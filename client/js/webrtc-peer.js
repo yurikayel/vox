@@ -27,10 +27,37 @@ export async function loadSignalingConfig() {
   } catch {}
   configCache = {
     stun: ["stun:stun.l.google.com:19302"],
+    turn: [],
     signalingUrls: ["ws://127.0.0.1:3921"],
     maxRtcPeers: 8,
   };
   return configCache;
+}
+
+const CUSTOM_TURN_KEY = "vox-custom-turn-config";
+
+export function getCustomTurnConfig() {
+  try {
+    const raw = localStorage.getItem(CUSTOM_TURN_KEY);
+    if (!raw) return { urls: "", username: "", credential: "" };
+    const parsed = JSON.parse(raw);
+    return {
+      urls: (parsed.urls || "").trim(),
+      username: (parsed.username || "").trim(),
+      credential: parsed.credential || "",
+    };
+  } catch {
+    return { urls: "", username: "", credential: "" };
+  }
+}
+
+export function saveCustomTurnConfig({ urls = "", username = "", credential = "" } = {}) {
+  const clean = {
+    urls: String(urls || "").trim(),
+    username: String(username || "").trim(),
+    credential: String(credential || ""),
+  };
+  localStorage.setItem(CUSTOM_TURN_KEY, JSON.stringify(clean));
 }
 
 export function onVoxMessage(handler) {
@@ -166,9 +193,27 @@ function sendSignaling(data) {
   }
 }
 
-function createRtcConfig() {
-  const stunList = configCache?.stun || ["stun:stun.l.google.com:19302"];
+export function createRtcConfig(config = configCache) {
+  const stunList = config?.stun || ["stun:stun.l.google.com:19302"];
   const iceServers = stunList.map((url) => ({ urls: url }));
+
+  const turnList = Array.isArray(config?.turn) ? config.turn : [];
+  for (const t of turnList) {
+    if (typeof t === "string" && t.trim()) {
+      iceServers.push({ urls: t.trim() });
+    } else if (t && typeof t === "object" && t.urls) {
+      iceServers.push(t);
+    }
+  }
+
+  const customTurn = getCustomTurnConfig();
+  if (customTurn.urls) {
+    const entry = { urls: customTurn.urls };
+    if (customTurn.username) entry.username = customTurn.username;
+    if (customTurn.credential) entry.credential = customTurn.credential;
+    iceServers.push(entry);
+  }
+
   return { iceServers };
 }
 

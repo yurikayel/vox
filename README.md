@@ -116,6 +116,10 @@ Todo dado no Vox é identificado por tags semânticas universais:
   - Configuração de STUN e sinalização comunitária (`config/signaling.json` e campo customizado na UI).
   - Integração às salvaguardas do Pacto 3.1: teto de 50 MB/dia, salvaguarda de Wi-Fi e opt-out.
   - Cascata completa: Memória -> IndexedDB -> Relay Desktop -> Broadcast -> WebRTC -> Gateways.
+- [x] **Fase 3.3: Deploy Público, Signaling WSS & TURN Comunitário**
+  - Pipelines GitHub Actions para CI multiplataforma (`.github/workflows/ci.yml`) e deploy estático no GitHub Pages (`.github/workflows/deploy-pages.yml`).
+  - Suporte completo a servidores TURN no cliente (`createRtcConfig`, `saveCustomTurnConfig`) e na UI (`#/settings/network`) para travessia de 4G/NAT simétrico.
+  - Kit de deploy self-host em Docker (`relay/deploy/docker-compose.yml`) com Caddy (WSS TLS automático) e Coturn blindado contra SSRF/abuso.
 - [ ] **Fase 4: Mensagens Diretas Criptografadas**
   - DMs com chave pública do destinatário via WebCrypto.
 - [ ] **Fase 5: Domínio & Identidade .vox.br**
@@ -135,6 +139,7 @@ Todo dado no Vox é identificado por tags semânticas universais:
 | [COMPLIANCE-BR.md](./COMPLIANCE-BR.md) | LGPD, Marco Civil Art. 19 e notas regulatórias |
 | [client/DEV.md](./client/DEV.md) | Guia do desenvolvedor: carteira Arweave local, faucets e testes |
 | [relay/README.md](./relay/README.md) | Guia do Vox Relay Desktop: cache proxy local em Python |
+| [relay/deploy/README.md](./relay/deploy/README.md) | Guia de Deploy VPS: Signaling WSS (Caddy) + TURN Comunitário (Coturn) |
 
 ### Rodar o PWA localmente
 

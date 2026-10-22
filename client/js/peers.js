@@ -297,6 +297,9 @@ export function getRtcStatus() {
   };
 }
 
+export const getCustomTurnConfig = webrtcPeer.getCustomTurnConfig;
+export const saveCustomTurnConfig = webrtcPeer.saveCustomTurnConfig;
+
 export async function checkDesktopRelay(url = "http://127.0.0.1:3920/health") {
   try {
     const res = await fetch(url, { signal: AbortSignal.timeout(350) });

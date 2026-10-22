@@ -477,7 +477,28 @@ function renderNetworkStats(metrics, cacheStats, dailyUsage, settings) {
     </div>`;
 }
 
-function renderNetworkForm(settings, notifPermission, customSignalingUrl) {
+function renderTurnFields(customTurn) {
+  return `
+    <div style="border-top:1px solid var(--border); padding-top:0.75rem; margin-top:0.75rem;">
+      <label style="font-weight:600; font-size:0.88rem; display:block; margin-bottom:0.4rem;">TURN Comunitário (Opcional — Travessia 4G / NAT Simétrico)</label>
+      <div class="form-group">
+        <label for="net-turn-url">URL do Servidor TURN:</label>
+        <input type="text" id="net-turn-url" class="form-control" placeholder="turn:turn.comunidade.org:3478" value="${customTurn?.urls || ""}" />
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.6rem;">
+        <div class="form-group">
+          <label for="net-turn-user">Usuário TURN:</label>
+          <input type="text" id="net-turn-user" class="form-control" placeholder="vox" value="${customTurn?.username || ""}" />
+        </div>
+        <div class="form-group">
+          <label for="net-turn-pass">Credencial TURN:</label>
+          <input type="password" id="net-turn-pass" class="form-control" placeholder="••••••" value="${customTurn?.credential || ""}" />
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderNetworkForm(settings, notifPermission, customSignalingUrl, customTurn) {
   const isEnabled = Boolean(settings?.enabled);
   const isBg = Boolean(settings?.backgroundRelay);
   const notifNotice = notifPermission === "granted"
@@ -520,11 +541,13 @@ function renderNetworkForm(settings, notifPermission, customSignalingUrl) {
 
         <div class="form-group">
           <label for="net-signaling-url">Servidor de Sinalização WebRTC (opcional):</label>
-          <input type="text" id="net-signaling-url" class="form-control" placeholder="ws://127.0.0.1:3921" value="${customSignalingUrl || ""}" />
-          <span class="meta" style="font-size:0.75rem;">URL WebSocket para pareamento direto com outros dispositivos (padrão: 3921).</span>
+          <input type="text" id="net-signaling-url" class="form-control" placeholder="wss://signal.comunidade.org ou ws://127.0.0.1:3921" value="${customSignalingUrl || ""}" />
+          <span class="meta" style="font-size:0.75rem;">URL WebSocket (ws:// ou wss://) para pareamento direto com outros dispositivos.</span>
         </div>
 
-        <div class="form-group" style="display:flex; align-items:center; gap:0.6rem; background:var(--accent-soft); padding:0.6rem; border-radius:var(--radius);">
+        ${renderTurnFields(customTurn)}
+
+        <div class="form-group" style="display:flex; align-items:center; gap:0.6rem; background:var(--accent-soft); padding:0.6rem; border-radius:var(--radius); margin-top:0.75rem;">
           <input type="checkbox" id="net-bg-relay" ${isBg ? "checked" : ""} style="width:1.1rem; height:1.1rem;" />
           <div style="flex:1;">
             <label for="net-bg-relay" style="margin:0; font-weight:600;">Atuar em segundo plano via Service Worker (somente Wi-Fi)</label>
@@ -546,10 +569,10 @@ function renderNetworkForm(settings, notifPermission, customSignalingUrl) {
     </div>`;
 }
 
-export function renderNetworkSettings(main, { settings, metrics, cacheStats, relayStatus, dailyUsage, notifPermission, rtcStatus, customSignalingUrl }) {
+export function renderNetworkSettings(main, { settings, metrics, cacheStats, relayStatus, dailyUsage, notifPermission, rtcStatus, customSignalingUrl, customTurn }) {
   const isEnabled = Boolean(settings?.enabled);
   let html = renderNetworkHeader(isEnabled, relayStatus, rtcStatus);
   html += renderNetworkStats(metrics, cacheStats, dailyUsage, settings);
-  html += renderNetworkForm(settings, notifPermission, customSignalingUrl);
+  html += renderNetworkForm(settings, notifPermission, customSignalingUrl, customTurn);
   main.innerHTML = html;
 }

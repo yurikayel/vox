@@ -32,3 +32,33 @@ test("webrtc - contagem de pares remotos e broadcast seguro", () => {
   const broadcastCount = webrtcPeer.broadcastRtcMessage({ type: "WANT", txId: "tx1" });
   assert.equal(broadcastCount, 0);
 });
+
+test("webrtc - createRtcConfig combina STUN, TURN estático e TURN customizado", () => {
+  localStorage.clear();
+  const baseCfg = {
+    stun: ["stun:stun.l.google.com:19302"],
+    turn: [{ urls: "turn:static.org:3478", username: "u1", credential: "p1" }],
+  };
+
+  let rtcCfg = webrtcPeer.createRtcConfig(baseCfg);
+  assert.equal(rtcCfg.iceServers.length, 2);
+  assert.equal(rtcCfg.iceServers[1].urls, "turn:static.org:3478");
+
+  webrtcPeer.saveCustomTurnConfig({
+    urls: "turn:comunidade.br:3478",
+    username: "vox_user",
+    credential: "segredo_123",
+  });
+
+  const savedTurn = webrtcPeer.getCustomTurnConfig();
+  assert.equal(savedTurn.urls, "turn:comunidade.br:3478");
+  assert.equal(savedTurn.username, "vox_user");
+
+  rtcCfg = webrtcPeer.createRtcConfig(baseCfg);
+  assert.equal(rtcCfg.iceServers.length, 3);
+  assert.deepEqual(rtcCfg.iceServers[2], {
+    urls: "turn:comunidade.br:3478",
+    username: "vox_user",
+    credential: "segredo_123",
+  });
+});
