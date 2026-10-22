@@ -15,6 +15,31 @@ python -m http.server 8080
 ```
 Abra no navegador: `http://127.0.0.1:8080/`
 
+### 1.1 Executar Testes Unitários Locais (Tudo)
+
+O Vox inclui suíte completa de testes unitários locais (45 testes: 33 client JS + 12 relay/signaling Python), sem dependências pesadas externas:
+
+```bash
+# Na raiz do repositório vox/
+npm test
+# ou no Windows:
+.\test.bat
+```
+
+Para rodar apenas os testes do cliente PWA:
+```bash
+npm run test:client
+# ou diretamente:
+node --test tests/*.test.js
+```
+
+Para rodar apenas os testes do servidor relay/signaling:
+```bash
+npm run test:relay
+# ou diretamente:
+python -m unittest discover -s relay -p "test_*.py"
+```
+
 ---
 
 ## 2. Carteira de Testes (Arweave JWK)

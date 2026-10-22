@@ -85,6 +85,7 @@ export function disconnectWebRtc() {
 
 async function connectSignaling() {
   if (!isWebRtcEnabled || !currentPeerId) return;
+  if (typeof process !== "undefined" && process.env?.NODE_ENV === "test") return;
   const config = await loadSignalingConfig();
   const url = getSignalingUrl(config);
 
