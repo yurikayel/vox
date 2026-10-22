@@ -1,0 +1,2 @@
+# O Vox Relay Desktop utiliza exclusivamente a biblioteca padrão do Python 3 (http.server, urllib, json).
+# Nenhuma dependência externa via pip é necessária.

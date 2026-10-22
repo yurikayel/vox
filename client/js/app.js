@@ -5,6 +5,8 @@ import * as wallet from "./wallet.js";
 import * as upload from "./upload.js";
 import * as share from "./share.js";
 import * as mod from "./moderation.js";
+import * as cacheNode from "./cache-node.js";
+import * as peers from "./peers.js";
 
 function parseRoute() {
   const hash = location.hash.replace(/^#\/?/, "");
@@ -13,6 +15,9 @@ function parseRoute() {
   const query = new URLSearchParams(queryPart || "");
 
   if (!parts.length) return { name: "home" };
+  if (parts[0] === "settings" && parts[1] === "network") {
+    return { name: "network-settings" };
+  }
   if (parts[0] === "c" && parts[1]) {
     return { name: "community", id: decodeURIComponent(parts[1]) };
   }
@@ -500,9 +505,75 @@ async function showComposeReply(topicId, communityId) {
   }
 }
 
+async function showNetworkSettings() {
+  const user = await getActiveUser();
+  const main = render.renderShell({
+    title: "Nó de Rede & Cache",
+    subtitle: "Configurações de rede distribuída e espelho local",
+    walletAddress: user,
+  });
+
+  const settings = peers.getPeerSettings();
+  const metrics = peers.getPeerMetrics();
+  const cacheStats = await cacheNode.getCacheStats();
+  const relayStatus = await peers.checkDesktopRelay();
+
+  render.renderNetworkSettings(main, {
+    settings,
+    metrics,
+    cacheStats,
+    relayStatus,
+  });
+
+  const form = document.getElementById("form-network-settings");
+  if (form) {
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const enabled = document.getElementById("net-optin")?.checked || false;
+      const maxMb = Number(document.getElementById("net-max-mb")?.value) || 25;
+      const wifiOnly = document.getElementById("net-wifi")?.checked || false;
+      const commOnly = document.getElementById("net-comm-only")?.checked || false;
+
+      peers.savePeerSettings({ enabled, maxMb, wifiOnly, commOnly });
+      cacheNode.enforceMaxCacheSize(maxMb);
+      share.showToast("Preferências de rede salvas!");
+      showNetworkSettings();
+    });
+  }
+
+  const btnClear = document.getElementById("btn-clear-cache");
+  if (btnClear) {
+    btnClear.addEventListener("click", async () => {
+      if (confirm("Limpar todo o cache local de transações no navegador?")) {
+        await cacheNode.clearCache();
+        share.showToast("Cache local esvaziado.");
+        showNetworkSettings();
+      }
+    });
+  }
+
+  const btnCheckRelay = document.getElementById("btn-check-relay");
+  if (btnCheckRelay) {
+    btnCheckRelay.addEventListener("click", async () => {
+      btnCheckRelay.disabled = true;
+      btnCheckRelay.textContent = "Verificando…";
+      const status = await peers.checkDesktopRelay();
+      btnCheckRelay.disabled = false;
+      btnCheckRelay.textContent = "Verificar Relay Desktop";
+      if (status.online) {
+        share.showToast(`Relay desktop online! ${status.data?.cachedCount || 0} itens em cache.`);
+      } else {
+        share.showToast("Relay desktop não detectado em 127.0.0.1:3920.", "error");
+      }
+      showNetworkSettings();
+    });
+  }
+}
+
 async function route() {
   const r = parseRoute();
   if (r.name === "home") return showHome();
+  if (r.name === "network-settings") return showNetworkSettings();
   if (r.name === "community") return showCommunity(r.id);
   if (r.name === "topic") return showTopic(r.id, r.communityId);
   if (r.name === "profile") return showProfile(r.address);

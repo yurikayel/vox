@@ -42,6 +42,13 @@ Espelhos são **opcionais** e **substituíveis**; o client Fase 1 fala direto co
 - Clientes podem integrar listas de hash/TX reportadas (espelho).
 - Obrigações legais brasileiras (LGPD, conteúdo eleitoral) estão resumidas em [COMPLIANCE-BR.md](./COMPLIANCE-BR.md) — **não substituem assessoria jurídica**.
 
+## Nós Participativos, Relays e Responsabilidade sobre Cache (Fase 3)
+
+- Usuários que ativam o nó participativo de leitura (`peers.js`) ou executam o Vox Relay Desktop (`vox/relay/`) armazenam cópias de cache local exclusivamente para aceleração de navegação em suas próprias máquinas.
+- O cache replica apenas transações que já são públicas e perenes na rede Arweave.
+- Operadores de relay e nós locais mantêm autonomia total para esvaziar seu cache a qualquer momento (pela interface `#/settings/network` ou excluindo o diretório `.cache/`).
+- Operadores de espelhos públicos que recebam notificações judiciais devem suprimir a renderização dos conteúdos ilícitos em seus índices locais, em observância ao Marco Civil da Internet (Art. 19).
+
 ## Escalonamento comunitário
 
 1. Criador define moderadores (transação de configuração).

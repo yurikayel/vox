@@ -6,4 +6,7 @@ dist/
 client/config/wallet.local.json
 *.jwk
 *.jwk.json
+relay/.cache/
+__pycache__/
+*.pyc
 

@@ -1,3 +1,6 @@
+import * as cacheNode from "./cache-node.js";
+import * as peers from "./peers.js";
+
 const QUERIES = {
   communities: `query ListCommunities($after: String) {
     transactions(
@@ -267,6 +270,30 @@ export async function fetchTransactionData(txId) {
   if (!txId) return { body: "", raw: "" };
   if (dataCache.has(txId)) return dataCache.get(txId);
 
+  // 1. Tenta Cache Local Persistente (IndexedDB)
+  const cachedDb = await cacheNode.getCachedTx(txId);
+  if (cachedDb) {
+    dataCache.set(txId, cachedDb);
+    return cachedDb;
+  }
+
+  // 2. Tenta Desktop Relay local (se estiver rodando em 127.0.0.1:3920)
+  const relayData = await peers.fetchFromDesktopRelay(txId);
+  if (relayData) {
+    dataCache.set(txId, relayData);
+    cacheNode.setCachedTx(txId, relayData);
+    return relayData;
+  }
+
+  // 3. Tenta Rede de Pares (Nós Leves via Broadcast / WebRTC)
+  const peerData = await peers.requestTxFromPeers(txId);
+  if (peerData) {
+    dataCache.set(txId, peerData);
+    cacheNode.setCachedTx(txId, peerData);
+    return peerData;
+  }
+
+  // 4. Fallback: Gateways Públicos
   const endpoints = [
     `https://arweave.net/${txId}`,
     `https://turbo-gateway.com/raw/${txId}`,
@@ -288,6 +315,7 @@ export async function fetchTransactionData(txId) {
         // texto plano
       }
       dataCache.set(txId, parsed);
+      cacheNode.setCachedTx(txId, parsed);
       return parsed;
     } catch {
       // tenta o próximo endpoint
