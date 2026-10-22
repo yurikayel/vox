@@ -5,6 +5,7 @@ on:
     branches: [ main ]
     paths:
       - "client/**"
+      - "docs/**"
       - ".github/workflows/deploy-pages.yml"
   workflow_dispatch:
 
@@ -30,10 +31,18 @@ jobs:
       - name: Configurar GitHub Pages
         uses: actions/configure-pages@v5
 
-      - name: Upload de artefato do PWA (pasta client/)
+      - name: Preparar site composto (_site)
+        run: |
+          mkdir -p _site
+          cp -r client/* _site/
+          if [ -f docs/proposta-vox.html ]; then
+            cp docs/proposta-vox.html _site/proposta-vox.html
+          fi
+
+      - name: Upload de artefato do PWA (_site)
         uses: actions/upload-pages-artifact@v3
         with:
-          path: "./client"
+          path: "./_site"
 
       - name: Deploy no GitHub Pages
         id: deployment

@@ -34,7 +34,7 @@ export function renderShell({ title, subtitle, breadcrumb, walletAddress }) {
       ${subtitle ? `<p class="header-subtitle">${escapeHtml(subtitle)}</p>` : ""}
     </header>
     <main id="app-main"></main>
-    <footer class="app-footer">Fase 3 — nós participativos e espelho local · permaweb</footer>
+    <footer class="app-footer">Vox — rede comunitária descentralizada · <a href="./proposta-vox.html" target="_blank" style="color:var(--accent);">Sobre a Proposta</a> · permaweb</footer>
   `;
   const main = document.getElementById("app-main");
   if (breadcrumb) main.insertAdjacentHTML("afterbegin", breadcrumb);
