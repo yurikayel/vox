@@ -25,6 +25,7 @@ export function renderShell({ title, subtitle, breadcrumb, walletAddress }) {
         <nav class="header-nav">
           <a href="#/">A Rua</a>
           <a href="#/wallet">Carteira</a>
+          <a href="#/settings/network">Nó</a>
           ${walletBadge}
         </nav>
       </div>
@@ -32,7 +33,7 @@ export function renderShell({ title, subtitle, breadcrumb, walletAddress }) {
       ${subtitle ? `<p class="header-subtitle">${escapeHtml(subtitle)}</p>` : ""}
     </header>
     <main id="app-main"></main>
-    <footer class="app-footer">Fase 2 — leitura, autoria e ponte · permaweb</footer>
+    <footer class="app-footer">Fase 3 — nós participativos e espelho local · permaweb</footer>
   `;
   const main = document.getElementById("app-main");
   if (breadcrumb) main.insertAdjacentHTML("afterbegin", breadcrumb);
@@ -373,4 +374,85 @@ export function renderComposeReply(main, topicId, communityId, { hasWallet = fal
         </div>
       </form>
     </div>`;
+}
+
+export function renderNetworkSettings(main, { settings, metrics, cacheStats, relayStatus }) {
+  const isEnabled = Boolean(settings?.enabled);
+  const relayBadge = relayStatus?.online
+    ? `<span class="badge-pill" style="background:#e6f8ed; color:#18794e;">🟢 Relay Online (127.0.0.1:3920) — ${relayStatus.data?.cachedCount || 0} itens em disco</span>`
+    : `<span class="badge-pill" style="background:#f4f6f9; color:var(--muted);">⚪ Relay Desktop Desconectado</span>`;
+
+  let html = `
+    <div class="card network-card">
+      <h2>Nó Participativo (Rede Distribuída)</h2>
+      <p class="desc">Ajude a manter o Vox descentralizado e resiliente servindo como nó de leitura e cache local para outros usuários, sem servidores caros e sem consumir sua bateria 24/7.</p>
+      
+      <div class="network-status" style="margin-top:1rem;">
+        <span class="pill" style="background:${isEnabled ? "var(--success)" : "var(--muted)"}">
+          ${isEnabled ? "Nó Leve Ativo" : "Nó Leve Inativo (Opt-in)"}
+        </span>
+        ${relayBadge}
+      </div>
+    </div>
+
+    <div class="actions-bar">
+      <span class="section-title">Estatísticas do Seu Nó</span>
+    </div>
+
+    <div class="stats-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:0.6rem; margin-bottom:1rem;">
+      <div class="card" style="text-align:center; padding:0.75rem;">
+        <div style="font-size:1.3rem; font-weight:700; color:var(--accent);">${metrics?.blobsServed || 0}</div>
+        <div class="meta">Itens Servidos</div>
+      </div>
+      <div class="card" style="text-align:center; padding:0.75rem;">
+        <div style="font-size:1.3rem; font-weight:700; color:var(--accent);">${((metrics?.bytesServed || 0) / 1024).toFixed(1)} KB</div>
+        <div class="meta">Banda Doada</div>
+      </div>
+      <div class="card" style="text-align:center; padding:0.75rem;">
+        <div style="font-size:1.3rem; font-weight:700; color:var(--text);">${metrics?.blobsReceived || 0}</div>
+        <div class="meta">Itens de Pares</div>
+      </div>
+      <div class="card" style="text-align:center; padding:0.75rem;">
+        <div style="font-size:1.3rem; font-weight:700; color:var(--text);">${cacheStats?.count || 0}</div>
+        <div class="meta">Itens em Cache (${cacheStats?.sizeKb || "0"} KB)</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Configuração do Nó Leve (PWA)</h3>
+      <form id="form-network-settings">
+        <div class="form-group" style="display:flex; align-items:center; gap:0.6rem; margin-top:0.75rem;">
+          <input type="checkbox" id="net-optin" ${isEnabled ? "checked" : ""} style="width:1.2rem; height:1.2rem;" />
+          <label for="net-optin" style="margin:0; font-weight:600;">Ativar nó participativo de leitura (compartilhar cache com outros clientes Vox)</label>
+        </div>
+
+        <div class="form-group">
+          <label for="net-max-mb">Limite máximo de armazenamento de cache (MB):</label>
+          <input type="number" id="net-max-mb" class="form-control" min="5" max="500" value="${settings?.maxMb || 25}" />
+        </div>
+
+        <div class="form-group" style="display:flex; align-items:center; gap:0.6rem;">
+          <input type="checkbox" id="net-wifi" ${settings?.wifiOnly ? "checked" : ""} style="width:1.1rem; height:1.1rem;" />
+          <label for="net-wifi" style="margin:0;">Priorizar compartilhamento apenas quando conectado em Wi-Fi</label>
+        </div>
+
+        <div class="form-group" style="display:flex; align-items:center; gap:0.6rem;">
+          <input type="checkbox" id="net-comm-only" ${settings?.commOnly ? "checked" : ""} style="width:1.1rem; height:1.1rem;" />
+          <label for="net-comm-only" style="margin:0;">Espelhar apenas comunidades que sou membro</label>
+        </div>
+
+        <div class="actions-row">
+          <button type="submit" class="btn btn-primary">Salvar Preferências</button>
+          <button type="button" id="btn-clear-cache" class="btn btn-outline">Limpar Cache Local</button>
+          <button type="button" id="btn-check-relay" class="btn btn-outline">Verificar Relay Desktop</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="card info-box" style="margin-top:1rem;">
+      <h4>Como funciona o nó participativo?</h4>
+      <p class="desc">Ao ativar o nó leve, seu navegador mantém uma cópia das transações públicas já baixadas no IndexedDB local e as disponibiliza para outras abas e clientes na rede via protocolo <code>vox-peer</code>. Para um espelho permanente de longa duração, você pode rodar o <strong>Vox Relay Desktop</strong> no seu computador.</p>
+    </div>`;
+
+  main.innerHTML = html;
 }

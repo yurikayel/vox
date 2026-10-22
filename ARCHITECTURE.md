@@ -148,7 +148,42 @@ query ListModActions($communityId: String!) {
 
 ---
 
-## 3. Mensagens Diretas (DMs) — Criptografia (Fase 3)
+## 3. Nós Participativos e Rede de Leitura Distribuída (Fase 3)
+
+O Vox adota uma arquitetura em camadas para leitura de transações, reduzindo a dependência de gateways centrais e garantindo navegação rápida mesmo com conectividade intermitente:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Permaweb (Arweave)                       │
+│                     Fonte Canônica                          │
+└──────────────────────────────┬──────────────────────────────┘
+                               ▼
+┌─────────────────────────────────────────────────────────────┐
+│           Gateways Públicos (AR.IO / Turbo GraphQL)         │
+└──────────────┬───────────────────────────────┬──────────────┘
+               ▼                               ▼
+┌─────────────────────────────┐ ┌─────────────────────────────┐
+│     Vox Relay Desktop       │ │        Nó Leve PWA          │
+│ Proxy Cache (127.0.0.1:3920)│ │ IndexedDB + BroadcastChannel│
+└──────────────┬──────────────┘ └──────────────┬──────────────┘
+               └───────────────┬───────────────┘
+                               ▼
+┌─────────────────────────────────────────────────────────────┐
+│                      Cliente Vox PWA                        │
+│      Hierarquia: Cache -> Relay -> Peer -> Gateways         │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Ordem de Resolução Hierárquica (`fetchTransactionData`):
+1. **Cache de Memória:** Resolução em 0 ms para itens já abertos na sessão ativa.
+2. **Cache Local Persistente (IndexedDB):** Consulta via `cache-node.js` com política LRU e teto de armazenamento configurável.
+3. **Vox Relay Desktop (Opcional):** Consulta a `http://127.0.0.1:3920/tx/<txId>` se o relay Python local estiver em execução.
+4. **Rede de Pares (Opt-in `vox-peer`):** Consulta a clientes conectados via `BroadcastChannel` (ou WebRTC) emitindo requisições `WANT` e recebendo respostas `BLOB`.
+5. **Gateways Públicos:** Fallback aos nós de infraestrutura global (`arweave.net`, `turbo-gateway.com`).
+
+---
+
+## 4. Mensagens Diretas (DMs) — Criptografia (Fase 4)
 
 As mensagens diretas não passam por servidor em texto aberto:
 * Cada usuário possui um par de chaves assimétricas de troca de chave (ECDH P-256 ou X25519) gerado no navegador via `window.crypto.subtle`.
@@ -159,7 +194,7 @@ As mensagens diretas não passam por servidor em texto aberto:
 
 ---
 
-## 4. Moderação Descentralizada
+## 5. Moderação Descentralizada
 
 Como os dados na permaweb são imutáveis, a moderação ocorre na **camada de renderização (Client-Side filtering)**:
 1. O dono da comunidade cria uma lista de moderadores autorizados.

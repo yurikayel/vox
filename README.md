@@ -98,9 +98,15 @@ Todo dado no Vox é identificado por tags semânticas universais:
   - Governança distribuída via transações `mod-action` com supressão client-side (`moderation.js`).
   - Guia de testes e faucet em [`client/DEV.md`](./client/DEV.md).
   - *Critério de Sucesso (DoD atingido):* Criação de tópicos assinados, leitura via GraphQL e compartilhamento em < 30s sem backend próprio.
-- [ ] **Fase 3: Mensagens Diretas Criptografadas**
+- [x] **Fase 3: Nós Participativos & Espelhos Locais**
+  - Cache persistente IndexedDB com política LRU (`cache-node.js`).
+  - Protocolo peer `vox-peer` v0 com mensagens `WANT`/`BLOB` via BroadcastChannel (`peers.js`).
+  - Interface de configuração de rede distribuída e métricas em `#/settings/network`.
+  - Servidor desktop local de cache e espelho em Python sem dependências (`vox/relay/`).
+  - *Critério de Sucesso (DoD atingido):* Resolução em cascata (Cache -> Relay -> Peer -> Gateway) acelerando leitura e suportando navegação offline.
+- [ ] **Fase 4: Mensagens Diretas Criptografadas**
   - DMs com chave pública do destinatário via WebCrypto.
-- [ ] **Fase 4: Domínio & Identidade .vox.br**
+- [ ] **Fase 5: Domínio & Identidade .vox.br**
   - Nomes amigáveis e resolução descentralizada.
 
 ---
@@ -116,6 +122,7 @@ Todo dado no Vox é identificado por tags semânticas universais:
 | [IDENTITY.md](./IDENTITY.md) | Ed25519, Passkeys e fases de identidade |
 | [COMPLIANCE-BR.md](./COMPLIANCE-BR.md) | LGPD, Marco Civil Art. 19 e notas regulatórias |
 | [client/DEV.md](./client/DEV.md) | Guia do desenvolvedor: carteira Arweave local, faucets e testes |
+| [relay/README.md](./relay/README.md) | Guia do Vox Relay Desktop: cache proxy local em Python |
 
 ### Rodar o PWA localmente
 

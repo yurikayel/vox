@@ -1,6 +1,6 @@
-# Guia do Desenvolvedor — Vox Fase 2
+# Guia do Desenvolvedor — Vox Fases 2 e 3
 
-Este documento descreve como testar o fluxo de leitura, autoria (upload de transações), compartilhamento e governança no PWA vanilla do Vox.
+Este documento descreve como testar o fluxo de leitura, autoria (upload de transações), compartilhamento, governança e a rede de nós participativos (Fase 3) no PWA vanilla do Vox.
 
 ---
 
@@ -33,7 +33,7 @@ Para publicar comunidades, tópicos, respostas ou ações de moderação na rede
 
 ---
 
-## 3. Teste do Fluxo Completo da Fase 2 (DoD)
+## 3. Teste do Fluxo de Autoria e Crossposting (Fase 2 DoD)
 
 Para validar o *Definition of Done* da Fase 2:
 1. Abra `http://127.0.0.1:8080/#/wallet` e gere ou importe uma carteira.
@@ -48,6 +48,34 @@ Para validar o *Definition of Done* da Fase 2:
 
 ---
 
-## 4. Fallback Offline / Demonstração
+## 4. Teste de Nós Participativos e Espelhos (Fase 3 DoD)
 
-Se os gateways Arweave estiverem temporariamente inacessíveis ou lentos para indexar no ambiente de testes, o Vox ativa automaticamente o **Modo Demonstração** (`mock.js`), permitindo navegar pela interface e testar formulários e telas sem travamentos.
+### 4.1 Teste Peer-to-Peer entre duas instâncias do PWA
+1. Abra duas abas ou janelas distintas do navegador em `http://127.0.0.1:8080/#/settings/network`.
+2. Em ambas as abas, marque a caixa **"Ativar nó participativo de leitura"** e clique em **"Salvar Preferências"**.
+3. Na **Aba 1**, navegue até um tópico qualquer e abra a discussão (o corpo será baixado e salvo no IndexedDB local).
+4. Na **Aba 2**, navegue até o mesmo tópico. O cliente emitirá um pedido `WANT` no canal `vox-peer-v0`; a Aba 1 responderá com um `BLOB` do seu cache local antes que a consulta chegue aos gateways públicos!
+5. Retorne a `#/settings/network`:
+   * Na **Aba 1**, veja o contador **"Itens Servidos"** e **"Banda Doada"** incrementados.
+   * Na **Aba 2**, veja o contador **"Itens de Pares"** incrementado.
+
+### 4.2 Teste com o Vox Relay Desktop (Localhost)
+1. Em um terminal separado, inicie o relay Python:
+   ```bash
+   cd vox/relay
+   python server.py
+   ```
+2. Verifique no navegador ou curl que `http://127.0.0.1:3920/health` responde com status 200 e JSON.
+3. No PWA do Vox, abra `#/settings/network` e clique no botão **"Verificar Relay Desktop"**:
+   * O badge exibirá: `🟢 Relay Online (127.0.0.1:3920)`.
+4. Ao abrir tópicos ainda não cacheados no PWA, o relay fará o proxy para `arweave.net`, armazenará a cópia na pasta local `vox/relay/.cache/` e servirá ao PWA com latência reduzida.
+
+### 4.3 Teste de Resiliência Offline
+1. Simule a desconexão de rede (ou desligue o Wi-Fi).
+2. Tópicos e comunidades previamente visitados continuam abrindo instantaneamente a partir do cache IndexedDB (`cache-node.js`) e do Vox Relay local, comprovando a tolerância a apagões de conectividade.
+
+---
+
+## 5. Fallback de Demonstração
+
+Se os gateways Arweave estiverem temporariamente inacessíveis e não houver cache ou peers para o item solicitado, o Vox ativa automaticamente o **Modo Demonstração** (`mock.js`), permitindo navegar pela interface e testar formulários e telas sem travamentos.
