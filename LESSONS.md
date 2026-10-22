@@ -105,3 +105,16 @@ Para materializar o *sweet spot* sem inflar o escopo, a **Fase 2** será regida 
    * **Ativo por Padrão no App Aberto:** Ao abrir o app, o nó leve atua automaticamente servindo requisições de leitura de dados públicos e imutáveis já baixados, sem custo de servidores para o projeto.
    * **Salvaguardas Inegociáveis:** Teto diário de banda (50 MB/dia), priorização Wi-Fi para não consumir 4G/5G, limite de disco (25 MB) e direito irrestrito de pausa/opt-out a qualquer momento nas configurações.
    * **Segundo Plano Transparente:** O Service Worker só roda tarefas de relay em segundo plano se houver conexão Wi-Fi ativa e com notificação visível no sistema operacional via Web Notification API.
+
+---
+
+## 7. Lições de Conectividade entre Dispositivos (Fase 3.2 WebRTC)
+
+### WebRTC sob Demanda ≠ A Armadilha P2P do Varanda
+
+1. **Por que o P2P do Varanda falha no celular:** Forçar o celular a ser um semeador contínuo em 4G/5G gera consumo desenfreado de bateria, esgota franquias de dados móveis e bate no muro de CGNATs de operadoras brasileiras.
+2. **Como o WebRTC do Vox 3.2 resolve com leveza:**
+   * **Apenas leitura e cache local:** O canal `vox-peer-v0` via WebRTC DataChannel só transporta pequenos fragmentos públicos já cacheados (tópicos e respostas), sob demanda.
+   * **Subordinação ao Pacto 3.1:** As mesmas salvaguardas (teto diário de 50 MB, bloqueio em redes móveis e botão de pausa) barram o envio de dados via WebRTC, eliminando qualquer risco de sobrecarga.
+   * **Degradação graciosa:** Se o servidor de sinalização cair ou o pareamento WebRTC falhar, a cascata do Vox salta imediatamente para o cache local ou para os gateways públicos, sem congelar a tela nem exigir intervenção manual do usuário.
+   * **Sinalização Desacoplada:** O servidor WebSocket de sinalização (`relay/signaling.py`) é ultra-leve, sem estado e autohospedado — não atua como AppView proprietário nem custodia dados da rede.

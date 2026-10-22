@@ -148,7 +148,7 @@ query ListModActions($communityId: String!) {
 
 ---
 
-## 3. Nós Participativos e Rede de Leitura Distribuída (Fase 3)
+## 3. Nós Participativos e Rede de Leitura Distribuída (Fases 3, 3.1 e 3.2)
 
 O Vox adota uma arquitetura em camadas para leitura de transações, reduzindo a dependência de gateways centrais e garantindo navegação rápida mesmo com conectividade intermitente:
 
@@ -163,22 +163,40 @@ O Vox adota uma arquitetura em camadas para leitura de transações, reduzindo a
 └──────────────┬───────────────────────────────┬──────────────┘
                ▼                               ▼
 ┌─────────────────────────────┐ ┌─────────────────────────────┐
-│     Vox Relay Desktop       │ │        Nó Leve PWA          │
-│ Proxy Cache (127.0.0.1:3920)│ │ IndexedDB + BroadcastChannel│
+│     Vox Relay Desktop       │ │   Signaling WS (3921)       │
+│ Proxy Cache (127.0.0.1:3920)│ │ Troca SDP/ICE (Self-host)   │
 └──────────────┬──────────────┘ └──────────────┬──────────────┘
-               └───────────────┬───────────────┘
-                               ▼
-┌─────────────────────────────────────────────────────────────┐
+               │                               ▼
+               │                ┌─────────────────────────────┐
+               │                │   WebRTC DataChannel Mesh   │
+               │                │  P2P entre dispositivos     │
+               ▼                └──────────────┬──────────────┘
+┌──────────────────────────────────────────────▼──────────────┐
 │                      Cliente Vox PWA                        │
-│      Hierarquia: Cache -> Relay -> Peer -> Gateways         │
+│   Hierarquia: Memória -> IndexedDB -> Relay -> Peers -> GW  │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### Ordem de Resolução Hierárquica (`fetchTransactionData`):
+### 3.1 Protocolo `vox-peer` e WebRTC Mesh (Fase 3.2)
+
+Entre abas e dispositivos, clientes trocam mensagens JSON simples sob o protocolo `vox-peer-v0`:
+* `WANT`: Pedido de payload de uma transação específica (`{ type: "WANT", txId, fromPeer }`).
+* `BLOB`: Resposta contendo o dado cacheado (`{ type: "BLOB", txId, data, fromPeer }`).
+* `HAVE`: Anúncio opcional de disponibilidade de conteúdo.
+
+**Camadas de Transporte de Pares:**
+1. **Local (Mesmo Navegador):** `BroadcastChannel` nativo do navegador, sem tráfego de rede.
+2. **Remota (Dispositivos Distintos):** `RTCDataChannel` ("vox-peer-v0") estabelecido ponto a ponto após sinalização.
+3. **Servidor de Sinalização (`relay/signaling.py`):** WebSocket autohospedado em Python (stdlib, porta 3921) que apenas encaminha ofertas SDP e candidatos ICE sem inspecionar ou persistir mensagens.
+4. **Resolução ICE / STUN / TURN:** O cliente utiliza servidores STUN públicos (ex: `stun:stun.l.google.com:19302`) configurados em `config/signaling.json` para travessia de NAT. Em redes com NAT simétrico corporativo restritivo, operadores podem apontar relays TURN próprios.
+
+### 3.2 Ordem de Resolução Hierárquica (`fetchTransactionData`):
 1. **Cache de Memória:** Resolução em 0 ms para itens já abertos na sessão ativa.
-2. **Cache Local Persistente (IndexedDB):** Consulta via `cache-node.js` com política LRU e teto de armazenamento configurável.
+2. **Cache Local Persistente (IndexedDB):** Consulta via `cache-node.js` com política LRU e teto de armazenamento configurável (padrão 25 MB).
 3. **Vox Relay Desktop (Opcional):** Consulta a `http://127.0.0.1:3920/tx/<txId>` se o relay Python local estiver em execução.
-4. **Rede de Pares (Opt-in `vox-peer`):** Consulta a clientes conectados via `BroadcastChannel` (ou WebRTC) emitindo requisições `WANT` e recebendo respostas `BLOB`.
+4. **Rede de Pares (`peers.js`):**
+   * *Passo A (Local):* Consulta broadcast a abas locais (timeout 600 ms).
+   * *Passo B (WebRTC):* Consulta a pares remotos conectados via RTCDataChannel (timeout 2000 ms).
 5. **Gateways Públicos:** Fallback aos nós de infraestrutura global (`arweave.net`, `turbo-gateway.com`).
 
 ---

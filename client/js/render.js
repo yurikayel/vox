@@ -424,21 +424,24 @@ export function closePactModal(container) {
   if (container) container.innerHTML = "";
 }
 
-function renderNetworkHeader(isEnabled, relayStatus) {
+function renderNetworkHeader(isEnabled, relayStatus, rtcStatus) {
+  const rtcCount = rtcStatus?.remotePeersConnected || 0;
   const relayBadge = relayStatus?.online
-    ? `<span class="badge-pill" style="background:#e6f8ed; color:#18794e;">🟢 Relay Online (127.0.0.1:3920) — ${relayStatus.data?.cachedCount || 0} itens em disco</span>`
+    ? `<span class="badge-pill" style="background:#e6f8ed; color:#18794e;">🟢 Relay Online (127.0.0.1:3920) — ${relayStatus.data?.cachedCount || 0} itens</span>`
     : `<span class="badge-pill" style="background:#f4f6f9; color:var(--muted);">⚪ Relay Desktop Desconectado</span>`;
+  const rtcBadge = `<span class="badge-pill" style="background:#eef2ff; color:#3730a3;">🌐 WebRTC: ${rtcCount} ${rtcCount === 1 ? "par remoto" : "pares remotos"}</span>`;
 
   return `
     <div class="card network-card">
       <h2>Rede Distribuída (Pacto Vox)</h2>
-      <p class="desc">Infraestrutura cooperativa transparente: soberania dos seus dados ↔ nó de leitura e cache local para outros usuários, sem servidores caros.</p>
+      <p class="desc">Infraestrutura cooperativa transparente: soberania dos seus dados ↔ nós leves de leitura e cache local entre dispositivos, sem servidores caros.</p>
       
-      <div class="network-status" style="margin-top:1rem;">
+      <div class="network-status" style="margin-top:1rem; display:flex; flex-wrap:wrap; gap:0.4rem;">
         <span class="pill" style="background:${isEnabled ? "var(--success)" : "var(--danger)"}">
           ${isEnabled ? "🟢 Nó Leve Ativo (Padrão)" : "⏸️ Contribuição Pausada"}
         </span>
         ${relayBadge}
+        ${rtcBadge}
       </div>
     </div>`;
 }
@@ -456,7 +459,7 @@ function renderNetworkStats(metrics, cacheStats, dailyUsage, settings) {
     <div class="stats-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:0.6rem; margin-bottom:1rem;">
       <div class="card" style="text-align:center; padding:0.75rem;">
         <div style="font-size:1.3rem; font-weight:700; color:var(--accent);">${metrics?.blobsServed || 0}</div>
-        <div class="meta">Itens Servidos</div>
+        <div class="meta">Itens Servidos (${metrics?.blobsServedRtc || 0} RTC)</div>
       </div>
       <div class="card" style="text-align:center; padding:0.75rem;">
         <div style="font-size:1.3rem; font-weight:700; color:var(--accent);">${((metrics?.bytesServed || 0) / 1024).toFixed(1)} KB</div>
@@ -474,7 +477,7 @@ function renderNetworkStats(metrics, cacheStats, dailyUsage, settings) {
     </div>`;
 }
 
-function renderNetworkForm(settings, notifPermission) {
+function renderNetworkForm(settings, notifPermission, customSignalingUrl) {
   const isEnabled = Boolean(settings?.enabled);
   const isBg = Boolean(settings?.backgroundRelay);
   const notifNotice = notifPermission === "granted"
@@ -510,6 +513,17 @@ function renderNetworkForm(settings, notifPermission) {
           <label for="net-comm-only" style="margin:0;">Espelhar apenas comunidades que sou membro</label>
         </div>
 
+        <div class="form-group" style="display:flex; align-items:center; gap:0.6rem;">
+          <input type="checkbox" id="net-webrtc" ${settings?.webrtcEnabled !== false ? "checked" : ""} style="width:1.1rem; height:1.1rem;" />
+          <label for="net-webrtc" style="margin:0;">Permitir pares em outras redes e dispositivos (WebRTC)</label>
+        </div>
+
+        <div class="form-group">
+          <label for="net-signaling-url">Servidor de Sinalização WebRTC (opcional):</label>
+          <input type="text" id="net-signaling-url" class="form-control" placeholder="ws://127.0.0.1:3921" value="${customSignalingUrl || ""}" />
+          <span class="meta" style="font-size:0.75rem;">URL WebSocket para pareamento direto com outros dispositivos (padrão: 3921).</span>
+        </div>
+
         <div class="form-group" style="display:flex; align-items:center; gap:0.6rem; background:var(--accent-soft); padding:0.6rem; border-radius:var(--radius);">
           <input type="checkbox" id="net-bg-relay" ${isBg ? "checked" : ""} style="width:1.1rem; height:1.1rem;" />
           <div style="flex:1;">
@@ -532,10 +546,10 @@ function renderNetworkForm(settings, notifPermission) {
     </div>`;
 }
 
-export function renderNetworkSettings(main, { settings, metrics, cacheStats, relayStatus, dailyUsage, notifPermission }) {
+export function renderNetworkSettings(main, { settings, metrics, cacheStats, relayStatus, dailyUsage, notifPermission, rtcStatus, customSignalingUrl }) {
   const isEnabled = Boolean(settings?.enabled);
-  let html = renderNetworkHeader(isEnabled, relayStatus);
+  let html = renderNetworkHeader(isEnabled, relayStatus, rtcStatus);
   html += renderNetworkStats(metrics, cacheStats, dailyUsage, settings);
-  html += renderNetworkForm(settings, notifPermission);
+  html += renderNetworkForm(settings, notifPermission, customSignalingUrl);
   main.innerHTML = html;
 }

@@ -518,8 +518,20 @@ function bindNetworkSettingsForm() {
     const wifiOnly = document.getElementById("net-wifi")?.checked || false;
     const commOnly = document.getElementById("net-comm-only")?.checked || false;
     const backgroundRelay = document.getElementById("net-bg-relay")?.checked || false;
+    const webrtcEnabled = document.getElementById("net-webrtc")?.checked !== false;
+    const customSignalingUrl = document.getElementById("net-signaling-url")?.value.trim() || "";
 
-    peers.savePeerSettings({ enabled, maxMb, wifiOnly, commOnly, backgroundRelay, dailyCapMb });
+    localStorage.setItem("vox-custom-signaling-url", customSignalingUrl);
+
+    peers.savePeerSettings({
+      enabled,
+      maxMb,
+      wifiOnly,
+      commOnly,
+      backgroundRelay,
+      dailyCapMb,
+      webrtcEnabled,
+    });
     cacheNode.enforceMaxCacheSize(maxMb);
     share.showToast(enabled ? "Preferências salvas: nó leve ativo!" : "Preferências salvas: nó pausado.");
     showNetworkSettings();
@@ -583,6 +595,8 @@ async function showNetworkSettings() {
   const relayStatus = await peers.checkDesktopRelay();
   const dailyUsage = peers.getDailyUsage();
   const notifPermission = "Notification" in window ? Notification.permission : "unsupported";
+  const rtcStatus = peers.getRtcStatus();
+  const customSignalingUrl = localStorage.getItem("vox-custom-signaling-url") || "";
 
   render.renderNetworkSettings(main, {
     settings,
@@ -591,6 +605,8 @@ async function showNetworkSettings() {
     relayStatus,
     dailyUsage,
     notifPermission,
+    rtcStatus,
+    customSignalingUrl,
   });
 
   bindNetworkSettingsForm();

@@ -1,5 +1,7 @@
-// Service Worker do Vox (Fase 3.1)
-const CACHE_NAME = "vox-pwa-v3.1";
+// Service Worker do Vox (Fase 3.2)
+// NOTA ARQUITETURAL: WebRTC DataChannels operam exclusivamente na thread principal (DOM/Window).
+// O Service Worker atua no cache offline do shell e notificações de status, sem abrir WebRTC.
+const CACHE_NAME = "vox-pwa-v3.2";
 const SHELL_ASSETS = [
   "./",
   "./index.html",
@@ -8,12 +10,14 @@ const SHELL_ASSETS = [
   "./icons/icon.svg",
   "./config/gateways.json",
   "./config/upload.json",
+  "./config/signaling.json",
   "./js/app.js",
   "./js/cache-node.js",
   "./js/graphql.js",
   "./js/mock.js",
   "./js/moderation.js",
   "./js/peers.js",
+  "./js/webrtc-peer.js",
   "./js/render.js",
   "./js/share.js",
   "./js/upload.js",
