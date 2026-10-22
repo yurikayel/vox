@@ -9,34 +9,39 @@
 
 No modelo atual da internet, a comunicação de mais de 200 milhões de brasileiros está refém de um punhado de corporações estrangeiras:
 1. **Risco de Apagão e Censura:** Contas bloqueadas arbitrariamente, algoritmos opacos que sufocam o alcance e a vulnerabilidade constante de ficar sem seus laços sociais caso uma plataforma estrangeira seja suspensa ou mude de dono.
-2. **Dependência de Falsas Alternativas:** Mesmo novas redes abertas estrangeiras mantêm dependências de servidores nos EUA e empresas centralizadoras.
-3. **Morte das Comunidades Reais:** O modelo algorítmico do feed infinito matou a convivência comunitária orgânica que o Brasil dominava na era do Orkut.
+2. **Dependência de Falsas Alternativas:** Redes alternativas comerciais mantêm infraestruturas centralizadas fora do país e respondem a interesses de investidores estrangeiros.
+3. **Morte das Comunidades Reais:** O modelo de feed infinito individualizado sufocou a convivência comunitária orgânica que o Brasil dominava na era do Orkut.
 
 O **Vox** adota o espírito do **Pix**: uma infraestrutura pública, descentralizada e aberta, onde você é dono da sua identidade e do seu conteúdo.
 
+### Por que não Bluesky / Mastodon / P2P puro?
+* **Sem dependência da Bluesky PBC:** O Bluesky centraliza seus serviços de busca e indexação (*AppViews*) em uma empresa privada sediada nos EUA. O Vox utiliza múltiplos gateways neutros distribuídos.
+* **Sem o custo de VPS do Mastodon:** O Fediverso sobrecarrega administradores voluntários com contas mensais de servidor e confunde o usuário final com a "escolha de instâncias". O Vox é 100% serverless para os mantenedores.
+* **Sem a fragilidade P2P do Varanda:** Dispensamos a necessidade de celulares atuarem como servidores de rede (*seeders*) e os bloqueios crônicos de NAT/CGNAT em redes móveis brasileiras.
+
+*(Diagnóstico comparativo completo, matriz 5×5 e lições aprendidas em [LESSONS.md](./LESSONS.md))*
+
 ---
 
-## 🏛️ Os Três Pilares do Vox
+## 🏛️ Os Três Pilares do Vox (O Sweet Spot)
 
 ### 1. Comunidades Primeiro (Estilo Orkut)
-* **Fóruns por Tópicos:** Discussões organizadas por assunto com tópicos e respostas encadeadas, e não apenas rolagens infinitas de dopamina.
+* **Fóruns por Tópicos:** Discussões organizadas por assunto com tópicos e respostas encadeadas, resgatando a profundidade das conversas.
+* **A Rua (Descoberta Pública):** A visualização global que permite descobrir o que está sendo debatido em todas as comunidades abertas, sem algoritmos de recomendação manipulativos.
 * **Membros no Perfil:** As comunidades às quais você pertence definem a sua identidade e seus interesses no seu perfil.
-* **Moderação Distribuída:** Os criadores e moderadores possuem ferramentas locais para filtrar spam e manter a ordem comunitária sem depender de censura centralizada.
+* **Moderação Distribuída:** Os criadores e moderadores filtram abusos localmente via transações assinadas (`mod-action`), sem depender de comitês centrais.
 
-### 2. Soberania na Camada de Dados (Permaweb / GraphQL)
-* **Zero Servidores Centrais:** O Vox não possui um servidor Node, Python ou banco de dados relacional caro que voluntários precisam bancar.
-* **Infraestrutura Descentralizada:** Utiliza a arquitetura Permaweb (Arweave + nós de gateway AR.IO / Turbo). 
-* **Leitura Livre via GraphQL:** Todas as comunidades, tópicos e perfis são indexados e consultados via GraphQL aberto nos gateways globais distribuídos (`/graphql`).
-* **Sua Chave é Você:** Identidade criptográfica gerada direto no dispositivo com WebCrypto (Ed25519/Passkeys).
+### 2. Soberania Serverless (Permaweb / GraphQL)
+* **Zero Servidores Centrais:** O Vox não possui backend Node, Python ou banco de dados que voluntários precisam bancar.
+* **Linhagem Channel-01:** Aproveita a arquitetura comprovada de leitura via GraphQL aberto em gateways da rede Arweave/AR.IO (`turbo-gateway.com`, `arweave.net`), expandindo o canal estático para um ecossistema social bidirecional.
+* **Sua Chave é Você:** Identidade criptográfica local no dispositivo (Ed25519; detalhes em [IDENTITY.md](./IDENTITY.md)).
 
-### 3. Crossposting: O Vox como Centro de Gravidade
+### 3. Ponte, não Ilha (Crossposting)
 * O Vox não exige que seus contatos abandonem outras plataformas para você ter voz.
-* Ao publicar no Vox, o post original assinado fica salvo permanentemente no seu controle.
+* O post original assinado fica salvo perenemente no controle do usuário.
 * Com **1 toque**, o app despacha o conteúdo para **WhatsApp, Instagram, TikTok e X** através da Web Share API nativa e web intents.
 
-### 4. Mensagens Diretas (DMs) com Privacidade
-* Comunicação privada ponto a ponto usando criptografia assimétrica de ponta a ponta (WebCrypto).
-* Apenas o destinatário detém a chave para decifrar a mensagem. Nenhum intermediário lê suas conversas.
+*(Mensagens Diretas E2E permanecem planejadas para a **Fase 3** após consolidação do protocolo de comunidades)*
 
 ---
 
@@ -71,8 +76,8 @@ Todo dado no Vox é identificado por tags semânticas universais:
 | **Entrar em Comunidade** | `membership` | `Community-Id` |
 | **Criar Tópico** | `topic` | `Community-Id`, `Topic-Title` |
 | **Responder Tópico** | `reply` | `Community-Id`, `Reply-To` (TX ID) |
-| **Mensagem Direta** | `dm` | `Recipient` (Chave pública) |
 | **Moderação** | `mod-action` | `Community-Id`, `Action` (hide/ban), `Target` |
+| **Mensagem Direta (Fase 3)** | `dm` | `Recipient` (Chave pública) |
 
 ---
 
@@ -81,17 +86,41 @@ Todo dado no Vox é identificado por tags semânticas universais:
 - [x] **Fase 0: Concepção & Arquitetura**
   - Definição da estratégia de soberania digital sem servidor central.
   - Adoção do modelo Permaweb + Turbo Gateway.
-- [ ] **Fase 1: MVP do Fórum & Leitura (A Rua + Comunidades)**
-  - Cliente PWA leve capaz de ler comunidades e tópicos via GraphQL.
-  - Interface nostálgica e limpa (estilo Orkut moderno).
-- [ ] **Fase 2: Autoria, Chaves & Crossposting**
-  - Geração de chave criptográfica local no navegador.
-  - Publicação de tópicos e respostas.
-  - Botões de compartilhamento rápido para WhatsApp, Insta, X e TikTok.
+- [x] **Fase 1: MVP do Fórum & Leitura (A Rua + Comunidades)**
+  - Cliente PWA em [`client/`](./client/) — comunidades, tópicos e respostas via GraphQL (`App-Name: vox-brasil`).
+  - Interface nostálgica e limpa (estilo Orkut moderno); demo offline se gateway falhar.
+- [ ] **Fase 2: Autoria, Chaves & Ponte de Crossposting**
+  - Geração de par de chaves local Ed25519 no navegador.
+  - Publicação de tópicos e respostas assinadas.
+  - Botão de compartilhamento imediato (Web Share API) formatado para WhatsApp, Insta, X e TikTok.
+  - Perfil exibindo comunidades seguidas (`membership`).
+  - *Critério de Sucesso (DoD):* Usuário cria tópico assinado, visualiza na PWA e despacha para WhatsApp em < 30s sem nenhum servidor Node/Python do projeto.
 - [ ] **Fase 3: Mensagens Diretas Criptografadas**
-  - DMs com chave pública do destinatário.
+  - DMs com chave pública do destinatário via WebCrypto.
 - [ ] **Fase 4: Domínio & Identidade .vox.br**
   - Nomes amigáveis e resolução descentralizada.
+
+---
+
+## 📚 Documentação
+
+| Arquivo | Conteúdo |
+|---------|----------|
+| [LESSONS.md](./LESSONS.md) | **Diagnóstico comparativo (Varanda, Bluesky, Mastodon, Channel-01, Pix) e matriz 5×5** |
+| [POSITIONING.md](./POSITIONING.md) | Posicionamento, honestidade permaweb e metáfora Pix |
+| [ARCHITECTURE.md](./ARCHITECTURE.md) | Linhagem Channel-01, GraphQL, tags e fluxos técnicos |
+| [GOVERNANCE.md](./GOVERNANCE.md) | Moderação `mod-action` client-side e espelhos comunitários |
+| [IDENTITY.md](./IDENTITY.md) | Ed25519, Passkeys e fases de identidade |
+| [COMPLIANCE-BR.md](./COMPLIANCE-BR.md) | LGPD, Marco Civil Art. 19 e notas regulatórias |
+
+### Rodar o PWA localmente
+
+```bash
+cd client
+python -m http.server 8080
+```
+
+Abra `http://127.0.0.1:8080/` (módulos ES exigem servidor HTTP local, não `file://`).
 
 ---
 

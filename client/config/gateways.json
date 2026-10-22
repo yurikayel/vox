@@ -1,0 +1,15 @@
+{
+  "appName": "vox-brasil",
+  "gateways": [
+    {
+      "id": "turbo",
+      "label": "Turbo Gateway",
+      "graphql": "https://turbo-gateway.com/graphql"
+    },
+    {
+      "id": "arweave-net",
+      "label": "arweave.net",
+      "graphql": "https://arweave.net/graphql"
+    }
+  ]
+}
