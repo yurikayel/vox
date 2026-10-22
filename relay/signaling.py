@@ -94,21 +94,46 @@ class PeerRegistry:
     def __init__(self):
         self.lock = threading.Lock()
         self.peers = {}  # peer_id -> handler
+        self.addresses = {}  # peer_id -> arweave_address
+        self.dm_pubs = {}  # peer_id -> public JWK dict
 
-    def register(self, peer_id: str, handler) -> list:
+    def register(self, peer_id: str, handler, address: str = "", dm_pub=None) -> list:
         with self.lock:
             existing = list(self.peers.keys())
             self.peers[peer_id] = handler
+            if address:
+                self.addresses[peer_id] = str(address)
+            if dm_pub:
+                self.dm_pubs[peer_id] = dm_pub
             return existing
 
     def unregister(self, peer_id: str):
         with self.lock:
-            if peer_id in self.peers:
-                del self.peers[peer_id]
+            self.peers.pop(peer_id, None)
+            self.addresses.pop(peer_id, None)
+            self.dm_pubs.pop(peer_id, None)
 
     def get(self, peer_id: str):
         with self.lock:
             return self.peers.get(peer_id)
+
+    def get_peer_by_address(self, address: str):
+        with self.lock:
+            for pid, addr in self.addresses.items():
+                if addr == address:
+                    return pid
+            return None
+
+    def get_address_map(self, exclude_peer: str = "") -> dict:
+        with self.lock:
+            result = {}
+            for pid, addr in self.addresses.items():
+                if pid != exclude_peer and addr:
+                    result[addr] = {
+                        "peerId": pid,
+                        "dmPub": self.dm_pubs.get(pid),
+                    }
+            return result
 
     def broadcast_others(self, sender_id: str, message: dict):
         with self.lock:
@@ -185,19 +210,34 @@ class WebSocketHandler(socketserver.BaseRequestHandler):
     def dispatch_message(self, msg: dict):
         mtype = msg.get("type")
         if mtype == "register":
-            self.on_register(msg.get("peerId"))
+            self.on_register(
+                msg.get("peerId"),
+                msg.get("address", ""),
+                msg.get("dmPub"),
+            )
         elif mtype in ("offer", "answer", "ice"):
             self.forward_peer_message(msg)
         elif mtype == "ping":
             self.send_json({"type": "pong"})
 
-    def on_register(self, peer_id: str):
+    def on_register(self, peer_id: str, address: str = "", dm_pub=None):
         if not peer_id:
             return
         self.peer_id = peer_id
-        others = registry.register(peer_id, self)
-        self.send_json({"type": "registered", "peerId": peer_id, "peers": others})
-        registry.broadcast_others(peer_id, {"type": "peer-joined", "peerId": peer_id})
+        others = registry.register(peer_id, self, address=address, dm_pub=dm_pub)
+        addr_map = registry.get_address_map(exclude_peer=peer_id)
+        self.send_json({
+            "type": "registered",
+            "peerId": peer_id,
+            "peers": others,
+            "addressMap": addr_map,
+        })
+        registry.broadcast_others(peer_id, {
+            "type": "peer-joined",
+            "peerId": peer_id,
+            "address": address or "",
+            "dmPub": dm_pub,
+        })
 
     def forward_peer_message(self, msg: dict):
         to_peer = msg.get("to")

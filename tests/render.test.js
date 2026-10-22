@@ -84,3 +84,28 @@ test("render - renderHome renderiza cards de comunidade", () => {
   assert.ok(html.includes("#/c/c1"));
   assert.ok(html.includes("#/c/c2"));
 });
+
+test("render - renderDmList e renderDmThread", () => {
+  const mainList = createContainer();
+  const convs = [
+    { peerAddress: "addr_bob", lastText: "E aí Alice", lastTs: Date.now() },
+  ];
+  render.renderDmList(mainList, convs, "addr_alice");
+  assert.ok(mainList.innerHTML.includes("Mensagens Diretas Efêmeras (E2E)"));
+  assert.ok(mainList.innerHTML.includes("addr_bob"));
+  assert.ok(mainList.innerHTML.includes("E aí Alice"));
+
+  const mainThread = createContainer();
+  const msgs = [
+    { id: "1", from: "addr_alice", text: "Oi Bob", ts: Date.now(), status: "delivered" },
+    { id: "2", from: "addr_bob", text: "Oi Alice!", ts: Date.now(), status: "received" },
+  ];
+  render.renderDmThread(mainThread, "addr_bob", msgs, "addr_alice", {
+    isRtcOnline: true,
+    hasDmPub: true,
+  });
+  assert.ok(mainThread.innerHTML.includes("WebRTC Online"));
+  assert.ok(mainThread.innerHTML.includes("Oi Bob"));
+  assert.ok(mainThread.innerHTML.includes("Oi Alice!"));
+  assert.ok(mainThread.innerHTML.includes("btn-send-dm"));
+});

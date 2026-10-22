@@ -7,6 +7,7 @@ client/config/wallet.local.json
 *.jwk
 *.jwk.json
 relay/.cache/
+relay/.inbox/
 __pycache__/
 *.pyc
 

@@ -95,6 +95,20 @@ class TestPeerRegistry(unittest.TestCase):
         self.registry.unregister("p1")
         self.assertIsNone(self.registry.get("p1"))
 
+    def test_register_with_address_and_dm_pub(self):
+        class DummyHandler:
+            def send_json(self, msg):
+                pass
+
+        h1 = DummyHandler()
+        pub = {"kty": "EC", "crv": "P-256", "x": "abc", "y": "def"}
+        self.registry.register("peer_alice", h1, address="addr_alice", dm_pub=pub)
+        self.assertEqual(self.registry.get_peer_by_address("addr_alice"), "peer_alice")
+        amap = self.registry.get_address_map(exclude_peer="peer_bob")
+        self.assertIn("addr_alice", amap)
+        self.assertEqual(amap["addr_alice"]["peerId"], "peer_alice")
+        self.assertEqual(amap["addr_alice"]["dmPub"]["x"], "abc")
+
 
 class TestSignalingIntegration(unittest.TestCase):
     @classmethod

@@ -118,3 +118,20 @@ Para materializar o *sweet spot* sem inflar o escopo, a **Fase 2** será regida 
    * **Subordinação ao Pacto 3.1:** As mesmas salvaguardas (teto diário de 50 MB, bloqueio em redes móveis e botão de pausa) barram o envio de dados via WebRTC, eliminando qualquer risco de sobrecarga.
    * **Degradação graciosa:** Se o servidor de sinalização cair ou o pareamento WebRTC falhar, a cascata do Vox salta imediatamente para o cache local ou para os gateways públicos, sem congelar a tela nem exigir intervenção manual do usuário.
    * **Sinalização Desacoplada:** O servidor WebSocket de sinalização (`relay/signaling.py`) é ultra-leve, sem estado e autohospedado — não atua como AppView proprietário nem custodia dados da rede.
+
+
+---
+
+## 8. Lições de Privacidade e DMs Efêmeras (Fase 4)
+
+### "Seus Dados São Seus" Inclui o Direito de NÃO Eternizar Conversas
+
+1. **A Armadilha de DMs on-chain (Permaweb):** Modelos ingênuos de web3 propõem gravar mensagens privadas cifradas na blockchain (`Type: dm`). No Vox, isso foi categoricamente **proibido**:
+   * *Risco de quebra futura:* Ciphertexts imutáveis podem ser quebrados no futuro (avanços matemáticos ou computação quântica).
+   * *Violação da LGPD:* A persistência forçada no permaweb impede o direito de eliminação e o esquecimento de conversas efêmeras.
+2. **Contraste com Varanda e P2P 24/7:** O Varanda exigia semeadores sempre online para entregar mensagens. No Vox, adotamos o modelo híbrido inteligente:
+   * Se ambos estiverem online: tráfego direto P2P via WebRTC DataChannel (`vox-dm-v0`), sem tocar em servidores.
+   * Se o destinatário estiver offline: envelope cifrado depositado no relay comunitário com **TTL estrito de 72h**, sendo deletado imediatamente após a coleta ou expirado automaticamente.
+3. **Contraste com Big Techs e Redes Corporativas:**
+   * Plataformas corporativas mineram grafos de relacionamento de DMs e retêm metadados para perfilamento publicitário.
+   * No Vox, o servidor de relay não autentica o GET (apenas entrega bytes opacos <32 KB a quem solicitar o endereço), não consegue inspecionar o plaintext (ECDH P-256 + AES-GCM) e não armazena logs nem histórico. O histórico de conversas pertence e reside exclusivamente no dispositivo do usuário.

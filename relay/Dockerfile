@@ -3,7 +3,7 @@ FROM python:3.12-alpine
 WORKDIR /app
 
 # Copia apenas os servidores stdlib (zero dependências pip)
-COPY signaling.py server.py ./
+COPY signaling.py server.py inbox.py ./
 
 EXPOSE 3920 3921
 

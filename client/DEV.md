@@ -175,3 +175,44 @@ python signaling.py --port 3921
 ## 7. Fallback de Demonstração
 
 Se os gateways Arweave estiverem temporariamente inacessíveis e não houver cache ou peers para o item solicitado, o Vox ativa automaticamente o **Modo Demonstração** (`mock.js`), permitindo navegar pela interface e testar formulários e telas sem travamentos.
+
+
+---
+
+## 8. Teste de DMs E2E Efêmeras — Fase 4 DoD
+
+### 8.1 Cenário 1: Entrega Online Instantânea via WebRTC
+
+1. Inicie o servidor de sinalização e o PWA:
+   ```bash
+   python relay/signaling.py --port 3921
+   cd client && python -m http.server 8080
+   ```
+2. Abra duas janelas do navegador (ex: janela normal e janela anônima):
+   - **Janela A (Alice):** Gere uma nova carteira em `#/wallet`. Copie seu endereço (`addr_alice`).
+   - **Janela B (Bob):** Gere outra carteira em `#/wallet`. Copie seu endereço (`addr_bob`).
+3. Ambas as abas se registram no `signaling.py` anunciando seus endereços e chaves públicas `Dm-Pub` (ECDH P-256).
+4. Na Janela A (Alice), abra `#/dm` e digite o endereço de Bob (`addr_bob`).
+   - O cabeçalho exibe `🟢 WebRTC Online` e `🔒 Criptografia E2E Pronta`.
+5. Alice digita `"Olá Bob! Conversa direta P2P."` e clica em **Enviar 🔒**:
+   - A mensagem é cifrada no navegador com chave efêmera de sessão + chave de Bob.
+   - É despachada diretamente pelo canal WebRTC `"vox-dm-v0"`.
+   - Na Janela B (Bob), a mensagem aparece instantaneamente com selo `✓✓ RTC`.
+   - O relay **nunca** viu o texto e o Arweave **nunca** recebeu transações.
+
+### 8.2 Cenário 2: Entrega Offline com Caixa Postal TTL (Relay Inbox)
+
+1. Inicie o servidor de relay HTTP com inbox na porta 3920:
+   ```bash
+   python relay/server.py --port 3920
+   ```
+2. Feche a Janela B (Bob está offline).
+3. Na Janela A (Alice), envie outra mensagem: `"Mensagem quando você voltar!"`.
+   - Como Bob está desconectado do WebRTC, o cliente faz fallback automático para o Relay Inbox.
+   - Envia `POST http://127.0.0.1:3920/inbox/addr_bob` com o envelope cifrado.
+   - O status da mensagem na tela de Alice marca `✓ Relay`.
+4. Verifique em disco: o arquivo `.inbox/addr_bob/<dm_id>.json` foi gravado com `expiresAt` de 72 horas. O conteúdo é apenas ciphertext ininteligível (`ct`).
+5. Abra novamente a Janela B (Bob) com a carteira de Bob ativa e acesse `#/dm`:
+   - O app faz `GET /inbox/addr_bob`, puxa o envelope e o decifra localmente via WebCrypto.
+   - O texto `"Mensagem quando você voltar!"` é exibido na tela e gravado no IndexedDB de Bob.
+   - O cliente de Bob emite `DELETE /inbox/addr_bob/<dm_id>` limpando o relay.

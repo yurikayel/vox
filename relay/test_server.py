@@ -16,6 +16,7 @@ from http.server import HTTPServer
 from pathlib import Path
 
 from relay import server
+from relay import inbox
 
 
 class TestVoxRelayServer(unittest.TestCase):
@@ -23,7 +24,9 @@ class TestVoxRelayServer(unittest.TestCase):
     def setUpClass(cls):
         cls.temp_dir = tempfile.mkdtemp(prefix="vox_test_cache_")
         cls.orig_cache_dir = server.CACHE_DIR
-        server.CACHE_DIR = Path(cls.temp_dir)
+        cls.orig_inbox_dir = inbox.INBOX_DIR
+        server.CACHE_DIR = Path(cls.temp_dir) / "cache"
+        inbox.INBOX_DIR = Path(cls.temp_dir) / "inbox"
 
         cls.httpd = HTTPServer(("127.0.0.1", 0), server.VoxRelayHandler)
         cls.port = cls.httpd.server_address[1]
@@ -36,6 +39,7 @@ class TestVoxRelayServer(unittest.TestCase):
         cls.httpd.shutdown()
         cls.httpd.server_close()
         server.CACHE_DIR = cls.orig_cache_dir
+        inbox.INBOX_DIR = cls.orig_inbox_dir
         shutil.rmtree(cls.temp_dir, ignore_errors=True)
 
     def _url(self, path):
@@ -114,6 +118,53 @@ class TestVoxRelayServer(unittest.TestCase):
             self.fail("Deveria retornar HTTP 404")
         except urllib.error.HTTPError as e:
             self.assertEqual(e.code, 404)
+
+    def test_inbox_lifecycle(self):
+        to_addr = "addr_bob_test_123"
+        envelope = {
+            "v": 1,
+            "id": "dm_msg_999",
+            "from": "addr_alice",
+            "to": to_addr,
+            "ts": int(time.time()),
+            "ephPub": {"kty": "EC", "crv": "P-256", "x": "1", "y": "2"},
+            "iv": "iv_test",
+            "ct": "ct_ciphertext_test",
+        }
+        body = json.dumps(envelope).encode("utf-8")
+
+        # 1. POST /inbox/:to_addr
+        post_req = urllib.request.Request(
+            self._url(f"/inbox/{to_addr}"),
+            data=body,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(post_req, timeout=2) as resp:
+            self.assertEqual(resp.status, 200)
+            data = json.loads(resp.read().decode("utf-8"))
+            self.assertEqual(data.get("status"), "queued")
+            self.assertEqual(data.get("id"), "dm_msg_999")
+
+        # 2. GET /inbox/:to_addr
+        get_req = urllib.request.Request(self._url(f"/inbox/{to_addr}"))
+        with urllib.request.urlopen(get_req, timeout=2) as resp:
+            self.assertEqual(resp.status, 200)
+            data = json.loads(resp.read().decode("utf-8"))
+            self.assertIn("envelopes", data)
+            self.assertEqual(len(data["envelopes"]), 1)
+            self.assertEqual(data["envelopes"][0]["id"], "dm_msg_999")
+
+        # 3. DELETE /inbox/:to_addr/:id
+        del_req = urllib.request.Request(self._url(f"/inbox/{to_addr}/dm_msg_999"), method="DELETE")
+        with urllib.request.urlopen(del_req, timeout=2) as resp:
+            self.assertEqual(resp.status, 200)
+
+        # 4. GET /inbox/:to_addr novamente (vazio)
+        with urllib.request.urlopen(get_req, timeout=2) as resp:
+            self.assertEqual(resp.status, 200)
+            data = json.loads(resp.read().decode("utf-8"))
+            self.assertEqual(len(data["envelopes"]), 0)
 
 
 if __name__ == "__main__":

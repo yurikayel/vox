@@ -7,6 +7,8 @@ import * as share from "./share.js";
 import * as mod from "./moderation.js";
 import * as cacheNode from "./cache-node.js";
 import * as peers from "./peers.js";
+import * as cryptoDm from "./crypto-dm.js";
+import * as inbox from "./inbox.js";
 
 function parseRoute() {
   const hash = location.hash.replace(/^#\/?/, "");
@@ -17,6 +19,10 @@ function parseRoute() {
   if (!parts.length) return { name: "home" };
   if (parts[0] === "settings" && parts[1] === "network") {
     return { name: "network-settings" };
+  }
+  if (parts[0] === "dm") {
+    if (parts[1]) return { name: "dm-thread", address: decodeURIComponent(parts[1]) };
+    return { name: "dm-list" };
   }
   if (parts[0] === "c" && parts[1]) {
     return { name: "community", id: decodeURIComponent(parts[1]) };
@@ -318,8 +324,41 @@ async function showProfile(address) {
   render.renderLoading(main);
 
   const memberships = await gql.fetchUserMemberships(address);
+  const isSelf = user === address;
+  let dmPub = null;
+  if (isSelf) {
+    dmPub = await cryptoDm.getPublicJwk();
+  }
+
   main.innerHTML = "";
-  render.renderProfile(main, address, memberships, user === address);
+  render.renderProfile(main, address, memberships, isSelf, JSON.stringify(dmPub));
+
+  const btnCopy = document.getElementById("btn-copy-dmpub");
+  if (btnCopy && dmPub) {
+    btnCopy.addEventListener("click", () => {
+      navigator.clipboard.writeText(JSON.stringify(dmPub));
+      share.showToast("Chave pública Dm-Pub copiada para a área de transferência!");
+    });
+  }
+
+  const btnPub = document.getElementById("btn-publish-dmpub");
+  if (btnPub && isSelf && dmPub) {
+    btnPub.addEventListener("click", async () => {
+      btnPub.disabled = true;
+      btnPub.textContent = "Anunciando on-chain…";
+      try {
+        const pubStr = JSON.stringify(dmPub);
+        const tags = upload.buildTags("profile-key", { "Dm-Pub": pubStr });
+        await upload.postData({ type: "profile-key", dmPub: pubStr }, tags);
+        share.showToast("Chave Dm-Pub anunciada no permaweb!");
+        btnPub.textContent = "✓ Anunciada";
+      } catch (err) {
+        share.showToast(`Erro ao anunciar: ${err.message}`, "error");
+        btnPub.disabled = false;
+        btnPub.textContent = "🌐 Anunciar Dm-Pub on-chain";
+      }
+    });
+  }
 }
 
 async function showWallet() {
@@ -353,6 +392,7 @@ async function showWallet() {
       btnGen.textContent = "Gerando par de chaves Arweave…";
       try {
         const { address } = await wallet.generateNewWallet();
+        await syncIdentity();
         share.showToast(`Carteira criada com sucesso!`);
         showWallet();
       } catch (err) {
@@ -372,6 +412,7 @@ async function showWallet() {
       try {
         const jwk = JSON.parse(input);
         wallet.saveJwk(jwk);
+        await syncIdentity();
         share.showToast("Carteira importada e salva localmente!");
         showWallet();
       } catch (err) {
@@ -619,6 +660,181 @@ async function showNetworkSettings() {
   bindNetworkSettingsButtons();
 }
 
+async function syncIdentity() {
+  const user = await getActiveUser();
+  if (user) {
+    const dmPub = await cryptoDm.getPublicJwk();
+    peers.announceIdentity(user, dmPub);
+  }
+}
+
+async function pollInboxMessages(user) {
+  if (!user) return 0;
+  try {
+    const sealedList = await inbox.pullMine(user);
+    let count = 0;
+    for (const env of sealedList) {
+      try {
+        const text = await cryptoDm.open(env);
+        await cacheNode.saveDmMessage({
+          id: env.id,
+          peerAddress: env.from,
+          from: env.from,
+          to: env.to,
+          text,
+          ts: env.ts || Date.now(),
+          status: "received",
+        });
+        await inbox.deleteSealed(user, env.id);
+        count++;
+      } catch {}
+    }
+    return count;
+  } catch {
+    return 0;
+  }
+}
+
+async function showDmList() {
+  const user = await getActiveUser();
+  const main = render.renderShell({
+    title: "Mensagens Diretas",
+    subtitle: "Conversas privadas efêmeras ponta-a-ponta (E2E)",
+    walletAddress: user,
+  });
+
+  if (!user) {
+    main.innerHTML = `<div class="card"><h2>Mensagens Diretas</h2><div class="error">Conecte sua carteira em <a href="#/wallet">#/wallet</a> para acessar DMs.</div></div>`;
+    return;
+  }
+
+  await pollInboxMessages(user);
+  const convs = await cacheNode.getDmConversations();
+  render.renderDmList(main, convs, user);
+
+  document.getElementById("form-new-dm")?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const peer = document.getElementById("dm-peer-input")?.value.trim();
+    if (peer) location.hash = `#/dm/${encodeURIComponent(peer)}`;
+  });
+
+  document.getElementById("btn-pull-inbox")?.addEventListener("click", async () => {
+    const pulled = await pollInboxMessages(user);
+    share.showToast(pulled > 0 ? `${pulled} nova(s) mensagem(ns)!` : "Inbox verificado: sem novas mensagens.");
+    showDmList();
+  });
+}
+
+async function handleSendDmSubmit(user, peerAddress, peerDmPub) {
+  const input = document.getElementById("dm-message-input");
+  const text = input?.value.trim();
+  if (!text) return;
+  const btn = document.getElementById("btn-send-dm");
+  if (btn) btn.disabled = true;
+
+  try {
+    const envelope = await cryptoDm.seal(peerDmPub, text, { from: user, to: peerAddress });
+    let status = "sent";
+    const transport = peers.sendDirectMessageTransport(peerAddress, envelope);
+    if (transport === "rtc") {
+      status = "delivered";
+    } else {
+      try {
+        await inbox.pushSealed(peerAddress, envelope);
+        status = "queued-relay";
+      } catch {
+        status = "pending-retry";
+      }
+    }
+
+    await cacheNode.saveDmMessage({
+      id: envelope.id,
+      peerAddress,
+      from: user,
+      to: peerAddress,
+      text,
+      ts: envelope.ts,
+      status,
+    });
+    if (input) input.value = "";
+    showDmThread(peerAddress);
+  } catch (err) {
+    share.showToast(`Erro ao cifrar: ${err.message}`, "error");
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function showDmThread(peerAddress) {
+  const user = await getActiveUser();
+  const main = render.renderShell({
+    title: "Conversa Direta",
+    subtitle: `Com ${peerAddress.slice(0, 10)}…`,
+    walletAddress: user,
+  });
+
+  if (!user) {
+    main.innerHTML = `<div class="card"><h2>Conversa Direta</h2><div class="error">Conecte sua carteira em <a href="#/wallet">#/wallet</a> para acessar DMs.</div></div>`;
+    return;
+  }
+
+  await pollInboxMessages(user);
+  const messages = await cacheNode.getDmMessages(peerAddress);
+  const isRtcOnline = peers.isAddressConnectedRtc(peerAddress);
+  let peerDmPub = gql.getCachedUserDmPub(peerAddress) || peers.getPeerDmPub(peerAddress);
+  if (!peerDmPub) peerDmPub = await gql.fetchUserDmPub(peerAddress);
+
+  render.renderDmThread(main, peerAddress, messages, user, {
+    isRtcOnline,
+    hasDmPub: Boolean(peerDmPub),
+  });
+
+  const c = document.getElementById("dm-thread-container");
+  if (c) c.scrollTop = c.scrollHeight;
+
+  document.getElementById("btn-save-manual-dmpub")?.addEventListener("click", () => {
+    try {
+      const parsed = JSON.parse(document.getElementById("input-manual-dmpub")?.value.trim());
+      gql.cacheUserDmPub(peerAddress, parsed);
+      share.showToast("Chave Dm-Pub salva localmente!");
+      showDmThread(peerAddress);
+    } catch {
+      share.showToast("JSON inválido.", "error");
+    }
+  });
+
+  if (peerDmPub) {
+    document.getElementById("form-send-dm")?.addEventListener("submit", (e) => {
+      e.preventDefault();
+      handleSendDmSubmit(user, peerAddress, peerDmPub);
+    });
+  }
+}
+
+function initDmListeners() {
+  peers.onDirectMessage(async (envelope) => {
+    const user = await getActiveUser();
+    if (!user || envelope.to !== user) return;
+    try {
+      const text = await cryptoDm.open(envelope);
+      await cacheNode.saveDmMessage({
+        id: envelope.id,
+        peerAddress: envelope.from,
+        from: envelope.from,
+        to: envelope.to,
+        text,
+        ts: envelope.ts || Date.now(),
+        status: "received",
+      });
+      const cur = parseRoute();
+      if (cur.name === "dm-thread" && cur.address === envelope.from) {
+        showDmThread(envelope.from);
+      } else {
+        share.showToast(`Nova mensagem de ${envelope.from.slice(0, 8)}…`);
+      }
+    } catch {}
+  });
+}
+
 function checkPactModal() {
   const accepted = localStorage.getItem("vox-pact-accepted");
   if (accepted) return;
@@ -652,6 +868,8 @@ async function route() {
   const r = parseRoute();
   if (r.name === "home") return showHome();
   if (r.name === "network-settings") return showNetworkSettings();
+  if (r.name === "dm-list") return showDmList();
+  if (r.name === "dm-thread") return showDmThread(r.address);
   if (r.name === "community") return showCommunity(r.id);
   if (r.name === "topic") return showTopic(r.id, r.communityId);
   if (r.name === "profile") return showProfile(r.address);
@@ -663,4 +881,6 @@ async function route() {
 }
 
 window.addEventListener("hashchange", () => route());
+initDmListeners();
+syncIdentity();
 route();

@@ -9,6 +9,21 @@ const CHANNEL_NAME = "vox-peer-v0";
 const myPeerId = "peer_" + Math.random().toString(36).substring(2, 9);
 let broadcastChannel = null;
 const pendingRequests = new Map(); // txId -> Array of resolver functions
+const dmListeners = new Set();
+
+export function onDirectMessage(listener) {
+  dmListeners.add(listener);
+  return () => dmListeners.delete(listener);
+}
+
+function dispatchDirectMessage(envelope, source = "rtc") {
+  if (!envelope) return;
+  for (const fn of dmListeners) {
+    try {
+      fn(envelope, source);
+    } catch {}
+  }
+}
 
 export function getMyPeerId() {
   return myPeerId;
@@ -186,6 +201,11 @@ export async function handleVoxMessage(msg, replyFn, source = "broadcast") {
       pendingRequests.delete(msg.txId);
     }
   }
+
+  if (msg.type === "DM" && msg.envelope) {
+    // DMs E2E ponta-a-ponta não contam no teto de banda do cache público
+    dispatchDirectMessage(msg.envelope, source);
+  }
 }
 
 export function initPeerChannel() {
@@ -219,6 +239,27 @@ export function initPeerChannel() {
 webrtcPeer.onVoxMessage((msg, replyFn, source) => {
   handleVoxMessage(msg, replyFn, source);
 });
+
+webrtcPeer.onDmMessage((envelope) => {
+  dispatchDirectMessage(envelope, "rtc");
+});
+
+export function sendDirectMessageTransport(toAddress, envelope) {
+  if (webrtcPeer.sendDmRtc(toAddress, envelope)) {
+    return "rtc";
+  }
+  if (broadcastChannel) {
+    try {
+      broadcastChannel.postMessage({ type: "DM", envelope });
+      return "broadcast";
+    } catch {}
+  }
+  return null;
+}
+
+export const announceIdentity = webrtcPeer.announceIdentity;
+export const isAddressConnectedRtc = webrtcPeer.isAddressConnectedRtc;
+export const getPeerDmPub = webrtcPeer.getPeerDmPub;
 
 function requestWithTransport(txId, sendFn, timeoutMs) {
   return new Promise((resolve) => {

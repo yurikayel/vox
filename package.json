@@ -1,6 +1,6 @@
 {
   "name": "vox",
-  "version": "0.3.3",
+  "version": "0.4.0",
   "description": "Vox — Rede social comunitária no permaweb",
   "type": "module",
   "scripts": {

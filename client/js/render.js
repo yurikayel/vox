@@ -24,6 +24,7 @@ export function renderShell({ title, subtitle, breadcrumb, walletAddress }) {
         <a class="home-link" href="#/">Vox</a>
         <nav class="header-nav">
           <a href="#/">A Rua</a>
+          <a href="#/dm">DMs</a>
           <a href="#/wallet">Carteira</a>
           <a href="#/settings/network">Nó</a>
           ${walletBadge}
@@ -204,12 +205,29 @@ export function renderTopic(main, topicId, topic, replies, { topicData = null, i
   main.innerHTML += html;
 }
 
-export function renderProfile(main, address, memberships = [], isCurrentWallet = false) {
+export function renderProfile(main, address, memberships = [], isCurrentWallet = false, dmPubStr = "") {
+  let actionBtn = "";
+  if (isCurrentWallet) {
+    actionBtn = `
+      <div style="margin-top:0.75rem; border-top:1px solid var(--border); padding-top:0.5rem;">
+        <span class="badge-pill">Sua Carteira Ativa</span>
+        <div style="margin-top:0.5rem; display:flex; flex-wrap:wrap; gap:0.4rem;">
+          <button id="btn-copy-dmpub" class="btn btn-sm btn-outline">📋 Copiar Chave Dm-Pub</button>
+          <button id="btn-publish-dmpub" class="btn btn-sm btn-primary">🌐 Anunciar Dm-Pub on-chain</button>
+        </div>
+      </div>`;
+  } else {
+    actionBtn = `
+      <div style="margin-top:0.75rem;">
+        <a class="btn btn-primary btn-sm" href="#/dm/${encodeURIComponent(address)}">💬 Enviar Mensagem Direta (E2E)</a>
+      </div>`;
+  }
+
   let html = `
     <div class="card profile-card">
       <h2>Perfil de Membro</h2>
       <p class="meta">Endereço: <code>${escapeHtml(address)}</code></p>
-      ${isCurrentWallet ? `<p class="badge-pill">Sua Carteira Ativa</p>` : ""}
+      ${actionBtn}
     </div>
     <div class="actions-bar">
       <span class="section-title">Comunidades que Participa (${memberships.length})</span>
@@ -575,4 +593,102 @@ export function renderNetworkSettings(main, { settings, metrics, cacheStats, rel
   html += renderNetworkStats(metrics, cacheStats, dailyUsage, settings);
   html += renderNetworkForm(settings, notifPermission, customSignalingUrl, customTurn);
   main.innerHTML = html;
+}
+
+export function renderDmList(main, conversations = [], myAddress = "") {
+  let listHtml = "";
+  if (!conversations.length) {
+    listHtml = `<div class="empty"><p>Nenhuma conversa privada ainda.</p></div>`;
+  } else {
+    const items = conversations
+      .map(
+        (c) => `
+      <li class="card">
+        <a href="#/dm/${encodeURIComponent(c.peerAddress)}" style="display:block;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <strong>${escapeHtml(shortId(c.peerAddress))}</strong>
+            <span class="meta" style="font-size:0.75rem;">${new Date(c.lastTs).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+          </div>
+          <p class="desc" style="margin:0.25rem 0 0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(c.lastText)}</p>
+        </a>
+      </li>`
+      )
+      .join("");
+    listHtml = `<ul class="card-list">${items}</ul>`;
+  }
+
+  main.innerHTML = `
+    <div class="card">
+      <h2>Mensagens Diretas Efêmeras (E2E)</h2>
+      <p class="desc">Criptografadas ponta-a-ponta (ECDH P-256 + AES-GCM). Fora do permaweb e sem histórico na nuvem.</p>
+      
+      <form id="form-new-dm" style="margin-top:0.75rem; display:flex; gap:0.5rem;">
+        <input type="text" id="dm-peer-input" class="form-control" placeholder="Endereço Arweave do destinatário..." required />
+        <button type="submit" class="btn btn-primary" style="white-space:nowrap;">Conversar →</button>
+      </form>
+    </div>
+
+    <div class="actions-bar">
+      <span class="section-title">Conversas Recentes</span>
+      <button id="btn-pull-inbox" class="btn btn-sm btn-outline">🔄 Atualizar Inbox</button>
+    </div>
+    ${listHtml}
+  `;
+}
+
+function renderDmMessageBubbles(messages, myAddress, peerAddress) {
+  if (!messages.length) {
+    return `<div class="empty" style="text-align:center; padding:1.5rem 0;"><p>Início da conversa com ${escapeHtml(shortId(peerAddress))}. DMs são efêmeras e salvas apenas neste aparelho.</p></div>`;
+  }
+  return messages
+    .map((m) => {
+      const isSent = m.from === myAddress || m.status === "sent";
+      const cls = isSent ? "sent" : "received";
+      const timeStr = m.ts ? new Date(m.ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
+      const statusLabel = m.status === "delivered" ? "✓✓ RTC" : m.status === "queued-relay" ? "✓ Relay" : "✓";
+      return `
+        <div class="dm-bubble ${cls}">
+          <div>${escapeHtml(m.text)}</div>
+          <div class="dm-bubble-meta">${timeStr} · ${statusLabel}</div>
+        </div>`;
+    })
+    .join("");
+}
+
+export function renderDmThread(main, peerAddress, messages = [], myAddress = "", { isRtcOnline = false, hasDmPub = false } = {}) {
+  const statusBadge = isRtcOnline
+    ? `<span class="badge-pill" style="background:#e6f8ed; color:#18794e;">🟢 WebRTC Online</span>`
+    : `<span class="badge-pill" style="background:#eef2ff; color:#3730a3;">📦 Relay Inbox TTL (72h)</span>`;
+
+  const keyWarning = !hasDmPub
+    ? `<div class="card error" style="margin-bottom:0.75rem;">
+        ⚠️ Chave Dm-Pub de <code>${escapeHtml(shortId(peerAddress))}</code> não encontrada. Cole abaixo para ativar E2E:
+        <div style="display:flex; gap:0.5rem; margin-top:0.5rem;">
+          <input type="text" id="input-manual-dmpub" class="form-control" placeholder='{"kty":"EC","crv":"P-256",...}' />
+          <button type="button" id="btn-save-manual-dmpub" class="btn btn-sm btn-primary">Salvar Chave</button>
+        </div>
+      </div>`
+    : "";
+
+  main.innerHTML = `
+    <a class="back-link" href="#/dm">← Voltar às conversas</a>
+    <div class="card" style="padding:0.75rem 1rem; margin-bottom:0.75rem; display:flex; justify-content:space-between; align-items:center;">
+      <div>
+        <h3 style="margin:0;"><a href="#/u/${encodeURIComponent(peerAddress)}">${escapeHtml(shortId(peerAddress))}</a></h3>
+        <p class="meta" style="margin:0.15rem 0 0;">Endereço: <code>${escapeHtml(shortId(peerAddress))}</code></p>
+      </div>
+      <div>${statusBadge}</div>
+    </div>
+
+    ${keyWarning}
+
+    <div class="card" style="padding:0.75rem;">
+      <div class="dm-thread-list" id="dm-thread-container">${renderDmMessageBubbles(messages, myAddress, peerAddress)}</div>
+
+      <form id="form-send-dm" class="dm-form-row">
+        <input type="text" id="dm-message-input" class="form-control" placeholder="Mensagem segura e privada..." required autocomplete="off" />
+        <button type="submit" id="btn-send-dm" class="btn btn-primary" ${!hasDmPub ? "disabled" : ""}>Enviar 🔒</button>
+      </form>
+    </div>
+  `;
 }

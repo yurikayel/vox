@@ -57,3 +57,39 @@ test("cache-node - enforceMaxCacheSize descarta os mais antigos", async () => {
   assert.equal(store.map.has("tx_antigo"), false);
   assert.equal(store.map.has("tx_novo"), true);
 });
+
+test("cache-node - mensagens diretas (dm-threads) persistência e conversas", async () => {
+  await cacheNode.saveDmMessage({
+    id: "msg_1",
+    peerAddress: "addr_bob",
+    from: "addr_alice",
+    to: "addr_bob",
+    text: "Oi Bob",
+    ts: 1000,
+    status: "delivered",
+  });
+
+  await cacheNode.saveDmMessage({
+    id: "msg_2",
+    peerAddress: "addr_bob",
+    from: "addr_bob",
+    to: "addr_alice",
+    text: "Oi Alice, tudo bem?",
+    ts: 2000,
+    status: "received",
+  });
+
+  const msgs = await cacheNode.getDmMessages("addr_bob");
+  assert.equal(msgs.length, 2);
+  assert.equal(msgs[0].text, "Oi Bob");
+  assert.equal(msgs[1].text, "Oi Alice, tudo bem?");
+
+  const convs = await cacheNode.getDmConversations();
+  assert.equal(convs.length, 1);
+  assert.equal(convs[0].peerAddress, "addr_bob");
+  assert.equal(convs[0].lastText, "Oi Alice, tudo bem?");
+
+  await cacheNode.deleteDmThread("addr_bob");
+  const empty = await cacheNode.getDmMessages("addr_bob");
+  assert.equal(empty.length, 0);
+});
