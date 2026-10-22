@@ -145,6 +145,15 @@ python -m http.server 8080
 
 Abra `http://127.0.0.1:8080/` (módulos ES exigem servidor HTTP local, não `file://`).
 
+### Executar os Testes Unitários Locais
+
+```bash
+npm test
+# ou no Windows:
+.\test.bat
+```
+Executa a suíte de 45 testes (33 testes JS via `node:test` e 12 testes Python via `unittest`).
+
 ---
 
 ## 🤝 Como Contribuir

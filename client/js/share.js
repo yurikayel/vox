@@ -1,4 +1,5 @@
 export function showToast(message, type = "info") {
+  if (typeof process !== "undefined" && process.env?.NODE_ENV === "test") return;
   const existing = document.querySelector(".vox-toast");
   if (existing) existing.remove();
 

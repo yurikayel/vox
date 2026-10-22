@@ -1,0 +1,120 @@
+#!/usr/bin/env python3
+"""
+Testes unitários para o Vox Relay Desktop (server.py).
+Biblioteca padrão Python (unittest).
+"""
+
+import json
+import os
+import shutil
+import tempfile
+import threading
+import time
+import unittest
+import urllib.request
+from http.server import HTTPServer
+from pathlib import Path
+
+from relay import server
+
+
+class TestVoxRelayServer(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.temp_dir = tempfile.mkdtemp(prefix="vox_test_cache_")
+        cls.orig_cache_dir = server.CACHE_DIR
+        server.CACHE_DIR = Path(cls.temp_dir)
+
+        cls.httpd = HTTPServer(("127.0.0.1", 0), server.VoxRelayHandler)
+        cls.port = cls.httpd.server_address[1]
+        cls.thread = threading.Thread(target=cls.httpd.serve_forever, daemon=True)
+        cls.thread.start()
+        time.sleep(0.1)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.httpd.shutdown()
+        cls.httpd.server_close()
+        server.CACHE_DIR = cls.orig_cache_dir
+        shutil.rmtree(cls.temp_dir, ignore_errors=True)
+
+    def _url(self, path):
+        return f"http://127.0.0.1:{self.port}{path}"
+
+    def test_health_check(self):
+        req = urllib.request.Request(self._url("/health"))
+        with urllib.request.urlopen(req, timeout=2) as resp:
+            self.assertEqual(resp.status, 200)
+            data = json.loads(resp.read().decode("utf-8"))
+            self.assertEqual(data.get("status"), "ok")
+            self.assertEqual(data.get("app"), "vox-relay")
+            self.assertIn("cachedCount", data)
+
+    def test_options_cors(self):
+        req = urllib.request.Request(self._url("/health"), method="OPTIONS")
+        with urllib.request.urlopen(req, timeout=2) as resp:
+            self.assertEqual(resp.status, 204)
+            self.assertEqual(resp.headers.get("Access-Control-Allow-Origin"), "*")
+
+    def test_invalid_tx_id_returns_400(self):
+        req = urllib.request.Request(self._url("/tx/invalid_short_id"))
+        try:
+            urllib.request.urlopen(req, timeout=2)
+            self.fail("Deveria retornar HTTP 400")
+        except urllib.error.HTTPError as e:
+            self.assertEqual(e.code, 400)
+
+    def test_tx_cache_hit(self):
+        valid_id = "A" * 43
+        payload = json.dumps({"title": "Topico Teste", "body": "Conteudo"}).encode("utf-8")
+        file_path = server.CACHE_DIR / valid_id
+        file_path.write_bytes(payload)
+
+        req = urllib.request.Request(self._url(f"/tx/{valid_id}"))
+        with urllib.request.urlopen(req, timeout=2) as resp:
+            self.assertEqual(resp.status, 200)
+            self.assertEqual(resp.headers.get("X-Vox-Cache"), "HIT")
+            body = resp.read()
+            self.assertEqual(body, payload)
+
+    def test_mirror_post_and_get_index(self):
+        comm_id = "comunidade_livre"
+        mirror_payload = {
+            "communityId": comm_id,
+            "title": "Comunidade Livre",
+            "topics": [{"id": "t1", "title": "Topico 1"}],
+        }
+        raw_bytes = json.dumps(mirror_payload).encode("utf-8")
+
+        # POST /vox/mirror
+        req = urllib.request.Request(
+            self._url("/vox/mirror"),
+            data=raw_bytes,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=2) as resp:
+            self.assertEqual(resp.status, 200)
+            res_data = json.loads(resp.read().decode("utf-8"))
+            self.assertEqual(res_data.get("status"), "mirrored")
+            self.assertEqual(res_data.get("communityId"), comm_id)
+
+        # GET /vox/index/<comm_id>.json
+        get_req = urllib.request.Request(self._url(f"/vox/index/{comm_id}.json"))
+        with urllib.request.urlopen(get_req, timeout=2) as resp:
+            self.assertEqual(resp.status, 200)
+            self.assertEqual(resp.headers.get("X-Vox-Cache"), "HIT")
+            ret_data = json.loads(resp.read().decode("utf-8"))
+            self.assertEqual(ret_data.get("title"), "Comunidade Livre")
+
+    def test_get_nonexistent_index_returns_404(self):
+        req = urllib.request.Request(self._url("/vox/index/inexistente.json"))
+        try:
+            urllib.request.urlopen(req, timeout=2)
+            self.fail("Deveria retornar HTTP 404")
+        except urllib.error.HTTPError as e:
+            self.assertEqual(e.code, 404)
+
+
+if __name__ == "__main__":
+    unittest.main()

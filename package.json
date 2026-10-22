@@ -1,0 +1,11 @@
+{
+  "name": "vox",
+  "version": "0.3.2",
+  "description": "Vox — Rede social comunitária no permaweb",
+  "type": "module",
+  "scripts": {
+    "test:client": "node --test tests/*.test.js",
+    "test:relay": "python -m unittest discover -s relay -p \"test_*.py\"",
+    "test": "node --test tests/*.test.js && python -m unittest discover -s relay -p \"test_*.py\""
+  }
+}
