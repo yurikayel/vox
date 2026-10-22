@@ -520,8 +520,12 @@ function bindNetworkSettingsForm() {
     const backgroundRelay = document.getElementById("net-bg-relay")?.checked || false;
     const webrtcEnabled = document.getElementById("net-webrtc")?.checked !== false;
     const customSignalingUrl = document.getElementById("net-signaling-url")?.value.trim() || "";
+    const turnUrls = document.getElementById("net-turn-url")?.value.trim() || "";
+    const turnUser = document.getElementById("net-turn-user")?.value.trim() || "";
+    const turnPass = document.getElementById("net-turn-pass")?.value || "";
 
     localStorage.setItem("vox-custom-signaling-url", customSignalingUrl);
+    peers.saveCustomTurnConfig({ urls: turnUrls, username: turnUser, credential: turnPass });
 
     peers.savePeerSettings({
       enabled,
@@ -597,6 +601,7 @@ async function showNetworkSettings() {
   const notifPermission = "Notification" in window ? Notification.permission : "unsupported";
   const rtcStatus = peers.getRtcStatus();
   const customSignalingUrl = localStorage.getItem("vox-custom-signaling-url") || "";
+  const customTurn = peers.getCustomTurnConfig();
 
   render.renderNetworkSettings(main, {
     settings,
@@ -607,6 +612,7 @@ async function showNetworkSettings() {
     notifPermission,
     rtcStatus,
     customSignalingUrl,
+    customTurn,
   });
 
   bindNetworkSettingsForm();

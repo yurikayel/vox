@@ -1,0 +1,6 @@
+# Substitua "signal.sua-comunidade.org" pelo seu domínio real apontado (DNS A/AAAA) para a VPS.
+# O Caddy provisionará o certificado TLS Let's Encrypt automaticamente para habilitar wss://
+
+signal.sua-comunidade.org {
+    reverse_proxy vox-signaling:3921
+}
