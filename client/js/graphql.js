@@ -1,5 +1,6 @@
 import * as cacheNode from "./cache-node.js";
 import * as peers from "./peers.js";
+import * as handles from "./handles.js";
 
 const QUERIES = {
   communities: `query ListCommunities($after: String) {
@@ -115,6 +116,43 @@ const QUERIES = {
       tags: [
         { name: "App-Name", values: ["vox-brasil"] }
         { name: "Type", values: ["profile-key", "membership"] }
+      ]
+      sort: HEIGHT_DESC
+    ) {
+      edges {
+        node {
+          id
+          tags { name value }
+        }
+      }
+    }
+  }`,
+  handlesBySlug: `query GetHandleBySlug($slug: String!) {
+    transactions(
+      first: 10
+      tags: [
+        { name: "App-Name", values: ["vox-brasil"] }
+        { name: "Type", values: ["handle"] }
+        { name: "Handle", values: [$slug] }
+      ]
+      sort: HEIGHT_DESC
+    ) {
+      edges {
+        node {
+          id
+          owner { address }
+          tags { name value }
+        }
+      }
+    }
+  }`,
+  handlesByAddress: `query GetHandleByAddress($address: String!) {
+    transactions(
+      first: 5
+      owners: [$address]
+      tags: [
+        { name: "App-Name", values: ["vox-brasil"] }
+        { name: "Type", values: ["handle"] }
       ]
       sort: HEIGHT_DESC
     ) {
@@ -302,6 +340,48 @@ export async function fetchUserDmPub(address) {
         const parsed = JSON.parse(dmPubRaw);
         cacheUserDmPub(address, parsed);
         return parsed;
+      }
+    }
+  } catch {}
+  return null;
+}
+
+export async function fetchHandle(rawSlug) {
+  const slug = handles.normalizeSlug(rawSlug);
+  if (!slug) return null;
+  try {
+    const { data } = await withGateways((url) =>
+      queryOne(url, QUERIES.handlesBySlug, { slug })
+    );
+    const edges = data.transactions?.edges || [];
+    const resolution = handles.resolveHandleClaimants(edges);
+    if (resolution?.primaryOwner) {
+      handles.cacheHandleMapping(slug, resolution.primaryOwner);
+    }
+    return resolution;
+  } catch {
+    const cached = handles.getCachedHandleMapping(slug);
+    if (cached) {
+      return { primaryOwner: cached, isConflict: false, claimants: [{ owner: cached }] };
+    }
+    return null;
+  }
+}
+
+export async function fetchHandleForAddress(address) {
+  if (!address) return null;
+  const cached = handles.getCachedAddressHandle(address);
+  if (cached) return cached;
+  try {
+    const { data } = await withGateways((url) =>
+      queryOne(url, QUERIES.handlesByAddress, { address })
+    );
+    const edges = data.transactions?.edges || [];
+    for (const e of edges) {
+      const slug = tagValue(e.node?.tags || [], "Handle");
+      if (slug && handles.validateSlug(slug).valid) {
+        handles.cacheHandleMapping(slug, address);
+        return slug;
       }
     }
   } catch {}

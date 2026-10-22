@@ -40,6 +40,14 @@ Ordem recomendada de entrega:
   - *Offline:* Envelope cifrado entregue ao inbox efêmero do relay comunitário (`/inbox/:toAddress`) com **TTL de 72 horas** e expiração automática, podendo ser apagado pelo destinatário imediatamente após a leitura.
   - *Armazenamento histórico:* Estritamente local em IndexedDB (`cache-node.js`, store `dm-threads`), sem sincronização com nuvens corporativas.
 
+## Fase 5 (entregue): Handles amigáveis e resolução de nomes (@handle)
+
+- **Identidade social ≠ Identidade legal:** O `@handle` é um alias mnemônico comunitário dentro do protocolo `vox-brasil`, registrado via transação `Type: handle` com a tag `Handle: <slug>`. Ele não confere propriedade marcaria no Registro.br nem substitui o nome civil do titular.
+- **Resolução sem autoridade central:**
+  - O cliente resolve o endereço Arweave mais recente associado ao slug.
+  - Se múltiplas contas reivindicarem o mesmo slug, o PWA sinaliza **ambiguidade/conflito** e apresenta ambos os perfis, sem que nenhum mantenedor tenha poder de veto ou confisco.
+- **ArNS (Fase 5.1):** A resolução de nomes ArNS (.ar) é documentada como evolução futura, evitando custos de leilão e dependências externas no cliente essencial.
+
 ## Boas práticas
 
 - Chaves privadas **nunca** enviadas a servidor Vox (não há servidor).

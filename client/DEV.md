@@ -216,3 +216,32 @@ Se os gateways Arweave estiverem temporariamente inacessíveis e não houver cac
    - O app faz `GET /inbox/addr_bob`, puxa o envelope e o decifra localmente via WebCrypto.
    - O texto `"Mensagem quando você voltar!"` é exibido na tela e gravado no IndexedDB de Bob.
    - O cliente de Bob emite `DELETE /inbox/addr_bob/<dm_id>` limpando o relay.
+
+
+---
+
+## 9. Teste de Handles Amigáveis & Resolução (@handle) — Fase 5 DoD
+
+### 9.1 Reivindicar @handle
+
+1. Com uma carteira ativa no navegador (`#/wallet`), acesse o seu perfil (`#/u/<seu-endereco>`).
+2. No card "Identidade & Chaves", localize o formulário **"Reivindicar ou atualizar @handle on-chain"**.
+3. Digite um slug desejado (ex: `maria`) e clique em **Salvar @handle**:
+   - O cliente valida o formato `[a-z0-9-]{3,24}` e rejeita slugs reservados (`admin`, `vox`, etc.).
+   - Dispara uma transação `Type: handle` com as tags `Handle: maria` e `Owner-Addr: <seu-endereco>`.
+   - O mapeamento é persistido no cache local em `localStorage`.
+
+### 9.2 Resolução via Rotas e Links Curtos
+
+1. No navegador, digite diretamente:
+   - `http://127.0.0.1:8080/#/h/maria` ou
+   - `http://127.0.0.1:8080/#/u/@maria`
+2. O PWA consulta o GraphQL (ou o cache local) e redireciona automaticamente para o perfil correspondente.
+3. Teste com parâmetro de URL:
+   - Acesse `http://127.0.0.1:8080/?h=maria`. O script inicial converte a query para `#/h/maria` e resolve o perfil.
+
+### 9.3 Cenário de Ambiguidade / Conflito Social
+
+1. Se duas contas diferentes publicarem o mesmo slug:
+2. Ao navegar para `#/h/maria`, o Vox detecta múltiplos reivindicantes (`isConflict: true`).
+3. O cliente renderiza a tela de **Ambiguidade de Handle**, apresentando os endereços de todos os reivindicantes com links diretos, permitindo ao usuário decidir sem intervenção de nenhum moderador central.

@@ -46,6 +46,13 @@ O regime de responsabilidade civil de intermediários no Brasil estabelece disti
 * **Responsabilidade por conteúdo de terceiros (Art. 19 / Jurisprudência STF):** Caso um operador de espelho receba ordem judicial específica (ou notificação qualificada conforme modulações do STF) para indisponibilizar conteúdo ilícito, a conformidade deve ser realizada na camada de renderização do front-end (suprimindo a exibição das transações em seus índices locais).
 * Para detalhes sobre os procedimentos comunitários de resposta a abusos e remoção em listas de espelhos, consulte [GOVERNANCE.md](./GOVERNANCE.md) (§ Abuso e moderação).
 
+## Handles, Propriedade Intelectual e Nomes (@handle — Fase 5)
+
+1. **Natureza Jurídica do Handle:** O identificador `@handle` registrado no protocolo `vox-brasil` é um alias técnico descentralizado para um endereço Arweave. Ele **não** constitui registro de marca no INPI nem nome de domínio no Registro.br.
+2. **Inexistência de Tribunal Central:** O software de código aberto Vox não dispõe de autoridade central para cancelar, arbitrar ou transferir slugs entre usuários.
+3. **Tratamento de Conflitos e Ambiguidade:** Quando mais de uma conta publica transação para o mesmo slug, o cliente PWA expõe a multiplicidade abertamente aos usuários (sinalização de conflito/ambiguidade), cabendo aos membros avaliarem o histórico de transações e chaves públicas associadas.
+4. **Violações Legais Flagrantes:** Casos de estelionato, falsidade ideológica (Art. 299 do Código Penal) ou uso indevido de marcas registradas devem ser tratados no âmbito do Poder Judiciário. Operadores de espelhos que recebam ordens judiciais específicas têm a faculdade técnica de ocultar resoluções de handles em seus front-ends.
+
 ## Conteúdo Político e TSE
 
 A **[Resolução TSE 23.610/2019](http://www.tse.jus.br/)** (e normas correlatas) impõe deveres a **plataformas digitais** no contexto eleitoral brasileiro (transparência, procedimentos, etc.).

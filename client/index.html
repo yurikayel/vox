@@ -14,6 +14,21 @@
     <div id="app-root"></div>
     <div id="modal-container"></div>
     <script>
+      // Suporte a URLs curtas: query ?h=slug ou subdomínio wildcard (*.comunidade.tld)
+      (function () {
+        const q = new URLSearchParams(window.location.search);
+        const qHandle = q.get("h") || q.get("handle");
+        if (qHandle && (!window.location.hash || window.location.hash === "#/")) {
+          window.location.hash = "#/h/" + encodeURIComponent(qHandle.replace(/^@/, "").toLowerCase());
+        } else if (!window.location.hash || window.location.hash === "#/") {
+          const parts = window.location.hostname.split(".");
+          if (parts.length >= 3 && parts[0] !== "www" && parts[0] !== "vox") {
+            window.location.hash = "#/h/" + encodeURIComponent(parts[0].toLowerCase());
+          }
+        }
+      })();
+    </script>
+    <script>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
           navigator.serviceWorker.register("./sw.js").catch(() => {});

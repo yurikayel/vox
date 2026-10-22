@@ -146,6 +146,29 @@ query ListModActions($communityId: String!) {
 }
 ```
 
+### 2.6 Resolução de Handles e Identidade Amigável (Fase 5)
+```graphql
+query GetHandleBySlug($slug: String!) {
+  transactions(
+    first: 10
+    tags: [
+      { name: "App-Name", values: ["vox-brasil"] },
+      { name: "Type", values: ["handle"] },
+      { name: "Handle", values: [$slug] }
+    ]
+    sort: HEIGHT_DESC
+  ) {
+    edges {
+      node {
+        id
+        owner { address }
+        tags { name value }
+      }
+    }
+  }
+}
+```
+
 ---
 
 ## 3. Nós Participativos e Rede de Leitura Distribuída (Fases 3, 3.1 e 3.2)
