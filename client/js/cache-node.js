@@ -1,8 +1,9 @@
 // Cache local persistente para transações e corpos do Vox (IndexedDB + LRU)
 
 const DB_NAME = "vox-cache-db";
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORE_NAME = "tx-data";
+const DM_STORE_NAME = "dm-threads";
 
 let dbPromise = null;
 
@@ -19,6 +20,11 @@ function openDB() {
         const store = db.createObjectStore(STORE_NAME, { keyPath: "id" });
         store.createIndex("lastAccessed", "lastAccessed", { unique: false });
         store.createIndex("timestamp", "timestamp", { unique: false });
+      }
+      if (!db.objectStoreNames.contains(DM_STORE_NAME)) {
+        const dmStore = db.createObjectStore(DM_STORE_NAME, { keyPath: "id" });
+        dmStore.createIndex("peerAddress", "peerAddress", { unique: false });
+        dmStore.createIndex("ts", "ts", { unique: false });
       }
     };
     req.onsuccess = (e) => resolve(e.target.result);
@@ -137,5 +143,97 @@ export async function enforceMaxCacheSize(maxMb = 25) {
         currentBytes -= item.size || 0;
       }
     };
+  } catch {}
+}
+
+export async function saveDmMessage(msg) {
+  if (!msg?.id || !msg?.peerAddress) return;
+  try {
+    const db = await openDB();
+    await new Promise((resolve) => {
+      const tx = db.transaction(DM_STORE_NAME, "readwrite");
+      const store = tx.objectStore(DM_STORE_NAME);
+      store.put({
+        id: msg.id,
+        peerAddress: msg.peerAddress,
+        from: msg.from || "",
+        to: msg.to || "",
+        text: msg.text || "",
+        ts: msg.ts || Date.now(),
+        status: msg.status || "delivered",
+      });
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => resolve();
+    });
+  } catch {}
+}
+
+export async function getDmMessages(peerAddress) {
+  if (!peerAddress) return [];
+  try {
+    const db = await openDB();
+    return await new Promise((resolve) => {
+      const tx = db.transaction(DM_STORE_NAME, "readonly");
+      const store = tx.objectStore(DM_STORE_NAME);
+      const req = store.getAll();
+      req.onsuccess = () => {
+        const all = req.result || [];
+        const filtered = all
+          .filter((m) => m.peerAddress === peerAddress)
+          .sort((a, b) => (a.ts || 0) - (b.ts || 0));
+        resolve(filtered);
+      };
+      req.onerror = () => resolve([]);
+    });
+  } catch {
+    return [];
+  }
+}
+
+export async function getDmConversations() {
+  try {
+    const db = await openDB();
+    return await new Promise((resolve) => {
+      const tx = db.transaction(DM_STORE_NAME, "readonly");
+      const store = tx.objectStore(DM_STORE_NAME);
+      const req = store.getAll();
+      req.onsuccess = () => {
+        const all = req.result || [];
+        const map = new Map();
+        for (const m of all) {
+          const existing = map.get(m.peerAddress);
+          if (!existing || (m.ts || 0) > (existing.lastTs || 0)) {
+            map.set(m.peerAddress, {
+              peerAddress: m.peerAddress,
+              lastText: m.text,
+              lastTs: m.ts || 0,
+              lastStatus: m.status,
+            });
+          }
+        }
+        const sorted = Array.from(map.values()).sort((a, b) => b.lastTs - a.lastTs);
+        resolve(sorted);
+      };
+      req.onerror = () => resolve([]);
+    });
+  } catch {
+    return [];
+  }
+}
+
+export async function deleteDmThread(peerAddress) {
+  if (!peerAddress) return;
+  try {
+    const db = await openDB();
+    const msgs = await getDmMessages(peerAddress);
+    await new Promise((resolve) => {
+      const tx = db.transaction(DM_STORE_NAME, "readwrite");
+      const store = tx.objectStore(DM_STORE_NAME);
+      for (const m of msgs) {
+        store.delete(m.id);
+      }
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => resolve();
+    });
   } catch {}
 }

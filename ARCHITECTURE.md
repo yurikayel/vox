@@ -201,14 +201,49 @@ Entre abas e dispositivos, clientes trocam mensagens JSON simples sob o protocol
 
 ---
 
-## 4. Mensagens Diretas (DMs) — Criptografia (Fase 4)
+## 4. Mensagens Diretas (DMs) — Criptografia E2E & Transporte Efêmero (Fase 4)
 
-As mensagens diretas não passam por servidor em texto aberto:
-* Cada usuário possui um par de chaves assimétricas de troca de chave (ECDH P-256 ou X25519) gerado no navegador via `window.crypto.subtle`.
-* O remetente obtém a chave pública do destinatário (anunciada no perfil).
-* O segredo compartilhado deriva uma chave simétrica AES-GCM-256.
-* O conteúdo da mensagem cifrado é enviado com a tag `Type: "dm"` e `Recipient: "<endereço-publico>"`.
-* Somente o detentor da chave privada correspondente consegue decifrar o payload ao baixar a transação.
+O Vox rejeita categoricamente gravar mensagens diretas na imutabilidade do permaweb (não existe `Type: dm` on-chain). Conversas privadas são estritamente efêmeras e criptografadas ponta-a-ponta:
+
+```
+                  ┌──────────────────────┐
+                  │      Alice (PWA)     │
+                  └──────────┬───────────┘
+                             │
+            ┌────────────────┴────────────────┐
+            │ [Se Bob estiver online via RTC] │ [Se Bob estiver offline]
+            ▼                                 ▼
+┌───────────────────────────┐     ┌───────────────────────────┐
+│ WebRTC DataChannel Dedicado│     │     Relay Comunitário     │
+│       ("vox-dm-v0")       │     │     Inbox com TTL 72h     │
+│   P2P Direto (Sem Relay)  │     │   (Ciphertext opaco <32KB)│
+└───────────┬───────────────┘     └───────────┬───────────────┘
+            │                                 │
+            │                                 ▼
+            │                     ┌───────────────────────────┐
+            │                     │       Bob (Ao abrir)      │
+            │                     │ GET /inbox/:addr & DELETE │
+            ▼                     └───────────┬───────────────┘
+┌─────────────────────────────────────────────▼───────────────┐
+│                    Bob (Decifra Localmente)                 │
+│      Abre envelope ECDH P-256 + AES-GCM no WebCrypto        │
+│       Histórico salvo unicamente em IndexedDB local         │
+└─────────────────────────────────────────────────────────────┘
+```
+
+1. **Geração e Publicação de Chave:**
+   * Cada usuário gera localmente um par assimétrico **ECDH P-256** (`crypto-dm.js`).
+   * A chave pública de recebimento é opcionalmente anunciada em uma transação pública leve (`Type: "profile-key"`, tag `Dm-Pub: "<jwk-json>"`), servindo apenas como endereço criptográfico de entrega.
+2. **Criptografia por Mensagem (Forward Secrecy em Nível de Envelope):**
+   * Ao enviar uma DM, o remetente gera um par ECDH efêmero e deriva uma chave de sessão simétrica AES-GCM-256 com os bytes públicos da chave do destinatário.
+   * O envelope selado possui o formato: `{ v: 1, id: "<dm_id>", from, to, ts, ephPub, iv, ct }`.
+   * Metadados críticos (`v1|from|to`) são vinculados via *Additional Authenticated Data* (AAD), impedindo qualquer tentativa de adulteração de rota ou falsificação de remetente.
+3. **Transporte em Dois Níveis:**
+   * **Online (WebRTC DataChannel):** Se o destinatário estiver conectado à malha de sinalização, a mensagem é transmitida via canal dedicado `"vox-dm-v0"` em milissegundos, sem qualquer contato com discos ou servidores.
+   * **Offline (Relay Comunitário com TTL):** Se o destinatário estiver offline, o envelope cifrado é postado em `POST /inbox/:toAddress` no relay comunitário (`inbox.py`). O relay armazena apenas o JSON opaco com limite de 32 KB por mensagem e descarta o arquivo automaticamente após 72 horas (ou imediatamente quando o destinatário faz `DELETE /inbox/:toAddress/:id`).
+4. **Isolamento de Banda e Armazenamento:**
+   * DMs não são computadas no teto diário de banda de leitura pública do Pacto 3.1.
+   * O histórico de mensagens fica armazenado estritamente no IndexedDB local do usuário (store `dm-threads`), sem persistência na nuvem do projeto.
 
 ---
 

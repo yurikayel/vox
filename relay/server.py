@@ -15,6 +15,8 @@ import urllib.request
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
+from relay import inbox
+
 DEFAULT_PORT = 3920
 DEFAULT_HOST = "127.0.0.1"
 CACHE_DIR = Path(__file__).resolve().parent / ".cache"
@@ -36,7 +38,7 @@ def count_cached_items():
 class VoxRelayHandler(BaseHTTPRequestHandler):
     def _set_cors_headers(self):
         self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
 
     def do_OPTIONS(self):
@@ -144,7 +146,18 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
                 self.wfile.write(json.dumps({"error": "Espelho de comunidade nao encontrado"}).encode("utf-8"))
                 return
 
-        # 4. Rota desconhecida
+        # 4. Inbox efêmero de mensagens diretas (Fase 4): /inbox/<toAddress>
+        if path.startswith("/inbox/"):
+            to_addr = path[len("/inbox/"):].split("/")[0]
+            envelopes = inbox.get_envelopes(to_addr)
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self._set_cors_headers()
+            self.end_headers()
+            self.wfile.write(json.dumps({"envelopes": envelopes}).encode("utf-8"))
+            return
+
+        # 5. Rota desconhecida
         self.send_response(404)
         self._set_cors_headers()
         self.end_headers()
@@ -181,6 +194,56 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(json.dumps({"error": str(e)}).encode("utf-8"))
                 return
+
+        # Inbox efêmero: POST /inbox/<toAddress>
+        if path.startswith("/inbox/"):
+            to_addr = path[len("/inbox/"):].split("/")[0]
+            content_length = int(self.headers.get("Content-Length", 0))
+            if content_length > inbox.MAX_ENVELOPE_SIZE:
+                self.send_response(413)
+                self._set_cors_headers()
+                self.end_headers()
+                self.wfile.write(b"Envelope excede limite maximo de 32 KB")
+                return
+            body = self.rfile.read(content_length)
+            try:
+                envelope = json.loads(body.decode("utf-8"))
+                res = inbox.store_envelope(to_addr, envelope)
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self._set_cors_headers()
+                self.end_headers()
+                self.wfile.write(json.dumps(res).encode("utf-8"))
+                return
+            except Exception as e:
+                self.send_response(400)
+                self._set_cors_headers()
+                self.end_headers()
+                self.wfile.write(json.dumps({"error": str(e)}).encode("utf-8"))
+                return
+
+        self.send_response(404)
+        self._set_cors_headers()
+        self.end_headers()
+
+    def do_DELETE(self):
+        path = self.path.split("?")[0].rstrip("/")
+        if path.startswith("/inbox/"):
+            parts = path[len("/inbox/"):].split("/")
+            to_addr = parts[0] if len(parts) > 0 else ""
+            msg_id = parts[1] if len(parts) > 1 else ""
+            if inbox.delete_envelope(to_addr, msg_id):
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self._set_cors_headers()
+                self.end_headers()
+                self.wfile.write(json.dumps({"status": "deleted", "id": msg_id}).encode("utf-8"))
+                return
+            self.send_response(404)
+            self._set_cors_headers()
+            self.end_headers()
+            self.wfile.write(json.dumps({"error": "Envelope nao encontrado"}).encode("utf-8"))
+            return
 
         self.send_response(404)
         self._set_cors_headers()

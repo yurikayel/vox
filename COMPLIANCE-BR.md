@@ -28,6 +28,14 @@ Na **Fase 3.1**, o Vox adota o modelo contratual transparente **Pacto Vox**:
   4. **Proteção Patrimonial (Banda e Bateria):** Padrão configurado com teto diário de banda (50 MB/dia), limite de armazenamento local (25 MB) e prioridade em conexões Wi-Fi para impedir consumo de dados tarifados 4G/5G.
   5. **Operação em Segundo Plano:** Se habilitada, a atuação via Service Worker exige permissão de notificação explícita do sistema operacional e desativa-se automaticamente fora de redes Wi-Fi ou caso o teto diário seja atingido.
 
+## Mensagens Diretas Efêmeras e Privacidade (Fase 4)
+
+A arquitetura de DMs do Vox é orientada aos princípios de **minimização de dados (Art. 6º, III da LGPD)** e **privacidade desde a concepção (*privacy by design*)**:
+1. **Inexistência de DMs no Permaweb:** O projeto proíbe expressamente transações de mensagens privadas on-chain no Arweave. Conversas íntimas nunca são imutabilizadas ou expostas a análises forenses perpétuas.
+2. **Criptografia Forte Ponta-a-Ponta:** As mensagens são cifradas nos próprios dispositivos remetente/destinatário via ECDH P-256 e AES-GCM-256. Nenhum intermediário tem acesso à chave de decifração.
+3. **Relay Comunitário como Repositório Transitório:** O endpoint `/inbox/:toAddress` opera unicamente como caixa postal cega e temporária para entregas offline. O operador do relay não tem acesso ao conteúdo em texto claro, não mantém backups de conversas e impõe **expiração compulsória em 72 horas (TTL)**, além de expurgo imediato quando o destinatário coleta a mensagem.
+4. **Sem Perfilamento Comercial:** Não há mineração de grafo social, leitura de palavras-chave para publicidade direcionada ou retenção compulsória de histórico em nuvens proprietárias. O histórico reside unicamente no armazenamento local do dispositivo do usuário.
+
 ## Marco Civil da Internet (Lei 12.965/2014) e Art. 19
 
 O regime de responsabilidade civil de intermediários no Brasil estabelece distinções fundamentais:

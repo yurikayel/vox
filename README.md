@@ -77,7 +77,7 @@ Todo dado no Vox é identificado por tags semânticas universais:
 | **Criar Tópico** | `topic` | `Community-Id`, `Topic-Title` |
 | **Responder Tópico** | `reply` | `Community-Id`, `Reply-To` (TX ID) |
 | **Moderação** | `mod-action` | `Community-Id`, `Action` (hide/ban), `Target` |
-| **Mensagem Direta (Fase 3)** | `dm` | `Recipient` (Chave pública) |
+| **Chave de DM** | `profile-key` | `Dm-Pub` (Chave pública ECDH JWK; conversas privadas trafegam fora do permaweb) |
 
 ---
 
@@ -120,8 +120,14 @@ Todo dado no Vox é identificado por tags semânticas universais:
   - Pipelines GitHub Actions para CI multiplataforma (`.github/workflows/ci.yml`) e deploy estático no GitHub Pages (`.github/workflows/deploy-pages.yml`).
   - Suporte completo a servidores TURN no cliente (`createRtcConfig`, `saveCustomTurnConfig`) e na UI (`#/settings/network`) para travessia de 4G/NAT simétrico.
   - Kit de deploy self-host em Docker (`relay/deploy/docker-compose.yml`) com Caddy (WSS TLS automático) e Coturn blindado contra SSRF/abuso.
-- [ ] **Fase 4: Mensagens Diretas Criptografadas**
-  - DMs com chave pública do destinatário via WebCrypto.
+- [x] **Fase 4: Mensagens Diretas Efêmeras (WebRTC + Inbox TTL)**
+  - Criptografia ponta-a-ponta com WebCrypto API (ECDH P-256 com chave efêmera + AES-GCM-256 e AAD) em `crypto-dm.js`.
+  - **Proibição estrita on-chain:** nenhuma mensagem privada gravada na imutabilidade do Arweave.
+  - Canal dedicado WebRTC `"vox-dm-v0"` para entrega online P2P direta sem servidores.
+  - Inbox efêmero com TTL de 72h em `relay/inbox.py` (`POST /inbox/:toAddress`, `GET` e `DELETE`) para mensagens offline.
+  - Histórico de conversas gravado exclusivamente no IndexedDB local do usuário (`dm-threads`).
+  - Interface completa com rotas `#/dm` e `#/dm/:address`, e botão de mensagem direta no perfil de membros.
+  - *Critério de Sucesso (DoD atingido):* Troca de mensagens E2E entre Alice e Bob online via WebRTC, e entrega assíncrona com auto-expiração via relay inbox quando offline.
 - [ ] **Fase 5: Domínio & Identidade .vox.br**
   - Nomes amigáveis e resolução descentralizada.
 

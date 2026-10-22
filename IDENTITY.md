@@ -28,9 +28,17 @@ Ordem recomendada de entrega:
 2. UX Passkey para não expor seed.
 3. Perfil com chave pública anunciada em tag `Author-Key` (proposta Fase 2).
 
-## Fase 3: DMs (deferida)
+## Fase 4 (entregue): DMs E2E efêmeras fora do permaweb
 
-Conforme [ARCHITECTURE.md](./ARCHITECTURE.md): ECDH (X25519/P-256) + AES-GCM para conteúdo; tag `Type: dm`. **Não implementado** no client Fase 1; README principal linka aqui para não overclaim.
+- **Princípio:** "Seus dados são seus" significa também o direito soberano de **não** ter conversas privadas eternizadas em um ledger imutável.
+- **Proibição estrita on-chain:** **Não** existe `Type: dm` gravado no Arweave. Conversas privadas nunca são enviadas ao permaweb.
+- **Chaves de DM:** Par assimétrico **ECDH P-256** gerado via WebCrypto (`crypto.subtle`) e mantido exclusivamente no navegador/aparelho do usuário (`crypto-dm.js`), desacoplado da carteira RSA/JWK Arweave de autoria pública.
+- **Identidade pública de DM:** Apenas a chave pública `Dm-Pub` (formato JWK) pode ser anunciada no perfil através de uma transação `Type: profile-key` com a tag `Dm-Pub`. Trata-se unicamente da chave pública de cifra, sem qualquer conteúdo de mensagem.
+- **Criptografia por envelope:** Para cada mensagem, o remetente gera um par de chaves ECDH efêmero e deriva uma chave AES-GCM-256 com autenticação de cabeçalho AAD (`v1|from|to`). O destinatário abre com sua chave privada local.
+- **Transporte efêmero:**
+  - *Online:* Entrega direta via WebRTC DataChannel dedicado (`vox-dm-v0`) ponto-a-ponta.
+  - *Offline:* Envelope cifrado entregue ao inbox efêmero do relay comunitário (`/inbox/:toAddress`) com **TTL de 72 horas** e expiração automática, podendo ser apagado pelo destinatário imediatamente após a leitura.
+  - *Armazenamento histórico:* Estritamente local em IndexedDB (`cache-node.js`, store `dm-threads`), sem sincronização com nuvens corporativas.
 
 ## Boas práticas
 

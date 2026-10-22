@@ -6,15 +6,21 @@
 
 let signalingWs = null;
 let currentPeerId = null;
+let currentAddress = "";
+let currentDmPub = null;
 let customSignalingUrl = null;
 let isWebRtcEnabled = false;
 let messageHandler = null;
+let dmMessageHandler = null;
+let identityHandler = null;
 let reconnectTimer = null;
 let reconnectAttempts = 0;
 let configCache = null;
 
-// Mapa de peerId remoto -> { pc: RTCPeerConnection, dc: RTCDataChannel }
+// Mapa de peerId remoto -> { pc: RTCPeerConnection, dc: RTCDataChannel, dmDc: RTCDataChannel }
 const peerConnections = new Map();
+const addressToPeer = new Map();
+const dmPubByAddress = new Map();
 
 export async function loadSignalingConfig() {
   if (configCache) return configCache;
@@ -62,6 +68,47 @@ export function saveCustomTurnConfig({ urls = "", username = "", credential = ""
 
 export function onVoxMessage(handler) {
   messageHandler = handler;
+}
+
+export function onDmMessage(handler) {
+  dmMessageHandler = handler;
+}
+
+export function onPeerIdentity(handler) {
+  identityHandler = handler;
+}
+
+export function announceIdentity(address, dmPub = null) {
+  currentAddress = address || "";
+  if (dmPub) currentDmPub = dmPub;
+  if (signalingWs && signalingWs.readyState === WebSocket.OPEN && currentPeerId) {
+    sendSignaling({
+      type: "register",
+      peerId: currentPeerId,
+      address: currentAddress,
+      dmPub: currentDmPub,
+    });
+  }
+}
+
+export function registerAddressMapping(address, peerId, dmPub = null) {
+  if (!address || !peerId) return;
+  addressToPeer.set(address, peerId);
+  if (dmPub) {
+    dmPubByAddress.set(address, dmPub);
+    if (identityHandler) identityHandler(address, dmPub);
+  }
+}
+
+export function getPeerDmPub(address) {
+  return dmPubByAddress.get(address) || null;
+}
+
+export function isAddressConnectedRtc(address) {
+  const pid = addressToPeer.get(address);
+  if (!pid) return false;
+  const entry = peerConnections.get(pid);
+  return Boolean(entry?.dmDc && entry.dmDc.readyState === "open");
 }
 
 export function getConnectedRtcPeersCount() {
@@ -127,7 +174,14 @@ async function connectSignaling() {
 function bindSignalingSocket(ws) {
   ws.onopen = () => {
     reconnectAttempts = 0;
-    ws.send(JSON.stringify({ type: "register", peerId: currentPeerId }));
+    ws.send(
+      JSON.stringify({
+        type: "register",
+        peerId: currentPeerId,
+        address: currentAddress,
+        dmPub: currentDmPub,
+      })
+    );
   };
 
   ws.onmessage = (event) => {
@@ -156,8 +210,16 @@ function scheduleReconnect() {
 async function handleSignalingMessage(msg) {
   const mtype = msg.type;
   if (mtype === "registered") {
+    if (msg.addressMap && typeof msg.addressMap === "object") {
+      for (const [addr, info] of Object.entries(msg.addressMap)) {
+        registerAddressMapping(addr, info.peerId, info.dmPub);
+      }
+    }
     handleRegisteredPeers(msg.peers || []);
   } else if (mtype === "peer-joined") {
+    if (msg.address) {
+      registerAddressMapping(msg.address, msg.peerId, msg.dmPub);
+    }
     handlePeerJoined(msg.peerId);
   } else if (mtype === "offer") {
     handleIncomingOffer(msg.from, msg.sdp);
@@ -232,11 +294,24 @@ function setupDataChannelEvents(dc, remotePeerId) {
   dc.onerror = () => closePeerConnection(remotePeerId);
 }
 
+function setupDmChannelEvents(dmDc, remotePeerId) {
+  dmDc.onmessage = (event) => {
+    if (!dmMessageHandler) return;
+    try {
+      const parsed = JSON.parse(event.data);
+      if (parsed?.type === "DM" && parsed.envelope) {
+        dmMessageHandler(parsed.envelope, remotePeerId);
+      }
+    } catch {}
+  };
+}
+
 async function createPeerConnection(remotePeerId, isInitiator) {
   if (peerConnections.has(remotePeerId)) return peerConnections.get(remotePeerId);
 
   const pc = new RTCPeerConnection(createRtcConfig());
   let dc = null;
+  let dmDc = null;
 
   pc.onicecandidate = (event) => {
     if (event.candidate) {
@@ -247,16 +322,23 @@ async function createPeerConnection(remotePeerId, isInitiator) {
   if (isInitiator) {
     dc = pc.createDataChannel("vox-peer-v0");
     setupDataChannelEvents(dc, remotePeerId);
+    dmDc = pc.createDataChannel("vox-dm-v0");
+    setupDmChannelEvents(dmDc, remotePeerId);
   } else {
     pc.ondatachannel = (event) => {
-      dc = event.channel;
-      setupDataChannelEvents(dc, remotePeerId);
+      const ch = event.channel;
       const entry = peerConnections.get(remotePeerId);
-      if (entry) entry.dc = dc;
+      if (ch.label === "vox-dm-v0") {
+        setupDmChannelEvents(ch, remotePeerId);
+        if (entry) entry.dmDc = ch;
+      } else {
+        setupDataChannelEvents(ch, remotePeerId);
+        if (entry) entry.dc = ch;
+      }
     };
   }
 
-  peerConnections.set(remotePeerId, { pc, dc });
+  peerConnections.set(remotePeerId, { pc, dc, dmDc });
 
   if (isInitiator) {
     try {
@@ -268,7 +350,7 @@ async function createPeerConnection(remotePeerId, isInitiator) {
     }
   }
 
-  return { pc, dc };
+  return { pc, dc, dmDc };
 }
 
 async function handleIncomingOffer(fromPeer, sdp) {
@@ -306,9 +388,29 @@ export function closePeerConnection(remotePeerId) {
   if (!entry) return;
   try {
     if (entry.dc) entry.dc.close();
+    if (entry.dmDc) entry.dmDc.close();
     entry.pc.close();
   } catch {}
   peerConnections.delete(remotePeerId);
+  for (const [addr, pid] of addressToPeer.entries()) {
+    if (pid === remotePeerId) {
+      addressToPeer.delete(addr);
+      break;
+    }
+  }
+}
+
+export function sendDmRtc(toAddress, envelope) {
+  const pid = addressToPeer.get(toAddress);
+  if (!pid) return false;
+  const entry = peerConnections.get(pid);
+  if (!entry?.dmDc || entry.dmDc.readyState !== "open") return false;
+  try {
+    entry.dmDc.send(JSON.stringify({ type: "DM", envelope }));
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export function sendVoxMessage(remotePeerId, obj) {

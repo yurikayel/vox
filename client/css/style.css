@@ -473,3 +473,54 @@ main {
     font-size: 1.55rem;
   }
 }
+
+/* DMs Efêmeras E2E (Fase 4) */
+.dm-thread-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+  max-height: 55dvh;
+  overflow-y: auto;
+  padding: 0.5rem 0.2rem;
+}
+
+.dm-bubble {
+  max-width: 82%;
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--radius);
+  font-size: 0.92rem;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.dm-bubble.sent {
+  align-self: flex-end;
+  background: var(--accent);
+  color: #fff;
+  border-bottom-right-radius: 2px;
+}
+
+.dm-bubble.received {
+  align-self: flex-start;
+  background: #e9ecef;
+  color: var(--text);
+  border-bottom-left-radius: 2px;
+}
+
+.dm-bubble-meta {
+  font-size: 0.72rem;
+  opacity: 0.8;
+  margin-top: 0.25rem;
+  text-align: right;
+}
+
+.dm-form-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.dm-form-row input {
+  flex: 1;
+}

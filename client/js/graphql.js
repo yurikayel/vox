@@ -107,6 +107,24 @@ const QUERIES = {
         }
       }
     }
+  }`,
+  profileKeys: `query GetProfileKey($address: String!) {
+    transactions(
+      first: 10
+      owners: [$address]
+      tags: [
+        { name: "App-Name", values: ["vox-brasil"] }
+        { name: "Type", values: ["profile-key", "membership"] }
+      ]
+      sort: HEIGHT_DESC
+    ) {
+      edges {
+        node {
+          id
+          tags { name value }
+        }
+      }
+    }
   }`
 };
 
@@ -243,6 +261,51 @@ export async function fetchUserMemberships(address) {
   } catch {
     return [];
   }
+}
+
+const KNOWN_DM_PUBS_KEY = "vox-known-dm-pubs";
+
+export function cacheUserDmPub(address, pubJwk) {
+  if (!address || !pubJwk) return;
+  try {
+    const raw = localStorage.getItem(KNOWN_DM_PUBS_KEY);
+    const map = raw ? JSON.parse(raw) : {};
+    map[address] = typeof pubJwk === "string" ? JSON.parse(pubJwk) : pubJwk;
+    localStorage.setItem(KNOWN_DM_PUBS_KEY, JSON.stringify(map));
+  } catch {}
+}
+
+export function getCachedUserDmPub(address) {
+  if (!address) return null;
+  try {
+    const raw = localStorage.getItem(KNOWN_DM_PUBS_KEY);
+    if (!raw) return null;
+    const map = JSON.parse(raw);
+    return map[address] || null;
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchUserDmPub(address) {
+  if (!address) return null;
+  const cached = getCachedUserDmPub(address);
+  if (cached) return cached;
+  try {
+    const { data } = await withGateways((url) =>
+      queryOne(url, QUERIES.profileKeys, { address })
+    );
+    const edges = data.transactions?.edges || [];
+    for (const e of edges) {
+      const dmPubRaw = tagValue(e.node?.tags || [], "Dm-Pub");
+      if (dmPubRaw) {
+        const parsed = JSON.parse(dmPubRaw);
+        cacheUserDmPub(address, parsed);
+        return parsed;
+      }
+    }
+  } catch {}
+  return null;
 }
 
 export async function fetchModActions(communityId) {
