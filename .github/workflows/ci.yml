@@ -1,0 +1,73 @@
+name: CI — Testes & Validação
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  test-client:
+    name: Cliente PWA (Node ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: ["20", "22", "24"]
+
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Verificação de sintaxe JS
+        run: |
+          node --check client/js/*.js client/sw.js
+
+      - name: Executar testes unitários do cliente (node:test)
+        run: |
+          npm run test:client
+
+  test-relay:
+    name: Relay & Signaling (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Verificação de sintaxe Python
+        run: |
+          python -m py_compile relay/*.py
+
+      - name: Executar testes unitários do relay (unittest)
+        run: |
+          npm run test:relay
+
+  security-audit:
+    name: Auditoria de Segurança (Secrets / Chaves)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      - name: Verificar ausência de chaves privadas ou JWK reais commitados
+        run: |
+          echo "Verificando se há chaves privadas acidentalmente no repositório..."
+          ! grep -rnw "BEGIN RSA PRIVATE KEY" . --exclude-dir=.git || exit 1
+          ! grep -rnw "BEGIN PRIVATE KEY" . --exclude-dir=.git || exit 1
+          echo "Nenhuma chave privada encontrada no repositório. OK!"
