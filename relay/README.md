@@ -45,6 +45,21 @@ Ao abrir o Vox no navegador (`http://127.0.0.1:8080`), o cliente consulta automa
 
 ---
 
+## 📡 Servidor de Sinalização WebRTC (`signaling.py` — Fase 3.2)
+
+Para conectar instâncias do Vox em **dispositivos diferentes** (mesma rede local Wi-Fi ou pela internet) via WebRTC DataChannel, o relay inclui um servidor WebSocket leve baseado na biblioteca padrão:
+
+```bash
+cd vox/relay
+python signaling.py --port 3921
+```
+
+* **Porta padrão:** `3921` (`ws://127.0.0.1:3921`).
+* **Função estrita:** Apenas troca de ofertas/respostas SDP e candidatos ICE entre pares. O servidor **não armazena conteúdo**, não analisa mensagens e não faz persistência.
+* **Rede descentralizada:** Comunidades, coletivos ou usuários avançados podem rodar seu próprio servidor de sinalização em LAN ou VPS (`wss://seu-dominio/`), configurando a URL customizada diretamente no PWA em `#/settings/network`.
+
+---
+
 ## 🔒 Segurança e Privacidade
 
 * **Escuta apenas em `127.0.0.1`:** Por padrão, o relay não expõe portas para a internet externa.

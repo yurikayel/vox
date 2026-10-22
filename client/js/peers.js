@@ -1,4 +1,5 @@
 import * as cacheNode from "./cache-node.js";
+import * as webrtcPeer from "./webrtc-peer.js";
 
 const PEER_SETTINGS_KEY = "vox-peer-settings";
 const PEER_METRICS_KEY = "vox-peer-metrics";
@@ -9,11 +10,14 @@ const myPeerId = "peer_" + Math.random().toString(36).substring(2, 9);
 let broadcastChannel = null;
 const pendingRequests = new Map(); // txId -> Array of resolver functions
 
+export function getMyPeerId() {
+  return myPeerId;
+}
+
 export function getPeerSettings() {
   try {
     const raw = localStorage.getItem(PEER_SETTINGS_KEY);
     if (!raw) {
-      // Fase 3.1: default-on (ativo por padrão)
       return {
         enabled: true,
         maxMb: 25,
@@ -21,6 +25,7 @@ export function getPeerSettings() {
         commOnly: false,
         backgroundRelay: false,
         dailyCapMb: 50,
+        webrtcEnabled: true,
       };
     }
     const parsed = JSON.parse(raw);
@@ -31,6 +36,7 @@ export function getPeerSettings() {
       commOnly: parsed.commOnly !== undefined ? parsed.commOnly : false,
       backgroundRelay: parsed.backgroundRelay !== undefined ? parsed.backgroundRelay : false,
       dailyCapMb: parsed.dailyCapMb || 50,
+      webrtcEnabled: parsed.webrtcEnabled !== undefined ? parsed.webrtcEnabled : true,
     };
   } catch {
     return {
@@ -40,6 +46,7 @@ export function getPeerSettings() {
       commOnly: false,
       backgroundRelay: false,
       dailyCapMb: 50,
+      webrtcEnabled: true,
     };
   }
 }
@@ -54,11 +61,30 @@ export function getPeerMetrics() {
   try {
     const raw = localStorage.getItem(PEER_METRICS_KEY);
     if (!raw) {
-      return { blobsServed: 0, bytesServed: 0, blobsReceived: 0, bytesReceived: 0 };
+      return {
+        blobsServed: 0,
+        bytesServed: 0,
+        blobsReceived: 0,
+        bytesReceived: 0,
+        blobsServedRtc: 0,
+      };
     }
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    return {
+      blobsServed: parsed.blobsServed || 0,
+      bytesServed: parsed.bytesServed || 0,
+      blobsReceived: parsed.blobsReceived || 0,
+      bytesReceived: parsed.bytesReceived || 0,
+      blobsServedRtc: parsed.blobsServedRtc || 0,
+    };
   } catch {
-    return { blobsServed: 0, bytesServed: 0, blobsReceived: 0, bytesReceived: 0 };
+    return {
+      blobsServed: 0,
+      bytesServed: 0,
+      blobsReceived: 0,
+      bytesReceived: 0,
+      blobsServedRtc: 0,
+    };
   }
 }
 
@@ -95,7 +121,7 @@ export function isDailyCapReached() {
 
 export function isWifiOrUnlimited() {
   const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-  if (!conn) return true; // desktop ou navegador sem API NetworkInformation
+  if (!conn) return true;
   if (conn.saveData) return false;
   if (conn.type && conn.type === "cellular") return false;
   return true;
@@ -120,65 +146,83 @@ function updateServiceWorkerRelay(settings) {
   }
 }
 
+export async function handleVoxMessage(msg, replyFn, source = "broadcast") {
+  if (!msg || typeof msg !== "object") return;
+  const settings = getPeerSettings();
+  if (!settings.enabled) return;
+
+  if (msg.type === "WANT" && msg.txId && msg.fromPeer !== myPeerId) {
+    if (isDailyCapReached()) return;
+    if (settings.wifiOnly && !isWifiOrUnlimited()) return;
+
+    const cached = await cacheNode.getCachedTx(msg.txId);
+    if (cached && typeof replyFn === "function") {
+      const payload = {
+        type: "BLOB",
+        txId: msg.txId,
+        data: cached,
+        fromPeer: myPeerId,
+      };
+      replyFn(payload);
+      const size = JSON.stringify(cached).length;
+      updateMetrics("blobsServed", 1);
+      updateMetrics("bytesServed", size);
+      if (source === "rtc") {
+        updateMetrics("blobsServedRtc", 1);
+      }
+      recordBytesServed(size);
+    }
+  }
+
+  if (msg.type === "BLOB" && msg.txId && msg.data) {
+    const resolvers = pendingRequests.get(msg.txId);
+    if (resolvers && resolvers.length) {
+      const size = JSON.stringify(msg.data).length;
+      updateMetrics("blobsReceived", 1);
+      updateMetrics("bytesReceived", size);
+      for (const resolve of resolvers) {
+        resolve(msg.data);
+      }
+      pendingRequests.delete(msg.txId);
+    }
+  }
+}
+
 export function initPeerChannel() {
   const settings = getPeerSettings();
+
   if (broadcastChannel) {
     if (!settings.enabled) {
       broadcastChannel.close();
       broadcastChannel = null;
-      return;
     }
   } else if (settings.enabled && window.BroadcastChannel) {
     broadcastChannel = new BroadcastChannel(CHANNEL_NAME);
-    broadcastChannel.onmessage = async (event) => {
-      const msg = event.data;
-      if (!msg || typeof msg !== "object") return;
-
-      // Responde a pedidos WANT se tivermos em cache, respeitando Wi-Fi e teto diário
-      if (msg.type === "WANT" && msg.txId && msg.fromPeer !== myPeerId) {
-        if (isDailyCapReached()) return;
-        if (settings.wifiOnly && !isWifiOrUnlimited()) return;
-
-        const cached = await cacheNode.getCachedTx(msg.txId);
-        if (cached && broadcastChannel) {
-          const payload = {
-            type: "BLOB",
-            txId: msg.txId,
-            data: cached,
-            fromPeer: myPeerId,
-          };
-          broadcastChannel.postMessage(payload);
-          const size = JSON.stringify(cached).length;
-          updateMetrics("blobsServed", 1);
-          updateMetrics("bytesServed", size);
-          recordBytesServed(size);
-        }
-      }
-
-      // Recebe BLOB atendendo a requisição pendente
-      if (msg.type === "BLOB" && msg.txId && msg.data) {
-        const resolvers = pendingRequests.get(msg.txId);
-        if (resolvers && resolvers.length) {
-          const size = JSON.stringify(msg.data).length;
-          updateMetrics("blobsReceived", 1);
-          updateMetrics("bytesReceived", size);
-          for (const resolve of resolvers) {
-            resolve(msg.data);
-          }
-          pendingRequests.delete(msg.txId);
-        }
-      }
+    broadcastChannel.onmessage = (event) => {
+      handleVoxMessage(
+        event.data,
+        (reply) => {
+          if (broadcastChannel) broadcastChannel.postMessage(reply);
+        },
+        "broadcast"
+      );
     };
+  }
+
+  if (settings.enabled && settings.webrtcEnabled) {
+    webrtcPeer.initWebRtc(myPeerId);
+  } else {
+    webrtcPeer.disconnectWebRtc();
   }
 }
 
-export async function requestTxFromPeers(txId, timeoutMs = 1200) {
-  const settings = getPeerSettings();
-  if (!settings.enabled || !broadcastChannel) return null;
+webrtcPeer.onVoxMessage((msg, replyFn, source) => {
+  handleVoxMessage(msg, replyFn, source);
+});
 
+function requestWithTransport(txId, sendFn, timeoutMs) {
   return new Promise((resolve) => {
     let timer = null;
-
     const onResolve = (data) => {
       if (timer) clearTimeout(timer);
       resolve(data);
@@ -189,16 +233,9 @@ export async function requestTxFromPeers(txId, timeoutMs = 1200) {
     }
     pendingRequests.get(txId).push(onResolve);
 
-    // Envia requisição WANT
     try {
-      broadcastChannel.postMessage({
-        type: "WANT",
-        txId,
-        fromPeer: myPeerId,
-      });
-    } catch {
-      // Ignora erro de postMessage
-    }
+      sendFn();
+    } catch {}
 
     timer = setTimeout(() => {
       const list = pendingRequests.get(txId);
@@ -210,6 +247,54 @@ export async function requestTxFromPeers(txId, timeoutMs = 1200) {
       resolve(null);
     }, timeoutMs);
   });
+}
+
+function requestFromBroadcast(txId, timeoutMs = 600) {
+  return requestWithTransport(
+    txId,
+    () => {
+      if (broadcastChannel) {
+        broadcastChannel.postMessage({ type: "WANT", txId, fromPeer: myPeerId });
+      }
+    },
+    timeoutMs
+  );
+}
+
+function requestFromRtc(txId, timeoutMs = 2000) {
+  return requestWithTransport(
+    txId,
+    () => {
+      webrtcPeer.broadcastRtcMessage({ type: "WANT", txId, fromPeer: myPeerId });
+    },
+    timeoutMs
+  );
+}
+
+export async function requestTxFromPeers(txId) {
+  const settings = getPeerSettings();
+  if (!settings.enabled) return null;
+
+  // 1. Tenta BroadcastChannel local (timeout 600ms)
+  if (broadcastChannel) {
+    const localResult = await requestFromBroadcast(txId, 600);
+    if (localResult) return localResult;
+  }
+
+  // 2. Tenta WebRTC DataChannel se houver pares remotos conectados (timeout 2000ms)
+  if (settings.webrtcEnabled && webrtcPeer.getConnectedRtcPeersCount() > 0) {
+    const rtcResult = await requestFromRtc(txId, 2000);
+    if (rtcResult) return rtcResult;
+  }
+
+  return null;
+}
+
+export function getRtcStatus() {
+  return {
+    remotePeersConnected: webrtcPeer.getConnectedRtcPeersCount(),
+    myPeerId,
+  };
 }
 
 export async function checkDesktopRelay(url = "http://127.0.0.1:3920/health") {

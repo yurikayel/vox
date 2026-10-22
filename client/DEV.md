@@ -101,12 +101,40 @@ Para validar o *Definition of Done* da Fase 2:
 ### 5.3 Service Worker e Background Relay
 1. Abra as Ferramentas do Desenvolvedor (F12) -> aba **Application** -> **Service Workers**:
    * O arquivo `sw.js` deve estar com status **Activated and running** com escopo `./`.
-2. Na aba **Cache Storage**, certifique-se de que o cache `vox-pwa-v3.1` contém os arquivos estáticos pré-cacheados (`index.html`, `style.css`, módulos `.js`).
+2. Na aba **Cache Storage**, certifique-se de que o cache `vox-pwa-v3.2` contém os arquivos estáticos pré-cacheados (`index.html`, `style.css`, módulos `.js`).
 3. Em `#/settings/network`, ative a opção **"Atuar em segundo plano via Service Worker"** e clique em **"Ativar Notificações de Status"**:
    * Ao autorizar permissão no navegador, o Service Worker sincroniza a configuração via mensagem `VOX_SETTINGS_UPDATED`.
 
 ---
 
-## 6. Fallback de Demonstração
+## 6. Teste de Pares entre Dispositivos via WebRTC — Fase 3.2 DoD
+
+### 6.1 Iniciar Servidor de Sinalização Local
+Em um terminal, inicie o servidor WebSocket padrão:
+```bash
+cd vox/relay
+python signaling.py --port 3921
+```
+
+### 6.2 Teste entre Duas Máquinas ou Dispositivos na LAN
+1. Inicie o servidor do PWA:
+   ```bash
+   cd vox/client
+   python -m http.server 8080 --bind 0.0.0.0
+   ```
+2. Abra o PWA no **Dispositivo A** (`http://192.168.x.x:8080`) e no **Dispositivo B** (outro celular ou navegador).
+3. Na tela `#/settings/network` de ambos, caso não estejam em localhost, insira a URL do signaling do seu IP local (ex: `ws://192.168.x.x:3921`) e clique em **"Salvar Preferências"**.
+4. Observe o badge no topo: `🌐 WebRTC: 1 par remoto` em ambos os nós!
+5. No **Dispositivo A**, abra um tópico comunitário. O conteúdo é baixado e persistido no IndexedDB.
+6. No **Dispositivo B**, abra o mesmo tópico:
+   * A requisição `WANT` é enviada pelo canal WebRTC `vox-peer-v0`.
+   * O Dispositivo A responde com o pacote `BLOB` contendo os dados do tópico diretamente via P2P.
+   * No Dispositivo A, veja o contador **"Itens Servidos (1 RTC)"** ser incrementado.
+7. **Teste de Degradação Graciosa:** Interrompa o `signaling.py` (Ctrl+C). Abra um tópico novo no Dispositivo B: o cliente tenta o canal WebRTC, expira em 2000 ms e realiza o fallback imediato para os gateways públicos (`arweave.net`), mantendo a navegação 100% funcional.
+8. **Teste de Teto Diário:** Ao ultrapassar os 50 MB ou ativar "Pausar contribuição", o nó recusa automaticamente responder a solicitações `WANT` recebidas via WebRTC, preservando os recursos do usuário.
+
+---
+
+## 7. Fallback de Demonstração
 
 Se os gateways Arweave estiverem temporariamente inacessíveis e não houver cache ou peers para o item solicitado, o Vox ativa automaticamente o **Modo Demonstração** (`mock.js`), permitindo navegar pela interface e testar formulários e telas sem travamentos.

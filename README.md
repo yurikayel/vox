@@ -110,6 +110,12 @@ Todo dado no Vox é identificado por tags semânticas universais:
   - Salvaguardas rigorosas: teto diário de banda (padrão 50 MB/dia), limite de cache (25 MB) e priorização Wi-Fi.
   - Suporte a Service Worker (`sw.js`) para relay em background com notificação visível no sistema operacional.
   - Direito incondicional de opt-out preservado em `#/settings/network` ("Pausar contribuição").
+- [x] **Fase 3.2: Conectividade entre Dispositivos (WebRTC Mesh)**
+  - Protocolo `vox-peer-v0` estendido para conexões diretas entre dispositivos via `RTCDataChannel` (`webrtc-peer.js`).
+  - Servidor de sinalização WebSocket leve em Python stdlib (`relay/signaling.py`, porta 3921), opcional e autohospedado.
+  - Configuração de STUN e sinalização comunitária (`config/signaling.json` e campo customizado na UI).
+  - Integração às salvaguardas do Pacto 3.1: teto de 50 MB/dia, salvaguarda de Wi-Fi e opt-out.
+  - Cascata completa: Memória -> IndexedDB -> Relay Desktop -> Broadcast -> WebRTC -> Gateways.
 - [ ] **Fase 4: Mensagens Diretas Criptografadas**
   - DMs com chave pública do destinatário via WebCrypto.
 - [ ] **Fase 5: Domínio & Identidade .vox.br**
