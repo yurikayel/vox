@@ -61,9 +61,54 @@ const QUERIES = {
       }
     }
   }`,
+  topicById: `query GetTopic($id: ID!) {
+    transaction(id: $id) {
+      id
+      owner { address }
+      tags { name value }
+    }
+  }`,
+  memberships: `query ListMemberships($address: String!) {
+    transactions(
+      first: 50
+      owners: [$address]
+      tags: [
+        { name: "App-Name", values: ["vox-brasil"] }
+        { name: "Type", values: ["membership"] }
+      ]
+      sort: HEIGHT_DESC
+    ) {
+      edges {
+        node {
+          id
+          tags { name value }
+        }
+      }
+    }
+  }`,
+  modActions: `query ListModActions($communityId: String!) {
+    transactions(
+      first: 50
+      tags: [
+        { name: "App-Name", values: ["vox-brasil"] }
+        { name: "Type", values: ["mod-action"] }
+        { name: "Community-Id", values: [$communityId] }
+      ]
+      sort: HEIGHT_DESC
+    ) {
+      edges {
+        node {
+          id
+          owner { address }
+          tags { name value }
+        }
+      }
+    }
+  }`
 };
 
 let gatewayConfig = null;
+const dataCache = new Map();
 
 export async function loadConfig() {
   if (gatewayConfig) return gatewayConfig;
@@ -73,6 +118,7 @@ export async function loadConfig() {
 }
 
 export function tagValue(tags, name) {
+  if (!Array.isArray(tags)) return "";
   const t = tags.find((x) => x.name === name);
   return t ? t.value : "";
 }
@@ -85,6 +131,7 @@ function mapCommunity(node) {
     title: tagValue(tags, "Title") || "Comunidade sem título",
     description: tagValue(tags, "Description") || "",
     category: tagValue(tags, "Category") || "",
+    moderators: tagValue(tags, "Moderators") || "",
     owner: node.owner?.address || "",
   };
 }
@@ -93,9 +140,10 @@ function mapTopic(node, communityId) {
   const tags = node.tags || [];
   return {
     id: node.id,
-    communityId,
+    communityId: communityId || tagValue(tags, "Community-Id"),
     title: tagValue(tags, "Topic-Title") || tagValue(tags, "Title") || "Tópico",
     owner: node.owner?.address || "",
+    tags,
   };
 }
 
@@ -104,8 +152,10 @@ function mapReply(node) {
   return {
     id: node.id,
     replyTo: tagValue(tags, "Reply-To"),
+    communityId: tagValue(tags, "Community-Id"),
     body: tagValue(tags, "Body") || tagValue(tags, "Content") || "",
     owner: node.owner?.address || "",
+    tags,
   };
 }
 
@@ -152,6 +202,18 @@ export async function fetchTopics(communityId) {
   return { items, gateway, demo: false };
 }
 
+export async function fetchTopicById(topicId) {
+  try {
+    const { data } = await withGateways((url) =>
+      queryOne(url, QUERIES.topicById, { id: topicId })
+    );
+    if (!data?.transaction) return null;
+    return mapTopic(data.transaction);
+  } catch {
+    return null;
+  }
+}
+
 export async function fetchReplies(topicId) {
   const { data, gateway } = await withGateways((url) =>
     queryOne(url, QUERIES.replies, { topicId })
@@ -159,4 +221,80 @@ export async function fetchReplies(topicId) {
   const edges = data.transactions?.edges || [];
   const items = edges.map((e) => mapReply(e.node));
   return { items, gateway, demo: false };
+}
+
+export async function fetchUserMemberships(address) {
+  try {
+    const { data } = await withGateways((url) =>
+      queryOne(url, QUERIES.memberships, { address })
+    );
+    const edges = data.transactions?.edges || [];
+    return edges.map((e) => {
+      const tags = e.node?.tags || [];
+      return {
+        id: e.node.id,
+        communityId: tagValue(tags, "Community-Id"),
+        displayName: tagValue(tags, "Display-Name") || "",
+      };
+    }).filter((m) => Boolean(m.communityId));
+  } catch {
+    return [];
+  }
+}
+
+export async function fetchModActions(communityId) {
+  try {
+    const { data } = await withGateways((url) =>
+      queryOne(url, QUERIES.modActions, { communityId })
+    );
+    const edges = data.transactions?.edges || [];
+    return edges.map((e) => {
+      const tags = e.node?.tags || [];
+      return {
+        id: e.node.id,
+        owner: e.node.owner?.address || "",
+        action: tagValue(tags, "Action"),
+        target: tagValue(tags, "Target"),
+        communityId: tagValue(tags, "Community-Id"),
+      };
+    });
+  } catch {
+    return [];
+  }
+}
+
+export async function fetchTransactionData(txId) {
+  if (!txId) return { body: "", raw: "" };
+  if (dataCache.has(txId)) return dataCache.get(txId);
+
+  const endpoints = [
+    `https://arweave.net/${txId}`,
+    `https://turbo-gateway.com/raw/${txId}`,
+  ];
+
+  for (const url of endpoints) {
+    try {
+      const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
+      if (!res.ok) continue;
+      const text = await res.text();
+      let parsed = { body: text, raw: text };
+      try {
+        const json = JSON.parse(text);
+        if (typeof json === "object" && json !== null) {
+          parsed.body = json.body || json.content || json.text || text;
+          parsed.title = json.title || "";
+        }
+      } catch {
+        // texto plano
+      }
+      dataCache.set(txId, parsed);
+      return parsed;
+    } catch {
+      // tenta o próximo endpoint
+    }
+  }
+
+  const empty = { body: "", raw: "" };
+  dataCache.set(txId, empty);
+  return empty;
 }

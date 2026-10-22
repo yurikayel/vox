@@ -8,13 +8,14 @@ Uma história única em fases — evita misturar promessas do README com o que o
 - Endereços exibidos são `owner.address` das transações Arweave (identificador público on-chain).
 - Stub reservado em `client/js/app.js` para autoria na Fase 2.
 
-## Fase 2: autoria de posts (Ed25519 + WebCrypto)
+## Fase 2 (entregue): autoria de posts (Wallet Arweave JWK + WebCrypto)
 
 **Canônico para assinar transações Vox (tópico, resposta, comunidade, mod-action):**
 
-- Algoritmo: **Ed25519** via `crypto.subtle` (import/export JWK onde o browser permitir).
-- O endereço Arweave exibido deriva da chave pública conforme convenção da stack de upload (Turbo/Arweave wallet — detalhe de integração na implementação Fase 2).
-- Payload: corpo da transação + tags `App-Name: vox-brasil`; assinatura prova autoria.
+- **Autoria on-chain canônica:** Wallet Arweave (formato RSA/JWK nativo do ecossistema), gerenciada localmente em `localStorage` via `wallet.js` e assinada diretamente pelo cliente.
+- O endereço Arweave público (`owner.address`) identifica o autor de tópicos, respostas e comunidades.
+- **Chave Ed25519 auxiliar:** Fica reservada como tag opcional (`Author-Key`) para Fase 2.1 — o upload de transações não é bloqueado por incompatibilidade Ed25519 vs RSA da carteira.
+- Payload: corpo da transação (JSON UTF-8) + tags `App-Name: vox-brasil`; assinatura prova autoria criptográfica permanente.
 
 **Passkeys (WebAuthn)** — fase posterior ou opcional:
 

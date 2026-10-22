@@ -1,7 +1,7 @@
 {
-  "name": "Vox — Comunidades",
+  "name": "Vox — Comunidades Soberanas",
   "short_name": "Vox",
-  "description": "Fórum comunitário no permaweb — Fase 1 leitura",
+  "description": "Fórum comunitário no permaweb — Fase 2 leitura, autoria e ponte",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f4f6f9",
