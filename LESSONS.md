@@ -88,7 +88,20 @@ Para materializar o *sweet spot* sem inflar o escopo, a **Fase 2** será regida 
    * Consulta GraphQL listando as comunidades que o endereço do usuário declarou pertencer.
 4. **Governança Distribuída (`mod-action`):**
    * Emissão de transação assinada por moderador para suprimir tópicos/respostas na visualização do cliente.
-5. **O que permanece explicitamente adiado (Fase 3+):**
+5. **O que permanece explicitamente adiado (Fase 4+):**
    * Mensagens diretas (DMs) com criptografia ponta a ponta (requer revisão jurídica sobre dados pessoais em permaweb).
-   * Nós semeadores P2P e topologias complexas de rede.
    * Seleção manual de instâncias/servidores pelo usuário final.
+
+---
+
+## 6. Lições de Infraestrutura Distribuída (Fases 3 e 3.1)
+
+### O Dilema do Opt-in vs Armadilha Varanda
+
+1. **O Fracasso do Opt-in Escondido:** Se a participação na infraestrutura for apenas uma caixa opcional escondida em menus avançados, menos de 1% dos usuários a ativam. O projeto continua vulnerável a quedas de gateways públicos e bloqueios de DNS.
+2. **A Armadilha do Varanda (P2P Obrigatório 24/7):** Exigir nós semeadores pesados no celular destrói a bateria, consome dados móveis tarifados no 4G/5G e cria problemas de NAT/CGNAT, gerando desinstalações em massa.
+3. **A Síntese Vox 3.1 (Default-on com Pacto e Salvaguardas):**
+   * **Inversão do Contrato Digital:** As Big Techs oferecem servidores "gratuitos" em troca de coletar, minerar e vender seus dados e direcionar algoritmos de retenção. O Vox garante soberania total (suas chaves, seus dados no permaweb) e, em troca, utiliza capacidade ociosa de cache e leitura do seu dispositivo como bem comum.
+   * **Ativo por Padrão no App Aberto:** Ao abrir o app, o nó leve atua automaticamente servindo requisições de leitura de dados públicos e imutáveis já baixados, sem custo de servidores para o projeto.
+   * **Salvaguardas Inegociáveis:** Teto diário de banda (50 MB/dia), priorização Wi-Fi para não consumir 4G/5G, limite de disco (25 MB) e direito irrestrito de pausa/opt-out a qualquer momento nas configurações.
+   * **Segundo Plano Transparente:** O Service Worker só roda tarefas de relay em segundo plano se houver conexão Wi-Fi ativa e com notificação visível no sistema operacional via Web Notification API.

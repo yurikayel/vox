@@ -104,6 +104,12 @@ Todo dado no Vox é identificado por tags semânticas universais:
   - Interface de configuração de rede distribuída e métricas em `#/settings/network`.
   - Servidor desktop local de cache e espelho em Python sem dependências (`vox/relay/`).
   - *Critério de Sucesso (DoD atingido):* Resolução em cascata (Cache -> Relay -> Peer -> Gateway) acelerando leitura e suportando navegação offline.
+- [x] **Fase 3.1: Rede Distribuída por Padrão (Pacto Vox)**
+  - Participação distribuída ativa por padrão com contrato transparente na 1ª abertura (Modal Pacto Vox).
+  - Inversão de valor: soberania de chaves e dados ↔ cache local cooperativo sem servidores centrais.
+  - Salvaguardas rigorosas: teto diário de banda (padrão 50 MB/dia), limite de cache (25 MB) e priorização Wi-Fi.
+  - Suporte a Service Worker (`sw.js`) para relay em background com notificação visível no sistema operacional.
+  - Direito incondicional de opt-out preservado em `#/settings/network` ("Pausar contribuição").
 - [ ] **Fase 4: Mensagens Diretas Criptografadas**
   - DMs com chave pública do destinatário via WebCrypto.
 - [ ] **Fase 5: Domínio & Identidade .vox.br**

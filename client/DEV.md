@@ -76,6 +76,37 @@ Para validar o *Definition of Done* da Fase 2:
 
 ---
 
-## 5. Fallback de Demonstração
+## 5. Teste da Rede Distribuída por Padrão — Fase 3.1 DoD
+
+### 5.1 Modal Onboarding do Pacto Vox
+1. No console do DevTools, execute:
+   ```javascript
+   localStorage.removeItem("vox-pact-accepted");
+   location.reload();
+   ```
+2. O modal **Pacto Vox: Rede Distribuída** é renderizado cobrindo a tela, informando a relação soberania ↔ cooperação técnica.
+3. Teste o botão **"Concordar e Entrar"**:
+   * O modal fecha, define `vox-pact-accepted = "true"` no `localStorage` e exibe um toast de confirmação.
+4. Repita limpando a chave e teste o botão **"Ajustar Limites de Rede Primeiro"**:
+   * O modal fecha e a navegação redireciona imediatamente para `#/settings/network`.
+
+### 5.2 Validação Default-on e Opt-Out ("Pausar Contribuição")
+1. Sem configuração prévia, abra `#/settings/network`:
+   * O badge exibe: `🟢 Nó Leve Ativo (Padrão)`.
+   * A caixa de diálogo exibe a barra de uso diário `0.0 / 50 MB`.
+2. Para testar o opt-out:
+   * Marque a opção **"Pausar contribuição (desativar nó leve e usar apenas modo leitura)"** e clique em **"Salvar Preferências"**.
+   * O badge muda para: `⏸️ Contribuição Pausada`. O canal `vox-peer-v0` deixa de responder a pacotes `WANT` de outros pares.
+
+### 5.3 Service Worker e Background Relay
+1. Abra as Ferramentas do Desenvolvedor (F12) -> aba **Application** -> **Service Workers**:
+   * O arquivo `sw.js` deve estar com status **Activated and running** com escopo `./`.
+2. Na aba **Cache Storage**, certifique-se de que o cache `vox-pwa-v3.1` contém os arquivos estáticos pré-cacheados (`index.html`, `style.css`, módulos `.js`).
+3. Em `#/settings/network`, ative a opção **"Atuar em segundo plano via Service Worker"** e clique em **"Ativar Notificações de Status"**:
+   * Ao autorizar permissão no navegador, o Service Worker sincroniza a configuração via mensagem `VOX_SETTINGS_UPDATED`.
+
+---
+
+## 6. Fallback de Demonstração
 
 Se os gateways Arweave estiverem temporariamente inacessíveis e não houver cache ou peers para o item solicitado, o Vox ativa automaticamente o **Modo Demonstração** (`mock.js`), permitindo navegar pela interface e testar formulários e telas sem travamentos.

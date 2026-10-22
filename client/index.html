@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#1a5fb4" />
-    <meta name="description" content="Vox — comunidades e fóruns no permaweb (Fase 2 leitura, autoria e ponte)" />
+    <meta name="description" content="Vox — comunidades e fóruns no permaweb (Fase 3.1 rede distribuída por padrão)" />
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="css/style.css" />
@@ -12,6 +12,14 @@
   </head>
   <body>
     <div id="app-root"></div>
+    <div id="modal-container"></div>
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker.register("./sw.js").catch(() => {});
+        });
+      }
+    </script>
     <script type="module" src="js/app.js"></script>
   </body>
 </html>

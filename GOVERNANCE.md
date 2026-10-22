@@ -42,12 +42,15 @@ Espelhos são **opcionais** e **substituíveis**; o client Fase 1 fala direto co
 - Clientes podem integrar listas de hash/TX reportadas (espelho).
 - Obrigações legais brasileiras (LGPD, conteúdo eleitoral) estão resumidas em [COMPLIANCE-BR.md](./COMPLIANCE-BR.md) — **não substituem assessoria jurídica**.
 
-## Nós Participativos, Relays e Responsabilidade sobre Cache (Fase 3)
+## Nós Participativos, Relays e Responsabilidade sobre Cache (Fases 3 e 3.1)
 
-- Usuários que ativam o nó participativo de leitura (`peers.js`) ou executam o Vox Relay Desktop (`vox/relay/`) armazenam cópias de cache local exclusivamente para aceleração de navegação em suas próprias máquinas.
-- O cache replica apenas transações que já são públicas e perenes na rede Arweave.
-- Operadores de relay e nós locais mantêm autonomia total para esvaziar seu cache a qualquer momento (pela interface `#/settings/network` ou excluindo o diretório `.cache/`).
-- Operadores de espelhos públicos que recebam notificações judiciais devem suprimir a renderização dos conteúdos ilícitos em seus índices locais, em observância ao Marco Civil da Internet (Art. 19).
+- Na **Fase 3.1 (Pacto Vox)**, a participação distribuída do nó leve é **ativa por padrão (default-on)** mediante contrato transparente apresentado na primeira abertura do app.
+- O app armazena cópias de cache local no IndexedDB exclusivamente para aceleração de navegação e compartilhamento peer-to-peer de dados que já são 100% públicos e imutáveis no permaweb Arweave.
+- O modelo garante reciprocidade: soberania dos dados do usuário (chaves locais) em troca de infraestrutura compartilhada sem servidores corporativos centrais.
+- Usuários mantêm autonomia absoluta para pausar ou desligar a contribuição a qualquer momento através de `#/settings/network` ("Pausar contribuição").
+- Limites de proteção diários (teto de banda de 50 MB/dia, cache de 25 MB e salvaguardas de Wi-Fi) asseguram que a rede não gere ônus imprevisto de dados ou bateria.
+- Operadores de relay desktop (`vox/relay/`) e nós leves mantêm total prerrogativa para limpar o cache a qualquer momento.
+- Espelhos públicos que recebam notificações judiciais devem suprimir a renderização dos conteúdos ilícitos em seus índices locais, em estrita observância ao Marco Civil da Internet (Art. 19).
 
 ## Escalonamento comunitário
 

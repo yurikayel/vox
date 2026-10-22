@@ -16,6 +16,18 @@ Documento informativo de alto nível. **Não é parecer jurídico.** Produtores 
 - Direitos do titular (acesso, eliminação): na permaweb, **eliminação técnica plena** pode ser impossível; mitigação = não publicar + filtros client-side + não replicar em espelhos.
 - Encarregado/DPO: inexistente no projeto open-source sem operador comercial central — quem rodar espelho comercial assume papéis conforme seu modelo de negócio.
 
+## O Pacto Vox: Recursos Compartilhados e LGPD (Fase 3.1)
+
+Na **Fase 3.1**, o Vox adota o modelo contratual transparente **Pacto Vox**:
+* **Inversão da lógica extrativista:** Em redes sociais corporativas tradicionais, a infraestrutura é centralizada mas o "preço" é a extração e venda de dados pessoais, metadados comportamentais e direcionamento algorítmico opaco. No Vox, a identidade e os conteúdos pertencem 100% ao usuário (assinados com JWK local na chain Arweave).
+* **Infraestrutura cooperativa ativa por padrão:** Como contrapartida da soberania, o app opera por padrão como um nó leve de leitura e cache local enquanto aberto, servindo fragmentos públicos a outros clientes na rede sem depender de datacenters corporativos custosos.
+* **Bases Legais e Transparência:**
+  1. **Ciência Prévia no Onboarding:** Na primeira abertura do app, um modal claro apresenta os termos do pacto antes da navegação continuada.
+  2. **Salvaguarda Técnica de Dados:** O nó leve trafega e armazena **estritamente dados públicos e imutáveis** já gravados no permaweb (tópicos e respostas comunitárias). Chaves privadas, dados sensíveis ou históricos pessoais de navegação nunca são compartilhados.
+  3. **Direito de Opt-Out Preservado:** O usuário mantém a prerrogativa soberana de pausar a contribuição a qualquer momento através de `#/settings/network` ("Pausar contribuição"), convertendo o cliente para modo passivo.
+  4. **Proteção Patrimonial (Banda e Bateria):** Padrão configurado com teto diário de banda (50 MB/dia), limite de armazenamento local (25 MB) e prioridade em conexões Wi-Fi para impedir consumo de dados tarifados 4G/5G.
+  5. **Operação em Segundo Plano:** Se habilitada, a atuação via Service Worker exige permissão de notificação explícita do sistema operacional e desativa-se automaticamente fora de redes Wi-Fi ou caso o teto diário seja atingido.
+
 ## Marco Civil da Internet (Lei 12.965/2014) e Art. 19
 
 O regime de responsabilidade civil de intermediários no Brasil estabelece distinções fundamentais:

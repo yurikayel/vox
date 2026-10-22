@@ -21,11 +21,11 @@ Para aprofundamento das lições e armadilhas evitadas, consulte [LESSONS.md](./
 
 | Aspecto | Narrativa comum (ex. BemTeVi) | Vox |
 |--------|-------------------------------|-----|
-| Infra | “Rede brasileira”, servidores/nós no país | Permaweb global + clientes locais; sem servidor Vox central |
+| Infra | “Rede brasileira”, servidores/nós no país | Permaweb global + nós locais default-on (Pacto Vox: seus dados são seus ↔ cache cooperativo) |
 | Dados | Dependem de operadores nacionais | Transações públicas indexadas via GraphQL em gateways abertos |
 | Moderação | Central ou institucional | Client-side + `mod-action` assinado por moderadores da comunidade |
 | Conexão com outras redes | Rede isolada | Ponte ativa: publica no Vox e despacha para WhatsApp, Insta, X e TikTok |
-| Fase atual | Varia por produto | **Fase 1: leitura entregue** — autoria e crosspost na Fase 2 |
+| Fase atual | Varia por produto | **Fases 1, 2, 3 e 3.1 entregues** — nós participativos default-on operacionais; DMs na Fase 4 |
 
 ## O que é imutável vs o que o cliente esconde
 
@@ -40,6 +40,6 @@ Para aprofundamento das lições e armadilhas evitadas, consulte [LESSONS.md](./
 - Bloqueios locais (silenciar autor).
 - Índices espelho opcionais curados por operadores de gateway ou espelhos comunitários — não apagam a TX original.
 
-**Fora do escopo honesto da Fase 1:**
+**Fora do escopo atual:**
 
-- Mensagens diretas, publicação pelo PWA e crosspost — roadmap Fase 2 e 3 (ver [README.md](./README.md)).
+- Mensagens diretas privadas ponto a ponto — roadmap Fase 4 (ver [README.md](./README.md)).

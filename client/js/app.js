@@ -505,42 +505,28 @@ async function showComposeReply(topicId, communityId) {
   }
 }
 
-async function showNetworkSettings() {
-  const user = await getActiveUser();
-  const main = render.renderShell({
-    title: "Nó de Rede & Cache",
-    subtitle: "Configurações de rede distribuída e espelho local",
-    walletAddress: user,
-  });
-
-  const settings = peers.getPeerSettings();
-  const metrics = peers.getPeerMetrics();
-  const cacheStats = await cacheNode.getCacheStats();
-  const relayStatus = await peers.checkDesktopRelay();
-
-  render.renderNetworkSettings(main, {
-    settings,
-    metrics,
-    cacheStats,
-    relayStatus,
-  });
-
+function bindNetworkSettingsForm() {
   const form = document.getElementById("form-network-settings");
-  if (form) {
-    form.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const enabled = document.getElementById("net-optin")?.checked || false;
-      const maxMb = Number(document.getElementById("net-max-mb")?.value) || 25;
-      const wifiOnly = document.getElementById("net-wifi")?.checked || false;
-      const commOnly = document.getElementById("net-comm-only")?.checked || false;
+  if (!form) return;
 
-      peers.savePeerSettings({ enabled, maxMb, wifiOnly, commOnly });
-      cacheNode.enforceMaxCacheSize(maxMb);
-      share.showToast("Preferências de rede salvas!");
-      showNetworkSettings();
-    });
-  }
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const paused = document.getElementById("net-pause")?.checked || false;
+    const enabled = !paused;
+    const maxMb = Number(document.getElementById("net-max-mb")?.value) || 25;
+    const dailyCapMb = Number(document.getElementById("net-daily-cap")?.value) || 50;
+    const wifiOnly = document.getElementById("net-wifi")?.checked || false;
+    const commOnly = document.getElementById("net-comm-only")?.checked || false;
+    const backgroundRelay = document.getElementById("net-bg-relay")?.checked || false;
 
+    peers.savePeerSettings({ enabled, maxMb, wifiOnly, commOnly, backgroundRelay, dailyCapMb });
+    cacheNode.enforceMaxCacheSize(maxMb);
+    share.showToast(enabled ? "Preferências salvas: nó leve ativo!" : "Preferências salvas: nó pausado.");
+    showNetworkSettings();
+  });
+}
+
+function bindNetworkSettingsButtons() {
   const btnClear = document.getElementById("btn-clear-cache");
   if (btnClear) {
     btnClear.addEventListener("click", async () => {
@@ -561,16 +547,86 @@ async function showNetworkSettings() {
       btnCheckRelay.disabled = false;
       btnCheckRelay.textContent = "Verificar Relay Desktop";
       if (status.online) {
-        share.showToast(`Relay desktop online! ${status.data?.cachedCount || 0} itens em cache.`);
+        share.showToast(`Relay desktop online! ${status.data?.cachedCount || 0} itens em disco.`);
       } else {
         share.showToast("Relay desktop não detectado em 127.0.0.1:3920.", "error");
       }
       showNetworkSettings();
     });
   }
+
+  const btnReqNotif = document.getElementById("btn-request-notif");
+  if (btnReqNotif) {
+    btnReqNotif.addEventListener("click", async () => {
+      const perm = await peers.requestNotificationPermission();
+      if (perm === "granted") {
+        share.showToast("Notificações de status permitidas!");
+      } else {
+        share.showToast("Permissão de notificação não concedida.", "error");
+      }
+      showNetworkSettings();
+    });
+  }
+}
+
+async function showNetworkSettings() {
+  const user = await getActiveUser();
+  const main = render.renderShell({
+    title: "Nó de Rede & Cache",
+    subtitle: "Configurações de rede distribuída e espelho local",
+    walletAddress: user,
+  });
+
+  const settings = peers.getPeerSettings();
+  const metrics = peers.getPeerMetrics();
+  const cacheStats = await cacheNode.getCacheStats();
+  const relayStatus = await peers.checkDesktopRelay();
+  const dailyUsage = peers.getDailyUsage();
+  const notifPermission = "Notification" in window ? Notification.permission : "unsupported";
+
+  render.renderNetworkSettings(main, {
+    settings,
+    metrics,
+    cacheStats,
+    relayStatus,
+    dailyUsage,
+    notifPermission,
+  });
+
+  bindNetworkSettingsForm();
+  bindNetworkSettingsButtons();
+}
+
+function checkPactModal() {
+  const accepted = localStorage.getItem("vox-pact-accepted");
+  if (accepted) return;
+
+  const modalContainer = document.getElementById("modal-container");
+  if (!modalContainer) return;
+
+  render.renderPactModal(modalContainer);
+
+  const btnAccept = document.getElementById("btn-pact-accept");
+  if (btnAccept) {
+    btnAccept.addEventListener("click", () => {
+      localStorage.setItem("vox-pact-accepted", "true");
+      render.closePactModal(modalContainer);
+      share.showToast("Pacto aceito: nó leve ativo!");
+    });
+  }
+
+  const btnSettings = document.getElementById("btn-pact-settings");
+  if (btnSettings) {
+    btnSettings.addEventListener("click", () => {
+      localStorage.setItem("vox-pact-accepted", "true");
+      render.closePactModal(modalContainer);
+      location.hash = "#/settings/network";
+    });
+  }
 }
 
 async function route() {
+  checkPactModal();
   const r = parseRoute();
   if (r.name === "home") return showHome();
   if (r.name === "network-settings") return showNetworkSettings();
