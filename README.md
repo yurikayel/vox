@@ -89,12 +89,15 @@ Todo dado no Vox é identificado por tags semânticas universais:
 - [x] **Fase 1: MVP do Fórum & Leitura (A Rua + Comunidades)**
   - Cliente PWA em [`client/`](./client/) — comunidades, tópicos e respostas via GraphQL (`App-Name: vox-brasil`).
   - Interface nostálgica e limpa (estilo Orkut moderno); demo offline se gateway falhar.
-- [ ] **Fase 2: Autoria, Chaves & Ponte de Crossposting**
-  - Geração de par de chaves local Ed25519 no navegador.
-  - Publicação de tópicos e respostas assinadas.
-  - Botão de compartilhamento imediato (Web Share API) formatado para WhatsApp, Insta, X e TikTok.
-  - Perfil exibindo comunidades seguidas (`membership`).
-  - *Critério de Sucesso (DoD):* Usuário cria tópico assinado, visualiza na PWA e despacha para WhatsApp em < 30s sem nenhum servidor Node/Python do projeto.
+- [x] **Fase 2: Autoria, Chaves & Ponte de Crossposting**
+  - Carteira Arweave JWK local (`wallet.js`) com geração e importação.
+  - Upload de transações (`upload.js`) para comunidades, tópicos e respostas.
+  - Leitura de corpo de transações com cache de dados (`graphql.js: fetchTransactionData`).
+  - Botão de compartilhamento Web Share API + fallback de área de transferência (`share.js`).
+  - Perfil de membro com listagem de comunidades seguidas (`membership`).
+  - Governança distribuída via transações `mod-action` com supressão client-side (`moderation.js`).
+  - Guia de testes e faucet em [`client/DEV.md`](./client/DEV.md).
+  - *Critério de Sucesso (DoD atingido):* Criação de tópicos assinados, leitura via GraphQL e compartilhamento em < 30s sem backend próprio.
 - [ ] **Fase 3: Mensagens Diretas Criptografadas**
   - DMs com chave pública do destinatário via WebCrypto.
 - [ ] **Fase 4: Domínio & Identidade .vox.br**
@@ -112,6 +115,7 @@ Todo dado no Vox é identificado por tags semânticas universais:
 | [GOVERNANCE.md](./GOVERNANCE.md) | Moderação `mod-action` client-side e espelhos comunitários |
 | [IDENTITY.md](./IDENTITY.md) | Ed25519, Passkeys e fases de identidade |
 | [COMPLIANCE-BR.md](./COMPLIANCE-BR.md) | LGPD, Marco Civil Art. 19 e notas regulatórias |
+| [client/DEV.md](./client/DEV.md) | Guia do desenvolvedor: carteira Arweave local, faucets e testes |
 
 ### Rodar o PWA localmente
 

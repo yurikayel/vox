@@ -101,6 +101,51 @@ query ListReplies($topicId: String!) {
 }
 ```
 
+### 2.4 Listar Membresias de um Usuário
+```graphql
+query ListMemberships($address: String!) {
+  transactions(
+    first: 50
+    owners: [$address]
+    tags: [
+      { name: "App-Name", values: ["vox-brasil"] },
+      { name: "Type", values: ["membership"] }
+    ]
+    sort: HEIGHT_DESC
+  ) {
+    edges {
+      node {
+        id
+        tags { name value }
+      }
+    }
+  }
+}
+```
+
+### 2.5 Listar Ações de Moderação de uma Comunidade
+```graphql
+query ListModActions($communityId: String!) {
+  transactions(
+    first: 50
+    tags: [
+      { name: "App-Name", values: ["vox-brasil"] },
+      { name: "Type", values: ["mod-action"] },
+      { name: "Community-Id", values: [$communityId] }
+    ]
+    sort: HEIGHT_DESC
+  ) {
+    edges {
+      node {
+        id
+        owner { address }
+        tags { name value }
+      }
+    }
+  }
+}
+```
+
 ---
 
 ## 3. Mensagens Diretas (DMs) — Criptografia (Fase 3)

@@ -1,24 +1,63 @@
 import * as gql from "./graphql.js";
 import * as render from "./render.js";
 import * as mock from "./mock.js";
-
-// Fase 2: WebCrypto Ed25519 sign + Turbo upload — not implemented.
+import * as wallet from "./wallet.js";
+import * as upload from "./upload.js";
+import * as share from "./share.js";
+import * as mod from "./moderation.js";
 
 function parseRoute() {
-  const hash = location.hash.replace(/^#/, "") || "/";
-  const parts = hash.split("/").filter(Boolean);
+  const hash = location.hash.replace(/^#\/?/, "");
+  const [pathPart, queryPart] = hash.split("?");
+  const parts = pathPart ? pathPart.split("/").filter(Boolean) : [];
+  const query = new URLSearchParams(queryPart || "");
+
   if (!parts.length) return { name: "home" };
-  if (parts[0] === "c" && parts[1]) return { name: "community", id: decodeURIComponent(parts[1]) };
-  if (parts[0] === "t" && parts[1]) return { name: "topic", id: decodeURIComponent(parts[1]) };
+  if (parts[0] === "c" && parts[1]) {
+    return { name: "community", id: decodeURIComponent(parts[1]) };
+  }
+  if (parts[0] === "t" && parts[1]) {
+    return {
+      name: "topic",
+      id: decodeURIComponent(parts[1]),
+      communityId: query.get("c") || "",
+    };
+  }
+  if (parts[0] === "u" && parts[1]) {
+    return { name: "profile", address: decodeURIComponent(parts[1]) };
+  }
+  if (parts[0] === "wallet") return { name: "wallet" };
+  if (parts[0] === "compose") {
+    if (parts[1] === "community") return { name: "compose-community" };
+    if (parts[1] === "topic") return { name: "compose-topic", communityId: query.get("c") || "" };
+    if (parts[1] === "reply") {
+      return {
+        name: "compose-reply",
+        topicId: query.get("t") || "",
+        communityId: query.get("c") || "",
+      };
+    }
+  }
   return { name: "home" };
 }
 
+async function getActiveUser() {
+  try {
+    return await wallet.getAddress();
+  } catch {
+    return null;
+  }
+}
+
 async function showHome() {
+  const user = await getActiveUser();
   const main = render.renderShell({
     title: "Comunidades",
-    subtitle: "Estilo Orkut — leitura no permaweb",
+    subtitle: "A Rua — fóruns e debates abertos no permaweb",
+    walletAddress: user,
   });
   render.renderLoading(main);
+
   try {
     const { items, gateway, demo } = await gql.fetchCommunities().catch(async () => mock.mockCommunities());
     main.innerHTML = "";
@@ -35,60 +74,442 @@ async function showHome() {
 }
 
 async function showCommunity(communityId) {
+  const user = await getActiveUser();
   const main = render.renderShell({
     title: "Comunidade",
-    subtitle: communityId,
+    subtitle: `Fórum de ${communityId}`,
+    walletAddress: user,
   });
   render.renderLoading(main);
+
+  let topics = [];
+  let meta = { id: communityId, title: communityId, owner: "" };
+  let demo = false;
+  let gateway = "";
+
   try {
-    const { items, gateway, demo } = await gql.fetchTopics(communityId).catch(() => mock.mockTopics(communityId));
-    main.innerHTML = "";
-    if (demo) render.renderDemoBanner(main);
-    else render.renderGatewayBanner(main, gateway);
-    render.renderCommunity(main, communityId, items, {});
+    const res = await gql.fetchTopics(communityId).catch(() => mock.mockTopics(communityId));
+    topics = res.items;
+    demo = res.demo;
+    gateway = res.gateway;
   } catch (e) {
-    main.innerHTML = "";
     const fb = mock.mockTopics(communityId);
-    render.renderDemoBanner(main);
-    render.renderError(main, String(e.message || e));
-    render.renderCommunity(main, communityId, fb.items, {});
+    topics = fb.items;
+    demo = true;
   }
+
+  // Tenta carregar detalhes da comunidade da lista
+  try {
+    const comms = await gql.fetchCommunities();
+    const found = comms.items.find((c) => c.id === communityId);
+    if (found) meta = found;
+  } catch {
+    // Mantém meta básico
+  }
+
+  // Moderação
+  let modActions = [];
+  try {
+    modActions = await mod.fetchModActions(communityId);
+  } catch {
+    // Sem mod actions
+  }
+  const filteredTopics = mod.applyFilters(topics, modActions, meta.owner, meta.moderators);
+  const isUserMod = mod.isModerator(user, meta.owner, meta.moderators);
+
+  // Checagem de Membresia
+  let isMember = false;
+  if (user) {
+    try {
+      const mems = await gql.fetchUserMemberships(user);
+      isMember = mems.some((m) => m.communityId === communityId);
+    } catch {
+      // Ignora
+    }
+  }
+
+  main.innerHTML = "";
+  if (demo) render.renderDemoBanner(main);
+  else if (gateway) render.renderGatewayBanner(main, gateway);
+
+  render.renderCommunity(main, communityId, filteredTopics, meta, {
+    isMember,
+    isMod: isUserMod,
+    walletAddress: user,
+  });
+
+  // Eventos na tela da comunidade
+  const btnShare = document.getElementById("btn-share-comm");
+  if (btnShare) {
+    btnShare.addEventListener("click", () => {
+      share.shareCommunity({ title: meta.title || communityId, communityId });
+    });
+  }
+
+  const btnJoin = document.getElementById("btn-join-comm");
+  if (btnJoin && !isMember) {
+    btnJoin.addEventListener("click", async () => {
+      if (!wallet.hasWallet()) {
+        share.showToast("Conecte sua carteira em #/wallet para entrar.", "error");
+        location.hash = "#/wallet";
+        return;
+      }
+      btnJoin.disabled = true;
+      btnJoin.textContent = "Gravando membresia…";
+      try {
+        const tags = upload.buildTags("membership", { "Community-Id": communityId });
+        await upload.postData({ communityId, joinedAt: Date.now() }, tags);
+        share.showToast("Membresia gravada com sucesso!");
+        btnJoin.textContent = "✓ Membro Confirmado";
+      } catch (err) {
+        share.showToast(`Erro ao entrar: ${err.message}`, "error");
+        btnJoin.disabled = false;
+        btnJoin.textContent = "★ Entrar na Comunidade";
+      }
+    });
+  }
+
+  // Evento Ocultar para moderadores
+  document.querySelectorAll(".btn-mod-hide").forEach((btn) => {
+    btn.addEventListener("click", async (e) => {
+      const targetId = e.target.dataset.id;
+      if (!confirm(`Ocultar o item ${targetId} para todos os membros desta comunidade?`)) return;
+      e.target.disabled = true;
+      try {
+        const tags = upload.buildTags("mod-action", {
+          "Community-Id": communityId,
+          Action: "hide",
+          Target: targetId,
+        });
+        await upload.postData({ action: "hide", target: targetId, communityId }, tags);
+        share.showToast("Ação de moderação enviada.");
+        e.target.closest(".card")?.remove();
+      } catch (err) {
+        share.showToast(`Erro na moderação: ${err.message}`, "error");
+        e.target.disabled = false;
+      }
+    });
+  });
 }
 
-async function showTopic(topicId) {
+async function showTopic(topicId, commIdParam = "") {
+  const user = await getActiveUser();
   const main = render.renderShell({
     title: "Tópico",
-    subtitle: topicId,
+    subtitle: `Discussão ${topicId.slice(0, 8)}…`,
+    walletAddress: user,
   });
   render.renderLoading(main);
-  let topic = { title: "Tópico", owner: "" };
+
+  let topic = { title: "Tópico", owner: "", communityId: commIdParam };
   let replies = [];
+  let topicData = { body: "" };
+
+  // Busca metadados e corpo do tópico
+  try {
+    const fetchedTopic = await gql.fetchTopicById(topicId);
+    if (fetchedTopic) topic = fetchedTopic;
+  } catch {
+    // fallback
+  }
+
+  try {
+    topicData = await gql.fetchTransactionData(topicId);
+  } catch {
+    // fallback
+  }
+
+  let gateway = "";
   let demo = false;
   try {
     const res = await gql.fetchReplies(topicId);
     replies = res.items;
-    demo = res.demo;
-    main.innerHTML = "";
-    render.renderGatewayBanner(main, res.gateway);
-  } catch (e) {
+    gateway = res.gateway;
+  } catch {
     const fb = mock.mockReplies(topicId);
     replies = fb.items;
     demo = true;
-    main.innerHTML = "";
-    render.renderDemoBanner(main);
-    render.renderError(main, String(e.message || e));
-    if (fb.items.length) {
-      topic = { title: "Como funciona a Fase 1?", owner: "demo-owner" };
+    if (!topic.title || topic.title === "Tópico") {
+      topic = { title: "Como funciona a Fase 2?", owner: "demo-owner", communityId: commIdParam };
+      topicData = { body: "Esta é uma visualização demonstrativa com corpo e replies." };
     }
   }
-  render.renderTopic(main, topicId, topic, replies);
+
+  // Para cada resposta sem body nas tags, carrega via fetchTransactionData assincronamente
+  const finalCommId = topic.communityId || commIdParam;
+  let modActions = [];
+  if (finalCommId) {
+    try {
+      modActions = await mod.fetchModActions(finalCommId);
+    } catch {}
+  }
+  const filteredReplies = mod.applyFilters(replies, modActions);
+  const isUserMod = mod.isModerator(user, "", "");
+
+  main.innerHTML = "";
+  if (demo) render.renderDemoBanner(main);
+  else if (gateway) render.renderGatewayBanner(main, gateway);
+
+  render.renderTopic(main, topicId, topic, filteredReplies, {
+    topicData,
+    isMod: isUserMod,
+    communityId: finalCommId,
+  });
+
+  // Carrega corpos das respostas que não vieram nas tags
+  filteredReplies.forEach(async (r) => {
+    if (!r.body || r.body.startsWith("(")) {
+      const d = await gql.fetchTransactionData(r.id);
+      if (d?.body) {
+        const el = document.getElementById(`reply-${r.id}`);
+        const p = el?.querySelector(".reply-body");
+        if (p) p.textContent = d.body;
+      }
+    }
+  });
+
+  // Evento Compartilhar
+  const btnShare = document.getElementById("btn-share-topic");
+  if (btnShare) {
+    btnShare.addEventListener("click", () => {
+      share.shareTopic({
+        title: topic.title || "Tópico no Vox",
+        topicId,
+        communityId: finalCommId,
+      });
+    });
+  }
+
+  // Mod hide em replies
+  document.querySelectorAll(".btn-mod-hide").forEach((btn) => {
+    btn.addEventListener("click", async (e) => {
+      const targetId = e.target.dataset.id;
+      if (!confirm(`Ocultar o item ${targetId}?`)) return;
+      e.target.disabled = true;
+      try {
+        const tags = upload.buildTags("mod-action", {
+          "Community-Id": finalCommId,
+          Action: "hide",
+          Target: targetId,
+        });
+        await upload.postData({ action: "hide", target: targetId }, tags);
+        share.showToast("Item ocultado.");
+        e.target.closest(".card")?.remove();
+      } catch (err) {
+        share.showToast(`Erro: ${err.message}`, "error");
+        e.target.disabled = false;
+      }
+    });
+  });
+}
+
+async function showProfile(address) {
+  const user = await getActiveUser();
+  const main = render.renderShell({
+    title: "Perfil",
+    subtitle: address.slice(0, 10) + "…",
+    walletAddress: user,
+  });
+  render.renderLoading(main);
+
+  const memberships = await gql.fetchUserMemberships(address);
+  main.innerHTML = "";
+  render.renderProfile(main, address, memberships, user === address);
+}
+
+async function showWallet() {
+  const user = await getActiveUser();
+  const main = render.renderShell({
+    title: "Carteira Arweave",
+    subtitle: "Gestão de chave local para autoria soberana",
+    walletAddress: user,
+  });
+
+  let balance = "0.000";
+  if (user) {
+    try {
+      balance = await wallet.getBalance(user);
+    } catch {
+      balance = "Indisponível";
+    }
+  }
+
+  render.renderWallet(main, {
+    address: user,
+    balance,
+    hasWallet: wallet.hasWallet(),
+  });
+
+  // Evento Gerar Carteira
+  const btnGen = document.getElementById("btn-generate-wallet");
+  if (btnGen) {
+    btnGen.addEventListener("click", async () => {
+      btnGen.disabled = true;
+      btnGen.textContent = "Gerando par de chaves Arweave…";
+      try {
+        const { address } = await wallet.generateNewWallet();
+        share.showToast(`Carteira criada com sucesso!`);
+        showWallet();
+      } catch (err) {
+        share.showToast(`Erro ao gerar: ${err.message}`, "error");
+        btnGen.disabled = false;
+        btnGen.textContent = "⚡ Gerar Nova Carteira";
+      }
+    });
+  }
+
+  // Evento Importar Carteira
+  const formImport = document.getElementById("form-import-wallet");
+  if (formImport) {
+    formImport.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const input = document.getElementById("wallet-jwk-input")?.value.trim();
+      try {
+        const jwk = JSON.parse(input);
+        wallet.saveJwk(jwk);
+        share.showToast("Carteira importada e salva localmente!");
+        showWallet();
+      } catch (err) {
+        share.showToast("JSON JWK inválido. Verifique o formato.", "error");
+      }
+    });
+  }
+
+  // Evento Desconectar Carteira
+  const btnDisc = document.getElementById("btn-disconnect-wallet");
+  if (btnDisc) {
+    btnDisc.addEventListener("click", () => {
+      if (confirm("Remover a carteira deste navegador? Certifique-se de ter backup.")) {
+        wallet.removeWallet();
+        share.showToast("Carteira removida do navegador.");
+        showWallet();
+      }
+    });
+  }
+}
+
+async function showComposeCommunity() {
+  const user = await getActiveUser();
+  const main = render.renderShell({
+    title: "Nova Comunidade",
+    subtitle: "Criar espaço temático permanente",
+    walletAddress: user,
+  });
+  render.renderComposeCommunity(main, { hasWallet: wallet.hasWallet() });
+
+  const form = document.getElementById("form-compose-community");
+  if (form) {
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById("btn-submit-comm");
+      const id = document.getElementById("comm-id")?.value.trim().toLowerCase();
+      const title = document.getElementById("comm-title")?.value.trim();
+      const category = document.getElementById("comm-category")?.value.trim();
+      const desc = document.getElementById("comm-desc")?.value.trim();
+
+      btn.disabled = true;
+      btn.textContent = "Assinando e enviando…";
+      try {
+        const tags = upload.buildTags("community", {
+          "Community-Id": id,
+          Title: title,
+          Category: category,
+          Description: desc,
+        });
+        await upload.postData({ id, title, category, description: desc }, tags);
+        share.showToast("Comunidade criada no permaweb!");
+        location.hash = `#/c/${encodeURIComponent(id)}`;
+      } catch (err) {
+        share.showToast(`Erro: ${err.message}`, "error");
+        btn.disabled = false;
+        btn.textContent = "Publicar Comunidade";
+      }
+    });
+  }
+}
+
+async function showComposeTopic(communityId) {
+  const user = await getActiveUser();
+  const main = render.renderShell({
+    title: "Novo Tópico",
+    subtitle: `Publicar em ${communityId}`,
+    walletAddress: user,
+  });
+  render.renderComposeTopic(main, communityId, { hasWallet: wallet.hasWallet() });
+
+  const form = document.getElementById("form-compose-topic");
+  if (form) {
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById("btn-submit-topic");
+      const title = document.getElementById("topic-title")?.value.trim();
+      const body = document.getElementById("topic-body")?.value.trim();
+
+      btn.disabled = true;
+      btn.textContent = "Assinando e enviando transação…";
+      try {
+        const tags = upload.buildTags("topic", {
+          "Community-Id": communityId,
+          "Topic-Title": title,
+          Title: title,
+        });
+        const res = await upload.postData({ title, body, communityId }, tags);
+        share.showToast("Tópico publicado no permaweb!");
+        location.hash = `#/t/${encodeURIComponent(res.id)}?c=${encodeURIComponent(communityId)}`;
+      } catch (err) {
+        share.showToast(`Erro: ${err.message}`, "error");
+        btn.disabled = false;
+        btn.textContent = "Publicar Tópico";
+      }
+    });
+  }
+}
+
+async function showComposeReply(topicId, communityId) {
+  const user = await getActiveUser();
+  const main = render.renderShell({
+    title: "Responder Tópico",
+    subtitle: `Resposta a ${topicId.slice(0, 8)}…`,
+    walletAddress: user,
+  });
+  render.renderComposeReply(main, topicId, communityId, { hasWallet: wallet.hasWallet() });
+
+  const form = document.getElementById("form-compose-reply");
+  if (form) {
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById("btn-submit-reply");
+      const body = document.getElementById("reply-body")?.value.trim();
+
+      btn.disabled = true;
+      btn.textContent = "Enviando resposta…";
+      try {
+        const tags = upload.buildTags("reply", {
+          "Reply-To": topicId,
+          "Community-Id": communityId,
+        });
+        await upload.postData({ replyTo: topicId, body, communityId }, tags);
+        share.showToast("Resposta gravada no permaweb!");
+        location.hash = `#/t/${encodeURIComponent(topicId)}?c=${encodeURIComponent(communityId)}`;
+      } catch (err) {
+        share.showToast(`Erro: ${err.message}`, "error");
+        btn.disabled = false;
+        btn.textContent = "Enviar Resposta";
+      }
+    });
+  }
 }
 
 async function route() {
   const r = parseRoute();
   if (r.name === "home") return showHome();
   if (r.name === "community") return showCommunity(r.id);
-  if (r.name === "topic") return showTopic(r.id);
+  if (r.name === "topic") return showTopic(r.id, r.communityId);
+  if (r.name === "profile") return showProfile(r.address);
+  if (r.name === "wallet") return showWallet();
+  if (r.name === "compose-community") return showComposeCommunity();
+  if (r.name === "compose-topic") return showComposeTopic(r.communityId);
+  if (r.name === "compose-reply") return showComposeReply(r.topicId, r.communityId);
   return showHome();
 }
 
