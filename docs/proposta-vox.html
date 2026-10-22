@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Vox — A Voz Soberana da Rede (Proposta & Arquitetura)</title>
+    <meta
+      name="description"
+      content="Rede comunitária brasileira, sem servidores centrais para pagar, resistente a bloqueios e sustentada por nós participativos cooperativos."
+    />
+    <meta property="og:title" content="Vox — A Voz Soberana da Rede" />
+    <meta
+      property="og:description"
+      content="Poste uma vez. Pertença a comunidades reais. Ecoe onde o povo já está. Sem Big Techs, sem silos e com soberania de dados."
+    />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://yurikayel.github.io/vox/proposta-vox.html" />
+    <meta name="theme-color" content="#0d5c3a" />
+    <style>
+      :root {
+        --bg: #f8fafc;
+        --surface: #ffffff;
+        --surface-soft: #f1f5f9;
+        --border: #e2e8f0;
+        --border-strong: #cbd5e1;
+        --text: #0f172a;
+        --muted: #475569;
+        --green: #0d5c3a;
+        --green-soft: #ecfdf5;
+        --green-border: #a7f3d0;
+        --blue: #1e40af;
+        --blue-soft: #eff6ff;
+        --amber: #b45309;
+        --amber-soft: #fef3c7;
+        --amber-border: #fde68a;
+        --radius: 12px;
+        --radius-sm: 6px;
+        --shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+        padding-bottom: 3rem;
+      }
+
+      .container {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 1.25rem;
+      }
+
+      header.hero {
+        background: linear-gradient(145deg, #093c26 0%, #0d5c3a 50%, #166534 100%);
+        color: #ffffff;
+        padding: 2.75rem 1.5rem 2.25rem;
+        border-radius: 0 0 var(--radius) var(--radius);
+        text-align: center;
+        box-shadow: 0 4px 12px rgba(9, 60, 38, 0.15);
+      }
+
+      .badge-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        background: rgba(255, 255, 255, 0.15);
+        color: #ffffff;
+        padding: 0.3rem 0.75rem;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+        margin-bottom: 0.75rem;
+        backdrop-filter: blur(4px);
+      }
+
+      .hero h1 {
+        margin: 0;
+        font-size: 2.1rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        line-height: 1.15;
+      }
+
+      .hero p.tagline {
+        margin: 0.85rem auto 1.5rem;
+        font-size: 1.05rem;
+        color: #d1fae5;
+        max-width: 560px;
+        line-height: 1.45;
+      }
+
+      .hero-actions {
+        display: flex;
+        justify-content: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-weight: 700;
+        padding: 0.75rem 1.25rem;
+        border-radius: var(--radius-sm);
+        text-decoration: none;
+        font-size: 0.95rem;
+        transition: transform 0.15s ease, background 0.15s ease;
+      }
+
+      .btn-primary {
+        background: #ffffff;
+        color: var(--green);
+      }
+
+      .btn-primary:hover {
+        background: #f1f5f9;
+        transform: translateY(-1px);
+      }
+
+      .btn-outline-hero {
+        background: transparent;
+        color: #ffffff;
+        border: 1px solid rgba(255, 255, 255, 0.4);
+      }
+
+      .btn-outline-hero:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1.35rem 1.4rem;
+        margin-top: 1.25rem;
+        box-shadow: var(--shadow);
+      }
+
+      .card h2 {
+        margin: 0 0 0.6rem;
+        font-size: 1.35rem;
+        font-weight: 700;
+        color: var(--text);
+        letter-spacing: -0.01em;
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+      }
+
+      .card h3 {
+        margin: 1rem 0 0.4rem;
+        font-size: 1.05rem;
+        font-weight: 700;
+      }
+
+      .card p {
+        margin: 0.45rem 0;
+        color: var(--muted);
+      }
+
+      .card ul {
+        margin: 0.5rem 0;
+        padding-left: 1.25rem;
+        color: var(--muted);
+      }
+
+      .card li {
+        margin-bottom: 0.35rem;
+      }
+
+      .lead {
+        font-size: 1.02rem;
+        color: var(--text);
+        font-weight: 500;
+      }
+
+      .pill {
+        display: inline-block;
+        font-size: 0.75rem;
+        padding: 0.15rem 0.5rem;
+        border-radius: 999px;
+        font-weight: 600;
+      }
+
+      .pill-green {
+        background: var(--green-soft);
+        color: var(--green);
+        border: 1px solid var(--green-border);
+      }
+
+      .pill-amber {
+        background: var(--amber-soft);
+        color: var(--amber);
+        border: 1px solid var(--amber-border);
+      }
+
+      .diagram-box {
+        background: #0f172a;
+        color: #e2e8f0;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 0.82rem;
+        padding: 1rem 1.1rem;
+        border-radius: var(--radius-sm);
+        overflow-x: auto;
+        line-height: 1.45;
+        margin: 0.85rem 0;
+      }
+
+      .diagram-box .hl-green {
+        color: #4ade80;
+        font-weight: bold;
+      }
+
+      .diagram-box .hl-blue {
+        color: #60a5fa;
+      }
+
+      .diagram-box .hl-amber {
+        color: #fbbf24;
+      }
+
+      table.compare-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+        margin-top: 0.75rem;
+      }
+
+      table.compare-table th,
+      table.compare-table td {
+        padding: 0.6rem 0.65rem;
+        border-bottom: 1px solid var(--border);
+        text-align: left;
+      }
+
+      table.compare-table th {
+        background: var(--surface-soft);
+        color: var(--text);
+        font-weight: 700;
+      }
+
+      table.compare-table tr:last-child td {
+        border-bottom: none;
+      }
+
+      .col-vox {
+        background: #f0fdf4;
+        font-weight: 600;
+        color: #166534;
+      }
+
+      details {
+        background: var(--surface-soft);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 0.65rem 0.85rem;
+        margin-top: 0.75rem;
+      }
+
+      details summary {
+        font-weight: 600;
+        cursor: pointer;
+        font-size: 0.9rem;
+        color: var(--text);
+      }
+
+      details[open] summary {
+        margin-bottom: 0.5rem;
+      }
+
+      .callout {
+        border-left: 4px solid var(--green);
+        background: var(--green-soft);
+        padding: 0.75rem 1rem;
+        border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+        margin: 0.85rem 0;
+      }
+
+      .callout p {
+        color: #14532d;
+        margin: 0;
+        font-size: 0.92rem;
+      }
+
+      .checklist {
+        list-style: none;
+        padding-left: 0;
+      }
+
+      .checklist li {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.45rem;
+        margin-bottom: 0.45rem;
+      }
+
+      .checklist li::before {
+        content: "✓";
+        color: var(--green);
+        font-weight: 900;
+      }
+
+      footer {
+        text-align: center;
+        font-size: 0.82rem;
+        color: var(--muted);
+        margin-top: 2rem;
+        border-top: 1px solid var(--border);
+        padding-top: 1.5rem;
+      }
+
+      footer a {
+        color: var(--blue);
+        text-decoration: none;
+      }
+
+      footer a:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- 1. Hero -->
+    <header class="hero">
+      <div class="badge-tag">🇧🇷 Protocolo Aberto & Soberano</div>
+      <h1>Vox: A Voz Soberana da Rede</h1>
+      <p class="tagline">
+        Poste uma vez. Pertença a comunidades reais. Ecoe onde o povo já está.<br />
+        Sem Big Techs no comando, sem servidores centrais para pagar e com autoria sua.
+      </p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="./#/">Acessar o Aplicativo (PWA) →</a>
+        <a class="btn btn-outline-hero" href="https://github.com/yurikayel/vox" target="_blank" rel="noopener">Código no GitHub</a>
+      </div>
+    </header>
+
+    <div class="container">
+      <!-- 2. O Problema -->
+      <section class="card">
+        <h2>⚠️ 1. O Problema da Dependência Digital</h2>
+        <p class="lead">
+          A comunicação e os laços sociais de mais de 200 milhões de brasileiros estão aprisionados em um punhado de corporações estrangeiras:
+        </p>
+        <ul>
+          <li><strong>Risco Permanente de Apagão:</strong> Contas suspensas unilateralmente, regras opacas e a vulnerabilidade constante de ficar sem seus contatos se uma plataforma for bloqueada judicialmente ou comprada por bilionários.</li>
+          <li><strong>O Feudo dos Algoritmos de Dopamina:</strong> Redes sociais modernas destruíram a conversa qualificada, substituindo fóruns temáticos por rolagens infinitas desenhadas para gerar indignação e capturar atenção.</li>
+          <li><strong>A Morte das Comunidades Reais:</strong> O Brasil dominava a internet na era do Orkut porque se organizava por interesses, bairros, cultura e debate. Hoje, tudo foi diluído em feeds personalistas e efêmeros.</li>
+          <li><strong>A Ilusão das Falsas Alternativas:</strong> Redes alternativas corporativas (como Bluesky) mantêm servidores centrais de busca e indexação (*AppViews*) sediados nos Estados Unidos, preservando a mesma dependência geopolítica de sempre.</li>
+        </ul>
+      </section>
+
+      <!-- 3. A Proposta Vox -->
+      <section class="card">
+        <h2>🏛️ 2. A Proposta Vox: O "Pix da Voz"</h2>
+        <p class="lead">
+          O Vox não é mais uma cópia do Twitter nem uma ilha isolada. Ele combina a experiência comunitária dos melhores tempos da internet com a solidez de um protocolo soberano:
+        </p>
+        <div class="callout">
+          <p>
+            <strong>A Metáfora do Pix:</strong> O Pix revolucionou as finanças brasileiras não por criar uma nova moeda, mas por fornecer <em>trilhos públicos e interoperáveis</em> para o dinheiro circular. O Vox é o trilho aberto para a sua voz circular sem pedágios ou censura algorítmica.
+          </p>
+        </div>
+        <ul>
+          <li><strong>Comunidades Primeiro (Estilo Orkut):</strong> A Rua como ponto de encontro, fóruns organizados por tópicos, respostas encadeadas e perfil composto pelas comunidades às quais você pertence.</li>
+          <li><strong>Arquivo Perpétuo (Permaweb):</strong> O que você publica publicamente não pode ser apagado por decisões arbitrárias de terceiros. Seu conteúdo fica registrado na infraestrutura descentralizada Arweave.</li>
+          <li><strong>Ponte para as Redes Existentes:</strong> Você não precisa convencer seus amigos a abandonarem tudo. Com 1 toque, o Vox despacha seu post assinado para WhatsApp, Instagram, TikTok e X através de integrações nativas do seu celular.</li>
+        </ul>
+      </section>
+
+      <!-- 4. Como a Rede se Sustenta (Núcleo) -->
+      <section class="card">
+        <h2>⚡ 3. Como a Rede se Sustenta: Economia da Carga Distribuída</h2>
+        <p class="lead">
+          A pergunta fundamental de qualquer iniciativa descentralizada: <em>"Quem paga a conta da infraestrutura?"</em>
+        </p>
+        <p>
+          O Vox resolve esse desafio com uma arquitetura de <strong>Custo Zero para Mantenedores</strong>, dividindo a carga de forma simétrica e cooperativa:
+        </p>
+
+        <h3>1. Mantenedores do Código (Custo Zero)</h3>
+        <p>
+          O cliente Vox é uma página estática (HTML/CSS/JS puro sem compilação pesada) hospedada gratuitamente no GitHub Pages e espelhos descentralizados. Desenvolvedores voluntários <strong>não pagam aluguel de servidores de banco de dados (PostgreSQL/Redis)</strong> nem mantêm máquinas ligadas.
+        </p>
+
+        <h3>2. Escrita Soberana (Cada Autor Paga Sua Inclusão)</h3>
+        <p>
+          Quando alguém cria uma comunidade ou publica um tópico no permaweb, o upload é assinado pela sua carteira criptográfica local. O micro-custo permanente de armazenamento é liquidado diretamente pelo emissor na rede Arweave/Turbo (em ambiente de teste/dev, utilizamos faucets gratuitos). O projeto Vox não tem custos com o banco de dados alheio.
+        </p>
+
+        <h3>3. Leitura Cooperativa em Cascata (Nós Leves)</h3>
+        <p>
+          Ler e navegar pelo Vox é 100% gratuito. Para não sobrecarregar gateways públicos, cada usuário que abre o aplicativo atua como um <strong>nó leve de leitura</strong>, servindo fragmentos cacheados para outros clientes próximos:
+        </p>
+
+        <div class="diagram-box">
+<span class="hl-green">CASCATA DE RESOLUÇÃO DE LEITURA (0 ms a 2 s):</span>
+[1. Memória RAM]        ──► Instantâneo (0 ms) para itens abertos
+         │ (miss)
+         ▼
+[2. Cache IndexedDB]    ──► Cache local persistente (LRU até 25 MB)
+         │ (miss)
+         ▼
+[3. Relay Desktop]      ──► Servidor proxy local opcional (127.0.0.1:3920)
+         │ (miss)
+         ▼
+[4. Rede de Pares]      ──► <span class="hl-blue">Broadcast local</span> (abas) + <span class="hl-green">WebRTC Mesh</span> (outros aparelhos)
+         │ (miss)
+         ▼
+[5. Gateways Públicos]  ──► Fallback distribuído global (arweave.net, turbo-gateway)
+        </div>
+
+        <h3>4. O Pacto Vox (Fase 3.1): Cooperação com Salvaguardas</h3>
+        <p>
+          Em redes comerciais, você recebe "servidores gratuitos" em troca de ter seus dados minerados e seu comportamento vendido. No Vox, invertemos o contrato: seus dados são seus, e a infraestrutura de leitura é cooperativa:
+        </p>
+        <ul>
+          <li><strong>Ativo por Padrão no App Aberto:</strong> Enquanto o Vox está aberto, ele responde a requisições de leitura de dados <em>estritamente públicos</em> já gravados no permaweb.</li>
+          <li><strong>Teto Diário de 50 MB:</strong> O app monitora a banda servida e cessa o compartilhamento automaticamente ao atingir a cota diária.</li>
+          <li><strong>Proteção Wi-Fi:</strong> Por padrão, não gasta franquias de dados móveis 4G/5G do celular.</li>
+          <li><strong>Botão de Pausa Irrestrito:</strong> A qualquer momento, em <code>Configurações de Rede</code>, você pode clicar em <em>"Pausar contribuição"</em> e navegar apenas em modo leitor.</li>
+          <li><strong>Segundo Plano Transparente:</strong> Atuação via Service Worker exige permissão de notificação explícita do sistema operacional e só roda sob Wi-Fi.</li>
+        </ul>
+
+        <h3>5. Operadores Comunitários (VPS Opcional — Fase 3.3)</h3>
+        <p>
+          Coletivos, universidades ou movimentos podem subir instâncias de apoio usando o pacote Docker pré-configurado do Vox (<code>relay/deploy/</code>):
+        </p>
+        <ul>
+          <li><strong>Signaling WebSocket (Porta 3921):</strong> Realiza o pareamento SDP/ICE WebRTC entre celulares em menos de 100 ms.</li>
+          <li><strong>Servidor TURN Comunitário (Coturn):</strong> Permite conexão P2P direta mesmo atrás de CGNATs e redes móveis restritivas.</li>
+          <li><strong>Caixa Postal Efêmera (TTL 72h):</strong> Guarda mensagens diretas cifradas temporariamente quando o destinatário está offline.</li>
+          <li><em>O operador do servidor NÃO é dono da rede:</em> ele transita apenas pacotes criptografados e não tem como inspecionar conteúdos privados.</li>
+        </ul>
+      </section>
+
+      <!-- 5. Seus Dados São Seus -->
+      <section class="card">
+        <h2>🔒 4. Seus Dados São Seus de Verdade</h2>
+        <ul>
+          <li><strong>Chaves Locais no Dispositivo:</strong> Sua identidade reside em chaves criptográficas geradas no navegador (WebCrypto). Nenhuma senha ou seed é enviada a servidores centrais.</li>
+          <li><strong>DMs Estritamente Efêmeras (Fase 4):</strong> Proibição total de mensagens privadas on-chain. DMs são cifradas via ECDH P-256 + AES-GCM-256, entregues via WebRTC direto ou guardadas em caixa postal cega com auto-expiração de 72 horas. Histórico salvo apenas no seu aparelho.</li>
+          <li><strong>Handles Amigáveis (@handle — Fase 5):</strong> Identificadores mnemônicos registrados on-chain. Em caso de múltiplos registros do mesmo nome, o PWA apresenta a ambiguidade de forma transparente, sem tribunais ou confiscos.</li>
+        </ul>
+      </section>
+
+      <!-- 6. Ponte, Não Ilha -->
+      <section class="card">
+        <h2>🌐 5. Ponte, Não Ilha (Crossposting)</h2>
+        <p>
+          O Vox não busca o isolamento. Ele funciona como a sua <strong>matriz soberana de publicação</strong>:
+        </p>
+        <ul>
+          <li>Você assina e grava o conteúdo em um ambiente permanente e livre de moderação corporativa.</li>
+          <li>Com um clique no botão <strong>🔗 Compartilhar</strong>, o PWA aciona a <em>Web Share API</em> do seu telefone, permitindo despachar o texto formatado e os links diretamente para grupos do WhatsApp, Stories do Instagram, canais do Telegram ou postagens no X.</li>
+        </ul>
+      </section>
+
+      <!-- 7. Comparativo Resumido -->
+      <section class="card">
+        <h2>📊 6. Comparativo de Modelos</h2>
+        <table class="compare-table">
+          <thead>
+            <tr>
+              <th>Dimensão</th>
+              <th>Big Tech (X/Meta)</th>
+              <th>Mastodon</th>
+              <th>Bluesky</th>
+              <th class="col-vox">Vox</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Quem paga o servidor?</strong></td>
+              <td>Anunciantes</td>
+              <td>Voluntários (VPS)</td>
+              <td>Investidores EUA</td>
+              <td class="col-vox">Zero mantenedor (Permaweb + Nós Leves)</td>
+            </tr>
+            <tr>
+              <td><strong>Controle de Identidade</strong></td>
+              <td>Corporação</td>
+              <td>Dono da Instância</td>
+              <td>Bluesky PBC</td>
+              <td class="col-vox">Sua Chave Criptográfica</td>
+            </tr>
+            <tr>
+              <td><strong>Resistência a Bloqueio</strong></td>
+              <td>Nenhuma</td>
+              <td>Média</td>
+              <td>Média (AppView central)</td>
+              <td class="col-vox">Alta (Multi-gateway + WebRTC)</td>
+            </tr>
+            <tr>
+              <td><strong>Formato Social</strong></td>
+              <td>Feed algorítmico</td>
+              <td>Timeline federada</td>
+              <td>Feed / Listas</td>
+              <td class="col-vox">Comunidades & Fóruns (Estilo Orkut)</td>
+            </tr>
+            <tr>
+              <td><strong>Carga no Celular</strong></td>
+              <td>Pesada (rastreadores)</td>
+              <td>Média</td>
+              <td>Média</td>
+              <td class="col-vox">Ultraleve (&lt; 50 KB, teto 50 MB)</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- 8. Calibração Honesta -->
+      <section class="card">
+        <h2>⚖️ 7. Calibração Honesta: O que o Vox NÃO É</h2>
+        <p class="lead">
+          Sem marketing enganoso ou promessas tecnológicas mágicas:
+        </p>
+        <ol>
+          <li><strong>"Ninguém paga servidores":</strong> Os mantenedores do código não pagam servidores de aplicação. A infraestrutura física de armazenamento é sustentada globalmente pela rede Arweave, e espelhos locais demandam sua própria conexão de internet.</li>
+          <li><strong>"Desacoplamento de empresas":</strong> O Vox elimina a dependência de AppViews proprietários de big techs. A rede permaweb subjacente, contudo, é um arranjo global distribuído e neutro, não uma internet isolada brasileira.</li>
+          <li><strong>".vox.br não é nosso domínio de cartório":</strong> O sufixo <code>.br</code> pertence ao Registro.br/CGI.br. No Vox, os handles <code>@nome</code> são identificadores de protocolo sem custo, não títulos de marca comercial.</li>
+          <li><strong>DMs não são gravadas em blockchain:</strong> Para garantir o direito ao esquecimento e a conformidade com a LGPD, mensagens privadas nunca são salvas na imutabilidade do Arweave.</li>
+        </ol>
+      </section>
+
+      <!-- 9. Roadmap -->
+      <section class="card">
+        <h2>🗺️ 8. Estado de Desenvolvimento (Roadmap)</h2>
+        <ul class="checklist">
+          <li><strong>Fase 0:</strong> Concepção, arquitetura de tags e linhagem Channel-01.</li>
+          <li><strong>Fase 1:</strong> Leitura comunitária (A Rua, tópicos, respostas e fallback offline).</li>
+          <li><strong>Fase 2:</strong> Autoria soberana (carteira Arweave JWK local, upload de transações e Web Share).</li>
+          <li><strong>Fase 3:</strong> Nós participativos e espelho local desktop (IndexedDB LRU e cache proxy).</li>
+          <li><strong>Fase 3.1:</strong> Pacto Vox (rede distribuída default-on, teto 50 MB/dia e salvaguardas).</li>
+          <li><strong>Fase 3.2:</strong> Conectividade WebRTC P2P entre dispositivos e servidor de sinalização leve.</li>
+          <li><strong>Fase 3.3:</strong> Suporte a TURN comunitário, deploy Docker (Caddy WSS + Coturn) e CI/CD Pages.</li>
+          <li><strong>Fase 4:</strong> DMs efêmeras ponta-a-ponta (WebCrypto ECDH + AES-GCM + Relay Inbox com TTL 72h).</li>
+          <li><strong>Fase 5:</strong> Handles amigáveis <code>@slug</code>, rotas <code>#/h/</code> e suporte a DNS/CNAME wildcard.</li>
+          <li style="color:var(--muted); list-style:none;">○ <strong>Fase 5.1 (Futuro):</strong> Integração opcional com domínios ArNS (.ar).</li>
+        </ul>
+      </section>
+
+      <!-- 10. Como Participar -->
+      <section class="card">
+        <h2>🚀 9. Como Participar</h2>
+        <ol>
+          <li><strong>Use o PWA no Celular ou Computador:</strong> Acesse <a href="./#/">o aplicativo Vox</a> direto no navegador (suporta instalação como app nativo na tela inicial).</li>
+          <li><strong>Crie sua Identidade:</strong> Em <code>Carteira</code>, gere sua chave com um clique e reivindique seu <code>@handle</code>.</li>
+          <li><strong>Crie ou Participe de Comunidades:</strong> Abra fóruns sobre tecnologia, política, cultura ou seu bairro e convide pessoas.</li>
+          <li><strong>Ajude a Rede:</strong> Ao manter o app aberto sob Wi-Fi, você já está servindo leituras comunitárias sem gastar recursos.</li>
+          <li><strong>Para Desenvolvedores:</strong> Consulte nosso guia técnico em <a href="https://github.com/yurikayel/vox/blob/main/client/DEV.md" target="_blank" rel="noopener"><code>client/DEV.md</code></a> para rodar nós de relay, sinalização e testes locais.</li>
+        </ol>
+      </section>
+
+      <!-- 11. Rodapé -->
+      <footer>
+        <p>
+          <strong>Vox — A Voz Soberana da Rede</strong><br />
+          Software Livre sob licença MIT · Projeto Comunitário e Independente.<br />
+          Repositório: <a href="https://github.com/yurikayel/vox" target="_blank" rel="noopener">github.com/yurikayel/vox</a>
+        </p>
+        <p style="font-size:0.75rem; color:#64748b; margin-top:0.5rem;">
+          Este documento tem caráter informativo e técnico. O Vox não é uma pessoa jurídica operadora centralizada; cada usuário e operador de espelho responde por seus conteúdos e obrigações legais nos termos da legislação brasileira (Marco Civil da Internet, LGPD e Resoluções aplicáveis).
+        </p>
+      </footer>
+    </div>
+  </body>
+</html>
