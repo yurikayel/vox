@@ -9,8 +9,15 @@ import * as cacheNode from "./cache-node.js";
 import * as peers from "./peers.js";
 import * as cryptoDm from "./crypto-dm.js";
 import * as inbox from "./inbox.js";
+import * as handles from "./handles.js";
 
 function parseRoute() {
+  if (typeof window !== "undefined" && window.location?.search) {
+    const q = new URLSearchParams(window.location.search);
+    const paramHandle = q.get("h");
+    if (paramHandle) return { name: "handle-lookup", slug: paramHandle };
+  }
+
   const hash = location.hash.replace(/^#\/?/, "");
   const [pathPart, queryPart] = hash.split("?");
   const parts = pathPart ? pathPart.split("/").filter(Boolean) : [];
@@ -19,6 +26,9 @@ function parseRoute() {
   if (!parts.length) return { name: "home" };
   if (parts[0] === "settings" && parts[1] === "network") {
     return { name: "network-settings" };
+  }
+  if (parts[0] === "h" && parts[1]) {
+    return { name: "handle-lookup", slug: decodeURIComponent(parts[1]) };
   }
   if (parts[0] === "dm") {
     if (parts[1]) return { name: "dm-thread", address: decodeURIComponent(parts[1]) };
@@ -35,7 +45,11 @@ function parseRoute() {
     };
   }
   if (parts[0] === "u" && parts[1]) {
-    return { name: "profile", address: decodeURIComponent(parts[1]) };
+    const raw = decodeURIComponent(parts[1]);
+    if (raw.startsWith("@")) {
+      return { name: "handle-lookup", slug: raw.slice(1) };
+    }
+    return { name: "profile", address: raw };
   }
   if (parts[0] === "wallet") return { name: "wallet" };
   if (parts[0] === "compose") {
@@ -316,6 +330,7 @@ async function showTopic(topicId, commIdParam = "") {
 
 async function showProfile(address) {
   const user = await getActiveUser();
+  const isSelf = user === address;
   const main = render.renderShell({
     title: "Perfil",
     subtitle: address.slice(0, 10) + "…",
@@ -324,15 +339,29 @@ async function showProfile(address) {
   render.renderLoading(main);
 
   const memberships = await gql.fetchUserMemberships(address);
-  const isSelf = user === address;
+  const handle = await gql.fetchHandleForAddress(address);
+  let conflictInfo = null;
+  if (handle) {
+    const hRes = await gql.fetchHandle(handle);
+    if (hRes?.isConflict) conflictInfo = hRes;
+  }
+
   let dmPub = null;
   if (isSelf) {
     dmPub = await cryptoDm.getPublicJwk();
   }
 
   main.innerHTML = "";
-  render.renderProfile(main, address, memberships, isSelf, JSON.stringify(dmPub));
+  render.renderProfile(main, address, memberships, isSelf, JSON.stringify(dmPub), {
+    handle: handle || "",
+    isConflict: Boolean(conflictInfo?.isConflict),
+    claimants: conflictInfo?.claimants || [],
+  });
 
+  bindProfileButtons(user, address, isSelf, dmPub);
+}
+
+function bindProfileButtons(user, address, isSelf, dmPub) {
   const btnCopy = document.getElementById("btn-copy-dmpub");
   if (btnCopy && dmPub) {
     btnCopy.addEventListener("click", () => {
@@ -359,6 +388,75 @@ async function showProfile(address) {
       }
     });
   }
+
+  const formClaim = document.getElementById("form-claim-handle");
+  if (formClaim && isSelf) {
+    formClaim.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const raw = document.getElementById("input-handle-slug")?.value.trim();
+      const check = handles.validateSlug(raw);
+      if (!check.valid) {
+        share.showToast(check.error, "error");
+        return;
+      }
+      const btn = document.getElementById("btn-submit-handle");
+      btn.disabled = true;
+      btn.textContent = "Gravando handle…";
+      try {
+        const tags = upload.buildTags("handle", {
+          Handle: check.slug,
+          "Owner-Addr": user,
+        });
+        await upload.postData({ handle: check.slug, owner: user }, tags);
+        handles.cacheHandleMapping(check.slug, user);
+        share.showToast(`Handle @${check.slug} gravado com sucesso!`);
+        showProfile(user);
+      } catch (err) {
+        share.showToast(`Erro ao gravar handle: ${err.message}`, "error");
+        btn.disabled = false;
+        btn.textContent = "Salvar @handle";
+      }
+    });
+  }
+}
+
+async function showHandleLookup(rawSlug) {
+  const user = await getActiveUser();
+  const slug = handles.normalizeSlug(rawSlug);
+  const main = render.renderShell({
+    title: `@${slug || "handle"}`,
+    subtitle: "Resolvendo identificador on-chain…",
+    walletAddress: user,
+  });
+  render.renderLoading(main, `Buscando perfil de @${slug} no permaweb…`);
+
+  const validation = handles.validateSlug(slug);
+  if (!validation.valid) {
+    main.innerHTML = "";
+    render.renderError(main, `Handle inválido: ${validation.error}`);
+    return;
+  }
+
+  const result = await gql.fetchHandle(slug);
+  if (!result || !result.primaryOwner) {
+    main.innerHTML = `
+      <div class="card">
+        <h2>@${render.escapeHtml(slug)}</h2>
+        <div class="empty">
+          <p>Nenhum endereço encontrado para o handle <code>@${render.escapeHtml(slug)}</code> no permaweb.</p>
+          <a class="btn btn-outline" href="#/">Voltar para A Rua</a>
+        </div>
+      </div>`;
+    return;
+  }
+
+  if (result.isConflict) {
+    main.innerHTML = "";
+    render.renderHandleConflict(main, slug, result.claimants);
+    return;
+  }
+
+  location.hash = `#/u/${encodeURIComponent(result.primaryOwner)}`;
 }
 
 async function showWallet() {
@@ -868,6 +966,7 @@ async function route() {
   const r = parseRoute();
   if (r.name === "home") return showHome();
   if (r.name === "network-settings") return showNetworkSettings();
+  if (r.name === "handle-lookup") return showHandleLookup(r.slug);
   if (r.name === "dm-list") return showDmList();
   if (r.name === "dm-thread") return showDmThread(r.address);
   if (r.name === "community") return showCommunity(r.id);

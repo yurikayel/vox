@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <title>Redirecionando para o perfil Vox…</title>
+    <script>
+      (function () {
+        const params = new URLSearchParams(window.location.search);
+        let slug = params.get("h") || params.get("handle") || "";
+        if (!slug) {
+          // Extrai de subdomínio wildcard se presente (ex: maria.comunidade.org)
+          const parts = window.location.hostname.split(".");
+          if (parts.length >= 3 && parts[0] !== "www" && parts[0] !== "vox") {
+            slug = parts[0];
+          }
+        }
+        slug = slug.replace(/^@/, "").trim().toLowerCase();
+        const targetHash = slug ? "#/h/" + encodeURIComponent(slug) : "#/";
+        window.location.replace("./" + targetHash);
+      })();
+    </script>
+  </head>
+  <body>
+    <p style="font-family:system-ui,sans-serif; text-align:center; padding-top:2rem;">
+      Redirecionando para o perfil no Vox…
+    </p>
+  </body>
+</html>

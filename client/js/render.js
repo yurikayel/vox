@@ -205,30 +205,55 @@ export function renderTopic(main, topicId, topic, replies, { topicData = null, i
   main.innerHTML += html;
 }
 
-export function renderProfile(main, address, memberships = [], isCurrentWallet = false, dmPubStr = "") {
-  let actionBtn = "";
+function renderProfileHeader(address, isCurrentWallet, handle, isConflict, claimants) {
+  const title = handle ? `@${escapeHtml(handle)}` : "Perfil de Membro";
+  const conflictBanner = isConflict
+    ? `<div class="card error" style="margin-top:0.6rem;">
+        ⚠️ <strong>Conflito de Handle:</strong> <code>@${escapeHtml(handle)}</code> foi reivindicado por mais de uma conta.
+        <div style="font-size:0.8rem; margin-top:0.3rem;">
+          ${claimants.map((c) => `<div>• <a href="#/u/${c.owner}">${escapeHtml(shortId(c.owner))}</a></div>`).join("")}
+        </div>
+      </div>`
+    : "";
+
+  return `
+    <div class="card profile-card">
+      <h2>${title}</h2>
+      <p class="meta">Endereço: <code>${escapeHtml(address)}</code></p>
+      ${conflictBanner}
+      ${isCurrentWallet ? `<p class="badge-pill" style="margin-top:0.5rem;">Sua Carteira Ativa</p>` : ""}
+    </div>`;
+}
+
+function renderProfileActions(address, isCurrentWallet, handle) {
   if (isCurrentWallet) {
-    actionBtn = `
-      <div style="margin-top:0.75rem; border-top:1px solid var(--border); padding-top:0.5rem;">
-        <span class="badge-pill">Sua Carteira Ativa</span>
-        <div style="margin-top:0.5rem; display:flex; flex-wrap:wrap; gap:0.4rem;">
+    return `
+      <div class="card" style="margin-top:0.75rem;">
+        <h3>Identidade & Chaves</h3>
+        <form id="form-claim-handle" style="margin-top:0.5rem;">
+          <label style="font-size:0.85rem; font-weight:600;">Reivindicar ou atualizar @handle on-chain:</label>
+          <div style="display:flex; gap:0.5rem; margin-top:0.25rem;">
+            <input type="text" id="input-handle-slug" class="form-control" placeholder="ex: maria" value="${handle || ""}" required />
+            <button type="submit" id="btn-submit-handle" class="btn btn-sm btn-primary" style="white-space:nowrap;">Salvar @handle</button>
+          </div>
+        </form>
+        <div style="margin-top:0.75rem; border-top:1px solid var(--border); padding-top:0.6rem; display:flex; flex-wrap:wrap; gap:0.4rem;">
           <button id="btn-copy-dmpub" class="btn btn-sm btn-outline">📋 Copiar Chave Dm-Pub</button>
           <button id="btn-publish-dmpub" class="btn btn-sm btn-primary">🌐 Anunciar Dm-Pub on-chain</button>
         </div>
       </div>`;
-  } else {
-    actionBtn = `
-      <div style="margin-top:0.75rem;">
-        <a class="btn btn-primary btn-sm" href="#/dm/${encodeURIComponent(address)}">💬 Enviar Mensagem Direta (E2E)</a>
-      </div>`;
   }
+  return `
+    <div class="card" style="margin-top:0.75rem;">
+      <a class="btn btn-primary btn-sm" href="#/dm/${encodeURIComponent(address)}">💬 Enviar Mensagem Direta (E2E)</a>
+    </div>`;
+}
 
-  let html = `
-    <div class="card profile-card">
-      <h2>Perfil de Membro</h2>
-      <p class="meta">Endereço: <code>${escapeHtml(address)}</code></p>
-      ${actionBtn}
-    </div>
+export function renderProfile(main, address, memberships = [], isCurrentWallet = false, dmPubStr = "", { handle = "", isConflict = false, claimants = [] } = {}) {
+  let html = renderProfileHeader(address, isCurrentWallet, handle, isConflict, claimants);
+  html += renderProfileActions(address, isCurrentWallet, handle);
+
+  html += `
     <div class="actions-bar">
       <span class="section-title">Comunidades que Participa (${memberships.length})</span>
     </div>`;
@@ -250,7 +275,33 @@ export function renderProfile(main, address, memberships = [], isCurrentWallet =
     html += `<ul class="card-list">${list}</ul>`;
   }
 
-  main.innerHTML += html;
+  main.innerHTML = html;
+}
+
+export function renderHandleConflict(main, slug, claimants = []) {
+  const items = claimants
+    .map(
+      (c) => `
+    <li class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <h3><a href="#/u/${encodeURIComponent(c.owner)}">${escapeHtml(shortId(c.owner))}</a></h3>
+          <p class="meta">Endereço: <code>${escapeHtml(c.owner)}</code></p>
+          <p class="meta">TX: <code>${escapeHtml(shortId(c.txId))}</code></p>
+        </div>
+        <a class="btn btn-outline" href="#/u/${encodeURIComponent(c.owner)}">Ver Perfil →</a>
+      </div>
+    </li>`
+    )
+    .join("");
+
+  main.innerHTML = `
+    <div class="card error">
+      <h2>⚠️ Ambiguidade: Múltiplas contas reivindicam @${escapeHtml(slug)}</h2>
+      <p class="desc">No Vox não há tribunal ou autoridade central para confiscar nomes. Mais de um endereço publicou este identificador. Escolha qual conta deseja acessar:</p>
+    </div>
+    <ul class="card-list" style="margin-top:1rem;">${items}</ul>
+  `;
 }
 
 export function renderWallet(main, { address = null, balance = "0.000", hasWallet = false, error = null } = {}) {

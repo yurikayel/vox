@@ -109,3 +109,25 @@ test("render - renderDmList e renderDmThread", () => {
   assert.ok(mainThread.innerHTML.includes("Oi Alice!"));
   assert.ok(mainThread.innerHTML.includes("btn-send-dm"));
 });
+
+test("render - renderProfile com handle e renderHandleConflict", () => {
+  const mainProf = createContainer();
+  render.renderProfile(mainProf, "addr_maria", [], true, "", {
+    handle: "maria",
+    isConflict: true,
+    claimants: [{ owner: "addr_maria" }, { owner: "addr_outra_maria" }],
+  });
+  assert.ok(mainProf.innerHTML.includes("@maria"));
+  assert.ok(mainProf.innerHTML.includes("Conflito de Handle"));
+  assert.ok(mainProf.innerHTML.includes("form-claim-handle"));
+
+  const mainConf = createContainer();
+  render.renderHandleConflict(mainConf, "maria", [
+    { owner: "addr_1", txId: "tx_1" },
+    { owner: "addr_2", txId: "tx_2" },
+  ]);
+  assert.ok(mainConf.innerHTML.includes("@maria"));
+  assert.ok(mainConf.innerHTML.includes("Ambiguidade"));
+  assert.ok(mainConf.innerHTML.includes("addr_1"));
+  assert.ok(mainConf.innerHTML.includes("addr_2"));
+});

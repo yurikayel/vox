@@ -78,6 +78,7 @@ Todo dado no Vox é identificado por tags semânticas universais:
 | **Responder Tópico** | `reply` | `Community-Id`, `Reply-To` (TX ID) |
 | **Moderação** | `mod-action` | `Community-Id`, `Action` (hide/ban), `Target` |
 | **Chave de DM** | `profile-key` | `Dm-Pub` (Chave pública ECDH JWK; conversas privadas trafegam fora do permaweb) |
+| **Reivindicar Handle** | `handle` | `Handle` (slug `[a-z0-9-]{3,24}`), `Owner-Addr` |
 
 ---
 
@@ -128,8 +129,13 @@ Todo dado no Vox é identificado por tags semânticas universais:
   - Histórico de conversas gravado exclusivamente no IndexedDB local do usuário (`dm-threads`).
   - Interface completa com rotas `#/dm` e `#/dm/:address`, e botão de mensagem direta no perfil de membros.
   - *Critério de Sucesso (DoD atingido):* Troca de mensagens E2E entre Alice e Bob online via WebRTC, e entrega assíncrona com auto-expiração via relay inbox quando offline.
-- [ ] **Fase 5: Domínio & Identidade .vox.br**
-  - Nomes amigáveis e resolução descentralizada.
+- [x] **Fase 5: Handles Amigáveis & Resolução (@handle + DNS Comunitário)**
+  - Identidade mnemônica `@handle` registrada on-chain via transações `Type: handle` (`handles.js`).
+  - Resolução no PWA via rotas `#/h/:slug` e `#/u/@slug` apontando para o perfil do proprietário.
+  - Detecção e interface de desambiguação transparente para **conflitos de handle** sem tribunal central.
+  - Suporte a CNAME comunitário e wildcard DNS (`docs/DNS-HANDLES.md` e `client/redirect.html`).
+  - ArNS documentado como evolução futura (Fase 5.1).
+  - *Critério de Sucesso (DoD atingido):* Reivindicação de `@slug`, resolução direta no PWA e navegação via query `?h=slug`.
 
 ---
 
@@ -146,6 +152,7 @@ Todo dado no Vox é identificado por tags semânticas universais:
 | [client/DEV.md](./client/DEV.md) | Guia do desenvolvedor: carteira Arweave local, faucets e testes |
 | [relay/README.md](./relay/README.md) | Guia do Vox Relay Desktop: cache proxy local em Python |
 | [relay/deploy/README.md](./relay/deploy/README.md) | Guia de Deploy VPS: Signaling WSS (Caddy) + TURN Comunitário (Coturn) |
+| [docs/DNS-HANDLES.md](./docs/DNS-HANDLES.md) | Guia de Identidade Amigável, CNAME Comunitário e DNS Wildcard |
 
 ### Rodar o PWA localmente
 
