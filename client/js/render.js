@@ -376,27 +376,81 @@ export function renderComposeReply(main, topicId, communityId, { hasWallet = fal
     </div>`;
 }
 
-export function renderNetworkSettings(main, { settings, metrics, cacheStats, relayStatus }) {
-  const isEnabled = Boolean(settings?.enabled);
+export function renderPactModal(container) {
+  if (!container) return;
+  container.innerHTML = `
+    <div class="modal-overlay" id="pact-modal-overlay">
+      <div class="modal-dialog">
+        <div style="text-align:center; margin-bottom:1.25rem;">
+          <span style="font-size:2rem;">🇧🇷 🌐</span>
+          <h2 style="margin:0.5rem 0 0.25rem; font-size:1.35rem; color:var(--text);">Pacto Vox: Rede Distribuída</h2>
+          <p class="desc" style="margin:0;">Seus dados são seus. A infraestrutura é de todos.</p>
+        </div>
+
+        <div class="pact-feature">
+          <div class="pact-feature-icon">🛡️</div>
+          <div>
+            <strong>1. Soberania e Autoria Total</strong>
+            <p class="desc" style="margin:0.2rem 0 0;">Nenhuma Big Tech é dona da sua conta. Suas postagens são assinadas por sua chave criptográfica no permaweb Arweave.</p>
+          </div>
+        </div>
+
+        <div class="pact-feature">
+          <div class="pact-feature-icon">⚡</div>
+          <div>
+            <strong>2. Nó Leve Ativo por Padrão</strong>
+            <p class="desc" style="margin:0.2rem 0 0;">Enquanto o app estiver aberto, ele serve fragmentos públicos de leitura do cache local para outros clientes, tornando o Vox livre de servidores centrais caros.</p>
+          </div>
+        </div>
+
+        <div class="pact-feature">
+          <div class="pact-feature-icon">🔒</div>
+          <div>
+            <strong>3. Proteção e Salvaguardas</strong>
+            <p class="desc" style="margin:0.2rem 0 0;">Respeita conexão Wi-Fi, teto diário de banda (padrão 50 MB) e limite de cache (25 MB). Você tem direito de pausar ou desligar a qualquer momento.</p>
+          </div>
+        </div>
+
+        <div style="margin-top:1.5rem; display:flex; flex-direction:column; gap:0.5rem;">
+          <button id="btn-pact-accept" class="btn btn-primary" style="padding:0.75rem; font-weight:700;">Concordar e Entrar</button>
+          <button id="btn-pact-settings" class="btn btn-outline" style="padding:0.6rem; font-size:0.88rem;">Ajustar Limites de Rede Primeiro</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+export function closePactModal(container) {
+  if (container) container.innerHTML = "";
+}
+
+function renderNetworkHeader(isEnabled, relayStatus) {
   const relayBadge = relayStatus?.online
     ? `<span class="badge-pill" style="background:#e6f8ed; color:#18794e;">🟢 Relay Online (127.0.0.1:3920) — ${relayStatus.data?.cachedCount || 0} itens em disco</span>`
     : `<span class="badge-pill" style="background:#f4f6f9; color:var(--muted);">⚪ Relay Desktop Desconectado</span>`;
 
-  let html = `
+  return `
     <div class="card network-card">
-      <h2>Nó Participativo (Rede Distribuída)</h2>
-      <p class="desc">Ajude a manter o Vox descentralizado e resiliente servindo como nó de leitura e cache local para outros usuários, sem servidores caros e sem consumir sua bateria 24/7.</p>
+      <h2>Rede Distribuída (Pacto Vox)</h2>
+      <p class="desc">Infraestrutura cooperativa transparente: soberania dos seus dados ↔ nó de leitura e cache local para outros usuários, sem servidores caros.</p>
       
       <div class="network-status" style="margin-top:1rem;">
-        <span class="pill" style="background:${isEnabled ? "var(--success)" : "var(--muted)"}">
-          ${isEnabled ? "Nó Leve Ativo" : "Nó Leve Inativo (Opt-in)"}
+        <span class="pill" style="background:${isEnabled ? "var(--success)" : "var(--danger)"}">
+          ${isEnabled ? "🟢 Nó Leve Ativo (Padrão)" : "⏸️ Contribuição Pausada"}
         </span>
         ${relayBadge}
       </div>
-    </div>
+    </div>`;
+}
 
+function renderNetworkStats(metrics, cacheStats, dailyUsage, settings) {
+  const capMb = settings?.dailyCapMb || 50;
+  const servedTodayMb = ((dailyUsage?.bytesServedToday || 0) / (1024 * 1024)).toFixed(1);
+  const pct = Math.min(100, Math.round((servedTodayMb / capMb) * 100));
+
+  return `
     <div class="actions-bar">
-      <span class="section-title">Estatísticas do Seu Nó</span>
+      <span class="section-title">Estatísticas e Uso Coletivo</span>
     </div>
 
     <div class="stats-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:0.6rem; margin-bottom:1rem;">
@@ -406,24 +460,39 @@ export function renderNetworkSettings(main, { settings, metrics, cacheStats, rel
       </div>
       <div class="card" style="text-align:center; padding:0.75rem;">
         <div style="font-size:1.3rem; font-weight:700; color:var(--accent);">${((metrics?.bytesServed || 0) / 1024).toFixed(1)} KB</div>
-        <div class="meta">Banda Doada</div>
+        <div class="meta">Banda Total</div>
       </div>
       <div class="card" style="text-align:center; padding:0.75rem;">
-        <div style="font-size:1.3rem; font-weight:700; color:var(--text);">${metrics?.blobsReceived || 0}</div>
-        <div class="meta">Itens de Pares</div>
+        <div style="font-size:1.1rem; font-weight:700; color:var(--text);">${servedTodayMb} / ${capMb} MB</div>
+        <div class="usage-meter"><div class="usage-fill" style="width:${pct}%;"></div></div>
+        <div class="meta" style="margin-top:0.25rem;">Uso Hoje (${pct}%)</div>
       </div>
       <div class="card" style="text-align:center; padding:0.75rem;">
-        <div style="font-size:1.3rem; font-weight:700; color:var(--text);">${cacheStats?.count || 0}</div>
-        <div class="meta">Itens em Cache (${cacheStats?.sizeKb || "0"} KB)</div>
+        <div style="font-size:1.1rem; font-weight:700; color:var(--text);">${cacheStats?.count || 0}</div>
+        <div class="meta">Cache (${cacheStats?.sizeKb || "0"} KB)</div>
       </div>
-    </div>
+    </div>`;
+}
 
+function renderNetworkForm(settings, notifPermission) {
+  const isEnabled = Boolean(settings?.enabled);
+  const isBg = Boolean(settings?.backgroundRelay);
+  const notifNotice = notifPermission === "granted"
+    ? `<span style="font-size:0.8rem; color:var(--success);">✓ Notificações do sistema permitidas</span>`
+    : `<button type="button" id="btn-request-notif" class="btn btn-outline" style="font-size:0.78rem; padding:0.2rem 0.5rem; margin-left:0.5rem;">Ativar Notificações de Status</button>`;
+
+  return `
     <div class="card">
-      <h3>Configuração do Nó Leve (PWA)</h3>
+      <h3>Preferências de Nó & Limites</h3>
       <form id="form-network-settings">
         <div class="form-group" style="display:flex; align-items:center; gap:0.6rem; margin-top:0.75rem;">
-          <input type="checkbox" id="net-optin" ${isEnabled ? "checked" : ""} style="width:1.2rem; height:1.2rem;" />
-          <label for="net-optin" style="margin:0; font-weight:600;">Ativar nó participativo de leitura (compartilhar cache com outros clientes Vox)</label>
+          <input type="checkbox" id="net-pause" ${!isEnabled ? "checked" : ""} style="width:1.2rem; height:1.2rem;" />
+          <label for="net-pause" style="margin:0; font-weight:600; color:var(--danger);">Pausar contribuição (desativar nó leve e usar apenas modo leitura)</label>
+        </div>
+
+        <div class="form-group">
+          <label for="net-daily-cap">Teto diário de banda servida (MB/dia):</label>
+          <input type="number" id="net-daily-cap" class="form-control" min="5" max="1000" value="${settings?.dailyCapMb || 50}" />
         </div>
 
         <div class="form-group">
@@ -433,7 +502,7 @@ export function renderNetworkSettings(main, { settings, metrics, cacheStats, rel
 
         <div class="form-group" style="display:flex; align-items:center; gap:0.6rem;">
           <input type="checkbox" id="net-wifi" ${settings?.wifiOnly ? "checked" : ""} style="width:1.1rem; height:1.1rem;" />
-          <label for="net-wifi" style="margin:0;">Priorizar compartilhamento apenas quando conectado em Wi-Fi</label>
+          <label for="net-wifi" style="margin:0;">Priorizar compartilhamento apenas quando conectado em Wi-Fi (não gastar 4G/5G)</label>
         </div>
 
         <div class="form-group" style="display:flex; align-items:center; gap:0.6rem;">
@@ -441,7 +510,15 @@ export function renderNetworkSettings(main, { settings, metrics, cacheStats, rel
           <label for="net-comm-only" style="margin:0;">Espelhar apenas comunidades que sou membro</label>
         </div>
 
-        <div class="actions-row">
+        <div class="form-group" style="display:flex; align-items:center; gap:0.6rem; background:var(--accent-soft); padding:0.6rem; border-radius:var(--radius);">
+          <input type="checkbox" id="net-bg-relay" ${isBg ? "checked" : ""} style="width:1.1rem; height:1.1rem;" />
+          <div style="flex:1;">
+            <label for="net-bg-relay" style="margin:0; font-weight:600;">Atuar em segundo plano via Service Worker (somente Wi-Fi)</label>
+            <div style="margin-top:0.2rem;">${notifNotice}</div>
+          </div>
+        </div>
+
+        <div class="actions-row" style="margin-top:1rem;">
           <button type="submit" class="btn btn-primary">Salvar Preferências</button>
           <button type="button" id="btn-clear-cache" class="btn btn-outline">Limpar Cache Local</button>
           <button type="button" id="btn-check-relay" class="btn btn-outline">Verificar Relay Desktop</button>
@@ -450,9 +527,15 @@ export function renderNetworkSettings(main, { settings, metrics, cacheStats, rel
     </div>
 
     <div class="card info-box" style="margin-top:1rem;">
-      <h4>Como funciona o nó participativo?</h4>
-      <p class="desc">Ao ativar o nó leve, seu navegador mantém uma cópia das transações públicas já baixadas no IndexedDB local e as disponibiliza para outras abas e clientes na rede via protocolo <code>vox-peer</code>. Para um espelho permanente de longa duração, você pode rodar o <strong>Vox Relay Desktop</strong> no seu computador.</p>
+      <h4>Pacto Vox: Transparência e LGPD</h4>
+      <p class="desc">O Vox inverte a lógica das redes corporativas: sua identidade e seus dados não são minerados nem vendidos. Em troca, o app funciona como um nó cooperativo leve enquanto aberto. Todas as salvaguardas (Wi-Fi, teto de dados e botão de pausa) estão sob o seu controle a qualquer momento.</p>
     </div>`;
+}
 
+export function renderNetworkSettings(main, { settings, metrics, cacheStats, relayStatus, dailyUsage, notifPermission }) {
+  const isEnabled = Boolean(settings?.enabled);
+  let html = renderNetworkHeader(isEnabled, relayStatus);
+  html += renderNetworkStats(metrics, cacheStats, dailyUsage, settings);
+  html += renderNetworkForm(settings, notifPermission);
   main.innerHTML = html;
 }

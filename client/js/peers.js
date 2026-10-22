@@ -2,6 +2,7 @@ import * as cacheNode from "./cache-node.js";
 
 const PEER_SETTINGS_KEY = "vox-peer-settings";
 const PEER_METRICS_KEY = "vox-peer-metrics";
+const DAILY_USAGE_KEY = "vox-daily-usage";
 const CHANNEL_NAME = "vox-peer-v0";
 
 const myPeerId = "peer_" + Math.random().toString(36).substring(2, 9);
@@ -12,22 +13,41 @@ export function getPeerSettings() {
   try {
     const raw = localStorage.getItem(PEER_SETTINGS_KEY);
     if (!raw) {
+      // Fase 3.1: default-on (ativo por padrão)
       return {
-        enabled: false,
+        enabled: true,
         maxMb: 25,
         wifiOnly: true,
         commOnly: false,
+        backgroundRelay: false,
+        dailyCapMb: 50,
       };
     }
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    return {
+      enabled: parsed.enabled !== undefined ? parsed.enabled : true,
+      maxMb: parsed.maxMb || 25,
+      wifiOnly: parsed.wifiOnly !== undefined ? parsed.wifiOnly : true,
+      commOnly: parsed.commOnly !== undefined ? parsed.commOnly : false,
+      backgroundRelay: parsed.backgroundRelay !== undefined ? parsed.backgroundRelay : false,
+      dailyCapMb: parsed.dailyCapMb || 50,
+    };
   } catch {
-    return { enabled: false, maxMb: 25, wifiOnly: true, commOnly: false };
+    return {
+      enabled: true,
+      maxMb: 25,
+      wifiOnly: true,
+      commOnly: false,
+      backgroundRelay: false,
+      dailyCapMb: 50,
+    };
   }
 }
 
 export function savePeerSettings(settings) {
   localStorage.setItem(PEER_SETTINGS_KEY, JSON.stringify(settings));
   initPeerChannel();
+  updateServiceWorkerRelay(settings);
 }
 
 export function getPeerMetrics() {
@@ -48,6 +68,58 @@ function updateMetrics(field, amount = 1) {
   localStorage.setItem(PEER_METRICS_KEY, JSON.stringify(metrics));
 }
 
+export function getDailyUsage() {
+  const today = new Date().toISOString().slice(0, 10);
+  try {
+    const raw = localStorage.getItem(DAILY_USAGE_KEY);
+    if (raw) {
+      const data = JSON.parse(raw);
+      if (data.date === today) return data;
+    }
+  } catch {}
+  return { date: today, bytesServedToday: 0 };
+}
+
+export function recordBytesServed(bytes) {
+  const usage = getDailyUsage();
+  usage.bytesServedToday += bytes;
+  localStorage.setItem(DAILY_USAGE_KEY, JSON.stringify(usage));
+}
+
+export function isDailyCapReached() {
+  const settings = getPeerSettings();
+  const usage = getDailyUsage();
+  const capBytes = (settings.dailyCapMb || 50) * 1024 * 1024;
+  return usage.bytesServedToday >= capBytes;
+}
+
+export function isWifiOrUnlimited() {
+  const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  if (!conn) return true; // desktop ou navegador sem API NetworkInformation
+  if (conn.saveData) return false;
+  if (conn.type && conn.type === "cellular") return false;
+  return true;
+}
+
+export async function requestNotificationPermission() {
+  if ("Notification" in window) {
+    if (Notification.permission === "default") {
+      return await Notification.requestPermission();
+    }
+    return Notification.permission;
+  }
+  return "denied";
+}
+
+function updateServiceWorkerRelay(settings) {
+  if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
+    navigator.serviceWorker.controller.postMessage({
+      type: "VOX_SETTINGS_UPDATED",
+      settings,
+    });
+  }
+}
+
 export function initPeerChannel() {
   const settings = getPeerSettings();
   if (broadcastChannel) {
@@ -62,8 +134,11 @@ export function initPeerChannel() {
       const msg = event.data;
       if (!msg || typeof msg !== "object") return;
 
-      // Responde a pedidos WANT se tivermos em cache
+      // Responde a pedidos WANT se tivermos em cache, respeitando Wi-Fi e teto diário
       if (msg.type === "WANT" && msg.txId && msg.fromPeer !== myPeerId) {
+        if (isDailyCapReached()) return;
+        if (settings.wifiOnly && !isWifiOrUnlimited()) return;
+
         const cached = await cacheNode.getCachedTx(msg.txId);
         if (cached && broadcastChannel) {
           const payload = {
@@ -76,6 +151,7 @@ export function initPeerChannel() {
           const size = JSON.stringify(cached).length;
           updateMetrics("blobsServed", 1);
           updateMetrics("bytesServed", size);
+          recordBytesServed(size);
         }
       }
 
@@ -168,5 +244,5 @@ export async function fetchFromDesktopRelay(txId) {
   }
 }
 
-// Inicializa canal se opt-in já estiver ativo
+// Inicializa canal (ativo por padrão)
 initPeerChannel();
