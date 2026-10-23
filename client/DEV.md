@@ -276,3 +276,27 @@ Para manter a clareza e acolhimento para o usuário leigo, jargões técnicos s�
 
 Regra de ouro: frases curtas (≤ ~8 palavras na interface principal), contraste WCAG testado e zero dependências externas de ícones ou frameworks.
 
+---
+
+## 11. Arquitetura P2P-First & Conta Local (vox-local-v0)
+
+O Vox opera primariamente como uma rede ponto a ponto cooperativa, sustentada pelos aparelhos dos usuários sob o **Pacto Vox**, sem custos financeiros ou necessidade de carteira de criptomoeda no onboarding:
+
+### 11.1 Conta Local & Route ID (`vx_...`)
+- Ao abrir o app pela primeira vez, `local-account.js` gera instantaneamente um par de chaves criptográficas ECDSA P-256 armazenado em `localStorage`.
+- O identificador público do usuário é derivado como `routeId` (`vx_` + 20 caracteres base64url do SHA-256 da chave pública).
+- As mensagens privadas (DMs) utilizam par ECDH P-256 correspondente, roteadas diretamente pelo `routeId` via WebRTC ou Relay Inbox com TTL de 72h.
+- O usuário pode configurar seu Nome de Exibição localmente na tela `#/perfil` sem necessidade de transações pagas.
+
+### 11.2 Gossip de Publicações & IndexedDB
+- Posts, tópicos, comunidades e respostas criados sem carteira são assinados digitalmente com a chave local e propagados via protocolo `GOSSIP` (`vox-local-v0`) através de `BroadcastChannel` e canais WebRTC DataChannel ativos.
+- O store `local-posts` no IndexedDB persiste as publicações recebidas dos pares com deduplicação e validação canônica de assinatura.
+- **A Rua (Feed):** Mescla em tempo real as publicações da rede P2P local com os tópicos do permaweb (Arweave GraphQL), identificando a origem com badges visuais claras:
+  - `🌐 Na rede`: post distribuído via malha participativa P2P.
+  - `💾 Permanente`: post ancorado no permaweb.
+
+### 11.3 Permaweb Opcional
+- A funcionalidade de carteira Arweave (`wallet.js`) permanece totalmente suportada, mas é posicionada como recurso avançado para usuários que desejam ancoragem permanente e imutável on-chain.
+- O acesso à carteira e anúncios on-chain fica acessível na seção expansível `<details class="advanced-settings">` no Perfil.
+
+

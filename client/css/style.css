@@ -891,6 +891,22 @@ main#app-main {
   font-weight: 600;
 }
 
+.p2p-pill {
+  background: var(--success-soft);
+  color: var(--success);
+  border: 1px solid rgba(23, 191, 99, 0.25);
+  font-size: 0.72rem;
+  padding: 1px 6px;
+}
+
+.permanent-pill {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1px solid rgba(26, 95, 180, 0.25);
+  font-size: 0.72rem;
+  padding: 1px 6px;
+}
+
 /* Banners e Alertas */
 .banner {
   background: var(--surface-soft);

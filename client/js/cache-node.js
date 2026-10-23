@@ -1,9 +1,10 @@
 // Cache local persistente para transações e corpos do Vox (IndexedDB + LRU)
 
 const DB_NAME = "vox-cache-db";
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 const STORE_NAME = "tx-data";
 const DM_STORE_NAME = "dm-threads";
+const LOCAL_POSTS_STORE = "local-posts";
 
 let dbPromise = null;
 
@@ -25,6 +26,13 @@ function openDB() {
         const dmStore = db.createObjectStore(DM_STORE_NAME, { keyPath: "id" });
         dmStore.createIndex("peerAddress", "peerAddress", { unique: false });
         dmStore.createIndex("ts", "ts", { unique: false });
+      }
+      if (!db.objectStoreNames.contains(LOCAL_POSTS_STORE)) {
+        const localStore = db.createObjectStore(LOCAL_POSTS_STORE, { keyPath: "id" });
+        localStore.createIndex("type", "type", { unique: false });
+        localStore.createIndex("communityId", "communityId", { unique: false });
+        localStore.createIndex("replyTo", "replyTo", { unique: false });
+        localStore.createIndex("ts", "ts", { unique: false });
       }
     };
     req.onsuccess = (e) => resolve(e.target.result);
@@ -234,6 +242,103 @@ export async function deleteDmThread(peerAddress) {
       }
       tx.oncomplete = () => resolve();
       tx.onerror = () => resolve();
+    });
+  } catch {}
+}
+
+export async function saveLocalPost(post) {
+  if (!post?.id || !post?.type) return;
+  try {
+    const db = await openDB();
+    await new Promise((resolve) => {
+      const tx = db.transaction(LOCAL_POSTS_STORE, "readwrite");
+      const store = tx.objectStore(LOCAL_POSTS_STORE);
+      store.put({
+        id: post.id,
+        type: post.type,
+        communityId: post.communityId || "",
+        replyTo: post.replyTo || "",
+        title: post.title || "",
+        body: post.body || "",
+        category: post.category || "",
+        description: post.description || "",
+        author: post.author || "",
+        pubKey: post.pubKey || null,
+        sig: post.sig || "",
+        ts: post.ts || Date.now(),
+        isLocalP2p: true,
+      });
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => resolve();
+    });
+  } catch {}
+}
+
+export async function getLocalPost(id) {
+  if (!id) return null;
+  try {
+    const db = await openDB();
+    return await new Promise((resolve) => {
+      const tx = db.transaction(LOCAL_POSTS_STORE, "readonly");
+      const store = tx.objectStore(LOCAL_POSTS_STORE);
+      const req = store.get(id);
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => resolve(null);
+    });
+  } catch {
+    return null;
+  }
+}
+
+export async function getLocalPosts({ type = null, communityId = null, replyTo = null } = {}) {
+  try {
+    const db = await openDB();
+    return await new Promise((resolve) => {
+      const tx = db.transaction(LOCAL_POSTS_STORE, "readonly");
+      const store = tx.objectStore(LOCAL_POSTS_STORE);
+      const req = store.getAll();
+      req.onsuccess = () => {
+        let items = req.result || [];
+        if (type) items = items.filter((p) => p.type === type);
+        if (communityId) items = items.filter((p) => p.communityId === communityId);
+        if (replyTo !== null) items = items.filter((p) => p.replyTo === replyTo);
+
+        if (type === "reply") {
+          items.sort((a, b) => (a.ts || 0) - (b.ts || 0));
+        } else {
+          items.sort((a, b) => (b.ts || 0) - (a.ts || 0));
+        }
+        resolve(items);
+      };
+      req.onerror = () => resolve([]);
+    });
+  } catch {
+    return [];
+  }
+}
+
+export async function getLocalCommunities() {
+  const posts = await getLocalPosts({ type: "community" });
+  return posts.map((c) => ({
+    id: c.communityId || c.id,
+    communityId: c.communityId || c.id,
+    title: c.title || c.communityId || c.id,
+    description: c.description || c.body || "",
+    category: c.category || "",
+    owner: c.author || "",
+    isLocalP2p: true,
+  }));
+}
+
+export async function clearLocalPosts() {
+  try {
+    const db = await openDB();
+    await new Promise((resolve) => {
+      const tx = db.transaction(LOCAL_POSTS_STORE, "readwrite");
+      const store = tx.objectStore(LOCAL_POSTS_STORE);
+      const req = store.clear();
+      req.onsuccess = () => resolve();
+      req.onerror = () => resolve();
     });
   } catch {}
 }
