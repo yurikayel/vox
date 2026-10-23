@@ -337,8 +337,20 @@ Para preencher a interface na primeira execução e permitir explorar os fluxos 
 | `vx_demo_pri` | **Pri** | *Entrar leva um toque* | Onboarding instantâneo com chaves geradas no navegador; criação imediata de comunidades e posts sem barreiras. |
 
 ### 12.2 Mecanismo de Semeação (`demo-seed.js`)
-- **Idempotência:** A chave `vox-demo-seeded-v1` em `localStorage` sinaliza a carga inicial. Se os itens estiverem presentes, a checagem é instantânea.
+- **Idempotência:** A chave `vox-demo-seeded-v2` em `localStorage` sinaliza a carga inicial. Se os itens estiverem presentes, a checagem é instantânea.
 - **Isolamento de Dados:** Os posts são gravados via `cacheNode.saveLocalPost` com `isLocalP2p: true` e sem assinatura gossip, ficando disponíveis para navegação local sem poluir o broadcast de outros aparelhos.
 - **Restauração Rápida:** O botão **"🔄 Restaurar tour demo"** em `#/settings/network` (seção Avançado) permite recarregar o conteúdo educativo a qualquer momento para fins de testes e QA.
+
+### 12.3 Experiência Visual InstaTwitter (Fotos, Curtidas e Salvos)
+
+O PWA traz a vivacidade e o engajamento visual de redes sociais modernas (híbrido X / Instagram):
+- **Avatares com Foto:** Perfis possuem imagens reais em `client/images/avatars/`, com fallback automático para iniciais em caso de falha de carregamento.
+- **Posts com Imagens:** Cards no feed e tópicos completos exibem fotografias de alta resolução (`client/images/posts/`), com cantos arredondados, enquadramento responsivo (`max-height: 440px`) e elevação sutil em hover.
+- **Ações Interativas:**
+  - **❤️ Curtir:** Alternância imediata com animação de pulso cardíaco (`@keyframes heartPop`), atualização de contagem e persistência em `localStorage` (`social.js`).
+  - **💬 Comentar:** Acesso direto à thread de respostas com contador dinâmico.
+  - **↗ Compartilhar:** Disparo do `navigator.share` nativo ou cópia direta do link com toast de confirmação.
+  - **🔖 Salvar:** Marcação de posts favoritos com feedback em toast.
+- **Cache Offline Completo:** Todas as fotos do tour são cacheadas pelo Service Worker (`CACHE_NAME = "vox-pwa-v5.6-instatwitter"`), garantindo navegação instantânea e offline.
 
 

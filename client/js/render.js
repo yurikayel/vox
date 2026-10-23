@@ -1,4 +1,5 @@
 import * as mock from "./mock.js";
+import * as social from "./social.js";
 
 const root = () => document.getElementById("app-root");
 
@@ -164,10 +165,19 @@ export function renderGatewayBanner(main, label) {
   );
 }
 
+function renderAvatarHtml(author, authorDisplay, sizeClass = "") {
+  const avatarUrl = mock.getAuthorAvatar(author);
+  const authorInitial = (authorDisplay || author || "V").slice(0, 1).toUpperCase();
+  if (avatarUrl) {
+    return `<span class="avatar-wrap ${sizeClass}"><img class="avatar-img" src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(authorDisplay)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" /><span class="avatar avatar-fallback" style="display:none;">${authorInitial}</span></span>`;
+  }
+  return `<span class="avatar ${sizeClass}">${authorInitial}</span>`;
+}
+
 function renderPostItem(t) {
   const author = t.author || t.owner || "";
   const authorDisplay = t.authorDisplay || (author ? mock.getAuthorDisplay(author) : "") || shortId(author);
-  const authorInitial = (authorDisplay || author || "V").slice(0, 1).toUpperCase();
+  const authorHandle = (author ? mock.getAuthorHandle(author) : "") || shortId(author);
   const commLabel = t.communityTitle || "Comunidade";
   const commPill = t.communityId
     ? `<a class="post-community-pill" href="#/c/${encodeURIComponent(t.communityId)}">${escapeHtml(commLabel)}</a>`
@@ -177,23 +187,52 @@ function renderPostItem(t) {
     ? `<span class="badge-pill p2p-pill">Na rede</span>`
     : `<span class="badge-pill permanent-pill">Guardado</span>`;
 
+  const imageHtml = t.image
+    ? `<div class="post-media-container"><img class="post-media" src="${escapeHtml(t.image)}" alt="${escapeHtml(t.imageAlt || t.title)}" loading="lazy" /></div>`
+    : "";
+
+  const baseLikes = Number(t.likesCount) || 0;
+  const liked = social.isLiked(t.id);
+  const currentLikes = social.getLikesCount(t.id, baseLikes);
+  const saved = social.isSaved(t.id);
+  const repliesCount = Number(t.repliesCount) || 0;
+
   return `
-    <article class="post">
-      <a class="avatar" href="#/u/${encodeURIComponent(author)}">${authorInitial}</a>
+    <article class="post insta-post" data-id="${escapeHtml(t.id)}">
+      <a class="avatar-link" href="#/u/${encodeURIComponent(author)}">${renderAvatarHtml(author, authorDisplay)}</a>
       <div class="post-content">
         <div class="post-header">
-          <a class="post-author" href="#/u/${encodeURIComponent(author)}">${escapeHtml(authorDisplay)}</a>
-          ${originBadge}
-          <span class="post-meta">· recente</span>
-          ${commPill}
+          <div class="post-header-author">
+            <a class="post-author" href="#/u/${encodeURIComponent(author)}">${escapeHtml(authorDisplay)}</a>
+            <span class="post-handle">@${escapeHtml(authorHandle)}</span>
+            <span class="post-dot">·</span>
+            <span class="post-meta">recente</span>
+          </div>
+          <div class="post-header-tags">
+            ${originBadge}
+            ${commPill}
+          </div>
         </div>
         <div class="post-title">
           <a href="#/t/${encodeURIComponent(t.id)}">${escapeHtml(t.title)}</a>
         </div>
         ${bodySnippet}
-        <div class="post-actions">
-          <a class="post-action-btn" href="#/t/${encodeURIComponent(t.id)}" aria-label="Ver discussão e responder">💬 Responder</a>
-          <button class="post-action-btn btn-share-post" data-id="${escapeHtml(t.id)}" data-title="${escapeHtml(t.title)}" aria-label="Compartilhar post">↗ Compartilhar</button>
+        ${imageHtml}
+        <div class="post-actions insta-actions">
+          <button class="action-btn btn-like ${liked ? "active" : ""}" data-id="${escapeHtml(t.id)}" data-count="${baseLikes}" aria-label="Curtir post">
+            <svg class="action-icon icon-heart" width="18" height="18" viewBox="0 0 24 24" fill="${liked ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+            <span class="action-count count-likes">${currentLikes > 0 ? currentLikes : ""}</span>
+          </button>
+          <a class="action-btn btn-comment" href="#/t/${encodeURIComponent(t.id)}" aria-label="Ver discussão e responder">
+            <svg class="action-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span class="action-count count-replies">${repliesCount > 0 ? repliesCount : ""}</span>
+          </a>
+          <button class="action-btn btn-share btn-share-post" data-id="${escapeHtml(t.id)}" data-title="${escapeHtml(t.title)}" aria-label="Compartilhar post">
+            <svg class="action-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+          </button>
+          <button class="action-btn btn-save ${saved ? "active" : ""}" data-id="${escapeHtml(t.id)}" aria-label="Salvar post">
+            <svg class="action-icon icon-bookmark" width="18" height="18" viewBox="0 0 24 24" fill="${saved ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
+          </button>
         </div>
       </div>
     </article>`;
@@ -299,10 +338,21 @@ export function renderTopic(main, topicId, topic, replies, { topicData = null, i
   const bodyText = topicData?.body || topic?.body || "Sem conteúdo textual.";
   const author = topic?.author || topic?.owner || "";
   const authorDisplay = topic?.authorDisplay || (author ? mock.getAuthorDisplay(author) : "") || shortId(author);
-  const authorInitial = (authorDisplay || author || "V").slice(0, 1).toUpperCase();
+  const authorHandle = (author ? mock.getAuthorHandle(author) : "") || shortId(author);
   const originBadge = topic?.isLocalP2p
     ? `<span class="badge-pill p2p-pill">Na rede</span>`
     : `<span class="badge-pill permanent-pill">Guardado</span>`;
+
+  const topicImage = topic?.image || topicData?.image || "";
+  const topicImageAlt = topic?.imageAlt || topicData?.imageAlt || topic?.title || "Foto da publicação";
+  const imageHtml = topicImage
+    ? `<div class="post-media-container" style="margin:12px 0 14px;"><img class="post-media" src="${escapeHtml(topicImage)}" alt="${escapeHtml(topicImageAlt)}" /></div>`
+    : "";
+
+  const baseLikes = Number(topic?.likesCount) || 0;
+  const liked = social.isLiked(topicId);
+  const currentLikes = social.getLikesCount(topicId, baseLikes);
+  const saved = social.isSaved(topicId);
 
   const modBtn = isMod
     ? `<button class="btn btn-sm btn-danger btn-mod-hide" data-id="${escapeHtml(topicId)}" data-type="topic">🛡️ Ocultar</button>`
@@ -310,19 +360,34 @@ export function renderTopic(main, topicId, topic, replies, { topicData = null, i
 
   let html = `
     ${backLink}
-    <article class="topic-root">
-      <div class="post-header">
-        <span class="avatar">${authorInitial}</span>
-        <div>
-          <a class="post-author" href="#/u/${encodeURIComponent(author)}">${escapeHtml(authorDisplay)}</a>
-          ${originBadge}
+    <article class="topic-root insta-topic-root card" style="padding:1.25rem;">
+      <div class="post-header" style="align-items:center;">
+        <a class="avatar-link" href="#/u/${encodeURIComponent(author)}">${renderAvatarHtml(author, authorDisplay)}</a>
+        <div style="flex:1;">
+          <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+            <a class="post-author" href="#/u/${encodeURIComponent(author)}">${escapeHtml(authorDisplay)}</a>
+            <span class="post-handle">@${escapeHtml(authorHandle)}</span>
+            ${originBadge}
+          </div>
+          <span class="post-meta">Publicado na rede</span>
         </div>
       </div>
-      <h2>${escapeHtml(topic?.title || "Post")}</h2>
-      <div class="post-body">${escapeHtml(bodyText)}</div>
-      <div class="actions-row">
-        <button id="btn-share-topic" class="btn btn-outline btn-sm" data-id="${escapeHtml(topicId)}" data-title="${escapeHtml(topic?.title || "")}">↗ Compartilhar</button>
-        <a class="btn btn-primary btn-sm" href="#/compose/reply?t=${encodeURIComponent(topicId)}&c=${encodeURIComponent(commId)}">💬 Responder</a>
+      <h2 style="margin:0.75rem 0 0.5rem; font-size:1.25rem;">${escapeHtml(topic?.title || "Post")}</h2>
+      <div class="post-body" style="font-size:0.98rem; line-height:1.5;">${escapeHtml(bodyText)}</div>
+      ${imageHtml}
+      <div class="post-actions insta-actions" style="margin-top:12px; padding-top:8px;">
+        <button class="action-btn btn-like ${liked ? "active" : ""}" data-id="${escapeHtml(topicId)}" data-count="${baseLikes}" aria-label="Curtir post">
+          <svg class="action-icon icon-heart" width="18" height="18" viewBox="0 0 24 24" fill="${liked ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+          <span class="action-count count-likes">${currentLikes > 0 ? currentLikes : ""}</span>
+        </button>
+        <button id="btn-share-topic" class="action-btn btn-share btn-share-post" data-id="${escapeHtml(topicId)}" data-title="${escapeHtml(topic?.title || "")}" aria-label="Compartilhar post">
+          <svg class="action-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+          <span class="action-count">Compartilhar</span>
+        </button>
+        <button class="action-btn btn-save ${saved ? "active" : ""}" data-id="${escapeHtml(topicId)}" aria-label="Salvar post">
+          <svg class="action-icon icon-bookmark" width="18" height="18" viewBox="0 0 24 24" fill="${saved ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
+        </button>
+        <a class="btn btn-primary btn-sm" href="#/compose/reply?t=${encodeURIComponent(topicId)}&c=${encodeURIComponent(commId)}" style="margin-left:auto;">💬 Responder</a>
         ${modBtn}
       </div>
     </article>
@@ -341,7 +406,6 @@ export function renderTopic(main, topicId, topic, replies, { topicData = null, i
   const replyItems = replies.map((r) => {
     const rAuthor = r.author || r.owner || "";
     const rAuthorDisplay = r.authorDisplay || (rAuthor ? mock.getAuthorDisplay(rAuthor) : "") || shortId(rAuthor);
-    const rInitial = (rAuthorDisplay || rAuthor || "V").slice(0, 1).toUpperCase();
     const rBadge = r.isLocalP2p
       ? `<span class="badge-pill p2p-pill">Na rede</span>`
       : `<span class="badge-pill permanent-pill">Guardado</span>`;
@@ -350,7 +414,7 @@ export function renderTopic(main, topicId, topic, replies, { topicData = null, i
       : "";
     return `
       <div class="reply-item card reply" id="reply-${escapeHtml(r.id)}">
-        <span class="avatar">${rInitial}</span>
+        <a class="avatar-link" href="#/u/${encodeURIComponent(rAuthor)}">${renderAvatarHtml(rAuthor, rAuthorDisplay)}</a>
         <div class="post-content">
           <div class="reply-header" style="display:flex; justify-content:space-between; align-items:center;">
             <div>
@@ -368,10 +432,24 @@ export function renderTopic(main, topicId, topic, replies, { topicData = null, i
   main.innerHTML += html;
 }
 
-function renderProfileHeader(address, isCurrentWallet, handle, isConflict, claimants, displayName, profileBio = "") {
+function renderProfileHeader(address, isCurrentWallet, handle, isConflict, claimants, displayName, profileBio = "", stats = null) {
   const displayTitle = displayName ? `${displayName} (@${handle || shortId(address)})` : (handle ? `@${handle}` : "Perfil");
   const initial = (displayName || handle || address || "U").slice(0, 1).toUpperCase();
-  const bioHtml = profileBio ? `<p class="profile-bio desc" style="margin:6px 0 0; color:var(--text);">${escapeHtml(profileBio)}</p>` : "";
+  const avatarUrl = mock.getAuthorAvatar(address);
+  const avatarHtml = avatarUrl
+    ? `<img class="profile-avatar-img" src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(displayName || address)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" /><span class="avatar" style="display:none; width:72px; height:72px; font-size:1.8rem;">${initial}</span>`
+    : `<span class="avatar" style="width:72px; height:72px; font-size:1.8rem;">${initial}</span>`;
+
+  const bioHtml = profileBio ? `<p class="profile-bio desc" style="margin:8px 0 0; color:var(--text); line-height:1.45;">${escapeHtml(profileBio)}</p>` : "";
+  const statsData = stats || mock.getMockProfile(address)?.stats;
+  const statsHtml = statsData
+    ? `<div class="profile-stats" style="display:flex; gap:1.2rem; margin-top:0.85rem; font-size:0.88rem;">
+        <span><strong>${statsData.posts || 1}</strong> <span class="meta">${(statsData.posts || 1) === 1 ? "post" : "posts"}</span></span>
+        <span><strong>${statsData.followers || 0}</strong> <span class="meta">seguidores</span></span>
+        <span><strong>${statsData.following || 0}</strong> <span class="meta">seguindo</span></span>
+      </div>`
+    : "";
+
   const conflictBanner = isConflict
     ? `<div class="card error" style="margin-top:0.6rem;">
         ⚠️ <strong>Conflito de Handle:</strong> <code>@${escapeHtml(handle)}</code> reivindicado por mais de uma conta.
@@ -383,16 +461,17 @@ function renderProfileHeader(address, isCurrentWallet, handle, isConflict, claim
 
   return `
     <div class="card profile-card">
-      <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
-        <span class="avatar" style="width:52px; height:52px; font-size:1.3rem;">${initial}</span>
+      <div style="display:flex; align-items:center; gap:16px; margin-bottom:8px;">
+        ${avatarHtml}
         <div>
           <h2 style="margin:0;">${escapeHtml(displayTitle)}</h2>
-          <p class="meta" style="margin:2px 0 0;">ID de Rede: <code>${escapeHtml(address)}</code></p>
+          <p class="meta" style="margin:3px 0 0;">ID de Rede: <code>${escapeHtml(address)}</code></p>
         </div>
       </div>
       ${bioHtml}
+      ${statsHtml}
       ${conflictBanner}
-      ${isCurrentWallet ? `<span class="badge-pill" style="margin-top:0.4rem;">Sua Conta Neste Aparelho</span>` : ""}
+      ${isCurrentWallet ? `<span class="badge-pill" style="margin-top:0.6rem;">Sua Conta Neste Aparelho</span>` : ""}
     </div>`;
 }
 
@@ -457,8 +536,8 @@ function renderProfileActions(address, isCurrentWallet, handle, displayName, has
     </div>`;
 }
 
-export function renderProfile(main, address, memberships = [], isCurrentWallet = false, dmPubStr = "", { handle = "", isConflict = false, claimants = [], displayName = "", profileBio = "", posts = [], hasWallet = false, balance = "0.000" } = {}) {
-  let html = renderProfileHeader(address, isCurrentWallet, handle, isConflict, claimants, displayName, profileBio);
+export function renderProfile(main, address, memberships = [], isCurrentWallet = false, dmPubStr = "", { handle = "", isConflict = false, claimants = [], displayName = "", profileBio = "", stats = null, posts = [], hasWallet = false, balance = "0.000" } = {}) {
+  let html = renderProfileHeader(address, isCurrentWallet, handle, isConflict, claimants, displayName, profileBio, stats);
   html += renderProfileActions(address, isCurrentWallet, handle, displayName, hasWallet, balance);
 
   if (posts && posts.length) {

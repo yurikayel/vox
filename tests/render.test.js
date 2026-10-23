@@ -161,11 +161,17 @@ test("render - renderProfile com handle e renderHandleConflict", () => {
 test("render - renderFeed e renderProfile com persona mock (Lia)", () => {
   const mainFeed = createContainer();
   const topics = [
-    { id: "demo-post-lia", title: "O Vox mora no seu celular", body: "Texto...", author: "vx_demo_lia", communityId: "demo-aprenda-vox" },
+    { id: "demo-post-lia", title: "O Vox mora no seu celular", body: "Texto...", image: "images/posts/tour-celular.jpg", author: "vx_demo_lia", communityId: "demo-aprenda-vox", likesCount: 24 },
   ];
   render.renderFeed(mainFeed, topics);
   assert.ok(mainFeed.innerHTML.includes("Lia"));
+  assert.ok(mainFeed.innerHTML.includes("@lia"));
   assert.ok(mainFeed.innerHTML.includes("O Vox mora no seu celular"));
+  assert.ok(mainFeed.innerHTML.includes("images/avatars/lia.jpg"));
+  assert.ok(mainFeed.innerHTML.includes("images/posts/tour-celular.jpg"));
+  assert.ok(mainFeed.innerHTML.includes("btn-like"));
+  assert.ok(mainFeed.innerHTML.includes("btn-save"));
+  assert.ok(mainFeed.innerHTML.includes("24"));
 
   const mainProf = createContainer();
   render.renderProfile(mainProf, "vx_demo_lia", [{ communityId: "demo-aprenda-vox" }], false, "", {
@@ -174,7 +180,9 @@ test("render - renderFeed e renderProfile com persona mock (Lia)", () => {
     posts: topics,
   });
   assert.ok(mainProf.innerHTML.includes("Lia (@vx_demo_lia)"));
+  assert.ok(mainProf.innerHTML.includes("images/avatars/lia.jpg"));
   assert.ok(mainProf.innerHTML.includes("Apoiadora de redes livres."));
+  assert.ok(mainProf.innerHTML.includes("profile-stats"));
   assert.ok(mainProf.innerHTML.includes("Posts do autor (1)"));
   assert.ok(mainProf.innerHTML.includes("O Vox mora no seu celular"));
 });

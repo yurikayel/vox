@@ -489,6 +489,35 @@ main#app-main {
   box-shadow: 0 0 8px rgba(26, 95, 180, 0.08);
 }
 
+.avatar-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.avatar-img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1.5px solid var(--border);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  display: block;
+}
+
+.profile-avatar-img {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--accent);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25), var(--accent-glow);
+  display: block;
+}
+
 .post-content {
   flex: 1;
   min-width: 0;
@@ -497,10 +526,25 @@ main#app-main {
 .post-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 6px;
   flex-wrap: wrap;
   font-size: 0.86rem;
   line-height: 1.3;
+}
+
+.post-header-author {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.post-header-tags {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
 }
 
 .post-author {
@@ -518,6 +562,11 @@ main#app-main {
   font-size: 0.82rem;
 }
 
+.post-dot {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
 .post-meta {
   color: var(--muted);
   font-size: 0.82rem;
@@ -532,7 +581,6 @@ main#app-main {
   color: var(--muted);
   border: 1px solid var(--border);
   text-decoration: none;
-  margin-left: auto;
   transition: all 0.15s ease;
 }
 
@@ -546,7 +594,7 @@ main#app-main {
 .post-title {
   font-size: 1.05rem;
   font-weight: 700;
-  margin: 4px 0 3px;
+  margin: 6px 0 3px;
   color: var(--text);
   line-height: 1.35;
 }
@@ -567,6 +615,130 @@ main#app-main {
   margin: 4px 0 8px;
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+/* Fotos e Mídia nos Posts Estilo InstaTwitter */
+.post-media-container {
+  margin: 10px 0 12px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--surface-soft);
+  max-height: 440px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.post-media {
+  width: 100%;
+  height: auto;
+  max-height: 440px;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .post-media-container:hover .post-media {
+    transform: scale(1.015);
+  }
+}
+
+/* Ações dos Posts (Curtir, Comentar, Compartilhar, Salvar) */
+.insta-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 440px;
+  margin-top: 10px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 0.84rem;
+  cursor: pointer;
+  padding: 5px 8px;
+  border-radius: 999px;
+  text-decoration: none;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.action-btn:hover {
+  text-decoration: none;
+  color: var(--text);
+  background: var(--surface-soft);
+}
+
+.action-btn .action-icon {
+  flex-shrink: 0;
+  transition: transform 0.15s ease;
+}
+
+.action-btn .action-count {
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.action-btn.btn-like:hover {
+  color: #e0245e;
+  background: rgba(224, 36, 94, 0.08);
+}
+
+.action-btn.btn-like.active {
+  color: #e0245e;
+}
+
+.action-btn.btn-like.active .action-icon {
+  animation: heartPop 0.25s cubic-bezier(0.17, 0.89, 0.32, 1.49);
+  fill: #e0245e;
+  stroke: #e0245e;
+}
+
+.action-btn.btn-comment:hover {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.action-btn.btn-share:hover {
+  color: var(--success);
+  background: var(--success-soft);
+}
+
+.action-btn.btn-save:hover {
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.action-btn.btn-save.active {
+  color: #f59e0b;
+}
+
+.action-btn.btn-save.active .action-icon {
+  fill: #f59e0b;
+  stroke: #f59e0b;
+}
+
+@keyframes heartPop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.35); }
+  100% { transform: scale(1); }
+}
+
+.profile-stats {
+  display: flex;
+  gap: 1.25rem;
+  margin-top: 0.85rem;
+  font-size: 0.88rem;
 }
 
 .post-actions {
