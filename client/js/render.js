@@ -3,6 +3,7 @@ import * as social from "./social.js";
 import * as listing from "./listing.js";
 import * as gov from "./governance.js";
 import * as brcode from "./brcode.js";
+import * as hashtags from "./hashtags.js";
 
 const root = () => document.getElementById("app-root");
 
@@ -213,83 +214,126 @@ export function formatPostMarkdown(post) {
   return `> **${authorDisplay}** (@${authorHandle}) · *Vox Brasil*\n>\n> **${title}**\n>\n> ${body}\n>\n> 🔗 Ver no Vox: ${url}`;
 }
 
-export function renderPostItem(t, { isPinned = false } = {}) {
-  const author = t.author || t.owner || "";
-  const authorDisplay = t.authorDisplay || (author ? mock.getAuthorDisplay(author) : "") || shortId(author);
-  const authorHandle = (author ? mock.getAuthorHandle(author) : "") || shortId(author);
+export function commentsPanelId(topicId) {
+  return `post-comments-${String(topicId || "").replace(/[^a-zA-Z0-9_-]/g, "")}`;
+}
+
+export function renderInlineReplyItem(r) {
+  const rAuthor = r.author || r.owner || "";
+  const rAuthorDisplay = r.authorDisplay || (rAuthor ? mock.getAuthorDisplay(rAuthor) : "") || shortId(rAuthor);
+  const rHandle = (rAuthor ? mock.getAuthorHandle(rAuthor) : "") || "";
+  const handleHtml = rHandle ? `<span class="post-handle">@${escapeHtml(rHandle)}</span>` : "";
+  return `
+    <li class="post-comment-item" id="inline-reply-${escapeHtml(r.id)}">
+      <a class="avatar-link" href="#/u/${encodeURIComponent(rAuthor)}">${renderAvatarHtml(rAuthor, rAuthorDisplay, "sm")}</a>
+      <div class="post-comment-body">
+        <div class="post-comment-meta">
+          <a class="post-author" href="#/u/${encodeURIComponent(rAuthor)}">${escapeHtml(rAuthorDisplay)}</a>
+          ${handleHtml}
+        </div>
+        <p class="reply-body">${hashtags.linkifyHashtags(escapeHtml(r.body || ""))}</p>
+      </div>
+    </li>`;
+}
+
+export function renderCommentList(replies = []) {
+  if (!replies.length) {
+    return `<div class="post-comments-feed"><p class="post-comments-empty">Nenhuma resposta ainda.</p></div>`;
+  }
+  return `<div class="post-comments-feed"><ul class="post-comment-list">${replies.map(renderInlineReplyItem).join("")}</ul></div>`;
+}
+
+function renderInlineReplyComposer(topicId, commId) {
+  return `
+    <form class="post-comment-composer" data-topic="${escapeHtml(topicId)}" data-comm="${escapeHtml(commId || "")}">
+      <textarea class="form-control post-comment-input" rows="2" maxlength="500" required placeholder="Responder…" aria-label="Escrever resposta"></textarea>
+      <div class="post-comment-composer-actions">
+        <a class="post-comments-thread" href="#/t/${encodeURIComponent(topicId)}">Abrir thread</a>
+        <button type="submit" class="btn btn-primary btn-sm btn-inline-reply">Responder</button>
+      </div>
+    </form>`;
+}
+
+export function renderPostComments(topicId, commId = "", { replies = [], expanded = false } = {}) {
+  const panelId = commentsPanelId(topicId);
+  const openCls = expanded ? " is-open" : "";
+  const hid = expanded ? "" : " hidden";
+  return `<div class="post-comments${openCls}" id="${escapeHtml(panelId)}"${hid} data-topic="${escapeHtml(topicId)}" data-comm="${escapeHtml(commId)}">${renderCommentList(replies)}${renderInlineReplyComposer(topicId, commId)}</div>`;
+}
+
+function renderPostHeaderBlock(t, author, authorDisplay, authorHandle, isPinned) {
   const commLabel = t.communityTitle || "Comunidade";
   const commPill = t.communityId
     ? `<a class="post-community-pill" href="#/c/${encodeURIComponent(t.communityId)}">${escapeHtml(commLabel)}</a>`
     : "";
-  const bodySnippet = t.body ? `<p class="post-body">${escapeHtml(t.body)}</p>` : "";
   const originBadge = t.isLocalP2p
     ? `<span class="badge-pill p2p-pill">Na rede</span>`
     : `<span class="badge-pill permanent-pill">Guardado</span>`;
-  const pinnedBadge = (isPinned || t.isPinned || (author && social.isPostPinned(author, t.id)))
+  const pinned = isPinned || t.isPinned || (author && social.isPostPinned(author, t.id));
+  const pinnedBadge = pinned
     ? `<span class="badge-pill pinned-pill" title="Publicação fixada pelo autor">📌 Fixado</span>`
     : "";
-
-  const imageHtml = t.image
-    ? `<div class="post-media-container"><img class="post-media" src="${escapeHtml(t.image)}" alt="${escapeHtml(t.imageAlt || t.title)}" loading="lazy" /></div>`
-    : "";
-
-  const baseLikes = Number(t.likesCount) || 0;
-  const liked = social.isLiked(t.id);
-  const currentLikes = social.getLikesCount(t.id, baseLikes);
-
-  const baseStars = Number(t.starsCount) || 0;
-  const starred = social.isStarred(t.id);
-  const currentStars = social.getStarsCount(t.id, baseStars);
-
-  const saved = social.isSaved(t.id);
-  const repliesCount = Number(t.repliesCount) || 0;
-  const timeLabel = formatTimeAgo(t.ts);
-  const authorPixKey = t.contactPix || (author ? mock.getAuthorPixKey(author) : "") || "";
-
   return `
-    <article class="post insta-post" data-id="${escapeHtml(t.id)}">
-      <a class="avatar-link" href="#/u/${encodeURIComponent(author)}">${renderAvatarHtml(author, authorDisplay)}</a>
-      <div class="post-content">
         <div class="post-header">
           <div class="post-header-author">
             <a class="post-author" href="#/u/${encodeURIComponent(author)}">${escapeHtml(authorDisplay)}</a>
             <span class="post-handle">@${escapeHtml(authorHandle)}</span>
             <span class="post-dot">·</span>
-            <span class="post-meta">${escapeHtml(timeLabel)}</span>
+            <span class="post-meta">${escapeHtml(formatTimeAgo(t.ts))}</span>
           </div>
-          <div class="post-header-tags">
-            ${pinnedBadge}
-            ${originBadge}
-            ${commPill}
-          </div>
-        </div>
-        ${imageHtml}
-        <div class="post-title">
-          <a href="#/t/${encodeURIComponent(t.id)}">${escapeHtml(t.title)}</a>
-        </div>
-        ${bodySnippet}
+          <div class="post-header-tags">${pinnedBadge}${originBadge}${commPill}</div>
+        </div>`;
+}
+
+function renderPostMedia(t) {
+  if (!t.image) return "";
+  const alt = escapeHtml(t.imageAlt || t.title);
+  return `<div class="post-media-container"><img class="post-media" src="${escapeHtml(t.image)}" alt="${alt}" loading="lazy" /></div>`;
+}
+
+function renderPostText(t) {
+  const body = t.body ? `<p class="post-body">${hashtags.linkifyHashtags(escapeHtml(t.body))}</p>` : "";
+  return `<div class="post-title"><a href="#/t/${encodeURIComponent(t.id)}">${escapeHtml(t.title)}</a></div>${body}`;
+}
+
+function renderCommentButton(t) {
+  const n = Number(t.repliesCount) || 0;
+  const panelId = commentsPanelId(t.id);
+  return `<button type="button" class="action-btn btn-comment" data-id="${escapeHtml(t.id)}" data-comm="${escapeHtml(t.communityId || "")}" aria-expanded="false" aria-controls="${escapeHtml(panelId)}" aria-label="Ver comentários">
+            <svg class="action-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span class="action-count count-replies">${n > 0 ? n : ""}</span>
+          </button>`;
+}
+
+function renderZapToolbarBtn(t, author, authorDisplay) {
+  const pix = t.contactPix || (author ? mock.getAuthorPixKey(author) : "") || "";
+  const icon = `<svg class="action-icon icon-zap" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`;
+  if (!pix) {
+    return `<button class="action-btn btn-zap-post disabled" disabled aria-label="Autor sem Pix informado" title="Autor sem chave Pix informada" style="opacity:0.35; cursor:not-allowed;">${icon}</button>`;
+  }
+  return `<button class="action-btn btn-zap-post" data-id="${escapeHtml(t.id)}" data-author="${escapeHtml(author)}" data-author-name="${escapeHtml(authorDisplay)}" data-pix="${escapeHtml(pix)}" data-title="${escapeHtml(t.title)}" aria-label="Apoiar com Pix Zap" title="Apoiar com Pix Zap">${icon}<span class="action-label zap-label" style="font-size:0.75rem; font-weight:600; margin-left:2px;">Apoiar</span></button>`;
+}
+
+function renderPostToolbar(t, author, authorDisplay, authorHandle) {
+  const baseLikes = Number(t.likesCount) || 0;
+  const liked = social.isLiked(t.id);
+  const likes = social.getLikesCount(t.id, baseLikes);
+  const baseStars = Number(t.starsCount) || 0;
+  const starred = social.isStarred(t.id);
+  const stars = social.getStarsCount(t.id, baseStars);
+  const saved = social.isSaved(t.id);
+  return `
         <div class="post-actions insta-actions post-toolbar">
           <button class="action-btn btn-like ${liked ? "active" : ""}" data-id="${escapeHtml(t.id)}" data-count="${baseLikes}" aria-label="Curtir post">
             <svg class="action-icon icon-heart" width="18" height="18" viewBox="0 0 24 24" fill="${liked ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
-            <span class="action-count count-likes">${currentLikes > 0 ? currentLikes : ""}</span>
+            <span class="action-count count-likes">${likes > 0 ? likes : ""}</span>
           </button>
           <button class="action-btn btn-star ${starred ? "active" : ""}" data-id="${escapeHtml(t.id)}" data-count="${baseStars}" aria-label="Dar estrela ao post">
             <svg class="action-icon icon-star" width="18" height="18" viewBox="0 0 24 24" fill="${starred ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-            <span class="action-count count-stars">${currentStars > 0 ? currentStars : ""}</span>
+            <span class="action-count count-stars">${stars > 0 ? stars : ""}</span>
           </button>
-          ${authorPixKey
-            ? `<button class="action-btn btn-zap-post" data-id="${escapeHtml(t.id)}" data-author="${escapeHtml(author)}" data-author-name="${escapeHtml(authorDisplay)}" data-pix="${escapeHtml(authorPixKey)}" data-title="${escapeHtml(t.title)}" aria-label="Apoiar com Pix Zap" title="Apoiar com Pix Zap">
-            <svg class="action-icon icon-zap" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-            <span class="action-label zap-label" style="font-size:0.75rem; font-weight:600; margin-left:2px;">Apoiar</span>
-          </button>`
-            : `<button class="action-btn btn-zap-post disabled" disabled aria-label="Autor sem Pix informado" title="Autor sem chave Pix informada" style="opacity:0.35; cursor:not-allowed;">
-            <svg class="action-icon icon-zap" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-          </button>`
-          }
-          <a class="action-btn btn-comment" href="#/t/${encodeURIComponent(t.id)}" aria-label="Ver discussão e responder">
-            <svg class="action-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-            <span class="action-count count-replies">${repliesCount > 0 ? repliesCount : ""}</span>
-          </a>
+          ${renderZapToolbarBtn(t, author, authorDisplay)}
+          ${renderCommentButton(t)}
           <button class="action-btn btn-share btn-share-post" data-id="${escapeHtml(t.id)}" data-title="${escapeHtml(t.title)}" aria-label="Compartilhar post">
             <svg class="action-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
           </button>
@@ -299,7 +343,22 @@ export function renderPostItem(t, { isPinned = false } = {}) {
           <button class="action-btn btn-save ${saved ? "active" : ""}" data-id="${escapeHtml(t.id)}" aria-label="Salvar post">
             <svg class="action-icon icon-bookmark" width="18" height="18" viewBox="0 0 24 24" fill="${saved ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
           </button>
-        </div>
+        </div>`;
+}
+
+export function renderPostItem(t, { isPinned = false } = {}) {
+  const author = t.author || t.owner || "";
+  const authorDisplay = t.authorDisplay || (author ? mock.getAuthorDisplay(author) : "") || shortId(author);
+  const authorHandle = (author ? mock.getAuthorHandle(author) : "") || shortId(author);
+  return `
+    <article class="post insta-post" data-id="${escapeHtml(t.id)}">
+      <a class="avatar-link" href="#/u/${encodeURIComponent(author)}">${renderAvatarHtml(author, authorDisplay)}</a>
+      <div class="post-content">
+        ${renderPostHeaderBlock(t, author, authorDisplay, authorHandle, isPinned)}
+        ${renderPostMedia(t)}
+        ${renderPostText(t)}
+        ${renderPostToolbar(t, author, authorDisplay, authorHandle)}
+        ${renderPostComments(t.id, t.communityId)}
       </div>
     </article>`;
 }
@@ -584,7 +643,7 @@ export function renderListingItem(item, { communityTitle = "" } = {}) {
           ${price ? `<span class="listing-price">${escapeHtml(price)}</span>` : ""}
           <h3 class="listing-title">${escapeHtml(item.title || "Oferta")}</h3>
         </div>
-        <div class="post-body listing-body">${escapeHtml(item.body || "")}</div>
+        <div class="post-body listing-body">${hashtags.linkifyHashtags(escapeHtml(item.body || ""))}</div>
       </div>
       <div class="listing-actions post-toolbar" style="margin-top:10px; display:flex; gap:8px; align-items:center;">
         <a class="btn btn-outline btn-sm" href="#/dm/${encodeURIComponent(author)}">💬 Conversar no DM</a>
@@ -646,7 +705,7 @@ export function renderTopic(main, topicId, topic, replies, { topicData = null, i
       </div>
       ${imageHtml}
       <h2 class="post-title" style="margin:0.75rem 0 0.5rem; font-size:1.25rem;">${escapeHtml(topic?.title || "Post")}</h2>
-      <div class="post-body" style="font-size:0.98rem; line-height:1.5;">${escapeHtml(bodyText)}</div>
+      <div class="post-body" style="font-size:0.98rem; line-height:1.5;">${hashtags.linkifyHashtags(escapeHtml(bodyText))}</div>
       <div class="post-actions insta-actions post-toolbar" style="margin-top:12px; padding-top:8px;">
         <button class="action-btn btn-like ${liked ? "active" : ""}" data-id="${escapeHtml(topicId)}" data-count="${baseLikes}" aria-label="Curtir post">
           <svg class="action-icon icon-heart" width="18" height="18" viewBox="0 0 24 24" fill="${liked ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
@@ -711,7 +770,7 @@ export function renderTopic(main, topicId, topic, replies, { topicData = null, i
             </div>
             ${replyModBtn}
           </div>
-          <p class="reply-body">${escapeHtml(r.body || "(carregando conteúdo...)")}</p>
+          <p class="reply-body">${hashtags.linkifyHashtags(escapeHtml(r.body || "(carregando conteúdo...)"))}</p>
         </div>
       </div>`;
   }).join("");
@@ -1511,21 +1570,23 @@ export function renderComposeProposal(main, communityId, commTitle = "") {
 }
 
 const CANTINA_ART_ALT =
-  "Deserto à porta de um bar: um guia encapuzado, o número 404, bots estilizados esperando na calçada e pessoas conversando do lado de dentro.";
+  "Ilustração anime de uma cantina: o bartender de túnica bege aponta para a câmera e o balão diz: Seus bots tem que esperar lá fora!";
+
+const CANTINA_ART =
+  `<img class="cantina-art-img" src="./images/cantina-gate.jpg" alt="${CANTINA_ART_ALT}" width="1024" height="575" />`;
 
 export function renderCantinaGate(container) {
   if (!container) return;
   container.innerHTML = `
     <div class="modal-overlay cantina-overlay" id="cantina-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="cantina-title">
       <div class="modal-dialog cantina-dialog">
-        <div class="cantina-art-wrap">
-          <img class="cantina-art-svg" src="images/cantina-gate.svg" width="640" height="220" alt="${escapeHtml(CANTINA_ART_ALT)}" decoding="async" />
+        <div class="cantina-art-wrap" role="img" aria-label="${escapeHtml(CANTINA_ART_ALT)}">
+          ${CANTINA_ART}
         </div>
         <div class="cantina-content">
           <h2 id="cantina-title" class="cantina-title">Porta da Cantina</h2>
           <p class="cantina-quote">“Seus bots vão ter que esperar do lado de fora.”</p>
-          <p class="cantina-desc desc">Droides e scripts na calçada — aqui é conversa de gente.</p>
-          <p class="cantina-easter-egg meta">Não é o bot que você procura.</p>
+          <p class="cantina-easter-egg meta">Aqui não servimos esse tipo.</p>
         </div>
         <div class="cantina-actions" style="display:flex; flex-direction:column; gap:0.6rem;">
           <button id="btn-cantina-enter" class="btn btn-primary btn-cantina-enter" style="padding:0.75rem; font-weight:700; font-size:1rem;">Entrar — sou humano</button>
@@ -1920,6 +1981,52 @@ export function renderDmThread(main, peerAddress, messages = [], myAddress = "",
         <input type="text" id="dm-message-input" class="form-control" placeholder="Mensagem privada..." required autocomplete="off" />
         <button type="submit" id="btn-send-dm" class="btn btn-primary" ${!hasDmPub ? "disabled" : ""}>Enviar 🔒</button>
       </form>
+    </div>
+  `;
+}
+
+export function renderTagFeed(main, slug, posts = []) {
+  if (!main) return;
+  const cleanSlug = hashtags.slugifyTag(slug) || slug;
+  const count = posts ? posts.length : 0;
+  const countLabel = count === 1 ? "1 post neste aparelho" : `${count} posts neste aparelho`;
+
+  const headerHtml = `
+    <header class="page-header tag-feed-header">
+      <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.25rem;">
+        <a class="back-link" href="#/" style="margin-bottom:0;">← Início</a>
+      </div>
+      <h2 class="tag-title" style="margin:0.25rem 0 0.15rem; font-size:1.5rem; display:flex; align-items:center; gap:6px;">
+        <span class="tag-hash" style="color:var(--accent);">#</span><span>${escapeHtml(cleanSlug)}</span>
+      </h2>
+      <div class="tag-meta" style="font-size:0.82rem; color:var(--muted); display:flex; gap:0.75rem; align-items:center;">
+        <span>📦 ${escapeHtml(countLabel)}</span>
+        <span>·</span>
+        <span>Descoberta local gossip (Willow)</span>
+      </div>
+    </header>
+  `;
+
+  if (!posts || posts.length === 0) {
+    main.innerHTML = `
+      ${headerHtml}
+      <div class="empty-state card" style="text-align:center; padding:2.5rem 1.5rem; margin-top:1rem;">
+        <div style="font-size:2rem; margin-bottom:0.5rem;">🔍</div>
+        <h3 style="margin:0 0 0.5rem; font-size:1.1rem;">Nenhum post com #${escapeHtml(cleanSlug)} neste aparelho</h3>
+        <p style="color:var(--muted); font-size:0.88rem; max-width:400px; margin:0 auto 1.25rem;">
+          No Vox, o índice vive no seu próprio dispositivo. Quando você ou alguém conectado na rede compartilhar posts com esta tag, eles aparecerão aqui.
+        </p>
+        <a class="btn btn-primary btn-sm" href="#/compose/topic">Criar post com #${escapeHtml(cleanSlug)}</a>
+      </div>
+    `;
+    return;
+  }
+
+  const postsHtml = posts.map((p) => renderPostItem(p)).join("");
+  main.innerHTML = `
+    ${headerHtml}
+    <div class="posts-list tag-posts-list" style="margin-top:1rem;">
+      ${postsHtml}
     </div>
   `;
 }

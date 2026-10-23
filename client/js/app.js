@@ -17,6 +17,7 @@ import * as pixKeyHelper from "./pix-key.js";
 import * as listing from "./listing.js";
 import * as gov from "./governance.js";
 import * as brcode from "./brcode.js";
+import * as hashtags from "./hashtags.js";
 
 function parseRoute() {
   if (typeof window !== "undefined" && window.location?.search) {
@@ -41,6 +42,9 @@ function parseRoute() {
   }
   if (parts[0] === "h" && parts[1]) {
     return { name: "handle-lookup", slug: decodeURIComponent(parts[1]) };
+  }
+  if (parts[0] === "tag" && parts[1]) {
+    return { name: "tag-feed", slug: decodeURIComponent(parts[1]) };
   }
   if (parts[0] === "dm") {
     if (parts[1]) return { name: "dm-thread", address: decodeURIComponent(parts[1]) };
@@ -1397,28 +1401,7 @@ async function showComposeReply(topicId, communityId) {
       btn.disabled = true;
       btn.textContent = "Enviando…";
       try {
-        const replyId = "rep_" + Math.random().toString(36).slice(2, 10);
-        const signed = await localAccount.signPayload({
-          id: replyId,
-          type: "reply",
-          replyTo: topicId,
-          communityId,
-          body,
-        });
-        await cacheNode.saveLocalPost(signed);
-        peers.broadcastGossip(signed);
-
-        if (wallet.hasWallet()) {
-          try {
-            const tags = upload.buildTags("reply", {
-              "Reply-To": topicId,
-              "Community-Id": communityId,
-              "Local-Origin-Id": replyId,
-            });
-            await upload.postData({ replyTo: topicId, body, communityId }, tags);
-          } catch {}
-        }
-
+        await persistLocalReply(topicId, communityId, body);
         share.showToast("Resposta enviada!");
         location.hash = `#/t/${encodeURIComponent(topicId)}?c=${encodeURIComponent(communityId)}`;
       } catch (err) {
@@ -1427,6 +1410,135 @@ async function showComposeReply(topicId, communityId) {
         btn.textContent = "Enviar Resposta";
       }
     });
+  }
+}
+
+async function persistLocalReply(topicId, communityId, body) {
+  const replyId = "rep_" + Math.random().toString(36).slice(2, 10);
+  const signed = await localAccount.signPayload({
+    id: replyId,
+    type: "reply",
+    replyTo: topicId,
+    communityId,
+    body,
+  });
+  await cacheNode.saveLocalPost(signed);
+  peers.broadcastGossip(signed);
+  if (!wallet.hasWallet()) return signed;
+  try {
+    const tags = upload.buildTags("reply", {
+      "Reply-To": topicId,
+      "Community-Id": communityId,
+      "Local-Origin-Id": replyId,
+    });
+    await upload.postData({ replyTo: topicId, body, communityId }, tags);
+  } catch {}
+  return signed;
+}
+
+async function loadInlineReplies(topicId) {
+  let local = [];
+  try {
+    local = await cacheNode.getLocalPosts({ type: "reply", replyTo: topicId });
+  } catch {
+    local = [];
+  }
+  const seen = new Set();
+  const out = [];
+  for (const r of local) {
+    seen.add(r.id);
+    out.push({ ...r, isLocalP2p: true });
+  }
+  for (const r of mock.mockReplies(topicId).items) {
+    if (seen.has(r.id)) continue;
+    seen.add(r.id);
+    out.push(r);
+  }
+  return out;
+}
+
+function setCommentOpen(btn, panel, open) {
+  panel.hidden = !open;
+  panel.classList.toggle("is-open", open);
+  btn.setAttribute("aria-expanded", open ? "true" : "false");
+  btn.classList.toggle("active", open);
+}
+
+function closeOtherCommentPanels(keep) {
+  document.querySelectorAll(".post-comments.is-open").forEach((panel) => {
+    if (panel === keep) return;
+    const article = panel.closest("article");
+    const otherBtn = article?.querySelector(".btn-comment");
+    if (otherBtn) setCommentOpen(otherBtn, panel, false);
+  });
+}
+
+function fillCommentFeed(panel, replies) {
+  const slot = panel.querySelector(".post-comments-feed");
+  if (slot) slot.outerHTML = render.renderCommentList(replies);
+  panel.dataset.loaded = "1";
+}
+
+async function togglePostComments(btn) {
+  const article = btn.closest("article");
+  const panel = article?.querySelector(".post-comments");
+  if (!panel) return;
+  const opening = panel.hasAttribute("hidden");
+  if (!opening) {
+    setCommentOpen(btn, panel, false);
+    return;
+  }
+  closeOtherCommentPanels(panel);
+  setCommentOpen(btn, panel, true);
+  if (panel.dataset.loaded === "1") {
+    panel.querySelector(".post-comment-input")?.focus();
+    return;
+  }
+  const slot = panel.querySelector(".post-comments-feed");
+  if (slot) slot.innerHTML = `<p class="post-comments-empty">Carregando respostas…</p>`;
+  fillCommentFeed(panel, await loadInlineReplies(panel.dataset.topic));
+  panel.querySelector(".post-comment-input")?.focus();
+}
+
+function appendInlineReply(panel, reply) {
+  let list = panel?.querySelector(".post-comment-list");
+  if (!list) {
+    const feed = panel?.querySelector(".post-comments-feed");
+    if (feed) feed.innerHTML = `<ul class="post-comment-list"></ul>`;
+    list = panel?.querySelector(".post-comment-list");
+  }
+  panel?.querySelector(".post-comments-empty")?.remove();
+  if (list) list.insertAdjacentHTML("beforeend", render.renderInlineReplyItem(reply));
+}
+
+function bumpReplyCount(article) {
+  const el = article?.querySelector(".count-replies");
+  if (!el) return;
+  el.textContent = String((Number(el.textContent) || 0) + 1);
+}
+
+async function onInlineReplySubmit(form) {
+  const body = form.querySelector(".post-comment-input")?.value.trim();
+  if (!body) return;
+  const btn = form.querySelector(".btn-inline-reply");
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = "Enviando…";
+  }
+  try {
+    const signed = await persistLocalReply(form.dataset.topic, form.dataset.comm || "", body);
+    appendInlineReply(form.closest(".post-comments"), signed);
+    bumpReplyCount(form.closest("article"));
+    form.reset();
+    const panel = form.closest(".post-comments");
+    if (panel) panel.dataset.loaded = "1";
+    share.showToast("Resposta enviada!");
+  } catch (err) {
+    share.showToast(`Erro: ${err.message}`, "error");
+  }
+  if (btn) {
+    btn.disabled = false;
+    btn.textContent = "Responder";
   }
 }
 
@@ -1809,10 +1921,24 @@ async function showPixLookup(query) {
   render.renderPixLookup(main, query, foundProfile);
 }
 
+async function showTagFeed(slug) {
+  const cleanSlug = hashtags.slugifyTag(slug) || slug;
+  const user = await getActiveUser();
+  const main = render.renderShell(makeShellProps(user, "home", `#${cleanSlug}`));
+  render.renderLoading(main);
+  try {
+    const posts = await cacheNode.getPostsByTag(cleanSlug);
+    render.renderTagFeed(main, cleanSlug, posts);
+  } catch {
+    render.renderTagFeed(main, cleanSlug, []);
+  }
+}
+
 async function route() {
   checkCantinaGate();
   const r = parseRoute();
   if (r.name === "home") return showHome(r.feed);
+  if (r.name === "tag-feed") return showTagFeed(r.slug);
   if (r.name === "communities") return showCommunities();
   if (r.name === "perfil") return showProfile(null, r.tab);
   if (r.name === "pix-lookup") return showPixLookup(r.query);
@@ -1844,6 +1970,8 @@ function initGossipListeners() {
       showProposal(cur.communityId, cur.proposalId);
     } else if (cur.name === "topic" && (cur.id === item.id || cur.id === item.replyTo)) {
       showTopic(cur.id, cur.communityId);
+    } else if (cur.name === "tag-feed" && cur.slug) {
+      showTagFeed(cur.slug);
     }
     if (item?.type === "topic") {
       share.showToast(`Novo post na rede: ${item.title?.slice(0, 24) || "..."}`);
@@ -1943,6 +2071,13 @@ function bindZapModalEvents(container, { pixKey, authorName }) {
 
 function initSocialInteractions() {
   document.addEventListener("click", (e) => {
+    const btnComment = e.target.closest(".btn-comment");
+    if (btnComment) {
+      e.preventDefault();
+      togglePostComments(btnComment);
+      return;
+    }
+
     // Pix Zap / Apoiar post (v6.0)
     const btnZap = e.target.closest(".btn-zap-post:not(.disabled)");
     if (btnZap) {
@@ -2041,6 +2176,13 @@ function initSocialInteractions() {
       share.showToast(watching ? "Agora você acompanha este autor no feed Seguindo!" : "Deixou de acompanhar este autor.");
       return;
     }
+  });
+
+  document.addEventListener("submit", (e) => {
+    const form = e.target.closest(".post-comment-composer");
+    if (!form) return;
+    e.preventDefault();
+    onInlineReplySubmit(form);
   });
 }
 

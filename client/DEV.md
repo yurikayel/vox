@@ -544,8 +544,43 @@ A sprint v6.0 introduz o suporte completo a microapoios comunitários diretos vi
 - Ao clicar em `⚡ Copiar Pix` nos itens da Feira Comunitária, caso o anúncio possua preço numérico associado, o modal de Pix Zap é aberto com aquele valor pré-selecionado e com a descrição preenchida com o título da oferta.
 
 ### 18.5 Cache e PWA
-- Cache do Service Worker atualizado para `vox-pwa-v6.1-tour-copy`, incluindo `./js/brcode.js` nos ativos do app shell.
+- Cache do Service Worker atualizado para `vox-pwa-v6.0-pix-zaps`, incluindo `./js/brcode.js` nos ativos do app shell.
 - Suite automatizada com **117 testes 100% verdes** (103 Node.js + 14 Python).
+
+---
+
+## 19. Hashtags Gossip & Descoberta Local Willow (Sprint v6.1)
+
+A sprint v6.1 implementa a descoberta descentralizada de conteúdos através de hashtags, alinhada à metáfora de caminhos hierárquicos do protocolo Willow (`/tags/:slug/...`):
+
+### 19.1 Módulo Vanilla `hashtags.js`
+- **Extração Segura (`extractHashtags`):**
+  - Identificação de tags por regex com limites de caracteres (`[a-zA-Z0-9_\u00C0-\u00FF]`).
+  - Descarte automático de números puros (`#123`, `#2026`) para evitar colisões com valores ou identificadores.
+  - Teto de no máximo 8 tags por post para coibir tag-stuffing e spam.
+- **Normalização em Slug ASCII (`slugifyTag`):**
+  - Converte caracteres com diacríticos e acentos para ASCII minúsculo via `normalize("NFD")` (ex: `#educação` $\to$ `educacao`, `Saúde_Pública` $\to$ `saude_publica`), gerando URLs limpas e canônicas.
+- **Linkificação Pós-Escape (`linkifyHashtags`):**
+  - Executada **estritamente após** o tratamento contra XSS (`escapeHtml`), convertendo `#tag` para `<a href="#/tag/:slug" class="hashtag-link">#tag</a>`.
+  - Lookbehind negativo para `&` impede qualquer colisão com entidades HTML comuns (ex: `&#39;` ou `&#x27;`).
+  - Preserva a acentuação e a caixa alta/baixa visual no texto renderizado, apontando o link para a rota do slug.
+
+### 19.2 Índice Local no Aparelho (`cache-node.js`)
+- **Sem Servidor de Tendências:** Ao contrário de redes centralizadas com termômetros de volume ("Trending Topics"), o índice de tags reside estritamente no armazenamento local do navegador do usuário (`IndexedDB`).
+- **Gossip Passivo:** Ao gravar ou sincronizar um post via `cacheNode.saveLocalPost`, as tags são extraídas e indexadas.
+- **Busca por Tag (`getPostsByTag`):**
+  - Consulta unificada mesclando posts locais gravados no aparelho e posts demonstrativos do tour.
+  - Ordenação estritamente cronológica decrescente (`(b.ts - a.ts)`): mais recentes primeiro.
+  - Zero pontuação algorítmica, zero manipulação de engajamento.
+
+### 19.3 Feed da Tag (`renderTagFeed`) e Rota `#/tag/:slug`
+- **Cabeçalho Limpo:** Exibe `#slug`, link de retorno `← Início` e metadado honesto de volume local (`📦 N posts neste aparelho`).
+- **Empty State Construtivo:** Quando uma tag pesquisada ainda não existe no aparelho, orienta o usuário com transparência sobre o funcionamento do gossip local e oferece atalho para postar com a tag.
+
+### 19.4 Cache e PWA
+- Cache do Service Worker atualizado para `vox-pwa-v6.1-tags-gossip`, incluindo `./js/hashtags.js` nos ativos do app shell.
+- Suite automatizada expandida para **125 testes 100% verdes** (111 Node.js + 14 Python).
+
 
 
 
