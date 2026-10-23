@@ -20,6 +20,7 @@ import * as brcode from "./brcode.js";
 import * as hashtags from "./hashtags.js";
 import * as frames from "./frames.js";
 import * as postOwnership from "./post-ownership.js";
+import * as composerMedia from "./composer-media.js";
 
 function parseRoute() {
   if (typeof window !== "undefined" && window.location?.search) {
