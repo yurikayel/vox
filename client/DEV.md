@@ -49,8 +49,11 @@ As pipelines em `.github/workflows/` rodam automaticamente no GitHub:
    - Valida checagem estática de sintaxe e executa os 45 testes unitários.
    - Auditoria de segurança: verifica que nenhuma chave privada foi commitada acidentalmente.
 2. **`deploy-pages.yml`:**
-   - Publica o PWA no GitHub Pages a cada alteração em `client/**`.
-   - Para ativar nas configurações do repositório no GitHub: **Settings** -> **Pages** -> em **Source**, selecione **GitHub Actions**.
+   - Publica o site composto (`client/**` + `docs/proposta-vox.html`) no GitHub Pages a cada alteração em `client/**` ou `docs/**`.
+   - Origem configurada via GitHub Actions (`build_type: workflow`).
+   - URLs ativas em produção:
+     - **PWA Vox:** `https://yurikayel.github.io/vox/`
+     - **Proposta & Arquitetura:** `https://yurikayel.github.io/vox/proposta-vox.html`
 
 ---
 
