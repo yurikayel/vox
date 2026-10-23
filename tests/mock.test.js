@@ -84,6 +84,20 @@ test("mock - catálogo de 10 perfis demo e helpers getMockProfile / getAuthorDis
   assert.equal(helenaPix.routeId, "vx_demo_helena");
 });
 
+test("mock - mockListings retorna ofertas para demo-feira-local", () => {
+  const feira = mock.mockListings("demo-feira-local");
+  assert.equal(feira.demo, true);
+  assert.equal(feira.items.length, 4);
+  assert.equal(feira.items[0].id, "demo-listing-helena");
+  assert.equal(feira.items[0].type, "listing");
+  assert.ok(feira.items[0].priceLabel);
+  assert.ok(feira.items[0].contactPix);
+
+  const outro = mock.mockListings("demo-aprenda-vox");
+  assert.equal(outro.demo, true);
+  assert.deepEqual(outro.items, []);
+});
+
 test("mock - mockRecentTopics retorna 10 posts educativos com fotos, dor e resolução", () => {
   const recent = mock.mockRecentTopics();
   assert.equal(recent.demo, true);

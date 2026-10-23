@@ -269,3 +269,76 @@ test("render - renderPixLookup perfil encontrado vs nao vinculado", () => {
   assert.ok(mainEmpty.innerHTML.includes("Chave Pix não vinculada"));
   assert.ok(mainEmpty.innerHTML.includes("chave_desconhecida"));
 });
+
+test("render - renderCommunity tabs Posts e Classificados com feira ativada e desativada", () => {
+  // 1. Feira ativada (demo-feira-local) na aba Classificados
+  const mainFeira = createContainer();
+  const feiraMeta = {
+    id: "demo-feira-local",
+    title: "Feira do Bairro",
+    commercialEnabled: true,
+  };
+  const listings = [
+    {
+      id: "demo-listing-helena",
+      title: "Pão artesanal & geleia",
+      priceLabel: "R$ 28",
+      locationLabel: "Vila Madalena, SP",
+      author: "vx_demo_helena",
+      contactPix: "helena.vox@gmail.com",
+      image: "images/posts/tour-helena.jpg",
+      listingStatus: "available",
+      body: "Fornada fresca aos sábados.",
+    },
+  ];
+
+  render.renderCommunity(mainFeira, "demo-feira-local", [], feiraMeta, {
+    activeTab: "listings",
+    listings,
+  });
+
+  const htmlFeira = mainFeira.innerHTML;
+  assert.ok(htmlFeira.includes("community-tabs"));
+  assert.ok(htmlFeira.includes("Classificados"));
+  assert.ok(htmlFeira.includes("Nova oferta"));
+  assert.ok(htmlFeira.includes("Pão artesanal &amp; geleia"));
+  assert.ok(htmlFeira.includes("R$ 28"));
+  assert.ok(htmlFeira.includes("Vila Madalena, SP"));
+  assert.ok(htmlFeira.includes("Copiar Pix"));
+  assert.ok(htmlFeira.includes("Conversar no DM"));
+
+  // 2. Feira desativada (Aprenda o Vox) visitando aba Classificados
+  const mainGov = createContainer();
+  const learnMeta = {
+    id: "demo-aprenda-vox",
+    title: "Aprenda o Vox",
+    commercialEnabled: false,
+  };
+  render.renderCommunity(mainGov, "demo-aprenda-vox", [], learnMeta, {
+    activeTab: "listings",
+    listings: [],
+  });
+
+  const htmlGov = mainGov.innerHTML;
+  assert.ok(htmlGov.includes("Feira comunitária não ativada"));
+  assert.ok(htmlGov.includes("opt-in por votação") || htmlGov.includes("proposta comunitária de governança"));
+  assert.ok(!htmlGov.includes("Nova oferta"));
+});
+
+test("render - renderComposeListing gera formulário de oferta com disclaimer", () => {
+  const main = createContainer();
+  render.renderComposeListing(main, "demo-feira-local", "Feira do Bairro", {
+    defaultPix: "minha-chave@vox.org",
+  });
+
+  const html = main.innerHTML;
+  assert.ok(html.includes("Nova Oferta — Feira do Bairro"));
+  assert.ok(html.includes("form-compose-listing"));
+  assert.ok(html.includes("listing-title"));
+  assert.ok(html.includes("listing-price"));
+  assert.ok(html.includes("listing-location"));
+  assert.ok(html.includes("listing-pix"));
+  assert.ok(html.includes("minha-chave@vox.org"));
+  assert.ok(html.includes("Publicar na Feira"));
+  assert.ok(html.includes("O Vox não intermedia pagamento"));
+});

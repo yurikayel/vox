@@ -403,4 +403,36 @@ Para blindar o Vox contra fazendas de automação sem recorrer a captchas corpor
    - Apresenta os três pilares cooperativos: *Seus dados são seus*, *Rede cooperativa* e *Controle total*.
    - Apenas após esse duplo consentimento a navegação é liberada para o feed e comunidades. Em acessos subsequentes, o usuário entra diretamente no app sem qualquer interrupção.
 
+---
+
+## 15. Feira Comunitária, Classificados (Fase M1) & Governança FOSS (Fase G0)
+
+A Sprint Feira M1 atende quem utiliza redes sociais para sustento e venda direta (artesanato, marmitas, brechó e serviços populares), preservando a pureza da praça pública de debates e a soberania comunitária:
+
+### 15.1 Governança e Opt-in Estrito (Default-Off)
+- **Modo Comercial Desligado por Padrão:** Toda comunidade nasce com classificados desativados.
+- **Ativação Soberana:** A aba de ofertas exige aprovação deliberativa da comunidade (`commercialEnabled: true` ou tag `Commercial-Posts: enabled`).
+- **Democracia de Base (G0):** Documentado em `GOVERNANCE.md` com a regra canônica anti-brigading `Eligibility-Cutoff = Proposal-Created-At` e voto estritamente igualitário ($1\times$).
+- **Empty State Educativo:** Ao visitar a aba Classificados em comunidades sem feira (como `demo-aprenda-vox`), a interface exibe aviso orientando sobre o modelo de governança e como propor a abertura da feira local.
+
+### 15.2 Interface da Comunidade: Tabs Posts | Classificados
+- **Abas Segmentadas (`.community-tabs`):** Permitem alternar com um toque entre o feed de conversas e os classificados locais daquela comunidade (`#/c/:id` vs `#/c/:id?tab=listings`).
+- **Card de Oferta (`.listing-card`):**
+  - Tipografia de alto impacto para preço (`.listing-price`, destaque esmeralda).
+  - Badge de localização de bairro (`.listing-location-badge`) e status de disponibilidade (`Disponível`, `Reservado`, `Vendido`).
+  - Fotografia nítida do produto ou serviço.
+  - Botão direto para contato no chat privado: `💬 Conversar no DM`.
+  - Botão de pagamento direto: `⚡ Copiar Pix` (alimentado pela chave Pix informada na oferta ou no perfil do vendedor).
+  - Compartilhamento 1-clique com link direto para a comunidade e aba.
+
+### 15.3 Publicação de Ofertas (`#/compose/listing`)
+- **Composer Dedicado:** Rota `#/compose/listing?c=:id` com campos para título, preço sugerido, bairro/cidade, chave Pix de recebimento, URL da foto e descrição.
+- **Validação Local (`listing.js`):** Validação de campos e normalização de preço para formato monetário (`R$ ...`).
+- **Disclaimer Obrigatório:** Exibição clara e constante do aviso: *"O Vox não intermedia pagamento nem cobra taxas. Combine no DM e use Pix direto."*
+
+### 15.4 Isolamento Rígido de Feeds
+- **Zero Mercantilização do Feed Principal:** Ofertas (`type: listing`) são armazenadas no IndexedDB `local-posts` mas são filtradas estritamente fora da timeline "Para você". Conversas e vendas não competem por atenção no mesmo feed.
+- **Comunidade Demo `demo-feira-local`:** Semeada via `demo-seed.js` (`vox-demo-seeded-v4`) com a "Feira do Bairro" e 4 ofertas de personas do tour (Helena, Fernanda, André e Mei).
+
+
 

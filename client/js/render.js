@@ -1,5 +1,6 @@
 import * as mock from "./mock.js";
 import * as social from "./social.js";
+import * as listing from "./listing.js";
 
 const root = () => document.getElementById("app-root");
 
@@ -325,7 +326,13 @@ export function renderHome(main, communities) {
   main.innerHTML += html;
 }
 
-export function renderCommunity(main, communityId, topics, meta = {}, { isMember = false, isMod = false, walletAddress = null } = {}) {
+export function renderCommunity(
+  main,
+  communityId,
+  topics,
+  meta = {},
+  { isMember = false, isMod = false, walletAddress = null, activeTab = "posts", listings = [] } = {}
+) {
   const commTitle = meta.title || communityId;
   const commDesc = meta.description || "";
   const commCat = meta.category ? `<span class="pill">${escapeHtml(meta.category)}</span>` : "";
@@ -343,19 +350,118 @@ export function renderCommunity(main, communityId, topics, meta = {}, { isMember
         <a class="btn btn-primary" href="#/compose/topic?c=${encodeURIComponent(communityId)}">+ Novo post</a>
       </div>
     </div>
+    <div class="community-tabs segmented-tabs">
+      <a class="tab-btn ${activeTab !== "listings" ? "active" : ""}" href="#/c/${encodeURIComponent(communityId)}">Posts</a>
+      <a class="tab-btn ${activeTab === "listings" ? "active" : ""}" href="#/c/${encodeURIComponent(communityId)}?tab=listings">Classificados</a>
+    </div>`;
+
+  if (activeTab === "listings") {
+    html += renderCommunityListingsTab(communityId, commTitle, meta, listings);
+  } else {
+    html += renderCommunityPostsTab(communityId, commTitle, topics);
+  }
+  main.innerHTML += html;
+}
+
+function renderCommunityPostsTab(communityId, commTitle, topics) {
+  let html = `
     <div class="actions-bar">
       <span class="section-title">Posts</span>
     </div>`;
-
   if (!topics.length) {
     html += `<div class="empty"><p>Nenhum post nesta comunidade ainda.</p></div>`;
-    main.innerHTML += html;
-    return;
+    return html;
+  }
+  const items = topics.map((t) => renderPostItem({ ...t, communityId, communityTitle: commTitle })).join("");
+  return html + `<div class="feed-container">${items}</div>`;
+}
+
+function renderCommunityListingsTab(communityId, commTitle, meta, listings) {
+  if (!listing.isCommercialEnabled(meta)) {
+    return `
+      <div class="empty feira-disabled card" style="padding: 1.5rem; text-align: center;">
+        <h3 style="margin-top:0;">🏛️ Feira comunitária não ativada</h3>
+        <p class="desc" style="max-width: 480px; margin: 0.5rem auto 1rem;">
+          Esta comunidade ainda não abriu classificados (modo comercial desligado por padrão). Uma proposta comunitária de governança pode deliberar e aprovar a abertura da feira local.
+        </p>
+        <a href="#/c/${encodeURIComponent(communityId)}" class="btn btn-outline btn-sm">← Ver posts da comunidade</a>
+      </div>`;
   }
 
-  const items = topics.map((t) => renderPostItem({ ...t, communityId, communityTitle: commTitle })).join("");
-  html += `<div class="feed-container">${items}</div>`;
-  main.innerHTML += html;
+  const actions = `
+    <div class="actions-bar feira-actions-bar" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+      <span class="section-title">Ofertas locais</span>
+      <a class="btn btn-primary btn-sm" href="#/compose/listing?c=${encodeURIComponent(communityId)}">+ Nova oferta</a>
+    </div>`;
+
+  if (!listings || !listings.length) {
+    return actions + `
+      <div class="empty card" style="padding: 1.5rem; text-align: center;">
+        <p>Nenhuma oferta cadastrada nesta feira ainda.</p>
+        <a class="btn btn-primary btn-sm" href="#/compose/listing?c=${encodeURIComponent(communityId)}">+ Criar primeira oferta</a>
+      </div>`;
+  }
+
+  const items = listings.map((l) => renderListingItem(l, { communityTitle: commTitle })).join("");
+  return actions + `
+    <div class="feed-container">${items}</div>
+    <p class="listing-footer-disclaimer">⚡ ${escapeHtml(listing.LISTING_DISCLAIMER)}</p>`;
+}
+
+export function renderListingItem(item, { communityTitle = "" } = {}) {
+  const author = item.author || item.owner || "";
+  const authorDisplay = (author ? mock.getAuthorDisplay(author) : "") || shortId(author);
+  const authorHandle = (author ? mock.getAuthorHandle(author) : "") || shortId(author);
+  const timeLabel = formatTimeAgo(item.ts);
+  const price = listing.normalizePriceLabel(item.priceLabel);
+  const location = listing.normalizeLocationLabel(item.locationLabel);
+  const statusKey = String(item.listingStatus || "available").toLowerCase();
+  const statusLabel = listing.formatListingStatus(item.listingStatus);
+
+  const locBadge = location
+    ? `<span class="listing-location-badge">📍 ${escapeHtml(location)}</span>`
+    : "";
+
+  const imgHtml = item.image
+    ? `<div class="post-media-container"><img class="post-media" src="${escapeHtml(item.image)}" alt="${escapeHtml(item.imageAlt || item.title || "Oferta")}" /></div>`
+    : "";
+
+  const pixKey = item.contactPix || (author ? mock.getMockProfile(author)?.pixKey : "") || "";
+  const pixBtn = pixKey
+    ? `<button class="btn btn-secondary btn-sm btn-copy-pix" data-pix="${escapeHtml(pixKey)}" title="Copiar chave Pix do vendedor">⚡ Copiar Pix</button>`
+    : "";
+
+  return `
+    <article class="post-card listing-card card" data-id="${escapeHtml(item.id)}">
+      <div class="post-header">
+        <div class="post-header-author">
+          <a class="avatar-link" href="#/u/${encodeURIComponent(author)}">${renderAvatarHtml(author, authorDisplay)}</a>
+          <a class="post-author" href="#/u/${encodeURIComponent(author)}">${escapeHtml(authorDisplay)}</a>
+          <span class="post-handle">@${escapeHtml(authorHandle)}</span>
+          ${locBadge}
+          <span class="post-dot">·</span>
+          <span class="post-meta">${escapeHtml(timeLabel)}</span>
+        </div>
+        <div class="listing-header-badges">
+          <span class="badge-pill listing-status-pill status-${statusKey}">${escapeHtml(statusLabel)}</span>
+        </div>
+      </div>
+      ${imgHtml}
+      <div class="listing-content">
+        <div class="listing-price-row">
+          ${price ? `<span class="listing-price">${escapeHtml(price)}</span>` : ""}
+          <h3 class="listing-title">${escapeHtml(item.title || "Oferta")}</h3>
+        </div>
+        <div class="post-body listing-body">${escapeHtml(item.body || "")}</div>
+      </div>
+      <div class="listing-actions post-toolbar" style="margin-top:10px; display:flex; gap:8px; align-items:center;">
+        <a class="btn btn-outline btn-sm" href="#/dm/${encodeURIComponent(author)}">💬 Conversar no DM</a>
+        ${pixBtn}
+        <button class="action-btn btn-share-post" data-id="${escapeHtml(item.id)}" data-title="${escapeHtml(item.title)}" aria-label="Compartilhar oferta">
+          <svg class="action-icon icon-share" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        </button>
+      </div>
+    </article>`;
 }
 
 export function renderTopic(main, topicId, topic, replies, { topicData = null, isMod = false, communityId = "" } = {}) {
@@ -831,6 +937,53 @@ export function renderComposeReply(main, topicId, communityId) {
         </div>
         <div class="form-actions">
           <button type="submit" class="btn btn-primary" id="btn-submit-reply">Enviar Resposta</button>
+        </div>
+      </form>
+    </div>`;
+}
+
+export function renderComposeListing(main, communityId, commTitle = "", prefill = {}) {
+  const titleDisplay = commTitle || communityId || "Feira";
+  const backLink = `<a class="back-link" href="#/c/${encodeURIComponent(communityId)}?tab=listings">← Voltar à feira</a>`;
+  const defaultPix = prefill.defaultPix || "";
+
+  main.innerHTML = `
+    <div class="card compose-card compose-listing-card">
+      ${backLink}
+      <h2>Nova Oferta — ${escapeHtml(titleDisplay)}</h2>
+      <p class="listing-form-disclaimer" style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem;">
+        ⚡ ${escapeHtml(listing.LISTING_DISCLAIMER)}
+      </p>
+      <form id="form-compose-listing">
+        <input type="hidden" id="listing-comm-id" value="${escapeHtml(communityId)}" />
+        <div class="form-group">
+          <label for="listing-title">O que você está ofertando?</label>
+          <input type="text" id="listing-title" class="form-control" placeholder="Ex: Pão artesanal de fermentação natural" required maxlength="120" />
+        </div>
+        <div class="form-row" style="display:flex; gap:0.75rem; flex-wrap:wrap;">
+          <div class="form-group" style="flex:1 1 140px;">
+            <label for="listing-price">Preço sugerido:</label>
+            <input type="text" id="listing-price" class="form-control" placeholder="Ex: R$ 35" />
+          </div>
+          <div class="form-group" style="flex:1 1 180px;">
+            <label for="listing-location">Bairro / Região:</label>
+            <input type="text" id="listing-location" class="form-control" placeholder="Ex: Vila Madalena, SP" maxlength="60" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="listing-pix">Chave Pix para recebimento direto (opcional):</label>
+          <input type="text" id="listing-pix" class="form-control" placeholder="E-mail, celular, CPF ou chave aleatória" value="${escapeHtml(defaultPix)}" />
+        </div>
+        <div class="form-group">
+          <label for="listing-image">Foto do item (URL opcional):</label>
+          <input type="text" id="listing-image" class="form-control" placeholder="images/posts/tour-helena.jpg ou https://..." />
+        </div>
+        <div class="form-group">
+          <label for="listing-body">Descrição da oferta:</label>
+          <textarea id="listing-body" class="form-control" rows="4" placeholder="Descreva os detalhes do produto ou serviço, prazos e forma de entrega..." required></textarea>
+        </div>
+        <div class="form-actions" style="margin-top:1rem;">
+          <button type="submit" class="btn btn-primary" id="btn-submit-listing">Publicar na Feira</button>
         </div>
       </form>
     </div>`;

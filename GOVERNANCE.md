@@ -58,3 +58,46 @@ Espelhos são **opcionais** e **substituíveis**; o client Fase 1 fala direto co
 2. Moderadores emitem `mod-action`.
 3. Membros reportam via link externo ou futuro fluxo off-chain (Fase 2+).
 4. Fork de cliente ou espelho se a comunidade discordar da política global de um espelho.
+
+## Deliberação, Propostas e Voto Comunitário (Fase G)
+
+O Vox adota o princípio de **rede como repositório público**: regras comunitárias não mudam por decisão unilateral de moderador ou algoritmo corporativo, mas por deliberação pública auditável, análoga a um fluxo de proposta e revisão de código aberto.
+
+### Tags de Governança
+
+| Tag | Tipo | Descrição |
+|-----|------|-----------|
+| `Type` | `governance-proposal` | Abertura formal de proposta de mudança de regra, inclusão de moderador ou habilitação de recursos. |
+| `Community-Id` | ID da comunidade | Escopo da comunidade deliberativa. |
+| `Title` | Texto curto | Título descritivo da proposta. |
+| `Body` | Texto/Markdown | Motivação e especificação de regras ou diff proposto (`Diff-Format: unified\|markdown`). |
+| `Eligibility-Cutoff` | Timestamp ISO | Marco temporal de corte para votantes elegíveis (**igual ao timestamp de criação da proposta**). |
+| `Closes-At` | Timestamp ISO | Prazo final para computação de votos. |
+| `State` | `open` \| `merged` \| `rejected` \| `expired` | Estado da deliberação. |
+
+| Tag | Tipo | Descrição |
+|-----|------|-----------|
+| `Type` | `governance-vote` | Registro de voto de um membro. |
+| `Proposal-Id` | TX ID da proposta | Identificador da proposta votada. |
+| `Choice` | `yes` \| `no` \| `abstain` | Opção do votante. |
+
+### Regra Canônica de Elegibilidade Anti-Brigading
+
+Para impedir invasões orquestradas, compras de contas e brigading de última hora (comuns em enquetes de redes centralizadas):
+
+1. **Marco de Corte Temporal (`Eligibility-Cutoff = Proposal-Created-At`):** Apenas contas cuja transação de adesão à comunidade (`Type: membership` ou registro local equivalente) possua timestamp comprovadamente **anterior** ao momento de criação da proposta têm seus votos contabilizados no *tally* (apuração).
+2. **1 Membro = 1 Voto ($1\times$):** Não há peso diferenciado por karma, curtidas, seguidores ou antiguidade.
+3. **Badges sem Poder Político Extra:** Selos de identidade (como GitHub verificado, gov.br ou Chave Pix informada) funcionam exclusivamente como atestados visuais de confiança pública; eles **nunca** multiplicam o peso do voto, que permanece rigorosamente $1\times$.
+4. **Apuração Transparente no Cliente:** Votos emitidos por contas posteriores ao cutoff podem ser visualizados na chain (não há censura de transação), mas o cliente os marca explicitamente como *"voto não computado (entrada na comunidade posterior à abertura da proposta)"*.
+
+---
+
+## Feira Comunitária e Classificados (Fase M)
+
+Milhões de pessoas utilizam redes sociais para sustento familiar e comércio popular (venda de marmitas, brechó, artesanato, serviços locais). O Vox acolhe essa realidade sem transformar a rede em um shopping corporativo ou poluir o feed principal:
+
+1. **Opt-in por Governança (Default-Off):** Toda comunidade inicia com o modo comercial **desativado**. A criação da aba de classificados exige proposta formal aprovada pelos membros (`Commercial-Posts: enabled`).
+2. **Separação Rígida de Feeds:** Publicações de ofertas (`Type: listing`) vivem exclusivamente na aba **Classificados** da comunidade respectiva. Elas **nunca** são injetadas no feed principal "Para você", preservando a integridade das conversas e do debate.
+3. **Sem Intermediação Financeira (Pix + DM Direto):** O Vox **não é instituição de pagamento (PSP)**, não processa pagamentos, não faz escrow e não cobra comissões nem taxas sobre vendas. O contato ocorre via DM e o pagamento via Pix direto para a chave informada pelo vendedor no card ou perfil.
+4. **Sem Impulsionamento Pago:** Não existem ferramentas de *boost*, alcance pago ou leilão de visibilidade. A feira comunitária é estritamente cronológica e baseada no território e nas regras decididas pela própria comunidade.
+
