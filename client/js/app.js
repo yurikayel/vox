@@ -24,6 +24,7 @@ function parseRoute() {
   const query = new URLSearchParams(queryPart || "");
 
   if (!parts.length) return { name: "home" };
+  if (parts[0] === "communities") return { name: "communities" };
   if (parts[0] === "settings" && parts[1] === "network") {
     return { name: "network-settings" };
   }
@@ -74,20 +75,64 @@ async function getActiveUser() {
   }
 }
 
+function makeShellProps(user, activeTab, title = "", subtitle = "", breadcrumb = null) {
+  const settings = peers.getPeerSettings();
+  const metrics = peers.getPeerMetrics();
+  const rtcStatus = peers.getRtcStatus();
+  return {
+    title,
+    subtitle,
+    breadcrumb,
+    walletAddress: user,
+    activeTab,
+    metrics,
+    rtcStatus,
+    settings,
+  };
+}
+
+function attachPostShareHandlers() {
+  document.querySelectorAll(".btn-share-post").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      share.shareTopic({
+        title: btn.dataset.title || "Post no Vox",
+        topicId: btn.dataset.id,
+      });
+    });
+  });
+}
+
 async function showHome() {
   const user = await getActiveUser();
-  const main = render.renderShell({
-    title: "Comunidades",
-    subtitle: "A Rua — fóruns e debates abertos no permaweb",
-    walletAddress: user,
-  });
+  const main = render.renderShell(makeShellProps(user, "home", "A Rua"));
+  render.renderLoading(main);
+
+  try {
+    const { items, gateway, demo } = await gql.fetchRecentTopics().catch(async () => mock.mockRecentTopics());
+    main.innerHTML = "";
+    if (demo) render.renderDemoBanner(main);
+    else if (gateway) render.renderGatewayBanner(main, gateway);
+    render.renderFeed(main, items);
+  } catch (e) {
+    main.innerHTML = "";
+    const fb = mock.mockRecentTopics();
+    render.renderDemoBanner(main);
+    render.renderFeed(main, fb.items);
+  }
+
+  attachPostShareHandlers();
+}
+
+async function showCommunities() {
+  const user = await getActiveUser();
+  const main = render.renderShell(makeShellProps(user, "communities", "Comunidades"));
   render.renderLoading(main);
 
   try {
     const { items, gateway, demo } = await gql.fetchCommunities().catch(async () => mock.mockCommunities());
     main.innerHTML = "";
     if (demo) render.renderDemoBanner(main);
-    else render.renderGatewayBanner(main, gateway);
+    else if (gateway) render.renderGatewayBanner(main, gateway);
     render.renderHome(main, items);
   } catch (e) {
     main.innerHTML = "";
@@ -100,11 +145,7 @@ async function showHome() {
 
 async function showCommunity(communityId) {
   const user = await getActiveUser();
-  const main = render.renderShell({
-    title: "Comunidade",
-    subtitle: `Fórum de ${communityId}`,
-    walletAddress: user,
-  });
+  const main = render.renderShell(makeShellProps(user, "communities", "Comunidade", `Fórum de ${communityId}`));
   render.renderLoading(main);
 
   let topics = [];
@@ -219,11 +260,7 @@ async function showCommunity(communityId) {
 
 async function showTopic(topicId, commIdParam = "") {
   const user = await getActiveUser();
-  const main = render.renderShell({
-    title: "Tópico",
-    subtitle: `Discussão ${topicId.slice(0, 8)}…`,
-    walletAddress: user,
-  });
+  const main = render.renderShell(makeShellProps(user, "home", "Tópico"));
   render.renderLoading(main);
 
   let topic = { title: "Tópico", owner: "", communityId: commIdParam };
@@ -331,11 +368,7 @@ async function showTopic(topicId, commIdParam = "") {
 async function showProfile(address) {
   const user = await getActiveUser();
   const isSelf = user === address;
-  const main = render.renderShell({
-    title: "Perfil",
-    subtitle: address.slice(0, 10) + "…",
-    walletAddress: user,
-  });
+  const main = render.renderShell(makeShellProps(user, "profile", "Perfil"));
   render.renderLoading(main);
 
   const memberships = await gql.fetchUserMemberships(address);
@@ -423,11 +456,7 @@ function bindProfileButtons(user, address, isSelf, dmPub) {
 async function showHandleLookup(rawSlug) {
   const user = await getActiveUser();
   const slug = handles.normalizeSlug(rawSlug);
-  const main = render.renderShell({
-    title: `@${slug || "handle"}`,
-    subtitle: "Resolvendo identificador on-chain…",
-    walletAddress: user,
-  });
+  const main = render.renderShell(makeShellProps(user, "profile", `@${slug || "handle"}`));
   render.renderLoading(main, `Buscando perfil de @${slug} no permaweb…`);
 
   const validation = handles.validateSlug(slug);
@@ -461,11 +490,7 @@ async function showHandleLookup(rawSlug) {
 
 async function showWallet() {
   const user = await getActiveUser();
-  const main = render.renderShell({
-    title: "Carteira Arweave",
-    subtitle: "Gestão de chave local para autoria soberana",
-    walletAddress: user,
-  });
+  const main = render.renderShell(makeShellProps(user, "profile", "Carteira"));
 
   let balance = "0.000";
   if (user) {
@@ -534,11 +559,7 @@ async function showWallet() {
 
 async function showComposeCommunity() {
   const user = await getActiveUser();
-  const main = render.renderShell({
-    title: "Nova Comunidade",
-    subtitle: "Criar espaço temático permanente",
-    walletAddress: user,
-  });
+  const main = render.renderShell(makeShellProps(user, "compose", "Nova Comunidade"));
   render.renderComposeCommunity(main, { hasWallet: wallet.hasWallet() });
 
   const form = document.getElementById("form-compose-community");
@@ -574,11 +595,7 @@ async function showComposeCommunity() {
 
 async function showComposeTopic(communityId) {
   const user = await getActiveUser();
-  const main = render.renderShell({
-    title: "Novo Tópico",
-    subtitle: `Publicar em ${communityId}`,
-    walletAddress: user,
-  });
+  const main = render.renderShell(makeShellProps(user, "compose", "Novo Post"));
   render.renderComposeTopic(main, communityId, { hasWallet: wallet.hasWallet() });
 
   const form = document.getElementById("form-compose-topic");
@@ -611,11 +628,7 @@ async function showComposeTopic(communityId) {
 
 async function showComposeReply(topicId, communityId) {
   const user = await getActiveUser();
-  const main = render.renderShell({
-    title: "Responder Tópico",
-    subtitle: `Resposta a ${topicId.slice(0, 8)}…`,
-    walletAddress: user,
-  });
+  const main = render.renderShell(makeShellProps(user, "home", "Responder"));
   render.renderComposeReply(main, topicId, communityId, { hasWallet: wallet.hasWallet() });
 
   const form = document.getElementById("form-compose-reply");
@@ -726,11 +739,7 @@ function bindNetworkSettingsButtons() {
 
 async function showNetworkSettings() {
   const user = await getActiveUser();
-  const main = render.renderShell({
-    title: "Nó de Rede & Cache",
-    subtitle: "Configurações de rede distribuída e espelho local",
-    walletAddress: user,
-  });
+  const main = render.renderShell(makeShellProps(user, "network", "Sua rede"));
 
   const settings = peers.getPeerSettings();
   const metrics = peers.getPeerMetrics();
@@ -795,11 +804,7 @@ async function pollInboxMessages(user) {
 
 async function showDmList() {
   const user = await getActiveUser();
-  const main = render.renderShell({
-    title: "Mensagens Diretas",
-    subtitle: "Conversas privadas efêmeras ponta-a-ponta (E2E)",
-    walletAddress: user,
-  });
+  const main = render.renderShell(makeShellProps(user, "dm", "Mensagens"));
 
   if (!user) {
     main.innerHTML = `<div class="card"><h2>Mensagens Diretas</h2><div class="error">Conecte sua carteira em <a href="#/wallet">#/wallet</a> para acessar DMs.</div></div>`;
@@ -864,11 +869,7 @@ async function handleSendDmSubmit(user, peerAddress, peerDmPub) {
 
 async function showDmThread(peerAddress) {
   const user = await getActiveUser();
-  const main = render.renderShell({
-    title: "Conversa Direta",
-    subtitle: `Com ${peerAddress.slice(0, 10)}…`,
-    walletAddress: user,
-  });
+  const main = render.renderShell(makeShellProps(user, "dm", "Conversa"));
 
   if (!user) {
     main.innerHTML = `<div class="card"><h2>Conversa Direta</h2><div class="error">Conecte sua carteira em <a href="#/wallet">#/wallet</a> para acessar DMs.</div></div>`;
@@ -965,6 +966,7 @@ async function route() {
   checkPactModal();
   const r = parseRoute();
   if (r.name === "home") return showHome();
+  if (r.name === "communities") return showCommunities();
   if (r.name === "network-settings") return showNetworkSettings();
   if (r.name === "handle-lookup") return showHandleLookup(r.slug);
   if (r.name === "dm-list") return showDmList();

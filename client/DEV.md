@@ -248,3 +248,31 @@ Se os gateways Arweave estiverem temporariamente inacessíveis e não houver cac
 1. Se duas contas diferentes publicarem o mesmo slug:
 2. Ao navegar para `#/h/maria`, o Vox detecta múltiplos reivindicantes (`isConflict: true`).
 3. O cliente renderiza a tela de **Ambiguidade de Handle**, apresentando os endereços de todos os reivindicantes com links diretos, permitindo ao usuário decidir sem intervenção de nenhum moderador central.
+
+---
+
+## 10. UI & Copy — Guia de Estilo Híbrido X / Instagram
+
+O PWA adota uma experiência leve e intuitiva inspirada no melhor do X e do Instagram:
+- **Chrome mínimo:** Barra superior fina (~52px) com logo e chip de status da rede; sem gradientes pesados.
+- **Navegação rápida:** TabBar inferior no mobile e Sidebar esquerda no desktop (≥768px).
+- **A Rua (Feed):** Timeline cronológica com divisores sutis (1px), avatares redondos, título do post e ações rápidas (💬 Responder, ↗ Compartilhar).
+- **Descoberta de Comunidades:** Grade visual estilo IG com cartões compactos e entrada direta.
+- **DMs (Mensagens):** Inbox estilo chat mobile e conversa full-height com caixa de envio fixa.
+- **Modo Claro / Escuro:** Automático via `prefers-color-scheme`, respeitando o tema do sistema operacional sem flash de cor.
+
+### 10.1 Tabela de Tom & Microcopy (Sem Slop Técnico)
+
+Para manter a clareza e acolhimento para o usuário leigo, jargões técnicos são restritos a `<details class="advanced-settings">`:
+
+| Superfície Anterior (Técnica) | Superfície Atual (Amigável) | Destino do Detalhe Técnico |
+|-------------------------------|-----------------------------|----------------------------|
+| "Mensagens Diretas Efêmeras (E2E) ECDH P-256..." | **"Mensagens"** · *Privadas. Só neste aparelho.* | Documentação / DEV.md |
+| "Rede Distribuída (Pacto Vox)" | **"Sua rede"** · *Você ajuda a levar o Vox adiante.* | Seção Informativa |
+| "Pausar contribuição (desativar nó leve...)" | **"Pausar ajuda à rede"** | Toggle em Preferências |
+| "Relay Desktop Desconectado (127.0.0.1:3920)" | **"PC offline"** | Avançado → Testar Relay |
+| "Servidor de Sinalização WebRTC (ws://...)" | **"Sinalização WebRTC"** | Avançado → Input custom |
+| Empty states com parágrafos explicativos | **1 frase objetiva + 1 botão de ação** | Direto ao ponto |
+
+Regra de ouro: frases curtas (≤ ~8 palavras na interface principal), contraste WCAG testado e zero dependências externas de ícones ou frameworks.
+

@@ -91,7 +91,8 @@ test("render - renderDmList e renderDmThread", () => {
     { peerAddress: "addr_bob", lastText: "E aí Alice", lastTs: Date.now() },
   ];
   render.renderDmList(mainList, convs, "addr_alice");
-  assert.ok(mainList.innerHTML.includes("Mensagens Diretas Efêmeras (E2E)"));
+  assert.ok(mainList.innerHTML.includes("Mensagens"));
+  assert.ok(mainList.innerHTML.includes("Privadas. Só neste aparelho."));
   assert.ok(mainList.innerHTML.includes("addr_bob"));
   assert.ok(mainList.innerHTML.includes("E aí Alice"));
 
@@ -108,6 +109,28 @@ test("render - renderDmList e renderDmThread", () => {
   assert.ok(mainThread.innerHTML.includes("Oi Bob"));
   assert.ok(mainThread.innerHTML.includes("Oi Alice!"));
   assert.ok(mainThread.innerHTML.includes("btn-send-dm"));
+});
+
+test("render - renderFeed renderiza timeline com posts", () => {
+  const main = createContainer();
+  const topics = [
+    { id: "t1", title: "Primeiro post", body: "Conteudo do post", owner: "addr_autor", communityId: "geral" },
+  ];
+  render.renderFeed(main, topics);
+  assert.ok(main.innerHTML.includes("A Rua"));
+  assert.ok(main.innerHTML.includes("Primeiro post"));
+  assert.ok(main.innerHTML.includes("Conteudo do post"));
+  assert.ok(main.innerHTML.includes("c/geral"));
+});
+
+test("render - renderNetworkChip status e rotulagem", () => {
+  const chipActive = render.renderNetworkChip({ blobsServed: 5 }, { remotePeersConnected: 2 }, { enabled: true });
+  assert.ok(chipActive.includes("2 aparelhos"));
+  assert.ok(chipActive.includes("network-chip active"));
+
+  const chipPaused = render.renderNetworkChip({}, {}, { enabled: false });
+  assert.ok(chipPaused.includes("Só leitura"));
+  assert.ok(chipPaused.includes("network-chip paused"));
 });
 
 test("render - renderProfile com handle e renderHandleConflict", () => {
