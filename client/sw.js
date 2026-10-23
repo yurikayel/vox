@@ -1,13 +1,14 @@
 // Service Worker do Vox (Fase 6.0 — Pix Zaps Nativos & BR Code EMV Offline)
 // NOTA ARQUITETURAL: WebRTC DataChannels operam exclusivamente na thread principal (DOM/Window).
 // O Service Worker atua no cache offline do shell e notificações de status, sem abrir WebRTC.
-const CACHE_NAME = "vox-pwa-v6.0-pix-zaps";
+const CACHE_NAME = "vox-pwa-v6.1-cantina-404";
 const SHELL_ASSETS = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
   "./css/style.css",
   "./icons/icon.svg",
+  "./images/cantina-gate.svg",
   "./images/avatars/helena.jpg",
   "./images/avatars/juliana.jpg",
   "./images/avatars/yara.jpg",

@@ -8,9 +8,9 @@ test("demo-seed - ensureDemoSeed grava comunidade, 10 tópicos, feira e ofertas 
   localStorage.clear();
   await cacheNode.clearLocalPosts();
 
-  // Primeira execução: insere itens demo v5
+  // Primeira execução: insere itens demo v6 (copy falado + fotos de pessoas)
   await demoSeed.ensureDemoSeed();
-  assert.equal(localStorage.getItem("vox-demo-seeded-v5"), "true");
+  assert.equal(localStorage.getItem("vox-demo-seeded-v6"), "true");
 
   // Verifica comunidade
   const comm = await cacheNode.getLocalPost("demo-aprenda-vox");
@@ -55,7 +55,7 @@ test("demo-seed - ensureDemoSeed grava comunidade, 10 tópicos, feira e ofertas 
   const postHelena = await cacheNode.getLocalPost("demo-post-helena");
   assert.ok(postHelena);
   assert.equal(postHelena.author, "vx_demo_helena");
-  assert.equal(postHelena.title, "Comunidades livres em vez de reféns do algoritmo");
+  assert.equal(postHelena.title, "No Insta, ninguém via minhas oficinas");
   assert.ok(postHelena.body.includes("Instagram"));
   assert.equal(postHelena.image, "images/posts/tour-helena.jpg");
   assert.ok(postHelena.likesCount > 0);
@@ -76,7 +76,7 @@ test("demo-seed - ensureDemoSeed grava comunidade, 10 tópicos, feira e ofertas 
 test("demo-seed - ensureDemoSeed é idempotente e preserva integridade", async () => {
   // Segunda execução imediata
   await demoSeed.ensureDemoSeed();
-  assert.equal(localStorage.getItem("vox-demo-seeded-v5"), "true");
+  assert.equal(localStorage.getItem("vox-demo-seeded-v6"), "true");
 
   const topics = await cacheNode.getLocalPosts({ type: "topic", communityId: "demo-aprenda-vox" });
   assert.equal(topics.length, 10);
@@ -90,7 +90,7 @@ test("demo-seed - ensureDemoSeed é idempotente e preserva integridade", async (
 
 test("demo-seed - resetDemoSeed restaura conteúdo demo", async () => {
   await demoSeed.resetDemoSeed();
-  assert.equal(localStorage.getItem("vox-demo-seeded-v5"), "true");
+  assert.equal(localStorage.getItem("vox-demo-seeded-v6"), "true");
 
   const topics = await cacheNode.getLocalPosts({ type: "topic", communityId: "demo-aprenda-vox" });
   assert.equal(topics.length, 10);

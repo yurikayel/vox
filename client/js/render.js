@@ -1510,26 +1510,8 @@ export function renderComposeProposal(main, communityId, commTitle = "") {
     </div>`;
 }
 
-const CANTINA_SVG = `
-  <svg class="cantina-art-svg" width="160" height="90" viewBox="0 0 240 140" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-    <defs>
-      <linearGradient id="cantina-glow" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stop-color="#388bfd" stop-opacity="0.8"/>
-        <stop offset="100%" stop-color="#f59e0b" stop-opacity="0.8"/>
-      </linearGradient>
-      <linearGradient id="door-grad" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stop-color="#18202c"/>
-        <stop offset="100%" stop-color="#0c1017"/>
-      </linearGradient>
-    </defs>
-    <rect x="20" y="20" width="200" height="110" rx="12" fill="url(#door-grad)" stroke="url(#cantina-glow)" stroke-width="2"/>
-    <path d="M40 130V52C40 40 50 30 62 30H178C190 30 200 40 200 52V130" stroke="rgba(255,255,255,0.18)" stroke-width="2" stroke-dasharray="4 4"/>
-    <circle cx="120" cy="55" r="15" fill="rgba(56, 139, 253, 0.15)" stroke="#388bfd" stroke-width="2"/>
-    <path d="M114 55L118 59L126 51" stroke="#388bfd" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-    <rect x="75" y="85" width="90" height="4" rx="2" fill="#f59e0b" opacity="0.85"/>
-    <line x1="85" y1="97" x2="155" y2="97" stroke="rgba(255,255,255,0.25)" stroke-width="2" stroke-linecap="round"/>
-    <line x1="95" y1="107" x2="145" y2="107" stroke="rgba(255,255,255,0.15)" stroke-width="2" stroke-linecap="round"/>
-  </svg>`;
+const CANTINA_ART_ALT =
+  "Deserto à porta de um bar: um guia encapuzado, o número 404, bots estilizados esperando na calçada e pessoas conversando do lado de dentro.";
 
 export function renderCantinaGate(container) {
   if (!container) return;
@@ -1537,13 +1519,13 @@ export function renderCantinaGate(container) {
     <div class="modal-overlay cantina-overlay" id="cantina-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="cantina-title">
       <div class="modal-dialog cantina-dialog">
         <div class="cantina-art-wrap">
-          ${CANTINA_SVG}
+          <img class="cantina-art-svg" src="images/cantina-gate.svg" width="640" height="220" alt="${escapeHtml(CANTINA_ART_ALT)}" decoding="async" />
         </div>
-        <div class="cantina-content" style="text-align:center;">
-          <h2 id="cantina-title" class="cantina-title" style="margin:0 0 0.35rem; font-size:1.35rem; font-weight:800;">Porta da Cantina</h2>
-          <p class="cantina-quote" style="margin:0 0 0.4rem; font-size:1.05rem; font-weight:700; color:var(--text);">“Seus bots vão ter que esperar do lado de fora.”</p>
-          <p class="cantina-desc desc" style="margin:0 0 0.35rem;">Droides e scripts ficam na calçada — aqui é conversa de gente.</p>
-          <p class="cantina-easter-egg meta" style="font-size:0.78rem; font-style:italic; margin:0 0 1rem; color:var(--muted);">Não é o bot que você procura.</p>
+        <div class="cantina-content">
+          <h2 id="cantina-title" class="cantina-title">Porta da Cantina</h2>
+          <p class="cantina-quote">“Seus bots vão ter que esperar do lado de fora.”</p>
+          <p class="cantina-desc desc">Droides e scripts na calçada — aqui é conversa de gente.</p>
+          <p class="cantina-easter-egg meta">Não é o bot que você procura.</p>
         </div>
         <div class="cantina-actions" style="display:flex; flex-direction:column; gap:0.6rem;">
           <button id="btn-cantina-enter" class="btn btn-primary btn-cantina-enter" style="padding:0.75rem; font-weight:700; font-size:1rem;">Entrar — sou humano</button>

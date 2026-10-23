@@ -15,7 +15,7 @@ import {
   MOCK_DEMO_VOTES,
 } from "./mock.js";
 
-const SEED_KEY = "vox-demo-seeded-v5";
+const SEED_KEY = "vox-demo-seeded-v6";
 
 export async function ensureDemoSeed() {
   if (typeof window === "undefined" || !window.localStorage) return;
