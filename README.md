@@ -163,6 +163,7 @@ Todo dado no Vox é identificado por tags semânticas universais:
 | [relay/README.md](./relay/README.md) | Guia do Vox Relay Desktop: cache proxy local em Python |
 | [relay/deploy/README.md](./relay/deploy/README.md) | Guia de Deploy VPS: Signaling WSS (Caddy) + TURN Comunitário (Coturn) |
 | [docs/DNS-HANDLES.md](./docs/DNS-HANDLES.md) | Guia de Identidade Amigável, CNAME Comunitário e DNS Wildcard |
+| [docs/governance-proposta-feira-pin-template.md](./docs/governance-proposta-feira-pin-template.md) | Modelo de proposta: feira comunitária + recomendação não vinculante de espelho leve (V-I07) |
 | [docs/proposta-vox.html](./docs/proposta-vox.html) | Página explicativa completa: proposta, economia distribuída e sustentabilidade |
 
 ### Rodar o PWA localmente
@@ -181,12 +182,12 @@ npm test
 # ou no Windows:
 .\test.bat
 ```
-Executa a suíte de **147 testes** (133 JS via `node:test` e 14 Python via `unittest`).
+Executa a suíte de **168 testes** (154 JS via `node:test` e 14 Python via `unittest`).
 
 ### 🚀 Pipelines de CI/CD (GitHub Actions)
 
 O repositório possui automação contínua configurada em `.github/workflows/`:
-* **CI — Testes & Validação (`.github/workflows/ci.yml`):** Matriz multiplataforma com Node.js (22, 24) e Python (3.11, 3.12) executando verificação de sintaxe, suíte completa de 147 testes e auditoria de segurança contra vazamento de chaves privadas.
+* **CI — Testes & Validação (`.github/workflows/ci.yml`):** Matriz multiplataforma com Node.js (22, 24) e Python (3.11, 3.12) executando verificação de sintaxe, suíte completa de 168 testes e auditoria de segurança contra vazamento de chaves privadas.
 * **Deploy PWA — GitHub Pages (`.github/workflows/deploy-pages.yml`):** Publicação contínua da pasta `client/` no GitHub Pages com suporte a HTTPS nativo e PWA instalável a cada push na branch `main`.
 
 ---
