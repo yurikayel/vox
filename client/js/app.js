@@ -19,6 +19,7 @@ import * as gov from "./governance.js";
 import * as brcode from "./brcode.js";
 import * as hashtags from "./hashtags.js";
 import * as frames from "./frames.js";
+import * as postOwnership from "./post-ownership.js";
 
 function parseRoute() {
   if (typeof window !== "undefined" && window.location?.search) {
@@ -298,11 +299,16 @@ async function showHome(feed = "for-you") {
     const merged = [];
     for (const p of localPosts) {
       seen.add(p.id);
-      merged.push({
-        ...p,
-        isLocalP2p: true,
-        communityTitle: commMap.get(p.communityId) || p.communityTitle || "",
-      });
+      merged.push(
+        postOwnership.withOwnLocalFlag(
+          {
+            ...p,
+            isLocalP2p: true,
+            communityTitle: commMap.get(p.communityId) || p.communityTitle || "",
+          },
+          user
+        )
+      );
     }
     for (const p of (remoteItems || [])) {
       if (p.type !== "listing" && !seen.has(p.id)) {
@@ -330,7 +336,13 @@ async function showHome(feed = "for-you") {
     const rawLocal = await cacheNode.getLocalPosts({ type: "topic" });
     const localPosts = rawLocal.filter((p) => p.type !== "listing");
     const fb = mock.mockRecentTopics();
-    let merged = [...localPosts.map((p) => ({ ...p, isLocalP2p: true })), ...fb.items.filter((p) => p.type !== "listing").map((p) => ({ ...p, isLocalP2p: false }))];
+    let merged = [
+      ...postOwnership.mapOwnLocalFlags(
+        localPosts.map((p) => ({ ...p, isLocalP2p: true })),
+        user
+      ),
+      ...fb.items.filter((p) => p.type !== "listing").map((p) => ({ ...p, isLocalP2p: false })),
+    ];
     if (activeFeed === "following") {
       const watchedSet = new Set(social.getWatchedProfiles());
       merged = merged.filter((p) => watchedSet.has(p.author || p.owner));
@@ -421,7 +433,7 @@ async function showCommunity(communityId, tab = "posts") {
   const mergedTopics = [];
   for (const t of localTopics) {
     seenT.add(t.id);
-    mergedTopics.push({ ...t, isLocalP2p: true });
+    mergedTopics.push(postOwnership.withOwnLocalFlag({ ...t, isLocalP2p: true }, user));
   }
   for (const t of topics) {
     if (!seenT.has(t.id)) {
@@ -624,7 +636,10 @@ async function showTopic(topicId, commIdParam = "") {
 
   const localTopic = await cacheNode.getLocalPost(topicId);
   if (localTopic) {
-    topic = { ...localTopic, owner: localTopic.author, isLocalP2p: true };
+    topic = postOwnership.withOwnLocalFlag(
+      { ...localTopic, owner: localTopic.author, isLocalP2p: true },
+      user
+    );
     topicData = { body: localTopic.body };
   } else {
     const demoFallback = mock.MOCK_DEMO_TOPICS.find((t) => t.id === topicId);
@@ -804,6 +819,7 @@ async function showProfile(address, activeTab = "posts") {
   // Busca posts deste autor
   const localPosts = await cacheNode.getLocalPosts({ type: "topic" });
   let authorPosts = localPosts.filter((p) => (p.author || p.owner) === targetAddress);
+  if (isSelf) authorPosts = postOwnership.mapOwnLocalFlags(authorPosts, user);
   if (!authorPosts.length && mockProf) {
     authorPosts = mock.MOCK_DEMO_TOPICS.filter((t) => t.author === targetAddress);
   }
@@ -2056,7 +2072,7 @@ async function showTagFeed(slug) {
   const main = render.renderShell(makeShellProps(user, "home", `#${cleanSlug}`));
   render.renderLoading(main);
   try {
-    const posts = await cacheNode.getPostsByTag(cleanSlug);
+    const posts = postOwnership.mapOwnLocalFlags(await cacheNode.getPostsByTag(cleanSlug), user);
     render.renderTagFeed(main, cleanSlug, posts);
   } catch {
     render.renderTagFeed(main, cleanSlug, []);
@@ -2265,8 +2281,110 @@ async function handleFrameActionClick(btn) {
   }
 }
 
+function getPostEditModalContainer() {
+  let container = document.getElementById("post-edit-modal-container");
+  if (!container) {
+    container = document.createElement("div");
+    container.id = "post-edit-modal-container";
+    document.body.appendChild(container);
+  }
+  return container;
+}
+
+function closePostEditModalUi() {
+  const container = document.getElementById("post-edit-modal-container");
+  if (container) render.closePostEditModal(container);
+}
+
+async function openPostEditModal(postId) {
+  const user = await getActiveUser();
+  const existing = await cacheNode.getLocalPost(postId);
+  if (!postOwnership.canMutateLocalPost(existing, user)) {
+    share.showToast("Só é possível editar posts seus.", "error");
+    return;
+  }
+  const container = getPostEditModalContainer();
+  render.renderPostEditModal(container, {
+    id: existing.id,
+    title: existing.title || "",
+    body: existing.body || "",
+    hasImage: Boolean(existing.image),
+  });
+  const overlay = container.querySelector("#post-edit-modal-overlay");
+  overlay?.addEventListener("click", (ev) => {
+    if (ev.target === overlay) closePostEditModalUi();
+  });
+  container.querySelector(".btn-close-post-edit")?.addEventListener("click", closePostEditModalUi);
+  container.querySelector(".btn-cancel-post-edit")?.addEventListener("click", closePostEditModalUi);
+  container.querySelector("#form-post-edit")?.addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const btn = document.getElementById("btn-post-edit-save");
+    const title = document.getElementById("post-edit-title")?.value?.trim() || "";
+    const body = document.getElementById("post-edit-body")?.value?.trim() || "";
+    const removeImage = Boolean(document.getElementById("post-edit-remove-image")?.checked);
+    if (!title || !body) return;
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = "Salvando…";
+    }
+    try {
+      const { sig: _s, pubKey: _p, ...rest } = existing;
+      const signed = await localAccount.signPayload({
+        ...rest,
+        title,
+        body,
+        image: removeImage ? "" : rest.image || "",
+        imageAlt: removeImage ? "" : rest.imageAlt || "",
+        ts: rest.ts,
+        editedAt: Date.now(),
+      });
+      await cacheNode.saveLocalPost(signed);
+      closePostEditModalUi();
+      share.showToast("Publicação atualizada.");
+      route();
+    } catch (err) {
+      share.showToast(`Erro ao editar: ${err.message}`, "error");
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = "Salvar";
+      }
+    }
+  });
+}
+
+async function handleDeletePost(postId) {
+  const user = await getActiveUser();
+  const existing = await cacheNode.getLocalPost(postId);
+  if (!postOwnership.canMutateLocalPost(existing, user)) {
+    share.showToast("Só é possível apagar posts seus.", "error");
+    return;
+  }
+  const label = (existing.title || "esta publicação").slice(0, 80);
+  if (!confirm(`Apagar "${label}"? Esta ação não pode ser desfeita.`)) return;
+  await cacheNode.deleteLocalPost(postId);
+  share.showToast("Publicação apagada.");
+  const onTopic = location.hash.replace(/^#\/?/, "").startsWith(`t/${postId}`);
+  if (onTopic) location.hash = "#/";
+  else route();
+}
+
 function initSocialInteractions() {
   document.addEventListener("click", (e) => {
+    const btnEdit = e.target.closest(".btn-post-edit");
+    if (btnEdit) {
+      e.preventDefault();
+      openPostEditModal(btnEdit.dataset.id);
+      return;
+    }
+
+    const btnDel = e.target.closest(".btn-post-delete");
+    if (btnDel) {
+      e.preventDefault();
+      handleDeletePost(btnDel.dataset.id);
+      return;
+    }
+
     // Open Frames (v6.2 Mini-apps)
     const btnFrame = e.target.closest(".btn-frame-action:not([disabled])");
     if (btnFrame) {

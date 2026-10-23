@@ -733,3 +733,28 @@ test("render - renderPostItem pilha vertical estilo Meta com header IG, toolbar 
   assert.ok(captionIdx < commentsIdx, "Caption deve preceder os comentários na pilha vertical");
 });
 
+test("render - renderPostOwnerMenu só aparece em posts isOwnLocalPost", () => {
+  const own = {
+    id: "p_own",
+    title: "Meu post",
+    body: "Texto",
+    author: "vx_me",
+    isOwnLocalPost: true,
+    type: "topic",
+    ts: Date.now(),
+  };
+  const tour = {
+    id: "demo-post-helena",
+    title: "Tour",
+    author: "vx_demo_helena",
+    isLocalP2p: true,
+    type: "topic",
+    ts: Date.now(),
+  };
+  const ownHtml = render.renderPostItem(own);
+  const tourHtml = render.renderPostItem(tour);
+  assert.ok(ownHtml.includes("btn-post-edit"));
+  assert.ok(ownHtml.includes("btn-post-delete"));
+  assert.ok(!tourHtml.includes("btn-post-edit"));
+});
+

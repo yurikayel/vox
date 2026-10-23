@@ -764,6 +764,19 @@ main#app-main {
   flex-wrap: wrap;
 }
 
+.post-owner-menu {
+  display: inline-flex;
+  gap: 0.25rem;
+  margin-left: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.post-owner-menu .btn {
+  font-size: 0.72rem;
+  padding: 0.15rem 0.45rem;
+  line-height: 1.2;
+}
+
 .post-header-tags {
   display: flex;
   align-items: center;

@@ -628,9 +628,15 @@ Toolbar tripartida mantém Zap, estrela, copiar MD e bookmark.
 ### 21.3 Stories strip
 - `renderStoriesStrip`: anéis com avatares do tour → `#/u/:id` (visual, sem TTL).
 
-### 21.4 Cache e PWA
-- Cache elevado para `vox-pwa-v6.3-hybrid-feed-spacing` (espaçamento de 24px entre posts, superfícies transparentes sem caixas residuais e paddings calibrados).
-- Suíte automatizada com **136 testes 100% verdes** (122 Node.js + 14 Python).
+### 21.4 Editar / apagar posts locais
+- **Escopo:** Somente posts gravados no aparelho via `cacheNode.saveLocalPost`, com `sig` ECDSA e `author` igual ao `routeId` ativo (`vx_…`). Posts do tour/demo (`mock.js`) não têm assinatura local — menu oculto; tentativa programática exibe toast *"Só é possível editar/apagar posts seus."*
+- **UI:** Botões **Editar** / **Apagar** no header do card (`renderPostOwnerMenu`) e na página `#/t/:id`. Edição abre modal (`renderPostEditModal`); exclusão usa `confirm()` nativo.
+- **Persistência:** `deleteLocalPost(id)` remove do IndexedDB; edição reutiliza `saveLocalPost` (mesmo `id`, `ts` original, `editedAt` novo) após `localAccount.signPayload`.
+- **Gossip:** Não há evento `GOSSIP_DELETE` na malha atual — remoção/edição são **locais neste aparelho**; pares que já receberam o post via gossip mantêm cópia até implementação futura de retratação.
+
+### 21.5 Cache e PWA
+- Cache elevado para `vox-pwa-v6.4-edit-delete-post`.
+- Suíte automatizada com **139+ testes** (Node.js + Python relay).
 
 
 
