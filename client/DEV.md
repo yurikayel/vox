@@ -320,4 +320,25 @@ O Vox opera primariamente como uma rede ponto a ponto cooperativa, sustentada pe
 - A funcionalidade de carteira Arweave (`wallet.js`) permanece totalmente suportada, mas é posicionada como recurso avançado para usuários que desejam ancoragem permanente e imutável on-chain.
 - O acesso à carteira e anúncios on-chain fica acessível na seção expansível `<details class="advanced-settings">` no Perfil.
 
+---
+
+## 12. Tour de Demonstração (5 Personas Educativas & Seed Local)
+
+Para preencher a interface na primeira execução e permitir explorar os fluxos (feed → post → comunidade → perfil do autor → mensagem privada) sem depender de gateways remotos ou transações on-chain, o Vox inicializa um catálogo curado de 5 personas com publicações educativas sobre o produto:
+
+### 12.1 Personas & Temas Educativos
+
+| Autor (`routeId`) | Nome | Post | Tema & Explicação |
+|-------------------|------|------|--------------------|
+| `vx_demo_lia` | **Lia** | *O Vox mora no seu celular* | Rede cooperativa distribuída; painel **Sua rede**; controle e pausa a qualquer momento. |
+| `vx_demo_rafa` | **Rafa** | *Mensagens sem complicação* | Mensagens diretas privadas ponto a ponto via WebRTC com fallback para caixa postal temporária (TTL). |
+| `vx_demo_camila` | **Camila** | *Comunidades em vez de scroll infinito* | Participação orgânica por tema e interesse real, sem algoritmos de retenção forçada. |
+| `vx_demo_davi` | **Davi** | *Na rede e Guardado* | Explicação dos badges: **Na rede** (distribuído entre aparelhos a custo zero) vs **Guardado** (permaweb opcional). |
+| `vx_demo_pri` | **Pri** | *Entrar leva um toque* | Onboarding instantâneo com chaves geradas no navegador; criação imediata de comunidades e posts sem barreiras. |
+
+### 12.2 Mecanismo de Semeação (`demo-seed.js`)
+- **Idempotência:** A chave `vox-demo-seeded-v1` em `localStorage` sinaliza a carga inicial. Se os itens estiverem presentes, a checagem é instantânea.
+- **Isolamento de Dados:** Os posts são gravados via `cacheNode.saveLocalPost` com `isLocalP2p: true` e sem assinatura gossip, ficando disponíveis para navegação local sem poluir o broadcast de outros aparelhos.
+- **Restauração Rápida:** O botão **"🔄 Restaurar tour demo"** em `#/settings/network` (seção Avançado) permite recarregar o conteúdo educativo a qualquer momento para fins de testes e QA.
+
 

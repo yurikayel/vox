@@ -1,3 +1,5 @@
+import * as mock from "./mock.js";
+
 const root = () => document.getElementById("app-root");
 
 export function escapeHtml(s) {
@@ -151,7 +153,7 @@ export function renderError(main, message) {
 export function renderDemoBanner(main) {
   main.insertAdjacentHTML(
     "afterbegin",
-    `<div class="banner demo">Modo demonstração — dados locais simulados.</div>`
+    `<div class="banner demo">Tour de demonstração — conteúdo de exemplo.</div>`
   );
 }
 
@@ -164,7 +166,8 @@ export function renderGatewayBanner(main, label) {
 
 function renderPostItem(t) {
   const author = t.author || t.owner || "";
-  const authorInitial = (author || "V").slice(0, 1).toUpperCase();
+  const authorDisplay = t.authorDisplay || (author ? mock.getAuthorDisplay(author) : "") || shortId(author);
+  const authorInitial = (authorDisplay || author || "V").slice(0, 1).toUpperCase();
   const commLabel = t.communityTitle || "Comunidade";
   const commPill = t.communityId
     ? `<a class="post-community-pill" href="#/c/${encodeURIComponent(t.communityId)}">${escapeHtml(commLabel)}</a>`
@@ -179,7 +182,7 @@ function renderPostItem(t) {
       <a class="avatar" href="#/u/${encodeURIComponent(author)}">${authorInitial}</a>
       <div class="post-content">
         <div class="post-header">
-          <a class="post-author" href="#/u/${encodeURIComponent(author)}">${escapeHtml(shortId(author))}</a>
+          <a class="post-author" href="#/u/${encodeURIComponent(author)}">${escapeHtml(authorDisplay)}</a>
           ${originBadge}
           <span class="post-meta">· recente</span>
           ${commPill}
@@ -295,7 +298,8 @@ export function renderTopic(main, topicId, topic, replies, { topicData = null, i
   const backLink = commId ? `<a class="back-link" href="#/c/${encodeURIComponent(commId)}">← Voltar à comunidade</a>` : "";
   const bodyText = topicData?.body || topic?.body || "Sem conteúdo textual.";
   const author = topic?.author || topic?.owner || "";
-  const authorInitial = (author || "V").slice(0, 1).toUpperCase();
+  const authorDisplay = topic?.authorDisplay || (author ? mock.getAuthorDisplay(author) : "") || shortId(author);
+  const authorInitial = (authorDisplay || author || "V").slice(0, 1).toUpperCase();
   const originBadge = topic?.isLocalP2p
     ? `<span class="badge-pill p2p-pill">Na rede</span>`
     : `<span class="badge-pill permanent-pill">Guardado</span>`;
@@ -310,7 +314,7 @@ export function renderTopic(main, topicId, topic, replies, { topicData = null, i
       <div class="post-header">
         <span class="avatar">${authorInitial}</span>
         <div>
-          <a class="post-author" href="#/u/${encodeURIComponent(author)}">${escapeHtml(shortId(author))}</a>
+          <a class="post-author" href="#/u/${encodeURIComponent(author)}">${escapeHtml(authorDisplay)}</a>
           ${originBadge}
         </div>
       </div>
@@ -336,7 +340,8 @@ export function renderTopic(main, topicId, topic, replies, { topicData = null, i
 
   const replyItems = replies.map((r) => {
     const rAuthor = r.author || r.owner || "";
-    const rInitial = (rAuthor || "V").slice(0, 1).toUpperCase();
+    const rAuthorDisplay = r.authorDisplay || (rAuthor ? mock.getAuthorDisplay(rAuthor) : "") || shortId(rAuthor);
+    const rInitial = (rAuthorDisplay || rAuthor || "V").slice(0, 1).toUpperCase();
     const rBadge = r.isLocalP2p
       ? `<span class="badge-pill p2p-pill">Na rede</span>`
       : `<span class="badge-pill permanent-pill">Guardado</span>`;
@@ -349,7 +354,7 @@ export function renderTopic(main, topicId, topic, replies, { topicData = null, i
         <div class="post-content">
           <div class="reply-header" style="display:flex; justify-content:space-between; align-items:center;">
             <div>
-              <a class="post-author" href="#/u/${encodeURIComponent(rAuthor)}">${escapeHtml(shortId(rAuthor))}</a>
+              <a class="post-author" href="#/u/${encodeURIComponent(rAuthor)}">${escapeHtml(rAuthorDisplay)}</a>
               ${rBadge}
             </div>
             ${replyModBtn}
@@ -363,9 +368,10 @@ export function renderTopic(main, topicId, topic, replies, { topicData = null, i
   main.innerHTML += html;
 }
 
-function renderProfileHeader(address, isCurrentWallet, handle, isConflict, claimants, displayName) {
+function renderProfileHeader(address, isCurrentWallet, handle, isConflict, claimants, displayName, profileBio = "") {
   const displayTitle = displayName ? `${displayName} (@${handle || shortId(address)})` : (handle ? `@${handle}` : "Perfil");
   const initial = (displayName || handle || address || "U").slice(0, 1).toUpperCase();
+  const bioHtml = profileBio ? `<p class="profile-bio desc" style="margin:6px 0 0; color:var(--text);">${escapeHtml(profileBio)}</p>` : "";
   const conflictBanner = isConflict
     ? `<div class="card error" style="margin-top:0.6rem;">
         ⚠️ <strong>Conflito de Handle:</strong> <code>@${escapeHtml(handle)}</code> reivindicado por mais de uma conta.
@@ -384,6 +390,7 @@ function renderProfileHeader(address, isCurrentWallet, handle, isConflict, claim
           <p class="meta" style="margin:2px 0 0;">ID de Rede: <code>${escapeHtml(address)}</code></p>
         </div>
       </div>
+      ${bioHtml}
       ${conflictBanner}
       ${isCurrentWallet ? `<span class="badge-pill" style="margin-top:0.4rem;">Sua Conta Neste Aparelho</span>` : ""}
     </div>`;
@@ -450,9 +457,19 @@ function renderProfileActions(address, isCurrentWallet, handle, displayName, has
     </div>`;
 }
 
-export function renderProfile(main, address, memberships = [], isCurrentWallet = false, dmPubStr = "", { handle = "", isConflict = false, claimants = [], displayName = "", hasWallet = false, balance = "0.000" } = {}) {
-  let html = renderProfileHeader(address, isCurrentWallet, handle, isConflict, claimants, displayName);
+export function renderProfile(main, address, memberships = [], isCurrentWallet = false, dmPubStr = "", { handle = "", isConflict = false, claimants = [], displayName = "", profileBio = "", posts = [], hasWallet = false, balance = "0.000" } = {}) {
+  let html = renderProfileHeader(address, isCurrentWallet, handle, isConflict, claimants, displayName, profileBio);
   html += renderProfileActions(address, isCurrentWallet, handle, displayName, hasWallet, balance);
+
+  if (posts && posts.length) {
+    html += `
+      <div class="actions-bar">
+        <span class="section-title">Posts do autor (${posts.length})</span>
+      </div>
+      <div class="feed-container">
+        ${posts.map(renderPostItem).join("")}
+      </div>`;
+  }
 
   html += `
     <div class="actions-bar">
@@ -812,6 +829,12 @@ function renderNetworkForm(settings, notifPermission, customSignalingUrl, custom
               </div>
               <button type="button" id="btn-check-relay" class="btn btn-outline btn-sm">Verificar Servidor Local</button>
               <span class="meta" style="margin-left:0.5rem;">${relayStatus?.online ? "🟢 Conectado" : "⚪ Offline"}</span>
+            </div>
+
+            <div style="margin-top:0.75rem; border-top:1px solid var(--border); padding-top:0.6rem;">
+              <label style="font-weight:600; font-size:0.85rem; display:block; margin-bottom:0.25rem;">Tour de Demonstração</label>
+              <p class="desc" style="font-size:0.8rem; margin:0 0 0.4rem;">Recarrega os 5 perfis e posts educativos de exemplo no seu aparelho:</p>
+              <button type="button" id="btn-reset-demo" class="btn btn-outline btn-sm">🔄 Restaurar tour demo</button>
             </div>
           </div>
         </details>

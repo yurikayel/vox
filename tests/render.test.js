@@ -157,3 +157,24 @@ test("render - renderProfile com handle e renderHandleConflict", () => {
   assert.ok(mainConf.innerHTML.includes("addr_1"));
   assert.ok(mainConf.innerHTML.includes("addr_2"));
 });
+
+test("render - renderFeed e renderProfile com persona mock (Lia)", () => {
+  const mainFeed = createContainer();
+  const topics = [
+    { id: "demo-post-lia", title: "O Vox mora no seu celular", body: "Texto...", author: "vx_demo_lia", communityId: "demo-aprenda-vox" },
+  ];
+  render.renderFeed(mainFeed, topics);
+  assert.ok(mainFeed.innerHTML.includes("Lia"));
+  assert.ok(mainFeed.innerHTML.includes("O Vox mora no seu celular"));
+
+  const mainProf = createContainer();
+  render.renderProfile(mainProf, "vx_demo_lia", [{ communityId: "demo-aprenda-vox" }], false, "", {
+    displayName: "Lia",
+    profileBio: "Apoiadora de redes livres.",
+    posts: topics,
+  });
+  assert.ok(mainProf.innerHTML.includes("Lia (@vx_demo_lia)"));
+  assert.ok(mainProf.innerHTML.includes("Apoiadora de redes livres."));
+  assert.ok(mainProf.innerHTML.includes("Posts do autor (1)"));
+  assert.ok(mainProf.innerHTML.includes("O Vox mora no seu celular"));
+});
