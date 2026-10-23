@@ -558,9 +558,23 @@ main#app-main {
   max-width: 160px;
 }
 
-.inline-composer-hint {
+.inline-composer-meta {
   margin: 8px 0 0;
   font-size: 0.72rem;
+  text-align: left;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  color: var(--muted);
+}
+
+.inline-composer-char {
+  font-variant-numeric: tabular-nums;
+}
+
+.inline-composer-hint {
+  margin: 0;
+  font-size: inherit;
   text-align: left;
 }
 
@@ -954,6 +968,21 @@ main#app-main {
   color: var(--text);
   margin: 4px 0 0 0;
   line-height: 1.45;
+}
+
+.post-caption-block .post-body.post-caption-only {
+  font-size: 0.94rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.post-caption-block .post-body.post-caption-only a {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.post-caption-block .post-body.post-caption-only a:hover {
+  text-decoration: underline;
 }
 
 /* Ações dos Posts (Toolbar IG: esquerda, centro, direita) */
@@ -1942,6 +1971,74 @@ main#app-main {
   border: 1px solid var(--glass-border);
   padding: 1.5rem;
   animation: modalPop 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-dialog-solid {
+  background: var(--bg);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: 1px solid var(--border);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+}
+
+.post-edit-dialog {
+  max-width: 480px;
+  padding: 1.25rem;
+}
+
+.post-edit-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.post-edit-title {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.post-edit-close {
+  border: none;
+  padding: 4px 8px;
+  font-size: 1.1rem;
+}
+
+.post-edit-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.post-edit-textarea {
+  margin-bottom: 0.35rem;
+}
+
+.post-edit-char {
+  margin: 0 0 0.5rem;
+  font-size: 0.72rem;
+}
+
+.post-edit-remove-image {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  margin: 0.5rem 0 0;
+}
+
+.post-edit-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+.post-owner-menu {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
 }
 
 @keyframes modalPop {

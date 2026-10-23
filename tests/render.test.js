@@ -234,6 +234,8 @@ test("render - inline composer e post-toolbar no feed", () => {
   assert.ok(strip.includes("inline-composer"));
   assert.ok(strip.includes("form-inline-topic"));
   assert.ok(strip.includes("inline-topic-file"));
+  assert.ok(strip.includes("inline-topic-char"));
+  assert.ok(strip.includes('id="btn-inline-submit" disabled'));
   assert.ok(!strip.includes("composer-strip-link"));
 
   const main = createContainer();

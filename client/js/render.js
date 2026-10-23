@@ -5,6 +5,7 @@ import * as gov from "./governance.js";
 import * as brcode from "./brcode.js";
 import * as hashtags from "./hashtags.js";
 import * as frames from "./frames.js";
+import * as postOwnership from "./post-ownership.js";
 
 const root = () => document.getElementById("app-root");
 
@@ -225,9 +226,12 @@ export function renderInlineComposer({ userRouteId = "", displayName = "" } = {}
             </label>
             <input type="text" id="inline-topic-comm" class="inline-composer-comm" placeholder="Comunidade (opcional)" maxlength="64" aria-label="Slug da comunidade" />
           </div>
-          <button type="submit" class="btn btn-primary btn-sm" id="btn-inline-submit">Postar</button>
+          <button type="submit" class="btn btn-primary btn-sm" id="btn-inline-submit" disabled>Postar</button>
         </div>
-        <p class="inline-composer-hint meta">Publicação assinada no seu aparelho · fica no feed · <a href="#/compose/topic">formulário completo</a></p>
+        <p class="inline-composer-meta" aria-live="polite">
+          <span class="inline-composer-char" id="inline-topic-char">0 / 2000</span>
+          <span class="inline-composer-hint meta"> · assinado no aparelho · <a href="#/compose/topic">formulário completo</a></span>
+        </p>
       </form>
     </div>`;
 }
@@ -350,9 +354,34 @@ function renderPostMedia(t) {
   return `<div class="post-media-container"><img class="post-media" src="${escapeHtml(t.image)}" alt="${alt}" loading="lazy" /></div>`;
 }
 
+export function renderPostTextHtml(post) {
+  const id = post?.id || "";
+  const href = id ? `#/t/${encodeURIComponent(id)}` : "#";
+  const disp = postOwnership.formatPostDisplay({ title: post?.title, body: post?.body });
+  if (disp.mode === "empty") return "";
+  if (disp.mode === "caption") {
+    const linked = hashtags.linkifyHashtags(escapeHtml(disp.text));
+    return `<p class="post-body post-caption-only"><a href="${href}">${linked}</a></p>`;
+  }
+  const titleBlock = `<div class="post-title"><a href="${href}">${escapeHtml(disp.title)}</a></div>`;
+  const bodyBlock = disp.body
+    ? `<p class="post-body">${hashtags.linkifyHashtags(escapeHtml(disp.body))}</p>`
+    : "";
+  return `${titleBlock}${bodyBlock}`;
+}
+
 function renderPostText(t) {
-  const body = t.body ? `<p class="post-body">${hashtags.linkifyHashtags(escapeHtml(t.body))}</p>` : "";
-  return `<div class="post-title"><a href="#/t/${encodeURIComponent(t.id)}">${escapeHtml(t.title)}</a></div>${body}`;
+  return renderPostTextHtml(t);
+}
+
+function renderTopicDetailText(topicId, title, bodyText) {
+  const disp = postOwnership.formatPostDisplay({ title, body: bodyText });
+  if (disp.mode === "caption") {
+    return `<div class="post-body post-caption-only post-topic-detail" style="font-size:0.98rem; line-height:1.5; margin:0.75rem 0 0;">${hashtags.linkifyHashtags(escapeHtml(disp.text))}</div>`;
+  }
+  const titleBlock = `<h2 class="post-title post-topic-detail-title" style="margin:0.75rem 0 0.5rem; font-size:1.25rem;">${escapeHtml(disp.title || "Post")}</h2>`;
+  const bodyBlock = `<div class="post-body" style="font-size:0.98rem; line-height:1.5;">${hashtags.linkifyHashtags(escapeHtml(disp.body || ""))}</div>`;
+  return `${titleBlock}${bodyBlock}`;
 }
 
 export function renderFrameContentHtml(frame, state) {
@@ -884,8 +913,7 @@ export function renderTopic(main, topicId, topic, replies, { topicData = null, i
         </div>
       </div>
       ${imageHtml}
-      <h2 class="post-title" style="margin:0.75rem 0 0.5rem; font-size:1.25rem;">${escapeHtml(topic?.title || "Post")}</h2>
-      <div class="post-body" style="font-size:0.98rem; line-height:1.5;">${hashtags.linkifyHashtags(escapeHtml(bodyText))}</div>
+      ${renderTopicDetailText(topicId, topic?.title || "", bodyText)}
       <div class="post-actions insta-actions post-toolbar" style="margin-top:12px; padding-top:8px;">
         <button class="action-btn btn-like ${liked ? "active" : ""}" data-id="${escapeHtml(topicId)}" data-count="${baseLikes}" aria-label="Curtir post">
           <svg class="action-icon icon-heart" width="18" height="18" viewBox="0 0 24 24" fill="${liked ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
@@ -1885,27 +1913,34 @@ export function closeZapModal(container) {
   if (container) container.innerHTML = "";
 }
 
+export function postEditInitialText({ title = "", body = "" } = {}) {
+  const disp = postOwnership.formatPostDisplay({ title, body });
+  if (disp.mode === "caption") return disp.text || "";
+  if (disp.mode === "title-body" && body.trim()) return body.trim();
+  return [title, body].filter(Boolean).join("\n").trim();
+}
+
 export function renderPostEditModal(container, { id = "", title = "", body = "", hasImage = false } = {}) {
   if (!container) return;
+  const initialText = postEditInitialText({ title, body });
   const imageRow = hasImage
-    ? `<label class="post-edit-remove-image" style="display:flex; align-items:center; gap:6px; font-size:0.85rem; margin:0.5rem 0 0;">
+    ? `<label class="post-edit-remove-image">
         <input type="checkbox" id="post-edit-remove-image" /> Remover imagem anexada
       </label>`
     : "";
   container.innerHTML = `
-    <div class="modal-overlay" id="post-edit-modal-overlay" role="dialog" aria-modal="true" aria-label="Editar publicação">
-      <div class="modal-dialog" style="max-width:480px; width:100%; padding:1.25rem;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
-          <h3 style="margin:0; font-size:1.1rem;">Editar publicação</h3>
-          <button type="button" class="btn btn-sm btn-outline btn-close-post-edit" style="border:none; padding:4px 8px; font-size:1.1rem;" aria-label="Fechar">✕</button>
+    <div class="modal-overlay post-edit-overlay" id="post-edit-modal-overlay" role="dialog" aria-modal="true" aria-label="Editar publicação">
+      <div class="modal-dialog modal-dialog-solid post-edit-dialog">
+        <div class="post-edit-head">
+          <h3 class="post-edit-title">Editar publicação</h3>
+          <button type="button" class="btn btn-sm btn-outline btn-close-post-edit post-edit-close" aria-label="Fechar">✕</button>
         </div>
         <form id="form-post-edit" data-id="${escapeHtml(id)}">
-          <label style="font-size:0.82rem; font-weight:600; display:block; margin-bottom:4px;">Título</label>
-          <input type="text" id="post-edit-title" class="form-control" maxlength="120" required value="${escapeHtml(title)}" style="margin-bottom:0.75rem;" />
-          <label style="font-size:0.82rem; font-weight:600; display:block; margin-bottom:4px;">Texto</label>
-          <textarea id="post-edit-body" class="form-control" rows="5" maxlength="5000" required style="margin-bottom:0.5rem;">${escapeHtml(body)}</textarea>
+          <label class="post-edit-label" for="post-edit-text">Texto da publicação</label>
+          <textarea id="post-edit-text" class="form-control inline-composer-textarea post-edit-textarea" rows="6" maxlength="5000" required placeholder="O que você quer dizer?">${escapeHtml(initialText)}</textarea>
+          <p class="post-edit-char meta" id="post-edit-char" aria-live="polite">${initialText.length} / 5000</p>
           ${imageRow}
-          <div style="display:flex; gap:0.5rem; justify-content:flex-end; margin-top:1rem;">
+          <div class="post-edit-actions">
             <button type="button" class="btn btn-outline btn-cancel-post-edit">Cancelar</button>
             <button type="submit" class="btn btn-primary" id="btn-post-edit-save">Salvar</button>
           </div>

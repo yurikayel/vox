@@ -1,5 +1,35 @@
 /** Regras de edição/exclusão — só posts locais assinados pelo autor ativo (vx_…). */
 
+/** Título Nostr/metadata a partir do texto único do compositor. */
+export function deriveTopicTitleFromBody(bodyRaw) {
+  const body = String(bodyRaw || "").trim();
+  if (!body) return { title: "", body: "" };
+  const firstLine = body.split(/\r?\n/)[0].trim();
+  const title = firstLine.slice(0, 120) || "Publicação";
+  return { title, body };
+}
+
+/**
+ * Evita título + corpo duplicados quando title === primeira linha do body.
+ * @returns {{ mode: "empty"|"caption"|"title-body", text?: string, title?: string, body?: string }}
+ */
+export function formatPostDisplay({ title = "", body = "" } = {}) {
+  const t = String(title || "").trim();
+  const b = String(body || "").trim();
+  if (!t && !b) return { mode: "empty" };
+  if (!b || b === t) return { mode: "caption", text: t || b };
+
+  if (b.startsWith(t)) {
+    let rest = b.slice(t.length);
+    if (rest.startsWith("\r\n")) rest = rest.slice(2);
+    else if (rest.startsWith("\n")) rest = rest.slice(1);
+    if (!rest.trim()) return { mode: "caption", text: t };
+    return { mode: "title-body", title: t, body: rest.trimStart() };
+  }
+
+  return { mode: "title-body", title: t || b.split(/\r?\n/)[0].trim(), body: b };
+}
+
 export function canMutateLocalPost(post, routeId) {
   if (!routeId || !post?.id || !post?.sig) return false;
   const author = post.author || post.owner || "";
