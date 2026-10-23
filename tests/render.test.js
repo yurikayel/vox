@@ -757,6 +757,8 @@ test("render - renderPostOwnerMenu só aparece em posts isOwnLocalPost", () => {
   const tourHtml = render.renderPostItem(tour);
   assert.ok(ownHtml.includes("btn-post-edit"));
   assert.ok(ownHtml.includes("btn-post-delete"));
+  assert.ok(ownHtml.includes("post-local-sync-hint"));
+  assert.ok(ownHtml.includes("gossip"));
   assert.ok(!tourHtml.includes("btn-post-edit"));
   assert.ok(!tourHtml.includes("btn-post-delete"));
 });
@@ -776,5 +778,11 @@ test("render - renderTopic inclui menu Editar/Apagar para post próprio", () => 
   assert.ok(main.innerHTML.includes("btn-post-edit"));
   assert.ok(main.innerHTML.includes("btn-post-delete"));
   assert.ok(main.innerHTML.includes('data-id="top_own_detail"'));
+});
+
+test("render - compositor inline inclui microcopy honesta de edit/apagar local", () => {
+  const html = render.renderInlineComposer({ userRouteId: "vx_me", displayName: "Eu" });
+  assert.ok(html.includes("inline-composer-local-hint"));
+  assert.ok(html.includes("gossip"));
 });
 
