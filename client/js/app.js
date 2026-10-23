@@ -11,6 +11,7 @@ import * as cryptoDm from "./crypto-dm.js";
 import * as inbox from "./inbox.js";
 import * as handles from "./handles.js";
 import * as localAccount from "./local-account.js";
+import * as demoSeed from "./demo-seed.js";
 
 function parseRoute() {
   if (typeof window !== "undefined" && window.location?.search) {
@@ -353,13 +354,19 @@ async function showTopic(topicId, commIdParam = "") {
     topic = { ...localTopic, owner: localTopic.author, isLocalP2p: true };
     topicData = { body: localTopic.body };
   } else {
-    try {
-      const fetchedTopic = await gql.fetchTopicById(topicId);
-      if (fetchedTopic) topic = fetchedTopic;
-    } catch {}
-    try {
-      topicData = await gql.fetchTransactionData(topicId);
-    } catch {}
+    const demoFallback = mock.MOCK_DEMO_TOPICS.find((t) => t.id === topicId);
+    if (demoFallback) {
+      topic = { ...demoFallback, owner: demoFallback.author, isLocalP2p: true };
+      topicData = { body: demoFallback.body };
+    } else {
+      try {
+        const fetchedTopic = await gql.fetchTopicById(topicId);
+        if (fetchedTopic) topic = fetchedTopic;
+      } catch {}
+      try {
+        topicData = await gql.fetchTransactionData(topicId);
+      } catch {}
+    }
   }
 
   let gateway = "";
@@ -390,6 +397,11 @@ async function showTopic(topicId, commIdParam = "") {
     if (!seenR.has(r.id)) {
       seenR.add(r.id);
       mergedReplies.push({ ...r, isLocalP2p: false });
+    }
+  }
+  if (!mergedReplies.length && mock.MOCK_REPLIES[topicId]) {
+    for (const r of mock.MOCK_REPLIES[topicId]) {
+      mergedReplies.push({ ...r, owner: r.author, isLocalP2p: true });
     }
   }
 
@@ -497,12 +509,32 @@ async function showProfile(address) {
     }
   }
 
+  const mockProf = mock.getMockProfile(targetAddress);
+  let displayName = isSelf ? localAccount.getDisplayName() : "";
+  let profileBio = "";
+  if (mockProf) {
+    displayName = mockProf.name;
+    profileBio = mockProf.bio;
+    if (!memberships.some((x) => x.communityId === "demo-aprenda-vox")) {
+      memberships.push({ id: `mem_${targetAddress}`, communityId: "demo-aprenda-vox" });
+    }
+  }
+
+  // Busca posts deste autor
+  const localPosts = await cacheNode.getLocalPosts({ type: "topic" });
+  let authorPosts = localPosts.filter((p) => (p.author || p.owner) === targetAddress);
+  if (!authorPosts.length && mockProf) {
+    authorPosts = mock.MOCK_DEMO_TOPICS.filter((t) => t.author === targetAddress);
+  }
+
   main.innerHTML = "";
   render.renderProfile(main, targetAddress, memberships, isSelf, JSON.stringify(dmPub), {
     handle: handle || "",
     isConflict: Boolean(conflictInfo?.isConflict),
     claimants: conflictInfo?.claimants || [],
-    displayName: isSelf ? localAccount.getDisplayName() : "",
+    displayName,
+    profileBio,
+    posts: authorPosts,
     hasWallet: wallet.hasWallet(),
     balance,
   });
@@ -959,6 +991,17 @@ function bindNetworkSettingsButtons() {
       showNetworkSettings();
     });
   }
+
+  const btnResetDemo = document.getElementById("btn-reset-demo");
+  if (btnResetDemo) {
+    btnResetDemo.addEventListener("click", async () => {
+      btnResetDemo.disabled = true;
+      btnResetDemo.textContent = "Restaurando…";
+      await demoSeed.resetDemoSeed();
+      share.showToast("Tour de demonstração restaurado com sucesso!");
+      showNetworkSettings();
+    });
+  }
 }
 
 async function showNetworkSettings() {
@@ -1232,4 +1275,4 @@ window.addEventListener("hashchange", () => route());
 initDmListeners();
 initGossipListeners();
 syncIdentity();
-route();
+demoSeed.ensureDemoSeed().finally(() => route());
