@@ -7,6 +7,7 @@ import * as hashtags from "./hashtags.js";
 import * as frames from "./frames.js";
 import * as postOwnership from "./post-ownership.js";
 import * as i18n from "./i18n-pt-br.js";
+import * as gossipRetract from "./gossip-retract-ui.js";
 
 const root = () => document.getElementById("app-root");
 
@@ -356,6 +357,10 @@ function renderPostHeaderBlock(t, author, authorDisplay, authorHandle, isPinned)
   const pinnedBadge = pinned
     ? `<span class="badge-pill pinned-pill" title="Publicação fixada pelo autor">📌 Fixado</span>`
     : "";
+  const editedBadge =
+    gossipRetract.isGossipRetractUiEnabled() && gossipRetract.isGossipEdited(t)
+      ? gossipRetract.renderGossipEditedBadgeHtml()
+      : "";
   const ownerMenu = renderPostOwnerMenu(t);
   return `
     <header class="post-header-ig">
@@ -368,7 +373,7 @@ function renderPostHeaderBlock(t, author, authorDisplay, authorHandle, isPinned)
           <span class="post-time">${escapeHtml(formatTimeAgo(t.ts))}</span>
         </div>
       </div>
-      <div class="post-header-tags">${pinnedBadge}${originBadge}${commPill}${ownerMenu}</div>
+      <div class="post-header-tags">${pinnedBadge}${editedBadge}${originBadge}${commPill}${ownerMenu}</div>
     </header>`;
 }
 
@@ -540,6 +545,7 @@ function renderPostToolbar(t, author, authorDisplay, authorHandle) {
 }
 
 export function renderPostItem(t, { isPinned = false } = {}) {
+  if (gossipRetract.shouldHideGossipDeletedPost(t)) return "";
   const author = t.author || t.owner || "";
   const authorDisplay = t.authorDisplay || (author ? mock.getAuthorDisplay(author) : "") || shortId(author);
   const authorHandle = (author ? mock.getAuthorHandle(author) : "") || shortId(author);
@@ -634,7 +640,8 @@ export function renderFeed(main, topics = [], { activeFeed = "for-you", userRout
     return;
   }
 
-  const items = topics.map((t) => renderPostItem(t)).join("");
+  const visible = gossipRetract.filterFeedTopicsForGossipRetract(topics);
+  const items = visible.map((t) => renderPostItem(t)).join("");
   html += `<div class="feed-container">${items}</div>`;
   main.innerHTML += html;
 }
@@ -895,6 +902,10 @@ export function renderListingItem(item, { communityTitle = "" } = {}) {
 export function renderTopic(main, topicId, topic, replies, { topicData = null, isMod = false, communityId = "" } = {}) {
   const commId = communityId || topic?.communityId || "";
   const backLink = commId ? `<a class="back-link" href="#/c/${encodeURIComponent(commId)}">← Voltar à comunidade</a>` : "";
+  if (gossipRetract.shouldHideGossipDeletedPost(topic)) {
+    main.innerHTML = `${backLink}${gossipRetract.renderGossipDeletedTopicShellHtml()}`;
+    return;
+  }
   const bodyText = topicData?.body || topic?.body || "Sem conteúdo textual.";
   const author = topic?.author || topic?.owner || "";
   const authorDisplay = topic?.authorDisplay || (author ? mock.getAuthorDisplay(author) : "") || shortId(author);
