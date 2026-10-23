@@ -1,3 +1,4 @@
+import * as composerMedia from "./composer-media.js";
 import * as share from "./share.js";
 import * as upload from "./upload.js";
 import * as wallet from "./wallet.js";
@@ -68,16 +69,18 @@ export function attachInlineComposerHandlers(onPublished) {
     }
   });
 
-  fileInput?.addEventListener("change", () => {
+  fileInput?.addEventListener("change", async () => {
     const file = fileInput.files?.[0];
-    if (!file || !file.type.startsWith("image/")) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      inlineComposerImageDataUrl = String(reader.result || "");
-      if (previewImg) previewImg.src = inlineComposerImageDataUrl;
-      previewWrap?.classList.remove("hidden");
-    };
-    reader.readAsDataURL(file);
+    if (!file) return;
+    const result = await composerMedia.readComposerImageFromFile(file);
+    if (!result.ok) {
+      share.showToast(result.message, "error");
+      clearImage();
+      return;
+    }
+    inlineComposerImageDataUrl = result.dataUrl;
+    if (previewImg) previewImg.src = inlineComposerImageDataUrl;
+    previewWrap?.classList.remove("hidden");
   });
 
   removeBtn?.addEventListener("click", (e) => {

@@ -238,7 +238,7 @@ export function renderInlineComposer({ userRouteId = "", displayName = "" } = {}
         <div class="inline-composer-toolbar">
           <div class="inline-composer-tools">
             <label class="inline-composer-tool" title="Anexar imagem">
-              <input type="file" id="inline-topic-file" accept="image/*" hidden />
+              <input type="file" id="inline-topic-file" accept="image/jpeg,image/png,image/webp,image/gif" hidden />
               <span aria-hidden="true">🖼</span> Foto
             </label>
             <input type="text" id="inline-topic-comm" class="inline-composer-comm" placeholder="Comunidade (opcional)" maxlength="64" aria-label="Slug da comunidade" />
