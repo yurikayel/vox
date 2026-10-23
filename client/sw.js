@@ -1,7 +1,7 @@
-// Service Worker do Vox (Fase 5.3 — UI & Copy Polish)
+// Service Worker do Vox (Fase 5.4 — UI Futurista Glass / Deep Space)
 // NOTA ARQUITETURAL: WebRTC DataChannels operam exclusivamente na thread principal (DOM/Window).
 // O Service Worker atua no cache offline do shell e notificações de status, sem abrir WebRTC.
-const CACHE_NAME = "vox-pwa-v5.3-polish";
+const CACHE_NAME = "vox-pwa-v5.4-glass";
 const SHELL_ASSETS = [
   "./",
   "./index.html",
