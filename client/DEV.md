@@ -633,11 +633,11 @@ Toolbar tripartida mantém Zap, estrela, copiar MD e bookmark.
 - **UI:** Botões **Editar** / **Apagar** no header do card (`renderPostOwnerMenu`) e na página `#/t/:id`. Edição abre modal (`renderPostEditModal`, campo único + contador); exclusão usa `confirm()` nativo.
 - **Exibição sem duplicata:** Compositor inline grava `title` = primeira linha e `body` = texto integral; `formatPostDisplay` + `renderPostTextHtml` mostram **uma** linha quando são iguais (modo caption), e título + resto em posts multilinha.
 - **Persistência:** `deleteLocalPost(id)` remove do IndexedDB; edição reutiliza `saveLocalPost` (mesmo `id`, `ts` original, `editedAt` novo) após `localAccount.signPayload`.
-- **Gossip:** Não há evento `GOSSIP_DELETE` na malha atual — remoção/edição são **locais neste aparelho**; pares que já receberam o post via gossip mantêm cópia até implementação futura de retratação.
+- **Gossip Retratação (v1):** Eventos `GOSSIP_UPDATE` e `GOSSIP_DELETE` propagam na malha `vox-local-v0`. Edições exigem assinatura válida do autor original e `editedAt` estritamente maior que a versão local (LWW). Exclusões gravam tombstone assinado (`post-tombstone`) no IndexedDB (`saveTombstone`), ocultando o post do feed e blindando contra ressurreição por creates atrasados.
 
 ### 21.5 Cache e PWA
-- Cache elevado para `vox-pwa-v6.4-post-display-refine`.
-- Suíte automatizada com **147 testes** (133 Node.js + 14 Python relay).
+- Cache elevado para `vox-pwa-v6.5-gossip-retract`.
+- Suíte automatizada com **157 testes** (143 Node.js + 14 Python relay).
 
 
 
