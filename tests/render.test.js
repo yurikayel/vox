@@ -775,6 +775,20 @@ test("render - renderPostItem pilha vertical estilo Meta com header IG, toolbar 
   assert.ok(captionIdx < commentsIdx, "Caption deve preceder os comentários na pilha vertical");
 });
 
+test("render - resolvePostAuthorLabels evita ID truncado duplicado", () => {
+  const route = "vx_1QvABCDEFGHIJKpX7a";
+  const labels = render.resolvePostAuthorLabels(route);
+  assert.equal(labels.primary, render.shortId(route));
+  assert.equal(labels.secondaryHandle, "");
+  assert.equal(labels.routeTitle, route);
+});
+
+test("render - resolvePostAuthorLabels nome + handle distintos", () => {
+  const labels = render.resolvePostAuthorLabels("vx_demo_helena");
+  assert.equal(labels.primary, "Helena");
+  assert.equal(labels.secondaryHandle, "helena");
+});
+
 test("render - renderPostOwnerMenu só aparece em posts isOwnLocalPost", () => {
   const own = {
     id: "p_own",
@@ -798,9 +812,27 @@ test("render - renderPostOwnerMenu só aparece em posts isOwnLocalPost", () => {
   assert.ok(ownHtml.includes("btn-post-edit"));
   assert.ok(ownHtml.includes("btn-post-delete"));
   assert.ok(ownHtml.includes("post-local-sync-hint"));
-  assert.ok(ownHtml.includes("gossip"));
+  assert.ok(ownHtml.includes("btn-text-quiet"));
+  assert.ok(!ownHtml.includes("Local imediato; com pares online"));
   assert.ok(!tourHtml.includes("btn-post-edit"));
   assert.ok(!tourHtml.includes("btn-post-delete"));
+});
+
+test("render - post header usa post-header-aside e title no autor", () => {
+  const route = "vx_1QvABCDEFGHIJKpX7a";
+  const html = render.renderPostItem({
+    id: "p_hdr",
+    title: "T",
+    body: "B",
+    author: route,
+    isLocalP2p: true,
+    type: "topic",
+    ts: Date.now(),
+  });
+  assert.ok(html.includes("post-header-aside"));
+  assert.ok(html.includes(`title="${route}"`));
+  const handleMatches = html.match(/class="post-handle"/g) || [];
+  assert.equal(handleMatches.length, 0, "sem @handle duplicado quando só há ID");
 });
 
 test("render - renderTopic inclui menu Editar/Apagar para post próprio", () => {

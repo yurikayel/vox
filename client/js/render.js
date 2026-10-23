@@ -8,6 +8,7 @@ import * as frames from "./frames.js";
 import * as postOwnership from "./post-ownership.js";
 import * as i18n from "./i18n-pt-br.js";
 import * as gossipRetract from "./gossip-retract-ui.js";
+import * as localAccount from "./local-account.js";
 
 const root = () => document.getElementById("app-root");
 
@@ -22,6 +23,70 @@ export function escapeHtml(s) {
 export function shortId(id) {
   if (!id) return "—";
   return id.length > 12 ? `${id.slice(0, 6)}…${id.slice(-4)}` : id;
+}
+
+function normAuthorToken(s) {
+  return String(s || "")
+    .trim()
+    .toLowerCase()
+    .replace(/^@/, "");
+}
+
+/** Nome + @handle ou ID curto uma vez (title = routeId completo). */
+export function resolvePostAuthorLabels(author, { authorDisplay: override = "", isOwnLocalPost = false } = {}) {
+  const routeId = String(author || "");
+  const profileName = routeId ? mock.getAuthorDisplay(routeId) : "";
+  const profileHandle = routeId ? mock.getAuthorHandle(routeId) : "";
+  let fullName = override || profileName || "";
+  if (!fullName && isOwnLocalPost) {
+    fullName = localAccount.getDisplayName() || "";
+  }
+  const shortRoute = routeId ? shortId(routeId) : "";
+  const firstName = (fullName.split(/\s+/).filter(Boolean)[0] || fullName || "").trim();
+
+  if (!firstName && routeId) {
+    return {
+      primary: shortRoute || "—",
+      secondaryHandle: "",
+      authorDisplay: shortRoute || "—",
+      authorHandle: profileHandle || shortRoute,
+      routeTitle: routeId,
+    };
+  }
+
+  const primary = firstName || shortRoute || "—";
+  let secondaryHandle = "";
+  if (profileHandle) {
+    secondaryHandle = profileHandle;
+  } else if (routeId && normAuthorToken(shortRoute) !== normAuthorToken(firstName)) {
+    secondaryHandle = shortRoute;
+  }
+
+  if (
+    secondaryHandle &&
+    normAuthorToken(primary) === normAuthorToken(shortRoute) &&
+    normAuthorToken(secondaryHandle) === normAuthorToken(shortRoute)
+  ) {
+    secondaryHandle = "";
+  }
+
+  const authorDisplay = fullName || primary;
+  const authorHandle = profileHandle || secondaryHandle || shortRoute;
+
+  return { primary, secondaryHandle, authorDisplay, authorHandle, routeTitle: routeId };
+}
+
+function renderPostAuthorMetaLines(author, labels, timeLabel) {
+  const { primary, secondaryHandle, routeTitle } = labels;
+  const titleAttr = routeTitle ? ` title="${escapeHtml(routeTitle)}"` : "";
+  const handleHtml = secondaryHandle
+    ? `<span class="post-handle"${titleAttr}>@${escapeHtml(secondaryHandle)}</span><span class="post-dot">·</span>`
+    : "";
+  return `<div class="post-header-meta">
+          <a class="post-author" href="#/u/${encodeURIComponent(author)}"${titleAttr}>${escapeHtml(primary)}</a>
+          ${handleHtml}
+          <span class="post-time">${escapeHtml(timeLabel)}</span>
+        </div>`;
 }
 
 export function getCommunityColor(id = "") {
@@ -275,8 +340,10 @@ function renderPostGithubGist(t) {
 export function formatPostMarkdown(post) {
   if (!post) return "";
   const author = post.author || post.owner || "";
-  const authorDisplay = post.authorDisplay || (author ? mock.getAuthorDisplay(author) : "") || shortId(author);
-  const authorHandle = (author ? mock.getAuthorHandle(author) : "") || shortId(author);
+  const { authorDisplay, authorHandle } = resolvePostAuthorLabels(author, {
+    authorDisplay: post.authorDisplay,
+    isOwnLocalPost: post.isOwnLocalPost,
+  });
   const title = post.title || "Publicação";
   const body = post.body || "";
   const host = typeof window !== "undefined" && window.location?.origin ? window.location.origin : "https://yurikayel.github.io/vox";
@@ -290,9 +357,14 @@ export function commentsPanelId(topicId) {
 
 export function renderInlineReplyItem(r) {
   const rAuthor = r.author || r.owner || "";
-  const rAuthorDisplay = r.authorDisplay || (rAuthor ? mock.getAuthorDisplay(rAuthor) : "") || shortId(rAuthor);
-  const rHandle = (rAuthor ? mock.getAuthorHandle(rAuthor) : "") || "";
-  const handleHtml = rHandle ? `<span class="post-handle">@${escapeHtml(rHandle)}</span>` : "";
+  const rLabels = resolvePostAuthorLabels(rAuthor, {
+    authorDisplay: r.authorDisplay,
+    isOwnLocalPost: r.isOwnLocalPost,
+  });
+  const rAuthorDisplay = rLabels.authorDisplay;
+  const handleHtml = rLabels.secondaryHandle
+    ? `<span class="post-handle" title="${escapeHtml(rLabels.routeTitle)}">@${escapeHtml(rLabels.secondaryHandle)}</span>`
+    : "";
   return `
     <li class="post-comment-item" id="inline-reply-${escapeHtml(r.id)}">
       <a class="avatar-link" href="#/u/${encodeURIComponent(rAuthor)}">${renderAvatarHtml(rAuthor, rAuthorDisplay, "sm")}</a>
@@ -334,18 +406,18 @@ export function renderPostComments(topicId, commId = "", { replies = [], expande
 export function renderPostOwnerMenu(t) {
   if (!t?.isOwnLocalPost || t.type === "reply") return "";
   const syncTip = escapeHtml(i18n.localMutateEditDeleteTooltip);
-  const syncHint = escapeHtml(i18n.localMutateEditDeleteHint);
   const hintId = `post-local-sync-hint-${escapeHtml(t.id)}`;
   return `<div class="post-owner-block">
     <div class="post-owner-menu" role="group" aria-label="Gerenciar publicação">
-      <button type="button" class="btn-post-edit btn btn-sm btn-outline" data-id="${escapeHtml(t.id)}" title="${syncTip}" aria-describedby="${hintId}">Editar</button>
-      <button type="button" class="btn-post-delete btn btn-sm btn-outline" data-id="${escapeHtml(t.id)}" title="${syncTip}" aria-describedby="${hintId}">Apagar</button>
+      <button type="button" class="btn-post-edit btn-text-quiet" data-id="${escapeHtml(t.id)}" title="${syncTip}" aria-describedby="${hintId}">Editar</button>
+      <button type="button" class="btn-post-delete btn-text-quiet" data-id="${escapeHtml(t.id)}" title="${syncTip}" aria-describedby="${hintId}">Apagar</button>
+      <button type="button" class="post-local-sync-hint" id="${hintId}" title="${syncTip}" aria-label="${syncTip}"><span aria-hidden="true">ⓘ</span></button>
     </div>
-    <span class="post-local-sync-hint meta" id="${hintId}" title="${syncTip}">${syncHint}</span>
   </div>`;
 }
 
-function renderPostHeaderBlock(t, author, authorDisplay, authorHandle, isPinned) {
+function renderPostHeaderBlock(t, author, labels, isPinned) {
+  const authorDisplay = labels.authorDisplay;
   const commLabel = t.communityTitle || "Comunidade";
   const commPill = t.communityId
     ? `<a class="post-community-pill" href="#/c/${encodeURIComponent(t.communityId)}">${escapeHtml(commLabel)}</a>`
@@ -362,18 +434,17 @@ function renderPostHeaderBlock(t, author, authorDisplay, authorHandle, isPinned)
       ? gossipRetract.renderGossipEditedBadgeHtml()
       : "";
   const ownerMenu = renderPostOwnerMenu(t);
+  const metaHtml = renderPostAuthorMetaLines(author, labels, formatTimeAgo(t.ts));
   return `
     <header class="post-header-ig">
       <div class="post-header-user">
         <a class="avatar-link" href="#/u/${encodeURIComponent(author)}">${renderAvatarHtml(author, authorDisplay)}</a>
-        <div class="post-header-meta">
-          <a class="post-author" href="#/u/${encodeURIComponent(author)}">${escapeHtml(authorDisplay)}</a>
-          <span class="post-handle">@${escapeHtml(authorHandle)}</span>
-          <span class="post-dot">·</span>
-          <span class="post-time">${escapeHtml(formatTimeAgo(t.ts))}</span>
-        </div>
+        ${metaHtml}
       </div>
-      <div class="post-header-tags">${pinnedBadge}${editedBadge}${originBadge}${commPill}${ownerMenu}</div>
+      <div class="post-header-aside">
+        <div class="post-header-tags">${pinnedBadge}${editedBadge}${originBadge}${commPill}</div>
+        ${ownerMenu}
+      </div>
     </header>`;
 }
 
@@ -547,10 +618,13 @@ function renderPostToolbar(t, author, authorDisplay, authorHandle) {
 export function renderPostItem(t, { isPinned = false } = {}) {
   if (gossipRetract.shouldHideGossipDeletedPost(t)) return "";
   const author = t.author || t.owner || "";
-  const authorDisplay = t.authorDisplay || (author ? mock.getAuthorDisplay(author) : "") || shortId(author);
-  const authorHandle = (author ? mock.getAuthorHandle(author) : "") || shortId(author);
+  const labels = resolvePostAuthorLabels(author, {
+    authorDisplay: t.authorDisplay,
+    isOwnLocalPost: t.isOwnLocalPost,
+  });
+  const { authorDisplay, authorHandle } = labels;
   const layout = getPostFeedLayout(t);
-  const header = renderPostHeaderBlock(t, author, authorDisplay, authorHandle, isPinned);
+  const header = renderPostHeaderBlock(t, author, labels, isPinned);
   const media = layout === "photo" ? renderPostMedia(t) : "";
   const frame = renderPostFrame(t);
   const toolbar = renderPostToolbar(t, author, authorDisplay, authorHandle);
@@ -908,12 +982,17 @@ export function renderTopic(main, topicId, topic, replies, { topicData = null, i
   }
   const bodyText = topicData?.body || topic?.body || "Sem conteúdo textual.";
   const author = topic?.author || topic?.owner || "";
-  const authorDisplay = topic?.authorDisplay || (author ? mock.getAuthorDisplay(author) : "") || shortId(author);
-  const authorHandle = (author ? mock.getAuthorHandle(author) : "") || shortId(author);
+  const labels = resolvePostAuthorLabels(author, {
+    authorDisplay: topic?.authorDisplay,
+    isOwnLocalPost: topic?.isOwnLocalPost,
+  });
+  const { authorDisplay, authorHandle } = labels;
   const originBadge = topic?.isLocalP2p
     ? `<span class="badge-pill p2p-pill">Na rede</span>`
     : `<span class="badge-pill permanent-pill">Guardado</span>`;
   const timeLabel = formatTimeAgo(topic?.ts || topicData?.ts);
+  const topicAuthorMeta = renderPostAuthorMetaLines(author, labels, timeLabel);
+  const ownerMenuHeader = renderPostOwnerMenu(topic);
 
   const topicImage = topic?.image || topicData?.image || "";
   const topicImageAlt = topic?.imageAlt || topicData?.imageAlt || topic?.title || "Foto da publicação";
@@ -939,16 +1018,14 @@ export function renderTopic(main, topicId, topic, replies, { topicData = null, i
   let html = `
     ${backLink}
     <article class="topic-root insta-topic-root card" style="padding:1.25rem;">
-      <div class="post-header">
-        <div class="post-header-author">
+      <div class="post-header post-header-ig">
+        <div class="post-header-user">
           <a class="avatar-link" href="#/u/${encodeURIComponent(author)}">${renderAvatarHtml(author, authorDisplay)}</a>
-          <a class="post-author" href="#/u/${encodeURIComponent(author)}">${escapeHtml(authorDisplay)}</a>
-          <span class="post-handle">@${escapeHtml(authorHandle)}</span>
-          <span class="post-dot">·</span>
-          <span class="post-meta">${escapeHtml(timeLabel)}</span>
+          ${topicAuthorMeta}
         </div>
-        <div class="post-header-tags">
-          ${originBadge}
+        <div class="post-header-aside">
+          <div class="post-header-tags">${originBadge}</div>
+          ${ownerMenuHeader}
         </div>
       </div>
       ${imageHtml}
@@ -982,7 +1059,6 @@ export function renderTopic(main, topicId, topic, replies, { topicData = null, i
           <svg class="action-icon icon-bookmark" width="18" height="18" viewBox="0 0 24 24" fill="${saved ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
         </button>
         <a class="btn btn-primary btn-sm" href="#/compose/reply?t=${encodeURIComponent(topicId)}&c=${encodeURIComponent(commId)}" style="margin-left:auto;">💬 Responder</a>
-        ${renderPostOwnerMenu(topic)}
         ${modBtn}
       </div>
     </article>
