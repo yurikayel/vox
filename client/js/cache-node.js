@@ -265,6 +265,8 @@ export async function saveLocalPost(post) {
         author: post.author || "",
         image: post.image || "",
         imageAlt: post.imageAlt || "",
+        externalPain: post.externalPain || "",
+        voxResolution: post.voxResolution || "now",
         likesCount: Number(post.likesCount) || 0,
         repliesCount: Number(post.repliesCount) || 0,
         pubKey: post.pubKey || null,

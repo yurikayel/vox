@@ -1255,6 +1255,28 @@ function initDmListeners() {
   });
 }
 
+function checkCantinaGate() {
+  const passed = localStorage.getItem("vox-cantina-v1");
+  if (passed) {
+    checkPactModal();
+    return;
+  }
+
+  const modalContainer = document.getElementById("modal-container");
+  if (!modalContainer) return;
+
+  render.renderCantinaGate(modalContainer);
+
+  const btnEnter = document.getElementById("btn-cantina-enter");
+  if (btnEnter) {
+    btnEnter.addEventListener("click", () => {
+      localStorage.setItem("vox-cantina-v1", "true");
+      render.closeCantinaGate(modalContainer);
+      checkPactModal();
+    });
+  }
+}
+
 function checkPactModal() {
   const accepted = localStorage.getItem("vox-pact-accepted");
   if (accepted) return;
@@ -1319,7 +1341,7 @@ async function showPixLookup(query) {
 }
 
 async function route() {
-  checkPactModal();
+  checkCantinaGate();
   const r = parseRoute();
   if (r.name === "home") return showHome();
   if (r.name === "communities") return showCommunities();
