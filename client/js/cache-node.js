@@ -301,6 +301,7 @@ export async function saveLocalPost(post) {
         pubKey: post.pubKey || null,
         sig: post.sig || "",
         ts: post.ts || post.createdAt || Date.now(),
+        editedAt: post.editedAt || 0,
         isLocalP2p: true,
       });
       tx.oncomplete = () => resolve();
@@ -322,6 +323,23 @@ export async function getLocalPost(id) {
     });
   } catch {
     return null;
+  }
+}
+
+export async function deleteLocalPost(id) {
+  if (!id) return false;
+  try {
+    const db = await openDB();
+    await new Promise((resolve) => {
+      const tx = db.transaction(LOCAL_POSTS_STORE, "readwrite");
+      const store = tx.objectStore(LOCAL_POSTS_STORE);
+      store.delete(id);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => resolve();
+    });
+    return true;
+  } catch {
+    return false;
   }
 }
 

@@ -308,6 +308,14 @@ export function renderPostComments(topicId, commId = "", { replies = [], expande
   return `<div class="post-comments${openCls}" id="${escapeHtml(panelId)}"${hid} data-topic="${escapeHtml(topicId)}" data-comm="${escapeHtml(commId)}">${renderCommentList(replies)}${renderInlineReplyComposer(topicId, commId)}</div>`;
 }
 
+export function renderPostOwnerMenu(t) {
+  if (!t?.isOwnLocalPost || t.type === "reply") return "";
+  return `<div class="post-owner-menu" role="group" aria-label="Gerenciar publicação">
+    <button type="button" class="btn-post-edit btn btn-sm btn-outline" data-id="${escapeHtml(t.id)}" title="Editar">Editar</button>
+    <button type="button" class="btn-post-delete btn btn-sm btn-outline" data-id="${escapeHtml(t.id)}" title="Apagar">Apagar</button>
+  </div>`;
+}
+
 function renderPostHeaderBlock(t, author, authorDisplay, authorHandle, isPinned) {
   const commLabel = t.communityTitle || "Comunidade";
   const commPill = t.communityId
@@ -320,6 +328,7 @@ function renderPostHeaderBlock(t, author, authorDisplay, authorHandle, isPinned)
   const pinnedBadge = pinned
     ? `<span class="badge-pill pinned-pill" title="Publicação fixada pelo autor">📌 Fixado</span>`
     : "";
+  const ownerMenu = renderPostOwnerMenu(t);
   return `
     <header class="post-header-ig">
       <div class="post-header-user">
@@ -331,7 +340,7 @@ function renderPostHeaderBlock(t, author, authorDisplay, authorHandle, isPinned)
           <span class="post-time">${escapeHtml(formatTimeAgo(t.ts))}</span>
         </div>
       </div>
-      <div class="post-header-tags">${pinnedBadge}${originBadge}${commPill}</div>
+      <div class="post-header-tags">${pinnedBadge}${originBadge}${commPill}${ownerMenu}</div>
     </header>`;
 }
 
@@ -906,6 +915,7 @@ export function renderTopic(main, topicId, topic, replies, { topicData = null, i
           <svg class="action-icon icon-bookmark" width="18" height="18" viewBox="0 0 24 24" fill="${saved ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
         </button>
         <a class="btn btn-primary btn-sm" href="#/compose/reply?t=${encodeURIComponent(topicId)}&c=${encodeURIComponent(commId)}" style="margin-left:auto;">💬 Responder</a>
+        ${renderPostOwnerMenu(topic)}
         ${modBtn}
       </div>
     </article>
@@ -1872,6 +1882,39 @@ export function renderZapModal(container, { author = "", authorName = "Autor", p
 }
 
 export function closeZapModal(container) {
+  if (container) container.innerHTML = "";
+}
+
+export function renderPostEditModal(container, { id = "", title = "", body = "", hasImage = false } = {}) {
+  if (!container) return;
+  const imageRow = hasImage
+    ? `<label class="post-edit-remove-image" style="display:flex; align-items:center; gap:6px; font-size:0.85rem; margin:0.5rem 0 0;">
+        <input type="checkbox" id="post-edit-remove-image" /> Remover imagem anexada
+      </label>`
+    : "";
+  container.innerHTML = `
+    <div class="modal-overlay" id="post-edit-modal-overlay" role="dialog" aria-modal="true" aria-label="Editar publicação">
+      <div class="modal-dialog" style="max-width:480px; width:100%; padding:1.25rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+          <h3 style="margin:0; font-size:1.1rem;">Editar publicação</h3>
+          <button type="button" class="btn btn-sm btn-outline btn-close-post-edit" style="border:none; padding:4px 8px; font-size:1.1rem;" aria-label="Fechar">✕</button>
+        </div>
+        <form id="form-post-edit" data-id="${escapeHtml(id)}">
+          <label style="font-size:0.82rem; font-weight:600; display:block; margin-bottom:4px;">Título</label>
+          <input type="text" id="post-edit-title" class="form-control" maxlength="120" required value="${escapeHtml(title)}" style="margin-bottom:0.75rem;" />
+          <label style="font-size:0.82rem; font-weight:600; display:block; margin-bottom:4px;">Texto</label>
+          <textarea id="post-edit-body" class="form-control" rows="5" maxlength="5000" required style="margin-bottom:0.5rem;">${escapeHtml(body)}</textarea>
+          ${imageRow}
+          <div style="display:flex; gap:0.5rem; justify-content:flex-end; margin-top:1rem;">
+            <button type="button" class="btn btn-outline btn-cancel-post-edit">Cancelar</button>
+            <button type="submit" class="btn btn-primary" id="btn-post-edit-save">Salvar</button>
+          </div>
+        </form>
+      </div>
+    </div>`;
+}
+
+export function closePostEditModal(container) {
   if (container) container.innerHTML = "";
 }
 
