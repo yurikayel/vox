@@ -306,6 +306,7 @@ test("render - renderCommunity tabs Posts e Classificados com feira ativada e de
   assert.ok(htmlFeira.includes("Vila Madalena, SP"));
   assert.ok(htmlFeira.includes("Copiar Pix"));
   assert.ok(htmlFeira.includes("Conversar no DM"));
+  assert.ok(htmlFeira.includes("btn-share-listing"));
 
   // 2. Feira desativada (Aprenda o Vox) visitando aba Classificados
   const mainGov = createContainer();

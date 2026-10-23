@@ -45,10 +45,14 @@ function parseRoute() {
     return { name: "dm-list" };
   }
   if (parts[0] === "c" && parts[1]) {
+    let tab = (query.get("tab") || "").toLowerCase();
+    if (!tab && (parts[2] === "listings" || parts[2] === "classificados" || parts[2] === "feira")) {
+      tab = "listings";
+    }
     return {
       name: "community",
       id: decodeURIComponent(parts[1]),
-      tab: query.get("tab") || "posts",
+      tab: tab === "listings" ? "listings" : "posts",
     };
   }
   if (parts[0] === "t" && parts[1]) {
@@ -236,14 +240,18 @@ async function showCommunity(communityId, tab = "posts") {
 
   // Tenta carregar detalhes da comunidade da lista remota ou local
   try {
-    const comms = await gql.fetchCommunities();
-    const found = comms.items.find((c) => c.id === communityId);
+    const comms = await gql.fetchCommunities().catch(() => mock.mockCommunities());
+    const found = comms?.items?.find((c) => c.id === communityId);
     if (found) meta = found;
   } catch {}
 
   const localComms = await cacheNode.getLocalCommunities();
   const localFound = localComms.find((c) => c.id === communityId);
   if (localFound) meta = { ...meta, ...localFound };
+
+  if (!meta.commercialEnabled && communityId === mock.MOCK_DEMO_COMMUNITY_FEIRA.id) {
+    meta = { ...mock.MOCK_DEMO_COMMUNITY_FEIRA, ...meta, commercialEnabled: true };
+  }
 
   // Mescla tópicos locais com remotos
   const localTopics = await cacheNode.getLocalPosts({ type: "topic", communityId });
@@ -285,9 +293,20 @@ async function showCommunity(communityId, tab = "posts") {
   let listings = [];
   if (tab === "listings") {
     try {
-      listings = await cacheNode.getLocalPosts({ type: "listing", communityId });
-      if (!listings.length && (demo || communityId === "demo-feira-local")) {
-        listings = mock.mockListings(communityId).items || [];
+      const localListings = await cacheNode.getLocalPosts({ type: "listing", communityId });
+      const demoListings = (demo || communityId === "demo-feira-local")
+        ? (mock.mockListings(communityId).items || [])
+        : [];
+      const seenL = new Set();
+      for (const l of localListings) {
+        seenL.add(l.id);
+        listings.push(l);
+      }
+      for (const l of demoListings) {
+        if (!seenL.has(l.id)) {
+          seenL.add(l.id);
+          listings.push(l);
+        }
       }
     } catch {}
   }
@@ -381,6 +400,17 @@ function attachCommunityListingHandlers(main) {
       } catch {
         share.showToast(`Pix: ${pix}`);
       }
+    });
+  });
+
+  main.querySelectorAll(".btn-share-listing").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      share.shareListing({
+        title: btn.dataset.title || "Oferta na Feira",
+        communityId: btn.dataset.comm || "demo-feira-local",
+        priceLabel: btn.dataset.price || "",
+      });
     });
   });
 }
@@ -954,33 +984,34 @@ async function showComposeTopic(communityId) {
 }
 
 async function showComposeListing(communityId) {
+  const targetComm = communityId || mock.MOCK_DEMO_COMMUNITY_FEIRA.id;
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "compose", "Nova Oferta"));
 
-  let meta = { id: communityId, title: communityId, commercialEnabled: false };
+  let meta = { id: targetComm, title: targetComm, commercialEnabled: false };
   try {
-    const localC = await cacheNode.getLocalPost(communityId);
+    const localC = await cacheNode.getLocalPost(targetComm);
     if (localC) {
       meta = { ...localC, commercialEnabled: Boolean(localC.commercialEnabled) };
-    } else if (communityId === mock.MOCK_DEMO_COMMUNITY_FEIRA.id) {
+    } else if (targetComm === mock.MOCK_DEMO_COMMUNITY_FEIRA.id) {
       meta = mock.MOCK_DEMO_COMMUNITY_FEIRA;
     } else {
-      const commRes = await gql.fetchCommunity(communityId).catch(() => null);
+      const commRes = await gql.fetchCommunity(targetComm).catch(() => null);
       if (commRes) meta = commRes;
     }
   } catch {}
 
   if (!listing.isCommercialEnabled(meta)) {
-    main.innerHTML = `<div class="card"><div class="error">Esta comunidade não possui feira comunitária ativada por governança.</div><p style="margin-top:1rem;"><a href="#/c/${encodeURIComponent(communityId)}" class="btn btn-outline btn-sm">← Voltar à comunidade</a></p></div>`;
+    main.innerHTML = `<div class="card"><div class="error">Esta comunidade não possui feira comunitária ativada por governança.</div><p style="margin-top:1rem;"><a href="#/c/${encodeURIComponent(targetComm)}" class="btn btn-outline btn-sm">← Voltar à comunidade</a></p></div>`;
     return;
   }
 
   const defaultPix = (await localAccount.getPixKey()) || "";
-  render.renderComposeListing(main, communityId, meta.title, { defaultPix });
+  render.renderComposeListing(main, targetComm, meta.title, { defaultPix });
 
   document.getElementById("form-compose-listing")?.addEventListener("submit", (e) => {
     e.preventDefault();
-    handleComposeListingSubmit(user, communityId);
+    handleComposeListingSubmit(user, targetComm);
   });
 }
 
@@ -994,6 +1025,15 @@ async function handleComposeListingSubmit(user, communityId) {
 
   const val = listing.validateListingInput({ title, body, priceLabel });
   if (!val.valid) return share.showToast(val.error, "error");
+
+  let normalizedPix = "";
+  if (contactPix) {
+    const pixVal = pixKeyHelper.validatePixKey(contactPix);
+    if (!pixVal.ok) {
+      return share.showToast(`Chave Pix inválida: ${pixVal.errorPt}`, "error");
+    }
+    normalizedPix = pixVal.normalized;
+  }
 
   const btn = document.getElementById("btn-submit-listing");
   if (btn) {
@@ -1011,7 +1051,7 @@ async function handleComposeListingSubmit(user, communityId) {
       body,
       priceLabel: listing.normalizePriceLabel(priceLabel),
       locationLabel: listing.normalizeLocationLabel(locationLabel),
-      contactPix: contactPix ? pixKeyHelper.normalizePixKey(contactPix).normalized || contactPix : "",
+      contactPix: normalizedPix,
       image,
       author: user,
       owner: user,
