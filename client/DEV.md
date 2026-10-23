@@ -17,7 +17,7 @@ Abra no navegador: `http://127.0.0.1:8080/`
 
 ### 1.1 Executar Testes Unitários Locais (Tudo)
 
-O Vox inclui suíte completa de testes unitários locais (45 testes: 33 client JS + 12 relay/signaling Python), sem dependências pesadas externas:
+O Vox inclui suíte completa de testes unitários locais (125 testes: 111 client JS + 14 relay/signaling Python), sem dependências pesadas externas:
 
 ```bash
 # Na raiz do repositório vox/
@@ -46,7 +46,7 @@ As pipelines em `.github/workflows/` rodam automaticamente no GitHub:
 1. **`ci.yml`:**
    - Disparado em todo `push` ou `pull_request` na branch `main`.
    - Executa matriz de testes no Node.js (20, 22 e 24) e Python (3.11 e 3.12).
-   - Valida checagem estática de sintaxe e executa os 45 testes unitários.
+   - Valida checagem estática de sintaxe e executa os 125 testes unitários.
    - Auditoria de segurança: verifica que nenhuma chave privada foi commitada acidentalmente.
 2. **`deploy-pages.yml`:**
    - Publica o site composto (`client/**` + `docs/proposta-vox.html`) no GitHub Pages a cada alteração em `client/**` ou `docs/**`.
@@ -356,10 +356,10 @@ O PWA traz a vivacidade e o engajamento visual de redes sociais modernas (híbri
 - **Posts com Imagens:** Cards no feed e tópicos completos exibem fotografias de alta resolução (`client/images/posts/`), com cantos arredondados, enquadramento responsivo (`max-height: 440px`) e elevação sutil em hover.
 - **Ações Interativas:**
   - **❤️ Curtir:** Alternância imediata com animação de pulso cardíaco (`@keyframes heartPop`), atualização de contagem e persistência em `localStorage` (`social.js`).
-  - **💬 Comentar:** Acesso direto à thread de respostas com contador dinâmico.
+  - **💬 Comentar:** O botão expande um dropdown `.post-comments` **no próprio card** (`aria-expanded` / `aria-controls`); a thread `#/t/:id` permanece só como atalho "Abrir thread".
   - **↗ Compartilhar:** Disparo do `navigator.share` nativo ou cópia direta do link com toast de confirmação.
   - **🔖 Salvar:** Marcação de posts favoritos com feedback em toast.
-- **Cache Offline Completo:** Todas as fotos do tour são cacheadas pelo Service Worker (`CACHE_NAME = "vox-pwa-v6.1-tour-copy"`), garantindo navegação instantânea e offline. Copy dos 10 posts em 1ª pessoa falada; fotos de pessoas em contexto (não stock genérico).
+- **Cache Offline Completo:** Fotos do tour e da porta da cantina entram no shell do Service Worker (cache vigente `vox-pwa-v6.1-cantina-balloon2`). Copy dos 10 posts em 1ª pessoa falada; fotos de pessoas em contexto (não stock genérico).
 
 ---
 
@@ -394,11 +394,12 @@ Na versão 5.7, o Vox implementa o layout Pro 2026 com cartões híbridos full-b
 Para blindar o Vox contra fazendas de automação sem recorrer a captchas corporativos invasivos ou login estatal com CPF, o fluxo de primeiro acesso utiliza um duplo portão consentido:
 
 1. **Porta da Cantina (`vox-cantina-v1`):**
-   - Paródia cultural e acolhedora inspirada na clássica cena de cantina espacial: o bartender de túnica bege aponta para a frente, enquanto o gag visual se resolve diretamente na arte e em balões de fala, sem necessidade de textos redundantes ou títulos em H2.
-   - Arte visual autoral em JPG (`cantina-gate.jpg`) com o primeiro balão impresso (*"Seus bots tem que esperar lá fora!"*) e segundo balão em HTML/CSS (`.cantina-balloon-2`: *"Aqui não servimos esse tipo."*) em formato oval com rabicho direcionado ao bartender.
-   - Diálogo com acessibilidade nativa via `aria-label="Porta da Cantina"` (sem ruído visual de cabeçalhos sobrepostos).
+   - Paródia cultural e acolhedora inspirada na clássica cena de cantina espacial: o bartender de túnica bege aponta para a frente, e o gag se resolve nos dois balões (Wuher: droids/bots esperam do lado de fora).
+   - Arte autoral em JPG (`cantina-gate.jpg`, `object-fit: cover` / `object-position: 78% 8%`). Primeiro balão impresso na arte (*"Seus bots tem que esperar lá fora!"*); segundo balão HTML/CSS `#cantina-balloon-2.cantina-balloon-2` (*"Aqui não servimos esse tipo."*), oval com rabicho apontando ao bartender.
+   - Overlay sem H2 "Porta da Cantina", sem quote duplicada e sem subtítulo itálico. O diálogo usa `aria-labelledby="cantina-balloon-2"`; o `alt` da imagem descreve os dois balões.
    - Acionamento em primeiro acesso armazenado em `localStorage` (`vox-cantina-v1`).
    - Botão de ação único: `Entrar — sou humano`, com esclarecimento expansível sobre a minimização de dados do Vox.
+   - Cache do Service Worker: `vox-pwa-v6.1-cantina-balloon2` (`./js/hashtags.js` permanece no shell).
 2. **Pacto Vox (`vox-pact-accepted`):**
    - Apresentado imediatamente após a passagem pela Porta da Cantina.
    - Apresenta os três pilares cooperativos: *Seus dados são seus*, *Rede cooperativa* e *Controle total*.
@@ -579,8 +580,7 @@ A sprint v6.1 implementa a descoberta descentralizada de conteúdos através de 
 - **Empty State Construtivo:** Quando uma tag pesquisada ainda não existe no aparelho, orienta o usuário com transparência sobre o funcionamento do gossip local e oferece atalho para postar com a tag.
 
 ### 19.4 Cache e PWA
-- Cache do Service Worker atualizado para `vox-pwa-v6.1-tags-gossip`, incluindo `./js/hashtags.js` nos ativos do app shell.
-- Suite automatizada expandida para **125 testes 100% verdes** (111 Node.js + 14 Python).
+- `./js/hashtags.js` permanece nos ativos do app shell (descoberta local Willow). Cache vigente: `vox-pwa-v6.1-cantina-balloon2`.
 
 
 
