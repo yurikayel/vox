@@ -4,6 +4,18 @@ Este documento descreve como testar o fluxo de leitura, autoria (upload de trans
 
 ---
 
+## 0. Fluxo Git (branches)
+
+| Regra | Detalhe |
+|-------|---------|
+| **`main` deployável** | Pages e CD disparam em push em `main`; mantenha-a estável. |
+| **Trabalho novo** | `git pull origin main` → `git checkout -b feat/...` (ou `fix/...`). |
+| **Entrega** | Push da branch → PR ou merge; **não** commitar features direto em `main` (agentes incluídos). |
+
+Ver também [README — Como Contribuir](../README.md#-como-contribuir).
+
+---
+
 ## 1. Ambiente Local
 
 O Vox é um PWA sem etapa de compilação (*no-build*), utilizando módulos JavaScript nativos (ES Modules).
