@@ -1,7 +1,7 @@
 # Feira — listing assinado + UI gossip v1
 
 **Compose:** assinado em `main` (`listing.js` + `app.js`).  
-**UI pendente:** branch **`feat/listing-signed-gossip`** (Cursor).
+**UI:** integrado em **`main`** (`listing-ui.js`, `153ad27`).
 
 ## Escopo UI
 
