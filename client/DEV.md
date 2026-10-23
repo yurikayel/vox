@@ -4,6 +4,18 @@ Este documento descreve como testar o fluxo de leitura, autoria (upload de trans
 
 ---
 
+## 0. Fluxo Git (branches)
+
+| Regra | Detalhe |
+|-------|---------|
+| **`main` deployável** | Pages e CD disparam em push em `main`; mantenha-a estável. |
+| **Trabalho novo** | `git pull origin main` → `git checkout -b feat/...` (ou `fix/...`). |
+| **Entrega** | Push da branch → PR ou merge; **não** commitar features direto em `main` (agentes incluídos). |
+
+Ver também [README — Como Contribuir](../README.md#-como-contribuir).
+
+---
+
 ## 1. Ambiente Local
 
 O Vox é um PWA sem etapa de compilação (*no-build*), utilizando módulos JavaScript nativos (ES Modules).
@@ -622,7 +634,7 @@ Feed com fundo cinza extremo (`#fafafa` / `#000`), coluna `--feed-max: 500px`, p
 Toolbar tripartida mantém Zap, estrela, copiar MD e bookmark.
 
 ### 21.2 Composer inline (estilo X)
-- `renderInlineComposer`: repouso = uma linha; foco expande textarea, contador `0 / 2000`, **Postar** desabilitado até haver texto, **Esc** recolhe, anexo de imagem (`FileReader` → `post.image`), comunidade opcional (`attachInlineComposerHandlers` em `app.js`).
+- `renderInlineComposer`: repouso = uma linha; foco expande textarea, contador `0 / 2000`, **Postar** desabilitado até haver texto, **Esc** recolhe, anexo de imagem (`FileReader` → `post.image`), comunidade opcional (`attachInlineComposerHandlers` em `inline-composer.js`).
 - `#/compose/topic` permanece como deep-link / formulário completo.
 
 ### 21.3 Stories strip
@@ -639,7 +651,39 @@ Toolbar tripartida mantém Zap, estrela, copiar MD e bookmark.
 - Cache elevado para `vox-pwa-v6.4-post-display-refine`.
 - Suíte automatizada com **147 testes** (133 Node.js + 14 Python relay).
 
+---
 
+## 22. Triagem: plano «Meta feed v6.3» (HOLD) vs feed híbrido entregue
+
+**Data:** 2026-10-23 · **Branch de registro:** `docs/hold-meta-feed-triage` · **Decisão:** **plano Meta feed encerrado** — substituído pelo sprint **Feed híbrido X + IG + GitHub** já integrado em `main` (`a63ca69`, espaçamento `27efe1e`, pós-v6.4 `4d8a2eb`).
+
+### 22.1 Origem do plano em HOLD
+
+Em 23/10 o sprint «Feed estilo Meta» ficou em **HOLD estrito** (sem código) com escopo registrado no log do lobby pai (`politica/lobby.md`) e rascunho `vox_sprint_v63_meta_feed.plan.md` (não versionado no repo Vox). Antes do HOLD, o usuário autorizou execução do **feed híbrido**, que absorveu a maior parte do visual Meta no timeline.
+
+### 22.2 Comparativo item a item
+
+| # | Plano Meta feed (HOLD) | Entregue em híbrido v6.3 (`main`) | Veredito |
+|---|------------------------|-----------------------------------|----------|
+| 1 | Pilha vertical **única** estilo IG: header → mídia 4:5 → toolbar → caption → comentários | **Híbrido por tipo** (`getPostFeedLayout` em `render.js`): texto **X** (caption antes da toolbar); foto **IG** (mídia → toolbar → caption); extra **GitHub** (gist) | **Substituído por desenho** — texto sem foto mantém leitura estilo X de propósito |
+| 2 | Posts **sem caixa** / glass no feed | `.post` transparente, sem borda de card; separação por respiro (`margin-bottom: 24px`) | **Atendido** |
+| 3 | Fundo cinza extremo `#fafafa` / `#121212` | `--bg: #fafafa` (claro) · escuro `--bg: #000` com `--surface: #121212` | **Atendido** (canvas escuro usa preto puro no fundo, não `#121212` no `--bg`) |
+| 4 | Eliminar **mesh** no feed | `--mesh-bg: none` | **Atendido** |
+| 5 | Eliminar **glass** no feed | Timeline plana; **chrome** (top bar, bottom nav, modais) ainda usa `--glass-bg` + blur | **Parcial** — fora do escopo do card; ver `feat/v6.3-ui-polish` |
+| 6 | Faixa de **stories** (avatares do tour) | `renderStoriesStrip` → `#/u/:id`, visual sem TTL | **Atendido** |
+| 7 | Comentários no card | `renderPostComments` inline no post | **Atendido** (pré-existente; reforçado no híbrido) |
+| 8 | — (não estava no plano Meta) | Composer **inline** estilo X, Open Frames no meio do card, editar/apagar local (v6.4) | **Extras** além do plano HOLD |
+
+### 22.3 Deltas residuais (backlog opcional, não bloqueiam o plano Meta)
+
+1. **Ordem IG em posts só-texto** — só se quiser paridade total com Instagram; hoje é escolha de produto (híbrido).
+2. **Canvas unificado** (banner sync flat, comentários sem caixa, abas underline, perfil) — implementação em **`feat/v6.3-ui-polish`**, não em `main`; item separado no groom Vox, não reabertura do plano Meta.
+3. **Glass no shell** — reduzir blur no header/nav se desejado; independente do layout do post.
+4. **Stories com TTL / estado “visto”** — nunca exigido no HOLD; permanece decorativo.
+
+### 22.4 Conclusão
+
+Não há trabalho pendente obrigatório do plano «Meta feed v6.3» em HOLD. O que restava de intenção visual Meta crítica para o **timeline** já está no híbrido; melhorias de **polish global** ficam na branch UI polish. **Não reexecutar** o sprint Meta como segundo passo — atualizar groom/backlog apenas se algum delta residual acima for priorizado explicitamente.
 
 
 
