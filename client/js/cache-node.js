@@ -1,10 +1,13 @@
 // Cache local persistente para transações e corpos do Vox (IndexedDB + LRU)
+import * as hashtags from "./hashtags.js";
+import * as mock from "./mock.js";
 
 const DB_NAME = "vox-cache-db";
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 const STORE_NAME = "tx-data";
 const DM_STORE_NAME = "dm-threads";
 const LOCAL_POSTS_STORE = "local-posts";
+const TAG_INDEX_STORE = "tag-index";
 
 let dbPromise = null;
 
@@ -33,6 +36,10 @@ function openDB() {
         localStore.createIndex("communityId", "communityId", { unique: false });
         localStore.createIndex("replyTo", "replyTo", { unique: false });
         localStore.createIndex("ts", "ts", { unique: false });
+      }
+      if (!db.objectStoreNames.contains(TAG_INDEX_STORE)) {
+        const tagStore = db.createObjectStore(TAG_INDEX_STORE, { keyPath: "id" });
+        tagStore.createIndex("slug", "slug", { unique: false });
       }
     };
     req.onsuccess = (e) => resolve(e.target.result);
@@ -248,6 +255,8 @@ export async function deleteDmThread(peerAddress) {
 
 export async function saveLocalPost(post) {
   if (!post?.id || !post?.type) return;
+  const combinedText = `${post.title || ""} ${post.body || ""} ${post.description || ""}`;
+  const postTags = hashtags.extractHashtags(combinedText);
   try {
     const db = await openDB();
     await new Promise((resolve) => {
@@ -262,6 +271,7 @@ export async function saveLocalPost(post) {
         proposalId: post.proposalId || "",
         title: post.title || "",
         body: post.body || "",
+        tags: postTags,
         diffText: post.diffText || "",
         closesAt: post.closesAt || 0,
         minQuorum: post.minQuorum || 0,
@@ -362,4 +372,56 @@ export async function clearLocalPosts() {
       req.onerror = () => resolve();
     });
   } catch {}
+}
+
+export async function getPostsByTag(slug) {
+  if (!slug) return [];
+  const targetSlug = hashtags.slugifyTag(slug);
+  if (!targetSlug) return [];
+
+  const results = [];
+  const seenIds = new Set();
+
+  try {
+    const localPosts = await getLocalPosts();
+    for (const p of localPosts) {
+      if (p.type !== "topic" && p.type !== "listing") continue;
+      const tags = Array.isArray(p.tags) && p.tags.length > 0
+        ? p.tags
+        : hashtags.extractHashtags(`${p.title || ""} ${p.body || ""} ${p.description || ""}`);
+      if (tags.includes(targetSlug) && !seenIds.has(p.id)) {
+        seenIds.add(p.id);
+        results.push(p);
+      }
+    }
+  } catch {}
+
+  try {
+    const mockTopics = mock.mockRecentTopics()?.items || [];
+    for (const t of mockTopics) {
+      if (seenIds.has(t.id)) continue;
+      const tags = Array.isArray(t.tags) && t.tags.length > 0
+        ? t.tags
+        : hashtags.extractHashtags(`${t.title || ""} ${t.body || ""}`);
+      if (tags.includes(targetSlug)) {
+        seenIds.add(t.id);
+        results.push(t);
+      }
+    }
+  } catch {}
+
+  try {
+    const mockListings = mock.mockListings("demo-feira-local")?.items || [];
+    for (const l of mockListings) {
+      if (seenIds.has(l.id)) continue;
+      const tags = hashtags.extractHashtags(`${l.title || ""} ${l.body || ""}`);
+      if (tags.includes(targetSlug)) {
+        seenIds.add(l.id);
+        results.push(l);
+      }
+    }
+  } catch {}
+
+  results.sort((a, b) => (b.ts || 0) - (a.ts || 0));
+  return results;
 }

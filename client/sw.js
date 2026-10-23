@@ -1,7 +1,7 @@
-// Service Worker do Vox (Fase 6.0 — Pix Zaps Nativos & BR Code EMV Offline)
+// Service Worker do Vox (Fase 6.1 — Hashtags Gossip & Descoberta Local Willow)
 // NOTA ARQUITETURAL: WebRTC DataChannels operam exclusivamente na thread principal (DOM/Window).
 // O Service Worker atua no cache offline do shell e notificações de status, sem abrir WebRTC.
-const CACHE_NAME = "vox-pwa-v6.1-cantina-404";
+const CACHE_NAME = "vox-pwa-v6.1-cantina-anime";
 const SHELL_ASSETS = [
   "./",
   "./index.html",
@@ -9,6 +9,7 @@ const SHELL_ASSETS = [
   "./css/style.css",
   "./icons/icon.svg",
   "./images/cantina-gate.svg",
+  "./images/cantina-gate.jpg",
   "./images/avatars/helena.jpg",
   "./images/avatars/juliana.jpg",
   "./images/avatars/yara.jpg",
@@ -39,6 +40,7 @@ const SHELL_ASSETS = [
   "./js/demo-seed.js",
   "./js/governance.js",
   "./js/handles.js",
+  "./js/hashtags.js",
   "./js/inbox.js",
   "./js/listing.js",
   "./js/local-account.js",

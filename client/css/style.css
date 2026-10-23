@@ -749,9 +749,114 @@ main#app-main {
   stroke: #e0245e;
 }
 
-.action-btn.btn-comment:hover {
+.action-btn.btn-comment:hover,
+.action-btn.btn-comment.active {
   color: var(--accent);
   background: var(--accent-soft);
+}
+
+.action-btn.btn-comment.active .action-icon {
+  stroke: var(--accent);
+}
+
+.avatar-wrap.sm .avatar-img,
+.avatar.sm {
+  width: 28px;
+  height: 28px;
+  font-size: 0.72rem;
+}
+
+.post-comments {
+  margin-top: 10px;
+  padding: 10px 2px 2px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.post-comments[hidden] {
+  display: none;
+}
+
+.post-comments-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.post-comment-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.post-comment-item {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.post-comment-body {
+  flex: 1;
+  min-width: 0;
+  background: var(--surface-soft);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 12px;
+}
+
+.post-comment-meta {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+  flex-wrap: wrap;
+  margin-bottom: 2px;
+}
+
+.post-comment-body .reply-body {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+
+.post-comments-empty {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.post-comment-composer {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.post-comment-input {
+  resize: none;
+  min-height: 44px;
+  border-radius: var(--radius);
+  background: var(--glass-bg);
+}
+
+.post-comment-composer-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.post-comments-thread {
+  font-size: 0.78rem;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.post-comments-thread:hover {
+  color: var(--accent);
 }
 
 .action-btn.btn-share:hover {
@@ -1586,17 +1691,25 @@ main#app-main {
 }
 
 .cantina-art-wrap {
+  position: relative;
   display: block;
+  width: calc(100% + 2.5rem);
+  max-width: none;
   margin: 0 -1.25rem 0.85rem;
-  background: #7eb8d4;
+  background: #1c1612;
   overflow: hidden;
+  aspect-ratio: 1024 / 575;
+  max-height: min(42vh, 320px);
 }
 
-.cantina-art-svg {
+.cantina-art-img {
+  position: absolute;
+  inset: 0;
   display: block;
   width: 100%;
-  height: auto;
-  vertical-align: middle;
+  height: 100%;
+  object-fit: cover;
+  object-position: 78% 8%;
 }
 
 .cantina-content {
@@ -1633,7 +1746,7 @@ main#app-main {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .cantina-art-svg {
+  .cantina-art-img {
     animation: cantinaArtIn 0.45s ease;
   }
 }
@@ -2273,6 +2386,29 @@ main#app-main {
   line-height: 1.4;
   margin: 0;
   padding: 0.5rem 0.75rem;
+}
+
+/* Hashtags Gossip / Willow prefix discovery */
+.hashtag-link {
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 4px;
+  padding: 1px 3px;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.hashtag-link:hover,
+.hashtag-link:focus-visible {
+  color: var(--accent-hover, #38bdf8);
+  background-color: var(--surface-soft, rgba(255, 255, 255, 0.08));
+  text-decoration: underline;
+}
+
+.tag-feed-header {
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
 }
 
 /* Footer */

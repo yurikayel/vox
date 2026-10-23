@@ -165,12 +165,14 @@ test("render - renderCantinaGate e closeCantinaGate", () => {
   const html = container.innerHTML;
   assert.ok(html.includes("Porta da Cantina"));
   assert.ok(html.includes("Seus bots vão ter que esperar do lado de fora"));
-  assert.ok(html.includes("Droides e scripts na calçada"));
-  assert.ok(html.includes("Não é o bot que você procura"));
-  assert.ok(html.includes("images/cantina-gate.svg"));
-  assert.ok(html.includes("cantina-art-svg"));
-  assert.ok(html.includes("404"));
-  assert.ok(html.includes("bots estilizados"));
+  assert.ok(html.includes("Aqui não servimos esse tipo"));
+  assert.ok(html.includes("cantina-art-img"));
+  assert.ok(html.includes("cantina-gate.jpg"));
+  assert.ok(html.includes("Ilustração anime"));
+  assert.ok(html.includes("bartender de túnica bege"));
+  assert.ok(html.includes("Seus bots tem que esperar lá fora"));
+  assert.ok(!html.includes("404"));
+  assert.ok(!html.includes("This is not the web page"));
   assert.ok(html.includes("btn-cantina-enter"));
   assert.ok(html.includes("Entrar — sou humano"));
   assert.ok(html.includes("O que isso significa?"));
@@ -232,6 +234,58 @@ test("render - renderComposerStrip e post-toolbar no feed", () => {
   assert.ok(main.innerHTML.includes("composer-strip"));
   assert.ok(main.innerHTML.includes("post-toolbar"));
   assert.ok(main.innerHTML.includes("5m"));
+});
+
+test("render - btn-comment expande post-comments no card (sem #/t)", () => {
+  const html = render.renderPostItem({
+    id: "demo-post-helena",
+    title: "No Insta, ninguém via minhas oficinas",
+    author: "vx_demo_helena",
+    communityId: "demo-aprenda-vox",
+    repliesCount: 1,
+  });
+
+  assert.ok(html.includes('class="action-btn btn-comment"'));
+  assert.ok(!html.includes('class="action-btn btn-comment" href='));
+  assert.ok(html.includes('aria-expanded="false"'));
+  assert.ok(html.includes('aria-controls="post-comments-demo-post-helena"'));
+  assert.ok(html.includes('id="post-comments-demo-post-helena"'));
+  assert.ok(html.includes("post-comments"));
+  assert.ok(html.includes(" hidden"));
+  assert.ok(html.includes("post-comment-composer"));
+  assert.ok(html.includes("Abrir thread"));
+  assert.equal(render.commentsPanelId("demo-post-helena"), "post-comments-demo-post-helena");
+});
+
+test("render - renderPostComments lista replies mock no expander", () => {
+  const replies = [
+    {
+      id: "demo-reply-juliana-1",
+      author: "vx_demo_juliana",
+      body: "É isso, Helena. Aqui a gente se organiza sem pedir licença pro algoritmo.",
+    },
+    {
+      id: "demo-reply-pri-1",
+      author: "vx_demo_helena",
+      body: "Resposta local de exemplo.",
+    },
+  ];
+  const open = render.renderPostComments("demo-post-helena", "demo-aprenda-vox", {
+    replies,
+    expanded: true,
+  });
+  assert.ok(open.includes("is-open"));
+  assert.ok(!open.includes(" hidden"));
+  assert.ok(open.includes("inline-reply-demo-reply-juliana-1"));
+  assert.ok(open.includes("inline-reply-demo-reply-pri-1"));
+  assert.ok(open.includes("sem pedir licença"));
+  assert.ok(open.includes("Juliana"));
+  assert.ok(open.includes("@juliana"));
+  assert.ok(open.includes("Helena"));
+  assert.ok(open.includes("post-comment-composer"));
+
+  const empty = render.renderCommentList([]);
+  assert.ok(empty.includes("Nenhuma resposta ainda."));
 });
 
 test("render - renderProfile com Pix e métricas honestas", () => {
