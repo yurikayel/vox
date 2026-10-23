@@ -11,7 +11,7 @@ Demo ao vivo: **[https://yurikayel.github.io/vox/](https://yurikayel.github.io/v
 
 Na primeira visita, a **Porta da Cantina** é a ilustração anime (`client/images/cantina-gate.jpg`) com o gag no estilo Wuher em **dois balões pintados na arte** (*"Seus bots tem que esperar lá fora!"* e *"Aqui não servimos esse tipo."*). Não há H2 "Porta da Cantina", quote duplicada, subtítulo itálico nem balão HTML/CSS por cima da imagem — só a arte e *Entrar — sou humano*.
 
-No feed, o layout é **híbrido**: texto estilo **X** (caption antes da toolbar), foto **4:5 full-bleed** estilo **IG**, bloco **README/diff** estilo **GitHub** quando aplicável — fundo cinza extremo, sem caixa em volta do post, stories visuais do tour e **composer inline** (Postar na mesma janela, com foto opcional). **Comentários abrem no próprio card**. Tour com **10 personas**, Open Frames (enquetes, abaixo-assinado, CLT). Cache: `vox-pwa-v6.3-hybrid-feed-spacing`.
+No feed, o layout é **híbrido**: texto estilo **X** (caption antes da toolbar), foto **4:5 full-bleed** estilo **IG**, bloco **README/diff** estilo **GitHub** quando aplicável — fundo cinza extremo, sem caixa em volta do post, stories visuais do tour e **composer inline** (Postar na mesma janela, com foto opcional). **Comentários abrem no próprio card**. Tour com **10 personas**, Open Frames (enquetes, abaixo-assinado, CLT). Cache: `vox-pwa-v6.4-post-display-refine`.
 
 ---
 
@@ -181,12 +181,12 @@ npm test
 # ou no Windows:
 .\test.bat
 ```
-Executa a suíte de **136 testes** (122 JS via `node:test` e 14 Python via `unittest`).
+Executa a suíte de **147 testes** (133 JS via `node:test` e 14 Python via `unittest`).
 
 ### 🚀 Pipelines de CI/CD (GitHub Actions)
 
 O repositório possui automação contínua configurada em `.github/workflows/`:
-* **CI — Testes & Validação (`.github/workflows/ci.yml`):** Matriz multiplataforma com Node.js (20, 22, 24) e Python (3.11, 3.12) executando verificação de sintaxe, suíte completa de 136 testes e auditoria de segurança contra vazamento de chaves privadas.
+* **CI — Testes & Validação (`.github/workflows/ci.yml`):** Matriz multiplataforma com Node.js (22, 24) e Python (3.11, 3.12) executando verificação de sintaxe, suíte completa de 147 testes e auditoria de segurança contra vazamento de chaves privadas.
 * **Deploy PWA — GitHub Pages (`.github/workflows/deploy-pages.yml`):** Publicação contínua da pasta `client/` no GitHub Pages com suporte a HTTPS nativo e PWA instalável a cada push na branch `main`.
 
 ---
