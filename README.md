@@ -9,9 +9,9 @@
 
 Demo ao vivo: **[https://yurikayel.github.io/vox/](https://yurikayel.github.io/vox/)**. Cliente **FOSS vanilla** (HTML, CSS e JavaScript nativo, *no-build*, sem runtime npm — `npm test` só roda a suíte local).
 
-Na primeira visita, a **Porta da Cantina** é a ilustração anime (`client/images/cantina-gate.jpg`) com o gag no estilo Wuher em **dois balões**: o primeiro já está impresso na arte (*"Seus bots tem que esperar lá fora!"*) e o segundo é HTML/CSS (`.cantina-balloon-2`: *"Aqui não servimos esse tipo."*). Não há H2 "Porta da Cantina", quote duplicada nem subtítulo itálico por cima da imagem — só a arte, os balões e *Entrar — sou humano*.
+Na primeira visita, a **Porta da Cantina** é a ilustração anime (`client/images/cantina-gate.jpg`) com o gag no estilo Wuher em **dois balões pintados na arte** (*"Seus bots tem que esperar lá fora!"* e *"Aqui não servimos esse tipo."*). Não há H2 "Porta da Cantina", quote duplicada, subtítulo itálico nem balão HTML/CSS por cima da imagem — só a arte e *Entrar — sou humano*.
 
-No feed, **comentários abrem no próprio card** (dropdown in-card; a thread `#/t/:id` segue como atalho). O tour educativo semeia **10 personas** brasileiras com posts em primeira pessoa e fotos de gente real. Cache do Service Worker vigente: `vox-pwa-v6.1-cantina-balloon2` (`hashtags.js` permanece no shell).
+No feed, **comentários abrem no próprio card** (dropdown in-card; a thread `#/t/:id` segue como atalho). O tour educativo semeia **10 personas** brasileiras com posts em primeira pessoa e fotos de gente real. Cache do Service Worker vigente: `vox-pwa-v6.1-cantina-baked-balloons` (`hashtags.js` permanece no shell).
 
 ---
 
