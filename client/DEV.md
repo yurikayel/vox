@@ -394,8 +394,9 @@ Na versão 5.7, o Vox implementa o layout Pro 2026 com cartões híbridos full-b
 Para blindar o Vox contra fazendas de automação sem recorrer a captchas corporativos invasivos ou login estatal com CPF, o fluxo de primeiro acesso utiliza um duplo portão consentido:
 
 1. **Porta da Cantina (`vox-cantina-v1`):**
-   - Paródia cultural e acolhedora inspirada na clássica cena de cantina espacial (*"Seus bots vão ter que esperar do lado de fora. Droides e scripts ficam na calçada — aqui é conversa de gente"*).
-   - Arte visual 100% autoral em SVG/CSS (sem utilização de frames, logomarcas ou personagens protegidos por propriedade intelectual de terceiros).
+   - Paródia cultural e acolhedora inspirada na clássica cena de cantina espacial: o bartender de túnica bege aponta para a frente, enquanto o gag visual se resolve diretamente na arte e em balões de fala, sem necessidade de textos redundantes ou títulos em H2.
+   - Arte visual autoral em JPG (`cantina-gate.jpg`) com o primeiro balão impresso (*"Seus bots tem que esperar lá fora!"*) e segundo balão em HTML/CSS (`.cantina-balloon-2`: *"Aqui não servimos esse tipo."*) em formato oval com rabicho direcionado ao bartender.
+   - Diálogo com acessibilidade nativa via `aria-label="Porta da Cantina"` (sem ruído visual de cabeçalhos sobrepostos).
    - Acionamento em primeiro acesso armazenado em `localStorage` (`vox-cantina-v1`).
    - Botão de ação único: `Entrar — sou humano`, com esclarecimento expansível sobre a minimização de dados do Vox.
 2. **Pacto Vox (`vox-pact-accepted`):**

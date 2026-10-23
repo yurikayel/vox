@@ -1570,7 +1570,7 @@ export function renderComposeProposal(main, communityId, commTitle = "") {
 }
 
 const CANTINA_ART_ALT =
-  "Ilustração anime de uma cantina: o bartender de túnica bege aponta para a câmera e o balão diz: Seus bots tem que esperar lá fora!";
+  "Ilustração anime de uma cantina: o bartender de túnica bege aponta para a câmera; o primeiro balão diz 'Seus bots tem que esperar lá fora!' e o segundo balão diz 'Aqui não servimos esse tipo.'";
 
 const CANTINA_ART =
   `<img class="cantina-art-img" src="./images/cantina-gate.jpg" alt="${CANTINA_ART_ALT}" width="1024" height="575" />`;
@@ -1578,15 +1578,11 @@ const CANTINA_ART =
 export function renderCantinaGate(container) {
   if (!container) return;
   container.innerHTML = `
-    <div class="modal-overlay cantina-overlay" id="cantina-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="cantina-title">
+    <div class="modal-overlay cantina-overlay" id="cantina-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="cantina-balloon-2">
       <div class="modal-dialog cantina-dialog">
-        <div class="cantina-art-wrap" role="img" aria-label="${escapeHtml(CANTINA_ART_ALT)}">
+        <div class="cantina-art-wrap">
           ${CANTINA_ART}
-        </div>
-        <div class="cantina-content">
-          <h2 id="cantina-title" class="cantina-title">Porta da Cantina</h2>
-          <p class="cantina-quote">“Seus bots vão ter que esperar do lado de fora.”</p>
-          <p class="cantina-easter-egg meta">Aqui não servimos esse tipo.</p>
+          <p id="cantina-balloon-2" class="cantina-balloon-2">Aqui não servimos esse tipo.</p>
         </div>
         <div class="cantina-actions" style="display:flex; flex-direction:column; gap:0.6rem;">
           <button id="btn-cantina-enter" class="btn btn-primary btn-cantina-enter" style="padding:0.75rem; font-weight:700; font-size:1rem;">Entrar — sou humano</button>
