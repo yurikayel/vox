@@ -253,8 +253,76 @@ export async function deleteDmThread(peerAddress) {
   } catch {}
 }
 
+export async function saveTombstone(tombstone) {
+  if (!tombstone?.id) return;
+  try {
+    const db = await openDB();
+    await new Promise((resolve) => {
+      const tx = db.transaction(LOCAL_POSTS_STORE, "readwrite");
+      const store = tx.objectStore(LOCAL_POSTS_STORE);
+      store.put({
+        id: tombstone.id,
+        type: "tombstone",
+        kind: "post-tombstone",
+        author: tombstone.author || "",
+        ts: tombstone.ts || Date.now(),
+        editedAt: tombstone.editedAt || Date.now(),
+        sig: tombstone.sig || "",
+        pubKey: tombstone.pubKey || null,
+        isLocalP2p: true,
+      });
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => resolve();
+    });
+  } catch {}
+}
+
+export async function getTombstone(id) {
+  if (!id) return null;
+  try {
+    const db = await openDB();
+    return await new Promise((resolve) => {
+      const tx = db.transaction(LOCAL_POSTS_STORE, "readonly");
+      const store = tx.objectStore(LOCAL_POSTS_STORE);
+      const req = store.get(id);
+      req.onsuccess = () => {
+        const res = req.result;
+        if (res && (res.type === "tombstone" || res.kind === "post-tombstone")) {
+          resolve(res);
+        } else {
+          resolve(null);
+        }
+      };
+      req.onerror = () => resolve(null);
+    });
+  } catch {
+    return null;
+  }
+}
+
+export async function getPostRecord(id) {
+  if (!id) return null;
+  try {
+    const db = await openDB();
+    return await new Promise((resolve) => {
+      const tx = db.transaction(LOCAL_POSTS_STORE, "readonly");
+      const store = tx.objectStore(LOCAL_POSTS_STORE);
+      const req = store.get(id);
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = () => resolve(null);
+    });
+  } catch {
+    return null;
+  }
+}
+
 export async function saveLocalPost(post) {
   if (!post?.id || !post?.type) return;
+  const tombstone = await getTombstone(post.id);
+  if (tombstone && (tombstone.editedAt || 0) >= (post.editedAt || post.ts || 0)) {
+    return;
+  }
+
   const combinedText = `${post.title || ""} ${post.body || ""} ${post.description || ""}`;
   const postTags = hashtags.extractHashtags(combinedText);
   try {
@@ -318,7 +386,14 @@ export async function getLocalPost(id) {
       const tx = db.transaction(LOCAL_POSTS_STORE, "readonly");
       const store = tx.objectStore(LOCAL_POSTS_STORE);
       const req = store.get(id);
-      req.onsuccess = () => resolve(req.result || null);
+      req.onsuccess = () => {
+        const res = req.result;
+        if (!res || res.type === "tombstone" || res.kind === "post-tombstone") {
+          resolve(null);
+        } else {
+          resolve(res);
+        }
+      };
       req.onerror = () => resolve(null);
     });
   } catch {
@@ -351,7 +426,7 @@ export async function getLocalPosts({ type = null, communityId = null, replyTo =
       const store = tx.objectStore(LOCAL_POSTS_STORE);
       const req = store.getAll();
       req.onsuccess = () => {
-        let items = req.result || [];
+        let items = (req.result || []).filter((p) => p.type !== "tombstone" && p.kind !== "post-tombstone");
         if (type) items = items.filter((p) => p.type === type);
         if (communityId) items = items.filter((p) => p.communityId === communityId);
         if (replyTo !== null) items = items.filter((p) => p.replyTo === replyTo);
