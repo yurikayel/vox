@@ -450,7 +450,7 @@ export async function fetchTransactionData(txId) {
     return cachedDb;
   }
 
-  // 2. Tenta Desktop Relay local (se estiver rodando em 127.0.0.1:3920)
+  // 2. Tenta relay HTTP configurado (local, LAN ou VPS)
   const relayData = await peers.fetchFromDesktopRelay(txId);
   if (relayData) {
     dataCache.set(txId, relayData);

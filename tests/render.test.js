@@ -54,6 +54,8 @@ test("render - renderNetworkSettings gera painel completo com WebRTC", () => {
     notifPermission: "granted",
     rtcStatus,
     customSignalingUrl: "ws://192.168.1.100:3921",
+    customRelayHttpUrl: "http://192.168.1.100:3920",
+    relayHttpUrl: "http://192.168.1.100:3920",
     customTurn: { urls: "turn:turn.comunidade.org:3478", username: "vox_turn", credential: "123" },
   });
 
@@ -65,6 +67,8 @@ test("render - renderNetworkSettings gera painel completo com WebRTC", () => {
   assert.ok(html.includes("net-pause"));
   assert.ok(html.includes("net-webrtc"));
   assert.ok(html.includes("ws://192.168.1.100:3921"));
+  assert.ok(html.includes("net-relay-http-url"));
+  assert.ok(html.includes("192.168.1.100:3920"));
   assert.ok(html.includes("turn:turn.comunidade.org:3478"));
   assert.ok(html.includes("vox_turn"));
   // Termos de infraestrutura restritos à seção Avançado

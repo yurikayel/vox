@@ -2130,7 +2130,15 @@ function renderTurnFields(customTurn) {
     </div>`;
 }
 
-function renderNetworkForm(settings, notifPermission, customSignalingUrl, customTurn, relayStatus, rtcStatus, metrics) {
+function relayHealthLabel(relayStatus, relayHttpUrl) {
+  const host = relayHttpUrl ? new URL(relayHttpUrl).host : "";
+  if (relayStatus?.online) {
+    return host ? `🟢 Conectado (${host})` : "🟢 Conectado";
+  }
+  return host ? `⚪ Offline (${host})` : "⚪ Offline";
+}
+
+function renderNetworkForm(settings, notifPermission, customSignalingUrl, customRelayHttpUrl, customTurn, relayStatus, rtcStatus, metrics, relayHttpUrl) {
   const isEnabled = Boolean(settings?.enabled);
   const isBg = Boolean(settings?.backgroundRelay);
   const notifNotice = notifPermission === "granted"
@@ -2184,6 +2192,12 @@ function renderNetworkForm(settings, notifPermission, customSignalingUrl, custom
               <input type="text" id="net-signaling-url" class="form-control" placeholder="wss://signal.comunidade.org" value="${customSignalingUrl || ""}" />
             </div>
 
+            <div class="form-group">
+              <label for="net-relay-http-url">Relay HTTP (cache e inbox, opcional):</label>
+              <input type="text" id="net-relay-http-url" class="form-control" placeholder="https://relay.comunidade.org ou 192.168.0.10:3920" value="${customRelayHttpUrl || ""}" />
+              <p class="desc" style="font-size:0.75rem; margin:0.35rem 0 0;">Usado para buscar posts e mensagens efêmeras. Vazio = derivado do servidor de conexão ou localhost.</p>
+            </div>
+
             ${renderTurnFields(customTurn)}
 
             <div class="form-group" style="display:flex; align-items:center; gap:0.6rem; margin-top:0.75rem;">
@@ -2198,8 +2212,8 @@ function renderNetworkForm(settings, notifPermission, customSignalingUrl, custom
               <div class="meta" style="margin-bottom:0.4rem;">
                 Conexões ativas: <strong>${rtcCount} aparelhos</strong> · Conteúdos via WebRTC: <strong>${metrics?.blobsServedRtc || 0}</strong>
               </div>
-              <button type="button" id="btn-check-relay" class="btn btn-outline btn-sm">Verificar Servidor Local</button>
-              <span class="meta" style="margin-left:0.5rem;">${relayStatus?.online ? "🟢 Conectado" : "⚪ Offline"}</span>
+              <button type="button" id="btn-check-relay" class="btn btn-outline btn-sm">Verificar Relay HTTP</button>
+              <span class="meta" style="margin-left:0.5rem;">${relayHealthLabel(relayStatus, relayHttpUrl)}</span>
             </div>
 
             <div style="margin-top:0.75rem; border-top:1px solid var(--border); padding-top:0.6rem;">
@@ -2218,11 +2232,11 @@ function renderNetworkForm(settings, notifPermission, customSignalingUrl, custom
     </div>`;
 }
 
-export function renderNetworkSettings(main, { settings, metrics, cacheStats, relayStatus, dailyUsage, notifPermission, rtcStatus, customSignalingUrl, customTurn }) {
+export function renderNetworkSettings(main, { settings, metrics, cacheStats, relayStatus, dailyUsage, notifPermission, rtcStatus, customSignalingUrl, customRelayHttpUrl, customTurn, relayHttpUrl }) {
   const isEnabled = Boolean(settings?.enabled);
   let html = renderNetworkHeader(isEnabled, relayStatus, rtcStatus);
   html += renderNetworkStats(metrics, cacheStats, dailyUsage, settings);
-  html += renderNetworkForm(settings, notifPermission, customSignalingUrl, customTurn, relayStatus, rtcStatus, metrics);
+  html += renderNetworkForm(settings, notifPermission, customSignalingUrl, customRelayHttpUrl, customTurn, relayStatus, rtcStatus, metrics, relayHttpUrl);
   main.innerHTML = html;
 }
 

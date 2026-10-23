@@ -1,6 +1,7 @@
 import * as cacheNode from "./cache-node.js";
 import * as webrtcPeer from "./webrtc-peer.js";
 import * as localAccount from "./local-account.js";
+import { getRelayHttpUrl } from "./inbox.js";
 
 const PEER_SETTINGS_KEY = "vox-peer-settings";
 const PEER_METRICS_KEY = "vox-peer-metrics";
@@ -551,9 +552,10 @@ export function getRtcStatus() {
 export const getCustomTurnConfig = webrtcPeer.getCustomTurnConfig;
 export const saveCustomTurnConfig = webrtcPeer.saveCustomTurnConfig;
 
-export async function checkDesktopRelay(url = "http://127.0.0.1:3920/health") {
+export async function checkDesktopRelay(url = null) {
+  const healthUrl = url || `${getRelayHttpUrl()}/health`;
   try {
-    const res = await fetch(url, { signal: AbortSignal.timeout(350) });
+    const res = await fetch(healthUrl, { signal: AbortSignal.timeout(350) });
     if (!res.ok) return { online: false };
     const data = await res.json();
     return { online: true, data };
@@ -564,7 +566,7 @@ export async function checkDesktopRelay(url = "http://127.0.0.1:3920/health") {
 
 export async function fetchFromDesktopRelay(txId) {
   try {
-    const res = await fetch(`http://127.0.0.1:3920/tx/${txId}`, {
+    const res = await fetch(`${getRelayHttpUrl()}/tx/${encodeURIComponent(txId)}`, {
       signal: AbortSignal.timeout(800),
     });
     if (!res.ok) return null;
