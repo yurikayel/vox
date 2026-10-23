@@ -634,7 +634,7 @@ Feed com fundo cinza extremo (`#fafafa` / `#000`), coluna `--feed-max: 500px`, p
 Toolbar tripartida mantém Zap, estrela, copiar MD e bookmark.
 
 ### 21.2 Composer inline (estilo X)
-- `renderInlineComposer`: repouso = uma linha; foco expande textarea, contador `0 / 2000`, **Postar** desabilitado até haver texto, **Esc** recolhe, anexo de imagem (`FileReader` → `post.image`), comunidade opcional (`attachInlineComposerHandlers` em `app.js`).
+- `renderInlineComposer`: repouso = uma linha; foco expande textarea, contador `0 / 2000`, **Postar** desabilitado até haver texto, **Esc** recolhe, anexo de imagem (`FileReader` → `post.image`), comunidade opcional (`attachInlineComposerHandlers` em `inline-composer.js`).
 - `#/compose/topic` permanece como deep-link / formulário completo.
 
 ### 21.3 Stories strip
