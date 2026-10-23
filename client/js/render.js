@@ -30,12 +30,11 @@ export function renderNetworkChip(metrics, rtcStatus, settings) {
 
 function renderWalletBadge(walletAddress) {
   return walletAddress
-    ? `<a class="wallet-badge connected" href="#/u/${walletAddress}">👤 ${escapeHtml(shortId(walletAddress))}</a>`
-    : `<a class="wallet-badge" href="#/wallet">🔑 Entrar</a>`;
+    ? `<a class="wallet-badge connected" href="#/perfil">👤 ${escapeHtml(shortId(walletAddress))}</a>`
+    : `<a class="wallet-badge" href="#/perfil">👤 Perfil</a>`;
 }
 
-function renderTabBar(activeTab, walletAddress) {
-  const profileHref = walletAddress ? `#/u/${walletAddress}` : `#/wallet`;
+function renderTabBar(activeTab) {
   const isHome = activeTab === "home";
   const isComm = activeTab === "communities";
   const isCompose = activeTab === "compose";
@@ -64,7 +63,7 @@ function renderTabBar(activeTab, walletAddress) {
           <span class="tab-icon">💬</span>
           <span class="tab-label">Mensagens</span>
         </a>
-        <a href="${profileHref}" class="tab-item ${isProfile ? "active" : ""}">
+        <a href="#/perfil" class="tab-item ${isProfile ? "active" : ""}">
           <span class="tab-icon">👤</span>
           <span class="tab-label">Perfil</span>
         </a>
@@ -75,7 +74,7 @@ function renderTabBar(activeTab, walletAddress) {
 export function renderShell({ title, subtitle, breadcrumb, walletAddress, activeTab = "home", metrics, rtcStatus, settings }) {
   const chipHtml = renderNetworkChip(metrics, rtcStatus, settings);
   const walletBadge = renderWalletBadge(walletAddress);
-  const tabBarHtml = renderTabBar(activeTab, walletAddress);
+  const tabBarHtml = renderTabBar(activeTab);
 
   root().innerHTML = `
     <div class="app-layout">
@@ -126,18 +125,23 @@ export function renderGatewayBanner(main, label) {
 }
 
 function renderPostItem(t) {
-  const authorInitial = (t.owner || "V").slice(0, 1).toUpperCase();
+  const author = t.author || t.owner || "";
+  const authorInitial = (author || "V").slice(0, 1).toUpperCase();
   const commPill = t.communityId
     ? `<a class="post-community-pill" href="#/c/${encodeURIComponent(t.communityId)}">c/${escapeHtml(t.communityId)}</a>`
     : "";
   const bodySnippet = t.body ? `<p class="post-body">${escapeHtml(t.body)}</p>` : "";
+  const originBadge = t.isLocalP2p
+    ? `<span class="badge-pill p2p-pill" title="Publicado na rede P2P cooperativa">🌐 Na rede</span>`
+    : `<span class="badge-pill permanent-pill" title="Indexado no permaweb Arweave">💾 Permanente</span>`;
 
   return `
     <article class="post">
-      <a class="avatar" href="#/u/${encodeURIComponent(t.owner)}">${authorInitial}</a>
+      <a class="avatar" href="#/u/${encodeURIComponent(author)}">${authorInitial}</a>
       <div class="post-content">
         <div class="post-header">
-          <a class="post-author" href="#/u/${encodeURIComponent(t.owner)}">${escapeHtml(shortId(t.owner))}</a>
+          <a class="post-author" href="#/u/${encodeURIComponent(author)}">${escapeHtml(shortId(author))}</a>
+          ${originBadge}
           <span class="post-meta">· recente</span>
           ${commPill}
         </div>
@@ -251,7 +255,11 @@ export function renderTopic(main, topicId, topic, replies, { topicData = null, i
   const commId = communityId || topic?.communityId || "";
   const backLink = commId ? `<a class="back-link" href="#/c/${encodeURIComponent(commId)}">← Voltar à comunidade</a>` : "";
   const bodyText = topicData?.body || topic?.body || "Sem conteúdo textual.";
-  const authorInitial = (topic?.owner || "V").slice(0, 1).toUpperCase();
+  const author = topic?.author || topic?.owner || "";
+  const authorInitial = (author || "V").slice(0, 1).toUpperCase();
+  const originBadge = topic?.isLocalP2p
+    ? `<span class="badge-pill p2p-pill">🌐 Na rede</span>`
+    : `<span class="badge-pill permanent-pill">💾 Permanente</span>`;
 
   const modBtn = isMod
     ? `<button class="btn btn-sm btn-danger btn-mod-hide" data-id="${escapeHtml(topicId)}" data-type="topic">🛡️ Ocultar</button>`
@@ -263,8 +271,9 @@ export function renderTopic(main, topicId, topic, replies, { topicData = null, i
       <div class="post-header">
         <span class="avatar">${authorInitial}</span>
         <div>
-          <a class="post-author" href="#/u/${encodeURIComponent(topic?.owner || "")}">${escapeHtml(shortId(topic?.owner))}</a>
-          <div class="post-meta">TX: ${escapeHtml(shortId(topicId))}</div>
+          <a class="post-author" href="#/u/${encodeURIComponent(author)}">${escapeHtml(shortId(author))}</a>
+          ${originBadge}
+          <div class="post-meta">ID: ${escapeHtml(shortId(topicId))}</div>
         </div>
       </div>
       <h2>${escapeHtml(topic?.title || "Tópico")}</h2>
@@ -288,7 +297,11 @@ export function renderTopic(main, topicId, topic, replies, { topicData = null, i
   }
 
   const replyItems = replies.map((r) => {
-    const rInitial = (r.owner || "V").slice(0, 1).toUpperCase();
+    const rAuthor = r.author || r.owner || "";
+    const rInitial = (rAuthor || "V").slice(0, 1).toUpperCase();
+    const rBadge = r.isLocalP2p
+      ? `<span class="badge-pill p2p-pill">🌐</span>`
+      : `<span class="badge-pill permanent-pill">💾</span>`;
     const replyModBtn = isMod
       ? `<button class="btn btn-sm btn-danger btn-mod-hide" data-id="${escapeHtml(r.id)}" data-type="reply">🛡️</button>`
       : "";
@@ -297,7 +310,10 @@ export function renderTopic(main, topicId, topic, replies, { topicData = null, i
         <span class="avatar">${rInitial}</span>
         <div class="post-content">
           <div class="reply-header" style="display:flex; justify-content:space-between; align-items:center;">
-            <a class="post-author" href="#/u/${encodeURIComponent(r.owner)}">${escapeHtml(shortId(r.owner))}</a>
+            <div>
+              <a class="post-author" href="#/u/${encodeURIComponent(rAuthor)}">${escapeHtml(shortId(rAuthor))}</a>
+              ${rBadge}
+            </div>
             ${replyModBtn}
           </div>
           <p class="reply-body">${escapeHtml(r.body || "(carregando conteúdo...)")}</p>
@@ -309,9 +325,9 @@ export function renderTopic(main, topicId, topic, replies, { topicData = null, i
   main.innerHTML += html;
 }
 
-function renderProfileHeader(address, isCurrentWallet, handle, isConflict, claimants) {
-  const title = handle ? `@${escapeHtml(handle)}` : "Perfil de Membro";
-  const initial = (handle || address || "U").slice(0, 1).toUpperCase();
+function renderProfileHeader(address, isCurrentWallet, handle, isConflict, claimants, displayName) {
+  const displayTitle = displayName ? `${displayName} (@${handle || shortId(address)})` : (handle ? `@${handle}` : "Perfil");
+  const initial = (displayName || handle || address || "U").slice(0, 1).toUpperCase();
   const conflictBanner = isConflict
     ? `<div class="card error" style="margin-top:0.6rem;">
         ⚠️ <strong>Conflito de Handle:</strong> <code>@${escapeHtml(handle)}</code> reivindicado por mais de uma conta.
@@ -326,32 +342,69 @@ function renderProfileHeader(address, isCurrentWallet, handle, isConflict, claim
       <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
         <span class="avatar" style="width:52px; height:52px; font-size:1.3rem;">${initial}</span>
         <div>
-          <h2 style="margin:0;">${title}</h2>
-          <p class="meta" style="margin:2px 0 0;"><code>${escapeHtml(shortId(address))}</code></p>
+          <h2 style="margin:0;">${escapeHtml(displayTitle)}</h2>
+          <p class="meta" style="margin:2px 0 0;">ID de Rede: <code>${escapeHtml(address)}</code></p>
         </div>
       </div>
       ${conflictBanner}
-      ${isCurrentWallet ? `<span class="badge-pill" style="margin-top:0.4rem;">Sua Carteira Ativa</span>` : ""}
+      ${isCurrentWallet ? `<span class="badge-pill" style="margin-top:0.4rem;">Sua Conta Neste Aparelho</span>` : ""}
     </div>`;
 }
 
-function renderProfileActions(address, isCurrentWallet, handle) {
+function renderProfileActions(address, isCurrentWallet, handle, displayName, hasWallet, balance) {
   if (isCurrentWallet) {
     return `
       <div class="card" style="margin-top:0.75rem;">
-        <h3>Identidade & Chaves</h3>
-        <form id="form-claim-handle" style="margin-top:0.5rem;">
-          <label style="font-size:0.85rem; font-weight:600;">Reivindicar @handle on-chain:</label>
-          <div style="display:flex; gap:0.5rem; margin-top:0.25rem;">
-            <input type="text" id="input-handle-slug" class="form-control" placeholder="ex: maria" value="${handle || ""}" required />
-            <button type="submit" id="btn-submit-handle" class="btn btn-sm btn-primary" style="white-space:nowrap;">Salvar @handle</button>
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+          <div>
+            <strong>Mensagens Diretas</strong>
+            <p class="meta" style="margin:2px 0 0;">Compartilhe seu link para receber DMs privadas:</p>
           </div>
-        </form>
-        <div style="margin-top:0.75rem; border-top:1px solid var(--border); padding-top:0.6rem; display:flex; flex-wrap:wrap; gap:0.4rem;">
-          <button id="btn-copy-dmpub" class="btn btn-sm btn-outline">📋 Copiar Chave Dm-Pub</button>
-          <button id="btn-publish-dmpub" class="btn btn-sm btn-primary">🌐 Anunciar Dm-Pub on-chain</button>
+          <button id="btn-copy-my-dm-link" class="btn btn-sm btn-outline" data-route="${escapeHtml(address)}">📋 Copiar Meu Link</button>
         </div>
-      </div>`;
+      </div>
+
+      <div class="card" style="margin-top:0.75rem;">
+        <h3>Identidade Local</h3>
+        <form id="form-display-name" style="margin-top:0.5rem; display:flex; gap:0.5rem;">
+          <input type="text" id="input-display-name" class="form-control" placeholder="Seu apelido ou nome..." value="${escapeHtml(displayName || "")}" maxlength="30" />
+          <button type="submit" class="btn btn-sm btn-primary" style="white-space:nowrap;">Salvar Nome</button>
+        </form>
+      </div>
+
+      <details class="advanced-settings card" style="margin-top:0.75rem;">
+        <summary>Avançado — Nuvem Permanente & Carteira Arweave</summary>
+        <div style="margin-top:0.75rem;">
+          <p class="desc">Por padrão, o Vox opera na rede distribuída com custo zero sustentado pelo Pacto Vox. Se quiser arquivar postagens e seu @handle permanentemente no permaweb, configure sua carteira Arweave abaixo:</p>
+
+          <form id="form-claim-handle" style="margin-top:0.75rem;">
+            <label style="font-size:0.85rem; font-weight:600;">Reivindicar @handle on-chain:</label>
+            <div style="display:flex; gap:0.5rem; margin-top:0.25rem;">
+              <input type="text" id="input-handle-slug" class="form-control" placeholder="ex: maria" value="${handle || ""}" />
+              <button type="submit" id="btn-submit-handle" class="btn btn-sm btn-primary" style="white-space:nowrap;">Salvar @handle</button>
+            </div>
+          </form>
+
+          <div style="margin-top:0.75rem; border-top:1px solid var(--border); padding-top:0.6rem; display:flex; flex-wrap:wrap; gap:0.4rem;">
+            <button id="btn-copy-dmpub" class="btn btn-sm btn-outline">📋 Copiar Chave Dm-Pub</button>
+            <button id="btn-publish-dmpub" class="btn btn-sm btn-primary">🌐 Anunciar Dm-Pub on-chain</button>
+          </div>
+
+          <div style="margin-top:0.75rem; border-top:1px solid var(--border); padding-top:0.6rem;">
+            <h4>Carteira Arweave</h4>
+            ${hasWallet ? `
+              <p class="meta">Status: Conectada · Saldo: <strong>${escapeHtml(balance || "0.000")} AR</strong></p>
+              <button id="btn-disconnect-wallet" class="btn btn-danger btn-sm">Desconectar Carteira</button>
+            ` : `
+              <p class="meta">Nenhuma carteira Arweave conectada.</p>
+              <div style="display:flex; gap:0.5rem; margin-top:0.4rem;">
+                <button id="btn-generate-wallet" class="btn btn-primary btn-sm">⚡ Gerar Carteira Arweave</button>
+                <a href="#/wallet" class="btn btn-outline btn-sm">Importar JWK</a>
+              </div>
+            `}
+          </div>
+        </div>
+      </details>`;
   }
   return `
     <div class="card" style="margin-top:0.75rem;">
@@ -359,9 +412,9 @@ function renderProfileActions(address, isCurrentWallet, handle) {
     </div>`;
 }
 
-export function renderProfile(main, address, memberships = [], isCurrentWallet = false, dmPubStr = "", { handle = "", isConflict = false, claimants = [] } = {}) {
-  let html = renderProfileHeader(address, isCurrentWallet, handle, isConflict, claimants);
-  html += renderProfileActions(address, isCurrentWallet, handle);
+export function renderProfile(main, address, memberships = [], isCurrentWallet = false, dmPubStr = "", { handle = "", isConflict = false, claimants = [], displayName = "", hasWallet = false, balance = "0.000" } = {}) {
+  let html = renderProfileHeader(address, isCurrentWallet, handle, isConflict, claimants, displayName);
+  html += renderProfileActions(address, isCurrentWallet, handle, displayName, hasWallet, balance);
 
   html += `
     <div class="actions-bar">
@@ -423,14 +476,14 @@ export function renderWallet(main, { address = null, balance = "0.000", hasWalle
         <p class="meta">Endereço: <code>${escapeHtml(address)}</code></p>
         <p class="balance">Saldo: <strong>${escapeHtml(balance)} AR</strong></p>
         <div class="actions-row">
-          <a class="btn btn-outline" href="#/u/${encodeURIComponent(address)}">Meu Perfil</a>
+          <a class="btn btn-outline" href="#/perfil">Meu Perfil</a>
           <button id="btn-disconnect-wallet" class="btn btn-danger">Desconectar</button>
         </div>
       </div>`;
   } else {
     statusBox = `
       <div class="card wallet-warning">
-        <p>Conecte ou gere uma carteira para postar e criar comunidades.</p>
+        <p>Conecte ou gere uma carteira Arweave se desejar publicar dados no permaweb permanente.</p>
         <button id="btn-generate-wallet" class="btn btn-primary">⚡ Gerar Carteira Instantânea</button>
       </div>`;
   }
@@ -455,19 +508,10 @@ export function renderWallet(main, { address = null, balance = "0.000", hasWalle
   main.innerHTML += html;
 }
 
-export function renderComposeCommunity(main, { hasWallet = false } = {}) {
-  if (!hasWallet) {
-    main.innerHTML = `
-      <div class="card">
-        <h2>Criar Comunidade</h2>
-        <div class="error">Conecte uma carteira em <a href="#/wallet">#/wallet</a> antes de publicar.</div>
-      </div>`;
-    return;
-  }
-
+export function renderComposeCommunity(main) {
   main.innerHTML = `
     <div class="card compose-card">
-      <a class="back-link" href="#/">← Voltar</a>
+      <a class="back-link" href="#/communities">← Voltar</a>
       <h2>Nova Comunidade</h2>
       <form id="form-compose-community">
         <div class="form-group">
@@ -493,16 +537,7 @@ export function renderComposeCommunity(main, { hasWallet = false } = {}) {
     </div>`;
 }
 
-export function renderComposeTopic(main, communityId, { hasWallet = false } = {}) {
-  if (!hasWallet) {
-    main.innerHTML = `
-      <div class="card">
-        <h2>Novo Post</h2>
-        <div class="error">Conecte uma carteira em <a href="#/wallet">#/wallet</a> antes de publicar.</div>
-      </div>`;
-    return;
-  }
-
+export function renderComposeTopic(main, communityId) {
   const backLink = communityId
     ? `<a class="back-link" href="#/c/${encodeURIComponent(communityId)}">← Voltar à comunidade</a>`
     : `<a class="back-link" href="#/">← Voltar</a>`;
@@ -533,16 +568,7 @@ export function renderComposeTopic(main, communityId, { hasWallet = false } = {}
     </div>`;
 }
 
-export function renderComposeReply(main, topicId, communityId, { hasWallet = false } = {}) {
-  if (!hasWallet) {
-    main.innerHTML = `
-      <div class="card">
-        <h2>Responder</h2>
-        <div class="error">Conecte uma carteira em <a href="#/wallet">#/wallet</a> antes de publicar.</div>
-      </div>`;
-    return;
-  }
-
+export function renderComposeReply(main, topicId, communityId) {
   main.innerHTML = `
     <div class="card compose-card">
       <a class="back-link" href="#/t/${encodeURIComponent(topicId)}">← Voltar ao post</a>
@@ -794,8 +820,13 @@ export function renderDmList(main, conversations = [], myAddress = "") {
       <h2 style="margin:0 0 2px;">Mensagens</h2>
       <p class="desc" style="margin:0 0 8px;">Privadas. Só neste aparelho. Criptografia ponta a ponta sem nuvem.</p>
       
+      <div style="background:var(--surface-soft); border:1px solid var(--border); padding:8px 12px; border-radius:var(--radius-sm); margin:8px 0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+        <span class="meta" style="font-size:0.8rem;">Seu ID de mensagens: <code>${escapeHtml(shortId(myAddress))}</code></span>
+        <button id="btn-copy-my-dm-link" class="btn btn-sm btn-outline" data-route="${escapeHtml(myAddress)}">📋 Copiar Link</button>
+      </div>
+
       <form id="form-new-dm" style="display:flex; gap:0.5rem; margin-top:0.75rem;">
-        <input type="text" id="dm-peer-input" class="form-control" placeholder="Endereço do destinatário..." required />
+        <input type="text" id="dm-peer-input" class="form-control" placeholder="ID de rota (vx_...) ou endereço..." required />
         <button type="submit" class="btn btn-primary" style="white-space:nowrap;">Conversar →</button>
       </form>
     </div>

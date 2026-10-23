@@ -10,6 +10,7 @@ import * as peers from "./peers.js";
 import * as cryptoDm from "./crypto-dm.js";
 import * as inbox from "./inbox.js";
 import * as handles from "./handles.js";
+import * as localAccount from "./local-account.js";
 
 function parseRoute() {
   if (typeof window !== "undefined" && window.location?.search) {
@@ -25,6 +26,7 @@ function parseRoute() {
 
   if (!parts.length) return { name: "home" };
   if (parts[0] === "communities") return { name: "communities" };
+  if (parts[0] === "perfil") return { name: "perfil" };
   if (parts[0] === "settings" && parts[1] === "network") {
     return { name: "network-settings" };
   }
@@ -69,10 +71,10 @@ function parseRoute() {
 
 async function getActiveUser() {
   try {
-    return await wallet.getAddress();
-  } catch {
-    return null;
-  }
+    const w = await wallet.getAddress();
+    if (w) return w;
+  } catch {}
+  return await localAccount.getRouteId();
 }
 
 function makeShellProps(user, activeTab, title = "", subtitle = "", breadcrumb = null) {
@@ -108,16 +110,33 @@ async function showHome() {
   render.renderLoading(main);
 
   try {
-    const { items, gateway, demo } = await gql.fetchRecentTopics().catch(async () => mock.mockRecentTopics());
+    const { items: remoteItems, gateway, demo } = await gql.fetchRecentTopics().catch(async () => mock.mockRecentTopics());
+    const localPosts = await cacheNode.getLocalPosts({ type: "topic" });
+
+    const seen = new Set();
+    const merged = [];
+    for (const p of localPosts) {
+      seen.add(p.id);
+      merged.push({ ...p, isLocalP2p: true });
+    }
+    for (const p of (remoteItems || [])) {
+      if (!seen.has(p.id)) {
+        seen.add(p.id);
+        merged.push({ ...p, isLocalP2p: false });
+      }
+    }
+
     main.innerHTML = "";
-    if (demo) render.renderDemoBanner(main);
+    if (demo && !localPosts.length) render.renderDemoBanner(main);
     else if (gateway) render.renderGatewayBanner(main, gateway);
-    render.renderFeed(main, items);
+    render.renderFeed(main, merged);
   } catch (e) {
     main.innerHTML = "";
+    const localPosts = await cacheNode.getLocalPosts({ type: "topic" });
     const fb = mock.mockRecentTopics();
+    const merged = [...localPosts.map((p) => ({ ...p, isLocalP2p: true })), ...fb.items.map((p) => ({ ...p, isLocalP2p: false }))];
     render.renderDemoBanner(main);
-    render.renderFeed(main, fb.items);
+    render.renderFeed(main, merged);
   }
 
   attachPostShareHandlers();
@@ -129,17 +148,33 @@ async function showCommunities() {
   render.renderLoading(main);
 
   try {
-    const { items, gateway, demo } = await gql.fetchCommunities().catch(async () => mock.mockCommunities());
+    const { items: remoteItems, gateway, demo } = await gql.fetchCommunities().catch(async () => mock.mockCommunities());
+    const localComms = await cacheNode.getLocalCommunities();
+
+    const seen = new Set();
+    const merged = [];
+    for (const c of localComms) {
+      seen.add(c.id);
+      merged.push(c);
+    }
+    for (const c of (remoteItems || [])) {
+      if (!seen.has(c.id)) {
+        seen.add(c.id);
+        merged.push({ ...c, isLocalP2p: false });
+      }
+    }
+
     main.innerHTML = "";
-    if (demo) render.renderDemoBanner(main);
+    if (demo && !localComms.length) render.renderDemoBanner(main);
     else if (gateway) render.renderGatewayBanner(main, gateway);
-    render.renderHome(main, items);
+    render.renderHome(main, merged);
   } catch (e) {
     main.innerHTML = "";
+    const localComms = await cacheNode.getLocalCommunities();
     const fb = mock.mockCommunities();
+    const merged = [...localComms, ...fb.items];
     render.renderDemoBanner(main);
-    render.renderError(main, String(e.message || e));
-    render.renderHome(main, fb.items);
+    render.renderHome(main, merged);
   }
 }
 
@@ -164,38 +199,55 @@ async function showCommunity(communityId) {
     demo = true;
   }
 
-  // Tenta carregar detalhes da comunidade da lista
+  // Tenta carregar detalhes da comunidade da lista remota ou local
   try {
     const comms = await gql.fetchCommunities();
     const found = comms.items.find((c) => c.id === communityId);
     if (found) meta = found;
-  } catch {
-    // Mantém meta básico
+  } catch {}
+
+  const localComms = await cacheNode.getLocalCommunities();
+  const localFound = localComms.find((c) => c.id === communityId);
+  if (localFound) meta = { ...meta, ...localFound };
+
+  // Mescla tópicos locais com remotos
+  const localTopics = await cacheNode.getLocalPosts({ type: "topic", communityId });
+  const seenT = new Set();
+  const mergedTopics = [];
+  for (const t of localTopics) {
+    seenT.add(t.id);
+    mergedTopics.push({ ...t, isLocalP2p: true });
+  }
+  for (const t of topics) {
+    if (!seenT.has(t.id)) {
+      seenT.add(t.id);
+      mergedTopics.push({ ...t, isLocalP2p: false });
+    }
   }
 
   // Moderação
   let modActions = [];
   try {
     modActions = await mod.fetchModActions(communityId);
-  } catch {
-    // Sem mod actions
-  }
-  const filteredTopics = mod.applyFilters(topics, modActions, meta.owner, meta.moderators);
+  } catch {}
+  const filteredTopics = mod.applyFilters(mergedTopics, modActions, meta.owner, meta.moderators);
   const isUserMod = mod.isModerator(user, meta.owner, meta.moderators);
 
-  // Checagem de Membresia
+  // Checagem de Membresia (local ou remota)
   let isMember = false;
   if (user) {
     try {
-      const mems = await gql.fetchUserMemberships(user);
-      isMember = mems.some((m) => m.communityId === communityId);
-    } catch {
-      // Ignora
-    }
+      const localMems = await cacheNode.getLocalPosts({ type: "membership", communityId });
+      isMember = localMems.some((m) => m.author === user);
+      if (!isMember) {
+        const mems = await gql.fetchUserMemberships(user);
+        isMember = mems.some((m) => m.communityId === communityId);
+      }
+    } catch {}
   }
 
   main.innerHTML = "";
-  if (demo) render.renderDemoBanner(main);
+  if (demo && !localTopics.length) render.renderDemoBanner(main);
   else if (gateway) render.renderGatewayBanner(main, gateway);
 
   render.renderCommunity(main, communityId, filteredTopics, meta, {
@@ -215,22 +267,30 @@ async function showCommunity(communityId) {
   const btnJoin = document.getElementById("btn-join-comm");
   if (btnJoin && !isMember) {
     btnJoin.addEventListener("click", async () => {
-      if (!wallet.hasWallet()) {
-        share.showToast("Conecte sua carteira em #/wallet para entrar.", "error");
-        location.hash = "#/wallet";
-        return;
-      }
       btnJoin.disabled = true;
-      btnJoin.textContent = "Gravando membresia…";
+      btnJoin.textContent = "Gravando…";
       try {
-        const tags = upload.buildTags("membership", { "Community-Id": communityId });
-        await upload.postData({ communityId, joinedAt: Date.now() }, tags);
-        share.showToast("Membresia gravada com sucesso!");
-        btnJoin.textContent = "✓ Membro Confirmado";
+        const signedMem = await localAccount.signPayload({
+          id: `mem_${communityId}_${user}`,
+          type: "membership",
+          communityId,
+          joinedAt: Date.now(),
+        });
+        await cacheNode.saveLocalPost(signedMem);
+        peers.broadcastGossip(signedMem);
+
+        if (wallet.hasWallet()) {
+          try {
+            const tags = upload.buildTags("membership", { "Community-Id": communityId });
+            await upload.postData({ communityId, joinedAt: Date.now() }, tags);
+          } catch {}
+        }
+        share.showToast("Você agora é membro desta comunidade!");
+        btnJoin.textContent = "✓ Membro";
       } catch (err) {
         share.showToast(`Erro ao entrar: ${err.message}`, "error");
         btnJoin.disabled = false;
-        btnJoin.textContent = "★ Entrar na Comunidade";
+        btnJoin.textContent = "★ Entrar";
       }
     });
   }
@@ -267,18 +327,18 @@ async function showTopic(topicId, commIdParam = "") {
   let replies = [];
   let topicData = { body: "" };
 
-  // Busca metadados e corpo do tópico
-  try {
-    const fetchedTopic = await gql.fetchTopicById(topicId);
-    if (fetchedTopic) topic = fetchedTopic;
-  } catch {
-    // fallback
-  }
-
-  try {
-    topicData = await gql.fetchTransactionData(topicId);
-  } catch {
-    // fallback
+  const localTopic = await cacheNode.getLocalPost(topicId);
+  if (localTopic) {
+    topic = { ...localTopic, owner: localTopic.author, isLocalP2p: true };
+    topicData = { body: localTopic.body };
+  } else {
+    try {
+      const fetchedTopic = await gql.fetchTopicById(topicId);
+      if (fetchedTopic) topic = fetchedTopic;
+    } catch {}
+    try {
+      topicData = await gql.fetchTransactionData(topicId);
+    } catch {}
   }
 
   let gateway = "";
@@ -292,12 +352,27 @@ async function showTopic(topicId, commIdParam = "") {
     replies = fb.items;
     demo = true;
     if (!topic.title || topic.title === "Tópico") {
-      topic = { title: "Como funciona a Fase 2?", owner: "demo-owner", communityId: commIdParam };
-      topicData = { body: "Esta é uma visualização demonstrativa com corpo e replies." };
+      topic = { title: "Como funciona o Vox P2P?", owner: "demo-owner", communityId: commIdParam };
+      topicData = { body: "Rede cooperativa e soberana sem servidores caros." };
     }
   }
 
-  // Para cada resposta sem body nas tags, carrega via fetchTransactionData assincronamente
+  // Mescla respostas locais P2P
+  const localReplies = await cacheNode.getLocalPosts({ type: "reply", replyTo: topicId });
+  const seenR = new Set();
+  const mergedReplies = [];
+  for (const r of localReplies) {
+    seenR.add(r.id);
+    mergedReplies.push({ ...r, owner: r.author, isLocalP2p: true });
+  }
+  for (const r of replies) {
+    if (!seenR.has(r.id)) {
+      seenR.add(r.id);
+      mergedReplies.push({ ...r, isLocalP2p: false });
+    }
+  }
+
+  // Moderação
   const finalCommId = topic.communityId || commIdParam;
   let modActions = [];
   if (finalCommId) {
@@ -305,11 +380,11 @@ async function showTopic(topicId, commIdParam = "") {
       modActions = await mod.fetchModActions(finalCommId);
     } catch {}
   }
-  const filteredReplies = mod.applyFilters(replies, modActions);
+  const filteredReplies = mod.applyFilters(mergedReplies, modActions);
   const isUserMod = mod.isModerator(user, "", "");
 
   main.innerHTML = "";
-  if (demo) render.renderDemoBanner(main);
+  if (demo && !localTopic && !localReplies.length) render.renderDemoBanner(main);
   else if (gateway) render.renderGatewayBanner(main, gateway);
 
   render.renderTopic(main, topicId, topic, filteredReplies, {
@@ -320,7 +395,7 @@ async function showTopic(topicId, commIdParam = "") {
 
   // Carrega corpos das respostas que não vieram nas tags
   filteredReplies.forEach(async (r) => {
-    if (!r.body || r.body.startsWith("(")) {
+    if (!r.isLocalP2p && (!r.body || r.body.startsWith("("))) {
       const d = await gql.fetchTransactionData(r.id);
       if (d?.body) {
         const el = document.getElementById(`reply-${r.id}`);
@@ -356,7 +431,7 @@ async function showTopic(topicId, commIdParam = "") {
         });
         await upload.postData({ action: "hide", target: targetId }, tags);
         share.showToast("Item ocultado.");
-        e.target.closest(".card")?.remove();
+        e.target.closest(".reply-item")?.remove();
       } catch (err) {
         share.showToast(`Erro: ${err.message}`, "error");
         e.target.disabled = false;
@@ -367,12 +442,20 @@ async function showTopic(topicId, commIdParam = "") {
 
 async function showProfile(address) {
   const user = await getActiveUser();
-  const isSelf = user === address;
+  const targetAddress = address || user;
+  const isSelf = targetAddress === user || targetAddress === (await localAccount.getRouteId());
   const main = render.renderShell(makeShellProps(user, "profile", "Perfil"));
   render.renderLoading(main);
 
-  const memberships = await gql.fetchUserMemberships(address);
-  const handle = await gql.fetchHandleForAddress(address);
+  const memberships = await gql.fetchUserMemberships(targetAddress);
+  const localMems = await cacheNode.getLocalPosts({ type: "membership" });
+  for (const m of localMems) {
+    if (m.author === targetAddress && !memberships.some((x) => x.communityId === m.communityId)) {
+      memberships.push({ id: m.id, communityId: m.communityId });
+    }
+  }
+
+  const handle = await gql.fetchHandleForAddress(targetAddress);
   let conflictInfo = null;
   if (handle) {
     const hRes = await gql.fetchHandle(handle);
@@ -384,28 +467,93 @@ async function showProfile(address) {
     dmPub = await cryptoDm.getPublicJwk();
   }
 
+  let balance = "0.000";
+  if (wallet.hasWallet() && isSelf) {
+    try {
+      balance = await wallet.getBalance(await wallet.getAddress());
+    } catch {
+      balance = "0.000";
+    }
+  }
+
   main.innerHTML = "";
-  render.renderProfile(main, address, memberships, isSelf, JSON.stringify(dmPub), {
+  render.renderProfile(main, targetAddress, memberships, isSelf, JSON.stringify(dmPub), {
     handle: handle || "",
     isConflict: Boolean(conflictInfo?.isConflict),
     claimants: conflictInfo?.claimants || [],
+    displayName: isSelf ? localAccount.getDisplayName() : "",
+    hasWallet: wallet.hasWallet(),
+    balance,
   });
 
-  bindProfileButtons(user, address, isSelf, dmPub);
+  bindProfileButtons(user, targetAddress, isSelf, dmPub);
 }
 
 function bindProfileButtons(user, address, isSelf, dmPub) {
+  const btnCopyDmLink = document.getElementById("btn-copy-my-dm-link");
+  if (btnCopyDmLink) {
+    btnCopyDmLink.addEventListener("click", () => {
+      const link = `${window.location.origin}${window.location.pathname}#/dm/${encodeURIComponent(address)}`;
+      navigator.clipboard.writeText(link);
+      share.showToast("Link copiado para a área de transferência!");
+    });
+  }
+
+  const formDisplayName = document.getElementById("form-display-name");
+  if (formDisplayName) {
+    formDisplayName.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const name = document.getElementById("input-display-name")?.value.trim();
+      localAccount.setDisplayName(name);
+      share.showToast("Nome local atualizado!");
+      showProfile(address);
+    });
+  }
+
+  const btnGenWallet = document.getElementById("btn-generate-wallet");
+  if (btnGenWallet) {
+    btnGenWallet.addEventListener("click", async () => {
+      btnGenWallet.disabled = true;
+      btnGenWallet.textContent = "Gerando carteira…";
+      try {
+        await wallet.generateNewWallet();
+        await syncIdentity();
+        share.showToast("Carteira Arweave gerada com sucesso!");
+        showProfile(address);
+      } catch (err) {
+        share.showToast(`Erro: ${err.message}`, "error");
+        btnGenWallet.disabled = false;
+        btnGenWallet.textContent = "⚡ Gerar Carteira Arweave";
+      }
+    });
+  }
+
+  const btnDiscWallet = document.getElementById("btn-disconnect-wallet");
+  if (btnDiscWallet) {
+    btnDiscWallet.addEventListener("click", () => {
+      if (confirm("Desconectar carteira Arweave deste navegador?")) {
+        wallet.removeWallet();
+        share.showToast("Carteira desconectada.");
+        showProfile(address);
+      }
+    });
+  }
+
   const btnCopy = document.getElementById("btn-copy-dmpub");
   if (btnCopy && dmPub) {
     btnCopy.addEventListener("click", () => {
       navigator.clipboard.writeText(JSON.stringify(dmPub));
-      share.showToast("Chave pública Dm-Pub copiada para a área de transferência!");
+      share.showToast("Chave pública Dm-Pub copiada!");
     });
   }
 
   const btnPub = document.getElementById("btn-publish-dmpub");
   if (btnPub && isSelf && dmPub) {
     btnPub.addEventListener("click", async () => {
+      if (!wallet.hasWallet()) {
+        share.showToast("Conecte uma carteira Arweave para anunciar on-chain.", "error");
+        return;
+      }
       btnPub.disabled = true;
       btnPub.textContent = "Anunciando on-chain…";
       try {
@@ -426,6 +574,10 @@ function bindProfileButtons(user, address, isSelf, dmPub) {
   if (formClaim && isSelf) {
     formClaim.addEventListener("submit", async (e) => {
       e.preventDefault();
+      if (!wallet.hasWallet()) {
+        share.showToast("Conecte uma carteira Arweave para reivindicar handle on-chain.", "error");
+        return;
+      }
       const raw = document.getElementById("input-handle-slug")?.value.trim();
       const check = handles.validateSlug(raw);
       if (!check.valid) {
@@ -560,7 +712,7 @@ async function showWallet() {
 async function showComposeCommunity() {
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "compose", "Nova Comunidade"));
-  render.renderComposeCommunity(main, { hasWallet: wallet.hasWallet() });
+  render.renderComposeCommunity(main);
 
   const form = document.getElementById("form-compose-community");
   if (form) {
@@ -573,16 +725,32 @@ async function showComposeCommunity() {
       const desc = document.getElementById("comm-desc")?.value.trim();
 
       btn.disabled = true;
-      btn.textContent = "Assinando e enviando…";
+      btn.textContent = "Assinando…";
       try {
-        const tags = upload.buildTags("community", {
-          "Community-Id": id,
-          Title: title,
-          Category: category,
-          Description: desc,
+        const signed = await localAccount.signPayload({
+          id: "c_" + id,
+          type: "community",
+          communityId: id,
+          title,
+          category,
+          description: desc,
         });
-        await upload.postData({ id, title, category, description: desc }, tags);
-        share.showToast("Comunidade criada no permaweb!");
+        await cacheNode.saveLocalPost(signed);
+        peers.broadcastGossip(signed);
+
+        if (wallet.hasWallet()) {
+          try {
+            const tags = upload.buildTags("community", {
+              "Community-Id": id,
+              Title: title,
+              Category: category,
+              Description: desc,
+            });
+            await upload.postData({ id, title, category, description: desc }, tags);
+          } catch {}
+        }
+
+        share.showToast("Comunidade criada na rede!");
         location.hash = `#/c/${encodeURIComponent(id)}`;
       } catch (err) {
         share.showToast(`Erro: ${err.message}`, "error");
@@ -596,31 +764,49 @@ async function showComposeCommunity() {
 async function showComposeTopic(communityId) {
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "compose", "Novo Post"));
-  render.renderComposeTopic(main, communityId, { hasWallet: wallet.hasWallet() });
+  render.renderComposeTopic(main, communityId);
 
   const form = document.getElementById("form-compose-topic");
   if (form) {
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       const btn = document.getElementById("btn-submit-topic");
+      const finalComm = communityId || document.getElementById("topic-comm-id")?.value.trim().toLowerCase() || "geral";
       const title = document.getElementById("topic-title")?.value.trim();
       const body = document.getElementById("topic-body")?.value.trim();
 
       btn.disabled = true;
-      btn.textContent = "Assinando e enviando transação…";
+      btn.textContent = "Publicando…";
       try {
-        const tags = upload.buildTags("topic", {
-          "Community-Id": communityId,
-          "Topic-Title": title,
-          Title: title,
+        const topicId = "top_" + Math.random().toString(36).slice(2, 10);
+        const signed = await localAccount.signPayload({
+          id: topicId,
+          type: "topic",
+          communityId: finalComm,
+          title,
+          body,
         });
-        const res = await upload.postData({ title, body, communityId }, tags);
-        share.showToast("Tópico publicado no permaweb!");
-        location.hash = `#/t/${encodeURIComponent(res.id)}?c=${encodeURIComponent(communityId)}`;
+        await cacheNode.saveLocalPost(signed);
+        peers.broadcastGossip(signed);
+
+        if (wallet.hasWallet()) {
+          try {
+            const tags = upload.buildTags("topic", {
+              "Community-Id": finalComm,
+              "Topic-Title": title,
+              Title: title,
+              "Local-Origin-Id": topicId,
+            });
+            await upload.postData({ title, body, communityId: finalComm }, tags);
+          } catch {}
+        }
+
+        share.showToast("Post publicado na rede!");
+        location.hash = `#/t/${encodeURIComponent(topicId)}?c=${encodeURIComponent(finalComm)}`;
       } catch (err) {
         share.showToast(`Erro: ${err.message}`, "error");
         btn.disabled = false;
-        btn.textContent = "Publicar Tópico";
+        btn.textContent = "Publicar Post";
       }
     });
   }
@@ -629,7 +815,7 @@ async function showComposeTopic(communityId) {
 async function showComposeReply(topicId, communityId) {
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "home", "Responder"));
-  render.renderComposeReply(main, topicId, communityId, { hasWallet: wallet.hasWallet() });
+  render.renderComposeReply(main, topicId, communityId);
 
   const form = document.getElementById("form-compose-reply");
   if (form) {
@@ -639,20 +825,40 @@ async function showComposeReply(topicId, communityId) {
       const body = document.getElementById("reply-body")?.value.trim();
 
       btn.disabled = true;
-      btn.textContent = "Enviando resposta…";
+      btn.textContent = "Enviando…";
       try {
-        const tags = upload.buildTags("reply", {
-          "Reply-To": topicId,
-          "Community-Id": communityId,
+        const replyId = "rep_" + Math.random().toString(36).slice(2, 10);
+        const signed = await localAccount.signPayload({
+          id: replyId,
+          type: "reply",
+          replyTo: topicId,
+          communityId,
+          body,
         });
-        await upload.postData({ replyTo: topicId, body, communityId }, tags);
-        share.showToast("Resposta gravada no permaweb!");
+        await cacheNode.saveLocalPost(signed);
+        peers.broadcastGossip(signed);
+
+        if (wallet.hasWallet()) {
+          try {
+            const tags = upload.buildTags("reply", {
+              "Reply-To": topicId,
+              "Community-Id": communityId,
+              "Local-Origin-Id": replyId,
+            });
+            await upload.postData({ replyTo: topicId, body, communityId }, tags);
+          } catch {}
+        }
+
+        share.showToast("Resposta enviada!");
         location.hash = `#/t/${encodeURIComponent(topicId)}?c=${encodeURIComponent(communityId)}`;
       } catch (err) {
         share.showToast(`Erro: ${err.message}`, "error");
         btn.disabled = false;
         btn.textContent = "Enviar Resposta";
       }
+    });
+  }
+}
     });
   }
 }
@@ -807,13 +1013,19 @@ async function showDmList() {
   const main = render.renderShell(makeShellProps(user, "dm", "Mensagens"));
 
   if (!user) {
-    main.innerHTML = `<div class="card"><h2>Mensagens Diretas</h2><div class="error">Conecte sua carteira em <a href="#/wallet">#/wallet</a> para acessar DMs.</div></div>`;
+    main.innerHTML = `<div class="card"><h2>Mensagens Diretas</h2><div class="error">Não foi possível carregar sua conta local.</div></div>`;
     return;
   }
 
   await pollInboxMessages(user);
   const convs = await cacheNode.getDmConversations();
   render.renderDmList(main, convs, user);
+
+  document.getElementById("btn-copy-my-dm-link")?.addEventListener("click", () => {
+    const link = `${window.location.origin}${window.location.pathname}#/dm/${encodeURIComponent(user)}`;
+    navigator.clipboard.writeText(link);
+    share.showToast("Link copiado para a área de transferência!");
+  });
 
   document.getElementById("form-new-dm")?.addEventListener("submit", (e) => {
     e.preventDefault();
@@ -872,7 +1084,7 @@ async function showDmThread(peerAddress) {
   const main = render.renderShell(makeShellProps(user, "dm", "Conversa"));
 
   if (!user) {
-    main.innerHTML = `<div class="card"><h2>Conversa Direta</h2><div class="error">Conecte sua carteira em <a href="#/wallet">#/wallet</a> para acessar DMs.</div></div>`;
+    main.innerHTML = `<div class="card"><h2>Conversa Direta</h2><div class="error">Não foi possível carregar sua conta local.</div></div>`;
     return;
   }
 
@@ -967,6 +1179,7 @@ async function route() {
   const r = parseRoute();
   if (r.name === "home") return showHome();
   if (r.name === "communities") return showCommunities();
+  if (r.name === "perfil") return showProfile();
   if (r.name === "network-settings") return showNetworkSettings();
   if (r.name === "handle-lookup") return showHandleLookup(r.slug);
   if (r.name === "dm-list") return showDmList();
@@ -981,7 +1194,24 @@ async function route() {
   return showHome();
 }
 
+function initGossipListeners() {
+  peers.onGossipPost((item) => {
+    const cur = parseRoute();
+    if (cur.name === "home") {
+      showHome();
+    } else if (cur.name === "community" && cur.id === item.communityId) {
+      showCommunity(cur.id);
+    } else if (cur.name === "topic" && (cur.id === item.id || cur.id === item.replyTo)) {
+      showTopic(cur.id, cur.communityId);
+    }
+    if (item?.type === "topic") {
+      share.showToast(`Novo post na rede: ${item.title?.slice(0, 24) || "..."}`);
+    }
+  });
+}
+
 window.addEventListener("hashchange", () => route());
 initDmListeners();
+initGossipListeners();
 syncIdentity();
 route();

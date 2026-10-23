@@ -1,5 +1,6 @@
 import * as cacheNode from "./cache-node.js";
 import * as webrtcPeer from "./webrtc-peer.js";
+import * as localAccount from "./local-account.js";
 
 const PEER_SETTINGS_KEY = "vox-peer-settings";
 const PEER_METRICS_KEY = "vox-peer-metrics";
@@ -10,6 +11,7 @@ const myPeerId = "peer_" + Math.random().toString(36).substring(2, 9);
 let broadcastChannel = null;
 const pendingRequests = new Map(); // txId -> Array of resolver functions
 const dmListeners = new Set();
+const gossipListeners = new Set();
 
 export function onDirectMessage(listener) {
   dmListeners.add(listener);
@@ -21,6 +23,20 @@ function dispatchDirectMessage(envelope, source = "rtc") {
   for (const fn of dmListeners) {
     try {
       fn(envelope, source);
+    } catch {}
+  }
+}
+
+export function onGossipPost(listener) {
+  gossipListeners.add(listener);
+  return () => gossipListeners.delete(listener);
+}
+
+function dispatchGossipPost(item, source = "rtc") {
+  if (!item) return;
+  for (const fn of gossipListeners) {
+    try {
+      fn(item, source);
     } catch {}
   }
 }
@@ -206,6 +222,40 @@ export async function handleVoxMessage(msg, replyFn, source = "broadcast") {
     // DMs E2E ponta-a-ponta não contam no teto de banda do cache público
     dispatchDirectMessage(msg.envelope, source);
   }
+
+  if (msg.type === "GOSSIP" && msg.item) {
+    handleGossipMessage(msg.item, source);
+  }
+}
+
+async function handleGossipMessage(item, source = "rtc") {
+  if (!item?.id || !item?.sig) return;
+  const existing = await cacheNode.getLocalPost(item.id);
+  if (existing) return;
+
+  const valid = await localAccount.verifyPayload(item);
+  if (!valid) return;
+
+  await cacheNode.saveLocalPost(item);
+  dispatchGossipPost(item, source);
+
+  // Re-transmite para outros canais (gossip mesh)
+  const payload = { type: "GOSSIP", item, fromPeer: myPeerId };
+  if (source !== "broadcast" && broadcastChannel) {
+    try { broadcastChannel.postMessage(payload); } catch {}
+  }
+  if (source !== "rtc") {
+    webrtcPeer.broadcastRtcMessage(payload);
+  }
+}
+
+export function broadcastGossip(item) {
+  if (!item?.id) return;
+  const payload = { type: "GOSSIP", item, fromPeer: myPeerId };
+  if (broadcastChannel) {
+    try { broadcastChannel.postMessage(payload); } catch {}
+  }
+  webrtcPeer.broadcastRtcMessage(payload);
 }
 
 export function initPeerChannel() {
