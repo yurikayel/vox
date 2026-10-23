@@ -84,3 +84,24 @@ test("share - shareCommunity formata link de comunidade", async () => {
   assert.equal(res, true);
   assert.ok(copiedText.includes("tec-br"));
 });
+
+test("share - shareListing formata link e texto de oferta para a feira", async () => {
+  delete globalThis.navigator.share;
+  let copiedText = null;
+  globalThis.navigator.clipboard = {
+    writeText: async (text) => {
+      copiedText = text;
+    },
+  };
+
+  const res = await share.shareListing({
+    title: "Pão de fermentação natural",
+    communityId: "demo-feira-local",
+    priceLabel: "R$ 28",
+  });
+
+  assert.equal(res, true);
+  assert.ok(copiedText.includes("Pão de fermentação natural"));
+  assert.ok(copiedText.includes("R$ 28"));
+  assert.ok(copiedText.includes("#/c/demo-feira-local?tab=listings"));
+});

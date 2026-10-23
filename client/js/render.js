@@ -415,8 +415,9 @@ export function renderListingItem(item, { communityTitle = "" } = {}) {
   const timeLabel = formatTimeAgo(item.ts);
   const price = listing.normalizePriceLabel(item.priceLabel);
   const location = listing.normalizeLocationLabel(item.locationLabel);
-  const statusKey = String(item.listingStatus || "available").toLowerCase();
+  const statusKey = listing.normalizeListingStatus(item.listingStatus);
   const statusLabel = listing.formatListingStatus(item.listingStatus);
+  const commId = item.communityId || communityTitle || "demo-feira-local";
 
   const locBadge = location
     ? `<span class="listing-location-badge">📍 ${escapeHtml(location)}</span>`
@@ -457,7 +458,7 @@ export function renderListingItem(item, { communityTitle = "" } = {}) {
       <div class="listing-actions post-toolbar" style="margin-top:10px; display:flex; gap:8px; align-items:center;">
         <a class="btn btn-outline btn-sm" href="#/dm/${encodeURIComponent(author)}">💬 Conversar no DM</a>
         ${pixBtn}
-        <button class="action-btn btn-share-post" data-id="${escapeHtml(item.id)}" data-title="${escapeHtml(item.title)}" aria-label="Compartilhar oferta">
+        <button class="action-btn btn-share-listing" data-id="${escapeHtml(item.id)}" data-title="${escapeHtml(item.title)}" data-comm="${escapeHtml(commId)}" data-price="${escapeHtml(price)}" aria-label="Compartilhar oferta">
           <svg class="action-icon icon-share" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
         </button>
       </div>

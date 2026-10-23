@@ -73,3 +73,33 @@ export async function shareCommunity({ title, communityId }) {
     return false;
   }
 }
+
+export async function shareListing({ title, communityId, priceLabel = "" }) {
+  const commPart = communityId ? `#/c/${encodeURIComponent(communityId)}?tab=listings` : "#/";
+  const url = `${window.location.origin}${window.location.pathname}${commPart}`;
+  const priceText = priceLabel ? ` por ${priceLabel}` : "";
+  const text = `Oferta "${title}"${priceText} na Feira do Vox Brasil:`;
+
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: `${title} | Feira Vox`,
+        text,
+        url,
+      });
+      showToast("Oferta compartilhada!");
+      return true;
+    } catch (e) {
+      if (e.name === "AbortError") return false;
+    }
+  }
+
+  try {
+    await navigator.clipboard.writeText(`${text} ${url}`);
+    showToast("Link da oferta copiado!");
+    return true;
+  } catch {
+    showToast("Não foi possível copiar o link.", "error");
+    return false;
+  }
+}

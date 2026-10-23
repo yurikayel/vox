@@ -21,6 +21,12 @@ export function normalizePriceLabel(raw) {
   if (!raw) return "";
   const cleaned = String(raw).trim();
   if (!cleaned) return "";
+
+  // Casos especiais não-monetários (Grátis, A combinar, Doação, etc.)
+  if (/^(gr[áa]tis|gratuito|a combinar|troca|doa[çc][ãa]o)$/i.test(cleaned)) {
+    return cleaned.charAt(0).toUpperCase() + cleaned.slice(1).toLowerCase();
+  }
+
   if (/^r\$/i.test(cleaned)) {
     return `R$ ${cleaned.replace(/^r\$\s*/i, "")}`.trim();
   }
@@ -32,8 +38,15 @@ export function normalizeLocationLabel(raw, maxLen = 60) {
   return String(raw).trim().slice(0, maxLen);
 }
 
+export function normalizeListingStatus(status) {
+  const s = String(status || "available").trim().toLowerCase();
+  if (s === "sold" || s === "vendido") return "sold";
+  if (s === "reserved" || s === "reservado") return "reserved";
+  return "available";
+}
+
 export function formatListingStatus(status) {
-  const s = String(status || "available").toLowerCase();
+  const s = normalizeListingStatus(status);
   if (s === "sold") return "Vendido";
   if (s === "reserved") return "Reservado";
   return "Disponível";
@@ -51,6 +64,9 @@ export function validateListingInput({ title, body, priceLabel } = {}) {
   }
   if (!cleanBody) {
     return { valid: false, error: "Descreva o item ou oferta." };
+  }
+  if (cleanBody.length > 2000) {
+    return { valid: false, error: "Descrição muito longa (máximo 2000 caracteres)." };
   }
   return { valid: true, error: null };
 }
