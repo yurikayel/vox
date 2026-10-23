@@ -10,3 +10,12 @@ test("i18n-pt-br - microcopy pós-gossip de retratação na malha", () => {
   assert.match(i18n.localMutateComposerHint, /pares online/i);
   assert.doesNotMatch(i18n.localMutateEditDeleteTooltip, /só neste aparelho/i);
 });
+
+test("i18n-pt-br - microcopy feira gossip (status / retratação)", () => {
+  assert.match(i18n.listingMutateStatusTooltip, /GOSSIP_UPDATE|gossip/i);
+  assert.match(i18n.listingRetractLabel, /Retirar/i);
+  assert.match(i18n.listingPublishedToast, /publicada/i);
+  assert.match(i18n.listingStatusUpdatedToast, /Status/i);
+  assert.match(i18n.listingRetractedToast, /retirada/i);
+  assert.match(i18n.listingVerifiedBadgeTitle, /assinada|verifyPayload/i);
+});

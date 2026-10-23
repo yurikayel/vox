@@ -2608,6 +2608,35 @@ main#app-main {
   border-radius: var(--radius-sm);
 }
 
+.listing-verified-pill {
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--accent-emerald, #10b981);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.listing-owner-block {
+  margin: 0 0 0.5rem;
+  padding: 0 1rem;
+}
+
+.listing-owner-menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  align-items: center;
+  font-size: 0.82rem;
+}
+
+.listing-owner-menu-label {
+  color: var(--text-muted);
+  margin-right: 4px;
+}
+
+.listing-owner-menu .btn-listing-status.is-active {
+  font-weight: 600;
+  text-decoration: underline;
+}
+
 .listing-status-pill {
   font-size: 0.72rem;
   font-weight: 600;

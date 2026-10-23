@@ -8,6 +8,7 @@ import * as frames from "./frames.js";
 import * as postOwnership from "./post-ownership.js";
 import * as i18n from "./i18n-pt-br.js";
 import * as gossipRetract from "./gossip-retract-ui.js";
+import * as listingUi from "./listing-ui.js";
 import * as localAccount from "./local-account.js";
 
 const root = () => document.getElementById("app-root");
@@ -973,6 +974,7 @@ export function renderProposalStatusBadge(state) {
 }
 
 export function renderListingItem(item, { communityTitle = "" } = {}) {
+  if (gossipRetract.shouldHideGossipDeletedPost(item)) return "";
   const author = item.author || item.owner || "";
   const authorDisplay = (author ? mock.getAuthorDisplay(author) : "") || shortId(author);
   const authorHandle = (author ? mock.getAuthorHandle(author) : "") || shortId(author);
@@ -996,6 +998,13 @@ export function renderListingItem(item, { communityTitle = "" } = {}) {
     ? `<button class="btn btn-secondary btn-sm btn-copy-pix" data-pix="${escapeHtml(pixKey)}" data-author-name="${escapeHtml(authorDisplay)}" data-price="${escapeHtml(price || "")}" data-title="${escapeHtml(item.title || "")}" title="Copiar Pix Copia e Cola">⚡ Copiar Pix</button>`
     : "";
 
+  const ownerMenu = listingUi.renderListingOwnerMenu(item);
+  const headerBadges = listingUi.renderListingHeaderBadges(item, {
+    statusKey,
+    statusLabel,
+    escapeHtml,
+  });
+
   return `
     <article class="post-card listing-card card" data-id="${escapeHtml(item.id)}">
       <div class="post-header">
@@ -1007,10 +1016,9 @@ export function renderListingItem(item, { communityTitle = "" } = {}) {
           <span class="post-dot">·</span>
           <span class="post-meta">${escapeHtml(timeLabel)}</span>
         </div>
-        <div class="listing-header-badges">
-          <span class="badge-pill listing-status-pill status-${statusKey}">${escapeHtml(statusLabel)}</span>
-        </div>
+        ${headerBadges}
       </div>
+      ${ownerMenu}
       ${imgHtml}
       <div class="listing-content">
         <div class="listing-price-row">

@@ -5,6 +5,7 @@ import * as cacheNode from "../client/js/cache-node.js";
 import * as localAccount from "../client/js/local-account.js";
 import * as peers from "../client/js/peers.js";
 import * as postOwnership from "../client/js/post-ownership.js";
+import * as listing from "../client/js/listing.js";
 
 test("gossip-retract T1: UPDATE com editedAt maior substitui corpo", async () => {
   await cacheNode.clearLocalPosts();
@@ -274,4 +275,52 @@ test("gossip-retract T10: broadcastGossipUpdate e broadcastGossipDelete não que
   peers.broadcastGossipUpdate(dummy);
   peers.broadcastGossipDelete(dummy);
   assert.ok(true);
+});
+
+test("gossip-retract T11: GOSSIP_UPDATE em listing atualiza status (sem corpo)", async () => {
+  await cacheNode.clearLocalPosts();
+  localStorage.clear();
+
+  const draft = listing.buildListingDraft({
+    id: "listing_retract_11",
+    communityId: "demo-feira-local",
+    title: "Café especial",
+    body: "250g torrado",
+    priceLabel: "45",
+    listingStatus: "available",
+  });
+  const original = await localAccount.signPayload(draft);
+  await cacheNode.saveLocalPost(original);
+
+  const statusPatch = listing.buildListingStatusUpdate(original, "reserved");
+  const update = await localAccount.signPayload(statusPatch);
+  await peers.handleVoxMessage({ type: "GOSSIP_UPDATE", item: update, fromPeer: "peer_feira" }, () => {}, "rtc");
+
+  const stored = await cacheNode.getLocalPost("listing_retract_11");
+  assert.ok(stored);
+  assert.equal(stored.listingStatus, "reserved");
+  assert.equal(stored.title, "Café especial");
+  assert.equal(stored.body, "250g torrado");
+  assert.equal(stored.editedAt, update.editedAt);
+});
+
+test("gossip-retract T12: GOSSIP_DELETE remove listing da feira (tombstone)", async () => {
+  await cacheNode.clearLocalPosts();
+  localStorage.clear();
+
+  const draft = listing.buildListingDraft({
+    id: "listing_retract_12",
+    communityId: "demo-feira-local",
+    title: "Plantas",
+    body: "Suculentas",
+    priceLabel: "15",
+  });
+  const signed = await localAccount.signPayload(draft);
+  await cacheNode.saveLocalPost(signed);
+
+  const tombstone = await postOwnership.createPostTombstone(signed);
+  await peers.handleVoxMessage({ type: "GOSSIP_DELETE", tombstone, fromPeer: "peer_feira" }, () => {}, "rtc");
+
+  assert.equal(await cacheNode.getLocalPost("listing_retract_12"), null);
+  assert.ok(await cacheNode.getTombstone("listing_retract_12"));
 });
