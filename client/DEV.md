@@ -29,7 +29,7 @@ Abra no navegador: `http://127.0.0.1:8080/`
 
 ### 1.1 Executar Testes Unitários Locais (Tudo)
 
-O Vox inclui suíte completa de testes unitários locais (125 testes: 111 client JS + 14 relay/signaling Python), sem dependências pesadas externas:
+O Vox inclui suíte completa de testes unitários locais (147 testes: 133 client JS + 14 relay/signaling Python), sem dependências pesadas externas:
 
 ```bash
 # Na raiz do repositório vox/
@@ -57,8 +57,8 @@ python -m unittest discover -s relay -p "test_*.py"
 As pipelines em `.github/workflows/` rodam automaticamente no GitHub:
 1. **`ci.yml`:**
    - Disparado em todo `push` ou `pull_request` na branch `main`.
-   - Executa matriz de testes no Node.js (20, 22 e 24) e Python (3.11 e 3.12).
-   - Valida checagem estática de sintaxe e executa os 125 testes unitários.
+   - Executa matriz de testes no Node.js (22 e 24) e Python (3.11 e 3.12).
+   - Valida checagem estática de sintaxe e executa os 147 testes unitários.
    - Auditoria de segurança: verifica que nenhuma chave privada foi commitada acidentalmente.
 2. **`deploy-pages.yml`:**
    - Publica o site composto (`client/**` + `docs/proposta-vox.html`) no GitHub Pages a cada alteração em `client/**` ou `docs/**`.
@@ -153,7 +153,7 @@ Para validar o *Definition of Done* da Fase 2:
 ### 5.3 Service Worker e Background Relay
 1. Abra as Ferramentas do Desenvolvedor (F12) -> aba **Application** -> **Service Workers**:
    * O arquivo `sw.js` deve estar com status **Activated and running** com escopo `./`.
-2. Na aba **Cache Storage**, certifique-se de que o cache `vox-pwa-v3.2` contém os arquivos estáticos pré-cacheados (`index.html`, `style.css`, módulos `.js`).
+2. Na aba **Cache Storage**, certifique-se de que o cache `vox-pwa-v6.4-post-display-refine` contém os arquivos estáticos pré-cacheados (`index.html`, `style.css`, módulos `.js`).
 3. Em `#/settings/network`, ative a opção **"Atuar em segundo plano via Service Worker"** e clique em **"Ativar Notificações de Status"**:
    * Ao autorizar permissão no navegador, o Service Worker sincroniza a configuração via mensagem `VOX_SETTINGS_UPDATED`.
 
