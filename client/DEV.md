@@ -648,7 +648,7 @@ Toolbar tripartida mantém Zap, estrela, copiar MD e bookmark.
 - **Gossip Retratação (v1):** Eventos `GOSSIP_UPDATE` e `GOSSIP_DELETE` propagam na malha `vox-local-v0`. Edições exigem assinatura válida do autor original e `editedAt` estritamente maior que a versão local (LWW). Exclusões gravam tombstone assinado (`post-tombstone`) no IndexedDB (`saveTombstone`), ocultando o post do feed e blindando contra ressurreição por creates atrasados.
 
 ### 21.5 Cache e PWA
-- Cache elevado para `vox-pwa-v6.5-gossip-retract`.
+- Cache elevado para `vox-pwa-v6.8-gossip-retract`.
 - Suíte automatizada com **157 testes** (143 Node.js + 14 Python relay).
 
 ---
