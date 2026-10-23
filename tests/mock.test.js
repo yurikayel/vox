@@ -101,7 +101,7 @@ test("mock - mockListings retorna ofertas para demo-feira-local", () => {
   assert.deepEqual(outro.items, []);
 });
 
-test("mock - mockRecentTopics retorna 10 posts educativos com fotos, dor e resolução", () => {
+test("mock - mockRecentTopics retorna 10 posts educativos com dor e resolução", () => {
   const recent = mock.mockRecentTopics();
   assert.equal(recent.demo, true);
   assert.equal(recent.items.length, 10);
@@ -112,12 +112,18 @@ test("mock - mockRecentTopics retorna 10 posts educativos com fotos, dor e resol
   assert.equal(recent.items[0].voxResolution, "now");
   assert.equal(recent.items[0].communityTitle, "Aprenda o Vox");
 
-  // Todos os 10 posts devem conter externalPain e voxResolution
+  const lucas = recent.items.find((p) => p.id === "demo-post-lucas");
+  assert.ok(lucas && !lucas.image, "Lucas é post só-texto (layout X)");
+
+  const raj = recent.items.find((p) => p.id === "demo-post-raj");
+  assert.ok(raj?.githubGist?.lines?.length, "Raj inclui bloco estilo GitHub");
+
   for (const item of recent.items) {
     assert.ok(item.externalPain, `Post ${item.id} deve ter externalPain`);
     assert.ok(item.voxResolution, `Post ${item.id} deve ter voxResolution`);
-    assert.ok(item.image, `Post ${item.id} deve ter imagem`);
   }
+  const withImage = recent.items.filter((p) => p.image);
+  assert.ok(withImage.length >= 8, "Maioria do tour mantém foto estilo IG");
 });
 
 test("mock - mockProposals e mockVotes retornam deliberações de governança demo", () => {

@@ -192,15 +192,61 @@ export function formatTimeAgo(ts) {
   return `${Math.floor(days / 30)}mês`;
 }
 
+/** @deprecated use renderInlineComposer — kept for tests/fallback */
 export function renderComposerStrip(displayName = "") {
+  return renderInlineComposer({ displayName });
+}
+
+export function renderInlineComposer({ userRouteId = "", displayName = "" } = {}) {
+  const label = displayName || (userRouteId ? mock.getAuthorDisplay(userRouteId) : "") || "Você";
+  const avatarHtml = userRouteId
+    ? renderAvatarHtml(userRouteId, label)
+    : `<span class="avatar">✍</span>`;
   return `
-    <div class="composer-strip card">
-      <a class="composer-strip-link" href="#/compose/topic">
-        <span class="composer-strip-avatar">✍️</span>
-        <span class="composer-strip-placeholder">O que está acontecendo na sua rede?</span>
-        <span class="btn btn-primary btn-sm composer-strip-btn">Postar</span>
-      </a>
+    <div class="inline-composer" id="feed-inline-composer" data-user-route="${escapeHtml(userRouteId || "")}">
+      <div class="inline-composer-collapsed" tabindex="0" role="button" aria-expanded="false" aria-controls="form-inline-topic">
+        <div class="inline-composer-avatar">${avatarHtml}</div>
+        <span class="inline-composer-placeholder">O que está acontecendo na sua rede?</span>
+      </div>
+      <form class="inline-composer-form hidden" id="form-inline-topic" aria-label="Nova publicação">
+        <div class="inline-composer-form-head">
+          ${avatarHtml}
+          <textarea id="inline-topic-body" class="inline-composer-textarea" rows="3" maxlength="2000" placeholder="Compartilhe texto, #hashtags ou anexe uma foto…" required aria-label="Texto da publicação"></textarea>
+        </div>
+        <div class="inline-composer-preview hidden" id="inline-topic-preview-wrap">
+          <img id="inline-topic-preview" class="inline-composer-preview-img" alt="Prévia da imagem" />
+          <button type="button" class="btn btn-outline btn-sm inline-composer-remove-img" id="btn-inline-remove-img">Remover foto</button>
+        </div>
+        <div class="inline-composer-toolbar">
+          <div class="inline-composer-tools">
+            <label class="inline-composer-tool" title="Anexar imagem">
+              <input type="file" id="inline-topic-file" accept="image/*" hidden />
+              <span aria-hidden="true">🖼</span> Foto
+            </label>
+            <input type="text" id="inline-topic-comm" class="inline-composer-comm" placeholder="Comunidade (opcional)" maxlength="64" aria-label="Slug da comunidade" />
+          </div>
+          <button type="submit" class="btn btn-primary btn-sm" id="btn-inline-submit">Postar</button>
+        </div>
+        <p class="inline-composer-hint meta">Publicação assinada no seu aparelho · fica no feed · <a href="#/compose/topic">formulário completo</a></p>
+      </form>
     </div>`;
+}
+
+export function getPostFeedLayout(t) {
+  if (t?.githubGist?.lines?.length) return "github";
+  if (t?.image) return "photo";
+  return "text";
+}
+
+function renderPostGithubGist(t) {
+  const gist = t.githubGist;
+  if (!gist?.lines?.length) return "";
+  const label = gist.label || "README / diff";
+  const lines = gist.lines.map((line) => escapeHtml(line)).join("\n");
+  return `<div class="post-github-gist" role="region" aria-label="${escapeHtml(label)}">
+    <div class="post-github-gist-label">${escapeHtml(label)}</div>
+    <pre class="post-github-gist-body">${lines}</pre>
+  </div>`;
 }
 
 export function formatPostMarkdown(post) {
@@ -275,15 +321,18 @@ function renderPostHeaderBlock(t, author, authorDisplay, authorHandle, isPinned)
     ? `<span class="badge-pill pinned-pill" title="Publicação fixada pelo autor">📌 Fixado</span>`
     : "";
   return `
-        <div class="post-header">
-          <div class="post-header-author">
-            <a class="post-author" href="#/u/${encodeURIComponent(author)}">${escapeHtml(authorDisplay)}</a>
-            <span class="post-handle">@${escapeHtml(authorHandle)}</span>
-            <span class="post-dot">·</span>
-            <span class="post-meta">${escapeHtml(formatTimeAgo(t.ts))}</span>
-          </div>
-          <div class="post-header-tags">${pinnedBadge}${originBadge}${commPill}</div>
-        </div>`;
+    <header class="post-header-ig">
+      <div class="post-header-user">
+        <a class="avatar-link" href="#/u/${encodeURIComponent(author)}">${renderAvatarHtml(author, authorDisplay)}</a>
+        <div class="post-header-meta">
+          <a class="post-author" href="#/u/${encodeURIComponent(author)}">${escapeHtml(authorDisplay)}</a>
+          <span class="post-handle">@${escapeHtml(authorHandle)}</span>
+          <span class="post-dot">·</span>
+          <span class="post-time">${escapeHtml(formatTimeAgo(t.ts))}</span>
+        </div>
+      </div>
+      <div class="post-header-tags">${pinnedBadge}${originBadge}${commPill}</div>
+    </header>`;
 }
 
 function renderPostMedia(t) {
@@ -400,25 +449,31 @@ function renderPostToolbar(t, author, authorDisplay, authorHandle) {
   const saved = social.isSaved(t.id);
   return `
         <div class="post-actions insta-actions post-toolbar">
-          <button class="action-btn btn-like ${liked ? "active" : ""}" data-id="${escapeHtml(t.id)}" data-count="${baseLikes}" aria-label="Curtir post">
-            <svg class="action-icon icon-heart" width="18" height="18" viewBox="0 0 24 24" fill="${liked ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
-            <span class="action-count count-likes">${likes > 0 ? likes : ""}</span>
-          </button>
-          <button class="action-btn btn-star ${starred ? "active" : ""}" data-id="${escapeHtml(t.id)}" data-count="${baseStars}" aria-label="Dar estrela ao post">
-            <svg class="action-icon icon-star" width="18" height="18" viewBox="0 0 24 24" fill="${starred ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-            <span class="action-count count-stars">${stars > 0 ? stars : ""}</span>
-          </button>
-          ${renderZapToolbarBtn(t, author, authorDisplay)}
-          ${renderCommentButton(t)}
-          <button class="action-btn btn-share btn-share-post" data-id="${escapeHtml(t.id)}" data-title="${escapeHtml(t.title)}" aria-label="Compartilhar post">
-            <svg class="action-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
-          </button>
-          <button class="action-btn btn-copy-md" data-id="${escapeHtml(t.id)}" data-title="${escapeHtml(t.title)}" data-body="${escapeHtml(t.body || "")}" data-author="${escapeHtml(authorDisplay)}" data-handle="${escapeHtml(authorHandle)}" aria-label="Copiar post como Markdown">
-            <svg class="action-icon icon-copy" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
-          </button>
-          <button class="action-btn btn-save ${saved ? "active" : ""}" data-id="${escapeHtml(t.id)}" aria-label="Salvar post">
-            <svg class="action-icon icon-bookmark" width="18" height="18" viewBox="0 0 24 24" fill="${saved ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
-          </button>
+          <div class="toolbar-left">
+            <button class="action-btn btn-like ${liked ? "active" : ""}" data-id="${escapeHtml(t.id)}" data-count="${baseLikes}" aria-label="Curtir post">
+              <svg class="action-icon icon-heart" width="20" height="20" viewBox="0 0 24 24" fill="${liked ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+              <span class="action-count count-likes">${likes > 0 ? likes : ""}</span>
+            </button>
+            ${renderCommentButton(t)}
+            <button class="action-btn btn-share btn-share-post" data-id="${escapeHtml(t.id)}" data-title="${escapeHtml(t.title)}" aria-label="Compartilhar post">
+              <svg class="action-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+            </button>
+          </div>
+          <div class="toolbar-center">
+            ${renderZapToolbarBtn(t, author, authorDisplay)}
+            <button class="action-btn btn-star ${starred ? "active" : ""}" data-id="${escapeHtml(t.id)}" data-count="${baseStars}" aria-label="Dar estrela ao post">
+              <svg class="action-icon icon-star" width="19" height="19" viewBox="0 0 24 24" fill="${starred ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <span class="action-count count-stars">${stars > 0 ? stars : ""}</span>
+            </button>
+          </div>
+          <div class="toolbar-right">
+            <button class="action-btn btn-copy-md" data-id="${escapeHtml(t.id)}" data-title="${escapeHtml(t.title)}" data-body="${escapeHtml(t.body || "")}" data-author="${escapeHtml(authorDisplay)}" data-handle="${escapeHtml(authorHandle)}" aria-label="Copiar post como Markdown">
+              <svg class="action-icon icon-copy" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
+            </button>
+            <button class="action-btn btn-save ${saved ? "active" : ""}" data-id="${escapeHtml(t.id)}" aria-label="Salvar post">
+              <svg class="action-icon icon-bookmark" width="19" height="19" viewBox="0 0 24 24" fill="${saved ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
+            </button>
+          </div>
         </div>`;
 }
 
@@ -426,31 +481,70 @@ export function renderPostItem(t, { isPinned = false } = {}) {
   const author = t.author || t.owner || "";
   const authorDisplay = t.authorDisplay || (author ? mock.getAuthorDisplay(author) : "") || shortId(author);
   const authorHandle = (author ? mock.getAuthorHandle(author) : "") || shortId(author);
+  const layout = getPostFeedLayout(t);
+  const header = renderPostHeaderBlock(t, author, authorDisplay, authorHandle, isPinned);
+  const media = layout === "photo" ? renderPostMedia(t) : "";
+  const frame = renderPostFrame(t);
+  const toolbar = renderPostToolbar(t, author, authorDisplay, authorHandle);
+  const caption = `<div class="post-caption-block">${renderPostText(t)}</div>`;
+  const gist = layout === "github" ? renderPostGithubGist(t) : "";
+  const comments = renderPostComments(t.id, t.communityId);
+
+  if (layout === "text" || layout === "github") {
+    return `
+    <article class="post insta-post post-layout-${layout}" data-id="${escapeHtml(t.id)}" data-layout="${layout}">
+      ${header}
+      ${caption}
+      ${gist}
+      ${frame}
+      ${toolbar}
+      ${comments}
+    </article>`;
+  }
+
   return `
-    <article class="post insta-post" data-id="${escapeHtml(t.id)}">
-      <a class="avatar-link" href="#/u/${encodeURIComponent(author)}">${renderAvatarHtml(author, authorDisplay)}</a>
-      <div class="post-content">
-        ${renderPostHeaderBlock(t, author, authorDisplay, authorHandle, isPinned)}
-        ${renderPostMedia(t)}
-        ${renderPostText(t)}
-        ${renderPostFrame(t)}
-        ${renderPostToolbar(t, author, authorDisplay, authorHandle)}
-        ${renderPostComments(t.id, t.communityId)}
-      </div>
+    <article class="post insta-post post-layout-photo" data-id="${escapeHtml(t.id)}" data-layout="photo">
+      ${header}
+      ${media}
+      ${frame}
+      ${toolbar}
+      ${caption}
+      ${comments}
     </article>`;
 }
 
-export function renderFeed(main, topics = [], { activeFeed = "for-you" } = {}) {
+export function renderStoriesStrip() {
+  const profiles = Object.values(mock.MOCK_DEMO_PROFILES || {});
+  if (!profiles.length) return "";
+  const items = profiles
+    .map((p) => {
+      const avatarSrc = p.avatar || "icons/icon.svg";
+      const firstName = (p.name || p.handle || "Autor").split(" ")[0];
+      return `
+        <a class="story-item" href="#/u/${encodeURIComponent(p.routeId)}" title="Ver perfil de ${escapeHtml(p.name)}">
+          <div class="story-ring">
+            <img class="story-avatar" src="${escapeHtml(avatarSrc)}" alt="${escapeHtml(p.name)}" loading="lazy" />
+          </div>
+          <span class="story-name">${escapeHtml(firstName)}</span>
+        </a>`;
+    })
+    .join("");
+
+  return `<div class="stories-strip" aria-label="Stories em destaque">${items}</div>`;
+}
+
+export function renderFeed(main, topics = [], { activeFeed = "for-you", userRouteId = "" } = {}) {
   const isForYou = activeFeed !== "following";
+  const displayName = userRouteId ? mock.getAuthorDisplay(userRouteId) : "";
   let html = `
     <div class="feed-header sticky-header">
       <div class="feed-segmented-nav">
         <a href="#/" class="feed-tab ${isForYou ? "active" : ""}">Para você</a>
         <a href="#/?feed=following" class="feed-tab ${!isForYou ? "active" : ""}">Seguindo</a>
       </div>
-      <a class="btn btn-primary btn-sm" href="#/compose/topic">+ Postar</a>
     </div>
-    ${renderComposerStrip()}`;
+    ${renderStoriesStrip()}
+    ${renderInlineComposer({ userRouteId, displayName })}`;
 
   if (!topics.length) {
     if (!isForYou) {
