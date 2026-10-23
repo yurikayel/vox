@@ -148,7 +148,11 @@ function attachPostShareHandlers() {
 async function showHome(feed = "for-you") {
   const activeFeed = feed === "following" ? "following" : "for-you";
   const user = await getActiveUser();
-  const main = render.renderShell(makeShellProps(user, "home"));
+  const main = render.renderShell({
+    ...makeShellProps(user, "home"),
+    activeFeed,
+    showFeedNav: true,
+  });
   render.renderLoading(main);
 
   try {
