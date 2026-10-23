@@ -432,3 +432,95 @@ test("render - renderProfile com README.md, GitHub badge e botão Watch", () => 
   assert.ok(html.includes("profile-tabs"));
   assert.ok(html.includes("Estrelados"));
 });
+
+test("render - renderCommunity tab Governança e renderProposalItem", () => {
+  const main = createContainer();
+  const proposals = [
+    {
+      id: "prop_1",
+      communityId: "demo-aprenda-vox",
+      title: "Ativar feira comunitária popular",
+      body: "Proposta para abrir feira solidária.",
+      diffText: "@@ -1,2 +1,3 @@\n- commercialEnabled: false\n+ commercialEnabled: true",
+      author: "vx_demo_helena",
+      createdAt: Date.now() - 3600000,
+      state: "open",
+    },
+  ];
+
+  render.renderCommunity(main, "demo-aprenda-vox", [], { title: "Aprenda o Vox" }, {
+    activeTab: "governance",
+    proposals,
+  });
+
+  const html = main.innerHTML;
+  assert.ok(html.includes("Governança (1)"));
+  assert.ok(html.includes("Deliberações Comunitárias"));
+  assert.ok(html.includes("Ativar feira comunitária popular"));
+  assert.ok(html.includes("Em votação"));
+  assert.ok(html.includes("Contém diff unificado"));
+  assert.ok(html.includes("Ver proposta & votos →"));
+});
+
+test("render - renderProposalDetail com diff, apuração e votos", () => {
+  const main = createContainer();
+  const proposal = {
+    id: "prop_diff_test",
+    communityId: "demo-aprenda-vox",
+    title: "Moderação transparente",
+    body: "**Regra:** Toda moderação deve ser pública.",
+    diffText: "@@ -1,2 +1,3 @@\n- modPolicy: secreta\n+ modPolicy: pública",
+    author: "vx_demo_juliana",
+    createdAt: Date.now() - 7200000,
+    state: "open",
+  };
+  const tally = {
+    yes: 2,
+    no: 1,
+    abstain: 0,
+    totalEligible: 3,
+    ineligibleCount: 1,
+    state: "open",
+    votesDetail: [
+      { author: "vx_demo_juliana", choice: "yes", eligible: true, reason: "", ts: Date.now() - 3000 },
+      { author: "vx_demo_raj", choice: "yes", eligible: true, reason: "", ts: Date.now() - 2000 },
+      { author: "vx_demo_carlos", choice: "no", eligible: true, reason: "", ts: Date.now() - 1000 },
+      { author: "vx_demo_mateus", choice: "yes", eligible: false, reason: "adesão posterior ao marco de corte", ts: Date.now() },
+    ],
+  };
+
+  render.renderProposalDetail(main, proposal, tally, {
+    userVote: { choice: "yes" },
+    isEligible: true,
+    isMember: true,
+    userAddress: "vx_demo_juliana",
+  });
+
+  const html = main.innerHTML;
+  assert.ok(html.includes("Moderação transparente"));
+  assert.ok(html.includes("Patch proposto (Diff unificado)"));
+  assert.ok(html.includes("diff-line-add"));
+  assert.ok(html.includes("+ modPolicy: pública"));
+  assert.ok(html.includes("diff-line-del"));
+  assert.ok(html.includes("- modPolicy: secreta"));
+  assert.ok(html.includes("Apuração de Votos (1 membro = 1 voto)"));
+  assert.ok(html.includes("Sim:</strong> 2"));
+  assert.ok(html.includes("Não:</strong> 1"));
+  assert.ok(html.includes("Descartados pós-corte:</strong> 1"));
+  assert.ok(html.includes("vote-btn-yes selected"));
+  assert.ok(html.includes("Transparência de Votos (4)"));
+  assert.ok(html.includes("Não computado (adesão posterior ao marco de corte)"));
+});
+
+test("render - renderComposeProposal gera formulário de proposta", () => {
+  const main = createContainer();
+  render.renderComposeProposal(main, "demo-aprenda-vox", "Aprenda o Vox");
+
+  const html = main.innerHTML;
+  assert.ok(html.includes("Nova Proposta — Aprenda o Vox"));
+  assert.ok(html.includes("form-compose-proposal"));
+  assert.ok(html.includes("prop-title"));
+  assert.ok(html.includes("prop-body"));
+  assert.ok(html.includes("prop-diff"));
+  assert.ok(html.includes("Publicar Proposta Assinada"));
+});

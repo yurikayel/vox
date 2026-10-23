@@ -1,7 +1,7 @@
 /**
  * Semeador idempotente do Tour Demo (10 perfis educativos).
- * Persiste tópicos no IndexedDB local-posts sem assinar via gossip,
- * permitindo explorar a UI, comunidades e perfis sem gateways remotos.
+ * Persiste tópicos, feira e propostas de governança no IndexedDB local-posts sem assinar via gossip,
+ * permitindo explorar a UI, comunidades, classificados e deliberações sem gateways remotos.
  */
 
 import * as cacheNode from "./cache-node.js";
@@ -11,9 +11,11 @@ import {
   MOCK_DEMO_TOPICS,
   MOCK_DEMO_LISTINGS,
   MOCK_DEMO_REPLIES,
+  MOCK_DEMO_PROPOSALS,
+  MOCK_DEMO_VOTES,
 } from "./mock.js";
 
-const SEED_KEY = "vox-demo-seeded-v4";
+const SEED_KEY = "vox-demo-seeded-v5";
 
 export async function ensureDemoSeed() {
   if (typeof window === "undefined" || !window.localStorage) return;
@@ -22,8 +24,9 @@ export async function ensureDemoSeed() {
   if (alreadySeeded) {
     const probe = await cacheNode.getLocalPost("demo-post-helena");
     const probeListing = await cacheNode.getLocalPost("demo-listing-helena");
+    const probeProposal = await cacheNode.getLocalPost("demo-prop-feira");
     const existing = await cacheNode.getLocalPosts({ type: "topic", communityId: MOCK_DEMO_COMMUNITY.id });
-    if (probe && probe.image && probeListing && existing.length >= 10) return;
+    if (probe && probe.image && probeListing && probeProposal && existing.length >= 10) return;
   }
 
   await insertDemoItems();
@@ -36,6 +39,9 @@ async function insertDemoItems() {
   await seedTopics(baseTs);
   await seedListings(baseTs);
   await seedReplies(baseTs);
+  await seedMemberships(baseTs);
+  await seedProposals(baseTs);
+  await seedVotes(baseTs);
 }
 
 async function seedCommunities(baseTs) {
@@ -111,6 +117,52 @@ async function seedReplies(baseTs) {
       author: r.author,
       ts: baseTs - 50000,
     });
+  }
+}
+
+async function seedMemberships(baseTs) {
+  const demoAuthors = [
+    "vx_demo_helena",
+    "vx_demo_juliana",
+    "vx_demo_lucas",
+    "vx_demo_raj",
+    "vx_demo_yara",
+    "vx_demo_carlos",
+    "vx_demo_ana",
+    "vx_demo_mateus",
+    "vx_demo_bia",
+    "vx_demo_fernando",
+  ];
+  for (let i = 0; i < demoAuthors.length; i++) {
+    const author = demoAuthors[i];
+    await cacheNode.saveLocalPost({
+      id: `mem_demo-aprenda-vox_${author}`,
+      type: "membership",
+      communityId: "demo-aprenda-vox",
+      author,
+      joinedAt: baseTs - (120 * 3600 * 1000 - i * 1000),
+      ts: baseTs - (120 * 3600 * 1000 - i * 1000),
+    });
+  }
+}
+
+async function seedProposals(baseTs) {
+  for (const p of MOCK_DEMO_PROPOSALS) {
+    await cacheNode.saveLocalPost({
+      ...p,
+      ts: p.createdAt || (baseTs - 86400000),
+    });
+  }
+}
+
+async function seedVotes() {
+  for (const propId of Object.keys(MOCK_DEMO_VOTES)) {
+    const list = MOCK_DEMO_VOTES[propId];
+    for (const v of list) {
+      await cacheNode.saveLocalPost({
+        ...v,
+      });
+    }
   }
 }
 

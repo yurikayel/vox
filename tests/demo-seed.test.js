@@ -8,9 +8,9 @@ test("demo-seed - ensureDemoSeed grava comunidade, 10 tópicos, feira e ofertas 
   localStorage.clear();
   await cacheNode.clearLocalPosts();
 
-  // Primeira execução: insere itens demo v4
+  // Primeira execução: insere itens demo v5
   await demoSeed.ensureDemoSeed();
-  assert.equal(localStorage.getItem("vox-demo-seeded-v4"), "true");
+  assert.equal(localStorage.getItem("vox-demo-seeded-v5"), "true");
 
   // Verifica comunidade
   const comm = await cacheNode.getLocalPost("demo-aprenda-vox");
@@ -33,6 +33,18 @@ test("demo-seed - ensureDemoSeed grava comunidade, 10 tópicos, feira e ofertas 
   // Verifica ofertas da feira (4 personas)
   const listings = await cacheNode.getLocalPosts({ type: "listing", communityId: "demo-feira-local" });
   assert.equal(listings.length, 4);
+
+  // Verifica propostas de governança
+  const proposals = await cacheNode.getLocalPosts({ type: "governance-proposal", communityId: "demo-aprenda-vox" });
+  assert.equal(proposals.length, 2);
+
+  const propFeira = await cacheNode.getLocalPost("demo-prop-feira");
+  assert.ok(propFeira);
+  assert.equal(propFeira.title, "Ativar feira comunitária e classificados populares");
+  assert.equal(propFeira.state, "open");
+
+  const votes = await cacheNode.getLocalPosts({ type: "governance-vote", proposalId: "demo-prop-feira" });
+  assert.equal(votes.length, 3);
 
   const listingHelena = await cacheNode.getLocalPost("demo-listing-helena");
   assert.ok(listingHelena);
@@ -64,22 +76,28 @@ test("demo-seed - ensureDemoSeed grava comunidade, 10 tópicos, feira e ofertas 
 test("demo-seed - ensureDemoSeed é idempotente e preserva integridade", async () => {
   // Segunda execução imediata
   await demoSeed.ensureDemoSeed();
-  assert.equal(localStorage.getItem("vox-demo-seeded-v4"), "true");
+  assert.equal(localStorage.getItem("vox-demo-seeded-v5"), "true");
 
   const topics = await cacheNode.getLocalPosts({ type: "topic", communityId: "demo-aprenda-vox" });
   assert.equal(topics.length, 10);
 
   const listings = await cacheNode.getLocalPosts({ type: "listing", communityId: "demo-feira-local" });
   assert.equal(listings.length, 4);
+
+  const proposals = await cacheNode.getLocalPosts({ type: "governance-proposal", communityId: "demo-aprenda-vox" });
+  assert.equal(proposals.length, 2);
 });
 
 test("demo-seed - resetDemoSeed restaura conteúdo demo", async () => {
   await demoSeed.resetDemoSeed();
-  assert.equal(localStorage.getItem("vox-demo-seeded-v4"), "true");
+  assert.equal(localStorage.getItem("vox-demo-seeded-v5"), "true");
 
   const topics = await cacheNode.getLocalPosts({ type: "topic", communityId: "demo-aprenda-vox" });
   assert.equal(topics.length, 10);
 
   const listings = await cacheNode.getLocalPosts({ type: "listing", communityId: "demo-feira-local" });
   assert.equal(listings.length, 4);
+
+  const proposals = await cacheNode.getLocalPosts({ type: "governance-proposal", communityId: "demo-aprenda-vox" });
+  assert.equal(proposals.length, 2);
 });

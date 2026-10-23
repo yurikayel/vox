@@ -254,15 +254,23 @@ export async function saveLocalPost(post) {
       const tx = db.transaction(LOCAL_POSTS_STORE, "readwrite");
       const store = tx.objectStore(LOCAL_POSTS_STORE);
       store.put({
+        ...post,
         id: post.id,
         type: post.type,
         communityId: post.communityId || "",
         replyTo: post.replyTo || "",
+        proposalId: post.proposalId || "",
         title: post.title || "",
         body: post.body || "",
+        diffText: post.diffText || "",
+        closesAt: post.closesAt || 0,
+        minQuorum: post.minQuorum || 0,
+        state: post.state || "open",
+        choice: post.choice || "",
+        joinedAt: post.joinedAt || 0,
         category: post.category || "",
         description: post.description || "",
-        author: post.author || "",
+        author: post.author || post.owner || "",
         image: post.image || "",
         imageAlt: post.imageAlt || "",
         externalPain: post.externalPain || "",
@@ -276,7 +284,7 @@ export async function saveLocalPost(post) {
         repliesCount: Number(post.repliesCount) || 0,
         pubKey: post.pubKey || null,
         sig: post.sig || "",
-        ts: post.ts || Date.now(),
+        ts: post.ts || post.createdAt || Date.now(),
         isLocalP2p: true,
       });
       tx.oncomplete = () => resolve();
@@ -301,7 +309,7 @@ export async function getLocalPost(id) {
   }
 }
 
-export async function getLocalPosts({ type = null, communityId = null, replyTo = null } = {}) {
+export async function getLocalPosts({ type = null, communityId = null, replyTo = null, proposalId = null } = {}) {
   try {
     const db = await openDB();
     return await new Promise((resolve) => {
@@ -313,6 +321,7 @@ export async function getLocalPosts({ type = null, communityId = null, replyTo =
         if (type) items = items.filter((p) => p.type === type);
         if (communityId) items = items.filter((p) => p.communityId === communityId);
         if (replyTo !== null) items = items.filter((p) => p.replyTo === replyTo);
+        if (proposalId) items = items.filter((p) => p.proposalId === proposalId);
 
         if (type === "reply") {
           items.sort((a, b) => (a.ts || 0) - (b.ts || 0));

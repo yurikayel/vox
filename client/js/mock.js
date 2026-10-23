@@ -426,6 +426,59 @@ export const MOCK_DEMO_LISTINGS = [
   },
 ];
 
+export const MOCK_DEMO_PROPOSALS = [
+  {
+    id: "demo-prop-feira",
+    type: "governance-proposal",
+    communityId: "demo-aprenda-vox",
+    title: "Ativar feira comunitária e classificados populares",
+    body: "Propomos habilitar a aba Classificados nesta comunidade para permitir a troca solidária e venda de produtos artesanais dos membros do bairro, com contato via DM e Pix direto.",
+    diffText: `@@ -1,4 +1,5 @@
+ category: "Tour"
+- commercialEnabled: false
++ commercialEnabled: true
++ commercialRules: "Produtos artesanais, alimentos frescos e serviços locais sem taxas."`,
+    author: "vx_demo_helena",
+    owner: "vx_demo_helena",
+    createdAt: NOW - 24 * 3600 * 1000,
+    closesAt: NOW + 48 * 3600 * 1000,
+    minQuorum: 2,
+    state: "open",
+    isLocalP2p: true,
+  },
+  {
+    id: "demo-prop-mod",
+    type: "governance-proposal",
+    communityId: "demo-aprenda-vox",
+    title: "Instituir moderação comunitária transparente via mod-action",
+    body: "Estabelecer que toda ação disciplinar deve gerar um registro criptográfico assinado pelos moderadores eleitos, sem deleções silenciosas.",
+    diffText: `@@ -10,3 +10,4 @@
+- modPolicy: "discricionária"
++ modPolicy: "pública e auditável via mod-action"
++ appealPeriod: "72h"`,
+    author: "vx_demo_juliana",
+    owner: "vx_demo_juliana",
+    createdAt: NOW - 72 * 3600 * 1000,
+    closesAt: NOW - 12 * 3600 * 1000,
+    minQuorum: 2,
+    state: "merged",
+    isLocalP2p: true,
+  },
+];
+
+export const MOCK_DEMO_VOTES = {
+  "demo-prop-feira": [
+    { id: "vote-1", type: "governance-vote", proposalId: "demo-prop-feira", author: "vx_demo_helena", owner: "vx_demo_helena", choice: "yes", ts: NOW - 20 * 3600 * 1000 },
+    { id: "vote-2", type: "governance-vote", proposalId: "demo-prop-feira", author: "vx_demo_juliana", owner: "vx_demo_juliana", choice: "yes", ts: NOW - 18 * 3600 * 1000 },
+    { id: "vote-3", type: "governance-vote", proposalId: "demo-prop-feira", author: "vx_demo_lucas", owner: "vx_demo_lucas", choice: "abstain", ts: NOW - 15 * 3600 * 1000 },
+  ],
+  "demo-prop-mod": [
+    { id: "vote-4", type: "governance-vote", proposalId: "demo-prop-mod", author: "vx_demo_juliana", owner: "vx_demo_juliana", choice: "yes", ts: NOW - 60 * 3600 * 1000 },
+    { id: "vote-5", type: "governance-vote", proposalId: "demo-prop-mod", author: "vx_demo_raj", owner: "vx_demo_raj", choice: "yes", ts: NOW - 58 * 3600 * 1000 },
+    { id: "vote-6", type: "governance-vote", proposalId: "demo-prop-mod", author: "vx_demo_yara", owner: "vx_demo_yara", choice: "yes", ts: NOW - 50 * 3600 * 1000 },
+  ],
+};
+
 export const MOCK_TOPICS = {
   "demo-aprenda-vox": MOCK_DEMO_TOPICS,
   "demo-feira-local": [],
@@ -521,6 +574,18 @@ export function mockRecentTopics() {
     ...t,
     communityTitle: "Aprenda o Vox",
   }));
+  return { items, demo: true };
+}
+
+export function mockProposals(communityId) {
+  if (communityId === "demo-aprenda-vox") {
+    return { items: MOCK_DEMO_PROPOSALS, demo: true };
+  }
+  return { items: [], demo: true };
+}
+
+export function mockVotes(proposalId) {
+  const items = MOCK_DEMO_VOTES[proposalId] || [];
   return { items, demo: true };
 }
 

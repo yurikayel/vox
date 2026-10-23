@@ -119,3 +119,22 @@ test("mock - mockRecentTopics retorna 10 posts educativos com fotos, dor e resol
     assert.ok(item.image, `Post ${item.id} deve ter imagem`);
   }
 });
+
+test("mock - mockProposals e mockVotes retornam deliberações de governança demo", () => {
+  const props = mock.mockProposals("demo-aprenda-vox");
+  assert.equal(props.demo, true);
+  assert.equal(props.items.length, 2);
+  assert.equal(props.items[0].id, "demo-prop-feira");
+  assert.equal(props.items[0].type, "governance-proposal");
+  assert.ok(props.items[0].diffText.includes("commercialEnabled"));
+
+  const vazio = mock.mockProposals("outra-comunidade");
+  assert.equal(vazio.demo, true);
+  assert.deepEqual(vazio.items, []);
+
+  const votes = mock.mockVotes("demo-prop-feira");
+  assert.equal(votes.demo, true);
+  assert.equal(votes.items.length, 3);
+  assert.equal(votes.items[0].type, "governance-vote");
+  assert.equal(votes.items[0].choice, "yes");
+});
