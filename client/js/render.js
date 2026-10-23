@@ -59,9 +59,13 @@ export function renderNetworkChip(metrics, rtcStatus, settings) {
 const USER_ICON_SVG = `<svg class="badge-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
 
 function renderWalletBadge(walletAddress) {
-  return walletAddress
-    ? `<a class="wallet-badge connected" href="#/perfil">${USER_ICON_SVG}<span>${escapeHtml(shortId(walletAddress))}</span></a>`
-    : `<a class="wallet-badge" href="#/perfil">${USER_ICON_SVG}<span>Perfil</span></a>`;
+  if (!walletAddress) {
+    return `<a class="wallet-badge account-access" href="#/perfil" aria-label="Abrir perfil">${USER_ICON_SVG}<span class="wallet-badge-label">Perfil</span></a>`;
+  }
+  const display = mock.getAuthorDisplay(walletAddress) || "Conta";
+  const shortName = display.split(/\s+/)[0] || display;
+  const tip = `${display} · ID ${walletAddress}`;
+  return `<a class="wallet-badge account-access connected" href="#/perfil" title="${escapeHtml(tip)}" aria-label="Perfil de ${escapeHtml(display)}">${USER_ICON_SVG}<span class="wallet-badge-label">${escapeHtml(shortName)}</span></a>`;
 }
 
 function renderTabBar(activeTab) {
@@ -101,23 +105,38 @@ function renderTabBar(activeTab) {
     </aside>`;
 }
 
+export function updateTopBarSync(active, detail = "") {
+  const el = document.getElementById("top-sync-hint");
+  if (!el) return;
+  if (active) {
+    el.hidden = false;
+    el.textContent = detail || "Sincronizando…";
+  } else {
+    el.hidden = true;
+    el.textContent = "";
+  }
+}
+
 export function renderShell({ title, subtitle, breadcrumb, walletAddress, activeTab = "home", metrics, rtcStatus, settings }) {
   const chipHtml = renderNetworkChip(metrics, rtcStatus, settings);
   const walletBadge = renderWalletBadge(walletAddress);
   const tabBarHtml = renderTabBar(activeTab);
+  const pageTitle = title ? `<span class="top-bar-title">${escapeHtml(title)}</span>` : "";
 
   root().innerHTML = `
     <div class="app-layout">
       ${tabBarHtml}
       <div class="main-column">
         <header class="top-bar">
-          <div class="top-brand">
-            <a class="home-link" href="#/"><span class="brand-mark">V</span><span class="brand-text">ox</span></a>
+          <div class="top-bar-start">
+            <div class="top-brand">
+              <a class="home-link" href="#/"><span class="brand-mark">V</span><span class="brand-text">ox</span></a>
+            </div>
+            ${pageTitle}
           </div>
-          <div class="top-center">
+          <div class="top-bar-end">
+            <span class="top-sync-hint" id="top-sync-hint" hidden aria-live="polite"></span>
             ${chipHtml}
-          </div>
-          <div class="top-actions">
             ${walletBadge}
           </div>
         </header>
@@ -161,15 +180,12 @@ export function renderError(main, message) {
 export function renderDemoBanner(main) {
   main.insertAdjacentHTML(
     "afterbegin",
-    `<div class="banner demo">Tour de demonstração — conteúdo de exemplo.</div>`
+    `<p class="feed-notice demo" role="status">Tour de demonstração — conteúdo de exemplo.</p>`
   );
 }
 
 export function renderGatewayBanner(main, label) {
-  main.insertAdjacentHTML(
-    "afterbegin",
-    `<div class="banner">Sincronizando conteúdos…</div>`
-  );
+  updateTopBarSync(true, label ? "Sincronizando conteúdos…" : "Sincronizando…");
 }
 
 function renderAvatarHtml(author, authorDisplay, sizeClass = "") {
@@ -583,14 +599,18 @@ export function renderFeed(main, topics = [], { activeFeed = "for-you", userRout
   const isForYou = activeFeed !== "following";
   const displayName = userRouteId ? mock.getAuthorDisplay(userRouteId) : "";
   let html = `
-    <div class="feed-header sticky-header">
-      <div class="feed-segmented-nav">
-        <a href="#/" class="feed-tab ${isForYou ? "active" : ""}">Para você</a>
-        <a href="#/?feed=following" class="feed-tab ${!isForYou ? "active" : ""}">Seguindo</a>
+    <div class="feed-chrome">
+      <div class="feed-header sticky-header">
+        <div class="feed-segmented-nav">
+          <a href="#/" class="feed-tab ${isForYou ? "active" : ""}">Para você</a>
+          <a href="#/?feed=following" class="feed-tab ${!isForYou ? "active" : ""}">Seguindo</a>
+        </div>
       </div>
-    </div>
-    ${renderStoriesStrip()}
-    ${renderInlineComposer({ userRouteId, displayName })}`;
+      ${renderStoriesStrip()}
+      <div class="feed-composer-section">
+        ${renderInlineComposer({ userRouteId, displayName })}
+      </div>
+    </div>`;
 
   if (!topics.length) {
     if (!isForYou) {
