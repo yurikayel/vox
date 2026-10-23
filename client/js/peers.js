@@ -27,6 +27,8 @@ function dispatchDirectMessage(envelope, source = "rtc") {
   }
 }
 
+const gossipTombstoneListeners = new Set();
+
 export function onGossipPost(listener) {
   gossipListeners.add(listener);
   return () => gossipListeners.delete(listener);
@@ -37,6 +39,20 @@ function dispatchGossipPost(item, source = "rtc") {
   for (const fn of gossipListeners) {
     try {
       fn(item, source);
+    } catch {}
+  }
+}
+
+export function onGossipTombstone(listener) {
+  gossipTombstoneListeners.add(listener);
+  return () => gossipTombstoneListeners.delete(listener);
+}
+
+function dispatchGossipTombstone(tombstone, source = "rtc") {
+  if (!tombstone) return;
+  for (const fn of gossipTombstoneListeners) {
+    try {
+      fn(tombstone, source);
     } catch {}
   }
 }
@@ -269,14 +285,32 @@ export async function handleVoxMessage(msg, replyFn, source = "broadcast") {
   }
 
   if (msg.type === "GOSSIP" && msg.item) {
-    handleGossipMessage(msg.item, source);
+    await handleGossipMessage(msg.item, source);
+  }
+
+  if (msg.type === "GOSSIP_UPDATE" && msg.item) {
+    await handleGossipUpdateMessage(msg.item, source);
+  }
+
+  if (msg.type === "GOSSIP_DELETE" && (msg.item || msg.tombstone)) {
+    await handleGossipDeleteMessage(msg.tombstone || msg.item, source);
   }
 }
 
 async function handleGossipMessage(item, source = "rtc") {
   if (!item?.id || !item?.sig) return;
+  const tombstone = await cacheNode.getTombstone(item.id);
+  if (tombstone && (tombstone.editedAt || 0) >= (item.editedAt || item.ts || 0)) {
+    return;
+  }
+
   const existing = await cacheNode.getLocalPost(item.id);
-  if (existing) return;
+  if (existing) {
+    const existingTime = existing.editedAt || existing.ts || 0;
+    const incomingTime = item.editedAt || item.ts || 0;
+    if (existingTime >= incomingTime) return;
+    if (existing.author && item.author && existing.author !== item.author) return;
+  }
 
   const valid = await localAccount.verifyPayload(item);
   if (!valid) return;
@@ -284,8 +318,71 @@ async function handleGossipMessage(item, source = "rtc") {
   await cacheNode.saveLocalPost(item);
   dispatchGossipPost(item, source);
 
-  // Re-transmite para outros canais (gossip mesh)
   const payload = { type: "GOSSIP", item, fromPeer: myPeerId };
+  if (source !== "broadcast" && broadcastChannel) {
+    try { broadcastChannel.postMessage(payload); } catch {}
+  }
+  if (source !== "rtc") {
+    webrtcPeer.broadcastRtcMessage(payload);
+  }
+}
+
+async function handleGossipUpdateMessage(item, source = "rtc") {
+  if (!item?.id || !item?.sig || !item?.author) return;
+  if (!item.editedAt || item.editedAt <= 0) return;
+
+  const tombstone = await cacheNode.getTombstone(item.id);
+  if (tombstone && (tombstone.editedAt || 0) >= item.editedAt) {
+    return;
+  }
+
+  const existing = await cacheNode.getLocalPost(item.id);
+  if (existing) {
+    if (existing.author && existing.author !== item.author) return;
+    const existingTime = existing.editedAt || existing.ts || 0;
+    if (item.editedAt <= existingTime) return;
+  }
+
+  const valid = await localAccount.verifyPayload(item);
+  if (!valid) return;
+
+  await cacheNode.saveLocalPost(item);
+  dispatchGossipPost(item, source);
+
+  const payload = { type: "GOSSIP_UPDATE", item, fromPeer: myPeerId };
+  if (source !== "broadcast" && broadcastChannel) {
+    try { broadcastChannel.postMessage(payload); } catch {}
+  }
+  if (source !== "rtc") {
+    webrtcPeer.broadcastRtcMessage(payload);
+  }
+}
+
+async function handleGossipDeleteMessage(tombstone, source = "rtc") {
+  if (!tombstone?.id || !tombstone?.sig || !tombstone?.author) return;
+  const deleteTime = tombstone.editedAt || tombstone.ts || 0;
+  if (!deleteTime) return;
+
+  const existingTombstone = await cacheNode.getTombstone(tombstone.id);
+  if (existingTombstone) {
+    const existingDeleteTime = existingTombstone.editedAt || existingTombstone.ts || 0;
+    if (existingDeleteTime >= deleteTime) return;
+  }
+
+  const existingPost = await cacheNode.getLocalPost(tombstone.id);
+  if (existingPost) {
+    if (existingPost.author && existingPost.author !== tombstone.author) return;
+    const postTime = existingPost.editedAt || existingPost.ts || 0;
+    if (deleteTime < postTime) return;
+  }
+
+  const valid = await localAccount.verifyPayload(tombstone);
+  if (!valid) return;
+
+  await cacheNode.saveTombstone(tombstone);
+  dispatchGossipTombstone(tombstone, source);
+
+  const payload = { type: "GOSSIP_DELETE", item: tombstone, tombstone, fromPeer: myPeerId };
   if (source !== "broadcast" && broadcastChannel) {
     try { broadcastChannel.postMessage(payload); } catch {}
   }
@@ -297,6 +394,24 @@ async function handleGossipMessage(item, source = "rtc") {
 export function broadcastGossip(item) {
   if (!item?.id) return;
   const payload = { type: "GOSSIP", item, fromPeer: myPeerId };
+  if (broadcastChannel) {
+    try { broadcastChannel.postMessage(payload); } catch {}
+  }
+  webrtcPeer.broadcastRtcMessage(payload);
+}
+
+export function broadcastGossipUpdate(item) {
+  if (!item?.id) return;
+  const payload = { type: "GOSSIP_UPDATE", item, fromPeer: myPeerId };
+  if (broadcastChannel) {
+    try { broadcastChannel.postMessage(payload); } catch {}
+  }
+  webrtcPeer.broadcastRtcMessage(payload);
+}
+
+export function broadcastGossipDelete(tombstone) {
+  if (!tombstone?.id) return;
+  const payload = { type: "GOSSIP_DELETE", item: tombstone, tombstone, fromPeer: myPeerId };
   if (broadcastChannel) {
     try { broadcastChannel.postMessage(payload); } catch {}
   }

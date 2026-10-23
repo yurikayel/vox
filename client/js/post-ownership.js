@@ -1,4 +1,5 @@
 /** Regras de edição/exclusão — só posts locais assinados pelo autor ativo (vx_…). */
+import * as localAccount from "./local-account.js";
 
 /** Título Nostr/metadata a partir do texto único do compositor. */
 export function deriveTopicTitleFromBody(bodyRaw) {
@@ -43,4 +44,17 @@ export function withOwnLocalFlag(post, routeId) {
 export function mapOwnLocalFlags(posts, routeId) {
   if (!routeId || !Array.isArray(posts)) return posts || [];
   return posts.map((p) => withOwnLocalFlag(p, routeId));
+}
+
+export async function createPostTombstone(post) {
+  if (!post?.id || !post?.author) throw new Error("Post inválido para exclusão");
+  const deletePayload = {
+    kind: "post-tombstone",
+    type: "tombstone",
+    id: post.id,
+    author: post.author,
+    ts: post.ts || Date.now(),
+    editedAt: Date.now(),
+  };
+  return await localAccount.signPayload(deletePayload);
 }

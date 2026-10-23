@@ -2003,7 +2003,8 @@ function initGossipListeners() {
       showTagFeed(cur.slug);
     }
     if (item?.type === "topic") {
-      share.showToast(`Novo post na rede: ${item.title?.slice(0, 24) || "..."}`);
+      const isUpdate = Boolean(item.editedAt && item.editedAt > 0);
+      share.showToast(isUpdate ? "Publicação atualizada na rede." : `Novo post na rede: ${item.title?.slice(0, 24) || "..."}`);
     } else if (item?.type === "listing") {
       share.showToast(`Nova oferta na feira: ${item.title?.slice(0, 24) || "..."}`);
     } else if (item?.type === "governance-proposal") {
@@ -2012,6 +2013,19 @@ function initGossipListeners() {
       share.showToast(`Novo voto registrado na proposta!`);
     } else if (item?.type === "frame-action") {
       share.showToast(`Nova interação no mini-app do post!`);
+    }
+  });
+
+  peers.onGossipTombstone((tombstone) => {
+    const cur = parseRoute();
+    if (cur.name === "home") {
+      showHome(cur.feed);
+    } else if (cur.name === "community") {
+      showCommunity(cur.id, cur.tab);
+    } else if (cur.name === "topic" && cur.id === tombstone.id) {
+      location.hash = "#/";
+    } else if (cur.name === "tag-feed" && cur.slug) {
+      showTagFeed(cur.slug);
     }
   });
 }
@@ -2234,6 +2248,7 @@ async function openPostEditModal(postId) {
         editedAt: Date.now(),
       });
       await cacheNode.saveLocalPost(signed);
+      peers.broadcastGossipUpdate(signed);
       closePostEditModalUi();
       share.showToast("Publicação atualizada.");
       route();
@@ -2257,7 +2272,9 @@ async function handleDeletePost(postId) {
   }
   const label = (existing.title || "esta publicação").slice(0, 80);
   if (!confirm(`Apagar "${label}"? Esta ação não pode ser desfeita.`)) return;
-  await cacheNode.deleteLocalPost(postId);
+  const tombstone = await postOwnership.createPostTombstone(existing);
+  await cacheNode.saveTombstone(tombstone);
+  peers.broadcastGossipDelete(tombstone);
   share.showToast("Publicação apagada.");
   const onTopic = location.hash.replace(/^#\/?/, "").startsWith(`t/${postId}`);
   if (onTopic) location.hash = "#/";
