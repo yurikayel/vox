@@ -5,6 +5,70 @@ import { mockStores } from "../tests/setup.js";
 import * as cacheNode from "../client/js/cache-node.js";
 import * as postOwnership from "../client/js/post-ownership.js";
 import * as localAccount from "../client/js/local-account.js";
+import * as render from "../client/js/render.js";
+
+function createContainer() {
+  return { innerHTML: "" };
+}
+
+test("renderPostOwnerMenu - Editar/Apagar só em post próprio (não reply)", () => {
+  assert.equal(render.renderPostOwnerMenu(null), "");
+  assert.equal(render.renderPostOwnerMenu({ isOwnLocalPost: false, id: "x" }), "");
+  assert.equal(
+    render.renderPostOwnerMenu({ isOwnLocalPost: true, type: "reply", id: "r1" }),
+    "",
+  );
+  const menu = render.renderPostOwnerMenu({
+    isOwnLocalPost: true,
+    type: "topic",
+    id: "top_menu_1",
+  });
+  assert.ok(menu.includes('role="group"'));
+  assert.ok(menu.includes("Gerenciar publicação"));
+  assert.ok(menu.includes("btn-post-edit"));
+  assert.ok(menu.includes("btn-post-delete"));
+  assert.ok(menu.includes('data-id="top_menu_1"'));
+  assert.ok(menu.includes(">Editar<"));
+  assert.ok(menu.includes(">Apagar<"));
+});
+
+test("renderPostEditModal - overlay, form, contador e fechar", () => {
+  const container = createContainer();
+  render.renderPostEditModal(container, {
+    id: "top_edit_ui",
+    title: "Olá rede",
+    body: "Olá rede\nDetalhe extra",
+  });
+  const html = container.innerHTML;
+  assert.ok(html.includes("post-edit-modal-overlay"));
+  assert.ok(html.includes('aria-modal="true"'));
+  assert.ok(html.includes('aria-label="Editar publicação"'));
+  assert.ok(html.includes('id="form-post-edit"'));
+  assert.ok(html.includes('data-id="top_edit_ui"'));
+  assert.ok(html.includes('id="post-edit-text"'));
+  assert.ok(html.includes("Detalhe extra"));
+  assert.ok(html.includes('id="post-edit-char"'));
+  assert.ok(html.includes(" / 5000"));
+  assert.ok(html.includes("btn-post-edit-save"));
+  assert.ok(html.includes("btn-cancel-post-edit"));
+  assert.ok(html.includes("btn-close-post-edit"));
+  assert.ok(!html.includes("post-edit-remove-image"));
+
+  render.closePostEditModal(container);
+  assert.equal(container.innerHTML, "");
+});
+
+test("renderPostEditModal - opção remover imagem quando hasImage", () => {
+  const container = createContainer();
+  render.renderPostEditModal(container, {
+    id: "top_img",
+    title: "Foto",
+    body: "Foto",
+    hasImage: true,
+  });
+  assert.ok(container.innerHTML.includes("post-edit-remove-image"));
+  assert.ok(container.innerHTML.includes("Remover imagem anexada"));
+});
 
 test("post-ownership - só posts assinados pelo autor ativo são mutáveis", () => {
   const me = "vx_abc123";
