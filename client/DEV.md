@@ -630,13 +630,13 @@ Toolbar tripartida mantém Zap, estrela, copiar MD e bookmark.
 
 ### 21.4 Editar / apagar posts locais
 - **Escopo:** Somente posts gravados no aparelho via `cacheNode.saveLocalPost`, com `sig` ECDSA e `author` igual ao `routeId` ativo (`vx_…`). Posts do tour/demo (`mock.js`) não têm assinatura local — menu oculto; tentativa programática exibe toast *"Só é possível editar/apagar posts seus."*
-- **UI:** Botões **Editar** / **Apagar** no header do card (`renderPostOwnerMenu`) e na página `#/t/:id`. Edição abre modal (`renderPostEditModal`, campo único + contador); exclusão usa `confirm()` nativo.
+- **UI:** Botões **Editar** / **Apagar** no header do card (`renderPostOwnerMenu`) e na página `#/t/:id`. Edição abre modal (`renderPostEditModal`, campo único + contador); exclusão usa `confirm()` nativo. Microcopy pt-BR em `i18n-pt-br.js` (tooltip + linha sutil no menu, compositor inline e modal) — honesta até gossip de retratação.
 - **Exibição sem duplicata:** Compositor inline grava `title` = primeira linha e `body` = texto integral; `formatPostDisplay` + `renderPostTextHtml` mostram **uma** linha quando são iguais (modo caption), e título + resto em posts multilinha.
 - **Persistência:** `deleteLocalPost(id)` remove do IndexedDB; edição reutiliza `saveLocalPost` (mesmo `id`, `ts` original, `editedAt` novo) após `localAccount.signPayload`.
 - **Gossip:** Não há evento `GOSSIP_DELETE` na malha atual — remoção/edição são **locais neste aparelho**; pares que já receberam o post via gossip mantêm cópia até implementação futura de retratação.
 
 ### 21.5 Cache e PWA
-- Cache elevado para `vox-pwa-v6.4-post-display-refine`.
+- Cache elevado para `vox-pwa-v6.5-local-only-microcopy` (`i18n-pt-br.js` no shell).
 - Suíte automatizada com **147 testes** (133 Node.js + 14 Python relay).
 
 
