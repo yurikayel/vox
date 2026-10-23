@@ -343,3 +343,92 @@ test("render - renderComposeListing gera formulário de oferta com disclaimer", 
   assert.ok(html.includes("Publicar na Feira"));
   assert.ok(html.includes("O Vox não intermedia pagamento"));
 });
+
+test("render - post v3 híbrido (mídia antes do texto, star, copy-md e pinned)", () => {
+  const post = {
+    id: "post_hibrido_1",
+    title: "Foto do mutirão na praça",
+    body: "Hoje nos reunimos para plantar mudas nativas e conversar sobre soberania.",
+    image: "images/posts/tour-helena.jpg",
+    author: "vx_demo_helena",
+    likesCount: 15,
+    starsCount: 8,
+  };
+
+  const html = render.renderPostItem(post, { isPinned: true });
+  assert.ok(html.includes("📌 Fixado"));
+  assert.ok(html.includes("post_hibrido_1"));
+  assert.ok(html.includes("images/posts/tour-helena.jpg"));
+  assert.ok(html.includes("btn-like"));
+  assert.ok(html.includes("btn-star"));
+  assert.ok(html.includes("count-stars"));
+  assert.ok(html.includes("btn-copy-md"));
+  assert.ok(html.includes("btn-save"));
+
+  // Valida que a tag de mídia aparece ANTES do título do post no DOM (hierarquia híbrida InstaTwitter)
+  const imgIdx = html.indexOf("post-media-container");
+  const titleIdx = html.indexOf("post-title");
+  assert.ok(imgIdx !== -1, "Deve conter post-media-container");
+  assert.ok(titleIdx !== -1, "Deve conter post-title");
+  assert.ok(imgIdx < titleIdx, "Mídia deve preceder o título na hierarquia visual v3");
+});
+
+test("render - feed com abas segmentadas Para você e Seguindo", () => {
+  const main = createContainer();
+  const topics = [
+    { id: "p1", title: "Primeiro post", author: "vx_demo_helena" },
+  ];
+
+  // Aba 'Para você'
+  render.renderFeed(main, topics, { activeFeed: "for-you" });
+  assert.ok(main.innerHTML.includes("feed-segmented-nav"));
+  assert.ok(main.innerHTML.includes("Para você"));
+  assert.ok(main.innerHTML.includes("Seguindo"));
+  assert.ok(main.innerHTML.includes("feed-tab active"));
+
+  // Aba 'Seguindo' vazia
+  const mainFollowingEmpty = createContainer();
+  render.renderFeed(mainFollowingEmpty, [], { activeFeed: "following" });
+  assert.ok(mainFollowingEmpty.innerHTML.includes("following-empty"));
+  assert.ok(mainFollowingEmpty.innerHTML.includes("Você ainda não acompanha ninguém"));
+  assert.ok(mainFollowingEmpty.innerHTML.includes("Acompanhar (Watch)"));
+});
+
+test("render - formatPostMarkdown formata citação padrão com link", () => {
+  const post = {
+    id: "post_md_test",
+    title: "Governança Direta",
+    body: "Proposta de deliberação comunitária.",
+    author: "vx_demo_juliana",
+  };
+  const md = render.formatPostMarkdown(post);
+  assert.ok(md.includes("> **Juliana**"));
+  assert.ok(md.includes("@juliana"));
+  assert.ok(md.includes("> **Governança Direta**"));
+  assert.ok(md.includes("Proposta de deliberação comunitária."));
+  assert.ok(md.includes("/#/t/post_md_test"));
+});
+
+test("render - renderProfile com README.md, GitHub badge e botão Watch", () => {
+  const main = createContainer();
+  render.renderProfile(main, "vx_demo_raj", [], false, "", {
+    displayName: "Raj",
+    handle: "raj",
+    githubHandle: "raj-crypto",
+    readme: "### Raj — Sistemas Distribuídos\n- Criptografia P-256 no browser\n- Local-first sem servidores",
+    posts: [
+      { id: "post_raj", title: "Criptografia Local", author: "vx_demo_raj" },
+    ],
+  });
+
+  const html = main.innerHTML;
+  assert.ok(html.includes("README.md"));
+  assert.ok(html.includes("Sistemas Distribuídos"));
+  assert.ok(html.includes("Criptografia P-256"));
+  assert.ok(html.includes("profile-github-badge"));
+  assert.ok(html.includes("@raj-crypto"));
+  assert.ok(html.includes("btn-watch-profile"));
+  assert.ok(html.includes("Acompanhar (Watch)"));
+  assert.ok(html.includes("profile-tabs"));
+  assert.ok(html.includes("Estrelados"));
+});

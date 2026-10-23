@@ -434,5 +434,43 @@ A Sprint Feira M1 atende quem utiliza redes sociais para sustento e venda direta
 - **Zero Mercantilização do Feed Principal:** Ofertas (`type: listing`) são armazenadas no IndexedDB `local-posts` mas são filtradas estritamente fora da timeline "Para você". Conversas e vendas não competem por atenção no mesmo feed.
 - **Comunidade Demo `demo-feira-local`:** Semeada via `demo-seed.js` (`vox-demo-seeded-v4`) com a "Feira do Bairro" e 4 ofertas de personas do tour (Helena, Fernanda, André e Mei).
 
+---
+
+## 16. UI Social v3 (Post Híbrido InstaTwitter), Feed Segmentado & GitHub UX (Sprint v5.10)
+
+A versão 5.10 consolida o feed híbrido de alto nível estético e traz os elementos de interação social inspirados no melhor do GitHub e do Instagram:
+
+### 16.1 Post Híbrido Arejado
+- **Hierarquia Visual Estrita:** Autor $\to$ Mídia (fotografia em proporção 4:5 / full-bleed) $\to$ Título $\to$ Texto do post $\to$ Metadados $\to$ Toolbar unificada.
+- **Prioridade da Imagem:** Quando o post possui fotografia, ela ganha destaque logo abaixo do cabeçalho de autoria, garantindo a vivacidade e o impacto visual de redes de mídia sem soterrar imagens abaixo de textos longos.
+- **Fallback Microblogging Limpo:** Quando não há fotografia, o card adota a densidade tipográfica limpa e elegante do X/Bluesky.
+
+### 16.2 Feed Segmentado: *Para você | Seguindo*
+- **Navegação Segmentada (`.feed-segmented-nav`):** Abas no topo do feed principal permitindo alternar instantaneamente entre a timeline comunitária global (*Para você*, rota `#/`) e as publicações exclusivas dos perfis acompanhados (*Seguindo*, rota `#/?feed=following`).
+- **Empty State Construtivo:** Se o usuário ainda não acompanha nenhum autor, a aba *Seguindo* exibe orientações claras sobre como dar "Watch" nos perfis do tour educativo ou de amigos, com atalhos de exploração direta.
+
+### 16.3 GitHub UX Social
+- **👁️ Watch / Acompanhar:** Armazenado localmente em `localStorage` (`vox-watched-profiles` via `social.js`). Permite seguir autores diretamente no card do perfil ou no feed, alimentando a aba *Seguindo*.
+- **⭐ Star (Estrelados):** Convive harmoniosamente com o ❤️ Curtir tradicional:
+  - O ❤️ Curtir representa reação rápida e afeto no post.
+  - A ⭐ Estrela expressa salvamento e afinidade com projetos ou debates relevantes.
+  - Aba **Estrelados** no perfil do usuário (`#/u/:addr?tab=starred`), permitindo consultar todos os posts favoritados com estrela.
+- **📖 README.md no Perfil:**
+  - Card estilizado `.profile-readme` no perfil, permitindo apresentações detalhadas com suporte nativo a Markdown seguro (títulos, listas, negrito, itálico e código inline, sem bibliotecas externas).
+  - Todas as 10 personas do tour educativo possuem agora seus respectivos `README.md` semeados no catálogo.
+  - O usuário local pode editar e salvar seu próprio README diretamente no app.
+- **📌 Posts Fixados (Pinned Posts):**
+  - Autores podem fixar sua publicação mais relevante no topo do perfil, sinalizada pelo badge `.pinned-pill` ("📌 Fixado").
+- **Vinculação de @handle do GitHub:**
+  - Campo opcional no perfil do usuário local para informar seu nome de usuário no GitHub, exibindo badge com link direto e selo "Informado" no cabeçalho do perfil.
+
+### 16.4 Exportação em Markdown (`formatPostMarkdown`)
+- Botão dedicado de cópia em Markdown na toolbar do post (`.btn-copy-md`), gerando automaticamente citação estruturada com autor, `@handle`, título, corpo e deep-link do Vox, pronta para compartilhamento em issues, repositórios ou discussões externas.
+
+### 16.5 Cache e PWA
+- Cache do Service Worker atualizado para `vox-pwa-v5.10-ui-social`.
+- Suite automatizada expandida para **101 testes 100% verdes** (87 Node.js + 14 Python).
+
+
 
 
