@@ -65,13 +65,18 @@ test("mock - catálogo de 5 perfis demo e helpers getMockProfile / getAuthorDisp
   assert.equal(mock.getAuthorDisplay("rota_desconhecida"), "");
   assert.equal(mock.getAuthorDisplay(""), "");
   assert.equal(mock.getMockProfile(""), null);
+
+  assert.equal(mock.getAuthorAvatar("vx_demo_lia"), "images/avatars/lia.jpg");
+  assert.equal(mock.getAuthorHandle("vx_demo_lia"), "lia");
 });
 
-test("mock - mockRecentTopics retorna 5 posts educativos alinhados ao tour", () => {
+test("mock - mockRecentTopics retorna 5 posts educativos com fotos e interações", () => {
   const recent = mock.mockRecentTopics();
   assert.equal(recent.demo, true);
   assert.equal(recent.items.length, 5);
   assert.equal(recent.items[0].id, "demo-post-lia");
   assert.equal(recent.items[0].author, "vx_demo_lia");
+  assert.equal(recent.items[0].image, "images/posts/tour-celular.jpg");
+  assert.equal(recent.items[0].likesCount, 24);
   assert.equal(recent.items[0].communityTitle, "Aprenda o Vox");
 });

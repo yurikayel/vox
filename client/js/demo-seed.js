@@ -7,7 +7,7 @@
 import * as cacheNode from "./cache-node.js";
 import { MOCK_DEMO_COMMUNITY, MOCK_DEMO_TOPICS, MOCK_DEMO_REPLIES } from "./mock.js";
 
-const SEED_KEY = "vox-demo-seeded-v1";
+const SEED_KEY = "vox-demo-seeded-v2";
 
 export async function ensureDemoSeed() {
   if (typeof window === "undefined" || !window.localStorage) return;
@@ -15,7 +15,7 @@ export async function ensureDemoSeed() {
   const alreadySeeded = window.localStorage.getItem(SEED_KEY);
   if (alreadySeeded) {
     const probe = await cacheNode.getLocalPost("demo-post-lia");
-    if (probe) return;
+    if (probe && probe.image) return;
   }
 
   await insertDemoItems();
@@ -37,7 +37,7 @@ async function insertDemoItems() {
     ts: baseTs - 600000,
   });
 
-  // 2. Tópicos das 5 personas
+  // 2. Tópicos das 5 personas com fotos e interações
   for (let i = 0; i < MOCK_DEMO_TOPICS.length; i++) {
     const t = MOCK_DEMO_TOPICS[i];
     await cacheNode.saveLocalPost({
@@ -47,6 +47,10 @@ async function insertDemoItems() {
       title: t.title,
       body: t.body,
       author: t.author,
+      image: t.image || "",
+      imageAlt: t.imageAlt || "",
+      likesCount: t.likesCount || 0,
+      repliesCount: t.repliesCount || 0,
       ts: baseTs - (5 - i) * 100000,
     });
   }

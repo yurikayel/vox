@@ -10,7 +10,7 @@ test("demo-seed - ensureDemoSeed grava comunidade, 5 tópicos e resposta no Inde
 
   // Primeira execução: insere itens demo
   await demoSeed.ensureDemoSeed();
-  assert.equal(localStorage.getItem("vox-demo-seeded-v1"), "true");
+  assert.equal(localStorage.getItem("vox-demo-seeded-v2"), "true");
 
   // Verifica comunidade
   const comm = await cacheNode.getLocalPost("demo-aprenda-vox");
@@ -28,6 +28,8 @@ test("demo-seed - ensureDemoSeed grava comunidade, 5 tópicos e resposta no Inde
   assert.equal(postLia.author, "vx_demo_lia");
   assert.equal(postLia.title, "O Vox mora no seu celular");
   assert.ok(postLia.body.includes("Sua rede"));
+  assert.equal(postLia.image, "images/posts/tour-celular.jpg");
+  assert.ok(postLia.likesCount > 0);
 
   const postPri = await cacheNode.getLocalPost("demo-post-pri");
   assert.ok(postPri);
@@ -43,7 +45,7 @@ test("demo-seed - ensureDemoSeed grava comunidade, 5 tópicos e resposta no Inde
 test("demo-seed - ensureDemoSeed é idempotente e preserva integridade", async () => {
   // Segunda execução imediata
   await demoSeed.ensureDemoSeed();
-  assert.equal(localStorage.getItem("vox-demo-seeded-v1"), "true");
+  assert.equal(localStorage.getItem("vox-demo-seeded-v2"), "true");
 
   const topics = await cacheNode.getLocalPosts({ type: "topic", communityId: "demo-aprenda-vox" });
   assert.equal(topics.length, 5);
@@ -51,7 +53,7 @@ test("demo-seed - ensureDemoSeed é idempotente e preserva integridade", async (
 
 test("demo-seed - resetDemoSeed restaura conteúdo demo", async () => {
   await demoSeed.resetDemoSeed();
-  assert.equal(localStorage.getItem("vox-demo-seeded-v1"), "true");
+  assert.equal(localStorage.getItem("vox-demo-seeded-v2"), "true");
 
   const topics = await cacheNode.getLocalPosts({ type: "topic", communityId: "demo-aprenda-vox" });
   assert.equal(topics.length, 5);

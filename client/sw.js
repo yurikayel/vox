@@ -1,13 +1,23 @@
-// Service Worker do Vox (Fase 5.5 — Tour Demo 5 Perfis)
+// Service Worker do Vox (Fase 5.6 — InstaTwitter Look & Feel, Fotos, Curtidas e Salvos)
 // NOTA ARQUITETURAL: WebRTC DataChannels operam exclusivamente na thread principal (DOM/Window).
 // O Service Worker atua no cache offline do shell e notificações de status, sem abrir WebRTC.
-const CACHE_NAME = "vox-pwa-v5.5-tour";
+const CACHE_NAME = "vox-pwa-v5.6-instatwitter";
 const SHELL_ASSETS = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
   "./css/style.css",
   "./icons/icon.svg",
+  "./images/avatars/lia.jpg",
+  "./images/avatars/rafa.jpg",
+  "./images/avatars/camila.jpg",
+  "./images/avatars/davi.jpg",
+  "./images/avatars/pri.jpg",
+  "./images/posts/tour-celular.jpg",
+  "./images/posts/tour-mensagens.jpg",
+  "./images/posts/tour-comunidades.jpg",
+  "./images/posts/tour-rede.jpg",
+  "./images/posts/tour-entrar.jpg",
   "./config/gateways.json",
   "./config/upload.json",
   "./config/signaling.json",
@@ -25,6 +35,7 @@ const SHELL_ASSETS = [
   "./js/webrtc-peer.js",
   "./js/render.js",
   "./js/share.js",
+  "./js/social.js",
   "./js/upload.js",
   "./js/wallet.js",
 ];

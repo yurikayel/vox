@@ -12,6 +12,7 @@ import * as inbox from "./inbox.js";
 import * as handles from "./handles.js";
 import * as localAccount from "./local-account.js";
 import * as demoSeed from "./demo-seed.js";
+import * as social from "./social.js";
 
 function parseRoute() {
   if (typeof window !== "undefined" && window.location?.search) {
@@ -534,6 +535,7 @@ async function showProfile(address) {
     claimants: conflictInfo?.claimants || [],
     displayName,
     profileBio,
+    stats: mockProf?.stats || null,
     posts: authorPosts,
     hasWallet: wallet.hasWallet(),
     balance,
@@ -1271,8 +1273,47 @@ function initGossipListeners() {
   });
 }
 
+function initSocialInteractions() {
+  document.addEventListener("click", (e) => {
+    // Like button
+    const btnLike = e.target.closest(".btn-like");
+    if (btnLike) {
+      e.preventDefault();
+      const postId = btnLike.dataset.id;
+      const baseCount = btnLike.dataset.count || 0;
+      const res = social.toggleLike(postId, baseCount);
+      btnLike.classList.toggle("active", res.liked);
+      const icon = btnLike.querySelector(".icon-heart");
+      if (icon) {
+        icon.setAttribute("fill", res.liked ? "currentColor" : "none");
+      }
+      const countLabel = btnLike.querySelector(".count-likes");
+      if (countLabel) {
+        countLabel.textContent = res.count > 0 ? res.count : "";
+      }
+      return;
+    }
+
+    // Save/Bookmark button
+    const btnSave = e.target.closest(".btn-save");
+    if (btnSave) {
+      e.preventDefault();
+      const postId = btnSave.dataset.id;
+      const saved = social.toggleSave(postId);
+      btnSave.classList.toggle("active", saved);
+      const icon = btnSave.querySelector(".icon-bookmark");
+      if (icon) {
+        icon.setAttribute("fill", saved ? "currentColor" : "none");
+      }
+      share.showToast(saved ? "Post salvo nos seus favoritos!" : "Post removido dos favoritos.");
+      return;
+    }
+  });
+}
+
 window.addEventListener("hashchange", () => route());
 initDmListeners();
 initGossipListeners();
+initSocialInteractions();
 syncIdentity();
 demoSeed.ensureDemoSeed().finally(() => route());
