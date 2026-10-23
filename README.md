@@ -197,3 +197,10 @@ O Vox é mantido pela boa vontade de desenvolvedores, designers e entusiastas br
 
 * Código aberto sob licença MIT.
 * Princípio de projeto: **Menor esforço, maior impacto**. Zero inchaço algorítmico, sem dependência de Big Techs.
+
+### Desenvolvimento (branches)
+
+* A branch **`main`** permanece **sempre publicável** — o [GitHub Pages](https://yurikayel.github.io/vox/) publica a cada push em `main`.
+* **Novas features e correções:** atualize `main` (`git pull`), crie branch (`git checkout -b feat/nome-curto` ou `fix/...`) e trabalhe nela.
+* **Integração:** envie a branch (`git push -u origin feat/...`) e abra PR, ou faça merge quando estiver pronto — sem commits diretos em `main` para trabalho de feature (humano ou agente).
+* Hotfix urgente em produção: branch `fix/...` ou `hotfix/...`, mesmo fluxo.
