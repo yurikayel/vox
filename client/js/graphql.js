@@ -197,6 +197,10 @@ export async function loadConfig() {
   return gatewayConfig;
 }
 
+export function __resetGatewayConfigForTests() {
+  gatewayConfig = null;
+}
+
 export function tagValue(tags, name) {
   if (!Array.isArray(tags)) return "";
   const t = tags.find((x) => x.name === name);
@@ -262,6 +266,44 @@ async function withGateways(fn) {
     }
   }
   throw lastErr || new Error("Nenhum gateway disponível");
+}
+
+function rawUrlsForTx(cfg, txId) {
+  const urls = [];
+  for (const gw of cfg.gateways || []) {
+    if (typeof gw.raw === "string" && gw.raw.includes("{txId}")) {
+      urls.push(gw.raw.replace("{txId}", txId));
+    }
+  }
+  if (!urls.length) {
+    urls.push(`https://arweave.net/${txId}`, `https://turbo-gateway.com/raw/${txId}`);
+  }
+  return urls;
+}
+
+async function fetchRawFromGateways(txId) {
+  const cfg = await loadConfig();
+  for (const url of rawUrlsForTx(cfg, txId)) {
+    try {
+      const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
+      if (!res.ok) continue;
+      const text = await res.text();
+      let parsed = { body: text, raw: text };
+      try {
+        const json = JSON.parse(text);
+        if (typeof json === "object" && json !== null) {
+          parsed.body = json.body || json.content || json.text || text;
+          parsed.title = json.title || "";
+        }
+      } catch {
+        // texto plano
+      }
+      return parsed;
+    } catch {
+      // tenta o próximo gateway
+    }
+  }
+  return null;
 }
 
 export async function fetchCommunities() {
@@ -466,33 +508,12 @@ export async function fetchTransactionData(txId) {
     return peerData;
   }
 
-  // 4. Fallback: Gateways Públicos
-  const endpoints = [
-    `https://arweave.net/${txId}`,
-    `https://turbo-gateway.com/raw/${txId}`,
-  ];
-
-  for (const url of endpoints) {
-    try {
-      const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
-      if (!res.ok) continue;
-      const text = await res.text();
-      let parsed = { body: text, raw: text };
-      try {
-        const json = JSON.parse(text);
-        if (typeof json === "object" && json !== null) {
-          parsed.body = json.body || json.content || json.text || text;
-          parsed.title = json.title || "";
-        }
-      } catch {
-        // texto plano
-      }
-      dataCache.set(txId, parsed);
-      cacheNode.setCachedTx(txId, parsed);
-      return parsed;
-    } catch {
-      // tenta o próximo endpoint
-    }
+  // 4. Fallback: Gateways Públicos (ordem em config/gateways.json — estilo Channel-01)
+  const gatewayParsed = await fetchRawFromGateways(txId);
+  if (gatewayParsed) {
+    dataCache.set(txId, gatewayParsed);
+    cacheNode.setCachedTx(txId, gatewayParsed);
+    return gatewayParsed;
   }
 
   const empty = { body: "", raw: "" };

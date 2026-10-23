@@ -122,7 +122,23 @@ Para materializar o *sweet spot* sem inflar o escopo, a **Fase 2** será regida 
 
 ---
 
-## 8. Lições de Privacidade e DMs Efêmeras (Fase 4)
+## 8. Linhagem [Arboard](https://github.com/rodrigopavezi/arboard) (Channel-01)
+
+O repositório **[Arboard](https://github.com/rodrigopavezi/arboard)** (template **Channel-01**) provou o modelo *servidor zero* para leitura Arweave: HTML/JS ultraleve, consultas GraphQL e **fallback automático entre gateways** quando um endpoint falha.
+
+**O que o Vox herda (sem copiar o canal unilateral):**
+
+| De Arboard / Channel-01 | No Vox |
+|---|---|
+| Lista de gateways em config + tentativa sequencial na leitura | `client/config/gateways.json` + `withGateways` (GraphQL) e `fetchRawFromGateways` (corpo da TX) |
+| Shell PWA cacheável, zero backend do mantenedor | Mesma linhagem estática; relay/sinalização são **opt-in** comunitários |
+| Canal de broadcast do autor → audiência | **Comunidades bidirecionais** (tópicos, respostas, moderação `mod-action`, malha P2P) |
+
+**O que o Vox não replica:** Arboard é essencialmente **unidirecional** (um canal, transmissão). O Vox expande a fundação de gateways para ecossistema social — incluindo **steward UX** (camadas Passivo→Steward), relay HTTP configurável e **retratação gossip** na malha — sem tratar o template como modelo completo de produto.
+
+---
+
+## 9. Lições de Privacidade e DMs Efêmeras (Fase 4)
 
 ### "Seus Dados São Seus" Inclui o Direito de NÃO Eternizar Conversas
 
