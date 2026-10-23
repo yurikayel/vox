@@ -6,6 +6,7 @@ import * as brcode from "./brcode.js";
 import * as hashtags from "./hashtags.js";
 import * as frames from "./frames.js";
 import * as postOwnership from "./post-ownership.js";
+import * as i18n from "./i18n-pt-br.js";
 
 const root = () => document.getElementById("app-root");
 
@@ -231,6 +232,7 @@ export function renderInlineComposer({ userRouteId = "", displayName = "" } = {}
         <p class="inline-composer-meta" aria-live="polite">
           <span class="inline-composer-char" id="inline-topic-char">0 / 2000</span>
           <span class="inline-composer-hint meta"> · assinado no aparelho · <a href="#/compose/topic">formulário completo</a></span>
+          <span class="inline-composer-local-hint meta" title="${escapeHtml(i18n.localMutateEditDeleteTooltip)}"> · ${escapeHtml(i18n.localMutateComposerHint)}</span>
         </p>
       </form>
     </div>`;
@@ -314,9 +316,15 @@ export function renderPostComments(topicId, commId = "", { replies = [], expande
 
 export function renderPostOwnerMenu(t) {
   if (!t?.isOwnLocalPost || t.type === "reply") return "";
-  return `<div class="post-owner-menu" role="group" aria-label="Gerenciar publicação">
-    <button type="button" class="btn-post-edit btn btn-sm btn-outline" data-id="${escapeHtml(t.id)}" title="Editar">Editar</button>
-    <button type="button" class="btn-post-delete btn btn-sm btn-outline" data-id="${escapeHtml(t.id)}" title="Apagar">Apagar</button>
+  const syncTip = escapeHtml(i18n.localMutateEditDeleteTooltip);
+  const syncHint = escapeHtml(i18n.localMutateEditDeleteHint);
+  const hintId = `post-local-sync-hint-${escapeHtml(t.id)}`;
+  return `<div class="post-owner-block">
+    <div class="post-owner-menu" role="group" aria-label="Gerenciar publicação">
+      <button type="button" class="btn-post-edit btn btn-sm btn-outline" data-id="${escapeHtml(t.id)}" title="${syncTip}" aria-describedby="${hintId}">Editar</button>
+      <button type="button" class="btn-post-delete btn btn-sm btn-outline" data-id="${escapeHtml(t.id)}" title="${syncTip}" aria-describedby="${hintId}">Apagar</button>
+    </div>
+    <span class="post-local-sync-hint meta" id="${hintId}" title="${syncTip}">${syncHint}</span>
   </div>`;
 }
 
@@ -1939,6 +1947,7 @@ export function renderPostEditModal(container, { id = "", title = "", body = "",
           <label class="post-edit-label" for="post-edit-text">Texto da publicação</label>
           <textarea id="post-edit-text" class="form-control inline-composer-textarea post-edit-textarea" rows="6" maxlength="5000" required placeholder="O que você quer dizer?">${escapeHtml(initialText)}</textarea>
           <p class="post-edit-char meta" id="post-edit-char" aria-live="polite">${initialText.length} / 5000</p>
+          <p class="post-edit-local-hint meta" title="${escapeHtml(i18n.localMutateEditDeleteTooltip)}">${escapeHtml(i18n.localMutateEditDeleteHint)}</p>
           ${imageRow}
           <div class="post-edit-actions">
             <button type="button" class="btn btn-outline btn-cancel-post-edit">Cancelar</button>
