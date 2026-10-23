@@ -1695,11 +1695,11 @@ main#app-main {
   display: block;
   width: calc(100% + 2.5rem);
   max-width: none;
-  margin: 0 -1.25rem 0.85rem;
+  margin: 0 -1.25rem 1rem;
   background: #1c1612;
   overflow: hidden;
   aspect-ratio: 1024 / 575;
-  max-height: min(42vh, 320px);
+  max-height: min(52vh, 380px);
 }
 
 .cantina-art-img {
@@ -1712,37 +1712,45 @@ main#app-main {
   object-position: 78% 8%;
 }
 
-.cantina-content {
-  text-align: center;
-}
-
-.cantina-title {
-  margin: 0 0 0.3rem;
-  font-size: 1.35rem;
+.cantina-balloon-2 {
+  position: absolute;
+  z-index: 2;
+  top: 21%;
+  right: 3%;
+  width: max-content;
+  max-width: min(32%, 9.25rem);
+  margin: 0;
+  padding: 0.48rem 0.68rem 0.52rem;
+  background: #fff8e6;
+  color: #1a120c;
+  border: 2.5px solid #1a120c;
+  border-radius: 1.35rem 1.45rem 1.4rem 1.1rem;
+  font-size: clamp(0.64rem, 2.4vw, 0.82rem);
   font-weight: 800;
-  background: var(--accent-gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  line-height: 1.22;
+  letter-spacing: -0.015em;
+  text-align: center;
+  transform: rotate(-4deg);
+  transform-origin: 0 80%;
+  box-shadow: 1px 2px 0 #1a120c;
+  pointer-events: none;
 }
 
-.cantina-quote {
-  margin: 0 0 0.3rem;
-  font-size: 1.02rem;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  color: var(--text);
+.cantina-balloon-2::after {
+  content: "";
+  position: absolute;
+  left: -0.4rem;
+  top: 48%;
+  width: 0.78rem;
+  height: 0.78rem;
+  background: #fff8e6;
+  border-left: 2.5px solid #1a120c;
+  border-bottom: 2.5px solid #1a120c;
+  transform: rotate(22deg);
 }
 
 .cantina-desc {
   margin: 0 0 0.25rem;
-}
-
-.cantina-easter-egg {
-  font-size: 0.78rem;
-  font-style: italic;
-  margin: 0 0 0.85rem;
-  color: var(--muted);
 }
 
 @media (prefers-reduced-motion: no-preference) {

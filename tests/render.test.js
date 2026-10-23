@@ -163,9 +163,14 @@ test("render - renderCantinaGate e closeCantinaGate", () => {
   render.renderCantinaGate(container);
 
   const html = container.innerHTML;
-  assert.ok(html.includes("Porta da Cantina"));
-  assert.ok(html.includes("Seus bots vão ter que esperar do lado de fora"));
+  assert.ok(html.includes("cantina-balloon-2"));
   assert.ok(html.includes("Aqui não servimos esse tipo"));
+  assert.ok(html.includes('aria-labelledby="cantina-balloon-2"'));
+  assert.ok(!html.includes("Porta da Cantina"));
+  assert.ok(!html.includes("cantina-title"));
+  assert.ok(!html.includes("cantina-quote"));
+  assert.ok(!html.includes("cantina-easter-egg"));
+  assert.ok(!html.includes("Seus bots vão ter que esperar do lado de fora"));
   assert.ok(html.includes("cantina-art-img"));
   assert.ok(html.includes("cantina-gate.jpg"));
   assert.ok(html.includes("Ilustração anime"));
