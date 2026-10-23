@@ -1,7 +1,7 @@
-// Service Worker do Vox (Fase 5.2 — P2P-first Local Account)
+// Service Worker do Vox (Fase 5.3 — UI & Copy Polish)
 // NOTA ARQUITETURAL: WebRTC DataChannels operam exclusivamente na thread principal (DOM/Window).
 // O Service Worker atua no cache offline do shell e notificações de status, sem abrir WebRTC.
-const CACHE_NAME = "vox-pwa-v5.2-p2p";
+const CACHE_NAME = "vox-pwa-v5.3-polish";
 const SHELL_ASSETS = [
   "./",
   "./index.html",

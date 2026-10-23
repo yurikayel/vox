@@ -1,7 +1,7 @@
 {
-  "name": "Vox — Comunidades Soberanas",
+  "name": "Vox — Comunidades Livres",
   "short_name": "Vox",
-  "description": "Fórum comunitário no permaweb — Fase 3.2 rede distribuída com WebRTC",
+  "description": "Comunidades e mensagens nos seus aparelhos",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f4f6f9",

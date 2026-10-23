@@ -235,8 +235,15 @@ a:hover {
 }
 
 .tab-icon {
-  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   line-height: 1;
+}
+
+.tab-svg {
+  display: block;
+  stroke: currentColor;
 }
 
 /* Desktop Sidebar (>= 768px - padrão X web) */
@@ -479,6 +486,19 @@ main#app-main {
   background: var(--accent-soft);
 }
 
+/* Feed Header Sticky */
+.feed-header.sticky-header {
+  position: sticky;
+  top: 52px;
+  z-index: 10;
+  background: var(--surface);
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 /* Feed Container */
 .feed-container {
   background: var(--surface);
@@ -499,16 +519,26 @@ main#app-main {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 14px 16px;
+  overflow: hidden;
+  padding: 0;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   box-shadow: var(--shadow);
-  transition: border-color 0.15s ease;
+  transition: border-color 0.15s ease, transform 0.12s ease;
 }
 
 .community-card:hover {
   border-color: var(--muted);
+}
+
+.community-cover-strip {
+  height: 6px;
+  width: 100%;
+}
+
+.community-card-body {
+  padding: 14px 16px 0;
 }
 
 .community-card h3 {
@@ -530,10 +560,10 @@ main#app-main {
 
 .community-card-footer {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   margin-top: 12px;
-  padding-top: 8px;
+  padding: 8px 16px 12px;
   border-top: 1px solid var(--border-subtle);
 }
 
@@ -974,7 +1004,65 @@ main#app-main {
   color: var(--text);
 }
 
-/* Modal Pacto Vox */
+/* Skeleton Loaders */
+.skeleton-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.skeleton-item {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.skeleton-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.skeleton-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--surface-soft);
+  animation: skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+.skeleton-line {
+  height: 14px;
+  border-radius: 6px;
+  background: var(--surface-soft);
+  animation: skeleton-pulse 1.4s ease-in-out infinite;
+  width: 100%;
+}
+
+.skeleton-line-sm {
+  width: 35%;
+  height: 12px;
+}
+
+.skeleton-line-lg {
+  width: 80%;
+  height: 16px;
+}
+
+@keyframes skeleton-pulse {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
+
+/* Modal Onboarding */
 .modal-overlay {
   position: fixed;
   inset: 0;

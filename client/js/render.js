@@ -13,6 +13,24 @@ export function shortId(id) {
   return id.length > 12 ? `${id.slice(0, 6)}…${id.slice(-4)}` : id;
 }
 
+export function getCommunityColor(id = "") {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    hash = (hash << 5) - hash + id.charCodeAt(i);
+    hash |= 0;
+  }
+  const hue = Math.abs(hash) % 360;
+  return `hsl(${hue}, 65%, 45%)`;
+}
+
+const ICONS = {
+  home: `<svg class="tab-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
+  communities: `<svg class="tab-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+  compose: `<svg class="tab-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>`,
+  dm: `<svg class="tab-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`,
+  profile: `<svg class="tab-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
+};
+
 export function renderNetworkChip(metrics, rtcStatus, settings) {
   const isEnabled = settings?.enabled !== false;
   if (!isEnabled) {
@@ -23,9 +41,9 @@ export function renderNetworkChip(metrics, rtcStatus, settings) {
   if (rtcCount > 0) {
     text = `${rtcCount} ${rtcCount === 1 ? "aparelho" : "aparelhos"}`;
   } else if (metrics?.blobsServed > 0) {
-    text = `${metrics.blobsServed} servidos`;
+    text = `${metrics.blobsServed} entregues`;
   }
-  return `<a class="network-chip active" href="#/settings/network" title="Sua rede está ajudando outros nós"><span class="chip-dot"></span><span>${escapeHtml(text)}</span></a>`;
+  return `<a class="network-chip active" href="#/settings/network" title="Sua rede está ajudando outros aparelhos"><span class="chip-dot"></span><span>${escapeHtml(text)}</span></a>`;
 }
 
 function renderWalletBadge(walletAddress) {
@@ -48,23 +66,23 @@ function renderTabBar(activeTab) {
       </div>
       <nav class="tab-nav">
         <a href="#/" class="tab-item ${isHome ? "active" : ""}">
-          <span class="tab-icon">🏠</span>
+          <span class="tab-icon">${ICONS.home}</span>
           <span class="tab-label">Início</span>
         </a>
         <a href="#/communities" class="tab-item ${isComm ? "active" : ""}">
-          <span class="tab-icon">👥</span>
+          <span class="tab-icon">${ICONS.communities}</span>
           <span class="tab-label">Comunidades</span>
         </a>
         <a href="#/compose/topic" class="tab-item compose-tab ${isCompose ? "active" : ""}">
-          <span class="tab-icon">➕</span>
+          <span class="tab-icon">${ICONS.compose}</span>
           <span class="tab-label">Postar</span>
         </a>
         <a href="#/dm" class="tab-item ${isDm ? "active" : ""}">
-          <span class="tab-icon">💬</span>
+          <span class="tab-icon">${ICONS.dm}</span>
           <span class="tab-label">Mensagens</span>
         </a>
         <a href="#/perfil" class="tab-item ${isProfile ? "active" : ""}">
-          <span class="tab-icon">👤</span>
+          <span class="tab-icon">${ICONS.profile}</span>
           <span class="tab-label">Perfil</span>
         </a>
       </nav>
@@ -92,7 +110,7 @@ export function renderShell({ title, subtitle, breadcrumb, walletAddress, active
           </div>
         </header>
         <main id="app-main"></main>
-        <footer class="app-footer">Vox · Rede livre nos aparelhos de quem usa · <a href="./proposta-vox.html" target="_blank">Proposta</a></footer>
+        <footer class="app-footer">Vox · Comunidades e mensagens nos seus aparelhos · <a href="./proposta-vox.html" target="_blank">Proposta</a></footer>
       </div>
     </div>
   `;
@@ -103,7 +121,25 @@ export function renderShell({ title, subtitle, breadcrumb, walletAddress, active
 }
 
 export function renderLoading(main, msg = "Carregando…") {
-  main.innerHTML = `<p class="loading">${escapeHtml(msg)}</p>`;
+  main.innerHTML = `
+    <div class="skeleton-container" aria-busy="true" aria-label="${escapeHtml(msg)}">
+      <div class="skeleton-item card">
+        <div class="skeleton-header">
+          <div class="skeleton-avatar"></div>
+          <div class="skeleton-line skeleton-line-sm"></div>
+        </div>
+        <div class="skeleton-line skeleton-line-lg"></div>
+        <div class="skeleton-line"></div>
+      </div>
+      <div class="skeleton-item card">
+        <div class="skeleton-header">
+          <div class="skeleton-avatar"></div>
+          <div class="skeleton-line skeleton-line-sm"></div>
+        </div>
+        <div class="skeleton-line skeleton-line-lg"></div>
+        <div class="skeleton-line"></div>
+      </div>
+    </div>`;
 }
 
 export function renderError(main, message) {
@@ -120,20 +156,21 @@ export function renderDemoBanner(main) {
 export function renderGatewayBanner(main, label) {
   main.insertAdjacentHTML(
     "afterbegin",
-    `<div class="banner">Conectado via ${escapeHtml(label)}</div>`
+    `<div class="banner">Sincronizando conteúdos…</div>`
   );
 }
 
 function renderPostItem(t) {
   const author = t.author || t.owner || "";
   const authorInitial = (author || "V").slice(0, 1).toUpperCase();
+  const commLabel = t.communityTitle || "Comunidade";
   const commPill = t.communityId
-    ? `<a class="post-community-pill" href="#/c/${encodeURIComponent(t.communityId)}">c/${escapeHtml(t.communityId)}</a>`
+    ? `<a class="post-community-pill" href="#/c/${encodeURIComponent(t.communityId)}">${escapeHtml(commLabel)}</a>`
     : "";
   const bodySnippet = t.body ? `<p class="post-body">${escapeHtml(t.body)}</p>` : "";
   const originBadge = t.isLocalP2p
-    ? `<span class="badge-pill p2p-pill" title="Publicado na rede P2P cooperativa">🌐 Na rede</span>`
-    : `<span class="badge-pill permanent-pill" title="Indexado no permaweb Arweave">💾 Permanente</span>`;
+    ? `<span class="badge-pill p2p-pill">Na rede</span>`
+    : `<span class="badge-pill permanent-pill">Guardado</span>`;
 
   return `
     <article class="post">
@@ -159,8 +196,8 @@ function renderPostItem(t) {
 
 export function renderFeed(main, topics = []) {
   let html = `
-    <div class="actions-bar">
-      <span class="section-title">A Rua — Timeline Recente</span>
+    <div class="feed-header sticky-header">
+      <span class="section-title">Para você</span>
       <a class="btn btn-primary btn-sm" href="#/compose/topic">+ Postar</a>
     </div>`;
 
@@ -200,15 +237,15 @@ export function renderHome(main, communities) {
     .map(
       (c) => `
     <div class="community-card card">
-      <div>
+      <div class="community-cover-strip" style="background:${getCommunityColor(c.id)};"></div>
+      <div class="community-card-body">
         <a href="#/c/${encodeURIComponent(c.id)}">
           <h3>${escapeHtml(c.title)} ${c.category ? `<span class="pill">${escapeHtml(c.category)}</span>` : ""}</h3>
         </a>
         <p class="desc">${escapeHtml(c.description || "Sem descrição.")}</p>
       </div>
       <div class="community-card-footer">
-        <span class="meta">${escapeHtml(shortId(c.id))}</span>
-        <a class="btn btn-sm btn-outline" href="#/c/${encodeURIComponent(c.id)}">Entrar →</a>
+        <a class="btn btn-sm btn-outline" href="#/c/${encodeURIComponent(c.id)}">Abrir →</a>
       </div>
     </div>`
     )
@@ -227,26 +264,26 @@ export function renderCommunity(main, communityId, topics, meta = {}, { isMember
     <div class="card community-header">
       <h2>${escapeHtml(commTitle)} ${commCat}</h2>
       ${commDesc ? `<p class="desc">${escapeHtml(commDesc)}</p>` : ""}
-      <p class="meta">Criador: <a href="#/u/${encodeURIComponent(meta.owner || "")}">${escapeHtml(shortId(meta.owner))}</a></p>
+      <p class="meta">Criada por: <a href="#/u/${encodeURIComponent(meta.owner || "")}">${escapeHtml(shortId(meta.owner))}</a></p>
       <div class="actions-row">
         <button id="btn-share-comm" class="btn btn-outline" data-id="${escapeHtml(communityId)}" data-title="${escapeHtml(commTitle)}">↗ Compartilhar</button>
         <button id="btn-join-comm" class="btn ${isMember ? "btn-secondary" : "btn-primary"}" data-id="${escapeHtml(communityId)}">
-          ${isMember ? "✓ Já é Membro" : "★ Entrar"}
+          ${isMember ? "✓ Já é Membro" : "★ Participar"}
         </button>
-        <a class="btn btn-primary" href="#/compose/topic?c=${encodeURIComponent(communityId)}">+ Novo Tópico</a>
+        <a class="btn btn-primary" href="#/compose/topic?c=${encodeURIComponent(communityId)}">+ Novo post</a>
       </div>
     </div>
     <div class="actions-bar">
-      <span class="section-title">Tópicos do Fórum</span>
+      <span class="section-title">Posts</span>
     </div>`;
 
   if (!topics.length) {
-    html += `<div class="empty"><p>Nenhum tópico nesta comunidade ainda.</p></div>`;
+    html += `<div class="empty"><p>Nenhum post nesta comunidade ainda.</p></div>`;
     main.innerHTML += html;
     return;
   }
 
-  const items = topics.map((t) => renderPostItem({ ...t, communityId })).join("");
+  const items = topics.map((t) => renderPostItem({ ...t, communityId, communityTitle: commTitle })).join("");
   html += `<div class="feed-container">${items}</div>`;
   main.innerHTML += html;
 }
@@ -258,8 +295,8 @@ export function renderTopic(main, topicId, topic, replies, { topicData = null, i
   const author = topic?.author || topic?.owner || "";
   const authorInitial = (author || "V").slice(0, 1).toUpperCase();
   const originBadge = topic?.isLocalP2p
-    ? `<span class="badge-pill p2p-pill">🌐 Na rede</span>`
-    : `<span class="badge-pill permanent-pill">💾 Permanente</span>`;
+    ? `<span class="badge-pill p2p-pill">Na rede</span>`
+    : `<span class="badge-pill permanent-pill">Guardado</span>`;
 
   const modBtn = isMod
     ? `<button class="btn btn-sm btn-danger btn-mod-hide" data-id="${escapeHtml(topicId)}" data-type="topic">🛡️ Ocultar</button>`
@@ -273,10 +310,9 @@ export function renderTopic(main, topicId, topic, replies, { topicData = null, i
         <div>
           <a class="post-author" href="#/u/${encodeURIComponent(author)}">${escapeHtml(shortId(author))}</a>
           ${originBadge}
-          <div class="post-meta">ID: ${escapeHtml(shortId(topicId))}</div>
         </div>
       </div>
-      <h2>${escapeHtml(topic?.title || "Tópico")}</h2>
+      <h2>${escapeHtml(topic?.title || "Post")}</h2>
       <div class="post-body">${escapeHtml(bodyText)}</div>
       <div class="actions-row">
         <button id="btn-share-topic" class="btn btn-outline btn-sm" data-id="${escapeHtml(topicId)}" data-title="${escapeHtml(topic?.title || "")}">↗ Compartilhar</button>
@@ -300,8 +336,8 @@ export function renderTopic(main, topicId, topic, replies, { topicData = null, i
     const rAuthor = r.author || r.owner || "";
     const rInitial = (rAuthor || "V").slice(0, 1).toUpperCase();
     const rBadge = r.isLocalP2p
-      ? `<span class="badge-pill p2p-pill">🌐</span>`
-      : `<span class="badge-pill permanent-pill">💾</span>`;
+      ? `<span class="badge-pill p2p-pill">Na rede</span>`
+      : `<span class="badge-pill permanent-pill">Guardado</span>`;
     const replyModBtn = isMod
       ? `<button class="btn btn-sm btn-danger btn-mod-hide" data-id="${escapeHtml(r.id)}" data-type="reply">🛡️</button>`
       : "";
@@ -373,9 +409,9 @@ function renderProfileActions(address, isCurrentWallet, handle, displayName, has
       </div>
 
       <details class="advanced-settings card" style="margin-top:0.75rem;">
-        <summary>Avançado — Nuvem Permanente & Carteira Arweave</summary>
+        <summary>Avançado — Arquivamento Permanente & Carteira</summary>
         <div style="margin-top:0.75rem;">
-          <p class="desc">Por padrão, o Vox opera na rede distribuída com custo zero sustentado pelo Pacto Vox. Se quiser arquivar postagens e seu @handle permanentemente no permaweb, configure sua carteira Arweave abaixo:</p>
+          <p class="desc">Por padrão, o Vox opera na rede distribuída com custo zero entre aparelhos. Se quiser arquivar publicações e seu @handle permanentemente no permaweb, configure sua carteira Arweave abaixo:</p>
 
           <form id="form-claim-handle" style="margin-top:0.75rem;">
             <label style="font-size:0.85rem; font-weight:600;">Reivindicar @handle on-chain:</label>
@@ -386,8 +422,8 @@ function renderProfileActions(address, isCurrentWallet, handle, displayName, has
           </form>
 
           <div style="margin-top:0.75rem; border-top:1px solid var(--border); padding-top:0.6rem; display:flex; flex-wrap:wrap; gap:0.4rem;">
-            <button id="btn-copy-dmpub" class="btn btn-sm btn-outline">📋 Copiar Chave Dm-Pub</button>
-            <button id="btn-publish-dmpub" class="btn btn-sm btn-primary">🌐 Anunciar Dm-Pub on-chain</button>
+            <button id="btn-copy-dmpub" class="btn btn-sm btn-outline">📋 Copiar Chave Pública</button>
+            <button id="btn-publish-dmpub" class="btn btn-sm btn-primary">🌐 Publicar Chave on-chain</button>
           </div>
 
           <div style="margin-top:0.75rem; border-top:1px solid var(--border); padding-top:0.6rem;">
@@ -592,37 +628,37 @@ export function renderPactModal(container) {
     <div class="modal-overlay" id="pact-modal-overlay">
       <div class="modal-dialog">
         <div style="text-align:center; margin-bottom:1rem;">
-          <h2 style="margin:0 0 0.25rem; font-size:1.25rem;">Pacto Vox: Rede Distribuída</h2>
-          <p class="desc" style="margin:0;">O Vox roda nos aparelhos de quem usa. Você pode pausar quando quiser.</p>
+          <h2 style="margin:0 0 0.25rem; font-size:1.25rem;">Bem-vindo ao Vox</h2>
+          <p class="desc" style="margin:0;">Comunidades e conversas direto nos aparelhos de quem usa, sem controle central.</p>
         </div>
 
         <div class="pact-feature">
           <div class="pact-feature-icon">🛡️</div>
           <div>
-            <strong>1. Soberania e Autoria Total</strong>
-            <p class="desc" style="margin:0.2rem 0 0;">Seus posts e chaves são seus. Nenhuma empresa é dona da sua conta.</p>
+            <strong>1. Seus dados são seus</strong>
+            <p class="desc" style="margin:0.2rem 0 0;">Suas mensagens e publicações pertencem a você. Nenhuma empresa controla sua conta.</p>
           </div>
         </div>
 
         <div class="pact-feature">
           <div class="pact-feature-icon">⚡</div>
           <div>
-            <strong>2. Nó Cooperativo Leve</strong>
-            <p class="desc" style="margin:0.2rem 0 0;">O app aberto ajuda a servir leituras para outros usuários sem servidores caros.</p>
+            <strong>2. Rede cooperativa</strong>
+            <p class="desc" style="margin:0.2rem 0 0;">O app aberto ajuda a distribuir conteúdos para outros usuários sem servidores caros.</p>
           </div>
         </div>
 
         <div class="pact-feature">
           <div class="pact-feature-icon">🔒</div>
           <div>
-            <strong>3. Controle e Salvaguardas</strong>
-            <p class="desc" style="margin:0.2rem 0 0;">Respeita Wi-Fi, teto diário de banda e botão de pausa a qualquer momento.</p>
+            <strong>3. Controle total</strong>
+            <p class="desc" style="margin:0.2rem 0 0;">Respeita conexão Wi-Fi, teto diário de dados e você pode pausar a qualquer momento.</p>
           </div>
         </div>
 
         <div style="margin-top:1.25rem; display:flex; flex-direction:column; gap:0.5rem;">
-          <button id="btn-pact-accept" class="btn btn-primary" style="padding:0.65rem; font-weight:700;">Concordar e Entrar</button>
-          <button id="btn-pact-settings" class="btn btn-outline" style="padding:0.5rem; font-size:0.85rem;">Ajustar Limites de Rede Primeiro</button>
+          <button id="btn-pact-accept" class="btn btn-primary" style="padding:0.65rem; font-weight:700;">Continuar</button>
+          <button id="btn-pact-settings" class="btn btn-outline" style="padding:0.5rem; font-size:0.85rem;">Ajustar rede depois</button>
         </div>
       </div>
     </div>
@@ -635,22 +671,21 @@ export function closePactModal(container) {
 
 function renderNetworkHeader(isEnabled, relayStatus, rtcStatus) {
   const rtcCount = rtcStatus?.remotePeersConnected || 0;
-  const relayBadge = relayStatus?.online
-    ? `<span class="badge-pill" style="background:var(--success-soft); color:var(--success);">🟢 Relay Online (127.0.0.1:3920)</span>`
-    : `<span class="badge-pill" style="background:var(--surface-soft); color:var(--muted);">⚪ PC offline</span>`;
-  const rtcBadge = `<span class="badge-pill">🌐 WebRTC: ${rtcCount} ${rtcCount === 1 ? "par remoto" : "pares remotos"}</span>`;
+  const statusBadge = isEnabled
+    ? `<span class="pill" style="background:var(--success); color:#fff;">🟢 Ajudando a rede</span>`
+    : `<span class="pill" style="background:var(--danger); color:#fff;">⏸️ Ajuda pausada</span>`;
+  const peerBadge = rtcCount > 0
+    ? `<span class="badge-pill" style="background:var(--success-soft); color:var(--success);">${rtcCount} ${rtcCount === 1 ? "aparelho conectado" : "aparelhos conectados"}</span>`
+    : `<span class="badge-pill">Conectando a aparelhos próximos…</span>`;
 
   return `
     <div class="card network-card">
       <h2>Sua rede</h2>
-      <p class="desc">Rede Distribuída (Pacto Vox) — você ajuda a levar o Vox adiante sem servidores centrais caros.</p>
+      <p class="desc">Você ajuda a manter o Vox funcionando para todo mundo, direto do seu aparelho.</p>
       
       <div class="network-status" style="margin-top:0.75rem; display:flex; flex-wrap:wrap; gap:0.4rem;">
-        <span class="pill" style="background:${isEnabled ? "var(--success)" : "var(--danger)"}; color:#fff;">
-          ${isEnabled ? "🟢 Nó Ativo" : "⏸️ Ajuda Pausada"}
-        </span>
-        ${relayBadge}
-        ${rtcBadge}
+        ${statusBadge}
+        ${peerBadge}
       </div>
     </div>`;
 }
@@ -668,20 +703,20 @@ function renderNetworkStats(metrics, cacheStats, dailyUsage, settings) {
     <div class="stats-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:0.5rem; margin-bottom:1rem;">
       <div class="card" style="text-align:center; padding:0.65rem;">
         <div style="font-size:1.25rem; font-weight:700; color:var(--accent);">${metrics?.blobsServed || 0}</div>
-        <div class="meta">Itens Servidos (${metrics?.blobsServedRtc || 0} RTC)</div>
+        <div class="meta">Conteúdos entregues</div>
       </div>
       <div class="card" style="text-align:center; padding:0.65rem;">
         <div style="font-size:1.25rem; font-weight:700; color:var(--accent);">${((metrics?.bytesServed || 0) / 1024).toFixed(1)} KB</div>
-        <div class="meta">Banda Total</div>
+        <div class="meta">Dados compartilhados</div>
       </div>
       <div class="card" style="text-align:center; padding:0.65rem;">
         <div style="font-size:1.1rem; font-weight:700; color:var(--text);">${servedTodayMb} / ${capMb} MB</div>
         <div class="usage-meter"><div class="usage-fill" style="width:${pct}%;"></div></div>
-        <div class="meta" style="margin-top:0.25rem;">Uso Hoje (${pct}%)</div>
+        <div class="meta" style="margin-top:0.25rem;">Uso hoje (${pct}%)</div>
       </div>
       <div class="card" style="text-align:center; padding:0.65rem;">
         <div style="font-size:1.1rem; font-weight:700; color:var(--text);">${cacheStats?.count || 0}</div>
-        <div class="meta">Cache (${cacheStats?.sizeKb || "0"} KB)</div>
+        <div class="meta">Em cache (${cacheStats?.sizeKb || "0"} KB)</div>
       </div>
     </div>`;
 }
@@ -689,9 +724,9 @@ function renderNetworkStats(metrics, cacheStats, dailyUsage, settings) {
 function renderTurnFields(customTurn) {
   return `
     <div style="border-top:1px solid var(--border); padding-top:0.75rem; margin-top:0.75rem;">
-      <label style="font-weight:600; font-size:0.85rem; display:block; margin-bottom:0.35rem;">TURN Comunitário (Travessia 4G / NAT Simétrico)</label>
+      <label style="font-weight:600; font-size:0.85rem; display:block; margin-bottom:0.35rem;">Servidor auxiliar para conexões móveis (TURN)</label>
       <div class="form-group">
-        <label for="net-turn-url">URL do Servidor TURN:</label>
+        <label for="net-turn-url">Endereço do servidor:</label>
         <input type="text" id="net-turn-url" class="form-control" placeholder="turn:turn.comunidade.org:3478" value="${customTurn?.urls || ""}" />
       </div>
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
@@ -707,12 +742,13 @@ function renderTurnFields(customTurn) {
     </div>`;
 }
 
-function renderNetworkForm(settings, notifPermission, customSignalingUrl, customTurn) {
+function renderNetworkForm(settings, notifPermission, customSignalingUrl, customTurn, relayStatus, rtcStatus, metrics) {
   const isEnabled = Boolean(settings?.enabled);
   const isBg = Boolean(settings?.backgroundRelay);
   const notifNotice = notifPermission === "granted"
     ? `<span style="font-size:0.8rem; color:var(--success);">✓ Notificações permitidas</span>`
     : `<button type="button" id="btn-request-notif" class="btn btn-outline btn-sm">Ativar Notificações</button>`;
+  const rtcCount = rtcStatus?.remotePeersConnected || 0;
 
   return `
     <div class="card">
@@ -724,35 +760,37 @@ function renderNetworkForm(settings, notifPermission, customSignalingUrl, custom
         </div>
 
         <div class="form-group">
-          <label for="net-daily-cap">Teto diário de banda servida (MB/dia):</label>
+          <label for="net-daily-cap">Teto diário de dados compartilhados (MB):</label>
           <input type="number" id="net-daily-cap" class="form-control" min="5" max="1000" value="${settings?.dailyCapMb || 50}" />
         </div>
 
         <div class="form-group">
-          <label for="net-max-mb">Limite de cache (MB):</label>
+          <label for="net-max-mb">Limite de espaço em disco (MB):</label>
           <input type="number" id="net-max-mb" class="form-control" min="5" max="500" value="${settings?.maxMb || 25}" />
         </div>
 
         <div class="form-group" style="display:flex; align-items:center; gap:0.6rem;">
           <input type="checkbox" id="net-wifi" ${settings?.wifiOnly ? "checked" : ""} style="width:1rem; height:1rem;" />
-          <label for="net-wifi" style="margin:0;">Compartilhar apenas em Wi-Fi</label>
+          <label for="net-wifi" style="margin:0;">Ajudar apenas quando estiver no Wi-Fi</label>
         </div>
 
         <div class="form-group" style="display:flex; align-items:center; gap:0.6rem;">
           <input type="checkbox" id="net-comm-only" ${settings?.commOnly ? "checked" : ""} style="width:1rem; height:1rem;" />
-          <label for="net-comm-only" style="margin:0;">Espelhar apenas minhas comunidades</label>
+          <label for="net-comm-only" style="margin:0;">Compartilhar apenas minhas comunidades</label>
         </div>
 
         <div class="form-group" style="display:flex; align-items:center; gap:0.6rem;">
           <input type="checkbox" id="net-webrtc" ${settings?.webrtcEnabled !== false ? "checked" : ""} style="width:1rem; height:1rem;" />
-          <label for="net-webrtc" style="margin:0;">Troca direta com outros aparelhos (WebRTC)</label>
+          <label for="net-webrtc" style="margin:0;">Conectar diretamente a outros aparelhos</label>
         </div>
 
         <details class="advanced-settings">
-          <summary>Avançado (Servidores e Segundo Plano)</summary>
+          <summary>Avançado (Conexões e Servidores)</summary>
           <div style="margin-top:0.75rem;">
+            <p class="desc" style="font-size:0.8rem; margin-bottom:0.75rem;">Detalhes técnicos da malha WebRTC e servidores auxiliares.</p>
+
             <div class="form-group">
-              <label for="net-signaling-url">Sinalização WebRTC (opcional):</label>
+              <label for="net-signaling-url">Servidor de conexão (opcional):</label>
               <input type="text" id="net-signaling-url" class="form-control" placeholder="wss://signal.comunidade.org" value="${customSignalingUrl || ""}" />
             </div>
 
@@ -766,8 +804,12 @@ function renderNetworkForm(settings, notifPermission, customSignalingUrl, custom
               </div>
             </div>
 
-            <div style="margin-top:0.75rem;">
-              <button type="button" id="btn-check-relay" class="btn btn-outline btn-sm">Verificar Relay Desktop (127.0.0.1:3920)</button>
+            <div style="margin-top:0.75rem; border-top:1px solid var(--border); padding-top:0.6rem;">
+              <div class="meta" style="margin-bottom:0.4rem;">
+                Conexões ativas: <strong>${rtcCount} aparelhos</strong> · Conteúdos via WebRTC: <strong>${metrics?.blobsServedRtc || 0}</strong>
+              </div>
+              <button type="button" id="btn-check-relay" class="btn btn-outline btn-sm">Verificar Servidor Local</button>
+              <span class="meta" style="margin-left:0.5rem;">${relayStatus?.online ? "🟢 Conectado" : "⚪ Offline"}</span>
             </div>
           </div>
         </details>
@@ -784,7 +826,7 @@ export function renderNetworkSettings(main, { settings, metrics, cacheStats, rel
   const isEnabled = Boolean(settings?.enabled);
   let html = renderNetworkHeader(isEnabled, relayStatus, rtcStatus);
   html += renderNetworkStats(metrics, cacheStats, dailyUsage, settings);
-  html += renderNetworkForm(settings, notifPermission, customSignalingUrl, customTurn);
+  html += renderNetworkForm(settings, notifPermission, customSignalingUrl, customTurn, relayStatus, rtcStatus, metrics);
   main.innerHTML = html;
 }
 
@@ -821,7 +863,7 @@ export function renderDmList(main, conversations = [], myAddress = "") {
       <p class="desc" style="margin:0 0 8px;">Privadas. Só neste aparelho. Criptografia ponta a ponta sem nuvem.</p>
       
       <div style="background:var(--surface-soft); border:1px solid var(--border); padding:8px 12px; border-radius:var(--radius-sm); margin:8px 0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
-        <span class="meta" style="font-size:0.8rem;">Seu ID de mensagens: <code>${escapeHtml(shortId(myAddress))}</code></span>
+        <span class="meta" style="font-size:0.8rem;">Seu link de mensagens: <code>${escapeHtml(shortId(myAddress))}</code></span>
         <button id="btn-copy-my-dm-link" class="btn btn-sm btn-outline" data-route="${escapeHtml(myAddress)}">📋 Copiar Link</button>
       </div>
 
@@ -848,7 +890,7 @@ function renderDmMessageBubbles(messages, myAddress, peerAddress) {
       const isSent = m.from === myAddress || m.status === "sent";
       const cls = isSent ? "sent" : "received";
       const timeStr = m.ts ? new Date(m.ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
-      const statusLabel = m.status === "delivered" ? "✓✓ RTC" : m.status === "queued-relay" ? "✓ Relay" : "✓";
+      const statusLabel = m.status === "delivered" ? "✓✓ Direta" : m.status === "queued-relay" ? "✓ Caixa postal" : "✓";
       return `
         <div class="dm-bubble ${cls}">
           <div>${escapeHtml(m.text)}</div>
@@ -860,12 +902,12 @@ function renderDmMessageBubbles(messages, myAddress, peerAddress) {
 
 export function renderDmThread(main, peerAddress, messages = [], myAddress = "", { isRtcOnline = false, hasDmPub = false } = {}) {
   const statusBadge = isRtcOnline
-    ? `<span class="badge-pill" style="background:var(--success-soft); color:var(--success);">🟢 WebRTC Online</span>`
-    : `<span class="badge-pill">📦 Relay Inbox TTL</span>`;
+    ? `<span class="badge-pill" style="background:var(--success-soft); color:var(--success);">🟢 Conectado</span>`
+    : `<span class="badge-pill">📦 Entrega offline</span>`;
 
   const keyWarning = !hasDmPub
     ? `<div class="card error" style="margin-bottom:0.75rem;">
-        ⚠️ Chave Dm-Pub de <code>${escapeHtml(shortId(peerAddress))}</code> não encontrada. Cole para ativar E2E:
+        ⚠️ Chave de <code>${escapeHtml(shortId(peerAddress))}</code> não encontrada. Cole para ativar conversa privada:
         <div style="display:flex; gap:0.5rem; margin-top:0.4rem;">
           <input type="text" id="input-manual-dmpub" class="form-control" placeholder='{"kty":"EC","crv":"P-256",...}' />
           <button type="button" id="btn-save-manual-dmpub" class="btn btn-sm btn-primary">Salvar</button>
