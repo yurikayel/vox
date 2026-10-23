@@ -2184,6 +2184,53 @@ main#app-main {
   font-weight: 600;
 }
 
+/* Pix Zaps (v6.0) */
+.btn-zap-post {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: #eab308;
+  transition: all 0.15s ease;
+}
+
+.btn-zap-post:hover {
+  color: #facc15;
+  transform: scale(1.05);
+}
+
+.icon-zap {
+  stroke: #eab308;
+  fill: rgba(234, 179, 8, 0.15);
+}
+
+.btn-zap-post.disabled {
+  color: var(--muted);
+  opacity: 0.35;
+}
+
+.btn-zap-post.disabled .icon-zap {
+  stroke: var(--muted);
+  fill: none;
+}
+
+.zap-amount-buttons {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 0.75rem;
+}
+
+.zap-amount-buttons .btn {
+  flex: 1;
+  text-align: center;
+}
+
+.zap-disclaimer {
+  font-size: 0.76rem;
+  line-height: 1.4;
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+}
+
 /* Footer */
 .app-footer {
   text-align: center;

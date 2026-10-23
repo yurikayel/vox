@@ -63,6 +63,17 @@ Muitos brasileiros recorrem ao Instagram e Facebook para vender produtos caseiro
 
 A feira comunitária do Vox valoriza a economia popular real sem mercantilizar a praça pública de debates.
 
+## Pix Zaps Nativos: Microapoio Direto vs Plataformas Extrativistas
+
+Redes centralizadas (Substack, YouTube, TikTok, Medium, X) impõem muros financeiros extrativistas: retêm de 10% a 30% de comissões, exigem limites mínimos de saque e impõem janelas de liquidação de 30 a 60 dias. No outro extremo, redes como Nostr dependem de Zaps com satoshis (Lightning Network), cuja volatilidade cambial e barreiras técnicas de onboarding afastam a população brasileira comum.
+
+O Vox adota uma terceira via soberana com os **Pix Zaps Nativos** (especificação BR Code EMV offline):
+
+- **Microapoios Instantâneos no Post:** O leitor apoia criadores de conteúdo, educadores populares ou coletivos locais com valores acessíveis (R$ 2, R$ 5, R$ 10 ou valor livre) em apenas um toque no feed ou na discussão (`⚡ Apoiar`).
+- **Geração 100% Offline e Segura:** O código Pix Copia e Cola é gerado localmente pelo navegador do usuário em milissegundos via algoritmo BR Code EMV + CRC16-CCITT puro, sem qualquer dependência de servidores intermediários ou APIs de bancos.
+- **Taxa Zero e Repasse Integral:** 100% do apoio chega à conta do recebedor em segundos no ecossistema Pix do Banco Central. O Vox não cobra comissão, não retém valores e não atua como instituição de pagamento.
+- **Economia Solidária Circular:** Criadores sustentam suas produções locais diretamente por meio da comunidade que consome suas ideias, sem dependência de anunciantes, algoritmos de engajamento predatório ou intermediários de pagamento.
+
 ## Fora do escopo atual
 
 - Intermediação financeira, custódia de valores ou split de pagamentos (o Vox não é e não será gateway bancário).

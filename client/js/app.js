@@ -16,6 +16,7 @@ import * as social from "./social.js";
 import * as pixKeyHelper from "./pix-key.js";
 import * as listing from "./listing.js";
 import * as gov from "./governance.js";
+import * as brcode from "./brcode.js";
 
 function parseRoute() {
   if (typeof window !== "undefined" && window.location?.search) {
@@ -450,11 +451,19 @@ function attachCommunityListingHandlers(main) {
       e.preventDefault();
       const pix = btn.dataset.pix;
       if (!pix) return;
-      try {
-        await navigator.clipboard.writeText(pix);
-        share.showToast("Chave Pix copiada!");
-      } catch {
-        share.showToast(`Pix: ${pix}`);
+      const price = btn.dataset.price || "";
+      const authorName = btn.dataset.authorName || "Vendedor";
+      const title = btn.dataset.title || "Oferta";
+      const numAmount = brcode.parseNumericAmount(price);
+      if (numAmount) {
+        openZapModal({ pixKey: pix, authorName, title, defaultAmount: parseFloat(numAmount) });
+      } else {
+        try {
+          await navigator.clipboard.writeText(pix);
+          share.showToast("Chave Pix copiada!");
+        } catch {
+          share.showToast(`Pix: ${pix}`);
+        }
       }
     });
   });
@@ -1848,8 +1857,103 @@ function initGossipListeners() {
   });
 }
 
+function getOrCreateZapModalContainer() {
+  let container = document.getElementById("zap-modal-container");
+  if (!container) {
+    container = document.createElement("div");
+    container.id = "zap-modal-container";
+    document.body.appendChild(container);
+  }
+  return container;
+}
+
+function openZapModal({ pixKey, authorName = "Autor", title = "", defaultAmount = 5 } = {}) {
+  if (!pixKey) return;
+  const container = getOrCreateZapModalContainer();
+  render.renderZapModal(container, { authorName, pixKey, title, defaultAmount });
+  bindZapModalEvents(container, { pixKey, authorName });
+}
+
+function bindZapModalEvents(container, { pixKey, authorName }) {
+  const overlay = container.querySelector("#zap-modal-overlay");
+  const area = container.querySelector("#zap-payload-area");
+  const customContainer = container.querySelector(".zap-custom-container");
+  const customInput = container.querySelector("#zap-custom-input");
+
+  const update = (amt) => {
+    try {
+      area.value = brcode.buildPixPayload({ key: pixKey, name: authorName, amount: amt, description: "Apoio Vox" });
+    } catch {
+      area.value = pixKey;
+    }
+  };
+
+  container.querySelectorAll(".btn-zap-val").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      container.querySelectorAll(".btn-zap-val").forEach((b) => {
+        b.classList.remove("btn-primary");
+        b.classList.add("btn-outline");
+      });
+      btn.classList.remove("btn-outline");
+      btn.classList.add("btn-primary");
+
+      const val = btn.dataset.val;
+      if (val === "custom") {
+        if (customContainer) customContainer.style.display = "block";
+        const customAmt = customInput ? brcode.parseNumericAmount(customInput.value) : null;
+        update(customAmt);
+      } else {
+        if (customContainer) customContainer.style.display = "none";
+        update(parseFloat(val));
+      }
+    });
+  });
+
+  if (customInput) {
+    customInput.addEventListener("input", () => {
+      const parsed = brcode.parseNumericAmount(customInput.value);
+      update(parsed);
+    });
+  }
+
+  const copyBtn = container.querySelector("#btn-copy-zap-payload");
+  if (copyBtn) {
+    copyBtn.addEventListener("click", async () => {
+      const text = area?.value || pixKey;
+      try {
+        await navigator.clipboard.writeText(text);
+        share.showToast("⚡ Pix Copia e Cola copiado! Cole no seu banco.");
+      } catch {
+        share.showToast(`Pix: ${text}`);
+      }
+      render.closeZapModal(container);
+    });
+  }
+
+  const closeBtn = container.querySelector(".btn-close-zap");
+  if (closeBtn) {
+    closeBtn.addEventListener("click", () => render.closeZapModal(container));
+  }
+  if (overlay) {
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) render.closeZapModal(container);
+    });
+  }
+}
+
 function initSocialInteractions() {
   document.addEventListener("click", (e) => {
+    // Pix Zap / Apoiar post (v6.0)
+    const btnZap = e.target.closest(".btn-zap-post:not(.disabled)");
+    if (btnZap) {
+      e.preventDefault();
+      const pixKey = btnZap.dataset.pix;
+      const authorName = btnZap.dataset.authorName || "Autor";
+      const title = btnZap.dataset.title || "";
+      openZapModal({ pixKey, authorName, title });
+      return;
+    }
+
     // Like button
     const btnLike = e.target.closest(".btn-like");
     if (btnLike) {
