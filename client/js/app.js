@@ -18,6 +18,7 @@ import * as listing from "./listing.js";
 import * as gov from "./governance.js";
 import * as brcode from "./brcode.js";
 import * as hashtags from "./hashtags.js";
+import * as frames from "./frames.js";
 
 function parseRoute() {
   if (typeof window !== "undefined" && window.location?.search) {
@@ -1981,6 +1982,8 @@ function initGossipListeners() {
       share.showToast(`Nova proposta de governança: ${item.title?.slice(0, 24) || "..."}`);
     } else if (item?.type === "governance-vote") {
       share.showToast(`Novo voto registrado na proposta!`);
+    } else if (item?.type === "frame-action") {
+      share.showToast(`Nova interação no mini-app do post!`);
     }
   });
 }
@@ -2069,8 +2072,81 @@ function bindZapModalEvents(container, { pixKey, authorName }) {
   }
 }
 
+async function resolvePostForFrame(postId) {
+  let post = await cacheNode.getLocalPost(postId);
+  if (!post?.frame) {
+    const tour = mock.mockRecentTopics()?.items || [];
+    post = tour.find((p) => p.id === postId) || null;
+  }
+  return post;
+}
+
+async function executeFrameAction(frame, postId, index, label) {
+  const user = await getActiveUser();
+  const payload = frames.buildFrameActionPayload({
+    postId,
+    frameKind: frame.kind,
+    buttonIndex: index,
+    buttonLabel: label,
+    userAddress: user,
+  });
+  const signed = await localAccount.signPayload(payload);
+  await cacheNode.saveLocalPost(signed);
+  peers.broadcastGossip(signed);
+
+  frames.saveUserFrameAction(postId, { buttonIndex: index, buttonLabel: label, author: user });
+  const localAction = frames.getUserFrameAction(postId);
+  const existing = await cacheNode.getLocalPosts({ type: "frame-action", postId });
+  return frames.getFrameState(frame, existing, localAction);
+}
+
+async function handleFrameActionClick(btn) {
+  const postId = btn.dataset.postId;
+  const index = Number(btn.dataset.index) || 1;
+  const label = btn.dataset.label || "";
+  const action = btn.dataset.action || "post";
+  const target = btn.dataset.target || "";
+
+  if (action === "link" && target) {
+    window.location.href = target;
+    return;
+  }
+
+  const container = btn.closest(".vox-frame");
+  const buttons = container ? container.querySelectorAll(".btn-frame-action") : [];
+  buttons.forEach((b) => (b.disabled = true));
+
+  try {
+    const post = await resolvePostForFrame(postId);
+    const parsed = frames.parseFrame(post?.frame);
+    if (!parsed.valid) throw new Error(parsed.error);
+
+    const state = await executeFrameAction(parsed.frame, postId, index, label);
+    const contentEl = document.getElementById(`frame-content-${postId}`);
+    if (contentEl) contentEl.innerHTML = render.renderFrameContentHtml(parsed.frame, state);
+
+    buttons.forEach((b) => {
+      b.disabled = false;
+      b.classList.toggle("active", Number(b.dataset.index) === index);
+    });
+    const msg = parsed.frame.kind === "poll" ? `Voto "${label}" computado!` : parsed.frame.kind === "petition" ? "Abaixo-assinado assinado! ✓" : "Cálculo CLT atualizado!";
+    share.showToast(msg);
+  } catch (err) {
+    buttons.forEach((b) => (b.disabled = false));
+    share.showToast(`Erro no frame: ${err.message}`, "error");
+  }
+}
+
 function initSocialInteractions() {
   document.addEventListener("click", (e) => {
+    // Open Frames (v6.2 Mini-apps)
+    const btnFrame = e.target.closest(".btn-frame-action:not([disabled])");
+    if (btnFrame) {
+      e.preventDefault();
+      handleFrameActionClick(btnFrame);
+      return;
+    }
+
     const btnComment = e.target.closest(".btn-comment");
     if (btnComment) {
       e.preventDefault();

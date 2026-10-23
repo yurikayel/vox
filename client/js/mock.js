@@ -183,6 +183,16 @@ export const MOCK_DEMO_TOPICS = [
     repliesCount: 1,
     isLocalP2p: true,
     ts: NOW - 45 * 60 * 1000, // ~45m atrás
+    frame: {
+      "of:accepts:vox": "vox",
+      kind: "petition",
+      title: "Abaixo-assinado: Merenda com Agricultura Familiar",
+      "of:image": "images/posts/tour-yara.jpg",
+      "of:image:aspect_ratio": "1.91:1",
+      "of:button:1": "✍️ Assinar Abaixo-Assinado",
+      initialSignatures: 147,
+      goal: 200,
+    },
   },
   {
     id: "demo-post-mei",
@@ -199,6 +209,16 @@ export const MOCK_DEMO_TOPICS = [
     repliesCount: 0,
     isLocalP2p: true,
     ts: NOW - 90 * 60 * 1000, // ~1h30 atrás
+    frame: {
+      "of:accepts:vox": "vox",
+      kind: "clt",
+      title: "Simulador Rápido de Direitos CLT (Salário Mínimo)",
+      "of:image": "images/posts/tour-mei.jpg",
+      "of:image:aspect_ratio": "1.91:1",
+      "of:button:1": "📅 Férias + 1/3",
+      "of:button:2": "💰 13º Salário",
+      "of:button:3": "📄 Rescisão",
+    },
   },
   {
     id: "demo-post-fernanda",
@@ -279,6 +299,17 @@ export const MOCK_DEMO_TOPICS = [
     repliesCount: 0,
     isLocalP2p: true,
     ts: NOW - 20 * 3600 * 1000, // ~20h atrás
+    frame: {
+      "of:accepts:vox": "vox",
+      kind: "poll",
+      title: "Enquete: Qual oficina popular devemos abrir no centro comunitário?",
+      "of:image": "images/posts/tour-kaue.jpg",
+      "of:image:aspect_ratio": "1.91:1",
+      "of:button:1": "📻 Rádio Livre",
+      "of:button:2": "🍞 Panificação",
+      "of:button:3": "🛠️ Marcenaria",
+      initialVotes: { 1: 18, 2: 42, 3: 15 },
+    },
   },
   {
     id: "demo-post-raj",

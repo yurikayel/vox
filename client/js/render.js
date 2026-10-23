@@ -4,6 +4,7 @@ import * as listing from "./listing.js";
 import * as gov from "./governance.js";
 import * as brcode from "./brcode.js";
 import * as hashtags from "./hashtags.js";
+import * as frames from "./frames.js";
 
 const root = () => document.getElementById("app-root");
 
@@ -296,6 +297,81 @@ function renderPostText(t) {
   return `<div class="post-title"><a href="#/t/${encodeURIComponent(t.id)}">${escapeHtml(t.title)}</a></div>${body}`;
 }
 
+export function renderFrameContentHtml(frame, state) {
+  if (!state) return "";
+  if (state.kind === "poll") {
+    if (state.userVotedIndex) {
+      const bars = state.options
+        .map((opt) => {
+          const isUser = state.userVotedIndex === opt.index;
+          return `<div class="frame-poll-bar-wrapper ${isUser ? "user-choice" : ""}">
+            <div class="frame-poll-bar-fill" style="width:${opt.percent}%"></div>
+            <div class="frame-poll-bar-label"><span>${escapeHtml(opt.label)} ${isUser ? "✓" : ""}</span> <strong>${opt.percent}% (${opt.count})</strong></div>
+          </div>`;
+        })
+        .join("");
+      return `<div class="frame-poll-results">${bars}</div>`;
+    }
+    return `<p class="frame-prompt">Vote na enquete abaixo para ver os resultados parciais em tempo real:</p>`;
+  }
+
+  if (state.kind === "petition") {
+    return `<div class="frame-petition-box">
+      <div class="frame-petition-metric"><strong>${state.signaturesCount}</strong> assinaturas (meta: ${state.goal}) · ${state.percent}%</div>
+      <div class="frame-petition-bar"><div class="frame-petition-bar-fill" style="width:${state.percent}%"></div></div>
+      ${state.hasSigned ? '<p class="frame-signed-msg">✓ Você assinou este abaixo-assinado.</p>' : '<p class="frame-prompt">Adicione sua assinatura com 1 clique (identidade criptográfica local):</p>'}
+    </div>`;
+  }
+
+  if (state.kind === "clt") {
+    return `<div class="frame-clt-box">
+      <h4 class="frame-clt-title">${escapeHtml(state.title)}</h4>
+      ${state.result ? `<div class="frame-clt-result">${escapeHtml(state.result)}</div>` : ""}
+      <p class="frame-clt-detail">${escapeHtml(state.detail)}</p>
+    </div>`;
+  }
+  return "";
+}
+
+function renderFrameButtons(t, frame, localAction) {
+  const activeIndex = localAction?.buttonIndex || 0;
+  return frame.buttons
+    .map(
+      (b) => `<button type="button" class="btn btn-sm btn-frame-action ${activeIndex === b.index ? "active" : ""}" data-post-id="${escapeHtml(t.id)}" data-index="${b.index}" data-action="${escapeHtml(b.action)}" data-label="${escapeHtml(b.label)}" ${b.target ? `data-target="${escapeHtml(b.target)}"` : ""}>${escapeHtml(b.label)}</button>`
+    )
+    .join("");
+}
+
+export function renderPostFrame(t) {
+  if (!t.frame) return "";
+  const parsed = frames.parseFrame(t.frame);
+  if (!parsed.valid) return "";
+  const frame = parsed.frame;
+  const localAction = frames.getUserFrameAction(t.id);
+  const state = frames.getFrameState(frame, [], localAction);
+
+  const imgHtml = frame["of:image"]
+    ? `<div class="vox-frame-media"><img class="vox-frame-img" src="${escapeHtml(frame["of:image"])}" alt="${escapeHtml(frame.title || t.title)}" loading="lazy" /></div>`
+    : "";
+
+  return `
+    <div class="vox-frame" data-post-id="${escapeHtml(t.id)}" data-kind="${escapeHtml(frame.kind)}">
+      <div class="vox-frame-badge"><span class="pill pill-frame">⚡ Mini-App · Open Frame</span> <span class="vox-frame-tag">${frame.kind.toUpperCase()}</span></div>
+      ${imgHtml}
+      <div class="vox-frame-body">
+        <div class="vox-frame-content" id="frame-content-${escapeHtml(t.id)}">
+          ${renderFrameContentHtml(frame, state)}
+        </div>
+        <div class="vox-frame-buttons">
+          ${renderFrameButtons(t, frame, localAction)}
+        </div>
+        <div class="vox-frame-footer">
+          <small class="meta">Open Frames FOSS · Assinatura ECDSA P-256 local · Sem iframes</small>
+        </div>
+      </div>
+    </div>`;
+}
+
 function renderCommentButton(t) {
   const n = Number(t.repliesCount) || 0;
   const panelId = commentsPanelId(t.id);
@@ -357,6 +433,7 @@ export function renderPostItem(t, { isPinned = false } = {}) {
         ${renderPostHeaderBlock(t, author, authorDisplay, authorHandle, isPinned)}
         ${renderPostMedia(t)}
         ${renderPostText(t)}
+        ${renderPostFrame(t)}
         ${renderPostToolbar(t, author, authorDisplay, authorHandle)}
         ${renderPostComments(t.id, t.communityId)}
       </div>

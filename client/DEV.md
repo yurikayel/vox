@@ -580,7 +580,36 @@ A sprint v6.1 implementa a descoberta descentralizada de conteúdos através de 
 - **Empty State Construtivo:** Quando uma tag pesquisada ainda não existe no aparelho, orienta o usuário com transparência sobre o funcionamento do gossip local e oferece atalho para postar com a tag.
 
 ### 19.4 Cache e PWA
-- `./js/hashtags.js` permanece nos ativos do app shell (descoberta local Willow). Cache vigente: `vox-pwa-v6.1-cantina-baked-balloons`.
+- `./js/hashtags.js` nos ativos do app shell (descoberta local Willow).
+
+---
+
+## 20. Open Frames FOSS & Mini-Apps no Feed (Sprint v6.2)
+
+A sprint v6.2 implementa a cooptagem da especificação **Open Frames** (`of:*` + `of:accepts:vox`), viabilizando mini-aplicativos interativos diretamente no feed, sem nenhuma dependência de pacotes npm, sem iframes e com segurança contra execução arbitrária de código remoto.
+
+### 20.1 Arquitetura Segura & Allowlist Estrita (`frames.js`)
+- **Declaração Declarativa:** O post embute um objeto `frame` contendo as tags padrão da especificação Open Frames:
+  - `of:accepts:vox`: declaração explícita de conformidade com o protocolo Vox (ex: `"vox"`).
+  - `kind`: validação rigorosa via allowlist só no cliente:
+    1. `poll`: enquete descentralizada com contagem em tempo real e regra canônica `1 membro = 1 voto`.
+    2. `petition`: abaixo-assinado comunitário com assinaturas únicas e barra de progresso da meta.
+    3. `clt`: simulador trabalhista leigo e offline (férias + 1/3, 13º integral, rescisão sem justa causa) baseado no salário mínimo oficial vigente (R$ 1.518,00).
+  - `of:image`: ilustração/gráfico do card (`1.91:1` ou `1:1`).
+  - `of:button:1..4`: de 1 a 4 botões de ação ou links (`action: "post" | "link"`).
+- **Zero Iframes & Zero Remote Code Execution:** Ao contrário de mini-programas centralizados que executam scripts remotos opacos ou embutem frames web pesados, no Vox toda a renderização e lógica são executadas por componentes nativos vanilla já inspecionados no shell da aplicação.
+
+### 20.2 Ações Criptográficas Locais (`type: frame-action`)
+- **Assinatura ECDSA P-256 no Aparelho:** O clique do usuário em um botão de ação não aciona OAuth ou sessão em servidor externo. Ele gera uma transação canônica assinada pela chave privada local do aparelho (`vx_...`).
+- **Gossip P2P & Persistência Local:** A ação é salva no `IndexedDB` local (`cacheNode.saveLocalPost`) e propagada aos pares conectados na malha WebRTC (`peers.broadcastGossip`).
+- **Cache Rápido em LocalStorage:** Ações locais recentes são mantidas em `vox-frame-actions` para renderização imediata sem flicker visual na timeline.
+- **Feedback Interativo em Tempo Real:** Atualização dinâmica no DOM (`#frame-content-:postId`) com barras de porcentagem para enquetes, confirmação de assinatura para abaixo-assinados e resultados de cálculo instantâneos.
+
+### 20.3 Cache e PWA
+- Cache elevado para `vox-pwa-v6.2-open-frames`.
+- Ativo `./js/frames.js` adicionado a `SHELL_ASSETS` no Service Worker.
+- Suíte automatizada com **133 testes 100% verdes** (119 Node.js + 14 Python).
+
 
 
 
