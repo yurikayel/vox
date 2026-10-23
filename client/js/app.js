@@ -1220,23 +1220,26 @@ async function handleComposeListingSubmit(user, communityId) {
 
   try {
     const listingId = `listing_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
-    const postItem = {
+    const draft = listing.buildListingDraft({
       id: listingId,
-      type: "listing",
       communityId,
       title,
       body,
-      priceLabel: listing.normalizePriceLabel(priceLabel),
-      locationLabel: listing.normalizeLocationLabel(locationLabel),
+      priceLabel,
+      locationLabel,
       contactPix: normalizedPix,
       image,
       author: user,
       owner: user,
       listingStatus: "available",
-      ts: Date.now(),
-    };
-    await cacheNode.saveLocalPost(postItem);
-    peers.broadcastGossip(postItem);
+    });
+    const signed = await localAccount.signPayload(draft);
+    const check = listing.validateSignedListingGossip(signed);
+    if (!check.valid) {
+      throw new Error(check.error || "Oferta inválida");
+    }
+    await cacheNode.saveLocalPost(signed);
+    peers.broadcastGossip(signed);
     share.showToast("Oferta publicada na feira!");
     location.hash = `#/c/${encodeURIComponent(communityId)}?tab=listings`;
   } catch (err) {

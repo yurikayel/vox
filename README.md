@@ -11,7 +11,18 @@ Demo ao vivo: **[https://yurikayel.github.io/vox/](https://yurikayel.github.io/v
 
 Na primeira visita, a **Porta da Cantina** é a ilustração anime (`client/images/cantina-gate.jpg`) com o gag no estilo Wuher em **dois balões pintados na arte** (*"Seus bots tem que esperar lá fora!"* e *"Aqui não servimos esse tipo."*). Não há H2 "Porta da Cantina", quote duplicada, subtítulo itálico nem balão HTML/CSS por cima da imagem — só a arte e *Entrar — sou humano*.
 
-No feed, o layout é **híbrido**: texto estilo **X** (caption antes da toolbar), foto **4:5 full-bleed** estilo **IG**, bloco **README/diff** estilo **GitHub** quando aplicável — canvas `--bg` unificado (sem cards cinza no feed/perfil/comentários), abas underline, stories + **composer inline** na mesma janela (Postar com foto opcional). **Comentários abrem no próprio card**. Tour com **10 personas**, Open Frames (enquetes, abaixo-assinado, CLT). Cache PWA: ver `CACHE_NAME` em [`client/sw.js`](./client/sw.js) (vigente: `vox-pwa-v6.15-infra-participation-ui`).
+No feed, o layout é **híbrido**: texto estilo **X** (caption antes da toolbar), foto **4:5 full-bleed** estilo **IG**, bloco **README/diff** estilo **GitHub** quando aplicável — canvas `--bg` unificado (sem cards cinza no feed/perfil/comentários), abas underline, stories + **composer inline** na mesma janela (Postar com foto opcional). **Comentários abrem no próprio card**. Tour com **10 personas**, Open Frames (enquetes, abaixo-assinado, CLT). Cache PWA: ver `CACHE_NAME` em [`client/sw.js`](./client/sw.js).
+
+### Linha de release (orgânico)
+
+| Campo | Valor |
+|-------|--------|
+| **Branch** | `main` (atualize o SHA após pull) |
+| **Testes** | **194** (`180` JS + `14` Python) — `npm test` na raiz |
+| **Service worker** | `vox-pwa-v6.18-cache-manifest-wire` |
+| **Deploy** | Push em `main` → GitHub Pages; após deploy use **hard refresh** (`Ctrl+Shift+R`) para trocar o SW |
+
+Malha: gossip **`CACHE_MANIFEST`** + prioridade **WANT** para pins do manifesto; feira com ofertas **assinadas** (gossip v1.1). Seed steward: [`docs/steward-seed-15min.md`](./docs/steward-seed-15min.md).
 
 ---
 
