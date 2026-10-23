@@ -269,6 +269,12 @@ export async function saveLocalPost(post) {
         communityId: post.communityId || "",
         replyTo: post.replyTo || "",
         proposalId: post.proposalId || "",
+        postId: post.postId || "",
+        frame: post.frame || null,
+        frameKind: post.frameKind || "",
+        buttonIndex: Number(post.buttonIndex) || 0,
+        buttonLabel: post.buttonLabel || "",
+        inputText: post.inputText || "",
         title: post.title || "",
         body: post.body || "",
         tags: postTags,
@@ -319,7 +325,7 @@ export async function getLocalPost(id) {
   }
 }
 
-export async function getLocalPosts({ type = null, communityId = null, replyTo = null, proposalId = null } = {}) {
+export async function getLocalPosts({ type = null, communityId = null, replyTo = null, proposalId = null, postId = null } = {}) {
   try {
     const db = await openDB();
     return await new Promise((resolve) => {
@@ -332,6 +338,7 @@ export async function getLocalPosts({ type = null, communityId = null, replyTo =
         if (communityId) items = items.filter((p) => p.communityId === communityId);
         if (replyTo !== null) items = items.filter((p) => p.replyTo === replyTo);
         if (proposalId) items = items.filter((p) => p.proposalId === proposalId);
+        if (postId) items = items.filter((p) => p.postId === postId);
 
         if (type === "reply") {
           items.sort((a, b) => (a.ts || 0) - (b.ts || 0));

@@ -2382,6 +2382,196 @@ main#app-main {
   border-bottom: 1px solid var(--border);
 }
 
+/* Open Frames (v6.2 Mini-Apps) */
+.vox-frame {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-soft, rgba(255, 255, 255, 0.03));
+  margin: 0.85rem 0;
+  overflow: hidden;
+}
+
+.vox-frame-badge {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.45rem 0.75rem;
+  background: rgba(0, 0, 0, 0.18);
+  border-bottom: 1px solid var(--border);
+}
+
+.pill-frame {
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+.vox-frame-tag {
+  font-size: 0.7rem;
+  color: var(--muted);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.vox-frame-media {
+  width: 100%;
+  max-height: 240px;
+  overflow: hidden;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vox-frame-img {
+  width: 100%;
+  height: auto;
+  max-height: 240px;
+  object-fit: cover;
+  display: block;
+}
+
+.vox-frame-body {
+  padding: 0.75rem;
+}
+
+.vox-frame-content {
+  margin-bottom: 0.75rem;
+}
+
+.frame-prompt {
+  font-size: 0.84rem;
+  color: var(--muted);
+  margin: 0 0 0.5rem 0;
+}
+
+.frame-poll-results {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.frame-poll-bar-wrapper {
+  position: relative;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  overflow: hidden;
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+}
+
+.frame-poll-bar-wrapper.user-choice {
+  border: 1px solid var(--accent);
+}
+
+.frame-poll-bar-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: var(--accent);
+  opacity: 0.35;
+  transition: width 0.3s ease;
+}
+
+.frame-poll-bar-label {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.3rem 0.65rem;
+  font-size: 0.82rem;
+}
+
+.frame-petition-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.frame-petition-metric {
+  font-size: 0.86rem;
+}
+
+.frame-petition-bar {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.frame-petition-bar-fill {
+  height: 100%;
+  background: #10b981;
+  transition: width 0.3s ease;
+}
+
+.frame-signed-msg {
+  font-size: 0.82rem;
+  color: #10b981;
+  font-weight: 600;
+  margin: 0.25rem 0 0 0;
+}
+
+.frame-clt-box {
+  background: rgba(0, 0, 0, 0.12);
+  padding: 0.65rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+
+.frame-clt-title {
+  font-size: 0.88rem;
+  margin: 0 0 0.3rem 0;
+  font-weight: 600;
+}
+
+.frame-clt-result {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #10b981;
+  margin: 0.25rem 0;
+}
+
+.frame-clt-detail {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.vox-frame-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-bottom: 0.5rem;
+}
+
+.btn-frame-action {
+  flex: 1 1 auto;
+  text-align: center;
+  min-width: 110px;
+}
+
+.btn-frame-action.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.vox-frame-footer {
+  border-top: 1px solid var(--border);
+  padding-top: 0.35rem;
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
 /* Footer */
 .app-footer {
   text-align: center;
