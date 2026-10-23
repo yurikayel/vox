@@ -8,6 +8,18 @@ export const MOCK_DEMO_COMMUNITY = {
   category: "Tour",
   owner: "vx_demo_helena",
   author: "vx_demo_helena",
+  commercialEnabled: false,
+};
+
+export const MOCK_DEMO_COMMUNITY_FEIRA = {
+  id: "demo-feira-local",
+  communityId: "demo-feira-local",
+  title: "Feira do Bairro",
+  description: "Classificados comunitários e economia popular: compre de quem faz no bairro, combine no DM e use Pix direto.",
+  category: "Feira",
+  owner: "vx_demo_fernanda",
+  author: "vx_demo_fernanda",
+  commercialEnabled: true,
 };
 
 export const MOCK_DEMO_PROFILES = {
@@ -294,6 +306,7 @@ export const MOCK_DEMO_REPLIES = [
 
 export const MOCK_COMMUNITIES = [
   MOCK_DEMO_COMMUNITY,
+  MOCK_DEMO_COMMUNITY_FEIRA,
   {
     id: "demo-community-1",
     title: "Vox Brasil — Boas-vindas",
@@ -310,8 +323,88 @@ export const MOCK_COMMUNITIES = [
   },
 ];
 
+export const MOCK_DEMO_LISTINGS = [
+  {
+    id: "demo-listing-helena",
+    type: "listing",
+    communityId: "demo-feira-local",
+    title: "Pão artesanal de fermentação natural & geleia",
+    priceLabel: "R$ 28",
+    locationLabel: "Vila Madalena, SP",
+    body: "Fornada fresca aos sábados. Pão rústico de 700g feito com farinha orgânica + potinho de geleia caseira de amora. Retirada no ateliê ou entrega no bairro.",
+    image: "images/posts/tour-helena.jpg",
+    imageAlt: "Pão artesanal rústico e geleia natural",
+    author: "vx_demo_helena",
+    owner: "vx_demo_helena",
+    contactPix: "helena.vox@gmail.com",
+    listingStatus: "available",
+    likesCount: 19,
+    repliesCount: 0,
+    isLocalP2p: true,
+    ts: NOW - 15 * 60 * 1000,
+  },
+  {
+    id: "demo-listing-fernanda",
+    type: "listing",
+    communityId: "demo-feira-local",
+    title: "Bolo de rolo tradicional & doces do agreste",
+    priceLabel: "R$ 45",
+    locationLabel: "Bongi, Recife",
+    body: "Produção artesanal da cooperativa de mulheres. Bolo de rolo com goiabada cascão e cocada cremosa. Encomendas para o fim de semana.",
+    image: "images/posts/tour-fernanda.jpg",
+    imageAlt: "Doces caseiros tradicionais",
+    author: "vx_demo_fernanda",
+    owner: "vx_demo_fernanda",
+    contactPix: "+5581999887766",
+    listingStatus: "available",
+    likesCount: 32,
+    repliesCount: 0,
+    isLocalP2p: true,
+    ts: NOW - 35 * 60 * 1000,
+  },
+  {
+    id: "demo-listing-andre",
+    type: "listing",
+    communityId: "demo-feira-local",
+    title: "Camisetas algodão 100% orgânico — Serigrafia Coletiva",
+    priceLabel: "R$ 55",
+    locationLabel: "Capão Redondo, SP",
+    body: "Estampa exclusiva do coletivo cultural periférico em tecido sustentável. Vários tamanhos disponíveis. Fortaleça a cultura independente.",
+    image: "images/posts/tour-andre.jpg",
+    imageAlt: "Camisetas com estampa artesanal",
+    author: "vx_demo_andre",
+    owner: "vx_demo_andre",
+    contactPix: "andre.comunidade@voxbrasil.org",
+    listingStatus: "available",
+    likesCount: 27,
+    repliesCount: 0,
+    isLocalP2p: true,
+    ts: NOW - 60 * 60 * 1000,
+  },
+  {
+    id: "demo-listing-mei",
+    type: "listing",
+    communityId: "demo-feira-local",
+    title: "Ecobags reforçadas & arte botânica manual",
+    priceLabel: "R$ 35",
+    locationLabel: "Liberdade, SP",
+    body: "Tecido reaproveitado de alta durabilidade, alça dupla reforçada e gravuras botânicas originais feitas à mão. Peça única.",
+    image: "images/posts/tour-mei.jpg",
+    imageAlt: "Ecobag artesanal estampada",
+    author: "vx_demo_mei",
+    owner: "vx_demo_mei",
+    contactPix: "mei.arte@voxbrasil.org",
+    listingStatus: "available",
+    likesCount: 14,
+    repliesCount: 0,
+    isLocalP2p: true,
+    ts: NOW - 95 * 60 * 1000,
+  },
+];
+
 export const MOCK_TOPICS = {
   "demo-aprenda-vox": MOCK_DEMO_TOPICS,
+  "demo-feira-local": [],
   "demo-community-1": [
     {
       id: "demo-topic-1",
@@ -372,6 +465,13 @@ export function mockTopics(communityId) {
 export function mockReplies(topicId) {
   const items = MOCK_REPLIES[topicId] || [];
   return { items, demo: true };
+}
+
+export function mockListings(communityId) {
+  if (communityId === "demo-feira-local") {
+    return { items: MOCK_DEMO_LISTINGS, demo: true };
+  }
+  return { items: [], demo: true };
 }
 
 export function mockRecentTopics() {

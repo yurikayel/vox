@@ -32,7 +32,7 @@ Para aprofundamento das lições e armadilhas evitadas, consulte [LESSONS.md](./
 
 **Imutável (on-chain / permaweb):**
 
-- Transações assinadas com tags `App-Name: vox-brasil` (comunidade, tópico, resposta, `mod-action`, etc.).
+- Transações assinadas com tags `App-Name: vox-brasil` (comunidade, tópico, resposta, `mod-action`, `listing`, `governance-proposal`, etc.).
 - Conteúdo referenciado pelo ID da transação (TX ID).
 
 **Mutável apenas na experiência do usuário:**
@@ -41,6 +41,30 @@ Para aprofundamento das lições e armadilhas evitadas, consulte [LESSONS.md](./
 - Bloqueios locais (silenciar autor).
 - Índices espelho opcionais curados por operadores de gateway ou espelhos comunitários — não apagam a TX original.
 
-**Fora do escopo atual:**
+## Rede como Repo Público (Democracia Direta e FOSS)
 
+Em plataformas centralizadas, regras de comunidade e algoritmos de alcance mudam por canetada corporativa a portas fechadas. No Vox:
+
+- **Proposta pública e diff:** Quem quer mudar regras ou habilitar novas funções em uma comunidade abre uma proposta auditável (`Type: governance-proposal`), expondo o que muda e o porquê.
+- **Voto transparente:** Membros participam com votos explícitos e auditáveis (`yes`, `no`, `abstain`), com trava de corte temporal (`Eligibility-Cutoff`) impedindo brigading Sybil.
+- **Regras acordadas, não impostas:** Assim como o código aberto permite inspecionar commits antes do merge, a governança local permite inspecionar e votar antes que uma regra passe a valer.
+
+## Feira Comunitária vs Meta Marketplace
+
+Muitos brasileiros recorrem ao Instagram e Facebook para vender produtos caseiros, artesanato, brechós e serviços. Contudo, são submetidos a algoritmos predatórios que exigem impulsionamento pago para que seus próprios seguidores vejam seus posts:
+
+| Dimensão | Meta Marketplace / Instagram | Vox (Feira Comunitária) |
+|---|---|---|
+| **Ambiente** | Shopping corporativo invasivo misturado com timeline | Feira local em aba dedicada da comunidade |
+| **Ativação** | Imposta globalmente a todos os usuários | Opt-in soberano votado pela comunidade (default-off) |
+| **Feed principal** | Inundado por anúncios e posts comerciais | Estritamente preservado: ofertas nunca entram no feed principal |
+| **Monetização da plataforma** | Cobrança por alcance (Ads), leilões e taxas | Zero taxas, zero anúncios pagos, visibilidade cronológica honesta |
+| **Transação** | Bloqueios de checkout corporativo | Pix direto para a chave do vendedor + conversa no DM |
+
+A feira comunitária do Vox valoriza a economia popular real sem mercantilizar a praça pública de debates.
+
+## Fora do escopo atual
+
+- Intermediação financeira, custódia de valores ou split de pagamentos (o Vox não é e não será gateway bancário).
+- Impulsionamento pago de posts ou anúncios patrocinados corporativos.
 - Mensagens diretas privadas ponto a ponto — roadmap Fase 4 (ver [README.md](./README.md)).

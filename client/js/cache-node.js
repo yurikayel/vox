@@ -267,6 +267,11 @@ export async function saveLocalPost(post) {
         imageAlt: post.imageAlt || "",
         externalPain: post.externalPain || "",
         voxResolution: post.voxResolution || "now",
+        priceLabel: post.priceLabel || "",
+        locationLabel: post.locationLabel || "",
+        contactPix: post.contactPix || "",
+        listingStatus: post.listingStatus || "available",
+        commercialEnabled: Boolean(post.commercialEnabled),
         likesCount: Number(post.likesCount) || 0,
         repliesCount: Number(post.repliesCount) || 0,
         pubKey: post.pubKey || null,
@@ -332,6 +337,7 @@ export async function getLocalCommunities() {
     description: c.description || c.body || "",
     category: c.category || "",
     owner: c.author || "",
+    commercialEnabled: Boolean(c.commercialEnabled),
     isLocalP2p: true,
   }));
 }

@@ -14,6 +14,7 @@ import * as localAccount from "./local-account.js";
 import * as demoSeed from "./demo-seed.js";
 import * as social from "./social.js";
 import * as pixKeyHelper from "./pix-key.js";
+import * as listing from "./listing.js";
 
 function parseRoute() {
   if (typeof window !== "undefined" && window.location?.search) {
@@ -44,7 +45,11 @@ function parseRoute() {
     return { name: "dm-list" };
   }
   if (parts[0] === "c" && parts[1]) {
-    return { name: "community", id: decodeURIComponent(parts[1]) };
+    return {
+      name: "community",
+      id: decodeURIComponent(parts[1]),
+      tab: query.get("tab") || "posts",
+    };
   }
   if (parts[0] === "t" && parts[1]) {
     return {
@@ -63,6 +68,7 @@ function parseRoute() {
   if (parts[0] === "wallet") return { name: "wallet" };
   if (parts[0] === "compose") {
     if (parts[1] === "community") return { name: "compose-community" };
+    if (parts[1] === "listing") return { name: "compose-listing", communityId: query.get("c") || "" };
     if (parts[1] === "topic") return { name: "compose-topic", communityId: query.get("c") || "" };
     if (parts[1] === "reply") {
       return {
@@ -117,7 +123,8 @@ async function showHome() {
 
   try {
     const { items: remoteItems, gateway, demo } = await gql.fetchRecentTopics().catch(async () => mock.mockRecentTopics());
-    const localPosts = await cacheNode.getLocalPosts({ type: "topic" });
+    const rawLocal = await cacheNode.getLocalPosts({ type: "topic" });
+    const localPosts = rawLocal.filter((p) => p.type !== "listing");
 
     // Constrói mapa de títulos de comunidades para exibição limpa no feed
     const commMap = new Map();
@@ -143,7 +150,7 @@ async function showHome() {
       });
     }
     for (const p of (remoteItems || [])) {
-      if (!seen.has(p.id)) {
+      if (p.type !== "listing" && !seen.has(p.id)) {
         seen.add(p.id);
         merged.push({
           ...p,
@@ -159,9 +166,10 @@ async function showHome() {
     render.renderFeed(main, merged);
   } catch (e) {
     main.innerHTML = "";
-    const localPosts = await cacheNode.getLocalPosts({ type: "topic" });
+    const rawLocal = await cacheNode.getLocalPosts({ type: "topic" });
+    const localPosts = rawLocal.filter((p) => p.type !== "listing");
     const fb = mock.mockRecentTopics();
-    const merged = [...localPosts.map((p) => ({ ...p, isLocalP2p: true })), ...fb.items.map((p) => ({ ...p, isLocalP2p: false }))];
+    const merged = [...localPosts.map((p) => ({ ...p, isLocalP2p: true })), ...fb.items.filter((p) => p.type !== "listing").map((p) => ({ ...p, isLocalP2p: false }))];
     render.renderDemoBanner(main);
     render.renderFeed(main, merged);
   }
@@ -205,7 +213,7 @@ async function showCommunities() {
   }
 }
 
-async function showCommunity(communityId) {
+async function showCommunity(communityId, tab = "posts") {
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "communities", "Comunidade"));
   render.renderLoading(main);
@@ -273,15 +281,31 @@ async function showCommunity(communityId) {
     } catch {}
   }
 
+  // Ofertas (Classificados)
+  let listings = [];
+  if (tab === "listings") {
+    try {
+      listings = await cacheNode.getLocalPosts({ type: "listing", communityId });
+      if (!listings.length && (demo || communityId === "demo-feira-local")) {
+        listings = mock.mockListings(communityId).items || [];
+      }
+    } catch {}
+  }
+
   main.innerHTML = "";
-  if (demo && !localTopics.length) render.renderDemoBanner(main);
+  if (demo && !localTopics.length && tab !== "listings") render.renderDemoBanner(main);
   else if (gateway) render.renderGatewayBanner(main, gateway);
 
   render.renderCommunity(main, communityId, filteredTopics, meta, {
     isMember,
     isMod: isUserMod,
     walletAddress: user,
+    activeTab: tab,
+    listings,
   });
+
+  attachCommunityListingHandlers(main);
+  attachPostShareHandlers();
 
   // Eventos na tela da comunidade
   const btnShare = document.getElementById("btn-share-comm");
@@ -340,6 +364,22 @@ async function showCommunity(communityId) {
       } catch (err) {
         share.showToast(`Erro na moderação: ${err.message}`, "error");
         e.target.disabled = false;
+      }
+    });
+  });
+}
+
+function attachCommunityListingHandlers(main) {
+  main.querySelectorAll(".btn-copy-pix").forEach((btn) => {
+    btn.addEventListener("click", async (e) => {
+      e.preventDefault();
+      const pix = btn.dataset.pix;
+      if (!pix) return;
+      try {
+        await navigator.clipboard.writeText(pix);
+        share.showToast("Chave Pix copiada!");
+      } catch {
+        share.showToast(`Pix: ${pix}`);
       }
     });
   });
@@ -913,6 +953,84 @@ async function showComposeTopic(communityId) {
   }
 }
 
+async function showComposeListing(communityId) {
+  const user = await getActiveUser();
+  const main = render.renderShell(makeShellProps(user, "compose", "Nova Oferta"));
+
+  let meta = { id: communityId, title: communityId, commercialEnabled: false };
+  try {
+    const localC = await cacheNode.getLocalPost(communityId);
+    if (localC) {
+      meta = { ...localC, commercialEnabled: Boolean(localC.commercialEnabled) };
+    } else if (communityId === mock.MOCK_DEMO_COMMUNITY_FEIRA.id) {
+      meta = mock.MOCK_DEMO_COMMUNITY_FEIRA;
+    } else {
+      const commRes = await gql.fetchCommunity(communityId).catch(() => null);
+      if (commRes) meta = commRes;
+    }
+  } catch {}
+
+  if (!listing.isCommercialEnabled(meta)) {
+    main.innerHTML = `<div class="card"><div class="error">Esta comunidade não possui feira comunitária ativada por governança.</div><p style="margin-top:1rem;"><a href="#/c/${encodeURIComponent(communityId)}" class="btn btn-outline btn-sm">← Voltar à comunidade</a></p></div>`;
+    return;
+  }
+
+  const defaultPix = (await localAccount.getPixKey()) || "";
+  render.renderComposeListing(main, communityId, meta.title, { defaultPix });
+
+  document.getElementById("form-compose-listing")?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    handleComposeListingSubmit(user, communityId);
+  });
+}
+
+async function handleComposeListingSubmit(user, communityId) {
+  const title = document.getElementById("listing-title")?.value?.trim() || "";
+  const priceLabel = document.getElementById("listing-price")?.value?.trim() || "";
+  const locationLabel = document.getElementById("listing-location")?.value?.trim() || "";
+  const contactPix = document.getElementById("listing-pix")?.value?.trim() || "";
+  const image = document.getElementById("listing-image")?.value?.trim() || "";
+  const body = document.getElementById("listing-body")?.value?.trim() || "";
+
+  const val = listing.validateListingInput({ title, body, priceLabel });
+  if (!val.valid) return share.showToast(val.error, "error");
+
+  const btn = document.getElementById("btn-submit-listing");
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = "Publicando…";
+  }
+
+  try {
+    const listingId = `listing_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+    const postItem = {
+      id: listingId,
+      type: "listing",
+      communityId,
+      title,
+      body,
+      priceLabel: listing.normalizePriceLabel(priceLabel),
+      locationLabel: listing.normalizeLocationLabel(locationLabel),
+      contactPix: contactPix ? pixKeyHelper.normalizePixKey(contactPix).normalized || contactPix : "",
+      image,
+      author: user,
+      owner: user,
+      listingStatus: "available",
+      ts: Date.now(),
+    };
+    await cacheNode.saveLocalPost(postItem);
+    peers.broadcastGossip(postItem);
+    share.showToast("Oferta publicada na feira!");
+    location.hash = `#/c/${encodeURIComponent(communityId)}?tab=listings`;
+  } catch (err) {
+    share.showToast(`Erro ao publicar oferta: ${err.message}`, "error");
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = "Publicar na Feira";
+    }
+  }
+}
+
 async function showComposeReply(topicId, communityId) {
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "home", "Responder"));
@@ -1351,11 +1469,12 @@ async function route() {
   if (r.name === "handle-lookup") return showHandleLookup(r.slug);
   if (r.name === "dm-list") return showDmList();
   if (r.name === "dm-thread") return showDmThread(r.address);
-  if (r.name === "community") return showCommunity(r.id);
+  if (r.name === "community") return showCommunity(r.id, r.tab);
   if (r.name === "topic") return showTopic(r.id, r.communityId);
   if (r.name === "profile") return showProfile(r.address);
   if (r.name === "wallet") return showWallet();
   if (r.name === "compose-community") return showComposeCommunity();
+  if (r.name === "compose-listing") return showComposeListing(r.communityId);
   if (r.name === "compose-topic") return showComposeTopic(r.communityId);
   if (r.name === "compose-reply") return showComposeReply(r.topicId, r.communityId);
   return showHome();
@@ -1367,12 +1486,14 @@ function initGossipListeners() {
     if (cur.name === "home") {
       showHome();
     } else if (cur.name === "community" && cur.id === item.communityId) {
-      showCommunity(cur.id);
+      showCommunity(cur.id, cur.tab);
     } else if (cur.name === "topic" && (cur.id === item.id || cur.id === item.replyTo)) {
       showTopic(cur.id, cur.communityId);
     }
     if (item?.type === "topic") {
       share.showToast(`Novo post na rede: ${item.title?.slice(0, 24) || "..."}`);
+    } else if (item?.type === "listing") {
+      share.showToast(`Nova oferta na feira: ${item.title?.slice(0, 24) || "..."}`);
     }
   });
 }

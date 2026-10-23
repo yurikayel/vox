@@ -1,7 +1,7 @@
-// Service Worker do Vox (Fase 5.8 — Porta Cantina & Tour 10 Personas Educativas)
+// Service Worker do Vox (Fase 5.9 — Feira Comunitária & Classificados M1)
 // NOTA ARQUITETURAL: WebRTC DataChannels operam exclusivamente na thread principal (DOM/Window).
 // O Service Worker atua no cache offline do shell e notificações de status, sem abrir WebRTC.
-const CACHE_NAME = "vox-pwa-v5.8-cantina-tour";
+const CACHE_NAME = "vox-pwa-v5.9-feira";
 const SHELL_ASSETS = [
   "./",
   "./index.html",
@@ -37,6 +37,7 @@ const SHELL_ASSETS = [
   "./js/demo-seed.js",
   "./js/handles.js",
   "./js/inbox.js",
+  "./js/listing.js",
   "./js/local-account.js",
   "./js/graphql.js",
   "./js/mock.js",
