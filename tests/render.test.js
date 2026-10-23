@@ -69,6 +69,42 @@ test("render - renderNetworkSettings gera painel completo com WebRTC", () => {
   assert.ok(html.includes("vox_turn"));
   // Termos de infraestrutura restritos à seção Avançado
   assert.ok(!html.includes("127.0.0.1:3920"));
+  assert.ok(html.includes("Camadas de participação"));
+  assert.ok(html.includes("data-layer=\"active\""));
+  assert.ok(html.includes("Você está aqui"));
+  assert.ok(html.includes("#net-comm-only-wrap"));
+  assert.ok(html.includes("#net-relay-steward"));
+});
+
+test("render - inferParticipationLayer mapeia commOnly e relay", () => {
+  assert.equal(render.inferParticipationLayer({ enabled: false }), "passive");
+  assert.equal(render.inferParticipationLayer({ enabled: true }), "active");
+  assert.equal(render.inferParticipationLayer({ enabled: true, commOnly: true }), "supporter");
+  assert.equal(
+    render.inferParticipationLayer({ enabled: true, commOnly: true, backgroundRelay: true }),
+    "steward",
+  );
+  assert.equal(
+    render.inferParticipationLayer({ enabled: true }, { customSignalingUrl: "wss://relay.local" }),
+    "steward",
+  );
+});
+
+test("render - renderNetworkSettings destaca Apoiador com commOnly", () => {
+  const main = createContainer();
+  render.renderNetworkSettings(main, {
+    settings: { enabled: true, commOnly: true, dailyCapMb: 50, maxMb: 25 },
+    metrics: {},
+    cacheStats: {},
+    relayStatus: { online: false },
+    dailyUsage: {},
+    notifPermission: "default",
+    rtcStatus: {},
+    customSignalingUrl: "",
+    customTurn: {},
+  });
+  assert.ok(main.innerHTML.includes('data-layer="supporter"'));
+  assert.ok(main.innerHTML.includes("Você está aqui"));
 });
 
 test("render - renderHome renderiza cards de comunidade", () => {
