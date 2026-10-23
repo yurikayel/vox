@@ -114,7 +114,7 @@ a:hover {
   position: sticky;
   top: 0;
   z-index: 90;
-  height: 52px;
+  min-height: 48px;
   background: var(--glass-bg);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
@@ -122,13 +122,60 @@ a:hover {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 1rem;
+  gap: 0.75rem;
+  padding: 6px 1rem;
+}
+
+.top-bar-start {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.top-bar-end {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.top-bar-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.top-sync-hint {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--muted);
+  white-space: nowrap;
+  max-width: 9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.top-sync-hint[hidden] {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .top-sync-hint:not([hidden]) {
+    display: none;
+  }
 }
 
 .top-brand {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  flex-shrink: 0;
 }
 
 .top-brand a.home-link,
