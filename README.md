@@ -5,6 +5,14 @@
 
 👉 **[Leia a Proposta Completa & Arquitetura de Sustentabilidade](./docs/proposta-vox.html)** (Página explicativa standalone para abrir no celular ou compartilhar no WhatsApp)
 
+### Experimente o PWA
+
+Demo ao vivo: **[https://yurikayel.github.io/vox/](https://yurikayel.github.io/vox/)**. Cliente **FOSS vanilla** (HTML, CSS e JavaScript nativo, *no-build*, sem runtime npm — `npm test` só roda a suíte local).
+
+Na primeira visita, a **Porta da Cantina** é a ilustração anime (`client/images/cantina-gate.jpg`) com o gag no estilo Wuher em **dois balões**: o primeiro já está impresso na arte (*"Seus bots tem que esperar lá fora!"*) e o segundo é HTML/CSS (`.cantina-balloon-2`: *"Aqui não servimos esse tipo."*). Não há H2 "Porta da Cantina", quote duplicada nem subtítulo itálico por cima da imagem — só a arte, os balões e *Entrar — sou humano*.
+
+No feed, **comentários abrem no próprio card** (dropdown in-card; a thread `#/t/:id` segue como atalho). O tour educativo semeia **10 personas** brasileiras com posts em primeira pessoa e fotos de gente real. Cache do Service Worker vigente: `vox-pwa-v6.1-cantina-balloon2` (`hashtags.js` permanece no shell).
+
 ---
 
 ## 🎯 Por que o Vox existe?
@@ -173,12 +181,12 @@ npm test
 # ou no Windows:
 .\test.bat
 ```
-Executa a suíte de 45 testes (33 testes JS via `node:test` e 12 testes Python via `unittest`).
+Executa a suíte de **125 testes** (111 JS via `node:test` e 14 Python via `unittest`).
 
 ### 🚀 Pipelines de CI/CD (GitHub Actions)
 
 O repositório possui automação contínua configurada em `.github/workflows/`:
-* **CI — Testes & Validação (`.github/workflows/ci.yml`):** Matriz multiplataforma com Node.js (20, 22, 24) e Python (3.11, 3.12) executando verificação de sintaxe, suíte completa de 45 testes e auditoria de segurança contra vazamento de chaves privadas.
+* **CI — Testes & Validação (`.github/workflows/ci.yml`):** Matriz multiplataforma com Node.js (20, 22, 24) e Python (3.11, 3.12) executando verificação de sintaxe, suíte completa de 125 testes e auditoria de segurança contra vazamento de chaves privadas.
 * **Deploy PWA — GitHub Pages (`.github/workflows/deploy-pages.yml`):** Publicação contínua da pasta `client/` no GitHub Pages com suporte a HTTPS nativo e PWA instalável a cada push na branch `main`.
 
 ---
