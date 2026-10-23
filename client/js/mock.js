@@ -53,3 +53,23 @@ export function mockReplies(topicId) {
   const items = MOCK_REPLIES[topicId] || [];
   return { items, demo: true };
 }
+
+export function mockRecentTopics() {
+  const items = [
+    {
+      id: "demo-topic-1",
+      communityId: "demo-community-1",
+      title: "Como funciona a rede Vox?",
+      body: "Uma rede que roda no celular e computador de quem usa. Sem servidores caros e com soberania total.",
+      owner: "demo-owner",
+    },
+    {
+      id: "demo-topic-2",
+      communityId: "demo-community-2",
+      title: "Soberania Digital e Autonomia Popular",
+      body: "Comunicação direta, dados criptografados e preservação no permaweb.",
+      owner: "demo-mod",
+    },
+  ];
+  return { items, demo: true };
+}

@@ -163,6 +163,27 @@ const QUERIES = {
         }
       }
     }
+  }`,
+  recentTopics: `query ListRecentTopics($after: String) {
+    transactions(
+      first: 30
+      after: $after
+      tags: [
+        { name: "App-Name", values: ["vox-brasil"] }
+        { name: "Type", values: ["topic"] }
+      ]
+      sort: HEIGHT_DESC
+    ) {
+      pageInfo { hasNextPage }
+      edges {
+        cursor
+        node {
+          id
+          owner { address }
+          tags { name value }
+        }
+      }
+    }
   }`
 };
 
@@ -258,6 +279,15 @@ export async function fetchTopics(communityId) {
   );
   const edges = data.transactions?.edges || [];
   const items = edges.map((e) => mapTopic(e.node, communityId));
+  return { items, gateway, demo: false };
+}
+
+export async function fetchRecentTopics() {
+  const { data, gateway } = await withGateways((url) =>
+    queryOne(url, QUERIES.recentTopics, {})
+  );
+  const edges = data.transactions?.edges || [];
+  const items = edges.map((e) => mapTopic(e.node));
   return { items, gateway, demo: false };
 }
 
