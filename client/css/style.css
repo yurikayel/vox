@@ -359,6 +359,8 @@ a:hover {
 }
 
 .sidebar-brand a.brand-link {
+  display: inline-flex;
+  align-items: center;
   font-size: 1.25rem;
   font-weight: 800;
   color: var(--text);
