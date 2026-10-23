@@ -29,7 +29,7 @@ Abra no navegador: `http://127.0.0.1:8080/`
 
 ### 1.1 Executar Testes Unitários Locais (Tudo)
 
-O Vox inclui suíte completa de testes unitários locais (147 testes: 133 client JS + 14 relay/signaling Python), sem dependências pesadas externas:
+O Vox inclui suíte completa de testes unitários locais (168 testes: 154 client JS + 14 relay/signaling Python), sem dependências pesadas externas:
 
 ```bash
 # Na raiz do repositório vox/
@@ -58,7 +58,7 @@ As pipelines em `.github/workflows/` rodam automaticamente no GitHub:
 1. **`ci.yml`:**
    - Disparado em todo `push` ou `pull_request` na branch `main`.
    - Executa matriz de testes no Node.js (22 e 24) e Python (3.11 e 3.12).
-   - Valida checagem estática de sintaxe e executa os 147 testes unitários.
+   - Valida checagem estática de sintaxe e executa os 168 testes unitários.
    - Auditoria de segurança: verifica que nenhuma chave privada foi commitada acidentalmente.
 2. **`deploy-pages.yml`:**
    - Publica o site composto (`client/**` + `docs/proposta-vox.html`) no GitHub Pages a cada alteração em `client/**` ou `docs/**`.
@@ -649,7 +649,7 @@ Toolbar tripartida mantém Zap, estrela, copiar MD e bookmark.
 
 ### 21.5 Cache e PWA
 - Cache vigente (único): `vox-pwa-v6.7-ui-polish` (`client/sw.js` → `CACHE_NAME`; merge V-D01 ui-polish + feed chrome).
-- Suíte automatizada com **147 testes** (133 Node.js + 14 Python relay).
+- Suíte automatizada com **168 testes** (154 Node.js + 14 Python relay).
 
 ---
 
