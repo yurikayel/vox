@@ -199,7 +199,19 @@ export function renderComposerStrip(displayName = "") {
     </div>`;
 }
 
-function renderPostItem(t) {
+export function formatPostMarkdown(post) {
+  if (!post) return "";
+  const author = post.author || post.owner || "";
+  const authorDisplay = post.authorDisplay || (author ? mock.getAuthorDisplay(author) : "") || shortId(author);
+  const authorHandle = (author ? mock.getAuthorHandle(author) : "") || shortId(author);
+  const title = post.title || "Publicação";
+  const body = post.body || "";
+  const host = typeof window !== "undefined" && window.location?.origin ? window.location.origin : "https://yurikayel.github.io/vox";
+  const url = `${host}/#/t/${encodeURIComponent(post.id)}`;
+  return `> **${authorDisplay}** (@${authorHandle}) · *Vox Brasil*\n>\n> **${title}**\n>\n> ${body}\n>\n> 🔗 Ver no Vox: ${url}`;
+}
+
+export function renderPostItem(t, { isPinned = false } = {}) {
   const author = t.author || t.owner || "";
   const authorDisplay = t.authorDisplay || (author ? mock.getAuthorDisplay(author) : "") || shortId(author);
   const authorHandle = (author ? mock.getAuthorHandle(author) : "") || shortId(author);
@@ -211,6 +223,9 @@ function renderPostItem(t) {
   const originBadge = t.isLocalP2p
     ? `<span class="badge-pill p2p-pill">Na rede</span>`
     : `<span class="badge-pill permanent-pill">Guardado</span>`;
+  const pinnedBadge = (isPinned || t.isPinned || (author && social.isPostPinned(author, t.id)))
+    ? `<span class="badge-pill pinned-pill" title="Publicação fixada pelo autor">📌 Fixado</span>`
+    : "";
 
   const imageHtml = t.image
     ? `<div class="post-media-container"><img class="post-media" src="${escapeHtml(t.image)}" alt="${escapeHtml(t.imageAlt || t.title)}" loading="lazy" /></div>`
@@ -219,6 +234,11 @@ function renderPostItem(t) {
   const baseLikes = Number(t.likesCount) || 0;
   const liked = social.isLiked(t.id);
   const currentLikes = social.getLikesCount(t.id, baseLikes);
+
+  const baseStars = Number(t.starsCount) || 0;
+  const starred = social.isStarred(t.id);
+  const currentStars = social.getStarsCount(t.id, baseStars);
+
   const saved = social.isSaved(t.id);
   const repliesCount = Number(t.repliesCount) || 0;
   const timeLabel = formatTimeAgo(t.ts);
@@ -235,19 +255,24 @@ function renderPostItem(t) {
             <span class="post-meta">${escapeHtml(timeLabel)}</span>
           </div>
           <div class="post-header-tags">
+            ${pinnedBadge}
             ${originBadge}
             ${commPill}
           </div>
         </div>
+        ${imageHtml}
         <div class="post-title">
           <a href="#/t/${encodeURIComponent(t.id)}">${escapeHtml(t.title)}</a>
         </div>
         ${bodySnippet}
-        ${imageHtml}
         <div class="post-actions insta-actions post-toolbar">
           <button class="action-btn btn-like ${liked ? "active" : ""}" data-id="${escapeHtml(t.id)}" data-count="${baseLikes}" aria-label="Curtir post">
             <svg class="action-icon icon-heart" width="18" height="18" viewBox="0 0 24 24" fill="${liked ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
             <span class="action-count count-likes">${currentLikes > 0 ? currentLikes : ""}</span>
+          </button>
+          <button class="action-btn btn-star ${starred ? "active" : ""}" data-id="${escapeHtml(t.id)}" data-count="${baseStars}" aria-label="Dar estrela ao post">
+            <svg class="action-icon icon-star" width="18" height="18" viewBox="0 0 24 24" fill="${starred ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <span class="action-count count-stars">${currentStars > 0 ? currentStars : ""}</span>
           </button>
           <a class="action-btn btn-comment" href="#/t/${encodeURIComponent(t.id)}" aria-label="Ver discussão e responder">
             <svg class="action-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
@@ -255,6 +280,9 @@ function renderPostItem(t) {
           </a>
           <button class="action-btn btn-share btn-share-post" data-id="${escapeHtml(t.id)}" data-title="${escapeHtml(t.title)}" aria-label="Compartilhar post">
             <svg class="action-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+          </button>
+          <button class="action-btn btn-copy-md" data-id="${escapeHtml(t.id)}" data-title="${escapeHtml(t.title)}" data-body="${escapeHtml(t.body || "")}" data-author="${escapeHtml(authorDisplay)}" data-handle="${escapeHtml(authorHandle)}" aria-label="Copiar post como Markdown">
+            <svg class="action-icon icon-copy" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
           </button>
           <button class="action-btn btn-save ${saved ? "active" : ""}" data-id="${escapeHtml(t.id)}" aria-label="Salvar post">
             <svg class="action-icon icon-bookmark" width="18" height="18" viewBox="0 0 24 24" fill="${saved ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
@@ -264,25 +292,41 @@ function renderPostItem(t) {
     </article>`;
 }
 
-export function renderFeed(main, topics = []) {
+export function renderFeed(main, topics = [], { activeFeed = "for-you" } = {}) {
+  const isForYou = activeFeed !== "following";
   let html = `
     <div class="feed-header sticky-header">
-      <span class="section-title">Para você</span>
+      <div class="feed-segmented-nav">
+        <a href="#/" class="feed-tab ${isForYou ? "active" : ""}">Para você</a>
+        <a href="#/?feed=following" class="feed-tab ${!isForYou ? "active" : ""}">Seguindo</a>
+      </div>
       <a class="btn btn-primary btn-sm" href="#/compose/topic">+ Postar</a>
     </div>
     ${renderComposerStrip()}`;
 
   if (!topics.length) {
-    html += `
-      <div class="empty">
-        <p>Nenhum post recente na rede.</p>
-        <a class="btn btn-primary" href="#/compose/topic">Criar primeiro post</a>
-      </div>`;
+    if (!isForYou) {
+      html += `
+        <div class="empty following-empty">
+          <p><strong>Você ainda não acompanha ninguém.</strong></p>
+          <p class="desc" style="max-width:440px; margin:0.4rem auto 0.8rem;">Clique em <strong>👁️ Acompanhar (Watch)</strong> nos perfis de autores para ver as publicações deles reunidas nesta aba.</p>
+          <div style="display:flex; gap:0.5rem; justify-content:center; flex-wrap:wrap;">
+            <a class="btn btn-primary btn-sm" href="#/">Explorar feed "Para você"</a>
+            <a class="btn btn-outline btn-sm" href="#/c/demo-aprenda-vox">Conhecer perfis do tour</a>
+          </div>
+        </div>`;
+    } else {
+      html += `
+        <div class="empty">
+          <p>Nenhum post recente na rede.</p>
+          <a class="btn btn-primary" href="#/compose/topic">Criar primeiro post</a>
+        </div>`;
+    }
     main.innerHTML += html;
     return;
   }
 
-  const items = topics.map(renderPostItem).join("");
+  const items = topics.map((t) => renderPostItem(t)).join("");
   html += `<div class="feed-container">${items}</div>`;
   main.innerHTML += html;
 }
@@ -486,6 +530,11 @@ export function renderTopic(main, topicId, topic, replies, { topicData = null, i
   const baseLikes = Number(topic?.likesCount) || 0;
   const liked = social.isLiked(topicId);
   const currentLikes = social.getLikesCount(topicId, baseLikes);
+
+  const baseStars = Number(topic?.starsCount) || 0;
+  const starred = social.isStarred(topicId);
+  const currentStars = social.getStarsCount(topicId, baseStars);
+
   const saved = social.isSaved(topicId);
 
   const modBtn = isMod
@@ -507,17 +556,24 @@ export function renderTopic(main, topicId, topic, replies, { topicData = null, i
           ${originBadge}
         </div>
       </div>
+      ${imageHtml}
       <h2 class="post-title" style="margin:0.75rem 0 0.5rem; font-size:1.25rem;">${escapeHtml(topic?.title || "Post")}</h2>
       <div class="post-body" style="font-size:0.98rem; line-height:1.5;">${escapeHtml(bodyText)}</div>
-      ${imageHtml}
       <div class="post-actions insta-actions post-toolbar" style="margin-top:12px; padding-top:8px;">
         <button class="action-btn btn-like ${liked ? "active" : ""}" data-id="${escapeHtml(topicId)}" data-count="${baseLikes}" aria-label="Curtir post">
           <svg class="action-icon icon-heart" width="18" height="18" viewBox="0 0 24 24" fill="${liked ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
           <span class="action-count count-likes">${currentLikes > 0 ? currentLikes : ""}</span>
         </button>
+        <button class="action-btn btn-star ${starred ? "active" : ""}" data-id="${escapeHtml(topicId)}" data-count="${baseStars}" aria-label="Dar estrela ao post">
+          <svg class="action-icon icon-star" width="18" height="18" viewBox="0 0 24 24" fill="${starred ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          <span class="action-count count-stars">${currentStars > 0 ? currentStars : ""}</span>
+        </button>
         <button id="btn-share-topic" class="action-btn btn-share btn-share-post" data-id="${escapeHtml(topicId)}" data-title="${escapeHtml(topic?.title || "")}" aria-label="Compartilhar post">
           <svg class="action-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
           <span class="action-count">Compartilhar</span>
+        </button>
+        <button class="action-btn btn-copy-md" data-id="${escapeHtml(topicId)}" data-title="${escapeHtml(topic?.title || "")}" data-body="${escapeHtml(bodyText)}" data-author="${escapeHtml(authorDisplay)}" data-handle="${escapeHtml(authorHandle)}" aria-label="Copiar post como Markdown">
+          <svg class="action-icon icon-copy" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
         </button>
         <button class="action-btn btn-save ${saved ? "active" : ""}" data-id="${escapeHtml(topicId)}" aria-label="Salvar post">
           <svg class="action-icon icon-bookmark" width="18" height="18" viewBox="0 0 24 24" fill="${saved ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
@@ -567,13 +623,106 @@ export function renderTopic(main, topicId, topic, replies, { topicData = null, i
   main.innerHTML += html;
 }
 
-function renderProfileStats(statsData) {
+function formatInlineMd(str) {
+  return str
+    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*(.*?)\*/g, "<em>$1</em>")
+    .replace(/`([^`]+)`/g, "<code>$1</code>");
+}
+
+function renderMarkdownLight(md) {
+  if (!md) return "";
+  const lines = String(md).split("\n");
+  const out = [];
+  let inList = false;
+
+  for (const rawLine of lines) {
+    const line = escapeHtml(rawLine);
+    const trimmed = line.trim();
+
+    if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
+      if (!inList) {
+        out.push("<ul>");
+        inList = true;
+      }
+      out.push(`<li>${formatInlineMd(trimmed.slice(2))}</li>`);
+      continue;
+    }
+
+    if (inList) {
+      out.push("</ul>");
+      inList = false;
+    }
+
+    if (trimmed.startsWith("### ")) {
+      out.push(`<h4>${trimmed.slice(4)}</h4>`);
+    } else if (trimmed.startsWith("## ")) {
+      out.push(`<h3>${trimmed.slice(3)}</h3>`);
+    } else if (trimmed.startsWith("# ")) {
+      out.push(`<h2>${trimmed.slice(2)}</h2>`);
+    } else if (!trimmed) {
+      // blank line
+    } else {
+      out.push(`<p>${formatInlineMd(trimmed)}</p>`);
+    }
+  }
+
+  if (inList) out.push("</ul>");
+  return out.join("");
+}
+
+function renderProfileGithubBadge(githubHandle) {
+  if (!githubHandle) return "";
+  const clean = escapeHtml(String(githubHandle).replace(/^@+/, ""));
+  return `
+    <div class="profile-github-badge">
+      <span class="github-badge-icon">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+      </span>
+      <span>GitHub: <a href="https://github.com/${clean}" target="_blank" rel="noopener"><strong>@${clean}</strong></a></span>
+      <span class="badge-pill gh-pill">Informado</span>
+    </div>`;
+}
+
+function renderProfileReadme(address, displayName, readme, isCurrentWallet) {
+  if (!readme && !isCurrentWallet) return "";
+  const contentHtml = readme
+    ? renderMarkdownLight(readme)
+    : `<p class="desc" style="font-style:italic;">Nenhum README.md adicionado ainda. Conte sobre seus projetos e ideias!</p>`;
+  return `
+    <div class="card profile-readme" style="margin-top:0.75rem;">
+      <div class="readme-header">
+        <span class="readme-title"><span class="readme-icon">📖</span> <strong>README.md</strong></span>
+        ${isCurrentWallet ? `<button type="button" id="btn-toggle-edit-readme" class="btn btn-xs btn-outline">Editar README</button>` : ""}
+      </div>
+      <div class="readme-body" id="readme-view">
+        ${contentHtml}
+      </div>
+      ${isCurrentWallet ? `
+        <form id="form-edit-readme" style="display:none; margin-top:0.6rem;">
+          <textarea id="input-profile-readme" class="form-control" rows="5" placeholder="Escreva seu README em Markdown...">${escapeHtml(readme || "")}</textarea>
+          <div style="display:flex; gap:0.5rem; margin-top:0.5rem;">
+            <button type="submit" class="btn btn-sm btn-primary">Salvar README</button>
+            <button type="button" id="btn-cancel-readme" class="btn btn-sm btn-outline">Cancelar</button>
+          </div>
+        </form>
+      ` : ""}
+    </div>`;
+}
+
+function renderProfileStats(statsData, address = "") {
   if (!statsData) return "";
   const postsCount = statsData.posts || 1;
   const postsLabel = postsCount === 1 ? "post" : "posts";
+  const baseFollowers = statsData.followers || 0;
+  const followersCount = social.getFollowersCount(address, baseFollowers);
+  const starsCount = statsData.stars || 0;
+
   return `
     <div class="profile-stats">
       <span><strong>${postsCount}</strong> <span class="meta">${postsLabel}</span></span>
+      <span><strong>${followersCount}</strong> <span class="meta">acompanhando</span></span>
+      ${starsCount ? `<span><strong>${starsCount}</strong> <span class="meta">estrelas</span></span>` : ""}
       ${statsData.peersConnected !== undefined
         ? `<span><strong>${statsData.peersConnected}</strong> <span class="meta">aparelhos próximos</span></span>`
         : ""}
@@ -595,7 +744,7 @@ function renderProfilePixBadge(pixKeyMasked, pixKeyRaw) {
     </div>`;
 }
 
-function renderProfileHeader(address, isCurrentWallet, handle, isConflict, claimants, displayName, profileBio = "", stats = null, pixKeyMasked = "", pixKeyRaw = "") {
+function renderProfileHeader(address, isCurrentWallet, handle, isConflict, claimants, displayName, profileBio = "", stats = null, pixKeyMasked = "", pixKeyRaw = "", githubHandle = "") {
   const displayTitle = displayName ? `${displayName} (@${handle || shortId(address)})` : (handle ? `@${handle}` : "Perfil");
   const initial = (displayName || handle || address || "U").slice(0, 1).toUpperCase();
   const avatarUrl = mock.getAuthorAvatar(address);
@@ -605,8 +754,16 @@ function renderProfileHeader(address, isCurrentWallet, handle, isConflict, claim
 
   const bioHtml = profileBio ? `<p class="profile-bio desc">${escapeHtml(profileBio)}</p>` : "";
   const statsData = stats || mock.getMockProfile(address)?.stats;
-  const statsHtml = renderProfileStats(statsData);
+  const statsHtml = renderProfileStats(statsData, address);
   const pixBadge = renderProfilePixBadge(pixKeyMasked, pixKeyRaw);
+  const githubBadge = renderProfileGithubBadge(githubHandle);
+
+  const isWatchingAuthor = social.isWatching(address);
+  const watchBtnHtml = !isCurrentWallet
+    ? `<button class="btn btn-sm ${isWatchingAuthor ? "btn-outline" : "btn-primary"} btn-watch-profile" data-route="${escapeHtml(address)}" style="margin-left:auto;">
+        ${isWatchingAuthor ? "✓ Acompanhando" : "👁️ Acompanhar (Watch)"}
+      </button>`
+    : "";
 
   const conflictBanner = isConflict
     ? `<div class="card error" style="margin-top:0.6rem;">
@@ -624,13 +781,17 @@ function renderProfileHeader(address, isCurrentWallet, handle, isConflict, claim
         <div class="profile-avatar-row">
           <div class="profile-avatar-wrap">${avatarHtml}</div>
           ${isCurrentWallet ? `<span class="badge-pill">Sua Conta Neste Aparelho</span>` : ""}
+          ${watchBtnHtml}
         </div>
         <div class="profile-info">
           <h2 class="profile-title">${escapeHtml(displayTitle)}</h2>
           <p class="meta profile-route-id">ID de Rede: <code>${escapeHtml(address)}</code></p>
         </div>
         ${bioHtml}
-        ${pixBadge}
+        <div style="display:flex; flex-wrap:wrap; gap:0.5rem; align-items:center;">
+          ${pixBadge}
+          ${githubBadge}
+        </div>
         ${statsHtml}
         ${conflictBanner}
       </div>
@@ -651,7 +812,21 @@ function renderPixForm(currentPixKey) {
     </div>`;
 }
 
-function renderProfileActions(address, isCurrentWallet, handle, displayName, hasWallet, balance, currentPixKey = "") {
+function renderGithubForm(currentGithub) {
+  return `
+    <div class="github-section" style="margin-top:0.75rem; border-top:1px solid var(--border-subtle); padding-top:0.75rem;">
+      <label for="input-github-handle" class="pix-label">Perfil GitHub (opcional):</label>
+      <p class="desc pix-desc">Vincule seu @handle público do GitHub ao seu perfil.</p>
+      <form id="form-github-handle" class="pix-form">
+        <input type="text" id="input-github-handle" class="form-control" placeholder="Usuário do GitHub (ex: dev-brasil)" value="${escapeHtml(currentGithub || "")}" />
+        <button type="submit" class="btn btn-sm btn-primary">Salvar GitHub</button>
+        ${currentGithub ? `<button type="button" id="btn-clear-github" class="btn btn-sm btn-outline">Remover</button>` : ""}
+      </form>
+      <div id="github-feedback" class="pix-feedback"></div>
+    </div>`;
+}
+
+function renderProfileActions(address, isCurrentWallet, handle, displayName, hasWallet, balance, currentPixKey = "", currentGithub = "") {
   if (isCurrentWallet) {
     return `
       <div class="card" style="margin-top:0.75rem;">
@@ -671,6 +846,7 @@ function renderProfileActions(address, isCurrentWallet, handle, displayName, has
           <button type="submit" class="btn btn-sm btn-primary" style="white-space:nowrap;">Salvar Nome</button>
         </form>
         ${renderPixForm(currentPixKey)}
+        ${renderGithubForm(currentGithub)}
       </div>
 
       <details class="advanced-settings card" style="margin-top:0.75rem;">
@@ -708,45 +884,89 @@ function renderProfileActions(address, isCurrentWallet, handle, displayName, has
       </details>`;
   }
   return `
-    <div class="card" style="margin-top:0.75rem;">
+    <div class="card" style="margin-top:0.75rem; display:flex; gap:0.5rem; align-items:center;">
       <a class="btn btn-primary btn-sm" href="#/dm/${encodeURIComponent(address)}">💬 Mensagem Privada</a>
+      <button class="btn btn-outline btn-sm" id="btn-copy-author-route" data-route="${escapeHtml(address)}">📋 Copiar ID</button>
     </div>`;
 }
 
-export function renderProfile(main, address, memberships = [], isCurrentWallet = false, dmPubStr = "", { handle = "", isConflict = false, claimants = [], displayName = "", profileBio = "", stats = null, posts = [], hasWallet = false, balance = "0.000", pixKey = "", pixKeyMasked = "" } = {}) {
-  let html = renderProfileHeader(address, isCurrentWallet, handle, isConflict, claimants, displayName, profileBio, stats, pixKeyMasked, pixKey);
-  html += renderProfileActions(address, isCurrentWallet, handle, displayName, hasWallet, balance, pixKey);
+export function renderProfile(main, address, memberships = [], isCurrentWallet = false, dmPubStr = "", {
+  handle = "",
+  isConflict = false,
+  claimants = [],
+  displayName = "",
+  profileBio = "",
+  stats = null,
+  posts = [],
+  starredPosts = [],
+  hasWallet = false,
+  balance = "0.000",
+  pixKey = "",
+  pixKeyMasked = "",
+  githubHandle = "",
+  readme = "",
+  activeTab = "posts",
+  pinnedPostId = "",
+} = {}) {
+  const finalGithub = githubHandle || (isCurrentWallet ? social.getLocalGithubHandle() : mock.getAuthorGithub(address));
+  const finalReadme = readme || (isCurrentWallet ? social.getLocalReadme() : mock.getAuthorReadme(address));
+  const finalPinned = pinnedPostId || (isCurrentWallet ? social.getPinnedPostId(address) : mock.getAuthorPinnedPostId(address));
 
-  if (posts && posts.length) {
-    html += `
-      <div class="actions-bar">
-        <span class="section-title">Posts do autor (${posts.length})</span>
-      </div>
-      <div class="feed-container">
-        ${posts.map(renderPostItem).join("")}
-      </div>`;
+  let html = renderProfileHeader(address, isCurrentWallet, handle, isConflict, claimants, displayName, profileBio, stats, pixKeyMasked, pixKey, finalGithub);
+  html += renderProfileActions(address, isCurrentWallet, handle, displayName, hasWallet, balance, pixKey, finalGithub);
+  html += renderProfileReadme(address, displayName, finalReadme, isCurrentWallet);
+
+  // Reordena posts para colocar fixado no topo
+  const authorPostList = [...(posts || [])];
+  if (finalPinned) {
+    const pinIdx = authorPostList.findIndex((p) => p.id === finalPinned);
+    if (pinIdx > 0) {
+      const [pinnedItem] = authorPostList.splice(pinIdx, 1);
+      authorPostList.unshift(pinnedItem);
+    }
   }
 
+  const starredList = starredPosts || [];
+  const currentTab = activeTab || "posts";
+
   html += `
-    <div class="actions-bar">
-      <span class="section-title">Comunidades (${memberships.length})</span>
+    <div class="community-tabs profile-tabs" style="margin-top:1rem;">
+      <a href="#/u/${encodeURIComponent(address)}?tab=posts" class="tab-btn ${currentTab === "posts" ? "active" : ""}">Posts do autor (${authorPostList.length})</a>
+      <a href="#/u/${encodeURIComponent(address)}?tab=starred" class="tab-btn ${currentTab === "starred" ? "active" : ""}">Estrelados (${starredList.length})</a>
+      <a href="#/u/${encodeURIComponent(address)}?tab=communities" class="tab-btn ${currentTab === "communities" ? "active" : ""}">Comunidades (${memberships.length})</a>
     </div>`;
 
-  if (!memberships.length) {
-    html += `<div class="empty"><p>Nenhuma comunidade registrada neste perfil.</p></div>`;
-  } else {
-    const list = memberships
-      .map(
-        (m) => `
-      <div class="card" style="padding:10px 14px;">
-        <a href="#/c/${encodeURIComponent(m.communityId)}">
-          <h3 style="margin:0 0 2px;">${escapeHtml(m.communityId)}</h3>
-        </a>
-        <span class="meta">Membro confirmado</span>
-      </div>`
-      )
-      .join("");
-    html += `<div class="card-list">${list}</div>`;
+  if (currentTab === "posts") {
+    if (!authorPostList.length) {
+      html += `<div class="empty"><p>Nenhum post publicado por este autor.</p></div>`;
+    } else {
+      const postCards = authorPostList.map((p) => renderPostItem(p, { isPinned: p.id === finalPinned })).join("");
+      html += `<div class="feed-container" style="margin-top:0.75rem;">${postCards}</div>`;
+    }
+  } else if (currentTab === "starred") {
+    if (!starredList.length) {
+      html += `<div class="empty"><p>Nenhum post favoritado com estrela ⭐ ainda.</p></div>`;
+    } else {
+      const starredCards = starredList.map((p) => renderPostItem(p)).join("");
+      html += `<div class="feed-container" style="margin-top:0.75rem;">${starredCards}</div>`;
+    }
+  } else if (currentTab === "communities") {
+    if (!memberships.length) {
+      html += `<div class="empty"><p>Nenhuma comunidade registrada neste perfil.</p></div>`;
+    } else {
+      const list = memberships
+        .map(
+          (m) => `
+        <div class="card" style="padding:10px 14px; margin-top:0.5rem;">
+          <a href="#/c/${encodeURIComponent(m.communityId)}">
+            <h3 style="margin:0 0 2px;">${escapeHtml(m.communityId)}</h3>
+          </a>
+          <span class="meta">Membro confirmado</span>
+        </div>`
+        )
+        .join("");
+      html += `<div class="card-list">${list}</div>`;
+    }
   }
 
   main.innerHTML = html;

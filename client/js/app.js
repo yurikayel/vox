@@ -28,9 +28,9 @@ function parseRoute() {
   const parts = pathPart ? pathPart.split("/").filter(Boolean) : [];
   const query = new URLSearchParams(queryPart || "");
 
-  if (!parts.length) return { name: "home" };
+  if (!parts.length) return { name: "home", feed: (query.get("feed") || "for-you").toLowerCase() };
   if (parts[0] === "communities") return { name: "communities" };
-  if (parts[0] === "perfil") return { name: "perfil" };
+  if (parts[0] === "perfil") return { name: "perfil", tab: (query.get("tab") || "posts").toLowerCase() };
   if (parts[0] === "pix" && parts[1]) {
     return { name: "pix-lookup", query: decodeURIComponent(parts[1]) };
   }
@@ -67,7 +67,7 @@ function parseRoute() {
     if (raw.startsWith("@")) {
       return { name: "handle-lookup", slug: raw.slice(1) };
     }
-    return { name: "profile", address: raw };
+    return { name: "profile", address: raw, tab: (query.get("tab") || "posts").toLowerCase() };
   }
   if (parts[0] === "wallet") return { name: "wallet" };
   if (parts[0] === "compose") {
@@ -120,9 +120,11 @@ function attachPostShareHandlers() {
   });
 }
 
-async function showHome() {
+async function showHome(feed = "for-you") {
+  const activeFeed = feed === "following" ? "following" : "for-you";
   const user = await getActiveUser();
-  const main = render.renderShell(makeShellProps(user, "home", "Para você"));
+  const title = activeFeed === "following" ? "Seguindo" : "Para você";
+  const main = render.renderShell(makeShellProps(user, "home", title));
   render.renderLoading(main);
 
   try {
@@ -164,18 +166,28 @@ async function showHome() {
       }
     }
 
+    let finalTopics = merged;
+    if (activeFeed === "following") {
+      const watchedSet = new Set(social.getWatchedProfiles());
+      finalTopics = merged.filter((p) => watchedSet.has(p.author || p.owner));
+    }
+
     main.innerHTML = "";
     if (demo && !localPosts.length) render.renderDemoBanner(main);
     else if (gateway) render.renderGatewayBanner(main, gateway);
-    render.renderFeed(main, merged);
+    render.renderFeed(main, finalTopics, { activeFeed });
   } catch (e) {
     main.innerHTML = "";
     const rawLocal = await cacheNode.getLocalPosts({ type: "topic" });
     const localPosts = rawLocal.filter((p) => p.type !== "listing");
     const fb = mock.mockRecentTopics();
-    const merged = [...localPosts.map((p) => ({ ...p, isLocalP2p: true })), ...fb.items.filter((p) => p.type !== "listing").map((p) => ({ ...p, isLocalP2p: false }))];
+    let merged = [...localPosts.map((p) => ({ ...p, isLocalP2p: true })), ...fb.items.filter((p) => p.type !== "listing").map((p) => ({ ...p, isLocalP2p: false }))];
+    if (activeFeed === "following") {
+      const watchedSet = new Set(social.getWatchedProfiles());
+      merged = merged.filter((p) => watchedSet.has(p.author || p.owner));
+    }
     render.renderDemoBanner(main);
-    render.renderFeed(main, merged);
+    render.renderFeed(main, merged, { activeFeed });
   }
 
   attachPostShareHandlers();
@@ -548,7 +560,7 @@ async function showTopic(topicId, commIdParam = "") {
   });
 }
 
-async function showProfile(address) {
+async function showProfile(address, activeTab = "posts") {
   const user = await getActiveUser();
   const targetAddress = address || user;
   const isSelf = targetAddress === user || targetAddress === (await localAccount.getRouteId());
@@ -610,6 +622,22 @@ async function showProfile(address) {
     authorPosts = mock.MOCK_DEMO_TOPICS.filter((t) => t.author === targetAddress);
   }
 
+  // Busca posts favoritados com estrela ⭐
+  const starredSet = new Set(social.getStarredPostIds());
+  const allAvailablePosts = [...localPosts, ...mock.MOCK_DEMO_TOPICS];
+  const seenStarred = new Set();
+  const starredPosts = [];
+  for (const p of allAvailablePosts) {
+    if (starredSet.has(p.id) && !seenStarred.has(p.id)) {
+      seenStarred.add(p.id);
+      starredPosts.push(p);
+    }
+  }
+
+  const githubHandle = isSelf ? social.getLocalGithubHandle() : (mockProf?.githubHandle || "");
+  const readme = isSelf ? social.getLocalReadme() : (mockProf?.readme || "");
+  const pinnedPostId = isSelf ? social.getPinnedPostId(targetAddress) : (mockProf?.pinnedPostId || "");
+
   main.innerHTML = "";
   render.renderProfile(main, targetAddress, memberships, isSelf, JSON.stringify(dmPub), {
     handle: handle || "",
@@ -619,16 +647,21 @@ async function showProfile(address) {
     profileBio,
     stats: mockProf?.stats || null,
     posts: authorPosts,
+    starredPosts,
     hasWallet: wallet.hasWallet(),
     balance,
     pixKey,
     pixKeyMasked,
+    githubHandle,
+    readme,
+    activeTab,
+    pinnedPostId,
   });
 
-  bindProfileButtons(user, targetAddress, isSelf, dmPub);
+  bindProfileButtons(user, targetAddress, isSelf, dmPub, activeTab);
 }
 
-function bindProfileButtons(user, address, isSelf, dmPub) {
+function bindProfileButtons(user, address, isSelf, dmPub, activeTab = "posts") {
   const formPixKey = document.getElementById("form-pix-key");
   if (formPixKey && isSelf) {
     formPixKey.addEventListener("submit", (e) => {
@@ -639,7 +672,7 @@ function bindProfileButtons(user, address, isSelf, dmPub) {
       if (!rawVal) {
         localAccount.clearPixKey();
         share.showToast("Chave Pix removida do perfil.");
-        showProfile(address);
+        showProfile(address, activeTab);
         return;
       }
       const validation = pixKeyHelper.validatePixKey(rawVal);
@@ -649,7 +682,7 @@ function bindProfileButtons(user, address, isSelf, dmPub) {
       }
       localAccount.setPixKey(validation.normalized);
       share.showToast("Chave Pix salva no seu perfil local!");
-      showProfile(address);
+      showProfile(address, activeTab);
     });
   }
 
@@ -658,7 +691,67 @@ function bindProfileButtons(user, address, isSelf, dmPub) {
     btnClearPix.addEventListener("click", () => {
       localAccount.clearPixKey();
       share.showToast("Chave Pix removida.");
-      showProfile(address);
+      showProfile(address, activeTab);
+    });
+  }
+
+  const formGithub = document.getElementById("form-github-handle");
+  if (formGithub && isSelf) {
+    formGithub.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const val = document.getElementById("input-github-handle")?.value.trim() || "";
+      social.setLocalGithubHandle(val);
+      share.showToast(val ? "Perfil do GitHub salvo!" : "GitHub removido.");
+      showProfile(address, activeTab);
+    });
+  }
+
+  const btnClearGithub = document.getElementById("btn-clear-github");
+  if (btnClearGithub && isSelf) {
+    btnClearGithub.addEventListener("click", () => {
+      social.setLocalGithubHandle("");
+      share.showToast("GitHub removido.");
+      showProfile(address, activeTab);
+    });
+  }
+
+  const btnToggleReadme = document.getElementById("btn-toggle-edit-readme");
+  const formReadme = document.getElementById("form-edit-readme");
+  const readmeView = document.getElementById("readme-view");
+  if (btnToggleReadme && formReadme) {
+    btnToggleReadme.addEventListener("click", () => {
+      const isHidden = formReadme.style.display === "none";
+      formReadme.style.display = isHidden ? "block" : "none";
+      if (readmeView) readmeView.style.display = isHidden ? "none" : "block";
+    });
+  }
+
+  const btnCancelReadme = document.getElementById("btn-cancel-readme");
+  if (btnCancelReadme && formReadme) {
+    btnCancelReadme.addEventListener("click", () => {
+      formReadme.style.display = "none";
+      if (readmeView) readmeView.style.display = "block";
+    });
+  }
+
+  if (formReadme && isSelf) {
+    formReadme.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const val = document.getElementById("input-profile-readme")?.value || "";
+      social.setLocalReadme(val);
+      share.showToast("README.md atualizado!");
+      showProfile(address, activeTab);
+    });
+  }
+
+  const btnCopyRoute = document.getElementById("btn-copy-author-route");
+  if (btnCopyRoute) {
+    btnCopyRoute.addEventListener("click", (e) => {
+      const routeToCopy = e.currentTarget.dataset.route || address;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(routeToCopy);
+        share.showToast("ID de rota copiado!");
+      }
     });
   }
   const btnCopyDmLink = document.getElementById("btn-copy-my-dm-link");
@@ -1501,9 +1594,9 @@ async function showPixLookup(query) {
 async function route() {
   checkCantinaGate();
   const r = parseRoute();
-  if (r.name === "home") return showHome();
+  if (r.name === "home") return showHome(r.feed);
   if (r.name === "communities") return showCommunities();
-  if (r.name === "perfil") return showProfile();
+  if (r.name === "perfil") return showProfile(null, r.tab);
   if (r.name === "pix-lookup") return showPixLookup(r.query);
   if (r.name === "network-settings") return showNetworkSettings();
   if (r.name === "handle-lookup") return showHandleLookup(r.slug);
@@ -1511,7 +1604,7 @@ async function route() {
   if (r.name === "dm-thread") return showDmThread(r.address);
   if (r.name === "community") return showCommunity(r.id, r.tab);
   if (r.name === "topic") return showTopic(r.id, r.communityId);
-  if (r.name === "profile") return showProfile(r.address);
+  if (r.name === "profile") return showProfile(r.address, r.tab);
   if (r.name === "wallet") return showWallet();
   if (r.name === "compose-community") return showComposeCommunity();
   if (r.name === "compose-listing") return showComposeListing(r.communityId);
@@ -1524,7 +1617,7 @@ function initGossipListeners() {
   peers.onGossipPost((item) => {
     const cur = parseRoute();
     if (cur.name === "home") {
-      showHome();
+      showHome(cur.feed);
     } else if (cur.name === "community" && cur.id === item.communityId) {
       showCommunity(cur.id, cur.tab);
     } else if (cur.name === "topic" && (cur.id === item.id || cur.id === item.replyTo)) {
@@ -1559,6 +1652,26 @@ function initSocialInteractions() {
       return;
     }
 
+    // Star button (GitHub UX)
+    const btnStar = e.target.closest(".btn-star");
+    if (btnStar) {
+      e.preventDefault();
+      const postId = btnStar.dataset.id;
+      const baseCount = btnStar.dataset.count || 0;
+      const res = social.toggleStar(postId, baseCount);
+      btnStar.classList.toggle("active", res.starred);
+      const icon = btnStar.querySelector(".icon-star");
+      if (icon) {
+        icon.setAttribute("fill", res.starred ? "currentColor" : "none");
+      }
+      const countLabel = btnStar.querySelector(".count-stars");
+      if (countLabel) {
+        countLabel.textContent = res.count > 0 ? res.count : "";
+      }
+      share.showToast(res.starred ? "Estrela adicionada ⭐ (nos seus Estrelados)!" : "Estrela removida.");
+      return;
+    }
+
     // Save/Bookmark button
     const btnSave = e.target.closest(".btn-save");
     if (btnSave) {
@@ -1571,6 +1684,40 @@ function initSocialInteractions() {
         icon.setAttribute("fill", saved ? "currentColor" : "none");
       }
       share.showToast(saved ? "Post salvo nos seus favoritos!" : "Post removido dos favoritos.");
+      return;
+    }
+
+    // Copiar Markdown do post (GH-A)
+    const btnCopyMd = e.target.closest(".btn-copy-md");
+    if (btnCopyMd) {
+      e.preventDefault();
+      const mdText = render.formatPostMarkdown({
+        id: btnCopyMd.dataset.id,
+        title: btnCopyMd.dataset.title || "",
+        body: btnCopyMd.dataset.body || "",
+        authorDisplay: btnCopyMd.dataset.author || "",
+        authorHandle: btnCopyMd.dataset.handle || "",
+      });
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(mdText).then(() => {
+          share.showToast("Post copiado em Markdown! 📋");
+        }).catch(() => {
+          share.showToast("Erro ao copiar.", "error");
+        });
+      }
+      return;
+    }
+
+    // Watch / Acompanhar perfil (GitHub UX)
+    const btnWatch = e.target.closest(".btn-watch-profile");
+    if (btnWatch) {
+      e.preventDefault();
+      const routeId = btnWatch.dataset.route;
+      const watching = social.toggleWatch(routeId);
+      btnWatch.classList.toggle("btn-primary", !watching);
+      btnWatch.classList.toggle("btn-outline", watching);
+      btnWatch.textContent = watching ? "✓ Acompanhando" : "👁️ Acompanhar (Watch)";
+      share.showToast(watching ? "Agora você acompanha este autor no feed Seguindo!" : "Deixou de acompanhar este autor.");
       return;
     }
   });

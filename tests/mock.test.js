@@ -77,6 +77,9 @@ test("mock - catálogo de 10 perfis demo e helpers getMockProfile / getAuthorDis
 
   assert.equal(mock.getAuthorAvatar("vx_demo_helena"), "images/avatars/helena.jpg");
   assert.equal(mock.getAuthorHandle("vx_demo_helena"), "helena");
+  assert.ok(mock.getAuthorReadme("vx_demo_helena").includes("Helena"));
+  assert.equal(mock.getAuthorGithub("vx_demo_helena"), "helenapopular");
+  assert.equal(mock.getAuthorPinnedPostId("vx_demo_helena"), "demo-post-helena");
 
   // Lookup de chave Pix fictícia
   const helenaPix = mock.findMockByPixKey("helena.vox@gmail.com");

@@ -30,7 +30,10 @@ export const MOCK_DEMO_PROFILES = {
     avatar: "images/avatars/helena.jpg",
     bio: "Artesã e educadora popular. Acredito em redes onde as conversas não dependem de pagar para ser vista.",
     pixKey: "helena.vox@gmail.com",
-    stats: { posts: 1, peersConnected: 3, communities: 1, isTourDemo: true },
+    githubHandle: "helenapopular",
+    pinnedPostId: "demo-post-helena",
+    readme: "### Olá, sou a Helena! 👋\n\nSou artesã e educadora popular em São Paulo. Construo espaços comunitários onde a tecnologia serve às pessoas, não a algoritmos de anúncio.\n\n- 🥖 **Produção Local:** Pães artesanais e conservas da horta comunitária na Feira do Bairro.\n- 🤝 **Solidariedade:** Oficinas de alfabetização digital e cidadania popular.\n- 💬 Fique à vontade para me mandar um DM ou trocar ideias!",
+    stats: { posts: 1, peersConnected: 3, communities: 1, followers: 42, stars: 38, isTourDemo: true },
   },
   vx_demo_juliana: {
     routeId: "vx_demo_juliana",
@@ -38,7 +41,10 @@ export const MOCK_DEMO_PROFILES = {
     name: "Juliana",
     avatar: "images/avatars/juliana.jpg",
     bio: "Advogada e pesquisadora de direitos digitais. Defendo moderação transparente e auditável.",
-    stats: { posts: 1, peersConnected: 2, communities: 1, isTourDemo: true },
+    githubHandle: "julianadireito",
+    pinnedPostId: "demo-post-juliana",
+    readme: "### Juliana — Direitos Digitais & Governança FOSS ⚖️\n\nPesquiso modelos de deliberação democrática direta e soberania de dados.\n\n- 📜 **Governança Aberta:** Propostas, votos auditáveis e corte anti-brigading.\n- 🛡️ **Pacto Comunitário:** Moderação exercida pela base com regras visíveis em diff.",
+    stats: { posts: 1, peersConnected: 2, communities: 1, followers: 29, stars: 21, isTourDemo: true },
   },
   vx_demo_yara: {
     routeId: "vx_demo_yara",
@@ -47,7 +53,9 @@ export const MOCK_DEMO_PROFILES = {
     avatar: "images/avatars/yara.jpg",
     bio: "Ativista socioambiental. Defendo a soberania sobre nossas memórias e a recusa da extração predatória de dados.",
     pixKey: "+5592988112233",
-    stats: { posts: 1, peersConnected: 4, communities: 1, isTourDemo: true },
+    pinnedPostId: "demo-post-yara",
+    readme: "### Yara — Guardiã de Memórias & Amazônia Viva 🌿\n\nArticuladora de redes populares de comunicação na Amazônia.\n\n- 📡 **Comunicação Segura:** Nossos registros históricos guardados nos aparelhos da comunidade.\n- 💧 Preservação das águas e das florestas sem vigilância de corporações.",
+    stats: { posts: 1, peersConnected: 4, communities: 1, followers: 35, stars: 19, isTourDemo: true },
   },
   vx_demo_mei: {
     routeId: "vx_demo_mei",
@@ -55,7 +63,9 @@ export const MOCK_DEMO_PROFILES = {
     name: "Mei",
     avatar: "images/avatars/mei.jpg",
     bio: "Designer e leitora assídua. Busco uma experiência de leitura limpa, sem gatilhos viciantes de autoplay.",
-    stats: { posts: 1, peersConnected: 2, communities: 1, isTourDemo: true },
+    pinnedPostId: "demo-post-mei",
+    readme: "### Mei — Design Consciente & Tipografia 🎨\n\nCrio identidades visuais e ilustrações com foco em leitura calma e interfaces humanizadas.\n\n- 👜 Arte têxtil e ecobags manuais na Feira do Bairro.\n- 📖 Design ético que respeita a atenção do usuário.",
+    stats: { posts: 1, peersConnected: 2, communities: 1, followers: 18, stars: 15, isTourDemo: true },
   },
   vx_demo_fernanda: {
     routeId: "vx_demo_fernanda",
@@ -63,7 +73,9 @@ export const MOCK_DEMO_PROFILES = {
     name: "Fernanda",
     avatar: "images/avatars/fernanda.jpg",
     bio: "Comunicadora comunitária no Nordeste. Foco no que é real entre vizinhos e sem anúncios disfarçados.",
-    stats: { posts: 1, peersConnected: 5, communities: 1, isTourDemo: true },
+    pinnedPostId: "demo-post-fernanda",
+    readme: "### Fernanda — Comunicação Popular no Bongi ☀️\n\nRadialista comunitária e produtora de doces artesanais em Recife.\n\n- 🍰 **Feira do Bairro:** Valorização do trabalho autônomo e da economia solidária.\n- 📻 Informação que nasce da rua e volta para a rua.",
+    stats: { posts: 1, peersConnected: 5, communities: 1, followers: 51, stars: 33, isTourDemo: true },
   },
   vx_demo_salma: {
     routeId: "vx_demo_salma",
@@ -71,7 +83,9 @@ export const MOCK_DEMO_PROFILES = {
     name: "Salma",
     avatar: "images/avatars/salma.jpg",
     bio: "Jornalista independente e tradutora. Minha voz vive nas minhas chaves, sem medo de cancelamento por robôs.",
-    stats: { posts: 1, peersConnected: 3, communities: 1, isTourDemo: true },
+    pinnedPostId: "demo-post-salma",
+    readme: "### Salma — Jornalismo Independente & Tradução 🗞️\n\nCobro direitos humanos, trabalho precarizado e tecnologia soberana.\n\n- ✍️ Reportagens de fôlego sem caça-cliques.\n- 🔑 Autenticação criptográfica de fontes sem censura central.",
+    stats: { posts: 1, peersConnected: 3, communities: 1, followers: 27, stars: 24, isTourDemo: true },
   },
   vx_demo_lucas: {
     routeId: "vx_demo_lucas",
@@ -79,7 +93,10 @@ export const MOCK_DEMO_PROFILES = {
     name: "Lucas",
     avatar: "images/avatars/lucas.jpg",
     bio: "Professor de história e entusiasta de software livre. Conversas sem incentivo algorítmico à polarização.",
-    stats: { posts: 1, peersConnected: 4, communities: 1, isTourDemo: true },
+    githubHandle: "lucas-historia",
+    pinnedPostId: "demo-post-lucas",
+    readme: "### Lucas — História, Educação Popular & FOSS 📚\n\nProfessor da rede pública. Ensino história contemporânea e ativismo de código aberto.\n\n- 🐧 Defesa do software livre na educação.\n- 🏛️ Redes públicas como praça da cidadania.",
+    stats: { posts: 1, peersConnected: 4, communities: 1, followers: 31, stars: 22, isTourDemo: true },
   },
   vx_demo_andre: {
     routeId: "vx_demo_andre",
@@ -88,7 +105,9 @@ export const MOCK_DEMO_PROFILES = {
     avatar: "images/avatars/andre.jpg",
     bio: "Organizador de coletivo cultural periférico. Comunicação direta entre nós, com apoios comunitários diretos.",
     pixKey: "andre.comunidade@voxbrasil.org",
-    stats: { posts: 1, peersConnected: 3, communities: 1, isTourDemo: true },
+    pinnedPostId: "demo-post-andre",
+    readme: "### André — Coletivo Cultural no Capão Redondo 🎤\n\nProdução cultural, hip-hop e economia periférica.\n\n- 👕 Estamparia sustentável e eventos culturais locais.\n- ⚡ Apoio direto via Pix para oficinas de jovens.",
+    stats: { posts: 1, peersConnected: 3, communities: 1, followers: 44, stars: 30, isTourDemo: true },
   },
   vx_demo_kaue: {
     routeId: "vx_demo_kaue",
@@ -96,7 +115,9 @@ export const MOCK_DEMO_PROFILES = {
     name: "Kaue",
     avatar: "images/avatars/kaue.jpg",
     bio: "Estudante e comunicador popular. Registrando saberes ancestrais em redes cooperativas abertas.",
-    stats: { posts: 1, peersConnected: 2, communities: 1, isTourDemo: true },
+    pinnedPostId: "demo-post-kaue",
+    readme: "### Kaue — Saberes Tradicionais & Mídias Livres 🌾\n\nEstudante universitário e documentarista comunitário.\n\n- 🎙️ Histórias orais de mestres da tradição.\n- 🌐 Protocolos P2P para preservar a memória coletiva.",
+    stats: { posts: 1, peersConnected: 2, communities: 1, followers: 23, stars: 17, isTourDemo: true },
   },
   vx_demo_raj: {
     routeId: "vx_demo_raj",
@@ -104,7 +125,10 @@ export const MOCK_DEMO_PROFILES = {
     name: "Raj",
     avatar: "images/avatars/raj.jpg",
     bio: "Engenheiro de sistemas e defensor de privacidade. Dados locais no meu próprio celular, sob minha jurisdição.",
-    stats: { posts: 1, peersConnected: 3, communities: 1, isTourDemo: true },
+    githubHandle: "raj-crypto",
+    pinnedPostId: "demo-post-raj",
+    readme: "### Raj — Sistemas Distribuídos & Web Crypto 🛡️\n\nArquiteto de software com foco em criptografia cliente-lado e redes tolerantes a falhas.\n\n- 🔐 ECDSA P-256 e ECDH locais no browser.\n- 📦 Zero dependências de runtime e local-first.",
+    stats: { posts: 1, peersConnected: 3, communities: 1, followers: 36, stars: 45, isTourDemo: true },
   },
 };
 
@@ -451,6 +475,24 @@ export function getAuthorHandle(authorId) {
   if (!authorId) return "";
   const prof = getMockProfile(authorId);
   return prof ? prof.handle || "" : "";
+}
+
+export function getAuthorReadme(authorId) {
+  if (!authorId) return "";
+  const prof = getMockProfile(authorId);
+  return prof ? prof.readme || "" : "";
+}
+
+export function getAuthorGithub(authorId) {
+  if (!authorId) return "";
+  const prof = getMockProfile(authorId);
+  return prof ? prof.githubHandle || "" : "";
+}
+
+export function getAuthorPinnedPostId(authorId) {
+  if (!authorId) return "";
+  const prof = getMockProfile(authorId);
+  return prof ? prof.pinnedPostId || "" : "";
 }
 
 export function mockCommunities() {

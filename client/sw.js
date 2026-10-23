@@ -1,7 +1,7 @@
-// Service Worker do Vox (Fase 5.9 — Feira Comunitária & Classificados M1)
+// Service Worker do Vox (Fase 5.10 — UI Social Pro, GitHub UX & Post Híbrido)
 // NOTA ARQUITETURAL: WebRTC DataChannels operam exclusivamente na thread principal (DOM/Window).
 // O Service Worker atua no cache offline do shell e notificações de status, sem abrir WebRTC.
-const CACHE_NAME = "vox-pwa-v5.9-feira";
+const CACHE_NAME = "vox-pwa-v5.10-ui-social";
 const SHELL_ASSETS = [
   "./",
   "./index.html",
