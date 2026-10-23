@@ -359,7 +359,7 @@ O PWA traz a vivacidade e o engajamento visual de redes sociais modernas (híbri
   - **💬 Comentar:** O botão expande um dropdown `.post-comments` **no próprio card** (`aria-expanded` / `aria-controls`); a thread `#/t/:id` permanece só como atalho "Abrir thread".
   - **↗ Compartilhar:** Disparo do `navigator.share` nativo ou cópia direta do link com toast de confirmação.
   - **🔖 Salvar:** Marcação de posts favoritos com feedback em toast.
-- **Cache Offline Completo:** Fotos do tour e da porta da cantina entram no shell do Service Worker (cache vigente `vox-pwa-v6.1-cantina-balloon2`). Copy dos 10 posts em 1ª pessoa falada; fotos de pessoas em contexto (não stock genérico).
+- **Cache Offline Completo:** Fotos do tour e da porta da cantina entram no shell do Service Worker (cache vigente `vox-pwa-v6.1-cantina-baked-balloons`). Copy dos 10 posts em 1ª pessoa falada; fotos de pessoas em contexto (não stock genérico).
 
 ---
 
@@ -395,11 +395,11 @@ Para blindar o Vox contra fazendas de automação sem recorrer a captchas corpor
 
 1. **Porta da Cantina (`vox-cantina-v1`):**
    - Paródia cultural e acolhedora inspirada na clássica cena de cantina espacial: o bartender de túnica bege aponta para a frente, e o gag se resolve nos dois balões (Wuher: droids/bots esperam do lado de fora).
-   - Arte autoral em JPG (`cantina-gate.jpg`, `object-fit: cover` / `object-position: 78% 8%`). Primeiro balão impresso na arte (*"Seus bots tem que esperar lá fora!"*); segundo balão HTML/CSS `#cantina-balloon-2.cantina-balloon-2` (*"Aqui não servimos esse tipo."*), oval com rabicho apontando ao bartender.
-   - Overlay sem H2 "Porta da Cantina", sem quote duplicada e sem subtítulo itálico. O diálogo usa `aria-labelledby="cantina-balloon-2"`; o `alt` da imagem descreve os dois balões.
+   - Arte autoral em JPG (`cantina-gate.jpg`, `object-fit: cover` / `object-position: 76% 16%`). Os dois balões do gag já vêm pintados na arte (*"Seus bots tem que esperar lá fora!"* e *"Aqui não servimos esse tipo."*) — sem overlay HTML/CSS.
+   - Overlay sem H2 "Porta da Cantina", sem quote duplicada e sem subtítulo itálico. O diálogo usa `aria-label="Porta da Cantina"`; o `alt` da imagem descreve os dois balões pintados.
    - Acionamento em primeiro acesso armazenado em `localStorage` (`vox-cantina-v1`).
    - Botão de ação único: `Entrar — sou humano`, com esclarecimento expansível sobre a minimização de dados do Vox.
-   - Cache do Service Worker: `vox-pwa-v6.1-cantina-balloon2` (`./js/hashtags.js` permanece no shell).
+   - Cache do Service Worker: `vox-pwa-v6.1-cantina-baked-balloons` (`./js/hashtags.js` permanece no shell).
 2. **Pacto Vox (`vox-pact-accepted`):**
    - Apresentado imediatamente após a passagem pela Porta da Cantina.
    - Apresenta os três pilares cooperativos: *Seus dados são seus*, *Rede cooperativa* e *Controle total*.
@@ -580,7 +580,7 @@ A sprint v6.1 implementa a descoberta descentralizada de conteúdos através de 
 - **Empty State Construtivo:** Quando uma tag pesquisada ainda não existe no aparelho, orienta o usuário com transparência sobre o funcionamento do gossip local e oferece atalho para postar com a tag.
 
 ### 19.4 Cache e PWA
-- `./js/hashtags.js` permanece nos ativos do app shell (descoberta local Willow). Cache vigente: `vox-pwa-v6.1-cantina-balloon2`.
+- `./js/hashtags.js` permanece nos ativos do app shell (descoberta local Willow). Cache vigente: `vox-pwa-v6.1-cantina-baked-balloons`.
 
 
 
