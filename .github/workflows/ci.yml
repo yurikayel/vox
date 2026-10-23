@@ -68,6 +68,6 @@ jobs:
       - name: Verificar ausência de chaves privadas ou JWK reais commitados
         run: |
           echo "Verificando se há chaves privadas acidentalmente no repositório..."
-          ! grep -rnw "BEGIN RSA PRIVATE KEY" . --exclude-dir=.git || exit 1
-          ! grep -rnw "BEGIN PRIVATE KEY" . --exclude-dir=.git || exit 1
+          ! grep -rnw "BEGIN RSA PRIVATE KEY" . --exclude-dir=.git --exclude-dir=.github || exit 1
+          ! grep -rnw "BEGIN PRIVATE KEY" . --exclude-dir=.git --exclude-dir=.github || exit 1
           echo "Nenhuma chave privada encontrada no repositório. OK!"
