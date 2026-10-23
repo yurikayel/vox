@@ -159,7 +159,7 @@ test("render - renderFeed renderiza timeline com posts", () => {
     { id: "t1", title: "Primeiro post", body: "Conteudo do post", owner: "addr_autor", communityId: "geral", communityTitle: "Geral" },
   ];
   render.renderFeed(main, topics);
-  assert.ok(main.innerHTML.includes("Para você"));
+  assert.ok(main.innerHTML.includes("feed-chrome"));
   assert.ok(main.innerHTML.includes("Primeiro post"));
   assert.ok(main.innerHTML.includes("Conteudo do post"));
   assert.ok(main.innerHTML.includes(">Geral<"));
@@ -516,18 +516,27 @@ test("render - post v3 híbrido (mídia antes do texto, star, copy-md e pinned)"
   assert.ok(imgIdx < titleIdx, "Mídia deve preceder o título na hierarquia visual v3");
 });
 
-test("render - feed com abas segmentadas Para você e Seguindo", () => {
+test("render - feed nav na sidebar (Para você e Seguindo)", () => {
+  const forYou = render.renderFeedNav("for-you");
+  assert.ok(forYou.includes("sidebar-feed-nav"));
+  assert.ok(forYou.includes("Para você"));
+  assert.ok(forYou.includes("Seguindo"));
+  assert.ok(forYou.includes("sidebar-feed-tab active"));
+
+  const following = render.renderFeedNav("following");
+  assert.ok(following.includes('href="#/?feed=following"'));
+  assert.ok(following.includes("sidebar-feed-tab active"));
+});
+
+test("render - feed sem abas duplicadas no chrome", () => {
   const main = createContainer();
   const topics = [
     { id: "p1", title: "Primeiro post", author: "vx_demo_helena" },
   ];
 
-  // Aba 'Para você'
   render.renderFeed(main, topics, { activeFeed: "for-you" });
-  assert.ok(main.innerHTML.includes("feed-segmented-nav"));
-  assert.ok(main.innerHTML.includes("Para você"));
-  assert.ok(main.innerHTML.includes("Seguindo"));
-  assert.ok(main.innerHTML.includes("feed-tab active"));
+  assert.ok(!main.innerHTML.includes("feed-segmented-nav"));
+  assert.ok(main.innerHTML.includes("feed-chrome"));
 
   // Aba 'Seguindo' vazia
   const mainFollowingEmpty = createContainer();
