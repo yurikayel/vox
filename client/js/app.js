@@ -20,6 +20,7 @@ import * as brcode from "./brcode.js";
 import * as hashtags from "./hashtags.js";
 import * as frames from "./frames.js";
 import * as postOwnership from "./post-ownership.js";
+import * as communityMirror from "./community-mirror.js";
 import { attachInlineComposerHandlers } from "./inline-composer.js";
 
 function parseRoute() {
@@ -397,6 +398,10 @@ async function showCommunity(communityId, tab = "posts") {
     listings,
     proposals,
   });
+
+  if (tab === "posts") {
+    void communityMirror.tryMirrorCommunityToRelay(meta, filteredTopics);
+  }
 
   attachCommunityListingHandlers(main);
   attachPostShareHandlers();
@@ -1575,11 +1580,13 @@ function bindNetworkSettingsForm() {
     const backgroundRelay = document.getElementById("net-bg-relay")?.checked || false;
     const webrtcEnabled = document.getElementById("net-webrtc")?.checked !== false;
     const customSignalingUrl = document.getElementById("net-signaling-url")?.value.trim() || "";
+    const customRelayHttpUrl = document.getElementById("net-relay-http-url")?.value.trim() || "";
     const turnUrls = document.getElementById("net-turn-url")?.value.trim() || "";
     const turnUser = document.getElementById("net-turn-user")?.value.trim() || "";
     const turnPass = document.getElementById("net-turn-pass")?.value || "";
 
     localStorage.setItem("vox-custom-signaling-url", customSignalingUrl);
+    inbox.saveRelayHttpUrl(customRelayHttpUrl);
     peers.saveCustomTurnConfig({ urls: turnUrls, username: turnUser, credential: turnPass });
 
     peers.savePeerSettings({
@@ -1620,7 +1627,7 @@ function bindNetworkSettingsButtons() {
       if (status.online) {
         share.showToast(`Relay desktop online! ${status.data?.cachedCount || 0} itens em disco.`);
       } else {
-        share.showToast("Relay desktop não detectado em 127.0.0.1:3920.", "error");
+        share.showToast(`Relay HTTP não detectado em ${inbox.getRelayHttpUrl()}.`, "error");
       }
       showNetworkSettings();
     });
@@ -1663,6 +1670,8 @@ async function showNetworkSettings() {
   const notifPermission = "Notification" in window ? Notification.permission : "unsupported";
   const rtcStatus = peers.getRtcStatus();
   const customSignalingUrl = localStorage.getItem("vox-custom-signaling-url") || "";
+  const customRelayHttpUrl = localStorage.getItem(inbox.RELAY_HTTP_STORAGE_KEY) || "";
+  const relayHttpUrl = inbox.getRelayHttpUrl();
   const customTurn = peers.getCustomTurnConfig();
 
   render.renderNetworkSettings(main, {
@@ -1674,7 +1683,9 @@ async function showNetworkSettings() {
     notifPermission,
     rtcStatus,
     customSignalingUrl,
+    customRelayHttpUrl,
     customTurn,
+    relayHttpUrl,
   });
 
   bindNetworkSettingsForm();
