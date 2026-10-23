@@ -1577,24 +1577,36 @@ main#app-main {
 
 /* Porta da Cantina (Gate Cultural Anti-Bot) */
 .cantina-dialog {
-  max-width: 440px;
+  max-width: 520px;
+  padding: 0 1.25rem 1.25rem;
   text-align: center;
+  overflow: hidden;
   border-color: rgba(56, 139, 253, 0.35);
   box-shadow: 0 24px 56px rgba(0, 0, 0, 0.5), 0 0 24px rgba(56, 139, 253, 0.18);
 }
 
 .cantina-art-wrap {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-bottom: 0.75rem;
+  display: block;
+  margin: 0 -1.25rem 0.85rem;
+  background: #7eb8d4;
+  overflow: hidden;
 }
 
 .cantina-art-svg {
-  filter: drop-shadow(0 4px 12px rgba(56, 139, 253, 0.25));
+  display: block;
+  width: 100%;
+  height: auto;
+  vertical-align: middle;
+}
+
+.cantina-content {
+  text-align: center;
 }
 
 .cantina-title {
+  margin: 0 0 0.3rem;
+  font-size: 1.35rem;
+  font-weight: 800;
   background: var(--accent-gradient);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -1602,7 +1614,39 @@ main#app-main {
 }
 
 .cantina-quote {
+  margin: 0 0 0.3rem;
+  font-size: 1.02rem;
+  font-weight: 700;
   letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+.cantina-desc {
+  margin: 0 0 0.25rem;
+}
+
+.cantina-easter-egg {
+  font-size: 0.78rem;
+  font-style: italic;
+  margin: 0 0 0.85rem;
+  color: var(--muted);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .cantina-art-svg {
+    animation: cantinaArtIn 0.45s ease;
+  }
+}
+
+@keyframes cantinaArtIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .cantina-btn-enter {

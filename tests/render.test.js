@@ -165,8 +165,12 @@ test("render - renderCantinaGate e closeCantinaGate", () => {
   const html = container.innerHTML;
   assert.ok(html.includes("Porta da Cantina"));
   assert.ok(html.includes("Seus bots vão ter que esperar do lado de fora"));
-  assert.ok(html.includes("Droides e scripts ficam na calçada"));
+  assert.ok(html.includes("Droides e scripts na calçada"));
   assert.ok(html.includes("Não é o bot que você procura"));
+  assert.ok(html.includes("images/cantina-gate.svg"));
+  assert.ok(html.includes("cantina-art-svg"));
+  assert.ok(html.includes("404"));
+  assert.ok(html.includes("bots estilizados"));
   assert.ok(html.includes("btn-cantina-enter"));
   assert.ok(html.includes("Entrar — sou humano"));
   assert.ok(html.includes("O que isso significa?"));
@@ -178,12 +182,12 @@ test("render - renderCantinaGate e closeCantinaGate", () => {
 test("render - renderFeed e renderProfile com persona mock (Helena)", () => {
   const mainFeed = createContainer();
   const topics = [
-    { id: "demo-post-helena", title: "Comunidades livres em vez de reféns do algoritmo", body: "Texto...", image: "images/posts/tour-helena.jpg", author: "vx_demo_helena", communityId: "demo-aprenda-vox", likesCount: 48 },
+    { id: "demo-post-helena", title: "No Insta, ninguém via minhas oficinas", body: "Texto...", image: "images/posts/tour-helena.jpg", author: "vx_demo_helena", communityId: "demo-aprenda-vox", likesCount: 48 },
   ];
   render.renderFeed(mainFeed, topics);
   assert.ok(mainFeed.innerHTML.includes("Helena"));
   assert.ok(mainFeed.innerHTML.includes("@helena"));
-  assert.ok(mainFeed.innerHTML.includes("Comunidades livres"));
+  assert.ok(mainFeed.innerHTML.includes("oficinas"));
   assert.ok(mainFeed.innerHTML.includes("images/avatars/helena.jpg"));
   assert.ok(mainFeed.innerHTML.includes("images/posts/tour-helena.jpg"));
   assert.ok(mainFeed.innerHTML.includes("btn-like"));
@@ -202,7 +206,7 @@ test("render - renderFeed e renderProfile com persona mock (Helena)", () => {
   assert.ok(mainProf.innerHTML.includes("Artesã e educadora popular."));
   assert.ok(mainProf.innerHTML.includes("profile-stats"));
   assert.ok(mainProf.innerHTML.includes("Posts do autor (1)"));
-  assert.ok(mainProf.innerHTML.includes("Comunidades livres"));
+  assert.ok(mainProf.innerHTML.includes("oficinas"));
 });
 
 test("render - formatTimeAgo retorna strings relativas concisas", () => {

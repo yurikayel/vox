@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 240" fill="none" role="img">
+  <title>Porta da Cantina</title>
+  <desc>Desert bar door: hooded guide, 404, stylized bots waiting on the sidewalk, people talking inside.</desc>
+  <!-- Original Vox art. No Octocat, no film frame, no third-party marks. -->
+
+  <rect width="640" height="152" fill="#7eb8d4"/>
+  <rect y="152" width="640" height="88" fill="#f0d9a0"/>
+
+  <ellipse cx="92" cy="156" rx="70" ry="10" fill="#e8cc8c"/>
+  <ellipse cx="300" cy="154" rx="90" ry="8" fill="#e6c888"/>
+  <path d="M0 168h420l40 12H0z" fill="#e4c07a"/>
+  <rect x="400" y="168" width="240" height="8" fill="#d8b46e"/>
+  <rect x="400" y="176" width="240" height="64" fill="#e2c07c"/>
+
+  <ellipse cx="72" cy="148" rx="28" ry="8" fill="#dcc07a"/>
+  <path d="M48 148c6-22 20-34 24-34s18 12 24 34" fill="#c9a86a"/>
+
+  <text x="28" y="108" fill="#fff" font-size="72" font-weight="800" font-family="Segoe UI, Arial, sans-serif" letter-spacing="-2">404</text>
+
+  <g transform="translate(248 58)">
+    <ellipse cx="32" cy="100" rx="22" ry="6" fill="#d4b06a"/>
+    <path d="M10 102c2-42 8-58 22-62 14 4 20 20 22 62-8 6-36 6-44 0z" fill="#4a3326"/>
+    <path d="M16 46c2-28 30-28 32 0-6 8-26 8-32 0z" fill="#3c281e"/>
+    <ellipse cx="32" cy="40" rx="10" ry="11" fill="#e6c4a0"/>
+    <circle cx="28" cy="39" r="1.6" fill="#2a1810"/>
+    <circle cx="36" cy="39" r="1.6" fill="#2a1810"/>
+    <path d="M28 45c2.4 2 6 2 8 0" stroke="#2a1810" stroke-width="1.2" stroke-linecap="round"/>
+    <path d="M12 70c-16-2-24 6-26 14" stroke="#4a3326" stroke-width="9" stroke-linecap="round"/>
+    <path d="M52 70c12 0 22 8 24 14" stroke="#4a3326" stroke-width="9" stroke-linecap="round"/>
+  </g>
+
+  <g transform="translate(348 118)">
+    <ellipse cx="18" cy="46" rx="16" ry="5" fill="#d4b06a"/>
+    <rect x="4" y="4" width="28" height="32" rx="7" fill="#6d7d89"/>
+    <rect x="9" y="13" width="18" height="9" rx="2" fill="#1b242c"/>
+    <circle cx="15" cy="17.5" r="2.3" class="cantina-bot-led" fill="#f5b942"/>
+    <circle cx="23" cy="17.5" r="2.3" class="cantina-bot-led" fill="#f5b942"/>
+    <rect x="8" y="36" width="9" height="9" rx="1.5" fill="#55636d"/>
+    <rect x="19" y="36" width="9" height="9" rx="1.5" fill="#55636d"/>
+    <line x1="18" y1="4" x2="18" y2="-8" stroke="#55636d" stroke-width="2"/>
+    <circle cx="18" cy="-10" r="3.4" fill="#f59e0b"/>
+  </g>
+
+  <g transform="translate(392 142)">
+    <ellipse cx="16" cy="30" rx="14" ry="4" fill="#d4b06a"/>
+    <rect x="2" y="4" width="28" height="20" rx="9" fill="#80919c"/>
+    <rect x="8" y="10" width="16" height="7" rx="2" fill="#1b242c"/>
+    <rect x="6" y="24" width="9" height="7" rx="1.5" fill="#55636d"/>
+    <rect x="17" y="24" width="9" height="7" rx="1.5" fill="#55636d"/>
+    <circle cx="9" cy="7" r="2.2" fill="#9aabb6"/>
+  </g>
+
+  <g transform="translate(418 36)">
+    <rect x="8" y="12" width="196" height="120" rx="8" fill="#c9a36c"/>
+    <rect x="0" y="4" width="212" height="18" rx="4" fill="#b08b52"/>
+    <rect x="18" y="36" width="22" height="28" rx="3" fill="#8a6a3e"/>
+    <rect x="172" y="36" width="22" height="28" rx="3" fill="#8a6a3e"/>
+    <path d="M58 132V72a46 50 0 0 1 92 0v60z" fill="#e8a23a"/>
+    <path class="cantina-door-glow" d="M68 132V76a36 40 0 0 1 72 0v56z" fill="#5c3010"/>
+    <g fill="#2a160c" opacity=".88">
+      <ellipse cx="90" cy="96" rx="8" ry="9"/>
+      <rect x="82" y="104" width="16" height="24" rx="4"/>
+      <ellipse cx="118" cy="94" rx="8" ry="9"/>
+      <rect x="110" y="102" width="16" height="26" rx="4"/>
+    </g>
+    <ellipse cx="104" cy="108" rx="38" ry="26" fill="#f5c14a" opacity=".22"/>
+    <line x1="80" y1="72" x2="80" y2="128" stroke="#3d2210" stroke-width="1.4" opacity=".35"/>
+    <line x1="96" y1="68" x2="96" y2="128" stroke="#3d2210" stroke-width="1.4" opacity=".35"/>
+    <line x1="112" y1="68" x2="112" y2="128" stroke="#3d2210" stroke-width="1.4" opacity=".35"/>
+    <line x1="128" y1="72" x2="128" y2="128" stroke="#3d2210" stroke-width="1.4" opacity=".35"/>
+    <circle cx="104" cy="58" r="5" fill="#ffe08a"/>
+    <line x1="104" y1="22" x2="104" y2="53" stroke="#8a6a3e" stroke-width="2"/>
+  </g>
+</svg>

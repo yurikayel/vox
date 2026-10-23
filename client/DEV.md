@@ -333,19 +333,19 @@ O elenco é desenhado para refletir a diversidade brasileira autêntica, evitand
 
 | # | Autor (`routeId`) | Nome | G | Etnia/Perfil | Dor Externa | Resolução no Vox | Status |
 |---|---|---|---|---|---|---|---|
-| 1 | `vx_demo_helena` | **Helena** | M | Branca | Instagram sufoca alcance orgânico | Comunidades temáticas e feed transparente "Para você" | `now` |
-| 2 | `vx_demo_juliana` | **Juliana** | M | Negra | Comentários e posts somem na Meta | Moderação aberta e auditável via `mod-action` público | `now` |
-| 3 | `vx_demo_yara` | **Yara** | M | Indígena | Extração predatória de dados para IA | Pacto Vox com teto diário e controle pleno no aparelho | `now` |
-| 4 | `vx_demo_mei` | **Mei** | M | Asiática BR | Autoplay viciante e ansiedade no TikTok/Reels | Leitura focada, layout limpo, zero autoplay de vídeos ou sons | `now` |
-| 5 | `vx_demo_fernanda` | **Fernanda** | M | Parda / NE | Feeds cheios de anúncios e seguidores comprados | Zero anúncios pagos e métricas honestas de aparelhos reais | `now` |
-| 6 | `vx_demo_salma` | **Salma** | M | Árabe-BR | Banimento injusto por filtro automatizado | Identidade soberana local (`routeId`) impossível de confiscar | `now` |
-| 7 | `vx_demo_lucas` | **Lucas** | H | Branco | Algoritmo do X que incentiva briga e ódio | Espaço comunitário com governança civilizada | `now` |
-| 8 | `vx_demo_andre` | **André** | H | Negro | Monopólio, clonagens e quedas no WhatsApp | DMs efêmeras P2P ponta a ponta + apoio comunitário via Pix | `now` |
-| 9 | `vx_demo_kaue` | **Kaue** | H | Indígena | Culturas regionais ignoradas nos grandes centros | Memória comunitária preservada a custo zero na rede | `now` |
-| 10 | `vx_demo_raj` | **Raj** | H | Sul-Asiático | Dados em datacenters sob leis estrangeiras | Histórico local no aparelho com caixa postal de 72h | `now` |
+| 1 | `vx_demo_helena` | **Helena** | M | Branca | Instagram só mostra oficina se pagar | Comunidade e feed "Para você", sem impulsionar | `now` |
+| 2 | `vx_demo_juliana` | **Juliana** | M | Negra | Comentário some na Meta sem motivo | Moderação pública: regra e quem aplicou à vista | `now` |
+| 3 | `vx_demo_yara` | **Yara** | M | Indígena | Relatos sugados para treinar IA | Dados no celular; banda e pausa sob o usuário | `now` |
+| 4 | `vx_demo_mei` | **Mei** | M | Asiática BR | Vídeo que toca sozinho (Reels/TikTok) | Leitura em paz: zero autoplay, zero som sozinho | `now` |
+| 5 | `vx_demo_fernanda` | **Fernanda** | M | Parda / NE | Feed de anúncio e seguidor comprado | Sem anúncio no meio da conversa; contas de aparelho real | `now` |
+| 6 | `vx_demo_salma` | **Salma** | M | Árabe-BR | Filtro automático derruba canal | Identidade gerada no aparelho, sem botão remoto | `now` |
+| 7 | `vx_demo_lucas` | **Lucas** | H | Branco | No X, briga ganha alcance | Discordar em comunidade, sem cassino de ódio | `now` |
+| 8 | `vx_demo_andre` | **André** | H | Negro | Quando o Zap cai, o coletivo para | Mensagem de celular pra celular + Pix no perfil | `now` |
+| 9 | `vx_demo_kaue` | **Kaue** | H | Indígena | Cultura do interior só aparece como meme | Comunidade própria; registros nos celulares do grupo | `now` |
+| 10 | `vx_demo_raj` | **Raj** | H | Sul-Asiático | Conversa gravada em servidor estrangeiro | Mensagem no navegador e nos aparelhos; arquivo permanente opcional | `now` |
 
 ### 12.2 Mecanismo de Semeação (`demo-seed.js`)
-- **Idempotência:** A chave `vox-demo-seeded-v3` em `localStorage` sinaliza a carga inicial. Se os 10 itens estiverem presentes, a checagem é instantânea.
+- **Idempotência:** A chave `vox-demo-seeded-v6` em `localStorage` sinaliza a carga inicial (copy falado + fotos de pessoas). Se os 10 itens estiverem presentes, a checagem é instantânea.
 - **Isolamento de Dados:** Os posts são gravados via `cacheNode.saveLocalPost` com `isLocalP2p: true` e metadados `externalPain` e `voxResolution: "now"`, sem poluir o broadcast de outros aparelhos.
 - **Restauração Rápida:** O botão **"🔄 Restaurar tour demo"** em `#/settings/network` (seção Avançado) permite recarregar o conteúdo educativo a qualquer momento para fins de testes e QA.
 
@@ -359,7 +359,7 @@ O PWA traz a vivacidade e o engajamento visual de redes sociais modernas (híbri
   - **💬 Comentar:** Acesso direto à thread de respostas com contador dinâmico.
   - **↗ Compartilhar:** Disparo do `navigator.share` nativo ou cópia direta do link com toast de confirmação.
   - **🔖 Salvar:** Marcação de posts favoritos com feedback em toast.
-- **Cache Offline Completo:** Todas as fotos do tour são cacheadas pelo Service Worker (`CACHE_NAME = "vox-pwa-v5.6-instatwitter"`), garantindo navegação instantânea e offline.
+- **Cache Offline Completo:** Todas as fotos do tour são cacheadas pelo Service Worker (`CACHE_NAME = "vox-pwa-v6.1-tour-copy"`), garantindo navegação instantânea e offline. Copy dos 10 posts em 1ª pessoa falada; fotos de pessoas em contexto (não stock genérico).
 
 ---
 
@@ -432,7 +432,7 @@ A Sprint Feira M1 atende quem utiliza redes sociais para sustento e venda direta
 
 ### 15.4 Isolamento Rígido de Feeds
 - **Zero Mercantilização do Feed Principal:** Ofertas (`type: listing`) são armazenadas no IndexedDB `local-posts` mas são filtradas estritamente fora da timeline "Para você". Conversas e vendas não competem por atenção no mesmo feed.
-- **Comunidade Demo `demo-feira-local`:** Semeada via `demo-seed.js` (`vox-demo-seeded-v4`) com a "Feira do Bairro" e 4 ofertas de personas do tour (Helena, Fernanda, André e Mei).
+- **Comunidade Demo `demo-feira-local`:** Semeada via `demo-seed.js` (`vox-demo-seeded-v6`) com a "Feira do Bairro" e 4 ofertas de personas do tour (Helena, Fernanda, André e Mei).
 
 ---
 
@@ -502,7 +502,7 @@ A sprint v5.11 implementa a governança aberta do Vox inspirada na democracia di
 
 ### 17.6 Cache e PWA
 - Cache do Service Worker atualizado para `vox-pwa-v5.11-governance`, incluindo `./js/governance.js` nos ativos do app shell.
-- Semeador demo idempotente atualizado para a chave `vox-demo-seeded-v5` com propostas e votos simulados.
+- Semeador demo idempotente atualizado para a chave `vox-demo-seeded-v6` (copy falado + fotos de pessoas; propostas e votos simulados).
 - Suite automatizada com **109 testes 100% verdes** (95 Node.js + 14 Python).
 
 ---
@@ -544,7 +544,7 @@ A sprint v6.0 introduz o suporte completo a microapoios comunitários diretos vi
 - Ao clicar em `⚡ Copiar Pix` nos itens da Feira Comunitária, caso o anúncio possua preço numérico associado, o modal de Pix Zap é aberto com aquele valor pré-selecionado e com a descrição preenchida com o título da oferta.
 
 ### 18.5 Cache e PWA
-- Cache do Service Worker atualizado para `vox-pwa-v6.0-pix-zaps`, incluindo `./js/brcode.js` nos ativos do app shell.
+- Cache do Service Worker atualizado para `vox-pwa-v6.1-tour-copy`, incluindo `./js/brcode.js` nos ativos do app shell.
 - Suite automatizada com **117 testes 100% verdes** (103 Node.js + 14 Python).
 
 
