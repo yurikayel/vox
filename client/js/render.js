@@ -46,10 +46,12 @@ export function renderNetworkChip(metrics, rtcStatus, settings) {
   return `<a class="network-chip active" href="#/settings/network" title="Sua rede está ajudando outros aparelhos"><span class="chip-dot"></span><span>${escapeHtml(text)}</span></a>`;
 }
 
+const USER_ICON_SVG = `<svg class="badge-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
+
 function renderWalletBadge(walletAddress) {
   return walletAddress
-    ? `<a class="wallet-badge connected" href="#/perfil">👤 ${escapeHtml(shortId(walletAddress))}</a>`
-    : `<a class="wallet-badge" href="#/perfil">👤 Perfil</a>`;
+    ? `<a class="wallet-badge connected" href="#/perfil">${USER_ICON_SVG}<span>${escapeHtml(shortId(walletAddress))}</span></a>`
+    : `<a class="wallet-badge" href="#/perfil">${USER_ICON_SVG}<span>Perfil</span></a>`;
 }
 
 function renderTabBar(activeTab) {
@@ -62,7 +64,7 @@ function renderTabBar(activeTab) {
   return `
     <aside class="tab-bar">
       <div class="sidebar-brand">
-        <a class="brand-link" href="#/">Vox</a>
+        <a class="brand-link" href="#/"><span class="brand-mark">V</span><span class="brand-text">ox</span></a>
       </div>
       <nav class="tab-nav">
         <a href="#/" class="tab-item ${isHome ? "active" : ""}">
@@ -100,7 +102,7 @@ export function renderShell({ title, subtitle, breadcrumb, walletAddress, active
       <div class="main-column">
         <header class="top-bar">
           <div class="top-brand">
-            <a class="home-link" href="#/">Vox</a>
+            <a class="home-link" href="#/"><span class="brand-mark">V</span><span class="brand-text">ox</span></a>
           </div>
           <div class="top-center">
             ${chipHtml}

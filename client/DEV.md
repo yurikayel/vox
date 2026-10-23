@@ -285,6 +285,18 @@ Para manter a clareza e acolhimento para o usuário leigo, jargões técnicos s�
 
 Regra de ouro: frases curtas (≤ ~8 palavras na interface principal), contraste WCAG testado e zero dependências externas de ícones ou frameworks.
 
+### 10.2 Tokens de Design & Estética Futurista (Glass / Deep Space)
+
+A interface utiliza uma estética translúcida (*glass / deep space*) com profundidade e acabamento refinado:
+- **Mesh de Fundo Sutil (`--mesh-bg`):** Gradiente radial fixo em `.app-layout::before`, conferindo ambiência luminosa sem interferir na leitura.
+- **Painéis Translúcidos (`--glass-bg`, `--glass-blur`):** Header, barra inferior de abas, cards e modais aplicam `backdrop-filter: blur(12px)` (ou 24px em diálogos) e transparência calculada.
+- **Fios Luminosos (`--glass-border`):** Bordas de 1px com translucidez calibrada para modo claro e escuro, definindo limites precisos sem peso visual.
+- **Micro-interações & Acessibilidade:**
+  - Chip de rede com anel de pulso sutil no ponto verde quando conectado.
+  - Botões primários com degradê linear (`--accent-gradient`) e glow em foco (`--accent-glow`).
+  - Fallback via `@supports not (backdrop-filter: blur(1px))` mantendo legibilidade total em navegadores antigos.
+  - Suporte completo a `@media (prefers-reduced-motion: reduce)` suprimindo animações e transições.
+
 ---
 
 ## 11. Arquitetura P2P-First & Conta Local (vox-local-v0)
