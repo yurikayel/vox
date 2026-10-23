@@ -642,19 +642,22 @@ main#app-main {
   display: flex;
   flex-direction: column;
   gap: 0;
-  padding: 0 0 14px 0;
-  background: var(--surface-solid);
+  padding: 0;
+  background: transparent;
   border: none;
   border-radius: 0;
-  border-bottom: 1px solid var(--border-subtle);
   margin: 0 auto;
   max-width: var(--feed-max, 500px);
   overflow: hidden;
   position: relative;
 }
 
+.feed-container > .post:not(:last-child) {
+  margin-bottom: 24px;
+}
+
 .post:hover {
-  background: var(--surface-solid);
+  background: transparent;
 }
 
 .post-layout-text .post-header-ig,
@@ -843,8 +846,6 @@ main#app-main {
   margin: 0;
   border-radius: 0;
   border: none;
-  border-top: 1px solid var(--border-subtle);
-  border-bottom: 1px solid var(--border-subtle);
   background: #000;
   width: 100%;
   aspect-ratio: 4 / 5;
@@ -868,8 +869,8 @@ main#app-main {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 14px;
-  background: var(--surface-solid);
+  padding: 12px 14px 10px;
+  background: transparent;
 }
 
 .post-header-user {
@@ -917,7 +918,7 @@ main#app-main {
 }
 
 .post-caption-block {
-  padding: 8px 14px 4px 14px;
+  padding: 10px 14px 12px;
 }
 
 .post-caption-block .post-title {
@@ -949,8 +950,8 @@ main#app-main {
   justify-content: space-between;
   width: 100%;
   max-width: none;
-  margin-top: 4px;
-  padding: 8px 10px 4px 10px;
+  margin-top: 2px;
+  padding: 10px 12px 8px;
   border-top: none;
 }
 
