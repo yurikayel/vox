@@ -134,40 +134,99 @@ function renderWalletBadge(walletAddress) {
   return `<a class="wallet-badge account-access connected" href="#/perfil" title="${escapeHtml(tip)}" aria-label="Perfil de ${escapeHtml(display)}">${USER_ICON_SVG}<span class="wallet-badge-label">${escapeHtml(shortName)}</span></a>`;
 }
 
-function renderTabBar(activeTab) {
+export function renderFeedNav(activeFeed = "for-you") {
+  const isForYou = activeFeed !== "following";
+  return `
+    <nav class="sidebar-feed-nav" aria-label="Alternar feed">
+      <a href="#/" class="sidebar-feed-tab ${isForYou ? "active" : ""}"${isForYou ? ' aria-current="page"' : ""}>
+        <span class="sidebar-feed-icon" aria-hidden="true">${ICONS.home}</span>
+        <span class="sidebar-feed-label">Para você</span>
+      </a>
+      <a href="#/?feed=following" class="sidebar-feed-tab ${!isForYou ? "active" : ""}"${!isForYou ? ' aria-current="page"' : ""}>
+        <span class="sidebar-feed-icon" aria-hidden="true">${ICONS.communities}</span>
+        <span class="sidebar-feed-label">Seguindo</span>
+      </a>
+    </nav>`;
+}
+
+function attachSidebarBehavior() {
+  const layout = document.querySelector(".app-layout");
+  const btn = document.getElementById("sidebar-collapse-btn");
+  const backdrop = document.getElementById("sidebar-backdrop");
+  if (!layout || !btn || btn.dataset.bound === "1") return;
+  btn.dataset.bound = "1";
+
+  const desktopMq = window.matchMedia("(min-width: 768px)");
+  if (desktopMq.matches && localStorage.getItem("vox-sidebar-collapsed") === "1") {
+    layout.classList.add("sidebar-collapsed");
+    btn.setAttribute("aria-expanded", "false");
+  }
+
+  btn.addEventListener("click", () => {
+    if (desktopMq.matches) {
+      layout.classList.toggle("sidebar-collapsed");
+      const collapsed = layout.classList.contains("sidebar-collapsed");
+      localStorage.setItem("vox-sidebar-collapsed", collapsed ? "1" : "0");
+      btn.setAttribute("aria-expanded", collapsed ? "false" : "true");
+      return;
+    }
+    layout.classList.toggle("sidebar-drawer-open");
+    if (backdrop) backdrop.hidden = !layout.classList.contains("sidebar-drawer-open");
+  });
+
+  backdrop?.addEventListener("click", () => {
+    layout.classList.remove("sidebar-drawer-open");
+    backdrop.hidden = true;
+  });
+}
+
+function renderSidebar(activeTab, { showFeedNav, activeFeed, chipHtml, walletBadge }) {
   const isHome = activeTab === "home";
   const isComm = activeTab === "communities";
   const isCompose = activeTab === "compose";
   const isDm = activeTab === "dm";
   const isProfile = activeTab === "profile" || activeTab === "wallet";
+  const feedNav = showFeedNav ? renderFeedNav(activeFeed) : "";
 
   return `
-    <aside class="tab-bar">
-      <div class="sidebar-brand">
-        <a class="brand-link" href="#/"><span class="brand-mark">V</span><span class="brand-text">ox</span></a>
+    <div class="sidebar-backdrop" id="sidebar-backdrop" hidden aria-hidden="true"></div>
+    <aside class="app-sidebar tab-bar" id="app-sidebar" aria-label="Navegação principal">
+      <div class="sidebar-scroll">
+        <div class="sidebar-brand">
+          <a class="brand-link" href="#/"><span class="brand-mark">V</span><span class="brand-text">ox</span></a>
+        </div>
+        ${feedNav}
+        <nav class="tab-nav" aria-label="Seções">
+          <a href="#/" class="tab-item ${isHome ? "active" : ""}"${isHome ? ' aria-current="page"' : ""}>
+            <span class="tab-icon">${ICONS.home}</span>
+            <span class="tab-label">Início</span>
+          </a>
+          <a href="#/communities" class="tab-item ${isComm ? "active" : ""}"${isComm ? ' aria-current="page"' : ""}>
+            <span class="tab-icon">${ICONS.communities}</span>
+            <span class="tab-label">Comunidades</span>
+          </a>
+          <a href="#/compose/topic" class="tab-item compose-tab ${isCompose ? "active" : ""}"${isCompose ? ' aria-current="page"' : ""}>
+            <span class="tab-icon">${ICONS.compose}</span>
+            <span class="tab-label">Postar</span>
+          </a>
+          <a href="#/dm" class="tab-item ${isDm ? "active" : ""}"${isDm ? ' aria-current="page"' : ""}>
+            <span class="tab-icon">${ICONS.dm}</span>
+            <span class="tab-label">Mensagens</span>
+          </a>
+          <a href="#/perfil" class="tab-item ${isProfile ? "active" : ""}"${isProfile ? ' aria-current="page"' : ""}>
+            <span class="tab-icon">${ICONS.profile}</span>
+            <span class="tab-label">Perfil</span>
+          </a>
+        </nav>
+        <div class="sidebar-footer">
+          <span class="sidebar-sync-hint" id="top-sync-hint" hidden aria-live="polite"></span>
+          ${chipHtml}
+          ${walletBadge}
+        </div>
       </div>
-      <nav class="tab-nav">
-        <a href="#/" class="tab-item ${isHome ? "active" : ""}">
-          <span class="tab-icon">${ICONS.home}</span>
-          <span class="tab-label">Início</span>
-        </a>
-        <a href="#/communities" class="tab-item ${isComm ? "active" : ""}">
-          <span class="tab-icon">${ICONS.communities}</span>
-          <span class="tab-label">Comunidades</span>
-        </a>
-        <a href="#/compose/topic" class="tab-item compose-tab ${isCompose ? "active" : ""}">
-          <span class="tab-icon">${ICONS.compose}</span>
-          <span class="tab-label">Postar</span>
-        </a>
-        <a href="#/dm" class="tab-item ${isDm ? "active" : ""}">
-          <span class="tab-icon">${ICONS.dm}</span>
-          <span class="tab-label">Mensagens</span>
-        </a>
-        <a href="#/perfil" class="tab-item ${isProfile ? "active" : ""}">
-          <span class="tab-icon">${ICONS.profile}</span>
-          <span class="tab-label">Perfil</span>
-        </a>
-      </nav>
+      <button type="button" class="sidebar-collapse-btn" id="sidebar-collapse-btn" aria-expanded="true" aria-controls="app-sidebar" aria-label="Recolher ou expandir menu">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
     </aside>`;
 }
 
@@ -183,35 +242,38 @@ export function updateTopBarSync(active, detail = "") {
   }
 }
 
-export function renderShell({ title, subtitle, breadcrumb, walletAddress, activeTab = "home", metrics, rtcStatus, settings }) {
+export function renderShell({
+  title,
+  subtitle,
+  breadcrumb,
+  walletAddress,
+  activeTab = "home",
+  metrics,
+  rtcStatus,
+  settings,
+  activeFeed = "for-you",
+  showFeedNav = false,
+}) {
   const chipHtml = renderNetworkChip(metrics, rtcStatus, settings);
   const walletBadge = renderWalletBadge(walletAddress);
-  const tabBarHtml = renderTabBar(activeTab);
+  const sidebarHtml = renderSidebar(activeTab, { showFeedNav, activeFeed, chipHtml, walletBadge });
   const pageTitle = title ? `<span class="top-bar-title">${escapeHtml(title)}</span>` : "";
+  const topBarHtml = title
+    ? `<header class="top-bar"><div class="top-bar-start">${pageTitle}</div></header>`
+    : "";
 
   root().innerHTML = `
     <div class="app-layout">
-      ${tabBarHtml}
+      ${sidebarHtml}
       <div class="main-column">
-        <header class="top-bar">
-          <div class="top-bar-start">
-            <div class="top-brand">
-              <a class="home-link" href="#/"><span class="brand-mark">V</span><span class="brand-text">ox</span></a>
-            </div>
-            ${pageTitle}
-          </div>
-          <div class="top-bar-end">
-            <span class="top-sync-hint" id="top-sync-hint" hidden aria-live="polite"></span>
-            ${chipHtml}
-            ${walletBadge}
-          </div>
-        </header>
+        ${topBarHtml}
         <main id="app-main"></main>
         <footer class="app-footer">Vox · Comunidades e mensagens nos seus aparelhos · <a href="./proposta-vox.html" target="_blank">Proposta</a></footer>
       </div>
     </div>
   `;
 
+  attachSidebarBehavior();
   const main = document.getElementById("app-main");
   if (breadcrumb) main.insertAdjacentHTML("afterbegin", breadcrumb);
   return main;
@@ -680,12 +742,6 @@ export function renderFeed(main, topics = [], { activeFeed = "for-you", userRout
   const displayName = userRouteId ? mock.getAuthorDisplay(userRouteId) : "";
   let html = `
     <div class="feed-chrome">
-      <div class="feed-header sticky-header">
-        <div class="feed-segmented-nav">
-          <a href="#/" class="feed-tab ${isForYou ? "active" : ""}">Para você</a>
-          <a href="#/?feed=following" class="feed-tab ${!isForYou ? "active" : ""}">Seguindo</a>
-        </div>
-      </div>
       ${renderStoriesStrip()}
       <div class="feed-composer-section">
         ${renderInlineComposer({ userRouteId, displayName })}
