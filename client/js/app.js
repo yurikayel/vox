@@ -153,6 +153,17 @@ function collapseInlineComposer() {
   form.classList.add("hidden");
   collapsed.classList.remove("hidden");
   collapsed.setAttribute("aria-expanded", "false");
+  collapsed.focus();
+}
+
+function syncInlineComposerUi() {
+  const textarea = document.getElementById("inline-topic-body");
+  const btn = document.getElementById("btn-inline-submit");
+  const charEl = document.getElementById("inline-topic-char");
+  const len = textarea?.value?.length || 0;
+  const hasText = Boolean(textarea?.value?.trim());
+  if (charEl) charEl.textContent = `${len} / 2000`;
+  if (btn) btn.disabled = !hasText;
 }
 
 function expandInlineComposer() {
@@ -163,7 +174,9 @@ function expandInlineComposer() {
   collapsed.classList.add("hidden");
   form.classList.remove("hidden");
   collapsed.setAttribute("aria-expanded", "true");
-  document.getElementById("inline-topic-body")?.focus();
+  const textarea = document.getElementById("inline-topic-body");
+  textarea?.focus();
+  syncInlineComposerUi();
 }
 
 function attachInlineComposerHandlers(onPublished) {
@@ -209,6 +222,18 @@ function attachInlineComposerHandlers(onPublished) {
     clearImage();
   });
 
+  const textarea = document.getElementById("inline-topic-body");
+  textarea?.addEventListener("input", syncInlineComposerUi);
+  form?.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      e.preventDefault();
+      form.reset();
+      clearImage();
+      syncInlineComposerUi();
+      collapseInlineComposer();
+    }
+  });
+
   form?.addEventListener("submit", async (e) => {
     e.preventDefault();
     const btn = document.getElementById("btn-inline-submit");
@@ -217,9 +242,7 @@ function attachInlineComposerHandlers(onPublished) {
       document.getElementById("inline-topic-comm")?.value?.trim().toLowerCase() || "geral";
     if (!bodyRaw) return;
 
-    const firstLine = bodyRaw.split("\n")[0].trim();
-    const title = firstLine.slice(0, 120) || "Publicação";
-    const body = bodyRaw;
+    const { title, body } = postOwnership.deriveTopicTitleFromBody(bodyRaw);
 
     if (btn) {
       btn.disabled = true;
@@ -2310,19 +2333,30 @@ async function openPostEditModal(postId) {
     body: existing.body || "",
     hasImage: Boolean(existing.image),
   });
+  const editTextarea = container.querySelector("#post-edit-text");
+  const editChar = container.querySelector("#post-edit-char");
+  const syncEditChar = () => {
+    const len = editTextarea?.value?.length || 0;
+    if (editChar) editChar.textContent = `${len} / 5000`;
+  };
+  editTextarea?.addEventListener("input", syncEditChar);
+  editTextarea?.focus();
   const overlay = container.querySelector("#post-edit-modal-overlay");
   overlay?.addEventListener("click", (ev) => {
     if (ev.target === overlay) closePostEditModalUi();
   });
   container.querySelector(".btn-close-post-edit")?.addEventListener("click", closePostEditModalUi);
   container.querySelector(".btn-cancel-post-edit")?.addEventListener("click", closePostEditModalUi);
+  overlay?.addEventListener("keydown", (ev) => {
+    if (ev.key === "Escape") closePostEditModalUi();
+  });
   container.querySelector("#form-post-edit")?.addEventListener("submit", async (ev) => {
     ev.preventDefault();
     const btn = document.getElementById("btn-post-edit-save");
-    const title = document.getElementById("post-edit-title")?.value?.trim() || "";
-    const body = document.getElementById("post-edit-body")?.value?.trim() || "";
+    const textRaw = document.getElementById("post-edit-text")?.value?.trim() || "";
+    const { title, body } = postOwnership.deriveTopicTitleFromBody(textRaw);
     const removeImage = Boolean(document.getElementById("post-edit-remove-image")?.checked);
-    if (!title || !body) return;
+    if (!textRaw || !title || !body) return;
     if (btn) {
       btn.disabled = true;
       btn.textContent = "Salvando…";

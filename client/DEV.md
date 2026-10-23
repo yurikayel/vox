@@ -622,7 +622,7 @@ Feed com fundo cinza extremo (`#fafafa` / `#000`), coluna `--feed-max: 500px`, p
 Toolbar tripartida mantém Zap, estrela, copiar MD e bookmark.
 
 ### 21.2 Composer inline (estilo X)
-- `renderInlineComposer`: repouso = uma linha; foco expande textarea, anexo de imagem (`FileReader` → `post.image`), comunidade opcional e **Postar** na mesma janela (`attachInlineComposerHandlers` em `app.js`).
+- `renderInlineComposer`: repouso = uma linha; foco expande textarea, contador `0 / 2000`, **Postar** desabilitado até haver texto, **Esc** recolhe, anexo de imagem (`FileReader` → `post.image`), comunidade opcional (`attachInlineComposerHandlers` em `app.js`).
 - `#/compose/topic` permanece como deep-link / formulário completo.
 
 ### 21.3 Stories strip
@@ -630,13 +630,14 @@ Toolbar tripartida mantém Zap, estrela, copiar MD e bookmark.
 
 ### 21.4 Editar / apagar posts locais
 - **Escopo:** Somente posts gravados no aparelho via `cacheNode.saveLocalPost`, com `sig` ECDSA e `author` igual ao `routeId` ativo (`vx_…`). Posts do tour/demo (`mock.js`) não têm assinatura local — menu oculto; tentativa programática exibe toast *"Só é possível editar/apagar posts seus."*
-- **UI:** Botões **Editar** / **Apagar** no header do card (`renderPostOwnerMenu`) e na página `#/t/:id`. Edição abre modal (`renderPostEditModal`); exclusão usa `confirm()` nativo.
+- **UI:** Botões **Editar** / **Apagar** no header do card (`renderPostOwnerMenu`) e na página `#/t/:id`. Edição abre modal (`renderPostEditModal`, campo único + contador); exclusão usa `confirm()` nativo.
+- **Exibição sem duplicata:** Compositor inline grava `title` = primeira linha e `body` = texto integral; `formatPostDisplay` + `renderPostTextHtml` mostram **uma** linha quando são iguais (modo caption), e título + resto em posts multilinha.
 - **Persistência:** `deleteLocalPost(id)` remove do IndexedDB; edição reutiliza `saveLocalPost` (mesmo `id`, `ts` original, `editedAt` novo) após `localAccount.signPayload`.
 - **Gossip:** Não há evento `GOSSIP_DELETE` na malha atual — remoção/edição são **locais neste aparelho**; pares que já receberam o post via gossip mantêm cópia até implementação futura de retratação.
 
 ### 21.5 Cache e PWA
-- Cache elevado para `vox-pwa-v6.4-edit-delete-post`.
-- Suíte automatizada com **139+ testes** (Node.js + Python relay).
+- Cache elevado para `vox-pwa-v6.4-post-display-refine`.
+- Suíte automatizada com **147 testes** (133 Node.js + 14 Python relay).
 
 
 
