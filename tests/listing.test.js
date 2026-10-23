@@ -2,6 +2,7 @@ import "../tests/setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import * as listing from "../client/js/listing.js";
+import * as localAccount from "../client/js/local-account.js";
 
 test("listing - isCommercialEnabled reconhece flag booleana e tags", () => {
   assert.equal(listing.isCommercialEnabled(null), false);
@@ -69,4 +70,24 @@ test("listing - validateListingInput rejeita títulos vazios, descrição ausent
   assert.ok(bodyVal.error.includes("Descrição muito longa"));
 
   assert.equal(listing.validateListingInput({ title: "Título", body: "Descrição" }).valid, true);
+});
+
+test("listing - gossip v1.1 assina oferta e valida retratação de status", async () => {
+  const draft = listing.buildListingDraft({
+    id: "listing_test_1",
+    communityId: "demo-feira-local",
+    title: "Pão artesanal",
+    body: "Entrega no bairro.",
+    priceLabel: "28",
+  });
+  const signed = await localAccount.signPayload(draft);
+  const check = listing.validateSignedListingGossip(signed);
+  assert.equal(check.valid, true);
+  assert.ok(signed.sig);
+
+  const statusPatch = listing.buildListingStatusUpdate(signed, "sold");
+  const signedUpdate = await localAccount.signPayload(statusPatch);
+  assert.equal(signedUpdate.listingStatus, "sold");
+  assert.ok(signedUpdate.editedAt > 0);
+  assert.equal(await localAccount.verifyPayload(signedUpdate), true);
 });

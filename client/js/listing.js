@@ -6,6 +6,74 @@
 export const LISTING_DISCLAIMER =
   "O Vox não intermedia pagamento nem cobra taxas. Combine no DM e use Pix direto.";
 
+export const LISTING_TYPE = "listing";
+
+export function isListingItem(item) {
+  return item?.type === LISTING_TYPE;
+}
+
+/** Campos mínimos antes de `localAccount.signPayload` (gossip v1.1). */
+export function buildListingDraft({
+  id,
+  communityId,
+  title,
+  body,
+  priceLabel = "",
+  locationLabel = "",
+  contactPix = "",
+  image = "",
+  listingStatus = "available",
+  author,
+  owner,
+  ts,
+}) {
+  return {
+    id,
+    type: LISTING_TYPE,
+    communityId,
+    title: String(title || "").trim(),
+    body: String(body || "").trim(),
+    priceLabel: normalizePriceLabel(priceLabel),
+    locationLabel: normalizeLocationLabel(locationLabel),
+    contactPix: String(contactPix || "").trim(),
+    image: String(image || "").trim(),
+    listingStatus: normalizeListingStatus(listingStatus),
+    author,
+    owner: owner || author,
+    ts: ts || Date.now(),
+  };
+}
+
+export function stripListingSignatureFields(item) {
+  if (!item) return null;
+  const { sig, pubKey, ...rest } = item;
+  return rest;
+}
+
+/** Atualização assinada de status (vendido/reservado) via GOSSIP_UPDATE. */
+export function buildListingStatusUpdate(base, listingStatus) {
+  const clean = stripListingSignatureFields(base);
+  if (!clean?.id) throw new Error("Oferta inválida");
+  return {
+    ...clean,
+    type: LISTING_TYPE,
+    listingStatus: normalizeListingStatus(listingStatus),
+    editedAt: Date.now(),
+  };
+}
+
+export function validateSignedListingGossip(item) {
+  if (!isListingItem(item)) {
+    return { valid: false, error: "tipo inválido" };
+  }
+  if (!item.sig || !item.pubKey || !item.author) {
+    return { valid: false, error: "oferta não assinada" };
+  }
+  const val = validateListingInput({ title: item.title, body: item.body, priceLabel: item.priceLabel });
+  if (!val.valid) return val;
+  return { valid: true, error: null };
+}
+
 export function isCommercialEnabled(communityMeta) {
   if (!communityMeta) return false;
   if (communityMeta.commercialEnabled === true || communityMeta.commercialEnabled === "true") {

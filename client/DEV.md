@@ -2,7 +2,9 @@
 
 Este documento descreve como testar o fluxo de leitura, autoria (upload de transações), compartilhamento, governança e a rede de nós participativos (Fase 3) no PWA vanilla do Vox.
 
-**Malha P2P / handoff Antigravity:** ver [`docs/antigravity-operating.md`](../docs/antigravity-operating.md). **Cache offline:** valor canônico em `CACHE_NAME` dentro de [`sw.js`](./sw.js) (não duplicar string fixa nos parágrafos abaixo — hoje `vox-pwa-v6.15-infra-participation-ui`).
+**Malha P2P / handoff Antigravity:** ver [`docs/antigravity-operating.md`](../docs/antigravity-operating.md). **Cache offline:** valor canônico em `CACHE_NAME` dentro de [`sw.js`](./sw.js) (não duplicar string fixa nos parágrafos abaixo — consulte o arquivo).
+
+**Release line:** após cada merge em `main`, confira SHA (`git rev-parse --short HEAD`), rode `npm test` (**194** testes: **180** JS + **14** Python) e anote o `CACHE_NAME` vigente. Usuários em Pages precisam de **hard refresh** para pegar shell novo.
 
 ---
 
@@ -31,7 +33,7 @@ Abra no navegador: `http://127.0.0.1:8080/`
 
 ### 1.1 Executar Testes Unitários Locais (Tudo)
 
-O Vox inclui suíte completa de testes unitários locais (187 testes: 173 client JS + 14 relay/signaling Python), sem dependências pesadas externas:
+O Vox inclui suíte completa de testes unitários locais (**194** testes: **180** client JS + **14** relay/signaling Python), sem dependências pesadas externas:
 
 ```bash
 # Na raiz do repositório vox/
@@ -60,7 +62,7 @@ As pipelines em `.github/workflows/` rodam automaticamente no GitHub:
 1. **`ci.yml`:**
    - Disparado em todo `push` ou `pull_request` na branch `main`.
    - Executa matriz de testes no Node.js (22 e 24) e Python (3.11 e 3.12).
-   - Valida checagem estática de sintaxe e executa os 187 testes unitários.
+   - Valida checagem estática de sintaxe e executa os **194** testes unitários.
    - Auditoria de segurança: verifica que nenhuma chave privada foi commitada acidentalmente.
 2. **`deploy-pages.yml`:**
    - Publica o site composto (`client/**` + `docs/proposta-vox.html`) no GitHub Pages a cada alteração em `client/**` ou `docs/**`.

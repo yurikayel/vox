@@ -1,7 +1,16 @@
 import * as cacheNode from "./cache-node.js";
 import * as webrtcPeer from "./webrtc-peer.js";
 import * as localAccount from "./local-account.js";
+import * as manifestMesh from "./peers-cache-manifest.js";
 import { getRelayHttpUrl } from "./inbox.js";
+
+export {
+  collectPriorityPinTxIds,
+  getLatestManifestForCommunity,
+  isManifestPriorityTx,
+  listKnownManifests,
+  buildCacheManifestGossipDraft,
+} from "./peers-cache-manifest.js";
 
 const PEER_SETTINGS_KEY = "vox-peer-settings";
 const PEER_METRICS_KEY = "vox-peer-metrics";
@@ -296,6 +305,25 @@ export async function handleVoxMessage(msg, replyFn, source = "broadcast") {
   if (msg.type === "GOSSIP_DELETE" && (msg.item || msg.tombstone)) {
     await handleGossipDeleteMessage(msg.tombstone || msg.item, source);
   }
+
+  if (msg.type === "CACHE_MANIFEST" && msg.item) {
+    await handleCacheManifestMessage(msg.item, source);
+  }
+}
+
+async function handleCacheManifestMessage(item, source = "rtc") {
+  const result = await manifestMesh.ingestSignedCacheManifestItem(item, localAccount.verifyPayload);
+  if (!result.ok || result.skipped) return;
+
+  const payload = { type: "CACHE_MANIFEST", item, fromPeer: myPeerId };
+  if (source !== "broadcast" && broadcastChannel) {
+    try {
+      broadcastChannel.postMessage(payload);
+    } catch {}
+  }
+  if (source !== "rtc") {
+    webrtcPeer.broadcastRtcMessage(payload);
+  }
 }
 
 async function handleGossipMessage(item, source = "rtc") {
@@ -419,6 +447,28 @@ export function broadcastGossipDelete(tombstone) {
   webrtcPeer.broadcastRtcMessage(payload);
 }
 
+export function broadcastCacheManifest(item) {
+  if (!item?.id || item.type !== "cache-manifest") return;
+  const payload = { type: "CACHE_MANIFEST", item, fromPeer: myPeerId };
+  if (broadcastChannel) {
+    try {
+      broadcastChannel.postMessage(payload);
+    } catch {}
+  }
+  webrtcPeer.broadcastRtcMessage(payload);
+}
+
+export async function publishSignedCacheManifest(manifestBody) {
+  const draft = manifestMesh.buildCacheManifestGossipDraft({
+    communityId: manifestBody?.communityId,
+    manifest: manifestBody,
+  });
+  const signed = await localAccount.signPayload(draft);
+  await manifestMesh.ingestSignedCacheManifestItem(signed, localAccount.verifyPayload);
+  broadcastCacheManifest(signed);
+  return signed;
+}
+
 export function initPeerChannel() {
   const settings = getPeerSettings();
 
@@ -523,19 +573,28 @@ function requestFromRtc(txId, timeoutMs = 2000) {
   );
 }
 
-export async function requestTxFromPeers(txId) {
+export async function requestTxFromPeers(txId, opts = {}) {
   const settings = getPeerSettings();
   if (!settings.enabled) return null;
 
-  // 1. Tenta BroadcastChannel local (timeout 600ms)
+  const priority =
+    opts.priority === true || manifestMesh.isManifestPriorityTx(txId);
+
+  const tryRtcFirst =
+    priority && settings.webrtcEnabled && webrtcPeer.getConnectedRtcPeersCount() > 0;
+
+  if (tryRtcFirst) {
+    const rtcResult = await requestFromRtc(txId, 2500);
+    if (rtcResult) return rtcResult;
+  }
+
   if (broadcastChannel) {
-    const localResult = await requestFromBroadcast(txId, 600);
+    const localResult = await requestFromBroadcast(txId, priority ? 900 : 600);
     if (localResult) return localResult;
   }
 
-  // 2. Tenta WebRTC DataChannel se houver pares remotos conectados (timeout 2000ms)
-  if (settings.webrtcEnabled && webrtcPeer.getConnectedRtcPeersCount() > 0) {
-    const rtcResult = await requestFromRtc(txId, 2000);
+  if (!tryRtcFirst && settings.webrtcEnabled && webrtcPeer.getConnectedRtcPeersCount() > 0) {
+    const rtcResult = await requestFromRtc(txId, priority ? 2500 : 2000);
     if (rtcResult) return rtcResult;
   }
 
