@@ -153,7 +153,7 @@ Para validar o *Definition of Done* da Fase 2:
 ### 5.3 Service Worker e Background Relay
 1. Abra as Ferramentas do Desenvolvedor (F12) -> aba **Application** -> **Service Workers**:
    * O arquivo `sw.js` deve estar com status **Activated and running** com escopo `./`.
-2. Na aba **Cache Storage**, certifique-se de que o cache `vox-pwa-v6.4-post-display-refine` contém os arquivos estáticos pré-cacheados (`index.html`, `style.css`, módulos `.js`).
+2. Na aba **Cache Storage**, certifique-se de que o cache vigente (`vox-pwa-v6.7-ui-polish` — ver `CACHE_NAME` em `sw.js`) contém os arquivos estáticos pré-cacheados (`index.html`, `style.css`, módulos `.js`, incl. `inline-composer.js` e `composer-media.js`).
 3. Em `#/settings/network`, ative a opção **"Atuar em segundo plano via Service Worker"** e clique em **"Ativar Notificações de Status"**:
    * Ao autorizar permissão no navegador, o Service Worker sincroniza a configuração via mensagem `VOX_SETTINGS_UPDATED`.
 
@@ -648,8 +648,8 @@ Toolbar tripartida mantém Zap, estrela, copiar MD e bookmark.
 - **Gossip Retratação (v1):** Eventos `GOSSIP_UPDATE` e `GOSSIP_DELETE` propagam na malha `vox-local-v0`. Edições exigem assinatura válida do autor original e `editedAt` estritamente maior que a versão local (LWW). Exclusões gravam tombstone assinado (`post-tombstone`) no IndexedDB (`saveTombstone`), ocultando o post do feed e blindando contra ressurreição por creates atrasados.
 
 ### 21.5 Cache e PWA
-- Cache elevado para `vox-pwa-v6.8-gossip-retract`.
-- Suíte automatizada com **157 testes** (143 Node.js + 14 Python relay).
+- Cache vigente (único): `vox-pwa-v6.10-gossip-retract-ui` (`client/sw.js` → `CACHE_NAME`; gossip v1 + UI prep).
+- Suíte automatizada com **164 testes** (150 Node.js + 14 Python relay).
 
 ---
 
