@@ -859,9 +859,6 @@ async function showComposeReply(topicId, communityId) {
     });
   }
 }
-    });
-  }
-}
 
 function bindNetworkSettingsForm() {
   const form = document.getElementById("form-network-settings");
