@@ -1982,6 +1982,70 @@ export function closePostEditModal(container) {
   if (container) container.innerHTML = "";
 }
 
+const PARTICIPATION_LAYERS = [
+  {
+    id: "passive",
+    title: "Passivo",
+    desc: "Você navega e publica, mas não repassa cache nem ajuda outros aparelhos. Ideal para economizar dados ou pausar a contribuição.",
+    control: '<a class="participation-link" href="#net-pause">Pausar ajuda à rede (modo somente leitura)</a>',
+  },
+  {
+    id: "active",
+    title: "Ativo",
+    desc: "Padrão do Pacto Vox: entrega leve de conteúdo público já em cache, com tetos de banda, limite de disco e preferência por Wi-Fi.",
+    control: '<span class="meta">Desmarque “Pausar ajuda” e ajuste os limites abaixo.</span>',
+  },
+  {
+    id: "supporter",
+    title: "Apoiador",
+    desc: "Prioriza os espaços digitais em que você participa: o compartilhamento na malha foca nas suas comunidades, não no feed global inteiro.",
+    control: '<a class="participation-link" href="#net-comm-only-wrap">Compartilhar apenas minhas comunidades</a> (<code>commOnly</code>)',
+  },
+  {
+    id: "steward",
+    title: "Steward",
+    desc: "Apoia a malha com relay desktop ou servidor de conexão (LAN/VPS), espelhando índices e sinalização para quem está por perto.",
+    control: '<a class="participation-link" href="#net-relay-steward">Relay e servidor de conexão</a>',
+  },
+];
+
+/** Camada inferida para destaque na UI (não persiste estado separado). */
+export function inferParticipationLayer(settings = {}, { customSignalingUrl = "" } = {}) {
+  if (settings.enabled === false) return "passive";
+  const signaling = String(customSignalingUrl || "").trim();
+  if (settings.backgroundRelay || signaling) return "steward";
+  if (settings.commOnly) return "supporter";
+  return "active";
+}
+
+function renderParticipationLayers(settings, customSignalingUrl) {
+  const current = inferParticipationLayer(settings, { customSignalingUrl });
+  const cards = PARTICIPATION_LAYERS.map((layer) => {
+    const isCurrent = layer.id === current;
+    const border = isCurrent ? "border:2px solid var(--accent);" : "border:1px solid var(--border);";
+    const badge = isCurrent
+      ? `<span class="pill" style="font-size:0.7rem; margin-left:0.35rem;">Você está aqui</span>`
+      : "";
+    return `
+      <div class="participation-layer" data-layer="${layer.id}" style="${border} border-radius:var(--radius-sm); padding:0.65rem 0.75rem; margin-bottom:0.5rem;">
+        <div style="font-weight:600; font-size:0.9rem;">${escapeHtml(layer.title)}${badge}</div>
+        <p class="desc" style="font-size:0.8rem; margin:0.35rem 0;">${escapeHtml(layer.desc)}</p>
+        <div style="font-size:0.8rem;">${layer.control}</div>
+      </div>`;
+  }).join("");
+
+  return `
+    <details class="advanced-settings participation-layers">
+      <summary>Camadas de participação (Passivo → Steward)</summary>
+      <div style="margin-top:0.75rem;">
+        <p class="desc" style="font-size:0.8rem; margin:0 0 0.75rem;">
+          Opt-in em etapas: ninguém precisa virar steward para usar o Vox. Escolha o nível que combina com seu aparelho e com os espaços digitais que você habita.
+        </p>
+        ${cards}
+      </div>
+    </details>`;
+}
+
 function renderNetworkHeader(isEnabled, relayStatus, rtcStatus) {
   const rtcCount = rtcStatus?.remotePeersConnected || 0;
   const statusBadge = isEnabled
@@ -2087,10 +2151,12 @@ function renderNetworkForm(settings, notifPermission, customSignalingUrl, custom
           <label for="net-wifi" style="margin:0;">Ajudar apenas quando estiver no Wi-Fi</label>
         </div>
 
-        <div class="form-group" style="display:flex; align-items:center; gap:0.6rem;">
+        <div id="net-comm-only-wrap" class="form-group" style="display:flex; align-items:center; gap:0.6rem;">
           <input type="checkbox" id="net-comm-only" ${settings?.commOnly ? "checked" : ""} style="width:1rem; height:1rem;" />
-          <label for="net-comm-only" style="margin:0;">Compartilhar apenas minhas comunidades</label>
+          <label for="net-comm-only" style="margin:0;">Compartilhar apenas minhas comunidades (camada Apoiador)</label>
         </div>
+
+        ${renderParticipationLayers(settings, customSignalingUrl)}
 
         <div class="form-group" style="display:flex; align-items:center; gap:0.6rem;">
           <input type="checkbox" id="net-webrtc" ${settings?.webrtcEnabled !== false ? "checked" : ""} style="width:1rem; height:1rem;" />
@@ -2099,8 +2165,8 @@ function renderNetworkForm(settings, notifPermission, customSignalingUrl, custom
 
         <details class="advanced-settings">
           <summary>Avançado (Conexões e Servidores)</summary>
-          <div style="margin-top:0.75rem;">
-            <p class="desc" style="font-size:0.8rem; margin-bottom:0.75rem;">Detalhes técnicos da malha WebRTC e servidores auxiliares.</p>
+          <div id="net-relay-steward" style="margin-top:0.75rem;">
+            <p class="desc" style="font-size:0.8rem; margin-bottom:0.75rem;">Detalhes técnicos da malha WebRTC, relay e camada Steward.</p>
 
             <div class="form-group">
               <label for="net-signaling-url">Servidor de conexão (opcional):</label>
