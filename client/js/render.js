@@ -2,6 +2,7 @@ import * as mock from "./mock.js";
 import * as social from "./social.js";
 import * as listing from "./listing.js";
 import * as gov from "./governance.js";
+import * as brcode from "./brcode.js";
 
 const root = () => document.getElementById("app-root");
 
@@ -243,6 +244,7 @@ export function renderPostItem(t, { isPinned = false } = {}) {
   const saved = social.isSaved(t.id);
   const repliesCount = Number(t.repliesCount) || 0;
   const timeLabel = formatTimeAgo(t.ts);
+  const authorPixKey = t.contactPix || (author ? mock.getAuthorPixKey(author) : "") || "";
 
   return `
     <article class="post insta-post" data-id="${escapeHtml(t.id)}">
@@ -275,6 +277,15 @@ export function renderPostItem(t, { isPinned = false } = {}) {
             <svg class="action-icon icon-star" width="18" height="18" viewBox="0 0 24 24" fill="${starred ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
             <span class="action-count count-stars">${currentStars > 0 ? currentStars : ""}</span>
           </button>
+          ${authorPixKey
+            ? `<button class="action-btn btn-zap-post" data-id="${escapeHtml(t.id)}" data-author="${escapeHtml(author)}" data-author-name="${escapeHtml(authorDisplay)}" data-pix="${escapeHtml(authorPixKey)}" data-title="${escapeHtml(t.title)}" aria-label="Apoiar com Pix Zap" title="Apoiar com Pix Zap">
+            <svg class="action-icon icon-zap" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            <span class="action-label zap-label" style="font-size:0.75rem; font-weight:600; margin-left:2px;">Apoiar</span>
+          </button>`
+            : `<button class="action-btn btn-zap-post disabled" disabled aria-label="Autor sem Pix informado" title="Autor sem chave Pix informada" style="opacity:0.35; cursor:not-allowed;">
+            <svg class="action-icon icon-zap" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          </button>`
+          }
           <a class="action-btn btn-comment" href="#/t/${encodeURIComponent(t.id)}" aria-label="Ver discussão e responder">
             <svg class="action-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             <span class="action-count count-replies">${repliesCount > 0 ? repliesCount : ""}</span>
@@ -547,9 +558,9 @@ export function renderListingItem(item, { communityTitle = "" } = {}) {
     ? `<div class="post-media-container"><img class="post-media" src="${escapeHtml(item.image)}" alt="${escapeHtml(item.imageAlt || item.title || "Oferta")}" /></div>`
     : "";
 
-  const pixKey = item.contactPix || (author ? mock.getMockProfile(author)?.pixKey : "") || "";
+  const pixKey = item.contactPix || (author ? mock.getAuthorPixKey(author) : "") || "";
   const pixBtn = pixKey
-    ? `<button class="btn btn-secondary btn-sm btn-copy-pix" data-pix="${escapeHtml(pixKey)}" title="Copiar chave Pix do vendedor">⚡ Copiar Pix</button>`
+    ? `<button class="btn btn-secondary btn-sm btn-copy-pix" data-pix="${escapeHtml(pixKey)}" data-author-name="${escapeHtml(authorDisplay)}" data-price="${escapeHtml(price || "")}" data-title="${escapeHtml(item.title || "")}" title="Copiar Pix Copia e Cola">⚡ Copiar Pix</button>`
     : "";
 
   return `
@@ -612,6 +623,7 @@ export function renderTopic(main, topicId, topic, replies, { topicData = null, i
   const currentStars = social.getStarsCount(topicId, baseStars);
 
   const saved = social.isSaved(topicId);
+  const authorPixKey = topic?.contactPix || (author ? mock.getAuthorPixKey(author) : "") || "";
 
   const modBtn = isMod
     ? `<button class="btn btn-sm btn-danger btn-mod-hide" data-id="${escapeHtml(topicId)}" data-type="topic">🛡️ Ocultar</button>`
@@ -644,6 +656,15 @@ export function renderTopic(main, topicId, topic, replies, { topicData = null, i
           <svg class="action-icon icon-star" width="18" height="18" viewBox="0 0 24 24" fill="${starred ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
           <span class="action-count count-stars">${currentStars > 0 ? currentStars : ""}</span>
         </button>
+        ${authorPixKey
+          ? `<button class="action-btn btn-zap-post" data-id="${escapeHtml(topicId)}" data-author="${escapeHtml(author)}" data-author-name="${escapeHtml(authorDisplay)}" data-pix="${escapeHtml(authorPixKey)}" data-title="${escapeHtml(topic?.title || "")}" aria-label="Apoiar com Pix Zap" title="Apoiar com Pix Zap">
+          <svg class="action-icon icon-zap" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          <span class="action-label zap-label" style="font-size:0.75rem; font-weight:600; margin-left:2px;">Apoiar</span>
+        </button>`
+          : `<button class="action-btn btn-zap-post disabled" disabled aria-label="Autor sem Pix informado" title="Autor sem chave Pix informada" style="opacity:0.35; cursor:not-allowed;">
+          <svg class="action-icon icon-zap" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        </button>`
+        }
         <button id="btn-share-topic" class="action-btn btn-share btn-share-post" data-id="${escapeHtml(topicId)}" data-title="${escapeHtml(topic?.title || "")}" aria-label="Compartilhar post">
           <svg class="action-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
           <span class="action-count">Compartilhar</span>
@@ -1584,6 +1605,64 @@ export function renderPactModal(container) {
 }
 
 export function closePactModal(container) {
+  if (container) container.innerHTML = "";
+}
+
+export function renderZapModal(container, { author = "", authorName = "Autor", pixKey = "", title = "", defaultAmount = 5 } = {}) {
+  if (!container) return;
+  const initialAmount = defaultAmount || 5;
+  let initialPayload = "";
+  try {
+    initialPayload = brcode.buildPixPayload({
+      key: pixKey,
+      name: authorName,
+      amount: initialAmount,
+      description: "Apoio Vox",
+    });
+  } catch {
+    initialPayload = pixKey;
+  }
+
+  container.innerHTML = `
+    <div class="modal-overlay" id="zap-modal-overlay">
+      <div class="modal-dialog zap-modal-dialog" style="max-width: 440px; width: 100%; padding: 1.5rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+          <h3 style="margin:0; font-size:1.15rem; display:flex; align-items:center; gap:6px;">
+            <span>⚡</span> Pix Zap para ${escapeHtml(authorName)}
+          </h3>
+          <button class="btn btn-sm btn-outline btn-close-zap" style="border:none; padding:4px 8px; font-size:1.1rem; cursor:pointer;" aria-label="Fechar">✕</button>
+        </div>
+        ${title ? `<p class="desc" style="font-size:0.82rem; margin:0 0 0.75rem; color:var(--muted);">${escapeHtml(title.slice(0, 60))}${title.length > 60 ? "…" : ""}</p>` : ""}
+        
+        <label style="font-size:0.82rem; font-weight:600; display:block; margin-bottom:6px;">Escolha o valor do apoio:</label>
+        <div class="zap-amount-buttons" style="display:flex; gap:6px; margin-bottom:0.75rem;">
+          <button class="btn btn-sm btn-zap-val ${initialAmount === 2 ? "btn-primary" : "btn-outline"}" data-val="2">R$ 2</button>
+          <button class="btn btn-sm btn-zap-val ${initialAmount === 5 ? "btn-primary" : "btn-outline"}" data-val="5">R$ 5</button>
+          <button class="btn btn-sm btn-zap-val ${initialAmount === 10 ? "btn-primary" : "btn-outline"}" data-val="10">R$ 10</button>
+          <button class="btn btn-sm btn-zap-val ${![2, 5, 10].includes(initialAmount) ? "btn-primary" : "btn-outline"}" data-val="custom">Outro</button>
+        </div>
+        
+        <div class="zap-custom-container" style="display:${![2, 5, 10].includes(initialAmount) ? "block" : "none"}; margin-bottom:0.75rem;">
+          <input type="text" id="zap-custom-input" class="form-control" placeholder="Ex: 15 ou R$ 20,00" value="${![2, 5, 10].includes(initialAmount) ? initialAmount : ""}" style="font-size:0.9rem;" />
+        </div>
+
+        <div class="form-group" style="margin-bottom:0.75rem;">
+          <label style="font-size:0.82rem; font-weight:600; display:block; margin-bottom:4px;">Pix Copia e Cola (BR Code EMV):</label>
+          <textarea id="zap-payload-area" class="form-control" rows="3" readonly style="font-family:monospace; font-size:0.75rem; resize:none; word-break:break-all; background:var(--surface-soft);">${escapeHtml(initialPayload)}</textarea>
+        </div>
+
+        <button id="btn-copy-zap-payload" class="btn btn-primary" style="width:100%; margin-bottom:0.75rem; font-weight:600;">
+          ⚡ Copiar Pix Copia e Cola
+        </button>
+
+        <div class="zap-disclaimer banner-info" style="font-size:0.74rem; line-height:1.4; margin:0; padding:0.5rem 0.75rem;">
+          🛡️ <strong>O Vox não é PSP:</strong> Código gerado 100% offline no seu navegador. O Vox não custodia valores nem cobra taxas. A liquidação é feita diretamente no seu banco pelo Banco Central.
+        </div>
+      </div>
+    </div>`;
+}
+
+export function closeZapModal(container) {
   if (container) container.innerHTML = "";
 }
 

@@ -505,6 +505,49 @@ A sprint v5.11 implementa a governança aberta do Vox inspirada na democracia di
 - Semeador demo idempotente atualizado para a chave `vox-demo-seeded-v5` com propostas e votos simulados.
 - Suite automatizada com **109 testes 100% verdes** (95 Node.js + 14 Python).
 
+---
+
+## 18. Pix Zaps Nativos & BR Code EMV Offline (Sprint v6.0)
+
+A sprint v6.0 introduz o suporte completo a microapoios comunitários diretos via Pix ("Pix Zaps"), implementados de forma 100% descentralizada e offline no cliente:
+
+### 18.1 Arquitetura BR Code EMV Vanilla (`brcode.js`)
+- **Padrão Oficial do Banco Central:** Montagem de strings Pix Copia e Cola em estrita conformidade com o manual de BR Code do BCB e o padrão EMV® QRCPS.
+- **Codificação TLV Estrita (`formatTlv`):** Cada campo é codificado como `[ID 2 dígitos][Tamanho 2 dígitos][Valor]`.
+  - Tag `00`: Payload Format Indicator (`"01"`).
+  - Tag `01`: Point of Initiation Method (`"11"`, QR Code estático reutilizável).
+  - Tag `26`: Merchant Account Information (GUI `"br.gov.bcb.pix"` + Tag `01` chave Pix + Tag `02` descrição opcional).
+  - Tag `52`: Merchant Category Code (`"0000"`).
+  - Tag `53`: Moeda (`"986"`, Real brasileiro).
+  - Tag `54`: Transaction Amount numérico formatado com 2 casas decimais (opcional para valor livre ou com valor predefinido).
+  - Tag `58`: Country Code (`"BR"`).
+  - Tag `59`: Merchant Name (higienizado sem acentos, max 25 caracteres em maiúsculas).
+  - Tag `60`: Merchant City (higienizado sem acentos, max 15 caracteres em maiúsculas, padrão `"BRASIL"`).
+  - Tag `62`: Additional Data Field Template (Tag `05` referência/txid, padrão `"***"`).
+  - Tag `63`: Checksum CRC16-CCITT de 4 dígitos hexadecimais em maiúsculas.
+- **CRC16-CCITT Determinístico (`calculateCrc16`):**
+  - Polinômio padrão `0x1021`, inicializador `0xFFFF`, processado byte a byte via operações bitwise em JavaScript vanilla sem bibliotecas externas.
+- **Higienização de Texto ASCII (`sanitizeAscii`):**
+  - Remoção determinística de acentos e diacríticos Unicode (via `normalize("NFD")`) e caracteres de controle, garantindo compatibilidade universal com leitores bancários.
+
+### 18.2 Botão ⚡ Apoiar no Feed e Tópicos
+- **Apoio Rápido no Post:** Cada post no feed e na visualização detalhada do tópico inclui o botão `.btn-zap-post` (`⚡ Apoiar`).
+- **Estado Dinâmico:** Caso o autor tenha declarado uma chave Pix válida em seu perfil ou na publicação, o botão fica ativo e com destaque. Caso contrário, permanece desabilitado com tooltip indicativo.
+
+### 18.3 Modal Interativo de Pix Zap (`renderZapModal`)
+- **Valores Predefinidos:** Botões de seleção rápida para **R$ 2**, **R$ 5**, **R$ 10** ou **Outro**.
+- **Valor Personalizado:** Ao selecionar "Outro", um campo numérico dinâmico aceita formatos em reais (`R$ 15,00`, `15,00`, `15.00` ou inteiros `15`), recalculando o BR Code instantaneamente.
+- **Área de Copia e Cola:** Textarea em fonte monoespaçada exibindo a string completa do BR Code, com botão de cópia de alta visibilidade e confirmação visual ("✓ Copiado!").
+- **Banner Regulatório Transparente:** Aviso de rodapé informando com clareza: *"🛡️ O Vox não é PSP: Código gerado 100% offline no seu navegador. O Vox não custodia valores nem cobra taxas. A liquidação é feita diretamente no seu banco pelo Banco Central."*
+
+### 18.4 Integração com a Feira Comunitária
+- Ao clicar em `⚡ Copiar Pix` nos itens da Feira Comunitária, caso o anúncio possua preço numérico associado, o modal de Pix Zap é aberto com aquele valor pré-selecionado e com a descrição preenchida com o título da oferta.
+
+### 18.5 Cache e PWA
+- Cache do Service Worker atualizado para `vox-pwa-v6.0-pix-zaps`, incluindo `./js/brcode.js` nos ativos do app shell.
+- Suite automatizada com **117 testes 100% verdes** (103 Node.js + 14 Python).
+
+
 
 
 

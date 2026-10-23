@@ -1,7 +1,7 @@
-// Service Worker do Vox (Fase 5.11 — Governança Comunitária G1 & Rede como Repo Público)
+// Service Worker do Vox (Fase 6.0 — Pix Zaps Nativos & BR Code EMV Offline)
 // NOTA ARQUITETURAL: WebRTC DataChannels operam exclusivamente na thread principal (DOM/Window).
 // O Service Worker atua no cache offline do shell e notificações de status, sem abrir WebRTC.
-const CACHE_NAME = "vox-pwa-v5.11-governance";
+const CACHE_NAME = "vox-pwa-v6.0-pix-zaps";
 const SHELL_ASSETS = [
   "./",
   "./index.html",
@@ -32,6 +32,7 @@ const SHELL_ASSETS = [
   "./config/upload.json",
   "./config/signaling.json",
   "./js/app.js",
+  "./js/brcode.js",
   "./js/cache-node.js",
   "./js/crypto-dm.js",
   "./js/demo-seed.js",

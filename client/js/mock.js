@@ -589,6 +589,11 @@ export function mockVotes(proposalId) {
   return { items, demo: true };
 }
 
+export function getAuthorPixKey(author) {
+  if (!author) return "";
+  return getMockProfile(author)?.pixKey || "";
+}
+
 export function findMockByPixKey(raw) {
   if (!raw) return null;
   const clean = String(raw).trim().toLowerCase();

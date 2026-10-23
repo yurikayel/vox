@@ -72,6 +72,23 @@ O regime de responsabilidade civil de intermediários no Brasil estabelece disti
    * Eventuais integrações futuras de atestação de reputação ou verificação de cidadania (ex: via credenciais verificáveis OpenID Connect gov.br) serão **estritamente opcionais, desacopladas do login e mantidas na Fase D**.
    * O Vox não condiciona a livre expressão, o compartilhamento comunitário e a participação na rede cooperativa a cadastros governamentais ou vigilância de dados civis.
 
+## Pix Zaps Nativos e BR Code EMV (Fase 6.0)
+
+A implementação do gerador de Pix Copia e Cola offline (`brcode.js`) observa estritamente o marco regulatório do Banco Central do Brasil (BCB):
+
+1. **Ausência de Intermediação e Não-Enquadramento como PSP:**
+   * O Vox **não é Prestador de Serviços de Pagamento (PSP)**, nem Instituição de Pagamento (IP) sujeita a autorização nos termos da Lei nº 12.865/2013 e da Resolução BCB nº 1/2020.
+   * O aplicativo **não intermedeia**, não processa, não liquida e não custodia moeda fiduciária ou eletrônica em nenhuma hipótese.
+   * Não há cobrança de tarifas, comissões percentuais ou retenção temporária de valores (*taxa zero de ponta a ponta*).
+
+2. **Operação 100% Offline no Dispositivo (Client-Side):**
+   * Os códigos no padrão BR Code / EMV são montados puramente via script estático no navegador do usuário, com base na chave declarada publicamente pelo autor e no valor escolhido pelo apoiador.
+   * Nenhuma requisição de rede ou chamada de API bancária é executada para gerar o código Copia e Cola. O dispositivo do usuário gera a sequência TLV e o checksum CRC16-CCITT de forma totalmente offline.
+
+3. **Liquidação Exclusiva no Sistema Financeiro Oficial:**
+   * A transferência efetiva de valores ocorre exclusivamente entre a instituição financeira do pagador e a do recebedor, no âmbito do Sistema de Pagamentos Instantâneos (SPI) do Banco Central do Brasil.
+   * O pagador utiliza seu próprio aplicativo bancário homologado para colar o código, autenticar a operação e confirmar o nome do titular recebedor antes de qualquer envio de recursos.
+
 ## Conteúdo Político e TSE
 
 A **[Resolução TSE 23.610/2019](http://www.tse.jus.br/)** (e normas correlatas) impõe deveres a **plataformas digitais** no contexto eleitoral brasileiro (transparência, procedimentos, etc.).

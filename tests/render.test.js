@@ -524,3 +524,60 @@ test("render - renderComposeProposal gera formulário de proposta", () => {
   assert.ok(html.includes("prop-diff"));
   assert.ok(html.includes("Publicar Proposta Assinada"));
 });
+
+test("render - renderPostItem exibe botao de Pix Zap se o autor tiver chave", () => {
+  // vx_demo_helena possui pixKey no mock (helena.vox@gmail.com)
+  const postWithPix = {
+    id: "p_helena_1",
+    author: "vx_demo_helena",
+    title: "Post da Helena com Pix",
+    body: "Conteúdo livre",
+    ts: Date.now() - 60000,
+  };
+  const htmlPix = render.renderPostItem(postWithPix);
+  assert.ok(htmlPix.includes("btn-zap-post"));
+  assert.ok(htmlPix.includes("data-pix=\"helena.vox@gmail.com\""));
+  assert.ok(htmlPix.includes("Apoiar"));
+
+  // Autor sem pix
+  const postNoPix = {
+    id: "p_unknown_1",
+    author: "vx_demo_desconhecido",
+    title: "Post sem Pix",
+    body: "Sem chave",
+    ts: Date.now() - 60000,
+  };
+  const htmlNoPix = render.renderPostItem(postNoPix);
+  assert.ok(htmlNoPix.includes("btn-zap-post disabled"));
+  assert.ok(htmlNoPix.includes("disabled"));
+});
+
+test("render - renderZapModal gera payload BR Code e aviso regulatorio", () => {
+  const container = createContainer();
+  render.renderZapModal(container, {
+    author: "vx_demo_helena",
+    authorName: "Helena Silva",
+    pixKey: "helena.vox@gmail.com",
+    title: "Post sobre permacultura",
+    defaultAmount: 5,
+  });
+
+  const html = container.innerHTML;
+  assert.ok(html.includes("Pix Zap para Helena Silva"));
+  assert.ok(html.includes("Post sobre permacultura"));
+  assert.ok(html.includes("btn-zap-val"));
+  assert.ok(html.includes("R$ 2"));
+  assert.ok(html.includes("R$ 5"));
+  assert.ok(html.includes("R$ 10"));
+  assert.ok(html.includes("Outro"));
+  assert.ok(html.includes("zap-payload-area"));
+  // Valida que o payload gerado é BR Code EMV (inicia com 000201010211)
+  assert.ok(html.includes("000201010211"));
+  assert.ok(html.includes("btn-copy-zap-payload"));
+  assert.ok(html.includes("O Vox não é PSP"));
+  assert.ok(html.includes("100% offline"));
+
+  render.closeZapModal(container);
+  assert.equal(container.innerHTML, "");
+});
+
