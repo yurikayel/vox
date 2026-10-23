@@ -17,7 +17,8 @@ No feed, o layout é **híbrido**: texto estilo **X** (caption antes da toolbar)
 
 | Campo | Valor |
 |-------|--------|
-| **Branch** | `main` (atualize o SHA após pull) |
+| **SHA** | `a341b64` |
+| **Branch** | `main` |
 | **Testes** | **194** (`180` JS + `14` Python) — `npm test` na raiz |
 | **Service worker** | `vox-pwa-v6.18-cache-manifest-wire` |
 | **Deploy** | Push em `main` → GitHub Pages; após deploy use **hard refresh** (`Ctrl+Shift+R`) para trocar o SW |
