@@ -758,5 +758,23 @@ test("render - renderPostOwnerMenu só aparece em posts isOwnLocalPost", () => {
   assert.ok(ownHtml.includes("btn-post-edit"));
   assert.ok(ownHtml.includes("btn-post-delete"));
   assert.ok(!tourHtml.includes("btn-post-edit"));
+  assert.ok(!tourHtml.includes("btn-post-delete"));
+});
+
+test("render - renderTopic inclui menu Editar/Apagar para post próprio", () => {
+  const main = createContainer();
+  const topic = {
+    id: "top_own_detail",
+    title: "Meu post",
+    body: "Texto na thread",
+    author: "vx_me",
+    isOwnLocalPost: true,
+    type: "topic",
+    ts: Date.now(),
+  };
+  render.renderTopic(main, "top_own_detail", topic, []);
+  assert.ok(main.innerHTML.includes("btn-post-edit"));
+  assert.ok(main.innerHTML.includes("btn-post-delete"));
+  assert.ok(main.innerHTML.includes('data-id="top_own_detail"'));
 });
 

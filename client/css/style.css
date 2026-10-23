@@ -156,25 +156,14 @@ a:hover {
   font-weight: 800;
 }
 
-.top-center {
-  display: flex;
-  align-items: center;
-}
-
-.top-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
 /* Chip de Rede (Status Compacto Glass) */
 .network-chip {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.78rem;
+  gap: 5px;
+  font-size: 0.72rem;
   font-weight: 600;
-  padding: 4px 10px;
+  padding: 3px 8px;
   border-radius: 999px;
   background: var(--glass-bg);
   backdrop-filter: blur(12px);
@@ -261,9 +250,44 @@ a:hover {
 }
 
 .wallet-badge.connected {
-  background: var(--accent-soft);
-  color: var(--accent);
-  border-color: var(--border-glow);
+  background: var(--surface-soft);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+.wallet-badge.account-access {
+  padding: 0.35rem 0.55rem;
+}
+
+.wallet-badge.account-access.connected {
+  padding: 0.35rem 0.65rem;
+}
+
+@media (max-width: 767px) {
+  .wallet-badge-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .wallet-badge.account-access {
+    padding: 0.4rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .wallet-badge-label {
+    max-width: 5.5rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }
 
 /* Tab Bar Mobile (Fixa no rodapé, Glass) */
@@ -427,7 +451,7 @@ main#app-main {
   width: 100%;
   max-width: var(--feed-max);
   margin: 0 auto;
-  padding: 1rem 1rem 5rem;
+  padding: 0.65rem 1rem 5rem;
   flex: 1;
 }
 
@@ -437,9 +461,38 @@ main#app-main {
   }
 }
 
+/* Feed chrome — abas, stories e composer alinhados à coluna */
+.feed-chrome {
+  max-width: var(--feed-max, 500px);
+  margin: 0 auto 0.5rem;
+  padding: 0 2px;
+}
+
+.feed-composer-section {
+  margin-top: 4px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.feed-notice {
+  max-width: var(--feed-max, 500px);
+  margin: 0 auto 0.65rem;
+  padding: 0 4px;
+  font-size: 0.74rem;
+  color: var(--muted);
+  text-align: center;
+}
+
+.feed-notice.demo {
+  color: var(--text);
+  background: rgba(234, 179, 8, 0.08);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+}
+
 /* Composer inline (estilo X — mesma janela) */
 .inline-composer {
-  max-width: var(--feed-max, 500px);
+  max-width: 100%;
   margin: 0 auto 14px auto;
   padding: 0 2px;
 }
@@ -582,16 +635,29 @@ main#app-main {
   color: var(--muted);
 }
 
+.inline-composer-local-hint {
+  display: inline;
+  color: var(--muted);
+}
+
+.post-edit-local-hint {
+  margin: 0.25rem 0 0.75rem;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: var(--muted);
+}
+
 /* Faixa de Stories Visual (Tour Personas) */
 .stories-strip {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px 4px 12px;
+  gap: 10px;
+  padding: 6px 4px 10px;
   background: transparent;
   border: none;
-  margin: 0 auto 6px auto;
-  max-width: var(--feed-max, 500px);
+  border-bottom: 1px solid var(--border-subtle);
+  margin: 0;
+  max-width: 100%;
   overflow-x: auto;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
@@ -778,10 +844,25 @@ main#app-main {
   flex-wrap: wrap;
 }
 
+.post-owner-block {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.15rem;
+  margin-left: 0.35rem;
+  max-width: min(100%, 14rem);
+}
+
+.post-local-sync-hint {
+  font-size: 0.62rem;
+  line-height: 1.25;
+  text-align: right;
+  color: var(--muted);
+}
+
 .post-owner-menu {
   display: inline-flex;
   gap: 0.25rem;
-  margin-left: 0.35rem;
   flex-wrap: wrap;
 }
 
@@ -1346,17 +1427,23 @@ main#app-main {
 /* Feed Header Sticky */
 .feed-header.sticky-header {
   position: sticky;
-  top: 52px;
+  top: 48px;
   z-index: 10;
   background: var(--bg);
-  padding: 8px 4px;
-  border-bottom: 1px solid var(--border-subtle);
+  padding: 4px 4px 8px;
+  border-bottom: none;
   display: flex;
   justify-content: center;
   align-items: center;
-  max-width: var(--feed-max, 500px);
-  margin: 0 auto 8px auto;
+  max-width: 100%;
+  margin: 0;
   border-radius: 0;
+}
+
+.feed-chrome .feed-segmented-nav {
+  width: 100%;
+  max-width: 280px;
+  justify-content: center;
 }
 
 /* Feed Container Sem Caixa */
