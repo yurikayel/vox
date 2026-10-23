@@ -582,6 +582,18 @@ main#app-main {
   color: var(--muted);
 }
 
+.inline-composer-local-hint {
+  display: inline;
+  color: var(--muted);
+}
+
+.post-edit-local-hint {
+  margin: 0.25rem 0 0.75rem;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: var(--muted);
+}
+
 /* Faixa de Stories Visual (Tour Personas) */
 .stories-strip {
   display: flex;
@@ -778,10 +790,25 @@ main#app-main {
   flex-wrap: wrap;
 }
 
+.post-owner-block {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.15rem;
+  margin-left: 0.35rem;
+  max-width: min(100%, 14rem);
+}
+
+.post-local-sync-hint {
+  font-size: 0.62rem;
+  line-height: 1.25;
+  text-align: right;
+  color: var(--muted);
+}
+
 .post-owner-menu {
   display: inline-flex;
   gap: 0.25rem;
-  margin-left: 0.35rem;
   flex-wrap: wrap;
 }
 
