@@ -4,12 +4,14 @@
     {
       "id": "turbo",
       "label": "Turbo Gateway",
-      "graphql": "https://turbo-gateway.com/graphql"
+      "graphql": "https://turbo-gateway.com/graphql",
+      "raw": "https://turbo-gateway.com/raw/{txId}"
     },
     {
       "id": "arweave-net",
       "label": "arweave.net",
-      "graphql": "https://arweave.net/graphql"
+      "graphql": "https://arweave.net/graphql",
+      "raw": "https://arweave.net/{txId}"
     }
   ]
 }

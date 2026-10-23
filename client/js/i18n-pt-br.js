@@ -1,12 +1,12 @@
 /**
- * Cadeias pt-BR — microcopy honesta até gossip de retratação (GOSSIP_UPDATE / GOSSIP_DELETE).
+ * Cadeias pt-BR — microcopy pós-gossip de retratação (GOSSIP_UPDATE / GOSSIP_DELETE).
  */
 
 export const localMutateEditDeleteTooltip =
-  "Por enquanto só neste aparelho. Com pares online, editar e apagar na malha virão com o gossip de retratação.";
+  "Alterações valem já aqui. Com pares online, editar e apagar propagam na malha via gossip de retratação.";
 
 export const localMutateEditDeleteHint =
-  "Local aqui; sync na malha com pares online quando o gossip chegar.";
+  "Local imediato; com pares online a retratação sincroniza na malha.";
 
 export const localMutateComposerHint =
-  "Editar/apagar ainda só neste aparelho até o gossip de retratação.";
+  "Editar/apagar: local imediato; retratação na malha quando houver pares online.";

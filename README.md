@@ -11,7 +11,7 @@ Demo ao vivo: **[https://yurikayel.github.io/vox/](https://yurikayel.github.io/v
 
 Na primeira visita, a **Porta da Cantina** é a ilustração anime (`client/images/cantina-gate.jpg`) com o gag no estilo Wuher em **dois balões pintados na arte** (*"Seus bots tem que esperar lá fora!"* e *"Aqui não servimos esse tipo."*). Não há H2 "Porta da Cantina", quote duplicada, subtítulo itálico nem balão HTML/CSS por cima da imagem — só a arte e *Entrar — sou humano*.
 
-No feed, o layout é **híbrido**: texto estilo **X** (caption antes da toolbar), foto **4:5 full-bleed** estilo **IG**, bloco **README/diff** estilo **GitHub** quando aplicável — canvas `--bg` unificado (sem cards cinza no feed/perfil/comentários), abas underline, stories + **composer inline** na mesma janela (Postar com foto opcional). **Comentários abrem no próprio card**. Tour com **10 personas**, Open Frames (enquetes, abaixo-assinado, CLT). Cache: `vox-pwa-v6.7-ui-polish`.
+No feed, o layout é **híbrido**: texto estilo **X** (caption antes da toolbar), foto **4:5 full-bleed** estilo **IG**, bloco **README/diff** estilo **GitHub** quando aplicável — canvas `--bg` unificado (sem cards cinza no feed/perfil/comentários), abas underline, stories + **composer inline** na mesma janela (Postar com foto opcional). **Comentários abrem no próprio card**. Tour com **10 personas**, Open Frames (enquetes, abaixo-assinado, CLT). Cache PWA: ver `CACHE_NAME` em [`client/sw.js`](./client/sw.js) (vigente: `vox-pwa-v6.14-prossiga-sprint`).
 
 ---
 
@@ -164,6 +164,7 @@ Todo dado no Vox é identificado por tags semânticas universais:
 | [relay/deploy/README.md](./relay/deploy/README.md) | Guia de Deploy VPS: Signaling WSS (Caddy) + TURN Comunitário (Coturn) |
 | [docs/DNS-HANDLES.md](./docs/DNS-HANDLES.md) | Guia de Identidade Amigável, CNAME Comunitário e DNS Wildcard |
 | [docs/governance-proposta-feira-pin-template.md](./docs/governance-proposta-feira-pin-template.md) | Modelo de proposta: feira comunitária + recomendação não vinculante de espelho leve (V-I07) |
+| [docs/antigravity-operating.md](./docs/antigravity-operating.md) | Contrato operacional Antigravity × Cursor (malha P2P, gossip, integração em `main`) |
 | [docs/proposta-vox.html](./docs/proposta-vox.html) | Página explicativa completa: proposta, economia distribuída e sustentabilidade |
 
 ### Rodar o PWA localmente
@@ -182,12 +183,12 @@ npm test
 # ou no Windows:
 .\test.bat
 ```
-Executa a suíte de **186 testes** (172 JS via `node:test` e 14 Python via `unittest`).
+Executa a suíte de **187 testes** (173 JS via `node:test` e 14 Python via `unittest`).
 
 ### 🚀 Pipelines de CI/CD (GitHub Actions)
 
 O repositório possui automação contínua configurada em `.github/workflows/`:
-* **CI — Testes & Validação (`.github/workflows/ci.yml`):** Matriz multiplataforma com Node.js (22, 24) e Python (3.11, 3.12) executando verificação de sintaxe, suíte completa de 186 testes e auditoria de segurança contra vazamento de chaves privadas.
+* **CI — Testes & Validação (`.github/workflows/ci.yml`):** Matriz multiplataforma com Node.js (22, 24) e Python (3.11, 3.12) executando verificação de sintaxe, suíte completa de 187 testes e auditoria de segurança contra vazamento de chaves privadas.
 * **Deploy PWA — GitHub Pages (`.github/workflows/deploy-pages.yml`):** Publicação contínua da pasta `client/` no GitHub Pages com suporte a HTTPS nativo e PWA instalável a cada push na branch `main`.
 
 ---
