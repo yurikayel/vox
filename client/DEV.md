@@ -353,4 +353,30 @@ O PWA traz a vivacidade e o engajamento visual de redes sociais modernas (híbri
   - **🔖 Salvar:** Marcação de posts favoritos com feedback em toast.
 - **Cache Offline Completo:** Todas as fotos do tour são cacheadas pelo Service Worker (`CACHE_NAME = "vox-pwa-v5.6-instatwitter"`), garantindo navegação instantânea e offline.
 
+---
+
+## 13. UI Pro 2026, Post Híbrido, Métricas Honestas e Pix Fase A
+
+Na versão 5.7, o Vox implementa o layout Pro 2026 com cartões híbridos full-bleed, métricas honestas e suporte a chave Pix opcional declarativa no perfil (Fase A):
+
+### 13.1 Layout & Post Híbrido Pro
+- **Design Tokens v2:** Adicionados `--feed-max: 640px` e escala de espaçamento semântico (`--space-xs: 4px`, `--space-sm: 8px`, `--space-md: 16px`, `--space-lg: 24px`).
+- **Composer Strip:** Barra compacta no topo do feed ("O que está acontecendo na sua rede?") com acionamento direto do formulário de postagem.
+- **Post Toolbar Unificada:** Botões de ação (`.post-toolbar` / `.insta-actions`) padronizados para curtir, comentar, compartilhar e salvar.
+- **Timestamps Relativos (`formatTimeAgo`):** Exibição concisa do tempo de publicação ("agora", "15m", "2h", "1d"), com fallback gracioso para strings legadas.
+
+### 13.2 Perfil Pro & Métricas Honestas
+- **Capa com Overlap:** Banner estilizado `.profile-cover` com gradiente glass e avatar posicionado em sobreposição.
+- **Métricas Honestas:** Substituição de falsas contagens de seguidores/seguindo (vanity metrics) por estatísticas reais e honestas: posts publicados, conexões ativas na malha P2P (`peersConnected`), comunidades e o selo explícito de "Perfil do tour de exemplo".
+
+### 13.3 Chave Pix no Perfil (Fase A) & Validador DICT
+- **Módulo `pix-key.js`:** Suporta os quatro tipos oficiais do Diretório de Identificadores de Contas Transacionais (DICT) do Banco Central:
+  1. `cpf`: validação algorítmica de 11 dígitos com cálculo dos dígitos verificadores (módulo 11) e rejeição de sequências repetidas.
+  2. `email`: formato RFC 5322 simplificado.
+  3. `phone`: formato E.164 com ou sem prefixo `+55` (10 ou 11 dígitos DDD + número).
+  4. `random`: identificador UUID v4 de 32 hexadecimais com hífens.
+- **Máscara de Privacidade:** Funções de exibição segura ocultam partes sensíveis de CPFs (`***.456.789-**`) e telefones (`+55 (11) *****-8901`).
+- **Conta Local & Sem CPF-Login:** A chave Pix reside em `vox-pix-key-v1` no `localStorage`. Ela é puramente opcional e declarativa. O `routeId` (`vx_...`) permanece como a única identidade criptográfica do usuário.
+- **Rota `#/pix/:key`:** Permite consultar perfis locais ou de exemplo associados à chave informada, acompanhada de aviso de conformidade explícito sobre pagamentos.
+
 

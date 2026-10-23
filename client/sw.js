@@ -1,7 +1,7 @@
-// Service Worker do Vox (Fase 5.6 — InstaTwitter Look & Feel, Fotos, Curtidas e Salvos)
+// Service Worker do Vox (Fase 5.7 — UI Pro 2026, Post Híbrido, Métricas Honestas e Pix Fase A)
 // NOTA ARQUITETURAL: WebRTC DataChannels operam exclusivamente na thread principal (DOM/Window).
 // O Service Worker atua no cache offline do shell e notificações de status, sem abrir WebRTC.
-const CACHE_NAME = "vox-pwa-v5.6-instatwitter";
+const CACHE_NAME = "vox-pwa-v5.7-ui-pix";
 const SHELL_ASSETS = [
   "./",
   "./index.html",
@@ -32,6 +32,7 @@ const SHELL_ASSETS = [
   "./js/mock.js",
   "./js/moderation.js",
   "./js/peers.js",
+  "./js/pix-key.js",
   "./js/webrtc-peer.js",
   "./js/render.js",
   "./js/share.js",

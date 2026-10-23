@@ -17,7 +17,8 @@ export const MOCK_DEMO_PROFILES = {
     name: "Lia",
     avatar: "images/avatars/lia.jpg",
     bio: "Apoiadora de redes livres. Acredito que a tecnologia deve servir às pessoas, não a grandes servidores.",
-    stats: { posts: 1, followers: 142, following: 89 },
+    pixKey: "lia@voxbrasil.org",
+    stats: { posts: 1, peersConnected: 3, communities: 1, isTourDemo: true },
   },
   vx_demo_rafa: {
     routeId: "vx_demo_rafa",
@@ -25,7 +26,7 @@ export const MOCK_DEMO_PROFILES = {
     name: "Rafa",
     avatar: "images/avatars/rafa.jpg",
     bio: "Entusiasta de privacidade e comunicação direta sem intermediários.",
-    stats: { posts: 1, followers: 98, following: 62 },
+    stats: { posts: 1, peersConnected: 2, communities: 1, isTourDemo: true },
   },
   vx_demo_camila: {
     routeId: "vx_demo_camila",
@@ -33,7 +34,7 @@ export const MOCK_DEMO_PROFILES = {
     name: "Camila",
     avatar: "images/avatars/camila.jpg",
     bio: "Organizadora comunitária. Foco em conversas que constroem laços reais.",
-    stats: { posts: 1, followers: 230, following: 140 },
+    stats: { posts: 1, peersConnected: 4, communities: 1, isTourDemo: true },
   },
   vx_demo_davi: {
     routeId: "vx_demo_davi",
@@ -41,7 +42,7 @@ export const MOCK_DEMO_PROFILES = {
     name: "Davi",
     avatar: "images/avatars/davi.jpg",
     bio: "Curioso por tecnologia descentralizada e preservação da memória popular.",
-    stats: { posts: 1, followers: 85, following: 74 },
+    stats: { posts: 1, peersConnected: 2, communities: 1, isTourDemo: true },
   },
   vx_demo_pri: {
     routeId: "vx_demo_pri",
@@ -49,9 +50,12 @@ export const MOCK_DEMO_PROFILES = {
     name: "Pri",
     avatar: "images/avatars/pri.jpg",
     bio: "Exploradora de novas redes sociais e defensora da internet aberta para todo mundo.",
-    stats: { posts: 1, followers: 310, following: 195 },
+    stats: { posts: 1, peersConnected: 5, communities: 1, isTourDemo: true },
   },
 };
+
+// Base de tempo dinâmica para os tópicos do tour (escalonados recentemente)
+const NOW = Date.now();
 
 export const MOCK_DEMO_TOPICS = [
   {
@@ -66,6 +70,7 @@ export const MOCK_DEMO_TOPICS = [
     likesCount: 24,
     repliesCount: 1,
     isLocalP2p: true,
+    ts: NOW - 12 * 60 * 1000, // ~12m atrás
   },
   {
     id: "demo-post-rafa",
@@ -79,6 +84,7 @@ export const MOCK_DEMO_TOPICS = [
     likesCount: 18,
     repliesCount: 0,
     isLocalP2p: true,
+    ts: NOW - 45 * 60 * 1000, // ~45m atrás
   },
   {
     id: "demo-post-camila",
@@ -92,6 +98,7 @@ export const MOCK_DEMO_TOPICS = [
     likesCount: 37,
     repliesCount: 0,
     isLocalP2p: true,
+    ts: NOW - 3 * 3600 * 1000, // ~3h atrás
   },
   {
     id: "demo-post-davi",
@@ -105,6 +112,7 @@ export const MOCK_DEMO_TOPICS = [
     likesCount: 29,
     repliesCount: 0,
     isLocalP2p: true,
+    ts: NOW - 8 * 3600 * 1000, // ~8h atrás
   },
   {
     id: "demo-post-pri",
@@ -118,6 +126,7 @@ export const MOCK_DEMO_TOPICS = [
     likesCount: 42,
     repliesCount: 0,
     isLocalP2p: true,
+    ts: NOW - 26 * 3600 * 1000, // ~1d atrás
   },
 ];
 
@@ -219,4 +228,15 @@ export function mockRecentTopics() {
     communityTitle: "Aprenda o Vox",
   }));
   return { items, demo: true };
+}
+
+export function findMockByPixKey(raw) {
+  if (!raw) return null;
+  const clean = String(raw).trim().toLowerCase();
+  for (const prof of Object.values(MOCK_DEMO_PROFILES)) {
+    if (prof.pixKey && prof.pixKey.trim().toLowerCase() === clean) {
+      return prof;
+    }
+  }
+  return null;
 }

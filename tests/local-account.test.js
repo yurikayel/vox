@@ -104,3 +104,24 @@ test("cache-node - armazena e consulta posts locais P2P (local-posts)", async ()
   assert.equal(comms.length, 1);
   assert.equal(comms[0].communityId, "tecnologia");
 });
+
+test("local-account - gerencia chave Pix opcional localmente", () => {
+  localStorage.clear();
+  assert.equal(localAccount.getPixKey(), null);
+
+  const saved = localAccount.setPixKey({
+    normalized: "lia@voxbrasil.org",
+    type: "email",
+    masked: "li***a@voxbrasil.org",
+  });
+  assert.equal(saved.normalized, "lia@voxbrasil.org");
+  assert.equal(saved.type, "email");
+  assert.ok(saved.updatedAt > 0);
+
+  const retrieved = localAccount.getPixKey();
+  assert.equal(retrieved.normalized, "lia@voxbrasil.org");
+  assert.equal(retrieved.masked, "li***a@voxbrasil.org");
+
+  localAccount.clearPixKey();
+  assert.equal(localAccount.getPixKey(), null);
+});

@@ -25,6 +25,11 @@
   --success-soft: rgba(23, 191, 99, 0.1);
   --radius: 14px;
   --radius-sm: 8px;
+  --feed-max: 640px;
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
   --shadow: 0 2px 8px rgba(15, 20, 25, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.03);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
   color-scheme: light dark;
@@ -433,7 +438,7 @@ a:hover {
 /* Conteúdo Principal */
 main#app-main {
   width: 100%;
-  max-width: 640px;
+  max-width: var(--feed-max);
   margin: 0 auto;
   padding: 1rem 1rem 5rem;
   flex: 1;
@@ -443,6 +448,46 @@ main#app-main {
   main#app-main {
     padding: 1.5rem 1.5rem 3rem;
   }
+}
+
+/* Barra rápida de composição (Composer Strip) */
+.composer-strip {
+  margin-bottom: 12px;
+  padding: 10px 14px;
+  background: var(--surface);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transition: all 0.2s ease;
+}
+
+.composer-strip:hover {
+  border-color: var(--border-glow);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+}
+
+.composer-strip-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.composer-strip-avatar {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.composer-strip-placeholder {
+  flex: 1;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.composer-strip-btn {
+  pointer-events: none;
 }
 
 /* Post / Item de Feed (Estilo X Glass) */
@@ -736,12 +781,134 @@ main#app-main {
 
 .profile-stats {
   display: flex;
-  gap: 1.25rem;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.1rem;
   margin-top: 0.85rem;
   font-size: 0.88rem;
 }
 
-.post-actions {
+/* Perfil Pro com Banner Cover & Overlap */
+.profile-card {
+  overflow: hidden;
+  position: relative;
+  padding: 0 0 16px;
+}
+
+.profile-cover {
+  height: 100px;
+  background: linear-gradient(135deg, rgba(26, 95, 180, 0.45) 0%, rgba(53, 132, 228, 0.25) 50%, rgba(137, 87, 229, 0.3) 100%);
+  border-bottom: 1px solid var(--border);
+  position: relative;
+}
+
+.profile-header-body {
+  padding: 0 16px;
+  position: relative;
+}
+
+.profile-avatar-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-top: -38px;
+  margin-bottom: 10px;
+}
+
+.profile-avatar-wrap {
+  border-radius: 50%;
+  padding: 3px;
+  background: var(--surface-solid);
+  display: inline-flex;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+}
+
+.profile-title {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.profile-route-id {
+  margin: 3px 0 0;
+  word-break: break-all;
+}
+
+.demo-badge {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1px solid var(--border-glow);
+  font-size: 0.72rem;
+}
+
+.profile-pix-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  margin-top: 8px;
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  color: var(--text);
+}
+
+.pix-badge-icon {
+  color: var(--accent);
+  font-size: 0.95rem;
+}
+
+.pix-badge-link {
+  font-size: 0.78rem;
+  margin-left: 4px;
+  text-decoration: underline;
+}
+
+/* Formulário Pix e Lookup */
+.pix-section {
+  margin-top: 0.75rem;
+  border-top: 1px solid var(--border);
+  padding-top: 0.75rem;
+}
+
+.pix-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.pix-desc {
+  font-size: 0.8rem;
+  margin: 0 0 0.4rem;
+}
+
+.pix-form {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.pix-form input {
+  flex: 1;
+  min-width: 200px;
+}
+
+.pix-feedback {
+  font-size: 0.82rem;
+  margin-top: 0.3rem;
+}
+
+.pix-lookup-card {
+  padding: 1.5rem;
+}
+
+.pix-lookup-header {
+  margin-bottom: 0.5rem;
+}
+
+.post-actions,
+.post-toolbar {
   display: flex;
   gap: 20px;
   color: var(--muted);
