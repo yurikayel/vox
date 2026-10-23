@@ -21,10 +21,10 @@ test("render - renderPactModal injeta o modal com termos e botoes", () => {
   const container = createContainer();
   render.renderPactModal(container);
 
-  assert.ok(container.innerHTML.includes("Pacto Vox: Rede Distribuída"));
+  assert.ok(container.innerHTML.includes("Bem-vindo ao Vox"));
   assert.ok(container.innerHTML.includes("btn-pact-accept"));
   assert.ok(container.innerHTML.includes("btn-pact-settings"));
-  assert.ok(container.innerHTML.includes("Soberania e Autoria Total"));
+  assert.ok(container.innerHTML.includes("Seus dados são seus"));
 
   render.closePactModal(container);
   assert.equal(container.innerHTML, "");
@@ -58,15 +58,17 @@ test("render - renderNetworkSettings gera painel completo com WebRTC", () => {
   });
 
   const html = main.innerHTML;
-  assert.ok(html.includes("Rede Distribuída (Pacto Vox)"));
-  assert.ok(html.includes("WebRTC: 3 pares remotos"));
-  assert.ok(html.includes("Relay Online (127.0.0.1:3920)"));
-  assert.ok(html.includes("4 RTC"));
+  assert.ok(html.includes("Sua rede"));
+  assert.ok(html.includes("Ajudando a rede"));
+  assert.ok(html.includes("3 aparelhos conectados"));
+  assert.ok(html.includes("advanced-settings"));
   assert.ok(html.includes("net-pause"));
   assert.ok(html.includes("net-webrtc"));
   assert.ok(html.includes("ws://192.168.1.100:3921"));
   assert.ok(html.includes("turn:turn.comunidade.org:3478"));
   assert.ok(html.includes("vox_turn"));
+  // Termos de infraestrutura restritos à seção Avançado
+  assert.ok(!html.includes("127.0.0.1:3920"));
 });
 
 test("render - renderHome renderiza cards de comunidade", () => {
@@ -105,7 +107,7 @@ test("render - renderDmList e renderDmThread", () => {
     isRtcOnline: true,
     hasDmPub: true,
   });
-  assert.ok(mainThread.innerHTML.includes("WebRTC Online"));
+  assert.ok(mainThread.innerHTML.includes("Conectado"));
   assert.ok(mainThread.innerHTML.includes("Oi Bob"));
   assert.ok(mainThread.innerHTML.includes("Oi Alice!"));
   assert.ok(mainThread.innerHTML.includes("btn-send-dm"));
@@ -114,13 +116,14 @@ test("render - renderDmList e renderDmThread", () => {
 test("render - renderFeed renderiza timeline com posts", () => {
   const main = createContainer();
   const topics = [
-    { id: "t1", title: "Primeiro post", body: "Conteudo do post", owner: "addr_autor", communityId: "geral" },
+    { id: "t1", title: "Primeiro post", body: "Conteudo do post", owner: "addr_autor", communityId: "geral", communityTitle: "Geral" },
   ];
   render.renderFeed(main, topics);
-  assert.ok(main.innerHTML.includes("A Rua"));
+  assert.ok(main.innerHTML.includes("Para você"));
   assert.ok(main.innerHTML.includes("Primeiro post"));
   assert.ok(main.innerHTML.includes("Conteudo do post"));
-  assert.ok(main.innerHTML.includes("c/geral"));
+  assert.ok(main.innerHTML.includes(">Geral<"));
+  assert.ok(!main.innerHTML.includes(">c/geral<"));
 });
 
 test("render - renderNetworkChip status e rotulagem", () => {

@@ -106,23 +106,44 @@ function attachPostShareHandlers() {
 
 async function showHome() {
   const user = await getActiveUser();
-  const main = render.renderShell(makeShellProps(user, "home", "A Rua"));
+  const main = render.renderShell(makeShellProps(user, "home", "Para você"));
   render.renderLoading(main);
 
   try {
     const { items: remoteItems, gateway, demo } = await gql.fetchRecentTopics().catch(async () => mock.mockRecentTopics());
     const localPosts = await cacheNode.getLocalPosts({ type: "topic" });
 
+    // Constrói mapa de títulos de comunidades para exibição limpa no feed
+    const commMap = new Map();
+    try {
+      const commsRes = await gql.fetchCommunities().catch(() => mock.mockCommunities());
+      for (const c of (commsRes?.items || [])) {
+        if (c.id && c.title) commMap.set(c.id, c.title);
+      }
+      const localComms = await cacheNode.getLocalCommunities();
+      for (const c of localComms) {
+        if (c.id && c.title) commMap.set(c.id, c.title);
+      }
+    } catch {}
+
     const seen = new Set();
     const merged = [];
     for (const p of localPosts) {
       seen.add(p.id);
-      merged.push({ ...p, isLocalP2p: true });
+      merged.push({
+        ...p,
+        isLocalP2p: true,
+        communityTitle: commMap.get(p.communityId) || p.communityTitle || "",
+      });
     }
     for (const p of (remoteItems || [])) {
       if (!seen.has(p.id)) {
         seen.add(p.id);
-        merged.push({ ...p, isLocalP2p: false });
+        merged.push({
+          ...p,
+          isLocalP2p: false,
+          communityTitle: commMap.get(p.communityId) || p.communityTitle || "",
+        });
       }
     }
 
@@ -180,7 +201,7 @@ async function showCommunities() {
 
 async function showCommunity(communityId) {
   const user = await getActiveUser();
-  const main = render.renderShell(makeShellProps(user, "communities", "Comunidade", `Fórum de ${communityId}`));
+  const main = render.renderShell(makeShellProps(user, "communities", "Comunidade"));
   render.renderLoading(main);
 
   let topics = [];
@@ -560,12 +581,12 @@ function bindProfileButtons(user, address, isSelf, dmPub) {
         const pubStr = JSON.stringify(dmPub);
         const tags = upload.buildTags("profile-key", { "Dm-Pub": pubStr });
         await upload.postData({ type: "profile-key", dmPub: pubStr }, tags);
-        share.showToast("Chave Dm-Pub anunciada no permaweb!");
+        share.showToast("Chave pública anunciada com sucesso!");
         btnPub.textContent = "✓ Anunciada";
       } catch (err) {
         share.showToast(`Erro ao anunciar: ${err.message}`, "error");
         btnPub.disabled = false;
-        btnPub.textContent = "🌐 Anunciar Dm-Pub on-chain";
+        btnPub.textContent = "🌐 Publicar Chave on-chain";
       }
     });
   }
@@ -609,7 +630,7 @@ async function showHandleLookup(rawSlug) {
   const user = await getActiveUser();
   const slug = handles.normalizeSlug(rawSlug);
   const main = render.renderShell(makeShellProps(user, "profile", `@${slug || "handle"}`));
-  render.renderLoading(main, `Buscando perfil de @${slug} no permaweb…`);
+  render.renderLoading(main, `Buscando perfil de @${slug}…`);
 
   const validation = handles.validateSlug(slug);
   if (!validation.valid) {
@@ -624,8 +645,8 @@ async function showHandleLookup(rawSlug) {
       <div class="card">
         <h2>@${render.escapeHtml(slug)}</h2>
         <div class="empty">
-          <p>Nenhum endereço encontrado para o handle <code>@${render.escapeHtml(slug)}</code> no permaweb.</p>
-          <a class="btn btn-outline" href="#/">Voltar para A Rua</a>
+          <p>Nenhum endereço encontrado para o perfil <code>@${render.escapeHtml(slug)}</code>.</p>
+          <a class="btn btn-outline" href="#/">Voltar ao início</a>
         </div>
       </div>`;
     return;
@@ -1157,7 +1178,7 @@ function checkPactModal() {
     btnAccept.addEventListener("click", () => {
       localStorage.setItem("vox-pact-accepted", "true");
       render.closePactModal(modalContainer);
-      share.showToast("Pacto aceito: nó leve ativo!");
+      share.showToast("Bem-vindo ao Vox! Rede ativa.");
     });
   }
 

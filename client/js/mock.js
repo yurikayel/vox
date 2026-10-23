@@ -10,8 +10,8 @@ export const MOCK_COMMUNITIES = [
   },
   {
     id: "demo-community-2",
-    title: "Política & Permaweb",
-    description: "Discussões sobre soberania digital (mock).",
+    title: "Política & Cidadania",
+    description: "Discussões sobre direitos e participação popular (mock).",
     category: "Sociedade",
     owner: "demo-owner",
   },
@@ -66,8 +66,8 @@ export function mockRecentTopics() {
     {
       id: "demo-topic-2",
       communityId: "demo-community-2",
-      title: "Soberania Digital e Autonomia Popular",
-      body: "Comunicação direta, dados criptografados e preservação no permaweb.",
+      title: "Soberania e Autonomia Popular",
+      body: "Comunicação direta, dados protegidos e controle total pelo usuário.",
       owner: "demo-mod",
     },
   ];
