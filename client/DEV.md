@@ -629,7 +629,8 @@ Toolbar tripartida mantém Zap, estrela, copiar MD e bookmark.
 - `renderStoriesStrip`: anéis com avatares do tour → `#/u/:id` (visual, sem TTL).
 
 ### 21.4 Cache e PWA
-- Cache: `vox-pwa-v6.3-hybrid-feed`.
+- Cache elevado para `vox-pwa-v6.3-hybrid-feed`.
+- Suíte automatizada com **136 testes 100% verdes** (122 Node.js + 14 Python).
 
 
 
