@@ -1947,6 +1947,243 @@ main#app-main {
   text-align: center;
 }
 
+/* Governança Comunitária FOSS (G1) */
+.gov-info-card {
+  background: var(--surface-card);
+  border: 1px solid var(--border-glow);
+  border-radius: var(--radius);
+}
+
+.proposal-card {
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.proposal-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+
+.status-pill {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.status-pill.status-open {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.status-pill.status-merged {
+  background: rgba(147, 51, 234, 0.15);
+  color: #a855f7;
+  border: 1px solid rgba(147, 51, 234, 0.3);
+}
+
+.status-pill.status-rejected {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.status-pill.status-expired {
+  background: rgba(107, 114, 128, 0.15);
+  color: #9ca3af;
+  border: 1px solid rgba(107, 114, 128, 0.3);
+}
+
+.diff-viewer {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  background: #0d1117;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow-x: auto;
+  padding: 0.5rem 0;
+  margin: 1rem 0;
+}
+
+.diff-line {
+  padding: 0.1rem 0.75rem;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.diff-line-add {
+  background: rgba(16, 185, 129, 0.18);
+  color: #3fb950;
+}
+
+.diff-line-del {
+  background: rgba(239, 68, 68, 0.18);
+  color: #f85149;
+}
+
+.diff-line-hunk {
+  background: rgba(56, 139, 253, 0.15);
+  color: #58a6ff;
+  font-weight: 600;
+}
+
+.diff-line-ctx {
+  color: #c9d1d9;
+}
+
+.tally-container {
+  margin: 1rem 0;
+  padding: 1rem;
+  background: var(--surface-soft);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+
+.tally-bar {
+  height: 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  display: flex;
+  overflow: hidden;
+  margin: 0.75rem 0;
+  border: 1px solid var(--border);
+}
+
+.tally-segment {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.tally-segment.tally-yes {
+  background: #10b981;
+}
+
+.tally-segment.tally-no {
+  background: #ef4444;
+}
+
+.tally-segment.tally-abstain {
+  background: #9ca3af;
+}
+
+.tally-stats-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.82rem;
+  color: var(--muted);
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.vote-action-buttons {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin: 1rem 0;
+}
+
+.vote-btn {
+  flex: 1;
+  min-width: 120px;
+  padding: 0.6rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: var(--radius);
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--surface-card);
+  color: var(--text);
+  transition: all 0.2s ease;
+}
+
+.vote-btn:hover {
+  background: var(--surface-soft);
+  border-color: var(--border-glow);
+}
+
+.vote-btn.selected {
+  outline: 2px solid var(--accent);
+  border-color: var(--accent);
+  box-shadow: var(--accent-glow);
+}
+
+.vote-btn-yes {
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+.vote-btn-yes.selected {
+  background: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+  outline-color: #10b981;
+}
+
+.vote-btn-no {
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.vote-btn-no.selected {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  outline-color: #ef4444;
+}
+
+.vote-btn-abstain {
+  border-color: rgba(107, 114, 128, 0.4);
+}
+
+.vote-btn-abstain.selected {
+  background: rgba(107, 114, 128, 0.2);
+  color: #9ca3af;
+  outline-color: #9ca3af;
+}
+
+.banner-warning {
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #f59e0b;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  margin: 0.75rem 0;
+}
+
+.banner-info {
+  background: rgba(53, 132, 228, 0.12);
+  border: 1px solid rgba(53, 132, 228, 0.3);
+  color: var(--accent);
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  margin: 0.75rem 0;
+}
+
+.votes-table {
+  width: 100%;
+  font-size: 0.82rem;
+  border-collapse: collapse;
+  margin-top: 0.5rem;
+}
+
+.votes-table th,
+.votes-table td {
+  padding: 0.4rem 0.5rem;
+  border-bottom: 1px solid var(--border-subtle);
+  text-align: left;
+}
+
+.votes-table th {
+  color: var(--muted);
+  font-weight: 600;
+}
+
 /* Footer */
 .app-footer {
   text-align: center;

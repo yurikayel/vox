@@ -471,6 +471,40 @@ A versão 5.10 consolida o feed híbrido de alto nível estético e traz os elem
 - Cache do Service Worker atualizado para `vox-pwa-v5.10-ui-social`.
 - Suite automatizada expandida para **101 testes 100% verdes** (87 Node.js + 14 Python).
 
+---
+
+## 17. Governança Comunitária FOSS & Rede como Repo Público (Sprint v5.11 G1)
+
+A sprint v5.11 implementa a governança aberta do Vox inspirada na democracia direta e no fluxo de Pull Requests do desenvolvimento de software livre:
+
+### 17.1 Modelo de Proposta e Diff Unificado (`governance-proposal`)
+- **Propostas como PRs:** Cada deliberação possui título, motivação em Markdown e um bloco opcional de diff unificado (`diffText`), no formato padrão `git diff` (`+` para adições, `-` para remoções, `@@` para hunks).
+- **Tokenizador Vanilla (`parseUnifiedDiff` em `governance.js`):** Processamento leve no cliente para colorização visual (verde para inclusões, vermelho para exclusões, azul para cabeçalhos de contexto) sem dependências npm externas.
+
+### 17.2 Marco de Corte Anti-Brigading (`Eligibility-Cutoff`)
+- **Regra Canônica:** O marco de corte temporal da proposta é exatamente o instante de sua criação (`Eligibility-Cutoff = Proposal-Created-At`).
+- **Bloqueio de Brigading:** Apenas membros cuja transação ou registro local de membresia (`Type: membership`) tenha ocorrido comprovadamente **antes** da criação da proposta têm seus votos computados no resultado oficial.
+- **Transparência Radical:** Membros que aderiram após a abertura podem registrar seu voto normalmente na interface; o voto é armazenado e exibido na tabela de transparência pública com o status *"Não computado (adesão posterior ao marco de corte)"*, garantindo auditabilidade total sem comprometer a integridade democrática.
+
+### 17.3 Voto Criptográfico ECDSA P-256 e Apuração Estrita (`1 membro = 1 voto`)
+- **Voto Assinado no Cliente:** Cada voto (`Type: governance-vote`, opções `yes`, `no`, `abstain`) é assinado com o par de chaves ECDSA local do usuário (`localAccount.signPayload`) e propagado via gossip P2P.
+- **Igualdade Estrita ($1\times$):** Badges visuais (GitHub verificado, Pix informado, gov.br) conferem confiança de autoria, mas **nunca multiplicam o poder de voto**. 1 membro é rigorosamente igual a 1 voto.
+- **Deduplicação de Votos:** Caso um membro altere sua escolha durante o período de votação, apenas o voto mais recente é considerado na apuração (`computeTally`).
+
+### 17.4 Interface da Comunidade: Aba Governança e Detalhe de Proposta
+- **Abas Segmentadas:** A comunidade agora possui 3 abas principais: `Posts | Classificados | Governança (N)`.
+- **Card de Proposta (`.proposal-card`):** Exibe título, autor, status (`🟢 Em votação`, `🟣 Aprovada (Merged)`, `🔴 Rejeitada`, `⚪ Expirada`), badge de diff unificado e link para a tela de deliberação.
+- **Visualizador de Apuração e Barra de Progresso (`.tally-bar`):** Visualização em tempo real das proporções de votos Sim, Não e Abstenção, total de votos computados e votos pós-corte descartados.
+- **Formulário de Nova Proposta (`#/compose/proposal?c=:id`):** Interface intuitiva com orientações FOSS para redigir propostas e colar patches de alteração de regras.
+
+### 17.5 Ativação Automática de Recursos via Propostas Merged
+- Propostas aprovadas (`merged`) contendo patches como `commercialEnabled: true` ativam automaticamente a Feira Comunitária daquela comunidade no cliente, completando o ciclo entre governança e utilidade prática.
+
+### 17.6 Cache e PWA
+- Cache do Service Worker atualizado para `vox-pwa-v5.11-governance`, incluindo `./js/governance.js` nos ativos do app shell.
+- Semeador demo idempotente atualizado para a chave `vox-demo-seeded-v5` com propostas e votos simulados.
+- Suite automatizada com **109 testes 100% verdes** (95 Node.js + 14 Python).
+
 
 
 

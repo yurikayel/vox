@@ -15,6 +15,7 @@ import * as demoSeed from "./demo-seed.js";
 import * as social from "./social.js";
 import * as pixKeyHelper from "./pix-key.js";
 import * as listing from "./listing.js";
+import * as gov from "./governance.js";
 
 function parseRoute() {
   if (typeof window !== "undefined" && window.location?.search) {
@@ -45,14 +46,28 @@ function parseRoute() {
     return { name: "dm-list" };
   }
   if (parts[0] === "c" && parts[1]) {
+    if (parts[2] === "proposal" && parts[3]) {
+      return {
+        name: "proposal",
+        communityId: decodeURIComponent(parts[1]),
+        proposalId: decodeURIComponent(parts[3]),
+      };
+    }
     let tab = (query.get("tab") || "").toLowerCase();
     if (!tab && (parts[2] === "listings" || parts[2] === "classificados" || parts[2] === "feira")) {
       tab = "listings";
     }
+    if (!tab && (parts[2] === "governance" || parts[2] === "governanca")) {
+      tab = "governance";
+    }
+    let finalTab = "posts";
+    if (tab === "listings") finalTab = "listings";
+    else if (tab === "governance" || tab === "governanca") finalTab = "governance";
+
     return {
       name: "community",
       id: decodeURIComponent(parts[1]),
-      tab: tab === "listings" ? "listings" : "posts",
+      tab: finalTab,
     };
   }
   if (parts[0] === "t" && parts[1]) {
@@ -73,6 +88,7 @@ function parseRoute() {
   if (parts[0] === "compose") {
     if (parts[1] === "community") return { name: "compose-community" };
     if (parts[1] === "listing") return { name: "compose-listing", communityId: query.get("c") || "" };
+    if (parts[1] === "proposal") return { name: "compose-proposal", communityId: query.get("c") || "" };
     if (parts[1] === "topic") return { name: "compose-topic", communityId: query.get("c") || "" };
     if (parts[1] === "reply") {
       return {
@@ -323,8 +339,35 @@ async function showCommunity(communityId, tab = "posts") {
     } catch {}
   }
 
+  // Governança (Propostas)
+  let proposals = [];
+  try {
+    const localProposals = await cacheNode.getLocalPosts({ type: "governance-proposal", communityId });
+    const demoProps = (demo || communityId === "demo-aprenda-vox")
+      ? (mock.mockProposals(communityId).items || [])
+      : [];
+    const seenP = new Set();
+    for (const p of localProposals) {
+      seenP.add(p.id);
+      proposals.push(p);
+    }
+    for (const p of demoProps) {
+      if (!seenP.has(p.id)) {
+        seenP.add(p.id);
+        proposals.push(p);
+      }
+    }
+  } catch {}
+
+  const hasMergedFeira = proposals.some(
+    (p) => p.state === "merged" && (p.diffText || "").includes("commercialEnabled: true")
+  );
+  if (hasMergedFeira) {
+    meta = { ...meta, commercialEnabled: true };
+  }
+
   main.innerHTML = "";
-  if (demo && !localTopics.length && tab !== "listings") render.renderDemoBanner(main);
+  if (demo && !localTopics.length && tab !== "listings" && tab !== "governance") render.renderDemoBanner(main);
   else if (gateway) render.renderGatewayBanner(main, gateway);
 
   render.renderCommunity(main, communityId, filteredTopics, meta, {
@@ -333,6 +376,7 @@ async function showCommunity(communityId, tab = "posts") {
     walletAddress: user,
     activeTab: tab,
     listings,
+    proposals,
   });
 
   attachCommunityListingHandlers(main);
@@ -1164,6 +1208,171 @@ async function handleComposeListingSubmit(user, communityId) {
   }
 }
 
+async function showProposal(communityId, proposalId) {
+  const user = await getActiveUser();
+  const main = render.renderShell(makeShellProps(user, "communities", "Proposta de Governança"));
+  render.renderLoading(main);
+
+  const data = await fetchProposalData(communityId, proposalId, user);
+  if (!data?.proposal) {
+    main.innerHTML = `<div class="empty card"><p>Proposta não encontrada.</p><a href="#/c/${encodeURIComponent(communityId)}?tab=governance" class="btn btn-outline">← Voltar</a></div>`;
+    return;
+  }
+
+  const { proposal, tally, userVote, isEligible, isMember } = data;
+  main.innerHTML = "";
+  render.renderProposalDetail(main, proposal, tally, {
+    userVote,
+    isEligible,
+    community: { id: communityId, title: communityId },
+    isMember,
+    userAddress: user,
+  });
+
+  attachProposalVotingHandlers(proposal, user);
+}
+
+async function fetchProposalData(communityId, proposalId, user) {
+  let proposal = await cacheNode.getLocalPost(proposalId);
+  if (!proposal) {
+    proposal = mock.MOCK_DEMO_PROPOSALS.find((p) => p.id === proposalId) || null;
+  }
+  if (!proposal) return null;
+
+  const votes = await loadProposalVotes(proposalId);
+  const localMems = await cacheNode.getLocalPosts({ type: "membership", communityId: proposal.communityId });
+  const userMem = localMems.find((m) => m.author === user);
+  const isMember = Boolean(userMem);
+  const pCreatedAt = Number(proposal.createdAt || proposal.ts || 0);
+  const isEligible = isMember && gov.isEligibleToVote({
+    membershipTs: Number(userMem?.joinedAt || userMem?.ts || 0),
+    proposalCreatedAt: pCreatedAt,
+  });
+
+  const tally = gov.computeTally({ proposal, votes, memberships: localMems, now: Date.now() });
+  const userVote = votes.filter((v) => (v.author || v.owner) === user).sort((a, b) => (b.ts || 0) - (a.ts || 0))[0] || null;
+
+  return { proposal, votes, tally, userVote, isEligible, isMember };
+}
+
+async function loadProposalVotes(proposalId) {
+  const localVotes = await cacheNode.getLocalPosts({ type: "governance-vote", proposalId });
+  const mockVotesList = mock.MOCK_DEMO_VOTES[proposalId] || [];
+  const seenV = new Set();
+  const votes = [];
+  for (const v of localVotes) {
+    seenV.add(v.id || `${v.author}_${v.choice}`);
+    votes.push(v);
+  }
+  for (const v of mockVotesList) {
+    const key = v.id || `${v.author}_${v.choice}`;
+    if (!seenV.has(key)) {
+      seenV.add(key);
+      votes.push(v);
+    }
+  }
+  return votes;
+}
+
+function attachProposalVotingHandlers(proposal, user) {
+  const buttons = document.querySelectorAll(".vote-btn");
+  buttons.forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const choice = btn.dataset.choice;
+      if (!choice || !user) return;
+      buttons.forEach((b) => (b.disabled = true));
+      btn.textContent = "Assinando…";
+      try {
+        const signedVote = await localAccount.signPayload({
+          id: `vote_${proposal.id}_${user}_${Date.now()}`,
+          type: "governance-vote",
+          proposalId: proposal.id,
+          choice,
+          communityId: proposal.communityId,
+          author: user,
+          owner: user,
+          ts: Date.now(),
+        });
+        await cacheNode.saveLocalPost(signedVote);
+        peers.broadcastGossip(signedVote);
+        share.showToast(`Voto "${choice}" registrado!`);
+        showProposal(proposal.communityId, proposal.id);
+      } catch (err) {
+        share.showToast(`Erro ao votar: ${err.message}`, "error");
+        buttons.forEach((b) => (b.disabled = false));
+      }
+    });
+  });
+}
+
+async function showComposeProposal(communityId) {
+  const targetComm = communityId || mock.MOCK_DEMO_COMMUNITY.id;
+  const user = await getActiveUser();
+  const main = render.renderShell(makeShellProps(user, "compose", "Nova Proposta"));
+
+  let commMeta = { id: targetComm, title: targetComm };
+  try {
+    const localC = await cacheNode.getLocalPost(targetComm);
+    if (localC) commMeta = localC;
+    else if (targetComm === mock.MOCK_DEMO_COMMUNITY.id) commMeta = mock.MOCK_DEMO_COMMUNITY;
+  } catch {}
+
+  render.renderComposeProposal(main, targetComm, commMeta.title);
+  attachComposeProposalHandlers(targetComm, user);
+}
+
+function attachComposeProposalHandlers(communityId, user) {
+  const form = document.getElementById("form-compose-proposal");
+  if (!form) return;
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const title = document.getElementById("prop-title")?.value || "";
+    const body = document.getElementById("prop-body")?.value || "";
+    const diffText = document.getElementById("prop-diff")?.value || "";
+
+    const val = gov.validateProposalInput({ title, body, diffText, communityId });
+    if (!val.valid) return share.showToast(val.error, "error");
+
+    const btn = document.getElementById("btn-submit-proposal");
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = "Publicando…";
+    }
+    await publishProposal({ communityId, title: val.title, body: val.body, diffText: val.diffText, user, btn });
+  });
+}
+
+async function publishProposal({ communityId, title, body, diffText, user, btn }) {
+  try {
+    const now = Date.now();
+    const signedProposal = await localAccount.signPayload({
+      id: `prop_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+      type: "governance-proposal",
+      communityId,
+      title,
+      body,
+      diffText,
+      author: user,
+      owner: user,
+      createdAt: now,
+      closesAt: now + 7 * 24 * 3600 * 1000,
+      minQuorum: 2,
+      state: "open",
+      ts: now,
+    });
+    await cacheNode.saveLocalPost(signedProposal);
+    peers.broadcastGossip(signedProposal);
+    share.showToast("Proposta publicada na governança!");
+    location.hash = `#/c/${encodeURIComponent(communityId)}/proposal/${encodeURIComponent(signedProposal.id)}`;
+  } catch (err) {
+    share.showToast(`Erro ao publicar proposta: ${err.message}`, "error");
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = "Publicar Proposta Assinada";
+    }
+  }
+}
+
 async function showComposeReply(topicId, communityId) {
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "home", "Responder"));
@@ -1603,11 +1812,13 @@ async function route() {
   if (r.name === "dm-list") return showDmList();
   if (r.name === "dm-thread") return showDmThread(r.address);
   if (r.name === "community") return showCommunity(r.id, r.tab);
+  if (r.name === "proposal") return showProposal(r.communityId, r.proposalId);
   if (r.name === "topic") return showTopic(r.id, r.communityId);
   if (r.name === "profile") return showProfile(r.address, r.tab);
   if (r.name === "wallet") return showWallet();
   if (r.name === "compose-community") return showComposeCommunity();
   if (r.name === "compose-listing") return showComposeListing(r.communityId);
+  if (r.name === "compose-proposal") return showComposeProposal(r.communityId);
   if (r.name === "compose-topic") return showComposeTopic(r.communityId);
   if (r.name === "compose-reply") return showComposeReply(r.topicId, r.communityId);
   return showHome();
@@ -1620,6 +1831,8 @@ function initGossipListeners() {
       showHome(cur.feed);
     } else if (cur.name === "community" && cur.id === item.communityId) {
       showCommunity(cur.id, cur.tab);
+    } else if (cur.name === "proposal" && (cur.proposalId === item.proposalId || cur.proposalId === item.id)) {
+      showProposal(cur.communityId, cur.proposalId);
     } else if (cur.name === "topic" && (cur.id === item.id || cur.id === item.replyTo)) {
       showTopic(cur.id, cur.communityId);
     }
@@ -1627,6 +1840,10 @@ function initGossipListeners() {
       share.showToast(`Novo post na rede: ${item.title?.slice(0, 24) || "..."}`);
     } else if (item?.type === "listing") {
       share.showToast(`Nova oferta na feira: ${item.title?.slice(0, 24) || "..."}`);
+    } else if (item?.type === "governance-proposal") {
+      share.showToast(`Nova proposta de governança: ${item.title?.slice(0, 24) || "..."}`);
+    } else if (item?.type === "governance-vote") {
+      share.showToast(`Novo voto registrado na proposta!`);
     }
   });
 }
