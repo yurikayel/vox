@@ -648,7 +648,7 @@ Toolbar tripartida mantém Zap, estrela, copiar MD e bookmark.
 - **Gossip:** Não há evento `GOSSIP_DELETE` na malha atual — remoção/edição são **locais neste aparelho**; pares que já receberam o post via gossip mantêm cópia até implementação futura de retratação.
 
 ### 21.5 Cache e PWA
-- Cache elevado para `vox-pwa-v6.4-post-display-refine`.
+- Cache vigente (único): `vox-pwa-v6.7-ui-polish` (`client/sw.js` → `CACHE_NAME`; merge V-D01 ui-polish + feed chrome).
 - Suíte automatizada com **147 testes** (133 Node.js + 14 Python relay).
 
 ---
