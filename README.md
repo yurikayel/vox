@@ -11,7 +11,7 @@ Demo ao vivo: **[https://yurikayel.github.io/vox/](https://yurikayel.github.io/v
 
 Na primeira visita, a **Porta da Cantina** é a ilustração anime (`client/images/cantina-gate.jpg`) com o gag no estilo Wuher em **dois balões pintados na arte** (*"Seus bots tem que esperar lá fora!"* e *"Aqui não servimos esse tipo."*). Não há H2 "Porta da Cantina", quote duplicada, subtítulo itálico nem balão HTML/CSS por cima da imagem — só a arte e *Entrar — sou humano*.
 
-No feed, o layout é **híbrido**: texto estilo **X** (caption antes da toolbar), foto **4:5 full-bleed** estilo **IG**, bloco **README/diff** estilo **GitHub** quando aplicável — fundo cinza extremo, sem caixa em volta do post, stories visuais do tour e **composer inline** (Postar na mesma janela, com foto opcional). **Comentários abrem no próprio card**. Tour com **10 personas**, Open Frames (enquetes, abaixo-assinado, CLT). Cache: `vox-pwa-v6.3-hybrid-feed`.
+No feed, o layout é **híbrido**: texto estilo **X** (caption antes da toolbar), foto **4:5 full-bleed** estilo **IG**, bloco **README/diff** estilo **GitHub** quando aplicável — fundo cinza extremo, sem caixa em volta do post, stories visuais do tour e **composer inline** (Postar na mesma janela, com foto opcional). **Comentários abrem no próprio card**. Tour com **10 personas**, Open Frames (enquetes, abaixo-assinado, CLT). Cache: `vox-pwa-v6.3-hybrid-feed-spacing`.
 
 ---
 
