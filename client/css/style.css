@@ -1162,10 +1162,10 @@ main#app-main {
 
 .dm-bubble {
   max-width: 78%;
-  padding: 8px 12px;
-  border-radius: 18px;
+  padding: 8px 14px;
+  border-radius: var(--radius);
   font-size: 0.92rem;
-  line-height: 1.35;
+  line-height: 1.4;
   word-break: break-word;
 }
 
@@ -1174,7 +1174,8 @@ main#app-main {
   background: var(--accent-gradient);
   color: #fff;
   border-bottom-right-radius: 4px;
-  box-shadow: 0 2px 8px rgba(26, 95, 180, 0.2);
+  box-shadow: 0 2px 10px rgba(26, 95, 180, 0.25);
+  border: none;
 }
 
 .dm-bubble.received {
@@ -1182,7 +1183,7 @@ main#app-main {
   background: var(--surface-soft);
   color: var(--text);
   border-bottom-left-radius: 4px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-subtle);
 }
 
 .dm-bubble-meta {
@@ -1572,6 +1573,40 @@ main#app-main {
     opacity: 1;
     transform: scale(1) translateY(0);
   }
+}
+
+/* Porta da Cantina (Gate Cultural Anti-Bot) */
+.cantina-dialog {
+  max-width: 440px;
+  text-align: center;
+  border-color: rgba(56, 139, 253, 0.35);
+  box-shadow: 0 24px 56px rgba(0, 0, 0, 0.5), 0 0 24px rgba(56, 139, 253, 0.18);
+}
+
+.cantina-art-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.cantina-art-svg {
+  filter: drop-shadow(0 4px 12px rgba(56, 139, 253, 0.25));
+}
+
+.cantina-title {
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.cantina-quote {
+  letter-spacing: -0.01em;
+}
+
+.cantina-btn-enter {
+  box-shadow: 0 4px 16px rgba(26, 95, 180, 0.35);
 }
 
 .pact-feature {

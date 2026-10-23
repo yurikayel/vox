@@ -17,7 +17,7 @@ test("mock - mockCommunities retorna lista demo incluindo tour", () => {
 test("mock - mockTopics retorna topicos da comunidade ou array vazio", () => {
   const tour = mock.mockTopics("demo-aprenda-vox");
   assert.equal(tour.demo, true);
-  assert.equal(tour.items.length, 5);
+  assert.equal(tour.items.length, 10);
   assert.equal(tour.items[0].communityId, "demo-aprenda-vox");
 
   const comm1 = mock.mockTopics("demo-community-1");
@@ -31,11 +31,11 @@ test("mock - mockTopics retorna topicos da comunidade ou array vazio", () => {
 });
 
 test("mock - mockReplies retorna respostas do topico ou array vazio", () => {
-  const repliesTour = mock.mockReplies("demo-post-lia");
+  const repliesTour = mock.mockReplies("demo-post-helena");
   assert.equal(repliesTour.demo, true);
   assert.ok(repliesTour.items.length >= 1);
-  assert.equal(repliesTour.items[0].replyTo, "demo-post-lia");
-  assert.equal(repliesTour.items[0].author, "vx_demo_pri");
+  assert.equal(repliesTour.items[0].replyTo, "demo-post-helena");
+  assert.equal(repliesTour.items[0].author, "vx_demo_juliana");
 
   const replies = mock.mockReplies("demo-topic-1");
   assert.equal(replies.demo, true);
@@ -47,36 +47,58 @@ test("mock - mockReplies retorna respostas do topico ou array vazio", () => {
   assert.deepEqual(vazio.items, []);
 });
 
-test("mock - catálogo de 5 perfis demo e helpers getMockProfile / getAuthorDisplay", () => {
-  const expectedRoutes = ["vx_demo_lia", "vx_demo_rafa", "vx_demo_camila", "vx_demo_davi", "vx_demo_pri"];
+test("mock - catálogo de 10 perfis demo e helpers getMockProfile / getAuthorDisplay", () => {
+  const expectedRoutes = [
+    "vx_demo_helena",
+    "vx_demo_juliana",
+    "vx_demo_yara",
+    "vx_demo_mei",
+    "vx_demo_fernanda",
+    "vx_demo_salma",
+    "vx_demo_lucas",
+    "vx_demo_andre",
+    "vx_demo_kaue",
+    "vx_demo_raj",
+  ];
   for (const routeId of expectedRoutes) {
     const prof = mock.getMockProfile(routeId);
     assert.ok(prof, `Perfil ${routeId} deve existir no catálogo`);
     assert.equal(prof.routeId, routeId);
     assert.ok(prof.name && prof.name.length > 0);
     assert.ok(prof.bio && prof.bio.length > 0);
+    assert.ok(prof.avatar && prof.avatar.includes("images/avatars/"));
   }
 
-  assert.equal(mock.getAuthorDisplay("vx_demo_lia"), "Lia");
-  assert.equal(mock.getAuthorDisplay("vx_demo_rafa"), "Rafa");
-  assert.equal(mock.getAuthorDisplay("vx_demo_camila"), "Camila");
-  assert.equal(mock.getAuthorDisplay("vx_demo_davi"), "Davi");
-  assert.equal(mock.getAuthorDisplay("vx_demo_pri"), "Pri");
+  assert.equal(mock.getAuthorDisplay("vx_demo_helena"), "Helena");
+  assert.equal(mock.getAuthorDisplay("vx_demo_andre"), "André");
   assert.equal(mock.getAuthorDisplay("rota_desconhecida"), "");
   assert.equal(mock.getAuthorDisplay(""), "");
   assert.equal(mock.getMockProfile(""), null);
 
-  assert.equal(mock.getAuthorAvatar("vx_demo_lia"), "images/avatars/lia.jpg");
-  assert.equal(mock.getAuthorHandle("vx_demo_lia"), "lia");
+  assert.equal(mock.getAuthorAvatar("vx_demo_helena"), "images/avatars/helena.jpg");
+  assert.equal(mock.getAuthorHandle("vx_demo_helena"), "helena");
+
+  // Lookup de chave Pix fictícia
+  const helenaPix = mock.findMockByPixKey("helena.vox@gmail.com");
+  assert.ok(helenaPix);
+  assert.equal(helenaPix.routeId, "vx_demo_helena");
 });
 
-test("mock - mockRecentTopics retorna 5 posts educativos com fotos e interações", () => {
+test("mock - mockRecentTopics retorna 10 posts educativos com fotos, dor e resolução", () => {
   const recent = mock.mockRecentTopics();
   assert.equal(recent.demo, true);
-  assert.equal(recent.items.length, 5);
-  assert.equal(recent.items[0].id, "demo-post-lia");
-  assert.equal(recent.items[0].author, "vx_demo_lia");
-  assert.equal(recent.items[0].image, "images/posts/tour-celular.jpg");
-  assert.equal(recent.items[0].likesCount, 24);
+  assert.equal(recent.items.length, 10);
+  assert.equal(recent.items[0].id, "demo-post-helena");
+  assert.equal(recent.items[0].author, "vx_demo_helena");
+  assert.equal(recent.items[0].image, "images/posts/tour-helena.jpg");
+  assert.ok(recent.items[0].externalPain);
+  assert.equal(recent.items[0].voxResolution, "now");
   assert.equal(recent.items[0].communityTitle, "Aprenda o Vox");
+
+  // Todos os 10 posts devem conter externalPain e voxResolution
+  for (const item of recent.items) {
+    assert.ok(item.externalPain, `Post ${item.id} deve ter externalPain`);
+    assert.ok(item.voxResolution, `Post ${item.id} deve ter voxResolution`);
+    assert.ok(item.image, `Post ${item.id} deve ter imagem`);
+  }
 });

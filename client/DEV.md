@@ -322,23 +322,31 @@ O Vox opera primariamente como uma rede ponto a ponto cooperativa, sustentada pe
 
 ---
 
-## 12. Tour de Demonstração (5 Personas Educativas & Seed Local)
+## 12. Tour de Demonstração (10 Personas Educativas & Diversidade Plural)
 
-Para preencher a interface na primeira execução e permitir explorar os fluxos (feed → post → comunidade → perfil do autor → mensagem privada) sem depender de gateways remotos ou transações on-chain, o Vox inicializa um catálogo curado de 5 personas com publicações educativas sobre o produto:
+Na **Sprint v5.8**, o Vox expande o tour para **10 perfis educativos** na comunidade `demo-aprenda-vox`, orientados a resolver dores reais de plataformas corporativas centralizadas (Meta, X, TikTok, WhatsApp) sem promessas enganosas (*false advertising*).
 
-### 12.1 Personas & Temas Educativos
+### 12.1 Elenco Representativo (Regra 6 Mulheres / 4 Homens)
+O elenco é desenhado para refletir a diversidade brasileira autêntica, evitando estereótipos e dando voz própria a cada persona:
+- **6 Mulheres / 4 Homens**
+- **1 mulher branca** (`Helena`) e **1 homem branco** (`Lucas`); demais personas com **etnias distintas** (negras, indígenas, asiáticas brasileiras, pardas/nordestinas, árabes-brasileiras e sul-asiáticas brasileiras).
 
-| Autor (`routeId`) | Nome | Post | Tema & Explicação |
-|-------------------|------|------|--------------------|
-| `vx_demo_lia` | **Lia** | *O Vox mora no seu celular* | Rede cooperativa distribuída; painel **Sua rede**; controle e pausa a qualquer momento. |
-| `vx_demo_rafa` | **Rafa** | *Mensagens sem complicação* | Mensagens diretas privadas ponto a ponto via WebRTC com fallback para caixa postal temporária (TTL). |
-| `vx_demo_camila` | **Camila** | *Comunidades em vez de scroll infinito* | Participação orgânica por tema e interesse real, sem algoritmos de retenção forçada. |
-| `vx_demo_davi` | **Davi** | *Na rede e Guardado* | Explicação dos badges: **Na rede** (distribuído entre aparelhos a custo zero) vs **Guardado** (permaweb opcional). |
-| `vx_demo_pri` | **Pri** | *Entrar leva um toque* | Onboarding instantâneo com chaves geradas no navegador; criação imediata de comunidades e posts sem barreiras. |
+| # | Autor (`routeId`) | Nome | G | Etnia/Perfil | Dor Externa | Resolução no Vox | Status |
+|---|---|---|---|---|---|---|---|
+| 1 | `vx_demo_helena` | **Helena** | M | Branca | Instagram sufoca alcance orgânico | Comunidades temáticas e feed transparente "Para você" | `now` |
+| 2 | `vx_demo_juliana` | **Juliana** | M | Negra | Comentários e posts somem na Meta | Moderação aberta e auditável via `mod-action` público | `now` |
+| 3 | `vx_demo_yara` | **Yara** | M | Indígena | Extração predatória de dados para IA | Pacto Vox com teto diário e controle pleno no aparelho | `now` |
+| 4 | `vx_demo_mei` | **Mei** | M | Asiática BR | Autoplay viciante e ansiedade no TikTok/Reels | Leitura focada, layout limpo, zero autoplay de vídeos ou sons | `now` |
+| 5 | `vx_demo_fernanda` | **Fernanda** | M | Parda / NE | Feeds cheios de anúncios e seguidores comprados | Zero anúncios pagos e métricas honestas de aparelhos reais | `now` |
+| 6 | `vx_demo_salma` | **Salma** | M | Árabe-BR | Banimento injusto por filtro automatizado | Identidade soberana local (`routeId`) impossível de confiscar | `now` |
+| 7 | `vx_demo_lucas` | **Lucas** | H | Branco | Algoritmo do X que incentiva briga e ódio | Espaço comunitário com governança civilizada | `now` |
+| 8 | `vx_demo_andre` | **André** | H | Negro | Monopólio, clonagens e quedas no WhatsApp | DMs efêmeras P2P ponta a ponta + apoio comunitário via Pix | `now` |
+| 9 | `vx_demo_kaue` | **Kaue** | H | Indígena | Culturas regionais ignoradas nos grandes centros | Memória comunitária preservada a custo zero na rede | `now` |
+| 10 | `vx_demo_raj` | **Raj** | H | Sul-Asiático | Dados em datacenters sob leis estrangeiras | Histórico local no aparelho com caixa postal de 72h | `now` |
 
 ### 12.2 Mecanismo de Semeação (`demo-seed.js`)
-- **Idempotência:** A chave `vox-demo-seeded-v2` em `localStorage` sinaliza a carga inicial. Se os itens estiverem presentes, a checagem é instantânea.
-- **Isolamento de Dados:** Os posts são gravados via `cacheNode.saveLocalPost` com `isLocalP2p: true` e sem assinatura gossip, ficando disponíveis para navegação local sem poluir o broadcast de outros aparelhos.
+- **Idempotência:** A chave `vox-demo-seeded-v3` em `localStorage` sinaliza a carga inicial. Se os 10 itens estiverem presentes, a checagem é instantânea.
+- **Isolamento de Dados:** Os posts são gravados via `cacheNode.saveLocalPost` com `isLocalP2p: true` e metadados `externalPain` e `voxResolution: "now"`, sem poluir o broadcast de outros aparelhos.
 - **Restauração Rápida:** O botão **"🔄 Restaurar tour demo"** em `#/settings/network` (seção Avançado) permite recarregar o conteúdo educativo a qualquer momento para fins de testes e QA.
 
 ### 12.3 Experiência Visual InstaTwitter (Fotos, Curtidas e Salvos)
@@ -378,5 +386,21 @@ Na versão 5.7, o Vox implementa o layout Pro 2026 com cartões híbridos full-b
 - **Máscara de Privacidade:** Funções de exibição segura ocultam partes sensíveis de CPFs (`***.456.789-**`) e telefones (`+55 (11) *****-8901`).
 - **Conta Local & Sem CPF-Login:** A chave Pix reside em `vox-pix-key-v1` no `localStorage`. Ela é puramente opcional e declarativa. O `routeId` (`vx_...`) permanece como a única identidade criptográfica do usuário.
 - **Rota `#/pix/:key`:** Permite consultar perfis locais ou de exemplo associados à chave informada, acompanhada de aviso de conformidade explícito sobre pagamentos.
+
+---
+
+## 14. Onboarding Cultural: Porta da Cantina → Pacto Vox (Sprint v5.8)
+
+Para blindar o Vox contra fazendas de automação sem recorrer a captchas corporativos invasivos ou login estatal com CPF, o fluxo de primeiro acesso utiliza um duplo portão consentido:
+
+1. **Porta da Cantina (`vox-cantina-v1`):**
+   - Paródia cultural e acolhedora inspirada na clássica cena de cantina espacial (*"Seus bots vão ter que esperar do lado de fora. Droides e scripts ficam na calçada — aqui é conversa de gente"*).
+   - Arte visual 100% autoral em SVG/CSS (sem utilização de frames, logomarcas ou personagens protegidos por propriedade intelectual de terceiros).
+   - Acionamento em primeiro acesso armazenado em `localStorage` (`vox-cantina-v1`).
+   - Botão de ação único: `Entrar — sou humano`, com esclarecimento expansível sobre a minimização de dados do Vox.
+2. **Pacto Vox (`vox-pact-accepted`):**
+   - Apresentado imediatamente após a passagem pela Porta da Cantina.
+   - Apresenta os três pilares cooperativos: *Seus dados são seus*, *Rede cooperativa* e *Controle total*.
+   - Apenas após esse duplo consentimento a navegação é liberada para o feed e comunidades. Em acessos subsequentes, o usuário entra diretamente no app sem qualquer interrupção.
 
 

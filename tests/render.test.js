@@ -158,33 +158,51 @@ test("render - renderProfile com handle e renderHandleConflict", () => {
   assert.ok(mainConf.innerHTML.includes("addr_2"));
 });
 
-test("render - renderFeed e renderProfile com persona mock (Lia)", () => {
+test("render - renderCantinaGate e closeCantinaGate", () => {
+  const container = createContainer();
+  render.renderCantinaGate(container);
+
+  const html = container.innerHTML;
+  assert.ok(html.includes("Porta da Cantina"));
+  assert.ok(html.includes("Seus bots vão ter que esperar do lado de fora"));
+  assert.ok(html.includes("Droides e scripts ficam na calçada"));
+  assert.ok(html.includes("Não é o bot que você procura"));
+  assert.ok(html.includes("btn-cantina-enter"));
+  assert.ok(html.includes("Entrar — sou humano"));
+  assert.ok(html.includes("O que isso significa?"));
+
+  render.closeCantinaGate(container);
+  assert.equal(container.innerHTML, "");
+});
+
+test("render - renderFeed e renderProfile com persona mock (Helena)", () => {
   const mainFeed = createContainer();
   const topics = [
-    { id: "demo-post-lia", title: "O Vox mora no seu celular", body: "Texto...", image: "images/posts/tour-celular.jpg", author: "vx_demo_lia", communityId: "demo-aprenda-vox", likesCount: 24 },
+    { id: "demo-post-helena", title: "Comunidades livres em vez de reféns do algoritmo", body: "Texto...", image: "images/posts/tour-helena.jpg", author: "vx_demo_helena", communityId: "demo-aprenda-vox", likesCount: 48 },
   ];
   render.renderFeed(mainFeed, topics);
-  assert.ok(mainFeed.innerHTML.includes("Lia"));
-  assert.ok(mainFeed.innerHTML.includes("@lia"));
-  assert.ok(mainFeed.innerHTML.includes("O Vox mora no seu celular"));
-  assert.ok(mainFeed.innerHTML.includes("images/avatars/lia.jpg"));
-  assert.ok(mainFeed.innerHTML.includes("images/posts/tour-celular.jpg"));
+  assert.ok(mainFeed.innerHTML.includes("Helena"));
+  assert.ok(mainFeed.innerHTML.includes("@helena"));
+  assert.ok(mainFeed.innerHTML.includes("Comunidades livres"));
+  assert.ok(mainFeed.innerHTML.includes("images/avatars/helena.jpg"));
+  assert.ok(mainFeed.innerHTML.includes("images/posts/tour-helena.jpg"));
   assert.ok(mainFeed.innerHTML.includes("btn-like"));
   assert.ok(mainFeed.innerHTML.includes("btn-save"));
-  assert.ok(mainFeed.innerHTML.includes("24"));
+  assert.ok(mainFeed.innerHTML.includes("48"));
 
   const mainProf = createContainer();
-  render.renderProfile(mainProf, "vx_demo_lia", [{ communityId: "demo-aprenda-vox" }], false, "", {
-    displayName: "Lia",
-    profileBio: "Apoiadora de redes livres.",
+  render.renderProfile(mainProf, "vx_demo_helena", [{ communityId: "demo-aprenda-vox" }], false, "", {
+    handle: "helena",
+    displayName: "Helena",
+    profileBio: "Artesã e educadora popular.",
     posts: topics,
   });
-  assert.ok(mainProf.innerHTML.includes("Lia (@vx_demo_lia)"));
-  assert.ok(mainProf.innerHTML.includes("images/avatars/lia.jpg"));
-  assert.ok(mainProf.innerHTML.includes("Apoiadora de redes livres."));
+  assert.ok(mainProf.innerHTML.includes("Helena (@helena)"));
+  assert.ok(mainProf.innerHTML.includes("images/avatars/helena.jpg"));
+  assert.ok(mainProf.innerHTML.includes("Artesã e educadora popular."));
   assert.ok(mainProf.innerHTML.includes("profile-stats"));
   assert.ok(mainProf.innerHTML.includes("Posts do autor (1)"));
-  assert.ok(mainProf.innerHTML.includes("O Vox mora no seu celular"));
+  assert.ok(mainProf.innerHTML.includes("Comunidades livres"));
 });
 
 test("render - formatTimeAgo retorna strings relativas concisas", () => {
@@ -204,7 +222,7 @@ test("render - renderComposerStrip e post-toolbar no feed", () => {
 
   const main = createContainer();
   const topics = [
-    { id: "post-1", title: "Novidade na rede", ts: Date.now() - 5 * 60000, author: "vx_demo_lia" },
+    { id: "post-1", title: "Novidade na rede", ts: Date.now() - 5 * 60000, author: "vx_demo_helena" },
   ];
   render.renderFeed(main, topics);
   assert.ok(main.innerHTML.includes("composer-strip"));
@@ -234,16 +252,16 @@ test("render - renderProfile com Pix e métricas honestas", () => {
 
 test("render - renderPixLookup perfil encontrado vs nao vinculado", () => {
   const mainFound = createContainer();
-  render.renderPixLookup(mainFound, "lia@voxbrasil.org", {
-    routeId: "vx_demo_lia",
-    name: "Lia",
-    handle: "lia",
-    pixKey: "lia@voxbrasil.org",
-    pixKeyMasked: "lia@voxbrasil.org",
+  render.renderPixLookup(mainFound, "helena.vox@gmail.com", {
+    routeId: "vx_demo_helena",
+    name: "Helena",
+    handle: "helena",
+    pixKey: "helena.vox@gmail.com",
+    pixKeyMasked: "helena.vox@gmail.com",
   });
   assert.ok(mainFound.innerHTML.includes("Conta Localizada"));
-  assert.ok(mainFound.innerHTML.includes("Lia"));
-  assert.ok(mainFound.innerHTML.includes("vx_demo_lia"));
+  assert.ok(mainFound.innerHTML.includes("Helena"));
+  assert.ok(mainFound.innerHTML.includes("vx_demo_helena"));
   assert.ok(mainFound.innerHTML.includes("Aviso de Conformidade"));
 
   const mainEmpty = createContainer();
