@@ -52,6 +52,31 @@ Espelhos são **opcionais** e **substituíveis**; o client Fase 1 fala direto co
 - Operadores de relay desktop (`vox/relay/`) e nós leves mantêm total prerrogativa para limpar o cache a qualquer momento.
 - Espelhos públicos que recebam notificações judiciais devem suprimir a renderização dos conteúdos ilícitos em seus índices locais, em estrita observância ao Marco Civil da Internet (Art. 19).
 
+## Papéis de operador de infra voluntária
+
+A malha Vox não tem operador central de infra. Quem usa ou **adquire espaços digitais** (comunidade, handle, feira) pode optar por camadas de participação definidas em [docs/espacos-digitais-infra.md](./docs/espacos-digitais-infra.md). Obrigações legais (LGPD, Marco Civil, espelho) estão em [COMPLIANCE-BR.md](./COMPLIANCE-BR.md) (§ Infraestrutura voluntária).
+
+| Camada | Operador | Deveres mínimos (comunidade / protocolo) | Relação com moderação e espelho |
+|--------|----------|------------------------------------------|----------------------------------|
+| **Passivo** | Leitor | Nenhum para a malha; pode pausar Pacto | Consome feeds; filtros pessoais locais |
+| **Ativo** | Usuário com Pacto Vox | Respeitar tetos (banda, disco, Wi-Fi); servir só payload **público**; opt-out soberano | Não aplica `mod-action` alheio automaticamente |
+| **Apoiador** | Ativo + `commOnly` | Priorizar WANT/BLOB das **comunidades em que participa**; não usar escopo para spam externo | Acelera cache da feira/comunidade “do bairro” |
+| **Steward** | Relay/espelho (LAN/VPS) | Quotas, saúde do relay, TTL de cache; **documentar** URL e política; canal para ordens judiciais | Pode pré-aplicar `mod-action` no índice espelhado; suprimir TX na **lista local** (não on-chain) |
+
+### Steward e índice espelho
+
+1. **Opcional e substituível:** clientes podem ignorar um espelho e falar direto com gateways Arweave ([gateways.json](./client/config/gateways.json)).
+2. **Mirror comunitário:** `POST /vox/mirror` e `GET /vox/index/<Community-Id>.json` consolidam leitura rápida; stewards **não** ganham poder de moderador só por hospedar disco.
+3. **Alinhamento com a comunidade:** moderadores continuam emitindo `mod-action` on-chain; o steward **escolhe** se o espelho honra essas ações na listagem servida.
+4. **Feira habilitada (`V-I07`, sugestão não vinculante):** comunidade pode **recomendar** pin/espelho leve a apoiadores/stewards — nunca exigir contribuição de infra para postar ou vender na feira.
+5. **Conflito de política:** se membros discordarem do filtro de um espelho, podem forkar cliente, apontar outro relay ou publicar índice alternativo — mesma lógica do § Escalonamento (item 4).
+
+### Princípios de governança da infra
+
+- **Opt-in / opt-out:** downgrade para Passivo a qualquer momento em `#/settings/network`.
+- **Sem score público de reputação de nó** — evita pressão social ou trabalho não remunerado disfarçado de ranking.
+- **Sem alcance pago:** contribuir banda ou disco **não** compra visibilidade no feed (ver § Feira Comunitária).
+
 ## Escalonamento comunitário
 
 1. Criador define moderadores (transação de configuração).

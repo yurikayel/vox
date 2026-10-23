@@ -1477,13 +1477,13 @@ main#app-main {
   top: 48px;
   z-index: 10;
   background: var(--bg);
-  padding: 4px 4px 8px;
-  border-bottom: none;
+  padding: 0 4px;
+  border-bottom: 1px solid var(--border-subtle);
   display: flex;
-  justify-content: center;
-  align-items: center;
-  max-width: 100%;
-  margin: 0;
+  justify-content: stretch;
+  align-items: stretch;
+  max-width: var(--feed-max, 500px);
+  margin: 0 auto 16px auto;
   border-radius: 0;
 }
 
