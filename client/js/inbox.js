@@ -3,20 +3,42 @@
  * Envio, busca e exclusão de envelopes cifrados fora do permaweb com TTL.
  */
 
+export const RELAY_HTTP_STORAGE_KEY = "vox-relay-http-url";
+const DEFAULT_RELAY_HTTP = "http://127.0.0.1:3920";
+
+function normalizeRelayHttpBase(raw) {
+  if (!raw || !String(raw).trim()) return null;
+  let url = String(raw).trim().replace(/\/+$/, "");
+  if (/^wss:\/\//i.test(url)) {
+    url = url.replace(/^wss:\/\//i, "https://").replace(/:3921$/i, ":3920");
+  } else if (/^ws:\/\//i.test(url)) {
+    url = url.replace(/^ws:\/\//i, "http://").replace(/:3921$/i, ":3920");
+  } else if (!/^https?:\/\//i.test(url)) {
+    url = `http://${url}`;
+  }
+  return url.replace(/\/+$/, "");
+}
+
+export function saveRelayHttpUrl(raw) {
+  const normalized = normalizeRelayHttpBase(raw);
+  if (normalized) {
+    localStorage.setItem(RELAY_HTTP_STORAGE_KEY, normalized);
+  } else {
+    localStorage.removeItem(RELAY_HTTP_STORAGE_KEY);
+  }
+}
+
 export function getRelayHttpUrl() {
   try {
+    const explicit = localStorage.getItem(RELAY_HTTP_STORAGE_KEY);
+    const fromExplicit = normalizeRelayHttpBase(explicit);
+    if (fromExplicit) return fromExplicit;
+
     const custom = localStorage.getItem("vox-custom-signaling-url");
-    if (custom && custom.trim()) {
-      const url = custom.trim();
-      if (url.startsWith("wss://")) {
-        return url.replace("wss://", "https://").replace(/:3921$/, ":3920");
-      }
-      if (url.startsWith("ws://")) {
-        return url.replace("ws://", "http://").replace(/:3921$/, ":3920");
-      }
-    }
+    const fromSignaling = normalizeRelayHttpBase(custom);
+    if (fromSignaling) return fromSignaling;
   } catch {}
-  return "http://127.0.0.1:3920";
+  return DEFAULT_RELAY_HTTP;
 }
 
 export async function pushSealed(toAddress, envelope, baseUrl = null) {

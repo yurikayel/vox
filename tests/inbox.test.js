@@ -12,6 +12,15 @@ test("inbox - getRelayHttpUrl resolução de endpoints", () => {
 
   localStorage.setItem("vox-custom-signaling-url", "wss://signal.exemplo.com");
   assert.equal(inbox.getRelayHttpUrl(), "https://signal.exemplo.com");
+
+  inbox.saveRelayHttpUrl("https://relay.vps.br:8443");
+  assert.equal(inbox.getRelayHttpUrl(), "https://relay.vps.br:8443");
+
+  inbox.saveRelayHttpUrl("192.168.1.50:3920");
+  assert.equal(inbox.getRelayHttpUrl(), "http://192.168.1.50:3920");
+
+  inbox.saveRelayHttpUrl("");
+  assert.equal(inbox.getRelayHttpUrl(), "https://signal.exemplo.com");
 });
 
 test("inbox - pushSealed, pullMine e deleteSealed com mock de fetch", async () => {

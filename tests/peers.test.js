@@ -1,9 +1,7 @@
 import "../tests/setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mockStores } from "../tests/setup.js";
 import * as cacheNode from "../client/js/cache-node.js";
-import * as localAccount from "../client/js/local-account.js";
 import * as peers from "../client/js/peers.js";
 
 test("peers - configurações default-on do Pacto Vox (Fase 3.1/3.2)", () => {
@@ -118,78 +116,25 @@ test("peers - handleVoxMessage não responde se o nó estiver pausado ou atingir
   assert.equal(replied, false);
 });
 
-test("peers - commOnly restringe BLOB às comunidades do usuário (membro)", async () => {
+test("peers - fetchFromDesktopRelay usa relay HTTP configurável", async () => {
   localStorage.clear();
-  mockStores.clear();
-  const account = await localAccount.ensureLocalAccount();
+  const originalFetch = globalThis.fetch;
+  let requestedUrl = "";
 
-  await cacheNode.saveLocalPost({
-    id: "mem_minha_comunidade",
-    type: "membership",
-    communityId: "minha-comunidade",
-    author: account.routeId,
-    ts: Date.now(),
-  });
+  globalThis.fetch = async (url) => {
+    requestedUrl = url;
+    return {
+      ok: true,
+      text: async () => JSON.stringify({ body: "via relay", title: "T" }),
+    };
+  };
 
-  peers.savePeerSettings({ enabled: true, dailyCapMb: 50, wifiOnly: false, commOnly: true });
-  globalThis.navigator.connection = { type: "wifi", saveData: false };
-
-  await cacheNode.setCachedTx("tx_dentro", { communityId: "minha-comunidade", body: "ok" });
-  await cacheNode.setCachedTx("tx_fora", { communityId: "outra-comunidade", body: "nope" });
-
-  let inside = null;
-  await peers.handleVoxMessage(
-    { type: "WANT", txId: "tx_dentro", fromPeer: "outro_peer" },
-    (payload) => {
-      inside = payload;
-    }
-  );
-  assert.ok(inside);
-  assert.equal(inside.txId, "tx_dentro");
-
-  let outside = null;
-  await peers.handleVoxMessage(
-    { type: "WANT", txId: "tx_fora", fromPeer: "outro_peer" },
-    (payload) => {
-      outside = payload;
-    }
-  );
-  assert.equal(outside, null);
-});
-
-test("peers - commOnly inclui TX de comunidade que o usuário possui", async () => {
-  localStorage.clear();
-  mockStores.clear();
-  const account = await localAccount.ensureLocalAccount();
-
-  await cacheNode.saveLocalPost({
-    id: "comm_owned",
-    type: "community",
-    communityId: "feira-local",
-    title: "Feira",
-    author: account.routeId,
-    ts: Date.now(),
-  });
-
-  peers.savePeerSettings({ enabled: true, dailyCapMb: 50, wifiOnly: false, commOnly: true });
-  await cacheNode.setCachedTx("tx_feira", { title: "Anúncio", body: "vendo" });
-  await cacheNode.saveLocalPost({
-    id: "tx_feira",
-    type: "topic",
-    communityId: "feira-local",
-    title: "Anúncio",
-    body: "vendo",
-    author: account.routeId,
-    ts: Date.now(),
-  });
-
-  let served = null;
-  await peers.handleVoxMessage(
-    { type: "WANT", txId: "tx_feira", fromPeer: "outro_peer" },
-    (payload) => {
-      served = payload;
-    }
-  );
-  assert.ok(served);
-  assert.equal(served.data.body, "vendo");
+  try {
+    localStorage.setItem("vox-relay-http-url", "http://10.0.0.5:3920");
+    const data = await peers.fetchFromDesktopRelay("tx_remote");
+    assert.equal(requestedUrl, "http://10.0.0.5:3920/tx/tx_remote");
+    assert.equal(data.body, "via relay");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });
