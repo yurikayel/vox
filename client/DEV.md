@@ -606,9 +606,31 @@ A sprint v6.2 implementa a cooptagem da especificação **Open Frames** (`of:*` 
 - **Feedback Interativo em Tempo Real:** Atualização dinâmica no DOM (`#frame-content-:postId`) com barras de porcentagem para enquetes, confirmação de assinatura para abaixo-assinados e resultados de cálculo instantâneos.
 
 ### 20.3 Cache e PWA
-- Cache elevado para `vox-pwa-v6.2-open-frames`.
-- Ativo `./js/frames.js` adicionado a `SHELL_ASSETS` no Service Worker.
-- Suíte automatizada com **133 testes 100% verdes** (119 Node.js + 14 Python).
+- Ativo `./js/frames.js` no app shell.
+
+---
+
+## 21. Feed híbrido X + IG + GitHub (Sprint v6.3)
+
+Feed com fundo cinza extremo (`#fafafa` / `#000`), coluna `--feed-max: 500px`, posts **sem caixa** (só hairline entre itens) e layouts por tipo (`getPostFeedLayout`):
+
+### 21.1 Layouts (`renderPostItem`)
+- **Texto (X):** header → caption → frame (se houver) → toolbar → comentários. Sem `.post-media-container` vazio.
+- **Foto (IG):** header → mídia 4:5 full-bleed → frame → toolbar → caption.
+- **GitHub (`.post-github-gist`):** bloco mono estilo README/diff fixado (ex.: tour Raj).
+
+Toolbar tripartida mantém Zap, estrela, copiar MD e bookmark.
+
+### 21.2 Composer inline (estilo X)
+- `renderInlineComposer`: repouso = uma linha; foco expande textarea, anexo de imagem (`FileReader` → `post.image`), comunidade opcional e **Postar** na mesma janela (`attachInlineComposerHandlers` em `app.js`).
+- `#/compose/topic` permanece como deep-link / formulário completo.
+
+### 21.3 Stories strip
+- `renderStoriesStrip`: anéis com avatares do tour → `#/u/:id` (visual, sem TTL).
+
+### 21.4 Cache e PWA
+- Cache: `vox-pwa-v6.3-hybrid-feed`.
+
 
 
 

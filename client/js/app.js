@@ -142,6 +142,133 @@ function attachPostShareHandlers() {
   });
 }
 
+let inlineComposerImageDataUrl = "";
+
+function collapseInlineComposer() {
+  const root = document.getElementById("feed-inline-composer");
+  const collapsed = root?.querySelector(".inline-composer-collapsed");
+  const form = document.getElementById("form-inline-topic");
+  if (!root || !collapsed || !form) return;
+  form.classList.add("hidden");
+  collapsed.classList.remove("hidden");
+  collapsed.setAttribute("aria-expanded", "false");
+}
+
+function expandInlineComposer() {
+  const root = document.getElementById("feed-inline-composer");
+  const collapsed = root?.querySelector(".inline-composer-collapsed");
+  const form = document.getElementById("form-inline-topic");
+  if (!root || !collapsed || !form) return;
+  collapsed.classList.add("hidden");
+  form.classList.remove("hidden");
+  collapsed.setAttribute("aria-expanded", "true");
+  document.getElementById("inline-topic-body")?.focus();
+}
+
+function attachInlineComposerHandlers(onPublished) {
+  const root = document.getElementById("feed-inline-composer");
+  if (!root) return;
+
+  const collapsed = root.querySelector(".inline-composer-collapsed");
+  const form = document.getElementById("form-inline-topic");
+  const fileInput = document.getElementById("inline-topic-file");
+  const previewWrap = document.getElementById("inline-topic-preview-wrap");
+  const previewImg = document.getElementById("inline-topic-preview");
+  const removeBtn = document.getElementById("btn-inline-remove-img");
+
+  const clearImage = () => {
+    inlineComposerImageDataUrl = "";
+    if (fileInput) fileInput.value = "";
+    previewWrap?.classList.add("hidden");
+    if (previewImg) previewImg.removeAttribute("src");
+  };
+
+  collapsed?.addEventListener("click", () => expandInlineComposer());
+  collapsed?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      expandInlineComposer();
+    }
+  });
+
+  fileInput?.addEventListener("change", () => {
+    const file = fileInput.files?.[0];
+    if (!file || !file.type.startsWith("image/")) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      inlineComposerImageDataUrl = String(reader.result || "");
+      if (previewImg) previewImg.src = inlineComposerImageDataUrl;
+      previewWrap?.classList.remove("hidden");
+    };
+    reader.readAsDataURL(file);
+  });
+
+  removeBtn?.addEventListener("click", (e) => {
+    e.preventDefault();
+    clearImage();
+  });
+
+  form?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById("btn-inline-submit");
+    const bodyRaw = document.getElementById("inline-topic-body")?.value?.trim() || "";
+    const commSlug =
+      document.getElementById("inline-topic-comm")?.value?.trim().toLowerCase() || "geral";
+    if (!bodyRaw) return;
+
+    const firstLine = bodyRaw.split("\n")[0].trim();
+    const title = firstLine.slice(0, 120) || "Publicação";
+    const body = bodyRaw;
+
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = "Publicando…";
+    }
+    try {
+      const topicId = "top_" + Math.random().toString(36).slice(2, 10);
+      const payload = {
+        id: topicId,
+        type: "topic",
+        communityId: commSlug,
+        title,
+        body,
+      };
+      if (inlineComposerImageDataUrl) {
+        payload.image = inlineComposerImageDataUrl;
+        payload.imageAlt = title;
+      }
+      const signed = await localAccount.signPayload(payload);
+      await cacheNode.saveLocalPost(signed);
+      peers.broadcastGossip(signed);
+
+      if (wallet.hasWallet()) {
+        try {
+          const tags = upload.buildTags("topic", {
+            "Community-Id": commSlug,
+            "Topic-Title": title,
+            Title: title,
+            "Local-Origin-Id": topicId,
+          });
+          await upload.postData({ title, body, communityId: commSlug }, tags);
+        } catch {}
+      }
+
+      share.showToast("Post publicado no feed!");
+      form.reset();
+      clearImage();
+      collapseInlineComposer();
+      if (typeof onPublished === "function") await onPublished();
+    } catch (err) {
+      share.showToast(`Erro: ${err.message}`, "error");
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = "Postar";
+      }
+    }
+  });
+}
+
 async function showHome(feed = "for-you") {
   const activeFeed = feed === "following" ? "following" : "for-you";
   const user = await getActiveUser();
@@ -197,7 +324,7 @@ async function showHome(feed = "for-you") {
     main.innerHTML = "";
     if (demo && !localPosts.length) render.renderDemoBanner(main);
     else if (gateway) render.renderGatewayBanner(main, gateway);
-    render.renderFeed(main, finalTopics, { activeFeed });
+    render.renderFeed(main, finalTopics, { activeFeed, userRouteId: user || "" });
   } catch (e) {
     main.innerHTML = "";
     const rawLocal = await cacheNode.getLocalPosts({ type: "topic" });
@@ -209,10 +336,11 @@ async function showHome(feed = "for-you") {
       merged = merged.filter((p) => watchedSet.has(p.author || p.owner));
     }
     render.renderDemoBanner(main);
-    render.renderFeed(main, merged, { activeFeed });
+    render.renderFeed(main, merged, { activeFeed, userRouteId: user || "" });
   }
 
   attachPostShareHandlers();
+  attachInlineComposerHandlers(() => showHome(activeFeed));
 }
 
 async function showCommunities() {

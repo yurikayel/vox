@@ -229,19 +229,54 @@ test("render - formatTimeAgo retorna strings relativas concisas", () => {
   assert.equal(render.formatTimeAgo("invalido"), "recente");
 });
 
-test("render - renderComposerStrip e post-toolbar no feed", () => {
-  const strip = render.renderComposerStrip();
-  assert.ok(strip.includes("composer-strip"));
-  assert.ok(strip.includes("#/compose/topic"));
+test("render - inline composer e post-toolbar no feed", () => {
+  const strip = render.renderInlineComposer({ userRouteId: "vx_demo_helena" });
+  assert.ok(strip.includes("inline-composer"));
+  assert.ok(strip.includes("form-inline-topic"));
+  assert.ok(strip.includes("inline-topic-file"));
+  assert.ok(!strip.includes("composer-strip-link"));
 
   const main = createContainer();
   const topics = [
     { id: "post-1", title: "Novidade na rede", ts: Date.now() - 5 * 60000, author: "vx_demo_helena" },
   ];
-  render.renderFeed(main, topics);
-  assert.ok(main.innerHTML.includes("composer-strip"));
+  render.renderFeed(main, topics, { userRouteId: "vx_demo_helena" });
+  assert.ok(main.innerHTML.includes("inline-composer"));
+  assert.ok(main.innerHTML.includes("stories-strip"));
   assert.ok(main.innerHTML.includes("post-toolbar"));
   assert.ok(main.innerHTML.includes("5m"));
+});
+
+test("render - layout híbrido texto vs foto vs github", () => {
+  assert.equal(render.getPostFeedLayout({ title: "Só texto" }), "text");
+  assert.equal(render.getPostFeedLayout({ title: "Foto", image: "images/x.jpg" }), "photo");
+
+  const textHtml = render.renderPostItem({
+    id: "t-text",
+    title: "Tweet",
+    body: "Corpo",
+    author: "vx_demo_lucas",
+  });
+  assert.ok(textHtml.includes('post-layout-text'));
+  assert.ok(!textHtml.includes("post-media-container"));
+
+  const photoHtml = render.renderPostItem({
+    id: "t-photo",
+    title: "Foto",
+    image: "images/posts/tour-helena.jpg",
+    author: "vx_demo_helena",
+  });
+  assert.ok(photoHtml.includes('post-layout-photo'));
+  assert.ok(photoHtml.includes("post-media-container"));
+
+  const ghHtml = render.renderPostItem({
+    id: "t-gh",
+    title: "README",
+    author: "vx_demo_raj",
+    githubGist: { label: "README", lines: ["# linha"] },
+  });
+  assert.ok(ghHtml.includes("post-layout-github"));
+  assert.ok(ghHtml.includes("post-github-gist"));
 });
 
 test("render - btn-comment expande post-comments no card (sem #/t)", () => {
@@ -645,5 +680,56 @@ test("render - renderZapModal gera payload BR Code e aviso regulatorio", () => {
 
   render.closeZapModal(container);
   assert.equal(container.innerHTML, "");
+});
+
+test("render - renderStoriesStrip gera faixa horizontal com anéis de stories e personas do tour", () => {
+  const html = render.renderStoriesStrip();
+  assert.ok(html.includes("stories-strip"));
+  assert.ok(html.includes("story-ring"));
+  assert.ok(html.includes("story-avatar"));
+  assert.ok(html.includes("#/u/vx_demo_helena"));
+  assert.ok(html.includes("Helena"));
+  assert.ok(html.includes("#/u/vx_demo_juliana"));
+  assert.ok(html.includes("Juliana"));
+  assert.ok(html.includes("#/u/vx_demo_kaue"));
+});
+
+test("render - renderPostItem pilha vertical estilo Meta com header IG, toolbar tripartida e caption block", () => {
+  const post = {
+    id: "post_meta_stack_1",
+    title: "Título do Post Meta",
+    body: "Corpo com #fotografia e #arte no estilo Instagram",
+    image: "images/posts/tour-helena.jpg",
+    author: "vx_demo_helena",
+    likesCount: 10,
+    starsCount: 4,
+    repliesCount: 2,
+    ts: Date.now(),
+  };
+
+  const html = render.renderPostItem(post);
+  assert.ok(html.includes("post-header-ig"));
+  assert.ok(html.includes("post-header-user"));
+  assert.ok(html.includes("toolbar-left"));
+  assert.ok(html.includes("toolbar-center"));
+  assert.ok(html.includes("toolbar-right"));
+  assert.ok(html.includes("post-caption-block"));
+  assert.ok(html.includes("post-media-container"));
+  assert.ok(html.includes("btn-like"));
+  assert.ok(html.includes("btn-comment"));
+  assert.ok(html.includes("btn-share-post"));
+  assert.ok(html.includes("btn-star"));
+  assert.ok(html.includes("btn-save"));
+
+  const headerIdx = html.indexOf("post-header-ig");
+  const mediaIdx = html.indexOf("post-media-container");
+  const toolbarIdx = html.indexOf("insta-actions");
+  const captionIdx = html.indexOf("post-caption-block");
+  const commentsIdx = html.indexOf('class="post-comments');
+
+  assert.ok(headerIdx < mediaIdx, "Header deve preceder a mídia na pilha vertical");
+  assert.ok(mediaIdx < toolbarIdx, "Mídia deve preceder a toolbar na pilha vertical");
+  assert.ok(toolbarIdx < captionIdx, "Toolbar deve preceder a caption na pilha vertical");
+  assert.ok(captionIdx < commentsIdx, "Caption deve preceder os comentários na pilha vertical");
 });
 

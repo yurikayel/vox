@@ -1,68 +1,63 @@
 :root {
-  --bg: #f5f7fb;
-  --surface: rgba(255, 255, 255, 0.82);
+  --bg: #fafafa;
+  --surface: #ffffff;
   --surface-solid: #ffffff;
-  --surface-soft: rgba(239, 243, 248, 0.75);
-  --border: rgba(225, 232, 237, 0.85);
-  --border-subtle: rgba(240, 243, 245, 0.75);
-  --border-glow: rgba(26, 95, 180, 0.25);
+  --surface-soft: #f4f4f4;
+  --border: #dbdbdb;
+  --border-subtle: #efefef;
+  --border-glow: rgba(0, 0, 0, 0.08);
   --text: #0f1419;
-  --muted: #536471;
+  --muted: #737373;
   --accent: #1a5fb4;
-  --accent-soft: rgba(26, 95, 180, 0.1);
+  --accent-soft: rgba(26, 95, 180, 0.08);
   --accent-hover: #134b91;
-  --accent-glow: 0 0 16px rgba(26, 95, 180, 0.28);
+  --accent-glow: 0 0 12px rgba(26, 95, 180, 0.2);
   --accent-gradient: linear-gradient(135deg, #1a5fb4 0%, #3584e4 100%);
-  --glass-bg: rgba(255, 255, 255, 0.78);
-  --glass-border: rgba(255, 255, 255, 0.6);
-  --glass-blur: blur(16px);
-  --mesh-bg:
-    radial-gradient(at 0% 0%, rgba(26, 95, 180, 0.05) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, rgba(53, 132, 228, 0.04) 0px, transparent 50%);
-  --danger: #e0245e;
-  --danger-soft: rgba(224, 36, 94, 0.1);
+  --glass-bg: rgba(255, 255, 255, 0.92);
+  --glass-border: #dbdbdb;
+  --glass-blur: blur(12px);
+  --mesh-bg: none;
+  --danger: #ed4956;
+  --danger-soft: rgba(237, 73, 86, 0.1);
   --success: #17bf63;
   --success-soft: rgba(23, 191, 99, 0.1);
-  --radius: 14px;
-  --radius-sm: 8px;
-  --feed-max: 640px;
+  --radius: 8px;
+  --radius-sm: 6px;
+  --feed-max: 500px;
   --space-xs: 4px;
   --space-sm: 8px;
   --space-md: 16px;
   --space-lg: 24px;
-  --shadow: 0 2px 8px rgba(15, 20, 25, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.03);
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
   color-scheme: light dark;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #070a0e;
-    --surface: rgba(16, 22, 31, 0.72);
-    --surface-solid: #10161f;
-    --surface-soft: rgba(27, 36, 50, 0.65);
-    --border: rgba(45, 59, 79, 0.7);
-    --border-subtle: rgba(30, 40, 55, 0.6);
-    --border-glow: rgba(47, 129, 247, 0.4);
-    --text: #f0f3f6;
-    --muted: #8b9cae;
+    --bg: #000000;
+    --surface: #121212;
+    --surface-solid: #121212;
+    --surface-soft: #1a1a1a;
+    --border: #262626;
+    --border-subtle: #1e1e1e;
+    --border-glow: rgba(255, 255, 255, 0.1);
+    --text: #f5f5f5;
+    --muted: #a8a8a8;
     --accent: #388bfd;
-    --accent-soft: rgba(56, 139, 253, 0.14);
+    --accent-soft: rgba(56, 139, 253, 0.12);
     --accent-hover: #58a6ff;
-    --accent-glow: 0 0 20px rgba(56, 139, 253, 0.35);
+    --accent-glow: 0 0 14px rgba(56, 139, 253, 0.25);
     --accent-gradient: linear-gradient(135deg, #388bfd 0%, #79c0ff 100%);
-    --glass-bg: rgba(16, 22, 31, 0.65);
-    --glass-border: rgba(56, 139, 253, 0.18);
-    --glass-blur: blur(18px);
-    --mesh-bg:
-      radial-gradient(at 10% 10%, rgba(56, 139, 253, 0.12) 0px, transparent 45%),
-      radial-gradient(at 90% 85%, rgba(137, 87, 229, 0.08) 0px, transparent 50%),
-      radial-gradient(at 50% 50%, rgba(14, 165, 233, 0.05) 0px, transparent 60%);
-    --danger: #f85149;
-    --danger-soft: rgba(248, 81, 73, 0.15);
+    --glass-bg: rgba(18, 18, 18, 0.92);
+    --glass-border: #262626;
+    --glass-blur: blur(14px);
+    --mesh-bg: none;
+    --danger: #ed4956;
+    --danger-soft: rgba(237, 73, 86, 0.15);
     --success: #238636;
     --success-soft: rgba(35, 134, 54, 0.15);
-    --shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05);
+    --shadow: none;
   }
 }
 
@@ -94,7 +89,7 @@ a:hover {
   text-decoration: underline;
 }
 
-/* App Shell Layout com Mesh Glass */
+/* App Shell Layout */
 .app-layout {
   display: flex;
   min-height: 100dvh;
@@ -104,15 +99,7 @@ a:hover {
 }
 
 .app-layout::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background-image: var(--mesh-bg);
-  background-attachment: fixed;
-  background-repeat: no-repeat;
-  background-size: 100% 100%;
+  display: none;
 }
 
 .main-column {
@@ -450,70 +437,259 @@ main#app-main {
   }
 }
 
-/* Barra rápida de composição (Composer Strip) */
-.composer-strip {
-  margin-bottom: 12px;
-  padding: 10px 14px;
-  background: var(--surface);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  transition: all 0.2s ease;
+/* Composer inline (estilo X — mesma janela) */
+.inline-composer {
+  max-width: var(--feed-max, 500px);
+  margin: 0 auto 14px auto;
+  padding: 0 2px;
 }
 
-.composer-strip:hover {
-  border-color: var(--border-glow);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
-}
-
-.composer-strip-link {
+.inline-composer-collapsed {
   display: flex;
   align-items: center;
   gap: 12px;
-  text-decoration: none;
-  color: var(--text);
+  padding: 10px 4px;
+  cursor: text;
+  border-radius: var(--radius-sm);
 }
 
-.composer-strip-avatar {
-  font-size: 1.25rem;
-  line-height: 1;
+.inline-composer-collapsed:hover {
+  background: var(--surface-soft);
 }
 
-.composer-strip-placeholder {
+.inline-composer-placeholder {
   flex: 1;
   color: var(--muted);
   font-size: 0.92rem;
 }
 
-.composer-strip-btn {
-  pointer-events: none;
+.inline-composer-form {
+  padding: 8px 4px 12px;
 }
 
-/* Post / Item de Feed (Estilo X Glass) */
+.inline-composer-form.hidden,
+.inline-composer-collapsed.hidden {
+  display: none;
+}
+
+.inline-composer-form-head {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.inline-composer-form-head .avatar,
+.inline-composer-form-head .avatar-img {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+}
+
+.inline-composer-textarea {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 1rem;
+  line-height: 1.45;
+  resize: vertical;
+  min-height: 72px;
+  padding: 4px 0;
+}
+
+.inline-composer-textarea:focus {
+  outline: none;
+}
+
+.inline-composer-preview {
+  margin: 8px 0 8px 50px;
+  max-width: 100%;
+}
+
+.inline-composer-preview.hidden {
+  display: none;
+}
+
+.inline-composer-preview-img {
+  display: block;
+  max-width: 100%;
+  max-height: 280px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+}
+
+.inline-composer-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.inline-composer-tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.inline-composer-tool {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.82rem;
+  color: var(--accent);
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.inline-composer-comm {
+  border: none;
+  background: var(--surface-soft);
+  color: var(--text);
+  font-size: 0.78rem;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  max-width: 160px;
+}
+
+.inline-composer-hint {
+  margin: 8px 0 0;
+  font-size: 0.72rem;
+  text-align: left;
+}
+
+.inline-composer-hint a {
+  color: var(--muted);
+}
+
+/* Faixa de Stories Visual (Tour Personas) */
+.stories-strip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 4px 12px;
+  background: transparent;
+  border: none;
+  margin: 0 auto 6px auto;
+  max-width: var(--feed-max, 500px);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.stories-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.story-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  text-decoration: none;
+  flex-shrink: 0;
+  width: 66px;
+}
+
+.story-item:hover {
+  text-decoration: none;
+}
+
+.story-ring {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  padding: 2.5px;
+  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease;
+}
+
+.story-item:hover .story-ring {
+  transform: scale(1.05);
+}
+
+.story-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--surface-solid);
+  display: block;
+  background: var(--surface-soft);
+}
+
+.story-name {
+  font-size: 0.72rem;
+  color: var(--text);
+  max-width: 64px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+}
+
+/* Post / Item de Feed (Estilo Meta / Instagram) */
 .post {
   display: flex;
-  gap: 12px;
-  padding: 14px 16px;
-  background: transparent;
+  flex-direction: column;
+  gap: 0;
+  padding: 0 0 14px 0;
+  background: var(--surface-solid);
+  border: none;
+  border-radius: 0;
   border-bottom: 1px solid var(--border-subtle);
-  transition: background 0.15s ease;
+  margin: 0 auto;
+  max-width: var(--feed-max, 500px);
+  overflow: hidden;
   position: relative;
 }
 
-.post:first-child {
-  border-top-left-radius: var(--radius);
-  border-top-right-radius: var(--radius);
+.post:hover {
+  background: var(--surface-solid);
 }
 
-.post:last-child {
-  border-bottom-left-radius: var(--radius);
-  border-bottom-right-radius: var(--radius);
+.post-layout-text .post-header-ig,
+.post-layout-github .post-header-ig {
   border-bottom: none;
 }
 
-.post:hover {
+.post-github-gist {
+  margin: 0 14px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
   background: var(--surface-soft);
+}
+
+.post-github-gist-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border-subtle);
+  font-family: ui-monospace, "Cascadia Code", "Segoe UI Mono", monospace;
+}
+
+.post-github-gist-body {
+  margin: 0;
+  padding: 10px 12px;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--text);
+  white-space: pre-wrap;
+  font-family: ui-monospace, "Cascadia Code", "Segoe UI Mono", monospace;
+  overflow-x: auto;
 }
 
 .avatar {
@@ -662,44 +838,128 @@ main#app-main {
   word-break: break-word;
 }
 
-/* Fotos e Mídia nos Posts Estilo InstaTwitter */
+/* Fotos e Mídia nos Posts Estilo Instagram (Bleed 4:5) */
 .post-media-container {
-  margin: 10px 0 12px;
-  border-radius: 14px;
+  margin: 0;
+  border-radius: 0;
+  border: none;
+  border-top: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+  background: #000;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  max-height: 600px;
   overflow: hidden;
-  border: 1px solid var(--border);
-  background: var(--surface-soft);
-  max-height: 440px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  box-shadow: none;
 }
 
 .post-media {
   width: 100%;
-  height: auto;
-  max-height: 440px;
+  height: 100%;
   object-fit: cover;
   display: block;
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .post-media-container:hover .post-media {
-    transform: scale(1.015);
-  }
+/* Header do Post IG */
+.post-header-ig {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--surface-solid);
 }
 
-/* Ações dos Posts (Curtir, Comentar, Compartilhar, Salvar) */
+.post-header-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.post-header-user .avatar {
+  width: 32px;
+  height: 32px;
+  font-size: 0.8rem;
+}
+
+.post-header-user .avatar-img {
+  width: 32px;
+  height: 32px;
+}
+
+.post-header-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.post-header-meta .post-author {
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.post-header-meta .post-author:hover {
+  text-decoration: underline;
+}
+
+.post-header-meta .post-handle,
+.post-header-meta .post-time,
+.post-header-meta .post-dot {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.post-caption-block {
+  padding: 8px 14px 4px 14px;
+}
+
+.post-caption-block .post-title {
+  font-size: 0.94rem;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+}
+
+.post-caption-block .post-title a {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.post-caption-block .post-title a:hover {
+  text-decoration: underline;
+}
+
+.post-caption-block .post-body {
+  font-size: 0.88rem;
+  color: var(--text);
+  margin: 4px 0 0 0;
+  line-height: 1.45;
+}
+
+/* Ações dos Posts (Toolbar IG: esquerda, centro, direita) */
 .insta-actions {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  max-width: 440px;
-  margin-top: 10px;
-  padding-top: 6px;
-  border-top: 1px solid var(--border-subtle);
+  width: 100%;
+  max-width: none;
+  margin-top: 4px;
+  padding: 8px 10px 4px 10px;
+  border-top: none;
+}
+
+.toolbar-left,
+.toolbar-center,
+.toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .action-btn {
@@ -1040,30 +1300,31 @@ main#app-main {
   background: var(--accent-soft);
 }
 
-/* Feed Header Sticky Glass */
+/* Feed Header Sticky */
 .feed-header.sticky-header {
   position: sticky;
   top: 52px;
   z-index: 10;
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  padding: 10px 16px;
-  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  padding: 8px 4px;
+  border-bottom: 1px solid var(--border-subtle);
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
+  max-width: var(--feed-max, 500px);
+  margin: 0 auto 8px auto;
+  border-radius: 0;
 }
 
-/* Feed Container Glass */
+/* Feed Container Sem Caixa */
 .feed-container {
-  background: var(--surface);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  overflow: hidden;
-  box-shadow: var(--shadow);
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  overflow: visible;
+  box-shadow: none;
+  max-width: var(--feed-max, 500px);
+  margin: 0 auto;
 }
 
 /* Grade de Descoberta de Comunidades (Estilo IG Glass) */
@@ -2384,10 +2645,12 @@ main#app-main {
 
 /* Open Frames (v6.2 Mini-Apps) */
 .vox-frame {
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  border: none;
+  border-top: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+  border-radius: 0;
   background: var(--surface-soft, rgba(255, 255, 255, 0.03));
-  margin: 0.85rem 0;
+  margin: 0;
   overflow: hidden;
 }
 
@@ -2397,7 +2660,7 @@ main#app-main {
   justify-content: space-between;
   padding: 0.45rem 0.75rem;
   background: rgba(0, 0, 0, 0.18);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .pill-frame {
@@ -2418,7 +2681,8 @@ main#app-main {
 
 .vox-frame-media {
   width: 100%;
-  max-height: 240px;
+  aspect-ratio: 4 / 5;
+  max-height: 600px;
   overflow: hidden;
   background: #000;
   display: flex;
@@ -2428,8 +2692,7 @@ main#app-main {
 
 .vox-frame-img {
   width: 100%;
-  height: auto;
-  max-height: 240px;
+  height: 100%;
   object-fit: cover;
   display: block;
 }
