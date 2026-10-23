@@ -891,39 +891,83 @@ main#app-main {
   flex-wrap: wrap;
 }
 
-.post-owner-block {
-  display: inline-flex;
+.post-header-aside {
+  display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 0.15rem;
-  margin-left: 0.35rem;
-  max-width: min(100%, 14rem);
+  gap: 4px;
+  flex-shrink: 0;
+  max-width: 52%;
+}
+
+.post-owner-block {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
 }
 
 .post-local-sync-hint {
-  font-size: 0.62rem;
-  line-height: 1.25;
-  text-align: right;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
   color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1;
+  cursor: help;
+  opacity: 0.75;
+}
+
+.post-local-sync-hint:hover,
+.post-local-sync-hint:focus-visible {
+  opacity: 1;
+  color: var(--text);
+  outline: none;
+  box-shadow: 0 0 0 1px var(--border);
 }
 
 .post-owner-menu {
   display: inline-flex;
-  gap: 0.25rem;
+  align-items: center;
+  gap: 0.35rem;
   flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
-.post-owner-menu .btn {
-  font-size: 0.72rem;
-  padding: 0.15rem 0.45rem;
-  line-height: 1.2;
+.btn-text-quiet {
+  font-size: 0.78rem;
+  font-weight: 500;
+  padding: 0.1rem 0.35rem;
+  line-height: 1.25;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.btn-text-quiet:hover,
+.btn-text-quiet:focus-visible {
+  color: var(--text);
+  background: var(--surface-soft);
+  outline: none;
+}
+
+.btn-post-delete.btn-text-quiet:hover {
+  color: #e57373;
 }
 
 .post-header-tags {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
   gap: 6px;
-  margin-left: auto;
 }
 
 .post-author {
@@ -1052,23 +1096,33 @@ main#app-main {
   gap: 4px;
   min-width: 0;
   flex-wrap: wrap;
+  line-height: 1.25;
 }
 
 .post-header-meta .post-author {
   font-weight: 700;
-  font-size: 0.88rem;
+  font-size: 0.9rem;
   color: var(--text);
   text-decoration: none;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .post-header-meta .post-author:hover {
   text-decoration: underline;
 }
 
-.post-header-meta .post-handle,
+.post-header-meta .post-handle {
+  font-size: 0.74rem;
+  font-weight: 400;
+  color: var(--muted);
+}
+
 .post-header-meta .post-time,
 .post-header-meta .post-dot {
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   color: var(--muted);
 }
 
