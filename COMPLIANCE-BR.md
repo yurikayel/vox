@@ -44,7 +44,31 @@ O regime de responsabilidade civil de intermediários no Brasil estabelece disti
 * **Servidores de Sinalização WebRTC (`signaling.py` — Fase 3.2):** O servidor de sinalização atua como canal transitório e estritamente técnico para o handshake P2P (ofertas SDP e candidatos ICE). Ele não armazena registros de aplicação, não inspeciona payloads e não custodia dados das comunidades, operando sob o princípio da neutralidade de rede (Art. 9º do Marco Civil).
 * **Operadores de espelhos e front-ends curados:** Entidades ou indivíduos que hospedarem e disponibilizarem publicamente instâncias ou espelhos com filtros próprios, domínios comerciais ou seleção de conteúdo podem vir a ser enquadrados juridicamente como **provedores de aplicação de internet**.
 * **Responsabilidade por conteúdo de terceiros (Art. 19 / Jurisprudência STF):** Caso um operador de espelho receba ordem judicial específica (ou notificação qualificada conforme modulações do STF) para indisponibilizar conteúdo ilícito, a conformidade deve ser realizada na camada de renderização do front-end (suprimindo a exibição das transações em seus índices locais).
-* Para detalhes sobre os procedimentos comunitários de resposta a abusos e remoção em listas de espelhos, consulte [GOVERNANCE.md](./GOVERNANCE.md) (§ Abuso e moderação).
+* **Nós leves e apoiadores (camadas Passivo / Ativo / Apoiador):** Usuários que apenas leem (Passivo) ou servem cache P2P de **payload já público** no permaweb, dentro dos tetos do Pacto Vox, **não** editam feed alheio nem vendem alcance. Em geral **não** se equiparam a provedor de aplicação centralizado; continuam sujeitos à lei civil se publicarem conteúdo ilícito **como autores**. Ver [docs/espacos-digitais-infra.md](./docs/espacos-digitais-infra.md).
+* **Stewards de espelho e relay (`vox/relay/`):** Quem opera **publicamente** índice curado (`GET /vox/index/*.json`), espelho multi-comunidade ou front-end com seleção editorial pode ser enquadrado como **provedor de aplicação**. O relay de inbox (`/inbox/:toAddress`) permanece **transitório e cego** (§ DMs acima) — distinto do espelho de conteúdo público.
+* **Espelho ≠ apagar on-chain:** Suprimir TX em índice local ou UI **não** remove dados do Arweave; cumpre ordem na **camada que o operador controla** (lista espelhada, HTML servido, filtros `mod-action`).
+* Para papéis comunitários, escalonamento e deveres mínimos de stewards, consulte [GOVERNANCE.md](./GOVERNANCE.md) (§ Papéis de operador de infra voluntária).
+
+## Infraestrutura voluntária (camadas Passivo → Steward)
+
+Norma de produto e implementação: [docs/espacos-digitais-infra.md](./docs/espacos-digitais-infra.md). Resumo **jurídico-informativo** para quem escolhe participar da malha:
+
+| Camada | Papel | LGPD / dados | Marco Civil (visão geral) |
+|--------|--------|--------------|---------------------------|
+| **Passivo** | Só consome; pausa ajuda à rede | Cache mínimo local; sem servir terceiros | Não atua como intermediário de terceiros |
+| **Ativo** | Nó leve (Pacto Vox, default-on) | Só replica **dados públicos** já obtidos; opt-out em `#/settings/network` | Canal técnico cooperativo; sem curadoria |
+| **Apoiador** | Ativo + escopo `commOnly` às comunidades do usuário | Mesmas salvaguardas do Ativo; não usar escopo para amplificar spam externo | Reforço de vizinhança digital, não plataforma editorial |
+| **Steward** | Relay desktop/VPS, espelho, pin documentado | Logs de acesso do **seu** servidor sob **sua** política; DMs permanecem cifradas/TTL | Possível **provedor de aplicação** se índice público curado; Art. 19 na renderização local |
+
+**Orientações práticas para stewards voluntários (PF, coletivo ou PJ):**
+
+1. **Transparência:** publicar URL do relay/espelho, quotas de disco e se aplicam filtros de `mod-action` ou listas locais de TX ocultas.
+2. **Ordem judicial / notificação qualificada:** canal de contato (e-mail ou página) para receber pedidos; responder na **camada espelhada** (remover TX do índice JSON, deixar de servir BLOB cacheado) — sem prometer remoção on-chain.
+3. **Feira comunitária:** sugerir pin leve a apoiadores/stewards da comunidade é **opcional** (governança suave); **não** condicionar postagem ou visibilidade a contribuição de infra (sem pay-to-win).
+4. **Sem ranking público de “bom nó”:** prioridade gossip suave no protocolo **não** cria obrigação legal extra; evita tratar participação como serviço profissional monitorado pelo projeto Vox.
+5. **Encarregado/DPO:** o repositório open-source **não** nomeia encarregado central; steward comercial ou que trate dados além do cache público deve avaliar LGPD conforme seu modelo.
+
+Participar como **Ativo/Apoiador** no app **não** transfere ao projeto Vox responsabilidade por cache servido — quem opera o dispositivo ou servidor responde pelos atos que pratica na malha.
 
 ## Handles, Propriedade Intelectual e Nomes (@handle — Fase 5)
 
