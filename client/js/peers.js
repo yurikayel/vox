@@ -177,6 +177,47 @@ function updateServiceWorkerRelay(settings) {
   }
 }
 
+/** Comunidades onde o usuário local é membro ou dono (escopo commOnly). */
+export async function collectUserCommunityIds() {
+  const account = await localAccount.ensureLocalAccount();
+  const routeId = account?.routeId || "";
+  const ids = new Set();
+  if (!routeId) return ids;
+
+  const memberships = await cacheNode.getLocalPosts({ type: "membership" });
+  for (const m of memberships) {
+    if (m.author === routeId && m.communityId) ids.add(m.communityId);
+  }
+
+  const communities = await cacheNode.getLocalCommunities();
+  for (const c of communities) {
+    const cid = c.communityId || c.id;
+    if (cid && c.owner === routeId) ids.add(cid);
+  }
+  return ids;
+}
+
+async function resolveTxCommunityId(txId, cachedData) {
+  if (cachedData && typeof cachedData === "object" && cachedData.communityId) {
+    return cachedData.communityId;
+  }
+  const local = await cacheNode.getLocalPost(txId);
+  if (local?.communityId) return local.communityId;
+  if (local?.replyTo) {
+    const parent = await cacheNode.getLocalPost(local.replyTo);
+    if (parent?.communityId) return parent.communityId;
+  }
+  return null;
+}
+
+export async function isTxInUserCommunityScope(txId, cachedData) {
+  const scope = await collectUserCommunityIds();
+  if (scope.size === 0) return false;
+  const commId = await resolveTxCommunityId(txId, cachedData);
+  if (!commId) return false;
+  return scope.has(commId);
+}
+
 export async function handleVoxMessage(msg, replyFn, source = "broadcast") {
   if (!msg || typeof msg !== "object") return;
   const settings = getPeerSettings();
@@ -188,20 +229,24 @@ export async function handleVoxMessage(msg, replyFn, source = "broadcast") {
 
     const cached = await cacheNode.getCachedTx(msg.txId);
     if (cached && typeof replyFn === "function") {
-      const payload = {
-        type: "BLOB",
-        txId: msg.txId,
-        data: cached,
-        fromPeer: myPeerId,
-      };
-      replyFn(payload);
-      const size = JSON.stringify(cached).length;
-      updateMetrics("blobsServed", 1);
-      updateMetrics("bytesServed", size);
-      if (source === "rtc") {
-        updateMetrics("blobsServedRtc", 1);
+      const inScope =
+        !settings.commOnly || (await isTxInUserCommunityScope(msg.txId, cached));
+      if (inScope) {
+        const payload = {
+          type: "BLOB",
+          txId: msg.txId,
+          data: cached,
+          fromPeer: myPeerId,
+        };
+        replyFn(payload);
+        const size = JSON.stringify(cached).length;
+        updateMetrics("blobsServed", 1);
+        updateMetrics("bytesServed", size);
+        if (source === "rtc") {
+          updateMetrics("blobsServedRtc", 1);
+        }
+        recordBytesServed(size);
       }
-      recordBytesServed(size);
     }
   }
 

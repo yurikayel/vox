@@ -1,7 +1,9 @@
 import "../tests/setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
+import { mockStores } from "../tests/setup.js";
 import * as cacheNode from "../client/js/cache-node.js";
+import * as localAccount from "../client/js/local-account.js";
 import * as peers from "../client/js/peers.js";
 
 test("peers - configurações default-on do Pacto Vox (Fase 3.1/3.2)", () => {
@@ -18,7 +20,7 @@ test("peers - configurações default-on do Pacto Vox (Fase 3.1/3.2)", () => {
 test("peers - persistência de configurações customizadas e opt-out", () => {
   localStorage.clear();
   peers.savePeerSettings({
-    enabled: false, // Pausado
+    enabled: false,
     maxMb: 100,
     wifiOnly: false,
     commOnly: true,
@@ -46,12 +48,12 @@ test("peers - detecção de rede wifi vs celular/saveData", () => {
   assert.equal(peers.isWifiOrUnlimited(), false);
 
   delete globalThis.navigator.connection;
-  assert.equal(peers.isWifiOrUnlimited(), true); // fallback desktop
+  assert.equal(peers.isWifiOrUnlimited(), true);
 });
 
 test("peers - medição de consumo diário e verificação de teto", () => {
   localStorage.clear();
-  peers.savePeerSettings({ enabled: true, dailyCapMb: 1 }); // 1 MB
+  peers.savePeerSettings({ enabled: true, dailyCapMb: 1 });
 
   assert.equal(peers.isDailyCapReached(), false);
 
@@ -103,9 +105,8 @@ test("peers - handleVoxMessage não responde se o nó estiver pausado ou atingir
   );
   assert.equal(replied, false);
 
-  // Ativo mas com teto atingido
   peers.savePeerSettings({ enabled: true, dailyCapMb: 1 });
-  peers.recordBytesServed(2 * 1024 * 1024); // 2 MB > 1 MB
+  peers.recordBytesServed(2 * 1024 * 1024);
 
   replied = false;
   await peers.handleVoxMessage(
@@ -115,4 +116,80 @@ test("peers - handleVoxMessage não responde se o nó estiver pausado ou atingir
     }
   );
   assert.equal(replied, false);
+});
+
+test("peers - commOnly restringe BLOB às comunidades do usuário (membro)", async () => {
+  localStorage.clear();
+  mockStores.clear();
+  const account = await localAccount.ensureLocalAccount();
+
+  await cacheNode.saveLocalPost({
+    id: "mem_minha_comunidade",
+    type: "membership",
+    communityId: "minha-comunidade",
+    author: account.routeId,
+    ts: Date.now(),
+  });
+
+  peers.savePeerSettings({ enabled: true, dailyCapMb: 50, wifiOnly: false, commOnly: true });
+  globalThis.navigator.connection = { type: "wifi", saveData: false };
+
+  await cacheNode.setCachedTx("tx_dentro", { communityId: "minha-comunidade", body: "ok" });
+  await cacheNode.setCachedTx("tx_fora", { communityId: "outra-comunidade", body: "nope" });
+
+  let inside = null;
+  await peers.handleVoxMessage(
+    { type: "WANT", txId: "tx_dentro", fromPeer: "outro_peer" },
+    (payload) => {
+      inside = payload;
+    }
+  );
+  assert.ok(inside);
+  assert.equal(inside.txId, "tx_dentro");
+
+  let outside = null;
+  await peers.handleVoxMessage(
+    { type: "WANT", txId: "tx_fora", fromPeer: "outro_peer" },
+    (payload) => {
+      outside = payload;
+    }
+  );
+  assert.equal(outside, null);
+});
+
+test("peers - commOnly inclui TX de comunidade que o usuário possui", async () => {
+  localStorage.clear();
+  mockStores.clear();
+  const account = await localAccount.ensureLocalAccount();
+
+  await cacheNode.saveLocalPost({
+    id: "comm_owned",
+    type: "community",
+    communityId: "feira-local",
+    title: "Feira",
+    author: account.routeId,
+    ts: Date.now(),
+  });
+
+  peers.savePeerSettings({ enabled: true, dailyCapMb: 50, wifiOnly: false, commOnly: true });
+  await cacheNode.setCachedTx("tx_feira", { title: "Anúncio", body: "vendo" });
+  await cacheNode.saveLocalPost({
+    id: "tx_feira",
+    type: "topic",
+    communityId: "feira-local",
+    title: "Anúncio",
+    body: "vendo",
+    author: account.routeId,
+    ts: Date.now(),
+  });
+
+  let served = null;
+  await peers.handleVoxMessage(
+    { type: "WANT", txId: "tx_feira", fromPeer: "outro_peer" },
+    (payload) => {
+      served = payload;
+    }
+  );
+  assert.ok(served);
+  assert.equal(served.data.body, "vendo");
 });
