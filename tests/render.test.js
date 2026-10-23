@@ -186,3 +186,68 @@ test("render - renderFeed e renderProfile com persona mock (Lia)", () => {
   assert.ok(mainProf.innerHTML.includes("Posts do autor (1)"));
   assert.ok(mainProf.innerHTML.includes("O Vox mora no seu celular"));
 });
+
+test("render - formatTimeAgo retorna strings relativas concisas", () => {
+  const now = Date.now();
+  assert.equal(render.formatTimeAgo(now - 10 * 1000), "agora");
+  assert.equal(render.formatTimeAgo(now - 15 * 60 * 1000), "15m");
+  assert.equal(render.formatTimeAgo(now - 2 * 3600 * 1000), "2h");
+  assert.equal(render.formatTimeAgo(now - 28 * 3600 * 1000), "1d");
+  assert.equal(render.formatTimeAgo(null), "recente");
+  assert.equal(render.formatTimeAgo("invalido"), "recente");
+});
+
+test("render - renderComposerStrip e post-toolbar no feed", () => {
+  const strip = render.renderComposerStrip();
+  assert.ok(strip.includes("composer-strip"));
+  assert.ok(strip.includes("#/compose/topic"));
+
+  const main = createContainer();
+  const topics = [
+    { id: "post-1", title: "Novidade na rede", ts: Date.now() - 5 * 60000, author: "vx_demo_lia" },
+  ];
+  render.renderFeed(main, topics);
+  assert.ok(main.innerHTML.includes("composer-strip"));
+  assert.ok(main.innerHTML.includes("post-toolbar"));
+  assert.ok(main.innerHTML.includes("5m"));
+});
+
+test("render - renderProfile com Pix e métricas honestas", () => {
+  const main = createContainer();
+  render.renderProfile(main, "vx_me", [], true, "", {
+    displayName: "Meu Perfil",
+    stats: { posts: 3, peersConnected: 4, communities: 2 },
+    pixKey: "12345678909",
+    pixKeyMasked: "***.456.789-**",
+  });
+  const html = main.innerHTML;
+  assert.ok(html.includes("profile-cover"));
+  assert.ok(html.includes("profile-avatar-wrap"));
+  assert.ok(html.includes("3"));
+  assert.ok(html.includes("posts"));
+  assert.ok(html.includes("4"));
+  assert.ok(html.includes("aparelhos próximos"));
+  assert.ok(html.includes("Chave Pix:"));
+  assert.ok(html.includes("***.456.789-**"));
+  assert.ok(html.includes("form-pix-key"));
+});
+
+test("render - renderPixLookup perfil encontrado vs nao vinculado", () => {
+  const mainFound = createContainer();
+  render.renderPixLookup(mainFound, "lia@voxbrasil.org", {
+    routeId: "vx_demo_lia",
+    name: "Lia",
+    handle: "lia",
+    pixKey: "lia@voxbrasil.org",
+    pixKeyMasked: "lia@voxbrasil.org",
+  });
+  assert.ok(mainFound.innerHTML.includes("Conta Localizada"));
+  assert.ok(mainFound.innerHTML.includes("Lia"));
+  assert.ok(mainFound.innerHTML.includes("vx_demo_lia"));
+  assert.ok(mainFound.innerHTML.includes("Aviso de Conformidade"));
+
+  const mainEmpty = createContainer();
+  render.renderPixLookup(mainEmpty, "chave_desconhecida", null);
+  assert.ok(mainEmpty.innerHTML.includes("Chave Pix não vinculada"));
+  assert.ok(mainEmpty.innerHTML.includes("chave_desconhecida"));
+});

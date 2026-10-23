@@ -53,6 +53,25 @@ O regime de responsabilidade civil de intermediários no Brasil estabelece disti
 3. **Tratamento de Conflitos e Ambiguidade:** Quando mais de uma conta publica transação para o mesmo slug, o cliente PWA expõe a multiplicidade abertamente aos usuários (sinalização de conflito/ambiguidade), cabendo aos membros avaliarem o histórico de transações e chaves públicas associadas.
 4. **Violações Legais Flagrantes:** Casos de estelionato, falsidade ideológica (Art. 299 do Código Penal) ou uso indevido de marcas registradas devem ser tratados no âmbito do Poder Judiciário. Operadores de espelhos que recebam ordens judiciais específicas têm a faculdade técnica de ocultar resoluções de handles em seus front-ends.
 
+## Identidade, Chave Pix (Fase A) e Política Anti-CPF (Fase 5.7)
+
+1. **Chave Pix Declarativa no Perfil (Fase A):**
+   * O campo de chave Pix no perfil do Vox é **opcional e puramente declarativo**, destinado a viabilizar apoios comunitários diretos entre pessoas (ex: jornalismo independente, coletivos locais).
+   * O Vox **não é instituição de pagamento (IP)** nem instituição financeira regulada pelo Banco Central do Brasil (BCB), não integra o Sistema de Pagamentos Brasileiro (SPB), não processa compensações, não cobra taxas e não custodia valores. Toda e qualquer transferência ocorre estritamente fora do aplicativo, no app bancário ou carteira do próprio usuário.
+   * O aplicativo **não valida nem atesta a titularidade civil ou bancária** da chave informada. Os usuários são expressamente alertados a conferir os dados no momento da liquidação bancária em sua instituição de preferência.
+
+2. **Minimização de Dados e Mascaramento de Privacidade (LGPD Art. 6º, III):**
+   * Em conformidade com o princípio da segurança e da minimização de riscos, chaves informadas de tipos sensíveis (como CPF ou telefone) são **mascaradas na interface** para terceiros (`***.456.789-**` ou `+55 (11) *****-8901`).
+   * A chave declarada reside unicamente no armazenamento local do navegador (`localStorage`) e não é enviada para nenhum servidor central do projeto Vox.
+
+3. **Política Estrita Anti-CPF-Login (Soberania Criptográfica):**
+   * O Vox **rejeita e veda expressamente o uso de CPF, e-mail governamental ou dados civis como requisito de autenticação ou login**.
+   * A identidade primária do usuário no Vox é soberana, efêmera e criptográfica: ela reside na chave de rota local (`routeId` no formato `vx_...`), gerada em par de chaves assimétricas no próprio navegador do usuário sem intermediários.
+
+4. **Roadmap e Relação com gov.br (Fase D — Documentação Conceitual):**
+   * Eventuais integrações futuras de atestação de reputação ou verificação de cidadania (ex: via credenciais verificáveis OpenID Connect gov.br) serão **estritamente opcionais, desacopladas do login e mantidas na Fase D**.
+   * O Vox não condiciona a livre expressão, o compartilhamento comunitário e a participação na rede cooperativa a cadastros governamentais ou vigilância de dados civis.
+
 ## Conteúdo Político e TSE
 
 A **[Resolução TSE 23.610/2019](http://www.tse.jus.br/)** (e normas correlatas) impõe deveres a **plataformas digitais** no contexto eleitoral brasileiro (transparência, procedimentos, etc.).

@@ -9,6 +9,7 @@ O **Pix** não significa “tudo acontece só no Brasil”. Significa **padrão 
 - **Permaweb (Arweave)** é uma camada global de armazenamento e indexação; gateways (Turbo, AR.IO, `arweave.net`) operam em várias regiões.
 - **App-Name `vox-brasil`** e convenções de tags são o “arranjo” brasileiro — comunidades, moderação e UX pensados para cultura de fórum e Orkut — não uma promessa de que bytes ficam fisicamente só em território nacional.
 - **Soberania** aqui é: *você assina, você publica, ninguém apaga sua transação na chain* — não “100% hospedado no Brasil” como slogan de marketing.
+- **Chave Pix no Perfil (Fase A):** Enquanto atributo social opcional, a chave Pix no perfil serve para apoios voluntários e diretos entre participantes (sem intermediação de plataforma), reafirmando que o valor circula diretamente entre as pontas, exatamente como a mensagem e o post. O Vox não é banco nem arranjo de pagamento fechado.
 
 ## Vox vs Iniciativas Arquetípicas
 

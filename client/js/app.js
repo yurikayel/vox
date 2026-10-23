@@ -13,6 +13,7 @@ import * as handles from "./handles.js";
 import * as localAccount from "./local-account.js";
 import * as demoSeed from "./demo-seed.js";
 import * as social from "./social.js";
+import * as pixKeyHelper from "./pix-key.js";
 
 function parseRoute() {
   if (typeof window !== "undefined" && window.location?.search) {
@@ -29,6 +30,9 @@ function parseRoute() {
   if (!parts.length) return { name: "home" };
   if (parts[0] === "communities") return { name: "communities" };
   if (parts[0] === "perfil") return { name: "perfil" };
+  if (parts[0] === "pix" && parts[1]) {
+    return { name: "pix-lookup", query: decodeURIComponent(parts[1]) };
+  }
   if (parts[0] === "settings" && parts[1] === "network") {
     return { name: "network-settings" };
   }
@@ -513,6 +517,14 @@ async function showProfile(address) {
   const mockProf = mock.getMockProfile(targetAddress);
   let displayName = isSelf ? localAccount.getDisplayName() : "";
   let profileBio = "";
+  let pixKey = "";
+  if (isSelf) {
+    pixKey = localAccount.getPixKey() || "";
+  } else if (mockProf?.pixKey) {
+    pixKey = mockProf.pixKey;
+  }
+  const pixKeyMasked = pixKey ? pixKeyHelper.maskForDisplay(pixKey) : "";
+
   if (mockProf) {
     displayName = mockProf.name;
     profileBio = mockProf.bio;
@@ -539,12 +551,46 @@ async function showProfile(address) {
     posts: authorPosts,
     hasWallet: wallet.hasWallet(),
     balance,
+    pixKey,
+    pixKeyMasked,
   });
 
   bindProfileButtons(user, targetAddress, isSelf, dmPub);
 }
 
 function bindProfileButtons(user, address, isSelf, dmPub) {
+  const formPixKey = document.getElementById("form-pix-key");
+  if (formPixKey && isSelf) {
+    formPixKey.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const input = document.getElementById("input-pix-key");
+      const rawVal = input?.value.trim() || "";
+      const feedback = document.getElementById("pix-feedback");
+      if (!rawVal) {
+        localAccount.clearPixKey();
+        share.showToast("Chave Pix removida do perfil.");
+        showProfile(address);
+        return;
+      }
+      const validation = pixKeyHelper.validatePixKey(rawVal);
+      if (!validation.valid) {
+        if (feedback) feedback.innerHTML = `<span style="color:var(--danger);">${validation.error}</span>`;
+        return;
+      }
+      localAccount.setPixKey(validation.normalized);
+      share.showToast("Chave Pix salva no seu perfil local!");
+      showProfile(address);
+    });
+  }
+
+  const btnClearPix = document.getElementById("btn-clear-pix");
+  if (btnClearPix && isSelf) {
+    btnClearPix.addEventListener("click", () => {
+      localAccount.clearPixKey();
+      share.showToast("Chave Pix removida.");
+      showProfile(address);
+    });
+  }
   const btnCopyDmLink = document.getElementById("btn-copy-my-dm-link");
   if (btnCopyDmLink) {
     btnCopyDmLink.addEventListener("click", () => {
@@ -1237,12 +1283,48 @@ function checkPactModal() {
   }
 }
 
+async function showPixLookup(query) {
+  const user = await getActiveUser();
+  const main = render.renderShell(makeShellProps(user, "profile", "Consulta Pix"));
+  render.renderLoading(main);
+
+  let foundProfile = null;
+  const cleanQuery = String(query || "").trim();
+  const myPix = localAccount.getPixKey();
+  const myRouteId = await localAccount.getRouteId();
+
+  if (myPix && (myPix.toLowerCase() === cleanQuery.toLowerCase() || pixKeyHelper.normalizePixKey(cleanQuery).normalized === myPix)) {
+    foundProfile = {
+      routeId: myRouteId,
+      name: localAccount.getDisplayName() || "Você",
+      handle: "",
+      pixKey: myPix,
+      pixKeyMasked: pixKeyHelper.maskForDisplay(myPix),
+    };
+  } else {
+    const mockFound = mock.findMockByPixKey(cleanQuery);
+    if (mockFound) {
+      foundProfile = {
+        routeId: mockFound.routeId,
+        name: mockFound.name,
+        handle: mockFound.handle,
+        pixKey: mockFound.pixKey,
+        pixKeyMasked: pixKeyHelper.maskForDisplay(mockFound.pixKey),
+      };
+    }
+  }
+
+  main.innerHTML = "";
+  render.renderPixLookup(main, query, foundProfile);
+}
+
 async function route() {
   checkPactModal();
   const r = parseRoute();
   if (r.name === "home") return showHome();
   if (r.name === "communities") return showCommunities();
   if (r.name === "perfil") return showProfile();
+  if (r.name === "pix-lookup") return showPixLookup(r.query);
   if (r.name === "network-settings") return showNetworkSettings();
   if (r.name === "handle-lookup") return showHandleLookup(r.slug);
   if (r.name === "dm-list") return showDmList();

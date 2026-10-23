@@ -174,6 +174,30 @@ function renderAvatarHtml(author, authorDisplay, sizeClass = "") {
   return `<span class="avatar ${sizeClass}">${authorInitial}</span>`;
 }
 
+export function formatTimeAgo(ts) {
+  if (!ts || isNaN(Number(ts))) return "recente";
+  const diff = Math.max(0, Date.now() - Number(ts));
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "agora";
+  if (mins < 60) return `${mins}m`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days}d`;
+  return `${Math.floor(days / 30)}mês`;
+}
+
+export function renderComposerStrip(displayName = "") {
+  return `
+    <div class="composer-strip card">
+      <a class="composer-strip-link" href="#/compose/topic">
+        <span class="composer-strip-avatar">✍️</span>
+        <span class="composer-strip-placeholder">O que está acontecendo na sua rede?</span>
+        <span class="btn btn-primary btn-sm composer-strip-btn">Postar</span>
+      </a>
+    </div>`;
+}
+
 function renderPostItem(t) {
   const author = t.author || t.owner || "";
   const authorDisplay = t.authorDisplay || (author ? mock.getAuthorDisplay(author) : "") || shortId(author);
@@ -196,6 +220,7 @@ function renderPostItem(t) {
   const currentLikes = social.getLikesCount(t.id, baseLikes);
   const saved = social.isSaved(t.id);
   const repliesCount = Number(t.repliesCount) || 0;
+  const timeLabel = formatTimeAgo(t.ts);
 
   return `
     <article class="post insta-post" data-id="${escapeHtml(t.id)}">
@@ -206,7 +231,7 @@ function renderPostItem(t) {
             <a class="post-author" href="#/u/${encodeURIComponent(author)}">${escapeHtml(authorDisplay)}</a>
             <span class="post-handle">@${escapeHtml(authorHandle)}</span>
             <span class="post-dot">·</span>
-            <span class="post-meta">recente</span>
+            <span class="post-meta">${escapeHtml(timeLabel)}</span>
           </div>
           <div class="post-header-tags">
             ${originBadge}
@@ -218,7 +243,7 @@ function renderPostItem(t) {
         </div>
         ${bodySnippet}
         ${imageHtml}
-        <div class="post-actions insta-actions">
+        <div class="post-actions insta-actions post-toolbar">
           <button class="action-btn btn-like ${liked ? "active" : ""}" data-id="${escapeHtml(t.id)}" data-count="${baseLikes}" aria-label="Curtir post">
             <svg class="action-icon icon-heart" width="18" height="18" viewBox="0 0 24 24" fill="${liked ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
             <span class="action-count count-likes">${currentLikes > 0 ? currentLikes : ""}</span>
@@ -243,7 +268,8 @@ export function renderFeed(main, topics = []) {
     <div class="feed-header sticky-header">
       <span class="section-title">Para você</span>
       <a class="btn btn-primary btn-sm" href="#/compose/topic">+ Postar</a>
-    </div>`;
+    </div>
+    ${renderComposerStrip()}`;
 
   if (!topics.length) {
     html += `
@@ -432,7 +458,35 @@ export function renderTopic(main, topicId, topic, replies, { topicData = null, i
   main.innerHTML += html;
 }
 
-function renderProfileHeader(address, isCurrentWallet, handle, isConflict, claimants, displayName, profileBio = "", stats = null) {
+function renderProfileStats(statsData) {
+  if (!statsData) return "";
+  const postsCount = statsData.posts || 1;
+  const postsLabel = postsCount === 1 ? "post" : "posts";
+  return `
+    <div class="profile-stats">
+      <span><strong>${postsCount}</strong> <span class="meta">${postsLabel}</span></span>
+      ${statsData.peersConnected !== undefined
+        ? `<span><strong>${statsData.peersConnected}</strong> <span class="meta">aparelhos próximos</span></span>`
+        : ""}
+      ${statsData.communities !== undefined
+        ? `<span><strong>${statsData.communities}</strong> <span class="meta">comunidade</span></span>`
+        : ""}
+      ${statsData.isTourDemo ? `<span class="badge-pill demo-badge">Perfil do tour de exemplo</span>` : ""}
+    </div>`;
+}
+
+function renderProfilePixBadge(pixKeyMasked, pixKeyRaw) {
+  if (!pixKeyMasked) return "";
+  const query = encodeURIComponent(pixKeyRaw || pixKeyMasked);
+  return `
+    <div class="profile-pix-badge">
+      <span class="pix-badge-icon">❖</span>
+      <span>Chave Pix: <strong>${escapeHtml(pixKeyMasked)}</strong></span>
+      <a class="pix-badge-link" href="#/pix/${query}">Consultar</a>
+    </div>`;
+}
+
+function renderProfileHeader(address, isCurrentWallet, handle, isConflict, claimants, displayName, profileBio = "", stats = null, pixKeyMasked = "", pixKeyRaw = "") {
   const displayTitle = displayName ? `${displayName} (@${handle || shortId(address)})` : (handle ? `@${handle}` : "Perfil");
   const initial = (displayName || handle || address || "U").slice(0, 1).toUpperCase();
   const avatarUrl = mock.getAuthorAvatar(address);
@@ -440,15 +494,10 @@ function renderProfileHeader(address, isCurrentWallet, handle, isConflict, claim
     ? `<img class="profile-avatar-img" src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(displayName || address)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" /><span class="avatar" style="display:none; width:72px; height:72px; font-size:1.8rem;">${initial}</span>`
     : `<span class="avatar" style="width:72px; height:72px; font-size:1.8rem;">${initial}</span>`;
 
-  const bioHtml = profileBio ? `<p class="profile-bio desc" style="margin:8px 0 0; color:var(--text); line-height:1.45;">${escapeHtml(profileBio)}</p>` : "";
+  const bioHtml = profileBio ? `<p class="profile-bio desc">${escapeHtml(profileBio)}</p>` : "";
   const statsData = stats || mock.getMockProfile(address)?.stats;
-  const statsHtml = statsData
-    ? `<div class="profile-stats" style="display:flex; gap:1.2rem; margin-top:0.85rem; font-size:0.88rem;">
-        <span><strong>${statsData.posts || 1}</strong> <span class="meta">${(statsData.posts || 1) === 1 ? "post" : "posts"}</span></span>
-        <span><strong>${statsData.followers || 0}</strong> <span class="meta">seguidores</span></span>
-        <span><strong>${statsData.following || 0}</strong> <span class="meta">seguindo</span></span>
-      </div>`
-    : "";
+  const statsHtml = renderProfileStats(statsData);
+  const pixBadge = renderProfilePixBadge(pixKeyMasked, pixKeyRaw);
 
   const conflictBanner = isConflict
     ? `<div class="card error" style="margin-top:0.6rem;">
@@ -461,21 +510,39 @@ function renderProfileHeader(address, isCurrentWallet, handle, isConflict, claim
 
   return `
     <div class="card profile-card">
-      <div style="display:flex; align-items:center; gap:16px; margin-bottom:8px;">
-        ${avatarHtml}
-        <div>
-          <h2 style="margin:0;">${escapeHtml(displayTitle)}</h2>
-          <p class="meta" style="margin:3px 0 0;">ID de Rede: <code>${escapeHtml(address)}</code></p>
+      <div class="profile-cover"></div>
+      <div class="profile-header-body">
+        <div class="profile-avatar-row">
+          <div class="profile-avatar-wrap">${avatarHtml}</div>
+          ${isCurrentWallet ? `<span class="badge-pill">Sua Conta Neste Aparelho</span>` : ""}
         </div>
+        <div class="profile-info">
+          <h2 class="profile-title">${escapeHtml(displayTitle)}</h2>
+          <p class="meta profile-route-id">ID de Rede: <code>${escapeHtml(address)}</code></p>
+        </div>
+        ${bioHtml}
+        ${pixBadge}
+        ${statsHtml}
+        ${conflictBanner}
       </div>
-      ${bioHtml}
-      ${statsHtml}
-      ${conflictBanner}
-      ${isCurrentWallet ? `<span class="badge-pill" style="margin-top:0.6rem;">Sua Conta Neste Aparelho</span>` : ""}
     </div>`;
 }
 
-function renderProfileActions(address, isCurrentWallet, handle, displayName, hasWallet, balance) {
+function renderPixForm(currentPixKey) {
+  return `
+    <div class="pix-section">
+      <label for="input-pix-key" class="pix-label">Chave Pix (opcional no perfil):</label>
+      <p class="desc pix-desc">Chave para apoios diretos. Não é login nem valida titularidade bancária. Seu ID de conta continua sendo sua chave criptográfica local.</p>
+      <form id="form-pix-key" class="pix-form">
+        <input type="text" id="input-pix-key" class="form-control" placeholder="CPF, e-mail, telefone ou chave aleatória" value="${escapeHtml(currentPixKey || "")}" />
+        <button type="submit" class="btn btn-sm btn-primary">Salvar Pix</button>
+        ${currentPixKey ? `<button type="button" id="btn-clear-pix" class="btn btn-sm btn-outline">Remover</button>` : ""}
+      </form>
+      <div id="pix-feedback" class="pix-feedback"></div>
+    </div>`;
+}
+
+function renderProfileActions(address, isCurrentWallet, handle, displayName, hasWallet, balance, currentPixKey = "") {
   if (isCurrentWallet) {
     return `
       <div class="card" style="margin-top:0.75rem;">
@@ -494,6 +561,7 @@ function renderProfileActions(address, isCurrentWallet, handle, displayName, has
           <input type="text" id="input-display-name" class="form-control" placeholder="Seu apelido ou nome..." value="${escapeHtml(displayName || "")}" maxlength="30" />
           <button type="submit" class="btn btn-sm btn-primary" style="white-space:nowrap;">Salvar Nome</button>
         </form>
+        ${renderPixForm(currentPixKey)}
       </div>
 
       <details class="advanced-settings card" style="margin-top:0.75rem;">
@@ -536,9 +604,9 @@ function renderProfileActions(address, isCurrentWallet, handle, displayName, has
     </div>`;
 }
 
-export function renderProfile(main, address, memberships = [], isCurrentWallet = false, dmPubStr = "", { handle = "", isConflict = false, claimants = [], displayName = "", profileBio = "", stats = null, posts = [], hasWallet = false, balance = "0.000" } = {}) {
-  let html = renderProfileHeader(address, isCurrentWallet, handle, isConflict, claimants, displayName, profileBio, stats);
-  html += renderProfileActions(address, isCurrentWallet, handle, displayName, hasWallet, balance);
+export function renderProfile(main, address, memberships = [], isCurrentWallet = false, dmPubStr = "", { handle = "", isConflict = false, claimants = [], displayName = "", profileBio = "", stats = null, posts = [], hasWallet = false, balance = "0.000", pixKey = "", pixKeyMasked = "" } = {}) {
+  let html = renderProfileHeader(address, isCurrentWallet, handle, isConflict, claimants, displayName, profileBio, stats, pixKeyMasked, pixKey);
+  html += renderProfileActions(address, isCurrentWallet, handle, displayName, hasWallet, balance, pixKey);
 
   if (posts && posts.length) {
     html += `
@@ -573,6 +641,52 @@ export function renderProfile(main, address, memberships = [], isCurrentWallet =
   }
 
   main.innerHTML = html;
+}
+
+export function renderPixLookup(main, query = "", profile = null) {
+  const queryStr = escapeHtml(query);
+  let content = "";
+  if (profile) {
+    const profName = profile.name || shortId(profile.routeId);
+    const profHandle = profile.handle ? `@${profile.handle}` : "";
+    const pixMasked = profile.pixKeyMasked || profile.pixKey || "";
+    content = `
+      <div class="card pix-lookup-card">
+        <div class="pix-lookup-header">
+          <span class="badge-pill p2p-pill">❖ Conta Localizada</span>
+        </div>
+        <h2 style="margin:0.5rem 0 0.2rem;">${escapeHtml(profName)} ${profHandle ? `<span class="meta">${escapeHtml(profHandle)}</span>` : ""}</h2>
+        <p class="meta">ID de Rede: <code>${escapeHtml(profile.routeId)}</code></p>
+        <div class="card" style="margin:0.75rem 0; background:var(--surface-soft);">
+          <span class="meta" style="font-size:0.8rem;">Chave Pix informada:</span>
+          <div style="font-size:1.1rem; font-weight:700; margin-top:0.2rem;"><code>${escapeHtml(pixMasked)}</code></div>
+        </div>
+        <div class="card" style="font-size:0.82rem; color:var(--muted); margin-bottom:1rem;">
+          <p style="margin:0;"><strong>Aviso de Conformidade:</strong> O Vox é um aplicativo peer-to-peer sem servidores centrais e não é uma instituição financeira nem processa pagamentos. Abra seu aplicativo de banco para concluir transações com segurança.</p>
+        </div>
+        <div class="actions-row">
+          <a class="btn btn-primary" href="#/u/${encodeURIComponent(profile.routeId)}">Ver Perfil Completo</a>
+          <a class="btn btn-outline" href="#/dm/${encodeURIComponent(profile.routeId)}">💬 Mensagem Privada</a>
+        </div>
+      </div>`;
+  } else {
+    content = `
+      <div class="card pix-lookup-card empty">
+        <h2>Chave Pix não vinculada</h2>
+        <p class="desc">A chave <code>${queryStr}</code> não foi declarada em nenhum perfil ativo ou tour neste aparelho.</p>
+        <p class="meta" style="margin-top:0.5rem;">Lembre-se: chaves Pix no Vox são atributos declarativos opcionais armazenados no aparelho de cada usuário.</p>
+        <div class="actions-row" style="margin-top:1rem;">
+          <a class="btn btn-outline" href="#/">← Voltar ao Início</a>
+        </div>
+      </div>`;
+  }
+
+  main.innerHTML = `
+    <div class="actions-bar">
+      <span class="section-title">Consulta de Chave Pix</span>
+    </div>
+    ${content}
+  `;
 }
 
 export function renderHandleConflict(main, slug, claimants = []) {

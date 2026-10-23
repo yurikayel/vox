@@ -8,6 +8,7 @@ import * as cryptoDm from "./crypto-dm.js";
 
 const ACCOUNT_STORAGE = "vox-local-account-v1";
 const DISPLAY_NAME_STORAGE = "vox-display-name";
+const PIX_STORAGE = "vox-pix-key-v1";
 
 function bytesToB64Url(bytes) {
   let bin = "";
@@ -120,6 +121,39 @@ export function setDisplayName(name) {
     return clean;
   } catch {
     return "";
+  }
+}
+
+export function getPixKey() {
+  try {
+    const raw = localStorage.getItem(PIX_STORAGE);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function setPixKey({ normalized, type, masked = "" }) {
+  try {
+    const data = {
+      normalized: String(normalized || ""),
+      type: String(type || "unknown"),
+      masked: String(masked || ""),
+      updatedAt: Date.now(),
+    };
+    localStorage.setItem(PIX_STORAGE, JSON.stringify(data));
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+export function clearPixKey() {
+  try {
+    localStorage.removeItem(PIX_STORAGE);
+    return true;
+  } catch {
+    return false;
   }
 }
 
