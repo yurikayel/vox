@@ -39,7 +39,8 @@ Objetivo: uma comunidade real com **leitura** via gateway **ou** relay voluntár
 
 ## Verificação (2 min)
 
-- [ ] `GET <relay>/health` → `{ "ok": true }`
+- [ ] `GET <relay>/health` → `{ "status": "ok", ... }` (ver `relay/server.py`)
+- [ ] Preferir wizard guiado: [`steward-wizard-brainstorm.md`](./steward-wizard-brainstorm.md) (implementação futura `#/settings/network/steward`)
 - [ ] Dois navegadores na mesma comunidade: post aparece via gossip (ou relay se configurado)
 - [ ] Retratação: autor apaga/edita → par vê tombstone/badge (gossip v1)
 

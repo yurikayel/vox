@@ -133,14 +133,14 @@ test("hashtags - renderTagFeed gera cabeçalho limpo e empty state honesto", () 
   assert.ok(html.includes("tag-feed-header"));
   assert.ok(html.includes("#"));
   assert.ok(html.includes("agroecologia"));
-  assert.ok(html.includes("1 post neste aparelho"));
+  assert.ok(html.includes("1 post no seu índice"));
   assert.ok(html.includes("Descoberta local gossip (Willow)"));
   assert.ok(html.includes("Horta Urbana"));
 
   // Teste empty state honesto (sem trending ou contagem global)
   render.renderTagFeed(main, "inexistente", []);
   html = main.innerHTML;
-  assert.ok(html.includes("Nenhum post com #inexistente neste aparelho"));
+  assert.ok(html.includes("Nenhum post com #inexistente no seu índice ainda"));
   assert.ok(html.includes("No Vox, o índice vive no seu próprio dispositivo"));
   assert.ok(html.includes("Criar post com #inexistente"));
   assert.ok(!html.includes("Em alta"));

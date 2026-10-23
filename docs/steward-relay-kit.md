@@ -2,6 +2,8 @@
 
 Stewards são **voluntários da comunidade**, não o mantenedor do repositório Vox. Este kit descreve o pacote mínimo para camada **Steward** em [`espacos-digitais-infra.md`](./espacos-digitais-infra.md).
 
+**V-I08 MVP (3 dias):** volume cache no compose, `.env.example`, `/health` com inventário de índices, quota disco HTTP, runbook HTTPS relay (não só `:3920`), alinhar [`steward-seed-15min.md`](./steward-seed-15min.md). Branch: `feat/steward-relay-kit`.
+
 ---
 
 ## Componentes

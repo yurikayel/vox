@@ -2485,7 +2485,7 @@ export function renderTagFeed(main, slug, posts = []) {
   if (!main) return;
   const cleanSlug = hashtags.slugifyTag(slug) || slug;
   const count = posts ? posts.length : 0;
-  const countLabel = count === 1 ? "1 post neste aparelho" : `${count} posts neste aparelho`;
+  const countLabel = count === 1 ? "1 post no seu índice" : `${count} posts no seu índice`;
 
   const headerHtml = `
     <header class="page-header tag-feed-header">
@@ -2508,7 +2508,7 @@ export function renderTagFeed(main, slug, posts = []) {
       ${headerHtml}
       <div class="empty-state card" style="text-align:center; padding:2.5rem 1.5rem; margin-top:1rem;">
         <div style="font-size:2rem; margin-bottom:0.5rem;">🔍</div>
-        <h3 style="margin:0 0 0.5rem; font-size:1.1rem;">Nenhum post com #${escapeHtml(cleanSlug)} neste aparelho</h3>
+        <h3 style="margin:0 0 0.5rem; font-size:1.1rem;">Nenhum post com #${escapeHtml(cleanSlug)} no seu índice ainda</h3>
         <p style="color:var(--muted); font-size:0.88rem; max-width:400px; margin:0 auto 1.25rem;">
           No Vox, o índice vive no seu próprio dispositivo. Quando você ou alguém conectado na rede compartilhar posts com esta tag, eles aparecerão aqui.
         </p>
