@@ -74,6 +74,31 @@ export async function shareCommunity({ title, communityId }) {
   }
 }
 
+export async function shareConnect({ routeId, displayName = "" }) {
+  const url = `${window.location.origin}${window.location.pathname}#/connect/${encodeURIComponent(routeId)}`;
+  const who = displayName || routeId.slice(0, 12);
+  const text = `Conecte com ${who} no Vox:`;
+
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: `${who} | Vox`, text, url });
+      showToast("Link compartilhado!");
+      return true;
+    } catch (e) {
+      if (e.name === "AbortError") return false;
+    }
+  }
+
+  try {
+    await navigator.clipboard.writeText(`${text} ${url}`);
+    showToast("Link #/connect copiado!");
+    return true;
+  } catch {
+    showToast("Não foi possível copiar o link.", "error");
+    return false;
+  }
+}
+
 export async function shareListing({ title, communityId, priceLabel = "" }) {
   const commPart = communityId ? `#/c/${encodeURIComponent(communityId)}?tab=listings` : "#/";
   const url = `${window.location.origin}${window.location.pathname}${commPart}`;

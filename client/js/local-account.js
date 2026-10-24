@@ -9,6 +9,7 @@ import * as cryptoDm from "./crypto-dm.js";
 const ACCOUNT_STORAGE = "vox-local-account-v1";
 const DISPLAY_NAME_STORAGE = "vox-display-name";
 const PIX_STORAGE = "vox-pix-key-v1";
+const ENRICHMENT_STORAGE = "vox-profile-enrichment-v1";
 
 function bytesToB64Url(bytes) {
   let bin = "";
@@ -122,6 +123,74 @@ export function setDisplayName(name) {
   } catch {
     return "";
   }
+}
+
+export function getProfileEnrichment() {
+  try {
+    const raw = localStorage.getItem(ENRICHMENT_STORAGE);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function setProfileEnrichment({ displayName, bio, avatarUrl, oauthProvider } = {}) {
+  try {
+    const prev = getProfileEnrichment() || {};
+    const next = {
+      ...prev,
+      displayName: displayName !== undefined ? String(displayName).trim().slice(0, 80) : prev.displayName,
+      bio: bio !== undefined ? String(bio).trim().slice(0, 280) : prev.bio,
+      avatarUrl: avatarUrl !== undefined ? String(avatarUrl).trim().slice(0, 512) : prev.avatarUrl,
+      oauthProvider: oauthProvider !== undefined ? String(oauthProvider).trim() : prev.oauthProvider,
+      linkedAt: Date.now(),
+    };
+    localStorage.setItem(ENRICHMENT_STORAGE, JSON.stringify(next));
+    if (next.displayName) setDisplayName(next.displayName);
+    return next;
+  } catch {
+    return null;
+  }
+}
+
+export function clearProfileEnrichment() {
+  try {
+    localStorage.removeItem(ENRICHMENT_STORAGE);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function exportLocalAccountBundle() {
+  const acc = await ensureLocalAccount();
+  return {
+    type: "vox-local-account-bundle",
+    schemaVersion: 1,
+    routeId: acc.routeId,
+    publicJwk: acc.publicJwk,
+    privateJwk: acc.privateJwk,
+    displayName: getDisplayName(),
+    enrichment: getProfileEnrichment(),
+    pix: getPixKey(),
+    exportedAt: Date.now(),
+  };
+}
+
+export async function importLocalAccountBundle(bundle) {
+  if (!bundle?.routeId || !bundle?.publicJwk || !bundle?.privateJwk) return false;
+  cachedAccount = {
+    routeId: bundle.routeId,
+    publicJwk: bundle.publicJwk,
+    privateJwk: bundle.privateJwk,
+    createdAt: bundle.createdAt || Date.now(),
+  };
+  localStorage.setItem(ACCOUNT_STORAGE, JSON.stringify(cachedAccount));
+  if (bundle.displayName) setDisplayName(bundle.displayName);
+  if (bundle.enrichment) localStorage.setItem(ENRICHMENT_STORAGE, JSON.stringify(bundle.enrichment));
+  if (bundle.pix) localStorage.setItem(PIX_STORAGE, JSON.stringify(bundle.pix));
+  await cryptoDm.ensureDmKeys();
+  return true;
 }
 
 export function getPixKey() {

@@ -148,3 +148,20 @@ test("local-account - gerencia chave Pix opcional localmente", () => {
   localAccount.clearPixKey();
   assert.equal(localAccount.getPixKey(), null);
 });
+
+test("local-account - profile enrichment and backup bundle", async () => {
+  localStorage.clear();
+  await localAccount.ensureLocalAccount();
+  localAccount.setProfileEnrichment({
+    displayName: "OAuth User",
+    avatarUrl: "https://example.com/a.jpg",
+    bio: "bio curta",
+    oauthProvider: "google",
+  });
+  assert.equal(localAccount.getProfileEnrichment()?.oauthProvider, "google");
+  assert.equal(localAccount.getDisplayName(), "OAuth User");
+  const bundle = await localAccount.exportLocalAccountBundle();
+  assert.equal(bundle.enrichment.displayName, "OAuth User");
+  localAccount.clearProfileEnrichment();
+  assert.equal(localAccount.getProfileEnrichment(), null);
+});

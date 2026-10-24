@@ -124,3 +124,13 @@ A **[Resolução TSE 23.610/2019](http://www.tse.jus.br/)** (e normas correlatas
 ## Moderação vs Lei
 
 Transações de `mod-action` e filtros locais ajudam na auto-organização de comunidades; **não substituem** denúncias a autoridades competentes ou o cumprimento de ordens judiciais específicas aplicáveis a intermediários que você opera.
+
+## Login social opcional (Google / Meta) — enriquecimento client-only (V-DIS)
+
+Após a Porta da Cantina, o usuário **pode** importar nome e foto pública via Google Identity Services ou Meta SDK, ou **pular** e usar apenas o identificador local `vx_*`.
+
+- **Sem backend Vox:** fluxo 100% no navegador; não há cadastro centralizado nem troca do `routeId` criptográfico.
+- **Sem armazenamento de tokens OAuth:** apenas claims de perfil público (nome, URL de avatar) são copiadas para `localStorage` no aparelho. Tokens de acesso/refresh **não** são persistidos (ver ADR `docs/adr/002-oauth-profile-enrich-client.md`).
+- **Revogação local:** em `#/perfil`, o botão *Remover nome/foto importados* apaga o enriquecimento; o `vx_*` permanece.
+- **Operador:** Client IDs Web em `client/config/oauth.json` (gitignored); origens autorizadas devem incluir o host de deploy e `http://localhost:*` para desenvolvimento.
+- **LGPD:** base legal típica = **consentimento** para dados opcionais de apresentação; minimização — não importamos listas de amigos nem e-mail como identificador de rede.

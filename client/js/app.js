@@ -26,6 +26,11 @@ import * as communityMirror from "./community-mirror.js";
 import * as stewardWizard from "./steward-wizard.js";
 import * as gatewayTelemetry from "./gateway-telemetry.js";
 import { attachInlineComposerHandlers } from "./inline-composer.js";
+import * as oauthProfile from "./oauth-profile.js";
+import * as contacts from "./contacts.js";
+import * as peopleIndex from "./people-index.js";
+import * as profileDirectory from "./profile-directory.js";
+import * as welcomeProfile from "./vox-welcome-profile.js";
 
 function parseRoute() {
   if (typeof window !== "undefined" && window.location?.search) {
@@ -41,6 +46,10 @@ function parseRoute() {
 
   if (!parts.length) return { name: "home", feed: (query.get("feed") || "for-you").toLowerCase() };
   if (parts[0] === "communities") return { name: "communities" };
+  if (parts[0] === "people") return { name: "people", query: query.get("q") || "" };
+  if (parts[0] === "connect" && parts[1]) {
+    return { name: "connect", routeId: decodeURIComponent(parts[1]) };
+  }
   if (parts[0] === "perfil") return { name: "perfil", tab: (query.get("tab") || "posts").toLowerCase() };
   if (parts[0] === "pix" && parts[1]) {
     return { name: "pix-lookup", query: decodeURIComponent(parts[1]) };
@@ -236,6 +245,11 @@ async function showHome(feed = "for-you") {
 
   attachPostShareHandlers();
   attachInlineComposerHandlers(() => showHome(activeFeed));
+  document.getElementById("btn-welcome-card-dismiss")?.addEventListener("click", () => {
+    welcomeProfile.markWelcomeCardSeen();
+    document.getElementById("welcome-first-contact-card")?.remove();
+  });
+  void ensureOnboardingSideEffects(user);
 }
 
 async function showCommunities() {
@@ -401,6 +415,8 @@ async function showCommunity(communityId, tab = "posts") {
   if (demo && !localTopics.length && tab !== "listings" && tab !== "governance") render.renderDemoBanner(main);
   else if (gateway) render.renderGatewayBanner(main, gateway);
 
+  const recentPeople = tab === "posts" ? peopleIndex.extractRecentAuthors(filteredTopics) : [];
+
   render.renderCommunity(main, communityId, filteredTopics, meta, {
     isMember,
     isMod: isUserMod,
@@ -408,6 +424,7 @@ async function showCommunity(communityId, tab = "posts") {
     activeTab: tab,
     listings,
     proposals,
+    recentPeople,
   });
 
   if (tab === "posts") {
@@ -747,8 +764,10 @@ async function showProfile(address, activeTab = "posts") {
   }
 
   const mockProf = mock.getMockProfile(targetAddress);
-  let displayName = isSelf ? localAccount.getDisplayName() : "";
-  let profileBio = "";
+  const resolved = await profileDirectory.resolveProfile(targetAddress);
+  let displayName = resolved.name || (isSelf ? localAccount.getDisplayName() : "");
+  let profileBio = resolved.bio || "";
+  const oauthProvider = isSelf ? localAccount.getProfileEnrichment()?.oauthProvider || "" : "";
   let pixKey = "";
   if (isSelf) {
     pixKey = localAccount.getPixKey() || "";
@@ -757,9 +776,12 @@ async function showProfile(address, activeTab = "posts") {
   }
   const pixKeyMasked = pixKey ? pixKeyHelper.maskForDisplay(pixKey) : "";
 
-  if (mockProf) {
-    displayName = mockProf.name;
-    profileBio = mockProf.bio;
+  if (welcomeProfile.isWelcomeRouteId(targetAddress)) {
+    displayName = resolved.name;
+    profileBio = resolved.bio || profileBio;
+  } else if (mockProf) {
+    displayName = mockProf.name || displayName;
+    profileBio = mockProf.bio || profileBio;
     if (!memberships.some((x) => x.communityId === "demo-aprenda-vox")) {
       memberships.push({ id: `mem_${targetAddress}`, communityId: "demo-aprenda-vox" });
     }
@@ -807,6 +829,7 @@ async function showProfile(address, activeTab = "posts") {
     readme,
     activeTab,
     pinnedPostId,
+    oauthProvider,
   });
 
   bindProfileButtons(user, targetAddress, isSelf, dmPub, activeTab);
@@ -924,6 +947,16 @@ function bindProfileButtons(user, address, isSelf, dmPub, activeTab = "posts") {
       showProfile(address);
     });
   }
+
+  document.getElementById("btn-clear-oauth-enrich")?.addEventListener("click", () => {
+    localAccount.clearProfileEnrichment();
+    share.showToast("Nome/foto importados removidos.");
+    showProfile(address, activeTab);
+  });
+
+  document.getElementById("btn-copy-connect-link")?.addEventListener("click", () => {
+    void share.shareConnect({ routeId: address, displayName: localAccount.getDisplayName() });
+  });
 
   const btnGenWallet = document.getElementById("btn-generate-wallet");
   if (btnGenWallet) {
@@ -1864,9 +1897,10 @@ async function showDmList() {
     return;
   }
 
+  await ensureOnboardingSideEffects(user);
   await pollInboxMessages(user);
   const convs = await cacheNode.getDmConversations();
-  render.renderDmList(main, convs, user);
+  render.renderDmList(main, convs, user, { contactList: contacts.listContacts() });
 
   document.getElementById("btn-copy-my-dm-link")?.addEventListener("click", () => {
     const link = `${window.location.origin}${window.location.pathname}#/dm/${encodeURIComponent(user)}`;
@@ -1876,7 +1910,8 @@ async function showDmList() {
 
   document.getElementById("form-new-dm")?.addEventListener("submit", (e) => {
     e.preventDefault();
-    const peer = document.getElementById("dm-peer-input")?.value.trim();
+    const raw = document.getElementById("dm-peer-input")?.value.trim();
+    const peer = peopleIndex.parseConnectTarget(raw) || raw;
     if (peer) location.hash = `#/dm/${encodeURIComponent(peer)}`;
   });
 
@@ -1993,10 +2028,73 @@ function initDmListeners() {
   });
 }
 
+async function ensureOnboardingSideEffects(userRouteId) {
+  if (!userRouteId || localStorage.getItem("vox-pact-accepted") !== "true") return;
+  try {
+    await welcomeProfile.runWelcomeOnboarding(userRouteId);
+  } catch {
+    /* ignore */
+  }
+}
+
+function checkOAuthEnrichStep() {
+  if (oauthProfile.hasCompletedOAuthStep()) {
+    checkPactModal();
+    return;
+  }
+
+  if (localStorage.getItem("vox-pact-accepted") === "true") {
+    oauthProfile.skipOAuthEnrichment();
+    checkPactModal();
+    return;
+  }
+
+  const modalContainer = document.getElementById("modal-container");
+  if (!modalContainer) return;
+
+  render.renderOAuthEnrich(modalContainer);
+
+  document.getElementById("btn-oauth-skip")?.addEventListener("click", () => {
+    oauthProfile.skipOAuthEnrichment();
+    render.closeOAuthEnrich(modalContainer);
+    checkPactModal();
+  });
+
+  document.getElementById("btn-oauth-google")?.addEventListener("click", async () => {
+    const btn = document.getElementById("btn-oauth-google");
+    if (btn) btn.disabled = true;
+    const res = await oauthProfile.signInWithGoogle();
+    if (res.ok) {
+      oauthProfile.skipOAuthEnrichment();
+      render.closeOAuthEnrich(modalContainer);
+      share.showToast("Perfil enriquecido com Google.");
+      checkPactModal();
+    } else {
+      share.showToast(res.reason || "Google indisponível", "error");
+      if (btn) btn.disabled = false;
+    }
+  });
+
+  document.getElementById("btn-oauth-meta")?.addEventListener("click", async () => {
+    const btn = document.getElementById("btn-oauth-meta");
+    if (btn) btn.disabled = true;
+    const res = await oauthProfile.signInWithMeta();
+    if (res.ok) {
+      oauthProfile.skipOAuthEnrichment();
+      render.closeOAuthEnrich(modalContainer);
+      share.showToast("Perfil enriquecido com Meta.");
+      checkPactModal();
+    } else {
+      share.showToast(res.reason || "Meta indisponível", "error");
+      if (btn) btn.disabled = false;
+    }
+  });
+}
+
 function checkCantinaGate() {
   const passed = localStorage.getItem("vox-cantina-v1");
   if (passed) {
-    checkPactModal();
+    checkOAuthEnrichStep();
     return;
   }
 
@@ -2010,7 +2108,7 @@ function checkCantinaGate() {
     btnEnter.addEventListener("click", () => {
       localStorage.setItem("vox-cantina-v1", "true");
       render.closeCantinaGate(modalContainer);
-      checkPactModal();
+      checkOAuthEnrichStep();
     });
   }
 }
@@ -2024,12 +2122,20 @@ function checkPactModal() {
 
   render.renderPactModal(modalContainer);
 
+  const finishPact = async () => {
+    localStorage.setItem("vox-pact-accepted", "true");
+    render.closePactModal(modalContainer);
+    const user = await localAccount.getRouteId().catch(() => "");
+    await ensureOnboardingSideEffects(user);
+    share.showToast("Bem-vindo ao Vox! Rede ativa.");
+    const cur = parseRoute();
+    if (cur.name === "home") showHome(cur.feed);
+  };
+
   const btnAccept = document.getElementById("btn-pact-accept");
   if (btnAccept) {
     btnAccept.addEventListener("click", () => {
-      localStorage.setItem("vox-pact-accepted", "true");
-      render.closePactModal(modalContainer);
-      share.showToast("Bem-vindo ao Vox! Rede ativa.");
+      void finishPact();
     });
   }
 
@@ -2038,9 +2144,42 @@ function checkPactModal() {
     btnSettings.addEventListener("click", () => {
       localStorage.setItem("vox-pact-accepted", "true");
       render.closePactModal(modalContainer);
+      void localAccount.getRouteId().then((u) => ensureOnboardingSideEffects(u));
       location.hash = "#/settings/network";
     });
   }
+}
+
+async function showPeople(initialQuery = "") {
+  const user = await getActiveUser();
+  const main = render.renderShell(makeShellProps(user, "people", "Pessoas"));
+  const q = initialQuery || "";
+  const results = await peopleIndex.searchPeople(q);
+  render.renderPeopleSearch(main, results, q);
+
+  document.getElementById("form-people-search")?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const next = document.getElementById("people-search-input")?.value.trim() || "";
+    location.hash = next ? `#/people?q=${encodeURIComponent(next)}` : "#/people";
+  });
+}
+
+async function showConnect(routeId) {
+  const user = await getActiveUser();
+  const main = render.renderShell(makeShellProps(user, "people", "Conectar"));
+  const profile = await profileDirectory.resolveProfile(routeId);
+  render.renderConnectPreview(main, profile, routeId, { isContact: contacts.hasContact(routeId) });
+
+  document.getElementById("btn-connect-add")?.addEventListener("click", (e) => {
+    const id = e.currentTarget.dataset.route || routeId;
+    contacts.addContact(id, profile.name || "");
+    share.showToast("Contato adicionado.");
+    showConnect(id);
+  });
+
+  document.getElementById("btn-connect-share")?.addEventListener("click", () => {
+    void share.shareConnect({ routeId, displayName: profile.name });
+  });
 }
 
 async function showPixLookup(query) {
@@ -2097,6 +2236,8 @@ async function route() {
   if (r.name === "home") return showHome(r.feed);
   if (r.name === "tag-feed") return showTagFeed(r.slug);
   if (r.name === "communities") return showCommunities();
+  if (r.name === "people") return showPeople(r.query);
+  if (r.name === "connect") return showConnect(r.routeId);
   if (r.name === "perfil") return showProfile(null, r.tab);
   if (r.name === "pix-lookup") return showPixLookup(r.query);
   if (r.name === "network-settings") return showNetworkSettings();

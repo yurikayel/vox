@@ -4,6 +4,7 @@ dist/
 .env
 .env.local
 client/config/wallet.local.json
+client/config/oauth.json
 *.jwk
 *.jwk.json
 relay/.cache/
