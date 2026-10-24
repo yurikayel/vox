@@ -2073,6 +2073,7 @@ export function renderOAuthEnrich(container) {
       <div class="modal-dialog modal-dialog-solid oauth-enrich-dialog">
         <h2 id="oauth-enrich-title" class="oauth-enrich-title">Como quer aparecer?</h2>
         <p class="desc oauth-enrich-lead">Importe <strong>nome e foto</strong> (opcional). Seu ID na rede continua sendo <code>vx_*</code> neste aparelho — não é login centralizado.</p>
+        <div id="oauth-enrich-error" class="oauth-enrich-error" role="alert" aria-live="polite" hidden></div>
         <div class="oauth-enrich-actions">
           <button type="button" id="btn-oauth-google" class="oauth-btn oauth-btn--google" aria-label="Entrar com Google para importar nome e foto">
             ${OAUTH_SVG_GOOGLE}
@@ -2085,6 +2086,7 @@ export function renderOAuthEnrich(container) {
         </div>
         <p class="oauth-enrich-divider" role="presentation"><span>ou</span></p>
         <button type="button" id="btn-oauth-skip" class="oauth-btn oauth-btn--skip">Pular — continuar só com vx_</button>
+        <p id="oauth-enrich-error" class="oauth-enrich-error" role="alert" aria-live="polite" hidden></p>
         <p class="meta oauth-enrich-legal">Só claims públicos de perfil; tokens OAuth não são armazenados (LGPD — ver COMPLIANCE-BR.md).</p>
       </div>
     </div>`;

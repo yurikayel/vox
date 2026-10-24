@@ -24,6 +24,8 @@ test("render - renderOAuthEnrich usa botoes de marca Google/Meta", () => {
   assert.ok(html.includes("oauth-btn--google"));
   assert.ok(html.includes("oauth-btn--meta"));
   assert.ok(html.includes('id="btn-oauth-google"'));
+  assert.ok(html.includes('id="oauth-enrich-error"'));
+  assert.ok(html.includes('aria-live="polite"'));
   assert.ok(html.includes('aria-label="Entrar com Google para importar nome e foto"'));
   assert.ok(html.includes("oauth-btn__icon"));
   render.closeOAuthEnrich(container);

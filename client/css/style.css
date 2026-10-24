@@ -2324,6 +2324,27 @@ main#app-main {
   gap: 0.55rem;
 }
 
+.oauth-enrich-error {
+  margin: 0 0 0.75rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: var(--radius-sm, 8px);
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: #fecaca;
+  background: rgba(220, 38, 38, 0.18);
+  border: 1px solid rgba(248, 113, 113, 0.45);
+}
+
+.oauth-enrich-error:empty,
+.oauth-enrich-error[hidden] {
+  display: none;
+}
+
+.oauth-btn[aria-busy="true"] {
+  opacity: 0.72;
+  cursor: wait;
+}
+
 .oauth-btn {
   display: flex;
   align-items: center;
@@ -2399,6 +2420,21 @@ main#app-main {
   flex: 1;
   height: 1px;
   background: var(--border-subtle);
+}
+
+.oauth-enrich-error {
+  margin: 0.75rem 0 0;
+  padding: 0.55rem 0.65rem;
+  font-size: 0.84rem;
+  line-height: 1.35;
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+  border: 1px solid var(--danger);
+  border-radius: var(--radius-sm);
+}
+
+.oauth-enrich-error[hidden] {
+  display: none !important;
 }
 
 .oauth-enrich-legal {
@@ -2634,7 +2670,8 @@ main#app-main {
   opacity: 0;
   pointer-events: none;
   transition: all 0.2s ease;
-  z-index: 9999;
+  /* Above .modal-overlay (10000) so errors show during onboarding modals */
+  z-index: 10050;
 }
 
 .vox-toast.visible {
@@ -2646,6 +2683,8 @@ main#app-main {
   background: var(--danger);
   color: #fff;
   border: none;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
 }
 
 /* Feira Comunitária e Classificados (Fase M1) */

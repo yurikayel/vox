@@ -51,7 +51,11 @@ export async function signInWithGoogle() {
   const cfg = await loadOAuthConfig();
   const clientId = cfg?.googleClientId || "";
   if (!clientId || clientId.includes("YOUR_")) {
-    return { ok: false, reason: "Google não configurado (oauth.json)" };
+    return {
+      ok: false,
+      reason:
+        "Google não configurado. Copie client/config/oauth.example.json para oauth.json e preencha o Client ID.",
+    };
   }
   await loadScript("https://accounts.google.com/gsi/client");
   return new Promise((resolve) => {
@@ -90,7 +94,11 @@ export async function signInWithMeta() {
   const cfg = await loadOAuthConfig();
   const appId = cfg?.facebookAppId || "";
   if (!appId || appId.includes("YOUR_")) {
-    return { ok: false, reason: "Meta não configurado (oauth.json)" };
+    return {
+      ok: false,
+      reason:
+        "Meta não configurado. Copie client/config/oauth.example.json para oauth.json e preencha o App ID.",
+    };
   }
   await loadScript("https://connect.facebook.net/pt_BR/sdk.js");
   return new Promise((resolve) => {

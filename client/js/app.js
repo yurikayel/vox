@@ -2037,6 +2037,47 @@ async function ensureOnboardingSideEffects(userRouteId) {
   }
 }
 
+function setOAuthEnrichError(message) {
+  const el = document.getElementById("oauth-enrich-error");
+  if (!el) return;
+  if (message) {
+    el.textContent = message;
+    el.hidden = false;
+  } else {
+    el.textContent = "";
+    el.hidden = true;
+  }
+}
+
+function setOAuthButtonBusy(btn, busy) {
+  if (!btn) return;
+  btn.disabled = busy;
+  if (busy) btn.setAttribute("aria-busy", "true");
+  else btn.removeAttribute("aria-busy");
+}
+
+function reportOAuthEnrichFailure(message, fallbackLabel) {
+  const text = message || fallbackLabel;
+  setOAuthEnrichError(text);
+  share.showToast(text, "error");
+}
+
+async function runOAuthEnrichSignIn(btn, signInFn, { successToast, fallbackError }) {
+  setOAuthEnrichError("");
+  setOAuthButtonBusy(btn, true);
+  try {
+    const res = await signInFn();
+    if (res.ok) return res;
+    reportOAuthEnrichFailure(res.reason, fallbackError);
+    return res;
+  } catch (err) {
+    reportOAuthEnrichFailure(err?.message, fallbackError);
+    return { ok: false, reason: err?.message };
+  } finally {
+    setOAuthButtonBusy(btn, false);
+  }
+}
+
 function checkOAuthEnrichStep() {
   if (oauthProfile.hasCompletedOAuthStep()) {
     checkPactModal();
@@ -2055,6 +2096,7 @@ function checkOAuthEnrichStep() {
   render.renderOAuthEnrich(modalContainer);
 
   document.getElementById("btn-oauth-skip")?.addEventListener("click", () => {
+    setOAuthEnrichError("");
     oauthProfile.skipOAuthEnrichment();
     render.closeOAuthEnrich(modalContainer);
     checkPactModal();
@@ -2062,31 +2104,27 @@ function checkOAuthEnrichStep() {
 
   document.getElementById("btn-oauth-google")?.addEventListener("click", async () => {
     const btn = document.getElementById("btn-oauth-google");
-    if (btn) btn.disabled = true;
-    const res = await oauthProfile.signInWithGoogle();
+    const res = await runOAuthEnrichSignIn(btn, () => oauthProfile.signInWithGoogle(), {
+      fallbackError: "Google indisponível",
+    });
     if (res.ok) {
       oauthProfile.skipOAuthEnrichment();
       render.closeOAuthEnrich(modalContainer);
       share.showToast("Perfil enriquecido com Google.");
       checkPactModal();
-    } else {
-      share.showToast(res.reason || "Google indisponível", "error");
-      if (btn) btn.disabled = false;
     }
   });
 
   document.getElementById("btn-oauth-meta")?.addEventListener("click", async () => {
     const btn = document.getElementById("btn-oauth-meta");
-    if (btn) btn.disabled = true;
-    const res = await oauthProfile.signInWithMeta();
+    const res = await runOAuthEnrichSignIn(btn, () => oauthProfile.signInWithMeta(), {
+      fallbackError: "Meta indisponível",
+    });
     if (res.ok) {
       oauthProfile.skipOAuthEnrichment();
       render.closeOAuthEnrich(modalContainer);
       share.showToast("Perfil enriquecido com Meta.");
       checkPactModal();
-    } else {
-      share.showToast(res.reason || "Meta indisponível", "error");
-      if (btn) btn.disabled = false;
     }
   });
 }
