@@ -840,3 +840,26 @@ Com IDs vazios ou `YOUR_*`, os botões Google/Meta ficam desabilitados no modal 
 
 **Nota:** `oauth.json` **não** entra no artefato público do CI por padrão (gitignored). Para OAuth em **produção Pages**, o operador precisa incluir `oauth.json` no host (deploy manual, secret no workflow, ou espelho privado) — o pipeline atual copia só `client/**` versionado.
 
+---
+
+## 26. Descoberta na malha P1+P2 (V-MESH)
+
+**Data:** 2026-10-24 · **SW:** `vox-pwa-v6.26-mesh-discovery`
+
+- **Docs:** `docs/adr/003-profile-card-gossip.md`, `docs/profile-card-gossip-v0.md`, `COMPLIANCE-BR.md` (§ busca na malha).
+- **P1:** `#/people` indexa contatos, autores de `topic`/`reply`/`membership` vistos no aparelho (`mesh-author`), tour demo só se contatos+malha vazios (ou seção Tour).
+- **P2:** toggle *Aparecer na busca da malha* em `#/perfil` e `#/settings/network` → `profile-card.js` + gossip (`peers.js`) → `profile-directory` (sem poluir feed).
+- **Módulos:** `profile-card.js`, `mesh-profile.js`, extensões em `people-index.js`, `peers.js`, `render.js`, `app.js`.
+- **Métrica local:** `vox-metric-people-search-ok` (busca com ≥1 resultado).
+
+### Playbook — dois usuários (A e B)
+
+1. **A:** aba normal — Cantina → OAuth (ou Pular) → Pacto → modal *Seu link #/connect* (opcional).
+2. **B:** aba anônima/incógnito — mesmo fluxo até Pacto.
+3. Em **ambos:** `#/settings/network` ou `#/perfil` → ligar **Aparecer na busca da malha** (salvar rede se alterou só em network).
+4. Garantir malha ativa: mesma origem (`http://localhost:8080`), WebRTC/BroadcastChannel — abrir feed em A e B na mesma aba ou duas janelas do mesmo host.
+5. **A** republica cartão (toggle off/on ou mudar nome) se B não achar.
+6. Em **B:** `#/people` → buscar nome de A ou prefixo `vx_` de A — deve aparecer em **Na malha** sem colar link.
+7. **A** desliga toggle → após gossip, B busca de novo — cartão some (autor de post antigo ainda pode aparecer como `mesh-author` se houve post compartilhado).
+8. `npm test` na raiz `vox/` antes de merge.
+

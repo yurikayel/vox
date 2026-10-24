@@ -11,6 +11,12 @@ test("i18n-pt-br - microcopy pós-gossip de retratação na malha", () => {
   assert.doesNotMatch(i18n.localMutateEditDeleteTooltip, /só neste aparelho/i);
 });
 
+test("i18n-pt-br - descoberta na malha (V-MESH)", () => {
+  assert.match(i18n.meshDiscoverableLabel, /busca da malha/i);
+  assert.match(i18n.meshDiscoverableHint, /cartão assinado|opt-in/i);
+  assert.match(i18n.peopleSectionMesh, /malha/i);
+});
+
 test("i18n-pt-br - microcopy feira gossip (status / retratação)", () => {
   assert.match(i18n.listingMutateStatusTooltip, /GOSSIP_UPDATE|gossip/i);
   assert.match(i18n.listingRetractLabel, /Retirar/i);

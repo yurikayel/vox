@@ -134,3 +134,15 @@ Após a Porta da Cantina, o usuário **pode** importar nome e foto pública via 
 - **Revogação local:** em `#/perfil`, o botão *Remover nome/foto importados* apaga o enriquecimento; o `vx_*` permanece.
 - **Operador:** Client IDs Web em `client/config/oauth.json` (gitignored); origens autorizadas devem incluir o host de deploy e `http://localhost:*` para desenvolvimento.
 - **LGPD:** base legal típica = **consentimento** para dados opcionais de apresentação; minimização — não importamos listas de amigos nem e-mail como identificador de rede.
+
+## Aparecer na busca da malha (PROFILE_CARD opt-in — V-MESH)
+
+Em `#/perfil` e `#/settings/network`, o usuário pode ativar **Aparecer na busca da malha** para publicar um cartão **assinado** (nome, foto, bio) aos pares conectados via gossip P2P/BroadcastChannel — **sem** backend Vox e **sem** diretório central.
+
+- **Opt-in:** desligado por padrão; ligar exige ação explícita após ciência do Pacto Vox.
+- **Dados:** apenas apresentação pública já visível no perfil; tokens OAuth e chaves privadas **não** trafegam no cartão.
+- **Revogação:** desligar o toggle envia atualização com `discoverable: false`; aparelhos que receberam o gossip removem o cartão do índice local (`#/people`).
+- **P1 complementar:** autores de posts/replies/membership já vistos na malha podem aparecer como *Na malha* sem cartão — minimização; não indexamos DMs.
+- **Retenção:** cartões recebidos expiram após 30 dias sem republicação (TTL client-side).
+- **LGPD:** consentimento específico para divulgação a pares da malha; direito de retirada via toggle; sem venda de dados nem perfilamento comercial.
+- **Referência:** ADR `docs/adr/003-profile-card-gossip.md`, spec `docs/profile-card-gossip-v0.md`.
