@@ -17,6 +17,19 @@ globalThis.document = {
 
 const render = await import("../client/js/render.js");
 
+test("render - renderOAuthEnrich usa botoes de marca Google/Meta", () => {
+  const container = createContainer();
+  render.renderOAuthEnrich(container);
+  const html = container.innerHTML;
+  assert.ok(html.includes("oauth-btn--google"));
+  assert.ok(html.includes("oauth-btn--meta"));
+  assert.ok(html.includes('id="btn-oauth-google"'));
+  assert.ok(html.includes('aria-label="Entrar com Google para importar nome e foto"'));
+  assert.ok(html.includes("oauth-btn__icon"));
+  render.closeOAuthEnrich(container);
+  assert.equal(container.innerHTML, "");
+});
+
 test("render - renderPactModal injeta o modal com termos e botoes", () => {
   const container = createContainer();
   render.renderPactModal(container);
