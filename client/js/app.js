@@ -2231,6 +2231,28 @@ function checkOAuthEnrichStep() {
 
   render.renderOAuthEnrich(modalContainer);
 
+  oauthProfile.loadOAuthConfig().then((cfg) => {
+    const googleId = String(cfg?.googleClientId || "").trim();
+    const metaId = String(cfg?.facebookAppId || "").trim();
+    const googleReady = googleId && !googleId.includes("YOUR_");
+    const metaReady = metaId && !metaId.includes("YOUR_");
+    const btnGoogle = document.getElementById("btn-oauth-google");
+    const btnMeta = document.getElementById("btn-oauth-meta");
+    if (btnGoogle) {
+      btnGoogle.disabled = !googleReady;
+      if (!googleReady) btnGoogle.title = "Google não configurado (oauth.json)";
+    }
+    if (btnMeta) {
+      btnMeta.disabled = !metaReady;
+      if (!metaReady) btnMeta.title = "Meta não configurado (oauth.json)";
+    }
+    if (!googleReady && !metaReady) {
+      setOAuthEnrichError(
+        "Login social ainda não configurado pelo operador — use Pular ou preencha client/config/oauth.json (ver DEV.md).",
+      );
+    }
+  });
+
   document.getElementById("btn-oauth-skip")?.addEventListener("click", () => {
     setOAuthEnrichError("");
     oauthProfile.skipOAuthEnrichment();

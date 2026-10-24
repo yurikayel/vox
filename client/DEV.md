@@ -759,3 +759,84 @@ Implementação dos quatro pilares essenciais do roadmap da rede Vox:
 - **OAuth operador:** copiar `client/config/oauth.example.json` → `client/config/oauth.json` (gitignored) com `googleClientId` e `facebookAppId`; nunca commitar secrets.
 - **Testes:** `contacts.test.js`, `vox-welcome-profile.test.js`, `people-index.test.js`, `oauth-profile.test.js`.
 
+### 25.1 OAuth Google / Meta (operador)
+
+Enriquecimento **client-only** (GIS + Meta JS SDK): importa nome/foto para `localStorage`; **não** há backend Vox nem tokens persistidos (ADR-002, `COMPLIANCE-BR.md`).
+
+#### Arquivos locais (nunca commitar)
+
+| Arquivo | Uso |
+|---------|-----|
+| `client/config/oauth.json` | **Canônico em runtime** — o PWA faz `fetch("./config/oauth.json")`. Gitignored. |
+| `client/config/oauth.example.json` | Modelo versionado (placeholders `YOUR_*`). |
+| `client/config/oauth.local.json` | Opcional: só para o operador copiar valores para `oauth.json` (gitignored). |
+| `vox/.env.local` | Opcional: se existir, use `VOX_GOOGLE_CLIENT_ID` e `VOX_FACEBOOK_APP_ID` **manualmente** — o PWA estático **não** lê `.env`; transcreva para `oauth.json`. |
+
+**Setup rápido:**
+
+```bash
+cd client/config
+cp oauth.example.json oauth.json   # ou mantenha oauth.json já criado com strings vazias
+# Edite oauth.json com os IDs reais (ou cole de oauth.local.json / .env.local)
+```
+
+Estrutura:
+
+```json
+{
+  "googleClientId": "<id>.apps.googleusercontent.com",
+  "facebookAppId": "<numeric app id>",
+  "enabledProviders": ["google", "facebook"]
+}
+```
+
+Com IDs vazios ou `YOUR_*`, os botões Google/Meta ficam desabilitados no modal *Como quer aparecer?*; **Pular** continua disponível.
+
+#### URL base do app (origens OAuth)
+
+- **Produção (GitHub Pages):** PWA em **`https://yurikayel.github.io/vox/`** (subpasta `/vox/` do user site; `index.html` **não** define `<base href>` — paths relativos `./config/`, `./sw.js` resolvem contra `/vox/`).
+- **Origem OAuth (Google/Meta):** só **scheme + host + porta** — **não** inclua `/vox/` na lista de *JavaScript origins* do Google; o path não faz parte da origem.
+- **Dev local:** servir a pasta `client/` na porta **8080** (`python -m http.server 8080`).
+
+#### Google Cloud — checklist
+
+1. [Google Cloud Console](https://console.cloud.google.com/) → projeto → **APIs & Services** → **Credentials**.
+2. **Create credentials** → **OAuth client ID** → tipo **Web application**.
+3. **Authorized JavaScript origins** (cole exatamente):
+
+   | Ambiente | Origem |
+   |----------|--------|
+   | GitHub Pages | `https://yurikayel.github.io` |
+   | Local | `http://localhost:8080` |
+   | Local | `http://127.0.0.1:8080` |
+
+4. **Authorized redirect URIs:** para o fluxo atual (**Google Identity Services** `google.accounts.id` + callback JWT no browser, sem redirect server-side) **não é obrigatório** adicionar redirect URI — deixe vazio ou ignore o campo se a console permitir. Se a console exigir ao menos uma URI, use a URL da página onde o modal roda, por exemplo `https://yurikayel.github.io/vox/` e `http://127.0.0.1:8080/` (GIS normalmente não redireciona para elas).
+5. Copie o **Client ID** para `oauth.json` → `googleClientId`.
+6. **OAuth consent screen:** app em *Testing* ou *Production* conforme audiência; escopos mínimos (perfil básico via ID token).
+
+#### Meta (Facebook) — checklist
+
+1. [Meta for Developers](https://developers.facebook.com/) → **My Apps** → **Create App** (tipo *Consumer* ou conforme política atual).
+2. Adicionar produto **Facebook Login** → settings **Facebook Login** → **Settings**.
+3. **Valid OAuth Redirect URIs** (SDK JS redireciona de volta à página atual):
+
+   | Ambiente | URI |
+   |----------|-----|
+   | GitHub Pages | `https://yurikayel.github.io/vox/` |
+   | Local | `http://localhost:8080/` |
+   | Local | `http://127.0.0.1:8080/` |
+
+4. **Allowed Domains for the JavaScript SDK** (App settings → Basic): inclua `yurikayel.github.io`, `localhost`, `127.0.0.1`.
+5. **Site URL** (Basic): `https://yurikayel.github.io/vox/`
+6. App em **Live** ou testers adicionados enquanto em **Development**.
+7. Copie **App ID** numérico para `oauth.json` → `facebookAppId`.
+8. Login solicita escopo `public_profile` apenas (`oauth-profile.js`).
+
+#### Verificação pós-config
+
+1. `cd client && python -m http.server 8080` → limpar Cantina/onboarding ou usar aba anônima → modal OAuth → botões habilitados.
+2. Após deploy em Pages, repetir em `https://yurikayel.github.io/vox/` (hard refresh / novo SW se necessário).
+3. `npm test` na raiz `vox/` antes de merge.
+
+**Nota:** `oauth.json` **não** entra no artefato público do CI por padrão (gitignored). Para OAuth em **produção Pages**, o operador precisa incluir `oauth.json` no host (deploy manual, secret no workflow, ou espelho privado) — o pipeline atual copia só `client/**` versionado.
+
