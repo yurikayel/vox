@@ -33,7 +33,40 @@ def ensure_cache_dir():
 def count_cached_items():
     if not CACHE_DIR.exists():
         return 0
-    return len([f for f in CACHE_DIR.glob("*") if f.is_file()])
+    return len([f for f in CACHE_DIR.glob("*") if f.is_file() and not f.name.startswith("index_")])
+
+
+def list_community_indexes():
+    if not CACHE_DIR.exists():
+        return []
+    return sorted(
+        f.stem.replace("index_", "", 1)
+        for f in CACHE_DIR.glob("index_*.json")
+        if f.is_file()
+    )
+
+
+def cache_dir_bytes():
+    if not CACHE_DIR.exists():
+        return 0
+    total = 0
+    for f in CACHE_DIR.glob("*"):
+        if f.is_file():
+            try:
+                total += f.stat().st_size
+            except OSError:
+                pass
+    return total
+
+
+def max_cache_bytes():
+    raw = os.environ.get("VOX_RELAY_MAX_CACHE_MB", "").strip()
+    if not raw:
+        return None
+    try:
+        return int(float(raw)) * 1024 * 1024
+    except ValueError:
+        return None
 
 class VoxRelayHandler(BaseHTTPRequestHandler):
     def _set_cors_headers(self):
@@ -55,11 +88,18 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self._set_cors_headers()
             self.end_headers()
+            indexes = list_community_indexes()
+            cache_bytes = cache_dir_bytes()
+            max_b = max_cache_bytes()
             payload = {
                 "status": "ok",
                 "app": "vox-relay",
-                "version": "0.2.0",
+                "version": "0.2.1",
                 "cachedCount": count_cached_items(),
+                "communityIndexes": indexes,
+                "communityIndexCount": len(indexes),
+                "cacheBytes": cache_bytes,
+                "maxCacheBytes": max_b,
                 "cacheDir": str(CACHE_DIR),
             }
             self.wfile.write(json.dumps(payload).encode("utf-8"))
@@ -180,6 +220,13 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
                     self.wfile.write(b"communityId obrigatorio")
                     return
                 ensure_cache_dir()
+                max_b = max_cache_bytes()
+                if max_b is not None and cache_dir_bytes() + len(body) > max_b:
+                    self.send_response(507)
+                    self._set_cors_headers()
+                    self.end_headers()
+                    self.wfile.write(json.dumps({"error": "quota de cache excedida"}).encode("utf-8"))
+                    return
                 index_file = CACHE_DIR / f"index_{comm_id}.json"
                 index_file.write_bytes(body)
                 self.send_response(200)

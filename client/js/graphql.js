@@ -1,6 +1,7 @@
 import * as cacheNode from "./cache-node.js";
 import * as peers from "./peers.js";
 import * as handles from "./handles.js";
+import { recordGatewayAttempt } from "./gateway-telemetry.js";
 
 const QUERIES = {
   communities: `query ListCommunities($after: String) {
@@ -259,9 +260,13 @@ async function withGateways(fn) {
   const cfg = await loadConfig();
   let lastErr = null;
   for (const gw of cfg.gateways) {
+    const label = gw.label || gw.graphql || "gateway";
     try {
-      return { data: await fn(gw.graphql), gateway: gw.label };
+      const data = await fn(gw.graphql);
+      recordGatewayAttempt(label, true);
+      return { data, gateway: gw.label };
     } catch (e) {
+      recordGatewayAttempt(label, false);
       lastErr = e;
     }
   }
@@ -283,7 +288,39 @@ function rawUrlsForTx(cfg, txId) {
 
 async function fetchRawFromGateways(txId) {
   const cfg = await loadConfig();
+  const tried = new Set();
+  for (const gw of cfg.gateways || []) {
+    if (typeof gw.raw !== "string" || !gw.raw.includes("{txId}")) continue;
+    const url = gw.raw.replace("{txId}", txId);
+    if (tried.has(url)) continue;
+    tried.add(url);
+    const label = gw.label || url;
+    try {
+      const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
+      if (!res.ok) {
+        recordGatewayAttempt(label, false);
+        continue;
+      }
+      const text = await res.text();
+      let parsed = { body: text, raw: text };
+      try {
+        const json = JSON.parse(text);
+        if (typeof json === "object" && json !== null) {
+          parsed.body = json.body || json.content || json.text || text;
+          parsed.title = json.title || "";
+        }
+      } catch {
+        // texto plano
+      }
+      recordGatewayAttempt(label, true);
+      return parsed;
+    } catch {
+      recordGatewayAttempt(label, false);
+    }
+  }
   for (const url of rawUrlsForTx(cfg, txId)) {
+    if (tried.has(url)) continue;
+    tried.add(url);
     try {
       const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
       if (!res.ok) continue;
@@ -298,9 +335,10 @@ async function fetchRawFromGateways(txId) {
       } catch {
         // texto plano
       }
+      recordGatewayAttempt(url, true);
       return parsed;
     } catch {
-      // tenta o próximo gateway
+      recordGatewayAttempt(url, false);
     }
   }
   return null;

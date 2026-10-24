@@ -23,6 +23,8 @@ import * as hashtags from "./hashtags.js";
 import * as frames from "./frames.js";
 import * as postOwnership from "./post-ownership.js";
 import * as communityMirror from "./community-mirror.js";
+import * as stewardWizard from "./steward-wizard.js";
+import * as gatewayTelemetry from "./gateway-telemetry.js";
 import { attachInlineComposerHandlers } from "./inline-composer.js";
 
 function parseRoute() {
@@ -44,6 +46,7 @@ function parseRoute() {
     return { name: "pix-lookup", query: decodeURIComponent(parts[1]) };
   }
   if (parts[0] === "settings" && parts[1] === "network") {
+    if (parts[2] === "steward") return { name: "steward-wizard" };
     return { name: "network-settings" };
   }
   if (parts[0] === "h" && parts[1]) {
@@ -1757,10 +1760,64 @@ async function showNetworkSettings() {
     customRelayHttpUrl,
     customTurn,
     relayHttpUrl,
+    gatewayHealth: gatewayTelemetry.getGatewayHealthSummary(),
   });
 
   bindNetworkSettingsForm();
   bindNetworkSettingsButtons();
+}
+
+function bindStewardWizardForm() {
+  const form = document.getElementById("form-steward-wizard");
+  if (!form) return;
+  const step = stewardWizard.loadStep();
+
+  document.getElementById("sw-prev")?.addEventListener("click", () => {
+    stewardWizard.saveDraft(stewardWizard.readFormStep(step));
+    stewardWizard.saveStep(step - 1);
+    showStewardWizard();
+  });
+
+  document.getElementById("sw-verify-relay")?.addEventListener("click", async () => {
+    const url = document.getElementById("sw-relay-http")?.value.trim();
+    const out = document.getElementById("sw-verify-result");
+    if (out) out.textContent = "Verificando…";
+    const r = await stewardWizard.verifyRelayHttp(url);
+    if (out) {
+      out.textContent = r.ok
+        ? `OK · ${r.data?.communityIndexCount ?? 0} espelhos`
+        : `Falha: ${r.reason}`;
+    }
+  });
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const data = stewardWizard.readFormStep(step);
+    if (step === 1 && !data.pledge) {
+      share.showToast("Marque o compromisso para continuar.", "error");
+      return;
+    }
+    stewardWizard.saveDraft(data);
+    if (step === 5) {
+      const draft = stewardWizard.loadDraft();
+      if (draft.signalingUrl) localStorage.setItem("vox-custom-signaling-url", draft.signalingUrl);
+      if (draft.relayHttpUrl) inbox.saveRelayHttpUrl(draft.relayHttpUrl);
+      share.showToast("Wizard concluído — URLs salvas em Preferências de rede.");
+      location.hash = "#/settings/network";
+      return;
+    }
+    stewardWizard.saveStep(step + 1);
+    showStewardWizard();
+  });
+}
+
+async function showStewardWizard() {
+  const user = await getActiveUser();
+  const main = render.renderShell(makeShellProps(user, "network", "Assistente steward"));
+  const step = stewardWizard.loadStep();
+  const draft = stewardWizard.loadDraft();
+  render.renderStewardWizard(main, { draft, step });
+  bindStewardWizardForm();
 }
 
 async function syncIdentity() {
@@ -2043,6 +2100,7 @@ async function route() {
   if (r.name === "perfil") return showProfile(null, r.tab);
   if (r.name === "pix-lookup") return showPixLookup(r.query);
   if (r.name === "network-settings") return showNetworkSettings();
+  if (r.name === "steward-wizard") return showStewardWizard();
   if (r.name === "handle-lookup") return showHandleLookup(r.slug);
   if (r.name === "dm-list") return showDmList();
   if (r.name === "dm-thread") return showDmThread(r.address);
