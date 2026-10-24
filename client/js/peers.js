@@ -2,6 +2,7 @@ import * as cacheNode from "./cache-node.js";
 import * as webrtcPeer from "./webrtc-peer.js";
 import * as localAccount from "./local-account.js";
 import * as manifestMesh from "./peers-cache-manifest.js";
+import * as moderation from "./moderation.js";
 import { getRelayHttpUrl } from "./inbox.js";
 
 export {
@@ -328,6 +329,7 @@ async function handleCacheManifestMessage(item, source = "rtc") {
 
 async function handleGossipMessage(item, source = "rtc") {
   if (!item?.id || !item?.sig) return;
+  if (moderation.shouldDropGossip(item.author)) return;
   const tombstone = await cacheNode.getTombstone(item.id);
   if (tombstone && (tombstone.editedAt || 0) >= (item.editedAt || item.ts || 0)) {
     return;
@@ -358,6 +360,7 @@ async function handleGossipMessage(item, source = "rtc") {
 
 async function handleGossipUpdateMessage(item, source = "rtc") {
   if (!item?.id || !item?.sig || !item?.author) return;
+  if (moderation.shouldDropGossip(item.author)) return;
   if (!item.editedAt || item.editedAt <= 0) return;
 
   const tombstone = await cacheNode.getTombstone(item.id);
@@ -389,6 +392,7 @@ async function handleGossipUpdateMessage(item, source = "rtc") {
 
 async function handleGossipDeleteMessage(tombstone, source = "rtc") {
   if (!tombstone?.id || !tombstone?.sig || !tombstone?.author) return;
+  if (moderation.shouldDropGossip(tombstone.author)) return;
   const deleteTime = tombstone.editedAt || tombstone.ts || 0;
   if (!deleteTime) return;
 
