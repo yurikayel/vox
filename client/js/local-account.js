@@ -283,3 +283,91 @@ export async function verifyPayload(signed) {
     return false;
   }
 }
+
+
+export async function exportAccountBundle() {
+  const acc = await ensureLocalAccount();
+  const dmKeypair = await cryptoDm.getDmKeypair();
+  const bundle = {
+    voxVersion: 1,
+    kind: "vox-account-backup",
+    routeId: acc.routeId,
+    publicJwk: acc.publicJwk,
+    privateJwk: acc.privateJwk,
+    dmKeypair,
+    displayName: getDisplayName(),
+    pixKey: getPixKey(),
+    exportedAt: Date.now(),
+  };
+  return JSON.stringify(bundle, null, 2);
+}
+
+export async function importAccountBundle(rawBundle) {
+  let parsed = null;
+  if (typeof rawBundle === "string") {
+    try {
+      parsed = JSON.parse(rawBundle);
+    } catch {
+      throw new Error("Formato de backup inválido (não é JSON)");
+    }
+  } else if (rawBundle && typeof rawBundle === "object") {
+    parsed = rawBundle;
+  }
+
+  if (!parsed || parsed.kind !== "vox-account-backup" || !parsed.routeId) {
+    throw new Error("Backup incompatível ou corrompido");
+  }
+
+  if (!parsed.publicJwk || !parsed.privateJwk) {
+    throw new Error("Chaves de assinatura ausentes no backup");
+  }
+
+  const expectedRouteId = await computeRouteId(parsed.publicJwk);
+  if (!expectedRouteId || expectedRouteId !== parsed.routeId) {
+    throw new Error("Chave pública não corresponde ao routeId declarado");
+  }
+
+  try {
+    const privKey = await crypto.subtle.importKey(
+      "jwk",
+      parsed.privateJwk,
+      { name: "ECDSA", namedCurve: "P-256" },
+      false,
+      ["sign"]
+    );
+    const pubKey = await crypto.subtle.importKey(
+      "jwk",
+      parsed.publicJwk,
+      { name: "ECDSA", namedCurve: "P-256" },
+      false,
+      ["verify"]
+    );
+    const nonce = new TextEncoder().encode(`vox-verify-${Date.now()}`);
+    const sig = await crypto.subtle.sign({ name: "ECDSA", hash: "SHA-256" }, privKey, nonce);
+    const valid = await crypto.subtle.verify({ name: "ECDSA", hash: "SHA-256" }, pubKey, sig, nonce);
+    if (!valid) throw new Error("Assinatura de teste falhou");
+  } catch (err) {
+    throw new Error(`Validação das chaves falhou: ${err.message}`);
+  }
+
+  cachedAccount = {
+    routeId: parsed.routeId,
+    publicJwk: parsed.publicJwk,
+    privateJwk: parsed.privateJwk,
+    createdAt: parsed.createdAt || Date.now(),
+    importedAt: Date.now(),
+  };
+  localStorage.setItem(ACCOUNT_STORAGE, JSON.stringify(cachedAccount));
+
+  if (parsed.dmKeypair) {
+    cryptoDm.setDmKeypair(parsed.dmKeypair);
+  }
+  if (parsed.displayName) {
+    setDisplayName(parsed.displayName);
+  }
+  if (parsed.pixKey) {
+    setPixKey(parsed.pixKey);
+  }
+
+  return cachedAccount;
+}
