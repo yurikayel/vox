@@ -6,6 +6,7 @@ import * as cacheNode from "./cache-node.js";
 import * as peers from "./peers.js";
 import * as localAccount from "./local-account.js";
 import * as postOwnership from "./post-ownership.js";
+import * as mediaBlob from "./media-blob.js";
 
 let inlineComposerImageDataUrl = "";
 
@@ -129,7 +130,12 @@ export function attachInlineComposerHandlers(onPublished) {
       }
       const signed = await localAccount.signPayload(payload);
       await cacheNode.saveLocalPost(signed);
-      peers.broadcastGossip(signed);
+
+      const { detachedPost, mediaBlob: blob } = await mediaBlob.detachMedia(signed);
+      if (blob) {
+        await mediaBlob.defaultBlobStorage.put(blob);
+      }
+      peers.broadcastGossip(detachedPost);
 
       if (wallet.hasWallet()) {
         try {

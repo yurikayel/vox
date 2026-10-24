@@ -691,7 +691,48 @@ Não há trabalho pendente obrigatório do plano «Meta feed v6.3» em HOLD. O q
 
 ---
 
-## 23. Afinidade Comportamental Local de Pares para Blobs (V-I09)
+## 23. Vox Roadmap Core: Autonomia, Moderação, Deliberação e Mídia P2P
+
+**Data:** 2026-10-23 · **Branch:** `feat/vox-roadmap-core` · **Suíte:** 222+ testes (208+ JS + 14 Python relay).
+
+Implementação dos quatro pilares essenciais do roadmap da rede Vox:
+
+### 23.1 Autonomia de Identidade (Backup e Restauração Criptográfica)
+- **Módulo:** `client/js/local-account.js` e `client/js/crypto-dm.js`.
+- **Exportação:** `exportAccountBundle()` serializa identidade local (`routeId`, `name`, `bio`, `handle`), par de chaves ECDSA P-256 de assinatura e par de chaves ECDH P-256 de DMs privadas com timestamp e versão `vox-account-bundle-v1`.
+- **Importação e Verificação Estrita:** `importAccountBundle(bundle)` re-computa o `routeId` a partir da chave pública JWK, assina e verifica um *challenge nonce* efêmero com a chave privada importada antes de persistir no `localStorage`. Rejeita pacotes adulterados, chaves truncadas ou identificadores forjados.
+- **Suíte de testes:** `tests/account-backup.test.js`.
+
+### 23.2 Moderação Local e Filtro Anti-Spam de Mesh
+- **Módulo:** `client/js/moderation.js` e integração em `client/js/peers.js`.
+- **Prevenção no Gateway de Rede:** Função `shouldDropGossip(author)` filtra pacotes no momento da recepção em `peers.js` (`handleGossipMessage`, `handleGossipUpdateMessage`, `handleGossipDeleteMessage`). Pacotes originados por autores bloqueados são descartados antes de processamento criptográfico, gravação no IndexedDB ou retransmissão gossip (bloqueio na borda do nó).
+- **Filtragem de Feed:** `filterFeedPosts(posts)` oculta posts e respostas de autores bloqueados ou silenciados.
+- **Portabilidade:** `exportModerationBundle()` e `importModerationBundle()` permitem backup e sincronização de listas de moderação entre nós.
+- **Suíte de testes:** `tests/moderation-local.test.js`.
+
+### 23.3 Deliberação Coletiva (Pol.is-lite / Consenso Determinístico)
+- **Módulo:** `client/js/polis.js`.
+- **Métricas e Apuração:** Normalização de votos (`concordo: +1`, `discordo: -1`, `passo/neutro: 0`), apuração por afirmação com cálculo de porcentagens e variância de opinião.
+- **Detecção de Pontes de Consenso:** Algoritmo determinístico de particionamento de votantes em clusters de divergência e identificação de afirmações ponte (*consensus bridges* — afirmações com alta aprovação em ambos os polos) vs afirmações divisivas (*divisive statements*).
+- **Sem Dependências Externas:** Implementado em JavaScript puro para execução instantânea no navegador e em nós do relay.
+- **Suíte de testes:** `tests/polis.test.js`.
+
+### 23.4 Blobs de Mídia P2P Content-Addressed (SHA-256)
+- **Módulo:** `client/js/media-blob.js`.
+- **Desacoplamento do Mesh:** Remove imagens pesadas em base64 do JSON transitado via gossip (`detachMedia`), substituindo-as por referências content-addressed `mediaRef` com hash SHA-256, tipo MIME e tamanho em bytes.
+- **Verificação de Integridade e Re-anexo:** `verifyMediaBlob` calcula o hash SHA-256 do payload e rejeita blobs corrompidos ou adulterados. `attachMedia` re-acopla a mídia sob demanda ao post correspondente.
+- **Armazenamento LRU:** `BlobStorage` com controle de capacidade máxima e descarte automático de entradas antigas.
+- **Suíte de testes:** `tests/media-blob.test.js`.
+### 23.5 Integração de UI & UX dos Pilares
+- **Backup de Identidade no Perfil:** Botões de exportação (`btn-export-account`) e restauração (`file-import-account`) integrados ao card de Identidade Local em `renderProfileActions`, com validação criptográfica estrita no navegador.
+- **Ações de Moderação no Perfil & Configurações:** Botões de bloqueio e silenciamento no perfil de terceiros (`btn-toggle-block`, `btn-toggle-mute`). Painel "Moderação Local & Filtros" em `renderNetworkSettings` listando autores bloqueados/silenciados com opções de desbloqueio pontual e exportação/importação de regras.
+- **Visualizador Pol.is-lite:** `renderPolisReportHtml` renderiza painel com resumo de participantes, afirmações, barras de votação tripartidas (concordo/neutro/discordo) e selos destacados para *Pontes de Consenso* (`consensus-bridge`) e *Pontos Divisivos* (`divisive-point`).
+- **Desacoplamento de Mídia no Compositor:** `inline-composer.js` utiliza `mediaBlob.detachMedia` para isolar a mídia base64 antes do broadcast de fofoca, transmitindo apenas referências content-addressed e armazenando o payload no `defaultBlobStorage`.
+- **Suíte de testes:** `tests/roadmap-ui.test.js` (5 testes cobrindo renderização e fluxos de UI).
+
+---
+
+## 24. Afinidade Comportamental Local de Pares para Blobs (V-I09)
 
 **Data:** 2026-10-24 · **Branch:** `feat/blob-soft-priority-v0` · **Suíte:** 207 testes (193 JS + 14 Python relay).
 
@@ -707,9 +748,9 @@ Não há trabalho pendente obrigatório do plano «Meta feed v6.3» em HOLD. O q
 
 ---
 
-## 24. Descoberta social, Vox Brasil welcome e OAuth client-only (V-DIS)
+## 25. Descoberta social, Vox Brasil welcome e OAuth client-only (V-DIS)
 
-**Data:** 2026-10-24 · **SW:** `vox-pwa-v6.23-v-dis-social-discovery`
+**Data:** 2026-10-24 · **SW:** `vox-pwa-v6.25-roadmap-core`
 
 - **Docs:** `docs/adr/002-oauth-profile-enrich-client.md`, `docs/vox-brasil-welcome-profile.md`, `COMPLIANCE-BR.md` (login social opcional).
 - **Módulos:** `vox-welcome-profile.js`, `profile-directory.js`, `contacts.js`, `people-index.js`, `oauth-profile.js`.
