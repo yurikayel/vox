@@ -866,7 +866,11 @@ export function renderCommunityPeopleStrip(people = []) {
     .map((p) => {
       const label = profileDirectory.getAuthorDisplaySync(p.routeId) || p.name || p.routeId.slice(0, 10);
       const av = renderAvatarHtml(p.routeId, label, "avatar-sm");
-      return `<a class="people-chip" href="#/u/${encodeURIComponent(p.routeId)}" style="display:inline-flex; align-items:center; gap:4px; padding:4px 8px; border:1px solid var(--border); border-radius:999px; font-size:0.82rem; text-decoration:none;">${av}<span>${escapeHtml(label)}</span></a>`;
+      return `
+        <span class="people-chip-wrap" style="display:inline-flex; align-items:center; gap:4px; padding:4px 6px 4px 8px; border:1px solid var(--border); border-radius:999px; font-size:0.82rem;">
+          <a class="people-chip" href="#/u/${encodeURIComponent(p.routeId)}" style="display:inline-flex; align-items:center; gap:4px; text-decoration:none;">${av}<span>${escapeHtml(label)}</span></a>
+          <button type="button" class="btn btn-sm btn-outline btn-community-add-contact" data-route="${escapeHtml(p.routeId)}" data-label="${escapeHtml(label)}" style="padding:2px 6px; font-size:0.72rem;">+ Contato</button>
+        </span>`;
     })
     .join("");
   return `
@@ -1461,6 +1465,7 @@ function renderProfileActions(
   oauthProvider = "",
   isBlocked = false,
   isMuted = false,
+  meshDiscoverable = false,
 ) {
   if (isCurrentWallet) {
     return `
@@ -1486,6 +1491,17 @@ function renderProfileActions(
         ${renderOAuthEnrichmentBlock(oauthProvider)}
         ${renderPixForm(currentPixKey)}
         ${renderGithubForm(currentGithub)}
+      </div>
+
+      <div class="card" style="margin-top:0.75rem;">
+        <h3>Descoberta na malha</h3>
+        <div class="form-group" style="display:flex; align-items:flex-start; gap:0.6rem; margin-top:0.5rem;">
+          <input type="checkbox" id="profile-mesh-discoverable" ${meshDiscoverable ? "checked" : ""} style="width:1.1rem; height:1.1rem; margin-top:0.2rem;" />
+          <div>
+            <label for="profile-mesh-discoverable" style="margin:0; font-weight:600;">Aparecer na busca da malha</label>
+            <p class="desc" style="font-size:0.82rem; margin:0.25rem 0 0;">Cartão assinado opt-in para pares conectados; sem ranking nem servidor central.</p>
+          </div>
+        </div>
       </div>
 
       <div class="card" style="margin-top:0.75rem;">
@@ -1567,6 +1583,7 @@ export function renderProfile(main, address, memberships = [], isCurrentWallet =
   oauthProvider = "",
   isBlocked = false,
   isMuted = false,
+  meshDiscoverable = false,
 } = {}) {
   const finalGithub = githubHandle || (isCurrentWallet ? social.getLocalGithubHandle() : mock.getAuthorGithub(address));
   const finalReadme = readme || (isCurrentWallet ? social.getLocalReadme() : mock.getAuthorReadme(address));
@@ -1585,6 +1602,7 @@ export function renderProfile(main, address, memberships = [], isCurrentWallet =
     oauthProvider,
     isBlocked,
     isMuted,
+    meshDiscoverable,
   );
   html += renderProfileReadme(address, displayName, finalReadme, isCurrentWallet);
 
@@ -2126,42 +2144,92 @@ export function closeOAuthEnrich(container) {
   if (container) container.innerHTML = "";
 }
 
-export function renderPeopleSearch(main, results = [], query = "") {
+function renderPeopleResultRow(p) {
+  const name = escapeHtml(p.name || p.routeId.slice(0, 14));
+  const handle = p.handle ? `@${escapeHtml(p.handle)}` : "";
+  const av = renderAvatarHtml(p.routeId, name);
+  return `
+    <div class="card people-result" style="padding:0.65rem 0.85rem; margin-top:0.45rem; display:flex; gap:0.65rem; align-items:center;">
+      ${av}
+      <div style="flex:1; min-width:0;">
+        <a href="#/u/${encodeURIComponent(p.routeId)}" style="font-weight:600;">${name}</a>
+        ${handle ? `<span class="meta"> ${handle}</span>` : ""}
+        <p class="meta" style="margin:2px 0 0;"><code>${escapeHtml(shortId(p.routeId))}</code></p>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:0.25rem;">
+        <a class="btn btn-sm btn-outline" href="#/connect/${encodeURIComponent(p.routeId)}">Conectar</a>
+        <a class="btn btn-sm btn-primary" href="#/dm/${encodeURIComponent(p.routeId)}">DM</a>
+      </div>
+    </div>`;
+}
+
+function renderPeopleSection(title, people) {
+  if (!people?.length) return "";
+  const rows = people.map((p) => renderPeopleResultRow(p)).join("");
+  return `
+    <div class="people-section" style="margin-top:0.75rem;">
+      <h3 class="section-title" style="font-size:0.95rem; margin:0 0 0.35rem;">${escapeHtml(title)}</h3>
+      ${rows}
+    </div>`;
+}
+
+export function renderPeopleSearch(main, { sections = null, results = [], query = "" } = {}) {
   const q = escapeHtml(query);
-  const rows =
-    results.length === 0
-      ? `<div class="empty"><p>Nenhuma pessoa encontrada${query ? ` para “${q}”` : ""}.</p></div>`
-      : results
-          .map((p) => {
-            const name = escapeHtml(p.name || p.routeId.slice(0, 14));
-            const handle = p.handle ? `@${escapeHtml(p.handle)}` : "";
-            const av = renderAvatarHtml(p.routeId, name);
-            return `
-            <div class="card people-result" style="padding:0.65rem 0.85rem; margin-top:0.45rem; display:flex; gap:0.65rem; align-items:center;">
-              ${av}
-              <div style="flex:1; min-width:0;">
-                <a href="#/u/${encodeURIComponent(p.routeId)}" style="font-weight:600;">${name}</a>
-                ${handle ? `<span class="meta"> ${handle}</span>` : ""}
-                <p class="meta" style="margin:2px 0 0;"><code>${escapeHtml(shortId(p.routeId))}</code></p>
-              </div>
-              <div style="display:flex; flex-direction:column; gap:0.25rem;">
-                <a class="btn btn-sm btn-outline" href="#/connect/${encodeURIComponent(p.routeId)}">Conectar</a>
-                <a class="btn btn-sm btn-primary" href="#/dm/${encodeURIComponent(p.routeId)}">DM</a>
-              </div>
-            </div>`;
-          })
-          .join("");
+  const hasQuery = Boolean(String(query || "").trim());
+  let body = "";
+  if (hasQuery) {
+    body =
+      results.length === 0
+        ? `<div class="empty"><p>Nenhuma pessoa encontrada para “${q}”.</p></div>`
+        : results.map((p) => renderPeopleResultRow(p)).join("");
+  } else if (sections) {
+    body =
+      renderPeopleSection("Contatos", sections.contacts) +
+      renderPeopleSection("Na malha", sections.mesh) +
+      renderPeopleSection("Tour (demonstração)", sections.tour);
+    if (!sections.contacts?.length && !sections.mesh?.length && !sections.tour?.length) {
+      body = `<div class="empty"><p>Ninguém indexado ainda.</p></div>`;
+    }
+  } else {
+    body = results.map((p) => renderPeopleResultRow(p)).join("");
+  }
 
   main.innerHTML = `
     <div class="card">
       <h2 style="margin:0 0 4px;">Pessoas</h2>
-      <p class="desc" style="margin:0 0 0.75rem;">Busca local: contatos, autores de posts neste aparelho e perfis de demonstração.</p>
+      <p class="desc" style="margin:0 0 0.75rem;">Busca local: contatos, autores vistos na malha, cartões opt-in e tour (só se vazio).</p>
       <form id="form-people-search" style="display:flex; gap:0.5rem;">
         <input type="search" id="people-search-input" class="form-control" placeholder="Nome, @handle ou vx_…" value="${q}" />
         <button type="submit" class="btn btn-primary">Buscar</button>
       </form>
+      <form id="form-people-paste-link" style="margin-top:0.65rem; display:flex; gap:0.5rem; flex-wrap:wrap;">
+        <input type="text" id="people-paste-input" class="form-control" placeholder="#/connect/… ou vx_…" style="flex:1; min-width:12rem;" />
+        <button type="submit" class="btn btn-outline">Abrir conexão</button>
+      </form>
+      <p class="meta" style="margin:0.35rem 0 0; font-size:0.78rem;">Cole um link #/connect ou vx_ para conectar sem busca.</p>
     </div>
-    <div class="people-results">${rows}</div>`;
+    <div class="people-results">${body}</div>`;
+}
+
+export function renderPostPactConnectModal(container, routeId) {
+  if (!container || !routeId) return;
+  const link = `${typeof location !== "undefined" ? location.origin + location.pathname : ""}#/connect/${encodeURIComponent(routeId)}`;
+  container.innerHTML = `
+    <div class="modal-overlay" id="post-pact-connect-overlay" role="dialog" aria-modal="true" style="z-index:10001;">
+      <div class="modal-dialog card" style="max-width:420px;">
+        <h3 style="margin:0 0 0.5rem;">Seu link #/connect</h3>
+        <p class="desc" style="margin:0 0 0.75rem;">Compartilhe para outros adicionarem você diretamente.</p>
+        <p class="meta" style="word-break:break-all;"><code id="post-pact-connect-url">${escapeHtml(link)}</code></p>
+        <div style="display:flex; gap:0.5rem; margin-top:1rem; flex-wrap:wrap;">
+          <button type="button" id="btn-post-pact-share-connect" class="btn btn-primary" data-route="${escapeHtml(routeId)}">Compartilhar</button>
+          <button type="button" id="btn-post-pact-connect-close" class="btn btn-outline">Continuar</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+export function closePostPactConnectModal(container) {
+  if (container) container.innerHTML = "";
 }
 
 export function renderConnectPreview(main, profile, routeId, { isContact = false } = {}) {
@@ -2527,7 +2595,7 @@ function relayHealthLabel(relayStatus, relayHttpUrl) {
   return host ? `⚪ Offline (${host})` : "⚪ Offline";
 }
 
-function renderNetworkForm(settings, notifPermission, customSignalingUrl, customRelayHttpUrl, customTurn, relayStatus, rtcStatus, metrics, relayHttpUrl) {
+function renderNetworkForm(settings, notifPermission, customSignalingUrl, customRelayHttpUrl, customTurn, relayStatus, rtcStatus, metrics, relayHttpUrl, meshDiscoverable = false) {
   const isEnabled = Boolean(settings?.enabled);
   const isBg = Boolean(settings?.backgroundRelay);
   const notifNotice = notifPermission === "granted"
@@ -2542,6 +2610,14 @@ function renderNetworkForm(settings, notifPermission, customSignalingUrl, custom
         <div class="form-group" style="display:flex; align-items:center; gap:0.6rem; margin-top:0.5rem;">
           <input type="checkbox" id="net-pause" ${!isEnabled ? "checked" : ""} style="width:1.1rem; height:1.1rem;" />
           <label for="net-pause" style="margin:0; font-weight:600; color:var(--danger);">Pausar ajuda à rede (modo somente leitura)</label>
+        </div>
+
+        <div class="form-group" style="display:flex; align-items:flex-start; gap:0.6rem;">
+          <input type="checkbox" id="net-mesh-discoverable" ${meshDiscoverable ? "checked" : ""} style="width:1.1rem; height:1.1rem; margin-top:0.2rem;" />
+          <div>
+            <label for="net-mesh-discoverable" style="margin:0; font-weight:600;">Aparecer na busca da malha</label>
+            <p class="desc" style="font-size:0.78rem; margin:0.25rem 0 0;">Cartão de perfil assinado (opt-in) propagado via gossip — ver COMPLIANCE-BR.md.</p>
+          </div>
         </div>
 
         <div class="form-group">
@@ -2670,11 +2746,23 @@ export function renderNetworkSettings(main, {
   gatewayHealth,
   blockedUsers = [],
   mutedUsers = [],
+  meshDiscoverable = false,
 }) {
   const isEnabled = Boolean(settings?.enabled);
   let html = renderNetworkHeader(isEnabled, relayStatus, rtcStatus, gatewayHealth);
   html += renderNetworkStats(metrics, cacheStats, dailyUsage, settings);
-  html += renderNetworkForm(settings, notifPermission, customSignalingUrl, customRelayHttpUrl, customTurn, relayStatus, rtcStatus, metrics, relayHttpUrl);
+  html += renderNetworkForm(
+    settings,
+    notifPermission,
+    customSignalingUrl,
+    customRelayHttpUrl,
+    customTurn,
+    relayStatus,
+    rtcStatus,
+    metrics,
+    relayHttpUrl,
+    meshDiscoverable,
+  );
   html += renderModerationSettingsSection(blockedUsers, mutedUsers);
   main.innerHTML = html;
 }
