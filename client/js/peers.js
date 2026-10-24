@@ -2,6 +2,7 @@ import * as cacheNode from "./cache-node.js";
 import * as webrtcPeer from "./webrtc-peer.js";
 import * as localAccount from "./local-account.js";
 import * as manifestMesh from "./peers-cache-manifest.js";
+import * as blobAffinity from "./peers-blob-affinity.js";
 import { getRelayHttpUrl } from "./inbox.js";
 
 export {
@@ -11,6 +12,16 @@ export {
   listKnownManifests,
   buildCacheManifestGossipDraft,
 } from "./peers-cache-manifest.js";
+
+export {
+  isBlobPeerSoftPriorityEnabled,
+  setBlobPeerSoftPriorityEnabled,
+  bumpAffinity,
+  getPeerAffinity,
+  rankAffinity,
+  clearAffinity,
+  getAffinityEntries,
+} from "./peers-blob-affinity.js";
 
 const PEER_SETTINGS_KEY = "vox-peer-settings";
 const PEER_METRICS_KEY = "vox-peer-metrics";
@@ -279,6 +290,9 @@ export async function handleVoxMessage(msg, replyFn, source = "broadcast") {
   if (msg.type === "BLOB" && msg.txId && msg.data) {
     const resolvers = pendingRequests.get(msg.txId);
     if (resolvers && resolvers.length) {
+      if (msg.fromPeer && blobAffinity.isBlobPeerSoftPriorityEnabled()) {
+        blobAffinity.bumpAffinity(msg.fromPeer);
+      }
       const size = JSON.stringify(msg.data).length;
       updateMetrics("blobsReceived", 1);
       updateMetrics("bytesReceived", size);
@@ -582,6 +596,21 @@ export async function requestTxFromPeers(txId, opts = {}) {
 
   const tryRtcFirst =
     priority && settings.webrtcEnabled && webrtcPeer.getConnectedRtcPeersCount() > 0;
+
+  if (settings.webrtcEnabled && blobAffinity.isBlobPeerSoftPriorityEnabled()) {
+    const openPeers = webrtcPeer.listOpenRtcPeerIds ? webrtcPeer.listOpenRtcPeerIds() : [];
+    const ranked = blobAffinity.rankAffinity(openPeers);
+    for (const peerId of ranked) {
+      const unicastResult = await requestWithTransport(
+        txId,
+        () => {
+          webrtcPeer.sendVoxMessage(peerId, { type: "WANT", txId, fromPeer: myPeerId });
+        },
+        450
+      );
+      if (unicastResult) return unicastResult;
+    }
+  }
 
   if (tryRtcFirst) {
     const rtcResult = await requestFromRtc(txId, 2500);
