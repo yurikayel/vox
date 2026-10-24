@@ -693,7 +693,7 @@ Não há trabalho pendente obrigatório do plano «Meta feed v6.3» em HOLD. O q
 
 ## 23. Vox Roadmap Core: Autonomia, Moderação, Deliberação e Mídia P2P
 
-**Data:** 2026-10-23 · **Branch:** `feat/vox-roadmap-core` · **Suíte:** 217 testes (203 JS + 14 Python relay).
+**Data:** 2026-10-23 · **Branch:** `feat/vox-roadmap-core` · **Suíte:** 222 testes (208 JS + 14 Python relay).
 
 Implementação dos quatro pilares essenciais do roadmap da rede Vox:
 
@@ -723,4 +723,10 @@ Implementação dos quatro pilares essenciais do roadmap da rede Vox:
 - **Verificação de Integridade e Re-anexo:** `verifyMediaBlob` calcula o hash SHA-256 do payload e rejeita blobs corrompidos ou adulterados. `attachMedia` re-acopla a mídia sob demanda ao post correspondente.
 - **Armazenamento LRU:** `BlobStorage` com controle de capacidade máxima e descarte automático de entradas antigas.
 - **Suíte de testes:** `tests/media-blob.test.js`.
+### 23.5 Integração de UI & UX dos Pilares
+- **Backup de Identidade no Perfil:** Botões de exportação (`btn-export-account`) e restauração (`file-import-account`) integrados ao card de Identidade Local em `renderProfileActions`, com validação criptográfica estrita no navegador.
+- **Ações de Moderação no Perfil & Configurações:** Botões de bloqueio e silenciamento no perfil de terceiros (`btn-toggle-block`, `btn-toggle-mute`). Painel "Moderação Local & Filtros" em `renderNetworkSettings` listando autores bloqueados/silenciados com opções de desbloqueio pontual e exportação/importação de regras.
+- **Visualizador Pol.is-lite:** `renderPolisReportHtml` renderiza painel com resumo de participantes, afirmações, barras de votação tripartidas (concordo/neutro/discordo) e selos destacados para *Pontes de Consenso* (`consensus-bridge`) e *Pontos Divisivos* (`divisive-point`).
+- **Desacoplamento de Mídia no Compositor:** `inline-composer.js` utiliza `mediaBlob.detachMedia` para isolar a mídia base64 antes do broadcast de fofoca, transmitindo apenas referências content-addressed e armazenando o payload no `defaultBlobStorage`.
+- **Suíte de testes:** `tests/roadmap-ui.test.js` (5 testes cobrindo renderização e fluxos de UI).
 

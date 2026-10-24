@@ -385,7 +385,7 @@ export function renderInlineComposer({ userRouteId = "", displayName = "" } = {}
 
 export function getPostFeedLayout(t) {
   if (t?.githubGist?.lines?.length) return "github";
-  if (t?.image) return "photo";
+  if (t?.image || t?.mediaRef?.hash) return "photo";
   return "text";
 }
 
@@ -512,9 +512,15 @@ function renderPostHeaderBlock(t, author, labels, isPinned) {
 }
 
 function renderPostMedia(t) {
-  if (!t.image) return "";
-  const alt = escapeHtml(t.imageAlt || t.title);
-  return `<div class="post-media-container"><img class="post-media" src="${escapeHtml(t.image)}" alt="${alt}" loading="lazy" /></div>`;
+  if (t?.image) {
+    const alt = escapeHtml(t.imageAlt || t.title);
+    return `<div class="post-media-container"><img class="post-media" src="${escapeHtml(t.image)}" alt="${alt}" loading="lazy" /></div>`;
+  }
+  if (t?.mediaRef?.hash) {
+    const alt = escapeHtml(t.imageAlt || t.title || "Mídia P2P");
+    return `<div class="post-media-container post-media-lazy" data-media-hash="${escapeHtml(t.mediaRef.hash)}"><div class="media-placeholder" style="aspect-ratio:4/5; display:flex; align-items:center; justify-content:center; background:var(--surface-soft); color:var(--muted); font-size:0.85rem;"><span>📷 Mídia P2P (${escapeHtml(t.mediaRef.mime || "imagem")})</span></div></div>`;
+  }
+  return "";
 }
 
 export function renderPostTextHtml(post) {
@@ -1370,7 +1376,7 @@ function renderGithubForm(currentGithub) {
     </div>`;
 }
 
-function renderProfileActions(address, isCurrentWallet, handle, displayName, hasWallet, balance, currentPixKey = "", currentGithub = "") {
+function renderProfileActions(address, isCurrentWallet, handle, displayName, hasWallet, balance, currentPixKey = "", currentGithub = "", isBlocked = false, isMuted = false) {
   if (isCurrentWallet) {
     return `
       <div class="card" style="margin-top:0.75rem;">
@@ -1391,6 +1397,18 @@ function renderProfileActions(address, isCurrentWallet, handle, displayName, has
         </form>
         ${renderPixForm(currentPixKey)}
         ${renderGithubForm(currentGithub)}
+      </div>
+
+      <div class="card" style="margin-top:0.75rem;">
+        <h3>Backup & Restauração de Conta</h3>
+        <p class="desc" style="font-size:0.85rem; margin-bottom:0.5rem;">Exporte sua identidade completa (chaves de assinatura e DMs) para controle total da sua conta.</p>
+        <div style="display:flex; flex-wrap:wrap; gap:0.5rem;">
+          <button type="button" id="btn-export-account" class="btn btn-sm btn-outline">💾 Exportar Identidade (.json)</button>
+          <label class="btn btn-sm btn-outline" style="margin:0; cursor:pointer;">
+            📥 Restaurar Backup
+            <input type="file" id="file-import-account" accept="application/json,.json" style="display:none;" />
+          </label>
+        </div>
       </div>
 
       <details class="advanced-settings card" style="margin-top:0.75rem;">
@@ -1428,9 +1446,15 @@ function renderProfileActions(address, isCurrentWallet, handle, displayName, has
       </details>`;
   }
   return `
-    <div class="card" style="margin-top:0.75rem; display:flex; gap:0.5rem; align-items:center;">
+    <div class="card" style="margin-top:0.75rem; display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
       <a class="btn btn-primary btn-sm" href="#/dm/${encodeURIComponent(address)}">💬 Mensagem Privada</a>
       <button class="btn btn-outline btn-sm" id="btn-copy-author-route" data-route="${escapeHtml(address)}">📋 Copiar ID</button>
+      <button class="btn btn-sm ${isBlocked ? "btn-outline" : "btn-danger"}" id="btn-toggle-block" data-route="${escapeHtml(address)}">
+        ${isBlocked ? "Desbloquear Autor" : "🚫 Bloquear"}
+      </button>
+      <button class="btn btn-sm btn-outline" id="btn-toggle-mute" data-route="${escapeHtml(address)}">
+        ${isMuted ? "Desilenciar no Feed" : "🔇 Silenciar"}
+      </button>
     </div>`;
 }
 
@@ -1451,13 +1475,15 @@ export function renderProfile(main, address, memberships = [], isCurrentWallet =
   readme = "",
   activeTab = "posts",
   pinnedPostId = "",
+  isBlocked = false,
+  isMuted = false,
 } = {}) {
   const finalGithub = githubHandle || (isCurrentWallet ? social.getLocalGithubHandle() : mock.getAuthorGithub(address));
   const finalReadme = readme || (isCurrentWallet ? social.getLocalReadme() : mock.getAuthorReadme(address));
   const finalPinned = pinnedPostId || (isCurrentWallet ? social.getPinnedPostId(address) : mock.getAuthorPinnedPostId(address));
 
   let html = renderProfileHeader(address, isCurrentWallet, handle, isConflict, claimants, displayName, profileBio, stats, pixKeyMasked, pixKey, finalGithub);
-  html += renderProfileActions(address, isCurrentWallet, handle, displayName, hasWallet, balance, pixKey, finalGithub);
+  html += renderProfileActions(address, isCurrentWallet, handle, displayName, hasWallet, balance, pixKey, finalGithub, isBlocked, isMuted);
   html += renderProfileReadme(address, displayName, finalReadme, isCurrentWallet);
 
   // Reordena posts para colocar fixado no topo
@@ -2372,11 +2398,46 @@ function renderNetworkForm(settings, notifPermission, customSignalingUrl, custom
     </div>`;
 }
 
-export function renderNetworkSettings(main, { settings, metrics, cacheStats, relayStatus, dailyUsage, notifPermission, rtcStatus, customSignalingUrl, customRelayHttpUrl, customTurn, relayHttpUrl }) {
+
+function renderModerationSettingsSection(blockedUsers = [], mutedUsers = []) {
+  const blockedList = blockedUsers.length
+    ? blockedUsers.map((u) => `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;"><code>${escapeHtml(shortId(u))}</code><button type="button" class="btn btn-sm btn-outline btn-unblock-item" data-route="${escapeHtml(u)}">Desbloquear</button></div>`).join("")
+    : `<p class="meta" style="margin:0;">Nenhum autor bloqueado.</p>`;
+
+  const mutedList = mutedUsers.length
+    ? mutedUsers.map((u) => `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;"><code>${escapeHtml(shortId(u))}</code><button type="button" class="btn btn-sm btn-outline btn-unmute-item" data-route="${escapeHtml(u)}">Desilenciar</button></div>`).join("")
+    : `<p class="meta" style="margin:0;">Nenhum autor silenciado.</p>`;
+
+  return `
+    <div class="card" style="margin-top:1rem;">
+      <h3>Moderação Local & Filtros</h3>
+      <p class="desc" style="font-size:0.85rem; margin-bottom:0.6rem;">Filtros de conteúdo soberanos salvos apenas neste aparelho.</p>
+      
+      <div style="margin-bottom:0.75rem;">
+        <h4 style="margin:0 0 4px; font-size:0.9rem;">Autores Bloqueados (${blockedUsers.length})</h4>
+        <div class="card" style="background:var(--surface-soft); padding:8px 10px;">${blockedList}</div>
+      </div>
+
+      <div style="margin-bottom:0.75rem;">
+        <h4 style="margin:0 0 4px; font-size:0.9rem;">Autores Silenciados (${mutedUsers.length})</h4>
+        <div class="card" style="background:var(--surface-soft); padding:8px 10px;">${mutedList}</div>
+      </div>
+
+      <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:0.5rem;">
+        <button type="button" id="btn-export-moderation" class="btn btn-sm btn-outline">💾 Exportar Regras</button>
+        <label class="btn btn-sm btn-outline" style="margin:0; cursor:pointer;">
+          📥 Importar Regras
+          <input type="file" id="file-import-moderation" accept="application/json,.json" style="display:none;" />
+        </label>
+      </div>
+    </div>`;
+}
+export function renderNetworkSettings(main, { settings, metrics, cacheStats, relayStatus, dailyUsage, notifPermission, rtcStatus, customSignalingUrl, customRelayHttpUrl, customTurn, relayHttpUrl, blockedUsers = [], mutedUsers = [] }) {
   const isEnabled = Boolean(settings?.enabled);
   let html = renderNetworkHeader(isEnabled, relayStatus, rtcStatus);
   html += renderNetworkStats(metrics, cacheStats, dailyUsage, settings);
   html += renderNetworkForm(settings, notifPermission, customSignalingUrl, customRelayHttpUrl, customTurn, relayStatus, rtcStatus, metrics, relayHttpUrl);
+  html += renderModerationSettingsSection(blockedUsers, mutedUsers);
   main.innerHTML = html;
 }
 
@@ -2533,4 +2594,57 @@ export function renderTagFeed(main, slug, posts = []) {
       ${postsHtml}
     </div>
   `;
+}
+
+function renderPolisStatementItem(s) {
+  const agreePct = Math.round(Number(s.agreePct) || 0);
+  const disagreePct = Math.round(Number(s.disagreePct) || 0);
+  const passPct = Math.round(Number(s.passPct) || 0);
+
+  let badge = "";
+  if (s.isBridge || s.evaluation?.isConsensusBridge) {
+    badge = `<span class="badge-pill consensus-bridge" style="background:var(--success-soft, #e6f4ea); color:var(--success, #137333); font-size:0.75rem; font-weight:700;">★ Ponte de Consenso</span>`;
+  } else if (s.isDivisive || s.evaluation?.isDivisive) {
+    badge = `<span class="badge-pill divisive-point" style="background:var(--warning-soft, #fef7e0); color:var(--warning, #b06000); font-size:0.75rem; font-weight:700;">⚡ Ponto Divisivo</span>`;
+  }
+
+  return `
+    <div class="polis-statement-card card" style="margin-bottom:0.75rem; padding:12px 14px;" data-statement-id="${escapeHtml(s.id)}">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:6px;">
+        <p class="post-body" style="margin:0; font-weight:600;">${escapeHtml(s.text)}</p>
+        ${badge}
+      </div>
+      <div class="polis-vote-bar" style="height:8px; display:flex; border-radius:4px; overflow:hidden; background:var(--surface-soft); margin:8px 0 4px;">
+        <div style="width:${agreePct}%; background:var(--success, #137333);" title="Concordo: ${agreePct}%"></div>
+        <div style="width:${passPct}%; background:var(--muted, #80868b);" title="Neutro: ${passPct}%"></div>
+        <div style="width:${disagreePct}%; background:var(--danger, #c5221f);" title="Discordo: ${disagreePct}%"></div>
+      </div>
+      <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:var(--muted);">
+        <span>👍 Concordo: ${agreePct}%</span>
+        <span>⚪ Neutro: ${passPct}%</span>
+        <span>👎 Discordo: ${disagreePct}%</span>
+      </div>
+    </div>`;
+}
+
+export function renderPolisReportHtml(report, userVotes = {}) {
+  if (!report || !Array.isArray(report.statements)) return "";
+  const totalVoters = report.totalVoters || 0;
+  const bridgesCount = (report.bridgeStatements || report.consensusBridges)?.length || 0;
+  const divisiveCount = report.divisiveStatements?.length || 0;
+
+  const header = `
+    <div class="polis-report-header" style="margin-bottom:1rem; padding-bottom:0.75rem; border-bottom:1px solid var(--border);">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+        <span class="badge-pill p2p-pill">🗳️ Deliberação Pol.is-lite</span>
+        <span class="meta">${totalVoters} participantes • ${report.totalStatements || report.statements.length} afirmações</span>
+      </div>
+      <div style="display:flex; gap:8px; margin-top:8px;">
+        <span class="badge-pill" style="background:var(--success-soft, #e6f4ea); color:var(--success, #137333); font-weight:700;">★ ${bridgesCount} Pontes de Consenso</span>
+        <span class="badge-pill" style="background:var(--warning-soft, #fef7e0); color:var(--warning, #b06000); font-weight:700;">⚡ ${divisiveCount} Pontos Divisivos</span>
+      </div>
+    </div>`;
+
+  const items = report.statements.map((s) => renderPolisStatementItem(s)).join("");
+  return `<div class="polis-deliberation-wrap">${header}${items}</div>`;
 }

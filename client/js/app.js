@@ -206,6 +206,7 @@ async function showHome(feed = "for-you") {
       const watchedSet = new Set(social.getWatchedProfiles());
       finalTopics = merged.filter((p) => watchedSet.has(p.author || p.owner));
     }
+    finalTopics = mod.filterFeedPosts(finalTopics);
 
     main.innerHTML = "";
     if (demo && !localPosts.length) render.renderDemoBanner(main);
@@ -227,6 +228,7 @@ async function showHome(feed = "for-you") {
       const watchedSet = new Set(social.getWatchedProfiles());
       merged = merged.filter((p) => watchedSet.has(p.author || p.owner));
     }
+    merged = mod.filterFeedPosts(merged);
     render.renderDemoBanner(main);
     render.renderFeed(main, merged, { activeFeed, userRouteId: user || "" });
   }
@@ -786,6 +788,9 @@ async function showProfile(address, activeTab = "posts") {
   const readme = isSelf ? social.getLocalReadme() : (mockProf?.readme || "");
   const pinnedPostId = isSelf ? social.getPinnedPostId(targetAddress) : (mockProf?.pinnedPostId || "");
 
+  const isBlocked = mod.isUserBlocked(targetAddress);
+  const isMuted = mod.isUserMuted(targetAddress);
+
   main.innerHTML = "";
   render.renderProfile(main, targetAddress, memberships, isSelf, JSON.stringify(dmPub), {
     handle: handle || "",
@@ -804,6 +809,8 @@ async function showProfile(address, activeTab = "posts") {
     readme,
     activeTab,
     pinnedPostId,
+    isBlocked,
+    isMuted,
   });
 
   bindProfileButtons(user, targetAddress, isSelf, dmPub, activeTab);
@@ -1013,6 +1020,76 @@ function bindProfileButtons(user, address, isSelf, dmPub, activeTab = "posts") {
         btn.disabled = false;
         btn.textContent = "Salvar @handle";
       }
+    });
+  }
+
+  const btnExportAcc = document.getElementById("btn-export-account");
+  if (btnExportAcc && isSelf) {
+    btnExportAcc.addEventListener("click", async () => {
+      try {
+        const bundle = await localAccount.exportAccountBundle();
+        const jsonStr = JSON.stringify(bundle, null, 2);
+        const blob = new Blob([jsonStr], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `vox-backup-${bundle.account.routeId || "identity"}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        share.showToast("Backup exportado com sucesso!");
+      } catch (err) {
+        share.showToast(`Erro ao exportar backup: ${err.message}`, "error");
+      }
+    });
+  }
+
+  const fileImportAcc = document.getElementById("file-import-account");
+  if (fileImportAcc && isSelf) {
+    fileImportAcc.addEventListener("change", async () => {
+      const file = fileImportAcc.files?.[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const ok = await localAccount.importAccountBundle(text);
+        if (ok) {
+          share.showToast("Identidade restaurada com sucesso!");
+          showProfile(null, activeTab);
+        } else {
+          share.showToast("Falha ao validar chaves do backup.", "error");
+        }
+      } catch (err) {
+        share.showToast(`Erro ao importar: ${err.message}`, "error");
+      }
+    });
+  }
+
+  const btnToggleBlock = document.getElementById("btn-toggle-block");
+  if (btnToggleBlock && !isSelf) {
+    btnToggleBlock.addEventListener("click", () => {
+      const route = btnToggleBlock.dataset.route || address;
+      if (mod.isUserBlocked(route)) {
+        mod.unblockUser(route);
+        share.showToast("Autor desbloqueado.");
+      } else {
+        mod.blockUser(route);
+        share.showToast("Autor bloqueado (posts ocultados e fofocas descartadas).");
+      }
+      showProfile(address, activeTab);
+    });
+  }
+
+  const btnToggleMute = document.getElementById("btn-toggle-mute");
+  if (btnToggleMute && !isSelf) {
+    btnToggleMute.addEventListener("click", () => {
+      const route = btnToggleMute.dataset.route || address;
+      if (mod.isUserMuted(route)) {
+        mod.unmuteUser(route);
+        share.showToast("Autor desilenciado.");
+      } else {
+        mod.muteUser(route);
+        share.showToast("Autor silenciado no feed.");
+      }
+      showProfile(address, activeTab);
     });
   }
 }
@@ -1727,6 +1804,63 @@ function bindNetworkSettingsButtons() {
       showNetworkSettings();
     });
   }
+
+  document.querySelectorAll(".btn-unblock-item").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      const route = e.currentTarget.dataset.route;
+      if (route) {
+        mod.unblockUser(route);
+        share.showToast("Autor desbloqueado.");
+        showNetworkSettings();
+      }
+    });
+  });
+
+  document.querySelectorAll(".btn-unmute-item").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      const route = e.currentTarget.dataset.route;
+      if (route) {
+        mod.unmuteUser(route);
+        share.showToast("Autor desilenciado.");
+        showNetworkSettings();
+      }
+    });
+  });
+
+  const btnExportMod = document.getElementById("btn-export-moderation");
+  if (btnExportMod) {
+    btnExportMod.addEventListener("click", () => {
+      const bundle = mod.exportModerationBundle();
+      const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "vox-moderacao.json";
+      a.click();
+      URL.revokeObjectURL(url);
+      share.showToast("Regras de moderação exportadas!");
+    });
+  }
+
+  const fileImportMod = document.getElementById("file-import-moderation");
+  if (fileImportMod) {
+    fileImportMod.addEventListener("change", async () => {
+      const file = fileImportMod.files?.[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const ok = mod.importModerationBundle(text);
+        if (ok) {
+          share.showToast("Regras de moderação importadas com sucesso!");
+          showNetworkSettings();
+        } else {
+          share.showToast("Arquivo de moderação inválido.", "error");
+        }
+      } catch (err) {
+        share.showToast(`Erro ao importar moderação: ${err.message}`, "error");
+      }
+    });
+  }
 }
 
 async function showNetworkSettings() {
@@ -1757,6 +1891,8 @@ async function showNetworkSettings() {
     customRelayHttpUrl,
     customTurn,
     relayHttpUrl,
+    blockedUsers: mod.getBlockedUsers(),
+    mutedUsers: mod.getMutedUsers(),
   });
 
   bindNetworkSettingsForm();

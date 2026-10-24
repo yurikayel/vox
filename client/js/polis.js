@@ -59,9 +59,10 @@ function disagreePctCalc(disagrees, total) {
 export function buildVoterMatrix(statements = [], votes = []) {
   const voterMap = new Map();
   for (const v of votes) {
-    if (!v.voter) continue;
-    if (!voterMap.has(v.voter)) voterMap.set(v.voter, new Map());
-    voterMap.get(v.voter).set(v.statementId, normalizePolisVote(v.vote));
+    const voter = v.voter || v.voterId;
+    if (!voter) continue;
+    if (!voterMap.has(voter)) voterMap.set(voter, new Map());
+    voterMap.get(voter).set(v.statementId, normalizePolisVote(v.vote));
   }
   return voterMap;
 }
