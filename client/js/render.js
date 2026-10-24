@@ -10,6 +10,12 @@ import * as i18n from "./i18n-pt-br.js";
 import * as gossipRetract from "./gossip-retract-ui.js";
 import * as listingUi from "./listing-ui.js";
 import * as localAccount from "./local-account.js";
+import * as profileDirectory from "./profile-directory.js";
+import {
+  getWelcomeProfile,
+  WELCOME_ROUTE_ID,
+  shouldShowWelcomeCard,
+} from "./vox-welcome-profile.js";
 
 const root = () => document.getElementById("app-root");
 
@@ -186,6 +192,7 @@ function renderSidebar(activeTab, { showFeedNav, activeFeed, chipHtml, walletBad
   const isComm = activeTab === "communities";
   const isCompose = activeTab === "compose";
   const isDm = activeTab === "dm";
+  const isPeople = activeTab === "people";
   const isProfile = activeTab === "profile" || activeTab === "wallet";
   const feedNav = showFeedNav ? renderFeedNav(activeFeed) : "";
 
@@ -205,6 +212,10 @@ function renderSidebar(activeTab, { showFeedNav, activeFeed, chipHtml, walletBad
           <a href="#/communities" class="tab-item ${isComm ? "active" : ""}"${isComm ? ' aria-current="page"' : ""}>
             <span class="tab-icon">${ICONS.communities}</span>
             <span class="tab-label">Comunidades</span>
+          </a>
+          <a href="#/people" class="tab-item ${isPeople ? "active" : ""}"${isPeople ? ' aria-current="page"' : ""}>
+            <span class="tab-icon">${ICONS.communities}</span>
+            <span class="tab-label">Pessoas</span>
           </a>
           <a href="#/compose/topic" class="tab-item compose-tab ${isCompose ? "active" : ""}"${isCompose ? ' aria-current="page"' : ""}>
             <span class="tab-icon">${ICONS.compose}</span>
@@ -318,10 +329,12 @@ export function renderGatewayBanner(main, label) {
 }
 
 function renderAvatarHtml(author, authorDisplay, sizeClass = "") {
-  const avatarUrl = mock.getAuthorAvatar(author);
-  const authorInitial = (authorDisplay || author || "V").slice(0, 1).toUpperCase();
+  const avatarUrl = profileDirectory.getAuthorAvatarSync(author) || mock.getAuthorAvatar(author);
+  const display =
+    authorDisplay || profileDirectory.getAuthorDisplaySync(author) || mock.getAuthorDisplay(author) || author;
+  const authorInitial = (display || "V").slice(0, 1).toUpperCase();
   if (avatarUrl) {
-    return `<span class="avatar-wrap ${sizeClass}"><img class="avatar-img" src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(authorDisplay)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" /><span class="avatar avatar-fallback" style="display:none;">${authorInitial}</span></span>`;
+    return `<span class="avatar-wrap ${sizeClass}"><img class="avatar-img" src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(display)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" /><span class="avatar avatar-fallback" style="display:none;">${authorInitial}</span></span>`;
   }
   return `<span class="avatar ${sizeClass}">${authorInitial}</span>`;
 }
@@ -738,15 +751,40 @@ export function renderStoriesStrip() {
   return `<div class="stories-strip" aria-label="Stories em destaque">${items}</div>`;
 }
 
+export function renderWelcomeCardHtml() {
+  if (!shouldShowWelcomeCard()) return "";
+  const w = getWelcomeProfile();
+  const av = renderAvatarHtml(WELCOME_ROUTE_ID, w.name);
+  return `
+    <div class="card welcome-first-contact" id="welcome-first-contact-card" style="margin-bottom:0.75rem; border:1px solid var(--border);">
+      <div style="display:flex; gap:0.75rem; align-items:flex-start;">
+        <div>${av}</div>
+        <div style="flex:1; min-width:0;">
+          <h3 style="margin:0 0 4px; font-size:1rem;">Primeiro contato: ${escapeHtml(w.name)}</h3>
+          <p class="desc" style="margin:0 0 0.65rem; font-size:0.88rem;">${escapeHtml(w.bio)}</p>
+          <div style="display:flex; flex-wrap:wrap; gap:0.4rem;">
+            <a class="btn btn-primary btn-sm" href="#/u/${encodeURIComponent(WELCOME_ROUTE_ID)}">Ver perfil</a>
+            <a class="btn btn-outline btn-sm" href="#/dm/${encodeURIComponent(WELCOME_ROUTE_ID)}">Mensagem</a>
+            <a class="btn btn-outline btn-sm" href="#/people">Encontrar pessoas</a>
+            <button type="button" class="btn btn-sm btn-outline" id="btn-welcome-card-dismiss">Ok, entendi</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
 export function renderFeed(main, topics = [], { activeFeed = "for-you", userRouteId = "" } = {}) {
   const isForYou = activeFeed !== "following";
-  const displayName = userRouteId ? mock.getAuthorDisplay(userRouteId) : "";
+  const displayName =
+    userRouteId ? profileDirectory.getAuthorDisplaySync(userRouteId) || mock.getAuthorDisplay(userRouteId) : "";
+  const welcomeCard = isForYou ? renderWelcomeCardHtml() : "";
   let html = `
     <div class="feed-chrome">
       ${renderStoriesStrip()}
       <div class="feed-composer-section">
         ${renderInlineComposer({ userRouteId, displayName })}
       </div>
+      ${welcomeCard}
     </div>`;
 
   if (!topics.length) {
@@ -816,12 +854,36 @@ export function renderHome(main, communities) {
   main.innerHTML += html;
 }
 
+export function renderCommunityPeopleStrip(people = []) {
+  if (!people.length) return "";
+  const chips = people
+    .map((p) => {
+      const label = profileDirectory.getAuthorDisplaySync(p.routeId) || p.name || p.routeId.slice(0, 10);
+      const av = renderAvatarHtml(p.routeId, label, "avatar-sm");
+      return `<a class="people-chip" href="#/u/${encodeURIComponent(p.routeId)}" style="display:inline-flex; align-items:center; gap:4px; padding:4px 8px; border:1px solid var(--border); border-radius:999px; font-size:0.82rem; text-decoration:none;">${av}<span>${escapeHtml(label)}</span></a>`;
+    })
+    .join("");
+  return `
+    <div class="card" style="margin-top:0.5rem; padding:0.65rem 0.85rem;">
+      <span class="section-title" style="font-size:0.85rem;">Pessoas nesta comunidade</span>
+      <div style="display:flex; flex-wrap:wrap; gap:0.35rem; margin-top:0.45rem;">${chips}</div>
+    </div>`;
+}
+
 export function renderCommunity(
   main,
   communityId,
   topics,
   meta = {},
-  { isMember = false, isMod = false, walletAddress = null, activeTab = "posts", listings = [], proposals = [] } = {}
+  {
+    isMember = false,
+    isMod = false,
+    walletAddress = null,
+    activeTab = "posts",
+    listings = [],
+    proposals = [],
+    recentPeople = [],
+  } = {}
 ) {
   const commTitle = meta.title || communityId;
   const commDesc = meta.description || "";
@@ -840,6 +902,7 @@ export function renderCommunity(
         <a class="btn btn-primary" href="#/compose/topic?c=${encodeURIComponent(communityId)}">+ Novo post</a>
       </div>
     </div>
+    ${activeTab === "posts" ? renderCommunityPeopleStrip(recentPeople) : ""}
     <div class="community-tabs segmented-tabs">
       <a class="tab-btn ${activeTab !== "listings" && activeTab !== "governance" ? "active" : ""}" href="#/c/${encodeURIComponent(communityId)}">Posts</a>
       <a class="tab-btn ${activeTab === "listings" ? "active" : ""}" href="#/c/${encodeURIComponent(communityId)}?tab=listings">Classificados</a>
@@ -1291,7 +1354,7 @@ function renderProfilePixBadge(pixKeyMasked, pixKeyRaw) {
 function renderProfileHeader(address, isCurrentWallet, handle, isConflict, claimants, displayName, profileBio = "", stats = null, pixKeyMasked = "", pixKeyRaw = "", githubHandle = "") {
   const displayTitle = displayName ? `${displayName} (@${handle || shortId(address)})` : (handle ? `@${handle}` : "Perfil");
   const initial = (displayName || handle || address || "U").slice(0, 1).toUpperCase();
-  const avatarUrl = mock.getAuthorAvatar(address);
+  const avatarUrl = profileDirectory.getAuthorAvatarSync(address) || mock.getAuthorAvatar(address);
   const avatarHtml = avatarUrl
     ? `<img class="profile-avatar-img" src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(displayName || address)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" /><span class="avatar" style="display:none; width:72px; height:72px; font-size:1.8rem;">${initial}</span>`
     : `<span class="avatar" style="width:72px; height:72px; font-size:1.8rem;">${initial}</span>`;
@@ -1370,7 +1433,27 @@ function renderGithubForm(currentGithub) {
     </div>`;
 }
 
-function renderProfileActions(address, isCurrentWallet, handle, displayName, hasWallet, balance, currentPixKey = "", currentGithub = "") {
+function renderOAuthEnrichmentBlock(oauthProvider = "") {
+  if (!oauthProvider) return "";
+  const label = oauthProvider === "google" ? "Google" : oauthProvider === "facebook" ? "Meta" : oauthProvider;
+  return `
+    <div class="oauth-enrich-notice" style="margin-top:0.65rem; padding:0.55rem 0.65rem; background:var(--surface-soft); border-radius:var(--radius-sm); font-size:0.82rem;">
+      <p class="desc" style="margin:0 0 0.45rem;">Nome e foto importados via <strong>${escapeHtml(label)}</strong> (opcional). Tokens OAuth não são guardados neste aparelho.</p>
+      <button type="button" id="btn-clear-oauth-enrich" class="btn btn-sm btn-outline">Remover nome/foto importados</button>
+    </div>`;
+}
+
+function renderProfileActions(
+  address,
+  isCurrentWallet,
+  handle,
+  displayName,
+  hasWallet,
+  balance,
+  currentPixKey = "",
+  currentGithub = "",
+  oauthProvider = ""
+) {
   if (isCurrentWallet) {
     return `
       <div class="card" style="margin-top:0.75rem;">
@@ -1379,7 +1462,10 @@ function renderProfileActions(address, isCurrentWallet, handle, displayName, has
             <strong>Mensagens Diretas</strong>
             <p class="meta" style="margin:2px 0 0;">Compartilhe seu link para receber DMs privadas:</p>
           </div>
-          <button id="btn-copy-my-dm-link" class="btn btn-sm btn-outline" data-route="${escapeHtml(address)}">📋 Copiar Meu Link</button>
+          <div style="display:flex; gap:0.35rem; flex-wrap:wrap;">
+            <button id="btn-copy-my-dm-link" class="btn btn-sm btn-outline" data-route="${escapeHtml(address)}">📋 Copiar Meu Link</button>
+            <button id="btn-copy-connect-link" class="btn btn-sm btn-outline" data-route="${escapeHtml(address)}">↗ Link #/connect</button>
+          </div>
         </div>
       </div>
 
@@ -1389,6 +1475,7 @@ function renderProfileActions(address, isCurrentWallet, handle, displayName, has
           <input type="text" id="input-display-name" class="form-control" placeholder="Seu apelido ou nome..." value="${escapeHtml(displayName || "")}" maxlength="30" />
           <button type="submit" class="btn btn-sm btn-primary" style="white-space:nowrap;">Salvar Nome</button>
         </form>
+        ${renderOAuthEnrichmentBlock(oauthProvider)}
         ${renderPixForm(currentPixKey)}
         ${renderGithubForm(currentGithub)}
       </div>
@@ -1451,13 +1538,24 @@ export function renderProfile(main, address, memberships = [], isCurrentWallet =
   readme = "",
   activeTab = "posts",
   pinnedPostId = "",
+  oauthProvider = "",
 } = {}) {
   const finalGithub = githubHandle || (isCurrentWallet ? social.getLocalGithubHandle() : mock.getAuthorGithub(address));
   const finalReadme = readme || (isCurrentWallet ? social.getLocalReadme() : mock.getAuthorReadme(address));
   const finalPinned = pinnedPostId || (isCurrentWallet ? social.getPinnedPostId(address) : mock.getAuthorPinnedPostId(address));
 
   let html = renderProfileHeader(address, isCurrentWallet, handle, isConflict, claimants, displayName, profileBio, stats, pixKeyMasked, pixKey, finalGithub);
-  html += renderProfileActions(address, isCurrentWallet, handle, displayName, hasWallet, balance, pixKey, finalGithub);
+  html += renderProfileActions(
+    address,
+    isCurrentWallet,
+    handle,
+    displayName,
+    hasWallet,
+    balance,
+    pixKey,
+    finalGithub,
+    oauthProvider
+  );
   html += renderProfileReadme(address, displayName, finalReadme, isCurrentWallet);
 
   // Reordena posts para colocar fixado no topo
@@ -1963,6 +2061,91 @@ const CANTINA_ART_ALT =
 const CANTINA_ART =
   `<img class="cantina-art-img" src="./images/cantina-gate.jpg" alt="${CANTINA_ART_ALT}" width="1024" height="575" />`;
 
+export function renderOAuthEnrich(container) {
+  if (!container) return;
+  container.innerHTML = `
+    <div class="modal-overlay oauth-enrich-overlay" id="oauth-enrich-overlay" role="dialog" aria-modal="true" aria-label="Como quer aparecer">
+      <div class="modal-dialog" style="max-width:420px;">
+        <h2 style="margin:0 0 0.35rem; font-size:1.15rem;">Como quer aparecer?</h2>
+        <p class="desc" style="margin:0 0 1rem;">Opcional: importe nome e foto. Seu ID na rede continua sendo <code>vx_*</code> gerado neste aparelho — sem login centralizado.</p>
+        <div style="display:flex; flex-direction:column; gap:0.5rem;">
+          <button type="button" id="btn-oauth-google" class="btn btn-primary">Continuar com Google</button>
+          <button type="button" id="btn-oauth-meta" class="btn btn-outline">Continuar com Meta</button>
+          <button type="button" id="btn-oauth-skip" class="btn btn-outline">Pular — só vx_</button>
+        </div>
+        <p class="meta" style="margin:0.75rem 0 0; font-size:0.75rem;">Dados públicos de perfil apenas; tokens OAuth não são armazenados (LGPD — ver COMPLIANCE-BR.md).</p>
+      </div>
+    </div>`;
+}
+
+export function closeOAuthEnrich(container) {
+  if (container) container.innerHTML = "";
+}
+
+export function renderPeopleSearch(main, results = [], query = "") {
+  const q = escapeHtml(query);
+  const rows =
+    results.length === 0
+      ? `<div class="empty"><p>Nenhuma pessoa encontrada${query ? ` para “${q}”` : ""}.</p></div>`
+      : results
+          .map((p) => {
+            const name = escapeHtml(p.name || p.routeId.slice(0, 14));
+            const handle = p.handle ? `@${escapeHtml(p.handle)}` : "";
+            const av = renderAvatarHtml(p.routeId, name);
+            return `
+            <div class="card people-result" style="padding:0.65rem 0.85rem; margin-top:0.45rem; display:flex; gap:0.65rem; align-items:center;">
+              ${av}
+              <div style="flex:1; min-width:0;">
+                <a href="#/u/${encodeURIComponent(p.routeId)}" style="font-weight:600;">${name}</a>
+                ${handle ? `<span class="meta"> ${handle}</span>` : ""}
+                <p class="meta" style="margin:2px 0 0;"><code>${escapeHtml(shortId(p.routeId))}</code></p>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:0.25rem;">
+                <a class="btn btn-sm btn-outline" href="#/connect/${encodeURIComponent(p.routeId)}">Conectar</a>
+                <a class="btn btn-sm btn-primary" href="#/dm/${encodeURIComponent(p.routeId)}">DM</a>
+              </div>
+            </div>`;
+          })
+          .join("");
+
+  main.innerHTML = `
+    <div class="card">
+      <h2 style="margin:0 0 4px;">Pessoas</h2>
+      <p class="desc" style="margin:0 0 0.75rem;">Busca local: contatos, autores de posts neste aparelho e perfis de demonstração.</p>
+      <form id="form-people-search" style="display:flex; gap:0.5rem;">
+        <input type="search" id="people-search-input" class="form-control" placeholder="Nome, @handle ou vx_…" value="${q}" />
+        <button type="submit" class="btn btn-primary">Buscar</button>
+      </form>
+    </div>
+    <div class="people-results">${rows}</div>`;
+}
+
+export function renderConnectPreview(main, profile, routeId, { isContact = false } = {}) {
+  const name = escapeHtml(profile?.name || routeId);
+  const bio = profile?.bio ? `<p class="desc">${escapeHtml(profile.bio)}</p>` : "";
+  const av = renderAvatarHtml(routeId, name);
+  main.innerHTML = `
+    <div class="card">
+      <h2 style="margin:0 0 0.5rem;">Conectar</h2>
+      <div style="display:flex; gap:0.75rem; align-items:flex-start;">
+        ${av}
+        <div>
+          <h3 style="margin:0;">${name}</h3>
+          <p class="meta"><code>${escapeHtml(routeId)}</code></p>
+          ${bio}
+        </div>
+      </div>
+      <div style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-top:1rem;">
+        <button type="button" id="btn-connect-add" class="btn btn-primary" data-route="${escapeHtml(routeId)}" ${isContact ? "disabled" : ""}>
+          ${isContact ? "✓ Já nos contatos" : "Adicionar contato"}
+        </button>
+        <a class="btn btn-outline" href="#/dm/${encodeURIComponent(routeId)}">Enviar mensagem</a>
+        <a class="btn btn-outline" href="#/u/${encodeURIComponent(routeId)}">Ver perfil</a>
+        <button type="button" id="btn-connect-share" class="btn btn-outline" data-route="${escapeHtml(routeId)}">Compartilhar link</button>
+      </div>
+    </div>`;
+}
+
 export function renderCantinaGate(container) {
   if (!container) return;
   container.innerHTML = `
@@ -2457,32 +2640,63 @@ export function renderStewardWizard(main, { draft = {}, step = 1 } = {}) {
     </div>`;
 }
 
-export function renderDmList(main, conversations = [], myAddress = "") {
+export function renderDmList(main, conversations = [], myAddress = "", { contactList = [] } = {}) {
+  const sorted = [...conversations].sort((a, b) => {
+    if (a.peerAddress === WELCOME_ROUTE_ID) return -1;
+    if (b.peerAddress === WELCOME_ROUTE_ID) return 1;
+    return (b.lastTs || 0) - (a.lastTs || 0);
+  });
+
   let listHtml = "";
-  if (!conversations.length) {
+  if (!sorted.length) {
     listHtml = `<div class="empty"><p>Nenhuma conversa privada ainda.</p></div>`;
   } else {
-    const items = conversations
-      .map(
-        (c) => {
-          const initial = (c.peerAddress || "U").slice(0, 1).toUpperCase();
-          const timeStr = c.lastTs ? new Date(c.lastTs).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
-          return `
-          <a class="dm-inbox-item" href="#/dm/${encodeURIComponent(c.peerAddress)}">
-            <span class="avatar">${initial}</span>
+    const items = sorted
+      .map((c) => {
+        const peer = c.peerAddress || "";
+        const label =
+          profileDirectory.getAuthorDisplaySync(peer) || (peer === WELCOME_ROUTE_ID ? getWelcomeProfile().name : shortId(peer));
+        const timeStr = c.lastTs ? new Date(c.lastTs).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
+        const pin = peer === WELCOME_ROUTE_ID ? `<span class="badge-pill" style="font-size:0.65rem;">Boas-vindas</span> ` : "";
+        const avInner = renderAvatarHtml(peer, label);
+        return `
+          <a class="dm-inbox-item" href="#/dm/${encodeURIComponent(peer)}">
+            <div class="dm-inbox-avatar">${avInner}</div>
             <div class="dm-inbox-body">
               <div class="dm-inbox-header">
-                <span class="dm-inbox-peer">${escapeHtml(shortId(c.peerAddress))}</span>
+                <span class="dm-inbox-peer">${pin}${escapeHtml(label)}</span>
                 <span class="meta" style="font-size:0.75rem;">${timeStr}</span>
               </div>
               <p class="dm-inbox-preview">${escapeHtml(c.lastText)}</p>
             </div>
           </a>`;
-        }
-      )
+      })
       .join("");
     listHtml = `<div class="dm-inbox-list">${items}</div>`;
   }
+
+  const contactChips =
+    contactList.length === 0
+      ? ""
+      : `<div class="card" style="margin-top:0.5rem; padding:0.55rem 0.75rem;">
+          <span class="section-title" style="font-size:0.82rem;">Contatos</span>
+          <div style="display:flex; flex-wrap:wrap; gap:0.35rem; margin-top:0.35rem;">
+            ${contactList
+              .slice(0, 12)
+              .map((c) => {
+                const label = c.label || profileDirectory.getAuthorDisplaySync(c.routeId) || shortId(c.routeId);
+                return `<a class="btn btn-sm btn-outline" href="#/dm/${encodeURIComponent(c.routeId)}">${escapeHtml(label)}</a>`;
+              })
+              .join("")}
+          </div>
+        </div>`;
+
+  const datalistOptions = contactList
+    .map((c) => {
+      const label = c.label || profileDirectory.getAuthorDisplaySync(c.routeId) || "";
+      return `<option value="${escapeHtml(c.routeId)}">${escapeHtml(label)}</option>`;
+    })
+    .join("");
 
   main.innerHTML = `
     <div class="card">
@@ -2495,10 +2709,12 @@ export function renderDmList(main, conversations = [], myAddress = "") {
       </div>
 
       <form id="form-new-dm" style="display:flex; gap:0.5rem; margin-top:0.75rem;">
-        <input type="text" id="dm-peer-input" class="form-control" placeholder="ID de rota (vx_...) ou endereço..." required />
+        <input type="text" id="dm-peer-input" class="form-control" list="dm-contact-suggestions" placeholder="vx_…, #/connect/… ou contato" required />
+        <datalist id="dm-contact-suggestions">${datalistOptions}</datalist>
         <button type="submit" class="btn btn-primary" style="white-space:nowrap;">Conversar →</button>
       </form>
     </div>
+    ${contactChips}
 
     <div class="actions-bar">
       <span class="section-title">Conversas Recentes</span>

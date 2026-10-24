@@ -705,3 +705,16 @@ Não há trabalho pendente obrigatório do plano «Meta feed v6.3» em HOLD. O q
   - Se nenhum par com afinidade responder ou a flag estiver desativada, o fluxo degrada transparentemente para o comportamento padrão.
 - **Suíte de testes:** `tests/peers-blob-soft-priority.test.js` (cenários T1 a T5 da spec + teste de capacidade máxima e descarte).
 
+---
+
+## 24. Descoberta social, Vox Brasil welcome e OAuth client-only (V-DIS)
+
+**Data:** 2026-10-24 · **SW:** `vox-pwa-v6.23-v-dis-social-discovery`
+
+- **Docs:** `docs/adr/002-oauth-profile-enrich-client.md`, `docs/vox-brasil-welcome-profile.md`, `COMPLIANCE-BR.md` (login social opcional).
+- **Módulos:** `vox-welcome-profile.js`, `profile-directory.js`, `contacts.js`, `people-index.js`, `oauth-profile.js`.
+- **Rotas:** `#/people` (busca local), `#/connect/:routeId` (deep link compartilhável), card *Primeiro contato* no feed, DM institucional `vx_voxbrasil_welcome`.
+- **Onboarding:** Cantina → *Como quer aparecer?* (Google / Meta / Pular) → Pacto → seed DM welcome + watch automático.
+- **OAuth operador:** copiar `client/config/oauth.example.json` → `client/config/oauth.json` (gitignored) com `googleClientId` e `facebookAppId`; nunca commitar secrets.
+- **Testes:** `contacts.test.js`, `vox-welcome-profile.test.js`, `people-index.test.js`, `oauth-profile.test.js`.
+
