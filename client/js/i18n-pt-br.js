@@ -26,3 +26,25 @@ export const listingRetractedToast = "Oferta retirada da feira.";
 
 export const listingVerifiedBadgeTitle =
   "Oferta assinada criptograficamente neste aparelho (verifyPayload).";
+
+export const meshDiscoverableLabel = "Aparecer na busca da malha";
+
+export const meshDiscoverableHint =
+  "Publica um cartão assinado (nome, foto, bio) para pares conectados — opt-in, sem diretório central.";
+
+export const meshDiscoverableLegal =
+  "Revogue a qualquer momento; dados de apresentação pública apenas (ver COMPLIANCE-BR.md).";
+
+export const peopleSectionContacts = "Contatos";
+
+export const peopleSectionMesh = "Na malha";
+
+export const peopleSectionTour = "Tour (demonstração)";
+
+export const peoplePasteConnectHint =
+  "Cole um link #/connect ou um vx_… para abrir a página de conexão.";
+
+export const postPactConnectTitle = "Seu link #/connect";
+
+export const postPactConnectBody =
+  "Compartilhe este link para que outros adicionem você sem busca na malha.";

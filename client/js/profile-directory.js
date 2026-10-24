@@ -33,6 +33,31 @@ export function getProfileCard(routeId) {
   return loadCards()[id] || null;
 }
 
+export function removeProfileCard(routeId) {
+  const id = String(routeId || "").trim();
+  if (!id) return;
+  const cards = loadCards();
+  delete cards[id];
+  try {
+    localStorage.setItem(CARDS_KEY, JSON.stringify(cards));
+  } catch {
+    /* ignore */
+  }
+}
+
+export function listDiscoverableProfileCards() {
+  const cards = loadCards();
+  return Object.values(cards).filter((c) => c && c.discoverable !== false && c.routeId);
+}
+
+export function __resetProfileCardsForTests() {
+  try {
+    localStorage.removeItem(CARDS_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
 export async function resolveProfile(routeId) {
   const id = String(routeId || "").trim();
   if (!id) return { routeId: "", name: "", handle: "", avatar: "", bio: "" };

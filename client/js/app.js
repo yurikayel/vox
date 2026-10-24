@@ -31,6 +31,7 @@ import * as contacts from "./contacts.js";
 import * as peopleIndex from "./people-index.js";
 import * as profileDirectory from "./profile-directory.js";
 import * as welcomeProfile from "./vox-welcome-profile.js";
+import * as meshProfile from "./mesh-profile.js";
 
 function parseRoute() {
   if (typeof window !== "undefined" && window.location?.search) {
@@ -436,6 +437,18 @@ async function showCommunity(communityId, tab = "posts") {
   attachCommunityListingHandlers(main);
   attachPostShareHandlers();
 
+  document.querySelectorAll(".btn-community-add-contact").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.route;
+      const label = btn.dataset.label || "";
+      if (!id) return;
+      contacts.addContact(id, label);
+      share.showToast("Contato adicionado.");
+      btn.disabled = true;
+      btn.textContent = "✓";
+    });
+  });
+
   // Eventos na tela da comunidade
   const btnShare = document.getElementById("btn-share-comm");
   if (btnShare) {
@@ -837,6 +850,7 @@ async function showProfile(address, activeTab = "posts") {
     oauthProvider,
     isBlocked,
     isMuted,
+    meshDiscoverable: localAccount.getMeshDiscoverable(),
   });
 
   bindProfileButtons(user, targetAddress, isSelf, dmPub, activeTab);
@@ -951,13 +965,23 @@ function bindProfileButtons(user, address, isSelf, dmPub, activeTab = "posts") {
       const name = document.getElementById("input-display-name")?.value.trim();
       localAccount.setDisplayName(name);
       share.showToast("Nome local atualizado!");
+      void meshProfile.syncMeshProfileCard();
       showProfile(address);
     });
   }
 
+  document.getElementById("profile-mesh-discoverable")?.addEventListener("change", (e) => {
+    localAccount.setMeshDiscoverable(Boolean(e.target.checked));
+    void meshProfile.syncMeshProfileCard().then(() => {
+      share.showToast(e.target.checked ? "Cartão publicado na malha." : "Cartão revogado na malha.");
+      showProfile(address, activeTab);
+    });
+  });
+
   document.getElementById("btn-clear-oauth-enrich")?.addEventListener("click", () => {
     localAccount.clearProfileEnrichment();
     share.showToast("Nome/foto importados removidos.");
+    void meshProfile.syncMeshProfileCard();
     showProfile(address, activeTab);
   });
 
@@ -1763,6 +1787,7 @@ function bindNetworkSettingsForm() {
     const commOnly = document.getElementById("net-comm-only")?.checked || false;
     const backgroundRelay = document.getElementById("net-bg-relay")?.checked || false;
     const webrtcEnabled = document.getElementById("net-webrtc")?.checked !== false;
+    const meshDiscoverable = document.getElementById("net-mesh-discoverable")?.checked || false;
     const customSignalingUrl = document.getElementById("net-signaling-url")?.value.trim() || "";
     const customRelayHttpUrl = document.getElementById("net-relay-http-url")?.value.trim() || "";
     const turnUrls = document.getElementById("net-turn-url")?.value.trim() || "";
@@ -1782,6 +1807,8 @@ function bindNetworkSettingsForm() {
       dailyCapMb,
       webrtcEnabled,
     });
+    localAccount.setMeshDiscoverable(meshDiscoverable);
+    void meshProfile.syncMeshProfileCard();
     cacheNode.enforceMaxCacheSize(maxMb);
     share.showToast(enabled ? "Preferências salvas: nó leve ativo!" : "Preferências salvas: nó pausado.");
     showNetworkSettings();
@@ -1930,6 +1957,7 @@ async function showNetworkSettings() {
     gatewayHealth: gatewayTelemetry.getGatewayHealthSummary(),
     blockedUsers: mod.getBlockedUsers(),
     mutedUsers: mod.getMutedUsers(),
+    meshDiscoverable: localAccount.getMeshDiscoverable(),
   });
 
   bindNetworkSettingsForm();
@@ -2269,6 +2297,7 @@ function checkOAuthEnrichStep() {
       oauthProfile.skipOAuthEnrichment();
       render.closeOAuthEnrich(modalContainer);
       share.showToast("Perfil enriquecido com Google.");
+      void meshProfile.syncMeshProfileCard();
       checkPactModal();
     }
   });
@@ -2282,6 +2311,7 @@ function checkOAuthEnrichStep() {
       oauthProfile.skipOAuthEnrichment();
       render.closeOAuthEnrich(modalContainer);
       share.showToast("Perfil enriquecido com Meta.");
+      void meshProfile.syncMeshProfileCard();
       checkPactModal();
     }
   });
@@ -2324,6 +2354,15 @@ function checkPactModal() {
     const user = await localAccount.getRouteId().catch(() => "");
     await ensureOnboardingSideEffects(user);
     share.showToast("Bem-vindo ao Vox! Rede ativa.");
+    if (user) {
+      render.renderPostPactConnectModal(modalContainer, user);
+      document.getElementById("btn-post-pact-connect-close")?.addEventListener("click", () => {
+        render.closePostPactConnectModal(modalContainer);
+      });
+      document.getElementById("btn-post-pact-share-connect")?.addEventListener("click", () => {
+        void share.shareConnect({ routeId: user, displayName: localAccount.getDisplayName() });
+      });
+    }
     const cur = parseRoute();
     if (cur.name === "home") showHome(cur.feed);
   };
@@ -2350,13 +2389,23 @@ async function showPeople(initialQuery = "") {
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "people", "Pessoas"));
   const q = initialQuery || "";
-  const results = await peopleIndex.searchPeople(q);
-  render.renderPeopleSearch(main, results, q);
+  const hasQ = Boolean(q.trim());
+  const sections = hasQ ? null : await peopleIndex.buildPeopleSections();
+  const results = hasQ ? await peopleIndex.searchPeople(q) : [];
+  render.renderPeopleSearch(main, { sections, results, query: q });
 
   document.getElementById("form-people-search")?.addEventListener("submit", (e) => {
     e.preventDefault();
     const next = document.getElementById("people-search-input")?.value.trim() || "";
     location.hash = next ? `#/people?q=${encodeURIComponent(next)}` : "#/people";
+  });
+
+  document.getElementById("form-people-paste-link")?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const raw = document.getElementById("people-paste-input")?.value.trim() || "";
+    const target = peopleIndex.parseConnectTarget(raw);
+    if (target) location.hash = `#/connect/${encodeURIComponent(target)}`;
+    else share.showToast("Cole um link #/connect ou vx_…", "error");
   });
 }
 

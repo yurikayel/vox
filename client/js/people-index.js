@@ -1,10 +1,75 @@
-/** Índice local de pessoas para busca (V-DIS-13). */
+/** Índice local de pessoas para busca (V-DIS + V-MESH P1/P2). */
 
 import * as cacheNode from "./cache-node.js";
 import * as contacts from "./contacts.js";
+import * as handles from "./handles.js";
 import * as mock from "./mock.js";
 import { getWelcomeProfile, WELCOME_ROUTE_ID } from "./vox-welcome-profile.js";
 import * as profileDirectory from "./profile-directory.js";
+
+const MESH_POST_TYPES = new Set(["topic", "reply", "membership"]);
+export const PEOPLE_SEARCH_OK_METRIC = "vox-metric-people-search-ok";
+
+function upsert(map, entry, preferSources = []) {
+  const existing = map.get(entry.routeId);
+  if (!existing) {
+    map.set(entry.routeId, entry);
+    return;
+  }
+  const rank = (s) => {
+    const i = preferSources.indexOf(s);
+    return i >= 0 ? i : 99;
+  };
+  if (rank(entry.source) < rank(existing.source)) {
+    map.set(entry.routeId, { ...existing, ...entry, source: entry.source });
+  }
+}
+
+async function indexMeshAuthors(map) {
+  const posts = await cacheNode.getLocalPosts({});
+  for (const p of posts) {
+    if (!MESH_POST_TYPES.has(p.type)) continue;
+    const author = p.author || p.owner;
+    if (!author) continue;
+    upsert(
+      map,
+      {
+        routeId: author,
+        name: profileDirectory.getAuthorDisplaySync(author) || author.slice(0, 14),
+        handle: mock.getAuthorHandle(author),
+        source: "mesh-author",
+      },
+      ["contact", "mesh-card", "mesh-author"],
+    );
+  }
+}
+
+function indexMeshCards(map) {
+  for (const card of profileDirectory.listDiscoverableProfileCards()) {
+    const routeId = card.routeId;
+    upsert(
+      map,
+      {
+        routeId,
+        name: card.name || profileDirectory.getAuthorDisplaySync(routeId) || routeId.slice(0, 14),
+        handle: card.handle || mock.getAuthorHandle(routeId),
+        source: "mesh-card",
+      },
+      ["contact", "mesh-card", "mesh-author"],
+    );
+  }
+}
+
+function indexDemo(map, intoTourOnly) {
+  for (const [routeId, prof] of Object.entries(mock.MOCK_DEMO_PROFILES || {})) {
+    const entry = { routeId, name: prof.name, handle: prof.handle || "", source: "demo" };
+    if (intoTourOnly) {
+      if (!map.has(routeId)) map.set(routeId, entry);
+    } else if (!map.has(routeId)) {
+      map.set(routeId, entry);
+    }
+  }
+}
 
 export async function buildPeopleIndex() {
   const map = new Map();
@@ -26,35 +91,61 @@ export async function buildPeopleIndex() {
     });
   }
 
-  const posts = await cacheNode.getLocalPosts({});
-  for (const p of posts) {
-    const author = p.author || p.owner;
-    if (!author || map.has(author)) continue;
-    map.set(author, {
-      routeId: author,
-      name: profileDirectory.getAuthorDisplaySync(author) || author.slice(0, 14),
-      handle: mock.getAuthorHandle(author),
-      source: "local-post",
-    });
-  }
+  await indexMeshAuthors(map);
+  indexMeshCards(map);
 
-  for (const [routeId, prof] of Object.entries(mock.MOCK_DEMO_PROFILES || {})) {
-    if (!map.has(routeId)) {
-      map.set(routeId, { routeId, name: prof.name, handle: prof.handle || "", source: "demo" });
-    }
-  }
+  const meshOrContactCount =
+    [...map.values()].filter((p) => p.source === "contact" || p.source === "mesh-author" || p.source === "mesh-card")
+      .length;
+
+  indexDemo(map, meshOrContactCount > 0);
 
   return Array.from(map.values());
 }
 
+export async function buildPeopleSections() {
+  const all = await buildPeopleIndex();
+  const contactsList = all.filter((p) => p.source === "contact" || p.source === "system");
+  const mesh = all.filter((p) => p.source === "mesh-author" || p.source === "mesh-card");
+  const tour = all.filter((p) => p.source === "demo");
+  return { contacts: contactsList, mesh, tour, all };
+}
+
+export function recordPeopleSearchOk() {
+  try {
+    localStorage.setItem(PEOPLE_SEARCH_OK_METRIC, String(Date.now()));
+  } catch {
+    /* ignore */
+  }
+}
+
 export async function searchPeople(query) {
-  const q = String(query || "").trim().toLowerCase();
+  const q = String(query || "").trim();
   const all = await buildPeopleIndex();
   if (!q) return all.slice(0, 50);
-  return all.filter((p) => {
+
+  let handleRoute = "";
+  if (q.startsWith("@")) {
+    const mapped = handles.getCachedHandleMapping(q);
+    if (mapped) handleRoute = mapped;
+  }
+  if (handleRoute && !all.some((p) => p.routeId === handleRoute)) {
+    all.push({
+      routeId: handleRoute,
+      name: profileDirectory.getAuthorDisplaySync(handleRoute) || handleRoute.slice(0, 14),
+      handle: handles.getCachedAddressHandle(handleRoute) || handles.normalizeSlug(q),
+      source: "handle-cache",
+    });
+  }
+
+  const ql = q.toLowerCase();
+  const results = all.filter((p) => {
+    if (handleRoute && p.routeId === handleRoute) return true;
     const hay = `${p.name} ${p.handle} ${p.routeId}`.toLowerCase();
-    return hay.includes(q);
+    return hay.includes(ql);
   });
+  if (results.length > 0) recordPeopleSearchOk();
+  return results;
 }
 
 export function extractRecentAuthors(topics, limit = 8) {

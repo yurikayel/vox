@@ -10,6 +10,7 @@ const ACCOUNT_STORAGE = "vox-local-account-v1";
 const DISPLAY_NAME_STORAGE = "vox-display-name";
 const PIX_STORAGE = "vox-pix-key-v1";
 const ENRICHMENT_STORAGE = "vox-profile-enrichment-v1";
+const DISCOVERABLE_STORAGE = "vox-discoverable-mesh-v1";
 
 function bytesToB64Url(bytes) {
   let bin = "";
@@ -285,6 +286,24 @@ export async function verifyPayload(signed) {
 }
 
 
+export function getMeshDiscoverable() {
+  try {
+    return localStorage.getItem(DISCOVERABLE_STORAGE) === "1";
+  } catch {
+    return false;
+  }
+}
+
+export function setMeshDiscoverable(on) {
+  try {
+    if (on) localStorage.setItem(DISCOVERABLE_STORAGE, "1");
+    else localStorage.removeItem(DISCOVERABLE_STORAGE);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function exportAccountBundle() {
   const acc = await ensureLocalAccount();
   const dmKeypair = await cryptoDm.getDmKeypair();
@@ -297,6 +316,7 @@ export async function exportAccountBundle() {
     dmKeypair,
     displayName: getDisplayName(),
     pixKey: getPixKey(),
+    meshDiscoverable: getMeshDiscoverable(),
     exportedAt: Date.now(),
   };
   return JSON.stringify(bundle, null, 2);
@@ -367,6 +387,9 @@ export async function importAccountBundle(rawBundle) {
   }
   if (parsed.pixKey) {
     setPixKey(parsed.pixKey);
+  }
+  if (typeof parsed.meshDiscoverable === "boolean") {
+    setMeshDiscoverable(parsed.meshDiscoverable);
   }
 
   return cachedAccount;

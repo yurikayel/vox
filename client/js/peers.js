@@ -4,6 +4,8 @@ import * as localAccount from "./local-account.js";
 import * as manifestMesh from "./peers-cache-manifest.js";
 import * as blobAffinity from "./peers-blob-affinity.js";
 import * as moderation from "./moderation.js";
+import * as profileCard from "./profile-card.js";
+import * as profileDirectory from "./profile-directory.js";
 import { getRelayHttpUrl } from "./inbox.js";
 
 export {
@@ -326,6 +328,44 @@ export async function handleVoxMessage(msg, replyFn, source = "broadcast") {
   }
 }
 
+function routeIdFromProfileCardId(cardId) {
+  const id = String(cardId || "");
+  if (!id.startsWith("pc_vx_")) return "";
+  return id.slice(3);
+}
+
+async function applyVerifiedProfileCardItem(item) {
+  if (profileCard.isProfileCardExpired(item)) {
+    if (item?.routeId) profileDirectory.removeProfileCard(item.routeId);
+    return true;
+  }
+  const check = profileCard.validateProfileCardItem(item);
+  if (!check.ok) return false;
+  if (!item.discoverable) {
+    profileDirectory.removeProfileCard(item.routeId);
+    return true;
+  }
+  profileDirectory.setProfileCard(item.routeId, {
+    name: item.displayName || "",
+    avatarUrl: item.avatarUrl || "",
+    bio: item.bio || "",
+    discoverable: true,
+    gossipCardId: item.id,
+  });
+  return true;
+}
+
+async function relayProfileCardGossip(payload, source) {
+  if (source !== "broadcast" && broadcastChannel) {
+    try {
+      broadcastChannel.postMessage(payload);
+    } catch {}
+  }
+  if (source !== "rtc") {
+    webrtcPeer.broadcastRtcMessage(payload);
+  }
+}
+
 async function handleCacheManifestMessage(item, source = "rtc") {
   const result = await manifestMesh.ingestSignedCacheManifestItem(item, localAccount.verifyPayload);
   if (!result.ok || result.skipped) return;
@@ -360,6 +400,12 @@ async function handleGossipMessage(item, source = "rtc") {
   const valid = await localAccount.verifyPayload(item);
   if (!valid) return;
 
+  if (item.type === profileCard.PROFILE_CARD_TYPE) {
+    await applyVerifiedProfileCardItem(item);
+    await relayProfileCardGossip({ type: "GOSSIP", item, fromPeer: myPeerId }, source);
+    return;
+  }
+
   await cacheNode.saveLocalPost(item);
   dispatchGossipPost(item, source);
 
@@ -391,6 +437,12 @@ async function handleGossipUpdateMessage(item, source = "rtc") {
 
   const valid = await localAccount.verifyPayload(item);
   if (!valid) return;
+
+  if (item.type === profileCard.PROFILE_CARD_TYPE) {
+    await applyVerifiedProfileCardItem(item);
+    await relayProfileCardGossip({ type: "GOSSIP_UPDATE", item, fromPeer: myPeerId }, source);
+    return;
+  }
 
   await cacheNode.saveLocalPost(item);
   dispatchGossipPost(item, source);
@@ -425,6 +477,16 @@ async function handleGossipDeleteMessage(tombstone, source = "rtc") {
 
   const valid = await localAccount.verifyPayload(tombstone);
   if (!valid) return;
+
+  const cardRoute = routeIdFromProfileCardId(tombstone.id);
+  if (cardRoute) {
+    profileDirectory.removeProfileCard(cardRoute);
+    await relayProfileCardGossip(
+      { type: "GOSSIP_DELETE", item: tombstone, tombstone, fromPeer: myPeerId },
+      source,
+    );
+    return;
+  }
 
   await cacheNode.saveTombstone(tombstone);
   dispatchGossipTombstone(tombstone, source);
@@ -463,6 +525,16 @@ export function broadcastGossipDelete(tombstone) {
     try { broadcastChannel.postMessage(payload); } catch {}
   }
   webrtcPeer.broadcastRtcMessage(payload);
+}
+
+export function broadcastProfileCard(item) {
+  if (item?.type !== profileCard.PROFILE_CARD_TYPE) return;
+  broadcastGossip(item);
+}
+
+export function broadcastProfileCardUpdate(item) {
+  if (item?.type !== profileCard.PROFILE_CARD_TYPE) return;
+  broadcastGossipUpdate(item);
 }
 
 export function broadcastCacheManifest(item) {
