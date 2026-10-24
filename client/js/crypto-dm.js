@@ -55,6 +55,16 @@ export async function getPublicJwk() {
   return publicJwk;
 }
 
+export async function getDmKeypair() {
+  return await ensureDmKeys();
+}
+
+export function setDmKeypair(keypair) {
+  if (!keypair?.publicJwk || !keypair?.privateJwk) return false;
+  localStorage.setItem(DM_KEYPAIR_STORAGE, JSON.stringify(keypair));
+  return true;
+}
+
 async function deriveAesKey(privateKey, publicKey, usage) {
   return crypto.subtle.deriveKey(
     { name: "ECDH", public: publicKey },

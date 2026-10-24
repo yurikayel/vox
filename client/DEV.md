@@ -689,8 +689,38 @@ Em 23/10 o sprint «Feed estilo Meta» ficou em **HOLD estrito** (sem código) c
 
 Não há trabalho pendente obrigatório do plano «Meta feed v6.3» em HOLD. O que restava de intenção visual Meta crítica para o **timeline** já está no híbrido; melhorias de **polish global** ficam na branch UI polish. **Não reexecutar** o sprint Meta como segundo passo — atualizar groom/backlog apenas se algum delta residual acima for priorizado explicitamente.
 
+---
 
+## 23. Vox Roadmap Core: Autonomia, Moderação, Deliberação e Mídia P2P
 
+**Data:** 2026-10-23 · **Branch:** `feat/vox-roadmap-core` · **Suíte:** 217 testes (203 JS + 14 Python relay).
 
+Implementação dos quatro pilares essenciais do roadmap da rede Vox:
 
+### 23.1 Autonomia de Identidade (Backup e Restauração Criptográfica)
+- **Módulo:** `client/js/local-account.js` e `client/js/crypto-dm.js`.
+- **Exportação:** `exportAccountBundle()` serializa identidade local (`routeId`, `name`, `bio`, `handle`), par de chaves ECDSA P-256 de assinatura e par de chaves ECDH P-256 de DMs privadas com timestamp e versão `vox-account-bundle-v1`.
+- **Importação e Verificação Estrita:** `importAccountBundle(bundle)` re-computa o `routeId` a partir da chave pública JWK, assina e verifica um *challenge nonce* efêmero com a chave privada importada antes de persistir no `localStorage`. Rejeita pacotes adulterados, chaves truncadas ou identificadores forjados.
+- **Suíte de testes:** `tests/account-backup.test.js`.
+
+### 23.2 Moderação Local e Filtro Anti-Spam de Mesh
+- **Módulo:** `client/js/moderation.js` e integração em `client/js/peers.js`.
+- **Prevenção no Gateway de Rede:** Função `shouldDropGossip(author)` filtra pacotes no momento da recepção em `peers.js` (`handleGossipMessage`, `handleGossipUpdateMessage`, `handleGossipDeleteMessage`). Pacotes originados por autores bloqueados são descartados antes de processamento criptográfico, gravação no IndexedDB ou retransmissão gossip (bloqueio na borda do nó).
+- **Filtragem de Feed:** `filterFeedPosts(posts)` oculta posts e respostas de autores bloqueados ou silenciados.
+- **Portabilidade:** `exportModerationBundle()` e `importModerationBundle()` permitem backup e sincronização de listas de moderação entre nós.
+- **Suíte de testes:** `tests/moderation-local.test.js`.
+
+### 23.3 Deliberação Coletiva (Pol.is-lite / Consenso Determinístico)
+- **Módulo:** `client/js/polis.js`.
+- **Métricas e Apuração:** Normalização de votos (`concordo: +1`, `discordo: -1`, `passo/neutro: 0`), apuração por afirmação com cálculo de porcentagens e variância de opinião.
+- **Detecção de Pontes de Consenso:** Algoritmo determinístico de particionamento de votantes em clusters de divergência e identificação de afirmações ponte (*consensus bridges* — afirmações com alta aprovação em ambos os polos) vs afirmações divisivas (*divisive statements*).
+- **Sem Dependências Externas:** Implementado em JavaScript puro para execução instantânea no navegador e em nós do relay.
+- **Suíte de testes:** `tests/polis.test.js`.
+
+### 23.4 Blobs de Mídia P2P Content-Addressed (SHA-256)
+- **Módulo:** `client/js/media-blob.js`.
+- **Desacoplamento do Mesh:** Remove imagens pesadas em base64 do JSON transitado via gossip (`detachMedia`), substituindo-as por referências content-addressed `mediaRef` com hash SHA-256, tipo MIME e tamanho em bytes.
+- **Verificação de Integridade e Re-anexo:** `verifyMediaBlob` calcula o hash SHA-256 do payload e rejeita blobs corrompidos ou adulterados. `attachMedia` re-acopla a mídia sob demanda ao post correspondente.
+- **Armazenamento LRU:** `BlobStorage` com controle de capacidade máxima e descarte automático de entradas antigas.
+- **Suíte de testes:** `tests/media-blob.test.js`.
 
