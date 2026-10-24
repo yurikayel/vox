@@ -94,6 +94,32 @@ test("render - inferParticipationLayer mapeia commOnly e relay", () => {
   );
 });
 
+test("render - renderNetworkSettings mostra Leitura reserva quando gateway critical", () => {
+  const main = createContainer();
+  render.renderNetworkSettings(main, {
+    settings: { enabled: true, dailyCapMb: 50 },
+    metrics: {},
+    cacheStats: { count: 0, sizeKb: "0" },
+    relayStatus: { online: false },
+    dailyUsage: { bytesServedToday: 0 },
+    notifPermission: "default",
+    rtcStatus: { remotePeersConnected: 0 },
+    customSignalingUrl: "",
+    customRelayHttpUrl: "",
+    customTurn: {},
+    relayHttpUrl: "http://127.0.0.1:3920",
+    gatewayHealth: { state: "critical", gateways: {}, lastReserveAt: Date.now() },
+  });
+  assert.ok(main.innerHTML.includes("Leitura reserva"));
+});
+
+test("render - renderStewardWizard passo 1", () => {
+  const main = createContainer();
+  render.renderStewardWizard(main, { step: 1, draft: {} });
+  assert.ok(main.innerHTML.includes("Assistente steward"));
+  assert.ok(main.innerHTML.includes("sw-pledge"));
+});
+
 test("render - renderNetworkSettings destaca Apoiador com commOnly", () => {
   const main = createContainer();
   render.renderNetworkSettings(main, {

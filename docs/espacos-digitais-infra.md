@@ -64,15 +64,20 @@ Leitor ──► Passivo
 
 **Governança suave (não vinculante, `V-I07`):** comunidade que **habilita feira** pode **sugerir** pin/espelho leve a membros Apoiador/Steward — nunca exigir como condição de postar.
 
-## Estado do código (23/10/2026)
+## Estado do código (24/10/2026)
 
 | Item | Status |
 |------|--------|
-| Relay local `127.0.0.1:3920`, `/vox/mirror`, `/vox/index/*.json` | API no relay; **cliente mirror pendente** (`V-I03`) |
-| `commOnly` persistido | **Não filtra** WANT/BLOB ainda (`V-I02`) |
-| Relay remoto configurável | Pendente (`V-I04`) |
-| Manifesto `Type: cache-manifest` | Rascunho (`V-I05`) |
-| UI camadas Passivo→Steward | Spec aqui; copy `V-I06` |
+| Relay HTTP `/health`, `/tx/:id`, `/vox/mirror`, `/vox/index/*.json` | **Integrado** (`relay/server.py`; health com inventário de espelhos) |
+| Cliente mirror comunidade | **Integrado** (`community-mirror.js`, hook pós-comunidade) |
+| `commOnly` filtra WANT/BLOB | **Integrado** (`peers.js`, SW v6.7+) |
+| Relay remoto configurável | **Integrado** (`vox-relay-http-url`, badge host) |
+| Manifesto `Type: cache-manifest` + gossip | **Integrado** (`cache-manifest.js`, `peers-cache-manifest.js`) |
+| UI camadas Passivo→Steward | **Integrado** (`render.js`, `#/settings/network`) |
+| Gateway telemetry (Leitura reserva) | **Integrado** (`gateway-telemetry.js`, V-P02) |
+| Wizard steward | **MVP** `#/settings/network/steward` (V-P01) |
+| Kit steward deploy | **Parcial** (`relay/deploy`, `steward-relay-kit.md`, quota env) |
+| Blob soft priority V-I09 | Spec; impl branch `feat/blob-soft-priority-v0` |
 
 ## Princípios inegociáveis
 

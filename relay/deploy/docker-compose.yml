@@ -16,8 +16,11 @@ services:
     command: ["python", "-u", "server.py", "--host", "0.0.0.0", "--port", "3920"]
     container_name: vox-relay
     restart: unless-stopped
+    environment:
+      - VOX_RELAY_MAX_CACHE_MB=${VOX_RELAY_MAX_CACHE_MB:-512}
     volumes:
       - vox_inbox:/app/.inbox
+      - vox_relay_cache:/app/.cache
     expose:
       - "3920"
 
@@ -52,3 +55,4 @@ volumes:
   caddy_data:
   caddy_config:
   vox_inbox:
+  vox_relay_cache:

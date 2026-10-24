@@ -53,6 +53,23 @@ class TestVoxRelayServer(unittest.TestCase):
             self.assertEqual(data.get("status"), "ok")
             self.assertEqual(data.get("app"), "vox-relay")
             self.assertIn("cachedCount", data)
+            self.assertIn("communityIndexCount", data)
+            self.assertEqual(data.get("communityIndexCount"), 0)
+
+    def test_mirror_lists_in_health(self):
+        body = json.dumps({"communityId": "test-comm", "topics": []}).encode("utf-8")
+        req = urllib.request.Request(
+            self._url("/vox/mirror"),
+            data=body,
+            method="POST",
+            headers={"Content-Type": "application/json"},
+        )
+        with urllib.request.urlopen(req, timeout=2) as resp:
+            self.assertEqual(resp.status, 200)
+        req = urllib.request.Request(self._url("/health"))
+        with urllib.request.urlopen(req, timeout=2) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            self.assertIn("test-comm", data.get("communityIndexes", []))
 
     def test_options_cors(self):
         req = urllib.request.Request(self._url("/health"), method="OPTIONS")
