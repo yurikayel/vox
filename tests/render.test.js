@@ -908,3 +908,48 @@ test("render - compositor inline inclui microcopy honesta de edit/apagar local",
   assert.ok(html.includes("gossip"));
 });
 
+test("render - renderPeopleSearch seções e paste connect", () => {
+  const main = createContainer();
+  render.renderPeopleSearch(main, {
+    sections: {
+      contacts: [{ routeId: "vx_c", name: "Contato", source: "contact" }],
+      mesh: [{ routeId: "vx_m", name: "Malha", source: "mesh-card" }],
+      tour: [],
+    },
+    results: [],
+    query: "",
+  });
+  assert.ok(main.innerHTML.includes("Contatos"));
+  assert.ok(main.innerHTML.includes("Na malha"));
+  assert.ok(main.innerHTML.includes("form-people-paste-link"));
+});
+
+test("render - renderNetworkSettings inclui toggle malha", () => {
+  const main = createContainer();
+  render.renderNetworkSettings(main, {
+    settings: { enabled: true, maxMb: 25, dailyCapMb: 50, wifiOnly: true, webrtcEnabled: true },
+    metrics: {},
+    cacheStats: { count: 0, sizeKb: "0" },
+    relayStatus: { online: false },
+    dailyUsage: { bytesServedToday: 0 },
+    notifPermission: "default",
+    rtcStatus: { remotePeersConnected: 0 },
+    customSignalingUrl: "",
+    customRelayHttpUrl: "",
+    relayHttpUrl: "",
+    customTurn: {},
+    meshDiscoverable: true,
+  });
+  assert.ok(main.innerHTML.includes("net-mesh-discoverable"));
+  assert.ok(main.innerHTML.includes("busca da malha"));
+});
+
+test("render - modal pós-pacto connect", () => {
+  const container = createContainer();
+  render.renderPostPactConnectModal(container, "vx_testroute123456");
+  assert.ok(container.innerHTML.includes("post-pact-connect-overlay"));
+  assert.ok(container.innerHTML.includes("#/connect/"));
+  render.closePostPactConnectModal(container);
+  assert.equal(container.innerHTML, "");
+});
+
