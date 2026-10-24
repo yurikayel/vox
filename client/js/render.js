@@ -492,35 +492,18 @@ export function renderPostOwnerMenu(t) {
   </div>`;
 }
 
-function renderPostHeaderBlock(t, author, labels, isPinned) {
+function renderPostHeaderBlock(t, author, labels) {
   const authorDisplay = labels.authorDisplay;
-  const commLabel = t.communityTitle || "Comunidade";
-  const commPill = t.communityId
-    ? `<a class="post-community-pill" href="#/c/${encodeURIComponent(t.communityId)}">${escapeHtml(commLabel)}</a>`
-    : "";
-  const originBadge = t.isLocalP2p
-    ? `<span class="badge-pill p2p-pill">Na rede</span>`
-    : `<span class="badge-pill permanent-pill">Guardado</span>`;
-  const pinned = isPinned || t.isPinned || (author && social.isPostPinned(author, t.id));
-  const pinnedBadge = pinned
-    ? `<span class="badge-pill pinned-pill" title="Publicação fixada pelo autor">📌 Fixado</span>`
-    : "";
-  const editedBadge =
-    gossipRetract.isGossipRetractUiEnabled() && gossipRetract.isGossipEdited(t)
-      ? gossipRetract.renderGossipEditedBadgeHtml()
-      : "";
   const ownerMenu = renderPostOwnerMenu(t);
   const metaHtml = renderPostAuthorMetaLines(author, labels, formatTimeAgo(t.ts));
+  const asideHtml = ownerMenu ? `<div class="post-header-aside">${ownerMenu}</div>` : "";
   return `
     <header class="post-header-ig">
       <div class="post-header-user">
         <a class="avatar-link" href="#/u/${encodeURIComponent(author)}">${renderAvatarHtml(author, authorDisplay)}</a>
         ${metaHtml}
       </div>
-      <div class="post-header-aside">
-        <div class="post-header-tags">${pinnedBadge}${editedBadge}${originBadge}${commPill}</div>
-        ${ownerMenu}
-      </div>
+      ${asideHtml}
     </header>`;
 }
 
@@ -706,7 +689,7 @@ export function renderPostItem(t, { isPinned = false } = {}) {
   });
   const { authorDisplay, authorHandle } = labels;
   const layout = getPostFeedLayout(t);
-  const header = renderPostHeaderBlock(t, author, labels, isPinned);
+  const header = renderPostHeaderBlock(t, author, labels);
   const media = layout === "photo" ? renderPostMedia(t) : "";
   const frame = renderPostFrame(t);
   const toolbar = renderPostToolbar(t, author, authorDisplay, authorHandle);
@@ -731,8 +714,8 @@ export function renderPostItem(t, { isPinned = false } = {}) {
       ${header}
       ${media}
       ${frame}
-      ${toolbar}
       ${caption}
+      ${toolbar}
       ${comments}
     </article>`;
 }

@@ -203,8 +203,8 @@ test("render - renderFeed renderiza timeline com posts", () => {
   assert.ok(main.innerHTML.includes("feed-chrome"));
   assert.ok(main.innerHTML.includes("Primeiro post"));
   assert.ok(main.innerHTML.includes("Conteudo do post"));
-  assert.ok(main.innerHTML.includes(">Geral<"));
-  assert.ok(!main.innerHTML.includes(">c/geral<"));
+  assert.ok(!main.innerHTML.includes("post-community-pill"));
+  assert.ok(!main.innerHTML.includes(">Geral<"));
 });
 
 test("render - renderNetworkChip status e rotulagem", () => {
@@ -540,7 +540,8 @@ test("render - post v3 híbrido (mídia antes do texto, star, copy-md e pinned)"
   };
 
   const html = render.renderPostItem(post, { isPinned: true });
-  assert.ok(html.includes("📌 Fixado"));
+  assert.ok(!html.includes("post-header-tags"));
+  assert.ok(!html.includes("📌 Fixado"));
   assert.ok(html.includes("post_hibrido_1"));
   assert.ok(html.includes("images/posts/tour-helena.jpg"));
   assert.ok(html.includes("btn-like"));
@@ -820,9 +821,9 @@ test("render - renderPostItem pilha vertical estilo Meta com header IG, toolbar 
   const commentsIdx = html.indexOf('class="post-comments');
 
   assert.ok(headerIdx < mediaIdx, "Header deve preceder a mídia na pilha vertical");
-  assert.ok(mediaIdx < toolbarIdx, "Mídia deve preceder a toolbar na pilha vertical");
-  assert.ok(toolbarIdx < captionIdx, "Toolbar deve preceder a caption na pilha vertical");
-  assert.ok(captionIdx < commentsIdx, "Caption deve preceder os comentários na pilha vertical");
+  assert.ok(mediaIdx < captionIdx, "Mídia deve preceder a caption na pilha vertical");
+  assert.ok(captionIdx < toolbarIdx, "Caption deve preceder a toolbar na pilha vertical");
+  assert.ok(toolbarIdx < commentsIdx, "Toolbar deve preceder os comentários na pilha vertical");
 });
 
 test("render - resolvePostAuthorLabels evita ID truncado duplicado", () => {
@@ -868,7 +869,7 @@ test("render - renderPostOwnerMenu só aparece em posts isOwnLocalPost", () => {
   assert.ok(!tourHtml.includes("btn-post-delete"));
 });
 
-test("render - post header usa post-header-aside e title no autor", () => {
+test("render - post header limpo sem chips e title no autor", () => {
   const route = "vx_1QvABCDEFGHIJKpX7a";
   const html = render.renderPostItem({
     id: "p_hdr",
@@ -876,10 +877,14 @@ test("render - post header usa post-header-aside e title no autor", () => {
     body: "B",
     author: route,
     isLocalP2p: true,
+    communityId: "demo-aprenda-vox",
+    communityTitle: "Aprenda o Vox",
     type: "topic",
     ts: Date.now(),
   });
-  assert.ok(html.includes("post-header-aside"));
+  assert.ok(!html.includes("post-header-tags"));
+  assert.ok(!html.includes("Na rede"));
+  assert.ok(!html.includes("Aprenda o Vox"));
   assert.ok(html.includes(`title="${route}"`));
   const handleMatches = html.match(/class="post-handle"/g) || [];
   assert.equal(handleMatches.length, 0, "sem @handle duplicado quando só há ID");
