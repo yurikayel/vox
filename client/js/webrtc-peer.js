@@ -121,6 +121,16 @@ export function getConnectedRtcPeersCount() {
   return count;
 }
 
+export function listOpenRtcPeerIds() {
+  const openPeers = [];
+  for (const [peerId, entry] of peerConnections.entries()) {
+    if (entry.dc && entry.dc.readyState === "open") {
+      openPeers.push(peerId);
+    }
+  }
+  return openPeers;
+}
+
 export function getSignalingUrl(config) {
   if (customSignalingUrl) return customSignalingUrl;
   const stored = localStorage.getItem("vox-custom-signaling-url");

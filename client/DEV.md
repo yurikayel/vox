@@ -689,8 +689,19 @@ Em 23/10 o sprint «Feed estilo Meta» ficou em **HOLD estrito** (sem código) c
 
 Não há trabalho pendente obrigatório do plano «Meta feed v6.3» em HOLD. O que restava de intenção visual Meta crítica para o **timeline** já está no híbrido; melhorias de **polish global** ficam na branch UI polish. **Não reexecutar** o sprint Meta como segundo passo — atualizar groom/backlog apenas se algum delta residual acima for priorizado explicitamente.
 
+---
 
+## 23. Afinidade Comportamental Local de Pares para Blobs (V-I09)
 
+**Data:** 2026-10-24 · **Branch:** `feat/blob-soft-priority-v0` · **Suíte:** 207 testes (193 JS + 14 Python relay).
 
-
+- **Spec / ADR:** `docs/antigravity-blob-soft-priority-v0.md`.
+- **Módulo:** `client/js/peers-blob-affinity.js` integrado em `client/js/peers.js` e `client/js/webrtc-peer.js`.
+- **Wire:** Reutiliza mensagens `WANT` e `BLOB` existentes com campo `fromPeer`.
+- **Privacidade & Compliance:** Sem ranking público, sem scoreboard e sem telemetria externa. O mapa de afinidade é estritamente local e efêmero no aparelho (`affinityMap`), com teto de 16 pares, TTL de 15 minutos e decaimento exponencial de pontuação (meia-vida de 5 minutos).
+- **Algoritmo (Flag off por padrão):** 
+  - Ao receber `BLOB` que cumpre um `WANT` pendente local, chama `bumpAffinity(fromPeer)` se a flag estiver ativa (`isBlobPeerSoftPriorityEnabled()`).
+  - Em `requestTxFromPeers`, antes do flood broadcast WebRTC/BroadcastChannel, consulta pares RTC abertos (`listOpenRtcPeerIds`), ordena por afinidade (`rankAffinity`) e tenta unicast rápido com timeout de 450ms por par.
+  - Se nenhum par com afinidade responder ou a flag estiver desativada, o fluxo degrada transparentemente para o comportamento padrão.
+- **Suíte de testes:** `tests/peers-blob-soft-priority.test.js` (cenários T1 a T5 da spec + teste de capacidade máxima e descarte).
 
