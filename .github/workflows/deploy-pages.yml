@@ -6,6 +6,7 @@ on:
     paths:
       - "client/**"
       - "docs/**"
+      - "tools/write-oauth-deploy-config.mjs"
       - ".github/workflows/deploy-pages.yml"
   workflow_dispatch:
 
@@ -32,12 +33,16 @@ jobs:
         uses: actions/configure-pages@v5
 
       - name: Preparar site composto (_site)
+        env:
+          VOX_GOOGLE_CLIENT_ID: ${{ secrets.VOX_GOOGLE_CLIENT_ID }}
+          VOX_FACEBOOK_APP_ID: ${{ secrets.VOX_FACEBOOK_APP_ID }}
         run: |
           mkdir -p _site
           cp -r client/* _site/
           if [ -f docs/proposta-vox.html ]; then
             cp docs/proposta-vox.html _site/proposta-vox.html
           fi
+          node tools/write-oauth-deploy-config.mjs
 
       - name: Upload de artefato do PWA (_site)
         uses: actions/upload-pages-artifact@v3

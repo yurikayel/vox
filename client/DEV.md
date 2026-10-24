@@ -832,13 +832,32 @@ Com IDs vazios ou `YOUR_*`, os botões Google/Meta ficam desabilitados no modal 
 7. Copie **App ID** numérico para `oauth.json` → `facebookAppId`.
 8. Login solicita escopo `public_profile` apenas (`oauth-profile.js`).
 
+#### GitHub Pages (CI — sem commitar `oauth.json`)
+
+O workflow [`.github/workflows/deploy-pages.yml`](../.github/workflows/deploy-pages.yml) gera `_site/config/oauth.json` no deploy a partir de **Actions secrets** (Client IDs Web são públicos no browser após deploy; secrets evitam commit acidental).
+
+| Secret (Actions) | Valor |
+|------------------|--------|
+| `VOX_GOOGLE_CLIENT_ID` | OAuth 2.0 Client ID (Web) do Google Cloud |
+| `VOX_FACEBOOK_APP_ID` | App ID numérico Meta |
+
+**Operador:**
+
+1. Repositório GitHub → **Settings** → **Secrets and variables** → **Actions** → **New repository secret** (crie os dois nomes acima).
+2. Redeploy: push em `main` que altere `client/**`, `docs/**`, `tools/write-oauth-deploy-config.mjs` ou o workflow — ou **Actions** → *Deploy PWA — GitHub Pages* → **Run workflow**.
+3. Verificar artefato publicado: abrir `https://yurikayel.github.io/vox/config/oauth.json` — deve conter IDs não vazios e `enabledProviders` coerente.
+4. Aba anônima em `https://yurikayel.github.io/vox/` → Cantina → modal *Como quer aparecer?* — botões Google/Meta habilitados, sem caixa vermelha de operador (se secrets preenchidos).
+5. **Hard refresh** após deploy (SW `vox-pwa-v6.26-mesh-discovery` ou posterior).
+
+Script: [`tools/write-oauth-deploy-config.mjs`](../tools/write-oauth-deploy-config.mjs) — se ambos secrets vazios, o job emite `::warning::` e o modal mantém o aviso atual.
+
+**Troubleshooting:** botões habilitados mas login falha → revisar **Authorized JavaScript origins** (Google: `https://yurikayel.github.io`) e **Valid OAuth Redirect URIs** / **Allowed Domains** (Meta: `https://yurikayel.github.io/vox/`) nas tabelas acima.
+
 #### Verificação pós-config
 
-1. `cd client && python -m http.server 8080` → limpar Cantina/onboarding ou usar aba anônima → modal OAuth → botões habilitados.
-2. Após deploy em Pages, repetir em `https://yurikayel.github.io/vox/` (hard refresh / novo SW se necessário).
+1. **Local:** `cd client && python -m http.server 8080` → aba anônima → modal OAuth → botões habilitados (com `client/config/oauth.json` preenchido localmente).
+2. **Pages:** passos da subseção GitHub Pages (CI) acima.
 3. `npm test` na raiz `vox/` antes de merge.
-
-**Nota:** `oauth.json` **não** entra no artefato público do CI por padrão (gitignored). Para OAuth em **produção Pages**, o operador precisa incluir `oauth.json` no host (deploy manual, secret no workflow, ou espelho privado) — o pipeline atual copia só `client/**` versionado.
 
 ---
 
