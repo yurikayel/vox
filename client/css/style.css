@@ -2301,6 +2301,125 @@ main#app-main {
   }
 }
 
+/* OAuth enrich — botões estilo GIS / Meta (ADR-002) */
+.oauth-enrich-dialog {
+  max-width: 420px;
+  padding: 1.35rem 1.25rem 1.15rem;
+}
+
+.oauth-enrich-title {
+  margin: 0 0 0.35rem;
+  font-size: 1.15rem;
+}
+
+.oauth-enrich-lead {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.oauth-enrich-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.oauth-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  width: 100%;
+  min-height: 44px;
+  padding: 0.55rem 1rem;
+  border-radius: 999px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.oauth-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.oauth-btn__icon {
+  flex-shrink: 0;
+}
+
+.oauth-btn--google {
+  background: #fff;
+  color: #1f1f1f;
+  border: 1px solid #747775;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.oauth-btn--google:hover {
+  background: #f8f8f8;
+  border-color: #5f6368;
+}
+
+.oauth-btn--meta {
+  background: #1877f2;
+  color: #fff;
+  border: 1px solid #1877f2;
+}
+
+.oauth-btn--meta:hover {
+  background: #166fe5;
+  border-color: #166fe5;
+}
+
+.oauth-btn--skip {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+  font-weight: 500;
+}
+
+.oauth-btn--skip:hover {
+  background: var(--surface-soft);
+}
+
+.oauth-enrich-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0.85rem 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+  text-transform: lowercase;
+}
+
+.oauth-enrich-divider::before,
+.oauth-enrich-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border-subtle);
+}
+
+.oauth-enrich-legal {
+  margin: 0.85rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+@media (prefers-color-scheme: dark) {
+  .oauth-btn--google {
+    background: #fff;
+    color: #1f1f1f;
+    border-color: #8e918f;
+  }
+
+  .oauth-btn--meta {
+    background: #1877f2;
+    color: #fff;
+  }
+}
+
 /* Modal Onboarding */
 .modal-overlay {
   position: fixed;
