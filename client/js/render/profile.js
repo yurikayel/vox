@@ -51,28 +51,29 @@ function renderProfileReadme(address, displayName, readme, isCurrentWallet) {
     </div>`;
 }
 
-function renderProfileStats(statsData, address = "") {
-  if (!statsData) return "";
-  const postsCount = statsData.posts || 1;
-  const postsLabel = postsCount === 1 ? "post" : "posts";
-  const baseFollowers = statsData.followers || 0;
-  const followersCount = social.getFollowersCount(address, baseFollowers);
-  const starsCount = statsData.stars || 0;
+const PROFILE_GRID_TAB_ICON = `<svg class="profile-grid-tab-icon" aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>`;
 
+function renderProfileGridStats(postsCount, statsData, address, isCurrentWallet) {
+  const baseFollowers = statsData?.followers || 0;
+  const followersCount = social.getFollowersCount(address, baseFollowers);
+  const followingCount = isCurrentWallet
+    ? social.getWatchedProfiles().length
+    : (statsData?.following ?? 0);
+  const pub = Number(postsCount) || 0;
   return `
-    <div class="profile-stats">
-      <span><strong>${postsCount}</strong> <span class="meta">${postsLabel}</span></span>
-      <span><strong>${followersCount}</strong> <span class="meta">acompanhando</span></span>
-      ${starsCount ? `<span><strong>${starsCount}</strong> <span class="meta">estrelas</span></span>` : ""}
-      ${statsData.peersConnected !== undefined
-        ? `<span><strong>${statsData.peersConnected}</strong> <span class="meta">aparelhos próximos</span></span>`
-        : ""}
-      ${statsData.communities !== undefined
-        ? `<span><strong>${statsData.communities}</strong> <span class="meta">comunidade</span></span>`
-        : ""}
-      ${statsData.isStereotypeDemo || statsData.isTourDemo
-        ? `<span class="badge-pill demo-badge">Perfil estereótipo (demo)</span>`
-        : ""}
+    <div class="profile-grid-stats" role="list">
+      <div class="profile-grid-stat" role="listitem">
+        <span class="profile-grid-stat-value">${pub}</span>
+        <span class="profile-grid-stat-label">${pub === 1 ? "publicação" : "publicações"}</span>
+      </div>
+      <div class="profile-grid-stat" role="listitem">
+        <span class="profile-grid-stat-value">${followersCount}</span>
+        <span class="profile-grid-stat-label">${followersCount === 1 ? "seguidor" : "seguidores"}</span>
+      </div>
+      <div class="profile-grid-stat" role="listitem">
+        <span class="profile-grid-stat-value">${followingCount}</span>
+        <span class="profile-grid-stat-label">seguindo</span>
+      </div>
     </div>`;
 }
 
@@ -89,27 +90,31 @@ function renderStereotypeDemoBanner(address) {
     ? `<p class="meta" style="margin:0.35rem 0 0;">${escapeHtml(prof.stateName)} (${escapeHtml(prof.uf)}) — humor educativo, não pessoa real.</p>`
     : "";
   return `
-    <div class="card profile-stereotype-banner" style="margin-top:0.65rem; border:1px dashed var(--border);">
-      <p style="margin:0; font-size:1.02rem;"><strong>👋 ${escapeHtml(greeting)}</strong></p>
-      <p style="margin:0.45rem 0 0;"><strong>🧪 ${escapeHtml(title)}</strong></p>
-      <p class="desc" style="margin:0.4rem 0 0; font-size:0.88rem;">
-        ${escapeHtml(disclaimerNote)}
-        Este é um <strong>perfil estereótipo</strong> para <strong>testes da plataforma</strong> e explicação lúdica de demografia regional. O clichê está no texto — nunca na zombaria de aparência.
-      </p>
-      ${ufLine}
-    </div>`;
+    <details class="profile-grid-disclaimer profile-stereotype-banner">
+      <summary>🧪 ${escapeHtml(title)} — toque para o aviso demo</summary>
+      <div class="profile-grid-disclaimer-body">
+        <p style="margin:0;"><strong>👋 ${escapeHtml(greeting)}</strong></p>
+        <p class="desc" style="margin:0.45rem 0 0; font-size:0.88rem;">
+          ${escapeHtml(disclaimerNote)}
+          Este é um <strong>perfil estereótipo</strong> para <strong>testes da plataforma</strong> e explicação lúdica de demografia regional. O clichê está no texto — nunca na zombaria de aparência.
+        </p>
+        ${ufLine}
+      </div>
+    </details>`;
 }
 
-function renderOfficialPlatformBanner(address) {
+function renderOfficialPlatformBadge(address) {
+  if (!isWelcomeRouteId(address)) return "";
+  return `<span class="profile-grid-verified" title="Conta oficial Vox Brasil">✓</span>`;
+}
+
+function renderOfficialPlatformAboutBlurb(address) {
   if (!isWelcomeRouteId(address)) return "";
   return `
-    <div class="card profile-official-banner" style="margin-top:0.65rem; border:1px solid var(--border);">
-      <p style="margin:0;"><strong>✓ Conta oficial da plataforma</strong></p>
-      <p class="desc" style="margin:0.4rem 0 0; font-size:0.88rem;">
-        Voz institucional do Vox — não é pessoa física nem perfil estereótipo de demo.
-        <a href="#/voxpedia">Voxpedia</a> · DM de boas-vindas
-      </p>
-    </div>`;
+    <p class="profile-grid-official-note desc">
+      Conta oficial da plataforma — voz institucional do Vox (não é pessoa física).
+      <a href="#/voxpedia">Voxpedia</a> · DM de boas-vindas
+    </p>`;
 }
 
 function renderProfilePixBadge(pixKeyMasked, pixKeyRaw) {
@@ -123,30 +128,85 @@ function renderProfilePixBadge(pixKeyMasked, pixKeyRaw) {
     </div>`;
 }
 
-function renderProfileHeader(address, isCurrentWallet, handle, isConflict, claimants, displayName, profileBio = "", stats = null, pixKeyMasked = "", pixKeyRaw = "", githubHandle = "") {
-  const displayTitle = displayName ? `${displayName} (@${handle || shortId(address)})` : (handle ? `@${handle}` : "Perfil");
+function renderProfileGridAvatar(address, displayName, handle) {
   const initial = (displayName || handle || address || "U").slice(0, 1).toUpperCase();
   const avatarUrl = profileDirectory.getAuthorAvatarSync(address) || mock.getAuthorAvatar(address);
   const squircle = isWelcomeRouteId(address) ? " avatar-squircle" : "";
-  const avatarHtml = avatarUrl
-    ? `<img class="profile-avatar-img${squircle}" src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(displayName || address)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" /><span class="avatar${squircle}" style="display:none; width:72px; height:72px; font-size:1.8rem;">${initial}</span>`
-    : `<span class="avatar${squircle}" style="width:72px; height:72px; font-size:1.8rem;">${initial}</span>`;
+  if (avatarUrl) {
+    return `<div class="profile-grid-avatar-wrap">
+      <img class="profile-grid-avatar-img${squircle}" src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(displayName || address)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
+      <span class="avatar profile-grid-avatar-fallback${squircle}" style="display:none;">${initial}</span>
+    </div>`;
+  }
+  return `<div class="profile-grid-avatar-wrap"><span class="avatar profile-grid-avatar-fallback${squircle}">${initial}</span></div>`;
+}
 
-  const bioHtml = profileBio ? `<p class="profile-bio desc">${escapeHtml(profileBio)}</p>` : "";
+function renderProfileGridActionRow(address, isCurrentWallet, isBlocked, isMuted) {
+  if (isCurrentWallet) {
+    return `
+      <div class="profile-grid-actions">
+        <a class="profile-grid-btn profile-grid-btn-outline" href="#/u/${encodeURIComponent(address)}?tab=about">Editar perfil</a>
+        <button type="button" class="profile-grid-btn profile-grid-btn-outline" id="btn-copy-my-dm-link" data-route="${escapeHtml(address)}">Compartilhar</button>
+        <button type="button" class="profile-grid-btn profile-grid-btn-outline" id="btn-copy-connect-link" data-route="${escapeHtml(address)}">Link connect</button>
+      </div>`;
+  }
+  if (isWelcomeRouteId(address)) {
+    return `
+      <div class="profile-grid-actions">
+        <a class="profile-grid-btn profile-grid-btn-outline" href="#/voxpedia">Voxpedia</a>
+        <a class="profile-grid-btn profile-grid-btn-outline" href="#/dm/${encodeURIComponent(address)}">Mensagem</a>
+      </div>`;
+  }
+  const isWatchingAuthor = social.isWatching(address);
+  const followClass = isWatchingAuthor ? "profile-grid-btn-outline is-following" : "profile-grid-btn-primary";
+  return `
+    <div class="profile-grid-actions">
+      <button type="button" class="profile-grid-btn ${followClass} btn-watch-profile" data-route="${escapeHtml(address)}" aria-pressed="${isWatchingAuthor ? "true" : "false"}">
+        ${isWatchingAuthor ? "Seguindo" : "Seguir"}
+      </button>
+      <a class="profile-grid-btn profile-grid-btn-outline" href="#/dm/${encodeURIComponent(address)}">Mensagem</a>
+      <button type="button" class="profile-grid-btn profile-grid-btn-outline" id="btn-copy-author-route" data-route="${escapeHtml(address)}">Copiar ID</button>
+    </div>
+    <details class="profile-grid-mod-actions">
+      <summary>Moderação local</summary>
+      <div class="profile-grid-mod-actions-body">
+        <button type="button" class="btn btn-sm ${isBlocked ? "btn-outline" : "btn-danger"}" id="btn-toggle-block" data-route="${escapeHtml(address)}">
+          ${isBlocked ? "Desbloquear Autor" : "Bloquear"}
+        </button>
+        <button type="button" class="btn btn-sm btn-outline" id="btn-toggle-mute" data-route="${escapeHtml(address)}">
+          ${isMuted ? "Desilenciar no Feed" : "Silenciar"}
+        </button>
+      </div>
+    </details>`;
+}
+
+function renderProfileGridHeader(
+  address,
+  isCurrentWallet,
+  handle,
+  isConflict,
+  claimants,
+  displayName,
+  profileBio = "",
+  stats = null,
+  postsCount = 0,
+  pixKeyMasked = "",
+  pixKeyRaw = "",
+  githubHandle = "",
+  isBlocked = false,
+  isMuted = false,
+) {
+  const handleLabel = handle ? `@${handle}` : `@${shortId(address)}`;
   const statsData = stats || mock.getMockProfile(address)?.stats;
-  const statsHtml = renderProfileStats(statsData, address);
+  const bioHtml = profileBio ? `<p class="profile-grid-bio desc">${escapeHtml(profileBio)}</p>` : "";
   const pixBadge = renderProfilePixBadge(pixKeyMasked, pixKeyRaw);
   const githubBadge = renderProfileGithubBadge(githubHandle);
-
-  const isWatchingAuthor = social.isWatching(address);
-  const watchBtnHtml = !isCurrentWallet
-    ? `<button class="btn btn-sm ${isWatchingAuthor ? "btn-outline" : "btn-primary"} btn-watch-profile" data-route="${escapeHtml(address)}" style="margin-left:auto;">
-        ${isWatchingAuthor ? "✓ Acompanhando" : "👁️ Acompanhar (Watch)"}
-      </button>`
+  const nameHtml = displayName
+    ? `<p class="profile-grid-display-name">${escapeHtml(displayName)}</p>`
     : "";
 
   const conflictBanner = isConflict
-    ? `<div class="card error" style="margin-top:0.6rem;">
+    ? `<div class="card error profile-grid-conflict">
         ⚠️ <strong>Conflito de Handle:</strong> <code>@${escapeHtml(handle)}</code> reivindicado por mais de uma conta.
         <div style="font-size:0.8rem; margin-top:0.3rem;">
           ${claimants.map((c) => `<div>• <a href="#/u/${c.owner}">${escapeHtml(shortId(c.owner))}</a></div>`).join("")}
@@ -155,27 +215,51 @@ function renderProfileHeader(address, isCurrentWallet, handle, isConflict, claim
     : "";
 
   return `
-    <div class="card profile-card">
-      <div class="profile-cover"></div>
-      <div class="profile-header-body">
-        <div class="profile-avatar-row">
-          <div class="profile-avatar-wrap">${avatarHtml}</div>
-          ${isCurrentWallet ? `<span class="badge-pill">Sua Conta Neste Aparelho</span>` : ""}
-          ${watchBtnHtml}
-        </div>
-        <div class="profile-info">
-          <h2 class="profile-title">${escapeHtml(displayTitle)}</h2>
-          <p class="meta profile-route-id">ID de Rede: <code>${escapeHtml(address)}</code></p>
-        </div>
+    <header class="profile-grid-header">
+      <div class="profile-grid-top">
+        ${renderProfileGridAvatar(address, displayName, handle)}
+        ${renderProfileGridStats(postsCount, statsData, address, isCurrentWallet)}
+      </div>
+      <div class="profile-grid-identity">
+        <h1 class="profile-grid-handle">${escapeHtml(handleLabel)}${renderOfficialPlatformBadge(address)}</h1>
+        ${nameHtml}
         ${bioHtml}
-        ${renderOfficialPlatformBanner(address)}
-        ${renderStereotypeDemoBanner(address)}
-        <div style="display:flex; flex-wrap:wrap; gap:0.5rem; align-items:center;">
-          ${pixBadge}
-          ${githubBadge}
-        </div>
-        ${statsHtml}
-        ${conflictBanner}
+        ${isCurrentWallet ? `<p class="profile-grid-self-badge meta">Sua conta neste aparelho</p>` : ""}
+        ${(pixBadge || githubBadge) ? `<div class="profile-grid-meta-badges">${pixBadge}${githubBadge}</div>` : ""}
+      </div>
+      ${renderProfileGridActionRow(address, isCurrentWallet, isBlocked, isMuted)}
+      ${renderStereotypeDemoBanner(address)}
+      ${conflictBanner}
+    </header>`;
+}
+
+function renderProfilePostGrid(posts, pinnedPostId = "") {
+  if (!posts?.length) {
+    return `<div class="profile-grid-empty empty"><p>Nenhuma publicação ainda.</p></div>`;
+  }
+  const tiles = posts.map((p) => {
+    const img = p.image || p.thumbnail || "";
+    const pinned = p.id === pinnedPostId
+      ? `<span class="profile-grid-pin" aria-label="Fixado">📌</span>`
+      : "";
+    const inner = img
+      ? `<img src="${escapeHtml(img)}" alt="" loading="lazy" />`
+      : `<span class="profile-grid-placeholder" aria-hidden="true">${escapeHtml(String(p.title || "?").slice(0, 1))}</span>`;
+    return `<a class="profile-grid-item" href="#/t/${encodeURIComponent(p.id)}" aria-label="${escapeHtml(p.title || "Post")}">${inner}${pinned}</a>`;
+  }).join("");
+  return `<div class="profile-grid">${tiles}</div>`;
+}
+
+/** Minimal IG shell for handle-not-found and similar states. */
+export function renderProfileGridNotFound(main, { handle = "", title = "", bodyHtml = "", actionsHtml = "" } = {}) {
+  const handleLine = handle ? `<h1 class="profile-grid-handle">@${escapeHtml(handle)}</h1>` : "";
+  main.innerHTML = `
+    <div class="profile-grid-layout profile-grid-not-found">
+      <header class="profile-grid-header profile-grid-header-minimal">${handleLine}</header>
+      <div class="card profile-grid-not-found-card">
+        ${title ? `<h2>${escapeHtml(title)}</h2>` : ""}
+        ${bodyHtml}
+        ${actionsHtml ? `<div class="profile-grid-not-found-actions">${actionsHtml}</div>` : ""}
       </div>
     </div>`;
 }
@@ -234,20 +318,7 @@ function renderProfileActions(
 ) {
   if (isCurrentWallet) {
     return `
-      <div class="card" style="margin-top:0.75rem;">
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-          <div>
-            <strong>Mensagens Diretas</strong>
-            <p class="meta" style="margin:2px 0 0;">Compartilhe seu link para receber DMs privadas:</p>
-          </div>
-          <div style="display:flex; gap:0.35rem; flex-wrap:wrap;">
-            <button id="btn-copy-my-dm-link" class="btn btn-sm btn-outline" data-route="${escapeHtml(address)}">📋 Copiar Meu Link</button>
-            <button id="btn-copy-connect-link" class="btn btn-sm btn-outline" data-route="${escapeHtml(address)}">↗ Link #/connect</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="card" style="margin-top:0.75rem;">
+      <div class="card profile-grid-settings-card" style="margin-top:0.75rem;">
         <h3>Identidade Local</h3>
         <form id="form-display-name" style="margin-top:0.5rem; display:flex; gap:0.5rem;">
           <input type="text" id="input-display-name" class="form-control" placeholder="Seu apelido ou nome..." value="${escapeHtml(displayName || "")}" maxlength="30" />
@@ -315,17 +386,7 @@ function renderProfileActions(
         </div>
       </details>`;
   }
-  return `
-    <div class="card" style="margin-top:0.75rem; display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
-      <a class="btn btn-primary btn-sm" href="#/dm/${encodeURIComponent(address)}">💬 Mensagem Privada</a>
-      <button class="btn btn-outline btn-sm" id="btn-copy-author-route" data-route="${escapeHtml(address)}">📋 Copiar ID</button>
-      <button class="btn btn-sm ${isBlocked ? "btn-outline" : "btn-danger"}" id="btn-toggle-block" data-route="${escapeHtml(address)}">
-        ${isBlocked ? "Desbloquear Autor" : "🚫 Bloquear"}
-      </button>
-      <button class="btn btn-sm btn-outline" id="btn-toggle-mute" data-route="${escapeHtml(address)}">
-        ${isMuted ? "Desilenciar no Feed" : "🔇 Silenciar"}
-      </button>
-    </div>`;
+  return "";
 }
 
 export function renderProfile(main, address, memberships = [], isCurrentWallet = false, dmPubStr = "", {
@@ -354,24 +415,6 @@ export function renderProfile(main, address, memberships = [], isCurrentWallet =
   const finalReadme = readme || (isCurrentWallet ? social.getLocalReadme() : mock.getAuthorReadme(address));
   const finalPinned = pinnedPostId || (isCurrentWallet ? social.getPinnedPostId(address) : mock.getAuthorPinnedPostId(address));
 
-  let html = renderProfileHeader(address, isCurrentWallet, handle, isConflict, claimants, displayName, profileBio, stats, pixKeyMasked, pixKey, finalGithub);
-  html += renderProfileActions(
-    address,
-    isCurrentWallet,
-    handle,
-    displayName,
-    hasWallet,
-    balance,
-    pixKey,
-    finalGithub,
-    oauthProvider,
-    isBlocked,
-    isMuted,
-    meshDiscoverable,
-  );
-  html += renderProfileReadme(address, displayName, finalReadme, isCurrentWallet);
-
-  // Reordena posts para colocar fixado no topo
   const authorPostList = [...(posts || [])];
   if (finalPinned) {
     const pinIdx = authorPostList.findIndex((p) => p.id === finalPinned);
@@ -382,48 +425,84 @@ export function renderProfile(main, address, memberships = [], isCurrentWallet =
   }
 
   const starredList = starredPosts || [];
-  const currentTab = activeTab || "posts";
+  const postsCount = authorPostList.length || stats?.posts || 0;
+  const mockProf = mock.getMockProfile(address);
+  const hasStereotypeAbout = Boolean(mockProf?.isStereotypeDemo || mockProf?.stereotypeTitle);
+  const showAboutTab = isCurrentWallet || finalReadme || hasStereotypeAbout || isWelcomeRouteId(address)
+    || starredList.length || memberships.length;
+
+  let currentTab = activeTab || "posts";
+  if (currentTab === "starred" || currentTab === "communities") currentTab = "about";
+
+  let html = `<div class="profile-grid-layout">`;
+  html += renderProfileGridHeader(
+    address,
+    isCurrentWallet,
+    handle,
+    isConflict,
+    claimants,
+    displayName,
+    profileBio,
+    stats,
+    postsCount,
+    pixKeyMasked,
+    pixKey,
+    finalGithub,
+    isBlocked,
+    isMuted,
+  );
 
   html += `
-    <div class="community-tabs profile-tabs" style="margin-top:1rem;">
-      <a href="#/u/${encodeURIComponent(address)}?tab=posts" class="tab-btn ${currentTab === "posts" ? "active" : ""}">Posts do autor (${authorPostList.length})</a>
-      <a href="#/u/${encodeURIComponent(address)}?tab=starred" class="tab-btn ${currentTab === "starred" ? "active" : ""}">Estrelados (${starredList.length})</a>
-      <a href="#/u/${encodeURIComponent(address)}?tab=communities" class="tab-btn ${currentTab === "communities" ? "active" : ""}">Comunidades (${memberships.length})</a>
-    </div>`;
+    <nav class="profile-grid-tabs" aria-label="Seções do perfil">
+      <a href="#/u/${encodeURIComponent(address)}?tab=posts" class="profile-grid-tab ${currentTab === "posts" ? "active" : ""}" aria-label="Publicações">${PROFILE_GRID_TAB_ICON}</a>
+      ${showAboutTab ? `<a href="#/u/${encodeURIComponent(address)}?tab=about" class="profile-grid-tab profile-grid-tab-text ${currentTab === "about" ? "active" : ""}">Sobre</a>` : ""}
+    </nav>`;
 
   if (currentTab === "posts") {
-    if (!authorPostList.length) {
-      html += `<div class="empty"><p>Nenhum post publicado por este autor.</p></div>`;
-    } else {
-      const postCards = authorPostList.map((p) => renderPostItem(p, { isPinned: p.id === finalPinned })).join("");
-      html += `<div class="feed-container" style="margin-top:0.75rem;">${postCards}</div>`;
+    html += renderProfilePostGrid(authorPostList, finalPinned);
+  } else {
+    html += `<div class="profile-grid-about">`;
+    html += renderOfficialPlatformAboutBlurb(address);
+    html += `<p class="meta profile-route-id">ID de rede: <code>${escapeHtml(address)}</code></p>`;
+    html += renderProfileReadme(address, displayName, finalReadme, isCurrentWallet);
+    if (isCurrentWallet) {
+      html += renderProfileActions(
+        address,
+        isCurrentWallet,
+        handle,
+        displayName,
+        hasWallet,
+        balance,
+        pixKey,
+        finalGithub,
+        oauthProvider,
+        isBlocked,
+        isMuted,
+        meshDiscoverable,
+      );
     }
-  } else if (currentTab === "starred") {
-    if (!starredList.length) {
-      html += `<div class="empty"><p>Nenhum post favoritado com estrela ⭐ ainda.</p></div>`;
-    } else {
-      const starredCards = starredList.map((p) => renderPostItem(p)).join("");
-      html += `<div class="feed-container" style="margin-top:0.75rem;">${starredCards}</div>`;
+    if (starredList.length) {
+      html += `<h3 class="profile-grid-about-heading">Estrelados (${starredList.length})</h3>`;
+      html += `<div class="feed-container profile-grid-about-feed">${starredList.map((p) => renderPostItem(p)).join("")}</div>`;
     }
-  } else if (currentTab === "communities") {
-    if (!memberships.length) {
-      html += `<div class="empty"><p>Nenhuma comunidade registrada neste perfil.</p></div>`;
-    } else {
-      const list = memberships
-        .map(
-          (m) => `
+    if (memberships.length) {
+      html += `<h3 class="profile-grid-about-heading">Comunidades (${memberships.length})</h3>`;
+      html += `<div class="card-list">${memberships.map((m) => `
         <div class="card" style="padding:10px 14px; margin-top:0.5rem;">
-          <a href="#/c/${encodeURIComponent(m.communityId)}">
-            <h3 style="margin:0 0 2px;">${escapeHtml(m.communityId)}</h3>
-          </a>
+          <a href="#/c/${encodeURIComponent(m.communityId)}"><h3 style="margin:0 0 2px;">${escapeHtml(m.communityId)}</h3></a>
           <span class="meta">Membro confirmado</span>
-        </div>`
-        )
-        .join("");
-      html += `<div class="card-list">${list}</div>`;
+        </div>`).join("")}</div>`;
     }
+    if (activeTab === "starred" && !starredList.length) {
+      html += `<div class="empty"><p>Nenhum post favoritado com estrela ⭐ ainda.</p></div>`;
+    }
+    if (activeTab === "communities" && !memberships.length) {
+      html += `<div class="empty"><p>Nenhuma comunidade registrada neste perfil.</p></div>`;
+    }
+    html += `</div>`;
   }
 
+  html += `</div>`;
   main.innerHTML = html;
 }
 

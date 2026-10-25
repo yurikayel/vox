@@ -57,6 +57,7 @@ export {
 
 export {
   renderProfile,
+  renderProfileGridNotFound,
   renderPixLookup,
   renderHandleConflict,
   renderWallet,

@@ -44,6 +44,7 @@ test("roadmap-ui: renderProfile exibe backup de identidade para conta própria",
   const main = createContainer();
   render.renderProfile(main, "vx_me", [], true, "", {
     displayName: "Minha Conta",
+    activeTab: "about",
   });
   const html = main.innerHTML;
   assert.ok(html.includes("Backup &amp; Restauração de Conta") || html.includes("Backup & Restauração de Conta"));
