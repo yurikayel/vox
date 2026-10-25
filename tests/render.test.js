@@ -178,7 +178,7 @@ test("render - renderDmList e renderDmThread", () => {
   ];
   render.renderDmList(mainList, convs, "addr_alice");
   assert.ok(mainList.innerHTML.includes("Mensagens"));
-  assert.ok(mainList.innerHTML.includes("Privadas. Só neste aparelho."));
+  assert.ok(mainList.innerHTML.includes("Conversas privadas neste aparelho."));
   assert.ok(mainList.innerHTML.includes("addr_bob"));
   assert.ok(mainList.innerHTML.includes("E aí Alice"));
 
@@ -191,7 +191,7 @@ test("render - renderDmList e renderDmThread", () => {
     isRtcOnline: true,
     hasDmPub: true,
   });
-  assert.ok(mainThread.innerHTML.includes("Conectado"));
+  assert.ok(mainThread.innerHTML.includes("Online agora"));
   assert.ok(mainThread.innerHTML.includes("Oi Bob"));
   assert.ok(mainThread.innerHTML.includes("Oi Alice!"));
   assert.ok(mainThread.innerHTML.includes("btn-send-dm"));
