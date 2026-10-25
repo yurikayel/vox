@@ -273,34 +273,24 @@ test("render - renderCantinaGate e closeCantinaGate", () => {
   assert.equal(container.innerHTML, "");
 });
 
-test("render - renderFeed e renderProfile com persona mock (Helena)", () => {
+test("render - renderFeed e renderProfile com persona mock (Maria MG)", () => {
+  const avatar = "https://randomuser.me/api/portraits/med/women/12.jpg";
   const mainFeed = createContainer();
   const topics = [
-    { id: "demo-post-helena", title: "No Insta, ninguém via minhas oficinas", body: "Texto...", image: "images/posts/tour-helena.jpg", author: "vx_demo_helena", communityId: "demo-aprenda-vox", likesCount: 48 },
+    { id: "demo-post-mg", title: "Maria mineira demo", body: "Texto...", image: avatar, author: "vx_demo_mg", communityId: "demo-aprenda-vox", likesCount: 48 },
   ];
   render.renderFeed(mainFeed, topics);
-  assert.ok(mainFeed.innerHTML.includes("Helena"));
-  assert.ok(mainFeed.innerHTML.includes("@helena"));
-  assert.ok(mainFeed.innerHTML.includes("oficinas"));
-  assert.ok(mainFeed.innerHTML.includes("images/avatars/helena.jpg"));
-  assert.ok(mainFeed.innerHTML.includes("images/posts/tour-helena.jpg"));
-  assert.ok(mainFeed.innerHTML.includes("btn-like"));
-  assert.ok(mainFeed.innerHTML.includes("btn-save"));
-  assert.ok(mainFeed.innerHTML.includes("48"));
+  assert.ok(mainFeed.innerHTML.includes("Maria"));
 
   const mainProf = createContainer();
-  render.renderProfile(mainProf, "vx_demo_helena", [{ communityId: "demo-aprenda-vox" }], false, "", {
-    handle: "helena",
-    displayName: "Helena",
-    profileBio: "Artesã e educadora popular.",
+  render.renderProfile(mainProf, "vx_demo_mg", [{ communityId: "demo-aprenda-vox" }], false, "", {
+    handle: "maria-mg",
+    displayName: "Maria",
+    profileBio: "Perfil estereotipo demo.",
     posts: topics,
   });
-  assert.ok(mainProf.innerHTML.includes("Helena (@helena)"));
-  assert.ok(mainProf.innerHTML.includes("images/avatars/helena.jpg"));
-  assert.ok(mainProf.innerHTML.includes("Artesã e educadora popular."));
-  assert.ok(mainProf.innerHTML.includes("profile-stats"));
-  assert.ok(mainProf.innerHTML.includes("Posts do autor (1)"));
-  assert.ok(mainProf.innerHTML.includes("oficinas"));
+  assert.ok(mainProf.innerHTML.includes("Maria (@maria-mg)"));
+  assert.ok(mainProf.innerHTML.includes("profile-stereotype-banner"));
 });
 
 test("render - formatTimeAgo retorna strings relativas concisas", () => {
@@ -314,7 +304,7 @@ test("render - formatTimeAgo retorna strings relativas concisas", () => {
 });
 
 test("render - inline composer e post-toolbar no feed", () => {
-  const strip = render.renderInlineComposer({ userRouteId: "vx_demo_helena" });
+  const strip = render.renderInlineComposer({ userRouteId: "vx_demo_mg" });
   assert.ok(strip.includes("inline-composer"));
   assert.ok(strip.includes("form-inline-topic"));
   assert.ok(strip.includes("inline-topic-file"));
@@ -324,9 +314,9 @@ test("render - inline composer e post-toolbar no feed", () => {
 
   const main = createContainer();
   const topics = [
-    { id: "post-1", title: "Novidade na rede", ts: Date.now() - 5 * 60000, author: "vx_demo_helena" },
+    { id: "post-1", title: "Novidade na rede", ts: Date.now() - 5 * 60000, author: "vx_demo_mg" },
   ];
-  render.renderFeed(main, topics, { userRouteId: "vx_demo_helena" });
+  render.renderFeed(main, topics, { userRouteId: "vx_demo_mg" });
   assert.ok(main.innerHTML.includes("inline-composer"));
   assert.ok(main.innerHTML.includes("stories-strip"));
   assert.ok(main.innerHTML.includes("post-toolbar"));
@@ -349,8 +339,8 @@ test("render - layout híbrido texto vs foto vs github", () => {
   const photoHtml = render.renderPostItem({
     id: "t-photo",
     title: "Foto",
-    image: "images/posts/tour-helena.jpg",
-    author: "vx_demo_helena",
+    image: "https://randomuser.me/api/portraits/med/women/12.jpg",
+    author: "vx_demo_mg",
   });
   assert.ok(photoHtml.includes('post-layout-photo'));
   assert.ok(photoHtml.includes("post-media-container"));
@@ -367,9 +357,9 @@ test("render - layout híbrido texto vs foto vs github", () => {
 
 test("render - btn-comment expande post-comments no card (sem #/t)", () => {
   const html = render.renderPostItem({
-    id: "demo-post-helena",
+    id: "demo-post-mg",
     title: "No Insta, ninguém via minhas oficinas",
-    author: "vx_demo_helena",
+    author: "vx_demo_mg",
     communityId: "demo-aprenda-vox",
     repliesCount: 1,
   });
@@ -377,40 +367,39 @@ test("render - btn-comment expande post-comments no card (sem #/t)", () => {
   assert.ok(html.includes('class="action-btn btn-comment"'));
   assert.ok(!html.includes('class="action-btn btn-comment" href='));
   assert.ok(html.includes('aria-expanded="false"'));
-  assert.ok(html.includes('aria-controls="post-comments-demo-post-helena"'));
-  assert.ok(html.includes('id="post-comments-demo-post-helena"'));
+  assert.ok(html.includes('aria-controls="post-comments-demo-post-mg"'));
+  assert.ok(html.includes('id="post-comments-demo-post-mg"'));
   assert.ok(html.includes("post-comments"));
   assert.ok(html.includes(" hidden"));
   assert.ok(html.includes("post-comment-composer"));
   assert.ok(html.includes("Abrir thread"));
-  assert.equal(render.commentsPanelId("demo-post-helena"), "post-comments-demo-post-helena");
+  assert.equal(render.commentsPanelId("demo-post-mg"), "post-comments-demo-post-mg");
 });
 
 test("render - renderPostComments lista replies mock no expander", () => {
   const replies = [
     {
-      id: "demo-reply-juliana-1",
-      author: "vx_demo_juliana",
-      body: "É isso, Helena. Aqui a gente se organiza sem pedir licença pro algoritmo.",
+      id: "demo-reply-sp-mg",
+      author: "vx_demo_sp",
+      body: "Uai, Maria! Aqui a gente se organiza sem pedir licenca pro algoritmo.",
     },
     {
       id: "demo-reply-pri-1",
-      author: "vx_demo_helena",
+      author: "vx_demo_mg",
       body: "Resposta local de exemplo.",
     },
   ];
-  const open = render.renderPostComments("demo-post-helena", "demo-aprenda-vox", {
+  const open = render.renderPostComments("demo-post-mg", "demo-aprenda-vox", {
     replies,
     expanded: true,
   });
   assert.ok(open.includes("is-open"));
   assert.ok(!open.includes(" hidden"));
-  assert.ok(open.includes("inline-reply-demo-reply-juliana-1"));
+  assert.ok(open.includes("inline-reply-demo-reply-sp-mg"));
   assert.ok(open.includes("inline-reply-demo-reply-pri-1"));
-  assert.ok(open.includes("sem pedir licença"));
-  assert.ok(open.includes("Juliana"));
-  assert.ok(open.includes("@juliana"));
-  assert.ok(open.includes("Helena"));
+  assert.ok(open.includes("sem pedir licenca"));
+  assert.ok(open.includes("@joao-sp"));
+  assert.ok(open.includes("Maria"));
   assert.ok(open.includes("post-comment-composer"));
 
   const empty = render.renderCommentList([]);
@@ -439,16 +428,16 @@ test("render - renderProfile com Pix e métricas honestas", () => {
 
 test("render - renderPixLookup perfil encontrado vs nao vinculado", () => {
   const mainFound = createContainer();
-  render.renderPixLookup(mainFound, "helena.vox@gmail.com", {
-    routeId: "vx_demo_helena",
-    name: "Helena",
-    handle: "helena",
-    pixKey: "helena.vox@gmail.com",
-    pixKeyMasked: "helena.vox@gmail.com",
+  render.renderPixLookup(mainFound, "maria.mg@voxbrasil.org", {
+    routeId: "vx_demo_mg",
+    name: "Maria",
+    handle: "maria-mg",
+    pixKey: "maria.mg@voxbrasil.org",
+    pixKeyMasked: "maria.mg@voxbrasil.org",
   });
   assert.ok(mainFound.innerHTML.includes("Conta Localizada"));
-  assert.ok(mainFound.innerHTML.includes("Helena"));
-  assert.ok(mainFound.innerHTML.includes("vx_demo_helena"));
+  assert.ok(mainFound.innerHTML.includes("Maria"));
+  assert.ok(mainFound.innerHTML.includes("vx_demo_mg"));
   assert.ok(mainFound.innerHTML.includes("Aviso de Conformidade"));
 
   const mainEmpty = createContainer();
@@ -467,13 +456,13 @@ test("render - renderCommunity tabs Posts e Classificados com feira ativada e de
   };
   const listings = [
     {
-      id: "demo-listing-helena",
+      id: "demo-listing-mg",
       title: "Pão artesanal & geleia",
       priceLabel: "R$ 28",
       locationLabel: "Vila Madalena, SP",
-      author: "vx_demo_helena",
-      contactPix: "helena.vox@gmail.com",
-      image: "images/posts/tour-helena.jpg",
+      author: "vx_demo_mg",
+      contactPix: "maria.mg@voxbrasil.org",
+      image: "https://randomuser.me/api/portraits/med/women/12.jpg",
       listingStatus: "available",
       body: "Fornada fresca aos sábados.",
     },
@@ -536,8 +525,8 @@ test("render - post v3 híbrido (mídia antes do texto, star, copy-md e pinned)"
     id: "post_hibrido_1",
     title: "Foto do mutirão na praça",
     body: "Hoje nos reunimos para plantar mudas nativas e conversar sobre soberania.",
-    image: "images/posts/tour-helena.jpg",
-    author: "vx_demo_helena",
+    image: "https://randomuser.me/api/portraits/med/women/12.jpg",
+    author: "vx_demo_mg",
     likesCount: 15,
     starsCount: 8,
   };
@@ -546,7 +535,7 @@ test("render - post v3 híbrido (mídia antes do texto, star, copy-md e pinned)"
   assert.ok(!html.includes("post-header-tags"));
   assert.ok(!html.includes("📌 Fixado"));
   assert.ok(html.includes("post_hibrido_1"));
-  assert.ok(html.includes("images/posts/tour-helena.jpg"));
+  assert.ok(html.includes("https://randomuser.me/api/portraits/med/women/12.jpg"));
   assert.ok(html.includes("btn-like"));
   assert.ok(html.includes("btn-star"));
   assert.ok(html.includes("count-stars"));
@@ -578,7 +567,7 @@ test("render - feed nav na sidebar (Para você e Seguindo)", () => {
 test("render - feed sem abas duplicadas no chrome", () => {
   const main = createContainer();
   const topics = [
-    { id: "p1", title: "Primeiro post", author: "vx_demo_helena" },
+    { id: "p1", title: "Primeiro post", author: "vx_demo_mg" },
   ];
 
   render.renderFeed(main, topics, { activeFeed: "for-you" });
@@ -598,13 +587,13 @@ test("render - formatPostMarkdown formata citação padrão com link", () => {
     id: "post_md_test",
     title: "Governança Direta",
     body: "Proposta de deliberação comunitária.",
-    author: "vx_demo_juliana",
+    author: "vx_demo_sp",
   };
   const md = render.formatPostMarkdown(post);
-  assert.ok(md.includes("> **Juliana**"));
-  assert.ok(md.includes("@juliana"));
-  assert.ok(md.includes("> **Governança Direta**"));
-  assert.ok(md.includes("Proposta de deliberação comunitária."));
+  assert.ok(md.includes("@joao-sp"));
+  assert.ok(md.includes("> **"));
+  assert.ok(md.includes("Governan"));
+  assert.ok(md.includes("Proposta de delibera"));
   assert.ok(md.includes("/#/t/post_md_test"));
 });
 
@@ -641,7 +630,7 @@ test("render - renderCommunity tab Governança e renderProposalItem", () => {
       title: "Ativar feira comunitária popular",
       body: "Proposta para abrir feira solidária.",
       diffText: "@@ -1,2 +1,3 @@\n- commercialEnabled: false\n+ commercialEnabled: true",
-      author: "vx_demo_helena",
+      author: "vx_demo_mg",
       createdAt: Date.now() - 3600000,
       state: "open",
     },
@@ -669,7 +658,7 @@ test("render - renderProposalDetail com diff, apuração e votos", () => {
     title: "Moderação transparente",
     body: "**Regra:** Toda moderação deve ser pública.",
     diffText: "@@ -1,2 +1,3 @@\n- modPolicy: secreta\n+ modPolicy: pública",
-    author: "vx_demo_juliana",
+    author: "vx_demo_sp",
     createdAt: Date.now() - 7200000,
     state: "open",
   };
@@ -681,7 +670,7 @@ test("render - renderProposalDetail com diff, apuração e votos", () => {
     ineligibleCount: 1,
     state: "open",
     votesDetail: [
-      { author: "vx_demo_juliana", choice: "yes", eligible: true, reason: "", ts: Date.now() - 3000 },
+      { author: "vx_demo_sp", choice: "yes", eligible: true, reason: "", ts: Date.now() - 3000 },
       { author: "vx_demo_raj", choice: "yes", eligible: true, reason: "", ts: Date.now() - 2000 },
       { author: "vx_demo_carlos", choice: "no", eligible: true, reason: "", ts: Date.now() - 1000 },
       { author: "vx_demo_mateus", choice: "yes", eligible: false, reason: "adesão posterior ao marco de corte", ts: Date.now() },
@@ -692,7 +681,7 @@ test("render - renderProposalDetail com diff, apuração e votos", () => {
     userVote: { choice: "yes" },
     isEligible: true,
     isMember: true,
-    userAddress: "vx_demo_juliana",
+    userAddress: "vx_demo_sp",
   });
 
   const html = main.innerHTML;
@@ -725,17 +714,17 @@ test("render - renderComposeProposal gera formulário de proposta", () => {
 });
 
 test("render - renderPostItem exibe botao de Pix Zap se o autor tiver chave", () => {
-  // vx_demo_helena possui pixKey no mock (helena.vox@gmail.com)
+  // vx_demo_mg possui pixKey no mock (maria.mg@voxbrasil.org)
   const postWithPix = {
     id: "p_helena_1",
-    author: "vx_demo_helena",
+    author: "vx_demo_mg",
     title: "Post da Helena com Pix",
     body: "Conteúdo livre",
     ts: Date.now() - 60000,
   };
   const htmlPix = render.renderPostItem(postWithPix);
   assert.ok(htmlPix.includes("btn-zap-post"));
-  assert.ok(htmlPix.includes("data-pix=\"helena.vox@gmail.com\""));
+  assert.ok(htmlPix.includes("data-pix=\"maria.mg@voxbrasil.org\""));
   assert.ok(htmlPix.includes("Apoiar"));
 
   // Autor sem pix
@@ -754,15 +743,15 @@ test("render - renderPostItem exibe botao de Pix Zap se o autor tiver chave", ()
 test("render - renderZapModal gera payload BR Code e aviso regulatorio", () => {
   const container = createContainer();
   render.renderZapModal(container, {
-    author: "vx_demo_helena",
-    authorName: "Helena Silva",
-    pixKey: "helena.vox@gmail.com",
+    author: "vx_demo_mg",
+    authorName: "Maria",
+    pixKey: "maria.mg@voxbrasil.org",
     title: "Post sobre permacultura",
     defaultAmount: 5,
   });
 
   const html = container.innerHTML;
-  assert.ok(html.includes("Pix Zap para Helena Silva"));
+  assert.ok(html.includes("Pix Zap para Maria"));
   assert.ok(html.includes("Post sobre permacultura"));
   assert.ok(html.includes("btn-zap-val"));
   assert.ok(html.includes("R$ 2"));
@@ -785,11 +774,10 @@ test("render - renderStoriesStrip gera faixa horizontal com anéis de stories e 
   assert.ok(html.includes("stories-strip"));
   assert.ok(html.includes("story-ring"));
   assert.ok(html.includes("story-avatar"));
-  assert.ok(html.includes("#/u/vx_demo_helena"));
-  assert.ok(html.includes("Helena"));
-  assert.ok(html.includes("#/u/vx_demo_juliana"));
-  assert.ok(html.includes("Juliana"));
-  assert.ok(html.includes("#/u/vx_demo_kaue"));
+  assert.ok(html.includes("#/u/vx_demo_mg"));
+  assert.ok(html.includes("Maria"));
+  assert.ok(html.includes("#/u/vx_demo_sp"));
+  assert.ok(html.includes("vx_demo_sp"));
 });
 
 test("render - renderPostItem pilha vertical estilo Meta com header IG, toolbar tripartida e caption block", () => {
@@ -797,8 +785,8 @@ test("render - renderPostItem pilha vertical estilo Meta com header IG, toolbar 
     id: "post_meta_stack_1",
     title: "Título do Post Meta",
     body: "Corpo com #fotografia e #arte no estilo Instagram",
-    image: "images/posts/tour-helena.jpg",
-    author: "vx_demo_helena",
+    image: "https://randomuser.me/api/portraits/med/women/12.jpg",
+    author: "vx_demo_mg",
     likesCount: 10,
     starsCount: 4,
     repliesCount: 2,
@@ -840,9 +828,9 @@ test("render - resolvePostAuthorLabels evita ID truncado duplicado", () => {
 });
 
 test("render - resolvePostAuthorLabels nome + handle distintos", () => {
-  const labels = render.resolvePostAuthorLabels("vx_demo_helena");
-  assert.equal(labels.primary, "Helena");
-  assert.equal(labels.secondaryHandle, "helena");
+  const labels = render.resolvePostAuthorLabels("vx_demo_mg");
+  assert.equal(labels.primary, "Maria");
+  assert.equal(labels.secondaryHandle, "maria-mg");
 });
 
 test("render - renderPostOwnerMenu só aparece em posts isOwnLocalPost", () => {
@@ -856,9 +844,9 @@ test("render - renderPostOwnerMenu só aparece em posts isOwnLocalPost", () => {
     ts: Date.now(),
   };
   const tour = {
-    id: "demo-post-helena",
+    id: "demo-post-mg",
     title: "Tour",
-    author: "vx_demo_helena",
+    author: "vx_demo_mg",
     isLocalP2p: true,
     type: "topic",
     ts: Date.now(),

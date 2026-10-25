@@ -72,38 +72,38 @@ test("social - salvos/bookmarks toggle", () => {
 test("social - watch perfis e lista de acompanhados", () => {
   localStorage.clear();
 
-  assert.equal(social.isWatching("vx_demo_helena"), false);
+  assert.equal(social.isWatching("vx_demo_mg"), false);
   assert.deepEqual(social.getWatchedProfiles(), []);
 
   // Começar a acompanhar
-  const watching = social.toggleWatch("vx_demo_helena");
+  const watching = social.toggleWatch("vx_demo_mg");
   assert.equal(watching, true);
-  assert.equal(social.isWatching("vx_demo_helena"), true);
-  assert.deepEqual(social.getWatchedProfiles(), ["vx_demo_helena"]);
-  assert.equal(social.getFollowersCount("vx_demo_helena", 10), 11);
+  assert.equal(social.isWatching("vx_demo_mg"), true);
+  assert.deepEqual(social.getWatchedProfiles(), ["vx_demo_mg"]);
+  assert.equal(social.getFollowersCount("vx_demo_mg", 10), 11);
 
   // Parar de acompanhar
-  const unwatching = social.toggleWatch("vx_demo_helena");
+  const unwatching = social.toggleWatch("vx_demo_mg");
   assert.equal(unwatching, false);
-  assert.equal(social.isWatching("vx_demo_helena"), false);
+  assert.equal(social.isWatching("vx_demo_mg"), false);
   assert.deepEqual(social.getWatchedProfiles(), []);
-  assert.equal(social.getFollowersCount("vx_demo_helena", 10), 10);
+  assert.equal(social.getFollowersCount("vx_demo_mg", 10), 10);
 });
 
 test("social - post fixado por autor (pinned)", () => {
   localStorage.clear();
 
-  assert.equal(social.getPinnedPostId("vx_demo_helena"), "");
-  assert.equal(social.isPostPinned("vx_demo_helena", "demo-post-helena"), false);
+  assert.equal(social.getPinnedPostId("vx_demo_mg"), "");
+  assert.equal(social.isPostPinned("vx_demo_mg", "demo-post-mg"), false);
 
   // Fixar
-  social.setPinnedPostId("vx_demo_helena", "demo-post-helena");
-  assert.equal(social.getPinnedPostId("vx_demo_helena"), "demo-post-helena");
-  assert.equal(social.isPostPinned("vx_demo_helena", "demo-post-helena"), true);
+  social.setPinnedPostId("vx_demo_mg", "demo-post-mg");
+  assert.equal(social.getPinnedPostId("vx_demo_mg"), "demo-post-mg");
+  assert.equal(social.isPostPinned("vx_demo_mg", "demo-post-mg"), true);
 
   // Desafixar
-  social.setPinnedPostId("vx_demo_helena", "");
-  assert.equal(social.getPinnedPostId("vx_demo_helena"), "");
+  social.setPinnedPostId("vx_demo_mg", "");
+  assert.equal(social.getPinnedPostId("vx_demo_mg"), "");
 });
 
 test("social - readme local e github handle", () => {

@@ -43,7 +43,7 @@ function renderComecar() {
       `<p>No menu lateral (quando você está no Início), alterne <strong>Para você</strong> e <strong>Seguindo</strong>. Seguindo mostra autores que você marcou; Para você mistura descoberta e conteúdo recente do índice.</p>
       ${layer(
         "Modo demonstração",
-        `<p>Se gateways Arweave falharem e não houver cache nem par, o app entra em <strong>tour de demonstração</strong> (<code>mock.js</code>) para você explorar telas sem travar — aviso aparece no topo do feed.</p>`
+        `<p>Se gateways Arweave falharem e não houver cache nem par, o app entra em <strong>tour de demonstração</strong> (<code>mock.js</code>) — <strong>27 perfis estereótipo</strong> (um por UF, ex. <code>#/h/maria-mg</code>) para testar feed e perfil sem travar.</p>`
       )}`
     )}`;
 
