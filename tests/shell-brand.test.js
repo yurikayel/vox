@@ -6,6 +6,11 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { brandMarkSrcForColorScheme } from "../client/js/render/shell.js";
 
+const styleCss = fs.readFileSync(
+  path.join(path.dirname(fileURLToPath(import.meta.url)), "../client/css/style.css"),
+  "utf8"
+);
+
 const shellSrc = fs.readFileSync(
   path.join(path.dirname(fileURLToPath(import.meta.url)), "../client/js/render/shell.js"),
   "utf8"
@@ -42,4 +47,12 @@ test("shell sidebar — IA estável (nav, postar, feed slot, footer)", () => {
   assert.ok(brandIdx >= 0 && brandIdx < navIdx && navIdx < composeIdx && composeIdx < feedIdx && feedIdx < footerIdx);
   assert.ok(!sidebarBlock.includes("${feedNav}"));
   assert.ok(shellSrc.includes("classList.add(\"is-active\")"));
+});
+
+test("shell layout — no page top bar strip", () => {
+  assert.ok(!shellSrc.includes("top-bar"));
+  assert.ok(!shellSrc.includes("<header class=\"top-bar\""));
+  assert.ok(!shellSrc.includes("topBarHtml"));
+  assert.ok(!styleCss.includes(".top-bar"));
+  assert.ok(shellSrc.includes("<main id=\"app-main\"></main>"));
 });

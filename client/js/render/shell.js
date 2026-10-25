@@ -217,16 +217,11 @@ export function renderShell({
   const chipHtml = renderNetworkChip(metrics, rtcStatus, settings);
   const walletBadge = renderWalletBadge(walletAddress);
   const sidebarHtml = renderSidebar(activeTab, { showFeedNav, activeFeed, chipHtml, walletBadge });
-  const pageTitle = title ? `<span class="top-bar-title">${escapeHtml(title)}</span>` : "";
-  const topBarHtml = title
-    ? `<header class="top-bar"><div class="top-bar-start">${pageTitle}</div></header>`
-    : "";
 
   root().innerHTML = `
     <div class="app-layout">
       ${sidebarHtml}
       <div class="main-column">
-        ${topBarHtml}
         <main id="app-main"></main>
         <footer class="app-footer">Vox · ${escapeHtml(appShellFooterTagline)} · <a href="./proposta-vox.html" target="_blank">Proposta</a></footer>
       </div>
