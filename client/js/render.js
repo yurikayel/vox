@@ -54,6 +54,8 @@ export {
   renderProposalVotingBox,
   renderProposalVotesList,
   renderComposeProposal,
+  computeCommunityNeighborStats,
+  renderCommunitySeedChecklist,
 } from "./render/community.js";
 
 export {
