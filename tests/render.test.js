@@ -192,6 +192,7 @@ test("render - renderCommunity hero Orkut-style Entrar e layout", () => {
   assert.ok(html.includes("Recado da comunidade"));
   assert.ok(html.includes("community-vox-layout"));
   assert.ok(html.includes("Membros online"));
+  assert.ok(html.includes("community-vox-online-grid"));
   assert.ok(html.includes("27 membros") || html.includes("27&nbsp;membros"));
 
   const mainMember = createContainer();
@@ -201,6 +202,23 @@ test("render - renderCommunity hero Orkut-style Entrar e layout", () => {
   });
   assert.ok(mainMember.innerHTML.includes("is-member"));
   assert.ok(mainMember.innerHTML.includes("Membro"));
+});
+
+test("render - renderCommunity Posts tab usa lista de tópicos estilo fórum (sem hero IG)", () => {
+  const main = createContainer();
+  const topics = mock.MOCK_DEMO_TOPICS.slice(0, 3);
+  render.renderCommunity(main, "demo-aprenda-vox", topics, mock.MOCK_DEMO_COMMUNITY, {
+    activeTab: "posts",
+  });
+  const html = main.innerHTML;
+  assert.ok(html.includes("community-vox-topic-list"));
+  assert.ok(html.includes("community-topic-row"));
+  assert.ok(html.includes(`#/t/${encodeURIComponent(topics[0].id)}`));
+  assert.ok(html.includes("resposta"));
+  assert.ok(html.includes("community-topic-row-thumb"));
+  assert.ok(!html.includes("post-media-hero"));
+  assert.ok(!html.includes("post-photo-bleed"));
+  assert.ok(!html.includes("feed-container community-vox-feed"));
 });
 
 test("render - renderDmList e renderDmThread", () => {
