@@ -267,9 +267,9 @@ Se os gateways Arweave estiverem temporariamente inacessíveis e não houver cac
 
 ---
 
-## 10. UI & Copy — Guia de Estilo Híbrido X / Instagram
+## 10. UI & Copy — Guia de superfícies sociais
 
-O PWA adota uma experiência leve e intuitiva inspirada no melhor do X e do Instagram:
+O PWA adota uma experiência leve e intuitiva com padrões de mercado para leitura e engajamento:
 - **Chrome mínimo:** Barra superior fina (~52px) com logo e chip de status da rede; sem gradientes pesados.
 - **Navegação rápida:** TabBar inferior no mobile e Sidebar esquerda no desktop (≥768px).
 - **Para você (Feed):** Timeline cronológica com divisores sutis (1px), avatares redondos, título do post e ações rápidas (💬 Responder, ↗ Compartilhar). Sem termos herdados do Varanda (ex: "A Rua", "Cadeiras").
@@ -365,9 +365,9 @@ O elenco é desenhado para refletir a diversidade brasileira autêntica, evitand
 - **Isolamento de Dados:** Os posts são gravados via `cacheNode.saveLocalPost` com `isLocalP2p: true` e metadados `externalPain` e `voxResolution: "now"`, sem poluir o broadcast de outros aparelhos.
 - **Restauração Rápida:** O botão **"🔄 Restaurar tour demo"** em `#/settings/network` (seção Avançado) permite recarregar o conteúdo educativo a qualquer momento para fins de testes e QA.
 
-### 12.3 Experiência Visual InstaTwitter (Fotos, Curtidas e Salvos)
+### 12.3 Experiência visual no feed (fotos, curtidas e salvos)
 
-O PWA traz a vivacidade e o engajamento visual de redes sociais modernas (híbrido X / Instagram):
+O PWA traz engajamento visual com layouts distintos por tipo de publicação:
 - **Avatares com Foto:** Perfis possuem imagens reais em `client/images/avatars/`, com fallback automático para iniciais em caso de falha de carregamento.
 - **Posts com Imagens:** Cards no feed e tópicos completos exibem fotografias de alta resolução (`client/images/posts/`), com cantos arredondados, enquadramento responsivo (`max-height: 440px`) e elevação sutil em hover.
 - **Ações Interativas:**
@@ -454,9 +454,9 @@ A Sprint Feira M1 atende quem utiliza redes sociais para sustento e venda direta
 
 ---
 
-## 16. UI Social v3 (Post Híbrido InstaTwitter), Feed Segmentado & GitHub UX (Sprint v5.10)
+## 16. UI Social v3 (post multimodal), feed segmentado & GitHub UX (Sprint v5.10)
 
-A versão 5.10 consolida o feed híbrido de alto nível estético e traz os elementos de interação social inspirados no melhor do GitHub e do Instagram:
+A versão 5.10 consolida o feed multimodal e traz elementos de interação social alinhados ao padrão GitHub para código e ao padrão de cartão para mídia:
 
 ### 16.1 Post Híbrido Arejado
 - **Hierarquia Visual Estrita:** Autor $\to$ Mídia (fotografia em proporção 4:5 / full-bleed) $\to$ Título $\to$ Texto do post $\to$ Metadados $\to$ Toolbar unificada.
@@ -933,9 +933,9 @@ Três direções consideradas (Google Fonts, PT-BR em 14–16px na sidebar):
 
 ---
 
-## 31. Feed — barra de ações e Seguir (IG)
+## 31. Feed — barra de ações e Seguir (hero de mídia)
 
-**Data:** 2026-10-25 · **SW:** `vox-pwa-v6.61-ig-reels-header`
+**Data:** 2026-10-25 · **SW:** ver `CACHE_NAME` em `client/sw.js`
 
 | Ação | Onde fica | Decisão |
 |------|-----------|---------|
@@ -945,17 +945,34 @@ Três direções consideradas (Google Fonts, PT-BR em 14–16px na sidebar):
 | ⚡ Apoiar (Pix) | Barra primária, só ícone | **Mantém** — apoio financeiro direto (Fase A); rótulo só no `aria-label` para não poluir. |
 | ⭐ Estrela | Menu **⋯** (overflow) | **Recolhe** — afinitude tipo GitHub; power user, não compete com curtida no mobile. |
 | 📋 Copiar Markdown | Menu **⋯** | **Recolhe** — jornalismo/dev; thread `#/t/:id` mantém ações completas. |
-| 🔖 Salvar | Barra secundária (direita) | **Mantém** — padrão IG, ícone único. |
-| **Seguir** | **Header Reels no hero** (`.btn-follow-reels`, texto branco sem pill) | **Fora da barra** — `social.toggleWatch`; oculto em post próprio e conta **Vox Brasil** (`vx_voxbrasil_welcome`). Perfil segue com 👁️ Watch. |
+| 🔖 Salvar | Barra secundária (direita) | **Mantém** — ícone único de salvamento. |
+| **Seguir** | **Header sobre a mídia** (`.btn-overlay-follow`, texto branco sem pill) | **Fora da barra** — `social.toggleWatch`; oculto em post próprio e conta **Vox Brasil** (`vx_voxbrasil_welcome`). Perfil segue com 👁️ Watch. |
 
 Layout: `.toolbar-primary` (engajamento + Pix) · `.toolbar-secondary` (⋯ toolbar + bookmark). Tema celeste nos hovers (`var(--accent-soft)`). Comentários nunca usam `.post-overlay` / scrim — só o card foto tem overlay de legenda.
 
-### 31.1 Header Reels no hero (foto)
+### 31.1 Header sobre mídia (foto)
 
-**Addendum 2026-10-25:** posts `layout=photo` usam `.post-reels-header` **dentro** de `.post-media-hero` (z-index 3), espelhando Reels:
+**Addendum 2026-10-25:** posts `layout=photo` usam `.post-media-header` **dentro** de `.post-media-hero` (z-index 3), faixa compacta sobre a imagem:
 
 - **Esquerda:** avatar → perfil · **nome** branco bold · selo verificado só **Vox Brasil** · `·` · tempo (`formatTimeAgo`) · linha 2 opcional `Demo · UF` (perfis estereótipo).
 - **Direita:** **Seguir** / **Seguindo** (texto, sem pill) · **⋯** abre `#post-more-sheet` (`post-more-menu.js`, handlers em `screens-home.js` + delegação global idempotente).
 - **Scrim:** `.post-media-scrim-top` (fade ~40% no topo, z1) separado de `.post-media-scrim-bottom` (legenda, z2). Legenda/título/hashtags só em `.post-overlay` inferior — **sem** autor duplicado no rodapé.
 - **Sheet PT-BR:** Denunciar · Não tenho interesse · Sobre esta conta · Ir para a publicação · Compartilhar… · Copiar link · Incorporar (toast *em breve* onde stub).
+
+---
+
+## 32. Profile IA (IG-inspired)
+
+**Data:** 2026-10-25 · **SW:** `vox-pwa-v6.65-profile-ig`
+
+`#/u/:routeId` e `#/perfil` usam shell `.profile-ig` (max-width ~935px): avatar grande à esquerda, métricas **publicações · seguidores · seguindo**, `@handle` em negrito, nome e bio, pills **Seguir / Mensagem / Editar perfil** (contextual). Conta **Vox Brasil** mantém avatar squircle + selo ✓; demos UF exibem aviso estereótipo em `<details>` abaixo do header. Abas: grade ▦ (posts em `.profile-ig-grid` 3 colunas, `aspect-ratio: 1`, link `#/t/:id`) e **Sobre** (README, identidade local, estrelados/comunidades legados). Handle inexistente usa o mesmo shell via `renderProfileIgNotFound`. Lógica de dados inalterada (`profile-directory`, mock por `routeId`).
+
+---
+
+## 33. Linguagem de UI e marcas
+
+Padrões de interface (header sobre mídia, grade de publicações, menu ⋯) seguem convenções de mercado para PWAs sociais.
+Marcas de terceiros **não** são referência de implementação nem aparecem em classes CSS, comentários de código ou specs internas.
+Documentação descreve comportamento e hierarquia visual em termos neutros (PT-BR).
+OAuth e compartilhamento nativo citam provedores apenas onde exigido por integração técnica ou política da plataforma.
 

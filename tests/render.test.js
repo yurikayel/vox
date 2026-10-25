@@ -231,6 +231,7 @@ test("render - renderProfile com handle e renderHandleConflict", () => {
     handle: "maria",
     isConflict: true,
     claimants: [{ owner: "addr_maria" }, { owner: "addr_outra_maria" }],
+    activeTab: "about",
   });
   assert.ok(mainProf.innerHTML.includes("@maria"));
   assert.ok(mainProf.innerHTML.includes("Conflito de Handle"));
@@ -294,8 +295,10 @@ test("render - renderFeed e renderProfile com persona mock (MG tour)", () => {
     profileBio: "Perfil estereotipo demo.",
     posts: topics,
   });
-  assert.ok(mainProf.innerHTML.includes(`${demoMg.displayName} (@${demoMg.handle})`));
+  assert.ok(mainProf.innerHTML.includes(`@${demoMg.handle}`));
+  assert.ok(mainProf.innerHTML.includes(demoMg.displayName));
   assert.ok(mainProf.innerHTML.includes("profile-stereotype-banner"));
+  assert.ok(mainProf.innerHTML.includes("profile-grid"));
   assert.ok(mainProf.innerHTML.includes("respeitoso"));
   assert.ok(mainProf.innerHTML.includes("n\u00e3o me leve a mal"));
 });
@@ -421,17 +424,17 @@ test("render - renderProfile com Pix e mÃ©tricas honestas", () => {
   const main = createContainer();
   render.renderProfile(main, "vx_me", [], true, "", {
     displayName: "Meu Perfil",
-    stats: { posts: 3, peersConnected: 4, communities: 2 },
+    stats: { posts: 3, followers: 4, following: 2 },
     pixKey: "12345678909",
     pixKeyMasked: "***.456.789-**",
+    activeTab: "about",
   });
   const html = main.innerHTML;
-  assert.ok(html.includes("profile-cover"));
-  assert.ok(html.includes("profile-avatar-wrap"));
-  assert.ok(html.includes("3"));
-  assert.ok(html.includes("posts"));
-  assert.ok(html.includes("4"));
-  assert.ok(html.includes("aparelhos prÃ³ximos"));
+  assert.ok(html.includes("profile-grid-layout"));
+  assert.ok(html.includes("profile-grid-avatar-wrap"));
+  assert.ok(html.includes("publica"));
+  assert.ok(html.includes("seguidores"));
+  assert.ok(html.includes("seguindo"));
   assert.ok(html.includes("Chave Pix:"));
   assert.ok(html.includes("***.456.789-**"));
   assert.ok(html.includes("form-pix-key"));
@@ -553,11 +556,11 @@ test("render - post v3 hÃ­brido (mÃ­dia antes do texto, star, copy-md e pinned)"
   assert.ok(html.includes("btn-copy-md"));
   assert.ok(html.includes("post-overlay-actions-more"));
   assert.ok(html.includes("post-actions-overlay"));
-  assert.ok(html.includes("btn-follow-reels"));
+  assert.ok(html.includes("btn-overlay-follow"));
   assert.ok(html.includes("btn-save"));
   assert.ok(!html.includes("post-toolbar"));
 
-  // Valida que a tag de mÃ­dia aparece ANTES do tÃ­tulo do post no DOM (hierarquia hÃ­brida InstaTwitter)
+  // Valida que a tag de mídia aparece ANTES do título do post no DOM (layout foto)
   const imgIdx = html.indexOf("post-media-container");
   const titleIdx = html.indexOf("post-overlay-title");
   assert.ok(imgIdx !== -1, "Deve conter post-media-container");
@@ -623,6 +626,7 @@ test("render - renderProfile com README.md, GitHub badge e botÃ£o Watch", () => 
     posts: [
       { id: "post_raj", title: "Criptografia Local", author: "vx_demo_raj" },
     ],
+    activeTab: "about",
   });
 
   const html = main.innerHTML;
@@ -632,9 +636,17 @@ test("render - renderProfile com README.md, GitHub badge e botÃ£o Watch", () => 
   assert.ok(html.includes("profile-github-badge"));
   assert.ok(html.includes("@raj-crypto"));
   assert.ok(html.includes("btn-watch-profile"));
-  assert.ok(html.includes("Acompanhar (Watch)"));
-  assert.ok(html.includes("profile-tabs"));
-  assert.ok(html.includes("Estrelados"));
+  assert.ok(html.includes("Seguir"));
+  assert.ok(html.includes("profile-grid-tabs"));
+  assert.ok(html.includes("Sobre"));
+
+  const mainGrid = createContainer();
+  render.renderProfile(mainGrid, "vx_demo_raj", [], false, "", {
+    handle: "raj",
+    posts: [{ id: "post_raj", title: "Criptografia Local", author: "vx_demo_raj", image: "images/x.jpg" }],
+    activeTab: "posts",
+  });
+  assert.ok(mainGrid.innerHTML.includes("profile-grid-item"));
 });
 
 test("render - renderCommunity tab GovernanÃ§a e renderProposalItem", () => {
@@ -796,11 +808,11 @@ test("render - renderStoriesStrip gera faixa horizontal com anÃ©is de stories e 
   assert.ok(html.includes("vx_demo_sp"));
 });
 
-test("render - renderPostItem pilha vertical estilo Meta com header IG, toolbar tripartida e caption block", () => {
+test("render - renderPostItem pilha vertical foto com header sobre mídia, toolbar tripartida e caption block", () => {
   const post = {
     id: "post_meta_stack_1",
     title: "TÃ­tulo do Post Meta",
-    body: "Corpo com #fotografia e #arte no estilo Instagram",
+    body: "Corpo com #fotografia e #arte em publicação com foto",
     image: "https://randomuser.me/api/portraits/med/women/12.jpg",
     author: "vx_demo_mg",
     likesCount: 10,
@@ -811,10 +823,10 @@ test("render - renderPostItem pilha vertical estilo Meta com header IG, toolbar 
 
   const html = render.renderPostItem(post);
   assert.ok(html.includes("post-overlay"));
-  assert.ok(html.includes("post-reels-header"));
+  assert.ok(html.includes("post-media-header"));
   assert.ok(!html.includes("post-overlay-author"));
   assert.ok(html.includes("post-actions-overlay"));
-  assert.ok(html.includes("btn-follow-reels"));
+  assert.ok(html.includes("btn-overlay-follow"));
   assert.ok(!html.includes("post-caption-block"));
   assert.ok(!html.includes("post-toolbar"));
   assert.ok(html.includes("post-media-hero"));
@@ -847,7 +859,7 @@ test("render - Seguir no hero oculto em post próprio e Vox oficial", () => {
     isOwnLocalPost: true,
     ts: Date.now(),
   });
-  assert.ok(!own.includes("btn-follow-reels"));
+  assert.ok(!own.includes("btn-overlay-follow"));
 
   const official = render.renderPostItem({
     id: "vox1",
@@ -856,8 +868,8 @@ test("render - Seguir no hero oculto em post próprio e Vox oficial", () => {
     author: "vx_voxbrasil_welcome",
     ts: Date.now(),
   });
-  assert.ok(!official.includes("btn-follow-reels"));
-  assert.ok(official.includes("post-reels-verified"));
+  assert.ok(!official.includes("btn-overlay-follow"));
+  assert.ok(official.includes("post-media-header-verified"));
 });
 
 test("render - resolvePostAuthorLabels evita ID truncado duplicado", () => {
