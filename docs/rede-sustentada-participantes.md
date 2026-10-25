@@ -55,6 +55,8 @@ Detalhamento em chat/agente out/2026; rastreio técnico em [backlog-participacao
 ## Referências
 
 - [steward-seed-15min.md](./steward-seed-15min.md) · [steward-relay-kit.md](./steward-relay-kit.md)
+- [brainstorm-auto-escala-organica-2026-10.md](./brainstorm-auto-escala-organica-2026-10.md) (flywheel, SLOs honestos, anti-padrões)
+- [infra-participativa-blindagem-crescimento.md](./infra-participativa-blindagem-crescimento.md) (4 camadas, painel comunitário, visão regulatória — ver [COMPLIANCE-BR.md](../COMPLIANCE-BR.md))
 - [proposta-vox.html](./proposta-vox.html)
 - Lobby politica: § Participação majoritária
 
