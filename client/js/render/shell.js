@@ -37,6 +37,9 @@ function attachBrandMarkTheme() {
 const ICONS = {
   home: `<svg class="tab-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
   communities: `<svg class="tab-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+  people: `<svg class="tab-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>`,
+  feedForYou: `<svg class="tab-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 14.5 8.5 20 9l-4 3.5L17 18l-5-3-5 3 1-5.5L4 9l5.5-.5Z"/></svg>`,
+  following: `<svg class="tab-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>`,
   compose: `<svg class="tab-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>`,
   dm: `<svg class="tab-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`,
   profile: `<svg class="tab-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
@@ -74,14 +77,33 @@ export function renderFeedNav(activeFeed = "for-you") {
   return `
     <nav class="sidebar-feed-nav" aria-label="Alternar feed">
       <a href="#/" class="sidebar-feed-tab ${isForYou ? "active" : ""}"${isForYou ? ' aria-current="page"' : ""}>
-        <span class="sidebar-feed-icon" aria-hidden="true">${ICONS.home}</span>
+        <span class="sidebar-feed-icon" aria-hidden="true">${ICONS.feedForYou}</span>
         <span class="sidebar-feed-label">Para você</span>
       </a>
       <a href="#/?feed=following" class="sidebar-feed-tab ${!isForYou ? "active" : ""}"${!isForYou ? ' aria-current="page"' : ""}>
-        <span class="sidebar-feed-icon" aria-hidden="true">${ICONS.communities}</span>
+        <span class="sidebar-feed-icon" aria-hidden="true">${ICONS.following}</span>
         <span class="sidebar-feed-label">Seguindo</span>
       </a>
     </nav>`;
+}
+
+function renderFeedNavSlot(showFeedNav, activeFeed) {
+  const inner = showFeedNav ? renderFeedNav(activeFeed) : "";
+  const hidden = showFeedNav ? "" : ' hidden aria-hidden="true"';
+  return `<div class="sidebar-feed-slot"${hidden}>${inner}</div>`;
+}
+
+const SIDEBAR_SYNC_PLACEHOLDER = "\u00a0";
+
+function renderSidebarFooter(chipHtml, walletBadge) {
+  return `
+        <div class="sidebar-footer">
+          <div class="sidebar-sync-slot">
+            <span class="sidebar-sync-hint" id="top-sync-hint" aria-live="polite">${SIDEBAR_SYNC_PLACEHOLDER}</span>
+          </div>
+          <div class="sidebar-network-slot">${chipHtml}</div>
+          <div class="sidebar-account-slot">${walletBadge}</div>
+        </div>`;
 }
 
 function attachSidebarBehavior() {
@@ -122,16 +144,15 @@ function renderSidebar(activeTab, { showFeedNav, activeFeed, chipHtml, walletBad
   const isDm = activeTab === "dm";
   const isPeople = activeTab === "people";
   const isProfile = activeTab === "profile" || activeTab === "wallet";
-  const feedNav = showFeedNav ? renderFeedNav(activeFeed) : "";
+  const feedSlot = renderFeedNavSlot(showFeedNav, activeFeed);
 
   return `
     <div class="sidebar-backdrop" id="sidebar-backdrop" hidden aria-hidden="true"></div>
     <aside class="app-sidebar tab-bar" id="app-sidebar" aria-label="Navegação principal">
+      <div class="sidebar-brand">
+        ${renderBrandLink()}
+      </div>
       <div class="sidebar-scroll">
-        <div class="sidebar-brand">
-          ${renderBrandLink()}
-        </div>
-        ${feedNav}
         <nav class="tab-nav" aria-label="Seções">
           <a href="#/" class="tab-item ${isHome ? "active" : ""}"${isHome ? ' aria-current="page"' : ""}>
             <span class="tab-icon">${ICONS.home}</span>
@@ -142,12 +163,8 @@ function renderSidebar(activeTab, { showFeedNav, activeFeed, chipHtml, walletBad
             <span class="tab-label">Comunidades</span>
           </a>
           <a href="#/people" class="tab-item ${isPeople ? "active" : ""}"${isPeople ? ' aria-current="page"' : ""}>
-            <span class="tab-icon">${ICONS.communities}</span>
+            <span class="tab-icon">${ICONS.people}</span>
             <span class="tab-label">Pessoas</span>
-          </a>
-          <a href="#/compose/topic" class="tab-item compose-tab ${isCompose ? "active" : ""}"${isCompose ? ' aria-current="page"' : ""}>
-            <span class="tab-icon">${ICONS.compose}</span>
-            <span class="tab-label">Postar</span>
           </a>
           <a href="#/dm" class="tab-item ${isDm ? "active" : ""}"${isDm ? ' aria-current="page"' : ""}>
             <span class="tab-icon">${ICONS.dm}</span>
@@ -158,12 +175,15 @@ function renderSidebar(activeTab, { showFeedNav, activeFeed, chipHtml, walletBad
             <span class="tab-label">Perfil</span>
           </a>
         </nav>
-        <div class="sidebar-footer">
-          <span class="sidebar-sync-hint" id="top-sync-hint" hidden aria-live="polite"></span>
-          ${chipHtml}
-          ${walletBadge}
+        <div class="sidebar-compose-slot">
+          <a href="#/compose/topic" class="tab-item compose-tab ${isCompose ? "active" : ""}"${isCompose ? ' aria-current="page"' : ""}>
+            <span class="tab-icon">${ICONS.compose}</span>
+            <span class="tab-label">Postar</span>
+          </a>
         </div>
+        ${feedSlot}
       </div>
+      ${renderSidebarFooter(chipHtml, walletBadge)}
       <button type="button" class="sidebar-collapse-btn" id="sidebar-collapse-btn" aria-expanded="true" aria-controls="app-sidebar" aria-label="Recolher ou expandir menu">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
@@ -174,11 +194,11 @@ export function updateTopBarSync(active, detail = "") {
   const el = document.getElementById("top-sync-hint");
   if (!el) return;
   if (active) {
-    el.hidden = false;
+    el.classList.add("is-active");
     el.textContent = detail || "Sincronizando…";
   } else {
-    el.hidden = true;
-    el.textContent = "";
+    el.classList.remove("is-active");
+    el.textContent = SIDEBAR_SYNC_PLACEHOLDER;
   }
 }
 
