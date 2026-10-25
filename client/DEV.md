@@ -998,3 +998,27 @@ OAuth e compartilhamento nativo citam provedores apenas onde exigido por integra
 
 **Não mexido:** overlay hero, react/reply em comentários, DM welcome, Voxpedia, Open Frames.
 
+---
+
+## 35. Comunidades — calor Orkut (referência BR, não clone)
+
+**Data:** 2026-10-25 · **SW:** `vox-pwa-v6.72-orkut-communities` · **Inspiração:** redes sociais comunitárias brasileiras de meados dos anos 2000 (layout acolhedor, fórum por tópicos, recados visíveis) — **sem** logos, nomes ou assets de terceiros; classes `community-vox-*` apenas.
+
+**Layout histórico (pesquisa):** página principal da comunidade, fórum de tópicos (`CommTopics`) e thread de mensagens; menu lateral com **Participar** / entrar na comunidade; dono + até **10 moderadores**; scraps/recados como mensagens rápidas no perfil; redesign posterior com cantos arredondados e tons **azul/ciano** (e temas laranja no perfil); experimental 2009: faixa/header customizável e cor de fundo por comunidade.
+
+**Adotado no Vox (UX):**
+
+- Faixa superior (`community-vox-band`): nome, contagem de membros, subtítulo **Tipo: aberta · Demo**, pill **Entrar** / **Membro** (azul→verde amigável sobre carbono/pergaminho).
+- Cartão **Recado da comunidade** (scrapbook-style) no demo **Brasil Estereótipo**.
+- Detalhe em **duas colunas** no desktop (tópicos + sidebar **Membros online** / estatísticas mock); mobile empilha com sidebar acima.
+- Lista de comunidades: faixa colorida, meta de membros, botão **Entrar →** arredondado.
+
+**Fontes (consulta online):**
+
+- https://wiki.archiveteam.org/index.php/Orkut — estrutura Community / CommTopics / CommMsgs; arquivo público pós-2014.
+- https://www.estadao.com.br/tecmundo/big-techs/239-como-usar-o-orkut/ — Participar, scraps vs depoimentos, enquetes no fórum.
+- https://www.uol.com.br/tilt/noticias/redacao/2022/04/28/scraps-comunidades-depoimentos-do-que-voce-tem-saudades-no-orkut.htm — nostalgia comunidades/tópicos/moderadores BR.
+- https://blogoscoped.com/archive/2007-08-24-n48.html — redesign visual (arredondamento, azul/ciano).
+- http://www.blakut.com/2009/03/spoiler-sneak-peek-into-future-of-orkut.html — header/cor customizável (referência de identidade por comunidade).
+- http://tribler.org/VirtualCommunitiesReport — moderadores, scrapbook, categorias.
+
