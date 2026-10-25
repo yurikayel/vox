@@ -27,6 +27,7 @@ import * as postOwnership from "../post-ownership.js";
 import * as communityMirror from "../community-mirror.js";
 import * as stewardWizard from "../steward-wizard.js";
 import * as gatewayTelemetry from "../gateway-telemetry.js";
+import * as posseDispatch from "../posse-dispatch.js";
 import { attachInlineComposerHandlers } from "../inline-composer.js";
 import * as oauthProfile from "../oauth-profile.js";
 import * as contacts from "../contacts.js";
@@ -74,6 +75,8 @@ export function bindNetworkSettingsForm() {
     localAccount.setMeshDiscoverable(meshDiscoverable);
     void meshProfile.syncMeshProfileCard();
     cacheNode.enforceMaxCacheSize(maxMb);
+    const webhookText = document.getElementById("net-posse-webhooks")?.value || "";
+    posseDispatch.savePosseWebhooks(posseDispatch.parseWebhookLines(webhookText));
     share.showToast(enabled ? "Preferências salvas: nó leve ativo!" : "Preferências salvas: nó pausado.");
     showNetworkSettings();
   });
@@ -222,6 +225,7 @@ export async function showNetworkSettings() {
     blockedUsers: mod.getBlockedUsers(),
     mutedUsers: mod.getMutedUsers(),
     meshDiscoverable: localAccount.getMeshDiscoverable(),
+    posseWebhooks: posseDispatch.loadPosseWebhooks(),
   });
 
   bindNetworkSettingsForm();
