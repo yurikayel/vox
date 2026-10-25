@@ -23,3 +23,23 @@ test("shell brand — theme pairing for mark src", () => {
   assert.equal(brandMarkSrcForColorScheme(false), "icons/icon-512.png");
   assert.equal(brandMarkSrcForColorScheme(true), "icons/icon-white-512.png");
 });
+
+test("shell sidebar — IA estável (nav, postar, feed slot, footer)", () => {
+  assert.ok(shellSrc.includes("sidebar-compose-slot"));
+  assert.ok(shellSrc.includes("sidebar-feed-slot"));
+  assert.ok(shellSrc.includes("sidebar-sync-slot"));
+  assert.ok(shellSrc.includes("sidebar-network-slot"));
+  assert.ok(shellSrc.includes("sidebar-account-slot"));
+  assert.ok(shellSrc.includes("ICONS.people"));
+  assert.ok(shellSrc.includes("ICONS.feedForYou"));
+  assert.ok(shellSrc.includes("ICONS.following"));
+  const sidebarBlock = shellSrc.match(/function renderSidebar\([\s\S]*?^}/m)?.[0] ?? "";
+  const brandIdx = sidebarBlock.indexOf("sidebar-brand");
+  const navIdx = sidebarBlock.indexOf('aria-label="Seções"');
+  const composeIdx = sidebarBlock.indexOf("sidebar-compose-slot");
+  const feedIdx = sidebarBlock.indexOf("${feedSlot}");
+  const footerIdx = sidebarBlock.indexOf("renderSidebarFooter");
+  assert.ok(brandIdx >= 0 && brandIdx < navIdx && navIdx < composeIdx && composeIdx < feedIdx && feedIdx < footerIdx);
+  assert.ok(!sidebarBlock.includes("${feedNav}"));
+  assert.ok(shellSrc.includes("classList.add(\"is-active\")"));
+});
