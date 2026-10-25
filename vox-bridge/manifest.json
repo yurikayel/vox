@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "Vox Bridge (experimental)",
+  "version": "0.0.1",
+  "description": "Stub MV3 — contrato POSSE com PWA Vox. Sem autopost em produção.",
+  "permissions": ["storage"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "externally_connectable": {
+    "matches": ["https://yurikayel.github.io/*", "http://127.0.0.1/*", "http://localhost/*"]
+  }
+}

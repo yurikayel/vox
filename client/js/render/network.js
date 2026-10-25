@@ -271,6 +271,15 @@ function renderNetworkForm(settings, notifPermission, customSignalingUrl, custom
     </div>`;
 }
 
+function renderStatusLinkBlock() {
+  return `
+    <div class="card" style="margin-top:1rem;">
+      <h3>Telemetria honesta</h3>
+      <p class="desc" style="font-size:0.85rem;">Gateways e relay vistos só neste aparelho — sem phone-home.</p>
+      <a class="btn btn-sm btn-outline" href="#/status">Abrir #/status</a>
+    </div>`;
+}
+
 function renderPosseWebhooksSection(webhooks = []) {
   const lines = escapeHtml((webhooks || []).join("\n"));
   return `
@@ -350,6 +359,7 @@ export function renderNetworkSettings(main, {
     relayHttpUrl,
     meshDiscoverable,
   );
+  html += renderStatusLinkBlock();
   html += renderPosseWebhooksSection(posseWebhooks);
   html += renderModerationSettingsSection(blockedUsers, mutedUsers);
   main.innerHTML = html;
