@@ -1926,7 +1926,7 @@ body.post-lightbox-open {
   outline: none;
 }
 
-/* Header do Post IG */
+/* Cabeçalho inline do post (texto / gist) */
 .post-header-inline {
   display: flex;
   align-items: center;

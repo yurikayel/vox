@@ -68,7 +68,7 @@ export function renderTopic(main, topicId, topic, replies, { topicData = null, i
   let html = `
     ${backLink}
     <article class="topic-root insta-topic-root card" style="padding:1.25rem;">
-      <div class="post-header post-header-ig">
+      <div class="post-header post-header-inline">
         <div class="post-header-user">
           <a class="avatar-link" href="#/u/${encodeURIComponent(author)}">${renderAvatarHtml(author, authorDisplay)}</a>
           ${topicAuthorMeta}
