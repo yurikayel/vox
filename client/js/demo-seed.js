@@ -1,7 +1,5 @@
 /**
- * Semeador idempotente do Tour Demo (10 perfis educativos).
- * Persiste tópicos, feira e propostas de governança no IndexedDB local-posts sem assinar via gossip,
- * permitindo explorar a UI, comunidades, classificados e deliberações sem gateways remotos.
+ * Semeador idempotente — 27 perfis UF demo no IndexedDB local.
  */
 
 import * as cacheNode from "./cache-node.js";
@@ -13,20 +11,22 @@ import {
   MOCK_DEMO_REPLIES,
   MOCK_DEMO_PROPOSALS,
   MOCK_DEMO_VOTES,
+  MOCK_DEMO_UF_COUNT,
 } from "./mock.js";
+import { UF_ROUTE_IDS } from "./data/profiles-brazil-uf.js";
 
-const SEED_KEY = "vox-demo-seeded-v6";
+const SEED_KEY = "vox-demo-seeded-v7-uf27";
 
 export async function ensureDemoSeed() {
   if (typeof window === "undefined" || !window.localStorage) return;
 
   const alreadySeeded = window.localStorage.getItem(SEED_KEY);
   if (alreadySeeded) {
-    const probe = await cacheNode.getLocalPost("demo-post-helena");
-    const probeListing = await cacheNode.getLocalPost("demo-listing-helena");
+    const probe = await cacheNode.getLocalPost("demo-post-mg");
+    const probeListing = await cacheNode.getLocalPost("demo-listing-mg");
     const probeProposal = await cacheNode.getLocalPost("demo-prop-feira");
     const existing = await cacheNode.getLocalPosts({ type: "topic", communityId: MOCK_DEMO_COMMUNITY.id });
-    if (probe && probe.image && probeListing && probeProposal && existing.length >= 10) return;
+    if (probe && probeListing && probeProposal && existing.length >= MOCK_DEMO_UF_COUNT) return;
   }
 
   await insertDemoItems();
@@ -45,9 +45,8 @@ async function insertDemoItems() {
 }
 
 async function seedCommunities(baseTs) {
-  const comms = [MOCK_DEMO_COMMUNITY, MOCK_DEMO_COMMUNITY_FEIRA];
-  for (let i = 0; i < comms.length; i++) {
-    const c = comms[i];
+  for (let i = 0; i < 2; i++) {
+    const c = i === 0 ? MOCK_DEMO_COMMUNITY : MOCK_DEMO_COMMUNITY_FEIRA;
     await cacheNode.saveLocalPost({
       id: c.id,
       type: "community",
@@ -78,7 +77,7 @@ async function seedTopics(baseTs) {
       voxResolution: t.voxResolution || "now",
       likesCount: t.likesCount || 0,
       repliesCount: t.repliesCount || 0,
-      ts: t.ts || (baseTs - (10 - i) * 100000),
+      ts: t.ts || (baseTs - (MOCK_DEMO_UF_COUNT - i) * 100000),
     });
   }
 }
@@ -121,18 +120,7 @@ async function seedReplies(baseTs) {
 }
 
 async function seedMemberships(baseTs) {
-  const demoAuthors = [
-    "vx_demo_helena",
-    "vx_demo_juliana",
-    "vx_demo_lucas",
-    "vx_demo_raj",
-    "vx_demo_yara",
-    "vx_demo_carlos",
-    "vx_demo_ana",
-    "vx_demo_mateus",
-    "vx_demo_bia",
-    "vx_demo_fernando",
-  ];
+  const demoAuthors = UF_ROUTE_IDS.slice(0, 12);
   for (let i = 0; i < demoAuthors.length; i++) {
     const author = demoAuthors[i];
     await cacheNode.saveLocalPost({
@@ -148,20 +136,14 @@ async function seedMemberships(baseTs) {
 
 async function seedProposals(baseTs) {
   for (const p of MOCK_DEMO_PROPOSALS) {
-    await cacheNode.saveLocalPost({
-      ...p,
-      ts: p.createdAt || (baseTs - 86400000),
-    });
+    await cacheNode.saveLocalPost({ ...p, ts: p.createdAt || (baseTs - 86400000) });
   }
 }
 
 async function seedVotes() {
   for (const propId of Object.keys(MOCK_DEMO_VOTES)) {
-    const list = MOCK_DEMO_VOTES[propId];
-    for (const v of list) {
-      await cacheNode.saveLocalPost({
-        ...v,
-      });
+    for (const v of MOCK_DEMO_VOTES[propId]) {
+      await cacheNode.saveLocalPost({ ...v });
     }
   }
 }

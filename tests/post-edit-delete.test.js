@@ -73,7 +73,7 @@ test("renderPostEditModal - opção remover imagem quando hasImage", () => {
 test("post-ownership - só posts assinados pelo autor ativo são mutáveis", () => {
   const me = "vx_abc123";
   const signed = { id: "p1", author: me, sig: "sig1" };
-  const tour = { id: "demo-post-helena", author: "vx_demo_helena", isLocalP2p: true };
+  const tour = { id: "demo-post-mg", author: "vx_demo_mg", isLocalP2p: true };
   const foreign = { id: "p2", author: "vx_other", sig: "sig2" };
 
   assert.equal(postOwnership.canMutateLocalPost(signed, me), true);
