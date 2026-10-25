@@ -351,6 +351,8 @@ test("render - layout híbrido texto vs foto vs github", () => {
   });
   assert.ok(photoHtml.includes('post-layout-photo'));
   assert.ok(photoHtml.includes("post-media-container"));
+  assert.ok(photoHtml.includes("post-media-hero"));
+  assert.ok(photoHtml.includes("post-overlay"));
 
   const ghHtml = render.renderPostItem({
     id: "t-gh",
@@ -551,10 +553,11 @@ test("render - post v3 híbrido (mídia antes do texto, star, copy-md e pinned)"
 
   // Valida que a tag de mídia aparece ANTES do título do post no DOM (hierarquia híbrida InstaTwitter)
   const imgIdx = html.indexOf("post-media-container");
-  const titleIdx = html.indexOf("post-title");
+  const titleIdx = html.indexOf("post-overlay-title");
   assert.ok(imgIdx !== -1, "Deve conter post-media-container");
-  assert.ok(titleIdx !== -1, "Deve conter post-title");
-  assert.ok(imgIdx < titleIdx, "Mídia deve preceder o título na hierarquia visual v3");
+  assert.ok(titleIdx !== -1, "Deve conter post-overlay-title");
+  assert.ok(imgIdx < titleIdx, "M�dia deve preceder o t�tulo no overlay");
+  assert.ok(!html.includes("post-caption-block"));
 });
 
 test("render - feed nav na sidebar (Para você e Seguindo)", () => {
@@ -801,29 +804,26 @@ test("render - renderPostItem pilha vertical estilo Meta com header IG, toolbar 
   };
 
   const html = render.renderPostItem(post);
-  assert.ok(html.includes("post-header-ig"));
-  assert.ok(html.includes("post-header-user"));
+  assert.ok(html.includes("post-overlay"));
+  assert.ok(html.includes("post-overlay-author"));
   assert.ok(html.includes("toolbar-left"));
   assert.ok(html.includes("toolbar-center"));
   assert.ok(html.includes("toolbar-right"));
-  assert.ok(html.includes("post-caption-block"));
-  assert.ok(html.includes("post-media-container"));
+  assert.ok(!html.includes("post-caption-block"));
+  assert.ok(html.includes("post-media-hero"));
+  assert.ok(html.includes("post-media-lightbox-trigger"));
   assert.ok(html.includes("btn-like"));
   assert.ok(html.includes("btn-comment"));
   assert.ok(html.includes("btn-share-post"));
   assert.ok(html.includes("btn-star"));
   assert.ok(html.includes("btn-save"));
 
-  const headerIdx = html.indexOf("post-header-ig");
   const mediaIdx = html.indexOf("post-media-container");
   const toolbarIdx = html.indexOf("insta-actions");
-  const captionIdx = html.indexOf("post-caption-block");
   const commentsIdx = html.indexOf('class="post-comments');
 
-  assert.ok(headerIdx < mediaIdx, "Header deve preceder a mídia na pilha vertical");
-  assert.ok(mediaIdx < captionIdx, "Mídia deve preceder a caption na pilha vertical");
-  assert.ok(captionIdx < toolbarIdx, "Caption deve preceder a toolbar na pilha vertical");
-  assert.ok(toolbarIdx < commentsIdx, "Toolbar deve preceder os comentários na pilha vertical");
+  assert.ok(mediaIdx < toolbarIdx, "M�dia deve preceder a toolbar na pilha vertical");
+  assert.ok(toolbarIdx < commentsIdx, "Toolbar deve preceder os coment�rios na pilha vertical");
 });
 
 test("render - resolvePostAuthorLabels evita ID truncado duplicado", () => {
