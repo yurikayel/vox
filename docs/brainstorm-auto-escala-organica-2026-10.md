@@ -8,6 +8,94 @@ Complementa [rede-sustentada-participantes.md](./rede-sustentada-participantes.m
 
 ---
 
+## A — Tração orgânica
+
+### Tese
+
+Tração orgânica no Vox **não é campanha de mídia paga** nem growth hack de ranking global. É o encadeamento de três forças já descritas em [rede-sustentada-participantes.md](./rede-sustentada-participantes.md) e no dossiê de incubação:
+
+1. **Utilidade no primeiro dia** — POSSE, Pix Zap, feira e deliberação valem mesmo com poucos membros locais (modo “single-player” honesto).
+2. **Convite relacional, não evangelismo da “federação”** — a lição do Fediverse (FediForum, Hachyderm) é *one-to-one*: quem migra traz três pessoas de confiança, oficina “sair do Meta”, install party no coletivo — não pitch técnico de protocolo.
+3. **Egoísmo esclarecido na malha** — quem cria comunidade, vende na feira ou publica todo dia **ganha** cache perto (Pacto Vox, `commOnly`, steward de gaveta); o mantenedor do repo **não** compra VPS para “salvar” crescimento.
+
+**Meta operacional (trimestre):** coletivo sobe relay + comunidade **sem loop do mantenedor**; visitante lê via gateway **ou** relay comunitário; default **Ativo** com sweet spot **Apoiador** (`commOnly`).
+
+### Dez ideias de auto-escala
+
+| # | Ideia | Mecanismo | Quem executa | Custo mantenedor | Risco principal |
+|---|--------|-----------|--------------|------------------|-----------------|
+| 1 | **Link canônico POSSE** | Post no Vox → share WhatsApp/X/blog; leitor externo cai no PWA/gateway | Criador, comunicador, MEI | R$ 0 (só Pages + CI) | Bridge ainda manual (P2); expectativa de crosspost 100% automático |
+| 2 | **Ritual seed pós-comunidade** (V-P05) | Wizard 3 min: aba Ativa, 2 convites, 1º tópico + pin na feira | Fundador da comunidade | R$ 0 (copy + checklist no client) | Cold start se fundador some antes do seed |
+| 3 | **Pacto Vox default-on** | Nó leve serve BLOB público lido na sessão; tetos 50 MB/dia, Wi-Fi preferido | Todo visitante (opt-out em `#/settings/network`) | R$ 0 | CGNAT no 4G — **não** prometer P2P total no celular |
+| 4 | **Nudge `commOnly`** (V-P04) | UI na comunidade convida Apoiador a cachear só aquele `Community-Id` | Membros engajados, comerciantes da feira | R$ 0 | Reciprocidade invisível se ninguém explica o benefício |
+| 5 | **Oficina / install party** | 90 min: Cantina + 3 perfis se seguem + escolher steward buddy | ONG, grêmio, biblioteca, FACIL/CHATONS-style allies | R$ 0 (slide `proposta-vox.html` + demo Pages) | Burnout do animador se não houver trio mod/steward |
+| 6 | **Feira como motor de bairro** | Classificados cronológicos; vendedor mantém nó ativo para fotos rápidas | MEI, artesão, vizinho | R$ 0 | Spam comercial no debate — mods locais (`mod-action`) |
+| 7 | **Deliberação com cutoff** | Proposta/voto só para quem já era membro antes da abertura | Coletivo, sindicato, condomínio | R$ 0 | Brigading externo se cutoff mal comunicado |
+| 8 | **Kit steward 1-clique** (V-I08) | Relay HTTP + índice `/vox/index` na LAN ou VPS **do coletivo** | 1 steward / 3–5 comunidades (heurística doc) | R$ 0 central; steward paga VPS opcional | Modelo Mastodon: um herói paga tudo e desiste |
+| 9 | **Honestidade “Leitura reserva”** (V-P02) + **2º espelho shell** | Pill quando gateway responde; fork Pages/Cloudflare espelha SHA do `main` | Voluntário espelho; stewards registram URL | R$ 0 | Usuário interpreta fallback como “rede quebrada” sem copy |
+| 10 | **Convite em círculo fechado** | “Troque Messenger comigo aqui” — padrão Signal/FediForum | Cada membro (MLM **ético**, 3 pessoas) | R$ 0 | Sala vazia se só convite sem conteúdo útil (POSSE/feira) |
+
+Nenhuma linha acima exige **telemetria central**, ranking de nós ou moeda in-app.
+
+### Flywheel (tração × infra participante)
+
+```
+Utilidade unitária (post, Pix, feira, voto)
+        │
+        ▼
+Fundador / criador compartilha link canônico fora do Vox
+        │
+        ▼
+Visitante lê (cache vizinho │ relay comunitário │ gateway reserva + pill honesta)
+        │
+        ▼
+Entrada Cantina (1 clique) → camada Ativo default → descobre comunidade
+        │
+        ▼
+Seed ritual (tópico + 2 convites) → Apoiador commOnly → steward opcional
+        │
+        ▼
+Comunidade rápida no bairro → criador repete share (interesse próprio)
+        │
+        └──────────► mais pares na malha ──► menos % leituras só via gateway
+                              │
+                              └── (telemetry local opt-in, sem scoreboard público)
+```
+
+O flywheel fecha quando **promoção externa** (WhatsApp) encontra **leitura rápida local** (participantes), não quando o mantenedor “liga um servidor global”.
+
+### Anti-padrões (tração)
+
+- **Growth de Fediverse genérico** — “entre na federação” antes de mostrar utilidade concreta (grupo, feira, votação).
+- **Ranking público de nós / leaderboard de stewards** — mata Apoiador tímido e incentiva gaming ([ADR-001](./adr/001-contribution-attestation-export.md) só export opt-in).
+- **Boost pago, moeda in-app, alcance leiloado** — reproduz Big Tech no client FOSS.
+- **Obrigar steward ou relay para postar/vender** — barreira de entrada mortal.
+- **Prometer 100% P2P no celular brasileiro** — CGNAT e franquia; Passivo legítimo.
+- **Mantenedor único como NOC + mod global + TURN para todos** — burnout Mastodon; Art. 19 e carga em **stewards de espelho**, não no repo.
+- **Phone-home disfarçado de “métricas abertas”** — contradiz P2P-first e LGPD-by-design.
+- **Telegram/WhatsApp como backend oculto** — escala até dar, depois centraliza moderação e dados.
+
+### Checklist mínimo — mantenedor (Pages + CI only)
+
+Objetivo explícito: **publicar cliente estático e manter qualidade de merge**; **não** operar malha social.
+
+| ✓ | Item | Notas |
+|---|------|--------|
+| ☐ | **GitHub Pages** (ou espelho documentado) servindo `client/` + `proposta-vox.html` | Workflow `deploy-pages.yml` no push `main` |
+| ☐ | **CI verde** — `npm test` + testes relay Python antes de merge | Bloqueio de release, não hotline de usuário |
+| ☐ | **Sem VPS obrigatória do projeto** | Gateways Arweave = terceiros; relay global **inexistente por design** |
+| ☐ | **Sem central de moderação / DPO / CNPJ operacional** | Mod = comunidades; [COMPLIANCE-BR.md](../COMPLIANCE-BR.md) |
+| ☐ | **Processo FOSS** — RFCs, PR review, tag release quando necessário | Mantenedor modera **código**, não **timeline** |
+| ☐ | **2º espelho shell** documentado e vivo (voluntário) | Reduz dependência de um domínio |
+| ☐ | **Piloto V-P09** encaminhado a humano local (retrospectiva) | Valida flywheel empiricamente |
+| ☐ | **Papel pessoal** — usar o app como cidadão nas próprias comunidades | Não substitui steward comunitário |
+
+**Fora do escopo do mantenedor (por design):** TURN global, inbox relay 24/7, suporte WhatsApp oficial, impulsionamento, curadoria algorítmica nacional.
+
+**Referências externas (síntese out/2026):** [FediForum — growth](https://fediforum.org/2025-10/session/5-e/) (one-to-one, install parties, grupos como cidadãos de primeira classe); [Hachyderm volunteering](https://community.hachyderm.io/docs/volunteering/) (community stewardship vs mod reativo); PWA mínima instalável ([minimal-pwa](https://github.com/chr15m/minimal-pwa)) alinhada ao shell &lt;100 KB — ops honesta: static cache, API live não fingida offline ([Ops Center PWA pattern](https://xnett.org/homelab/ops-center-pwa-mobile-wallboards)).
+
+---
+
 ## 1. Tese em uma página
 
 O Vox **não escala contratando servidores** nem mantendo um “time de ops” central. Escala quando:
@@ -282,3 +370,255 @@ Membro → Apoiador (commOnly) → Facilitador (organiza feira/tópicos, sem pod
 ---
 
 **Versão:** 1.0 · **Data:** 25 out 2026 · **Dono:** Community-doc (consolidado agente)
+
+---
+
+## B — Confiabilidade sem SPOF
+
+> **Slice B (out/2026):** leitura técnica do repositório — relay, telemetria, espelho de índice, shell offline, `#/status`, steward docs e CI. Complementa §4 com **âncoras de código** e **gaps ainda abertos**.
+
+### B.1 Tese: onde *não* há SPOF (e onde ainda há)
+
+| Superfície | SPOF hoje? | Mecanismo no código / ops |
+|------------|------------|---------------------------|
+| **Canônico (Arweave)** | Não (permaweb + múltiplos gateways em `client/config/gateways.json`) | `graphql.js` tenta gateways; `recordGatewayAttempt` em `gateway-telemetry.js` |
+| **Shell PWA** | **Parcial** — espelho **A** (GitHub Pages) documentado; **B** ainda playbook | `sw.js` `CACHE_NAME`; [`ops-shell-mirrors.md`](./ops-shell-mirrors.md) |
+| **Relay HTTP / índice LAN** | Não global — **por coletivo**; default `127.0.0.1:3920` | `relay/server.py`, `inbox.getRelayHttpUrl()` |
+| **Signaling / TURN** | Por steward (`signaling.json`, wizard `#/settings/network/steward`) | Sem relay global do mantenedor (design) |
+| **Descoberta GraphQL** | **Degradável** — gateway público vira gargalo sob carga | Pill “Leitura reserva” + fallback relay `/tx/:id` |
+| **Inbox DM** | Por relay que o par usa; TTL 72 h | `relay/inbox.py` `DEFAULT_TTL_SECONDS` |
+| **WebRTC / malha** | Sem broker central no repo; CGNAT limita celular | `peers.js` + `webrtc-peer.js` (fora do SW) |
+
+**Conclusão operacional:** confiabilidade = **camadas sobrepostas** (cache local → relay vizinho → gateway → honestidade na UI), não uptime de um datacenter único.
+
+### B.2 Mapa de componentes (estado do código)
+
+```
+Visitante / membro (PWA)
+    │
+    ├─ SW (sw.js) ── shell offline, gateways.json precached
+    ├─ graphql.js ── gateways Arweave + gateway-telemetry
+    ├─ peers.js ── gossip/WebRTC; checkDesktopRelay() → GET /health
+    ├─ community-mirror.js ── POST /vox/mirror (aba posts #/c/:slug)
+    └─ #/status (screens-status.js + render/status.js) ── diagnóstico local
+
+Steward (voluntário)
+    ├─ relay/server.py ── /health, /tx/:id, /vox/index/:id.json, /vox/mirror, /inbox/*
+    ├─ relay/deploy + steward-relay-kit.md + steward-seed-15min.md
+    └─ tools/steward-kit-windows/ (V-I08 parcial)
+
+CI (main)
+    └─ npm test:client + npm test:relay (Python 3.11/3.12)
+```
+
+**Observações da auditoria rápida:**
+
+- `community-mirror.js` **não** está na lista `SHELL_ASSETS` do `sw.js` — offline-first do espelho depende do bundle `app.js`; gap menor de cache shell.
+- `POST /vox/mirror` persiste JSON **sem** validação estrutural v1 ([`mirror-validate-v1.md`](./mirror-validate-v1.md) proposta; `mirror_validate.py` ainda ausente) → **V-P06**.
+- Índice espelhado: slug em disco `index_{communityId}.json`; leitura `GET /vox/index/{communityId}.json`.
+- Quota steward: `VOX_RELAY_MAX_CACHE_MB` → HTTP **507** se espelho estourar disco.
+
+### B.3 Camadas P0 / P1 / P2 (confiabilidade técnica)
+
+| Camada | Objetivo de confiabilidade | Já no repo | Falta para “fechado” |
+|--------|---------------------------|------------|----------------------|
+| **P0 — Leitura honesta** | Usuário sabe se leu via gateway, cache ou relay; app não finge malha plena | V-P02 feito: pills em `render/network.js`, `formatGatewayHealthPill`, export JSON em `gateway-telemetry.js`; `#/status` sem phone-home | Copy audit contínua; link `#/status` mais visível em comunidades degradadas |
+| **P0 — Shell sobrevive queda do host A** | PWA abre offline; segundo URL público | SW v6.x precache amplo; [`ops-shell-mirrors.md`](./ops-shell-mirrors.md) | **2º espelho vivo** + registro `mirror_id, git_sha, CACHE_NAME` |
+| **P0 — Steward repetível** | Qualquer coletivo sobe relay sem o mantenedor | `/health` com `communityIndexes`, compose, wizard V-P01, Windows kit parcial | **V-I08** fechado: runbook Linux+Win 1-clique, automação deploy |
+| **P1 — Vizinhança rápida** | Comunidade seedada evita cold start GraphQL | `tryMirrorCommunityToRelay` em `screens-community.js`; blob soft priority V-I09 | **V-P04** nudge `commOnly`; **V-P05** checklist seed; **V-P06** validate mirror |
+| **P1 — Humanos sustentam nós** | Relay não morre com uma pessoa | Docs V-P08 (buddy/sucessão) | UI/processos de handoff; múltiplos relays anunciados na comunidade |
+| **P2 — Escala federada** | Muitos espelhos, attestations, Bridge | RFC POSSE, spike Bridge | **V-P07** export ADR-001; registro público espelhos; gossip manifest pins maduro |
+
+### B.4 SLOs honestos (malha voluntária)
+
+Metas de **desenho + observação local** — não SLA comercial. Instrumentação principal: `localStorage` `vox-gateway-health`, `#/status`, `/health` do relay, retrospectiva **V-P09**.
+
+| Métrica | Alvo (comunidade saudável) | Degradado aceitável | Onde medir hoje |
+|---------|----------------------------|---------------------|-----------------|
+| Primeiro conteúdo visível (com índice espelhado + cache) | &lt; 5 s | &lt; 45 s via gateway + pill reserva | Qualitativo piloto; telemetry gateway `state` |
+| Estado gateway local | `all_ok` | `degraded` / `critical` → pill | `getGatewayHealthState()` |
+| Relay configurado alcançável | `/health` &lt; 350 ms (timeout cliente) | `checkDesktopRelay` → Offline | `#/status`, network settings |
+| Espelho índice fresh | `mirroredAt` &lt; 24 h (convencão) | Só GraphQL | Sem UI de staleness → gap **V-P06** |
+| Inbox DM entregue | &lt; 72 h enquanto relay up | Expira; peer offline | TTL `inbox.py` |
+| Release regressão | `npm test` + relay unittest verdes | Bloqueia merge | `.github/workflows/ci.yml` |
+
+**Regra de honestidade:** se `critical`, UI deve preferir copy “Leitura reserva” sobre spinner infinito — já alinhado a V-P02; stewards usam `#/status` + export diagnóstico para debug **sem** centralizar dados.
+
+### B.5 O que quebra em ~100 / ~1k / ~10k usuários ativos
+
+Premissa: usuários espalhados em comunidades; picos locais, não DDoS global ao repo.
+
+#### ~100 (1–3 comunidades piloto)
+
+| Falha | Mecanismo | Sintoma | Mitigação no stack |
+|-------|-----------|---------|-------------------|
+| Cold start índice | GraphQL + zero stewards | Tudo lento; pill frequente | **V-P05** seed; steward 15 min; mirror POST |
+| Relay só localhost | Default `127.0.0.1:3920` | Visitantes externos não usam cache LAN | Steward expõe HTTPS; URL no PWA |
+| CGNAT 4G | WebRTC direto falha | Gossip ralo | Relay HTTP + TURN do coletivo |
+| Único espelho Pages | Queda DNS/GitHub | Barulho; SW ainda abre cache | **2º espelho** + comunicar URL alternativa |
+| Mirror não validado | POST aceita lixo | Índice corrupto / path weird | **V-P06** + quota 507 já existe |
+
+#### ~1 000 (~10–30 comunidades)
+
+| Falha | Mecanismo | Sintoma | Mitigação |
+|-------|-----------|---------|-----------|
+| Gateway rate limit | `graphql.js` multi-gateway esgotado | `degraded` persistente | Mais stewards; `/tx` cache HIT |
+| Steward burnout | Um `index_*.json` | Comunidade “some” do relay | **V-P08** buddy; segundo mirror POST |
+| `commOnly` baixo | Malha global WANT | Spam cross-community | **V-P04** |
+| Inbox fila | Muitos POST `/inbox` | Atraso DM | TTL limita; múltiplos relays anunciados |
+| Quota cache | `VOX_RELAY_MAX_CACHE_MB` | 507 em mirror | Monitor `/health` `cacheBytes` |
+
+#### ~10 000 (dezenas de comunidades, algumas grandes)
+
+| Falha | Mecanismo | Sintoma | Mitigação |
+|-------|-----------|---------|-----------|
+| GraphQL como índice global | Sem curadoria | Latência/custo alto | Registro espelhos; pins manifest gossip |
+| Divergência índice espelhado | POST não assinado | Clientes veem listas diferentes | V-P06 + futura assinatura `cacheManifest` |
+| Pressão legal | Espelho público | Art. 19 no **steward** | COMPLIANCE-BR; README relay |
+| Telemetria central tentadora | Escala ops | Phone-home disfarçado | Manter `#/status` local-only |
+| Shell drift entre espelhos | `CACHE_NAME` / SHA divergentes | Bugs fantasma | ops-shell-mirrors checklist |
+
+### B.6 Gaps mapeados (backlog → confiabilidade)
+
+| ID | Título | Evidência no repo | Impacto SPOF / escala |
+|----|--------|-------------------|------------------------|
+| **V-I08** | Kit steward fechado | Parcial: `steward-relay-kit.md`, compose, `/health`, Windows kit; pendente automação Linux/deploy | **Alto** — gargalo humano substitui SPOF de “mantenedor ops” |
+| **V-P04** | Nudge `commOnly` em `#/c/:slug` | Backlog; depende V-I02 | **Médio** — malha local vs flood global |
+| **V-P05** | Checklist seed pós-comunidade | Template infra; não wired como wizard único | **Alto** — cold start = dependência gateway |
+| **V-P06** | Mirror validate v1 UI + relay | Spec `mirror-validate-v1.md`; relay aceita qualquer JSON | **Médio** — índice confiável, anti-abuso POST |
+| **V-P07** | Export atestação ADR-001 | ADR escrito; UI opt-in pendente | **Baixo ops** — motivação stewards (P2 confiança) |
+| **V-P08** | Sucessão steward + relay buddy | Community-doc | **Alto** — SPOF **humano** por comunidade |
+| **V-P09** | Piloto + retrospectiva | `piloto-comunidade-retrospectiva-template.md` | **P0 validação** — calibrar SLOs reais |
+| **—** | **2º espelho shell vivo** | `ops-shell-mirrors.md` playbook only | **Alto P0** — SPOF de distribuição do cliente |
+| **—** | `community-mirror.js` no precache SW | Ausente em `SHELL_ASSETS` | **Baixo** — consistência offline |
+
+### B.7 Rede de segurança (testes que sustentam confiabilidade)
+
+| Área | Testes | O que garantem |
+|------|--------|----------------|
+| Gateway telemetry | `tests/gateway-telemetry.test.js` | Estados `all_ok` / `degraded` / `critical` |
+| Community mirror | `tests/community-mirror.test.js` | Payload normalizado; POST best-effort; falha engolida |
+| Status UI | `tests/status-render.test.js` | `#/status` renderiza gateway + relay offline |
+| Relay HTTP | `relay/test_server.py` | Health, mirror → `communityIndexes`, CORS, quota |
+| Inbox TTL | `relay/test_server.py` / inbox tests | Envelope 72 h, tamanho 32 KiB |
+| CI | `test-client` + `test-relay` matrices | Regressão bloqueia release quebrada |
+
+**Definition of done slice B (90 dias, eixo confiabilidade):** V-I08 + **2º espelho** + V-P05/V-P06 entregues; V-P09 mede pelo menos 2 métricas de B.4; nenhum novo phone-home.
+
+*Slice B · 25 out 2026 · explorado: relay, gateway-telemetry, community-mirror, steward docs, ops-shell-mirrors, `#/status`, sw, tests.*
+
+---
+
+## C — Moderação voluntária
+
+> **Fatia C (incitar):** como comunidades piloto **convidam e sustentam** moderadores sem salário, sem central T&S e sem gamificação tóxica — ancorado em [`mod-action`](../GOVERNANCE.md), deliberação Fase G, [`moderation.js`](../client/js/moderation.js) e onboarding Cantina → Pacto (moderação **depois** da entrada, não na Porta).
+
+### C.1 Psicologia — por que moderar (e o que drena)
+
+Síntese cruzando literatura recente (2024–2025) com desenho Vox:
+
+| Motor (SDT / cívico) | Manifestação na praça | Desenho Vox |
+|----------------------|----------------------|-------------|
+| **Autonomia + competência** | “Eu sei o tom daqui”; ferramentas claras reduzem ansiedade | `hide`/`ban` assinados; UI confirma que hide ≠ apagar |
+| **Relatedness / altruísmo digital** | Proteger amigos, feira, debate local | Mod = membro eleito, não “staff do app” |
+| **Justiça procedimental** | Regras explícitas, voto para mudar normas | `governance-proposal` + `Eligibility-Cutoff` |
+| **Prestígio local** | Reconhecimento **dentro** da comunidade | Badge opt-in “Moderador eleito em …”; **sem** ranking público |
+| **Suporte entre pares** | Validar frustração, compartilhar playbooks | Canal Matrix/Telegram **do coletivo**; meta-sala de mods (externa) |
+
+**Contraintuições (New Media & Society, 2024):** governança muito “democrática” no dia a dia pode **aumentar** percepção de justiça mas **reduzir** pertencimento institucional do mod — centralizar *procedimentos* (cartas, plantão, appeals) sem centralizar *poder* ajuda.
+
+**Riscos documentados:** burnout (~1/5 mods Fediverse reporta trauma/burnout anual — IFTAS 2024); emotional labor; conflito com amigos; pico pós-migração WhatsApp → Vox sem rotação.
+
+**Implicação “incitar”:** convite deve enfatizar **escopo limitado**, **prazo finito**, **transparência on-chain** e **pausa republicana** — nunca “herói solitário” nem scoreboard de ações.
+
+### C.2 Sete mecanismos para incitar moderação (produto + ritual)
+
+| # | Mecanismo | **Produto** (cliente / protocolo) | **Ritual** (comunidade piloto) |
+|---|-----------|-----------------------------------|--------------------------------|
+| 1 | **Convite pós-membria** | Nudge em `#/c/:slug` só após `membership` + N posts lidos; **não** no fluxo Cantina/Pacto | Fundador nomeia 2 co-facilitadores na 1ª semana (E1 piloto) |
+| 2 | **Eleição com cutoff** | `governance-proposal` tipo “incluir moderador” + `governance-vote`; cutoff = criação da proposta | Sessão 30 min “quem cuida da praça?” antes do voto |
+| 3 | **Ação de um clique, auditável** | Botão ocultar → TX `mod-action` (`screens-community.js`); toast + link “ver na cadeia” | Workshop “mod-action ao vivo” (E3) |
+| 4 | **Carta de mod 1 página** | Campo `Rules` / pin nas regras da TX `community` + template fixo PT | Colar template na retrospectiva V-P09 § “Copy confusa” |
+| 5 | **Plantão rotativo** | Perfil: badge “Plantão desta semana” (local, sem contagem pública) | Rodízio mensal honorífico (E4) |
+| 6 | **Reconhecimento privado** | Export atestação opt-in (V-P07 / ADR-001) — **não** leaderboard de mods | Agradecimento explícito no tópico fixo da comunidade |
+| 7 | **Válvula republicana** | `unhide`/`unban` via mod-action; fork de espelho; steward **não** ganha ban automático | Se política divergir: proposta “espelho alternativo” + documentar URL |
+
+### C.3 Escada leitor → mod → steward
+
+```
+Leitor (Passivo/Ativo, Cantina concluída)
+    │  membership + participação na feira/debate
+    ▼
+Apoiador (`commOnly` — acelera cache, zero poder de ban)
+    ▼
+Facilitador (organiza tópicos, seed, WhatsApp — sem `mod-action`)
+    ▼
+Moderador eleito (lista on-chain / tag moderadores; emite hide/ban/unhide/unban)
+    ▼
+Steward de espelho (relay/index JSON; **opcional**; aplica mod-action no índice servido)
+    ▼
+Ex-mod / sabático (governance-vote remove; ciclo encerrado publicamente)
+```
+
+**Separação crítica ([GOVERNANCE.md](../GOVERNANCE.md)):** contribuir banda ou disco **não** compra visibilidade nem poder moderador; steward ≠ mod automático.
+
+**Onboarding Cantina:** entrada 1 clique + Pacto default-on prepara **cidadania** (cache, POSSE); o **convite a moderar** só faz sentido quando o membro já “morou” na praça — evita recrutar turista como polícia.
+
+### C.4 Guardrails (appeals, mandatos, anti-scoreboard)
+
+| Guardrail | Regra | Implementação / copy |
+|-----------|--------|---------------------|
+| **Appeals (recurso)** | Mod não é tribunal final da **norma** | Membro pede revisão via `governance-proposal` “reconsiderar ocultação” ou mod emite `unhide` com motivo na TX; votos só de quem já era membro antes da proposta |
+| **Mandatos (term limits)** | Ciclo sugerido **90 dias**; renovação por proposta, não permanência implícita | UI convite cita prazo; fim de ciclo = nudge “renovar ou passar bastão” |
+| **Sem scoreboard** | Proibido ranking público de mods, nós ou “ações de mod” | Alinhado a GOVERNANCE § infra e COMPLIANCE § stewards; telemetria agregada só opt-in steward |
+| **Hide ≠ delete** | Transparência + autonomia de cliente | Outros clientes podem ignorar filtros; educar no confirm de ocultar |
+| **DMs sem backdoor** | Mod não lê inbox cifrado | COMPLIANCE Fase 4; moderação só conteúdo público comunitário |
+| **Ilícito grave** | `mod-action` não substitui autoridade | Orientar canal externo + steward Art. 19 na camada espelhada |
+| **Anti-brigading** | Voto para regras/mods usa cutoff | `Eligibility-Cutoff = Proposal-Created-At` |
+
+### C.5 Experimentos P0 (piloto V-P09)
+
+Integrar na [piloto-comunidade-retrospectiva-template.md](./piloto-comunidade-retrospectiva-template.md) — coluna “Fase C mod” sugerida:
+
+| ID | Experimento | Hipótese | Sinal de sucesso (4–7 dias piloto) |
+|----|-------------|----------|-------------------------------------|
+| **E1** | Trio inicial (2 facilitadores + 1 mod reserva) | Fundador não queima sozinho | ≥2 pessoas aceitam papel antes do dia 7 |
+| **E2** | Carta de mod 1 página nas regras | Menos “regra implícita do Zap” | Retrospectiva: zero conflito “não sabia que podia ocultar” |
+| **E3** | Sessão “mod-action ao vivo” (30 min) | Reduz medo da TX pública | Tempo até 1ª `mod-action` legítima &lt; 48 h após incidente simulado |
+| **E4** | Plantão semanal rotativo | Burnout ↓ | Mods reportam “pausa sem culpa” na retrospectiva |
+| **E5** | Appeal simulado (proposta + unhide) | Procedimento &gt; personalismo | Comunidade completa 1 ciclo proposta → voto → desfecho documentado |
+
+**Métricas honestas (qualitativas):** abandono do fundador-mod; frequência pill “Leitura reserva” **não** correlacionada a mod (infra ≠ mod); copy confusa listada na retrospectiva.
+
+### C.6 Copy UI (PT-BR) — cinco snippets
+
+**1 — Convite (pós-membria, `#/c/:slug`):**
+
+> Esta praça é cuidada por **membros eleitos**, não pela equipe do app. Você já conhece o tom da conversa. Topa moderar por **90 dias**? Cada ocultação vira registro **público e assinado** — transparência para quem usa esta comunidade.
+
+**2 — Confirmar ocultar (substituir confirm genérico):**
+
+> Ocultar **não apaga** da rede: publica um `mod-action` assinado. Quem usa outro cliente pode ainda ver o original. Inclua um motivo curto na sua prática comunitária. Confirma?
+
+**3 — Appeal / recurso (link em tópico oculto ou ajuda):**
+
+> Discordou de uma ocultação? Peça **revisão comunitária**: abra uma proposta de governança ou fale com o mod de plantão. Mudança de regra exige voto de quem **já era membro** antes da proposta.
+
+**4 — Fim de mandato:**
+
+> Seu ciclo de moderação termina em **{data}**. Renovar é opcional: proponha na comunidade ou indique quem assume o próximo plantão. Pausar é republicano.
+
+**5 — Distinção steward (painel comunidade / settings rede):**
+
+> **Guardião de cache** ajuda a praça carregar rápido — isso **não** dá poder de banir. Moderação continua com quem a comunidade **elegeu** e assina `mod-action`.
+
+### C.7 Referências externas (fatia C)
+
+- Seering et al. — *Trouble in Paradise?* (Mastodon admins, ACM 2024).
+- New Media & Society (2024) — tradeoffs participação / pertencimento em mods voluntários.
+- IFTAS — *Fediverse Trust & Safety Needs Assessment 2024* (burnout, gaps de guia formal).
+- SOUPS 2024 — *Custodian of online communities* (suporte mútuo entre mods).
+- ACM GROUP 2025 — comunidades voluntárias de resposta a desinformação (motivação por pares).
+- Mental Health & Digital Technologies (2024) — altruísmo digital e carga em mods de saúde.
+
+**Versão fatia C:** 1.0 · **Data:** 25 out 2026
