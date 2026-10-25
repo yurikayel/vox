@@ -7,7 +7,13 @@ test("vox-welcome-profile - route id and copy", () => {
   assert.equal(welcome.WELCOME_ROUTE_ID, "vx_voxbrasil_welcome");
   const p = welcome.getWelcomeProfile();
   assert.equal(p.name, "Vox Brasil");
+  assert.equal(p.handle, "voxbrasil");
+  assert.equal(p.avatar, welcome.OFFICIAL_PROFILE_AVATAR);
+  assert.ok(p.avatar.includes("profile-vox-official-512.png"));
+  assert.ok(p.bio.includes("Conta oficial"));
+  assert.ok(p.isOfficialPlatform);
   assert.ok(welcome.getWelcomeDmText().includes("Pessoas"));
+  assert.ok(welcome.getWelcomeDmText().includes("Voxpedia"));
   assert.equal(welcome.isWelcomeRouteId(welcome.WELCOME_ROUTE_ID), true);
 });
 
