@@ -287,6 +287,17 @@ def write_png(path: Path, im: Image.Image) -> None:
     im.save(path, optimize=True)
 
 
+def fit_opaque_square(im: Image.Image, size: int) -> Image.Image:
+    """Center-crop to square and resize — full paper/navy tile, no transparency cutout."""
+    rgb = im.convert("RGB")
+    w, h = rgb.size
+    side = min(w, h)
+    x0 = (w - side) // 2
+    y0 = (h - side) // 2
+    square = rgb.crop((x0, y0, x0 + side, y0 + side))
+    return square.resize((size, size), Image.Resampling.LANCZOS)
+
+
 def _o_hole_center_alpha(rgba: Image.Image) -> tuple[int, int, int]:
     px = rgba.load()
     w, h = rgba.size
@@ -344,14 +355,17 @@ def main() -> None:
             raise SystemExit(f"O hole not transparent ({label}): ({x},{y}) alpha={a}")
         print(f"O hole center ({label}): ({x},{y}) alpha=0")
 
-    opaque_bg = (*BRAND_NAVY, 255)
-    for size, name in ((192, "icon-192.png"), (512, "icon-512.png")):
+    for size, name in ((192, "icon-192.png"),):
         write_png(ICONS / name, fit_mark(mark_white, size, pad_ratio=0.07, bg=(0, 0, 0, 0)))
 
     write_png(ICONS / "icon-mark-1024.png", fit_mark(mark_white, 1024, pad_ratio=0.07))
     write_png(ICONS / "icon-mark.png", fit_mark(mark_white, 512, pad_ratio=0.07))
-    write_png(ICONS / "icon-1024.png", fit_mark(mark_white, 1024, pad_ratio=0.07, bg=opaque_bg))
     write_png(ICONS / "favicon.png", fit_mark(mark_white, 32, pad_ratio=0.05, bg=(0, 0, 0, 0)))
+
+    # Opaque squircle tiles for UI + PWA (official JPG fields, not cutout composites).
+    write_png(ICONS / "icon-white-512.png", fit_opaque_square(white_im, 512))
+    write_png(ICONS / "icon-1024.png", fit_opaque_square(navy_im, 1024))
+    write_png(ICONS / "icon-512.png", fit_opaque_square(navy_im, 512))
 
     print("Wrote branding + client icons from official docs JPGs.")
 

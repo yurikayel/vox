@@ -186,6 +186,20 @@ a:hover {
   object-fit: cover;
 }
 
+.brand-mark--dark {
+  display: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  .brand-mark--light {
+    display: none;
+  }
+
+  .brand-mark--dark {
+    display: block;
+  }
+}
+
 .brand-word {
   color: var(--text);
   font-weight: 800;
