@@ -9,7 +9,7 @@ const css = fs.readFileSync(path.join(root, "css/style.css"), "utf8");
 const sw = fs.readFileSync(path.join(root, "sw.js"), "utf8");
 
 test("depurple paper - service worker cache id", () => {
-  assert.match(sw, /vox-pwa-v6\.69-actions-icon-count/);
+  assert.match(sw, /vox-pwa-v6\.70-carbon-parchment-identity/);
 });
 
 test("onboarding paper - modal sheet/card in CSS, neutral scrim", () => {
@@ -38,10 +38,19 @@ test("depurple paper - sidebar nav active not accent-soft fill", () => {
   assert.ok(tabActive.includes("nav-active-bg"));
 });
 
-test("depurple paper - dark surfaces neutral not lavender stack", () => {
-  assert.ok(css.includes("--surface-1: #0f1d2e"));
+test("carbon parchment - base bg tokens and sky does not wash --bg", () => {
+  assert.ok(css.includes("--bg-parchment: #f4f0e8"));
+  assert.ok(css.includes("--bg-carbon: #18181a"));
+  assert.ok(css.includes("--bg: var(--bg-parchment)"));
+  const skyManha = css.match(/:root\[data-sky-period="manha"\]\s*\{[^}]+\}/s)?.[0] ?? "";
+  assert.ok(!skyManha.includes("--bg:"), "sky period must not override --bg");
   assert.ok(!css.includes("#312183"), "purple brand chrome removed");
   assert.ok(!css.includes("#c8c0f0"));
+  assert.ok(!css.includes("#0c0a18"), "purple-tint dark canvas removed");
+});
+
+test("depurple paper - dark surfaces neutral carbon stack", () => {
+  assert.ok(css.includes("--surface-1: #222224"));
 });
 
 test("depurple paper - compose tab solid brand not gradient block", () => {
