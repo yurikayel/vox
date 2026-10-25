@@ -976,3 +976,25 @@ Marcas de terceiros **não** são referência de implementação nem aparecem em
 Documentação descreve comportamento e hierarquia visual em termos neutros (PT-BR).
 OAuth e compartilhamento nativo citam provedores apenas onde exigido por integração técnica ou política da plataforma.
 
+---
+
+## 34. Identidade carbono / pergaminho (brainstorm → ship)
+
+**Data:** 2026-10-25 · **SW:** `vox-pwa-v6.70-carbon-parchment-identity`
+
+**Problema:** canvas celeste/roxo e cards foto full-bleed liam como clone genérico de feed de foto; marca na sidebar trocava tile escuro/claro.
+
+**Tokens:** `--bg-parchment` `#f4f0e8` (claro) · `--bg-carbon` `#18181a` (escuro) · superfícies empilhadas neutras; `data-sky-period` só afina **chrome/accent** (`--brand-chrome`, `--theme-chrome`), **não** `--bg` / `--surface-*`.
+
+**Marca shell:** um único `icons/icon-512.png` (squircle tile claro) — sem `attachBrandMarkTheme` / `icon-white-512`.
+
+**Entregue (UX):**
+
+- **Mural:** posts com mídia usam `.post-mural` — padding, raio ~14px, sombra papel, mídia com cantos arredondados (overlay/ações/comentários intactos).
+- **Newsletter:** `.post-layout-text` tipografia mais larga (~1.02rem corpo) e coluna até ~540px.
+- **Sidebar cívica:** barra verde `inset` + superfícies pergaminho/carbono.
+- **Stories:** anel plano verde/outline (sem gradiente arco-íris); conta **Vox Brasil** ✓ com `.story-ring--official`.
+- **Grade perfil:** gutters 8px, tiles arredondados com borda/sombra leve.
+
+**Não mexido:** overlay hero, react/reply em comentários, DM welcome, Voxpedia, Open Frames.
+
