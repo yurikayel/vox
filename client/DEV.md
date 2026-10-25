@@ -882,3 +882,24 @@ Script: [`tools/write-oauth-deploy-config.mjs`](../tools/write-oauth-deploy-conf
 7. **A** desliga toggle → após gossip, B busca de novo — cartão some (autor de post antigo ainda pode aparecer como `mesh-author` se houve post compartilhado).
 8. `npm test` na raiz `vox/` antes de merge.
 
+---
+
+## 27. Meta App Dashboard — campos obrigatórios
+
+Quando a console mostra *Não qualificado para envio* (ícone, privacidade, exclusão de dados, categoria):
+
+| Campo | Ação |
+|-------|------|
+| **Ícone 1024×1024** | Upload de `client/icons/icon-1024.png` (PNG 1024×1024) |
+| **Política de Privacidade** | `https://yurikayel.github.io/vox/privacy.html` |
+| **Exclusão de dados** | `https://yurikayel.github.io/vox/data-deletion.html` |
+| **Categoria** | Ex.: *Utilitários* → *Redes sociais* |
+
+Arquivos: `client/privacy.html`, `client/data-deletion.html`. Deploy: push em `main` que altere `client/**`. Detalhes jurídicos: `COMPLIANCE-BR.md`.
+
+---
+
+## 28. Code hardening
+
+Ver [`docs/HARDENING.md`](../docs/HARDENING.md), [`docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md). Comandos: `npm run audit:complexity`, `npm run lint`, `npm test`.
+

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Política de Privacidade — Vox</title>
+    <meta
+      name="description"
+      content="Política de Privacidade do Vox PWA — cliente open-source, dados predominantemente no aparelho, login social opcional."
+    />
+    <link rel="canonical" href="https://yurikayel.github.io/vox/privacy.html" />
+    <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+    <style>
+      :root { --text: #1a1a1a; --muted: #555; --link: #1a5fb4; --max: 42rem; }
+      body { font-family: system-ui, sans-serif; line-height: 1.55; color: var(--text); margin: 0; padding: 1.5rem; }
+      main { max-width: var(--max); margin: 0 auto; }
+      h1 { font-size: 1.5rem; }
+      h2 { font-size: 1.1rem; margin-top: 1.75rem; }
+      p, li { color: var(--text); }
+      .meta { color: var(--muted); font-size: 0.9rem; }
+      a { color: var(--link); }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Política de Privacidade — Vox PWA</h1>
+      <p class="meta">
+        Instância: <a href="https://yurikayel.github.io/vox/">yurikayel.github.io/vox</a> ·
+        Última atualização: 25 de outubro de 2026 · Documento informativo; não substitui parecer jurídico.
+      </p>
+
+      <p>
+        O <strong>Vox</strong> é um Progressive Web App (PWA) de código aberto para comunidades e mensagens.
+        <strong>Não há cadastro centralizado</strong> operado pelo projeto Vox: a identidade criptográfica
+        (<code>vx_*</code>) e a maior parte dos dados ficam no seu aparelho (IndexedDB e localStorage).
+      </p>
+
+      <h2>1. Controlador / operador desta instância</h2>
+      <p>
+        Código-fonte: <a href="https://github.com/yurikayel/vox">github.com/yurikayel/vox</a>.
+        Esta cópia em GitHub Pages é hospedagem estática do cliente; não existe backend Vox que armazene contas ou senhas.
+        Contato para privacidade desta instância:
+        <a href="https://github.com/yurikayel/vox/issues">issues no GitHub</a> (assunto “Privacidade / LGPD”).
+      </p>
+
+      <h2>2. Dados tratados</h2>
+      <ul>
+        <li><strong>Identidade local:</strong> par de chaves e <code>vx_*</code> gerados no navegador; nome, foto, bio e preferências que você salva localmente.</li>
+        <li><strong>Login social opcional (Google / Meta):</strong> após consentimento no onboarding (“Cantina”), o app copia <em>apenas</em> nome e URL pública de avatar para o aparelho. <strong>Tokens OAuth de longa duração não são persistidos</strong> pelo Vox.</li>
+        <li><strong>Busca na malha (opt-in):</strong> cartão de perfil assinado (nome, foto, bio) propagado entre aparelhos conectados via gossip P2P — sem diretório central.</li>
+        <li><strong>Conteúdo público (Arweave):</strong> publicações assinadas por você são públicas e persistentes on-chain; leitura usa gateways de terceiros.</li>
+        <li><strong>Mensagens diretas:</strong> cifradas ponta a ponta; relays comunitários guardam só envelopes cifrados por tempo limitado (TTL).</li>
+        <li><strong>Cache e Pacto Vox:</strong> o app pode cachear fragmentos públicos já obtidos para ajudar outros clientes na malha, com opt-out em
+          <a href="https://yurikayel.github.io/vox/index.html#/settings/network">configurações de rede</a>.</li>
+      </ul>
+
+      <h2>3. Finalidades e bases legais (LGPD — visão geral)</h2>
+      <ul>
+        <li>Execução do cliente e funcionalidades que você solicita (Art. 7º, V).</li>
+        <li>Consentimento para dados opcionais: login social, cartão na malha (Art. 7º, I).</li>
+        <li>Minimização: sem venda de dados, sem perfilamento comercial.</li>
+      </ul>
+
+      <h2>4. Compartilhamento com terceiros</h2>
+      <ul>
+        <li><strong>Google / Meta:</strong> somente se você usar login social; aplicam-se as políticas deles.</li>
+        <li><strong>Gateways Arweave e relays:</strong> conforme operadores configurados por você ou sua comunidade.</li>
+      </ul>
+
+      <h2>5. Retenção</h2>
+      <ul>
+        <li>Dados locais: enquanto permanecerem no aparelho ou até você limpar cache / dados do site.</li>
+        <li>Cartões de malha recebidos: expiração client-side (~30 dias sem republicação).</li>
+        <li>Inbox relay: TTL típico de 72 horas para envelopes cifrados.</li>
+        <li>Permaweb: conteúdo publicado pode ser permanente.</li>
+      </ul>
+
+      <h2>6. Seus direitos</h2>
+      <p>
+        Acesso, correção e eliminação no que couber tecnicamente: remova enriquecimento OAuth em
+        <code>#/perfil</code>, desative o cartão na malha, pause ajuda à rede, limpe cache local ou dados do site.
+        Conteúdo já on-chain pode não ser eliminável de forma plena.
+      </p>
+      <p>
+        Passo a passo de exclusão:
+        <a href="https://yurikayel.github.io/vox/data-deletion.html">Exclusão de dados do usuário</a>.
+      </p>
+
+      <h2>7. Crianças e adolescentes</h2>
+      <p>
+        O Vox não é direcionado a menores de 13 anos. Pais ou responsáveis podem solicitar orientação via issue no repositório.
+      </p>
+
+      <h2>8. Alterações</h2>
+      <p>
+        Esta página pode ser atualizada no repositório; a data no topo indica a revisão vigente nesta instância.
+      </p>
+
+      <p class="meta">
+        <a href="https://yurikayel.github.io/vox/data-deletion.html">Exclusão de dados</a> ·
+        <a href="https://yurikayel.github.io/vox/">Voltar ao Vox</a>
+      </p>
+    </main>
+  </body>
+</html>
