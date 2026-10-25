@@ -1,4 +1,4 @@
-/** @file IG-style ⋯ sheet for feed photo posts (#post-more-sheet). */
+/** @file Menu ⋯ (sheet) para publicações com foto no feed (#post-more-sheet). */
 
 import * as share from "../share.js";
 
