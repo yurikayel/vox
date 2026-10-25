@@ -291,6 +291,8 @@ test("render - renderFeed e renderProfile com persona mock (Maria MG)", () => {
   });
   assert.ok(mainProf.innerHTML.includes("Maria (@maria-mg)"));
   assert.ok(mainProf.innerHTML.includes("profile-stereotype-banner"));
+  assert.ok(mainProf.innerHTML.includes("respeitoso"));
+  assert.ok(mainProf.innerHTML.includes("n\u00e3o me leve a mal"));
 });
 
 test("render - formatTimeAgo retorna strings relativas concisas", () => {
