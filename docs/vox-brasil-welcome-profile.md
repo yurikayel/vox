@@ -7,17 +7,16 @@
 - **Conta oficial / voz da plataforma** (não pessoa, não perfil estereótipo UF).
 - Primeiro contato de todo visitante após onboarding.
 - Tom **institucional e amigável**; links para `#/voxpedia`, `#/settings/network`, `#/people`.
-- Botões: **Seguir** (watch), **Mensagem** (DM welcome).
+- **Watch** automático + **DM** de boas-vindas (sem card grande no feed).
 
 ## DM boas-vindas
 
-Mensagem local única (sem E2E do sistema), seed `welcome-dm-vox-brasil-v2` em [`vox-welcome-profile.js`](../../client/js/vox-welcome-profile.js):
-
-> Olá! 👋 Sou a conta oficial do Vox Brasil — sua voz de boas-vindas na plataforma. Use **Pessoas** para achar gente ou compartilhe `#/connect/seu_vx_`. Glossário leigo: **Voxpedia** (#/voxpedia). Rede: Configurações → Sua rede.
+Mensagem local única (sem E2E do sistema), seed `welcome-dm-vox-brasil-v3` em [`vox-welcome-profile.js`](../../client/js/vox-welcome-profile.js). Copy idiocracy-friendly PT com emoji; menciona Pessoas e Voxpedia.
 
 ## UI
 
-- Card pós-pacto (1x por aparelho, flag `vox-welcome-card-seen`).
+- Feed: faixa fina opcional (`vox-welcome-dm-intro-seen`) ou toast na primeira seed — link para `#/dm/vx_voxbrasil_welcome`.
+- Thread welcome: bloco compacto com links (Pessoas · Voxpedia · perfil).
 - Inbox: conversa welcome pinada no topo quando existir.
 
 ## Assets
