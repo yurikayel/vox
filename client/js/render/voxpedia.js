@@ -196,6 +196,7 @@ function renderTecnico() {
         "Docs no repositório",
         `<ul class="voxpedia-steps">
           <li><code>client/DEV.md</code> — fluxos de teste manual</li>
+          <li><a href="#/labs/frames">Open Frames (lab)</a> · <a href="#/status">Status da malha</a></li>
           <li><code>docs/ARCHITECTURE.md</code> — visão geral</li>
           <li><code>POSITIONING.md</code> — comparação honesta com outras redes</li>
         </ul>`

@@ -1,6 +1,7 @@
 /** @file Markdown leve para corpo de posts (fenced code + parágrafos). */
 import { escapeHtml } from "./util.js";
 import * as hashtags from "../hashtags.js";
+import { renderUnifiedDiffHtml } from "./diff-html.js";
 
 const FENCE_RE = /```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g;
 
@@ -37,9 +38,14 @@ function renderTextSegment(raw) {
 }
 
 function renderCodeBlock(code, lang) {
+  const normLang = String(lang || "").trim().toLowerCase();
+  if (normLang === "diff") {
+    return `<div class="post-md-code post-md-code--diff" role="region" aria-label="diff">${renderUnifiedDiffHtml(code)}</div>`;
+  }
   const label = lang ? escapeHtml(lang) : "código";
   const body = escapeHtml(String(code || "").replace(/\n$/, ""));
-  return `<div class="post-md-code" role="region" aria-label="${label}">
+  const langClass = normLang ? ` post-md-code--lang-${escapeHtml(normLang.replace(/[^a-z0-9_-]/g, ""))}` : "";
+  return `<div class="post-md-code${langClass}" role="region" aria-label="${label}">
     ${lang ? `<div class="post-md-code-lang">${label}</div>` : ""}
     <pre class="post-md-code-pre"><code>${body}</code></pre>
   </div>`;

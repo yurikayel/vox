@@ -344,11 +344,12 @@ function renderProfileActions(
         </div>
       </div>
 
-      <div class="card" style="margin-top:0.75rem;">
-        <h3>Backup & Restauração de Conta</h3>
-        <p class="desc" style="font-size:0.85rem; margin-bottom:0.5rem;">Exporte sua identidade completa (chaves de assinatura e DMs) para controle total da sua conta.</p>
+      <div class="card profile-sovereignty-export" style="margin-top:0.75rem;">
+        <h3>Arquivo de soberania</h3>
+        <p class="desc" style="font-size:0.85rem; margin-bottom:0.5rem;">Baixe um JSON com chaves locais (assinatura e DM). Guarde offline — ninguém na Big Tech pode revogar este arquivo. Leia <code>COMPLIANCE-BR.md</code> no repositório.</p>
         <div style="display:flex; flex-wrap:wrap; gap:0.5rem;">
-          <button type="button" id="btn-export-account" class="btn btn-sm btn-outline">💾 Exportar Identidade (.json)</button>
+          <button type="button" id="btn-export-account" class="btn btn-sm btn-primary">Baixar arquivo de soberania (.json)</button>
+          <button type="button" id="btn-export-account-alt" class="btn btn-sm btn-outline" hidden aria-hidden="true">💾 Exportar Identidade (.json)</button>
           <label class="btn btn-sm btn-outline" style="margin:0; cursor:pointer;">
             📥 Restaurar Backup
             <input type="file" id="file-import-account" accept="application/json,.json" style="display:none;" />
