@@ -3,9 +3,9 @@ import * as mock from "../mock.js";
 import { appShellFooterTagline } from "../i18n-pt-br.js";
 import { escapeHtml, root } from "./util.js";
 
-/** Opaque tiles; UI clips with `.brand-mark` squircle (not transparent cutout). */
-const BRAND_MARK_LIGHT = "icons/icon-white-512.png";
-const BRAND_MARK_DARK = "icons/icon-512.png";
+/** Light theme: navy tile; dark theme: white tile — clipped by `.brand-mark` squircle. */
+const BRAND_MARK_LIGHT = "icons/icon-512.png";
+const BRAND_MARK_DARK = "icons/icon-white-512.png";
 
 function renderBrandLink() {
   return `<a class="brand-link" href="#/" aria-label="Vox — início"><img class="brand-logo brand-mark brand-mark--light" src="${BRAND_MARK_LIGHT}" width="32" height="32" alt="" decoding="async" /><img class="brand-logo brand-mark brand-mark--dark" src="${BRAND_MARK_DARK}" width="32" height="32" alt="" decoding="async" aria-hidden="true" /><span class="brand-word">Vox</span></a>`;
