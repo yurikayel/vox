@@ -931,3 +931,22 @@ Três direções consideradas (Google Fonts, PT-BR em 14–16px na sidebar):
 
 **Escolhida — híbrido Praça + Rede viva:** `--font-sans: "Source Sans 3"` (UI, feed, forms, nav) e `--font-display: "Outfit"` só em `.brand-word` / `.brand-link`. Source Sans 3 mantém legibilidade cívica e acentuação PT; Outfit dá personalidade geométrica ao “Vox” sem competir com o celeste sky-theme. Fallback: `ui-sans-serif, system-ui`. Pesos: `--font-weight-nav: 600`; nav ativo 700. Letter-spacing: `0.03em` no wordmark, `0.012em` em `.tab-item` / `.sidebar-feed-tab`. Carregamento: `index.html` (preconnect + CSS2); bump `CACHE_NAME` quando o shell muda.
 
+---
+
+## 31. Feed — barra de ações e Seguir (IG)
+
+**Data:** 2026-10-25 · **SW:** `vox-pwa-v6.60-ig-follow-actions`
+
+| Ação | Onde fica | Decisão |
+|------|-----------|---------|
+| ❤️ Curtir + contagem | Barra primária (esquerda) | **Mantém** — reação social imediata, métrica honesta local. |
+| 💬 Comentar + contagem | Barra primária | **Mantém** — debate cívico; painel `.post-comments-surface` **abaixo** da foto, sem overlay na imagem. |
+| ↗ Compartilhar | Barra primária | **Mantém** — viralização cooperativa (link nativo / clipboard). |
+| ⚡ Apoiar (Pix) | Barra primária, só ícone | **Mantém** — apoio financeiro direto (Fase A); rótulo só no `aria-label` para não poluir. |
+| ⭐ Estrela | Menu **⋯** (overflow) | **Recolhe** — afinitude tipo GitHub; power user, não compete com curtida no mobile. |
+| 📋 Copiar Markdown | Menu **⋯** | **Recolhe** — jornalismo/dev; thread `#/t/:id` mantém ações completas. |
+| 🔖 Salvar | Barra secundária (direita) | **Mantém** — padrão IG, ícone único. |
+| **Seguir** | **Pill no canto sup. direito do hero** (`.post-follow-overlay`) | **Fora da barra** — copy IG; `social.toggleWatch`; oculto em post próprio e conta **Vox Brasil** (`vx_voxbrasil_welcome`). Perfil segue com 👁️ Watch. |
+
+Layout: `.toolbar-primary` (engajamento + Pix) · `.toolbar-secondary` (⋯ + bookmark). Tema celeste nos hovers (`var(--accent-soft)`). Comentários nunca usam `.post-overlay` / scrim — só o card foto tem overlay de autor+texto.
+

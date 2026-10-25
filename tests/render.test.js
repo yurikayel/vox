@@ -549,6 +549,8 @@ test("render - post v3 h√≠brido (m√≠dia antes do texto, star, copy-md e pinned)"
   assert.ok(html.includes("btn-star"));
   assert.ok(html.includes("count-stars"));
   assert.ok(html.includes("btn-copy-md"));
+  assert.ok(html.includes("toolbar-overflow"));
+  assert.ok(html.includes("post-follow-overlay"));
   assert.ok(html.includes("btn-save"));
 
   // Valida que a tag de m√≠dia aparece ANTES do t√≠tulo do post no DOM (hierarquia h√≠brida InstaTwitter)
@@ -806,9 +808,9 @@ test("render - renderPostItem pilha vertical estilo Meta com header IG, toolbar 
   const html = render.renderPostItem(post);
   assert.ok(html.includes("post-overlay"));
   assert.ok(html.includes("post-overlay-author"));
-  assert.ok(html.includes("toolbar-left"));
-  assert.ok(html.includes("toolbar-center"));
-  assert.ok(html.includes("toolbar-right"));
+  assert.ok(html.includes("toolbar-primary"));
+  assert.ok(html.includes("toolbar-secondary"));
+  assert.ok(html.includes("post-follow-overlay"));
   assert.ok(!html.includes("post-caption-block"));
   assert.ok(html.includes("post-media-hero"));
   assert.ok(html.includes("post-media-lightbox-trigger"));
@@ -824,6 +826,31 @@ test("render - renderPostItem pilha vertical estilo Meta com header IG, toolbar 
 
   assert.ok(mediaIdx < toolbarIdx, "MÌdia deve preceder a toolbar na pilha vertical");
   assert.ok(toolbarIdx < commentsIdx, "Toolbar deve preceder os coment·rios na pilha vertical");
+
+  const mediaSlice = html.slice(html.indexOf("post-media-container"), html.indexOf("insta-actions"));
+  assert.ok(!mediaSlice.includes("post-comments-surface"), "Coment·rios n„o no hero nem antes da toolbar");
+  assert.ok(html.includes("post-comments-surface"));
+});
+
+test("render - Seguir no hero oculto em post prÛprio e Vox oficial", () => {
+  const own = render.renderPostItem({
+    id: "own1",
+    title: "Meu post",
+    image: "https://example.com/a.jpg",
+    author: "vx_me",
+    isOwnLocalPost: true,
+    ts: Date.now(),
+  });
+  assert.ok(!own.includes("post-follow-overlay"));
+
+  const official = render.renderPostItem({
+    id: "vox1",
+    title: "Novidade",
+    image: "https://example.com/b.jpg",
+    author: "vx_voxbrasil_welcome",
+    ts: Date.now(),
+  });
+  assert.ok(!official.includes("post-follow-overlay"));
 });
 
 test("render - resolvePostAuthorLabels evita ID truncado duplicado", () => {

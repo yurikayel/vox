@@ -57,6 +57,7 @@ export function initPostMediaLightbox() {
     const trigger = e.target.closest(".post-media-lightbox-trigger");
     if (!trigger) return;
     if (e.target.closest(".post-overlay")) return;
+    if (e.target.closest(".post-follow-overlay")) return;
     e.preventDefault();
     openPostMediaLightbox(trigger.dataset.mediaSrc || "", trigger.dataset.mediaAlt || "");
   });
