@@ -130,6 +130,8 @@ export async function showComposeTopic(communityId) {
         }
 
         share.showToast("Post publicado na rede!");
+        const { openPosseSheetAfterPublish } = await import("../posse-dispatch.js");
+        openPosseSheetAfterPublish({ id: topicId, communityId: finalComm, title, body });
         location.hash = `#/t/${encodeURIComponent(topicId)}?c=${encodeURIComponent(finalComm)}`;
       } catch (err) {
         share.showToast(`Erro: ${err.message}`, "error");

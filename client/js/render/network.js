@@ -271,6 +271,19 @@ function renderNetworkForm(settings, notifPermission, customSignalingUrl, custom
     </div>`;
 }
 
+function renderPosseWebhooksSection(webhooks = []) {
+  const lines = escapeHtml((webhooks || []).join("\n"));
+  return `
+    <div class="card" style="margin-top:1rem;">
+      <h3>Ecoe POSSE — Webhooks</h3>
+      <p class="desc" style="font-size:0.85rem;">URLs (Discord, Telegram, n8n…) recebem POST JSON ao exportar POSSE no cockpit pós-publicação. Máx. 8 linhas.</p>
+      <div class="form-group">
+        <label for="net-posse-webhooks">URLs de webhook (uma por linha)</label>
+        <textarea id="net-posse-webhooks" class="form-control" rows="3" placeholder="https://discord.com/api/webhooks/…">${lines}</textarea>
+      </div>
+    </div>`;
+}
+
 function renderModerationSettingsSection(blockedUsers = [], mutedUsers = []) {
   const blockedList = blockedUsers.length
     ? blockedUsers.map((u) => `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;"><code>${escapeHtml(shortId(u))}</code><button type="button" class="btn btn-sm btn-outline btn-unblock-item" data-route="${escapeHtml(u)}">Desbloquear</button></div>`).join("")
@@ -320,6 +333,7 @@ export function renderNetworkSettings(main, {
   blockedUsers = [],
   mutedUsers = [],
   meshDiscoverable = false,
+  posseWebhooks = [],
 }) {
   const isEnabled = Boolean(settings?.enabled);
   let html = renderNetworkHeader(isEnabled, relayStatus, rtcStatus, gatewayHealth);
@@ -336,6 +350,7 @@ export function renderNetworkSettings(main, {
     relayHttpUrl,
     meshDiscoverable,
   );
+  html += renderPosseWebhooksSection(posseWebhooks);
   html += renderModerationSettingsSection(blockedUsers, mutedUsers);
   main.innerHTML = html;
 }
