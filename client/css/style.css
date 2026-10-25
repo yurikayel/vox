@@ -1423,9 +1423,8 @@ main#app-main {
 }
 
 .post-comments {
-  margin-top: 10px;
-  padding: 10px 2px 2px;
-  border-top: 1px solid var(--border-subtle);
+  margin-top: 4px;
+  padding: 0;
 }
 
 .post-comments[hidden] {
@@ -1456,12 +1455,7 @@ main#app-main {
 .post-comment-body {
   flex: 1;
   min-width: 0;
-  background: var(--surface-soft);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 8px 12px;
+  padding: 0;
 }
 
 .post-comment-meta {
@@ -1485,17 +1479,18 @@ main#app-main {
 }
 
 .post-comment-composer {
-  margin-top: 10px;
+  margin-top: 8px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .post-comment-input {
   resize: none;
-  min-height: 44px;
+  min-height: 40px;
   border-radius: var(--radius);
-  background: var(--glass-bg);
+  background: transparent;
+  border-color: var(--border-subtle);
 }
 
 .post-comment-composer-actions {
