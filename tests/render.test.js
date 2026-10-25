@@ -21,6 +21,7 @@ globalThis.document = {
 };
 
 const render = await import("../client/js/render.js");
+const mock = await import("../client/js/mock.js");
 
 test("render - renderOAuthEnrich usa botoes de marca Google/Meta", () => {
   const container = createContainer();
@@ -174,6 +175,32 @@ test("render - renderHome renderiza cards de comunidade", () => {
   assert.ok(html.includes("Cultura Brasileira"));
   assert.ok(html.includes("#/c/c1"));
   assert.ok(html.includes("#/c/c2"));
+  assert.ok(html.includes("community-vox-card"));
+  assert.ok(html.includes("community-vox-enter-btn"));
+});
+
+test("render - renderCommunity hero Orkut-style Entrar e layout", () => {
+  const main = createContainer();
+  render.renderCommunity(main, "demo-aprenda-vox", [], mock.MOCK_DEMO_COMMUNITY, {
+    isMember: false,
+    activeTab: "posts",
+    recentPeople: [{ routeId: "vx_demo_sp", name: "Demo SP" }],
+  });
+  const html = main.innerHTML;
+  assert.ok(html.includes("community-vox-hero"));
+  assert.ok(html.includes("Entrar"));
+  assert.ok(html.includes("Recado da comunidade"));
+  assert.ok(html.includes("community-vox-layout"));
+  assert.ok(html.includes("Membros online"));
+  assert.ok(html.includes("27 membros") || html.includes("27&nbsp;membros"));
+
+  const mainMember = createContainer();
+  render.renderCommunity(mainMember, "demo-aprenda-vox", [], mock.MOCK_DEMO_COMMUNITY, {
+    isMember: true,
+    activeTab: "posts",
+  });
+  assert.ok(mainMember.innerHTML.includes("is-member"));
+  assert.ok(mainMember.innerHTML.includes("Membro"));
 });
 
 test("render - renderDmList e renderDmThread", () => {
