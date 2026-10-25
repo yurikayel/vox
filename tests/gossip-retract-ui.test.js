@@ -29,7 +29,7 @@ test("gossip-retract-ui - tombstone oculto no feed com flag on", async () => {
     {
       id: "dead-post",
       title: "Removido",
-      author: "vx_demo_helena",
+      author: "vx_demo_mg",
       ts: Date.now(),
       gossipTombstone: { deleted: true, at: 1700000000000, sig: "mock-tombstone" },
     },

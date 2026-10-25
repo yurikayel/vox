@@ -1,7 +1,7 @@
 // Service Worker do Vox (PWA ? Porta da Cantina anime + shell offline)
 // NOTA ARQUITETURAL: WebRTC DataChannels operam exclusivamente na thread principal (DOM/Window).
 // O Service Worker atua no cache offline do shell e notifica��es de status, sem abrir WebRTC.
-const CACHE_NAME = "vox-pwa-v6.49-celeste-sky-theme";
+const CACHE_NAME = "vox-pwa-v6.50-uf27-profiles";
 const SHELL_ASSETS = [
   "./",
   "./index.html",
@@ -17,26 +17,6 @@ const SHELL_ASSETS = [
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./images/cantina-gate.jpg",
-  "./images/avatars/helena.jpg",
-  "./images/avatars/juliana.jpg",
-  "./images/avatars/yara.jpg",
-  "./images/avatars/mei.jpg",
-  "./images/avatars/fernanda.jpg",
-  "./images/avatars/salma.jpg",
-  "./images/avatars/lucas.jpg",
-  "./images/avatars/andre.jpg",
-  "./images/avatars/kaue.jpg",
-  "./images/avatars/raj.jpg",
-  "./images/posts/tour-helena.jpg",
-  "./images/posts/tour-juliana.jpg",
-  "./images/posts/tour-yara.jpg",
-  "./images/posts/tour-mei.jpg",
-  "./images/posts/tour-fernanda.jpg",
-  "./images/posts/tour-salma.jpg",
-  "./images/posts/tour-lucas.jpg",
-  "./images/posts/tour-andre.jpg",
-  "./images/posts/tour-kaue.jpg",
-  "./images/posts/tour-raj.jpg",
   "./config/gateways.json",
   "./config/upload.json",
   "./config/signaling.json",
@@ -83,6 +63,7 @@ const SHELL_ASSETS = [
   "./js/vox-welcome-profile.js",
   "./js/gateway-telemetry.js",
   "./js/graphql.js",
+  "./js/data/profiles-brazil-uf.js",
   "./js/mock.js",
   "./js/moderation.js",
   "./js/peers.js",
