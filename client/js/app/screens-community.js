@@ -228,10 +228,12 @@ export async function showCommunity(communityId, tab = "posts") {
         }
         share.showToast("Você agora é membro desta comunidade!");
         btnJoin.textContent = "✓ Membro";
+        btnJoin.classList.add("is-member");
+        btnJoin.setAttribute("aria-pressed", "true");
       } catch (err) {
         share.showToast(`Erro ao entrar: ${err.message}`, "error");
         btnJoin.disabled = false;
-        btnJoin.textContent = "★ Entrar";
+        btnJoin.textContent = "Entrar";
       }
     });
   }
