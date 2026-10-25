@@ -54,6 +54,7 @@
   --radius: 8px;
   --radius-sm: 6px;
   --feed-max: 500px;
+  --feed-post-gap: 3rem;
   --sidebar-width: 240px;
   --sidebar-width-collapsed: 72px;
   --space-xs: 4px;
@@ -2782,7 +2783,7 @@ body.post-lightbox-open {
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--feed-post-gap);
 }
 
 /* Grade de descoberta de comunidades (cartões compactos) */
