@@ -27,9 +27,28 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
+      - name: Instalar dependências (ESLint / audit)
+        run: npm ci
+
       - name: Verificação de sintaxe JS
         run: |
-          node --check client/js/*.js client/sw.js
+          find client/js -name '*.js' -print0 | xargs -0 node --check
+          node --check client/sw.js
+
+      - name: Auditoria de complexidade (baseline)
+        run: npm run audit:complexity
+
+      - name: Upload baseline métricas
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: complexity-baseline-node-${{ matrix.node-version }}
+          path: docs/metrics/baseline-*.json
+          if-no-files-found: ignore
+
+      - name: ESLint client (warn-only)
+        run: npm run lint
+        continue-on-error: true
 
       - name: Executar testes unitários do cliente (node:test)
         run: |
@@ -59,6 +78,10 @@ jobs:
       - name: Executar testes unitários do relay (unittest)
         run: |
           npm run test:relay
+
+      - name: Ruff relay (opcional)
+        run: pip install ruff && npm run lint:relay
+        continue-on-error: true
 
   security-audit:
     name: Auditoria de Segurança (Secrets / Chaves)

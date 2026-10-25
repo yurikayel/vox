@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Exclusão de dados do usuário — Vox</title>
+    <meta
+      name="description"
+      content="Como excluir dados do Vox PWA — aparelho local, login Meta/Google, malha P2P e permaweb."
+    />
+    <link rel="canonical" href="https://yurikayel.github.io/vox/data-deletion.html" />
+    <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+    <style>
+      :root { --text: #1a1a1a; --muted: #555; --link: #1a5fb4; --max: 42rem; }
+      body { font-family: system-ui, sans-serif; line-height: 1.55; color: var(--text); margin: 0; padding: 1.5rem; }
+      main { max-width: var(--max); margin: 0 auto; }
+      h1 { font-size: 1.5rem; }
+      h2 { font-size: 1.1rem; margin-top: 1.75rem; }
+      ol li { margin-bottom: 0.65rem; }
+      .meta { color: var(--muted); font-size: 0.9rem; }
+      a { color: var(--link); }
+      code { font-size: 0.9em; }
+      .note { background: #f4f6f9; border-radius: 8px; padding: 0.75rem 1rem; font-size: 0.92rem; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Exclusão de dados do usuário — Vox</h1>
+      <p class="meta">
+        Instância: <a href="https://yurikayel.github.io/vox/">yurikayel.github.io/vox</a> ·
+        Atualizado em 25 de outubro de 2026 · Meta / Google OAuth e LGPD
+      </p>
+
+      <p class="note">
+        O Vox <strong>não opera servidor central de contas</strong>. Quase todos os dados ficam no seu navegador.
+        Não enviamos pedidos de exclusão para um “banco de usuários Vox” porque esse banco não existe.
+      </p>
+
+      <h2>1. Nome e foto importados (Google ou Meta / Facebook Login)</h2>
+      <ol>
+        <li>Abra <a href="https://yurikayel.github.io/vox/">https://yurikayel.github.io/vox/</a>.</li>
+        <li>Vá em <strong>Perfil</strong> (<code>#/perfil</code>).</li>
+        <li>Toque em <strong>Remover nome/foto importados</strong> (painel de identidade).</li>
+      </ol>
+      <p>
+        Isso apaga nome/foto copiados localmente; seu <code>vx_*</code> permanece. O Vox não guarda token OAuth após o enriquecimento.
+      </p>
+      <p><strong>No provedor:</strong></p>
+      <ul>
+        <li><strong>Google:</strong> Conta Google → Segurança → Seus apps de terceiros → remover Vox.</li>
+        <li><strong>Meta:</strong> Facebook → Configurações → Apps e sites → remover o app Vox PWA.</li>
+      </ul>
+
+      <h2>2. Cartão “Aparecer na busca da malha”</h2>
+      <ol>
+        <li>Em <code>#/perfil</code> ou <code>#/settings/network</code>, desligue <strong>Aparecer na busca da malha</strong>.</li>
+        <li>Salve preferências; pares recebem atualização para remover seu cartão do índice local.</li>
+      </ol>
+
+      <h2>3. Apagar tudo neste aparelho (recomendado para “excluir minha conta local”)</h2>
+      <ol>
+        <li><code>#/settings/network</code> → <strong>Limpar cache local</strong>, ou</li>
+        <li>No navegador: Configurações → Privacidade → Dados do site →
+          <code>yurikayel.github.io</code> → excluir armazenamento e cache (inclui Service Worker).</li>
+      </ol>
+      <p>
+        Remove identidade local, DMs locais, moderação, rascunhos e cache P2P neste dispositivo.
+        <strong>Irreversível</strong> sem backup exportado previamente em <code>#/perfil</code>.
+      </p>
+
+      <h2>4. Conteúdo publicado no Arweave (permaweb)</h2>
+      <p>
+        Transações assinadas por você são públicas e, em regra, <strong>não apagáveis</strong> pelo projeto Vox.
+        Mitigações: não republicar; usar retratação/gossip quando disponível; pedir a operadores de espelhos que ocultem TX em front-ends que controlam.
+      </p>
+
+      <h2>5. Mensagens cifradas no relay (inbox)</h2>
+      <p>
+        Envelopes expiram automaticamente (TTL, tipicamente 72 h) ou são apagados quando o destinatário busca.
+        O relay não armazena texto legível.
+      </p>
+
+      <h2>6. Pedido formal (LGPD / titular de dados)</h2>
+      <p>
+        Para esta instância, abra uma issue em
+        <a href="https://github.com/yurikayel/vox/issues">github.com/yurikayel/vox/issues</a>
+        com assunto “Exclusão de dados”, informando seu <code>vx_*</code> (se souber) e o que deseja apagar.
+        Responderemos com orientação alinhada ao que é tecnicamente possível sem backend central.
+      </p>
+
+      <h2>7. Meta — URL de instruções de exclusão</h2>
+      <p>
+        Esta página cumpre o requisito de <strong>User data deletion</strong> para apps que usam Facebook Login
+        sem callback server-side: instruções públicas para o usuário apagar dados no cliente e revogar o app na Meta.
+      </p>
+
+      <p class="meta">
+        <a href="https://yurikayel.github.io/vox/privacy.html">Política de Privacidade</a> ·
+        <a href="https://yurikayel.github.io/vox/">Voltar ao app</a>
+      </p>
+    </main>
+  </body>
+</html>

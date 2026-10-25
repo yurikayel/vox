@@ -5,6 +5,7 @@ import * as manifestMesh from "./peers-cache-manifest.js";
 import * as blobAffinity from "./peers-blob-affinity.js";
 import * as moderation from "./moderation.js";
 import * as profileCard from "./profile-card.js";
+import * as gossipProfile from "./peers-gossip-profile.js";
 import * as profileDirectory from "./profile-directory.js";
 import { getRelayHttpUrl } from "./inbox.js";
 
@@ -328,33 +329,6 @@ export async function handleVoxMessage(msg, replyFn, source = "broadcast") {
   }
 }
 
-function routeIdFromProfileCardId(cardId) {
-  const id = String(cardId || "");
-  if (!id.startsWith("pc_vx_")) return "";
-  return id.slice(3);
-}
-
-async function applyVerifiedProfileCardItem(item) {
-  if (profileCard.isProfileCardExpired(item)) {
-    if (item?.routeId) profileDirectory.removeProfileCard(item.routeId);
-    return true;
-  }
-  const check = profileCard.validateProfileCardItem(item);
-  if (!check.ok) return false;
-  if (!item.discoverable) {
-    profileDirectory.removeProfileCard(item.routeId);
-    return true;
-  }
-  profileDirectory.setProfileCard(item.routeId, {
-    name: item.displayName || "",
-    avatarUrl: item.avatarUrl || "",
-    bio: item.bio || "",
-    discoverable: true,
-    gossipCardId: item.id,
-  });
-  return true;
-}
-
 async function relayProfileCardGossip(payload, source) {
   if (source !== "broadcast" && broadcastChannel) {
     try {
@@ -401,7 +375,7 @@ async function handleGossipMessage(item, source = "rtc") {
   if (!valid) return;
 
   if (item.type === profileCard.PROFILE_CARD_TYPE) {
-    await applyVerifiedProfileCardItem(item);
+    await gossipProfile.applyVerifiedProfileCardItem(item);
     await relayProfileCardGossip({ type: "GOSSIP", item, fromPeer: myPeerId }, source);
     return;
   }
@@ -439,7 +413,7 @@ async function handleGossipUpdateMessage(item, source = "rtc") {
   if (!valid) return;
 
   if (item.type === profileCard.PROFILE_CARD_TYPE) {
-    await applyVerifiedProfileCardItem(item);
+    await gossipProfile.applyVerifiedProfileCardItem(item);
     await relayProfileCardGossip({ type: "GOSSIP_UPDATE", item, fromPeer: myPeerId }, source);
     return;
   }
@@ -478,7 +452,7 @@ async function handleGossipDeleteMessage(tombstone, source = "rtc") {
   const valid = await localAccount.verifyPayload(tombstone);
   if (!valid) return;
 
-  const cardRoute = routeIdFromProfileCardId(tombstone.id);
+  const cardRoute = gossipProfile.routeIdFromProfileCardId(tombstone.id);
   if (cardRoute) {
     profileDirectory.removeProfileCard(cardRoute);
     await relayProfileCardGossip(
