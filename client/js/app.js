@@ -5,6 +5,7 @@ import { wireRoute, setupHashchangeListener, routeImpl as route } from "./app/ro
 import { initDmListeners, initGossipListeners, initSocialInteractions } from "./app/init.js";
 import { initPostMediaLightbox } from "./app/post-media-lightbox.js";
 import { attachPostMoreMenuHandlers } from "./render/post-more-menu.js";
+import { attachPosseSheetHandlers } from "./posse-dispatch.js";
 import { attachPostOverlayActionMenuHandlers } from "./app/screens-home.js";
 import { syncIdentity } from "./app/screens-network.js";
 
@@ -16,6 +17,7 @@ initGossipListeners();
 initSocialInteractions();
 initPostMediaLightbox();
 attachPostMoreMenuHandlers();
+attachPosseSheetHandlers();
 attachPostOverlayActionMenuHandlers();
 syncIdentity();
 demoSeed.ensureDemoSeed().finally(() => route());
