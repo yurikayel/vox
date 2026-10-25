@@ -174,7 +174,7 @@ a:hover {
   gap: 8px;
 }
 
-/* iOS squircle: light theme = navy tile (white X); dark theme = white tile (blue X). */
+/* iOS squircle: src set in shell.js from prefers-color-scheme (light=navy, dark=white). */
 .brand-logo.brand-mark,
 .brand-mark {
   width: 32px;
@@ -184,22 +184,6 @@ a:hover {
   border-radius: 22%;
   overflow: hidden;
   object-fit: cover;
-}
-
-/* Default (light): `.brand-mark--light` → icons/icon-512.png */
-.brand-mark--dark {
-  display: none;
-}
-
-@media (prefers-color-scheme: dark) {
-  /* Dark: `.brand-mark--dark` → icons/icon-white-512.png */
-  .brand-mark--light {
-    display: none;
-  }
-
-  .brand-mark--dark {
-    display: block;
-  }
 }
 
 .brand-word {
