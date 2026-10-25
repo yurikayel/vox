@@ -1,5 +1,5 @@
 :root {
-  /* Marca G/O/X — vox populi (squircle navy / squircle branco) */
+  /* Marca G/O/X â€” vox populi (squircle navy / squircle branco) */
   --brand-chrome: #0284c7;
   --brand-chrome-hover: #0369a1;
   --brand-navy: var(--brand-chrome);
@@ -431,7 +431,7 @@ a:hover {
   }
 }
 
-/* Sidebar esquerda (mobile: faixa de ícones; desktop: expansível) */
+/* Sidebar esquerda (mobile: faixa de Ã­cones; desktop: expansÃ­vel) */
 .sidebar-backdrop {
   position: fixed;
   inset: 0;
@@ -677,7 +677,7 @@ a:hover {
   margin-left: var(--sidebar-width-collapsed);
 }
 
-/* Mobile: rótulos ocultos até drawer aberto */
+/* Mobile: rÃ³tulos ocultos atÃ© drawer aberto */
 @media (max-width: 767px) {
   .sidebar-feed-label,
   .tab-label,
@@ -823,7 +823,7 @@ a:hover {
   }
 }
 
-/* Conteúdo Principal */
+/* ConteÃºdo Principal */
 main#app-main,
 .app-main {
   width: 100%;
@@ -845,7 +845,7 @@ main#app-main,
   }
 }
 
-/* Feed chrome — abas, stories e composer alinhados à coluna */
+/* Feed chrome â€” abas, stories e composer alinhados Ã  coluna */
 .feed-chrome {
   max-width: var(--feed-max, 500px);
   margin: 0 auto 0.5rem;
@@ -875,7 +875,7 @@ main#app-main,
   padding: 6px 10px;
 }
 
-/* Composer inline (estilo X — mesma janela) */
+/* Composer inline (estilo X â€” mesma janela) */
 .inline-composer {
   max-width: 100%;
   margin: 0 auto 14px auto;
@@ -1102,7 +1102,7 @@ main#app-main,
   text-align: center;
 }
 
-/* Post / item de feed (cartão padrão) */
+/* Post / item de feed (cartÃ£o padrÃ£o) */
 .post {
   display: flex;
   flex-direction: column;
@@ -1392,7 +1392,7 @@ main#app-main,
   word-break: break-word;
 }
 
-/* Fotos e mídia nos posts (bleed 4:5) */
+/* Fotos e mÃ­dia nos posts (bleed 4:5) */
 .post-media-container {
   margin: 0;
   border-radius: 0;
@@ -1875,7 +1875,7 @@ body.post-more-sheet-open {
   display: block;
 }
 
-/* Lightbox — imagem limpa, sem textos do feed */
+/* Lightbox â€” imagem limpa, sem textos do feed */
 .post-lightbox {
   position: fixed;
   inset: 0;
@@ -1926,7 +1926,7 @@ body.post-lightbox-open {
   outline: none;
 }
 
-/* Cabeçalho inline do post (texto / gist) */
+/* CabeÃ§alho inline do post (texto / gist) */
 .post-header-inline {
   display: flex;
   align-items: center;
@@ -2030,7 +2030,7 @@ body.post-lightbox-open {
   text-decoration: underline;
 }
 
-/* Ações dos Posts (Toolbar IG: esquerda, centro, direita) */
+/* AÃ§Ãµes dos Posts (Toolbar IG: esquerda, centro, direita) */
 .insta-actions {
   display: flex;
   align-items: center;
@@ -2180,7 +2180,7 @@ body.post-lightbox-open {
 }
 
 .post-comments-surface.is-open {
-  /* Painel de comentários — nunca herda overlay/scrim do hero */
+  /* Painel de comentÃ¡rios â€” nunca herda overlay/scrim do hero */
   z-index: auto;
 }
 
@@ -2227,6 +2227,85 @@ body.post-lightbox-open {
   margin: 0;
   font-size: 0.88rem;
   line-height: 1.4;
+}
+
+.post-comment-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin-top: 4px;
+}
+
+.post-comment-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 36px;
+  padding: 4px 10px;
+  margin: 0;
+  border: none;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.post-comment-action:hover,
+.post-comment-action:focus-visible {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.btn-comment-react.active {
+  color: var(--danger, #e11d48);
+}
+
+.btn-comment-react.active .post-comment-action-icon {
+  color: var(--danger, #e11d48);
+}
+
+.post-comment-action-icon {
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.count-comment-reacts {
+  font-size: 0.75rem;
+  font-weight: 700;
+  min-width: 0.75rem;
+}
+
+.post-comment-nested-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0 0 0 12px;
+  border-left: 2px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.post-comment-nested-list .post-comment-item {
+  gap: 8px;
+}
+
+.post-comment-nested-reply {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.post-comment-nested-reply[hidden] {
+  display: none !important;
+}
+
+.post-comment-nested-actions {
+  justify-content: flex-end;
 }
 
 .post-comments-empty {
@@ -2301,7 +2380,7 @@ body.post-lightbox-open {
   font-size: 0.88rem;
 }
 
-/* Perfil ? grade de publicações (mobile-first, max ~935px) */
+/* Perfil ? grade de publicaÃ§Ãµes (mobile-first, max ~935px) */
 .profile-grid-layout {
   width: 100%;
   max-width: 935px;
@@ -2700,7 +2779,7 @@ body.post-lightbox-open {
   text-decoration: underline;
 }
 
-/* Formulário Pix e Lookup */
+/* FormulÃ¡rio Pix e Lookup */
 .pix-section {
   margin-top: 0.75rem;
   border-top: 1px solid var(--border);
@@ -2785,7 +2864,7 @@ body.post-lightbox-open {
   gap: 16px;
 }
 
-/* Grade de descoberta de comunidades (cartões compactos) */
+/* Grade de descoberta de comunidades (cartÃµes compactos) */
 .community-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -2848,7 +2927,7 @@ body.post-lightbox-open {
   border-top: 1px solid var(--border-subtle);
 }
 
-/* Tópicos e Threads Estilo X */
+/* TÃ³picos e Threads Estilo X */
 .topic-root {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -3019,7 +3098,7 @@ body.post-lightbox-open {
   gap: 8px;
 }
 
-/* Elementos Padrão / Glass Cards */
+/* Elementos PadrÃ£o / Glass Cards */
 .card {
   background: var(--surface-1);
   border: 1px solid var(--outline);
@@ -3085,7 +3164,7 @@ body.post-lightbox-open {
   gap: 0.65rem;
 }
 
-/* Botões */
+/* BotÃµes */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -3164,7 +3243,7 @@ body.post-lightbox-open {
   font-size: 0.78rem;
 }
 
-/* Formulários */
+/* FormulÃ¡rios */
 .form-group {
   margin-bottom: 0.85rem;
 }
@@ -3306,7 +3385,7 @@ body.post-lightbox-open {
   color: var(--text);
 }
 
-/* Progressive Disclosure (Avançado) */
+/* Progressive Disclosure (AvanÃ§ado) */
 .advanced-settings {
   border-top: 1px solid var(--border);
   padding-top: 0.75rem;
@@ -3383,7 +3462,7 @@ body.post-lightbox-open {
   }
 }
 
-/* OAuth enrich — botões estilo GIS / Meta (ADR-002) */
+/* OAuth enrich â€” botÃµes estilo GIS / Meta (ADR-002) */
 .oauth-enrich-dialog {
   max-width: 420px;
   padding: 1.35rem 1.25rem 1.15rem;
@@ -3539,7 +3618,7 @@ body.post-lightbox-open {
   }
 }
 
-/* Modal Onboarding — opaque scrim + paper cards (no glass / purple wash) */
+/* Modal Onboarding â€” opaque scrim + paper cards (no glass / purple wash) */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -3867,7 +3946,7 @@ body.post-lightbox-open {
   transition: width 0.3s ease;
 }
 
-/* Welcome via DM — feed hint + thread intro */
+/* Welcome via DM â€” feed hint + thread intro */
 .welcome-feed-hint {
   display: flex;
   align-items: center;
@@ -3940,7 +4019,7 @@ body.post-lightbox-open {
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
 }
 
-/* Feira Comunitária e Classificados (Fase M1) */
+/* Feira ComunitÃ¡ria e Classificados (Fase M1) */
 .community-tabs {
   display: flex;
   gap: 0.5rem;
@@ -4116,7 +4195,7 @@ body.post-lightbox-open {
   background: var(--accent-soft);
 }
 
-/* UI v3: Feed Segmented Nav (Para você | Seguindo) */
+/* UI v3: Feed Segmented Nav (Para vocÃª | Seguindo) */
 .feed-segmented-nav {
   display: inline-flex;
   align-items: center;
@@ -4246,7 +4325,7 @@ body.post-lightbox-open {
   text-align: center;
 }
 
-/* Governança Comunitária FOSS (G1) */
+/* GovernanÃ§a ComunitÃ¡ria FOSS (G1) */
 .gov-info-card {
   background: var(--surface-card);
   border: 1px solid var(--border-glow);
@@ -4745,7 +4824,7 @@ body.post-lightbox-open {
   color: var(--muted);
 }
 
-/* Voxpedia — leitura confortável, camadas em details */
+/* Voxpedia â€” leitura confortÃ¡vel, camadas em details */
 .voxpedia-page {
   max-width: 42rem;
   margin: 0 auto;
