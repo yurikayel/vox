@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections import deque
 from pathlib import Path
 
-from PIL import Image
+from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[1]
 DOCS = ROOT / "docs"
@@ -298,6 +298,23 @@ def fit_opaque_square(im: Image.Image, size: int) -> Image.Image:
     return square.resize((size, size), Image.Resampling.LANCZOS)
 
 
+def squircle_mask(size: int, corner_ratio: float = 0.22) -> Image.Image:
+    """iOS-style squircle alpha mask (matches CSS border-radius ~22%)."""
+    mask = Image.new("L", (size, size), 0)
+    draw = ImageDraw.Draw(mask)
+    r = max(1, int(size * corner_ratio))
+    draw.rounded_rectangle((0, 0, size - 1, size - 1), radius=r, fill=255)
+    return mask
+
+
+def fit_opaque_squircle(im: Image.Image, size: int, corner_ratio: float = 0.22) -> Image.Image:
+    """Opaque logo tile clipped to squircle — official platform profile avatar."""
+    square = fit_opaque_square(im, size)
+    rgba = square.convert("RGBA")
+    rgba.putalpha(squircle_mask(size, corner_ratio))
+    return rgba
+
+
 def _o_hole_center_alpha(rgba: Image.Image) -> tuple[int, int, int]:
     px = rgba.load()
     w, h = rgba.size
@@ -366,6 +383,7 @@ def main() -> None:
     write_png(ICONS / "icon-white-512.png", fit_opaque_square(white_im, 512))
     write_png(ICONS / "icon-1024.png", fit_opaque_square(navy_im, 1024))
     write_png(ICONS / "icon-512.png", fit_opaque_square(navy_im, 512))
+    write_png(ICONS / "profile-vox-official-512.png", fit_opaque_squircle(white_im, 512))
 
     print("Wrote branding + client icons from official docs JPGs.")
 

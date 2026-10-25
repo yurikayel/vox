@@ -1114,6 +1114,17 @@ main#app-main,
   display: block;
 }
 
+.avatar-squircle,
+.avatar-wrap.avatar-squircle,
+.avatar-img.avatar-squircle,
+.profile-avatar-img.avatar-squircle {
+  border-radius: 22%;
+}
+
+.avatar-wrap.avatar-squircle .avatar-img.avatar-squircle {
+  object-fit: cover;
+}
+
 .post-content {
   flex: 1;
   min-width: 0;
