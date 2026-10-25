@@ -448,8 +448,8 @@ export function renderFeed(main, topics = [], { activeFeed = "for-you", userRout
     } else {
       html += `
         <div class="empty">
-          <p>Nenhum post recente na rede.</p>
-          <a class="btn btn-primary" href="#/compose/topic">Criar primeiro post</a>
+          <p>Nenhuma voz recente na rede — seja a primeira.</p>
+          <a class="btn btn-primary" href="#/compose/topic">Publicar primeiro post</a>
         </div>`;
     }
     main.innerHTML += html;
