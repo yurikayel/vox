@@ -61,7 +61,10 @@
   --space-md: 16px;
   --space-lg: 24px;
   --shadow: var(--elevation-2);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
+  --font-sans: "Source Sans 3", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Outfit", var(--font-sans);
+  --font-weight-nav: 600;
+  font-family: var(--font-sans);
   color-scheme: light dark;
 }
 
@@ -214,6 +217,7 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
+  font-family: var(--font-sans);
   line-height: 1.5;
   min-height: 100dvh;
   -webkit-font-smoothing: antialiased;
@@ -263,9 +267,10 @@ a:hover {
 }
 
 .sidebar-brand a.brand-link {
+  font-family: var(--font-display);
   font-size: 1.35rem;
   font-weight: 800;
-  letter-spacing: -0.03em;
+  letter-spacing: 0.03em;
   text-decoration: none;
   display: inline-flex;
   align-items: center;
@@ -285,6 +290,7 @@ a:hover {
 }
 
 .brand-word {
+  font-family: var(--font-display);
   color: var(--text);
   font-weight: 800;
   letter-spacing: -0.03em;
@@ -508,7 +514,7 @@ a:hover {
   font-size: 1.25rem;
   font-weight: 800;
   color: var(--text);
-  letter-spacing: -0.03em;
+  letter-spacing: 0.03em;
   text-decoration: none;
   justify-content: center;
 }
@@ -528,8 +534,9 @@ a:hover {
   gap: 12px;
   padding: 8px 10px;
   border-radius: 999px;
-  font-size: 0.88rem;
-  font-weight: 600;
+  font-size: 0.9375rem;
+  font-weight: var(--font-weight-nav);
+  letter-spacing: 0.012em;
   color: var(--muted);
   text-decoration: none;
   transition: background 0.15s ease, color 0.15s ease;
@@ -615,8 +622,9 @@ a:hover {
   gap: 0;
   color: var(--muted);
   text-decoration: none;
-  font-size: 0.68rem;
-  font-weight: 600;
+  font-size: 0.875rem;
+  font-weight: var(--font-weight-nav);
+  letter-spacing: 0.012em;
   padding: 10px 8px;
   border-radius: 999px;
   transition: all 0.15s ease;
