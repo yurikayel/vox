@@ -450,7 +450,7 @@ function renderToolbarUtilityMenu(t, author, authorDisplay, authorHandle, baseSt
         <span class="toolbar-overflow-label">Apoiar</span>
       </button>`;
   return `<details class="${overflowCls}">
-    <summary class="action-btn btn-toolbar-more${overlay ? " overlay-action-btn" : ""}" aria-label="Mais ações"><span aria-hidden="true">⋯</span></summary>
+    <summary class="action-btn btn-toolbar-more${overlay ? " overlay-action-btn btn-post-actions-more" : ""}" aria-label="Mais ações"><span aria-hidden="true">⋯</span></summary>
     <div class="${menuCls}" role="menu">
       ${zapItem}
       <button type="button" class="action-btn btn-save ${saved ? "active" : ""}" data-id="${escapeHtml(t.id)}" role="menuitem" aria-label="Salvar post">
@@ -464,7 +464,7 @@ function renderToolbarUtilityMenu(t, author, authorDisplay, authorHandle, baseSt
       </button>
       <button type="button" class="action-btn btn-copy-md" data-id="${escapeHtml(t.id)}" data-title="${escapeHtml(t.title)}" data-body="${escapeHtml(t.body || "")}" data-author="${escapeHtml(authorDisplay)}" data-handle="${escapeHtml(authorHandle)}" role="menuitem" aria-label="Copiar Markdown">
         <svg class="action-icon icon-copy" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
-        <span class="toolbar-overflow-label">Copiar Markdown</span>
+        <span class="toolbar-overflow-label">${overlay ? "Copiar MD" : "Copiar Markdown"}</span>
       </button>
     </div>
   </details>`;
