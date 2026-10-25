@@ -1,6 +1,13 @@
 /** @file App shell, sidebar, feed nav, loading/error banners. */
 import * as mock from "../mock.js";
+import { appShellFooterTagline } from "../i18n-pt-br.js";
 import { escapeHtml, root } from "./util.js";
+
+const BRAND_MARK = "icons/icon-mark.png";
+
+function renderBrandLink() {
+  return `<a class="brand-link" href="#/" aria-label="Vox — início"><img class="brand-logo" src="${BRAND_MARK}" width="32" height="32" alt="" decoding="async" /><span class="brand-word">Vox</span></a>`;
+}
 
 const ICONS = {
   home: `<svg class="tab-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
@@ -97,7 +104,7 @@ function renderSidebar(activeTab, { showFeedNav, activeFeed, chipHtml, walletBad
     <aside class="app-sidebar tab-bar" id="app-sidebar" aria-label="Navegação principal">
       <div class="sidebar-scroll">
         <div class="sidebar-brand">
-          <a class="brand-link" href="#/"><span class="brand-mark">V</span><span class="brand-text">ox</span></a>
+          ${renderBrandLink()}
         </div>
         ${feedNav}
         <nav class="tab-nav" aria-label="Seções">
@@ -176,7 +183,7 @@ export function renderShell({
       <div class="main-column">
         ${topBarHtml}
         <main id="app-main"></main>
-        <footer class="app-footer">Vox · Comunidades e mensagens nos seus aparelhos · <a href="./proposta-vox.html" target="_blank">Proposta</a></footer>
+        <footer class="app-footer">Vox · ${escapeHtml(appShellFooterTagline)} · <a href="./proposta-vox.html" target="_blank">Proposta</a></footer>
       </div>
     </div>
   `;
