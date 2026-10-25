@@ -47,7 +47,7 @@ test("roadmap-ui: renderProfile exibe backup de identidade para conta própria",
     activeTab: "about",
   });
   const html = main.innerHTML;
-  assert.ok(html.includes("Backup &amp; Restauração de Conta") || html.includes("Backup & Restauração de Conta"));
+  assert.ok(html.includes("Arquivo de soberania") || html.includes("profile-sovereignty-export"));
   assert.ok(html.includes("btn-export-account"));
   assert.ok(html.includes("file-import-account"));
   assert.ok(!html.includes("btn-toggle-block"));

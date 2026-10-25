@@ -383,16 +383,16 @@ export function bindProfileButtons(user, address, isSelf, dmPub, activeTab = "po
   if (btnExportAcc && isSelf) {
     btnExportAcc.addEventListener("click", async () => {
       try {
-        const bundle = await localAccount.exportAccountBundle();
-        const jsonStr = JSON.stringify(bundle, null, 2);
+        const jsonStr = await localAccount.exportAccountBundle();
+        const parsed = JSON.parse(jsonStr);
         const blob = new Blob([jsonStr], { type: "application/json" });
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `vox-backup-${bundle.account.routeId || "identity"}.json`;
+        a.download = `vox-soberania-${parsed.routeId || "identity"}.json`;
         a.click();
         URL.revokeObjectURL(url);
-        share.showToast("Backup exportado com sucesso!");
+        share.showToast("Arquivo de soberania exportado — guarde offline.");
       } catch (err) {
         share.showToast(`Erro ao exportar backup: ${err.message}`, "error");
       }

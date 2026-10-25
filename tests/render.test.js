@@ -85,6 +85,7 @@ test("render - renderNetworkSettings gera painel completo com WebRTC", () => {
 
   const html = main.innerHTML;
   assert.ok(html.includes("Sua rede"));
+  assert.ok(html.includes("#/status"));
   assert.ok(html.includes("Ajudando a rede"));
   assert.ok(html.includes("3 aparelhos conectados"));
   assert.ok(html.includes("advanced-settings"));
@@ -177,6 +178,17 @@ test("render - renderHome renderiza cards de comunidade", () => {
   assert.ok(html.includes("#/c/c2"));
   assert.ok(html.includes("community-vox-card"));
   assert.ok(html.includes("community-vox-enter-btn"));
+});
+
+test("render - renderCommunity fork banner for mirror demo", () => {
+  const main = createContainer();
+  render.renderCommunity(main, "demo-aprenda-vox-mirror", [], mock.MOCK_DEMO_COMMUNITY_FORK, {
+    activeTab: "posts",
+  });
+  const html = main.innerHTML;
+  assert.ok(html.includes("community-vox-fork-banner"));
+  assert.match(html, /Espelho comunit/i);
+  assert.ok(html.includes("demo-aprenda-vox"));
 });
 
 test("render - renderCommunity hero Orkut-style Entrar e layout", () => {
@@ -543,7 +555,8 @@ test("render - renderCommunity tabs Posts e Classificados com feira ativada e de
   assert.ok(htmlFeira.includes("Pão artesanal &amp; geleia"));
   assert.ok(htmlFeira.includes("R$ 28"));
   assert.ok(htmlFeira.includes("Vila Madalena, SP"));
-  assert.ok(htmlFeira.includes("Copiar Pix"));
+  assert.ok(htmlFeira.includes("Apoiar"));
+  assert.ok(htmlFeira.includes("btn-zap-post"));
   assert.ok(htmlFeira.includes("Conversar no DM"));
   assert.ok(htmlFeira.includes("btn-share-listing"));
 

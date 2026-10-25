@@ -25,3 +25,10 @@ test("markdown-body - linkifies hashtags outside fences", () => {
   assert.ok(html.includes('href="#/tag/'));
   assert.ok(html.includes("verde"));
 });
+
+test("markdown-body - diff fence uses diff viewer", () => {
+  const html = md.renderPostBodyMarkdown("```diff\n+ added\n- removed\n```");
+  assert.ok(html.includes("post-md-code--diff"));
+  assert.ok(html.includes("diff-line-add"));
+  assert.ok(html.includes("diff-line-del"));
+});
