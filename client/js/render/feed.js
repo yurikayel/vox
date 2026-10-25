@@ -100,7 +100,32 @@ export function commentsPanelId(topicId) {
   return `post-comments-${String(topicId || "").replace(/[^a-zA-Z0-9_-]/g, "")}`;
 }
 
-export function renderInlineReplyItem(r) {
+export function renderCommentNestedReplyComposer(parentId, topicId, commId, mentionHandle = "") {
+  const mention = mentionHandle ? `@${mentionHandle} ` : "";
+  return `
+    <form class="post-comment-nested-reply" data-parent="${escapeHtml(parentId)}" data-topic="${escapeHtml(topicId)}" data-comm="${escapeHtml(commId || "")}" hidden>
+      <textarea class="form-control post-comment-input post-comment-nested-input" rows="2" maxlength="500" required placeholder="Responder…" aria-label="Responder comentário">${escapeHtml(mention)}</textarea>
+      <div class="post-comment-composer-actions post-comment-nested-actions">
+        <button type="button" class="btn btn-sm btn-outline btn-comment-reply-cancel">Cancelar</button>
+        <button type="submit" class="btn btn-primary btn-sm btn-comment-nested-send">Enviar</button>
+      </div>
+    </form>`;
+}
+
+function renderCommentReactBtn(r) {
+  const baseReactions = Number(r.reactionsCount) || 0;
+  const reacted = social.isCommentReacted(r.id);
+  const reactCount = social.getCommentReactCount(r.id, baseReactions);
+  const countHtml =
+    reactCount > 0
+      ? `<span class="action-count count-comment-reacts">${reactCount}</span>`
+      : `<span class="action-count count-comment-reacts" hidden></span>`;
+  return `<button type="button" class="post-comment-action btn-comment-react${reacted ? " active" : ""}" data-id="${escapeHtml(r.id)}" data-count="${baseReactions}" aria-pressed="${reacted ? "true" : "false"}" aria-label="Reagir${reactCount > 0 ? `, ${reactCount}` : ""}">
+      <span class="post-comment-action-icon" aria-hidden="true">♥</span>${countHtml}
+    </button>`;
+}
+
+export function renderInlineReplyItem(r, { byParent = null, topicId = "", commId = "" } = {}) {
   const rAuthor = r.author || r.owner || "";
   const rLabels = resolvePostAuthorLabels(rAuthor, {
     authorDisplay: r.authorDisplay,
@@ -110,8 +135,16 @@ export function renderInlineReplyItem(r) {
   const handleHtml = rLabels.secondaryHandle
     ? `<span class="post-handle" title="${escapeHtml(rLabels.routeTitle)}">@${escapeHtml(rLabels.secondaryHandle)}</span>`
     : "";
+  const mentionHandle = rLabels.secondaryHandle || rLabels.authorHandle || "";
+  const children = byParent && byParent[r.id] ? byParent[r.id] : [];
+  const nestedList =
+    children.length > 0
+      ? `<ul class="post-comment-nested-list">${children
+          .map((child) => renderInlineReplyItem(child, { byParent, topicId, commId }))
+          .join("")}</ul>`
+      : "";
   return `
-    <li class="post-comment-item" id="inline-reply-${escapeHtml(r.id)}">
+    <li class="post-comment-item" id="inline-reply-${escapeHtml(r.id)}" data-comment-id="${escapeHtml(r.id)}">
       <a class="avatar-link" href="#/u/${encodeURIComponent(rAuthor)}">${renderAvatarHtml(rAuthor, rAuthorDisplay, "sm")}</a>
       <div class="post-comment-body">
         <div class="post-comment-meta">
@@ -119,15 +152,38 @@ export function renderInlineReplyItem(r) {
           ${handleHtml}
         </div>
         <p class="reply-body">${hashtags.linkifyHashtags(escapeHtml(r.body || ""))}</p>
+        <div class="post-comment-actions">
+          ${renderCommentReactBtn(r)}
+          <button type="button" class="post-comment-action btn-comment-reply" data-comment-id="${escapeHtml(r.id)}" aria-label="Responder a ${escapeHtml(rAuthorDisplay)}">Responder</button>
+        </div>
+        ${nestedList}
+        ${topicId ? renderCommentNestedReplyComposer(r.id, topicId, commId, mentionHandle) : ""}
       </div>
     </li>`;
 }
 
-export function renderCommentList(replies = []) {
+function groupRepliesForThread(replies) {
+  const byParent = {};
+  const tops = [];
+  for (const r of replies) {
+    const pid = r.parentId || "";
+    if (pid) {
+      if (!byParent[pid]) byParent[pid] = [];
+      byParent[pid].push(r);
+    } else {
+      tops.push(r);
+    }
+  }
+  return { tops, byParent };
+}
+
+export function renderCommentList(replies = [], { topicId = "", commId = "" } = {}) {
   if (!replies.length) {
     return `<div class="post-comments-feed"><p class="post-comments-empty">Nenhuma resposta ainda.</p></div>`;
   }
-  return `<div class="post-comments-feed"><ul class="post-comment-list">${replies.map(renderInlineReplyItem).join("")}</ul></div>`;
+  const { tops, byParent } = groupRepliesForThread(replies);
+  const items = tops.map((r) => renderInlineReplyItem(r, { byParent, topicId, commId }));
+  return `<div class="post-comments-feed"><ul class="post-comment-list">${items.join("")}</ul></div>`;
 }
 
 function renderInlineReplyComposer(topicId, commId) {
@@ -146,7 +202,7 @@ export function renderPostComments(topicId, commId = "", { replies = [], expande
   const panelId = commentsPanelId(topicId);
   const openCls = expanded ? " is-open" : "";
   const hid = expanded ? "" : " hidden";
-  return `<div class="post-comments post-comments-surface${openCls}" id="${escapeHtml(panelId)}"${hid} data-topic="${escapeHtml(topicId)}" data-comm="${escapeHtml(commId)}">${renderCommentList(replies)}${renderInlineReplyComposer(topicId, commId)}</div>`;
+  return `<div class="post-comments post-comments-surface${openCls}" id="${escapeHtml(panelId)}"${hid} data-topic="${escapeHtml(topicId)}" data-comm="${escapeHtml(commId)}">${renderCommentList(replies, { topicId, commId })}${renderInlineReplyComposer(topicId, commId)}</div>`;
 }
 
 export function renderPostOwnerMenu(t) {
