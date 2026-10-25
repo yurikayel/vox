@@ -603,7 +603,7 @@ export function renderPostItem(t, { isPinned = false } = {}) {
   }
 
   return `
-    <article class="post post-card insta-post post-layout-photo" data-id="${escapeHtml(t.id)}" data-layout="photo">
+    <article class="post post-card insta-post post-layout-photo post-mural" data-id="${escapeHtml(t.id)}" data-layout="photo">
       ${header}
       ${media}
       ${frame}
@@ -619,9 +619,10 @@ export function renderStoriesStrip() {
     .map((p) => {
       const avatarSrc = p.avatar || "icons/icon.svg";
       const firstName = (p.name || p.handle || "Autor").split(" ")[0];
+      const ringClass = isWelcomeRouteId(p.routeId) ? "story-ring story-ring--official" : "story-ring";
       return `
         <a class="story-item" href="#/u/${encodeURIComponent(p.routeId)}" title="Ver perfil de ${escapeHtml(p.name)}">
-          <div class="story-ring">
+          <div class="${ringClass}">
             <img class="story-avatar" src="${escapeHtml(avatarSrc)}" alt="${escapeHtml(p.name)}" loading="lazy" />
           </div>
           <span class="story-name">${escapeHtml(firstName)}</span>

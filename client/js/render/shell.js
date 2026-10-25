@@ -3,35 +3,15 @@ import * as mock from "../mock.js";
 import { appShellFooterTagline } from "../i18n-pt-br.js";
 import { escapeHtml, root } from "./util.js";
 
-/** Light theme: navy tile; dark theme: white tile — clipped by `.brand-mark` squircle. */
-const BRAND_MARK_LIGHT = "icons/icon-512.png";
-const BRAND_MARK_DARK = "icons/icon-white-512.png";
+/** Squircle marca navy em tile claro — mesmo asset em claro/escuro (sem swap por tema). */
+export const BRAND_MARK_SRC = "icons/icon-512.png";
 
-export function brandMarkSrcForColorScheme(dark) {
-  return dark ? BRAND_MARK_DARK : BRAND_MARK_LIGHT;
+export function brandMarkSrcForColorScheme(_dark) {
+  return BRAND_MARK_SRC;
 }
 
 function renderBrandLink() {
-  return `<a class="brand-link" href="#/" aria-label="Vox — início"><img class="brand-logo brand-mark" src="${BRAND_MARK_LIGHT}" width="32" height="32" alt="" decoding="async" /><span class="brand-word">Vox</span></a>`;
-}
-
-let brandMarkThemeBound = false;
-
-function syncBrandMarkTheme() {
-  const img = document.querySelector(".sidebar-brand .brand-mark");
-  if (!img) return;
-  const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-  img.src = brandMarkSrcForColorScheme(dark);
-}
-
-function attachBrandMarkTheme() {
-  syncBrandMarkTheme();
-  if (brandMarkThemeBound) return;
-  brandMarkThemeBound = true;
-  const mq = window.matchMedia("(prefers-color-scheme: dark)");
-  const onChange = () => syncBrandMarkTheme();
-  if (typeof mq.addEventListener === "function") mq.addEventListener("change", onChange);
-  else mq.addListener(onChange);
+  return `<a class="brand-link" href="#/" aria-label="Vox — início"><img class="brand-logo brand-mark" src="${BRAND_MARK_SRC}" width="32" height="32" alt="" decoding="async" /><span class="brand-word">Vox</span></a>`;
 }
 
 const ICONS = {
@@ -235,7 +215,6 @@ export function renderShell({
   `;
 
   attachSidebarBehavior();
-  attachBrandMarkTheme();
   const main = document.getElementById("app-main");
   if (breadcrumb) main.insertAdjacentHTML("afterbegin", breadcrumb);
   return main;
