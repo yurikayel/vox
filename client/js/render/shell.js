@@ -43,6 +43,7 @@ const ICONS = {
   compose: `<svg class="tab-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>`,
   dm: `<svg class="tab-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`,
   profile: `<svg class="tab-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
+  voxpedia: `<svg class="tab-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="14" y2="11"/></svg>`,
 };
 
 export function renderNetworkChip(metrics, rtcStatus, settings) {
@@ -144,6 +145,7 @@ function renderSidebar(activeTab, { showFeedNav, activeFeed, chipHtml, walletBad
   const isDm = activeTab === "dm";
   const isPeople = activeTab === "people";
   const isProfile = activeTab === "profile" || activeTab === "wallet";
+  const isVoxpedia = activeTab === "voxpedia";
   const feedSlot = renderFeedNavSlot(showFeedNav, activeFeed);
 
   return `
@@ -173,6 +175,10 @@ function renderSidebar(activeTab, { showFeedNav, activeFeed, chipHtml, walletBad
           <a href="#/perfil" class="tab-item ${isProfile ? "active" : ""}"${isProfile ? ' aria-current="page"' : ""}>
             <span class="tab-icon">${ICONS.profile}</span>
             <span class="tab-label">Perfil</span>
+          </a>
+          <a href="#/voxpedia" class="tab-item ${isVoxpedia ? "active" : ""}"${isVoxpedia ? ' aria-current="page"' : ""}>
+            <span class="tab-icon">${ICONS.voxpedia}</span>
+            <span class="tab-label">Voxpedia</span>
           </a>
         </nav>
         <div class="sidebar-compose-slot">
