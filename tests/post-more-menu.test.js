@@ -20,9 +20,24 @@ test("post more menu - hero exposes trigger with post id", () => {
   assert.ok(html.includes("Demo · AC"));
 });
 
-test("post more menu - module defines sheet id", () => {
+test("post more menu - module defines sheet id and closed-by-default", () => {
   const src = fs.readFileSync(path.join(root, "js/render/post-more-menu.js"), "utf8");
   assert.ok(src.includes("post-more-sheet"));
   assert.ok(src.includes("Denunciar"));
   assert.ok(src.includes("Incorporar"));
+  assert.ok(src.includes('aria-hidden", "true"'));
+  assert.ok(src.includes("is-open"));
+  assert.ok(!src.includes("ensurePostMoreSheet();\n  if (!wired)"));
+  assert.ok(src.includes("lastOpener"));
+});
+
+test("post more menu - CSS hides sheet until is-open", () => {
+  const css = fs.readFileSync(path.join(root, "css/style.css"), "utf8");
+  assert.ok(css.includes(".post-more-sheet:not(.is-open)"));
+  assert.ok(css.includes("display: none !important"));
+});
+
+test("post more menu - route closes sheet on navigation", () => {
+  const src = fs.readFileSync(path.join(root, "js/app/route.js"), "utf8");
+  assert.ok(src.includes("closePostMoreMenu"));
 });

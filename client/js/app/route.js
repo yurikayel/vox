@@ -1,4 +1,5 @@
 /** @file Hash router — dispatches to screen modules. */
+import { closePostMoreMenu } from "../render/post-more-menu.js";
 import { parseRoute } from "./route-parse.js";
 import { setRoute } from "./navigation.js";
 import { checkCantinaGate } from "./onboarding.js";
@@ -18,6 +19,7 @@ import {
 } from "./screens-compose.js";
 
 export async function routeImpl() {
+  closePostMoreMenu();
   checkCantinaGate();
   const r = parseRoute();
   if (r.name === "home") return showHome(r.feed);
