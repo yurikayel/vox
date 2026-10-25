@@ -213,16 +213,18 @@ function renderPostOverlayAuthor(author, labels) {
 function renderPostMediaHero(t, author, labels) {
   const overlayText = renderPostOverlayTextHtml(t);
   const overlayAuthor = renderPostOverlayAuthor(author, labels);
-  const overlayBlock =
-    overlayText || overlayAuthor
-      ? `<div class="post-overlay">
-      <div class="post-media-scrim" aria-hidden="true"></div>
+  const hasOverlay = overlayText || overlayAuthor;
+  const scrimBlock = hasOverlay
+    ? `<div class="post-media-scrim" aria-hidden="true"></div>`
+    : "";
+  const overlayBlock = hasOverlay
+    ? `<div class="post-overlay">
       <div class="post-overlay-content">
         ${overlayAuthor}
         ${overlayText}
       </div>
     </div>`
-      : "";
+    : "";
 
   if (t?.image) {
     const altRaw = t.imageAlt || t.title || "";
@@ -232,12 +234,14 @@ function renderPostMediaHero(t, author, labels) {
       <button type="button" class="post-media-lightbox-trigger" aria-label="Ver imagem em tela cheia" data-media-src="${src}" data-media-alt="${alt}">
         <img class="post-media post-media-hero-img" src="${src}" alt="${alt}" loading="lazy" />
       </button>
+      ${scrimBlock}
       ${overlayBlock}
     </div>`;
   }
   if (t?.mediaRef?.hash) {
     return `<div class="post-media-container post-media-hero post-media-lazy" data-media-hash="${escapeHtml(t.mediaRef.hash)}">
       <div class="media-placeholder" style="aspect-ratio:4/5; display:flex; align-items:center; justify-content:center; background:var(--surface-soft); color:var(--muted); font-size:0.85rem;"><span>📷 Mídia P2P (${escapeHtml(t.mediaRef.mime || "imagem")})</span></div>
+      ${scrimBlock}
       ${overlayBlock}
     </div>`;
   }
