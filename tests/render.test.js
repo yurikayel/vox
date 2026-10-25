@@ -353,6 +353,8 @@ test("render - layout h√≠brido texto vs foto vs github", () => {
   assert.ok(photoHtml.includes("post-media-container"));
   assert.ok(photoHtml.includes("post-media-hero"));
   assert.ok(photoHtml.includes("post-overlay"));
+  assert.ok(photoHtml.includes("post-actions-overlay"));
+  assert.ok(!photoHtml.includes("post-toolbar"));
 
   const ghHtml = render.renderPostItem({
     id: "t-gh",
@@ -549,9 +551,11 @@ test("render - post v3 h√≠brido (m√≠dia antes do texto, star, copy-md e pinned)"
   assert.ok(html.includes("btn-star"));
   assert.ok(html.includes("count-stars"));
   assert.ok(html.includes("btn-copy-md"));
-  assert.ok(html.includes("toolbar-overflow"));
+  assert.ok(html.includes("post-overlay-actions-more"));
+  assert.ok(html.includes("post-actions-overlay"));
   assert.ok(html.includes("btn-follow-reels"));
   assert.ok(html.includes("btn-save"));
+  assert.ok(!html.includes("post-toolbar"));
 
   // Valida que a tag de m√≠dia aparece ANTES do t√≠tulo do post no DOM (hierarquia h√≠brida InstaTwitter)
   const imgIdx = html.indexOf("post-media-container");
@@ -809,10 +813,10 @@ test("render - renderPostItem pilha vertical estilo Meta com header IG, toolbar 
   assert.ok(html.includes("post-overlay"));
   assert.ok(html.includes("post-reels-header"));
   assert.ok(!html.includes("post-overlay-author"));
-  assert.ok(html.includes("toolbar-primary"));
-  assert.ok(html.includes("toolbar-secondary"));
+  assert.ok(html.includes("post-actions-overlay"));
   assert.ok(html.includes("btn-follow-reels"));
   assert.ok(!html.includes("post-caption-block"));
+  assert.ok(!html.includes("post-toolbar"));
   assert.ok(html.includes("post-media-hero"));
   assert.ok(html.includes("post-media-lightbox-trigger"));
   assert.ok(html.includes("btn-like"));
@@ -822,14 +826,15 @@ test("render - renderPostItem pilha vertical estilo Meta com header IG, toolbar 
   assert.ok(html.includes("btn-save"));
 
   const mediaIdx = html.indexOf("post-media-container");
-  const toolbarIdx = html.indexOf("insta-actions");
+  const actionsIdx = html.indexOf("post-actions-overlay");
   const commentsIdx = html.indexOf('class="post-comments');
 
-  assert.ok(mediaIdx < toolbarIdx, "MÌdia deve preceder a toolbar na pilha vertical");
-  assert.ok(toolbarIdx < commentsIdx, "Toolbar deve preceder os coment·rios na pilha vertical");
+  assert.ok(mediaIdx < actionsIdx, "MÌdia deve conter a faixa de aÁıes no hero");
+  assert.ok(actionsIdx < commentsIdx, "AÁıes on-image devem preceder coment·rios fora do hero");
 
-  const mediaSlice = html.slice(html.indexOf("post-media-container"), html.indexOf("insta-actions"));
-  assert.ok(!mediaSlice.includes("post-comments-surface"), "Coment·rios n„o no hero nem antes da toolbar");
+  const mediaSlice = html.slice(html.indexOf("post-media-container"), commentsIdx);
+  assert.ok(mediaSlice.includes("post-actions-overlay"));
+  assert.ok(!mediaSlice.includes("post-comments-surface"), "Coment·rios n„o no hero");
   assert.ok(html.includes("post-comments-surface"));
 });
 

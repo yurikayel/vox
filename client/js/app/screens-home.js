@@ -39,6 +39,20 @@ import { getActiveUser, makeShellProps, attachPostShareHandlers } from "./contex
 import { attachPostMoreMenuHandlers } from "../render/post-more-menu.js";
 import { ensureOnboardingSideEffects } from "./onboarding-side-effects.js";
 
+let postOverlayMenuHandlersBound = false;
+
+/** Fecha popovers ⋯ utilitários (Apoiar/Salvar/…) ao clicar fora — só no hero foto. */
+export function attachPostOverlayActionMenuHandlers() {
+  if (postOverlayMenuHandlersBound) return;
+  postOverlayMenuHandlersBound = true;
+  document.addEventListener("click", (e) => {
+    if (e.target.closest(".post-actions-overlay .post-overlay-actions-more")) return;
+    document.querySelectorAll(".post-actions-overlay .post-overlay-actions-more[open]").forEach((el) => {
+      el.removeAttribute("open");
+    });
+  });
+}
+
 function attachWelcomeFeedHintHandlers() {
   document.getElementById("btn-welcome-hint-dismiss")?.addEventListener("click", () => {
     welcomeProfile.markWelcomeIntroSeen();
@@ -135,6 +149,7 @@ export async function showHome(feed = "for-you") {
 
   attachPostShareHandlers();
   attachPostMoreMenuHandlers();
+  attachPostOverlayActionMenuHandlers();
   attachInlineComposerHandlers(() => showHome(activeFeed));
   attachWelcomeFeedHintHandlers();
   if (onboarding.dmJustSeeded && activeFeed === "for-you") {
