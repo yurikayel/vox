@@ -25,12 +25,20 @@ test("shell brand — single squircle img in markup", () => {
 });
 
 test("shell brand — same squircle mark in light and dark", () => {
-  assert.equal(brandMarkSrcForColorScheme(false), "icons/icon-512.png");
-  assert.equal(brandMarkSrcForColorScheme(true), "icons/icon-512.png");
+  assert.equal(brandMarkSrcForColorScheme(false), "icons/icon-white-512.png");
+  assert.equal(brandMarkSrcForColorScheme(true), "icons/icon-white-512.png");
   assert.ok(shellSrc.includes("export const BRAND_MARK_SRC"));
-  assert.ok(shellSrc.includes("icons/icon-512.png"));
+  assert.ok(shellSrc.includes("icons/icon-white-512.png"));
   assert.ok(!shellSrc.includes("attachBrandMarkTheme"));
-  assert.ok(!shellSrc.includes("icon-white-512"));
+  assert.ok(!shellSrc.includes("icons/icon-512.png"));
+});
+
+test("shell brand — lowercase vox wordmark matches icon colors", () => {
+  const wordBlock = shellSrc.match(/function renderBrandWordmark\(\)[\s\S]*?^}/m)?.[0] ?? "";
+  assert.ok(wordBlock.includes("brand-letter-v") && wordBlock.includes(">v</span>"));
+  assert.ok(wordBlock.includes("brand-letter-o") && wordBlock.includes(">o</span>"));
+  assert.ok(wordBlock.includes("brand-letter-x") && wordBlock.includes(">x</span>"));
+  assert.ok(!shellSrc.includes(">Vox</span>"));
 });
 
 test("shell sidebar — IA estável (nav, postar, feed slot, footer)", () => {

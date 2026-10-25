@@ -889,8 +889,8 @@ Script: [`tools/write-oauth-deploy-config.mjs`](../tools/write-oauth-deploy-conf
 | Uso | Arquivo | Nota |
 |-----|---------|------|
 | **Aba do navegador** | `icons/icon.svg` (+ `favicon-16.png` / `favicon-32.png` / `favicon.png`) | Megafone vetorial estilo emoji — **verde** (`emoji-vox-brasil.svg`) ativo por padrão. |
-| **PWA / “Adicionar à tela”** | `icon-192.png`, `icon-512.png` | Marca squircle MD3 (G/O/X) — não trocar pelo emoji. |
-| **Meta Dashboard** | `icon-1024.png` (PNG) | Upload oficial; JPG `icon-1024-meta.jpg` é rascunho local, fora do git. |
+| **PWA / “Adicionar à tela”** | `icon-white-192.png`, `icon-white-512.png` | Squircle branco + X azul (G/O/X) — não trocar pelo emoji. |
+| **Meta Dashboard** | `icon-1024.png` (PNG navy, legado) | Upload opcional; shell/PWA usam só tile branco. |
 
 **Trocar para megafone vermelho (estadista):** copiar `emoji-vox-vermelho.svg` → `icon.svg` e `emoji-vox-vermelho-32.png` → `favicon.png` + `favicon-32.png`; regerar ou copiar `favicon-16.png`; bump `CACHE_NAME` em `sw.js`; hard refresh (Ctrl+F5).
 
@@ -929,7 +929,7 @@ Três direções consideradas (Google Fonts, PT-BR em 14–16px na sidebar):
 | **Malha técnica** | IBM Plex Sans + Space Grotesk | Tom “infra aberta”; geométrico no wordmark, frio demais para corpo social. |
 | **Rede viva** | Noto Sans + Outfit | Corpo acolhedor e neutro; display levemente futurista sem sci-fi. |
 
-**Escolhida — híbrido Praça + Rede viva:** `--font-sans: "Source Sans 3"` (UI, feed, forms, nav) e `--font-display: "Outfit"` só em `.brand-word` / `.brand-link`. Source Sans 3 mantém legibilidade cívica e acentuação PT; Outfit dá personalidade geométrica ao “Vox” sem competir com o celeste sky-theme. Fallback: `ui-sans-serif, system-ui`. Pesos: `--font-weight-nav: 600`; nav ativo 700. Letter-spacing: `0.03em` no wordmark, `0.012em` em `.tab-item` / `.sidebar-feed-tab`. Carregamento: `index.html` (preconnect + CSS2); bump `CACHE_NAME` quando o shell muda.
+**Escolhida — híbrido Praça + Rede viva:** `--font-sans: "Source Sans 3"` (UI, feed, forms, nav) e `--font-display: "Outfit"` só em `.brand-word` / `.brand-link`. Source Sans 3 mantém legibilidade cívica e acentuação PT; Outfit dá personalidade geométrica ao logotipo **vox** (minúsculas) sem competir com o celeste sky-theme. Letras do wordmark: **v** `--brand-green`, **o** `--brand-yellow`, **x** `--brand-blue` (par do X do squircle). Fallback: `ui-sans-serif, system-ui`. Pesos: `--font-weight-nav: 600`; nav ativo 700. Letter-spacing: `-0.03em` no wordmark, `0.012em` em `.tab-item` / `.sidebar-feed-tab`. Carregamento: `index.html` (preconnect + CSS2); bump `CACHE_NAME` quando o shell muda.
 
 ---
 
@@ -986,7 +986,7 @@ OAuth e compartilhamento nativo citam provedores apenas onde exigido por integra
 
 **Tokens:** `--bg-parchment` `#f4f0e8` (claro) · `--bg-carbon` `#18181a` (escuro) · superfícies empilhadas neutras; `data-sky-period` só afina **chrome/accent** (`--brand-chrome`, `--theme-chrome`), **não** `--bg` / `--surface-*`.
 
-**Marca shell:** um único `icons/icon-512.png` (squircle tile claro) — sem `attachBrandMarkTheme` / `icon-white-512`.
+**Marca shell:** um único `icons/icon-white-512.png` (squircle branco + X azul) + wordmark **vox** colorido — sem `attachBrandMarkTheme` nem tile navy na UI.
 
 **Entregue (UX):**
 

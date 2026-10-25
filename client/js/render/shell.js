@@ -12,15 +12,19 @@ import { applySkyTheme } from "../sky-theme.js";
 import { appShellFooterTagline } from "../i18n-pt-br.js";
 import { escapeHtml, root } from "./util.js";
 
-/** Squircle marca navy em tile claro — mesmo asset em claro/escuro (sem swap por tema). */
-export const BRAND_MARK_SRC = "icons/icon-512.png";
+/** Squircle branco + X azul — mesmo asset em claro/escuro (sem tile navy na shell). */
+export const BRAND_MARK_SRC = "icons/icon-white-512.png";
 
 export function brandMarkSrcForColorScheme(_dark) {
   return BRAND_MARK_SRC;
 }
 
+function renderBrandWordmark() {
+  return `<span class="brand-word" aria-hidden="true"><span class="brand-letter brand-letter-v">v</span><span class="brand-letter brand-letter-o">o</span><span class="brand-letter brand-letter-x">x</span></span>`;
+}
+
 function renderBrandLink() {
-  return `<a class="brand-link" href="#/" aria-label="Vox — início"><img class="brand-logo brand-mark" src="${BRAND_MARK_SRC}" width="32" height="32" alt="" decoding="async" /><span class="brand-word">Vox</span></a>`;
+  return `<a class="brand-link" href="#/" aria-label="vox — início"><img class="brand-logo brand-mark" src="${BRAND_MARK_SRC}" width="32" height="32" alt="" decoding="async" />${renderBrandWordmark()}</a>`;
 }
 
 const ICONS = {
