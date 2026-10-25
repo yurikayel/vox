@@ -319,16 +319,15 @@ function renderPostActionsOverlay(t, author, authorDisplay, authorHandle) {
   const starred = social.isStarred(t.id);
   const stars = social.getStarsCount(t.id, baseStars);
   const saved = social.isSaved(t.id);
-  const likeCountHtml = likes > 0 ? ` <span class="action-count count-likes">${likes}</span>` : "";
+  const likeCountHtml = likes > 0 ? `<span class="overlay-action-count count-likes">${likes}</span>` : "";
   return `<div class="post-actions-overlay" role="toolbar" aria-label="Ações da publicação">
     <button class="action-btn btn-like overlay-action-btn ${liked ? "active" : ""}" data-id="${escapeHtml(t.id)}" data-count="${baseLikes}" aria-label="Gostei${likes > 0 ? `, ${likes}` : ""}">
       <svg class="action-icon icon-heart" width="22" height="22" viewBox="0 0 24 24" fill="${liked ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
-      <span class="overlay-action-label">Gostei${likeCountHtml}</span>
+      ${likeCountHtml}
     </button>
     ${renderCommentButton(t, { overlay: true })}
     <button class="action-btn btn-share btn-share-post overlay-action-btn" data-id="${escapeHtml(t.id)}" data-title="${escapeHtml(t.title)}" aria-label="Compartilhar">
       <svg class="action-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
-      <span class="overlay-action-label">Compartilhar</span>
     </button>
     ${renderToolbarUtilityMenu(t, author, authorDisplay, authorHandle, baseStars, starred, stars, saved, { overlay: true })}
   </div>`;
@@ -475,7 +474,7 @@ function renderCommentButton(t, { overlay = false } = {}) {
   const panelId = commentsPanelId(t.id);
   const overlayCls = overlay ? " overlay-action-btn" : "";
   const label = overlay
-    ? `<span class="overlay-action-label">Comentar${n > 0 ? ` <span class="action-count count-replies">${n}</span>` : ""}</span>`
+    ? (n > 0 ? `<span class="overlay-action-count count-replies">${n}</span>` : "")
     : `<span class="action-count count-replies">${n > 0 ? n : ""}</span>`;
   return `<button type="button" class="action-btn btn-comment${overlayCls}" data-id="${escapeHtml(t.id)}" data-comm="${escapeHtml(t.communityId || "")}" aria-expanded="false" aria-controls="${escapeHtml(panelId)}" aria-label="Comentar${n > 0 ? `, ${n} comentários` : ""}">
             <svg class="action-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
