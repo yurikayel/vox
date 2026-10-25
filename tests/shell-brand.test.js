@@ -24,9 +24,13 @@ test("shell brand — single squircle img in markup", () => {
   assert.ok(!block.includes("brand-mark--dark"));
 });
 
-test("shell brand — theme pairing for mark src", () => {
+test("shell brand — same squircle mark in light and dark", () => {
   assert.equal(brandMarkSrcForColorScheme(false), "icons/icon-512.png");
-  assert.equal(brandMarkSrcForColorScheme(true), "icons/icon-white-512.png");
+  assert.equal(brandMarkSrcForColorScheme(true), "icons/icon-512.png");
+  assert.ok(shellSrc.includes("export const BRAND_MARK_SRC"));
+  assert.ok(shellSrc.includes("icons/icon-512.png"));
+  assert.ok(!shellSrc.includes("attachBrandMarkTheme"));
+  assert.ok(!shellSrc.includes("icon-white-512"));
 });
 
 test("shell sidebar — IA estável (nav, postar, feed slot, footer)", () => {
