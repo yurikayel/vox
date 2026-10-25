@@ -255,19 +255,41 @@ function renderPostReelsHeader(t, author, labels) {
   </div>`;
 }
 
+function renderPostActionsOverlay(t, author, authorDisplay, authorHandle) {
+  const baseLikes = Number(t.likesCount) || 0;
+  const liked = social.isLiked(t.id);
+  const likes = social.getLikesCount(t.id, baseLikes);
+  const baseStars = Number(t.starsCount) || 0;
+  const starred = social.isStarred(t.id);
+  const stars = social.getStarsCount(t.id, baseStars);
+  const saved = social.isSaved(t.id);
+  const likeCountHtml = likes > 0 ? ` <span class="action-count count-likes">${likes}</span>` : "";
+  return `<div class="post-actions-overlay" role="toolbar" aria-label="Ações da publicação">
+    <button class="action-btn btn-like overlay-action-btn ${liked ? "active" : ""}" data-id="${escapeHtml(t.id)}" data-count="${baseLikes}" aria-label="Gostei${likes > 0 ? `, ${likes}` : ""}">
+      <svg class="action-icon icon-heart" width="22" height="22" viewBox="0 0 24 24" fill="${liked ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+      <span class="overlay-action-label">Gostei${likeCountHtml}</span>
+    </button>
+    ${renderCommentButton(t, { overlay: true })}
+    <button class="action-btn btn-share btn-share-post overlay-action-btn" data-id="${escapeHtml(t.id)}" data-title="${escapeHtml(t.title)}" aria-label="Compartilhar">
+      <svg class="action-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+      <span class="overlay-action-label">Compartilhar</span>
+    </button>
+    ${renderToolbarUtilityMenu(t, author, authorDisplay, authorHandle, baseStars, starred, stars, saved, { overlay: true })}
+  </div>`;
+}
+
 function renderPostMediaHero(t, author, labels) {
   const overlayText = renderPostOverlayTextHtml(t);
-  const hasBottomOverlay = Boolean(overlayText);
+  const authorDisplay = labels.authorDisplay;
+  const authorHandle = labels.authorHandle;
   const reelsHeader = renderPostReelsHeader(t, author, labels);
   const scrimTop = `<div class="post-media-scrim-top" aria-hidden="true"></div>`;
-  const scrimBottom = hasBottomOverlay ? `<div class="post-media-scrim-bottom" aria-hidden="true"></div>` : "";
-  const overlayBlock = hasBottomOverlay
-    ? `<div class="post-overlay">
-      <div class="post-overlay-content">
-        ${overlayText}
-      </div>
-    </div>`
+  const scrimBottom = `<div class="post-media-scrim-bottom" aria-hidden="true"></div>`;
+  const actionsOverlay = renderPostActionsOverlay(t, author, authorDisplay, authorHandle);
+  const captionBlock = overlayText
+    ? `<div class="post-overlay-content">${overlayText}</div>`
     : "";
+  const overlayBlock = `<div class="post-overlay">${captionBlock}</div>`;
 
   if (t?.image) {
     const altRaw = t.imageAlt || t.title || "";
@@ -281,6 +303,7 @@ function renderPostMediaHero(t, author, labels) {
       ${scrimTop}
       ${scrimBottom}
       ${overlayBlock}
+      ${actionsOverlay}
     </div>`;
   }
   if (t?.mediaRef?.hash) {
@@ -290,6 +313,7 @@ function renderPostMediaHero(t, author, labels) {
       ${scrimTop}
       ${scrimBottom}
       ${overlayBlock}
+      ${actionsOverlay}
     </div>`;
   }
   return "";
@@ -390,12 +414,16 @@ export function renderPostFrame(t) {
     </div>`;
 }
 
-function renderCommentButton(t) {
+function renderCommentButton(t, { overlay = false } = {}) {
   const n = Number(t.repliesCount) || 0;
   const panelId = commentsPanelId(t.id);
-  return `<button type="button" class="action-btn btn-comment" data-id="${escapeHtml(t.id)}" data-comm="${escapeHtml(t.communityId || "")}" aria-expanded="false" aria-controls="${escapeHtml(panelId)}" aria-label="Ver comentários">
+  const overlayCls = overlay ? " overlay-action-btn" : "";
+  const label = overlay
+    ? `<span class="overlay-action-label">Comentar${n > 0 ? ` <span class="action-count count-replies">${n}</span>` : ""}</span>`
+    : `<span class="action-count count-replies">${n > 0 ? n : ""}</span>`;
+  return `<button type="button" class="action-btn btn-comment${overlayCls}" data-id="${escapeHtml(t.id)}" data-comm="${escapeHtml(t.communityId || "")}" aria-expanded="false" aria-controls="${escapeHtml(panelId)}" aria-label="Comentar${n > 0 ? `, ${n} comentários` : ""}">
             <svg class="action-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-            <span class="action-count count-replies">${n > 0 ? n : ""}</span>
+            ${label}
           </button>`;
 }
 
@@ -406,6 +434,40 @@ function renderZapToolbarBtn(t, author, authorDisplay) {
     return `<button class="action-btn btn-zap-post disabled" disabled aria-label="Autor sem Pix informado" title="Autor sem chave Pix informada" style="opacity:0.35; cursor:not-allowed;">${icon}</button>`;
   }
   return `<button class="action-btn btn-zap-post" data-id="${escapeHtml(t.id)}" data-author="${escapeHtml(author)}" data-author-name="${escapeHtml(authorDisplay)}" data-pix="${escapeHtml(pix)}" data-title="${escapeHtml(t.title)}" aria-label="Apoiar com Pix" title="Apoiar com Pix">${icon}</button>`;
+}
+
+function renderToolbarUtilityMenu(t, author, authorDisplay, authorHandle, baseStars, starred, stars, saved, { overlay = false } = {}) {
+  const pix = t.contactPix || (author ? mock.getAuthorPixKey(author) : "") || "";
+  const overflowCls = overlay ? "toolbar-overflow post-overlay-actions-more" : "toolbar-overflow";
+  const menuCls = overlay ? "toolbar-overflow-menu toolbar-overflow-menu--overlay" : "toolbar-overflow-menu";
+  const zapItem = pix
+    ? `<button type="button" class="action-btn btn-zap-post" data-id="${escapeHtml(t.id)}" data-author="${escapeHtml(author)}" data-author-name="${escapeHtml(authorDisplay)}" data-pix="${escapeHtml(pix)}" data-title="${escapeHtml(t.title)}" role="menuitem" aria-label="Apoiar com Pix">
+        <svg class="action-icon icon-zap" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        <span class="toolbar-overflow-label">Apoiar</span>
+      </button>`
+    : `<button type="button" class="action-btn btn-zap-post disabled" disabled role="menuitem" aria-label="Autor sem Pix informado">
+        <svg class="action-icon icon-zap" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        <span class="toolbar-overflow-label">Apoiar</span>
+      </button>`;
+  return `<details class="${overflowCls}">
+    <summary class="action-btn btn-toolbar-more${overlay ? " overlay-action-btn" : ""}" aria-label="Mais ações"><span aria-hidden="true">⋯</span></summary>
+    <div class="${menuCls}" role="menu">
+      ${zapItem}
+      <button type="button" class="action-btn btn-save ${saved ? "active" : ""}" data-id="${escapeHtml(t.id)}" role="menuitem" aria-label="Salvar post">
+        <svg class="action-icon icon-bookmark" width="18" height="18" viewBox="0 0 24 24" fill="${saved ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
+        <span class="toolbar-overflow-label">Salvar</span>
+      </button>
+      <button type="button" class="action-btn btn-star ${starred ? "active" : ""}" data-id="${escapeHtml(t.id)}" data-count="${baseStars}" role="menuitem" aria-label="Estrelar post">
+        <svg class="action-icon icon-star" width="18" height="18" viewBox="0 0 24 24" fill="${starred ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        <span class="action-count count-stars">${stars > 0 ? stars : ""}</span>
+        <span class="toolbar-overflow-label">Estrelar</span>
+      </button>
+      <button type="button" class="action-btn btn-copy-md" data-id="${escapeHtml(t.id)}" data-title="${escapeHtml(t.title)}" data-body="${escapeHtml(t.body || "")}" data-author="${escapeHtml(authorDisplay)}" data-handle="${escapeHtml(authorHandle)}" role="menuitem" aria-label="Copiar Markdown">
+        <svg class="action-icon icon-copy" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
+        <span class="toolbar-overflow-label">Copiar Markdown</span>
+      </button>
+    </div>
+  </details>`;
 }
 
 function renderToolbarOverflow(t, author, authorDisplay, authorHandle, baseStars, starred, stars) {
@@ -468,7 +530,7 @@ export function renderPostItem(t, { isPinned = false } = {}) {
   const header = renderPostHeaderBlock(t, author, labels, { photoOverlay: isPhoto });
   const media = isPhoto ? renderPostMediaHero(t, author, labels) : "";
   const frame = renderPostFrame(t);
-  const toolbar = renderPostToolbar(t, author, authorDisplay, authorHandle);
+  const toolbar = isPhoto ? "" : renderPostToolbar(t, author, authorDisplay, authorHandle);
   const caption = isPhoto ? "" : `<div class="post-caption-block">${renderPostText(t)}</div>`;
   const gist = layout === "github" ? renderPostGithubGist(t) : "";
   const comments = renderPostComments(t.id, t.communityId);
@@ -486,7 +548,7 @@ export function renderPostItem(t, { isPinned = false } = {}) {
   }
 
   return `
-    <article class="post insta-post post-layout-photo" data-id="${escapeHtml(t.id)}" data-layout="photo">
+    <article class="post post-card insta-post post-layout-photo" data-id="${escapeHtml(t.id)}" data-layout="photo">
       ${header}
       ${media}
       ${frame}
