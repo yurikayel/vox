@@ -22,6 +22,13 @@ test("post overlay - photo card has hero, overlay and lightbox trigger", () => {
   assert.ok(html.includes("post-overlay-title"));
   assert.ok(html.includes("#verde"));
   assert.ok(!html.includes("post-caption-block"));
+  assert.ok(html.includes("post-media-scrim"));
+  const scrimIdx = html.indexOf("post-media-scrim");
+  const overlayIdx = html.indexOf('class="post-overlay"');
+  assert.ok(scrimIdx !== -1 && overlayIdx !== -1 && scrimIdx < overlayIdx);
+  const overlayOpen = html.indexOf('class="post-overlay"');
+  const scrimInsideOverlay = html.slice(overlayOpen, overlayOpen + 120).includes("post-media-scrim");
+  assert.ok(!scrimInsideOverlay, "scrim must be sibling of overlay, not inside it");
 });
 
 test("post overlay - title dedupe when title equals body", () => {
