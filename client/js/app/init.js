@@ -355,11 +355,11 @@ export function initSocialInteractions() {
       e.preventDefault();
       const routeId = btnWatch.dataset.route;
       const watching = social.toggleWatch(routeId);
-      if (btnWatch.classList.contains("btn-follow-overlay")) {
+      if (btnWatch.classList.contains("btn-follow-reels")) {
         btnWatch.textContent = watching ? "Seguindo" : "Seguir";
         btnWatch.setAttribute("aria-pressed", watching ? "true" : "false");
         btnWatch.setAttribute("aria-label", watching ? "Deixar de seguir autor" : "Seguir autor");
-        btnWatch.closest(".post-follow-overlay")?.classList.toggle("is-following", watching);
+        btnWatch.classList.toggle("is-following", watching);
       } else {
         btnWatch.classList.toggle("btn-primary", !watching);
         btnWatch.classList.toggle("btn-outline", watching);

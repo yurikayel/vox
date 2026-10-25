@@ -22,8 +22,12 @@ test("post overlay - photo card has hero, overlay and lightbox trigger", () => {
   assert.ok(html.includes("post-overlay-title"));
   assert.ok(html.includes("#verde"));
   assert.ok(!html.includes("post-caption-block"));
-  assert.ok(html.includes("post-media-scrim"));
-  const scrimIdx = html.indexOf("post-media-scrim");
+  assert.ok(html.includes("post-media-scrim-top"));
+  assert.ok(html.includes("post-media-scrim-bottom"));
+  assert.ok(html.includes("post-reels-header"));
+  assert.ok(html.includes("btn-post-more-menu"));
+  assert.ok(!html.includes("post-overlay-author"));
+  const scrimIdx = html.indexOf("post-media-scrim-top");
   const overlayIdx = html.indexOf('class="post-overlay"');
   assert.ok(scrimIdx !== -1 && overlayIdx !== -1 && scrimIdx < overlayIdx);
   const overlayOpen = html.indexOf('class="post-overlay"');
@@ -58,4 +62,6 @@ test("post overlay - CSS classes present", () => {
   assert.ok(css.includes(".post-overlay"));
   assert.ok(css.includes(".post-lightbox"));
   assert.ok(css.includes(".post-media-hero"));
+  assert.ok(css.includes(".post-reels-header"));
+  assert.ok(css.includes("#post-more-sheet") || css.includes(".post-more-sheet"));
 });

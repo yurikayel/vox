@@ -935,7 +935,7 @@ Três direções consideradas (Google Fonts, PT-BR em 14–16px na sidebar):
 
 ## 31. Feed — barra de ações e Seguir (IG)
 
-**Data:** 2026-10-25 · **SW:** `vox-pwa-v6.60-ig-follow-actions`
+**Data:** 2026-10-25 · **SW:** `vox-pwa-v6.61-ig-reels-header`
 
 | Ação | Onde fica | Decisão |
 |------|-----------|---------|
@@ -946,7 +946,16 @@ Três direções consideradas (Google Fonts, PT-BR em 14–16px na sidebar):
 | ⭐ Estrela | Menu **⋯** (overflow) | **Recolhe** — afinitude tipo GitHub; power user, não compete com curtida no mobile. |
 | 📋 Copiar Markdown | Menu **⋯** | **Recolhe** — jornalismo/dev; thread `#/t/:id` mantém ações completas. |
 | 🔖 Salvar | Barra secundária (direita) | **Mantém** — padrão IG, ícone único. |
-| **Seguir** | **Pill no canto sup. direito do hero** (`.post-follow-overlay`) | **Fora da barra** — copy IG; `social.toggleWatch`; oculto em post próprio e conta **Vox Brasil** (`vx_voxbrasil_welcome`). Perfil segue com 👁️ Watch. |
+| **Seguir** | **Header Reels no hero** (`.btn-follow-reels`, texto branco sem pill) | **Fora da barra** — `social.toggleWatch`; oculto em post próprio e conta **Vox Brasil** (`vx_voxbrasil_welcome`). Perfil segue com 👁️ Watch. |
 
-Layout: `.toolbar-primary` (engajamento + Pix) · `.toolbar-secondary` (⋯ + bookmark). Tema celeste nos hovers (`var(--accent-soft)`). Comentários nunca usam `.post-overlay` / scrim — só o card foto tem overlay de autor+texto.
+Layout: `.toolbar-primary` (engajamento + Pix) · `.toolbar-secondary` (⋯ toolbar + bookmark). Tema celeste nos hovers (`var(--accent-soft)`). Comentários nunca usam `.post-overlay` / scrim — só o card foto tem overlay de legenda.
+
+### 31.1 Header Reels no hero (foto)
+
+**Addendum 2026-10-25:** posts `layout=photo` usam `.post-reels-header` **dentro** de `.post-media-hero` (z-index 3), espelhando Reels:
+
+- **Esquerda:** avatar → perfil · **nome** branco bold · selo verificado só **Vox Brasil** · `·` · tempo (`formatTimeAgo`) · linha 2 opcional `Demo · UF` (perfis estereótipo).
+- **Direita:** **Seguir** / **Seguindo** (texto, sem pill) · **⋯** abre `#post-more-sheet` (`post-more-menu.js`, handlers em `screens-home.js` + delegação global idempotente).
+- **Scrim:** `.post-media-scrim-top` (fade ~40% no topo, z1) separado de `.post-media-scrim-bottom` (legenda, z2). Legenda/título/hashtags só em `.post-overlay` inferior — **sem** autor duplicado no rodapé.
+- **Sheet PT-BR:** Denunciar · Não tenho interesse · Sobre esta conta · Ir para a publicação · Compartilhar… · Copiar link · Incorporar (toast *em breve* onde stub).
 
