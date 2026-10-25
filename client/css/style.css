@@ -6,9 +6,18 @@
   --brand-blue: #2b5fb8;
   --theme-chrome: var(--brand-navy);
   --bg: #f5f3ef;
-  --surface: #ffffff;
-  --surface-solid: #ffffff;
-  --surface-soft: #ece8e1;
+  /* MD3-style surfaces (civic paper stack on --bg) */
+  --surface-1: #ffffff;
+  --surface-2: #faf8f4;
+  --surface-3: #ece8e1;
+  --outline: #c9c5bc;
+  --elevation-1: 0 1px 2px rgba(20, 18, 24, 0.07), 0 2px 6px rgba(20, 18, 24, 0.04);
+  --elevation-2: 0 2px 6px rgba(20, 18, 24, 0.08), 0 8px 20px rgba(20, 18, 24, 0.05);
+  --elevation-3: 0 4px 14px rgba(20, 18, 24, 0.1), 0 16px 36px rgba(20, 18, 24, 0.08);
+  --paper-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  --surface: var(--surface-1);
+  --surface-solid: var(--surface-1);
+  --surface-soft: var(--surface-3);
   --border: #d6d2c9;
   --border-subtle: #e8e4dc;
   --border-glow: rgba(49, 35, 131, 0.12);
@@ -29,9 +38,9 @@
   --amber-soft: rgba(245, 196, 0, 0.18);
   --overlay: rgba(20, 18, 24, 0.62);
   --on-accent: #ffffff;
-  --glass-bg: rgba(255, 255, 255, 0.94);
-  --glass-border: var(--border);
-  --glass-blur: blur(12px);
+  --glass-bg: var(--surface-1);
+  --glass-border: var(--outline);
+  --glass-blur: none;
   --mesh-bg: none;
   --danger: #d63a49;
   --danger-soft: rgba(214, 58, 73, 0.12);
@@ -46,7 +55,7 @@
   --space-sm: 8px;
   --space-md: 16px;
   --space-lg: 24px;
-  --shadow: 0 1px 2px rgba(20, 18, 24, 0.06), 0 4px 12px rgba(20, 18, 24, 0.04);
+  --shadow: var(--elevation-2);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
   color-scheme: light dark;
 }
@@ -55,9 +64,17 @@
   :root {
     --theme-chrome: #0c0a18;
     --bg: #0c0a18;
-    --surface: #161328;
-    --surface-solid: #161328;
-    --surface-soft: #1f1c36;
+    --surface-1: #161328;
+    --surface-2: #1c1930;
+    --surface-3: #252140;
+    --outline: #3d3860;
+    --elevation-1: 0 1px 3px rgba(0, 0, 0, 0.42), 0 2px 8px rgba(0, 0, 0, 0.28);
+    --elevation-2: 0 3px 10px rgba(0, 0, 0, 0.45), 0 10px 24px rgba(0, 0, 0, 0.32);
+    --elevation-3: 0 6px 18px rgba(0, 0, 0, 0.5), 0 20px 40px rgba(0, 0, 0, 0.38);
+    --paper-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    --surface: var(--surface-1);
+    --surface-solid: var(--surface-1);
+    --surface-soft: var(--surface-3);
     --border: #322e52;
     --border-subtle: #252140;
     --border-glow: rgba(200, 192, 240, 0.14);
@@ -76,22 +93,22 @@
     --amber: var(--brand-yellow);
     --amber-soft: rgba(245, 196, 0, 0.14);
     --overlay: rgba(8, 6, 20, 0.78);
-    --glass-bg: rgba(22, 19, 40, 0.94);
-    --glass-border: var(--border);
-    --glass-blur: blur(14px);
+    --glass-bg: var(--surface-1);
+    --glass-border: var(--outline);
+    --glass-blur: none;
     --mesh-bg: none;
     --danger: #ff6b7a;
     --danger-soft: rgba(255, 107, 122, 0.16);
     --success: #3dd982;
     --success-soft: rgba(61, 217, 130, 0.16);
-    --shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+    --shadow: var(--elevation-2);
   }
 }
 
 @supports not (backdrop-filter: blur(1px)) {
   :root {
-    --surface: var(--surface-solid);
-    --glass-bg: var(--surface-solid);
+    --surface: var(--surface-1);
+    --glass-bg: var(--surface-1);
   }
 }
 
@@ -143,10 +160,9 @@ a:hover {
   top: 0;
   z-index: 40;
   min-height: 44px;
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border-bottom: 1px solid var(--border);
+  background: var(--surface-1);
+  border-bottom: 1px solid var(--outline);
+  box-shadow: var(--elevation-1);
   display: flex;
   align-items: center;
   padding: 6px 1rem;
@@ -219,11 +235,9 @@ a:hover {
   font-weight: 600;
   padding: 3px 8px;
   border-radius: 999px;
-  background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: var(--surface-2);
   color: var(--text);
-  border: 1px solid var(--border);
+  border: 1px solid var(--outline);
   cursor: pointer;
   text-decoration: none;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
@@ -284,9 +298,7 @@ a:hover {
 
 /* Wallet Badge Glass */
 .wallet-badge {
-  background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: var(--surface-2);
   color: var(--text);
   padding: 0.28rem 0.75rem;
   border-radius: 999px;
@@ -369,10 +381,9 @@ a:hover {
   bottom: 0;
   z-index: 95;
   width: var(--sidebar-width-collapsed);
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border-right: 1px solid var(--border);
+  background: var(--surface-1);
+  border-right: 1px solid var(--outline);
+  box-shadow: var(--elevation-1);
   display: flex;
   flex-direction: column;
   padding: 0.65rem 0.45rem;
@@ -1011,23 +1022,24 @@ main#app-main {
   flex-direction: column;
   gap: 0;
   padding: 0;
-  background: transparent;
-  border: none;
-  border-radius: 0;
+  background: var(--surface-1);
+  border: 1px solid var(--outline);
+  border-radius: var(--radius);
   margin: 0 auto;
   max-width: var(--feed-max, 500px);
   overflow: hidden;
   position: relative;
+  box-shadow: var(--elevation-1), var(--paper-highlight);
 }
 
 .feed-container > .post:not(:last-child) {
-  margin-bottom: 20px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
 }
 
 .post:hover {
-  background: transparent;
+  border-color: color-mix(in srgb, var(--brand-navy) 18%, var(--outline));
 }
 
 .post-layout-text .post-header-ig,
@@ -1495,8 +1507,12 @@ main#app-main {
 }
 
 .post-comments {
-  margin-top: 4px;
-  padding: 0;
+  margin: 0 12px 12px;
+  padding: 10px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--outline);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--paper-highlight);
 }
 
 .post-comments[hidden] {
@@ -1778,6 +1794,9 @@ main#app-main {
   box-shadow: none;
   max-width: var(--feed-max, 500px);
   margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 /* Grade de Descoberta de Comunidades (Estilo IG Glass) */
@@ -1788,17 +1807,15 @@ main#app-main {
 }
 
 .community-card {
-  background: var(--surface);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--border);
+  background: var(--surface-1);
+  border: 1px solid var(--outline);
   border-radius: var(--radius);
   overflow: hidden;
   padding: 0;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  box-shadow: var(--shadow);
+  box-shadow: var(--elevation-1), var(--paper-highlight);
   transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -1950,10 +1967,8 @@ main#app-main {
   display: flex;
   flex-direction: column;
   height: calc(100dvh - 140px);
-  background: var(--surface);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--border);
+  background: var(--surface-1);
+  border: 1px solid var(--outline);
   border-radius: var(--radius);
   overflow: hidden;
   box-shadow: var(--shadow);
@@ -1961,13 +1976,11 @@ main#app-main {
 
 .dm-thread-header {
   padding: 10px 14px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--outline);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
+  background: var(--surface-2);
 }
 
 .dm-thread-list {
@@ -2014,23 +2027,19 @@ main#app-main {
 
 .dm-form-sticky {
   padding: 10px 12px;
-  border-top: 1px solid var(--border);
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
+  border-top: 1px solid var(--outline);
+  background: var(--surface-2);
   display: flex;
   gap: 8px;
 }
 
 /* Elementos Padrão / Glass Cards */
 .card {
-  background: var(--surface);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--border);
+  background: var(--surface-1);
+  border: 1px solid var(--outline);
   border-radius: var(--radius);
   padding: 1rem 1.15rem;
-  box-shadow: var(--shadow);
+  box-shadow: var(--elevation-1), var(--paper-highlight);
   margin-bottom: 0.85rem;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
@@ -2392,6 +2401,7 @@ main#app-main {
 .oauth-enrich-dialog {
   max-width: 420px;
   padding: 1.35rem 1.25rem 1.15rem;
+  border-top: 3px solid var(--brand-green);
 }
 
 .oauth-enrich-title {
@@ -2548,8 +2558,6 @@ main#app-main {
   position: fixed;
   inset: 0;
   background: var(--overlay);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2558,27 +2566,23 @@ main#app-main {
 }
 
 .modal-dialog {
-  background: var(--glass-bg);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  background: var(--surface-1);
   color: var(--text);
-  border-radius: var(--radius);
+  border-radius: calc(var(--radius) + 2px);
   max-width: 480px;
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4), 0 0 0 1px var(--glass-border);
-  border: 1px solid var(--glass-border);
+  box-shadow: var(--elevation-3), var(--paper-highlight);
+  border: 1px solid var(--outline);
   padding: 1.5rem;
   animation: modalPop 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .modal-dialog-solid {
-  background: var(--bg);
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  border: 1px solid var(--border);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+  background: var(--surface-1);
+  border: 1px solid var(--outline);
+  box-shadow: var(--elevation-3), var(--paper-highlight);
 }
 
 .post-edit-dialog {
