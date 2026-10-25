@@ -9,7 +9,7 @@ const css = fs.readFileSync(path.join(root, "css/style.css"), "utf8");
 const sw = fs.readFileSync(path.join(root, "sw.js"), "utf8");
 
 test("depurple paper - service worker cache id", () => {
-  assert.match(sw, /vox-pwa-v6\.52-uf27-interactions/);
+  assert.match(sw, /vox-pwa-v6\.53-uf27-copy/);
 });
 
 test("onboarding paper - modal sheet/card in CSS, neutral scrim", () => {

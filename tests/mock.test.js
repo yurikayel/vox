@@ -44,6 +44,6 @@ test("mock - topic media temático (não avatar)", () => {
   const ma = tour.items.find((t) => t.id === "demo-post-ma");
   assert.equal(
     ma.image,
-    "https://images.unsplash.com/photo-1519892306449-f6395edf9ebe?w=800&q=80"
+    "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&q=80"
   );
 });
