@@ -586,7 +586,7 @@ function ufRoute(uf) {
   return `vx_demo_${String(uf).toLowerCase()}`;
 }
 
-function replyRow(id, hostUf, fromUf, body, replyToPostId) {
+function replyRow(id, hostUf, fromUf, body, replyToPostId, reactionsCount = 0) {
   const host = String(hostUf).toLowerCase();
   return {
     id,
@@ -596,6 +596,7 @@ function replyRow(id, hostUf, fromUf, body, replyToPostId) {
     author: ufRoute(fromUf),
     owner: ufRoute(fromUf),
     isLocalP2p: true,
+    reactionsCount: Number(reactionsCount) || 0,
   };
 }
 
@@ -631,7 +632,7 @@ function handcraftedUfReplies() {
       UF_DEMO_PAIR_COPY["RJ-CE"],
     ),
     replyRow("demo-reply-ce-ma-0", "ma", "ce", UF_DEMO_PAIR_COPY["CE-MA"]),
-    replyRow("demo-reply-ba-ma-0", "ma", "ba", UF_DEMO_PAIR_COPY["BA-MA"]),
+    replyRow("demo-reply-ba-ma-0", "ma", "ba", UF_DEMO_PAIR_COPY["BA-MA"], undefined, 3),
     replyRow("demo-reply-rs-ma-0", "ma", "rs", UF_DEMO_PAIR_COPY["RS-MA"]),
     replyRow("demo-reply-pa-ma-1", "ma", "pa", UF_DEMO_PAIR_COPY["PA-MA"]),
     replyRow("demo-reply-ma-thanks", "ma", "ma", UF_DEMO_PAIR_COPY["MA-MA"]),
