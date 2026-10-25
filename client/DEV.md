@@ -1024,3 +1024,19 @@ OAuth e compartilhamento nativo citam provedores apenas onde exigido por integra
 
 **Addendum (aba Posts ≠ feed):** na coluna **Tópicos e posts**, `renderCommunityTopicRow()` substitui `renderPostItem` — linhas compactas (título → `#/t/:id`, @autor, contagem de respostas, última atividade, excerpt curto; thumb 48px opcional). Sidebar **Membros online** vira grade 3×3 de avatares demo UF; abas sticky; Classificados/Governança dentro de `community-vox-panel`. SW `vox-pwa-v6.73-community-topic-list`.
 
+---
+
+## 36. Incubação P0 — POSSE, Markdown e webhooks
+
+**Escopo:** cockpit **Ecoe para…** após publicar (compose + inline); link canônico `#/t/:id`; intents WhatsApp / X / Bluesky; Web Share; copiar bloco; export JSON CLI.
+
+**Código:** `client/js/posse-dispatch.js` · testes `tests/posse-dispatch.test.js` · preferência “não mostrar de novo” (`vox-posse-sheet-skip`).
+
+**Webhooks (Tier B):** `#/settings/network` → textarea **Ecoe POSSE — Webhooks** (`vox-posse-webhooks`); POST JSON ao usar **Exportar JSON** no sheet.
+
+**Markdown:** blocos fenced ` ```lang ` em corpo de post → `render/markdown-body.js` (feed, overlay, `#/t/:id`); sem HTML bruto; hashtags fora de fences.
+
+**Pix:** botão ⚡ no overlay de foto; **Apoiar** no perfil quando há chave; tópico já tinha zap na toolbar.
+
+**Fora de P0:** extensão Vox Bridge (P2); Diffs/PR estilo GitHub (P1+).
+

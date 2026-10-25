@@ -27,6 +27,7 @@ test("post overlay - photo card has hero, overlay and lightbox trigger", () => {
   assert.ok(html.includes("post-media-header"));
   assert.ok(html.includes("btn-post-more-menu"));
   assert.ok(html.includes("post-actions-overlay"));
+  assert.ok(html.includes("btn-zap-post overlay-action-btn"));
   assert.ok(html.includes('aria-label="Gostei'));
   assert.ok(!html.includes("overlay-action-label"));
   assert.ok(!html.includes(">Compartilhar<"));
