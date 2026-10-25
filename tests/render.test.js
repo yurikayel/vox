@@ -550,7 +550,7 @@ test("render - post v3 híbrido (mídia antes do texto, star, copy-md e pinned)"
   assert.ok(html.includes("count-stars"));
   assert.ok(html.includes("btn-copy-md"));
   assert.ok(html.includes("toolbar-overflow"));
-  assert.ok(html.includes("post-follow-overlay"));
+  assert.ok(html.includes("btn-follow-reels"));
   assert.ok(html.includes("btn-save"));
 
   // Valida que a tag de mídia aparece ANTES do título do post no DOM (hierarquia híbrida InstaTwitter)
@@ -807,10 +807,11 @@ test("render - renderPostItem pilha vertical estilo Meta com header IG, toolbar 
 
   const html = render.renderPostItem(post);
   assert.ok(html.includes("post-overlay"));
-  assert.ok(html.includes("post-overlay-author"));
+  assert.ok(html.includes("post-reels-header"));
+  assert.ok(!html.includes("post-overlay-author"));
   assert.ok(html.includes("toolbar-primary"));
   assert.ok(html.includes("toolbar-secondary"));
-  assert.ok(html.includes("post-follow-overlay"));
+  assert.ok(html.includes("btn-follow-reels"));
   assert.ok(!html.includes("post-caption-block"));
   assert.ok(html.includes("post-media-hero"));
   assert.ok(html.includes("post-media-lightbox-trigger"));
@@ -841,7 +842,7 @@ test("render - Seguir no hero oculto em post pr�prio e Vox oficial", () => {
     isOwnLocalPost: true,
     ts: Date.now(),
   });
-  assert.ok(!own.includes("post-follow-overlay"));
+  assert.ok(!own.includes("btn-follow-reels"));
 
   const official = render.renderPostItem({
     id: "vox1",
@@ -850,7 +851,8 @@ test("render - Seguir no hero oculto em post pr�prio e Vox oficial", () => {
     author: "vx_voxbrasil_welcome",
     ts: Date.now(),
   });
-  assert.ok(!official.includes("post-follow-overlay"));
+  assert.ok(!official.includes("btn-follow-reels"));
+  assert.ok(official.includes("post-reels-verified"));
 });
 
 test("render - resolvePostAuthorLabels evita ID truncado duplicado", () => {
