@@ -1,11 +1,13 @@
 :root {
   /* Marca G/O/X — vox populi (squircle navy / squircle branco) */
-  --brand-navy: #312183;
+  --brand-chrome: #0284c7;
+  --brand-chrome-hover: #0369a1;
+  --brand-navy: var(--brand-chrome);
   --brand-green: #1fa855;
   --brand-yellow: #f5c400;
-  --brand-blue: #2b5fb8;
-  --theme-chrome: var(--brand-navy);
-  --bg: #f5f3ef;
+  --brand-blue: #0369a1;
+  --theme-chrome: var(--brand-chrome);
+  --bg: #f0f9ff;
   /* MD3-style surfaces (civic paper stack on --bg) */
   --surface-1: #ffffff;
   --surface-2: #faf8f4;
@@ -88,7 +90,7 @@
     --accent-soft: rgba(142, 184, 245, 0.12);
     --accent-hover: #a8c8f8;
     --accent-glow: none;
-    --accent-gradient: linear-gradient(135deg, #2b5fb8 0%, var(--success) 100%);
+    --accent-gradient: linear-gradient(135deg, #0ea5e9 0%, var(--success) 100%);
     --nav-active-bg: rgba(255, 255, 255, 0.06);
     --nav-active-indicator: var(--success);
     --surface-card: var(--surface-2);
@@ -98,7 +100,7 @@
     --warning-border: rgba(245, 196, 0, 0.32);
     --amber: var(--brand-yellow);
     --amber-soft: rgba(245, 196, 0, 0.14);
-    --overlay: rgba(8, 6, 20, 0.78);
+    --overlay: rgba(6, 14, 28, 0.78);
     --glass-bg: var(--surface-1);
     --glass-border: var(--outline);
     --glass-blur: none;
@@ -110,6 +112,92 @@
     --shadow: var(--elevation-2);
   }
 }
+
+
+:root[data-sky-period="madrugada"] {
+  --brand-chrome: #1e4976;
+  --brand-chrome-hover: #163a5f;
+  --theme-chrome: #1e4976;
+  --bg: #eef4fb;
+  --accent: #3b82f6;
+}
+
+:root[data-sky-period="manha"] {
+  --brand-chrome: #0284c7;
+  --brand-chrome-hover: #0369a1;
+  --theme-chrome: #0284c7;
+  --bg: #f0f9ff;
+  --accent: #0ea5e9;
+}
+
+:root[data-sky-period="tarde"] {
+  --brand-chrome: #0369a1;
+  --brand-chrome-hover: #075985;
+  --theme-chrome: #0369a1;
+  --bg: #ecfeff;
+  --accent: #0891b2;
+}
+
+:root[data-sky-period="entardecer"] {
+  --brand-chrome: #0e7490;
+  --brand-chrome-hover: #155e75;
+  --theme-chrome: #0e7490;
+  --bg: #f0fdfa;
+  --accent: #14b8a6;
+}
+
+:root[data-sky-period="noite"] {
+  --brand-chrome: #1d4ed8;
+  --brand-chrome-hover: #1e40af;
+  --theme-chrome: #1e3a8a;
+  --bg: #eff6ff;
+  --accent: #2563eb;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-sky-period="madrugada"] {
+    --brand-chrome: #67e8f9;
+    --brand-chrome-hover: #a5f3fc;
+    --theme-chrome: #0c1929;
+    --bg: #070d14;
+    --surface-1: #0c1826;
+    --surface-2: #101f30;
+    --surface-3: #152a3d;
+  }
+
+  :root[data-sky-period="manha"] {
+    --brand-chrome: #7dd3fc;
+    --brand-chrome-hover: #bae6fd;
+    --theme-chrome: #0a1628;
+    --bg: #0a1628;
+    --surface-1: #0f1d2e;
+  }
+
+  :root[data-sky-period="tarde"] {
+    --brand-chrome: #38bdf8;
+    --brand-chrome-hover: #7dd3fc;
+    --theme-chrome: #0b1a2e;
+    --bg: #0b1a2e;
+    --surface-1: #102033;
+  }
+
+  :root[data-sky-period="entardecer"] {
+    --brand-chrome: #22d3ee;
+    --brand-chrome-hover: #67e8f9;
+    --theme-chrome: #0f2038;
+    --bg: #0f2038;
+    --surface-1: #142840;
+  }
+
+  :root[data-sky-period="noite"] {
+    --brand-chrome: #60a5fa;
+    --brand-chrome-hover: #93c5fd;
+    --theme-chrome: #081422;
+    --bg: #081422;
+    --surface-1: #0d1a2c;
+  }
+}
+
 
 @supports not (backdrop-filter: blur(1px)) {
   :root {
@@ -561,7 +649,7 @@ a:hover {
 
 .tab-item.compose-tab:hover {
   color: var(--on-accent);
-  background: #261a6a;
+  background: var(--brand-chrome-hover);
   box-shadow: var(--elevation-2);
 }
 
@@ -2138,7 +2226,7 @@ main#app-main,
   filter: brightness(1.08);
   box-shadow: var(--elevation-2);
   color: var(--on-accent);
-  background: #261a6a;
+  background: var(--brand-chrome-hover);
 }
 
 .btn-secondary {
