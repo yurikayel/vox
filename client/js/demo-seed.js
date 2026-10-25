@@ -15,7 +15,7 @@ import {
 } from "./mock.js";
 import { UF_ROUTE_IDS } from "./data/profiles-brazil-uf.js";
 
-const SEED_KEY = "vox-demo-seeded-v8-uf27-media";
+const SEED_KEY = "vox-demo-seeded-v9-uf27-interactions";
 
 export async function ensureDemoSeed() {
   if (typeof window === "undefined" || !window.localStorage) return;
@@ -25,8 +25,11 @@ export async function ensureDemoSeed() {
     const probe = await cacheNode.getLocalPost("demo-post-mg");
     const probeListing = await cacheNode.getLocalPost("demo-listing-mg");
     const probeProposal = await cacheNode.getLocalPost("demo-prop-feira");
+    const probeInteraction = await cacheNode.getLocalPost("demo-reply-ce-ma-0");
     const existing = await cacheNode.getLocalPosts({ type: "topic", communityId: MOCK_DEMO_COMMUNITY.id });
-    if (probe && probeListing && probeProposal && existing.length >= MOCK_DEMO_UF_COUNT) return;
+    if (probe && probeListing && probeProposal && probeInteraction && existing.length >= MOCK_DEMO_UF_COUNT) {
+      return;
+    }
   }
 
   await insertDemoItems();

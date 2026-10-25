@@ -41,6 +41,15 @@ export const MOCK_DEMO_TOPICS = buildUfDemoTopics(NOW);
 export const MOCK_DEMO_LISTINGS = buildUfDemoListings(NOW);
 export const MOCK_DEMO_REPLIES = buildUfDemoReplies();
 
+function indexRepliesByTopic(replies) {
+  const map = {};
+  for (const r of replies) {
+    if (!map[r.replyTo]) map[r.replyTo] = [];
+    map[r.replyTo].push(r);
+  }
+  return map;
+}
+
 export const MOCK_DEMO_PROPOSALS = [
   {
     id: "demo-prop-feira",
@@ -128,9 +137,7 @@ export const MOCK_TOPICS = {
 };
 
 export const MOCK_REPLIES = {
-  "demo-post-mg": [MOCK_DEMO_REPLIES[0]],
-  "demo-post-am": [MOCK_DEMO_REPLIES[1]],
-  "demo-post-ce": [MOCK_DEMO_REPLIES[2]],
+  ...indexRepliesByTopic(MOCK_DEMO_REPLIES),
   "demo-topic-1": [
     {
       id: "demo-reply-1",

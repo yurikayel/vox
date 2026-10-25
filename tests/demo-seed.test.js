@@ -5,7 +5,7 @@ import * as demoSeed from "../client/js/demo-seed.js";
 import * as cacheNode from "../client/js/cache-node.js";
 import { MOCK_DEMO_UF_COUNT } from "../client/js/mock.js";
 
-const SEED_KEY = "vox-demo-seeded-v8-uf27-media";
+const SEED_KEY = "vox-demo-seeded-v9-uf27-interactions";
 
 test("demo-seed - 27 topicos UF", async () => {
   localStorage.clear();
@@ -20,4 +20,16 @@ test("demo-seed - idempotente", async () => {
   await demoSeed.ensureDemoSeed();
   const topics = await cacheNode.getLocalPosts({ type: "topic", communityId: "demo-aprenda-vox" });
   assert.equal(topics.length, MOCK_DEMO_UF_COUNT);
+});
+
+test("demo-seed - interacoes UF cruzadas (MA)", async () => {
+  localStorage.clear();
+  await cacheNode.clearLocalPosts();
+  await demoSeed.ensureDemoSeed();
+  const maReply = await cacheNode.getLocalPost("demo-reply-ce-ma-0");
+  assert.ok(maReply);
+  assert.equal(maReply.replyTo, "demo-post-ma");
+  assert.equal(maReply.author, "vx_demo_ce");
+  const replies = await cacheNode.getLocalPosts({ type: "reply", replyTo: "demo-post-ma" });
+  assert.ok(replies.length >= 4);
 });
