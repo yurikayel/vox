@@ -1,6 +1,11 @@
 import "../tests/setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
+import { UF_STEREOTYPE_SEEDS } from "../client/js/data/profiles-brazil-uf.js";
+
+const demoMg = UF_STEREOTYPE_SEEDS.find((s) => s.uf === "MG");
+const demoSp = UF_STEREOTYPE_SEEDS.find((s) => s.uf === "SP");
+const mgPixKey = `${demoMg.handle.replace("-", ".")}@voxbrasil.org`;
 
 // Mock de DOM
 function createContainer() {
@@ -273,23 +278,23 @@ test("render - renderCantinaGate e closeCantinaGate", () => {
   assert.equal(container.innerHTML, "");
 });
 
-test("render - renderFeed e renderProfile com persona mock (Maria MG)", () => {
+test("render - renderFeed e renderProfile com persona mock (MG tour)", () => {
   const avatar = "https://randomuser.me/api/portraits/med/women/12.jpg";
   const mainFeed = createContainer();
   const topics = [
-    { id: "demo-post-mg", title: "Maria mineira demo", body: "Texto...", image: avatar, author: "vx_demo_mg", communityId: "demo-aprenda-vox", likesCount: 48 },
+    { id: "demo-post-mg", title: `${demoMg.displayName} mineira demo`, body: "Texto...", image: avatar, author: "vx_demo_mg", communityId: "demo-aprenda-vox", likesCount: 48 },
   ];
   render.renderFeed(mainFeed, topics);
-  assert.ok(mainFeed.innerHTML.includes("Maria"));
+  assert.ok(mainFeed.innerHTML.includes(demoMg.displayName));
 
   const mainProf = createContainer();
   render.renderProfile(mainProf, "vx_demo_mg", [{ communityId: "demo-aprenda-vox" }], false, "", {
-    handle: "maria-mg",
-    displayName: "Maria",
+    handle: demoMg.handle,
+    displayName: demoMg.displayName,
     profileBio: "Perfil estereotipo demo.",
     posts: topics,
   });
-  assert.ok(mainProf.innerHTML.includes("Maria (@maria-mg)"));
+  assert.ok(mainProf.innerHTML.includes(`${demoMg.displayName} (@${demoMg.handle})`));
   assert.ok(mainProf.innerHTML.includes("profile-stereotype-banner"));
   assert.ok(mainProf.innerHTML.includes("respeitoso"));
   assert.ok(mainProf.innerHTML.includes("n\u00e3o me leve a mal"));
@@ -383,7 +388,7 @@ test("render - renderPostComments lista replies mock no expander", () => {
     {
       id: "demo-reply-sp-mg",
       author: "vx_demo_sp",
-      body: "Uai, Maria! Aqui a gente se organiza sem pedir licenca pro algoritmo.",
+      body: `Uai, ${demoMg.displayName}! Aqui a gente se organiza sem pedir licenca pro algoritmo.`,
     },
     {
       id: "demo-reply-pri-1",
@@ -400,8 +405,8 @@ test("render - renderPostComments lista replies mock no expander", () => {
   assert.ok(open.includes("inline-reply-demo-reply-sp-mg"));
   assert.ok(open.includes("inline-reply-demo-reply-pri-1"));
   assert.ok(open.includes("sem pedir licenca"));
-  assert.ok(open.includes("@joao-sp"));
-  assert.ok(open.includes("Maria"));
+  assert.ok(open.includes(`@${demoSp.handle}`));
+  assert.ok(open.includes(demoMg.displayName));
   assert.ok(open.includes("post-comment-composer"));
 
   const empty = render.renderCommentList([]);
@@ -430,15 +435,15 @@ test("render - renderProfile com Pix e métricas honestas", () => {
 
 test("render - renderPixLookup perfil encontrado vs nao vinculado", () => {
   const mainFound = createContainer();
-  render.renderPixLookup(mainFound, "maria.mg@voxbrasil.org", {
+  render.renderPixLookup(mainFound, mgPixKey, {
     routeId: "vx_demo_mg",
-    name: "Maria",
-    handle: "maria-mg",
-    pixKey: "maria.mg@voxbrasil.org",
-    pixKeyMasked: "maria.mg@voxbrasil.org",
+    name: demoMg.displayName,
+    handle: demoMg.handle,
+    pixKey: mgPixKey,
+    pixKeyMasked: mgPixKey,
   });
   assert.ok(mainFound.innerHTML.includes("Conta Localizada"));
-  assert.ok(mainFound.innerHTML.includes("Maria"));
+  assert.ok(mainFound.innerHTML.includes(demoMg.displayName));
   assert.ok(mainFound.innerHTML.includes("vx_demo_mg"));
   assert.ok(mainFound.innerHTML.includes("Aviso de Conformidade"));
 
@@ -463,7 +468,7 @@ test("render - renderCommunity tabs Posts e Classificados com feira ativada e de
       priceLabel: "R$ 28",
       locationLabel: "Vila Madalena, SP",
       author: "vx_demo_mg",
-      contactPix: "maria.mg@voxbrasil.org",
+      contactPix: mgPixKey,
       image: "https://randomuser.me/api/portraits/med/women/12.jpg",
       listingStatus: "available",
       body: "Fornada fresca aos sábados.",
@@ -592,7 +597,7 @@ test("render - formatPostMarkdown formata citação padrão com link", () => {
     author: "vx_demo_sp",
   };
   const md = render.formatPostMarkdown(post);
-  assert.ok(md.includes("@joao-sp"));
+  assert.ok(md.includes(`@${demoSp.handle}`));
   assert.ok(md.includes("> **"));
   assert.ok(md.includes("Governan"));
   assert.ok(md.includes("Proposta de delibera"));
@@ -716,7 +721,7 @@ test("render - renderComposeProposal gera formulário de proposta", () => {
 });
 
 test("render - renderPostItem exibe botao de Pix Zap se o autor tiver chave", () => {
-  // vx_demo_mg possui pixKey no mock (maria.mg@voxbrasil.org)
+  // vx_demo_mg possui pixKey no mock (ex.: alice.mg@voxbrasil.org)
   const postWithPix = {
     id: "p_helena_1",
     author: "vx_demo_mg",
@@ -726,7 +731,7 @@ test("render - renderPostItem exibe botao de Pix Zap se o autor tiver chave", ()
   };
   const htmlPix = render.renderPostItem(postWithPix);
   assert.ok(htmlPix.includes("btn-zap-post"));
-  assert.ok(htmlPix.includes("data-pix=\"maria.mg@voxbrasil.org\""));
+  assert.ok(htmlPix.includes(`data-pix="${mgPixKey}"`));
   assert.ok(htmlPix.includes("Apoiar"));
 
   // Autor sem pix
@@ -746,14 +751,14 @@ test("render - renderZapModal gera payload BR Code e aviso regulatorio", () => {
   const container = createContainer();
   render.renderZapModal(container, {
     author: "vx_demo_mg",
-    authorName: "Maria",
-    pixKey: "maria.mg@voxbrasil.org",
+    authorName: demoMg.displayName,
+    pixKey: mgPixKey,
     title: "Post sobre permacultura",
     defaultAmount: 5,
   });
 
   const html = container.innerHTML;
-  assert.ok(html.includes("Pix Zap para Maria"));
+  assert.ok(html.includes(`Pix Zap para ${demoMg.displayName}`));
   assert.ok(html.includes("Post sobre permacultura"));
   assert.ok(html.includes("btn-zap-val"));
   assert.ok(html.includes("R$ 2"));
@@ -777,7 +782,7 @@ test("render - renderStoriesStrip gera faixa horizontal com anéis de stories e 
   assert.ok(html.includes("story-ring"));
   assert.ok(html.includes("story-avatar"));
   assert.ok(html.includes("#/u/vx_demo_mg"));
-  assert.ok(html.includes("Maria"));
+  assert.ok(html.includes(demoMg.displayName));
   assert.ok(html.includes("#/u/vx_demo_sp"));
   assert.ok(html.includes("vx_demo_sp"));
 });
@@ -831,8 +836,8 @@ test("render - resolvePostAuthorLabels evita ID truncado duplicado", () => {
 
 test("render - resolvePostAuthorLabels nome + handle distintos", () => {
   const labels = render.resolvePostAuthorLabels("vx_demo_mg");
-  assert.equal(labels.primary, "Maria");
-  assert.equal(labels.secondaryHandle, "maria-mg");
+  assert.equal(labels.primary, demoMg.displayName);
+  assert.equal(labels.secondaryHandle, demoMg.handle);
 });
 
 test("render - renderPostOwnerMenu só aparece em posts isOwnLocalPost", () => {

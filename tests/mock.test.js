@@ -4,9 +4,13 @@ import assert from "node:assert/strict";
 import * as mock from "../client/js/mock.js";
 import {
   UF_ROUTE_IDS,
+  UF_STEREOTYPE_SEEDS,
   MOCK_DEMO_UF_COUNT,
   MOCK_DEMO_TOPIC_COUNT,
 } from "../client/js/data/profiles-brazil-uf.js";
+
+const demoMg = UF_STEREOTYPE_SEEDS.find((s) => s.uf === "MG");
+const mgPixKey = `${demoMg.handle.replace("-", ".")}@voxbrasil.org`;
 
 test("mock - mockCommunities retorna tour UF demo", () => {
   const res = mock.mockCommunities();
@@ -25,8 +29,14 @@ test("mock - mockReplies MG", () => {
 
 test("mock - 27 perfis UF", () => {
   assert.equal(UF_ROUTE_IDS.length, 27);
-  assert.equal(mock.getAuthorDisplay("vx_demo_mg"), "Maria");
-  assert.ok(mock.findMockByPixKey("maria.mg@voxbrasil.org"));
+  assert.equal(mock.getAuthorDisplay("vx_demo_mg"), demoMg.displayName);
+  assert.ok(mock.findMockByPixKey(mgPixKey));
+});
+
+test("mock - 27 prenomes IBGE unicos (sem repeticao entre UFs)", () => {
+  const names = UF_STEREOTYPE_SEEDS.map((s) => s.displayName);
+  assert.equal(names.length, 27);
+  assert.equal(new Set(names).size, 27);
 });
 
 test("mock - feira 6 listings", () => {
@@ -37,7 +47,7 @@ test("mock - recent topics", () => {
   assert.equal(mock.mockRecentTopics().items.length, MOCK_DEMO_TOPIC_COUNT);
 });
 
-test("mock - titulos Jose AL vs MA distintos", () => {
+test("mock - titulos AL vs MA distintos", () => {
   const tour = mock.mockTopics("demo-aprenda-vox");
   const al = tour.items.filter((t) => t.author === "vx_demo_al").map((t) => t.title);
   const ma = tour.items.filter((t) => t.author === "vx_demo_ma").map((t) => t.title);
