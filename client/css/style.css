@@ -1,33 +1,42 @@
 :root {
-  /* Marca G/O/X — vox populi (docs + icon.svg) */
+  /* Marca G/O/X — vox populi (squircle navy / squircle branco) */
   --brand-navy: #312183;
   --brand-green: #1fa855;
   --brand-yellow: #f5c400;
   --brand-blue: #2b5fb8;
-  --bg: #fafafa;
+  --theme-chrome: var(--brand-navy);
+  --bg: #f5f3ef;
   --surface: #ffffff;
   --surface-solid: #ffffff;
-  --surface-soft: #f4f4f4;
-  --border: #dbdbdb;
-  --border-subtle: #efefef;
-  --border-glow: rgba(0, 0, 0, 0.08);
-  --text: #0f1419;
-  --muted: #737373;
+  --surface-soft: #ece8e1;
+  --border: #d6d2c9;
+  --border-subtle: #e8e4dc;
+  --border-glow: rgba(49, 35, 131, 0.12);
+  --text: #141218;
+  --muted: #5c5868;
   --link: var(--brand-blue);
   --accent: var(--brand-navy);
-  --accent-soft: rgba(49, 35, 131, 0.09);
+  --accent-soft: rgba(49, 35, 131, 0.1);
   --accent-hover: #261a6a;
-  --accent-glow: 0 0 12px rgba(49, 35, 131, 0.22);
-  --accent-gradient: linear-gradient(135deg, #312183 0%, #2b5fb8 55%, #1fa855 100%);
-  --signal-soft: rgba(245, 196, 0, 0.14);
-  --glass-bg: rgba(255, 255, 255, 0.92);
-  --glass-border: #dbdbdb;
+  --accent-glow: 0 0 14px rgba(49, 35, 131, 0.2);
+  --accent-gradient: linear-gradient(135deg, var(--brand-navy) 0%, var(--brand-blue) 52%, var(--brand-green) 100%);
+  --signal: var(--brand-yellow);
+  --signal-soft: rgba(245, 196, 0, 0.16);
+  --warning: #9a7200;
+  --warning-soft: rgba(245, 196, 0, 0.18);
+  --warning-border: rgba(245, 196, 0, 0.42);
+  --amber: #9a7200;
+  --amber-soft: rgba(245, 196, 0, 0.18);
+  --overlay: rgba(20, 18, 24, 0.62);
+  --on-accent: #ffffff;
+  --glass-bg: rgba(255, 255, 255, 0.94);
+  --glass-border: var(--border);
   --glass-blur: blur(12px);
   --mesh-bg: none;
-  --danger: #ed4956;
-  --danger-soft: rgba(237, 73, 86, 0.1);
+  --danger: #d63a49;
+  --danger-soft: rgba(214, 58, 73, 0.12);
   --success: var(--brand-green);
-  --success-soft: rgba(31, 168, 85, 0.12);
+  --success-soft: rgba(31, 168, 85, 0.14);
   --radius: 8px;
   --radius-sm: 6px;
   --feed-max: 500px;
@@ -37,38 +46,45 @@
   --space-sm: 8px;
   --space-md: 16px;
   --space-lg: 24px;
-  --shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  --shadow: 0 1px 2px rgba(20, 18, 24, 0.06), 0 4px 12px rgba(20, 18, 24, 0.04);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
   color-scheme: light dark;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #07050f;
-    --surface: #12101c;
-    --surface-solid: #12101c;
-    --surface-soft: #1a1728;
-    --border: #2a2640;
-    --border-subtle: #1e1b2e;
-    --border-glow: rgba(255, 255, 255, 0.1);
-    --text: #f5f5f5;
-    --muted: #a8a8a8;
-    --link: #7eb3ff;
-    --accent: #9d8fe8;
-    --accent-soft: rgba(157, 143, 232, 0.14);
-    --accent-hover: #b8adff;
-    --accent-glow: 0 0 14px rgba(157, 143, 232, 0.28);
-    --accent-gradient: linear-gradient(135deg, #312183 0%, #2b5fb8 50%, #1fa855 100%);
-    --signal-soft: rgba(245, 196, 0, 0.12);
-    --glass-bg: rgba(18, 16, 28, 0.92);
-    --glass-border: #2a2640;
+    --theme-chrome: #0c0a18;
+    --bg: #0c0a18;
+    --surface: #161328;
+    --surface-solid: #161328;
+    --surface-soft: #1f1c36;
+    --border: #322e52;
+    --border-subtle: #252140;
+    --border-glow: rgba(200, 192, 240, 0.14);
+    --text: #f4f2fc;
+    --muted: #a39ec4;
+    --link: #8eb8f5;
+    --accent: #c8c0f0;
+    --accent-soft: rgba(200, 192, 240, 0.14);
+    --accent-hover: #ded9ff;
+    --accent-glow: 0 0 16px rgba(200, 192, 240, 0.22);
+    --accent-gradient: linear-gradient(135deg, var(--brand-navy) 0%, var(--brand-blue) 48%, var(--brand-green) 100%);
+    --signal-soft: rgba(245, 196, 0, 0.14);
+    --warning: var(--brand-yellow);
+    --warning-soft: rgba(245, 196, 0, 0.14);
+    --warning-border: rgba(245, 196, 0, 0.32);
+    --amber: var(--brand-yellow);
+    --amber-soft: rgba(245, 196, 0, 0.14);
+    --overlay: rgba(8, 6, 20, 0.78);
+    --glass-bg: rgba(22, 19, 40, 0.94);
+    --glass-border: var(--border);
     --glass-blur: blur(14px);
     --mesh-bg: none;
-    --danger: #ed4956;
-    --danger-soft: rgba(237, 73, 86, 0.15);
-    --success: #2fd171;
-    --success-soft: rgba(47, 209, 113, 0.15);
-    --shadow: none;
+    --danger: #ff6b7a;
+    --danger-soft: rgba(255, 107, 122, 0.16);
+    --success: #3dd982;
+    --success-soft: rgba(61, 217, 130, 0.16);
+    --shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
   }
 }
 
@@ -87,8 +103,9 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  line-height: 1.45;
+  line-height: 1.5;
   min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
 }
 
 a {
@@ -220,6 +237,11 @@ a:hover {
   transform: translateY(-1px);
 }
 
+.network-chip.active {
+  border-color: color-mix(in srgb, var(--success) 35%, var(--border));
+  background: color-mix(in srgb, var(--success-soft) 55%, var(--glass-bg));
+}
+
 .network-chip .chip-dot {
   width: 7px;
   height: 7px;
@@ -331,7 +353,7 @@ a:hover {
   position: fixed;
   inset: 0;
   z-index: 94;
-  background: rgba(0, 0, 0, 0.45);
+  background: var(--overlay);
   border: 0;
 }
 
@@ -716,7 +738,8 @@ main#app-main {
 
 .feed-notice.demo {
   color: var(--text);
-  background: rgba(234, 179, 8, 0.08);
+  background: var(--signal-soft);
+  border: 1px solid var(--warning-border);
   border-radius: var(--radius-sm);
   padding: 6px 10px;
 }
@@ -964,7 +987,9 @@ main#app-main {
 }
 
 .feed-container > .post:not(:last-child) {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .post:hover {
@@ -1976,6 +2001,13 @@ main#app-main {
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
+@media (prefers-reduced-motion: no-preference) {
+  .card:hover {
+    border-color: color-mix(in srgb, var(--accent) 22%, var(--border));
+    box-shadow: var(--shadow), var(--accent-glow);
+  }
+}
+
 .card h2, .card h3 {
   margin: 0 0 0.35rem;
   font-size: 1.1rem;
@@ -2043,7 +2075,8 @@ main#app-main {
 
 .btn:hover {
   text-decoration: none;
-  background: var(--border);
+  background: var(--surface-soft);
+  border-color: var(--border);
 }
 
 .btn:disabled {
@@ -2053,7 +2086,7 @@ main#app-main {
 
 .btn-primary {
   background: var(--accent-gradient);
-  color: #fff;
+  color: var(--on-accent);
   border-color: transparent;
   box-shadow: 0 2px 10px rgba(49, 35, 131, 0.25);
 }
@@ -2061,12 +2094,18 @@ main#app-main {
 .btn-primary:hover {
   filter: brightness(1.08);
   box-shadow: 0 4px 14px rgba(49, 35, 131, 0.35);
-  color: #fff;
+  color: var(--on-accent);
+  background: var(--accent-gradient);
 }
 
 .btn-secondary {
   background: var(--success);
-  color: #fff;
+  color: var(--on-accent);
+}
+
+.btn-secondary:hover {
+  filter: brightness(1.06);
+  color: var(--on-accent);
 }
 
 .btn-outline {
@@ -2157,7 +2196,7 @@ main#app-main {
 .p2p-pill {
   background: var(--success-soft);
   color: var(--success);
-  border: 1px solid rgba(23, 191, 99, 0.25);
+  border: 1px solid color-mix(in srgb, var(--success) 28%, transparent);
   font-size: 0.72rem;
   padding: 1px 6px;
 }
@@ -2171,9 +2210,9 @@ main#app-main {
 }
 
 .gossip-edited-pill {
-  background: rgba(120, 90, 200, 0.12);
-  color: #6b4fbb;
-  border: 1px solid rgba(107, 79, 187, 0.28);
+  background: var(--accent-soft);
+  color: var(--accent-hover);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
   font-size: 0.72rem;
   padding: 1px 6px;
 }
@@ -2474,7 +2513,7 @@ main#app-main {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(10, 14, 20, 0.75);
+  background: var(--overlay);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   display: flex;
@@ -2585,8 +2624,8 @@ main#app-main {
   padding: 0 1.25rem 1.25rem;
   text-align: center;
   overflow: hidden;
-  border-color: rgba(56, 139, 253, 0.35);
-  box-shadow: 0 24px 56px rgba(0, 0, 0, 0.5), 0 0 24px rgba(56, 139, 253, 0.18);
+  border-color: color-mix(in srgb, var(--brand-blue) 38%, var(--border));
+  box-shadow: 0 24px 56px rgba(0, 0, 0, 0.5), 0 0 24px color-mix(in srgb, var(--brand-blue) 22%, transparent);
 }
 
 .cantina-art-wrap {
