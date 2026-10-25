@@ -349,15 +349,22 @@ export function initSocialInteractions() {
       return;
     }
 
-    // Watch / Acompanhar perfil (GitHub UX)
+    // Watch / Acompanhar perfil (GitHub UX) · Seguir no hero do feed (IG)
     const btnWatch = e.target.closest(".btn-watch-profile");
     if (btnWatch) {
       e.preventDefault();
       const routeId = btnWatch.dataset.route;
       const watching = social.toggleWatch(routeId);
-      btnWatch.classList.toggle("btn-primary", !watching);
-      btnWatch.classList.toggle("btn-outline", watching);
-      btnWatch.textContent = watching ? "✓ Acompanhando" : "👁️ Acompanhar (Watch)";
+      if (btnWatch.classList.contains("btn-follow-overlay")) {
+        btnWatch.textContent = watching ? "Seguindo" : "Seguir";
+        btnWatch.setAttribute("aria-pressed", watching ? "true" : "false");
+        btnWatch.setAttribute("aria-label", watching ? "Deixar de seguir autor" : "Seguir autor");
+        btnWatch.closest(".post-follow-overlay")?.classList.toggle("is-following", watching);
+      } else {
+        btnWatch.classList.toggle("btn-primary", !watching);
+        btnWatch.classList.toggle("btn-outline", watching);
+        btnWatch.textContent = watching ? "✓ Acompanhando" : "👁️ Acompanhar (Watch)";
+      }
       share.showToast(watching ? "Agora você acompanha este autor no feed Seguindo!" : "Deixou de acompanhar este autor.");
       return;
     }
