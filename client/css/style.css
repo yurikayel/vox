@@ -7,11 +7,13 @@
   --brand-yellow: #f5c400;
   --brand-blue: #0369a1;
   --theme-chrome: var(--brand-chrome);
-  --bg: #f0f9ff;
-  /* MD3-style surfaces (civic paper stack on --bg) */
-  --surface-1: #ffffff;
-  --surface-2: #faf8f4;
-  --surface-3: #ece8e1;
+  --bg-parchment: #f4f0e8;
+  --bg-carbon: #18181a;
+  --bg: var(--bg-parchment);
+  /* MD3-style surfaces (civic paper stack on --bg-parchment) */
+  --surface-1: #faf7f0;
+  --surface-2: #f0ebe3;
+  --surface-3: #e4ddd2;
   --outline: #c9c5bc;
   --elevation-1: 0 1px 2px rgba(20, 18, 24, 0.07), 0 2px 6px rgba(20, 18, 24, 0.04);
   --elevation-2: 0 2px 6px rgba(20, 18, 24, 0.08), 0 8px 20px rgba(20, 18, 24, 0.05);
@@ -71,11 +73,11 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --theme-chrome: #0c0a18;
-    --bg: #0c0a18;
-    --surface-1: #12101f;
-    --surface-2: #181624;
-    --surface-3: #222030;
+    --theme-chrome: var(--bg-carbon);
+    --bg: var(--bg-carbon);
+    --surface-1: #222224;
+    --surface-2: #28282c;
+    --surface-3: #323238;
     --outline: #3d3a48;
     --elevation-1: 0 1px 3px rgba(0, 0, 0, 0.42), 0 2px 8px rgba(0, 0, 0, 0.28);
     --elevation-2: 0 3px 10px rgba(0, 0, 0, 0.45), 0 10px 24px rgba(0, 0, 0, 0.32);
@@ -122,7 +124,6 @@
   --brand-chrome: #1e4976;
   --brand-chrome-hover: #163a5f;
   --theme-chrome: #1e4976;
-  --bg: #eef4fb;
   --accent: #3b82f6;
 }
 
@@ -130,7 +131,6 @@
   --brand-chrome: #0284c7;
   --brand-chrome-hover: #0369a1;
   --theme-chrome: #0284c7;
-  --bg: #f0f9ff;
   --accent: #0ea5e9;
 }
 
@@ -138,7 +138,6 @@
   --brand-chrome: #0369a1;
   --brand-chrome-hover: #075985;
   --theme-chrome: #0369a1;
-  --bg: #ecfeff;
   --accent: #0891b2;
 }
 
@@ -146,7 +145,6 @@
   --brand-chrome: #0e7490;
   --brand-chrome-hover: #155e75;
   --theme-chrome: #0e7490;
-  --bg: #f0fdfa;
   --accent: #14b8a6;
 }
 
@@ -154,7 +152,6 @@
   --brand-chrome: #1d4ed8;
   --brand-chrome-hover: #1e40af;
   --theme-chrome: #1e3a8a;
-  --bg: #eff6ff;
   --accent: #2563eb;
 }
 
@@ -162,43 +159,31 @@
   :root[data-sky-period="madrugada"] {
     --brand-chrome: #67e8f9;
     --brand-chrome-hover: #a5f3fc;
-    --theme-chrome: #0c1929;
-    --bg: #070d14;
-    --surface-1: #0c1826;
-    --surface-2: #101f30;
-    --surface-3: #152a3d;
+    --theme-chrome: #1a2838;
   }
 
   :root[data-sky-period="manha"] {
     --brand-chrome: #7dd3fc;
     --brand-chrome-hover: #bae6fd;
-    --theme-chrome: #0a1628;
-    --bg: #0a1628;
-    --surface-1: #0f1d2e;
+    --theme-chrome: #1c2a3a;
   }
 
   :root[data-sky-period="tarde"] {
     --brand-chrome: #38bdf8;
     --brand-chrome-hover: #7dd3fc;
-    --theme-chrome: #0b1a2e;
-    --bg: #0b1a2e;
-    --surface-1: #102033;
+    --theme-chrome: #1e3044;
   }
 
   :root[data-sky-period="entardecer"] {
     --brand-chrome: #22d3ee;
     --brand-chrome-hover: #67e8f9;
-    --theme-chrome: #0f2038;
-    --bg: #0f2038;
-    --surface-1: #142840;
+    --theme-chrome: #203548;
   }
 
   :root[data-sky-period="noite"] {
     --brand-chrome: #60a5fa;
     --brand-chrome-hover: #93c5fd;
-    --theme-chrome: #081422;
-    --bg: #081422;
-    --surface-1: #0d1a2c;
+    --theme-chrome: #182638;
   }
 }
 
@@ -278,7 +263,7 @@ a:hover {
   gap: 8px;
 }
 
-/* iOS squircle: src set in shell.js from prefers-color-scheme (light=navy, dark=white). */
+/* Sidebar brand: squircle tile único (fundo claro) em todos os temas ? ver shell.js. */
 .brand-logo.brand-mark,
 .brand-mark {
   width: 32px;
@@ -454,7 +439,7 @@ a:hover {
   width: var(--sidebar-width-collapsed);
   background: var(--surface-1);
   border-right: 1px solid var(--outline);
-  box-shadow: var(--elevation-1);
+  box-shadow: inset 3px 0 0 var(--brand-green), var(--elevation-1);
   display: flex;
   flex-direction: column;
   padding: 0.65rem 0.45rem;
@@ -1071,12 +1056,17 @@ main#app-main,
   width: 58px;
   height: 58px;
   border-radius: 50%;
-  padding: 2.5px;
-  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+  padding: 2px;
+  background: transparent;
+  border: 2px solid color-mix(in srgb, var(--brand-green) 55%, var(--outline));
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.15s ease;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.story-ring.story-ring--official {
+  border-color: var(--brand-green);
 }
 
 .story-item:hover .story-ring {
@@ -1805,17 +1795,41 @@ body.post-more-sheet-open {
   white-space: nowrap;
 }
 
-.post-layout-photo.post-card {
-  border: none;
-  box-shadow: none;
+.post-layout-photo.post-mural {
+  border: 1px solid var(--outline);
+  box-shadow: var(--elevation-2), var(--paper-highlight);
+  border-radius: 14px;
+  padding: 10px 10px 12px;
+  background: var(--surface-1);
+  max-width: min(var(--feed-max, 500px), 100%);
 }
 
-.post-layout-photo.post-card:hover {
-  border-color: transparent;
+.post-layout-photo.post-mural:hover {
+  border-color: color-mix(in srgb, var(--brand-green) 22%, var(--outline));
 }
 
-.post-layout-photo.post-card .post-media-container {
-  border-radius: 0;
+.post-layout-photo.post-mural .post-media-container {
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: var(--elevation-1);
+}
+
+.post-layout-text.post,
+.post-layout-github.post {
+  max-width: 540px;
+  border-radius: 12px;
+}
+
+.post-layout-text .post-caption-block .post-body,
+.post-layout-text .post-caption-block .post-body.post-caption-only {
+  font-size: 1.02rem;
+  line-height: 1.58;
+  letter-spacing: 0.01em;
+}
+
+.post-layout-text .post-caption-block .post-title {
+  font-size: 1.06rem;
+  line-height: 1.4;
 }
 
 .post-overlay-title {
@@ -2617,8 +2631,9 @@ body.post-lightbox-open {
 .profile-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 2px;
-  background: var(--border-subtle);
+  gap: 8px;
+  padding: 0 4px;
+  background: transparent;
 }
 
 .profile-grid-item {
@@ -2627,6 +2642,9 @@ body.post-lightbox-open {
   background: var(--surface-soft);
   overflow: hidden;
   display: block;
+  border-radius: 10px;
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--elevation-1);
 }
 
 .profile-grid-item img {
