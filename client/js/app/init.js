@@ -21,7 +21,12 @@ import {
   showProposal,
 } from "./screens-community.js";
 import { showDmThread, initDmListeners } from "./screens-dm.js";
-import { togglePostComments, onInlineReplySubmit } from "./screens-compose.js";
+import {
+  togglePostComments,
+  onInlineReplySubmit,
+  onNestedCommentReplySubmit,
+  toggleCommentReplyComposer,
+} from "./screens-compose.js";
 
 export function initGossipListeners() {
   peers.onGossipPost((item) => {
@@ -263,6 +268,48 @@ export function initSocialInteractions() {
       return;
     }
 
+
+    const btnCommentReact = e.target.closest(".btn-comment-react");
+    if (btnCommentReact) {
+      e.preventDefault();
+      const commentId = btnCommentReact.dataset.id;
+      const baseCount = btnCommentReact.dataset.count || 0;
+      const res = social.toggleCommentReact(commentId, baseCount);
+      btnCommentReact.classList.toggle("active", res.reacted);
+      btnCommentReact.setAttribute("aria-pressed", res.reacted ? "true" : "false");
+      const countEl = btnCommentReact.querySelector(".count-comment-reacts");
+      if (countEl) {
+        if (res.count > 0) {
+          countEl.textContent = String(res.count);
+          countEl.hidden = false;
+        } else {
+          countEl.textContent = "";
+          countEl.hidden = true;
+        }
+      }
+      return;
+    }
+
+    const btnCommentReplyCancel = e.target.closest(".btn-comment-reply-cancel");
+    if (btnCommentReplyCancel) {
+      e.preventDefault();
+      toggleCommentReplyComposer(btnCommentReplyCancel.closest(".post-comment-item"), false);
+      return;
+    }
+
+    const btnCommentReply = e.target.closest(".btn-comment-reply");
+    if (btnCommentReply) {
+      e.preventDefault();
+      const item = btnCommentReply.closest(".post-comment-item");
+      const form = item?.querySelector(".post-comment-nested-reply");
+      const opening = form?.hidden !== false;
+      document.querySelectorAll(".post-comment-nested-reply:not([hidden])").forEach((f) => {
+        if (f !== form) toggleCommentReplyComposer(f.closest(".post-comment-item"), false);
+      });
+      toggleCommentReplyComposer(item, opening);
+      return;
+    }
+
     // Pix Zap / Apoiar post (v6.0)
     const btnZap = e.target.closest(".btn-zap-post:not(.disabled)");
     if (btnZap) {
@@ -371,6 +418,12 @@ export function initSocialInteractions() {
   });
 
   document.addEventListener("submit", (e) => {
+    const nestedForm = e.target.closest(".post-comment-nested-reply");
+    if (nestedForm) {
+      e.preventDefault();
+      onNestedCommentReplySubmit(nestedForm);
+      return;
+    }
     const form = e.target.closest(".post-comment-composer");
     if (!form) return;
     e.preventDefault();

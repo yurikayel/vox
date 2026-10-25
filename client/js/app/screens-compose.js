@@ -326,7 +326,7 @@ export async function showComposeReply(topicId, communityId) {
   }
 }
 
-export async function persistLocalReply(topicId, communityId, body) {
+export async function persistLocalReply(topicId, communityId, body, { parentId = "" } = {}) {
   const replyId = "rep_" + Math.random().toString(36).slice(2, 10);
   const signed = await localAccount.signPayload({
     id: replyId,
@@ -334,6 +334,7 @@ export async function persistLocalReply(topicId, communityId, body) {
     replyTo: topicId,
     communityId,
     body,
+    parentId: parentId || "",
   });
   await cacheNode.saveLocalPost(signed);
   peers.broadcastGossip(signed);
@@ -388,7 +389,12 @@ export function closeOtherCommentPanels(keep) {
 
 export function fillCommentFeed(panel, replies) {
   const slot = panel.querySelector(".post-comments-feed");
-  if (slot) slot.outerHTML = render.renderCommentList(replies);
+  if (slot) {
+    slot.outerHTML = render.renderCommentList(replies, {
+      topicId: panel.dataset.topic || "",
+      commId: panel.dataset.comm || "",
+    });
+  }
   panel.dataset.loaded = "1";
 }
 
@@ -413,7 +419,19 @@ export async function togglePostComments(btn) {
   panel.querySelector(".post-comment-input")?.focus();
 }
 
+function commentListContext(panel) {
+  return {
+    topicId: panel?.dataset.topic || "",
+    commId: panel?.dataset.comm || "",
+  };
+}
+
 export function appendInlineReply(panel, reply) {
+  const parentId = reply.parentId || "";
+  if (parentId) {
+    appendNestedInlineReply(panel, parentId, reply);
+    return;
+  }
   let list = panel?.querySelector(".post-comment-list");
   if (!list) {
     const feed = panel?.querySelector(".post-comments-feed");
@@ -421,7 +439,75 @@ export function appendInlineReply(panel, reply) {
     list = panel?.querySelector(".post-comment-list");
   }
   panel?.querySelector(".post-comments-empty")?.remove();
-  if (list) list.insertAdjacentHTML("beforeend", render.renderInlineReplyItem(reply));
+  if (list) {
+    list.insertAdjacentHTML(
+      "beforeend",
+      render.renderInlineReplyItem(reply, commentListContext(panel)),
+    );
+  }
+}
+
+export function appendNestedInlineReply(panel, parentId, reply) {
+  const parentItem = panel?.querySelector(`[data-comment-id="${parentId}"]`);
+  if (!parentItem) {
+    appendInlineReply(panel, { ...reply, parentId: "" });
+    return;
+  }
+  let nested = parentItem.querySelector(":scope > .post-comment-body > .post-comment-nested-list");
+  if (!nested) {
+    parentItem
+      .querySelector(".post-comment-body")
+      ?.insertAdjacentHTML("beforeend", `<ul class="post-comment-nested-list"></ul>`);
+    nested = parentItem.querySelector(":scope > .post-comment-body > .post-comment-nested-list");
+  }
+  if (nested) {
+    nested.insertAdjacentHTML(
+      "beforeend",
+      render.renderInlineReplyItem(reply, commentListContext(panel)),
+    );
+  }
+}
+
+export function toggleCommentReplyComposer(item, open) {
+  const form = item?.querySelector(".post-comment-nested-reply");
+  if (!form) return;
+  form.hidden = !open;
+  if (open) {
+    const ta = form.querySelector("textarea");
+    ta?.focus();
+    if (ta && typeof ta.setSelectionRange === "function") {
+      const len = ta.value.length;
+      ta.setSelectionRange(len, len);
+    }
+  }
+}
+
+export async function onNestedCommentReplySubmit(form) {
+  const body = form.querySelector(".post-comment-nested-input")?.value.trim();
+  if (!body) return;
+  const btn = form.querySelector(".btn-comment-nested-send");
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = "Enviando…";
+  }
+  try {
+    const signed = await persistLocalReply(form.dataset.topic, form.dataset.comm || "", body, {
+      parentId: form.dataset.parent || "",
+    });
+    appendInlineReply(form.closest(".post-comments"), signed);
+    bumpReplyCount(form.closest("article"));
+    form.reset();
+    toggleCommentReplyComposer(form.closest(".post-comment-item"), false);
+    const panel = form.closest(".post-comments");
+    if (panel) panel.dataset.loaded = "1";
+    share.showToast("Resposta enviada!");
+  } catch (err) {
+    share.showToast(`Erro: ${err.message}`, "error");
+  }
+  if (btn) {
+    btn.disabled = false;
+    btn.textContent = "Enviar";
+  }
 }
 
 export function bumpReplyCount(article) {

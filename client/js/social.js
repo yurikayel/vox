@@ -10,6 +10,7 @@ const WATCHED_KEY = "vox-watched-profiles";
 const PINNED_KEY = "vox-pinned-posts";
 const README_KEY = "vox-profile-readme";
 const GITHUB_KEY = "vox-profile-github";
+const COMMENT_REACT_KEY = "vox-liked-comments";
 
 function loadSet(key) {
   if (typeof window === "undefined" || !window.localStorage) return new Set();
@@ -71,6 +72,34 @@ export function toggleLike(postId, baseCount = 0) {
   saveSet(LIKES_KEY, set);
   const count = (Number(baseCount) || 0) + (liked ? 1 : 0);
   return { liked, count };
+}
+
+/* --- Reações em comentários (♥ local) --- */
+
+export function isCommentReacted(commentId) {
+  if (!commentId) return false;
+  return loadSet(COMMENT_REACT_KEY).has(commentId);
+}
+
+export function getCommentReactCount(commentId, baseCount = 0) {
+  const base = Number(baseCount) || 0;
+  return isCommentReacted(commentId) ? base + 1 : base;
+}
+
+export function toggleCommentReact(commentId, baseCount = 0) {
+  if (!commentId) return { reacted: false, count: Number(baseCount) || 0 };
+  const set = loadSet(COMMENT_REACT_KEY);
+  let reacted = false;
+  if (set.has(commentId)) {
+    set.delete(commentId);
+    reacted = false;
+  } else {
+    set.add(commentId);
+    reacted = true;
+  }
+  saveSet(COMMENT_REACT_KEY, set);
+  const count = (Number(baseCount) || 0) + (reacted ? 1 : 0);
+  return { reacted, count };
 }
 
 /* --- Estrelas (Stars ⭐ - GitHub UX) --- */
