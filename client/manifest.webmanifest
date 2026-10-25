@@ -4,10 +4,22 @@
   "description": "Comunidades e mensagens nos seus aparelhos",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#f4f6f9",
-  "theme_color": "#1a5fb4",
+  "background_color": "#081b4b",
+  "theme_color": "#081b4b",
   "lang": "pt-BR",
   "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
     {
       "src": "icons/icon.svg",
       "sizes": "any",
