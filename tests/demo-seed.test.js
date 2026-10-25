@@ -5,7 +5,7 @@ import * as demoSeed from "../client/js/demo-seed.js";
 import * as cacheNode from "../client/js/cache-node.js";
 import { MOCK_DEMO_UF_COUNT } from "../client/js/mock.js";
 
-const SEED_KEY = "vox-demo-seeded-v9-uf27-interactions";
+const SEED_KEY = "vox-demo-seeded-v10-uf27-copy";
 
 test("demo-seed - 27 topicos UF", async () => {
   localStorage.clear();
