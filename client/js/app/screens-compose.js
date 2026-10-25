@@ -26,6 +26,7 @@ import * as frames from "../frames.js";
 import * as postOwnership from "../post-ownership.js";
 import * as communityMirror from "../community-mirror.js";
 import * as stewardWizard from "../steward-wizard.js";
+import * as communitySeed from "../community-seed-checklist.js";
 import * as gatewayTelemetry from "../gateway-telemetry.js";
 import { attachInlineComposerHandlers } from "../inline-composer.js";
 import * as oauthProfile from "../oauth-profile.js";
@@ -78,8 +79,9 @@ export async function showComposeCommunity() {
           } catch {}
         }
 
+        communitySeed.markSeedPending(id);
         share.showToast("Comunidade criada na rede!");
-        location.hash = `#/c/${encodeURIComponent(id)}`;
+        location.hash = `#/c/${encodeURIComponent(id)}?seed=1`;
       } catch (err) {
         share.showToast(`Erro: ${err.message}`, "error");
         btn.disabled = false;
