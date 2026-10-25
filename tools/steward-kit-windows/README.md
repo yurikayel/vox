@@ -25,7 +25,7 @@ O script:
 
 ```powershell
 pip install pyinstaller
-pyinstaller --onefile --name VoxStewardKit tools/steward-kit-windows/steward_launcher.py
+.\tools\steward-kit-windows\build.ps1
 ```
 
 Distribua `dist/VoxStewardKit.exe` com este README. O `.exe` embute apenas o launcher; relay continua Python embutido via PyInstaller `--add-data` se você empacotar o diretório `relay/` (ver comentários em `steward_launcher.py`).

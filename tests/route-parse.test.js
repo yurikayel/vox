@@ -41,6 +41,15 @@ describe("route-parse", () => {
     });
   });
 
+  it("status and labs frames", () => {
+    withLocation({ hash: "#/status" }, () => {
+      assert.deepEqual(parseRoute(), { name: "status" });
+    });
+    withLocation({ hash: "#/labs/frames" }, () => {
+      assert.deepEqual(parseRoute(), { name: "labs-frames" });
+    });
+  });
+
   it("connect and dm thread", () => {
     withLocation({ hash: "#/connect/vx_abc" }, () => {
       assert.deepEqual(parseRoute(), { name: "connect", routeId: "vx_abc" });

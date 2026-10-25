@@ -42,6 +42,23 @@ export const MOCK_DEMO_COMMUNITY_FEIRA = {
   commercialEnabled: true,
 };
 
+/** Demo P2 — espelho (`Type: community-fork`) da comunidade tour. */
+export const MOCK_DEMO_COMMUNITY_FORK = {
+  id: "demo-aprenda-vox-mirror",
+  communityId: "demo-aprenda-vox-mirror",
+  title: "Brasil Estereótipo — espelho SP",
+  description: "Espelho comunitário de leitura rápida (demo fork).",
+  category: "Espelho",
+  owner: "vx_demo_sp",
+  author: "vx_demo_sp",
+  commercialEnabled: false,
+  visibility: "open",
+  communityForkOf: {
+    communityId: "demo-aprenda-vox",
+    title: "Brasil Estereótipo (Demo Vox)",
+  },
+};
+
 export const MOCK_DEMO_PROFILES = buildUfDemoProfilesMap();
 export const MOCK_DEMO_TOPICS = buildUfDemoTopics(NOW);
 export const MOCK_DEMO_LISTINGS = buildUfDemoListings(NOW);
@@ -111,6 +128,7 @@ export const MOCK_DEMO_VOTES = {
 
 export const MOCK_COMMUNITIES = [
   MOCK_DEMO_COMMUNITY,
+  MOCK_DEMO_COMMUNITY_FORK,
   MOCK_DEMO_COMMUNITY_FEIRA,
   {
     id: "demo-community-1",
