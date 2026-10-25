@@ -1,6 +1,6 @@
 # Backlog — participação majoritária na malha
 
-Rastreio de [rede-sustentada-participantes.md](./rede-sustentada-participantes.md). IDs **V-P** complementam **V-I** do lobby.
+Rastreio de [rede-sustentada-participantes.md](./rede-sustentada-participantes.md). Dossiês: [brainstorm-auto-escala-organica-2026-10.md](./brainstorm-auto-escala-organica-2026-10.md) · [infra-participativa-blindagem-crescimento.md](./infra-participativa-blindagem-crescimento.md). IDs **V-P** complementam **V-I** do lobby.
 
 ## P0 — Desbloqueia sustentação sem mantenedor
 
