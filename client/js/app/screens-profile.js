@@ -465,14 +465,12 @@ export async function showHandleLookup(rawSlug) {
 
   const result = await gql.fetchHandle(slug);
   if (!result || !result.primaryOwner) {
-    main.innerHTML = `
-      <div class="card">
-        <h2>@${render.escapeHtml(slug)}</h2>
-        <div class="empty">
-          <p>Nenhum endereço encontrado para o perfil <code>@${render.escapeHtml(slug)}</code>.</p>
-          <a class="btn btn-outline" href="#/">Voltar ao início</a>
-        </div>
-      </div>`;
+    main.innerHTML = "";
+    render.renderProfileGridNotFound(main, {
+      handle: slug,
+      bodyHtml: `<div class="empty"><p>Nenhum endereço encontrado para o perfil <code>@${render.escapeHtml(slug)}</code>.</p></div>`,
+      actionsHtml: `<a class="btn btn-outline" href="#/">Voltar ao início</a>`,
+    });
     return;
   }
 
