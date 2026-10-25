@@ -40,6 +40,9 @@ test("render - renderPactModal injeta o modal com termos e botoes", () => {
   assert.ok(container.innerHTML.includes("btn-pact-accept"));
   assert.ok(container.innerHTML.includes("btn-pact-settings"));
   assert.ok(container.innerHTML.includes("Seus dados são seus"));
+  assert.ok(container.innerHTML.includes("modal-sheet"));
+  assert.ok(container.innerHTML.includes("modal-card"));
+  assert.ok(container.innerHTML.includes("modal-feature"));
 
   render.closePactModal(container);
   assert.equal(container.innerHTML, "");
@@ -956,6 +959,8 @@ test("render - modal pós-pacto connect", () => {
   render.renderPostPactConnectModal(container, "vx_testroute123456");
   assert.ok(container.innerHTML.includes("post-pact-connect-overlay"));
   assert.ok(container.innerHTML.includes("#/connect/"));
+  assert.ok(container.innerHTML.includes("modal-card"));
+  assert.ok(!container.innerHTML.includes('class="modal-dialog card"'));
   render.closePostPactConnectModal(container);
   assert.equal(container.innerHTML, "");
 });
