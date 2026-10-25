@@ -980,7 +980,7 @@ OAuth e compartilhamento nativo citam provedores apenas onde exigido por integra
 
 ## 34. Identidade carbono / pergaminho (brainstorm → ship)
 
-**Data:** 2026-10-25 · **SW:** `vox-pwa-v6.70-carbon-parchment-identity`
+**Data:** 2026-10-25 · **SW:** `vox-pwa-v6.71-photo-no-card`
 
 **Problema:** canvas celeste/roxo e cards foto full-bleed liam como clone genérico de feed de foto; marca na sidebar trocava tile escuro/claro.
 
@@ -990,7 +990,7 @@ OAuth e compartilhamento nativo citam provedores apenas onde exigido por integra
 
 **Entregue (UX):**
 
-- **Mural:** posts com mídia usam `.post-mural` — padding, raio ~14px, sombra papel, mídia com cantos arredondados (overlay/ações/comentários intactos).
+- **Foto bleed:** posts com mídia usam `.post-photo-bleed` — hero flush no `--bg` (sem card externo); overlay/caption/ações na imagem; comentários borderless abaixo.
 - **Newsletter:** `.post-layout-text` tipografia mais larga (~1.02rem corpo) e coluna até ~540px.
 - **Sidebar cívica:** barra verde `inset` + superfícies pergaminho/carbono.
 - **Stories:** anel plano verde/outline (sem gradiente arco-íris); conta **Vox Brasil** ✓ com `.story-ring--official`.
