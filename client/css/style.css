@@ -1473,8 +1473,8 @@ main#app-main,
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 8px;
-  padding: 10px 12px 8px;
+  gap: 6px;
+  padding: 8px 10px 6px;
   pointer-events: none;
 }
 
@@ -1482,7 +1482,7 @@ main#app-main,
 .post-reels-header-right {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   min-width: 0;
   pointer-events: auto;
 }
@@ -1490,7 +1490,7 @@ main#app-main,
 .post-reels-header-right {
   flex-shrink: 0;
   align-items: flex-start;
-  gap: 10px;
+  gap: 8px;
 }
 
 .post-reels-avatar .avatar-img,
@@ -1681,7 +1681,7 @@ body.post-more-sheet-open {
 .post-overlay-content {
   position: relative;
   z-index: 1;
-  padding: 14px 14px 58px;
+  padding: 12px 12px 3.5rem;
   pointer-events: auto;
 }
 
@@ -1694,9 +1694,9 @@ body.post-more-sheet-open {
   display: flex;
   align-items: center;
   justify-content: space-evenly;
-  gap: 2px;
+  gap: 4px;
   width: 100%;
-  padding: 8px 6px calc(10px + env(safe-area-inset-bottom, 0px));
+  padding: 0.5rem 0.75rem calc(0.5rem + env(safe-area-inset-bottom, 0px));
   pointer-events: auto;
   background: linear-gradient(
     180deg,
@@ -1709,12 +1709,15 @@ body.post-more-sheet-open {
 .post-actions-overlay .overlay-action-btn {
   flex: 1 1 0;
   min-width: 0;
+  max-width: 5.25rem;
+  min-height: 40px;
   flex-direction: column;
-  gap: 2px;
-  padding: 4px 2px;
+  gap: 3px;
+  padding: 4px 3px;
   color: #fff;
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   font-weight: 600;
+  border: none;
   border-radius: 8px;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
 }
@@ -1723,6 +1726,11 @@ body.post-more-sheet-open {
 .post-actions-overlay .overlay-action-btn:focus-visible {
   color: #fff;
   background: rgba(255, 255, 255, 0.1);
+  outline: none;
+}
+
+.post-actions-overlay .overlay-action-btn:focus-visible {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.35);
 }
 
 .post-actions-overlay .overlay-action-btn.active {
@@ -1739,19 +1747,39 @@ body.post-more-sheet-open {
 
 .post-actions-overlay .action-icon {
   flex-shrink: 0;
+  width: 20px;
+  height: 20px;
 }
 
 .post-actions-overlay .post-overlay-actions-more {
   flex: 1 1 0;
+  max-width: 5.25rem;
   display: flex;
   justify-content: center;
 }
 
-.post-actions-overlay .post-overlay-actions-more > summary {
+.post-actions-overlay .post-overlay-actions-more > summary,
+.post-actions-overlay .btn-toolbar-more.btn-post-actions-more {
   flex-direction: column;
-  gap: 2px;
-  font-size: 1.35rem;
+  gap: 3px;
+  min-height: 40px;
+  font-size: 1.15rem;
   line-height: 1;
+  border: none;
+  background: transparent;
+  color: #fff;
+  box-shadow: none;
+}
+
+.post-actions-overlay .post-overlay-actions-more > summary:hover,
+.post-actions-overlay .post-overlay-actions-more > summary:focus-visible {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.post-actions-overlay .post-overlay-actions-more > summary:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.35);
 }
 
 .post-actions-overlay .toolbar-overflow-menu--overlay {
@@ -1759,11 +1787,19 @@ body.post-more-sheet-open {
   left: 50%;
   right: auto;
   transform: translateX(-50%);
-  min-width: 168px;
+  min-width: 11rem;
+  padding: 4px;
+  gap: 0;
+}
+
+.post-actions-overlay .toolbar-overflow-menu--overlay .action-btn {
+  padding: 7px 10px;
+  white-space: nowrap;
 }
 
 .post-actions-overlay .toolbar-overflow-menu--overlay .toolbar-overflow-label {
   color: var(--text);
+  white-space: nowrap;
 }
 
 .post-layout-photo.post-card {
@@ -1781,9 +1817,13 @@ body.post-more-sheet-open {
 
 .post-overlay-title {
   margin: 0 0 4px;
-  font-size: 1rem;
+  font-size: 0.92rem;
   font-weight: 700;
   line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .post-overlay-title a {
@@ -1798,8 +1838,8 @@ body.post-more-sheet-open {
 
 .post-overlay-excerpt {
   margin: 0;
-  font-size: 0.86rem;
-  line-height: 1.4;
+  font-size: 0.82rem;
+  line-height: 1.38;
   color: #fff;
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.65), 0 0 1px rgba(0, 0, 0, 0.8);
   display: -webkit-box;
