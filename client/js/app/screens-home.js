@@ -38,9 +38,17 @@ import { parseRoute } from "./route-parse.js";
 import { getActiveUser, makeShellProps, attachPostShareHandlers } from "./context.js";
 import { ensureOnboardingSideEffects } from "./onboarding-side-effects.js";
 
+function attachWelcomeFeedHintHandlers() {
+  document.getElementById("btn-welcome-hint-dismiss")?.addEventListener("click", () => {
+    welcomeProfile.markWelcomeIntroSeen();
+    document.getElementById("welcome-feed-hint")?.remove();
+  });
+}
+
 export async function showHome(feed = "for-you") {
   const activeFeed = feed === "following" ? "following" : "for-you";
   const user = await getActiveUser();
+  const onboarding = user ? await ensureOnboardingSideEffects(user) : { dmJustSeeded: false };
   const main = render.renderShell({
     ...makeShellProps(user, "home"),
     activeFeed,
@@ -126,11 +134,10 @@ export async function showHome(feed = "for-you") {
 
   attachPostShareHandlers();
   attachInlineComposerHandlers(() => showHome(activeFeed));
-  document.getElementById("btn-welcome-card-dismiss")?.addEventListener("click", () => {
-    welcomeProfile.markWelcomeCardSeen();
-    document.getElementById("welcome-first-contact-card")?.remove();
-  });
-  void ensureOnboardingSideEffects(user);
+  attachWelcomeFeedHintHandlers();
+  if (onboarding.dmJustSeeded && activeFeed === "for-you") {
+    share.showToast("Vox Brasil te mandou uma mensagem — veja em Mensagens 💬");
+  }
 }
 
 export async function showCommunities() {

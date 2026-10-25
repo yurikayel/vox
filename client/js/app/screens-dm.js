@@ -147,6 +147,10 @@ export async function showDmThread(peerAddress) {
     return;
   }
 
+  await ensureOnboardingSideEffects(user);
+  if (welcomeProfile.isWelcomeRouteId(peerAddress)) {
+    welcomeProfile.markWelcomeIntroSeen();
+  }
   await pollInboxMessages(user);
   const messages = await cacheNode.getDmMessages(peerAddress);
   const isRtcOnline = peers.isAddressConnectedRtc(peerAddress);

@@ -3,10 +3,12 @@
 import * as welcomeProfile from "../vox-welcome-profile.js";
 
 export async function ensureOnboardingSideEffects(userRouteId) {
-  if (!userRouteId || localStorage.getItem("vox-pact-accepted") !== "true") return;
+  if (!userRouteId || localStorage.getItem("vox-pact-accepted") !== "true") {
+    return { dmJustSeeded: false };
+  }
   try {
-    await welcomeProfile.runWelcomeOnboarding(userRouteId);
+    return await welcomeProfile.runWelcomeOnboarding(userRouteId);
   } catch {
-    /* ignore */
+    return { dmJustSeeded: false };
   }
 }

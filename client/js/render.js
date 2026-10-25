@@ -33,7 +33,7 @@ export {
   renderPostFrame,
   renderPostItem,
   renderStoriesStrip,
-  renderWelcomeCardHtml,
+  renderWelcomeFeedHintHtml,
   renderFeed,
 } from "./render/feed.js";
 
