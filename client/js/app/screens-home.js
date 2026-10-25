@@ -36,6 +36,7 @@ import * as welcomeProfile from "../vox-welcome-profile.js";
 import * as meshProfile from "../mesh-profile.js";
 import { parseRoute } from "./route-parse.js";
 import { getActiveUser, makeShellProps, attachPostShareHandlers } from "./context.js";
+import { attachPostMoreMenuHandlers } from "../render/post-more-menu.js";
 import { ensureOnboardingSideEffects } from "./onboarding-side-effects.js";
 
 function attachWelcomeFeedHintHandlers() {
@@ -133,6 +134,7 @@ export async function showHome(feed = "for-you") {
   }
 
   attachPostShareHandlers();
+  attachPostMoreMenuHandlers();
   attachInlineComposerHandlers(() => showHome(activeFeed));
   attachWelcomeFeedHintHandlers();
   if (onboarding.dmJustSeeded && activeFeed === "for-you") {
