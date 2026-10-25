@@ -1710,13 +1710,15 @@ body.post-more-sheet-open {
 .post-actions-overlay .overlay-action-btn {
   flex: 1 1 0;
   min-width: 0;
-  max-width: 5.25rem;
+  max-width: 4.5rem;
   min-height: 40px;
-  flex-direction: column;
-  gap: 3px;
-  padding: 4px 3px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 4px 6px;
   color: #fff;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   border: none;
   border-radius: 8px;
@@ -1738,12 +1740,10 @@ body.post-more-sheet-open {
   color: #ff6b8a;
 }
 
-.post-actions-overlay .overlay-action-label {
-  line-height: 1.1;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.post-actions-overlay .overlay-action-count {
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  min-width: 0.5rem;
 }
 
 .post-actions-overlay .action-icon {
@@ -1761,8 +1761,10 @@ body.post-more-sheet-open {
 
 .post-actions-overlay .post-overlay-actions-more > summary,
 .post-actions-overlay .btn-toolbar-more.btn-post-actions-more {
-  flex-direction: column;
-  gap: 3px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
   min-height: 40px;
   font-size: 1.15rem;
   line-height: 1;
