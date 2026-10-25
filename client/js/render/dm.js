@@ -113,10 +113,29 @@ function renderDmMessageBubbles(messages, myAddress, peerAddress) {
     .join("");
 }
 
+function renderWelcomeThreadIntro() {
+  const profileHref = `#/u/${encodeURIComponent(WELCOME_ROUTE_ID)}`;
+  return `
+    <div class="dm-welcome-intro card" role="complementary" aria-label="Boas-vindas Vox Brasil">
+      <p class="desc" style="margin:0 0 0.5rem; font-size:0.88rem;">
+        Conta oficial 📣 — dicas rápidas sem encher o feed.
+      </p>
+      <p style="margin:0; font-size:0.88rem;">
+        <a href="#/people">Encontrar pessoas</a>
+        <span class="meta"> · </span>
+        <a href="#/voxpedia">Voxpedia</a>
+        <span class="meta"> · </span>
+        <a href="${profileHref}">Ver perfil</a>
+      </p>
+    </div>`;
+}
+
 export function renderDmThread(main, peerAddress, messages = [], myAddress = "", { isRtcOnline = false, hasDmPub = false } = {}) {
   const peerLabel =
     profileDirectory.getAuthorDisplaySync(peerAddress) ||
     (peerAddress === WELCOME_ROUTE_ID ? getWelcomeProfile().name : shortId(peerAddress));
+
+  const welcomeIntro = peerAddress === WELCOME_ROUTE_ID ? renderWelcomeThreadIntro() : "";
 
   const statusBadge = isRtcOnline
     ? `<span class="badge-pill" style="background:var(--success-soft); color:var(--success);">Online agora</span>`
@@ -137,6 +156,7 @@ export function renderDmThread(main, peerAddress, messages = [], myAddress = "",
 
   main.innerHTML = `
     <a class="back-link" href="#/dm">← Voltar às conversas</a>
+    ${welcomeIntro}
     ${keyWarning}
 
     <div class="dm-thread-container">

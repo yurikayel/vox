@@ -8,8 +8,10 @@ export const WELCOME_ROUTE_ID = "vx_voxbrasil_welcome";
 /** Avatar institucional: logo branco em tile opaco, squircle (light/dark). */
 export const OFFICIAL_PROFILE_AVATAR = "./icons/profile-vox-official-512.png";
 
+/** @deprecated Card removido — migrado para intro via DM. */
 export const WELCOME_CARD_SEEN_KEY = "vox-welcome-card-seen";
-export const WELCOME_DM_SEED_KEY = "vox-welcome-dm-seeded-v2";
+export const WELCOME_DM_INTRO_SEEN_KEY = "vox-welcome-dm-intro-seen";
+export const WELCOME_DM_SEED_KEY = "vox-welcome-dm-seeded-v3";
 
 export function getWelcomeProfile() {
   return {
@@ -33,26 +35,49 @@ export function getWelcomeProfile() {
 
 export function getWelcomeDmText() {
   return (
-    "Olá! 👋 Sou a conta oficial do Vox Brasil — sua voz de boas-vindas na plataforma. " +
-    "Use **Pessoas** para achar gente ou compartilhe `#/connect/seu_vx_`. " +
-    "Glossário leigo: **Voxpedia** (#/voxpedia). Rede: Configurações → Sua rede."
+    "Oi! 👋 Sou a Vox Brasil — a conta oficial que te dá boas-vindas por aqui.\n\n" +
+    "Quer achar alguém? Use Pessoas no menu. Quer entender as palavrinhas do app? " +
+    "Abra a Voxpedia (glossário bem leigo).\n\n" +
+    "Se travar, responde nesta conversa. A gente orienta — sem linguagem de banco. 😊"
   );
 }
 
-export function markWelcomeCardSeen() {
+function readWelcomeIntroSeen() {
   try {
+    if (localStorage.getItem(WELCOME_DM_INTRO_SEEN_KEY) === "1") return true;
+    if (localStorage.getItem(WELCOME_CARD_SEEN_KEY) === "1") return true;
+  } catch {
+    /* ignore */
+  }
+  return false;
+}
+
+export function markWelcomeIntroSeen() {
+  try {
+    localStorage.setItem(WELCOME_DM_INTRO_SEEN_KEY, "1");
     localStorage.setItem(WELCOME_CARD_SEEN_KEY, "1");
   } catch {
     /* ignore */
   }
 }
 
-export function shouldShowWelcomeCard() {
+/** @deprecated Use markWelcomeIntroSeen */
+export function markWelcomeCardSeen() {
+  markWelcomeIntroSeen();
+}
+
+export function shouldShowWelcomeFeedHint() {
   try {
-    return localStorage.getItem(WELCOME_CARD_SEEN_KEY) !== "1";
+    if (readWelcomeIntroSeen()) return false;
+    return localStorage.getItem(WELCOME_DM_SEED_KEY) === "1";
   } catch {
-    return true;
+    return false;
   }
+}
+
+/** @deprecated Card removido do feed */
+export function shouldShowWelcomeCard() {
+  return false;
 }
 
 export function isWelcomeRouteId(routeId) {
@@ -60,9 +85,9 @@ export function isWelcomeRouteId(routeId) {
 }
 
 export async function ensureWelcomeDmSeed(myRouteId) {
-  if (!myRouteId || localStorage.getItem(WELCOME_DM_SEED_KEY)) return;
+  if (!myRouteId || localStorage.getItem(WELCOME_DM_SEED_KEY)) return false;
   await cacheNode.saveDmMessage({
-    id: "welcome-dm-vox-brasil-v2",
+    id: "welcome-dm-vox-brasil-v3",
     peerAddress: WELCOME_ROUTE_ID,
     from: WELCOME_ROUTE_ID,
     to: myRouteId,
@@ -71,6 +96,7 @@ export async function ensureWelcomeDmSeed(myRouteId) {
     status: "received",
   });
   localStorage.setItem(WELCOME_DM_SEED_KEY, "1");
+  return true;
 }
 
 export function ensureWelcomeWatch() {
@@ -80,6 +106,7 @@ export function ensureWelcomeWatch() {
 }
 
 export async function runWelcomeOnboarding(myRouteId) {
-  await ensureWelcomeDmSeed(myRouteId);
+  const dmJustSeeded = await ensureWelcomeDmSeed(myRouteId);
   ensureWelcomeWatch();
+  return { dmJustSeeded };
 }
