@@ -3,7 +3,9 @@
 > **Documento Estratégico & Arquitetural**  
 > **Status:** Canônico  
 > **Data:** 25 de Outubro de 2026  
-> **Escopo:** Sustentação desatendida via participantes, flywheel simbiótico e imunidade regulatória por descentralização radical.
+> **Escopo:** Sustentação desatendida via participantes, flywheel simbiótico e **redução de superfície regulatória** por descentralização radical (visão de produto — **não é parecer jurídico**; ver [COMPLIANCE-BR.md](../COMPLIANCE-BR.md)).
+
+Complementa [rede-sustentada-participantes.md](./rede-sustentada-participantes.md), [brainstorm-auto-escala-organica-2026-10.md](./brainstorm-auto-escala-organica-2026-10.md), [backlog-participacao-rede.md](./backlog-participacao-rede.md), [brainstorm-tracao-escalabilidade-incubacao.md](./brainstorm-tracao-escalabilidade-incubacao.md) e [GOVERNANCE.md](../GOVERNANCE.md).
 
 ---
 
@@ -89,12 +91,13 @@ Passa a ser mais um nó de cache e membro ativo da comunidade
 * O Vox promove o criador oferecendo link permanente e Pix Zaps nativos;
 * A rede cresce a cada clique externo sem gastar 1 centavo em marketing ou anúncios pagos.
 
-### 2. Placar da Autonomia Comunitária (Orgulho Cívico Visível)
-* Cada comunidade exibe no topo um painel transparente:
-  > *"Comunidade 100% autônoma. Sustentada por 14 vizinhos online. 96% do tráfego servido localmente. Zero dependência de Big Techs."*
-* Se a comunidade perde nós e passa a depender de gateways lentos de reserva, o app sinaliza de forma honesta:
-  > *"⚠️ Velocidade reduzida: apenas 1 guardião online nesta comunidade. [Ajude a manter esta praça viva com 1 clique]"*.
-* Isso ativa o senso de posse coletiva e estimula membros a ativarem a camada de Apoiador.
+### 2. Painel honesto da comunidade (estatísticas locais — **sem** ranking público de nós)
+* Alinhado a [rede-sustentada-participantes.md](./rede-sustentada-participantes.md) e [brainstorm-auto-escala-organica-2026-10.md](./brainstorm-auto-escala-organica-2026-10.md): **não** há leaderboard global de stewards, scoreboard de contribuição ou competição entre nós ([ADR-001](./adr/001-contribution-attestation-export.md) = export opt-in privado).
+* Cada comunidade pode exibir no header um **painel contextual só daquela praça** (telemetria local opt-in, agregados aproximados):
+  > *"Sustentada por vizinhos: ~14 aparelhos online agora. ~96% das leituras recentes vieram de cache local ou relay comunitário (estimativa)."*
+* Se a comunidade perde apoio e passa a depender de gateways de reserva, o app sinaliza de forma honesta (sem culpar indivíduos):
+  > *"⚠️ Velocidade reduzida: poucos apoiadores online nesta comunidade. [Ajude a manter esta praça viva com 1 clique]"*.
+* Objetivo: posse coletiva e convite a `commOnly`/steward — **não** gamificação ou exposição pública de quem “contribui mais”.
 
 ### 3. "A Rua" sem Caixa-Preta (Curadoria Pública e Aberta)
 * Na praça pública do Vox ("A Rua"), não há algoritmos de recomendação secretos otimizados para reter usuários através de indignação e ódio.
@@ -106,9 +109,9 @@ Passa a ser mais um nó de cache e membro ativo da comunidade
 
 ---
 
-## 🛡️ 4. Blindagem Regulatória & Descentralização Radical: Como Driblar Leis por Arquitetura
+## 🛡️ 4. Redução de superfície regulatória por arquitetura (leitura de risco, não “drible”)
 
-Para que a rede seja **fácil de manter, imune a canetadas judiciais e resistente a pressões regulatórias**, a arquitetura do Vox é desenhada para **eliminar pontos de estrangulamento legal**:
+Para que a rede seja **mais fácil de manter por voluntários** e **menos dependente de um operador central único**, a arquitetura do Vox busca **eliminar pontos de estrangulamento desnecessários**. Isso **não** garante imunidade absoluta: espelhos públicos, stewards e autores de conteúdo ainda podem ter obrigações (Marco Civil Art. 19, LGPD, etc.) — detalhes em [COMPLIANCE-BR.md](../COMPLIANCE-BR.md).
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
@@ -138,7 +141,7 @@ Para que a rede seja **fácil de manter, imune a canetadas judiciais e resistent
   - O Vox é um software livre (código estático HTML/JS), análogo ao protocolo BitTorrent, ao cliente de e-mail Thunderbird ou ao protocolo Bitcoin.
   - Você não pode processar os autores do código do BitTorrent pelo conteúdo que trafega na rede P2P mundial. O repositório apenas publica o cliente que fala com a infraestrutura pública global da permaweb (Arweave/AR.IO).
 
-### 2. A LGPD Driblada por Inexistência de Dados (Privacy by Design Radical)
+### 2. LGPD e minimização por inexistência de custódia central (Privacy by Design)
 * **A Armadilha Comum:** Coletar e-mail, telefone, CPF, IP ou cookies exige nomear Encarregado de Dados (DPO), manter relatórios de impacto à privacidade (RIPD) e responder a incidentes na ANPD.
 * **A Blindagem do Vox:**
   - **Zero Cadastro:** O login não pede e-mail, senha, telefone nem CPF. A identidade é um par criptográfico Ed25519 gerado em milissegundos na memória do dispositivo.
@@ -157,7 +160,7 @@ Para que a rede seja **fácil de manter, imune a canetadas judiciais e resistent
 * **A Armadilha Comum:** Plataformas centralizadas que moderam conteúdo tornam-se editorialmente responsáveis pelo que deixam passar; se não moderam, são bloqueadas por inação contra ilícitos.
 * **A Blindagem do Vox:**
   - Na camada de rede/permaweb, as transações são registros assinados e matemáticos.
-  - A moderação ocorre inteiramente no **cliente** através de transações de governança ([`mod-action`](file:///c:/project/politica/vox/GOVERNANCE.md#L11-L20)): moderadores eleitos emitem assinaturas para ocultar tópicos abusivos (`hide` ou `ban`).
+  - A moderação ocorre inteiramente no **cliente** através de transações de governança ([`mod-action`](../GOVERNANCE.md)): moderadores eleitos emitem assinaturas para ocultar tópicos abusivos (`hide` ou `ban`).
   - Se um operador de espelho público (Steward) receber uma notificação ou ordem judicial específica (Marco Civil Art. 19), ele apenas oculta a exibição daquele identificador no seu front-end local. A malha continua viva e o operador cumpre a lei estritamente dentro da camada técnica que controla.
 
 ### 5. Imunidade Contra Apagões e Bloqueios Judiciais de Domínio
@@ -175,7 +178,7 @@ Com base nessa estratégia simbiótica e blindada, as funcionalidades essenciais
 
 | Item | Feature | O Que Faz | Impacto no Crescimento Autônomo |
 |---|---|---|---|
-| **1** | **Painel "Sustentada por Vizinhos" no Header da Comunidade** | Exibe latência local, % de cache servido por pares e número de stewards ativos na comunidade. | Transparência radical: ativa o senso de posse e cuidado coletivo. |
+| **1** | **Painel "Sustentada por Vizinhos" no Header da Comunidade** | Exibe estimativas locais (latência, % cache comunitário, apoiadores online) **sem** ranking entre nós. | Transparência honesta → convite a apoio (`V-P04`/`commOnly`), não scoreboard. |
 | **2** | **Wizard de Auto-Semeadura pós-Criação de Comunidade (`V-P05`)** | Guia o fundador em 3 passos simples para garantir os 2 primeiros nós de cache para a comunidade recém-nascida. | Acaba com comunidades "fantasma" ou lentas no nascimento. |
 | **3** | **Steward Desktop Executável 1-Clique (Windows / Mac / Linux)** | App standalone em que o usuário clica e define: "Quero ceder 1 GB de cache para meu bairro/coletivo". | Multiplica o número de relays independentes sem exigir terminal Linux. |
 | **4** | **Extensão "Vox Bridge" para Crossposting Automático** | Extensão web que utiliza as sessões ativas do usuário para despachar o post canônico do Vox para X, Threads e Instagram. | Converte criadores de conteúdo em máquinas de trazer novos visitantes para o Vox. |
@@ -193,4 +196,4 @@ O Vox não tenta vencer as Big Techs jogando o jogo delas (comprando servidores 
 O Vox vence ao **mudar as regras do jogo**:
 1. Torna a **infraestrutura um bem comum invisível e distribuído**, mantido pelo benefício direto de quem posta;
 2. Transforma a **transparência e a verdade na malha** em seu maior ativo de marketing e confiança;
-3. Adota uma **descentralização tão radical que a regulação tradicional não encontra ponto de apoio para atacar**, garantindo longevidade, custo zero de manutenção e autonomia real para o povo brasileiro.
+3. Adota **descentralização radical** para reduzir dependência de um provedor único e custo central de manutenção — com conformidade tratada como desenho + responsabilidade distribuída ([COMPLIANCE-BR.md](../COMPLIANCE-BR.md)), não como promessa de “blindagem total”.
