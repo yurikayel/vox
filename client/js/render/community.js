@@ -14,6 +14,7 @@ import {
   renderAvatarHtml,
   renderMarkdownLight,
 } from "./util.js";
+import { renderUnifiedDiffHtml } from "./diff-html.js";
 
 function resolveCommunityMemberCount(meta, communityId) {
   if (meta.memberCount != null && !Number.isNaN(Number(meta.memberCount))) {
@@ -32,8 +33,23 @@ function buildCommunityTypeSubtitle(meta, communityId) {
   const parts = [];
   const vis = meta.visibility === "closed" ? "fechada" : "aberta";
   parts.push(`Tipo: ${vis}`);
+  if (meta.communityForkOf || meta.forkOf) parts.push("espelho");
   if (communityId === mock.MOCK_DEMO_COMMUNITY.id || meta.demo) parts.push("Demo");
   return parts.join(" · ");
+}
+
+function renderCommunityForkBanner(meta) {
+  const forkOf = meta.communityForkOf || meta.forkOf;
+  if (!forkOf) return "";
+  const upstreamId = typeof forkOf === "string" ? forkOf : forkOf.communityId || forkOf.id || "";
+  if (!upstreamId) return "";
+  const label = forkOf.title || upstreamId;
+  return `
+    <div class="community-vox-fork-banner card" role="note">
+      <strong>Espelho comunitário</strong> — esta comunidade espelha
+      <a href="#/c/${encodeURIComponent(upstreamId)}">${escapeHtml(label)}</a>.
+      <span class="meta">Tag: <code>Type: community-fork</code></span>
+    </div>`;
 }
 
 function renderCommunityWelcomeRecado(text) {
@@ -272,6 +288,7 @@ export function renderCommunity(
         <p class="community-vox-owner meta">Criada por: <a href="#/u/${encodeURIComponent(meta.owner || "")}">${escapeHtml(shortId(meta.owner))}</a></p>
       </div>
     </header>
+    ${renderCommunityForkBanner(meta)}
     ${activeTab === "posts" && welcomeText ? renderCommunityWelcomeRecado(welcomeText) : ""}
     <div class="community-tabs segmented-tabs community-vox-tabs">
       <a class="tab-btn ${activeTab !== "listings" && activeTab !== "governance" ? "active" : ""}" href="#/c/${encodeURIComponent(communityId)}">Posts</a>
@@ -447,7 +464,7 @@ export function renderListingItem(item, { communityTitle = "" } = {}) {
 
   const pixKey = item.contactPix || (author ? mock.getAuthorPixKey(author) : "") || "";
   const pixBtn = pixKey
-    ? `<button class="btn btn-secondary btn-sm btn-copy-pix" data-pix="${escapeHtml(pixKey)}" data-author-name="${escapeHtml(authorDisplay)}" data-price="${escapeHtml(price || "")}" data-title="${escapeHtml(item.title || "")}" title="Copiar Pix Copia e Cola">⚡ Copiar Pix</button>`
+    ? `<button type="button" class="btn btn-secondary btn-sm btn-zap-post btn-copy-pix" data-pix="${escapeHtml(pixKey)}" data-author="${escapeHtml(author)}" data-author-name="${escapeHtml(authorDisplay)}" data-price="${escapeHtml(price || "")}" data-title="${escapeHtml(item.title || "")}" aria-label="Apoiar com Pix" title="Apoiar com Pix">⚡ Apoiar</button>`
     : "";
 
   const ownerMenu = listingUi.renderListingOwnerMenu(item);
@@ -528,32 +545,13 @@ export function renderProposalDetail(main, proposal, tally, { userVote = null, i
 }
 
 export function renderProposalDiff(diffText) {
-  const lines = gov.parseUnifiedDiff(diffText);
-  if (!lines.length) return "";
-  const lineHtmls = lines.map((l) => {
-    let cls = "diff-line-ctx";
-    let prefix = " ";
-    if (l.type === "add") {
-      cls = "diff-line-add";
-      prefix = "+";
-    } else if (l.type === "del") {
-      cls = "diff-line-del";
-      prefix = "-";
-    } else if (l.type === "hunk") {
-      cls = "diff-line-hunk";
-      prefix = "";
-    }
-    const cleanText = l.text.startsWith(" ") ? l.text.slice(1) : l.text;
-    const content = prefix ? `${prefix} ${cleanText}` : cleanText;
-    return `<div class="diff-line ${cls}">${escapeHtml(content)}</div>`;
-  }).join("");
-
+  if (!diffText) return "";
   return `
     <div style="margin-top: 1.5rem;">
       <h4 style="margin: 0 0 0.5rem; display:flex; align-items:center; gap:6px;">
         <span>📝</span> Patch proposto (Diff unificado)
       </h4>
-      <div class="diff-viewer">${lineHtmls}</div>
+      ${renderUnifiedDiffHtml(diffText)}
     </div>`;
 }
 

@@ -1038,5 +1038,11 @@ OAuth e compartilhamento nativo citam provedores apenas onde exigido por integra
 
 **Pix:** botão ⚡ no overlay de foto; **Apoiar** no perfil quando há chave; tópico já tinha zap na toolbar.
 
-**Fora de P0:** extensão Vox Bridge (P2); Diffs/PR estilo GitHub (P1+).
+**CLI headless:** `tools/posse-cli/posse-cli.mjs` — `--file export.json` ou stdin, `--webhook URL` (repetível), `--dry-run`. Testes: `tests/posse-cli.test.js`.
+
+**Mastodon (intent manual):** abra `https://<sua-instancia>/share?text=` + URL-encode do bloco POSSE (título + link canônico). API `/api/v1/statuses` exige token — use CLI/webhook para automação.
+
+**Labs:** `#/labs/frames` · `#/status` telemetria local.
+
+**Fora de P0:** extensão Vox Bridge (P2 stub em `vox-bridge/`); Diffs/PR estilo GitHub (P1+ parcial via ` ```diff `).
 

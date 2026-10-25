@@ -40,3 +40,5 @@ Extensão WebExtension **MV3** em repositório separado `vox-bridge/` para autop
 ## Próximo passo P2
 
 Repo vazio + README + manifest; integração PWA só após flag `#/settings/network` “Bridge experimental”.
+
+**Stub in-repo:** [`vox-bridge/`](../vox-bridge/) (MV3 background only) · schema test `tests/vox-bridge-schema.test.js`.
