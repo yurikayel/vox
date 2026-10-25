@@ -355,7 +355,7 @@ export function initSocialInteractions() {
       e.preventDefault();
       const routeId = btnWatch.dataset.route;
       const watching = social.toggleWatch(routeId);
-      if (btnWatch.classList.contains("btn-follow-reels")) {
+      if (btnWatch.classList.contains("btn-overlay-follow")) {
         btnWatch.textContent = watching ? "Seguindo" : "Seguir";
         btnWatch.setAttribute("aria-pressed", watching ? "true" : "false");
         btnWatch.setAttribute("aria-label", watching ? "Deixar de seguir autor" : "Seguir autor");

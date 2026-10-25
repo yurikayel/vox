@@ -24,7 +24,7 @@ test("post overlay - photo card has hero, overlay and lightbox trigger", () => {
   assert.ok(!html.includes("post-caption-block"));
   assert.ok(html.includes("post-media-scrim-top"));
   assert.ok(html.includes("post-media-scrim-bottom"));
-  assert.ok(html.includes("post-reels-header"));
+  assert.ok(html.includes("post-media-header"));
   assert.ok(html.includes("btn-post-more-menu"));
   assert.ok(html.includes("post-actions-overlay"));
   assert.ok(html.includes("overlay-action-label"));
@@ -69,7 +69,7 @@ test("post overlay - CSS classes present", () => {
   assert.ok(css.includes(".post-overlay"));
   assert.ok(css.includes(".post-lightbox"));
   assert.ok(css.includes(".post-media-hero"));
-  assert.ok(css.includes(".post-reels-header"));
+  assert.ok(css.includes(".post-media-header"));
   assert.ok(css.includes(".post-actions-overlay"));
   assert.ok(css.includes("#post-more-sheet") || css.includes(".post-more-sheet"));
 });
