@@ -8,9 +8,9 @@ import * as render from "../client/js/render.js";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const css = fs.readFileSync(path.join(__dirname, "../client/css/style.css"), "utf8");
 
-test("feed follow - CSS pill IG no hero", () => {
-  assert.ok(css.includes(".post-follow-overlay"));
-  assert.ok(css.includes(".btn-follow-overlay"));
+test("feed follow - CSS Seguir texto no header Reels", () => {
+  assert.ok(css.includes(".post-reels-header"));
+  assert.ok(css.includes(".btn-follow-reels"));
 });
 
 test("feed follow - comentários decoupled do overlay", () => {

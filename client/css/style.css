@@ -1438,57 +1438,229 @@ main#app-main,
   outline-offset: -2px;
 }
 
-.post-follow-overlay {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 3;
-  pointer-events: auto;
-}
-
-.btn-follow-overlay {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 28px;
-  padding: 5px 12px;
-  border: none;
-  border-radius: 999px;
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.01em;
-  color: #fff;
-  background: rgba(0, 0, 0, 0.42);
-  backdrop-filter: blur(6px);
-  cursor: pointer;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
-  transition: background 0.15s ease, transform 0.12s ease;
-}
-
-.btn-follow-overlay:hover,
-.btn-follow-overlay:focus-visible {
-  background: rgba(0, 0, 0, 0.55);
-  outline: 2px solid color-mix(in srgb, var(--accent) 65%, #fff);
-  outline-offset: 1px;
-}
-
-.post-follow-overlay.is-following .btn-follow-overlay {
-  background: rgba(255, 255, 255, 0.22);
-  color: #fff;
-}
-
-.post-media-scrim {
+.post-media-scrim-top {
   position: absolute;
   inset: 0;
   z-index: 1;
   pointer-events: none;
   background: linear-gradient(
     180deg,
-    rgba(0, 0, 0, 0.08) 0%,
-    rgba(0, 0, 0, 0) 35%,
+    rgba(0, 0, 0, 0.62) 0%,
+    rgba(0, 0, 0, 0.28) 28%,
+    rgba(0, 0, 0, 0) 40%
+  );
+}
+
+.post-media-scrim-bottom {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0) 45%,
     rgba(0, 0, 0, 0.55) 72%,
     rgba(0, 0, 0, 0.82) 100%
   );
+}
+
+.post-reels-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px 8px;
+  pointer-events: none;
+}
+
+.post-reels-header-left,
+.post-reels-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  pointer-events: auto;
+}
+
+.post-reels-header-right {
+  flex-shrink: 0;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.post-reels-avatar .avatar-img,
+.post-reels-avatar .avatar {
+  width: 32px;
+  height: 32px;
+  font-size: 0.75rem;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+}
+
+.post-reels-header-lines {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.post-reels-header-primary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  line-height: 1.2;
+}
+
+.post-reels-username {
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: #fff;
+  text-decoration: none;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.post-reels-username:hover {
+  text-decoration: underline;
+}
+
+.post-reels-verified {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  font-size: 0.55rem;
+  font-weight: 800;
+  color: #fff;
+  background: color-mix(in srgb, var(--accent) 70%, #1a3a5c);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.35);
+}
+
+.post-reels-dot,
+.post-reels-time {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.88);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+}
+
+.post-reels-subtitle {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.78);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+}
+
+.btn-follow-reels {
+  border: none;
+  background: transparent;
+  padding: 2px 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
+  white-space: nowrap;
+}
+
+.btn-follow-reels:hover,
+.btn-follow-reels:focus-visible {
+  text-decoration: underline;
+  outline: none;
+}
+
+.btn-follow-reels.is-following {
+  opacity: 0.92;
+}
+
+.btn-post-more-menu {
+  border: none;
+  background: transparent;
+  padding: 0 2px;
+  font-size: 1.25rem;
+  line-height: 1;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
+}
+
+.btn-post-more-menu:hover,
+.btn-post-more-menu:focus-visible {
+  opacity: 0.85;
+  outline: 2px solid rgba(255, 255, 255, 0.45);
+  outline-offset: 2px;
+}
+
+body.post-more-sheet-open {
+  overflow: hidden;
+}
+
+.post-more-sheet {
+  align-items: flex-end;
+  padding: 0;
+}
+
+.post-more-sheet-panel {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0.35rem 0 calc(0.35rem + env(safe-area-inset-bottom, 0px));
+  border-radius: 16px 16px 0 0;
+  background: #1c1c1e;
+  color: #fff;
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.45);
+  animation: sheetSlideUp 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes sheetSlideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.post-more-sheet-item {
+  display: block;
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: #fff;
+  text-align: center;
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 0.85rem 1rem;
+  cursor: pointer;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.post-more-sheet-item:first-of-type {
+  border-top: none;
+}
+
+.post-more-sheet-item--destructive {
+  color: #ff453a;
+}
+
+.post-more-sheet-item:hover,
+.post-more-sheet-item:focus-visible {
+  background: rgba(255, 255, 255, 0.06);
+  outline: none;
+}
+
+.post-more-sheet-cancel {
+  margin-top: 0.35rem;
+  font-weight: 700;
 }
 
 .post-overlay {
@@ -1506,47 +1678,6 @@ main#app-main,
   z-index: 1;
   padding: 14px 14px 16px;
   pointer-events: auto;
-}
-
-.post-overlay-author {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-
-.post-overlay-author .avatar-img,
-.post-overlay-author .avatar {
-  width: 28px;
-  height: 28px;
-  font-size: 0.72rem;
-  border-color: rgba(255, 255, 255, 0.35);
-}
-
-.post-overlay-author-lines {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 4px;
-  min-width: 0;
-}
-
-.post-overlay-name {
-  font-weight: 700;
-  font-size: 0.88rem;
-  color: #fff;
-  text-decoration: none;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
-}
-
-.post-overlay-name:hover {
-  text-decoration: underline;
-}
-
-.post-overlay-handle {
-  font-size: 0.74rem;
-  color: rgba(255, 255, 255, 0.82);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
 }
 
 .post-overlay-title {

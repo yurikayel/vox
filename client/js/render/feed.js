@@ -11,6 +11,7 @@ import {
   WELCOME_ROUTE_ID,
   isWelcomeRouteId,
   shouldShowWelcomeFeedHint,
+  getWelcomeProfile,
 } from "../vox-welcome-profile.js";
 import {
   escapeHtml,
@@ -198,69 +199,96 @@ export function renderPostOverlayTextHtml(post) {
   return `${titleBlock}${bodyBlock}`;
 }
 
-function renderPostOverlayAuthor(author, labels) {
-  const authorDisplay = labels.authorDisplay;
-  const handleHtml = labels.secondaryHandle
-    ? `<span class="post-overlay-handle">@${escapeHtml(labels.secondaryHandle)}</span>`
-    : "";
-  return `<div class="post-overlay-author">
-      <a class="avatar-link post-overlay-avatar" href="#/u/${encodeURIComponent(author)}">${renderAvatarHtml(author, authorDisplay, "sm")}</a>
-      <div class="post-overlay-author-lines">
-        <a class="post-overlay-name" href="#/u/${encodeURIComponent(author)}">${escapeHtml(authorDisplay)}</a>
-        ${handleHtml}
-      </div>
-    </div>`;
-}
-
 function shouldShowPostFollowOverlay(t, author) {
   if (!author || t?.isOwnLocalPost) return false;
   if (isWelcomeRouteId(author)) return false;
   return true;
 }
 
-function renderPostFollowOverlay(author) {
+function renderPostHeroFollowBtn(author) {
   const watching = social.isWatching(author);
   const label = watching ? "Seguindo" : "Seguir";
-  return `<div class="post-follow-overlay${watching ? " is-following" : ""}">
-    <button type="button" class="btn-follow-overlay btn-watch-profile" data-route="${escapeHtml(author)}" aria-pressed="${watching ? "true" : "false"}" aria-label="${watching ? "Deixar de seguir autor" : "Seguir autor"}">${label}</button>
+  return `<button type="button" class="btn-follow-reels btn-watch-profile${watching ? " is-following" : ""}" data-route="${escapeHtml(author)}" aria-pressed="${watching ? "true" : "false"}" aria-label="${watching ? "Deixar de seguir autor" : "Seguir autor"}">${label}</button>`;
+}
+
+function renderPostHeroVerifiedBadge(author) {
+  if (!isWelcomeRouteId(author)) return "";
+  const official = getWelcomeProfile();
+  if (!official?.isOfficialPlatform) return "";
+  return `<span class="post-reels-verified" title="Conta verificada" aria-label="Conta verificada">✓</span>`;
+}
+
+function renderPostHeroSubtitle(author) {
+  const prof = mock.getMockProfile(author);
+  if (prof?.uf) {
+    return `<div class="post-reels-subtitle">Demo · ${escapeHtml(prof.uf)}</div>`;
+  }
+  return "";
+}
+
+function renderPostMoreMenuTrigger(t, author, authorDisplay) {
+  return `<button type="button" class="btn-post-more-menu" aria-label="Mais opções da publicação" data-post-id="${escapeHtml(t.id)}" data-author-route="${escapeHtml(author)}" data-title="${escapeHtml(t.title || authorDisplay || "")}"><span aria-hidden="true">⋯</span></button>`;
+}
+
+function renderPostReelsHeader(t, author, labels) {
+  const authorDisplay = labels.authorDisplay;
+  const timeLabel = formatTimeAgo(t.ts);
+  const followBtn = shouldShowPostFollowOverlay(t, author) ? renderPostHeroFollowBtn(author) : "";
+  const subtitle = renderPostHeroSubtitle(author);
+  return `<div class="post-reels-header">
+    <div class="post-reels-header-left">
+      <a class="avatar-link post-reels-avatar" href="#/u/${encodeURIComponent(author)}">${renderAvatarHtml(author, authorDisplay, "sm")}</a>
+      <div class="post-reels-header-lines">
+        <div class="post-reels-header-primary">
+          <a class="post-reels-username" href="#/u/${encodeURIComponent(author)}">${escapeHtml(authorDisplay)}</a>
+          ${renderPostHeroVerifiedBadge(author)}
+          <span class="post-reels-dot" aria-hidden="true">·</span>
+          <span class="post-reels-time">${escapeHtml(timeLabel)}</span>
+        </div>
+        ${subtitle}
+      </div>
+    </div>
+    <div class="post-reels-header-right">
+      ${followBtn}
+      ${renderPostMoreMenuTrigger(t, author, authorDisplay)}
+    </div>
   </div>`;
 }
 
 function renderPostMediaHero(t, author, labels) {
   const overlayText = renderPostOverlayTextHtml(t);
-  const overlayAuthor = renderPostOverlayAuthor(author, labels);
-  const hasOverlay = overlayText || overlayAuthor;
-  const scrimBlock = hasOverlay
-    ? `<div class="post-media-scrim" aria-hidden="true"></div>`
-    : "";
-  const overlayBlock = hasOverlay
+  const hasBottomOverlay = Boolean(overlayText);
+  const reelsHeader = renderPostReelsHeader(t, author, labels);
+  const scrimTop = `<div class="post-media-scrim-top" aria-hidden="true"></div>`;
+  const scrimBottom = hasBottomOverlay ? `<div class="post-media-scrim-bottom" aria-hidden="true"></div>` : "";
+  const overlayBlock = hasBottomOverlay
     ? `<div class="post-overlay">
       <div class="post-overlay-content">
-        ${overlayAuthor}
         ${overlayText}
       </div>
     </div>`
     : "";
-  const followOverlay = shouldShowPostFollowOverlay(t, author) ? renderPostFollowOverlay(author) : "";
 
   if (t?.image) {
     const altRaw = t.imageAlt || t.title || "";
     const alt = escapeHtml(altRaw);
     const src = escapeHtml(t.image);
     return `<div class="post-media-container post-media-hero">
-      ${followOverlay}
+      ${reelsHeader}
       <button type="button" class="post-media-lightbox-trigger" aria-label="Ver imagem em tela cheia" data-media-src="${src}" data-media-alt="${alt}">
         <img class="post-media post-media-hero-img" src="${src}" alt="${alt}" loading="lazy" />
       </button>
-      ${scrimBlock}
+      ${scrimTop}
+      ${scrimBottom}
       ${overlayBlock}
     </div>`;
   }
   if (t?.mediaRef?.hash) {
     return `<div class="post-media-container post-media-hero post-media-lazy" data-media-hash="${escapeHtml(t.mediaRef.hash)}">
-      ${followOverlay}
+      ${reelsHeader}
       <div class="media-placeholder" style="aspect-ratio:4/5; display:flex; align-items:center; justify-content:center; background:var(--surface-soft); color:var(--muted); font-size:0.85rem;"><span>📷 Mídia P2P (${escapeHtml(t.mediaRef.mime || "imagem")})</span></div>
-      ${scrimBlock}
+      ${scrimTop}
+      ${scrimBottom}
       ${overlayBlock}
     </div>`;
   }
