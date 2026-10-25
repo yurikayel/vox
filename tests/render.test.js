@@ -191,16 +191,52 @@ test("render - renderCommunity fork banner for mirror demo", () => {
   assert.ok(html.includes("demo-aprenda-vox"));
 });
 
+test("render - painel Sustentada por vizinhos e seed checklist", () => {
+  const main = createContainer();
+  render.renderCommunity(main, "minha-comunidade", [], { title: "Praça", owner: "vx_owner" }, {
+    activeTab: "posts",
+    recentPeople: [{ routeId: "vx_a", name: "A" }],
+    neighborStats: {
+      onlineDevices: 2,
+      localReadPct: 42,
+      degraded: true,
+      fewSupporters: true,
+      isDemoEstimate: false,
+    },
+    commOnly: false,
+    seedChecklist: {
+      state: { activeAck: false, invitesSent: 0, commOnlyNudgeSeen: false, dismissed: false },
+      ctx: { topicCount: 0, peerEnabled: true, commOnly: false },
+    },
+  });
+  const html = main.innerHTML;
+  assert.ok(html.includes("community-vox-neighbor"));
+  assert.ok(html.includes("Sustentada por vizinhos"));
+  assert.ok(html.includes("Velocidade reduzida"));
+  assert.ok(html.includes("btn-neighbor-comm-only"));
+  assert.ok(html.includes("#/settings/network"));
+  assert.ok(html.includes("community-vox-neighbor-foot"));
+  assert.ok(html.includes("community-vox-seed"));
+  assert.ok(html.includes("Primeiros passos"));
+  assert.ok(!html.includes("leaderboard"));
+});
+
 test("render - renderCommunity header compacto, Entrar e layout", () => {
   const main = createContainer();
   render.renderCommunity(main, "demo-aprenda-vox", [], mock.MOCK_DEMO_COMMUNITY, {
     isMember: false,
     activeTab: "posts",
     recentPeople: [{ routeId: "vx_demo_sp", name: "Demo SP" }],
+    neighborStats: render.computeCommunityNeighborStats({
+      recentPeople: [{ routeId: "vx_demo_sp", name: "Demo SP" }],
+      communityId: "demo-aprenda-vox",
+      isDemo: true,
+    }),
   });
   const html = main.innerHTML;
   assert.ok(html.includes("community-vox-page"));
   assert.ok(html.includes("community-vox-header"));
+  assert.ok(html.includes("Sustentada por vizinhos"));
   assert.ok(html.includes("community-vox-chip-list"));
   assert.ok(html.includes("community-vox-toolbar"));
   assert.ok(html.includes("Entrar"));
