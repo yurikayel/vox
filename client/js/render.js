@@ -43,6 +43,7 @@ export {
   renderHome,
   renderCommunityPeopleStrip,
   renderCommunity,
+  renderCommunityTopicRow,
   renderCommunityGovernanceTab,
   renderProposalItem,
   renderProposalStatusBadge,
