@@ -11,11 +11,11 @@ import {
   MOCK_DEMO_REPLIES,
   MOCK_DEMO_PROPOSALS,
   MOCK_DEMO_VOTES,
-  MOCK_DEMO_UF_COUNT,
+  MOCK_DEMO_TOPIC_COUNT,
 } from "./mock.js";
 import { UF_ROUTE_IDS } from "./data/profiles-brazil-uf.js";
 
-const SEED_KEY = "vox-demo-seeded-v10-uf27-copy";
+const SEED_KEY = "vox-demo-seeded-v11-uf27-triple-posts";
 
 export async function ensureDemoSeed() {
   if (typeof window === "undefined" || !window.localStorage) return;
@@ -27,7 +27,7 @@ export async function ensureDemoSeed() {
     const probeProposal = await cacheNode.getLocalPost("demo-prop-feira");
     const probeInteraction = await cacheNode.getLocalPost("demo-reply-ce-ma-0");
     const existing = await cacheNode.getLocalPosts({ type: "topic", communityId: MOCK_DEMO_COMMUNITY.id });
-    if (probe && probeListing && probeProposal && probeInteraction && existing.length >= MOCK_DEMO_UF_COUNT) {
+    if (probe && probeListing && probeProposal && probeInteraction && existing.length >= MOCK_DEMO_TOPIC_COUNT) {
       return;
     }
   }
@@ -80,7 +80,7 @@ async function seedTopics(baseTs) {
       voxResolution: t.voxResolution || "now",
       likesCount: t.likesCount || 0,
       repliesCount: t.repliesCount || 0,
-      ts: t.ts || (baseTs - (MOCK_DEMO_UF_COUNT - i) * 100000),
+      ts: t.ts || (baseTs - (MOCK_DEMO_TOPICS.length - i) * 100000),
     });
   }
 }
