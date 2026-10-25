@@ -1,5 +1,6 @@
 /** @file Vox client entry — boot and route wiring. */
-import { initSkyTheme } from "./sky-theme.js";
+import { initColorMode } from "./color-mode.js";
+import { applySkyTheme, initSkyTheme } from "./sky-theme.js";
 import * as demoSeed from "./demo-seed.js";
 import { wireRoute, setupHashchangeListener, routeImpl as route } from "./app/route.js";
 import { initDmListeners, initGossipListeners, initSocialInteractions } from "./app/init.js";
@@ -9,6 +10,7 @@ import { attachPosseSheetHandlers } from "./posse-dispatch.js";
 import { attachPostOverlayActionMenuHandlers } from "./app/screens-home.js";
 import { syncIdentity } from "./app/screens-network.js";
 
+initColorMode(document, { onApply: () => applySkyTheme(document) });
 initSkyTheme();
 wireRoute();
 setupHashchangeListener();
