@@ -173,6 +173,122 @@ function renderCommunitySidebar(meta, communityId, recentPeople = [], isMember =
     </aside>`;
 }
 
+/** Estatísticas honestas para painel «Sustentada por vizinhos» (sem ranking de nós). */
+export function computeCommunityNeighborStats({
+  recentPeople = [],
+  communityId = "",
+  memberCount = null,
+  gatewayState = "all_ok",
+  isDemo = false,
+} = {}) {
+  const online = resolveCommunityOnlinePeople(recentPeople, communityId, 9);
+  let onlineDevices = online.length;
+  if (isDemo || communityId === mock.MOCK_DEMO_COMMUNITY.id) {
+    onlineDevices = Math.max(onlineDevices, 14);
+  }
+  let localReadPct;
+  if (isDemo || communityId === mock.MOCK_DEMO_COMMUNITY.id) {
+    localReadPct = 96;
+  } else if (gatewayState === "critical") {
+    localReadPct = 35;
+  } else if (gatewayState === "degraded") {
+    localReadPct = 58;
+  } else if (onlineDevices >= 6) {
+    localReadPct = Math.min(96, 72 + onlineDevices * 2);
+  } else if (onlineDevices >= 3) {
+    localReadPct = 68;
+  } else {
+    localReadPct = 42;
+  }
+  const fewSupporters = onlineDevices < 3 && !isDemo && communityId !== mock.MOCK_DEMO_COMMUNITY.id;
+  const degraded = fewSupporters || gatewayState === "critical";
+  return {
+    onlineDevices,
+    localReadPct,
+    degraded,
+    fewSupporters,
+    isDemoEstimate: isDemo || communityId === mock.MOCK_DEMO_COMMUNITY.id,
+    memberCount,
+  };
+}
+
+function renderCommunityNeighborPanel(stats, { commOnly = false } = {}) {
+  if (!stats) return "";
+  const demoNote = stats.isDemoEstimate
+    ? ' <span class="community-vox-neighbor-demo meta">(estimativa demo)</span>'
+    : ' <span class="community-vox-neighbor-demo meta">(estimativa local)</span>';
+  const onlineLabel = `~${stats.onlineDevices.toLocaleString("pt-BR")} aparelho${stats.onlineDevices === 1 ? "" : "s"} online agora`;
+  const readLabel = `~${stats.localReadPct}% das leituras recentes via cache local ou relay comunitário`;
+
+  let alert = "";
+  if (stats.degraded) {
+    alert = `
+      <p class="community-vox-neighbor-alert" role="status">
+        Velocidade reduzida: poucos apoiadores online nesta comunidade.
+      </p>`;
+  }
+
+  const commCta = commOnly
+    ? `<span class="meta">Você já prioriza suas comunidades na malha (Apoiador).</span>`
+    : `<button type="button" class="btn btn-sm btn-outline" id="btn-neighbor-comm-only">Priorizar esta comunidade na malha</button>`;
+
+  return `
+    <section class="community-vox-neighbor card" aria-labelledby="community-vox-neighbor-title">
+      <h2 id="community-vox-neighbor-title" class="community-vox-neighbor-title">Sustentada por vizinhos</h2>
+      <p class="community-vox-neighbor-body">
+        ${escapeHtml(onlineLabel)}.${demoNote}
+        <span class="community-vox-neighbor-read">${escapeHtml(readLabel)}.${demoNote}</span>
+      </p>
+      ${alert}
+      <div class="community-vox-neighbor-actions">
+        <a class="btn btn-sm btn-outline" href="#/settings/network">Ajustar participação na rede</a>
+        ${commCta}
+      </div>
+      <p class="community-vox-neighbor-foot meta">Sem ranking público de nós — só agregados desta praça.</p>
+    </section>`;
+}
+
+/** Checklist V-P05 (~3 min) — passos honestos pós-criação. */
+export function renderCommunitySeedChecklist(communityId, state, ctx = {}) {
+  const {
+    topicCount = 0,
+    peerEnabled = true,
+    commOnly = false,
+  } = ctx;
+  if (!communityId || !state || state.dismissed) return "";
+  if (isSeedCompleteForRender(state, { topicCount, peerEnabled })) return "";
+
+  const activeDone = state.activeAck || peerEnabled !== false;
+  const invitesDone = state.invitesSent >= 2;
+  const topicDone = topicCount > 0;
+
+  const step = (done, label, detail) =>
+    `<li class="community-seed-step${done ? " is-done" : ""}">${done ? "✓" : "○"} ${label}${detail ? ` <span class="meta">${detail}</span>` : ""}</li>`;
+
+  const composeHref = `#/compose/topic?c=${encodeURIComponent(communityId)}`;
+
+  return `
+    <section class="community-vox-seed card" aria-labelledby="community-vox-seed-title" data-community-id="${escapeHtml(communityId)}">
+      <header class="community-vox-seed-head">
+        <h2 id="community-vox-seed-title" class="community-vox-seed-title">Primeiros passos (~3 min)</h2>
+        <button type="button" class="btn btn-sm btn-ghost community-seed-dismiss" id="btn-seed-dismiss">Dispensar</button>
+      </header>
+      <p class="desc community-vox-seed-lead">Ritual rápido para visitantes lerem via vizinhos, não só gateway de reserva.</p>
+      <ol class="community-seed-steps">
+        ${step(activeDone, "Camada <strong>Ativa</strong> (Pacto Vox)", activeDone ? "" : '<a href="#/settings/network">Revisar rede</a>')}
+        ${step(invitesDone, "2 convites", invitesDone ? `${state.invitesSent} enviados` : '<button type="button" class="btn-link community-seed-invite" id="btn-seed-invite">Contar compartilhamento</button>')}
+        ${step(topicDone, "Primeiro tópico", topicDone ? "Publicado" : `<a href="${composeHref}">Criar post</a>`)}
+        ${step(state.commOnlyNudgeSeen || commOnly, "Apoiador <code>commOnly</code> (opcional)", commOnly ? "Ativo" : '<a href="#/settings/network#net-comm-only-wrap">Ver opção</a>')}
+      </ol>
+      <p class="meta community-vox-seed-foot">Baseado em <code>docs/steward-seed-15min.md</code> — caminho A (sem VPS).</p>
+    </section>`;
+}
+
+function isSeedCompleteForRender(state, ctx) {
+  const activeOk = state.activeAck || ctx.peerEnabled !== false;
+  return activeOk && state.invitesSent >= 2 && ctx.topicCount > 0;
+}
+
 function renderCommunityMetaChips(meta, communityId, memberCount) {
   const chips = [];
   if (memberCount != null) {
@@ -263,6 +379,9 @@ export function renderCommunity(
     listings = [],
     proposals = [],
     recentPeople = [],
+    neighborStats = null,
+    commOnly = false,
+    seedChecklist = null,
   } = {}
 ) {
   const commTitle = meta.title || communityId;
@@ -299,6 +418,8 @@ export function renderCommunity(
         ${meta.owner ? `<p class="community-vox-owner meta">Criada por <a href="#/u/${encodeURIComponent(meta.owner)}">${escapeHtml(shortId(meta.owner))}</a></p>` : ""}
       </div>` : ""}
     </header>
+    ${renderCommunityNeighborPanel(neighborStats, { commOnly })}
+    ${seedChecklist ? renderCommunitySeedChecklist(communityId, seedChecklist.state, seedChecklist.ctx) : ""}
     ${renderCommunityForkBanner(meta)}
     ${activeTab === "posts" && welcomeText ? renderCommunityWelcomeRecado(welcomeText) : ""}
     <nav class="community-vox-nav community-tabs segmented-tabs" aria-label="Seções da comunidade">
