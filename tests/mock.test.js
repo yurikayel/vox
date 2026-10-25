@@ -32,3 +32,18 @@ test("mock - feira 6 listings", () => {
 test("mock - recent topics", () => {
   assert.equal(mock.mockRecentTopics().items.length, MOCK_DEMO_UF_COUNT);
 });
+
+test("mock - topic media temático (não avatar)", () => {
+  const tour = mock.mockTopics("demo-aprenda-vox");
+  for (const t of tour.items) {
+    const avatar = mock.getAuthorAvatar(t.author);
+    assert.notEqual(t.image, avatar, `${t.id} reutiliza avatar como mídia`);
+    assert.match(t.image, /images\.unsplash\.com/, `${t.id} sem URL temática`);
+    assert.ok(t.imageAlt && !/retrato/i.test(t.imageAlt), `${t.id} alt deve ser tema regional`);
+  }
+  const ma = tour.items.find((t) => t.id === "demo-post-ma");
+  assert.equal(
+    ma.image,
+    "https://images.unsplash.com/photo-1519892306449-f6395edf9ebe?w=800&q=80"
+  );
+});
