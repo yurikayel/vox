@@ -7,6 +7,12 @@
 const PORTRAIT = (gender, n) =>
   `https://randomuser.me/api/portraits/med/${gender === "m" ? "men" : "women"}/${n % 100}.jpg`;
 
+/** Banner no perfil UF — tom acolhedor, não caricatura cruel. */
+export const STEREOTYPE_GREETING =
+  "Oi, sou só um estereótipo respeitoso — não me leve a mal!";
+export const STEREOTYPE_DISCLAIMER_NOTE =
+  "Perfil fictício para demo e educação no Vox: clichês regionais leves (comida, música, orgulho) — nunca para ridicularizar pessoas reais. 🇧🇷";
+
 export const UF_STEREOTYPE_SEEDS = [
   { uf: "AC", stateName: "Acre", displayName: "Maria", gender: "f", handle: "maria-ac", stereotypeTitle: "Maria acreana 🌳", tagline: "Calor de porteira aberta — perfil estereótipo demo.", vibe: "Tacacá na conversa, floresta perto e hospitalidade que não cabe no algoritmo.", hashtag: "acre" },
   { uf: "AL", stateName: "Alagoas", displayName: "José", gender: "m", handle: "jose-al", stereotypeTitle: "José alagoano 🌊", tagline: "Forró, praia e papo reto — demo estereótipo.", vibe: "Sururu na panela, risada alta e orgulho do litoral nordestino.", hashtag: "alagoas" },
@@ -36,6 +42,12 @@ export const UF_STEREOTYPE_SEEDS = [
   { uf: "SP", stateName: "São Paulo", displayName: "João", gender: "m", handle: "joao-sp", stereotypeTitle: "João paulistano 🚇", tagline: "Metrô, pressa e pluralidade — estereótipo demo.", vibe: "Padaria 6h, trânsito eterno e solidariedade escondida no corredor.", hashtag: "saopaulo", feira: { title: "Pão na chapa & café coado kit", price: "R$ 25", place: "Vila Madalena, SP", body: "Kit café da manhã de padaria de bairro — sem app de entrega no meio." } },
   { uf: "TO", stateName: "Tocantins", displayName: "Maria", gender: "f", handle: "maria-to", stereotypeTitle: "Maria tocantinense 🌅", tagline: "Cerrado novo, raiz forte — demo.", vibe: "Pequi, pôr do sol no Jalapão e comunidade jovem.", hashtag: "tocantins" },
 ];
+
+for (const seed of UF_STEREOTYPE_SEEDS) {
+  seed.stereotypeGreeting = seed.stereotypeGreeting || STEREOTYPE_GREETING;
+  seed.disclaimerNote = seed.disclaimerNote || STEREOTYPE_DISCLAIMER_NOTE;
+  seed.demoComments = seed.demoComments || [];
+}
 
 export const MOCK_DEMO_UF_COUNT = UF_STEREOTYPE_SEEDS.length;
 export const UF_ROUTE_IDS = UF_STEREOTYPE_SEEDS.map((s) => `vx_demo_${s.uf.toLowerCase()}`);
@@ -155,6 +167,7 @@ export const postMediaByUf = {
 function readmeFor(seed) {
   return (
     `### ${seed.displayName} — ${seed.stereotypeTitle}\n\n` +
+    `> ${seed.stereotypeGreeting}\n>\n` +
     `> **Perfil estereótipo** 🇧🇷 — só para **testes** e **humor educativo**. **Não** é pessoa real.\n\n` +
     `${seed.vibe}\n\n` +
     `- 📍 **UF:** ${seed.stateName} (${seed.uf})\n` +
@@ -180,6 +193,8 @@ export function buildUfDemoProfilesMap() {
       uf: seed.uf,
       stateName: seed.stateName,
       stereotypeTitle: seed.stereotypeTitle,
+      stereotypeGreeting: seed.stereotypeGreeting,
+      stereotypeDisclaimerNote: seed.disclaimerNote,
       bio: seed.tagline,
       pixKey: pixFor(seed),
       pinnedPostId: `demo-post-${seed.uf.toLowerCase()}`,
@@ -200,10 +215,15 @@ export function buildUfDemoProfilesMap() {
 }
 
 export function buildUfDemoTopics(now = Date.now()) {
+  const replyTotals = {};
+  for (const r of buildUfDemoReplies()) {
+    replyTotals[r.replyTo] = (replyTotals[r.replyTo] || 0) + 1;
+  }
   return UF_STEREOTYPE_SEEDS.map((seed, i) => {
     const uf = seed.uf.toLowerCase();
     const routeId = `vx_demo_${uf}`;
     const media = postMediaByUf[uf] || postMediaByUf.ac;
+    const postId = `demo-post-${uf}`;
     return {
       id: `demo-post-${uf}`,
       communityId: "demo-aprenda-vox",
@@ -218,7 +238,7 @@ export function buildUfDemoTopics(now = Date.now()) {
       externalPain: "Redes centralizadas — alcance pago e extração de dados",
       voxResolution: "now",
       likesCount: 20 + (i * 7) % 55,
-      repliesCount: i % 5 === 0 ? 1 : 0,
+      repliesCount: replyTotals[postId] || 0,
       isLocalP2p: true,
       ts: now - (i + 1) * 45 * 60 * 1000,
     };
@@ -252,34 +272,117 @@ export function buildUfDemoListings(now = Date.now()) {
   });
 }
 
-export function buildUfDemoReplies() {
-  return [
-    {
-      id: "demo-reply-sp-mg",
-      replyTo: "demo-post-mg",
-      communityId: "demo-aprenda-vox",
-      body: "Uai, Maria! Aqui no Vox a gente organiza sem pedir licença pro algoritmo. 🇧🇷",
-      author: "vx_demo_sp",
-      owner: "vx_demo_sp",
-      isLocalP2p: true,
-    },
-    {
-      id: "demo-reply-ba-am",
-      replyTo: "demo-post-am",
-      communityId: "demo-aprenda-vox",
-      body: "Fechado! Memória nossa não vira treino de IA sem consentimento. 🌿",
-      author: "vx_demo_ba",
-      owner: "vx_demo_ba",
-      isLocalP2p: true,
-    },
-    {
-      id: "demo-reply-rj-ce",
-      replyTo: "demo-post-ce",
-      communityId: "demo-aprenda-vox",
-      body: "Piada boa, Francisco — mas governança transparente é coisa séria. 😄⚖️",
-      author: "vx_demo_rj",
-      owner: "vx_demo_rj",
-      isLocalP2p: true,
-    },
+const UF_DEMO_PAIR_COPY = {
+  "CE-MA":
+    "Francisco cearense na área! 🌞 Seu bumba e reggae maranhense conversam bem com nosso forró de terreiro — aqui no Vox a gente troca cultura sem algoritmo empurrando briga. Quando rolar festa em São Luís, manda o convite que eu levo jerimum na mochila (e piada boa, claro).",
+  "BA-MA":
+    "Maria baiana passando! 🥁 Tambor de crioula e axé são primos de parente — adorei você falar de memória que não some da timeline. Vox é rede de respeito: comida, música e história, nunca zombaria de quem é de verdade.",
+  "RS-MA":
+    "João gaúcho aqui — chimarrão virtual na mão. 🧉 Reggae do Maranhão já fez amizade com trilha no pampa em playlist minha; no Vox a conversa fica na comunidade, sem impulsionar post. Abraço pro norte com carinho de sul.",
+  "PA-MA":
+    "José paraense chegando de Belém! 🛶 Açaí na tigela e carimbó no pé — São Luís no coração. Que bom ver voz do MA sem plataforma gringa decidindo alcance. Tamo junto na demo, sempre com respeito.",
+  "MA-MA":
+    "José maranhense respondendo: valeu, galera de todo canto! 🎭 Bumba, reggae e hospitalidade maranhense ficam mais fortes quando a rede é nossa. Sigam testando o Vox — clichê leve, nunca maldade.",
+  "SP-MG":
+    "João paulistano no corre do metrô 🚇 — mas parei pra ler, Maria. Pão de queijo mineiro já salvou muitos almoços na Paulista; aqui no Vox organizamos sem pedir licença pro algoritmo. Uai sô, respeito total!",
+  "BA-AM":
+    "Maria baiana de coração! 🐟 Peixe assado amazonense lembra acarajé de domingo — memória nossa não vira treino de IA sem consentimento. Fechado com você, vizinha de floresta!",
+  "RJ-CE":
+    "João carioca na laje: piada boa, Francisco! 🏖️ Sol cearense e humor fino cabem na mesma timeline — governança transparente é coisa séria, mas com leveza. Bora manter o Vox honesto.",
+};
+
+function ufRoute(uf) {
+  return `vx_demo_${String(uf).toLowerCase()}`;
+}
+
+function replyRow(id, hostUf, fromUf, body) {
+  const host = String(hostUf).toLowerCase();
+  return {
+    id,
+    replyTo: `demo-post-${host}`,
+    communityId: "demo-aprenda-vox",
+    body,
+    author: ufRoute(fromUf),
+    owner: ufRoute(fromUf),
+    isLocalP2p: true,
+  };
+}
+
+function respectfulBanter(from, host, slot) {
+  const pair = UF_DEMO_PAIR_COPY[`${from.uf}-${host.uf}`];
+  if (pair) return pair;
+  const hooks = [
+    `${from.displayName} (${from.uf}) na thread: ${from.vibe.split(".")[0]}. — e torço pela voz de ${host.stateName} aqui no Vox, sem algoritmo estrangeiro apagando post. 🤝`,
+    `Opa, ${host.displayName}! Chego de ${from.stateName} com ${from.stereotypeTitle.replace(/^[^ ]+ /, "")} no bolso. Clichê leve, carinho grande — demo só pra ensinar a plataforma. 😊`,
+    `Passando de ${from.stateName} pra dizer: ${from.tagline} Adorei seu recado sobre comunidade local — é isso que a gente quer testar no Vox.`,
   ];
+  return hooks[slot % hooks.length];
+}
+
+function handcraftedUfReplies() {
+  return [
+    replyRow(
+      "demo-reply-sp-mg",
+      "mg",
+      "sp",
+      UF_DEMO_PAIR_COPY["SP-MG"],
+    ),
+    replyRow(
+      "demo-reply-ba-am",
+      "am",
+      "ba",
+      UF_DEMO_PAIR_COPY["BA-AM"],
+    ),
+    replyRow(
+      "demo-reply-rj-ce",
+      "ce",
+      "rj",
+      UF_DEMO_PAIR_COPY["RJ-CE"],
+    ),
+    replyRow("demo-reply-ce-ma-0", "ma", "ce", UF_DEMO_PAIR_COPY["CE-MA"]),
+    replyRow("demo-reply-ba-ma-0", "ma", "ba", UF_DEMO_PAIR_COPY["BA-MA"]),
+    replyRow("demo-reply-rs-ma-0", "ma", "rs", UF_DEMO_PAIR_COPY["RS-MA"]),
+    replyRow("demo-reply-pa-ma-1", "ma", "pa", UF_DEMO_PAIR_COPY["PA-MA"]),
+    replyRow("demo-reply-ma-thanks", "ma", "ma", UF_DEMO_PAIR_COPY["MA-MA"]),
+  ];
+}
+
+export function attachDemoCommentsToSeeds(replies) {
+  for (const seed of UF_STEREOTYPE_SEEDS) {
+    const postId = `demo-post-${seed.uf.toLowerCase()}`;
+    seed.demoComments = replies
+      .filter((r) => r.replyTo === postId)
+      .map((r) => ({ id: r.id, author: r.author, body: r.body }));
+  }
+}
+
+export function buildUfDemoReplies() {
+  const replies = handcraftedUfReplies();
+  const seenIds = new Set(replies.map((r) => r.id));
+  const perPost = {};
+  for (const r of replies) {
+    perPost[r.replyTo] = (perPost[r.replyTo] || 0) + 1;
+  }
+
+  const n = UF_STEREOTYPE_SEEDS.length;
+  const targetPerPost = 3;
+
+  UF_STEREOTYPE_SEEDS.forEach((host, i) => {
+    const postId = `demo-post-${host.uf.toLowerCase()}`;
+    let slot = 0;
+    while ((perPost[postId] || 0) < targetPerPost && slot < 12) {
+      const j = (i + 1 + slot * 7) % n;
+      slot += 1;
+      if (UF_STEREOTYPE_SEEDS[j].uf === host.uf) continue;
+      const from = UF_STEREOTYPE_SEEDS[j];
+      const id = `demo-reply-${from.uf.toLowerCase()}-${host.uf.toLowerCase()}-${slot}`;
+      if (seenIds.has(id)) continue;
+      replies.push(replyRow(id, host.uf, from.uf, respectfulBanter(from, host, slot)));
+      seenIds.add(id);
+      perPost[postId] = (perPost[postId] || 0) + 1;
+    }
+  });
+
+  attachDemoCommentsToSeeds(replies);
+  return replies;
 }
