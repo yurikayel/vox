@@ -118,13 +118,17 @@ export function renderPostPactConnectModal(container, routeId) {
   container.innerHTML = `
     <div class="modal-overlay modal-sheet modal-sheet--raised" id="post-pact-connect-overlay" role="dialog" aria-modal="true">
       <div class="modal-dialog modal-card modal-card--narrow">
-        <h3 class="modal-card-title">Seu link #/connect</h3>
-        <p class="desc modal-card-lead">Compartilhe para outros adicionarem você diretamente.</p>
-        <p class="meta modal-connect-url"><code id="post-pact-connect-url">${escapeHtml(link)}</code></p>
+        <h3 class="modal-card-title">Convide amigos</h3>
+        <p class="desc modal-card-lead">Toque em Compartilhar para mandar seu convite do Vox.</p>
         <div class="modal-actions modal-actions--row">
           <button type="button" id="btn-post-pact-share-connect" class="btn btn-primary" data-route="${escapeHtml(routeId)}">Compartilhar</button>
           <button type="button" id="btn-post-pact-connect-close" class="btn btn-outline">Continuar</button>
         </div>
+        <details class="dm-advanced post-pact-advanced">
+          <summary class="dm-advanced-summary">Ver link técnico</summary>
+          <p class="meta">Só se precisar copiar manualmente:</p>
+          <p class="meta modal-connect-url"><code id="post-pact-connect-url">${escapeHtml(link)}</code></p>
+        </details>
       </div>
     </div>`;
 }
