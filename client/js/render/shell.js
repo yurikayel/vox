@@ -1,5 +1,14 @@
 /** @file App shell, sidebar, feed nav, loading/error banners. */
 import * as mock from "../mock.js";
+import {
+  colorModeLabel,
+  colorModeToggleHint,
+  cycleColorMode,
+  readColorMode,
+  writeColorMode,
+  applyColorModeToRoot,
+} from "../color-mode.js";
+import { applySkyTheme } from "../sky-theme.js";
 import { appShellFooterTagline } from "../i18n-pt-br.js";
 import { escapeHtml, root } from "./util.js";
 
@@ -76,9 +85,49 @@ function renderFeedNavSlot(showFeedNav, activeFeed) {
 
 const SIDEBAR_SYNC_PLACEHOLDER = "\u00a0";
 
+const THEME_ICONS = {
+  auto: `<svg class="theme-mode-svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2v20M2 12h20"/></svg>`,
+  light: `<svg class="theme-mode-svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>`,
+  dark: `<svg class="theme-mode-svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`,
+};
+
+function renderThemeModeToggle(mode) {
+  const m = mode === "light" || mode === "dark" ? mode : "auto";
+  const label = colorModeLabel(m);
+  return `<button type="button" class="theme-mode-toggle" id="theme-mode-toggle" aria-label="${escapeHtml(colorModeToggleHint(m))}">
+          <span class="theme-mode-icon">${THEME_ICONS[m]}</span>
+          <span class="theme-mode-label">${escapeHtml(label)}</span>
+        </button>`;
+}
+
+function syncThemeModeToggleUi(btn, mode) {
+  const m = mode === "light" || mode === "dark" ? mode : "auto";
+  btn.setAttribute("aria-label", colorModeToggleHint(m));
+  const icon = btn.querySelector(".theme-mode-icon");
+  const label = btn.querySelector(".theme-mode-label");
+  if (icon) icon.innerHTML = THEME_ICONS[m];
+  if (label) label.textContent = colorModeLabel(m);
+}
+
+function attachThemeModeToggle() {
+  const btn = document.getElementById("theme-mode-toggle");
+  if (!btn || btn.dataset.bound === "1") return;
+  btn.dataset.bound = "1";
+  btn.addEventListener("click", () => {
+    const storage = window.localStorage;
+    const next = cycleColorMode(readColorMode(storage));
+    writeColorMode(storage, next);
+    applyColorModeToRoot(document.documentElement, next);
+    applySkyTheme(document);
+    syncThemeModeToggleUi(btn, next);
+  });
+}
+
 function renderSidebarFooter(chipHtml, walletBadge) {
+  const themeToggle = renderThemeModeToggle(readColorMode(typeof localStorage !== "undefined" ? localStorage : null));
   return `
         <div class="sidebar-footer">
+          <div class="sidebar-theme-slot">${themeToggle}</div>
           <div class="sidebar-sync-slot">
             <span class="sidebar-sync-hint" id="top-sync-hint" aria-live="polite">${SIDEBAR_SYNC_PLACEHOLDER}</span>
           </div>
@@ -215,6 +264,7 @@ export function renderShell({
   `;
 
   attachSidebarBehavior();
+  attachThemeModeToggle();
   const main = document.getElementById("app-main");
   if (breadcrumb) main.insertAdjacentHTML("afterbegin", breadcrumb);
   return main;

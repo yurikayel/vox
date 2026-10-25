@@ -18,6 +18,17 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="css/style.css" />
+    <script>
+      (function () {
+        try {
+          var m = localStorage.getItem("vox-color-mode");
+          if (m === "light" || m === "dark") {
+            document.documentElement.setAttribute("data-color-mode", m);
+            document.documentElement.style.colorScheme = m;
+          }
+        } catch (_e) {}
+      })();
+    </script>
     <title>Vox</title>
   </head>
   <body>
