@@ -82,7 +82,7 @@ export async function showDmList() {
   document.getElementById("btn-copy-my-dm-link")?.addEventListener("click", () => {
     const link = `${window.location.origin}${window.location.pathname}#/dm/${encodeURIComponent(user)}`;
     navigator.clipboard.writeText(link);
-    share.showToast("Link copiado para a área de transferência!");
+    share.showToast("Link copiado! Manda para quem quiser te escrever.");
   });
 
   document.getElementById("form-new-dm")?.addEventListener("submit", (e) => {

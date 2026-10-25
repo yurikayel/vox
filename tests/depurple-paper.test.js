@@ -9,7 +9,25 @@ const css = fs.readFileSync(path.join(root, "css/style.css"), "utf8");
 const sw = fs.readFileSync(path.join(root, "sw.js"), "utf8");
 
 test("depurple paper — service worker cache id", () => {
-  assert.match(sw, /vox-pwa-v6\.42-no-topbar/);
+  assert.match(sw, /vox-pwa-v6\.41-onboarding-paper/);
+});
+
+test("onboarding paper — modal sheet/card in CSS, neutral scrim", () => {
+  assert.ok(css.includes(".modal-sheet"));
+  assert.ok(css.includes(".modal-card"));
+  assert.ok(css.includes("rgba(0, 0, 0, 0.5)"));
+  const overlay = css.match(/\.modal-overlay\s*\{[^}]+\}/s)?.[0] ?? "";
+  assert.ok(!overlay.includes("backdrop-filter: blur"), "modal overlay must not blur");
+});
+
+test("onboarding paper — oauth modals use semantic classes not glass card", () => {
+  const modals = fs.readFileSync(path.join(root, "js/render/oauth-modals.js"), "utf8");
+  assert.ok(modals.includes("modal-sheet"));
+  assert.ok(modals.includes("modal-card"));
+  assert.ok(modals.includes("modal-feature"));
+  assert.ok(!modals.includes('class="modal-dialog card"'));
+  assert.ok(!modals.includes("pact-feature"));
+  assert.ok(!/style="[^"]*(?:gradient|#312183|rgba\(49)/i.test(modals));
 });
 
 test("depurple paper — sidebar nav active not accent-soft fill", () => {
