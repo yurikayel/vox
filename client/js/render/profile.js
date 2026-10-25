@@ -80,13 +80,20 @@ function renderStereotypeDemoBanner(address) {
   const prof = mock.getMockProfile(address);
   if (!prof?.isStereotypeDemo && !prof?.stereotypeTitle) return "";
   const title = prof.stereotypeTitle || "Perfil estereótipo 🇧🇷";
+  const greeting =
+    prof.stereotypeGreeting || "Oi, sou só um estereótipo respeitoso — não me leve a mal!";
+  const disclaimerNote =
+    prof.stereotypeDisclaimerNote ||
+    "Perfil fictício para demo e educação no Vox — clichês regionais leves, nunca para ridicularizar pessoas reais.";
   const ufLine = prof.uf && prof.stateName
     ? `<p class="meta" style="margin:0.35rem 0 0;">${escapeHtml(prof.stateName)} (${escapeHtml(prof.uf)}) — humor educativo, não pessoa real.</p>`
     : "";
   return `
     <div class="card profile-stereotype-banner" style="margin-top:0.65rem; border:1px dashed var(--border);">
-      <p style="margin:0;"><strong>🧪 ${escapeHtml(title)}</strong></p>
+      <p style="margin:0; font-size:1.02rem;"><strong>👋 ${escapeHtml(greeting)}</strong></p>
+      <p style="margin:0.45rem 0 0;"><strong>🧪 ${escapeHtml(title)}</strong></p>
       <p class="desc" style="margin:0.4rem 0 0; font-size:0.88rem;">
+        ${escapeHtml(disclaimerNote)}
         Este é um <strong>perfil estereótipo</strong> para <strong>testes da plataforma</strong> e explicação lúdica de demografia regional. O clichê está no texto — nunca na zombaria de aparência.
       </p>
       ${ufLine}
