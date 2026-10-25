@@ -275,7 +275,7 @@ O PWA adota uma experiência leve e intuitiva com padrões de mercado para leitu
 - **Para você (Feed):** Timeline cronológica com divisores sutis (1px), avatares redondos, título do post e ações rápidas (💬 Responder, ↗ Compartilhar). Sem termos herdados do Varanda (ex: "A Rua", "Cadeiras").
 - **Descoberta de Comunidades:** Grade visual estilo IG com cartões compactos, faixa de cor derivada da comunidade e entrada direta via "Abrir →".
 - **DMs (Mensagens):** Inbox estilo chat mobile e conversa full-height com caixa de envio fixa.
-- **Modo Claro / Escuro:** Automático via `prefers-color-scheme`, respeitando o tema do sistema operacional sem flash de cor.
+- **Modo Claro / Escuro / Automático:** Toggle no rodapé da sidebar (`vox-color-mode`); automático = `prefers-color-scheme` + paleta celeste por relógio (`data-sky-period`); claro/escuro forçam pergaminho/carbono.
 - **Tab Bar com Ícones SVG:** Ícones minimalistas inline em SVG (22x22, `currentColor`), substituindo emojis e elevando o acabamento visual.
 
 ### 10.1 Tabela de Tom & Microcopy (Sem Slop Técnico)
