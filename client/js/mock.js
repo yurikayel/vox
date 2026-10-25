@@ -3,13 +3,14 @@
 import {
   UF_ROUTE_IDS,
   MOCK_DEMO_UF_COUNT,
+  MOCK_DEMO_TOPIC_COUNT,
   buildUfDemoProfilesMap,
   buildUfDemoTopics,
   buildUfDemoListings,
   buildUfDemoReplies,
 } from "./data/profiles-brazil-uf.js";
 
-export { UF_ROUTE_IDS, MOCK_DEMO_UF_COUNT };
+export { UF_ROUTE_IDS, MOCK_DEMO_UF_COUNT, MOCK_DEMO_TOPIC_COUNT };
 
 const NOW = Date.now();
 
