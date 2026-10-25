@@ -408,13 +408,17 @@ test("render - renderPostComments lista replies mock no expander", () => {
     expanded: true,
   });
   assert.ok(open.includes("is-open"));
-  assert.ok(!open.includes(" hidden"));
+  assert.ok(!open.includes('id="post-comments-demo-post-mg" hidden'));
   assert.ok(open.includes("inline-reply-demo-reply-sp-mg"));
   assert.ok(open.includes("inline-reply-demo-reply-pri-1"));
   assert.ok(open.includes("sem pedir licenca"));
   assert.ok(open.includes(`@${demoSp.handle}`));
   assert.ok(open.includes(demoMg.displayName));
   assert.ok(open.includes("post-comment-composer"));
+  assert.ok(open.includes("btn-comment-react"));
+  assert.ok(open.includes("btn-comment-reply"));
+  assert.ok(open.includes('class="post-comment-action btn-comment-react'));
+  assert.ok(open.includes("post-comment-nested-reply"));
 
   const empty = render.renderCommentList([]);
   assert.ok(empty.includes("Nenhuma resposta ainda."));

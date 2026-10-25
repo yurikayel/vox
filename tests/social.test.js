@@ -106,6 +106,21 @@ test("social - post fixado por autor (pinned)", () => {
   assert.equal(social.getPinnedPostId("vx_demo_mg"), "");
 });
 
+test("social - reações em comentários toggle e contagem", () => {
+  localStorage.clear();
+
+  assert.equal(social.isCommentReacted("demo-reply-ba-ma-0"), false);
+  assert.equal(social.getCommentReactCount("demo-reply-ba-ma-0", 3), 3);
+
+  const first = social.toggleCommentReact("demo-reply-ba-ma-0", 3);
+  assert.equal(first.reacted, true);
+  assert.equal(first.count, 4);
+
+  const second = social.toggleCommentReact("demo-reply-ba-ma-0", 3);
+  assert.equal(second.reacted, false);
+  assert.equal(second.count, 3);
+});
+
 test("social - readme local e github handle", () => {
   localStorage.clear();
 
