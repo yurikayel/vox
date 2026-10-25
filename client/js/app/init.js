@@ -311,7 +311,7 @@ export function initSocialInteractions() {
     }
 
     // Pix Zap / Apoiar post (v6.0)
-    const btnZap = e.target.closest(".btn-zap-post:not(.disabled)");
+    const btnZap = e.target.closest(".btn-zap-post:not(.disabled), .btn-zap-profile");
     if (btnZap) {
       e.preventDefault();
       const pixKey = btnZap.dataset.pix;

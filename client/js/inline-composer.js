@@ -150,6 +150,8 @@ export function attachInlineComposerHandlers(onPublished) {
       }
 
       share.showToast("Post publicado no feed!");
+      const { openPosseSheetAfterPublish } = await import("./posse-dispatch.js");
+      openPosseSheetAfterPublish({ id: topicId, communityId: commSlug, title, body, image: payload.image });
       form.reset();
       clearImage();
       collapseInlineComposer();

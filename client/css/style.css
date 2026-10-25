@@ -1659,6 +1659,70 @@ body.post-more-sheet-open {
   font-weight: 700;
 }
 
+.posse-dispatch-sheet[hidden],
+.posse-dispatch-sheet:not(.is-open) {
+  display: none !important;
+}
+
+.posse-dispatch-sheet {
+  align-items: flex-end;
+  padding: 0;
+}
+
+.posse-dispatch-lead {
+  margin: 0.65rem 1rem 0.25rem;
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.75);
+  text-align: center;
+}
+
+.posse-dispatch-url {
+  margin: 0 1rem 0.5rem;
+  font-size: 0.72rem;
+  word-break: break-all;
+  text-align: center;
+  opacity: 0.85;
+}
+
+.posse-dispatch-skip {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0.35rem 1rem 0;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.post-md-code {
+  margin: 0.5rem 0;
+  border-radius: var(--radius-sm, 8px);
+  background: var(--surface-soft, rgba(0, 0, 0, 0.06));
+  border: 1px solid var(--border, rgba(0, 0, 0, 0.08));
+  overflow: auto;
+}
+
+.post-md-code-lang {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.35rem 0.65rem;
+  border-bottom: 1px solid var(--border, rgba(0, 0, 0, 0.08));
+  opacity: 0.75;
+}
+
+.post-md-code-pre {
+  margin: 0;
+  padding: 0.65rem 0.75rem;
+  font-family: ui-monospace, "Cascadia Code", "Segoe UI Mono", monospace;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.post-body-md .post-md-para {
+  margin: 0.35rem 0;
+}
+
 .post-overlay {
   position: absolute;
   inset: 0;
