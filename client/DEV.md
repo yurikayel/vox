@@ -884,7 +884,21 @@ Script: [`tools/write-oauth-deploy-config.mjs`](../tools/write-oauth-deploy-conf
 
 ---
 
-## 27. Meta App Dashboard — campos obrigatórios
+## 27. Ícones — aba vs PWA instalado
+
+| Uso | Arquivo | Nota |
+|-----|---------|------|
+| **Aba do navegador** | `icons/icon.svg` (+ `favicon-16.png` / `favicon-32.png` / `favicon.png`) | Megafone vetorial estilo emoji — **verde** (`emoji-vox-brasil.svg`) ativo por padrão. |
+| **PWA / “Adicionar à tela”** | `icon-192.png`, `icon-512.png` | Marca squircle MD3 (G/O/X) — não trocar pelo emoji. |
+| **Meta Dashboard** | `icon-1024.png` (PNG) | Upload oficial; JPG `icon-1024-meta.jpg` é rascunho local, fora do git. |
+
+**Trocar para megafone vermelho (estadista):** copiar `emoji-vox-vermelho.svg` → `icon.svg` e `emoji-vox-vermelho-32.png` → `favicon.png` + `favicon-32.png`; regerar ou copiar `favicon-16.png`; bump `CACHE_NAME` em `sw.js`; hard refresh (Ctrl+F5).
+
+Variantes versionadas: `emoji-vox-brasil*` e `emoji-vox-vermelho*` (SVG + PNG 32 e master).
+
+---
+
+## 28. Meta App Dashboard — campos obrigatórios
 
 Quando a console mostra *Não qualificado para envio* (ícone, privacidade, exclusão de dados, categoria):
 
@@ -899,7 +913,7 @@ Arquivos: `client/privacy.html`, `client/data-deletion.html`. Deploy: push em `m
 
 ---
 
-## 28. Code hardening
+## 29. Code hardening
 
 Ver [`docs/HARDENING.md`](../docs/HARDENING.md), [`docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md). Comandos: `npm run audit:complexity`, `npm run lint`, `npm test`.
 
