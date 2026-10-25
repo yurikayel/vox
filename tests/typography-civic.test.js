@@ -15,6 +15,9 @@ test("typography civic — CSS tokens and display pairing", () => {
   assert.match(css, /--font-weight-nav:\s*600/);
   assert.ok(css.includes("font-family: var(--font-sans)"));
   assert.ok(css.includes(".brand-word") && css.includes("var(--font-display)"));
+  assert.ok(css.includes(".brand-letter-v") && css.includes("var(--brand-green)"));
+  assert.ok(css.includes(".brand-letter-o") && css.includes("var(--brand-yellow)"));
+  assert.ok(css.includes(".brand-letter-x") && css.includes("var(--brand-blue)"));
 });
 
 test("typography civic — Google Fonts loaded in shell", () => {
