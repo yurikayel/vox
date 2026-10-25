@@ -1022,3 +1022,5 @@ OAuth e compartilhamento nativo citam provedores apenas onde exigido por integra
 - http://www.blakut.com/2009/03/spoiler-sneak-peek-into-future-of-orkut.html — header/cor customizável (referência de identidade por comunidade).
 - http://tribler.org/VirtualCommunitiesReport — moderadores, scrapbook, categorias.
 
+**Addendum (aba Posts ≠ feed):** na coluna **Tópicos e posts**, `renderCommunityTopicRow()` substitui `renderPostItem` — linhas compactas (título → `#/t/:id`, @autor, contagem de respostas, última atividade, excerpt curto; thumb 48px opcional). Sidebar **Membros online** vira grade 3×3 de avatares demo UF; abas sticky; Classificados/Governança dentro de `community-vox-panel`. SW `vox-pwa-v6.73-community-topic-list`.
+
