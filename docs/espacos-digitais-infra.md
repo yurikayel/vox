@@ -77,7 +77,7 @@ Leitor ──► Passivo
 | Gateway telemetry (Leitura reserva) | **Integrado** (`gateway-telemetry.js`, V-P02) |
 | Wizard steward | **MVP** `#/settings/network/steward` (V-P01) |
 | Kit steward deploy | **Parcial** (`relay/deploy`, `steward-relay-kit.md`, quota env) |
-| Blob soft priority V-I09 | Spec; impl branch `feat/blob-soft-priority-v0` |
+| Blob soft priority V-I09 | **Integrado** (`peers-blob-affinity.js`, `main` cc6239a) |
 
 ## Princípios inegociáveis
 
