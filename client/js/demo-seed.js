@@ -15,7 +15,7 @@ import {
 } from "./mock.js";
 import { UF_ROUTE_IDS } from "./data/profiles-brazil-uf.js";
 
-const SEED_KEY = "vox-demo-seeded-v11-uf27-triple-posts";
+const SEED_KEY = "vox-demo-seeded-v12-uf27-common-names";
 
 export async function ensureDemoSeed() {
   if (typeof window === "undefined" || !window.localStorage) return;
