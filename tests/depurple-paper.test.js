@@ -9,7 +9,7 @@ const css = fs.readFileSync(path.join(root, "css/style.css"), "utf8");
 const sw = fs.readFileSync(path.join(root, "sw.js"), "utf8");
 
 test("depurple paper — service worker cache id", () => {
-  assert.match(sw, /vox-pwa-v6\.44-emoji-megaphone/);
+  assert.match(sw, /vox-pwa-v6\.46-celeste-sky-theme/);
 });
 
 test("onboarding paper — modal sheet/card in CSS, neutral scrim", () => {
@@ -39,7 +39,8 @@ test("depurple paper — sidebar nav active not accent-soft fill", () => {
 });
 
 test("depurple paper — dark surfaces neutral not lavender stack", () => {
-  assert.ok(css.includes("--surface-1: #12101f"));
+  assert.ok(css.includes("--surface-1: #0f1d2e"));
+  assert.ok(!css.includes("#312183"), "purple brand chrome removed");
   assert.ok(!css.includes("#c8c0f0"));
 });
 

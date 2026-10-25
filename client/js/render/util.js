@@ -2,6 +2,7 @@
 import * as mock from "../mock.js";
 import * as localAccount from "../local-account.js";
 import * as profileDirectory from "../profile-directory.js";
+import { isWelcomeRouteId } from "../vox-welcome-profile.js";
 
 export const root = () => document.getElementById("app-root");
 
@@ -96,10 +97,11 @@ export function renderAvatarHtml(author, authorDisplay, sizeClass = "") {
   const display =
     authorDisplay || profileDirectory.getAuthorDisplaySync(author) || mock.getAuthorDisplay(author) || author;
   const authorInitial = (display || "V").slice(0, 1).toUpperCase();
+  const squircle = isWelcomeRouteId(author) ? " avatar-squircle" : "";
   if (avatarUrl) {
-    return `<span class="avatar-wrap ${sizeClass}"><img class="avatar-img" src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(display)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" /><span class="avatar avatar-fallback" style="display:none;">${authorInitial}</span></span>`;
+    return `<span class="avatar-wrap${squircle} ${sizeClass}"><img class="avatar-img${squircle}" src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(display)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" /><span class="avatar avatar-fallback${squircle}" style="display:none;">${authorInitial}</span></span>`;
   }
-  return `<span class="avatar ${sizeClass}">${authorInitial}</span>`;
+  return `<span class="avatar${squircle} ${sizeClass}">${authorInitial}</span>`;
 }
 
 export function formatTimeAgo(ts) {
