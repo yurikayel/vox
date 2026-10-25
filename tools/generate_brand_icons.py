@@ -310,6 +310,7 @@ def _o_hole_center_alpha(rgba: Image.Image) -> tuple[int, int, int]:
     return cx, cy, px[cx, cy][3]
 
 
+# UI uses opaque tiles in squircle; cutout marks are archive.
 def build_transparent_mark(im: Image.Image, bg: tuple[int, int, int], tolerance: float, *, white_paper: bool) -> Image.Image:
     rgba = flood_remove_bg(im, bg, tolerance)
     rgba = clear_enclosed_background(rgba, bg, tolerance + 4)
