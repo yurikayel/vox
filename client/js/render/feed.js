@@ -8,9 +8,8 @@ import * as i18n from "../i18n-pt-br.js";
 import * as gossipRetract from "../gossip-retract-ui.js";
 import * as profileDirectory from "../profile-directory.js";
 import {
-  getWelcomeProfile,
   WELCOME_ROUTE_ID,
-  shouldShowWelcomeCard,
+  shouldShowWelcomeFeedHint,
 } from "../vox-welcome-profile.js";
 import {
   escapeHtml,
@@ -398,25 +397,16 @@ export function renderStoriesStrip() {
   return `<div class="stories-strip" aria-label="Stories em destaque">${items}</div>`;
 }
 
-export function renderWelcomeCardHtml() {
-  if (!shouldShowWelcomeCard()) return "";
-  const w = getWelcomeProfile();
-  const av = renderAvatarHtml(WELCOME_ROUTE_ID, w.name);
+export function renderWelcomeFeedHintHtml() {
+  if (!shouldShowWelcomeFeedHint()) return "";
+  const dmHref = `#/dm/${encodeURIComponent(WELCOME_ROUTE_ID)}`;
   return `
-    <div class="card welcome-first-contact" id="welcome-first-contact-card" style="margin-bottom:0.75rem; border:1px solid var(--border);">
-      <div style="display:flex; gap:0.75rem; align-items:flex-start;">
-        <div>${av}</div>
-        <div style="flex:1; min-width:0;">
-          <h3 style="margin:0 0 4px; font-size:1rem;">Primeiro contato: ${escapeHtml(w.name)}</h3>
-          <p class="desc" style="margin:0 0 0.65rem; font-size:0.88rem;">${escapeHtml(w.bio)}</p>
-          <div style="display:flex; flex-wrap:wrap; gap:0.4rem;">
-            <a class="btn btn-primary btn-sm" href="#/u/${encodeURIComponent(WELCOME_ROUTE_ID)}">Ver perfil</a>
-            <a class="btn btn-outline btn-sm" href="#/dm/${encodeURIComponent(WELCOME_ROUTE_ID)}">Mensagem</a>
-            <a class="btn btn-outline btn-sm" href="#/people">Encontrar pessoas</a>
-            <button type="button" class="btn btn-sm btn-outline" id="btn-welcome-card-dismiss">Ok, entendi</button>
-          </div>
-        </div>
-      </div>
+    <div class="welcome-feed-hint" id="welcome-feed-hint" role="status">
+      <span class="welcome-feed-hint-text">
+        💬 <strong>Vox Brasil</strong> te mandou uma mensagem —
+        <a href="${dmHref}">Abrir conversa</a>
+      </span>
+      <button type="button" class="welcome-feed-hint-dismiss" id="btn-welcome-hint-dismiss" aria-label="Dispensar aviso">×</button>
     </div>`;
 }
 
@@ -424,14 +414,14 @@ export function renderFeed(main, topics = [], { activeFeed = "for-you", userRout
   const isForYou = activeFeed !== "following";
   const displayName =
     userRouteId ? profileDirectory.getAuthorDisplaySync(userRouteId) || mock.getAuthorDisplay(userRouteId) : "";
-  const welcomeCard = isForYou ? renderWelcomeCardHtml() : "";
+  const welcomeHint = isForYou ? renderWelcomeFeedHintHtml() : "";
   let html = `
     <div class="feed-chrome">
       ${renderStoriesStrip()}
+      ${welcomeHint}
       <div class="feed-composer-section">
         ${renderInlineComposer({ userRouteId, displayName })}
       </div>
-      ${welcomeCard}
     </div>`;
 
   if (!topics.length) {
