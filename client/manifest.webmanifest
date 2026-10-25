@@ -1,11 +1,11 @@
 {
   "name": "Vox — Comunidades Livres",
   "short_name": "Vox",
-  "description": "Comunidades e mensagens nos seus aparelhos",
+  "description": "Voz do povo e comunidades nos seus aparelhos",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#081b4b",
-  "theme_color": "#081b4b",
+  "background_color": "#312183",
+  "theme_color": "#312183",
   "lang": "pt-BR",
   "icons": [
     {

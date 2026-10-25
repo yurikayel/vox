@@ -2,6 +2,11 @@
  * Cadeias pt-BR — microcopy pós-gossip de retratação (GOSSIP_UPDATE / GOSSIP_DELETE).
  */
 
+export const appMetaDescription =
+  "Vox — voz do povo e comunidades nos seus aparelhos, sem controle central";
+
+export const appShellFooterTagline = "Voz do povo, aparelho a aparelho";
+
 export const localMutateEditDeleteTooltip =
   "Alterações valem já aqui. Com pares online, editar e apagar propagam na malha via gossip de retratação.";
 
