@@ -1,31 +1,15 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Vox">
-  <defs>
-    <filter id="shadow" x="-15%" y="-15%" width="130%" height="130%">
-      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#000000" flood-opacity="0.35"/>
-    </filter>
-  </defs>
-  <g transform="translate(256 268) rotate(-32)" filter="url(#shadow)">
-    <!-- Ondas (sinal) -->
-    <g fill="none" stroke="#B8C4E8" stroke-width="5" stroke-linecap="round" opacity="0.85">
-      <path d="M 98 -52 Q 118 -78 148 -88"/>
-      <path d="M 108 -38 Q 138 -68 178 -78"/>
-      <path d="M 118 -24 Q 158 -58 208 -66"/>
-      <path d="M 128 -10 Q 178 -48 238 -52"/>
-    </g>
-    <!-- V / check (verde) -->
-    <path
-      d="M -118 42 L -58 -38 L 8 -8 L -22 32 L -88 88 Z"
-      fill="#1FA855"
-      stroke="#1FA855"
-      stroke-width="8"
-      stroke-linejoin="round"
-    />
-    <!-- Anel (amarelo) -->
-    <circle cx="18" cy="-8" r="54" fill="none" stroke="#F5C400" stroke-width="26"/>
-    <!-- X (azul) -->
-    <g stroke="#2B5FB8" stroke-width="28" stroke-linecap="round">
-      <line x1="52" y1="-58" x2="132" y2="22"/>
-      <line x1="52" y1="22" x2="132" y2="-58"/>
-    </g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Vox">
+  <g transform="translate(26, 34) rotate(-30)">
+    <!-- Haste / Handle do Megafone -->
+    <path d="M -8,4 L -11,20 A 4,4 0 0,0 -3,21 L -1,5 Z" fill="#002776"/>
+    <!-- Cone do Megafone -->
+    <path d="M -24,0 L -2,-13 L -2,13 Z" fill="#00C853"/>
+    <circle cx="-24" cy="0" r="3.5" fill="#00C853"/>
+    <!-- Anel da Boca / Flare -->
+    <ellipse cx="0" cy="0" rx="3.5" ry="14" fill="#FFD600"/>
+    <ellipse cx="0" cy="0" rx="1.8" ry="9" fill="#002776"/>
+    <!-- Ondas Sonoras (Arcos de Som) -->
+    <path d="M 7,-9 A 12,12 0 0,1 7,9" fill="none" stroke="#1E88E5" stroke-width="3.2" stroke-linecap="round"/>
+    <path d="M 14,-15 A 19,19 0 0,1 14,15" fill="none" stroke="#1E88E5" stroke-width="3.2" stroke-linecap="round"/>
   </g>
 </svg>

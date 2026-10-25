@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Vox">
+  <g transform="translate(26, 34) rotate(-30)">
+    <!-- Haste / Handle do Megafone -->
+    <path d="M -8,4 L -11,20 A 4,4 0 0,0 -3,21 L -1,5 Z" fill="#002776"/>
+    <!-- Cone do Megafone -->
+    <path d="M -24,0 L -2,-13 L -2,13 Z" fill="#E53935"/>
+    <circle cx="-24" cy="0" r="3.5" fill="#E53935"/>
+    <!-- Anel da Boca / Flare -->
+    <ellipse cx="0" cy="0" rx="3.5" ry="14" fill="#FFD600"/>
+    <ellipse cx="0" cy="0" rx="1.8" ry="9" fill="#002776"/>
+    <!-- Ondas Sonoras (Arcos de Som) -->
+    <path d="M 7,-9 A 12,12 0 0,1 7,9" fill="none" stroke="#1E88E5" stroke-width="3.2" stroke-linecap="round"/>
+    <path d="M 14,-15 A 19,19 0 0,1 14,15" fill="none" stroke="#1E88E5" stroke-width="3.2" stroke-linecap="round"/>
+  </g>
+</svg>
