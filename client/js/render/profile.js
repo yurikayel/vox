@@ -141,7 +141,7 @@ function renderProfileGridAvatar(address, displayName, handle) {
   return `<div class="profile-grid-avatar-wrap"><span class="avatar profile-grid-avatar-fallback${squircle}">${initial}</span></div>`;
 }
 
-function renderProfileGridActionRow(address, isCurrentWallet, isBlocked, isMuted) {
+function renderProfileGridActionRow(address, isCurrentWallet, isBlocked, isMuted, pixKeyRaw = "", displayName = "") {
   if (isCurrentWallet) {
     return `
       <div class="profile-grid-actions">
@@ -159,11 +159,15 @@ function renderProfileGridActionRow(address, isCurrentWallet, isBlocked, isMuted
   }
   const isWatchingAuthor = social.isWatching(address);
   const followClass = isWatchingAuthor ? "profile-grid-btn-outline is-following" : "profile-grid-btn-primary";
+  const zapBtn = pixKeyRaw
+    ? `<button type="button" class="profile-grid-btn profile-grid-btn-outline btn-zap-profile" data-pix="${escapeHtml(pixKeyRaw)}" data-author="${escapeHtml(address)}" data-author-name="${escapeHtml(displayName || address)}" aria-label="Apoiar com Pix">⚡ Apoiar</button>`
+    : "";
   return `
     <div class="profile-grid-actions">
       <button type="button" class="profile-grid-btn ${followClass} btn-watch-profile" data-route="${escapeHtml(address)}" aria-pressed="${isWatchingAuthor ? "true" : "false"}">
         ${isWatchingAuthor ? "Seguindo" : "Seguir"}
       </button>
+      ${zapBtn}
       <a class="profile-grid-btn profile-grid-btn-outline" href="#/dm/${encodeURIComponent(address)}">Mensagem</a>
       <button type="button" class="profile-grid-btn profile-grid-btn-outline" id="btn-copy-author-route" data-route="${escapeHtml(address)}">Copiar ID</button>
     </div>
@@ -227,7 +231,7 @@ function renderProfileGridHeader(
         ${isCurrentWallet ? `<p class="profile-grid-self-badge meta">Sua conta neste aparelho</p>` : ""}
         ${(pixBadge || githubBadge) ? `<div class="profile-grid-meta-badges">${pixBadge}${githubBadge}</div>` : ""}
       </div>
-      ${renderProfileGridActionRow(address, isCurrentWallet, isBlocked, isMuted)}
+      ${renderProfileGridActionRow(address, isCurrentWallet, isBlocked, isMuted, pixKeyRaw, displayName)}
       ${renderStereotypeDemoBanner(address)}
       ${conflictBanner}
     </header>`;

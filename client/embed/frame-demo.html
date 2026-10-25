@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <title>Open Frame demo</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; padding: 12px; background: #f4f0e8; }
+    button { padding: 8px 14px; border-radius: 8px; border: 1px solid #ccc; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <p><strong>Demo:</strong> petição fictícia</p>
+  <p>Assinaturas: <span id="n">0</span></p>
+  <button type="button" id="sign">Assinar</button>
+  <script>
+    let n = 0;
+    const post = (type, payload) => parent.postMessage({ type, payload }, "*");
+    post("of:ready", { frameId: "demo-petition" });
+    document.getElementById("sign").onclick = () => {
+      n += 1;
+      document.getElementById("n").textContent = String(n);
+      post("of:action", { action: "sign", value: n });
+      post("of:resize", { height: document.body.scrollHeight + 8 });
+    };
+    post("of:resize", { height: document.body.scrollHeight + 8 });
+  </script>
+</body>
+</html>
