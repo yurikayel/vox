@@ -9,6 +9,7 @@ import * as gossipRetract from "../gossip-retract-ui.js";
 import * as profileDirectory from "../profile-directory.js";
 import {
   WELCOME_ROUTE_ID,
+  isWelcomeRouteId,
   shouldShowWelcomeFeedHint,
 } from "../vox-welcome-profile.js";
 import {
@@ -139,11 +140,12 @@ function renderInlineReplyComposer(topicId, commId) {
     </form>`;
 }
 
+/** Comentários ficam **fora** de `.post-media-hero` — superfície normal do card, nunca overlay na foto. */
 export function renderPostComments(topicId, commId = "", { replies = [], expanded = false } = {}) {
   const panelId = commentsPanelId(topicId);
   const openCls = expanded ? " is-open" : "";
   const hid = expanded ? "" : " hidden";
-  return `<div class="post-comments${openCls}" id="${escapeHtml(panelId)}"${hid} data-topic="${escapeHtml(topicId)}" data-comm="${escapeHtml(commId)}">${renderCommentList(replies)}${renderInlineReplyComposer(topicId, commId)}</div>`;
+  return `<div class="post-comments post-comments-surface${openCls}" id="${escapeHtml(panelId)}"${hid} data-topic="${escapeHtml(topicId)}" data-comm="${escapeHtml(commId)}">${renderCommentList(replies)}${renderInlineReplyComposer(topicId, commId)}</div>`;
 }
 
 export function renderPostOwnerMenu(t) {
@@ -210,6 +212,20 @@ function renderPostOverlayAuthor(author, labels) {
     </div>`;
 }
 
+function shouldShowPostFollowOverlay(t, author) {
+  if (!author || t?.isOwnLocalPost) return false;
+  if (isWelcomeRouteId(author)) return false;
+  return true;
+}
+
+function renderPostFollowOverlay(author) {
+  const watching = social.isWatching(author);
+  const label = watching ? "Seguindo" : "Seguir";
+  return `<div class="post-follow-overlay${watching ? " is-following" : ""}">
+    <button type="button" class="btn-follow-overlay btn-watch-profile" data-route="${escapeHtml(author)}" aria-pressed="${watching ? "true" : "false"}" aria-label="${watching ? "Deixar de seguir autor" : "Seguir autor"}">${label}</button>
+  </div>`;
+}
+
 function renderPostMediaHero(t, author, labels) {
   const overlayText = renderPostOverlayTextHtml(t);
   const overlayAuthor = renderPostOverlayAuthor(author, labels);
@@ -225,12 +241,14 @@ function renderPostMediaHero(t, author, labels) {
       </div>
     </div>`
     : "";
+  const followOverlay = shouldShowPostFollowOverlay(t, author) ? renderPostFollowOverlay(author) : "";
 
   if (t?.image) {
     const altRaw = t.imageAlt || t.title || "";
     const alt = escapeHtml(altRaw);
     const src = escapeHtml(t.image);
     return `<div class="post-media-container post-media-hero">
+      ${followOverlay}
       <button type="button" class="post-media-lightbox-trigger" aria-label="Ver imagem em tela cheia" data-media-src="${src}" data-media-alt="${alt}">
         <img class="post-media post-media-hero-img" src="${src}" alt="${alt}" loading="lazy" />
       </button>
@@ -240,6 +258,7 @@ function renderPostMediaHero(t, author, labels) {
   }
   if (t?.mediaRef?.hash) {
     return `<div class="post-media-container post-media-hero post-media-lazy" data-media-hash="${escapeHtml(t.mediaRef.hash)}">
+      ${followOverlay}
       <div class="media-placeholder" style="aspect-ratio:4/5; display:flex; align-items:center; justify-content:center; background:var(--surface-soft); color:var(--muted); font-size:0.85rem;"><span>📷 Mídia P2P (${escapeHtml(t.mediaRef.mime || "imagem")})</span></div>
       ${scrimBlock}
       ${overlayBlock}
@@ -358,7 +377,24 @@ function renderZapToolbarBtn(t, author, authorDisplay) {
   if (!pix) {
     return `<button class="action-btn btn-zap-post disabled" disabled aria-label="Autor sem Pix informado" title="Autor sem chave Pix informada" style="opacity:0.35; cursor:not-allowed;">${icon}</button>`;
   }
-  return `<button class="action-btn btn-zap-post" data-id="${escapeHtml(t.id)}" data-author="${escapeHtml(author)}" data-author-name="${escapeHtml(authorDisplay)}" data-pix="${escapeHtml(pix)}" data-title="${escapeHtml(t.title)}" aria-label="Apoiar com Pix Zap" title="Apoiar com Pix Zap">${icon}<span class="action-label zap-label" style="font-size:0.75rem; font-weight:600; margin-left:2px;">Apoiar</span></button>`;
+  return `<button class="action-btn btn-zap-post" data-id="${escapeHtml(t.id)}" data-author="${escapeHtml(author)}" data-author-name="${escapeHtml(authorDisplay)}" data-pix="${escapeHtml(pix)}" data-title="${escapeHtml(t.title)}" aria-label="Apoiar com Pix" title="Apoiar com Pix">${icon}</button>`;
+}
+
+function renderToolbarOverflow(t, author, authorDisplay, authorHandle, baseStars, starred, stars) {
+  return `<details class="toolbar-overflow">
+    <summary class="action-btn btn-toolbar-more" aria-label="Mais ações do post"><span aria-hidden="true">⋯</span></summary>
+    <div class="toolbar-overflow-menu" role="menu">
+      <button type="button" class="action-btn btn-star ${starred ? "active" : ""}" data-id="${escapeHtml(t.id)}" data-count="${baseStars}" role="menuitem" aria-label="Dar estrela ao post">
+        <svg class="action-icon icon-star" width="18" height="18" viewBox="0 0 24 24" fill="${starred ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        <span class="action-count count-stars">${stars > 0 ? stars : ""}</span>
+        <span class="toolbar-overflow-label">Estrela</span>
+      </button>
+      <button type="button" class="action-btn btn-copy-md" data-id="${escapeHtml(t.id)}" data-title="${escapeHtml(t.title)}" data-body="${escapeHtml(t.body || "")}" data-author="${escapeHtml(authorDisplay)}" data-handle="${escapeHtml(authorHandle)}" role="menuitem" aria-label="Copiar post como Markdown">
+        <svg class="action-icon icon-copy" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
+        <span class="toolbar-overflow-label">Copiar MD</span>
+      </button>
+    </div>
+  </details>`;
 }
 
 function renderPostToolbar(t, author, authorDisplay, authorHandle) {
@@ -371,7 +407,7 @@ function renderPostToolbar(t, author, authorDisplay, authorHandle) {
   const saved = social.isSaved(t.id);
   return `
         <div class="post-actions insta-actions post-toolbar">
-          <div class="toolbar-left">
+          <div class="toolbar-primary">
             <button class="action-btn btn-like ${liked ? "active" : ""}" data-id="${escapeHtml(t.id)}" data-count="${baseLikes}" aria-label="Curtir post">
               <svg class="action-icon icon-heart" width="20" height="20" viewBox="0 0 24 24" fill="${liked ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
               <span class="action-count count-likes">${likes > 0 ? likes : ""}</span>
@@ -380,18 +416,10 @@ function renderPostToolbar(t, author, authorDisplay, authorHandle) {
             <button class="action-btn btn-share btn-share-post" data-id="${escapeHtml(t.id)}" data-title="${escapeHtml(t.title)}" aria-label="Compartilhar post">
               <svg class="action-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
             </button>
-          </div>
-          <div class="toolbar-center">
             ${renderZapToolbarBtn(t, author, authorDisplay)}
-            <button class="action-btn btn-star ${starred ? "active" : ""}" data-id="${escapeHtml(t.id)}" data-count="${baseStars}" aria-label="Dar estrela ao post">
-              <svg class="action-icon icon-star" width="19" height="19" viewBox="0 0 24 24" fill="${starred ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-              <span class="action-count count-stars">${stars > 0 ? stars : ""}</span>
-            </button>
           </div>
-          <div class="toolbar-right">
-            <button class="action-btn btn-copy-md" data-id="${escapeHtml(t.id)}" data-title="${escapeHtml(t.title)}" data-body="${escapeHtml(t.body || "")}" data-author="${escapeHtml(authorDisplay)}" data-handle="${escapeHtml(authorHandle)}" aria-label="Copiar post como Markdown">
-              <svg class="action-icon icon-copy" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
-            </button>
+          <div class="toolbar-secondary">
+            ${renderToolbarOverflow(t, author, authorDisplay, authorHandle, baseStars, starred, stars)}
             <button class="action-btn btn-save ${saved ? "active" : ""}" data-id="${escapeHtml(t.id)}" aria-label="Salvar post">
               <svg class="action-icon icon-bookmark" width="19" height="19" viewBox="0 0 24 24" fill="${saved ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
             </button>
