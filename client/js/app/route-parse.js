@@ -81,6 +81,8 @@ export function parseRoute() {
     }
     return { name: "profile", address: raw, tab: (query.get("tab") || "posts").toLowerCase() };
   }
+  if (parts[0] === "voxpedia") return { name: "voxpedia" };
+  if (parts[0] === "ajuda" && parts[1] === "voxpedia") return { name: "voxpedia" };
   if (parts[0] === "wallet") return { name: "wallet" };
   if (parts[0] === "compose") {
     if (parts[1] === "community") return { name: "compose-community" };
