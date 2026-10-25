@@ -343,7 +343,7 @@ a:hover {
   gap: 8px;
 }
 
-/* Sidebar brand: squircle tile único (fundo claro) em todos os temas ? ver shell.js. */
+/* Sidebar brand: squircle branco + X azul em todos os temas ? ver shell.js. */
 .brand-logo.brand-mark,
 .brand-mark {
   width: 32px;
@@ -357,9 +357,22 @@ a:hover {
 
 .brand-word {
   font-family: var(--font-display);
-  color: var(--text);
   font-weight: 800;
   letter-spacing: -0.03em;
+  display: inline-flex;
+  align-items: baseline;
+}
+
+.brand-letter-v {
+  color: var(--brand-green);
+}
+
+.brand-letter-o {
+  color: var(--brand-yellow);
+}
+
+.brand-letter-x {
+  color: var(--brand-blue);
 }
 
 /* Chip de Rede (Status Compacto Glass) */

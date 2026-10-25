@@ -21,7 +21,7 @@ Heurística de design (não KPI público): comunidade 50+ membros — ≥70% Ati
 
 **Pronto:** camadas 0→3, Pacto Vox (`peers.js`), `commOnly`, mirror, relay HTTP configurável, `CACHE_MANIFEST`, listing/feira, retratação gossip, UI `#/settings/network`.
 
-**Gargalos:** atrito steward (deploy); gateway fallback opaco; reciprocidade fraca fora de settings; cold start sem ritual de seed; V-I09 affinity pendente impl.
+**Gargalos:** atrito steward (deploy 1-clique ainda parcial); reciprocidade fraca fora de `#/settings/network`; cold start sem ritual de seed pós-comunidade; espelho shell único (Pages); POSSE ainda manual (Bridge stub); piloto real não executado.
 
 **Brasil:** CGNAT — celular não substitui VPS; Passivo legítimo; sem scoreboard público ([ADR-001](./adr/001-contribution-attestation-export.md) só export opt-in).
 
@@ -41,6 +41,16 @@ Heurística de design (não KPI público): comunidade 50+ membros — ≥70% Ati
 ## Piloto recomendado
 
 Ver [piloto-comunidade-retrospectiva-template.md](./piloto-comunidade-retrospectiva-template.md).
+
+## Lista revisada — prioridades (out/2026)
+
+Foco: **rede cresce sozinha** com infra dos participantes, transparência operacional e impulso comunitário (sem ranking público de nós).
+
+| P0 | Kit steward fechado (V-I08 + Windows/Linux runbook); nudge `commOnly` (V-P04); checklist seed pós-comunidade (V-P05); mirror validate na UI (V-P06); 2º espelho shell documentado e vivo (ops); piloto V-P09 com retrospectiva |
+| P1 | Runbook sucessão steward + relay buddy (V-P08); export atestação ADR-001 opt-in (V-P07); embed/POSSE webhook + Bridge MV3; fork comunitário além do demo; registro público de espelhos (URL, SHA, `CACHE_NAME`) |
+| P2 | RFCs com janela de comentário; lentes de feed plugáveis; WoT/ZK (visão); telemetria agregada **voluntária** por stewards (não phone-home central) |
+
+Detalhamento em chat/agente out/2026; rastreio técnico em [backlog-participacao-rede.md](./backlog-participacao-rede.md).
 
 ## Referências
 

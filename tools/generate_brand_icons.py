@@ -380,6 +380,7 @@ def main() -> None:
     write_png(ICONS / "favicon.png", fit_mark(mark_white, 32, pad_ratio=0.05, bg=(0, 0, 0, 0)))
 
     # Opaque squircle tiles for UI + PWA (official JPG fields, not cutout composites).
+    write_png(ICONS / "icon-white-192.png", fit_opaque_square(white_im, 192))
     write_png(ICONS / "icon-white-512.png", fit_opaque_square(white_im, 512))
     write_png(ICONS / "icon-1024.png", fit_opaque_square(navy_im, 1024))
     write_png(ICONS / "icon-512.png", fit_opaque_square(navy_im, 512))
