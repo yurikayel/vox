@@ -3,10 +3,11 @@ import * as mock from "../mock.js";
 import { appShellFooterTagline } from "../i18n-pt-br.js";
 import { escapeHtml, root } from "./util.js";
 
-const BRAND_MARK = "icons/icon-mark.png";
+/** Opaque navy tile; UI clips with `.brand-mark` squircle (not transparent cutout). */
+const BRAND_MARK = "icons/icon-1024.png";
 
 function renderBrandLink() {
-  return `<a class="brand-link" href="#/" aria-label="Vox — início"><img class="brand-logo" src="${BRAND_MARK}" width="32" height="32" alt="" decoding="async" /><span class="brand-word">Vox</span></a>`;
+  return `<a class="brand-link" href="#/" aria-label="Vox — início"><img class="brand-logo brand-mark" src="${BRAND_MARK}" width="32" height="32" alt="" decoding="async" /><span class="brand-word">Vox</span></a>`;
 }
 
 const ICONS = {
