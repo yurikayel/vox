@@ -40,6 +40,118 @@ export const UF_STEREOTYPE_SEEDS = [
 export const MOCK_DEMO_UF_COUNT = UF_STEREOTYPE_SEEDS.length;
 export const UF_ROUTE_IDS = UF_STEREOTYPE_SEEDS.map((s) => `vx_demo_${s.uf.toLowerCase()}`);
 
+/** Mídia de post por UF — tema cultural/regional (nunca retrato de avatar). */
+export const postMediaByUf = {
+  ac: {
+    postImageUrl: "https://images.unsplash.com/photo-1448375249986-3937330462b7?w=800&q=80",
+    postAlt: "Floresta tropical — calor de porteira acreana (demo)",
+  },
+  al: {
+    postImageUrl: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80",
+    postAlt: "Praia e litoral — forró e mar alagoano (demo)",
+  },
+  ap: {
+    postImageUrl: "https://images.unsplash.com/photo-1518173946687-a4c0362aee7f?w=800&q=80",
+    postAlt: "Vegetação de fronteira norte — Amapá (demo)",
+  },
+  am: {
+    postImageUrl: "https://images.unsplash.com/photo-1585314152723-904fc4f4d312?w=800&q=80",
+    postAlt: "Rio e floresta — memória amazonense (demo)",
+  },
+  ba: {
+    postImageUrl: "https://images.unsplash.com/photo-1545389336-cf090694435e?w=800&q=80",
+    postAlt: "Tambor e festa — axé e samba de roda baiano (demo)",
+  },
+  ce: {
+    postImageUrl: "https://images.unsplash.com/photo-1509316785289-025f5b846b8f?w=800&q=80",
+    postAlt: "Sol forte do sertão — humor e jerimum cearense (demo)",
+  },
+  df: {
+    postImageUrl: "https://images.unsplash.com/photo-1546550547-93d4e4c6b5e1?w=800&q=80",
+    postAlt: "Horizonte urbano — Plano Piloto e candango (demo)",
+  },
+  es: {
+    postImageUrl: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80",
+    postAlt: "Montanhas e mar — calma capixaba (demo)",
+  },
+  go: {
+    postImageUrl: "https://images.unsplash.com/photo-1500382017468-90403deda075?w=800&q=80",
+    postAlt: "Cerrado e campo — pequi e festa goiana (demo)",
+  },
+  ma: {
+    postImageUrl: "https://images.unsplash.com/photo-1519892306449-f6395edf9ebe?w=800&q=80",
+    postAlt: "Tambores e festa popular — bumba e cultura maranhense (demo)",
+  },
+  mt: {
+    postImageUrl: "https://images.unsplash.com/photo-1500595040049-30c4151484bf?w=800&q=80",
+    postAlt: "Pôr do sol no campo — Pantanal mato-grossense (demo)",
+  },
+  ms: {
+    postImageUrl: "https://images.unsplash.com/photo-1439066615861-d1bef174757f?w=800&q=80",
+    postAlt: "Paisagem de planície — tereré e fronteira sul-mato-grossense (demo)",
+  },
+  mg: {
+    postImageUrl: "https://images.unsplash.com/photo-1497935586351-b67026826061?w=800&q=80",
+    postAlt: "Café coado — prosa mineira sem pressa (demo)",
+  },
+  pa: {
+    postImageUrl: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&q=80",
+    postAlt: "Barco no estuário — açaí e Ver-o-Peso paraense (demo)",
+  },
+  pb: {
+    postImageUrl: "https://images.unsplash.com/photo-1509316975858-15e1b34a7649?w=800&q=80",
+    postAlt: "Sertão e litoral — forró paraibano (demo)",
+  },
+  pr: {
+    postImageUrl: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&q=80",
+    postAlt: "Mata de pinheiros — chimarrão paranaense (demo)",
+  },
+  pe: {
+    postImageUrl: "https://images.unsplash.com/photo-1533174078815-4f917a568892?w=800&q=80",
+    postAlt: "Cores de frevo e maracatu — criatividade pernambucana (demo)",
+  },
+  pi: {
+    postImageUrl: "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800&q=80",
+    postAlt: "Estrada no sertão — persistência piauiense (demo)",
+  },
+  rj: {
+    postImageUrl: "https://images.unsplash.com/photo-1483728642382-8ead366eed7a?w=800&q=80",
+    postAlt: "Orla e morros — samba carioca (demo)",
+  },
+  rn: {
+    postImageUrl: "https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=800&q=80",
+    postAlt: "Dunas e vento — litoral potiguar (demo)",
+  },
+  rs: {
+    postImageUrl: "https://images.unsplash.com/photo-1416879595882-3383a0488b5b?w=800&q=80",
+    postAlt: "Campanha gaúcha — chimarrão e tradição (demo)",
+  },
+  ro: {
+    postImageUrl: "https://images.unsplash.com/photo-1518837695015-87179a5f262a?w=800&q=80",
+    postAlt: "Estrada e café — comunidade rondoniense (demo)",
+  },
+  rr: {
+    postImageUrl: "https://images.unsplash.com/photo-1464822759023-fed62297fa48?w=800&q=80",
+    postAlt: "Montanhas do norte — acolhimento roraimense (demo)",
+  },
+  sc: {
+    postImageUrl: "https://images.unsplash.com/photo-1571115764595-39278f141678?w=800&q=80",
+    postAlt: "Costa organizada — praia catarinense (demo)",
+  },
+  se: {
+    postImageUrl: "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=800&q=80",
+    postAlt: "Mesinha com frutos do mar — litoral sergipano (demo)",
+  },
+  sp: {
+    postImageUrl: "https://images.unsplash.com/photo-1444723127015-bd81fda2d572?w=800&q=80",
+    postAlt: "Skyline urbano — metrô e pluralidade paulistana (demo)",
+  },
+  to: {
+    postImageUrl: "https://images.unsplash.com/photo-1470071450284-b48dbe1b276b?w=800&q=80",
+    postAlt: "Nascer do sol no cerrado — Jalapão tocantinense (demo)",
+  },
+};
+
 function readmeFor(seed) {
   return (
     `### ${seed.displayName} — ${seed.stereotypeTitle}\n\n` +
@@ -91,7 +203,7 @@ export function buildUfDemoTopics(now = Date.now()) {
   return UF_STEREOTYPE_SEEDS.map((seed, i) => {
     const uf = seed.uf.toLowerCase();
     const routeId = `vx_demo_${uf}`;
-    const avatarUrl = PORTRAIT(seed.gender, 10 + i);
+    const media = postMediaByUf[uf] || postMediaByUf.ac;
     return {
       id: `demo-post-${uf}`,
       communityId: "demo-aprenda-vox",
@@ -99,8 +211,8 @@ export function buildUfDemoTopics(now = Date.now()) {
       body:
         `${seed.vibe} Aqui no Vox a conversa fica na comunidade — sem impulsionar post. ` +
         `Perfil **estereótipo demo** para testar a plataforma. #${seed.hashtag} #perfildemo #brasil`,
-      image: avatarUrl,
-      imageAlt: `Retrato demo — perfil estereótipo ${seed.stateName}`,
+      image: media.postImageUrl,
+      imageAlt: media.postAlt,
       author: routeId,
       owner: routeId,
       externalPain: "Redes centralizadas — alcance pago e extração de dados",
