@@ -1,5 +1,7 @@
 /** @file Celeste sky palette by local clock (data-sky-period on documentElement). */
 
+import { readColorMode, resolveEffectiveDark } from "./color-mode.js";
+
 export const SKY_PERIOD_HOURS = Object.freeze({
   madrugada: { start: 0, end: 5, label: "Madrugada" },
   manha: { start: 6, end: 11, label: "Manhã" },
@@ -54,14 +56,17 @@ function syncThemeColorMeta(doc, period, dark) {
 
 export function applySkyTheme(doc, hour = new Date().getHours(), opts = {}) {
   const root = doc.documentElement;
-  const followClock = opts.followClock ?? readFollowClock(doc.defaultView?.localStorage);
+  const storage = doc.defaultView?.localStorage;
+  const followClock = opts.followClock ?? readFollowClock(storage);
+  const colorMode = readColorMode(storage);
+  const schemeDark = prefersDarkScheme(doc.defaultView);
+  const dark = opts.dark ?? resolveEffectiveDark(colorMode, schemeDark);
   if (!followClock) {
     root.removeAttribute("data-sky-period");
     root.removeAttribute("data-sky-palette");
-    return { period: null, dark: prefersDarkScheme(doc.defaultView), followClock: false };
+    return { period: null, dark, followClock: false, colorMode };
   }
   const period = hourToSkyPeriod(hour);
-  const dark = opts.dark ?? prefersDarkScheme(doc.defaultView);
   root.setAttribute("data-sky-period", period);
   root.setAttribute("data-sky-palette", period);
   syncThemeColorMeta(doc, period, dark);
