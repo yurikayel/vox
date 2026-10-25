@@ -49,7 +49,7 @@ test("gossip-retract-ui - tombstone oculto no feed com flag on", async () => {
   assert.equal(tombHtml, "");
 });
 
-test("gossip-retract-ui - badge Editado com gossipEditedAt quando flag on", async () => {
+test("gossip-retract-ui - feed card sem badge Editado no header (chip removido)", async () => {
   gossipRetract.__setGossipRetractUiEnabledForTests(true);
   const render = await import("../client/js/render.js");
 
@@ -60,8 +60,8 @@ test("gossip-retract-ui - badge Editado com gossipEditedAt quando flag on", asyn
     gossipEditedAt: 1700000001000,
   });
 
-  assert.ok(html.includes("gossip-edited-pill"));
-  assert.ok(html.includes("Editado"));
+  assert.ok(!html.includes("gossip-edited-pill"));
+  assert.ok(!html.includes("post-header-tags"));
 });
 
 test("gossip-retract-ui - flag off ignora tombstone e gossip edit", async () => {

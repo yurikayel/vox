@@ -1,0 +1,924 @@
+{
+  "generatedAt": "2026-10-24T13:06:24.382Z",
+  "filesScanned": 69,
+  "violationCount": 131,
+  "violations": [
+    {
+      "file": "client/js/app/init.js",
+      "line": 27,
+      "rule": "complexity",
+      "message": "Arrow function has a complexity of 30. Maximum allowed is 15.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/app/init.js",
+      "line": 236,
+      "rule": "complexity",
+      "message": "Arrow function has a complexity of 34. Maximum allowed is 15.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/app/route-parse.js",
+      "line": 9,
+      "rule": "complexity",
+      "message": "Function 'parseRoute' has a complexity of 61. Maximum allowed is 15.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/app/route.js",
+      "line": 19,
+      "rule": "complexity",
+      "message": "Async function 'routeImpl' has a complexity of 23. Maximum allowed is 15.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/app/screens-community.js",
+      "line": 42,
+      "rule": "complexity",
+      "message": "Async function 'showCommunity' has a complexity of 43. Maximum allowed is 15.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/app/screens-community.js",
+      "line": 357,
+      "rule": "complexity",
+      "message": "Async function 'showTopic' has a complexity of 24. Maximum allowed is 15.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/app/screens-compose.js",
+      "line": 175,
+      "rule": "complexity",
+      "message": "Async function 'handleComposeListingSubmit' has a complexity of 27. Maximum allowed is 15.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/app/screens-home.js",
+      "line": 41,
+      "rule": "complexity",
+      "message": "Async function 'showHome' has a complexity of 30. Maximum allowed is 15.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/app/screens-network.js",
+      "line": 44,
+      "rule": "complexity",
+      "message": "Arrow function has a complexity of 27. Maximum allowed is 15.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/app/screens-profile.js",
+      "line": 41,
+      "rule": "complexity",
+      "message": "Async function 'showProfile' has a complexity of 52. Maximum allowed is 15.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/app/screens-profile.js",
+      "line": 155,
+      "rule": "complexity",
+      "message": "Function 'bindProfileButtons' has a complexity of 39. Maximum allowed is 15.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/cache-manifest.js",
+      "line": 39,
+      "rule": "complexity",
+      "message": "Function 'validateManifestBody' has a complexity of 18. Maximum allowed is 15.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/cache-node.js",
+      "line": 330,
+      "rule": "complexity",
+      "message": "Arrow function has a complexity of 37. Maximum allowed is 15.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/cache-node.js",
+      "line": 477,
+      "rule": "complexity",
+      "message": "Async function 'getPostsByTag' has a complexity of 32. Maximum allowed is 15.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/frames.js",
+      "line": 117,
+      "rule": "complexity",
+      "message": "Function 'tallyVotes' has a complexity of 16. Maximum allowed is 15.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/governance.js",
+      "line": 91,
+      "rule": "complexity",
+      "message": "Function 'computeTally' has a complexity of 28. Maximum allowed is 15.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/graphql.js",
+      "line": 289,
+      "rule": "complexity",
+      "message": "Async function 'fetchRawFromGateways' has a complexity of 27. Maximum allowed is 15.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/inline-composer.js",
+      "line": 104,
+      "rule": "complexity",
+      "message": "Async arrow function has a complexity of 16. Maximum allowed is 15.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/local-account.js",
+      "line": 325,
+      "rule": "complexity",
+      "message": "Async function 'importAccountBundle' has a complexity of 19. Maximum allowed is 15.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/moderation.js",
+      "line": 24,
+      "rule": "complexity",
+      "message": "Function 'applyFilters' has a complexity of 18. Maximum allowed is 15.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/peers-cache-manifest.js",
+      "line": 52,
+      "rule": "complexity",
+      "message": "Async function 'ingestSignedCacheManifestItem' has a complexity of 20. Maximum allowed is 15.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/peers.js",
+      "line": 262,
+      "rule": "complexity",
+      "message": "Async function 'handleVoxMessage' has a complexity of 36. Maximum allowed is 15.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/peers.js",
+      "line": 358,
+      "rule": "complexity",
+      "message": "Async function 'handleGossipMessage' has a complexity of 27. Maximum allowed is 15.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/peers.js",
+      "line": 395,
+      "rule": "complexity",
+      "message": "Async function 'handleGossipUpdateMessage' has a complexity of 26. Maximum allowed is 15.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/peers.js",
+      "line": 433,
+      "rule": "complexity",
+      "message": "Async function 'handleGossipDeleteMessage' has a complexity of 28. Maximum allowed is 15.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/peers.js",
+      "line": 640,
+      "rule": "complexity",
+      "message": "Async function 'requestTxFromPeers' has a complexity of 21. Maximum allowed is 15.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/post-ownership.js",
+      "line": 17,
+      "rule": "complexity",
+      "message": "Function 'formatPostDisplay' has a complexity of 16. Maximum allowed is 15.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/profile-directory.js",
+      "line": 61,
+      "rule": "complexity",
+      "message": "Async function 'resolveProfile' has a complexity of 41. Maximum allowed is 15.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/render/community.js",
+      "line": 78,
+      "rule": "complexity",
+      "message": "Function 'renderCommunity' has a complexity of 25. Maximum allowed is 15.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/render/community.js",
+      "line": 196,
+      "rule": "complexity",
+      "message": "Function 'renderProposalItem' has a complexity of 18. Maximum allowed is 15.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/render/community.js",
+      "line": 244,
+      "rule": "complexity",
+      "message": "Function 'renderListingItem' has a complexity of 25. Maximum allowed is 15.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/render/community.js",
+      "line": 307,
+      "rule": "complexity",
+      "message": "Function 'renderProposalDetail' has a complexity of 19. Maximum allowed is 15.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/render/network.js",
+      "line": 171,
+      "rule": "complexity",
+      "message": "Function 'renderNetworkForm' has a complexity of 24. Maximum allowed is 15.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/render/network.js",
+      "line": 344,
+      "rule": "complexity",
+      "message": "Function 'renderStewardWizard' has a complexity of 18. Maximum allowed is 15.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/render/oauth-modals.js",
+      "line": 233,
+      "rule": "complexity",
+      "message": "Function 'renderZapModal' has a complexity of 18. Maximum allowed is 15.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/render/profile.js",
+      "line": 87,
+      "rule": "complexity",
+      "message": "Function 'renderProfileHeader' has a complexity of 23. Maximum allowed is 15.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/render/profile.js",
+      "line": 179,
+      "rule": "complexity",
+      "message": "Function 'renderProfileActions' has a complexity of 16. Maximum allowed is 15.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/render/profile.js",
+      "line": 289,
+      "rule": "complexity",
+      "message": "Function 'renderProfile' has a complexity of 45. Maximum allowed is 15.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/render/topic.js",
+      "line": 26,
+      "rule": "complexity",
+      "message": "Function 'renderTopic' has a complexity of 63. Maximum allowed is 15.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/render/util.js",
+      "line": 29,
+      "rule": "complexity",
+      "message": "Function 'resolvePostAuthorLabels' has a complexity of 31. Maximum allowed is 15.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/steward-wizard.js",
+      "line": 41,
+      "rule": "complexity",
+      "message": "Function 'readFormStep' has a complexity of 16. Maximum allowed is 15.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/app/init.js",
+      "line": 26,
+      "rule": "max-lines-per-function",
+      "message": "Function 'initGossipListeners' has too many lines (40). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/app/init.js",
+      "line": 96,
+      "rule": "max-lines-per-function",
+      "message": "Async function 'handleFrameActionClick' has too many lines (31). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/app/init.js",
+      "line": 148,
+      "rule": "max-lines-per-function",
+      "message": "Async function 'openPostEditModal' has too many lines (68). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/app/init.js",
+      "line": 179,
+      "rule": "max-lines-per-function",
+      "message": "Async arrow function has too many lines (36). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/app/init.js",
+      "line": 235,
+      "rule": "max-lines-per-function",
+      "message": "Function 'initSocialInteractions' has too many lines (121). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/app/init.js",
+      "line": 236,
+      "rule": "max-lines-per-function",
+      "message": "Arrow function has too many lines (113). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/app/onboarding.js",
+      "line": 55,
+      "rule": "max-lines-per-function",
+      "message": "Function 'checkOAuthEnrichStep' has too many lines (67). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/app/onboarding.js",
+      "line": 152,
+      "rule": "max-lines-per-function",
+      "message": "Function 'checkPactModal' has too many lines (40). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/app/route-parse.js",
+      "line": 9,
+      "rule": "max-lines-per-function",
+      "message": "Function 'parseRoute' has too many lines (88). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/app/screens-community.js",
+      "line": 42,
+      "rule": "max-lines-per-function",
+      "message": "Async function 'showCommunity' has too many lines (190). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/app/screens-community.js",
+      "line": 262,
+      "rule": "max-lines-per-function",
+      "message": "Function 'attachCommunityListingHandlers' has too many lines (46). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/app/screens-community.js",
+      "line": 357,
+      "rule": "max-lines-per-function",
+      "message": "Async function 'showTopic' has too many lines (120). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/app/screens-compose.js",
+      "line": 40,
+      "rule": "max-lines-per-function",
+      "message": "Async function 'showComposeCommunity' has too many lines (47). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/app/screens-compose.js",
+      "line": 47,
+      "rule": "max-lines-per-function",
+      "message": "Async arrow function has too many lines (39). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/app/screens-compose.js",
+      "line": 92,
+      "rule": "max-lines-per-function",
+      "message": "Async function 'showComposeTopic' has too many lines (46). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/app/screens-compose.js",
+      "line": 99,
+      "rule": "max-lines-per-function",
+      "message": "Async arrow function has too many lines (38). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/app/screens-compose.js",
+      "line": 175,
+      "rule": "max-lines-per-function",
+      "message": "Async function 'handleComposeListingSubmit' has too many lines (54). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/app/screens-dm.js",
+      "line": 102,
+      "rule": "max-lines-per-function",
+      "message": "Async function 'handleSendDmSubmit' has too many lines (36). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/app/screens-dm.js",
+      "line": 141,
+      "rule": "max-lines-per-function",
+      "message": "Async function 'showDmThread' has too many lines (35). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/app/screens-home.js",
+      "line": 41,
+      "rule": "max-lines-per-function",
+      "message": "Async function 'showHome' has too many lines (87). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/app/screens-home.js",
+      "line": 136,
+      "rule": "max-lines-per-function",
+      "message": "Async function 'showCommunities' has too many lines (32). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/app/screens-network.js",
+      "line": 40,
+      "rule": "max-lines-per-function",
+      "message": "Function 'bindNetworkSettingsForm' has too many lines (38). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/app/screens-network.js",
+      "line": 44,
+      "rule": "max-lines-per-function",
+      "message": "Arrow function has too many lines (34). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/app/screens-network.js",
+      "line": 82,
+      "rule": "max-lines-per-function",
+      "message": "Function 'bindNetworkSettingsButtons' has too many lines (103). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/app/screens-network.js",
+      "line": 193,
+      "rule": "max-lines-per-function",
+      "message": "Async function 'showNetworkSettings' has too many lines (34). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/app/screens-network.js",
+      "line": 231,
+      "rule": "max-lines-per-function",
+      "message": "Function 'bindStewardWizardForm' has too many lines (40). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/app/screens-profile.js",
+      "line": 41,
+      "rule": "max-lines-per-function",
+      "message": "Async function 'showProfile' has too many lines (99). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/app/screens-profile.js",
+      "line": 155,
+      "rule": "max-lines-per-function",
+      "message": "Function 'bindProfileButtons' has too many lines (277). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/app/screens-profile.js",
+      "line": 488,
+      "rule": "max-lines-per-function",
+      "message": "Async function 'showWallet' has too many lines (60). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/app/screens-profile.js",
+      "line": 557,
+      "rule": "max-lines-per-function",
+      "message": "Async function 'showPixLookup' has too many lines (31). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/app/zap-modal.js",
+      "line": 24,
+      "rule": "max-lines-per-function",
+      "message": "Function 'bindZapModalEvents' has too many lines (60). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/cache-manifest.js",
+      "line": 39,
+      "rule": "max-lines-per-function",
+      "message": "Function 'validateManifestBody' has too many lines (36). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/cache-node.js",
+      "line": 14,
+      "rule": "max-lines-per-function",
+      "message": "Function 'openDB' has too many lines (36). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/cache-node.js",
+      "line": 16,
+      "rule": "max-lines-per-function",
+      "message": "Arrow function has too many lines (32). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/cache-node.js",
+      "line": 319,
+      "rule": "max-lines-per-function",
+      "message": "Async function 'saveLocalPost' has too many lines (60). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/cache-node.js",
+      "line": 330,
+      "rule": "max-lines-per-function",
+      "message": "Arrow function has too many lines (48). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/cache-node.js",
+      "line": 477,
+      "rule": "max-lines-per-function",
+      "message": "Async function 'getPostsByTag' has too many lines (46). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/frames.js",
+      "line": 175,
+      "rule": "max-lines-per-function",
+      "message": "Function 'computeCltState' has too many lines (38). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/governance.js",
+      "line": 91,
+      "rule": "max-lines-per-function",
+      "message": "Function 'computeTally' has too many lines (63). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/graphql.js",
+      "line": 289,
+      "rule": "max-lines-per-function",
+      "message": "Async function 'fetchRawFromGateways' has too many lines (55). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/inline-composer.js",
+      "line": 47,
+      "rule": "max-lines-per-function",
+      "message": "Function 'attachInlineComposerHandlers' has too many lines (108). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/inline-composer.js",
+      "line": 104,
+      "rule": "max-lines-per-function",
+      "message": "Async arrow function has too many lines (57). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/local-account.js",
+      "line": 48,
+      "rule": "max-lines-per-function",
+      "message": "Async function 'ensureLocalAccount' has too many lines (33). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/local-account.js",
+      "line": 325,
+      "rule": "max-lines-per-function",
+      "message": "Async function 'importAccountBundle' has too many lines (65). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/oauth-profile.js",
+      "line": 50,
+      "rule": "max-lines-per-function",
+      "message": "Async function 'signInWithGoogle' has too many lines (42). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/oauth-profile.js",
+      "line": 93,
+      "rule": "max-lines-per-function",
+      "message": "Async function 'signInWithMeta' has too many lines (42). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/peers.js",
+      "line": 89,
+      "rule": "max-lines-per-function",
+      "message": "Function 'getPeerSettings' has too many lines (36). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/peers.js",
+      "line": 262,
+      "rule": "max-lines-per-function",
+      "message": "Async function 'handleVoxMessage' has too many lines (60). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/peers.js",
+      "line": 358,
+      "rule": "max-lines-per-function",
+      "message": "Async function 'handleGossipMessage' has too many lines (31). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/peers.js",
+      "line": 395,
+      "rule": "max-lines-per-function",
+      "message": "Async function 'handleGossipUpdateMessage' has too many lines (31). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/peers.js",
+      "line": 433,
+      "rule": "max-lines-per-function",
+      "message": "Async function 'handleGossipDeleteMessage' has too many lines (37). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/peers.js",
+      "line": 640,
+      "rule": "max-lines-per-function",
+      "message": "Async function 'requestTxFromPeers' has too many lines (35). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/pix-key.js",
+      "line": 83,
+      "rule": "max-lines-per-function",
+      "message": "Function 'validatePixKey' has too many lines (33). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/pix-key.js",
+      "line": 123,
+      "rule": "max-lines-per-function",
+      "message": "Function 'maskForDisplay' has too many lines (31). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/polis.js",
+      "line": 17,
+      "rule": "max-lines-per-function",
+      "message": "Function 'computeStatementStats' has too many lines (33). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/polis.js",
+      "line": 128,
+      "rule": "max-lines-per-function",
+      "message": "Function 'computePolisReport' has too many lines (36). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/profile-directory.js",
+      "line": 61,
+      "rule": "max-lines-per-function",
+      "message": "Async function 'resolveProfile' has too many lines (34). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/render/community.js",
+      "line": 19,
+      "rule": "max-lines-per-function",
+      "message": "Function 'renderHome' has too many lines (35). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/render/community.js",
+      "line": 78,
+      "rule": "max-lines-per-function",
+      "message": "Function 'renderCommunity' has too many lines (46). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/render/community.js",
+      "line": 196,
+      "rule": "max-lines-per-function",
+      "message": "Function 'renderProposalItem' has too many lines (33). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/render/community.js",
+      "line": 244,
+      "rule": "max-lines-per-function",
+      "message": "Function 'renderListingItem' has too many lines (58). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/render/community.js",
+      "line": 307,
+      "rule": "max-lines-per-function",
+      "message": "Function 'renderProposalDetail' has too many lines (36). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/render/community.js",
+      "line": 400,
+      "rule": "max-lines-per-function",
+      "message": "Function 'renderProposalVotingBox' has too many lines (33). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/render/community.js",
+      "line": 436,
+      "rule": "max-lines-per-function",
+      "message": "Function 'renderProposalVotesList' has too many lines (38). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/render/dm.js",
+      "line": 6,
+      "rule": "max-lines-per-function",
+      "message": "Function 'renderDmList' has too many lines (76). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/render/dm.js",
+      "line": 109,
+      "rule": "max-lines-per-function",
+      "message": "Function 'renderDmThread' has too many lines (33). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/render/feed.js",
+      "line": 28,
+      "rule": "max-lines-per-function",
+      "message": "Function 'renderInlineComposer' has too many lines (38). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/render/feed.js",
+      "line": 210,
+      "rule": "max-lines-per-function",
+      "message": "Function 'renderFrameContentHtml' has too many lines (33). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/render/feed.js",
+      "line": 303,
+      "rule": "max-lines-per-function",
+      "message": "Function 'renderPostToolbar' has too many lines (37). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/render/feed.js",
+      "line": 341,
+      "rule": "max-lines-per-function",
+      "message": "Function 'renderPostItem' has too many lines (37). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/render/feed.js",
+      "line": 423,
+      "rule": "max-lines-per-function",
+      "message": "Function 'renderFeed' has too many lines (39). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/render/network.js",
+      "line": 171,
+      "rule": "max-lines-per-function",
+      "message": "Function 'renderNetworkForm' has too many lines (86). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/render/network.js",
+      "line": 307,
+      "rule": "max-lines-per-function",
+      "message": "Function 'renderNetworkSettings' has too many lines (35). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/render/network.js",
+      "line": 344,
+      "rule": "max-lines-per-function",
+      "message": "Function 'renderStewardWizard' has too many lines (52). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/render/oauth-modals.js",
+      "line": 77,
+      "rule": "max-lines-per-function",
+      "message": "Function 'renderPeopleSearch' has too many lines (36). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/render/oauth-modals.js",
+      "line": 186,
+      "rule": "max-lines-per-function",
+      "message": "Function 'renderPactModal' has too many lines (38). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/render/oauth-modals.js",
+      "line": 233,
+      "rule": "max-lines-per-function",
+      "message": "Function 'renderZapModal' has too many lines (47). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/render/profile.js",
+      "line": 87,
+      "rule": "max-lines-per-function",
+      "message": "Function 'renderProfileHeader' has too many lines (49). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/render/profile.js",
+      "line": 179,
+      "rule": "max-lines-per-function",
+      "message": "Function 'renderProfileActions' has too many lines (102). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/render/profile.js",
+      "line": 289,
+      "rule": "max-lines-per-function",
+      "message": "Function 'renderProfile' has too many lines (91). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/render/profile.js",
+      "line": 388,
+      "rule": "max-lines-per-function",
+      "message": "Function 'renderPixLookup' has too many lines (44). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/render/profile.js",
+      "line": 460,
+      "rule": "max-lines-per-function",
+      "message": "Function 'renderWallet' has too many lines (38). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/render/profile.js",
+      "line": 579,
+      "rule": "max-lines-per-function",
+      "message": "Function 'renderComposeListing' has too many lines (45). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/render/shell.js",
+      "line": 86,
+      "rule": "max-lines-per-function",
+      "message": "Function 'renderSidebar' has too many lines (53). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/render/shell.js",
+      "line": 153,
+      "rule": "max-lines-per-function",
+      "message": "Function 'renderShell' has too many lines (34). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/render/tag-polis.js",
+      "line": 6,
+      "rule": "max-lines-per-function",
+      "message": "Function 'renderTagFeed' has too many lines (42). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/render/topic.js",
+      "line": 26,
+      "rule": "max-lines-per-function",
+      "message": "Function 'renderTopic' has too many lines (119). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/render/util.js",
+      "line": 29,
+      "rule": "max-lines-per-function",
+      "message": "Function 'resolvePostAuthorLabels' has too many lines (37). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/render/util.js",
+      "line": 124,
+      "rule": "max-lines-per-function",
+      "message": "Function 'renderMarkdownLight' has too many lines (34). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/webrtc-peer.js",
+      "line": 319,
+      "rule": "max-lines-per-function",
+      "message": "Async function 'createPeerConnection' has too many lines (40). Maximum allowed is 30.",
+      "severity": "warn"
+    }
+  ]
+}
