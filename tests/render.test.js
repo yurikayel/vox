@@ -564,10 +564,12 @@ test("render - feed nav na sidebar (Para você e Seguindo)", () => {
   assert.ok(forYou.includes("Para você"));
   assert.ok(forYou.includes("Seguindo"));
   assert.ok(forYou.includes("sidebar-feed-tab active"));
+  assert.ok(!forYou.includes('m3 9 9-7 9 7v11'));
 
   const following = render.renderFeedNav("following");
   assert.ok(following.includes('href="#/?feed=following"'));
   assert.ok(following.includes("sidebar-feed-tab active"));
+  assert.ok(following.includes("polyline points=\"16 11 18 13 22 9\""));
 });
 
 test("render - feed sem abas duplicadas no chrome", () => {
