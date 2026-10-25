@@ -603,7 +603,7 @@ export function renderPostItem(t, { isPinned = false } = {}) {
   }
 
   return `
-    <article class="post post-card insta-post post-layout-photo post-mural" data-id="${escapeHtml(t.id)}" data-layout="photo">
+    <article class="post insta-post post-layout-photo post-photo-bleed" data-id="${escapeHtml(t.id)}" data-layout="photo">
       ${header}
       ${media}
       ${frame}
