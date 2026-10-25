@@ -1604,6 +1604,11 @@ body.post-more-sheet-open {
   overflow: hidden;
 }
 
+.post-more-sheet[hidden],
+.post-more-sheet:not(.is-open) {
+  display: none !important;
+}
+
 .post-more-sheet {
   align-items: flex-end;
   padding: 0;

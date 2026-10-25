@@ -11,6 +11,7 @@ function ensurePostMoreSheet() {
   root.id = SHEET_ID;
   root.className = "post-more-sheet modal-overlay modal-sheet";
   root.hidden = true;
+  root.setAttribute("aria-hidden", "true");
   root.setAttribute("role", "dialog");
   root.setAttribute("aria-modal", "true");
   root.setAttribute("aria-label", "Mais opções da publicação");
@@ -30,7 +31,22 @@ function ensurePostMoreSheet() {
 }
 
 let activeContext = null;
+let lastOpener = null;
 let wired = false;
+
+function setSheetOpen(sheet, open) {
+  if (open) {
+    sheet.hidden = false;
+    sheet.classList.add("is-open");
+    sheet.setAttribute("aria-hidden", "false");
+    document.body.classList.add("post-more-sheet-open");
+  } else {
+    sheet.hidden = true;
+    sheet.classList.remove("is-open");
+    sheet.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("post-more-sheet-open");
+  }
+}
 
 function postPermalink(topicId) {
   const origin =
@@ -44,19 +60,20 @@ function postPermalink(topicId) {
 
 export function closePostMoreMenu() {
   const sheet = document.getElementById(SHEET_ID);
-  if (!sheet) return;
-  sheet.hidden = true;
+  if (!sheet?.classList.contains("is-open")) return;
+  setSheetOpen(sheet, false);
   activeContext = null;
-  document.body.classList.remove("post-more-sheet-open");
+  const opener = lastOpener;
+  lastOpener = null;
+  opener?.focus?.();
 }
 
-export function openPostMoreMenu(ctx) {
+export function openPostMoreMenu(ctx, openerEl) {
   if (!ctx?.postId) return;
-  ensurePostMoreSheet();
+  const sheet = ensurePostMoreSheet();
   activeContext = { ...ctx };
-  const sheet = document.getElementById(SHEET_ID);
-  sheet.hidden = false;
-  document.body.classList.add("post-more-sheet-open");
+  lastOpener = openerEl instanceof HTMLElement ? openerEl : null;
+  setSheetOpen(sheet, true);
   sheet.querySelector(".post-more-sheet-item")?.focus();
 }
 
@@ -100,9 +117,8 @@ async function onSheetAction(action) {
   }
 }
 
-/** Wire sheet + feed ⋯ buttons (idempotent). */
+/** Wire sheet + feed ⋯ buttons (idempotent). Sheet DOM is created on first open. */
 export function attachPostMoreMenuHandlers() {
-  ensurePostMoreSheet();
   if (!wired) {
     wired = true;
     document.addEventListener("click", (e) => {
@@ -110,16 +126,19 @@ export function attachPostMoreMenuHandlers() {
       if (openBtn) {
         e.preventDefault();
         e.stopPropagation();
-        openPostMoreMenu({
-          postId: openBtn.dataset.postId || "",
-          authorRoute: openBtn.dataset.authorRoute || "",
-          title: openBtn.dataset.title || "",
-        });
+        openPostMoreMenu(
+          {
+            postId: openBtn.dataset.postId || "",
+            authorRoute: openBtn.dataset.authorRoute || "",
+            title: openBtn.dataset.title || "",
+          },
+          openBtn,
+        );
         return;
       }
 
       const sheet = e.target.closest(`#${SHEET_ID}`);
-      if (!sheet || sheet.hidden) return;
+      if (!sheet?.classList.contains("is-open")) return;
       if (e.target === sheet) {
         e.preventDefault();
         closePostMoreMenu();
@@ -139,7 +158,7 @@ export function attachPostMoreMenuHandlers() {
     document.addEventListener("keydown", (e) => {
       if (e.key !== "Escape") return;
       const sheet = document.getElementById(SHEET_ID);
-      if (sheet && !sheet.hidden) {
+      if (sheet?.classList.contains("is-open")) {
         e.preventDefault();
         closePostMoreMenu();
       }
