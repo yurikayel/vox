@@ -9,10 +9,11 @@ const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "clie
 const css = fs.readFileSync(path.join(root, "css/style.css"), "utf8");
 const feedJs = fs.readFileSync(path.join(root, "js/render/feed.js"), "utf8");
 
-test("carbon parchment identity — mural photo cards", () => {
-  assert.ok(feedJs.includes("post-layout-photo post-mural"));
-  assert.ok(css.includes(".post-layout-photo.post-mural"));
-  assert.ok(css.includes("border-radius: 14px"));
+test("carbon parchment identity — photo posts bleed flush", () => {
+  assert.ok(feedJs.includes("post-layout-photo post-photo-bleed"));
+  assert.ok(css.includes(".post-layout-photo.post-photo-bleed"));
+  assert.ok(css.includes("background: transparent"));
+  assert.ok(!feedJs.includes("post-mural"));
 });
 
 test("carbon parchment identity — civic story ring not gradient", () => {

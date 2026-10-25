@@ -1795,23 +1795,33 @@ body.post-more-sheet-open {
   white-space: nowrap;
 }
 
-.post-layout-photo.post-mural {
-  border: 1px solid var(--outline);
-  box-shadow: var(--elevation-2), var(--paper-highlight);
-  border-radius: 14px;
-  padding: 10px 10px 12px;
-  background: var(--surface-1);
+.post-layout-photo.post-photo-bleed {
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
   max-width: min(var(--feed-max, 500px), 100%);
+  overflow: visible;
 }
 
-.post-layout-photo.post-mural:hover {
-  border-color: color-mix(in srgb, var(--brand-green) 22%, var(--outline));
+.post-layout-photo.post-photo-bleed:hover {
+  border-color: transparent;
 }
 
-.post-layout-photo.post-mural .post-media-container {
-  border-radius: 10px;
+.post-layout-photo.post-photo-bleed .post-media-container {
+  border-radius: 0;
   overflow: hidden;
-  box-shadow: var(--elevation-1);
+  box-shadow: none;
+}
+
+.post-layout-photo.post-photo-bleed .post-comments,
+.post-layout-photo.post-photo-bleed .post-comments-surface {
+  margin: 8px 0 0;
+  padding: 10px 0 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
 }
 
 .post-layout-text.post,
