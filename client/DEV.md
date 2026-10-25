@@ -680,7 +680,7 @@ Em 23/10 o sprint «Feed estilo Meta» ficou em **HOLD estrito** (sem código) c
 
 ### 22.3 Deltas residuais (backlog opcional, não bloqueiam o plano Meta)
 
-1. **Ordem IG em posts só-texto** — só se quiser paridade total com Instagram; hoje é escolha de produto (híbrido).
+1. **Ordem visual em posts só-texto** — alinhar header/toolbar ao padrão “mídia primeiro” se quiser paridade com feed foto; hoje é escolha de produto (híbrido).
 2. **Canvas unificado** (banner sync flat, comentários sem caixa, abas underline, perfil) — implementação em **`feat/v6.3-ui-polish`**, não em `main`; item separado no groom Vox, não reabertura do plano Meta.
 3. **Glass no shell** — reduzir blur no header/nav se desejado; independente do layout do post.
 4. **Stories com TTL / estado “visto”** — nunca exigido no HOLD; permanece decorativo.
@@ -961,11 +961,11 @@ Layout: `.toolbar-primary` (engajamento + Pix) · `.toolbar-secondary` (⋯ tool
 
 ---
 
-## 32. Profile IA (IG-inspired)
+## 32. Profile IA (grade de publicações)
 
-**Data:** 2026-10-25 · **SW:** `vox-pwa-v6.65-profile-ig`
+**Data:** 2026-10-25 · **SW:** `vox-pwa-v6.65-neutral-ux-language`
 
-`#/u/:routeId` e `#/perfil` usam shell `.profile-ig` (max-width ~935px): avatar grande à esquerda, métricas **publicações · seguidores · seguindo**, `@handle` em negrito, nome e bio, pills **Seguir / Mensagem / Editar perfil** (contextual). Conta **Vox Brasil** mantém avatar squircle + selo ✓; demos UF exibem aviso estereótipo em `<details>` abaixo do header. Abas: grade ▦ (posts em `.profile-ig-grid` 3 colunas, `aspect-ratio: 1`, link `#/t/:id`) e **Sobre** (README, identidade local, estrelados/comunidades legados). Handle inexistente usa o mesmo shell via `renderProfileIgNotFound`. Lógica de dados inalterada (`profile-directory`, mock por `routeId`).
+`#/u/:routeId` e `#/perfil` usam shell `.profile-grid-layout` (max-width ~935px): avatar grande à esquerda, métricas **publicações · seguidores · seguindo**, `@handle` em negrito, nome e bio, pills **Seguir / Mensagem / Editar perfil** (contextual). Conta **Vox Brasil** mantém avatar squircle + selo ✓; demos UF exibem aviso estereótipo em `<details>` abaixo do header. Abas: grade ▦ (posts em `.profile-grid` 3 colunas, `aspect-ratio: 1`, link `#/t/:id`) e **Sobre** (README, identidade local, estrelados/comunidades legados). Handle inexistente usa o mesmo shell via `renderProfileGridNotFound`. Lógica de dados inalterada (`profile-directory`, mock por `routeId`).
 
 ---
 
