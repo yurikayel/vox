@@ -20,15 +20,18 @@
   --surface-soft: var(--surface-3);
   --border: #d6d2c9;
   --border-subtle: #e8e4dc;
-  --border-glow: rgba(49, 35, 131, 0.12);
+  --border-glow: rgba(20, 18, 24, 0.1);
   --text: #141218;
   --muted: #5c5868;
   --link: var(--brand-blue);
-  --accent: var(--brand-navy);
-  --accent-soft: rgba(49, 35, 131, 0.1);
-  --accent-hover: #261a6a;
-  --accent-glow: 0 0 14px rgba(49, 35, 131, 0.2);
-  --accent-gradient: linear-gradient(135deg, var(--brand-navy) 0%, var(--brand-blue) 52%, var(--brand-green) 100%);
+  --accent: var(--brand-blue);
+  --accent-soft: rgba(43, 95, 184, 0.1);
+  --accent-hover: #234a94;
+  --accent-glow: none;
+  --accent-gradient: linear-gradient(135deg, #234a94 0%, var(--brand-green) 100%);
+  --nav-active-bg: rgba(20, 18, 24, 0.05);
+  --nav-active-indicator: var(--brand-green);
+  --surface-card: var(--surface-1);
   --signal: var(--brand-yellow);
   --signal-soft: rgba(245, 196, 0, 0.16);
   --warning: #9a7200;
@@ -64,10 +67,10 @@
   :root {
     --theme-chrome: #0c0a18;
     --bg: #0c0a18;
-    --surface-1: #161328;
-    --surface-2: #1c1930;
-    --surface-3: #252140;
-    --outline: #3d3860;
+    --surface-1: #12101f;
+    --surface-2: #181624;
+    --surface-3: #222030;
+    --outline: #3d3a48;
     --elevation-1: 0 1px 3px rgba(0, 0, 0, 0.42), 0 2px 8px rgba(0, 0, 0, 0.28);
     --elevation-2: 0 3px 10px rgba(0, 0, 0, 0.45), 0 10px 24px rgba(0, 0, 0, 0.32);
     --elevation-3: 0 6px 18px rgba(0, 0, 0, 0.5), 0 20px 40px rgba(0, 0, 0, 0.38);
@@ -75,17 +78,20 @@
     --surface: var(--surface-1);
     --surface-solid: var(--surface-1);
     --surface-soft: var(--surface-3);
-    --border: #322e52;
-    --border-subtle: #252140;
-    --border-glow: rgba(200, 192, 240, 0.14);
-    --text: #f4f2fc;
-    --muted: #a39ec4;
+    --border: #2c2938;
+    --border-subtle: #1a1826;
+    --border-glow: rgba(255, 255, 255, 0.08);
+    --text: #ebe9e4;
+    --muted: #9a9690;
     --link: #8eb8f5;
-    --accent: #c8c0f0;
-    --accent-soft: rgba(200, 192, 240, 0.14);
-    --accent-hover: #ded9ff;
-    --accent-glow: 0 0 16px rgba(200, 192, 240, 0.22);
-    --accent-gradient: linear-gradient(135deg, var(--brand-navy) 0%, var(--brand-blue) 48%, var(--brand-green) 100%);
+    --accent: #8eb8f5;
+    --accent-soft: rgba(142, 184, 245, 0.12);
+    --accent-hover: #a8c8f8;
+    --accent-glow: none;
+    --accent-gradient: linear-gradient(135deg, #2b5fb8 0%, var(--success) 100%);
+    --nav-active-bg: rgba(255, 255, 255, 0.06);
+    --nav-active-indicator: var(--success);
+    --surface-card: var(--surface-2);
     --signal-soft: rgba(245, 196, 0, 0.14);
     --warning: var(--brand-yellow);
     --warning-soft: rgba(245, 196, 0, 0.14);
@@ -246,8 +252,8 @@ a:hover {
 
 .network-chip:hover {
   background: var(--surface-soft);
-  border-color: var(--border-glow);
-  box-shadow: var(--accent-glow);
+  border-color: var(--outline);
+  box-shadow: var(--elevation-1);
   text-decoration: none;
   transform: translateY(-1px);
 }
@@ -314,8 +320,8 @@ a:hover {
 
 .wallet-badge:hover {
   background: var(--surface-soft);
-  border-color: var(--border-glow);
-  box-shadow: var(--accent-glow);
+  border-color: var(--outline);
+  box-shadow: var(--elevation-1);
   text-decoration: none;
   transform: translateY(-1px);
 }
@@ -478,8 +484,10 @@ a:hover {
 }
 
 .sidebar-feed-tab.active {
-  color: var(--accent);
-  background: var(--accent-soft);
+  color: var(--text);
+  background: var(--nav-active-bg);
+  box-shadow: inset 3px 0 0 var(--nav-active-indicator);
+  border-radius: var(--radius-sm);
 }
 
 .sidebar-feed-icon {
@@ -563,23 +571,28 @@ a:hover {
 }
 
 .tab-item.active {
-  color: var(--accent);
-  background: var(--accent-soft);
+  color: var(--text);
+  background: var(--nav-active-bg);
   font-weight: 700;
+  box-shadow: inset 3px 0 0 var(--nav-active-indicator);
+  border-radius: var(--radius-sm);
 }
 
 .tab-item.active .tab-svg {
-  filter: drop-shadow(0 0 6px var(--accent-soft));
+  filter: none;
+  color: var(--nav-active-indicator);
 }
 
 .tab-item.compose-tab {
-  background: var(--accent-gradient);
-  color: #fff;
+  background: var(--brand-navy);
+  color: var(--on-accent);
+  border-radius: var(--radius-sm);
 }
 
 .tab-item.compose-tab:hover {
-  color: #fff;
-  box-shadow: 0 2px 12px rgba(49, 35, 131, 0.35);
+  color: var(--on-accent);
+  background: #261a6a;
+  box-shadow: var(--elevation-2);
 }
 
 .tab-icon {
@@ -687,12 +700,12 @@ a:hover {
   }
 
   .tab-item.active {
-    box-shadow: inset 3px 0 0 var(--accent);
+    box-shadow: inset 3px 0 0 var(--nav-active-indicator);
   }
 
   .sidebar-compose-slot .tab-item.compose-tab {
     justify-content: center;
-    box-shadow: 0 2px 10px rgba(49, 35, 131, 0.25);
+    box-shadow: var(--elevation-2);
   }
 
   .sidebar-footer .network-chip,
@@ -1081,8 +1094,8 @@ main#app-main {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: var(--accent-soft);
-  color: var(--accent);
+  background: var(--surface-2);
+  color: var(--text);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1091,8 +1104,8 @@ main#app-main {
   flex-shrink: 0;
   text-decoration: none;
   user-select: none;
-  border: 1px solid var(--border-glow);
-  box-shadow: 0 0 8px rgba(49, 35, 131, 0.08);
+  border: 1px solid var(--outline);
+  box-shadow: var(--elevation-1);
 }
 
 .avatar-wrap {
@@ -1119,8 +1132,8 @@ main#app-main {
   height: 72px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid var(--accent);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25), var(--accent-glow);
+  border: 2px solid var(--outline);
+  box-shadow: var(--elevation-2);
   display: block;
 }
 
@@ -1264,8 +1277,8 @@ main#app-main {
 
 .post-community-pill:hover {
   color: var(--text);
-  border-color: var(--border-glow);
-  box-shadow: var(--accent-glow);
+  border-color: var(--outline);
+  box-shadow: var(--elevation-1);
   text-decoration: none;
 }
 
@@ -1643,10 +1656,9 @@ main#app-main {
   height: 100px;
   background: linear-gradient(
     135deg,
-    rgba(49, 35, 131, 0.55) 0%,
-    rgba(43, 95, 184, 0.28) 45%,
-    rgba(31, 168, 85, 0.22) 75%,
-    rgba(245, 196, 0, 0.18) 100%
+    rgba(43, 95, 184, 0.22) 0%,
+    rgba(31, 168, 85, 0.18) 55%,
+    rgba(245, 196, 0, 0.14) 100%
   );
   border-bottom: 1px solid var(--border);
   position: relative;
@@ -1684,9 +1696,9 @@ main#app-main {
 }
 
 .demo-badge {
-  background: var(--accent-soft);
-  color: var(--accent);
-  border: 1px solid var(--border-glow);
+  background: var(--signal-soft);
+  color: var(--warning);
+  border: 1px solid var(--warning-border);
   font-size: 0.72rem;
 }
 
@@ -1821,8 +1833,8 @@ main#app-main {
 
 @media (prefers-reduced-motion: no-preference) {
   .community-card:hover {
-    border-color: var(--border-glow);
-    box-shadow: var(--shadow), var(--accent-glow);
+    border-color: var(--outline);
+    box-shadow: var(--elevation-2);
     transform: translateY(-2px);
   }
 }
@@ -2003,10 +2015,10 @@ main#app-main {
 
 .dm-bubble.sent {
   align-self: flex-end;
-  background: var(--accent-gradient);
+  background: var(--brand-navy);
   color: #fff;
   border-bottom-right-radius: 4px;
-  box-shadow: 0 2px 10px rgba(49, 35, 131, 0.25);
+  box-shadow: var(--elevation-1);
   border: none;
 }
 
@@ -2046,8 +2058,8 @@ main#app-main {
 
 @media (prefers-reduced-motion: no-preference) {
   .card:hover {
-    border-color: color-mix(in srgb, var(--accent) 22%, var(--border));
-    box-shadow: var(--shadow), var(--accent-glow);
+    border-color: var(--outline);
+    box-shadow: var(--elevation-2);
   }
 }
 
@@ -2128,17 +2140,17 @@ main#app-main {
 }
 
 .btn-primary {
-  background: var(--accent-gradient);
+  background: var(--brand-navy);
   color: var(--on-accent);
   border-color: transparent;
-  box-shadow: 0 2px 10px rgba(49, 35, 131, 0.25);
+  box-shadow: var(--elevation-1);
 }
 
 .btn-primary:hover {
   filter: brightness(1.08);
-  box-shadow: 0 4px 14px rgba(49, 35, 131, 0.35);
+  box-shadow: var(--elevation-2);
   color: var(--on-accent);
-  background: var(--accent-gradient);
+  background: #261a6a;
 }
 
 .btn-secondary {
@@ -2245,9 +2257,9 @@ main#app-main {
 }
 
 .permanent-pill {
-  background: var(--accent-soft);
-  color: var(--accent);
-  border: 1px solid rgba(49, 35, 131, 0.25);
+  background: var(--surface-soft);
+  color: var(--muted);
+  border: 1px solid var(--outline);
   font-size: 0.72rem;
   padding: 1px 6px;
 }
@@ -2710,7 +2722,7 @@ main#app-main {
 }
 
 .cantina-btn-enter {
-  box-shadow: 0 4px 16px rgba(49, 35, 131, 0.35);
+  box-shadow: var(--elevation-2);
 }
 
 .pact-feature {
@@ -2804,9 +2816,10 @@ main#app-main {
 }
 
 .community-tabs .tab-btn.active {
-  color: var(--accent);
-  background: var(--accent-soft);
-  box-shadow: 0 0 10px var(--accent-soft);
+  color: var(--text);
+  background: var(--surface-1);
+  border: 1px solid var(--outline);
+  box-shadow: var(--elevation-1);
   font-weight: 700;
 }
 
@@ -3248,7 +3261,7 @@ main#app-main {
 .vote-btn.selected {
   outline: 2px solid var(--accent);
   border-color: var(--accent);
-  box-shadow: var(--accent-glow);
+  box-shadow: var(--elevation-1);
 }
 
 .vote-btn-yes {
