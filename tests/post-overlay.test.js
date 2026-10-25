@@ -26,6 +26,11 @@ test("post overlay - photo card has hero, overlay and lightbox trigger", () => {
   assert.ok(html.includes("post-media-scrim-bottom"));
   assert.ok(html.includes("post-reels-header"));
   assert.ok(html.includes("btn-post-more-menu"));
+  assert.ok(html.includes("post-actions-overlay"));
+  assert.ok(html.includes("overlay-action-label"));
+  assert.ok(html.includes("Gostei"));
+  assert.ok(html.includes("post-overlay-actions-more"));
+  assert.ok(!html.includes("post-toolbar"));
   assert.ok(!html.includes("post-overlay-author"));
   const scrimIdx = html.indexOf("post-media-scrim-top");
   const overlayIdx = html.indexOf('class="post-overlay"');
@@ -47,7 +52,9 @@ test("post overlay - title dedupe when title equals body", () => {
   });
   assert.ok(html.includes("post-overlay-caption-only"));
   assert.ok(!html.includes("post-overlay-title"));
-  const overlayBlock = html.match(/class="post-overlay-content"[\s\S]*?<\/div>\s*<\/div>\s*<\/div>/)?.[0] ?? "";
+  const contentStart = html.indexOf('class="post-overlay-content"');
+  const actionsStart = html.indexOf("post-actions-overlay");
+  const overlayBlock = contentStart !== -1 && actionsStart !== -1 ? html.slice(contentStart, actionsStart) : "";
   assert.equal((overlayBlock.match(new RegExp(unique, "g")) || []).length, 1);
 });
 
@@ -63,5 +70,6 @@ test("post overlay - CSS classes present", () => {
   assert.ok(css.includes(".post-lightbox"));
   assert.ok(css.includes(".post-media-hero"));
   assert.ok(css.includes(".post-reels-header"));
+  assert.ok(css.includes(".post-actions-overlay"));
   assert.ok(css.includes("#post-more-sheet") || css.includes(".post-more-sheet"));
 });

@@ -57,6 +57,7 @@ export function initPostMediaLightbox() {
     const trigger = e.target.closest(".post-media-lightbox-trigger");
     if (!trigger) return;
     if (e.target.closest(".post-overlay")) return;
+    if (e.target.closest(".post-actions-overlay")) return;
     if (e.target.closest(".post-reels-header")) return;
     if (e.target.closest(".btn-post-more-menu")) return;
     e.preventDefault();
