@@ -190,7 +190,7 @@ export function renderPactModal(container) {
       <div class="modal-dialog">
         <div style="text-align:center; margin-bottom:1rem;">
           <h2 style="margin:0 0 0.25rem; font-size:1.25rem;">Bem-vindo ao Vox</h2>
-          <p class="desc" style="margin:0;">Comunidades e conversas direto nos aparelhos de quem usa, sem controle central.</p>
+          <p class="desc" style="margin:0;">Vox populi na prática: conversas e comunidades direto nos aparelhos, sem controle central.</p>
         </div>
 
         <div class="pact-feature">
