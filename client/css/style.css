@@ -2958,6 +2958,256 @@ body.post-lightbox-open {
   border-top: 1px solid var(--border-subtle);
 }
 
+/* Comunidades ? calor de redes sociais BR (anos 2000), sem marcas de terceiros */
+.community-vox-card-band {
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.community-vox-card-band-inner {
+  padding: 12px 16px 10px;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--community-accent, var(--brand-chrome)) 18%, var(--surface-1)) 0%,
+    var(--surface-1) 100%
+  );
+}
+
+.community-vox-card .community-cover-strip {
+  height: 4px;
+  background: var(--community-accent, var(--brand-chrome));
+}
+
+.community-vox-card-title {
+  text-decoration: none;
+  color: inherit;
+}
+
+.community-vox-card-members,
+.community-vox-card-type {
+  margin: 0.15rem 0 0;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.community-vox-enter-btn {
+  background: color-mix(in srgb, var(--brand-green) 88%, var(--brand-chrome));
+  color: #fff;
+  border: 1px solid color-mix(in srgb, var(--brand-green) 70%, #000);
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.community-vox-enter-btn:hover {
+  filter: brightness(1.05);
+  color: #fff;
+}
+
+.community-vox-hero {
+  padding: 0;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+}
+
+.community-vox-band {
+  padding: 1rem 1.15rem 1.1rem;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--community-accent, var(--brand-chrome)) 22%, var(--surface-1)) 0%,
+    var(--surface-1) 55%,
+    color-mix(in srgb, var(--brand-green) 8%, var(--surface-1)) 100%
+  );
+  border-bottom: 3px solid color-mix(in srgb, var(--community-accent, var(--brand-chrome)) 55%, var(--brand-green));
+}
+
+.community-vox-band-top {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.community-vox-kicker {
+  margin: 0 0 0.2rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.community-vox-name {
+  margin: 0;
+  font-size: 1.35rem;
+  line-height: 1.25;
+}
+
+.community-vox-members {
+  margin: 0.35rem 0 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--brand-chrome);
+}
+
+.community-vox-type {
+  margin: 0.2rem 0 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.community-vox-desc {
+  margin: 0.75rem 0 0;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: var(--text);
+}
+
+.community-vox-owner {
+  margin: 0.5rem 0 0;
+  font-size: 0.82rem;
+}
+
+.community-vox-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  align-items: center;
+}
+
+.community-vox-join-pill {
+  border: none;
+  border-radius: 999px;
+  padding: 0.45rem 1.1rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  background: linear-gradient(180deg, #38bdf8 0%, var(--brand-chrome) 100%);
+  color: #fff;
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--brand-chrome) 40%, #000);
+}
+
+.community-vox-join-pill:hover {
+  filter: brightness(1.06);
+}
+
+.community-vox-join-pill.is-member {
+  background: linear-gradient(180deg, #4ade80 0%, var(--brand-green) 100%);
+  cursor: default;
+}
+
+.community-vox-recado {
+  margin-bottom: 0.85rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius);
+  border: 1px solid color-mix(in srgb, var(--brand-chrome) 25%, var(--outline));
+  background: color-mix(in srgb, var(--brand-chrome) 6%, var(--surface-1));
+}
+
+.community-vox-recado-head {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.35rem;
+}
+
+.community-vox-recado-icon {
+  font-size: 1.1rem;
+}
+
+.community-vox-recado-body {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.community-vox-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 280px);
+  gap: 1rem;
+  align-items: start;
+}
+
+@media (max-width: 820px) {
+  .community-vox-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .community-vox-sidebar {
+    order: -1;
+  }
+}
+
+.community-vox-sidebar {
+  padding: 0.85rem 1rem;
+  position: sticky;
+  top: 0.75rem;
+}
+
+.community-vox-sidebar-block + .community-vox-sidebar-block {
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.community-vox-sidebar-title {
+  margin: 0 0 0.35rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.community-vox-sidebar-hint {
+  margin: 0 0 0.5rem;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.community-vox-online-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.community-vox-online-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  padding: 0.2rem 0;
+}
+
+.community-vox-online-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--brand-green);
+  flex-shrink: 0;
+}
+
+.community-vox-stat-dl {
+  margin: 0;
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+}
+
+.community-vox-stat-dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.community-vox-stat-dl dt {
+  margin: 0;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.community-vox-stat-dl dd {
+  margin: 0;
+  font-weight: 600;
+  text-align: right;
+}
+
 /* Tópicos e Threads Estilo X */
 .topic-root {
   background: var(--surface);

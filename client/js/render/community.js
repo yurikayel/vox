@@ -16,6 +16,77 @@ import {
 } from "./util.js";
 import { renderPostItem } from "./feed.js";
 
+function resolveCommunityMemberCount(meta, communityId) {
+  if (meta.memberCount != null && !Number.isNaN(Number(meta.memberCount))) {
+    return Number(meta.memberCount);
+  }
+  if (communityId === mock.MOCK_DEMO_COMMUNITY.id) return mock.MOCK_DEMO_UF_COUNT;
+  return null;
+}
+
+function formatCommunityMembers(n) {
+  if (n == null) return "";
+  return `${n.toLocaleString("pt-BR")} membros`;
+}
+
+function buildCommunityTypeSubtitle(meta, communityId) {
+  const parts = [];
+  const vis = meta.visibility === "closed" ? "fechada" : "aberta";
+  parts.push(`Tipo: ${vis}`);
+  if (communityId === mock.MOCK_DEMO_COMMUNITY.id || meta.demo) parts.push("Demo");
+  return parts.join(" · ");
+}
+
+function renderCommunityWelcomeRecado(text) {
+  if (!text) return "";
+  return `
+    <article class="community-vox-recado card" aria-label="Recado da comunidade">
+      <header class="community-vox-recado-head">
+        <span class="community-vox-recado-icon" aria-hidden="true">✉</span>
+        <span class="section-title">Recado da comunidade</span>
+      </header>
+      <p class="community-vox-recado-body">${escapeHtml(text)}</p>
+    </article>`;
+}
+
+function renderCommunitySidebar(meta, communityId, recentPeople = [], isMember = false) {
+  const memberCount = resolveCommunityMemberCount(meta, communityId);
+  const online = recentPeople.slice(0, 6);
+  const onlineExtra = Math.max(0, (memberCount || online.length) - online.length);
+  const modCount = Array.isArray(meta.moderators) ? meta.moderators.length : 0;
+
+  const onlineList = online.length
+    ? online
+        .map((p) => {
+          const label =
+            profileDirectory.getAuthorDisplaySync(p.routeId) || p.name || p.routeId.slice(0, 10);
+          return `
+          <li class="community-vox-online-item">
+            <span class="community-vox-online-dot" aria-hidden="true"></span>
+            <a href="#/u/${encodeURIComponent(p.routeId)}">${escapeHtml(label)}</a>
+          </li>`;
+        })
+        .join("")
+    : `<li class="community-vox-online-item community-vox-online-empty">Ninguém recente no feed — seja o primeiro!</li>`;
+
+  return `
+    <aside class="community-vox-sidebar card" aria-label="Membros e estatísticas">
+      <section class="community-vox-sidebar-block">
+        <h3 class="community-vox-sidebar-title">Membros online</h3>
+        <p class="community-vox-sidebar-hint">${online.length ? `${online.length + (onlineExtra ? onlineExtra : 0)} agora (demo)` : "Demo offline"}</p>
+        <ul class="community-vox-online-list">${onlineList}</ul>
+      </section>
+      <section class="community-vox-sidebar-block community-vox-sidebar-stats">
+        <h3 class="community-vox-sidebar-title">Estatísticas</h3>
+        <dl class="community-vox-stat-dl">
+          ${memberCount != null ? `<div><dt>Membros</dt><dd>${escapeHtml(formatCommunityMembers(memberCount))}</dd></div>` : ""}
+          <div><dt>Moderadores</dt><dd>${modCount ? modCount : "Dono + até 10"}</dd></div>
+          <div><dt>Você</dt><dd>${isMember ? "Membro" : "Visitante"}</dd></div>
+        </dl>
+      </section>
+    </aside>`;
+}
+
 export function renderHome(main, communities) {
   let html = `
     <div class="actions-bar">
@@ -34,21 +105,30 @@ export function renderHome(main, communities) {
   }
 
   const items = communities
-    .map(
-      (c) => `
-    <div class="community-card card">
-      <div class="community-cover-strip" style="background:${getCommunityColor(c.id)};"></div>
+    .map((c) => {
+      const members = resolveCommunityMemberCount(c, c.id);
+      const memberLine = members != null ? `<p class="community-vox-card-members">${escapeHtml(formatCommunityMembers(members))}</p>` : "";
+      const typeLine = buildCommunityTypeSubtitle(c, c.id);
+      return `
+    <div class="community-card community-vox-card card">
+      <div class="community-vox-card-band" style="--community-accent:${getCommunityColor(c.id)};">
+        <div class="community-cover-strip"></div>
+        <div class="community-vox-card-band-inner">
+          <a class="community-vox-card-title" href="#/c/${encodeURIComponent(c.id)}">
+            <h3>${escapeHtml(c.title)} ${c.category ? `<span class="pill">${escapeHtml(c.category)}</span>` : ""}</h3>
+          </a>
+          ${memberLine}
+          <p class="community-vox-card-type">${escapeHtml(typeLine)}</p>
+        </div>
+      </div>
       <div class="community-card-body">
-        <a href="#/c/${encodeURIComponent(c.id)}">
-          <h3>${escapeHtml(c.title)} ${c.category ? `<span class="pill">${escapeHtml(c.category)}</span>` : ""}</h3>
-        </a>
         <p class="desc">${escapeHtml(c.description || "Sem descrição.")}</p>
       </div>
       <div class="community-card-footer">
-        <a class="btn btn-sm btn-outline" href="#/c/${encodeURIComponent(c.id)}">Abrir →</a>
+        <a class="btn btn-sm community-vox-enter-btn" href="#/c/${encodeURIComponent(c.id)}">Entrar →</a>
       </div>
-    </div>`
-    )
+    </div>`;
+    })
     .join("");
 
   html += `<div class="community-grid">${items}</div>`;
@@ -93,22 +173,37 @@ export function renderCommunity(
   const commTitle = meta.title || communityId;
   const commDesc = meta.description || "";
   const commCat = meta.category ? `<span class="pill">${escapeHtml(meta.category)}</span>` : "";
+  const memberCount = resolveCommunityMemberCount(meta, communityId);
+  const typeSubtitle = buildCommunityTypeSubtitle(meta, communityId);
+  const tagline =
+    meta.headerTagline ||
+    (communityId === mock.MOCK_DEMO_COMMUNITY.id ? mock.MOCK_DEMO_COMMUNITY.headerTagline : "");
+  const welcomeText = meta.welcomeRecado || "";
 
   let html = `
-    <div class="card community-header">
-      <h2>${escapeHtml(commTitle)} ${commCat}</h2>
-      ${commDesc ? `<p class="desc">${escapeHtml(commDesc)}</p>` : ""}
-      <p class="meta">Criada por: <a href="#/u/${encodeURIComponent(meta.owner || "")}">${escapeHtml(shortId(meta.owner))}</a></p>
-      <div class="actions-row">
-        <button id="btn-share-comm" class="btn btn-outline" data-id="${escapeHtml(communityId)}" data-title="${escapeHtml(commTitle)}">↗ Compartilhar</button>
-        <button id="btn-join-comm" class="btn ${isMember ? "btn-secondary" : "btn-primary"}" data-id="${escapeHtml(communityId)}">
-          ${isMember ? "✓ Já é Membro" : "★ Participar"}
-        </button>
-        <a class="btn btn-primary" href="#/compose/topic?c=${encodeURIComponent(communityId)}">+ Novo post</a>
+    <header class="community-vox-hero card">
+      <div class="community-vox-band" style="--community-accent:${getCommunityColor(communityId)};">
+        <div class="community-vox-band-top">
+          <div class="community-vox-title-block">
+            ${tagline ? `<p class="community-vox-kicker">${escapeHtml(tagline)}</p>` : `<p class="community-vox-kicker">Comunidade</p>`}
+            <h2 class="community-vox-name">${escapeHtml(commTitle)} ${commCat}</h2>
+            ${memberCount != null ? `<p class="community-vox-members">${escapeHtml(formatCommunityMembers(memberCount))}</p>` : ""}
+            <p class="community-vox-type">${escapeHtml(typeSubtitle)}</p>
+          </div>
+          <div class="community-vox-hero-actions">
+            <button id="btn-join-comm" type="button" class="community-vox-join-pill${isMember ? " is-member" : ""}" data-id="${escapeHtml(communityId)}" aria-pressed="${isMember ? "true" : "false"}">
+              ${isMember ? "✓ Membro" : "Entrar"}
+            </button>
+            <button id="btn-share-comm" type="button" class="btn btn-sm btn-outline" data-id="${escapeHtml(communityId)}" data-title="${escapeHtml(commTitle)}">↗ Compartilhar</button>
+            <a class="btn btn-sm btn-primary" href="#/compose/topic?c=${encodeURIComponent(communityId)}">+ Novo post</a>
+          </div>
+        </div>
+        ${commDesc ? `<p class="community-vox-desc">${escapeHtml(commDesc)}</p>` : ""}
+        <p class="community-vox-owner meta">Criada por: <a href="#/u/${encodeURIComponent(meta.owner || "")}">${escapeHtml(shortId(meta.owner))}</a></p>
       </div>
-    </div>
-    ${activeTab === "posts" ? renderCommunityPeopleStrip(recentPeople) : ""}
-    <div class="community-tabs segmented-tabs">
+    </header>
+    ${activeTab === "posts" && welcomeText ? renderCommunityWelcomeRecado(welcomeText) : ""}
+    <div class="community-tabs segmented-tabs community-vox-tabs">
       <a class="tab-btn ${activeTab !== "listings" && activeTab !== "governance" ? "active" : ""}" href="#/c/${encodeURIComponent(communityId)}">Posts</a>
       <a class="tab-btn ${activeTab === "listings" ? "active" : ""}" href="#/c/${encodeURIComponent(communityId)}?tab=listings">Classificados</a>
       <a class="tab-btn ${activeTab === "governance" ? "active" : ""}" href="#/c/${encodeURIComponent(communityId)}?tab=governance">Governança${proposals.length ? ` (${proposals.length})` : ""}</a>
@@ -119,22 +214,32 @@ export function renderCommunity(
   } else if (activeTab === "governance") {
     html += renderCommunityGovernanceTab(communityId, commTitle, meta, proposals);
   } else {
-    html += renderCommunityPostsTab(communityId, commTitle, topics);
+    html += renderCommunityPostsLayout(communityId, commTitle, topics, meta, recentPeople, isMember);
   }
   main.innerHTML += html;
 }
 
+function renderCommunityPostsLayout(communityId, commTitle, topics, meta, recentPeople, isMember) {
+  const mainCol = renderCommunityPostsTab(communityId, commTitle, topics);
+  const sidebar = renderCommunitySidebar(meta, communityId, recentPeople, isMember);
+  return `
+    <div class="community-vox-layout">
+      <div class="community-vox-main">${mainCol}</div>
+      ${sidebar}
+    </div>`;
+}
+
 function renderCommunityPostsTab(communityId, commTitle, topics) {
   let html = `
-    <div class="actions-bar">
-      <span class="section-title">Posts</span>
+    <div class="actions-bar community-vox-topics-bar">
+      <span class="section-title">Tópicos e posts</span>
     </div>`;
   if (!topics.length) {
-    html += `<div class="empty"><p>Nenhum post nesta comunidade ainda.</p></div>`;
+    html += `<div class="empty community-vox-empty"><p>Nenhum post nesta comunidade ainda.</p></div>`;
     return html;
   }
   const items = topics.map((t) => renderPostItem({ ...t, communityId, communityTitle: commTitle })).join("");
-  return html + `<div class="feed-container">${items}</div>`;
+  return html + `<div class="feed-container community-vox-feed">${items}</div>`;
 }
 
 function renderCommunityListingsTab(communityId, commTitle, meta, listings) {
