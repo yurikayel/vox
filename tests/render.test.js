@@ -209,6 +209,8 @@ test("render - renderCommunity header compacto, Entrar e layout", () => {
   assert.ok(html.includes("community-vox-feed"));
   assert.ok(html.includes("Membros online"));
   assert.ok(html.includes("community-vox-online-grid"));
+  const onlineFaces = (html.match(/community-vox-online-face/g) || []).length;
+  assert.equal(onlineFaces, 9, "demo sidebar shows 3×3 online avatars");
   assert.ok(html.includes("27 membros") || html.includes("27&nbsp;membros"));
 
   const mainMember = createContainer();
