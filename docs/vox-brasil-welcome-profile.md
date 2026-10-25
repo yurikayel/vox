@@ -4,15 +4,16 @@
 
 ## Papel
 
+- **Conta oficial / voz da plataforma** (não pessoa, não perfil estereótipo UF).
 - Primeiro contato de todo visitante após onboarding.
-- Tom **institucional** (não Wuher); links para `#/settings/network`, `#/people`, proposta.
+- Tom **institucional e amigável**; links para `#/voxpedia`, `#/settings/network`, `#/people`.
 - Botões: **Seguir** (watch), **Mensagem** (DM welcome).
 
 ## DM boas-vindas
 
-Mensagem local única (sem E2E do sistema), seed em [`vox-welcome-profile.js`](../../client/js/vox-welcome-profile.js):
+Mensagem local única (sem E2E do sistema), seed `welcome-dm-vox-brasil-v2` em [`vox-welcome-profile.js`](../../client/js/vox-welcome-profile.js):
 
-> Olá! Sou o contato inicial do Vox Brasil. Use Pessoas para achar gente, ou compartilhe seu link `#/connect/seu_vx_`. Dúvidas de rede: Configurações → Sua rede.
+> Olá! 👋 Sou a conta oficial do Vox Brasil — sua voz de boas-vindas na plataforma. Use **Pessoas** para achar gente ou compartilhe `#/connect/seu_vx_`. Glossário leigo: **Voxpedia** (#/voxpedia). Rede: Configurações → Sua rede.
 
 ## UI
 
@@ -21,4 +22,5 @@ Mensagem local única (sem E2E do sistema), seed em [`vox-welcome-profile.js`](.
 
 ## Assets
 
-- Avatar padrão: `client/icons/icon.svg` até arte dedicada.
+- Avatar oficial: `client/icons/profile-vox-official-512.png` — logo branco em tile opaco, squircle (qualquer tema).
+- Gerado por `tools/generate_brand_icons.py` a partir de `docs/vox_logo_branco.jpg`.

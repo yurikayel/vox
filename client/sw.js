@@ -1,7 +1,7 @@
-// Service Worker do Vox (PWA â€” Porta da Cantina anime + shell offline)
+// Service Worker do Vox (PWA ? Porta da Cantina anime + shell offline)
 // NOTA ARQUITETURAL: WebRTC DataChannels operam exclusivamente na thread principal (DOM/Window).
-// O Service Worker atua no cache offline do shell e notificaÃ§Ãµes de status, sem abrir WebRTC.
-const CACHE_NAME = "vox-pwa-v6.44-emoji-megaphone";
+// O Service Worker atua no cache offline do shell e notificações de status, sem abrir WebRTC.
+const CACHE_NAME = "vox-pwa-v6.45-official-profile";
 const SHELL_ASSETS = [
   "./",
   "./index.html",
@@ -13,6 +13,7 @@ const SHELL_ASSETS = [
   "./icons/favicon-32.png",
   "./icons/icon-1024.png",
   "./icons/icon-white-512.png",
+  "./icons/profile-vox-official-512.png",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./images/cantina-gate.jpg",
@@ -142,7 +143,7 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
 
-  // RequisiÃ§Ãµes externas (gateways GraphQL, Arweave HTTP) passam direto pela rede
+  // Requisições externas (gateways GraphQL, Arweave HTTP) passam direto pela rede
   if (url.origin !== self.location.origin) {
     return;
   }
@@ -175,8 +176,8 @@ self.addEventListener("message", (event) => {
   const settings = data.settings || {};
   if (settings.backgroundRelay && typeof Notification !== "undefined" && Notification.permission === "granted") {
     self.registration
-      .showNotification("Vox â€” NÃ³ Leve em Segundo Plano", {
-        body: "ParticipaÃ§Ã£o distribuÃ­da ativa (somente Wi-Fi com teto diÃ¡rio).",
+      .showNotification("Vox ? Nó Leve em Segundo Plano", {
+        body: "Participação distribuída ativa (somente Wi-Fi com teto diário).",
         icon: "./icons/icon.svg",
         tag: "vox-relay-status",
         silent: true,

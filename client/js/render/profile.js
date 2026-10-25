@@ -10,6 +10,7 @@ import {
   renderMarkdownLight,
 } from "./util.js";
 import { renderPostItem } from "./feed.js";
+import { isWelcomeRouteId } from "../vox-welcome-profile.js";
 
 function renderProfileGithubBadge(githubHandle) {
   if (!githubHandle) return "";
@@ -69,7 +70,38 @@ function renderProfileStats(statsData, address = "") {
       ${statsData.communities !== undefined
         ? `<span><strong>${statsData.communities}</strong> <span class="meta">comunidade</span></span>`
         : ""}
-      ${statsData.isTourDemo ? `<span class="badge-pill demo-badge">Perfil do tour de exemplo</span>` : ""}
+      ${statsData.isStereotypeDemo || statsData.isTourDemo
+        ? `<span class="badge-pill demo-badge">Perfil estereótipo (demo)</span>`
+        : ""}
+    </div>`;
+}
+
+function renderStereotypeDemoBanner(address) {
+  const prof = mock.getMockProfile(address);
+  if (!prof?.isStereotypeDemo && !prof?.stereotypeTitle) return "";
+  const title = prof.stereotypeTitle || "Perfil estereótipo 🇧🇷";
+  const ufLine = prof.uf && prof.stateName
+    ? `<p class="meta" style="margin:0.35rem 0 0;">${escapeHtml(prof.stateName)} (${escapeHtml(prof.uf)}) — humor educativo, não pessoa real.</p>`
+    : "";
+  return `
+    <div class="card profile-stereotype-banner" style="margin-top:0.65rem; border:1px dashed var(--border);">
+      <p style="margin:0;"><strong>🧪 ${escapeHtml(title)}</strong></p>
+      <p class="desc" style="margin:0.4rem 0 0; font-size:0.88rem;">
+        Este é um <strong>perfil estereótipo</strong> para <strong>testes da plataforma</strong> e explicação lúdica de demografia regional. O clichê está no texto — nunca na zombaria de aparência.
+      </p>
+      ${ufLine}
+    </div>`;
+}
+
+function renderOfficialPlatformBanner(address) {
+  if (!isWelcomeRouteId(address)) return "";
+  return `
+    <div class="card profile-official-banner" style="margin-top:0.65rem; border:1px solid var(--border);">
+      <p style="margin:0;"><strong>✓ Conta oficial da plataforma</strong></p>
+      <p class="desc" style="margin:0.4rem 0 0; font-size:0.88rem;">
+        Voz institucional do Vox — não é pessoa física nem perfil estereótipo de demo.
+        <a href="#/voxpedia">Voxpedia</a> · DM de boas-vindas
+      </p>
     </div>`;
 }
 
@@ -88,9 +120,10 @@ function renderProfileHeader(address, isCurrentWallet, handle, isConflict, claim
   const displayTitle = displayName ? `${displayName} (@${handle || shortId(address)})` : (handle ? `@${handle}` : "Perfil");
   const initial = (displayName || handle || address || "U").slice(0, 1).toUpperCase();
   const avatarUrl = profileDirectory.getAuthorAvatarSync(address) || mock.getAuthorAvatar(address);
+  const squircle = isWelcomeRouteId(address) ? " avatar-squircle" : "";
   const avatarHtml = avatarUrl
-    ? `<img class="profile-avatar-img" src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(displayName || address)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" /><span class="avatar" style="display:none; width:72px; height:72px; font-size:1.8rem;">${initial}</span>`
-    : `<span class="avatar" style="width:72px; height:72px; font-size:1.8rem;">${initial}</span>`;
+    ? `<img class="profile-avatar-img${squircle}" src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(displayName || address)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" /><span class="avatar${squircle}" style="display:none; width:72px; height:72px; font-size:1.8rem;">${initial}</span>`
+    : `<span class="avatar${squircle}" style="width:72px; height:72px; font-size:1.8rem;">${initial}</span>`;
 
   const bioHtml = profileBio ? `<p class="profile-bio desc">${escapeHtml(profileBio)}</p>` : "";
   const statsData = stats || mock.getMockProfile(address)?.stats;
@@ -128,6 +161,8 @@ function renderProfileHeader(address, isCurrentWallet, handle, isConflict, claim
           <p class="meta profile-route-id">ID de Rede: <code>${escapeHtml(address)}</code></p>
         </div>
         ${bioHtml}
+        ${renderOfficialPlatformBanner(address)}
+        ${renderStereotypeDemoBanner(address)}
         <div style="display:flex; flex-wrap:wrap; gap:0.5rem; align-items:center;">
           ${pixBadge}
           ${githubBadge}
