@@ -917,3 +917,17 @@ Arquivos: `client/privacy.html`, `client/data-deletion.html`. Deploy: push em `m
 
 Ver [`docs/HARDENING.md`](../docs/HARDENING.md), [`docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md). Comandos: `npm run audit:complexity`, `npm run lint`, `npm test`.
 
+---
+
+## 30. Tipografia — cívico / futurista / social
+
+Três direções consideradas (Google Fonts, PT-BR em 14–16px na sidebar):
+
+| Direção | Stack | Por quê |
+|---------|--------|---------|
+| **Praça digital** | Source Sans 3 + Literata (títulos) | Clareza institucional tipo serviço público; serif só em destaques editoriais. |
+| **Malha técnica** | IBM Plex Sans + Space Grotesk | Tom “infra aberta”; geométrico no wordmark, frio demais para corpo social. |
+| **Rede viva** | Noto Sans + Outfit | Corpo acolhedor e neutro; display levemente futurista sem sci-fi. |
+
+**Escolhida — híbrido Praça + Rede viva:** `--font-sans: "Source Sans 3"` (UI, feed, forms, nav) e `--font-display: "Outfit"` só em `.brand-word` / `.brand-link`. Source Sans 3 mantém legibilidade cívica e acentuação PT; Outfit dá personalidade geométrica ao “Vox” sem competir com o celeste sky-theme. Fallback: `ui-sans-serif, system-ui`. Pesos: `--font-weight-nav: 600`; nav ativo 700. Letter-spacing: `0.03em` no wordmark, `0.012em` em `.tab-item` / `.sidebar-feed-tab`. Carregamento: `index.html` (preconnect + CSS2); bump `CACHE_NAME` quando o shell muda.
+
