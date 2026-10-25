@@ -159,9 +159,15 @@ export function renderPostOwnerMenu(t) {
   </div>`;
 }
 
-function renderPostHeaderBlock(t, author, labels) {
+function renderPostHeaderBlock(t, author, labels, { photoOverlay = false } = {}) {
   const authorDisplay = labels.authorDisplay;
   const ownerMenu = renderPostOwnerMenu(t);
+  if (photoOverlay) {
+    if (!ownerMenu) return "";
+    return `<header class="post-header-ig post-header-photo-admin">
+      <div class="post-header-aside">${ownerMenu}</div>
+    </header>`;
+  }
   const metaHtml = renderPostAuthorMetaLines(author, labels, formatTimeAgo(t.ts));
   const asideHtml = ownerMenu ? `<div class="post-header-aside">${ownerMenu}</div>` : "";
   return `
@@ -174,14 +180,66 @@ function renderPostHeaderBlock(t, author, labels) {
     </header>`;
 }
 
-function renderPostMedia(t) {
+export function renderPostOverlayTextHtml(post) {
+  const id = post?.id || "";
+  const href = id ? `#/t/${encodeURIComponent(id)}` : "#";
+  const disp = postOwnership.formatPostDisplay({ title: post?.title, body: post?.body });
+  if (disp.mode === "empty") return "";
+  if (disp.mode === "caption") {
+    const linked = hashtags.linkifyHashtags(escapeHtml(disp.text));
+    return `<p class="post-overlay-excerpt post-overlay-caption-only"><a href="${href}">${linked}</a></p>`;
+  }
+  const titleBlock = `<h3 class="post-overlay-title"><a href="${href}">${escapeHtml(disp.title)}</a></h3>`;
+  const bodyBlock = disp.body
+    ? `<p class="post-overlay-excerpt">${hashtags.linkifyHashtags(escapeHtml(disp.body))}</p>`
+    : "";
+  return `${titleBlock}${bodyBlock}`;
+}
+
+function renderPostOverlayAuthor(author, labels) {
+  const authorDisplay = labels.authorDisplay;
+  const handleHtml = labels.secondaryHandle
+    ? `<span class="post-overlay-handle">@${escapeHtml(labels.secondaryHandle)}</span>`
+    : "";
+  return `<div class="post-overlay-author">
+      <a class="avatar-link post-overlay-avatar" href="#/u/${encodeURIComponent(author)}">${renderAvatarHtml(author, authorDisplay, "sm")}</a>
+      <div class="post-overlay-author-lines">
+        <a class="post-overlay-name" href="#/u/${encodeURIComponent(author)}">${escapeHtml(authorDisplay)}</a>
+        ${handleHtml}
+      </div>
+    </div>`;
+}
+
+function renderPostMediaHero(t, author, labels) {
+  const overlayText = renderPostOverlayTextHtml(t);
+  const overlayAuthor = renderPostOverlayAuthor(author, labels);
+  const overlayBlock =
+    overlayText || overlayAuthor
+      ? `<div class="post-overlay">
+      <div class="post-media-scrim" aria-hidden="true"></div>
+      <div class="post-overlay-content">
+        ${overlayAuthor}
+        ${overlayText}
+      </div>
+    </div>`
+      : "";
+
   if (t?.image) {
-    const alt = escapeHtml(t.imageAlt || t.title);
-    return `<div class="post-media-container"><img class="post-media" src="${escapeHtml(t.image)}" alt="${alt}" loading="lazy" /></div>`;
+    const altRaw = t.imageAlt || t.title || "";
+    const alt = escapeHtml(altRaw);
+    const src = escapeHtml(t.image);
+    return `<div class="post-media-container post-media-hero">
+      <button type="button" class="post-media-lightbox-trigger" aria-label="Ver imagem em tela cheia" data-media-src="${src}" data-media-alt="${alt}">
+        <img class="post-media post-media-hero-img" src="${src}" alt="${alt}" loading="lazy" />
+      </button>
+      ${overlayBlock}
+    </div>`;
   }
   if (t?.mediaRef?.hash) {
-    const alt = escapeHtml(t.imageAlt || t.title || "Mídia P2P");
-    return `<div class="post-media-container post-media-lazy" data-media-hash="${escapeHtml(t.mediaRef.hash)}"><div class="media-placeholder" style="aspect-ratio:4/5; display:flex; align-items:center; justify-content:center; background:var(--surface-soft); color:var(--muted); font-size:0.85rem;"><span>📷 Mídia P2P (${escapeHtml(t.mediaRef.mime || "imagem")})</span></div></div>`;
+    return `<div class="post-media-container post-media-hero post-media-lazy" data-media-hash="${escapeHtml(t.mediaRef.hash)}">
+      <div class="media-placeholder" style="aspect-ratio:4/5; display:flex; align-items:center; justify-content:center; background:var(--surface-soft); color:var(--muted); font-size:0.85rem;"><span>📷 Mídia P2P (${escapeHtml(t.mediaRef.mime || "imagem")})</span></div>
+      ${overlayBlock}
+    </div>`;
   }
   return "";
 }
@@ -346,11 +404,12 @@ export function renderPostItem(t, { isPinned = false } = {}) {
   });
   const { authorDisplay, authorHandle } = labels;
   const layout = getPostFeedLayout(t);
-  const header = renderPostHeaderBlock(t, author, labels);
-  const media = layout === "photo" ? renderPostMedia(t) : "";
+  const isPhoto = layout === "photo";
+  const header = renderPostHeaderBlock(t, author, labels, { photoOverlay: isPhoto });
+  const media = isPhoto ? renderPostMediaHero(t, author, labels) : "";
   const frame = renderPostFrame(t);
   const toolbar = renderPostToolbar(t, author, authorDisplay, authorHandle);
-  const caption = `<div class="post-caption-block">${renderPostText(t)}</div>`;
+  const caption = isPhoto ? "" : `<div class="post-caption-block">${renderPostText(t)}</div>`;
   const gist = layout === "github" ? renderPostGithubGist(t) : "";
   const comments = renderPostComments(t.id, t.communityId);
 
@@ -371,7 +430,6 @@ export function renderPostItem(t, { isPinned = false } = {}) {
       ${header}
       ${media}
       ${frame}
-      ${caption}
       ${toolbar}
       ${comments}
     </article>`;

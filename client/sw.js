@@ -1,7 +1,7 @@
 // Service Worker do Vox (PWA ? Porta da Cantina anime + shell offline)
 // NOTA ARQUITETURAL: WebRTC DataChannels operam exclusivamente na thread principal (DOM/Window).
 // O Service Worker atua no cache offline do shell e notifica��es de status, sem abrir WebRTC.
-const CACHE_NAME = "vox-pwa-v6.56-welcome-via-dm";
+const CACHE_NAME = "vox-pwa-v6.57-post-image-overlay";
 const SHELL_ASSETS = [
   "./",
   "./index.html",
@@ -24,6 +24,7 @@ const SHELL_ASSETS = [
   "./js/app.js",
   "./js/app/context.js",
   "./js/app/init.js",
+  "./js/app/post-media-lightbox.js",
   "./js/app/navigation.js",
   "./js/app/onboarding-side-effects.js",
   "./js/app/onboarding.js",
