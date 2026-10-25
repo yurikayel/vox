@@ -1,7 +1,8 @@
 /**
  * Perfis demo estereótipo — um por UF (27).
- * Nomes próprios: referência educativa a rankings públicos de registros civis / IBGE por região.
- * Avatares: randomuser.me; fallback de iniciais no onerror do <img>.
+ * Prenomes: top 27 por frequência no Censo Demográfico 2022 (IBGE — Nomes no Brasil).
+ * Fonte: https://censo2022.ibge.gov.br/nomes
+ * Avatares: randomuser.me (gender=male|female); fallback de iniciais no onerror do <img>.
  */
 
 const PORTRAIT = (gender, n) =>
@@ -13,35 +14,123 @@ export const STEREOTYPE_GREETING =
 export const STEREOTYPE_DISCLAIMER_NOTE =
   "Perfil fictício para demo e educação no Vox: clichês regionais leves (comida, música, orgulho) — nunca para ridicularizar pessoas reais. 🇧🇷";
 
-export const UF_STEREOTYPE_SEEDS = [
-  { uf: "AC", stateName: "Acre", displayName: "Maria", gender: "f", handle: "maria-ac", stereotypeTitle: "Maria acreana 🌳", tagline: "Calor de porteira aberta — perfil estereótipo demo.", vibe: "Tacacá na conversa, floresta perto e hospitalidade que não cabe no algoritmo.", hashtag: "acre" },
-  { uf: "AL", stateName: "Alagoas", displayName: "José", gender: "m", handle: "jose-al", stereotypeTitle: "José alagoano 🌊", tagline: "Forró, praia e papo reto — demo estereótipo.", vibe: "Sururu na panela, risada alta e orgulho do litoral nordestino.", hashtag: "alagoas" },
-  { uf: "AP", stateName: "Amapá", displayName: "Ana", gender: "f", handle: "ana-ap", stereotypeTitle: "Ana amapaense 🍃", tagline: "Fronteira norte, coração aberto — perfil demo.", vibe: "Mix de Amazônia e Guiana na mesa; comunidade pequena, laço grande.", hashtag: "amapa" },
-  { uf: "AM", stateName: "Amazonas", displayName: "Maria", gender: "f", handle: "maria-am", stereotypeTitle: "Maria amazonense 🐟", tagline: "Rio, mercado e memória — estereótipo lúdico.", vibe: "Peixe assado, história de caboclo e rede que não vende nossa fala.", hashtag: "amazonas" },
-  { uf: "BA", stateName: "Bahia", displayName: "Maria", gender: "f", handle: "maria-ba", stereotypeTitle: "Maria baiana 🥁", tagline: "Axé na timeline, sem exploração — demo.", vibe: "Acarajé, samba de roda e democracia com tempero.", hashtag: "bahia", feira: { title: "Acarajé & molho de pimenta artesanal", price: "R$ 22", place: "Pelourinho, Salvador", body: "Porção para dois, feita no dia. Pix na hora, conversa de vizinho." } },
-  { uf: "CE", stateName: "Ceará", displayName: "Francisco", gender: "m", handle: "francisco-ce", stereotypeTitle: "Francisco cearense ☀️", tagline: "Humor fino, sol forte — perfil estereótipo.", vibe: "Piada boa, jerimum na mão e coragem de sertão.", hashtag: "ceara" },
-  { uf: "DF", stateName: "Distrito Federal", displayName: "Maria", gender: "f", handle: "maria-df", stereotypeTitle: "Maria candanga 🏛️", tagline: "Plano Piloto, coração plural — demo.", vibe: "Mistura de todo canto, churrasco de domingo e política na mesa (com respeito).", hashtag: "distritofederal" },
-  { uf: "ES", stateName: "Espírito Santo", displayName: "João", gender: "m", handle: "joao-es", stereotypeTitle: "João capixaba 🌴", tagline: "Colina, café e calma — estereótipo educativo.", vibe: "Moqueca capixaba, montanha e mar no mesmo dia.", hashtag: "espiritosanto" },
-  { uf: "GO", stateName: "Goiás", displayName: "Maria", gender: "f", handle: "maria-go", stereotypeTitle: "Maria goiana 🌾", tagline: "Pequi, sertão e festa — perfil demo.", vibe: "Empanado no fim de semana, pequi com respeito e hospitalidade do cerrado.", hashtag: "goias" },
-  { uf: "MA", stateName: "Maranhão", displayName: "José", gender: "m", handle: "jose-ma", stereotypeTitle: "José maranhense 🎭", tagline: "Bumba, reggae e história — demo.", vibe: "Tambor de crioula longe de palco vazio; cultura que merece rede própria.", hashtag: "maranhao" },
-  { uf: "MT", stateName: "Mato Grosso", displayName: "Maria", gender: "f", handle: "maria-mt", stereotypeTitle: "Maria mato-grossense 🐂", tagline: "Pantanal no coração — estereótipo lúdico.", vibe: "Churrasco de estrada, pôr do sol largo e pragmatismo bonito.", hashtag: "matogrosso" },
-  { uf: "MS", stateName: "Mato Grosso do Sul", displayName: "Maria", gender: "f", handle: "maria-ms", stereotypeTitle: "Maria sul-mato-grossense 🧉", tagline: "Tereré e fronteira — perfil demo.", vibe: "Calor seco, chimarrão gelado e gente que cumprimenta de longe.", hashtag: "matogrossodosul" },
-  { uf: "MG", stateName: "Minas Gerais", displayName: "Maria", gender: "f", handle: "maria-mg", stereotypeTitle: "Maria mineira ☕", tagline: "Pão de queijo e conversa longa — demo estereótipo.", vibe: "Uai, sô — café coado, prosa sem pressa e solidariedade de vizinho.", hashtag: "minasgerais", feira: { title: "Pão de queijo & goiabada da roça", price: "R$ 30", place: "Savassi, BH", body: "Fornada mineira + potinho de doce. Retirada ou combina no DM." } },
-  { uf: "PA", stateName: "Pará", displayName: "José", gender: "m", handle: "jose-pa", stereotypeTitle: "José paraense 🛶", tagline: "Belém, açaí e Ver-o-Peso — demo.", vibe: "Açaí na tigela, carimbó no pé e orgulho de estuário.", hashtag: "para" },
-  { uf: "PB", stateName: "Paraíba", displayName: "Maria", gender: "f", handle: "maria-pb", stereotypeTitle: "Maria paraibana 🌵", tagline: "Sertão forró e litoral — estereótipo.", vibe: "Carne de sol, frevo no coração e fé em comunidade.", hashtag: "paraiba" },
-  { uf: "PR", stateName: "Paraná", displayName: "Maria", gender: "f", handle: "maria-pr", stereotypeTitle: "Maria paranaense 🌲", tagline: "Pinheiro, chimarrão e ordem — demo.", vibe: "Barreado no inverno, mate amargo e trabalho bem feito.", hashtag: "parana", feira: { title: "Barreado congelado & pão caseiro", price: "R$ 38", place: "Curitiba", body: "Porção para família; combina retirada no bairro." } },
-  { uf: "PE", stateName: "Pernambuco", displayName: "Maria", gender: "f", handle: "maria-pe", stereotypeTitle: "Maria pernambucana 🎨", tagline: "Frevo, maracatu e criatividade — demo.", vibe: "Bolo de rolo na mesa, cordel na memória e revolução com docência.", hashtag: "pernambuco", feira: { title: "Bolo de rolo & doces do agreste", price: "R$ 45", place: "Recife", body: "Fatias generosas, encomenda para o fim de semana." } },
-  { uf: "PI", stateName: "Piauí", displayName: "José", gender: "m", handle: "jose-pi", stereotypeTitle: "José piauiense 🌞", tagline: "Sertão quente, gente forte — demo.", vibe: "Vatapá de galinha, piada seca e persistência.", hashtag: "piaui" },
-  { uf: "RJ", stateName: "Rio de Janeiro", displayName: "João", gender: "m", handle: "joao-rj", stereotypeTitle: "João carioca 🏖️", tagline: "Samba, brevidade e malandragem boa — demo.", vibe: "Feijoada de domingo, trilha no visual e papo na laje.", hashtag: "riodejaneiro" },
-  { uf: "RN", stateName: "Rio Grande do Norte", displayName: "Maria", gender: "f", handle: "maria-rn", stereotypeTitle: "Maria potiguar 🌊", tagline: "Sol, forró e sal — estereótipo.", vibe: "Ginga com tapioca, vento forte e hospitalidade de litoral.", hashtag: "riograndedonorte" },
-  { uf: "RS", stateName: "Rio Grande do Sul", displayName: "João", gender: "m", handle: "joao-rs", stereotypeTitle: "João gaúcho 🧉", tagline: "Chimarrão e tradição — perfil demo.", vibe: "Churrasco de fim de semana, chimarrão rodado e orgulho gaúcho (sem treta).", hashtag: "riograndedosul", feira: { title: "Erva-mate artesanal & cuca caseira", price: "R$ 42", place: "Porto Alegre", body: "Mate curado + fatia de cuca; apoie produtor local." } },
-  { uf: "RO", stateName: "Rondônia", displayName: "Maria", gender: "f", handle: "maria-ro", stereotypeTitle: "Maria rondoniense 🌳", tagline: "Madeira, migração e café — demo.", vibe: "Estrada longa, café forte e comunidade que se reinventa.", hashtag: "rondonia" },
-  { uf: "RR", stateName: "Roraima", displayName: "Maria", gender: "f", handle: "maria-rr", stereotypeTitle: "Maria roraimense 🏔️", tagline: "Norte extremo, acolhimento — demo.", vibe: "Fronteira, diversidade indígena e respeito na conversa.", hashtag: "roraima" },
-  { uf: "SC", stateName: "Santa Catarina", displayName: "Maria", gender: "f", handle: "maria-sc", stereotypeTitle: "Maria catarinense 🌊", tagline: "Praia, alemão e organização — demo.", vibe: "Sequence, ostras e festa junina com pontualidade carinhosa.", hashtag: "santacatarina" },
-  { uf: "SE", stateName: "Sergipe", displayName: "Maria", gender: "f", handle: "maria-se", stereotypeTitle: "Maria sergipana 🦀", tagline: "Menor estado, coração grande — demo.", vibe: "Caranguejo, mangue e memória afetiva de litoral.", hashtag: "sergipe" },
-  { uf: "SP", stateName: "São Paulo", displayName: "João", gender: "m", handle: "joao-sp", stereotypeTitle: "João paulistano 🚇", tagline: "Metrô, pressa e pluralidade — estereótipo demo.", vibe: "Padaria 6h, trânsito eterno e solidariedade escondida no corredor.", hashtag: "saopaulo", feira: { title: "Pão na chapa & café coado kit", price: "R$ 25", place: "Vila Madalena, SP", body: "Kit café da manhã de padaria de bairro — sem app de entrega no meio." } },
-  { uf: "TO", stateName: "Tocantins", displayName: "Maria", gender: "f", handle: "maria-to", stereotypeTitle: "Maria tocantinense 🌅", tagline: "Cerrado novo, raiz forte — demo.", vibe: "Pequi, pôr do sol no Jalapão e comunidade jovem.", hashtag: "tocantins" },
+/** Embaralhamento reprodutível: um prenome único por UF. */
+export const UF_NAME_SHUFFLE_SEED = 20261025;
+
+/** 27 prenomes mais frequentes no Brasil (Censo 2022 / IBGE), ordem por ranking nacional. */
+export const BRAZIL_COMMON_GIVEN_NAMES = [
+  { displayName: "Maria", gender: "f" },
+  { displayName: "José", gender: "m" },
+  { displayName: "Ana", gender: "f" },
+  { displayName: "João", gender: "m" },
+  { displayName: "Antônio", gender: "m" },
+  { displayName: "Francisco", gender: "m" },
+  { displayName: "Pedro", gender: "m" },
+  { displayName: "Carlos", gender: "m" },
+  { displayName: "Lucas", gender: "m" },
+  { displayName: "Luiz", gender: "m" },
+  { displayName: "Paulo", gender: "m" },
+  { displayName: "Gabriel", gender: "m" },
+  { displayName: "Francisca", gender: "f" },
+  { displayName: "Júlia", gender: "f" },
+  { displayName: "Juliana", gender: "f" },
+  { displayName: "Adriana", gender: "f" },
+  { displayName: "Fernanda", gender: "f" },
+  { displayName: "Márcia", gender: "f" },
+  { displayName: "Patrícia", gender: "f" },
+  { displayName: "Marcos", gender: "m" },
+  { displayName: "Amanda", gender: "f" },
+  { displayName: "Davi", gender: "m" },
+  { displayName: "Rafael", gender: "m" },
+  { displayName: "Luís", gender: "m" },
+  { displayName: "Daniel", gender: "m" },
+  { displayName: "Miguel", gender: "m" },
+  { displayName: "Alice", gender: "f" },
 ];
+
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return () => {
+    a += 0x6d2b79f5;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function shuffleWithSeed(items, seed) {
+  const arr = items.slice();
+  const rand = mulberry32(seed);
+  for (let i = arr.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(rand() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function handleFromNameAndUf(displayName, uf) {
+  const slug = displayName
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .toLowerCase();
+  return `${slug}-${uf.toLowerCase()}`;
+}
+
+const UF_REGION_META = [
+  { uf: "AC", stateName: "Acre", regional: { f: "acreana", m: "acreano" }, emoji: "🌳", tagline: "Calor de porteira aberta — perfil estereótipo demo.", vibe: "Tacacá na conversa, floresta perto e hospitalidade que não cabe no algoritmo.", hashtag: "acre" },
+  { uf: "AL", stateName: "Alagoas", regional: { f: "alagoana", m: "alagoano" }, emoji: "🌊", tagline: "Forró, praia e papo reto — demo estereótipo.", vibe: "Sururu na panela, risada alta e orgulho do litoral nordestino.", hashtag: "alagoas" },
+  { uf: "AP", stateName: "Amapá", regional: "amapaense", emoji: "🍃", tagline: "Fronteira norte, coração aberto — perfil demo.", vibe: "Mix de Amazônia e Guiana na mesa; comunidade pequena, laço grande.", hashtag: "amapa" },
+  { uf: "AM", stateName: "Amazonas", regional: "amazonense", emoji: "🐟", tagline: "Rio, mercado e memória — estereótipo lúdico.", vibe: "Peixe assado, história de caboclo e rede que não vende nossa fala.", hashtag: "amazonas" },
+  { uf: "BA", stateName: "Bahia", regional: { f: "baiana", m: "baiano" }, emoji: "🥁", tagline: "Axé na timeline, sem exploração — demo.", vibe: "Acarajé, samba de roda e democracia com tempero.", hashtag: "bahia", feira: { title: "Acarajé & molho de pimenta artesanal", price: "R$ 22", place: "Pelourinho, Salvador", body: "Porção para dois, feita no dia. Pix na hora, conversa de vizinho." } },
+  { uf: "CE", stateName: "Ceará", regional: "cearense", emoji: "☀️", tagline: "Humor fino, sol forte — perfil estereótipo.", vibe: "Piada boa, jerimum na mão e coragem de sertão.", hashtag: "ceara" },
+  { uf: "DF", stateName: "Distrito Federal", regional: "candanga", emoji: "🏛️", tagline: "Plano Piloto, coração plural — demo.", vibe: "Mistura de todo canto, churrasco de domingo e política na mesa (com respeito).", hashtag: "distritofederal" },
+  { uf: "ES", stateName: "Espírito Santo", regional: "capixaba", emoji: "🌴", tagline: "Colina, café e calma — estereótipo educativo.", vibe: "Moqueca capixaba, montanha e mar no mesmo dia.", hashtag: "espiritosanto" },
+  { uf: "GO", stateName: "Goiás", regional: { f: "goiana", m: "goiano" }, emoji: "🌾", tagline: "Pequi, sertão e festa — perfil demo.", vibe: "Empanado no fim de semana, pequi com respeito e hospitalidade do cerrado.", hashtag: "goias" },
+  { uf: "MA", stateName: "Maranhão", regional: "maranhense", emoji: "🎭", tagline: "Bumba, reggae e história — demo.", vibe: "Tambor de crioula longe de palco vazio; cultura que merece rede própria.", hashtag: "maranhao" },
+  { uf: "MT", stateName: "Mato Grosso", regional: "mato-grossense", emoji: "🐂", tagline: "Pantanal no coração — estereótipo lúdico.", vibe: "Churrasco de estrada, pôr do sol largo e pragmatismo bonito.", hashtag: "matogrosso" },
+  { uf: "MS", stateName: "Mato Grosso do Sul", regional: "sul-mato-grossense", emoji: "🧉", tagline: "Tereré e fronteira — perfil demo.", vibe: "Calor seco, chimarrão gelado e gente que cumprimenta de longe.", hashtag: "matogrossodosul" },
+  { uf: "MG", stateName: "Minas Gerais", regional: { f: "mineira", m: "mineiro" }, emoji: "☕", tagline: "Pão de queijo e conversa longa — demo estereótipo.", vibe: "Uai, sô — café coado, prosa sem pressa e solidariedade de vizinho.", hashtag: "minasgerais", feira: { title: "Pão de queijo & goiabada da roça", price: "R$ 30", place: "Savassi, BH", body: "Fornada mineira + potinho de doce. Retirada ou combina no DM." } },
+  { uf: "PA", stateName: "Pará", regional: "paraense", emoji: "🛶", tagline: "Belém, açaí e Ver-o-Peso — demo.", vibe: "Açaí na tigela, carimbó no pé e orgulho de estuário.", hashtag: "para" },
+  { uf: "PB", stateName: "Paraíba", regional: { f: "paraibana", m: "paraibano" }, emoji: "🌵", tagline: "Sertão forró e litoral — estereótipo.", vibe: "Carne de sol, frevo no coração e fé em comunidade.", hashtag: "paraiba" },
+  { uf: "PR", stateName: "Paraná", regional: "paranaense", emoji: "🌲", tagline: "Pinheiro, chimarrão e ordem — demo.", vibe: "Barreado no inverno, mate amargo e trabalho bem feito.", hashtag: "parana", feira: { title: "Barreado congelado & pão caseiro", price: "R$ 38", place: "Curitiba", body: "Porção para família; combina retirada no bairro." } },
+  { uf: "PE", stateName: "Pernambuco", regional: { f: "pernambucana", m: "pernambucano" }, emoji: "🎨", tagline: "Frevo, maracatu e criatividade — demo.", vibe: "Bolo de rolo na mesa, cordel na memória e revolução com docência.", hashtag: "pernambuco", feira: { title: "Bolo de rolo & doces do agreste", price: "R$ 45", place: "Recife", body: "Fatias generosas, encomenda para o fim de semana." } },
+  { uf: "PI", stateName: "Piauí", regional: "piauiense", emoji: "🌞", tagline: "Sertão quente, gente forte — demo.", vibe: "Vatapá de galinha, piada seca e persistência.", hashtag: "piaui" },
+  { uf: "RJ", stateName: "Rio de Janeiro", regional: "carioca", emoji: "🏖️", tagline: "Samba, brevidade e malandragem boa — demo.", vibe: "Feijoada de domingo, trilha no visual e papo na laje.", hashtag: "riodejaneiro" },
+  { uf: "RN", stateName: "Rio Grande do Norte", regional: "potiguar", emoji: "🌊", tagline: "Sol, forró e sal — estereótipo.", vibe: "Ginga com tapioca, vento forte e hospitalidade de litoral.", hashtag: "riograndedonorte" },
+  { uf: "RS", stateName: "Rio Grande do Sul", regional: { f: "gaúcha", m: "gaúcho" }, emoji: "🧉", tagline: "Chimarrão e tradição — perfil demo.", vibe: "Churrasco de fim de semana, chimarrão rodado e orgulho gaúcho (sem treta).", hashtag: "riograndedosul", feira: { title: "Erva-mate artesanal & cuca caseira", price: "R$ 42", place: "Porto Alegre", body: "Mate curado + fatia de cuca; apoie produtor local." } },
+  { uf: "RO", stateName: "Rondônia", regional: "rondoniense", emoji: "🌳", tagline: "Madeira, migração e café — demo.", vibe: "Estrada longa, café forte e comunidade que se reinventa.", hashtag: "rondonia" },
+  { uf: "RR", stateName: "Roraima", regional: "roraimense", emoji: "🏔️", tagline: "Norte extremo, acolhimento — demo.", vibe: "Fronteira, diversidade indígena e respeito na conversa.", hashtag: "roraima" },
+  { uf: "SC", stateName: "Santa Catarina", regional: "catarinense", emoji: "🌊", tagline: "Praia, alemão e organização — demo.", vibe: "Sequence, ostras e festa junina com pontualidade carinhosa.", hashtag: "santacatarina" },
+  { uf: "SE", stateName: "Sergipe", regional: { f: "sergipana", m: "sergipano" }, emoji: "🦀", tagline: "Menor estado, coração grande — demo.", vibe: "Caranguejo, mangue e memória afetiva de litoral.", hashtag: "sergipe" },
+  { uf: "SP", stateName: "São Paulo", regional: { f: "paulistana", m: "paulistano" }, emoji: "🚇", tagline: "Metrô, pressa e pluralidade — estereótipo demo.", vibe: "Padaria 6h, trânsito eterno e solidariedade escondida no corredor.", hashtag: "saopaulo", feira: { title: "Pão na chapa & café coado kit", price: "R$ 25", place: "Vila Madalena, SP", body: "Kit café da manhã de padaria de bairro — sem app de entrega no meio." } },
+  { uf: "TO", stateName: "Tocantins", regional: "tocantinense", emoji: "🌅", tagline: "Cerrado novo, raiz forte — demo.", vibe: "Pequi, pôr do sol no Jalapão e comunidade jovem.", hashtag: "tocantins" },
+];
+
+function regionalEpithet(meta, gender) {
+  const key = gender === "m" ? "m" : "f";
+  const word =
+    typeof meta.regional === "string" ? meta.regional : meta.regional[key] || meta.regional.f;
+  return `${word} ${meta.emoji}`;
+}
+
+function buildUfStereotypeSeeds() {
+  const names = shuffleWithSeed(BRAZIL_COMMON_GIVEN_NAMES, UF_NAME_SHUFFLE_SEED);
+  return UF_REGION_META.map((meta, i) => {
+    const { displayName, gender } = names[i];
+    const handle = handleFromNameAndUf(displayName, meta.uf);
+    const { regional, emoji, ...rest } = meta;
+    return {
+      ...rest,
+      displayName,
+      gender,
+      handle,
+      stereotypeTitle: `${displayName} ${regionalEpithet(meta, gender)}`,
+    };
+  });
+}
+
+export const UF_STEREOTYPE_SEEDS = buildUfStereotypeSeeds();
 
 for (const seed of UF_STEREOTYPE_SEEDS) {
   seed.stereotypeGreeting = seed.stereotypeGreeting || STEREOTYPE_GREETING;
@@ -311,12 +400,12 @@ const UF_POST_TITLE_OVERRIDE = {
   al: [
     "Sururu na panela, Maceió no peito 🌊",
     "Forró de terreiro — invite na demo Vox",
-    "José alagoano pergunta: qual trilha você salvaria offline?",
+    "Júlia alagoana pergunta: qual trilha você salvaria offline?",
   ],
   ma: [
     "Bumba na calçada, reggae no centro 🎭",
     "São Luís: tambor de crioula na thread",
-    "José maranhense — qual bloco popular te arrepia?",
+    "Marcos maranhense — qual bloco popular te arrepia?",
   ],
 };
 
@@ -476,21 +565,21 @@ export function buildUfDemoListings(now = Date.now()) {
 
 const UF_DEMO_PAIR_COPY = {
   "CE-MA":
-    "Francisco cearense na área! 🌞 Seu bumba e reggae maranhense conversam bem com nosso forró de terreiro — aqui no Vox a gente troca cultura sem algoritmo empurrando briga. Quando rolar festa em São Luís, manda o convite que eu levo jerimum na mochila (e piada boa, claro).",
+    "Davi cearense na área! 🌞 Seu bumba e reggae maranhense conversam bem com nosso forró de terreiro — aqui no Vox a gente troca cultura sem algoritmo empurrando briga. Quando rolar festa em São Luís, manda o convite que eu levo jerimum na mochila (e piada boa, claro).",
   "BA-MA":
-    "Maria baiana passando! 🥁 Tambor de crioula e axé são primos de parente — adorei você falar de memória que não some da timeline. Vox é rede de respeito: comida, música e história, nunca zombaria de quem é de verdade.",
+    "Paulo baiano passando! 🥁 Tambor de crioula e axé são primos de parente — adorei você falar de memória que não some da timeline. Vox é rede de respeito: comida, música e história, nunca zombaria de quem é de verdade.",
   "RS-MA":
-    "João gaúcho aqui — chimarrão virtual na mão. 🧉 Reggae do Maranhão já fez amizade com trilha no pampa em playlist minha; no Vox a conversa fica na comunidade, sem impulsionar post. Abraço pro norte com carinho de sul.",
+    "Rafael gaúcho aqui — chimarrão virtual na mão. 🧉 Reggae do Maranhão já fez amizade com trilha no pampa em playlist minha; no Vox a conversa fica na comunidade, sem impulsionar post. Abraço pro norte com carinho de sul.",
   "PA-MA":
-    "José paraense chegando de Belém! 🛶 Açaí na tigela e carimbó no pé — São Luís no coração. Que bom ver voz do MA sem plataforma gringa decidindo alcance. Tamo junto na demo, sempre com respeito.",
+    "Amanda paraense chegando de Belém! 🛶 Açaí na tigela e carimbó no pé — São Luís no coração. Que bom ver voz do MA sem plataforma gringa decidindo alcance. Tamo junto na demo, sempre com respeito.",
   "MA-MA":
-    "José maranhense respondendo: valeu, galera de todo canto! 🎭 Bumba, reggae e hospitalidade maranhense ficam mais fortes quando a rede é nossa. Sigam testando o Vox — clichê leve, nunca maldade.",
+    "Marcos maranhense respondendo: valeu, galera de todo canto! 🎭 Bumba, reggae e hospitalidade maranhense ficam mais fortes quando a rede é nossa. Sigam testando o Vox — clichê leve, nunca maldade.",
   "SP-MG":
-    "João paulistano no corre do metrô 🚇 — mas parei pra ler, Maria. Pão de queijo mineiro já salvou muitos almoços na Paulista; aqui no Vox organizamos sem pedir licença pro algoritmo. Uai sô, respeito total!",
+    "Lucas paulistano no corre do metrô 🚇 — mas parei pra ler, Alice. Pão de queijo mineiro já salvou muitos almoços na Paulista; aqui no Vox organizamos sem pedir licença pro algoritmo. Uai sô, respeito total!",
   "BA-AM":
-    "Maria baiana de coração! 🐟 Peixe assado amazonense lembra acarajé de domingo — memória nossa não vira treino de IA sem consentimento. Fechado com você, vizinha de floresta!",
+    "Paulo baiano de coração! 🐟 Peixe assado amazonense lembra acarajé de domingo — memória nossa não vira treino de IA sem consentimento. Fechado com você, vizinha de floresta!",
   "RJ-CE":
-    "João carioca na laje: piada boa, Francisco! 🏖️ Sol cearense e humor fino cabem na mesma timeline — governança transparente é coisa séria, mas com leveza. Bora manter o Vox honesto.",
+    "Gabriel carioca na laje: piada boa, Davi! 🏖️ Sol cearense e humor fino cabem na mesma timeline — governança transparente é coisa séria, mas com leveza. Bora manter o Vox honesto.",
 };
 
 function ufRoute(uf) {
