@@ -47,7 +47,7 @@ test("listing-ui - badge Verificada e menu dono só em oferta própria assinada"
     title: "Mel orgânico",
     body: "500g",
     priceLabel: "30",
-    author: "vx_demo_helena",
+    author: "vx_demo_mg",
   });
   const signed = await localAccount.signPayload(draft);
   const own = { ...signed, isOwnLocalPost: true };
