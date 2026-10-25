@@ -50,6 +50,8 @@ for (const seed of UF_STEREOTYPE_SEEDS) {
 }
 
 export const MOCK_DEMO_UF_COUNT = UF_STEREOTYPE_SEEDS.length;
+export const MOCK_DEMO_POSTS_PER_UF = 3;
+export const MOCK_DEMO_TOPIC_COUNT = MOCK_DEMO_UF_COUNT * MOCK_DEMO_POSTS_PER_UF;
 export const UF_ROUTE_IDS = UF_STEREOTYPE_SEEDS.map((s) => `vx_demo_${s.uf.toLowerCase()}`);
 
 /** Mídia de post por UF — tema cultural/regional (nunca retrato de avatar). */
@@ -164,6 +166,35 @@ export const postMediaByUf = {
   },
 };
 
+const POST_MEDIA_ALT_URLS = [
+  "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80",
+  "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&q=80",
+  "https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=800&q=80",
+  "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=800&q=80",
+  "https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=800&q=80",
+  "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&q=80",
+  "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=800&q=80",
+  "https://images.unsplash.com/photo-1483729558449-99ef09a8c325?w=800&q=80",
+];
+
+function ensureTriplePostMedia() {
+  const keys = Object.keys(postMediaByUf);
+  keys.forEach((k, i) => {
+    let entry = postMediaByUf[k];
+    if (!Array.isArray(entry)) entry = [entry];
+    while (entry.length < MOCK_DEMO_POSTS_PER_UF) {
+      const slot = entry.length;
+      const src = entry[0];
+      entry.push({
+        postImageUrl: POST_MEDIA_ALT_URLS[(i + slot * 5) % POST_MEDIA_ALT_URLS.length],
+        postAlt: `${src.postAlt.replace(/\s*\(demo\)\s*$/, "")} — foto ${slot + 1} (demo)`,
+      });
+    }
+    postMediaByUf[k] = entry;
+  });
+}
+ensureTriplePostMedia();
+
 /** Corpo dos posts demo UF — voz regional (disclaimer só no perfil). */
 export const UF_DEMO_POST_COPY = {
   ac:
@@ -276,6 +307,62 @@ export const UF_DEMO_POST_COPY = {
     "Palmas ou interior — o que você defende quando falam mal do norte central? Voz firme, tom leve.",
 };
 
+const UF_POST_TITLE_OVERRIDE = {
+  al: [
+    "Sururu na panela, Maceió no peito 🌊",
+    "Forró de terreiro — invite na demo Vox",
+    "José alagoano pergunta: qual trilha você salvaria offline?",
+  ],
+  ma: [
+    "Bumba na calçada, reggae no centro 🎭",
+    "São Luís: tambor de crioula na thread",
+    "José maranhense — qual bloco popular te arrepia?",
+  ],
+};
+
+const UF_POST_BODY_EXTRA = {
+  al: [
+    "🌊 Saí do sururu e fui ouvir trio no quiosque: Alagoas tem risada alta e mar calmo no mesmo dia. Se você nunca provou, imagina só o cheiro — e me diz qual prato nordestino combina com forró de terreiro.",
+    "🎶 Abri esta thread porque forró alagoano não deveria competir com anúncio patrocinado. Coloca emoji de onda + uma memória de domingo no litoral — sem zombar de quem vem de interior.",
+  ],
+  ma: [
+    "🎭 Reggae maranhense na caixa de som do centro histórico: São Luís tem ritmo próprio que viraliza melhor quando a conversa é local. Conta se você já dançou bumba ou só ouviu de longe — respeito sempre.",
+    "🥁 Tambor de crioula na memória de quem cresceu ouvindo rua fechar pra festa. Maranhão não é palco vazio: é cultura que precisa de rede onde o post não some. Manda 👋 de outra UF com equivalente cultural.",
+  ],
+};
+
+export function ufDemoPostId(uf, slot) {
+  const u = String(uf).toLowerCase();
+  if (slot === 0) return `demo-post-${u}`;
+  return `demo-post-${u}-${slot + 1}`;
+}
+
+function titleForUfPost(seed, slot) {
+  const custom = UF_POST_TITLE_OVERRIDE[seed.uf.toLowerCase()];
+  if (custom?.[slot]) return custom[slot];
+  const em = seed.stereotypeTitle.match(/\s([\p{Extended_Pictographic}\uFE0F]+)$/u)?.[1] || "";
+  const base = seed.stereotypeTitle.replace(/\s[\p{Extended_Pictographic}\uFE0F]+$/u, "");
+  if (slot === 0) return `${base} — ${seed.stateName}${em ? ` ${em}` : ""}`;
+  if (slot === 1) {
+    return `${seed.displayName} (${seed.uf}): panela, prosa & #${seed.hashtag}`;
+  }
+  return `${seed.displayName} (${seed.uf}) pergunta: qual clichê leve da sua região?`;
+}
+
+function bodyForUfPost(seed, slot) {
+  const uf = seed.uf.toLowerCase();
+  if (slot === 0) return UF_DEMO_POST_COPY[uf] || seed.vibe;
+  const extras = UF_POST_BODY_EXTRA[uf];
+  if (extras?.[slot - 1]) return extras[slot - 1];
+  const vibes = seed.vibe.split(".").map((s) => s.trim()).filter(Boolean);
+  const hook = vibes[slot % vibes.length] || seed.tagline;
+  const prompts = [
+    `${hook}. Abri este tópico pra testar se a voz de ${seed.stateName} cabe num post longo sem repetir rodapé de plataforma.`,
+    `${seed.displayName} (${seed.uf}) de volta: ${seed.tagline} Responde com emoji + uma história curta da sua região — troca respeitosa, zero treta.`,
+  ];
+  return prompts[(slot - 1) % prompts.length];
+}
+
 function readmeFor(seed) {
   return (
     `### ${seed.displayName} — ${seed.stereotypeTitle}\n\n` +
@@ -313,7 +400,7 @@ export function buildUfDemoProfilesMap() {
       readme: readmeFor(seed),
       isStereotypeDemo: true,
       stats: {
-        posts: 1,
+        posts: MOCK_DEMO_POSTS_PER_UF,
         peersConnected: 2 + (i % 4),
         communities: 1,
         followers: 12 + (i * 3) % 40,
@@ -331,29 +418,33 @@ export function buildUfDemoTopics(now = Date.now()) {
   for (const r of buildUfDemoReplies()) {
     replyTotals[r.replyTo] = (replyTotals[r.replyTo] || 0) + 1;
   }
-  return UF_STEREOTYPE_SEEDS.map((seed, i) => {
+  const topics = [];
+  UF_STEREOTYPE_SEEDS.forEach((seed, i) => {
     const uf = seed.uf.toLowerCase();
     const routeId = `vx_demo_${uf}`;
-    const media = postMediaByUf[uf] || postMediaByUf.ac;
-    const postId = `demo-post-${uf}`;
-    return {
-      id: `demo-post-${uf}`,
-      communityId: "demo-aprenda-vox",
-      title: `${seed.displayName} (${seed.uf}): nossa voz sem algoritmo estrangeiro`,
-      body:
-        `${UF_DEMO_POST_COPY[uf] || seed.vibe} #${seed.hashtag} #perfildemo #brasil`,
-      image: media.postImageUrl,
-      imageAlt: media.postAlt,
-      author: routeId,
-      owner: routeId,
-      externalPain: "Redes centralizadas — alcance pago e extração de dados",
-      voxResolution: "now",
-      likesCount: 20 + (i * 7) % 55,
-      repliesCount: replyTotals[postId] || 0,
-      isLocalP2p: true,
-      ts: now - (i + 1) * 45 * 60 * 1000,
-    };
+    const mediaArr = postMediaByUf[uf] || postMediaByUf.ac;
+    for (let slot = 0; slot < MOCK_DEMO_POSTS_PER_UF; slot++) {
+      const postId = ufDemoPostId(seed.uf, slot);
+      const media = mediaArr[slot] || mediaArr[0];
+      topics.push({
+        id: postId,
+        communityId: "demo-aprenda-vox",
+        title: titleForUfPost(seed, slot),
+        body: `${bodyForUfPost(seed, slot)} #${seed.hashtag} #perfildemo #brasil`,
+        image: media.postImageUrl,
+        imageAlt: media.postAlt,
+        author: routeId,
+        owner: routeId,
+        externalPain: "Redes centralizadas — alcance pago e extração de dados",
+        voxResolution: "now",
+        likesCount: 20 + (i * 7 + slot * 3) % 55,
+        repliesCount: replyTotals[postId] || 0,
+        isLocalP2p: true,
+        ts: now - (i * MOCK_DEMO_POSTS_PER_UF + slot + 1) * 45 * 60 * 1000,
+      });
+    }
   });
+  return topics;
 }
 
 export function buildUfDemoListings(now = Date.now()) {
@@ -406,11 +497,11 @@ function ufRoute(uf) {
   return `vx_demo_${String(uf).toLowerCase()}`;
 }
 
-function replyRow(id, hostUf, fromUf, body) {
+function replyRow(id, hostUf, fromUf, body, replyToPostId) {
   const host = String(hostUf).toLowerCase();
   return {
     id,
-    replyTo: `demo-post-${host}`,
+    replyTo: replyToPostId || ufDemoPostId(host, 0),
     communityId: "demo-aprenda-vox",
     body,
     author: ufRoute(fromUf),
@@ -476,21 +567,25 @@ export function buildUfDemoReplies() {
   }
 
   const n = UF_STEREOTYPE_SEEDS.length;
-  const targetPerPost = 3;
 
   UF_STEREOTYPE_SEEDS.forEach((host, i) => {
-    const postId = `demo-post-${host.uf.toLowerCase()}`;
-    let slot = 0;
-    while ((perPost[postId] || 0) < targetPerPost && slot < 12) {
-      const j = (i + 1 + slot * 7) % n;
-      slot += 1;
-      if (UF_STEREOTYPE_SEEDS[j].uf === host.uf) continue;
-      const from = UF_STEREOTYPE_SEEDS[j];
-      const id = `demo-reply-${from.uf.toLowerCase()}-${host.uf.toLowerCase()}-${slot}`;
-      if (seenIds.has(id)) continue;
-      replies.push(replyRow(id, host.uf, from.uf, respectfulBanter(from, host, slot)));
-      seenIds.add(id);
-      perPost[postId] = (perPost[postId] || 0) + 1;
+    for (let postSlot = 0; postSlot < MOCK_DEMO_POSTS_PER_UF; postSlot++) {
+      const postId = ufDemoPostId(host.uf, postSlot);
+      const targetPerPost = postSlot === 0 ? 3 : 2;
+      let slot = 0;
+      while ((perPost[postId] || 0) < targetPerPost && slot < 12) {
+        const j = (i + 1 + postSlot * 3 + slot * 7) % n;
+        slot += 1;
+        if (UF_STEREOTYPE_SEEDS[j].uf === host.uf) continue;
+        const from = UF_STEREOTYPE_SEEDS[j];
+        const id = `demo-reply-${from.uf.toLowerCase()}-${host.uf.toLowerCase()}-s${postSlot}-${slot}`;
+        if (seenIds.has(id)) continue;
+        replies.push(
+          replyRow(id, host.uf, from.uf, respectfulBanter(from, host, slot + postSlot), postId),
+        );
+        seenIds.add(id);
+        perPost[postId] = (perPost[postId] || 0) + 1;
+      }
     }
   });
 

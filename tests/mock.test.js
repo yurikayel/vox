@@ -2,16 +2,20 @@ import "../tests/setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import * as mock from "../client/js/mock.js";
-import { UF_ROUTE_IDS, MOCK_DEMO_UF_COUNT } from "../client/js/data/profiles-brazil-uf.js";
+import {
+  UF_ROUTE_IDS,
+  MOCK_DEMO_UF_COUNT,
+  MOCK_DEMO_TOPIC_COUNT,
+} from "../client/js/data/profiles-brazil-uf.js";
 
 test("mock - mockCommunities retorna tour UF demo", () => {
   const res = mock.mockCommunities();
   assert.equal(res.items[0].title, "Brasil Estereótipo (Demo Vox)");
 });
 
-test("mock - mockTopics retorna 27 topicos", () => {
+test("mock - mockTopics retorna 81 topicos (27×3)", () => {
   const tour = mock.mockTopics("demo-aprenda-vox");
-  assert.equal(tour.items.length, MOCK_DEMO_UF_COUNT);
+  assert.equal(tour.items.length, MOCK_DEMO_TOPIC_COUNT);
 });
 
 test("mock - mockReplies MG", () => {
@@ -30,7 +34,19 @@ test("mock - feira 6 listings", () => {
 });
 
 test("mock - recent topics", () => {
-  assert.equal(mock.mockRecentTopics().items.length, MOCK_DEMO_UF_COUNT);
+  assert.equal(mock.mockRecentTopics().items.length, MOCK_DEMO_TOPIC_COUNT);
+});
+
+test("mock - titulos Jose AL vs MA distintos", () => {
+  const tour = mock.mockTopics("demo-aprenda-vox");
+  const al = tour.items.filter((t) => t.author === "vx_demo_al").map((t) => t.title);
+  const ma = tour.items.filter((t) => t.author === "vx_demo_ma").map((t) => t.title);
+  assert.equal(al.length, 3);
+  assert.equal(ma.length, 3);
+  assert.notDeepEqual(al, ma);
+  for (const title of al.concat(ma)) {
+    assert.doesNotMatch(title, /nossa voz sem algoritmo estrangeiro/i);
+  }
 });
 
 test("mock - topic media temático (não avatar)", () => {
