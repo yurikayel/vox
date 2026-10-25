@@ -27,6 +27,8 @@ import * as postOwnership from "../post-ownership.js";
 import * as communityMirror from "../community-mirror.js";
 import * as stewardWizard from "../steward-wizard.js";
 import * as gatewayTelemetry from "../gateway-telemetry.js";
+import * as communitySeed from "../community-seed-checklist.js";
+import { computeCommunityNeighborStats } from "../render/community.js";
 import { attachInlineComposerHandlers } from "../inline-composer.js";
 import * as oauthProfile from "../oauth-profile.js";
 import * as contacts from "../contacts.js";
@@ -168,6 +170,35 @@ export async function showCommunity(communityId, tab = "posts") {
 
   const recentPeople = tab === "posts" ? peopleIndex.extractRecentAuthors(filteredTopics) : [];
 
+  const peerSettings = peers.getPeerSettings();
+  const gatewayState = gatewayTelemetry.getGatewayHealthState();
+  const memberCount = meta.memberCount != null ? Number(meta.memberCount) : null;
+  const neighborStats = computeCommunityNeighborStats({
+    recentPeople,
+    communityId,
+    memberCount,
+    gatewayState,
+    isDemo: Boolean(demo || meta.demo || communityId === mock.MOCK_DEMO_COMMUNITY.id),
+  });
+
+  let seedChecklist = null;
+  if (user && communitySeed.shouldOfferSeedRitual(communityId, user, meta)) {
+    const seedState = communitySeed.loadSeedState(communityId);
+    const topicCount = filteredTopics.length;
+    if (!communitySeed.isSeedComplete(seedState, { topicCount, peerEnabled: peerSettings.enabled })) {
+      seedChecklist = {
+        state: seedState,
+        ctx: {
+          topicCount,
+          peerEnabled: peerSettings.enabled,
+          commOnly: peerSettings.commOnly,
+        },
+      };
+    } else {
+      communitySeed.finalizeSeedIfComplete(communityId, { topicCount, peerEnabled: peerSettings.enabled });
+    }
+  }
+
   render.renderCommunity(main, communityId, filteredTopics, meta, {
     isMember,
     isMod: isUserMod,
@@ -176,6 +207,9 @@ export async function showCommunity(communityId, tab = "posts") {
     listings,
     proposals,
     recentPeople,
+    neighborStats,
+    commOnly: peerSettings.commOnly,
+    seedChecklist,
   });
 
   if (tab === "posts") {
@@ -202,8 +236,36 @@ export async function showCommunity(communityId, tab = "posts") {
   if (btnShare) {
     btnShare.addEventListener("click", () => {
       share.shareCommunity({ title: meta.title || communityId, communityId });
+      if (user && communitySeed.shouldOfferSeedRitual(communityId, user, meta)) {
+        communitySeed.recordSeedInvite(communityId);
+      }
     });
   }
+
+  document.getElementById("btn-neighbor-comm-only")?.addEventListener("click", () => {
+    const next = { ...peerSettings, commOnly: true, enabled: true };
+    peers.savePeerSettings(next);
+    communitySeed.saveSeedState(communityId, { commOnlyNudgeSeen: true });
+    share.showToast("Modo Apoiador: cache focado nas suas comunidades.");
+    location.hash = "#/settings/network#net-comm-only-wrap";
+  });
+
+  document.getElementById("btn-seed-invite")?.addEventListener("click", () => {
+    communitySeed.recordSeedInvite(communityId);
+    share.shareCommunity({ title: meta.title || communityId, communityId });
+    share.showToast(`Convite ${communitySeed.loadSeedState(communityId).invitesSent}/2 registrado.`);
+    route(parseRoute(location.hash.slice(1) || `/c/${communityId}`));
+  });
+
+  document.getElementById("btn-seed-dismiss")?.addEventListener("click", () => {
+    communitySeed.dismissSeedRitual(communityId);
+    share.showToast("Checklist dispensado — você pode reabrir em Configurações → Rede.");
+    route(parseRoute(location.hash.slice(1) || `/c/${communityId}`));
+  });
+
+  document.querySelector(".community-vox-seed a[href='#/settings/network']")?.addEventListener("click", () => {
+    communitySeed.saveSeedState(communityId, { activeAck: true });
+  });
 
   const btnJoin = document.getElementById("btn-join-comm");
   if (btnJoin && !isMember) {
