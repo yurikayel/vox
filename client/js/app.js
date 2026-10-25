@@ -4,6 +4,7 @@ import { wireRoute, setupHashchangeListener, routeImpl as route } from "./app/ro
 import { initDmListeners, initGossipListeners, initSocialInteractions } from "./app/init.js";
 import { syncIdentity } from "./app/screens-network.js";
 
+initSkyTheme();
 wireRoute();
 setupHashchangeListener();
 initDmListeners();

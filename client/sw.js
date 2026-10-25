@@ -1,7 +1,7 @@
 // Service Worker do Vox (PWA ? Porta da Cantina anime + shell offline)
 // NOTA ARQUITETURAL: WebRTC DataChannels operam exclusivamente na thread principal (DOM/Window).
-// O Service Worker atua no cache offline do shell e notificações de status, sem abrir WebRTC.
-const CACHE_NAME = "vox-pwa-v6.45-official-profile";
+// O Service Worker atua no cache offline do shell e notificaï¿½ï¿½es de status, sem abrir WebRTC.
+const CACHE_NAME = "vox-pwa-v6.49-celeste-sky-theme";
 const SHELL_ASSETS = [
   "./",
   "./index.html",
@@ -143,7 +143,7 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
 
-  // Requisições externas (gateways GraphQL, Arweave HTTP) passam direto pela rede
+  // Requisiï¿½ï¿½es externas (gateways GraphQL, Arweave HTTP) passam direto pela rede
   if (url.origin !== self.location.origin) {
     return;
   }
@@ -176,8 +176,8 @@ self.addEventListener("message", (event) => {
   const settings = data.settings || {};
   if (settings.backgroundRelay && typeof Notification !== "undefined" && Notification.permission === "granted") {
     self.registration
-      .showNotification("Vox ? Nó Leve em Segundo Plano", {
-        body: "Participação distribuída ativa (somente Wi-Fi com teto diário).",
+      .showNotification("Vox ? Nï¿½ Leve em Segundo Plano", {
+        body: "Participaï¿½ï¿½o distribuï¿½da ativa (somente Wi-Fi com teto diï¿½rio).",
         icon: "./icons/icon.svg",
         tag: "vox-relay-status",
         silent: true,
