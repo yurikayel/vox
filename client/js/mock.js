@@ -24,6 +24,11 @@ export const MOCK_DEMO_COMMUNITY = {
   owner: "vx_demo_mg",
   author: "vx_demo_mg",
   commercialEnabled: false,
+  visibility: "open",
+  memberCount: MOCK_DEMO_UF_COUNT,
+  welcomeRecado:
+    "Recado da comunidade: bem-vindos ao tour! Tratem este espaço como recados de Orkut — leveza, respeito e humor educativo. Um perfil por UF; nada de pessoas reais.",
+  headerTagline: "Comunidade do Brasil estereótipo — demo Vox",
 };
 
 export const MOCK_DEMO_COMMUNITY_FEIRA = {
