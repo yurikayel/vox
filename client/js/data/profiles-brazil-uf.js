@@ -55,7 +55,7 @@ export const UF_ROUTE_IDS = UF_STEREOTYPE_SEEDS.map((s) => `vx_demo_${s.uf.toLow
 /** Mídia de post por UF — tema cultural/regional (nunca retrato de avatar). */
 export const postMediaByUf = {
   ac: {
-    postImageUrl: "https://images.unsplash.com/photo-1448375249986-3937330462b7?w=800&q=80",
+    postImageUrl: "https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?w=800&q=80",
     postAlt: "Floresta tropical — calor de porteira acreana (demo)",
   },
   al: {
@@ -63,11 +63,11 @@ export const postMediaByUf = {
     postAlt: "Praia e litoral — forró e mar alagoano (demo)",
   },
   ap: {
-    postImageUrl: "https://images.unsplash.com/photo-1518173946687-a4c0362aee7f?w=800&q=80",
+    postImageUrl: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&q=80",
     postAlt: "Vegetação de fronteira norte — Amapá (demo)",
   },
   am: {
-    postImageUrl: "https://images.unsplash.com/photo-1585314152723-904fc4f4d312?w=800&q=80",
+    postImageUrl: "https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=800&q=80",
     postAlt: "Rio e floresta — memória amazonense (demo)",
   },
   ba: {
@@ -75,11 +75,11 @@ export const postMediaByUf = {
     postAlt: "Tambor e festa — axé e samba de roda baiano (demo)",
   },
   ce: {
-    postImageUrl: "https://images.unsplash.com/photo-1509316785289-025f5b846b8f?w=800&q=80",
+    postImageUrl: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=800&q=80",
     postAlt: "Sol forte do sertão — humor e jerimum cearense (demo)",
   },
   df: {
-    postImageUrl: "https://images.unsplash.com/photo-1546550547-93d4e4c6b5e1?w=800&q=80",
+    postImageUrl: "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?w=800&q=80",
     postAlt: "Horizonte urbano — Plano Piloto e candango (demo)",
   },
   es: {
@@ -87,23 +87,23 @@ export const postMediaByUf = {
     postAlt: "Montanhas e mar — calma capixaba (demo)",
   },
   go: {
-    postImageUrl: "https://images.unsplash.com/photo-1500382017468-90403deda075?w=800&q=80",
+    postImageUrl: "https://images.unsplash.com/photo-1501004318641-b39e6451bec6?w=800&q=80",
     postAlt: "Cerrado e campo — pequi e festa goiana (demo)",
   },
   ma: {
-    postImageUrl: "https://images.unsplash.com/photo-1519892306449-f6395edf9ebe?w=800&q=80",
+    postImageUrl: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&q=80",
     postAlt: "Tambores e festa popular — bumba e cultura maranhense (demo)",
   },
   mt: {
-    postImageUrl: "https://images.unsplash.com/photo-1500595040049-30c4151484bf?w=800&q=80",
+    postImageUrl: "https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=800&q=80",
     postAlt: "Pôr do sol no campo — Pantanal mato-grossense (demo)",
   },
   ms: {
-    postImageUrl: "https://images.unsplash.com/photo-1439066615861-d1bef174757f?w=800&q=80",
+    postImageUrl: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=800&q=80",
     postAlt: "Paisagem de planície — tereré e fronteira sul-mato-grossense (demo)",
   },
   mg: {
-    postImageUrl: "https://images.unsplash.com/photo-1497935586351-b67026826061?w=800&q=80",
+    postImageUrl: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&q=80",
     postAlt: "Café coado — prosa mineira sem pressa (demo)",
   },
   pa: {
@@ -111,7 +111,7 @@ export const postMediaByUf = {
     postAlt: "Barco no estuário — açaí e Ver-o-Peso paraense (demo)",
   },
   pb: {
-    postImageUrl: "https://images.unsplash.com/photo-1509316975858-15e1b34a7649?w=800&q=80",
+    postImageUrl: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80",
     postAlt: "Sertão e litoral — forró paraibano (demo)",
   },
   pr: {
@@ -119,7 +119,7 @@ export const postMediaByUf = {
     postAlt: "Mata de pinheiros — chimarrão paranaense (demo)",
   },
   pe: {
-    postImageUrl: "https://images.unsplash.com/photo-1533174078815-4f917a568892?w=800&q=80",
+    postImageUrl: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&q=80",
     postAlt: "Cores de frevo e maracatu — criatividade pernambucana (demo)",
   },
   pi: {
@@ -127,7 +127,7 @@ export const postMediaByUf = {
     postAlt: "Estrada no sertão — persistência piauiense (demo)",
   },
   rj: {
-    postImageUrl: "https://images.unsplash.com/photo-1483728642382-8ead366eed7a?w=800&q=80",
+    postImageUrl: "https://images.unsplash.com/photo-1483729558449-99ef09a8c325?w=800&q=80",
     postAlt: "Orla e morros — samba carioca (demo)",
   },
   rn: {
@@ -135,19 +135,19 @@ export const postMediaByUf = {
     postAlt: "Dunas e vento — litoral potiguar (demo)",
   },
   rs: {
-    postImageUrl: "https://images.unsplash.com/photo-1416879595882-3383a0488b5b?w=800&q=80",
+    postImageUrl: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80",
     postAlt: "Campanha gaúcha — chimarrão e tradição (demo)",
   },
   ro: {
-    postImageUrl: "https://images.unsplash.com/photo-1518837695015-87179a5f262a?w=800&q=80",
+    postImageUrl: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&q=80",
     postAlt: "Estrada e café — comunidade rondoniense (demo)",
   },
   rr: {
-    postImageUrl: "https://images.unsplash.com/photo-1464822759023-fed62297fa48?w=800&q=80",
+    postImageUrl: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80",
     postAlt: "Montanhas do norte — acolhimento roraimense (demo)",
   },
   sc: {
-    postImageUrl: "https://images.unsplash.com/photo-1571115764595-39278f141678?w=800&q=80",
+    postImageUrl: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80",
     postAlt: "Costa organizada — praia catarinense (demo)",
   },
   se: {
@@ -155,13 +155,125 @@ export const postMediaByUf = {
     postAlt: "Mesinha com frutos do mar — litoral sergipano (demo)",
   },
   sp: {
-    postImageUrl: "https://images.unsplash.com/photo-1444723127015-bd81fda2d572?w=800&q=80",
+    postImageUrl: "https://images.unsplash.com/photo-1514565131-fce0801e5785?w=800&q=80",
     postAlt: "Skyline urbano — metrô e pluralidade paulistana (demo)",
   },
   to: {
-    postImageUrl: "https://images.unsplash.com/photo-1470071450284-b48dbe1b276b?w=800&q=80",
+    postImageUrl: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=800&q=80",
     postAlt: "Nascer do sol no cerrado — Jalapão tocantinense (demo)",
   },
+};
+
+/** Corpo dos posts demo UF — voz regional (disclaimer só no perfil). */
+export const UF_DEMO_POST_COPY = {
+  ac:
+    "🌳 Rio Branco no bolso e tacacá na memória: porteira aberta, conversa longa e floresta que a gente defende com orgulho, não com meme ofensivo. " +
+    "Acre é fronteira calorosa — migração, borracha na história e hospitalidade que não precisa de filtro patrocinado pra aparecer. " +
+    "Conta aí: qual cheiro ou som te lembra casa no interior? Clichê leve, respeito sempre.",
+  al:
+    "🌊 Maceió no coração e sururu na panela: forró de terreiro, risada alta e mar que não cabe num story de 15 segundos. " +
+    "Alagoas é litoral nordestino com papo reto — festa, família e orgulho sem zombaria de quem veio de outro estado. " +
+    "Manda um emoji de praia e diz qual música alagoana você colocaria na trilha da comunidade.",
+  ap:
+    "🍃 Macapá mistura Amazônia e Guiana na mesma mesa — comunidade pequena, laço grande, fronteira que ensina a ouvir antes de falar. " +
+    "Aqui a demo é sobre voz do norte extremo com carinho: natureza, mistura cultural e zero caricatura de quem mora de verdade. " +
+    "Se você já cruzou fronteira de barco ou estrada, conta como foi — história real vale mais que estereótipo vazio.",
+  am:
+    "🐟 Manaus cheira a peixe assado no mercado e história de caboclo que não deveria sumir da timeline por algoritmo estrangeiro. " +
+    "Amazonas é rio, floresta e memória compartilhada — rede nossa quando a conversa é de respeito e não de ridicularizar sotaque. " +
+    "Qual igarapé, festa ou prato te conecta com o norte? Bora trocar cultura sem empurrar briga.",
+  ba:
+    "🥁 Salvador pulsa axé, acarajé quente e samba de roda que não aceita palco vazio nem exploração de tradição. " +
+    "Bahia é democracia com tempero: religião, música e comida de rua contadas na nossa voz, clichê leve e carinho grande. " +
+    "Pelourinho ou orla — onde você começaria um tour honesto pelo seu bairro? Responde com emoji e respeito.",
+  ce:
+    "☀️ Sol cearense bate forte, jerimum na mão e humor fino que desarma treta — piada boa, nunca humilhação. " +
+    "Ceará é sertão corajoso e litoral acolhedor; aqui a gente testa rede com coragem de quem enfrenta seca e ainda abre a porta. " +
+    "Manda uma piada limpa ou um orgulho cearense que cabe num post sem impulsionar ninguém pra fora da conversa.",
+  df:
+    "🏛️ Candanga de todo canto: Plano Piloto no horizonte, churrasco de domingo e política na mesa — sempre com respeito, nunca com ódio performático. " +
+    "DF é pluralidade real: interior goiano, nordeste, sul — mistura que funciona quando a rede é nossa. " +
+    "De onde você veio pra Brasília e o que trouxe na mochila além do CPF? História de migração também é identidade.",
+  es:
+    "🌴 Colina, café coado e moqueca capixaba: calma que não é frieza — é ritmo de quem divide montanha e mar no mesmo dia. " +
+    "Espírito Santo cabe no prato e na prosa: clichê capixaba leve, hospitalidade de vizinho, zero zombaria de quem fala devagar. " +
+    "Vitória, Vila Velha ou roça — qual vista te representa? Comenta com emoji de paz.",
+  go:
+    "🌾 Goiás no peito: pequi com respeito, empanado de fim de semana e festa de interior que lota praça sem precisar de anúncio. " +
+    "Cerrado é raiz forte — calor, estrada e gente que cumprimenta de longe e senta perto na hora do café. " +
+    "Qual cantor goiano ou prato do cerrado você colocaria na trilha desta comunidade? Uai, digo: bora conversar.",
+  ma:
+    "🎭 São Luís respira bumba-meuboi na calçada e reggae que desce pro centro sem pedir licença de plataforma gringa. " +
+    "Tambor de crioula longe de palco vazio — cultura maranhense que merece rede própria, memória afetiva e thread de respeito. " +
+    "Qual festa popular do seu estado combina com nosso toque maranhense? Clichê leve, nunca maldade — vem testar a timeline comigo.",
+  mt:
+    "🐂 Pantanal no coração: pôr do sol largo, churrasco de estrada e pragmatismo bonito de quem sabe esperar a chuva. " +
+    "Mato Grosso é campo, rio e boiada na memória — demo pra mostrar voz do centro-oeste sem virar piada de interior. " +
+    "Já viu jacaré na beira da estrada ou só no documentário? Conta sem exagerar — respeito ao bioma primeiro.",
+  ms:
+    "🧉 Tereré gelado na mão, calor seco e fronteira que aprendeu a cumprimentar antes de negociar. " +
+    "Sul Mato-Grossense é chimarrão compartilhado e estrada reta — comunidade que não precisa de algoritmo pra achar vizinho. " +
+    "Mate amargo ou doce? Responde e diz de qual cidade interior você sente falta quando viaja.",
+  mg:
+    "☕ Uai, sô — café coado, pão de queijo quente e prosa sem pressa na varanda. " +
+    "Minas é solidariedade de vizinho: cidade histórica, serra e interior que cabe num post longo sem repetir footer de plataforma. " +
+    "BH, Triângulo ou Vale — qual sotaque mineiro você acha bonito (e não motivo de piada)? Bora manter a conversa honesta.",
+  pa:
+    "🛶 Belém cheira Ver-o-Peso, açaí na tigela grossa e carimbó no pé — estuário que não cabe em template gringo de feed. " +
+    "Pará é rio, mangue e orgulho paraense contado na nossa voz; clichê de açaí sim, zombaria de povo não. " +
+    "Manaus ou Belém — o que sua região tem em comum com a nossa mesa? Troca cultura aqui embaixo 👇",
+  pb:
+    "🌵 Paraíba de sertão quente e litoral ventoso: carne de sol, forró no coração e fé em comunidade que segura o vizinho. " +
+    "João Pessoa ou Campina — cada canto tem meme afetivo, não bullying regional. " +
+    "Qual frevo ou moda de viola te lembra domingo em família? Emoji de sol e respeito.",
+  pr:
+    "🌲 Pinheiro, chimarrão amargo e barreado no inverno — Paraná é ordem carinhosa e trabalho bem feito, não troça de sotaque. " +
+    "Curitiba e interior: mate rodado, estrada bonita e orgulho paranaense leve o bastante pra demo educativa. " +
+    "Litoral ou planalto — onde você congelaria um barreado pra dividir na feira demo?",
+  pe:
+    "🎨 Recife colorido: frevo no passo, maracatu na memória e bolo de rolo fatia generosa na mesa. " +
+    "Pernambuco é criatividade com docência — revolução cantada, cordel no bolso, zero ridicularizar nordeste. " +
+    "Olinda ou Porto de Galinhas — qual bloco você entraria sem pagar impulsionamento? Só conversa boa.",
+  pi:
+    "🌞 Sertão piauiense quente e gente forte: vatapá de galinha, piada seca e persistência que não pede palco vazio. " +
+    "Piauí cabe no prato e na história — demo pra lembrar que estado pequeno no mapa não é pequeno na cultura. " +
+    "Teresina ou interior — o que te orgulha do PI sem diminuir o vizinho? Responde com carinho.",
+  rj:
+    "🏖️ Laje, samba e trilha no visual: carioca é brevidade na fala e solidariedade escondida no corredor do prédio. " +
+    "Feijoada de domingo, malandragem boa (a que ajuda) e orgulho de morro e orla na mesma timeline honesta. " +
+    "Copacabana ou Madureira — qual ritmo carioca você colocaria no primeiro post da sua comunidade?",
+  rn:
+    "🌊 Potiguar de vento forte: tapioca na chapa, forró no sal e sol que convida conversa na areia. " +
+    "Rio Grande do Norte é ginga e hospitalidade de litoral — clichê de dunas sim, desrespeito nunca. " +
+    "Natal ou Mossoró — manda emoji de onda e diz qual cantor potiguar merece thread própria.",
+  rs:
+    "🧉 Chimarrão rodado, churrasco de fim de semana e campanha no horizonte — gaúcho com orgulho, sem treta com outro estado. " +
+    "Rio Grande do Sul é tradição compartilhada: cultura, mate e abraço pro norte quando a conversa é fraterna. " +
+    "Porto Alegre ou interior — qual trilha gaúcha combina com demo de rede comunitária? Sem impulsionar, só trocar ideia.",
+  ro:
+    "🌳 Estrada longa, café forte e comunidade rondoniense que se reinventa sem esquecer quem chegou primeiro. " +
+    "Madeira, migração e floresta — voz do norte oeste contada com respeito, não com piada de atraso. " +
+    "Porto Velho na memória: o que sua cidade aprendeu com quem veio de fora? História real > estereótipo.",
+  rr:
+    "🏔️ Roraima no extremo norte: montanha, diversidade indígena e acolhimento que começa ouvindo. " +
+    "Fronteira e respeito caminham juntos — demo pra testar conversa séria sobre território sem caricatura. " +
+    "Boa Vista ou interior — qual paisagem te lembra que Brasil é continental? Comenta com reverência.",
+  sc:
+    "🌊 Praia organizada, ostra no prato e festa junina pontual — catarinense é sequence no passo e carinho no detalhe. " +
+    "Santa Catarina mistura litoral alemão e sotaque doce sem virar troça de migrante — clichê leve, inclusão real. " +
+    "Florianópolis ou serra — onde você serviria o primeiro café demo da comunidade?",
+  se:
+    "🦀 Menor estado, coração grande: caranguejo, mangue e memória afetiva de litoral que cabe num abraço. " +
+    "Sergipe é proximidade — todo mundo conhece alguém que conhece alguém; perfeito pra testar rede local honesta. " +
+    "Aracaju na veia: qual cheiro de mar te traz de volta? Emoji de caranguejo permitido 🦀",
+  sp:
+    "🚇 Paulistano no corre: padaria 6h, metrô lotado e pluralidade que cabe num vagão — pressa sim, solidariedade também. " +
+    "São Paulo é bairro, migração e café coado no intervalo — demo sem reduzir cidade a meme de frieza. " +
+    "Qual linha de metrô ou bairro te representa? Responde rápido (é o estilo) mas com respeito.",
+  to:
+    "🌅 Jalapão no coração: pequi, pôr do sol no cerrado e comunidade jovem plantando raiz onde antes só passava estrada. " +
+    "Tocantins é estado novo com memória antiga do cerrado — clichê de paisagem sim, desrespeito ao bioma não. " +
+    "Palmas ou interior — o que você defende quando falam mal do norte central? Voz firme, tom leve.",
 };
 
 function readmeFor(seed) {
@@ -229,8 +341,7 @@ export function buildUfDemoTopics(now = Date.now()) {
       communityId: "demo-aprenda-vox",
       title: `${seed.displayName} (${seed.uf}): nossa voz sem algoritmo estrangeiro`,
       body:
-        `${seed.vibe} Aqui no Vox a conversa fica na comunidade — sem impulsionar post. ` +
-        `Perfil **estereótipo demo** para testar a plataforma. #${seed.hashtag} #perfildemo #brasil`,
+        `${UF_DEMO_POST_COPY[uf] || seed.vibe} #${seed.hashtag} #perfildemo #brasil`,
       image: media.postImageUrl,
       imageAlt: media.postAlt,
       author: routeId,
