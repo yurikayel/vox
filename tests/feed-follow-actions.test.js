@@ -24,9 +24,11 @@ test("feed follow - comentários decoupled do overlay", () => {
     ts: Date.now(),
   });
   assert.ok(html.includes("post-comments-surface"));
-  const mediaBlock = html.slice(html.indexOf("post-media-container"), html.indexOf("insta-actions"));
+  const commentsIdx = html.indexOf("post-comments");
+  const mediaBlock = html.slice(html.indexOf("post-media-container"), commentsIdx === -1 ? html.length : commentsIdx);
   assert.ok(!mediaBlock.includes("post-comments"));
-  assert.ok(!mediaBlock.includes("post-overlay-excerpt") || mediaBlock.includes("post-overlay"));
+  assert.ok(html.includes("post-actions-overlay"));
+  assert.ok(!html.includes("post-toolbar"));
 });
 
 test("feed toolbar - overflow esconde estrela e copy-md da barra principal", () => {
