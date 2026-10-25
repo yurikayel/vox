@@ -18,8 +18,8 @@ const OAUTH_SVG_META = `<svg class="oauth-btn__icon oauth-btn__icon--meta" width
 export function renderOAuthEnrich(container) {
   if (!container) return;
   container.innerHTML = `
-    <div class="modal-overlay oauth-enrich-overlay" id="oauth-enrich-overlay" role="dialog" aria-modal="true" aria-labelledby="oauth-enrich-title">
-      <div class="modal-dialog modal-dialog-solid oauth-enrich-dialog">
+    <div class="modal-overlay modal-sheet oauth-enrich-overlay" id="oauth-enrich-overlay" role="dialog" aria-modal="true" aria-labelledby="oauth-enrich-title">
+      <div class="modal-dialog modal-card modal-dialog-solid oauth-enrich-dialog">
         <h2 id="oauth-enrich-title" class="oauth-enrich-title">Como quer aparecer?</h2>
         <p class="desc oauth-enrich-lead">Importe <strong>nome e foto</strong> (opcional). Seu ID na rede continua sendo <code>vx_*</code> neste aparelho — não é login centralizado.</p>
         <div id="oauth-enrich-error" class="oauth-enrich-error" role="alert" aria-live="polite" hidden></div>
@@ -116,12 +116,12 @@ export function renderPostPactConnectModal(container, routeId) {
   if (!container || !routeId) return;
   const link = `${typeof location !== "undefined" ? location.origin + location.pathname : ""}#/connect/${encodeURIComponent(routeId)}`;
   container.innerHTML = `
-    <div class="modal-overlay" id="post-pact-connect-overlay" role="dialog" aria-modal="true" style="z-index:10001;">
-      <div class="modal-dialog card" style="max-width:420px;">
-        <h3 style="margin:0 0 0.5rem;">Seu link #/connect</h3>
-        <p class="desc" style="margin:0 0 0.75rem;">Compartilhe para outros adicionarem você diretamente.</p>
-        <p class="meta" style="word-break:break-all;"><code id="post-pact-connect-url">${escapeHtml(link)}</code></p>
-        <div style="display:flex; gap:0.5rem; margin-top:1rem; flex-wrap:wrap;">
+    <div class="modal-overlay modal-sheet modal-sheet--raised" id="post-pact-connect-overlay" role="dialog" aria-modal="true">
+      <div class="modal-dialog modal-card modal-card--narrow">
+        <h3 class="modal-card-title">Seu link #/connect</h3>
+        <p class="desc modal-card-lead">Compartilhe para outros adicionarem você diretamente.</p>
+        <p class="meta modal-connect-url"><code id="post-pact-connect-url">${escapeHtml(link)}</code></p>
+        <div class="modal-actions modal-actions--row">
           <button type="button" id="btn-post-pact-share-connect" class="btn btn-primary" data-route="${escapeHtml(routeId)}">Compartilhar</button>
           <button type="button" id="btn-post-pact-connect-close" class="btn btn-outline">Continuar</button>
         </div>
@@ -162,16 +162,16 @@ export function renderConnectPreview(main, profile, routeId, { isContact = false
 export function renderCantinaGate(container) {
   if (!container) return;
   container.innerHTML = `
-    <div class="modal-overlay cantina-overlay" id="cantina-modal-overlay" role="dialog" aria-modal="true" aria-label="Porta da Cantina">
-      <div class="modal-dialog cantina-dialog">
+    <div class="modal-overlay modal-sheet cantina-overlay" id="cantina-modal-overlay" role="dialog" aria-modal="true" aria-label="Porta da Cantina">
+      <div class="modal-dialog modal-card cantina-dialog">
         <div class="cantina-art-wrap">
           ${CANTINA_ART}
         </div>
-        <div class="cantina-actions" style="display:flex; flex-direction:column; gap:0.6rem;">
-          <button id="btn-cantina-enter" class="btn btn-primary btn-cantina-enter" style="padding:0.75rem; font-weight:700; font-size:1rem;">Entrar — sou humano</button>
-          <details class="cantina-details" style="font-size:0.82rem; margin-top:0.35rem; cursor:pointer;">
-            <summary style="color:var(--muted); text-align:center;">O que isso significa?</summary>
-            <p class="desc" style="margin:0.4rem 0 0; text-align:left; font-size:0.8rem; background:var(--surface-soft); padding:8px 10px; border-radius:var(--radius-sm); border:1px solid var(--border);">No Vox você não precisa de CPF nem de cadastro sob vigilância. Protegemos o espaço recusando fazendas de automação para que pessoas reais conversem em paz sob o Pacto Vox.</p>
+        <div class="cantina-actions modal-actions modal-actions--stack">
+          <button id="btn-cantina-enter" class="btn btn-primary btn-cantina-enter btn-cantina-enter-lg">Entrar — sou humano</button>
+          <details class="cantina-details">
+            <summary class="cantina-details-summary">O que isso significa?</summary>
+            <p class="desc cantina-details-body">No Vox você não precisa de CPF nem de cadastro sob vigilância. Protegemos o espaço recusando fazendas de automação para que pessoas reais conversem em paz sob o Pacto Vox.</p>
           </details>
         </div>
       </div>
@@ -186,40 +186,40 @@ export function closeCantinaGate(container) {
 export function renderPactModal(container) {
   if (!container) return;
   container.innerHTML = `
-    <div class="modal-overlay" id="pact-modal-overlay">
-      <div class="modal-dialog">
-        <div style="text-align:center; margin-bottom:1rem;">
-          <h2 style="margin:0 0 0.25rem; font-size:1.25rem;">Bem-vindo ao Vox</h2>
-          <p class="desc" style="margin:0;">Vox populi na prática: conversas e comunidades direto nos aparelhos, sem controle central.</p>
+    <div class="modal-overlay modal-sheet" id="pact-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="pact-welcome-title">
+      <div class="modal-dialog modal-card">
+        <div class="modal-card-header modal-card-header--center">
+          <h2 id="pact-welcome-title" class="modal-card-heading">Bem-vindo ao Vox</h2>
+          <p class="desc modal-card-intro">Vox populi na prática: conversas e comunidades direto nos aparelhos, sem controle central.</p>
         </div>
 
-        <div class="pact-feature">
-          <div class="pact-feature-icon">🛡️</div>
+        <div class="modal-feature">
+          <div class="modal-feature-icon" aria-hidden="true">🛡️</div>
           <div>
             <strong>1. Seus dados são seus</strong>
-            <p class="desc" style="margin:0.2rem 0 0;">Suas mensagens e publicações pertencem a você. Nenhuma empresa controla sua conta.</p>
+            <p class="desc modal-feature-desc">Suas mensagens e publicações pertencem a você. Nenhuma empresa controla sua conta.</p>
           </div>
         </div>
 
-        <div class="pact-feature">
-          <div class="pact-feature-icon">⚡</div>
+        <div class="modal-feature">
+          <div class="modal-feature-icon" aria-hidden="true">⚡</div>
           <div>
             <strong>2. Rede cooperativa</strong>
-            <p class="desc" style="margin:0.2rem 0 0;">O app aberto ajuda a distribuir conteúdos para outros usuários sem servidores caros.</p>
+            <p class="desc modal-feature-desc">O app aberto ajuda a distribuir conteúdos para outros usuários sem servidores caros.</p>
           </div>
         </div>
 
-        <div class="pact-feature">
-          <div class="pact-feature-icon">🔒</div>
+        <div class="modal-feature">
+          <div class="modal-feature-icon" aria-hidden="true">🔒</div>
           <div>
             <strong>3. Controle total</strong>
-            <p class="desc" style="margin:0.2rem 0 0;">Respeita conexão Wi-Fi, teto diário de dados e você pode pausar a qualquer momento.</p>
+            <p class="desc modal-feature-desc">Respeita conexão Wi-Fi, teto diário de dados e você pode pausar a qualquer momento.</p>
           </div>
         </div>
 
-        <div style="margin-top:1.25rem; display:flex; flex-direction:column; gap:0.5rem;">
-          <button id="btn-pact-accept" class="btn btn-primary" style="padding:0.65rem; font-weight:700;">Continuar</button>
-          <button id="btn-pact-settings" class="btn btn-outline" style="padding:0.5rem; font-size:0.85rem;">Ajustar rede depois</button>
+        <div class="modal-actions modal-actions--stack">
+          <button id="btn-pact-accept" class="btn btn-primary btn-pact-continue">Continuar</button>
+          <button id="btn-pact-settings" class="btn btn-outline btn-pact-settings">Ajustar rede depois</button>
         </div>
       </div>
     </div>
@@ -246,8 +246,8 @@ export function renderZapModal(container, { author = "", authorName = "Autor", p
   }
 
   container.innerHTML = `
-    <div class="modal-overlay" id="zap-modal-overlay">
-      <div class="modal-dialog zap-modal-dialog" style="max-width: 440px; width: 100%; padding: 1.5rem;">
+    <div class="modal-overlay modal-sheet" id="zap-modal-overlay">
+      <div class="modal-dialog modal-card zap-modal-dialog">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
           <h3 style="margin:0; font-size:1.15rem; display:flex; align-items:center; gap:6px;">
             <span>⚡</span> Pix Zap para ${escapeHtml(authorName)}
@@ -304,8 +304,8 @@ export function renderPostEditModal(container, { id = "", title = "", body = "",
       </label>`
     : "";
   container.innerHTML = `
-    <div class="modal-overlay post-edit-overlay" id="post-edit-modal-overlay" role="dialog" aria-modal="true" aria-label="Editar publicação">
-      <div class="modal-dialog modal-dialog-solid post-edit-dialog">
+    <div class="modal-overlay modal-sheet post-edit-overlay" id="post-edit-modal-overlay" role="dialog" aria-modal="true" aria-label="Editar publicação">
+      <div class="modal-dialog modal-card modal-dialog-solid post-edit-dialog">
         <div class="post-edit-head">
           <h3 class="post-edit-title">Editar publicação</h3>
           <button type="button" class="btn btn-sm btn-outline btn-close-post-edit post-edit-close" aria-label="Fechar">✕</button>
