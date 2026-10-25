@@ -174,7 +174,7 @@ a:hover {
   gap: 8px;
 }
 
-/* iOS-style squircle clip for opaque logo tiles (navy or white paper). */
+/* iOS squircle: light theme = navy tile (white X); dark theme = white tile (blue X). */
 .brand-logo.brand-mark,
 .brand-mark {
   width: 32px;
@@ -186,11 +186,13 @@ a:hover {
   object-fit: cover;
 }
 
+/* Default (light): `.brand-mark--light` → icons/icon-512.png */
 .brand-mark--dark {
   display: none;
 }
 
 @media (prefers-color-scheme: dark) {
+  /* Dark: `.brand-mark--dark` → icons/icon-white-512.png */
   .brand-mark--light {
     display: none;
   }
