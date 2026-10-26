@@ -1,5 +1,8 @@
 # Wizard operador Steward (brainstorm)
 
+> **Status:** SUPERSEDED por **V-I08** — implementação canônica: [steward-relay-kit.md](./steward-relay-kit.md), wizard em `client/js/steward-wizard.js`, kits `tools/steward-kit-*`. Mantido como histórico de exploração (DOC-05).
+
+
 **Rota alvo:** `#/settings/network/steward` · **MVP 5 passos**
 
 1. Pledge camada 3 + link compliance  

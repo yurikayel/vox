@@ -1,8 +1,10 @@
 # Inventário — estado Vox + tarefas de documentação (nov/2026)
 
-> **Baseline produto:** `main` **`5609ae4`** (inventário **`0420882`** · T1 Antigravity **`26e7b7d`** · V-I08 **`898509c`**) · SW **`vox-pwa-v6.83-steward-kit-v-i08`** · **355** testes (**333** JS + **22** Python) · Pages **https://yurikayel.github.io/vox/**  
-> **Escopo:** mapa do que existe hoje + **N=20** tarefas para revisão/documentação/completude — não substitui execução de T2 (2º espelho) nem piloto humano.  
+> **Baseline produto:** `main` **`e44a1b4`** (direcionamento **`40bb954`** · inventário **`0420882`** · T1 Antigravity **`26e7b7d`** · V-I08 **`898509c`**) · SW **`vox-pwa-v6.83-steward-kit-v-i08`** · **355** testes (**333** JS + **22** Python) · Pages **https://yurikayel.github.io/vox/**  
+> **Escopo:** mapa do que existe hoje + **N=20** tarefas núcleo (4×5 DOC/NET/CODE/PIL **01–05**) **+ DOC-06…08** doc/review — não substitui execução de T2 (2º espelho) nem piloto humano.  
 > **Política de agentes:** Composer 2.5 only (lobby politica).
+
+**Plano mestre N=25 (trilha EXP):** [dossie-geral-inventario-master-breakdown-2026-11.md](./dossie-geral-inventario-master-breakdown-2026-11.md) — checklist **EXP-01…05** só no dossiê; DOC/NET/CODE/PIL **01–05** equivalentes aqui (§4–§5).
 
 Complementa [direcionamento-crescimento-rede-2026-11.md](./direcionamento-crescimento-rede-2026-11.md), [rede-sustentada-participantes.md](./rede-sustentada-participantes.md), [backlog-participacao-rede.md](./backlog-participacao-rede.md), [brainstorm-proximas-10-tarefas-pos-v82-2026-11.md](./brainstorm-proximas-10-tarefas-pos-v82-2026-11.md) e [brainstorm-dez-tarefas-estrategia-2026-10.md](./brainstorm-dez-tarefas-estrategia-2026-10.md).
 
@@ -96,8 +98,10 @@ Legenda: **fresh** = alinhado a `99180f9` / 355 testes / participação pós-v82
 
 ### 2.5 Índice mestre sugerido (entrada única para revisores)
 
+Ver também [docs/README.md](./README.md) (DOC-03). Trilhas:
+
 1. Participação: **rede-sustentada** → **backlog V-P** → **infra-participativa** → **auto-escala**  
-2. Roadmap: **brainstorm pós-v82** → **brainstorm out/2026** → **antigravity-estrategia**  
+2. Roadmap: **brainstorm pós-v82** → **brainstorm out/2026** → **antigravity-estrategia** · plano master **N=25:** [dossiê](./dossie-geral-inventario-master-breakdown-2026-11.md)  
 3. Ops steward: **steward-relay-kit** → **seed 15min** → **ops-shell-mirrors**  
 4. Dev: **DEV.md** + **README release line** + **`sw.js` CACHE_NAME**
 
@@ -259,6 +263,10 @@ Cada tarefa: **objetivo**, **DoD revisado**, **owner**, **prioridade**, **links*
 - [ ] **PIL-03** Retrospectiva  
 - [ ] **PIL-04** Barra Apoiadores/steward  
 - [ ] **PIL-05** Mod E1–E5  
+
+### Expansão POSSE & ecossistema (EXP) — checklist no dossiê
+
+Trilha **EXP-01…05** (POSSE, embed, fork, backup HTML, Bridge MV3): checklist e DoD em [dossie-geral-inventario-master-breakdown-2026-11.md](./dossie-geral-inventario-master-breakdown-2026-11.md) § Trilha E — **não** duplicar aqui.
 
 ---
 
