@@ -17,10 +17,10 @@ No feed, o layout é **híbrido**: texto estilo **X** (caption antes da toolbar)
 
 | Campo | Valor |
 |-------|--------|
-| **SHA** | `bd80399` |
+| **SHA** | `26e7b7d` |
 | **Branch** | `main` |
-| **Testes** | **201** (`187` JS + `14` Python) — `npm test` na raiz |
-| **Service worker** | `vox-pwa-v6.20-listing-signed-gossip-ui` |
+| **Testes** | **355** (`333` JS + `22` Python) — `npm test` na raiz |
+| **Service worker** | `vox-pwa-v6.83-steward-kit-v-i08` |
 | **Deploy** | Push em `main` → GitHub Pages; após deploy use **hard refresh** (`Ctrl+Shift+R`) para trocar o SW |
 
 Malha: gossip **`CACHE_MANIFEST`** + prioridade **WANT**; feira **Classificados** com ofertas assinadas, status/retratação na malha ([`listing-ui.js`](./client/js/listing-ui.js)). Seed steward: [`docs/steward-seed-15min.md`](./docs/steward-seed-15min.md).
