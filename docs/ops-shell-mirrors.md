@@ -5,7 +5,19 @@
 | Mirror | Papel |
 |--------|--------|
 | **A** | GitHub Pages — workflow [`deploy-pages.yml`](../.github/workflows/deploy-pages.yml) em push `main` |
-| **B** | Cloudflare Pages **ou** nginx coletivo (voluntário) |
+| **B** | Cloudflare Pages **ou** nginx coletivo (voluntário) · CI opcional: [`.github/workflows/deploy-shell-b.yml`](../.github/workflows/deploy-shell-b.yml) *(desligado até secrets)* |
+
+## Como ligar o workflow (GitHub Actions → shell B)
+
+Espelho B continua **`planned`** até URL pública verificada na tabela T2 — ligar o workflow **não** inventa `base_url`.
+
+1. **Cloudflare:** conta com permissão em **Workers & Pages**; criar projeto Pages (nome anotado para o secret abaixo) — pode ficar vazio até o primeiro upload.
+2. **Token API:** Cloudflare → *My Profile* → *API Tokens* → template *Edit Cloudflare Workers* (ou token custom com *Account → Cloudflare Pages → Edit*); copiar **sem** commitar no repo.
+3. **Secrets no GitHub** (`Settings → Secrets and variables → Actions`): `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_PAGES_PROJECT_NAME` (nome exato do projeto Pages); opcional mas recomendado para paridade OAuth com A: `VOX_GOOGLE_CLIENT_ID`, `VOX_FACEBOOK_APP_ID` (pedir ao mantenedor por canal seguro).
+4. **Disparo manual:** *Actions* → **Deploy shell B — Cloudflare Pages** → *Run workflow* → campo `confirm` = `DEPLOY` (só `workflow_dispatch`; push em `main` **não** aciona B).
+5. **Pós-deploy (humano):** anotar URL em *Cloudflare Pages → Custom domains* / `*.pages.dev`; smoke `sw.js` + `#/settings/network`; **só então** preencher `base_url` e marcar `live` na tabela T2 abaixo.
+
+Sem os três secrets Cloudflare, o job termina em **no-op** (notice no log) — comportamento esperado.
 
 ## Integridade (release)
 
