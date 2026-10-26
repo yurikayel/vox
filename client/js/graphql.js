@@ -1,7 +1,7 @@
 import * as cacheNode from "./cache-node.js";
 import * as peers from "./peers.js";
 import * as handles from "./handles.js";
-import { recordGatewayAttempt } from "./gateway-telemetry.js";
+import { recordGatewayAttempt, recordReadOrigin } from "./gateway-telemetry.js";
 
 const QUERIES = {
   communities: `query ListCommunities($after: String) {
@@ -519,13 +519,16 @@ export async function fetchModActions(communityId) {
   }
 }
 
-export async function fetchTransactionData(txId) {
+export async function fetchTransactionData(txId, { communityId = "" } = {}) {
   if (!txId) return { body: "", raw: "" };
   if (dataCache.has(txId)) return dataCache.get(txId);
+
+  const comm = String(communityId || "").trim();
 
   // 1. Tenta Cache Local Persistente (IndexedDB)
   const cachedDb = await cacheNode.getCachedTx(txId);
   if (cachedDb) {
+    recordReadOrigin("cache_idb", comm);
     dataCache.set(txId, cachedDb);
     return cachedDb;
   }
@@ -533,6 +536,7 @@ export async function fetchTransactionData(txId) {
   // 2. Tenta relay HTTP configurado (local, LAN ou VPS)
   const relayData = await peers.fetchFromDesktopRelay(txId);
   if (relayData) {
+    recordReadOrigin("relay", comm);
     dataCache.set(txId, relayData);
     cacheNode.setCachedTx(txId, relayData);
     return relayData;
@@ -541,6 +545,7 @@ export async function fetchTransactionData(txId) {
   // 3. Tenta Rede de Pares (Nós Leves via Broadcast / WebRTC)
   const peerData = await peers.requestTxFromPeers(txId);
   if (peerData) {
+    recordReadOrigin("mesh", comm);
     dataCache.set(txId, peerData);
     cacheNode.setCachedTx(txId, peerData);
     return peerData;
@@ -549,6 +554,7 @@ export async function fetchTransactionData(txId) {
   // 4. Fallback: Gateways Públicos (ordem em config/gateways.json — estilo Channel-01)
   const gatewayParsed = await fetchRawFromGateways(txId);
   if (gatewayParsed) {
+    recordReadOrigin("gateway", comm);
     dataCache.set(txId, gatewayParsed);
     cacheNode.setCachedTx(txId, gatewayParsed);
     return gatewayParsed;

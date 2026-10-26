@@ -3,6 +3,10 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import * as gql from "../client/js/graphql.js";
 import * as cacheNode from "../client/js/cache-node.js";
+import {
+  getReadOriginAggregate,
+  __resetGatewayHealthForTests,
+} from "../client/js/gateway-telemetry.js";
 
 test("graphql - tagValue encontra tags ou retorna string vazia", () => {
   const tags = [
@@ -17,13 +21,17 @@ test("graphql - tagValue encontra tags ou retorna string vazia", () => {
 });
 
 test("graphql - fetchTransactionData resolve a partir do cache local", async () => {
+  __resetGatewayHealthForTests();
   assert.deepEqual(await gql.fetchTransactionData(null), { body: "", raw: "" });
 
   const mockPayload = { title: "Salvo no Cache", body: "Texto completo da postagem" };
   await cacheNode.setCachedTx("tx_test_gql", mockPayload);
 
-  const res = await gql.fetchTransactionData("tx_test_gql");
+  const res = await gql.fetchTransactionData("tx_test_gql", { communityId: "com-cache" });
   assert.deepEqual(res, mockPayload);
+  const agg = getReadOriginAggregate("com-cache");
+  assert.equal(agg.total, 1);
+  assert.equal(agg.counts.cache_idb, 1);
 });
 
 test("graphql - fetchTransactionData consulta relay HTTP antes dos gateways", async () => {

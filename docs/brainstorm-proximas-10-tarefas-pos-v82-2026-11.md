@@ -327,7 +327,7 @@ Runbook de **sucessão** e **relay buddy**: segundo voluntário treinado, handof
 | Compose + Caddy + `/health` | ✓ | Drill em VPS BR real (CGNAT, firewall) | Steward voluntário |
 | Wizard + quota UI | ✓ | Smoke por **não-maintainer** documentado | Cursor |
 | Kits Win/Linux 1-clique | ✓ script Linux | AppImage/systemd user unit (P2) | FOSS |
-| V-P08 buddy handoff | doc T4 | Runbook `docs/` dedicado ainda pendente | Community-doc |
+| V-P08 buddy handoff | doc T4 | Runbook [steward-relay-buddy.md](./steward-relay-buddy.md) ✓; handoff na comunidade = ops-humano | Community-doc |
 | Manifest gossip pós-seed | spec v0 | Exemplo no kit «dia 1 após espelho» | Cursor doc |
 
 **DoD T7:** checklist acima fechada ou virou issues P1/P2; seed 15 min testado por voluntário externo uma vez.

@@ -9,7 +9,7 @@ Gate humano antes de abrir as 4 semanas do piloto. Preencher **todos** os papéi
 | Facilitador local | |
 | Fundador (comunidade) | |
 | Community-doc (retrospectiva + docs piloto) | |
-| Relay Buddy (sucessão steward, V-P08) | |
+| Relay Buddy (sucessão steward, V-P08) | | ver [steward-relay-buddy.md](./steward-relay-buddy.md) |
 | Canal paralelo Zap/Telegram (URL ou descrição) | |
 
 ## Alpha testers (teste aberto — T-18)
