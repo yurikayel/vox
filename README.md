@@ -32,7 +32,7 @@ Porta de entrada da documentação: **[docs/README.md](./docs/README.md)**. Test
 |--------|---------------------------|
 | **Licença** | [MIT](./LICENSE) |
 | **Runtime do PWA** | Vanilla no navegador — **sem** dependência npm em produção |
-| **Testes** | **362** (`340` JS + `22` Python) — `npm test` na raiz |
+| **Testes** | **375** (`353` JS + `22` Python) — `npm test` na raiz |
 | **Relay / inbox** | Python sem dependências externas em [`relay/`](./relay/) |
 | **Bugs de teste** | Issue **[tester] Bug report** ([`.github/ISSUE_TEMPLATE/bug-tester.yml`](./.github/ISSUE_TEMPLATE/bug-tester.yml)) |
 | **Docs** | Norma [docs/CONTRIBUTING-DOCS.md](./docs/CONTRIBUTING-DOCS.md); **GitHub = fonte de verdade** (a [Voxpedia](https://yurikayel.github.io/vox/#/voxpedia) no app explica; desenvolvimento e release line ficam aqui) |
@@ -59,10 +59,10 @@ Demo: **[https://yurikayel.github.io/vox/](https://yurikayel.github.io/vox/)** �
 
 | Campo | Valor |
 |-------|--------|
-| **SHA** | `1359ee6` |
+| **SHA** | `b97d0c7` |
 | **Branch** | `main` |
 | **Testes** | **362** (`340` JS + `22` Python) — `npm test` na raiz |
-| **Service worker** | `vox-pwa-v6.84-teste-aberto` |
+| **Service worker** | `vox-pwa-v6.85-cantina-ajuda-link` |
 | **Deploy** | Push em `main` → GitHub Pages; após deploy use **hard refresh** (`Ctrl+Shift+R`) para trocar o SW |
 
 Malha: gossip **`CACHE_MANIFEST`** + prioridade **WANT**; feira **Classificados** com ofertas assinadas, status/retratação na malha ([`listing-ui.js`](./client/js/listing-ui.js)). Seed steward: [`docs/steward-seed-15min.md`](./docs/steward-seed-15min.md).
