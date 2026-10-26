@@ -28,7 +28,7 @@ Complementa [direcionamento-crescimento-rede-2026-11.md](./direcionamento-cresci
 | **Open Frames / feed** | `open-frames-host.js`, `frames.js`, composer inline | [open-frames-v2.md](./open-frames-v2.md) | `open-frames-host.test.js`, `frames.test.js` |
 | **Pix / economia local** | `brcode.js`, `pix-key.js` | DEV §18 · [COMPLIANCE-BR.md](../COMPLIANCE-BR.md) | `brcode.test.js`, `pix-key.test.js` |
 | **Identidade / wallet** | `wallet.js`, `local-account.js`, `handles.js` | [IDENTITY.md](../IDENTITY.md) | `wallet.test.js`, `handles.test.js`, `local-account.test.js` |
-| **Shell / PWA** | `sw.js` (`CACHE_NAME` canônico), sidebar, temas | README (parcial stale) · DEV §0–36 | 67 arquivos `tests/*.test.js` → **333** casos |
+| **Shell / PWA** | `sw.js` (`CACHE_NAME` canônico), sidebar, temas | README + [release-metadata.json](./release-metadata.json) · DEV §0–36 | **334** casos JS + **22** Python → **356** |
 
 **Gaps produto (documentados, não bugs ocultos):** 2º espelho shell **B** vivo (T2); piloto V-P09 **execução** humana; V-P08 runbook dedicado; V-P07 UI atestação; métricas honestas **v2** (T5); Bridge MV3 decisão pós-piloto.
 
@@ -36,20 +36,20 @@ Complementa [direcionamento-crescimento-rede-2026-11.md](./direcionamento-cresci
 
 ## 2. Inventário docs — mapa canônico
 
-Legenda: **fresh** = alinhado a `99180f9` / 355 testes / participação pós-v82 · **stale** = números, SHA ou SW desatualizados · **spec** = normativo de protocolo · **brainstorm** = planejamento (pode divergir do código até merge).
+Legenda: **fresh** = alinhado a [README](../README.md) + [release-metadata.json](./release-metadata.json) · **stale** = números, SHA ou SW desatualizados · **spec** = normativo de protocolo · **brainstorm** = planejamento (pode divergir do código até merge).
 
 ### 2.1 Raiz repositório `vox/`
 
 | Documento | Papel | Status |
 |-----------|--------|--------|
-| [README.md](../README.md) | Onboarding + release line | **stale** (201 testes, SHA/SW antigos) |
+| [README.md](../README.md) | Onboarding + release line | **fresh** (tabela release; regenerar `npm run release-line`) |
 | [ARCHITECTURE.md](../ARCHITECTURE.md) | Visão técnica | **fresh** (revisar POSSE/DM footnotes trimestralmente) |
 | [GOVERNANCE.md](../GOVERNANCE.md) | Moderação / papéis | **fresh** (V-I10) |
 | [COMPLIANCE-BR.md](../COMPLIANCE-BR.md) | LGPD / Marco Civil copy | **fresh** |
 | [IDENTITY.md](../IDENTITY.md) | Chaves / handles | **fresh** |
 | [POSITIONING.md](../POSITIONING.md) | Narrativa | **stale** (revisar pós T2 posicionamento out/2026) |
 | [LESSONS.md](../LESSONS.md) | Lições comparativas | **fresh** |
-| [client/DEV.md](../client/DEV.md) | Guia dev §0–36 | **stale** (topo §1.1/CI: 201/350 misto vs 355; SW via `sw.js` OK) |
+| [client/DEV.md](../client/DEV.md) | Guia dev §0–36 | **fresh** (topo § release line **356**; varrer §1.1 legado em DOC-02) |
 
 ### 2.2 `vox/docs/` — estratégia & participação
 
@@ -227,53 +227,23 @@ Cada tarefa: **objetivo**, **DoD revisado**, **owner**, **prioridade**, **links*
 
 ---
 
-## 5. Checklist master
+## 5. Checklist master (somente leitura)
 
-### Documentação revisão
+**Checklist vivo único:** marcar **apenas** no [dossiê §3.6](./dossie-geral-inventario-master-breakdown-2026-11.md#36-checklist-master-vivo-n25). Este inventário mantém DoD nas tabelas §4 (IDs **DOC-06…08** inclusos) — **sem** caixas `[ ]` duplicadas.
 
-- [ ] **DOC-01** README release line  
-- [ ] **DOC-02** DEV.md contagens testes  
-- [ ] **DOC-03** Índice mestre docs  
-- [ ] **DOC-04** Re-audit copy honesta  
-- [ ] **DOC-05** Arquivar steward-wizard brainstorm  
-- [ ] **DOC-06** Rebaseline metrics  
-- [ ] **DOC-07** Cross-link brainstorms  
-- [ ] **DOC-08** POSITIONING vs T2  
-
-### Crescimento rede
-
-- [ ] **NET-01** Espelho B vivo  
-- [ ] **NET-02** Drill DR  
-- [ ] **NET-03** Runbook V-P08  
-- [ ] **NET-04** Smoke steward externo  
-- [ ] **NET-05** Registro espelhos  
-
-### Código P0 / P1
-
-- [ ] **CODE-01** Feature freeze piloto  
-- [ ] **CODE-02** Métricas honestas v2  
-- [ ] **CODE-03** V-P07 export UI  
-- [ ] **CODE-04** Doc flag V-I09  
-- [ ] **CODE-05** Gateway fallback decisão  
-
-### Piloto humano
-
-- [ ] **PIL-01** Seleção comunidade  
-- [ ] **PIL-02** Execução semanas 0–4  
-- [ ] **PIL-03** Retrospectiva  
-- [ ] **PIL-04** Barra Apoiadores/steward  
-- [ ] **PIL-05** Mod E1–E5  
-
-### Expansão POSSE & ecossistema (EXP) — checklist no dossiê
-
-Trilha **EXP-01…05** (POSSE, embed, fork, backup HTML, Bridge MV3): checklist e DoD em [dossie-geral-inventario-master-breakdown-2026-11.md](./dossie-geral-inventario-master-breakdown-2026-11.md) § Trilha E — **não** duplicar aqui.
+| Onde marcar | Conteúdo |
+|-------------|----------|
+| [Dossiê §3.6](./dossie-geral-inventario-master-breakdown-2026-11.md#36-checklist-master-vivo-n25) | DOC-01…05, NET, CODE, PIL, EXP-01…05 + coluna **Tipo DoD** |
+| §4 abaixo | Critérios textuais DOC-06…08 e detalhe de cada ID |
+| [piloto-comunidade-go-no-go.md](./piloto-comunidade-go-no-go.md) | Gate humano pré-piloto (não substitui PIL-02) |
+| [ops-dr-drill-checklist.md](./ops-dr-drill-checklist.md) | Passos do drill (NET-02); resultado humano |
 
 ---
 
 ## 6. Top 5 tarefas P0 — documentação (ação imediata)
 
-1. **DOC-01** — README release line (`99180f9`, 355, SW v6.83).  
-2. **DOC-02** — DEV.md + CI: uma contagem canônica de testes.  
+1. **DOC-01** — README release line ↔ [release-metadata.json](./release-metadata.json) (`npm run release-line`).  
+2. **DOC-02** — DEV.md + CI: uma contagem canônica **356** testes.  
 3. **DOC-03** — Índice mestre apontando trilhas participação/roadmap/ops/dev.  
 4. **DOC-04** — Re-audit honest copy (gateway, steward, painel vizinhos).  
 5. **DOC-07** — Amarrar IDs V-P / V-I / T1–T10 neste inventário e nos brainstorms (evitar drift de prioridade).

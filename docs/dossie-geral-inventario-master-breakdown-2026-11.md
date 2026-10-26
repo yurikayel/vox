@@ -2,7 +2,7 @@
 
 > **Status:** canônico (plano mestre N=25) · **Owner:** mantenedor/revisor · **Revisado:** 2026-11 · Release/SHA: [README.md](./README.md)  
 > **Documento:** Inventário de Arquitetura, Estado da Arte & Plano Mestre de Execução  
-> **Suíte de Testes:** **355** testes (**333** JS nativo + **22** Python unittest) — alinhar [../README.md](../README.md)  
+> **Suíte de testes / SHA / SW:** [../README.md](../README.md) (tabela release) · [release-metadata.json](./release-metadata.json) — não repetir contagens neste header.  
 > **Arquivos Canônicos Relacionados:** [inventario-estado-e-tarefas-documentacao-2026-11.md](./inventario-estado-e-tarefas-documentacao-2026-11.md), [direcionamento-crescimento-rede-2026-11.md](./direcionamento-crescimento-rede-2026-11.md) e [brainstorm-proximas-10-tarefas-pos-v82-2026-11.md](./brainstorm-proximas-10-tarefas-pos-v82-2026-11.md).
 
 > **Política de agentes:** Composer 2.5 only (lobby politica).
@@ -13,10 +13,10 @@
 
 | Artefato | IDs | Papel |
 |----------|-----|--------|
-| **Este dossiê** | **25** — DOC-01…05, NET, CODE, PIL, **EXP-01…05** | Plano mestre de execução (Partes 1–3); checklist master em §3; **única fonte** da trilha **EXP**. |
-| [Inventário nov/2026](./inventario-estado-e-tarefas-documentacao-2026-11.md) | **20** núcleo (= 4×5 sem EXP) **+ DOC-06…08** | Mapa produto/docs + DoD detalhado de **revisão documental**; checklist §5 **sem** EXP (ver dossiê). |
+| **Este dossiê** | **25** — DOC-01…05, NET, CODE, PIL, **EXP-01…05** | Plano mestre de execução (Partes 1–3); **único checklist vivo** §3.6; **única fonte** da trilha **EXP**. |
+| [Inventário nov/2026](./inventario-estado-e-tarefas-documentacao-2026-11.md) | **20** núcleo (= 4×5 sem EXP) **+ DOC-06…08** | Mapa produto/docs + DoD detalhado (tabelas §4); **sem** caixas `[ ]` — marcar só §3.6 abaixo. |
 
-**Reconciliação:** DOC/NET/CODE/PIL **01–05** são **equivalentes** nos dois documentos — marcar progresso **uma vez** (preferir checklist do inventário §5 para doc-only; dossiê §3 para visão master). **Não** duplicar `[ ]` para EXP no inventário — use só este dossiê. **DOC-06…08** existem **somente** no inventário.
+**Reconciliação:** marcar progresso **somente** em [§3.6 Checklist master vivo (N=25)](#36-checklist-master-vivo-n25). **DOC-06…08** rastreiam-se nas tabelas §4 do inventário (DoD texto), sem checkbox duplicado. **EXP-01…05** só aqui.
 
 ---
 
@@ -96,8 +96,8 @@ Um servidor leve e autônomo em Python puro (sem frameworks pesados), projetado 
 
 ### 1.3 Suíte de Testes Automatizados (`vox/tests/`)
 
-Total de **355 testes** rodando em menos de 3 segundos na raiz:
-* **333 testes JavaScript (Node.js nativo `--test`):** cobrindo roteamento, renderizadores, criptografia WebCrypto, BR Code Pix, governança, algoritmos Pol.is, WebRTC, feeds, Service Worker, temas e heurísticas de cache.
+Total de **356** testes (`334` JS + `22` Python) na raiz — conferir [README](../README.md) / `npm test`:
+* **334 testes JavaScript (Node.js nativo `--test`):** cobrindo roteamento, renderizadores, criptografia WebCrypto, BR Code Pix, governança, algoritmos Pol.is, WebRTC, feeds, Service Worker, temas e heurísticas de cache.
 * **22 testes Python (`unittest`):** cobrindo endpoints de relay, validação estrutural V-P06, inboxes cegas de DM, WebSocket de sinalização e tratamento de quotas de disco.
 
 ---
@@ -232,6 +232,42 @@ graph TD
 | **EXP-03** | **Especificação de Community Forking (T9)** | Criar o mecanismo protocolar de bifurcação civilizada de comunidades em conflito. | Tag `Type: community-fork` especificada em `GOVERNANCE.md`, permitindo clonagem de histórico e regras sem apagar dados anteriores. | Antigravity | P2 | O mantenedor do repo jamais toma partido em um fork comunitário. | [`brainstorm-proximas-10-tarefas-pos-v82-2026-11.md`](./brainstorm-proximas-10-tarefas-pos-v82-2026-11.md#L361) |
 | **EXP-04** | **Exportador de Backup Soberano em HTML Standalone** | Garantir que o usuário possa baixar toda a sua vida digital em um arquivo único offline. | Botão que empacota todos os posts, tópicos, fotos e contatos em um arquivo `.html` interativo que abre sem internet para sempre. | Cursor | P2 | Os dados pertencem ao usuário; nenhum arquivo deve exigir servidor para abrir. | [`brainstorm-tracao-escalabilidade-incubacao.md`](./brainstorm-tracao-escalabilidade-incubacao.md) |
 | **EXP-05** | **Avaliação da Extensão Vox Bridge MV3** | Analisar se a extensão de navegador para automação de postagem deve avançar ou permanecer em pausa. | Decisão formal registrada após o piloto humano avaliando riscos de quebra de ToS de Big Techs versus ganho real para criadores. | Antigravity | P2 | Se o risco à conta do usuário for alto, suspender a extensão em favor de webhooks abertos. | [`vox-bridge-spike.md`](./vox-bridge-spike.md) |
+
+---
+
+### 3.6 Checklist master vivo (N=25)
+
+**Única fonte de caixas `[ ]` / `[x]`** para DOC/NET/CODE/PIL/EXP. Coluna **Tipo DoD:** `doc` · `code` · `ops-humano` ([CONTRIBUTING-DOCS](./CONTRIBUTING-DOCS.md) §3). Detalhe de DoD: tabelas acima e [inventário §4](./inventario-estado-e-tarefas-documentacao-2026-11.md).
+
+| ✓ | ID | Tipo DoD | Nota |
+|---|-----|----------|------|
+| [ ] | **DOC-01** | doc | Release line README ↔ [release-metadata.json](./release-metadata.json) |
+| [ ] | **DOC-02** | doc | Contagem única **356** em DEV §1.1 + CI |
+| [x] | **DOC-03** | doc | Porta [docs/README.md](./README.md) + 4 trilhas (out/2026 revisão) |
+| [ ] | **DOC-04** | doc | Re-audit [honest-copy-audit](./honest-copy-audit-2026-10-23.md) |
+| [x] | **DOC-05** | doc | [steward-wizard-brainstorm](./steward-wizard-brainstorm.md) banner SUPERSEDED |
+| [ ] | **NET-01** | ops-humano | Espelho **B** live — [ops-shell-mirrors](./ops-shell-mirrors.md) T2 (**não** marcar só por doc) |
+| [ ] | **NET-02** | ops-humano | Drill DR datado — [ops-dr-drill-checklist](./ops-dr-drill-checklist.md) |
+| [ ] | **NET-03** | doc | Runbook V-P08 dedicado |
+| [ ] | **NET-04** | ops-humano | Smoke steward por não-maintainer |
+| [ ] | **NET-05** | doc | Registro espelhos comunidade |
+| [ ] | **CODE-01** | code | Gate `PILOT_FREEZE` / go-no-go piloto ativo ([DEV §0.1](../client/DEV.md)) |
+| [ ] | **CODE-02** | code | Métricas honestas v2 (T5) |
+| [ ] | **CODE-03** | code | V-P07 UI atestação |
+| [ ] | **CODE-04** | doc | Flag V-I09 documentada em DEV |
+| [ ] | **CODE-05** | doc | ADR gateway fallback |
+| [ ] | **PIL-01** | ops-humano | Comunidade + facilitador nomeados |
+| [ ] | **PIL-02** | ops-humano | **V-P09** semanas 0–4 (**blocked-human**) |
+| [ ] | **PIL-03** | ops-humano | Retrospectiva preenchida |
+| [ ] | **PIL-04** | ops-humano | Barra Apoiadores/steward semana 4 |
+| [ ] | **PIL-05** | ops-humano | Ciclo mod E1–E5 evidenciado |
+| [ ] | **EXP-01** | code | POSSE Tier A/B |
+| [ ] | **EXP-02** | code | Embed widget |
+| [ ] | **EXP-03** | doc | Spec community fork |
+| [ ] | **EXP-04** | code | Backup HTML standalone |
+| [ ] | **EXP-05** | doc | Decisão Bridge MV3 pós-piloto |
+
+*(DOC-06…08 — rebaseline metrics, cross-link T1–T10, POSITIONING — DoD só no [inventário §4](./inventario-estado-e-tarefas-documentacao-2026-11.md), sem checkbox aqui.)*
 
 ---
 
