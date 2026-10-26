@@ -1,6 +1,6 @@
 # Vox — índice de documentação
 
-> **Baseline:** `main` **`e44a1b4`** · SW **`vox-pwa-v6.83-steward-kit-v-i08`** · **355** testes  
+> **Baseline:** `main` **`4ddc4ca`** · SW **`vox-pwa-v6.83-steward-kit-v-i08`** · **355** testes  
 > **Plano mestre:** [Dossiê geral — inventário & N=25 tarefas](./dossie-geral-inventario-master-breakdown-2026-11.md) · **Revisão doc:** [Inventário nov/2026](./inventario-estado-e-tarefas-documentacao-2026-11.md) · **Tração rede:** [Direcionamento §1–§6](./direcionamento-crescimento-rede-2026-11.md)
 
 Entrada única para revisores e colaboradores (DOC-03). Quatro trilhas de leitura:
@@ -15,6 +15,7 @@ Entrada única para revisores e colaboradores (DOC-03). Quatro trilhas de leitur
 ## 2. Roadmap & estratégia
 
 - [brainstorm-proximas-10-tarefas-pos-v82-2026-11.md](./brainstorm-proximas-10-tarefas-pos-v82-2026-11.md) — T1–T10 pós-v82  
+- [brainstorm-10-pontos-fracos-metodo-implementacao-2026-11.md](./brainstorm-10-pontos-fracos-metodo-implementacao-2026-11.md) — crítica ao método (planejamento/ops), não backlog produto  
 - [brainstorm-dez-tarefas-estrategia-2026-10.md](./brainstorm-dez-tarefas-estrategia-2026-10.md) — T1–T10 out/2026  
 - [antigravity-estrategia-mantenedor-revisor-2026.md](./antigravity-estrategia-mantenedor-revisor-2026.md) — mantenedor → revisor  
 

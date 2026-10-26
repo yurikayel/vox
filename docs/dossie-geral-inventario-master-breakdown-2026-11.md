@@ -7,7 +7,7 @@
 
 > **Política de agentes:** Composer 2.5 only (lobby politica).
 
-**Documentos irmãos:** [Inventário nov/2026 — tarefas doc/review (N=20 + DOC-06…08)](./inventario-estado-e-tarefas-documentacao-2026-11.md) · [Direcionamento crescimento rede §1–§6](./direcionamento-crescimento-rede-2026-11.md) · [Brainstorm T1–T10 pós-v82](./brainstorm-proximas-10-tarefas-pos-v82-2026-11.md)
+**Documentos irmãos:** [Inventário nov/2026 — tarefas doc/review (N=20 + DOC-06…08)](./inventario-estado-e-tarefas-documentacao-2026-11.md) · [Direcionamento crescimento rede §1–§6](./direcionamento-crescimento-rede-2026-11.md) · [Brainstorm T1–T10 pós-v82](./brainstorm-proximas-10-tarefas-pos-v82-2026-11.md) · [Brainstorm — 10 fraquezas do método nov/2026](./brainstorm-10-pontos-fracos-metodo-implementacao-2026-11.md)
 
 ### Escopo: inventário (20) vs dossiê master (25)
 
