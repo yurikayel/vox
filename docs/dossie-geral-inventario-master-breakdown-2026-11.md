@@ -1,8 +1,8 @@
 # 🇧🇷 Vox — Dossiê Geral: Inventário do Sistema & Master Breakdown em N=25 Tarefas
 
+> **Status:** canônico (plano mestre N=25) · **Owner:** mantenedor/revisor · **Revisado:** 2026-11 · Release/SHA: [README.md](./README.md)  
 > **Documento:** Inventário de Arquitetura, Estado da Arte & Plano Mestre de Execução  
-> **Linha de Base:** `main` **`8217d18`** (DOC-01/02 **`5d8c0d6`**) · SW **`vox-pwa-v6.83-steward-kit-v-i08`**  
-> **Suíte de Testes:** **355** testes (**333** JS nativo + **22** Python unittest) — 100% verde  
+> **Suíte de Testes:** **355** testes (**333** JS nativo + **22** Python unittest) — alinhar [../README.md](../README.md)  
 > **Arquivos Canônicos Relacionados:** [inventario-estado-e-tarefas-documentacao-2026-11.md](./inventario-estado-e-tarefas-documentacao-2026-11.md), [direcionamento-crescimento-rede-2026-11.md](./direcionamento-crescimento-rede-2026-11.md) e [brainstorm-proximas-10-tarefas-pos-v82-2026-11.md](./brainstorm-proximas-10-tarefas-pos-v82-2026-11.md).
 
 > **Política de agentes:** Composer 2.5 only (lobby politica).

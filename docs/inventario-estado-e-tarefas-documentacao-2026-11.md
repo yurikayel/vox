@@ -1,7 +1,7 @@
 # Inventário — estado Vox + tarefas de documentação (nov/2026)
 
-> **Baseline produto:** `main` **`e44a1b4`** (direcionamento **`40bb954`** · inventário **`0420882`** · T1 Antigravity **`26e7b7d`** · V-I08 **`898509c`**) · SW **`vox-pwa-v6.83-steward-kit-v-i08`** · **355** testes (**333** JS + **22** Python) · Pages **https://yurikayel.github.io/vox/**  
-> **Escopo:** mapa do que existe hoje + **N=20** tarefas núcleo (4×5 DOC/NET/CODE/PIL **01–05**) **+ DOC-06…08** doc/review — não substitui execução de T2 (2º espelho) nem piloto humano.  
+> **Status:** canônico (DoD doc N=20 + DOC-06…08) · **Owner:** revisor doc · **Revisado:** 2026-11 · Release: [README.md](./README.md)  
+> **Escopo:** mapa do que existe hoje + **N=20** tarefas núcleo (4×5 DOC/NET/CODE/PIL **01–05**) **+ DOC-06…08** doc/review — não substitui execução de T2 (2º espelho) nem piloto humano. Plano mestre **N=25:** [dossiê](./dossie-geral-inventario-master-breakdown-2026-11.md).  
 > **Política de agentes:** Composer 2.5 only (lobby politica).
 
 **Plano mestre N=25 (trilha EXP):** [dossie-geral-inventario-master-breakdown-2026-11.md](./dossie-geral-inventario-master-breakdown-2026-11.md) — checklist **EXP-01…05** só no dossiê; DOC/NET/CODE/PIL **01–05** equivalentes aqui (§4–§5). **Meta-processo:** [brainstorm 10 fraquezas do método nov/2026](./brainstorm-10-pontos-fracos-metodo-implementacao-2026-11.md).
