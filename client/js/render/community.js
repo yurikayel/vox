@@ -11,6 +11,7 @@ import {
   shortId,
   getCommunityColor,
   formatTimeAgo,
+  postTimeParts,
   renderAvatarHtml,
   renderMarkdownLight,
 } from "./util.js";
@@ -98,7 +99,7 @@ function topicReplyCount(topic) {
 export function renderCommunityTopicRow(topic, { communityId = "", communityTitle = "" } = {}) {
   const author = topic.author || topic.owner || "";
   const authorHandle = (author ? mock.getAuthorHandle(author) : "") || shortId(author);
-  const timeLabel = formatTimeAgo(topic.ts);
+  const { display: timeDisplay, titleAttr: timeTitle } = postTimeParts(topic.ts);
   const replies = topicReplyCount(topic);
   const replyLabel = replies === 1 ? "1 resposta" : `${replies} respostas`;
   const title = topic.title || topicExcerptOneParagraph(topic) || "Sem título";
@@ -120,7 +121,7 @@ export function renderCommunityTopicRow(topic, { communityId = "", communityTitl
           <span class="community-topic-row-dot" aria-hidden="true">·</span>
           <span>${escapeHtml(replyLabel)}</span>
           <span class="community-topic-row-dot" aria-hidden="true">·</span>
-          <span>${escapeHtml(timeLabel)}</span>
+          <span class="community-topic-row-time"${timeTitle}>${escapeHtml(timeDisplay)}</span>
         </p>
         ${excerpt && excerpt !== title ? `<p class="community-topic-row-excerpt">${escapeHtml(excerpt)}</p>` : ""}
       </div>

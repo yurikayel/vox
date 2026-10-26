@@ -35,6 +35,25 @@ export function renderAjudaTeste() {
         </ol>
       </section>
 
+      <section class="voxpedia-section card" id="teste-transparencia-feed" aria-labelledby="teste-transparencia-feed-title">
+        <h2 id="teste-transparencia-feed-title">Feed transparente: sem ranking, sem boost</h2>
+        <p class="desc">
+          O feed do Vox é <strong>sem ranking, sem boost</strong>: não há leilão de anúncios nem algoritmo secreto de retenção.
+          A listagem segue o horário de assinatura; a aba Para você pode misturar descoberta recente, sem ads.
+        </p>
+      </section>
+
+      <section class="voxpedia-section card" id="teste-posse-zap" aria-labelledby="teste-posse-zap-title">
+        <h2 id="teste-posse-zap-title">Cidade fantasma? O Zap continua existindo (POSSE)</h2>
+        <p class="desc">
+          Você não precisa abandonar seus grupos de WhatsApp nem convencer todo mundo a migrar de uma vez.
+          O modelo do Vox é <strong>POSSE</strong> (<em>Publish on Own Site, Syndicate Elsewhere</em>):
+          você publica primeiro no Vox (onde o texto fica assinado no seu controle e no permaweb) e ecoa o link
+          ou resumo diretamente para o WhatsApp, Instagram ou X pelo botão de compartilhar.
+          O Vox é a fonte soberana; os grupos de mensagem continuam sendo o canal onde a conversa acontece.
+        </p>
+      </section>
+
       <section class="voxpedia-section card" id="teste-pacto" aria-labelledby="teste-pacto-title">
         <h2 id="teste-pacto-title">Pacto e opt-out</h2>
         <p class="desc">

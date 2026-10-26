@@ -35,6 +35,8 @@ export function attachPostShareHandlers() {
       share.shareTopic({
         title: btn.dataset.title || "Post no Vox",
         topicId: btn.dataset.id,
+        author: btn.dataset.author || "",
+        body: btn.dataset.body || "",
       });
     });
   });
