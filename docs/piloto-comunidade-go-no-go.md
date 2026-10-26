@@ -12,6 +12,21 @@ Gate humano antes de abrir as 4 semanas do piloto. Preencher **todos** os papéi
 | Relay Buddy (sucessão steward, V-P08) | |
 | Canal paralelo Zap/Telegram (URL ou descrição) | |
 
+## Alpha testers (teste aberto — T-18)
+
+Gate **humano** antes de anunciar convite público além do círculo fechado. Preencher **somente** com nomes reais acordados offline — **não** inventar no repositório.
+
+| Campo | Valor |
+|-------|--------|
+| **Host do teste** | |
+| **Canal** (Zap/Telegram — URL ou descrição) | |
+| **Data de abertura** | |
+| **Status** | **`blocked-human`** *(trocar quando host + canal + data estiverem definidos)* |
+
+**Pacotes doc (mutex):** [teste-aberto-convite.md](./teste-aberto-convite.md) · [teste-aberto-canal-apoio.md](./teste-aberto-canal-apoio.md) · [teste-aberto-carta-moderacao-e2.md](./teste-aberto-carta-moderacao-e2.md)
+
+> **Nota:** isto **não** fecha V-P09 — o gate [checklist pré go-live](#checklist-pré-go-live) abaixo permanece obrigatório para o piloto de 4 semanas.
+
 ## Checklist pré go-live
 
 | Item | OK | Notas / link |
