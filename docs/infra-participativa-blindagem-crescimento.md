@@ -7,6 +7,13 @@
 
 Complementa [rede-sustentada-participantes.md](./rede-sustentada-participantes.md), [brainstorm-auto-escala-organica-2026-10.md](./brainstorm-auto-escala-organica-2026-10.md), [backlog-participacao-rede.md](./backlog-participacao-rede.md), [brainstorm-tracao-escalabilidade-incubacao.md](./brainstorm-tracao-escalabilidade-incubacao.md) e [GOVERNANCE.md](../GOVERNANCE.md).
 
+```mermaid
+graph TD
+    A["1. Infraestrutura dos Participantes (Custo Zero Central)"] --> B["2. Flywheel Transparente (Comunidade se Auto-Impulsiona)"]
+    B --> C["3. Redução de Superfície Regulatória por Arquitetura"]
+    C --> A
+```
+
 ---
 
 ## 🏛️ 1. O Paradoxo das Redes Alternativas e a Solução do Vox
@@ -17,22 +24,15 @@ Redes descentralizadas tradicionais costumam falhar por dois extremos:
 
 O **Vox** resolve essa equação com o modelo de **Infraestrutura Participativa Cooperativa em 4 Camadas** apoiado no Permaweb imutável:
 
-```
-┌────────────────────────────────────────────────────────────────────────┐
-│               A PIRÂMIDE DE SUSTENTAÇÃO PARTICIPATIVA                  │
-├────────────────────────────────────────────────────────────────────────┤
-│  Camada 3: Stewards Comunitários (Relays de Gaveta / PC / TV Box)      │
-│  ~1-2 voluntários por comunidade mantêm índice e cache local rápido.   │
-├────────────────────────────────────────────────────────────────────────┤
-│  Camada 2: Apoiadores Locais (commOnly — Escopo da sua Comunidade)     │
-│  Membros ativos doam 25 MB de cache para acelerar seu próprio bairro.  │
-├────────────────────────────────────────────────────────────────────────┤
-│  Camada 1: Nós Leves Ativos (Pacto Vox Default-On no PWA)              │
-│  Todo visitante com app aberto serve dados públicos aos pares próximos.│
-├────────────────────────────────────────────────────────────────────────┤
-│  Camada 0: Leitura / Passivo (Opt-out soberano a qualquer momento)     │
-│  Usuários com planos 3G fracos apenas consomem sem custos de upload.   │
-└────────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Piramide ["Pirâmide de Sustentação da Malha"]
+        L3["Camada 3: Stewards (Relays de Gaveta / PC / TV Box) — ~1-2 por comunidade"]
+        L2["Camada 2: Apoiadores (commOnly — Foco no seu Bairro/Comunidade) — 25 MB cache"]
+        L1["Camada 1: Nós Leves Ativos (Pacto Vox Default-On no PWA) — 50 MB banda/dia"]
+        L0["Camada 0: Leitura / Passivo (Opt-out soberano a qualquer momento)"]
+    end
+    L0 --> L1 --> L2 --> L3
 ```
 
 **Custo central de servidores para os mantenedores do projeto Vox: R$ 0,00.**
@@ -72,20 +72,21 @@ Para que a rede escale organicamente sem exigir investimento ou manutenção cen
 A força motriz do Vox reside em expor abertamente como a rede funciona, transformando a transparência em um motor de orgulho cívico e crescimento:
 
 ### 1. O Flywheel de Auto-Promoção Mútua (POSSE Soberano)
-```
-Criador publica matéria/oferta no Vox
-              │
-              ▼
-Compartilha link canônico no WhatsApp, X, Telegram e Instagram
-              │
-              ▼
-Leitores externos clicam para ler o artigo original sem paywall
-              │
-              ▼
-Leitor descobre a plataforma aberta, entra com 1 clique (Cantina Gate)
-              │
-              ▼
-Passa a ser mais um nó de cache e membro ativo da comunidade
+
+```mermaid
+sequenceDiagram
+    participant Criador as Criador / Comunicador
+    participant Vox as Vox (Base Canônica)
+    participant Redes as Redes Externas (Zap, X, Insta)
+    participant Leitor as Novo Leitor / Membro
+
+    Criador->>Vox: Posta matéria/proposta/feira (link imutável)
+    Criador->>Redes: Despacha via 1 clique (POSSE Crossposting)
+    Redes->>Leitor: Leitor clica no link aberto do Vox
+    Leitor->>Vox: Abre instantâneo no navegador (<100 KB PWA)
+    Note over Leitor,Vox: Leitor entra via Porta da Cantina (1 toque)
+    Vox->>Leitor: Torna-se novo nó de cache + membro da comunidade
+    Leitor->>Criador: Apoia com Pix Zap direto (0% taxa)
 ```
 * O criador divulga o Vox para promover a si mesmo;
 * O Vox promove o criador oferecendo link permanente e Pix Zaps nativos;
@@ -113,59 +114,49 @@ Passa a ser mais um nó de cache e membro ativo da comunidade
 
 Para que a rede seja **mais fácil de manter por voluntários** e **menos dependente de um operador central único**, a arquitetura do Vox busca **eliminar pontos de estrangulamento desnecessários**. Isso **não** garante imunidade absoluta: espelhos públicos, stewards e autores de conteúdo ainda podem ter obrigações (Marco Civil Art. 19, LGPD, etc.) — detalhes em [COMPLIANCE-BR.md](../COMPLIANCE-BR.md).
 
-```
-┌────────────────────────────────────────────────────────────────────────┐
-│                   AS 5 LINHAS DE BLINDAGEM REGULATÓRIA                 │
-├─────────────────────────┬──────────────────────────────────────────────┤
-│ 1. MARCO CIVIL (Art. 19)│ Zero Provedor Central: código estático puro. │
-│                         │ Sem servidor central para receber ordem.     │
-├─────────────────────────┼──────────────────────────────────────────────┤
-│ 2. LGPD (Minimização)   │ Zero Coleta: sem cadastro civil, sem cookies,│
-│                         │ sem banco de dados. "O que não existe não vaza".│
-├─────────────────────────┼──────────────────────────────────────────────┤
-│ 3. REGULAÇÃO BANCÁRIA   │ Zero Custódia: Pix Zaps são gerados no client│
-│                         │ via BR Code EMV. Vox não toca em dinheiro.   │
-├─────────────────────────┼──────────────────────────────────────────────┤
-│ 4. MODERAÇÃO E CENSURA  │ Moderação Client-Side (`mod-action` local).  │
-│                         │ A rede é o fio; o cliente escolhe a tela.    │
-├─────────────────────────┼──────────────────────────────────────────────┤
-│ 5. IMUNIDADE DE DOMÍNIO │ PWA Standalone Offline + Multigateways.      │
-│                         │ Derrubar uma URL não apaga a rede.           │
-└─────────────────────────┴──────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph Reducao ["Redução de Superfície Regulatória por Arquitetura"]
+        M1["1. Marco Civil (Art. 19): Zero Provedor Central (código estático FOSS)"]
+        M2["2. LGPD: Minimização radical — zero cadastro civil, zero telemetria central"]
+        M3["3. Bacen / Pagamentos: Zero custódia — Pix Zaps via BR Code EMV no client"]
+        M4["4. Moderação: Client-side descentralizada (mod-action) — sem comitê central"]
+        M5["5. Resiliência: PWA offline + multigateways públicos e relays comunitários"]
+    end
 ```
 
 ### 1. Inexistência Jurídica de "Provedor de Aplicação" (Marco Civil da Internet)
 * **A Armadilha Comum:** Projetos que registram CNPJ ou mantêm uma API central em nuvem corporativa tornam-se "provedores de aplicação". Juízes intimam os fundadores sob pena de multa diária e prisão.
-* **A Blindagem do Vox:** 
+* **Separação de camadas e desenho de produto:** 
   - O Vox **não é uma empresa, não possui CNPJ e não opera servidores centrais de aplicação**.
   - O Vox é um software livre (código estático HTML/JS), análogo ao protocolo BitTorrent, ao cliente de e-mail Thunderbird ou ao protocolo Bitcoin.
   - Você não pode processar os autores do código do BitTorrent pelo conteúdo que trafega na rede P2P mundial. O repositório apenas publica o cliente que fala com a infraestrutura pública global da permaweb (Arweave/AR.IO).
 
 ### 2. LGPD e minimização por inexistência de custódia central (Privacy by Design)
 * **A Armadilha Comum:** Coletar e-mail, telefone, CPF, IP ou cookies exige nomear Encarregado de Dados (DPO), manter relatórios de impacto à privacidade (RIPD) e responder a incidentes na ANPD.
-* **A Blindagem do Vox:**
+* **Separação de camadas e desenho de produto:**
   - **Zero Cadastro:** O login não pede e-mail, senha, telefone nem CPF. A identidade é um par criptográfico Ed25519 gerado em milissegundos na memória do dispositivo.
   - **Zero Telemetria:** O cliente não envia dados comportamentais para nenhum backend nosso (não há Google Analytics, Mixpanel ou trackers).
   - **DMs Fora da Chain com TTL de 72h:** Mensagens privadas nunca vão para a permaweb; trafegam cifradas ponta a ponta (ECDH P-256 + AES-GCM) por inboxes efêmeras que expiram e se autodestroem em 72 horas.
   - **Princípio:** *"A melhor forma de cumprir a LGPD é não possuir dado pessoal algum sob custódia."*
 
-### 3. Imunidade às Regulações do Banco Central (Pix Zaps Offline)
+### 3. Neutralidade técnica e conformidade BACEN (Pix Zaps Offline)
 * **A Armadilha Comum:** Redes que tentam criar moedas próprias, tokens, carteiras custodiadas ou intermediar transações financeiras caem na mira do Banco Central e do COAF como Instituições de Pagamento (IP), sofrendo exigências de capital mínimo e KYC pesado.
-* **A Blindagem do Vox:**
+* **Separação de camadas e desenho de produto:**
   - O Vox **não processa pagamentos, não faz split, não cobra taxas e não custodia 1 centavo**.
   - O recurso de Pix Zap gera a especificação aberta BR Code EMV diretamente no navegador do usuário via JavaScript puro + CRC16 offline.
   - Quando o usuário apoia um criador, ele copia a chave ou abre o app do seu próprio banco (Nubank, Itaú, Banco do Brasil, etc.) e liquida a transação diretamente de banco para banco. O Vox é tão somente uma "impressora de QR Code", juridicamente imune a regulações de intermediação de crédito ou pagamento.
 
-### 4. Moderação sem Risco Legal: "A Rede é Neutra, o Cliente Decide o Filtro"
+### 4. Moderação distribuída: filtros client-side e separação de camadas
 * **A Armadilha Comum:** Plataformas centralizadas que moderam conteúdo tornam-se editorialmente responsáveis pelo que deixam passar; se não moderam, são bloqueadas por inação contra ilícitos.
-* **A Blindagem do Vox:**
+* **Separação de camadas e desenho de produto:**
   - Na camada de rede/permaweb, as transações são registros assinados e matemáticos.
   - A moderação ocorre inteiramente no **cliente** através de transações de governança ([`mod-action`](../GOVERNANCE.md)): moderadores eleitos emitem assinaturas para ocultar tópicos abusivos (`hide` ou `ban`).
   - Se um operador de espelho público (Steward) receber uma notificação ou ordem judicial específica (Marco Civil Art. 19), ele apenas oculta a exibição daquele identificador no seu front-end local. A malha continua viva e o operador cumpre a lei estritamente dentro da camada técnica que controla.
 
-### 5. Imunidade Contra Apagões e Bloqueios Judiciais de Domínio
+### 5. Resiliência de distribuição: PWA offline, espelhos e multigateways
 * **A Armadilha Comum:** Uma decisão judicial bloqueia o DNS do domínio oficial (ex: `vox.org.br`) e a rede inteira desaparece da noite para o dia.
-* **A Blindagem do Vox:**
+* **Separação de camadas e desenho de produto:**
   - O cliente é um **PWA com Service Worker e cache offline**. Uma vez acessado, ele roda localmente no aparelho mesmo se o domínio cair.
   - O código pode ser clonado e servido por milhares de espelhos no GitHub Pages, Vercel, Cloudflare Pages, IPFS ou simplesmente salvo no pendrive como um arquivo `index.html` que abre no navegador.
   - A camada de leitura consulta gateways distribuídos globais e relays locais independentes. Não existe um "endereço IP central do Vox" para ser desligado na tomada.
