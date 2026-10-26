@@ -95,6 +95,19 @@ Se **https://yurikayel.github.io/vox/** não responder (HTTP erro, shell em bran
 
 ---
 
+## Smoke Pages (production, 2026-10-26)
+
+Espelho **A** — **https://yurikayel.github.io/vox/** (sem servidor local; **não** usar porta 8765).
+
+**Paridade com `main`:** `sw.js` servido em Pages expõe `CACHE_NAME` **`vox-pwa-v6.84-teste-aberto`**, alinhado a [`client/sw.js`](../client/sw.js) e à linha de release do [README.md](../README.md) (`1359ee6`, 362 testes). **Não** observado shell defasado em relação ao `main` nesta passagem; se `#/status` mostrar outro cache, **hard refresh** (`Ctrl+Shift+R`).
+
+1. **`#/ajuda/teste`** — H1 **Teste aberto (~15 min)**; links **Aprenda Vox**, **Feira demo**, **Status da malha**, **Sua rede** no snapshot; roteiro in-app coerente com T-09.
+2. **`#/c/demo-aprenda-vox`** — H1 **Brasil Estereótipo (Demo Vox)**; feed demo com posts (mock/local); **sem** ritual seed V-P05; slug `demo-aprenda-vox` (não mirror).
+3. **`#/status`** (opcional na mesma sessão) — texto **Versão do cache (Service Worker):** `vox-pwa-v6.84-teste-aberto`.
+4. **Porta da Cantina** — overlay *Entrar — sou humano* visível até aceitar; rotas acima carregam conteúdo por trás do gate (comportamento esperado no smoke automatizado).
+
+---
+
 ## Referências cruzadas
 
 - Canal e regras: [teste-aberto-canal-apoio.md](./teste-aberto-canal-apoio.md) (T-03)  

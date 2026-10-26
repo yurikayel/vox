@@ -136,6 +136,18 @@ function renderNetworkStats(metrics, cacheStats, dailyUsage, settings) {
         <div style="font-size:1.1rem; font-weight:700; color:var(--text);">${cacheStats?.count || 0}</div>
         <div class="meta">Em cache (${cacheStats?.sizeKb || "0"} KB)</div>
       </div>
+    </div>
+
+    <div class="card" style="margin-bottom:1rem; padding:0.75rem;">
+      <p class="desc" style="font-size:0.82rem; margin:0 0 0.5rem;">
+        Exporte um JSON assinado neste aparelho com o snapshot das métricas acima (opt-in). O arquivo fica só com você — <strong>não</strong> há envio para ranking público nem gossip automático.
+      </p>
+      <button type="button" id="btn-export-contribution-attestation" class="btn btn-outline btn-sm">
+        Baixar Comprovante de Contribuição
+      </button>
+      <p class="meta" style="font-size:0.72rem; margin:0.45rem 0 0;">
+        Auto-atestado: métricas em localStorage podem ser alteradas antes da assinatura. Limite de uma exportação por minuto. Pix e doações seguem fluxo manual (COMPLIANCE-BR).
+      </p>
     </div>`;
 }
 
@@ -285,7 +297,7 @@ function renderPosseWebhooksSection(webhooks = []) {
   return `
     <div class="card" style="margin-top:1rem;">
       <h3>Ecoe POSSE — Webhooks</h3>
-      <p class="desc" style="font-size:0.85rem;">URLs (Discord, Telegram, n8n…) recebem POST JSON ao exportar POSSE no cockpit pós-publicação. Máx. 8 linhas.</p>
+      <p class="desc" style="font-size:0.85rem;">URLs que você cadastrar (Discord, Telegram, n8n…) recebem POST JSON só quando você tocar em <strong>Exportar JSON</strong> no sheet POSSE — sem post automático no Facebook/Instagram. Máx. 8 linhas.</p>
       <div class="form-group">
         <label for="net-posse-webhooks">URLs de webhook (uma por linha)</label>
         <textarea id="net-posse-webhooks" class="form-control" rows="3" placeholder="https://discord.com/api/webhooks/…">${lines}</textarea>

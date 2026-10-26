@@ -35,6 +35,7 @@ import * as peopleIndex from "../people-index.js";
 import * as profileDirectory from "../profile-directory.js";
 import * as welcomeProfile from "../vox-welcome-profile.js";
 import * as meshProfile from "../mesh-profile.js";
+import * as contributionAttestation from "../contribution-attestation.js";
 import { parseRoute } from "./route-parse.js";
 import { getActiveUser, makeShellProps, attachPostShareHandlers } from "./context.js";
 
@@ -169,6 +170,34 @@ export function bindNetworkSettingsButtons() {
       a.click();
       URL.revokeObjectURL(url);
       share.showToast("Regras de moderação exportadas!");
+    });
+  }
+
+  const btnAttestation = document.getElementById("btn-export-contribution-attestation");
+  if (btnAttestation) {
+    btnAttestation.addEventListener("click", async () => {
+      btnAttestation.disabled = true;
+      try {
+        const out = await contributionAttestation.buildSignedContributionAttestation();
+        if (!out.ok) {
+          const sec = Math.ceil((out.retryAfterMs || 0) / 1000);
+          share.showToast(`Aguarde ${sec}s para exportar de novo.`, "error");
+          return;
+        }
+        const signed = out.signed;
+        const blob = new Blob([JSON.stringify(signed, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = contributionAttestation.attestationDownloadFilename(signed.author, signed.ts);
+        a.click();
+        URL.revokeObjectURL(url);
+        share.showToast("Comprovante baixado — guarde offline; nada foi enviado à rede.");
+      } catch (err) {
+        share.showToast(`Erro ao gerar comprovante: ${err.message}`, "error");
+      } finally {
+        btnAttestation.disabled = false;
+      }
     });
   }
 
