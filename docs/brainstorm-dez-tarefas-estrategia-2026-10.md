@@ -1,8 +1,10 @@
 # Brainstorm — 10 tarefas estratégia Vox (out/2026)
 
-> **Status:** consolidado sprint estratégia (doc-only)
+> **Status:** HISTÓRICO / SUPERSEDED · **Owner:** histórico · **Revisado:** 2026-10  
+> **Sucessor canônico:** [brainstorm-proximas-10-tarefas-pos-v82-2026-11.md](./brainstorm-proximas-10-tarefas-pos-v82-2026-11.md) (ordem operacional pós-v82) e [dossie-geral-inventario-master-breakdown-2026-11.md](./dossie-geral-inventario-master-breakdown-2026-11.md) (plano mestre N=25).  
+> **Aviso:** Mantido para fins de registro histórico e análise comparativa de posicionamento (T2). Não serve como checklist de execução ativa.
 
-Complementa rede-sustentada, auto-escala, infra-participativa, backlog. **T1** → [antigravity-estrategia-mantenedor-revisor-2026.md](./antigravity-estrategia-mantenedor-revisor-2026.md) ✓
+Complementa historicamente rede-sustentada, auto-escala, infra-participativa, backlog. **T1** consolidado em [antigravity-estrategia-mantenedor-revisor-2026.md](./antigravity-estrategia-mantenedor-revisor-2026.md).
 
 ---
 
