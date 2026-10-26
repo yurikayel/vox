@@ -541,8 +541,8 @@ export function renderPixLookup(main, query = "", profile = null) {
     content = `
       <div class="card pix-lookup-card empty">
         <h2>Chave Pix não vinculada</h2>
-        <p class="desc">A chave <code>${queryStr}</code> não foi declarada em nenhum perfil ativo ou tour neste aparelho.</p>
-        <p class="meta" style="margin-top:0.5rem;">Lembre-se: chaves Pix no Vox são atributos declarativos opcionais armazenados no aparelho de cada usuário.</p>
+        <p class="desc">A chave <code>${queryStr}</code> não consta no seu índice local (perfis e tour neste navegador).</p>
+        <p class="meta" style="margin-top:0.5rem;">Chaves Pix são atributos opcionais declarados localmente — não são posts públicos na malha.</p>
         <div class="actions-row" style="margin-top:1rem;">
           <a class="btn btn-outline" href="#/">← Voltar ao Início</a>
         </div>

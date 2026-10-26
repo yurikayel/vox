@@ -241,17 +241,17 @@ graph TD
 
 | ✓ | ID | Tipo DoD | Nota |
 |---|-----|----------|------|
-| [ ] | **DOC-01** | doc | Release line README ↔ [release-metadata.json](./release-metadata.json) |
-| [ ] | **DOC-02** | doc | Contagem única **356** em DEV §1.1 + CI |
-| [x] | **DOC-03** | doc | Porta [docs/README.md](./README.md) + 4 trilhas (out/2026 revisão) |
+| [x] | **DOC-01** | doc | Release line README ↔ [release-metadata.json](./release-metadata.json) |
+| [x] | **DOC-02** | doc | Contagem única **362** em DEV §1.1 + CI |
+| [x] | **DOC-03** | doc | Porta [docs/README.md](./README.md) + 4 trilhas + teste-aberto (§1/§4) |
 | [ ] | **DOC-04** | doc | Re-audit [honest-copy-audit](./honest-copy-audit-2026-10-23.md) |
 | [x] | **DOC-05** | doc | [steward-wizard-brainstorm](./steward-wizard-brainstorm.md) banner SUPERSEDED |
 | [ ] | **NET-01** | ops-humano | Espelho **B** live — [ops-shell-mirrors](./ops-shell-mirrors.md) T2 (**não** marcar só por doc) |
 | [ ] | **NET-02** | ops-humano | Drill DR datado — [ops-dr-drill-checklist](./ops-dr-drill-checklist.md) |
-| [ ] | **NET-03** | doc | Runbook V-P08 dedicado |
+| [x] | **NET-03** | doc | Runbook V-P08 — [steward-relay-buddy.md](./steward-relay-buddy.md) |
 | [ ] | **NET-04** | ops-humano | Smoke steward por não-maintainer |
 | [ ] | **NET-05** | doc | Registro espelhos comunidade |
-| [ ] | **CODE-01** | code | Gate `PILOT_FREEZE` / go-no-go piloto ativo ([DEV §0.1](../client/DEV.md)) |
+| [x] | **CODE-01** | code | Job `pilot-freeze` CI + DEV §0.1 (`PILOT_FREEZE` opt-in; go-no-go humano separado) |
 | [ ] | **CODE-02** | code | Métricas honestas v2 (T5) |
 | [ ] | **CODE-03** | code | V-P07 UI atestação |
 | [ ] | **CODE-04** | doc | Flag V-I09 documentada em DEV |

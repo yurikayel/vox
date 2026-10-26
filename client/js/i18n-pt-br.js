@@ -11,10 +11,16 @@ export const localMutateEditDeleteTooltip =
   "Alterações valem já aqui. Com pares online, editar e apagar propagam na malha via gossip de retratação.";
 
 export const localMutateEditDeleteHint =
-  "Local imediato; com pares online a retratação sincroniza na malha.";
+  "Efeito imediato aqui; com pares online a retratação sincroniza na malha.";
 
 export const localMutateComposerHint =
-  "Editar/apagar: local imediato; retratação na malha quando houver pares online.";
+  "Editar/apagar: efeito imediato aqui; retratação na malha quando houver pares online.";
+
+export const localMutateUpdatedToast =
+  "Publicação atualizada aqui; retratação na malha quando houver pares online.";
+
+export const localMutateDeletedToast =
+  "Publicação apagada aqui; retratação na malha quando houver pares online.";
 
 export const listingMutateStatusTooltip =
   "Status atualiza já aqui. Com pares online, a mudança propaga na malha via gossip (GOSSIP_UPDATE).";
