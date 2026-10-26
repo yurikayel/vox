@@ -33,101 +33,129 @@ Complementa [antigravity-estrategia-mantenedor-revisor-2026.md](./antigravity-es
 
 ## T1 — Roadmap integrado Q4-2026 → Q2-2027 (mantenedor revisor)
 
-### Objetivo
+### 1. Tese de Sustentação da Malha
 
-Amarrar **uma sequência única** pós-v6.82: o repositório permanece **revisor/aprovador FOSS** (CI, Pages, merge, RFC); a **malha** escala só quando **V-I08 → espelho confiável → piloto V-P09** fecham o loop — sem relay global, sem VPS de emergência do mantenedor.
+O Vox não escala por injeção de capital corporativo em servidores nem por algoritmos predatórios de retenção: a malha só cresce de forma saudável quando cada nova comunidade traz consigo sua própria infraestrutura de cache e moderação voluntária. A transparência do método — que expõe sem falsas promessas o estado local da rede e elimina comitês centrais opacos — converte participantes em guardiões corresponsáveis pelo seu território digital. Essa sustentação não se atinge por marketing viral abstrato, mas através de pilotos relacionais humanos (10 a 30 pessoas), onde rituais simples de auto-semeadura e deliberação provam o valor da rede no mundo real antes de qualquer expansão em massa. O papel do mantenedor não é bancar a infraestrutura da comunidade, mas fornecer um cliente soberano confiável, suíte rigorosa de testes e especificações abertas de protocolo.
 
-Dossiê de papel (12 meses, T1–T4 exit): [antigravity-estrategia-mantenedor-revisor-2026.md](./antigravity-estrategia-mantenedor-revisor-2026.md).
+### 2. Grafo de Dependências Críticas
 
-### Linha de base pós-v6.82 (nov/2026)
-
-| Entregue em `main` | Função no roadmap |
-|--------------------|-------------------|
-| V-P06 mirror validate (relay + client) | Steward publica espelho **estruturalmente válido** antes do piloto |
-| V-P02 gateway telemetry + pill reserva | Baseline honesto para T5 métricas v2 |
-| V-P04/05 painel vizinhos + seed | Ritual pós-comunidade no piloto |
-| V-I09 blob soft priority | Menos gateway quando pares online |
-| V-I08 **fechado** (runbook, kits Win/Linux, wizard quota/health) | Steward sobe relay sem maintainer — **T2** espelho shell é P0 |
-
-**Não executado ainda:** 2º espelho shell vivo (T2), piloto V-P09 (T3), retrospectiva escrita (gate Q2).
-
-### Papel-alvo do mantenedor (revisor)
-
-| Faz | Não faz |
-|-----|---------|
-| Merge `main`, CI verde, bump SW quando shell muda | Relay/TURN/inbox **global** |
-| Pages + workflow; revisar PRs de protocolo | Moderação central ou hotline WhatsApp oficial |
-| Documentar 2º espelho; tags release quando necessário | Comprar VPS para “salvar” comunidade lenta |
-| Participar do app como **cidadão** nas próprias comunidades | Ser NOC único da malha |
-
-Handoff protocolo: Antigravity em `feat/*` → Cursor integra ([antigravity-operating.md](./antigravity-operating.md)).
-
-### Cadeia crítica: V-I08 → espelho → piloto
-
-Ordem **não negociável** para Q4-2026→Q1-2027:
+A expansão da rede obedece a uma cadeia linear rigorosa. Pular etapas gera dependência de emergência do mantenedor e colapso na experiência do usuário:
 
 ```mermaid
 flowchart LR
-  VI08[V-I08 kit steward fechado]
-  VP06[V-P06 mirror validate ✓]
-  ESP[2º espelho shell + espelho comunitário]
-  VP09[V-P09 piloto 4 sem + retrospectiva]
-  VI08 --> ESP
-  VP06 --> ESP
-  ESP --> VP09
-  VP09 --> T5T8[T5 métricas · T8 POSSE · T10 ADR-001]
+    VI08["1. V-I08: Steward Kit Fechado<br/>(Runbook, Compose, Caddy, Quota)"]
+    ESP["2. 2º Espelho Shell (T2)<br/>(Cloudflare/Nginx + Drill DR)"]
+    VP09["3. V-P09: Piloto Humano (T3)<br/>(10–30 pessoas, 4 semanas)"]
+    VP08["4. V-P08: Sucessão Steward (T4)<br/>(Relay Buddy, Anti-Burnout)"]
+    P2["5. Expansão P2 (T8/T9/T10)<br/>(Bridge POSSE, Fork, ADR-001)"]
+
+    VI08 --> ESP
+    ESP --> VP09
+    VP09 --> VP08
+    VP08 --> P2
 ```
 
-| Etapa | ID / artefato | Critério mínimo | Risco se pular |
-|-------|---------------|-----------------|----------------|
-| **1 — Steward pode subir relay** | V-I08 + [steward-relay-kit.md](./steward-relay-kit.md) · [steward-seed-15min.md](./steward-seed-15min.md) | Win/Linux runbook; health/quota; wizard `#/settings/network/steward` | Piloto fica 100% gateway → pill permanente → “rede quebrada” |
-| **2 — Espelho confiável** | V-P06 ✓ + T2 [ops-shell-mirrors.md](./ops-shell-mirrors.md) | ≥1 steward espelha comunidade piloto; **2 URLs shell** com SHA/`CACHE_NAME` publicados | SW mismatch; DR inexistente; Art. 19 cai no único ponto |
-| **3 — Piloto relacional** | V-P09 + [piloto-comunidade-retrospectiva-template.md](./piloto-comunidade-retrospectiva-template.md) | 10–30 pessoas, 4 sem, ≥5 Apoiadores **ou** 1 steward verificado | Roadmap Q2 vira feature creep sem dados qualitativos |
+1. **V-I08 (Steward Kit Fechado):** Sem um kit de relay reproduzível em 15 minutos em Linux/Windows, o piloto depende de gateways Arweave lentos ou de um relay improvisado pelo mantenedor.
+2. **2º Espelho Shell (T2):** Sem uma URL alternativa síncrona com GitHub Pages, o projeto tem um ponto único de falha de distribuição (SPOF) e vulnerabilidade de domínio.
+3. **Piloto Humano V-P09 (T3):** A validação real de moderação e cache ocorre em uma comunidade viva de 10 a 30 pessoas, gerando dados qualitativos antes de qualquer novo código de rede.
+4. **Sucessão Steward V-P08 (T4):** Antes de expandir para novas comunidades, a comunidade piloto precisa documentar o "Relay Buddy" para evitar o burnout do operador pioneiro.
+5. **Expansão P2 (T8 Bridge POSSE, T9 Fork, T10 ADR-001):** Funcionalidades de amplificação só entram após a infraestrutura de acolhimento e sucessão estar provada.
 
-**Regra:** piloto **não** começa sem **decisão explícita** Caminho A vs B (seed doc) **e** plano T2 (mesmo que Caminho A — documentar bloqueio steward).
+### 3. Planejamento Trimestral (Q4-2026 → Q3-2027)
 
-### Mapa trimestral integrado (T1–T10 deste doc)
+| Trimestre | Objetivos Centrais | Entregáveis Principais | Exit Criteria (Critérios de Saída) | O Que NÃO Fazer |
+|---|---|---|---|---|
+| **2026-Q4**<br/>*Hardening & Contrato da Malha* | Eliminar SPOFs operacionais do mantenedor; fechar kit steward e redundância de front-end. | • V-P06 integrado (`mirror_validate.py` + pré-validação client)<br/>• V-I08 concluído (runbook, wizard, kits Win/Linux)<br/>• T2: 2º espelho shell ativo e drill DR documentado em [`ops-shell-mirrors.md`](./ops-shell-mirrors.md) | • Zero relays rodando sob responsabilidade do mantenedor.<br/>• 2 URLs de cliente PWA ativas e sincronizadas.<br/>• Suíte de testes verde (≥350 testes). | • **NÃO** subir relay de emergência em VPS do mantenedor.<br/>• **NÃO** iniciar piloto sem plano de 2º espelho.<br/>• **NÃO** adicionar novas tags on-chain sem spec formal. |
+| **2027-Q1**<br/>*Piloto Humano & Loop Fechado* | Validar convivência real, auto-semeadura e moderação local em 1–3 comunidades (10–30 membros). | • T3: V-P09 piloto 4 semanas executado.<br/>• T4: V-P08 runbook de sucessão steward e relay buddy.<br/>• T5: Métricas honestas v2 (estimativa local, sem phone-home).<br/>• T6: Playbook de moderação E1–E5 testado. | • Retrospectiva do piloto preenchida ([`piloto-comunidade-retrospectiva-template.md`](./piloto-comunidade-retrospectiva-template.md)).<br/>• ≥1 relay comunitário mantido 100% por terceiros.<br/>• Zero tickets de suporte 1:1 ao mantenedor. | • **NÃO** criar ranking público ou gamificação de nós.<br/>• **NÃO** interferir em disputas de moderação local.<br/>• **NÃO** prometer P2P total em rede celular (4G/CGNAT). |
+| **2027-Q2**<br/>*Validação Qualitativa & POSSE P2* | Publicar lições do piloto e abrir funil de criadores com link canônico e defesa contra tirania. | • T8: POSSE Tier A/B (link canônico, CLI webhook, `vox-embed.js`).<br/>• T9: Spec e UI mínima de Community Forking.<br/>• T10: UI de export de atestação ADR-001 (opt-in local).<br/>• Retrospectiva formal do piloto publicada no repo. | • Comunidade piloto operando há 90 dias sem intervenção técnica central.<br/>• Decisão formal registrada sobre avanço ou pausa da Bridge MV3.<br/>• Relatório qualitativo de moderação E1–E5 arquivado. | • **NÃO** implementar extensões invasivas que violem ToS de terceiros.<br/>• **NÃO** reabrir backends centralizados para facilitar onboarding.<br/>• **NÃO** criar comitê central de apelação de moderação. |
+| **2027-Q3**<br/>*Consolidação Federada* | Estabilizar o protocolo para múltiplos coletivos autônomos; abrir processo de RFCs externas. | • Biblioteca canônica de tags Vox consolidada.<br/>• Múltiplos relays comunitários federados via gossip de manifestos.<br/>• Processo formal de RFCs comunitárias no GitHub.<br/>• Documentação multilíngue básica (PT/ES). | • Coletivos externos abrem comunidades e sobem relays sem contato prévio com o mantenedor.<br/>• O repositório opera 100% como árbitro de código aberto e especificações. | • **NÃO** assumir despesas de infraestrutura de terceiros.<br/>• **NÃO** aceitar PRs que quebrem o modelo client-first serverless.<br/>• **NÃO** centralizar chaves ou registros de handles. |
 
-| Trimestre | Foco release | Tarefas deste brainstorm | Exit criteria (mantenedor) |
-|-----------|--------------|--------------------------|----------------------------|
-| **2026-Q4** | Hardening pós-v6.82 | **T1** (este), **T7** (V-I08 gaps), **T2** (2º espelho + drill) | V-I08 runbook fechado **ou** gaps listados com owner; 2º espelho **testado**; zero “VPS emergência” |
-| **2027-Q1** | Piloto + sustentação | **T3** V-P09, **T4** V-P08, **T5** métricas v2, **T6** mod E1–E5 | Retrospectiva **iniciada**; buddy steward documentado; gateway-heavy comunidade piloto **medido** (local) |
-| **2027-Q2** | Validação + P2 honesto | **T8** Bridge/embed, **T9** fork, **T10** ADR-001 UI | Retrospectiva **publicada**; backlog P2 priorizado **sem** reabrir relay global |
+### 4. Cenários de Adoção Realista (Escala Cívica)
 
-Alinhado aos marcos T1–T4 do dossiê mantenedor→revisor (Q4 contrato → Q1 loop sem maintainer → Q2 legal/humano → Q3 validação escala); **este** doc encurta o horizonte operacional até **Q2-2027** com entregáveis concretos pós-v6.82.
+O Vox rejeita métricas de vaidade corporativa (MAU na casa de milhões) e planeja sua resiliência para a escala cívica real (dezenas a centenas de participantes por comunidade):
 
-### Modos de release (freeze vs hardening)
+| Dimensão | Cenário Pessimista (Atrito & Estagnação) | Cenário Base (Adoção Focalizada) | Cenário Otimista (Onda Local / Expansão) |
+|---|---|---|---|
+| **Escala Numérica** | 1 comunidade; <10 participantes ativos; abandono após semana 2. | 1–3 comunidades; 20–80 participantes ativos; retenção semanal estável. | 5–10 comunidades; 100–300 participantes ativos; múltiplos coletivos regionais. |
+| **Infraestrutura** | 0 stewards voluntários; 100% de tráfego recaindo em gateways Arweave de reserva. | 1 steward ativo por comunidade + 3 a 5 apoiadores `commOnly`; >70% de leituras locais. | 3 a 5 stewards independentes em VPS/PC; malha P2P ativa; gateways atuam como backup real. |
+| **Dinâmica Social** | Poucos posts; tópicos sem resposta; sensação de "sala vazia". | 2 a 5 tópicos por semana; deliberações com quórum cumprido; feira com ofertas reais. | Debate ativo diário; assembleias digitais com corte temporal; feira com circulação de Pix Zaps. |
+| **Resposta do Mantenedor** | **Não entrar em pânico.** Não criar bots de engajamento nem comprar tráfego. Revisar atrito no onboarding (ritual V-P05), arquivar dados honestamente no template e aguardar caso de uso com demanda real. | **Manter o papel de revisor.** Focar em estabilidade de release, documentar lições aprendidas e apoiar o facilitador local apenas com melhorias de documentação. | **Congelar features imediatamente.** Realizar auditoria de banda e quotas nos relays (V-I08), executar drill de espelho shell (T2) e garantir que nenhum suporte centralizado seja criado. |
 
-| Modo | Quando | Entra | Não entra |
-|------|--------|-------|-----------|
-| **Hardening** | Agora → fim Q4-2026 | T7, T2, regressão malha | OAuth enrich, feed experiments, Bridge XL |
-| **Feature freeze** | Semanas 0–4 do piloto (T3) | Bugfix, SW bump, copy | Novos tipos TX sem spec |
-| **Protocol window** | Branch Antigravity pronta | Cursor merge + testes | >1 XL malha em paralelo |
+### 5. Tensões Abertas e Trade-offs Estratégicos
 
-### Cenários e resposta do mantenedor
+1. **Painel Honesto vs. Gamificação de Participação:**
+   - *A Tensão:* Usuários acostumados com redes tradicionais pedem rankings ("Top Contribuidores", "Melhores Nós", badges de reputação pública).
+   - *A Resolução do Vox:* O Vox proíbe placares públicos e pontuações de reputação de nós ([COMPLIANCE-BR.md](../COMPLIANCE-BR.md) § infra). A gamificação gera vigilância, pressão social informal e potenciais passivos trabalhistas. O painel da comunidade exibe estritamente **estimativas locais agregadas da praça** (ex: "~14 vizinhos online", "~90% de leituras locais"), tratando a infraestrutura como bem comum cooperativo e não como competição individual.
+2. **Separação de Camadas vs. Risco Legal (Marco Civil Art. 19 em Espelhos):**
+   - *A Tensão:* A crença ingênua de que código aberto traz "imunidade absoluta" versus o risco real de ordens judiciais de remoção de conteúdo ilícito.
+   - *A Resolução do Vox:* O repositório FOSS não é provedor de aplicação (não tem CNPJ, banco de dados nem servidores). Contudo, quem opera espelhos públicos estáticos ou relays com índices curados pode receber notificações (Marco Civil Art. 19). A blindagem técnica reside na **separação estrita de camadas**: ordens judiciais são cumpridas na camada que o operador controla (suprimindo a TX do índice JSON do espelho local), sem que o mantenedor do código seja intimado a "apagar dados da permaweb global", o que é tecnicamente impossível.
+3. **Burnout de Stewards e Moderadores (A Armadilha do Mastodon):**
+   - *A Tensão:* A decentralização muitas vezes transfere o estresse das Big Techs para voluntários sobrecarregados que acumulam os papéis de sysadmin, juiz e suporte técnico.
+   - *A Resolução do Vox:* Desacoplamento de papéis e mandatos rotativos. O steward cuida apenas de disco e banda (infraestrutura cega); as regras e moderações pertencem à comunidade via `mod-action` eleito. A introdução obrigatória do **Relay Buddy (V-P08)** impede que a infraestrutura dependa de uma única pessoa, e o ciclo de moderação de 90 dias (E4) garante rotatividade de lideranças cívicas.
 
-| Cenário | Sinais | Ação maintainer |
-|---------|--------|-----------------|
-| **A — Piloto fechado** | 1–3 comunidades, T3 em curso | Só CI/docs; membro, não NOC |
-| **B — Orgânico lento** | Pill reserva frequente, poucos stewards | Merge T7/T2; reforçar copy — **não** hostear relay |
-| **C — Onda local** | Pico 100–300 MAU regional | **Congelar features**; hardening T2/T7 |
-| **D — Estagnação** | Cold start, salas vazias | Empurrar seed V-P05; **não** growth central |
-| **E — Pressão regulatória** | Art. 19 → **espelho/steward** | Atualizar COMPLIANCE-BR; **zero** inbox jurídica no repo |
+### 6. Decisões Irreversíveis vs. Experimentos Reversíveis
 
-### Definition of Done — T1 (roadmap)
+O mantenedor e os revisores devem categorizar qualquer proposta antes da aprovação em `main`:
 
-- [x] Índice T1–T10 + cadeia V-I08 → espelho → piloto documentada
-- [x] **T2–T4** consolidados (objetivo, DoD, riscos, owner)
-- [x] T5–T10 consolidados neste arquivo (nov/2026)
-- [x] Lobby `foco D` aponta para este doc + lista T1–T10
-- [ ] Piloto V-P09 **não** go-live antes de T2 drill **ou** waver explícito no template retrospectiva
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│ DECISÕES IRREVERSÍVEIS (One-Way Doors) — Exigem RFC e Quórum Formal    │
+├────────────────────────────────────────────────────────────────────────┤
+│ • Esquema de tags e tipos de transação on-chain (App-Name: vox-brasil) │
+│ • Regra matemática de corte temporal (Eligibility-Cutoff = Created-At) │
+│ • Padrão criptográfico de identidade (Ed25519) e chaves locais         │
+│ • Proibição expressa de DMs gravadas no Permaweb (minimização LGPD)    │
+│ • Algoritmo BR Code EMV offline puro para Pix Zaps                     │
+├────────────────────────────────────────────────────────────────────────┤
+│ EXPERIMENTOS REVERSÍVEIS (Two-Way Doors) — Foco em Iteração Rápida     │
+├────────────────────────────────────────────────────────────────────────┤
+│ • Layouts de cards e temas visuais (Carbon, Sky, Civic Typography)     │
+│ • Modais, toasts e fluxos explicativos de onboarding (Porta da Cantina)│
+│ • Heurísticas locais de cache e prioridade de busca em IndexedDB       │
+│ • Menus de transbordo (Post-more sheet) e abas secundárias             │
+│ • Scripts auxiliares de deploy (Docker Compose, Caddyfile, batch)      │
+└────────────────────────────────────────────────────────────────────────┘
+```
 
-### Anti-padrões (roadmap)
+#### Gatilhos de Feature Freeze vs. Hardening
+- **Hardening Ativo:** Aplicado sempre que a suíte de testes apresentar instabilidade, quando houver descompasso entre documentação e código (*doc drift*), ou na semana anterior à ativação de um novo relay/espelho. Durante o hardening, apenas correções de bugs e alinhamento de documentação entram em `main`.
+- **Feature Freeze Rígido:** Acionado obrigatoriamente durante as **4 semanas do piloto humano V-P09 (T3)** ou se houver pico repentino de acessos (Cenário C). É expressamente proibido introduzir novos tipos de transação, reescrever componentes do Service Worker ou alterar schemas de tags durante a janela de observação do piloto.
 
-- Piloto antes de runbook steward (V-I08) **e** plano espelho (T2).
-- Maintainer sobe relay “temporário” para destravar demo.
-- Métricas v2 (T5) como scoreboard público — só estimativa **por comunidade**, opt-in.
-- Q2-2027 cheio de Bridge/fork **sem** retrospectiva T3.
+### 7. O Papel do Mantenedor por Trimestre (Transição Mantenedor → Revisor)
+
+A meta existencial do mantenedor é tornar-se dispensável para a operação diária da rede:
+
+```mermaid
+flowchart TD
+    Q4["Q4-2026: Guardião de Contratos<br/>• Revisa PRs de hardening (V-I08, T2)<br/>• Mantém CI/CD e Pages<br/>• Não roda relay comunitário"]
+    Q1["Q1-2027: Observador do Piloto<br/>• Congela features durante T3<br/>• Participa como cidadão comum<br/>• Recusa chamados de suporte 1:1"]
+    Q2["Q2-2027: Revisor de Protocolo<br/>• Avalia retrospectiva qualitativa<br/>• Revisa RFCs de POSSE e Fork<br/>• Não arbitra disputas de mod"]
+    Q3["Q3-2027: Facilitador FOSS<br/>• Arbitra conformidade de código<br/>• Atualiza suíte de testes de regressão<br/>• Malha opera 100% autônoma"]
+
+    Q4 --> Q1 --> Q2 --> Q3
+```
+
+- **Em 2026-Q4:** O mantenedor atua como revisor rigoroso de código. Garante que o kit steward (V-I08) e o espelho redundante (T2) sejam operáveis por terceiros. Não aceita ser "o hospedeiro provisório" de comunidades de teste.
+- **Em 2027-Q1:** O mantenedor entra em modo de observação. No piloto V-P09, ele frequenta a praça apenas com seu par de chaves pessoal, postando e deliberando como membro comum. Toda dúvida de uso é direcionada para a documentação e rituais do grupo.
+- **Em 2027-Q2:** O mantenedor atua como analista de produto aberto. Lê a retrospectiva comunitária, avalia a maturidade das ferramentas de export e bifurcação (T8/T9), e garante que nenhuma pressão por crescimento comprometa a arquitetura serverless.
+- **Em 2027-Q3 em diante:** O mantenedor atinge o papel pleno de **revisor de especificações e releases**. Ele aprova PRs, audita a segurança criptográfica do cliente e assegura que a governança do repositório permaneça pública, enquanto a infraestrutura física é gerida organicamente pelos coletivos do país.
+
+### 8. Definition of Done & Anti-Padrões de T1
+
+#### Definition of Done (DoD)
+- [x] Tese em 3–5 frases definindo o crescimento por infraestrutura participante e piloto humano.
+- [x] Grafo de dependências formalizando a cadeia linear: `V-I08 → 2º espelho → V-P09 piloto → V-P08 sucessão → P2`.
+- [x] Cronograma trimestral completo (Q4-2026 a Q3-2027) com objetivos, entregáveis, exit criteria e vedações explícitas.
+- [x] Matriz de cenários realista (Pessimista, Base, Otimista) dimensionada para escala cívica (dezenas a centenas por comunidade).
+- [x] Análise aprofundada das tensões abertas: painel honesto, risco legal no Art. 19 e burnout de operadores.
+- [x] Critérios objetivos delimitando decisões irreversíveis vs. experimentos reversíveis, com gatilhos de freeze e hardening.
+- [x] Matriz trimestral do papel do mantenedor em sua transição definitiva para revisor FOSS.
+
+#### Anti-Padrões Críticos
+- Iniciar qualquer piloto humano antes de validar o runbook de steward (V-I08) e o 2º espelho shell (T2).
+- O mantenedor ceder à tentação de subir um relay "temporário" em sua própria VPS para destravar uma demonstração.
+- Introduzir leaderboards ou pontuações de reputação de nós no painel comunitário.
+- Queimar esforço de desenvolvimento na extensão Vox Bridge (Tier D) antes de consolidar o link canônico (Tier A) e a retrospectiva do piloto.
 
 ---
 
