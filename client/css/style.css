@@ -3275,6 +3275,15 @@ body.post-lightbox-open {
   margin-bottom: 0.35rem;
 }
 
+.community-vox-mirror-hint {
+  margin: 0.35rem 0 0;
+  font-size: 0.78rem;
+}
+
+.community-vox-mirror-hint--warn {
+  color: var(--color-warning, #b45309);
+}
+
 .community-vox-neighbor-foot {
   margin: 0;
   font-size: 0.75rem;
