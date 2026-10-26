@@ -1,8 +1,8 @@
 # Direcionamento — crescimento da rede (nov/2026)
 
-> **Status:** canônico (estratégia rede) · **Owner:** mantenedor doc · **Revisado:** 2026-11 · Release: [README.md](./README.md)  
-> **Horizonte:** **2026-Q4 → 2027-Q2**  
-> **Tese:** malha escala com **infra dos participantes** e piloto relacional — repositório publica cliente e **revisa código**, não opera relay/mod/suporte central.  
+> **Status:** canônico (Tese Cívica & Flywheel de Tração) · **Owner:** mantenedor doc · **Revisado:** 2026-11 · Release: [README.md](./README.md)  
+> **Papel canônico:** Tese de tração, preceitos não negociáveis (§1–§6), escada de 4 camadas e moderação local E1–E5.  
+> **Horizonte:** **2026-Q4 → 2027-Q2** · **Checklist vivo único:** [Dossiê N=25](./dossie-geral-inventario-master-breakdown-2026-11.md)  
 > **Não é parecer jurídico** — [COMPLIANCE-BR.md](../COMPLIANCE-BR.md)
 
 Complementa [rede-sustentada-participantes.md](./rede-sustentada-participantes.md), [infra-participativa-blindagem-crescimento.md](./infra-participativa-blindagem-crescimento.md), [brainstorm-proximas-10-tarefas-pos-v82-2026-11.md](./brainstorm-proximas-10-tarefas-pos-v82-2026-11.md), [antigravity-estrategia-mantenedor-revisor-2026.md](./antigravity-estrategia-mantenedor-revisor-2026.md) e [brainstorm-auto-escala-organica-2026-10.md](./brainstorm-auto-escala-organica-2026-10.md).
@@ -329,4 +329,4 @@ Processo externo: RFCs com janela de comentário (P2) — participação majorit
 
 ---
 
-**Versão:** 0.3 (§1–§6) · **Dono:** Community-doc · **Baseline código:** `898509c` (V-I08 steward kit)
+**Versão:** 0.3 (§1–§6) · **Dono:** Community-doc · **Release:** [README.md](../README.md) · [release-metadata.json](./release-metadata.json)
