@@ -1,5 +1,7 @@
 name: CI — Testes & Validação
 
+# Suíte local: 356 testes (334 JS node:test + 22 Python unittest) — npm test na raiz.
+# Contagens canônicas: docs/release-metadata.json (npm run release-metadata).
 # runs-on ubuntu-latest: GitHub will migrate default to Ubuntu 26 (~Oct 2026); pin ubuntu-24.04 only if you need a fixed image.
 
 on:
@@ -50,7 +52,7 @@ jobs:
         run: npm run lint
         continue-on-error: true
 
-      - name: Executar testes unitários do cliente (node:test)
+      - name: Executar testes unitários do cliente (334 JS, node:test)
         run: |
           npm run test:client
 
@@ -75,7 +77,7 @@ jobs:
         run: |
           python -m py_compile relay/*.py
 
-      - name: Executar testes unitários do relay (unittest)
+      - name: Executar testes unitários do relay (22 Python, unittest)
         run: |
           npm run test:relay
 
@@ -96,3 +98,46 @@ jobs:
           ! grep -rnw "BEGIN RSA PRIVATE KEY" . --exclude-dir=.git --exclude-dir=.github || exit 1
           ! grep -rnw "BEGIN PRIVATE KEY" . --exclude-dir=.git --exclude-dir=.github || exit 1
           echo "Nenhuma chave privada encontrada no repositório. OK!"
+
+  pilot-freeze:
+    name: Piloto V-P09 — freeze client/js (opt-in)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Detectar freeze ativo
+        id: freeze
+        run: |
+          if [ "${{ vars.PILOT_FREEZE }}" = "1" ] || [ -f .github/pilot-freeze.flag ]; then
+            echo "active=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "active=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Bloquear mudanças em client/js sem pilot-hotfix
+        if: steps.freeze.outputs.active == 'true'
+        env:
+          BASE: ${{ github.base_ref }}
+          LABELS_JSON: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+        run: |
+          git fetch origin "$BASE"
+          CHANGED="$(git diff --name-only "origin/${BASE}...HEAD" | grep '^client/js/' || true)"
+          if [ -z "$CHANGED" ]; then
+            echo "Nenhuma alteração em client/js — OK."
+            exit 0
+          fi
+          echo "$CHANGED"
+          if echo "$LABELS_JSON" | grep -q 'pilot-hotfix'; then
+            echo "Label pilot-hotfix presente — OK."
+            exit 0
+          fi
+          if git log --format=%s "origin/${BASE}..HEAD" | grep -qi 'pilot-hotfix'; then
+            echo "Commit message pilot-hotfix — OK."
+            exit 0
+          fi
+          echo "::error::PILOT_FREEZE ativo: PR altera client/js/**. Use label pilot-hotfix ou desative o freeze."
+          exit 1

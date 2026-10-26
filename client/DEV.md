@@ -4,7 +4,7 @@ Este documento descreve como testar o fluxo de leitura, autoria (upload de trans
 
 **Malha P2P / handoff Antigravity:** ver [`docs/antigravity-operating.md`](../docs/antigravity-operating.md). **Cache offline:** valor canônico em `CACHE_NAME` dentro de [`sw.js`](./sw.js) (não duplicar string fixa nos parágrafos abaixo — consulte o arquivo).
 
-**Release line:** após cada merge em `main`, confira SHA (`git rev-parse --short HEAD`), rode `npm test` (**356** testes: **334** JS + **22** Python) e anote o `CACHE_NAME` vigente. Usuários em Pages precisam de **hard refresh** para pegar shell novo.
+**Release line:** SHA canônico na tabela de release do [README](../README.md) e em [`docs/release-metadata.json`](../docs/release-metadata.json). Regenerar: `npm run release-metadata` (contagens) ou `npm run release-line` (metadata + README). Suíte: **356** testes (**334** JS + **22** Python) via `npm test`. `CACHE_NAME` só em [`sw.js`](./sw.js). Pages: **hard refresh** após deploy.
 
 ---
 
@@ -17,6 +17,21 @@ Este documento descreve como testar o fluxo de leitura, autoria (upload de trans
 | **Entrega** | Push da branch → PR ou merge; **não** commitar features direto em `main` (agentes incluídos). |
 
 Ver também [README — Como Contribuir](../README.md#-como-contribuir).
+
+### 0.1 Piloto V-P09 — `PILOT_FREEZE` (feature freeze, opt-in)
+
+Por padrão **desligado** — `main` segue recebendo mudanças em `client/js/**` normalmente.
+
+Quando o piloto V-P09 começar, ative o freeze de uma destas formas:
+
+| Ativação | Efeito |
+|----------|--------|
+| Variável de repositório GitHub `PILOT_FREEZE=1` | CI falha PRs que alteram `client/js/**` |
+| Arquivo `.github/pilot-freeze.flag` na branch default | Mesmo comportamento (útil em fork ou teste local) |
+
+**Exceção:** label de PR `pilot-hotfix` ou commit message contendo `pilot-hotfix` — permite correções urgentes no cliente durante o freeze.
+
+Desligar: remover a flag ou zerar a variável. Documentação técnica: job `pilot-freeze` em [`.github/workflows/ci.yml`](../.github/workflows/ci.yml).
 
 ---
 
@@ -33,7 +48,7 @@ Abra no navegador: `http://127.0.0.1:8080/`
 
 ### 1.1 Executar Testes Unitários Locais (Tudo)
 
-O Vox inclui suíte completa de testes unitários locais (**350** testes: **329** client JS + **21** relay/signaling Python), sem dependências pesadas externas:
+O Vox inclui suíte completa de testes unitários locais (**356** testes: **334** client JS + **22** relay/signaling Python), sem dependências pesadas externas:
 
 ```bash
 # Na raiz do repositório vox/
