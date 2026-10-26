@@ -4,7 +4,7 @@
 > **Escopo:** mapa do que existe hoje + **N=20** tarefas núcleo (4×5 DOC/NET/CODE/PIL **01–05**) **+ DOC-06…08** doc/review — não substitui execução de T2 (2º espelho) nem piloto humano.  
 > **Política de agentes:** Composer 2.5 only (lobby politica).
 
-**Plano mestre N=25 (trilha EXP):** [dossie-geral-inventario-master-breakdown-2026-11.md](./dossie-geral-inventario-master-breakdown-2026-11.md) — checklist **EXP-01…05** só no dossiê; DOC/NET/CODE/PIL **01–05** equivalentes aqui (§4–§5).
+**Plano mestre N=25 (trilha EXP):** [dossie-geral-inventario-master-breakdown-2026-11.md](./dossie-geral-inventario-master-breakdown-2026-11.md) — checklist **EXP-01…05** só no dossiê; DOC/NET/CODE/PIL **01–05** equivalentes aqui (§4–§5). **Meta-processo:** [brainstorm 10 fraquezas do método nov/2026](./brainstorm-10-pontos-fracos-metodo-implementacao-2026-11.md).
 
 Complementa [direcionamento-crescimento-rede-2026-11.md](./direcionamento-crescimento-rede-2026-11.md), [rede-sustentada-participantes.md](./rede-sustentada-participantes.md), [backlog-participacao-rede.md](./backlog-participacao-rede.md), [brainstorm-proximas-10-tarefas-pos-v82-2026-11.md](./brainstorm-proximas-10-tarefas-pos-v82-2026-11.md) e [brainstorm-dez-tarefas-estrategia-2026-10.md](./brainstorm-dez-tarefas-estrategia-2026-10.md).
 
