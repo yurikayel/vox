@@ -88,7 +88,7 @@ Se **https://yurikayel.github.io/vox/** não responder (HTTP erro, shell em bran
 2. `#/ajuda/teste` — H1 **Teste aberto (~15 min)**; links **Aprenda Vox**, **Feira demo**, **Status da malha**, **Sua rede** presentes no snapshot.
 3. `#/c/demo-aprenda-vox` — H1 **Brasil Estereótipo (Demo Vox)**; feed demo com posts (mock/local); **sem** ritual seed V-P05.
 4. Roteiro in-app alinhado a [teste-aberto-demo.md](./teste-aberto-demo.md) (`demo-aprenda-vox`, não mirror).
-5. Porta da Cantina visível em **`#/`** até **Entrar — sou humano**; links **`#/ajuda/teste`** (footer, Status, etc.) continuam clicáveis sob o overlay; rota **`#/ajuda/teste`** abre sem exigir o gate.
+5. Porta da Cantina visível até **Entrar — sou humano**; roteiro e comunidade demo carregam antes do gate.
 6. `parseRoute` + `tests/ajuda-teste.test.js` — `#/ajuda/teste` → `ajuda-teste` (340 testes Node + relay OK).
 7. Nenhuma correção de rota necessária em `route-parse.js` / `ajuda-teste.js` nesta passagem.
 8. Produção: repetir smoke em **https://yurikayel.github.io/vox/** após deploy (mesmos hashes).
@@ -99,12 +99,13 @@ Se **https://yurikayel.github.io/vox/** não responder (HTTP erro, shell em bran
 
 Espelho **A** — **https://yurikayel.github.io/vox/** (sem servidor local; **não** usar porta 8765).
 
-**Paridade com `main`:** `sw.js` servido em Pages expõe `CACHE_NAME` **`vox-pwa-v6.84-teste-aberto`**, alinhado a [`client/sw.js`](../client/sw.js) e à linha de release do [README.md](../README.md) (`1359ee6`, 362 testes). **Não** observado shell defasado em relação ao `main` nesta passagem; se `#/status` mostrar outro cache, **hard refresh** (`Ctrl+Shift+R`).
+**Paridade com `main`:** `sw.js` servido em Pages expõe `CACHE_NAME` **`vox-pwa-v6.84-teste-aberto`**, alinhado a [`client/sw.js`](../client/sw.js) e à linha de release do [README.md](../README.md) (`1359ee6`, 362 testes). **Não** observado shell defasado em relação ao `main` nesta passagem; se `#/status` mostrar outro cache, **hard refresh** (`Ctrl+Shift+R`) — SW **v6.84** costuma exigir refresh após deploy.
 
 1. **`#/ajuda/teste`** — H1 **Teste aberto (~15 min)**; links **Aprenda Vox**, **Feira demo**, **Status da malha**, **Sua rede** no snapshot; roteiro in-app coerente com T-09.
 2. **`#/c/demo-aprenda-vox`** — H1 **Brasil Estereótipo (Demo Vox)**; feed demo com posts (mock/local); **sem** ritual seed V-P05; slug `demo-aprenda-vox` (não mirror).
-3. **`#/status`** (opcional na mesma sessão) — texto **Versão do cache (Service Worker):** `vox-pwa-v6.84-teste-aberto`.
+3. **`#/status`** (opcional na mesma sessão) — texto **Versão do cache (Service Worker):** `vox-pwa-v6.84-teste-aberto`; **Leitura Arweave: all_ok**; relay local offline (esperado sem steward).
 4. **Porta da Cantina** — overlay *Entrar — sou humano* visível até aceitar; rotas acima carregam conteúdo por trás do gate (comportamento esperado no smoke automatizado).
+5. **Nota (browser 2026-10-26):** smoke repetido em espelho A (sem porta 8765); hashes `#/ajuda/teste` e `#/c/demo-aprenda-vox` OK.
 
 ---
 
