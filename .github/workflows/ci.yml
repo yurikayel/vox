@@ -1,6 +1,6 @@
 name: CI — Testes & Validação
 
-# Suíte local: 362 testes (340 JS node:test + 22 Python unittest) — npm test na raiz.
+# Suíte local: 375 testes (353 JS node:test + 22 Python unittest) — npm test na raiz.
 # Contagens canônicas: docs/release-metadata.json (npm run release-metadata).
 # runs-on ubuntu-latest: GitHub will migrate default to Ubuntu 26 (~Oct 2026); pin ubuntu-24.04 only if you need a fixed image.
 
