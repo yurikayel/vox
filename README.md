@@ -17,7 +17,7 @@ No feed, o layout é **híbrido**: texto estilo **X** (caption antes da toolbar)
 
 | Campo | Valor |
 |-------|--------|
-| **SHA** | `4563942` |
+| **SHA** | `4f4ef9c` |
 | **Branch** | `main` |
 | **Testes** | **356** (`334` JS + `22` Python) — `npm test` na raiz |
 | **Service worker** | `vox-pwa-v6.83-steward-kit-v-i08` |
