@@ -444,7 +444,7 @@ V-P07 fecha loop “contribuí → prova opt-in” com impl menor que motor de l
 
 ### DoD
 
-- [ ] UI `#/settings/network`: export JSON `contribution-attestation` + `signPayload`
+- [x] UI `#/settings/network`: export JSON `contribution-attestation` + `signPayload`
 - [ ] Rate limit + disclaimers (self-attested)
 - [ ] **Não** upload automático; **não** alterar WANT/feed
 - [ ] Testes schema; export default **não** lista peers servidos

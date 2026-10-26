@@ -85,6 +85,12 @@ test("share - shareCommunity formata link de comunidade", async () => {
   assert.ok(copiedText.includes("tec-br"));
 });
 
+test("share - honest limits copy mentions no silent Meta post", () => {
+  assert.match(share.SHARE_HONEST_LIMITS_SHORT, /Facebook|Instagram/i);
+  assert.match(share.SHARE_HONEST_LIMITS_SHORT, /Web Share|JSON|CLI/i);
+  assert.match(share.SHARE_HONEST_LIMITS_SHORT, /Sem post automático/i);
+});
+
 test("share - shareListing formata link e texto de oferta para a feira", async () => {
   delete globalThis.navigator.share;
   let copiedText = null;

@@ -1,3 +1,10 @@
+/** Microcopy EXP-01 — POSSE não publica sozinho em redes fechadas (Meta). */
+export const SHARE_HONEST_LIMITS_SHORT =
+  "Você escolhe onde ecoar: Web Share do aparelho, links (WhatsApp, X, Bluesky) ou JSON/CLI. Sem post automático no Facebook ou Instagram.";
+
+export const SHARE_NATIVE_SUCCESS_TOAST = "Compartilhamento aberto no app que você escolheu.";
+export const SHARE_CLIPBOARD_SUCCESS_TOAST = "Link copiado — cole onde quiser publicar.";
+
 export function showToast(message, type = "info") {
   if (typeof process !== "undefined" && process.env?.NODE_ENV === "test") return;
   const existing = document.querySelector(".vox-toast");
@@ -29,7 +36,7 @@ export async function shareTopic({ title, topicId, communityId }) {
         text,
         url,
       });
-      showToast("Compartilhado com sucesso!");
+      showToast(SHARE_NATIVE_SUCCESS_TOAST);
       return true;
     } catch (e) {
       if (e.name === "AbortError") return false;
@@ -38,7 +45,7 @@ export async function shareTopic({ title, topicId, communityId }) {
 
   try {
     await navigator.clipboard.writeText(`${text} ${url}`);
-    showToast("Link copiado para a área de transferência!");
+    showToast(SHARE_CLIPBOARD_SUCCESS_TOAST);
     return true;
   } catch {
     showToast("Não foi possível copiar o link.", "error");
@@ -57,7 +64,7 @@ export async function shareCommunity({ title, communityId }) {
         text,
         url,
       });
-      showToast("Compartilhado com sucesso!");
+      showToast(SHARE_NATIVE_SUCCESS_TOAST);
       return true;
     } catch (e) {
       if (e.name === "AbortError") return false;
@@ -66,7 +73,7 @@ export async function shareCommunity({ title, communityId }) {
 
   try {
     await navigator.clipboard.writeText(`${text} ${url}`);
-    showToast("Link da comunidade copiado!");
+    showToast(SHARE_CLIPBOARD_SUCCESS_TOAST);
     return true;
   } catch {
     showToast("Não foi possível copiar o link.", "error");
@@ -82,7 +89,7 @@ export async function shareConnect({ routeId, displayName = "" }) {
   if (navigator.share) {
     try {
       await navigator.share({ title: `${who} | Vox`, text, url });
-      showToast("Link compartilhado!");
+      showToast(SHARE_NATIVE_SUCCESS_TOAST);
       return true;
     } catch (e) {
       if (e.name === "AbortError") return false;
@@ -91,7 +98,7 @@ export async function shareConnect({ routeId, displayName = "" }) {
 
   try {
     await navigator.clipboard.writeText(`${text} ${url}`);
-    showToast("Link #/connect copiado!");
+    showToast(SHARE_CLIPBOARD_SUCCESS_TOAST);
     return true;
   } catch {
     showToast("Não foi possível copiar o link.", "error");
@@ -112,7 +119,7 @@ export async function shareListing({ title, communityId, priceLabel = "" }) {
         text,
         url,
       });
-      showToast("Oferta compartilhada!");
+      showToast(SHARE_NATIVE_SUCCESS_TOAST);
       return true;
     } catch (e) {
       if (e.name === "AbortError") return false;
@@ -121,7 +128,7 @@ export async function shareListing({ title, communityId, priceLabel = "" }) {
 
   try {
     await navigator.clipboard.writeText(`${text} ${url}`);
-    showToast("Link da oferta copiado!");
+    showToast(SHARE_CLIPBOARD_SUCCESS_TOAST);
     return true;
   } catch {
     showToast("Não foi possível copiar o link.", "error");
