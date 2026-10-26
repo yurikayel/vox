@@ -1,6 +1,6 @@
 # POST /vox/mirror — validação estrutural v1 (ADR)
 
-**Status:** proposta · implementação em `relay/mirror_validate.py`
+**Status:** v1 integrado · `relay/mirror_validate.py` + pré-validação em `community-mirror.js`
 
 ## Verificar no POST
 

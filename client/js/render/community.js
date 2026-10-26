@@ -227,6 +227,29 @@ export function computeCommunityNeighborStats({
   };
 }
 
+function renderCommunityMirrorHint(mirrorStatus) {
+  if (!mirrorStatus) return "";
+  if (mirrorStatus.ok) {
+    let timeLabel = "";
+    if (mirrorStatus.at) {
+      try {
+        timeLabel = new Date(mirrorStatus.at).toLocaleString("pt-BR", {
+          day: "2-digit",
+          month: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+      } catch {
+        timeLabel = "";
+      }
+    }
+    const label = timeLabel ? `atualizado ${timeLabel}` : "atualizado";
+    return `<p class="community-vox-mirror-hint meta" role="status">Espelho relay ${escapeHtml(label)}.</p>`;
+  }
+  const code = mirrorStatus.code || "erro";
+  return `<p class="community-vox-mirror-hint meta community-vox-mirror-hint--warn" role="status">Último espelho: falha (<code>${escapeHtml(code)}</code>).</p>`;
+}
+
 function renderCommunityNeighborPanel(stats, { commOnly = false } = {}) {
   if (!stats) return "";
   const demoNote = stats.isDemoEstimate
@@ -397,6 +420,7 @@ export function renderCommunity(
     neighborStats = null,
     commOnly = false,
     seedChecklist = null,
+    mirrorStatus = null,
   } = {}
 ) {
   const commTitle = meta.title || communityId;
@@ -418,6 +442,7 @@ export function renderCommunity(
           ${tagline ? `<p class="community-vox-kicker">${escapeHtml(tagline)}</p>` : `<p class="community-vox-kicker">Comunidade Vox</p>`}
           <h1 class="community-vox-name">${escapeHtml(commTitle)}</h1>
           ${metaChips}
+          ${renderCommunityMirrorHint(mirrorStatus)}
         </div>
         <div class="community-vox-toolbar" role="toolbar" aria-label="Ações da comunidade">
           <button id="btn-join-comm" type="button" class="community-vox-join-pill${isMember ? " is-member" : ""}" data-id="${escapeHtml(communityId)}" aria-pressed="${isMember ? "true" : "false"}">
