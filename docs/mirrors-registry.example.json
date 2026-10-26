@@ -6,7 +6,7 @@
       "mirror_id": "shell-a",
       "role": "A",
       "base_url": "https://yurikayel.github.io/vox/",
-      "git_sha": "7c888d135aa8d7eafa2d3f379c52c152387040cd",
+      "git_sha": "c63125d84cb47a9c1a816868abee1b0c7271d156",
       "cache_name": "vox-pwa-v6.83-steward-kit-v-i08",
       "operator": "yurikayel",
       "read_only": true,
