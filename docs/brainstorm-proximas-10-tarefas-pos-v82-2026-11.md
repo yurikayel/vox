@@ -115,7 +115,8 @@ Alinhado aos marcos T1–T4 do dossiê mantenedor→revisor (Q4 contrato → Q1 
 ### Definition of Done — T1 (roadmap)
 
 - [x] Índice T1–T10 + cadeia V-I08 → espelho → piloto documentada
-- [ ] T2–T10 consolidados neste arquivo (agentes paralelos nov/2026)
+- [x] **T2–T4** consolidados (objetivo, DoD, riscos, owner)
+- [ ] T5–T10 consolidados neste arquivo (agentes paralelos nov/2026)
 - [ ] Lobby `foco D` aponta para este doc quando lista estiver fechada
 - [ ] Piloto V-P09 **não** go-live antes de T2 drill **ou** waver explícito no template retrospectiva
 
@@ -130,19 +131,126 @@ Alinhado aos marcos T1–T4 do dossiê mantenedor→revisor (Q4 contrato → Q1 
 
 ## T2 — 2º espelho shell + drill DR
 
-> *Seção em consolidação (agente paralelo). Ver [ops-shell-mirrors.md](./ops-shell-mirrors.md) e T9 em [brainstorm-dez-tarefas-estrategia-2026-10.md](./brainstorm-dez-tarefas-estrategia-2026-10.md).*
+**Escopo:** distribuição **read-only** do cliente PWA — não confundir com relay/steward ([ops-shell-mirrors.md](./ops-shell-mirrors.md) · drill detalhado: T9 em [brainstorm-dez-tarefas-estrategia-2026-10.md](./brainstorm-dez-tarefas-estrategia-2026-10.md)).
+
+### Objetivo
+
+Eliminar o **SPOF** do espelho **A** (GitHub Pages): manter espelho **B** (Cloudflare Pages / Gitea / nginx coletivo) com **paridade de release** (`git_sha`, `CACHE_NAME`) e **drill DR** documentado (simulação de indisponibilidade de A), para o piloto ter URL alternativa antes de onda local.
+
+### Definition of done (DoD)
+
+| Critério | Evidência |
+|----------|-----------|
+| Espelho **B** público, mesmo `client/` da release | Registro: `mirror_id`, `base_url`, `git_sha`, `cache_name`, `operator`, `read_only: true` |
+| Paridade A↔B | `git rev-parse HEAD` + `CACHE_NAME` em `sw.js` **iguais** na mesma release |
+| **Um** drill DR executado | Passos 1–6 do playbook (janela, A pausado/aviso, smoke B, comunicação piloto, reativar A) com data |
+| Smoke em B | PWA; `#/settings/network`; `#/c/demo-aprenda-vox-mirror`; steward **Testar espelho agora** se relay existir |
+| Steward ≠ shell | Docs: relay/VPS **não** migra com espelho estático |
+
+### Riscos
+
+| Risco | Impacto | Mitigação |
+|-------|---------|-----------|
+| Só A ou só B atualizado | App branco; SW mismatch | P0: paridade antes de feature; checklist ops por push `main` |
+| Voluntário abandona B | Retorno ao SPOF A | Contato no registro; rotacionar operador; drill semestral |
+| Diff silencioso em `gateways.json` | Malhas divergentes | Documentar diff por coletivo |
+| Espelho confundido com “nó da rede” | Expectativa T&S no host estático | [COMPLIANCE-BR.md](../COMPLIANCE-BR.md); steward ≠ shell |
+| Hype anti-censura | Confiança quebrada | Espelho reduz dependência de **um domínio**, não apaga permaweb |
+
+### Owner
+
+| Papel | Responsabilidade |
+|-------|------------------|
+| **Mantenedor CI** | Espelho **A**, workflow Pages, SHA publicado |
+| **Voluntário espelho (ops FOSS)** | Espelho **B**, drill DR |
+| **Community-doc** | [ops-shell-mirrors.md](./ops-shell-mirrors.md) + registro de URLs |
+
+**Prioridade:** P0 · **Dep:** release v6.82+ · **Antes de:** go-live piloto (T3) sem waver no template.
 
 ---
 
 ## T3 — V-P09 piloto operacional
 
-> *Seção em consolidação (agente paralelo). Ver T3 em [brainstorm-dez-tarefas-estrategia-2026-10.md](./brainstorm-dez-tarefas-estrategia-2026-10.md).*
+**Escopo:** execução **humana** — playbook semanas 0–4: [brainstorm-dez-tarefas-estrategia-2026-10.md](./brainstorm-dez-tarefas-estrategia-2026-10.md) § T3 · template [piloto-comunidade-retrospectiva-template.md](./piloto-comunidade-retrospectiva-template.md).
+
+### Objetivo
+
+Rodar **1–3** pilotos (10–30 pessoas, ~4 semanas) para validar flywheel **uso → espaço digital → `commOnly` → leitura mais rápida**, calibrar copy honesta (pill gateway, steward opcional) e alimentar V-P04/V-P05/V-I08 com dados **qualitativos** — não DAU nacional.
+
+### Definition of done (DoD)
+
+| Critério | Evidência |
+|----------|-----------|
+| Piloto executado | Facilitador + fundador; Zap/Telegram paralelo; `#/c/:slug` |
+| Retrospectiva preenchida | Template 7–14 dias pós go-live; continuar / pausar / abortar |
+| Roles mínimos | Trio ou Caminho A/B explícito ([steward-seed-15min.md](./steward-seed-15min.md)) |
+| Métricas template | Ativo/Apoiador, stewards, pill reserva, gateway (estimativa local) |
+| Barra mínima 2026 | ≥3 Apoiadores `commOnly` **ou** 1 steward + espelho verificado (V-P06) até semana 4 |
+| Abortar bem | Retrospectiva + pin “piloto encerrado — arquivo permanece” |
+
+### Riscos
+
+| Risco | Impacto | Mitigação |
+|-------|---------|-----------|
+| Sala vazia | “Vox não funciona” | Seed semana 0: feira/voto/POSSE dia 1 |
+| “Mais um app” | Abandono | Vox = arquivo/decisão; Zap = urgência |
+| Steward herói | Relay cai; VPS no fundador | Caminho A OK; buddy V-P08 (T4) cedo |
+| Mod polícia | Repúdio | Mandato ~90d; E4; carta mod |
+| Maintainer = suporte 1:1 | Escopo estoura | Playbook; sem hotline oficial |
+| SLO como SLA | Expectativa comercial | Observação local only |
+
+### Owner
+
+| Papel | Responsabilidade |
+|-------|------------------|
+| **Community-doc** | Template, lições no backlog |
+| **Facilitador local** | Rituais 0–4; ponte Zap ↔ link |
+| **Fundador** | Convites, seed, mod/steward |
+| **Cursor / mantenedor** | Bugfix/docs — **não** animar piloto |
+
+**Prioridade:** V-P09 (P0/P2 backlog) · **Dep:** V-P04/05/06; **ideal:** T2 comunicado ao grupo.
 
 ---
 
-## T4 — V-P08 sucessão steward
+## T4 — V-P08 sucessão steward + relay buddy
 
-> *Seção em consolidação (agente paralelo).*
+**Escopo:** processo **humano + doc** para relay/índice não morrer com uma pessoa — complementa V-I08 ([steward-relay-kit.md](./steward-relay-kit.md)).
+
+### Objetivo
+
+Runbook de **sucessão** e **relay buddy**: segundo voluntário treinado, handoff compose/credenciais, quotas disco, contato Art. 19 na camada espelhada, anúncio de segundo espelho POST quando couber — reduzir SPOF **humano** (anti burn-out Mastodon).
+
+### Definition of done (DoD)
+
+| Critério | Evidência |
+|----------|-----------|
+| Doc **V-P08** publicado | Buddy, handoff, emergência 72h, offboarding steward |
+| Checklist handoff | VPS/compose, `.env`, WSS, backup `index_*.json`, rotação chaves, aviso comunidade |
+| Buddy nomeado antes do burnout | Ritual/campo no template V-P09; heurística 1 steward / 3–5 comunidades |
+| Copy steward ≠ mod | [GOVERNANCE.md](../GOVERNANCE.md) + wizard |
+| Referência em comunidade real | Buddy documentado **ou** “Caminho A — risco aceito” |
+| Compliance | Link [COMPLIANCE-BR.md](../COMPLIANCE-BR.md); README steward (URL, filtros, contato judicial) |
+
+### Riscos
+
+| Risco | Impacto | Mitigação |
+|-------|---------|-----------|
+| Steward único some | Índice congelado; pill crítica | Buddy + segundo mirror POST |
+| Handoff no Zap | Vazamento | Checklist escrito; rotacionar segredos |
+| Buddy sem acordo | Conflito de índice | Política publicada; escolha de URL |
+| Maintainer compra VPS | Antipadrão T1 | Escalar ao coletivo |
+| UI handoff prematura | Atraso P1 | v1 doc-only; UI = P2 |
+
+### Owner
+
+| Papel | Responsabilidade |
+|-------|------------------|
+| **Community-doc** | Runbook V-P08 |
+| **Steward + buddy** | Handoff na comunidade |
+| **Antigravity / Cursor** | Revisão técnica kit — **não** buddy default |
+| **Fundador / mod** | Visibilidade do buddy (pin/governança) |
+
+**Prioridade:** P1 · **Dep:** V-I08 repetível · **Sinergia:** T3 nomeia buddy; T2 cobre distribuição **cliente**.
 
 ---
 
@@ -182,4 +290,4 @@ Alinhado aos marcos T1–T4 do dossiê mantenedor→revisor (Q4 contrato → Q1 
 
 ---
 
-**Versão:** 0.1 · **T1** Antigravity retry `95a45b1a` · **Data:** 25 out 2026
+**Versão:** 0.2 · **T1** Antigravity retry `95a45b1a` · **T2–T4** análise · **Data:** 25 out 2026
