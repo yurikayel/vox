@@ -21,6 +21,7 @@ import {
   renderPostAuthorMetaLines,
   renderAvatarHtml,
   formatTimeAgo,
+  postTimeParts,
 } from "./util.js";
 
 export function renderComposerStrip(displayName = "") {
@@ -228,7 +229,7 @@ function renderPostHeaderBlock(t, author, labels, { photoOverlay = false } = {})
       <div class="post-header-aside">${ownerMenu}</div>
     </header>`;
   }
-  const metaHtml = renderPostAuthorMetaLines(author, labels, formatTimeAgo(t.ts));
+  const metaHtml = renderPostAuthorMetaLines(author, labels, formatTimeAgo(t.ts), { ts: t.ts });
   const asideHtml = ownerMenu ? `<div class="post-header-aside">${ownerMenu}</div>` : "";
   return `
     <header class="post-header-inline">
@@ -287,7 +288,7 @@ function renderPostMoreMenuTrigger(t, author, authorDisplay) {
 
 function renderPostMediaHeader(t, author, labels) {
   const authorDisplay = labels.authorDisplay;
-  const timeLabel = formatTimeAgo(t.ts);
+  const { display: timeDisplay, titleAttr: timeTitle } = postTimeParts(t.ts);
   const followBtn = shouldShowPostFollowOverlay(t, author) ? renderPostHeroFollowBtn(author) : "";
   const subtitle = renderPostHeroSubtitle(author);
   return `<div class="post-media-header">
@@ -298,7 +299,7 @@ function renderPostMediaHeader(t, author, labels) {
           <a class="post-media-header-username" href="#/u/${encodeURIComponent(author)}">${escapeHtml(authorDisplay)}</a>
           ${renderPostHeroVerifiedBadge(author)}
           <span class="post-media-header-dot" aria-hidden="true">·</span>
-          <span class="post-media-header-time">${escapeHtml(timeLabel)}</span>
+          <span class="post-media-header-time"${timeTitle}>${escapeHtml(timeDisplay)}</span>
         </div>
         ${subtitle}
       </div>
@@ -326,7 +327,7 @@ function renderPostActionsOverlay(t, author, authorDisplay, authorHandle) {
     </button>
     ${renderCommentButton(t, { overlay: true })}
     ${renderZapOverlayBtn(t, author, authorDisplay)}
-    <button class="action-btn btn-share btn-share-post overlay-action-btn" data-id="${escapeHtml(t.id)}" data-title="${escapeHtml(t.title)}" aria-label="Compartilhar">
+    <button class="action-btn btn-share btn-share-post overlay-action-btn" data-id="${escapeHtml(t.id)}" data-title="${escapeHtml(t.title)}" data-author="${escapeHtml(authorDisplay || "")}" data-body="${escapeHtml((t.body || "").slice(0, 160))}" aria-label="Compartilhar">
       <svg class="action-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
     </button>
     ${renderToolbarUtilityMenu(t, author, authorDisplay, authorHandle, baseStars, starred, stars, saved, { overlay: true })}
@@ -565,7 +566,7 @@ function renderPostToolbar(t, author, authorDisplay, authorHandle) {
               <span class="action-count count-likes">${likes > 0 ? likes : ""}</span>
             </button>
             ${renderCommentButton(t)}
-            <button class="action-btn btn-share btn-share-post" data-id="${escapeHtml(t.id)}" data-title="${escapeHtml(t.title)}" aria-label="Compartilhar post">
+            <button class="action-btn btn-share btn-share-post" data-id="${escapeHtml(t.id)}" data-title="${escapeHtml(t.title)}" data-author="${escapeHtml(authorDisplay || "")}" data-body="${escapeHtml((t.body || "").slice(0, 160))}" aria-label="Compartilhar post">
               <svg class="action-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
             </button>
             ${renderZapToolbarBtn(t, author, authorDisplay)}
