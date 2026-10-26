@@ -1,6 +1,7 @@
 # Direcionamento — crescimento da rede (nov/2026)
 
-> **Status:** consolidação doc-only · horizonte **2026-Q4 → 2027-Q2**  
+> **Status:** canônico (estratégia rede) · **Owner:** mantenedor doc · **Revisado:** 2026-11 · Release: [README.md](./README.md)  
+> **Horizonte:** **2026-Q4 → 2027-Q2**  
 > **Tese:** malha escala com **infra dos participantes** e piloto relacional — repositório publica cliente e **revisa código**, não opera relay/mod/suporte central.  
 > **Não é parecer jurídico** — [COMPLIANCE-BR.md](../COMPLIANCE-BR.md)
 
