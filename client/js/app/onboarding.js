@@ -6,6 +6,12 @@ import * as localAccount from "../local-account.js";
 import * as oauthProfile from "../oauth-profile.js";
 import * as meshProfile from "../mesh-profile.js";
 import { parseRoute } from "./route-parse.js";
+import {
+  CANTINA_STORAGE_KEY,
+  hasPassedCantinaGate,
+  shouldShowCantinaGate,
+  wireCantinaOverlayPassthrough,
+} from "./cantina-gate.js";
 import { ensureOnboardingSideEffects } from "./onboarding-side-effects.js";
 import { showHome } from "./screens-home.js";
 
@@ -128,21 +134,28 @@ export function checkOAuthEnrichStep() {
 }
 
 export function checkCantinaGate() {
-  const passed = localStorage.getItem("vox-cantina-v1");
-  if (passed) {
-    checkOAuthEnrichStep();
+  const modalContainer = document.getElementById("modal-container");
+  const route = parseRoute();
+
+  if (!shouldShowCantinaGate(route.name)) {
+    if (modalContainer && route.name === "ajuda-teste") {
+      render.closeCantinaGate(modalContainer);
+    }
+    if (hasPassedCantinaGate()) {
+      checkOAuthEnrichStep();
+    }
     return;
   }
 
-  const modalContainer = document.getElementById("modal-container");
   if (!modalContainer) return;
 
+  wireCantinaOverlayPassthrough();
   render.renderCantinaGate(modalContainer);
 
   const btnEnter = document.getElementById("btn-cantina-enter");
   if (btnEnter) {
     btnEnter.addEventListener("click", () => {
-      localStorage.setItem("vox-cantina-v1", "true");
+      localStorage.setItem(CANTINA_STORAGE_KEY, "true");
       render.closeCantinaGate(modalContainer);
       checkOAuthEnrichStep();
     });

@@ -1,9 +1,9 @@
 {
-  "git_sha": "1359ee6",
+  "git_sha": "b97d0c7",
   "branch": "main",
-  "test_js": 340,
+  "test_js": 353,
   "test_python": 22,
-  "test_total": 362,
-  "cache_name": "vox-pwa-v6.84-teste-aberto",
-  "generated_at": "2026-10-26T02:49:13Z"
+  "test_total": 375,
+  "cache_name": "vox-pwa-v6.85-cantina-ajuda-link",
+  "generated_at": "2026-10-26T09:57:08Z"
 }
