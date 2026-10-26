@@ -59,7 +59,7 @@ export function renderInlineComposer({ userRouteId = "", displayName = "" } = {}
         </div>
         <p class="inline-composer-meta" aria-live="polite">
           <span class="inline-composer-char" id="inline-topic-char">0 / 2000</span>
-          <span class="inline-composer-hint meta"> · assinado no aparelho · <a href="#/compose/topic">formulário completo</a></span>
+          <span class="inline-composer-hint meta"> · assinado no aparelho · <a href="#/compose/topic">formulário completo</a> · <a href="#/wallet">Criar ou importar chave</a></span>
           <span class="inline-composer-local-hint meta" title="${escapeHtml(i18n.localMutateEditDeleteTooltip)}"> · ${escapeHtml(i18n.localMutateComposerHint)}</span>
         </p>
       </form>
