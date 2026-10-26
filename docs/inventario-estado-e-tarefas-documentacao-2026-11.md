@@ -184,46 +184,46 @@ Cada tarefa: **objetivo**, **DoD revisado**, **owner**, **prioridade**, **links*
 
 ### A — Documentação revisão
 
-| ID | Objetivo | DoD revisado | Owner | P | Links |
-|----|----------|--------------|-------|---|-------|
-| **DOC-01** | Alinhar README release line a `99180f9` / 355 / SW v6.83 | Tabela SHA, testes, SW; link inventário | Cursor | **P0** | [README.md](../README.md) |
-| **DOC-02** | Eliminar drift DEV.md §1.1 + CI (contagens testes) | Uma cifra canônica 355; CI descreve matriz Node/Python | Cursor | **P0** | [DEV.md](../client/DEV.md) |
-| **DOC-03** | Índice mestre docs (§2.5) no README ou `docs/README.md` | Entrada única com 4 trilhas; link deste inventário | Community-doc | **P0** | §2.5 acima |
-| **DOC-04** | Re-audit copy honesta pós painel vizinhos + steward | Checklist P0 hashtag/gateway/steward; delta vs out/23 | Cursor | **P0** | [honest-copy-audit](./honest-copy-audit-2026-10-23.md) |
-| **DOC-05** | Arquivar/markdown histórico steward-wizard brainstorm | Banner «superseded by V-I08» + link kit | Community-doc | P1 | [steward-wizard-brainstorm](./steward-wizard-brainstorm.md) |
-| **DOC-06** | Rebaseline métricas doc `metrics/baseline` | Novo snapshot 355 testes + áreas teste | Cursor | P1 | [metrics/baseline](./metrics/baseline-2026-10-24.md) |
-| **DOC-07** | Cross-link inventário ↔ ambos brainstorms T1–T10 | Tabelas §3 espelham índices; zero ID orphan | Community-doc | P1 | §3 deste doc |
-| **DOC-08** | POSITIONING.md vs T2 (out/2026) — gaps copy | Tabela audiência/mensagem/evitar sincronizada | Community-doc | P2 | [POSITIONING](../POSITIONING.md), [brainstorm-dez T2](./brainstorm-dez-tarefas-estrategia-2026-10.md) |
+| ID | Tipo DoD | Objetivo | DoD revisado | Owner | P | Links |
+|----|:---:|----------|--------------|-------|---|-------|
+| **DOC-01** | `doc` | Alinhar README release line a `99180f9` / 355 / SW v6.83 | Tabela SHA, testes, SW; link inventário | Cursor | **P0** | [README.md](../README.md) |
+| **DOC-02** | `doc` | Eliminar drift DEV.md §1.1 + CI (contagens testes) | Uma cifra canônica 355; CI descreve matriz Node/Python | Cursor | **P0** | [DEV.md](../client/DEV.md) |
+| **DOC-03** | `doc` | Índice mestre docs (§2.5) no README ou `docs/README.md` | Entrada única com 4 trilhas; link deste inventário | Community-doc | **P0** | §2.5 acima |
+| **DOC-04** | `doc` | Re-audit copy honesta pós painel vizinhos + steward | Checklist P0 hashtag/gateway/steward; delta vs out/23 | Cursor | **P0** | [honest-copy-audit](./honest-copy-audit-2026-10-23.md) |
+| **DOC-05** | `doc` | Arquivar/markdown histórico steward-wizard brainstorm | Banner «superseded by V-I08» + link kit | Community-doc | P1 | [steward-wizard-brainstorm](./steward-wizard-brainstorm.md) |
+| **DOC-06** | `doc` | Rebaseline métricas doc `metrics/baseline` | Novo snapshot 355 testes + áreas teste | Cursor | P1 | [metrics/baseline](./metrics/baseline-2026-10-24.md) |
+| **DOC-07** | `doc` | Cross-link inventário ↔ ambos brainstorms T1–T10 | Tabelas §3 espelham índices; zero ID orphan | Community-doc | P1 | §3 deste doc |
+| **DOC-08** | `doc` | POSITIONING.md vs T2 (out/2026) — gaps copy | Tabela audiência/mensagem/evitar sincronizada | Community-doc | P2 | [POSITIONING](../POSITIONING.md), [brainstorm-dez T2](./brainstorm-dez-tarefas-estrategia-2026-10.md) |
 
 ### B — Crescimento rede (ops + doc)
 
-| ID | Objetivo | DoD revisado | Owner | P | Links |
-|----|----------|--------------|-------|---|-------|
-| **NET-01** | Ativar espelho shell **B** + registro público | URL, `git_sha`, `CACHE_NAME`, operador; paridade A↔B | Voluntário espelho | **P0** | [ops-shell-mirrors](./ops-shell-mirrors.md), T2 pós-v82 |
-| **NET-02** | Executar drill DR espelho (playbook T9/T2) | Data + passos 1–6 documentados no ops doc | Voluntário + Community-doc | **P0** | [brainstorm-dez T9](./brainstorm-dez-tarefas-estrategia-2026-10.md) |
-| **NET-03** | Publicar runbook V-P08 sucessão + relay buddy | Doc dedicado `docs/` + checklist handoff | Community-doc | P1 | T4 pós-v82, [backlog V-P08](./backlog-participacao-rede.md) |
-| **NET-04** | Smoke steward por voluntário **não-maintainer** | Evidência (log/screenshot) anexada ao T7 | Steward externo | P1 | [steward-relay-kit](./steward-relay-kit.md) |
-| **NET-05** | Registro espelhos comunidade (URL, SHA, read-only) | Tabela em ops ou COMPLIANCE anexo | Community-doc | P2 | [COMPLIANCE-BR](../COMPLIANCE-BR.md) |
+| ID | Tipo DoD | Objetivo | DoD revisado | Owner | P | Links |
+|----|:---:|----------|--------------|-------|---|-------|
+| **NET-01** | `ops-humano` | Ativar espelho shell **B** + registro público | URL, `git_sha`, `CACHE_NAME`, operador; paridade A↔B | Voluntário espelho | **P0** | [ops-shell-mirrors](./ops-shell-mirrors.md), T2 pós-v82 |
+| **NET-02** | `ops-humano` | Executar drill DR espelho (playbook T9/T2) | Data + passos 1–6 documentados no ops doc | Voluntário + Community-doc | **P0** | [brainstorm-dez T9](./brainstorm-dez-tarefas-estrategia-2026-10.md) |
+| **NET-03** | `doc` | Publicar runbook V-P08 sucessão + relay buddy | Doc dedicado `docs/` + checklist handoff | Community-doc | P1 | T4 pós-v82, [backlog V-P08](./backlog-participacao-rede.md) |
+| **NET-04** | `ops-humano` | Smoke steward por voluntário **não-maintainer** | Evidência (log/screenshot) anexada ao T7 | Steward externo | P1 | [steward-relay-kit](./steward-relay-kit.md) |
+| **NET-05** | `doc` | Registro espelhos comunidade (URL, SHA, read-only) | Tabela em ops ou COMPLIANCE anexo | Community-doc | P2 | [COMPLIANCE-BR](../COMPLIANCE-BR.md) |
 
 ### C — Código P0
 
-| ID | Objetivo | DoD revisado | Owner | P | Links |
-|----|----------|--------------|-------|---|-------|
-| **CODE-01** | Feature freeze gate: só doc/fix durante piloto | Lobby + DEV § nota freeze; checklist PR | Mantenedor | **P0** | [brainstorm pós-v82 § freeze](./brainstorm-proximas-10-tarefas-pos-v82-2026-11.md) |
-| **CODE-02** | Métricas honestas v2 (T5) — `read_origin` local | DoD T5 § checklist; testes render; sem API relay | Cursor | P1 | T5 pós-v82 |
-| **CODE-03** | V-P07 UI export atestação ADR-001 opt-in | Fluxo `#/settings` + testes; copy LGPD | Cursor | P2 | [adr/001](./adr/001-contribution-attestation-export.md) |
-| **CODE-04** | Documentar flag V-I09 soft priority (default off) | DEV §24 + toggle futuro ou env doc | Cursor | P1 | [antigravity-blob-soft-priority-v0](./antigravity-blob-soft-priority-v0.md) |
-| **CODE-05** | Gateway fallback UX (brainstorm → spike ou wontfix) | ADR curto ou issues fechadas com rationale | Cursor | P2 | [gateway-honest-fallback-brainstorm](./gateway-honest-fallback-brainstorm.md) |
+| ID | Tipo DoD | Objetivo | DoD revisado | Owner | P | Links |
+|----|:---:|----------|--------------|-------|---|-------|
+| **CODE-01** | `code` | Feature freeze gate: só doc/fix durante piloto | Lobby + DEV § nota freeze; checklist PR | Mantenedor | **P0** | [brainstorm pós-v82 § freeze](./brainstorm-proximas-10-tarefas-pos-v82-2026-11.md) |
+| **CODE-02** | `code` | Métricas honestas v2 (T5) — `read_origin` local | DoD T5 § checklist; testes render; sem API relay | Cursor | P1 | T5 pós-v82 |
+| **CODE-03** | `code` | V-P07 UI export atestação ADR-001 opt-in | Fluxo `#/settings` + testes; copy LGPD | Cursor | P2 | [adr/001](./adr/001-contribution-attestation-export.md) |
+| **CODE-04** | `doc` | Documentar flag V-I09 soft priority (default off) | DEV §24 + toggle futuro ou env doc | Cursor | P1 | [antigravity-blob-soft-priority-v0](./antigravity-blob-soft-priority-v0.md) |
+| **CODE-05** | `doc` | Gateway fallback UX (brainstorm → spike ou wontfix) | ADR curto ou issues fechadas com rationale | Cursor | P2 | [gateway-honest-fallback-brainstorm](./gateway-honest-fallback-brainstorm.md) |
 
 ### D — Piloto humano
 
-| ID | Objetivo | DoD revisado | Owner | P | Links |
-|----|----------|--------------|-------|---|-------|
-| **PIL-01** | Selecionar comunidade + facilitador (10–30) | Roles RACI preenchido; Caminho A/B | Fundador local | **P0** | [brainstorm-dez T3](./brainstorm-dez-tarefas-estrategia-2026-10.md) |
-| **PIL-02** | Semanas 0–4 piloto V-P09 | Calendário T3 executado; Zap paralelo | Facilitador | **P0** | [template retrospectiva](./piloto-comunidade-retrospectiva-template.md) |
-| **PIL-03** | Retrospectiva 7–14d pós go-live | Template completo; decisão continuar/pausar/abortar | Community-doc | **P0** | V-P09 |
-| **PIL-04** | Barra mínima: ≥3 Apoiadores ou 1 steward + mirror OK | Campos template preenchidos semana 4 | Fundador | P1 | V-P04/05/06 |
-| **PIL-05** | Ciclo mod E1–E5 (90d) no piloto | E1–E5 evidências T6; appeal documentado | Mods + facilitador | P1 | [auto-escala § C.5](./brainstorm-auto-escala-organica-2026-10.md) |
+| ID | Tipo DoD | Objetivo | DoD revisado | Owner | P | Links |
+|----|:---:|----------|--------------|-------|---|-------|
+| **PIL-01** | `ops-humano` | Selecionar comunidade + facilitador (10–30) | Roles RACI preenchido; Caminho A/B | Fundador local | **P0** | [brainstorm-dez T3](./brainstorm-dez-tarefas-estrategia-2026-10.md) |
+| **PIL-02** | `ops-humano` | Semanas 0–4 piloto V-P09 | Calendário T3 executado; Zap paralelo | Facilitador | **P0** | [template retrospectiva](./piloto-comunidade-retrospectiva-template.md) |
+| **PIL-03** | `ops-humano` | Retrospectiva 7–14d pós go-live | Template completo; decisão continuar/pausar/abortar | Community-doc | **P0** | V-P09 |
+| **PIL-04** | `ops-humano` | Barra mínima: ≥3 Apoiadores ou 1 steward + mirror OK | Campos template preenchidos semana 4 | Fundador | P1 | V-P04/05/06 |
+| **PIL-05** | `ops-humano` | Ciclo mod E1–E5 (90d) no piloto | E1–E5 evidências T6; appeal documentado | Mods + facilitador | P1 | [auto-escala § C.5](./brainstorm-auto-escala-organica-2026-10.md) |
 
 ---
 
