@@ -1,7 +1,7 @@
 # Brainstorm — próximas 10 tarefas pós-v6.82 (nov/2026)
 
 > **Status:** consolidação doc-only · sprint pós-**V-P06** (mirror validate)  
-> **Linha de base:** `main` **`f43f8b8`** · SW **`vox-pwa-v6.82-mirror-validate-v1`** · **350** testes Node  
+> **Linha de base:** `main` **`898509c`** (V-I08 steward kit) · SW **`vox-pwa-v6.83-steward-kit-v-i08`** · **333** testes Node + **22** relay  
 > **Horizonte:** **2026-Q4 → 2027-Q2** (piloto + malha sem loop do mantenedor)  
 > **Público:** mantenedor/revisor, stewards, facilitadores de piloto  
 > **Não é parecer jurídico** — [COMPLIANCE-BR.md](../COMPLIANCE-BR.md)
@@ -27,6 +27,8 @@ Complementa [antigravity-estrategia-mantenedor-revisor-2026.md](./antigravity-es
 | **T9** | Community fork (gatilhos republicanos) | Q2-2027 | Community-doc | T6 |
 | **T10** | Export atestação ADR-001 (UI opt-in) | Q2-2027 | Cursor | V-P07 spec |
 
+**Escolha T10:** **ADR-001 / V-P07** em vez de *Pluggable Feeds* — backlog [P1, baixo ops](./backlog-participacao-rede.md); lentes plugáveis **P3** ([incubacao-p2-backlog.md](./incubacao-p2-backlog.md)).
+
 ---
 
 ## T1 — Roadmap integrado Q4-2026 → Q2-2027 (mantenedor revisor)
@@ -45,7 +47,7 @@ Dossiê de papel (12 meses, T1–T4 exit): [antigravity-estrategia-mantenedor-re
 | V-P02 gateway telemetry + pill reserva | Baseline honesto para T5 métricas v2 |
 | V-P04/05 painel vizinhos + seed | Ritual pós-comunidade no piloto |
 | V-I09 blob soft priority | Menos gateway quando pares online |
-| V-I08 **parcial** (health, compose, docs) | **Gargalo P0** — T7 fecha runbook 1-clique |
+| V-I08 **fechado** (runbook, kits Win/Linux, wizard quota/health) | Steward sobe relay sem maintainer — **T2** espelho shell é P0 |
 
 **Não executado ainda:** 2º espelho shell vivo (T2), piloto V-P09 (T3), retrospectiva escrita (gate Q2).
 
@@ -116,8 +118,8 @@ Alinhado aos marcos T1–T4 do dossiê mantenedor→revisor (Q4 contrato → Q1 
 
 - [x] Índice T1–T10 + cadeia V-I08 → espelho → piloto documentada
 - [x] **T2–T4** consolidados (objetivo, DoD, riscos, owner)
-- [ ] T5–T10 consolidados neste arquivo (agentes paralelos nov/2026)
-- [ ] Lobby `foco D` aponta para este doc quando lista estiver fechada
+- [x] T5–T10 consolidados neste arquivo (nov/2026)
+- [x] Lobby `foco D` aponta para este doc + lista T1–T10
 - [ ] Piloto V-P09 **não** go-live antes de T2 drill **ou** waver explícito no template retrospectiva
 
 ### Anti-padrões (roadmap)
@@ -256,38 +258,182 @@ Runbook de **sucessão** e **relay buddy**: segundo voluntário treinado, handof
 
 ## T5 — Métricas honestas v2 (implementação)
 
-> *Seção em consolidação (agente paralelo).*
+**Objetivo:** Evoluir o painel «Sustentada por vizinhos» (v1 em `computeCommunityNeighborStats`) para **v2** — estimativas locais úteis, sem phone-home nem ranking global ([brainstorm-dez-tarefas-estrategia-2026-10.md](./brainstorm-dez-tarefas-estrategia-2026-10.md) § T5 · [ADR-001](./adr/001-contribution-attestation-export.md)).
+
+**DoD**
+
+- [ ] `read_origin` por leitura (`mesh` \| `relay` \| `gateway` \| `cache_idb`) agregado só na comunidade atual
+- [ ] Janela 24h ou 50 leituras; ocultar `%` se amostra &lt; 5
+- [ ] Estados UI: saudável / degradado / frio-seed / insuficiente
+- [ ] «Apagar estatísticas locais» em `#/settings/network`
+- [ ] Testes render estendidos; **nenhuma** API nova de métricas no relay
+
+**Riscos:** percentual falso induz confiança; vazar `routeId` em agregado; phone-home disfarçado.
+
+**Owner:** Cursor.
 
 ---
 
-## T6 — Moderação E1–E5
+## T6 — Moderação voluntária E1–E5 (90 dias)
 
-> *Seção em consolidação (agente paralelo). Ver [brainstorm-auto-escala-organica-2026-10.md](./brainstorm-auto-escala-organica-2026-10.md) §5.5.*
+**Objetivo:** Validar mods eleitos, carta, plantão e appeal **no piloto T3**, sem central Vox ([brainstorm-auto-escala-organica-2026-10.md](./brainstorm-auto-escala-organica-2026-10.md) § C.5).
+
+**DoD**
+
+- [ ] E1 trio + E2 carta pinned antes do dia 7
+- [ ] E3 workshop mod-action; ≥1 ocultação de teste registrada
+- [ ] E5 um ciclo appeal completo documentado
+- [ ] Retro atualiza GOVERNANCE se gaps
+
+**Riscos:** mod burnout; fundador permanente como mod; leaderboard de ações mod.
+
+**Owner:** Facilitador + mods da comunidade piloto.
 
 ---
 
-## T7 — V-I08 gaps / runbook
+## T7 — V-I08 gaps / runbook (análise pós-fechamento)
 
-> *Seção em consolidação (agente paralelo). Análise de gaps — implementação V-I08 em agente dedicado.*
+**Objetivo:** Após **`898509c`** ([steward-relay-kit.md](./steward-relay-kit.md)), registrar lacunas **residuais** — não reimplementar o kit.
+
+| Área | Estado pós-V-I08 | Gap residual | Owner |
+|------|------------------|--------------|-------|
+| Compose + Caddy + `/health` | ✓ | Drill em VPS BR real (CGNAT, firewall) | Steward voluntário |
+| Wizard + quota UI | ✓ | Smoke por **não-maintainer** documentado | Cursor |
+| Kits Win/Linux 1-clique | ✓ script Linux | AppImage/systemd user unit (P2) | FOSS |
+| V-P08 buddy handoff | doc T4 | Runbook `docs/` dedicado ainda pendente | Community-doc |
+| Manifest gossip pós-seed | spec v0 | Exemplo no kit «dia 1 após espelho» | Cursor doc |
+
+**DoD T7:** checklist acima fechada ou virou issues P1/P2; seed 15 min testado por voluntário externo uma vez.
+
+**Riscos:** doc perfeito mas relay na VPS do maintainer; wizard promete P2P total no 4G.
+
+**Owner:** Cursor (impl residual) · revisão steward voluntário.
 
 ---
 
-## T8 — POSSE / Bridge / embed
+## T8 — POSSE / Bridge / embed — funil criadores
 
-> *Seção em consolidação (agente paralelo).*
+**Refs:** [RFC 0001 POSSE](./rfc/0001-posse-export.md) · [vox-bridge-spike.md](./vox-bridge-spike.md) · [embed-integration.md](./embed-integration.md) · `posse-dispatch.js` · [vox-bridge/](../vox-bridge/).
+
+### Objetivo
+
+Criador publica **canônico no Vox** e distribui para Zap/redes **sem** prometer crosspost automático antes de Tier A/B — funil até Apoiador/steward.
+
+### Funil
+
+```
+Cantina / convite Zap → post #/t/:id assinado
+        ├─ Tier A: share sheet (WhatsApp, X, copiar link)     [P0]
+        ├─ Tier B: vox-posse-export + CLI webhook             [P1]
+        ├─ Tier C: vox-embed.js em site parceiro              [P1]
+        └─ Tier D: Bridge MV3 (IG/Threads) experimental       [P2]
+        → leitor externo → comunidade → commOnly / steward
+```
+
+### Ordem de build
+
+| Ordem | Entrega | Prioridade |
+|-------|---------|------------|
+| 1 | Link canônico + OG honestos em `#/t/` | P0 |
+| 2 | Sheet POSSE Tier A (intents + microcopy) | P0 |
+| 3 | Export JSON estável + `tools/posse-cli` | P1 |
+| 4 | Embed: doc + 3 sites piloto | P1 |
+| 5 | Flag «Bridge experimental» em settings | P2 |
+| 6 | `vox-bridge` MV3 clipboard handoff | P2 |
+
+### DoD
+
+- [ ] Tier A + B em `main`; embed documentado com demo
+- [ ] Bridge **não** default-on; copy sem “Instagram automático” antes de Tier A
+
+### Riscos
+
+ToS Meta/X; expectativa MEI queimada; `externally_connectable` precipitado.
+
+### Owner
+
+Cursor (PWA/CLI) · contribuidor FOSS (extensão).
+
+**Anti-padrão:** competir com ActivityPub boost antes de link canônico estável.
 
 ---
 
-## T9 — Community fork
+## T9 — Community fork — conflitos e gatilhos republicanos
 
-> *Seção em consolidação (agente paralelo).*
+**Refs:** [incubacao-p2-backlog.md](./incubacao-p2-backlog.md) · demo `demo-aprenda-vox-mirror` · [brainstorm-tracao-escalabilidade-incubacao.md](./brainstorm-tracao-escalabilidade-incubacao.md).
+
+### Objetivo
+
+Pressão republicana sobre mods **sem** litígio no repo central — fork civilizado com histórico preservado.
+
+### Cenários e respostas
+
+| Cenário | Resposta republicana |
+|---------|----------------------|
+| Mod tirânico (hide em massa, sem appeal) | Proposta fork + migração filiação |
+| Steward aplica índice além do mod eleito | Documentar; espelho alternativo |
+| Schism de regras | Fork + cutoff na votação |
+| Captura fundador | E1 + mandato 90d + governance |
+
+### Gatilhos objetivos (propor fork)
+
+1. ≥3 `mod-action` contestadas + appeal E5 negado sem voto cutoff.
+2. Recusa carta mod (E2) após 14 dias.
+3. Política de índice steward incompatible com voto válido.
+4. Heurística piloto: ≥20 membros ativos e ≥40% assinam proposta fork.
+
+### Alvo produto (P2)
+
+- TX `Type: community-fork` + `parentCommunityId`
+- UI «Migrar minha filiação» 1 clique; banner espelho (estender demo)
+- **Não** apagar histórico parent
+
+### DoD
+
+- [ ] Spec protocolo + UI mínima além do demo; GOVERNANCE § fork
+- [ ] Mantenedor **não** escolhe lado
+
+### Riscos
+
+Fork spam; brigading na votação; central “escolher fork oficial”.
+
+### Owner
+
+Antigravity (TX spec) · Cursor (UI).
 
 ---
 
 ## T10 — Export atestação ADR-001 (UI opt-in)
 
-> *Seção em consolidação (agente paralelo). Ver [adr/001-contribution-attestation-export.md](./adr/001-contribution-attestation-export.md).*
+**Refs:** [ADR-001](./adr/001-contribution-attestation-export.md) · [backlog-participacao-rede.md](./backlog-participacao-rede.md) · [COMPLIANCE-BR.md](../COMPLIANCE-BR.md).
+
+### Objetivo
+
+Apoiador/steward exporta snapshot **assinado** das métricas **do próprio aparelho** — reconhecimento privado, **sem** ranking público nem gossip automático.
+
+### Por que T10 e não Pluggable Feeds
+
+V-P07 fecha loop “contribuí → prova opt-in” com impl menor que motor de lentes JS; feeds plugáveis exigem sandbox, governança de scripts e moderação de algoritmo — **P3** após piloto e POSSE Tier A.
+
+### DoD
+
+- [ ] UI `#/settings/network`: export JSON `contribution-attestation` + `signPayload`
+- [ ] Rate limit + disclaimers (self-attested)
+- [ ] **Não** upload automático; **não** alterar WANT/feed
+- [ ] Testes schema; export default **não** lista peers servidos
+
+### Riscos
+
+Comunidades comparando exports como scoreboard; telemetria disfarçada.
+
+### Owner
+
+Cursor.
 
 ---
 
-**Versão:** 0.2 · **T1** Antigravity retry `95a45b1a` · **T2–T4** análise · **Data:** 25 out 2026
+## Rastreio lobby
+
+Lista 1–10 em `lobby.md` § **Brainstorm próximas 10 pós-v82 (nov/2026)**.
+
+**Versão:** 1.1 · T1–T10 consolidado · V-I08 **`898509c`** · **Data:** 25 out 2026
