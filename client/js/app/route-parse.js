@@ -89,6 +89,7 @@ export function parseRoute() {
   if (parts[0] === "labs" && parts[1] === "frames") return { name: "labs-frames" };
   if (parts[0] === "voxpedia") return { name: "voxpedia" };
   if (parts[0] === "ajuda" && parts[1] === "voxpedia") return { name: "voxpedia" };
+  if (parts[0] === "ajuda" && parts[1] === "teste") return { name: "ajuda-teste" };
   if (parts[0] === "wallet") return { name: "wallet" };
   if (parts[0] === "compose") {
     if (parts[1] === "community") return { name: "compose-community" };

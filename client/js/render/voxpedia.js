@@ -248,6 +248,7 @@ export function renderVoxpedia() {
           <strong>Vox</strong> é uma rede social comunitária cooperativa: posts e comunidades no permaweb,
           mensagens privadas cifradas e uma malha que ajuda a carregar conteúdo entre aparelhos.
           <strong>Voxpedia</strong> explica como isso funciona — comece pelo resumo e abra as camadas quando quiser detalhe.
+          Testando o app? Siga o <a href="#/ajuda/teste">roteiro teste aberto (~15 min)</a>.
         </p>
       </header>
       <nav class="voxpedia-toc card" aria-label="Índice da Voxpedia">
@@ -259,6 +260,7 @@ export function renderVoxpedia() {
           <li><a href="#voxpedia-rede">Rede cooperativa</a></li>
           <li><a href="#voxpedia-privacidade">Privacidade & dados</a></li>
           <li><a href="#voxpedia-tecnico">Para curiosos (técnico)</a></li>
+          <li><a href="#/ajuda/teste">Teste aberto (testadores)</a></li>
         </ul>
       </nav>
       ${renderGithubDocsAside()}
