@@ -6,7 +6,10 @@ Preencher após 7–14 dias de piloto real (10–30 pessoas + WhatsApp).
 
 - **Comunidade (slug / Community-Id):**
 - **Período:**
-- **Facilitador:**
+- **Facilitador (owner):**
+- **Fundador (owner):**
+- **Community-doc (owner):**
+- **Relay Buddy (owner):**
 
 ## Fases
 
