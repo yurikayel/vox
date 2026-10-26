@@ -29,23 +29,23 @@ Objetivo: uma comunidade real com **leitura** via gateway **ou** relay voluntár
 
 ## Caminho B — relay + espelho (15 min)
 
-1. **Deploy relay:** seguir [`relay/deploy/README.md`](../relay/deploy/README.md) (`docker compose up -d --build`).
-2. **PWA:** `#/settings/network` → WSS do Caddy, TURN do `turnserver.conf`, **URL HTTP do relay** (`http://IP:3920` ou HTTPS se exposto).
-3. **Espelho de índice:** no steward, usar `community-mirror.js` / `POST /vox/mirror` com índice JSON da comunidade (ver [`espacos-digitais-infra.md`](./espacos-digitais-infra.md)).
-4. **Manifesto de pins (v0):** publicar `CACHE_MANIFEST` na malha com `peers.publishSignedCacheManifest(manifestBody)` ou transação Arweave `Type: cache-manifest` (spec [`cache-manifest-v0.md`](./cache-manifest-v0.md)).
+1. **Deploy relay:** [`relay/deploy/README.md`](../relay/deploy/README.md) (`docker compose up -d --build`) **ou** kit desktop [`steward-relay-kit.md`](./steward-relay-kit.md).
+2. **PWA:** assistente `#/settings/network/steward` **ou** `#/settings/network` → WSS, TURN, **URL HTTP relay** (`https://signal…` na VPS; `http://127.0.0.1:8787` no kit local).
+3. **Espelho de índice:** passo 5 do wizard → **Testar espelho agora** (`community-mirror.js` / `POST /vox/mirror`).
+4. **Manifesto de pins (v0):** `peers.publishSignedCacheManifest(manifestBody)` ou transação Arweave `Type: cache-manifest` ([`cache-manifest-v0.md`](./cache-manifest-v0.md)).
 5. **Hard refresh** após deploy do shell (`Ctrl+Shift+R`) — conferir `CACHE_NAME` em [`client/sw.js`](../client/sw.js).
 
 ---
 
 ## Verificação (2 min)
 
-- [ ] `GET <relay>/health` → `{ "status": "ok", ... }` (ver `relay/server.py`)
-- [ ] Preferir wizard guiado: [`steward-wizard-brainstorm.md`](./steward-wizard-brainstorm.md) (implementação futura `#/settings/network/steward`)
-- [ ] Dois navegadores na mesma comunidade: post aparece via gossip (ou relay se configurado)
+- [ ] `GET <relay>/health` → `{ "status": "ok", "communityIndexCount": …, "cacheBytes": … }`
+- [ ] Wizard passo 4 → **Verificar Relay HTTP** mostra espelhos e uso de quota
+- [ ] Dois navegadores na mesma comunidade: post via gossip (ou relay se configurado)
 - [ ] Retratação: autor apaga/edita → par vê tombstone/badge (gossip v1)
 
 ---
 
-## Próximo passo (V-I08)
+## Referência completa
 
-Kit steward completo: multi-índice, quota, Caddy — ver [`steward-relay-kit.md`](./steward-relay-kit.md).
+Kit steward (health, quota, multi-comunidade): [`steward-relay-kit.md`](./steward-relay-kit.md).

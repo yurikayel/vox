@@ -38,6 +38,22 @@ export async function verifyRelayHttp(baseUrl) {
   }
 }
 
+/** Linha curta para UI após GET /health (espelhos + quota). */
+export function formatRelayHealthSummary(data) {
+  if (!data || data.status !== "ok") return "";
+  const n = data.communityIndexCount ?? 0;
+  const used = Number(data.cacheBytes) || 0;
+  const maxB = data.maxCacheBytes;
+  const usedMb = Math.round(used / (1024 * 1024));
+  if (maxB != null && maxB > 0) {
+    const maxMb = Math.round(maxB / (1024 * 1024));
+    const pct = Math.min(100, Math.round((used / maxB) * 100));
+    return `${n} espelho(s) · cache ${pct}% (${usedMb}/${maxMb} MB)`;
+  }
+  if (used > 0) return `${n} espelho(s) · cache ${usedMb} MB`;
+  return `${n} espelho(s)`;
+}
+
 export function readFormStep(step) {
   if (step === 1) {
     return { pledge: Boolean(document.getElementById("sw-pledge")?.checked) };

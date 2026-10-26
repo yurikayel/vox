@@ -136,6 +136,13 @@ Spec: [`docs/mirror-validate-v1.md`](../docs/mirror-validate-v1.md).
 - **Steward / manual:** assistente `#/settings/network/steward` passo 5 → **Testar espelho agora** (toast em falha); `localStorage.VOX_MIRROR_VERBOSE=1` também exibe toast no auto-mirror.
 - **Telemetria local (sem PII):** `localStorage` chave `vox-mirror-telemetry` — pill no header da comunidade; `#/status` exporta `mirror_last_error` + hora + `communityId`.
 
+#### 4.2.2 Kit steward (V-I08)
+
+- **Docs:** [`docs/steward-relay-kit.md`](../docs/steward-relay-kit.md) (health, quota, VPS vs desktop).
+- **1-clique:** `tools/steward-kit-windows/Start-StewardKit.ps1` ou `tools/steward-kit-linux/start-steward-kit.sh` → relay `:8787` + wizard no browser.
+- **VPS:** `relay/deploy` — mesma origem HTTPS para WSS e relay HTTP; `GET /health` expõe `communityIndexes`, `cacheBytes`, `maxCacheBytes`.
+- **Wizard passo 4:** **Verificar Relay HTTP** usa `steward-wizard.js` (`formatRelayHealthSummary`); testes em `tests/steward-wizard.test.js`.
+
 ### 4.3 Teste de Resiliência Offline
 1. Simule a desconexão de rede (ou desligue o Wi-Fi).
 2. Tópicos e comunidades previamente visitados continuam abrindo instantaneamente a partir do cache IndexedDB (`cache-node.js`) e do Vox Relay local, comprovando a tolerância a apagões de conectividade.

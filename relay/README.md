@@ -38,7 +38,7 @@ Ao abrir o Vox no navegador (`http://127.0.0.1:8080`), o cliente consulta automa
 
 | Rota | Método | Descrição |
 |---|---|---|
-| `/health` | `GET` | Retorna status do serviço, versão e contagem de itens em cache. |
+| `/health` | `GET` | Status, `communityIndexes`, `cacheBytes`, `maxCacheBytes` (env `VOX_RELAY_MAX_CACHE_MB`). |
 | `/tx/<txId>` | `GET` | Retorna o payload da transação (Cache HIT se local; busca em `arweave.net` se MISS). |
 | `/vox/index/<commId>.json` | `GET` | Retorna índice consolidado da comunidade armazenado localmente. |
 | `/vox/mirror` | `POST` | Salva espelho local de comunidade recebido pelo cliente. |
