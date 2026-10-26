@@ -17,9 +17,9 @@ No feed, o layout é **híbrido**: texto estilo **X** (caption antes da toolbar)
 
 | Campo | Valor |
 |-------|--------|
-| **SHA** | `0aeb313` |
+| **SHA** | `f94fa09` |
 | **Branch** | `main` |
-| **Testes** | **356** (`334` JS + `22` Python) — `npm test` na raiz |
+| **Testes** | **3564Ò` Python) — `npm test` na raiz |
 | **Service worker** | `vox-pwa-v6.83-steward-kit-v-i08` |
 | **Deploy** | Push em `main` → GitHub Pages; após deploy use **hard refresh** (`Ctrl+Shift+R`) para trocar o SW |
 
@@ -195,7 +195,7 @@ npm test
 # ou no Windows:
 .\test.bat
 ```
-Executa a suíte de **356 testes** (`334` JS via `node:test` e `22` Python via `unittest`).
+Executa a suíte de **356 testes4Ò` Python via `unittest`).
 
 ### 🚀 Pipelines de CI/CD (GitHub Actions)
 
