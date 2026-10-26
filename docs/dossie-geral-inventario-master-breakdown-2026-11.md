@@ -1,9 +1,9 @@
 # 🇧🇷 Vox — Dossiê Geral: Inventário do Sistema & Master Breakdown em N=25 Tarefas
 
 > **Documento:** Inventário de Arquitetura, Estado da Arte & Plano Mestre de Execução  
-> **Linha de Base:** `main` **`e44a1b4`** · SW **`vox-pwa-v6.83-steward-kit-v-i08`**  
+> **Linha de Base:** `main` **`8217d18`** (DOC-01/02 **`5d8c0d6`**) · SW **`vox-pwa-v6.83-steward-kit-v-i08`**  
 > **Suíte de Testes:** **355** testes (**333** JS nativo + **22** Python unittest) — 100% verde  
-> **Arquivos Canônicos Relacionados:** [`vox/docs/inventario-estado-e-tarefas-documentacao-2026-11.md`](./inventario-estado-e-tarefas-documentacao-2026-11.md), [`vox/docs/direcionamento-crescimento-rede-2026-11.md`](./direcionamento-crescimento-rede-2026-11.md) e [`vox/docs/brainstorm-proximas-10-tarefas-pos-v82-2026-11.md`](./brainstorm-proximas-10-tarefas-pos-v82-2026-11.md).
+> **Arquivos Canônicos Relacionados:** [inventario-estado-e-tarefas-documentacao-2026-11.md](./inventario-estado-e-tarefas-documentacao-2026-11.md), [direcionamento-crescimento-rede-2026-11.md](./direcionamento-crescimento-rede-2026-11.md) e [brainstorm-proximas-10-tarefas-pos-v82-2026-11.md](./brainstorm-proximas-10-tarefas-pos-v82-2026-11.md).
 
 > **Política de agentes:** Composer 2.5 only (lobby politica).
 
@@ -179,7 +179,7 @@ graph TD
 
 | ID | Título | Objetivo | Definition of Done (DoD) | Owner | Prioridade | Guardrail / Anti-Padrão | Links |
 |---|---|---|---|:---:|:---:|---|---|
-| **DOC-01** | **README Release Line Update** | Alinhar o cabeçalho e tabela de release do README oficial com o estado real do repositório. | Tabela do `README.md` exibe `SHA: e44a1b4`, `Branch: main`, `Testes: 355 (333 JS + 22 Python)` e `SW: vox-pwa-v6.83-steward-kit-v-i08`. | Cursor | **P0** | Não inventar números de testes; rodar `npm test` para validar. | [`README.md`](../README.md#L18-L25) |
+| **DOC-01** | **README Release Line Update** | Alinhar o cabeçalho e tabela de release do README oficial com o estado real do repositório. | Tabela do `README.md` exibe SHA atual de `main`, `Branch: main`, `Testes: 355 (333 JS + 22 Python)` e `SW: vox-pwa-v6.83-steward-kit-v-i08` (✓ **`5d8c0d6`**). | Cursor | **P0** | Não inventar números de testes; rodar `npm test` para validar. | [`README.md`](../README.md#L18-L25) |
 | **DOC-02** | **Saneamento de Contagens em DEV.md** | Eliminar menções legadas a 201 ou 350 testes em `DEV.md` e workflows de CI. | `client/DEV.md` §1.1 e `.github/workflows/ci.yml` registram consistentemente 355 testes e descrevem a matriz Node 22/24 + Python 3.12. | Cursor | **P0** | Não quebrar o guia de desenvolvimento local. | [`client/DEV.md`](../client/DEV.md#L7) |
 | **DOC-03** | **Índice Mestre de Navegação Docs** | Criar porta de entrada única para novos colaboradores e revisores técnicos. | Arquivo `vox/docs/README.md` estruturado com 4 trilhas de leitura: Participação, Roadmap, Operações Steward e Desenvolvimento. | Community-doc | **P0** | Não criar documentos duplicados; apenas organizar links canônicos. | [`vox/docs/`](./) |
 | **DOC-04** | **Re-auditoria de Copy Honesta** | Auditar todas as telas do PWA para assegurar que não haja termos inflados ou falsas promessas. | Relatório em `honest-copy-audit` atualizado confirmando ausência de "100% P2P no 4G", "imunidade total" e termos de ranking em toda a UI. | Cursor | **P0** | Garantir que o painel de vizinhos use sempre "estimativa local". | [`honest-copy-audit-2026-10-23.md`](./honest-copy-audit-2026-10-23.md) |
