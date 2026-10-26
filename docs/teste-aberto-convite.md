@@ -14,6 +14,8 @@ Material para quem **convida** participantes do teste aberto do PWA. Tom informa
 | **A (canônico)** | GitHub Pages | **https://yurikayel.github.io/vox/** |
 | **B (alternativo)** | Shell estático read-only | **`planned`** — sem URL pública no repositório |
 
+Voluntário ops: passos para ligar o deploy B (sem prometer URL no convite) — [ops-shell-mirrors.md § Como ligar o workflow](./ops-shell-mirrors.md#como-ligar-o-workflow-github-actions--shell-b).
+
 **Texto sugerido no convite (copiar/colar):**
 
 > Abra o Vox pelo link oficial do teste: **https://yurikayel.github.io/vox/**  
