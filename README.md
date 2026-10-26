@@ -1,26 +1,68 @@
-# 🇧🇷 Vox — A Voz Soberana da Rede
+# Vox — rede social cívica no permaweb
 
-> **Poste uma vez. Pertença a comunidades reais. Ecoe em todas as redes.**  
-> O Vox é uma iniciativa de rede social aberta, leve e descentralizada, desenhada para devolver a soberania digital e o controle do conteúdo às mãos dos brasileiros — sem dependência de Big Techs, sem servidores centrais para pagar e com foco em comunidades no estilo Orkut.
+## O que é
 
-👉 **[Leia a Proposta Completa & Arquitetura de Sustentabilidade](./docs/proposta-vox.html)** (Página explicativa standalone para abrir no celular ou compartilhar no WhatsApp)
+O **Vox** é uma rede social **livre e de código aberto (FOSS)** pensada para **comunidades primeiro** — fóruns, membros no perfil e uma praça pública de descoberta, no espírito útil do Orkut. Sua **identidade e chaves ficam no aparelho**; posts públicos podem ser publicados no **permaweb** (Arweave) e replicados por **malha entre vizinhos** (cache local, relay opcional, peers na mesma rede).
+
+É para **coletivos e grupos brasileiros** que querem conversa com profundidade, moderação local e transparência sobre onde os dados circulam. **Este repositório** é o código, a documentação e os testes — **não** é uma empresa, **não** hospeda sua comunidade por você e **não** substitui facilitadores humanos no piloto.
+
+## A proposta
+
+Plataformas fechadas concentram regras opacas, risco de apagão de contas e feeds que substituem a **praça** por engajamento solitário. Fediverso e instâncias próprias empurram **custo de servidor** para voluntários; P2P puro esbarra em NAT e operação frágil no celular.
+
+O Vox combina um **cliente estático** (PWA) com **leitura via gateways** da rede Arweave/Turbo quando a malha local não tem o blob — gateways são **leitura reserva**, não um “backend Vox” central. Você publica onde controla (incluindo **POSSE**: ecoar para outras redes com Web Share / intents, sem prender o original). Quem participa pode **contribuir com cache** (Pacto Vox, com limites e opt-out); **stewards** podem rodar relay/sinalização **opcional e comunitário**. Métricas no app são **estimativas locais** — não há ranking público de nós nem promessa de “imunidade” regulatória.
+
+A demo pública ([GitHub Pages](https://yurikayel.github.io/vox/)) é um **shell estático** útil para testar; espelhos adicionais seguem [docs/ops-shell-mirrors.md](./docs/ops-shell-mirrors.md).
+
+## Metodologia
+
+Construímos em camadas verificáveis:
+
+- **Cliente serverless, vanilla, sem build de produção** — HTML, CSS e ES modules em [`client/`](./client/); `npm` só para **lint e testes** na raiz.
+- **Checklist vivo único** no [dossiê §3.6](./docs/dossie-geral-inventario-master-breakdown-2026-11.md#36-checklist-master-vivo-n25) (N=25); inventário e DoD detalhado em [docs/inventario-estado-e-tarefas-documentacao-2026-11.md](./docs/inventario-estado-e-tarefas-documentacao-2026-11.md).
+- **Definition of Done** por tipo: `doc`, `code`, `ops-humano` — ver [docs/CONTRIBUTING-DOCS.md](./docs/CONTRIBUTING-DOCS.md).
+- **Mantenedor do repo = revisor de código**, não VPS da comunidade nem suporte 1:1 — ver [docs/antigravity-estrategia-mantenedor-revisor-2026.md](./docs/antigravity-estrategia-mantenedor-revisor-2026.md).
+- **Piloto humano (V-P09) antes de escalar P2**; quando o piloto abre, **feature freeze** ([CODE-01](./docs/dossie-geral-inventario-master-breakdown-2026-11.md)) — só hotfix e documentação entram em `main`.
+
+Porta de entrada da documentação: **[docs/README.md](./docs/README.md)**. Testadores: [https://yurikayel.github.io/vox/#/ajuda/teste](https://yurikayel.github.io/vox/#/ajuda/teste) e convite em [docs/teste-aberto-convite.md](./docs/teste-aberto-convite.md).
+
+## Características open source
+
+| Aspecto | Como funciona neste repo |
+|--------|---------------------------|
+| **Licença** | [MIT](./LICENSE) |
+| **Runtime do PWA** | Vanilla no navegador — **sem** dependência npm em produção |
+| **Testes** | **362** (`340` JS + `22` Python) — `npm test` na raiz |
+| **Relay / inbox** | Python sem dependências externas em [`relay/`](./relay/) |
+| **Bugs de teste** | Issue **[tester] Bug report** ([`.github/ISSUE_TEMPLATE/bug-tester.yml`](./.github/ISSUE_TEMPLATE/bug-tester.yml)) |
+| **Docs** | Norma [docs/CONTRIBUTING-DOCS.md](./docs/CONTRIBUTING-DOCS.md); **GitHub = fonte de verdade** (a [Voxpedia](https://yurikayel.github.io/vox/#/voxpedia) no app explica; desenvolvimento e release line ficam aqui) |
+| **Governança & BR** | [GOVERNANCE.md](./GOVERNANCE.md) · [COMPLIANCE-BR.md](./COMPLIANCE-BR.md) |
+
+**Rodar localmente** (porta **8080**, não 8765):
+
+```bash
+cd client
+python -m http.server 8080
+```
+
+Abra `http://127.0.0.1:8080/` — módulos ES exigem HTTP, não `file://`.
+
+**Validar alterações:** na raiz do repo, `npm test` (contagens canônicas em [docs/release-metadata.json](./docs/release-metadata.json)).
+
+Proposta longa para compartilhar: **[docs/proposta-vox.html](./docs/proposta-vox.html)**
 
 ### Experimente o PWA
 
-Demo ao vivo: **[https://yurikayel.github.io/vox/](https://yurikayel.github.io/vox/)**. Cliente **FOSS vanilla** (HTML, CSS e JavaScript nativo, *no-build*, sem runtime npm — `npm test` só roda a suíte local).
-
-Na primeira visita, a **Porta da Cantina** é a ilustração anime (`client/images/cantina-gate.jpg`) com o gag no estilo Wuher em **dois balões pintados na arte** (*"Seus bots tem que esperar lá fora!"* e *"Aqui não servimos esse tipo."*). Não há H2 "Porta da Cantina", quote duplicada, subtítulo itálico nem balão HTML/CSS por cima da imagem — só a arte e *Entrar — sou humano*.
-
-No feed, o layout é **híbrido**: texto estilo **X** (caption antes da toolbar), foto **4:5 full-bleed** estilo **IG**, bloco **README/diff** estilo **GitHub** quando aplicável — canvas `--bg` unificado (sem cards cinza no feed/perfil/comentários), abas underline, stories + **composer inline** na mesma janela (Postar com foto opcional). **Comentários abrem no próprio card**. Tour com **10 personas**, Open Frames (enquetes, abaixo-assinado, CLT). Cache PWA: ver `CACHE_NAME` em [`client/sw.js`](./client/sw.js).
+Demo: **[https://yurikayel.github.io/vox/](https://yurikayel.github.io/vox/)** — PWA instalável, tour com personas demo e rota **[#/ajuda/teste](https://yurikayel.github.io/vox/#/ajuda/teste)** para quem testa sem ser dev. Após deploy, use **hard refresh** (`Ctrl+Shift+R`) se o service worker não atualizar.
 
 ### Linha de release (orgânico)
 
 | Campo | Valor |
 |-------|--------|
-| **SHA** | `26fc292` |
+| **SHA** | `84eaa78` |
 | **Branch** | `main` |
-| **Testes** | **356** (`334` JS + `22` Python) — `npm test` na raiz |
-| **Service worker** | `vox-pwa-v6.83-steward-kit-v-i08` |
+| **Testes** | **362** (`340` JS + `22` Python) — `npm test` na raiz |
+| **Service worker** | `vox-pwa-v6.84-teste-aberto` |
 | **Deploy** | Push em `main` → GitHub Pages; após deploy use **hard refresh** (`Ctrl+Shift+R`) para trocar o SW |
 
 Malha: gossip **`CACHE_MANIFEST`** + prioridade **WANT**; feira **Classificados** com ofertas assinadas, status/retratação na malha ([`listing-ui.js`](./client/js/listing-ui.js)). Seed steward: [`docs/steward-seed-15min.md`](./docs/steward-seed-15min.md).
@@ -62,8 +104,6 @@ O **Vox** adota o espírito do **Pix**: uma infraestrutura pública, descentrali
 * O Vox não exige que seus contatos abandonem outras plataformas para você ter voz.
 * O post original assinado fica salvo perenemente no controle do usuário.
 * Com **1 toque**, o app despacha o conteúdo para **WhatsApp, Instagram, TikTok e X** através da Web Share API nativa e web intents.
-
-*(Mensagens Diretas E2E permanecem planejadas para a **Fase 3** após consolidação do protocolo de comunidades)*
 
 ---
 
@@ -195,12 +235,12 @@ npm test
 # ou no Windows:
 .\test.bat
 ```
-Executa a suíte de **356 testes4Ò` Python via `unittest`).
+Executa **362** testes (`340` JS + `22` Python) via `npm test`.
 
 ### 🚀 Pipelines de CI/CD (GitHub Actions)
 
 O repositório possui automação contínua configurada em `.github/workflows/`:
-* **CI — Testes & Validação (`.github/workflows/ci.yml`):** Matriz multiplataforma com Node.js (22, 24) e Python (3.11, 3.12) executando verificação de sintaxe, suíte completa de **356** testes e auditoria de segurança contra vazamento de chaves privadas.
+* **CI — Testes & Validação (`.github/workflows/ci.yml`):** Matriz multiplataforma com Node.js (22, 24) e Python (3.11, 3.12) executando verificação de sintaxe, suíte completa de **362** testes e auditoria de segurança contra vazamento de chaves privadas.
 * **Deploy PWA — GitHub Pages (`.github/workflows/deploy-pages.yml`):** Publicação contínua da pasta `client/` no GitHub Pages com suporte a HTTPS nativo e PWA instalável a cada push na branch `main`.
 
 ---
