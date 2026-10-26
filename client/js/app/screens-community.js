@@ -168,7 +168,10 @@ export async function showCommunity(communityId, tab = "posts") {
   if (demo && !localTopics.length && tab !== "listings" && tab !== "governance") render.renderDemoBanner(main);
   else if (gateway) render.renderGatewayBanner(main, gateway);
 
-  const recentPeople = tab === "posts" ? peopleIndex.extractRecentAuthors(filteredTopics) : [];
+  const recentPeople =
+    tab === "posts" || tab === "members"
+      ? peopleIndex.extractRecentAuthors(filteredTopics)
+      : [];
 
   const peerSettings = peers.getPeerSettings();
   const gatewayState = gatewayTelemetry.getGatewayHealthState();

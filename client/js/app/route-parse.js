@@ -57,9 +57,13 @@ export function parseRoute() {
     if (!tab && (parts[2] === "governance" || parts[2] === "governanca")) {
       tab = "governance";
     }
+    if (!tab && (parts[2] === "members" || parts[2] === "membros" || parts[2] === "online")) {
+      tab = "members";
+    }
     let finalTab = "posts";
     if (tab === "listings") finalTab = "listings";
     else if (tab === "governance" || tab === "governanca") finalTab = "governance";
+    else if (tab === "members" || tab === "membros" || tab === "online") finalTab = "members";
 
     return {
       name: "community",
