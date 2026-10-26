@@ -241,13 +241,26 @@ test("render - renderCommunity header compacto, Entrar e layout", () => {
   assert.ok(html.includes("community-vox-toolbar"));
   assert.ok(html.includes("Entrar"));
   assert.ok(html.includes("Recado da comunidade"));
-  assert.ok(html.includes("community-vox-layout"));
+  assert.ok(html.includes("community-vox-posts-wrap"));
   assert.ok(html.includes("community-vox-feed"));
-  assert.ok(html.includes("Membros online"));
-  assert.ok(html.includes("community-vox-online-grid"));
-  const onlineFaces = (html.match(/community-vox-online-face/g) || []).length;
-  assert.equal(onlineFaces, 9, "demo sidebar shows 3×3 online avatars");
-  assert.ok(html.includes("27 membros") || html.includes("27&nbsp;membros"));
+  assert.ok(html.includes("?tab=members"));
+  assert.ok(html.includes("Membros</a>"));
+  assert.ok(!html.includes("community-vox-aside"));
+  assert.ok(!html.includes("Membros online"));
+
+  const mainMembers = createContainer();
+  render.renderCommunity(mainMembers, "demo-aprenda-vox", [], mock.MOCK_DEMO_COMMUNITY, {
+    isMember: false,
+    activeTab: "members",
+    recentPeople: [{ routeId: "vx_demo_sp", name: "Demo SP" }],
+  });
+  const membersHtml = mainMembers.innerHTML;
+  assert.ok(membersHtml.includes("community-vox-members-panel"));
+  assert.ok(membersHtml.includes("Membros online"));
+  assert.ok(membersHtml.includes("community-vox-online-grid--tab"));
+  const onlineFaces = (membersHtml.match(/community-vox-online-face/g) || []).length;
+  assert.ok(onlineFaces >= 9, "members tab shows expanded online grid");
+  assert.ok(membersHtml.includes("27 membros") || membersHtml.includes("27&nbsp;membros"));
 
   const mainMember = createContainer();
   render.renderCommunity(mainMember, "demo-aprenda-vox", [], mock.MOCK_DEMO_COMMUNITY, {
