@@ -15,6 +15,7 @@ import {
   renderMarkdownLight,
 } from "./util.js";
 import { renderUnifiedDiffHtml } from "./diff-html.js";
+import { getReadOriginAggregate } from "../gateway-telemetry.js";
 
 function resolveCommunityMemberCount(meta, communityId) {
   if (meta.memberCount != null && !Number.isNaN(Number(meta.memberCount))) {
@@ -195,34 +196,37 @@ export function computeCommunityNeighborStats({
   memberCount = null,
   gatewayState = "all_ok",
   isDemo = false,
+  readOriginStats = null,
 } = {}) {
   const online = resolveCommunityOnlinePeople(recentPeople, communityId, 9);
   let onlineDevices = online.length;
-  if (isDemo || communityId === mock.MOCK_DEMO_COMMUNITY.id) {
+  const demoComm = isDemo || communityId === mock.MOCK_DEMO_COMMUNITY.id;
+  if (demoComm) {
     onlineDevices = Math.max(onlineDevices, 14);
   }
-  let localReadPct;
-  if (isDemo || communityId === mock.MOCK_DEMO_COMMUNITY.id) {
+
+  let localReadPct = null;
+  let readOriginInsufficient = false;
+  if (demoComm) {
     localReadPct = 96;
-  } else if (gatewayState === "critical") {
-    localReadPct = 35;
-  } else if (gatewayState === "degraded") {
-    localReadPct = 58;
-  } else if (onlineDevices >= 6) {
-    localReadPct = Math.min(96, 72 + onlineDevices * 2);
-  } else if (onlineDevices >= 3) {
-    localReadPct = 68;
   } else {
-    localReadPct = 42;
+    const agg = readOriginStats ?? getReadOriginAggregate(communityId);
+    if (agg.sufficient && agg.localReadPct != null) {
+      localReadPct = agg.localReadPct;
+    } else {
+      readOriginInsufficient = true;
+    }
   }
-  const fewSupporters = onlineDevices < 3 && !isDemo && communityId !== mock.MOCK_DEMO_COMMUNITY.id;
+
+  const fewSupporters = onlineDevices < 3 && !demoComm;
   const degraded = fewSupporters || gatewayState === "critical";
   return {
     onlineDevices,
     localReadPct,
+    readOriginInsufficient,
     degraded,
     fewSupporters,
-    isDemoEstimate: isDemo || communityId === mock.MOCK_DEMO_COMMUNITY.id,
+    isDemoEstimate: demoComm,
     memberCount,
   };
 }
@@ -256,7 +260,9 @@ function renderCommunityNeighborPanel(stats, { commOnly = false } = {}) {
     ? ' <span class="community-vox-neighbor-demo meta">(estimativa demo)</span>'
     : ' <span class="community-vox-neighbor-demo meta">(estimativa local)</span>';
   const onlineLabel = `~${stats.onlineDevices.toLocaleString("pt-BR")} aparelho${stats.onlineDevices === 1 ? "" : "s"} online agora`;
-  const readLabel = `~${stats.localReadPct}% das leituras recentes via cache local ou relay comunitário`;
+  const readLabel = stats.readOriginInsufficient || stats.localReadPct == null
+    ? "Ainda coletando estimativa local das leituras neste aparelho (precisamos de algumas leituras na praça)"
+    : `~${stats.localReadPct}% das leituras recentes via cache local, malha ou relay comunitário`;
 
   let alert = "";
   if (stats.degraded) {
