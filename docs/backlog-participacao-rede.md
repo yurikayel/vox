@@ -24,7 +24,7 @@ Rastreio de [rede-sustentada-participantes.md](./rede-sustentada-participantes.m
 
 | ID | Título | Owner |
 |----|--------|-------|
-| V-P07 | ADR-001 attestation export UI | Cursor |
+| V-P07 | ADR-001 attestation export UI | ✓ Cursor (`main`, `#/settings/network`) |
 | V-P08 | Runbook sucessão steward + relay buddy | Community-doc | doc ✓ [steward-relay-buddy.md](./steward-relay-buddy.md); handoff/buddy real = ops-humano |
 | V-P09 | Piloto 1 comunidade + retrospectiva | Community-doc | template feito; execução humana |
 

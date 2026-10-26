@@ -2,7 +2,10 @@
 
 import * as share from "./share.js";
 
+export { SHARE_HONEST_LIMITS_SHORT } from "./share.js";
+
 export const POSSE_SKIP_STORAGE_KEY = "vox-posse-sheet-skip";
+export const POSSE_SHEET_LEAD = "Link canônico no Vox — você ecoa manualmente.";
 export const POSSE_WEBHOOKS_STORAGE_KEY = "vox-posse-webhooks";
 
 const SHEET_ID = "posse-dispatch-sheet";
@@ -147,10 +150,11 @@ function ensurePosseSheet() {
   root.setAttribute("aria-hidden", "true");
   root.setAttribute("role", "dialog");
   root.setAttribute("aria-modal", "true");
-  root.setAttribute("aria-label", "Ecoe para outras redes");
+  root.setAttribute("aria-label", "Ecoe para outras redes (manual)");
   root.innerHTML = `
     <div class="posse-dispatch-panel post-more-sheet-panel" role="document">
-      <p class="posse-dispatch-lead">Link canônico no Vox — compartilhe onde quiser.</p>
+      <p class="posse-dispatch-lead">${POSSE_SHEET_LEAD}</p>
+      <p class="posse-dispatch-limits meta">${share.SHARE_HONEST_LIMITS_SHORT}</p>
       <p class="posse-dispatch-url meta" id="posse-dispatch-url"></p>
       <button type="button" class="post-more-sheet-item" data-posse="native">Compartilhar (aparelho)…</button>
       <button type="button" class="post-more-sheet-item" data-posse="whatsapp">WhatsApp</button>
@@ -246,7 +250,9 @@ async function onPosseAction(action) {
     const json = JSON.stringify(payload, null, 2);
     try {
       await navigator.clipboard.writeText(json);
-      share.showToast("JSON POSSE copiado para a área de transferência.");
+      share.showToast(
+        "JSON copiado — webhooks só disparam neste export; nada vai ao Meta sozinho.",
+      );
     } catch {
       share.showToast("Export pronto — veja console.", "info");
       console.info("[vox-posse-export]", payload);
