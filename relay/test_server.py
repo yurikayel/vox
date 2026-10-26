@@ -199,6 +199,14 @@ class TestVoxRelayServer(unittest.TestCase):
             data = json.loads(resp.read().decode("utf-8"))
             self.assertEqual(len(data["envelopes"]), 0)
 
+    def test_default_port_and_env(self):
+        self.assertEqual(server.DEFAULT_PORT, 3920)
+        self.assertEqual(server.DEFAULT_HOST, "127.0.0.1")
+        self.assertEqual(server.resolve_listen_port({}), 3920)
+        self.assertEqual(server.resolve_listen_port({"VOX_RELAY_PORT": "8787"}), 8787)
+        self.assertEqual(server.resolve_listen_port({"VOX_RELAY_PORT": "abc"}), 3920)
+        self.assertEqual(server.resolve_listen_port({"VOX_RELAY_PORT": ""}), 3920)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -71,6 +71,12 @@ describe("renderVoxpedia", () => {
     assert.match(html, /IndexedDB/i);
   });
 
+  it("covers feed transparency and POSSE copy", () => {
+    assert.match(html, /sem ranking, sem boost/i);
+    assert.match(html, /POSSE/i);
+    assert.match(html, /Zap continua existindo/i);
+  });
+
   it("links to GitHub technical documentation", () => {
     assert.match(html, /id="voxpedia-docs-github"/);
     assert.match(html, /Documentação técnica \(GitHub\)/);

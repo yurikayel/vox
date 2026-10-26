@@ -33,7 +33,7 @@ def _ensure_relay() -> subprocess.Popen | None:
     env = os.environ.copy()
     env.setdefault("VOX_RELAY_BIND", "127.0.0.1")
     return subprocess.Popen(
-        [sys.executable, str(RELAY)],
+        [sys.executable, str(RELAY), "--port", str(RELAY_PORT)],
         cwd=str(RELAY.parent),
         env=env,
         creationflags=getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0),
@@ -54,13 +54,19 @@ def main() -> int:
     relay_proc = _ensure_relay()
     client_proc = _ensure_client_server()
     for _ in range(30):
-        if _port_open(CLIENT_PORT):
+        if _port_open(CLIENT_PORT) and _port_open(RELAY_PORT):
             break
         time.sleep(0.2)
     url = f"http://127.0.0.1:{CLIENT_PORT}/#/settings/network/steward"
+    print("======================================================")
+    print("  Vox Steward Kit — Nó Local & Cliente Ativos")
+    print(f"  PWA Client:  http://127.0.0.1:{CLIENT_PORT}")
+    print(f"  Relay HTTP:  http://127.0.0.1:{RELAY_PORT}")
+    print(f"  Healthcheck: http://127.0.0.1:{RELAY_PORT}/health")
+    print(f"  Wizard:      {url}")
+    print("======================================================")
     print(f"Opening {url}")
     webbrowser.open(url)
-    print(f"Relay HTTP: http://127.0.0.1:{RELAY_PORT}")
     print("Press Ctrl+C to stop.")
     try:
         while True:

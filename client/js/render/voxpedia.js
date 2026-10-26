@@ -67,6 +67,14 @@ function renderComecar() {
       "Feeds Para você e Seguindo",
       `<p>No menu lateral (quando você está no Início), alterne <strong>Para você</strong> e <strong>Seguindo</strong>. Seguindo mostra autores que você marcou; Para você mistura descoberta e conteúdo recente do índice.</p>
       ${layer(
+        "Transparência do feed (sem ranking, sem boost)",
+        `<p>O feed é transparente: sem ranking algorítmico de retenção e sem boost pago. A listagem segue o horário de assinatura; a aba Para você pode misturar descoberta recente, sem leilão de ads.</p>`
+      )}
+      ${layer(
+        "POSSE: O Zap continua existindo",
+        `<p>Para combater o efeito de “cidade fantasma”, você não precisa esperar todo mundo migrar: publique no Vox como fonte soberana (chaves no aparelho) e compartilhe o link ou resumo nos seus grupos de WhatsApp e redes sociais (estratégia POSSE). O Vox guarda o original; o Zap continua sendo seu canal de conversa.</p>`
+      )}
+      ${layer(
         "Modo demonstração",
         `<p>Se gateways Arweave falharem e não houver cache nem par, o app entra em <strong>tour de demonstração</strong> (<code>mock.js</code>) — <strong>27 perfis estereótipo</strong> (um por UF, ex. <code>#/h/alice-mg</code>) para testar feed e perfil sem travar.</p>`
       )}`

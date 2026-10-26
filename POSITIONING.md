@@ -11,6 +11,15 @@ O **Pix** não significa “tudo acontece só no Brasil”. Significa **padrão 
 - **Soberania** aqui é: *você assina, você publica, ninguém apaga sua transação na chain* — não “100% hospedado no Brasil” como slogan de marketing.
 - **Chave Pix no Perfil (Fase A):** Enquanto atributo social opcional, a chave Pix no perfil serve para apoios voluntários e diretos entre participantes (sem intermediação de plataforma), reafirmando que o valor circula diretamente entre as pontas, exatamente como a mensagem e o post. O Vox não é banco nem arranjo de pagamento fechado.
 
+## Posicionamento diante dos 4 modelos cívicos (A–D)
+
+Diante do debate recorrente sobre redes sociais brasileiras e soberania (ver [docs/campo-debate-aberto-ndp-2026-10.md](./docs/campo-debate-aberto-ndp-2026-10.md)), o Vox adota posição inequívoca:
+
+- **Não somos o clone soberano (Modelo A):** Criar um “Twitter/Instagram nacional” em servidor central no Brasil não resolve a opacidade algorítmica nem a custódia das contas. Continua sendo um silo vulnerável com ponto único de falha.
+- **Não somos instância Mastodon (Modelo B):** Voluntário e movimento social não devem ser sobrecarregados pagando e operando VPS para a comunidade existir.
+- **Somos o Modelo C (Malha Local-first + PWA + POSSE):** Praça pública cronológica, chaves no aparelho, leitura de backup via gateways públicos e distribuição ativa para onde a massa já conversa (WhatsApp, Instagram, X), sem prender o original.
+- **Modelo D (Participação governamental / Orçamento Participativo):** Integrações institucionais com dados públicos e consultas do Estado não entram no P0; pontes cívicas só serão avaliadas após a validação do piloto humano (V-P09).
+
 ## Vox vs Iniciativas Arquetípicas
 
 Para aprofundamento das lições e armadilhas evitadas, consulte [LESSONS.md](./LESSONS.md):

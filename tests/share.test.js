@@ -60,11 +60,38 @@ test("share - shareTopic usa fallback de clipboard quando share nao existe", asy
     title: "Crosspost Teste",
     topicId: "tx_456",
     communityId: "geral",
+    author: "Helena",
+    body: "Trecho para o Zap.",
   });
 
   assert.equal(res, true);
   assert.ok(copiedText);
+  assert.ok(copiedText.includes("*Crosspost Teste*"));
+  assert.ok(copiedText.includes("(Helena)"));
+  assert.ok(copiedText.includes("Trecho para o Zap."));
   assert.ok(copiedText.includes("tx_456"));
+  assert.match(share.SHARE_CLIPBOARD_RICH_TOAST, /Texto formatado copiado/i);
+});
+
+test("share - buildTopicShareText e buildWhatsAppShareUrl formatam texto rico para WhatsApp", () => {
+  const text = share.buildTopicShareText({
+    title: "Discussão Soberana",
+    topicId: "tx_abc",
+    author: "Helena",
+    body: "Um texto de introdução relevante para o debate cívico.",
+  });
+  assert.ok(text.includes("*Discussão Soberana*"));
+  assert.ok(text.includes("(Helena)"));
+  assert.ok(text.includes("Um texto de introdução relevante"));
+  assert.ok(text.includes("#/t/tx_abc"));
+
+  const waUrl = share.buildWhatsAppShareUrl({
+    title: "Discussão Soberana",
+    topicId: "tx_abc",
+    author: "Helena",
+  });
+  assert.ok(waUrl.startsWith("https://api.whatsapp.com/send?text="));
+  assert.ok(waUrl.includes(encodeURIComponent("*Discussão Soberana*")));
 });
 
 test("share - shareCommunity formata link de comunidade", async () => {
