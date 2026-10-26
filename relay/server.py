@@ -20,6 +20,13 @@ from relay import mirror_validate
 
 DEFAULT_PORT = 3920
 DEFAULT_HOST = "127.0.0.1"
+
+
+def resolve_listen_port(env=None, default=DEFAULT_PORT):
+    raw = str((env if env is not None else os.environ).get("VOX_RELAY_PORT") or "").strip()
+    return int(raw) if raw.isdigit() else default
+
+
 CACHE_DIR = Path(__file__).resolve().parent / ".cache"
 UPSTREAM_GATEWAYS = [
     "https://arweave.net",
@@ -324,8 +331,9 @@ def run_server(host=DEFAULT_HOST, port=DEFAULT_PORT):
         httpd.server_close()
 
 if __name__ == "__main__":
+    default_port = resolve_listen_port()
     parser = argparse.ArgumentParser(description="Vox Relay Desktop Server")
     parser.add_argument("--host", default=DEFAULT_HOST, help="Host/IP para escutar (padrão 127.0.0.1)")
-    parser.add_argument("--port", type=int, default=DEFAULT_PORT, help="Porta para escutar (padrão 3920)")
+    parser.add_argument("--port", type=int, default=default_port, help=f"Porta para escutar (padrão {default_port})")
     args = parser.parse_args()
     run_server(host=args.host, port=args.port)

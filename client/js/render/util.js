@@ -70,16 +70,62 @@ export function resolvePostAuthorLabels(author, { authorDisplay: override = "", 
   return { primary, secondaryHandle, authorDisplay, authorHandle, routeTitle: routeId };
 }
 
-export function renderPostAuthorMetaLines(author, labels, timeLabel) {
+function parseTsDate(ts) {
+  if (!ts || isNaN(Number(ts))) return null;
+  const d = new Date(Number(ts));
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function pad2(n) {
+  return String(n).padStart(2, "0");
+}
+
+export function formatAbsoluteDate(ts) {
+  const d = parseTsDate(ts);
+  if (!d) return "";
+  return `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}/${d.getFullYear()}`;
+}
+
+export function formatAbsoluteDateTime(ts) {
+  const d = parseTsDate(ts);
+  if (!d) return "";
+  return `${formatAbsoluteDate(ts)} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+}
+
+export function formatIsoTimestamp(ts) {
+  const d = parseTsDate(ts);
+  return d ? d.toISOString() : "";
+}
+
+export function postTimeParts(ts) {
+  const relative = formatTimeAgo(ts);
+  const absDate = formatAbsoluteDate(ts);
+  const iso = formatIsoTimestamp(ts);
+  return {
+    relative,
+    absDate,
+    iso,
+    display: absDate ? `${relative} · ${absDate}` : relative,
+    titleAttr: iso ? ` title="${escapeHtml(iso)}"` : "",
+  };
+}
+
+export function renderPostAuthorMetaLines(author, labels, timeLabel, options = {}) {
   const { primary, secondaryHandle, routeTitle } = labels;
   const titleAttr = routeTitle ? ` title="${escapeHtml(routeTitle)}"` : "";
   const handleHtml = secondaryHandle
     ? `<span class="post-handle"${titleAttr}>@${escapeHtml(secondaryHandle)}</span><span class="post-dot">·</span>`
     : "";
+  const parts = postTimeParts(options?.ts);
+  const absDate = options?.absDate || parts.absDate;
+  const timeTitle = options?.absDateTime
+    ? ` title="${escapeHtml(options.absDateTime)}"`
+    : parts.titleAttr;
+  const dateSuffix = absDate ? `<span class="post-time-abs"> · ${escapeHtml(absDate)}</span>` : "";
   return `<div class="post-header-meta">
           <a class="post-author" href="#/u/${encodeURIComponent(author)}"${titleAttr}>${escapeHtml(primary)}</a>
           ${handleHtml}
-          <span class="post-time">${escapeHtml(timeLabel)}</span>
+          <span class="post-time"${timeTitle}>${escapeHtml(timeLabel)}${dateSuffix}</span>
         </div>`;
 }
 

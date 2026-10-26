@@ -10,6 +10,8 @@ O **Vox** é uma rede social **livre e de código aberto (FOSS)** pensada para *
 
 Plataformas fechadas concentram regras opacas, risco de apagão de contas e feeds que substituem a **praça** por engajamento solitário. Fediverso e instâncias próprias empurram **custo de servidor** para voluntários; P2P puro esbarra em NAT e operação frágil no celular.
 
+Não somos um clone soberano em datacenter central (Modelo A) nem exigimos que voluntários paguem VPS para manter instâncias (Modelo B). Somos **local-first (Modelo C)**: praça cronológica sem ranking opaco, chaves no aparelho, leitura de backup via gateways públicos e estratégia POSSE para onde as pessoas já conversam (WhatsApp, redes). Pontes governamentais e de dados públicos (Modelo D) ficam para depois do piloto humano — ver [docs/campo-debate-aberto-ndp-2026-10.md](./docs/campo-debate-aberto-ndp-2026-10.md) e [POSITIONING.md](./POSITIONING.md).
+
 O Vox combina um **cliente estático** (PWA) com **leitura via gateways** da rede Arweave/Turbo quando a malha local não tem o blob — gateways são **leitura reserva**, não um “backend Vox” central. Você publica onde controla (incluindo **POSSE**: ecoar para outras redes com Web Share / intents, sem prender o original). Quem participa pode **contribuir com cache** (Pacto Vox, com limites e opt-out); **stewards** podem rodar relay/sinalização **opcional e comunitário**. Métricas no app são **estimativas locais** — não há ranking público de nós nem promessa de “imunidade” regulatória.
 
 A demo pública ([GitHub Pages](https://yurikayel.github.io/vox/)) é um **shell estático** útil para testar; espelhos adicionais seguem [docs/ops-shell-mirrors.md](./docs/ops-shell-mirrors.md).
@@ -32,7 +34,7 @@ Porta de entrada da documentação: **[docs/README.md](./docs/README.md)**. Test
 |--------|---------------------------|
 | **Licença** | [MIT](./LICENSE) |
 | **Runtime do PWA** | Vanilla no navegador — **sem** dependência npm em produção |
-| **Testes** | **375** (`353` JS + `22` Python) — `npm test` na raiz |
+| **Testes** | **382** (`359` JS + `23` Python) — `npm test` na raiz |
 | **Relay / inbox** | Python sem dependências externas em [`relay/`](./relay/) |
 | **Bugs de teste** | Issue **[tester] Bug report** ([`.github/ISSUE_TEMPLATE/bug-tester.yml`](./.github/ISSUE_TEMPLATE/bug-tester.yml)) |
 | **Docs** | Norma [docs/CONTRIBUTING-DOCS.md](./docs/CONTRIBUTING-DOCS.md); **GitHub = fonte de verdade** (a [Voxpedia](https://yurikayel.github.io/vox/#/voxpedia) no app explica; desenvolvimento e release line ficam aqui) |
@@ -59,9 +61,9 @@ Demo: **[https://yurikayel.github.io/vox/](https://yurikayel.github.io/vox/)** �
 
 | Campo | Valor |
 |-------|--------|
-| **SHA** | `b97d0c7` |
+| **SHA** | `8cb5440` |
 | **Branch** | `main` |
-| **Testes** | **362** (`340` JS + `22` Python) — `npm test` na raiz |
+| **Testes** | **382** (`359` JS + `23` Python) — `npm test` na raiz |
 | **Service worker** | `vox-pwa-v6.86-home-logo` |
 | **Deploy** | Push em `main` → GitHub Pages; após deploy use **hard refresh** (`Ctrl+Shift+R`) para trocar o SW |
 
@@ -204,7 +206,7 @@ Todo dado no Vox é identificado por tags semânticas universais:
 ### 🚀 Pipelines de CI/CD (GitHub Actions)
 
 O repositório possui automação contínua configurada em `.github/workflows/`:
-* **CI — Testes & Validação (`.github/workflows/ci.yml`):** Matriz multiplataforma com Node.js (22, 24) e Python (3.11, 3.12) executando verificação de sintaxe, suíte completa de **362** testes e auditoria de segurança contra vazamento de chaves privadas.
+* **CI — Testes & Validação (`.github/workflows/ci.yml`):** Matriz multiplataforma com Node.js (22, 24) e Python (3.11, 3.12) executando verificação de sintaxe, suíte completa de **382** testes e auditoria de segurança contra vazamento de chaves privadas.
 * **Deploy PWA — GitHub Pages (`.github/workflows/deploy-pages.yml`):** Publicação contínua da pasta `client/` no GitHub Pages com suporte a HTTPS nativo e PWA instalável a cada push na branch `main`.
 
 ---
