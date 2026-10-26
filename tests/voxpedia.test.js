@@ -4,7 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseRoute } from "../client/js/app/route-parse.js";
-import { renderVoxpedia } from "../client/js/render/voxpedia.js";
+import { renderVoxpedia, VOX_GITHUB_DOCS } from "../client/js/render/voxpedia.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const shellSrc = fs.readFileSync(
@@ -69,6 +69,16 @@ describe("renderVoxpedia", () => {
     assert.match(html, /Pacto Vox/i);
     assert.match(html, /vx_/);
     assert.match(html, /IndexedDB/i);
+  });
+
+  it("links to GitHub technical documentation", () => {
+    assert.match(html, /id="voxpedia-docs-github"/);
+    assert.match(html, /Documentação técnica \(GitHub\)/);
+    assert.match(html, new RegExp(`href="${VOX_GITHUB_DOCS.docsReadme.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"`));
+    assert.match(html, /target="_blank"/);
+    assert.match(html, /rel="noopener noreferrer"/);
+    assert.match(html, /repositório é a fonte, não um helpdesk/);
+    assert.match(html, new RegExp(`href="${VOX_GITHUB_DOCS.devGuide.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"`));
   });
 });
 

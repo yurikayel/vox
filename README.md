@@ -19,7 +19,7 @@ No feed, o layout é **híbrido**: texto estilo **X** (caption antes da toolbar)
 |-------|--------|
 | **SHA** | `5c54326` |
 | **Branch** | `main` |
-| **Testes** | **355** (`333` JS + `22` Python) — `npm test` na raiz |
+| **Testes** | **356** (`334` JS + `22` Python) — `npm test` na raiz |
 | **Service worker** | `vox-pwa-v6.83-steward-kit-v-i08` |
 | **Deploy** | Push em `main` → GitHub Pages; após deploy use **hard refresh** (`Ctrl+Shift+R`) para trocar o SW |
 
@@ -195,12 +195,12 @@ npm test
 # ou no Windows:
 .\test.bat
 ```
-Executa a suíte de **355 testes** (`333` JS via `node:test` e `22` Python via `unittest`).
+Executa a suíte de **356 testes** (`334` JS via `node:test` e `22` Python via `unittest`).
 
 ### 🚀 Pipelines de CI/CD (GitHub Actions)
 
 O repositório possui automação contínua configurada em `.github/workflows/`:
-* **CI — Testes & Validação (`.github/workflows/ci.yml`):** Matriz multiplataforma com Node.js (22, 24) e Python (3.11, 3.12) executando verificação de sintaxe, suíte completa de **355** testes e auditoria de segurança contra vazamento de chaves privadas.
+* **CI — Testes & Validação (`.github/workflows/ci.yml`):** Matriz multiplataforma com Node.js (22, 24) e Python (3.11, 3.12) executando verificação de sintaxe, suíte completa de **356** testes e auditoria de segurança contra vazamento de chaves privadas.
 * **Deploy PWA — GitHub Pages (`.github/workflows/deploy-pages.yml`):** Publicação contínua da pasta `client/` no GitHub Pages com suporte a HTTPS nativo e PWA instalável a cada push na branch `main`.
 
 ---

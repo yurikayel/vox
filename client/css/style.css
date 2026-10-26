@@ -5872,6 +5872,36 @@ body.post-lightbox-open {
   word-break: break-word;
 }
 
+.voxpedia-docs-github {
+  margin-top: 0.75rem;
+  border-left: 3px solid var(--accent);
+}
+
+.voxpedia-docs-github-lead {
+  margin: 0.35rem 0 0.5rem;
+  font-size: 0.88rem;
+}
+
+.voxpedia-docs-github-links {
+  margin: 0;
+  font-size: 0.88rem;
+}
+
+.voxpedia-gh-link {
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.voxpedia-gh-link:hover {
+  text-decoration: underline;
+}
+
+.voxpedia-footer {
+  margin-top: 1rem;
+  font-size: 0.88rem;
+}
+
 @media (max-width: 480px) {
   .voxpedia-page {
     padding-left: 0.15rem;
