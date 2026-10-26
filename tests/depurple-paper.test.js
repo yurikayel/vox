@@ -9,7 +9,7 @@ const css = fs.readFileSync(path.join(root, "css/style.css"), "utf8");
 const sw = fs.readFileSync(path.join(root, "sw.js"), "utf8");
 
 test("depurple paper - service worker cache id", () => {
-  assert.match(sw, /vox-pwa-v6\.83-steward-kit-v-i08/);
+  assert.match(sw, /vox-pwa-v6\.84-teste-aberto/);
   assert.ok(sw.includes('"./js/community-mirror.js"'));
   assert.ok(sw.includes('"./js/community-seed-checklist.js"'));
 });
