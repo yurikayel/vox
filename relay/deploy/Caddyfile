@@ -9,6 +9,6 @@ signal.sua-comunidade.org {
     }
     reverse_proxy @ws vox-signaling:3921
 
-    # Inbox Efêmero com TTL (Fase 4 DMs) & Proxy de Leitura
+    # Relay HTTP: /health, /tx/*, /vox/mirror, /vox/index/*.json, /inbox/*
     reverse_proxy vox-relay:3920
 }

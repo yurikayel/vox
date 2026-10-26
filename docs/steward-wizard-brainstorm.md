@@ -10,6 +10,6 @@
 
 **Persistência:** mesmas keys que `#/settings/network` (`vox-custom-signaling-url`, `vox-relay-http-url`, `vox-custom-turn-config`, `vox-peer-settings`) + draft `vox-steward-wizard-draft`.
 
-**Implementação:** `steward-wizard.js`, `renderStewardWizard`, tests — branch `feat/steward-wizard-ui` (Cursor).
+**Implementação:** `steward-wizard.js`, `renderStewardWizard`, `tests/steward-wizard.test.js` — entregue com V-P01 + V-I08.
 
 *Tom Cantina + detalhes: spike wizard operador (23/10).*

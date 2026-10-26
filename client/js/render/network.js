@@ -389,18 +389,25 @@ export function renderStewardWizard(main, { draft = {}, step = 1, mirrorLast = n
           </div>
         ` : ""}
         ${s === 3 ? `
-          <p class="desc">Deploy relay + Caddy + Coturn: siga <code>relay/deploy/README.md</code> no repositório (Docker).</p>
-          <p class="desc" style="font-size:0.8rem;">Checklist rápido: doc <code>docs/steward-seed-15min.md</code> no repositório.</p>
+          <p class="desc"><strong>VPS (coletivo):</strong> Docker em <code>relay/deploy</code> — Caddy expõe WSS e relay HTTP no mesmo domínio (<code>docs/steward-relay-kit.md</code>).</p>
+          <ul class="desc" style="font-size:0.85rem; margin:0.5rem 0 0 1rem;">
+            <li>DNS + <code>docker compose up -d --build</code></li>
+            <li><code>cp .env.example .env</code> — quota <code>VOX_RELAY_MAX_CACHE_MB</code></li>
+            <li>Conferir <code>curl …/health</code> (espelhos + cache)</li>
+          </ul>
+          <p class="desc" style="font-size:0.85rem; margin-top:0.75rem;"><strong>Desktop / LAN:</strong> Windows <code>tools/steward-kit-windows/Start-StewardKit.ps1</code> ou Linux <code>tools/steward-kit-linux/start-steward-kit.sh</code> — relay em <code>http://127.0.0.1:8787</code>.</p>
         ` : ""}
         ${s === 4 ? `
           <div class="form-group">
             <label for="sw-signaling">WSS signaling</label>
             <input type="text" id="sw-signaling" class="form-control" value="${escapeHtml(d.signalingUrl || "")}" placeholder="wss://signal.coletivo.org" />
           </div>
+          <p class="meta" style="font-size:0.8rem;">TURN (usuário/senha): configure em <a href="#/settings/network">Preferências de rede</a> após o wizard.</p>
           <div class="form-group">
             <label for="sw-relay-http">URL HTTP relay</label>
-            <input type="text" id="sw-relay-http" class="form-control" value="${escapeHtml(d.relayHttpUrl || "")}" placeholder="https://relay.coletivo.org" />
+            <input type="text" id="sw-relay-http" class="form-control" value="${escapeHtml(d.relayHttpUrl || "")}" placeholder="https://signal.coletivo.org" />
           </div>
+          <p class="meta" style="font-size:0.8rem;">Na VPS, use a <strong>mesma origem HTTPS</strong> do signaling (Caddy encaminha <code>/health</code> e <code>/vox/*</code>). Local: <code>http://127.0.0.1:8787</code>.</p>
           <button type="button" id="sw-verify-relay" class="btn btn-outline btn-sm">Verificar Relay HTTP</button>
           <span id="sw-verify-result" class="meta" style="margin-left:0.5rem;"></span>
         ` : ""}
