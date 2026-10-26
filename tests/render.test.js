@@ -1076,6 +1076,12 @@ test("render - compositor inline inclui microcopy honesta de edit/apagar local",
   assert.ok(html.includes("gossip"));
 });
 
+test("render - compositor inline inclui hatch civic wallet (T-15)", () => {
+  const html = render.renderInlineComposer({ userRouteId: "vx_me", displayName: "Eu" });
+  assert.match(html, /href="#\/wallet"/);
+  assert.match(html, /Criar ou importar chave/);
+});
+
 test("render - renderPeopleSearch seções e paste connect", () => {
   const main = createContainer();
   render.renderPeopleSearch(main, {
