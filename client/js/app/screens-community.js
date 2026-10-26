@@ -449,7 +449,9 @@ export async function showTopic(topicId, commIdParam = "") {
         if (fetchedTopic) topic = fetchedTopic;
       } catch {}
       try {
-        topicData = await gql.fetchTransactionData(topicId);
+        topicData = await gql.fetchTransactionData(topicId, {
+          communityId: topic?.communityId || commIdParam,
+        });
       } catch {}
     }
   }
@@ -514,7 +516,7 @@ export async function showTopic(topicId, commIdParam = "") {
   // Carrega corpos das respostas que não vieram nas tags
   filteredReplies.forEach(async (r) => {
     if (!r.isLocalP2p && (!r.body || r.body.startsWith("("))) {
-      const d = await gql.fetchTransactionData(r.id);
+      const d = await gql.fetchTransactionData(r.id, { communityId: finalCommId });
       if (d?.body) {
         const el = document.getElementById(`reply-${r.id}`);
         const p = el?.querySelector(".reply-body");

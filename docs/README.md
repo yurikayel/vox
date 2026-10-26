@@ -45,7 +45,7 @@ O **Dossiê N=25** foi escolhido como a fonte viva e exclusiva de checkboxes `[ 
 
 ## 3. Operações steward & espelhos
 
-- [steward-relay-kit.md](./steward-relay-kit.md) · [steward-seed-15min.md](./steward-seed-15min.md)  
+- [steward-relay-kit.md](./steward-relay-kit.md) · [steward-seed-15min.md](./steward-seed-15min.md) · [steward-relay-buddy.md](./steward-relay-buddy.md) — V-P08 sucessão relay buddy  
 - [ops-shell-mirrors.md](./ops-shell-mirrors.md) — espelhos shell A/B, T2 executável  
 - [ops-dr-drill-checklist.md](./ops-dr-drill-checklist.md) — procedimento e checklist de drill DR  
 - [ops-pages-rollback.md](./ops-pages-rollback.md) — runbook de rollback do Pages e SW  

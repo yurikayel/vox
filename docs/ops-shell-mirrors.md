@@ -30,6 +30,14 @@ Sem os três secrets Cloudflare, o job termina em **no-op** (notice no log) — 
 
 Relay WSS/TURN/`POST /vox/mirror` vive na VPS — ver [`steward-seed-15min.md`](./steward-seed-15min.md).
 
+## Sucessão relay (V-P08)
+
+Runbook canônico: [`steward-relay-buddy.md`](./steward-relay-buddy.md) — buddy (segundo voluntário), handoff de credenciais e janela de emergência **72 h** (relay + inbox TTL).
+Espelho shell **A/B** (esta página) distribui só o PWA estático; **não** substitui relay comunitário nem handoff de VPS.
+Steward/buddy cuidam de disco e `/health`; **moderador** cuida de `mod-action` ([GOVERNANCE.md](../GOVERNANCE.md)) — papéis separados.
+DoD **doc** (runbook publicado) ≠ buddy nomeado na comunidade (`ops-humano` — [go/no-go V-P09](./piloto-comunidade-go-no-go.md)).
+Kit técnico de subida: [steward-relay-kit.md](./steward-relay-kit.md) (V-I08).
+
 ---
 
 ## T2 — Registro executável (NET-01)
