@@ -779,6 +779,12 @@ a:hover {
   line-height: 1;
 }
 
+.tab-icon .brand-logo.brand-mark,
+.tab-icon .tab-brand-mark {
+  width: 22px;
+  height: 22px;
+}
+
 .tab-svg {
   display: block;
   stroke: currentColor;

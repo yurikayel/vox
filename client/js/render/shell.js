@@ -19,16 +19,11 @@ export function brandMarkSrcForColorScheme(_dark) {
   return BRAND_MARK_SRC;
 }
 
-function renderBrandWordmark() {
-  return `<span class="brand-word" aria-hidden="true"><span class="brand-letter brand-letter-v">v</span><span class="brand-letter brand-letter-o">o</span><span class="brand-letter brand-letter-x">x</span></span>`;
-}
-
-function renderBrandLink() {
-  return `<a class="brand-link" href="#/" aria-label="vox — início"><img class="brand-logo brand-mark" src="${BRAND_MARK_SRC}" width="32" height="32" alt="" decoding="async" />${renderBrandWordmark()}</a>`;
+function renderHomeIcon() {
+  return `<img class="brand-logo brand-mark tab-brand-mark" src="${BRAND_MARK_SRC}" width="22" height="22" alt="" decoding="async" />`;
 }
 
 const ICONS = {
-  home: `<svg class="tab-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
   communities: `<svg class="tab-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
   people: `<svg class="tab-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>`,
   feedForYou: `<svg class="tab-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 14.5 8.5 20 9l-4 3.5L17 18l-5-3-5 3 1-5.5L4 9l5.5-.5Z"/></svg>`,
@@ -184,13 +179,10 @@ function renderSidebar(activeTab, { showFeedNav, activeFeed, chipHtml, walletBad
   return `
     <div class="sidebar-backdrop" id="sidebar-backdrop" hidden aria-hidden="true"></div>
     <aside class="app-sidebar tab-bar" id="app-sidebar" aria-label="Navegação principal">
-      <div class="sidebar-brand">
-        ${renderBrandLink()}
-      </div>
       <div class="sidebar-scroll">
         <nav class="tab-nav" aria-label="Seções">
-          <a href="#/" class="tab-item ${isHome ? "active" : ""}"${isHome ? ' aria-current="page"' : ""}>
-            <span class="tab-icon">${ICONS.home}</span>
+          <a href="#/" class="tab-item ${isHome ? "active" : ""}"${isHome ? ' aria-current="page"' : ""} aria-label="Início">
+            <span class="tab-icon">${renderHomeIcon()}</span>
             <span class="tab-label">Início</span>
           </a>
           <a href="#/communities" class="tab-item ${isComm ? "active" : ""}"${isComm ? ' aria-current="page"' : ""}>
