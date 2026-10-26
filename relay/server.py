@@ -16,6 +16,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
 from relay import inbox
+from relay import mirror_validate
 
 DEFAULT_PORT = 3920
 DEFAULT_HOST = "127.0.0.1"
@@ -209,16 +210,26 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
         # Salva espelho local de comunidade
         if path == "/vox/mirror":
             content_length = int(self.headers.get("Content-Length", 0))
-            body = self.rfile.read(content_length)
             try:
-                payload = json.loads(body.decode("utf-8"))
-                comm_id = payload.get("communityId")
-                if not comm_id:
-                    self.send_response(400)
-                    self._set_cors_headers()
-                    self.end_headers()
-                    self.wfile.write(b"communityId obrigatorio")
-                    return
+                body = self.rfile.read(content_length)
+            except Exception as e:
+                self.send_response(500)
+                self._set_cors_headers()
+                self.end_headers()
+                self.wfile.write(json.dumps({"error": str(e)}).encode("utf-8"))
+                return
+
+            ok, payload, err, status = mirror_validate.validate_mirror_body(body)
+            if not ok:
+                self.send_response(status)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self._set_cors_headers()
+                self.end_headers()
+                self.wfile.write(json.dumps(err).encode("utf-8"))
+                return
+
+            comm_id = str(payload.get("communityId", "")).strip()
+            try:
                 ensure_cache_dir()
                 max_b = max_cache_bytes()
                 if max_b is not None and cache_dir_bytes() + len(body) > max_b:
@@ -234,13 +245,12 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
                 self._set_cors_headers()
                 self.end_headers()
                 self.wfile.write(json.dumps({"status": "mirrored", "communityId": comm_id}).encode("utf-8"))
-                return
             except Exception as e:
                 self.send_response(500)
                 self._set_cors_headers()
                 self.end_headers()
                 self.wfile.write(json.dumps({"error": str(e)}).encode("utf-8"))
-                return
+            return
 
         # Inbox efêmero: POST /inbox/<toAddress>
         if path.startswith("/inbox/"):
