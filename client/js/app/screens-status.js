@@ -16,4 +16,15 @@ export async function showStatus() {
     relayHttpUrl: inbox.getRelayHttpUrl(),
     mirrorExport: communityMirror.getMirrorLastErrorExport(),
   });
+
+  const cacheEl = document.getElementById("status-sw-cache");
+  if (cacheEl && typeof caches !== "undefined") {
+    try {
+      const keys = await caches.keys();
+      const voxCaches = keys.filter((k) => k.startsWith("vox-pwa"));
+      cacheEl.textContent = voxCaches.length ? voxCaches.join(", ") : "(nenhum — tente Ctrl+Shift+R)";
+    } catch {
+      cacheEl.textContent = "(indisponível neste contexto)";
+    }
+  }
 }
