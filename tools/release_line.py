@@ -121,10 +121,8 @@ def patch_readme(meta: dict) -> bool:
             rf"\g<1>{sha}\2",
         ),
         (
-            re.compile(
-                r"(\| \*\*Testes\*\* \| \*\*)\d+(\*\* \(`)\d+(` JS \+ `)\d+(` Python\))"
-            ),
-            rf"\g<1>{total}\2{js_n}\3{py_n}\4",
+            re.compile(r"\| \*\*Testes\*\* \|[^\n]+\n"),
+            f"| **Testes** | **{total}** (`{js_n}` JS + `{py_n}` Python) — `npm test` na raiz |\n",
         ),
         (
             re.compile(r"(\| \*\*Service worker\*\* \| `)[^`]+(` \|)"),
