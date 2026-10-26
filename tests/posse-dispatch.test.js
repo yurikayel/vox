@@ -53,3 +53,8 @@ test("posse - webhook lines parser", () => {
   const urls = posse.parseWebhookLines(" https://a.com \n\nhttps://b.com/x ");
   assert.deepEqual(urls, ["https://a.com", "https://b.com/x"]);
 });
+
+test("posse - re-exports honest limits microcopy for sheet UI", () => {
+  assert.match(posse.SHARE_HONEST_LIMITS_SHORT, /Sem post automático/i);
+  assert.match(posse.POSSE_SHEET_LEAD, /manualmente/i);
+});
