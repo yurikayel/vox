@@ -262,7 +262,7 @@ export function renderShell({
       ${sidebarHtml}
       <div class="main-column">
         <main id="app-main"></main>
-        <footer class="app-footer">Vox · ${escapeHtml(appShellFooterTagline)} · <a href="./proposta-vox.html" target="_blank">Proposta</a></footer>
+        <footer class="app-footer">Vox · ${escapeHtml(appShellFooterTagline)} · <a href="#/ajuda/teste">Teste aberto</a> · <a href="./proposta-vox.html" target="_blank">Proposta</a></footer>
       </div>
     </div>
   `;
