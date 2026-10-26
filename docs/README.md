@@ -30,6 +30,7 @@ O **Dossiê N=25** foi escolhido como a fonte viva e exclusiva de checkboxes `[ 
 
 - [rede-sustentada-participantes.md](./rede-sustentada-participantes.md) — meta trimestre, camadas 0→3  
 - [backlog-participacao-rede.md](./backlog-participacao-rede.md) — IDs V-P  
+- Teste aberto (convite, canal, carta E2): [teste-aberto-convite.md](./teste-aberto-convite.md) · [teste-aberto-canal-apoio.md](./teste-aberto-canal-apoio.md) · [teste-aberto-carta-moderacao-e2.md](./teste-aberto-carta-moderacao-e2.md)  
 - [infra-participativa-blindagem-crescimento.md](./infra-participativa-blindagem-crescimento.md) — blindagem regulatória e 4 camadas  
 - [brainstorm-auto-escala-organica-2026-10.md](./brainstorm-auto-escala-organica-2026-10.md) — flywheel E1–E5  
 
