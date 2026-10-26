@@ -213,6 +213,7 @@ export async function showCommunity(communityId, tab = "posts") {
     neighborStats,
     commOnly: peerSettings.commOnly,
     seedChecklist,
+    mirrorStatus: communityMirror.getMirrorStatusForCommunity(communityId),
   });
 
   if (tab === "posts") {

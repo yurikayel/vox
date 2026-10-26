@@ -11,7 +11,7 @@ test("community-mirror - buildCommunityMirrorIndex normaliza payload", () => {
       { txId: "tx_topic_2", topicTitle: "Topico 2" },
       { id: "", title: "ignorado" },
     ],
-    { mirroredAt: "2026-10-23T12:00:00.000Z" }
+    { mirroredAt: "2026-10-23T12:00:00.000Z" },
   );
 
   assert.equal(index.communityId, "comunidade_livre");
@@ -28,6 +28,12 @@ test("community-mirror - buildCommunityMirrorIndex normaliza payload", () => {
 
 test("community-mirror - buildCommunityMirrorIndex exige communityId", () => {
   assert.throws(() => mirror.buildCommunityMirrorIndex({}, []), /communityId obrigatório/);
+});
+
+test("community-mirror - validateCommunityMirrorPayload rejeita communityId inválido", () => {
+  const res = mirror.validateCommunityMirrorPayload({ communityId: "bad/slug", topics: [] });
+  assert.equal(res.valid, false);
+  assert.equal(res.code, "mirror.community_id_invalid");
 });
 
 test("community-mirror - postCommunityMirrorToRelay usa relay das configurações", async () => {
@@ -78,7 +84,7 @@ test("community-mirror - mirrorCommunityToRelay monta índice e POST", async () 
       { id: "demo-aprenda-vox", title: "Aprenda Vox" },
       [{ id: "post_1", title: "Olá" }],
       "http://127.0.0.1:3920",
-      { mirroredAt: "2026-10-23T00:00:00.000Z" }
+      { mirroredAt: "2026-10-23T00:00:00.000Z" },
     );
     assert.equal(requests.length, 1);
     assert.equal(requests[0].url, "http://127.0.0.1:3920/vox/mirror");
@@ -91,6 +97,7 @@ test("community-mirror - mirrorCommunityToRelay monta índice e POST", async () 
 });
 
 test("community-mirror - tryMirrorCommunityToRelay engole falha de rede", async () => {
+  localStorage.clear();
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async () => {
     throw new Error("offline");
@@ -99,7 +106,39 @@ test("community-mirror - tryMirrorCommunityToRelay engole falha de rede", async 
   try {
     const res = await mirror.tryMirrorCommunityToRelay({ id: "c1", title: "C" }, []);
     assert.equal(res, null);
+    const tel = mirror.loadMirrorTelemetry();
+    assert.equal(tel.lastError?.communityId, "c1");
   } finally {
     globalThis.fetch = originalFetch;
   }
+});
+
+test("community-mirror - tryMirror manual registra falha local com flag manual", async () => {
+  localStorage.clear();
+  const res = await mirror.tryMirrorCommunityToRelay(
+    { id: "invalid slug!", title: "X" },
+    [],
+    null,
+    { manual: true },
+  );
+  assert.equal(res, null);
+  const tel = mirror.loadMirrorTelemetry();
+  assert.equal(tel.lastError?.manual, true);
+  assert.equal(tel.lastError?.code, "mirror.community_id_invalid");
+});
+
+test("community-mirror - mirrorUserMessage copy PT", () => {
+  assert.match(mirror.mirrorUserMessage("mirror.body_too_large"), /256 KiB|grande demais/i);
+});
+
+test("community-mirror - getMirrorLastErrorExport para status", () => {
+  localStorage.clear();
+  mirror.recordMirrorOutcome("demo-x", {
+    ok: false,
+    code: "mirror.topics_limit",
+    error: "test",
+  });
+  const exp = mirror.getMirrorLastErrorExport();
+  assert.equal(exp.mirror_last_error, "mirror.topics_limit");
+  assert.equal(exp.mirror_last_error_community, "demo-x");
 });

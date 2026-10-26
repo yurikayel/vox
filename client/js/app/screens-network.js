@@ -243,6 +243,20 @@ export function bindStewardWizardForm() {
     showStewardWizard();
   });
 
+  document.getElementById("sw-test-mirror")?.addEventListener("click", async () => {
+    const draft = stewardWizard.loadDraft();
+    const out = document.getElementById("sw-mirror-result");
+    if (out) out.textContent = "Enviando…";
+    const relayUrl = draft.relayHttpUrl || inbox.getRelayHttpUrl();
+    const result = await communityMirror.testMirrorForSteward(draft.communityId, [], relayUrl);
+    if (out) {
+      out.textContent = result
+        ? "Espelho OK — relay aceitou o índice."
+        : "Falha — veja toast ou código acima.";
+    }
+    if (result) showStewardWizard();
+  });
+
   document.getElementById("sw-verify-relay")?.addEventListener("click", async () => {
     const url = document.getElementById("sw-relay-http")?.value.trim();
     const out = document.getElementById("sw-verify-result");
@@ -281,7 +295,10 @@ export async function showStewardWizard() {
   const main = render.renderShell(makeShellProps(user, "network", "Assistente steward"));
   const step = stewardWizard.loadStep();
   const draft = stewardWizard.loadDraft();
-  render.renderStewardWizard(main, { draft, step });
+  const mirrorLast =
+    communityMirror.getMirrorStatusForCommunity(draft.communityId) ||
+    communityMirror.loadMirrorTelemetry().lastError;
+  render.renderStewardWizard(main, { draft, step, mirrorLast });
   bindStewardWizardForm();
 }
 
