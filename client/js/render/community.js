@@ -81,25 +81,6 @@ function resolveCommunityOnlinePeople(recentPeople, communityId, limit = 9) {
   return people;
 }
 
-function renderCommunityOnlineGrid(people = []) {
-  if (!people.length) {
-    return `<p class="community-vox-online-empty">Ninguém recente no feed — seja o primeiro!</p>`;
-  }
-  const cells = people
-    .map((p) => {
-      const label =
-        profileDirectory.getAuthorDisplaySync(p.routeId) || p.name || p.routeId.slice(0, 10);
-      const short = label.split(/\s+/)[0] || label;
-      return `
-        <a class="community-vox-online-face" href="#/u/${encodeURIComponent(p.routeId)}" title="${escapeHtml(label)}">
-          ${renderAvatarHtml(p.routeId, label, "avatar-sm")}
-          <span class="community-vox-online-name">${escapeHtml(short)}</span>
-        </a>`;
-    })
-    .join("");
-  return `<div class="community-vox-online-grid" role="list">${cells}</div>`;
-}
-
 function topicExcerptOneParagraph(topic) {
   const raw = (topic.body || topic.title || "").replace(/\s+/g, " ").trim();
   const noTags = raw.replace(/#\S+/g, "").replace(/\s+/g, " ").trim();
@@ -146,31 +127,65 @@ export function renderCommunityTopicRow(topic, { communityId = "", communityTitl
     </article>`;
 }
 
-function renderCommunitySidebar(meta, communityId, recentPeople = [], isMember = false) {
+function buildCommunityMembersSummary(meta, communityId, recentPeople = [], isMember = false, onlineLimit = 24) {
   const memberCount = resolveCommunityMemberCount(meta, communityId);
-  const online = resolveCommunityOnlinePeople(recentPeople, communityId, 9);
+  const online = resolveCommunityOnlinePeople(recentPeople, communityId, onlineLimit);
   const onlineExtra = Math.max(0, (memberCount || online.length) - online.length);
   const modCount = Array.isArray(meta.moderators) ? meta.moderators.length : 0;
   const onlineHint = online.length
     ? `${online.length}${onlineExtra ? `+${onlineExtra}` : ""} agora (demo)`
     : "Demo offline";
+  return { memberCount, online, onlineHint, modCount, isMember };
+}
 
+function renderCommunityMembersStatsBlock({ memberCount, modCount, isMember }) {
   return `
-    <aside class="community-vox-sidebar community-vox-aside card" aria-label="Membros e estatísticas">
-      <section class="community-vox-sidebar-block">
-        <h3 class="community-vox-sidebar-title">Membros online</h3>
-        <p class="community-vox-sidebar-hint">${escapeHtml(onlineHint)}</p>
-        ${renderCommunityOnlineGrid(online)}
-      </section>
-      <section class="community-vox-sidebar-block community-vox-sidebar-stats">
-        <h3 class="community-vox-sidebar-title">Estatísticas</h3>
-        <dl class="community-vox-stat-dl">
+      <section class="community-vox-members-stats card" aria-labelledby="community-vox-members-stats-title">
+        <h3 id="community-vox-members-stats-title" class="community-vox-sidebar-title">Estatísticas</h3>
+        <dl class="community-vox-stat-dl community-vox-stat-dl--wide">
           ${memberCount != null ? `<div><dt>Membros</dt><dd>${escapeHtml(formatCommunityMembers(memberCount))}</dd></div>` : ""}
           <div><dt>Moderadores</dt><dd>${modCount ? modCount : "Dono + até 10"}</dd></div>
           <div><dt>Você</dt><dd>${isMember ? "Membro" : "Visitante"}</dd></div>
         </dl>
+      </section>`;
+}
+
+export function renderCommunityMembersTab(meta, communityId, recentPeople = [], isMember = false) {
+  const summary = buildCommunityMembersSummary(meta, communityId, recentPeople, isMember, 24);
+  return `
+    <div class="community-vox-panel community-vox-members-panel">
+      <section class="community-vox-members-online card" aria-labelledby="community-vox-members-online-title">
+        <header class="community-vox-members-head">
+          <h2 id="community-vox-members-online-title" class="community-vox-members-title">Membros online</h2>
+          <p class="community-vox-sidebar-hint">${escapeHtml(summary.onlineHint)}</p>
+        </header>
+        ${renderCommunityOnlineGrid(summary.online, { layout: "tab" })}
       </section>
-    </aside>`;
+      ${renderCommunityMembersStatsBlock(summary)}
+    </div>`;
+}
+
+function renderCommunityOnlineGrid(people = [], { layout = "compact" } = {}) {
+  if (!people.length) {
+    return `<p class="community-vox-online-empty">Ninguém recente no feed — seja o primeiro!</p>`;
+  }
+  const gridClass =
+    layout === "tab"
+      ? "community-vox-online-grid community-vox-online-grid--tab"
+      : "community-vox-online-grid";
+  const cells = people
+    .map((p) => {
+      const label =
+        profileDirectory.getAuthorDisplaySync(p.routeId) || p.name || p.routeId.slice(0, 10);
+      const short = label.split(/\s+/)[0] || label;
+      return `
+        <a class="community-vox-online-face" href="#/u/${encodeURIComponent(p.routeId)}" title="${escapeHtml(label)}">
+          ${renderAvatarHtml(p.routeId, label, "avatar-sm")}
+          <span class="community-vox-online-name">${escapeHtml(short)}</span>
+        </a>`;
+    })
+    .join("");
+  return `<div class="${gridClass}" role="list">${cells}</div>`;
 }
 
 /** Estatísticas honestas para painel «Sustentada por vizinhos» (sem ranking de nós). */
@@ -423,30 +438,24 @@ export function renderCommunity(
     ${renderCommunityForkBanner(meta)}
     ${activeTab === "posts" && welcomeText ? renderCommunityWelcomeRecado(welcomeText) : ""}
     <nav class="community-vox-nav community-tabs segmented-tabs" aria-label="Seções da comunidade">
-      <a class="tab-btn ${activeTab !== "listings" && activeTab !== "governance" ? "active" : ""}" href="#/c/${encodeURIComponent(communityId)}">Posts</a>
+      <a class="tab-btn ${activeTab !== "listings" && activeTab !== "governance" && activeTab !== "members" ? "active" : ""}" href="#/c/${encodeURIComponent(communityId)}">Posts</a>
+      <a class="tab-btn ${activeTab === "members" ? "active" : ""}" href="#/c/${encodeURIComponent(communityId)}?tab=members">Membros</a>
       <a class="tab-btn ${activeTab === "listings" ? "active" : ""}" href="#/c/${encodeURIComponent(communityId)}?tab=listings">Classificados</a>
       <a class="tab-btn ${activeTab === "governance" ? "active" : ""}" href="#/c/${encodeURIComponent(communityId)}?tab=governance">Governança${proposals.length ? ` (${proposals.length})` : ""}</a>
     </nav>`;
 
-  if (activeTab === "listings") {
+  const tab = activeTab || "posts";
+  if (tab === "listings") {
     html += renderCommunityListingsTab(communityId, commTitle, meta, listings);
-  } else if (activeTab === "governance") {
+  } else if (tab === "governance") {
     html += renderCommunityGovernanceTab(communityId, commTitle, meta, proposals);
+  } else if (tab === "members") {
+    html += renderCommunityMembersTab(meta, communityId, recentPeople, isMember);
   } else {
-    html += renderCommunityPostsLayout(communityId, commTitle, topics, meta, recentPeople, isMember);
+    html += `<div class="community-vox-posts-wrap">${renderCommunityPostsTab(communityId, commTitle, topics)}</div>`;
   }
   html += `</div>`;
   main.innerHTML += html;
-}
-
-function renderCommunityPostsLayout(communityId, commTitle, topics, meta, recentPeople, isMember) {
-  const mainCol = renderCommunityPostsTab(communityId, commTitle, topics);
-  const sidebar = renderCommunitySidebar(meta, communityId, recentPeople, isMember);
-  return `
-    <div class="community-vox-layout">
-      <div class="community-vox-main">${mainCol}</div>
-      ${sidebar}
-    </div>`;
 }
 
 function renderCommunityPostsTab(communityId, commTitle, topics) {
