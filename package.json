@@ -10,7 +10,9 @@
     "lint": "eslint client/js/**/*.js client/sw.js",
     "lint:fix": "eslint client/js/**/*.js client/sw.js --fix",
     "lint:relay": "ruff check relay/",
-    "audit:complexity": "node tools/complexity-audit.mjs"
+    "audit:complexity": "node tools/complexity-audit.mjs",
+    "release-line": "python tools/release_line.py",
+    "release-metadata": "python tools/release_line.py --metadata-only"
   },
   "devDependencies": {
     "eslint": "^9.39.0",
