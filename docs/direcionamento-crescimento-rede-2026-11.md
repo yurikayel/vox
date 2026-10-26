@@ -6,6 +6,71 @@
 
 Complementa [rede-sustentada-participantes.md](./rede-sustentada-participantes.md), [infra-participativa-blindagem-crescimento.md](./infra-participativa-blindagem-crescimento.md), [brainstorm-proximas-10-tarefas-pos-v82-2026-11.md](./brainstorm-proximas-10-tarefas-pos-v82-2026-11.md), [antigravity-estrategia-mantenedor-revisor-2026.md](./antigravity-estrategia-mantenedor-revisor-2026.md) e [brainstorm-auto-escala-organica-2026-10.md](./brainstorm-auto-escala-organica-2026-10.md).
 
+**Inventário:** evidências do pacote nov/2026 em [inventario-estado-e-tarefas-documentacao-2026-11.md](./inventario-estado-e-tarefas-documentacao-2026-11.md); doc irmão de origens primárias [inventario-origens-rede-2026-11.md](./inventario-origens-rede-2026-11.md) *(link ativo quando publicado)*.
+
+---
+
+## 1. Flywheel e tração
+
+### Preceitos (não negociáveis)
+
+| Preceito | O que significa na prática |
+|----------|----------------------------|
+| **Transparência radical** | Regras de visibilidade auditáveis no código; painel comunitário com **estimativas locais** (“~N apoiadores online”, “~X% leituras via cache local”); pill honesta quando a leitura cai no gateway de reserva — sem caixa-preta algorítmica nacional. |
+| **Sem leaderboard** | Proibido placar público de nós, stewards, IPs ou endereços “top contribuidor”. [ADR-001](./adr/001-contribution-attestation-export.md) permanece export opt-in **privado**; orgulho coletivo, não competição entre pessoas. |
+| **Participação em 4 camadas** | Malha sustentada por escada voluntária 0→3 ([infra-participativa-blindagem-crescimento.md](./infra-participativa-blindagem-crescimento.md)): Passivo (opt-out soberano), Ativo (Pacto Vox default-on), Apoiador (`commOnly`), Steward (relay de gaveta / índice comunitário). Crescimento **não** exige subir de camada para postar, vender ou votar. |
+| **Tom COMPLIANCE-BR** | Copy e rituais alinhados a [COMPLIANCE-BR.md](../COMPLIANCE-BR.md): espelho ≠ apagar on-chain; steward ≠ operador central do repo; Pix declarativo (não-PSP); moderação nas comunidades; pressão Art. 19 recai em quem opera espelho/relay, não no mantenedor como caixa postal jurídica. |
+
+O flywheel só vale se estas quatro linhas forem visíveis para quem entra pela primeira vez — transparência não é slide de marketing, é comportamento do produto e da documentação.
+
+### Onde crescer primeiro
+
+Prioridade **Brasil, relacional, utilidade no primeiro dia** — não “federação abstrata” nem campanha nacional de awareness.
+
+1. **Nichos BR com utilidade unitária clara** — coletivos de bairro, sindicatos de base, grêmios, bibliotecas comunitárias, ONGs locais, condomínios que já deliberam offline. Critério: existe **motivo concreto** para voltar amanhã (proposta, aviso, lista de presença), não só curiosidade técnica.
+2. **Coletivos com trio mínimo** — fundador + pelo menos um mod buddy + um candidato a steward ou segundo apoiador `commOnly`. Sem trio, o piloto vira dependência do mantenedor e quebra o desenho.
+3. **Feira comunitária** — classificados cronológicos, fotos de produto, Pix Zap; o comerciante local **ganha** cache perto ao manter nó ativo (egoísmo esclarecido). Porta de entrada para vizinhos que ainda não debatem política nacional.
+4. **POSSE soberano** — link canônico no Vox compartilhado no WhatsApp, grupos e blog; leitor externo cai no PWA leve, Cantina em um toque, default Ativo. Tração vem do **criador que se promove**, não de anúncio pago do projeto.
+
+Sequência recomendada: **uma praça fechada que funciona** → feira ou deliberação com cutoff → só então convite “traga três pessoas de confiança” (padrão FediForum/Signal, não MLM de protocolo).
+
+### O que NÃO fazer
+
+- **Ranking, badges públicos de contribuição ou “hall da fama” de relays** — mata apoiador tímido e incentiva gaming; contradiz [GOVERNANCE.md](../GOVERNANCE.md) e COMPLIANCE-BR.
+- **Growth hack de Fediverse genérico** — pitch “entre na federação” antes de mostrar grupo, feira ou votação útil.
+- **Obrigar steward, VPS ou relay para criar comunidade, postar ou vender** — barreira mortal; gateway de reserva + pill honesta são legítimos no cold start.
+- **Prometer P2P total no celular 4G brasileiro** — CGNAT e franquia; Passivo e leitura via gateway são **normais**, não falha moral do usuário.
+- **Boost pago, moeda in-app, alcance leiloado ou telemetria central disfarçada de “métricas abertas”** — reproduz Big Tech no client FOSS.
+- **Mantenedor como NOC único, mod global, TURN para todos ou suporte WhatsApp oficial** — modelo Mastodon; burnout garantido.
+- **Telegram/WhatsApp como backend oculto de timeline** — escala até centralizar moderação e dados.
+- **Narrativa “blindagem total” ou “zero provedor absoluto”** — falsa segurança; espelhos e autores mantêm obrigações reais ([COMPLIANCE-BR.md](../COMPLIANCE-BR.md)).
+
+### Cinco alavancas — próximos 90 dias
+
+Cada alavanca abaixo usa **sinais qualitativos** (retrospectiva, observação de facilitador, notas de piloto) — **não** DAU nacional, funil de conversão centralizado nem metas de “viralidade”.
+
+| # | Alavanca | Ação concreta | Sinal qualitativo de sucesso (90 d) |
+|---|----------|---------------|-------------------------------------|
+| **L1** | **Piloto V-P09 encaminhado** | 1–3 círculos de 10–30 pessoas, ~4 semanas, retrospectiva [piloto-comunidade-retrospectiva-template.md](./piloto-comunidade-retrospectiva-template.md) | Facilitador descreve flywheel “uso → share externo → leitura aceitável → seed” como **fechado ou parcialmente fechado**, com gaps nomeados (não “deu certo” vago) |
+| **L2** | **Ritual seed pós-comunidade** | Wizard/checklist 3 min: aba Ativa, 2 convites, 1º tópico; pin na feira se aplicável ([steward-seed-15min.md](./steward-seed-15min.md)) | Fundadores reportam **primeira semana com conteúdo próprio** e pelo menos **um** convite recíproco observado (par convidou par) |
+| **L3** | **Nudge `commOnly` + painel honesto** | Copy na comunidade convida Apoiador; header com estimativas locais, sem nomes ([rede-sustentada-participantes.md](./rede-sustentada-participantes.md)) | Mod ou steward relata **menos reclamações de “lento”** e membros citam o painel como motivo para ativar Apoiador — ou pill de gateway aceita sem pânico |
+| **L4** | **POSSE + link canônico na rotina** | Criadores habituados a publicar no Vox antes do share externo; bridge/embed conforme [RFC POSSE](./rfc/0001-posse-export.md) quando pronto | Comunicadores dizem que **link permanente e Pix** justificam o passo extra; leitores externos **entram pela Cantina** pelo menos uma vez no piloto (anecdota registrada na retrospectiva) |
+| **L5** | **Steward buddy + 2º espelho shell** | Um relay comunitário (V-I08) **ou** buddy documentado; segundo espelho Pages/Cloudflare vivo ([brainstorm-proximas-10-tarefas-pos-v82-2026-11.md](./brainstorm-proximas-10-tarefas-pos-v82-2026-11.md) T2) | Coletivo **sobe ou herda relay sem ticket ao mantenedor**; drill de espelho alternativo **testado uma vez** e descrito em uma frase no [inventario-estado-e-tarefas-documentacao-2026-11.md](./inventario-estado-e-tarefas-documentacao-2026-11.md) |
+
+### Flywheel (referência operacional)
+
+```
+Utilidade (post, Pix, feira, deliberação)
+        → share externo com link canônico (POSSE)
+        → visitante lê (cache │ relay │ gateway + pill)
+        → Cantina → camada Ativo (opt-out claro)
+        → seed + commOnly opcional + steward opcional
+        → praça rápida no território → criador repete share
+        → mais pares na malha (sem scoreboard público)
+```
+
+Detalhe arquitetural e regulatório: [infra-participativa-blindagem-crescimento.md](./infra-participativa-blindagem-crescimento.md) §2–3. Evidências: [inventario-estado-e-tarefas-documentacao-2026-11.md](./inventario-estado-e-tarefas-documentacao-2026-11.md); [inventario-origens-rede-2026-11.md](./inventario-origens-rede-2026-11.md) *(doc irmão — quando publicado)*.
+
 ---
 
 ## 2. Infra participante
@@ -145,7 +210,7 @@ O mantenedor humano garante **contrato de release** e especificações abertas; 
 
 ## 4. Moderação voluntária
 
-Moderação no Vox é **local, eleita e auditável** — não há central T&S no repositório ([GOVERNANCE.md](../GOVERNANCE.md)). Crescer a rede nos preceitos (§2–§3) exige **praças vivas** antes de escala numérica: cada comunidade piloto (V-P09) deve provar que mods voluntários sustentam o tom sem burnout do fundador.
+Moderação no Vox é **local, eleita e auditável** — não há central T&S no repositório ([GOVERNANCE.md](../GOVERNANCE.md)). Crescer a rede nos preceitos (§1–§3) exige **praças vivas** antes de escala numérica: cada comunidade piloto (V-P09) deve provar que mods voluntários sustentam o tom sem burnout do fundador.
 
 ### 4.1 Princípios operacionais
 
@@ -263,4 +328,4 @@ Processo externo: RFCs com janela de comentário (P2) — participação majorit
 
 ---
 
-**Versão:** 0.3 (§2–§6) · **Dono:** Community-doc · **Baseline código:** `898509c` (V-I08 steward kit)
+**Versão:** 0.3 (§1–§6) · **Dono:** Community-doc · **Baseline código:** `898509c` (V-I08 steward kit)
