@@ -14,6 +14,7 @@ Entrada única para revisores, desenvolvedores e operadores cívicos.
 | [inventario-estado-e-tarefas-documentacao-2026-11.md](./inventario-estado-e-tarefas-documentacao-2026-11.md) | **Inventário Técnico & DoD Documental** | Auditoria de módulos, inventário de specs e detalhamento DOC-01…08 (sem `[ ]` duplicados). |
 | [brainstorm-proximas-10-tarefas-pos-v82-2026-11.md](./brainstorm-proximas-10-tarefas-pos-v82-2026-11.md) | **Ordem de Execução Operacional** | Sequência linear pós-v82 (T2 espelho → V-P09 piloto → V-P08 sucessão → P2). |
 | [direcionamento-crescimento-rede-2026-11.md](./direcionamento-crescimento-rede-2026-11.md) | **Tese Cívica & Flywheel de Tração** | Preceitos não negociáveis (§1–§6), escada de 4 camadas e moderação E1–E5. |
+| [campo-debate-aberto-ndp-2026-10.md](./campo-debate-aberto-ndp-2026-10.md) | **Notas de Campo & Posicionamento Cívico** | Observação empírica (Debate Aberto, NDP, Varanda), modelos A–D e dores reais. |
 | [brainstorm-10-pontos-fracos-metodo-implementacao-2026-11.md](./brainstorm-10-pontos-fracos-metodo-implementacao-2026-11.md) | **Meta-Processo & Governança de Método** | Auditoria dos 10 gargalos metodológicos, antifrágil e guardrails do fluxo. |
 | [brainstorm-dez-tarefas-estrategia-2026-10.md](./brainstorm-dez-tarefas-estrategia-2026-10.md) | **HISTÓRICO / SUPERSEDED** | Registro de contexto de out/2026; superado pelo pós-v82 e dossiê N=25. |
 | [CONTRIBUTING-DOCS.md](./CONTRIBUTING-DOCS.md) | **Norma de Manutenção Documental** | Regras de mutex de agentes, padrão de banners de status e separação de DoD. |
@@ -28,6 +29,7 @@ O **Dossiê N=25** foi escolhido como a fonte viva e exclusiva de checkboxes `[ 
 
 ## 1. Participação & malha
 
+- [campo-debate-aberto-ndp-2026-10.md](./campo-debate-aberto-ndp-2026-10.md) — notas de campo (Debate Aberto, NDP, modelos A–D)
 - [rede-sustentada-participantes.md](./rede-sustentada-participantes.md) — meta trimestre, camadas 0→3  
 - [backlog-participacao-rede.md](./backlog-participacao-rede.md) — IDs V-P  
 - Teste aberto (convite, canal, carta E2): [teste-aberto-convite.md](./teste-aberto-convite.md) · [teste-aberto-canal-apoio.md](./teste-aberto-canal-apoio.md) · [teste-aberto-carta-moderacao-e2.md](./teste-aberto-carta-moderacao-e2.md)  

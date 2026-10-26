@@ -4,6 +4,7 @@ export const SHARE_HONEST_LIMITS_SHORT =
 
 export const SHARE_NATIVE_SUCCESS_TOAST = "Compartilhamento aberto no app que você escolheu.";
 export const SHARE_CLIPBOARD_SUCCESS_TOAST = "Link copiado — cole onde quiser publicar.";
+export const SHARE_CLIPBOARD_RICH_TOAST = "Texto formatado copiado — cole no Zap ou onde quiser.";
 
 export function showToast(message, type = "info") {
   if (typeof process !== "undefined" && process.env?.NODE_ENV === "test") return;
@@ -25,15 +26,38 @@ export function showToast(message, type = "info") {
   }, 3500);
 }
 
-export async function shareTopic({ title, topicId, communityId }) {
+export function formatShareBaseUrl() {
+  if (typeof window !== "undefined" && window.location) {
+    return `${window.location.origin}${window.location.pathname}`;
+  }
+  return "https://yurikayel.github.io/vox/";
+}
+
+export function buildTopicShareText({ title, topicId, communityId = "", author = "", body = "" }) {
+  const base = formatShareBaseUrl().replace(/\/+$/, "");
+  const url = `${base}/#/t/${encodeURIComponent(topicId)}`;
+  const cleanTitle = (title || "Publicação no Vox").trim();
+  const authorTag = author ? ` (${author.trim()})` : "";
+  const cleanBody = (body || "").replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
+  const excerpt = cleanBody.length > 120 ? `${cleanBody.slice(0, 117)}…` : cleanBody;
+  const excerptBlock = excerpt && excerpt !== cleanTitle ? `\n\n"${excerpt}"` : "";
+  return `📢 *${cleanTitle}*${authorTag}${excerptBlock}\n\n👉 Veja e debata no Vox Brasil:\n${url}`;
+}
+
+export function buildWhatsAppShareUrl({ title, topicId, communityId = "", author = "", body = "" }) {
+  const text = buildTopicShareText({ title, topicId, communityId, author, body });
+  return `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+}
+
+export async function shareTopic({ title, topicId, communityId, author = "", body = "" }) {
   const url = `${window.location.origin}${window.location.pathname}#/t/${encodeURIComponent(topicId)}`;
-  const text = `"${title}" — Veja e debata no Vox Brasil:`;
+  const formattedFull = buildTopicShareText({ title, topicId, communityId, author, body });
 
   if (navigator.share) {
     try {
       await navigator.share({
         title: `${title} | Vox`,
-        text,
+        text: formattedFull,
         url,
       });
       showToast(SHARE_NATIVE_SUCCESS_TOAST);
@@ -44,8 +68,8 @@ export async function shareTopic({ title, topicId, communityId }) {
   }
 
   try {
-    await navigator.clipboard.writeText(`${text} ${url}`);
-    showToast(SHARE_CLIPBOARD_SUCCESS_TOAST);
+    await navigator.clipboard.writeText(formattedFull);
+    showToast(SHARE_CLIPBOARD_RICH_TOAST);
     return true;
   } catch {
     showToast("Não foi possível copiar o link.", "error");

@@ -52,6 +52,12 @@ describe("renderAjudaTeste", () => {
     assert.match(html, /não custodia/i);
   });
 
+  it("covers feed transparency and POSSE copy", () => {
+    assert.match(html, /sem ranking, sem boost/i);
+    assert.match(html, /POSSE/i);
+    assert.match(html, /Zap continua existindo/i);
+  });
+
   it("links GitHub docs and issues", () => {
     assert.match(
       html,

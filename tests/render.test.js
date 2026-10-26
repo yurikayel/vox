@@ -439,6 +439,45 @@ test("render - formatTimeAgo retorna strings relativas concisas", () => {
   assert.equal(render.formatTimeAgo("invalido"), "recente");
 });
 
+test("render - formatAbsoluteDate e formatAbsoluteDateTime formatam timestamps de forma inequívoca", () => {
+  const d = new Date(2026, 9, 26, 9, 30);
+  const ts = d.getTime();
+  assert.equal(render.formatAbsoluteDate(ts), "26/10/2026");
+  assert.match(render.formatAbsoluteDateTime(ts), /^26\/10\/2026 \d{2}:\d{2}$/);
+  assert.equal(render.formatIsoTimestamp(ts), d.toISOString());
+  assert.equal(render.formatAbsoluteDate(null), "");
+  assert.equal(render.formatAbsoluteDate("invalid"), "");
+  assert.equal(render.formatAbsoluteDateTime(null), "");
+  assert.equal(render.formatIsoTimestamp(null), "");
+});
+
+test("render - renderPostAuthorMetaLines inclui data absoluta no card para evitar desinformação temporal", () => {
+  const d = new Date(2022, 4, 15, 14, 20);
+  const oldTs = d.getTime();
+  const html = render.renderPostAuthorMetaLines(
+    "vx_autor_antigo",
+    { primary: "Carlos", secondaryHandle: "carlos", routeTitle: "vx_autor_antigo" },
+    "24mês",
+    { ts: oldTs }
+  );
+  assert.ok(html.includes("post-time-abs"), "missing post-time-abs class");
+  assert.ok(html.includes("15/05/2022"), "missing absolute date 15/05/2022");
+  assert.ok(html.includes(`title="${d.toISOString()}"`), "missing ISO title on time");
+});
+
+test("render - renderCommunityTopicRow mostra data absoluta inequívoca", () => {
+  const d = new Date(2022, 4, 15, 14, 20);
+  const html = render.renderCommunityTopicRow({
+    id: "old-topic",
+    title: "Arquivo antigo",
+    author: "vx_autor_antigo",
+    ts: d.getTime(),
+    repliesCount: 0,
+  });
+  assert.ok(html.includes("15/05/2022"), "missing absolute date on community row");
+  assert.ok(html.includes(d.toISOString()), "missing ISO title on community row");
+});
+
 test("render - inline composer e post-toolbar no feed", () => {
   const strip = render.renderInlineComposer({ userRouteId: "vx_demo_mg" });
   assert.ok(strip.includes("inline-composer"));
