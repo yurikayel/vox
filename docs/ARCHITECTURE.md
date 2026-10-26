@@ -72,6 +72,7 @@ flowchart TB
 
 - [002 OAuth client-only](adr/002-oauth-profile-enrich-client.md)
 - [003 Profile card gossip](adr/003-profile-card-gossip.md)
+- [004 Gateway honest fallback](adr/004-gateway-honest-fallback.md)
 
 ## Testes
 
