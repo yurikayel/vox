@@ -32,7 +32,7 @@ Porta de entrada da documentação: **[docs/README.md](./docs/README.md)**. Test
 |--------|---------------------------|
 | **Licença** | [MIT](./LICENSE) |
 | **Runtime do PWA** | Vanilla no navegador — **sem** dependência npm em produção |
-| **Testes** | `npm test` → Node (`tests/*.test.js`) + Python stdlib (`relay/test_*.py`) |
+| **Testes** | **362** (`340` JS + `22` Python) — `npm test` na raiz |
 | **Relay / inbox** | Python sem dependências externas em [`relay/`](./relay/) |
 | **Bugs de teste** | Issue **[tester] Bug report** ([`.github/ISSUE_TEMPLATE/bug-tester.yml`](./.github/ISSUE_TEMPLATE/bug-tester.yml)) |
 | **Docs** | Norma [docs/CONTRIBUTING-DOCS.md](./docs/CONTRIBUTING-DOCS.md); **GitHub = fonte de verdade** (a [Voxpedia](https://yurikayel.github.io/vox/#/voxpedia) no app explica; desenvolvimento e release line ficam aqui) |
@@ -59,7 +59,7 @@ Demo: **[https://yurikayel.github.io/vox/](https://yurikayel.github.io/vox/)** �
 
 | Campo | Valor |
 |-------|--------|
-| **SHA** | `e9e6d85` |
+| **SHA** | `84eaa78` |
 | **Branch** | `main` |
 | **Testes** | **362** (`340` JS + `22` Python) — `npm test` na raiz |
 | **Service worker** | `vox-pwa-v6.84-teste-aberto` |
