@@ -103,6 +103,8 @@ test("render - renderNetworkSettings gera painel completo com WebRTC", () => {
   assert.ok(html.includes("Você está aqui"));
   assert.ok(html.includes("#net-comm-only-wrap"));
   assert.ok(html.includes("#net-relay-steward"));
+  assert.ok(html.includes("btn-export-contribution-attestation"));
+  assert.ok(html.includes("Baixar Comprovante de Contribuição"));
 });
 
 test("render - inferParticipationLayer mapeia commOnly e relay", () => {
@@ -191,6 +193,17 @@ test("render - renderCommunity fork banner for mirror demo", () => {
   assert.ok(html.includes("demo-aprenda-vox"));
 });
 
+test("render - computeCommunityNeighborStats sem amostra read_origin", () => {
+  const stats = render.computeCommunityNeighborStats({
+    recentPeople: [{ routeId: "vx_a", name: "A" }],
+    communityId: "real-praca",
+    gatewayState: "all_ok",
+    readOriginStats: { total: 2, localReadPct: null, sufficient: false },
+  });
+  assert.equal(stats.localReadPct, null);
+  assert.equal(stats.readOriginInsufficient, true);
+});
+
 test("render - painel Sustentada por vizinhos e seed checklist", () => {
   const main = createContainer();
   render.renderCommunity(main, "minha-comunidade", [], { title: "Pra�a", owner: "vx_owner" }, {
@@ -199,6 +212,7 @@ test("render - painel Sustentada por vizinhos e seed checklist", () => {
     neighborStats: {
       onlineDevices: 2,
       localReadPct: 42,
+      readOriginInsufficient: false,
       degraded: true,
       fewSupporters: true,
       isDemoEstimate: false,
@@ -295,7 +309,7 @@ test("render - renderDmList e renderDmThread", () => {
   ];
   render.renderDmList(mainList, convs, "addr_alice");
   assert.ok(mainList.innerHTML.includes("Mensagens"));
-  assert.ok(mainList.innerHTML.includes("Conversas privadas neste aparelho."));
+  assert.ok(mainList.innerHTML.includes("Conversas privadas neste navegador."));
   assert.ok(mainList.innerHTML.includes("addr_bob"));
   assert.ok(mainList.innerHTML.includes("E aí Alice"));
 

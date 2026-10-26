@@ -30,7 +30,7 @@ Complementa [direcionamento-crescimento-rede-2026-11.md](./direcionamento-cresci
 | **Identidade / wallet** | `wallet.js`, `local-account.js`, `handles.js` | [IDENTITY.md](../IDENTITY.md) | `wallet.test.js`, `handles.test.js`, `local-account.test.js` |
 | **Shell / PWA** | `sw.js` (`CACHE_NAME` canônico), sidebar, temas | README + [release-metadata.json](./release-metadata.json) · DEV §0–36 | **334** casos JS + **22** Python → **356** |
 
-**Gaps produto (documentados, não bugs ocultos):** 2º espelho shell **B** vivo (T2); piloto V-P09 **execução** humana; V-P08 runbook dedicado; V-P07 UI atestação; métricas honestas **v2** (T5); Bridge MV3 decisão pós-piloto.
+**Gaps produto (documentados, não bugs ocultos):** 2º espelho shell **B** vivo (T2); piloto V-P09 **execução** humana; V-P08 **handoff/buddy na comunidade** (runbook ✓ [steward-relay-buddy.md](./steward-relay-buddy.md)); V-P07 UI atestação; métricas honestas **v2** (T5); Bridge MV3 decisão pós-piloto.
 
 ---
 
@@ -135,7 +135,7 @@ Ver também [docs/README.md](./README.md) (DOC-03). Trilhas:
 | V-P05 | Seed checklist pós-comunidade | ✓ |
 | V-P06 | Mirror validate UI | ✓ **`f43f8b8`** |
 | V-P07 | ADR-001 export UI | pendente P2 |
-| V-P08 | Sucessão steward + buddy | doc T4 pendente |
+| V-P08 | Sucessão steward + buddy | doc ✓ [steward-relay-buddy.md](./steward-relay-buddy.md); ops-humano pendente |
 | V-P09 | Piloto + retrospectiva | template ✓ · **execução humana** [ ] |
 
 ### 3.3 T1–T10 — [brainstorm-dez-tarefas-estrategia-2026-10.md](./brainstorm-dez-tarefas-estrategia-2026-10.md) (out/2026)

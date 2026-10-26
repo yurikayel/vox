@@ -1,9 +1,16 @@
 /**
- * Telemetria local de gateways (V-P02) — sem phone-home.
+ * Telemetria local de gateways e origem de leitura (V-P02 / T5) — sem phone-home.
  */
 const STORAGE_KEY = "vox-gateway-health";
+const READ_ORIGIN_KEY = "vox-read-origin";
+const READ_ORIGIN_MAX = 50;
+const READ_ORIGIN_TTL_MS = 24 * 60 * 60 * 1000;
+export const READ_ORIGIN_MIN_SAMPLE = 5;
 
 /** @typedef {"all_ok"|"degraded"|"critical"} GatewayHealthState */
+/** @typedef {"mesh"|"relay"|"gateway"|"cache_idb"} ReadOrigin */
+
+const READ_ORIGINS = new Set(["mesh", "relay", "gateway", "cache_idb"]);
 
 function loadState() {
   try {
@@ -27,6 +34,32 @@ function saveState(state) {
   }
 }
 
+function loadReadOriginState() {
+  try {
+    const raw = localStorage.getItem(READ_ORIGIN_KEY);
+    if (!raw) return { communities: {} };
+    const parsed = JSON.parse(raw);
+    const communities =
+      parsed.communities && typeof parsed.communities === "object" ? parsed.communities : {};
+    return { communities };
+  } catch {
+    return { communities: {} };
+  }
+}
+
+function saveReadOriginState(state) {
+  try {
+    localStorage.setItem(READ_ORIGIN_KEY, JSON.stringify(state));
+  } catch {
+    /* quota */
+  }
+}
+
+function pruneReadSamples(samples, now = Date.now()) {
+  const cutoff = now - READ_ORIGIN_TTL_MS;
+  return samples.filter((s) => s.at >= cutoff).slice(-READ_ORIGIN_MAX);
+}
+
 /**
  * @param {string} label
  * @param {boolean} ok
@@ -40,6 +73,21 @@ export function recordGatewayAttempt(label, ok) {
   state.gateways[label] = prev;
   if (!ok) state.lastReserveAt = Date.now();
   saveState(state);
+}
+
+/**
+ * @param {ReadOrigin} origin
+ * @param {string} communityId
+ */
+export function recordReadOrigin(origin, communityId = "") {
+  if (!READ_ORIGINS.has(origin)) return;
+  const comm = String(communityId || "").trim();
+  if (!comm) return;
+  const state = loadReadOriginState();
+  const prev = Array.isArray(state.communities[comm]) ? state.communities[comm] : [];
+  const now = Date.now();
+  state.communities[comm] = pruneReadSamples([...prev, { origin, at: now }], now);
+  saveReadOriginState(state);
 }
 
 /** @returns {GatewayHealthState} */
@@ -61,6 +109,39 @@ export function getGatewayHealthSummary() {
     gateways: { ...state.gateways },
     lastReserveAt: state.lastReserveAt,
   };
+}
+
+/**
+ * Agregado local por comunidade (malha + relay + cache_idb).
+ * @param {string} communityId
+ */
+export function getReadOriginAggregate(communityId = "") {
+  const empty = {
+    total: 0,
+    localCount: 0,
+    localReadPct: null,
+    sufficient: false,
+    counts: { mesh: 0, relay: 0, gateway: 0, cache_idb: 0 },
+  };
+  const comm = String(communityId || "").trim();
+  if (!comm) return empty;
+
+  const state = loadReadOriginState();
+  const rawSamples = Array.isArray(state.communities[comm]) ? state.communities[comm] : [];
+  const samples = pruneReadSamples(rawSamples);
+  const counts = { mesh: 0, relay: 0, gateway: 0, cache_idb: 0 };
+  for (const s of samples) {
+    if (Object.hasOwn(counts, s.origin)) counts[s.origin] += 1;
+  }
+  const total = samples.length;
+  const localCount = counts.mesh + counts.relay + counts.cache_idb;
+  const sufficient = total >= READ_ORIGIN_MIN_SAMPLE;
+  let localReadPct = null;
+  if (sufficient && total > 0) {
+    const rawPct = Math.round((localCount / total) * 100);
+    localReadPct = Math.round(rawPct / 5) * 5;
+  }
+  return { total, localCount, localReadPct, sufficient, counts };
 }
 
 export function formatGatewayHealthPill(state) {
@@ -90,4 +171,5 @@ export function exportGatewayDiagnostic() {
 
 export function __resetGatewayHealthForTests() {
   localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(READ_ORIGIN_KEY);
 }
