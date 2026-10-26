@@ -146,3 +146,12 @@ Em `#/perfil` e `#/settings/network`, o usuário pode ativar **Aparecer na busca
 - **Retenção:** cartões recebidos expiram após 30 dias sem republicação (TTL client-side).
 - **LGPD:** consentimento específico para divulgação a pares da malha; direito de retirada via toggle; sem venda de dados nem perfilamento comercial.
 - **Referência:** ADR `docs/adr/003-profile-card-gossip.md`, spec `docs/profile-card-gossip-v0.md`.
+
+## Leitura reserva e gateways (telemetria local — V-P02)
+
+Quando gateways públicos Arweave/Turbo falham ou demoram, o cliente pode ler de **cache local** ou **relay comunitário**. A UI mostra a pill **Leitura reserva** — plano B de leitura, não falha do usuário.
+
+- **Terceiros:** requisições GraphQL continuam indo a operadores de gateway escolhidos no cliente; políticas de log/IP são deles (§ LGPD acima).
+- **Sem proxy central Vox:** o projeto **não** opera servidor proprietário de leitura que oculte degradação ou substitua gateways públicos.
+- **Sem phone-home:** contadores de tentativa ficam em `localStorage` no aparelho (`gateway-telemetry.js`); export diagnóstico é opt-in e não envia telemetria ao repositório.
+- **Referência:** ADR `docs/adr/004-gateway-honest-fallback.md`.
