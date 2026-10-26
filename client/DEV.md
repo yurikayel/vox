@@ -33,7 +33,7 @@ Abra no navegador: `http://127.0.0.1:8080/`
 
 ### 1.1 Executar Testes Unitários Locais (Tudo)
 
-O Vox inclui suíte completa de testes unitários locais (**201** testes: **187** client JS + **14** relay/signaling Python), sem dependências pesadas externas:
+O Vox inclui suíte completa de testes unitários locais (**350** testes: **329** client JS + **21** relay/signaling Python), sem dependências pesadas externas:
 
 ```bash
 # Na raiz do repositório vox/
@@ -125,6 +125,16 @@ Para validar o *Definition of Done* da Fase 2:
 3. No PWA do Vox, abra `#/settings/network` e clique no botão **"Verificar Relay Desktop"**:
    * O badge exibirá: `🟢 Relay Online (127.0.0.1:3920)`.
 4. Ao abrir tópicos ainda não cacheados no PWA, o relay fará o proxy para `arweave.net`, armazenará a cópia na pasta local `vox/relay/.cache/` e servirá ao PWA com latência reduzida.
+
+#### 4.2.1 Espelho de comunidade (`POST /vox/mirror`, V-P06)
+
+Spec: [`docs/mirror-validate-v1.md`](../docs/mirror-validate-v1.md).
+
+- **Cliente:** `community-mirror.js` monta índice leve e pré-valida (`communityId` path-safe, `topics` ≤ 500, corpo ≤ 256 KiB, `cacheManifest` v0 opcional) antes do POST.
+- **Relay:** `relay/mirror_validate.py` aplica as mesmas regras; erros JSON `{ "code": "mirror.*", "error": "…" }` (400 estrutural, 413 corpo grande).
+- **Auto-mirror:** ao abrir `#/c/:slug` (aba Posts), `tryMirrorCommunityToRelay` é best-effort **silencioso** (relay offline não incomoda o leitor).
+- **Steward / manual:** assistente `#/settings/network/steward` passo 5 → **Testar espelho agora** (toast em falha); `localStorage.VOX_MIRROR_VERBOSE=1` também exibe toast no auto-mirror.
+- **Telemetria local (sem PII):** `localStorage` chave `vox-mirror-telemetry` — pill no header da comunidade; `#/status` exporta `mirror_last_error` + hora + `communityId`.
 
 ### 4.3 Teste de Resiliência Offline
 1. Simule a desconexão de rede (ou desligue o Wi-Fi).

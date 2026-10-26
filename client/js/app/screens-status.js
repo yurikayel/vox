@@ -3,6 +3,7 @@ import * as render from "../render.js";
 import * as peers from "../peers.js";
 import * as inbox from "../inbox.js";
 import * as gatewayTelemetry from "../gateway-telemetry.js";
+import * as communityMirror from "../community-mirror.js";
 import { getActiveUser, makeShellProps } from "./context.js";
 
 export async function showStatus() {
@@ -13,5 +14,6 @@ export async function showStatus() {
     gatewayHealth: gatewayTelemetry.getGatewayHealthSummary(),
     relayStatus,
     relayHttpUrl: inbox.getRelayHttpUrl(),
+    mirrorExport: communityMirror.getMirrorLastErrorExport(),
   });
 }

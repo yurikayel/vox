@@ -366,7 +366,7 @@ export function renderNetworkSettings(main, {
 }
 
 /** Wizard operador steward (V-P01) — MVP 5 passos. */
-export function renderStewardWizard(main, { draft = {}, step = 1 } = {}) {
+export function renderStewardWizard(main, { draft = {}, step = 1, mirrorLast = null } = {}) {
   const s = Math.min(5, Math.max(1, Number(step) || 1));
   const d = draft || {};
   main.innerHTML = `
@@ -405,8 +405,11 @@ export function renderStewardWizard(main, { draft = {}, step = 1 } = {}) {
           <span id="sw-verify-result" class="meta" style="margin-left:0.5rem;"></span>
         ` : ""}
         ${s === 5 ? `
-          <p class="desc">Salve as URLs acima em <a href="#/settings/network">Preferências de rede</a>. Depois, na comunidade, dispare espelho (<code>mirrorCommunityToRelay</code>) e compartilhe <code>#/c/&lt;slug&gt;</code>.</p>
-          <div class="form-group">
+          <p class="desc">Salve as URLs acima em <a href="#/settings/network">Preferências de rede</a>. Depois, teste o espelho no relay e compartilhe <code>#/c/&lt;slug&gt;</code>.</p>
+          <button type="button" id="sw-test-mirror" class="btn btn-outline btn-sm">Testar espelho agora</button>
+          <span id="sw-mirror-result" class="meta" style="margin-left:0.5rem;"></span>
+          ${mirrorLast && !mirrorLast.ok ? `<p class="meta" id="sw-mirror-last-code">Último código: <code>${escapeHtml(mirrorLast.code || "—")}</code></p>` : ""}
+          <div class="form-group" style="margin-top:0.75rem;">
             <label for="sw-share-link">Link para compartilhar</label>
             <input type="text" id="sw-share-link" class="form-control" value="${escapeHtml(d.shareLink || "")}" placeholder="#/c/minha-comunidade" />
           </div>
