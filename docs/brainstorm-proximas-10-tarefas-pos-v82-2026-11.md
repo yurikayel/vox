@@ -27,6 +27,8 @@ Complementa [antigravity-estrategia-mantenedor-revisor-2026.md](./antigravity-es
 | **T9** | Community fork (gatilhos republicanos) | Q2-2027 | Community-doc | T6 |
 | **T10** | Export atestação ADR-001 (UI opt-in) | Q2-2027 | Cursor | V-P07 spec |
 
+**Escolha T10:** **ADR-001 / V-P07** em vez de *Pluggable Feeds* — backlog [P1, baixo ops](./backlog-participacao-rede.md); lentes plugáveis **P3** ([incubacao-p2-backlog.md](./incubacao-p2-backlog.md)).
+
 ---
 
 ## T1 — Roadmap integrado Q4-2026 → Q2-2027 (mantenedor revisor)
@@ -272,22 +274,129 @@ Runbook de **sucessão** e **relay buddy**: segundo voluntário treinado, handof
 
 ---
 
-## T8 — POSSE / Bridge / embed
+## T8 — POSSE / Bridge / embed — funil criadores
 
-> *Seção em consolidação (agente paralelo).*
+**Refs:** [RFC 0001 POSSE](./rfc/0001-posse-export.md) · [vox-bridge-spike.md](./vox-bridge-spike.md) · [embed-integration.md](./embed-integration.md) · `posse-dispatch.js` · [vox-bridge/](../vox-bridge/).
+
+### Objetivo
+
+Criador publica **canônico no Vox** e distribui para Zap/redes **sem** prometer crosspost automático antes de Tier A/B — funil até Apoiador/steward.
+
+### Funil
+
+```
+Cantina / convite Zap → post #/t/:id assinado
+        ├─ Tier A: share sheet (WhatsApp, X, copiar link)     [P0]
+        ├─ Tier B: vox-posse-export + CLI webhook             [P1]
+        ├─ Tier C: vox-embed.js em site parceiro              [P1]
+        └─ Tier D: Bridge MV3 (IG/Threads) experimental       [P2]
+        → leitor externo → comunidade → commOnly / steward
+```
+
+### Ordem de build
+
+| Ordem | Entrega | Prioridade |
+|-------|---------|------------|
+| 1 | Link canônico + OG honestos em `#/t/` | P0 |
+| 2 | Sheet POSSE Tier A (intents + microcopy) | P0 |
+| 3 | Export JSON estável + `tools/posse-cli` | P1 |
+| 4 | Embed: doc + 3 sites piloto | P1 |
+| 5 | Flag «Bridge experimental» em settings | P2 |
+| 6 | `vox-bridge` MV3 clipboard handoff | P2 |
+
+### DoD
+
+- [ ] Tier A + B em `main`; embed documentado com demo
+- [ ] Bridge **não** default-on; copy sem “Instagram automático” antes de Tier A
+
+### Riscos
+
+ToS Meta/X; expectativa MEI queimada; `externally_connectable` precipitado.
+
+### Owner
+
+Cursor (PWA/CLI) · contribuidor FOSS (extensão).
+
+**Anti-padrão:** competir com ActivityPub boost antes de link canônico estável.
 
 ---
 
-## T9 — Community fork
+## T9 — Community fork — conflitos e gatilhos republicanos
 
-> *Seção em consolidação (agente paralelo).*
+**Refs:** [incubacao-p2-backlog.md](./incubacao-p2-backlog.md) · demo `demo-aprenda-vox-mirror` · [brainstorm-tracao-escalabilidade-incubacao.md](./brainstorm-tracao-escalabilidade-incubacao.md).
+
+### Objetivo
+
+Pressão republicana sobre mods **sem** litígio no repo central — fork civilizado com histórico preservado.
+
+### Cenários e respostas
+
+| Cenário | Resposta republicana |
+|---------|----------------------|
+| Mod tirânico (hide em massa, sem appeal) | Proposta fork + migração filiação |
+| Steward aplica índice além do mod eleito | Documentar; espelho alternativo |
+| Schism de regras | Fork + cutoff na votação |
+| Captura fundador | E1 + mandato 90d + governance |
+
+### Gatilhos objetivos (propor fork)
+
+1. ≥3 `mod-action` contestadas + appeal E5 negado sem voto cutoff.
+2. Recusa carta mod (E2) após 14 dias.
+3. Política de índice steward incompatible com voto válido.
+4. Heurística piloto: ≥20 membros ativos e ≥40% assinam proposta fork.
+
+### Alvo produto (P2)
+
+- TX `Type: community-fork` + `parentCommunityId`
+- UI «Migrar minha filiação» 1 clique; banner espelho (estender demo)
+- **Não** apagar histórico parent
+
+### DoD
+
+- [ ] Spec protocolo + UI mínima além do demo; GOVERNANCE § fork
+- [ ] Mantenedor **não** escolhe lado
+
+### Riscos
+
+Fork spam; brigading na votação; central “escolher fork oficial”.
+
+### Owner
+
+Antigravity (TX spec) · Cursor (UI).
 
 ---
 
 ## T10 — Export atestação ADR-001 (UI opt-in)
 
-> *Seção em consolidação (agente paralelo). Ver [adr/001-contribution-attestation-export.md](./adr/001-contribution-attestation-export.md).*
+**Refs:** [ADR-001](./adr/001-contribution-attestation-export.md) · [backlog-participacao-rede.md](./backlog-participacao-rede.md) · [COMPLIANCE-BR.md](../COMPLIANCE-BR.md).
+
+### Objetivo
+
+Apoiador/steward exporta snapshot **assinado** das métricas **do próprio aparelho** — reconhecimento privado, **sem** ranking público nem gossip automático.
+
+### Por que T10 e não Pluggable Feeds
+
+V-P07 fecha loop “contribuí → prova opt-in” com impl menor que motor de lentes JS; feeds plugáveis exigem sandbox, governança de scripts e moderação de algoritmo — **P3** após piloto e POSSE Tier A.
+
+### DoD
+
+- [ ] UI `#/settings/network`: export JSON `contribution-attestation` + `signPayload`
+- [ ] Rate limit + disclaimers (self-attested)
+- [ ] **Não** upload automático; **não** alterar WANT/feed
+- [ ] Testes schema; export default **não** lista peers servidos
+
+### Riscos
+
+Comunidades comparando exports como scoreboard; telemetria disfarçada.
+
+### Owner
+
+Cursor.
 
 ---
 
-**Versão:** 0.2 · **T1** Antigravity retry `95a45b1a` · **T2–T4** análise · **Data:** 25 out 2026
+## Rastreio lobby
+
+Lista 1–10 em `lobby.md` § **Brainstorm próximas 10 pós-v82 (nov/2026)**.
+
+**Versão:** 1.0 · **T1** `95a45b1a` · **T2–T4** análise · **T8–T10** consolidado · **Data:** 25 nov 2026
