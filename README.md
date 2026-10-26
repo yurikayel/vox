@@ -59,7 +59,7 @@ Demo: **[https://yurikayel.github.io/vox/](https://yurikayel.github.io/vox/)** �
 
 | Campo | Valor |
 |-------|--------|
-| **SHA** | `84eaa78` |
+| **SHA** | `1359ee6` |
 | **Branch** | `main` |
 | **Testes** | **362** (`340` JS + `22` Python) — `npm test` na raiz |
 | **Service worker** | `vox-pwa-v6.84-teste-aberto` |
@@ -71,39 +71,21 @@ Malha: gossip **`CACHE_MANIFEST`** + prioridade **WANT**; feira **Classificados*
 
 ## 🎯 Por que o Vox existe?
 
-No modelo atual da internet, a comunicação de mais de 200 milhões de brasileiros está refém de um punhado de corporações estrangeiras:
-1. **Risco de Apagão e Censura:** Contas bloqueadas arbitrariamente, algoritmos opacos que sufocam o alcance e a vulnerabilidade constante de ficar sem seus laços sociais caso uma plataforma estrangeira seja suspensa ou mude de dono.
-2. **Dependência de Falsas Alternativas:** Redes alternativas comerciais mantêm infraestruturas centralizadas fora do país e respondem a interesses de investidores estrangeiros.
-3. **Morte das Comunidades Reais:** O modelo de feed infinito individualizado sufocou a convivência comunitária orgânica que o Brasil dominava na era do Orkut.
+No modelo atual da internet, a comunicação cívica brasileira está refém de corporações centralizadas: risco de apagão de contas, morte das comunidades orgânicas em prol de feeds algorítmicos opacos e dependência de infraestruturas fora do país. O **Vox** adota a filosofia do **Pix**: protocolo público, leve e aberto, com chaves no aparelho e soberania comunitária.
 
-O **Vox** adota o espírito do **Pix**: uma infraestrutura pública, descentralizada e aberta, onde você é dono da sua identidade e do seu conteúdo.
+* **Vs. Bluesky (PBC):** Sem serviços centrais de busca e indexação (*AppViews*) em empresa privada; múltiplos gateways neutros distribuídos e leitura de reserva.
+* **Vs. Mastodon (Fediverso):** Sem custo mensal de VPS sobrecarregando mantenedores nem confusão de "escolha de instâncias"; cliente estático no-build servido via Pages/espelhos.
+* **Vs. P2P puro móvel:** Sem exigir que celulares em redes 4G atuem como seeders 24/7 (inviabilizado pelo CGNAT e consumo de franquia no Brasil).
 
-### Por que não Bluesky / Mastodon / P2P puro?
-* **Sem dependência da Bluesky PBC:** O Bluesky centraliza seus serviços de busca e indexação (*AppViews*) em uma empresa privada sediada nos EUA. O Vox utiliza múltiplos gateways neutros distribuídos.
-* **Sem o custo de VPS do Mastodon:** O Fediverso sobrecarrega administradores voluntários com contas mensais de servidor e confunde o usuário final com a "escolha de instâncias". O Vox é 100% serverless para os mantenedores.
-* **Sem a fragilidade P2P do Varanda:** Dispensamos a necessidade de celulares atuarem como servidores de rede (*seeders*) e os bloqueios crônicos de NAT/CGNAT em redes móveis brasileiras.
-
-*(Diagnóstico comparativo completo, matriz 5×5 e lições aprendidas em [LESSONS.md](./LESSONS.md))*
+*(Diagnóstico comparativo completo e lições aprendidas em [LESSONS.md](./LESSONS.md) e [POSITIONING.md](./POSITIONING.md).)*
 
 ---
 
-## 🏛️ Os Três Pilares do Vox (O Sweet Spot)
+## 🏛️ Os Três Pilares do Vox
 
-### 1. Comunidades Primeiro (Estilo Orkut)
-* **Fóruns por Tópicos:** Discussões organizadas por assunto com tópicos e respostas encadeadas, resgatando a profundidade das conversas.
-* **A Rua (Descoberta Pública):** A visualização global que permite descobrir o que está sendo debatido em todas as comunidades abertas, sem algoritmos de recomendação manipulativos.
-* **Membros no Perfil:** As comunidades às quais você pertence definem a sua identidade e seus interesses no seu perfil.
-* **Moderação Distribuída:** Os criadores e moderadores filtram abusos localmente via transações assinadas (`mod-action`), sem depender de comitês centrais.
-
-### 2. Soberania Serverless (Permaweb / GraphQL)
-* **Zero Servidores Centrais:** O Vox não possui backend Node, Python ou banco de dados que voluntários precisam bancar.
-* **Linhagem Channel-01:** Aproveita a arquitetura comprovada de leitura via GraphQL aberto em gateways da rede Arweave/AR.IO (`turbo-gateway.com`, `arweave.net`), expandindo o canal estático para um ecossistema social bidirecional.
-* **Sua Chave é Você:** Identidade criptográfica local no dispositivo (Ed25519; detalhes em [IDENTITY.md](./IDENTITY.md)).
-
-### 3. Ponte, não Ilha (Crossposting)
-* O Vox não exige que seus contatos abandonem outras plataformas para você ter voz.
-* O post original assinado fica salvo perenemente no controle do usuário.
-* Com **1 toque**, o app despacha o conteúdo para **WhatsApp, Instagram, TikTok e X** através da Web Share API nativa e web intents.
+1. **Comunidades Primeiro (Estilo Orkut):** Fóruns por tópicos com respostas encadeadas, descoberta pública sem algoritmo manipulativo, membros no perfil e moderação local via `mod-action` client-side ([GOVERNANCE.md](./GOVERNANCE.md)).
+2. **Soberania Serverless (Permaweb / GraphQL):** Zero servidores centrais de aplicação; leitura via GraphQL aberto em gateways Arweave/AR.IO (`turbo-gateway.com`, `arweave.net`) e chaves criptográficas Ed25519 no dispositivo ([IDENTITY.md](./IDENTITY.md)).
+3. **Ponte, não Ilha (Crossposting POSSE):** O post canônico permanente é salvo no Vox e despachado com 1 toque para WhatsApp, Instagram, TikTok e X via Web Share API nativa e web intents ([docs/rfc/0001-posse-export.md](./docs/rfc/0001-posse-export.md)).
 
 ---
 
@@ -218,24 +200,6 @@ Todo dado no Vox é identificado por tags semânticas universais:
 | [docs/governance-proposta-feira-pin-template.md](./docs/governance-proposta-feira-pin-template.md) | Modelo de proposta: feira comunitária + recomendação não vinculante de espelho leve (V-I07) |
 | [docs/antigravity-operating.md](./docs/antigravity-operating.md) | Contrato operacional Antigravity × Cursor (malha P2P, gossip, integração em `main`) |
 | [docs/proposta-vox.html](./docs/proposta-vox.html) | Página explicativa completa: proposta, economia distribuída e sustentabilidade |
-
-### Rodar o PWA localmente
-
-```bash
-cd client
-python -m http.server 8080
-```
-
-Abra `http://127.0.0.1:8080/` (módulos ES exigem servidor HTTP local, não `file://`).
-
-### Executar os Testes Unitários Locais
-
-```bash
-npm test
-# ou no Windows:
-.\test.bat
-```
-Executa **362** testes (`340` JS + `22` Python) via `npm test`.
 
 ### 🚀 Pipelines de CI/CD (GitHub Actions)
 
