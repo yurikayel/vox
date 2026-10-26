@@ -22,6 +22,12 @@ test("mock - mockTopics retorna 81 topicos (27×3)", () => {
   assert.equal(tour.items.length, MOCK_DEMO_TOPIC_COUNT);
 });
 
+test("mock - mockTopics espelho demo reutiliza tour", () => {
+  const mirror = mock.mockTopics("demo-aprenda-vox-mirror");
+  assert.equal(mirror.items.length, MOCK_DEMO_TOPIC_COUNT);
+  assert.equal(mirror.demo, true);
+});
+
 test("mock - mockReplies MG", () => {
   const mg = mock.mockReplies("demo-post-mg");
   assert.equal(mg.items[0].author, "vx_demo_sp");

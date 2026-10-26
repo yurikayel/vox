@@ -53,6 +53,7 @@ O **Dossiê N=25** foi escolhido como a fonte viva e exclusiva de checkboxes `[ 
 
 ## 4. Desenvolvimento & governança
 
+- [teste-aberto-demo.md](./teste-aberto-demo.md) — praça demo `demo-aprenda-vox` · [bug report testadores](../.github/ISSUE_TEMPLATE/bug-tester.yml)  
 - [CONTRIBUTING-DOCS.md](./CONTRIBUTING-DOCS.md) — norma curta para voluntários e agentes  
 - [metodo-agentes-mutex-e-revisor.md](./metodo-agentes-mutex-e-revisor.md) — regras de mutex e operação revisor  
 - [piloto-comunidade-go-no-go.md](./piloto-comunidade-go-no-go.md) — gate humano do piloto (V-P09)  

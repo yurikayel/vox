@@ -6,6 +6,7 @@ import * as cacheNode from "./cache-node.js";
 import {
   MOCK_DEMO_COMMUNITY,
   MOCK_DEMO_COMMUNITY_FEIRA,
+  MOCK_DEMO_COMMUNITY_FORK,
   MOCK_DEMO_TOPICS,
   MOCK_DEMO_LISTINGS,
   MOCK_DEMO_REPLIES,
@@ -48,8 +49,9 @@ async function insertDemoItems() {
 }
 
 async function seedCommunities(baseTs) {
-  for (let i = 0; i < 2; i++) {
-    const c = i === 0 ? MOCK_DEMO_COMMUNITY : MOCK_DEMO_COMMUNITY_FEIRA;
+  const communities = [MOCK_DEMO_COMMUNITY, MOCK_DEMO_COMMUNITY_FEIRA, MOCK_DEMO_COMMUNITY_FORK];
+  for (let i = 0; i < communities.length; i++) {
+    const c = communities[i];
     await cacheNode.saveLocalPost({
       id: c.id,
       type: "community",
