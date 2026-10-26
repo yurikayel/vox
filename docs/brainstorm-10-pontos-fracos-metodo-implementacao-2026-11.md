@@ -1,8 +1,7 @@
 # Brainstorm — 10 pontos fracos do método de planejamento e implementação (nov/2026)
 
-> **Status:** brainstorm meta-processo (crítica ao **método**, não backlog de produto)  
-> **Data:** nov/2026  
-> **Baseline:** `main` **`4ddc4ca`** · SW **`vox-pwa-v6.83-steward-kit-v-i08`** · **355** testes (**333** JS + **22** Python)  
+> **Status:** canônico (meta-processo) · **Owner:** mantenedor método · **Revisado:** 2026-11 · **Não substitui:** dossiê N=25, inventário doc, T1–T10 pós-v82  
+> **Escopo:** crítica ao **método** de planejamento/implementação — não backlog de produto. Mitigação operacional: [CONTRIBUTING-DOCS.md](./CONTRIBUTING-DOCS.md). Release: [README.md](./README.md).  
 > **Canônicos relacionados:** [Dossiê N=25](./dossie-geral-inventario-master-breakdown-2026-11.md) · [Direcionamento §1–§6](./direcionamento-crescimento-rede-2026-11.md) · [T1–T10 pós-v82](./brainstorm-proximas-10-tarefas-pos-v82-2026-11.md) · [Inventário nov/2026](./inventario-estado-e-tarefas-documentacao-2026-11.md)
 
 Este documento critica **como** o Vox planeja, documenta e executa trabalho (lobby frictionless, Composer 2.5, docs-first, merge `--no-ff` após `npm test`) — **não** avalia se o produto deveria ter mais features. Evidências vêm de incidentes recentes (DOC-01, README corrompido por script PowerShell, inventário N=20 vs dossiê N=25, perda de conteúdo em `direcionamento` por agentes paralelos) e do estado atual do repositório na baseline acima.

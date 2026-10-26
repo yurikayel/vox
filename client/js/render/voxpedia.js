@@ -1,6 +1,31 @@
 /** @file Voxpedia — documentação em camadas (PT-BR). */
 import { escapeHtml } from "./util.js";
 
+/** URLs públicas — specs e runbooks vivem no GitHub (fonte, não helpdesk). */
+export const VOX_GITHUB_DOCS = {
+  repo: "https://github.com/yurikayel/vox",
+  docsIndex: "https://github.com/yurikayel/vox/tree/main/docs",
+  docsReadme: "https://github.com/yurikayel/vox/blob/main/docs/README.md",
+  devGuide: "https://github.com/yurikayel/vox/blob/main/client/DEV.md",
+};
+
+function renderGithubDocsAside() {
+  const { docsReadme, devGuide, docsIndex } = VOX_GITHUB_DOCS;
+  return `
+    <aside class="voxpedia-docs-github card" id="voxpedia-docs-github" aria-labelledby="voxpedia-docs-github-title">
+      <p class="section-title" id="voxpedia-docs-github-title">Docs técnicas</p>
+      <p class="desc voxpedia-docs-github-lead">
+        Código, specs e runbooks ficam no repositório público — auditável e mantido pela comunidade de contribuidores.
+        A Voxpedia explica o app; o GitHub é a fonte para quem desenvolve ou revisa.
+      </p>
+      <p class="voxpedia-docs-github-links">
+        <a class="voxpedia-gh-link" href="${docsReadme}" target="_blank" rel="noopener noreferrer">Documentação técnica (GitHub)</a>
+        · <a class="voxpedia-gh-link" href="${devGuide}" target="_blank" rel="noopener noreferrer">Guia DEV</a>
+        · <a class="voxpedia-gh-link" href="${docsIndex}" target="_blank" rel="noopener noreferrer">Índice docs/</a>
+      </p>
+    </aside>`;
+}
+
 function layer(summary, bodyHtml, extraClass = "") {
   const cls = extraClass ? `voxpedia-layer ${extraClass}` : "voxpedia-layer";
   return `<details class="${cls}"><summary>${escapeHtml(summary)}</summary><div class="voxpedia-layer-body">${bodyHtml}</div></details>`;
@@ -195,11 +220,12 @@ function renderTecnico() {
       ${layer(
         "Docs no repositório",
         `<ul class="voxpedia-steps">
-          <li><code>client/DEV.md</code> — fluxos de teste manual</li>
+          <li><a href="${VOX_GITHUB_DOCS.devGuide}" target="_blank" rel="noopener noreferrer">client/DEV.md</a> — fluxos de teste manual</li>
           <li><a href="#/labs/frames">Open Frames (lab)</a> · <a href="#/status">Status da malha</a></li>
-          <li><code>docs/ARCHITECTURE.md</code> — visão geral</li>
-          <li><code>POSITIONING.md</code> — comparação honesta com outras redes</li>
-        </ul>`
+          <li><a href="${VOX_GITHUB_DOCS.docsReadme}" target="_blank" rel="noopener noreferrer">docs/README.md</a> — índice das trilhas</li>
+          <li><a href="${VOX_GITHUB_DOCS.repo}" target="_blank" rel="noopener noreferrer">Repositório yurikayel/vox</a></li>
+        </ul>
+        <p class="desc">Ver também o bloco <a href="#voxpedia-docs-github">Docs técnicas</a> no topo desta página.</p>`
       )}`
     )}`;
 
@@ -235,11 +261,18 @@ export function renderVoxpedia() {
           <li><a href="#voxpedia-tecnico">Para curiosos (técnico)</a></li>
         </ul>
       </nav>
+      ${renderGithubDocsAside()}
       ${renderComecar()}
       ${renderMensagens()}
       ${renderComunidades()}
       ${renderRede()}
       ${renderPrivacidade()}
       ${renderTecnico()}
+      <footer class="voxpedia-footer card">
+        <p class="desc">
+          <a class="voxpedia-gh-link" href="${VOX_GITHUB_DOCS.docsReadme}" target="_blank" rel="noopener noreferrer">Documentação técnica (GitHub)</a>
+          — código, specs e runbooks; o repositório é a fonte, não um helpdesk.
+        </p>
+      </footer>
     </article>`;
 }
