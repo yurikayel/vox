@@ -88,7 +88,7 @@ Se **https://yurikayel.github.io/vox/** não responder (HTTP erro, shell em bran
 2. `#/ajuda/teste` — H1 **Teste aberto (~15 min)**; links **Aprenda Vox**, **Feira demo**, **Status da malha**, **Sua rede** presentes no snapshot.
 3. `#/c/demo-aprenda-vox` — H1 **Brasil Estereótipo (Demo Vox)**; feed demo com posts (mock/local); **sem** ritual seed V-P05.
 4. Roteiro in-app alinhado a [teste-aberto-demo.md](./teste-aberto-demo.md) (`demo-aprenda-vox`, não mirror).
-5. Porta da Cantina visível até **Entrar — sou humano**; roteiro e comunidade demo carregam antes do gate.
+5. Porta da Cantina visível em **`#/`** até **Entrar — sou humano**; links **`#/ajuda/teste`** (footer, Status, etc.) continuam clicáveis sob o overlay; rota **`#/ajuda/teste`** abre sem exigir o gate.
 6. `parseRoute` + `tests/ajuda-teste.test.js` — `#/ajuda/teste` → `ajuda-teste` (340 testes Node + relay OK).
 7. Nenhuma correção de rota necessária em `route-parse.js` / `ajuda-teste.js` nesta passagem.
 8. Produção: repetir smoke em **https://yurikayel.github.io/vox/** após deploy (mesmos hashes).
