@@ -261,7 +261,7 @@ graph TD
 | [ ] | **PIL-03** | ops-humano | Retrospectiva preenchida |
 | [ ] | **PIL-04** | ops-humano | Barra Apoiadores/steward semana 4 |
 | [ ] | **PIL-05** | ops-humano | Ciclo mod E1–E5 evidenciado |
-| [ ] | **EXP-01** | code | POSSE Tier A/B |
+| [x] | **EXP-01** | code | POSSE Tier A/B |
 | [ ] | **EXP-02** | code | Embed widget |
 | [ ] | **EXP-03** | doc | Spec community fork |
 | [ ] | **EXP-04** | code | Backup HTML standalone |
