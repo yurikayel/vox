@@ -1,4 +1,4 @@
-# Steward Kit — Windows 1-clique (P1)
+# Steward Kit — Windows 1-clique (V-I08)
 
 Pacote MVP para operadores comunitários: inicia relay local + abre o assistente steward do Vox.
 
@@ -36,6 +36,11 @@ Distribua `dist/VoxStewardKit.exe` com este README. O `.exe` embute apenas o lau
 - Cole a URL no passo 4 do wizard steward (`docs/steward-seed-15min.md`, `docs/steward-relay-kit.md`).
 - Atestado ADR-001: stub local até protocolo wired — wizard grava URLs em `localStorage` do PWA.
 
-## Mac / Linux
+## Linux / macOS
 
-AppImage documentado como P1.1 — reutilize `steward_launcher.py` com shebang e systemd user unit.
+```bash
+chmod +x tools/steward-kit-linux/start-steward-kit.sh
+./tools/steward-kit-linux/start-steward-kit.sh
+```
+
+Mesmo launcher Python (`steward_launcher.py`). Para VPS com TLS, use `relay/deploy` — ver `docs/steward-relay-kit.md`.

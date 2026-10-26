@@ -50,6 +50,12 @@ describe("route-parse", () => {
     });
   });
 
+  it("network steward wizard route", () => {
+    withLocation({ hash: "#/settings/network/steward" }, () => {
+      assert.deepEqual(parseRoute(), { name: "steward-wizard" });
+    });
+  });
+
   it("connect and dm thread", () => {
     withLocation({ hash: "#/connect/vx_abc" }, () => {
       assert.deepEqual(parseRoute(), { name: "connect", routeId: "vx_abc" });

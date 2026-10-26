@@ -9,8 +9,9 @@ Este diretório fornece uma pilha pronta em Docker (`docker-compose.yml`) para q
 ## 📦 O que compõe a pilha
 
 1. **`vox-signaling` (`signaling.py`):** Servidor WebSocket Python stdlib (zero dependências pip) que faz o pareamento SDP/ICE entre dispositivos sem armazenar dados.
-2. **`vox-caddy` (Caddy 2):** Reverse proxy que obtém e renova certificados TLS Let's Encrypt automaticamente, expondo `wss://signal.sua-comunidade.org` na porta `443`.
-3. **`vox-coturn` (Coturn):** Servidor STUN/TURN leve e blindado contra SSRF/abuso (`turnserver.conf`), restrito à faixa de portas `49152-49200/udp` e com limite de taxa (`max-bps=512000`).
+2. **`vox-relay` (`server.py`):** Relay HTTP — cache de transações, espelhos `POST /vox/mirror`, `GET /health`. Volume Docker `vox_relay_cache`.
+3. **`vox-caddy` (Caddy 2):** Reverse proxy TLS (Let's Encrypt). WebSocket → signaling; **demais rotas** → relay (`/health`, `/tx/*`, `/vox/*`, `/inbox/*`).
+4. **`vox-coturn` (Coturn):** Servidor STUN/TURN leve e blindado contra SSRF/abuso (`turnserver.conf`), restrito à faixa de portas `49152-49200/udp` e com limite de taxa (`max-bps=512000`).
 
 ---
 
@@ -30,10 +31,20 @@ Crie um registro DNS `A` (e opcionalmente `AAAA`) apontando seu subdomínio (ex:
 - `3478/udp` e `3478/tcp` (Coturn STUN/TURN)
 - `49152:49200/udp` (Faixa de mídia/relay TURN)
 
-### 4. Subir os Containers
+### 4. Quota de cache (opcional)
+
+```bash
+cp .env.example .env
+# Edite VOX_RELAY_MAX_CACHE_MB (padrão 512)
+```
+
+O serviço `vox-relay` lê `VOX_RELAY_MAX_CACHE_MB`; quando o disco de cache atinge o teto, novos espelhos retornam HTTP 413. Monitore com `GET /health` (`cacheBytes`, `maxCacheBytes`, `communityIndexes`). Ver [`docs/steward-relay-kit.md`](../../docs/steward-relay-kit.md).
+
+### 5. Subir os Containers
 ```bash
 cd vox/relay/deploy
 docker compose up -d --build
+curl -sS "https://signal.sua-comunidade.org/health"
 ```
 
 ---
@@ -43,9 +54,10 @@ docker compose up -d --build
 Qualquer membro da sua comunidade pode usar o servidor abrindo `#/settings/network` no Vox:
 
 1. **Servidor de Sinalização WebRTC:** `wss://signal.sua-comunidade.org`
-2. **URL do Servidor TURN:** `turn:signal.sua-comunidade.org:3478`
-3. **Usuário TURN:** `vox`
-4. **Credencial TURN:** *(a senha definida no `turnserver.conf`)*
-5. Clique em **Salvar Preferências**.
+2. **URL HTTP do relay:** `https://signal.sua-comunidade.org` *(mesmo host — Caddy encaminha para `vox-relay`)*
+3. **URL do Servidor TURN:** `turn:signal.sua-comunidade.org:3478`
+4. **Usuário TURN:** `vox`
+5. **Credencial TURN:** *(a senha definida no `turnserver.conf`)*
+6. Clique em **Salvar Preferências** — ou use o assistente `#/settings/network/steward`.
 
 > **Nota para forks/espelhos:** Se você hospeda seu próprio front-end estático, pode pré-preencher esses valores diretamente em [`client/config/signaling.json`](../../client/config/signaling.json) para que seus usuários já entrem conectados por padrão.
