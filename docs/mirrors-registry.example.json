@@ -1,0 +1,26 @@
+{
+  "schema": "vox-shell-mirror-registry/v1",
+  "release_note": "Copiar para registro do coletivo; manter shell-a/shell-b em sync com ops-shell-mirrors.md",
+  "mirrors": [
+    {
+      "mirror_id": "shell-a",
+      "role": "A",
+      "base_url": "https://yurikayel.github.io/vox/",
+      "git_sha": "7c888d135aa8d7eafa2d3f379c52c152387040cd",
+      "cache_name": "vox-pwa-v6.83-steward-kit-v-i08",
+      "operator": "yurikayel",
+      "read_only": true,
+      "status": "live"
+    },
+    {
+      "mirror_id": "shell-b",
+      "role": "B",
+      "base_url": "",
+      "git_sha": "",
+      "cache_name": "vox-pwa-v6.83-steward-kit-v-i08",
+      "operator": "",
+      "read_only": true,
+      "status": "planned"
+    }
+  ]
+}
