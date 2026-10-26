@@ -45,8 +45,12 @@ O **Dossiê N=25** foi escolhido como a fonte viva e exclusiva de checkboxes `[ 
 
 ## 3. Operações steward & espelhos
 
-- [steward-relay-kit.md](./steward-relay-kit.md) · [steward-seed-15min.md](./steward-seed-15min.md) · [steward-relay-buddy.md](./steward-relay-buddy.md) — V-P08 sucessão relay buddy  
-- [ops-shell-mirrors.md](./ops-shell-mirrors.md) — espelhos shell A/B, T2 executável  
+- [steward-relay-kit.md](./steward-relay-kit.md) · [steward-seed-15min.md](./steward-seed-15min.md)  
+- **V-P08** — [steward-relay-buddy.md](./steward-relay-buddy.md): relay buddy (segundo voluntário) antes do burnout do steward principal.  
+- Handoff `ops-humano`: VPS/compose, `.env`, WSS, backup `index_*.json`, rotação de segredos — checklist no runbook; nomes só offline.  
+- Emergência **72 h** (relay + inbox TTL): restore ou URL alternativa; shell A/B em [ops-dr-drill-checklist.md](./ops-dr-drill-checklist.md) se o PWA cair.  
+- Steward ≠ mod ([GOVERNANCE.md](../GOVERNANCE.md)); buddy não herda `mod-action` — [piloto-comunidade-go-no-go.md](./piloto-comunidade-go-no-go.md) (campo Relay Buddy).  
+- [ops-shell-mirrors.md](./ops-shell-mirrors.md) — espelhos shell A/B, T2 executável (+ bloco V-P08 em § Sucessão relay)  
 - [ops-dr-drill-checklist.md](./ops-dr-drill-checklist.md) — procedimento e checklist de drill DR  
 - [ops-pages-rollback.md](./ops-pages-rollback.md) — runbook de rollback do Pages e SW  
 - [mirror-validate-v1.md](./mirror-validate-v1.md) · [antigravity-operating.md](./antigravity-operating.md)  
