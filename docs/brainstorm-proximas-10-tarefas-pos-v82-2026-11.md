@@ -1,9 +1,8 @@
 # Brainstorm — próximas 10 tarefas pós-v6.82 (nov/2026)
 
-> **Status:** consolidação doc-only · sprint pós-**V-P06** (mirror validate)  
-> **Linha de base:** `main` **`898509c`** (V-I08 steward kit) · SW **`vox-pwa-v6.83-steward-kit-v-i08`** · **333** testes Node + **22** relay  
-> **Horizonte:** **2026-Q4 → 2027-Q2** (piloto + malha sem loop do mantenedor)  
-> **Público:** mantenedor/revisor, stewards, facilitadores de piloto  
+> **Status:** canônico (Ordem de Execução Ops Sequencial pós-v82) · **Owner:** mantenedor/revisor · **Revisado:** 2026-11 · Release: [README.md](../README.md) · [release-metadata.json](./release-metadata.json)  
+> **Papel canônico:** Sequência linear de dependências operacionais (T2 espelho → V-P09 piloto → V-P08 sucessão → P2). O checklist vivo reside exclusivamente no [Dossiê N=25](./dossie-geral-inventario-master-breakdown-2026-11.md).  
+> **Horizonte:** **2026-Q4 → 2027-Q2** (piloto + malha sustentada por participantes)  
 > **Não é parecer jurídico** — [COMPLIANCE-BR.md](../COMPLIANCE-BR.md)
 
 Complementa [antigravity-estrategia-mantenedor-revisor-2026.md](./antigravity-estrategia-mantenedor-revisor-2026.md) (T1 estratégico out/2026), [backlog-participacao-rede.md](./backlog-participacao-rede.md), [rede-sustentada-participantes.md](./rede-sustentada-participantes.md) e [brainstorm-dez-tarefas-estrategia-2026-10.md](./brainstorm-dez-tarefas-estrategia-2026-10.md).
