@@ -17,8 +17,8 @@ const shellSrc = fs.readFileSync(
 );
 
 test("shell brand — single squircle img in markup", () => {
-  const block = shellSrc.match(/function renderBrandLink\(\)[\s\S]*?^}/m)?.[0] ?? "";
-  assert.ok(block.includes('class="brand-logo brand-mark"'));
+  const block = shellSrc.match(/function renderHomeIcon\(\)[\s\S]*?^}/m)?.[0] ?? "";
+  assert.ok(block.includes('class="brand-logo brand-mark tab-brand-mark"'));
   assert.equal((block.match(/<img/g) || []).length, 1);
   assert.ok(!block.includes("brand-mark--light"));
   assert.ok(!block.includes("brand-mark--dark"));
@@ -33,12 +33,13 @@ test("shell brand — same squircle mark in light and dark", () => {
   assert.ok(!shellSrc.includes("icons/icon-512.png"));
 });
 
-test("shell brand — lowercase vox wordmark matches icon colors", () => {
-  const wordBlock = shellSrc.match(/function renderBrandWordmark\(\)[\s\S]*?^}/m)?.[0] ?? "";
-  assert.ok(wordBlock.includes("brand-letter-v") && wordBlock.includes(">v</span>"));
-  assert.ok(wordBlock.includes("brand-letter-o") && wordBlock.includes(">o</span>"));
-  assert.ok(wordBlock.includes("brand-letter-x") && wordBlock.includes(">x</span>"));
+test("shell brand — Início uses mark as icon, no top wordmark", () => {
+  assert.ok(shellSrc.includes("renderHomeIcon()"));
+  assert.ok(!shellSrc.includes("sidebar-brand"));
+  assert.ok(!shellSrc.includes("renderBrandWordmark"));
+  assert.ok(!shellSrc.includes("renderBrandLink"));
   assert.ok(!shellSrc.includes(">Vox</span>"));
+  assert.ok(!shellSrc.includes(">vox</span>"));
 });
 
 test("shell sidebar — IA estável (nav, postar, feed slot, footer)", () => {
@@ -51,12 +52,11 @@ test("shell sidebar — IA estável (nav, postar, feed slot, footer)", () => {
   assert.ok(shellSrc.includes("ICONS.feedForYou"));
   assert.ok(shellSrc.includes("ICONS.following"));
   const sidebarBlock = shellSrc.match(/function renderSidebar\([\s\S]*?^}/m)?.[0] ?? "";
-  const brandIdx = sidebarBlock.indexOf("sidebar-brand");
   const navIdx = sidebarBlock.indexOf('aria-label="Seções"');
   const composeIdx = sidebarBlock.indexOf("sidebar-compose-slot");
   const feedIdx = sidebarBlock.indexOf("${feedSlot}");
   const footerIdx = sidebarBlock.indexOf("renderSidebarFooter");
-  assert.ok(brandIdx >= 0 && brandIdx < navIdx && navIdx < composeIdx && composeIdx < feedIdx && feedIdx < footerIdx);
+  assert.ok(navIdx >= 0 && navIdx < composeIdx && composeIdx < feedIdx && feedIdx < footerIdx);
   assert.ok(!sidebarBlock.includes("${feedNav}"));
   assert.ok(shellSrc.includes("classList.add(\"is-active\")"));
 });

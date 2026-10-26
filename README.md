@@ -62,7 +62,7 @@ Demo: **[https://yurikayel.github.io/vox/](https://yurikayel.github.io/vox/)** �
 | **SHA** | `b97d0c7` |
 | **Branch** | `main` |
 | **Testes** | **362** (`340` JS + `22` Python) — `npm test` na raiz |
-| **Service worker** | `vox-pwa-v6.85-cantina-ajuda-link` |
+| **Service worker** | `vox-pwa-v6.86-home-logo` |
 | **Deploy** | Push em `main` → GitHub Pages; após deploy use **hard refresh** (`Ctrl+Shift+R`) para trocar o SW |
 
 Malha: gossip **`CACHE_MANIFEST`** + prioridade **WANT**; feira **Classificados** com ofertas assinadas, status/retratação na malha ([`listing-ui.js`](./client/js/listing-ui.js)). Seed steward: [`docs/steward-seed-15min.md`](./docs/steward-seed-15min.md).
