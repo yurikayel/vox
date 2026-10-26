@@ -1807,6 +1807,14 @@ body.post-more-sheet-open {
   text-align: center;
 }
 
+.posse-dispatch-limits {
+  margin: 0 1rem 0.35rem;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.62);
+  text-align: center;
+}
+
 .posse-dispatch-url {
   margin: 0 1rem 0.5rem;
   font-size: 0.72rem;
