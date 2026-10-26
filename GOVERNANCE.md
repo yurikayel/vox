@@ -1,6 +1,10 @@
 # Governança e moderação
 
+> **Status:** canônico (protocolo mod/deliberação) · **Owner:** mantenedor protocolo · **Revisado:** 2026-11
+
 O Vox não possui um “time de trust & safety” central. Comunidades são espaços com regras locais; a permaweb guarda o registro; **clientes decidem o que mostrar**.
+
+**Repositório vs comunidade:** [github.com/yurikayel/vox](https://github.com/yurikayel/vox) publica e revisa **código** e documentação técnica ([docs/README.md](./docs/README.md), [CONTRIBUTING-DOCS.md](./docs/CONTRIBUTING-DOCS.md)); não opera relay central nem moderação das suas comunidades. Stewards e moderadores locais respondem pela infra e pelas regras do espaço — a [Voxpedia](https://yurikayel.github.io/vox/#/voxpedia) explica o app; specs e runbooks ficam no GitHub para auditores e novos voluntários (~30 min: índice + status + um owner por doc).
 
 ## Princípios
 
