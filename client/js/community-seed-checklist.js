@@ -1,5 +1,12 @@
 /** Checklist seed pós-criação de comunidade (V-P05) — ritual ~3 min, localStorage. */
 const PENDING_KEY = "vox-community-seed-pending";
+
+/** Tour/mock — ritual de seed não se aplica a testadores na praça demo. */
+export const SEED_RITUAL_SKIP_COMMUNITY_IDS = new Set([
+  "demo-aprenda-vox",
+  "demo-aprenda-vox-mirror",
+  "demo-feira-local",
+]);
 const stateKey = (communityId) => `vox-community-seed-${communityId}`;
 
 export function markSeedPending(communityId) {
@@ -78,6 +85,7 @@ export function isSeedComplete(state, { topicCount = 0, peerEnabled = true } = {
  */
 export function shouldOfferSeedRitual(communityId, userAddress, meta = {}) {
   if (!communityId || !userAddress) return false;
+  if (SEED_RITUAL_SKIP_COMMUNITY_IDS.has(communityId)) return false;
   const state = loadSeedState(communityId);
   if (state.dismissed) return false;
   const pending = getSeedPendingCommunityId();

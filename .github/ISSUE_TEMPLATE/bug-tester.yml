@@ -1,0 +1,58 @@
+name: "[tester] Bug report"
+description: Bug encontrado no teste aberto — versão, rota e contexto para reproduzir.
+title: "[tester] "
+labels:
+  - tester
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Obrigado por testar o Vox. Abra **#/status** no app e copie o nome do cache (`CACHE_NAME` do Service Worker).
+        Praça demo padrão: `#/c/demo-aprenda-vox` — ver [docs/teste-aberto-demo.md](https://github.com/yurikayel/vox/blob/main/docs/teste-aberto-demo.md).
+  - type: input
+    id: cache_name
+    attributes:
+      label: Versão (CACHE_NAME)
+      description: Nome do cache PWA em #/status (ex. vox-pwa-v6.83-…)
+      placeholder: vox-pwa-v6.xx-…
+    validations:
+      required: true
+  - type: input
+    id: page_url
+    attributes:
+      label: URL usada
+      description: Endereço completo da aba (Pages, localhost, etc.)
+      placeholder: https://yurikayel.github.io/vox/client/
+    validations:
+      required: true
+  - type: input
+    id: route_hash
+    attributes:
+      label: Rota (hash)
+      description: Fragmento após # (ex. #/c/demo-aprenda-vox, #/status, #/ajuda/teste)
+      placeholder: "#/c/demo-aprenda-vox"
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: O que você esperava
+      description: Comportamento ou texto que fazia sentido para você
+    validations:
+      required: true
+  - type: textarea
+    id: happened
+    attributes:
+      label: O que aconteceu
+      description: Passos para reproduzir, mensagens de erro, screenshot (cole ou anexe)
+    validations:
+      required: true
+  - type: input
+    id: device_browser
+    attributes:
+      label: Aparelho e navegador
+      description: Modelo/OS + navegador e versão (ex. Android 14 · Chrome 131)
+      placeholder: Windows 11 · Firefox 133
+    validations:
+      required: true
