@@ -264,7 +264,7 @@ export function bindStewardWizardForm() {
     const r = await stewardWizard.verifyRelayHttp(url);
     if (out) {
       out.textContent = r.ok
-        ? `OK · ${r.data?.communityIndexCount ?? 0} espelhos`
+        ? `OK · ${stewardWizard.formatRelayHealthSummary(r.data)}`
         : `Falha: ${r.reason}`;
     }
   });

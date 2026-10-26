@@ -6,7 +6,7 @@ Rastreio de [rede-sustentada-participantes.md](./rede-sustentada-participantes.m
 
 | ID | Título | Owner | Status |
 |----|--------|-------|--------|
-| V-I08 | Kit steward relay (multi-comunidade, quota, health, deploy) | Antigravity/Cursor | parcial (health + compose + env) |
+| V-I08 | Kit steward relay (multi-comunidade, quota, health, deploy) | Cursor | ✓ runbook + kits Win/Linux + wizard |
 | V-P01 | Wizard steward `#/settings/network/steward` | Cursor | feito MVP |
 | V-P02 | Gateway telemetry + pill Leitura reserva | Cursor | feito |
 | V-P03 | Sync `espacos-digitais-infra` § estado código | Community-doc | feito |
