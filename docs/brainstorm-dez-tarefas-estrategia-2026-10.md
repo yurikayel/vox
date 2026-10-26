@@ -1,11 +1,14 @@
-# Brainstorm — dez tarefas estratégia (out/2026)
+# Brainstorm — 10 tarefas estratégia Vox (out/2026)
 
-> **Status:** Sprint análise/estratégia (sem código)  
-> **Escopo deste arquivo:** T2 (posicionamento comparativo), T3 (playbook piloto V-P09), T4 (matriz risco regulatório), T5 (métricas honestas v2)  
-> **Tom:** cívico, honesto sobre escala e limites técnicos no Brasil  
-> **Relacionados:** [rede-sustentada-participantes.md](./rede-sustentada-participantes.md) · [brainstorm-auto-escala-organica-2026-10.md](./brainstorm-auto-escala-organica-2026-10.md) · [backlog-participacao-rede.md](./backlog-participacao-rede.md) (V-P09) · [COMPLIANCE-BR.md](../COMPLIANCE-BR.md)
+> **Status:** consolidado sprint estratégia (doc-only)
 
-Índice planejado do sprint (10 tarefas): T1–T10. **Entregues aqui:** T2, T3, T4, T5. T1 → [antigravity-estrategia-mantenedor-revisor-2026.md](./antigravity-estrategia-mantenedor-revisor-2026.md).
+Complementa rede-sustentada, auto-escala, infra-participativa, backlog. **T1** → [antigravity-estrategia-mantenedor-revisor-2026.md](./antigravity-estrategia-mantenedor-revisor-2026.md) ✓
+
+---
+
+## T1 — Antigravity (12 meses)
+
+Ver dossiê canônico: [antigravity-estrategia-mantenedor-revisor-2026.md](./antigravity-estrategia-mantenedor-revisor-2026.md).
 
 ---
 
@@ -437,4 +440,217 @@ Tudo permanece em **localStorage / IndexedDB / memória de sessão** — zero ba
 
 ---
 
-**Versão:** 1.1 (T2 + T3 + T4 + T5) · **Data:** 2026-10-25 · **Dono:** Community-doc / sprint estratégia
+## T6 — V-P06 mirror validate: UX steward + aceite
+
+**Spec:** [mirror-validate-v1.md](./mirror-validate-v1.md) · cliente [`community-mirror.js`](../client/js/community-mirror.js) · relay `mirror_validate.py` (proposta).
+
+### Problema hoje
+
+- Cliente monta JSON e `tryMirrorCommunityToRelay` **silencia falhas** (relay offline OK).
+- Relay aceita corpo **sem** validação estrutural → índice quebrado ou oversized → steward debuga no escuro.
+
+### Jornada UX steward (alvo)
+
+```
+Comunidade carrega tópicos
+        │
+        ▼
+Cliente pré-valida (communityId, topics ≤500, ≤256 KiB)
+        │
+        ├─ falha local → toast “Índice não enviado: {motivo PT}” + link DEV
+        │
+        ▼
+POST /vox/mirror → relay mirror_validate
+        │
+        ├─ 400 + code mirror.* → UI steward/wizard: “Corrija {campo}”
+        ├─ 413 → “Índice grande demais; reduza tópicos ou use manifest v0”
+        ├─ 507 → quota (já existe)
+        └─ 200 → pill “Espelho atualizado {hora}” no painel vizinhos
+```
+
+**Superfícies UI**
+
+| Onde | Comportamento |
+|------|----------------|
+| `#/c/:slug` header | Último espelho OK/falha (sem alarmismo) |
+| `#/settings/network/steward` | Botão “Testar espelho agora” + último `code` |
+| `#/status` | Linha `mirror_last_error` exportável |
+
+**Pré-validação client-side** espelha regras do ADR (regex `communityId`, limites array) para fail-fast offline.
+
+### Critérios de aceite (DoD V-P06)
+
+| # | Critério | Verificação |
+|---|----------|-------------|
+| A1 | `mirror_validate.py` rejeita `communityId` inválido com `mirror.community_id_invalid` | unittest relay |
+| A2 | Corpo >256 KiB → HTTP 413 | unittest |
+| A3 | `topics` >500 → 400 estrutural | unittest |
+| A4 | Sucesso inalterado `{ status: "mirrored", communityId }` | regressão `community-mirror.test.js` |
+| A5 | Cliente mostra toast em falha **quando** steward/disparo manual; auto-mirror mantém best-effort silencioso **ou** flag `VOX_MIRROR_VERBOSE` | teste JS + copy PT |
+| A6 | `cacheManifest` opcional validado v0 quando presente | unittest + doc |
+| A7 | DEV.md § espelho atualizado; **324+** testes verdes | CI |
+
+**Fora de escopo v1:** assinatura criptográfica do índice espelhado (P1 gossip manifest).
+
+---
+
+## T7 — Moderação voluntária E1–E5: plano 90 dias
+
+Base: [brainstorm-auto-escala-organica-2026-10.md](./brainstorm-auto-escala-organica-2026-10.md) §5 e fatia C (E1–E5).
+
+### Objetivo
+
+Validar que comunidades reais sustentam mods **sem** central Vox e sem scoreboard.
+
+### Calendário
+
+| Semanas | Foco | Entregas |
+|---------|------|----------|
+| **1–2** | Preparação | Carta mod template (**E2**); copy UI mod (5 snippets fatia C); integrar coluna “Fase C mod” no template V-P09 |
+| **3–4** | Piloto 1 (10–15) | **E1** trio; **E3** workshop mod-action; registrar 1ª TX hide simulada |
+| **5–6** | Piloto 2 ou mesma comunidade Fase C | **E4** plantão rotativo; ≥3 mods ou rotación clara |
+| **7–8** | Appeal | **E5** ciclo proposta → voto cutoff → `unhide` ou manutenção |
+| **9–10** | Retro + doc | Atualizar GOVERNANCE se gaps; issues UI mod (confirm, appeal link) |
+| **11–12** | Escala suave | Segunda comunidade repete E1–E3; retrospectiva comparativa qualitativa |
+
+### Experimentos (definição operacional)
+
+| ID | O que fazer | Owner | Sucesso 90d |
+|----|-------------|-------|-------------|
+| **E1** | Fundador nomeia 2 facilitadores + 1 mod reserva antes dia 7 | Fundador | ≥2 aceites documentados |
+| **E2** | Carta 1 página pinned nas regras | Mod plantão | Zero “regra implícita” na retro |
+| **E3** | Live 30 min: ocultar tópico teste + ver TX | Facilitador | 1ª mod-action &lt;48h pós-incidente sim |
+| **E4** | Plantão semanal rotativo (honorífico) | Mods | Autorrelato pausa sem culpa |
+| **E5** | Appeal simulado: governance + desfecho | Comunidade | 1 ciclo completo documentado |
+
+### Guardrails (non-negotiable)
+
+- Mandato sugerido **90 dias**; steward ≠ mod ([GOVERNANCE.md](../GOVERNANCE.md)).
+- Hide ≠ delete; sem backdoor DM.
+- Sem leaderboard de ações mod.
+
+---
+
+## T8 — POSSE / Bridge / embed: funil criadores e ordem de build
+
+**Refs:** [RFC 0001 POSSE](./rfc/0001-posse-export.md) · [vox-bridge-spike.md](./vox-bridge-spike.md) · [embed-integration.md](./embed-integration.md) · `posse-dispatch.js` · [vox-bridge/](../vox-bridge/).
+
+### Funil criador
+
+```
+Descoberta (Cantina / convite Zap)
+        │
+        ▼
+Publicação canônica Vox (#/t/:id assinado)
+        │
+        ├─ Tier A: share sheet intents (WhatsApp, X, copiar link)
+        ├─ Tier B: export JSON vox-posse-export + CLI webhook
+        ├─ Tier C: embed blog (vox-embed.js) → tráfego de retorno
+        └─ Tier D: Bridge MV3 (Instagram/Threads) experimental
+        │
+        ▼
+Leitor externo abre PWA → entrada comunidade → Apoiador/steward
+```
+
+### Ordem de build (não pular)
+
+| Ordem | Entrega | Prioridade | Dependência |
+|-------|---------|------------|-------------|
+| **1** | Link canônico + OG meta honestos no `#/t/` | P0 | Nenhuma |
+| **2** | Sheet POSSE Tier A (intents + copy) | P0 | 1 |
+| **3** | `vox-posse-export` v1 estável + CLI | P1 | RFC 0001 |
+| **4** | Embed `vox-embed.js` doc + 3 sites parceiros piloto | P1 | 1 |
+| **5** | Flag “Bridge experimental” em settings | P2 | Governança ToS |
+| **6** | Repo `vox-bridge` MV3 handoff clipboard | P2 | 5 |
+| **7** | `externally_connectable` PWA↔extensão | P3 | Auditoria segurança |
+
+**Anti-padrão:** prometer crosspost Instagram automático antes de Tier A/B — queima confiança do criador MEI.
+
+---
+
+## T9 — 2º espelho shell: drill DR e checklist ops
+
+**Playbook:** [ops-shell-mirrors.md](./ops-shell-mirrors.md)
+
+### Papéis
+
+| Mirror | Host | Operador |
+|--------|------|----------|
+| **A** | GitHub Pages `yurikayel.github.io/vox` | Mantenedor CI |
+| **B** | Cloudflare Pages / Gitea / nginx coletivo | Voluntário FOSS |
+
+### Drill DR (semestral ou pós-release major)
+
+| Passo | Ação | Tempo alvo |
+|-------|------|------------|
+| 1 | Anunciar janela em README (não simular ataque real) | T-7d |
+| 2 | Desabilitar **A** (workflow pause ou aviso) | T0 |
+| 3 | Validar **B** serve PWA, SW `CACHE_NAME` = release tag | T0+15min |
+| 4 | Smoke: login local, `#/settings/network`, `#/c/demo-aprenda-vox-mirror` | T0+30min |
+| 5 | Comunicar URL **B** no grupo piloto | T0+1h |
+| 6 | Reativar **A**; confirmar SHA igual em ambos | T+4h |
+
+### Checklist ops (release)
+
+- [ ] `git rev-parse HEAD` publicado README ambos espelhos
+- [ ] `CACHE_NAME` em `sw.js` idêntico na mesma release
+- [ ] Diff `gateways.json` / `signaling.json` documentado se fork coletivo
+- [ ] Registro: `mirror_id`, `base_url`, `git_sha`, `cache_name`, `operator`, `read_only: true`
+- [ ] Steward ≠ shell (relay continua separado)
+
+### Sinais de falha
+
+- Usuários reportam “app branco” → SW mismatch entre espelhos.
+- Só um espelho atualizado → DR incompleto; prioridade P0 antes de feature.
+
+---
+
+## T10 — Community fork: conflitos e gatilhos republicanos
+
+**Refs:** [brainstorm-tracao-escalabilidade-incubacao.md](./brainstorm-tracao-escalabilidade-incubacao.md) · [incubacao-p2-backlog.md](./incubacao-p2-backlog.md) · demo `demo-aprenda-vox-mirror`.
+
+### Princípio
+
+Fork **civilizado** = pressão sana sobre mods; não litígio no repo central.
+
+### Cenários de conflito
+
+| Cenário | Sintomas | Resposta republicana |
+|---------|----------|----------------------|
+| **Mod tirânico** | Ocultações em massa, sem carta mod, recusa appeal | Proposta fork + migração filiação |
+| **Steward parcial** | Espelho aplica hide além do mod eleito | Steward documenta política; comunidade escolhe espelho alternativo |
+| **Schism doutrinário** | Dois blocos querem regras incompatíveis | Fork com histórico preservado; cutoff evita brigading na votação |
+| **Spam comercial** | Feira invadida | Mod feira + ocultar; fork só se mods capturados |
+| **Captura fundador** | Fundador = mod permanente | E1 + mandato 90d + governance remove |
+
+### Gatilhos objetivos (quando **propor** fork)
+
+1. ≥3 `mod-action` contestadas + appeal **E5** negado sem voto cutoff documentado.
+2. Mod recusa publicar carta mod (**E2**) após 14 dias pedido comunitário.
+3. Steward anuncia política de índice incompatível com voto de governança válido.
+4. Comunidade ≥20 membros ativos e **≥40%** assinam proposta fork (heurística piloto, não hardcode produto).
+
+### Fluxo produto (alvo P2)
+
+1. TX `Type: community-fork` referencia `parentCommunityId`.
+2. UI: “Migrar minha filiação” 1 clique (IndexedDB + gossip).
+3. Banner espelho alternativo (já parcial no demo).
+4. **Não** deletar histórico parent — transparência.
+
+### O que o mantenedor **não** faz
+
+- Escolher lado no fork.
+- Reverter mods centralmente.
+- Prometer merge automático de ramos.
+
+---
+
+## Rastreio lobby
+
+Lista 1–10 espelhada em `lobby.md` § **Brainstorm 10 tarefas out/2026**. Implementação técnica: V-P06, V-P09, V-I08, P2 fork/Bridge conforme [backlog-participacao-rede.md](./backlog-participacao-rede.md).
+
+**Versão:** 1.0 · **Data:** 25 out 2026
+
+---
+
+**Versão:** 1.2 · T2–T5 detalhado + T6–T10 restaurados pós-merge ff95718 · 2026-10-25
