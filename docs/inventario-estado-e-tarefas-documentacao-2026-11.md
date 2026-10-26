@@ -1,10 +1,10 @@
 # Inventário — estado Vox + tarefas de documentação (nov/2026)
 
-> **Baseline produto:** `main` **`99180f9`** (merge V-I08 **`898509c`**) · SW **`vox-pwa-v6.83-steward-kit-v-i08`** · **355** testes (**333** JS + **22** Python) · Pages **https://yurikayel.github.io/vox/**  
+> **Baseline produto:** `main` **`5609ae4`** (inventário **`0420882`** · T1 Antigravity **`26e7b7d`** · V-I08 **`898509c`**) · SW **`vox-pwa-v6.83-steward-kit-v-i08`** · **355** testes (**333** JS + **22** Python) · Pages **https://yurikayel.github.io/vox/**  
 > **Escopo:** mapa do que existe hoje + **N=20** tarefas para revisão/documentação/completude — não substitui execução de T2 (2º espelho) nem piloto humano.  
 > **Política de agentes:** Composer 2.5 only (lobby politica).
 
-Complementa [rede-sustentada-participantes.md](./rede-sustentada-participantes.md), [backlog-participacao-rede.md](./backlog-participacao-rede.md), [brainstorm-proximas-10-tarefas-pos-v82-2026-11.md](./brainstorm-proximas-10-tarefas-pos-v82-2026-11.md) e [brainstorm-dez-tarefas-estrategia-2026-10.md](./brainstorm-dez-tarefas-estrategia-2026-10.md).
+Complementa [direcionamento-crescimento-rede-2026-11.md](./direcionamento-crescimento-rede-2026-11.md), [rede-sustentada-participantes.md](./rede-sustentada-participantes.md), [backlog-participacao-rede.md](./backlog-participacao-rede.md), [brainstorm-proximas-10-tarefas-pos-v82-2026-11.md](./brainstorm-proximas-10-tarefas-pos-v82-2026-11.md) e [brainstorm-dez-tarefas-estrategia-2026-10.md](./brainstorm-dez-tarefas-estrategia-2026-10.md).
 
 ---
 
