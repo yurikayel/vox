@@ -99,5 +99,6 @@ export { renderDmList, renderDmThread } from "./render/dm.js";
 export { renderTagFeed, renderPolisReportHtml } from "./render/tag-polis.js";
 
 export { renderVoxpedia } from "./render/voxpedia.js";
+export { renderAjudaTeste, VOX_GITHUB_ISSUES } from "./render/ajuda-teste.js";
 
 export { renderStatusPage } from "./render/status.js";

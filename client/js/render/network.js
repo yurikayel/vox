@@ -275,7 +275,7 @@ function renderStatusLinkBlock() {
   return `
     <div class="card" style="margin-top:1rem;">
       <h3>Telemetria honesta</h3>
-      <p class="desc" style="font-size:0.85rem;">Gateways e relay vistos só neste aparelho — sem phone-home.</p>
+      <p class="desc" style="font-size:0.85rem;">Gateways e relay vistos só neste aparelho — sem phone-home. Pacto Vox: pause contribuição acima ou veja <a href="#/ajuda/teste">teste aberto</a>.</p>
       <a class="btn btn-sm btn-outline" href="#/status">Abrir #/status</a>
     </div>`;
 }

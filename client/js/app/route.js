@@ -10,6 +10,7 @@ import { showPeople, showConnect } from "./screens-people.js";
 import { showNetworkSettings, showStewardWizard } from "./screens-network.js";
 import { showDmList, showDmThread } from "./screens-dm.js";
 import { showVoxpedia } from "./screens-voxpedia.js";
+import { showAjudaTeste } from "./screens-ajuda-teste.js";
 import { showStatus } from "./screens-status.js";
 import { showLabsFrames } from "./screens-labs.js";
 import {
@@ -37,6 +38,7 @@ export async function routeImpl() {
   if (r.name === "dm-list") return showDmList();
   if (r.name === "dm-thread") return showDmThread(r.address);
   if (r.name === "voxpedia") return showVoxpedia();
+  if (r.name === "ajuda-teste") return showAjudaTeste();
   if (r.name === "status") return showStatus();
   if (r.name === "labs-frames") return showLabsFrames();
   if (r.name === "community") return showCommunity(r.id, r.tab);
