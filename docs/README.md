@@ -1,7 +1,7 @@
 # Vox — índice de documentação
 
 > **Status:** canônico (índice único DOC-03) · **Owner:** voluntário doc (mutex 1 PR/arquivo) · **Revisado:** 2026-11  
-> **Baseline release:** alinhar [../README.md](../README.md) (SHA, SW, testes) — hoje **`4f4ef9c`** · SW **`vox-pwa-v6.83-steward-kit-v-i08`** · **356** testes  
+> **Baseline release:** alinhar [../README.md](../README.md) (SHA, SW, testes) — hoje **`0aeb313`** · SW **`vox-pwa-v6.83-steward-kit-v-i08`** · **356** testes  
 > **Plano mestre:** [Dossiê geral — inventário & N=25 tarefas](./dossie-geral-inventario-master-breakdown-2026-11.md) · **Revisão doc:** [Inventário nov/2026](./inventario-estado-e-tarefas-documentacao-2026-11.md) · **Tração rede:** [Direcionamento §1–§6](./direcionamento-crescimento-rede-2026-11.md)
 
 Entrada única para revisores e colaboradores (DOC-03). Quatro trilhas de leitura.
