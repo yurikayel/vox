@@ -1,7 +1,7 @@
 # Brainstorm — próximas 10 tarefas pós-v6.82 (nov/2026)
 
 > **Status:** consolidação doc-only · sprint pós-**V-P06** (mirror validate)  
-> **Linha de base:** `main` **`f43f8b8`** · SW **`vox-pwa-v6.82-mirror-validate-v1`** · **350** testes Node  
+> **Linha de base:** `main` **`898509c`** (V-I08 steward kit) · SW **`vox-pwa-v6.83-steward-kit-v-i08`** · **333** testes Node + **22** relay  
 > **Horizonte:** **2026-Q4 → 2027-Q2** (piloto + malha sem loop do mantenedor)  
 > **Público:** mantenedor/revisor, stewards, facilitadores de piloto  
 > **Não é parecer jurídico** — [COMPLIANCE-BR.md](../COMPLIANCE-BR.md)
@@ -47,7 +47,7 @@ Dossiê de papel (12 meses, T1–T4 exit): [antigravity-estrategia-mantenedor-re
 | V-P02 gateway telemetry + pill reserva | Baseline honesto para T5 métricas v2 |
 | V-P04/05 painel vizinhos + seed | Ritual pós-comunidade no piloto |
 | V-I09 blob soft priority | Menos gateway quando pares online |
-| V-I08 **parcial** (health, compose, docs) | **Gargalo P0** — T7 fecha runbook 1-clique |
+| V-I08 **fechado** (runbook, kits Win/Linux, wizard quota/health) | Steward sobe relay sem maintainer — **T2** espelho shell é P0 |
 
 **Não executado ainda:** 2º espelho shell vivo (T2), piloto V-P09 (T3), retrospectiva escrita (gate Q2).
 
@@ -118,8 +118,8 @@ Alinhado aos marcos T1–T4 do dossiê mantenedor→revisor (Q4 contrato → Q1 
 
 - [x] Índice T1–T10 + cadeia V-I08 → espelho → piloto documentada
 - [x] **T2–T4** consolidados (objetivo, DoD, riscos, owner)
-- [ ] T5–T10 consolidados neste arquivo (agentes paralelos nov/2026)
-- [ ] Lobby `foco D` aponta para este doc quando lista estiver fechada
+- [x] T5–T10 consolidados neste arquivo (nov/2026)
+- [x] Lobby `foco D` aponta para este doc + lista T1–T10
 - [ ] Piloto V-P09 **não** go-live antes de T2 drill **ou** waver explícito no template retrospectiva
 
 ### Anti-padrões (roadmap)
@@ -258,19 +258,56 @@ Runbook de **sucessão** e **relay buddy**: segundo voluntário treinado, handof
 
 ## T5 — Métricas honestas v2 (implementação)
 
-> *Seção em consolidação (agente paralelo).*
+**Objetivo:** Evoluir o painel «Sustentada por vizinhos» (v1 em `computeCommunityNeighborStats`) para **v2** — estimativas locais úteis, sem phone-home nem ranking global ([brainstorm-dez-tarefas-estrategia-2026-10.md](./brainstorm-dez-tarefas-estrategia-2026-10.md) § T5 · [ADR-001](./adr/001-contribution-attestation-export.md)).
+
+**DoD**
+
+- [ ] `read_origin` por leitura (`mesh` \| `relay` \| `gateway` \| `cache_idb`) agregado só na comunidade atual
+- [ ] Janela 24h ou 50 leituras; ocultar `%` se amostra &lt; 5
+- [ ] Estados UI: saudável / degradado / frio-seed / insuficiente
+- [ ] «Apagar estatísticas locais» em `#/settings/network`
+- [ ] Testes render estendidos; **nenhuma** API nova de métricas no relay
+
+**Riscos:** percentual falso induz confiança; vazar `routeId` em agregado; phone-home disfarçado.
+
+**Owner:** Cursor.
 
 ---
 
-## T6 — Moderação E1–E5
+## T6 — Moderação voluntária E1–E5 (90 dias)
 
-> *Seção em consolidação (agente paralelo). Ver [brainstorm-auto-escala-organica-2026-10.md](./brainstorm-auto-escala-organica-2026-10.md) §5.5.*
+**Objetivo:** Validar mods eleitos, carta, plantão e appeal **no piloto T3**, sem central Vox ([brainstorm-auto-escala-organica-2026-10.md](./brainstorm-auto-escala-organica-2026-10.md) § C.5).
+
+**DoD**
+
+- [ ] E1 trio + E2 carta pinned antes do dia 7
+- [ ] E3 workshop mod-action; ≥1 ocultação de teste registrada
+- [ ] E5 um ciclo appeal completo documentado
+- [ ] Retro atualiza GOVERNANCE se gaps
+
+**Riscos:** mod burnout; fundador permanente como mod; leaderboard de ações mod.
+
+**Owner:** Facilitador + mods da comunidade piloto.
 
 ---
 
-## T7 — V-I08 gaps / runbook
+## T7 — V-I08 gaps / runbook (análise pós-fechamento)
 
-> *Seção em consolidação (agente paralelo). Análise de gaps — implementação V-I08 em agente dedicado.*
+**Objetivo:** Após **`898509c`** ([steward-relay-kit.md](./steward-relay-kit.md)), registrar lacunas **residuais** — não reimplementar o kit.
+
+| Área | Estado pós-V-I08 | Gap residual | Owner |
+|------|------------------|--------------|-------|
+| Compose + Caddy + `/health` | ✓ | Drill em VPS BR real (CGNAT, firewall) | Steward voluntário |
+| Wizard + quota UI | ✓ | Smoke por **não-maintainer** documentado | Cursor |
+| Kits Win/Linux 1-clique | ✓ script Linux | AppImage/systemd user unit (P2) | FOSS |
+| V-P08 buddy handoff | doc T4 | Runbook `docs/` dedicado ainda pendente | Community-doc |
+| Manifest gossip pós-seed | spec v0 | Exemplo no kit «dia 1 após espelho» | Cursor doc |
+
+**DoD T7:** checklist acima fechada ou virou issues P1/P2; seed 15 min testado por voluntário externo uma vez.
+
+**Riscos:** doc perfeito mas relay na VPS do maintainer; wizard promete P2P total no 4G.
+
+**Owner:** Cursor (impl residual) · revisão steward voluntário.
 
 ---
 
@@ -399,4 +436,4 @@ Cursor.
 
 Lista 1–10 em `lobby.md` § **Brainstorm próximas 10 pós-v82 (nov/2026)**.
 
-**Versão:** 1.0 · **T1** `95a45b1a` · **T2–T4** análise · **T8–T10** consolidado · **Data:** 25 nov 2026
+**Versão:** 1.1 · T1–T10 consolidado · V-I08 **`898509c`** · **Data:** 25 out 2026
