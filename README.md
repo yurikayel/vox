@@ -59,7 +59,7 @@ Demo: **[https://yurikayel.github.io/vox/](https://yurikayel.github.io/vox/)** â
 
 | Campo | Valor |
 |-------|--------|
-| **SHA** | `84eaa78` |
+| **SHA** | `1359ee6` |
 | **Branch** | `main` |
 | **Testes** | **362** (`340` JS + `22` Python) â€” `npm test` na raiz |
 | **Service worker** | `vox-pwa-v6.84-teste-aberto` |
