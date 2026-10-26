@@ -6,7 +6,7 @@
 
 Complementa [rede-sustentada-participantes.md](./rede-sustentada-participantes.md), [infra-participativa-blindagem-crescimento.md](./infra-participativa-blindagem-crescimento.md), [brainstorm-proximas-10-tarefas-pos-v82-2026-11.md](./brainstorm-proximas-10-tarefas-pos-v82-2026-11.md), [antigravity-estrategia-mantenedor-revisor-2026.md](./antigravity-estrategia-mantenedor-revisor-2026.md) e [brainstorm-auto-escala-organica-2026-10.md](./brainstorm-auto-escala-organica-2026-10.md).
 
-**Inventário:** evidências do pacote nov/2026 em [inventario-estado-e-tarefas-documentacao-2026-11.md](./inventario-estado-e-tarefas-documentacao-2026-11.md); doc irmão de origens primárias [inventario-origens-rede-2026-11.md](./inventario-origens-rede-2026-11.md) *(link ativo quando publicado)*.
+**Inventário:** evidências do pacote nov/2026 em [inventario-estado-e-tarefas-documentacao-2026-11.md](./inventario-estado-e-tarefas-documentacao-2026-11.md); plano mestre **N=25** (trilha EXP) em [dossie-geral-inventario-master-breakdown-2026-11.md](./dossie-geral-inventario-master-breakdown-2026-11.md); doc irmão de origens primárias [inventario-origens-rede-2026-11.md](./inventario-origens-rede-2026-11.md) *(link ativo quando publicado)*.
 
 ---
 
