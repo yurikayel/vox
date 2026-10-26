@@ -1,3 +1,5 @@
+> **SUPERSEDED — decisão arquivada.** Mantém-se a pill **Leitura reserva** e telemetria local **sem** proxy central proprietário. Ver **[ADR-004: Gateway honest fallback](./adr/004-gateway-honest-fallback.md)**.
+
 # Gateway fallback — UX honesta (brainstorm)
 
 **Problema:** `withGateways` / `fetchRawFromGateways` fazem fallback silencioso; chip P2P não reflete leitura Arweave.
