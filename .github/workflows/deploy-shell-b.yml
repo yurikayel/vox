@@ -1,0 +1,68 @@
+# NET-01 / T2 — espelho shell B (Cloudflare Pages)
+# Desligado por padrão: só workflow_dispatch; sem token Cloudflare = no-op honesto.
+
+name: Deploy shell B — Cloudflare Pages
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Digite DEPLOY para publicar _site no projeto Pages configurado"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: shell-b-pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Publicar client/ no Cloudflare Pages (B)
+    runs-on: ubuntu-latest
+    if: github.event.inputs.confirm == 'DEPLOY'
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v5
+
+      - name: Verificar secrets (no-op se faltarem)
+        env:
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CF_PROJECT: ${{ secrets.CLOUDFLARE_PAGES_PROJECT_NAME }}
+        run: |
+          missing=""
+          [ -z "$CF_TOKEN" ] && missing="${missing} CLOUDFLARE_API_TOKEN"
+          [ -z "$CF_ACCOUNT" ] && missing="${missing} CLOUDFLARE_ACCOUNT_ID"
+          [ -z "$CF_PROJECT" ] && missing="${missing} CLOUDFLARE_PAGES_PROJECT_NAME"
+          if [ -n "$missing" ]; then
+            echo "::notice title=Shell B não publicado::Faltam secrets no repositório:${missing}. Configure no GitHub (Settings → Secrets) e dispare de novo. Nenhum URL foi alterado."
+            echo "skip=true" >> "$GITHUB_ENV"
+            exit 0
+          fi
+          echo "skip=false" >> "$GITHUB_ENV"
+
+      - name: Preparar site estático (_site)
+        if: env.skip != 'true'
+        env:
+          VOX_GOOGLE_CLIENT_ID: ${{ secrets.VOX_GOOGLE_CLIENT_ID }}
+          VOX_FACEBOOK_APP_ID: ${{ secrets.VOX_FACEBOOK_APP_ID }}
+        run: |
+          mkdir -p _site
+          cp -r client/* _site/
+          if [ -f docs/proposta-vox.html ]; then
+            cp docs/proposta-vox.html _site/proposta-vox.html
+          fi
+          node tools/write-oauth-deploy-config.mjs
+
+      - name: Upload para Cloudflare Pages
+        if: env.skip != 'true'
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: ${{ secrets.CLOUDFLARE_PAGES_PROJECT_NAME }}
+          directory: _site
+          branch: main
