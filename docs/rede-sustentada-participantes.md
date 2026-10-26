@@ -56,6 +56,8 @@ Detalhamento em chat/agente out/2026; rastreio técnico em [backlog-participacao
 
 - [steward-seed-15min.md](./steward-seed-15min.md) · [steward-relay-kit.md](./steward-relay-kit.md)
 - [brainstorm-auto-escala-organica-2026-10.md](./brainstorm-auto-escala-organica-2026-10.md) (flywheel, SLOs honestos, anti-padrões)
+- [antigravity-estrategia-mantenedor-revisor-2026.md](./antigravity-estrategia-mantenedor-revisor-2026.md) (Q4-2026→Q3-2027: revisor/aprovador, T1–T4 exit criteria)
+- [brainstorm-dez-tarefas-estrategia-2026-10.md](./brainstorm-dez-tarefas-estrategia-2026-10.md) (índice T1–T10)
 - [infra-participativa-blindagem-crescimento.md](./infra-participativa-blindagem-crescimento.md) (4 camadas, painel comunitário, visão regulatória — ver [COMPLIANCE-BR.md](../COMPLIANCE-BR.md))
 - [proposta-vox.html](./proposta-vox.html)
 - Lobby politica: § Participação majoritária
