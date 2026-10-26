@@ -37,6 +37,9 @@ test("community-seed-checklist - pending, state e conclusão", () => {
     seed.dismissSeedRitual("outra");
     assert.ok(seed.loadSeedState("outra").dismissed);
     assert.ok(!seed.shouldOfferSeedRitual("outra", "vx_user", { owner: "vx_user" }));
+
+    assert.ok(!seed.shouldOfferSeedRitual("demo-aprenda-vox", "vx_user", { owner: "vx_user" }));
+    assert.ok(seed.SEED_RITUAL_SKIP_COMMUNITY_IDS.has("demo-aprenda-vox"));
   } finally {
     globalThis.localStorage = prev;
   }

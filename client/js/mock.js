@@ -218,8 +218,13 @@ export function mockCommunities() {
   return { items: MOCK_COMMUNITIES, demo: true };
 }
 
+const MOCK_TOPIC_COMMUNITY_ALIASES = {
+  "demo-aprenda-vox-mirror": "demo-aprenda-vox",
+};
+
 export function mockTopics(communityId) {
-  const items = MOCK_TOPICS[communityId] || [];
+  const key = MOCK_TOPIC_COMMUNITY_ALIASES[communityId] || communityId;
+  const items = MOCK_TOPICS[key] || [];
   return { items, demo: true };
 }
 
