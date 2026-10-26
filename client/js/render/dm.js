@@ -64,7 +64,7 @@ export function renderDmList(main, conversations = [], myAddress = "", { contact
   main.innerHTML = `
     <div class="card dm-hero-simple">
       <h2 class="dm-hero-title">Mensagens</h2>
-      <p class="desc dm-hero-lead">Conversas privadas neste aparelho.</p>
+      <p class="desc dm-hero-lead">Conversas privadas neste navegador.</p>
       <div class="dm-hero-actions">
         <a href="#/people" class="btn btn-primary dm-hero-primary">Nova conversa</a>
         <button type="button" id="btn-copy-my-dm-link" class="btn btn-outline">Copiar meu link</button>
@@ -88,7 +88,7 @@ export function renderDmList(main, conversations = [], myAddress = "", { contact
           <datalist id="dm-contact-suggestions">${datalistOptions}</datalist>
           <button type="submit" class="btn btn-primary">Abrir conversa</button>
         </form>
-        <p class="meta dm-advanced-privacy">Suas mensagens ficam só neste aparelho. Sem servidor lendo o texto.</p>
+        <p class="meta dm-advanced-privacy">Suas mensagens ficam só neste navegador. Sem servidor lendo o texto.</p>
       </div>
     </details>
   `;
@@ -96,7 +96,7 @@ export function renderDmList(main, conversations = [], myAddress = "", { contact
 
 function renderDmMessageBubbles(messages, myAddress, peerAddress) {
   if (!messages.length) {
-    return `<div class="empty" style="text-align:center; padding:1.5rem 0;"><p>Início da conversa. As mensagens ficam só neste aparelho.</p></div>`;
+    return `<div class="empty" style="text-align:center; padding:1.5rem 0;"><p>Início da conversa. As mensagens ficam só neste navegador.</p></div>`;
   }
   return messages
     .map((m) => {

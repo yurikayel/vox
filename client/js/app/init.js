@@ -10,6 +10,7 @@ import * as localAccount from "../local-account.js";
 import * as social from "../social.js";
 import * as frames from "../frames.js";
 import * as postOwnership from "../post-ownership.js";
+import * as i18n from "../i18n-pt-br.js";
 import { parseRoute } from "./route-parse.js";
 import { getActiveUser } from "./context.js";
 import { route } from "./navigation.js";
@@ -206,7 +207,7 @@ export async function openPostEditModal(postId) {
       await cacheNode.saveLocalPost(signed);
       peers.broadcastGossipUpdate(signed);
       closePostEditModalUi();
-      share.showToast("Publicação atualizada.");
+      share.showToast(i18n.localMutateUpdatedToast);
       route();
     } catch (err) {
       share.showToast(`Erro ao editar: ${err.message}`, "error");
@@ -231,7 +232,7 @@ export async function handleDeletePost(postId) {
   const tombstone = await postOwnership.createPostTombstone(existing);
   await cacheNode.saveTombstone(tombstone);
   peers.broadcastGossipDelete(tombstone);
-  share.showToast("Publicação apagada.");
+  share.showToast(i18n.localMutateDeletedToast);
   const onTopic = location.hash.replace(/^#\/?/, "").startsWith(`t/${postId}`);
   if (onTopic) location.hash = "#/";
   else route();
