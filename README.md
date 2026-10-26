@@ -61,7 +61,7 @@ Demo: **[https://yurikayel.github.io/vox/](https://yurikayel.github.io/vox/)** �
 
 | Campo | Valor |
 |-------|--------|
-| **SHA** | `b97d0c7` |
+| **SHA** | `8cb5440` |
 | **Branch** | `main` |
 | **Testes** | **382** (`359` JS + `23` Python) — `npm test` na raiz |
 | **Service worker** | `vox-pwa-v6.86-home-logo` |
@@ -206,7 +206,7 @@ Todo dado no Vox é identificado por tags semânticas universais:
 ### 🚀 Pipelines de CI/CD (GitHub Actions)
 
 O repositório possui automação contínua configurada em `.github/workflows/`:
-* **CI — Testes & Validação (`.github/workflows/ci.yml`):** Matriz multiplataforma com Node.js (22, 24) e Python (3.11, 3.12) executando verificação de sintaxe, suíte completa de **362** testes e auditoria de segurança contra vazamento de chaves privadas.
+* **CI — Testes & Validação (`.github/workflows/ci.yml`):** Matriz multiplataforma com Node.js (22, 24) e Python (3.11, 3.12) executando verificação de sintaxe, suíte completa de **382** testes e auditoria de segurança contra vazamento de chaves privadas.
 * **Deploy PWA — GitHub Pages (`.github/workflows/deploy-pages.yml`):** Publicação contínua da pasta `client/` no GitHub Pages com suporte a HTTPS nativo e PWA instalável a cada push na branch `main`.
 
 ---
