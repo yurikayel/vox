@@ -55,6 +55,22 @@ class TestVoxRelayServer(unittest.TestCase):
             self.assertIn("cachedCount", data)
             self.assertIn("communityIndexCount", data)
             self.assertEqual(data.get("communityIndexCount"), 0)
+            self.assertIn("cacheBytes", data)
+            self.assertIn("maxCacheBytes", data)
+
+    def test_health_exposes_max_cache_from_env(self):
+        prev = os.environ.get("VOX_RELAY_MAX_CACHE_MB")
+        os.environ["VOX_RELAY_MAX_CACHE_MB"] = "128"
+        try:
+            req = urllib.request.Request(self._url("/health"))
+            with urllib.request.urlopen(req, timeout=2) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                self.assertEqual(data.get("maxCacheBytes"), 128 * 1024 * 1024)
+        finally:
+            if prev is None:
+                os.environ.pop("VOX_RELAY_MAX_CACHE_MB", None)
+            else:
+                os.environ["VOX_RELAY_MAX_CACHE_MB"] = prev
 
     def test_mirror_lists_in_health(self):
         body = json.dumps({"communityId": "test-comm", "topics": []}).encode("utf-8")
