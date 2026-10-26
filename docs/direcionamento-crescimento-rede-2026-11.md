@@ -143,4 +143,124 @@ O mantenedor humano garante **contrato de release** e especificações abertas; 
 
 ---
 
-**Versão:** 0.2 (§2–§3) · **Dono:** Community-doc · **Baseline código:** `898509c` (V-I08 steward kit)
+## 4. Moderação voluntária
+
+Moderação no Vox é **local, eleita e auditável** — não há central T&S no repositório ([GOVERNANCE.md](../GOVERNANCE.md)). Crescer a rede nos preceitos (§2–§3) exige **praças vivas** antes de escala numérica: cada comunidade piloto (V-P09) deve provar que mods voluntários sustentam o tom sem burnout do fundador.
+
+### 4.1 Princípios operacionais
+
+| Princípio | Implicação prática |
+|-----------|-------------------|
+| **Transparência** | Toda ocultação/ban = TX `Type: mod-action` assinada; hide ≠ apagar on-chain |
+| **Escopo limitado** | Mod só na `Community-Id`; sem poder global no client |
+| **Steward ≠ mod** | Quem hospeda relay/espelho **não** ganha ban automático (§2.1) |
+| **Justiça procedimental** | Mudança de regra → proposta + `Eligibility-Cutoff` (anti-brigading) |
+| **Repo fora de disputas** | Mantenedor merge código; **não** arbitra timeline local (§3.3) |
+
+Motivação sustentável ([brainstorm-auto-escala-organica-2026-10.md](./brainstorm-auto-escala-organica-2026-10.md) §5): proteger **o espaço que importa**, prestígio **dentro** da comunidade (sem leaderboard de mods), ferramentas de baixo atrito (`hide`/`unhide` assinados).
+
+### 4.2 Escada do moderador (mod ladder)
+
+```
+Membro → Apoiador (commOnly) → Facilitador (feira/tópicos, sem ban)
+    → Moderador eleito (mod-action hide/ban)
+    → Curador de espelho (opcional: índice JSON honra mod-action — sem poder extra)
+    → Ex-mod / pausa (governance-vote ou rotação)
+```
+
+**Ritual mínimo no piloto:** **E1 — trio inicial** — 2 co-facilitadores + 1 mod backup antes da semana 2 ([brainstorm-proximas-10-tarefas-pos-v82-2026-11.md](./brainstorm-proximas-10-tarefas-pos-v82-2026-11.md) T6).
+
+### 4.3 Playbook piloto E1–E5 (Q1-2027)
+
+| ID | Experimento | DoD qualitativo (4 sem) |
+|----|-------------|-------------------------|
+| **E1** | Trio inicial | Fundador não é único mod de plantão |
+| **E2** | Carta de mod 1 página (PT) | Regras explícitas na comunidade |
+| **E3** | Workshop 30 min “mod-action ao vivo” | Tempo até primeira TX mod ↓ |
+| **E4** | Rodízio mensal de plantão | Burnout autorrelatado ↓ |
+| **E5** | Appeal comunitário | Contestação → proposta/voto cutoff, não DM ao maintainer |
+
+**Feira + debate:** spam comercial no tópico principal → ocultar; classificados na aba feira. **DMs:** mods **não** leem inbox cifrado ([COMPLIANCE-BR.md](../COMPLIANCE-BR.md)).
+
+### 4.4 Anti-padrões (moderação)
+
+- Central de denúncias no repo ou “mod global” do mantenedor.
+- Gamificar mods (badge público nacional, ranking).
+- Steward usar índice espelho para política **além** do que mods eleitos assinaram — resposta: espelho alternativo (§5.2).
+- Fundador-mod eterno sem rotação — resposta: E1 + mandato ~90 dias + V-P08 buddy para **infra**, não para mod.
+
+---
+
+## 5. Governança e fork
+
+Governança distribui **regras da praça** e **válvulas republicanas** quando a praça trava — sem recorrer ao GitHub como tribunal social.
+
+### 5.1 Deliberação e infra suave
+
+| Mecanismo | Uso | Vinculante? |
+|-----------|-----|-------------|
+| Proposta + voto com cutoff | Mudar regras, eleger mods, recomendar espelho/pin | Sim, na comunidade |
+| Feira + pin leve (V-I07) | Sugerir relay/espelho a apoiadores | **Não** — nunca exigir infra para postar/vender |
+| `mod-action` | Ocultar/ban/unhide/unban | Sim, no client que honra lista de mods |
+| RFC / PR no repo | Protocolo, tags, client FOSS | Sim, para **código** — não para mod local |
+
+**Pressão regulatória (Brasil):** pedidos Art. 19 e canal de contato recaem sobre **operador de espelho/steward** documentado — não sobre merge do mantenedor ([COMPLIANCE-BR.md](../COMPLIANCE-BR.md), §3.3).
+
+### 5.2 Fork comunitário e espelhos (T9)
+
+Objetivo: **schism civilizado** com histórico preservado — [brainstorm-proximas-10-tarefas-pos-v82-2026-11.md](./brainstorm-proximas-10-tarefas-pos-v82-2026-11.md) § T9, [incubacao-p2-backlog.md](./incubacao-p2-backlog.md).
+
+| Cenário | Resposta republicana |
+|---------|----------------------|
+| Mod tirânico (hide em massa, sem appeal E5) | Proposta `community-fork` + migrar filiação |
+| Steward filtra índice além do mod eleito | Documentar URL; membros apontam espelho alternativo |
+| Schism de regras | Fork + cutoff na votação da nova praça |
+| Captura do fundador | E1 + mandato + governance-vote |
+
+**Gatilhos objetivos para propor fork (piloto):**
+
+1. ≥3 `mod-action` contestadas + appeal E5 negado sem voto cutoff.
+2. Recusa de adotar carta mod (E2) após 14 dias.
+3. Política de índice steward incompatível com voto válido da comunidade.
+4. Heurística: ≥20 membros ativos e ≥40% assinam proposta fork.
+
+**Alvo protocolo (P2):** TX `Type: community-fork` + `parentCommunityId`; UI «Migrar minha filiação»; **não** apagar parent on-chain. **Mantenedor:** spec + merge — **não** escolhe lado oficial.
+
+**Distinção:** fork **shell** (2º espelho read-only, T2) ≠ fork **comunidade** (governança); confundir os dois é anti-padrão de confiabilidade (§3.4).
+
+### 5.3 Transição mantenedor → revisor (governança de **código**)
+
+| Trimestre | Foco governança FOSS | Malha social |
+|-----------|----------------------|--------------|
+| **2026-Q4** | T2 doc + CI; freeze tags on-chain sem spec | Coletivos preparam piloto |
+| **2027-Q1** | T6 playbook mod arquivado pós-V-P09 | 100% mod/steward local |
+| **2027-Q2+** | T8–T10 POSSE/fork/ADR-001 UI opt-in | Múltiplos relays sem contato prévio com maintainer |
+
+Processo externo: RFCs com janela de comentário (P2) — participação majoritária na **malha**, revisão majoritária no **repo** via PR.
+
+---
+
+## 6. Síntese executiva
+
+**Em uma frase:** a rede Vox cresce quando cada coletivo traz **utilidade no primeiro dia** (feira, deliberação, POSSE), **cache perto** (Ativo → Apoiador → steward opcional) e **moderação republicana** (TX públicas + fork como válvula) — enquanto o repositório permanece **cliente estático + contrato de protocolo**, sem relay global, ranking de nós ou tribunal central.
+
+**Encadeamento já acordado (§2–§5):** V-I08 ✓ → **T2** (2º espelho) → **V-P09** (piloto 10–30) → **V-P08** (buddy steward) → **T6** (mod E1–E5) → **T8–T10** (POSSE, fork, atestação opt-in). Pular T2 ou “relay de emergência” do mantenedor quebra o flywheel e reproduz anti-padrões Mastodon.
+
+### Dez ações acionáveis (mantenedor + coletivos)
+
+1. **Mantenedor — fechar T2 antes do go-live:** registrar espelho B (`git_sha`, `CACHE_NAME`), um drill DR documentado; convite do piloto já traz URL A **e** B ([ops-shell-mirrors.md](./ops-shell-mirrors.md)).
+2. **Coletivo piloto — executar V-P09 com feature freeze 4 sem:** preencher [piloto-comunidade-retrospectiva-template.md](./piloto-comunidade-retrospectiva-template.md); barra mínima: ≥3 `commOnly` **ou** 1 steward + espelho verificado (V-P06).
+3. **Fundador — ritual V-P05 no dia 0:** tópico útil + 2 convites + pin feira se aplicável; Caminho A (só Apoiadores) é válido — steward não é pré-requisito para postar.
+4. **Facilitador — montar trio E1 na semana 1:** 2 co-facilitadores + 1 mod backup; carta mod E2 publicada na comunidade antes de polêmica.
+5. **Apoiadores — aceitar nudge V-P04:** `commOnly` na praça que frequentam; meta local é reciprocidade visível no painel honesto, não “virar servidor”.
+6. **Steward voluntário — V-I08 + buddy V-P08:** um relay por coletivo (ou ~1 steward / 3–5 comunidades); segundo operador documentado antes de férias ou pico de migração.
+7. **Mods eleitos — mod-action transparente:** ocultar com confirmação UI; appeals via proposta/voto cutoff (E5), não ticket ao maintainer.
+8. **Mantenedor — zero ops heroica:** nenhum relay/VPS/hotline 1:1; bugs → issue/PR; dúvidas de rituais → docs §2.3 e playbook T6.
+9. **Coletivo em conflito — fork antes do flame war no GitHub:** acionar gatilhos §5.2; espelho alternativo se só o índice steward divergiu; maintainer não escolhe lado.
+10. **Todos — honestidade como feature:** pill “Leitura reserva”, CGNAT no 4G, hide ≠ delete; escala cívica (dezenas–centenas por praça), não promessa de MAU nacional nem P2P total no celular.
+
+**Próximo checkpoint:** retrospectiva V-P09 → atualizar SLOs §3.2 e priorizar T8–T10 só se piloto **continuar** sem loop do mantenedor.
+
+---
+
+**Versão:** 0.3 (§2–§6) · **Dono:** Community-doc · **Baseline código:** `898509c` (V-I08 steward kit)
