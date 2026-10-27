@@ -1,6 +1,7 @@
 /** @file Menu ⋯ (sheet) para publicações com foto no feed (#post-more-sheet). */
 
 import * as share from "../share.js";
+import * as mod from "../moderation.js";
 
 const SHEET_ID = "post-more-sheet";
 
@@ -77,6 +78,14 @@ export function openPostMoreMenu(ctx, openerEl) {
   sheet.querySelector(".post-more-sheet-item")?.focus();
 }
 
+async function shareSheetPost(ctx) {
+  if (!mod.canEchoPost(ctx.postId)) {
+    share.showToast(mod.QUARANTINE_HINT);
+    return;
+  }
+  await share.shareTopic({ title: ctx.title || "Post no Vox", topicId: ctx.postId });
+}
+
 async function onSheetAction(action) {
   const ctx = activeContext;
   closePostMoreMenu();
@@ -99,7 +108,7 @@ async function onSheetAction(action) {
     return;
   }
   if (action === "share") {
-    await share.shareTopic({ title: ctx.title || "Post no Vox", topicId: ctx.postId });
+    await shareSheetPost(ctx);
     return;
   }
   if (action === "copy-link") {
