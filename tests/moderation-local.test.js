@@ -77,6 +77,58 @@ test("moderation - gossip de usuário bloqueado é descartado antes do cache", a
   assert.equal(stored, null, "Post de autor bloqueado não deve ser salvo no IndexedDB");
 });
 
+test("moderation - quarentena local add/remove/persist por id de post", () => {
+  localStorage.clear();
+  const bait = "post_bait_isca_1";
+
+  assert.equal(moderation.isPostQuarantined(bait), false);
+  assert.equal(moderation.canEchoPost(bait), true);
+  assert.equal(moderation.quarantinePost(bait), true);
+  assert.equal(moderation.isPostQuarantined(bait), true);
+  assert.equal(moderation.canEchoPost(bait), false);
+
+  const persisted = localStorage.getItem(moderation.QUARANTINE_STORAGE_KEY);
+  assert.ok(persisted.includes(bait));
+  assert.deepEqual(moderation.getQuarantinedPostIds(), [bait]);
+
+  assert.equal(moderation.unquarantinePost(bait), true);
+  assert.equal(moderation.isPostQuarantined(bait), false);
+  assert.equal(moderation.canEchoPost(bait), true);
+  assert.deepEqual(moderation.getQuarantinedPostIds(), []);
+});
+
+test("moderation - filterFeedPosts oculta id em quarentena sem silenciar o autor", () => {
+  localStorage.clear();
+  moderation.quarantinePost("p-bait");
+
+  const posts = [
+    { id: "p-ok", author: "vx_same" },
+    { id: "p-bait", author: "vx_same" },
+    { id: "p-other", author: "vx_other" },
+  ];
+  const filtered = moderation.filterFeedPosts(posts);
+  assert.deepEqual(filtered.map((p) => p.id), ["p-ok", "p-other"]);
+  assert.equal(moderation.isUserMuted("vx_same"), false);
+  assert.equal(moderation.isUserBlocked("vx_same"), false);
+});
+
+test("moderation - quarentena local não é mute de autor nem mod-action hide", () => {
+  localStorage.clear();
+  moderation.quarantinePost("tx_bait");
+  const items = [
+    { id: "tx_bait", author: "vx_author", owner: "vx_author" },
+    { id: "tx_ok", author: "vx_author", owner: "vx_author" },
+  ];
+
+  const feed = moderation.filterFeedPosts(items);
+  assert.deepEqual(feed.map((p) => p.id), ["tx_ok"]);
+
+  const fromModAction = moderation.applyFilters(items, [], "owner");
+  assert.equal(fromModAction.length, 2);
+  assert.equal(moderation.isUserMuted("vx_author"), false);
+  assert.ok(!moderation.exportModerationBundle().includes("tx_bait"));
+});
+
 test("moderation - export e import de listas de moderação", () => {
   localStorage.clear();
   moderation.blockUser("vx_troll_1", "Hate speech");

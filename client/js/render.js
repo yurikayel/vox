@@ -33,6 +33,7 @@ export {
   renderCommentList,
   renderPostComments,
   renderPostOwnerMenu,
+  renderQuarantineAction,
   renderPostTextHtml,
   renderFrameContentHtml,
   renderPostFrame,
