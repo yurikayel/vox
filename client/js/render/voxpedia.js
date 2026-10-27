@@ -40,6 +40,27 @@ function section(id, title, lead, layersHtml) {
     </section>`;
 }
 
+const TRES_LOGICAS_BODY = [
+  "<p><strong>Big Tech = fazenda.</strong> A terra é de outro. Você planta audiência; o dono leiloa atenção, muda a cerca e pode despejar a conta. Alcance vira aluguel.</p>",
+  "<p><strong>Fediverso clássico = pensão.</strong> Instância Mastodon ou Lemmy tem síndico: alguém paga o VPS, modera e não falir. A soberania do coletivo cabe no humor — e no boleto — de quem opera o servidor.</p>",
+  "<p><strong>Vox = movimento.</strong> A praça é o cliente no aparelho mais o protocolo. O que é inalienável é a <strong>chave no bolso</strong>, não um slogan de rede indestrutível. Gateways e relays são leitura reserva e vizinhos voluntários.</p>",
+  "<p>Não prometemos malha só entre celulares no 4G, nem imunidade na Justiça, nem que derrubar um endereço da web equivale a tomar cada aparelho (o inverso também é falso: backup, índice e o próprio aparelho ainda importam). POSSE ecoa o que você escolhe compartilhar — <strong>não</strong> publica sozinho no Facebook ou Instagram.</p>",
+].join("");
+
+const PR_CIVICO_BODY = [
+  "<p>Na aba <strong>Governança</strong> você abre uma proposta (<code>governance-proposal</code>) com texto e, se quiser, um <strong>diff</strong> unificado — o mesmo espírito de um pull request: o que muda nas regras fica visível antes de valer.</p>",
+  "<p>Membros votam <strong>sim</strong>, <strong>não</strong> ou <strong>abstenção</strong> (1 membro = 1 voto). Só entra na apuração quem já era membro quando a proposta nasceu: <code>Eligibility-Cutoff</code> = <code>Proposal-Created-At</code> (já no cliente; não é um segundo sistema de corte).</p>",
+  "<p>O alvo é a <strong>regra daquela comunidade</strong> — não um programa municipal, não uma carta de federação, não quórum territorial de bairro até o país.</p>",
+].join("");
+
+function layerTresLogicas() {
+  return layer("Três lógicas: fazenda, pensão, movimento", TRES_LOGICAS_BODY);
+}
+
+function layerPrCivico() {
+  return layer("Pull request cívico (regras da comunidade)", PR_CIVICO_BODY);
+}
+
 function renderComecar() {
   const layers = `
     ${layer(
@@ -51,6 +72,7 @@ function renderComecar() {
         <li>Use <strong>Início</strong> para ver posts; <strong>Postar</strong> para publicar um tópico.</li>
       </ol>`
     )}
+    ${layerTresLogicas()}
     ${layer(
       "Conta, carteira e identidade",
       `<p>Sem login corporativo: sua conta local usa um identificador <code>vx_…</code> no aparelho. Para publicar na rede Arweave, configure uma carteira em <a href="#/wallet">Carteira</a> (gerar ou importar JWK — fica só no navegador).</p>
@@ -72,7 +94,7 @@ function renderComecar() {
       )}
       ${layer(
         "POSSE: O Zap continua existindo",
-        `<p>Para combater o efeito de “cidade fantasma”, você não precisa esperar todo mundo migrar: publique no Vox como fonte soberana (chaves no aparelho) e compartilhe o link ou resumo nos seus grupos de WhatsApp e redes sociais (estratégia POSSE). O Vox guarda o original; o Zap continua sendo seu canal de conversa.</p>`
+        `<p>Para combater o efeito de “cidade fantasma”, você não precisa esperar todo mundo migrar: publique no Vox como fonte soberana (chaves no aparelho) e compartilhe o link ou resumo nos seus grupos de WhatsApp e redes sociais (estratégia POSSE). O Vox guarda o original; o Zap continua sendo seu canal de conversa. POSSE <strong>não</strong> publica sozinho no Facebook ou Instagram — você escolhe onde ecoar.</p>`
       )}
       ${layer(
         "Modo demonstração",
@@ -125,6 +147,7 @@ function renderComunidades() {
       "Entrar e navegar",
       `<p>Em <a href="#/communities">Comunidades</a> você vê espaços públicos indexados com tag <code>App-Name: vox-brasil</code>. Dentro de cada uma: abas <strong>Posts</strong>, <strong>Classificados</strong> e <strong>Governança</strong>.</p>`
     )}
+    ${layerPrCivico()}
     ${layer(
       "Publicar e responder",
       `<ol class="voxpedia-steps">
