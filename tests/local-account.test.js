@@ -165,3 +165,68 @@ test("local-account - profile enrichment and backup bundle", async () => {
   localAccount.clearProfileEnrichment();
   assert.equal(localAccount.getProfileEnrichment(), null);
 });
+
+test("local-account - wipe gera outro routeId e limpa chaves deste navegador", async () => {
+  localStorage.clear();
+  const session = {
+    store: new Map(),
+    getItem(key) {
+      return this.store.has(key) ? this.store.get(key) : null;
+    },
+    setItem(key, value) {
+      this.store.set(key, String(value));
+    },
+    removeItem(key) {
+      this.store.delete(key);
+    },
+  };
+  globalThis.sessionStorage = session;
+  session.setItem("vox-sovereignty-passphrase", "frase-sessao");
+
+  const acc1 = await localAccount.ensureLocalAccount();
+  localAccount.setDisplayName("Nome Temporario");
+  localAccount.setPixKey({ normalized: "pix@vox.example", type: "email" });
+  localAccount.setProfileEnrichment({ displayName: "Nome Temporario", bio: "bio" });
+  localAccount.setMeshDiscoverable(true);
+  assert.ok(acc1.routeId);
+  assert.ok(localStorage.getItem("vox-local-account-v1"));
+  assert.ok(localStorage.getItem("vox-dm-keypair"));
+
+  localAccount.wipeLocalAccount();
+  assert.equal(localAccount.getCachedRouteIdSync(), "");
+  assert.equal(localStorage.getItem("vox-local-account-v1"), null);
+  assert.equal(localStorage.getItem("vox-dm-keypair"), null);
+  assert.equal(localStorage.getItem("vox-display-name"), null);
+  assert.equal(localStorage.getItem("vox-pix-key-v1"), null);
+  assert.equal(localStorage.getItem("vox-profile-enrichment-v1"), null);
+  assert.equal(localStorage.getItem("vox-discoverable-mesh-v1"), null);
+  assert.equal(session.getItem("vox-sovereignty-passphrase"), null);
+
+  const acc2 = await localAccount.ensureLocalAccount();
+  assert.ok(acc2.routeId);
+  assert.notEqual(acc2.routeId, acc1.routeId);
+});
+
+test("local-account - confirmLocalWipe exige duas confirmações", () => {
+  const calls = [];
+  assert.equal(
+    localAccount.confirmLocalWipe((msg) => {
+      calls.push(msg);
+      return true;
+    }),
+    true,
+  );
+  assert.equal(calls.length, 2);
+  assert.equal(calls[0], localAccount.LOCAL_WIPE_NOTICE);
+  assert.equal(calls[1], localAccount.LOCAL_WIPE_NOTICE);
+
+  let n = 0;
+  assert.equal(
+    localAccount.confirmLocalWipe(() => {
+      n += 1;
+      return false;
+    }),
+    false,
+  );
+  assert.equal(n, 1);
+});
