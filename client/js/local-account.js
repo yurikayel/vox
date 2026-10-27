@@ -12,6 +12,20 @@ const DISPLAY_NAME_STORAGE = "vox-display-name";
 const PIX_STORAGE = "vox-pix-key-v1";
 const ENRICHMENT_STORAGE = "vox-profile-enrichment-v1";
 const DISCOVERABLE_STORAGE = "vox-discoverable-mesh-v1";
+const DM_KEYPAIR_STORAGE = "vox-dm-keypair";
+const SESSION_PASSPHRASE_KEYS = ["vox-sovereignty-passphrase", "vox-backup-passphrase"];
+
+export const LOCAL_WIPE_NOTICE =
+  "Apaga chaves JWK DESTE navegador. Posts no permaweb, relay/inbox e arquivo .json/.voxid em disco NÃO são apagados.";
+
+const LOCAL_WIPE_KEYS = [
+  ACCOUNT_STORAGE,
+  DM_KEYPAIR_STORAGE,
+  DISPLAY_NAME_STORAGE,
+  PIX_STORAGE,
+  ENRICHMENT_STORAGE,
+  DISCOVERABLE_STORAGE,
+];
 
 function bytesToB64Url(bytes) {
   let bin = "";
@@ -403,4 +417,29 @@ export async function importAccountBundle(rawBundle, passphrase) {
   await assertBackupIdentity(inner);
   await challengeSigningPair(inner);
   return persistAccountBackup(inner);
+}
+
+function dropStoredKey(store, key) {
+  try {
+    store.removeItem(key);
+  } catch {}
+}
+
+function dropSessionPassphrase() {
+  try {
+    const ss = globalThis.sessionStorage;
+    if (!ss) return;
+    for (const key of SESSION_PASSPHRASE_KEYS) dropStoredKey(ss, key);
+  } catch {}
+}
+
+export function confirmLocalWipe(ask = globalThis.confirm) {
+  const prompt = typeof ask === "function" ? ask : () => false;
+  return Boolean(prompt(LOCAL_WIPE_NOTICE) && prompt(LOCAL_WIPE_NOTICE));
+}
+
+export function wipeLocalAccount() {
+  cachedAccount = null;
+  for (const key of LOCAL_WIPE_KEYS) dropStoredKey(localStorage, key);
+  dropSessionPassphrase();
 }
