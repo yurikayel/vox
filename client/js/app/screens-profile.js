@@ -38,6 +38,7 @@ import * as meshProfile from "../mesh-profile.js";
 import { parseRoute } from "./route-parse.js";
 import { getActiveUser, makeShellProps, attachPostShareHandlers } from "./context.js";
 import { syncIdentity } from "./screens-network.js";
+import { KIND_WRAPPED, peekBackupKind } from "../account-backup-wrap.js";
 
 export async function showProfile(address, activeTab = "posts") {
   const user = await getActiveUser();
@@ -151,6 +152,72 @@ export async function showProfile(address, activeTab = "posts") {
   });
 
   bindProfileButtons(user, targetAddress, isSelf, dmPub, activeTab);
+}
+
+function readSovereigntyPassphrase() {
+  return document.getElementById("input-sovereignty-passphrase")?.value || "";
+}
+
+function downloadSovereigntyFile(jsonStr, routeId) {
+  const blob = new Blob([jsonStr], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `vox-soberania-${routeId || "identity"}.voxid`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+async function resolveImportPassphrase(text, fieldValue) {
+  if (peekBackupKind(text) !== KIND_WRAPPED) return fieldValue;
+  if (String(fieldValue || "").trim()) return fieldValue;
+  return window.prompt("Este .voxid está cifrado. Senha:") || "";
+}
+
+function bindSovereigntyExport() {
+  const btn = document.getElementById("btn-export-account");
+  if (!btn) return;
+  btn.addEventListener("click", async () => {
+    try {
+      const jsonStr = await localAccount.exportAccountBundle(readSovereigntyPassphrase());
+      downloadSovereigntyFile(jsonStr, JSON.parse(jsonStr).routeId);
+      share.showToast("Arquivo de soberania exportado — guarde offline.");
+    } catch (err) {
+      share.showToast(`Erro ao exportar backup: ${err.message}`, "error");
+    }
+  });
+}
+
+async function restoreSovereigntyFile(file, activeTab) {
+  const text = await file.text();
+  const secret = await resolveImportPassphrase(text, readSovereigntyPassphrase());
+  const ok = await localAccount.importAccountBundle(text, secret);
+  if (!ok) {
+    share.showToast("Falha ao validar chaves do backup.", "error");
+    return;
+  }
+  share.showToast("Identidade restaurada com sucesso!");
+  showProfile(null, activeTab);
+}
+
+function bindSovereigntyImport(activeTab) {
+  const input = document.getElementById("file-import-account");
+  if (!input) return;
+  input.addEventListener("change", async () => {
+    const file = input.files?.[0];
+    if (!file) return;
+    try {
+      await restoreSovereigntyFile(file, activeTab);
+    } catch (err) {
+      share.showToast(`Erro ao importar: ${err.message}`, "error");
+    }
+  });
+}
+
+function bindSovereigntyBackup(isSelf, activeTab) {
+  if (!isSelf) return;
+  bindSovereigntyExport();
+  bindSovereigntyImport(activeTab);
 }
 
 export function bindProfileButtons(user, address, isSelf, dmPub, activeTab = "posts") {
@@ -386,45 +453,7 @@ export function bindProfileButtons(user, address, isSelf, dmPub, activeTab = "po
     });
   }
 
-  const btnExportAcc = document.getElementById("btn-export-account");
-  if (btnExportAcc && isSelf) {
-    btnExportAcc.addEventListener("click", async () => {
-      try {
-        const jsonStr = await localAccount.exportAccountBundle();
-        const parsed = JSON.parse(jsonStr);
-        const blob = new Blob([jsonStr], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `vox-soberania-${parsed.routeId || "identity"}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
-        share.showToast("Arquivo de soberania exportado — guarde offline.");
-      } catch (err) {
-        share.showToast(`Erro ao exportar backup: ${err.message}`, "error");
-      }
-    });
-  }
-
-  const fileImportAcc = document.getElementById("file-import-account");
-  if (fileImportAcc && isSelf) {
-    fileImportAcc.addEventListener("change", async () => {
-      const file = fileImportAcc.files?.[0];
-      if (!file) return;
-      try {
-        const text = await file.text();
-        const ok = await localAccount.importAccountBundle(text);
-        if (ok) {
-          share.showToast("Identidade restaurada com sucesso!");
-          showProfile(null, activeTab);
-        } else {
-          share.showToast("Falha ao validar chaves do backup.", "error");
-        }
-      } catch (err) {
-        share.showToast(`Erro ao importar: ${err.message}`, "error");
-      }
-    });
-  }
+  bindSovereigntyBackup(isSelf, activeTab);
 
   const btnToggleBlock = document.getElementById("btn-toggle-block");
   if (btnToggleBlock && !isSelf) {

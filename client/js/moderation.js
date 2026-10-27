@@ -1,6 +1,5 @@
-import { fetchModActions as gqlFetchModActions } from "./graphql.js";
-
 export async function fetchModActions(communityId) {
+  const { fetchModActions: gqlFetchModActions } = await import("./graphql.js");
   return gqlFetchModActions(communityId);
 }
 
@@ -58,6 +57,10 @@ export function applyFilters(items, actions = [], communityOwner = "", rawModera
 
 const BLOCKED_STORAGE = "vox-moderation-blocked-v1";
 const MUTED_STORAGE = "vox-moderation-muted-v1";
+export const QUARANTINE_STORAGE_KEY = "vox-quarantine-posts-v1";
+export const QUARANTINE_ACTION_LABEL = "Quarentena local / não ecoar";
+export const QUARANTINE_HINT =
+  "Só neste aparelho. Não apaga o permaweb nem é ban da plataforma.";
 
 function loadStorage(key) {
   try {
@@ -129,18 +132,61 @@ export function shouldDropGossip(authorRouteId) {
   return isUserBlocked(authorRouteId);
 }
 
+function asPostIdList(raw) {
+  if (!Array.isArray(raw)) return [];
+  const ids = [];
+  for (const item of raw) {
+    const id = typeof item === "string" ? item : item?.id;
+    if (id) ids.push(id);
+  }
+  return ids;
+}
+
+export function getQuarantinedPostIds() {
+  return asPostIdList(loadStorage(QUARANTINE_STORAGE_KEY));
+}
+
+export function isPostQuarantined(postId) {
+  if (!postId) return false;
+  return getQuarantinedPostIds().includes(postId);
+}
+
+export function canEchoPost(postId) {
+  return Boolean(postId) && !isPostQuarantined(postId);
+}
+
+export function quarantinePost(postId) {
+  if (!postId) return false;
+  const ids = getQuarantinedPostIds().filter((id) => id !== postId);
+  ids.push(postId);
+  saveStorage(QUARANTINE_STORAGE_KEY, ids);
+  return true;
+}
+
+export function unquarantinePost(postId) {
+  if (!postId) return false;
+  const ids = getQuarantinedPostIds().filter((id) => id !== postId);
+  saveStorage(QUARANTINE_STORAGE_KEY, ids);
+  return true;
+}
+
+function hiddenAuthorSet() {
+  const blocked = getBlockedUsers().map((b) => b.routeId);
+  const muted = getMutedUsers().map((m) => m.routeId);
+  return new Set([...blocked, ...muted]);
+}
+
+function isFeedPostVisible(post, hiddenAuthors, hiddenIds) {
+  if (post?.id && hiddenIds.has(post.id)) return false;
+  const author = post?.author || post?.owner || "";
+  return !author || !hiddenAuthors.has(author);
+}
+
 export function filterFeedPosts(posts) {
   if (!Array.isArray(posts)) return [];
-  const blockedSet = new Set(getBlockedUsers().map((b) => b.routeId));
-  const mutedSet = new Set(getMutedUsers().map((m) => m.routeId));
-
-  return posts.filter((post) => {
-    const author = post?.author || post?.owner || "";
-    if (author && (blockedSet.has(author) || mutedSet.has(author))) {
-      return false;
-    }
-    return true;
-  });
+  const hiddenAuthors = hiddenAuthorSet();
+  const hiddenIds = new Set(getQuarantinedPostIds());
+  return posts.filter((post) => isFeedPostVisible(post, hiddenAuthors, hiddenIds));
 }
 
 export function exportModerationBundle() {
