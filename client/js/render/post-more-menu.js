@@ -1,6 +1,7 @@
 /** @file Menu ⋯ (sheet) para publicações com foto no feed (#post-more-sheet). */
 
 import * as share from "../share.js";
+import { openQrUrlSheet } from "../qr-url.js";
 import * as mod from "../moderation.js";
 
 const SHEET_ID = "post-more-sheet";
@@ -24,6 +25,7 @@ function ensurePostMoreSheet() {
       <button type="button" class="post-more-sheet-item" data-action="goto-post">Ir para a publicação</button>
       <button type="button" class="post-more-sheet-item" data-action="share">Compartilhar…</button>
       <button type="button" class="post-more-sheet-item" data-action="copy-link">Copiar link</button>
+      <button type="button" class="post-more-sheet-item" data-action="qr">QR deste link</button>
       <button type="button" class="post-more-sheet-item" data-action="embed">Incorporar</button>
       <button type="button" class="post-more-sheet-item post-more-sheet-cancel" data-action="cancel">Cancelar</button>
     </div>`;
@@ -119,6 +121,14 @@ async function onSheetAction(action) {
     } catch {
       share.showToast("Não foi possível copiar o link.", "error");
     }
+    return;
+  }
+  if (action === "qr") {
+    if (!mod.canEchoPost(ctx.postId)) {
+      share.showToast(mod.QUARANTINE_HINT);
+      return;
+    }
+    openQrUrlSheet(share.topicShareUrl(ctx.postId));
     return;
   }
   if (action === "embed") {
