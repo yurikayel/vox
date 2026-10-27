@@ -8,6 +8,7 @@ import { initPostMediaLightbox } from "./app/post-media-lightbox.js";
 import { attachPostMoreMenuHandlers } from "./render/post-more-menu.js";
 import { attachPosseSheetHandlers } from "./posse-dispatch.js";
 import { attachPostOverlayActionMenuHandlers } from "./app/screens-home.js";
+import { attachQuarantineHandlers } from "./app/context.js";
 import { syncIdentity } from "./app/screens-network.js";
 
 initColorMode(document, { onApply: () => applySkyTheme(document) });
@@ -21,5 +22,6 @@ initPostMediaLightbox();
 attachPostMoreMenuHandlers();
 attachPosseSheetHandlers();
 attachPostOverlayActionMenuHandlers();
+attachQuarantineHandlers();
 syncIdentity();
 demoSeed.ensureDemoSeed().finally(() => route());

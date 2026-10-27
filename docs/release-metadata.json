@@ -1,9 +1,9 @@
 {
   "git_sha": "bcc58ec",
   "branch": "main",
-  "test_js": 368,
+  "test_js": 371,
   "test_python": 23,
-  "test_total": 391,
-  "cache_name": "vox-pwa-v6.89-mofn-lab",
+  "test_total": 394,
+  "cache_name": "vox-pwa-v6.90-quarantine-local",
   "generated_at": "2026-10-27T19:04:04Z"
 }
