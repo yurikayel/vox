@@ -50,6 +50,15 @@ describe("route-parse", () => {
     });
   });
 
+  it("labs m-of-n flag and hash", () => {
+    withLocation({ hash: "#/labs/mofn" }, () => {
+      assert.deepEqual(parseRoute(), { name: "labs-mofn" });
+    });
+    withLocation({ hash: "#/", search: "?labs=mofn" }, () => {
+      assert.deepEqual(parseRoute(), { name: "labs-mofn" });
+    });
+  });
+
   it("network steward wizard route", () => {
     withLocation({ hash: "#/settings/network/steward" }, () => {
       assert.deepEqual(parseRoute(), { name: "steward-wizard" });

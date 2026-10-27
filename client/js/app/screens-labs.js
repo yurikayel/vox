@@ -1,7 +1,8 @@
-/** @file Labs — Open Frames iframe demo. */
+/** @file Labs — Open Frames iframe demo + T02 M-de-N. */
 import * as render from "../render.js";
 import * as openFramesHost from "../open-frames-host.js";
 import { getActiveUser, makeShellProps } from "./context.js";
+import { renderMofnLab, wireMofnLab } from "../labs/mofn-lab.js";
 
 export async function showLabsFrames() {
   const user = await getActiveUser();
@@ -29,4 +30,11 @@ export async function showLabsFrames() {
       console.info("[open-frame-action]", payload);
     },
   });
+}
+
+export async function showLabsMofn() {
+  const user = await getActiveUser();
+  const main = render.renderShell(makeShellProps(user, "home", "Lab M-de-N"));
+  main.innerHTML += renderMofnLab();
+  wireMofnLab(main);
 }

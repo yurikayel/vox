@@ -64,6 +64,7 @@ O **Dossiê N=25** foi escolhido como a fonte viva e exclusiva de checkboxes `[ 
 - [teste-aberto-demo.md](./teste-aberto-demo.md) — praça demo `demo-aprenda-vox` · [bug report testadores](../.github/ISSUE_TEMPLATE/bug-tester.yml)  
 - [CONTRIBUTING-DOCS.md](./CONTRIBUTING-DOCS.md) — norma curta para voluntários e agentes  
 - [metodo-agentes-mutex-e-revisor.md](./metodo-agentes-mutex-e-revisor.md) — regras de mutex e operação revisor  
+- [adr/005-collective-profile-m-of-n.md](./adr/005-collective-profile-m-of-n.md) — T02 tese: perfil coletivo M-de-N (spec + lab)  
 - [piloto-comunidade-go-no-go.md](./piloto-comunidade-go-no-go.md) — gate humano do piloto (V-P09)  
 - [piloto-comunidade-retrospectiva-template.md](./piloto-comunidade-retrospectiva-template.md) — template retrospectiva  
 - [../client/DEV.md](../client/DEV.md) — guia de desenvolvimento §0–36  
