@@ -11,6 +11,16 @@ O **Pix** não significa “tudo acontece só no Brasil”. Significa **padrão 
 - **Soberania** aqui é: *você assina, você publica, ninguém apaga sua transação na chain* — não “100% hospedado no Brasil” como slogan de marketing.
 - **Chave Pix no Perfil (Fase A):** Enquanto atributo social opcional, a chave Pix no perfil serve para apoios voluntários e diretos entre participantes (sem intermediação de plataforma), reafirmando que o valor circula diretamente entre as pontas, exatamente como a mensagem e o post. O Vox não é banco nem arranjo de pagamento fechado.
 
+## Três lógicas: fazenda, pensão, movimento
+
+Não confundir dono da terra, síndico da pensão e bem comum:
+
+1. **Big Tech = fazenda.** A terra é de outro. Você planta audiência; o dono leiloa atenção, muda a cerca e pode despejar a conta. Alcance vira aluguel.
+2. **Fediverso clássico = pensão / serviço.** Instância Mastodon/Lemmy tem operador: alguém paga VPS, modera e não falir. A soberania do coletivo cabe no humor (e no boleto) do síndico.
+3. **Vox = movimento / bem comum.** A praça é o cliente no aparelho mais o protocolo. **Inalienável** é a chave no bolso — não o slogan de rede indestrutível. Gateways e relays são leitura reserva e vizinhos voluntários; um URL fora do ar não equivale a confiscar cada celular, e o contrário também não é verdadeiro (aparelho, backup e índice ainda importam).
+
+Este recorte não altera os modelos A–D abaixo. Tese de militância (esquerda e direita pró-democráticas como **praça comum**, não partido): [docs/tese-praca-civica-militancia-pro-democratica-2026-10.md](./docs/tese-praca-civica-militancia-pro-democratica-2026-10.md).
+
 ## Posicionamento diante dos 4 modelos cívicos (A–D)
 
 Diante do debate recorrente sobre redes sociais brasileiras e soberania (ver [docs/campo-debate-aberto-ndp-2026-10.md](./docs/campo-debate-aberto-ndp-2026-10.md)), o Vox adota posição inequívoca:
