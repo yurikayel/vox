@@ -1,227 +1,198 @@
-# Vox — rede social cívica no permaweb
+# Vox — Rede Social Cívica no Permaweb
 
-## O que é
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
+[![Tests Passing](https://img.shields.io/badge/tests-405%20passing-success.svg)](./tests)
+[![Client](https://img.shields.io/badge/PWA-Vanilla%20ES%20Modules-orange.svg)](./client)
+[![Identity](https://img.shields.io/badge/Identity-WebCrypto%20P--256-blueviolet.svg)](./client/js/local-account.js)
+[![Storage](https://img.shields.io/badge/Storage-Arweave%20Permaweb-black.svg)](https://arweave.org)
+[![Service Worker](https://img.shields.io/badge/SW-v6.92--qr--url-informational.svg)](./client/sw.js)
 
-O **Vox** é uma rede social **livre e de código aberto (FOSS)** pensada para **comunidades primeiro** — fóruns, membros no perfil e uma praça pública de descoberta, no espírito útil do Orkut. Sua **identidade e chaves ficam no aparelho**; posts públicos podem ser publicados no **permaweb** (Arweave) e replicados por **malha entre vizinhos** (cache local, relay opcional, peers na mesma rede).
+Uma praça pública digital, livre e de código aberto (FOSS), pensada para **comunidades primeiro**. Uma rede social descentralizada no espírito útil do Orkut clássico, onde a **identidade e as chaves ficam no aparelho do usuário** (WebCrypto local), as publicações públicas residem no **permaweb** (Arweave) e os dados circulam por **malha local e relays voluntários**.
 
-É para **coletivos e grupos brasileiros** que querem conversa com profundidade, moderação local e transparência sobre onde os dados circulam. **Este repositório** é o código, a documentação e os testes — **não** é uma empresa, **não** hospeda sua comunidade por você e **não** substitui facilitadores humanos no piloto.
+> 🌐 **Demo Pública:** [https://yurikayel.github.io/vox/](https://yurikayel.github.io/vox/)  
+> 🧪 **Guia para Testadores:** [#/ajuda/teste](https://yurikayel.github.io/vox/#/ajuda/teste)  
+> 📚 **Índice Mestre de Documentação:** [docs/README.md](./docs/README.md)  
+> 📋 **Plano Mestre & Checklist Vivo:** [dossiê N=25 §3.6](./docs/dossie-geral-inventario-master-breakdown-2026-11.md#36-checklist-master-vivo-n25)
 
-## A proposta
+---
 
-Plataformas fechadas concentram regras opacas, risco de apagão de contas e feeds que substituem a **praça** por engajamento solitário. Fediverso e instâncias próprias empurram **custo de servidor** para voluntários; P2P puro esbarra em NAT e operação frágil no celular.
+## 🏛️ Visão e Posicionamento
 
-Não somos um clone soberano em datacenter central (Modelo A) nem exigimos que voluntários paguem VPS para manter instâncias (Modelo B). Somos **local-first (Modelo C)**: praça cronológica sem ranking opaco, chaves no aparelho, leitura de backup via gateways públicos e estratégia POSSE para onde as pessoas já conversam (WhatsApp, redes). Pontes governamentais e de dados públicos (Modelo D) ficam para depois do piloto humano — ver [docs/campo-debate-aberto-ndp-2026-10.md](./docs/campo-debate-aberto-ndp-2026-10.md) e [POSITIONING.md](./POSITIONING.md).
+O Vox nasce para libertar a comunicação comunitária e cívica da lógica extrativa das Big Techs e da sobrecarga operacional do Fediverso tradicional.
 
-O Vox combina um **cliente estático** (PWA) com **leitura via gateways** da rede Arweave/Turbo quando a malha local não tem o blob — gateways são **leitura reserva**, não um “backend Vox” central. Você publica onde controla (incluindo **POSSE**: ecoar para outras redes com Web Share / intents, sem prender o original). Quem participa pode **contribuir com cache** (Pacto Vox, com limites e opt-out); **stewards** podem rodar relay/sinalização **opcional e comunitário**. Métricas no app são **estimativas locais** — não há ranking público de nós nem promessa de “imunidade” regulatória.
+### As Três Lógicas de Rede
 
-A demo pública ([GitHub Pages](https://yurikayel.github.io/vox/)) é um **shell estático** útil para testar; espelhos adicionais seguem [docs/ops-shell-mirrors.md](./docs/ops-shell-mirrors.md).
+| Modelo | Dinâmica | Limitações & Vulnerabilidades | Abordagem do Vox |
+|:---|:---|:---|:---|
+| **Big Tech (A Fazenda)** | A terra pertence ao bilionário. Seguidor é aluguel; o algoritmo sequestra a atenção via *rage-bait* e pode despejar contas a qualquer momento. | Desplataformização sem recurso, vigilância comercial, feeds manipulados por leilão financeiro. | **Recusada:** Sem servidores corporativos, sem caixas-pretas de recomendação, sem venda de dados. |
+| **Fediverso (A Pensão)** | Instâncias centralizadas geridas por administradores voluntários que arcam com servidores VPS do próprio bolso. | Custos recorrentes de hospedagem, risco de falência da instância, migração complexa entre servidores. | **Superada:** Zero custo de servidor para o usuário comum; cliente estático servido via PWA. |
+| **Vox (O Movimento)** | **Bem comum inalienável:** a praça é o cliente no próprio aparelho + protocolo público aberto. | Exige maturidade cívica e consciência de que gateways são leitura reserva, não nuvem infinita. | **Adotada:** Chaves no bolso (`vx_…`), IndexedDB local, permaweb imutável e relays domésticos opcionais. |
 
-## Metodologia
+*(Diagnóstico comparativo aprofundado em [LESSONS.md](./LESSONS.md) e [POSITIONING.md](./POSITIONING.md).)*
 
-Construímos em camadas verificáveis:
+---
 
-- **Cliente serverless, vanilla, sem build de produção** — HTML, CSS e ES modules em [`client/`](./client/); `npm` só para **lint e testes** na raiz.
-- **Checklist vivo único** no [dossiê §3.6](./docs/dossie-geral-inventario-master-breakdown-2026-11.md#36-checklist-master-vivo-n25) (N=25); inventário e DoD detalhado em [docs/inventario-estado-e-tarefas-documentacao-2026-11.md](./docs/inventario-estado-e-tarefas-documentacao-2026-11.md).
-- **Definition of Done** por tipo: `doc`, `code`, `ops-humano` — ver [docs/CONTRIBUTING-DOCS.md](./docs/CONTRIBUTING-DOCS.md).
-- **Mantenedor do repo = revisor de código**, não VPS da comunidade nem suporte 1:1 — ver [docs/antigravity-estrategia-mantenedor-revisor-2026.md](./docs/antigravity-estrategia-mantenedor-revisor-2026.md).
-- **Piloto humano (V-P09) antes de escalar P2**; quando o piloto abre, **feature freeze** ([CODE-01](./docs/dossie-geral-inventario-master-breakdown-2026-11.md)) — só hotfix e documentação entram em `main`.
+## ⚡ Os Quatro Princípios Fundamentais
 
-Porta de entrada da documentação: **[docs/README.md](./docs/README.md)**. Testadores: [https://yurikayel.github.io/vox/#/ajuda/teste](https://yurikayel.github.io/vox/#/ajuda/teste) e convite em [docs/teste-aberto-convite.md](./docs/teste-aberto-convite.md).
+1. **Isonomia Radical (1 Pessoa = 1 Chave Local):**
+   A identidade mestre (`vx_…`) é gerada no próprio navegador com **ECDSA P-256** via WebCrypto API. Alcance não se compra em leilão publicitário; fazendas de bots não têm voto; cada usuário é soberano sobre sua presença digital.
+2. **Sem Feed de Rage-Bait (Morte das Iscas Emocionais):**
+   O feed é **estritamente cronológico** ou filtrado por laços orgânicos de confiança. Sem ranking oculto, sem pontuação de polêmica, sem recomendação orientada a choque moral. Conteúdos forjados de guerra híbrida perdem tração e morrem no vácuo.
+3. **Ponte, não Ilha (POSSE Honesto e Aberto):**
+   Filosofia *Publish on Own Site, Syndicate Elsewhere* ([RFC 0001](./docs/rfc/0001-posse-export.md)). O conteúdo canônico nasce assinado no Vox e pode ser compartilhado com 1 clique para WhatsApp, Instagram e X via Web Share API e web intents. Não prometemos postagens automáticas e silenciosas em APIs proprietárias fechadas.
+4. **Resiliência Local-First & Autonomia de Dados:**
+   O PWA opera offline via cache inteligente (Service Worker + IndexedDB com política LRU). Seus tópicos e contatos permanecem no dispositivo. A qualquer momento, o usuário pode exportar seu Arquivo de Soberania (`vox-soberania-*.json` ou `.voxid` protegido com senha via PBKDF2/AES-GCM).
 
-## Características open source
+---
 
-| Aspecto | Como funciona neste repo |
-|--------|---------------------------|
-| **Licença** | [MIT](./LICENSE) |
-| **Runtime do PWA** | Vanilla no navegador — **sem** dependência npm em produção |
-| **Testes** | **405** (`382` JS + `23` Python) — `npm test` na raiz |
-| **Relay / inbox** | Python sem dependências externas em [`relay/`](./relay/) |
-| **Bugs de teste** | Issue **[tester] Bug report** ([`.github/ISSUE_TEMPLATE/bug-tester.yml`](./.github/ISSUE_TEMPLATE/bug-tester.yml)) |
-| **Docs** | Norma [docs/CONTRIBUTING-DOCS.md](./docs/CONTRIBUTING-DOCS.md); **GitHub = fonte de verdade** (a [Voxpedia](https://yurikayel.github.io/vox/#/voxpedia) no app explica; desenvolvimento e release line ficam aqui) |
-| **Governança & BR** | [GOVERNANCE.md](./GOVERNANCE.md) · [COMPLIANCE-BR.md](./COMPLIANCE-BR.md) |
+## 📊 Linha de Release Canônica
 
-**Rodar localmente** (porta **8080**, não 8765):
+Informações sincronizadas com [docs/release-metadata.json](./docs/release-metadata.json):
+
+| Campo | Valor Atual | Descrição / Observação |
+|:---|:---:|:---|
+| **Branch** | `main` | Linha de produção contínua (Pages deploy automático) |
+| **Commit SHA** | `797c0cb` | HEAD verificado e auditado na esteira de integração |
+| **Suíte de Testes** | **405** (`382` JS + `23` Python) | Execução via `npm test` na raiz do repositório |
+| **Service Worker** | `vox-pwa-v6.92-qr-url` | Atualização do cache offline do shell estático |
+| **Deploy** | [yurikayel.github.io/vox](https://yurikayel.github.io/vox/) | PWA público para testes e validação de campo |
+
+> [!NOTE]
+> Após atualizações de release, recomenda-se executar um **hard refresh** (`Ctrl+Shift+R`) no navegador para substituição ativa do Service Worker.
+
+---
+
+## ⚙️ Arquitetura do Sistema
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│                   Vox Web Client (PWA Ultraleve < 50 KB)               │
+│             Vanilla HTML5 + CSS Moderno + ES Modules Nativos           │
+└───────────────────┬────────────────────────────────┬───────────────────┘
+                    │                                │
+         [Leitura & Descoberta]             [Autoria & Identidade]
+                    │                                │
+                    ▼                                ▼
+       Cascata de Leitura Híbrida:              Assinatura Criptográfica:
+     1. Memória RAM / IndexedDB              • Identidade: ECDSA P-256 (vx_…)
+     2. Malha Gossip (WANT/BLOB)             • Permaweb: Carteira Arweave JWK
+     3. Relay Doméstico (Opcional)           • Mensagens Privadas: ECDH P-256
+     4. Gateways Públicos (Reserva)                  │
+                    │                                ▼
+                    ▼                    Turbo Bundler (L2 Arweave)
+         Gateways Descentralizados                   │
+          (AR.IO / Turbo GraphQL)                    │
+                    │                                │
+                    └────────────────┬───────────────┘
+                                     ▼
+                        Permaweb Imutável (Arweave)
+```
+
+### Esquema de Tags e Transações (Sem Banco Central)
+
+O ecossistema opera sem banco de dados SQL centralizado. Todo estado é composto por transações com tags semânticas padronizadas:
+
+| Ação | Tag `Type` | Tags Complementares Chave | Finalidade |
+|:---|:---|:---|:---|
+| **Criar Comunidade** | `community` | `Community-Id`, `Title`, `Description`, `Category` | Funda um espaço público de debate |
+| **Adesão a Membro** | `membership` | `Community-Id` | Registra vínculo comunitário no perfil |
+| **Publicar Tópico** | `topic` | `Community-Id`, `Topic-Title` | Abre uma nova discussão no fórum |
+| **Responder Tópico** | `reply` | `Community-Id`, `Reply-To` (TX ID) | Adiciona resposta em árvore encadeada |
+| **Moderação Cívica** | `mod-action` | `Community-Id`, `Action` (hide/ban), `Target` | Supressão client-side por quórum |
+| **Chave de DM** | `profile-key` | `Dm-Pub` (JWK pública P-256) | Habilita recebimento de mensagens diretas |
+| **Handle Cívico** | `handle` | `Handle` (`[a-z0-9-]{3,24}`), `Owner-Addr` | Mnemônico `@slug` sem cartório central |
+| **Pull Request Cívico** | `governance-proposal` | `Community-Id`, `Proposal-Id`, `Diff` | Proposta de alteração de regras locais |
+
+---
+
+## 🛠️ Capacidades em Produção & Laboratório
+
+* **Fóruns & Comunidades (Espírito Orkut):** Espaços temáticos, membros visíveis no perfil, feeds cronológicos por comunidade e busca pública aberta.
+* **Classificados / Feira Comunitária:** Ofertas locais assinadas com gossip de manifesto de cache (`CACHE_MANIFEST`), prioridade `WANT` e suporte a retratação na malha.
+* **Mensagens Diretas E2E (WebRTC + Inbox TTL):** Criptografia ponta-a-ponta no navegador (`ECDH P-256` + `AES-GCM-256`). Mensagens privadas trafegam fora do permaweb; quando o par está offline, transitam por relay transitório com expiração forçada de 72 horas.
+* **Soberania & Exportação de Chaves:** Export e import de credenciais com suporte a envelope criptografado com senha mestra (`.voxid` via PBKDF2).
+* **Quarentena Local de Guerra Híbrida:** Marcador no dispositivo que oculta posts identificados como iscas emocionais e bloqueia compartilhamento acidental, cortando a retroalimentação algorítmica.
+* **QR Code Canônico Vanilla (`qr-url.js`):** Gerador nativo de QR codes para links de tópicos, comunidades e convites, sem dependências externas de npm.
+* **Laboratório M-de-N (`#/labs/mofn`):** Especificação ([ADR-005](./docs/adr/005-collective-profile-m-of-n.md)) e simulador de multi-assinatura independente para conselhos e sindicatos, mantendo o isolamento estrito da conta de produção.
+
+---
+
+## 🚀 Começando em 30 Segundos
+
+### 1. Rodar o Cliente PWA Localmente
+
+O cliente é 100% estático (no-build). Não requer `webpack`, `vite` ou compilação:
 
 ```bash
 cd client
 python -m http.server 8080
 ```
+Acesse `http://127.0.0.1:8080/` no navegador. *(Módulos ES exigem protocolo HTTP/HTTPS, não abrindo via `file://`)*.
 
-Abra `http://127.0.0.1:8080/` — módulos ES exigem HTTP, não `file://`.
+### 2. Executar a Suíte Completa de Testes
 
-**Validar alterações:** na raiz do repo, `npm test` (contagens canônicas em [docs/release-metadata.json](./docs/release-metadata.json)).
+Na raiz do repositório:
 
-Proposta longa para compartilhar: **[docs/proposta-vox.html](./docs/proposta-vox.html)**
-
-### Experimente o PWA
-
-Demo: **[https://yurikayel.github.io/vox/](https://yurikayel.github.io/vox/)** — PWA instalável, tour com personas demo e rota **[#/ajuda/teste](https://yurikayel.github.io/vox/#/ajuda/teste)** para quem testa sem ser dev. Após deploy, use **hard refresh** (`Ctrl+Shift+R`) se o service worker não atualizar.
-
-### Linha de release (orgânico)
-
-| Campo | Valor |
-|-------|--------|
-| **SHA** | `55ee9dd` |
-| **Branch** | `main` |
-| **Testes** | **405** (`382` JS + `23` Python) — `npm test` na raiz |
-| **Service worker** | `vox-pwa-v6.92-qr-url` |
-| **Deploy** | Push em `main` → GitHub Pages; após deploy use **hard refresh** (`Ctrl+Shift+R`) para trocar o SW |
-
-Malha: gossip **`CACHE_MANIFEST`** + prioridade **WANT**; feira **Classificados** com ofertas assinadas, status/retratação na malha ([`listing-ui.js`](./client/js/listing-ui.js)). Seed steward: [`docs/steward-seed-15min.md`](./docs/steward-seed-15min.md).
-
----
-
-## 🎯 Por que o Vox existe?
-
-No modelo atual da internet, a comunicação cívica brasileira está refém de corporações centralizadas: risco de apagão de contas, morte das comunidades orgânicas em prol de feeds algorítmicos opacos e dependência de infraestruturas fora do país. O **Vox** adota a filosofia do **Pix**: protocolo público, leve e aberto, com chaves no aparelho e soberania comunitária.
-
-* **Vs. Bluesky (PBC):** Sem serviços centrais de busca e indexação (*AppViews*) em empresa privada; múltiplos gateways neutros distribuídos e leitura de reserva.
-* **Vs. Mastodon (Fediverso):** Sem custo mensal de VPS sobrecarregando mantenedores nem confusão de "escolha de instâncias"; cliente estático no-build servido via Pages/espelhos.
-* **Vs. P2P puro móvel:** Sem exigir que celulares em redes 4G atuem como seeders 24/7 (inviabilizado pelo CGNAT e consumo de franquia no Brasil).
-
-*(Diagnóstico comparativo completo e lições aprendidas em [LESSONS.md](./LESSONS.md) e [POSITIONING.md](./POSITIONING.md).)*
-
----
-
-## 🏛️ Os Três Pilares do Vox
-
-1. **Comunidades Primeiro (Estilo Orkut):** Fóruns por tópicos com respostas encadeadas, descoberta pública sem algoritmo manipulativo, membros no perfil e moderação local via `mod-action` client-side ([GOVERNANCE.md](./GOVERNANCE.md)).
-2. **Soberania Serverless (Permaweb / GraphQL):** Zero servidores centrais de aplicação; leitura via GraphQL aberto em gateways Arweave/AR.IO (`turbo-gateway.com`, `arweave.net`) e chaves criptográficas Ed25519 no dispositivo ([IDENTITY.md](./IDENTITY.md)).
-3. **Ponte, não Ilha (Crossposting POSSE):** O post canônico permanente é salvo no Vox e despachado com 1 toque para WhatsApp, Instagram, TikTok e X via Web Share API nativa e web intents ([docs/rfc/0001-posse-export.md](./docs/rfc/0001-posse-export.md)).
-
----
-
-## ⚙️ Arquitetura Técnica do MVP
-
+```bash
+npm test
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                 Vox Web Client (PWA Ultraleve)              │
-│       HTML5 + CSS Minimalista + Vanilla JS (< 50 KB)        │
-└──────────────┬───────────────────────────────┬──────────────┘
-               │                               │
-        [Leitura Pública]               [Escrita & DMs]
-               │                               │
-               ▼                               ▼
-      Gateways Descentralizados       Assinatura Local
-        (AR.IO / Turbo GraphQL)        (WebCrypto no Aparelho)
-               │                               │
-               ▼                               ▼
-    Consultas de Comunidades/Posts     Turbo Bundler (L2 Arweave)
-               │                               │
-               └───────────────┬───────────────┘
-                               ▼
-                       Permaweb (Arweave)
+Executa **405 testes unitários e de integração** (382 testes Node.js nativos + 23 testes em Python stdlib).
+
+### 3. Rodar o Relay / Servidor de Cache Doméstico (Opcional)
+
+Para operadores que desejam apoiar a malha como *stewards*:
+
+```bash
+cd relay
+python relay.py
 ```
-
-### Esquema de Tags (Sem Banco de Dados)
-Todo dado no Vox é identificado por tags semânticas universais:
-
-| Ação | Tag `Type` | Tags Adicionais |
-|---|---|---|
-| **Criar Comunidade** | `community` | `Community-Id`, `Title`, `Description`, `Category` |
-| **Entrar em Comunidade** | `membership` | `Community-Id` |
-| **Criar Tópico** | `topic` | `Community-Id`, `Topic-Title` |
-| **Responder Tópico** | `reply` | `Community-Id`, `Reply-To` (TX ID) |
-| **Moderação** | `mod-action` | `Community-Id`, `Action` (hide/ban), `Target` |
-| **Chave de DM** | `profile-key` | `Dm-Pub` (Chave pública ECDH JWK; conversas privadas trafegam fora do permaweb) |
-| **Reivindicar Handle** | `handle` | `Handle` (slug `[a-z0-9-]{3,24}`), `Owner-Addr` |
+Servidor leve em Python (sem dependências externas), provendo proxy de leitura Arweave e inbox efêmero de DMs na porta `8765`.
 
 ---
 
-## 🗺️ Roadmap de Execução
+## 🔍 Compromisso de Transparência Técnica
 
-- [x] **Fase 0: Concepção & Arquitetura**
-  - Definição da estratégia de soberania digital sem servidor central.
-  - Adoção do modelo Permaweb + Turbo Gateway.
-- [x] **Fase 1: MVP do Fórum & Leitura (A Rua + Comunidades)**
-  - Cliente PWA em [`client/`](./client/) — comunidades, tópicos e respostas via GraphQL (`App-Name: vox-brasil`).
-  - Interface nostálgica e limpa (estilo Orkut moderno); demo offline se gateway falhar.
-- [x] **Fase 2: Autoria, Chaves & Ponte de Crossposting**
-  - Carteira Arweave JWK local (`wallet.js`) com geração e importação.
-  - Upload de transações (`upload.js`) para comunidades, tópicos e respostas.
-  - Leitura de corpo de transações com cache de dados (`graphql.js: fetchTransactionData`).
-  - Botão de compartilhamento Web Share API + fallback de área de transferência (`share.js`).
-  - QR do link canônico (`qr-url.js`) — o outro aparelho precisa de câmera e de alcançar o PWA; o navegador não faz Wi-Fi Direct.
-  - Perfil de membro com listagem de comunidades seguidas (`membership`).
-  - Governança distribuída via transações `mod-action` com supressão client-side (`moderation.js`).
-  - Guia de testes e faucet em [`client/DEV.md`](./client/DEV.md).
-  - *Critério de Sucesso (DoD atingido):* Criação de tópicos assinados, leitura via GraphQL e compartilhamento em < 30s sem backend próprio.
-- [x] **Fase 3: Nós Participativos & Espelhos Locais**
-  - Cache persistente IndexedDB com política LRU (`cache-node.js`).
-  - Protocolo peer `vox-peer` v0 com mensagens `WANT`/`BLOB` via BroadcastChannel (`peers.js`).
-  - Interface de configuração de rede distribuída e métricas em `#/settings/network`.
-  - Servidor desktop local de cache e espelho em Python sem dependências (`vox/relay/`).
-  - *Critério de Sucesso (DoD atingido):* Resolução em cascata (Cache -> Relay -> Peer -> Gateway) acelerando leitura e suportando navegação offline.
-- [x] **Fase 3.1: Rede Distribuída por Padrão (Pacto Vox)**
-  - Participação distribuída ativa por padrão com contrato transparente na 1ª abertura (Modal Pacto Vox).
-  - Inversão de valor: soberania de chaves e dados ↔ cache local cooperativo sem servidores centrais.
-  - Salvaguardas rigorosas: teto diário de banda (padrão 50 MB/dia), limite de cache (25 MB) e priorização Wi-Fi.
-  - Suporte a Service Worker (`sw.js`) para relay em background com notificação visível no sistema operacional.
-  - Direito incondicional de opt-out preservado em `#/settings/network` ("Pausar contribuição").
-- [x] **Fase 3.2: Conectividade entre Dispositivos (WebRTC Mesh)**
-  - Protocolo `vox-peer-v0` estendido para conexões diretas entre dispositivos via `RTCDataChannel` (`webrtc-peer.js`).
-  - Servidor de sinalização WebSocket leve em Python stdlib (`relay/signaling.py`, porta 3921), opcional e autohospedado.
-  - Configuração de STUN e sinalização comunitária (`config/signaling.json` e campo customizado na UI).
-  - Integração às salvaguardas do Pacto 3.1: teto de 50 MB/dia, salvaguarda de Wi-Fi e opt-out.
-  - Cascata completa: Memória -> IndexedDB -> Relay Desktop -> Broadcast -> WebRTC -> Gateways.
-- [x] **Fase 3.3: Deploy Público, Signaling WSS & TURN Comunitário**
-  - Pipelines GitHub Actions para CI multiplataforma (`.github/workflows/ci.yml`) e deploy estático no GitHub Pages (`.github/workflows/deploy-pages.yml`).
-  - Suporte completo a servidores TURN no cliente (`createRtcConfig`, `saveCustomTurnConfig`) e na UI (`#/settings/network`) para travessia de 4G/NAT simétrico.
-  - Kit de deploy self-host em Docker (`relay/deploy/docker-compose.yml`) com Caddy (WSS TLS automático) e Coturn blindado contra SSRF/abuso.
-- [x] **Fase 4: Mensagens Diretas Efêmeras (WebRTC + Inbox TTL)**
-  - Criptografia ponta-a-ponta com WebCrypto API (ECDH P-256 com chave efêmera + AES-GCM-256 e AAD) em `crypto-dm.js`.
-  - **Proibição estrita on-chain:** nenhuma mensagem privada gravada na imutabilidade do Arweave.
-  - Canal dedicado WebRTC `"vox-dm-v0"` para entrega online P2P direta sem servidores.
-  - Inbox efêmero com TTL de 72h em `relay/inbox.py` (`POST /inbox/:toAddress`, `GET` e `DELETE`) para mensagens offline.
-  - Histórico de conversas gravado exclusivamente no IndexedDB local do usuário (`dm-threads`).
-  - Interface completa com rotas `#/dm` e `#/dm/:address`, e botão de mensagem direta no perfil de membros.
-  - *Critério de Sucesso (DoD atingido):* Troca de mensagens E2E entre Alice e Bob online via WebRTC, e entrega assíncrona com auto-expiração via relay inbox quando offline.
-- [x] **Fase 5: Handles Amigáveis & Resolução (@handle + DNS Comunitário)**
-  - Identidade mnemônica `@handle` registrada on-chain via transações `Type: handle` (`handles.js`).
-  - Resolução no PWA via rotas `#/h/:slug` e `#/u/@slug` apontando para o perfil do proprietário.
-  - Detecção e interface de desambiguação transparente para **conflitos de handle** sem tribunal central.
-  - Suporte a CNAME comunitário e wildcard DNS (`docs/DNS-HANDLES.md` e `client/redirect.html`).
-  - ArNS documentado como evolução futura (Fase 5.1).
-  - *Critério de Sucesso (DoD atingido):* Reivindicação de `@slug`, resolução direta no PWA e navegação via query `?h=slug`.
+Em conformidade com a auditoria de honestidade cívica ([docs/honest-copy-audit-2026-10-23.md](./docs/honest-copy-audit-2026-10-23.md)):
+
+* **O Vox NÃO é 100% P2P móvel no 4G brasileiro:** Celulares sob CGNAT e franquia de dados limitada não sustentam conexões permanentes. O uso de gateways públicos Arweave como leitura reserva é transparente e necessário.
+* **O Vox NÃO promete imunidade judicial:** Toda postagem pública no permaweb é permanente e auditável. As normas da legislação brasileira ([COMPLIANCE-BR.md](./COMPLIANCE-BR.md) — Marco Civil da Internet e LGPD) aplicam-se integralmente.
+* **O Vox NÃO publica sozinho nas redes sociais:** O protocolo POSSE gera rascunhos, links e compartilhamentos assistidos via intents oficiais; o envio final é sempre um ato consciente e deliberado do usuário.
+* **O repositório NÃO é uma empresa:** Não hospedamos fóruns em nome de terceiros nem cobramos mensalidades. Somos código, documentação e infraestrutura cívica auditável.
 
 ---
 
-## 📚 Documentação
+## 📖 Mapa Canônico de Documentação
 
-| Arquivo | Conteúdo |
-|---------|----------|
-| [LESSONS.md](./LESSONS.md) | **Diagnóstico comparativo (Varanda, Bluesky, Mastodon, Channel-01, Pix) e matriz 5×5** |
-| [POSITIONING.md](./POSITIONING.md) | Posicionamento, honestidade permaweb e metáfora Pix |
-| [ARCHITECTURE.md](./ARCHITECTURE.md) | Linhagem Channel-01, GraphQL, tags e fluxos técnicos |
-| [GOVERNANCE.md](./GOVERNANCE.md) | Moderação `mod-action` client-side e espelhos comunitários |
-| [IDENTITY.md](./IDENTITY.md) | Ed25519, Passkeys e fases de identidade |
-| [COMPLIANCE-BR.md](./COMPLIANCE-BR.md) | LGPD, Marco Civil Art. 19 e notas regulatórias |
-| [client/DEV.md](./client/DEV.md) | Guia do desenvolvedor: carteira Arweave local, faucets e testes |
-| [relay/README.md](./relay/README.md) | Guia do Vox Relay Desktop: cache proxy local em Python |
-| [relay/deploy/README.md](./relay/deploy/README.md) | Guia de Deploy VPS: Signaling WSS (Caddy) + TURN Comunitário (Coturn) |
-| [docs/DNS-HANDLES.md](./docs/DNS-HANDLES.md) | Guia de Identidade Amigável, CNAME Comunitário e DNS Wildcard |
-| [docs/governance-proposta-feira-pin-template.md](./docs/governance-proposta-feira-pin-template.md) | Modelo de proposta: feira comunitária + recomendação não vinculante de espelho leve (V-I07) |
-| [docs/antigravity-operating.md](./docs/antigravity-operating.md) | Contrato operacional Antigravity × Cursor (malha P2P, gossip, integração em `main`) |
-| [docs/proposta-vox.html](./docs/proposta-vox.html) | Página explicativa completa: proposta, economia distribuída e sustentabilidade |
+| Documento | Foco & Finalidade |
+|:---|:---|
+| **[docs/README.md](./docs/README.md)** | **Índice Mestre:** Ponto de partida único para desenvolvedores e revisores. |
+| **[docs/dossie-geral-inventario-master-breakdown-2026-11.md](./docs/dossie-geral-inventario-master-breakdown-2026-11.md)** | **Plano Mestre N=25:** Único checklist vivo `[ ]` e Definition of Done global. |
+| **[ARCHITECTURE.md](./ARCHITECTURE.md)** | Topologia técnica, tags GraphQL, linhagem e protocolos de dados. |
+| **[GOVERNANCE.md](./GOVERNANCE.md)** | Governança distribuída, quórum cívico e moderação client-side. |
+| **[COMPLIANCE-BR.md](./COMPLIANCE-BR.md)** | Adequação regulatória: Marco Civil da Internet (Art. 19), LGPD e minimização. |
+| **[IDENTITY.md](./IDENTITY.md)** | Criptografia P-256 WebCrypto, gestão de chaves e carteiras Arweave. |
+| **[docs/tese-praca-civica-militancia-pro-democratica-2026-10.md](./docs/tese-praca-civica-militancia-pro-democratica-2026-10.md)** | Tese de militância pró-democrática (cruzamento estratégico T01–T20). |
+| **[docs/steward-seed-15min.md](./docs/steward-seed-15min.md)** | Guia rápido de 15 minutos para operadores e seeds voluntários de relay. |
+| **[docs/CONTRIBUTING-DOCS.md](./docs/CONTRIBUTING-DOCS.md)** | Regras de governança de documentação, mutex de agentes e políticas de commit. |
 
-### 🚀 Pipelines de CI/CD (GitHub Actions)
+### Decisões Arquiteturais Registradas (ADRs)
 
-O repositório possui automação contínua configurada em `.github/workflows/`:
-* **CI — Testes & Validação (`.github/workflows/ci.yml`):** Matriz multiplataforma com Node.js (22, 24) e Python (3.11, 3.12) executando verificação de sintaxe, suíte completa de **405** testes e auditoria de segurança contra vazamento de chaves privadas.
-* **Deploy PWA — GitHub Pages (`.github/workflows/deploy-pages.yml`):** Publicação contínua da pasta `client/` no GitHub Pages com suporte a HTTPS nativo e PWA instalável a cada push na branch `main`.
+* **[ADR-001](./docs/adr/001-contribution-attestation-export.md):** Atestação exportável de contribuição P2P.
+* **[ADR-002](./docs/adr/002-oauth-profile-enrich-client.md):** Enriquecimento de perfil client-only via OAuth.
+* **[ADR-003](./docs/adr/003-profile-card-gossip.md):** Cartão de malha e propagação gossip de perfis.
+* **[ADR-004](./docs/adr/004-gateway-honest-fallback.md):** Fallback transparente e honesto de leitura reserva de gateways.
+* **[ADR-005](./docs/adr/005-collective-profile-m-of-n.md):** Perfil coletivo M-de-N via multi-assinatura independente (Tese T02).
 
 ---
 
-## 🤝 Como Contribuir
+## 🤝 Governança e Contribuição
 
-O Vox é mantido pela boa vontade de desenvolvedores, designers e entusiastas brasileiros da soberania digital.
+O projeto opera sob o método **Mantenedor como Revisor de Código** ([docs/antigravity-estrategia-mantenedor-revisor-2026.md](./docs/antigravity-estrategia-mantenedor-revisor-2026.md)):
 
-* Código aberto sob licença MIT.
-* Princípio de projeto: **Menor esforço, maior impacto**. Zero inchaço algorítmico, sem dependência de Big Techs.
+* A branch **`main`** permanece **sempre verde e publicável** (Pages deploy imediato).
+* Todo desenvolvimento ocorre em branches dedicadas (`feat/...`, `fix/...`), integradas via merge explícito (`--no-ff`) após aprovação total da suíte de testes.
+* Respeito estrito aos mutexes de agentes: um agente por arquivo canônico, garantindo histórico limpo e zero regressão.
 
-### Desenvolvimento (branches)
+---
 
-* A branch **`main`** permanece **sempre publicável** — o [GitHub Pages](https://yurikayel.github.io/vox/) publica a cada push em `main`.
-* **Novas features e correções:** atualize `main` (`git pull`), crie branch (`git checkout -b feat/nome-curto` ou `fix/...`) e trabalhe nela.
-* **Integração:** envie a branch (`git push -u origin feat/...`) e abra PR, ou faça merge quando estiver pronto — sem commits diretos em `main` para trabalho de feature (humano ou agente).
-* Hotfix urgente em produção: branch `fix/...` ou `hotfix/...`, mesmo fluxo.
+*Vox — Praça pública digital, soberania de dados e comunicação comunitária livre.*
