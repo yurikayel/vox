@@ -56,6 +56,10 @@ describe("renderAjudaTeste", () => {
     assert.match(html, /sem ranking, sem boost/i);
     assert.match(html, /POSSE/i);
     assert.match(html, /Zap continua existindo/i);
+    assert.match(html, /fazenda/i);
+    assert.match(html, /pens[aã]o/i);
+    assert.match(html, /movimento/i);
+    assert.match(html, /proposta \+ diff \+ voto/i);
   });
 
   it("links GitHub docs and issues", () => {
