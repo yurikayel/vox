@@ -64,7 +64,12 @@ O **Dossiê N=25** foi escolhido como a fonte viva e exclusiva de checkboxes `[ 
 - [teste-aberto-demo.md](./teste-aberto-demo.md) — praça demo `demo-aprenda-vox` · [bug report testadores](../.github/ISSUE_TEMPLATE/bug-tester.yml)  
 - [CONTRIBUTING-DOCS.md](./CONTRIBUTING-DOCS.md) — norma curta para voluntários e agentes  
 - [metodo-agentes-mutex-e-revisor.md](./metodo-agentes-mutex-e-revisor.md) — regras de mutex e operação revisor  
-- [adr/005-collective-profile-m-of-n.md](./adr/005-collective-profile-m-of-n.md) — T02 tese: perfil coletivo M-de-N (spec + lab)  
+- **Decisões Arquiteturais (ADRs):**
+  - [adr/001-contribution-attestation-export.md](./adr/001-contribution-attestation-export.md) — ADR-001: Atestação exportável de contribuição P2P
+  - [adr/002-oauth-profile-enrich-client.md](./adr/002-oauth-profile-enrich-client.md) — ADR-002: Enriquecimento de perfil client-only via OAuth
+  - [adr/003-profile-card-gossip.md](./adr/003-profile-card-gossip.md) — ADR-003: Cartão de malha e propagação gossip de perfis
+  - [adr/004-gateway-honest-fallback.md](./adr/004-gateway-honest-fallback.md) — ADR-004: Fallback honesto de gateway (leitura reserva)
+  - [adr/005-collective-profile-m-of-n.md](./adr/005-collective-profile-m-of-n.md) — ADR-005: Perfil coletivo M-de-N via multi-assinatura independente (Tese T02)
 - [piloto-comunidade-go-no-go.md](./piloto-comunidade-go-no-go.md) — gate humano do piloto (V-P09)  
 - [piloto-comunidade-retrospectiva-template.md](./piloto-comunidade-retrospectiva-template.md) — template retrospectiva  
 - [../client/DEV.md](../client/DEV.md) — guia de desenvolvimento §0–36  
