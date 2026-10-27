@@ -54,7 +54,20 @@ test("roadmap-ui: renderProfile exibe backup de identidade para conta própria",
   assert.ok(html.includes("deste aparelho"));
   assert.ok(html.includes("IndexedDB"));
   assert.ok(html.includes("seguidores"));
+  assert.ok(html.includes("btn-wipe-local-account"));
+  assert.ok(html.includes("Apaga chaves JWK DESTE navegador"));
+  assert.ok(html.includes("arquivo .json/.voxid em disco NÃO são apagados"));
   assert.ok(!html.includes("btn-toggle-block"));
+});
+
+test("roadmap-ui: renderProfile não oferece wipe local para outro autor", () => {
+  const main = createContainer();
+  render.renderProfile(main, "vx_outro_usuario", [], false, "", {
+    displayName: "Outro Usuário",
+    activeTab: "about",
+  });
+  assert.ok(!main.innerHTML.includes("btn-wipe-local-account"));
+  assert.ok(!main.innerHTML.includes("Apaga chaves JWK DESTE navegador"));
 });
 
 test("roadmap-ui: renderProfile exibe moderação local para outro autor", () => {
