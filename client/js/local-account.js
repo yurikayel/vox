@@ -5,6 +5,7 @@
  */
 
 import * as cryptoDm from "./crypto-dm.js";
+import { KIND_PLAIN, KIND_WRAPPED, wrapBackup, unwrapBackup } from "./account-backup-wrap.js";
 
 const ACCOUNT_STORAGE = "vox-local-account-v1";
 const DISPLAY_NAME_STORAGE = "vox-display-name";
@@ -304,64 +305,72 @@ export function setMeshDiscoverable(on) {
   }
 }
 
-export async function exportAccountBundle() {
+async function buildAccountBackup() {
   const acc = await ensureLocalAccount();
-  const dmKeypair = await cryptoDm.getDmKeypair();
-  const bundle = {
+  return {
     voxVersion: 1,
-    kind: "vox-account-backup",
+    kind: KIND_PLAIN,
     routeId: acc.routeId,
     publicJwk: acc.publicJwk,
     privateJwk: acc.privateJwk,
-    dmKeypair,
+    dmKeypair: await cryptoDm.getDmKeypair(),
     displayName: getDisplayName(),
     pixKey: getPixKey(),
     meshDiscoverable: getMeshDiscoverable(),
     exportedAt: Date.now(),
   };
-  return JSON.stringify(bundle, null, 2);
 }
 
-export async function importAccountBundle(rawBundle) {
-  let parsed = null;
+export async function exportAccountBundle(passphrase) {
+  const bundle = await buildAccountBackup();
+  const secret = String(passphrase || "").trim();
+  if (!secret) return JSON.stringify(bundle, null, 2);
+  return JSON.stringify(await wrapBackup(bundle, secret), null, 2);
+}
+
+function parseBackupRaw(rawBundle) {
   if (typeof rawBundle === "string") {
     try {
-      parsed = JSON.parse(rawBundle);
+      return JSON.parse(rawBundle);
     } catch {
       throw new Error("Formato de backup inválido (não é JSON)");
     }
-  } else if (rawBundle && typeof rawBundle === "object") {
-    parsed = rawBundle;
   }
+  if (rawBundle && typeof rawBundle === "object") return rawBundle;
+  throw new Error("Formato de backup inválido (não é JSON)");
+}
 
-  if (!parsed || parsed.kind !== "vox-account-backup" || !parsed.routeId) {
-    throw new Error("Backup incompatível ou corrompido");
-  }
+async function unwrapIfNeeded(parsed, passphrase) {
+  if (parsed?.kind === KIND_PLAIN) return parsed;
+  if (parsed?.kind === KIND_WRAPPED) return unwrapBackup(parsed, passphrase);
+  throw new Error("Backup incompatível ou corrompido");
+}
 
+async function assertBackupIdentity(parsed) {
+  if (!parsed?.routeId) throw new Error("Backup incompatível ou corrompido");
   if (!parsed.publicJwk || !parsed.privateJwk) {
     throw new Error("Chaves de assinatura ausentes no backup");
   }
-
-  const expectedRouteId = await computeRouteId(parsed.publicJwk);
-  if (!expectedRouteId || expectedRouteId !== parsed.routeId) {
+  const expected = await computeRouteId(parsed.publicJwk);
+  if (!expected || expected !== parsed.routeId) {
     throw new Error("Chave pública não corresponde ao routeId declarado");
   }
+}
 
+async function importEcdsaKey(jwk, usages) {
+  return crypto.subtle.importKey(
+    "jwk",
+    jwk,
+    { name: "ECDSA", namedCurve: "P-256" },
+    false,
+    usages
+  );
+}
+
+async function challengeSigningPair(parsed) {
   try {
-    const privKey = await crypto.subtle.importKey(
-      "jwk",
-      parsed.privateJwk,
-      { name: "ECDSA", namedCurve: "P-256" },
-      false,
-      ["sign"]
-    );
-    const pubKey = await crypto.subtle.importKey(
-      "jwk",
-      parsed.publicJwk,
-      { name: "ECDSA", namedCurve: "P-256" },
-      false,
-      ["verify"]
-    );
+    const privKey = await importEcdsaKey(parsed.privateJwk, ["sign"]);
+    const pubKey = await importEcdsaKey(parsed.publicJwk, ["verify"]);
     const nonce = new TextEncoder().encode(`vox-verify-${Date.now()}`);
     const sig = await crypto.subtle.sign({ name: "ECDSA", hash: "SHA-256" }, privKey, nonce);
     const valid = await crypto.subtle.verify({ name: "ECDSA", hash: "SHA-256" }, pubKey, sig, nonce);
@@ -369,7 +378,9 @@ export async function importAccountBundle(rawBundle) {
   } catch (err) {
     throw new Error(`Validação das chaves falhou: ${err.message}`);
   }
+}
 
+function persistAccountBackup(parsed) {
   cachedAccount = {
     routeId: parsed.routeId,
     publicJwk: parsed.publicJwk,
@@ -378,19 +389,18 @@ export async function importAccountBundle(rawBundle) {
     importedAt: Date.now(),
   };
   localStorage.setItem(ACCOUNT_STORAGE, JSON.stringify(cachedAccount));
-
-  if (parsed.dmKeypair) {
-    cryptoDm.setDmKeypair(parsed.dmKeypair);
-  }
-  if (parsed.displayName) {
-    setDisplayName(parsed.displayName);
-  }
-  if (parsed.pixKey) {
-    setPixKey(parsed.pixKey);
-  }
+  if (parsed.dmKeypair) cryptoDm.setDmKeypair(parsed.dmKeypair);
+  if (parsed.displayName) setDisplayName(parsed.displayName);
+  if (parsed.pixKey) setPixKey(parsed.pixKey);
   if (typeof parsed.meshDiscoverable === "boolean") {
     setMeshDiscoverable(parsed.meshDiscoverable);
   }
-
   return cachedAccount;
+}
+
+export async function importAccountBundle(rawBundle, passphrase) {
+  const inner = await unwrapIfNeeded(parseBackupRaw(rawBundle), passphrase);
+  await assertBackupIdentity(inner);
+  await challengeSigningPair(inner);
+  return persistAccountBackup(inner);
 }
