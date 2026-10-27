@@ -12,7 +12,7 @@ import { showDmList, showDmThread } from "./screens-dm.js";
 import { showVoxpedia } from "./screens-voxpedia.js";
 import { showAjudaTeste } from "./screens-ajuda-teste.js";
 import { showStatus } from "./screens-status.js";
-import { showLabsFrames } from "./screens-labs.js";
+import { showLabsFrames, showLabsMofn } from "./screens-labs.js";
 import {
   showComposeCommunity,
   showComposeTopic,
@@ -41,6 +41,7 @@ export async function routeImpl() {
   if (r.name === "ajuda-teste") return showAjudaTeste();
   if (r.name === "status") return showStatus();
   if (r.name === "labs-frames") return showLabsFrames();
+  if (r.name === "labs-mofn") return showLabsMofn();
   if (r.name === "community") return showCommunity(r.id, r.tab);
   if (r.name === "proposal") return showProposal(r.communityId, r.proposalId);
   if (r.name === "topic") return showTopic(r.id, r.communityId);
