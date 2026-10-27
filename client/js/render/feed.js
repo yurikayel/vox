@@ -8,6 +8,7 @@ import { renderPostBodyMarkdown } from "./markdown-body.js";
 import * as i18n from "../i18n-pt-br.js";
 import * as gossipRetract from "../gossip-retract-ui.js";
 import * as profileDirectory from "../profile-directory.js";
+import * as mod from "../moderation.js";
 import {
   WELCOME_ROUTE_ID,
   isWelcomeRouteId,
@@ -207,6 +208,21 @@ export function renderPostComments(topicId, commId = "", { replies = [], expande
   return `<div class="post-comments post-comments-surface${openCls}" id="${escapeHtml(panelId)}"${hid} data-topic="${escapeHtml(topicId)}" data-comm="${escapeHtml(commId)}">${renderCommentList(replies, { topicId, commId })}${renderInlineReplyComposer(topicId, commId)}</div>`;
 }
 
+export function quarantineShareAttrs(postId) {
+  if (!mod.isPostQuarantined(postId)) return "";
+  return ` disabled aria-disabled="true" title="${escapeHtml(mod.QUARANTINE_HINT)}"`;
+}
+
+export function renderQuarantineAction(postId, { asMenuItem = true } = {}) {
+  const id = String(postId || "");
+  const on = mod.isPostQuarantined(id);
+  const label = on ? "Tirar da quarentena local" : mod.QUARANTINE_ACTION_LABEL;
+  const role = asMenuItem ? ' role="menuitem"' : "";
+  return `<button type="button" class="action-btn btn-quarantine-post${on ? " is-quarantined" : ""}" data-id="${escapeHtml(id)}" title="${escapeHtml(mod.QUARANTINE_HINT)}" aria-label="${escapeHtml(label)}" aria-pressed="${on ? "true" : "false"}"${role}>
+    <span class="toolbar-overflow-label">${escapeHtml(label)}</span>
+  </button>`;
+}
+
 export function renderPostOwnerMenu(t) {
   if (!t?.isOwnLocalPost || t.type === "reply") return "";
   const syncTip = escapeHtml(i18n.localMutateEditDeleteTooltip);
@@ -327,7 +343,7 @@ function renderPostActionsOverlay(t, author, authorDisplay, authorHandle) {
     </button>
     ${renderCommentButton(t, { overlay: true })}
     ${renderZapOverlayBtn(t, author, authorDisplay)}
-    <button class="action-btn btn-share btn-share-post overlay-action-btn" data-id="${escapeHtml(t.id)}" data-title="${escapeHtml(t.title)}" data-author="${escapeHtml(authorDisplay || "")}" data-body="${escapeHtml((t.body || "").slice(0, 160))}" aria-label="Compartilhar">
+    <button class="action-btn btn-share btn-share-post overlay-action-btn" data-id="${escapeHtml(t.id)}" data-title="${escapeHtml(t.title)}" data-author="${escapeHtml(authorDisplay || "")}" data-body="${escapeHtml((t.body || "").slice(0, 160))}" aria-label="Compartilhar"${quarantineShareAttrs(t.id)}>
       <svg class="action-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
     </button>
     ${renderToolbarUtilityMenu(t, author, authorDisplay, authorHandle, baseStars, starred, stars, saved, { overlay: true })}
@@ -529,6 +545,7 @@ function renderToolbarUtilityMenu(t, author, authorDisplay, authorHandle, baseSt
         <svg class="action-icon icon-copy" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
         <span class="toolbar-overflow-label">Copiar .md</span>
       </button>
+      ${renderQuarantineAction(t.id)}
     </div>
   </details>`;
 }
@@ -546,6 +563,7 @@ function renderToolbarOverflow(t, author, authorDisplay, authorHandle, baseStars
         <svg class="action-icon icon-copy" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
         <span class="toolbar-overflow-label">Copiar .md</span>
       </button>
+      ${renderQuarantineAction(t.id)}
     </div>
   </details>`;
 }
@@ -566,7 +584,7 @@ function renderPostToolbar(t, author, authorDisplay, authorHandle) {
               <span class="action-count count-likes">${likes > 0 ? likes : ""}</span>
             </button>
             ${renderCommentButton(t)}
-            <button class="action-btn btn-share btn-share-post" data-id="${escapeHtml(t.id)}" data-title="${escapeHtml(t.title)}" data-author="${escapeHtml(authorDisplay || "")}" data-body="${escapeHtml((t.body || "").slice(0, 160))}" aria-label="Compartilhar post">
+            <button class="action-btn btn-share btn-share-post" data-id="${escapeHtml(t.id)}" data-title="${escapeHtml(t.title)}" data-author="${escapeHtml(authorDisplay || "")}" data-body="${escapeHtml((t.body || "").slice(0, 160))}" aria-label="Compartilhar post"${quarantineShareAttrs(t.id)}>
               <svg class="action-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
             </button>
             ${renderZapToolbarBtn(t, author, authorDisplay)}
