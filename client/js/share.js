@@ -33,6 +33,18 @@ export function formatShareBaseUrl() {
   return "https://yurikayel.github.io/vox/";
 }
 
+export function topicShareUrl(topicId) {
+  return `${formatShareBaseUrl()}#/t/${encodeURIComponent(topicId)}`;
+}
+
+export function connectShareUrl(routeId) {
+  return `${formatShareBaseUrl()}#/connect/${encodeURIComponent(routeId)}`;
+}
+
+export function communityShareUrl(communityId) {
+  return `${formatShareBaseUrl()}#/c/${encodeURIComponent(communityId)}`;
+}
+
 export function buildTopicShareText({ title, topicId, communityId = "", author = "", body = "" }) {
   const base = formatShareBaseUrl().replace(/\/+$/, "");
   const url = `${base}/#/t/${encodeURIComponent(topicId)}`;
@@ -50,7 +62,7 @@ export function buildWhatsAppShareUrl({ title, topicId, communityId = "", author
 }
 
 export async function shareTopic({ title, topicId, communityId, author = "", body = "" }) {
-  const url = `${window.location.origin}${window.location.pathname}#/t/${encodeURIComponent(topicId)}`;
+  const url = topicShareUrl(topicId);
   const formattedFull = buildTopicShareText({ title, topicId, communityId, author, body });
 
   if (navigator.share) {
@@ -78,7 +90,7 @@ export async function shareTopic({ title, topicId, communityId, author = "", bod
 }
 
 export async function shareCommunity({ title, communityId }) {
-  const url = `${window.location.origin}${window.location.pathname}#/c/${encodeURIComponent(communityId)}`;
+  const url = communityShareUrl(communityId);
   const text = `Participe da comunidade "${title}" no Vox Brasil:`;
 
   if (navigator.share) {
@@ -106,7 +118,7 @@ export async function shareCommunity({ title, communityId }) {
 }
 
 export async function shareConnect({ routeId, displayName = "" }) {
-  const url = `${window.location.origin}${window.location.pathname}#/connect/${encodeURIComponent(routeId)}`;
+  const url = connectShareUrl(routeId);
   const who = displayName || routeId.slice(0, 12);
   const text = `Conecte com ${who} no Vox:`;
 

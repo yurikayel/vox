@@ -25,6 +25,8 @@ test("post more menu - module defines sheet id and closed-by-default", () => {
   assert.ok(src.includes("post-more-sheet"));
   assert.ok(src.includes("Denunciar"));
   assert.ok(src.includes("Incorporar"));
+  assert.ok(src.includes("QR deste link"));
+  assert.ok(src.includes('data-action="qr"'));
   assert.ok(src.includes('aria-hidden", "true"'));
   assert.ok(src.includes("is-open"));
   assert.ok(!src.includes("ensurePostMoreSheet();\n  if (!wired)"));

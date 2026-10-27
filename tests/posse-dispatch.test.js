@@ -1,6 +1,7 @@
 import "../tests/setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
+import fs from "node:fs";
 
 const posse = await import("../client/js/posse-dispatch.js");
 
@@ -52,6 +53,12 @@ test("posse - export payload shape", () => {
 test("posse - webhook lines parser", () => {
   const urls = posse.parseWebhookLines(" https://a.com \n\nhttps://b.com/x ");
   assert.deepEqual(urls, ["https://a.com", "https://b.com/x"]);
+});
+
+test("posse - sheet offers QR deste link", () => {
+  const src = fs.readFileSync(new URL("../client/js/posse-dispatch.js", import.meta.url), "utf8");
+  assert.ok(src.includes("QR deste link"));
+  assert.ok(src.includes('data-posse="qr"'));
 });
 
 test("posse - re-exports honest limits microcopy for sheet UI", () => {
