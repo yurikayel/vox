@@ -1,9 +1,9 @@
 {
-  "git_sha": "55ee9dd",
+  "git_sha": "797c0cb",
   "branch": "main",
   "test_js": 382,
   "test_python": 23,
   "test_total": 405,
   "cache_name": "vox-pwa-v6.92-qr-url",
-  "generated_at": "2026-10-27T19:10:30Z"
+  "generated_at": "2026-10-27T19:25:00Z"
 }
