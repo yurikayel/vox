@@ -1,6 +1,7 @@
 /** @file POSSE pós-publicação — intents, Web Share, webhooks (incubação P0). */
 
 import * as share from "./share.js";
+import { openQrUrlSheet } from "./qr-url.js";
 
 export { SHARE_HONEST_LIMITS_SHORT } from "./share.js";
 
@@ -161,6 +162,7 @@ function ensurePosseSheet() {
       <button type="button" class="post-more-sheet-item" data-posse="twitter">X (Twitter)</button>
       <button type="button" class="post-more-sheet-item" data-posse="bluesky">Bluesky</button>
       <button type="button" class="post-more-sheet-item" data-posse="copy">Copiar texto + link</button>
+      <button type="button" class="post-more-sheet-item" data-posse="qr">QR deste link</button>
       <button type="button" class="post-more-sheet-item" data-posse="export">Exportar JSON (CLI)</button>
       <label class="posse-dispatch-skip">
         <input type="checkbox" id="posse-dispatch-skip-cb" />
@@ -243,6 +245,11 @@ async function onPosseAction(action) {
       share.showToast(text.slice(0, 120), "info");
     }
     closePosseSheet();
+    return;
+  }
+  if (action === "qr") {
+    closePosseSheet();
+    openQrUrlSheet(url);
     return;
   }
   if (action === "export") {
