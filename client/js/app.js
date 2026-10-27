@@ -7,6 +7,7 @@ import { initDmListeners, initGossipListeners, initSocialInteractions } from "./
 import { initPostMediaLightbox } from "./app/post-media-lightbox.js";
 import { attachPostMoreMenuHandlers } from "./render/post-more-menu.js";
 import { attachPosseSheetHandlers } from "./posse-dispatch.js";
+import { attachQrUrlHandlers } from "./qr-url.js";
 import { attachPostOverlayActionMenuHandlers } from "./app/screens-home.js";
 import { syncIdentity } from "./app/screens-network.js";
 
@@ -20,6 +21,7 @@ initSocialInteractions();
 initPostMediaLightbox();
 attachPostMoreMenuHandlers();
 attachPosseSheetHandlers();
+attachQrUrlHandlers();
 attachPostOverlayActionMenuHandlers();
 syncIdentity();
 demoSeed.ensureDemoSeed().finally(() => route());

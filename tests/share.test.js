@@ -112,6 +112,12 @@ test("share - shareCommunity formata link de comunidade", async () => {
   assert.ok(copiedText.includes("tec-br"));
 });
 
+test("share - canonical URL builders use hash routes", () => {
+  assert.ok(share.topicShareUrl("tx_abc").includes("#/t/tx_abc"));
+  assert.ok(share.connectShareUrl("vx_user1").includes("#/connect/vx_user1"));
+  assert.ok(share.communityShareUrl("feira").includes("#/c/feira"));
+});
+
 test("share - honest limits copy mentions no silent Meta post", () => {
   assert.match(share.SHARE_HONEST_LIMITS_SHORT, /Facebook|Instagram/i);
   assert.match(share.SHARE_HONEST_LIMITS_SHORT, /Web Share|JSON|CLI/i);
