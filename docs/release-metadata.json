@@ -1,9 +1,9 @@
 {
-  "git_sha": "bcc58ec",
-  "branch": "feat/t11-qr-vox-url",
+  "git_sha": "be7cbd5",
+  "branch": "main",
   "test_js": 379,
   "test_python": 23,
   "test_total": 402,
   "cache_name": "vox-pwa-v6.91-qr-url",
-  "generated_at": "2026-10-27T19:10:00Z"
+  "generated_at": "2026-10-27T19:08:25Z"
 }
