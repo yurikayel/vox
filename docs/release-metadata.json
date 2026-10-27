@@ -1,9 +1,9 @@
 {
   "git_sha": "4c2543f",
   "branch": "main",
-  "test_js": 363,
+  "test_js": 366,
   "test_python": 23,
-  "test_total": 386,
-  "cache_name": "vox-pwa-v6.88-voxpedia-tres-logicas",
+  "test_total": 389,
+  "cache_name": "vox-pwa-v6.89-quarantine-local",
   "generated_at": "2026-10-27T19:01:10Z"
 }

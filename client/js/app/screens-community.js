@@ -37,7 +37,7 @@ import * as profileDirectory from "../profile-directory.js";
 import * as welcomeProfile from "../vox-welcome-profile.js";
 import * as meshProfile from "../mesh-profile.js";
 import { parseRoute } from "./route-parse.js";
-import { getActiveUser, makeShellProps, attachPostShareHandlers } from "./context.js";
+import { getActiveUser, makeShellProps, attachPostShareHandlers, shareTopicUnlessQuarantined } from "./context.js";
 import { route } from "./navigation.js";
 import { openZapModal } from "./zap-modal.js";
 
@@ -529,7 +529,7 @@ export async function showTopic(topicId, commIdParam = "") {
   const btnShare = document.getElementById("btn-share-topic");
   if (btnShare) {
     btnShare.addEventListener("click", () => {
-      share.shareTopic({
+      shareTopicUnlessQuarantined({
         title: topic.title || "Tópico no Vox",
         topicId,
         communityId: finalCommId,

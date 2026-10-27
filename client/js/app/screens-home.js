@@ -199,7 +199,9 @@ export async function showTagFeed(slug) {
   const main = render.renderShell(makeShellProps(user, "home", `#${cleanSlug}`));
   render.renderLoading(main);
   try {
-    const posts = postOwnership.mapOwnLocalFlags(await cacheNode.getPostsByTag(cleanSlug), user);
+    const posts = mod.filterFeedPosts(
+      postOwnership.mapOwnLocalFlags(await cacheNode.getPostsByTag(cleanSlug), user)
+    );
     render.renderTagFeed(main, cleanSlug, posts);
   } catch {
     render.renderTagFeed(main, cleanSlug, []);
