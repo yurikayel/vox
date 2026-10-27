@@ -307,6 +307,31 @@ function renderOAuthEnrichmentBlock(oauthProvider = "") {
     </div>`;
 }
 
+function renderSovereigntyCard() {
+  return `
+      <div class="card profile-sovereignty-export" style="margin-top:0.75rem;">
+        <h3>Arquivo de soberania</h3>
+        <p class="desc" style="font-size:0.85rem; margin-bottom:0.5rem;">
+          Chaves P-256 de assinatura e chaves de DM <strong>deste aparelho</strong>.
+          Não inclui o IndexedDB completo nem a lista de seguidores.
+          Sem senha o JSON sai em claro (kind <code>vox-account-backup</code>); senha opcional cifra com AES-GCM.
+          Extensão <code>.voxid</code> é o mesmo payload que <code>.json</code>.
+        </p>
+        <label for="input-sovereignty-passphrase" class="desc" style="display:block; font-size:0.82rem; margin-bottom:0.25rem;">
+          Senha opcional para cifrar o arquivo
+        </label>
+        <input type="password" id="input-sovereignty-passphrase" class="form-control" autocomplete="new-password" placeholder="Senha (opcional)" style="margin-bottom:0.5rem;" />
+        <div style="display:flex; flex-wrap:wrap; gap:0.5rem;">
+          <button type="button" id="btn-export-account" class="btn btn-sm btn-primary">Baixar arquivo de soberania (.voxid)</button>
+          <button type="button" id="btn-export-account-alt" class="btn btn-sm btn-outline" hidden aria-hidden="true">💾 Exportar Identidade (.json)</button>
+          <label class="btn btn-sm btn-outline" style="margin:0; cursor:pointer;">
+            📥 Restaurar Backup
+            <input type="file" id="file-import-account" accept=".json,.voxid,application/json" style="display:none;" />
+          </label>
+        </div>
+      </div>`;
+}
+
 function renderProfileActions(
   address,
   isCurrentWallet,
@@ -345,18 +370,7 @@ function renderProfileActions(
         </div>
       </div>
 
-      <div class="card profile-sovereignty-export" style="margin-top:0.75rem;">
-        <h3>Arquivo de soberania</h3>
-        <p class="desc" style="font-size:0.85rem; margin-bottom:0.5rem;">Baixe um JSON com chaves locais (assinatura e DM). Guarde offline — ninguém na Big Tech pode revogar este arquivo. Leia <code>COMPLIANCE-BR.md</code> no repositório.</p>
-        <div style="display:flex; flex-wrap:wrap; gap:0.5rem;">
-          <button type="button" id="btn-export-account" class="btn btn-sm btn-primary">Baixar arquivo de soberania (.json)</button>
-          <button type="button" id="btn-export-account-alt" class="btn btn-sm btn-outline" hidden aria-hidden="true">💾 Exportar Identidade (.json)</button>
-          <label class="btn btn-sm btn-outline" style="margin:0; cursor:pointer;">
-            📥 Restaurar Backup
-            <input type="file" id="file-import-account" accept="application/json,.json" style="display:none;" />
-          </label>
-        </div>
-      </div>
+      ${renderSovereigntyCard()}
 
       <details class="advanced-settings card" style="margin-top:0.75rem;">
         <summary>Avançado — Arquivamento Permanente & Carteira</summary>

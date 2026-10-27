@@ -9,6 +9,7 @@ import { attachPostMoreMenuHandlers } from "./render/post-more-menu.js";
 import { attachPosseSheetHandlers } from "./posse-dispatch.js";
 import { attachQrUrlHandlers } from "./qr-url.js";
 import { attachPostOverlayActionMenuHandlers } from "./app/screens-home.js";
+import { attachQuarantineHandlers } from "./app/context.js";
 import { syncIdentity } from "./app/screens-network.js";
 
 initColorMode(document, { onApply: () => applySkyTheme(document) });
@@ -23,5 +24,6 @@ attachPostMoreMenuHandlers();
 attachPosseSheetHandlers();
 attachQrUrlHandlers();
 attachPostOverlayActionMenuHandlers();
+attachQuarantineHandlers();
 syncIdentity();
 demoSeed.ensureDemoSeed().finally(() => route());

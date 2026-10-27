@@ -7,6 +7,19 @@ export const VOX_GITHUB_ISSUES = "https://github.com/yurikayel/vox/issues";
 const DEMO_COMMUNITY = "demo-aprenda-vox";
 const DEMO_FEIRA = "demo-feira-local";
 
+function renderTresLogicasTeste() {
+  return `
+      <section class="voxpedia-section card" id="teste-tres-logicas" aria-labelledby="teste-tres-logicas-title">
+        <h2 id="teste-tres-logicas-title">Fazenda, pensão, movimento</h2>
+        <p class="desc">
+          Big Tech é <strong>fazenda</strong> (terra de outro). Fediverso clássico é <strong>pensão</strong> (alguém paga o VPS).
+          Vox é <strong>movimento</strong>: a chave fica no bolso; gateways são leitura reserva.
+          Na aba Governança, mudar regra da comunidade é proposta + diff + voto sim/não/abstenção — não programa municipal nem carta de federação.
+          Camadas na <a href="#/voxpedia">Voxpedia</a>.
+        </p>
+      </section>`;
+}
+
 /** @returns {string} HTML da página Teste aberto */
 export function renderAjudaTeste() {
   const { docsReadme, devGuide, docsIndex, repo } = VOX_GITHUB_DOCS;
@@ -53,7 +66,7 @@ export function renderAjudaTeste() {
           O Vox é a fonte soberana; os grupos de mensagem continuam sendo o canal onde a conversa acontece.
         </p>
       </section>
-
+      ${renderTresLogicasTeste()}
       <section class="voxpedia-section card" id="teste-pacto" aria-labelledby="teste-pacto-title">
         <h2 id="teste-pacto-title">Pacto e opt-out</h2>
         <p class="desc">
