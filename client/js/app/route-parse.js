@@ -1,17 +1,30 @@
 /**
  * @module app/route-parse
- * Parser puro de `location.hash` e query `?h=` — sem DOM side effects.
+ * Parser puro de `location.hash` e query `?h=` / `?labs=` — sem DOM side effects.
  */
 
 /**
  * @returns {Record<string, string> & { name: string }}
  */
+function parseSearchHints() {
+  if (typeof window === "undefined" || !window.location?.search) return null;
+  const q = new URLSearchParams(window.location.search);
+  const paramHandle = q.get("h");
+  if (paramHandle) return { name: "handle-lookup", slug: paramHandle };
+  if (q.get("labs") === "mofn") return { name: "labs-mofn" };
+  return null;
+}
+
+function parseLabsHash(parts) {
+  if (parts[0] !== "labs") return null;
+  if (parts[1] === "mofn") return { name: "labs-mofn" };
+  if (parts[1] === "frames") return { name: "labs-frames" };
+  return null;
+}
+
 export function parseRoute() {
-  if (typeof window !== "undefined" && window.location?.search) {
-    const q = new URLSearchParams(window.location.search);
-    const paramHandle = q.get("h");
-    if (paramHandle) return { name: "handle-lookup", slug: paramHandle };
-  }
+  const fromSearch = parseSearchHints();
+  if (fromSearch) return fromSearch;
 
   const hash = location.hash.replace(/^#\/?/, "");
   const [pathPart, queryPart] = hash.split("?");
@@ -86,7 +99,8 @@ export function parseRoute() {
     return { name: "profile", address: raw, tab: (query.get("tab") || "posts").toLowerCase() };
   }
   if (parts[0] === "status") return { name: "status" };
-  if (parts[0] === "labs" && parts[1] === "frames") return { name: "labs-frames" };
+  const labs = parseLabsHash(parts);
+  if (labs) return labs;
   if (parts[0] === "voxpedia") return { name: "voxpedia" };
   if (parts[0] === "ajuda" && parts[1] === "voxpedia") return { name: "voxpedia" };
   if (parts[0] === "ajuda" && parts[1] === "teste") return { name: "ajuda-teste" };
