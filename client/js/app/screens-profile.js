@@ -6,6 +6,7 @@ import * as mock from "../mock.js";
 import * as wallet from "../wallet.js";
 import * as upload from "../upload.js";
 import * as share from "../share.js";
+import { openQrUrlSheet } from "../qr-url.js";
 import * as mod from "../moderation.js";
 import * as cacheNode from "../cache-node.js";
 import * as peers from "../peers.js";
@@ -283,6 +284,12 @@ export function bindProfileButtons(user, address, isSelf, dmPub, activeTab = "po
 
   document.getElementById("btn-copy-connect-link")?.addEventListener("click", () => {
     void share.shareConnect({ routeId: address, displayName: localAccount.getDisplayName() });
+  });
+
+  document.getElementById("btn-qr-connect-link")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    openQrUrlSheet(share.connectShareUrl(address));
   });
 
   const btnGenWallet = document.getElementById("btn-generate-wallet");

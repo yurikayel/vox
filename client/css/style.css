@@ -5923,6 +5923,54 @@ body.post-lightbox-open {
   }
 }
 
+.qr-url-sheet[hidden],
+.qr-url-sheet:not(.is-open) {
+  display: none !important;
+}
+
+.qr-url-sheet {
+  align-items: center;
+  padding: 1rem;
+}
+
+.qr-url-panel {
+  width: min(100%, 22rem);
+  background: var(--surface-1, #fff);
+  color: var(--text, #111);
+  border-radius: 16px;
+  padding: 1.1rem 1.2rem 1.2rem;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
+}
+
+.qr-url-title {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.qr-url-svg {
+  display: flex;
+  justify-content: center;
+  margin: 0.75rem 0;
+}
+
+.qr-url-svg svg {
+  width: min(72vw, 16rem);
+  height: auto;
+  background: #fff;
+}
+
+.qr-url-copy {
+  font-size: 0.85rem;
+  line-height: 1.4;
+  margin: 0 0 0.6rem;
+}
+
+.qr-url-href {
+  word-break: break-all;
+  font-size: 0.75rem;
+  margin: 0 0 0.9rem;
+}
+
 /* Footer */
 .app-footer {
   text-align: center;
