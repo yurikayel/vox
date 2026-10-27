@@ -61,3 +61,39 @@ test("account-backup - rejeita string não-JSON ou chaves ausentes", async () =>
     /Chaves de assinatura ausentes no backup/
   );
 });
+
+test("account-backup - envelope com senha restaura identidade (roundtrip wrapped)", async () => {
+  localStorage.clear();
+  const acc1 = await localAccount.ensureLocalAccount();
+  localAccount.setDisplayName("Líder Comunitário");
+  const privD = acc1.privateJwk.d;
+
+  const wrappedStr = await localAccount.exportAccountBundle("frase-secreta-ok");
+  assert.ok(wrappedStr.includes("vox-account-backup-wrapped"));
+  assert.ok(!wrappedStr.includes("vox-account-backup\""));
+  assert.ok(!wrappedStr.includes("Líder Comunitário"));
+  assert.ok(!wrappedStr.includes(privD));
+
+  localStorage.clear();
+  const restored = await localAccount.importAccountBundle(wrappedStr, "frase-secreta-ok");
+  assert.equal(restored.routeId, acc1.routeId);
+  assert.equal(localAccount.getDisplayName(), "Líder Comunitário");
+  const signed = await localAccount.signPayload({ title: "Post wrapped", body: "ok" });
+  assert.equal(await localAccount.verifyPayload(signed), true);
+});
+
+test("account-backup - senha errada rejeita envelope wrapped", async () => {
+  localStorage.clear();
+  await localAccount.ensureLocalAccount();
+  const wrappedStr = await localAccount.exportAccountBundle("frase-certa");
+
+  localStorage.clear();
+  await assert.rejects(
+    () => localAccount.importAccountBundle(wrappedStr, "senha-errada"),
+    /Senha incorreta/
+  );
+  await assert.rejects(
+    () => localAccount.importAccountBundle(wrappedStr),
+    /informe a senha/
+  );
+});
