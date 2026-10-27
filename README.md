@@ -34,7 +34,7 @@ Porta de entrada da documentação: **[docs/README.md](./docs/README.md)**. Test
 |--------|---------------------------|
 | **Licença** | [MIT](./LICENSE) |
 | **Runtime do PWA** | Vanilla no navegador — **sem** dependência npm em produção |
-| **Testes** | **382** (`359` JS + `23` Python) — `npm test` na raiz |
+| **Testes** | **384** (`361` JS + `23` Python) — `npm test` na raiz |
 | **Relay / inbox** | Python sem dependências externas em [`relay/`](./relay/) |
 | **Bugs de teste** | Issue **[tester] Bug report** ([`.github/ISSUE_TEMPLATE/bug-tester.yml`](./.github/ISSUE_TEMPLATE/bug-tester.yml)) |
 | **Docs** | Norma [docs/CONTRIBUTING-DOCS.md](./docs/CONTRIBUTING-DOCS.md); **GitHub = fonte de verdade** (a [Voxpedia](https://yurikayel.github.io/vox/#/voxpedia) no app explica; desenvolvimento e release line ficam aqui) |
@@ -63,8 +63,8 @@ Demo: **[https://yurikayel.github.io/vox/](https://yurikayel.github.io/vox/)** �
 |-------|--------|
 | **SHA** | `8cb5440` |
 | **Branch** | `main` |
-| **Testes** | **382** (`359` JS + `23` Python) — `npm test` na raiz |
-| **Service worker** | `vox-pwa-v6.86-home-logo` |
+| **Testes** | **384** (`361` JS + `23` Python) — `npm test` na raiz |
+| **Service worker** | `vox-pwa-v6.87-voxid-passphrase` |
 | **Deploy** | Push em `main` → GitHub Pages; após deploy use **hard refresh** (`Ctrl+Shift+R`) para trocar o SW |
 
 Malha: gossip **`CACHE_MANIFEST`** + prioridade **WANT**; feira **Classificados** com ofertas assinadas, status/retratação na malha ([`listing-ui.js`](./client/js/listing-ui.js)). Seed steward: [`docs/steward-seed-15min.md`](./docs/steward-seed-15min.md).
@@ -206,7 +206,7 @@ Todo dado no Vox é identificado por tags semânticas universais:
 ### 🚀 Pipelines de CI/CD (GitHub Actions)
 
 O repositório possui automação contínua configurada em `.github/workflows/`:
-* **CI — Testes & Validação (`.github/workflows/ci.yml`):** Matriz multiplataforma com Node.js (22, 24) e Python (3.11, 3.12) executando verificação de sintaxe, suíte completa de **382** testes e auditoria de segurança contra vazamento de chaves privadas.
+* **CI — Testes & Validação (`.github/workflows/ci.yml`):** Matriz multiplataforma com Node.js (22, 24) e Python (3.11, 3.12) executando verificação de sintaxe, suíte completa de **384** testes e auditoria de segurança contra vazamento de chaves privadas.
 * **Deploy PWA — GitHub Pages (`.github/workflows/deploy-pages.yml`):** Publicação contínua da pasta `client/` no GitHub Pages com suporte a HTTPS nativo e PWA instalável a cada push na branch `main`.
 
 ---
