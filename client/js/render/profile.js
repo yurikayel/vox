@@ -11,6 +11,7 @@ import {
 } from "./util.js";
 import { renderPostItem } from "./feed.js";
 import { isWelcomeRouteId } from "../vox-welcome-profile.js";
+import { LOCAL_WIPE_NOTICE } from "../local-account.js";
 
 function renderProfileGithubBadge(githubHandle) {
   if (!githubHandle) return "";
@@ -332,6 +333,15 @@ function renderSovereigntyCard() {
       </div>`;
 }
 
+function renderLocalWipeCard() {
+  return `
+      <div class="card profile-local-wipe" style="margin-top:0.75rem;">
+        <h3>Apagar chaves deste navegador</h3>
+        <p class="desc" style="font-size:0.85rem; margin-bottom:0.5rem;">${escapeHtml(LOCAL_WIPE_NOTICE)}</p>
+        <button type="button" id="btn-wipe-local-account" class="btn btn-sm btn-danger">Apagar chaves deste navegador</button>
+      </div>`;
+}
+
 function renderProfileActions(
   address,
   isCurrentWallet,
@@ -371,6 +381,7 @@ function renderProfileActions(
       </div>
 
       ${renderSovereigntyCard()}
+      ${renderLocalWipeCard()}
 
       <details class="advanced-settings card" style="margin-top:0.75rem;">
         <summary>Avançado — Arquivamento Permanente & Carteira</summary>

@@ -220,6 +220,27 @@ function bindSovereigntyBackup(isSelf, activeTab) {
   bindSovereigntyImport(activeTab);
 }
 
+function clearPassphraseField() {
+  const el = document.getElementById("input-sovereignty-passphrase");
+  if (el) el.value = "";
+}
+
+async function runLocalWipe(activeTab) {
+  if (!localAccount.confirmLocalWipe()) return;
+  clearPassphraseField();
+  localAccount.wipeLocalAccount();
+  share.showToast("Chaves deste navegador apagadas.");
+  await showProfile(null, activeTab);
+}
+
+function bindLocalWipe(isSelf, activeTab) {
+  const btn = document.getElementById("btn-wipe-local-account");
+  if (!isSelf || !btn) return;
+  btn.addEventListener("click", () => {
+    void runLocalWipe(activeTab);
+  });
+}
+
 export function bindProfileButtons(user, address, isSelf, dmPub, activeTab = "posts") {
   const formPixKey = document.getElementById("form-pix-key");
   if (formPixKey && isSelf) {
@@ -454,6 +475,7 @@ export function bindProfileButtons(user, address, isSelf, dmPub, activeTab = "po
   }
 
   bindSovereigntyBackup(isSelf, activeTab);
+  bindLocalWipe(isSelf, activeTab);
 
   const btnToggleBlock = document.getElementById("btn-toggle-block");
   if (btnToggleBlock && !isSelf) {
