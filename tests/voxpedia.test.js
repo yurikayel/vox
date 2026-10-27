@@ -75,6 +75,34 @@ describe("renderVoxpedia", () => {
     assert.match(html, /sem ranking, sem boost/i);
     assert.match(html, /POSSE/i);
     assert.match(html, /Zap continua existindo/i);
+    assert.match(html, /n[aã]o<\/strong> publica sozinho no Facebook ou Instagram/i);
+  });
+
+  it("covers civic pull request on community rules", () => {
+    assert.match(html, /Pull request cívico \(regras da comunidade\)/);
+    assert.match(html, /governance-proposal/);
+    assert.match(html, /diff/i);
+    assert.match(html, /sim/);
+    assert.match(html, /abstenção/);
+    assert.match(html, /Eligibility-Cutoff/);
+    assert.match(html, /Proposal-Created-At/);
+    assert.match(html, /regra daquela comunidade/);
+    assert.match(html, /n[aã]o um programa municipal/);
+    assert.match(html, /n[aã]o uma carta de federa/);
+    assert.match(html, /n[aã]o quórum territorial/);
+  });
+
+  it("covers three logics fazenda pensão movimento", () => {
+    assert.match(html, /Três lógicas: fazenda, pensão, movimento/);
+    assert.match(html, /Big Tech = fazenda/);
+    assert.match(html, /Fediverso clássico = pensão/);
+    assert.match(html, /Vox = movimento/);
+    assert.match(html, /chave no bolso/);
+    assert.doesNotMatch(html, /100%\s*P2P/i);
+    assert.doesNotMatch(html, /imunidade judicial/i);
+    assert.doesNotMatch(html, /calar a rede/i);
+    assert.doesNotMatch(html, /confiscar cada celular/i);
+    assert.doesNotMatch(html, /confiscate cada celular/i);
   });
 
   it("links to GitHub technical documentation", () => {
