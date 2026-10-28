@@ -41,7 +41,7 @@ export function renderAjudaTeste() {
         <ol class="voxpedia-steps">
           <li>Entre pelo site (PWA). Na <strong>Porta da Cantina</strong>, aceite entrar — cria sua identidade local <code>vx_…</code> no aparelho.</li>
           <li>Leia e aceite o <strong>Pacto Vox</strong> (ajuda leve à malha). Para pausar depois: <a href="#/settings/network">Sua rede</a> → marque <strong>Pausar ajuda à rede</strong>.</li>
-          <li>Entre na comunidade demo <a href="#/c/${escapeHtml(DEMO_COMMUNITY)}">Aprenda Vox</a> ou na praça de teste <a href="#/c/${escapeHtml(DEMO_FEIRA)}?tab=listings">Feira demo</a>.</li>
+          <li>Entre na comunidade demo <a href="#/c/${escapeHtml(DEMO_COMMUNITY)}">Aprenda Vox</a> ou na feira de teste <a href="#/c/${escapeHtml(DEMO_FEIRA)}?tab=listings">Feira demo</a>.</li>
           <li>Publique <strong>um post</strong> (menu <strong>Postar</strong> ou compositor no Início). Texto curto basta.</li>
           <li>Abra <a href="#/status">Status da malha</a> neste aparelho e veja gateways, relay e versão do cache (Service Worker).</li>
           <li>Encontrou bug ou texto confuso? Abra um issue no <a href="${VOX_GITHUB_ISSUES}" target="_blank" rel="noopener noreferrer">GitHub</a> (screenshot + navegador ajudam).</li>
