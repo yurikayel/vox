@@ -40,6 +40,8 @@ export {
   renderPostItem,
   renderStoriesStrip,
   renderWelcomeFeedHintHtml,
+  renderFeedTabsBar,
+  renderExternalFeedManagerHtml,
   renderFeed,
 } from "./render/feed.js";
 
