@@ -30,7 +30,7 @@ function ensurePostMoreSheet() {
       <button type="button" class="post-more-sheet-item" data-action="not-interested">Não tenho interesse</button>
       <button type="button" class="post-more-sheet-item" data-action="about-account">Sobre esta conta</button>
       <button type="button" class="post-more-sheet-item" data-action="goto-post">Ir para a publicação</button>
-      <button type="button" class="post-more-sheet-item" data-action="repost">Republicar na praça</button>
+      <button type="button" class="post-more-sheet-item" data-action="repost">Republicar</button>
       <button type="button" class="post-more-sheet-item" data-action="save">Salvar</button>
       <button type="button" class="post-more-sheet-item" data-action="zap" hidden>Apoiar</button>
       <button type="button" class="post-more-sheet-item" data-action="tag" hidden>Marcar pessoas</button>

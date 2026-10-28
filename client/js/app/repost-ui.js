@@ -1,11 +1,11 @@
-/** Clique da toolbar: republicar na praça ou desfazer. */
+/** Clique da toolbar: republicar ou desfazer. */
 
 import * as share from "../share.js";
 import * as repost from "../repost.js";
 
 export function toastRepostResult(res) {
   if (res?.kind === "create" && res.signed) {
-    share.showToast("Republicado na praça (sem impulsionar).");
+    share.showToast("Republicado (sem impulsionar).");
     return true;
   }
   if (res?.kind === "undo" && res.undone) {
