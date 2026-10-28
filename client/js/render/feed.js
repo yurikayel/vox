@@ -571,11 +571,12 @@ export function renderPostItem(t, { isPinned = false } = {}) {
 
   return `
     <article class="post insta-post post-layout-photo post-photo-bleed" data-id="${escapeHtml(t.id)}" data-layout="photo">
+      ${media}
       ${header}
       ${igHead}
-      ${media}
-      ${igBar}
       ${igTitle}
+      ${igBar}
+
       ${frame}
       ${comments}
     </article>`;
