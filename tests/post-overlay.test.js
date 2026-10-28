@@ -23,8 +23,8 @@ test("photo chrome - thin header, toolbar, title; body só nos comentários", ()
   assert.ok(html.includes("btn-post-more-menu"));
   assert.ok(html.includes("post-ig-toolbar"));
   assert.ok(html.includes("btn-save"));
-  assert.ok(html.includes("post-photo-title"));
-  assert.ok(html.includes("Mutirão na praça"));
+  assert.ok(!html.includes("post-photo-title"));
+
   assert.ok(!html.includes("post-caption-block"));
   assert.ok(!html.includes("post-media-scrim-top"));
   assert.ok(!html.includes("post-overlay-title"));
@@ -49,7 +49,7 @@ test("photo chrome - caption-only não duplica título no expander", () => {
     imageAlt: "foto demo",
     author: "vx_demo_sp",
   });
-  assert.ok(html.includes("post-photo-title"));
+  assert.ok(!html.includes("post-photo-title"));
   assert.ok(!html.includes("post-photo-message"));
 });
 

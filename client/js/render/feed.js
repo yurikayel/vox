@@ -554,7 +554,7 @@ export function renderPostItem(t, { isPinned = false } = {}) {
   const frame = renderPostFrame(t);
 
   const igBar = isPhoto ? renderIgToolbar(t, authorDisplay) : "";
-  const igTitle = isPhoto ? renderPhotoTitleHtml(t) : "";
+
   const toolbar = isPhoto ? "" : renderPostToolbar(t, author, authorDisplay, authorHandle);
   const caption = isPhoto ? "" : `<div class="post-caption-block">${renderPostText(t)}${renderRepostCiteHtml(t)}</div>`;
   const gist = layout === "github" ? renderPostGithubGist(t) : "";
@@ -578,7 +578,7 @@ export function renderPostItem(t, { isPinned = false } = {}) {
       ${media}
       ${header}
 
-      ${igTitle}
+
       ${igBar}
 
       ${frame}
