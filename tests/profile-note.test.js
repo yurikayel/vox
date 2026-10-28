@@ -7,9 +7,9 @@ test("profile-note - set get clip and expire 24h", () => {
   profileNote.__resetNotesForTests();
   assert.equal(profileNote.getNote("vx_me"), null);
 
-  const rec = profileNote.setNote("vx_me", "  oi da praça  ");
-  assert.equal(rec.text, "oi da praça");
-  assert.equal(profileNote.getNote("vx_me").text, "oi da praça");
+  const rec = profileNote.setNote("vx_me", "  oi do perfil  ");
+  assert.equal(rec.text, "oi do perfil");
+  assert.equal(profileNote.getNote("vx_me").text, "oi do perfil");
 
   const long = "x".repeat(200);
   assert.equal(profileNote.setNote("vx_me", long).text.length, profileNote.NOTE_MAX);

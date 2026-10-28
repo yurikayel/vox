@@ -1587,8 +1587,8 @@ main#app-main,
   max-height: 600px;
   overflow: hidden;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: stretch;
+  justify-content: flex-start;
   box-shadow: none;
 }
 
@@ -2087,14 +2087,30 @@ body.post-more-sheet-open {
 
 .post-layout-photo.post-photo-bleed .post-media-container {
   border-radius: 0;
-  overflow: visible;
+  overflow: hidden;
   box-shadow: none;
+  margin: 0;
+  align-items: stretch;
+  justify-content: flex-start;
+}
+
+.post-layout-photo.post-photo-bleed .post-media-lightbox-trigger {
+  flex: 1 1 auto;
+  align-self: stretch;
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+}
+
+.post-layout-photo.post-photo-bleed .post-media-hero-img {
+  object-position: center top;
 }
 
 .post-layout-photo.post-photo-bleed .post-comments,
 .post-layout-photo.post-photo-bleed .post-comments-surface {
-  margin: 8px 0 0;
-  padding: 10px 0 0;
+  margin: 0;
+  padding: 0;
+  min-height: 0;
   background: transparent;
   border: none;
   box-shadow: none;
@@ -2167,7 +2183,8 @@ body.post-more-sheet-open {
 
 .post-layout-photo .post-header-photo-admin {
   justify-content: flex-end;
-  padding: 8px 12px 4px;
+  padding: 4px 10px 0;
+  margin: 0;
   min-height: 0;
 }
 
@@ -6074,8 +6091,9 @@ body.post-lightbox-open {
   flex-wrap: nowrap;
   align-items: center;
   gap: 6px;
-  min-height: 36px;
-  padding: 4px 10px;
+  min-height: 0;
+  margin: 0;
+  padding: 4px 10px 2px;
   background: var(--bg);
   white-space: nowrap;
 }
@@ -6126,7 +6144,8 @@ body.post-lightbox-open {
 
 .post-photo-title {
   margin: 0;
-  padding: 2px 12px 8px;
+  padding: 2px 12px 0;
+  min-height: 0;
   font-size: 0.88rem;
   font-weight: 650;
   line-height: 1.25;
@@ -6141,9 +6160,19 @@ body.post-lightbox-open {
 }
 
 .post-photo-message {
-  padding: 8px 12px 4px;
+  padding: 4px 12px 8px;
+  margin: 0;
+  min-height: 0;
   font-size: 0.9rem;
   line-height: 1.4;
+}
+
+.post-photo-message .post-md-para {
+  margin: 0;
+}
+
+.post-photo-message .post-md-para + .post-md-para {
+  margin-top: 0.35rem;
 }
 
 .post-media-header-subtitle {

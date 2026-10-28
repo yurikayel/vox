@@ -1,6 +1,6 @@
 /** Draft puro de republicação — sem peers/DOM. */
 
-export const REPOST_LABEL = "Republicar na praça";
+export const REPOST_LABEL = "Republicar";
 export const REPOST_HINT =
   "Cria um post local que cita o original. Feed cronológico — sem impulsionar.";
 const EXCERPT_MAX = 160;
@@ -54,7 +54,7 @@ export function buildRepostDraft(original, { id } = {}) {
     id: id || newTopicId(),
     type: "topic",
     communityId: original.communityId || "geral",
-    title: "Republicação na praça",
+    title: "Republicação",
     body: `Republicação de ${cite}\n#/t/${originalId}\n\n${excerpt}`,
     originalId,
     originalAuthor: author,
