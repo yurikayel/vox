@@ -84,6 +84,23 @@ Passos sugeridos (buddy ou mod/fundador **visibilidade**, buddy **execução té
 
 ---
 
+---
+
+## Automação Gratuita Multi-Cloud (Zero Máquina & Zero Trampo)
+
+Para evitar os gargalos de manutenção física (ter que pedir para voluntário deixar PC ligado ou configurar portas/Caddy em VPS manual), o Vox suporta automação total sem custos via GitHub Actions:
+
+1. **Deploy Automatizado do Relay Buddy no Hugging Face Spaces (`deploy-relay-hf.yml`):**
+   - Roda contêiner Docker oficial com 2 vCPUs e 16 GB RAM no plano gratuito (sem cartão).
+   - O workflow sincroniza `relay/` direto no Space a cada push no `main`.
+   - Gera URL HTTPS/WSS pública automática (`https://usuario-space.hf.space`).
+2. **Deploy Automatizado do Espelho B no Cloudflare Pages (`deploy-shell-b.yml`):**
+   - Publica o shell PWA estático automaticamente no push do `main`.
+3. **Failover e Espelhamento Duplo no PWA:**
+   - Na tela `#/settings/network`, configure o campo **Relay Buddy** com a URL do segundo nó.
+   - `fetchFromDesktopRelay` e `pullMine` tentam o relay principal; se falhar ou der timeout, chamam o buddy automaticamente.
+   - `postCommunityMirrorToRelay` envia o espelho de comunidade para ambos os nós em paralelo.
+
 ## Referências rápidas
 
 | Tópico | Doc |

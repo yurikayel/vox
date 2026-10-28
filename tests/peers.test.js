@@ -138,3 +138,36 @@ test("peers - fetchFromDesktopRelay usa relay HTTP configurável", async () => {
     globalThis.fetch = originalFetch;
   }
 });
+test("peers - fetchFromDesktopRelay faz failover para o buddy relay quando o primário falha", async () => {
+  localStorage.clear();
+  localStorage.setItem("vox-relay-http-url", "http://10.0.0.5:3920");
+  localStorage.setItem("vox-relay-buddy-http-url", "https://buddy.vox.hf.space");
+
+  const originalFetch = globalThis.fetch;
+  const queriedUrls = [];
+
+  globalThis.fetch = async (url) => {
+    queriedUrls.push(url);
+    if (url.includes("10.0.0.5")) {
+      throw new Error("Timeout/Connection refused");
+    }
+    if (url.includes("buddy.vox.hf.space")) {
+      return {
+        ok: true,
+        text: async () => JSON.stringify({ body: "resgatado pelo buddy", title: "Buddy Title" }),
+      };
+    }
+    return { ok: false };
+  };
+
+  try {
+    const data = await peers.fetchFromDesktopRelay("tx_resgate");
+    assert.equal(data.body, "resgatado pelo buddy");
+    assert.equal(queriedUrls.length, 2);
+    assert.ok(queriedUrls[0].includes("10.0.0.5"));
+    assert.ok(queriedUrls[1].includes("buddy.vox.hf.space"));
+  } finally {
+    globalThis.fetch = originalFetch;
+    localStorage.clear();
+  }
+});
