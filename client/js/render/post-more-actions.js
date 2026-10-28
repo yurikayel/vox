@@ -5,6 +5,7 @@ import * as share from "../share.js";
 import * as repost from "../repost.js";
 import { beginTagMode } from "../app/photo-tag-ui.js";
 import { openZapModal } from "../app/zap-modal.js";
+import { toastRepostResult } from "../app/repost-ui.js";
 
 export function refreshSaveLabel(sheet, postId) {
   const btn = sheet?.querySelector('[data-action="save"]');
@@ -17,6 +18,8 @@ export function refreshSheetExtras(sheet, ctx) {
   if (tagBtn) tagBtn.hidden = !(ctx.isOwn && ctx.hasImage);
   const zapBtn = sheet.querySelector('[data-action="zap"]');
   if (zapBtn) zapBtn.hidden = !ctx.pix;
+  const rp = sheet.querySelector('[data-action="repost"]');
+  if (rp) rp.textContent = repost.hasOwnRepost(ctx.postId) ? "Desfazer republicação" : repost.REPOST_LABEL;
 }
 
 export function toggleSaveFromMenu(postId) {
@@ -25,9 +28,9 @@ export function toggleSaveFromMenu(postId) {
 }
 
 export async function republicarFromMenu(ctx) {
-  const signed = await repost.republicarFromContext(ctx);
-  share.showToast(signed ? "Republicado na praça (sem impulsionar)." : "Não foi possível republicar.");
-  if (signed) window.location.hash = "#/";
+  const res = await repost.toggleFromContext(ctx);
+  toastRepostResult(res);
+  if (res?.ok) window.location.hash = "#/";
 }
 
 export function apoiarFromMenu(ctx) {
