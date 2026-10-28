@@ -138,3 +138,25 @@ test("social - readme local e github handle", () => {
   social.setLocalGithubHandle("");
   assert.equal(social.getLocalGithubHandle(), "");
 });
+
+test("social - contagem e registro de disparos EXPLODE!", () => {
+  localStorage.clear();
+
+  assert.equal(social.isExploded("post_exp_1"), false);
+  assert.equal(social.getExplodesCount("post_exp_1", 10), 10);
+
+  const res1 = social.recordExplosion("post_exp_1", 10);
+  assert.equal(res1.count, 11);
+  assert.equal(res1.isNew, true);
+  assert.equal(social.isExploded("post_exp_1"), true);
+  assert.equal(social.getExplodesCount("post_exp_1", 10), 11);
+
+  const res2 = social.recordExplosion("post_exp_1", 10);
+  assert.equal(res2.count, 12);
+  assert.equal(res2.isNew, false);
+  assert.equal(social.getExplodesCount("post_exp_1", 10), 12);
+
+  assert.equal(social.recordExplosion(null, 5).count, 5);
+  assert.equal(social.getExplodesCount(null, 5), 5);
+});
+

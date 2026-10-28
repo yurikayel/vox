@@ -7116,6 +7116,17 @@ blockquote.repost-cite {
   transform: scale(0.95);
 }
 
+.btn-explode.exploded {
+  color: #f59e0b;
+}
+
+.btn-explode .count-explodes {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #f59e0b;
+  margin-left: 2px;
+}
+
 .explode-sheet[hidden],
 .explode-sheet:not(.is-open) {
   display: none !important;
