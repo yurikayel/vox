@@ -314,7 +314,7 @@ function renderPostMediaHeader(t, author, labels) {
   </div>`;
 }
 
-function renderPostMediaHero(t) {
+function renderPostMediaHero(t, overlayHeaderHtml = "") {
   const layer = renderPhotoTagLayerHtml(t, { isOwn: Boolean(t.isOwnLocalPost) });
   if (t?.image) {
     const altRaw = t.imageAlt || t.title || "";
@@ -325,12 +325,14 @@ function renderPostMediaHero(t) {
         <img class="post-media post-media-hero-img" src="${src}" alt="${alt}" loading="lazy" />
       </button>
       ${layer}
+      ${overlayHeaderHtml}
     </div>`;
   }
   if (t?.mediaRef?.hash) {
     return `<div class="post-media-container post-media-hero post-media-lazy" data-media-hash="${escapeHtml(t.mediaRef.hash)}">
       <div class="media-placeholder" style="aspect-ratio:4/5; display:flex; align-items:center; justify-content:center; background:var(--surface-soft); color:var(--muted); font-size:0.85rem;"><span>📷 Mídia P2P (${escapeHtml(t.mediaRef.mime || "imagem")})</span></div>
       ${layer}
+      ${overlayHeaderHtml}
     </div>`;
   }
   return "";
@@ -546,9 +548,11 @@ export function renderPostItem(t, { isPinned = false } = {}) {
   const layout = getPostFeedLayout(t);
   const isPhoto = layout === "photo";
   const header = renderPostHeaderBlock(t, author, labels, { photoOverlay: isPhoto });
-  const media = isPhoto ? renderPostMediaHero(t) : "";
-  const frame = renderPostFrame(t);
+
   const igHead = isPhoto ? renderPostMediaHeader(t, author, labels) : "";
+  const media = isPhoto ? renderPostMediaHero(t, igHead) : "";
+  const frame = renderPostFrame(t);
+
   const igBar = isPhoto ? renderIgToolbar(t, authorDisplay) : "";
   const igTitle = isPhoto ? renderPhotoTitleHtml(t) : "";
   const toolbar = isPhoto ? "" : renderPostToolbar(t, author, authorDisplay, authorHandle);
@@ -573,7 +577,7 @@ export function renderPostItem(t, { isPinned = false } = {}) {
     <article class="post insta-post post-layout-photo post-photo-bleed" data-id="${escapeHtml(t.id)}" data-layout="photo">
       ${media}
       ${header}
-      ${igHead}
+
       ${igTitle}
       ${igBar}
 

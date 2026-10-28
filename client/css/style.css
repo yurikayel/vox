@@ -6093,7 +6093,7 @@ body.post-lightbox-open {
   gap: 6px;
   min-height: 0;
   margin: 0;
-  padding: 4px 10px 2px;
+  position: absolute; top: auto; bottom: 0; left: 0; right: 0; z-index: 4; padding: 22px 10px 8px; background: linear-gradient(to top, rgba(6, 10, 18, 0.74) 0%, rgba(6, 10, 18, 0.34) 62%, rgba(6, 10, 18, 0) 100%) !important;
   background: var(--bg);
   white-space: nowrap;
 }
@@ -6104,7 +6104,7 @@ body.post-lightbox-open {
 .post-ig-header .btn-overlay-follow,
 .post-ig-header .btn-post-more-menu {
   color: var(--text);
-  text-shadow: none;
+  color: #fff; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.72);
 }
 
 .post-ig-header .post-media-header-username {
@@ -6182,6 +6182,18 @@ body.post-lightbox-open {
 .post-ig-header .post-media-header-avatar .avatar-img,
 .post-ig-header .post-media-header-avatar .avatar {
   border-color: var(--outline);
+}
+
+.post-ig-header .post-media-header-time,
+.post-ig-header-handle,
+.post-ig-header-uf {
+  color: rgba(255, 255, 255, 0.84);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.65);
+}
+
+.post-ig-header .post-media-header-avatar .avatar-img,
+.post-ig-header .post-media-header-avatar .avatar {
+  border-color: rgba(255, 255, 255, 0.85);
 }
 
 .post-ig-header .btn-post-more-menu:focus-visible {
@@ -6605,7 +6617,7 @@ body.photo-tagging .post-media-hero.photo-tag-mode {
 
 .photo-tag-bar {
   position: absolute;
-  bottom: 12px;
+  top: 10px;
   left: 12px;
   z-index: 4;
   display: flex;

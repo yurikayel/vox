@@ -77,7 +77,8 @@ test("photo chrome - header/media and title/body sit tight", () => {
     /\.post-layout-photo\.post-photo-bleed \.post-comments,\s*\.post-layout-photo\.post-photo-bleed \.post-comments-surface\s*\{[^}]+\}/
   )?.[0] || "";
   const media = css.match(/\.post-layout-photo\.post-photo-bleed \.post-media-container\s*\{[^}]+\}/)?.[0] || "";
-  assert.match(igHead, /padding:\s*4px 10px 2px/);
+  assert.match(igHead, /bottom:\s*0/);
+  assert.match(igHead, /linear-gradient/);
   assert.match(igHead, /min-height:\s*0/);
   assert.match(title, /padding:\s*2px 12px 0/);
   assert.match(message, /padding:\s*4px 12px 8px/);
