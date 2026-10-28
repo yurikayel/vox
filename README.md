@@ -54,7 +54,7 @@ Informações sincronizadas com [docs/release-metadata.json](./docs/release-meta
 | **Branch** | `main` | Linha de produção contínua (Pages deploy automático) |
 | **Commit SHA** | `f5d6fea` | HEAD verificado e auditado na esteira de integração |
 | **Suíte de Testes** | **430** (`407` JS + `23` Python) | Execução via `npm test` na raiz do repositório |
-| **Service Worker** | `vox-pwa-v7.02-photo-bottom-vignette` | Atualização do cache offline do shell estático |
+| **Service Worker** | `vox-pwa-v7.03-photo-compact-no-title` | Atualização do cache offline do shell estático |
 | **Deploy** | [yurikayel.github.io/vox](https://yurikayel.github.io/vox/) | PWA público para testes e validação de campo |
 
 > [!NOTE]
