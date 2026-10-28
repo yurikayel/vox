@@ -37,6 +37,23 @@ test("post more menu - CSS hides sheet until is-open", () => {
   const css = fs.readFileSync(path.join(root, "css/style.css"), "utf8");
   assert.ok(css.includes(".post-more-sheet:not(.is-open)"));
   assert.ok(css.includes("display: none !important"));
+  assert.ok(css.includes(".post:has(.toolbar-overflow[open])"));
+});
+
+test("post more menu - photo overflow keeps Apoiar, toolbar has no zap", () => {
+  const html = render.renderPostItem({
+    id: "pm-zap-1",
+    title: "Foto",
+    image: "https://example.com/p.jpg",
+    author: "vx_demo_ac",
+    ts: Date.now(),
+  });
+  const moreIdx = html.indexOf("toolbar-overflow-menu--overlay");
+  assert.ok(moreIdx !== -1);
+  const menu = html.slice(moreIdx, moreIdx + 800);
+  assert.ok(menu.includes("btn-zap-post"));
+  assert.ok(menu.includes("Apoiar"));
+  assert.ok(!html.includes("btn-zap-post overlay-action-btn"));
 });
 
 test("post more menu - route closes sheet on navigation", () => {
