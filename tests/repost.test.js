@@ -12,17 +12,17 @@ test("repost - draft cita originalId sem impulsionar", () => {
     id: "top_orig_1",
     author: "vx_demo_ac",
     title: "Foto",
-    body: "Trecho da praça original",
+    body: "Trecho do post original",
   });
   assert.ok(draft);
   assert.equal(draft.originalId, "top_orig_1");
   assert.equal(draft.type, "topic");
   assert.equal(draft.isRepost, true);
   assert.match(draft.body, /#\/t\/top_orig_1/);
-  assert.match(draft.body, /Trecho da praça/);
+  assert.match(draft.body, /Trecho do post/);
   assert.equal(repost.getOriginalId(draft), "top_orig_1");
   assert.equal(repost.buildRepostDraft({}), null);
-  assert.match(repost.REPOST_LABEL, /Republicar na praça/);
+  assert.match(repost.REPOST_LABEL, /^Republicar$/);
   assert.match(repost.REPOST_HINT, /impulsionar/i);
 });
 
@@ -82,7 +82,7 @@ test("repost - contagem visível honesta e cite no feed", () => {
 
   const html = render.renderPostItem({
     id: "r1",
-    title: "Republicação na praça",
+    title: "Republicação",
     body: "Republicação de vx_demo_ac\n#/t/o1\n\nTrecho",
     originalId: "o1",
     originalAuthor: "vx_demo_ac",
@@ -92,7 +92,7 @@ test("repost - contagem visível honesta e cite no feed", () => {
   });
   assert.ok(html.includes("repost-cite"));
   assert.ok(html.includes("#/t/o1"));
-  assert.ok(html.includes("Republicação na praça"));
+  assert.ok(html.includes("Republicação"));
   assert.ok(html.includes("btn-repost"));
 });
 

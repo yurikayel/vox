@@ -262,7 +262,7 @@ function renderCommunityNeighborPanel(stats, { commOnly = false } = {}) {
     : ' <span class="community-vox-neighbor-demo meta">(estimativa local)</span>';
   const onlineLabel = `~${stats.onlineDevices.toLocaleString("pt-BR")} aparelho${stats.onlineDevices === 1 ? "" : "s"} online agora`;
   const readLabel = stats.readOriginInsufficient || stats.localReadPct == null
-    ? "Ainda coletando estimativa local das leituras neste aparelho (precisamos de algumas leituras na praça)"
+    ? "Ainda coletando estimativa local das leituras neste aparelho (precisamos de algumas leituras na rede)"
     : `~${stats.localReadPct}% das leituras recentes via cache local, malha ou relay comunitário`;
 
   let alert = "";
@@ -289,7 +289,7 @@ function renderCommunityNeighborPanel(stats, { commOnly = false } = {}) {
         <a class="btn btn-sm btn-outline" href="#/settings/network">Ajustar participação na rede</a>
         ${commCta}
       </div>
-      <p class="community-vox-neighbor-foot meta">Sem ranking público de nós — só agregados desta praça.</p>
+      <p class="community-vox-neighbor-foot meta">Sem ranking público de nós — só agregados desta comunidade.</p>
     </section>`;
 }
 

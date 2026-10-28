@@ -43,7 +43,7 @@ function section(id, title, lead, layersHtml) {
 const TRES_LOGICAS_BODY = [
   "<p><strong>Big Tech = fazenda.</strong> A terra é de outro. Você planta audiência; o dono leiloa atenção, muda a cerca e pode despejar a conta. Alcance vira aluguel.</p>",
   "<p><strong>Fediverso clássico = pensão.</strong> Instância Mastodon ou Lemmy tem síndico: alguém paga o VPS, modera e não falir. A soberania do coletivo cabe no humor — e no boleto — de quem opera o servidor.</p>",
-  "<p><strong>Vox = movimento.</strong> A praça é o cliente no aparelho mais o protocolo. O que é inalienável é a <strong>chave no bolso</strong>, não um slogan de rede indestrutível. Gateways e relays são leitura reserva e vizinhos voluntários.</p>",
+  "<p><strong>Vox = movimento.</strong> O bem comum é o cliente no aparelho mais o protocolo. O que é inalienável é a <strong>chave no bolso</strong>, não um slogan de rede indestrutível. Gateways e relays são leitura reserva e vizinhos voluntários.</p>",
   "<p>Não prometemos malha só entre celulares no 4G, nem imunidade na Justiça, nem que derrubar um endereço da web equivale a tomar cada aparelho (o inverso também é falso: backup, índice e o próprio aparelho ainda importam). POSSE ecoa o que você escolhe compartilhar — <strong>não</strong> publica sozinho no Facebook ou Instagram.</p>",
 ].join("");
 
