@@ -52,9 +52,9 @@ Informações sincronizadas com [docs/release-metadata.json](./docs/release-meta
 | Campo | Valor Atual | Descrição / Observação |
 |:---|:---:|:---|
 | **Branch** | `main` | Linha de produção contínua (Pages deploy automático) |
-| **Commit SHA** | `fd0dedd` | HEAD verificado e auditado na esteira de integração |
-| **Suíte de Testes** | **405** (`382` JS + `23` Python) | Execução via `npm test` na raiz do repositório |
-| **Service Worker** | `vox-pwa-v6.92-qr-url` | Atualização do cache offline do shell estático |
+| **Commit SHA** | `aaa9460` | HEAD verificado e auditado na esteira de integração |
+| **Suíte de Testes** | **411** (`388` JS + `23` Python) | Execução via `npm test` na raiz do repositório |
+| **Service Worker** | `vox-pwa-v6.94-notes-repost-save-tags` | Atualização do cache offline do shell estático |
 | **Deploy** | [yurikayel.github.io/vox](https://yurikayel.github.io/vox/) | PWA público para testes e validação de campo |
 
 > [!NOTE]
@@ -136,7 +136,7 @@ Na raiz do repositório:
 ```bash
 npm test
 ```
-Executa **405 testes unitários e de integração** (382 testes Node.js nativos + 23 testes em Python stdlib).
+Executa **411 testes unitários e de integração** (388 testes Node.js nativos + 23 testes em Python stdlib).
 
 ### 3. Rodar o Relay / Servidor de Cache Doméstico (Opcional)
 

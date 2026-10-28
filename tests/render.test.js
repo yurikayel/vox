@@ -206,7 +206,7 @@ test("render - computeCommunityNeighborStats sem amostra read_origin", () => {
 
 test("render - painel Sustentada por vizinhos e seed checklist", () => {
   const main = createContainer();
-  render.renderCommunity(main, "minha-comunidade", [], { title: "Praça", owner: "vx_owner" }, {
+  render.renderCommunity(main, "minha-comunidade", [], { title: "Praï¿½a", owner: "vx_owner" }, {
     activeTab: "posts",
     recentPeople: [{ routeId: "vx_a", name: "A" }],
     neighborStats: {
@@ -285,7 +285,7 @@ test("render - renderCommunity header compacto, Entrar e layout", () => {
   assert.ok(mainMember.innerHTML.includes("Membro"));
 });
 
-test("render - renderCommunity Posts tab usa lista de tópicos estilo fórum (sem hero IG)", () => {
+test("render - renderCommunity Posts tab usa lista de tï¿½picos estilo fï¿½rum (sem hero IG)", () => {
   const main = createContainer();
   const topics = mock.MOCK_DEMO_TOPICS.slice(0, 3);
   render.renderCommunity(main, "demo-aprenda-vox", topics, mock.MOCK_DEMO_COMMUNITY, {
@@ -520,8 +520,8 @@ test("render - layout hÃ­brido texto vs foto vs github", () => {
   assert.ok(photoHtml.includes('post-layout-photo'));
   assert.ok(photoHtml.includes("post-media-container"));
   assert.ok(photoHtml.includes("post-media-hero"));
-  assert.ok(photoHtml.includes("post-overlay"));
-  assert.ok(photoHtml.includes("post-actions-overlay"));
+  assert.ok(photoHtml.includes("post-ig-header"));
+  assert.ok(photoHtml.includes("post-ig-toolbar"));
   assert.ok(!photoHtml.includes("post-toolbar"));
 
   const ghHtml = render.renderPostItem({
@@ -721,22 +721,19 @@ test("render - post v3 hÃ­brido (mÃ­dia antes do texto, star, copy-md e pinned)"
   assert.ok(html.includes("post_hibrido_1"));
   assert.ok(html.includes("https://randomuser.me/api/portraits/med/women/12.jpg"));
   assert.ok(html.includes("btn-like"));
-  assert.ok(html.includes("btn-star"));
-  assert.ok(html.includes("count-stars"));
-  assert.ok(html.includes("btn-copy-md"));
-  assert.ok(html.includes("post-overlay-actions-more"));
-  assert.ok(html.includes("post-actions-overlay"));
   assert.ok(html.includes("btn-overlay-follow"));
   assert.ok(html.includes("btn-save"));
+  assert.ok(html.includes("post-ig-toolbar"));
   assert.ok(!html.includes("post-toolbar"));
 
-  // Valida que a tag de mídia aparece ANTES do título do post no DOM (layout foto)
   const imgIdx = html.indexOf("post-media-container");
-  const titleIdx = html.indexOf("post-overlay-title");
+  const titleIdx = html.indexOf("post-photo-title");
   assert.ok(imgIdx !== -1, "Deve conter post-media-container");
-  assert.ok(titleIdx !== -1, "Deve conter post-overlay-title");
-  assert.ok(imgIdx < titleIdx, "Mídia deve preceder o título no overlay");
+  assert.ok(titleIdx !== -1, "Deve conter post-photo-title");
+  assert.ok(imgIdx < titleIdx, "MÃ­dia deve preceder o tÃ­tulo");
   assert.ok(!html.includes("post-caption-block"));
+  assert.ok(html.includes("post-photo-message"));
+  assert.ok(html.includes("soberania"));
 });
 
 test("render - feed nav na sidebar (Para vocÃª e Seguindo)", () => {
@@ -978,11 +975,11 @@ test("render - renderStoriesStrip gera faixa horizontal com anÃ©is de stories e 
   assert.ok(html.includes("vx_demo_sp"));
 });
 
-test("render - renderPostItem pilha vertical foto com header sobre mídia, toolbar tripartida e caption block", () => {
+test("render - renderPostItem pilha vertical foto com header sobre mï¿½dia, toolbar tripartida e caption block", () => {
   const post = {
     id: "post_meta_stack_1",
     title: "TÃ­tulo do Post Meta",
-    body: "Corpo com #fotografia e #arte em publicação com foto",
+    body: "Corpo com #fotografia e #arte em publicaï¿½ï¿½o com foto",
     image: "https://randomuser.me/api/portraits/med/women/12.jpg",
     author: "vx_demo_mg",
     likesCount: 10,
@@ -992,10 +989,9 @@ test("render - renderPostItem pilha vertical foto com header sobre mídia, toolba
   };
 
   const html = render.renderPostItem(post);
-  assert.ok(html.includes("post-overlay"));
   assert.ok(html.includes("post-media-header"));
   assert.ok(!html.includes("post-overlay-author"));
-  assert.ok(html.includes("post-actions-overlay"));
+  assert.ok(html.includes("post-ig-toolbar"));
   assert.ok(html.includes("btn-overlay-follow"));
   assert.ok(!html.includes("post-caption-block"));
   assert.ok(!html.includes("post-toolbar"));
@@ -1004,23 +1000,25 @@ test("render - renderPostItem pilha vertical foto com header sobre mídia, toolba
   assert.ok(html.includes("btn-like"));
   assert.ok(html.includes("btn-comment"));
   assert.ok(html.includes("btn-share-post"));
-  assert.ok(html.includes("btn-star"));
   assert.ok(html.includes("btn-save"));
+  assert.ok(html.includes("post-photo-title"));
+  assert.ok(!html.includes("btn-star") || html.indexOf("btn-star") > html.indexOf("post-comments"));
 
   const mediaIdx = html.indexOf("post-media-container");
-  const actionsIdx = html.indexOf("post-actions-overlay");
+  const actionsIdx = html.indexOf("post-ig-toolbar");
   const commentsIdx = html.indexOf('class="post-comments');
 
-  assert.ok(mediaIdx < actionsIdx, "Mídia deve conter a faixa de ações no hero");
-  assert.ok(actionsIdx < commentsIdx, "Ações on-image devem preceder comentários fora do hero");
-
+  assert.ok(mediaIdx < actionsIdx);
+  assert.ok(actionsIdx < commentsIdx);
   const mediaSlice = html.slice(html.indexOf("post-media-container"), commentsIdx);
-  assert.ok(mediaSlice.includes("post-actions-overlay"));
-  assert.ok(!mediaSlice.includes("post-comments-surface"), "Comentários não no hero");
+  assert.ok(mediaSlice.includes("post-ig-toolbar"));
+  assert.ok(!mediaSlice.includes("post-comments-surface"), "ComentÃ¡rios nÃ£o no hero");
   assert.ok(html.includes("post-comments-surface"));
+  assert.ok(html.includes("post-photo-message"));
+  assert.ok(html.includes("#fotografia"));
 });
 
-test("render - Seguir no hero oculto em post próprio e Vox oficial", () => {
+test("render - Seguir no hero oculto em post prï¿½prio e Vox oficial", () => {
   const own = render.renderPostItem({
     id: "own1",
     title: "Meu post",

@@ -27,7 +27,7 @@ test("feed follow - comentários decoupled do overlay", () => {
   const commentsIdx = html.indexOf("post-comments");
   const mediaBlock = html.slice(html.indexOf("post-media-container"), commentsIdx === -1 ? html.length : commentsIdx);
   assert.ok(!mediaBlock.includes("post-comments"));
-  assert.ok(html.includes("post-actions-overlay"));
+  assert.ok(html.includes("post-ig-toolbar"));
   assert.ok(!html.includes("post-toolbar"));
 });
 
