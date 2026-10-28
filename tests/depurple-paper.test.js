@@ -9,7 +9,7 @@ const css = fs.readFileSync(path.join(root, "css/style.css"), "utf8");
 const sw = fs.readFileSync(path.join(root, "sw.js"), "utf8");
 
 test("depurple paper - service worker cache id", () => {
-  assert.match(sw, /vox-pwa-v6\.94-notes-repost-save-tags/);
+  assert.match(sw, /vox-pwa-v6\.95-repost-toolbar/);
   assert.ok(sw.includes('"./js/qr-url.js"'));
   assert.ok(sw.includes('"./js/account-backup-wrap.js"'));
   assert.ok(sw.includes('"./js/app/cantina-gate.js"'));
@@ -17,6 +17,9 @@ test("depurple paper - service worker cache id", () => {
   assert.ok(sw.includes('"./js/community-seed-checklist.js"'));
   assert.ok(sw.includes('"./js/photo-tags.js"'));
   assert.ok(sw.includes('"./js/profile-note.js"'));
+  assert.ok(sw.includes('"./js/repost-index.js"'));
+  assert.ok(sw.includes('"./js/render/repost-btn.js"'));
+  assert.ok(sw.includes('"./js/app/repost-ui.js"'));
 });
 
 test("onboarding paper - modal sheet/card in CSS, neutral scrim", () => {

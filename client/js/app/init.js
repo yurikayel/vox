@@ -28,6 +28,7 @@ import {
   onNestedCommentReplySubmit,
   toggleCommentReplyComposer,
 } from "./screens-compose.js";
+import { handleRepostClick } from "./repost-ui.js";
 
 export function initGossipListeners() {
   peers.onGossipPost((item) => {
@@ -319,6 +320,15 @@ export function initSocialInteractions() {
       const authorName = btnZap.dataset.authorName || "Autor";
       const title = btnZap.dataset.title || "";
       openZapModal({ pixKey, authorName, title });
+      return;
+    }
+
+    const btnRepost = e.target.closest(".btn-repost");
+    if (btnRepost) {
+      e.preventDefault();
+      handleRepostClick(btnRepost).then((res) => {
+        if (res?.ok) route();
+      });
       return;
     }
 
