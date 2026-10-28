@@ -4,7 +4,7 @@ Este documento descreve como testar o fluxo de leitura, autoria (upload de trans
 
 **Malha P2P / handoff Antigravity:** ver [`docs/antigravity-operating.md`](../docs/antigravity-operating.md). **Cache offline:** valor canônico em `CACHE_NAME` dentro de [`sw.js`](./sw.js) (não duplicar string fixa nos parágrafos abaixo — consulte o arquivo).
 
-**Release line:** SHA canônico na tabela de release do [README](../README.md) e em [`docs/release-metadata.json`](../docs/release-metadata.json). Regenerar: `npm run release-metadata` (contagens) ou `npm run release-line` (metadata + README). Suíte: **375** testes (**353** JS + **22** Python) via `npm test`. `CACHE_NAME` só em [`sw.js`](./sw.js). Pages: **hard refresh** após deploy.
+**Release line:** SHA canônico na tabela de release do [README](../README.md) e em [`docs/release-metadata.json`](../docs/release-metadata.json). Regenerar: `npm run release-metadata` (contagens) ou `npm run release-line` (metadata + README). Suíte: **415** testes (**392** JS + **23** Python) via `npm test`. `CACHE_NAME` só em [`sw.js`](./sw.js). Pages: **hard refresh** após deploy.
 
 ---
 
@@ -48,7 +48,7 @@ Abra no navegador: `http://127.0.0.1:8080/`
 
 ### 1.1 Executar Testes Unitários Locais (Tudo)
 
-O Vox inclui suíte completa de testes unitários locais (**375** testes: **353** client JS + **22** relay/signaling Python), sem dependências pesadas externas:
+O Vox inclui suíte completa de testes unitários locais (**415** testes: **392** client JS + **23** relay/signaling Python), sem dependências pesadas externas:
 
 ```bash
 # Na raiz do repositório vox/
@@ -77,7 +77,7 @@ As pipelines em `.github/workflows/` rodam automaticamente no GitHub:
 1. **`ci.yml`:**
    - Disparado em todo `push` ou `pull_request` na branch `main`.
    - Executa matriz de testes no Node.js (22 e 24) e Python (3.11 e 3.12).
-   - Valida checagem estática de sintaxe e executa os **375** testes unitários (**353** JS + **22** Python).
+   - Valida checagem estática de sintaxe e executa os **415** testes unitários (**392** JS + **23** Python).
    - Auditoria de segurança: verifica que nenhuma chave privada foi commitada acidentalmente.
 2. **`deploy-pages.yml`:**
    - Publica o site composto (`client/**` + `docs/proposta-vox.html`) no GitHub Pages a cada alteração em `client/**` ou `docs/**`.
@@ -360,7 +360,7 @@ O Vox opera primariamente como uma rede ponto a ponto cooperativa, sustentada pe
 ### 11.2 Gossip de Publicações & IndexedDB
 - Posts, tópicos, comunidades e respostas criados sem carteira são assinados digitalmente com a chave local e propagados via protocolo `GOSSIP` (`vox-local-v0`) através de `BroadcastChannel` e canais WebRTC DataChannel ativos.
 - O store `local-posts` no IndexedDB persiste as publicações recebidas dos pares com deduplicação e validação canônica de assinatura.
-- **A Rua (Feed):** Mescla em tempo real as publicações da rede P2P local com os tópicos do permaweb (Arweave GraphQL), identificando a origem com badges visuais claras:
+- **Para você (Feed):** Mescla em tempo real as publicações da rede P2P local com os tópicos do permaweb (Arweave GraphQL), identificando a origem com badges visuais claras:
   - `🌐 Na rede`: post distribuído via malha participativa P2P.
   - `💾 Permanente`: post ancorado no permaweb.
 
@@ -457,7 +457,7 @@ Para blindar o Vox contra fazendas de automação sem recorrer a captchas corpor
 
 ## 15. Feira Comunitária, Classificados (Fase M1) & Governança FOSS (Fase G0)
 
-A Sprint Feira M1 atende quem utiliza redes sociais para sustento e venda direta (artesanato, marmitas, brechó e serviços populares), preservando a pureza da praça pública de debates e a soberania comunitária:
+A Sprint Feira M1 atende quem utiliza redes sociais para sustento e venda direta (artesanato, marmitas, brechó e serviços populares), preservando a integridade do espaço comunitário de debates e a soberania comunitária:
 
 ### 15.1 Governança e Opt-in Estrito (Default-Off)
 - **Modo Comercial Desligado por Padrão:** Toda comunidade nasce com classificados desativados.
@@ -1077,4 +1077,21 @@ OAuth e compartilhamento nativo citam provedores apenas onde exigido por integra
 **Labs:** `#/labs/frames` · `#/status` telemetria local.
 
 **Fora de P0:** extensão Vox Bridge (P2 stub em `vox-bridge/`); Diffs/PR estilo GitHub (P1+ parcial via ` ```diff `).
+
+---
+
+## 37. Chrome compacto de foto, interações sociais e trilhas T01/T02/T05/T06/T11
+
+**Data:** 2026-10-27 · **SW:** `vox-pwa-v6.96-photo-card-gaps`
+
+- **Chrome compacto de foto:** Header sobre mídia enxuto (`post-overlay.js`), espaçamento harmonizado entre cards de foto e comentários borderless.
+- **Notas de perfil 24h (`profile-note.js`):** Nota curta opcional com expiração local de 24h no perfil e na faixa superior.
+- **Republicar sem impulsionar (`repost-draft.js`, `repost-cite.js`, `app/repost-ui.js`):** Citação honesta na rede sem algoritmo de boost; rótulo neutro **"Republicar"** / **"Republicação"** (sem jargões externos de "praça/rua/varanda").
+- **Salvos & Marcação manual em fotos (`photo-tag-pins.js`):** Aba **Salvos** no perfil e marcação manual de perfis por coordenadas (`x%`, `y%`) sobre a foto — estritamente sem reconhecimento facial.
+- **Soberania & Segurança local:**
+  - **T01 (`.voxid`):** Backup cifrado com senha via PBKDF2 + AES-GCM-256 (`voxid-crypto.js`).
+  - **T02 (`#/labs/mofn`):** Especificação [ADR-005](../docs/adr/005-collective-profile-m-of-n.md) e simulador isolado de multi-assinatura P-256 (`labs/collective-mofn.js`).
+  - **T05 (`local-wipe.js`):** Wipe local de emergência com confirmação explícita e aviso honesto sobre o que já saiu do aparelho.
+  - **T06 (`post-quarantine.js`):** Quarentena local contra iscas emocionais e bloqueio de compartilhamento acidental.
+  - **T11 (`qr-url.js`):** QR code vanilla offline para rotas `#/t/`, `#/c/` e `#/connect/`.
 
