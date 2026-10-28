@@ -666,24 +666,29 @@ export function renderFeedTabsBar(activeFeed = "for-you") {
     </div>`;
 }
 
+function renderCitizenShieldBarHtml() {
+  return `
+    <div class="vox-citizen-shield-bar" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; padding:6px 10px; margin-bottom:0.65rem; border-radius:var(--radius-sm); background:rgba(22,163,74,0.1); border:1px solid rgba(22,163,74,0.35); font-size:0.75rem;">
+      <span>🛡️ <strong>Escudo Cidadão Vox Ativo:</strong> 0 Rastreadores · 0 Algoritmo de Ódio · 100% Cronológico</span>
+      <a href="#/settings/linked-accounts" style="font-weight:700; color:var(--accent); text-decoration:none;">🔗 Configurar Redes →</a>
+    </div>`;
+}
+
 export function renderExternalFeedManagerHtml(subscriptions = []) {
   const list = Array.isArray(subscriptions) ? subscriptions : [];
   const chips = list
     .map(
-      (h) => `
-    <span class="bsky-sub-chip">
-      <span class="bsky-sub-name">@${escapeHtml(h)}</span>
-      <button type="button" class="btn-remove-bsky-sub" data-handle="${escapeHtml(h)}" aria-label="Remover @${escapeHtml(h)}" title="Deixar de acompanhar">×</button>
-    </span>`
+      (h) => `<span class="bsky-sub-chip"><span class="bsky-sub-name">@${escapeHtml(h)}</span><button type="button" class="btn-remove-bsky-sub" data-handle="${escapeHtml(h)}" aria-label="Remover @${escapeHtml(h)}" title="Deixar de acompanhar">×</button></span>`,
     )
     .join("");
 
   return `
     <div class="bsky-feed-manager" role="region" aria-label="Gerenciador de feeds externos">
+      ${renderCitizenShieldBarHtml()}
       <div class="bsky-manager-head">
         <span class="bsky-badge">🌐 INGESTÃO PREDATÓRIA · AT PROTOCOL</span>
-        <h3 class="bsky-manager-title">Feeds do Bluesky sem Algoritmo de Ódio</h3>
-        <p class="bsky-manager-desc">Consuma perfis externos dentro da soberania do Vox. Cronológico puro, sem anúncios nem rastreadores.</p>
+        <h3 class="bsky-manager-title">Feeds Externos sob Proteção Cívica</h3>
+        <p class="bsky-manager-desc">Consuma e interaja (curta, salve, comente, cite e exploda) com perfis externos dentro da soberania do Vox.</p>
       </div>
       <form id="form-add-bsky" class="bsky-add-form" aria-label="Adicionar perfil do Bluesky">
         <div class="bsky-input-group">

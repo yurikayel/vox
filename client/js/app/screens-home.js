@@ -1,47 +1,40 @@
-import * as bskyFeed from "../bsky-feed.js";
-/** @file Home feed, communities list, tag feed. */
+/** @file Home feed, communities list, tag feed, and Bluesky external feed orchestration. */
 
+import * as bskyFeed from "../bsky-feed.js";
 import * as gql from "../graphql.js";
 import * as render from "../render.js";
 import * as mock from "../mock.js";
-import * as wallet from "../wallet.js";
-import * as upload from "../upload.js";
 import * as share from "../share.js";
 import * as mod from "../moderation.js";
 import * as cacheNode from "../cache-node.js";
-import * as peers from "../peers.js";
-import * as cryptoDm from "../crypto-dm.js";
-import * as inbox from "../inbox.js";
-import * as handles from "../handles.js";
-import * as localAccount from "../local-account.js";
-import * as demoSeed from "../demo-seed.js";
 import * as social from "../social.js";
-import * as pixKeyHelper from "../pix-key.js";
-import * as listing from "../listing.js";
-import * as listingUi from "../listing-ui.js";
-import * as i18n from "../i18n-pt-br.js";
-import * as gov from "../governance.js";
-import * as brcode from "../brcode.js";
 import * as hashtags from "../hashtags.js";
-import * as frames from "../frames.js";
 import * as postOwnership from "../post-ownership.js";
-import * as communityMirror from "../community-mirror.js";
-import * as stewardWizard from "../steward-wizard.js";
-import * as gatewayTelemetry from "../gateway-telemetry.js";
 import { attachInlineComposerHandlers } from "../inline-composer.js";
-import * as oauthProfile from "../oauth-profile.js";
-import * as contacts from "../contacts.js";
-import * as peopleIndex from "../people-index.js";
-import * as profileDirectory from "../profile-directory.js";
 import * as welcomeProfile from "../vox-welcome-profile.js";
-import * as meshProfile from "../mesh-profile.js";
-import { parseRoute } from "./route-parse.js";
 import { getActiveUser, makeShellProps, attachPostShareHandlers } from "./context.js";
 import { attachPostMoreMenuHandlers } from "../render/post-more-menu.js";
 import { ensureOnboardingSideEffects } from "./onboarding-side-effects.js";
 
 let postOverlayMenuHandlersBound = false;
 let quoteExternalBound = false;
+
+function insertQuoteIntoComposer(quoteText) {
+  const textarea = document.getElementById("inline-topic-body");
+  const collapsed = document.querySelector("#feed-inline-composer .inline-composer-collapsed");
+  const form = document.getElementById("form-inline-topic");
+
+  if (!textarea || !form) return false;
+  if (form.classList.contains("hidden") && collapsed) collapsed.click();
+  textarea.value = quoteText + (textarea.value || "");
+  textarea.focus();
+  textarea.selectionStart = textarea.value.length;
+  textarea.selectionEnd = textarea.value.length;
+  textarea.dispatchEvent(new Event("input", { bubbles: true }));
+  document.getElementById("feed-inline-composer")?.scrollIntoView({ behavior: "smooth", block: "center" });
+  share.showToast("Citação inserida! Escreva sua análise cívica. ✍️");
+  return true;
+}
 
 export function attachQuoteExternalHandlers() {
   if (quoteExternalBound) return;
@@ -52,24 +45,8 @@ export function attachQuoteExternalHandlers() {
     const handle = btn.dataset.handle || btn.dataset.author || "@bluesky";
     const body = btn.dataset.body || "";
     const url = btn.dataset.url || "";
-    const quoteText = `> 🌐 **Citação Soberana de ${handle}** ([Ver original](${url})):\n> "${body}"\n\n`;
-
-    const textarea = document.getElementById("inline-topic-body");
-    const collapsed = document.querySelector("#feed-inline-composer .inline-composer-collapsed");
-    const form = document.getElementById("form-inline-topic");
-
-    if (textarea && form) {
-      if (form.classList.contains("hidden") && collapsed) {
-        collapsed.click();
-      }
-      textarea.value = quoteText + (textarea.value || "");
-      textarea.focus();
-      textarea.selectionStart = textarea.value.length;
-      textarea.selectionEnd = textarea.value.length;
-      textarea.dispatchEvent(new Event("input", { bubbles: true }));
-      document.getElementById("feed-inline-composer")?.scrollIntoView({ behavior: "smooth", block: "center" });
-      share.showToast("Citação inserida! Escreva sua análise cívica. ✍️");
-    } else {
+    const quoteText = bskyFeed.quoteExternalPostText({ authorHandle: handle, body, externalUrl: url });
+    if (!insertQuoteIntoComposer(quoteText)) {
       try {
         sessionStorage.setItem("vox_quote_prefill", quoteText);
         window.location.hash = "#/compose/topic";
@@ -78,7 +55,6 @@ export function attachQuoteExternalHandlers() {
   });
 }
 
-/** Fecha popovers ⋯ utilitários (Apoiar/Salvar/…) ao clicar fora — só no hero foto. */
 export function attachPostOverlayActionMenuHandlers() {
   if (postOverlayMenuHandlersBound) return;
   postOverlayMenuHandlersBound = true;
@@ -97,96 +73,58 @@ function attachWelcomeFeedHintHandlers() {
   });
 }
 
-export async function showHome(feed = "for-you") {
-  const activeFeed = feed === "following" ? "following" : "for-you";
-  const user = await getActiveUser();
-  const onboarding = user ? await ensureOnboardingSideEffects(user) : { dmJustSeeded: false };
-  const main = render.renderShell({
-    ...makeShellProps(user, "home"),
-    activeFeed,
-    showFeedNav: true,
-  });
-  render.renderLoading(main);
-
+async function buildCommunityTitleMap() {
+  const commMap = new Map();
   try {
-    const { items: remoteItems, gateway, demo } = await gql.fetchRecentTopics().catch(async () => mock.mockRecentTopics());
-    const rawLocal = await cacheNode.getLocalPosts({ type: "topic" });
-    const localPosts = rawLocal.filter((p) => p.type !== "listing");
-
-    // Constrói mapa de títulos de comunidades para exibição limpa no feed
-    const commMap = new Map();
-    try {
-      const commsRes = await gql.fetchCommunities().catch(() => mock.mockCommunities());
-      for (const c of (commsRes?.items || [])) {
-        if (c.id && c.title) commMap.set(c.id, c.title);
-      }
-      const localComms = await cacheNode.getLocalCommunities();
-      for (const c of localComms) {
-        if (c.id && c.title) commMap.set(c.id, c.title);
-      }
-    } catch {}
-
-    const seen = new Set();
-    const merged = [];
-    for (const p of localPosts) {
-      seen.add(p.id);
-      merged.push(
-        postOwnership.withOwnLocalFlag(
-          {
-            ...p,
-            isLocalP2p: true,
-            communityTitle: commMap.get(p.communityId) || p.communityTitle || "",
-          },
-          user
-        )
-      );
+    const commsRes = await gql.fetchCommunities().catch(() => mock.mockCommunities());
+    for (const c of commsRes?.items || []) {
+      if (c.id && c.title) commMap.set(c.id, c.title);
     }
-    for (const p of (remoteItems || [])) {
-      if (p.type !== "listing" && !seen.has(p.id)) {
-        seen.add(p.id);
-        merged.push({
-          ...p,
-          isLocalP2p: false,
-          communityTitle: commMap.get(p.communityId) || p.communityTitle || "",
-        });
-      }
+    const localComms = await cacheNode.getLocalCommunities();
+    for (const c of localComms) {
+      if (c.id && c.title) commMap.set(c.id, c.title);
     }
+  } catch {}
+  return commMap;
+}
 
-    let finalTopics = merged;
-    if (activeFeed === "following") {
-      const watchedSet = new Set(social.getWatchedProfiles());
-      finalTopics = merged.filter((p) => watchedSet.has(p.author || p.owner));
-    } else if (activeFeed === "all") {
-      const bsky = await bskyFeed.fetchAggregatedBskyFeed().catch(() => []);
-      finalTopics = [...merged, ...bsky].sort((a, b) => (b.ts || 0) - (a.ts || 0));
-    }
-    finalTopics = mod.filterFeedPosts(finalTopics);
-
-    main.innerHTML = "";
-    if (demo && !localPosts.length) render.renderDemoBanner(main);
-    else if (gateway) render.renderGatewayBanner(main, gateway);
-    render.renderFeed(main, finalTopics, { activeFeed, userRouteId: user || "" });
-  } catch (e) {
-    main.innerHTML = "";
-    const rawLocal = await cacheNode.getLocalPosts({ type: "topic" });
-    const localPosts = rawLocal.filter((p) => p.type !== "listing");
-    const fb = mock.mockRecentTopics();
-    let merged = [
-      ...postOwnership.mapOwnLocalFlags(
-        localPosts.map((p) => ({ ...p, isLocalP2p: true })),
-        user
+function mergeLocalAndRemoteTopics(localPosts, remoteItems, commMap, user) {
+  const seen = new Set();
+  const merged = [];
+  for (const p of localPosts) {
+    seen.add(p.id);
+    merged.push(
+      postOwnership.withOwnLocalFlag(
+        { ...p, isLocalP2p: true, communityTitle: commMap.get(p.communityId) || p.communityTitle || "" },
+        user,
       ),
-      ...fb.items.filter((p) => p.type !== "listing").map((p) => ({ ...p, isLocalP2p: false })),
-    ];
-    if (activeFeed === "following") {
-      const watchedSet = new Set(social.getWatchedProfiles());
-      merged = merged.filter((p) => watchedSet.has(p.author || p.owner));
-    }
-    merged = mod.filterFeedPosts(merged);
-    render.renderDemoBanner(main);
-    render.renderFeed(main, merged, { activeFeed, userRouteId: user || "" });
+    );
   }
+  for (const p of remoteItems || []) {
+    if (p.type !== "listing" && !seen.has(p.id)) {
+      seen.add(p.id);
+      merged.push({ ...p, isLocalP2p: false, communityTitle: commMap.get(p.communityId) || p.communityTitle || "" });
+    }
+  }
+  return merged;
+}
 
+async function filterTopicsForActiveFeed(merged, activeFeed) {
+  if (activeFeed === "following") {
+    const watchedSet = new Set(social.getWatchedProfiles());
+    return merged.filter((p) => watchedSet.has(p.author || p.owner));
+  }
+  if (activeFeed === "external") {
+    return await bskyFeed.fetchAggregatedBskyFeed().catch(() => []);
+  }
+  if (activeFeed === "all") {
+    const bsky = await bskyFeed.fetchAggregatedBskyFeed().catch(() => []);
+    return [...merged, ...bsky].sort((a, b) => (b.ts || 0) - (a.ts || 0));
+  }
+  return merged;
+}
+
+function wireHomeInteractiveHandlers(activeFeed) {
   attachPostShareHandlers();
   attachPostMoreMenuHandlers();
   attachPostOverlayActionMenuHandlers();
@@ -194,9 +132,89 @@ export async function showHome(feed = "for-you") {
   attachWelcomeFeedHintHandlers();
   attachBskyManagerHandlers(() => showHome(activeFeed));
   attachQuoteExternalHandlers();
+}
+
+export async function showHome(feed = "for-you") {
+  const validFeeds = ["for-you", "following", "external", "all"];
+  const activeFeed = validFeeds.includes(feed) ? feed : "for-you";
+  const user = await getActiveUser();
+  const onboarding = user ? await ensureOnboardingSideEffects(user) : { dmJustSeeded: false };
+  const main = render.renderShell({ ...makeShellProps(user, "home"), activeFeed, showFeedNav: true });
+  render.renderLoading(main);
+  const externalSubs = bskyFeed.loadBskySubscriptions();
+
+  try {
+    const { items: remoteItems, gateway, demo } = await gql.fetchRecentTopics().catch(async () => mock.mockRecentTopics());
+    const localPosts = (await cacheNode.getLocalPosts({ type: "topic" })).filter((p) => p.type !== "listing");
+    const commMap = await buildCommunityTitleMap();
+    const merged = mergeLocalAndRemoteTopics(localPosts, remoteItems, commMap, user);
+    const finalTopics = mod.filterFeedPosts(await filterTopicsForActiveFeed(merged, activeFeed));
+
+    main.innerHTML = "";
+    if (demo && !localPosts.length) render.renderDemoBanner(main);
+    else if (gateway) render.renderGatewayBanner(main, gateway);
+    render.renderFeed(main, finalTopics, { activeFeed, userRouteId: user || "", externalSubs });
+  } catch {
+    main.innerHTML = "";
+    const localPosts = (await cacheNode.getLocalPosts({ type: "topic" })).filter((p) => p.type !== "listing");
+    const fb = mock.mockRecentTopics();
+    const merged = mergeLocalAndRemoteTopics(localPosts, fb.items, new Map(), user);
+    const finalTopics = mod.filterFeedPosts(await filterTopicsForActiveFeed(merged, activeFeed));
+    render.renderDemoBanner(main);
+    render.renderFeed(main, finalTopics, { activeFeed, userRouteId: user || "", externalSubs });
+  }
+
+  wireHomeInteractiveHandlers(activeFeed);
   if (onboarding.dmJustSeeded && activeFeed === "for-you") {
     share.showToast("Vox te mandou uma mensagem — veja em Mensagens 💬");
   }
+}
+
+function bindBskyImportButton(onRefresh) {
+  const importBtn = document.getElementById("btn-import-bsky-follows");
+  if (!importBtn || importBtn.dataset.wired) return;
+  importBtn.dataset.wired = "1";
+  importBtn.addEventListener("click", async () => {
+    const input = document.getElementById("input-bsky-import-me");
+    const val = input?.value?.trim();
+    if (!val) return share.showToast("Digite seu @handle do Bluesky para importar.");
+    importBtn.disabled = true;
+    importBtn.textContent = "Importando...";
+    try {
+      const res = await bskyFeed.importBskyFollows(val, 50);
+      share.showToast(`🎉 ${res.added} novos perfis importados com sucesso!`);
+      if (input) input.value = "";
+      if (onRefresh) onRefresh();
+    } catch {
+      share.showToast("Falha ao importar perfis do Bluesky.");
+    } finally {
+      importBtn.disabled = false;
+      importBtn.textContent = "📥 Puxar quem eu sigo";
+    }
+  });
+}
+
+function bindBskyChipActions(onRefresh) {
+  document.querySelectorAll(".btn-add-suggestion").forEach((btn) => {
+    if (btn.dataset.wired) return;
+    btn.dataset.wired = "1";
+    btn.addEventListener("click", () => {
+      if (!btn.dataset.handle) return;
+      bskyFeed.addBskySubscription(btn.dataset.handle);
+      share.showToast(`Perfil @${btn.dataset.handle} adicionado! 🌐`);
+      if (onRefresh) onRefresh();
+    });
+  });
+  document.querySelectorAll(".btn-remove-bsky-sub").forEach((btn) => {
+    if (btn.dataset.wired) return;
+    btn.dataset.wired = "1";
+    btn.addEventListener("click", () => {
+      if (!btn.dataset.handle) return;
+      bskyFeed.removeBskySubscription(btn.dataset.handle);
+      share.showToast(`Perfil @${btn.dataset.handle} removido.`);
+      if (onRefresh) onRefresh();
+    });
+  });
 }
 
 export function attachBskyManagerHandlers(onRefresh) {
@@ -214,57 +232,8 @@ export function attachBskyManagerHandlers(onRefresh) {
       if (onRefresh) onRefresh();
     });
   }
-
-  const importBtn = document.getElementById("btn-import-bsky-follows");
-  if (importBtn && !importBtn.dataset.wired) {
-    importBtn.dataset.wired = "1";
-    importBtn.addEventListener("click", async () => {
-      const input = document.getElementById("input-bsky-import-me");
-      const val = input?.value?.trim();
-      if (!val) {
-        share.showToast("Digite seu @handle do Bluesky para importar.");
-        return;
-      }
-      importBtn.disabled = true;
-      importBtn.textContent = "Importando...";
-      share.showToast(`Buscando quem @${val.replace(/^@/, "")} segue no Bluesky...`);
-      try {
-        const res = await bskyFeed.importBskyFollows(val, 50);
-        share.showToast(`🎉 ${res.added} novos perfis importados com sucesso!`);
-        if (input) input.value = "";
-        if (onRefresh) onRefresh();
-      } catch {
-        share.showToast("Falha ao importar perfis do Bluesky.");
-      } finally {
-        importBtn.disabled = false;
-        importBtn.textContent = "📥 Puxar quem eu sigo";
-      }
-    });
-  }
-
-  document.querySelectorAll(".btn-add-suggestion").forEach((btn) => {
-    if (btn.dataset.wired) return;
-    btn.dataset.wired = "1";
-    btn.addEventListener("click", () => {
-      const handle = btn.dataset.handle;
-      if (!handle) return;
-      bskyFeed.addBskySubscription(handle);
-      share.showToast(`Perfil @${handle} adicionado! 🌐`);
-      if (onRefresh) onRefresh();
-    });
-  });
-
-  document.querySelectorAll(".btn-remove-bsky-sub").forEach((btn) => {
-    if (btn.dataset.wired) return;
-    btn.dataset.wired = "1";
-    btn.addEventListener("click", () => {
-      const handle = btn.dataset.handle;
-      if (!handle) return;
-      bskyFeed.removeBskySubscription(handle);
-      share.showToast(`Perfil @${handle} removido.`);
-      if (onRefresh) onRefresh();
-    });
-  });
+  bindBskyImportButton(onRefresh);
+  bindBskyChipActions(onRefresh);
 }
 
 export async function showCommunities() {
@@ -275,31 +244,21 @@ export async function showCommunities() {
   try {
     const { items: remoteItems, gateway, demo } = await gql.fetchCommunities().catch(async () => mock.mockCommunities());
     const localComms = await cacheNode.getLocalCommunities();
-
-    const seen = new Set();
-    const merged = [];
-    for (const c of localComms) {
-      seen.add(c.id);
-      merged.push(c);
-    }
-    for (const c of (remoteItems || [])) {
-      if (!seen.has(c.id)) {
-        seen.add(c.id);
-        merged.push({ ...c, isLocalP2p: false });
-      }
-    }
-
+    const seen = new Set(localComms.map((c) => c.id));
+    const merged = [
+      ...localComms,
+      ...(remoteItems || []).filter((c) => !seen.has(c.id)).map((c) => ({ ...c, isLocalP2p: false })),
+    ];
     main.innerHTML = "";
     if (demo && !localComms.length) render.renderDemoBanner(main);
     else if (gateway) render.renderGatewayBanner(main, gateway);
     render.renderHome(main, merged);
-  } catch (e) {
+  } catch {
     main.innerHTML = "";
     const localComms = await cacheNode.getLocalCommunities();
     const fb = mock.mockCommunities();
-    const merged = [...localComms, ...fb.items];
     render.renderDemoBanner(main);
-    render.renderHome(main, merged);
+    render.renderHome(main, [...localComms, ...fb.items]);
   }
 }
 
@@ -310,7 +269,7 @@ export async function showTagFeed(slug) {
   render.renderLoading(main);
   try {
     const posts = mod.filterFeedPosts(
-      postOwnership.mapOwnLocalFlags(await cacheNode.getPostsByTag(cleanSlug), user)
+      postOwnership.mapOwnLocalFlags(await cacheNode.getPostsByTag(cleanSlug), user),
     );
     render.renderTagFeed(main, cleanSlug, posts);
   } catch {

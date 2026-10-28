@@ -170,6 +170,7 @@ function renderProfileGridActionRow(address, isCurrentWallet, isBlocked, isMuted
     return `
       <div class="profile-grid-actions">
         <a class="profile-grid-btn profile-grid-btn-outline" href="#/u/${encodeURIComponent(address)}?tab=about">Editar perfil</a>
+        <a class="profile-grid-btn profile-grid-btn-outline" href="#/settings/linked-accounts">🔗 Redes</a>
         <button type="button" class="profile-grid-btn profile-grid-btn-outline" id="btn-copy-my-dm-link" data-route="${escapeHtml(address)}">Compartilhar</button>
         <button type="button" class="profile-grid-btn profile-grid-btn-outline" id="btn-copy-connect-link" data-route="${escapeHtml(address)}">Link connect</button>
         <button type="button" class="profile-grid-btn profile-grid-btn-outline" id="btn-qr-connect-link" data-qr-share="connect" data-qr-id="${escapeHtml(address)}">QR deste link</button>
@@ -322,12 +323,18 @@ function renderGithubForm(currentGithub) {
 }
 
 function renderOAuthEnrichmentBlock(oauthProvider = "") {
-  if (!oauthProvider) return "";
   const label = oauthProvider === "google" ? "Google" : oauthProvider === "facebook" ? "Meta" : oauthProvider === "github" ? "GitHub" : oauthProvider;
+  const statusLine = oauthProvider
+    ? `<p class="desc" style="margin:0 0 0.45rem;">Nome e foto importados via <strong>${escapeHtml(label)}</strong> (opcional). Tokens OAuth não são guardados neste aparelho.</p>`
+    : `<p class="desc" style="margin:0 0 0.45rem;">Importe seu nome e foto via <strong>Google, Meta ou GitHub</strong> sem abrir mão da sua chave soberana <code>vx_*</code>.</p>`;
   return `
     <div class="oauth-enrich-notice" style="margin-top:0.65rem; padding:0.55rem 0.65rem; background:var(--surface-soft); border-radius:var(--radius-sm); font-size:0.82rem;">
-      <p class="desc" style="margin:0 0 0.45rem;">Nome e foto importados via <strong>${escapeHtml(label)}</strong> (opcional). Tokens OAuth não são guardados neste aparelho.</p>
-      <button type="button" id="btn-clear-oauth-enrich" class="btn btn-sm btn-outline">Remover nome/foto importados</button>
+      ${statusLine}
+      <div style="display:flex; flex-wrap:wrap; gap:0.4rem;">
+        <button type="button" id="btn-open-oauth-modal" class="btn btn-sm btn-outline">🔐 Entrar com Google / Meta / GitHub</button>
+        <a href="#/settings/linked-accounts" class="btn btn-sm btn-outline">🔗 Redes Vinculadas & Auto-Replicação</a>
+        ${oauthProvider ? `<button type="button" id="btn-clear-oauth-enrich" class="btn btn-sm btn-outline">Remover nome/foto importados</button>` : ""}
+      </div>
     </div>`;
 }
 
