@@ -718,6 +718,11 @@ export function renderProposalDetail(main, proposal, tally, { userVote = null, i
         <h1 style="font-size: 1.4rem; margin: 0.5rem 0 1rem;">${escapeHtml(proposal.title)}</h1>
         <div class="post-text" style="font-size: 1rem; line-height: 1.6;">${renderMarkdownLight(proposal.body)}</div>
         ${diffHtml}
+        <div class="proposal-bridge-bar" style="margin-top:1rem; padding-top:0.75rem; border-top:1px solid var(--border); display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+          <span class="meta" style="font-size:0.78rem;">📣 Ecoar no QG:</span>
+          <button type="button" id="btn-proposal-copy-discord" class="btn btn-sm btn-outline">📋 Copiar resumo (Discord / Slack)</button>
+          <button type="button" id="btn-proposal-webhook-echo" class="btn btn-sm btn-outline">🔔 Disparar Webhook</button>
+        </div>
       </article>
       ${tallyHtml}
       ${votingHtml}

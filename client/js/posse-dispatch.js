@@ -1,7 +1,8 @@
-/** @file POSSE pós-publicação — intents, Web Share, webhooks (incubação P0). */
+/** @file POSSE pós-publicação — intents, Web Share, webhooks nativos Discord/Slack (incubação P0). */
 
 import * as share from "./share.js";
 import { openQrUrlSheet } from "./qr-url.js";
+import { adaptWebhookPayloadForUrl, buildChatSummaryCopy } from "./chat-bridge.js";
 
 export { SHARE_HONEST_LIMITS_SHORT } from "./share.js";
 
@@ -26,6 +27,21 @@ export function buildCanonicalTopicUrl(topicId, { origin, pathname, communityId 
   const comm = String(communityId || "").trim();
   if (comm) url += `?c=${encodeURIComponent(comm)}`;
   return url;
+}
+
+export function buildCanonicalProposalUrl(communityId, proposalId, { origin, pathname } = {}) {
+  const cid = String(communityId || "").trim();
+  const pid = String(proposalId || "").trim();
+  if (!cid || !pid) return "";
+  const o =
+    origin ||
+    (typeof window !== "undefined" && window.location?.origin) ||
+    "https://yurikayel.github.io/vox";
+  const p =
+    pathname ||
+    (typeof window !== "undefined" && window.location?.pathname) ||
+    "/vox/";
+  return `${o}${p}#/c/${encodeURIComponent(cid)}/proposal/${encodeURIComponent(pid)}`;
 }
 
 export function buildPosseShareText({ title = "", body = "", url = "" } = {}) {
@@ -61,10 +77,11 @@ export function buildBlueskyIntentUrl(text) {
 export function buildPosseExportPayload(post) {
   const topicId = post?.id || post?.topicId || "";
   const communityId = post?.communityId || "";
-  const url = buildCanonicalTopicUrl(topicId, { communityId });
-  return {
+  const url = post?.canonicalUrl || buildCanonicalTopicUrl(topicId, { communityId });
+  const out = {
     v: 1,
     type: "vox-posse-export",
+    kind: post?.kind || post?.type || "topic",
     topicId,
     communityId,
     title: post?.title || "",
@@ -73,6 +90,26 @@ export function buildPosseExportPayload(post) {
     canonicalUrl: url,
     exportedAt: new Date().toISOString(),
   };
+  if (post?.diffText != null) out.diffText = post.diffText;
+  if (post?.tally != null) out.tally = post.tally;
+  if (post?.state != null) out.state = post.state;
+  if (post?.priceLabel) out.priceLabel = post.priceLabel;
+  if (post?.locationLabel) out.locationLabel = post.locationLabel;
+  if (post?.contactPix) out.contactPix = post.contactPix;
+  return out;
+}
+
+export function buildProposalPossePayload(proposal, tally = null, opts = {}) {
+  const communityId = proposal?.communityId || opts.communityId || "";
+  const proposalId = proposal?.id || "";
+  const canonicalUrl = buildCanonicalProposalUrl(communityId, proposalId, opts);
+  return buildPosseExportPayload({
+    ...proposal,
+    kind: "governance-proposal",
+    communityId,
+    canonicalUrl,
+    tally,
+  });
 }
 
 export function loadPosseWebhooks() {
@@ -110,14 +147,14 @@ export async function firePosseWebhooks(payload, urls = loadPosseWebhooks()) {
   if (!list.length) return { sent: 0, failed: 0 };
   let sent = 0;
   let failed = 0;
-  const body = JSON.stringify(payload);
   await Promise.all(
     list.map(async (url) => {
       try {
+        const adapted = adaptWebhookPayloadForUrl(url, payload);
         const res = await fetch(url, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body,
+          body: JSON.stringify(adapted),
           mode: "cors",
         });
         if (res.ok) sent += 1;
@@ -141,6 +178,26 @@ function setSkipPosseSheet(skip) {
   else localStorage.removeItem(POSSE_SKIP_STORAGE_KEY);
 }
 
+function buildPosseSheetHtml() {
+  return `
+    <div class="posse-dispatch-panel post-more-sheet-panel" role="document">
+      <p class="posse-dispatch-lead">${POSSE_SHEET_LEAD}</p>
+      <p class="posse-dispatch-limits meta">${share.SHARE_HONEST_LIMITS_SHORT}</p>
+      <p class="posse-dispatch-url meta" id="posse-dispatch-url"></p>
+      <button type="button" class="post-more-sheet-item" data-posse="native">Compartilhar (aparelho)…</button>
+      <button type="button" class="post-more-sheet-item" data-posse="whatsapp">WhatsApp</button>
+      <button type="button" class="post-more-sheet-item" data-posse="twitter">X (Twitter)</button>
+      <button type="button" class="post-more-sheet-item" data-posse="bluesky">Bluesky</button>
+      <button type="button" class="post-more-sheet-item" data-posse="chat-summary">Copiar resumo (Discord / Slack)</button>
+      <button type="button" class="post-more-sheet-item" data-posse="webhooks">Enviar p/ Discord / Slack (Webhook)</button>
+      <button type="button" class="post-more-sheet-item" data-posse="copy">Copiar texto + link</button>
+      <button type="button" class="post-more-sheet-item" data-posse="qr">QR deste link</button>
+      <button type="button" class="post-more-sheet-item" data-posse="export">Exportar JSON (CLI)</button>
+      <label class="posse-dispatch-skip"><input type="checkbox" id="posse-dispatch-skip-cb" /> Não mostrar de novo após publicar</label>
+      <button type="button" class="post-more-sheet-item post-more-sheet-cancel" data-posse="close">Fechar</button>
+    </div>`;
+}
+
 function ensurePosseSheet() {
   let root = document.getElementById(SHEET_ID);
   if (root) return root;
@@ -152,24 +209,7 @@ function ensurePosseSheet() {
   root.setAttribute("role", "dialog");
   root.setAttribute("aria-modal", "true");
   root.setAttribute("aria-label", "Ecoe para outras redes (manual)");
-  root.innerHTML = `
-    <div class="posse-dispatch-panel post-more-sheet-panel" role="document">
-      <p class="posse-dispatch-lead">${POSSE_SHEET_LEAD}</p>
-      <p class="posse-dispatch-limits meta">${share.SHARE_HONEST_LIMITS_SHORT}</p>
-      <p class="posse-dispatch-url meta" id="posse-dispatch-url"></p>
-      <button type="button" class="post-more-sheet-item" data-posse="native">Compartilhar (aparelho)…</button>
-      <button type="button" class="post-more-sheet-item" data-posse="whatsapp">WhatsApp</button>
-      <button type="button" class="post-more-sheet-item" data-posse="twitter">X (Twitter)</button>
-      <button type="button" class="post-more-sheet-item" data-posse="bluesky">Bluesky</button>
-      <button type="button" class="post-more-sheet-item" data-posse="copy">Copiar texto + link</button>
-      <button type="button" class="post-more-sheet-item" data-posse="qr">QR deste link</button>
-      <button type="button" class="post-more-sheet-item" data-posse="export">Exportar JSON (CLI)</button>
-      <label class="posse-dispatch-skip">
-        <input type="checkbox" id="posse-dispatch-skip-cb" />
-        Não mostrar de novo após publicar
-      </label>
-      <button type="button" class="post-more-sheet-item post-more-sheet-cancel" data-posse="close">Fechar</button>
-    </div>`;
+  root.innerHTML = buildPosseSheetHtml();
   document.body.appendChild(root);
   return root;
 }
@@ -198,45 +238,37 @@ export function closePosseSheet() {
   activePost = null;
 }
 
-async function onPosseAction(action) {
-  if (!activePost) return;
-  const url = buildCanonicalTopicUrl(activePost.id, { communityId: activePost.communityId });
-  const text = buildPosseShareText({ title: activePost.title, body: activePost.body, url });
-  const skipCb = document.getElementById("posse-dispatch-skip-cb");
-  if (skipCb?.checked) setSkipPosseSheet(true);
-
-  if (action === "close") {
-    closePosseSheet();
-    return;
-  }
-  if (action === "native") {
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: activePost.title || "Vox", text, url });
-      } catch {
-        /* user cancelled */
-      }
-    } else {
-      share.showToast("Compartilhamento nativo indisponível neste navegador.", "error");
+async function handlePosseBridgeActions(action, payload) {
+  if (action === "chat-summary") {
+    const summary = buildChatSummaryCopy(payload, { format: "discord" });
+    try {
+      await navigator.clipboard.writeText(summary);
+      share.showToast("Resumo formatado para Discord/Slack copiado!");
+    } catch {
+      share.showToast(summary.slice(0, 120), "info");
     }
     closePosseSheet();
-    return;
+    return true;
   }
-  if (action === "whatsapp") {
-    window.open(buildWhatsAppShareUrl(text), "_blank", "noopener,noreferrer");
+  if (action === "webhooks") {
+    const urls = loadPosseWebhooks();
+    if (!urls.length) {
+      share.showToast("Configure webhooks do Discord/Slack em Configurações → Rede.", "info");
+      closePosseSheet();
+      return true;
+    }
+    const res = await firePosseWebhooks(payload, urls);
+    share.showToast(
+      res.sent > 0 ? `Enviado para ${res.sent} webhook(s) (Discord/Slack)!` : "Falha ao disparar webhook.",
+      res.sent > 0 ? "info" : "error",
+    );
     closePosseSheet();
-    return;
+    return true;
   }
-  if (action === "twitter") {
-    window.open(buildTwitterIntentUrl(text, url), "_blank", "noopener,noreferrer");
-    closePosseSheet();
-    return;
-  }
-  if (action === "bluesky") {
-    window.open(buildBlueskyIntentUrl(text), "_blank", "noopener,noreferrer");
-    closePosseSheet();
-    return;
-  }
+  return false;
+}
+
+async function handlePosseExportAndCopy(action, payload, text, url) {
   if (action === "copy") {
     try {
       await navigator.clipboard.writeText(text);
@@ -253,13 +285,10 @@ async function onPosseAction(action) {
     return;
   }
   if (action === "export") {
-    const payload = buildPosseExportPayload(activePost);
     const json = JSON.stringify(payload, null, 2);
     try {
       await navigator.clipboard.writeText(json);
-      share.showToast(
-        "JSON copiado — webhooks só disparam neste export; nada vai ao Meta sozinho.",
-      );
+      share.showToast("JSON copiado — webhooks só disparam neste export; nada vai ao Meta sozinho.");
     } catch {
       share.showToast("Export pronto — veja console.", "info");
       console.info("[vox-posse-export]", payload);
@@ -267,6 +296,48 @@ async function onPosseAction(action) {
     void firePosseWebhooks(payload);
     closePosseSheet();
   }
+}
+
+async function handlePosseIntentActions(action, text, url) {
+  if (action === "native") {
+    if (navigator.share) {
+      try { await navigator.share({ title: activePost?.title || "Vox", text, url }); } catch {}
+    } else {
+      share.showToast("Compartilhamento nativo indisponível neste navegador.", "error");
+    }
+    closePosseSheet();
+    return true;
+  }
+  if (action === "whatsapp") {
+    window.open(buildWhatsAppShareUrl(text), "_blank", "noopener,noreferrer");
+    closePosseSheet();
+    return true;
+  }
+  if (action === "twitter") {
+    window.open(buildTwitterIntentUrl(text, url), "_blank", "noopener,noreferrer");
+    closePosseSheet();
+    return true;
+  }
+  if (action === "bluesky") {
+    window.open(buildBlueskyIntentUrl(text), "_blank", "noopener,noreferrer");
+    closePosseSheet();
+    return true;
+  }
+  return false;
+}
+
+async function onPosseAction(action) {
+  if (!activePost) return;
+  const payload = buildPosseExportPayload(activePost);
+  const url = payload.canonicalUrl;
+  const text = buildPosseShareText({ title: activePost.title, body: activePost.body, url });
+  const skipCb = document.getElementById("posse-dispatch-skip-cb");
+  if (skipCb?.checked) setSkipPosseSheet(true);
+
+  if (action === "close") return closePosseSheet();
+  if (await handlePosseIntentActions(action, text, url)) return;
+  if (await handlePosseBridgeActions(action, payload)) return;
+  await handlePosseExportAndCopy(action, payload, text, url);
 }
 
 export function openPosseSheetAfterPublish(post) {

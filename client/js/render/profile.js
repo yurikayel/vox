@@ -728,6 +728,14 @@ export function renderComposeTopic(main, communityId) {
         <div class="form-group">
           <label for="topic-body">Mensagem:</label>
           <textarea id="topic-body" class="form-control" rows="5" placeholder="Escreva seu post aqui..." required></textarea>
+          <details class="compose-chat-import" style="margin-top:0.65rem; padding:0.6rem 0.75rem; border:1px dashed var(--border); border-radius:var(--radius-sm); background:var(--surface-soft);">
+            <summary style="cursor:pointer; font-size:0.82rem; font-weight:600; color:var(--accent);">📥 Importar Ata / Conversa do Slack ou Discord (Memória Anti-90-dias)</summary>
+            <div style="margin-top:0.5rem;">
+              <p class="meta" style="margin:0 0 0.4rem; font-size:0.76rem;">Cole abaixo o trecho copiado do Slack ou Discord. O Vox formata os turnos de fala em ata Markdown permanente.</p>
+              <textarea id="chat-transcript-input" class="form-control" rows="4" placeholder="Ex:\nHelena — Hoje às 14:30\nAprovamos o mutirão de sábado.\nTiago — Hoje às 14:32\nFechado! Levo as mudas."></textarea>
+              <button type="button" id="btn-convert-chat-transcript" class="btn btn-sm btn-outline" style="margin-top:0.45rem;">Converter em Ata Formatada</button>
+            </div>
+          </details>
         </div>
         <div class="form-actions">
           <button type="submit" class="btn btn-primary" id="btn-submit-topic">Publicar Post</button>
