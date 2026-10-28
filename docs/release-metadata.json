@@ -1,9 +1,9 @@
 {
   "git_sha": "c2b6d0b",
   "branch": "main",
-  "test_js": 391,
+  "test_js": 392,
   "test_python": 23,
-  "test_total": 414,
-  "cache_name": "vox-pwa-v6.95-repost-toolbar",
+  "test_total": 415,
+  "cache_name": "vox-pwa-v6.96-photo-card-gaps",
   "generated_at": "2026-10-28T00:28:00Z"
 }

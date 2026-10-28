@@ -1,7 +1,7 @@
 /** Checklist seed pós-criação de comunidade (V-P05) — ritual ~3 min, localStorage. */
 const PENDING_KEY = "vox-community-seed-pending";
 
-/** Tour/mock — ritual de seed não se aplica a testadores na praça demo. */
+/** Tour/mock — ritual de seed não se aplica a testadores na rede demo. */
 export const SEED_RITUAL_SKIP_COMMUNITY_IDS = new Set([
   "demo-aprenda-vox",
   "demo-aprenda-vox-mirror",
