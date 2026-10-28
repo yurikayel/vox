@@ -3,9 +3,6 @@
  * Parser puro de `location.hash` e query `?h=` / `?labs=` — sem DOM side effects.
  */
 
-/**
- * @returns {Record<string, string> & { name: string }}
- */
 function parseSearchHints() {
   if (typeof window === "undefined" || !window.location?.search) return null;
   const q = new URLSearchParams(window.location.search);
@@ -22,6 +19,69 @@ function parseLabsHash(parts) {
   return null;
 }
 
+function parseSettingsRoute(parts) {
+  if (parts[0] !== "settings") return null;
+  if (parts[1] === "linked-accounts") return { name: "linked-accounts" };
+  if (parts[1] === "network" && parts[2] === "steward") return { name: "steward-wizard" };
+  return { name: "network-settings" };
+}
+
+function resolveCommunityTab(subPath, rawQueryTab) {
+  let tab = (rawQueryTab || "").toLowerCase();
+  if (!tab && (subPath === "listings" || subPath === "classificados" || subPath === "feira")) tab = "listings";
+  if (!tab && (subPath === "governance" || subPath === "governanca")) tab = "governance";
+  if (!tab && (subPath === "members" || subPath === "membros" || subPath === "online")) tab = "members";
+  if (tab === "listings") return "listings";
+  if (tab === "governance" || tab === "governanca") return "governance";
+  if (tab === "members" || tab === "membros" || tab === "online") return "members";
+  return "posts";
+}
+
+function parseCommunityRoute(parts, query) {
+  if (parts[0] !== "c" || !parts[1]) return null;
+  if (parts[2] === "proposal" && parts[3]) {
+    return {
+      name: "proposal",
+      communityId: decodeURIComponent(parts[1]),
+      proposalId: decodeURIComponent(parts[3]),
+    };
+  }
+  return {
+    name: "community",
+    id: decodeURIComponent(parts[1]),
+    tab: resolveCommunityTab(parts[2], query.get("tab")),
+  };
+}
+
+function parseComposeRoute(parts, query) {
+  if (parts[0] !== "compose") return null;
+  if (parts[1] === "community") return { name: "compose-community" };
+  if (parts[1] === "listing") return { name: "compose-listing", communityId: query.get("c") || "" };
+  if (parts[1] === "proposal") return { name: "compose-proposal", communityId: query.get("c") || "" };
+  if (parts[1] === "topic") return { name: "compose-topic", communityId: query.get("c") || "" };
+  if (parts[1] === "reply") {
+    return { name: "compose-reply", topicId: query.get("t") || "", communityId: query.get("c") || "" };
+  }
+  return null;
+}
+
+function parseEntityRoute(parts, query) {
+  if (parts[0] === "connect" && parts[1]) return { name: "connect", routeId: decodeURIComponent(parts[1]) };
+  if (parts[0] === "pix" && parts[1]) return { name: "pix-lookup", query: decodeURIComponent(parts[1]) };
+  if (parts[0] === "h" && parts[1]) return { name: "handle-lookup", slug: decodeURIComponent(parts[1]) };
+  if (parts[0] === "tag" && parts[1]) return { name: "tag-feed", slug: decodeURIComponent(parts[1]) };
+  if (parts[0] === "dm") return parts[1] ? { name: "dm-thread", address: decodeURIComponent(parts[1]) } : { name: "dm-list" };
+  if (parts[0] === "t" && parts[1]) {
+    return { name: "topic", id: decodeURIComponent(parts[1]), communityId: query.get("c") || "" };
+  }
+  if (parts[0] === "u" && parts[1]) {
+    const raw = decodeURIComponent(parts[1]);
+    if (raw.startsWith("@")) return { name: "handle-lookup", slug: raw.slice(1) };
+    return { name: "profile", address: raw, tab: (query.get("tab") || "posts").toLowerCase() };
+  }
+  return null;
+}
+
 export function parseRoute() {
   const fromSearch = parseSearchHints();
   if (fromSearch) return fromSearch;
@@ -34,92 +94,18 @@ export function parseRoute() {
   if (!parts.length) return { name: "home", feed: (query.get("feed") || "for-you").toLowerCase() };
   if (parts[0] === "communities") return { name: "communities" };
   if (parts[0] === "people") return { name: "people", query: query.get("q") || "" };
-  if (parts[0] === "connect" && parts[1]) {
-    return { name: "connect", routeId: decodeURIComponent(parts[1]) };
-  }
   if (parts[0] === "perfil") return { name: "perfil", tab: (query.get("tab") || "posts").toLowerCase() };
-  if (parts[0] === "pix" && parts[1]) {
-    return { name: "pix-lookup", query: decodeURIComponent(parts[1]) };
-  }
-  if (parts[0] === "settings") {
-    if (parts[1] === "linked-accounts") return { name: "linked-accounts" };
-    if (parts[1] === "network") {
-      if (parts[2] === "steward") return { name: "steward-wizard" };
-      return { name: "network-settings" };
-    }
-  }
-  if (parts[0] === "h" && parts[1]) {
-    return { name: "handle-lookup", slug: decodeURIComponent(parts[1]) };
-  }
-  if (parts[0] === "tag" && parts[1]) {
-    return { name: "tag-feed", slug: decodeURIComponent(parts[1]) };
-  }
-  if (parts[0] === "dm") {
-    if (parts[1]) return { name: "dm-thread", address: decodeURIComponent(parts[1]) };
-    return { name: "dm-list" };
-  }
-  if (parts[0] === "c" && parts[1]) {
-    if (parts[2] === "proposal" && parts[3]) {
-      return {
-        name: "proposal",
-        communityId: decodeURIComponent(parts[1]),
-        proposalId: decodeURIComponent(parts[3]),
-      };
-    }
-    let tab = (query.get("tab") || "").toLowerCase();
-    if (!tab && (parts[2] === "listings" || parts[2] === "classificados" || parts[2] === "feira")) {
-      tab = "listings";
-    }
-    if (!tab && (parts[2] === "governance" || parts[2] === "governanca")) {
-      tab = "governance";
-    }
-    if (!tab && (parts[2] === "members" || parts[2] === "membros" || parts[2] === "online")) {
-      tab = "members";
-    }
-    let finalTab = "posts";
-    if (tab === "listings") finalTab = "listings";
-    else if (tab === "governance" || tab === "governanca") finalTab = "governance";
-    else if (tab === "members" || tab === "membros" || tab === "online") finalTab = "members";
-
-    return {
-      name: "community",
-      id: decodeURIComponent(parts[1]),
-      tab: finalTab,
-    };
-  }
-  if (parts[0] === "t" && parts[1]) {
-    return {
-      name: "topic",
-      id: decodeURIComponent(parts[1]),
-      communityId: query.get("c") || "",
-    };
-  }
-  if (parts[0] === "u" && parts[1]) {
-    const raw = decodeURIComponent(parts[1]);
-    if (raw.startsWith("@")) {
-      return { name: "handle-lookup", slug: raw.slice(1) };
-    }
-    return { name: "profile", address: raw, tab: (query.get("tab") || "posts").toLowerCase() };
-  }
   if (parts[0] === "status") return { name: "status" };
-  const labs = parseLabsHash(parts);
-  if (labs) return labs;
-  if (parts[0] === "voxpedia") return { name: "voxpedia" };
-  if (parts[0] === "ajuda" && parts[1] === "voxpedia") return { name: "voxpedia" };
-  if (parts[0] === "ajuda" && parts[1] === "teste") return { name: "ajuda-teste" };
   if (parts[0] === "wallet") return { name: "wallet" };
-  if (parts[0] === "compose") {
-    if (parts[1] === "community") return { name: "compose-community" };
-    if (parts[1] === "listing") return { name: "compose-listing", communityId: query.get("c") || "" };
-    if (parts[1] === "proposal") return { name: "compose-proposal", communityId: query.get("c") || "" };
-    if (parts[1] === "topic") return { name: "compose-topic", communityId: query.get("c") || "" };
-    if (parts[1] === "reply") {
-      return {
-        name: "compose-reply",
-        topicId: query.get("t") || "",
-        communityId: query.get("c") || "",
-      };
-    }
-  }
-  return { name: "home" };
+  if (parts[0] === "voxpedia" || (parts[0] === "ajuda" && parts[1] === "voxpedia")) return { name: "voxpedia" };
+  if (parts[0] === "ajuda" && parts[1] === "teste") return { name: "ajuda-teste" };
+
+  return (
+    parseSettingsRoute(parts) ||
+    parseEntityRoute(parts, query) ||
+    parseCommunityRoute(parts, query) ||
+    parseLabsHash(parts) ||
+    parseComposeRoute(parts, query) ||
+    { name: "home" }
+  );
 }

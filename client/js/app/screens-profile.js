@@ -9,34 +9,18 @@ import * as share from "../share.js";
 import { openQrUrlSheet } from "../qr-url.js";
 import * as mod from "../moderation.js";
 import * as cacheNode from "../cache-node.js";
-import * as peers from "../peers.js";
 import * as cryptoDm from "../crypto-dm.js";
-import * as inbox from "../inbox.js";
 import * as handles from "../handles.js";
 import * as localAccount from "../local-account.js";
-import * as demoSeed from "../demo-seed.js";
 import * as social from "../social.js";
 import * as pixKeyHelper from "../pix-key.js";
-import * as listing from "../listing.js";
-import * as listingUi from "../listing-ui.js";
-import * as i18n from "../i18n-pt-br.js";
-import * as gov from "../governance.js";
-import * as brcode from "../brcode.js";
-import * as hashtags from "../hashtags.js";
-import * as frames from "../frames.js";
 import * as postOwnership from "../post-ownership.js";
-import * as communityMirror from "../community-mirror.js";
-import * as stewardWizard from "../steward-wizard.js";
-import * as gatewayTelemetry from "../gateway-telemetry.js";
-import { attachInlineComposerHandlers } from "../inline-composer.js";
-import * as oauthProfile from "../oauth-profile.js";
-import * as contacts from "../contacts.js";
-import * as peopleIndex from "../people-index.js";
 import * as profileDirectory from "../profile-directory.js";
 import * as welcomeProfile from "../vox-welcome-profile.js";
 import * as meshProfile from "../mesh-profile.js";
-import { parseRoute } from "./route-parse.js";
-import { getActiveUser, makeShellProps, attachPostShareHandlers } from "./context.js";
+import { getCachedBskyPosts } from "../bsky-feed.js";
+import { openOAuthEnrichModal } from "./onboarding.js";
+import { getActiveUser, makeShellProps } from "./context.js";
 import { syncIdentity } from "./screens-network.js";
 import { KIND_WRAPPED, peekBackupKind } from "../account-backup-wrap.js";
 
@@ -120,7 +104,7 @@ export async function showProfile(address, activeTab = "posts") {
     authorPosts = mock.MOCK_DEMO_TOPICS.filter((t) => t.author === targetAddress);
   }
 
-  const allAvailablePosts = [...localPosts, ...mock.MOCK_DEMO_TOPICS];
+  const allAvailablePosts = [...localPosts, ...mock.MOCK_DEMO_TOPICS, ...getCachedBskyPosts()];
   const starredPosts = collectByIds(allAvailablePosts, social.getStarredPostIds());
   const savedPosts = collectByIds(allAvailablePosts, social.getSavedPostIds());
 
@@ -366,6 +350,10 @@ export function bindProfileButtons(user, address, isSelf, dmPub, activeTab = "po
       share.showToast(e.target.checked ? "Cartão publicado na malha." : "Cartão revogado na malha.");
       showProfile(address, activeTab);
     });
+  });
+
+  document.getElementById("btn-open-oauth-modal")?.addEventListener("click", () => {
+    openOAuthEnrichModal({ onComplete: () => showProfile(address, activeTab) });
   });
 
   document.getElementById("btn-clear-oauth-enrich")?.addEventListener("click", () => {

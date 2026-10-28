@@ -46,13 +46,17 @@ test("explode - buildTelegramShareUrl generates t.me share url", () => {
   assert.ok(url.includes("text="));
 });
 
-test("explode - buildThreadsIntentUrl generates threads.net compose url", () => {
-  const url = explode.buildThreadsIntentUrl("Alerta geral", "https://yurikayel.github.io/vox/#/t/1");
-  assert.ok(url.startsWith("https://www.threads.net/intent/post?text="));
-  assert.ok(url.includes("Alerta%20geral"));
+test("explode - buildThreadsIntentUrl and buildFacebookShareUrl generate valid share intents", () => {
+  const threadsUrl = explode.buildThreadsIntentUrl("Alerta geral", "https://yurikayel.github.io/vox/#/t/1");
+  assert.ok(threadsUrl.startsWith("https://www.threads.net/intent/post?text="));
+  assert.ok(threadsUrl.includes("Alerta%20geral"));
+
+  const fbUrl = explode.buildFacebookShareUrl("https://yurikayel.github.io/vox/#/t/1", "Mobilização");
+  assert.ok(fbUrl.startsWith("https://www.facebook.com/sharer/sharer.php?u="));
+  assert.ok(fbUrl.includes("quote="));
 });
 
-test("explode - buildExplodeSheetHtml renders launchpad with all network actions", () => {
+test("explode - buildExplodeSheetHtml renders launchpad with all 9 network actions", () => {
   const html = explode.buildExplodeSheetHtml({
     id: "top_test_explode",
     title: "Vitória dos Trabalhadores",
@@ -67,8 +71,11 @@ test("explode - buildExplodeSheetHtml renders launchpad with all network actions
   assert.ok(html.includes('data-explode-action="whatsapp"'));
   assert.ok(html.includes('data-explode-action="twitter"'));
   assert.ok(html.includes('data-explode-action="bluesky"'));
-  assert.ok(html.includes('data-explode-action="telegram"'));
   assert.ok(html.includes('data-explode-action="threads"'));
+  assert.ok(html.includes('data-explode-action="facebook"'));
+  assert.ok(html.includes('data-explode-action="instagram"'));
+  assert.ok(html.includes('data-explode-action="tiktok"'));
+  assert.ok(html.includes('data-explode-action="telegram"'));
   assert.ok(html.includes('data-explode-action="webhooks"'));
   assert.ok(html.includes('data-explode-action="copy"'));
   assert.ok(html.includes('data-explode-action="native"'));

@@ -1,6 +1,7 @@
 /** @file Ingestão predatória soberana de feeds do Bluesky (AT Protocol) — 100% client-side via API pública. */
 
 export const BSKY_SUBS_STORAGE_KEY = "vox-bsky-subs-v1";
+export const BSKY_POST_CACHE_KEY = "vox-bsky-cached-posts-v1";
 export const BSKY_PUBLIC_ENDPOINT = "https://public.api.bsky.app/xrpc";
 export const BSKY_DEFAULT_SEEDS = ["lula.com.br", "brasildefato.com.br", "theintercept.com"];
 
@@ -26,11 +27,13 @@ export function loadBskySubscriptions() {
 
 export function saveBskySubscriptions(handles) {
   if (typeof localStorage === "undefined") return;
-  const clean = Array.from(new Set(
-    (Array.isArray(handles) ? handles : [])
-      .map((h) => String(h || "").trim().replace(/^@/, "").toLowerCase())
-      .filter(Boolean)
-  )).slice(0, 50);
+  const clean = Array.from(
+    new Set(
+      (Array.isArray(handles) ? handles : [])
+        .map((h) => String(h || "").trim().replace(/^@/, "").toLowerCase())
+        .filter(Boolean),
+    ),
+  ).slice(0, 50);
   localStorage.setItem(BSKY_SUBS_STORAGE_KEY, JSON.stringify(clean));
 }
 
@@ -51,6 +54,35 @@ export function removeBskySubscription(handle) {
   return next;
 }
 
+export function getCachedBskyPosts() {
+  if (typeof localStorage === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(BSKY_POST_CACHE_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+export function cacheBskyPosts(posts) {
+  if (typeof localStorage === "undefined" || !Array.isArray(posts) || !posts.length) return;
+  try {
+    const existing = getCachedBskyPosts();
+    const map = new Map();
+    for (const p of [...posts, ...existing]) {
+      if (p?.id && !map.has(p.id)) map.set(p.id, p);
+    }
+    const merged = Array.from(map.values()).slice(0, 60);
+    localStorage.setItem(BSKY_POST_CACHE_KEY, JSON.stringify(merged));
+  } catch {}
+}
+
+export function getCachedBskyPostById(id) {
+  if (!id) return null;
+  return getCachedBskyPosts().find((p) => p.id === id) || null;
+}
+
 export function buildBskyAuthorFeedUrl(actor, limit = 20) {
   const a = encodeURIComponent(String(actor || "").trim().replace(/^@/, ""));
   return `${BSKY_PUBLIC_ENDPOINT}/app.bsky.feed.getAuthorFeed?actor=${a}&limit=${limit}`;
@@ -64,9 +96,8 @@ export function buildBskyFollowsUrl(actor, limit = 50) {
 export async function fetchBskyFollows(actor, limit = 50) {
   const clean = String(actor || "").trim().replace(/^@/, "");
   if (!clean) return [];
-  const url = buildBskyFollowsUrl(clean, limit);
   try {
-    const res = await fetch(url, { headers: { Accept: "application/json" } });
+    const res = await fetch(buildBskyFollowsUrl(clean, limit), { headers: { Accept: "application/json" } });
     if (!res.ok) return [];
     const data = await res.json();
     const follows = Array.isArray(data?.follows) ? data.follows : [];
@@ -95,7 +126,7 @@ export function importSubscriptionsList(rawText) {
   let handles = [];
   try {
     const parsed = JSON.parse(rawText);
-    handles = Array.isArray(parsed) ? parsed : (Array.isArray(parsed?.subscriptions) ? parsed.subscriptions : []);
+    handles = Array.isArray(parsed) ? parsed : Array.isArray(parsed?.subscriptions) ? parsed.subscriptions : [];
   } catch {
     handles = rawText.split(/[\r\n,;]+/).map((s) => s.trim()).filter(Boolean);
   }
@@ -157,14 +188,14 @@ export function normalizeBskyPost(item) {
 export async function fetchBskyAuthorFeed(handle, limit = 15) {
   const clean = String(handle || "").trim().replace(/^@/, "");
   if (!clean) return [];
-  const url = buildBskyAuthorFeedUrl(clean, limit);
-
   try {
-    const res = await fetch(url, { headers: { Accept: "application/json" } });
+    const res = await fetch(buildBskyAuthorFeedUrl(clean, limit), { headers: { Accept: "application/json" } });
     if (!res.ok) return [];
     const data = await res.json();
     const feed = Array.isArray(data?.feed) ? data.feed : [];
-    return feed.map(normalizeBskyPost).filter(Boolean);
+    const posts = feed.map(normalizeBskyPost).filter(Boolean);
+    cacheBskyPosts(posts);
+    return posts;
   } catch {
     return [];
   }
@@ -174,10 +205,7 @@ export async function fetchAggregatedBskyFeed(handles = loadBskySubscriptions(),
   const list = (Array.isArray(handles) ? handles : []).slice(0, 15);
   if (!list.length) return [];
 
-  const results = await Promise.allSettled(
-    list.map((h) => fetchBskyAuthorFeed(h, limitPerUser))
-  );
-
+  const results = await Promise.allSettled(list.map((h) => fetchBskyAuthorFeed(h, limitPerUser)));
   const posts = [];
   const seen = new Set();
 
@@ -190,6 +218,7 @@ export async function fetchAggregatedBskyFeed(handles = loadBskySubscriptions(),
       }
     }
   }
-
-  return posts.sort((a, b) => b.ts - a.ts);
+  const sorted = posts.sort((a, b) => b.ts - a.ts);
+  cacheBskyPosts(sorted);
+  return sorted;
 }
