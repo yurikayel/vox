@@ -89,7 +89,7 @@ test("qr-url - encoder is vanilla and not brcode/Pix", () => {
   assert.ok(!src.includes("brcode"));
   assert.ok(!src.includes("buildPixPayload"));
   const sw = fs.readFileSync(path.join(root, "sw.js"), "utf8");
-  assert.match(sw, /vox-pwa-v6\.94-notes-repost-save-tags/);
+  assert.match(sw, /vox-pwa-v6\.95-repost-toolbar/);
   assert.ok(sw.includes('"./js/qr-url.js"'));
   assert.ok(sw.includes('"./js/qr-url-gf.js"'));
   assert.ok(sw.includes('"./js/qr-url-codec.js"'));
