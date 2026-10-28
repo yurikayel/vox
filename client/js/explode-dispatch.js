@@ -10,6 +10,7 @@ import {
   buildTwitterIntentUrl,
   buildBlueskyIntentUrl,
 } from "./posse-dispatch.js";
+import { dispatchAutoReplication } from "./linked-accounts.js";
 import { escapeHtml } from "./render/util.js";
 
 export const EXPLODE_SHEET_ID = "explode-dispatch-sheet";
@@ -44,6 +45,12 @@ export function buildThreadsIntentUrl(text, url) {
   return `https://www.threads.net/intent/post?text=${encodeURIComponent(full)}`;
 }
 
+export function buildFacebookShareUrl(url, quote = "") {
+  const u = encodeURIComponent(String(url || ""));
+  const q = encodeURIComponent(String(quote || ""));
+  return `https://www.facebook.com/sharer/sharer.php?u=${u}&quote=${q}`;
+}
+
 export async function executeExplodeBurst(post) {
   const canonicalUrl = buildCanonicalTopicUrl(post?.id, { communityId: post?.communityId });
   const text = buildJanonesExplodeText({
@@ -61,8 +68,9 @@ export async function executeExplodeBurst(post) {
   const payload = buildPosseExportPayload({ ...post, canonicalUrl });
   const webhooks = loadPosseWebhooks();
   const res = webhooks.length ? await firePosseWebhooks(payload, webhooks) : { sent: 0, failed: 0 };
+  const autoRep = await dispatchAutoReplication({ ...post, canonicalUrl }).catch(() => ({ count: 0 }));
 
-  return { copied, webhooksSent: res.sent, text, canonicalUrl };
+  return { copied, webhooksSent: res.sent + (autoRep.count || 0), text, canonicalUrl };
 }
 
 let activeExplodePost = null;
@@ -78,30 +86,15 @@ function buildExplodeHeaderHtml() {
 
 function buildExplodeGridHtml() {
   return `<div class="explode-grid" role="group" aria-label="Redes para disparo">
-    <button type="button" class="explode-grid-btn btn-zap" data-explode-action="whatsapp">
-      <span class="explode-grid-icon">📲</span>
-      <span>WhatsApp</span>
-    </button>
-    <button type="button" class="explode-grid-btn btn-x" data-explode-action="twitter">
-      <span class="explode-grid-icon">🐦</span>
-      <span>X (Twitter)</span>
-    </button>
-    <button type="button" class="explode-grid-btn btn-bluesky" data-explode-action="bluesky">
-      <span class="explode-grid-icon">🦋</span>
-      <span>Bluesky</span>
-    </button>
-    <button type="button" class="explode-grid-btn btn-telegram" data-explode-action="telegram">
-      <span class="explode-grid-icon">✈️</span>
-      <span>Telegram</span>
-    </button>
-    <button type="button" class="explode-grid-btn btn-threads" data-explode-action="threads">
-      <span class="explode-grid-icon">🧵</span>
-      <span>Threads</span>
-    </button>
-    <button type="button" class="explode-grid-btn btn-webhooks" data-explode-action="webhooks">
-      <span class="explode-grid-icon">💬</span>
-      <span>Discord/Slack</span>
-    </button>
+    <button type="button" class="explode-grid-btn btn-zap" data-explode-action="whatsapp"><span class="explode-grid-icon">📲</span><span>WhatsApp</span></button>
+    <button type="button" class="explode-grid-btn btn-x" data-explode-action="twitter"><span class="explode-grid-icon">🐦</span><span>X (Twitter)</span></button>
+    <button type="button" class="explode-grid-btn btn-bluesky" data-explode-action="bluesky"><span class="explode-grid-icon">🦋</span><span>Bluesky</span></button>
+    <button type="button" class="explode-grid-btn btn-threads" data-explode-action="threads"><span class="explode-grid-icon">🧵</span><span>Threads</span></button>
+    <button type="button" class="explode-grid-btn btn-facebook" data-explode-action="facebook"><span class="explode-grid-icon">👥</span><span>Facebook</span></button>
+    <button type="button" class="explode-grid-btn btn-instagram" data-explode-action="instagram"><span class="explode-grid-icon">📸</span><span>Instagram</span></button>
+    <button type="button" class="explode-grid-btn btn-tiktok" data-explode-action="tiktok"><span class="explode-grid-icon">🎵</span><span>TikTok</span></button>
+    <button type="button" class="explode-grid-btn btn-telegram" data-explode-action="telegram"><span class="explode-grid-icon">✈️</span><span>Telegram</span></button>
+    <button type="button" class="explode-grid-btn btn-webhooks" data-explode-action="webhooks"><span class="explode-grid-icon">💬</span><span>Discord/Slack</span></button>
   </div>`;
 }
 
@@ -159,32 +152,33 @@ export function closeExplodeSheet() {
   activeExplodePost = null;
 }
 
+function resolveIntentTargetUrl(action, text, url) {
+  if (action === "whatsapp") return buildWhatsAppShareUrl(text);
+  if (action === "twitter") return buildTwitterIntentUrl(text, url);
+  if (action === "bluesky") return buildBlueskyIntentUrl(text);
+  if (action === "telegram") return buildTelegramShareUrl(text, url);
+  if (action === "threads") return buildThreadsIntentUrl(text, url);
+  if (action === "facebook") return buildFacebookShareUrl(url, text);
+  return "";
+}
+
 async function handleExplodeGridActions(action, text, url, payload) {
-  if (action === "whatsapp") {
-    window.open(buildWhatsAppShareUrl(text), "_blank", "noopener,noreferrer");
+  const targetUrl = resolveIntentTargetUrl(action, text, url);
+  if (targetUrl) {
+    window.open(targetUrl, "_blank", "noopener,noreferrer");
     return true;
   }
-  if (action === "twitter") {
-    window.open(buildTwitterIntentUrl(text, url), "_blank", "noopener,noreferrer");
-    return true;
-  }
-  if (action === "bluesky") {
-    window.open(buildBlueskyIntentUrl(text), "_blank", "noopener,noreferrer");
-    return true;
-  }
-  if (action === "telegram") {
-    window.open(buildTelegramShareUrl(text, url), "_blank", "noopener,noreferrer");
-    return true;
-  }
-  if (action === "threads") {
-    window.open(buildThreadsIntentUrl(text, url), "_blank", "noopener,noreferrer");
+  if (action === "instagram" || action === "tiktok") {
+    try { await navigator.clipboard.writeText(text); } catch {}
+    share.showToast(`Legenda copiada! Cole no ${action === "instagram" ? "Instagram 📸" : "TikTok 🎵"}`);
+    window.open(action === "instagram" ? "https://www.instagram.com/" : "https://www.tiktok.com/upload", "_blank", "noopener,noreferrer");
     return true;
   }
   if (action === "webhooks") {
     const hooks = loadPosseWebhooks();
     const res = hooks.length ? await firePosseWebhooks(payload, hooks) : { sent: 0, failed: 0 };
     share.showToast(
-      res.sent > 0 ? `Enviado para ${res.sent} webhook(s) (Discord/Slack)!` : "Configure webhooks em Configurações → Rede.",
+      res.sent > 0 ? `Enviado para ${res.sent} webhook(s)!` : "Configure webhooks em Configurações → Rede.",
       res.sent > 0 ? "info" : "error",
     );
     return true;
@@ -194,37 +188,22 @@ async function handleExplodeGridActions(action, text, url, payload) {
 
 async function onExplodeAction(action) {
   if (!activeExplodePost) return;
-  const canonicalUrl = buildCanonicalTopicUrl(activeExplodePost.id, { communityId: activeExplodePost.communityId });
-  const text = buildJanonesExplodeText({
-    title: activeExplodePost.title,
-    body: activeExplodePost.body,
-    url: canonicalUrl,
-  });
-  const payload = buildPosseExportPayload({ ...activeExplodePost, canonicalUrl });
-
   if (action === "close") return closeExplodeSheet();
+
+  const canonicalUrl = buildCanonicalTopicUrl(activeExplodePost.id, { communityId: activeExplodePost.communityId });
+  const text = buildJanonesExplodeText({ title: activeExplodePost.title, body: activeExplodePost.body, url: canonicalUrl });
+  const payload = buildPosseExportPayload({ ...activeExplodePost, canonicalUrl });
 
   if (action === "burst") {
     const res = await executeExplodeBurst(activeExplodePost);
-    const msg = res.webhooksSent > 0
-      ? `💥 Rajada disparada! (${res.webhooksSent} webhooks + texto copiado p/ colar no Zap)`
-      : "💥 Munição copiada! Abra os grupos do Zap e cole!";
-    share.showToast(msg);
-    closeExplodeSheet();
-    return;
+    share.showToast(res.webhooksSent > 0 ? `💥 Rajada disparada! (${res.webhooksSent} destinos)` : "💥 Munição copiada! Cole nos grupos!");
+    return closeExplodeSheet();
   }
-
-  if (await handleExplodeGridActions(action, text, canonicalUrl, payload)) {
-    closeExplodeSheet();
-    return;
-  }
-
+  if (await handleExplodeGridActions(action, text, canonicalUrl, payload)) return closeExplodeSheet();
   if (action === "copy") {
     try { await navigator.clipboard.writeText(text); share.showToast("Pacote de munição copiado com sucesso! 💥"); } catch {}
-    closeExplodeSheet();
-    return;
+    return closeExplodeSheet();
   }
-
   if (action === "native" && navigator.share) {
     try { await navigator.share({ title: activeExplodePost.title || "Vox", text, url: canonicalUrl }); } catch {}
     closeExplodeSheet();
@@ -248,14 +227,9 @@ export function attachExplodeHandlers() {
       });
       return;
     }
-
     const sheet = document.getElementById(EXPLODE_SHEET_ID);
     if (!sheet || sheet.hidden) return;
-    if (e.target === sheet) {
-      closeExplodeSheet();
-      return;
-    }
-
+    if (e.target === sheet) return closeExplodeSheet();
     const btn = e.target.closest?.("[data-explode-action]");
     if (btn && sheet.contains(btn)) {
       e.preventDefault();

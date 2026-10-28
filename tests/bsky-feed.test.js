@@ -63,6 +63,15 @@ test("bsky - normalizeBskyPost maps AT Protocol post to Vox post item", () => {
   assert.ok(p.body.includes("Comando da tropa"));
 });
 
+test("bsky - cacheBskyPosts and getCachedBskyPostById persist external posts locally", () => {
+  localStorage.clear();
+  const sample = { id: "bsky_cached_1", title: "Post Cacheado", body: "Conteúdo soberano", isExternal: true };
+  bskyFeed.cacheBskyPosts([sample]);
+  const cached = bskyFeed.getCachedBskyPosts();
+  assert.equal(cached.length, 1);
+  assert.equal(bskyFeed.getCachedBskyPostById("bsky_cached_1")?.title, "Post Cacheado");
+});
+
 test("bsky - subscription management add and remove", () => {
   localStorage.clear();
   const init = bskyFeed.loadBskySubscriptions();
@@ -142,9 +151,11 @@ test("feed - renderFeedTabsBar renders 4 tabs with active state", () => {
   assert.ok(extTabs.includes('href="#/?feed=external" class="feed-tab-chip active"'));
 });
 
-test("feed - renderExternalFeedManagerHtml renders input, import follows row and civic suggestions", () => {
+test("feed - renderExternalFeedManagerHtml renders citizen shield, input, import follows and civic suggestions", () => {
   const html = feed.renderExternalFeedManagerHtml(["lula.com.br", "intercept.com"]);
   assert.ok(html.includes("bsky-feed-manager"));
+  assert.ok(html.includes("vox-citizen-shield-bar"));
+  assert.ok(html.includes("Escudo Cidadão Vox Ativo"));
   assert.ok(html.includes("INGESTÃO PREDATÓRIA"));
   assert.ok(html.includes("@lula.com.br"));
   assert.ok(html.includes("@intercept.com"));
