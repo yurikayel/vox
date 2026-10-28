@@ -142,3 +142,31 @@ test("community-mirror - getMirrorLastErrorExport para status", () => {
   assert.equal(exp.mirror_last_error, "mirror.topics_limit");
   assert.equal(exp.mirror_last_error_community, "demo-x");
 });
+test("community-mirror - postCommunityMirrorToRelay espelha em primário e buddy", async () => {
+  localStorage.clear();
+  localStorage.setItem("vox-relay-http-url", "https://relay.primario.org");
+  localStorage.setItem("vox-relay-buddy-http-url", "https://relay.buddy.org");
+
+  const originalFetch = globalThis.fetch;
+  const requests = [];
+
+  globalThis.fetch = async (url, options = {}) => {
+    requests.push({ url, options });
+    return {
+      ok: true,
+      json: async () => ({ status: "mirrored", path: "/vox/index/c1.json" }),
+    };
+  };
+
+  try {
+    const payload = mirror.buildCommunityMirrorIndex({ id: "c1", title: "C1" }, []);
+    const res = await mirror.postCommunityMirrorToRelay(payload);
+    assert.equal(res.status, "mirrored");
+    assert.equal(requests.length, 2);
+    assert.equal(requests[0].url, "https://relay.primario.org/vox/mirror");
+    assert.equal(requests[1].url, "https://relay.buddy.org/vox/mirror");
+  } finally {
+    globalThis.fetch = originalFetch;
+    localStorage.clear();
+  }
+});

@@ -1,14 +1,23 @@
 # NET-01 / T2 — espelho shell B (Cloudflare Pages)
-# Desligado por padrão: só workflow_dispatch; sem token Cloudflare = no-op honesto.
+# Automatizado: dispara em push na main ou workflow_dispatch.
+# Sem token Cloudflare = no-op honesto (aviso no log).
 
 name: Deploy shell B — Cloudflare Pages
 
 on:
+  push:
+    branches: [ main ]
+    paths:
+      - "client/**"
+      - "docs/**"
+      - "tools/write-oauth-deploy-config.mjs"
+      - ".github/workflows/deploy-shell-b.yml"
   workflow_dispatch:
     inputs:
       confirm:
         description: "Digite DEPLOY para publicar _site no projeto Pages configurado"
-        required: true
+        required: false
+        default: "DEPLOY"
         type: string
 
 permissions:
@@ -22,7 +31,7 @@ jobs:
   deploy:
     name: Publicar client/ no Cloudflare Pages (B)
     runs-on: ubuntu-latest
-    if: github.event.inputs.confirm == 'DEPLOY'
+    if: github.event_name == 'push' || github.event.inputs.confirm == 'DEPLOY'
     steps:
       - name: Checkout do repositório
         uses: actions/checkout@v5

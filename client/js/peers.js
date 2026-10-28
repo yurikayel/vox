@@ -7,7 +7,7 @@ import * as moderation from "./moderation.js";
 import * as profileCard from "./profile-card.js";
 import * as gossipProfile from "./peers-gossip-profile.js";
 import * as profileDirectory from "./profile-directory.js";
-import { getRelayHttpUrl } from "./inbox.js";
+import { getRelayHttpUrl, getRelayHttpUrls } from "./inbox.js";
 
 export {
   collectPriorityPinTxIds,
@@ -691,36 +691,42 @@ export const getCustomTurnConfig = webrtcPeer.getCustomTurnConfig;
 export const saveCustomTurnConfig = webrtcPeer.saveCustomTurnConfig;
 
 export async function checkDesktopRelay(url = null) {
-  const healthUrl = url || `${getRelayHttpUrl()}/health`;
-  try {
-    const res = await fetch(healthUrl, { signal: AbortSignal.timeout(350) });
-    if (!res.ok) return { online: false };
-    const data = await res.json();
-    return { online: true, data };
-  } catch {
-    return { online: false };
+  const targets = url ? [url] : getRelayHttpUrls();
+  for (const root of targets) {
+    const healthUrl = `${root.replace(/\/+$/, "")}/health`;
+    try {
+      const res = await fetch(healthUrl, { signal: AbortSignal.timeout(450) });
+      if (!res.ok) continue;
+      const data = await res.json();
+      return { online: true, data, activeUrl: root };
+    } catch {}
   }
+  return { online: false };
 }
 
-export async function fetchFromDesktopRelay(txId) {
-  try {
-    const res = await fetch(`${getRelayHttpUrl()}/tx/${encodeURIComponent(txId)}`, {
-      signal: AbortSignal.timeout(800),
-    });
-    if (!res.ok) return null;
-    const text = await res.text();
-    let parsed = { body: text, raw: text };
+export async function fetchFromDesktopRelay(txId, url = null) {
+  const targets = url ? [url] : getRelayHttpUrls();
+  for (const root of targets) {
     try {
-      const json = JSON.parse(text);
-      if (typeof json === "object" && json !== null) {
-        parsed.body = json.body || json.content || json.text || text;
-        parsed.title = json.title || "";
-      }
-    } catch {}
-    return parsed;
-  } catch {
-    return null;
+      const res = await fetch(`${root.replace(/\/+$/, "")}/tx/${encodeURIComponent(txId)}`, {
+        signal: AbortSignal.timeout(800),
+      });
+      if (!res.ok) continue;
+      const text = await res.text();
+      let parsed = { body: text, raw: text };
+      try {
+        const json = JSON.parse(text);
+        if (typeof json === "object" && json !== null) {
+          parsed.body = json.body || json.content || json.text || text;
+          parsed.title = json.title || "";
+        }
+      } catch {}
+      return parsed;
+    } catch {
+      continue;
+    }
   }
+  return null;
 }
 
 // Inicializa canal (ativo por padrão)
