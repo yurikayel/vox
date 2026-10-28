@@ -68,10 +68,8 @@ jobs:
 
       - name: Upload para Cloudflare Pages
         if: env.skip != 'true'
-        uses: cloudflare/pages-action@v1
+        uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: ${{ secrets.CLOUDFLARE_PAGES_PROJECT_NAME }}
-          directory: _site
-          branch: main
+          command: pages deploy _site --project-name=${{ secrets.CLOUDFLARE_PAGES_PROJECT_NAME }} --branch=main --commit-dirty=true
