@@ -727,7 +727,7 @@ test("render - post v3 híbrido (mídia antes do texto, star, copy-md e pinned)"
   assert.ok(!html.includes("post-toolbar"));
 
   const imgIdx = html.indexOf("post-media-container");
-  const titleIdx = html.indexOf("post-photo-title");
+  const titleIdx = html.indexOf("post-ig-toolbar");
   assert.ok(imgIdx !== -1, "Deve conter post-media-container");
   assert.ok(titleIdx !== -1, "Deve conter post-photo-title");
   assert.ok(imgIdx < titleIdx, "Mídia deve preceder o título");
@@ -1001,14 +1001,14 @@ test("render - renderPostItem pilha vertical foto com header sobre m�dia, tool
   assert.ok(html.includes("btn-comment"));
   assert.ok(html.includes("btn-share-post"));
   assert.ok(html.includes("btn-save"));
-  assert.ok(html.includes("post-photo-title"));
+  assert.ok(!html.includes("post-photo-title"));
   assert.ok(!html.includes("btn-star") || html.indexOf("btn-star") > html.indexOf("post-comments"));
 
   const mediaIdx = html.indexOf("post-media-container");
   const actionsIdx = html.indexOf("post-ig-toolbar");
   const commentsIdx = html.indexOf('class="post-comments');
 
-  assert.ok(mediaIdx < html.indexOf("post-ig-header") && html.indexOf("post-ig-header") < html.indexOf("post-photo-title") && html.indexOf("post-photo-title") < actionsIdx);
+  assert.ok(mediaIdx < html.indexOf("post-ig-header") && html.indexOf("post-ig-header") < actionsIdx);
   assert.ok(actionsIdx < commentsIdx);
   const mediaSlice = html.slice(html.indexOf("post-media-container"), commentsIdx);
   assert.ok(mediaSlice.includes("post-ig-toolbar"));
