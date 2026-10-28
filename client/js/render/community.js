@@ -16,6 +16,7 @@ import {
   renderMarkdownLight,
 } from "./util.js";
 import { renderUnifiedDiffHtml } from "./diff-html.js";
+import { buildListingDmHref } from "../dm-messenger.js";
 import { getReadOriginAggregate } from "../gateway-telemetry.js";
 
 function resolveCommunityMemberCount(meta, communityId) {
@@ -677,7 +678,7 @@ export function renderListingItem(item, { communityTitle = "" } = {}) {
         <div class="post-body listing-body">${hashtags.linkifyHashtags(escapeHtml(item.body || ""))}</div>
       </div>
       <div class="listing-actions post-toolbar" style="margin-top:10px; display:flex; gap:8px; align-items:center;">
-        <a class="btn btn-outline btn-sm" href="#/dm/${encodeURIComponent(author)}">💬 Conversar no DM</a>
+        <a class="btn btn-outline btn-sm" href="${escapeHtml(buildListingDmHref(author, item, { communityId: commId, price: price || "", pixKey }))}">💬 Conversar no DM</a>
         ${pixBtn}
         <button class="action-btn btn-share-listing" data-id="${escapeHtml(item.id)}" data-title="${escapeHtml(item.title)}" data-comm="${escapeHtml(commId)}" data-price="${escapeHtml(price)}" aria-label="Compartilhar oferta">
           <svg class="action-icon icon-share" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
