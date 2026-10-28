@@ -7,7 +7,7 @@ import { showHome, showCommunities, showTagFeed } from "./screens-home.js";
 import { showCommunity, showTopic, showProposal } from "./screens-community.js";
 import { showProfile, showHandleLookup, showWallet, showPixLookup } from "./screens-profile.js";
 import { showPeople, showConnect } from "./screens-people.js";
-import { showNetworkSettings, showStewardWizard } from "./screens-network.js";
+import { showNetworkSettings, showStewardWizard, showLinkedAccounts } from "./screens-network.js";
 import { showDmList, showDmThread } from "./screens-dm.js";
 import { showVoxpedia } from "./screens-voxpedia.js";
 import { showAjudaTeste } from "./screens-ajuda-teste.js";
@@ -33,6 +33,7 @@ export async function routeImpl() {
   if (r.name === "perfil") return showProfile(null, r.tab);
   if (r.name === "pix-lookup") return showPixLookup(r.query);
   if (r.name === "network-settings") return showNetworkSettings();
+  if (r.name === "linked-accounts") return showLinkedAccounts();
   if (r.name === "steward-wizard") return showStewardWizard();
   if (r.name === "handle-lookup") return showHandleLookup(r.slug);
   if (r.name === "dm-list") return showDmList();

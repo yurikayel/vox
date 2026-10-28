@@ -24,7 +24,7 @@ export async function loadOAuthConfig() {
   } catch {
     /* ignore */
   }
-  configCache = { googleClientId: "", facebookAppId: "", enabledProviders: [] };
+  configCache = { googleClientId: "", facebookAppId: "", githubClientId: "", enabledProviders: [] };
   return configCache;
 }
 
@@ -131,6 +131,44 @@ export async function signInWithMeta() {
       { scope: "public_profile" },
     );
   });
+}
+
+export async function signInWithGithub(handle = "") {
+  let cleanHandle = String(handle || "").trim().replace(/^@/, "");
+  if (!cleanHandle) {
+    if (typeof window !== "undefined" && window.prompt) {
+      cleanHandle = String(window.prompt("Digite seu usuário ou @handle do GitHub:") || "")
+        .trim()
+        .replace(/^@/, "");
+    }
+  }
+  if (!cleanHandle) {
+    return { ok: false, reason: "Usuário GitHub não informado." };
+  }
+
+  try {
+    const res = await fetch(`https://api.github.com/users/${encodeURIComponent(cleanHandle)}`);
+    if (!res.ok) {
+      return { ok: false, reason: `Perfil GitHub @${cleanHandle} não encontrado.` };
+    }
+    const data = await res.json();
+    const name = data.name || data.login || cleanHandle;
+    const avatar = data.avatar_url || "";
+    const bio = data.bio || "";
+
+    localAccount.setProfileEnrichment({
+      displayName: name,
+      avatarUrl: avatar,
+      bio,
+      oauthProvider: "github",
+    });
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem("vox-profile-github", cleanHandle);
+    }
+    return { ok: true, profile: { displayName: name, avatarUrl: avatar, bio, handle: cleanHandle } };
+  } catch (e) {
+    return { ok: false, reason: e.message || "Falha na conexão com GitHub" };
+  }
 }
 
 export function skipOAuthEnrichment() {

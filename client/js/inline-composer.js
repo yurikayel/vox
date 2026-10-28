@@ -150,6 +150,16 @@ export function attachInlineComposerHandlers(onPublished) {
       }
 
       share.showToast("Post publicado no feed!");
+      const { dispatchAutoReplication, isAutoReplicationEnabled } = await import("./linked-accounts.js");
+      if (isAutoReplicationEnabled()) {
+        dispatchAutoReplication({ id: topicId, communityId: commSlug, title, body, image: payload.image })
+          .then((rep) => {
+            if (rep.dispatched && rep.count > 0) {
+              share.showToast(`🚀 Replicado para ${rep.count} webhook(s) de redes vinculadas!`);
+            }
+          })
+          .catch(() => {});
+      }
       const { openPosseSheetAfterPublish } = await import("./posse-dispatch.js");
       openPosseSheetAfterPublish({ id: topicId, communityId: commSlug, title, body, image: payload.image });
       form.reset();

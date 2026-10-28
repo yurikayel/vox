@@ -41,9 +41,12 @@ export function parseRoute() {
   if (parts[0] === "pix" && parts[1]) {
     return { name: "pix-lookup", query: decodeURIComponent(parts[1]) };
   }
-  if (parts[0] === "settings" && parts[1] === "network") {
-    if (parts[2] === "steward") return { name: "steward-wizard" };
-    return { name: "network-settings" };
+  if (parts[0] === "settings") {
+    if (parts[1] === "linked-accounts") return { name: "linked-accounts" };
+    if (parts[1] === "network") {
+      if (parts[2] === "steward") return { name: "steward-wizard" };
+      return { name: "network-settings" };
+    }
   }
   if (parts[0] === "h" && parts[1]) {
     return { name: "handle-lookup", slug: decodeURIComponent(parts[1]) };
