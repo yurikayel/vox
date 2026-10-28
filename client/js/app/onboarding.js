@@ -1,4 +1,4 @@
-/** @file Cantina gate, OAuth enrich, pact modals. */
+/** @file Cantina gate, OAuth enrich (Google / Meta / GitHub), pact modals. */
 
 import * as render from "../render.js";
 import * as share from "../share.js";
@@ -20,13 +20,8 @@ export { ensureOnboardingSideEffects } from "./onboarding-side-effects.js";
 export function setOAuthEnrichError(message) {
   const el = document.getElementById("oauth-enrich-error");
   if (!el) return;
-  if (message) {
-    el.textContent = message;
-    el.hidden = false;
-  } else {
-    el.textContent = "";
-    el.hidden = true;
-  }
+  el.textContent = message || "";
+  el.hidden = !message;
 }
 
 export function setOAuthButtonBusy(btn, busy) {
@@ -42,7 +37,7 @@ export function reportOAuthEnrichFailure(message, fallbackLabel) {
   share.showToast(text, "error");
 }
 
-export async function runOAuthEnrichSignIn(btn, signInFn, { successToast, fallbackError }) {
+export async function runOAuthEnrichSignIn(btn, signInFn, { fallbackError }) {
   setOAuthEnrichError("");
   setOAuthButtonBusy(btn, true);
   try {
@@ -58,23 +53,7 @@ export async function runOAuthEnrichSignIn(btn, signInFn, { successToast, fallba
   }
 }
 
-export function checkOAuthEnrichStep() {
-  if (oauthProfile.hasCompletedOAuthStep()) {
-    checkPactModal();
-    return;
-  }
-
-  if (localStorage.getItem("vox-pact-accepted") === "true") {
-    oauthProfile.skipOAuthEnrichment();
-    checkPactModal();
-    return;
-  }
-
-  const modalContainer = document.getElementById("modal-container");
-  if (!modalContainer) return;
-
-  render.renderOAuthEnrich(modalContainer);
-
+function applyOAuthProviderAvailability() {
   oauthProfile.loadOAuthConfig().then((cfg) => {
     const googleId = String(cfg?.googleClientId || "").trim();
     const metaId = String(cfg?.facebookAppId || "").trim();
@@ -92,59 +71,56 @@ export function checkOAuthEnrichStep() {
     }
     if (!googleReady && !metaReady) {
       setOAuthEnrichError(
-        "Login social ainda não configurado pelo operador — use Pular ou preencha client/config/oauth.json (ver DEV.md).",
+        "Google/Meta requerem oauth.json — você pode entrar com GitHub agora ou clicar em Pular.",
       );
     }
   });
+}
+
+function bindOAuthProviderButton(btnId, signInFn, fallbackError, labelFn, modalContainer, onDone) {
+  document.getElementById(btnId)?.addEventListener("click", async () => {
+    const btn = document.getElementById(btnId);
+    const res = await runOAuthEnrichSignIn(btn, signInFn, { fallbackError });
+    if (res.ok) {
+      oauthProfile.skipOAuthEnrichment();
+      render.closeOAuthEnrich(modalContainer);
+      share.showToast(labelFn(res));
+      void meshProfile.syncMeshProfileCard();
+      if (onDone) onDone(res);
+    }
+  });
+}
+
+export function openOAuthEnrichModal({ onComplete } = {}) {
+  const modalContainer = document.getElementById("modal-container");
+  if (!modalContainer) return;
+
+  render.renderOAuthEnrich(modalContainer);
+  applyOAuthProviderAvailability();
 
   document.getElementById("btn-oauth-skip")?.addEventListener("click", () => {
     setOAuthEnrichError("");
     oauthProfile.skipOAuthEnrichment();
     render.closeOAuthEnrich(modalContainer);
+    if (onComplete) onComplete({ skipped: true });
+  });
+
+  bindOAuthProviderButton("btn-oauth-google", () => oauthProfile.signInWithGoogle(), "Google indisponível", () => "Perfil enriquecido com Google.", modalContainer, onComplete);
+  bindOAuthProviderButton("btn-oauth-meta", () => oauthProfile.signInWithMeta(), "Meta indisponível", () => "Perfil enriquecido com Meta.", modalContainer, onComplete);
+  bindOAuthProviderButton("btn-oauth-github", () => oauthProfile.signInWithGithub(), "GitHub indisponível", (res) => `Perfil enriquecido com GitHub (@${res.profile?.handle || ""}).`, modalContainer, onComplete);
+}
+
+export function checkOAuthEnrichStep() {
+  if (oauthProfile.hasCompletedOAuthStep()) {
     checkPactModal();
-  });
-
-  document.getElementById("btn-oauth-google")?.addEventListener("click", async () => {
-    const btn = document.getElementById("btn-oauth-google");
-    const res = await runOAuthEnrichSignIn(btn, () => oauthProfile.signInWithGoogle(), {
-      fallbackError: "Google indisponível",
-    });
-    if (res.ok) {
-      oauthProfile.skipOAuthEnrichment();
-      render.closeOAuthEnrich(modalContainer);
-      share.showToast("Perfil enriquecido com Google.");
-      void meshProfile.syncMeshProfileCard();
-      checkPactModal();
-    }
-  });
-
-  document.getElementById("btn-oauth-meta")?.addEventListener("click", async () => {
-    const btn = document.getElementById("btn-oauth-meta");
-    const res = await runOAuthEnrichSignIn(btn, () => oauthProfile.signInWithMeta(), {
-      fallbackError: "Meta indisponível",
-    });
-    if (res.ok) {
-      oauthProfile.skipOAuthEnrichment();
-      render.closeOAuthEnrich(modalContainer);
-      share.showToast("Perfil enriquecido com Meta.");
-      void meshProfile.syncMeshProfileCard();
-      checkPactModal();
-    }
-  });
-
-  document.getElementById("btn-oauth-github")?.addEventListener("click", async () => {
-    const btn = document.getElementById("btn-oauth-github");
-    const res = await runOAuthEnrichSignIn(btn, () => oauthProfile.signInWithGithub(), {
-      fallbackError: "GitHub indisponível",
-    });
-    if (res.ok) {
-      oauthProfile.skipOAuthEnrichment();
-      render.closeOAuthEnrich(modalContainer);
-      share.showToast(`Perfil enriquecido com GitHub (@${res.profile?.handle || ""}).`);
-      void meshProfile.syncMeshProfileCard();
-      checkPactModal();
-    }
-  });
+    return;
+  }
+  if (localStorage.getItem("vox-pact-accepted") === "true") {
+    oauthProfile.skipOAuthEnrichment();
+    checkPactModal();
+    return;
+  }
+  openOAuthEnrichModal({ onComplete: () => checkPactModal() });
 }
 
 export function checkCantinaGate() {
@@ -155,69 +131,53 @@ export function checkCantinaGate() {
     if (modalContainer && route.name === "ajuda-teste") {
       render.closeCantinaGate(modalContainer);
     }
-    if (hasPassedCantinaGate()) {
-      checkOAuthEnrichStep();
-    }
+    if (hasPassedCantinaGate()) checkOAuthEnrichStep();
     return;
   }
-
   if (!modalContainer) return;
 
   wireCantinaOverlayPassthrough();
   render.renderCantinaGate(modalContainer);
 
-  const btnEnter = document.getElementById("btn-cantina-enter");
-  if (btnEnter) {
-    btnEnter.addEventListener("click", () => {
-      localStorage.setItem(CANTINA_STORAGE_KEY, "true");
-      render.closeCantinaGate(modalContainer);
-      checkOAuthEnrichStep();
+  document.getElementById("btn-cantina-enter")?.addEventListener("click", () => {
+    localStorage.setItem(CANTINA_STORAGE_KEY, "true");
+    render.closeCantinaGate(modalContainer);
+    checkOAuthEnrichStep();
+  });
+}
+
+async function finishPactAcceptance(modalContainer) {
+  localStorage.setItem("vox-pact-accepted", "true");
+  render.closePactModal(modalContainer);
+  const user = await localAccount.getRouteId().catch(() => "");
+  await ensureOnboardingSideEffects(user);
+  share.showToast("Bem-vindo ao Vox! Rede ativa.");
+  if (user) {
+    render.renderPostPactConnectModal(modalContainer, user);
+    document.getElementById("btn-post-pact-connect-close")?.addEventListener("click", () => {
+      render.closePostPactConnectModal(modalContainer);
+    });
+    document.getElementById("btn-post-pact-share-connect")?.addEventListener("click", () => {
+      void share.shareConnect({ routeId: user, displayName: localAccount.getDisplayName() });
     });
   }
+  const cur = parseRoute();
+  if (cur.name === "home") showHome(cur.feed);
 }
 
 export function checkPactModal() {
-  const accepted = localStorage.getItem("vox-pact-accepted");
-  if (accepted) return;
-
+  if (localStorage.getItem("vox-pact-accepted")) return;
   const modalContainer = document.getElementById("modal-container");
   if (!modalContainer) return;
 
   render.renderPactModal(modalContainer);
-
-  const finishPact = async () => {
+  document.getElementById("btn-pact-accept")?.addEventListener("click", () => {
+    void finishPactAcceptance(modalContainer);
+  });
+  document.getElementById("btn-pact-settings")?.addEventListener("click", () => {
     localStorage.setItem("vox-pact-accepted", "true");
     render.closePactModal(modalContainer);
-    const user = await localAccount.getRouteId().catch(() => "");
-    await ensureOnboardingSideEffects(user);
-    share.showToast("Bem-vindo ao Vox! Rede ativa.");
-    if (user) {
-      render.renderPostPactConnectModal(modalContainer, user);
-      document.getElementById("btn-post-pact-connect-close")?.addEventListener("click", () => {
-        render.closePostPactConnectModal(modalContainer);
-      });
-      document.getElementById("btn-post-pact-share-connect")?.addEventListener("click", () => {
-        void share.shareConnect({ routeId: user, displayName: localAccount.getDisplayName() });
-      });
-    }
-    const cur = parseRoute();
-    if (cur.name === "home") showHome(cur.feed);
-  };
-
-  const btnAccept = document.getElementById("btn-pact-accept");
-  if (btnAccept) {
-    btnAccept.addEventListener("click", () => {
-      void finishPact();
-    });
-  }
-
-  const btnSettings = document.getElementById("btn-pact-settings");
-  if (btnSettings) {
-    btnSettings.addEventListener("click", () => {
-      localStorage.setItem("vox-pact-accepted", "true");
-      render.closePactModal(modalContainer);
-      void localAccount.getRouteId().then((u) => ensureOnboardingSideEffects(u));
-      location.hash = "#/settings/network";
-    });
-  }
+    void localAccount.getRouteId().then((u) => ensureOnboardingSideEffects(u));
+    location.hash = "#/settings/network";
+  });
 }

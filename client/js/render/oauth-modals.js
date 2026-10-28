@@ -41,7 +41,6 @@ export function renderOAuthEnrich(container) {
         </div>
         <p class="oauth-enrich-divider" role="presentation"><span>ou</span></p>
         <button type="button" id="btn-oauth-skip" class="oauth-btn oauth-btn--skip">Pular — continuar só com vx_</button>
-        <p id="oauth-enrich-error" class="oauth-enrich-error" role="alert" aria-live="polite" hidden></p>
         <p class="meta oauth-enrich-legal">Só claims públicos de perfil; tokens OAuth não são armazenados (LGPD — ver COMPLIANCE-BR.md).</p>
       </div>
     </div>`;

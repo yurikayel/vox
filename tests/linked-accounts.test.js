@@ -7,17 +7,20 @@ import { fileURLToPath } from "node:url";
 
 import * as linked from "../client/js/linked-accounts.js";
 import * as linkedUi from "../client/js/render/linked-accounts-ui.js";
+import * as bskyFeed from "../client/js/bsky-feed.js";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "client");
 
-test("linked-accounts - save, load and remove accounts", () => {
+test("linked-accounts - save, load, remove accounts and sync bsky subscription", () => {
   localStorage.clear();
   assert.deepEqual(linked.loadLinkedAccounts(), {});
 
-  linked.saveLinkedAccount("bsky", { handle: "@lula.bsky.social", enabled: true });
+  linked.saveLinkedAccount("bsky", { handle: "@lula.bsky.social", appPassword: "app-pwd-123", enabled: true });
   const accs = linked.loadLinkedAccounts();
   assert.equal(accs.bsky?.handle, "lula.bsky.social");
+  assert.equal(accs.bsky?.appPassword, "app-pwd-123");
   assert.equal(accs.bsky?.enabled, true);
+  assert.ok(bskyFeed.loadBskySubscriptions().includes("lula.bsky.social"));
 
   linked.saveLinkedAccount("twitter", { handle: "vox_brasil", webhook: "https://hook.com/x" });
   assert.equal(linked.loadLinkedAccounts().twitter?.webhook, "https://hook.com/x");
@@ -63,7 +66,33 @@ test("linked-accounts - buildReplicationPayload formats event data", () => {
   assert.ok(payload.janonesBurst.headline.includes("🚨 NOVO POST NO VOX"));
 });
 
-test("linked-accounts - dispatchAutoReplication respects toggle and sends webhooks", async () => {
+test("linked-accounts - postToBlueskyAtProto creates session and record via AT Protocol", async () => {
+  const origFetch = globalThis.fetch;
+  const calls = [];
+  globalThis.fetch = async (url, opts) => {
+    calls.push({ url: String(url), opts });
+    if (String(url).includes("createSession")) {
+      return { ok: true, json: async () => ({ did: "did:plc:vox123", accessJwt: "jwt_tok" }) };
+    }
+    return { ok: true, json: async () => ({ uri: "at://did:plc:vox123/app.bsky.feed.post/3k1" }) };
+  };
+
+  try {
+    const res = await linked.postToBlueskyAtProto("@cidadao.bsky.social", "app-secret", {
+      title: "Soberania Popular",
+      body: "Post direto via AT Protocol",
+      canonicalUrl: "https://yurikayel.github.io/vox/#/t/1",
+    });
+    assert.equal(res.ok, true);
+    assert.equal(calls.length, 2);
+    assert.ok(calls[0].url.includes("com.atproto.server.createSession"));
+    assert.ok(calls[1].url.includes("com.atproto.repo.createRecord"));
+  } finally {
+    globalThis.fetch = origFetch;
+  }
+});
+
+test("linked-accounts - dispatchAutoReplication respects toggle and sends webhooks + ATProto", async () => {
   localStorage.clear();
   linked.setAutoReplicationEnabled(false);
   linked.setGeneralWebhookUrl("https://hook.test/vox");
@@ -74,30 +103,34 @@ test("linked-accounts - dispatchAutoReplication respects toggle and sends webhoo
   assert.equal(resDisabled.reason, "auto_replication_disabled");
 
   linked.setAutoReplicationEnabled(true);
+  linked.saveLinkedAccount("bsky", { handle: "user.bsky.social", appPassword: "pwd", enabled: true });
   const origFetch = globalThis.fetch;
-  let sentToUrl = "";
+  const calledUrls = [];
   globalThis.fetch = async (url) => {
-    sentToUrl = String(url);
-    return { ok: true };
+    calledUrls.push(String(url));
+    return { ok: true, json: async () => ({ did: "did:plc:1", accessJwt: "jwt", uri: "at://1" }) };
   };
 
   try {
     const resEnabled = await linked.dispatchAutoReplication(post);
     assert.equal(resEnabled.dispatched, true);
-    assert.equal(resEnabled.count, 1);
-    assert.equal(sentToUrl, "https://hook.test/vox");
+    assert.equal(resEnabled.count, 2);
+    assert.ok(calledUrls.includes("https://hook.test/vox"));
+    assert.ok(calledUrls.some((u) => u.includes("createRecord")));
   } finally {
     globalThis.fetch = origFetch;
   }
 });
 
-test("linked-accounts - renderLinkedAccountsHtml renders networks and controls", () => {
+test("linked-accounts - renderLinkedAccountsHtml renders networks, ATProto field and OAuth button", () => {
   localStorage.clear();
-  linked.saveLinkedAccount("bsky", { handle: "teste.bsky.social" });
+  linked.saveLinkedAccount("bsky", { handle: "teste.bsky.social", appPassword: "secret" });
 
   const html = linkedUi.renderLinkedAccountsHtml();
   assert.ok(html.includes("Redes Vinculadas"));
   assert.ok(html.includes("Bluesky"));
+  assert.ok(html.includes("AT Protocol direto configurado"));
+  assert.ok(html.includes("btn-open-oauth-from-linked"));
   assert.ok(html.includes("Twitter / X"));
   assert.ok(html.includes("Threads"));
   assert.ok(html.includes("Instagram"));
