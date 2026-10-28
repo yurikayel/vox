@@ -123,7 +123,7 @@ function renderStereotypeDemoBanner(address) {
 
 function renderOfficialPlatformBadge(address) {
   if (!isWelcomeRouteId(address)) return "";
-  return `<span class="profile-grid-verified" title="Conta oficial Vox Brasil">✓</span>`;
+  return `<span class="profile-grid-verified" title="Conta oficial Vox">✓</span>`;
 }
 
 function renderOfficialPlatformAboutBlurb(address) {

@@ -153,7 +153,7 @@ export async function showHome(feed = "for-you") {
   attachInlineComposerHandlers(() => showHome(activeFeed));
   attachWelcomeFeedHintHandlers();
   if (onboarding.dmJustSeeded && activeFeed === "for-you") {
-    share.showToast("Vox Brasil te mandou uma mensagem — veja em Mensagens 💬");
+    share.showToast("Vox te mandou uma mensagem — veja em Mensagens 💬");
   }
 }
 

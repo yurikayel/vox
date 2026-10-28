@@ -780,7 +780,7 @@ Implementação dos quatro pilares essenciais do roadmap da rede Vox:
 
 ---
 
-## 25. Descoberta social, Vox Brasil welcome e OAuth client-only (V-DIS)
+## 25. Descoberta social, Vox welcome e OAuth client-only (V-DIS)
 
 **Data:** 2026-10-24 · **SW:** `vox-pwa-v6.25-roadmap-core`
 
@@ -978,7 +978,7 @@ Três direções consideradas (Google Fonts, PT-BR em 14–16px na sidebar):
 | ⭐ Estrela | Menu **⋯** (overflow) | **Recolhe** — afinitude tipo GitHub; power user, não compete com curtida no mobile. |
 | 📋 Copiar Markdown | Menu **⋯** | **Recolhe** — jornalismo/dev; thread `#/t/:id` mantém ações completas. |
 | 🔖 Salvar | Barra secundária (direita) | **Mantém** — ícone único de salvamento. |
-| **Seguir** | **Header sobre a mídia** (`.btn-overlay-follow`, texto branco sem pill) | **Fora da barra** — `social.toggleWatch`; oculto em post próprio e conta **Vox Brasil** (`vx_voxbrasil_welcome`). Perfil segue com 👁️ Watch. |
+| **Seguir** | **Header sobre a mídia** (`.btn-overlay-follow`, texto branco sem pill) | **Fora da barra** — `social.toggleWatch`; oculto em post próprio e conta **Vox** (`vx_voxbrasil_welcome`). Perfil segue com 👁️ Watch. |
 
 Layout: `.toolbar-primary` (engajamento + Pix) · `.toolbar-secondary` (⋯ toolbar + bookmark). Tema celeste nos hovers (`var(--accent-soft)`). Comentários nunca usam `.post-overlay` / scrim — só o card foto tem overlay de legenda.
 
@@ -986,7 +986,7 @@ Layout: `.toolbar-primary` (engajamento + Pix) · `.toolbar-secondary` (⋯ tool
 
 **Addendum 2026-10-25:** posts `layout=photo` usam `.post-media-header` **dentro** de `.post-media-hero` (z-index 3), faixa compacta sobre a imagem:
 
-- **Esquerda:** avatar → perfil · **nome** branco bold · selo verificado só **Vox Brasil** · `·` · tempo (`formatTimeAgo`) · linha 2 opcional `Demo · UF` (perfis estereótipo).
+- **Esquerda:** avatar → perfil · **nome** branco bold · selo verificado só **Vox** · `·` · tempo (`formatTimeAgo`) · linha 2 opcional `Demo · UF` (perfis estereótipo).
 - **Direita:** **Seguir** / **Seguindo** (texto, sem pill) · **⋯** abre `#post-more-sheet` (`post-more-menu.js`, handlers em `screens-home.js` + delegação global idempotente).
 - **Scrim:** `.post-media-scrim-top` (fade ~40% no topo, z1) separado de `.post-media-scrim-bottom` (legenda, z2). Legenda/título/hashtags só em `.post-overlay` inferior — **sem** autor duplicado no rodapé.
 - **Sheet PT-BR:** Denunciar · Não tenho interesse · Sobre esta conta · Ir para a publicação · Compartilhar… · Copiar link · Incorporar (toast *em breve* onde stub).
@@ -997,7 +997,7 @@ Layout: `.toolbar-primary` (engajamento + Pix) · `.toolbar-secondary` (⋯ tool
 
 **Data:** 2026-10-25 · **SW:** `vox-pwa-v6.65-neutral-ux-language`
 
-`#/u/:routeId` e `#/perfil` usam shell `.profile-grid-layout` (max-width ~935px): avatar grande à esquerda, métricas **publicações · seguidores · seguindo**, `@handle` em negrito, nome e bio, pills **Seguir / Mensagem / Editar perfil** (contextual). Conta **Vox Brasil** mantém avatar squircle + selo ✓; demos UF exibem aviso estereótipo em `<details>` abaixo do header. Abas: grade ▦ (posts em `.profile-grid` 3 colunas, `aspect-ratio: 1`, link `#/t/:id`) e **Sobre** (README, identidade local, estrelados/comunidades legados). Handle inexistente usa o mesmo shell via `renderProfileGridNotFound`. Lógica de dados inalterada (`profile-directory`, mock por `routeId`).
+`#/u/:routeId` e `#/perfil` usam shell `.profile-grid-layout` (max-width ~935px): avatar grande à esquerda, métricas **publicações · seguidores · seguindo**, `@handle` em negrito, nome e bio, pills **Seguir / Mensagem / Editar perfil** (contextual). Conta **Vox** mantém avatar squircle + selo ✓; demos UF exibem aviso estereótipo em `<details>` abaixo do header. Abas: grade ▦ (posts em `.profile-grid` 3 colunas, `aspect-ratio: 1`, link `#/t/:id`) e **Sobre** (README, identidade local, estrelados/comunidades legados). Handle inexistente usa o mesmo shell via `renderProfileGridNotFound`. Lógica de dados inalterada (`profile-directory`, mock por `routeId`).
 
 ---
 
@@ -1025,7 +1025,7 @@ OAuth e compartilhamento nativo citam provedores apenas onde exigido por integra
 - **Foto bleed:** posts com mídia usam `.post-photo-bleed` — hero flush no `--bg` (sem card externo); overlay/caption/ações na imagem; comentários borderless abaixo.
 - **Newsletter:** `.post-layout-text` tipografia mais larga (~1.02rem corpo) e coluna até ~540px.
 - **Sidebar cívica:** barra verde `inset` + superfícies pergaminho/carbono.
-- **Stories:** anel plano verde/outline (sem gradiente arco-íris); conta **Vox Brasil** ✓ com `.story-ring--official`.
+- **Stories:** anel plano verde/outline (sem gradiente arco-íris); conta **Vox** ✓ com `.story-ring--official`.
 - **Grade perfil:** gutters 8px, tiles arredondados com borda/sombra leve.
 
 **Não mexido:** overlay hero, react/reply em comentários, DM welcome, Voxpedia, Open Frames.
@@ -1082,7 +1082,7 @@ OAuth e compartilhamento nativo citam provedores apenas onde exigido por integra
 
 ## 37. Chrome compacto de foto, interações sociais e trilhas T01/T02/T05/T06/T11
 
-**Data:** 2026-10-27 · **SW:** `vox-pwa-v6.96-photo-card-gaps`
+**Data:** 2026-10-27 · **SW:** `vox-pwa-v6.97-vox-brand-name`
 
 - **Chrome compacto de foto:** Header sobre mídia enxuto (`post-overlay.js`), espaçamento harmonizado entre cards de foto e comentários borderless.
 - **Notas de perfil 24h (`profile-note.js`):** Nota curta opcional com expiração local de 24h no perfil e na faixa superior.
