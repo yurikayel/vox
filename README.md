@@ -138,7 +138,7 @@ Na raiz do repositório:
 ```bash
 npm test
 ```
-Executa **430 testes unitários e de integração** (407 testes Node.js nativos + 23 testes em Python stdlib).
+Executa **444 testes unitários e de integração** (421 testes Node.js nativos + 23 testes em Python stdlib).
 
 ### 3. Rodar o Relay / Servidor de Cache Doméstico (Opcional)
 
