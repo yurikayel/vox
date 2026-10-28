@@ -21,6 +21,10 @@ function iconBookmark(on) {
   return `<svg class="action-icon icon-bookmark" width="18" height="18" viewBox="0 0 24 24" fill="${on ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>`;
 }
 
+function iconExplode() {
+  return `<svg class="action-icon icon-explode" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m13 2-2 7.5h5.5L11 22l2-8.5H7.5L13 2z"/></svg>`;
+}
+
 function shareAttrs(postId) {
   if (!mod.isPostQuarantined(postId)) return "";
   return ` disabled aria-disabled="true" title="${escapeHtml(mod.QUARANTINE_HINT)}"`;
@@ -43,6 +47,7 @@ export function renderIgToolbar(t, authorDisplay) {
       ${commentBtn(t)}
       ${renderRepostBtn(t)}
       <button class="action-btn btn-share btn-share-post" data-id="${escapeHtml(t.id)}" data-title="${escapeHtml(t.title)}" data-author="${escapeHtml(authorDisplay || "")}" data-body="${escapeHtml((t.title || "").slice(0, 160))}" aria-label="Compartilhar"${shareAttrs(t.id)}>${iconPlane()}</button>
+      <button class="action-btn btn-explode btn-explode-post" data-id="${escapeHtml(t.id)}" data-title="${escapeHtml(t.title)}" data-author="${escapeHtml(authorDisplay || "")}" data-body="${escapeHtml((t.body || t.title || "").slice(0, 200))}" data-comm="${escapeHtml(t.communityId || "")}" aria-label="Explodir nas redes (Método Janones)" title="EXPLODE!">${iconExplode()}</button>
     </div>
     <button class="action-btn btn-save ${saved ? "active" : ""}" data-id="${escapeHtml(t.id)}" aria-label="Salvar post">${iconBookmark(saved)}</button>
   </div>`;
