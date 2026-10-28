@@ -1540,6 +1540,7 @@ main#app-main,
   position: relative;
   display: block;
   isolation: isolate;
+  overflow: visible;
 }
 
 .post-media-lightbox-trigger {
@@ -1553,6 +1554,7 @@ main#app-main,
   cursor: zoom-in;
   position: relative;
   z-index: 0;
+  overflow: hidden;
 }
 
 .post-media-hero-img,
@@ -1905,6 +1907,7 @@ body.post-more-sheet-open {
   width: 100%;
   padding: 0.5rem 0.75rem calc(0.5rem + env(safe-area-inset-bottom, 0px));
   pointer-events: auto;
+  overflow: visible;
   background: linear-gradient(
     180deg,
     rgba(0, 0, 0, 0) 0%,
@@ -1993,9 +1996,10 @@ body.post-more-sheet-open {
 
 .post-actions-overlay .toolbar-overflow-menu--overlay {
   bottom: calc(100% + 8px);
-  left: 50%;
-  right: auto;
-  transform: translateX(-50%);
+  left: auto;
+  right: 0;
+  transform: none;
+  z-index: 20;
   min-width: 11rem;
   padding: 4px;
   gap: 0;
@@ -2027,7 +2031,7 @@ body.post-more-sheet-open {
 
 .post-layout-photo.post-photo-bleed .post-media-container {
   border-radius: 0;
-  overflow: hidden;
+  overflow: visible;
   box-shadow: none;
 }
 
@@ -2297,8 +2301,14 @@ body.post-lightbox-open {
   margin-left: auto;
 }
 
+.post:has(.toolbar-overflow[open]) {
+  overflow: visible;
+  z-index: 8;
+}
+
 .toolbar-overflow {
   position: relative;
+  overflow: visible;
 }
 
 .toolbar-overflow > summary {

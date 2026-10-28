@@ -27,7 +27,9 @@ test("post overlay - photo card has hero, overlay and lightbox trigger", () => {
   assert.ok(html.includes("post-media-header"));
   assert.ok(html.includes("btn-post-more-menu"));
   assert.ok(html.includes("post-actions-overlay"));
-  assert.ok(html.includes("btn-zap-post overlay-action-btn"));
+  assert.ok(html.includes("btn-zap-post"));
+  assert.ok(html.includes('toolbar-overflow-label">Apoiar'));
+  assert.ok(!html.includes("btn-zap-post overlay-action-btn"));
   assert.ok(html.includes('aria-label="Gostei'));
   assert.ok(!html.includes("overlay-action-label"));
   assert.ok(!html.includes(">Compartilhar<"));
@@ -74,4 +76,6 @@ test("post overlay - CSS classes present", () => {
   assert.ok(css.includes(".post-media-header"));
   assert.ok(css.includes(".post-actions-overlay"));
   assert.ok(css.includes("#post-more-sheet") || css.includes(".post-more-sheet"));
+  assert.ok(css.includes(".post-media-hero"));
+  assert.ok(css.includes(".post:has(.toolbar-overflow[open])"));
 });
