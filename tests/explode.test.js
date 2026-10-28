@@ -71,6 +71,8 @@ test("explode - buildExplodeSheetHtml renders launchpad with all 9 network actio
   assert.ok(!html.includes("Janones"));
   assert.ok(html.includes("btn-explode-burst"));
   assert.ok(html.includes('data-explode-action="burst"'));
+  assert.ok(html.includes('data-explode-action="cascade"'));
+  assert.ok(html.includes('data-explode-action="story-card"'));
   assert.ok(html.includes('data-explode-action="whatsapp"'));
   assert.ok(html.includes('data-explode-action="twitter"'));
   assert.ok(html.includes('data-explode-action="bluesky"'));
@@ -268,6 +270,60 @@ test("explode - quickExplodePost triggers burst and copies content", async () =>
   });
   assert.ok(res.text.includes("Post rápido"));
   assert.ok(res.canonicalUrl.includes("post_quick"));
+});
+
+test("explode - cascade stepper manages multi-channel flow", () => {
+  const elements = new Map();
+  const makeEl = (tag = "div") => ({
+    tagName: tag.toUpperCase(),
+    attributes: {},
+    innerHTML: "",
+    hidden: false,
+    setAttribute(k, v) { this.attributes[k] = String(v); },
+    getAttribute(k) { return this.attributes[k] || null; },
+    querySelector() { return { focus() {}, set textContent(v) {} }; },
+    remove() { elements.delete(this.id); },
+  });
+
+  const prevDoc = globalThis.document;
+  const prevWindow = globalThis.window;
+  const openedUrls = [];
+  globalThis.window = {
+    open: (u) => openedUrls.push(u),
+  };
+  globalThis.document = {
+    body: { appendChild: (el) => { if (el.id) elements.set(el.id, el); } },
+    getElementById: (id) => elements.get(id) || null,
+    createElement: (tag) => makeEl(tag),
+  };
+
+  try {
+    explode.startCascadeExplode({
+      id: "post_cascade_1",
+      title: "Onda Popular",
+      body: "Texto onda",
+      communityId: "comm_sp",
+    });
+
+    const bar = globalThis.document.getElementById(explode.CASCADE_BAR_ID);
+    assert.ok(bar);
+    assert.ok(bar.innerHTML.includes("WhatsApp"));
+
+    explode.advanceCascadeExplode();
+    assert.ok(openedUrls.some((u) => u.includes("twitter.com") || u.includes("x.com")));
+
+    explode.removeCascadeBar();
+    assert.equal(globalThis.document.getElementById(explode.CASCADE_BAR_ID), null);
+  } finally {
+    globalThis.document = prevDoc;
+    globalThis.window = prevWindow;
+  }
+});
+
+test("explode - posse post-publish sheet includes quick explode button", () => {
+  const posseSrc = fs.readFileSync(path.join(root, "js/posse-dispatch.js"), "utf8");
+  assert.ok(posseSrc.includes('data-posse="quick-explode"'));
+  assert.ok(posseSrc.includes("Disparo Imediato em 1 Toque"));
 });
 
 test("explode - sw.js caches explode-dispatch.js", () => {
