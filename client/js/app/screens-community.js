@@ -36,6 +36,8 @@ import * as peopleIndex from "../people-index.js";
 import * as profileDirectory from "../profile-directory.js";
 import * as welcomeProfile from "../vox-welcome-profile.js";
 import * as meshProfile from "../mesh-profile.js";
+import { buildProposalPossePayload, firePosseWebhooks, loadPosseWebhooks } from "../posse-dispatch.js";
+import { buildChatSummaryCopy } from "../chat-bridge.js";
 import { parseRoute } from "./route-parse.js";
 import { getActiveUser, makeShellProps, attachPostShareHandlers, shareTopicUnlessQuarantined } from "./context.js";
 import { route } from "./navigation.js";
@@ -582,6 +584,7 @@ export async function showProposal(communityId, proposalId) {
   });
 
   attachProposalVotingHandlers(proposal, user);
+  attachProposalBridgeHandlers(proposal, tally);
 }
 
 export async function fetchProposalData(communityId, proposalId, user) {
@@ -624,6 +627,31 @@ export async function loadProposalVotes(proposalId) {
     }
   }
   return votes;
+}
+
+function attachProposalBridgeHandlers(proposal, tally) {
+  const payload = buildProposalPossePayload(proposal, tally);
+  document.getElementById("btn-proposal-copy-discord")?.addEventListener("click", async () => {
+    const summary = buildChatSummaryCopy(payload, { format: "discord" });
+    try {
+      await navigator.clipboard.writeText(summary);
+      share.showToast("Resumo da proposta copiado para Discord / Slack!");
+    } catch {
+      share.showToast(summary.slice(0, 120), "info");
+    }
+  });
+  document.getElementById("btn-proposal-webhook-echo")?.addEventListener("click", async () => {
+    const urls = loadPosseWebhooks();
+    if (!urls.length) {
+      share.showToast("Configure webhooks do Discord/Slack em Configurações → Rede.", "info");
+      return;
+    }
+    const res = await firePosseWebhooks(payload, urls);
+    share.showToast(
+      res.sent > 0 ? `Proposta enviada para ${res.sent} webhook(s)!` : "Falha ao disparar webhook.",
+      res.sent > 0 ? "info" : "error",
+    );
+  });
 }
 
 export function attachProposalVotingHandlers(proposal, user) {

@@ -3,6 +3,7 @@
  * Protocolo de mensageiro essencial DM v2 (E2E):
  * - Quote-Reply (responder mensagem específica dentro do envelope cifrado)
  * - Reações rápidas em bolhas (👍 ❤️ 🔥 🙏 ✅)
+ * - Recibos de leitura E2E (✓✓ Lido) e anexo de foto/comprovante comprimido (<= 24 KB)
  * - Cartões nativos de contexto (Oferta da Feira, Pix, Tópico)
  * - Estado local de não lidas (unread), conversas fixadas (pin) e busca instantânea
  */
@@ -10,6 +11,7 @@
 export const DM_READ_STORAGE_KEY = "vox-dm-read-ts-v1";
 export const DM_PINS_STORAGE_KEY = "vox-dm-pins-v1";
 export const MAX_PINNED_PEERS = 3;
+export const MAX_DM_MEDIA_CHARS = 24000;
 export const DM_REACTION_EMOJIS = ["👍", "❤️", "🔥", "🙏", "✅"];
 const DEFAULT_WELCOME_ID = "vx_voxbrasil_welcome";
 
@@ -53,18 +55,33 @@ export function normalizeContextCard(raw) {
   };
 }
 
-export function serializeDmPayload({ text = "", replyTo = null, contextCard = null } = {}) {
+export function normalizeMediaDataUrl(raw) {
+  const s = String(raw || "").trim();
+  if (!s || s.length > MAX_DM_MEDIA_CHARS) return "";
+  if (!/^data:image\/(?:jpeg|jpg|png|webp);base64,[A-Za-z0-9+/=]+$/i.test(s)) return "";
+  return s;
+}
+
+export function serializeDmPayload({
+  text = "",
+  replyTo = null,
+  contextCard = null,
+  mediaDataUrl = "",
+} = {}) {
   const cleanText = String(text ?? "");
   const cleanReply = normalizeReplyMeta(replyTo);
   const cleanCard = normalizeContextCard(contextCard);
-  if (!cleanReply && !cleanCard) return cleanText;
-  return JSON.stringify({
+  const cleanMedia = normalizeMediaDataUrl(mediaDataUrl);
+  if (!cleanReply && !cleanCard && !cleanMedia) return cleanText;
+  const out = {
     __vox_dm_v2: 1,
     kind: "message",
     text: cleanText,
     replyTo: cleanReply,
     contextCard: cleanCard,
-  });
+  };
+  if (cleanMedia) out.mediaDataUrl = cleanMedia;
+  return JSON.stringify(out);
 }
 
 export function serializeDmReaction({ targetId = "", emoji = "" } = {}) {
@@ -81,6 +98,15 @@ export function serializeDmReaction({ targetId = "", emoji = "" } = {}) {
   });
 }
 
+export function serializeDmReadReceipt({ upToTs = Date.now() } = {}) {
+  const ts = Number(upToTs) || Date.now();
+  return JSON.stringify({
+    __vox_dm_v2: 1,
+    kind: "read",
+    upToTs: ts,
+  });
+}
+
 function tryParseV2Json(str) {
   if (!str.startsWith('{"__vox_dm_v2":1')) return null;
   try {
@@ -94,7 +120,7 @@ export function parseDmPayload(raw) {
   const str = String(raw ?? "");
   const parsed = tryParseV2Json(str);
   if (!parsed) {
-    return { kind: "message", text: str, replyTo: null, contextCard: null };
+    return { kind: "message", text: str, replyTo: null, contextCard: null, mediaDataUrl: "" };
   }
   if (parsed.kind === "react" && parsed.targetId && DM_REACTION_EMOJIS.includes(parsed.emoji)) {
     return {
@@ -103,11 +129,18 @@ export function parseDmPayload(raw) {
       emoji: parsed.emoji,
     };
   }
+  if (parsed.kind === "read" && Number(parsed.upToTs) > 0) {
+    return {
+      kind: "read",
+      upToTs: Number(parsed.upToTs),
+    };
+  }
   return {
     kind: "message",
     text: String(parsed.text ?? ""),
     replyTo: normalizeReplyMeta(parsed.replyTo),
     contextCard: normalizeContextCard(parsed.contextCard),
+    mediaDataUrl: normalizeMediaDataUrl(parsed.mediaDataUrl),
   };
 }
 

@@ -1,5 +1,9 @@
 #!/usr/bin/env node
-/** Headless POSSE — consome export JSON do Vox PWA (vox-posse-export). */
+/** Headless POSSE — consome export JSON do Vox PWA (vox-posse-export) com suporte nativo a Discord/Slack. */
+
+import path from "node:path";
+import { pathToFileURL } from "node:url";
+import { adaptWebhookPayloadForUrl, detectWebhookPlatform } from "../../client/js/chat-bridge.js";
 
 export function validatePosseExportPayload(raw) {
   if (!raw || typeof raw !== "object") return { valid: false, error: "Payload ausente" };
@@ -23,16 +27,18 @@ export function buildPosseShareText(payload) {
 export async function postWebhook(url, payload, { dryRun = false, fetchImpl = fetch } = {}) {
   const u = String(url || "").trim();
   if (!u) return { ok: false, reason: "url vazia" };
-  if (dryRun) return { ok: true, dryRun: true, url: u };
+  const platform = detectWebhookPlatform(u);
+  const adapted = adaptWebhookPayloadForUrl(u, payload);
+  if (dryRun) return { ok: true, dryRun: true, url: u, platform, payload: adapted };
   try {
     const res = await fetchImpl(u, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(adapted),
     });
-    return { ok: res.ok, status: res.status, url: u };
+    return { ok: res.ok, status: res.status, url: u, platform };
   } catch (err) {
-    return { ok: false, reason: err?.message || "fetch failed", url: u };
+    return { ok: false, reason: err?.message || "fetch failed", url: u, platform };
   }
 }
 
@@ -81,9 +87,6 @@ export async function main(argv = process.argv.slice(2)) {
   console.log(JSON.stringify(out, null, 2));
   process.exit(out.ok ? 0 : 1);
 }
-
-import path from "node:path";
-import { pathToFileURL } from "node:url";
 
 const isDirectRun =
   process.argv[1] &&

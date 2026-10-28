@@ -1,4 +1,4 @@
-/** @file Direct message inbox and thread UI (DM v2: quote-reply, reactions, context cards, unread/pin/search). */
+/** @file Direct message inbox and thread UI (DM v2: quote-reply, reactions, context cards, read receipts, E2E photo, unread/pin/search). */
 import * as profileDirectory from "../profile-directory.js";
 import { getWelcomeProfile, WELCOME_ROUTE_ID } from "../vox-welcome-profile.js";
 import {
@@ -165,20 +165,29 @@ function renderBubbleReactions(m, myAddress) {
     </div>`;
 }
 
+function formatBubbleStatusLabel(status) {
+  if (status === "read") return "✓✓ Lido";
+  if (status === "delivered") return "✓✓ Direta";
+  if (status === "queued-relay") return "✓ Caixa postal";
+  return "✓";
+}
+
 function renderDmMessageBubbles(messages, myAddress) {
   if (!messages.length) {
     return `<div class="empty" style="text-align:center; padding:1.5rem 0;"><p>Início da conversa. As mensagens ficam só neste navegador.</p></div>`;
   }
   return messages
     .map((m) => {
-      const cls = m.from === myAddress || m.status === "sent" ? "sent" : "received";
+      const cls = m.from === myAddress || m.status === "sent" || m.status === "read" ? "sent" : "received";
       const timeStr = m.ts ? new Date(m.ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
-      const statusLabel = m.status === "delivered" ? "✓✓ Direta" : m.status === "queued-relay" ? "✓ Caixa postal" : "✓";
+      const statusLabel = formatBubbleStatusLabel(m.status);
       const card = m.contextCard || extractInlineVoxCard(m.text);
+      const mediaHtml = m.mediaDataUrl ? `<div class="dm-bubble-media"><img class="dm-bubble-img" src="${escapeHtml(m.mediaDataUrl)}" alt="Foto cifrada E2E" loading="lazy" /></div>` : "";
       return `
         <div class="dm-bubble ${cls}" data-msg-id="${escapeHtml(m.id)}">
           ${renderBubbleReplyQuote(m.replyTo)}
           ${renderBubbleContextCard(card)}
+          ${mediaHtml}
           <div class="dm-bubble-text">${escapeHtml(m.text)}</div>
           <div class="dm-bubble-meta">${timeStr} · ${statusLabel}</div>
           ${renderBubbleReactions(m, myAddress)}
@@ -232,14 +241,17 @@ function renderThreadComposerHtml(hasDmPub, pendingContextCard) {
     <div class="dm-composer-stack">
       ${renderContextDraftBanner(pendingContextCard)}
       <div class="dm-draft-banner dm-reply-draft-bar" id="dm-reply-draft-bar" hidden>
-        <div class="dm-draft-info">
-          <span class="dm-draft-kicker">↩ Respondendo:</span>
-          <span class="dm-draft-text" id="dm-reply-draft-text"></span>
-        </div>
+        <div class="dm-draft-info"><span class="dm-draft-kicker">↩ Respondendo:</span><span class="dm-draft-text" id="dm-reply-draft-text"></span></div>
         <button type="button" class="btn-dm-draft-close" id="btn-cancel-dm-reply" aria-label="Cancelar resposta">×</button>
       </div>
+      <div class="dm-draft-banner dm-media-draft-bar" id="dm-media-draft-bar" hidden>
+        <div class="dm-draft-info"><span class="dm-draft-kicker">📷 Anexo E2E:</span><span class="dm-draft-text" id="dm-media-draft-text">Foto pronta</span></div>
+        <button type="button" class="btn-dm-draft-close" id="btn-cancel-dm-media" aria-label="Remover foto">×</button>
+      </div>
       <form id="form-send-dm" class="dm-form-sticky">
-        <input type="text" id="dm-message-input" class="form-control" placeholder="Escreva aqui…" required autocomplete="off" />
+        <label for="dm-media-input" class="btn btn-outline btn-sm dm-attach-btn" title="Anexar foto ou comprovante (cifrado E2E)" aria-label="Anexar foto">📷</label>
+        <input type="file" id="dm-media-input" accept="image/*" hidden />
+        <input type="text" id="dm-message-input" class="form-control" placeholder="Escreva aqui…" autocomplete="off" />
         <button type="submit" id="btn-send-dm" class="btn btn-primary" ${!hasDmPub ? "disabled" : ""}>Enviar</button>
       </form>
     </div>`;

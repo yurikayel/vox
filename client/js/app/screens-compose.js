@@ -35,6 +35,7 @@ import * as peopleIndex from "../people-index.js";
 import * as profileDirectory from "../profile-directory.js";
 import * as welcomeProfile from "../vox-welcome-profile.js";
 import * as meshProfile from "../mesh-profile.js";
+import { parseChatTranscriptToMarkdown } from "../chat-bridge.js";
 import { parseRoute } from "./route-parse.js";
 import { getActiveUser, makeShellProps, attachPostShareHandlers } from "./context.js";
 
@@ -91,10 +92,27 @@ export async function showComposeCommunity() {
   }
 }
 
+function bindChatTranscriptImportHandler() {
+  document.getElementById("btn-convert-chat-transcript")?.addEventListener("click", () => {
+    const raw = document.getElementById("chat-transcript-input")?.value || "";
+    const parsed = parseChatTranscriptToMarkdown(raw);
+    if (!parsed.messageCount) {
+      share.showToast("Cole uma conversa do Slack ou Discord para converter.", "error");
+      return;
+    }
+    const bodyEl = document.getElementById("topic-body");
+    const titleEl = document.getElementById("topic-title");
+    if (bodyEl) bodyEl.value = bodyEl.value.trim() ? `${bodyEl.value.trim()}\n\n${parsed.markdown}` : parsed.markdown;
+    if (titleEl && !titleEl.value.trim() && parsed.suggestedTitle) titleEl.value = parsed.suggestedTitle.slice(0, 120);
+    share.showToast(`Ata formatada (${parsed.messageCount} intervenções)!`);
+  });
+}
+
 export async function showComposeTopic(communityId) {
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "compose", "Novo Post"));
   render.renderComposeTopic(main, communityId);
+  bindChatTranscriptImportHandler();
 
   const form = document.getElementById("form-compose-topic");
   if (form) {
