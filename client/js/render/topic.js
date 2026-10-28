@@ -117,7 +117,7 @@ export function renderTopic(main, topicId, topic, replies, { topicData = null, i
           <span class="action-count">Compartilhar</span>
         </button>
         <button id="btn-explode-topic" class="action-btn btn-explode btn-explode-post" data-id="${escapeHtml(topicId)}" data-title="${escapeHtml(topic?.title || "")}" data-author="${escapeHtml(authorDisplay || "")}" data-body="${escapeHtml((bodyText || "").slice(0, 200))}" data-comm="${escapeHtml(commId || "")}" aria-label="Explodir nas redes (EXPLODE!)" title="EXPLODE! Disparo multi-redes">
-          <svg class="action-icon icon-explode" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m13 2-2 7.5h5.5L11 22l2-8.5H7.5L13 2z"/></svg>
+          <svg class="action-icon icon-explode" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
           <span class="action-count">EXPLODE!</span>
         </button>
         <button class="action-btn btn-copy-md" data-id="${escapeHtml(topicId)}" data-title="${escapeHtml(topic?.title || "")}" data-body="${escapeHtml(bodyText)}" data-author="${escapeHtml(authorDisplay)}" data-handle="${escapeHtml(authorHandle)}" aria-label="Copiar post como Markdown">

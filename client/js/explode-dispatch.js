@@ -80,7 +80,7 @@ let explodeWired = false;
 
 function buildExplodeHeaderHtml() {
   return `<div class="explode-header">
-    <span class="explode-badge">💥 REPLICAÇÃO MULTI-REDES</span>
+    <span class="explode-badge">📢 REPLICAÇÃO MULTI-REDES</span>
     <h3 class="explode-title">EXPLODE NAS REDES!</h3>
     <p class="explode-subtitle">Disparo sincronizado em lote: replicação soberana com fricção zero.</p>
   </div>`;
@@ -107,7 +107,7 @@ export function buildExplodeSheetHtml(post) {
     <div class="explode-panel post-more-sheet-panel" role="document">
       ${buildExplodeHeaderHtml()}
       <button type="button" class="btn-explode-burst" data-explode-action="burst">
-        <span>⚡</span>
+        <span>📢</span>
         <span>DISPARAR RAJADA (Webhooks + Copiar Texto)</span>
       </button>
       ${buildExplodeGridHtml()}
@@ -204,12 +204,12 @@ async function onExplodeAction(action) {
 
   if (action === "burst") {
     const res = await executeExplodeBurst(activeExplodePost);
-    share.showToast(res.webhooksSent > 0 ? `💥 Rajada disparada! (${res.webhooksSent} destinos)` : "💥 Munição copiada! Cole nos grupos!");
+    share.showToast(res.webhooksSent > 0 ? `📢 Rajada disparada! (${res.webhooksSent} destinos)` : "📢 Mensagem copiada! Cole nos grupos!");
     return closeExplodeSheet();
   }
   if (await handleExplodeGridActions(action, text, canonicalUrl, payload)) return closeExplodeSheet();
   if (action === "copy") {
-    try { await navigator.clipboard.writeText(text); share.showToast("Pacote de munição copiado com sucesso! 💥"); } catch {}
+    try { await navigator.clipboard.writeText(text); share.showToast("Pacote de mensagem copiado com sucesso! 📢"); } catch {}
     return closeExplodeSheet();
   }
   if (action === "native" && navigator.share) {
