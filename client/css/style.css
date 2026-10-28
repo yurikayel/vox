@@ -6093,7 +6093,7 @@ body.post-lightbox-open {
   gap: 6px;
   min-height: 0;
   margin: 0;
-  position: absolute; top: auto; bottom: 0; left: 0; right: 0; z-index: 4; padding: 22px 10px 8px; background: linear-gradient(to top, rgba(6, 10, 18, 0.74) 0%, rgba(6, 10, 18, 0.34) 62%, rgba(6, 10, 18, 0) 100%) !important;
+  position: absolute; top: auto; bottom: 0; left: 0; right: 0; z-index: 4; gap: 5px; padding: 14px 8px 3px; background: linear-gradient(to top, rgba(6, 10, 18, 0.78) 0%, rgba(6, 10, 18, 0.35) 58%, rgba(6, 10, 18, 0) 100%) !important;
   background: var(--bg);
   white-space: nowrap;
 }
@@ -6194,6 +6194,51 @@ body.post-lightbox-open {
 .post-ig-header .post-media-header-avatar .avatar-img,
 .post-ig-header .post-media-header-avatar .avatar {
   border-color: rgba(255, 255, 255, 0.85);
+}
+
+.post-ig-header .post-media-header-avatar {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+}
+
+.post-ig-header .post-media-header-avatar .avatar-img,
+.post-ig-header .post-media-header-avatar .avatar {
+  width: 26px;
+  height: 26px;
+  font-size: 0.66rem;
+  border-width: 1.5px;
+  border-color: rgba(255, 255, 255, 0.85);
+}
+
+.post-ig-header .post-media-header-username {
+  font-size: 0.74rem;
+  line-height: 1.1;
+}
+
+.post-ig-header .post-media-header-dot,
+.post-ig-header .post-media-header-time,
+.post-ig-header-handle,
+.post-ig-header-uf {
+  font-size: 0.65rem;
+  line-height: 1.1;
+}
+
+.post-ig-header-end {
+  gap: 5px;
+}
+
+.post-ig-header .btn-overlay-follow {
+  font-size: 0.7rem;
+  padding: 1px 4px;
+  line-height: 1.1;
+}
+
+.post-ig-header .btn-post-more-menu {
+  font-size: 0.88rem;
+  padding: 0 3px;
+  min-height: 20px;
+  line-height: 1;
 }
 
 .post-ig-header .btn-post-more-menu:focus-visible {
