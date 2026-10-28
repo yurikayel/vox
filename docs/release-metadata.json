@@ -1,9 +1,9 @@
 {
   "git_sha": "local-t2-buddy-failover",
   "branch": "main",
-  "test_js": 411,
+  "test_js": 421,
   "test_python": 23,
-  "test_total": 434,
-  "cache_name": "vox-pwa-v7.05-multi-relay-buddy-failover",
+  "test_total": 444,
+  "cache_name": "vox-pwa-v7.06-explode-janones",
   "generated_at": "2026-10-28T18:30:00Z"
 }
