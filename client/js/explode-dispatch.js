@@ -11,6 +11,7 @@ import {
   buildBlueskyIntentUrl,
 } from "./posse-dispatch.js";
 import { dispatchAutoReplication, loadLinkedAccounts } from "./linked-accounts.js";
+import { copyStoryCardToClipboard } from "./story-card.js";
 import { escapeHtml } from "./render/util.js";
 
 export const EXPLODE_SHEET_ID = "explode-dispatch-sheet";
@@ -158,8 +159,13 @@ export function buildExplodeSheetHtml(post) {
         <span>📢</span>
         <span>DISPARAR RAJADA (Webhooks + Copiar Texto)</span>
       </button>
+      <button type="button" class="btn-explode-cascade" data-explode-action="cascade">
+        <span>🌊</span>
+        <span>DISPARO EM ONDA (Passo a Passo)</span>
+      </button>
       ${buildExplodeGridHtml()}
       <div class="explode-preview" id="explode-preview-text">${escapeHtml(text)}</div>
+      <button type="button" class="post-more-sheet-item" data-explode-action="story-card">📸 Gerar Card de Story (Instagram / TikTok)</button>
       <button type="button" class="post-more-sheet-item" data-explode-action="copy">📋 Copiar Pacote de Munição</button>
       <button type="button" class="post-more-sheet-item" data-explode-action="native">📱 Compartilhar no Aparelho…</button>
       <button type="button" class="post-more-sheet-item post-more-sheet-cancel" data-explode-action="close">Fechar</button>
@@ -230,10 +236,14 @@ async function handleExplodeGridActions(action, text, url, payload, post) {
     window.open(targetUrl, "_blank", "noopener,noreferrer");
     return true;
   }
-  if (action === "instagram" || action === "tiktok") {
+  if (action === "instagram" || action === "tiktok" || action === "story-card") {
     try { await navigator.clipboard.writeText(text); } catch {}
-    share.showToast(`Legenda copiada! Cole no ${action === "instagram" ? "Instagram 📸" : "TikTok 🎵"}`);
-    window.open(action === "instagram" ? "https://www.instagram.com/" : "https://www.tiktok.com/upload", "_blank", "noopener,noreferrer");
+    const cardRes = await copyStoryCardToClipboard(post);
+    const target = action === "tiktok" ? "TikTok 🎵" : "Instagram 📸";
+    const msg = cardRes?.imageCopied ? `📸 Card copiado + legenda! Cole no ${target}` : `📸 Card baixado + legenda copiada! Abra o ${target}`;
+    share.showToast(msg);
+    if (action === "story-card") return true;
+    window.open(action === "tiktok" ? "https://www.tiktok.com/upload" : "https://www.instagram.com/", "_blank", "noopener,noreferrer");
     return true;
   }
   if (action === "webhooks") {
@@ -248,9 +258,97 @@ async function handleExplodeGridActions(action, text, url, payload, post) {
   return false;
 }
 
+export const CASCADE_BAR_ID = "explode-cascade-bar";
+export const CASCADE_STEPS = [
+  { id: "whatsapp", label: "WhatsApp", icon: "📲" },
+  { id: "twitter", label: "X (Twitter)", icon: "🐦" },
+  { id: "threads", label: "Threads", icon: "🧵" },
+  { id: "bluesky", label: "Bluesky", icon: "🦋" },
+];
+
+let activeCascade = null;
+
+export function removeCascadeBar() {
+  document.getElementById(CASCADE_BAR_ID)?.remove();
+  activeCascade = null;
+}
+
+function openCascadeStep(step, post) {
+  const canonicalUrl = buildCanonicalTopicUrl(post?.id, { communityId: post?.communityId });
+  const text = buildExplodeText({ title: post?.title, body: post?.body, url: canonicalUrl });
+  const targetUrl = resolveIntentTargetUrl(step.id, text, canonicalUrl, post);
+  if (targetUrl) window.open(targetUrl, "_blank", "noopener,noreferrer");
+}
+
+function updateCascadeBarUi() {
+  const root = document.getElementById(CASCADE_BAR_ID);
+  if (!root || !activeCascade) return;
+  const { stepIndex } = activeCascade;
+  const current = CASCADE_STEPS[stepIndex];
+  const next = CASCADE_STEPS[stepIndex + 1];
+
+  const infoEl = root.querySelector(".explode-cascade-info");
+  const nextBtn = root.querySelector(".btn-cascade-next");
+  if (infoEl) {
+    infoEl.innerHTML = `<span class="explode-cascade-badge">Etapa ${stepIndex + 1}/${CASCADE_STEPS.length}</span> <strong>${current.icon} ${current.label} aberto ✓</strong>`;
+  }
+  if (nextBtn) {
+    nextBtn.textContent = next ? `👉 Próximo: ${next.icon} ${next.label}` : "🏁 Concluir Disparo";
+    nextBtn.focus();
+  }
+}
+
+export function advanceCascadeExplode() {
+  if (!activeCascade) return;
+  activeCascade.stepIndex += 1;
+  if (activeCascade.stepIndex >= CASCADE_STEPS.length) {
+    share.showToast("🎉 Disparo em onda concluído em todas as redes!");
+    return removeCascadeBar();
+  }
+  openCascadeStep(CASCADE_STEPS[activeCascade.stepIndex], activeCascade.post);
+  updateCascadeBarUi();
+}
+
+function buildCascadeBarHtml(stepIndex) {
+  const current = CASCADE_STEPS[stepIndex];
+  const next = CASCADE_STEPS[stepIndex + 1];
+  return `
+    <div class="explode-cascade-info">
+      <span class="explode-cascade-badge">Etapa ${stepIndex + 1}/${CASCADE_STEPS.length}</span>
+      <strong>${current.icon} ${current.label} aberto ✓</strong>
+    </div>
+    <div class="explode-cascade-actions">
+      <button type="button" class="btn btn-sm btn-primary btn-cascade-next">👉 Próximo: ${next.icon} ${next.label}</button>
+      <button type="button" class="btn btn-sm btn-outline btn-cascade-skip">Pular</button>
+      <button type="button" class="btn btn-sm btn-text btn-cascade-close" aria-label="Fechar esteira">✕</button>
+    </div>`;
+}
+
+export function startCascadeExplode(post) {
+  if (!post?.id || typeof document === "undefined") return;
+  closeExplodeSheet();
+  void executeExplodeBurst(post);
+
+  activeCascade = { post: { ...post }, stepIndex: 0 };
+  openCascadeStep(CASCADE_STEPS[0], activeCascade.post);
+
+  let bar = document.getElementById(CASCADE_BAR_ID);
+  if (!bar) {
+    bar = document.createElement("div");
+    bar.id = CASCADE_BAR_ID;
+    bar.className = "explode-cascade-bar";
+    bar.setAttribute("role", "region");
+    bar.setAttribute("aria-label", "Esteira de Disparo");
+    document.body.appendChild(bar);
+  }
+  bar.innerHTML = buildCascadeBarHtml(0);
+  bar.querySelector(".btn-cascade-next")?.focus();
+}
+
 async function onExplodeAction(action) {
   if (!activeExplodePost) return;
   if (action === "close") return closeExplodeSheet();
+  if (action === "cascade") return startCascadeExplode(activeExplodePost);
 
   const canonicalUrl = buildCanonicalTopicUrl(activeExplodePost.id, { communityId: activeExplodePost.communityId });
   const text = buildExplodeText({ title: activeExplodePost.title, body: activeExplodePost.body, url: canonicalUrl });
@@ -283,6 +381,14 @@ function extractExplodeBtnPost(btn) {
 }
 
 function handleDocumentExplodeClick(e) {
+  if (e.target.closest?.(".btn-cascade-next") || e.target.closest?.(".btn-cascade-skip")) {
+    e.preventDefault();
+    return advanceCascadeExplode();
+  }
+  if (e.target.closest?.(".btn-cascade-close")) {
+    e.preventDefault();
+    return removeCascadeBar();
+  }
   const explodePostBtn = e.target.closest?.(".btn-explode-post");
   if (explodePostBtn) {
     e.preventDefault();
