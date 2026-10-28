@@ -11,6 +11,7 @@ const PINNED_KEY = "vox-pinned-posts";
 const README_KEY = "vox-profile-readme";
 const GITHUB_KEY = "vox-profile-github";
 const COMMENT_REACT_KEY = "vox-liked-comments";
+const EXPLODE_COUNTS_KEY = "vox-explode-counts";
 
 function loadSet(key) {
   if (typeof window === "undefined" || !window.localStorage) return new Set();
@@ -260,3 +261,29 @@ export function setLocalGithubHandle(handle) {
     return false;
   }
 }
+
+/* --- Disparos EXPLODE! (📢 Métrica Cívica de Alcance) --- */
+
+export function isExploded(postId) {
+  if (!postId) return false;
+  const map = loadMap(EXPLODE_COUNTS_KEY);
+  return (Number(map[postId]) || 0) > 0;
+}
+
+export function getExplodesCount(postId, baseCount = 0) {
+  const base = Number(baseCount) || 0;
+  if (!postId) return base;
+  const map = loadMap(EXPLODE_COUNTS_KEY);
+  return base + (Number(map[postId]) || 0);
+}
+
+export function recordExplosion(postId, baseCount = 0) {
+  if (!postId) return { count: Number(baseCount) || 0, isNew: false };
+  const map = loadMap(EXPLODE_COUNTS_KEY);
+  const current = Number(map[postId]) || 0;
+  const isNew = current === 0;
+  map[postId] = current + 1;
+  saveMap(EXPLODE_COUNTS_KEY, map);
+  return { count: (Number(baseCount) || 0) + map[postId], isNew };
+}
+

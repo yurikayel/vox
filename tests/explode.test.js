@@ -330,3 +330,64 @@ test("explode - sw.js caches explode-dispatch.js", () => {
   const sw = fs.readFileSync(path.join(root, "sw.js"), "utf8");
   assert.ok(sw.includes('"./js/explode-dispatch.js"'));
 });
+
+test("explode - renderers display explode counter and updateExplodeButtonsUi updates DOM", () => {
+  const mockPost = {
+    id: "post_exp_dom_1",
+    title: "Voto e Democracia",
+    body: "Conteúdo do post",
+    communityId: "comm_geral",
+    explodesCount: 7,
+  };
+
+  const feedHtml = feed.renderPostItem(mockPost, "0x123", "Helena", "@helena");
+  assert.ok(feedHtml.includes("count-explodes"));
+  assert.ok(feedHtml.includes("btn-explode-post"));
+  assert.ok(feedHtml.includes(">7<"));
+
+  const igHtml = igToolbar.renderIgToolbar(mockPost, "Helena");
+  assert.ok(igHtml.includes("count-explodes"));
+  assert.ok(igHtml.includes(">7<"));
+
+  const mainEl = { innerHTML: "" };
+  topic.renderTopic(mainEl, "post_exp_dom_1", mockPost, []);
+  assert.ok(mainEl.innerHTML.includes("count-explodes"));
+  assert.ok(mainEl.innerHTML.includes("7 disparos"));
+
+  // Test DOM update
+  const fakeBtn1 = {
+    id: "btn_1",
+    dataset: { id: "post_exp_dom_1" },
+    classList: { add: (c) => fakeBtn1.classes.add(c) },
+    classes: new Set(),
+    querySelector: (sel) => (sel === ".count-explodes" ? fakeSpan1 : null),
+  };
+  const fakeSpan1 = { textContent: "" };
+
+  const fakeBtnTopic = {
+    id: "btn-explode-topic",
+    dataset: { id: "post_exp_dom_1" },
+    classList: { add: (c) => fakeBtnTopic.classes.add(c) },
+    classes: new Set(),
+    querySelector: (sel) => (sel === ".count-explodes" ? fakeSpanTopic : null),
+  };
+  const fakeSpanTopic = { textContent: "" };
+
+  const prevDoc = globalThis.document;
+  globalThis.document = {
+    querySelectorAll: (sel) => {
+      if (sel.includes('post_exp_dom_1')) return [fakeBtn1, fakeBtnTopic];
+      return [];
+    },
+  };
+
+  try {
+    explode.updateExplodeButtonsUi("post_exp_dom_1", 8);
+    assert.ok(fakeBtn1.classes.has("exploded"));
+    assert.equal(fakeSpan1.textContent, "8");
+    assert.ok(fakeBtnTopic.classes.has("exploded"));
+    assert.equal(fakeSpanTopic.textContent, "8 disparos");
+  } finally {
+    globalThis.document = prevDoc;
+  }
+});
