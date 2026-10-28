@@ -184,6 +184,7 @@ function buildPosseSheetHtml() {
       <p class="posse-dispatch-lead">${POSSE_SHEET_LEAD}</p>
       <p class="posse-dispatch-limits meta">${share.SHARE_HONEST_LIMITS_SHORT}</p>
       <p class="posse-dispatch-url meta" id="posse-dispatch-url"></p>
+      <button type="button" class="post-more-sheet-item btn-posse-explode" data-posse="explode" style="font-weight:700; color:#d97706; background:rgba(245,158,11,0.12);">💥 EXPLODE! (Disparo Tático Janones)</button>
       <button type="button" class="post-more-sheet-item" data-posse="native">Compartilhar (aparelho)…</button>
       <button type="button" class="post-more-sheet-item" data-posse="whatsapp">WhatsApp</button>
       <button type="button" class="post-more-sheet-item" data-posse="twitter">X (Twitter)</button>
@@ -335,6 +336,12 @@ async function onPosseAction(action) {
   if (skipCb?.checked) setSkipPosseSheet(true);
 
   if (action === "close") return closePosseSheet();
+  if (action === "explode") {
+    const postToExplode = activePost;
+    closePosseSheet();
+    import("./explode-dispatch.js").then((m) => m.openExplodeSheet(postToExplode));
+    return;
+  }
   if (await handlePosseIntentActions(action, text, url)) return;
   if (await handlePosseBridgeActions(action, payload)) return;
   await handlePosseExportAndCopy(action, payload, text, url);
