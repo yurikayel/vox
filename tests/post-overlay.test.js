@@ -67,3 +67,23 @@ test("photo chrome - CSS compacto", () => {
   assert.ok(css.includes(".post-lightbox"));
   assert.ok(css.includes("#post-more-sheet") || css.includes(".post-more-sheet"));
 });
+
+test("photo chrome - header/media and title/body sit tight", () => {
+  const css = fs.readFileSync(path.join(root, "css/style.css"), "utf8");
+  const igHead = css.match(/\.post-ig-header\.post-media-header\s*\{[^}]+\}/)?.[0] || "";
+  const title = css.match(/\.post-photo-title\s*\{[^}]+\}/)?.[0] || "";
+  const message = css.match(/\.post-photo-message\s*\{[^}]+\}/)?.[0] || "";
+  const comments = css.match(
+    /\.post-layout-photo\.post-photo-bleed \.post-comments,\s*\.post-layout-photo\.post-photo-bleed \.post-comments-surface\s*\{[^}]+\}/
+  )?.[0] || "";
+  const media = css.match(/\.post-layout-photo\.post-photo-bleed \.post-media-container\s*\{[^}]+\}/)?.[0] || "";
+  assert.match(igHead, /padding:\s*4px 10px 2px/);
+  assert.match(igHead, /min-height:\s*0/);
+  assert.match(title, /padding:\s*2px 12px 0/);
+  assert.match(message, /padding:\s*4px 12px 8px/);
+  assert.match(comments, /padding:\s*0/);
+  assert.match(comments, /margin:\s*0/);
+  assert.ok(!comments.includes("padding: 10px 0 0"), "expander must not reserve overlay caption pad");
+  assert.match(media, /align-items:\s*stretch/);
+  assert.match(media, /justify-content:\s*flex-start/);
+});
