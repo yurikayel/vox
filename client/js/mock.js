@@ -132,7 +132,7 @@ export const MOCK_COMMUNITIES = [
   MOCK_DEMO_COMMUNITY_FEIRA,
   {
     id: "demo-community-1",
-    title: "Vox Brasil — Boas-vindas",
+    title: "Vox — Boas-vindas",
     description: "Comunidade de demonstração offline.",
     category: "Geral",
     owner: "demo-owner",

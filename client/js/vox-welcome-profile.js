@@ -1,4 +1,4 @@
-/** Perfil oficial da plataforma Vox Brasil — primeiro contato (V-DIS). */
+/** Perfil oficial da plataforma Vox — primeiro contato (V-DIS). */
 
 import * as cacheNode from "./cache-node.js";
 import * as social from "./social.js";
@@ -16,14 +16,14 @@ export const WELCOME_DM_SEED_KEY = "vox-welcome-dm-seeded-v3";
 export function getWelcomeProfile() {
   return {
     routeId: WELCOME_ROUTE_ID,
-    name: "Vox Brasil",
-    handle: "voxbrasil",
+    name: "Vox",
+    handle: "vox",
     bio:
       "Conta oficial da plataforma — voz institucional, novidades e ajuda na rede. " +
       "Não é perfil de pessoa: é o canal do Vox com você. 📣",
     avatar: OFFICIAL_PROFILE_AVATAR,
     readme:
-      "Somos a **conta oficial** do Vox Brasil: onboarding, dicas de rede e links úteis.\n\n" +
+      "Somos a **conta oficial** do Vox: onboarding, dicas de rede e links úteis.\n\n" +
       "- **Pessoas** — busca local e deep links `#/connect/seu_vx_`\n" +
       "- **Sua rede** — Configurações → malha comunitária\n" +
       "- **Voxpedia** — glossário leigo em [#/voxpedia](#/voxpedia)\n\n" +
@@ -35,7 +35,7 @@ export function getWelcomeProfile() {
 
 export function getWelcomeDmText() {
   return (
-    "Oi! 👋 Sou a Vox Brasil — a conta oficial que te dá boas-vindas por aqui.\n\n" +
+    "Oi! 👋 Sou o Vox — a conta oficial que te dá boas-vindas por aqui.\n\n" +
     "Quer achar alguém? Use Pessoas no menu. Quer entender as palavrinhas do app? " +
     "Abra a Voxpedia (glossário bem leigo).\n\n" +
     "Se travar, responde nesta conversa. A gente orienta — sem linguagem de banco. 😊"

@@ -1,9 +1,9 @@
 {
-  "git_sha": "bf0503e",
+  "git_sha": "bcfc6ca",
   "branch": "main",
   "test_js": 392,
   "test_python": 23,
   "test_total": 415,
-  "cache_name": "vox-pwa-v6.96-photo-card-gaps",
-  "generated_at": "2026-10-28T01:29:42Z"
+  "cache_name": "vox-pwa-v6.97-vox-brand-name",
+  "generated_at": "2026-10-28T01:37:05Z"
 }
