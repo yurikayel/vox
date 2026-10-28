@@ -130,6 +130,7 @@ const SHELL_ASSETS = [
 
   "./js/posse-dispatch.js",
   "./js/explode-dispatch.js",
+  "./js/story-card.js",
   "./js/bsky-feed.js",
   "./js/linked-accounts.js",
   "./js/render/linked-accounts-ui.js",
