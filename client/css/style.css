@@ -56,7 +56,7 @@
   --radius: 12px;
   --radius-sm: 8px;
   --feed-max: 500px;
-  --feed-post-gap: 1.35rem;
+  --feed-post-gap: 2.7rem;
   --sidebar-width: 240px;
   --sidebar-width-collapsed: 72px;
   --space-xs: 4px;
@@ -2437,14 +2437,14 @@ body.post-lightbox-open {
 .action-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   background: transparent;
   border: none;
   color: var(--muted);
-  font-size: 0.84rem;
+  font-size: 0.78rem;
   cursor: pointer;
-  min-height: 36px;
-  padding: 6px 10px;
+  min-height: 28px;
+  padding: 4px 7px;
   border-radius: 999px;
   text-decoration: none;
   transition: color 0.15s ease, background 0.15s ease, transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
@@ -6192,17 +6192,25 @@ body.post-lightbox-open {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 6px 10px 2px;
+  padding: 4px 10px 1px;
 }
 
 .post-ig-toolbar-left {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 8px;
 }
 
 .post-ig-toolbar .action-btn {
   color: var(--text);
+  min-height: 26px;
+  padding: 2px 5px;
+  font-size: 0.78rem;
+}
+
+.post-ig-toolbar .action-icon {
+  width: 18px;
+  height: 18px;
 }
 
 .post-ig-toolbar .btn-like.active,
