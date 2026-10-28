@@ -7099,7 +7099,7 @@ blockquote.repost-cite {
 
 
 /* ==========================================================================
-   💥 DISPARO TÁTICO EXPLODE! (Método Janones)
+   💥 DISPARO TÁTICO EXPLODE! (Replicação Multi-Redes)
    ========================================================================== */
 
 .btn-explode {
@@ -7116,11 +7116,24 @@ blockquote.repost-cite {
   transform: scale(0.95);
 }
 
+.explode-sheet[hidden],
+.explode-sheet:not(.is-open) {
+  display: none !important;
+}
+
+.explode-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  cursor: pointer;
+}
+
 .explode-sheet .post-more-sheet-panel {
   max-width: 440px;
   background: var(--surface);
   border: 1px solid rgba(245, 158, 11, 0.35);
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45), 0 0 20px rgba(245, 158, 11, 0.12);
+  cursor: default;
 }
 
 .explode-header {

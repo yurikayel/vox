@@ -66,6 +66,9 @@ test("explode - buildExplodeSheetHtml renders launchpad with all 9 network actio
 
   assert.ok(html.includes("explode-panel"));
   assert.ok(html.includes("EXPLODE NAS REDES!"));
+  assert.ok(html.includes("REPLICAÇÃO MULTI-REDES"));
+  assert.ok(!html.includes("MÉTODO JANONES"));
+  assert.ok(!html.includes("Janones"));
   assert.ok(html.includes("btn-explode-burst"));
   assert.ok(html.includes('data-explode-action="burst"'));
   assert.ok(html.includes('data-explode-action="whatsapp"'));
@@ -121,10 +124,88 @@ test("explode - topic view includes btn-explode-topic", () => {
   assert.ok(main.innerHTML.includes("EXPLODE!"));
 });
 
-test("explode - posse post-publish sheet offers explode option", () => {
+test("explode - posse post-publish sheet offers explode option and omits Janones", () => {
   const posseSrc = fs.readFileSync(path.join(root, "js/posse-dispatch.js"), "utf8");
   assert.ok(posseSrc.includes('data-posse="explode"'));
-  assert.ok(posseSrc.includes("EXPLODE!"));
+  assert.ok(posseSrc.includes("EXPLODE! (Disparo Multi-Redes)"));
+  assert.ok(!posseSrc.includes("Janones"));
+});
+
+test("explode - UI copy, buttons and aria labels do not mention Janones", () => {
+  const feedHtml = feed.renderPostItem({
+    id: "post_feed_2",
+    title: "Post limpo",
+    author: "user_1",
+    ts: Date.now(),
+  });
+  assert.ok(!feedHtml.includes("Janones"));
+
+  const igHtml = igToolbar.renderIgToolbar({ id: "post_ig_2", title: "Foto" }, "Autor");
+  assert.ok(!igHtml.includes("Janones"));
+
+  const main = { innerHTML: "" };
+  topic.renderTopic(main, "topic_2", { id: "topic_2", title: "Tema" }, []);
+  assert.ok(!main.innerHTML.includes("Janones"));
+});
+
+test("explode - style.css defines backdrop dismissibility and hidden states", () => {
+  const css = fs.readFileSync(path.join(root, "css/style.css"), "utf8");
+  assert.ok(css.includes(".explode-sheet[hidden]"));
+  assert.ok(css.includes(".explode-sheet:not(.is-open)"));
+  assert.ok(css.includes("display: none !important;"));
+  assert.ok(css.includes(".explode-sheet {"));
+  assert.ok(css.includes("cursor: pointer;"));
+  assert.ok(!css.includes("Método Janones"));
+});
+
+test("explode - openExplodeSheet and closeExplodeSheet manage sheet lifecycle", () => {
+  const elements = new Map();
+  const makeEl = (tag = "div") => ({
+    tagName: tag.toUpperCase(),
+    attributes: {},
+    classList: {
+      _set: new Set(),
+      add(c) { this._set.add(c); },
+      remove(c) { this._set.delete(c); },
+      contains(c) { return this._set.has(c); },
+    },
+    hidden: false,
+    setAttribute(k, v) { this.attributes[k] = String(v); },
+    getAttribute(k) { return this.attributes[k] || null; },
+    addEventListener() {},
+    querySelector() { return { focus() {} }; },
+    appendChild() {},
+  });
+
+  const prevDoc = globalThis.document;
+  const body = makeEl("body");
+  globalThis.document = {
+    body,
+    getElementById(id) { return elements.get(id) || null; },
+    createElement(tag) {
+      const el = makeEl(tag);
+      return el;
+    },
+  };
+  body.appendChild = (el) => { if (el.id) elements.set(el.id, el); };
+
+  try {
+    explode.openExplodeSheet({
+      id: "post_test_sheet",
+      title: "Teste lifecycle",
+      body: "Corpo teste",
+    });
+    const sheet = globalThis.document.getElementById(explode.EXPLODE_SHEET_ID);
+    assert.ok(sheet);
+    assert.equal(sheet.hidden, false);
+    assert.ok(sheet.classList.contains("is-open"));
+
+    explode.closeExplodeSheet();
+    assert.equal(sheet.hidden, true);
+    assert.ok(!sheet.classList.contains("is-open"));
+  } finally {
+    globalThis.document = prevDoc;
+  }
 });
 
 test("explode - sw.js caches explode-dispatch.js", () => {
