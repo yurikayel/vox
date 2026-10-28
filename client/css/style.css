@@ -6092,18 +6092,37 @@ body.post-lightbox-open {
 
 /* IG-like photo chrome (ritmo, sem marca Instagram) */
 .post-ig-header.post-media-header {
-  position: static;
-  z-index: auto;
+  position: absolute;
+  top: auto;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 4;
   pointer-events: auto;
   display: flex;
   flex-wrap: nowrap;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   min-height: 0;
   margin: 0;
-  position: absolute; top: auto; bottom: 0; left: 0; right: 0; z-index: 4; gap: 5px; padding: 14px 8px 3px; background: linear-gradient(to top, rgba(6, 10, 18, 0.78) 0%, rgba(6, 10, 18, 0.35) 58%, rgba(6, 10, 18, 0) 100%) !important;
-  background: var(--bg);
+  padding: 14px 8px 3px;
+  background: linear-gradient(to top, rgba(6, 10, 18, 0.78) 0%, rgba(6, 10, 18, 0.35) 58%, rgba(6, 10, 18, 0) 100%);
   white-space: nowrap;
+}
+
+.post-ig-header .post-media-header-avatar {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+}
+
+.post-ig-header .post-media-header-avatar .avatar-img,
+.post-ig-header .post-media-header-avatar .avatar {
+  width: 26px;
+  height: 26px;
+  font-size: 0.66rem;
+  border-width: 1.5px;
+  border-color: rgba(255, 255, 255, 0.85);
 }
 
 .post-ig-header .post-media-header-username,
@@ -6111,8 +6130,8 @@ body.post-lightbox-open {
 .post-ig-header .post-media-header-time,
 .post-ig-header .btn-overlay-follow,
 .post-ig-header .btn-post-more-menu {
-  color: var(--text);
-  color: #fff; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.72);
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.72);
 }
 
 .post-ig-header .post-media-header-username {
@@ -6120,15 +6139,19 @@ body.post-lightbox-open {
   max-width: 34vw;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-size: 0.82rem;
+  font-size: 0.74rem;
+  line-height: 1.1;
 }
 
+.post-ig-header .post-media-header-dot,
 .post-ig-header .post-media-header-time,
 .post-ig-header-handle,
 .post-ig-header-uf {
   flex-shrink: 0;
-  font-size: 0.72rem;
-  color: var(--muted);
+  font-size: 0.65rem;
+  line-height: 1.1;
+  color: rgba(255, 255, 255, 0.84);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.65);
 }
 
 .post-ig-header-handle,
@@ -6141,13 +6164,26 @@ body.post-lightbox-open {
 .post-ig-header-end {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 5px;
   margin-left: auto;
   flex-shrink: 0;
 }
 
 .post-ig-header .btn-overlay-follow {
-  font-size: 0.78rem;
+  font-size: 0.7rem;
+  padding: 1px 4px;
+  line-height: 1.1;
+}
+
+.post-ig-header .btn-post-more-menu {
+  font-size: 0.88rem;
+  padding: 0 3px;
+  min-height: 20px;
+  line-height: 1;
+}
+
+.post-ig-header .btn-post-more-menu:focus-visible {
+  outline-color: var(--accent);
 }
 
 .post-photo-title {
@@ -6185,72 +6221,6 @@ body.post-lightbox-open {
 
 .post-media-header-subtitle {
   display: none;
-}
-
-.post-ig-header .post-media-header-avatar .avatar-img,
-.post-ig-header .post-media-header-avatar .avatar {
-  border-color: var(--outline);
-}
-
-.post-ig-header .post-media-header-time,
-.post-ig-header-handle,
-.post-ig-header-uf {
-  color: rgba(255, 255, 255, 0.84);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.65);
-}
-
-.post-ig-header .post-media-header-avatar .avatar-img,
-.post-ig-header .post-media-header-avatar .avatar {
-  border-color: rgba(255, 255, 255, 0.85);
-}
-
-.post-ig-header .post-media-header-avatar {
-  display: inline-flex;
-  align-items: center;
-  line-height: 1;
-}
-
-.post-ig-header .post-media-header-avatar .avatar-img,
-.post-ig-header .post-media-header-avatar .avatar {
-  width: 26px;
-  height: 26px;
-  font-size: 0.66rem;
-  border-width: 1.5px;
-  border-color: rgba(255, 255, 255, 0.85);
-}
-
-.post-ig-header .post-media-header-username {
-  font-size: 0.74rem;
-  line-height: 1.1;
-}
-
-.post-ig-header .post-media-header-dot,
-.post-ig-header .post-media-header-time,
-.post-ig-header-handle,
-.post-ig-header-uf {
-  font-size: 0.65rem;
-  line-height: 1.1;
-}
-
-.post-ig-header-end {
-  gap: 5px;
-}
-
-.post-ig-header .btn-overlay-follow {
-  font-size: 0.7rem;
-  padding: 1px 4px;
-  line-height: 1.1;
-}
-
-.post-ig-header .btn-post-more-menu {
-  font-size: 0.88rem;
-  padding: 0 3px;
-  min-height: 20px;
-  line-height: 1;
-}
-
-.post-ig-header .btn-post-more-menu:focus-visible {
-  outline-color: var(--accent);
 }
 
 .post-ig-toolbar {
