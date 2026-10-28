@@ -131,6 +131,20 @@ export function checkOAuthEnrichStep() {
       checkPactModal();
     }
   });
+
+  document.getElementById("btn-oauth-github")?.addEventListener("click", async () => {
+    const btn = document.getElementById("btn-oauth-github");
+    const res = await runOAuthEnrichSignIn(btn, () => oauthProfile.signInWithGithub(), {
+      fallbackError: "GitHub indisponível",
+    });
+    if (res.ok) {
+      oauthProfile.skipOAuthEnrichment();
+      render.closeOAuthEnrich(modalContainer);
+      share.showToast(`Perfil enriquecido com GitHub (@${res.profile?.handle || ""}).`);
+      void meshProfile.syncMeshProfileCard();
+      checkPactModal();
+    }
+  });
 }
 
 export function checkCantinaGate() {

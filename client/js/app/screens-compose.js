@@ -161,6 +161,16 @@ export async function showComposeTopic(communityId) {
         }
 
         share.showToast("Post publicado na rede!");
+        const { dispatchAutoReplication, isAutoReplicationEnabled } = await import("../linked-accounts.js");
+        if (isAutoReplicationEnabled()) {
+          dispatchAutoReplication({ id: topicId, communityId: finalComm, title, body })
+            .then((rep) => {
+              if (rep.dispatched && rep.count > 0) {
+                share.showToast(`🚀 Replicado para ${rep.count} webhook(s) de redes vinculadas!`);
+              }
+            })
+            .catch(() => {});
+        }
         const { openPosseSheetAfterPublish } = await import("../posse-dispatch.js");
         openPosseSheetAfterPublish({ id: topicId, communityId: finalComm, title, body });
         location.hash = `#/t/${encodeURIComponent(topicId)}?c=${encodeURIComponent(finalComm)}`;

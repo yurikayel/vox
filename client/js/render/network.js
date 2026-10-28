@@ -189,6 +189,14 @@ function renderNetworkForm(settings, notifPermission, customSignalingUrl, custom
   const rtcCount = rtcStatus?.remotePeersConnected || 0;
 
   return `
+    <div class="card" style="margin-bottom:1rem; padding:0.85rem 1rem; background:var(--surface-soft); border:1px solid var(--outline); border-radius:var(--radius-sm); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+      <div>
+        <strong style="font-size:0.92rem; display:block;">🔗 Redes Vinculadas & Auto-Replicação</strong>
+        <span class="meta" style="font-size:0.8rem;">Conecte Twitter/X, Bluesky, Threads, Instagram, Facebook e TikTok.</span>
+      </div>
+      <a href="#/settings/linked-accounts" class="btn btn-sm btn-primary">Gerenciar Redes</a>
+    </div>
+
     <div class="card">
       <h3>Preferências de Ajuda</h3>
       <form id="form-network-settings">

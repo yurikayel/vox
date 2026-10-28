@@ -110,3 +110,4 @@ export { renderVoxpedia } from "./render/voxpedia.js";
 export { renderAjudaTeste, VOX_GITHUB_ISSUES } from "./render/ajuda-teste.js";
 
 export { renderStatusPage } from "./render/status.js";
+export { renderLinkedAccountsPage, renderLinkedAccountsHtml } from "./render/linked-accounts-ui.js";

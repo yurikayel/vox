@@ -4,7 +4,7 @@
 
 // O Service Worker atua no cache offline do shell e notifica��es de status, sem abrir WebRTC.
 
-const CACHE_NAME = "vox-pwa-v7.08-bsky-graph-import-quote";
+const CACHE_NAME = "vox-pwa-v7.09-linked-accounts-cross-post";
 
 const SHELL_ASSETS = [
 
@@ -131,6 +131,8 @@ const SHELL_ASSETS = [
   "./js/posse-dispatch.js",
   "./js/explode-dispatch.js",
   "./js/bsky-feed.js",
+  "./js/linked-accounts.js",
+  "./js/render/linked-accounts-ui.js",
 
   "./js/render/markdown-body.js",
 
