@@ -108,7 +108,7 @@ test("social - post fixado por autor (pinned)", () => {
   assert.equal(social.getPinnedPostId("vx_demo_mg"), "");
 });
 
-test("social - reações em comentários toggle e contagem", () => {
+test("social - reaÃ§Ãµes em comentÃ¡rios toggle e contagem", () => {
   localStorage.clear();
 
   assert.equal(social.isCommentReacted("demo-reply-ba-ma-0"), false);
