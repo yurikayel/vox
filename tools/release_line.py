@@ -114,31 +114,36 @@ def patch_readme(meta: dict) -> bool:
     py_n = meta["test_python"]
     total = meta["test_total"]
     cache = meta["cache_name"]
+    sw_short = re.sub(r"^vox-pwa-", "", cache).replace("-", "--")
 
     replacements = [
         (
-            re.compile(r"(\| \*\*SHA\*\* \| `)[^`]+(` \|)"),
+            re.compile(r"(\| \*\*(?:Commit )?SHA\*\* \| `)[^`]+(` \|)"),
             rf"\g<1>{sha}\2",
         ),
         (
-            re.compile(r"\| \*\*Testes\*\* \|[^\n]+\n"),
-            f"| **Testes** | **{total}** (`{js_n}` JS + `{py_n}` Python) — `npm test` na raiz |\n",
+            re.compile(r"(\| \*\*Su.{1,3}te de Testes\*\* \| )\*\*\d+\*\* \(`\d+` JS \+ `\d+` Python\)( \|)"),
+            rf"\g<1>**{total}** (`{js_n}` JS + `{py_n}` Python)\2",
         ),
         (
-            re.compile(r"(\| \*\*Service worker\*\* \| `)[^`]+(` \|)"),
+            re.compile(r"(\| \*\*Service [Ww]orker\*\* \| `)[^`]+(` \|)"),
             rf"\g<1>{cache}\2",
         ),
         (
             re.compile(
-                r"(Executa a su.{0,3}te de \*\*)\d+ testes(\*\* \(`)\d+(` JS via `node:test` e `)\d+(` Python via `unittest`\)\.)"
+                r"(Executa \*\*)\d+ testes unit.{1,3}rios e de integra.{1,4}o(\*\* \()\d+( testes Node\.js nativos \+ )\d+( testes em Python stdlib\)\.)"
             ),
-            rf"\g<1>{total} testes\2{js_n}\3{py_n}\4",
+            rf"\g<1>{total} testes unitários e de integração\g<2>{js_n}\g<3>{py_n}\g<4>",
         ),
         (
             re.compile(
-                r"(su.{0,3}te completa de \*\*)\d+ testes(\*\* e auditoria)"
+                r"(badge/tests-)\d+(%20passing-success\.svg)"
             ),
-            rf"\g<1>{total} testes\2",
+            rf"\g<1>{total}\2",
+        ),
+        (
+            re.compile(r"(badge/SW-)[^-]+(?:--[^-]+)*(-informational\.svg)"),
+            rf"\g<1>{sw_short}\2",
         ),
     ]
     new_text = text

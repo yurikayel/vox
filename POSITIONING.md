@@ -17,7 +17,7 @@ Não confundir dono da terra, síndico da pensão e bem comum:
 
 1. **Big Tech = fazenda.** A terra é de outro. Você planta audiência; o dono leiloa atenção, muda a cerca e pode despejar a conta. Alcance vira aluguel.
 2. **Fediverso clássico = pensão / serviço.** Instância Mastodon/Lemmy tem operador: alguém paga VPS, modera e não falir. A soberania do coletivo cabe no humor (e no boleto) do síndico.
-3. **Vox = movimento / bem comum.** A praça é o cliente no aparelho mais o protocolo. **Inalienável** é a chave no bolso — não o slogan de rede indestrutível. Gateways e relays são leitura reserva e vizinhos voluntários; um URL fora do ar não equivale a confiscar cada celular, e o contrário também não é verdadeiro (aparelho, backup e índice ainda importam).
+3. **Vox = movimento / bem comum.** O espaço cívico é o cliente no aparelho mais o protocolo. **Inalienável** é a chave no bolso — não o slogan de rede indestrutível. Gateways e relays são leitura reserva e vizinhos voluntários; um URL fora do ar não equivale a confiscar cada celular, e o contrário também não é verdadeiro (aparelho, backup e índice ainda importam).
 
 Este recorte não altera os modelos A–D abaixo. Tese de militância (esquerda e direita pró-democráticas como **praça comum**, não partido): [docs/tese-praca-civica-militancia-pro-democratica-2026-10.md](./docs/tese-praca-civica-militancia-pro-democratica-2026-10.md).
 
@@ -27,7 +27,7 @@ Diante do debate recorrente sobre redes sociais brasileiras e soberania (ver [do
 
 - **Não somos o clone soberano (Modelo A):** Criar um “Twitter/Instagram nacional” em servidor central no Brasil não resolve a opacidade algorítmica nem a custódia das contas. Continua sendo um silo vulnerável com ponto único de falha.
 - **Não somos instância Mastodon (Modelo B):** Voluntário e movimento social não devem ser sobrecarregados pagando e operando VPS para a comunidade existir.
-- **Somos o Modelo C (Malha Local-first + PWA + POSSE):** Praça pública cronológica, chaves no aparelho, leitura de backup via gateways públicos e distribuição ativa para onde a massa já conversa (WhatsApp, Instagram, X), sem prender o original.
+- **Somos o Modelo C (Malha Local-first + PWA + POSSE):** Rede cívica cronológica, chaves no aparelho, leitura de backup via gateways públicos e distribuição ativa para onde a massa já conversa (WhatsApp, Instagram, X), sem prender o original.
 - **Modelo D (Participação governamental / Orçamento Participativo):** Integrações institucionais com dados públicos e consultas do Estado não entram no P0; pontes cívicas só serão avaliadas após a validação do piloto humano (V-P09).
 
 ## Vox vs Iniciativas Arquetípicas
@@ -80,7 +80,7 @@ Muitos brasileiros recorrem ao Instagram e Facebook para vender produtos caseiro
 | **Monetização da plataforma** | Cobrança por alcance (Ads), leilões e taxas | Zero taxas, zero anúncios pagos, visibilidade cronológica honesta |
 | **Transação** | Bloqueios de checkout corporativo | Pix direto para a chave do vendedor + conversa no DM |
 
-A feira comunitária do Vox valoriza a economia popular real sem mercantilizar a praça pública de debates.
+A feira comunitária do Vox valoriza a economia popular real sem mercantilizar o espaço comunitário de debates.
 
 ## Pix Zaps Nativos: Microapoio Direto vs Plataformas Extrativistas
 
