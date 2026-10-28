@@ -52,7 +52,7 @@ Informações sincronizadas com [docs/release-metadata.json](./docs/release-meta
 | Campo | Valor Atual | Descrição / Observação |
 |:---|:---:|:---|
 | **Branch** | `main` | Linha de produção contínua (Pages deploy automático) |
-| **Commit SHA** | `0089c7e` | HEAD verificado e auditado na esteira de integração |
+| **Commit SHA** | `70dac55` | HEAD verificado e auditado na esteira de integração |
 | **Suíte de Testes** | **452** (`429` JS + `23` Python) | Execução via `npm test` na raiz do repositório |
 | **Service Worker** | `vox-pwa-v7.07-bsky-predatory-ingest` | Atualização do cache offline do shell estático |
 | **Deploy** | [yurikayel.github.io/vox](https://yurikayel.github.io/vox/) | PWA público para testes e validação de campo |
