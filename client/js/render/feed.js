@@ -24,6 +24,10 @@ import {
   formatTimeAgo,
   postTimeParts,
 } from "./util.js";
+import { renderIgToolbar } from "./ig-toolbar.js";
+import { renderPhotoTagLayerHtml } from "./photo-tag-pins.js";
+import { renderRepostCiteHtml } from "./repost-cite.js";
+import { renderPhotoTitleHtml, renderPhotoHiddenMessageHtml } from "./photo-chrome.js";
 
 export function renderComposerStrip(displayName = "") {
   return renderInlineComposer({ displayName });
@@ -201,11 +205,11 @@ function renderInlineReplyComposer(topicId, commId) {
 }
 
 /** Comentários ficam **fora** de `.post-media-hero` — superfície normal do card, nunca overlay na foto. */
-export function renderPostComments(topicId, commId = "", { replies = [], expanded = false } = {}) {
+export function renderPostComments(topicId, commId = "", { replies = [], expanded = false, prefaceHtml = "" } = {}) {
   const panelId = commentsPanelId(topicId);
   const openCls = expanded ? " is-open" : "";
   const hid = expanded ? "" : " hidden";
-  return `<div class="post-comments post-comments-surface${openCls}" id="${escapeHtml(panelId)}"${hid} data-topic="${escapeHtml(topicId)}" data-comm="${escapeHtml(commId)}">${renderCommentList(replies, { topicId, commId })}${renderInlineReplyComposer(topicId, commId)}</div>`;
+  return `<div class="post-comments post-comments-surface${openCls}" id="${escapeHtml(panelId)}"${hid} data-topic="${escapeHtml(topicId)}" data-comm="${escapeHtml(commId)}">${prefaceHtml}${renderCommentList(replies, { topicId, commId })}${renderInlineReplyComposer(topicId, commId)}</div>`;
 }
 
 export function quarantineShareAttrs(postId) {
@@ -257,20 +261,6 @@ function renderPostHeaderBlock(t, author, labels, { photoOverlay = false } = {})
     </header>`;
 }
 
-export function renderPostOverlayTextHtml(post) {
-  const id = post?.id || "";
-  const href = id ? `#/t/${encodeURIComponent(id)}` : "#";
-  const disp = postOwnership.formatPostDisplay({ title: post?.title, body: post?.body });
-  if (disp.mode === "empty") return "";
-  if (disp.mode === "caption") {
-    const linked = hashtags.linkifyHashtags(escapeHtml(disp.text));
-    return `<p class="post-overlay-excerpt post-overlay-caption-only"><a href="${href}">${linked}</a></p>`;
-  }
-  const titleBlock = `<h3 class="post-overlay-title"><a href="${href}">${escapeHtml(disp.title)}</a></h3>`;
-  const bodyBlock = disp.body ? `<div class="post-overlay-excerpt post-body-md">${renderPostBodyMarkdown(disp.body)}</div>` : "";
-  return `${titleBlock}${bodyBlock}`;
-}
-
 function shouldShowPostFollowOverlay(t, author) {
   if (!author || t?.isOwnLocalPost) return false;
   if (isWelcomeRouteId(author)) return false;
@@ -290,101 +280,55 @@ function renderPostHeroVerifiedBadge(author) {
   return `<span class="post-media-header-verified" title="Conta verificada" aria-label="Conta verificada">✓</span>`;
 }
 
-function renderPostHeroSubtitle(author) {
-  const prof = mock.getMockProfile(author);
-  if (prof?.uf) {
-    return `<div class="post-media-header-subtitle">Demo · ${escapeHtml(prof.uf)}</div>`;
-  }
-  return "";
+function photoHeaderUf(author) {
+  const uf = mock.getMockProfile(author)?.uf;
+  return uf ? `<span class="post-ig-header-uf">${escapeHtml(uf)}</span>` : "";
 }
 
 function renderPostMoreMenuTrigger(t, author, authorDisplay) {
-  return `<button type="button" class="btn-post-more-menu" aria-label="Mais opções da publicação" data-post-id="${escapeHtml(t.id)}" data-author-route="${escapeHtml(author)}" data-title="${escapeHtml(t.title || authorDisplay || "")}"><span aria-hidden="true">⋯</span></button>`;
+  const hasImage = t.image || t.mediaRef?.hash ? "1" : "";
+  const isOwn = t.isOwnLocalPost ? "1" : "";
+  const pix = escapeHtml(t.contactPix || "");
+  return `<button type="button" class="btn-post-more-menu" aria-label="Mais opções da publicação" data-post-id="${escapeHtml(t.id)}" data-author-route="${escapeHtml(author)}" data-title="${escapeHtml(t.title || authorDisplay || "")}" data-has-image="${hasImage}" data-is-own="${isOwn}" data-pix="${pix}"><span aria-hidden="true">⋯</span></button>`;
 }
 
 function renderPostMediaHeader(t, author, labels) {
   const authorDisplay = labels.authorDisplay;
   const { display: timeDisplay, titleAttr: timeTitle } = postTimeParts(t.ts);
   const followBtn = shouldShowPostFollowOverlay(t, author) ? renderPostHeroFollowBtn(author) : "";
-  const subtitle = renderPostHeroSubtitle(author);
-  return `<div class="post-media-header">
-    <div class="post-media-header-left">
-      <a class="avatar-link post-media-header-avatar" href="#/u/${encodeURIComponent(author)}">${renderAvatarHtml(author, authorDisplay, "sm")}</a>
-      <div class="post-media-header-lines">
-        <div class="post-media-header-primary">
-          <a class="post-media-header-username" href="#/u/${encodeURIComponent(author)}">${escapeHtml(authorDisplay)}</a>
-          ${renderPostHeroVerifiedBadge(author)}
-          <span class="post-media-header-dot" aria-hidden="true">·</span>
-          <span class="post-media-header-time"${timeTitle}>${escapeHtml(timeDisplay)}</span>
-        </div>
-        ${subtitle}
-      </div>
-    </div>
-    <div class="post-media-header-right">
+  const handle = labels.authorHandle ? `<span class="post-ig-header-handle">@${escapeHtml(labels.authorHandle)}</span>` : "";
+  return `<div class="post-media-header post-ig-header">
+    <a class="avatar-link post-media-header-avatar" href="#/u/${encodeURIComponent(author)}">${renderAvatarHtml(author, authorDisplay, "sm")}</a>
+    <a class="post-media-header-username" href="#/u/${encodeURIComponent(author)}">${escapeHtml(authorDisplay)}</a>
+    ${renderPostHeroVerifiedBadge(author)}
+    ${handle}
+    <span class="post-media-header-dot" aria-hidden="true">·</span>
+    <span class="post-media-header-time"${timeTitle}>${escapeHtml(timeDisplay)}</span>
+    ${photoHeaderUf(author)}
+    <div class="post-ig-header-end">
       ${followBtn}
       ${renderPostMoreMenuTrigger(t, author, authorDisplay)}
     </div>
   </div>`;
 }
 
-function renderPostActionsOverlay(t, author, authorDisplay, authorHandle) {
-  const baseLikes = Number(t.likesCount) || 0;
-  const liked = social.isLiked(t.id);
-  const likes = social.getLikesCount(t.id, baseLikes);
-  const baseStars = Number(t.starsCount) || 0;
-  const starred = social.isStarred(t.id);
-  const stars = social.getStarsCount(t.id, baseStars);
-  const saved = social.isSaved(t.id);
-  const likeCountHtml = likes > 0 ? `<span class="overlay-action-count count-likes">${likes}</span>` : "";
-  return `<div class="post-actions-overlay" role="toolbar" aria-label="Ações da publicação">
-    <button class="action-btn btn-like overlay-action-btn ${liked ? "active" : ""}" data-id="${escapeHtml(t.id)}" data-count="${baseLikes}" aria-label="Gostei${likes > 0 ? `, ${likes}` : ""}">
-      <svg class="action-icon icon-heart" width="22" height="22" viewBox="0 0 24 24" fill="${liked ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
-      ${likeCountHtml}
-    </button>
-    ${renderCommentButton(t, { overlay: true })}
-    <button class="action-btn btn-share btn-share-post overlay-action-btn" data-id="${escapeHtml(t.id)}" data-title="${escapeHtml(t.title)}" data-author="${escapeHtml(authorDisplay || "")}" data-body="${escapeHtml((t.body || "").slice(0, 160))}" aria-label="Compartilhar"${quarantineShareAttrs(t.id)}>
-      <svg class="action-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
-    </button>
-    ${renderToolbarUtilityMenu(t, author, authorDisplay, authorHandle, baseStars, starred, stars, saved, { overlay: true })}
-  </div>`;
-}
-
-function renderPostMediaHero(t, author, labels) {
-  const overlayText = renderPostOverlayTextHtml(t);
-  const authorDisplay = labels.authorDisplay;
-  const authorHandle = labels.authorHandle;
-  const mediaHeader = renderPostMediaHeader(t, author, labels);
-  const scrimTop = `<div class="post-media-scrim-top" aria-hidden="true"></div>`;
-  const scrimBottom = `<div class="post-media-scrim-bottom" aria-hidden="true"></div>`;
-  const actionsOverlay = renderPostActionsOverlay(t, author, authorDisplay, authorHandle);
-  const captionBlock = overlayText
-    ? `<div class="post-overlay-content">${overlayText}</div>`
-    : "";
-  const overlayBlock = `<div class="post-overlay">${captionBlock}</div>`;
-
+function renderPostMediaHero(t) {
+  const layer = renderPhotoTagLayerHtml(t, { isOwn: Boolean(t.isOwnLocalPost) });
   if (t?.image) {
     const altRaw = t.imageAlt || t.title || "";
     const alt = escapeHtml(altRaw);
     const src = escapeHtml(t.image);
     return `<div class="post-media-container post-media-hero">
-      ${mediaHeader}
       <button type="button" class="post-media-lightbox-trigger" aria-label="Ver imagem em tela cheia" data-media-src="${src}" data-media-alt="${alt}">
         <img class="post-media post-media-hero-img" src="${src}" alt="${alt}" loading="lazy" />
       </button>
-      ${scrimTop}
-      ${scrimBottom}
-      ${overlayBlock}
-      ${actionsOverlay}
+      ${layer}
     </div>`;
   }
   if (t?.mediaRef?.hash) {
     return `<div class="post-media-container post-media-hero post-media-lazy" data-media-hash="${escapeHtml(t.mediaRef.hash)}">
-      ${mediaHeader}
       <div class="media-placeholder" style="aspect-ratio:4/5; display:flex; align-items:center; justify-content:center; background:var(--surface-soft); color:var(--muted); font-size:0.85rem;"><span>📷 Mídia P2P (${escapeHtml(t.mediaRef.mime || "imagem")})</span></div>
-      ${scrimTop}
-      ${scrimBottom}
-      ${overlayBlock}
-      ${actionsOverlay}
+      ${layer}
     </div>`;
   }
   return "";
@@ -599,12 +543,16 @@ export function renderPostItem(t, { isPinned = false } = {}) {
   const layout = getPostFeedLayout(t);
   const isPhoto = layout === "photo";
   const header = renderPostHeaderBlock(t, author, labels, { photoOverlay: isPhoto });
-  const media = isPhoto ? renderPostMediaHero(t, author, labels) : "";
+  const media = isPhoto ? renderPostMediaHero(t) : "";
   const frame = renderPostFrame(t);
+  const igHead = isPhoto ? renderPostMediaHeader(t, author, labels) : "";
+  const igBar = isPhoto ? renderIgToolbar(t, authorDisplay) : "";
+  const igTitle = isPhoto ? renderPhotoTitleHtml(t) : "";
   const toolbar = isPhoto ? "" : renderPostToolbar(t, author, authorDisplay, authorHandle);
-  const caption = isPhoto ? "" : `<div class="post-caption-block">${renderPostText(t)}</div>`;
+  const caption = isPhoto ? "" : `<div class="post-caption-block">${renderPostText(t)}${renderRepostCiteHtml(t)}</div>`;
   const gist = layout === "github" ? renderPostGithubGist(t) : "";
-  const comments = renderPostComments(t.id, t.communityId);
+  const preface = isPhoto ? renderPhotoHiddenMessageHtml(t) : "";
+  const comments = renderPostComments(t.id, t.communityId, { prefaceHtml: preface });
 
   if (layout === "text" || layout === "github") {
     return `
@@ -621,9 +569,11 @@ export function renderPostItem(t, { isPinned = false } = {}) {
   return `
     <article class="post insta-post post-layout-photo post-photo-bleed" data-id="${escapeHtml(t.id)}" data-layout="photo">
       ${header}
+      ${igHead}
       ${media}
+      ${igBar}
+      ${igTitle}
       ${frame}
-      ${toolbar}
       ${comments}
     </article>`;
 }

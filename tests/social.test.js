@@ -67,6 +67,8 @@ test("social - salvos/bookmarks toggle", () => {
   assert.equal(social.isSaved("post_abc"), false);
 
   assert.equal(social.toggleSave(""), false);
+  social.toggleSave("post_abc");
+  assert.deepEqual(social.getSavedPostIds(), ["post_abc"]);
 });
 
 test("social - watch perfis e lista de acompanhados", () => {

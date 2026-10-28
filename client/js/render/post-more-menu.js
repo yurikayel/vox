@@ -3,6 +3,13 @@
 import * as share from "../share.js";
 import { openQrUrlSheet } from "../qr-url.js";
 import * as mod from "../moderation.js";
+import {
+  refreshSheetExtras,
+  toggleSaveFromMenu,
+  republicarFromMenu,
+  apoiarFromMenu,
+  marcarFromMenu,
+} from "./post-more-actions.js";
 
 const SHEET_ID = "post-more-sheet";
 
@@ -23,6 +30,10 @@ function ensurePostMoreSheet() {
       <button type="button" class="post-more-sheet-item" data-action="not-interested">Não tenho interesse</button>
       <button type="button" class="post-more-sheet-item" data-action="about-account">Sobre esta conta</button>
       <button type="button" class="post-more-sheet-item" data-action="goto-post">Ir para a publicação</button>
+      <button type="button" class="post-more-sheet-item" data-action="repost">Republicar na praça</button>
+      <button type="button" class="post-more-sheet-item" data-action="save">Salvar</button>
+      <button type="button" class="post-more-sheet-item" data-action="zap" hidden>Apoiar</button>
+      <button type="button" class="post-more-sheet-item" data-action="tag" hidden>Marcar pessoas</button>
       <button type="button" class="post-more-sheet-item" data-action="share">Compartilhar…</button>
       <button type="button" class="post-more-sheet-item" data-action="copy-link">Copiar link</button>
       <button type="button" class="post-more-sheet-item" data-action="qr">QR deste link</button>
@@ -76,6 +87,7 @@ export function openPostMoreMenu(ctx, openerEl) {
   const sheet = ensurePostMoreSheet();
   activeContext = { ...ctx };
   lastOpener = openerEl instanceof HTMLElement ? openerEl : null;
+  refreshSheetExtras(sheet, activeContext);
   setSheetOpen(sheet, true);
   sheet.querySelector(".post-more-sheet-item")?.focus();
 }
@@ -88,10 +100,31 @@ async function shareSheetPost(ctx) {
   await share.shareTopic({ title: ctx.title || "Post no Vox", topicId: ctx.postId });
 }
 
+async function onSocialSheetAction(action, ctx) {
+  if (action === "save") {
+    toggleSaveFromMenu(ctx.postId);
+    return true;
+  }
+  if (action === "repost") {
+    await republicarFromMenu(ctx);
+    return true;
+  }
+  if (action === "zap") {
+    apoiarFromMenu(ctx);
+    return true;
+  }
+  if (action === "tag") {
+    marcarFromMenu(ctx);
+    return true;
+  }
+  return false;
+}
+
 async function onSheetAction(action) {
   const ctx = activeContext;
   closePostMoreMenu();
   if (!ctx) return;
+  if (await onSocialSheetAction(action, ctx)) return;
 
   if (action === "report") {
     share.showToast("Denúncia registrada localmente — em breve na malha.");
@@ -150,6 +183,9 @@ export function attachPostMoreMenuHandlers() {
             postId: openBtn.dataset.postId || "",
             authorRoute: openBtn.dataset.authorRoute || "",
             title: openBtn.dataset.title || "",
+            isOwn: openBtn.dataset.isOwn === "1",
+            hasImage: openBtn.dataset.hasImage === "1",
+            pix: openBtn.dataset.pix || "",
           },
           openBtn,
         );
