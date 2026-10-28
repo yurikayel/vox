@@ -14,6 +14,8 @@ import {
   postTimeParts,
 } from "./util.js";
 import { renderPostOwnerMenu, renderQuarantineAction, quarantineShareAttrs } from "./feed.js";
+import { renderPhotoTagLayerHtml } from "./photo-tag-pins.js";
+import { renderRepostCiteHtml } from "./repost-cite.js";
 import * as mod from "../moderation.js";
 import { renderPostBodyMarkdown } from "./markdown-body.js";
 
@@ -56,7 +58,7 @@ export function renderTopic(main, topicId, topic, replies, { topicData = null, i
   const topicImage = topic?.image || topicData?.image || "";
   const topicImageAlt = topic?.imageAlt || topicData?.imageAlt || topic?.title || "Foto da publicação";
   const imageHtml = topicImage
-    ? `<div class="post-media-container"><img class="post-media" src="${escapeHtml(topicImage)}" alt="${escapeHtml(topicImageAlt)}" /></div>`
+    ? `<div class="post-media-container post-media-hero"><img class="post-media post-media-hero-img" src="${escapeHtml(topicImage)}" alt="${escapeHtml(topicImageAlt)}" />${renderPhotoTagLayerHtml(topic || topicData || {}, { isOwn: Boolean(topic?.isOwnLocalPost) })}</div>`
     : "";
 
   const baseLikes = Number(topic?.likesCount) || 0;
@@ -88,6 +90,7 @@ export function renderTopic(main, topicId, topic, replies, { topicData = null, i
         </div>
       </div>
       ${imageHtml}
+      ${renderRepostCiteHtml(topic || {})}
       ${renderTopicDetailText(topicId, topic?.title || "", bodyText)}
       <div class="post-actions insta-actions post-toolbar" style="margin-top:12px; padding-top:8px;">
         <button class="action-btn btn-like ${liked ? "active" : ""}" data-id="${escapeHtml(topicId)}" data-count="${baseLikes}" aria-label="Curtir post">

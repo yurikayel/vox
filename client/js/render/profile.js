@@ -12,6 +12,7 @@ import {
 import { renderPostItem } from "./feed.js";
 import { isWelcomeRouteId } from "../vox-welcome-profile.js";
 import { LOCAL_WIPE_NOTICE } from "../local-account.js";
+import { renderProfileNoteBubbleHtml } from "./profile-note-bubble.js";
 
 function renderProfileGithubBadge(githubHandle) {
   if (!githubHandle) return "";
@@ -53,6 +54,22 @@ function renderProfileReadme(address, displayName, readme, isCurrentWallet) {
 }
 
 const PROFILE_GRID_TAB_ICON = `<svg class="profile-grid-tab-icon" aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>`;
+const PROFILE_SAVED_TAB_ICON = `<svg class="profile-grid-tab-icon" aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>`;
+
+function renderProfileGridTabs(address, currentTab, showAbout, showSaved) {
+  const href = (tab) => `#/u/${encodeURIComponent(address)}?tab=${tab}`;
+  const saved = showSaved
+    ? `<a href="${href("saved")}" class="profile-grid-tab ${currentTab === "saved" ? "active" : ""}" aria-label="Salvos">${PROFILE_SAVED_TAB_ICON}</a>`
+    : "";
+  const about = showAbout
+    ? `<a href="${href("about")}" class="profile-grid-tab profile-grid-tab-text ${currentTab === "about" ? "active" : ""}">Sobre</a>`
+    : "";
+  return `<nav class="profile-grid-tabs" aria-label="Seções do perfil">
+      <a href="${href("posts")}" class="profile-grid-tab ${currentTab === "posts" ? "active" : ""}" aria-label="Publicações">${PROFILE_GRID_TAB_ICON}</a>
+      ${saved}
+      ${about}
+    </nav>`;
+}
 
 function renderProfileGridStats(postsCount, statsData, address, isCurrentWallet) {
   const baseFollowers = statsData?.followers || 0;
@@ -129,7 +146,7 @@ function renderProfilePixBadge(pixKeyMasked, pixKeyRaw) {
     </div>`;
 }
 
-function renderProfileGridAvatar(address, displayName, handle) {
+function renderProfileGridAvatarInner(address, displayName, handle) {
   const initial = (displayName || handle || address || "U").slice(0, 1).toUpperCase();
   const avatarUrl = profileDirectory.getAuthorAvatarSync(address) || mock.getAuthorAvatar(address);
   const squircle = isWelcomeRouteId(address) ? " avatar-squircle" : "";
@@ -140,6 +157,12 @@ function renderProfileGridAvatar(address, displayName, handle) {
     </div>`;
   }
   return `<div class="profile-grid-avatar-wrap"><span class="avatar profile-grid-avatar-fallback${squircle}">${initial}</span></div>`;
+}
+
+function renderProfileGridAvatar(address, displayName, handle, isOwn) {
+  const inner = renderProfileGridAvatarInner(address, displayName, handle);
+  const bubble = renderProfileNoteBubbleHtml(address, { isOwn });
+  return `<div class="profile-grid-avatar-stage">${inner}${bubble}</div>`;
 }
 
 function renderProfileGridActionRow(address, isCurrentWallet, isBlocked, isMuted, pixKeyRaw = "", displayName = "") {
@@ -223,7 +246,7 @@ function renderProfileGridHeader(
   return `
     <header class="profile-grid-header">
       <div class="profile-grid-top">
-        ${renderProfileGridAvatar(address, displayName, handle)}
+        ${renderProfileGridAvatar(address, displayName, handle, isCurrentWallet)}
         ${renderProfileGridStats(postsCount, statsData, address, isCurrentWallet)}
       </div>
       <div class="profile-grid-identity">
@@ -429,6 +452,7 @@ export function renderProfile(main, address, memberships = [], isCurrentWallet =
   stats = null,
   posts = [],
   starredPosts = [],
+  savedPosts = [],
   hasWallet = false,
   balance = "0.000",
   pixKey = "",
@@ -456,6 +480,7 @@ export function renderProfile(main, address, memberships = [], isCurrentWallet =
   }
 
   const starredList = starredPosts || [];
+  const savedList = savedPosts || [];
   const postsCount = authorPostList.length || stats?.posts || 0;
   const mockProf = mock.getMockProfile(address);
   const hasStereotypeAbout = Boolean(mockProf?.isStereotypeDemo || mockProf?.stereotypeTitle);
@@ -464,6 +489,7 @@ export function renderProfile(main, address, memberships = [], isCurrentWallet =
 
   let currentTab = activeTab || "posts";
   if (currentTab === "starred" || currentTab === "communities") currentTab = "about";
+  if (currentTab === "saved" && !isCurrentWallet) currentTab = "posts";
 
   let html = `<div class="profile-grid-layout">`;
   html += renderProfileGridHeader(
@@ -483,14 +509,14 @@ export function renderProfile(main, address, memberships = [], isCurrentWallet =
     isMuted,
   );
 
-  html += `
-    <nav class="profile-grid-tabs" aria-label="Seções do perfil">
-      <a href="#/u/${encodeURIComponent(address)}?tab=posts" class="profile-grid-tab ${currentTab === "posts" ? "active" : ""}" aria-label="Publicações">${PROFILE_GRID_TAB_ICON}</a>
-      ${showAboutTab ? `<a href="#/u/${encodeURIComponent(address)}?tab=about" class="profile-grid-tab profile-grid-tab-text ${currentTab === "about" ? "active" : ""}">Sobre</a>` : ""}
-    </nav>`;
+  html += renderProfileGridTabs(address, currentTab, showAboutTab, isCurrentWallet);
 
   if (currentTab === "posts") {
     html += renderProfilePostGrid(authorPostList, finalPinned);
+  } else if (currentTab === "saved") {
+    html += savedList.length
+      ? renderProfilePostGrid(savedList)
+      : `<div class="profile-grid-empty empty"><p>Nenhum post salvo neste aparelho.</p></div>`;
   } else {
     html += `<div class="profile-grid-about">`;
     html += renderOfficialPlatformAboutBlurb(address);
