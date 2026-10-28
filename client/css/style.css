@@ -7404,3 +7404,70 @@ blockquote.repost-cite {
 .btn-remove-bsky-sub:hover {
   color: var(--accent, #f59e0b);
 }
+
+.bsky-import-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 10px 0;
+  padding: 8px 10px;
+  background: var(--bg);
+  border: 1px dashed var(--outline);
+  border-radius: var(--radius-sm, 8px);
+}
+
+.bsky-import-follows-row {
+  display: flex;
+  gap: 8px;
+}
+
+.bsky-suggestions-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 0.72rem;
+}
+
+.bsky-sugg-label {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.btn-add-suggestion {
+  background: var(--surface-2);
+  border: 1px solid var(--outline);
+  border-radius: 999px;
+  padding: 2px 7px;
+  font-size: 0.7rem;
+  color: var(--accent);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-add-suggestion:hover {
+  background: var(--accent);
+  color: #000;
+  border-color: var(--accent);
+}
+
+.action-btn.btn-quote-external {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  border-radius: 999px;
+  border: 1px solid var(--outline);
+  background: var(--surface-2);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.action-btn.btn-quote-external:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}

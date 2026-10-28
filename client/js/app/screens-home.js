@@ -41,6 +41,42 @@ import { attachPostMoreMenuHandlers } from "../render/post-more-menu.js";
 import { ensureOnboardingSideEffects } from "./onboarding-side-effects.js";
 
 let postOverlayMenuHandlersBound = false;
+let quoteExternalBound = false;
+
+export function attachQuoteExternalHandlers() {
+  if (quoteExternalBound) return;
+  quoteExternalBound = true;
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest?.(".btn-quote-external");
+    if (!btn) return;
+    const handle = btn.dataset.handle || btn.dataset.author || "@bluesky";
+    const body = btn.dataset.body || "";
+    const url = btn.dataset.url || "";
+    const quoteText = `> 🌐 **Citação Soberana de ${handle}** ([Ver original](${url})):\n> "${body}"\n\n`;
+
+    const textarea = document.getElementById("inline-topic-body");
+    const collapsed = document.querySelector("#feed-inline-composer .inline-composer-collapsed");
+    const form = document.getElementById("form-inline-topic");
+
+    if (textarea && form) {
+      if (form.classList.contains("hidden") && collapsed) {
+        collapsed.click();
+      }
+      textarea.value = quoteText + (textarea.value || "");
+      textarea.focus();
+      textarea.selectionStart = textarea.value.length;
+      textarea.selectionEnd = textarea.value.length;
+      textarea.dispatchEvent(new Event("input", { bubbles: true }));
+      document.getElementById("feed-inline-composer")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      share.showToast("Citação inserida! Escreva sua análise cívica. ✍️");
+    } else {
+      try {
+        sessionStorage.setItem("vox_quote_prefill", quoteText);
+        window.location.hash = "#/compose/topic";
+      } catch {}
+    }
+  });
+}
 
 /** Fecha popovers ⋯ utilitários (Apoiar/Salvar/…) ao clicar fora — só no hero foto. */
 export function attachPostOverlayActionMenuHandlers() {
@@ -157,6 +193,7 @@ export async function showHome(feed = "for-you") {
   attachInlineComposerHandlers(() => showHome(activeFeed));
   attachWelcomeFeedHintHandlers();
   attachBskyManagerHandlers(() => showHome(activeFeed));
+  attachQuoteExternalHandlers();
   if (onboarding.dmJustSeeded && activeFeed === "for-you") {
     share.showToast("Vox te mandou uma mensagem — veja em Mensagens 💬");
   }
@@ -177,6 +214,45 @@ export function attachBskyManagerHandlers(onRefresh) {
       if (onRefresh) onRefresh();
     });
   }
+
+  const importBtn = document.getElementById("btn-import-bsky-follows");
+  if (importBtn && !importBtn.dataset.wired) {
+    importBtn.dataset.wired = "1";
+    importBtn.addEventListener("click", async () => {
+      const input = document.getElementById("input-bsky-import-me");
+      const val = input?.value?.trim();
+      if (!val) {
+        share.showToast("Digite seu @handle do Bluesky para importar.");
+        return;
+      }
+      importBtn.disabled = true;
+      importBtn.textContent = "Importando...";
+      share.showToast(`Buscando quem @${val.replace(/^@/, "")} segue no Bluesky...`);
+      try {
+        const res = await bskyFeed.importBskyFollows(val, 50);
+        share.showToast(`🎉 ${res.added} novos perfis importados com sucesso!`);
+        if (input) input.value = "";
+        if (onRefresh) onRefresh();
+      } catch {
+        share.showToast("Falha ao importar perfis do Bluesky.");
+      } finally {
+        importBtn.disabled = false;
+        importBtn.textContent = "📥 Puxar quem eu sigo";
+      }
+    });
+  }
+
+  document.querySelectorAll(".btn-add-suggestion").forEach((btn) => {
+    if (btn.dataset.wired) return;
+    btn.dataset.wired = "1";
+    btn.addEventListener("click", () => {
+      const handle = btn.dataset.handle;
+      if (!handle) return;
+      bskyFeed.addBskySubscription(handle);
+      share.showToast(`Perfil @${handle} adicionado! 🌐`);
+      if (onRefresh) onRefresh();
+    });
+  });
 
   document.querySelectorAll(".btn-remove-bsky-sub").forEach((btn) => {
     if (btn.dataset.wired) return;
