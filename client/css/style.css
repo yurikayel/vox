@@ -7208,6 +7208,7 @@ blockquote.repost-cite {
 }
 
 .explode-grid-btn {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -7222,6 +7223,24 @@ blockquote.repost-cite {
   font-weight: 600;
   cursor: pointer;
   transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.explode-grid-connected {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  font-size: 0.58rem;
+  font-weight: 800;
+  line-height: 1;
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.16);
+  border: 1px solid rgba(16, 185, 129, 0.45);
+  border-radius: 999px;
+  width: 14px;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .explode-grid-btn:hover {
