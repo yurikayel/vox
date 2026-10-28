@@ -114,6 +114,17 @@ export async function showComposeTopic(communityId) {
   render.renderComposeTopic(main, communityId);
   bindChatTranscriptImportHandler();
 
+  try {
+    const quotePrefill = sessionStorage.getItem("vox_quote_prefill");
+    if (quotePrefill) {
+      sessionStorage.removeItem("vox_quote_prefill");
+      const bodyEl = document.getElementById("topic-body");
+      if (bodyEl) bodyEl.value = quotePrefill;
+      const titleEl = document.getElementById("topic-title");
+      if (titleEl && !titleEl.value) titleEl.value = "Debate Cívico Soberano";
+    }
+  } catch {}
+
   const form = document.getElementById("form-compose-topic");
   if (form) {
     form.addEventListener("submit", async (e) => {

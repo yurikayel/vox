@@ -553,6 +553,11 @@ function renderPostToolbar(t, author, authorDisplay, authorHandle) {
             <button class="action-btn btn-explode btn-explode-post" data-id="${escapeHtml(t.id)}" data-title="${escapeHtml(t.title)}" data-author="${escapeHtml(authorDisplay || "")}" data-body="${escapeHtml((t.body || t.title || "").slice(0, 200))}" data-comm="${escapeHtml(t.communityId || "")}" aria-label="Explodir nas redes (Método Janones)" title="EXPLODE! Disparo tático">
               <svg class="action-icon icon-explode" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m13 2-2 7.5h5.5L11 22l2-8.5H7.5L13 2z"/></svg>
             </button>
+            ${t.isExternal ? `
+            <button class="action-btn btn-quote-external" data-id="${escapeHtml(t.id)}" data-title="${escapeHtml(t.title)}" data-author="${escapeHtml(authorDisplay || "")}" data-handle="${escapeHtml(t.authorHandle || "")}" data-body="${escapeHtml((t.body || t.title || "").slice(0, 280))}" data-url="${escapeHtml(t.externalUrl || "")}" aria-label="Citar e debater no Vox" title="💬 Citar e debater no Vox">
+              <svg class="action-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              <span class="action-count">Citar</span>
+            </button>` : ""}
           </div>
           <div class="toolbar-secondary">
             ${renderToolbarOverflow(t, author, authorDisplay, authorHandle, baseStars, starred, stars)}
@@ -686,6 +691,20 @@ export function renderExternalFeedManagerHtml(subscriptions = []) {
           <button type="submit" class="btn btn-primary btn-sm btn-submit-bsky">+ Acompanhar no Vox</button>
         </div>
       </form>
+      <div class="bsky-import-section">
+        <div class="bsky-import-follows-row">
+          <input type="text" id="input-bsky-import-me" class="bsky-input" placeholder="Seu @handle para importar quem você segue..." aria-label="Seu perfil do Bluesky" />
+          <button type="button" id="btn-import-bsky-follows" class="btn btn-outline btn-sm">📥 Puxar quem eu sigo</button>
+        </div>
+        <div class="bsky-suggestions-row">
+          <span class="bsky-sugg-label">Sugestões cívicas:</span>
+          <button type="button" class="btn-add-suggestion" data-handle="lula.com.br">+ @lula.com.br</button>
+          <button type="button" class="btn-add-suggestion" data-handle="brasildefato.com.br">+ @brasildefato.com.br</button>
+          <button type="button" class="btn-add-suggestion" data-handle="theintercept.com">+ @theintercept.com</button>
+          <button type="button" class="btn-add-suggestion" data-handle="apublica.org">+ @apublica.org</button>
+          <button type="button" class="btn-add-suggestion" data-handle="cartacapital.com.br">+ @cartacapital.com.br</button>
+        </div>
+      </div>
       <div class="bsky-subs-list">
         <span class="bsky-subs-label">Perfis integrados:</span>
         <div class="bsky-subs-chips">${chips || '<span class="meta">Nenhum perfil cadastrado.</span>'}</div>
