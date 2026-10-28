@@ -7,8 +7,8 @@ import * as welcome from "../client/js/vox-welcome-profile.js";
 test("vox-welcome-profile - route id and copy", () => {
   assert.equal(welcome.WELCOME_ROUTE_ID, "vx_voxbrasil_welcome");
   const p = welcome.getWelcomeProfile();
-  assert.equal(p.name, "Vox Brasil");
-  assert.equal(p.handle, "voxbrasil");
+  assert.equal(p.name, "Vox");
+  assert.equal(p.handle, "vox");
   assert.equal(p.avatar, welcome.OFFICIAL_PROFILE_AVATAR);
   assert.ok(p.avatar.includes("profile-vox-official-512.png"));
   assert.ok(p.isOfficialPlatform);
