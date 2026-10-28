@@ -27,6 +27,8 @@ import {
 import { renderIgToolbar } from "./ig-toolbar.js";
 import { renderPhotoTagLayerHtml } from "./photo-tag-pins.js";
 import { renderRepostCiteHtml } from "./repost-cite.js";
+import { renderRepostBtn } from "./repost-btn.js";
+import { rememberVisible } from "../repost-index.js";
 import { renderPhotoTitleHtml, renderPhotoHiddenMessageHtml } from "./photo-chrome.js";
 
 export function renderComposerStrip(displayName = "") {
@@ -488,6 +490,7 @@ function renderToolbarOverflow(t, author, authorDisplay, authorHandle, baseStars
   return `<details class="toolbar-overflow">
     <summary class="action-btn btn-toolbar-more" aria-label="Mais ações do post"><span aria-hidden="true">⋯</span></summary>
     <div class="toolbar-overflow-menu" role="menu">
+      ${renderZapToolbarBtn(t, author, authorDisplay)}
       <button type="button" class="action-btn btn-star ${starred ? "active" : ""}" data-id="${escapeHtml(t.id)}" data-count="${baseStars}" role="menuitem" aria-label="Dar estrela ao post">
         <svg class="action-icon icon-star" width="18" height="18" viewBox="0 0 24 24" fill="${starred ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
         <span class="action-count count-stars">${stars > 0 ? stars : ""}</span>
@@ -518,10 +521,10 @@ function renderPostToolbar(t, author, authorDisplay, authorHandle) {
               <span class="action-count count-likes">${likes > 0 ? likes : ""}</span>
             </button>
             ${renderCommentButton(t)}
+            ${renderRepostBtn(t, { size: 20 })}
             <button class="action-btn btn-share btn-share-post" data-id="${escapeHtml(t.id)}" data-title="${escapeHtml(t.title)}" data-author="${escapeHtml(authorDisplay || "")}" data-body="${escapeHtml((t.body || "").slice(0, 160))}" aria-label="Compartilhar post"${quarantineShareAttrs(t.id)}>
               <svg class="action-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
             </button>
-            ${renderZapToolbarBtn(t, author, authorDisplay)}
           </div>
           <div class="toolbar-secondary">
             ${renderToolbarOverflow(t, author, authorDisplay, authorHandle, baseStars, starred, stars)}
@@ -649,6 +652,7 @@ export function renderFeed(main, topics = [], { activeFeed = "for-you", userRout
   }
 
   const visible = gossipRetract.filterFeedTopicsForGossipRetract(topics);
+  rememberVisible(visible, userRouteId);
   const items = visible.map((t) => renderPostItem(t)).join("");
   html += `<div class="feed-container">${items}</div>`;
   main.innerHTML += html;
