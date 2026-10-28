@@ -11,7 +11,7 @@
 
 ## DM boas-vindas
 
-Mensagem local única (sem E2E do sistema), seed `welcome-dm-vox-brasil-v3` em [`vox-welcome-profile.js`](../../client/js/vox-welcome-profile.js). Copy idiocracy-friendly PT com emoji; menciona Pessoas e Voxpedia.
+Mensagem local única (sem E2E do sistema), seed `welcome-dm-vox-brasil-v3` em [`vox-welcome-profile.js`](../client/js/vox-welcome-profile.js). Copy idiocracy-friendly PT com emoji; menciona Pessoas e Voxpedia.
 
 ## UI
 
