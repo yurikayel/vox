@@ -87,4 +87,6 @@ test("photo chrome - header/media and title/body sit tight", () => {
   assert.ok(!comments.includes("padding: 10px 0 0"), "expander must not reserve overlay caption pad");
   assert.match(media, /align-items:\s*stretch/);
   assert.match(media, /justify-content:\s*flex-start/);
+  assert.match(css, /\.post-layout-photo\.post-photo-bleed \.post-comments-feed\s*\{[^}]*28px/);
+  assert.match(message, /margin:\s*0 0 16px 0/);
 });
