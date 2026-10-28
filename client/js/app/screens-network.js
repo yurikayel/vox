@@ -16,6 +16,7 @@ import * as posseDispatch from "../posse-dispatch.js";
 import * as meshProfile from "../mesh-profile.js";
 import * as contributionAttestation from "../contribution-attestation.js";
 import * as linkedAccounts from "../linked-accounts.js";
+import { escapeHtml } from "../render/util.js";
 import { openOAuthEnrichModal } from "./onboarding.js";
 import { getActiveUser, makeShellProps } from "./context.js";
 
@@ -343,6 +344,42 @@ function bindLinkedAccountCheckboxes() {
   });
 }
 
+function displayTestFeedback(netId, res) {
+  const fb = document.getElementById(`test-feedback-${netId}`);
+  if (!fb) return;
+  fb.style.display = "block";
+  fb.style.background = res.ok ? "rgba(22,163,74,0.12)" : "rgba(220,38,38,0.12)";
+  fb.style.color = res.ok ? "#16a34a" : "#dc2626";
+  fb.style.border = `1px solid ${res.ok ? "#16a34a" : "#dc2626"}`;
+  const link = res.profileUrl
+    ? ` <a href="${res.profileUrl}" target="_blank" rel="noopener noreferrer" style="font-weight:bold; text-decoration:underline; color:inherit; margin-left:4px;">Ver perfil ↗</a>`
+    : "";
+  fb.innerHTML = `<span>${escapeHtml(res.message)}</span>${link}`;
+}
+
+function bindLinkedAccountTestButtons() {
+  document.querySelectorAll(".btn-test-network").forEach((btn) => {
+    if (btn.dataset.wired) return;
+    btn.dataset.wired = "1";
+    btn.addEventListener("click", async () => {
+      const netId = btn.dataset.netId;
+      if (!netId) return;
+      btn.disabled = true;
+      btn.textContent = "⏳ Testando…";
+      try {
+        const res = await linkedAccounts.testLinkedAccount(netId);
+        displayTestFeedback(netId, res);
+        share.showToast(res.message, res.ok ? "info" : "error");
+      } catch (err) {
+        share.showToast(`Erro ao testar: ${err?.message}`, "error");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "🧪 Testar se conectou";
+      }
+    });
+  });
+}
+
 export function bindLinkedAccountsUi(onRefresh) {
   const chkMaster = document.getElementById("chk-auto-replicate-master");
   if (chkMaster && !chkMaster.dataset.wired) {
@@ -369,4 +406,5 @@ export function bindLinkedAccountsUi(onRefresh) {
 
   bindLinkedAccountFormsAndButtons(onRefresh);
   bindLinkedAccountCheckboxes();
+  bindLinkedAccountTestButtons();
 }

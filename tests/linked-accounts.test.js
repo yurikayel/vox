@@ -122,6 +122,30 @@ test("linked-accounts - dispatchAutoReplication respects toggle and sends webhoo
   }
 });
 
+test("linked-accounts - testLinkedAccount verifies webhook, bsky, github and profile link", async () => {
+  localStorage.clear();
+  linked.saveLinkedAccount("instagram", { handle: "kayel_yuri" });
+  const resInsta = await linked.testLinkedAccount("instagram");
+  assert.equal(resInsta.ok, true);
+  assert.equal(resInsta.profileUrl, "https://www.instagram.com/kayel_yuri/");
+  assert.ok(resInsta.message.includes("@kayel_yuri"));
+
+  linked.saveLinkedAccount("twitter", { handle: "vox_br", webhook: "https://hook.test/ping" });
+  const origFetch = globalThis.fetch;
+  let pinged = false;
+  globalThis.fetch = async () => {
+    pinged = true;
+    return { ok: true };
+  };
+  try {
+    const resHook = await linked.testLinkedAccount("twitter");
+    assert.equal(resHook.ok, true);
+    assert.equal(pinged, true);
+  } finally {
+    globalThis.fetch = origFetch;
+  }
+});
+
 test("linked-accounts - renderLinkedAccountsHtml renders networks, ATProto field and OAuth button", () => {
   localStorage.clear();
   linked.saveLinkedAccount("bsky", { handle: "teste.bsky.social", appPassword: "secret" });
@@ -129,6 +153,8 @@ test("linked-accounts - renderLinkedAccountsHtml renders networks, ATProto field
   const html = linkedUi.renderLinkedAccountsHtml();
   assert.ok(html.includes("Redes Vinculadas"));
   assert.ok(html.includes("Bluesky"));
+  assert.ok(html.includes("btn-test-network"));
+  assert.ok(html.includes("Testar se conectou"));
   assert.ok(html.includes("AT Protocol direto configurado"));
   assert.ok(html.includes("btn-open-oauth-from-linked"));
   assert.ok(html.includes("Twitter / X"));

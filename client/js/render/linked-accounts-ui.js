@@ -24,7 +24,11 @@ function renderConnectedCardBody(net, linkedData) {
         Replicar posts nesta rede
       </label>
     </div>
-    <button type="button" class="btn btn-sm btn-outline btn-unlink-network" data-net-id="${escapeHtml(net.id)}">Desvincular @${escapeHtml(handle)}</button>`;
+    <div style="display:flex; gap:6px; flex-wrap:wrap;">
+      <button type="button" class="btn btn-sm btn-primary btn-test-network" data-net-id="${escapeHtml(net.id)}">🧪 Testar se conectou</button>
+      <button type="button" class="btn btn-sm btn-outline btn-unlink-network" data-net-id="${escapeHtml(net.id)}">Desvincular @${escapeHtml(handle)}</button>
+    </div>
+    <div class="linked-test-feedback" id="test-feedback-${escapeHtml(net.id)}" style="display:none; font-size:0.78rem; padding:6px 8px; border-radius:var(--radius-sm); margin-top:6px;"></div>`;
 }
 
 function renderLinkNetworkForm(net) {
