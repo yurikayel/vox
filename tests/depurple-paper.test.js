@@ -9,8 +9,9 @@ const css = fs.readFileSync(path.join(root, "css/style.css"), "utf8");
 const sw = fs.readFileSync(path.join(root, "sw.js"), "utf8");
 
 test("depurple paper - service worker cache id", () => {
-  assert.match(sw, /vox-pwa-v6\.99-dm-messenger-v2/);
+  assert.match(sw, /vox-pwa-v7\.00-slack-discord-bridge/);
   assert.ok(sw.includes('"./js/dm-messenger.js"'));
+  assert.ok(sw.includes('"./js/chat-bridge.js"'));
   assert.ok(sw.includes('"./js/qr-url.js"'));
   assert.ok(sw.includes('"./js/account-backup-wrap.js"'));
   assert.ok(sw.includes('"./js/app/cantina-gate.js"'));

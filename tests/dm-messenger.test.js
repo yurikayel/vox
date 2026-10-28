@@ -225,3 +225,43 @@ test("dm-messenger: renderDmList and renderDmThread render DM v2 UI controls", (
   assert.ok(main.innerHTML.includes('id="dm-context-draft-bar"'));
   assert.ok(main.innerHTML.includes("Alface Crespa"));
 });
+
+
+test("dm-messenger: read receipt and E2E compressed photo payload roundtrip", () => {
+  const readWire = dmMsg.serializeDmReadReceipt({ upToTs: 1700000000123 });
+  const parsedRead = dmMsg.parseDmPayload(readWire);
+  assert.equal(parsedRead.kind, "read");
+  assert.equal(parsedRead.upToTs, 1700000000123);
+
+  const sampleImg = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD=";
+  const mediaWire = dmMsg.serializeDmPayload({
+    text: "Comprovante Pix",
+    mediaDataUrl: sampleImg,
+  });
+  const parsedMedia = dmMsg.parseDmPayload(mediaWire);
+  assert.equal(parsedMedia.kind, "message");
+  assert.equal(parsedMedia.text, "Comprovante Pix");
+  assert.equal(parsedMedia.mediaDataUrl, sampleImg);
+
+  const main = createContainer();
+  render.renderDmThread(
+    main,
+    "vx_parceiro_99",
+    [
+      {
+        id: "dm_photo_1",
+        from: "vx_eu_11",
+        to: "vx_parceiro_99",
+        text: "Comprovante Pix",
+        mediaDataUrl: sampleImg,
+        ts: Date.now(),
+        status: "read",
+      },
+    ],
+    "vx_eu_11",
+    { isRtcOnline: true, hasDmPub: true }
+  );
+  assert.ok(main.innerHTML.includes("dm-bubble-img"));
+  assert.ok(main.innerHTML.includes("✓✓ Lido"));
+  assert.ok(main.innerHTML.includes('id="dm-media-input"'));
+});
