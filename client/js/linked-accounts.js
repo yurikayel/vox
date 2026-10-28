@@ -196,3 +196,69 @@ export async function dispatchAutoReplication(post) {
   const successful = results.filter((r) => r.status === "fulfilled" && r.value?.ok).length;
   return { dispatched: true, count: successful, total: tasks.length };
 }
+
+export function resolveNetworkProfileUrl(netId, handle) {
+  const h = String(handle || "").trim().replace(/^@/, "");
+  if (!h) return "";
+  if (netId === "instagram") return `https://www.instagram.com/${h}/`;
+  if (netId === "twitter") return `https://x.com/${h}`;
+  if (netId === "threads") return `https://www.threads.net/@${h}`;
+  if (netId === "facebook") return `https://www.facebook.com/${h}`;
+  if (netId === "tiktok") return `https://www.tiktok.com/@${h}`;
+  if (netId === "bsky") return `https://bsky.app/profile/${h}`;
+  if (netId === "github") return `https://github.com/${h}`;
+  return "";
+}
+
+async function testBskyConnection(data) {
+  if (data?.appPassword) {
+    const res = await postToBlueskyAtProto(data.handle, data.appPassword, {
+      title: "Teste de Conexão Vox",
+      body: "Testando autenticação AT Protocol.",
+    });
+    if (res.ok) return { ok: true, message: `✅ Sessão AT Protocol ativa para @${data.handle}! Pronto para postar direto.` };
+    return { ok: false, message: `⚠️ Falha na autenticação AT Protocol: verifique o App Password de @${data.handle}.` };
+  }
+  try {
+    const r = await fetch(`https://public.api.bsky.app/xrpc/app.bsky.actor.getProfile?actor=${encodeURIComponent(data.handle)}`);
+    if (r.ok) return { ok: true, message: `✅ Perfil @${data.handle} confirmado no Bluesky! (Leitura e citação ativas)` };
+    return { ok: false, message: `⚠️ Perfil @${data.handle} não encontrado no Bluesky público.` };
+  } catch {
+    return { ok: false, message: "Erro de conexão ao consultar Bluesky." };
+  }
+}
+
+async function testGithubConnection(data) {
+  try {
+    const res = await fetch(`https://api.github.com/users/${encodeURIComponent(data.handle)}`);
+    if (res.ok) return { ok: true, message: `✅ Perfil @${data.handle} confirmado na API do GitHub!` };
+    return { ok: false, message: `⚠️ Perfil @${data.handle} não encontrado no GitHub.` };
+  } catch {
+    return { ok: false, message: "Erro ao consultar API do GitHub." };
+  }
+}
+
+export async function testLinkedAccount(netId) {
+  const accounts = loadLinkedAccounts();
+  const data = accounts[netId];
+  if (!data?.handle) return { ok: false, message: "Nenhuma conta vinculada." };
+
+  const webhookUrl = data.webhook || getGeneralWebhookUrl();
+  if (webhookUrl) {
+    const payload = { event: "vox.connection.test", network: netId, handle: data.handle, testedAt: new Date().toISOString() };
+    const res = await sendWebhookPost(webhookUrl, payload);
+    return res.ok
+      ? { ok: true, message: `✅ Webhook testado com sucesso para @${data.handle}!`, profileUrl: resolveNetworkProfileUrl(netId, data.handle) }
+      : { ok: false, message: `⚠️ Falha ao contactar webhook: ${res.error || "erro de rede"}` };
+  }
+
+  if (netId === "bsky") return await testBskyConnection(data);
+  if (netId === "github") return await testGithubConnection(data);
+
+  const profileUrl = resolveNetworkProfileUrl(netId, data.handle);
+  return {
+    ok: true,
+    profileUrl,
+    message: `✅ Conta @${data.handle} registrada no Vox! Disparo em 1 toque (EXPLODE!) pronto.`,
+  };
+}
