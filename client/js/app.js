@@ -6,6 +6,8 @@ import { wireRoute, setupHashchangeListener, routeImpl as route } from "./app/ro
 import { initDmListeners, initGossipListeners, initSocialInteractions } from "./app/init.js";
 import { initPostMediaLightbox } from "./app/post-media-lightbox.js";
 import { attachPostMoreMenuHandlers } from "./render/post-more-menu.js";
+import { attachProfileNoteHandlers } from "./app/profile-note-ui.js";
+import { attachPhotoTagUi } from "./app/photo-tag-ui.js";
 import { attachPosseSheetHandlers } from "./posse-dispatch.js";
 import { attachQrUrlHandlers } from "./qr-url.js";
 import { attachPostOverlayActionMenuHandlers } from "./app/screens-home.js";
@@ -21,6 +23,8 @@ initGossipListeners();
 initSocialInteractions();
 initPostMediaLightbox();
 attachPostMoreMenuHandlers();
+attachProfileNoteHandlers();
+attachPhotoTagUi();
 attachPosseSheetHandlers();
 attachQrUrlHandlers();
 attachPostOverlayActionMenuHandlers();

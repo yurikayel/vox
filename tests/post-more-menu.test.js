@@ -17,7 +17,8 @@ test("post more menu - hero exposes trigger with post id", () => {
   });
   assert.ok(html.includes("btn-post-more-menu"));
   assert.ok(html.includes('data-post-id="pm-1"'));
-  assert.ok(html.includes("Demo · AC"));
+  assert.ok(!html.includes("Demo · AC"));
+  assert.ok(html.includes("post-ig-header"));
 });
 
 test("post more menu - module defines sheet id and closed-by-default", () => {
@@ -40,7 +41,7 @@ test("post more menu - CSS hides sheet until is-open", () => {
   assert.ok(css.includes(".post:has(.toolbar-overflow[open])"));
 });
 
-test("post more menu - photo overflow keeps Apoiar, toolbar has no zap", () => {
+test("post more menu - sheet keeps Apoiar, photo toolbar has no zap", () => {
   const html = render.renderPostItem({
     id: "pm-zap-1",
     title: "Foto",
@@ -48,12 +49,13 @@ test("post more menu - photo overflow keeps Apoiar, toolbar has no zap", () => {
     author: "vx_demo_ac",
     ts: Date.now(),
   });
-  const moreIdx = html.indexOf("toolbar-overflow-menu--overlay");
-  assert.ok(moreIdx !== -1);
-  const menu = html.slice(moreIdx, moreIdx + 800);
-  assert.ok(menu.includes("btn-zap-post"));
-  assert.ok(menu.includes("Apoiar"));
-  assert.ok(!html.includes("btn-zap-post overlay-action-btn"));
+  assert.ok(html.includes("post-ig-toolbar"));
+  assert.ok(!html.includes("btn-zap-post"));
+  const src = fs.readFileSync(path.join(root, "js/render/post-more-menu.js"), "utf8");
+  assert.ok(src.includes('data-action="zap"'));
+  assert.ok(src.includes("Apoiar"));
+  assert.ok(src.includes('data-action="repost"'));
+  assert.ok(src.includes('data-action="save"'));
 });
 
 test("post more menu - route closes sheet on navigation", () => {

@@ -5,6 +5,7 @@
 
 import * as profileCard from "./profile-card.js";
 import * as profileDirectory from "./profile-directory.js";
+import * as profileNote from "./profile-note.js";
 
 /** @param {string} cardId */
 export function routeIdFromProfileCardId(cardId) {
@@ -35,5 +36,6 @@ export async function applyVerifiedProfileCardItem(item) {
     discoverable: true,
     gossipCardId: item.id,
   });
+  if (item.note) profileNote.ingestRemoteNote(item.routeId, item.note, item.noteAt || item.editedAt);
   return true;
 }

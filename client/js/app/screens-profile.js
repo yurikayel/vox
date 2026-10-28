@@ -40,6 +40,18 @@ import { getActiveUser, makeShellProps, attachPostShareHandlers } from "./contex
 import { syncIdentity } from "./screens-network.js";
 import { KIND_WRAPPED, peekBackupKind } from "../account-backup-wrap.js";
 
+function collectByIds(posts, ids) {
+  const set = new Set(ids);
+  const out = [];
+  const seen = new Set();
+  for (const p of posts || []) {
+    if (!p?.id || !set.has(p.id) || seen.has(p.id)) continue;
+    seen.add(p.id);
+    out.push(p);
+  }
+  return out;
+}
+
 export async function showProfile(address, activeTab = "posts") {
   const user = await getActiveUser();
   const targetAddress = address || user;
@@ -108,17 +120,9 @@ export async function showProfile(address, activeTab = "posts") {
     authorPosts = mock.MOCK_DEMO_TOPICS.filter((t) => t.author === targetAddress);
   }
 
-  // Busca posts favoritados com estrela ⭐
-  const starredSet = new Set(social.getStarredPostIds());
   const allAvailablePosts = [...localPosts, ...mock.MOCK_DEMO_TOPICS];
-  const seenStarred = new Set();
-  const starredPosts = [];
-  for (const p of allAvailablePosts) {
-    if (starredSet.has(p.id) && !seenStarred.has(p.id)) {
-      seenStarred.add(p.id);
-      starredPosts.push(p);
-    }
-  }
+  const starredPosts = collectByIds(allAvailablePosts, social.getStarredPostIds());
+  const savedPosts = collectByIds(allAvailablePosts, social.getSavedPostIds());
 
   const githubHandle = isSelf ? social.getLocalGithubHandle() : (mockProf?.githubHandle || "");
   const readme = isSelf ? social.getLocalReadme() : (mockProf?.readme || "");
@@ -137,6 +141,7 @@ export async function showProfile(address, activeTab = "posts") {
     stats: mockProf?.stats || null,
     posts: authorPosts,
     starredPosts,
+    savedPosts,
     hasWallet: wallet.hasWallet(),
     balance,
     pixKey,

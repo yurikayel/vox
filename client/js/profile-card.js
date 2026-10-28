@@ -1,6 +1,7 @@
 /** PROFILE_CARD gossip v0 — validate, TTL, assinatura (V-MESH). */
 
 import * as localAccount from "./local-account.js";
+import * as profileNote from "./profile-note.js";
 
 export const PROFILE_CARD_TYPE = "profile-card";
 export const CARD_TTL_MS = 30 * 24 * 60 * 60 * 1000;
@@ -40,6 +41,7 @@ export function validateProfileCardItem(item) {
 export async function buildSignedProfileCard({ displayName = "", avatarUrl = "", bio = "" } = {}) {
   const routeId = await localAccount.getRouteId();
   const enrich = localAccount.getProfileEnrichment();
+  const note = profileNote.getNote(routeId);
   const payload = {
     id: canonicalProfileCardId(routeId),
     type: PROFILE_CARD_TYPE,
@@ -47,6 +49,8 @@ export async function buildSignedProfileCard({ displayName = "", avatarUrl = "",
     displayName: String(displayName || localAccount.getDisplayName() || enrich?.displayName || "").slice(0, 80),
     avatarUrl: String(avatarUrl || enrich?.avatarUrl || "").slice(0, 512),
     bio: String(bio || enrich?.bio || "").slice(0, 280),
+    note: note?.text || "",
+    noteAt: note?.updatedAt || 0,
     discoverable: true,
     editedAt: Date.now(),
   };
