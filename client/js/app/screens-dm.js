@@ -1,42 +1,50 @@
-/** @file Direct messages list and thread. */
+/** @file Direct messages list and thread (DM v2). */
 
 import * as gql from "../graphql.js";
 import * as render from "../render.js";
-import * as mock from "../mock.js";
-import * as wallet from "../wallet.js";
-import * as upload from "../upload.js";
 import * as share from "../share.js";
-import * as mod from "../moderation.js";
 import * as cacheNode from "../cache-node.js";
 import * as peers from "../peers.js";
 import * as cryptoDm from "../crypto-dm.js";
 import * as inbox from "../inbox.js";
-import * as handles from "../handles.js";
-import * as localAccount from "../local-account.js";
-import * as demoSeed from "../demo-seed.js";
-import * as social from "../social.js";
-import * as pixKeyHelper from "../pix-key.js";
-import * as listing from "../listing.js";
-import * as listingUi from "../listing-ui.js";
-import * as i18n from "../i18n-pt-br.js";
-import * as gov from "../governance.js";
-import * as brcode from "../brcode.js";
-import * as hashtags from "../hashtags.js";
-import * as frames from "../frames.js";
-import * as postOwnership from "../post-ownership.js";
-import * as communityMirror from "../community-mirror.js";
-import * as stewardWizard from "../steward-wizard.js";
-import * as gatewayTelemetry from "../gateway-telemetry.js";
-import { attachInlineComposerHandlers } from "../inline-composer.js";
-import * as oauthProfile from "../oauth-profile.js";
 import * as contacts from "../contacts.js";
 import * as peopleIndex from "../people-index.js";
-import * as profileDirectory from "../profile-directory.js";
 import * as welcomeProfile from "../vox-welcome-profile.js";
-import * as meshProfile from "../mesh-profile.js";
+import * as dmMsg from "../dm-messenger.js";
 import { parseRoute } from "./route-parse.js";
-import { getActiveUser, makeShellProps, attachPostShareHandlers } from "./context.js";
+import { getActiveUser, makeShellProps } from "./context.js";
 import { ensureOnboardingSideEffects } from "./onboarding-side-effects.js";
+
+let activeReplyDraft = null;
+let pendingContextDraft = null;
+
+async function applyBubbleReaction(peerAddress, actorAddress, targetId, emoji) {
+  const msgs = await cacheNode.getDmMessages(peerAddress);
+  const target = msgs.find((m) => m.id === targetId);
+  if (!target) return false;
+  target.reactions = dmMsg.toggleReactionMap(target.reactions, emoji, actorAddress);
+  await cacheNode.saveDmMessage(target);
+  return true;
+}
+
+async function ingestDecryptedEnvelope(env, rawText) {
+  const parsed = dmMsg.parseDmPayload(rawText);
+  if (parsed.kind === "react") {
+    return applyBubbleReaction(env.from, env.from, parsed.targetId, parsed.emoji);
+  }
+  await cacheNode.saveDmMessage({
+    id: env.id,
+    peerAddress: env.from,
+    from: env.from,
+    to: env.to,
+    text: parsed.text,
+    replyTo: parsed.replyTo,
+    contextCard: parsed.contextCard,
+    ts: env.ts || Date.now(),
+    status: "received",
+  });
+  return true;
+}
 
 export async function pollInboxMessages(user) {
   if (!user) return 0;
@@ -45,16 +53,8 @@ export async function pollInboxMessages(user) {
     let count = 0;
     for (const env of sealedList) {
       try {
-        const text = await cryptoDm.open(env);
-        await cacheNode.saveDmMessage({
-          id: env.id,
-          peerAddress: env.from,
-          from: env.from,
-          to: env.to,
-          text,
-          ts: env.ts || Date.now(),
-          status: "received",
-        });
+        const rawText = await cryptoDm.open(env);
+        await ingestDecryptedEnvelope(env, rawText);
         await inbox.deleteSealed(user, env.id);
         count++;
       } catch {}
@@ -65,20 +65,27 @@ export async function pollInboxMessages(user) {
   }
 }
 
-export async function showDmList() {
-  const user = await getActiveUser();
-  const main = render.renderShell(makeShellProps(user, "dm", "Mensagens"));
-
-  if (!user) {
-    main.innerHTML = `<div class="card"><h2>Mensagens Diretas</h2><div class="error">Não foi possível carregar sua conta local.</div></div>`;
-    return;
+async function dispatchSealedEnvelope(peerAddress, envelope) {
+  if (peers.sendDirectMessageTransport(peerAddress, envelope) === "rtc") {
+    return "delivered";
   }
+  try {
+    await inbox.pushSealed(peerAddress, envelope);
+    return "queued-relay";
+  } catch {
+    return "pending-retry";
+  }
+}
 
-  await ensureOnboardingSideEffects(user);
-  await pollInboxMessages(user);
-  const convs = await cacheNode.getDmConversations();
-  render.renderDmList(main, convs, user, { contactList: contacts.listContacts() });
+function renderAndBindDmList(main, convs, user, searchQuery = "") {
+  render.renderDmList(main, convs, user, {
+    contactList: contacts.listContacts(),
+    searchQuery,
+  });
+  bindDmListControls(main, convs, user);
+}
 
+function bindDmListControls(main, convs, user) {
   document.getElementById("btn-copy-my-dm-link")?.addEventListener("click", () => {
     const link = `${window.location.origin}${window.location.pathname}#/dm/${encodeURIComponent(user)}`;
     navigator.clipboard.writeText(link);
@@ -97,39 +104,83 @@ export async function showDmList() {
     share.showToast(pulled > 0 ? `${pulled} nova(s) mensagem(ns)!` : "Inbox verificado: sem novas mensagens.");
     showDmList();
   });
+
+  bindDmListSearchAndPins(main, convs, user);
+}
+
+function bindDmListSearchAndPins(main, convs, user) {
+  const searchInput = document.getElementById("dm-search-input");
+  searchInput?.addEventListener("input", () => {
+    const val = searchInput.value;
+    const pos = searchInput.selectionStart ?? val.length;
+    renderAndBindDmList(main, convs, user, val);
+    const nextInput = document.getElementById("dm-search-input");
+    if (nextInput) {
+      nextInput.focus();
+      nextInput.setSelectionRange(pos, pos);
+    }
+  });
+
+  main.querySelectorAll(".btn-dm-pin").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const res = dmMsg.togglePinPeer(btn.dataset.peer);
+      if (res.reason === "limit" || res.limitReached) {
+        share.showToast("Limite de 3 conversas fixadas atingido.", "error");
+        return;
+      }
+      renderAndBindDmList(main, convs, user, searchInput?.value || "");
+    });
+  });
+}
+
+export async function showDmList() {
+  const user = await getActiveUser();
+  const main = render.renderShell(makeShellProps(user, "dm", "Mensagens"));
+  if (!user) {
+    main.innerHTML = `<div class="card"><h2>Mensagens Diretas</h2><div class="error">Não foi possível carregar sua conta local.</div></div>`;
+    return;
+  }
+  await ensureOnboardingSideEffects(user);
+  await pollInboxMessages(user);
+  const convs = await cacheNode.getDmConversations();
+  renderAndBindDmList(main, convs, user, "");
+}
+
+async function sealAndPersistOutgoingDm(user, peerAddress, peerDmPub, text) {
+  const wirePayload = dmMsg.serializeDmPayload({
+    text,
+    replyTo: activeReplyDraft,
+    contextCard: pendingContextDraft,
+  });
+  const envelope = await cryptoDm.seal(peerDmPub, wirePayload, { from: user, to: peerAddress });
+  const status = await dispatchSealedEnvelope(peerAddress, envelope);
+  await cacheNode.saveDmMessage({
+    id: envelope.id,
+    peerAddress,
+    from: user,
+    to: peerAddress,
+    text,
+    replyTo: activeReplyDraft,
+    contextCard: pendingContextDraft,
+    ts: envelope.ts,
+    status,
+  });
 }
 
 export async function handleSendDmSubmit(user, peerAddress, peerDmPub) {
   const input = document.getElementById("dm-message-input");
-  const text = input?.value.trim();
+  const rawText = input?.value.trim() || "";
+  const text = rawText || (pendingContextDraft ? `💬 ${pendingContextDraft.title}` : "");
   if (!text) return;
   const btn = document.getElementById("btn-send-dm");
   if (btn) btn.disabled = true;
 
   try {
-    const envelope = await cryptoDm.seal(peerDmPub, text, { from: user, to: peerAddress });
-    let status = "sent";
-    const transport = peers.sendDirectMessageTransport(peerAddress, envelope);
-    if (transport === "rtc") {
-      status = "delivered";
-    } else {
-      try {
-        await inbox.pushSealed(peerAddress, envelope);
-        status = "queued-relay";
-      } catch {
-        status = "pending-retry";
-      }
-    }
-
-    await cacheNode.saveDmMessage({
-      id: envelope.id,
-      peerAddress,
-      from: user,
-      to: peerAddress,
-      text,
-      ts: envelope.ts,
-      status,
-    });
+    await sealAndPersistOutgoingDm(user, peerAddress, peerDmPub, text);
+    activeReplyDraft = null;
+    pendingContextDraft = null;
     if (input) input.value = "";
     showDmThread(peerAddress);
   } catch (err) {
@@ -138,33 +189,74 @@ export async function handleSendDmSubmit(user, peerAddress, peerDmPub) {
   }
 }
 
-export async function showDmThread(peerAddress) {
-  const user = await getActiveUser();
-  const main = render.renderShell(makeShellProps(user, "dm", "Conversa"));
-
-  if (!user) {
-    main.innerHTML = `<div class="card"><h2>Conversa Direta</h2><div class="error">Não foi possível carregar sua conta local.</div></div>`;
-    return;
+async function handleToggleBubbleReaction(user, peerAddress, peerDmPub, msgId, emoji) {
+  if (!msgId || !emoji) return;
+  await applyBubbleReaction(peerAddress, user, msgId, emoji);
+  if (peerDmPub) {
+    try {
+      const wire = dmMsg.serializeDmReaction({ targetId: msgId, emoji });
+      const env = await cryptoDm.seal(peerDmPub, wire, { from: user, to: peerAddress });
+      await dispatchSealedEnvelope(peerAddress, env);
+    } catch {}
   }
+  showDmThread(peerAddress);
+}
 
-  await ensureOnboardingSideEffects(user);
-  if (welcomeProfile.isWelcomeRouteId(peerAddress)) {
-    welcomeProfile.markWelcomeIntroSeen();
-  }
-  await pollInboxMessages(user);
-  const messages = await cacheNode.getDmMessages(peerAddress);
-  const isRtcOnline = peers.isAddressConnectedRtc(peerAddress);
-  let peerDmPub = gql.getCachedUserDmPub(peerAddress) || peers.getPeerDmPub(peerAddress);
-  if (!peerDmPub) peerDmPub = await gql.fetchUserDmPub(peerAddress);
-
-  render.renderDmThread(main, peerAddress, messages, user, {
-    isRtcOnline,
-    hasDmPub: Boolean(peerDmPub),
+function bindDmThreadDraftAndCardActions(main) {
+  main.querySelectorAll(".btn-dm-reply-msg").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      activeReplyDraft = {
+        id: btn.dataset.msgId,
+        author: btn.dataset.msgAuthor || "",
+        snippet: btn.dataset.msgSnippet || "",
+      };
+      const bar = document.getElementById("dm-reply-draft-bar");
+      const txt = document.getElementById("dm-reply-draft-text");
+      if (txt) txt.textContent = `${activeReplyDraft.author}: "${activeReplyDraft.snippet}"`;
+      if (bar) bar.hidden = false;
+      document.getElementById("dm-message-input")?.focus();
+    });
   });
 
-  const c = document.getElementById("dm-thread-container");
-  if (c) c.scrollTop = c.scrollHeight;
+  document.getElementById("btn-cancel-dm-reply")?.addEventListener("click", () => {
+    activeReplyDraft = null;
+    const bar = document.getElementById("dm-reply-draft-bar");
+    if (bar) bar.hidden = true;
+  });
 
+  document.getElementById("btn-clear-dm-context")?.addEventListener("click", () => {
+    pendingContextDraft = null;
+    document.getElementById("dm-context-draft-bar")?.remove();
+  });
+}
+
+function bindDmThreadBubbleActions(main, user, peerAddress, peerDmPub) {
+  main.querySelectorAll(".btn-dm-copy-pix").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const pix = btn.dataset.pix || "";
+      if (!pix) return;
+      navigator.clipboard.writeText(pix);
+      share.showToast("Chave Pix copiada!");
+    });
+  });
+
+  main.querySelectorAll(".btn-dm-react-pick, .dm-reaction-pill").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      handleToggleBubbleReaction(user, peerAddress, peerDmPub, btn.dataset.msgId, btn.dataset.emoji);
+    });
+  });
+}
+
+function consumeHashContextForThread(peerAddress) {
+  const fromHash = dmMsg.parseDmContextFromHash(location.hash);
+  if (!fromHash) return;
+  pendingContextDraft = fromHash;
+  if (typeof history !== "undefined" && typeof history.replaceState === "function") {
+    history.replaceState(null, "", `#/dm/${encodeURIComponent(peerAddress)}`);
+  }
+}
+
+function bindDmThreadFormEvents(main, user, peerAddress, peerDmPub) {
   document.getElementById("btn-save-manual-dmpub")?.addEventListener("click", () => {
     try {
       const parsed = JSON.parse(document.getElementById("input-manual-dmpub")?.value.trim());
@@ -176,6 +268,9 @@ export async function showDmThread(peerAddress) {
     }
   });
 
+  bindDmThreadDraftAndCardActions(main);
+  bindDmThreadBubbleActions(main, user, peerAddress, peerDmPub);
+
   if (peerDmPub) {
     document.getElementById("form-send-dm")?.addEventListener("submit", (e) => {
       e.preventDefault();
@@ -184,21 +279,44 @@ export async function showDmThread(peerAddress) {
   }
 }
 
+export async function showDmThread(peerAddress) {
+  const user = await getActiveUser();
+  const main = render.renderShell(makeShellProps(user, "dm", "Conversa"));
+  if (!user) {
+    main.innerHTML = `<div class="card"><h2>Conversa Direta</h2><div class="error">Não foi possível carregar sua conta local.</div></div>`;
+    return;
+  }
+  await ensureOnboardingSideEffects(user);
+  if (welcomeProfile.isWelcomeRouteId(peerAddress)) welcomeProfile.markWelcomeIntroSeen();
+  dmMsg.markThreadRead(peerAddress);
+  consumeHashContextForThread(peerAddress);
+  await pollInboxMessages(user);
+
+  const messages = await cacheNode.getDmMessages(peerAddress);
+  const isRtcOnline = peers.isAddressConnectedRtc(peerAddress);
+  const peerDmPub =
+    gql.getCachedUserDmPub(peerAddress) ||
+    peers.getPeerDmPub(peerAddress) ||
+    (await gql.fetchUserDmPub(peerAddress));
+
+  render.renderDmThread(main, peerAddress, messages, user, {
+    isRtcOnline,
+    hasDmPub: Boolean(peerDmPub),
+    pendingContextCard: pendingContextDraft,
+  });
+
+  const c = document.getElementById("dm-thread-container");
+  if (c) c.scrollTop = c.scrollHeight;
+  bindDmThreadFormEvents(main, user, peerAddress, peerDmPub);
+}
+
 export function initDmListeners() {
   peers.onDirectMessage(async (envelope) => {
     const user = await getActiveUser();
     if (!user || envelope.to !== user) return;
     try {
-      const text = await cryptoDm.open(envelope);
-      await cacheNode.saveDmMessage({
-        id: envelope.id,
-        peerAddress: envelope.from,
-        from: envelope.from,
-        to: envelope.to,
-        text,
-        ts: envelope.ts || Date.now(),
-        status: "received",
-      });
+      const rawText = await cryptoDm.open(envelope);
+      await ingestDecryptedEnvelope(envelope, rawText);
       const cur = parseRoute();
       if (cur.name === "dm-thread" && cur.address === envelope.from) {
         showDmThread(envelope.from);

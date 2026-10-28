@@ -176,6 +176,9 @@ export async function saveDmMessage(msg) {
         text: msg.text || "",
         ts: msg.ts || Date.now(),
         status: msg.status || "delivered",
+        replyTo: msg.replyTo || null,
+        contextCard: msg.contextCard || null,
+        reactions: msg.reactions || {},
       });
       tx.oncomplete = () => resolve();
       tx.onerror = () => resolve();
@@ -223,8 +226,16 @@ export async function getDmConversations() {
               lastText: m.text,
               lastTs: m.ts || 0,
               lastStatus: m.status,
+              unreadCount: 0,
             });
           }
+        }
+        let readMap = {};
+        try { readMap = JSON.parse(localStorage.getItem("vox-dm-read-ts-v1") || "{}") || {}; } catch {}
+        for (const m of all) {
+          const item = map.get(m.peerAddress);
+          const lastRead = Number(readMap[m.peerAddress]) || 0;
+          if (item && m.status === "received" && (m.ts || 0) > lastRead) item.unreadCount = (item.unreadCount || 0) + 1;
         }
         const sorted = Array.from(map.values()).sort((a, b) => b.lastTs - a.lastTs);
         resolve(sorted);
