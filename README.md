@@ -5,7 +5,7 @@
 [![Client](https://img.shields.io/badge/PWA-Vanilla%20ES%20Modules-orange.svg)](./client)
 [![Identity](https://img.shields.io/badge/Identity-WebCrypto%20P--256-blueviolet.svg)](./client/js/local-account.js)
 [![Storage](https://img.shields.io/badge/Storage-Arweave%20Permaweb-black.svg)](https://arweave.org)
-[![Service Worker](https://img.shields.io/badge/SW-v6.97--vox--brand--name-informational.svg)](./client/sw.js)
+[![Service Worker](https://img.shields.io/badge/SW-v6.98--compact--btns--post--gap-informational.svg)](./client/sw.js)
 
 Uma rede social cívica, livre e de código aberto (FOSS), pensada para **comunidades primeiro**. Uma rede descentralizada no espírito útil do Orkut clássico, onde a **identidade e as chaves ficam no aparelho do usuário** (WebCrypto local), as publicações públicas residem no **permaweb** (Arweave) e os dados circulam por **malha local e relays voluntários**.
 
@@ -52,9 +52,9 @@ Informações sincronizadas com [docs/release-metadata.json](./docs/release-meta
 | Campo | Valor Atual | Descrição / Observação |
 |:---|:---:|:---|
 | **Branch** | `main` | Linha de produção contínua (Pages deploy automático) |
-| **Commit SHA** | `bcfc6ca` | HEAD verificado e auditado na esteira de integração |
+| **Commit SHA** | `cd9e3cd` | HEAD verificado e auditado na esteira de integração |
 | **Suíte de Testes** | **415** (`392` JS + `23` Python) | Execução via `npm test` na raiz do repositório |
-| **Service Worker** | `vox-pwa-v6.97-vox-brand-name` | Atualização do cache offline do shell estático |
+| **Service Worker** | `vox-pwa-v6.98-compact-btns-post-gap` | Atualização do cache offline do shell estático |
 | **Deploy** | [yurikayel.github.io/vox](https://yurikayel.github.io/vox/) | PWA público para testes e validação de campo |
 
 > [!NOTE]
