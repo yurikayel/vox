@@ -8,43 +8,38 @@ import * as render from "../client/js/render.js";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "client");
 
-test("post overlay - photo card has hero, overlay and lightbox trigger", () => {
+test("photo chrome - thin header, toolbar, title; body só nos comentários", () => {
   const html = render.renderPostItem({
     id: "overlay-1",
     title: "Mutirão na praça",
-    body: "Plantamos mudas #verde #comunidade",
+    body: "Mutirão na praça\nPlantamos mudas #verde #comunidade",
     image: "https://example.com/photo.jpg",
     author: "vx_demo_mg",
+    ts: Date.now(),
   });
   assert.ok(html.includes("post-media-hero"));
-  assert.ok(html.includes("post-overlay"));
   assert.ok(html.includes("post-media-lightbox-trigger"));
-  assert.ok(html.includes("post-overlay-title"));
-  assert.ok(html.includes("#verde"));
-  assert.ok(!html.includes("post-caption-block"));
-  assert.ok(html.includes("post-media-scrim-top"));
-  assert.ok(html.includes("post-media-scrim-bottom"));
-  assert.ok(html.includes("post-media-header"));
+  assert.ok(html.includes("post-ig-header"));
   assert.ok(html.includes("btn-post-more-menu"));
-  assert.ok(html.includes("post-actions-overlay"));
-  assert.ok(html.includes("btn-zap-post"));
-  assert.ok(html.includes('toolbar-overflow-label">Apoiar'));
-  assert.ok(!html.includes("btn-zap-post overlay-action-btn"));
-  assert.ok(html.includes('aria-label="Gostei'));
-  assert.ok(!html.includes("overlay-action-label"));
-  assert.ok(!html.includes(">Compartilhar<"));
-  assert.ok(html.includes("post-overlay-actions-more"));
+  assert.ok(html.includes("post-ig-toolbar"));
+  assert.ok(html.includes("btn-save"));
+  assert.ok(html.includes("post-photo-title"));
+  assert.ok(html.includes("Mutirão na praça"));
+  assert.ok(!html.includes("post-caption-block"));
+  assert.ok(!html.includes("post-media-scrim-top"));
+  assert.ok(!html.includes("post-overlay-title"));
+  assert.ok(!html.includes("post-overlay-caption-only"));
   assert.ok(!html.includes("post-toolbar"));
-  assert.ok(!html.includes("post-overlay-author"));
-  const scrimIdx = html.indexOf("post-media-scrim-top");
-  const overlayIdx = html.indexOf('class="post-overlay"');
-  assert.ok(scrimIdx !== -1 && overlayIdx !== -1 && scrimIdx < overlayIdx);
-  const overlayOpen = html.indexOf('class="post-overlay"');
-  const scrimInsideOverlay = html.slice(overlayOpen, overlayOpen + 120).includes("post-media-scrim");
-  assert.ok(!scrimInsideOverlay, "scrim must be sibling of overlay, not inside it");
+  assert.ok(!html.includes("Demo ·"));
+  assert.ok(!html.includes("btn-zap-post overlay-action-btn"));
+  assert.ok(html.includes("post-photo-message"));
+  assert.ok(html.includes("#verde"));
+  const msg = html.slice(html.indexOf("post-photo-message"));
+  assert.ok(msg.includes("#verde"));
+  assert.ok(html.includes("hidden"));
 });
 
-test("post overlay - title dedupe when title equals body", () => {
+test("photo chrome - caption-only não duplica título no expander", () => {
   const unique = "LinhaUnicaOverlayDedupe";
   const html = render.renderPostItem({
     id: "overlay-dup",
@@ -54,12 +49,8 @@ test("post overlay - title dedupe when title equals body", () => {
     imageAlt: "foto demo",
     author: "vx_demo_sp",
   });
-  assert.ok(html.includes("post-overlay-caption-only"));
-  assert.ok(!html.includes("post-overlay-title"));
-  const contentStart = html.indexOf('class="post-overlay-content"');
-  const actionsStart = html.indexOf("post-actions-overlay");
-  const overlayBlock = contentStart !== -1 && actionsStart !== -1 ? html.slice(contentStart, actionsStart) : "";
-  assert.equal((overlayBlock.match(new RegExp(unique, "g")) || []).length, 1);
+  assert.ok(html.includes("post-photo-title"));
+  assert.ok(!html.includes("post-photo-message"));
 });
 
 test("post overlay - index.html exposes lightbox shell", () => {
@@ -68,14 +59,11 @@ test("post overlay - index.html exposes lightbox shell", () => {
   assert.ok(indexHtml.includes("post-lightbox"));
 });
 
-test("post overlay - CSS classes present", () => {
+test("photo chrome - CSS compacto", () => {
   const css = fs.readFileSync(path.join(root, "css/style.css"), "utf8");
-  assert.ok(css.includes(".post-overlay"));
+  assert.ok(css.includes(".post-ig-toolbar"));
+  assert.ok(css.includes(".post-photo-title"));
+  assert.ok(css.includes(".post-ig-header"));
   assert.ok(css.includes(".post-lightbox"));
-  assert.ok(css.includes(".post-media-hero"));
-  assert.ok(css.includes(".post-media-header"));
-  assert.ok(css.includes(".post-actions-overlay"));
   assert.ok(css.includes("#post-more-sheet") || css.includes(".post-more-sheet"));
-  assert.ok(css.includes(".post-media-hero"));
-  assert.ok(css.includes(".post:has(.toolbar-overflow[open])"));
 });

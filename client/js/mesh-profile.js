@@ -3,6 +3,7 @@
 import * as localAccount from "./local-account.js";
 import * as profileCard from "./profile-card.js";
 import * as profileDirectory from "./profile-directory.js";
+import * as profileNote from "./profile-note.js";
 import * as peers from "./peers.js";
 
 function applyLocalCardFromSigned(signed) {
@@ -18,6 +19,9 @@ function applyLocalCardFromSigned(signed) {
     discoverable: true,
     gossipCardId: signed.id,
   });
+  if (signed.note) {
+    profileNote.ingestRemoteNote(signed.routeId, signed.note, signed.noteAt || signed.editedAt);
+  }
 }
 
 export async function syncMeshProfileCard() {

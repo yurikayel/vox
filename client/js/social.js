@@ -156,6 +156,10 @@ export function toggleSave(postId) {
   return saved;
 }
 
+export function getSavedPostIds() {
+  return Array.from(loadSet(SAVED_KEY));
+}
+
 /* --- Acompanhar Perfis (Watch 👁️ / Seguindo) --- */
 
 export function isWatching(routeId) {
