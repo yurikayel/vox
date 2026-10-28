@@ -7223,3 +7223,184 @@ blockquote.repost-cite {
   line-height: 1.35;
   margin-bottom: 8px;
 }
+
+
+/* ==========================================================================
+   🌐 ABAS DE FEED & INGESTÃO PREDATÓRIA (AT Protocol / Bluesky)
+   ========================================================================== */
+
+.feed-tabs-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 6px 12px 10px;
+  margin-bottom: 2px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.feed-tabs-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.feed-tab-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--outline);
+  background: var(--bg);
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.feed-tab-chip:hover {
+  background: var(--paper-highlight, rgba(255, 255, 255, 0.05));
+  color: var(--text);
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+.feed-tab-chip.active {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: #d97706;
+  color: var(--text);
+  font-weight: 700;
+}
+
+.badge-post-external {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.badge-post-external.bsky {
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: #38bdf8;
+}
+
+.badge-post-external a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.badge-post-external a:hover {
+  text-decoration: underline;
+}
+
+.bsky-feed-manager {
+  background: var(--surface);
+  border: 1px solid var(--outline);
+  border-radius: var(--radius-sm, 8px);
+  padding: 12px 14px;
+  margin: 0 12px 16px;
+}
+
+.bsky-manager-head {
+  margin-bottom: 10px;
+}
+
+.bsky-badge {
+  display: inline-block;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-bottom: 4px;
+}
+
+.bsky-manager-title {
+  font-size: 0.96rem;
+  font-weight: 750;
+  margin: 0 0 2px;
+  color: var(--text);
+}
+
+.bsky-manager-desc {
+  font-size: 0.74rem;
+  color: var(--muted);
+  margin: 0;
+  line-height: 1.35;
+}
+
+.bsky-add-form {
+  margin: 10px 0;
+}
+
+.bsky-input-group {
+  display: flex;
+  gap: 8px;
+}
+
+.bsky-input {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm, 8px);
+  border: 1px solid var(--outline);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.8rem;
+}
+
+.bsky-subs-list {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 0.74rem;
+}
+
+.bsky-subs-label {
+  color: var(--muted);
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+.bsky-subs-chips {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.bsky-sub-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: var(--bg);
+  border: 1px solid var(--outline);
+  border-radius: 999px;
+  font-size: 0.72rem;
+  color: var(--text);
+}
+
+.btn-remove-bsky-sub {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1;
+}
+
+.btn-remove-bsky-sub:hover {
+  color: var(--accent, #f59e0b);
+}

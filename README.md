@@ -1,11 +1,11 @@
 # Vox — Rede Social Cívica no Permaweb
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
-[![Tests Passing](https://img.shields.io/badge/tests-430%20passing-success.svg)](./tests)
+[![Tests Passing](https://img.shields.io/badge/tests-452%20passing-success.svg)](./tests)
 [![Client](https://img.shields.io/badge/PWA-Vanilla%20ES%20Modules-orange.svg)](./client)
 [![Identity](https://img.shields.io/badge/Identity-WebCrypto%20P--256-blueviolet.svg)](./client/js/local-account.js)
 [![Storage](https://img.shields.io/badge/Storage-Arweave%20Permaweb-black.svg)](https://arweave.org)
-[![Service Worker](https://img.shields.io/badge/SW-v7.00--slack--discord--bridge-informational.svg)](./client/sw.js)
+[![Service Worker](https://img.shields.io/badge/SW-v7.07--bsky--predatory--ingest-informational.svg)](./client/sw.js)
 
 Uma rede social cívica, livre e de código aberto (FOSS), pensada para **comunidades primeiro**. Uma rede descentralizada no espírito útil do Orkut clássico, onde a **identidade e as chaves ficam no aparelho do usuário** (WebCrypto local), as publicações públicas residem no **permaweb** (Arweave) e os dados circulam por **malha local e relays voluntários**.
 
@@ -52,9 +52,9 @@ Informações sincronizadas com [docs/release-metadata.json](./docs/release-meta
 | Campo | Valor Atual | Descrição / Observação |
 |:---|:---:|:---|
 | **Branch** | `main` | Linha de produção contínua (Pages deploy automático) |
-| **Commit SHA** | `f5d6fea` | HEAD verificado e auditado na esteira de integração |
-| **Suíte de Testes** | **430** (`407` JS + `23` Python) | Execução via `npm test` na raiz do repositório |
-| **Service Worker** | `vox-pwa-v7.04-comments-hierarchy-indent` | Atualização do cache offline do shell estático |
+| **Commit SHA** | `0089c7e` | HEAD verificado e auditado na esteira de integração |
+| **Suíte de Testes** | **452** (`429` JS + `23` Python) | Execução via `npm test` na raiz do repositório |
+| **Service Worker** | `vox-pwa-v7.07-bsky-predatory-ingest` | Atualização do cache offline do shell estático |
 | **Deploy** | [yurikayel.github.io/vox](https://yurikayel.github.io/vox/) | PWA público para testes e validação de campo |
 
 > [!NOTE]
@@ -138,7 +138,7 @@ Na raiz do repositório:
 ```bash
 npm test
 ```
-Executa **444 testes unitários e de integração** (421 testes Node.js nativos + 23 testes em Python stdlib).
+Executa **452 testes unitários e de integração** (429 testes Node.js nativos + 23 testes em Python stdlib).
 
 ### 3. Rodar o Relay / Servidor de Cache Doméstico (Opcional)
 
