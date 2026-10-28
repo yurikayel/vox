@@ -56,6 +56,8 @@ export function initPostMediaLightbox() {
 
     const trigger = e.target.closest(".post-media-lightbox-trigger");
     if (!trigger) return;
+    if (document.body.classList.contains("photo-tagging")) return;
+    if (e.target.closest(".photo-tag-pins, .photo-tag-bar, .btn-photo-tag")) return;
     if (e.target.closest(".post-overlay")) return;
     if (e.target.closest(".post-actions-overlay")) return;
     if (e.target.closest(".post-media-header")) return;
