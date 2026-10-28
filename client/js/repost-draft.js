@@ -23,6 +23,27 @@ export function isRepost(post) {
   return Boolean(post?.originalId || post?.isRepost);
 }
 
+export function postsCiting(posts, originalId) {
+  const id = String(originalId || "").trim();
+  if (!id || !Array.isArray(posts)) return [];
+  return posts.filter((p) => getOriginalId(p) === id);
+}
+
+export function countCites(posts, originalId) {
+  return postsCiting(posts, originalId).length;
+}
+
+export function findOwnCite(posts, originalId, authorId) {
+  const author = String(authorId || "").trim();
+  return (
+    postsCiting(posts, originalId).find((p) => {
+      if (p.isOwnLocalPost) return true;
+      const who = String(p.author || p.owner || "").trim();
+      return Boolean(author && who === author);
+    }) || null
+  );
+}
+
 export function buildRepostDraft(original, { id } = {}) {
   const originalId = String(original?.id || "").trim();
   if (!originalId) return null;

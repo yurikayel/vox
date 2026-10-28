@@ -6678,3 +6678,8 @@ blockquote.repost-cite {
   font-size: 0.75rem;
   color: var(--muted);
 }
+
+.btn-repost.active,
+.post-ig-toolbar .btn-repost.active {
+  color: var(--accent);
+}
