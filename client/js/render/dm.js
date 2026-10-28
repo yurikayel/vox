@@ -116,7 +116,7 @@ function renderDmMessageBubbles(messages, myAddress, peerAddress) {
 function renderWelcomeThreadIntro() {
   const profileHref = `#/u/${encodeURIComponent(WELCOME_ROUTE_ID)}`;
   return `
-    <div class="dm-welcome-intro card" role="complementary" aria-label="Boas-vindas Vox Brasil">
+    <div class="dm-welcome-intro card" role="complementary" aria-label="Boas-vindas Vox">
       <p class="desc" style="margin:0 0 0.5rem; font-size:0.88rem;">
         Conta oficial 📣 — dicas rápidas sem encher o feed.
       </p>

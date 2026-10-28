@@ -13,7 +13,7 @@ test("people-index - includes welcome and search", async () => {
   contacts.__resetContactsForTests();
   const all = await peopleIndex.buildPeopleIndex();
   assert.ok(all.some((p) => p.routeId === WELCOME_ROUTE_ID));
-  const found = await peopleIndex.searchPeople("vox brasil");
+  const found = await peopleIndex.searchPeople("vox");
   assert.ok(found.some((p) => p.routeId === WELCOME_ROUTE_ID));
 });
 

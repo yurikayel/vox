@@ -1,4 +1,4 @@
-# Perfil institucional — Vox Brasil (primeiro contato)
+# Perfil institucional — Vox (primeiro contato)
 
 **RouteId fixo:** `vx_voxbrasil_welcome` (sistema; não assinatura P2P de usuário).
 
