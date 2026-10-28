@@ -74,7 +74,7 @@ O **Dossiê N=25** foi escolhido como a fonte viva e exclusiva de checkboxes `[ 
 - [piloto-comunidade-retrospectiva-template.md](./piloto-comunidade-retrospectiva-template.md) — template retrospectiva  
 - [../client/DEV.md](../client/DEV.md) — guia de desenvolvimento §0–37  
 - [../README.md](../README.md) — release line e tabela canônica  
-- [../ARCHITECTURE.md](../ARCHITECTURE.md) · [../GOVERNANCE.md](../GOVERNANCE.md) · [../COMPLIANCE-BR.md](../COMPLIANCE-BR.md)  
+- [../ARCHITECTURE.md](../ARCHITECTURE.md) · [../POSITIONING.md](../POSITIONING.md) · [../GOVERNANCE.md](../GOVERNANCE.md) · [../COMPLIANCE-BR.md](../COMPLIANCE-BR.md)  
 - `client/sw.js` — `CACHE_NAME` canônico  
 - [revisao-estado-2026-10-25.md](./revisao-estado-2026-10-25.md) — snapshot auditoria pós-agentes (o que shipped vs P0 humano)
 
