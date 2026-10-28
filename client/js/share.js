@@ -53,7 +53,7 @@ export function buildTopicShareText({ title, topicId, communityId = "", author =
   const cleanBody = (body || "").replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
   const excerpt = cleanBody.length > 120 ? `${cleanBody.slice(0, 117)}…` : cleanBody;
   const excerptBlock = excerpt && excerpt !== cleanTitle ? `\n\n"${excerpt}"` : "";
-  return `📢 *${cleanTitle}*${authorTag}${excerptBlock}\n\n👉 Veja e debata no Vox Brasil:\n${url}`;
+  return `📢 *${cleanTitle}*${authorTag}${excerptBlock}\n\n👉 Veja e debata no Vox:\n${url}`;
 }
 
 export function buildWhatsAppShareUrl({ title, topicId, communityId = "", author = "", body = "" }) {
@@ -91,7 +91,7 @@ export async function shareTopic({ title, topicId, communityId, author = "", bod
 
 export async function shareCommunity({ title, communityId }) {
   const url = communityShareUrl(communityId);
-  const text = `Participe da comunidade "${title}" no Vox Brasil:`;
+  const text = `Participe da comunidade "${title}" no Vox:`;
 
   if (navigator.share) {
     try {
@@ -146,7 +146,7 @@ export async function shareListing({ title, communityId, priceLabel = "" }) {
   const commPart = communityId ? `#/c/${encodeURIComponent(communityId)}?tab=listings` : "#/";
   const url = `${window.location.origin}${window.location.pathname}${commPart}`;
   const priceText = priceLabel ? ` por ${priceLabel}` : "";
-  const text = `Oferta "${title}"${priceText} na Feira do Vox Brasil:`;
+  const text = `Oferta "${title}"${priceText} na Feira do Vox:`;
 
   if (navigator.share) {
     try {

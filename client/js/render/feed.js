@@ -102,7 +102,7 @@ export function formatPostMarkdown(post) {
   const body = post.body || "";
   const host = typeof window !== "undefined" && window.location?.origin ? window.location.origin : "https://yurikayel.github.io/vox";
   const url = `${host}/#/t/${encodeURIComponent(post.id)}`;
-  return `> **${authorDisplay}** (@${authorHandle}) · *Vox Brasil*\n>\n> **${title}**\n>\n> ${body}\n>\n> 🔗 Ver no Vox: ${url}`;
+  return `> **${authorDisplay}** (@${authorHandle}) · *Vox*\n>\n> **${title}**\n>\n> ${body}\n>\n> 🔗 Ver no Vox: ${url}`;
 }
 
 export function commentsPanelId(topicId) {
@@ -608,7 +608,7 @@ export function renderWelcomeFeedHintHtml() {
   return `
     <div class="welcome-feed-hint" id="welcome-feed-hint" role="status">
       <span class="welcome-feed-hint-text">
-        💬 <strong>Vox Brasil</strong> te mandou uma mensagem —
+        💬 <strong>Vox</strong> te mandou uma mensagem —
         <a href="${dmHref}">Abrir conversa</a>
       </span>
       <button type="button" class="welcome-feed-hint-dismiss" id="btn-welcome-hint-dismiss" aria-label="Dispensar aviso">×</button>
