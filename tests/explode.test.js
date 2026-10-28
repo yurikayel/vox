@@ -127,8 +127,24 @@ test("explode - topic view includes btn-explode-topic", () => {
 test("explode - posse post-publish sheet offers explode option and omits Janones", () => {
   const posseSrc = fs.readFileSync(path.join(root, "js/posse-dispatch.js"), "utf8");
   assert.ok(posseSrc.includes('data-posse="explode"'));
-  assert.ok(posseSrc.includes("EXPLODE! (Disparo Multi-Redes)"));
+  assert.ok(posseSrc.includes("📢 EXPLODE! (Disparo Multi-Redes)"));
   assert.ok(!posseSrc.includes("Janones"));
+});
+
+test("explode - megaphone emoji and SVG icon are used to clarify civic nature", () => {
+  const html = explode.buildExplodeSheetHtml({ id: "post_megaphone", title: "Cívico" });
+  assert.ok(html.includes("📢 REPLICAÇÃO MULTI-REDES"));
+  assert.ok(html.includes("<span>📢</span>"));
+
+  const igHtml = igToolbar.renderIgToolbar({ id: "post_ig_mega", title: "Foto" }, "Autor");
+  assert.ok(igHtml.includes("m3 11 18-5v12L3 14v-3z"));
+
+  const feedHtml = feed.renderPostItem({ id: "post_feed_mega", title: "Feed", ts: Date.now() });
+  assert.ok(feedHtml.includes("m3 11 18-5v12L3 14v-3z"));
+
+  const main = { innerHTML: "" };
+  topic.renderTopic(main, "topic_mega", { id: "topic_mega", title: "Tema" }, []);
+  assert.ok(main.innerHTML.includes("m3 11 18-5v12L3 14v-3z"));
 });
 
 test("explode - UI copy, buttons and aria labels do not mention Janones", () => {

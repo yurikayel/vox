@@ -1,7 +1,7 @@
 # Vox — Rede Social Cívica no Permaweb
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
-[![Tests Passing](https://img.shields.io/badge/tests-469%20passing-success.svg)](./tests)
+[![Tests Passing](https://img.shields.io/badge/tests-470%20passing-success.svg)](./tests)
 [![Client](https://img.shields.io/badge/PWA-Vanilla%20ES%20Modules-orange.svg)](./client)
 [![Identity](https://img.shields.io/badge/Identity-WebCrypto%20P--256-blueviolet.svg)](./client/js/local-account.js)
 [![Storage](https://img.shields.io/badge/Storage-Arweave%20Permaweb-black.svg)](https://arweave.org)
@@ -52,8 +52,8 @@ Informações sincronizadas com [docs/release-metadata.json](./docs/release-meta
 | Campo | Valor Atual | Descrição / Observação |
 |:---|:---:|:---|
 | **Branch** | `main` | Linha de produção contínua (Pages deploy automático) |
-| **Commit SHA** | `ef2e361` | HEAD verificado e auditado na esteira de integração |
-| **Suíte de Testes** | **469** (`446` JS + `23` Python) | Execução via `npm test` na raiz do repositório |
+| **Commit SHA** | `9ce7f39` | HEAD verificado e auditado na esteira de integração |
+| **Suíte de Testes** | **470** (`447` JS + `23` Python) | Execução via `npm test` na raiz do repositório |
 | **Service Worker** | `vox-pwa-v7.10-hardened-review-sovereign-shield` | Atualização do cache offline do shell estático |
 | **Deploy** | [yurikayel.github.io/vox](https://yurikayel.github.io/vox/) | PWA público para testes e validação de campo |
 
@@ -138,7 +138,7 @@ Na raiz do repositório:
 ```bash
 npm test
 ```
-Executa **469 testes unitários e de integração** (446 testes Node.js nativos + 23 testes em Python stdlib).
+Executa **470 testes unitários e de integração** (447 testes Node.js nativos + 23 testes em Python stdlib).
 
 ### 3. Rodar o Relay / Servidor de Cache Doméstico (Opcional)
 
