@@ -4,6 +4,14 @@ export const BSKY_SUBS_STORAGE_KEY = "vox-bsky-subs-v1";
 export const BSKY_PUBLIC_ENDPOINT = "https://public.api.bsky.app/xrpc";
 export const BSKY_DEFAULT_SEEDS = ["lula.com.br", "brasildefato.com.br", "theintercept.com"];
 
+export const BSKY_CIVIC_SUGGESTIONS = Object.freeze([
+  { handle: "lula.com.br", label: "Lula" },
+  { handle: "brasildefato.com.br", label: "Brasil de Fato" },
+  { handle: "theintercept.com", label: "The Intercept" },
+  { handle: "apublica.org", label: "Agência Pública" },
+  { handle: "cartacapital.com.br", label: "CartaCapital" },
+]);
+
 export function loadBskySubscriptions() {
   if (typeof localStorage === "undefined") return [...BSKY_DEFAULT_SEEDS];
   try {
@@ -22,7 +30,7 @@ export function saveBskySubscriptions(handles) {
     (Array.isArray(handles) ? handles : [])
       .map((h) => String(h || "").trim().replace(/^@/, "").toLowerCase())
       .filter(Boolean)
-  )).slice(0, 30);
+  )).slice(0, 50);
   localStorage.setItem(BSKY_SUBS_STORAGE_KEY, JSON.stringify(clean));
 }
 
@@ -46,6 +54,64 @@ export function removeBskySubscription(handle) {
 export function buildBskyAuthorFeedUrl(actor, limit = 20) {
   const a = encodeURIComponent(String(actor || "").trim().replace(/^@/, ""));
   return `${BSKY_PUBLIC_ENDPOINT}/app.bsky.feed.getAuthorFeed?actor=${a}&limit=${limit}`;
+}
+
+export function buildBskyFollowsUrl(actor, limit = 50) {
+  const a = encodeURIComponent(String(actor || "").trim().replace(/^@/, ""));
+  return `${BSKY_PUBLIC_ENDPOINT}/app.bsky.graph.getFollows?actor=${a}&limit=${limit}`;
+}
+
+export async function fetchBskyFollows(actor, limit = 50) {
+  const clean = String(actor || "").trim().replace(/^@/, "");
+  if (!clean) return [];
+  const url = buildBskyFollowsUrl(clean, limit);
+  try {
+    const res = await fetch(url, { headers: { Accept: "application/json" } });
+    if (!res.ok) return [];
+    const data = await res.json();
+    const follows = Array.isArray(data?.follows) ? data.follows : [];
+    return follows.map((f) => f?.handle).filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
+export async function importBskyFollows(actor, limit = 50) {
+  const follows = await fetchBskyFollows(actor, limit);
+  if (!follows.length) return { added: 0, total: loadBskySubscriptions().length };
+  const current = loadBskySubscriptions();
+  const next = Array.from(new Set([...follows, ...current])).slice(0, 50);
+  saveBskySubscriptions(next);
+  return { added: next.length - current.length, total: next.length };
+}
+
+export function exportBskySubscriptionsJson() {
+  const subs = loadBskySubscriptions();
+  return JSON.stringify({ version: 1, exportedAt: new Date().toISOString(), subscriptions: subs }, null, 2);
+}
+
+export function importSubscriptionsList(rawText) {
+  if (!rawText || typeof rawText !== "string") return 0;
+  let handles = [];
+  try {
+    const parsed = JSON.parse(rawText);
+    handles = Array.isArray(parsed) ? parsed : (Array.isArray(parsed?.subscriptions) ? parsed.subscriptions : []);
+  } catch {
+    handles = rawText.split(/[\r\n,;]+/).map((s) => s.trim()).filter(Boolean);
+  }
+  const clean = handles.map((h) => String(h).trim().replace(/^@/, "").toLowerCase()).filter(Boolean);
+  if (!clean.length) return 0;
+  const current = loadBskySubscriptions();
+  const merged = Array.from(new Set([...clean, ...current])).slice(0, 50);
+  saveBskySubscriptions(merged);
+  return merged.length - current.length;
+}
+
+export function quoteExternalPostText(post) {
+  const handle = post?.authorHandle || "@bluesky";
+  const url = post?.externalUrl || "";
+  const body = String(post?.body || post?.title || "").slice(0, 320);
+  return `> 🌐 **Citação Soberana de ${handle}** ([Ver original](${url})):\n> "${body}"\n\n`;
 }
 
 export function extractPostImage(embed) {
