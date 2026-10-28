@@ -342,3 +342,84 @@ export async function syncIdentity() {
     peers.announceIdentity(user, dmPub);
   }
 }
+
+export async function showLinkedAccounts() {
+  const user = await getActiveUser();
+  const main = render.renderShell(makeShellProps(user, "network", "Redes Vinculadas"));
+  render.renderLinkedAccountsPage(main);
+  bindLinkedAccountsUi(() => showLinkedAccounts());
+}
+
+export function bindLinkedAccountsUi(onRefresh) {
+  const chkMaster = document.getElementById("chk-auto-replicate-master");
+  if (chkMaster && !chkMaster.dataset.wired) {
+    chkMaster.dataset.wired = "1";
+    chkMaster.addEventListener("change", () => {
+      import("../linked-accounts.js").then((mod) => {
+        mod.setAutoReplicationEnabled(chkMaster.checked);
+        share.showToast(chkMaster.checked ? "Auto-replicação ativada! ⚡" : "Auto-replicação desativada.");
+      });
+    });
+  }
+
+  const btnGeneral = document.getElementById("btn-save-general-webhook");
+  if (btnGeneral && !btnGeneral.dataset.wired) {
+    btnGeneral.dataset.wired = "1";
+    btnGeneral.addEventListener("click", () => {
+      const val = document.getElementById("input-general-webhook")?.value?.trim();
+      import("../linked-accounts.js").then((mod) => {
+        mod.setGeneralWebhookUrl(val);
+        share.showToast(val ? "Webhook unificado salvo!" : "Webhook removido.");
+      });
+    });
+  }
+
+  document.querySelectorAll(".form-link-network").forEach((form) => {
+    if (form.dataset.wired) return;
+    form.dataset.wired = "1";
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const netId = form.dataset.netId;
+      const handleInput = form.querySelector(".input-net-handle");
+      const webhookInput = form.querySelector(".input-net-webhook");
+      const handle = handleInput?.value?.trim();
+      const webhook = webhookInput?.value?.trim() || "";
+      if (!handle) return;
+      import("../linked-accounts.js").then((mod) => {
+        mod.saveLinkedAccount(netId, { handle, webhook, enabled: true });
+        share.showToast(`Conta @${handle.replace(/^@/, "")} vinculada com sucesso! 🔗`);
+        if (onRefresh) onRefresh();
+      });
+    });
+  });
+
+  document.querySelectorAll(".btn-unlink-network").forEach((btn) => {
+    if (btn.dataset.wired) return;
+    btn.dataset.wired = "1";
+    btn.addEventListener("click", () => {
+      const netId = btn.dataset.netId;
+      if (!netId) return;
+      import("../linked-accounts.js").then((mod) => {
+        mod.removeLinkedAccount(netId);
+        share.showToast("Rede desvinculada.");
+        if (onRefresh) onRefresh();
+      });
+    });
+  });
+
+  document.querySelectorAll(".chk-network-replicate").forEach((chk) => {
+    if (chk.dataset.wired) return;
+    chk.dataset.wired = "1";
+    chk.addEventListener("change", () => {
+      const netId = chk.dataset.netId;
+      if (!netId) return;
+      import("../linked-accounts.js").then((mod) => {
+        const accounts = mod.loadLinkedAccounts();
+        if (accounts[netId]) {
+          mod.saveLinkedAccount(netId, { ...accounts[netId], enabled: chk.checked });
+          share.showToast(chk.checked ? "Replicação ativada para este canal." : "Replicação pausada para este canal.");
+        }
+      });
+    });
+  });
+}
