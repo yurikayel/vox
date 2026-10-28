@@ -36,6 +36,13 @@ function commentBtn(t) {
   return `<button type="button" class="action-btn btn-comment" data-id="${escapeHtml(t.id)}" data-comm="${escapeHtml(t.communityId || "")}" aria-label="Comentar${n > 0 ? `, ${n} comentários` : ""}">${iconComment()}${count}</button>`;
 }
 
+function explodeBtn(t, authorDisplay) {
+  const n = social.getExplodesCount(t.id, Number(t.explodesCount) || 0);
+  const exploded = social.isExploded(t.id);
+  const count = n > 0 ? `<span class="overlay-action-count count-explodes">${n}</span>` : `<span class="overlay-action-count count-explodes"></span>`;
+  return `<button class="action-btn btn-explode btn-explode-post ${exploded ? "exploded" : ""}" data-id="${escapeHtml(t.id)}" data-count="${Number(t.explodesCount) || 0}" data-title="${escapeHtml(t.title)}" data-author="${escapeHtml(authorDisplay || "")}" data-body="${escapeHtml((t.body || t.title || "").slice(0, 200))}" data-comm="${escapeHtml(t.communityId || "")}" aria-label="Explodir nas redes (EXPLODE!)" title="EXPLODE! (Shift+clique para disparo rápido)">${iconExplode()}${count}</button>`;
+}
+
 export function renderIgToolbar(t, authorDisplay) {
   const liked = social.isLiked(t.id);
   const likes = social.getLikesCount(t.id, Number(t.likesCount) || 0);
@@ -47,7 +54,7 @@ export function renderIgToolbar(t, authorDisplay) {
       ${commentBtn(t)}
       ${renderRepostBtn(t)}
       <button class="action-btn btn-share btn-share-post" data-id="${escapeHtml(t.id)}" data-title="${escapeHtml(t.title)}" data-author="${escapeHtml(authorDisplay || "")}" data-body="${escapeHtml((t.title || "").slice(0, 160))}" aria-label="Compartilhar"${shareAttrs(t.id)}>${iconPlane()}</button>
-      <button class="action-btn btn-explode btn-explode-post" data-id="${escapeHtml(t.id)}" data-title="${escapeHtml(t.title)}" data-author="${escapeHtml(authorDisplay || "")}" data-body="${escapeHtml((t.body || t.title || "").slice(0, 200))}" data-comm="${escapeHtml(t.communityId || "")}" aria-label="Explodir nas redes (EXPLODE!)" title="EXPLODE! (Shift+clique para disparo rápido)">${iconExplode()}</button>
+      ${explodeBtn(t, authorDisplay)}
       ${t.isExternal ? `<button class="action-btn btn-quote-external" data-id="${escapeHtml(t.id)}" data-title="${escapeHtml(t.title)}" data-author="${escapeHtml(authorDisplay || "")}" data-handle="${escapeHtml(t.authorHandle || "")}" data-body="${escapeHtml((t.body || t.title || "").slice(0, 200))}" data-url="${escapeHtml(t.externalUrl || "")}" aria-label="Citar e debater no Vox" title="💬 Citar e debater no Vox"><svg class="action-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>` : ""}
     </div>
     <button class="action-btn btn-save ${saved ? "active" : ""}" data-id="${escapeHtml(t.id)}" aria-label="Salvar post">${iconBookmark(saved)}</button>

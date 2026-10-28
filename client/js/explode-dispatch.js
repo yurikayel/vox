@@ -12,6 +12,7 @@ import {
 } from "./posse-dispatch.js";
 import { dispatchAutoReplication, loadLinkedAccounts } from "./linked-accounts.js";
 import { copyStoryCardToClipboard } from "./story-card.js";
+import { recordExplosion } from "./social.js";
 import { escapeHtml } from "./render/util.js";
 
 export const EXPLODE_SHEET_ID = "explode-dispatch-sheet";
@@ -98,6 +99,20 @@ export async function quickExplodePost(post) {
   return res;
 }
 
+export function updateExplodeButtonsUi(postId, count) {
+  if (typeof document === "undefined" || !postId) return;
+  const buttons = document.querySelectorAll(`.btn-explode-post[data-id="${postId}"]`);
+  buttons.forEach((btn) => {
+    btn.classList.add("exploded");
+    const countEl = btn.querySelector(".count-explodes");
+    if (countEl) {
+      countEl.textContent = btn.id === "btn-explode-topic"
+        ? (count > 0 ? `${count} disparos` : "EXPLODE!")
+        : (count > 0 ? String(count) : "");
+    }
+  });
+}
+
 export async function executeExplodeBurst(post) {
   const canonicalUrl = buildCanonicalTopicUrl(post?.id, { communityId: post?.communityId });
   const text = buildExplodeText({
@@ -116,6 +131,11 @@ export async function executeExplodeBurst(post) {
   const webhooks = loadPosseWebhooks();
   const res = webhooks.length ? await firePosseWebhooks(payload, webhooks) : { sent: 0, failed: 0 };
   const autoRep = await dispatchAutoReplication({ ...post, canonicalUrl }).catch(() => ({ count: 0 }));
+
+  if (post?.id) {
+    const exp = recordExplosion(post.id, post.explodesCount || 0);
+    updateExplodeButtonsUi(post.id, exp.count);
+  }
 
   return { copied, webhooksSent: res.sent + (autoRep.count || 0), text, canonicalUrl };
 }
@@ -358,6 +378,10 @@ async function onExplodeAction(action) {
     const res = await executeExplodeBurst(activeExplodePost);
     share.showToast(res.webhooksSent > 0 ? `📢 Rajada disparada! (${res.webhooksSent} destinos)` : "📢 Mensagem copiada! Cole nos grupos!");
     return closeExplodeSheet();
+  }
+  if (activeExplodePost?.id) {
+    const exp = recordExplosion(activeExplodePost.id, activeExplodePost.explodesCount || 0);
+    updateExplodeButtonsUi(activeExplodePost.id, exp.count);
   }
   if (await handleExplodeGridActions(action, text, canonicalUrl, payload, activeExplodePost)) return closeExplodeSheet();
   if (action === "copy") {
