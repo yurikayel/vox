@@ -180,7 +180,7 @@ function relayHealthLabel(relayStatus, relayHttpUrl) {
   return host ? `⚪ Offline (${host})` : "⚪ Offline";
 }
 
-function renderNetworkForm(settings, notifPermission, customSignalingUrl, customRelayHttpUrl, customTurn, relayStatus, rtcStatus, metrics, relayHttpUrl, meshDiscoverable = false) {
+function renderNetworkForm(settings, notifPermission, customSignalingUrl, customRelayHttpUrl, customTurn, relayStatus, rtcStatus, metrics, relayHttpUrl, meshDiscoverable = false, customRelayBuddyHttpUrl = "") {
   const isEnabled = Boolean(settings?.enabled);
   const isBg = Boolean(settings?.backgroundRelay);
   const notifNotice = notifPermission === "granted"
@@ -247,6 +247,12 @@ function renderNetworkForm(settings, notifPermission, customSignalingUrl, custom
               <label for="net-relay-http-url">Relay HTTP (cache e inbox, opcional):</label>
               <input type="text" id="net-relay-http-url" class="form-control" placeholder="https://relay.comunidade.org ou 192.168.0.10:3920" value="${customRelayHttpUrl || ""}" />
               <p class="desc" style="font-size:0.75rem; margin:0.35rem 0 0;">Usado para buscar posts e mensagens efêmeras. Vazio = derivado do servidor de conexão ou localhost.</p>
+            </div>
+
+            <div class="form-group">
+              <label for="net-relay-buddy-http-url">Relay Buddy (reserva/espelho B, opcional):</label>
+              <input type="text" id="net-relay-buddy-http-url" class="form-control" placeholder="https://buddy.comunidade.org ou https://usuario-space.hf.space" value="${customRelayBuddyHttpUrl || ""}" />
+              <p class="desc" style="font-size:0.75rem; margin:0.35rem 0 0;">Segundo nó para failover automático se o relay principal cair durante o piloto.</p>
             </div>
 
             ${renderTurnFields(customTurn)}
@@ -348,6 +354,7 @@ export function renderNetworkSettings(main, {
   rtcStatus,
   customSignalingUrl,
   customRelayHttpUrl,
+  customRelayBuddyHttpUrl = "",
   customTurn,
   relayHttpUrl,
   gatewayHealth,
@@ -370,6 +377,7 @@ export function renderNetworkSettings(main, {
     metrics,
     relayHttpUrl,
     meshDiscoverable,
+    customRelayBuddyHttpUrl,
   );
   html += renderStatusLinkBlock();
   html += renderPosseWebhooksSection(posseWebhooks);
