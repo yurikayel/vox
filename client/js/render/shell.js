@@ -62,16 +62,27 @@ function renderWalletBadge(walletAddress) {
 }
 
 export function renderFeedNav(activeFeed = "for-you") {
-  const isForYou = activeFeed !== "following";
+  const isForYou = activeFeed === "for-you";
+  const isFollowing = activeFeed === "following";
+  const isExternal = activeFeed === "external";
+  const isAll = activeFeed === "all";
   return `
     <nav class="sidebar-feed-nav" aria-label="Alternar feed">
       <a href="#/" class="sidebar-feed-tab ${isForYou ? "active" : ""}"${isForYou ? ' aria-current="page"' : ""}>
         <span class="sidebar-feed-icon" aria-hidden="true">${ICONS.feedForYou}</span>
         <span class="sidebar-feed-label">Para você</span>
       </a>
-      <a href="#/?feed=following" class="sidebar-feed-tab ${!isForYou ? "active" : ""}"${!isForYou ? ' aria-current="page"' : ""}>
+      <a href="#/?feed=following" class="sidebar-feed-tab ${isFollowing ? "active" : ""}"${isFollowing ? ' aria-current="page"' : ""}>
         <span class="sidebar-feed-icon" aria-hidden="true">${ICONS.following}</span>
         <span class="sidebar-feed-label">Seguindo</span>
+      </a>
+      <a href="#/?feed=external" class="sidebar-feed-tab ${isExternal ? "active" : ""}"${isExternal ? ' aria-current="page"' : ""}>
+        <span class="sidebar-feed-icon" aria-hidden="true">🌐</span>
+        <span class="sidebar-feed-label">Redes (Bluesky)</span>
+      </a>
+      <a href="#/?feed=all" class="sidebar-feed-tab ${isAll ? "active" : ""}"${isAll ? ' aria-current="page"' : ""}>
+        <span class="sidebar-feed-icon" aria-hidden="true">🔀</span>
+        <span class="sidebar-feed-label">Tudo</span>
       </a>
     </nav>`;
 }

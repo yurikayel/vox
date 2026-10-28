@@ -251,6 +251,29 @@ function renderPostHeaderBlock(t, author, labels, { photoOverlay = false } = {})
       <div class="post-header-aside">${ownerMenu}</div>
     </header>`;
   }
+  if (t.isExternal) {
+    const avatarImg = t.authorAvatar
+      ? `<img class="avatar avatar-img" src="${escapeHtml(t.authorAvatar)}" alt="${escapeHtml(authorDisplay)}" loading="lazy" />`
+      : `<span class="avatar avatar-bsky">🦋</span>`;
+    const sourceBadge = `<span class="badge-post-external bsky" title="Post ingerido via AT Protocol"><a href="${escapeHtml(t.externalUrl || '#')}" target="_blank" rel="noopener noreferrer">🦋 Bluesky ↗</a></span>`;
+    return `
+      <header class="post-header-inline post-header-external">
+        <div class="post-header-user">
+          <a class="avatar-link" href="${escapeHtml(t.externalUrl || '#')}" target="_blank" rel="noopener noreferrer">${avatarImg}</a>
+          <div class="post-header-meta">
+            <div class="post-author-line">
+              <strong class="post-author-name">${escapeHtml(authorDisplay)}</strong>
+              <span class="post-handle">${escapeHtml(labels.authorHandle || "")}</span>
+              ${sourceBadge}
+            </div>
+            <div class="post-meta-sub">
+              <time class="post-time">${escapeHtml(formatTimeAgo(t.ts))}</time>
+            </div>
+          </div>
+        </div>
+        ${ownerMenu ? `<div class="post-header-aside">${ownerMenu}</div>` : ""}
+      </header>`;
+  }
   const metaHtml = renderPostAuthorMetaLines(author, labels, formatTimeAgo(t.ts), { ts: t.ts });
   const asideHtml = ownerMenu ? `<div class="post-header-aside">${ownerMenu}</div>` : "";
   return `
@@ -623,14 +646,66 @@ export function renderWelcomeFeedHintHtml() {
     </div>`;
 }
 
-export function renderFeed(main, topics = [], { activeFeed = "for-you", userRouteId = "" } = {}) {
-  const isForYou = activeFeed !== "following";
+export function renderFeedTabsBar(activeFeed = "for-you") {
+  const isForYou = activeFeed === "for-you";
+  const isExternal = activeFeed === "external";
+  const isAll = activeFeed === "all";
+  const isFollowing = activeFeed === "following";
+
+  return `
+    <div class="feed-tabs-bar" role="tablist" aria-label="Filtro de feeds">
+      <a href="#/" class="feed-tab-chip ${isForYou ? "active" : ""}" role="tab" aria-selected="${isForYou}">🏛️ Vox</a>
+      <a href="#/?feed=external" class="feed-tab-chip ${isExternal ? "active" : ""}" role="tab" aria-selected="${isExternal}">🌐 Redes (Bluesky)</a>
+      <a href="#/?feed=all" class="feed-tab-chip ${isAll ? "active" : ""}" role="tab" aria-selected="${isAll}">🔀 Tudo</a>
+      <a href="#/?feed=following" class="feed-tab-chip ${isFollowing ? "active" : ""}" role="tab" aria-selected="${isFollowing}">⭐ Seguindo</a>
+    </div>`;
+}
+
+export function renderExternalFeedManagerHtml(subscriptions = []) {
+  const list = Array.isArray(subscriptions) ? subscriptions : [];
+  const chips = list
+    .map(
+      (h) => `
+    <span class="bsky-sub-chip">
+      <span class="bsky-sub-name">@${escapeHtml(h)}</span>
+      <button type="button" class="btn-remove-bsky-sub" data-handle="${escapeHtml(h)}" aria-label="Remover @${escapeHtml(h)}" title="Deixar de acompanhar">×</button>
+    </span>`
+    )
+    .join("");
+
+  return `
+    <div class="bsky-feed-manager" role="region" aria-label="Gerenciador de feeds externos">
+      <div class="bsky-manager-head">
+        <span class="bsky-badge">🌐 INGESTÃO PREDATÓRIA · AT PROTOCOL</span>
+        <h3 class="bsky-manager-title">Feeds do Bluesky sem Algoritmo de Ódio</h3>
+        <p class="bsky-manager-desc">Consuma perfis externos dentro da soberania do Vox. Cronológico puro, sem anúncios nem rastreadores.</p>
+      </div>
+      <form id="form-add-bsky" class="bsky-add-form" aria-label="Adicionar perfil do Bluesky">
+        <div class="bsky-input-group">
+          <input type="text" id="input-bsky-handle" class="bsky-input" placeholder="Digite @handle.bsky.social..." required aria-label="Handle do Bluesky" />
+          <button type="submit" class="btn btn-primary btn-sm btn-submit-bsky">+ Acompanhar no Vox</button>
+        </div>
+      </form>
+      <div class="bsky-subs-list">
+        <span class="bsky-subs-label">Perfis integrados:</span>
+        <div class="bsky-subs-chips">${chips || '<span class="meta">Nenhum perfil cadastrado.</span>'}</div>
+      </div>
+    </div>`;
+}
+
+export function renderFeed(main, topics = [], { activeFeed = "for-you", userRouteId = "", externalSubs = null } = {}) {
+  const isForYou = activeFeed !== "following" && activeFeed !== "external" && activeFeed !== "all";
   const displayName =
     userRouteId ? profileDirectory.getAuthorDisplaySync(userRouteId) || mock.getAuthorDisplay(userRouteId) : "";
   const welcomeHint = isForYou ? renderWelcomeFeedHintHtml() : "";
+  const tabsBar = renderFeedTabsBar(activeFeed);
+  const managerHtml = activeFeed === "external" ? renderExternalFeedManagerHtml(externalSubs) : "";
+
   let html = `
     <div class="feed-chrome">
       ${renderStoriesStrip()}
+      ${tabsBar}
+      ${managerHtml}
       ${welcomeHint}
       <div class="feed-composer-section">
         ${renderInlineComposer({ userRouteId, displayName })}
@@ -638,7 +713,13 @@ export function renderFeed(main, topics = [], { activeFeed = "for-you", userRout
     </div>`;
 
   if (!topics.length) {
-    if (!isForYou) {
+    if (activeFeed === "external") {
+      html += `
+        <div class="empty external-empty">
+          <p><strong>Nenhum post externo encontrado.</strong></p>
+          <p class="desc" style="max-width:440px; margin:0.4rem auto 0.8rem;">Adicione um perfil do Bluesky acima ou verifique sua conexão com a internet.</p>
+        </div>`;
+    } else if (activeFeed === "following") {
       html += `
         <div class="empty following-empty">
           <p><strong>Você ainda não acompanha ninguém.</strong></p>

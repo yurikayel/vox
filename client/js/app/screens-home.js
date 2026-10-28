@@ -1,3 +1,4 @@
+import * as bskyFeed from "../bsky-feed.js";
 /** @file Home feed, communities list, tag feed. */
 
 import * as gql from "../graphql.js";
@@ -119,6 +120,9 @@ export async function showHome(feed = "for-you") {
     if (activeFeed === "following") {
       const watchedSet = new Set(social.getWatchedProfiles());
       finalTopics = merged.filter((p) => watchedSet.has(p.author || p.owner));
+    } else if (activeFeed === "all") {
+      const bsky = await bskyFeed.fetchAggregatedBskyFeed().catch(() => []);
+      finalTopics = [...merged, ...bsky].sort((a, b) => (b.ts || 0) - (a.ts || 0));
     }
     finalTopics = mod.filterFeedPosts(finalTopics);
 
@@ -152,9 +156,39 @@ export async function showHome(feed = "for-you") {
   attachPostOverlayActionMenuHandlers();
   attachInlineComposerHandlers(() => showHome(activeFeed));
   attachWelcomeFeedHintHandlers();
+  attachBskyManagerHandlers(() => showHome(activeFeed));
   if (onboarding.dmJustSeeded && activeFeed === "for-you") {
     share.showToast("Vox te mandou uma mensagem — veja em Mensagens 💬");
   }
+}
+
+export function attachBskyManagerHandlers(onRefresh) {
+  const form = document.getElementById("form-add-bsky");
+  if (form && !form.dataset.wired) {
+    form.dataset.wired = "1";
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const input = document.getElementById("input-bsky-handle");
+      const val = input?.value?.trim();
+      if (!val) return;
+      bskyFeed.addBskySubscription(val);
+      share.showToast(`Perfil @${val.replace(/^@/, "")} adicionado ao Vox! 🌐`);
+      if (input) input.value = "";
+      if (onRefresh) onRefresh();
+    });
+  }
+
+  document.querySelectorAll(".btn-remove-bsky-sub").forEach((btn) => {
+    if (btn.dataset.wired) return;
+    btn.dataset.wired = "1";
+    btn.addEventListener("click", () => {
+      const handle = btn.dataset.handle;
+      if (!handle) return;
+      bskyFeed.removeBskySubscription(handle);
+      share.showToast(`Perfil @${handle} removido.`);
+      if (onRefresh) onRefresh();
+    });
+  });
 }
 
 export async function showCommunities() {

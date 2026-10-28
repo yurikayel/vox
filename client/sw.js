@@ -4,7 +4,7 @@
 
 // O Service Worker atua no cache offline do shell e notifica��es de status, sem abrir WebRTC.
 
-const CACHE_NAME = "vox-pwa-v7.06-explode-janones";
+const CACHE_NAME = "vox-pwa-v7.07-bsky-predatory-ingest";
 
 const SHELL_ASSETS = [
 
@@ -130,6 +130,7 @@ const SHELL_ASSETS = [
 
   "./js/posse-dispatch.js",
   "./js/explode-dispatch.js",
+  "./js/bsky-feed.js",
 
   "./js/render/markdown-body.js",
 
