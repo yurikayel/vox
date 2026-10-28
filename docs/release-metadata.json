@@ -1,9 +1,9 @@
 {
-  "git_sha": "9ce7f39",
+  "git_sha": "dabba70",
   "branch": "main",
-  "test_js": 447,
+  "test_js": 451,
   "test_python": 23,
-  "test_total": 470,
+  "test_total": 474,
   "cache_name": "vox-pwa-v7.10-hardened-review-sovereign-shield",
-  "generated_at": "2026-10-28T21:40:35Z"
+  "generated_at": "2026-10-28T21:46:47Z"
 }

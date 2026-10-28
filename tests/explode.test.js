@@ -224,6 +224,52 @@ test("explode - openExplodeSheet and closeExplodeSheet manage sheet lifecycle", 
   }
 });
 
+test("explode - buildTwitterExplodeText formats concise tweet under character limits", () => {
+  const tw = explode.buildTwitterExplodeText({
+    title: "Voto Popular na Praça contra a escala 6x1 e pelos direitos",
+    body: "Vamos defender o salário mínimo e a soberania popular! Mais de mil trabalhadores reunidos hoje em São Paulo. #SalarioDigno #6x1Nao",
+  });
+  assert.ok(tw.startsWith("📢 Voto Popular na Praça"));
+  assert.ok(tw.includes("#SalarioDigno"));
+  assert.ok(tw.length <= 220);
+});
+
+test("explode - buildBlueskyExplodeText formats post under 290 characters", () => {
+  const bsky = explode.buildBlueskyExplodeText({
+    title: "Voto Popular na Praça contra a escala 6x1 e pelos direitos",
+    body: "Vamos defender o salário mínimo e a soberania popular! Mais de mil trabalhadores reunidos hoje em São Paulo. #SalarioDigno #6x1Nao",
+    url: "https://yurikayel.github.io/vox/#/t/top_bsky_123",
+  });
+  assert.ok(bsky.includes("https://yurikayel.github.io/vox/#/t/top_bsky_123"));
+  assert.ok(bsky.includes("#SalarioDigno"));
+  assert.ok(bsky.length <= 290);
+});
+
+test("explode - buildExplodeSheetHtml renders connected account badges", async () => {
+  const linkedModule = await import("../client/js/linked-accounts.js");
+  linkedModule.saveLinkedAccount("instagram", { handle: "kayel_yuri" });
+  linkedModule.saveLinkedAccount("twitter", { handle: "yurix" });
+
+  const html = explode.buildExplodeSheetHtml({
+    id: "post_with_linked",
+    title: "Post com badges",
+  });
+
+  assert.ok(html.includes('class="explode-grid-connected"'));
+  assert.ok(html.includes("kayel_yuri"));
+  assert.ok(html.includes("yurix"));
+});
+
+test("explode - quickExplodePost triggers burst and copies content", async () => {
+  const res = await explode.quickExplodePost({
+    id: "post_quick",
+    title: "Post rápido",
+    body: "Corpo do disparo rápido",
+  });
+  assert.ok(res.text.includes("Post rápido"));
+  assert.ok(res.canonicalUrl.includes("post_quick"));
+});
+
 test("explode - sw.js caches explode-dispatch.js", () => {
   const sw = fs.readFileSync(path.join(root, "sw.js"), "utf8");
   assert.ok(sw.includes('"./js/explode-dispatch.js"'));
