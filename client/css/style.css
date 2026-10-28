@@ -7024,3 +7024,28 @@ blockquote.repost-cite {
   flex-wrap: wrap;
   min-width: 0;
 }
+
+
+.dm-bubble-media {
+  margin-bottom: 0.45rem;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  max-width: 240px;
+  border: 1px solid var(--outline);
+}
+
+.dm-bubble-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+.dm-attach-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 0.65rem;
+  cursor: pointer;
+  flex-shrink: 0;
+}

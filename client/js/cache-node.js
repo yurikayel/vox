@@ -179,6 +179,7 @@ export async function saveDmMessage(msg) {
         replyTo: msg.replyTo || null,
         contextCard: msg.contextCard || null,
         reactions: msg.reactions || {},
+        mediaDataUrl: msg.mediaDataUrl || "",
       });
       tx.oncomplete = () => resolve();
       tx.onerror = () => resolve();

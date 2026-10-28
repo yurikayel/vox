@@ -17,6 +17,7 @@ import { ensureOnboardingSideEffects } from "./onboarding-side-effects.js";
 
 let activeReplyDraft = null;
 let pendingContextDraft = null;
+let activeMediaDraft = "";
 
 async function applyBubbleReaction(peerAddress, actorAddress, targetId, emoji) {
   const msgs = await cacheNode.getDmMessages(peerAddress);
@@ -27,10 +28,26 @@ async function applyBubbleReaction(peerAddress, actorAddress, targetId, emoji) {
   return true;
 }
 
+async function applyReadReceipt(peerAddress, upToTs) {
+  const msgs = await cacheNode.getDmMessages(peerAddress);
+  let updated = false;
+  for (const m of msgs) {
+    if (m.from !== peerAddress && m.status !== "read" && (Number(m.ts) || 0) <= upToTs) {
+      m.status = "read";
+      await cacheNode.saveDmMessage(m);
+      updated = true;
+    }
+  }
+  return updated;
+}
+
 async function ingestDecryptedEnvelope(env, rawText) {
   const parsed = dmMsg.parseDmPayload(rawText);
   if (parsed.kind === "react") {
     return applyBubbleReaction(env.from, env.from, parsed.targetId, parsed.emoji);
+  }
+  if (parsed.kind === "read") {
+    return applyReadReceipt(env.from, parsed.upToTs);
   }
   await cacheNode.saveDmMessage({
     id: env.id,
@@ -40,6 +57,7 @@ async function ingestDecryptedEnvelope(env, rawText) {
     text: parsed.text,
     replyTo: parsed.replyTo,
     contextCard: parsed.contextCard,
+    mediaDataUrl: parsed.mediaDataUrl,
     ts: env.ts || Date.now(),
     status: "received",
   });
@@ -153,6 +171,7 @@ async function sealAndPersistOutgoingDm(user, peerAddress, peerDmPub, text) {
     text,
     replyTo: activeReplyDraft,
     contextCard: pendingContextDraft,
+    mediaDataUrl: activeMediaDraft,
   });
   const envelope = await cryptoDm.seal(peerDmPub, wirePayload, { from: user, to: peerAddress });
   const status = await dispatchSealedEnvelope(peerAddress, envelope);
@@ -164,6 +183,7 @@ async function sealAndPersistOutgoingDm(user, peerAddress, peerDmPub, text) {
     text,
     replyTo: activeReplyDraft,
     contextCard: pendingContextDraft,
+    mediaDataUrl: activeMediaDraft,
     ts: envelope.ts,
     status,
   });
@@ -172,7 +192,8 @@ async function sealAndPersistOutgoingDm(user, peerAddress, peerDmPub, text) {
 export async function handleSendDmSubmit(user, peerAddress, peerDmPub) {
   const input = document.getElementById("dm-message-input");
   const rawText = input?.value.trim() || "";
-  const text = rawText || (pendingContextDraft ? `💬 ${pendingContextDraft.title}` : "");
+  const fallback = pendingContextDraft ? `💬 ${pendingContextDraft.title}` : activeMediaDraft ? "📷 Foto" : "";
+  const text = rawText || fallback;
   if (!text) return;
   const btn = document.getElementById("btn-send-dm");
   if (btn) btn.disabled = true;
@@ -181,6 +202,7 @@ export async function handleSendDmSubmit(user, peerAddress, peerDmPub) {
     await sealAndPersistOutgoingDm(user, peerAddress, peerDmPub, text);
     activeReplyDraft = null;
     pendingContextDraft = null;
+    activeMediaDraft = "";
     if (input) input.value = "";
     showDmThread(peerAddress);
   } catch (err) {
@@ -202,14 +224,53 @@ async function handleToggleBubbleReaction(user, peerAddress, peerDmPub, msgId, e
   showDmThread(peerAddress);
 }
 
+function compressDmImageFile(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("Falha ao ler imagem"));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error("Imagem inválida"));
+      img.onload = () => {
+        const scale = Math.min(1, 380 / Math.max(img.width || 1, img.height || 1));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(img.width * scale));
+        canvas.height = Math.max(1, Math.round(img.height * scale));
+        canvas.getContext("2d")?.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", 0.56));
+      };
+      img.src = String(reader.result || "");
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function bindDmMediaAttachmentEvents() {
+  const fileInput = document.getElementById("dm-media-input");
+  fileInput?.addEventListener("change", async () => {
+    const file = fileInput.files?.[0];
+    if (!file) return;
+    try {
+      const dataUrl = await compressDmImageFile(file);
+      activeMediaDraft = dmMsg.normalizeMediaDataUrl(dataUrl);
+      if (!activeMediaDraft) throw new Error("Imagem excede o limite de 24 KB do envelope E2E.");
+      const bar = document.getElementById("dm-media-draft-bar");
+      if (bar) bar.hidden = false;
+    } catch (err) {
+      share.showToast(err.message || "Falha ao comprimir foto.", "error");
+    }
+  });
+  document.getElementById("btn-cancel-dm-media")?.addEventListener("click", () => {
+    activeMediaDraft = "";
+    const bar = document.getElementById("dm-media-draft-bar");
+    if (bar) bar.hidden = true;
+  });
+}
+
 function bindDmThreadDraftAndCardActions(main) {
   main.querySelectorAll(".btn-dm-reply-msg").forEach((btn) => {
     btn.addEventListener("click", () => {
-      activeReplyDraft = {
-        id: btn.dataset.msgId,
-        author: btn.dataset.msgAuthor || "",
-        snippet: btn.dataset.msgSnippet || "",
-      };
+      activeReplyDraft = { id: btn.dataset.msgId, author: btn.dataset.msgAuthor || "", snippet: btn.dataset.msgSnippet || "" };
       const bar = document.getElementById("dm-reply-draft-bar");
       const txt = document.getElementById("dm-reply-draft-text");
       if (txt) txt.textContent = `${activeReplyDraft.author}: "${activeReplyDraft.snippet}"`;
@@ -217,17 +278,16 @@ function bindDmThreadDraftAndCardActions(main) {
       document.getElementById("dm-message-input")?.focus();
     });
   });
-
   document.getElementById("btn-cancel-dm-reply")?.addEventListener("click", () => {
     activeReplyDraft = null;
     const bar = document.getElementById("dm-reply-draft-bar");
     if (bar) bar.hidden = true;
   });
-
   document.getElementById("btn-clear-dm-context")?.addEventListener("click", () => {
     pendingContextDraft = null;
     document.getElementById("dm-context-draft-bar")?.remove();
   });
+  bindDmMediaAttachmentEvents();
 }
 
 function bindDmThreadBubbleActions(main, user, peerAddress, peerDmPub) {
