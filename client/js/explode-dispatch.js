@@ -1,4 +1,4 @@
-/** @file Disparo tático EXPLODE! (Método Janones) — Fricção zero, ondas de rede e webhooks em lote. */
+/** @file Disparo tático EXPLODE! — Fricção zero, ondas de rede e webhooks em lote. */
 
 import * as share from "./share.js";
 import {
@@ -14,16 +14,17 @@ import { dispatchAutoReplication } from "./linked-accounts.js";
 import { escapeHtml } from "./render/util.js";
 
 export const EXPLODE_SHEET_ID = "explode-dispatch-sheet";
-export const JANONES_DEFAULT_TAGS = ["#Democracia", "#VozDoPovo", "#Vox"];
+export const DEFAULT_EXPLODE_TAGS = ["#Democracia", "#VozDoPovo", "#Vox"];
+export const JANONES_DEFAULT_TAGS = DEFAULT_EXPLODE_TAGS;
 
-export function buildJanonesExplodeText({ title = "", body = "", url = "", hashtags = [] } = {}) {
+export function buildExplodeText({ title = "", body = "", url = "", hashtags = [] } = {}) {
   const cleanTitle = (title || "Mobilização no Vox").trim();
   const cleanBody = (body || "").replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
   const excerpt = cleanBody.length > 140 ? `${cleanBody.slice(0, 137)}…` : cleanBody;
 
   const foundTags = cleanBody.match(/#[a-zA-Z0-9_À-ÿ]+/g) || [];
   const merged = Array.from(new Set([...foundTags, ...hashtags]));
-  const tagList = merged.length ? merged : JANONES_DEFAULT_TAGS;
+  const tagList = merged.length ? merged : DEFAULT_EXPLODE_TAGS;
   const tagLine = `\n\n🔥 ${tagList.join(" ")}`;
 
   const quote = excerpt && excerpt !== cleanTitle ? `\n\n"${excerpt}"` : "";
@@ -33,6 +34,7 @@ export function buildJanonesExplodeText({ title = "", body = "", url = "", hasht
 
   return `${lead}\n\n📢 *${cleanTitle}*${quote}\n\n${action}${tagLine}${foot}`;
 }
+export const buildJanonesExplodeText = buildExplodeText;
 
 export function buildTelegramShareUrl(text, url) {
   const t = encodeURIComponent(String(text || ""));
@@ -53,7 +55,7 @@ export function buildFacebookShareUrl(url, quote = "") {
 
 export async function executeExplodeBurst(post) {
   const canonicalUrl = buildCanonicalTopicUrl(post?.id, { communityId: post?.communityId });
-  const text = buildJanonesExplodeText({
+  const text = buildExplodeText({
     title: post?.title,
     body: post?.body,
     url: canonicalUrl,
@@ -78,9 +80,9 @@ let explodeWired = false;
 
 function buildExplodeHeaderHtml() {
   return `<div class="explode-header">
-    <span class="explode-badge">💥 MÉTODO JANONES</span>
+    <span class="explode-badge">💥 REPLICAÇÃO MULTI-REDES</span>
     <h3 class="explode-title">EXPLODE NAS REDES!</h3>
-    <p class="explode-subtitle">Disparo tático sincronizado de fricção zero. 1 clique e a democracia acontece.</p>
+    <p class="explode-subtitle">Disparo sincronizado em lote: replicação soberana com fricção zero.</p>
   </div>`;
 }
 
@@ -100,7 +102,7 @@ function buildExplodeGridHtml() {
 
 export function buildExplodeSheetHtml(post) {
   const url = buildCanonicalTopicUrl(post?.id, { communityId: post?.communityId });
-  const text = buildJanonesExplodeText({ title: post?.title, body: post?.body, url });
+  const text = buildExplodeText({ title: post?.title, body: post?.body, url });
   return `
     <div class="explode-panel post-more-sheet-panel" role="document">
       ${buildExplodeHeaderHtml()}
@@ -125,6 +127,12 @@ function ensureExplodeSheet(post) {
     root.setAttribute("role", "dialog");
     root.setAttribute("aria-modal", "true");
     root.setAttribute("aria-label", "Painel Tático EXPLODE!");
+    root.addEventListener("click", (e) => {
+      if (e.target === root) {
+        e.preventDefault();
+        closeExplodeSheet();
+      }
+    });
     document.body.appendChild(root);
   }
   root.innerHTML = buildExplodeSheetHtml(post);
@@ -191,7 +199,7 @@ async function onExplodeAction(action) {
   if (action === "close") return closeExplodeSheet();
 
   const canonicalUrl = buildCanonicalTopicUrl(activeExplodePost.id, { communityId: activeExplodePost.communityId });
-  const text = buildJanonesExplodeText({ title: activeExplodePost.title, body: activeExplodePost.body, url: canonicalUrl });
+  const text = buildExplodeText({ title: activeExplodePost.title, body: activeExplodePost.body, url: canonicalUrl });
   const payload = buildPosseExportPayload({ ...activeExplodePost, canonicalUrl });
 
   if (action === "burst") {
@@ -210,33 +218,38 @@ async function onExplodeAction(action) {
   }
 }
 
+function handleDocumentExplodeClick(e) {
+  const explodePostBtn = e.target.closest?.(".btn-explode-post");
+  if (explodePostBtn) {
+    e.preventDefault();
+    openExplodeSheet({
+      id: explodePostBtn.dataset.id,
+      title: explodePostBtn.dataset.title,
+      body: explodePostBtn.dataset.body,
+      author: explodePostBtn.dataset.author,
+      communityId: explodePostBtn.dataset.comm || "",
+    });
+    return;
+  }
+  const sheet = document.getElementById(EXPLODE_SHEET_ID);
+  if (!sheet || sheet.hidden || !sheet.classList.contains("is-open")) return;
+  if (!e.target.closest(".explode-panel")) {
+    e.preventDefault();
+    closeExplodeSheet();
+    return;
+  }
+  const btn = e.target.closest?.("[data-explode-action]");
+  if (btn && sheet.contains(btn)) {
+    e.preventDefault();
+    void onExplodeAction(btn.getAttribute("data-explode-action"));
+  }
+}
+
 export function attachExplodeHandlers() {
   if (explodeWired) return;
   explodeWired = true;
 
-  document.addEventListener("click", (e) => {
-    const explodePostBtn = e.target.closest?.(".btn-explode-post");
-    if (explodePostBtn) {
-      e.preventDefault();
-      openExplodeSheet({
-        id: explodePostBtn.dataset.id,
-        title: explodePostBtn.dataset.title,
-        body: explodePostBtn.dataset.body,
-        author: explodePostBtn.dataset.author,
-        communityId: explodePostBtn.dataset.comm || "",
-      });
-      return;
-    }
-    const sheet = document.getElementById(EXPLODE_SHEET_ID);
-    if (!sheet || sheet.hidden) return;
-    if (e.target === sheet) return closeExplodeSheet();
-    const btn = e.target.closest?.("[data-explode-action]");
-    if (btn && sheet.contains(btn)) {
-      e.preventDefault();
-      void onExplodeAction(btn.getAttribute("data-explode-action"));
-    }
-  });
-
+  document.addEventListener("click", handleDocumentExplodeClick);
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") closeExplodeSheet();
   });

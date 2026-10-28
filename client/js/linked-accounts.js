@@ -99,6 +99,10 @@ export function buildReplicationPayload(post) {
     image: post?.image || "",
     publishedAt: new Date().toISOString(),
     linkedNetworks: activeNetworks,
+    explodeBurst: {
+      headline: `🚨 NOVO POST NO VOX: ${title || body.slice(0, 70)}`,
+      actionUrl: canonicalUrl,
+    },
     janonesBurst: {
       headline: `🚨 NOVO POST NO VOX: ${title || body.slice(0, 70)}`,
       actionUrl: canonicalUrl,
