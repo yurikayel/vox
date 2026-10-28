@@ -4,7 +4,7 @@
  */
 
 import { validateManifestBody } from "./cache-manifest.js";
-import { getRelayHttpUrl } from "./inbox.js";
+import { getRelayHttpUrl, getRelayHttpUrls } from "./inbox.js";
 
 export const MIRROR_MAX_BODY_BYTES = 256 * 1024;
 export const MIRROR_MAX_TOPICS = 500;
@@ -200,24 +200,41 @@ export async function postCommunityMirrorToRelay(indexPayload, baseUrl = null) {
     throw err;
   }
 
-  const root = (baseUrl || getRelayHttpUrl()).replace(/\/+$/, "");
-  const url = `${root}/vox/mirror`;
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body,
-  });
-  if (!res.ok) {
-    const parsed = await parseMirrorErrorResponse(res);
-    const err = new Error(
-      mirrorUserMessage(parsed.code, parsed.error) ||
-        `Falha ao espelhar comunidade (HTTP ${res.status})`,
-    );
-    err.code = parsed.code || "mirror.relay_error";
-    err.httpStatus = parsed.httpStatus;
-    throw err;
+  const targets = baseUrl ? [baseUrl.replace(/\/+$/, "")] : getRelayHttpUrls();
+  let lastErr = null;
+  let lastResult = null;
+  let successCount = 0;
+
+  for (const root of targets) {
+    try {
+      const url = `${root}/vox/mirror`;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body,
+      });
+      if (res.ok) {
+        successCount++;
+        lastResult = await res.json();
+      } else {
+        const parsed = await parseMirrorErrorResponse(res);
+        const err = new Error(
+          mirrorUserMessage(parsed.code, parsed.error) ||
+            `Falha ao espelhar comunidade (HTTP ${res.status})`,
+        );
+        err.code = parsed.code || "mirror.relay_error";
+        err.httpStatus = parsed.httpStatus;
+        lastErr = err;
+      }
+    } catch (e) {
+      lastErr = e;
+    }
   }
-  return await res.json();
+
+  if (successCount > 0) {
+    return lastResult || { ok: true, mirrored: true };
+  }
+  throw lastErr || new Error("Falha ao espelhar comunidade em todos os relays configurados");
 }
 
 export async function mirrorCommunityToRelay(community, topics, baseUrl = null, options = {}) {

@@ -56,12 +56,14 @@ export function bindNetworkSettingsForm() {
     const meshDiscoverable = document.getElementById("net-mesh-discoverable")?.checked || false;
     const customSignalingUrl = document.getElementById("net-signaling-url")?.value.trim() || "";
     const customRelayHttpUrl = document.getElementById("net-relay-http-url")?.value.trim() || "";
+    const customRelayBuddyHttpUrl = document.getElementById("net-relay-buddy-http-url")?.value.trim() || "";
     const turnUrls = document.getElementById("net-turn-url")?.value.trim() || "";
     const turnUser = document.getElementById("net-turn-user")?.value.trim() || "";
     const turnPass = document.getElementById("net-turn-pass")?.value || "";
 
     localStorage.setItem("vox-custom-signaling-url", customSignalingUrl);
     inbox.saveRelayHttpUrl(customRelayHttpUrl);
+    inbox.saveRelayBuddyHttpUrl(customRelayBuddyHttpUrl);
     peers.saveCustomTurnConfig({ urls: turnUrls, username: turnUser, credential: turnPass });
 
     peers.savePeerSettings({
@@ -235,6 +237,7 @@ export async function showNetworkSettings() {
   const rtcStatus = peers.getRtcStatus();
   const customSignalingUrl = localStorage.getItem("vox-custom-signaling-url") || "";
   const customRelayHttpUrl = localStorage.getItem(inbox.RELAY_HTTP_STORAGE_KEY) || "";
+  const customRelayBuddyHttpUrl = localStorage.getItem(inbox.RELAY_BUDDY_HTTP_STORAGE_KEY) || "";
   const relayHttpUrl = inbox.getRelayHttpUrl();
   const customTurn = peers.getCustomTurnConfig();
 
@@ -248,6 +251,7 @@ export async function showNetworkSettings() {
     rtcStatus,
     customSignalingUrl,
     customRelayHttpUrl,
+    customRelayBuddyHttpUrl,
     customTurn,
     relayHttpUrl,
     gatewayHealth: gatewayTelemetry.getGatewayHealthSummary(),

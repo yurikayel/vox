@@ -1,0 +1,73 @@
+# V-P08 / T2 — Relay Buddy automatizado (Hugging Face Spaces - Container Docker Gratuito)
+# Automatizado: dispara em push na main quando houver alterações em relay/** ou workflow_dispatch.
+# Sem segredos HF_TOKEN / HF_SPACE = no-op honesto (aviso no log do GitHub Actions).
+
+name: Deploy Relay Buddy — Hugging Face Spaces
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - "relay/**"
+      - ".github/workflows/deploy-relay-hf.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: relay-hf-space
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Sincronizar relay/ no Hugging Face Space (Buddy)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v5
+
+      - name: Verificar secrets Hugging Face (no-op se faltarem)
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_SPACE: ${{ secrets.HF_SPACE }}
+        run: |
+          missing=""
+          [ -z "$HF_TOKEN" ] && missing="${missing} HF_TOKEN"
+          [ -z "$HF_SPACE" ] && missing="${missing} HF_SPACE"
+          if [ -n "$missing" ]; then
+            echo "::notice title=Relay Buddy HF não sincronizado::Faltam secrets:${missing}. Para deploy automático gratuito, crie um Space Docker no Hugging Face e configure HF_TOKEN e HF_SPACE (ex: usuario/vox-relay-buddy) em Settings → Secrets."
+            echo "skip=true" >> "$GITHUB_ENV"
+            exit 0
+          fi
+          echo "skip=false" >> "$GITHUB_ENV"
+
+      - name: Preparar bundle e publicar no Hugging Face Space
+        if: env.skip != 'true'
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_SPACE: ${{ secrets.HF_SPACE }}
+        run: |
+          mkdir -p _hf_deploy
+          cp -r relay/* _hf_deploy/
+          cat << 'EOF' > _hf_deploy/README.md
+          ---
+          title: Vox Relay Buddy
+          emoji: 📡
+          colorFrom: blue
+          colorTo: indigo
+          sdk: docker
+          app_port: 3920
+          ---
+
+          # Vox Relay Buddy
+          Nó de espelho e sinalização WebRTC para a comunidade Vox.
+          EOF
+          cd _hf_deploy
+          git init
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b main
+          git add .
+          git commit -m "Deploy relay buddy via GitHub Actions: ${{ github.sha }}"
+          git push -f "https://user:${HF_TOKEN}@huggingface.co/spaces/${HF_SPACE}" main
