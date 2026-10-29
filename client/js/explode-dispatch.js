@@ -143,11 +143,69 @@ export async function executeExplodeBurst(post) {
 let activeExplodePost = null;
 let explodeWired = false;
 
+export const APP_ICONS = {
+  whatsapp: `<svg class="app-logo-svg" width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path fill="#25D366" d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2z"/>
+    <path fill="#fff" d="M17.54 14.39c-.3-.15-1.78-.88-2.06-.98-.28-.1-.48-.15-.69.15-.2.3-.79.98-.97 1.18-.18.2-.36.23-.66.08-.3-.15-1.27-.47-2.42-1.5-.89-.8-1.5-1.78-1.67-2.08-.18-.3-.02-.46.13-.61.14-.13.3-.35.45-.53.15-.18.2-.3.3-.5.1-.2.05-.38-.03-.53-.08-.15-.69-1.65-.94-2.26-.25-.6-.5-.52-.69-.53h-.59c-.2 0-.53.08-.8.38-.28.3-1.06 1.04-1.06 2.53s1.09 2.94 1.24 3.14c.15.2 2.14 3.27 5.19 4.59.73.31 1.29.5 1.74.64.73.23 1.4.2 1.93.12.59-.09 1.78-.73 2.03-1.43.25-.7.25-1.31.18-1.43-.08-.13-.28-.2-.58-.35z"/>
+  </svg>`,
+
+  twitter: `<svg class="app-logo-svg" width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+  </svg>`,
+
+  bluesky: `<svg class="app-logo-svg" width="26" height="26" viewBox="0 0 568 501" fill="#1185fe" aria-hidden="true">
+    <path d="M123.121 33.664C188.241 82.552 258.281 181.68 284 234.873c25.719-53.192 95.759-152.32 160.879-201.21C491.866-1.611 568-28.906 568 57.947c0 17.346-9.945 145.713-15.778 166.555-20.275 72.453-94.155 90.933-159.875 79.748C507.222 323.8 536.444 388.56 473.333 453.32c-119.25 122.36-166.666-30.827-189.333-88.667-22.667 57.84-70.083 211.027-189.333 88.667-63.111-64.76-33.889-129.52 80.986-149.07-65.72 11.185-139.6-7.295-159.875-79.748C9.945 203.66 0 75.293 0 57.947 0-28.906 76.135-1.612 123.121 33.664Z"/>
+  </svg>`,
+
+  threads: `<svg class="app-logo-svg" width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <path d="M12.03 2c-5.5 0-9.97 4.47-9.97 9.97 0 4.4 2.87 8.13 6.87 9.43.14-.11.26-.26.36-.43.43-.72.63-1.57.57-2.41-.67-.32-1.28-.75-1.8-1.28-1.55-1.56-2.41-3.64-2.41-5.84 0-4.5 3.66-8.16 8.16-8.16s8.16 3.66 8.16 8.16c0 3.32-1.9 6.29-4.82 7.56-1.5.65-3.23.6-4.63-.13-1.63-.86-2.55-2.53-2.43-4.42.15-2.3 2.1-4.08 4.44-4.08 1.28 0 2.44.52 3.26 1.45.18-.7.16-1.47-.07-2.18-.38-1.18-1.35-2.06-2.59-2.35-1.98-.46-3.95.42-4.7 2.1-.3.67-.44 1.4-.42 2.14.03 1.08.38 2.11 1.02 2.97.22.3.48.56.77.78-.17.37-.3.76-.38 1.16-.36-.26-.68-.58-.95-.94-.85-1.14-1.31-2.5-1.35-3.93-.03-.98.15-1.95.55-2.84 1-2.24 3.63-3.41 6.27-2.8 1.65.39 2.95 1.56 3.46 3.13.3 1 .28 2.06-.06 3.03l.63.29c.17.08.28.25.27.44-.12 2.45-1.33 4.63-3.32 5.83-1.68.99-3.76 1.21-5.61.6-4.48-1.46-7.7-5.65-7.7-10.59 0-6.17 5.02-11.19 11.19-11.19s11.19 5.02 11.19 11.19c0 3.99-2.14 7.62-5.59 9.47-.4.22-.84.28-1.28.18s-.8-.38-.99-.78c-.28-.58-.1-1.27.42-1.63 2.87-1.54 4.65-4.57 4.65-7.91 0-5.17-4.2-9.37-9.37-9.37z"/>
+  </svg>`,
+
+  facebook: `<svg class="app-logo-svg" width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <circle cx="12" cy="12" r="10" fill="#1877F2"/>
+    <path fill="#fff" d="M14.5 12.3h-2v7.2h-3v-7.2h-1.4v-2.5h1.4V8.2c0-1.2.6-3 3-3l2.2.01v2.4h-1.6c-.3 0-.6.1-.6.6v1.6h2.2l-.2 2.5z"/>
+  </svg>`,
+
+  instagram: `<svg class="app-logo-svg" width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <defs>
+      <linearGradient id="ig-btn-grad" x1="0%" y1="100%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="#FFD600"/>
+        <stop offset="25%" stop-color="#FF7A00"/>
+        <stop offset="50%" stop-color="#FF0069"/>
+        <stop offset="75%" stop-color="#D300C5"/>
+        <stop offset="100%" stop-color="#7638FA"/>
+      </linearGradient>
+    </defs>
+    <rect x="2.5" y="2.5" width="19" height="19" rx="5" stroke="url(#ig-btn-grad)" stroke-width="2.2"/>
+    <circle cx="12" cy="12" r="4.2" stroke="url(#ig-btn-grad)" stroke-width="2.2"/>
+    <circle cx="17.5" cy="6.5" r="1.3" fill="url(#ig-btn-grad)"/>
+  </svg>`,
+
+  tiktok: `<svg class="app-logo-svg" width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path fill="#25F4EE" d="M19.32 6.63a4.78 4.78 0 0 1-3.6-3.98H13v12.75a2.75 2.75 0 0 1-2.75 2.75 2.75 2.75 0 0 1-2.75-2.75 2.75 2.75 0 0 1 2.75-2.75c.34 0 .66.07.96.18V9.3a6.37 6.37 0 0 0-.96-.07 6.37 6.37 0 1 0 6.37 6.37V8.52a8.03 8.03 0 0 0 4.69 1.5V6.82a4.78 4.78 0 0 1-1.99-.19z" transform="translate(-0.8, -0.6)"/>
+    <path fill="#FE2C55" d="M19.32 6.63a4.78 4.78 0 0 1-3.6-3.98H13v12.75a2.75 2.75 0 0 1-2.75 2.75 2.75 2.75 0 0 1-2.75-2.75 2.75 2.75 0 0 1 2.75-2.75c.34 0 .66.07.96.18V9.3a6.37 6.37 0 0 0-.96-.07 6.37 6.37 0 1 0 6.37 6.37V8.52a8.03 8.03 0 0 0 4.69 1.5V6.82a4.78 4.78 0 0 1-1.99-.19z" transform="translate(0.8, 0.6)"/>
+    <path fill="#fff" d="M19.32 6.63a4.78 4.78 0 0 1-3.6-3.98H13v12.75a2.75 2.75 0 0 1-2.75 2.75 2.75 2.75 0 0 1 2.75-2.75c.34 0 .66.07.96.18V9.3a6.37 6.37 0 0 0-.96-.07 6.37 6.37 0 1 0 6.37 6.37V8.52a8.03 8.03 0 0 0 4.69 1.5V6.82a4.78 4.78 0 0 1-1.99-.19z"/>
+  </svg>`,
+
+  telegram: `<svg class="app-logo-svg" width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <circle cx="12" cy="12" r="10" fill="#2AABEE"/>
+    <path fill="#fff" d="m16.9 7.8-1.9 9c-.1.6-.5.7-1 .4l-2.7-2-1.3 1.3c-.2.2-.3.3-.6.3l.2-2.8 5.1-4.6c.2-.2 0-.3-.3-.1l-6.3 4-2.7-.9c-.6-.2-.6-.6.1-.9l10.6-4.1c.5-.2.9.1.8.7z"/>
+  </svg>`,
+
+  webhooks: `<svg class="app-logo-svg" width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <rect width="24" height="24" rx="6" fill="#5865F2"/>
+    <path fill="#fff" d="M17.4 6.9a13.3 13.3 0 0 0-3.3-1 .05.05 0 0 0-.05.02c-.15.26-.3.6-.42.87a12.3 12.3 0 0 0-3.7 0 8 8 0 0 0-.42-.87.05.05 0 0 0-.05-.02c-1.16.2-2.3.55-3.3 1a.05.05 0 0 0-.02.02C4.1 10.3 3.5 13.6 3.8 16.8a.06.06 0 0 0 .02.04 13.4 13.4 0 0 0 4 2 .05.05 0 0 0 .06-.02c.3-.43.6-.88.83-1.35a.05.05 0 0 0-.03-.07c-.42-.16-.82-.36-1.2-.58a.05.05 0 0 1 0-.09c.08-.06.16-.12.24-.18a.05.05 0 0 1 .05 0 9.5 9.5 0 0 0 8.7 0 .05.05 0 0 1 .05 0c.08.06.16.12.24.18a.05.05 0 0 1 0 .09c-.38.22-.78.42-1.2.58a.05.05 0 0 0-.03.07c.24.47.53.92.83 1.35a.05.05 0 0 0 .06.02 13.3 13.3 0 0 0 4-2 .06.06 0 0 0 .02-.04c.4-3.8-.7-7-2.3-9.9a.05.05 0 0 0-.02-.02zM8.9 14.8c-.8 0-1.4-.7-1.4-1.6s.6-1.6 1.4-1.6c.8 0 1.4.7 1.4 1.6s-.6 1.6-1.4 1.6zm6.2 0c-.8 0-1.4-.7-1.4-1.6s.6-1.6 1.4-1.6c.8 0 1.4.7 1.4 1.6s-.6 1.6-1.4 1.6z"/>
+  </svg>`,
+};
+
 function buildExplodeHeaderHtml() {
   return `<div class="explode-header">
-    <span class="explode-badge">📢 REPLICAÇÃO MULTI-REDES</span>
+    <div class="explode-header-top">
+      <span class="explode-badge">📢 REPLICAÇÃO MULTI-REDES</span>
+      <button type="button" class="explode-close-btn" data-explode-action="close" aria-label="Fechar">✕</button>
+    </div>
     <h3 class="explode-title">EXPLODE NAS REDES!</h3>
-    <p class="explode-subtitle">Disparo sincronizado em lote: replicação soberana com fricção zero.</p>
+    <p class="explode-subtitle">Toque no app desejado para compartilhar em 1 clique:</p>
   </div>`;
 }
 
@@ -157,15 +215,91 @@ function buildExplodeGridHtml() {
   const badge = (id) => isLinked(id) ? `<span class="explode-grid-connected" title="Conectado: @${escapeHtml(linked[id].handle)}">✓</span>` : "";
 
   return `<div class="explode-grid" role="group" aria-label="Redes para disparo">
-    <button type="button" class="explode-grid-btn btn-zap" data-explode-action="whatsapp"><span class="explode-grid-icon">📲</span><span>WhatsApp</span></button>
-    <button type="button" class="explode-grid-btn btn-x" data-explode-action="twitter"><span class="explode-grid-icon">🐦</span><span>X (Twitter)</span>${badge("twitter")}</button>
-    <button type="button" class="explode-grid-btn btn-bluesky" data-explode-action="bluesky"><span class="explode-grid-icon">🦋</span><span>Bluesky</span>${badge("bsky")}</button>
-    <button type="button" class="explode-grid-btn btn-threads" data-explode-action="threads"><span class="explode-grid-icon">🧵</span><span>Threads</span>${badge("threads")}</button>
-    <button type="button" class="explode-grid-btn btn-facebook" data-explode-action="facebook"><span class="explode-grid-icon">👥</span><span>Facebook</span>${badge("facebook")}</button>
-    <button type="button" class="explode-grid-btn btn-instagram" data-explode-action="instagram"><span class="explode-grid-icon">📸</span><span>Instagram</span>${badge("instagram")}</button>
-    <button type="button" class="explode-grid-btn btn-tiktok" data-explode-action="tiktok"><span class="explode-grid-icon">🎵</span><span>TikTok</span>${badge("tiktok")}</button>
-    <button type="button" class="explode-grid-btn btn-telegram" data-explode-action="telegram"><span class="explode-grid-icon">✈️</span><span>Telegram</span></button>
-    <button type="button" class="explode-grid-btn btn-webhooks" data-explode-action="webhooks"><span class="explode-grid-icon">💬</span><span>Discord/Slack</span></button>
+    <button type="button" class="explode-grid-btn btn-zap" data-explode-action="whatsapp">
+      <span class="explode-grid-icon">${APP_ICONS.whatsapp}</span>
+      <span class="explode-grid-name">WhatsApp</span>
+    </button>
+    <button type="button" class="explode-grid-btn btn-instagram" data-explode-action="instagram">
+      <span class="explode-grid-icon">${APP_ICONS.instagram}</span>
+      <span class="explode-grid-name">Instagram</span>${badge("instagram")}
+    </button>
+    <button type="button" class="explode-grid-btn btn-tiktok" data-explode-action="tiktok">
+      <span class="explode-grid-icon">${APP_ICONS.tiktok}</span>
+      <span class="explode-grid-name">TikTok</span>${badge("tiktok")}
+    </button>
+    <button type="button" class="explode-grid-btn btn-x" data-explode-action="twitter">
+      <span class="explode-grid-icon">${APP_ICONS.twitter}</span>
+      <span class="explode-grid-name">X (Twitter)</span>${badge("twitter")}
+    </button>
+    <button type="button" class="explode-grid-btn btn-bluesky" data-explode-action="bluesky">
+      <span class="explode-grid-icon">${APP_ICONS.bluesky}</span>
+      <span class="explode-grid-name">Bluesky</span>${badge("bsky")}
+    </button>
+    <button type="button" class="explode-grid-btn btn-threads" data-explode-action="threads">
+      <span class="explode-grid-icon">${APP_ICONS.threads}</span>
+      <span class="explode-grid-name">Threads</span>${badge("threads")}
+    </button>
+    <button type="button" class="explode-grid-btn btn-telegram" data-explode-action="telegram">
+      <span class="explode-grid-icon">${APP_ICONS.telegram}</span>
+      <span class="explode-grid-name">Telegram</span>
+    </button>
+    <button type="button" class="explode-grid-btn btn-facebook" data-explode-action="facebook">
+      <span class="explode-grid-icon">${APP_ICONS.facebook}</span>
+      <span class="explode-grid-name">Facebook</span>${badge("facebook")}
+    </button>
+    <button type="button" class="explode-grid-btn btn-webhooks" data-explode-action="webhooks">
+      <span class="explode-grid-icon">${APP_ICONS.webhooks}</span>
+      <span class="explode-grid-name">Discord/Slack</span>
+    </button>
+  </div>`;
+}
+
+function buildExplodeActionsHtml() {
+  return `<div class="explode-actions-list">
+    <button type="button" class="explode-action-row" data-explode-action="story-card">
+      <span class="explode-action-icon">📸</span>
+      <span class="explode-action-text">
+        <strong>Gerar Card de Story (9:16)</strong>
+        <small>Imagem vertical para Stories do Instagram e TikTok</small>
+      </span>
+      <span class="explode-action-arrow">Criar →</span>
+    </button>
+    <button type="button" class="explode-action-row" data-explode-action="copy">
+      <span class="explode-action-icon">📋</span>
+      <span class="explode-action-text">
+        <strong>Copiar Mensagem Formatada</strong>
+        <small>Texto completo com chamada, hashtags e link</small>
+      </span>
+      <span class="explode-action-arrow">Copiar</span>
+    </button>
+    <button type="button" class="explode-action-row" data-explode-action="native">
+      <span class="explode-action-icon">📱</span>
+      <span class="explode-action-text">
+        <strong>Mais Opções do Aparelho…</strong>
+        <small>Compartilhar via menu nativo do sistema</small>
+      </span>
+      <span class="explode-action-arrow">Abrir →</span>
+    </button>
+  </div>`;
+}
+
+function buildExplodeBatchHtml(text) {
+  return `<div class="explode-batch-card">
+    <div class="explode-batch-header">
+      <span>⚡ AUTOMAÇÃO EM LOTE</span>
+      <button type="button" class="explode-preview-toggle" id="explode-preview-toggle" aria-expanded="false">Ver texto ▼</button>
+    </div>
+    <div class="explode-preview" id="explode-preview-text" hidden>${escapeHtml(text)}</div>
+    <div class="explode-batch-buttons">
+      <button type="button" class="btn-explode-burst" data-explode-action="burst">
+        <span>📢</span>
+        <span>Disparo Rápido (Webhooks + Copiar)</span>
+      </button>
+      <button type="button" class="btn-explode-cascade" data-explode-action="cascade">
+        <span>🌊</span>
+        <span>Disparo em Onda</span>
+      </button>
+    </div>
   </div>`;
 }
 
@@ -175,19 +309,9 @@ export function buildExplodeSheetHtml(post) {
   return `
     <div class="explode-panel post-more-sheet-panel" role="document">
       ${buildExplodeHeaderHtml()}
-      <button type="button" class="btn-explode-burst" data-explode-action="burst">
-        <span>📢</span>
-        <span>DISPARAR RAJADA (Webhooks + Copiar Texto)</span>
-      </button>
-      <button type="button" class="btn-explode-cascade" data-explode-action="cascade">
-        <span>🌊</span>
-        <span>DISPARO EM ONDA (Passo a Passo)</span>
-      </button>
       ${buildExplodeGridHtml()}
-      <div class="explode-preview" id="explode-preview-text">${escapeHtml(text)}</div>
-      <button type="button" class="post-more-sheet-item" data-explode-action="story-card">📸 Gerar Card de Story (Instagram / TikTok)</button>
-      <button type="button" class="post-more-sheet-item" data-explode-action="copy">📋 Copiar Pacote de Munição</button>
-      <button type="button" class="post-more-sheet-item" data-explode-action="native">📱 Compartilhar no Aparelho…</button>
+      ${buildExplodeActionsHtml()}
+      ${buildExplodeBatchHtml(text)}
       <button type="button" class="post-more-sheet-item post-more-sheet-cancel" data-explode-action="close">Fechar</button>
     </div>`;
 }
@@ -425,6 +549,18 @@ function handleDocumentExplodeClick(e) {
   if (!e.target.closest(".explode-panel")) {
     e.preventDefault();
     return closeExplodeSheet();
+  }
+  const toggleBtn = e.target.closest?.("#explode-preview-toggle");
+  if (toggleBtn) {
+    e.preventDefault();
+    const preview = document.getElementById("explode-preview-text");
+    if (preview) {
+      const isHidden = preview.hidden;
+      preview.hidden = !isHidden;
+      toggleBtn.textContent = isHidden ? "Ocultar texto ▲" : "Ver texto ▼";
+      toggleBtn.setAttribute("aria-expanded", String(isHidden));
+    }
+    return;
   }
   const btn = e.target.closest?.("[data-explode-action]");
   if (btn && sheet.contains(btn)) {
