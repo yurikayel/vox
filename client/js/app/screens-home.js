@@ -124,12 +124,28 @@ async function filterTopicsForActiveFeed(merged, activeFeed) {
   return merged;
 }
 
+function attachWelcomeTopicDismissHandlers(onDismiss) {
+  document.querySelectorAll(".btn-dismiss-welcome-topic").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      try {
+        localStorage.setItem("vox-welcome-post-dismissed", "1");
+      } catch {}
+      btn.closest(".post")?.remove();
+      share.showToast("Post de boas-vindas dispensado.");
+      if (typeof onDismiss === "function") onDismiss();
+    });
+  });
+}
+
 function wireHomeInteractiveHandlers(activeFeed) {
   attachPostShareHandlers();
   attachPostMoreMenuHandlers();
   attachPostOverlayActionMenuHandlers();
   attachInlineComposerHandlers(() => showHome(activeFeed));
   attachWelcomeFeedHintHandlers();
+  attachWelcomeTopicDismissHandlers(() => showHome(activeFeed));
   attachBskyManagerHandlers(() => showHome(activeFeed));
   attachQuoteExternalHandlers();
 }
@@ -149,10 +165,10 @@ export async function showHome(feed = "for-you") {
     const commMap = await buildCommunityTitleMap();
     const merged = mergeLocalAndRemoteTopics(localPosts, remoteItems, commMap, user);
     const filtered = await filterTopicsForActiveFeed(merged, activeFeed);
+    const isWelcomeDismissed = localStorage.getItem("vox-welcome-post-dismissed") === "1";
     const welcomeTopic = welcomeProfile.getOfficialWelcomeTopic();
-    const withWelcome = filtered.some((p) => p.id === welcomeTopic.id)
-      ? filtered
-      : [welcomeTopic, ...filtered];
+    const shouldIncludeWelcome = !isWelcomeDismissed && !filtered.some((p) => p.id === welcomeTopic.id);
+    const withWelcome = shouldIncludeWelcome ? [welcomeTopic, ...filtered] : filtered;
     const finalTopics = mod.filterFeedPosts(withWelcome);
 
     main.innerHTML = "";
@@ -164,10 +180,10 @@ export async function showHome(feed = "for-you") {
     const fb = mock.mockRecentTopics();
     const merged = mergeLocalAndRemoteTopics(localPosts, fb.items, new Map(), user);
     const filtered = await filterTopicsForActiveFeed(merged, activeFeed);
+    const isWelcomeDismissed = localStorage.getItem("vox-welcome-post-dismissed") === "1";
     const welcomeTopic = welcomeProfile.getOfficialWelcomeTopic();
-    const withWelcome = filtered.some((p) => p.id === welcomeTopic.id)
-      ? filtered
-      : [welcomeTopic, ...filtered];
+    const shouldIncludeWelcome = !isWelcomeDismissed && !filtered.some((p) => p.id === welcomeTopic.id);
+    const withWelcome = shouldIncludeWelcome ? [welcomeTopic, ...filtered] : filtered;
     const finalTopics = mod.filterFeedPosts(withWelcome);
     render.renderFeed(main, finalTopics, { activeFeed, userRouteId: user || "", externalSubs });
   }

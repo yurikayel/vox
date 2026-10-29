@@ -664,8 +664,11 @@ export function renderPostItem(t, { isPinned = false } = {}) {
   const preface = isPhoto ? renderPhotoHiddenMessageHtml(t) : "";
   const comments = renderPostComments(t.id, t.communityId, { prefaceHtml: preface });
   const isPostPinned = Boolean(isPinned || t.isPinned);
+  const dismissBtn = t.id === "vox-official-manifesto-welcome" || t.isDismissable
+    ? `<button type="button" class="btn-dismiss-welcome-topic" title="Dispensar este post" aria-label="Dispensar post de boas-vindas" style="margin-left:auto; background:none; border:none; color:inherit; cursor:pointer; font-size:0.9rem; padding:0 4px; opacity:0.8;">✕</button>`
+    : "";
   const pinnedRibbon = isPostPinned
-    ? `<div class="post-pinned-ribbon"><span class="pin-icon">📌</span> <span>${t.isOfficial ? "Bem-vindo à Vox" : "Publicação Fixada"}</span></div>`
+    ? `<div class="post-pinned-ribbon"><span class="pin-icon">📌</span> <span>${t.isOfficial ? "Bem-vindo à Vox" : "Publicação Fixada"}</span>${dismissBtn}</div>`
     : "";
 
   if (layout === "text" || layout === "github") {

@@ -1295,6 +1295,8 @@ main#app-main,
   border-radius: var(--radius);
   margin: 0 auto;
   max-width: var(--feed-max, 500px);
+  width: 100%;
+  box-sizing: border-box;
   overflow: hidden;
   position: relative;
   box-shadow: var(--elevation-1), var(--paper-highlight);
@@ -2679,6 +2681,15 @@ body.post-lightbox-open {
   justify-content: space-between;
   align-items: center;
   gap: 8px;
+}
+
+.btn-inline-reply {
+  flex-shrink: 0;
+}
+
+.btn-dismiss-welcome-topic:hover {
+  opacity: 1 !important;
+  transform: scale(1.15);
 }
 
 .post-comments-thread {
