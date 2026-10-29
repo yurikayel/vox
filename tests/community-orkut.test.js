@@ -154,3 +154,12 @@ test("community-orkut - renderComposeCommunity includes photo upload field and l
   assert.ok(html.includes("comm-category-suggestions"));
   assert.ok(html.includes("comm-type"));
 });
+
+test("profile - action buttons aligned on same line with nowrap and unconstrained width", async () => {
+  const fs = await import("node:fs");
+  const path = await import("node:path");
+  const css = fs.readFileSync(path.resolve("client/css/style.css"), "utf8");
+  assert.ok(css.includes(".profile-grid-actions"));
+  assert.ok(css.includes("flex-wrap: nowrap;"));
+  assert.ok(css.includes("overflow-x: auto;"));
+});
