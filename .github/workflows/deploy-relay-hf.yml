@@ -57,7 +57,7 @@ jobs:
           colorFrom: blue
           colorTo: indigo
           sdk: docker
-          app_port: 3920
+          app_port: 7860
           ---
 
           # Vox Relay Buddy

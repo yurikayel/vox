@@ -5,6 +5,7 @@ Biblioteca padrão Python 3 (zero dependências pip).
 Protocolo WebSocket RFC 6455 para troca de ofertas SDP e candidatos ICE.
 """
 
+import os
 import sys
 import json
 import base64
@@ -90,6 +91,70 @@ def read_ws_frame(sock):
     return opcode, payload
 
 
+def resolve_port(cli_port=None, default: int = DEFAULT_PORT) -> int:
+    if cli_port is not None:
+        try:
+            return int(cli_port)
+        except (ValueError, TypeError):
+            pass
+    env_port = os.environ.get("PORT")
+    if env_port and str(env_port).strip().isdigit():
+        return int(str(env_port).strip())
+    return default
+
+
+def make_http_response(
+    status_code: int,
+    status_text: str,
+    body: bytes = b"",
+    content_type: str = "application/json",
+) -> bytes:
+    lines = [
+        f"HTTP/1.1 {status_code} {status_text}",
+        f"Content-Type: {content_type}",
+        f"Content-Length: {len(body)}",
+        "Access-Control-Allow-Origin: *",
+        "Access-Control-Allow-Methods: GET, HEAD, OPTIONS",
+        "Access-Control-Allow-Headers: *",
+        "Connection: close",
+        "",
+        "",
+    ]
+    return "\r\n".join(lines).encode("ascii") + body
+
+
+def parse_http_target(request_line: str):
+    parts = (request_line or "").strip().split()
+    method = parts[0].upper() if len(parts) > 0 else "GET"
+    path = parts[1] if len(parts) > 1 else "/"
+    return method, path
+
+
+def handle_http_request(request_sock, request_line: str, peer_count: int = 0) -> None:
+    method, path = parse_http_target(request_line)
+    if method == "OPTIONS":
+        resp = make_http_response(204, "No Content", body=b"")
+    elif method in ("GET", "HEAD"):
+        clean_path = path.split("?")[0]
+        if clean_path in ("/", "/health", "/status", "/ping"):
+            payload = json.dumps({
+                "status": "ok",
+                "service": "vox-signaling",
+                "version": "1.0.0",
+                "peers": peer_count,
+            }).encode("utf-8")
+            body = b"" if method == "HEAD" else payload
+            resp = make_http_response(200, "OK", body=body)
+        else:
+            resp = make_http_response(404, "Not Found", body=b'{"error":"not_found"}')
+    else:
+        resp = make_http_response(405, "Method Not Allowed", body=b'{"error":"method_not_allowed"}')
+    try:
+        request_sock.sendall(resp)
+    except Exception:
+        pass
+
+
 class PeerRegistry:
     def __init__(self):
         self.lock = threading.Lock()
@@ -155,6 +220,14 @@ class WebSocketHandler(socketserver.BaseRequestHandler):
             return
         self.receive_loop()
 
+    def _parse_headers(self, lines: list) -> dict:
+        headers = {}
+        for line in lines:
+            if ":" in line:
+                k, v = line.split(":", 1)
+                headers[k.strip().lower()] = v.strip()
+        return headers
+
     def perform_handshake(self) -> bool:
         request_data = bytearray()
         while b"\r\n\r\n" not in request_data:
@@ -164,14 +237,15 @@ class WebSocketHandler(socketserver.BaseRequestHandler):
             request_data.extend(chunk)
 
         header_lines = request_data.split(b"\r\n\r\n")[0].decode("utf-8", "ignore").split("\r\n")
-        headers = {}
-        for line in header_lines[1:]:
-            if ":" in line:
-                k, v = line.split(":", 1)
-                headers[k.strip().lower()] = v.strip()
+        headers = self._parse_headers(header_lines[1:])
 
         sec_key = headers.get("sec-websocket-key")
         if not sec_key:
+            handle_http_request(
+                self.request,
+                header_lines[0] if header_lines else "",
+                peer_count=len(registry.peers),
+            )
             return False
 
         accept_val = compute_accept_key(sec_key)
@@ -272,19 +346,22 @@ class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
 
 
 def main():
-    host = DEFAULT_HOST
-    port = DEFAULT_PORT
+    cli_port = None
+    cli_host = None
 
     for i, arg in enumerate(sys.argv):
         if arg == "--port" and i + 1 < len(sys.argv):
-            port = int(sys.argv[i + 1])
+            cli_port = sys.argv[i + 1]
         elif arg == "--host" and i + 1 < len(sys.argv):
-            host = sys.argv[i + 1]
+            cli_host = sys.argv[i + 1]
+
+    host = cli_host or os.environ.get("HOST", DEFAULT_HOST)
+    port = resolve_port(cli_port, DEFAULT_PORT)
 
     print("======================================================")
     print("  Vox Signaling Server — WebRTC Mesh (Fase 3.2)")
     print(f"  Escutando em: ws://{host}:{port}")
-    print("  Protocolo: WebSocket RFC 6455 (stdlib)")
+    print("  Protocolo: WebSocket RFC 6455 (stdlib) + HTTP Health")
     print("  Pressione Ctrl+C para encerrar.")
     print("======================================================")
 

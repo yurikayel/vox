@@ -2,9 +2,11 @@ FROM python:3.12-alpine
 
 WORKDIR /app
 
-# Copia apenas os servidores stdlib (zero dependências pip)
-COPY signaling.py server.py inbox.py ./
+# Servidores stdlib puros do Vox (zero dependências pip)
+COPY signaling.py server.py inbox.py mirror_validate.py ./
 
-EXPOSE 3920 3921
+# Porta padrão para instâncias gratuitas em nuvem (7860 para HF Spaces; Koyeb e Render injetam $PORT)
+ENV PORT=7860
+EXPOSE 7860 3921 3920
 
-CMD ["python", "-u", "signaling.py", "--host", "0.0.0.0", "--port", "3921"]
+CMD ["python", "-u", "signaling.py", "--host", "0.0.0.0"]

@@ -20,6 +20,9 @@ from relay.signaling import (
     make_ws_frame,
     parse_frame_length,
     read_ws_frame,
+    resolve_port,
+    make_http_response,
+    parse_http_target,
 )
 
 
@@ -202,6 +205,74 @@ class TestSignalingIntegration(unittest.TestCase):
         finally:
             s1.close()
             s2.close()
+
+    def test_http_health_check_returns_200_json(self):
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect(("127.0.0.1", self.port))
+        try:
+            req = f"GET /health HTTP/1.1\r\nHost: 127.0.0.1:{self.port}\r\nConnection: close\r\n\r\n"
+            s.sendall(req.encode("ascii"))
+            resp = s.recv(4096).decode("utf-8")
+            self.assertIn("HTTP/1.1 200 OK", resp)
+            self.assertIn("Content-Type: application/json", resp)
+            body = resp.split("\r\n\r\n")[1]
+            data = json.loads(body)
+            self.assertEqual(data["status"], "ok")
+            self.assertEqual(data["service"], "vox-signaling")
+            self.assertIn("peers", data)
+        finally:
+            s.close()
+
+    def test_http_options_preflight_returns_204(self):
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect(("127.0.0.1", self.port))
+        try:
+            req = f"OPTIONS / HTTP/1.1\r\nHost: 127.0.0.1:{self.port}\r\nConnection: close\r\n\r\n"
+            s.sendall(req.encode("ascii"))
+            resp = s.recv(1024).decode("utf-8")
+            self.assertIn("HTTP/1.1 204 No Content", resp)
+            self.assertIn("Access-Control-Allow-Origin: *", resp)
+        finally:
+            s.close()
+
+    def test_http_unknown_route_returns_404(self):
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect(("127.0.0.1", self.port))
+        try:
+            req = f"GET /rota_inexistente HTTP/1.1\r\nHost: 127.0.0.1:{self.port}\r\nConnection: close\r\n\r\n"
+            s.sendall(req.encode("ascii"))
+            resp = s.recv(1024).decode("utf-8")
+            self.assertIn("HTTP/1.1 404 Not Found", resp)
+        finally:
+            s.close()
+
+
+class TestPortResolution(unittest.TestCase):
+    def test_cli_port_priority(self):
+        self.assertEqual(resolve_port("8080", default=3921), 8080)
+        self.assertEqual(resolve_port("invalid", default=3921), 3921)
+
+    def test_env_port(self):
+        import os
+        old = os.environ.get("PORT")
+        try:
+            os.environ["PORT"] = "7860"
+            self.assertEqual(resolve_port(None, default=3921), 7860)
+        finally:
+            if old is None:
+                os.environ.pop("PORT", None)
+            else:
+                os.environ["PORT"] = old
+
+    def test_default_fallback(self):
+        import os
+        old = os.environ.get("PORT")
+        try:
+            os.environ.pop("PORT", None)
+            self.assertEqual(resolve_port(None, default=3921), 3921)
+        finally:
+            if old is not None:
+                os.environ["PORT"] = old
 
 
 if __name__ == "__main__":
