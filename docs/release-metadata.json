@@ -1,9 +1,9 @@
 {
-  "git_sha": "local-v7.15-perma-notary-civic-credentials",
+  "git_sha": "local-v7.16-real-network-audio-video-upload",
   "branch": "main",
-  "test_js": 476,
+  "test_js": 474,
   "test_python": 23,
-  "test_total": 499,
-  "cache_name": "vox-pwa-v7.15-perma-notary-civic-credentials",
-  "generated_at": "2026-10-28T23:28:00Z"
+  "test_total": 497,
+  "cache_name": "vox-pwa-v7.16-real-network-audio-video-upload",
+  "generated_at": "2026-10-28T23:45:00Z"
 }

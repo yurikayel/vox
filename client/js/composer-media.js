@@ -148,3 +148,57 @@ export async function processComposerLofiImage(fileOrDataUrl, { filter = "normal
     img.src = dataUrl;
   });
 }
+
+export const COMPOSER_AUDIO_MAX_BYTES = 10 * 1024 * 1024;
+export const COMPOSER_AUDIO_ALLOWED_MIMES = Object.freeze([
+  "audio/mpeg",
+  "audio/mp3",
+  "audio/wav",
+  "audio/ogg",
+  "audio/webm",
+  "audio/aac",
+  "audio/m4a",
+  "audio/mp4",
+]);
+
+export function validateComposerAudioFile(file) {
+  if (!file) return { ok: false, message: "Nenhum arquivo de áudio selecionado." };
+  const mime = String(file.type || "").toLowerCase();
+  const isAudio = mime.startsWith("audio/") || COMPOSER_AUDIO_ALLOWED_MIMES.includes(mime);
+  if (!isAudio) {
+    return { ok: false, message: "Formato de áudio não suportado. Use MP3, WAV, OGG ou WebM." };
+  }
+  const size = Number(file.size) || 0;
+  if (size > COMPOSER_AUDIO_MAX_BYTES) {
+    return { ok: false, message: "Áudio excede o limite de 10 MB." };
+  }
+  if (size <= 0) return { ok: false, message: "Arquivo de áudio vazio." };
+  return { ok: true };
+}
+
+export const COMPOSER_VIDEO_MAX_BYTES = 25 * 1024 * 1024;
+export const COMPOSER_VIDEO_ALLOWED_MIMES = Object.freeze([
+  "video/mp4",
+  "video/webm",
+  "video/ogg",
+  "video/quicktime",
+]);
+
+export function validateComposerVideoFile(file) {
+  if (!file) return { ok: false, message: "Nenhum arquivo de vídeo selecionado." };
+  const mime = String(file.type || "").toLowerCase();
+  const isVideo = mime.startsWith("video/") || COMPOSER_VIDEO_ALLOWED_MIMES.includes(mime);
+  if (!isVideo) {
+    return { ok: false, message: "Formato de vídeo não suportado. Use MP4 ou WebM." };
+  }
+  const size = Number(file.size) || 0;
+  if (size > COMPOSER_VIDEO_MAX_BYTES) {
+    return { ok: false, message: "Vídeo excede o limite de 25 MB." };
+  }
+  if (size <= 0) return { ok: false, message: "Arquivo de vídeo vazio." };
+  return { ok: true };
+}
+
+export async function readComposerMediaFile(file) {
+  return readFileAsDataUrl(file);
+}
