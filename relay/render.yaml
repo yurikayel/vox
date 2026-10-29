@@ -1,0 +1,12 @@
+# Render Blueprint para implantação gratuita do Nó Sentinela Vox
+# Documentação: https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: vox-sentinel
+    env: docker
+    dockerfilePath: relay/Dockerfile
+    dockerContext: relay
+    plan: free
+    region: oregon
+    healthCheckPath: /health
+    autoDeploy: true

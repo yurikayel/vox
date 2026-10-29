@@ -1,0 +1,61 @@
+name: Sentinel Keepalive — Nós Base 24/7
+
+on:
+  schedule:
+    # A cada 14 minutos (mantém instâncias gratuitas como Render e Koyeb ativas sem adormecer)
+    - cron: "*/14 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: sentinel-keepalive
+  cancel-in-progress: true
+
+jobs:
+  ping:
+    name: Ping Nós Base (Sentinelas Vox)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Executar pings de prontidão nos nós sentinelas
+        env:
+          SENTINEL_NODE_1: ${{ secrets.SENTINEL_NODE_1 }}
+          SENTINEL_NODE_2: ${{ secrets.SENTINEL_NODE_2 }}
+          SENTINEL_NODE_3: ${{ secrets.SENTINEL_NODE_3 }}
+        run: |
+          echo "=============================================="
+          echo "  Vox Sentinel Keepalive Ping"
+          echo "=============================================="
+
+          nodes=()
+          [ -n "$SENTINEL_NODE_1" ] && nodes+=("$SENTINEL_NODE_1")
+          [ -n "$SENTINEL_NODE_2" ] && nodes+=("$SENTINEL_NODE_2")
+          [ -n "$SENTINEL_NODE_3" ] && nodes+=("$SENTINEL_NODE_3")
+
+          if [ ${#nodes[@]} -eq 0 ]; then
+            echo "::notice title=Nenhum nó sentinela configurado::Configure os segredos de repositório SENTINEL_NODE_1, SENTINEL_NODE_2 e SENTINEL_NODE_3 com as URLs dos nós base (ex: https://meu-space.hf.space)."
+            exit 0
+          fi
+
+          failed=0
+          for node in "${nodes[@]}"; do
+            clean_url=$(echo "$node" | sed 's|/$||')
+            if [[ ! "$clean_url" =~ ^https?:// ]]; then
+              clean_url="https://${clean_url}"
+            fi
+            health_url="${clean_url}/health"
+
+            echo "Testando nó: $health_url ..."
+            response=$(curl -s -S -m 15 -w "\nHTTP_STATUS:%{http_code}\nTIME:%{time_total}s" "$health_url" || true)
+            http_code=$(echo "$response" | grep "HTTP_STATUS:" | cut -d':' -f2)
+            req_time=$(echo "$response" | grep "TIME:" | cut -d':' -f2)
+
+            if [ "$http_code" = "200" ]; then
+              echo "  [OK] Nó ativo! Status 200 em ${req_time}"
+            else
+              echo "  [ALERTA] Falha no nó ($clean_url) — Código HTTP: ${http_code:-timeout}"
+              failed=$((failed + 1))
+            fi
+          done
+
+          echo "=============================================="
+          echo "Ping concluído: $((${#nodes[@]} - failed))/${#nodes[@]} nós ativos."
+          echo "=============================================="

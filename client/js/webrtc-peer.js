@@ -131,11 +131,35 @@ export function listOpenRtcPeerIds() {
   return openPeers;
 }
 
+let activeSignalingIndex = 0;
+
+export function getSignalingCandidates(config) {
+  if (customSignalingUrl) return [customSignalingUrl];
+  const stored = (localStorage.getItem("vox-custom-signaling-url") || "").trim();
+  if (stored) return [stored];
+  const urls = Array.isArray(config?.signalingUrls)
+    ? config.signalingUrls.map((u) => String(u || "").trim()).filter(Boolean)
+    : [];
+  return urls.length > 0 ? urls : ["ws://127.0.0.1:3921"];
+}
+
+export function getActiveSignalingIndex() {
+  return activeSignalingIndex;
+}
+
+export function resetSignalingIndex() {
+  activeSignalingIndex = 0;
+}
+
 export function getSignalingUrl(config) {
-  if (customSignalingUrl) return customSignalingUrl;
-  const stored = localStorage.getItem("vox-custom-signaling-url");
-  if (stored) return stored.trim();
-  return config.signalingUrls?.[0] || "ws://127.0.0.1:3921";
+  const candidates = getSignalingCandidates(config);
+  return candidates[activeSignalingIndex % candidates.length];
+}
+
+export function rotateSignalingUrl(config) {
+  const candidates = getSignalingCandidates(config);
+  activeSignalingIndex = (activeSignalingIndex + 1) % candidates.length;
+  return candidates[activeSignalingIndex];
 }
 
 export async function initWebRtc(peerId, customUrl = null) {
@@ -165,6 +189,7 @@ export function disconnectWebRtc() {
   for (const remoteId of Array.from(peerConnections.keys())) {
     closePeerConnection(remoteId);
   }
+  resetSignalingIndex();
 }
 
 async function connectSignaling() {
@@ -175,14 +200,17 @@ async function connectSignaling() {
 
   try {
     signalingWs = new WebSocket(url);
-    bindSignalingSocket(signalingWs);
+    bindSignalingSocket(signalingWs, config);
   } catch {
-    scheduleReconnect();
+    rotateSignalingUrl(config);
+    scheduleReconnect(true);
   }
 }
 
-function bindSignalingSocket(ws) {
+function bindSignalingSocket(ws, config) {
+  let wasOpened = false;
   ws.onopen = () => {
+    wasOpened = true;
     reconnectAttempts = 0;
     ws.send(
       JSON.stringify({
@@ -201,16 +229,31 @@ function bindSignalingSocket(ws) {
     } catch {}
   };
 
-  ws.onerror = () => ws.close();
+  ws.onerror = () => {
+    try {
+      ws.close();
+    } catch {}
+  };
+
   ws.onclose = () => {
     signalingWs = null;
-    scheduleReconnect();
+    const candidates = getSignalingCandidates(config);
+    if (!wasOpened && candidates.length > 1) {
+      const prevIndex = activeSignalingIndex;
+      rotateSignalingUrl(config);
+      const wrappedAround = activeSignalingIndex <= prevIndex;
+      scheduleReconnect(!wrappedAround);
+    } else {
+      scheduleReconnect(false);
+    }
   };
 }
 
-function scheduleReconnect() {
+function scheduleReconnect(immediate = false) {
   if (!isWebRtcEnabled || reconnectTimer) return;
-  const delay = Math.min(30000, 1000 * Math.pow(1.5, reconnectAttempts++));
+  const delay = immediate
+    ? 300
+    : Math.min(30000, 1000 * Math.pow(1.5, reconnectAttempts++));
   reconnectTimer = setTimeout(() => {
     reconnectTimer = null;
     connectSignaling();
