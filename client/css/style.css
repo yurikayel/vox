@@ -2899,16 +2899,26 @@ p.profile-grid-handle {
 
 .profile-grid-actions {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.4rem;
   margin-top: 0.75rem;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.profile-grid-actions::-webkit-scrollbar {
+  display: none;
 }
 
 .profile-grid-btn {
-  flex: 1 1 auto;
+  flex: 0 0 auto;
+  white-space: nowrap;
   min-width: 0;
   text-align: center;
-  padding: 0.45rem 0.75rem;
+  padding: 0.42rem 0.65rem;
   font-size: 0.82rem;
   font-weight: 600;
   border-radius: 8px;
@@ -2918,6 +2928,7 @@ p.profile-grid-handle {
   text-decoration: none;
   cursor: pointer;
   line-height: 1.25;
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
 
 .profile-grid-btn-primary {
@@ -3082,11 +3093,12 @@ p.profile-grid-handle {
   }
 
   .profile-grid-actions {
-    max-width: 420px;
+    max-width: 100%;
+    flex-wrap: nowrap;
   }
 
   .profile-grid-btn {
-    flex: 0 1 auto;
+    flex: 0 0 auto;
   }
 }
 
