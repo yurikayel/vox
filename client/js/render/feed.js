@@ -599,10 +599,15 @@ export function renderPostItem(t, { isPinned = false } = {}) {
   const gist = layout === "github" ? renderPostGithubGist(t) : "";
   const preface = isPhoto ? renderPhotoHiddenMessageHtml(t) : "";
   const comments = renderPostComments(t.id, t.communityId, { prefaceHtml: preface });
+  const isPostPinned = Boolean(isPinned || t.isPinned);
+  const pinnedRibbon = isPostPinned
+    ? `<div class="post-pinned-ribbon"><span class="pin-icon">📌</span> <span>${t.isOfficial ? "Post Oficial · Boas-vindas à Rede" : "Publicação Fixada"}</span></div>`
+    : "";
 
   if (layout === "text" || layout === "github") {
     return `
-    <article class="post insta-post post-layout-${layout}" data-id="${escapeHtml(t.id)}" data-layout="${layout}">
+    <article class="post insta-post post-layout-${layout}${isPostPinned ? " post-pinned-highlight" : ""}" data-id="${escapeHtml(t.id)}" data-layout="${layout}">
+      ${pinnedRibbon}
       ${header}
       ${caption}
       ${gist}
