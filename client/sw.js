@@ -276,6 +276,11 @@ const SHELL_ASSETS = [
   "./js/upload.js",
 
   "./js/wallet.js",
+  "./js/idb-store.js",
+  "./js/chunked-transfer.js",
+  "./js/airgap-webrtc.js",
+  "./js/testimonials.js",
+  "./js/bridging-rank.js",
 
 ];
 
