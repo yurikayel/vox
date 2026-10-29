@@ -370,9 +370,8 @@ export function renderPostTextHtml(post) {
     const linked = hashtags.linkifyHashtags(escapeHtml(disp.text));
     return `<p class="post-body post-caption-only"><a href="${href}">${linked}</a></p>`;
   }
-  const titleBlock = `<div class="post-title"><a href="${href}">${escapeHtml(disp.title)}</a></div>`;
-  const bodyBlock = disp.body ? `<div class="post-body post-body-md">${renderPostBodyMarkdown(disp.body)}</div>` : "";
-  return `${titleBlock}${bodyBlock}`;
+  const fullText = post?.body || (disp.title ? `${disp.title}\n${disp.body}` : disp.body);
+  return `<div class="post-body post-body-md">${renderPostBodyMarkdown(fullText)}</div>`;
 }
 
 function renderPostText(t) {
@@ -601,7 +600,7 @@ export function renderPostItem(t, { isPinned = false } = {}) {
   const comments = renderPostComments(t.id, t.communityId, { prefaceHtml: preface });
   const isPostPinned = Boolean(isPinned || t.isPinned);
   const pinnedRibbon = isPostPinned
-    ? `<div class="post-pinned-ribbon"><span class="pin-icon">📌</span> <span>${t.isOfficial ? "Post Oficial · Boas-vindas à Rede" : "Publicação Fixada"}</span></div>`
+    ? `<div class="post-pinned-ribbon"><span class="pin-icon">📌</span> <span>${t.isOfficial ? "Bem-vindo à Vox" : "Publicação Fixada"}</span></div>`
     : "";
 
   if (layout === "text" || layout === "github") {

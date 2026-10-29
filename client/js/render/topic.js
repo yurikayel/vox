@@ -27,12 +27,9 @@ function shareTopicAria(topicId) {
 
 function renderTopicDetailText(topicId, title, bodyText) {
   const disp = postOwnership.formatPostDisplay({ title, body: bodyText });
-  if (disp.mode === "caption") {
-    return `<div class="post-body post-caption-only post-topic-detail" style="font-size:0.98rem; line-height:1.5; margin:0.75rem 0 0;">${hashtags.linkifyHashtags(escapeHtml(disp.text))}</div>`;
-  }
-  const titleBlock = `<h2 class="post-title post-topic-detail-title" style="margin:0.75rem 0 0.5rem; font-size:1.25rem;">${escapeHtml(disp.title || "Post")}</h2>`;
-  const bodyBlock = `<div class="post-body post-body-md" style="font-size:0.98rem; line-height:1.5;">${renderPostBodyMarkdown(disp.body || "")}</div>`;
-  return `${titleBlock}${bodyBlock}`;
+  if (disp.mode === "empty") return "";
+  const fullText = bodyText || disp.body || disp.text || "";
+  return `<div class="post-body post-body-md post-topic-detail" style="font-size:0.98rem; line-height:1.5; margin:0.75rem 0 0;">${renderPostBodyMarkdown(fullText)}</div>`;
 }
 export function renderTopic(main, topicId, topic, replies, { topicData = null, isMod = false, communityId = "" } = {}) {
   const commId = communityId || topic?.communityId || "";
