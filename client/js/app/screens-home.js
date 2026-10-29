@@ -160,7 +160,20 @@ export async function showHome(feed = "for-you") {
   const externalSubs = bskyFeed.loadBskySubscriptions();
 
   try {
-    const { items: remoteItems, gateway, demo } = await gql.fetchRecentTopics().catch(async () => mock.mockRecentTopics());
+    let remoteItems = [];
+    let gateway = "";
+    if (activeFeed === "following") {
+      const watched = social.getWatchedProfiles();
+      if (watched.length > 0) {
+        const res = await gql.fetchTopicsByOwners(watched).catch(() => ({ items: [] }));
+        remoteItems = res.items || [];
+        gateway = res.gateway || "";
+      }
+    } else {
+      const res = await gql.fetchRecentTopics().catch(async () => mock.mockRecentTopics());
+      remoteItems = res.items || [];
+      gateway = res.gateway || "";
+    }
     const localPosts = (await cacheNode.getLocalPosts({ type: "topic" })).filter((p) => p.type !== "listing");
     const commMap = await buildCommunityTitleMap();
     const merged = mergeLocalAndRemoteTopics(localPosts, remoteItems, commMap, user);
