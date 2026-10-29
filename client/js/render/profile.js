@@ -60,14 +60,14 @@ const PROFILE_SAVED_TAB_ICON = `<svg class="profile-grid-tab-icon" aria-hidden="
 function renderProfileGridTabs(address, currentTab, showAbout, showSaved) {
   const href = (tab) => `#/u/${encodeURIComponent(address)}?tab=${tab}`;
   const saved = showSaved
-    ? `<a href="${href("saved")}" class="profile-grid-tab ${currentTab === "saved" ? "active" : ""}" aria-label="Salvos">${PROFILE_SAVED_TAB_ICON}</a>`
+    ? `<a href="${href("saved")}" class="profile-grid-tab ${currentTab === "saved" ? "active" : ""}" data-tab="saved" aria-label="Salvos">${PROFILE_SAVED_TAB_ICON}</a>`
     : "";
-  const following = `<a href="${href("following")}" class="profile-grid-tab profile-grid-tab-text ${currentTab === "following" || currentTab === "followers" ? "active" : ""}">Amizades</a>`;
+  const following = `<a href="${href("following")}" class="profile-grid-tab profile-grid-tab-text ${currentTab === "following" || currentTab === "followers" ? "active" : ""}" data-tab="following">Amizades</a>`;
   const about = showAbout
-    ? `<a href="${href("about")}" class="profile-grid-tab profile-grid-tab-text ${currentTab === "about" ? "active" : ""}">Sobre</a>`
+    ? `<a href="${href("about")}" class="profile-grid-tab profile-grid-tab-text ${currentTab === "about" ? "active" : ""}" data-tab="about">Sobre</a>`
     : "";
   return `<nav class="profile-grid-tabs" aria-label="Seções do perfil">
-      <a href="${href("posts")}" class="profile-grid-tab ${currentTab === "posts" ? "active" : ""}" aria-label="Publicações">${PROFILE_GRID_TAB_ICON}</a>
+      <a href="${href("posts")}" class="profile-grid-tab ${currentTab === "posts" ? "active" : ""}" data-tab="posts" aria-label="Publicações">${PROFILE_GRID_TAB_ICON}</a>
       ${following}
       ${saved}
       ${about}
@@ -502,7 +502,7 @@ export function renderProfile(main, address, memberships = [], isCurrentWallet =
   if (currentTab === "starred" || currentTab === "communities") currentTab = "about";
   if (currentTab === "saved" && !isCurrentWallet) currentTab = "posts";
 
-  let html = `<div class="profile-grid-layout">`;
+  let html = `<div class="profile-grid-layout" data-profile-address="${escapeHtml(address)}">`;
   html += renderProfileGridHeader(
     address,
     isCurrentWallet,
@@ -521,12 +521,64 @@ export function renderProfile(main, address, memberships = [], isCurrentWallet =
   );
 
   html += renderProfileGridTabs(address, currentTab, showAboutTab, isCurrentWallet);
+  html += `<div class="profile-tab-content-slot" id="profile-tab-content">`;
+  html += renderProfileTabContent(currentTab, {
+    address,
+    isCurrentWallet,
+    handle,
+    authorPostList,
+    finalPinned,
+    savedList,
+    displayName,
+    finalReadme,
+    hasWallet,
+    balance,
+    pixKey,
+    finalGithub,
+    oauthProvider,
+    isBlocked,
+    isMuted,
+    meshDiscoverable,
+    starredList,
+    memberships,
+    activeTab,
+  });
+  html += `</div>`;
+  html += `</div>`;
+  main.innerHTML = html;
+}
 
-  if (currentTab === "posts") {
+export function renderProfileTabContent(currentTab = "posts", {
+  address = "",
+  isCurrentWallet = false,
+  handle = "",
+  authorPostList = [],
+  finalPinned = "",
+  savedList = [],
+  displayName = "",
+  finalReadme = "",
+  hasWallet = false,
+  balance = "0.000",
+  pixKey = "",
+  finalGithub = "",
+  oauthProvider = "",
+  isBlocked = false,
+  isMuted = false,
+  meshDiscoverable = false,
+  starredList = [],
+  memberships = [],
+  activeTab = "posts",
+} = {}) {
+  let normalizedTab = currentTab || "posts";
+  if (normalizedTab === "starred" || normalizedTab === "communities") normalizedTab = "about";
+  if (normalizedTab === "saved" && !isCurrentWallet) normalizedTab = "posts";
+
+  let html = "";
+  if (normalizedTab === "posts") {
     html += renderProfilePostGrid(authorPostList, finalPinned);
-  } else if (currentTab === "following" || currentTab === "followers") {
-    html += renderProfileNetworkTab(address, isCurrentWallet, currentTab);
-  } else if (currentTab === "saved") {
+  } else if (normalizedTab === "following" || normalizedTab === "followers") {
+    html += renderProfileNetworkTab(address, isCurrentWallet, normalizedTab);
+  } else if (normalizedTab === "saved") {
     html += savedList.length
       ? renderProfilePostGrid(savedList)
       : `<div class="profile-grid-empty empty"><p>Nenhum post salvo neste aparelho.</p></div>`;
@@ -571,9 +623,7 @@ export function renderProfile(main, address, memberships = [], isCurrentWallet =
     }
     html += `</div>`;
   }
-
-  html += `</div>`;
-  main.innerHTML = html;
+  return html;
 }
 
 export function renderPixLookup(main, query = "", profile = null) {

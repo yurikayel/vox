@@ -3055,6 +3055,12 @@ p.profile-grid-handle {
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 
+.profile-tab-content-slot,
+.community-tab-content-slot {
+  width: 100%;
+  min-height: 120px;
+}
+
 .profile-grid-empty {
   padding: 2.5rem 1rem;
   text-align: center;
