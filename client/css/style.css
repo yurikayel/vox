@@ -7851,3 +7851,53 @@ blockquote.repost-cite {
   border: 1px solid rgba(245, 158, 11, 0.35) !important;
   box-shadow: 0 4px 20px rgba(245, 158, 11, 0.08) !important;
 }
+
+/* Lo-Fi Cívico e Estética Retrô */
+.lofi-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.lofi-filter-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted, #71767b);
+}
+
+.lofi-filter-btn {
+  font-size: 0.76rem;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--surface-soft, rgba(0, 0, 0, 0.05));
+  border: 1px solid var(--border);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.lofi-filter-btn:hover {
+  background: var(--surface-hover, rgba(0, 0, 0, 0.1));
+}
+
+.lofi-filter-btn.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+.lofi-weight-pill {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: #16a34a;
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(22, 163, 74, 0.1);
+}
