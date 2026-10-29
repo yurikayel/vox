@@ -49,7 +49,7 @@ export function renderInlineComposer({ userRouteId = "", displayName = "" } = {}
       <form class="inline-composer-form hidden" id="form-inline-topic" aria-label="Nova publicação">
         <div class="inline-composer-form-head">
           ${avatarHtml}
-          <textarea id="inline-topic-body" class="inline-composer-textarea" rows="3" maxlength="2000" placeholder="Compartilhe texto, #hashtags ou anexe uma foto…" required aria-label="Texto da publicação"></textarea>
+          <textarea id="inline-topic-body" class="inline-composer-textarea" rows="3" maxlength="2000" placeholder="Compartilhe texto, #hashtags ou anexe uma foto…" aria-label="Texto da publicação"></textarea>
         </div>
                 <div class="inline-composer-preview hidden" id="inline-topic-preview-wrap">
           <img id="inline-topic-preview" class="inline-composer-preview-img hidden" alt="Prévia da imagem" />
