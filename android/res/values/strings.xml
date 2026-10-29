@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Vox Seeder</string>
+    <string name="channel_name">Vox Nó Comunitário</string>
+    <string name="channel_desc">Mantém o serviço de rede mesh e sincronização ativo em background</string>
+    <string name="notif_title">Vox Nó Ativo</string>
+    <string name="notif_desc_wifi">Semeando comunidades no Wi-Fi · 0 MB móveis</string>
+    <string name="notif_desc_paused">Pausado (aguardando conexão Wi-Fi)</string>
+</resources>
