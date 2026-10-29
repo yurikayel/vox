@@ -154,7 +154,11 @@ export function renderTopic(main, topicId, topic, replies, { topicData = null, i
 
   const replyItems = replies.map((r) => {
     const rAuthor = r.author || r.owner || "";
-    const rAuthorDisplay = r.authorDisplay || (rAuthor ? mock.getAuthorDisplay(rAuthor) : "") || shortId(rAuthor);
+    const rLabels = resolvePostAuthorLabels(rAuthor, {
+      authorDisplay: r.authorDisplay,
+      isOwnLocalPost: r.isOwnLocalPost,
+    });
+    const rAuthorDisplay = rLabels.authorDisplay;
     const rBadge = r.isLocalP2p
       ? `<span class="badge-pill p2p-pill">Na rede</span>`
       : `<span class="badge-pill permanent-pill">Guardado</span>`;
