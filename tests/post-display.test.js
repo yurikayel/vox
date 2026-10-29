@@ -43,13 +43,13 @@ test("renderPostTextHtml - feed não repete texto quando title === body", () => 
   assert.equal((html.match(/A Meta/g) || []).length, 1);
 });
 
-test("renderPostTextHtml - multilinha mostra título e corpo distintos", () => {
+test("renderPostTextHtml - multilinha exibe mensagem sem post-title separado", () => {
   const html = render.renderPostTextHtml({
     id: "top_multi",
     title: "Título",
     body: "Título\nCorpo extra",
   });
-  assert.ok(html.includes("post-title"));
+  assert.ok(!html.includes("post-title"));
   assert.ok(html.includes("Corpo extra"));
   assert.ok(!html.includes("post-caption-only"));
 });

@@ -226,7 +226,7 @@ function renderProfileGridHeader(
   isBlocked = false,
   isMuted = false,
 ) {
-  const handleLabel = handle ? `@${handle}` : `@${shortId(address)}`;
+  const handleLabel = handle ? `@${handle}` : (isWelcomeRouteId(address) ? "@vox" : `@${shortId(address)}`);
   const statsData = stats || mock.getMockProfile(address)?.stats;
   const bioHtml = profileBio ? `<p class="profile-grid-bio desc">${escapeHtml(profileBio)}</p>` : "";
   const pixBadge = renderProfilePixBadge(pixKeyMasked, pixKeyRaw);
@@ -282,7 +282,7 @@ function renderProfilePostGrid(posts, pinnedPostId = "") {
 
 /** Minimal IG shell for handle-not-found and similar states. */
 export function renderProfileGridNotFound(main, { handle = "", title = "", bodyHtml = "", actionsHtml = "" } = {}) {
-  const handleLine = handle ? `<h1 class="profile-grid-handle">@${escapeHtml(handle)}</h1>` : "";
+  const handleLine = handle ? `<h1 class="profile-grid-handle">@${escapeHtml(handle)}</h1>` : (isWelcomeRouteId(handle) ? '<h1 class="profile-grid-handle">@vox</h1>' : "");
   main.innerHTML = `
     <div class="profile-grid-layout profile-grid-not-found">
       <header class="profile-grid-header profile-grid-header-minimal">${handleLine}</header>
@@ -728,10 +728,7 @@ export function renderComposeTopic(main, communityId) {
             <input type="text" id="topic-comm-id" class="form-control" placeholder="ex: cinema-nacional" required />
           </div>
         `}
-        <div class="form-group">
-          <label for="topic-title">Título:</label>
-          <input type="text" id="topic-title" class="form-control" placeholder="O que está acontecendo?" required maxlength="120" />
-        </div>
+
         <div class="form-group">
           <label for="topic-body">Mensagem:</label>
           <textarea id="topic-body" class="form-control" rows="5" placeholder="Escreva seu post aqui..." required></textarea>

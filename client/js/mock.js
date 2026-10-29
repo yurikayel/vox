@@ -174,6 +174,18 @@ export const MOCK_REPLIES = {
 
 export function getMockProfile(authorId) {
   if (!authorId) return null;
+  if (authorId === "vx_voxbrasil_welcome" || authorId === "vx_vox_welcome") {
+    return {
+      routeId: authorId,
+      name: "Vox",
+      handle: "vox",
+      avatar: "./icons/profile-vox-official-512.png",
+      bio: "Conta oficial da plataforma Vox.",
+      readme: "Conta oficial da plataforma Vox.",
+      isOfficialPlatform: true,
+      isSystem: true,
+    };
+  }
   return MOCK_DEMO_PROFILES[authorId] || null;
 }
 
