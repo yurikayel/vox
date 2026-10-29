@@ -55,11 +55,33 @@ export function attachInlineComposerHandlers(onPublished) {
   const previewImg = document.getElementById("inline-topic-preview");
   const removeBtn = document.getElementById("btn-inline-remove-img");
 
+  let rawSourceFile = null;
+  let activeLofiFilter = "normal";
+
   const clearImage = () => {
+    rawSourceFile = null;
+    activeLofiFilter = "normal";
     inlineComposerImageDataUrl = "";
     if (fileInput) fileInput.value = "";
     previewWrap?.classList.add("hidden");
     if (previewImg) previewImg.removeAttribute("src");
+    const badge = document.getElementById("lofi-weight-badge");
+    if (badge) badge.textContent = "⚡ ~45 KB (100% Grátis)";
+  };
+
+  const renderLofiPreview = async () => {
+    if (!rawSourceFile) return;
+    const badge = document.getElementById("lofi-weight-badge");
+    if (badge) badge.textContent = "⚡ Processando Lo-Fi…";
+    const result = await composerMedia.processComposerLofiImage(rawSourceFile, { filter: activeLofiFilter });
+    if (result.ok) {
+      inlineComposerImageDataUrl = result.dataUrl;
+      if (previewImg) previewImg.src = result.dataUrl;
+      const kb = Math.max(1, Math.round((result.byteLength || 0) / 1024));
+      if (badge) badge.textContent = `⚡ ~${kb} KB (100% Grátis)`;
+    } else {
+      share.showToast(result.message || "Erro no processamento da imagem", "error");
+    }
   };
 
   collapsed?.addEventListener("click", () => expandInlineComposer());
@@ -73,15 +95,32 @@ export function attachInlineComposerHandlers(onPublished) {
   fileInput?.addEventListener("change", async () => {
     const file = fileInput.files?.[0];
     if (!file) return;
-    const result = await composerMedia.readComposerImageFromFile(file);
-    if (!result.ok) {
-      share.showToast(result.message, "error");
+    const check = composerMedia.validateComposerImageFile(file);
+    if (!check.ok) {
+      share.showToast(check.message, "error");
       clearImage();
       return;
     }
-    inlineComposerImageDataUrl = result.dataUrl;
-    if (previewImg) previewImg.src = inlineComposerImageDataUrl;
+    rawSourceFile = file;
+    activeLofiFilter = "normal";
+    const filterBar = document.getElementById("lofi-filter-bar");
+    filterBar?.querySelectorAll(".lofi-filter-btn").forEach((b) => {
+      b.classList.toggle("active", b.dataset.filter === "normal");
+    });
     previewWrap?.classList.remove("hidden");
+    await renderLofiPreview();
+    syncInlineComposerUi();
+  });
+
+  const filterBar = document.getElementById("lofi-filter-bar");
+  filterBar?.addEventListener("click", async (e) => {
+    const btn = e.target.closest(".lofi-filter-btn");
+    if (!btn || !rawSourceFile) return;
+    e.preventDefault();
+    filterBar.querySelectorAll(".lofi-filter-btn").forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+    activeLofiFilter = btn.dataset.filter || "normal";
+    await renderLofiPreview();
   });
 
   removeBtn?.addEventListener("click", (e) => {
