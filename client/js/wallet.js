@@ -60,3 +60,10 @@ export async function generateNewWallet() {
   saveJwk(jwk);
   return { jwk, address };
 }
+
+export async function ensureWallet() {
+  const existing = getStoredJwk();
+  if (existing) return existing;
+  const { jwk } = await generateNewWallet();
+  return jwk;
+}

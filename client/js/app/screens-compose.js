@@ -227,6 +227,7 @@ export async function showComposeTopic(communityId) {
         await cacheNode.saveLocalPost(signed);
         peers.broadcastGossip(signed);
 
+        let permawebResult = null;
         if (wallet.hasWallet()) {
           try {
             const tags = upload.buildTags("topic", {
@@ -235,11 +236,20 @@ export async function showComposeTopic(communityId) {
               Title: title,
               "Local-Origin-Id": topicId,
             });
-            await upload.postData({ title, body, communityId: finalComm }, tags);
-          } catch {}
+            permawebResult = await upload.postData({ title, body, communityId: finalComm }, tags);
+          } catch (permaErr) {
+            console.warn("Falha no upload Permaweb:", permaErr);
+          }
         }
 
-        share.showToast("Post publicado na rede!");
+        if (permawebResult?.success) {
+          const badge = permawebResult.via === "turbo" ? "Turbo ⚡" : "Arweave";
+          share.showToast(`Post publicado no P2P e gravado na Permaweb (${badge})!`);
+        } else if (wallet.hasWallet()) {
+          share.showToast("Post publicado no P2P local (Permaweb indisponível).", "warning");
+        } else {
+          share.showToast("Post publicado na rede!");
+        }
         const { dispatchAutoReplication, isAutoReplicationEnabled } = await import("../linked-accounts.js");
         if (isAutoReplicationEnabled()) {
           dispatchAutoReplication({ id: topicId, communityId: finalComm, title, body })
