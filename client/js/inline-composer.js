@@ -497,15 +497,37 @@ export function attachInlineComposerHandlers(onPublished) {
       peers.broadcastGossip(detachedPost);
 
       let permawebResult = null;
+      let mediaTxId = null;
       if (wallet.hasWallet()) {
         try {
+          if (blob?.dataUrl && mediaBlob.isDataUrl(blob.dataUrl)) {
+            const rawBytes = mediaBlob.dataUrlToUint8Array(blob.dataUrl);
+            if (rawBytes.length <= upload.FREE_TIER_MAX_BYTES) {
+              const mediaTags = upload.buildTags("media", {
+                "Content-Type": blob.mime || "image/webp",
+                "Media-Type": blob.mime || "image/webp",
+                "Blob-Hash": blob.hash,
+                "Aspect-Ratio": selectedAspect,
+              });
+              const mediaRes = await upload.postBinary(rawBytes, mediaTags);
+              if (mediaRes?.success) mediaTxId = mediaRes.id;
+            }
+          }
+
           const tags = upload.buildTags("topic", {
             "Community-Id": commSlug,
             "Topic-Title": title,
             Title: title,
             "Local-Origin-Id": topicId,
+            ...(mediaTxId ? { "Media-Tx": mediaTxId, "Media-Type": blob?.mime || "image/webp", "Aspect-Ratio": selectedAspect } : {}),
           });
-          permawebResult = await upload.postData({ title, body, communityId: commSlug }, tags);
+          permawebResult = await upload.postData({
+            title,
+            body,
+            communityId: commSlug,
+            mediaTx: mediaTxId,
+            aspectRatio: selectedAspect,
+          }, tags);
         } catch (permaErr) {
           console.warn("Falha no upload Permaweb:", permaErr);
         }

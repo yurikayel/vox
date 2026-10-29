@@ -19,7 +19,7 @@ export function parseDataUrl(dataUrl) {
   return { mime, base64, byteLength };
 }
 
-function base64ToUint8Array(base64) {
+export function base64ToUint8Array(base64) {
   if (typeof atob === "function") {
     const binary = atob(base64);
     const len = binary.length;
@@ -33,6 +33,11 @@ function base64ToUint8Array(base64) {
     return new Uint8Array(Buffer.from(base64, "base64"));
   }
   throw new Error("Ambiente sem suporte a decodificação base64");
+}
+
+export function dataUrlToUint8Array(dataUrl) {
+  const parsed = parseDataUrl(dataUrl);
+  return base64ToUint8Array(parsed.base64);
 }
 
 function bufferToHex(buffer) {

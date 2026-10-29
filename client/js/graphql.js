@@ -223,11 +223,18 @@ function mapCommunity(node) {
 
 function mapTopic(node, communityId) {
   const tags = node.tags || [];
+  const mediaTx = tagValue(tags, "Media-Tx");
+  const mediaMime = tagValue(tags, "Media-Type") || "image/webp";
+  const aspect = tagValue(tags, "Aspect-Ratio") || "original";
   return {
     id: node.id,
     communityId: communityId || tagValue(tags, "Community-Id"),
     title: tagValue(tags, "Topic-Title") || tagValue(tags, "Title") || "Tópico",
     owner: node.owner?.address || "",
+    mediaTx: mediaTx || null,
+    image: mediaTx ? `https://turbo-gateway.com/raw/${mediaTx}` : null,
+    mediaType: mediaMime,
+    aspectRatio: aspect,
     tags,
   };
 }
