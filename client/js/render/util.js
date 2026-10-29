@@ -173,7 +173,10 @@ export function formatTimeAgo(ts) {
   if (hours < 24) return `${hours}h`;
   const days = Math.floor(hours / 24);
   if (days < 30) return `${days}d`;
-  return `${Math.floor(days / 30)}mês`;
+  const months = Math.floor(days / 30);
+  if (months < 12) return `${months} ${months === 1 ? "mês" : "meses"}`;
+  const years = Math.floor(months / 12);
+  return `${years} ${years === 1 ? "ano" : "anos"}`;
 }
 function formatInlineMd(str) {
   return str
