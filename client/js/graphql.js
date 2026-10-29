@@ -242,6 +242,28 @@ const QUERIES = {
       }
     }
   }`,
+  topicsByOwners: `query ListTopicsByOwners($owners: [String!]!, $after: String) {
+    transactions(
+      first: 30
+      after: $after
+      owners: $owners
+      tags: [
+        { name: "App-Name", values: ["vox-brasil"] }
+        { name: "Type", values: ["topic"] }
+      ]
+      sort: HEIGHT_DESC
+    ) {
+      pageInfo { hasNextPage }
+      edges {
+        cursor
+        node {
+          id
+          owner { address }
+          tags { name value }
+        }
+      }
+    }
+  }`,
   recentTopics: `query ListRecentTopics($after: String) {
     transactions(
       first: 30
@@ -443,6 +465,19 @@ export async function fetchCommunities() {
   );
   const edges = data.transactions?.edges || [];
   const items = edges.map((e) => mapCommunity(e.node));
+  return { items, gateway, demo: false };
+}
+
+
+export async function fetchTopicsByOwners(owners = [], { after } = {}) {
+  const list = Array.isArray(owners) ? owners.filter(Boolean) : [];
+  if (!list.length) return { items: [], gateway: "", demo: false };
+
+  const { data, gateway } = await withGateways((url) =>
+    queryOne(url, QUERIES.topicsByOwners, { owners: list, after: after || null })
+  );
+  const edges = data.transactions?.edges || [];
+  const items = edges.map((e) => mapTopic(e.node));
   return { items, gateway, demo: false };
 }
 
