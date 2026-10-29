@@ -496,6 +496,7 @@ export function attachInlineComposerHandlers(onPublished) {
       }
       peers.broadcastGossip(detachedPost);
 
+      let permawebResult = null;
       if (wallet.hasWallet()) {
         try {
           const tags = upload.buildTags("topic", {
@@ -504,15 +505,24 @@ export function attachInlineComposerHandlers(onPublished) {
             Title: title,
             "Local-Origin-Id": topicId,
           });
-          await upload.postData({ title, body, communityId: commSlug }, tags);
-        } catch {}
+          permawebResult = await upload.postData({ title, body, communityId: commSlug }, tags);
+        } catch (permaErr) {
+          console.warn("Falha no upload Permaweb:", permaErr);
+        }
       }
 
       form.reset();
       clearMedia();
       syncInlineComposerUi();
       collapseInlineComposer();
-      share.showToast("Post publicado na rede!");
+      if (permawebResult?.success) {
+        const badge = permawebResult.via === "turbo" ? "Turbo ⚡" : "Arweave";
+        share.showToast(`Post publicado no P2P e gravado na Permaweb (${badge})!`);
+      } else if (wallet.hasWallet()) {
+        share.showToast("Post publicado no P2P local (Permaweb indisponível).", "warning");
+      } else {
+        share.showToast("Post publicado na rede P2P!");
+      }
       if (typeof onPublished === "function") {
         onPublished(signed);
       } else {
