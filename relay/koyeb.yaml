@@ -1,0 +1,25 @@
+# Koyeb App Specification para implantação gratuita do Nó Sentinela Vox (Eco Nano)
+# Documentação: https://www.koyeb.com/docs/reference/koyeb-yaml
+name: vox-sentinel
+services:
+  - name: vox-sentinel-service
+    type: web
+    instance_type: nano
+    docker:
+      dockerfile: relay/Dockerfile
+    ports:
+      - port: 8000
+        path: /
+        protocol: http
+    routes:
+      - path: /
+        port: 8000
+    env:
+      - key: PORT
+        value: "8000"
+    health_checks:
+      - path: /health
+        port: 8000
+        protocol: http
+        interval: 30
+        timeout: 5

@@ -33,6 +33,63 @@ test("webrtc - contagem de pares remotos e broadcast seguro", () => {
   assert.equal(broadcastCount, 0);
 });
 
+test("webrtc - getSignalingCandidates extrai lista e descarta vazios com fallback", () => {
+  localStorage.clear();
+  webrtcPeer.resetSignalingIndex();
+
+  const cfgMultiple = {
+    signalingUrls: [
+      "wss://node1.hf.space",
+      "",
+      "  wss://node2.koyeb.app  ",
+      null,
+      "wss://node3.onrender.com",
+    ],
+  };
+
+  const candidates = webrtcPeer.getSignalingCandidates(cfgMultiple);
+  assert.equal(candidates.length, 3);
+  assert.equal(candidates[0], "wss://node1.hf.space");
+  assert.equal(candidates[1], "wss://node2.koyeb.app");
+  assert.equal(candidates[2], "wss://node3.onrender.com");
+
+  const cfgEmpty = { signalingUrls: [] };
+  const fallback = webrtcPeer.getSignalingCandidates(cfgEmpty);
+  assert.deepEqual(fallback, ["ws://127.0.0.1:3921"]);
+});
+
+test("webrtc - rotateSignalingUrl alterna sequencialmente entre os nós base", () => {
+  localStorage.clear();
+  webrtcPeer.resetSignalingIndex();
+
+  const cfg = {
+    signalingUrls: [
+      "wss://node1.hf.space",
+      "wss://node2.koyeb.app",
+      "wss://node3.onrender.com",
+    ],
+  };
+
+  assert.equal(webrtcPeer.getSignalingUrl(cfg), "wss://node1.hf.space");
+  assert.equal(webrtcPeer.getActiveSignalingIndex(), 0);
+
+  const next1 = webrtcPeer.rotateSignalingUrl(cfg);
+  assert.equal(next1, "wss://node2.koyeb.app");
+  assert.equal(webrtcPeer.getActiveSignalingIndex(), 1);
+
+  const next2 = webrtcPeer.rotateSignalingUrl(cfg);
+  assert.equal(next2, "wss://node3.onrender.com");
+  assert.equal(webrtcPeer.getActiveSignalingIndex(), 2);
+
+  const next3 = webrtcPeer.rotateSignalingUrl(cfg);
+  assert.equal(next3, "wss://node1.hf.space");
+  assert.equal(webrtcPeer.getActiveSignalingIndex(), 0);
+
+  webrtcPeer.resetSignalingIndex();
+  assert.equal(webrtcPeer.getActiveSignalingIndex(), 0);
+  assert.equal(webrtcPeer.getSignalingUrl(cfg), "wss://node1.hf.space");
+});
+
 test("webrtc - createRtcConfig combina STUN, TURN estático e TURN customizado", () => {
   localStorage.clear();
   const baseCfg = {
