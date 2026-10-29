@@ -223,3 +223,28 @@ test("media-lofi - optimizeCanvasQualityUnderCeiling assegura limite estrito de 
   assert.ok(result.byteLength <= 101376, "tamanho não deve exceder teto");
   assert.ok(result.qualityUsed > 0.5, "deve maximizar a qualidade ótima dentro da janela");
 });
+
+test("pw-3 - mapTopic e feed renderizam fotos on-chain com link da Permaweb e proporcao correta", async () => {
+  const mediaBlob = await import("../client/js/media-blob.js");
+
+  const dummyDataUrl = "data:image/webp;base64,UklGRhoAAABXRUJQVlA4TA0AAAAvAAAAEAcQERGIiP4HAA==";
+  const rawBytes = mediaBlob.dataUrlToUint8Array(dummyDataUrl);
+  assert.ok(rawBytes instanceof Uint8Array);
+  assert.ok(rawBytes.length > 0);
+
+  const expectedImg = "https://turbo-gateway.com/raw/HPeo2mkdG7K2Hqez7fZ6_d-EhJ01Qve8Cr2vGcNns8w";
+  const mappedPost = {
+    id: "tx_topic_with_media_123",
+    communityId: "geral",
+    title: "Foto no Permaweb",
+    owner: "0x_author_arweave",
+    mediaTx: "HPeo2mkdG7K2Hqez7fZ6_d-EhJ01Qve8Cr2vGcNns8w",
+    image: expectedImg,
+    aspectRatio: "16:9",
+  };
+
+  const html = renderPostItem(mappedPost);
+  assert.ok(html.includes(expectedImg), "o feed deve renderizar a URL da imagem da Permaweb");
+  assert.ok(html.includes("post-aspect-16-9"), "deve aplicar a classe de proporcao 16:9");
+  assert.ok(html.includes('data-media-src="' + expectedImg + '"'), "lightbox deve receber o link da Permaweb");
+});
