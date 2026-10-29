@@ -134,3 +134,28 @@ export function getAuthorAvatarSync(routeId) {
   }
   return "";
 }
+
+export async function fetchAndCacheOnChainProfile(target) {
+  const id = String(target || "").trim();
+  if (!id) return null;
+  const isRoute = id.startsWith("vx_");
+  const gql = await import("./graphql.js");
+  const onChain = await gql.fetchProfileCardOnChain(isRoute ? { routeId: id } : { address: id });
+  if (!onChain) return null;
+
+  const cardData = {
+    name: onChain.displayName || onChain.name || "",
+    bio: onChain.bio || "",
+    avatarUrl: onChain.avatarUrl || "",
+    arweaveAddress: onChain.owner || "",
+    onChainTxId: onChain.txId || "",
+    discoverable: onChain.discoverable,
+  };
+
+  const key = onChain.routeId || id;
+  setProfileCard(key, cardData);
+  if (onChain.owner && onChain.routeId) {
+    setProfileCard(onChain.owner, cardData);
+  }
+  return { routeId: key, ...cardData };
+}

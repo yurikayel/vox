@@ -165,6 +165,83 @@ const QUERIES = {
       }
     }
   }`,
+
+  profileCardByAddress: `query GetProfileCardByAddress($address: String!) {
+    transactions(
+      first: 5
+      owners: [$address]
+      tags: [
+        { name: "App-Name", values: ["vox-brasil"] }
+        { name: "Type", values: ["profile-card"] }
+      ]
+      sort: HEIGHT_DESC
+    ) {
+      edges {
+        node {
+          id
+          owner { address }
+          tags { name value }
+        }
+      }
+    }
+  }`,
+  profileCardByRoute: `query GetProfileCardByRoute($routeId: String!) {
+    transactions(
+      first: 5
+      tags: [
+        { name: "App-Name", values: ["vox-brasil"] }
+        { name: "Type", values: ["profile-card"] }
+        { name: "Route-Id", values: [$routeId] }
+      ]
+      sort: HEIGHT_DESC
+    ) {
+      edges {
+        node {
+          id
+          owner { address }
+          tags { name value }
+        }
+      }
+    }
+  }`,
+  identityLinkByAddress: `query GetIdentityLinkByAddress($address: String!) {
+    transactions(
+      first: 5
+      owners: [$address]
+      tags: [
+        { name: "App-Name", values: ["vox-brasil"] }
+        { name: "Type", values: ["identity-link"] }
+      ]
+      sort: HEIGHT_DESC
+    ) {
+      edges {
+        node {
+          id
+          owner { address }
+          tags { name value }
+        }
+      }
+    }
+  }`,
+  identityLinkByRoute: `query GetIdentityLinkByRoute($routeId: String!) {
+    transactions(
+      first: 5
+      tags: [
+        { name: "App-Name", values: ["vox-brasil"] }
+        { name: "Type", values: ["identity-link"] }
+        { name: "Route-Id", values: [$routeId] }
+      ]
+      sort: HEIGHT_DESC
+    ) {
+      edges {
+        node {
+          id
+          owner { address }
+          tags { name value }
+        }
+      }
+    }
+  }`,
   recentTopics: `query ListRecentTopics($after: String) {
     transactions(
       first: 30
@@ -579,4 +656,57 @@ export async function fetchTransactionData(txId, { communityId = "" } = {}) {
   const empty = { body: "", raw: "" };
   dataCache.set(txId, empty);
   return empty;
+}
+
+function mapProfileCard(node) {
+  const tags = node.tags || [];
+  return {
+    txId: node.id,
+    owner: node.owner?.address || "",
+    routeId: tagValue(tags, "Route-Id"),
+    displayName: tagValue(tags, "Display-Name"),
+    name: tagValue(tags, "Display-Name"),
+    bio: tagValue(tags, "Bio"),
+    avatarUrl: tagValue(tags, "Avatar-Url"),
+    discoverable: tagValue(tags, "Discoverable") !== "false",
+    timestamp: Number(tagValue(tags, "Timestamp") || 0),
+    tags,
+  };
+}
+
+export async function fetchProfileCardOnChain({ address, routeId } = {}) {
+  const targetAddr = String(address || "").trim();
+  const targetRoute = String(routeId || "").trim();
+  if (!targetAddr && !targetRoute) return null;
+
+  try {
+    const query = targetAddr ? QUERIES.profileCardByAddress : QUERIES.profileCardByRoute;
+    const variables = targetAddr ? { address: targetAddr } : { routeId: targetRoute };
+    const { data } = await withGateways((url) => queryOne(url, query, variables));
+    const edges = data.transactions?.edges || [];
+    if (!edges.length) return null;
+    return mapProfileCard(edges[0].node);
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchIdentityLinkOnChain({ address, routeId } = {}) {
+  const targetAddr = String(address || "").trim();
+  const targetRoute = String(routeId || "").trim();
+  if (!targetAddr && !targetRoute) return null;
+
+  try {
+    const query = targetAddr ? QUERIES.identityLinkByAddress : QUERIES.identityLinkByRoute;
+    const variables = targetAddr ? { address: targetAddr } : { routeId: targetRoute };
+    const { data } = await withGateways((url) => queryOne(url, query, variables));
+    const edges = data.transactions?.edges || [];
+    if (!edges.length) return null;
+    const node = edges[0].node;
+    const rawData = await fetchTransactionData(node.id);
+    if (!rawData?.body) return null;
+    return typeof rawData.body === "string" ? JSON.parse(rawData.body) : rawData.body;
+  } catch {
+    return null;
+  }
 }

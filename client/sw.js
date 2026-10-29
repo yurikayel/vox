@@ -270,6 +270,9 @@ const SHELL_ASSETS = [
 
   "./js/social.js",
 
+  "./js/ans104.js",
+  "./js/identity-link.js",
+  "./js/render/welcome-pact.js",
   "./js/upload.js",
 
   "./js/wallet.js",

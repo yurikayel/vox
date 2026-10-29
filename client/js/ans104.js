@@ -134,3 +134,15 @@ export async function createSignedDataItem(data, tags, jwk) {
   const bytes = assembleItem({ signature, owner, anchor, tagBytes, tagCount: tags.length, data: payload });
   return { id: bytesToB64Url(await sha("SHA-256", signature)), bytes };
 }
+
+/**
+ * Retorna o endereço Arweave (43 chars base64url) derivado do módulo público n da JWK.
+ * @param {object} jwk
+ * @returns {Promise<string>}
+ */
+export async function jwkToAddress(jwk) {
+  if (!jwk?.n) return "";
+  const owner = b64UrlToBytes(jwk.n);
+  const hash = await sha("SHA-256", owner);
+  return bytesToB64Url(hash);
+}

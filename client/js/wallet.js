@@ -1,3 +1,5 @@
+import * as ans104 from "./ans104.js";
+
 const STORAGE_KEY = "vox-wallet-jwk";
 let arweaveInstance = null;
 
@@ -42,21 +44,28 @@ export function hasWallet() {
 export async function getAddress() {
   const jwk = getStoredJwk();
   if (!jwk) return null;
-  const arweave = await getArweave();
-  return arweave.wallets.jwkToAddress(jwk);
+  return ans104.jwkToAddress(jwk);
 }
 
 export async function getBalance(address) {
   if (!address) return "0.000";
-  const arweave = await getArweave();
-  const winston = await arweave.wallets.getBalance(address);
-  return arweave.ar.winstonToAr(winston);
+  try {
+    const arweave = await getArweave();
+    const winston = await arweave.wallets.getBalance(address);
+    return arweave.ar.winstonToAr(winston);
+  } catch {
+    return "0.000";
+  }
 }
 
 export async function generateNewWallet() {
-  const arweave = await getArweave();
-  const jwk = await arweave.wallets.generate();
-  const address = await arweave.wallets.jwkToAddress(jwk);
+  const pair = await crypto.subtle.generateKey(
+    { name: "RSA-PSS", modulusLength: 4096, publicExponent: new Uint8Array([1, 0, 1]), hash: "SHA-256" },
+    true,
+    ["sign", "verify"]
+  );
+  const jwk = await crypto.subtle.exportKey("jwk", pair.privateKey);
+  const address = await ans104.jwkToAddress(jwk);
   saveJwk(jwk);
   return { jwk, address };
 }
