@@ -173,3 +173,31 @@ test("sw.js caches linked-accounts.js and linked-accounts-ui.js", () => {
   assert.ok(sw.includes('"./js/linked-accounts.js"'));
   assert.ok(sw.includes('"./js/render/linked-accounts-ui.js"'));
 });
+
+
+test("linked-accounts - 1-click connect opens network, saves account and renders button without required block", () => {
+  localStorage.clear();
+  localStorage.setItem("vox-profile-enrichment", JSON.stringify({ displayName: "Yuri Kayel" }));
+
+  // 1. Suggested handle resolves from profile name
+  assert.equal(linked.getSuggestedHandle("bsky"), "yurikayel");
+  assert.equal(linked.getSuggestedHandle("twitter"), "yurikayel");
+
+  // 2. Auth URLs point directly to the networks
+  assert.equal(linked.getNetworkAuthUrl("bsky", "yurikayel"), "https://bsky.app/profile/yurikayel");
+  assert.equal(linked.getNetworkAuthUrl("twitter", "yurikayel"), "https://x.com/yurikayel");
+  assert.equal(linked.getNetworkAuthUrl("threads", "yurikayel"), "https://www.threads.net/@yurikayel");
+
+  // 3. 1-Click Connect immediately links account in Vox and returns auth URL
+  const res = linked.connectWithOneClick("bsky");
+  assert.equal(res.ok, true);
+  assert.equal(res.handle, "yurikayel");
+  assert.equal(linked.loadLinkedAccounts().bsky?.handle, "yurikayel");
+
+  // 4. UI renders 1-Click connect button without required attribute blocking submission
+  const html = linkedUi.renderLinkedAccountsHtml();
+  assert.ok(html.includes("btn-one-click-connect"));
+  assert.ok(html.includes("Conectar Twitter / X (1 Clique)"));
+  assert.ok(html.includes("Conectar Threads (1 Clique)"));
+  assert.ok(!html.includes('required style="font-size:0.8rem; padding:5px 8px;"'));
+});
