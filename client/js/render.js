@@ -66,10 +66,12 @@ export {
   renderComposeProposal,
   computeCommunityNeighborStats,
   renderCommunitySeedChecklist,
+  renderCommunityTabContent,
 } from "./render/community.js";
 
 export {
   renderProfile,
+  renderProfileTabContent,
   renderProfileGridNotFound,
   renderPixLookup,
   renderHandleConflict,

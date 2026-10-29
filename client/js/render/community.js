@@ -504,7 +504,7 @@ export function renderCommunity(
   const canChangePhoto = isMod || (meta.owner && walletAddress && meta.owner === walletAddress);
 
   let html = `
-    <div class="community-vox-page" style="--community-accent:${accent};">
+    <div class="community-vox-page" data-community-id="${escapeHtml(communityId)}" style="--community-accent:${accent};">
     <header class="community-vox-header card">
       <div class="community-vox-accent-rail" aria-hidden="true"></div>
       <div class="community-vox-header-grid">
@@ -577,27 +577,53 @@ export function renderCommunity(
     ${renderCommunityForkBanner(meta)}
     ${activeTab === "posts" && welcomeText ? renderCommunityWelcomeRecado(welcomeText) : ""}
     <nav class="community-vox-nav community-tabs segmented-tabs" aria-label="Seções da comunidade">
-      <a class="tab-btn ${activeTab !== "listings" && activeTab !== "governance" && activeTab !== "members" ? "active" : ""}" href="#/c/${encodeURIComponent(communityId)}">Posts</a>
-      <a class="tab-btn ${activeTab === "members" ? "active" : ""}" href="#/c/${encodeURIComponent(communityId)}?tab=members">Membros</a>
-      <a class="tab-btn ${activeTab === "listings" ? "active" : ""}" href="#/c/${encodeURIComponent(communityId)}?tab=listings">Classificados</a>
-      <a class="tab-btn ${activeTab === "governance" ? "active" : ""}" href="#/c/${encodeURIComponent(communityId)}?tab=governance">Governança${proposals.length ? ` (${proposals.length})` : ""}</a>
-    </nav>`;
-
-  const tab = activeTab || "posts";
-  if (tab === "listings") {
-    html += renderCommunityListingsTab(communityId, commTitle, meta, listings);
-  } else if (tab === "governance") {
-    html += renderCommunityGovernanceTab(communityId, commTitle, meta, proposals);
-  } else if (tab === "members") {
-    html += renderCommunityMembersTab(meta, communityId, recentPeople, isMember);
-  } else {
-    html += `<div class="community-vox-posts-wrap">
-      ${renderCommunityOrkutMembersBox(meta, communityId, recentPeople, memberCount)}
-      ${renderCommunityPostsTab(communityId, commTitle, topics)}
-    </div>`;
-  }
-  html += `</div>`;
+      <a class="tab-btn ${activeTab !== "listings" && activeTab !== "governance" && activeTab !== "members" ? "active" : ""}" data-tab="posts" href="#/c/${encodeURIComponent(communityId)}">Posts</a>
+      <a class="tab-btn ${activeTab === "members" ? "active" : ""}" data-tab="members" href="#/c/${encodeURIComponent(communityId)}?tab=members">Membros</a>
+      <a class="tab-btn ${activeTab === "listings" ? "active" : ""}" data-tab="listings" href="#/c/${encodeURIComponent(communityId)}?tab=listings">Classificados</a>
+      <a class="tab-btn ${activeTab === "governance" ? "active" : ""}" data-tab="governance" href="#/c/${encodeURIComponent(communityId)}?tab=governance">Governança${proposals.length ? ` (${proposals.length})` : ""}</a>
+    </nav>
+    <div class="community-tab-content-slot" id="community-tab-content">
+      ${renderCommunityTabContent(activeTab, {
+        communityId,
+        commTitle,
+        meta,
+        topics,
+        listings,
+        proposals,
+        recentPeople,
+        isMember,
+        memberCount,
+      })}
+    </div>
+  </div>`;
   main.innerHTML += html;
+}
+
+export function renderCommunityTabContent(tab = "posts", {
+  communityId = "",
+  commTitle = "",
+  meta = {},
+  topics = [],
+  listings = [],
+  proposals = [],
+  recentPeople = [],
+  isMember = false,
+  memberCount = null,
+} = {}) {
+  const activeTab = tab || "posts";
+  if (activeTab === "listings") {
+    return renderCommunityListingsTab(communityId, commTitle, meta, listings);
+  }
+  if (activeTab === "governance") {
+    return renderCommunityGovernanceTab(communityId, commTitle, meta, proposals);
+  }
+  if (activeTab === "members") {
+    return renderCommunityMembersTab(meta, communityId, recentPeople, isMember);
+  }
+  return `<div class="community-vox-posts-wrap">
+    ${renderCommunityOrkutMembersBox(meta, communityId, recentPeople, memberCount)}
+    ${renderCommunityPostsTab(communityId, commTitle, topics)}
+  </div>`;
 }
 
 function renderCommunityPostsTab(communityId, commTitle, topics) {
