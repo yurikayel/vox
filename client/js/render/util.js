@@ -30,24 +30,38 @@ function normAuthorToken(s) {
     .replace(/^@/, "");
 }
 
-/** Nome + @handle ou ID curto uma vez (title = routeId completo). */
-export function resolvePostAuthorLabels(author, { authorDisplay: override = "", isOwnLocalPost = false } = {}) {
-  const routeId = String(author || "");
-  if (isWelcomeRouteId(routeId)) {
-    return {
-      primary: "Vox",
-      secondaryHandle: "vox",
-      authorDisplay: "Vox",
-      authorHandle: "vox",
-      routeTitle: "Vox (Conta Oficial)",
-    };
+function resolveAuthorFullName(routeId, override, isOwnLocalPost) {
+  const rawOverride = String(override || "").trim();
+  if (rawOverride && !rawOverride.startsWith("vx_") && !rawOverride.startsWith("0x")) {
+    return rawOverride;
   }
-  const profileName = routeId ? mock.getAuthorDisplay(routeId) : "";
-  const profileHandle = routeId ? mock.getAuthorHandle(routeId) : "";
-  let fullName = override || profileName || "";
-  if (!fullName && isOwnLocalPost) {
-    fullName = localAccount.getDisplayName() || "";
+  const myId = localAccount.getCachedRouteIdSync();
+  const isSelf = Boolean(isOwnLocalPost) || (Boolean(routeId) && Boolean(myId) && routeId === myId);
+  if (isSelf) {
+    const selfName = localAccount.getDisplayName() || localAccount.getProfileEnrichment()?.displayName || "";
+    if (selfName) return selfName;
   }
+  if (routeId) {
+    const dirName = profileDirectory.getAuthorDisplaySync(routeId);
+    if (dirName && !dirName.startsWith("vx_") && !dirName.startsWith("0x")) return dirName;
+    if (typeof localAccount.listVaultAccountsSync === "function") {
+      const match = localAccount.listVaultAccountsSync().find((v) => v.routeId === routeId);
+      if (match?.displayName && !match.displayName.startsWith("vx_")) return match.displayName;
+    }
+    const mockName = mock.getAuthorDisplay(routeId);
+    if (mockName) return mockName;
+  }
+  return "";
+}
+
+function resolveAuthorHandle(routeId) {
+  if (!routeId) return "";
+  const card = profileDirectory.getProfileCard(routeId);
+  if (card?.handle) return card.handle;
+  return mock.getAuthorHandle(routeId) || "";
+}
+
+function formatAuthorResult(routeId, fullName, profileHandle) {
   const shortRoute = routeId ? shortId(routeId) : "";
   const firstName = (fullName.split(/\s+/).filter(Boolean)[0] || fullName || "").trim();
 
@@ -81,6 +95,23 @@ export function resolvePostAuthorLabels(author, { authorDisplay: override = "", 
   const authorHandle = profileHandle || secondaryHandle || shortRoute;
 
   return { primary, secondaryHandle, authorDisplay, authorHandle, routeTitle: routeId };
+}
+
+/** Nome + @handle ou ID curto uma vez (title = routeId completo). */
+export function resolvePostAuthorLabels(author, { authorDisplay: override = "", isOwnLocalPost = false } = {}) {
+  const routeId = String(author || "");
+  if (isWelcomeRouteId(routeId)) {
+    return {
+      primary: "Vox",
+      secondaryHandle: "vox",
+      authorDisplay: "Vox",
+      authorHandle: "vox",
+      routeTitle: "Vox (Conta Oficial)",
+    };
+  }
+  const fullName = resolveAuthorFullName(routeId, override, isOwnLocalPost);
+  const profileHandle = resolveAuthorHandle(routeId);
+  return formatAuthorResult(routeId, fullName, profileHandle);
 }
 
 function parseTsDate(ts) {

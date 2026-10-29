@@ -9,6 +9,7 @@ import * as profileDirectory from "../profile-directory.js";
 import {
   escapeHtml,
   shortId,
+  resolvePostAuthorLabels,
   getCommunityColor,
   formatTimeAgo,
   postTimeParts,
@@ -578,8 +579,11 @@ export function renderCommunityGovernanceTab(communityId, commTitle, meta, propo
 
 export function renderProposalItem(item, { communityId = "", communityTitle = "" } = {}) {
   const author = item.author || item.owner || "";
-  const authorDisplay = (author ? mock.getAuthorDisplay(author) : "") || shortId(author);
-  const authorHandle = (author ? mock.getAuthorHandle(author) : "") || shortId(author);
+  const labels = resolvePostAuthorLabels(author, {
+    authorDisplay: item.authorDisplay,
+    isOwnLocalPost: item.isOwnLocalPost,
+  });
+  const { authorDisplay, authorHandle } = labels;
   const timeLabel = formatTimeAgo(item.createdAt || item.ts);
   const commId = item.communityId || communityId || "";
   const state = item.state || "open";
@@ -627,8 +631,11 @@ export function renderProposalStatusBadge(state) {
 export function renderListingItem(item, { communityTitle = "" } = {}) {
   if (gossipRetract.shouldHideGossipDeletedPost(item)) return "";
   const author = item.author || item.owner || "";
-  const authorDisplay = (author ? mock.getAuthorDisplay(author) : "") || shortId(author);
-  const authorHandle = (author ? mock.getAuthorHandle(author) : "") || shortId(author);
+  const labels = resolvePostAuthorLabels(author, {
+    authorDisplay: item.authorDisplay,
+    isOwnLocalPost: item.isOwnLocalPost,
+  });
+  const { authorDisplay, authorHandle } = labels;
   const timeLabel = formatTimeAgo(item.ts);
   const price = listing.normalizePriceLabel(item.priceLabel);
   const location = listing.normalizeLocationLabel(item.locationLabel);
@@ -691,8 +698,11 @@ export function renderProposalDetail(main, proposal, tally, { userVote = null, i
   const commId = proposal.communityId;
   const commTitle = community?.title || commId;
   const author = proposal.author || proposal.owner || "";
-  const authorDisplay = (author ? mock.getAuthorDisplay(author) : "") || shortId(author);
-  const authorHandle = (author ? mock.getAuthorHandle(author) : "") || shortId(author);
+  const labels = resolvePostAuthorLabels(author, {
+    authorDisplay: proposal.authorDisplay,
+    isOwnLocalPost: proposal.isOwnLocalPost,
+  });
+  const { authorDisplay, authorHandle } = labels;
   const timeLabel = formatTimeAgo(proposal.createdAt || proposal.ts);
   const state = tally.state || proposal.state || "open";
 
@@ -807,7 +817,11 @@ export function renderProposalVotesList(tally) {
   if (!votes.length) return "";
 
   const rows = votes.map((v) => {
-    const authorDisplay = mock.getAuthorDisplay(v.author) || shortId(v.author);
+    const labels = resolvePostAuthorLabels(v.author, {
+      authorDisplay: v.authorDisplay,
+      isOwnLocalPost: v.isOwnLocalPost,
+    });
+    const authorDisplay = labels.authorDisplay;
     const timeLabel = formatTimeAgo(v.ts);
     const choiceLabels = { yes: "Sim", no: "Não", abstain: "Abstenção" };
     const choiceColors = { yes: "#10b981", no: "#ef4444", abstain: "#9ca3af" };
