@@ -44,6 +44,13 @@ export function openPostMediaLightbox(src, alt = "") {
   }
 }
 
+function extractMediaFromTrigger(el) {
+  const img = el.matches?.("img") ? el : el.querySelector?.("img");
+  const src = el.dataset?.mediaSrc || img?.src || el.getAttribute?.("src") || "";
+  const alt = el.dataset?.mediaAlt || img?.alt || el.getAttribute?.("alt") || "";
+  return { src, alt };
+}
+
 export function initPostMediaLightbox() {
   document.addEventListener("click", (e) => {
     const closeBtn = e.target.closest(".post-lightbox-close");
@@ -54,15 +61,16 @@ export function initPostMediaLightbox() {
       return;
     }
 
-    const trigger = e.target.closest(".post-media-lightbox-trigger");
+    if (window.__justLongPressed) return;
+    const trigger = e.target.closest(".post-media-lightbox-trigger, .post-media-hero-img");
     if (!trigger) return;
     if (document.body.classList.contains("photo-tagging")) return;
-    if (e.target.closest(".photo-tag-pins, .photo-tag-bar, .btn-photo-tag")) return;
-    if (e.target.closest(".post-overlay")) return;
-    if (e.target.closest(".post-actions-overlay")) return;
-    if (e.target.closest(".post-media-header, .post-ig-toolbar, .post-toolbar")) return;
-    if (e.target.closest(".btn-post-more-menu")) return;
+    if (e.target.closest(".photo-tag-pins, .photo-tag-bar, .btn-photo-tag, .btn-photo-tag-vis")) return;
+    if (e.target.closest(".post-overlay, .post-actions-overlay, .post-media-header, .post-ig-toolbar, .post-toolbar, .btn-post-more-menu")) return;
+
+    const { src, alt } = extractMediaFromTrigger(trigger);
+    if (!src) return;
     e.preventDefault();
-    openPostMediaLightbox(trigger.dataset.mediaSrc || "", trigger.dataset.mediaAlt || "");
+    openPostMediaLightbox(src, alt);
   });
 }
