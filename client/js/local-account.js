@@ -13,6 +13,7 @@ const PIX_STORAGE = "vox-pix-key-v1";
 const ENRICHMENT_STORAGE = "vox-profile-enrichment-v1";
 const DISCOVERABLE_STORAGE = "vox-discoverable-mesh-v1";
 const DM_KEYPAIR_STORAGE = "vox-dm-keypair";
+const VAULT_STORAGE = "vox-accounts-vault-v1";
 const SESSION_PASSPHRASE_KEYS = ["vox-sovereignty-passphrase", "vox-backup-passphrase"];
 
 export const LOCAL_WIPE_NOTICE =
@@ -25,6 +26,7 @@ const LOCAL_WIPE_KEYS = [
   PIX_STORAGE,
   ENRICHMENT_STORAGE,
   DISCOVERABLE_STORAGE,
+  VAULT_STORAGE,
 ];
 
 function bytesToB64Url(bytes) {
@@ -442,4 +444,143 @@ export function wipeLocalAccount() {
   cachedAccount = null;
   for (const key of LOCAL_WIPE_KEYS) dropStoredKey(localStorage, key);
   dropSessionPassphrase();
+}
+
+
+function readVaultMap() {
+  try {
+    const raw = localStorage.getItem(VAULT_STORAGE);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeVaultMap(map) {
+  try {
+    localStorage.setItem(VAULT_STORAGE, JSON.stringify(map));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function syncActiveAccountToVault() {
+  const acc = await ensureLocalAccount();
+  if (!acc?.routeId) return null;
+  const vault = readVaultMap();
+  const existing = vault[acc.routeId] || {};
+  const dmKeys = await cryptoDm.getDmKeypair();
+  vault[acc.routeId] = {
+    ...existing,
+    routeId: acc.routeId,
+    publicJwk: acc.publicJwk,
+    privateJwk: acc.privateJwk,
+    dmKeypair: dmKeys || existing.dmKeypair || null,
+    displayName: getDisplayName() || existing.displayName || "",
+    enrichment: getProfileEnrichment() || existing.enrichment || null,
+    pixKey: getPixKey() || existing.pixKey || null,
+    meshDiscoverable: getMeshDiscoverable(),
+    createdAt: acc.createdAt || existing.createdAt || Date.now(),
+    lastUsedAt: Date.now(),
+  };
+  writeVaultMap(vault);
+  return vault[acc.routeId];
+}
+
+export function listVaultAccountsSync() {
+  const vault = readVaultMap();
+  const currentId = getCachedRouteIdSync();
+  return Object.values(vault).map((item) => ({
+    routeId: item.routeId,
+    displayName: item.displayName || "",
+    avatarUrl: item.enrichment?.avatarUrl || "",
+    bio: item.enrichment?.bio || "",
+    createdAt: item.createdAt || 0,
+    lastUsedAt: item.lastUsedAt || 0,
+    isCurrent: item.routeId === currentId,
+  })).sort((a, b) => (b.lastUsedAt || 0) - (a.lastUsedAt || 0));
+}
+
+export async function listVaultAccounts() {
+  await syncActiveAccountToVault();
+  return listVaultAccountsSync();
+}
+
+export async function switchActiveAccount(targetRouteId) {
+  if (!targetRouteId) return false;
+  await syncActiveAccountToVault();
+  const vault = readVaultMap();
+  const target = vault[targetRouteId];
+  if (!target?.routeId || !target?.publicJwk || !target?.privateJwk) return false;
+
+  cachedAccount = {
+    routeId: target.routeId,
+    publicJwk: target.publicJwk,
+    privateJwk: target.privateJwk,
+    createdAt: target.createdAt || Date.now(),
+  };
+  localStorage.setItem(ACCOUNT_STORAGE, JSON.stringify(cachedAccount));
+  if (target.dmKeypair) {
+    cryptoDm.setDmKeypair(target.dmKeypair);
+  } else {
+    await cryptoDm.ensureDmKeys();
+  }
+  setDisplayName(target.displayName || "");
+  if (target.enrichment) {
+    localStorage.setItem(ENRICHMENT_STORAGE, JSON.stringify(target.enrichment));
+  } else {
+    localStorage.removeItem(ENRICHMENT_STORAGE);
+  }
+  if (target.pixKey) {
+    localStorage.setItem(PIX_STORAGE, JSON.stringify(target.pixKey));
+  } else {
+    localStorage.removeItem(PIX_STORAGE);
+  }
+  setMeshDiscoverable(Boolean(target.meshDiscoverable));
+  target.lastUsedAt = Date.now();
+  vault[targetRouteId] = target;
+  writeVaultMap(vault);
+  return true;
+}
+
+export async function createAdditionalAccount({ displayName = "" } = {}) {
+  await syncActiveAccountToVault();
+  const pair = await crypto.subtle.generateKey(
+    { name: "ECDSA", namedCurve: "P-256" },
+    true,
+    ["sign", "verify"]
+  );
+  const publicJwk = await crypto.subtle.exportKey("jwk", pair.publicKey);
+  const privateJwk = await crypto.subtle.exportKey("jwk", pair.privateKey);
+  const routeId = await computeRouteId(publicJwk);
+
+  const dmPair = await crypto.subtle.generateKey(
+    { name: "ECDH", namedCurve: "P-256" },
+    true,
+    ["deriveKey", "deriveBits"]
+  );
+  const dmPublicJwk = await crypto.subtle.exportKey("jwk", dmPair.publicKey);
+  const dmPrivateJwk = await crypto.subtle.exportKey("jwk", dmPair.privateKey);
+  const dmKeypair = { publicKey: dmPublicJwk, privateKey: dmPrivateJwk };
+
+  cachedAccount = { routeId, publicJwk, privateJwk, createdAt: Date.now() };
+  localStorage.setItem(ACCOUNT_STORAGE, JSON.stringify(cachedAccount));
+  cryptoDm.setDmKeypair(dmKeypair);
+  setDisplayName(displayName);
+  localStorage.removeItem(ENRICHMENT_STORAGE);
+  localStorage.removeItem(PIX_STORAGE);
+
+  await syncActiveAccountToVault();
+  return cachedAccount;
+}
+
+export function removeVaultAccount(targetRouteId) {
+  const currentId = getCachedRouteIdSync();
+  if (!targetRouteId || targetRouteId === currentId) return false;
+  const vault = readVaultMap();
+  if (!vault[targetRouteId]) return false;
+  delete vault[targetRouteId];
+  writeVaultMap(vault);
+  return true;
 }

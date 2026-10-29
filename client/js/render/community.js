@@ -457,6 +457,7 @@ export function renderCommunity(
             ${isMember ? "✓ Membro" : "Entrar"}
           </button>
           <button id="btn-share-comm" type="button" class="btn btn-sm btn-outline community-vox-btn-share" data-id="${escapeHtml(communityId)}" data-title="${escapeHtml(commTitle)}">Compartilhar</button>
+          <button id="btn-export-comm-genesis" type="button" class="btn btn-sm btn-outline community-vox-btn-export" data-id="${escapeHtml(communityId)}" title="Exportar Gênesis e dados offline desta comunidade">💾 Gênesis</button>
           <a class="btn btn-sm btn-primary community-vox-btn-compose" href="#/compose/topic?c=${encodeURIComponent(communityId)}">Novo post</a>
         </div>
       </div>
