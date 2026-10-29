@@ -370,9 +370,10 @@ export function attachInlineComposerHandlers(onPublished) {
     const bodyRaw = document.getElementById("inline-topic-body")?.value?.trim() || "";
     const commSlug =
       document.getElementById("inline-topic-comm")?.value?.trim().toLowerCase() || "geral";
-    if (!bodyRaw && !inlineComposerMedia.dataUrl) return;
+    const hasMedia = Boolean(inlineComposerImageDataUrl || inlineComposerMedia.dataUrl);
+    if (!bodyRaw && !hasMedia) return;
 
-    const { title, body } = postOwnership.deriveTopicTitleFromBody(bodyRaw || "Mídia publicada no feed");
+    const { title, body } = postOwnership.deriveTopicTitleFromBody(bodyRaw || "");
 
     if (btn) {
       btn.disabled = true;
@@ -384,12 +385,12 @@ export function attachInlineComposerHandlers(onPublished) {
         id: topicId,
         type: "topic",
         communityId: commSlug,
-        title,
-        body,
+        title: title || "",
+        body: body || "",
       };
-      if (inlineComposerMedia.type === "image" && inlineComposerImageDataUrl) {
-        payload.image = inlineComposerImageDataUrl;
-        payload.imageAlt = title;
+      if (inlineComposerMedia.type === "image" && (inlineComposerImageDataUrl || inlineComposerMedia.dataUrl)) {
+        payload.image = inlineComposerImageDataUrl || inlineComposerMedia.dataUrl;
+        payload.imageAlt = title || "Foto";
       } else if (inlineComposerMedia.type === "audio" && inlineComposerMedia.dataUrl) {
         payload.audio = inlineComposerMedia.dataUrl;
       } else if (inlineComposerMedia.type === "video" && inlineComposerMedia.dataUrl) {

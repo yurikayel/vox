@@ -103,3 +103,10 @@ test("tab-slot-architecture - CSS declares slot container classes", () => {
   assert.ok(css.includes(".profile-tab-content-slot"), "CSS must declare .profile-tab-content-slot");
   assert.ok(css.includes(".community-tab-content-slot"), "CSS must declare .community-tab-content-slot");
 });
+
+test("composer - inline composer permits posting without text when media is attached", () => {
+  const main = createContainer();
+  render.renderFeed(main, [], { activeFeed: "for-you", userRouteId: "vx_user_1" });
+  assert.ok(main.innerHTML.includes('id="inline-topic-body"'), "Feed must render inline-topic-body textarea");
+  assert.ok(!main.innerHTML.includes('id="inline-topic-body" class="inline-composer-textarea" rows="3" maxlength="2000" placeholder="Compartilhe texto, #hashtags ou anexe uma foto…" required'), "inline-topic-body must NOT have required attribute so media-only posts can be submitted");
+});
