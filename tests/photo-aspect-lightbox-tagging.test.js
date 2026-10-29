@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 import { renderPostItem } from "../client/js/render/feed.js";
 import { renderTopic } from "../client/js/render/topic.js";
 import { renderPhotoTagBarHtml, renderPhotoTagPinsHtml } from "../client/js/render/photo-tag-pins.js";
+import * as mediaLofi from "../client/js/media-lofi.js";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "client");
 const css = fs.readFileSync(path.join(root, "css/style.css"), "utf8");
@@ -80,6 +81,30 @@ test("photo aspect ratio - renders correct aspect class on feed post", () => {
     ts: Date.now(),
   };
   assert.ok(renderPostItem(postWide).includes("post-aspect-16-9"));
+
+  const postStory = {
+    id: "top_aspect_story",
+    type: "topic",
+    title: "Vertical 9:16",
+    body: "",
+    image: "https://example.com/story.jpg",
+    aspectRatio: "9:16",
+    author: "vx_author_1",
+    ts: Date.now(),
+  };
+  assert.ok(renderPostItem(postStory).includes("post-aspect-9-16"));
+
+  const postPortrait = {
+    id: "top_aspect_portrait",
+    type: "topic",
+    title: "Retrato 3:4",
+    body: "",
+    image: "https://example.com/portrait.jpg",
+    aspectRatio: "3:4",
+    author: "vx_author_1",
+    ts: Date.now(),
+  };
+  assert.ok(renderPostItem(postPortrait).includes("post-aspect-3-4"));
 });
 
 test("photo aspect ratio - topic detail handles aspect ratio and lightbox", () => {
@@ -142,9 +167,59 @@ test("lightbox and css - supports uncropped original aspect ratio and fullscreen
   assert.ok(css.includes(".post-media-container.post-aspect-1-1"));
   assert.ok(css.includes(".post-media-container.post-aspect-4-3"));
   assert.ok(css.includes(".post-media-container.post-aspect-16-9"));
+  assert.ok(css.includes(".post-media-container.post-aspect-9-16"));
+  assert.ok(css.includes(".post-media-container.post-aspect-3-4"));
   assert.ok(css.includes(".composer-aspect-bar"));
   assert.ok(css.includes(".composer-aspect-btn"));
   assert.ok(css.includes(".inline-composer-tag-chip"));
   assert.ok(lightboxJs.includes("openPostMediaLightbox"));
   assert.ok(lightboxJs.includes("window.__justLongPressed"));
+});
+
+test("media-lofi - calculateCropAndBounds limita a 1920x1080 horizontal e 1080x1920 vertical", () => {
+  // Landscape 4:3 -> escala para caber em 1920x1080 mantendo aspect
+  const land43 = mediaLofi.calculateCropAndBounds(4000, 3000, { aspect: "original", maxLong: 1920, maxShort: 1080 });
+  assert.equal(land43.destW, 1440);
+  assert.equal(land43.destH, 1080);
+  assert.equal(land43.destW <= 1920, true);
+  assert.equal(land43.destH <= 1080, true);
+
+  // Portrait 3:4 -> escala para caber em 1080x1920 mantendo aspect
+  const port34 = mediaLofi.calculateCropAndBounds(3000, 4000, { aspect: "original", maxLong: 1920, maxShort: 1080 });
+  assert.equal(port34.destW, 1080);
+  assert.equal(port34.destH, 1440);
+  assert.equal(port34.destW <= 1080, true);
+  assert.equal(port34.destH <= 1920, true);
+
+  // Escolha do usuário 16:9
+  const crop169 = mediaLofi.calculateCropAndBounds(4000, 3000, { aspect: "16:9", maxLong: 1920, maxShort: 1080 });
+  assert.equal(crop169.destW, 1920);
+  assert.equal(crop169.destH, 1080);
+
+  // Escolha do usuário 9:16
+  const crop916 = mediaLofi.calculateCropAndBounds(3000, 4000, { aspect: "9:16", maxLong: 1920, maxShort: 1080 });
+  assert.equal(crop916.destW, 1080);
+  assert.equal(crop916.destH, 1920);
+
+  // Imagens pequenas não sofrem upscale desnecessário
+  const small = mediaLofi.calculateCropAndBounds(800, 600, { aspect: "original", maxLong: 1920, maxShort: 1080 });
+  assert.equal(small.destW, 800);
+  assert.equal(small.destH, 600);
+});
+
+test("media-lofi - optimizeCanvasQualityUnderCeiling assegura limite estrito de 100 KB para Permaweb", () => {
+  const fakeCanvas = {
+    width: 1080,
+    height: 1920,
+    toDataURL(mime, quality) {
+      // Simula compressão WebP onde qualidade maior produz mais bytes
+      const bytes = Math.round(50000 + quality * 60000);
+      const b64 = "A".repeat(Math.round(bytes * 1.34));
+      return `data:image/webp;base64,${b64}`;
+    },
+  };
+  const result = mediaLofi.optimizeCanvasQualityUnderCeiling(fakeCanvas, { maxBytes: 101376 });
+  assert.ok(result.isWithinLimit, "deve caber sob o teto de 100 KB");
+  assert.ok(result.byteLength <= 101376, "tamanho não deve exceder teto");
+  assert.ok(result.qualityUsed > 0.5, "deve maximizar a qualidade ótima dentro da janela");
 });

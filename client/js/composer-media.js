@@ -91,7 +91,7 @@ export async function readComposerImageFromFile(file) {
   }
 }
 
-export async function processComposerLofiImage(fileOrDataUrl, { filter = "normal" } = {}) {
+export async function processComposerLofiImage(fileOrDataUrl, { filter = "normal", aspect = "original" } = {}) {
   let dataUrl = "";
   if (typeof fileOrDataUrl === "string") {
     dataUrl = fileOrDataUrl;
@@ -106,28 +106,40 @@ export async function processComposerLofiImage(fileOrDataUrl, { filter = "normal
   }
 
   if (typeof document === "undefined" || !document.createElement) {
-    return { ok: true, dataUrl, byteLength: dataUrl.length, filter, isUnder99Kb: true };
+    return { ok: true, dataUrl, byteLength: dataUrl.length, filter, aspect, isUnder99Kb: true };
   }
 
   return new Promise((resolve) => {
     const img = new Image();
     img.onload = () => {
       try {
-        const { width, height } = mediaLofi.calculateConstrainedDimensions(
-          img.naturalWidth || img.width,
-          img.naturalHeight || img.height,
-          mediaLofi.LOFI_LIMITS.PHOTO_MAX_DIMENSION
-        );
-        const canvas = document.createElement("canvas");
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0, width, height);
+        const naturalW = img.naturalWidth || img.width || 1;
+        const naturalH = img.naturalHeight || img.height || 1;
+        const bounds = mediaLofi.calculateCropAndBounds(naturalW, naturalH, {
+          aspect,
+          maxLong: 1920,
+          maxShort: 1080,
+        });
 
-        mediaLofi.applyLofiFilter(ctx, width, height, filter);
+        const canvas = document.createElement("canvas");
+        canvas.width = bounds.destW;
+        canvas.height = bounds.destH;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(
+          img,
+          bounds.sx,
+          bounds.sy,
+          bounds.sWidth,
+          bounds.sHeight,
+          0,
+          0,
+          bounds.destW,
+          bounds.destH
+        );
+
+        mediaLofi.applyLofiFilter(ctx, bounds.destW, bounds.destH, filter);
 
         const clamped = mediaLofi.compressCanvasWithClamp(canvas, {
-          quality: mediaLofi.LOFI_LIMITS.PHOTO_DEFAULT_QUALITY,
           maxBytes: mediaLofi.LOFI_LIMITS.PHOTO_MAX_BYTES,
         });
 
@@ -135,13 +147,15 @@ export async function processComposerLofiImage(fileOrDataUrl, { filter = "normal
           ok: true,
           dataUrl: clamped.dataUrl,
           byteLength: clamped.byteLength,
-          width,
-          height,
+          width: bounds.destW,
+          height: bounds.destH,
           filter,
+          aspect,
+          qualityUsed: clamped.qualityUsed,
           isUnder99Kb: clamped.byteLength <= mediaLofi.LOFI_LIMITS.PHOTO_MAX_BYTES,
         });
       } catch (err) {
-        resolve({ ok: true, dataUrl, byteLength: dataUrl.length, filter, isUnder99Kb: true });
+        resolve({ ok: true, dataUrl, byteLength: dataUrl.length, filter, aspect, isUnder99Kb: true });
       }
     };
     img.onerror = () => resolve({ ok: false, message: "Falha ao decodificar imagem para compressão Lo-Fi." });
