@@ -1,46 +1,42 @@
-# Steward Kit — Windows 1-clique (V-I08)
+# Steward Kit — Windows 1-Clique (.EXE)
 
-Pacote MVP para operadores comunitários: inicia relay local + abre o assistente steward do Vox.
+Pacote autônomo para operadores comunitários e stewards: executa o servidor de relay local HTTP (`127.0.0.1:8787`) e abre o assistente de governança/rede do Vox.
 
-## Pré-requisitos
+---
 
-- Windows 10+
-- Python 3.11+ no PATH
-- Repositório Vox clonado (esta pasta fica em `vox/tools/steward-kit-windows/`)
+## 🚀 Como Usar
 
-## Uso rápido (sem PyInstaller)
+Basta baixar e dar duplo clique em:
+👉 **`dist/VoxStewardKit.exe`**
+
+- **100% Standalone:** já inclui o código do relay Python e o cliente web estático embutidos no `.exe`.
+- **Sem necessidade de instalar Python, venv ou dependências externas.**
+- Abre automaticamente o navegador na tela de configuração do steward (`http://127.0.0.1:8080/#/settings/network/steward`).
+
+---
+
+## 🧪 Autoteste e Validação
+
+Para validar o binário em terminal ou esteiras CI sem abrir o navegador:
 
 ```powershell
-cd c:\caminho\para\vox
-.\tools\steward-kit-windows\Start-StewardKit.ps1
+.\dist\VoxStewardKit.exe --check
 ```
 
-O script:
+Saída esperada:
+```
+--- [Autoteste Vox Steward Kit] ---
+[OK] Relay healthcheck 200: {"status": "ok", "app": "vox-relay", "version": "0.2.1", ...}
+[OK] Cliente estatico servido com sucesso
+--- [Todos os autotestes do Steward Kit passaram!] ---
+ExitCode: 0
+```
 
-1. Cria venv em `%LOCALAPPDATA%\VoxSteward\venv` (se não existir) e instala `relay/requirements.txt`.
-2. Sobe `relay/server.py` na porta **8787** (ou `VOX_RELAY_PORT`).
-3. Abre o navegador em `#/settings/network/steward` (servidor estático em `client/` na porta **8080** se nada estiver ouvindo).
+---
 
-## Build executável (opcional)
+## 🔨 Como Recompilar
 
 ```powershell
-pip install pyinstaller
+cd vox
 .\tools\steward-kit-windows\build.ps1
 ```
-
-Distribua `dist/VoxStewardKit.exe` com este README. O `.exe` embute apenas o launcher; relay continua Python embutido via PyInstaller `--add-data` se você empacotar o diretório `relay/` (ver comentários em `steward_launcher.py`).
-
-## Operação
-
-- Relay HTTP padrão: `http://127.0.0.1:8787`
-- Cole a URL no passo 4 do wizard steward (`docs/steward-seed-15min.md`, `docs/steward-relay-kit.md`).
-- Atestado ADR-001: stub local até protocolo wired — wizard grava URLs em `localStorage` do PWA.
-
-## Linux / macOS
-
-```bash
-chmod +x tools/steward-kit-linux/start-steward-kit.sh
-./tools/steward-kit-linux/start-steward-kit.sh
-```
-
-Mesmo launcher Python (`steward_launcher.py`). Para VPS com TLS, use `relay/deploy` — ver `docs/steward-relay-kit.md`.
