@@ -40,6 +40,21 @@ export function collapseInlineComposer() {
   collapsed?.setAttribute("aria-expanded", "false");
 }
 
+export async function populateCommunityDatalist() {
+  const datalist = document.getElementById("inline-comm-list");
+  if (!datalist) return;
+  const set = new Set(["geral", "politica", "musica", "tecnologia", "arte", "ciencia", "livre"]);
+  try {
+    const locals = await cacheNode.getLocalCommunities();
+    for (const c of locals || []) {
+      if (c?.id) set.add(c.id);
+    }
+  } catch {}
+  datalist.innerHTML = Array.from(set)
+    .map((slug) => `<option value="${slug}"></option>`)
+    .join("");
+}
+
 export function expandInlineComposer() {
   const root = document.getElementById("feed-inline-composer");
   if (!root) return;
@@ -51,6 +66,7 @@ export function expandInlineComposer() {
   collapsed?.setAttribute("aria-expanded", "true");
   const textarea = document.getElementById("inline-topic-body");
   textarea?.focus();
+  populateCommunityDatalist();
   syncInlineComposerUi();
 }
 
@@ -73,8 +89,113 @@ export function attachInlineComposerHandlers(onPublished) {
 
   let rawSourceFile = null;
   let activeLofiFilter = "normal";
+  let activeStream = null;
+  let activeRecorder = null;
+  let recordingChunks = [];
+  let recordingTimer = null;
+  let recordingSeconds = 0;
+
+  const formatRecordingTime = (sec) => {
+    const m = String(Math.floor(sec / 60)).padStart(2, "0");
+    const s = String(sec % 60).padStart(2, "0");
+    return `${m}:${s} / 01:00`;
+  };
+
+  const cleanupRecordingState = () => {
+    if (recordingTimer) {
+      clearInterval(recordingTimer);
+      recordingTimer = null;
+    }
+    if (activeStream) {
+      activeStream.getTracks().forEach((t) => t.stop());
+      activeStream = null;
+    }
+    activeRecorder = null;
+    recordingChunks = [];
+    recordingSeconds = 0;
+    const indicator = document.getElementById("inline-recording-indicator");
+    if (indicator) indicator.classList.add("hidden");
+  };
+
+  const startVoiceRecording = async () => {
+    if (!navigator?.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
+      share.showToast("Gravação de voz não suportada neste ambiente.", "error");
+      return;
+    }
+    clearMedia();
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      activeStream = stream;
+      recordingChunks = [];
+      recordingSeconds = 0;
+      let mimeType = "audio/webm;codecs=opus";
+      if (!MediaRecorder.isTypeSupported(mimeType)) {
+        mimeType = MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "";
+      }
+      const options = mimeType ? { mimeType, audioBitsPerSecond: 48000 } : {};
+      const recorder = new MediaRecorder(stream, options);
+      activeRecorder = recorder;
+      recorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) recordingChunks.push(e.data);
+      };
+      recorder.onstop = () => {
+        const type = recorder.mimeType || "audio/webm";
+        const blob = new Blob(recordingChunks, { type });
+        const kb = Math.max(1, Math.round(blob.size / 1024));
+        const reader = new FileReader();
+        reader.onload = () => {
+          const dataUrl = reader.result;
+          inlineComposerMedia = { type: "audio", dataUrl, byteLength: blob.size };
+          if (previewAudio) previewAudio.src = dataUrl;
+          previewAudioWrap?.classList.remove("hidden");
+          const filterBar = document.getElementById("lofi-filter-bar");
+          if (filterBar) filterBar.style.display = "none";
+          const badge = document.getElementById("lofi-weight-badge");
+          if (badge) badge.textContent = `⚡ ~${kb} KB (Voz Gravada Lo-Fi ${kb <= 99 ? "100% Grátis" : "48k"})`;
+          previewWrap?.classList.remove("hidden");
+          cleanupRecordingState();
+          syncInlineComposerUi();
+        };
+        reader.readAsDataURL(blob);
+      };
+      recorder.start(500);
+      const indicator = document.getElementById("inline-recording-indicator");
+      const timerEl = document.getElementById("inline-recording-timer");
+      if (indicator) indicator.classList.remove("hidden");
+      if (timerEl) timerEl.textContent = "00:00 / 01:00";
+      recordingTimer = setInterval(() => {
+        recordingSeconds++;
+        if (timerEl) timerEl.textContent = formatRecordingTime(recordingSeconds);
+        if (recordingSeconds >= 60) stopVoiceRecording();
+      }, 1000);
+    } catch (err) {
+      cleanupRecordingState();
+      share.showToast(`Erro ao acessar microfone: ${err.message}`, "error");
+    }
+  };
+
+  const stopVoiceRecording = () => {
+    if (activeRecorder && activeRecorder.state === "recording") {
+      activeRecorder.stop();
+    }
+    if (recordingTimer) {
+      clearInterval(recordingTimer);
+      recordingTimer = null;
+    }
+  };
+
+  const cancelVoiceRecording = () => {
+    if (activeRecorder && activeRecorder.state === "recording") {
+      activeRecorder.ondataavailable = null;
+      activeRecorder.onstop = null;
+      try { activeRecorder.stop(); } catch {}
+    }
+    cleanupRecordingState();
+    share.showToast("Gravação cancelada.");
+  };
 
   const clearMedia = () => {
+    cleanupRecordingState();
     rawSourceFile = null;
     activeLofiFilter = "normal";
     inlineComposerMedia = { type: "", dataUrl: "", byteLength: 0 };
@@ -212,6 +333,23 @@ export function attachInlineComposerHandlers(onPublished) {
     e.preventDefault();
     clearMedia();
     syncInlineComposerUi();
+  });
+
+  const micBtn = document.getElementById("btn-inline-mic");
+  const stopRecBtn = document.getElementById("btn-inline-stop-rec");
+  const cancelRecBtn = document.getElementById("btn-inline-cancel-rec");
+
+  micBtn?.addEventListener("click", (e) => {
+    e.preventDefault();
+    startVoiceRecording();
+  });
+  stopRecBtn?.addEventListener("click", (e) => {
+    e.preventDefault();
+    stopVoiceRecording();
+  });
+  cancelRecBtn?.addEventListener("click", (e) => {
+    e.preventDefault();
+    cancelVoiceRecording();
   });
 
   const textarea = document.getElementById("inline-topic-body");
