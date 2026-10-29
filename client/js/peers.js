@@ -200,7 +200,7 @@ export function isWifiOrUnlimited() {
 }
 
 export async function requestNotificationPermission() {
-  if ("Notification" in window) {
+  if (typeof window !== "undefined" && "Notification" in window) {
     if (Notification.permission === "default") {
       return await Notification.requestPermission();
     }
@@ -541,8 +541,9 @@ export function initPeerChannel() {
       broadcastChannel.close();
       broadcastChannel = null;
     }
-  } else if (settings.enabled && window.BroadcastChannel) {
+  } else if (settings.enabled && (typeof window !== "undefined" ? window.BroadcastChannel : globalThis.BroadcastChannel)) {
     broadcastChannel = new BroadcastChannel(CHANNEL_NAME);
+    if (typeof broadcastChannel.unref === "function") broadcastChannel.unref();
     broadcastChannel.onmessage = (event) => {
       handleVoxMessage(
         event.data,

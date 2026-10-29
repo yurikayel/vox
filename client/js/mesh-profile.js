@@ -29,6 +29,7 @@ export async function syncMeshProfileCard() {
     const signed = await profileCard.buildSignedProfileCard();
     applyLocalCardFromSigned(signed);
     peers.broadcastProfileCard(signed);
+    void profileCard.publishProfileCardOnChain(signed);
     return signed;
   }
   const revoke = await profileCard.buildRevokeProfileCard();
