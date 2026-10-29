@@ -36,13 +36,26 @@ function collectByIds(posts, ids) {
   return out;
 }
 
-export async function showProfile(address, activeTab = "posts") {
-  const user = await getActiveUser();
-  const targetAddress = address || user;
-  const isSelf = targetAddress === user || targetAddress === (await localAccount.getRouteId());
-  const main = render.renderShell(makeShellProps(user, "profile", "Perfil"));
-  render.renderLoading(main);
+let activeProfileCache = null;
 
+export function invalidateProfileCache() {
+  activeProfileCache = null;
+}
+
+function updateProfileTabIndicator(existingLayout, activeTab) {
+  const nav = existingLayout.querySelector(".profile-grid-tabs");
+  if (!nav) return;
+  const target = (activeTab === "followers")
+    ? "following"
+    : (activeTab === "starred" || activeTab === "communities")
+      ? "about"
+      : (activeTab || "posts");
+  nav.querySelectorAll(".profile-grid-tab").forEach((tabEl) => {
+    tabEl.classList.toggle("active", tabEl.dataset.tab === target);
+  });
+}
+
+async function loadProfileMemberships(targetAddress) {
   const memberships = await gql.fetchUserMemberships(targetAddress);
   const localMems = await cacheNode.getLocalPosts({ type: "membership" });
   for (const m of localMems) {
@@ -50,19 +63,14 @@ export async function showProfile(address, activeTab = "posts") {
       memberships.push({ id: m.id, communityId: m.communityId });
     }
   }
+  return memberships;
+}
 
-  const handle = await gql.fetchHandleForAddress(targetAddress);
-  let conflictInfo = null;
-  if (handle) {
-    const hRes = await gql.fetchHandle(handle);
-    if (hRes?.isConflict) conflictInfo = hRes;
-  }
-
+async function loadProfileWalletAndDm(isSelf) {
   let dmPub = null;
   if (isSelf) {
     dmPub = await cryptoDm.getPublicJwk();
   }
-
   let balance = "0.000";
   if (wallet.hasWallet() && isSelf) {
     try {
@@ -71,20 +79,21 @@ export async function showProfile(address, activeTab = "posts") {
       balance = "0.000";
     }
   }
+  return { dmPub, balance };
+}
 
+async function loadProfileIdentity(targetAddress, isSelf) {
+  let handle = await gql.fetchHandleForAddress(targetAddress);
+  let conflictInfo = null;
+  if (handle) {
+    const hRes = await gql.fetchHandle(handle);
+    if (hRes?.isConflict) conflictInfo = hRes;
+  }
   const mockProf = mock.getMockProfile(targetAddress);
   const resolved = await profileDirectory.resolveProfile(targetAddress);
   let displayName = resolved.name || (isSelf ? localAccount.getDisplayName() : "");
   let profileBio = resolved.bio || "";
-  const oauthProvider = isSelf ? localAccount.getProfileEnrichment()?.oauthProvider || "" : "";
-  let pixKey = "";
-  if (isSelf) {
-    pixKey = localAccount.getPixKey() || "";
-  } else if (mockProf?.pixKey) {
-    pixKey = mockProf.pixKey;
-  }
-  const pixKeyMasked = pixKey ? pixKeyHelper.maskForDisplay(pixKey) : "";
-
+  let pixKey = isSelf ? (localAccount.getPixKey() || "") : (mockProf?.pixKey || "");
   if (welcomeProfile.isWelcomeRouteId(targetAddress)) {
     displayName = resolved.name || "Vox";
     handle = "vox";
@@ -92,56 +101,100 @@ export async function showProfile(address, activeTab = "posts") {
   } else if (mockProf) {
     displayName = mockProf.name || displayName;
     profileBio = mockProf.bio || profileBio;
-    if (!memberships.some((x) => x.communityId === "demo-aprenda-vox")) {
-      memberships.push({ id: `mem_${targetAddress}`, communityId: "demo-aprenda-vox" });
-    }
   }
+  const pixKeyMasked = pixKey ? pixKeyHelper.maskForDisplay(pixKey) : "";
+  return { handle, conflictInfo, mockProf, displayName, profileBio, pixKey, pixKeyMasked };
+}
 
-  // Busca posts deste autor
+async function loadProfilePosts(targetAddress, isSelf, user, mockProf) {
   const localPosts = await cacheNode.getLocalPosts({ type: "topic" });
   let authorPosts = localPosts.filter((p) => (p.author || p.owner) === targetAddress);
   if (isSelf) authorPosts = postOwnership.mapOwnLocalFlags(authorPosts, user);
   if (!authorPosts.length && mockProf) {
     authorPosts = mock.MOCK_DEMO_TOPICS.filter((t) => t.author === targetAddress);
   }
+  const allAvailable = [...localPosts, ...mock.MOCK_DEMO_TOPICS, ...getCachedBskyPosts()];
+  const starredPosts = collectByIds(allAvailable, social.getStarredPostIds());
+  const savedPosts = collectByIds(allAvailable, social.getSavedPostIds());
+  return { authorPosts, allAvailable, starredPosts, savedPosts };
+}
 
-  const allAvailablePosts = [...localPosts, ...mock.MOCK_DEMO_TOPICS, ...getCachedBskyPosts()];
-  const starredPosts = collectByIds(allAvailablePosts, social.getStarredPostIds());
-  const savedPosts = collectByIds(allAvailablePosts, social.getSavedPostIds());
+async function loadProfileData(targetAddress, isSelf, user, activeTab = "posts") {
+  if (activeProfileCache && activeProfileCache.address === targetAddress) {
+    const all = activeProfileCache.allAvailablePosts || [];
+    activeProfileCache.starredPosts = collectByIds(all, social.getStarredPostIds());
+    activeProfileCache.savedPosts = collectByIds(all, social.getSavedPostIds());
+    activeProfileCache.activeTab = activeTab;
+    return activeProfileCache;
+  }
 
-  const githubHandle = isSelf ? social.getLocalGithubHandle() : (mockProf?.githubHandle || "");
-  const readme = isSelf ? social.getLocalReadme() : (mockProf?.readme || "");
-  const pinnedPostId = isSelf ? social.getPinnedPostId(targetAddress) : (mockProf?.pinnedPostId || "");
+  const memberships = await loadProfileMemberships(targetAddress);
+  const { dmPub, balance } = await loadProfileWalletAndDm(isSelf);
+  const ident = await loadProfileIdentity(targetAddress, isSelf);
+  if (ident.mockProf && !memberships.some((x) => x.communityId === "demo-aprenda-vox")) {
+    memberships.push({ id: `mem_${targetAddress}`, communityId: "demo-aprenda-vox" });
+  }
+  const postsData = await loadProfilePosts(targetAddress, isSelf, user, ident.mockProf);
 
-  const isBlocked = mod.isUserBlocked(targetAddress);
-  const isMuted = mod.isUserMuted(targetAddress);
-
-  main.innerHTML = "";
-  render.renderProfile(main, targetAddress, memberships, isSelf, JSON.stringify(dmPub), {
-    handle: handle || "",
-    isConflict: Boolean(conflictInfo?.isConflict),
-    claimants: conflictInfo?.claimants || [],
-    displayName,
-    profileBio,
-    stats: mockProf?.stats || null,
-    posts: authorPosts,
-    starredPosts,
-    savedPosts,
+  const data = {
+    address: targetAddress,
+    isCurrentWallet: isSelf,
+    handle: ident.handle || "",
+    isConflict: Boolean(ident.conflictInfo?.isConflict),
+    claimants: ident.conflictInfo?.claimants || [],
+    displayName: ident.displayName,
+    profileBio: ident.profileBio,
+    stats: ident.mockProf?.stats || null,
+    posts: postsData.authorPosts,
+    authorPostList: postsData.authorPosts,
+    allAvailablePosts: postsData.allAvailable,
+    starredPosts: postsData.starredPosts,
+    savedPosts: postsData.savedPosts,
     hasWallet: wallet.hasWallet(),
     balance,
-    pixKey,
-    pixKeyMasked,
-    githubHandle,
-    readme,
-    activeTab,
-    pinnedPostId,
-    oauthProvider,
-    isBlocked,
-    isMuted,
+    pixKey: ident.pixKey,
+    pixKeyMasked: ident.pixKeyMasked,
+    githubHandle: isSelf ? social.getLocalGithubHandle() : (ident.mockProf?.githubHandle || ""),
+    readme: isSelf ? social.getLocalReadme() : (ident.mockProf?.readme || ""),
+    finalReadme: isSelf ? social.getLocalReadme() : (ident.mockProf?.readme || ""),
+    pinnedPostId: isSelf ? social.getPinnedPostId(targetAddress) : (ident.mockProf?.pinnedPostId || ""),
+    oauthProvider: isSelf ? (localAccount.getProfileEnrichment()?.oauthProvider || "") : "",
+    isBlocked: mod.isUserBlocked(targetAddress),
+    isMuted: mod.isUserMuted(targetAddress),
     meshDiscoverable: localAccount.getMeshDiscoverable(),
-  });
+    memberships,
+    dmPub,
+    activeTab,
+  };
+  activeProfileCache = data;
+  return data;
+}
 
-  bindProfileButtons(user, targetAddress, isSelf, dmPub, activeTab);
+export async function showProfile(address, activeTab = "posts") {
+  const user = await getActiveUser();
+  const targetAddress = address || user;
+  const isSelf = targetAddress === user || targetAddress === (await localAccount.getRouteId());
+
+  const existingLayout = document.querySelector(`.profile-grid-layout[data-profile-address="${targetAddress}"]`);
+  const slot = existingLayout?.querySelector("#profile-tab-content");
+
+  if (existingLayout && slot) {
+    updateProfileTabIndicator(existingLayout, activeTab);
+    const pData = await loadProfileData(targetAddress, isSelf, user, activeTab);
+    slot.innerHTML = render.renderProfileTabContent(activeTab, pData);
+    bindProfileButtons(user, targetAddress, isSelf, pData.dmPub, activeTab);
+    return;
+  }
+
+  const main = render.renderShell(makeShellProps(user, "profile", "Perfil"));
+  render.renderLoading(main);
+
+  const pData = await loadProfileData(targetAddress, isSelf, user, activeTab);
+
+  main.innerHTML = "";
+  render.renderProfile(main, targetAddress, pData.memberships, isSelf, JSON.stringify(pData.dmPub), pData);
+
+  bindProfileButtons(user, targetAddress, isSelf, pData.dmPub, activeTab);
 }
 
 function readSovereigntyPassphrase() {
@@ -240,6 +293,7 @@ export function bindProfileButtons(user, address, isSelf, dmPub, activeTab = "po
       const rawVal = input?.value.trim() || "";
       const feedback = document.getElementById("pix-feedback");
       if (!rawVal) {
+        invalidateProfileCache();
         localAccount.clearPixKey();
         share.showToast("Chave Pix removida do perfil.");
         showProfile(address, activeTab);
@@ -250,6 +304,7 @@ export function bindProfileButtons(user, address, isSelf, dmPub, activeTab = "po
         if (feedback) feedback.innerHTML = `<span style="color:var(--danger);">${validation.error}</span>`;
         return;
       }
+      invalidateProfileCache();
       localAccount.setPixKey(validation.normalized);
       share.showToast("Chave Pix salva no seu perfil local!");
       showProfile(address, activeTab);
@@ -259,6 +314,7 @@ export function bindProfileButtons(user, address, isSelf, dmPub, activeTab = "po
   const btnClearPix = document.getElementById("btn-clear-pix");
   if (btnClearPix && isSelf) {
     btnClearPix.addEventListener("click", () => {
+      invalidateProfileCache();
       localAccount.clearPixKey();
       share.showToast("Chave Pix removida.");
       showProfile(address, activeTab);
@@ -270,6 +326,7 @@ export function bindProfileButtons(user, address, isSelf, dmPub, activeTab = "po
     formGithub.addEventListener("submit", (e) => {
       e.preventDefault();
       const val = document.getElementById("input-github-handle")?.value.trim() || "";
+      invalidateProfileCache();
       social.setLocalGithubHandle(val);
       share.showToast(val ? "Perfil do GitHub salvo!" : "GitHub removido.");
       showProfile(address, activeTab);
@@ -279,6 +336,7 @@ export function bindProfileButtons(user, address, isSelf, dmPub, activeTab = "po
   const btnClearGithub = document.getElementById("btn-clear-github");
   if (btnClearGithub && isSelf) {
     btnClearGithub.addEventListener("click", () => {
+      invalidateProfileCache();
       social.setLocalGithubHandle("");
       share.showToast("GitHub removido.");
       showProfile(address, activeTab);
@@ -308,6 +366,7 @@ export function bindProfileButtons(user, address, isSelf, dmPub, activeTab = "po
     formReadme.addEventListener("submit", (e) => {
       e.preventDefault();
       const val = document.getElementById("input-profile-readme")?.value || "";
+      invalidateProfileCache();
       social.setLocalReadme(val);
       share.showToast("README.md atualizado!");
       showProfile(address, activeTab);
@@ -338,6 +397,7 @@ export function bindProfileButtons(user, address, isSelf, dmPub, activeTab = "po
     formDisplayName.addEventListener("submit", (e) => {
       e.preventDefault();
       const name = document.getElementById("input-display-name")?.value.trim();
+      invalidateProfileCache();
       localAccount.setDisplayName(name);
       share.showToast("Nome local atualizado!");
       void meshProfile.syncMeshProfileCard();

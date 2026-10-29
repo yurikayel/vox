@@ -21,6 +21,7 @@ import * as communitySeed from "../community-seed-checklist.js";
 import { computeCommunityNeighborStats } from "../render/community.js";
 import * as contacts from "../contacts.js";
 import * as peopleIndex from "../people-index.js";
+import * as profileDirectory from "../profile-directory.js";
 import { buildProposalPossePayload, firePosseWebhooks, loadPosseWebhooks } from "../posse-dispatch.js";
 import { buildChatSummaryCopy } from "../chat-bridge.js";
 import { getCachedBskyPostById } from "../bsky-feed.js";
@@ -29,11 +30,16 @@ import { getActiveUser, makeShellProps, attachPostShareHandlers, shareTopicUnles
 import { route } from "./navigation.js";
 import { openZapModal } from "./zap-modal.js";
 
-export async function showCommunity(communityId, tab = "posts") {
-  const user = await getActiveUser();
-  const main = render.renderShell(makeShellProps(user, "communities", "Comunidade"));
-  render.renderLoading(main);
+function updateCommunityTabIndicator(commEl, tab) {
+  const nav = commEl.querySelector(".community-vox-nav");
+  if (!nav) return;
+  const target = (tab === "listings" || tab === "governance" || tab === "members") ? tab : "posts";
+  nav.querySelectorAll(".tab-btn").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.tab === target);
+  });
+}
 
+async function loadCommunityMetaAndTopics(communityId, user) {
   let topics = [];
   let meta = { id: communityId, title: communityId, owner: "" };
   let demo = false;
@@ -44,13 +50,12 @@ export async function showCommunity(communityId, tab = "posts") {
     topics = res.items;
     demo = res.demo;
     gateway = res.gateway;
-  } catch (e) {
+  } catch {
     const fb = mock.mockTopics(communityId);
     topics = fb.items;
     demo = true;
   }
 
-  // Tenta carregar detalhes da comunidade da lista remota ou local
   try {
     const comms = await gql.fetchCommunities().catch(() => mock.mockCommunities());
     const found = comms?.items?.find((c) => c.id === communityId);
@@ -61,11 +66,18 @@ export async function showCommunity(communityId, tab = "posts") {
   const localFound = localComms.find((c) => c.id === communityId);
   if (localFound) meta = { ...meta, ...localFound };
 
+  try {
+    const localUpdates = await cacheNode.getLocalPosts({ type: "community_update", communityId });
+    if (localUpdates && localUpdates.length) {
+      const lastUpdate = localUpdates[localUpdates.length - 1];
+      meta = { ...meta, ...lastUpdate };
+    }
+  } catch {}
+
   if (!meta.commercialEnabled && communityId === mock.MOCK_DEMO_COMMUNITY_FEIRA.id) {
     meta = { ...mock.MOCK_DEMO_COMMUNITY_FEIRA, ...meta, commercialEnabled: true };
   }
 
-  // Mescla tópicos locais com remotos
   const localTopics = await cacheNode.getLocalPosts({ type: "topic", communityId });
   const seenT = new Set();
   const mergedTopics = [];
@@ -80,7 +92,6 @@ export async function showCommunity(communityId, tab = "posts") {
     }
   }
 
-  // Moderação
   let modActions = [];
   try {
     modActions = await mod.fetchModActions(communityId);
@@ -88,20 +99,10 @@ export async function showCommunity(communityId, tab = "posts") {
   const filteredTopics = mod.applyFilters(mergedTopics, modActions, meta.owner, meta.moderators);
   const isUserMod = mod.isModerator(user, meta.owner, meta.moderators);
 
-  // Checagem de Membresia (local ou remota)
-  let isMember = false;
-  if (user) {
-    try {
-      const localMems = await cacheNode.getLocalPosts({ type: "membership", communityId });
-      isMember = localMems.some((m) => m.author === user);
-      if (!isMember) {
-        const mems = await gql.fetchUserMemberships(user);
-        isMember = mems.some((m) => m.communityId === communityId);
-      }
-    } catch {}
-  }
+  return { meta, filteredTopics, localTopics, demo, gateway, isUserMod };
+}
 
-  // Ofertas (Classificados)
+async function loadCommunityTabSpecifics(communityId, tab, user, demo) {
   let listings = [];
   if (tab === "listings") {
     try {
@@ -125,7 +126,6 @@ export async function showCommunity(communityId, tab = "posts") {
     } catch {}
   }
 
-  // Governança (Propostas)
   let proposals = [];
   try {
     const localProposals = await cacheNode.getLocalPosts({ type: "governance-proposal", communityId });
@@ -145,72 +145,52 @@ export async function showCommunity(communityId, tab = "posts") {
     }
   } catch {}
 
-  const hasMergedFeira = proposals.some(
-    (p) => p.state === "merged" && (p.diffText || "").includes("commercialEnabled: true")
-  );
-  if (hasMergedFeira) {
-    meta = { ...meta, commercialEnabled: true };
+  return { listings, proposals };
+}
+
+async function checkCommunityMembership(communityId, user) {
+  if (!user) return false;
+  try {
+    const localMems = await cacheNode.getLocalPosts({ type: "membership", communityId });
+    if (localMems.some((m) => m.author === user)) return true;
+    const mems = await gql.fetchUserMemberships(user);
+    return mems.some((m) => m.communityId === communityId);
+  } catch {
+    return false;
   }
+}
 
-  main.innerHTML = "";
-  if (demo && !localTopics.length && tab !== "listings" && tab !== "governance") render.renderDemoBanner(main);
-  else if (gateway) render.renderGatewayBanner(main, gateway);
-
-  const recentPeople =
-    tab === "posts" || tab === "members"
-      ? peopleIndex.extractRecentAuthors(filteredTopics)
-      : [];
-
-  const peerSettings = peers.getPeerSettings();
-  const gatewayState = gatewayTelemetry.getGatewayHealthState();
-  const memberCount = meta.memberCount != null ? Number(meta.memberCount) : null;
-  const neighborStats = computeCommunityNeighborStats({
-    recentPeople,
-    communityId,
-    memberCount,
-    gatewayState,
-    isDemo: Boolean(demo || meta.demo || communityId === mock.MOCK_DEMO_COMMUNITY.id),
-  });
-
-  let seedChecklist = null;
-  if (user && communitySeed.shouldOfferSeedRitual(communityId, user, meta)) {
-    const seedState = communitySeed.loadSeedState(communityId);
-    const topicCount = filteredTopics.length;
-    if (!communitySeed.isSeedComplete(seedState, { topicCount, peerEnabled: peerSettings.enabled })) {
-      seedChecklist = {
-        state: seedState,
-        ctx: {
-          topicCount,
-          peerEnabled: peerSettings.enabled,
-          commOnly: peerSettings.commOnly,
-        },
-      };
-    } else {
-      communitySeed.finalizeSeedIfComplete(communityId, { topicCount, peerEnabled: peerSettings.enabled });
-    }
+function buildCommunityRecentPeople(filteredTopics, meta, user, isMember, tab) {
+  const recentPeople = (tab === "posts" || tab === "members")
+    ? peopleIndex.extractRecentAuthors(filteredTopics)
+    : [];
+  const peopleSet = new Set(recentPeople.map((p) => p.routeId));
+  if (meta.owner && !peopleSet.has(meta.owner)) {
+    const ownerName = profileDirectory.getAuthorDisplaySync(meta.owner) || meta.owner;
+    recentPeople.unshift({ routeId: meta.owner, name: ownerName });
+    peopleSet.add(meta.owner);
   }
-
-  render.renderCommunity(main, communityId, filteredTopics, meta, {
-    isMember,
-    isMod: isUserMod,
-    walletAddress: user,
-    activeTab: tab,
-    listings,
-    proposals,
-    recentPeople,
-    neighborStats,
-    commOnly: peerSettings.commOnly,
-    seedChecklist,
-    mirrorStatus: communityMirror.getMirrorStatusForCommunity(communityId),
-  });
-
-  if (tab === "posts") {
-    void communityMirror.tryMirrorCommunityToRelay(meta, filteredTopics);
+  if (user && isMember && !peopleSet.has(user)) {
+    const selfName = localAccount.getDisplayName() || user;
+    recentPeople.push({ routeId: user, name: selfName });
   }
+  return recentPeople;
+}
 
-  attachCommunityListingHandlers(main);
-  attachPostShareHandlers();
+function resolveCommunitySeedChecklist(communityId, user, meta, topicCount, peerSettings) {
+  if (!user || !communitySeed.shouldOfferSeedRitual(communityId, user, meta)) return null;
+  const seedState = communitySeed.loadSeedState(communityId);
+  if (!communitySeed.isSeedComplete(seedState, { topicCount, peerEnabled: peerSettings.enabled })) {
+    return {
+      state: seedState,
+      ctx: { topicCount, peerEnabled: peerSettings.enabled, commOnly: peerSettings.commOnly },
+    };
+  }
+  communitySeed.finalizeSeedIfComplete(communityId, { topicCount, peerEnabled: peerSettings.enabled });
+  return null;
+}
 
+function bindCommunityHeaderEvents(main, communityId, meta, user, isMember, peerSettings, filteredTopics) {
   document.querySelectorAll(".btn-community-add-contact").forEach((btn) => {
     btn.addEventListener("click", () => {
       const id = btn.dataset.route;
@@ -223,7 +203,6 @@ export async function showCommunity(communityId, tab = "posts") {
     });
   });
 
-  // Eventos na tela da comunidade
   const btnShare = document.getElementById("btn-share-comm");
   if (btnShare) {
     btnShare.addEventListener("click", () => {
@@ -291,6 +270,49 @@ export async function showCommunity(communityId, tab = "posts") {
     communitySeed.saveSeedState(communityId, { activeAck: true });
   });
 
+  const inputCommPhoto = document.getElementById("input-comm-photo-file");
+  if (inputCommPhoto) {
+    inputCommPhoto.addEventListener("change", async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      try {
+        const dataUrl = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+        const updatePayload = {
+          id: `comm_update_${communityId}_${Date.now()}`,
+          type: "community_update",
+          communityId,
+          image: dataUrl,
+          avatar: dataUrl,
+          updatedAt: Date.now(),
+        };
+        const signed = await localAccount.signPayload(updatePayload);
+        await cacheNode.saveLocalPost(signed);
+        peers.broadcastGossip(signed);
+
+        const img = document.querySelector(".community-avatar-img");
+        if (img) {
+          img.src = dataUrl;
+          img.style.display = "block";
+        } else {
+          const box = document.querySelector(".community-avatar-box");
+          if (box) {
+            box.innerHTML = `<img class="community-avatar-img" src="${dataUrl}" alt="${meta.title || communityId}" />`;
+          }
+        }
+        const fallback = document.querySelector(".community-avatar-fallback");
+        if (fallback) fallback.style.display = "none";
+        share.showToast("Foto da comunidade atualizada!");
+      } catch (err) {
+        share.showToast(`Erro ao atualizar foto: ${err.message}`, "error");
+      }
+    });
+  }
+
   const btnJoin = document.getElementById("btn-join-comm");
   if (btnJoin && !isMember) {
     btnJoin.addEventListener("click", async () => {
@@ -324,7 +346,6 @@ export async function showCommunity(communityId, tab = "posts") {
     });
   }
 
-  // Evento Ocultar para moderadores
   document.querySelectorAll(".btn-mod-hide").forEach((btn) => {
     btn.addEventListener("click", async (e) => {
       const targetId = e.target.dataset.id;
@@ -345,6 +366,84 @@ export async function showCommunity(communityId, tab = "posts") {
       }
     });
   });
+}
+
+export async function showCommunity(communityId, tab = "posts") {
+  const user = await getActiveUser();
+  const existingComm = document.querySelector(`.community-vox-page[data-community-id="${communityId}"]`);
+  const slot = existingComm?.querySelector("#community-tab-content");
+
+  const base = await loadCommunityMetaAndTopics(communityId, user);
+  let meta = base.meta;
+  const specifics = await loadCommunityTabSpecifics(communityId, tab, user, base.demo);
+  if (specifics.proposals.some((p) => p.state === "merged" && (p.diffText || "").includes("commercialEnabled: true"))) {
+    meta = { ...meta, commercialEnabled: true };
+  }
+  const isMember = await checkCommunityMembership(communityId, user);
+  const recentPeople = buildCommunityRecentPeople(base.filteredTopics, meta, user, isMember, tab);
+  const memberCount = meta.memberCount != null ? Number(meta.memberCount) : null;
+
+  const tabProps = {
+    communityId,
+    commTitle: meta.title || communityId,
+    meta,
+    topics: base.filteredTopics,
+    listings: specifics.listings,
+    proposals: specifics.proposals,
+    recentPeople,
+    isMember,
+    memberCount,
+  };
+
+  if (existingComm && slot) {
+    updateCommunityTabIndicator(existingComm, tab);
+    slot.innerHTML = render.renderCommunityTabContent(tab, tabProps);
+    attachCommunityListingHandlers(existingComm);
+    attachPostShareHandlers();
+    return;
+  }
+
+  const main = render.renderShell(makeShellProps(user, "communities", "Comunidade"));
+  render.renderLoading(main);
+  main.innerHTML = "";
+  if (base.demo && !base.localTopics.length && tab !== "listings" && tab !== "governance") {
+    render.renderDemoBanner(main);
+  } else if (base.gateway) {
+    render.renderGatewayBanner(main, base.gateway);
+  }
+
+  const peerSettings = peers.getPeerSettings();
+  const neighborStats = computeCommunityNeighborStats({
+    recentPeople,
+    communityId,
+    memberCount,
+    gatewayState: gatewayTelemetry.getGatewayHealthState(),
+    isDemo: Boolean(base.demo || meta.demo || communityId === mock.MOCK_DEMO_COMMUNITY.id),
+  });
+
+  const seedChecklist = resolveCommunitySeedChecklist(communityId, user, meta, base.filteredTopics.length, peerSettings);
+
+  render.renderCommunity(main, communityId, base.filteredTopics, meta, {
+    isMember,
+    isMod: base.isUserMod,
+    walletAddress: user,
+    activeTab: tab,
+    listings: specifics.listings,
+    proposals: specifics.proposals,
+    recentPeople,
+    neighborStats,
+    commOnly: peerSettings.commOnly,
+    seedChecklist,
+    mirrorStatus: communityMirror.getMirrorStatusForCommunity(communityId),
+  });
+
+  if (tab === "posts") {
+    void communityMirror.tryMirrorCommunityToRelay(meta, base.filteredTopics);
+  }
+
+  attachCommunityListingHandlers(main);
+  attachPostShareHandlers();
+  bindCommunityHeaderEvents(main, communityId, meta, user, isMember, peerSettings, base.filteredTopics);
 }
 
 export function attachCommunityListingHandlers(main) {

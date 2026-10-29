@@ -49,7 +49,7 @@ export function renderInlineComposer({ userRouteId = "", displayName = "" } = {}
       <form class="inline-composer-form hidden" id="form-inline-topic" aria-label="Nova publicação">
         <div class="inline-composer-form-head">
           ${avatarHtml}
-          <textarea id="inline-topic-body" class="inline-composer-textarea" rows="3" maxlength="2000" placeholder="Compartilhe texto, #hashtags ou anexe uma foto…" required aria-label="Texto da publicação"></textarea>
+          <textarea id="inline-topic-body" class="inline-composer-textarea" rows="3" maxlength="2000" placeholder="Compartilhe texto, #hashtags ou anexe uma foto…" aria-label="Texto da publicação"></textarea>
         </div>
                 <div class="inline-composer-preview hidden" id="inline-topic-preview-wrap">
           <img id="inline-topic-preview" class="inline-composer-preview-img hidden" alt="Prévia da imagem" />
@@ -70,6 +70,17 @@ export function renderInlineComposer({ userRouteId = "", displayName = "" } = {}
             <button type="button" class="lofi-filter-btn" data-filter="vhs">📼 VHS 90s</button>
             <button type="button" class="lofi-filter-btn" data-filter="risograph">🎨 Risógrafo</button>
             <span class="lofi-weight-pill" id="lofi-weight-badge">⚡ ~45 KB (100% Grátis)</span>
+          </div>
+          <div class="composer-aspect-bar" id="composer-aspect-bar" style="display:none;">
+            <span class="meta composer-aspect-label">Proporção:</span>
+            <button type="button" class="composer-aspect-btn active" data-aspect="original">Original (padrão)</button>
+            <button type="button" class="composer-aspect-btn" data-aspect="1:1">1:1</button>
+            <button type="button" class="composer-aspect-btn" data-aspect="4:3">4:3</button>
+            <button type="button" class="composer-aspect-btn" data-aspect="16:9">16:9</button>
+          </div>
+          <div class="composer-tag-bar" id="composer-tag-bar" style="display:none; margin-top:8px; align-items:center; gap:8px; flex-wrap:wrap;">
+            <button type="button" class="btn btn-outline btn-xs" id="btn-inline-tag-people">🏷️ Marcar pessoas</button>
+            <div id="inline-composer-tags-chips" class="inline-composer-tags-chips" style="display:inline-flex; gap:4px; flex-wrap:wrap;"></div>
           </div>
           <button type="button" class="btn btn-outline btn-sm inline-composer-remove-img" id="btn-inline-remove-img" style="margin-top:8px;">Remover anexo</button>
         </div>
@@ -432,7 +443,9 @@ function renderPostMediaHero(t, overlayHeaderHtml = "", overlayFooterHtml = "") 
     const altRaw = t.imageAlt || t.title || "";
     const alt = escapeHtml(altRaw);
     const src = escapeHtml(t.image);
-    return `<div class="post-media-container post-media-hero">
+    const aspect = t?.aspectRatio || "original";
+    const aspectClass = `post-aspect-${aspect.replace(":", "-")}`;
+    return `<div class="post-media-container post-media-hero ${aspectClass}" data-aspect="${escapeHtml(aspect)}">
       <button type="button" class="post-media-lightbox-trigger" aria-label="Ver imagem em tela cheia" data-media-src="${src}" data-media-alt="${alt}">
         <img class="post-media post-media-hero-img" src="${src}" alt="${alt}" loading="lazy" />
       </button>
@@ -712,7 +725,7 @@ export function renderPostItem(t, { isPinned = false } = {}) {
   }
 
   return `
-    <article class="post insta-post post-layout-photo post-photo-bleed" data-id="${escapeHtml(t.id)}" data-layout="photo">
+    <article class="post insta-post post-layout-photo post-photo-bleed" data-id="${escapeHtml(t.id)}" data-layout="photo"${t.isOwnLocalPost ? ' data-is-own="true"' : ""}>
       ${media}
       ${header}
       ${fallbackIgBar}

@@ -12,10 +12,53 @@ import {
   resolvePostAuthorLabels,
   getCommunityColor,
   formatTimeAgo,
+  formatAbsoluteDate,
   postTimeParts,
   renderAvatarHtml,
   renderMarkdownLight,
 } from "./util.js";
+export function renderCommunityAvatarHtml(meta = {}, communityId = "", sizeClass = "community-avatar-lg") {
+  const image = meta.image || meta.avatar || meta.photo || "";
+  const title = meta.title || communityId || "Comunidade";
+  const initial = (title || "C").slice(0, 1).toUpperCase();
+  const accent = getCommunityColor(communityId);
+  if (image) {
+    return `<div class="community-avatar-box ${sizeClass}" style="--comm-avatar-accent:${accent};">
+      <img class="community-avatar-img" src="${escapeHtml(image)}" alt="${escapeHtml(title)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
+      <div class="community-avatar-fallback" style="display:none; background:${accent};">${escapeHtml(initial)}</div>
+    </div>`;
+  }
+  return `<div class="community-avatar-box ${sizeClass}" style="--comm-avatar-accent:${accent};">
+    <div class="community-avatar-fallback" style="background:${accent};">${escapeHtml(initial)}</div>
+  </div>`;
+}
+
+export function renderCommunityOrkutMembersBox(meta, communityId, recentPeople = [], memberCount = null) {
+  if (!recentPeople || !recentPeople.length) return "";
+  const displayList = recentPeople.slice(0, 8);
+  const countLabel = memberCount != null ? ` (${memberCount.toLocaleString("pt-BR")})` : "";
+  const items = displayList
+    .map((p) => {
+      const name = profileDirectory.getAuthorDisplaySync(p.routeId) || p.name || p.routeId.slice(0, 8);
+      const firstName = name.split(/\s+/)[0] || name;
+      return `
+        <a class="community-orkut-member-item" href="#/u/${encodeURIComponent(p.routeId)}" title="${escapeHtml(name)}">
+          ${renderAvatarHtml(p.routeId, name, "avatar-md")}
+          <span class="community-orkut-member-name">${escapeHtml(firstName)}</span>
+        </a>`;
+    })
+    .join("");
+
+  return `
+    <section class="community-orkut-members-box card" aria-label="Membros da comunidade">
+      <header class="community-orkut-members-head">
+        <h3 class="community-orkut-members-title">Membros da comunidade${escapeHtml(countLabel)}</h3>
+        <a class="community-orkut-members-more" href="#/c/${encodeURIComponent(communityId)}?tab=members">Ver todos →</a>
+      </header>
+      <div class="community-orkut-members-grid">${items}</div>
+    </section>`;
+}
+
 import { renderUnifiedDiffHtml } from "./diff-html.js";
 import { buildListingDmHref } from "../dm-messenger.js";
 import { getReadOriginAggregate } from "../gateway-telemetry.js";
@@ -100,7 +143,13 @@ function topicReplyCount(topic) {
 
 export function renderCommunityTopicRow(topic, { communityId = "", communityTitle = "" } = {}) {
   const author = topic.author || topic.owner || "";
-  const authorHandle = (author ? mock.getAuthorHandle(author) : "") || shortId(author);
+  const authorLabels = resolvePostAuthorLabels(author, {
+    authorDisplay: topic.authorDisplay,
+    isOwnLocalPost: topic.isOwnLocalPost,
+  });
+  const authorHandle = authorLabels.authorHandle || (author ? mock.getAuthorHandle(author) : "") || shortId(author);
+  const authorDisplay = authorLabels.authorDisplay || authorHandle;
+  const authorAvatar = renderAvatarHtml(author, authorDisplay, "avatar-xs");
   const { display: timeDisplay, titleAttr: timeTitle } = postTimeParts(topic.ts);
   const replies = topicReplyCount(topic);
   const replyLabel = replies === 1 ? "1 resposta" : `${replies} respostas`;
@@ -119,7 +168,10 @@ export function renderCommunityTopicRow(topic, { communityId = "", communityTitl
           <a href="${topicHref}">${escapeHtml(title)}</a>
         </h3>
         <p class="community-topic-row-meta">
-          <a class="community-topic-row-author" href="#/u/${encodeURIComponent(author)}">@${escapeHtml(authorHandle)}</a>
+          <a class="community-topic-row-author" href="#/u/${encodeURIComponent(author)}">
+            ${authorAvatar}
+            <span>@${escapeHtml(authorHandle)}</span>
+          </a>
           <span class="community-topic-row-dot" aria-hidden="true">·</span>
           <span>${escapeHtml(replyLabel)}</span>
           <span class="community-topic-row-dot" aria-hidden="true">·</span>
@@ -371,18 +423,24 @@ export function renderHome(main, communities) {
       const members = resolveCommunityMemberCount(c, c.id);
       const memberLine = members != null ? `<p class="community-vox-card-members">${escapeHtml(formatCommunityMembers(members))}</p>` : "";
       const typeLine = buildCommunityTypeSubtitle(c, c.id);
+      const avatarHtml = renderCommunityAvatarHtml(c, c.id, "community-avatar-md");
       return `
     <article class="community-card community-vox-card community-vox-card-list card" style="--community-accent:${getCommunityColor(c.id)};">
       <div class="community-vox-card-accent" aria-hidden="true"></div>
-      <div class="community-vox-card-main">
-        <a class="community-vox-card-title" href="#/c/${encodeURIComponent(c.id)}">
-          <h3>${escapeHtml(c.title)}</h3>
+      <div class="community-vox-card-layout">
+        <a class="community-vox-card-avatar-link community-vox-card-avatar-wrap" href="#/c/${encodeURIComponent(c.id)}" aria-label="${escapeHtml(c.title)}">
+          ${avatarHtml}
         </a>
-        ${memberLine}
-        <p class="community-vox-card-type">${escapeHtml(typeLine)}</p>
-        <p class="community-vox-card-desc desc">${escapeHtml(c.description || "Sem descrição.")}</p>
-        <div class="community-vox-card-actions">
-          <a class="btn btn-sm community-vox-enter-btn" href="#/c/${encodeURIComponent(c.id)}">Entrar →</a>
+        <div class="community-vox-card-main">
+          <a class="community-vox-card-title" href="#/c/${encodeURIComponent(c.id)}">
+            <h3>${escapeHtml(c.title)}</h3>
+          </a>
+          ${memberLine}
+          <p class="community-vox-card-type">${escapeHtml(typeLine)}</p>
+          <p class="community-vox-card-desc desc">${escapeHtml(c.description || "Sem descrição.")}</p>
+          <div class="community-vox-card-actions">
+            <a class="btn btn-sm community-vox-enter-btn" href="#/c/${encodeURIComponent(c.id)}">Entrar →</a>
+          </div>
         </div>
       </div>
     </article>`;
@@ -442,13 +500,24 @@ export function renderCommunity(
   const welcomeText = meta.welcomeRecado || "";
 
   const accent = getCommunityColor(communityId);
+  const ownerLabels = meta.owner ? resolvePostAuthorLabels(meta.owner) : null;
+  const canChangePhoto = isMod || (meta.owner && walletAddress && meta.owner === walletAddress);
+
   let html = `
-    <div class="community-vox-page" style="--community-accent:${accent};">
+    <div class="community-vox-page" data-community-id="${escapeHtml(communityId)}" style="--community-accent:${accent};">
     <header class="community-vox-header card">
       <div class="community-vox-accent-rail" aria-hidden="true"></div>
       <div class="community-vox-header-grid">
+        <div class="community-vox-avatar-wrap">
+          ${renderCommunityAvatarHtml(meta, communityId, "community-avatar-lg")}
+          ${canChangePhoto ? `
+            <label class="btn-change-comm-photo" title="Alterar foto da comunidade (estilo Orkut)">
+              <input type="file" id="input-comm-photo-file" accept="image/*" style="display:none;" />
+              <span class="btn-change-comm-photo-label">📷 Alterar foto</span>
+            </label>` : ""}
+        </div>
         <div class="community-vox-header-copy">
-          ${tagline ? `<p class="community-vox-kicker">${escapeHtml(tagline)}</p>` : `<p class="community-vox-kicker">Comunidade Vox</p>`}
+          ${tagline ? `<p class="community-vox-kicker">${escapeHtml(tagline)}</p>` : `<p class="community-vox-kicker">${escapeHtml(meta.category ? `Comunidade · ${meta.category}` : "Comunidade Vox")}</p>`}
           <h1 class="community-vox-name">${escapeHtml(commTitle)}</h1>
           ${metaChips}
           ${renderCommunityMirrorHint(mirrorStatus)}
@@ -462,35 +531,99 @@ export function renderCommunity(
           <a class="btn btn-sm btn-primary community-vox-btn-compose" href="#/compose/topic?c=${encodeURIComponent(communityId)}">Novo post</a>
         </div>
       </div>
-      ${commDesc || meta.owner ? `
-      <div class="community-vox-about">
+      <div class="community-vox-about community-orkut-ficha">
         ${commDesc ? `<p class="community-vox-desc">${escapeHtml(commDesc)}</p>` : ""}
-        ${meta.owner ? `<p class="community-vox-owner meta">Criada por <a href="#/u/${encodeURIComponent(meta.owner)}">${escapeHtml(shortId(meta.owner))}</a></p>` : ""}
-      </div>` : ""}
+        <div class="community-orkut-details-grid">
+          ${meta.owner && ownerLabels ? `
+            <div class="community-orkut-detail-item">
+              <span class="community-orkut-detail-label">Dono:</span>
+              <span class="community-orkut-detail-val">
+                <a class="community-orkut-owner-link" href="#/u/${encodeURIComponent(meta.owner)}">
+                  ${renderAvatarHtml(meta.owner, ownerLabels.authorDisplay, "avatar-xs")}
+                  <span class="community-orkut-owner-name">${escapeHtml(ownerLabels.authorDisplay)}</span>
+                  ${ownerLabels.authorHandle && ownerLabels.authorHandle !== ownerLabels.authorDisplay ? `<span class="meta community-orkut-owner-handle">@${escapeHtml(ownerLabels.authorHandle)}</span>` : ""}
+                </a>
+              </span>
+            </div>` : ""}
+          ${meta.category ? `
+            <div class="community-orkut-detail-item">
+              <span class="community-orkut-detail-label">Categoria:</span>
+              <span class="community-orkut-detail-val">${escapeHtml(meta.category)}</span>
+            </div>` : ""}
+          <div class="community-orkut-detail-item">
+            <span class="community-orkut-detail-label">Tipo:</span>
+            <span class="community-orkut-detail-val">${meta.visibility === "closed" ? "Moderada (Fechada)" : "Pública (Aberta)"}</span>
+          </div>
+          <div class="community-orkut-detail-item">
+            <span class="community-orkut-detail-label">Idioma:</span>
+            <span class="community-orkut-detail-val">${escapeHtml(meta.language || "Português")}</span>
+          </div>
+          ${memberCount != null ? `
+            <div class="community-orkut-detail-item">
+              <span class="community-orkut-detail-label">Membros:</span>
+              <span class="community-orkut-detail-val">${escapeHtml(formatCommunityMembers(memberCount))}</span>
+            </div>` : ""}
+          ${meta.createdAt || meta.ts ? `
+            <div class="community-orkut-detail-item">
+              <span class="community-orkut-detail-label">Criada em:</span>
+              <span class="community-orkut-detail-val">${escapeHtml(formatAbsoluteDate(meta.createdAt || meta.ts))}</span>
+            </div>` : ""}
+        </div>
+        ${meta.owner ? `<p class="community-vox-owner meta" style="display:none;">Criada por <a href="#/u/${encodeURIComponent(meta.owner)}">${escapeHtml(shortId(meta.owner))}</a></p>` : ""}
+      </div>
     </header>
     ${renderCommunityNeighborPanel(neighborStats, { commOnly })}
     ${seedChecklist ? renderCommunitySeedChecklist(communityId, seedChecklist.state, seedChecklist.ctx) : ""}
     ${renderCommunityForkBanner(meta)}
     ${activeTab === "posts" && welcomeText ? renderCommunityWelcomeRecado(welcomeText) : ""}
     <nav class="community-vox-nav community-tabs segmented-tabs" aria-label="Seções da comunidade">
-      <a class="tab-btn ${activeTab !== "listings" && activeTab !== "governance" && activeTab !== "members" ? "active" : ""}" href="#/c/${encodeURIComponent(communityId)}">Posts</a>
-      <a class="tab-btn ${activeTab === "members" ? "active" : ""}" href="#/c/${encodeURIComponent(communityId)}?tab=members">Membros</a>
-      <a class="tab-btn ${activeTab === "listings" ? "active" : ""}" href="#/c/${encodeURIComponent(communityId)}?tab=listings">Classificados</a>
-      <a class="tab-btn ${activeTab === "governance" ? "active" : ""}" href="#/c/${encodeURIComponent(communityId)}?tab=governance">Governança${proposals.length ? ` (${proposals.length})` : ""}</a>
-    </nav>`;
-
-  const tab = activeTab || "posts";
-  if (tab === "listings") {
-    html += renderCommunityListingsTab(communityId, commTitle, meta, listings);
-  } else if (tab === "governance") {
-    html += renderCommunityGovernanceTab(communityId, commTitle, meta, proposals);
-  } else if (tab === "members") {
-    html += renderCommunityMembersTab(meta, communityId, recentPeople, isMember);
-  } else {
-    html += `<div class="community-vox-posts-wrap">${renderCommunityPostsTab(communityId, commTitle, topics)}</div>`;
-  }
-  html += `</div>`;
+      <a class="tab-btn ${activeTab !== "listings" && activeTab !== "governance" && activeTab !== "members" ? "active" : ""}" data-tab="posts" href="#/c/${encodeURIComponent(communityId)}">Posts</a>
+      <a class="tab-btn ${activeTab === "members" ? "active" : ""}" data-tab="members" href="#/c/${encodeURIComponent(communityId)}?tab=members">Membros</a>
+      <a class="tab-btn ${activeTab === "listings" ? "active" : ""}" data-tab="listings" href="#/c/${encodeURIComponent(communityId)}?tab=listings">Classificados</a>
+      <a class="tab-btn ${activeTab === "governance" ? "active" : ""}" data-tab="governance" href="#/c/${encodeURIComponent(communityId)}?tab=governance">Governança${proposals.length ? ` (${proposals.length})` : ""}</a>
+    </nav>
+    <div class="community-tab-content-slot" id="community-tab-content">
+      ${renderCommunityTabContent(activeTab, {
+        communityId,
+        commTitle,
+        meta,
+        topics,
+        listings,
+        proposals,
+        recentPeople,
+        isMember,
+        memberCount,
+      })}
+    </div>
+  </div>`;
   main.innerHTML += html;
+}
+
+export function renderCommunityTabContent(tab = "posts", {
+  communityId = "",
+  commTitle = "",
+  meta = {},
+  topics = [],
+  listings = [],
+  proposals = [],
+  recentPeople = [],
+  isMember = false,
+  memberCount = null,
+} = {}) {
+  const activeTab = tab || "posts";
+  if (activeTab === "listings") {
+    return renderCommunityListingsTab(communityId, commTitle, meta, listings);
+  }
+  if (activeTab === "governance") {
+    return renderCommunityGovernanceTab(communityId, commTitle, meta, proposals);
+  }
+  if (activeTab === "members") {
+    return renderCommunityMembersTab(meta, communityId, recentPeople, isMember);
+  }
+  return `<div class="community-vox-posts-wrap">
+    ${renderCommunityOrkutMembersBox(meta, communityId, recentPeople, memberCount)}
+    ${renderCommunityPostsTab(communityId, commTitle, topics)}
+  </div>`;
 }
 
 function renderCommunityPostsTab(communityId, commTitle, topics) {

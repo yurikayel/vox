@@ -65,7 +65,9 @@ export function renderTopic(main, topicId, topic, replies, { topicData = null, i
   } else if (topicAudio) {
     imageHtml = `<div class="post-media-audio-card" style="margin:10px 0 14px; padding:12px 14px; background:var(--surface-soft); border-radius:var(--radius-sm); border:1px solid var(--border);"><div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;"><span style="font-size:1.1rem;">🎙️</span><strong style="font-size:0.85rem;">Recado de Voz</strong> <span class="badge-pill" style="font-size:0.7rem; padding:2px 6px;">Lo-Fi 48k</span></div><audio class="post-media-audio" src="${escapeHtml(topicAudio)}" controls style="width:100%;"></audio></div>`;
   } else if (topicImage) {
-    imageHtml = `<div class="post-media-container post-media-hero"><img class="post-media post-media-hero-img" src="${escapeHtml(topicImage)}" alt="${escapeHtml(topicImageAlt)}" />${renderPhotoTagLayerHtml(topic || topicData || {}, { isOwn: Boolean(topic?.isOwnLocalPost) })}</div>`;
+    const aspect = topic?.aspectRatio || "original";
+    const aspectClass = `post-aspect-${aspect.replace(":", "-")}`;
+    imageHtml = `<div class="post-media-container post-media-hero ${aspectClass}" data-aspect="${escapeHtml(aspect)}"><button type="button" class="post-media-lightbox-trigger" aria-label="Ver imagem em tela cheia" data-media-src="${escapeHtml(topicImage)}" data-media-alt="${escapeHtml(topicImageAlt)}"><img class="post-media post-media-hero-img" src="${escapeHtml(topicImage)}" alt="${escapeHtml(topicImageAlt)}" /></button>${renderPhotoTagLayerHtml(topic || topicData || {}, { isOwn: Boolean(topic?.isOwnLocalPost) })}</div>`;
   }
 
   const baseLikes = Number(topic?.likesCount) || 0;
