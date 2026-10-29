@@ -516,6 +516,10 @@ export async function showHandleLookup(rawSlug) {
 
   const result = await gql.fetchHandle(slug);
   if (!result || !result.primaryOwner) {
+    if (/^vox-[a-z0-9]+$/i.test(slug)) {
+      location.hash = "#/";
+      return;
+    }
     main.innerHTML = "";
     render.renderProfileGridNotFound(main, {
       handle: slug,

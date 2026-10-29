@@ -148,7 +148,12 @@ export async function showHome(feed = "for-you") {
     const localPosts = (await cacheNode.getLocalPosts({ type: "topic" })).filter((p) => p.type !== "listing");
     const commMap = await buildCommunityTitleMap();
     const merged = mergeLocalAndRemoteTopics(localPosts, remoteItems, commMap, user);
-    const finalTopics = mod.filterFeedPosts(await filterTopicsForActiveFeed(merged, activeFeed));
+    const filtered = await filterTopicsForActiveFeed(merged, activeFeed);
+    const welcomeTopic = welcomeProfile.getOfficialWelcomeTopic();
+    const withWelcome = filtered.some((p) => p.id === welcomeTopic.id)
+      ? filtered
+      : [welcomeTopic, ...filtered];
+    const finalTopics = mod.filterFeedPosts(withWelcome);
 
     main.innerHTML = "";
     if (demo && !localPosts.length) render.renderDemoBanner(main);
@@ -159,7 +164,12 @@ export async function showHome(feed = "for-you") {
     const localPosts = (await cacheNode.getLocalPosts({ type: "topic" })).filter((p) => p.type !== "listing");
     const fb = mock.mockRecentTopics();
     const merged = mergeLocalAndRemoteTopics(localPosts, fb.items, new Map(), user);
-    const finalTopics = mod.filterFeedPosts(await filterTopicsForActiveFeed(merged, activeFeed));
+    const filtered = await filterTopicsForActiveFeed(merged, activeFeed);
+    const welcomeTopic = welcomeProfile.getOfficialWelcomeTopic();
+    const withWelcome = filtered.some((p) => p.id === welcomeTopic.id)
+      ? filtered
+      : [welcomeTopic, ...filtered];
+    const finalTopics = mod.filterFeedPosts(withWelcome);
     render.renderDemoBanner(main);
     render.renderFeed(main, finalTopics, { activeFeed, userRouteId: user || "", externalSubs });
   }

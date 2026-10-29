@@ -110,3 +110,30 @@ export async function runWelcomeOnboarding(myRouteId) {
   ensureWelcomeWatch();
   return { dmJustSeeded };
 }
+
+export const OFFICIAL_WELCOME_POST_BODY =
+  "Bem-vindo ao Vox! 📢 Esta é a sua praça pública digital: uma rede cidadã que roda direto no seu aparelho, sem algoritmos de ódio, sem venda de dados e imune ao controle de bilionários. Aqui, conversas e comunidades pertencem a você. Suas publicações viajam de bolso em bolso pela malha P2P e ficam salvas de forma soberana. Explore o feed, participe das deliberações locais, conecte-se com pessoas reais e ajude a construir uma comunicação livre e popular no Brasil. O Vox é nosso! 🇧🇷✨";
+
+export function getOfficialWelcomeTopic() {
+  return {
+    id: "vox-official-manifesto-welcome",
+    type: "topic",
+    communityId: "demo-aprenda-vox",
+    communityTitle: "Praça Cívica",
+    title: "Bem-vindo ao Vox: a praça pública digital soberana",
+    body: OFFICIAL_WELCOME_POST_BODY,
+    author: WELCOME_ROUTE_ID,
+    owner: WELCOME_ROUTE_ID,
+    authorDisplay: "Vox",
+    authorHandle: "vox",
+    authorAvatar: OFFICIAL_PROFILE_AVATAR,
+    createdAt: 1730000000000,
+    ts: 1730000000000,
+    isPinned: true,
+    isOfficial: true,
+    isOfficialPlatform: true,
+    isSystem: true,
+    likes: 135,
+    repliesCount: 8,
+  };
+}
