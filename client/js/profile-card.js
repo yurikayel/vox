@@ -2,6 +2,7 @@
 
 import * as localAccount from "./local-account.js";
 import * as profileNote from "./profile-note.js";
+import * as upload from "./upload.js";
 
 export const PROFILE_CARD_TYPE = "profile-card";
 export const CARD_TTL_MS = 30 * 24 * 60 * 60 * 1000;
@@ -70,4 +71,30 @@ export async function buildRevokeProfileCard() {
     editedAt: Date.now(),
   };
   return localAccount.signPayload(payload);
+}
+
+export function buildProfileCardArweaveTags(card) {
+  return [
+    { name: "App-Name", value: "vox-brasil" },
+    { name: "Type", value: PROFILE_CARD_TYPE },
+    { name: "Route-Id", value: String(card?.routeId || "").trim() },
+    { name: "Display-Name", value: String(card?.displayName || card?.name || "").trim().slice(0, 80) },
+    { name: "Bio", value: String(card?.bio || "").trim().slice(0, 280) },
+    { name: "Avatar-Url", value: String(card?.avatarUrl || "").trim().slice(0, 512) },
+    { name: "Discoverable", value: card?.discoverable !== false ? "true" : "false" },
+    { name: "Timestamp", value: String(card?.editedAt || card?.ts || Date.now()) },
+    { name: "Content-Type", value: "application/json" },
+  ];
+}
+
+export async function publishProfileCardOnChain(card, { uploadFn = upload.postData } = {}) {
+  if (!card?.routeId) return { ok: false, reason: "invalid-card" };
+  const tags = buildProfileCardArweaveTags(card);
+  const data = JSON.stringify(card);
+  try {
+    const res = await uploadFn(data, tags, { autoCreate: true });
+    return { ok: true, id: res.id, via: res.via };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
 }
