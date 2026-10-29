@@ -301,7 +301,16 @@ async function fetchRawFromGateways(txId) {
         recordGatewayAttempt(label, false);
         continue;
       }
+      const ctype = res.headers?.get?.("content-type") || "";
+      if (ctype.includes("text/html")) {
+        recordGatewayAttempt(label, false);
+        continue;
+      }
       const text = await res.text();
+      if (text.trim().toLowerCase().startsWith("<!doctype html") || text.trim().toLowerCase().startsWith("<html")) {
+        recordGatewayAttempt(label, false);
+        continue;
+      }
       let parsed = { body: text, raw: text };
       try {
         const json = JSON.parse(text);

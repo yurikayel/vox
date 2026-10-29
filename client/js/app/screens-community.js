@@ -1,3 +1,4 @@
+import * as welcomeProfile from "../vox-welcome-profile.js";
 /** @file Community, topic, listings, proposals. */
 
 import * as gql from "../graphql.js";
@@ -418,44 +419,60 @@ export async function showTopic(topicId, commIdParam = "") {
   let replies = [];
   let topicData = { body: "" };
 
-  const localTopic = (await cacheNode.getLocalPost(topicId)) || getCachedBskyPostById(topicId);
-  if (localTopic) {
-    topic = postOwnership.withOwnLocalFlag(
-      { ...localTopic, owner: localTopic.author, isLocalP2p: true },
-      user
-    );
-    topicData = { body: localTopic.body };
+  const isOfficialWelcome =
+    topicId === welcomeProfile.OFFICIAL_WELCOME_TOPIC_ID ||
+    topicId === "vox-official-manifesto-welcome";
+
+  if (isOfficialWelcome) {
+    const welcomeTopic = welcomeProfile.getOfficialWelcomeTopic();
+    topic = { ...welcomeTopic, isOfficial: true, isLocalP2p: true };
+    topicData = { body: welcomeTopic.body };
   } else {
-    const demoFallback = mock.MOCK_DEMO_TOPICS.find((t) => t.id === topicId);
-    if (demoFallback) {
-      topic = { ...demoFallback, owner: demoFallback.author, isLocalP2p: true };
-      topicData = { body: demoFallback.body };
+    const localTopic = (await cacheNode.getLocalPost(topicId)) || getCachedBskyPostById(topicId);
+    if (localTopic) {
+      topic = postOwnership.withOwnLocalFlag(
+        { ...localTopic, owner: localTopic.author, isLocalP2p: true },
+        user
+      );
+      topicData = { body: localTopic.body };
     } else {
-      try {
-        const fetchedTopic = await gql.fetchTopicById(topicId);
-        if (fetchedTopic) topic = fetchedTopic;
-      } catch {}
-      try {
-        topicData = await gql.fetchTransactionData(topicId, {
-          communityId: topic?.communityId || commIdParam,
-        });
-      } catch {}
+      const demoFallback = mock.MOCK_DEMO_TOPICS.find((t) => t.id === topicId);
+      if (demoFallback) {
+        topic = { ...demoFallback, owner: demoFallback.author, isLocalP2p: true };
+        topicData = { body: demoFallback.body };
+      } else {
+        try {
+          const fetchedTopic = await gql.fetchTopicById(topicId);
+          if (fetchedTopic) topic = fetchedTopic;
+        } catch {}
+        try {
+          topicData = await gql.fetchTransactionData(topicId, {
+            communityId: topic?.communityId || commIdParam,
+          });
+        } catch {}
+      }
     }
   }
 
   let gateway = "";
   let demo = false;
-  try {
-    const res = await gql.fetchReplies(topicId);
-    replies = res.items;
-    gateway = res.gateway;
-  } catch {
+  if (isOfficialWelcome) {
     const fb = mock.mockReplies(topicId);
     replies = fb.items;
     demo = true;
-    if (!topic.title || topic.title === "Tópico") {
-      topic = { title: "Como funciona o Vox P2P?", owner: "demo-owner", communityId: commIdParam };
-      topicData = { body: "Rede cooperativa e soberana sem servidores caros." };
+  } else {
+    try {
+      const res = await gql.fetchReplies(topicId);
+      replies = res.items;
+      gateway = res.gateway;
+    } catch {
+      const fb = mock.mockReplies(topicId);
+      replies = fb.items;
+      demo = true;
+      if (!topic.title || topic.title === "Tópico") {
+        topic = { title: "Como funciona o Vox P2P?", owner: "demo-owner", communityId: commIdParam };
+        topicData = { body: "Rede cooperativa e soberana sem servidores caros." };
+      }
     }
   }
 

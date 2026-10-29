@@ -86,7 +86,8 @@ export async function showProfile(address, activeTab = "posts") {
   const pixKeyMasked = pixKey ? pixKeyHelper.maskForDisplay(pixKey) : "";
 
   if (welcomeProfile.isWelcomeRouteId(targetAddress)) {
-    displayName = resolved.name;
+    displayName = resolved.name || "Vox";
+    handle = "vox";
     profileBio = resolved.bio || profileBio;
   } else if (mockProf) {
     displayName = mockProf.name || displayName;

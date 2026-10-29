@@ -16,7 +16,11 @@ export function escapeHtml(s) {
 
 export function shortId(id) {
   if (!id) return "—";
-  return id.length > 12 ? `${id.slice(0, 6)}…${id.slice(-4)}` : id;
+  if (isWelcomeRouteId(id)) return "vox";
+  if (id.length <= 10) return id;
+  if (id.startsWith("vx_")) return id.slice(0, 9);
+  if (id.startsWith("0x")) return id.slice(0, 8);
+  return id.slice(0, 8);
 }
 
 function normAuthorToken(s) {
@@ -29,6 +33,15 @@ function normAuthorToken(s) {
 /** Nome + @handle ou ID curto uma vez (title = routeId completo). */
 export function resolvePostAuthorLabels(author, { authorDisplay: override = "", isOwnLocalPost = false } = {}) {
   const routeId = String(author || "");
+  if (isWelcomeRouteId(routeId)) {
+    return {
+      primary: "Vox",
+      secondaryHandle: "vox",
+      authorDisplay: "Vox",
+      authorHandle: "vox",
+      routeTitle: "Vox (Conta Oficial)",
+    };
+  }
   const profileName = routeId ? mock.getAuthorDisplay(routeId) : "";
   const profileHandle = routeId ? mock.getAuthorHandle(routeId) : "";
   let fullName = override || profileName || "";

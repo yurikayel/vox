@@ -131,8 +131,9 @@ export async function showComposeTopic(communityId) {
       e.preventDefault();
       const btn = document.getElementById("btn-submit-topic");
       const finalComm = communityId || document.getElementById("topic-comm-id")?.value.trim().toLowerCase() || "geral";
-      const title = document.getElementById("topic-title")?.value.trim();
-      const body = document.getElementById("topic-body")?.value.trim();
+      const title = document.getElementById("topic-title")?.value?.trim() || "";
+      const body = document.getElementById("topic-body")?.value?.trim() || "";
+      if (!body) return;
 
       btn.disabled = true;
       btn.textContent = "Publicando…";
