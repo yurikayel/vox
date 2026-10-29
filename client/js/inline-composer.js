@@ -240,14 +240,18 @@ export function attachInlineComposerHandlers(onPublished) {
   const renderLofiPreview = async () => {
     if (!rawSourceFile || inlineComposerMedia.type !== "image") return;
     const badge = document.getElementById("lofi-weight-badge");
-    if (badge) badge.textContent = "⚡ Processando Lo-Fi…";
-    const result = await composerMedia.processComposerLofiImage(rawSourceFile, { filter: activeLofiFilter });
+    if (badge) badge.textContent = "⚡ Otimizando qualidade (~100 KB)…";
+    const result = await composerMedia.processComposerLofiImage(rawSourceFile, {
+      filter: activeLofiFilter,
+      aspect: inlineComposerAspectRatio,
+    });
     if (result.ok) {
       inlineComposerImageDataUrl = result.dataUrl;
       inlineComposerMedia.dataUrl = result.dataUrl;
       if (previewImg) previewImg.src = result.dataUrl;
       const kb = Math.max(1, Math.round((result.byteLength || 0) / 1024));
-      if (badge) badge.textContent = `⚡ ~${kb} KB (100% Grátis)`;
+      const qPct = Math.round((result.qualityUsed || 0.8) * 100);
+      if (badge) badge.textContent = `⚡ ~${kb} KB (${qPct}% qualidade · Permaweb Arweave)`;
     } else {
       share.showToast(result.message || "Erro no processamento da imagem", "error");
     }
@@ -358,7 +362,7 @@ export function attachInlineComposerHandlers(onPublished) {
   });
 
   const aspectBar = document.getElementById("composer-aspect-bar");
-  aspectBar?.addEventListener("click", (e) => {
+  aspectBar?.addEventListener("click", async (e) => {
     const btn = e.target.closest(".composer-aspect-btn");
     if (!btn || inlineComposerMedia.type !== "image") return;
     e.preventDefault();
@@ -366,9 +370,17 @@ export function attachInlineComposerHandlers(onPublished) {
     btn.classList.add("active");
     inlineComposerAspectRatio = btn.dataset.aspect || "original";
     if (previewImg) {
-      previewImg.classList.remove("composer-aspect-original", "composer-aspect-1-1", "composer-aspect-4-3", "composer-aspect-16-9");
+      previewImg.classList.remove(
+        "composer-aspect-original",
+        "composer-aspect-16-9",
+        "composer-aspect-9-16",
+        "composer-aspect-4-3",
+        "composer-aspect-3-4",
+        "composer-aspect-1-1"
+      );
       previewImg.classList.add(`composer-aspect-${inlineComposerAspectRatio.replace(":", "-")}`);
     }
+    await renderLofiPreview();
   });
 
   const tagPeopleBtn = document.getElementById("btn-inline-tag-people");

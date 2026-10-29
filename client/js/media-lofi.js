@@ -34,6 +34,49 @@ export function calculateConstrainedDimensions(srcW, srcH, maxDim = LOFI_LIMITS.
   return { width: Math.max(1, Math.round((w * maxDim) / h)), height: maxDim };
 }
 
+export function parseAspectRatio(aspect) {
+  if (aspect === "16:9") return 16 / 9;
+  if (aspect === "9:16") return 9 / 16;
+  if (aspect === "4:3") return 4 / 3;
+  if (aspect === "3:4") return 3 / 4;
+  if (aspect === "1:1") return 1 / 1;
+  return null;
+}
+
+export function calculateCropAndBounds(srcW, srcH, { aspect = "original", maxLong = 1920, maxShort = 1080 } = {}) {
+  const origW = Number(srcW) || 1;
+  const origH = Number(srcH) || 1;
+  const targetRatio = parseAspectRatio(aspect);
+
+  let sx = 0;
+  let sy = 0;
+  let sWidth = origW;
+  let sHeight = origH;
+
+  if (targetRatio !== null) {
+    const curRatio = origW / origH;
+    if (curRatio > targetRatio) {
+      sHeight = origH;
+      sWidth = Math.max(1, Math.round(origH * targetRatio));
+      sx = Math.round((origW - sWidth) / 2);
+    } else if (curRatio < targetRatio) {
+      sWidth = origW;
+      sHeight = Math.max(1, Math.round(origW / targetRatio));
+      sy = Math.round((origH - sHeight) / 2);
+    }
+  }
+
+  const isLandscape = sWidth >= sHeight;
+  const boxW = isLandscape ? maxLong : maxShort;
+  const boxH = isLandscape ? maxShort : maxLong;
+
+  const scale = Math.min(1, boxW / sWidth, boxH / sHeight);
+  const destW = Math.max(1, Math.round(sWidth * scale));
+  const destH = Math.max(1, Math.round(sHeight * scale));
+
+  return { sx, sy, sWidth, sHeight, destW, destH };
+}
+
 export function applyXeroxDither(ctx, width, height) {
   const imgData = ctx.getImageData(0, 0, width, height);
   const data = imgData.data;
@@ -97,27 +140,73 @@ export function applyLofiFilter(ctx, width, height, filterName = "normal") {
   if (filterName === "vhs") return applyVhsCamcorder(ctx, width, height);
 }
 
-export function compressCanvasWithClamp(canvas, { quality = LOFI_LIMITS.PHOTO_DEFAULT_QUALITY, maxBytes = LOFI_LIMITS.PHOTO_MAX_BYTES } = {}) {
-  let q = quality;
-  let dataUrl = canvas.toDataURL("image/webp", q);
-  let parsed = parseDataUrl(dataUrl);
+export function optimizeCanvasQualityUnderCeiling(canvas, { maxBytes = LOFI_LIMITS.PHOTO_MAX_BYTES } = {}) {
+  let low = 0.15;
+  let high = 0.95;
+  let best = null;
 
-  // Clamp adaptativo em no máximo 3 tentativas se exceder 99 KB
-  let attempts = 0;
-  while (parsed.byteLength > maxBytes && attempts < 3) {
-    attempts++;
-    q = Math.max(0.25, q - 0.12);
-    dataUrl = canvas.toDataURL("image/webp", q);
-    parsed = parseDataUrl(dataUrl);
+  try {
+    const probeUrl = canvas.toDataURL("image/webp", high);
+    const probeParsed = parseDataUrl(probeUrl);
+    if (probeParsed.byteLength <= maxBytes) {
+      return {
+        dataUrl: probeUrl,
+        byteLength: probeParsed.byteLength,
+        qualityUsed: high,
+        mime: "image/webp",
+        isWithinLimit: true,
+      };
+    }
+  } catch {}
+
+  for (let iter = 0; iter < 6; iter++) {
+    const mid = Number(((low + high) / 2).toFixed(3));
+    try {
+      const dataUrl = canvas.toDataURL("image/webp", mid);
+      const parsed = parseDataUrl(dataUrl);
+      if (parsed.byteLength <= maxBytes) {
+        best = {
+          dataUrl,
+          byteLength: parsed.byteLength,
+          qualityUsed: mid,
+          mime: "image/webp",
+          isWithinLimit: true,
+        };
+        low = mid;
+      } else {
+        high = mid;
+      }
+    } catch {
+      high = mid;
+    }
   }
 
+  if (best) return best;
+
+  if (canvas.width > 320 && canvas.height > 320 && typeof document !== "undefined" && document.createElement) {
+    try {
+      const down = document.createElement("canvas");
+      down.width = Math.max(1, Math.round(canvas.width * 0.85));
+      down.height = Math.max(1, Math.round(canvas.height * 0.85));
+      const dctx = down.getContext("2d");
+      dctx.drawImage(canvas, 0, 0, down.width, down.height);
+      return optimizeCanvasQualityUnderCeiling(down, { maxBytes });
+    } catch {}
+  }
+
+  const fallbackUrl = canvas.toDataURL("image/webp", 0.15);
+  const fallbackParsed = parseDataUrl(fallbackUrl);
   return {
-    dataUrl,
-    byteLength: parsed.byteLength,
+    dataUrl: fallbackUrl,
+    byteLength: fallbackParsed.byteLength,
+    qualityUsed: 0.15,
     mime: "image/webp",
-    isWithinLimit: parsed.byteLength <= maxBytes,
-    qualityUsed: q,
+    isWithinLimit: fallbackParsed.byteLength <= maxBytes,
   };
+}
+
+export function compressCanvasWithClamp(canvas, { quality = LOFI_LIMITS.PHOTO_DEFAULT_QUALITY, maxBytes = LOFI_LIMITS.PHOTO_MAX_BYTES } = {}) {
+  return optimizeCanvasQualityUnderCeiling(canvas, { maxBytes });
 }
 
 export function calculateAudioChunks(durationSeconds) {
