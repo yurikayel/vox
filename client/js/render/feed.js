@@ -137,6 +137,7 @@ export function formatPostMarkdown(post) {
   const author = post.author || post.owner || "";
   const { authorDisplay, authorHandle } = resolvePostAuthorLabels(author, {
     authorDisplay: post.authorDisplay,
+    authorHandle: post.authorHandle,
     isOwnLocalPost: post.isOwnLocalPost,
   });
   const title = post.title || "Publicação";
@@ -179,6 +180,7 @@ export function renderInlineReplyItem(r, { byParent = null, topicId = "", commId
   const rAuthor = r.author || r.owner || "";
   const rLabels = resolvePostAuthorLabels(rAuthor, {
     authorDisplay: r.authorDisplay,
+    authorHandle: r.authorHandle,
     isOwnLocalPost: r.isOwnLocalPost,
   });
   const rAuthorDisplay = rLabels.authorDisplay;
@@ -283,6 +285,35 @@ export function renderPostOwnerMenu(t) {
   </div>`;
 }
 
+function renderExternalPostHeader(t, labels, ownerMenu) {
+  const authorDisplay = labels.authorDisplay;
+  const avatarImg = t.authorAvatar
+    ? `<img class="avatar avatar-img" src="${escapeHtml(t.authorAvatar)}" alt="${escapeHtml(authorDisplay)}" loading="lazy" />`
+    : `<span class="avatar avatar-bsky">🦋</span>`;
+  const sourceBadge = `<span class="badge-post-external bsky" title="Post ingerido via AT Protocol"><a href="${escapeHtml(t.externalUrl || '#')}" target="_blank" rel="noopener noreferrer">🦋 Bluesky ↗</a></span>`;
+  const cleanHandle = (labels.authorHandle || "").replace(/^@/, "");
+  const handleHtml = cleanHandle ? `<span class="post-handle">@${escapeHtml(cleanHandle)}</span>` : "";
+
+  return `
+      <header class="post-header-inline post-header-external">
+        <div class="post-header-user">
+          <a class="avatar-link" href="${escapeHtml(t.externalUrl || '#')}" target="_blank" rel="noopener noreferrer">${avatarImg}</a>
+          <div class="post-header-meta">
+            <div class="post-author-line">
+              <strong class="post-author-name">${escapeHtml(authorDisplay)}</strong>
+              ${sourceBadge}
+            </div>
+            <div class="post-meta-sub">
+              ${handleHtml}
+              ${handleHtml ? '<span class="post-dot">·</span>' : ''}
+              <time class="post-time">${escapeHtml(formatTimeAgo(t.ts))}</time>
+            </div>
+          </div>
+        </div>
+        ${ownerMenu ? `<div class="post-header-aside">${ownerMenu}</div>` : ""}
+      </header>`;
+}
+
 function renderPostHeaderBlock(t, author, labels, { photoOverlay = false } = {}) {
   const authorDisplay = labels.authorDisplay;
   const ownerMenu = renderPostOwnerMenu(t);
@@ -293,27 +324,7 @@ function renderPostHeaderBlock(t, author, labels, { photoOverlay = false } = {})
     </header>`;
   }
   if (t.isExternal) {
-    const avatarImg = t.authorAvatar
-      ? `<img class="avatar avatar-img" src="${escapeHtml(t.authorAvatar)}" alt="${escapeHtml(authorDisplay)}" loading="lazy" />`
-      : `<span class="avatar avatar-bsky">🦋</span>`;
-    const sourceBadge = `<span class="badge-post-external bsky" title="Post ingerido via AT Protocol"><a href="${escapeHtml(t.externalUrl || '#')}" target="_blank" rel="noopener noreferrer">🦋 Bluesky ↗</a></span>`;
-    return `
-      <header class="post-header-inline post-header-external">
-        <div class="post-header-user">
-          <a class="avatar-link" href="${escapeHtml(t.externalUrl || '#')}" target="_blank" rel="noopener noreferrer">${avatarImg}</a>
-          <div class="post-header-meta">
-            <div class="post-author-line">
-              <strong class="post-author-name">${escapeHtml(authorDisplay)}</strong>
-              <span class="post-handle">${escapeHtml(labels.authorHandle || "")}</span>
-              ${sourceBadge}
-            </div>
-            <div class="post-meta-sub">
-              <time class="post-time">${escapeHtml(formatTimeAgo(t.ts))}</time>
-            </div>
-          </div>
-        </div>
-        ${ownerMenu ? `<div class="post-header-aside">${ownerMenu}</div>` : ""}
-      </header>`;
+    return renderExternalPostHeader(t, labels, ownerMenu);
   }
   const metaHtml = renderPostAuthorMetaLines(author, labels, formatTimeAgo(t.ts), { ts: t.ts });
   const asideHtml = ownerMenu ? `<div class="post-header-aside">${ownerMenu}</div>` : "";
@@ -362,15 +373,26 @@ function renderPostMediaHeader(t, author, labels) {
   const authorDisplay = labels.authorDisplay;
   const { display: timeDisplay, titleAttr: timeTitle } = postTimeParts(t.ts);
   const followBtn = shouldShowPostFollowOverlay(t, author) ? renderPostHeroFollowBtn(author) : "";
-  const handle = labels.authorHandle ? `<span class="post-ig-header-handle">@${escapeHtml(labels.authorHandle)}</span>` : "";
+  const cleanHandle = (labels.authorHandle || "").replace(/^@/, "");
+  const handleHtml = cleanHandle ? `<span class="post-ig-header-handle">@${escapeHtml(cleanHandle)}</span>` : "";
+  const ufHtml = photoHeaderUf(author);
+
   return `<div class="post-media-header post-ig-header">
-    <a class="avatar-link post-media-header-avatar" href="#/u/${encodeURIComponent(author)}">${renderAvatarHtml(author, authorDisplay, "sm")}</a>
-    <a class="post-media-header-username" href="#/u/${encodeURIComponent(author)}">${escapeHtml(authorDisplay)}</a>
-    ${renderPostHeroVerifiedBadge(author)}
-    ${handle}
-    <span class="post-media-header-dot" aria-hidden="true">·</span>
-    <span class="post-media-header-time"${timeTitle}>${escapeHtml(timeDisplay)}</span>
-    ${photoHeaderUf(author)}
+    <div class="post-media-header-left">
+      <a class="avatar-link post-media-header-avatar" href="#/u/${encodeURIComponent(author)}">${renderAvatarHtml(author, authorDisplay, "sm")}</a>
+      <div class="post-media-header-text">
+        <div class="post-media-header-name-row">
+          <a class="post-media-header-username" href="#/u/${encodeURIComponent(author)}">${escapeHtml(authorDisplay)}</a>
+          ${renderPostHeroVerifiedBadge(author)}
+          ${ufHtml}
+        </div>
+        <div class="post-media-header-handle-row">
+          ${handleHtml}
+          ${handleHtml ? '<span class="post-media-header-dot" aria-hidden="true">·</span>' : ''}
+          <span class="post-media-header-time"${timeTitle}>${escapeHtml(timeDisplay)}</span>
+        </div>
+      </div>
+    </div>
     <div class="post-ig-header-end">
       ${followBtn}
       ${renderPostMoreMenuTrigger(t, author, authorDisplay)}
@@ -378,16 +400,17 @@ function renderPostMediaHeader(t, author, labels) {
   </div>`;
 }
 
-function renderPostMediaHero(t, overlayHeaderHtml = "") {
+function renderPostMediaHero(t, overlayHeaderHtml = "", overlayFooterHtml = "") {
   const layer = renderPhotoTagLayerHtml(t, { isOwn: Boolean(t.isOwnLocalPost) });
   if (t?.video) {
     const src = escapeHtml(t.video);
     return `<div class="post-media-container post-media-hero post-media-video-container" style="background:#000; border-radius:var(--radius-sm); overflow:hidden; position:relative;">
-      <div class="lofi-video-header" style="position:absolute; top:8px; left:8px; z-index:2; display:flex; align-items:center; gap:6px;">
+      ${overlayHeaderHtml}
+      <div class="lofi-video-header" style="position:absolute; top:52px; left:8px; z-index:2; display:flex; align-items:center; gap:6px;">
         <span class="badge-pill" style="font-size:0.7rem; padding:2px 6px; background:rgba(0,0,0,0.65); color:#fff; border:1px solid rgba(255,255,255,0.2);">📼 Lo-Fi 360p</span>
       </div>
       <video class="post-media-video" src="${src}" controls playsinline preload="metadata" style="width:100%; max-height:480px; display:block;"></video>
-      ${overlayHeaderHtml}
+      ${overlayFooterHtml}
     </div>`;
   }
   if (t?.audio) {
@@ -402,6 +425,7 @@ function renderPostMediaHero(t, overlayHeaderHtml = "") {
       </div>
       <audio class="post-media-audio" src="${src}" controls style="width:100%; outline:none; border-radius:4px;"></audio>
       ${overlayHeaderHtml}
+      ${overlayFooterHtml}
     </div>`;
   }
   if (t?.image) {
@@ -414,6 +438,7 @@ function renderPostMediaHero(t, overlayHeaderHtml = "") {
       </button>
       ${layer}
       ${overlayHeaderHtml}
+      ${overlayFooterHtml}
     </div>`;
   }
   if (t?.mediaRef?.hash) {
@@ -421,6 +446,7 @@ function renderPostMediaHero(t, overlayHeaderHtml = "") {
       <div class="media-placeholder" style="aspect-ratio:4/5; display:flex; align-items:center; justify-content:center; background:var(--surface-soft); color:var(--muted); font-size:0.85rem;"><span>📦 Mídia P2P (${escapeHtml(t.mediaRef.mime || "mídia")})</span></div>
       ${layer}
       ${overlayHeaderHtml}
+      ${overlayFooterHtml}
     </div>`;
   }
   return "";
@@ -645,6 +671,7 @@ export function renderPostItem(t, { isPinned = false } = {}) {
   const author = t.author || t.owner || "";
   const labels = resolvePostAuthorLabels(author, {
     authorDisplay: t.authorDisplay,
+    authorHandle: t.authorHandle,
     isOwnLocalPost: t.isOwnLocalPost,
   });
   const { authorDisplay, authorHandle } = labels;
@@ -653,11 +680,11 @@ export function renderPostItem(t, { isPinned = false } = {}) {
   const header = renderPostHeaderBlock(t, author, labels, { photoOverlay: isPhoto });
 
   const igHead = isPhoto ? renderPostMediaHeader(t, author, labels) : "";
-  const media = isPhoto ? renderPostMediaHero(t, igHead) : "";
+  const igBar = isPhoto ? renderIgToolbar(t, authorDisplay) : "";
+  const media = isPhoto ? renderPostMediaHero(t, igHead, igBar) : "";
   const frame = renderPostFrame(t);
 
-  const igBar = isPhoto ? renderIgToolbar(t, authorDisplay) : "";
-
+  const fallbackIgBar = isPhoto && !media ? igBar : "";
   const toolbar = isPhoto ? "" : renderPostToolbar(t, author, authorDisplay, authorHandle);
   const caption = isPhoto ? "" : `<div class="post-caption-block">${renderPostText(t)}${renderRepostCiteHtml(t)}</div>`;
   const gist = layout === "github" ? renderPostGithubGist(t) : "";
@@ -688,10 +715,7 @@ export function renderPostItem(t, { isPinned = false } = {}) {
     <article class="post insta-post post-layout-photo post-photo-bleed" data-id="${escapeHtml(t.id)}" data-layout="photo">
       ${media}
       ${header}
-
-
-      ${igBar}
-
+      ${fallbackIgBar}
       ${frame}
       ${comments}
     </article>`;
