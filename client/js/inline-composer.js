@@ -1,44 +1,54 @@
 import * as composerMedia from "./composer-media.js";
 import * as share from "./share.js";
 import * as upload from "./upload.js";
-import * as wallet from "./wallet.js";
-import * as cacheNode from "./cache-node.js";
-import * as peers from "./peers.js";
 import * as localAccount from "./local-account.js";
+import * as peers from "./peers.js";
+import * as cacheNode from "./cache-node.js";
+import * as wallet from "./wallet.js";
 import * as postOwnership from "./post-ownership.js";
 import * as mediaBlob from "./media-blob.js";
 
 let inlineComposerImageDataUrl = "";
+let inlineComposerMedia = { type: "", dataUrl: "", byteLength: 0 };
 
-function collapseInlineComposer() {
+export function isInlineComposerActive() {
   const root = document.getElementById("feed-inline-composer");
-  const collapsed = root?.querySelector(".inline-composer-collapsed");
-  const form = document.getElementById("form-inline-topic");
-  if (!root || !collapsed || !form) return;
-  form.classList.add("hidden");
-  collapsed.classList.remove("hidden");
-  collapsed.setAttribute("aria-expanded", "false");
-  collapsed.focus();
+  return Boolean(root && !root.classList.contains("is-collapsed"));
 }
 
-function syncInlineComposerUi() {
+export function syncInlineComposerUi() {
+  const root = document.getElementById("feed-inline-composer");
+  if (!root) return;
   const textarea = document.getElementById("inline-topic-body");
-  const btn = document.getElementById("btn-inline-submit");
   const charEl = document.getElementById("inline-topic-char");
-  const len = textarea?.value?.length || 0;
-  const hasText = Boolean(textarea?.value?.trim());
+  const submitBtn = document.getElementById("btn-inline-submit");
+  const text = textarea ? textarea.value : "";
+  const len = text.length;
   if (charEl) charEl.textContent = `${len} / 2000`;
-  if (btn) btn.disabled = !hasText;
+  const hasContent = Boolean(text.trim() || inlineComposerImageDataUrl || inlineComposerMedia.dataUrl);
+  if (submitBtn) submitBtn.disabled = !hasContent;
 }
 
-function expandInlineComposer() {
+export function collapseInlineComposer() {
   const root = document.getElementById("feed-inline-composer");
-  const collapsed = root?.querySelector(".inline-composer-collapsed");
+  if (!root) return;
+  root.classList.add("is-collapsed");
   const form = document.getElementById("form-inline-topic");
-  if (!root || !collapsed || !form) return;
-  collapsed.classList.add("hidden");
-  form.classList.remove("hidden");
-  collapsed.setAttribute("aria-expanded", "true");
+  const collapsed = root.querySelector(".inline-composer-collapsed");
+  form?.classList.add("hidden");
+  collapsed?.classList.remove("hidden");
+  collapsed?.setAttribute("aria-expanded", "false");
+}
+
+export function expandInlineComposer() {
+  const root = document.getElementById("feed-inline-composer");
+  if (!root) return;
+  root.classList.remove("is-collapsed");
+  const form = document.getElementById("form-inline-topic");
+  const collapsed = root.querySelector(".inline-composer-collapsed");
+  form?.classList.remove("hidden");
+  collapsed?.classList.add("hidden");
+  collapsed?.setAttribute("aria-expanded", "true");
   const textarea = document.getElementById("inline-topic-body");
   textarea?.focus();
   syncInlineComposerUi();
@@ -51,31 +61,54 @@ export function attachInlineComposerHandlers(onPublished) {
   const collapsed = root.querySelector(".inline-composer-collapsed");
   const form = document.getElementById("form-inline-topic");
   const fileInput = document.getElementById("inline-topic-file");
+  const audioInput = document.getElementById("inline-topic-audio");
+  const videoInput = document.getElementById("inline-topic-video");
   const previewWrap = document.getElementById("inline-topic-preview-wrap");
   const previewImg = document.getElementById("inline-topic-preview");
+  const previewAudioWrap = document.getElementById("inline-topic-preview-audio-wrap");
+  const previewAudio = document.getElementById("inline-topic-preview-audio");
+  const previewVideoWrap = document.getElementById("inline-topic-preview-video-wrap");
+  const previewVideo = document.getElementById("inline-topic-preview-video");
   const removeBtn = document.getElementById("btn-inline-remove-img");
 
   let rawSourceFile = null;
   let activeLofiFilter = "normal";
 
-  const clearImage = () => {
+  const clearMedia = () => {
     rawSourceFile = null;
     activeLofiFilter = "normal";
+    inlineComposerMedia = { type: "", dataUrl: "", byteLength: 0 };
     inlineComposerImageDataUrl = "";
     if (fileInput) fileInput.value = "";
+    if (audioInput) audioInput.value = "";
+    if (videoInput) videoInput.value = "";
     previewWrap?.classList.add("hidden");
-    if (previewImg) previewImg.removeAttribute("src");
+    if (previewImg) {
+      previewImg.removeAttribute("src");
+      previewImg.classList.add("hidden");
+    }
+    if (previewAudio) {
+      previewAudio.removeAttribute("src");
+      previewAudioWrap?.classList.add("hidden");
+    }
+    if (previewVideo) {
+      previewVideo.removeAttribute("src");
+      previewVideoWrap?.classList.add("hidden");
+    }
+    const filterBar = document.getElementById("lofi-filter-bar");
+    if (filterBar) filterBar.style.display = "flex";
     const badge = document.getElementById("lofi-weight-badge");
     if (badge) badge.textContent = "⚡ ~45 KB (100% Grátis)";
   };
 
   const renderLofiPreview = async () => {
-    if (!rawSourceFile) return;
+    if (!rawSourceFile || inlineComposerMedia.type !== "image") return;
     const badge = document.getElementById("lofi-weight-badge");
     if (badge) badge.textContent = "⚡ Processando Lo-Fi…";
     const result = await composerMedia.processComposerLofiImage(rawSourceFile, { filter: activeLofiFilter });
     if (result.ok) {
       inlineComposerImageDataUrl = result.dataUrl;
+      inlineComposerMedia.dataUrl = result.dataUrl;
       if (previewImg) previewImg.src = result.dataUrl;
       const kb = Math.max(1, Math.round((result.byteLength || 0) / 1024));
       if (badge) badge.textContent = `⚡ ~${kb} KB (100% Grátis)`;
@@ -98,12 +131,16 @@ export function attachInlineComposerHandlers(onPublished) {
     const check = composerMedia.validateComposerImageFile(file);
     if (!check.ok) {
       share.showToast(check.message, "error");
-      clearImage();
+      clearMedia();
       return;
     }
+    clearMedia();
     rawSourceFile = file;
+    inlineComposerMedia = { type: "image", dataUrl: "", byteLength: file.size };
     activeLofiFilter = "normal";
+    previewImg?.classList.remove("hidden");
     const filterBar = document.getElementById("lofi-filter-bar");
+    if (filterBar) filterBar.style.display = "flex";
     filterBar?.querySelectorAll(".lofi-filter-btn").forEach((b) => {
       b.classList.toggle("active", b.dataset.filter === "normal");
     });
@@ -112,10 +149,58 @@ export function attachInlineComposerHandlers(onPublished) {
     syncInlineComposerUi();
   });
 
+  audioInput?.addEventListener("change", async () => {
+    const file = audioInput.files?.[0];
+    if (!file) return;
+    const check = composerMedia.validateComposerAudioFile(file);
+    if (!check.ok) {
+      share.showToast(check.message, "error");
+      clearMedia();
+      return;
+    }
+    clearMedia();
+    rawSourceFile = file;
+    const dataUrl = await composerMedia.readComposerMediaFile(file);
+    const kb = Math.max(1, Math.round(file.size / 1024));
+    inlineComposerMedia = { type: "audio", dataUrl, byteLength: file.size };
+    if (previewAudio) previewAudio.src = dataUrl;
+    previewAudioWrap?.classList.remove("hidden");
+    const filterBar = document.getElementById("lofi-filter-bar");
+    if (filterBar) filterBar.style.display = "none";
+    const badge = document.getElementById("lofi-weight-badge");
+    if (badge) badge.textContent = `⚡ ~${kb} KB (Áudio Lo-Fi ${kb <= 99 ? "100% Grátis" : "48k"})`;
+    previewWrap?.classList.remove("hidden");
+    syncInlineComposerUi();
+  });
+
+  videoInput?.addEventListener("change", async () => {
+    const file = videoInput.files?.[0];
+    if (!file) return;
+    const check = composerMedia.validateComposerVideoFile(file);
+    if (!check.ok) {
+      share.showToast(check.message, "error");
+      clearMedia();
+      return;
+    }
+    clearMedia();
+    rawSourceFile = file;
+    const dataUrl = await composerMedia.readComposerMediaFile(file);
+    const kb = Math.max(1, Math.round(file.size / 1024));
+    inlineComposerMedia = { type: "video", dataUrl, byteLength: file.size };
+    if (previewVideo) previewVideo.src = dataUrl;
+    previewVideoWrap?.classList.remove("hidden");
+    const filterBar = document.getElementById("lofi-filter-bar");
+    if (filterBar) filterBar.style.display = "none";
+    const badge = document.getElementById("lofi-weight-badge");
+    if (badge) badge.textContent = `⚡ ~${kb} KB (Vídeo Lo-Fi 360p)`;
+    previewWrap?.classList.remove("hidden");
+    syncInlineComposerUi();
+  });
+
   const filterBar = document.getElementById("lofi-filter-bar");
   filterBar?.addEventListener("click", async (e) => {
     const btn = e.target.closest(".lofi-filter-btn");
-    if (!btn || !rawSourceFile) return;
+    if (!btn || !rawSourceFile || inlineComposerMedia.type !== "image") return;
     e.preventDefault();
     filterBar.querySelectorAll(".lofi-filter-btn").forEach((b) => b.classList.remove("active"));
     btn.classList.add("active");
@@ -125,7 +210,8 @@ export function attachInlineComposerHandlers(onPublished) {
 
   removeBtn?.addEventListener("click", (e) => {
     e.preventDefault();
-    clearImage();
+    clearMedia();
+    syncInlineComposerUi();
   });
 
   const textarea = document.getElementById("inline-topic-body");
@@ -134,7 +220,7 @@ export function attachInlineComposerHandlers(onPublished) {
     if (e.key === "Escape") {
       e.preventDefault();
       form.reset();
-      clearImage();
+      clearMedia();
       syncInlineComposerUi();
       collapseInlineComposer();
     }
@@ -146,9 +232,9 @@ export function attachInlineComposerHandlers(onPublished) {
     const bodyRaw = document.getElementById("inline-topic-body")?.value?.trim() || "";
     const commSlug =
       document.getElementById("inline-topic-comm")?.value?.trim().toLowerCase() || "geral";
-    if (!bodyRaw) return;
+    if (!bodyRaw && !inlineComposerMedia.dataUrl) return;
 
-    const { title, body } = postOwnership.deriveTopicTitleFromBody(bodyRaw);
+    const { title, body } = postOwnership.deriveTopicTitleFromBody(bodyRaw || "Mídia publicada no feed");
 
     if (btn) {
       btn.disabled = true;
@@ -163,10 +249,15 @@ export function attachInlineComposerHandlers(onPublished) {
         title,
         body,
       };
-      if (inlineComposerImageDataUrl) {
+      if (inlineComposerMedia.type === "image" && inlineComposerImageDataUrl) {
         payload.image = inlineComposerImageDataUrl;
         payload.imageAlt = title;
+      } else if (inlineComposerMedia.type === "audio" && inlineComposerMedia.dataUrl) {
+        payload.audio = inlineComposerMedia.dataUrl;
+      } else if (inlineComposerMedia.type === "video" && inlineComposerMedia.dataUrl) {
+        payload.video = inlineComposerMedia.dataUrl;
       }
+
       const signed = await localAccount.signPayload(payload);
       await cacheNode.saveLocalPost(signed);
 
@@ -188,25 +279,18 @@ export function attachInlineComposerHandlers(onPublished) {
         } catch {}
       }
 
-      share.showToast("Post publicado no feed!");
-      const { dispatchAutoReplication, isAutoReplicationEnabled } = await import("./linked-accounts.js");
-      if (isAutoReplicationEnabled()) {
-        dispatchAutoReplication({ id: topicId, communityId: commSlug, title, body, image: payload.image })
-          .then((rep) => {
-            if (rep.dispatched && rep.count > 0) {
-              share.showToast(`🚀 Replicado para ${rep.count} webhook(s) de redes vinculadas!`);
-            }
-          })
-          .catch(() => {});
-      }
-      const { openPosseSheetAfterPublish } = await import("./posse-dispatch.js");
-      openPosseSheetAfterPublish({ id: topicId, communityId: commSlug, title, body, image: payload.image });
       form.reset();
-      clearImage();
+      clearMedia();
+      syncInlineComposerUi();
       collapseInlineComposer();
-      if (typeof onPublished === "function") await onPublished();
+      share.showToast("Post publicado na rede!");
+      if (typeof onPublished === "function") {
+        onPublished(signed);
+      } else {
+        location.reload();
+      }
     } catch (err) {
-      share.showToast(`Erro: ${err.message}`, "error");
+      share.showToast(`Erro ao publicar: ${err.message}`, "error");
     } finally {
       if (btn) {
         btn.disabled = false;

@@ -88,7 +88,7 @@ test("people-index - demo only in tour when mesh populated", async () => {
   });
   const sections = await peopleIndex.buildPeopleSections();
   assert.ok(sections.mesh.length >= 1);
-  assert.ok(sections.tour.length >= 1);
+  assert.equal(sections.tour.length, 0, 'perfis demo foram removidos do índice');
   const demoInMesh = sections.mesh.some((p) => p.source === "demo");
   assert.equal(demoInMesh, false);
 });

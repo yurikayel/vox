@@ -156,8 +156,7 @@ export async function showHome(feed = "for-you") {
     const finalTopics = mod.filterFeedPosts(withWelcome);
 
     main.innerHTML = "";
-    if (demo && !localPosts.length) render.renderDemoBanner(main);
-    else if (gateway) render.renderGatewayBanner(main, gateway);
+    if (gateway) render.renderGatewayBanner(main, gateway);
     render.renderFeed(main, finalTopics, { activeFeed, userRouteId: user || "", externalSubs });
   } catch {
     main.innerHTML = "";
@@ -170,7 +169,6 @@ export async function showHome(feed = "for-you") {
       ? filtered
       : [welcomeTopic, ...filtered];
     const finalTopics = mod.filterFeedPosts(withWelcome);
-    render.renderDemoBanner(main);
     render.renderFeed(main, finalTopics, { activeFeed, userRouteId: user || "", externalSubs });
   }
 
@@ -260,14 +258,12 @@ export async function showCommunities() {
       ...(remoteItems || []).filter((c) => !seen.has(c.id)).map((c) => ({ ...c, isLocalP2p: false })),
     ];
     main.innerHTML = "";
-    if (demo && !localComms.length) render.renderDemoBanner(main);
-    else if (gateway) render.renderGatewayBanner(main, gateway);
+    if (gateway) render.renderGatewayBanner(main, gateway);
     render.renderHome(main, merged);
   } catch {
     main.innerHTML = "";
     const localComms = await cacheNode.getLocalCommunities();
     const fb = mock.mockCommunities();
-    render.renderDemoBanner(main);
     render.renderHome(main, [...localComms, ...fb.items]);
   }
 }

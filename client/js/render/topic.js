@@ -55,11 +55,18 @@ export function renderTopic(main, topicId, topic, replies, { topicData = null, i
   const topicAuthorMeta = renderPostAuthorMetaLines(author, labels, timeLabel, { ts: topicTs });
   const ownerMenuHeader = renderPostOwnerMenu(topic);
 
+    const topicVideo = topic?.video || topicData?.video || "";
+  const topicAudio = topic?.audio || topicData?.audio || "";
   const topicImage = topic?.image || topicData?.image || "";
   const topicImageAlt = topic?.imageAlt || topicData?.imageAlt || topic?.title || "Foto da publicação";
-  const imageHtml = topicImage
-    ? `<div class="post-media-container post-media-hero"><img class="post-media post-media-hero-img" src="${escapeHtml(topicImage)}" alt="${escapeHtml(topicImageAlt)}" />${renderPhotoTagLayerHtml(topic || topicData || {}, { isOwn: Boolean(topic?.isOwnLocalPost) })}</div>`
-    : "";
+  let imageHtml = "";
+  if (topicVideo) {
+    imageHtml = `<div class="post-media-container post-media-hero post-media-video-container" style="background:#000; border-radius:var(--radius-sm); overflow:hidden; margin-bottom:12px;"><video class="post-media-video" src="${escapeHtml(topicVideo)}" controls playsinline style="width:100%; max-height:480px; display:block;"></video></div>`;
+  } else if (topicAudio) {
+    imageHtml = `<div class="post-media-audio-card" style="margin:10px 0 14px; padding:12px 14px; background:var(--surface-soft); border-radius:var(--radius-sm); border:1px solid var(--border);"><div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;"><span style="font-size:1.1rem;">🎙️</span><strong style="font-size:0.85rem;">Recado de Voz</strong> <span class="badge-pill" style="font-size:0.7rem; padding:2px 6px;">Lo-Fi 48k</span></div><audio class="post-media-audio" src="${escapeHtml(topicAudio)}" controls style="width:100%;"></audio></div>`;
+  } else if (topicImage) {
+    imageHtml = `<div class="post-media-container post-media-hero"><img class="post-media post-media-hero-img" src="${escapeHtml(topicImage)}" alt="${escapeHtml(topicImageAlt)}" />${renderPhotoTagLayerHtml(topic || topicData || {}, { isOwn: Boolean(topic?.isOwnLocalPost) })}</div>`;
+  }
 
   const baseLikes = Number(topic?.likesCount) || 0;
   const liked = social.isLiked(topicId);
