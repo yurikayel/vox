@@ -17,10 +17,11 @@ export function escapeHtml(s) {
 export function shortId(id) {
   if (!id) return "—";
   if (isWelcomeRouteId(id)) return "vox";
-  if (id.length <= 10) return id;
-  if (id.startsWith("vx_")) return id.slice(0, 9);
-  if (id.startsWith("0x")) return id.slice(0, 8);
-  return id.slice(0, 8);
+  if (id.startsWith("vx_")) return id.length <= 10 ? id : id.slice(0, 9);
+  if (id.startsWith("0x")) return id.length <= 10 ? id : id.slice(0, 8);
+  if (id.startsWith("did:")) return id.slice(0, 12);
+  if (id.length <= 32) return id;
+  return id.slice(0, 24) + "…";
 }
 
 function normAuthorToken(s) {
@@ -32,7 +33,7 @@ function normAuthorToken(s) {
 
 function resolveAuthorFullName(routeId, override, isOwnLocalPost) {
   const rawOverride = String(override || "").trim();
-  if (rawOverride && !rawOverride.startsWith("vx_") && !rawOverride.startsWith("0x")) {
+  if (rawOverride && !rawOverride.startsWith("vx_") && !rawOverride.startsWith("0x") && !rawOverride.startsWith("did:")) {
     return rawOverride;
   }
   const myId = localAccount.getCachedRouteIdSync();
@@ -43,13 +44,16 @@ function resolveAuthorFullName(routeId, override, isOwnLocalPost) {
   }
   if (routeId) {
     const dirName = profileDirectory.getAuthorDisplaySync(routeId);
-    if (dirName && !dirName.startsWith("vx_") && !dirName.startsWith("0x")) return dirName;
+    if (dirName && !dirName.startsWith("vx_") && !dirName.startsWith("0x") && !dirName.startsWith("did:")) return dirName;
     if (typeof localAccount.listVaultAccountsSync === "function") {
       const match = localAccount.listVaultAccountsSync().find((v) => v.routeId === routeId);
       if (match?.displayName && !match.displayName.startsWith("vx_")) return match.displayName;
     }
     const mockName = mock.getAuthorDisplay(routeId);
     if (mockName) return mockName;
+    if (!routeId.startsWith("vx_") && !routeId.startsWith("0x") && !routeId.startsWith("did:")) {
+      return routeId;
+    }
   }
   return "";
 }
@@ -63,9 +67,9 @@ function resolveAuthorHandle(routeId) {
 
 function formatAuthorResult(routeId, fullName, profileHandle) {
   const shortRoute = routeId ? shortId(routeId) : "";
-  const firstName = (fullName.split(/\s+/).filter(Boolean)[0] || fullName || "").trim();
+  const displayName = String(fullName || "").trim();
 
-  if (!firstName && routeId) {
+  if (!displayName && routeId) {
     return {
       primary: shortRoute || "—",
       secondaryHandle: "",
@@ -75,12 +79,12 @@ function formatAuthorResult(routeId, fullName, profileHandle) {
     };
   }
 
-  const primary = firstName || shortRoute || "—";
+  const primary = displayName || shortRoute || "—";
   let secondaryHandle = "";
   if (profileHandle) {
-    secondaryHandle = profileHandle;
-  } else if (routeId && normAuthorToken(shortRoute) !== normAuthorToken(firstName)) {
-    secondaryHandle = shortRoute;
+    secondaryHandle = profileHandle.replace(/^@/, "");
+  } else if (routeId && normAuthorToken(shortRoute) !== normAuthorToken(displayName)) {
+    secondaryHandle = shortRoute.replace(/^@/, "");
   }
 
   if (
@@ -91,14 +95,14 @@ function formatAuthorResult(routeId, fullName, profileHandle) {
     secondaryHandle = "";
   }
 
-  const authorDisplay = fullName || primary;
-  const authorHandle = profileHandle || secondaryHandle || shortRoute;
+  const authorDisplay = displayName || primary;
+  const authorHandle = secondaryHandle || (profileHandle ? profileHandle.replace(/^@/, "") : shortRoute);
 
   return { primary, secondaryHandle, authorDisplay, authorHandle, routeTitle: routeId };
 }
 
 /** Nome + @handle ou ID curto uma vez (title = routeId completo). */
-export function resolvePostAuthorLabels(author, { authorDisplay: override = "", isOwnLocalPost = false } = {}) {
+export function resolvePostAuthorLabels(author, { authorDisplay: override = "", authorHandle: optHandle = "", isOwnLocalPost = false } = {}) {
   const routeId = String(author || "");
   if (isWelcomeRouteId(routeId)) {
     return {
@@ -110,7 +114,7 @@ export function resolvePostAuthorLabels(author, { authorDisplay: override = "", 
     };
   }
   const fullName = resolveAuthorFullName(routeId, override, isOwnLocalPost);
-  const profileHandle = resolveAuthorHandle(routeId);
+  const profileHandle = optHandle || resolveAuthorHandle(routeId);
   return formatAuthorResult(routeId, fullName, profileHandle);
 }
 
@@ -157,8 +161,9 @@ export function postTimeParts(ts) {
 export function renderPostAuthorMetaLines(author, labels, timeLabel, options = {}) {
   const { primary, secondaryHandle, routeTitle } = labels;
   const titleAttr = routeTitle ? ` title="${escapeHtml(routeTitle)}"` : "";
-  const handleHtml = secondaryHandle
-    ? `<span class="post-handle"${titleAttr}>@${escapeHtml(secondaryHandle)}</span><span class="post-dot">·</span>`
+  const cleanHandle = (secondaryHandle || "").replace(/^@/, "");
+  const handleHtml = cleanHandle
+    ? `<span class="post-handle"${titleAttr}>@${escapeHtml(cleanHandle)}</span>`
     : "";
   const parts = postTimeParts(options?.ts);
   const absDate = options?.absDate || parts.absDate;
@@ -167,9 +172,14 @@ export function renderPostAuthorMetaLines(author, labels, timeLabel, options = {
     : parts.titleAttr;
   const dateSuffix = absDate ? `<span class="post-time-abs"> · ${escapeHtml(absDate)}</span>` : "";
   return `<div class="post-header-meta">
-          <a class="post-author" href="#/u/${encodeURIComponent(author)}"${titleAttr}>${escapeHtml(primary)}</a>
-          ${handleHtml}
-          <span class="post-time"${timeTitle}>${escapeHtml(timeLabel)}${dateSuffix}</span>
+          <div class="post-author-line">
+            <a class="post-author" href="#/u/${encodeURIComponent(author)}"${titleAttr}>${escapeHtml(primary)}</a>
+          </div>
+          <div class="post-meta-sub">
+            ${handleHtml}
+            ${handleHtml ? '<span class="post-dot">·</span>' : ''}
+            <span class="post-time"${timeTitle}>${escapeHtml(timeLabel)}${dateSuffix}</span>
+          </div>
         </div>`;
 }
 

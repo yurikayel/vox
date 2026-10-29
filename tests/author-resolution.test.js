@@ -16,7 +16,7 @@ test("author-resolution - resolve display name da conta ativa sem exibir rota vx
   // Sem override e sem isOwnLocalPost explícito: deve detectar rota própria pelo cache
   const labelsAuto = util.resolvePostAuthorLabels(acc.routeId);
   assert.equal(labelsAuto.authorDisplay, "Militante Soberano");
-  assert.equal(labelsAuto.primary, "Militante");
+  assert.equal(labelsAuto.primary, "Militante Soberano");
 
   // Se override vier com rota bruta 'vx_...', deve ignorar e resolver o nome real
   const labelsIgnoredRaw = util.resolvePostAuthorLabels(acc.routeId, { authorDisplay: acc.routeId });
@@ -89,4 +89,16 @@ test("profile - cabeçalho exibe display name como título principal h1 e handle
   });
   assert.ok(main.innerHTML.includes('<h1 class="profile-grid-name">Yuri Kayel</h1>'));
   assert.ok(main.innerHTML.includes('<p class="profile-grid-handle meta">@yuri_vox</p>'));
+});
+
+
+test("author-resolution - nao trunca nomes como The Intercept para The Inte", () => {
+  const labels = util.resolvePostAuthorLabels("The Intercept", {
+    authorDisplay: "The Intercept",
+    authorHandle: "@theintercept.com",
+  });
+  assert.equal(labels.primary, "The Intercept");
+  assert.equal(labels.authorDisplay, "The Intercept");
+  assert.equal(labels.authorHandle, "theintercept.com");
+  assert.equal(labels.secondaryHandle, "theintercept.com");
 });

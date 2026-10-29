@@ -55,7 +55,7 @@
   --success-soft: rgba(31, 168, 85, 0.14);
   --radius: 12px;
   --radius-sm: 8px;
-  --feed-max: 500px;
+  --feed-max: 640px;
   --feed-post-gap: 2.7rem;
   --sidebar-width: 240px;
   --sidebar-width-collapsed: 72px;
@@ -1014,7 +1014,7 @@ main#app-main,
 
 /* Feed chrome — abas, stories e composer alinhados à coluna */
 .feed-chrome {
-  max-width: var(--feed-max, 500px);
+  max-width: var(--feed-max, 640px);
   margin: 0 auto 0.5rem;
   padding: 0 2px;
 }
@@ -1026,7 +1026,7 @@ main#app-main,
 }
 
 .feed-notice {
-  max-width: var(--feed-max, 500px);
+  max-width: var(--feed-max, 640px);
   margin: 0 auto 0.65rem;
   padding: 0 4px;
   font-size: 0.74rem;
@@ -1294,7 +1294,7 @@ main#app-main,
   border: 1px solid var(--outline);
   border-radius: var(--radius);
   margin: 0 auto;
-  max-width: var(--feed-max, 500px);
+  max-width: var(--feed-max, 640px);
   width: 100%;
   box-sizing: border-box;
   overflow: hidden;
@@ -2079,7 +2079,7 @@ body.post-more-sheet-open {
   border-radius: 0;
   padding: 0;
   background: transparent;
-  max-width: min(var(--feed-max, 500px), 100%);
+  max-width: min(var(--feed-max, 640px), 100%);
   overflow: visible;
 }
 
@@ -2285,11 +2285,26 @@ body.post-lightbox-open {
 
 .post-header-meta {
   display: flex;
-  align-items: baseline;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.post-header-meta .post-author-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.post-header-meta .post-meta-sub {
+  display: flex;
+  align-items: center;
   gap: 5px;
   min-width: 0;
-  flex-wrap: wrap;
-  line-height: 1.3;
+  line-height: 1.1;
 }
 
 .post-header-meta .post-author {
@@ -3234,7 +3249,7 @@ p.profile-grid-handle {
   border-radius: 0;
   overflow: visible;
   box-shadow: none;
-  max-width: var(--feed-max, 500px);
+  max-width: var(--feed-max, 640px);
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -4457,7 +4472,7 @@ p.profile-grid-handle {
   border: 1px dashed var(--outline);
   border-radius: var(--radius);
   margin: 1rem auto;
-  max-width: var(--feed-max, 500px);
+  max-width: var(--feed-max, 640px);
   box-shadow: var(--elevation-1);
 }
 
@@ -6133,8 +6148,8 @@ p.profile-grid-handle {
 /* IG-like photo chrome (ritmo, sem marca Instagram) */
 .post-ig-header.post-media-header {
   position: absolute;
-  top: auto;
-  bottom: 0;
+  top: 0;
+  bottom: auto;
   left: 0;
   right: 0;
   z-index: 4;
@@ -6142,12 +6157,40 @@ p.profile-grid-handle {
   display: flex;
   flex-wrap: nowrap;
   align-items: center;
-  gap: 5px;
+  justify-content: space-between;
+  gap: 8px;
   min-height: 0;
   margin: 0;
-  padding: 14px 8px 3px;
-  background: linear-gradient(to top, rgba(6, 10, 18, 0.78) 0%, rgba(6, 10, 18, 0.35) 58%, rgba(6, 10, 18, 0) 100%);
+  padding: 10px 12px 24px;
+  background: linear-gradient(to bottom, rgba(6, 10, 18, 0.88) 0%, rgba(6, 10, 18, 0.45) 60%, rgba(6, 10, 18, 0) 100%);
   white-space: nowrap;
+}
+
+.post-media-header-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+  line-height: 1.2;
+}
+
+.post-media-header-name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.post-media-header-handle-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  font-size: 0.72rem;
+  line-height: 1.1;
+  color: rgba(255, 255, 255, 0.88);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75);
 }
 
 .post-ig-header .post-media-header-avatar {
@@ -6198,7 +6241,7 @@ p.profile-grid-handle {
 .post-ig-header-uf {
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 4.5rem;
+  max-width: 16rem;
 }
 
 .post-ig-header-end {
@@ -6268,6 +6311,41 @@ p.profile-grid-handle {
   align-items: center;
   justify-content: space-between;
   padding: 4px 10px 1px;
+}
+
+.post-layout-photo .post-media-hero .post-ig-toolbar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 12px 10px;
+  background: linear-gradient(to top, rgba(6, 10, 18, 0.9) 0%, rgba(6, 10, 18, 0.45) 60%, rgba(6, 10, 18, 0) 100%);
+  pointer-events: auto;
+}
+
+.post-layout-photo .post-media-hero .post-ig-toolbar .action-btn {
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
+}
+
+.post-layout-photo .post-media-hero .post-ig-toolbar .action-icon {
+  stroke: #fff;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.75));
+}
+
+.post-layout-photo .post-media-hero .post-ig-toolbar .action-count {
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
+}
+
+.post-layout-photo .post-media-hero .post-ig-toolbar .btn-like.active .action-icon,
+.post-layout-photo .post-media-hero .post-ig-toolbar .btn-save.active .action-icon {
+  fill: var(--danger, #f43f5e);
+  stroke: var(--danger, #f43f5e);
 }
 
 .post-ig-toolbar-left {
