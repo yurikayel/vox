@@ -60,15 +60,8 @@ function indexMeshCards(map) {
   }
 }
 
-function indexDemo(map, intoTourOnly) {
-  for (const [routeId, prof] of Object.entries(mock.MOCK_DEMO_PROFILES || {})) {
-    const entry = { routeId, name: prof.name, handle: prof.handle || "", source: "demo" };
-    if (intoTourOnly) {
-      if (!map.has(routeId)) map.set(routeId, entry);
-    } else if (!map.has(routeId)) {
-      map.set(routeId, entry);
-    }
-  }
+function indexDemo() {
+  // Perfis mock removidos: nenhuma conta sintética é indexada no diretório
 }
 
 export async function buildPeopleIndex() {

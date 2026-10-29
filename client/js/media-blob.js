@@ -109,6 +109,13 @@ export function attachMedia(post, mediaBlob) {
   if (!mediaBlob || typeof mediaBlob !== "object") return post;
   if (!post.mediaRef || post.mediaRef.hash !== mediaBlob.hash) return post;
 
+  const mime = String(mediaBlob.mime || post.mediaRef.mime || "").toLowerCase();
+  if (mime.startsWith("video/")) {
+    return { ...post, video: mediaBlob.data };
+  }
+  if (mime.startsWith("audio/")) {
+    return { ...post, audio: mediaBlob.data };
+  }
   return {
     ...post,
     image: mediaBlob.data,
