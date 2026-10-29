@@ -235,9 +235,8 @@ function renderProfileGridHeader(
   const bioHtml = profileBio ? `<p class="profile-grid-bio desc">${escapeHtml(profileBio)}</p>` : "";
   const pixBadge = renderProfilePixBadge(pixKeyMasked, pixKeyRaw);
   const githubBadge = renderProfileGithubBadge(githubHandle);
-  const nameHtml = displayName
-    ? `<p class="profile-grid-display-name">${escapeHtml(displayName)}</p>`
-    : "";
+  const primaryName = displayName || (isWelcomeRouteId(address) ? "Vox" : handleLabel);
+  const secondaryHandle = displayName ? handleLabel : "";
 
   const conflictBanner = isConflict
     ? `<div class="card error profile-grid-conflict">
@@ -255,8 +254,8 @@ function renderProfileGridHeader(
         ${renderProfileGridStats(postsCount, statsData, address, isCurrentWallet)}
       </div>
       <div class="profile-grid-identity">
-        <h1 class="profile-grid-handle">${escapeHtml(handleLabel)}${renderOfficialPlatformBadge(address)}</h1>
-        ${nameHtml}
+        <h1 class="profile-grid-name">${escapeHtml(primaryName)}${renderOfficialPlatformBadge(address)}</h1>
+        ${secondaryHandle ? `<p class="profile-grid-handle meta">${escapeHtml(secondaryHandle)}</p>` : ""}
         ${bioHtml}
         ${isCurrentWallet ? `<p class="profile-grid-self-badge meta">Sua conta neste aparelho</p>` : ""}
         ${(pixBadge || githubBadge) ? `<div class="profile-grid-meta-badges">${pixBadge}${githubBadge}</div>` : ""}

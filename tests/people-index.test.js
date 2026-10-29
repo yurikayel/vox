@@ -92,3 +92,43 @@ test("people-index - demo only in tour when mesh populated", async () => {
   const demoInMesh = sections.mesh.some((p) => p.source === "demo");
   assert.equal(demoInMesh, false);
 });
+
+test("people-index - busca flexível por @vx_... rota curta e nome de exibição local", async () => {
+  localStorage.clear();
+  contacts.__resetContactsForTests();
+  const acc = await localAccount.ensureLocalAccount();
+  localAccount.setDisplayName("Yuri Kayel");
+
+  // 1. Busca pelo prefixo da rota com '@' (ex: @vx_jn2jPl)
+  const shortWithAt = `@${acc.routeId.slice(0, 9)}`;
+  const byRouteWithAt = await peopleIndex.searchPeople(shortWithAt);
+  assert.ok(byRouteWithAt.some((p) => p.routeId === acc.routeId));
+
+  // 2. Busca pelo prefixo da rota sem '@'
+  const shortWithoutAt = acc.routeId.slice(0, 9);
+  const byRouteWithoutAt = await peopleIndex.searchPeople(shortWithoutAt);
+  assert.ok(byRouteWithoutAt.some((p) => p.routeId === acc.routeId));
+
+  // 3. Busca por nome próprio
+  const byName = await peopleIndex.searchPeople("Yuri Kayel");
+  assert.ok(byName.some((p) => p.routeId === acc.routeId));
+
+  // 4. Busca por primeiro nome
+  const byFirstName = await peopleIndex.searchPeople("Yuri");
+  assert.ok(byFirstName.some((p) => p.routeId === acc.routeId));
+
+  // 5. parseConnectTarget com '@vx_...'
+  assert.equal(peopleIndex.parseConnectTarget(`@${acc.routeId}`), acc.routeId);
+});
+
+test("people-index - indexa contas do cofre e exibe em contatos", async () => {
+  localStorage.clear();
+  contacts.__resetContactsForTests();
+  const accVault = await localAccount.createAdditionalAccount({ displayName: "Clarice Co-Irmã" });
+
+  const sections = await peopleIndex.buildPeopleSections();
+  assert.ok(sections.contacts.some((p) => p.routeId === accVault.routeId));
+
+  const found = await peopleIndex.searchPeople("Clarice");
+  assert.ok(found.some((p) => p.routeId === accVault.routeId));
+});
