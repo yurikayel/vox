@@ -60,7 +60,7 @@ export function initPostMediaLightbox() {
     if (e.target.closest(".photo-tag-pins, .photo-tag-bar, .btn-photo-tag")) return;
     if (e.target.closest(".post-overlay")) return;
     if (e.target.closest(".post-actions-overlay")) return;
-    if (e.target.closest(".post-media-header")) return;
+    if (e.target.closest(".post-media-header, .post-ig-toolbar, .post-toolbar")) return;
     if (e.target.closest(".btn-post-more-menu")) return;
     e.preventDefault();
     openPostMediaLightbox(trigger.dataset.mediaSrc || "", trigger.dataset.mediaAlt || "");
