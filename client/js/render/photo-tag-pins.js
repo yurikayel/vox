@@ -20,14 +20,8 @@ export function renderPhotoTagPinsHtml(tags, { visible = true } = {}) {
 export function renderPhotoTagBarHtml(post, { isOwn = false } = {}) {
   const tags = photoTags.listTags(post);
   const n = tags.length;
-  const vis = n
-    ? `<button type="button" class="btn-photo-tag-vis" data-id="${escapeHtml(post.id)}" aria-pressed="true">Marcas (${n})</button>`
-    : "";
-  const mark = isOwn
-    ? `<button type="button" class="btn-photo-tag" data-id="${escapeHtml(post.id)}" title="${escapeHtml(photoTags.TAGS_HINT)}">Marcar</button>`
-    : "";
-  if (!vis && !mark) return "";
-  return `<div class="photo-tag-bar">${mark}${vis}</div>`;
+  if (!n) return "";
+  return `<div class="photo-tag-bar"><button type="button" class="btn-photo-tag-vis" data-id="${escapeHtml(post.id)}" aria-pressed="true">Marcas (${n})</button></div>`;
 }
 
 export function renderPhotoTagLayerHtml(post, { isOwn = false } = {}) {
