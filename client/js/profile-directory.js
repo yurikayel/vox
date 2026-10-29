@@ -105,7 +105,8 @@ export function getAuthorDisplaySync(routeId) {
   if (mockName) return mockName;
   const myId = localAccount.getCachedRouteIdSync();
   if (myId === routeId) {
-    return localAccount.getDisplayName() || routeId.slice(0, 10);
+    const selfName = localAccount.getDisplayName() || localAccount.getProfileEnrichment()?.displayName || "";
+    if (selfName) return selfName;
   }
   if (typeof localAccount.listVaultAccountsSync === "function") {
     const vault = localAccount.listVaultAccountsSync();
@@ -124,7 +125,7 @@ export function getAuthorAvatarSync(routeId) {
   const myId = localAccount.getCachedRouteIdSync();
   if (myId === routeId) {
     const e = localAccount.getProfileEnrichment();
-    return e?.avatarUrl || "";
+    if (e?.avatarUrl) return e.avatarUrl;
   }
   if (typeof localAccount.listVaultAccountsSync === "function") {
     const vault = localAccount.listVaultAccountsSync();
