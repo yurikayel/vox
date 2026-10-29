@@ -7,9 +7,14 @@ import * as cacheNode from "./cache-node.js";
 import * as wallet from "./wallet.js";
 import * as postOwnership from "./post-ownership.js";
 import * as mediaBlob from "./media-blob.js";
+import * as photoTags from "./photo-tags.js";
+import { openPhotoTagPicker } from "./app/photo-tag-picker.js";
+import { escapeHtml } from "./render/util.js";
 
 let inlineComposerImageDataUrl = "";
 let inlineComposerMedia = { type: "", dataUrl: "", byteLength: 0 };
+let inlineComposerAspectRatio = "original";
+let inlineComposerPhotoTags = [];
 
 export function isInlineComposerActive() {
   const root = document.getElementById("feed-inline-composer");
@@ -198,6 +203,8 @@ export function attachInlineComposerHandlers(onPublished) {
     cleanupRecordingState();
     rawSourceFile = null;
     activeLofiFilter = "normal";
+    inlineComposerAspectRatio = "original";
+    inlineComposerPhotoTags = [];
     inlineComposerMedia = { type: "", dataUrl: "", byteLength: 0 };
     inlineComposerImageDataUrl = "";
     if (fileInput) fileInput.value = "";
@@ -207,6 +214,8 @@ export function attachInlineComposerHandlers(onPublished) {
     if (previewImg) {
       previewImg.removeAttribute("src");
       previewImg.classList.add("hidden");
+      previewImg.classList.remove("composer-aspect-1-1", "composer-aspect-4-3", "composer-aspect-16-9");
+      previewImg.classList.add("composer-aspect-original");
     }
     if (previewAudio) {
       previewAudio.removeAttribute("src");
@@ -218,6 +227,12 @@ export function attachInlineComposerHandlers(onPublished) {
     }
     const filterBar = document.getElementById("lofi-filter-bar");
     if (filterBar) filterBar.style.display = "flex";
+    const aspectBar = document.getElementById("composer-aspect-bar");
+    if (aspectBar) aspectBar.style.display = "none";
+    const tagBar = document.getElementById("composer-tag-bar");
+    if (tagBar) tagBar.style.display = "none";
+    const tagsChips = document.getElementById("inline-composer-tags-chips");
+    if (tagsChips) tagsChips.innerHTML = "";
     const badge = document.getElementById("lofi-weight-badge");
     if (badge) badge.textContent = "⚡ ~45 KB (100% Grátis)";
   };
@@ -259,12 +274,25 @@ export function attachInlineComposerHandlers(onPublished) {
     rawSourceFile = file;
     inlineComposerMedia = { type: "image", dataUrl: "", byteLength: file.size };
     activeLofiFilter = "normal";
+    inlineComposerAspectRatio = "original";
+    inlineComposerPhotoTags = [];
     previewImg?.classList.remove("hidden");
     const filterBar = document.getElementById("lofi-filter-bar");
     if (filterBar) filterBar.style.display = "flex";
     filterBar?.querySelectorAll(".lofi-filter-btn").forEach((b) => {
       b.classList.toggle("active", b.dataset.filter === "normal");
     });
+    const aspectBar = document.getElementById("composer-aspect-bar");
+    if (aspectBar) aspectBar.style.display = "flex";
+    aspectBar?.querySelectorAll(".composer-aspect-btn").forEach((b) => {
+      b.classList.toggle("active", b.dataset.aspect === "original");
+    });
+    const tagBar = document.getElementById("composer-tag-bar");
+    if (tagBar) tagBar.style.display = "flex";
+    const tagsChips = document.getElementById("inline-composer-tags-chips");
+    if (tagsChips) tagsChips.innerHTML = "";
+    previewImg?.classList.remove("composer-aspect-1-1", "composer-aspect-4-3", "composer-aspect-16-9");
+    previewImg?.classList.add("composer-aspect-original");
     previewWrap?.classList.remove("hidden");
     await renderLofiPreview();
     syncInlineComposerUi();
@@ -329,6 +357,49 @@ export function attachInlineComposerHandlers(onPublished) {
     await renderLofiPreview();
   });
 
+  const aspectBar = document.getElementById("composer-aspect-bar");
+  aspectBar?.addEventListener("click", (e) => {
+    const btn = e.target.closest(".composer-aspect-btn");
+    if (!btn || inlineComposerMedia.type !== "image") return;
+    e.preventDefault();
+    aspectBar.querySelectorAll(".composer-aspect-btn").forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+    inlineComposerAspectRatio = btn.dataset.aspect || "original";
+    if (previewImg) {
+      previewImg.classList.remove("composer-aspect-original", "composer-aspect-1-1", "composer-aspect-4-3", "composer-aspect-16-9");
+      previewImg.classList.add(`composer-aspect-${inlineComposerAspectRatio.replace(":", "-")}`);
+    }
+  });
+
+  const tagPeopleBtn = document.getElementById("btn-inline-tag-people");
+  const tagsChips = document.getElementById("inline-composer-tags-chips");
+
+  const renderTagChips = () => {
+    if (!tagsChips) return;
+    tagsChips.innerHTML = inlineComposerPhotoTags
+      .map((t, idx) => `<span class="inline-composer-tag-chip"><span>${escapeHtml(t.label || t.targetId)}</span><button type="button" class="btn-remove-tag" data-idx="${idx}" aria-label="Remover marca">✕</button></span>`)
+      .join("");
+  };
+
+  tagPeopleBtn?.addEventListener("click", (e) => {
+    e.preventDefault();
+    openPhotoTagPicker("composer", 50, 50, (picked) => {
+      inlineComposerPhotoTags.push({ x: 50, y: 50, targetId: picked.targetId, label: picked.label });
+      renderTagChips();
+    });
+  });
+
+  tagsChips?.addEventListener("click", (e) => {
+    const removeBtn = e.target.closest(".btn-remove-tag");
+    if (!removeBtn) return;
+    e.preventDefault();
+    const idx = Number(removeBtn.dataset.idx);
+    if (!Number.isNaN(idx)) {
+      inlineComposerPhotoTags.splice(idx, 1);
+      renderTagChips();
+    }
+  });
+
   removeBtn?.addEventListener("click", (e) => {
     e.preventDefault();
     clearMedia();
@@ -370,9 +441,10 @@ export function attachInlineComposerHandlers(onPublished) {
     const bodyRaw = document.getElementById("inline-topic-body")?.value?.trim() || "";
     const commSlug =
       document.getElementById("inline-topic-comm")?.value?.trim().toLowerCase() || "geral";
-    if (!bodyRaw && !inlineComposerMedia.dataUrl) return;
+    const hasMedia = Boolean(inlineComposerImageDataUrl || inlineComposerMedia.dataUrl);
+    if (!bodyRaw && !hasMedia) return;
 
-    const { title, body } = postOwnership.deriveTopicTitleFromBody(bodyRaw || "Mídia publicada no feed");
+    const { title, body } = postOwnership.deriveTopicTitleFromBody(bodyRaw || "");
 
     if (btn) {
       btn.disabled = true;
@@ -384,12 +456,16 @@ export function attachInlineComposerHandlers(onPublished) {
         id: topicId,
         type: "topic",
         communityId: commSlug,
-        title,
-        body,
+        title: title || "",
+        body: body || "",
       };
-      if (inlineComposerMedia.type === "image" && inlineComposerImageDataUrl) {
-        payload.image = inlineComposerImageDataUrl;
-        payload.imageAlt = title;
+      if (inlineComposerMedia.type === "image" && (inlineComposerImageDataUrl || inlineComposerMedia.dataUrl)) {
+        payload.image = inlineComposerImageDataUrl || inlineComposerMedia.dataUrl;
+        payload.imageAlt = title || "Foto";
+        payload.aspectRatio = inlineComposerAspectRatio || "original";
+        if (inlineComposerPhotoTags.length > 0) {
+          payload.photoTags = [...inlineComposerPhotoTags];
+        }
       } else if (inlineComposerMedia.type === "audio" && inlineComposerMedia.dataUrl) {
         payload.audio = inlineComposerMedia.dataUrl;
       } else if (inlineComposerMedia.type === "video" && inlineComposerMedia.dataUrl) {
@@ -398,6 +474,9 @@ export function attachInlineComposerHandlers(onPublished) {
 
       const signed = await localAccount.signPayload(payload);
       await cacheNode.saveLocalPost(signed);
+      if (payload.photoTags?.length) {
+        photoTags.setLocalTags(signed.id, payload.photoTags);
+      }
 
       const { detachedPost, mediaBlob: blob } = await mediaBlob.detachMedia(signed);
       if (blob) {

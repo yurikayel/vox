@@ -60,14 +60,14 @@ const PROFILE_SAVED_TAB_ICON = `<svg class="profile-grid-tab-icon" aria-hidden="
 function renderProfileGridTabs(address, currentTab, showAbout, showSaved) {
   const href = (tab) => `#/u/${encodeURIComponent(address)}?tab=${tab}`;
   const saved = showSaved
-    ? `<a href="${href("saved")}" class="profile-grid-tab ${currentTab === "saved" ? "active" : ""}" aria-label="Salvos">${PROFILE_SAVED_TAB_ICON}</a>`
+    ? `<a href="${href("saved")}" class="profile-grid-tab ${currentTab === "saved" ? "active" : ""}" data-tab="saved" aria-label="Salvos">${PROFILE_SAVED_TAB_ICON}</a>`
     : "";
-  const following = `<a href="${href("following")}" class="profile-grid-tab profile-grid-tab-text ${currentTab === "following" || currentTab === "followers" ? "active" : ""}">Amizades</a>`;
+  const following = `<a href="${href("following")}" class="profile-grid-tab profile-grid-tab-text ${currentTab === "following" || currentTab === "followers" ? "active" : ""}" data-tab="following">Amizades</a>`;
   const about = showAbout
-    ? `<a href="${href("about")}" class="profile-grid-tab profile-grid-tab-text ${currentTab === "about" ? "active" : ""}">Sobre</a>`
+    ? `<a href="${href("about")}" class="profile-grid-tab profile-grid-tab-text ${currentTab === "about" ? "active" : ""}" data-tab="about">Sobre</a>`
     : "";
   return `<nav class="profile-grid-tabs" aria-label="Seções do perfil">
-      <a href="${href("posts")}" class="profile-grid-tab ${currentTab === "posts" ? "active" : ""}" aria-label="Publicações">${PROFILE_GRID_TAB_ICON}</a>
+      <a href="${href("posts")}" class="profile-grid-tab ${currentTab === "posts" ? "active" : ""}" data-tab="posts" aria-label="Publicações">${PROFILE_GRID_TAB_ICON}</a>
       ${following}
       ${saved}
       ${about}
@@ -502,7 +502,7 @@ export function renderProfile(main, address, memberships = [], isCurrentWallet =
   if (currentTab === "starred" || currentTab === "communities") currentTab = "about";
   if (currentTab === "saved" && !isCurrentWallet) currentTab = "posts";
 
-  let html = `<div class="profile-grid-layout">`;
+  let html = `<div class="profile-grid-layout" data-profile-address="${escapeHtml(address)}">`;
   html += renderProfileGridHeader(
     address,
     isCurrentWallet,
@@ -521,12 +521,64 @@ export function renderProfile(main, address, memberships = [], isCurrentWallet =
   );
 
   html += renderProfileGridTabs(address, currentTab, showAboutTab, isCurrentWallet);
+  html += `<div class="profile-tab-content-slot" id="profile-tab-content">`;
+  html += renderProfileTabContent(currentTab, {
+    address,
+    isCurrentWallet,
+    handle,
+    authorPostList,
+    finalPinned,
+    savedList,
+    displayName,
+    finalReadme,
+    hasWallet,
+    balance,
+    pixKey,
+    finalGithub,
+    oauthProvider,
+    isBlocked,
+    isMuted,
+    meshDiscoverable,
+    starredList,
+    memberships,
+    activeTab,
+  });
+  html += `</div>`;
+  html += `</div>`;
+  main.innerHTML = html;
+}
 
-  if (currentTab === "posts") {
+export function renderProfileTabContent(currentTab = "posts", {
+  address = "",
+  isCurrentWallet = false,
+  handle = "",
+  authorPostList = [],
+  finalPinned = "",
+  savedList = [],
+  displayName = "",
+  finalReadme = "",
+  hasWallet = false,
+  balance = "0.000",
+  pixKey = "",
+  finalGithub = "",
+  oauthProvider = "",
+  isBlocked = false,
+  isMuted = false,
+  meshDiscoverable = false,
+  starredList = [],
+  memberships = [],
+  activeTab = "posts",
+} = {}) {
+  let normalizedTab = currentTab || "posts";
+  if (normalizedTab === "starred" || normalizedTab === "communities") normalizedTab = "about";
+  if (normalizedTab === "saved" && !isCurrentWallet) normalizedTab = "posts";
+
+  let html = "";
+  if (normalizedTab === "posts") {
     html += renderProfilePostGrid(authorPostList, finalPinned);
-  } else if (currentTab === "following" || currentTab === "followers") {
-    html += renderProfileNetworkTab(address, isCurrentWallet, currentTab);
-  } else if (currentTab === "saved") {
+  } else if (normalizedTab === "following" || normalizedTab === "followers") {
+    html += renderProfileNetworkTab(address, isCurrentWallet, normalizedTab);
+  } else if (normalizedTab === "saved") {
     html += savedList.length
       ? renderProfilePostGrid(savedList)
       : `<div class="profile-grid-empty empty"><p>Nenhum post salvo neste aparelho.</p></div>`;
@@ -571,9 +623,7 @@ export function renderProfile(main, address, memberships = [], isCurrentWallet =
     }
     html += `</div>`;
   }
-
-  html += `</div>`;
-  main.innerHTML = html;
+  return html;
 }
 
 export function renderPixLookup(main, query = "", profile = null) {
@@ -691,10 +741,25 @@ export function renderWallet(main, { address = null, balance = "0.000", hasWalle
 
 export function renderComposeCommunity(main) {
   main.innerHTML = `
-    <div class="card compose-card">
+    <div class="card compose-card compose-community-card">
       <a class="back-link" href="#/communities">← Voltar</a>
       <h2>Nova Comunidade</h2>
       <form id="form-compose-community">
+        <div class="form-group community-compose-photo-group">
+          <label style="font-weight:600; display:block; margin-bottom:0.4rem;">Foto da Comunidade (estilo Orkut):</label>
+          <div class="community-compose-photo-row" style="display:flex; gap:1rem; align-items:center;">
+            <div id="comm-photo-preview" class="community-avatar-box community-avatar-lg" style="--comm-avatar-accent:var(--brand-chrome); width:80px; height:80px; flex-shrink:0;">
+              <div class="community-avatar-fallback" style="background:var(--brand-chrome); font-size:1.8rem; display:flex; align-items:center; justify-content:center; width:100%; height:100%; color:#fff; font-weight:800; border-radius:14px;">C</div>
+            </div>
+            <div style="flex:1;">
+              <label class="btn btn-sm btn-outline" style="cursor:pointer; display:inline-block; margin-bottom:0.4rem;">
+                📁 Escolher foto do aparelho
+                <input type="file" id="comm-photo-file" accept="image/*" style="display:none;" />
+              </label>
+              <input type="url" id="comm-photo-url" class="form-control" placeholder="Ou cole a URL da imagem (opcional)" style="font-size:0.85rem;" />
+            </div>
+          </div>
+        </div>
         <div class="form-group">
           <label for="comm-id">Identificador único (slug):</label>
           <input type="text" id="comm-id" class="form-control" placeholder="ex: cinema-nacional" required pattern="^[a-z0-9-]+$" title="Apenas letras minúsculas, números e hífens." />
@@ -705,11 +770,28 @@ export function renderComposeCommunity(main) {
         </div>
         <div class="form-group">
           <label for="comm-category">Categoria:</label>
-          <input type="text" id="comm-category" class="form-control" placeholder="ex: Cultura, Tecnologia" maxlength="40" />
+          <input type="text" id="comm-category" class="form-control" list="comm-category-suggestions" placeholder="ex: Cultura & Artes, Política & Cidadania" maxlength="40" />
+          <datalist id="comm-category-suggestions">
+            <option value="Política & Cidadania">
+            <option value="Cultura & Artes">
+            <option value="Tecnologia & Software Livre">
+            <option value="Cidades & Bairros">
+            <option value="Música & Cinema">
+            <option value="Economia Solidária">
+            <option value="Educação & Ciência">
+            <option value="Humor & Entretenimento">
+          </datalist>
+        </div>
+        <div class="form-group">
+          <label for="comm-type">Tipo de Comunidade:</label>
+          <select id="comm-type" class="form-control">
+            <option value="open">Pública (Aberta a todos)</option>
+            <option value="closed">Moderada (Requer aprovação)</option>
+          </select>
         </div>
         <div class="form-group">
           <label for="comm-desc">Descrição e Regras:</label>
-          <textarea id="comm-desc" class="form-control" rows="3" placeholder="Qual o propósito desta comunidade?" required maxlength="500"></textarea>
+          <textarea id="comm-desc" class="form-control" rows="3" placeholder="Qual o propósito desta comunidade? Quais as regras de convivência?" required maxlength="500"></textarea>
         </div>
         <div class="form-actions">
           <button type="submit" class="btn btn-primary" id="btn-submit-comm">Publicar Comunidade</button>
