@@ -53,7 +53,15 @@ export function renderInlineComposer({ userRouteId = "", displayName = "" } = {}
         </div>
         <div class="inline-composer-preview hidden" id="inline-topic-preview-wrap">
           <img id="inline-topic-preview" class="inline-composer-preview-img" alt="Prévia da imagem" />
-          <button type="button" class="btn btn-outline btn-sm inline-composer-remove-img" id="btn-inline-remove-img">Remover foto</button>
+          <div class="lofi-filter-bar" id="lofi-filter-bar">
+            <span class="meta lofi-filter-label">Estilo Lo-Fi:</span>
+            <button type="button" class="lofi-filter-btn active" data-filter="normal">Padrão</button>
+            <button type="button" class="lofi-filter-btn" data-filter="xerox">📰 Xerox</button>
+            <button type="button" class="lofi-filter-btn" data-filter="vhs">📼 VHS 90s</button>
+            <button type="button" class="lofi-filter-btn" data-filter="risograph">🎨 Risógrafo</button>
+            <span class="lofi-weight-pill" id="lofi-weight-badge">⚡ ~45 KB (100% Grátis)</span>
+          </div>
+          <button type="button" class="btn btn-outline btn-sm inline-composer-remove-img" id="btn-inline-remove-img" style="margin-top:8px;">Remover foto</button>
         </div>
         <div class="inline-composer-toolbar">
           <div class="inline-composer-tools">
