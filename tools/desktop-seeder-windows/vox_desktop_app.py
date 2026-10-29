@@ -19,7 +19,10 @@ import webbrowser
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-import webview
+try:
+    import webview
+except ImportError:
+    webview = None
 
 APP_TITLE = "Vox • Rede Social Civica & Seeder P2P"
 DEFAULT_REMOTE_URL = os.environ.get("VOX_REMOTE_URL", "https://vox-9df.pages.dev/")
@@ -208,6 +211,11 @@ def main() -> int:
         print(f"  Backup Local: http://127.0.0.1:{local_port}")
     print("  Malha P2P:    Ativa (WebRTC Swarm)")
     print("======================================================")
+
+    if webview is None:
+        print("Erro: 'pywebview' nao esta instalado neste ambiente. Execute: pip install pywebview")
+        server.stop()
+        return 1
 
     window = webview.create_window(
         title=APP_TITLE,
