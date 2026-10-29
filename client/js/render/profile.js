@@ -691,10 +691,25 @@ export function renderWallet(main, { address = null, balance = "0.000", hasWalle
 
 export function renderComposeCommunity(main) {
   main.innerHTML = `
-    <div class="card compose-card">
+    <div class="card compose-card compose-community-card">
       <a class="back-link" href="#/communities">← Voltar</a>
       <h2>Nova Comunidade</h2>
       <form id="form-compose-community">
+        <div class="form-group community-compose-photo-group">
+          <label style="font-weight:600; display:block; margin-bottom:0.4rem;">Foto da Comunidade (estilo Orkut):</label>
+          <div class="community-compose-photo-row" style="display:flex; gap:1rem; align-items:center;">
+            <div id="comm-photo-preview" class="community-avatar-box community-avatar-lg" style="--comm-avatar-accent:var(--brand-chrome); width:80px; height:80px; flex-shrink:0;">
+              <div class="community-avatar-fallback" style="background:var(--brand-chrome); font-size:1.8rem; display:flex; align-items:center; justify-content:center; width:100%; height:100%; color:#fff; font-weight:800; border-radius:14px;">C</div>
+            </div>
+            <div style="flex:1;">
+              <label class="btn btn-sm btn-outline" style="cursor:pointer; display:inline-block; margin-bottom:0.4rem;">
+                📁 Escolher foto do aparelho
+                <input type="file" id="comm-photo-file" accept="image/*" style="display:none;" />
+              </label>
+              <input type="url" id="comm-photo-url" class="form-control" placeholder="Ou cole a URL da imagem (opcional)" style="font-size:0.85rem;" />
+            </div>
+          </div>
+        </div>
         <div class="form-group">
           <label for="comm-id">Identificador único (slug):</label>
           <input type="text" id="comm-id" class="form-control" placeholder="ex: cinema-nacional" required pattern="^[a-z0-9-]+$" title="Apenas letras minúsculas, números e hífens." />
@@ -705,11 +720,28 @@ export function renderComposeCommunity(main) {
         </div>
         <div class="form-group">
           <label for="comm-category">Categoria:</label>
-          <input type="text" id="comm-category" class="form-control" placeholder="ex: Cultura, Tecnologia" maxlength="40" />
+          <input type="text" id="comm-category" class="form-control" list="comm-category-suggestions" placeholder="ex: Cultura & Artes, Política & Cidadania" maxlength="40" />
+          <datalist id="comm-category-suggestions">
+            <option value="Política & Cidadania">
+            <option value="Cultura & Artes">
+            <option value="Tecnologia & Software Livre">
+            <option value="Cidades & Bairros">
+            <option value="Música & Cinema">
+            <option value="Economia Solidária">
+            <option value="Educação & Ciência">
+            <option value="Humor & Entretenimento">
+          </datalist>
+        </div>
+        <div class="form-group">
+          <label for="comm-type">Tipo de Comunidade:</label>
+          <select id="comm-type" class="form-control">
+            <option value="open">Pública (Aberta a todos)</option>
+            <option value="closed">Moderada (Requer aprovação)</option>
+          </select>
         </div>
         <div class="form-group">
           <label for="comm-desc">Descrição e Regras:</label>
-          <textarea id="comm-desc" class="form-control" rows="3" placeholder="Qual o propósito desta comunidade?" required maxlength="500"></textarea>
+          <textarea id="comm-desc" class="form-control" rows="3" placeholder="Qual o propósito desta comunidade? Quais as regras de convivência?" required maxlength="500"></textarea>
         </div>
         <div class="form-actions">
           <button type="submit" class="btn btn-primary" id="btn-submit-comm">Publicar Comunidade</button>

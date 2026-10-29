@@ -61,6 +61,14 @@ export async function showCommunity(communityId, tab = "posts") {
   const localFound = localComms.find((c) => c.id === communityId);
   if (localFound) meta = { ...meta, ...localFound };
 
+  try {
+    const localUpdates = await cacheNode.getLocalPosts({ type: "community_update", communityId });
+    if (localUpdates && localUpdates.length) {
+      const lastUpdate = localUpdates[localUpdates.length - 1];
+      meta = { ...meta, ...lastUpdate };
+    }
+  } catch {}
+
   if (!meta.commercialEnabled && communityId === mock.MOCK_DEMO_COMMUNITY_FEIRA.id) {
     meta = { ...mock.MOCK_DEMO_COMMUNITY_FEIRA, ...meta, commercialEnabled: true };
   }
@@ -160,6 +168,18 @@ export async function showCommunity(communityId, tab = "posts") {
     tab === "posts" || tab === "members"
       ? peopleIndex.extractRecentAuthors(filteredTopics)
       : [];
+
+  const peopleSet = new Set(recentPeople.map((p) => p.routeId));
+  if (meta.owner && !peopleSet.has(meta.owner)) {
+    const ownerName = profileDirectory.getAuthorDisplaySync(meta.owner) || meta.owner;
+    recentPeople.unshift({ routeId: meta.owner, name: ownerName });
+    peopleSet.add(meta.owner);
+  }
+  if (user && isMember && !peopleSet.has(user)) {
+    const selfName = localAccount.getDisplayName() || user;
+    recentPeople.push({ routeId: user, name: selfName });
+    peopleSet.add(user);
+  }
 
   const peerSettings = peers.getPeerSettings();
   const gatewayState = gatewayTelemetry.getGatewayHealthState();
@@ -290,6 +310,49 @@ export async function showCommunity(communityId, tab = "posts") {
   document.querySelector(".community-vox-seed a[href='#/settings/network']")?.addEventListener("click", () => {
     communitySeed.saveSeedState(communityId, { activeAck: true });
   });
+
+  const inputCommPhoto = document.getElementById("input-comm-photo-file");
+  if (inputCommPhoto) {
+    inputCommPhoto.addEventListener("change", async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      try {
+        const dataUrl = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+        const updatePayload = {
+          id: `comm_update_${communityId}_${Date.now()}`,
+          type: "community_update",
+          communityId,
+          image: dataUrl,
+          avatar: dataUrl,
+          updatedAt: Date.now(),
+        };
+        const signed = await localAccount.signPayload(updatePayload);
+        await cacheNode.saveLocalPost(signed);
+        peers.broadcastGossip(signed);
+
+        const img = document.querySelector(".community-avatar-img");
+        if (img) {
+          img.src = dataUrl;
+          img.style.display = "block";
+        } else {
+          const box = document.querySelector(".community-avatar-box");
+          if (box) {
+            box.innerHTML = `<img class="community-avatar-img" src="${dataUrl}" alt="${meta.title || communityId}" />`;
+          }
+        }
+        const fallback = document.querySelector(".community-avatar-fallback");
+        if (fallback) fallback.style.display = "none";
+        share.showToast("Foto da comunidade atualizada!");
+      } catch (err) {
+        share.showToast(`Erro ao atualizar foto: ${err.message}`, "error");
+      }
+    });
+  }
 
   const btnJoin = document.getElementById("btn-join-comm");
   if (btnJoin && !isMember) {

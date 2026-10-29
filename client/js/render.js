@@ -51,6 +51,8 @@ export {
   renderHome,
   renderCommunityPeopleStrip,
   renderCommunity,
+  renderCommunityAvatarHtml,
+  renderCommunityOrkutMembersBox,
   renderCommunityTopicRow,
   renderCommunityGovernanceTab,
   renderProposalItem,

@@ -45,6 +45,56 @@ export async function showComposeCommunity() {
   const main = render.renderShell(makeShellProps(user, "compose", "Nova Comunidade"));
   render.renderComposeCommunity(main);
 
+  let photoDataUrl = "";
+  const fileInput = document.getElementById("comm-photo-file");
+  const urlInput = document.getElementById("comm-photo-url");
+  const previewEl = document.getElementById("comm-photo-preview");
+  const titleInput = document.getElementById("comm-title");
+
+  const updatePreview = (src, initial = "C") => {
+    if (!previewEl) return;
+    if (src) {
+      previewEl.innerHTML = `<img class="community-avatar-img" src="${src}" alt="Preview" style="width:100%; height:100%; object-fit:cover; border-radius:14px;" />`;
+    } else {
+      previewEl.innerHTML = `<div class="community-avatar-fallback" style="background:var(--brand-chrome); font-size:1.8rem; display:flex; align-items:center; justify-content:center; width:100%; height:100%; color:#fff; font-weight:800; border-radius:14px;">${initial}</div>`;
+    }
+  };
+
+  if (fileInput) {
+    fileInput.addEventListener("change", (e) => {
+      const file = e.target.files?.[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          photoDataUrl = reader.result;
+          updatePreview(photoDataUrl);
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  }
+
+  if (urlInput) {
+    urlInput.addEventListener("input", () => {
+      const url = urlInput.value.trim();
+      if (url) {
+        photoDataUrl = url;
+        updatePreview(url);
+      } else if (!fileInput?.files?.[0]) {
+        photoDataUrl = "";
+        updatePreview("", (titleInput?.value || "C").slice(0, 1).toUpperCase());
+      }
+    });
+  }
+
+  if (titleInput) {
+    titleInput.addEventListener("input", () => {
+      if (!photoDataUrl) {
+        updatePreview("", (titleInput.value || "C").slice(0, 1).toUpperCase());
+      }
+    });
+  }
+
   const form = document.getElementById("form-compose-community");
   if (form) {
     form.addEventListener("submit", async (e) => {
@@ -52,8 +102,10 @@ export async function showComposeCommunity() {
       const btn = document.getElementById("btn-submit-comm");
       const id = document.getElementById("comm-id")?.value.trim().toLowerCase();
       const title = document.getElementById("comm-title")?.value.trim();
-      const category = document.getElementById("comm-category")?.value.trim();
+      const category = document.getElementById("comm-category")?.value.trim() || "Geral";
       const desc = document.getElementById("comm-desc")?.value.trim();
+      const visibility = document.getElementById("comm-type")?.value || "open";
+      const image = photoDataUrl || urlInput?.value.trim() || "";
 
       btn.disabled = true;
       btn.textContent = "Assinando…";
@@ -65,6 +117,11 @@ export async function showComposeCommunity() {
           title,
           category,
           description: desc,
+          image,
+          avatar: image,
+          visibility,
+          language: "Português",
+          createdAt: Date.now(),
         });
         await cacheNode.saveLocalPost(signed);
         peers.broadcastGossip(signed);
@@ -76,8 +133,9 @@ export async function showComposeCommunity() {
               Title: title,
               Category: category,
               Description: desc,
+              Image: image,
             });
-            await upload.postData({ id, title, category, description: desc }, tags);
+            await upload.postData({ id, title, category, description: desc, image }, tags);
           } catch {}
         }
 
