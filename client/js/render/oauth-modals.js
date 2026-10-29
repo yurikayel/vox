@@ -2,6 +2,7 @@
 import * as brcode from "../brcode.js";
 import * as i18n from "../i18n-pt-br.js";
 import * as postOwnership from "../post-ownership.js";
+import * as localAccount from "../local-account.js";
 import { escapeHtml, shortId, renderAvatarHtml } from "./util.js";
 
 const CANTINA_ART_ALT =
@@ -54,6 +55,14 @@ function renderPeopleResultRow(p) {
   const name = escapeHtml(p.name || p.routeId.slice(0, 14));
   const handle = p.handle ? `@${escapeHtml(p.handle)}` : "";
   const av = renderAvatarHtml(p.routeId, name);
+  const myId = localAccount.getCachedRouteIdSync();
+  const isSelf = Boolean(myId && p.routeId === myId);
+  const actionsHtml = isSelf
+    ? `<a class="btn btn-sm btn-outline" href="#/u/${encodeURIComponent(p.routeId)}">Meu perfil</a>`
+    : `
+        <a class="btn btn-sm btn-outline" href="#/connect/${encodeURIComponent(p.routeId)}">Conectar</a>
+        <a class="btn btn-sm btn-primary" href="#/dm/${encodeURIComponent(p.routeId)}">DM</a>
+      `;
   return `
     <div class="card people-result" style="padding:0.65rem 0.85rem; margin-top:0.45rem; display:flex; gap:0.65rem; align-items:center;">
       ${av}
@@ -63,8 +72,7 @@ function renderPeopleResultRow(p) {
         <p class="meta" style="margin:2px 0 0;"><code>${escapeHtml(shortId(p.routeId))}</code></p>
       </div>
       <div style="display:flex; flex-direction:column; gap:0.25rem;">
-        <a class="btn btn-sm btn-outline" href="#/connect/${encodeURIComponent(p.routeId)}">Conectar</a>
-        <a class="btn btn-sm btn-primary" href="#/dm/${encodeURIComponent(p.routeId)}">DM</a>
+        ${actionsHtml}
       </div>
     </div>`;
 }
