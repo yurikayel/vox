@@ -301,18 +301,52 @@ export async function showLinkedAccounts() {
 }
 
 function bindLinkedAccountFormsAndButtons(onRefresh) {
+  document.querySelectorAll(".btn-one-click-connect").forEach((btn) => {
+    if (btn.dataset.wired) return;
+    btn.dataset.wired = "1";
+    btn.addEventListener("click", () => {
+      const netId = btn.dataset.netId;
+      if (!netId) return;
+      const box = btn.closest(".network-connect-box") || btn.closest(".linked-network-card");
+      const handleInput = box?.querySelector(".input-net-handle");
+      const handle = handleInput?.value?.trim() || "";
+      const res = linkedAccounts.connectWithOneClick(netId, handle);
+      share.showToast(`Conectando ao ${netId}... Rede aberta no navegador! 🔗`);
+      if (onRefresh) onRefresh();
+      linkedAccounts.testLinkedAccount(netId).catch(() => {});
+    });
+  });
+
+  document.querySelectorAll(".btn-save-handle-quick").forEach((btn) => {
+    if (btn.dataset.wired) return;
+    btn.dataset.wired = "1";
+    btn.addEventListener("click", () => {
+      const netId = btn.dataset.netId;
+      if (!netId) return;
+      const box = btn.closest(".network-connect-box") || btn.closest(".linked-network-card");
+      const handle = box?.querySelector(".input-net-handle")?.value?.trim() || "";
+      if (!handle) {
+        share.showToast("Informe o @handle para vincular.", "warning");
+        return;
+      }
+      linkedAccounts.saveLinkedAccount(netId, { handle, enabled: true });
+      share.showToast(`Conta @${handle.replace(/^@/, "")} vinculada com sucesso! 🔗`);
+      if (onRefresh) onRefresh();
+    });
+  });
+
   document.querySelectorAll(".form-link-network").forEach((form) => {
     if (form.dataset.wired) return;
     form.dataset.wired = "1";
     form.addEventListener("submit", (e) => {
       e.preventDefault();
       const netId = form.dataset.netId;
-      const handle = form.querySelector(".input-net-handle")?.value?.trim();
+      const box = form.closest(".network-connect-box") || form.closest(".linked-network-card");
+      const handle = box?.querySelector(".input-net-handle")?.value?.trim() || form.querySelector(".input-net-handle")?.value?.trim() || linkedAccounts.getSuggestedHandle(netId) || netId;
       const webhook = form.querySelector(".input-net-webhook")?.value?.trim() || "";
       const appPassword = form.querySelector(".input-net-app-password")?.value?.trim() || "";
-      if (!handle) return;
       linkedAccounts.saveLinkedAccount(netId, { handle, webhook, appPassword, enabled: true });
-      share.showToast(`Conta @${handle.replace(/^@/, "")} vinculada com sucesso! 🔗`);
+      share.showToast(`Credenciais de @${handle.replace(/^@/, "")} salvas com sucesso! 🔗`);
       if (onRefresh) onRefresh();
     });
   });

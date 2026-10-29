@@ -266,3 +266,84 @@ export async function testLinkedAccount(netId) {
     message: `✅ Conta @${data.handle} registrada no Vox! Disparo em 1 toque (EXPLODE!) pronto.`,
   };
 }
+
+export function getNetworkAuthUrl(netId, handle = "") {
+  const h = String(handle || "").trim().replace(/^@/, "");
+  if (netId === "bsky") {
+    return h ? `https://bsky.app/profile/${encodeURIComponent(h)}` : "https://bsky.app/";
+  }
+  if (netId === "twitter") {
+    return h ? `https://x.com/${encodeURIComponent(h)}` : "https://x.com/";
+  }
+  if (netId === "threads") {
+    return h ? `https://www.threads.net/@${encodeURIComponent(h)}` : "https://www.threads.net/";
+  }
+  if (netId === "instagram") {
+    return h ? `https://www.instagram.com/${encodeURIComponent(h)}/` : "https://www.instagram.com/";
+  }
+  if (netId === "facebook") {
+    return "https://www.facebook.com/";
+  }
+  if (netId === "tiktok") {
+    return h ? `https://www.tiktok.com/@${encodeURIComponent(h)}` : "https://www.tiktok.com/";
+  }
+  if (netId === "github") {
+    return h ? `https://github.com/${encodeURIComponent(h)}` : "https://github.com/login";
+  }
+  return "https://google.com";
+}
+
+export function getSuggestedHandle(netId = "") {
+  if (typeof localStorage === "undefined") return "";
+  const saved = localStorage.getItem(`vox-profile-${netId}`);
+  if (saved) return saved.replace(/^@/, "");
+
+  try {
+    const rawEnrich = localStorage.getItem("vox-profile-enrichment");
+    if (rawEnrich) {
+      const enrichment = JSON.parse(rawEnrich);
+      if (enrichment?.displayName) {
+        const slug = enrichment.displayName
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/[^a-z0-9_]/g, "");
+        if (slug) return slug;
+      }
+    }
+  } catch {}
+
+  if (netId === "bsky") {
+    try {
+      const subs = JSON.parse(localStorage.getItem("vox-bsky-subs-v1") || "[]");
+      if (subs.length > 0) return String(subs[0]).replace(/^@/, "");
+    } catch {}
+  }
+
+  const myRoute = localStorage.getItem("vox-local-account-route-id") || "";
+  if (myRoute && !myRoute.startsWith("0x")) {
+    return myRoute.replace(/^@/, "");
+  }
+  return "";
+}
+
+export function connectWithOneClick(netId, inputHandle = "") {
+  const cleanId = String(netId || "").trim().toLowerCase();
+  let handle = String(inputHandle || "").trim().replace(/^@/, "");
+  if (!handle) {
+    handle = getSuggestedHandle(cleanId);
+  }
+  if (!handle) {
+    handle = cleanId;
+  }
+
+  const authUrl = getNetworkAuthUrl(cleanId, handle);
+  if (typeof window !== "undefined" && typeof window.open === "function") {
+    try {
+      window.open(authUrl, "_blank", "noopener,noreferrer");
+    } catch {}
+  }
+
+  saveLinkedAccount(cleanId, { handle, enabled: true });
+  return { ok: true, netId: cleanId, handle, authUrl };
+}
