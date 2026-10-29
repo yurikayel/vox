@@ -455,13 +455,86 @@ export async function fetchTopics(communityId) {
   return { items, gateway, demo: false };
 }
 
-export async function fetchRecentTopics() {
+export async function queryAllGateways(query, variables) {
+  const cfg = await loadConfig();
+  const gateways = cfg.gateways || [];
+  const results = [];
+
+  for (const gw of gateways) {
+    const label = gw.label || gw.graphql || "gateway";
+    try {
+      const data = await queryOne(gw.graphql, query, variables);
+      recordGatewayAttempt(label, true);
+      results.push({ gateway: label, data });
+    } catch {
+      recordGatewayAttempt(label, false);
+    }
+  }
+  return results;
+}
+
+export function mergeTopicEdgesWithConsensus(gatewayResults) {
+  const edgeMap = new Map();
+  for (const res of gatewayResults || []) {
+    const edges = res.data?.transactions?.edges || [];
+    for (const edge of edges) {
+      const id = edge.node?.id;
+      if (!id) continue;
+      if (!edgeMap.has(id)) {
+        edgeMap.set(id, {
+          node: edge.node,
+          cursor: edge.cursor,
+          witnesses: [res.gateway],
+          conflict: false,
+        });
+      } else {
+        const item = edgeMap.get(id);
+        item.witnesses.push(res.gateway);
+        if (item.node?.owner?.address !== edge.node?.owner?.address) {
+          item.conflict = true;
+        }
+      }
+    }
+  }
+
+  return Array.from(edgeMap.values()).map((item) => ({
+    node: item.node,
+    cursor: item.cursor,
+    crossChecked: item.witnesses.length >= 2,
+    consensusCount: item.witnesses.length,
+    witnesses: item.witnesses,
+    conflict: item.conflict,
+  }));
+}
+
+export async function fetchRecentTopics({ crossCheck = false } = {}) {
+  if (crossCheck) {
+    try {
+      const results = await queryAllGateways(QUERIES.recentTopics, {});
+      if (results.length > 0) {
+        const mergedEdges = mergeTopicEdgesWithConsensus(results);
+        const items = mergedEdges.map((e) => {
+          const item = mapTopic(e.node);
+          item.crossChecked = e.crossChecked;
+          item.consensusCount = e.consensusCount;
+          item.witnesses = e.witnesses;
+          item.conflict = e.conflict;
+          return item;
+        });
+        const gws = results.map((r) => r.gateway).join(", ");
+        return { items, gateway: gws, demo: false, crossChecked: true };
+      }
+    } catch {
+      /* fallback to standard withGateways */
+    }
+  }
+
   const { data, gateway } = await withGateways((url) =>
     queryOne(url, QUERIES.recentTopics, {})
   );
   const edges = data.transactions?.edges || [];
   const items = edges.map((e) => mapTopic(e.node));
-  return { items, gateway, demo: false };
+  return { items, gateway, demo: false, crossChecked: false };
 }
 
 export async function fetchTopicById(topicId) {
