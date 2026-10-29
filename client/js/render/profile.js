@@ -737,7 +737,10 @@ export function renderComposeTopic(main, communityId) {
             <div style="margin-top:0.5rem;">
               <p class="meta" style="margin:0 0 0.4rem; font-size:0.76rem;">Cole abaixo o trecho copiado do Slack ou Discord. O Vox formata os turnos de fala em ata Markdown permanente.</p>
               <textarea id="chat-transcript-input" class="form-control" rows="4" placeholder="Ex:\nHelena — Hoje às 14:30\nAprovamos o mutirão de sábado.\nTiago — Hoje às 14:32\nFechado! Levo as mudas."></textarea>
-              <button type="button" id="btn-convert-chat-transcript" class="btn btn-sm btn-outline" style="margin-top:0.45rem;">Converter em Ata Formatada</button>
+              <div style="display:flex; gap:0.5rem; align-items:center; margin-top:0.45rem; flex-wrap:wrap;">
+                <button type="button" id="btn-convert-chat-transcript" class="btn btn-sm btn-outline">Converter em Ata</button>
+                <button type="button" id="btn-convert-and-notarize" class="btn btn-sm btn-primary">🏛️ Converter & Selar Cartório (Arweave)</button>
+              </div>
             </div>
           </details>
         </div>

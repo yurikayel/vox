@@ -113,6 +113,7 @@ test("chat-bridge: UI renders Slack/Discord import in compose topic and bridge b
   render.renderComposeTopic(main, "mutirao-sp");
   assert.ok(main.innerHTML.includes('id="chat-transcript-input"'));
   assert.ok(main.innerHTML.includes('id="btn-convert-chat-transcript"'));
+  assert.ok(main.innerHTML.includes('id="btn-convert-and-notarize"'));
 
   render.renderProposalDetail(
     main,
