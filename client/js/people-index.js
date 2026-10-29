@@ -6,6 +6,8 @@ import * as handles from "./handles.js";
 import * as mock from "./mock.js";
 import { getWelcomeProfile, WELCOME_ROUTE_ID } from "./vox-welcome-profile.js";
 import * as profileDirectory from "./profile-directory.js";
+import * as localAccount from "./local-account.js";
+import { shortId } from "./render/util.js";
 
 const MESH_POST_TYPES = new Set(["topic", "reply", "membership"]);
 export const PEOPLE_SEARCH_OK_METRIC = "vox-metric-people-search-ok";
@@ -60,8 +62,37 @@ function indexMeshCards(map) {
   }
 }
 
-function indexDemo() {
-  // Perfis mock removidos: nenhuma conta sintética é indexada no diretório
+function indexLocalAndVaultAccounts(map) {
+  const myId = localAccount.getCachedRouteIdSync();
+  if (myId) {
+    const myName = localAccount.getDisplayName() || localAccount.getProfileEnrichment()?.displayName || "";
+    upsert(
+      map,
+      {
+        routeId: myId,
+        name: myName || myId.slice(0, 14),
+        handle: handles.getCachedAddressHandle(myId) || "",
+        source: "self",
+      },
+      ["self", "contact", "vault", "mesh-card", "mesh-author"],
+    );
+  }
+
+  if (typeof localAccount.listVaultAccountsSync === "function") {
+    for (const v of localAccount.listVaultAccountsSync()) {
+      if (!v?.routeId) continue;
+      upsert(
+        map,
+        {
+          routeId: v.routeId,
+          name: v.displayName || profileDirectory.getAuthorDisplaySync(v.routeId) || v.routeId.slice(0, 14),
+          handle: handles.getCachedAddressHandle(v.routeId) || "",
+          source: "vault",
+        },
+        ["self", "contact", "vault", "mesh-card", "mesh-author"],
+      );
+    }
+  }
 }
 
 export async function buildPeopleIndex() {
@@ -75,6 +106,8 @@ export async function buildPeopleIndex() {
     source: "system",
   });
 
+  indexLocalAndVaultAccounts(map);
+
   for (const c of contacts.listContacts()) {
     map.set(c.routeId, {
       routeId: c.routeId,
@@ -87,19 +120,17 @@ export async function buildPeopleIndex() {
   await indexMeshAuthors(map);
   indexMeshCards(map);
 
-  const meshOrContactCount =
-    [...map.values()].filter((p) => p.source === "contact" || p.source === "mesh-author" || p.source === "mesh-card")
-      .length;
-
-  indexDemo(map, meshOrContactCount > 0);
-
   return Array.from(map.values());
 }
 
 export async function buildPeopleSections() {
   const all = await buildPeopleIndex();
-  const contactsList = all.filter((p) => p.source === "contact" || p.source === "system");
-  const mesh = all.filter((p) => p.source === "mesh-author" || p.source === "mesh-card");
+  const contactsList = all.filter(
+    (p) => p.source === "contact" || p.source === "system" || p.source === "self" || p.source === "vault",
+  );
+  const mesh = all.filter(
+    (p) => p.source === "mesh-author" || p.source === "mesh-card" || p.source === "route-direct",
+  );
   const tour = all.filter((p) => p.source === "demo");
   return { contacts: contactsList, mesh, tour, all };
 }
@@ -112,31 +143,63 @@ export function recordPeopleSearchOk() {
   }
 }
 
+function resolveDirectRouteQuery(cleanQ, all) {
+  const cleanQl = cleanQ.toLowerCase();
+  if (cleanQl.startsWith("vx_") && cleanQl.length >= 6) {
+    const already = all.some((p) => (p.routeId || "").toLowerCase().includes(cleanQl));
+    if (!already) {
+      const disp = profileDirectory.getAuthorDisplaySync(cleanQ);
+      all.push({
+        routeId: cleanQ,
+        name: disp || cleanQ.slice(0, 14),
+        handle: handles.getCachedAddressHandle(cleanQ) || "",
+        source: "route-direct",
+      });
+    }
+  }
+}
+
+function matchesPerson(p, ql, cleanQl, handleRoute) {
+  if (handleRoute && p.routeId === handleRoute) return true;
+  const pRoute = (p.routeId || "").toLowerCase();
+  const pShort = shortId(p.routeId).toLowerCase();
+  const pName = (p.name || "").toLowerCase();
+  const pHandle = (p.handle || "").toLowerCase();
+
+  if (cleanQl && (pRoute.startsWith(cleanQl) || pRoute.includes(cleanQl) || pShort.startsWith(cleanQl) || pShort.includes(cleanQl))) {
+    return true;
+  }
+  if (pName.includes(ql) || (cleanQl && pName.includes(cleanQl))) return true;
+  if (pHandle && (pHandle.includes(ql) || (cleanQl && pHandle.includes(cleanQl)))) return true;
+  return false;
+}
+
 export async function searchPeople(query) {
   const q = String(query || "").trim();
   const all = await buildPeopleIndex();
   if (!q) return all.slice(0, 50);
 
+  const cleanQ = q.replace(/^@/, "").trim();
   let handleRoute = "";
-  if (q.startsWith("@")) {
-    const mapped = handles.getCachedHandleMapping(q);
+  if (q.startsWith("@") || cleanQ) {
+    const mapped = handles.getCachedHandleMapping(q.startsWith("@") ? q : `@${cleanQ}`);
     if (mapped) handleRoute = mapped;
   }
   if (handleRoute && !all.some((p) => p.routeId === handleRoute)) {
     all.push({
       routeId: handleRoute,
       name: profileDirectory.getAuthorDisplaySync(handleRoute) || handleRoute.slice(0, 14),
-      handle: handles.getCachedAddressHandle(handleRoute) || handles.normalizeSlug(q),
+      handle: handles.getCachedAddressHandle(handleRoute) || handles.normalizeSlug(cleanQ),
       source: "handle-cache",
     });
   }
 
+  resolveDirectRouteQuery(cleanQ, all);
+
   const ql = q.toLowerCase();
-  const results = all.filter((p) => {
-    if (handleRoute && p.routeId === handleRoute) return true;
-    const hay = `${p.name} ${p.handle} ${p.routeId}`.toLowerCase();
-    return hay.includes(ql);
-  });
+  const cleanQl = cleanQ.toLowerCase();
+  const results = all.filter((p) => matchesPerson(p, ql, cleanQl, handleRoute));
+
   if (results.length > 0) recordPeopleSearchOk();
   return results;
 }
@@ -162,6 +225,7 @@ export function parseConnectTarget(input) {
   if (!raw) return null;
   const connectMatch = raw.match(/#\/connect\/([^/?#]+)/i) || raw.match(/connect\/([^/?#]+)/i);
   if (connectMatch) return decodeURIComponent(connectMatch[1]);
-  if (raw.startsWith("vx_")) return raw.split(/\s/)[0];
+  const clean = raw.replace(/^@/, "").trim();
+  if (clean.startsWith("vx_")) return clean.split(/\s/)[0];
   return null;
 }
