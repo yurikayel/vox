@@ -102,15 +102,32 @@ test("hashtags - cache-node saveLocalPost indexa tags e getPostsByTag busca por 
   assert.equal(none.length, 0);
 });
 
-test("hashtags - getPostsByTag resolve topicos demo UF com tags", async () => {
+test("hashtags - getPostsByTag resolve topicos com tags", async () => {
+  await cacheNode.saveLocalPost({
+    id: "top_mg_real",
+    type: "topic",
+    title: "Post de Minas",
+    body: "Post sobre soberania em #minasgerais!",
+    author: "vx_real_mg",
+    ts: Date.now(),
+  });
+  await cacheNode.saveLocalPost({
+    id: "top_sp_real",
+    type: "topic",
+    title: "Post de SP",
+    body: "Post sobre coletivos em #saopaulo!",
+    author: "vx_real_sp",
+    ts: Date.now(),
+  });
+
   const posts = await cacheNode.getPostsByTag("minasgerais");
   assert.ok(posts.length >= 1);
-  assert.equal(posts[0].id, "demo-post-mg");
+  assert.equal(posts[0].id, "top_mg_real");
   assert.ok(posts[0].body.includes("#minasgerais"));
 
   const spPosts = await cacheNode.getPostsByTag("saopaulo");
   assert.ok(spPosts.length >= 1);
-  assert.equal(spPosts[0].id, "demo-post-sp");
+  assert.equal(spPosts[0].id, "top_sp_real");
 });
 
 test("hashtags - renderTagFeed gera cabeçalho limpo e empty state honesto", () => {

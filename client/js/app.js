@@ -32,4 +32,4 @@ attachQrUrlHandlers();
 attachPostOverlayActionMenuHandlers();
 attachQuarantineHandlers();
 syncIdentity();
-demoSeed.ensureDemoSeed().finally(() => route());
+demoSeed.purgeMockDemoSeed().finally(() => route());

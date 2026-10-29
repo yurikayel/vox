@@ -287,7 +287,11 @@ test("render - renderCommunity header compacto, Entrar e layout", () => {
 
 test("render - renderCommunity Posts tab usa lista de t�picos estilo f�rum (sem hero IG)", () => {
   const main = createContainer();
-  const topics = mock.MOCK_DEMO_TOPICS.slice(0, 3);
+  const topics = [
+    { id: "test-top-1", title: "Primeiro Tópico", author: "vx_test_1", ts: Date.now() - 60000, repliesCount: 1, image: "https://example.com/img.jpg" },
+    { id: "test-top-2", title: "Segundo Tópico", author: "vx_test_2", ts: Date.now() - 120000, repliesCount: 2 },
+    { id: "test-top-3", title: "Terceiro Tópico", author: "vx_test_3", ts: Date.now() - 180000, repliesCount: 0 },
+  ];
   render.renderCommunity(main, "demo-aprenda-vox", topics, mock.MOCK_DEMO_COMMUNITY, {
     activeTab: "posts",
   });
@@ -913,6 +917,7 @@ test("render - renderPostItem exibe botao de Pix Zap se o autor tiver chave", ()
   const postWithPix = {
     id: "p_helena_1",
     author: "vx_demo_mg",
+    contactPix: mgPixKey,
     title: "Post da Helena com Pix",
     body: "Conteúdo livre",
     ts: Date.now() - 60000,
@@ -965,7 +970,11 @@ test("render - renderZapModal gera payload BR Code e aviso regulatorio", () => {
 });
 
 test("render - renderStoriesStrip gera faixa horizontal com anéis de stories e personas do tour", () => {
-  const html = render.renderStoriesStrip();
+  const sampleProfiles = [
+    { routeId: "vx_demo_mg", name: demoMg.displayName, avatar: "https://example.com/avatar.jpg" },
+    { routeId: "vx_demo_sp", name: "vx_demo_sp", handle: "vx_demo_sp", avatar: "https://example.com/avatar2.jpg" },
+  ];
+  const html = render.renderStoriesStrip(sampleProfiles);
   assert.ok(html.includes("stories-strip"));
   assert.ok(html.includes("story-ring"));
   assert.ok(html.includes("story-avatar"));
@@ -1049,7 +1058,7 @@ test("render - resolvePostAuthorLabels evita ID truncado duplicado", () => {
 });
 
 test("render - resolvePostAuthorLabels nome + handle distintos", () => {
-  const labels = render.resolvePostAuthorLabels("vx_demo_mg");
+  const labels = render.resolvePostAuthorLabels("vx_demo_mg", { authorDisplay: demoMg.displayName, authorHandle: demoMg.handle });
   assert.equal(labels.primary, demoMg.displayName);
   assert.equal(labels.secondaryHandle, demoMg.handle);
 });

@@ -51,8 +51,18 @@ export function renderInlineComposer({ userRouteId = "", displayName = "" } = {}
           ${avatarHtml}
           <textarea id="inline-topic-body" class="inline-composer-textarea" rows="3" maxlength="2000" placeholder="Compartilhe texto, #hashtags ou anexe uma foto…" required aria-label="Texto da publicação"></textarea>
         </div>
-        <div class="inline-composer-preview hidden" id="inline-topic-preview-wrap">
-          <img id="inline-topic-preview" class="inline-composer-preview-img" alt="Prévia da imagem" />
+                <div class="inline-composer-preview hidden" id="inline-topic-preview-wrap">
+          <img id="inline-topic-preview" class="inline-composer-preview-img hidden" alt="Prévia da imagem" />
+          <div id="inline-topic-preview-audio-wrap" class="hidden" style="margin:8px 0; padding:10px 14px; background:var(--surface-soft); border-radius:var(--radius-sm); border:1px solid var(--border);">
+            <div style="display:flex; align-items:center; gap:6px; margin-bottom:6px;">
+              <span>🎙️</span>
+              <strong style="font-size:0.85rem;">Recado de Voz (Lo-Fi 48kbps)</strong>
+            </div>
+            <audio id="inline-topic-preview-audio" controls style="width:100%;"></audio>
+          </div>
+          <div id="inline-topic-preview-video-wrap" class="hidden" style="margin:8px 0; background:#000; border-radius:var(--radius-sm); overflow:hidden;">
+            <video id="inline-topic-preview-video" controls playsinline style="width:100%; max-height:240px; display:block;"></video>
+          </div>
           <div class="lofi-filter-bar" id="lofi-filter-bar">
             <span class="meta lofi-filter-label">Estilo Lo-Fi:</span>
             <button type="button" class="lofi-filter-btn active" data-filter="normal">Padrão</button>
@@ -61,13 +71,21 @@ export function renderInlineComposer({ userRouteId = "", displayName = "" } = {}
             <button type="button" class="lofi-filter-btn" data-filter="risograph">🎨 Risógrafo</button>
             <span class="lofi-weight-pill" id="lofi-weight-badge">⚡ ~45 KB (100% Grátis)</span>
           </div>
-          <button type="button" class="btn btn-outline btn-sm inline-composer-remove-img" id="btn-inline-remove-img" style="margin-top:8px;">Remover foto</button>
+          <button type="button" class="btn btn-outline btn-sm inline-composer-remove-img" id="btn-inline-remove-img" style="margin-top:8px;">Remover anexo</button>
         </div>
         <div class="inline-composer-toolbar">
-          <div class="inline-composer-tools">
-            <label class="inline-composer-tool" title="Anexar imagem">
+                    <div class="inline-composer-tools" style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+            <label class="inline-composer-tool" title="Anexar foto (até 99 KB)">
               <input type="file" id="inline-topic-file" accept="image/jpeg,image/png,image/webp,image/gif" hidden />
-              <span aria-hidden="true">🖼</span> Foto
+              <span aria-hidden="true">📷</span> Foto
+            </label>
+            <label class="inline-composer-tool" title="Anexar áudio (até 60s)">
+              <input type="file" id="inline-topic-audio" accept="audio/mpeg,audio/mp3,audio/wav,audio/ogg,audio/webm,audio/aac,audio/m4a" hidden />
+              <span aria-hidden="true">🎙️</span> Áudio
+            </label>
+            <label class="inline-composer-tool" title="Anexar vídeo (até 10s)">
+              <input type="file" id="inline-topic-video" accept="video/mp4,video/webm,video/ogg" hidden />
+              <span aria-hidden="true">🎬</span> Vídeo
             </label>
             <input type="text" id="inline-topic-comm" class="inline-composer-comm" placeholder="Comunidade (opcional)" maxlength="64" aria-label="Slug da comunidade" />
           </div>
@@ -84,7 +102,7 @@ export function renderInlineComposer({ userRouteId = "", displayName = "" } = {}
 
 export function getPostFeedLayout(t) {
   if (t?.githubGist?.lines?.length) return "github";
-  if (t?.image || t?.mediaRef?.hash) return "photo";
+  if (t?.image || t?.video || t?.audio || t?.mediaRef?.hash) return "photo";
   return "text";
 }
 
@@ -347,6 +365,25 @@ function renderPostMediaHeader(t, author, labels) {
 
 function renderPostMediaHero(t, overlayHeaderHtml = "") {
   const layer = renderPhotoTagLayerHtml(t, { isOwn: Boolean(t.isOwnLocalPost) });
+  if (t?.video) {
+    const src = escapeHtml(t.video);
+    return `<div class="post-media-container post-media-hero post-media-video-container" style="background:#000; border-radius:var(--radius-sm); overflow:hidden;">
+      <video class="post-media-video" src="${src}" controls playsinline preload="metadata" style="width:100%; max-height:480px; display:block;"></video>
+      ${overlayHeaderHtml}
+    </div>`;
+  }
+  if (t?.audio) {
+    const src = escapeHtml(t.audio);
+    return `<div class="post-media-audio-card" style="margin:8px 0; padding:12px 14px; background:var(--surface-soft); border-radius:var(--radius-sm); border:1px solid var(--border);">
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+        <span style="font-size:1.1rem;">🎙️</span>
+        <strong style="font-size:0.85rem;">Recado de Voz</strong>
+        <span class="badge-pill" style="font-size:0.7rem; padding:2px 6px;">Lo-Fi 48k</span>
+      </div>
+      <audio class="post-media-audio" src="${src}" controls style="width:100%;"></audio>
+      ${overlayHeaderHtml}
+    </div>`;
+  }
   if (t?.image) {
     const altRaw = t.imageAlt || t.title || "";
     const alt = escapeHtml(altRaw);
@@ -361,7 +398,7 @@ function renderPostMediaHero(t, overlayHeaderHtml = "") {
   }
   if (t?.mediaRef?.hash) {
     return `<div class="post-media-container post-media-hero post-media-lazy" data-media-hash="${escapeHtml(t.mediaRef.hash)}">
-      <div class="media-placeholder" style="aspect-ratio:4/5; display:flex; align-items:center; justify-content:center; background:var(--surface-soft); color:var(--muted); font-size:0.85rem;"><span>📷 Mídia P2P (${escapeHtml(t.mediaRef.mime || "imagem")})</span></div>
+      <div class="media-placeholder" style="aspect-ratio:4/5; display:flex; align-items:center; justify-content:center; background:var(--surface-soft); color:var(--muted); font-size:0.85rem;"><span>📦 Mídia P2P (${escapeHtml(t.mediaRef.mime || "mídia")})</span></div>
       ${layer}
       ${overlayHeaderHtml}
     </div>`;
@@ -637,9 +674,9 @@ export function renderPostItem(t, { isPinned = false } = {}) {
     </article>`;
 }
 
-export function renderStoriesStrip() {
-  const profiles = Object.values(mock.MOCK_DEMO_PROFILES || {});
-  if (!profiles.length) return "";
+export function renderStoriesStrip(customProfiles = null) {
+  const profiles = customProfiles || Object.values(mock.MOCK_DEMO_PROFILES || {});
+  if (!profiles.length) return '<div class="stories-strip stories-strip--empty" style="display:none;"></div>';
   const items = profiles
     .map((p) => {
       const avatarSrc = p.avatar || "icons/icon.svg";
