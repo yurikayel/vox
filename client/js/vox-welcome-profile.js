@@ -117,10 +117,20 @@ export const OFFICIAL_WELCOME_POST_BODY =
 export const OFFICIAL_WELCOME_TOPIC_ID = "vox-official-manifesto-welcome";
 
 export function getOfficialWelcomeTopic() {
+  let created = Date.now();
+  try {
+    const saved = localStorage.getItem("vox-welcome-post-ts");
+    if (saved && !isNaN(Number(saved))) {
+      created = Number(saved);
+    } else {
+      localStorage.setItem("vox-welcome-post-ts", String(created));
+    }
+  } catch {}
+
   return {
     id: OFFICIAL_WELCOME_TOPIC_ID,
     type: "topic",
-    communityId: "demo-aprenda-vox",
+    communityId: "geral",
     communityTitle: "Praça Cívica",
     title: "",
     body: OFFICIAL_WELCOME_POST_BODY,
@@ -129,13 +139,14 @@ export function getOfficialWelcomeTopic() {
     authorDisplay: "Vox",
     authorHandle: "vox",
     authorAvatar: OFFICIAL_PROFILE_AVATAR,
-    createdAt: 1730000000000,
-    ts: 1730000000000,
+    createdAt: created,
+    ts: created,
     isPinned: true,
     isOfficial: true,
     isOfficialPlatform: true,
     isSystem: true,
-    likes: 135,
-    repliesCount: 8,
+    likes: 0,
+    repliesCount: 0,
+    isDismissable: true,
   };
 }
