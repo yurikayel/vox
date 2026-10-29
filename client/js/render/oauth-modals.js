@@ -121,14 +121,37 @@ export function renderPostPactConnectModal(container, routeId) {
   if (!container || !routeId) return;
   const link = `${typeof location !== "undefined" ? location.origin + location.pathname : ""}#/connect/${encodeURIComponent(routeId)}`;
   container.innerHTML = `
-    <div class="modal-overlay modal-sheet modal-sheet--raised" id="post-pact-connect-overlay" role="dialog" aria-modal="true">
-      <div class="modal-dialog modal-card modal-card--narrow">
-        <h3 class="modal-card-title">Convide amigos</h3>
-        <p class="desc modal-card-lead">Toque em Compartilhar para mandar seu convite do Vox.</p>
-        <div class="modal-actions modal-actions--row">
-          <button type="button" id="btn-post-pact-share-connect" class="btn btn-primary" data-route="${escapeHtml(routeId)}">Compartilhar</button>
-          <button type="button" id="btn-post-pact-connect-close" class="btn btn-outline">Continuar</button>
+    <div class="modal-overlay modal-sheet modal-sheet--raised" id="post-pact-connect-overlay" role="dialog" aria-modal="true" aria-labelledby="post-pact-title">
+      <div class="modal-dialog modal-card post-pact-connect-card">
+        <div class="post-pact-badge-pill">
+          <span class="post-pact-badge-dot"></span>
+          <span>Nó Conectado à Malha Cívica</span>
         </div>
+        
+        <div class="post-pact-header">
+          <div class="post-pact-icon" aria-hidden="true">🎉</div>
+          <div>
+            <h3 class="modal-card-title" id="post-pact-title">Convide amigos</h3>
+            <p class="desc modal-card-lead">Toque em Compartilhar para mandar seu convite do Vox.</p>
+          </div>
+        </div>
+
+        <div class="post-pact-identity-preview">
+          ${renderAvatarHtml(routeId, shortId(routeId))}
+          <div class="post-pact-identity-meta">
+            <strong>Sua Chave Cidadã</strong>
+            <p class="meta"><code>${escapeHtml(shortId(routeId))}</code> · Soberana e sem dono</p>
+          </div>
+        </div>
+
+        <div class="modal-actions modal-actions--row post-pact-actions">
+          <button type="button" id="btn-post-pact-share-connect" class="btn btn-primary btn-post-pact-share" data-route="${escapeHtml(routeId)}">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            Compartilhar
+          </button>
+          <button type="button" id="btn-post-pact-connect-close" class="btn btn-outline btn-post-pact-close">Continuar</button>
+        </div>
+
         <details class="dm-advanced post-pact-advanced">
           <summary class="dm-advanced-summary">Ver link técnico</summary>
           <p class="meta">Só se precisar copiar manualmente:</p>
