@@ -84,6 +84,12 @@ test("explode - buildExplodeSheetHtml renders launchpad with all 9 network actio
   assert.ok(html.includes('data-explode-action="webhooks"'));
   assert.ok(html.includes('data-explode-action="copy"'));
   assert.ok(html.includes('data-explode-action="native"'));
+  assert.ok(html.includes("app-logo-svg"));
+  assert.ok(html.includes("explode-close-btn"));
+  assert.ok(html.includes("explode-actions-list"));
+  assert.ok(html.includes("Gerar Card de Story"));
+  assert.ok(html.includes("Copiar Mensagem Formatada"));
+
 });
 
 test("explode - renderIgToolbar includes btn-explode-post after share", () => {
@@ -389,5 +395,14 @@ test("explode - renderers display explode counter and updateExplodeButtonsUi upd
     assert.equal(fakeSpanTopic.textContent, "8 disparos");
   } finally {
     globalThis.document = prevDoc;
+  }
+});
+
+test("explode - APP_ICONS contains official vector SVG logos for all 9 apps", () => {
+  const expected = ["whatsapp", "instagram", "tiktok", "twitter", "bluesky", "threads", "telegram", "facebook", "webhooks"];
+  for (const app of expected) {
+    assert.ok(explode.APP_ICONS[app], `Missing icon for ${app}`);
+    assert.ok(explode.APP_ICONS[app].includes("<svg"), `Icon for ${app} must be an SVG`);
+    assert.ok(explode.APP_ICONS[app].includes("app-logo-svg"), `Icon for ${app} must have app-logo-svg class`);
   }
 });
