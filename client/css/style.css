@@ -2818,6 +2818,16 @@ body.post-lightbox-open {
   line-height: 1.25;
 }
 
+.profile-grid-name {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
 .profile-grid-handle {
   margin: 0;
   font-size: 1.05rem;
@@ -2826,6 +2836,13 @@ body.post-lightbox-open {
   align-items: center;
   gap: 0.35rem;
   flex-wrap: wrap;
+}
+
+p.profile-grid-handle {
+  margin: 0.15rem 0 0;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--muted);
 }
 
 .profile-grid-verified {

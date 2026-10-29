@@ -93,7 +93,7 @@ export function parseRoute() {
 
   if (!parts.length) return { name: "home", feed: (query.get("feed") || "for-you").toLowerCase() };
   if (parts[0] === "communities") return { name: "communities" };
-  if (parts[0] === "people") return { name: "people", query: query.get("q") || "" };
+  if (parts[0] === "people" || parts[0] === "pessoas") return { name: "people", query: query.get("q") || "" };
   if (parts[0] === "perfil") return { name: "perfil", tab: (query.get("tab") || "posts").toLowerCase() };
   if (parts[0] === "status") return { name: "status" };
   if (parts[0] === "wallet") return { name: "wallet" };
