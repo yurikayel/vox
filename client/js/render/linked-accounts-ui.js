@@ -6,6 +6,8 @@ import {
   loadLinkedAccounts,
   isAutoReplicationEnabled,
   getGeneralWebhookUrl,
+  getNetworkAuthUrl,
+  getSuggestedHandle,
 } from "../linked-accounts.js";
 
 function renderConnectedCardBody(net, linkedData) {
@@ -32,19 +34,42 @@ function renderConnectedCardBody(net, linkedData) {
 }
 
 function renderLinkNetworkForm(net) {
+  const suggested = getSuggestedHandle(net.id);
+  const authUrl = getNetworkAuthUrl(net.id, suggested);
+
   return `
-    <form class="form-link-network" data-net-id="${escapeHtml(net.id)}" style="margin-top:0.4rem;">
-      <div style="display:flex; flex-direction:column; gap:6px;">
-        <input type="text" class="input-net-handle form-control" placeholder="Seu @usuário nesta rede..." required style="font-size:0.8rem; padding:5px 8px;" />
-        ${net.supportsAtProto ? `
-          <input type="password" class="input-net-app-password form-control" placeholder="App Password Bluesky (opcional — post direto ATProto)" autocomplete="off" style="font-size:0.75rem; padding:4px 8px;" />
-        ` : ""}
-        ${net.canAutoWebhook ? `
-          <input type="url" class="input-net-webhook form-control" placeholder="URL do Webhook pessoal (opcional — n8n/Make/Zapier)..." style="font-size:0.75rem; padding:4px 8px;" />
-        ` : ""}
-        <button type="submit" class="btn btn-sm btn-primary" style="align-self:flex-start;">Vincular ${escapeHtml(net.name)}</button>
+    <div class="network-connect-box" data-net-id="${escapeHtml(net.id)}" style="margin-top:0.4rem;">
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+          <button type="button" class="btn btn-sm btn-primary btn-one-click-connect" data-net-id="${escapeHtml(net.id)}" data-auth-url="${escapeHtml(authUrl)}" style="background:${escapeHtml(net.color || "#1e293b")}; border-color:${escapeHtml(net.color || "#1e293b")}; color:#fff; font-weight:600; padding:7px 16px; border-radius:var(--radius-sm); display:inline-flex; align-items:center; gap:6px;">
+            <span>${net.icon}</span>
+            <span>Conectar ${escapeHtml(net.name)} (1 Clique)</span>
+          </button>
+          <span class="meta" style="font-size:0.75rem; color:var(--muted); line-height:1.2;">
+            Abre a rede no navegador, loga sozinho e volta ao Vox
+          </span>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:6px;">
+          <span class="meta" style="font-size:0.82rem; font-weight:600; color:var(--muted);">@</span>
+          <input type="text" class="input-net-handle form-control" placeholder="seu_usuario" value="${escapeHtml(suggested)}" style="font-size:0.8rem; padding:4px 8px; max-width:220px;" aria-label="Usuário nesta rede" />
+          <button type="button" class="btn btn-xs btn-outline btn-save-handle-quick" data-net-id="${escapeHtml(net.id)}" title="Vincular com este @handle">Vincular @</button>
+        </div>
+
+        <details class="network-advanced-opts" style="margin-top:2px; font-size:0.75rem; color:var(--muted);">
+          <summary style="cursor:pointer; user-select:none; padding:2px 0;">⚙️ Configuração avançada (App Password / Webhook manual)</summary>
+          <form class="form-link-network" data-net-id="${escapeHtml(net.id)}" style="margin-top:6px; display:flex; flex-direction:column; gap:6px;">
+            ${net.supportsAtProto ? `
+              <input type="password" class="input-net-app-password form-control" placeholder="App Password Bluesky (opcional — post direto ATProto)" autocomplete="off" style="font-size:0.75rem; padding:4px 8px;" />
+            ` : ""}
+            ${net.canAutoWebhook ? `
+              <input type="url" class="input-net-webhook form-control" placeholder="URL do Webhook pessoal (opcional — n8n/Make/Zapier)..." style="font-size:0.75rem; padding:4px 8px;" />
+            ` : ""}
+            <button type="submit" class="btn btn-xs btn-outline" style="align-self:flex-start;">Salvar credenciais manuais</button>
+          </form>
+        </details>
       </div>
-    </form>`;
+    </div>`;
 }
 
 function renderNetworkCard(net, linkedData) {
