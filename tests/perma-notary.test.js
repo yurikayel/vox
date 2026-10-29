@@ -2,6 +2,7 @@ import "../tests/setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import * as notary from "../client/js/perma-notary.js";
+import * as topic from "../client/js/render/topic.js";
 
 const SAMPLE_ATA_TEXT = `Resumo da reunião – Comitê Popular de Tecnologia (28/10)
 Quatro princípios:
@@ -68,4 +69,30 @@ test("perma-notary: renderNotaryBadgeHtml renderiza selo de cartório cívico", 
   assert.ok(html.includes("Arweave Free"));
   assert.ok(html.includes("sha256:"));
   assert.ok(html.includes("1 testemunhas"));
+});
+
+test("perma-notary: renderTopic renders notary badge when notaryRecord is present", async () => {
+  const record = await notary.createCivicNotaryRecord({
+    title: "Ata Plenária",
+    bodyText: SAMPLE_ATA_TEXT,
+    author: "vx_raul",
+    witnesses: ["vx_maria"],
+  });
+  const main = { innerHTML: "" };
+  topic.renderTopic(
+    main,
+    "topic_notary_1",
+    {
+      id: "topic_notary_1",
+      title: "Ata Plenária",
+      body: SAMPLE_ATA_TEXT,
+      author: "vx_raul",
+      notaryRecord: record,
+    },
+    []
+  );
+
+  assert.ok(main.innerHTML.includes("notary-badge"));
+  assert.ok(main.innerHTML.includes("Ata Cívica Imutável"));
+  assert.ok(main.innerHTML.includes(record.documentHash.slice(0, 12)));
 });

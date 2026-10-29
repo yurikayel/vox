@@ -36,6 +36,7 @@ import * as profileDirectory from "../profile-directory.js";
 import * as welcomeProfile from "../vox-welcome-profile.js";
 import * as meshProfile from "../mesh-profile.js";
 import { parseChatTranscriptToMarkdown } from "../chat-bridge.js";
+import { createCivicNotaryRecord } from "../perma-notary.js";
 import { parseRoute } from "./route-parse.js";
 import { getActiveUser, makeShellProps, attachPostShareHandlers } from "./context.js";
 
@@ -92,27 +93,46 @@ export async function showComposeCommunity() {
   }
 }
 
-function bindChatTranscriptImportHandler() {
-  document.getElementById("btn-convert-chat-transcript")?.addEventListener("click", () => {
-    const raw = document.getElementById("chat-transcript-input")?.value || "";
-    const parsed = parseChatTranscriptToMarkdown(raw);
-    if (!parsed.messageCount) {
-      share.showToast("Cole uma conversa do Slack ou Discord para converter.", "error");
-      return;
-    }
-    const bodyEl = document.getElementById("topic-body");
-    const titleEl = document.getElementById("topic-title");
-    if (bodyEl) bodyEl.value = bodyEl.value.trim() ? `${bodyEl.value.trim()}\n\n${parsed.markdown}` : parsed.markdown;
-    if (titleEl && !titleEl.value.trim() && parsed.suggestedTitle) titleEl.value = parsed.suggestedTitle.slice(0, 120);
-    share.showToast(`Ata formatada (${parsed.messageCount} intervenções)!`);
-  });
+async function applyTranscriptToComposer(shouldNotarize, user) {
+  const raw = document.getElementById("chat-transcript-input")?.value || "";
+  const parsed = parseChatTranscriptToMarkdown(raw);
+  if (!parsed.messageCount) {
+    share.showToast("Cole uma conversa do Slack ou Discord para converter.", "error");
+    return;
+  }
+  const bodyEl = document.getElementById("topic-body");
+  const titleEl = document.getElementById("topic-title");
+  let content = parsed.markdown;
+  if (shouldNotarize) {
+    const title = titleEl?.value.trim() || parsed.suggestedTitle || "Ata Comunitária";
+    const notary = await createCivicNotaryRecord({
+      title,
+      bodyText: parsed.markdown,
+      author: user?.routeId || "comunidade",
+      witnesses: parsed.participants,
+    });
+    const badge = `\n\n> 🏛️ **Cartório Cívico Arweave** • Prova de Existência Imutável\n> Hash SHA-256: \`${notary.documentHash}\`\n> Testemunhas registradas: ${notary.witnesses.join(", ") || "Assembleia"}`;
+    content = `${parsed.markdown}${badge}`;
+  }
+  if (bodyEl) {
+    bodyEl.value = bodyEl.value.trim() ? `${bodyEl.value.trim()}\n\n${content}` : content;
+  }
+  if (titleEl && !titleEl.value.trim() && parsed.suggestedTitle) {
+    titleEl.value = parsed.suggestedTitle.slice(0, 120);
+  }
+  share.showToast(shouldNotarize ? "Ata formatada e selada com Cartório Cívico!" : `Ata formatada (${parsed.messageCount} intervenções)!`);
+}
+
+function bindChatTranscriptImportHandler(user) {
+  document.getElementById("btn-convert-chat-transcript")?.addEventListener("click", () => applyTranscriptToComposer(false, user));
+  document.getElementById("btn-convert-and-notarize")?.addEventListener("click", () => applyTranscriptToComposer(true, user));
 }
 
 export async function showComposeTopic(communityId) {
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "compose", "Novo Post"));
   render.renderComposeTopic(main, communityId);
-  bindChatTranscriptImportHandler();
+  bindChatTranscriptImportHandler(user);
 
   try {
     const quotePrefill = sessionStorage.getItem("vox_quote_prefill");
