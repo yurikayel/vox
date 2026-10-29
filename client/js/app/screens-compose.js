@@ -392,6 +392,7 @@ export async function showComposeReply(topicId, communityId) {
 
 export async function persistLocalReply(topicId, communityId, body, { parentId = "" } = {}) {
   const replyId = "rep_" + Math.random().toString(36).slice(2, 10);
+  const myDisplayName = localAccount.getDisplayName() || localAccount.getProfileEnrichment()?.displayName || "";
   const signed = await localAccount.signPayload({
     id: replyId,
     type: "reply",
@@ -399,6 +400,7 @@ export async function persistLocalReply(topicId, communityId, body, { parentId =
     communityId,
     body,
     parentId: parentId || "",
+    authorDisplay: myDisplayName,
   });
   await cacheNode.saveLocalPost(signed);
   peers.broadcastGossip(signed);
@@ -409,7 +411,7 @@ export async function persistLocalReply(topicId, communityId, body, { parentId =
       "Community-Id": communityId,
       "Local-Origin-Id": replyId,
     });
-    await upload.postData({ replyTo: topicId, body, communityId }, tags);
+    await upload.postData({ replyTo: topicId, body, communityId, authorDisplay: myDisplayName }, tags);
   } catch {}
   return signed;
 }
@@ -421,11 +423,19 @@ export async function loadInlineReplies(topicId) {
   } catch {
     local = [];
   }
+  const myId = localAccount.getCachedRouteIdSync();
+  const myName = localAccount.getDisplayName() || localAccount.getProfileEnrichment()?.displayName || "";
   const seen = new Set();
   const out = [];
   for (const r of local) {
     seen.add(r.id);
-    out.push({ ...r, isLocalP2p: true });
+    const isOwn = Boolean(myId && r.author === myId);
+    out.push({
+      ...r,
+      isLocalP2p: true,
+      isOwnLocalPost: isOwn,
+      authorDisplay: r.authorDisplay || (isOwn ? myName : ""),
+    });
   }
   for (const r of mock.mockReplies(topicId).items) {
     if (seen.has(r.id)) continue;
@@ -558,7 +568,12 @@ export async function onNestedCommentReplySubmit(form) {
     const signed = await persistLocalReply(form.dataset.topic, form.dataset.comm || "", body, {
       parentId: form.dataset.parent || "",
     });
-    appendInlineReply(form.closest(".post-comments"), signed);
+    const myName = localAccount.getDisplayName() || localAccount.getProfileEnrichment()?.displayName || "";
+    appendInlineReply(form.closest(".post-comments"), {
+      ...signed,
+      isOwnLocalPost: true,
+      authorDisplay: signed.authorDisplay || myName,
+    });
     bumpReplyCount(form.closest("article"));
     form.reset();
     toggleCommentReplyComposer(form.closest(".post-comment-item"), false);
@@ -590,7 +605,12 @@ export async function onInlineReplySubmit(form) {
   }
   try {
     const signed = await persistLocalReply(form.dataset.topic, form.dataset.comm || "", body);
-    appendInlineReply(form.closest(".post-comments"), signed);
+    const myName = localAccount.getDisplayName() || localAccount.getProfileEnrichment()?.displayName || "";
+    appendInlineReply(form.closest(".post-comments"), {
+      ...signed,
+      isOwnLocalPost: true,
+      authorDisplay: signed.authorDisplay || myName,
+    });
     bumpReplyCount(form.closest("article"));
     form.reset();
     const panel = form.closest(".post-comments");
