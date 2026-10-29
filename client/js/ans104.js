@@ -146,3 +146,100 @@ export async function jwkToAddress(jwk) {
   const hash = await sha("SHA-256", owner);
   return bytesToB64Url(hash);
 }
+
+/**
+ * Faz o parsing da estrutura binária de um data item ANS-104.
+ * @param {Uint8Array} bytes
+ */
+export function parseBinaryDataItem(bytes) {
+  if (!bytes || bytes.length < 1076) {
+    return { ok: false, reason: "tam-insuficiente" };
+  }
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const sigType = view.getUint16(0, true);
+  if (sigType !== SIG_TYPE_ARWEAVE) {
+    return { ok: false, reason: "tipo-assinatura-invalido" };
+  }
+
+  const signature = bytes.slice(2, 514);
+  const owner = bytes.slice(514, 1026);
+  let offset = 1026;
+
+  const hasTarget = bytes[offset++] === 1;
+  const target = hasTarget ? bytes.slice(offset, offset + 32) : new Uint8Array(0);
+  if (hasTarget) offset += 32;
+
+  const hasAnchor = bytes[offset++] === 1;
+  const anchor = hasAnchor ? bytes.slice(offset, offset + 32) : new Uint8Array(0);
+  if (hasAnchor) offset += 32;
+
+  const tagCount = Number(view.getBigUint64(offset, true)); offset += 8;
+  const tagBytesLen = Number(view.getBigUint64(offset, true)); offset += 8;
+  const tagBytes = bytes.slice(offset, offset + tagBytesLen); offset += tagBytesLen;
+  const data = bytes.slice(offset);
+
+  return {
+    ok: true,
+    sigType,
+    signature,
+    owner,
+    target,
+    anchor,
+    tagCount,
+    tagBytesLen,
+    tagBytes,
+    data,
+  };
+}
+
+/**
+ * Valida matematicamente a assinatura RSA-PSS de um data item dissecado.
+ */
+export async function verifyParsedDataItem(parsed) {
+  if (!parsed?.ok) return { valid: false, reason: parsed?.reason || "invalido" };
+  const message = await deepHash([
+    enc.encode("dataitem"),
+    enc.encode("1"),
+    enc.encode(String(parsed.sigType)),
+    parsed.owner,
+    parsed.target,
+    parsed.anchor,
+    parsed.tagBytes,
+    parsed.data,
+  ]);
+
+  const pubKey = await crypto.subtle.importKey(
+    "jwk",
+    { kty: "RSA", n: bytesToB64Url(parsed.owner), e: "AQAB" },
+    { name: "RSA-PSS", hash: "SHA-256" },
+    false,
+    ["verify"]
+  );
+
+  const valid = await crypto.subtle.verify(
+    { name: "RSA-PSS", saltLength: 32 },
+    pubKey,
+    parsed.signature,
+    message
+  );
+
+  const id = bytesToB64Url(await sha("SHA-256", parsed.signature));
+  const ownerAddress = bytesToB64Url(await sha("SHA-256", parsed.owner));
+
+  return {
+    valid: Boolean(valid),
+    id,
+    ownerAddress,
+    data: parsed.data,
+    tagBytes: parsed.tagBytes,
+  };
+}
+
+/**
+ * Parsing e validação de assinatura em etapa única.
+ */
+export async function parseAndVerifyDataItem(bytes) {
+  const parsed = parseBinaryDataItem(bytes);
+  if (!parsed.ok) return { valid: false, reason: parsed.reason };
+  return verifyParsedDataItem(parsed);
+}

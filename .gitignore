@@ -13,3 +13,4 @@ relay/.inbox/
 __pycache__/
 *.pyc
 
+build/
