@@ -9,7 +9,7 @@ const css = fs.readFileSync(path.join(root, "css/style.css"), "utf8");
 const sw = fs.readFileSync(path.join(root, "sw.js"), "utf8");
 
 test("depurple paper - service worker cache id", () => {
-  assert.match(sw, /vox-pwa-v7\.10-hardened-review-sovereign-shield/);
+  assert.match(sw, /vox-pwa-v7\.11-official-welcome-post-pinned/);
   assert.ok(sw.includes('"./js/dm-messenger.js"'));
   assert.ok(sw.includes('"./js/chat-bridge.js"'));
   assert.ok(sw.includes('"./js/qr-url.js"'));

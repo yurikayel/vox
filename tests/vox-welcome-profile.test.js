@@ -42,3 +42,14 @@ test("vox-welcome-profile - legacy card flag migrates to intro seen", () => {
   welcome.markWelcomeCardSeen();
   assert.equal(localStorage.getItem(welcome.WELCOME_DM_INTRO_SEEN_KEY), "1");
 });
+
+test("vox-welcome-profile - getOfficialWelcomeTopic post oficial de boas-vindas com ~480 chars", () => {
+  const topic = welcome.getOfficialWelcomeTopic();
+  assert.equal(topic.id, "vox-official-manifesto-welcome");
+  assert.equal(topic.author, welcome.WELCOME_ROUTE_ID);
+  assert.equal(topic.isPinned, true);
+  assert.equal(topic.isOfficial, true);
+  assert.ok(topic.body.includes("praça pública digital"));
+  assert.ok(topic.body.includes("malha P2P"));
+  assert.ok(topic.body.length >= 450 && topic.body.length <= 500, `Body length ${topic.body.length} should be around 480 chars`);
+});

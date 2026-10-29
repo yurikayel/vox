@@ -55,7 +55,7 @@ Escrever este doc **não** conta como ✓. Sem credenciais de B, a linha B perma
 | mirror_id | role | base_url | git_sha | CACHE_NAME | operator | read_only | status | DoD ✓ |
 |-----------|------|----------|---------|------------|----------|-----------|--------|-------|
 | `shell-a` | A (Pages) | https://yurikayel.github.io/vox/ | `c63125d84cb47a9c1a816868abee1b0c7271d156` | `vox-pwa-v6.83-steward-kit-v-i08` | yurikayel (CI GitHub Actions) | true | **live** | ✓ verificado 2026-10-25 — URL responde; `sw.js` live = CACHE_NAME acima; SHA = último deploy Pages (`gh run list --workflow=deploy-pages.yml`) |
-| `shell-b` | B (alt) | *(vazio — preencher após go-live)* | *(mesmo SHA que A na release)* | `vox-pwa-v6.83-steward-kit-v-i08` *(obrigatório: copiar de `client/sw.js` da mesma release)* | *(voluntário — ver abaixo)* | true | **planned** | — |
+| `shell-b` | B (Pages) | https://vox-9df.pages.dev/ | `e5bc279` | `vox-pwa-v7.10-hardened-review-sovereign-shield` | yurikayel (CI GitHub Actions + Cloudflare Pages) | true | **live** | ✓ verificado 2026-10-28 — HTTP 200; `sw.js` live = CACHE_NAME; deploy automático via `deploy-shell-b.yml` |
 
 **Verificação rápida (operador A ou auditor):**
 
