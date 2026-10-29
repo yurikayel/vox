@@ -461,16 +461,40 @@ export async function getLocalPosts({ type = null, communityId = null, replyTo =
 
 export async function getLocalCommunities() {
   const posts = await getLocalPosts({ type: "community" });
-  return posts.map((c) => ({
-    id: c.communityId || c.id,
-    communityId: c.communityId || c.id,
-    title: c.title || c.communityId || c.id,
-    description: c.description || c.body || "",
-    category: c.category || "",
-    owner: c.author || "",
-    commercialEnabled: Boolean(c.commercialEnabled),
-    isLocalP2p: true,
-  }));
+  const updates = await getLocalPosts({ type: "community_update" });
+  const map = new Map();
+  for (const c of posts) {
+    const cid = c.communityId || c.id;
+    map.set(cid, {
+      id: cid,
+      communityId: cid,
+      title: c.title || cid,
+      description: c.description || c.body || "",
+      category: c.category || "",
+      owner: c.author || "",
+      image: c.image || c.avatar || "",
+      avatar: c.avatar || c.image || "",
+      language: c.language || "Português",
+      visibility: c.visibility || "open",
+      createdAt: c.createdAt || c.ts || null,
+      commercialEnabled: Boolean(c.commercialEnabled),
+      isLocalP2p: true,
+    });
+  }
+  for (const u of updates) {
+    const cid = u.communityId || u.id;
+    const existing = map.get(cid);
+    if (existing) {
+      if (u.image || u.avatar) {
+        existing.image = u.image || u.avatar;
+        existing.avatar = u.avatar || u.image;
+      }
+      if (u.title) existing.title = u.title;
+      if (u.description) existing.description = u.description;
+      if (u.category) existing.category = u.category;
+    }
+  }
+  return Array.from(map.values());
 }
 
 export async function clearLocalPosts() {
