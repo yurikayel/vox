@@ -73,12 +73,26 @@ export function renderInlineComposer({ userRouteId = "", displayName = "" } = {}
           </div>
           <button type="button" class="btn btn-outline btn-sm inline-composer-remove-img" id="btn-inline-remove-img" style="margin-top:8px;">Remover anexo</button>
         </div>
+        <div id="inline-recording-indicator" class="hidden" style="margin:8px 0; padding:10px 14px; background:rgba(220, 53, 69, 0.08); border:1px solid rgba(220, 53, 69, 0.4); border-radius:var(--radius-sm); display:flex; align-items:center; justify-content:space-between;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span class="recording-pulse" style="width:12px; height:12px; background:#dc3545; border-radius:50%; display:inline-block;"></span>
+            <strong style="color:var(--danger, #dc3545); font-size:0.85rem;">Gravando voz:</strong>
+            <span id="inline-recording-timer" style="font-family:monospace; font-weight:700;">00:00 / 01:00</span>
+          </div>
+          <div style="display:flex; gap:6px;">
+            <button type="button" id="btn-inline-stop-rec" class="btn btn-xs btn-primary">⏹ Concluir</button>
+            <button type="button" id="btn-inline-cancel-rec" class="btn btn-xs btn-outline">❌ Cancelar</button>
+          </div>
+        </div>
         <div class="inline-composer-toolbar">
-                    <div class="inline-composer-tools" style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+          <div class="inline-composer-tools" style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
             <label class="inline-composer-tool" title="Anexar foto (até 99 KB)">
               <input type="file" id="inline-topic-file" accept="image/jpeg,image/png,image/webp,image/gif" hidden />
               <span aria-hidden="true">📷</span> Foto
             </label>
+            <button type="button" class="inline-composer-tool" id="btn-inline-mic" title="Gravar voz pelo microfone (até 60s)">
+              <span aria-hidden="true">🔴</span> Gravar
+            </button>
             <label class="inline-composer-tool" title="Anexar áudio (até 60s)">
               <input type="file" id="inline-topic-audio" accept="audio/mpeg,audio/mp3,audio/wav,audio/ogg,audio/webm,audio/aac,audio/m4a" hidden />
               <span aria-hidden="true">🎙️</span> Áudio
@@ -87,7 +101,8 @@ export function renderInlineComposer({ userRouteId = "", displayName = "" } = {}
               <input type="file" id="inline-topic-video" accept="video/mp4,video/webm,video/ogg" hidden />
               <span aria-hidden="true">🎬</span> Vídeo
             </label>
-            <input type="text" id="inline-topic-comm" class="inline-composer-comm" placeholder="Comunidade (opcional)" maxlength="64" aria-label="Slug da comunidade" />
+            <input type="text" id="inline-topic-comm" class="inline-composer-comm" list="inline-comm-list" placeholder="Comunidade (opcional)" maxlength="64" aria-label="Slug da comunidade" />
+            <datalist id="inline-comm-list"></datalist>
           </div>
           <button type="submit" class="btn btn-primary btn-sm" id="btn-inline-submit" disabled>Postar</button>
         </div>
@@ -367,7 +382,10 @@ function renderPostMediaHero(t, overlayHeaderHtml = "") {
   const layer = renderPhotoTagLayerHtml(t, { isOwn: Boolean(t.isOwnLocalPost) });
   if (t?.video) {
     const src = escapeHtml(t.video);
-    return `<div class="post-media-container post-media-hero post-media-video-container" style="background:#000; border-radius:var(--radius-sm); overflow:hidden;">
+    return `<div class="post-media-container post-media-hero post-media-video-container" style="background:#000; border-radius:var(--radius-sm); overflow:hidden; position:relative;">
+      <div class="lofi-video-header" style="position:absolute; top:8px; left:8px; z-index:2; display:flex; align-items:center; gap:6px;">
+        <span class="badge-pill" style="font-size:0.7rem; padding:2px 6px; background:rgba(0,0,0,0.65); color:#fff; border:1px solid rgba(255,255,255,0.2);">📼 Lo-Fi 360p</span>
+      </div>
       <video class="post-media-video" src="${src}" controls playsinline preload="metadata" style="width:100%; max-height:480px; display:block;"></video>
       ${overlayHeaderHtml}
     </div>`;
@@ -375,12 +393,14 @@ function renderPostMediaHero(t, overlayHeaderHtml = "") {
   if (t?.audio) {
     const src = escapeHtml(t.audio);
     return `<div class="post-media-audio-card" style="margin:8px 0; padding:12px 14px; background:var(--surface-soft); border-radius:var(--radius-sm); border:1px solid var(--border);">
-      <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
-        <span style="font-size:1.1rem;">🎙️</span>
-        <strong style="font-size:0.85rem;">Recado de Voz</strong>
-        <span class="badge-pill" style="font-size:0.7rem; padding:2px 6px;">Lo-Fi 48k</span>
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:1.1rem;">🎙️</span>
+          <strong style="font-size:0.85rem;">Recado de Voz</strong>
+        </div>
+        <span class="badge-pill" style="font-size:0.7rem; padding:2px 6px; background:var(--surface); border:1px solid var(--border);">⚡ Lo-Fi 48k Opus</span>
       </div>
-      <audio class="post-media-audio" src="${src}" controls style="width:100%;"></audio>
+      <audio class="post-media-audio" src="${src}" controls style="width:100%; outline:none; border-radius:4px;"></audio>
       ${overlayHeaderHtml}
     </div>`;
   }
@@ -803,18 +823,24 @@ export function renderFeed(main, topics = [], { activeFeed = "for-you", userRout
     } else if (activeFeed === "following") {
       html += `
         <div class="empty following-empty">
+          <div style="font-size:2rem; margin-bottom:0.5rem;">👥</div>
           <p><strong>Você ainda não acompanha ninguém.</strong></p>
           <p class="desc" style="max-width:440px; margin:0.4rem auto 0.8rem;">Clique em <strong>👁️ Acompanhar (Watch)</strong> nos perfis de autores para ver as publicações deles reunidas nesta aba.</p>
           <div style="display:flex; gap:0.5rem; justify-content:center; flex-wrap:wrap;">
             <a class="btn btn-primary btn-sm" href="#/">Explorar feed "Para você"</a>
-            <a class="btn btn-outline btn-sm" href="#/c/demo-aprenda-vox">Conhecer perfis do tour</a>
+            <a class="btn btn-outline btn-sm" href="#/pessoas">Encontrar pessoas na rede</a>
           </div>
         </div>`;
     } else {
       html += `
         <div class="empty">
-          <p>Nenhuma voz recente na rede — seja a primeira.</p>
-          <a class="btn btn-primary" href="#/compose/topic">Publicar primeiro post</a>
+          <div style="font-size:2rem; margin-bottom:0.5rem;">🌱</div>
+          <p><strong>Nenhuma publicação no feed ainda.</strong></p>
+          <p class="desc" style="max-width:440px; margin:0.4rem auto 0.8rem;">Seja a primeira voz soberana a compartilhar uma ideia, foto Lo-Fi, áudio ou vídeo nesta rede.</p>
+          <div style="display:flex; gap:0.5rem; justify-content:center; flex-wrap:wrap;">
+            <button type="button" class="btn btn-primary btn-sm" onclick="document.querySelector('#feed-inline-composer .inline-composer-collapsed')?.click()">Criar publicação</button>
+            <a class="btn btn-outline btn-sm" href="#/pessoas">Encontrar pessoas</a>
+          </div>
         </div>`;
     }
     main.innerHTML += html;

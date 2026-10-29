@@ -7901,3 +7901,40 @@ blockquote.repost-cite {
   border-radius: 4px;
   background: rgba(22, 163, 74, 0.1);
 }
+
+/* Voice memo recording pulse */
+@keyframes recPulse {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(0.95); opacity: 0.8; }
+}
+.recording-pulse {
+  animation: recPulse 1.2s infinite ease-in-out;
+}
+
+/* Post Audio & Video Lo-Fi enhancements */
+.post-media-audio-card {
+  transition: border-color 0.15s ease;
+}
+.post-media-audio-card:hover {
+  border-color: var(--border-hover, #64748b);
+}
+.post-media-video-container {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+.lofi-video-header {
+  pointer-events: none;
+}
+
+/* Multi-Account Vault styling */
+.vault-account-item {
+  transition: transform 0.1s ease, background 0.1s ease;
+}
+.vault-account-item:hover {
+  background: var(--surface-hover, rgba(0, 0, 0, 0.08));
+}
+
+/* Profile Network tab */
+.profile-grid-network {
+  margin-top: 0.75rem;
+}

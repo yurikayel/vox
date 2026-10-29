@@ -11,6 +11,7 @@ import {
 } from "./util.js";
 import { renderPostItem } from "./feed.js";
 import { isWelcomeRouteId } from "../vox-welcome-profile.js";
+import * as localAccount from "../local-account.js";
 import { LOCAL_WIPE_NOTICE } from "../local-account.js";
 import { renderProfileNoteBubbleHtml } from "./profile-note-bubble.js";
 
@@ -61,11 +62,13 @@ function renderProfileGridTabs(address, currentTab, showAbout, showSaved) {
   const saved = showSaved
     ? `<a href="${href("saved")}" class="profile-grid-tab ${currentTab === "saved" ? "active" : ""}" aria-label="Salvos">${PROFILE_SAVED_TAB_ICON}</a>`
     : "";
+  const following = `<a href="${href("following")}" class="profile-grid-tab profile-grid-tab-text ${currentTab === "following" || currentTab === "followers" ? "active" : ""}">Amizades</a>`;
   const about = showAbout
     ? `<a href="${href("about")}" class="profile-grid-tab profile-grid-tab-text ${currentTab === "about" ? "active" : ""}">Sobre</a>`
     : "";
   return `<nav class="profile-grid-tabs" aria-label="Seções do perfil">
       <a href="${href("posts")}" class="profile-grid-tab ${currentTab === "posts" ? "active" : ""}" aria-label="Publicações">${PROFILE_GRID_TAB_ICON}</a>
+      ${following}
       ${saved}
       ${about}
     </nav>`;
@@ -80,18 +83,18 @@ function renderProfileGridStats(postsCount, statsData, address, isCurrentWallet)
   const pub = Number(postsCount) || 0;
   return `
     <div class="profile-grid-stats" role="list">
-      <div class="profile-grid-stat" role="listitem">
+      <a class="profile-grid-stat" href="#/u/${encodeURIComponent(address)}?tab=posts" role="listitem">
         <span class="profile-grid-stat-value">${pub}</span>
         <span class="profile-grid-stat-label">${pub === 1 ? "publicação" : "publicações"}</span>
-      </div>
-      <div class="profile-grid-stat" role="listitem">
+      </a>
+      <a class="profile-grid-stat" href="#/u/${encodeURIComponent(address)}?tab=followers" role="listitem" title="Ver seguidores">
         <span class="profile-grid-stat-value">${followersCount}</span>
         <span class="profile-grid-stat-label">${followersCount === 1 ? "seguidor" : "seguidores"}</span>
-      </div>
-      <div class="profile-grid-stat" role="listitem">
+      </a>
+      <a class="profile-grid-stat" href="#/u/${encodeURIComponent(address)}?tab=following" role="listitem" title="Ver seguidos">
         <span class="profile-grid-stat-value">${followingCount}</span>
         <span class="profile-grid-stat-label">seguindo</span>
-      </div>
+      </a>
     </div>`;
 }
 
@@ -195,6 +198,7 @@ function renderProfileGridActionRow(address, isCurrentWallet, isBlocked, isMuted
       </button>
       ${zapBtn}
       <a class="profile-grid-btn profile-grid-btn-outline" href="#/dm/${encodeURIComponent(address)}">Mensagem</a>
+      <button type="button" class="profile-grid-btn profile-grid-btn-outline" id="btn-qr-connect-link" data-qr-share="connect" data-qr-id="${escapeHtml(address)}" title="Cartão de Amizade / QR Code">📇 Conectar</button>
       <button type="button" class="profile-grid-btn profile-grid-btn-outline" id="btn-copy-author-route" data-route="${escapeHtml(address)}">Copiar ID</button>
     </div>
     <details class="profile-grid-mod-actions">
@@ -388,6 +392,7 @@ function renderProfileActions(
 ) {
   if (isCurrentWallet) {
     return `
+      ${renderMultiAccountCard(address)}
       <div class="card profile-grid-settings-card" style="margin-top:0.75rem;">
         <h3>Identidade Local</h3>
         <form id="form-display-name" style="margin-top:0.5rem; display:flex; gap:0.5rem;">
@@ -520,6 +525,8 @@ export function renderProfile(main, address, memberships = [], isCurrentWallet =
 
   if (currentTab === "posts") {
     html += renderProfilePostGrid(authorPostList, finalPinned);
+  } else if (currentTab === "following" || currentTab === "followers") {
+    html += renderProfileNetworkTab(address, isCurrentWallet, currentTab);
   } else if (currentTab === "saved") {
     html += savedList.length
       ? renderProfilePostGrid(savedList)
@@ -813,5 +820,95 @@ export function renderComposeListing(main, communityId, commTitle = "", prefill 
           <button type="submit" class="btn btn-primary" id="btn-submit-listing">Publicar na Feira</button>
         </div>
       </form>
+    </div>`;
+}
+
+
+function renderMultiAccountCard(currentAddress) {
+  const accounts = localAccount.listVaultAccountsSync();
+  const itemsHtml = accounts.map((acc) => {
+    const isCurrent = acc.routeId === currentAddress;
+    const name = acc.displayName || shortId(acc.routeId);
+    const badge = isCurrent
+      ? `<span class="badge-pill p2p-pill" style="font-size:0.75rem;">Ativa</span>`
+      : `<button type="button" class="btn btn-xs btn-primary btn-switch-vault-account" data-route="${escapeHtml(acc.routeId)}">Alternar</button>`;
+    const removeBtn = !isCurrent && accounts.length > 1
+      ? `<button type="button" class="btn btn-xs btn-outline btn-remove-vault-account" data-route="${escapeHtml(acc.routeId)}" title="Remover do cofre local">✕</button>`
+      : "";
+    return `
+      <div class="card vault-account-item" style="display:flex; align-items:center; justify-content:space-between; padding:8px 12px; margin-top:6px; background:var(--surface-soft); border-radius:var(--radius-sm);">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <div class="avatar" style="width:32px; height:32px; font-size:0.85rem;">${escapeHtml(name.slice(0, 1).toUpperCase())}</div>
+          <div>
+            <strong>${escapeHtml(name)}</strong>
+            <div class="meta" style="font-size:0.72rem;"><code>${escapeHtml(shortId(acc.routeId))}</code></div>
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:6px;">
+          ${badge}
+          ${removeBtn}
+        </div>
+      </div>`;
+  }).join("");
+
+  return `
+    <div class="card profile-vault-accounts" style="margin-top:0.75rem;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.4rem;">
+        <h3 style="margin:0;">Alternador de Contas Locais</h3>
+        <span class="badge-pill" style="font-size:0.7rem;">Cofre Seguro</span>
+      </div>
+      <p class="desc" style="font-size:0.83rem; margin-bottom:0.5rem;">
+        Alterne entre identidades soberanas neste navegador para testar amizades, comunidades e publicações de vida real.
+      </p>
+      <div class="vault-account-list" style="margin-bottom:0.75rem;">
+        ${itemsHtml}
+      </div>
+      <form id="form-create-vault-account" style="display:flex; gap:0.5rem; align-items:center;">
+        <input type="text" id="input-new-account-name" class="form-control" placeholder="Nome da nova conta (ex: Alice, Comunidade, Bob)" maxlength="30" required />
+        <button type="submit" class="btn btn-sm btn-outline" style="white-space:nowrap;">➕ Nova Conta</button>
+      </form>
+    </div>`;
+}
+
+function renderProfileNetworkTab(address, isCurrentWallet, currentTab) {
+  const isFollowing = currentTab !== "followers";
+  const list = isCurrentWallet
+    ? social.getWatchedProfiles()
+    : [];
+  const title = isFollowing ? "Acompanhados / Amizades" : "Seguidores";
+
+  if (!list.length) {
+    return `
+      <div class="profile-grid-network">
+        <h3 class="profile-grid-about-heading">${title}</h3>
+        <div class="empty">
+          <p>Nenhuma conta acompanhada ainda neste perfil.</p>
+          <a class="btn btn-primary btn-sm" href="#/pessoas" style="margin-top:0.5rem;">Encontrar pessoas na rede</a>
+        </div>
+      </div>`;
+  }
+
+  const items = list.map((routeId) => {
+    const disp = profileDirectory.getAuthorDisplaySync(routeId) || shortId(routeId);
+    return `
+      <div class="card" style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px; margin-top:6px;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div class="avatar">${escapeHtml(disp.slice(0, 1).toUpperCase())}</div>
+          <div>
+            <a href="#/u/${encodeURIComponent(routeId)}"><strong>${escapeHtml(disp)}</strong></a>
+            <div class="meta" style="font-size:0.75rem;"><code>${escapeHtml(shortId(routeId))}</code></div>
+          </div>
+        </div>
+        <div style="display:flex; gap:6px;">
+          <a class="btn btn-xs btn-outline" href="#/dm/${encodeURIComponent(routeId)}">💬 DM</a>
+          <button type="button" class="btn btn-xs btn-outline btn-watch-profile" data-route="${escapeHtml(routeId)}">Seguindo</button>
+        </div>
+      </div>`;
+  }).join("");
+
+  return `
+    <div class="profile-grid-network">
+      <h3 class="profile-grid-about-heading">${title} (${list.length})</h3>
+      <div class="card-list">${items}</div>
     </div>`;
 }

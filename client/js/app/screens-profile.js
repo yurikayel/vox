@@ -368,10 +368,63 @@ export function bindProfileButtons(user, address, isSelf, dmPub, activeTab = "po
     void share.shareConnect({ routeId: address, displayName: localAccount.getDisplayName() });
   });
 
-  document.getElementById("btn-qr-connect-link")?.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    openQrUrlSheet(share.connectShareUrl(address));
+  document.querySelectorAll("[data-qr-share='connect'], #btn-qr-connect-link").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const targetId = btn.dataset.qrId || address;
+      openQrUrlSheet(share.connectShareUrl(targetId));
+    });
+  });
+
+  const formCreateVault = document.getElementById("form-create-vault-account");
+  if (formCreateVault && isSelf) {
+    formCreateVault.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const input = document.getElementById("input-new-account-name");
+      const name = input?.value.trim() || "";
+      if (!name) return;
+      try {
+        const newAcc = await localAccount.createAdditionalAccount({ displayName: name });
+        profileDirectory.setProfileCard(newAcc.routeId, { name, updatedAt: Date.now() });
+        share.showToast(`Nova conta "${name}" criada e ativada!`);
+        await showProfile(newAcc.routeId, "about");
+      } catch (err) {
+        share.showToast(`Erro ao criar conta: ${err.message}`, "error");
+      }
+    });
+  }
+
+  document.querySelectorAll(".btn-switch-vault-account").forEach((btn) => {
+    btn.addEventListener("click", async (e) => {
+      e.preventDefault();
+      const targetRoute = btn.dataset.route;
+      if (!targetRoute) return;
+      try {
+        const ok = await localAccount.switchActiveAccount(targetRoute);
+        if (ok) {
+          share.showToast("Identidade alternada com sucesso!");
+          await showProfile(targetRoute, "about");
+        } else {
+          share.showToast("Falha ao alternar conta.", "error");
+        }
+      } catch (err) {
+        share.showToast(`Erro ao alternar: ${err.message}`, "error");
+      }
+    });
+  });
+
+  document.querySelectorAll(".btn-remove-vault-account").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      const targetRoute = btn.dataset.route;
+      if (!targetRoute) return;
+      if (confirm("Remover esta conta do cofre local deste aparelho?")) {
+        localAccount.removeVaultAccount(targetRoute);
+        share.showToast("Conta removida do cofre.");
+        showProfile(address, "about");
+      }
+    });
   });
 
   const btnGenWallet = document.getElementById("btn-generate-wallet");

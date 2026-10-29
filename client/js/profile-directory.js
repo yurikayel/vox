@@ -107,6 +107,11 @@ export function getAuthorDisplaySync(routeId) {
   if (myId === routeId) {
     return localAccount.getDisplayName() || routeId.slice(0, 10);
   }
+  if (typeof localAccount.listVaultAccountsSync === "function") {
+    const vault = localAccount.listVaultAccountsSync();
+    const match = vault.find((v) => v.routeId === routeId);
+    if (match?.displayName) return match.displayName;
+  }
   return "";
 }
 
@@ -120,6 +125,11 @@ export function getAuthorAvatarSync(routeId) {
   if (myId === routeId) {
     const e = localAccount.getProfileEnrichment();
     return e?.avatarUrl || "";
+  }
+  if (typeof localAccount.listVaultAccountsSync === "function") {
+    const vault = localAccount.listVaultAccountsSync();
+    const match = vault.find((v) => v.routeId === routeId);
+    if (match?.avatarUrl) return match.avatarUrl;
   }
   return "";
 }

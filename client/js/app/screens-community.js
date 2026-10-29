@@ -234,6 +234,38 @@ export async function showCommunity(communityId, tab = "posts") {
     });
   }
 
+  const btnExportGenesis = document.getElementById("btn-export-comm-genesis");
+  if (btnExportGenesis) {
+    btnExportGenesis.addEventListener("click", () => {
+      const genesisData = {
+        type: "vox-community-genesis",
+        version: 1,
+        communityId,
+        meta,
+        exportedAt: Date.now(),
+        topicsCount: filteredTopics.length,
+        topics: filteredTopics.map((t) => ({
+          id: t.id,
+          title: t.title,
+          body: t.body,
+          author: t.author || t.owner,
+          ts: t.ts,
+          image: t.image,
+          audio: t.audio,
+          video: t.video,
+        })),
+      };
+      const blob = new Blob([JSON.stringify(genesisData, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `comunidade-${communityId}-genesis.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      share.showToast("Gênesis da comunidade exportado com sucesso!");
+    });
+  }
+
   document.getElementById("btn-neighbor-comm-only")?.addEventListener("click", () => {
     const next = { ...peerSettings, commOnly: true, enabled: true };
     peers.savePeerSettings(next);
