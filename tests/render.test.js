@@ -1189,3 +1189,18 @@ test("render - modal pós-pacto connect", () => {
   assert.equal(container.innerHTML, "");
 });
 
+
+test("render - pacto de boas-vindas traz mosaico de fotos reais leves e prova social", async () => {
+  const fs = await import("node:fs");
+  const container = createContainer();
+  render.renderPactModal(container);
+  const html = container.innerHTML;
+  const srcs = [...html.matchAll(/src="(images\/welcome\/[^"]+)"/g)].map((m) => m[1]);
+  assert.ok(srcs.length >= 10, "mosaico + avatares");
+  for (const s of srcs) {
+    const size = fs.statSync(new URL(`../client/${s}`, import.meta.url)).size;
+    assert.ok(size <= 30 * 1024, `${s} deve ser leve (${size} B)`);
+  }
+  assert.ok(html.includes("welcome-social"));
+  assert.ok(/alt="[^"]{8,}"/.test(html), "fotos do mosaico com alt descritivo");
+});

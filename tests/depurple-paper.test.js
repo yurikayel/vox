@@ -36,7 +36,7 @@ test("onboarding paper - modal sheet/card in CSS, neutral scrim", () => {
 });
 
 test("onboarding paper - oauth modals use semantic classes not glass card", () => {
-  const modals = fs.readFileSync(path.join(root, "js/render/oauth-modals.js"), "utf8");
+  const modals = ["js/render/oauth-modals.js", "js/render/welcome-pact.js"].map((f) => fs.readFileSync(path.join(root, f), "utf8")).join("\n");
   assert.ok(modals.includes("modal-sheet"));
   assert.ok(modals.includes("modal-card"));
   assert.ok(modals.includes("modal-feature"));

@@ -1,4 +1,5 @@
 /** @file OAuth, cantina gate, pact/zap/edit modals, people search. */
+import { renderPactModalHtml } from "./welcome-pact.js";
 import * as brcode from "../brcode.js";
 import * as i18n from "../i18n-pt-br.js";
 import * as postOwnership from "../post-ownership.js";
@@ -225,45 +226,7 @@ export function closeCantinaGate(container) {
 
 export function renderPactModal(container) {
   if (!container) return;
-  container.innerHTML = `
-    <div class="modal-overlay modal-sheet" id="pact-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="pact-welcome-title">
-      <div class="modal-dialog modal-card">
-        <div class="modal-card-header modal-card-header--center">
-          <h2 id="pact-welcome-title" class="modal-card-heading">Bem-vindo ao Vox</h2>
-          <p class="desc modal-card-intro">Vox populi na prática: conversas e comunidades direto nos aparelhos, sem controle central.</p>
-        </div>
-
-        <div class="modal-feature">
-          <div class="modal-feature-icon" aria-hidden="true">🛡️</div>
-          <div>
-            <strong>1. Seus dados são seus</strong>
-            <p class="desc modal-feature-desc">Suas mensagens e publicações pertencem a você. Nenhuma empresa controla sua conta.</p>
-          </div>
-        </div>
-
-        <div class="modal-feature">
-          <div class="modal-feature-icon" aria-hidden="true">⚡</div>
-          <div>
-            <strong>2. Rede cooperativa</strong>
-            <p class="desc modal-feature-desc">O app aberto ajuda a distribuir conteúdos para outros usuários sem servidores caros.</p>
-          </div>
-        </div>
-
-        <div class="modal-feature">
-          <div class="modal-feature-icon" aria-hidden="true">🔒</div>
-          <div>
-            <strong>3. Controle total</strong>
-            <p class="desc modal-feature-desc">Respeita conexão Wi-Fi, teto diário de dados e você pode pausar a qualquer momento.</p>
-          </div>
-        </div>
-
-        <div class="modal-actions modal-actions--stack">
-          <button id="btn-pact-accept" class="btn btn-primary btn-pact-continue">Continuar</button>
-          <button id="btn-pact-settings" class="btn btn-outline btn-pact-settings">Ajustar rede depois</button>
-        </div>
-      </div>
-    </div>
-  `;
+  container.innerHTML = renderPactModalHtml();
 }
 
 export function closePactModal(container) {
