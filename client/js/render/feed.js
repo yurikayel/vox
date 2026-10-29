@@ -74,9 +74,11 @@ export function renderInlineComposer({ userRouteId = "", displayName = "" } = {}
           <div class="composer-aspect-bar" id="composer-aspect-bar" style="display:none;">
             <span class="meta composer-aspect-label">Proporção:</span>
             <button type="button" class="composer-aspect-btn active" data-aspect="original">Original (padrão)</button>
-            <button type="button" class="composer-aspect-btn" data-aspect="1:1">1:1</button>
-            <button type="button" class="composer-aspect-btn" data-aspect="4:3">4:3</button>
             <button type="button" class="composer-aspect-btn" data-aspect="16:9">16:9</button>
+            <button type="button" class="composer-aspect-btn" data-aspect="9:16">9:16</button>
+            <button type="button" class="composer-aspect-btn" data-aspect="4:3">4:3</button>
+            <button type="button" class="composer-aspect-btn" data-aspect="3:4">3:4</button>
+            <button type="button" class="composer-aspect-btn" data-aspect="1:1">1:1</button>
           </div>
           <div class="composer-tag-bar" id="composer-tag-bar" style="display:none; margin-top:8px; align-items:center; gap:8px; flex-wrap:wrap;">
             <button type="button" class="btn btn-outline btn-xs" id="btn-inline-tag-people">🏷️ Marcar pessoas</button>

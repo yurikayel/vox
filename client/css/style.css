@@ -1143,9 +1143,15 @@ main#app-main,
   object-fit: contain;
 }
 
-.inline-composer-preview-img.composer-aspect-1-1 {
-  aspect-ratio: 1 / 1;
+.inline-composer-preview-img.composer-aspect-16-9 {
+  aspect-ratio: 16 / 9;
   max-height: 320px;
+  object-fit: cover;
+}
+
+.inline-composer-preview-img.composer-aspect-9-16 {
+  aspect-ratio: 9 / 16;
+  max-height: 380px;
   object-fit: cover;
 }
 
@@ -1155,8 +1161,14 @@ main#app-main,
   object-fit: cover;
 }
 
-.inline-composer-preview-img.composer-aspect-16-9 {
-  aspect-ratio: 16 / 9;
+.inline-composer-preview-img.composer-aspect-3-4 {
+  aspect-ratio: 3 / 4;
+  max-height: 360px;
+  object-fit: cover;
+}
+
+.inline-composer-preview-img.composer-aspect-1-1 {
+  aspect-ratio: 1 / 1;
   max-height: 320px;
   object-fit: cover;
 }
@@ -1730,6 +1742,26 @@ main#app-main,
   max-height: 640px;
 }
 .post-media-container.post-aspect-16-9 .post-media-hero-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.post-media-container.post-aspect-9-16 {
+  aspect-ratio: 9 / 16;
+  max-height: 780px;
+}
+.post-media-container.post-aspect-9-16 .post-media-hero-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.post-media-container.post-aspect-3-4 {
+  aspect-ratio: 3 / 4;
+  max-height: 720px;
+}
+.post-media-container.post-aspect-3-4 .post-media-hero-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
