@@ -35,24 +35,34 @@ function resolveKind(payload = {}) {
   return "topic";
 }
 
+const PROPOSAL_STATUS_CONFIG = {
+  merged: { color: 0x16a34a, label: "🟣 Aprovada (Merged)" },
+  rejected: { color: 0xdc2626, label: "🔴 Rejeitada" },
+  open: { color: 0x2b5fb8, label: "🟢 Em votação" },
+};
+
+function formatProposalTally(tally) {
+  if (!tally || tally.yes == null) {
+    return "1 membro = 1 voto (corte anti-brigading)";
+  }
+  return `🟢 Sim: ${tally.yes || 0} · 🔴 Não: ${tally.no || 0} · ⚪ Abst: ${tally.abstain || 0}`;
+}
+
 function buildDiscordProposalEmbed(p) {
-  const state = String(p.state || p.tally?.state || "open").toLowerCase();
-  const color = state === "merged" ? 0x16a34a : state === "rejected" ? 0xdc2626 : 0x2b5fb8;
-  const statusLabel = state === "merged" ? "🟣 Aprovada (Merged)" : state === "rejected" ? "🔴 Rejeitada" : "🟢 Em votação";
+  const rawState = p.state || (p.tally && p.tally.state) || "open";
+  const state = String(rawState).toLowerCase();
+  const cfg = PROPOSAL_STATUS_CONFIG[state] || PROPOSAL_STATUS_CONFIG.open;
   const diffSnippet = p.diffText ? `\n\n\`\`\`diff\n${clip(p.diffText, 600)}\n\`\`\`` : "";
-  const tally = p.tally || {};
-  const tallyStr =
-    tally.yes != null
-      ? `🟢 Sim: ${tally.yes || 0} · 🔴 Não: ${tally.no || 0} · ⚪ Abst: ${tally.abstain || 0}`
-      : "1 membro = 1 voto (corte anti-brigading)";
+  const tallyStr = formatProposalTally(p.tally);
+
   return {
     title: clip(`🗳️ ${p.title || "Proposta de Governança"}`, 240),
     url: p.canonicalUrl || undefined,
     description: `${clip(p.body || "", 400)}${diffSnippet}`.trim(),
-    color,
+    color: cfg.color,
     fields: [
       { name: "Comunidade", value: p.communityId || "geral", inline: true },
-      { name: "Status", value: statusLabel, inline: true },
+      { name: "Status", value: cfg.label, inline: true },
       { name: "Apuração", value: tallyStr, inline: false },
     ],
     footer: { text: "Vox · Governança Cívica Auditável" },
@@ -162,6 +172,26 @@ export function adaptWebhookPayloadForUrl(url, payload) {
   return payload;
 }
 
+function buildProposalSummaryLines(payload, bold) {
+  const lines = [];
+  if (payload.diffText) {
+    lines.push(`\`\`\`diff\n${clip(payload.diffText, 400)}\n\`\`\``);
+  }
+  if (payload.tally && payload.tally.yes != null) {
+    const t = payload.tally;
+    lines.push(`📊 ${bold}Placar (1 membro = 1 voto):${bold} 🟢 Sim: ${t.yes} · 🔴 Não: ${t.no} · ⚪ Abst: ${t.abstain}`);
+  }
+  return lines;
+}
+
+function buildListingSummaryLines(payload) {
+  if (!payload.priceLabel && !payload.contactPix) return [];
+  const parts = [];
+  if (payload.priceLabel) parts.push(`💰 ${payload.priceLabel}`);
+  if (payload.contactPix) parts.push(`⚡ Pix: \`${payload.contactPix}\``);
+  return [parts.join(" · ")];
+}
+
 export function buildChatSummaryCopy(payload = {}, { format = "discord" } = {}) {
   const kind = resolveKind(payload);
   const bold = format === "slack" ? "*" : "**";
@@ -170,17 +200,13 @@ export function buildChatSummaryCopy(payload = {}, { format = "discord" } = {}) 
   const comm = payload.communityId ? ` · \`#${payload.communityId}\`` : "";
   const lines = [`${icon} ${bold}${title}${bold}${comm}`];
   if (payload.body) lines.push(clip(payload.body, 320));
-  if (kind === "proposal" && payload.diffText) {
-    lines.push(`\`\`\`diff\n${clip(payload.diffText, 400)}\n\`\`\``);
+
+  if (kind === "proposal") {
+    lines.push(...buildProposalSummaryLines(payload, bold));
+  } else if (kind === "listing") {
+    lines.push(...buildListingSummaryLines(payload));
   }
-  if (kind === "proposal" && payload.tally?.yes != null) {
-    const t = payload.tally;
-    lines.push(`📊 ${bold}Placar (1 membro = 1 voto):${bold} 🟢 Sim: ${t.yes} · 🔴 Não: ${t.no} · ⚪ Abst: ${t.abstain}`);
-  }
-  if (kind === "listing" && (payload.priceLabel || payload.contactPix)) {
-    const parts = [payload.priceLabel ? `💰 ${payload.priceLabel}` : "", payload.contactPix ? `⚡ Pix: \`${payload.contactPix}\`` : ""].filter(Boolean);
-    lines.push(parts.join(" · "));
-  }
+
   if (payload.canonicalUrl) lines.push(`🔗 ${payload.canonicalUrl}`);
   return lines.join("\n\n");
 }
