@@ -298,7 +298,7 @@ export async function showCommunities() {
   render.renderLoading(main);
 
   try {
-    const { items: remoteItems, gateway, demo } = await gql.fetchCommunities().catch(async () => mock.mockCommunities());
+    const { items: remoteItems, gateway } = await gql.fetchCommunities().catch(async () => mock.mockCommunities());
     const localComms = await cacheNode.getLocalCommunities();
     const seen = new Set(localComms.map((c) => c.id));
     const merged = [

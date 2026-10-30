@@ -32,31 +32,38 @@ function normAuthorToken(s) {
     .replace(/^@/, "");
 }
 
-function resolveAuthorFullName(routeId, override, isOwnLocalPost) {
-  const rawOverride = String(override || "").trim();
-  if (rawOverride && !rawOverride.startsWith("vx_") && !rawOverride.startsWith("0x") && !rawOverride.startsWith("did:")) {
-    return rawOverride;
-  }
+function isRawAddressToken(str) {
+  if (!str || typeof str !== "string") return true;
+  return str.startsWith("vx_") || str.startsWith("0x") || str.startsWith("did:");
+}
+
+function resolveSelfName(routeId, isOwnLocalPost) {
   const myId = localAccount.getCachedRouteIdSync();
   const isSelf = Boolean(isOwnLocalPost) || (Boolean(routeId) && Boolean(myId) && routeId === myId);
-  if (isSelf) {
-    const selfName = localAccount.getDisplayName() || localAccount.getProfileEnrichment()?.displayName || "";
-    if (selfName) return selfName;
+  if (!isSelf) return "";
+  return localAccount.getDisplayName() || localAccount.getProfileEnrichment()?.displayName || "";
+}
+
+function resolveDirectoryOrVaultName(routeId) {
+  if (!routeId) return "";
+  const dirName = profileDirectory.getAuthorDisplaySync(routeId);
+  if (dirName && !isRawAddressToken(dirName)) return dirName;
+
+  if (typeof localAccount.listVaultAccountsSync === "function") {
+    const match = localAccount.listVaultAccountsSync().find((v) => v.routeId === routeId);
+    if (match?.displayName && !isRawAddressToken(match.displayName)) return match.displayName;
   }
-  if (routeId) {
-    const dirName = profileDirectory.getAuthorDisplaySync(routeId);
-    if (dirName && !dirName.startsWith("vx_") && !dirName.startsWith("0x") && !dirName.startsWith("did:")) return dirName;
-    if (typeof localAccount.listVaultAccountsSync === "function") {
-      const match = localAccount.listVaultAccountsSync().find((v) => v.routeId === routeId);
-      if (match?.displayName && !match.displayName.startsWith("vx_")) return match.displayName;
-    }
-    const mockName = mock.getAuthorDisplay(routeId);
-    if (mockName) return mockName;
-    if (!routeId.startsWith("vx_") && !routeId.startsWith("0x") && !routeId.startsWith("did:")) {
-      return routeId;
-    }
+  return mock.getAuthorDisplay(routeId) || (!isRawAddressToken(routeId) ? routeId : "");
+}
+
+function resolveAuthorFullName(routeId, override, isOwnLocalPost) {
+  const rawOverride = String(override || "").trim();
+  if (rawOverride && !isRawAddressToken(rawOverride)) {
+    return rawOverride;
   }
-  return "";
+  const selfName = resolveSelfName(routeId, isOwnLocalPost);
+  if (selfName) return selfName;
+  return resolveDirectoryOrVaultName(routeId);
 }
 
 function resolveAuthorHandle(routeId) {
@@ -64,6 +71,22 @@ function resolveAuthorHandle(routeId) {
   const card = profileDirectory.getProfileCard(routeId);
   if (card?.handle) return card.handle;
   return mock.getAuthorHandle(routeId) || "";
+}
+
+function resolveSecondaryHandle(routeId, displayName, shortRoute, profileHandle) {
+  if (profileHandle) {
+    return profileHandle.replace(/^@/, "");
+  }
+  if (routeId && normAuthorToken(shortRoute) !== normAuthorToken(displayName)) {
+    return shortRoute.replace(/^@/, "");
+  }
+  return "";
+}
+
+function shouldClearSecondaryHandle(primary, secondaryHandle, shortRoute) {
+  if (!secondaryHandle) return false;
+  const normShort = normAuthorToken(shortRoute);
+  return normAuthorToken(primary) === normShort && normAuthorToken(secondaryHandle) === normShort;
 }
 
 function formatAuthorResult(routeId, fullName, profileHandle) {
@@ -81,23 +104,14 @@ function formatAuthorResult(routeId, fullName, profileHandle) {
   }
 
   const primary = displayName || shortRoute || "—";
-  let secondaryHandle = "";
-  if (profileHandle) {
-    secondaryHandle = profileHandle.replace(/^@/, "");
-  } else if (routeId && normAuthorToken(shortRoute) !== normAuthorToken(displayName)) {
-    secondaryHandle = shortRoute.replace(/^@/, "");
-  }
-
-  if (
-    secondaryHandle &&
-    normAuthorToken(primary) === normAuthorToken(shortRoute) &&
-    normAuthorToken(secondaryHandle) === normAuthorToken(shortRoute)
-  ) {
+  let secondaryHandle = resolveSecondaryHandle(routeId, displayName, shortRoute, profileHandle);
+  if (shouldClearSecondaryHandle(primary, secondaryHandle, shortRoute)) {
     secondaryHandle = "";
   }
 
   const authorDisplay = displayName || primary;
-  const authorHandle = secondaryHandle || (profileHandle ? profileHandle.replace(/^@/, "") : shortRoute);
+  const cleanProfileHandle = profileHandle ? profileHandle.replace(/^@/, "") : "";
+  const authorHandle = secondaryHandle || cleanProfileHandle || shortRoute;
 
   return { primary, secondaryHandle, authorDisplay, authorHandle, routeTitle: routeId };
 }

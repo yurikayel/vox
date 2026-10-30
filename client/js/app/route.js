@@ -21,39 +21,43 @@ import {
   showComposeReply,
 } from "./screens-compose.js";
 
+const ROUTE_DISPATCH_TABLE = {
+  home: (r) => showHome(r.feed),
+  "tag-feed": (r) => showTagFeed(r.slug),
+  communities: () => showCommunities(),
+  people: (r) => showPeople(r.query),
+  connect: (r) => showConnect(r.routeId),
+  perfil: (r) => showProfile(null, r.tab),
+  "pix-lookup": (r) => showPixLookup(r.query),
+  "network-settings": () => showNetworkSettings(),
+  "linked-accounts": () => showLinkedAccounts(),
+  "steward-wizard": () => showStewardWizard(),
+  "handle-lookup": (r) => showHandleLookup(r.slug),
+  "dm-list": () => showDmList(),
+  "dm-thread": (r) => showDmThread(r.address),
+  voxpedia: () => showVoxpedia(),
+  "ajuda-teste": () => showAjudaTeste(),
+  status: () => showStatus(),
+  "labs-frames": () => showLabsFrames(),
+  "labs-mofn": () => showLabsMofn(),
+  community: (r) => showCommunity(r.id, r.tab),
+  proposal: (r) => showProposal(r.communityId, r.proposalId),
+  topic: (r) => showTopic(r.id, r.communityId),
+  profile: (r) => showProfile(r.address, r.tab),
+  wallet: () => showWallet(),
+  "compose-community": () => showComposeCommunity(),
+  "compose-listing": (r) => showComposeListing(r.communityId),
+  "compose-proposal": (r) => showComposeProposal(r.communityId),
+  "compose-topic": (r) => showComposeTopic(r.communityId),
+  "compose-reply": (r) => showComposeReply(r.topicId, r.communityId),
+};
+
 export async function routeImpl() {
   closePostMoreMenu();
   checkCantinaGate();
   const r = parseRoute();
-  if (r.name === "home") return showHome(r.feed);
-  if (r.name === "tag-feed") return showTagFeed(r.slug);
-  if (r.name === "communities") return showCommunities();
-  if (r.name === "people") return showPeople(r.query);
-  if (r.name === "connect") return showConnect(r.routeId);
-  if (r.name === "perfil") return showProfile(null, r.tab);
-  if (r.name === "pix-lookup") return showPixLookup(r.query);
-  if (r.name === "network-settings") return showNetworkSettings();
-  if (r.name === "linked-accounts") return showLinkedAccounts();
-  if (r.name === "steward-wizard") return showStewardWizard();
-  if (r.name === "handle-lookup") return showHandleLookup(r.slug);
-  if (r.name === "dm-list") return showDmList();
-  if (r.name === "dm-thread") return showDmThread(r.address);
-  if (r.name === "voxpedia") return showVoxpedia();
-  if (r.name === "ajuda-teste") return showAjudaTeste();
-  if (r.name === "status") return showStatus();
-  if (r.name === "labs-frames") return showLabsFrames();
-  if (r.name === "labs-mofn") return showLabsMofn();
-  if (r.name === "community") return showCommunity(r.id, r.tab);
-  if (r.name === "proposal") return showProposal(r.communityId, r.proposalId);
-  if (r.name === "topic") return showTopic(r.id, r.communityId);
-  if (r.name === "profile") return showProfile(r.address, r.tab);
-  if (r.name === "wallet") return showWallet();
-  if (r.name === "compose-community") return showComposeCommunity();
-  if (r.name === "compose-listing") return showComposeListing(r.communityId);
-  if (r.name === "compose-proposal") return showComposeProposal(r.communityId);
-  if (r.name === "compose-topic") return showComposeTopic(r.communityId);
-  if (r.name === "compose-reply") return showComposeReply(r.topicId, r.communityId);
-  return showHome();
+  const handler = ROUTE_DISPATCH_TABLE[r.name] || (() => showHome());
+  return await handler(r);
 }
 
 export function wireRoute() {
