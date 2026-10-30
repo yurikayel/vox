@@ -1,32 +1,25 @@
 {
-  "generatedAt": "2026-10-30T05:02:51.993Z",
+  "generatedAt": "2026-10-30T22:25:42.557Z",
   "filesScanned": 130,
-  "violationCount": 183,
+  "violationCount": 176,
   "violations": [
     {
-      "file": "client/js/app/route.js",
-      "line": 24,
-      "rule": "complexity",
-      "message": "Async function 'routeImpl' has a complexity of 29. Maximum allowed is 15.",
-      "severity": "warn"
-    },
-    {
       "file": "client/js/app/screens-compose.js",
-      "line": 152,
+      "line": 132,
       "rule": "complexity",
       "message": "Async function 'applyTranscriptToComposer' has a complexity of 17. Maximum allowed is 15.",
       "severity": "warn"
     },
     {
       "file": "client/js/app/screens-compose.js",
-      "line": 206,
+      "line": 186,
       "rule": "complexity",
       "message": "Async arrow function has a complexity of 24. Maximum allowed is 15.",
       "severity": "warn"
     },
     {
       "file": "client/js/app/screens-compose.js",
-      "line": 309,
+      "line": 289,
       "rule": "complexity",
       "message": "Async function 'handleComposeListingSubmit' has a complexity of 27. Maximum allowed is 15.",
       "severity": "warn"
@@ -431,20 +424,6 @@
       "severity": "warn"
     },
     {
-      "file": "client/js/render/util.js",
-      "line": 35,
-      "rule": "complexity",
-      "message": "Function 'resolveAuthorFullName' has a complexity of 27. Maximum allowed is 15.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/render/util.js",
-      "line": 69,
-      "rule": "complexity",
-      "message": "Function 'formatAuthorResult' has a complexity of 19. Maximum allowed is 15.",
-      "severity": "warn"
-    },
-    {
       "file": "client/js/steward-wizard.js",
       "line": 57,
       "rule": "complexity",
@@ -466,50 +445,43 @@
       "severity": "warn"
     },
     {
-      "file": "client/js/app/route.js",
-      "line": 24,
-      "rule": "max-lines-per-function",
-      "message": "Async function 'routeImpl' has too many lines (34). Maximum allowed is 30.",
-      "severity": "warn"
-    },
-    {
       "file": "client/js/app/screens-compose.js",
-      "line": 41,
+      "line": 21,
       "rule": "max-lines-per-function",
       "message": "Async function 'showComposeCommunity' has too many lines (101). Maximum allowed is 30.",
       "severity": "warn"
     },
     {
       "file": "client/js/app/screens-compose.js",
-      "line": 98,
+      "line": 78,
       "rule": "max-lines-per-function",
       "message": "Async arrow function has too many lines (48). Maximum allowed is 30.",
       "severity": "warn"
     },
     {
       "file": "client/js/app/screens-compose.js",
-      "line": 187,
+      "line": 167,
       "rule": "max-lines-per-function",
       "message": "Async function 'showComposeTopic' has too many lines (84). Maximum allowed is 30.",
       "severity": "warn"
     },
     {
       "file": "client/js/app/screens-compose.js",
-      "line": 206,
+      "line": 186,
       "rule": "max-lines-per-function",
       "message": "Async arrow function has too many lines (65). Maximum allowed is 30.",
       "severity": "warn"
     },
     {
       "file": "client/js/app/screens-compose.js",
-      "line": 309,
+      "line": 289,
       "rule": "max-lines-per-function",
       "message": "Async function 'handleComposeListingSubmit' has too many lines (54). Maximum allowed is 30.",
       "severity": "warn"
     },
     {
       "file": "client/js/app/screens-compose.js",
-      "line": 636,
+      "line": 616,
       "rule": "max-lines-per-function",
       "message": "Async function 'onNestedCommentReplySubmit' has too many lines (32). Maximum allowed is 30.",
       "severity": "warn"
@@ -1230,7 +1202,7 @@
     },
     {
       "file": "client/js/render/util.js",
-      "line": 231,
+      "line": 245,
       "rule": "max-lines-per-function",
       "message": "Function 'renderMarkdownLight' has too many lines (34). Maximum allowed is 30.",
       "severity": "warn"
@@ -1261,27 +1233,6 @@
       "line": 119,
       "rule": "max-lines-per-function",
       "message": "Function 'getOfficialWelcomeTopic' has too many lines (33). Maximum allowed is 30.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/webrtc-peer.js",
-      "line": 211,
-      "rule": "max-lines-per-function",
-      "message": "Function 'bindSignalingSocket' has too many lines (38). Maximum allowed is 30.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/webrtc-peer.js",
-      "line": 390,
-      "rule": "max-lines-per-function",
-      "message": "Async function 'createPeerConnection' has too many lines (47). Maximum allowed is 30.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/webrtc-peer.js",
-      "line": 475,
-      "rule": "max-lines-per-function",
-      "message": "Function 'closePeerConnection' has too many lines (33). Maximum allowed is 30.",
       "severity": "warn"
     }
   ]
