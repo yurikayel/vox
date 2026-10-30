@@ -62,37 +62,42 @@ function indexMeshCards(map) {
   }
 }
 
-function indexLocalAndVaultAccounts(map) {
+function indexSelfAccount(map) {
   const myId = localAccount.getCachedRouteIdSync();
-  if (myId) {
-    const myName = localAccount.getDisplayName() || localAccount.getProfileEnrichment()?.displayName || "";
+  if (!myId) return;
+  const myName = localAccount.getDisplayName() || localAccount.getProfileEnrichment()?.displayName || "";
+  upsert(
+    map,
+    {
+      routeId: myId,
+      name: myName || myId.slice(0, 14),
+      handle: handles.getCachedAddressHandle(myId) || "",
+      source: "self",
+    },
+    ["self", "contact", "vault", "mesh-card", "mesh-author"],
+  );
+}
+
+function indexVaultAccounts(map) {
+  if (typeof localAccount.listVaultAccountsSync !== "function") return;
+  for (const v of localAccount.listVaultAccountsSync()) {
+    if (!v?.routeId) continue;
     upsert(
       map,
       {
-        routeId: myId,
-        name: myName || myId.slice(0, 14),
-        handle: handles.getCachedAddressHandle(myId) || "",
-        source: "self",
+        routeId: v.routeId,
+        name: v.displayName || profileDirectory.getAuthorDisplaySync(v.routeId) || v.routeId.slice(0, 14),
+        handle: handles.getCachedAddressHandle(v.routeId) || "",
+        source: "vault",
       },
       ["self", "contact", "vault", "mesh-card", "mesh-author"],
     );
   }
+}
 
-  if (typeof localAccount.listVaultAccountsSync === "function") {
-    for (const v of localAccount.listVaultAccountsSync()) {
-      if (!v?.routeId) continue;
-      upsert(
-        map,
-        {
-          routeId: v.routeId,
-          name: v.displayName || profileDirectory.getAuthorDisplaySync(v.routeId) || v.routeId.slice(0, 14),
-          handle: handles.getCachedAddressHandle(v.routeId) || "",
-          source: "vault",
-        },
-        ["self", "contact", "vault", "mesh-card", "mesh-author"],
-      );
-    }
-  }
+function indexLocalAndVaultAccounts(map) {
+  indexSelfAccount(map);
+  indexVaultAccounts(map);
 }
 
 export async function buildPeopleIndex() {
@@ -159,19 +164,27 @@ function resolveDirectRouteQuery(cleanQ, all) {
   }
 }
 
+function matchesTextQuery(text, ql, cleanQl) {
+  if (!text) return false;
+  return text.includes(ql) || Boolean(cleanQl && text.includes(cleanQl));
+}
+
+function matchesRouteId(pRoute, pShort, cleanQl) {
+  if (!cleanQl) return false;
+  return pRoute.includes(cleanQl) || pShort.includes(cleanQl);
+}
+
 function matchesPerson(p, ql, cleanQl, handleRoute) {
   if (handleRoute && p.routeId === handleRoute) return true;
   const pRoute = (p.routeId || "").toLowerCase();
   const pShort = shortId(p.routeId).toLowerCase();
-  const pName = (p.name || "").toLowerCase();
-  const pHandle = (p.handle || "").toLowerCase();
+  if (matchesRouteId(pRoute, pShort, cleanQl)) return true;
 
-  if (cleanQl && (pRoute.startsWith(cleanQl) || pRoute.includes(cleanQl) || pShort.startsWith(cleanQl) || pShort.includes(cleanQl))) {
-    return true;
-  }
-  if (pName.includes(ql) || (cleanQl && pName.includes(cleanQl))) return true;
-  if (pHandle && (pHandle.includes(ql) || (cleanQl && pHandle.includes(cleanQl)))) return true;
-  return false;
+  const pName = (p.name || "").toLowerCase();
+  if (matchesTextQuery(pName, ql, cleanQl)) return true;
+
+  const pHandle = (p.handle || "").toLowerCase();
+  return matchesTextQuery(pHandle, ql, cleanQl);
 }
 
 export async function searchPeople(query) {

@@ -14,7 +14,7 @@ export function canonicalProfileCardId(routeId) {
 
 export function stripSignatureFields(item) {
   if (!item || typeof item !== "object") return {};
-  const { sig, pubKey, ...rest } = item;
+  const { sig: _sig, pubKey: _pubKey, ...rest } = item;
   return rest;
 }
 
@@ -39,19 +39,40 @@ export function validateProfileCardItem(item) {
   return { ok: true };
 }
 
+function resolveCardDisplayName(displayName, enrich) {
+  if (displayName) return displayName;
+  const local = localAccount.getDisplayName();
+  if (local) return local;
+  return (enrich && enrich.displayName) ? enrich.displayName : "";
+}
+
+function resolveCardAvatar(avatarUrl, enrich) {
+  if (avatarUrl) return avatarUrl;
+  return (enrich && enrich.avatarUrl) ? enrich.avatarUrl : "";
+}
+
+function resolveCardBio(bio, enrich) {
+  if (bio) return bio;
+  return (enrich && enrich.bio) ? enrich.bio : "";
+}
+
 export async function buildSignedProfileCard({ displayName = "", avatarUrl = "", bio = "" } = {}) {
   const routeId = await localAccount.getRouteId();
   const enrich = localAccount.getProfileEnrichment();
   const note = profileNote.getNote(routeId);
+  const name = resolveCardDisplayName(displayName, enrich);
+  const avatar = resolveCardAvatar(avatarUrl, enrich);
+  const resolvedBio = resolveCardBio(bio, enrich);
+
   const payload = {
     id: canonicalProfileCardId(routeId),
     type: PROFILE_CARD_TYPE,
     routeId,
-    displayName: String(displayName || localAccount.getDisplayName() || enrich?.displayName || "").slice(0, 80),
-    avatarUrl: String(avatarUrl || enrich?.avatarUrl || "").slice(0, 512),
-    bio: String(bio || enrich?.bio || "").slice(0, 280),
-    note: note?.text || "",
-    noteAt: note?.updatedAt || 0,
+    displayName: String(name).slice(0, 80),
+    avatarUrl: String(avatar).slice(0, 512),
+    bio: String(resolvedBio).slice(0, 280),
+    note: (note && note.text) ? note.text : "",
+    noteAt: (note && note.updatedAt) ? note.updatedAt : 0,
     discoverable: true,
     editedAt: Date.now(),
   };
@@ -73,16 +94,24 @@ export async function buildRevokeProfileCard() {
   return localAccount.signPayload(payload);
 }
 
+function getCardTagValue(val, maxLen) {
+  const str = String(val || "").trim();
+  return maxLen ? str.slice(0, maxLen) : str;
+}
+
 export function buildProfileCardArweaveTags(card) {
+  const c = card || {};
+  const name = c.displayName || c.name || "";
+  const ts = c.editedAt || c.ts || Date.now();
   return [
     { name: "App-Name", value: "vox-brasil" },
     { name: "Type", value: PROFILE_CARD_TYPE },
-    { name: "Route-Id", value: String(card?.routeId || "").trim() },
-    { name: "Display-Name", value: String(card?.displayName || card?.name || "").trim().slice(0, 80) },
-    { name: "Bio", value: String(card?.bio || "").trim().slice(0, 280) },
-    { name: "Avatar-Url", value: String(card?.avatarUrl || "").trim().slice(0, 512) },
-    { name: "Discoverable", value: card?.discoverable !== false ? "true" : "false" },
-    { name: "Timestamp", value: String(card?.editedAt || card?.ts || Date.now()) },
+    { name: "Route-Id", value: getCardTagValue(c.routeId) },
+    { name: "Display-Name", value: getCardTagValue(name, 80) },
+    { name: "Bio", value: getCardTagValue(c.bio, 280) },
+    { name: "Avatar-Url", value: getCardTagValue(c.avatarUrl, 512) },
+    { name: "Discoverable", value: c.discoverable !== false ? "true" : "false" },
+    { name: "Timestamp", value: String(ts) },
     { name: "Content-Type", value: "application/json" },
   ];
 }
