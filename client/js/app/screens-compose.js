@@ -217,12 +217,16 @@ export async function showComposeTopic(communityId) {
       btn.textContent = "Publicando…";
       try {
         const topicId = "top_" + Math.random().toString(36).slice(2, 10);
+        const myDisplayName = localAccount.getDisplayName() || localAccount.getProfileEnrichment()?.displayName || "";
+        const myAvatar = localAccount.getProfileEnrichment()?.avatarUrl || "";
         const signed = await localAccount.signPayload({
           id: topicId,
           type: "topic",
           communityId: finalComm,
           title,
           body,
+          authorDisplay: myDisplayName,
+          authorAvatar: myAvatar,
         });
         await cacheNode.saveLocalPost(signed);
         peers.broadcastGossip(signed);
@@ -461,6 +465,7 @@ export async function showComposeReply(topicId, communityId) {
 export async function persistLocalReply(topicId, communityId, body, { parentId = "" } = {}) {
   const replyId = "rep_" + Math.random().toString(36).slice(2, 10);
   const myDisplayName = localAccount.getDisplayName() || localAccount.getProfileEnrichment()?.displayName || "";
+  const myAvatar = localAccount.getProfileEnrichment()?.avatarUrl || "";
   const signed = await localAccount.signPayload({
     id: replyId,
     type: "reply",
@@ -469,6 +474,7 @@ export async function persistLocalReply(topicId, communityId, body, { parentId =
     body,
     parentId: parentId || "",
     authorDisplay: myDisplayName,
+    authorAvatar: myAvatar,
   });
   await cacheNode.saveLocalPost(signed);
   peers.broadcastGossip(signed);
@@ -557,7 +563,12 @@ export async function togglePostComments(btn) {
   }
   const slot = panel.querySelector(".post-comments-feed");
   if (slot) slot.innerHTML = `<p class="post-comments-empty">Carregando respostas…</p>`;
-  fillCommentFeed(panel, await loadInlineReplies(panel.dataset.topic));
+  const replies = await loadInlineReplies(panel.dataset.topic);
+  fillCommentFeed(panel, replies);
+  const countEls = article.querySelectorAll(".count-replies");
+  for (const el of countEls) {
+    el.textContent = replies.length > 0 ? String(replies.length) : "";
+  }
   panel.querySelector(".post-comment-input")?.focus();
 }
 
@@ -658,9 +669,17 @@ export async function onNestedCommentReplySubmit(form) {
 }
 
 export function bumpReplyCount(article) {
-  const el = article?.querySelector(".count-replies");
-  if (!el) return;
-  el.textContent = String((Number(el.textContent) || 0) + 1);
+  if (!article) return;
+  const countEls = article.querySelectorAll(".count-replies");
+  for (const el of countEls) {
+    const next = (Number(el.textContent) || 0) + 1;
+    el.textContent = String(next);
+  }
+  const btns = article.querySelectorAll(".btn-comment");
+  for (const btn of btns) {
+    const n = Number(btn.querySelector(".count-replies")?.textContent) || 0;
+    btn.setAttribute("aria-label", `Comentar${n > 0 ? `, ${n} comentários` : ""}`);
+  }
 }
 
 export async function onInlineReplySubmit(form) {

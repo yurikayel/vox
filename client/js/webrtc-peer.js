@@ -332,7 +332,18 @@ export function createRtcConfig(config = configCache) {
   return { iceServers };
 }
 
+let peerConnectHandler = null;
+
+export function onPeerConnect(handler) {
+  peerConnectHandler = handler;
+}
+
 function setupDataChannelEvents(dc, remotePeerId) {
+  dc.onopen = () => {
+    if (typeof peerConnectHandler === "function") {
+      peerConnectHandler(remotePeerId, (obj) => sendVoxMessage(remotePeerId, obj));
+    }
+  };
   dc.onmessage = (event) => {
     if (!messageHandler) return;
     try {

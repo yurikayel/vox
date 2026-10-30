@@ -264,6 +264,14 @@ export async function handleVoxMessage(msg, replyFn, source = "broadcast") {
   const settings = getPeerSettings();
   if (!settings.enabled) return;
 
+  if (msg.type === "PROFILE_CARD_HELLO" && msg.card) {
+    const valid = await localAccount.verifyPayload(msg.card);
+    if (valid) {
+      await gossipProfile.applyVerifiedProfileCardItem(msg.card);
+    }
+    return;
+  }
+
   if (msg.type === "WANT" && msg.txId && msg.fromPeer !== myPeerId) {
     if (isDailyCapReached()) return;
     if (settings.wifiOnly && !isWifiOrUnlimited()) return;
@@ -378,6 +386,14 @@ async function handleGossipMessage(item, source = "rtc") {
     await gossipProfile.applyVerifiedProfileCardItem(item);
     await relayProfileCardGossip({ type: "GOSSIP", item, fromPeer: myPeerId }, source);
     return;
+  }
+
+  if (item.author && (item.authorDisplay || item.authorAvatar || item.authorHandle)) {
+    profileDirectory.setProfileCard(item.author, {
+      name: item.authorDisplay || "",
+      avatarUrl: item.authorAvatar || "",
+      handle: item.authorHandle || "",
+    });
   }
 
   await cacheNode.saveLocalPost(item);
@@ -568,6 +584,13 @@ webrtcPeer.onVoxMessage((msg, replyFn, source) => {
 
 webrtcPeer.onDmMessage((envelope) => {
   dispatchDirectMessage(envelope, "rtc");
+});
+
+webrtcPeer.onPeerConnect(async (remotePeerId, sendFn) => {
+  try {
+    const card = await profileCard.buildSignedProfileCard();
+    sendFn({ type: "PROFILE_CARD_HELLO", card });
+  } catch {}
 });
 
 export function sendDirectMessageTransport(toAddress, envelope) {

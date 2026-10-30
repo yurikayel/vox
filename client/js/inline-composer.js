@@ -464,12 +464,16 @@ export function attachInlineComposerHandlers(onPublished) {
     }
     try {
       const topicId = "top_" + Math.random().toString(36).slice(2, 10);
+      const myDisplayName = localAccount.getDisplayName() || localAccount.getProfileEnrichment()?.displayName || "";
+      const myAvatar = localAccount.getProfileEnrichment()?.avatarUrl || "";
       const payload = {
         id: topicId,
         type: "topic",
         communityId: commSlug,
         title: title || "",
         body: body || "",
+        authorDisplay: myDisplayName,
+        authorAvatar: myAvatar,
       };
       if (inlineComposerMedia.type === "image" && (inlineComposerImageDataUrl || inlineComposerMedia.dataUrl)) {
         payload.image = inlineComposerImageDataUrl || inlineComposerMedia.dataUrl;

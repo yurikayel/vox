@@ -367,6 +367,9 @@ export async function saveLocalPost(post) {
         category: post.category || "",
         description: post.description || "",
         author: post.author || post.owner || "",
+        authorDisplay: post.authorDisplay || "",
+        authorAvatar: post.authorAvatar || "",
+        authorHandle: post.authorHandle || "",
         image: post.image || "",
         imageAlt: post.imageAlt || "",
         externalPain: post.externalPain || "",
@@ -457,6 +460,17 @@ export async function getLocalPosts({ type = null, communityId = null, replyTo =
   } catch {
     return [];
   }
+}
+
+export async function getReplyCountsMap() {
+  const replies = await getLocalPosts({ type: "reply" });
+  const counts = {};
+  for (const r of replies) {
+    if (r.replyTo) {
+      counts[r.replyTo] = (counts[r.replyTo] || 0) + 1;
+    }
+  }
+  return counts;
 }
 
 export async function getLocalCommunities() {

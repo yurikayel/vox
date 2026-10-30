@@ -32,7 +32,7 @@ function shareAttrs(postId) {
 
 function commentBtn(t) {
   const n = Number(t.repliesCount) || 0;
-  const count = n > 0 ? `<span class="overlay-action-count count-replies">${n}</span>` : "";
+  const count = `<span class="overlay-action-count count-replies">${n > 0 ? n : ""}</span>`;
   return `<button type="button" class="action-btn btn-comment" data-id="${escapeHtml(t.id)}" data-comm="${escapeHtml(t.communityId || "")}" aria-label="Comentar${n > 0 ? `, ${n} comentários` : ""}">${iconComment()}${count}</button>`;
 }
 

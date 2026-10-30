@@ -24,6 +24,8 @@ import {
 import { showDmThread, initDmListeners } from "./screens-dm.js";
 import {
   togglePostComments,
+  bumpReplyCount,
+  appendInlineReply,
   onInlineReplySubmit,
   onNestedCommentReplySubmit,
   toggleCommentReplyComposer,
@@ -33,6 +35,22 @@ import { handleRepostClick } from "./repost-ui.js";
 export function initGossipListeners() {
   peers.onGossipPost((item) => {
     const cur = parseRoute();
+    if (item?.type === "reply" && item.replyTo) {
+      const topicArticle = document.querySelector(`article[data-id="${item.replyTo}"]`);
+      if (topicArticle) {
+        bumpReplyCount(topicArticle);
+        const panel = topicArticle.querySelector(".post-comments");
+        if (panel && !panel.hidden) {
+          appendInlineReply(panel, item);
+        }
+      }
+      if (cur.name === "topic" && (cur.id === item.id || cur.id === item.replyTo)) {
+        showTopic(cur.id, cur.communityId);
+      }
+      share.showToast(`Nova resposta na publicação: ${(item.body || "").slice(0, 24)}…`);
+      return;
+    }
+
     if (cur.name === "home") {
       showHome(cur.feed);
     } else if (cur.name === "community" && cur.id === item.communityId) {
