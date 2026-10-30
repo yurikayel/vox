@@ -31,8 +31,9 @@ jobs:
           [ -n "$SENTINEL_NODE_3" ] && nodes+=("$SENTINEL_NODE_3")
 
           if [ ${#nodes[@]} -eq 0 ]; then
-            echo "Nenhum segredo configurado. Usando sentinela padrão ativo no Render."
+            echo "Nenhum segredo configurado. Usando sentinelas padrão ativas (Render e Deno Edge)."
             nodes+=("https://vox-sentinel.onrender.com")
+            nodes+=("https://vox.vox.deno.net")
           fi
 
           failed=0
