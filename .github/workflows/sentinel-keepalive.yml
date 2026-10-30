@@ -31,8 +31,8 @@ jobs:
           [ -n "$SENTINEL_NODE_3" ] && nodes+=("$SENTINEL_NODE_3")
 
           if [ ${#nodes[@]} -eq 0 ]; then
-            echo "::notice title=Nenhum nó sentinela configurado::Configure os segredos de repositório SENTINEL_NODE_1, SENTINEL_NODE_2 e SENTINEL_NODE_3 com as URLs dos nós base (ex: https://meu-space.hf.space)."
-            exit 0
+            echo "Nenhum segredo configurado. Usando sentinela padrão ativo no Render."
+            nodes+=("https://vox-sentinel.onrender.com")
           fi
 
           failed=0
