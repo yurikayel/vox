@@ -161,6 +161,34 @@ function wireHomeInteractiveHandlers(activeFeed) {
   attachQuoteExternalHandlers();
 }
 
+async function fetchRemoteHomeItems(activeFeed) {
+  if (activeFeed === "following") {
+    const watched = social.getWatchedProfiles();
+    if (watched.length > 0) {
+      const res = await gql.fetchTopicsByOwners(watched).catch(() => ({ items: [] }));
+      return { items: res.items || [], gateway: res.gateway || "" };
+    }
+    return { items: [], gateway: "" };
+  }
+  const res = await gql.fetchRecentTopics().catch(async () => mock.mockRecentTopics());
+  return { items: res.items || [], gateway: res.gateway || "" };
+}
+
+async function assembleHomeFeedTopics(remoteItems, commMap, user, activeFeed) {
+  const localPosts = (await cacheNode.getLocalPosts({ type: "topic" })).filter((p) => p.type !== "listing");
+  const replyCounts = await cacheNode.getReplyCountsMap().catch(() => ({}));
+  const merged = applyReplyCountsToTopics(
+    mergeLocalAndRemoteTopics(localPosts, remoteItems, commMap, user),
+    replyCounts,
+  );
+  const filtered = await filterTopicsForActiveFeed(merged, activeFeed);
+  const isWelcomeDismissed = localStorage.getItem("vox-welcome-post-dismissed") === "1";
+  const welcomeTopic = welcomeProfile.getOfficialWelcomeTopic();
+  const shouldIncludeWelcome = !isWelcomeDismissed && !filtered.some((p) => p.id === welcomeTopic.id);
+  const withWelcome = shouldIncludeWelcome ? [welcomeTopic, ...filtered] : filtered;
+  return mod.filterFeedPosts(withWelcome);
+}
+
 export async function showHome(feed = "for-you") {
   const validFeeds = ["for-you", "following", "external", "all"];
   const activeFeed = validFeeds.includes(feed) ? feed : "for-you";
@@ -171,52 +199,17 @@ export async function showHome(feed = "for-you") {
   const externalSubs = bskyFeed.loadBskySubscriptions();
 
   try {
-    let remoteItems = [];
-    let gateway = "";
-    if (activeFeed === "following") {
-      const watched = social.getWatchedProfiles();
-      if (watched.length > 0) {
-        const res = await gql.fetchTopicsByOwners(watched).catch(() => ({ items: [] }));
-        remoteItems = res.items || [];
-        gateway = res.gateway || "";
-      }
-    } else {
-      const res = await gql.fetchRecentTopics().catch(async () => mock.mockRecentTopics());
-      remoteItems = res.items || [];
-      gateway = res.gateway || "";
-    }
-    const localPosts = (await cacheNode.getLocalPosts({ type: "topic" })).filter((p) => p.type !== "listing");
-    const replyCounts = await cacheNode.getReplyCountsMap().catch(() => ({}));
+    const { items: remoteItems, gateway } = await fetchRemoteHomeItems(activeFeed);
     const commMap = await buildCommunityTitleMap();
-    const merged = applyReplyCountsToTopics(
-      mergeLocalAndRemoteTopics(localPosts, remoteItems, commMap, user),
-      replyCounts,
-    );
-    const filtered = await filterTopicsForActiveFeed(merged, activeFeed);
-    const isWelcomeDismissed = localStorage.getItem("vox-welcome-post-dismissed") === "1";
-    const welcomeTopic = welcomeProfile.getOfficialWelcomeTopic();
-    const shouldIncludeWelcome = !isWelcomeDismissed && !filtered.some((p) => p.id === welcomeTopic.id);
-    const withWelcome = shouldIncludeWelcome ? [welcomeTopic, ...filtered] : filtered;
-    const finalTopics = mod.filterFeedPosts(withWelcome);
+    const finalTopics = await assembleHomeFeedTopics(remoteItems, commMap, user, activeFeed);
 
     main.innerHTML = "";
     if (gateway) render.renderGatewayBanner(main, gateway);
     render.renderFeed(main, finalTopics, { activeFeed, userRouteId: user || "", externalSubs });
   } catch {
     main.innerHTML = "";
-    const localPosts = (await cacheNode.getLocalPosts({ type: "topic" })).filter((p) => p.type !== "listing");
-    const replyCounts = await cacheNode.getReplyCountsMap().catch(() => ({}));
-    const fb = mock.mockRecentTopics();
-    const merged = applyReplyCountsToTopics(
-      mergeLocalAndRemoteTopics(localPosts, fb.items, new Map(), user),
-      replyCounts,
-    );
-    const filtered = await filterTopicsForActiveFeed(merged, activeFeed);
-    const isWelcomeDismissed = localStorage.getItem("vox-welcome-post-dismissed") === "1";
-    const welcomeTopic = welcomeProfile.getOfficialWelcomeTopic();
-    const shouldIncludeWelcome = !isWelcomeDismissed && !filtered.some((p) => p.id === welcomeTopic.id);
-    const withWelcome = shouldIncludeWelcome ? [welcomeTopic, ...filtered] : filtered;
-    const finalTopics = mod.filterFeedPosts(withWelcome);
+    const fallbackItems = mock.mockRecentTopics()?.items || [];
+    const finalTopics = await assembleHomeFeedTopics(fallbackItems, new Map(), user, activeFeed);
     render.renderFeed(main, finalTopics, { activeFeed, userRouteId: user || "", externalSubs });
   }
 
