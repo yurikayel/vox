@@ -20,24 +20,40 @@ import { escapeHtml } from "../render/util.js";
 import { openOAuthEnrichModal } from "./onboarding.js";
 import { getActiveUser, makeShellProps } from "./context.js";
 
+function getChecked(id, defaultValue = false) {
+  const el = document.getElementById(id);
+  return el ? el.checked : defaultValue;
+}
+
+function getValue(id, defaultValue = "") {
+  const el = document.getElementById(id);
+  return el ? el.value.trim() : defaultValue;
+}
+
+function getNumberValue(id, defaultValue = 0) {
+  const el = document.getElementById(id);
+  const n = el ? Number(el.value) : defaultValue;
+  return Number.isNaN(n) || n <= 0 ? defaultValue : n;
+}
+
 function readNetworkFormValues() {
-  const paused = document.getElementById("net-pause")?.checked || false;
+  const paused = getChecked("net-pause");
   return {
     enabled: !paused,
-    maxMb: Number(document.getElementById("net-max-mb")?.value) || 25,
-    dailyCapMb: Number(document.getElementById("net-daily-cap")?.value) || 50,
-    wifiOnly: document.getElementById("net-wifi")?.checked || false,
-    commOnly: document.getElementById("net-comm-only")?.checked || false,
-    backgroundRelay: document.getElementById("net-bg-relay")?.checked || false,
-    webrtcEnabled: document.getElementById("net-webrtc")?.checked !== false,
-    meshDiscoverable: document.getElementById("net-mesh-discoverable")?.checked || false,
-    customSignalingUrl: document.getElementById("net-signaling-url")?.value.trim() || "",
-    customRelayHttpUrl: document.getElementById("net-relay-http-url")?.value.trim() || "",
-    customRelayBuddyHttpUrl: document.getElementById("net-relay-buddy-http-url")?.value.trim() || "",
-    turnUrls: document.getElementById("net-turn-url")?.value.trim() || "",
-    turnUser: document.getElementById("net-turn-user")?.value.trim() || "",
-    turnPass: document.getElementById("net-turn-pass")?.value || "",
-    webhookText: document.getElementById("net-posse-webhooks")?.value || "",
+    maxMb: getNumberValue("net-max-mb", 25),
+    dailyCapMb: getNumberValue("net-daily-cap", 50),
+    wifiOnly: getChecked("net-wifi"),
+    commOnly: getChecked("net-comm-only"),
+    backgroundRelay: getChecked("net-bg-relay"),
+    webrtcEnabled: getChecked("net-webrtc", true),
+    meshDiscoverable: getChecked("net-mesh-discoverable"),
+    customSignalingUrl: getValue("net-signaling-url"),
+    customRelayHttpUrl: getValue("net-relay-http-url"),
+    customRelayBuddyHttpUrl: getValue("net-relay-buddy-http-url"),
+    turnUrls: getValue("net-turn-url"),
+    turnUser: getValue("net-turn-user"),
+    turnPass: getValue("net-turn-pass"),
+    webhookText: getValue("net-posse-webhooks"),
   };
 }
 
@@ -300,7 +316,15 @@ export async function showLinkedAccounts() {
   bindLinkedAccountsUi(() => showLinkedAccounts());
 }
 
-function bindLinkedAccountFormsAndButtons(onRefresh) {
+function resolveNetworkFormHandle(box, form, netId) {
+  const boxHandle = box?.querySelector(".input-net-handle")?.value?.trim();
+  if (boxHandle) return boxHandle;
+  const formHandle = form?.querySelector(".input-net-handle")?.value?.trim();
+  if (formHandle) return formHandle;
+  return linkedAccounts.getSuggestedHandle(netId) || netId;
+}
+
+function bindOneClickConnectButtons(onRefresh) {
   document.querySelectorAll(".btn-one-click-connect").forEach((btn) => {
     if (btn.dataset.wired) return;
     btn.dataset.wired = "1";
@@ -308,15 +332,16 @@ function bindLinkedAccountFormsAndButtons(onRefresh) {
       const netId = btn.dataset.netId;
       if (!netId) return;
       const box = btn.closest(".network-connect-box") || btn.closest(".linked-network-card");
-      const handleInput = box?.querySelector(".input-net-handle");
-      const handle = handleInput?.value?.trim() || "";
+      const handle = box?.querySelector(".input-net-handle")?.value?.trim() || "";
       linkedAccounts.connectWithOneClick(netId, handle);
       share.showToast(`Conectando ao ${netId}... Rede aberta no navegador! 🔗`);
       if (onRefresh) onRefresh();
       linkedAccounts.testLinkedAccount(netId).catch(() => {});
     });
   });
+}
 
+function bindSaveHandleQuickButtons(onRefresh) {
   document.querySelectorAll(".btn-save-handle-quick").forEach((btn) => {
     if (btn.dataset.wired) return;
     btn.dataset.wired = "1";
@@ -334,7 +359,9 @@ function bindLinkedAccountFormsAndButtons(onRefresh) {
       if (onRefresh) onRefresh();
     });
   });
+}
 
+function bindFormLinkNetwork(onRefresh) {
   document.querySelectorAll(".form-link-network").forEach((form) => {
     if (form.dataset.wired) return;
     form.dataset.wired = "1";
@@ -342,7 +369,7 @@ function bindLinkedAccountFormsAndButtons(onRefresh) {
       e.preventDefault();
       const netId = form.dataset.netId;
       const box = form.closest(".network-connect-box") || form.closest(".linked-network-card");
-      const handle = box?.querySelector(".input-net-handle")?.value?.trim() || form.querySelector(".input-net-handle")?.value?.trim() || linkedAccounts.getSuggestedHandle(netId) || netId;
+      const handle = resolveNetworkFormHandle(box, form, netId);
       const webhook = form.querySelector(".input-net-webhook")?.value?.trim() || "";
       const appPassword = form.querySelector(".input-net-app-password")?.value?.trim() || "";
       linkedAccounts.saveLinkedAccount(netId, { handle, webhook, appPassword, enabled: true });
@@ -350,7 +377,9 @@ function bindLinkedAccountFormsAndButtons(onRefresh) {
       if (onRefresh) onRefresh();
     });
   });
+}
 
+function bindUnlinkNetworkButtons(onRefresh) {
   document.querySelectorAll(".btn-unlink-network").forEach((btn) => {
     if (btn.dataset.wired) return;
     btn.dataset.wired = "1";
@@ -361,6 +390,13 @@ function bindLinkedAccountFormsAndButtons(onRefresh) {
       if (onRefresh) onRefresh();
     });
   });
+}
+
+function bindLinkedAccountFormsAndButtons(onRefresh) {
+  bindOneClickConnectButtons(onRefresh);
+  bindSaveHandleQuickButtons(onRefresh);
+  bindFormLinkNetwork(onRefresh);
+  bindUnlinkNetworkButtons(onRefresh);
 }
 
 function bindLinkedAccountCheckboxes() {

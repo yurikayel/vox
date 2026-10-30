@@ -58,6 +58,46 @@ export function __resetProfileCardsForTests() {
   }
 }
 
+function resolveDisplayName({ id, card, mockProf, myId, enrich }) {
+  if (myId === id) {
+    const selfName = localAccount.getDisplayName();
+    if (selfName) return selfName;
+    if (enrich?.displayName) return enrich.displayName;
+  }
+  if (card?.name) return card.name;
+  if (enrich?.displayName) return enrich.displayName;
+  if (mockProf?.name) return mockProf.name;
+  const mockDisp = mock.getAuthorDisplay(id);
+  if (mockDisp) return mockDisp;
+  return id.slice(0, 12);
+}
+
+function resolveAvatar({ id, card, enrich, mockProf }) {
+  if (card?.avatarUrl) return card.avatarUrl;
+  if (card?.avatar) return card.avatar;
+  if (enrich?.avatarUrl) return enrich.avatarUrl;
+  if (mockProf?.avatar) return mockProf.avatar;
+  return mock.getAuthorAvatar(id) || "";
+}
+
+function resolveHandle({ id, card, mockProf }) {
+  if (card?.handle) return card.handle;
+  if (mockProf?.handle) return mockProf.handle;
+  return mock.getAuthorHandle(id) || "";
+}
+
+function resolveBio({ card, enrich, mockProf }) {
+  if (card?.bio) return card.bio;
+  if (enrich?.bio) return enrich.bio;
+  if (mockProf?.readme) return mockProf.readme.slice(0, 120);
+  return "";
+}
+
+function resolveReadme({ id, mockProf }) {
+  if (mockProf?.readme) return mockProf.readme;
+  return mock.getAuthorReadme(id) || "";
+}
+
 export async function resolveProfile(routeId) {
   const id = String(routeId || "").trim();
   if (!id) return { routeId: "", name: "", handle: "", avatar: "", bio: "" };
@@ -79,21 +119,15 @@ export async function resolveProfile(routeId) {
   const mockProf = mock.getMockProfile(id);
   const myId = await localAccount.getRouteId();
   const enrich = myId === id ? localAccount.getProfileEnrichment() : null;
-
-  let displayName = card?.name || mockProf?.name || mock.getAuthorDisplay(id) || "";
-  if (myId === id) {
-    displayName = localAccount.getDisplayName() || enrich?.displayName || displayName;
-  } else if (enrich?.displayName) {
-    displayName = enrich.displayName;
-  }
+  const ctx = { id, card, mockProf, myId, enrich };
 
   return {
     routeId: id,
-    name: displayName || id.slice(0, 12),
-    handle: card?.handle || mockProf?.handle || mock.getAuthorHandle(id) || "",
-    avatar: card?.avatarUrl || card?.avatar || enrich?.avatarUrl || mockProf?.avatar || mock.getAuthorAvatar(id) || "",
-    bio: card?.bio || enrich?.bio || mockProf?.readme?.slice(0, 120) || "",
-    readme: mockProf?.readme || mock.getAuthorReadme(id) || "",
+    name: resolveDisplayName(ctx),
+    handle: resolveHandle(ctx),
+    avatar: resolveAvatar(ctx),
+    bio: resolveBio(ctx),
+    readme: resolveReadme(ctx),
   };
 }
 
