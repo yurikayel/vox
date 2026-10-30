@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-10-30T22:40:59.880Z",
+  "generatedAt": "2026-10-30T22:43:43.473Z",
   "filesScanned": 130,
-  "violationCount": 144,
+  "violationCount": 137,
   "violations": [
     {
       "file": "client/js/app/screens-home.js",
@@ -57,20 +57,6 @@
       "line": 39,
       "rule": "complexity",
       "message": "Function 'validateManifestBody' has a complexity of 18. Maximum allowed is 15.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/chat-bridge.js",
-      "line": 38,
-      "rule": "complexity",
-      "message": "Function 'buildDiscordProposalEmbed' has a complexity of 18. Maximum allowed is 15.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/chat-bridge.js",
-      "line": 165,
-      "rule": "complexity",
-      "message": "Function 'buildChatSummaryCopy' has a complexity of 21. Maximum allowed is 15.",
       "severity": "warn"
     },
     {
@@ -207,38 +193,10 @@
       "severity": "warn"
     },
     {
-      "file": "client/js/people-index.js",
-      "line": 162,
-      "rule": "complexity",
-      "message": "Function 'matchesPerson' has a complexity of 18. Maximum allowed is 15.",
-      "severity": "warn"
-    },
-    {
       "file": "client/js/posse-dispatch.js",
       "line": 77,
       "rule": "complexity",
       "message": "Function 'buildPosseExportPayload' has a complexity of 31. Maximum allowed is 15.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/post-ownership.js",
-      "line": 17,
-      "rule": "complexity",
-      "message": "Function 'formatPostDisplay' has a complexity of 16. Maximum allowed is 15.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/profile-card.js",
-      "line": 42,
-      "rule": "complexity",
-      "message": "Async function 'buildSignedProfileCard' has a complexity of 19. Maximum allowed is 15.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/profile-card.js",
-      "line": 76,
-      "rule": "complexity",
-      "message": "Function 'buildProfileCardArweaveTags' has a complexity of 17. Maximum allowed is 15.",
       "severity": "warn"
     },
     {
@@ -631,13 +589,6 @@
       "line": 143,
       "rule": "max-lines-per-function",
       "message": "Function 'optimizeCanvasQualityUnderCeiling' has too many lines (59). Maximum allowed is 30.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/people-index.js",
-      "line": 65,
-      "rule": "max-lines-per-function",
-      "message": "Function 'indexLocalAndVaultAccounts' has too many lines (31). Maximum allowed is 30.",
       "severity": "warn"
     },
     {
