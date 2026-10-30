@@ -80,7 +80,7 @@ function renderPolisStatementItem(s) {
     </div>`;
 }
 
-export function renderPolisReportHtml(report, userVotes = {}) {
+export function renderPolisReportHtml(report, _userVotes = {}) {
   if (!report || !Array.isArray(report.statements)) return "";
   const totalVoters = report.totalVoters || 0;
   const bridgesCount = (report.bridgeStatements || report.consensusBridges)?.length || 0;

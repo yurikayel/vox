@@ -37,7 +37,11 @@ const ICONS = {
 export function renderNetworkChip(metrics, rtcStatus, settings) {
   const isEnabled = settings?.enabled !== false;
   if (!isEnabled) {
-    return `<a class="network-chip paused" href="#/settings/network" title="Modo somente leitura · Toque para configurar"><span class="chip-dot"></span><span>Só leitura</span></a>`;
+    return `<a class="network-chip paused" href="#/settings/network" title="Modo somente leitura · Toque para configurar" aria-label="Rede em modo somente leitura"><span class="chip-dot"></span><span>Só leitura</span></a>`;
+  }
+  const isOnline = rtcStatus?.isOnline !== false && (typeof navigator === "undefined" || navigator.onLine !== false);
+  if (!isOnline) {
+    return `<a class="network-chip offline" href="#/settings/network" title="Dispositivo sem conexão à internet" aria-label="Rede offline"><span class="chip-dot"></span><span>Offline</span></a>`;
   }
   const rtcCount = rtcStatus?.remotePeersConnected || 0;
   let text = "Rede ativa";
@@ -46,7 +50,7 @@ export function renderNetworkChip(metrics, rtcStatus, settings) {
   } else if (metrics?.blobsServed > 0) {
     text = `${metrics.blobsServed} entregues`;
   }
-  return `<a class="network-chip active" href="#/settings/network" title="Sua rede está ajudando outros aparelhos"><span class="chip-dot"></span><span>${escapeHtml(text)}</span></a>`;
+  return `<a class="network-chip active" href="#/settings/network" title="Sua rede está ajudando outros aparelhos" aria-label="Status da rede: ${escapeHtml(text)}"><span class="chip-dot"></span><span>${escapeHtml(text)}</span></a>`;
 }
 
 const USER_ICON_SVG = `<svg class="badge-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
@@ -245,8 +249,8 @@ export function updateTopBarSync(active, detail = "") {
 }
 
 export function renderShell({
-  title,
-  subtitle,
+  title: _title,
+  subtitle: _subtitle,
   breadcrumb,
   walletAddress,
   activeTab = "home",

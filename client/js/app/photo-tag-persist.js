@@ -11,7 +11,7 @@ export async function persistPhotoTags(postId, tags) {
   if (!rec) return clean;
   const me = await localAccount.getRouteId();
   if (!postOwnership.canMutateLocalPost(rec, me)) return clean;
-  const { sig, pubKey, ...rest } = rec;
+  const { sig: _sig, pubKey: _pubKey, ...rest } = rec;
   const signed = await localAccount.signPayload({
     ...rest,
     photoTags: clean,

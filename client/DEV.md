@@ -48,28 +48,29 @@ Abra no navegador: `http://127.0.0.1:8080/`
 
 ### 1.1 Executar Testes Unitários Locais (Tudo)
 
-O Vox inclui suíte completa de testes unitários locais (**463** testes: **440** client JS + **23** relay/signaling Python), sem dependências pesadas externas:
+O Vox inclui suíte completa de testes unitários locais (**601** testes: **568** client JS + **33** relay/signaling Python), sem dependências pesadas externas:
 
-```bash
+`ash
 # Na raiz do repositório vox/
 npm test
-# ou no Windows:
-.\test.bat
-```
+# ou:
+npm run test:all
+`
 
-Para rodar apenas os testes do cliente PWA:
-```bash
-npm run test:client
-# ou diretamente:
-node --test tests/*.test.js
-```
+Comandos específicos disponíveis no package.json:
+`ash
+# Apenas testes do cliente PWA (568 testes)
+npm run test:js
 
-Para rodar apenas os testes do servidor relay/signaling:
-```bash
-npm run test:relay
-# ou diretamente:
-python -m unittest discover -s relay -p "test_*.py"
-```
+# Apenas testes do servidor relay/signaling (33 testes)
+npm run test:py
+
+# Linter estático e validação AST dos nós relay
+npm run lint:relay
+
+# Auditoria automatizada de complexidade ciclomática e LLOC
+npm run audit:complexity
+`
 
 ### 1.2 Integração Contínua & Deploy (GitHub Actions)
 

@@ -233,7 +233,7 @@ export function closePactModal(container) {
   if (container) container.innerHTML = "";
 }
 
-export function renderZapModal(container, { author = "", authorName = "Autor", pixKey = "", title = "", defaultAmount = 5 } = {}) {
+export function renderZapModal(container, { author: _author = "", authorName = "Autor", pixKey = "", title = "", defaultAmount = 5 } = {}) {
   if (!container) return;
   const initialAmount = defaultAmount || 5;
   let initialPayload = "";

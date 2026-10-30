@@ -7,7 +7,7 @@ import * as moderation from "./moderation.js";
 import * as profileCard from "./profile-card.js";
 import * as gossipProfile from "./peers-gossip-profile.js";
 import * as profileDirectory from "./profile-directory.js";
-import { getRelayHttpUrl, getRelayHttpUrls } from "./inbox.js";
+import { getRelayHttpUrls } from "./inbox.js";
 
 export {
   collectPriorityPinTxIds,
@@ -259,81 +259,95 @@ export async function isTxInUserCommunityScope(txId, cachedData) {
   return scope.has(commId);
 }
 
+const MAX_PROFILE_CARD_SIZE = 65536; // 64 KB max profile card
+const TXID_REGEX = /^[a-zA-Z0-9_-]{3,128}$/;
+
+function isValidTxId(txId) {
+  return typeof txId === "string" && TXID_REGEX.test(txId);
+}
+
+async function handleProfileCardHello(card) {
+  if (!card || typeof card !== "object" || !card.pubKey || !card.sig || !card.author) return;
+  if (moderation.shouldDropGossip(card.author)) return;
+  try {
+    if (JSON.stringify(card).length > MAX_PROFILE_CARD_SIZE) return;
+  } catch {
+    return;
+  }
+  const valid = await localAccount.verifyPayload(card);
+  if (valid) {
+    await gossipProfile.applyVerifiedProfileCardItem(card);
+  }
+}
+
+async function handleWantMessage(msg, replyFn, settings, source) {
+  if (!isValidTxId(msg.txId) || msg.fromPeer === myPeerId) return;
+  if (isDailyCapReached()) return;
+  if (settings.wifiOnly && !isWifiOrUnlimited()) return;
+
+  const cached = await cacheNode.getCachedTx(msg.txId);
+  if (!cached || typeof replyFn !== "function") return;
+
+  const inScope = !settings.commOnly || (await isTxInUserCommunityScope(msg.txId, cached));
+  if (!inScope) return;
+
+  const payload = {
+    type: "BLOB",
+    txId: msg.txId,
+    data: cached,
+    fromPeer: myPeerId,
+  };
+  replyFn(payload);
+  const size = JSON.stringify(cached).length;
+  updateMetrics("blobsServed", 1);
+  updateMetrics("bytesServed", size);
+  if (source === "rtc") {
+    updateMetrics("blobsServedRtc", 1);
+  }
+  recordBytesServed(size);
+}
+
+function handleBlobMessage(msg) {
+  if (!isValidTxId(msg.txId) || !msg.data) return;
+  const resolvers = pendingRequests.get(msg.txId);
+  if (!resolvers || !resolvers.length) return;
+
+  if (msg.fromPeer && blobAffinity.isBlobPeerSoftPriorityEnabled()) {
+    blobAffinity.bumpAffinity(msg.fromPeer);
+  }
+  const size = JSON.stringify(msg.data).length;
+  updateMetrics("blobsReceived", 1);
+  updateMetrics("bytesReceived", size);
+  for (const resolve of resolvers) {
+    resolve(msg.data);
+  }
+  pendingRequests.delete(msg.txId);
+}
+
+const VOX_MESSAGE_HANDLERS = {
+  PROFILE_CARD_HELLO: (msg) => handleProfileCardHello(msg.card),
+  WANT: (msg, replyFn, settings, source) => handleWantMessage(msg, replyFn, settings, source),
+  BLOB: (msg) => handleBlobMessage(msg),
+  DM: (msg, _replyFn, _settings, source) => {
+    if (msg.envelope) dispatchDirectMessage(msg.envelope, source);
+  },
+  GOSSIP: (msg, _replyFn, _settings, source) => (msg.item ? handleGossipMessage(msg.item, source) : null),
+  GOSSIP_UPDATE: (msg, _replyFn, _settings, source) => (msg.item ? handleGossipUpdateMessage(msg.item, source) : null),
+  GOSSIP_DELETE: (msg, _replyFn, _settings, source) => {
+    const target = msg.tombstone || msg.item;
+    return target ? handleGossipDeleteMessage(target, source) : null;
+  },
+  CACHE_MANIFEST: (msg, _replyFn, _settings, source) => (msg.item ? handleCacheManifestMessage(msg.item, source) : null),
+};
+
 export async function handleVoxMessage(msg, replyFn, source = "broadcast") {
   if (!msg || typeof msg !== "object") return;
   const settings = getPeerSettings();
   if (!settings.enabled) return;
 
-  if (msg.type === "PROFILE_CARD_HELLO" && msg.card) {
-    const valid = await localAccount.verifyPayload(msg.card);
-    if (valid) {
-      await gossipProfile.applyVerifiedProfileCardItem(msg.card);
-    }
-    return;
-  }
-
-  if (msg.type === "WANT" && msg.txId && msg.fromPeer !== myPeerId) {
-    if (isDailyCapReached()) return;
-    if (settings.wifiOnly && !isWifiOrUnlimited()) return;
-
-    const cached = await cacheNode.getCachedTx(msg.txId);
-    if (cached && typeof replyFn === "function") {
-      const inScope =
-        !settings.commOnly || (await isTxInUserCommunityScope(msg.txId, cached));
-      if (inScope) {
-        const payload = {
-          type: "BLOB",
-          txId: msg.txId,
-          data: cached,
-          fromPeer: myPeerId,
-        };
-        replyFn(payload);
-        const size = JSON.stringify(cached).length;
-        updateMetrics("blobsServed", 1);
-        updateMetrics("bytesServed", size);
-        if (source === "rtc") {
-          updateMetrics("blobsServedRtc", 1);
-        }
-        recordBytesServed(size);
-      }
-    }
-  }
-
-  if (msg.type === "BLOB" && msg.txId && msg.data) {
-    const resolvers = pendingRequests.get(msg.txId);
-    if (resolvers && resolvers.length) {
-      if (msg.fromPeer && blobAffinity.isBlobPeerSoftPriorityEnabled()) {
-        blobAffinity.bumpAffinity(msg.fromPeer);
-      }
-      const size = JSON.stringify(msg.data).length;
-      updateMetrics("blobsReceived", 1);
-      updateMetrics("bytesReceived", size);
-      for (const resolve of resolvers) {
-        resolve(msg.data);
-      }
-      pendingRequests.delete(msg.txId);
-    }
-  }
-
-  if (msg.type === "DM" && msg.envelope) {
-    // DMs E2E ponta-a-ponta não contam no teto de banda do cache público
-    dispatchDirectMessage(msg.envelope, source);
-  }
-
-  if (msg.type === "GOSSIP" && msg.item) {
-    await handleGossipMessage(msg.item, source);
-  }
-
-  if (msg.type === "GOSSIP_UPDATE" && msg.item) {
-    await handleGossipUpdateMessage(msg.item, source);
-  }
-
-  if (msg.type === "GOSSIP_DELETE" && (msg.item || msg.tombstone)) {
-    await handleGossipDeleteMessage(msg.tombstone || msg.item, source);
-  }
-
-  if (msg.type === "CACHE_MANIFEST" && msg.item) {
-    await handleCacheManifestMessage(msg.item, source);
+  const handler = VOX_MESSAGE_HANDLERS[msg.type];
+  if (handler) {
+    await handler(msg, replyFn, settings, source);
   }
 }
 

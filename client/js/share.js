@@ -45,7 +45,7 @@ export function communityShareUrl(communityId) {
   return `${formatShareBaseUrl()}#/c/${encodeURIComponent(communityId)}`;
 }
 
-export function buildTopicShareText({ title, topicId, communityId = "", author = "", body = "" }) {
+export function buildTopicShareText({ title, topicId, communityId: _communityId = "", author = "", body = "" }) {
   const base = formatShareBaseUrl().replace(/\/+$/, "");
   const url = `${base}/#/t/${encodeURIComponent(topicId)}`;
   const cleanTitle = (title || "Publicação no Vox").trim();

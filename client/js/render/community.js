@@ -141,7 +141,7 @@ function topicReplyCount(topic) {
   return Number.isFinite(Number(n)) ? Number(n) : 0;
 }
 
-export function renderCommunityTopicRow(topic, { communityId = "", communityTitle = "" } = {}) {
+export function renderCommunityTopicRow(topic, { communityId: _communityId = "", communityTitle: _communityTitle = "" } = {}) {
   const author = topic.author || topic.owner || "";
   const authorLabels = resolvePostAuthorLabels(author, {
     authorDisplay: topic.authorDisplay,
@@ -710,7 +710,7 @@ export function renderCommunityGovernanceTab(communityId, commTitle, meta, propo
   return `${actions}<div class="feed-container community-vox-panel-feed">${items}</div></div>`;
 }
 
-export function renderProposalItem(item, { communityId = "", communityTitle = "" } = {}) {
+export function renderProposalItem(item, { communityId = "", communityTitle: _communityTitle = "" } = {}) {
   const author = item.author || item.owner || "";
   const labels = resolvePostAuthorLabels(author, {
     authorDisplay: item.authorDisplay,
@@ -885,7 +885,7 @@ export function renderProposalDiff(diffText) {
     </div>`;
 }
 
-export function renderProposalTally(tally, proposal) {
+export function renderProposalTally(tally, _proposal) {
   const total = tally.totalEligible || 0;
   const pctYes = total > 0 ? Math.round((tally.yes / total) * 100) : 0;
   const pctNo = total > 0 ? Math.round((tally.no / total) * 100) : 0;
