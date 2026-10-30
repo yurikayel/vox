@@ -328,6 +328,12 @@ export async function getPostRecord(id) {
   }
 }
 
+let cachedReplyCountsMap = null;
+
+export function invalidateReplyCountsCache() {
+  cachedReplyCountsMap = null;
+}
+
 export async function saveLocalPost(post) {
   if (!post?.id || !post?.type) return;
   const tombstone = await getTombstone(post.id);
@@ -387,7 +393,10 @@ export async function saveLocalPost(post) {
         editedAt: post.editedAt || 0,
         isLocalP2p: true,
       });
-      tx.oncomplete = () => resolve();
+      tx.oncomplete = () => {
+        invalidateReplyCountsCache();
+        resolve();
+      };
       tx.onerror = () => resolve();
     });
   } catch {}
@@ -424,7 +433,10 @@ export async function deleteLocalPost(id) {
       const tx = db.transaction(LOCAL_POSTS_STORE, "readwrite");
       const store = tx.objectStore(LOCAL_POSTS_STORE);
       store.delete(id);
-      tx.oncomplete = () => resolve();
+      tx.oncomplete = () => {
+        invalidateReplyCountsCache();
+        resolve();
+      };
       tx.onerror = () => resolve();
     });
     return true;
@@ -463,6 +475,9 @@ export async function getLocalPosts({ type = null, communityId = null, replyTo =
 }
 
 export async function getReplyCountsMap() {
+  if (cachedReplyCountsMap) {
+    return { ...cachedReplyCountsMap };
+  }
   const replies = await getLocalPosts({ type: "reply" });
   const counts = {};
   for (const r of replies) {
@@ -470,7 +485,8 @@ export async function getReplyCountsMap() {
       counts[r.replyTo] = (counts[r.replyTo] || 0) + 1;
     }
   }
-  return counts;
+  cachedReplyCountsMap = counts;
+  return { ...counts };
 }
 
 export async function getLocalCommunities() {
@@ -518,7 +534,10 @@ export async function clearLocalPosts() {
       const tx = db.transaction(LOCAL_POSTS_STORE, "readwrite");
       const store = tx.objectStore(LOCAL_POSTS_STORE);
       const req = store.clear();
-      req.onsuccess = () => resolve();
+      req.onsuccess = () => {
+        invalidateReplyCountsCache();
+        resolve();
+      };
       req.onerror = () => resolve();
     });
   } catch {}

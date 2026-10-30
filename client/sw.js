@@ -1,4 +1,4 @@
-// Service Worker do Vox (PWA ? Porta da Cantina anime + shell offline)
+// Service Worker do Vox (PWA — Porta da Cantina anime + shell offline)
 
 // NOTA ARQUITETURAL: WebRTC DataChannels operam exclusivamente na thread principal (DOM/Window).
 
@@ -284,8 +284,6 @@ const SHELL_ASSETS = [
 
 ];
 
-
-
 self.addEventListener("install", (event) => {
 
   event.waitUntil(
@@ -301,8 +299,6 @@ self.addEventListener("install", (event) => {
   );
 
 });
-
-
 
 self.addEventListener("activate", (event) => {
 
@@ -336,13 +332,9 @@ self.addEventListener("activate", (event) => {
 
 });
 
-
-
 self.addEventListener("fetch", (event) => {
 
   const url = new URL(event.request.url);
-
-
 
   // Requisi��es externas (gateways GraphQL, Arweave HTTP) passam direto pela rede
 
@@ -351,8 +343,6 @@ self.addEventListener("fetch", (event) => {
     return;
 
   }
-
-
 
   // Configuração de sinalização sempre tenta rede primeiro para novos nós base, com fallback offline
   if (url.pathname.endsWith("/config/signaling.json")) {
@@ -410,15 +400,11 @@ self.addEventListener("fetch", (event) => {
 
 });
 
-
-
 self.addEventListener("message", (event) => {
 
   const data = event.data;
 
   if (!data || data.type !== "VOX_SETTINGS_UPDATED") return;
-
-
 
   const settings = data.settings || {};
 
@@ -459,8 +445,6 @@ self.addEventListener("message", (event) => {
   }
 
 });
-
-
 
 self.addEventListener("notificationclick", (event) => {
 

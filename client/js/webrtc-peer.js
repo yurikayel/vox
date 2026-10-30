@@ -41,6 +41,7 @@ export async function loadSignalingConfig() {
 }
 
 const CUSTOM_TURN_KEY = "vox-custom-turn-config";
+const NEGOTIATION_TIMEOUT_MS = 15000;
 
 export function getCustomTurnConfig() {
   try {
@@ -338,8 +339,24 @@ export function onPeerConnect(handler) {
   peerConnectHandler = handler;
 }
 
+function startNegotiationTimer(remotePeerId) {
+  return setTimeout(() => {
+    const entry = peerConnections.get(remotePeerId);
+    if (!entry) return;
+    const isReady = Boolean(entry.dc && entry.dc.readyState === "open");
+    if (!isReady) {
+      closePeerConnection(remotePeerId);
+    }
+  }, NEGOTIATION_TIMEOUT_MS);
+}
+
 function setupDataChannelEvents(dc, remotePeerId) {
   dc.onopen = () => {
+    const entry = peerConnections.get(remotePeerId);
+    if (entry?.timeoutId) {
+      clearTimeout(entry.timeoutId);
+      entry.timeoutId = null;
+    }
     if (typeof peerConnectHandler === "function") {
       peerConnectHandler(remotePeerId, (obj) => sendVoxMessage(remotePeerId, obj));
     }
@@ -377,6 +394,13 @@ async function createPeerConnection(remotePeerId, isInitiator) {
   let dc = null;
   let dmDc = null;
 
+  pc.onconnectionstatechange = () => {
+    const state = pc.connectionState;
+    if (state === "failed" || state === "closed" || state === "disconnected") {
+      closePeerConnection(remotePeerId);
+    }
+  };
+
   pc.onicecandidate = (event) => {
     if (event.candidate) {
       sendSignaling({ type: "ice", to: remotePeerId, candidate: event.candidate });
@@ -402,7 +426,8 @@ async function createPeerConnection(remotePeerId, isInitiator) {
     };
   }
 
-  peerConnections.set(remotePeerId, { pc, dc, dmDc });
+  const timeoutId = startNegotiationTimer(remotePeerId);
+  peerConnections.set(remotePeerId, { pc, dc, dmDc, timeoutId });
 
   if (isInitiator) {
     try {
@@ -450,16 +475,33 @@ async function handleIncomingIce(fromPeer, candidate) {
 export function closePeerConnection(remotePeerId) {
   const entry = peerConnections.get(remotePeerId);
   if (!entry) return;
+  if (entry.timeoutId) {
+    clearTimeout(entry.timeoutId);
+    entry.timeoutId = null;
+  }
   try {
-    if (entry.dc) entry.dc.close();
-    if (entry.dmDc) entry.dmDc.close();
-    entry.pc.close();
+    if (entry.dc) {
+      entry.dc.onopen = null;
+      entry.dc.onmessage = null;
+      entry.dc.onclose = null;
+      entry.dc.onerror = null;
+      entry.dc.close();
+    }
+    if (entry.dmDc) {
+      entry.dmDc.onmessage = null;
+      entry.dmDc.close();
+    }
+    if (entry.pc) {
+      entry.pc.onicecandidate = null;
+      entry.pc.ondatachannel = null;
+      entry.pc.onconnectionstatechange = null;
+      entry.pc.close();
+    }
   } catch {}
   peerConnections.delete(remotePeerId);
   for (const [addr, pid] of addressToPeer.entries()) {
     if (pid === remotePeerId) {
       addressToPeer.delete(addr);
-      break;
     }
   }
 }
