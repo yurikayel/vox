@@ -254,10 +254,19 @@ export async function signPayload(payload) {
     ["sign"]
   );
 
+  const enrich = getProfileEnrichment();
+  const fallbackDisplay = getDisplayName() || enrich?.displayName || "";
+  const fallbackAvatar = enrich?.avatarUrl || "";
   const enriched = {
     ...payload,
     id: payload.id || "p_" + bytesToB64Url(crypto.getRandomValues(new Uint8Array(12))),
     author: acc.routeId,
+    ...(payload.authorDisplay !== undefined
+      ? { authorDisplay: payload.authorDisplay }
+      : (fallbackDisplay ? { authorDisplay: fallbackDisplay } : {})),
+    ...(payload.authorAvatar !== undefined
+      ? { authorAvatar: payload.authorAvatar }
+      : (fallbackAvatar ? { authorAvatar: fallbackAvatar } : {})),
     ts: payload.ts || Date.now(),
   };
 
