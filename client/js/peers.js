@@ -86,40 +86,32 @@ export function getMyPeerId() {
   return myPeerId;
 }
 
+const DEFAULT_PEER_SETTINGS = Object.freeze({
+  enabled: true,
+  maxMb: 25,
+  wifiOnly: true,
+  commOnly: false,
+  backgroundRelay: false,
+  dailyCapMb: 50,
+  webrtcEnabled: true,
+});
+
 export function getPeerSettings() {
   try {
     const raw = localStorage.getItem(PEER_SETTINGS_KEY);
-    if (!raw) {
-      return {
-        enabled: true,
-        maxMb: 25,
-        wifiOnly: true,
-        commOnly: false,
-        backgroundRelay: false,
-        dailyCapMb: 50,
-        webrtcEnabled: true,
-      };
-    }
-    const parsed = JSON.parse(raw);
+    if (!raw) return { ...DEFAULT_PEER_SETTINGS };
+    const p = JSON.parse(raw);
     return {
-      enabled: parsed.enabled !== undefined ? parsed.enabled : true,
-      maxMb: parsed.maxMb || 25,
-      wifiOnly: parsed.wifiOnly !== undefined ? parsed.wifiOnly : true,
-      commOnly: parsed.commOnly !== undefined ? parsed.commOnly : false,
-      backgroundRelay: parsed.backgroundRelay !== undefined ? parsed.backgroundRelay : false,
-      dailyCapMb: parsed.dailyCapMb || 50,
-      webrtcEnabled: parsed.webrtcEnabled !== undefined ? parsed.webrtcEnabled : true,
+      enabled: p.enabled !== undefined ? p.enabled : DEFAULT_PEER_SETTINGS.enabled,
+      maxMb: p.maxMb || DEFAULT_PEER_SETTINGS.maxMb,
+      wifiOnly: p.wifiOnly !== undefined ? p.wifiOnly : DEFAULT_PEER_SETTINGS.wifiOnly,
+      commOnly: p.commOnly !== undefined ? p.commOnly : DEFAULT_PEER_SETTINGS.commOnly,
+      backgroundRelay: p.backgroundRelay !== undefined ? p.backgroundRelay : DEFAULT_PEER_SETTINGS.backgroundRelay,
+      dailyCapMb: p.dailyCapMb || DEFAULT_PEER_SETTINGS.dailyCapMb,
+      webrtcEnabled: p.webrtcEnabled !== undefined ? p.webrtcEnabled : DEFAULT_PEER_SETTINGS.webrtcEnabled,
     };
   } catch {
-    return {
-      enabled: true,
-      maxMb: 25,
-      wifiOnly: true,
-      commOnly: false,
-      backgroundRelay: false,
-      dailyCapMb: 50,
-      webrtcEnabled: true,
-    };
+    return { ...DEFAULT_PEER_SETTINGS };
   }
 }
 
@@ -351,7 +343,7 @@ export async function handleVoxMessage(msg, replyFn, source = "broadcast") {
   }
 }
 
-async function relayProfileCardGossip(payload, source) {
+function relayToMesh(payload, source = "rtc") {
   if (source !== "broadcast" && broadcastChannel) {
     try {
       broadcastChannel.postMessage(payload);
@@ -365,43 +357,24 @@ async function relayProfileCardGossip(payload, source) {
 async function handleCacheManifestMessage(item, source = "rtc") {
   const result = await manifestMesh.ingestSignedCacheManifestItem(item, localAccount.verifyPayload);
   if (!result.ok || result.skipped) return;
-
-  const payload = { type: "CACHE_MANIFEST", item, fromPeer: myPeerId };
-  if (source !== "broadcast" && broadcastChannel) {
-    try {
-      broadcastChannel.postMessage(payload);
-    } catch {}
-  }
-  if (source !== "rtc") {
-    webrtcPeer.broadcastRtcMessage(payload);
-  }
+  relayToMesh({ type: "CACHE_MANIFEST", item, fromPeer: myPeerId }, source);
 }
 
-async function handleGossipMessage(item, source = "rtc") {
-  if (!item?.id || !item?.sig) return;
-  if (moderation.shouldDropGossip(item.author)) return;
+async function isGossipItemSuperseded(item) {
+  const incomingTime = item.editedAt || item.ts || 0;
   const tombstone = await cacheNode.getTombstone(item.id);
-  if (tombstone && (tombstone.editedAt || 0) >= (item.editedAt || item.ts || 0)) {
-    return;
-  }
+  if (tombstone && (tombstone.editedAt || 0) >= incomingTime) return true;
 
   const existing = await cacheNode.getLocalPost(item.id);
   if (existing) {
     const existingTime = existing.editedAt || existing.ts || 0;
-    const incomingTime = item.editedAt || item.ts || 0;
-    if (existingTime >= incomingTime) return;
-    if (existing.author && item.author && existing.author !== item.author) return;
+    if (existingTime >= incomingTime) return true;
+    if (existing.author && item.author && existing.author !== item.author) return true;
   }
+  return false;
+}
 
-  const valid = await localAccount.verifyPayload(item);
-  if (!valid) return;
-
-  if (item.type === profileCard.PROFILE_CARD_TYPE) {
-    await gossipProfile.applyVerifiedProfileCardItem(item);
-    await relayProfileCardGossip({ type: "GOSSIP", item, fromPeer: myPeerId }, source);
-    return;
-  }
-
+function syncProfileDirectoryFromGossip(item) {
   if (item.author && (item.authorDisplay || item.authorAvatar || item.authorHandle)) {
     profileDirectory.setProfileCard(item.author, {
       name: item.authorDisplay || "",
@@ -409,55 +382,76 @@ async function handleGossipMessage(item, source = "rtc") {
       handle: item.authorHandle || "",
     });
   }
-
-  await cacheNode.saveLocalPost(item);
-  dispatchGossipPost(item, source);
-
-  const payload = { type: "GOSSIP", item, fromPeer: myPeerId };
-  if (source !== "broadcast" && broadcastChannel) {
-    try { broadcastChannel.postMessage(payload); } catch {}
-  }
-  if (source !== "rtc") {
-    webrtcPeer.broadcastRtcMessage(payload);
-  }
 }
 
-async function handleGossipUpdateMessage(item, source = "rtc") {
-  if (!item?.id || !item?.sig || !item?.author) return;
+async function handleGossipMessage(item, source = "rtc") {
+  if (!item?.id || !item?.sig) return;
   if (moderation.shouldDropGossip(item.author)) return;
-  if (!item.editedAt || item.editedAt <= 0) return;
-
-  const tombstone = await cacheNode.getTombstone(item.id);
-  if (tombstone && (tombstone.editedAt || 0) >= item.editedAt) {
-    return;
-  }
-
-  const existing = await cacheNode.getLocalPost(item.id);
-  if (existing) {
-    if (existing.author && existing.author !== item.author) return;
-    const existingTime = existing.editedAt || existing.ts || 0;
-    if (item.editedAt <= existingTime) return;
-  }
+  if (await isGossipItemSuperseded(item)) return;
 
   const valid = await localAccount.verifyPayload(item);
   if (!valid) return;
 
   if (item.type === profileCard.PROFILE_CARD_TYPE) {
     await gossipProfile.applyVerifiedProfileCardItem(item);
-    await relayProfileCardGossip({ type: "GOSSIP_UPDATE", item, fromPeer: myPeerId }, source);
+    relayToMesh({ type: "GOSSIP", item, fromPeer: myPeerId }, source);
+    return;
+  }
+
+  syncProfileDirectoryFromGossip(item);
+  await cacheNode.saveLocalPost(item);
+  dispatchGossipPost(item, source);
+  relayToMesh({ type: "GOSSIP", item, fromPeer: myPeerId }, source);
+}
+
+async function isGossipUpdateSuperseded(item) {
+  const tombstone = await cacheNode.getTombstone(item.id);
+  if (tombstone && (tombstone.editedAt || 0) >= item.editedAt) return true;
+
+  const existing = await cacheNode.getLocalPost(item.id);
+  if (existing) {
+    if (existing.author && existing.author !== item.author) return true;
+    const existingTime = existing.editedAt || existing.ts || 0;
+    if (item.editedAt <= existingTime) return true;
+  }
+  return false;
+}
+
+async function handleGossipUpdateMessage(item, source = "rtc") {
+  if (!item?.id || !item?.sig || !item?.author) return;
+  if (moderation.shouldDropGossip(item.author)) return;
+  if (!item.editedAt || item.editedAt <= 0) return;
+  if (await isGossipUpdateSuperseded(item)) return;
+
+  const valid = await localAccount.verifyPayload(item);
+  if (!valid) return;
+
+  if (item.type === profileCard.PROFILE_CARD_TYPE) {
+    await gossipProfile.applyVerifiedProfileCardItem(item);
+    relayToMesh({ type: "GOSSIP_UPDATE", item, fromPeer: myPeerId }, source);
     return;
   }
 
   await cacheNode.saveLocalPost(item);
   dispatchGossipPost(item, source);
+  relayToMesh({ type: "GOSSIP_UPDATE", item, fromPeer: myPeerId }, source);
+}
 
-  const payload = { type: "GOSSIP_UPDATE", item, fromPeer: myPeerId };
-  if (source !== "broadcast" && broadcastChannel) {
-    try { broadcastChannel.postMessage(payload); } catch {}
+async function isTombstoneSuperseded(tombstone) {
+  const deleteTime = tombstone.editedAt || tombstone.ts || 0;
+  const existingTombstone = await cacheNode.getTombstone(tombstone.id);
+  if (existingTombstone) {
+    const existingDeleteTime = existingTombstone.editedAt || existingTombstone.ts || 0;
+    if (existingDeleteTime >= deleteTime) return true;
   }
-  if (source !== "rtc") {
-    webrtcPeer.broadcastRtcMessage(payload);
+
+  const existingPost = await cacheNode.getLocalPost(tombstone.id);
+  if (existingPost) {
+    if (existingPost.author && existingPost.author !== tombstone.author) return true;
+    const postTime = existingPost.editedAt || existingPost.ts || 0;
+    if (deleteTime < postTime) return true;
   }
+  return false;
 }
 
 async function handleGossipDeleteMessage(tombstone, source = "rtc") {
@@ -465,19 +459,7 @@ async function handleGossipDeleteMessage(tombstone, source = "rtc") {
   if (moderation.shouldDropGossip(tombstone.author)) return;
   const deleteTime = tombstone.editedAt || tombstone.ts || 0;
   if (!deleteTime) return;
-
-  const existingTombstone = await cacheNode.getTombstone(tombstone.id);
-  if (existingTombstone) {
-    const existingDeleteTime = existingTombstone.editedAt || existingTombstone.ts || 0;
-    if (existingDeleteTime >= deleteTime) return;
-  }
-
-  const existingPost = await cacheNode.getLocalPost(tombstone.id);
-  if (existingPost) {
-    if (existingPost.author && existingPost.author !== tombstone.author) return;
-    const postTime = existingPost.editedAt || existingPost.ts || 0;
-    if (deleteTime < postTime) return;
-  }
+  if (await isTombstoneSuperseded(tombstone)) return;
 
   const valid = await localAccount.verifyPayload(tombstone);
   if (!valid) return;
@@ -485,7 +467,7 @@ async function handleGossipDeleteMessage(tombstone, source = "rtc") {
   const cardRoute = gossipProfile.routeIdFromProfileCardId(tombstone.id);
   if (cardRoute) {
     profileDirectory.removeProfileCard(cardRoute);
-    await relayProfileCardGossip(
+    relayToMesh(
       { type: "GOSSIP_DELETE", item: tombstone, tombstone, fromPeer: myPeerId },
       source,
     );
@@ -494,14 +476,7 @@ async function handleGossipDeleteMessage(tombstone, source = "rtc") {
 
   await cacheNode.saveTombstone(tombstone);
   dispatchGossipTombstone(tombstone, source);
-
-  const payload = { type: "GOSSIP_DELETE", item: tombstone, tombstone, fromPeer: myPeerId };
-  if (source !== "broadcast" && broadcastChannel) {
-    try { broadcastChannel.postMessage(payload); } catch {}
-  }
-  if (source !== "rtc") {
-    webrtcPeer.broadcastRtcMessage(payload);
-  }
+  relayToMesh({ type: "GOSSIP_DELETE", item: tombstone, tombstone, fromPeer: myPeerId }, source);
 }
 
 export function broadcastGossip(item) {
@@ -675,44 +650,53 @@ function requestFromRtc(txId, timeoutMs = 2000) {
   );
 }
 
+async function requestFromAffinityPeers(txId) {
+  const openPeers = webrtcPeer.listOpenRtcPeerIds ? webrtcPeer.listOpenRtcPeerIds() : [];
+  const ranked = blobAffinity.rankAffinity(openPeers);
+  for (const peerId of ranked) {
+    const result = await requestWithTransport(
+      txId,
+      () => webrtcPeer.sendVoxMessage(peerId, { type: "WANT", txId, fromPeer: myPeerId }),
+      450,
+    );
+    if (result) return result;
+  }
+  return null;
+}
+
+async function requestFromLocalBroadcast(txId, priority) {
+  if (!broadcastChannel) return null;
+  return requestFromBroadcast(txId, priority ? 900 : 600);
+}
+
+async function requestFromMeshRtc(txId, priority, hasRtc) {
+  if (!hasRtc) return null;
+  return requestFromRtc(txId, priority ? 2500 : 2000);
+}
+
 export async function requestTxFromPeers(txId, opts = {}) {
   const settings = getPeerSettings();
   if (!settings.enabled) return null;
 
-  const priority =
-    opts.priority === true || manifestMesh.isManifestPriorityTx(txId);
-
-  const tryRtcFirst =
-    priority && settings.webrtcEnabled && webrtcPeer.getConnectedRtcPeersCount() > 0;
+  const priority = Boolean(opts.priority) || manifestMesh.isManifestPriorityTx(txId);
+  const hasRtc = Boolean(settings.webrtcEnabled && webrtcPeer.getConnectedRtcPeersCount() > 0);
 
   if (settings.webrtcEnabled && blobAffinity.isBlobPeerSoftPriorityEnabled()) {
-    const openPeers = webrtcPeer.listOpenRtcPeerIds ? webrtcPeer.listOpenRtcPeerIds() : [];
-    const ranked = blobAffinity.rankAffinity(openPeers);
-    for (const peerId of ranked) {
-      const unicastResult = await requestWithTransport(
-        txId,
-        () => {
-          webrtcPeer.sendVoxMessage(peerId, { type: "WANT", txId, fromPeer: myPeerId });
-        },
-        450
-      );
-      if (unicastResult) return unicastResult;
-    }
+    const affinityResult = await requestFromAffinityPeers(txId);
+    if (affinityResult) return affinityResult;
   }
 
-  if (tryRtcFirst) {
-    const rtcResult = await requestFromRtc(txId, 2500);
-    if (rtcResult) return rtcResult;
+  if (priority) {
+    const rtcFirst = await requestFromMeshRtc(txId, true, hasRtc);
+    if (rtcFirst) return rtcFirst;
   }
 
-  if (broadcastChannel) {
-    const localResult = await requestFromBroadcast(txId, priority ? 900 : 600);
-    if (localResult) return localResult;
-  }
+  const broadcastResult = await requestFromLocalBroadcast(txId, priority);
+  if (broadcastResult) return broadcastResult;
 
-  if (!tryRtcFirst && settings.webrtcEnabled && webrtcPeer.getConnectedRtcPeersCount() > 0) {
-    const rtcResult = await requestFromRtc(txId, priority ? 2500 : 2000);
-    if (rtcResult) return rtcResult;
+  if (!priority) {
+    const rtcFallback = await requestFromMeshRtc(txId, false, hasRtc);
+    if (rtcFallback) return rtcFallback;
   }
 
   return null;
