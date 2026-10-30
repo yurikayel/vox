@@ -1,41 +1,11 @@
 /** @file People search and connect preview. */
 
-import * as gql from "../graphql.js";
 import * as render from "../render.js";
-import * as mock from "../mock.js";
-import * as wallet from "../wallet.js";
-import * as upload from "../upload.js";
 import * as share from "../share.js";
-import * as mod from "../moderation.js";
-import * as cacheNode from "../cache-node.js";
-import * as peers from "../peers.js";
-import * as cryptoDm from "../crypto-dm.js";
-import * as inbox from "../inbox.js";
-import * as handles from "../handles.js";
-import * as localAccount from "../local-account.js";
-import * as demoSeed from "../demo-seed.js";
-import * as social from "../social.js";
-import * as pixKeyHelper from "../pix-key.js";
-import * as listing from "../listing.js";
-import * as listingUi from "../listing-ui.js";
-import * as i18n from "../i18n-pt-br.js";
-import * as gov from "../governance.js";
-import * as brcode from "../brcode.js";
-import * as hashtags from "../hashtags.js";
-import * as frames from "../frames.js";
-import * as postOwnership from "../post-ownership.js";
-import * as communityMirror from "../community-mirror.js";
-import * as stewardWizard from "../steward-wizard.js";
-import * as gatewayTelemetry from "../gateway-telemetry.js";
-import { attachInlineComposerHandlers } from "../inline-composer.js";
-import * as oauthProfile from "../oauth-profile.js";
 import * as contacts from "../contacts.js";
 import * as peopleIndex from "../people-index.js";
 import * as profileDirectory from "../profile-directory.js";
-import * as welcomeProfile from "../vox-welcome-profile.js";
-import * as meshProfile from "../mesh-profile.js";
-import { parseRoute } from "./route-parse.js";
-import { getActiveUser, makeShellProps, attachPostShareHandlers } from "./context.js";
+import { getActiveUser, makeShellProps } from "./context.js";
 
 export async function showPeople(initialQuery = "") {
   const user = await getActiveUser();

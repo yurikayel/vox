@@ -11,6 +11,40 @@ const TAG_INDEX_STORE = "tag-index";
 
 let dbPromise = null;
 
+function initTxStore(db) {
+  if (db.objectStoreNames.contains(STORE_NAME)) return;
+  const store = db.createObjectStore(STORE_NAME, { keyPath: "id" });
+  store.createIndex("lastAccessed", "lastAccessed", { unique: false });
+  store.createIndex("timestamp", "timestamp", { unique: false });
+}
+
+function initDmAndTagStores(db) {
+  if (!db.objectStoreNames.contains(DM_STORE_NAME)) {
+    const dmStore = db.createObjectStore(DM_STORE_NAME, { keyPath: "id" });
+    dmStore.createIndex("peerAddress", "peerAddress", { unique: false });
+    dmStore.createIndex("ts", "ts", { unique: false });
+  }
+  if (!db.objectStoreNames.contains(TAG_INDEX_STORE)) {
+    const tagStore = db.createObjectStore(TAG_INDEX_STORE, { keyPath: "id" });
+    tagStore.createIndex("slug", "slug", { unique: false });
+  }
+}
+
+function initLocalPostsStore(db) {
+  if (db.objectStoreNames.contains(LOCAL_POSTS_STORE)) return;
+  const localStore = db.createObjectStore(LOCAL_POSTS_STORE, { keyPath: "id" });
+  localStore.createIndex("type", "type", { unique: false });
+  localStore.createIndex("communityId", "communityId", { unique: false });
+  localStore.createIndex("replyTo", "replyTo", { unique: false });
+  localStore.createIndex("ts", "ts", { unique: false });
+}
+
+function upgradeDatabaseSchema(db) {
+  initTxStore(db);
+  initDmAndTagStores(db);
+  initLocalPostsStore(db);
+}
+
 function openDB() {
   if (dbPromise) return dbPromise;
   dbPromise = new Promise((resolve, reject) => {
@@ -18,30 +52,7 @@ function openDB() {
       return reject(new Error("IndexedDB não suportado neste ambiente"));
     }
     const req = window.indexedDB.open(DB_NAME, DB_VERSION);
-    req.onupgradeneeded = (e) => {
-      const db = e.target.result;
-      if (!db.objectStoreNames.contains(STORE_NAME)) {
-        const store = db.createObjectStore(STORE_NAME, { keyPath: "id" });
-        store.createIndex("lastAccessed", "lastAccessed", { unique: false });
-        store.createIndex("timestamp", "timestamp", { unique: false });
-      }
-      if (!db.objectStoreNames.contains(DM_STORE_NAME)) {
-        const dmStore = db.createObjectStore(DM_STORE_NAME, { keyPath: "id" });
-        dmStore.createIndex("peerAddress", "peerAddress", { unique: false });
-        dmStore.createIndex("ts", "ts", { unique: false });
-      }
-      if (!db.objectStoreNames.contains(LOCAL_POSTS_STORE)) {
-        const localStore = db.createObjectStore(LOCAL_POSTS_STORE, { keyPath: "id" });
-        localStore.createIndex("type", "type", { unique: false });
-        localStore.createIndex("communityId", "communityId", { unique: false });
-        localStore.createIndex("replyTo", "replyTo", { unique: false });
-        localStore.createIndex("ts", "ts", { unique: false });
-      }
-      if (!db.objectStoreNames.contains(TAG_INDEX_STORE)) {
-        const tagStore = db.createObjectStore(TAG_INDEX_STORE, { keyPath: "id" });
-        tagStore.createIndex("slug", "slug", { unique: false });
-      }
-    };
+    req.onupgradeneeded = (e) => upgradeDatabaseSchema(e.target.result);
     req.onsuccess = (e) => resolve(e.target.result);
     req.onerror = () => reject(req.error);
   });
@@ -209,38 +220,54 @@ export async function getDmMessages(peerAddress) {
   }
 }
 
+function readDmReadTimestamps() {
+  try {
+    return JSON.parse(localStorage.getItem("vox-dm-read-ts-v1") || "{}") || {};
+  } catch {
+    return {};
+  }
+}
+
+function populateLatestMessages(all, map) {
+  for (const m of all) {
+    const existing = map.get(m.peerAddress);
+    if (!existing || (m.ts || 0) > (existing.lastTs || 0)) {
+      map.set(m.peerAddress, {
+        peerAddress: m.peerAddress,
+        lastText: m.text,
+        lastTs: m.ts || 0,
+        lastStatus: m.status,
+        unreadCount: 0,
+      });
+    }
+  }
+}
+
+function countUnreadDmMessages(all, map) {
+  const readMap = readDmReadTimestamps();
+  for (const m of all) {
+    const item = map.get(m.peerAddress);
+    const lastRead = Number(readMap[m.peerAddress]) || 0;
+    if (item && m.status === "received" && (m.ts || 0) > lastRead) {
+      item.unreadCount = (item.unreadCount || 0) + 1;
+    }
+  }
+}
+
+function aggregateDmConversations(all) {
+  const map = new Map();
+  populateLatestMessages(all, map);
+  countUnreadDmMessages(all, map);
+  return Array.from(map.values()).sort((a, b) => b.lastTs - a.lastTs);
+}
+
 export async function getDmConversations() {
   try {
     const db = await openDB();
     return await new Promise((resolve) => {
       const tx = db.transaction(DM_STORE_NAME, "readonly");
-      const store = tx.objectStore(DM_STORE_NAME);
-      const req = store.getAll();
-      req.onsuccess = () => {
-        const all = req.result || [];
-        const map = new Map();
-        for (const m of all) {
-          const existing = map.get(m.peerAddress);
-          if (!existing || (m.ts || 0) > (existing.lastTs || 0)) {
-            map.set(m.peerAddress, {
-              peerAddress: m.peerAddress,
-              lastText: m.text,
-              lastTs: m.ts || 0,
-              lastStatus: m.status,
-              unreadCount: 0,
-            });
-          }
-        }
-        let readMap = {};
-        try { readMap = JSON.parse(localStorage.getItem("vox-dm-read-ts-v1") || "{}") || {}; } catch {}
-        for (const m of all) {
-          const item = map.get(m.peerAddress);
-          const lastRead = Number(readMap[m.peerAddress]) || 0;
-          if (item && m.status === "received" && (m.ts || 0) > lastRead) item.unreadCount = (item.unreadCount || 0) + 1;
-        }
-        const sorted = Array.from(map.values()).sort((a, b) => b.lastTs - a.lastTs);
-        resolve(sorted);
-      };
+      const req = tx.objectStore(DM_STORE_NAME).getAll();
+      req.onsuccess = () => resolve(aggregateDmConversations(req.result || []));
       req.onerror = () => resolve([]);
     });
   } catch {
@@ -334,65 +361,75 @@ export function invalidateReplyCountsCache() {
   cachedReplyCountsMap = null;
 }
 
+const LOCAL_POST_DEFAULTS = Object.freeze({
+  communityId: "",
+  replyTo: "",
+  proposalId: "",
+  postId: "",
+  frame: null,
+  frameKind: "",
+  buttonIndex: 0,
+  buttonLabel: "",
+  inputText: "",
+  title: "",
+  body: "",
+  diffText: "",
+  closesAt: 0,
+  minQuorum: 0,
+  state: "open",
+  choice: "",
+  joinedAt: 0,
+  category: "",
+  description: "",
+  authorDisplay: "",
+  authorAvatar: "",
+  authorHandle: "",
+  image: "",
+  imageAlt: "",
+  externalPain: "",
+  voxResolution: "now",
+  priceLabel: "",
+  locationLabel: "",
+  contactPix: "",
+  listingStatus: "available",
+  commercialEnabled: false,
+  likesCount: 0,
+  repliesCount: 0,
+  pubKey: null,
+  sig: "",
+  editedAt: 0,
+});
+
+function normalizeLocalPost(post) {
+  const combinedText = `${post.title || ""} ${post.body || ""} ${post.description || ""}`;
+  return {
+    ...LOCAL_POST_DEFAULTS,
+    ...post,
+    id: post.id,
+    type: post.type,
+    author: post.author || post.owner || "",
+    buttonIndex: Number(post.buttonIndex) || 0,
+    commercialEnabled: Boolean(post.commercialEnabled),
+    likesCount: Number(post.likesCount) || 0,
+    repliesCount: Number(post.repliesCount) || 0,
+    tags: hashtags.extractHashtags(combinedText),
+    ts: post.ts || post.createdAt || Date.now(),
+    isLocalP2p: true,
+  };
+}
+
 export async function saveLocalPost(post) {
   if (!post?.id || !post?.type) return;
   const tombstone = await getTombstone(post.id);
-  if (tombstone && (tombstone.editedAt || 0) >= (post.editedAt || post.ts || 0)) {
-    return;
-  }
+  const postTime = post.editedAt || post.ts || 0;
+  if (tombstone && (tombstone.editedAt || 0) >= postTime) return;
 
-  const combinedText = `${post.title || ""} ${post.body || ""} ${post.description || ""}`;
-  const postTags = hashtags.extractHashtags(combinedText);
+  const record = normalizeLocalPost(post);
   try {
     const db = await openDB();
     await new Promise((resolve) => {
       const tx = db.transaction(LOCAL_POSTS_STORE, "readwrite");
-      const store = tx.objectStore(LOCAL_POSTS_STORE);
-      store.put({
-        ...post,
-        id: post.id,
-        type: post.type,
-        communityId: post.communityId || "",
-        replyTo: post.replyTo || "",
-        proposalId: post.proposalId || "",
-        postId: post.postId || "",
-        frame: post.frame || null,
-        frameKind: post.frameKind || "",
-        buttonIndex: Number(post.buttonIndex) || 0,
-        buttonLabel: post.buttonLabel || "",
-        inputText: post.inputText || "",
-        title: post.title || "",
-        body: post.body || "",
-        tags: postTags,
-        diffText: post.diffText || "",
-        closesAt: post.closesAt || 0,
-        minQuorum: post.minQuorum || 0,
-        state: post.state || "open",
-        choice: post.choice || "",
-        joinedAt: post.joinedAt || 0,
-        category: post.category || "",
-        description: post.description || "",
-        author: post.author || post.owner || "",
-        authorDisplay: post.authorDisplay || "",
-        authorAvatar: post.authorAvatar || "",
-        authorHandle: post.authorHandle || "",
-        image: post.image || "",
-        imageAlt: post.imageAlt || "",
-        externalPain: post.externalPain || "",
-        voxResolution: post.voxResolution || "now",
-        priceLabel: post.priceLabel || "",
-        locationLabel: post.locationLabel || "",
-        contactPix: post.contactPix || "",
-        listingStatus: post.listingStatus || "available",
-        commercialEnabled: Boolean(post.commercialEnabled),
-        likesCount: Number(post.likesCount) || 0,
-        repliesCount: Number(post.repliesCount) || 0,
-        pubKey: post.pubKey || null,
-        sig: post.sig || "",
-        ts: post.ts || post.createdAt || Date.now(),
-        editedAt: post.editedAt || 0,
-        isLocalP2p: true,
-      });
+      tx.objectStore(LOCAL_POSTS_STORE).put(record);
       tx.oncomplete = () => {
         invalidateReplyCountsCache();
         resolve();
@@ -489,39 +526,48 @@ export async function getReplyCountsMap() {
   return { ...counts };
 }
 
+function buildLocalCommunityRecord(c) {
+  const cid = c.communityId || c.id;
+  return {
+    id: cid,
+    communityId: cid,
+    title: c.title || cid,
+    description: c.description || c.body || "",
+    category: c.category || "",
+    owner: c.author || "",
+    image: c.image || c.avatar || "",
+    avatar: c.avatar || c.image || "",
+    language: c.language || "Português",
+    visibility: c.visibility || "open",
+    createdAt: c.createdAt || c.ts || null,
+    commercialEnabled: Boolean(c.commercialEnabled),
+    isLocalP2p: true,
+  };
+}
+
+function applyCommunityUpdate(existing, u) {
+  if (u.image || u.avatar) {
+    existing.image = u.image || u.avatar;
+    existing.avatar = u.avatar || u.image;
+  }
+  if (u.title) existing.title = u.title;
+  if (u.description) existing.description = u.description;
+  if (u.category) existing.category = u.category;
+}
+
 export async function getLocalCommunities() {
   const posts = await getLocalPosts({ type: "community" });
   const updates = await getLocalPosts({ type: "community_update" });
   const map = new Map();
   for (const c of posts) {
     const cid = c.communityId || c.id;
-    map.set(cid, {
-      id: cid,
-      communityId: cid,
-      title: c.title || cid,
-      description: c.description || c.body || "",
-      category: c.category || "",
-      owner: c.author || "",
-      image: c.image || c.avatar || "",
-      avatar: c.avatar || c.image || "",
-      language: c.language || "Português",
-      visibility: c.visibility || "open",
-      createdAt: c.createdAt || c.ts || null,
-      commercialEnabled: Boolean(c.commercialEnabled),
-      isLocalP2p: true,
-    });
+    map.set(cid, buildLocalCommunityRecord(c));
   }
   for (const u of updates) {
     const cid = u.communityId || u.id;
     const existing = map.get(cid);
     if (existing) {
-      if (u.image || u.avatar) {
-        existing.image = u.image || u.avatar;
-        existing.avatar = u.avatar || u.image;
-      }
-      if (u.title) existing.title = u.title;
-      if (u.description) existing.description = u.description;
-      if (u.category) existing.category = u.category;
+      applyCommunityUpdate(existing, u);
     }
   }
   return Array.from(map.values());
@@ -543,6 +589,24 @@ export async function clearLocalPosts() {
   } catch {}
 }
 
+function itemMatchesTag(item, targetSlug) {
+  const tags = Array.isArray(item.tags) && item.tags.length > 0
+    ? item.tags
+    : hashtags.extractHashtags(`${item.title || ""} ${item.body || ""} ${item.description || ""}`);
+  return tags.includes(targetSlug);
+}
+
+function collectMatchingItems(items, targetSlug, seenIds, results, typeFilter = null) {
+  for (const item of items) {
+    if (!item || seenIds.has(item.id)) continue;
+    if (typeFilter && !typeFilter(item)) continue;
+    if (itemMatchesTag(item, targetSlug)) {
+      seenIds.add(item.id);
+      results.push(item);
+    }
+  }
+}
+
 export async function getPostsByTag(slug) {
   if (!slug) return [];
   const targetSlug = hashtags.slugifyTag(slug);
@@ -553,42 +617,21 @@ export async function getPostsByTag(slug) {
 
   try {
     const localPosts = await getLocalPosts();
-    for (const p of localPosts) {
-      if (p.type !== "topic" && p.type !== "listing") continue;
-      const tags = Array.isArray(p.tags) && p.tags.length > 0
-        ? p.tags
-        : hashtags.extractHashtags(`${p.title || ""} ${p.body || ""} ${p.description || ""}`);
-      if (tags.includes(targetSlug) && !seenIds.has(p.id)) {
-        seenIds.add(p.id);
-        results.push(p);
-      }
-    }
+    collectMatchingItems(
+      localPosts,
+      targetSlug,
+      seenIds,
+      results,
+      (p) => p.type === "topic" || p.type === "listing",
+    );
   } catch {}
 
   try {
-    const mockTopics = mock.mockRecentTopics()?.items || [];
-    for (const t of mockTopics) {
-      if (seenIds.has(t.id)) continue;
-      const tags = Array.isArray(t.tags) && t.tags.length > 0
-        ? t.tags
-        : hashtags.extractHashtags(`${t.title || ""} ${t.body || ""}`);
-      if (tags.includes(targetSlug)) {
-        seenIds.add(t.id);
-        results.push(t);
-      }
-    }
+    collectMatchingItems(mock.mockRecentTopics()?.items || [], targetSlug, seenIds, results);
   } catch {}
 
   try {
-    const mockListings = mock.mockListings("demo-feira-local")?.items || [];
-    for (const l of mockListings) {
-      if (seenIds.has(l.id)) continue;
-      const tags = hashtags.extractHashtags(`${l.title || ""} ${l.body || ""}`);
-      if (tags.includes(targetSlug)) {
-        seenIds.add(l.id);
-        results.push(l);
-      }
-    }
+    collectMatchingItems(mock.mockListings("demo-feira-local")?.items || [], targetSlug, seenIds, results);
   } catch {}
 
   results.sort((a, b) => (b.ts || 0) - (a.ts || 0));
