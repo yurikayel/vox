@@ -192,8 +192,9 @@ export function getCommunityColor(id = "") {
   const hue = Math.abs(hash) % 360;
   return `hsl(${hue}, 65%, 45%)`;
 }
-export function renderAvatarHtml(author, authorDisplay, sizeClass = "") {
-  const avatarUrl = profileDirectory.getAuthorAvatarSync(author) || mock.getAuthorAvatar(author);
+export function renderAvatarHtml(author, authorDisplay, sizeClass = "", avatarOverride = "") {
+  const avatarUrl =
+    avatarOverride || profileDirectory.getAuthorAvatarSync(author) || mock.getAuthorAvatar(author);
   const display =
     authorDisplay || profileDirectory.getAuthorDisplaySync(author) || mock.getAuthorDisplay(author) || author;
   const authorInitial = (display || "V").slice(0, 1).toUpperCase();

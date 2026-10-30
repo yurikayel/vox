@@ -210,7 +210,7 @@ export function renderInlineReplyItem(r, { byParent = null, topicId = "", commId
       : "";
   return `
     <li class="post-comment-item" id="inline-reply-${escapeHtml(r.id)}" data-comment-id="${escapeHtml(r.id)}">
-      <a class="avatar-link" href="#/u/${encodeURIComponent(rAuthor)}">${renderAvatarHtml(rAuthor, rAuthorDisplay, "sm")}</a>
+      <a class="avatar-link" href="#/u/${encodeURIComponent(rAuthor)}">${renderAvatarHtml(rAuthor, rAuthorDisplay, "sm", r.authorAvatar)}</a>
       <div class="post-comment-body">
         <div class="post-comment-meta">
           <a class="post-author" href="#/u/${encodeURIComponent(rAuthor)}">${escapeHtml(rAuthorDisplay)}</a>
@@ -344,7 +344,7 @@ function renderPostHeaderBlock(t, author, labels, { photoOverlay = false } = {})
   return `
     <header class="post-header-inline">
       <div class="post-header-user">
-        <a class="avatar-link" href="#/u/${encodeURIComponent(author)}">${renderAvatarHtml(author, authorDisplay)}</a>
+        <a class="avatar-link" href="#/u/${encodeURIComponent(author)}">${renderAvatarHtml(author, authorDisplay, "", t.authorAvatar)}</a>
         ${metaHtml}
       </div>
       ${asideHtml}
@@ -392,7 +392,7 @@ function renderPostMediaHeader(t, author, labels) {
 
   return `<div class="post-media-header post-ig-header">
     <div class="post-media-header-left">
-      <a class="avatar-link post-media-header-avatar" href="#/u/${encodeURIComponent(author)}">${renderAvatarHtml(author, authorDisplay, "sm")}</a>
+      <a class="avatar-link post-media-header-avatar" href="#/u/${encodeURIComponent(author)}">${renderAvatarHtml(author, authorDisplay, "sm", t.authorAvatar)}</a>
       <div class="post-media-header-text">
         <div class="post-media-header-name-row">
           <a class="post-media-header-username" href="#/u/${encodeURIComponent(author)}">${escapeHtml(authorDisplay)}</a>
@@ -564,7 +564,7 @@ function renderCommentButton(t, { overlay = false } = {}) {
   const panelId = commentsPanelId(t.id);
   const overlayCls = overlay ? " overlay-action-btn" : "";
   const label = overlay
-    ? (n > 0 ? `<span class="overlay-action-count count-replies">${n}</span>` : "")
+    ? `<span class="overlay-action-count count-replies">${n > 0 ? n : ""}</span>`
     : `<span class="action-count count-replies">${n > 0 ? n : ""}</span>`;
   return `<button type="button" class="action-btn btn-comment${overlayCls}" data-id="${escapeHtml(t.id)}" data-comm="${escapeHtml(t.communityId || "")}" aria-expanded="false" aria-controls="${escapeHtml(panelId)}" aria-label="Comentar${n > 0 ? `, ${n} comentários` : ""}">
             <svg class="action-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>

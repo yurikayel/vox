@@ -96,6 +96,13 @@ async function loadCommunityMetaAndTopics(communityId, user) {
   try {
     modActions = await mod.fetchModActions(communityId);
   } catch {}
+  const replyCounts = await cacheNode.getReplyCountsMap().catch(() => ({}));
+  for (const t of mergedTopics) {
+    const extra = replyCounts[t.id] || 0;
+    if (extra > 0 || !t.repliesCount) {
+      t.repliesCount = (Number(t.repliesCount) || 0) + extra;
+    }
+  }
   const filteredTopics = mod.applyFilters(mergedTopics, modActions, meta.owner, meta.moderators);
   const isUserMod = mod.isModerator(user, meta.owner, meta.moderators);
 
