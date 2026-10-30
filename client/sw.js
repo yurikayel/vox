@@ -354,6 +354,22 @@ self.addEventListener("fetch", (event) => {
 
 
 
+  // Configuração de sinalização sempre tenta rede primeiro para novos nós base, com fallback offline
+  if (url.pathname.endsWith("/config/signaling.json")) {
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const clone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return networkResponse;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
   // App shell: cache-first com fallback de rede
 
   event.respondWith(
