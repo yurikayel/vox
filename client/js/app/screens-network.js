@@ -310,7 +310,7 @@ function bindLinkedAccountFormsAndButtons(onRefresh) {
       const box = btn.closest(".network-connect-box") || btn.closest(".linked-network-card");
       const handleInput = box?.querySelector(".input-net-handle");
       const handle = handleInput?.value?.trim() || "";
-      const res = linkedAccounts.connectWithOneClick(netId, handle);
+      linkedAccounts.connectWithOneClick(netId, handle);
       share.showToast(`Conectando ao ${netId}... Rede aberta no navegador! 🔗`);
       if (onRefresh) onRefresh();
       linkedAccounts.testLinkedAccount(netId).catch(() => {});

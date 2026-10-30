@@ -129,6 +129,16 @@ export async function showComposeCommunity() {
   }
 }
 
+async function buildNotarizedBadge(parsed, title, user) {
+  const notary = await createCivicNotaryRecord({
+    title,
+    bodyText: parsed.markdown,
+    author: user?.routeId || "comunidade",
+    witnesses: parsed.participants,
+  });
+  return `\n\n> 🏛️ **Cartório Cívico Arweave** • Prova de Existência Imutável\n> Hash SHA-256: \`${notary.documentHash}\`\n> Testemunhas registradas: ${notary.witnesses.join(", ") || "Assembleia"}`;
+}
+
 async function applyTranscriptToComposer(shouldNotarize, user) {
   const raw = document.getElementById("chat-transcript-input")?.value || "";
   const parsed = parseChatTranscriptToMarkdown(raw);
@@ -141,13 +151,7 @@ async function applyTranscriptToComposer(shouldNotarize, user) {
   let content = parsed.markdown;
   if (shouldNotarize) {
     const title = titleEl?.value.trim() || parsed.suggestedTitle || "Ata Comunitária";
-    const notary = await createCivicNotaryRecord({
-      title,
-      bodyText: parsed.markdown,
-      author: user?.routeId || "comunidade",
-      witnesses: parsed.participants,
-    });
-    const badge = `\n\n> 🏛️ **Cartório Cívico Arweave** • Prova de Existência Imutável\n> Hash SHA-256: \`${notary.documentHash}\`\n> Testemunhas registradas: ${notary.witnesses.join(", ") || "Assembleia"}`;
+    const badge = await buildNotarizedBadge(parsed, title, user);
     content = `${parsed.markdown}${badge}`;
   }
   if (bodyEl) {
@@ -181,75 +185,111 @@ export async function showComposeTopic(communityId) {
     }
   } catch {}
 
+async function tryUploadTopicToPermaweb(topicId, finalComm, title, body) {
+  if (!wallet.hasWallet()) return null;
+  try {
+    const tags = upload.buildTags("topic", {
+      "Community-Id": finalComm,
+      "Topic-Title": title,
+      Title: title,
+      "Local-Origin-Id": topicId,
+    });
+    return await upload.postData({ title, body, communityId: finalComm }, tags);
+  } catch (permaErr) {
+    console.warn("Falha no upload Permaweb:", permaErr);
+    return null;
+  }
+}
+
+function getInputValue(id) {
+  const el = document.getElementById(id);
+  return el ? el.value.trim() : "";
+}
+
+function readTopicInputs() {
+  const commInput = document.getElementById("topic-comm-id");
+  const rawComm = commInput ? commInput.value.trim().toLowerCase() : "";
+  return {
+    commId: rawComm || "geral",
+    title: getInputValue("topic-title"),
+    body: getInputValue("topic-body"),
+  };
+}
+
+async function signAndBroadcastTopic(topicId, finalComm, title, body) {
+  const myDisplayName = localAccount.getDisplayName() || localAccount.getProfileEnrichment()?.displayName || "";
+  const myAvatar = localAccount.getProfileEnrichment()?.avatarUrl || "";
+  const signed = await localAccount.signPayload({
+    id: topicId,
+    type: "topic",
+    communityId: finalComm,
+    title,
+    body,
+    authorDisplay: myDisplayName,
+    authorAvatar: myAvatar,
+  });
+  await cacheNode.saveLocalPost(signed);
+  peers.broadcastGossip(signed);
+}
+
+function showTopicPublishToast(permawebResult) {
+  if (permawebResult?.success) {
+    const badge = permawebResult.via === "turbo" ? "Turbo ⚡" : "Arweave";
+    share.showToast(`Post publicado no P2P e gravado na Permaweb (${badge})!`);
+  } else if (wallet.hasWallet()) {
+    share.showToast("Post publicado no P2P local (Permaweb indisponível).", "warning");
+  } else {
+    share.showToast("Post publicado na rede!");
+  }
+}
+
+async function triggerTopicReplicationAndPosse(topicPayload) {
+  try {
+    const { dispatchAutoReplication, isAutoReplicationEnabled } = await import("../linked-accounts.js");
+    if (isAutoReplicationEnabled()) {
+      dispatchAutoReplication(topicPayload)
+        .then((rep) => {
+          if (rep.dispatched && rep.count > 0) {
+            share.showToast(`🚀 Replicado para ${rep.count} webhook(s) de redes vinculadas!`);
+          }
+        })
+        .catch(() => {});
+    }
+  } catch {}
+  try {
+    const { openPosseSheetAfterPublish } = await import("../posse-dispatch.js");
+    openPosseSheetAfterPublish(topicPayload);
+  } catch {}
+}
+
+async function handleComposeTopicSubmit(e, communityId) {
+  e.preventDefault();
+  const btn = document.getElementById("btn-submit-topic");
+  const inputs = readTopicInputs();
+  const finalComm = communityId || inputs.commId;
+  if (!inputs.body) return;
+
+  btn.disabled = true;
+  btn.textContent = "Publicando…";
+  try {
+    const topicId = "top_" + Math.random().toString(36).slice(2, 10);
+    await signAndBroadcastTopic(topicId, finalComm, inputs.title, inputs.body);
+    const permaResult = await tryUploadTopicToPermaweb(topicId, finalComm, inputs.title, inputs.body);
+    showTopicPublishToast(permaResult);
+
+    await triggerTopicReplicationAndPosse({ id: topicId, communityId: finalComm, title: inputs.title, body: inputs.body });
+    location.hash = `#/t/${encodeURIComponent(topicId)}?c=${encodeURIComponent(finalComm)}`;
+  } catch (err) {
+    share.showToast(`Erro: ${err.message}`, "error");
+    btn.disabled = false;
+    btn.textContent = "Publicar Post";
+  }
+}
+
   const form = document.getElementById("form-compose-topic");
   if (form) {
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const btn = document.getElementById("btn-submit-topic");
-      const finalComm = communityId || document.getElementById("topic-comm-id")?.value.trim().toLowerCase() || "geral";
-      const title = document.getElementById("topic-title")?.value?.trim() || "";
-      const body = document.getElementById("topic-body")?.value?.trim() || "";
-      if (!body) return;
-
-      btn.disabled = true;
-      btn.textContent = "Publicando…";
-      try {
-        const topicId = "top_" + Math.random().toString(36).slice(2, 10);
-        const myDisplayName = localAccount.getDisplayName() || localAccount.getProfileEnrichment()?.displayName || "";
-        const myAvatar = localAccount.getProfileEnrichment()?.avatarUrl || "";
-        const signed = await localAccount.signPayload({
-          id: topicId,
-          type: "topic",
-          communityId: finalComm,
-          title,
-          body,
-          authorDisplay: myDisplayName,
-          authorAvatar: myAvatar,
-        });
-        await cacheNode.saveLocalPost(signed);
-        peers.broadcastGossip(signed);
-
-        let permawebResult = null;
-        if (wallet.hasWallet()) {
-          try {
-            const tags = upload.buildTags("topic", {
-              "Community-Id": finalComm,
-              "Topic-Title": title,
-              Title: title,
-              "Local-Origin-Id": topicId,
-            });
-            permawebResult = await upload.postData({ title, body, communityId: finalComm }, tags);
-          } catch (permaErr) {
-            console.warn("Falha no upload Permaweb:", permaErr);
-          }
-        }
-
-        if (permawebResult?.success) {
-          const badge = permawebResult.via === "turbo" ? "Turbo ⚡" : "Arweave";
-          share.showToast(`Post publicado no P2P e gravado na Permaweb (${badge})!`);
-        } else if (wallet.hasWallet()) {
-          share.showToast("Post publicado no P2P local (Permaweb indisponível).", "warning");
-        } else {
-          share.showToast("Post publicado na rede!");
-        }
-        const { dispatchAutoReplication, isAutoReplicationEnabled } = await import("../linked-accounts.js");
-        if (isAutoReplicationEnabled()) {
-          dispatchAutoReplication({ id: topicId, communityId: finalComm, title, body })
-            .then((rep) => {
-              if (rep.dispatched && rep.count > 0) {
-                share.showToast(`🚀 Replicado para ${rep.count} webhook(s) de redes vinculadas!`);
-              }
-            })
-            .catch(() => {});
-        }
-        const { openPosseSheetAfterPublish } = await import("../posse-dispatch.js");
-        openPosseSheetAfterPublish({ id: topicId, communityId: finalComm, title, body });
-        location.hash = `#/t/${encodeURIComponent(topicId)}?c=${encodeURIComponent(finalComm)}`;
-      } catch (err) {
-        share.showToast(`Erro: ${err.message}`, "error");
-        btn.disabled = false;
-        btn.textContent = "Publicar Post";
-      }
+    form.addEventListener("submit", (e) => {
+      handleComposeTopicSubmit(e, communityId);
     });
   }
 }
@@ -286,25 +326,53 @@ export async function showComposeListing(communityId) {
   });
 }
 
-export async function handleComposeListingSubmit(user, communityId) {
-  const title = document.getElementById("listing-title")?.value?.trim() || "";
-  const priceLabel = document.getElementById("listing-price")?.value?.trim() || "";
-  const locationLabel = document.getElementById("listing-location")?.value?.trim() || "";
-  const contactPix = document.getElementById("listing-pix")?.value?.trim() || "";
-  const image = document.getElementById("listing-image")?.value?.trim() || "";
-  const body = document.getElementById("listing-body")?.value?.trim() || "";
+function readListingFormValues() {
+  return {
+    title: getInputValue("listing-title"),
+    priceLabel: getInputValue("listing-price"),
+    locationLabel: getInputValue("listing-location"),
+    contactPix: getInputValue("listing-pix"),
+    image: getInputValue("listing-image"),
+    body: getInputValue("listing-body"),
+  };
+}
 
-  const val = listing.validateListingInput({ title, body, priceLabel });
+function resolveContactPix(contactPix) {
+  if (!contactPix) return { ok: true, normalized: "" };
+  const pixVal = pixKeyHelper.validatePixKey(contactPix);
+  if (!pixVal.ok) {
+    return { ok: false, error: `Chave Pix inválida: ${pixVal.errorPt}` };
+  }
+  return { ok: true, normalized: pixVal.normalized };
+}
+
+async function executeListingPublish(form, pixNormalized, user, communityId) {
+  const listingId = `listing_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+  const draft = listing.buildListingDraft({
+    id: listingId,
+    communityId,
+    ...form,
+    contactPix: pixNormalized,
+    author: user,
+    owner: user,
+    listingStatus: "available",
+  });
+  const signed = await localAccount.signPayload(draft);
+  const check = listing.validateSignedListingGossip(signed);
+  if (!check.valid) throw new Error(check.error || "Oferta inválida");
+  await cacheNode.saveLocalPost(signed);
+  peers.broadcastGossip(signed);
+  share.showToast(i18n.listingPublishedToast);
+  location.hash = `#/c/${encodeURIComponent(communityId)}?tab=listings`;
+}
+
+export async function handleComposeListingSubmit(user, communityId) {
+  const form = readListingFormValues();
+  const val = listing.validateListingInput(form);
   if (!val.valid) return share.showToast(val.error, "error");
 
-  let normalizedPix = "";
-  if (contactPix) {
-    const pixVal = pixKeyHelper.validatePixKey(contactPix);
-    if (!pixVal.ok) {
-      return share.showToast(`Chave Pix inválida: ${pixVal.errorPt}`, "error");
-    }
-    normalizedPix = pixVal.normalized;
-  }
+  const pixResult = resolveContactPix(form.contactPix);
+  if (!pixResult.ok) return share.showToast(pixResult.error, "error");
 
   const btn = document.getElementById("btn-submit-listing");
   if (btn) {
@@ -313,29 +381,7 @@ export async function handleComposeListingSubmit(user, communityId) {
   }
 
   try {
-    const listingId = `listing_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
-    const draft = listing.buildListingDraft({
-      id: listingId,
-      communityId,
-      title,
-      body,
-      priceLabel,
-      locationLabel,
-      contactPix: normalizedPix,
-      image,
-      author: user,
-      owner: user,
-      listingStatus: "available",
-    });
-    const signed = await localAccount.signPayload(draft);
-    const check = listing.validateSignedListingGossip(signed);
-    if (!check.valid) {
-      throw new Error(check.error || "Oferta inválida");
-    }
-    await cacheNode.saveLocalPost(signed);
-    peers.broadcastGossip(signed);
-    share.showToast(i18n.listingPublishedToast);
-    location.hash = `#/c/${encodeURIComponent(communityId)}?tab=listings`;
+    await executeListingPublish(form, pixResult.normalized, user, communityId);
   } catch (err) {
     share.showToast(`Erro ao publicar oferta: ${err.message}`, "error");
     if (btn) {
