@@ -1,0 +1,6 @@
+{
+  "entrypoint": "deno-signaling.js",
+  "tasks": {
+    "start": "deno run --allow-net deno-signaling.js"
+  }
+}
