@@ -108,16 +108,28 @@ function renderNetworkHeader(isEnabled, relayStatus, rtcStatus, gatewayHealth) {
     </div>`;
 }
 
+function renderContributionAttestationCardHtml() {
+  return `
+    <div class="card" style="margin-bottom:1rem; padding:0.75rem;">
+      <p class="desc" style="font-size:0.82rem; margin:0 0 0.5rem;">
+        Exporte um JSON assinado neste aparelho com o snapshot das métricas acima (opt-in). O arquivo fica só com você — <strong>não</strong> há envio para ranking público nem gossip automático.
+      </p>
+      <button type="button" id="btn-export-contribution-attestation" class="btn btn-outline btn-sm">
+        Baixar Comprovante de Contribuição
+      </button>
+      <p class="meta" style="font-size:0.72rem; margin:0.45rem 0 0;">
+        Auto-atestado: métricas em localStorage podem ser alteradas antes da assinatura. Limite de uma exportação por minuto. Pix e doações seguem fluxo manual (COMPLIANCE-BR).
+      </p>
+    </div>`;
+}
+
 function renderNetworkStats(metrics, cacheStats, dailyUsage, settings) {
   const capMb = settings?.dailyCapMb || 50;
   const servedTodayMb = ((dailyUsage?.bytesServedToday || 0) / (1024 * 1024)).toFixed(1);
   const pct = Math.min(100, Math.round((servedTodayMb / capMb) * 100));
 
   return `
-    <div class="actions-bar">
-      <span class="section-title">Estatísticas de Ajuda</span>
-    </div>
-
+    <div class="actions-bar"><span class="section-title">Estatísticas de Ajuda</span></div>
     <div class="stats-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:0.5rem; margin-bottom:1rem;">
       <div class="card" style="text-align:center; padding:0.65rem;">
         <div style="font-size:1.25rem; font-weight:700; color:var(--accent);">${metrics?.blobsServed || 0}</div>
@@ -137,18 +149,7 @@ function renderNetworkStats(metrics, cacheStats, dailyUsage, settings) {
         <div class="meta">Em cache (${cacheStats?.sizeKb || "0"} KB)</div>
       </div>
     </div>
-
-    <div class="card" style="margin-bottom:1rem; padding:0.75rem;">
-      <p class="desc" style="font-size:0.82rem; margin:0 0 0.5rem;">
-        Exporte um JSON assinado neste aparelho com o snapshot das métricas acima (opt-in). O arquivo fica só com você — <strong>não</strong> há envio para ranking público nem gossip automático.
-      </p>
-      <button type="button" id="btn-export-contribution-attestation" class="btn btn-outline btn-sm">
-        Baixar Comprovante de Contribuição
-      </button>
-      <p class="meta" style="font-size:0.72rem; margin:0.45rem 0 0;">
-        Auto-atestado: métricas em localStorage podem ser alteradas antes da assinatura. Limite de uma exportação por minuto. Pix e doações seguem fluxo manual (COMPLIANCE-BR).
-      </p>
-    </div>`;
+    ${renderContributionAttestationCardHtml()}`;
 }
 
 function renderTurnFields(customTurn) {
@@ -180,14 +181,7 @@ function relayHealthLabel(relayStatus, relayHttpUrl) {
   return host ? `⚪ Offline (${host})` : "⚪ Offline";
 }
 
-function renderNetworkForm(settings, notifPermission, customSignalingUrl, customRelayHttpUrl, customTurn, relayStatus, rtcStatus, metrics, relayHttpUrl, meshDiscoverable = false, customRelayBuddyHttpUrl = "") {
-  const isEnabled = Boolean(settings?.enabled);
-  const isBg = Boolean(settings?.backgroundRelay);
-  const notifNotice = notifPermission === "granted"
-    ? `<span style="font-size:0.8rem; color:var(--success);">✓ Notificações permitidas</span>`
-    : `<button type="button" id="btn-request-notif" class="btn btn-outline btn-sm">Ativar Notificações</button>`;
-  const rtcCount = rtcStatus?.remotePeersConnected || 0;
-
+function renderLinkedAccountsBannerHtml() {
   return `
     <div class="card" style="margin-bottom:1rem; padding:0.85rem 1rem; background:var(--surface-soft); border:1px solid var(--outline); border-radius:var(--radius-sm); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
       <div>
@@ -195,100 +189,125 @@ function renderNetworkForm(settings, notifPermission, customSignalingUrl, custom
         <span class="meta" style="font-size:0.8rem;">Conecte Twitter/X, Bluesky, Threads, Instagram, Facebook e TikTok.</span>
       </div>
       <a href="#/settings/linked-accounts" class="btn btn-sm btn-primary">Gerenciar Redes</a>
-    </div>
+    </div>`;
+}
 
+function renderPauseAndDiscoverableHtml(isEnabled, meshDiscoverable) {
+  return `
+    <div class="form-group" style="display:flex; align-items:center; gap:0.6rem; margin-top:0.5rem;">
+      <input type="checkbox" id="net-pause" ${!isEnabled ? "checked" : ""} style="width:1.1rem; height:1.1rem;" />
+      <label for="net-pause" style="margin:0; font-weight:600; color:var(--danger);">Pausar ajuda à rede (modo somente leitura)</label>
+    </div>
+    <div class="form-group" style="display:flex; align-items:flex-start; gap:0.6rem;">
+      <input type="checkbox" id="net-mesh-discoverable" ${meshDiscoverable ? "checked" : ""} style="width:1.1rem; height:1.1rem; margin-top:0.2rem;" />
+      <div>
+        <label for="net-mesh-discoverable" style="margin:0; font-weight:600;">Aparecer na busca da malha</label>
+        <p class="desc" style="font-size:0.78rem; margin:0.25rem 0 0;">Cartão de perfil assinado (opt-in) propagado via gossip — ver COMPLIANCE-BR.md.</p>
+      </div>
+    </div>`;
+}
+
+function renderQuotaAndLimitFieldsHtml(settings) {
+  return `
+    <div class="form-group">
+      <label for="net-daily-cap">Teto diário de dados compartilhados (MB):</label>
+      <input type="number" id="net-daily-cap" class="form-control" min="5" max="1000" value="${settings?.dailyCapMb || 50}" />
+    </div>
+    <div class="form-group">
+      <label for="net-max-mb">Limite de espaço em disco (MB):</label>
+      <input type="number" id="net-max-mb" class="form-control" min="5" max="500" value="${settings?.maxMb || 25}" />
+    </div>
+    <div class="form-group" style="display:flex; align-items:center; gap:0.6rem;">
+      <input type="checkbox" id="net-wifi" ${settings?.wifiOnly ? "checked" : ""} style="width:1rem; height:1rem;" />
+      <label for="net-wifi" style="margin:0;">Ajudar apenas quando estiver no Wi-Fi</label>
+    </div>
+    <div id="net-comm-only-wrap" class="form-group" style="display:flex; align-items:center; gap:0.6rem;">
+      <input type="checkbox" id="net-comm-only" ${settings?.commOnly ? "checked" : ""} style="width:1rem; height:1rem;" />
+      <label for="net-comm-only" style="margin:0;">Compartilhar apenas minhas comunidades (camada Apoiador)</label>
+    </div>`;
+}
+
+function renderGeneralPreferencesHtml(settings, meshDiscoverable, customSignalingUrl) {
+  const isEnabled = Boolean(settings?.enabled);
+  return `
+    ${renderPauseAndDiscoverableHtml(isEnabled, meshDiscoverable)}
+    ${renderQuotaAndLimitFieldsHtml(settings)}
+    ${renderParticipationLayers(settings, customSignalingUrl)}
+    <div class="form-group" style="display:flex; align-items:center; gap:0.6rem;">
+      <input type="checkbox" id="net-webrtc" ${settings?.webrtcEnabled !== false ? "checked" : ""} style="width:1rem; height:1rem;" />
+      <label for="net-webrtc" style="margin:0;">Conectar diretamente a outros aparelhos</label>
+    </div>`;
+}
+
+function renderRelayUrlInputsHtml(opts) {
+  return `
+    <div class="form-group">
+      <label for="net-signaling-url">Servidor de conexão (opcional):</label>
+      <input type="text" id="net-signaling-url" class="form-control" placeholder="wss://signal.comunidade.org" value="${opts.customSignalingUrl || ""}" />
+    </div>
+    <div class="form-group">
+      <label for="net-relay-http-url">Relay HTTP (cache e inbox, opcional):</label>
+      <input type="text" id="net-relay-http-url" class="form-control" placeholder="https://relay.comunidade.org ou 192.168.0.10:3920" value="${opts.customRelayHttpUrl || ""}" />
+      <p class="desc" style="font-size:0.75rem; margin:0.35rem 0 0;">Usado para buscar posts e mensagens efêmeras. Vazio = derivado do servidor de conexão ou localhost.</p>
+    </div>
+    <div class="form-group">
+      <label for="net-relay-buddy-http-url">Relay Buddy (reserva/espelho B, opcional):</label>
+      <input type="text" id="net-relay-buddy-http-url" class="form-control" placeholder="https://buddy.comunidade.org ou https://usuario-space.hf.space" value="${opts.customRelayBuddyHttpUrl || ""}" />
+      <p class="desc" style="font-size:0.75rem; margin:0.35rem 0 0;">Segundo nó para failover automático se o relay principal cair durante o piloto.</p>
+    </div>`;
+}
+
+function renderRelayHealthAndTourHtml(opts) {
+  const rtcCount = opts.rtcStatus?.remotePeersConnected || 0;
+  return `
+    <div style="margin-top:0.75rem; border-top:1px solid var(--border); padding-top:0.6rem;">
+      <div class="meta" style="margin-bottom:0.4rem;">
+        Conexões ativas: <strong>${rtcCount} aparelhos</strong> · Conteúdos via WebRTC: <strong>${opts.metrics?.blobsServedRtc || 0}</strong>
+      </div>
+      <button type="button" id="btn-check-relay" class="btn btn-outline btn-sm">Verificar Relay HTTP</button>
+      <span class="meta" style="margin-left:0.5rem;">${relayHealthLabel(opts.relayStatus, opts.relayHttpUrl)}</span>
+    </div>
+    <div style="margin-top:0.75rem; border-top:1px solid var(--border); padding-top:0.6rem;">
+      <label style="font-weight:600; font-size:0.85rem; display:block; margin-bottom:0.25rem;">Tour de Demonstração</label>
+      <p class="desc" style="font-size:0.8rem; margin:0 0 0.4rem;">Recarrega os 5 perfis e posts educativos de exemplo no seu aparelho:</p>
+      <button type="button" id="btn-reset-demo" class="btn btn-outline btn-sm">🔄 Restaurar tour demo</button>
+    </div>`;
+}
+
+function renderAdvancedServerSettingsHtml(opts) {
+  const isBg = Boolean(opts.settings?.backgroundRelay);
+  const notifNotice = opts.notifPermission === "granted"
+    ? `<span style="font-size:0.8rem; color:var(--success);">✓ Notificações permitidas</span>`
+    : `<button type="button" id="btn-request-notif" class="btn btn-outline btn-sm">Ativar Notificações</button>`;
+
+  return `
+    <details class="advanced-settings">
+      <summary>Avançado (Conexões e Servidores)</summary>
+      <div id="net-relay-steward" style="margin-top:0.75rem;">
+        <p class="desc" style="font-size:0.8rem; margin-bottom:0.5rem;">Detalhes técnicos da malha WebRTC, relay e camada Steward.</p>
+        <p style="margin-bottom:0.75rem;"><a href="#/settings/network/steward" class="btn btn-outline btn-sm">Assistente steward (5 passos)</a></p>
+        ${renderRelayUrlInputsHtml(opts)}
+        ${renderTurnFields(opts.customTurn)}
+        <div class="form-group" style="display:flex; align-items:center; gap:0.6rem; margin-top:0.75rem;">
+          <input type="checkbox" id="net-bg-relay" ${isBg ? "checked" : ""} style="width:1rem; height:1rem;" />
+          <div style="flex:1;">
+            <label for="net-bg-relay" style="margin:0; font-weight:600;">Segundo plano via Service Worker (Wi-Fi)</label>
+            <div style="margin-top:0.2rem;">${notifNotice}</div>
+          </div>
+        </div>
+        ${renderRelayHealthAndTourHtml(opts)}
+      </div>
+    </details>`;
+}
+
+function renderNetworkForm(opts) {
+  return `
+    ${renderLinkedAccountsBannerHtml()}
     <div class="card">
       <h3>Preferências de Ajuda</h3>
       <form id="form-network-settings">
-        <div class="form-group" style="display:flex; align-items:center; gap:0.6rem; margin-top:0.5rem;">
-          <input type="checkbox" id="net-pause" ${!isEnabled ? "checked" : ""} style="width:1.1rem; height:1.1rem;" />
-          <label for="net-pause" style="margin:0; font-weight:600; color:var(--danger);">Pausar ajuda à rede (modo somente leitura)</label>
-        </div>
-
-        <div class="form-group" style="display:flex; align-items:flex-start; gap:0.6rem;">
-          <input type="checkbox" id="net-mesh-discoverable" ${meshDiscoverable ? "checked" : ""} style="width:1.1rem; height:1.1rem; margin-top:0.2rem;" />
-          <div>
-            <label for="net-mesh-discoverable" style="margin:0; font-weight:600;">Aparecer na busca da malha</label>
-            <p class="desc" style="font-size:0.78rem; margin:0.25rem 0 0;">Cartão de perfil assinado (opt-in) propagado via gossip — ver COMPLIANCE-BR.md.</p>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label for="net-daily-cap">Teto diário de dados compartilhados (MB):</label>
-          <input type="number" id="net-daily-cap" class="form-control" min="5" max="1000" value="${settings?.dailyCapMb || 50}" />
-        </div>
-
-        <div class="form-group">
-          <label for="net-max-mb">Limite de espaço em disco (MB):</label>
-          <input type="number" id="net-max-mb" class="form-control" min="5" max="500" value="${settings?.maxMb || 25}" />
-        </div>
-
-        <div class="form-group" style="display:flex; align-items:center; gap:0.6rem;">
-          <input type="checkbox" id="net-wifi" ${settings?.wifiOnly ? "checked" : ""} style="width:1rem; height:1rem;" />
-          <label for="net-wifi" style="margin:0;">Ajudar apenas quando estiver no Wi-Fi</label>
-        </div>
-
-        <div id="net-comm-only-wrap" class="form-group" style="display:flex; align-items:center; gap:0.6rem;">
-          <input type="checkbox" id="net-comm-only" ${settings?.commOnly ? "checked" : ""} style="width:1rem; height:1rem;" />
-          <label for="net-comm-only" style="margin:0;">Compartilhar apenas minhas comunidades (camada Apoiador)</label>
-        </div>
-
-        ${renderParticipationLayers(settings, customSignalingUrl)}
-
-        <div class="form-group" style="display:flex; align-items:center; gap:0.6rem;">
-          <input type="checkbox" id="net-webrtc" ${settings?.webrtcEnabled !== false ? "checked" : ""} style="width:1rem; height:1rem;" />
-          <label for="net-webrtc" style="margin:0;">Conectar diretamente a outros aparelhos</label>
-        </div>
-
-        <details class="advanced-settings">
-          <summary>Avançado (Conexões e Servidores)</summary>
-          <div id="net-relay-steward" style="margin-top:0.75rem;">
-            <p class="desc" style="font-size:0.8rem; margin-bottom:0.5rem;">Detalhes técnicos da malha WebRTC, relay e camada Steward.</p>
-            <p style="margin-bottom:0.75rem;"><a href="#/settings/network/steward" class="btn btn-outline btn-sm">Assistente steward (5 passos)</a></p>
-
-            <div class="form-group">
-              <label for="net-signaling-url">Servidor de conexão (opcional):</label>
-              <input type="text" id="net-signaling-url" class="form-control" placeholder="wss://signal.comunidade.org" value="${customSignalingUrl || ""}" />
-            </div>
-
-            <div class="form-group">
-              <label for="net-relay-http-url">Relay HTTP (cache e inbox, opcional):</label>
-              <input type="text" id="net-relay-http-url" class="form-control" placeholder="https://relay.comunidade.org ou 192.168.0.10:3920" value="${customRelayHttpUrl || ""}" />
-              <p class="desc" style="font-size:0.75rem; margin:0.35rem 0 0;">Usado para buscar posts e mensagens efêmeras. Vazio = derivado do servidor de conexão ou localhost.</p>
-            </div>
-
-            <div class="form-group">
-              <label for="net-relay-buddy-http-url">Relay Buddy (reserva/espelho B, opcional):</label>
-              <input type="text" id="net-relay-buddy-http-url" class="form-control" placeholder="https://buddy.comunidade.org ou https://usuario-space.hf.space" value="${customRelayBuddyHttpUrl || ""}" />
-              <p class="desc" style="font-size:0.75rem; margin:0.35rem 0 0;">Segundo nó para failover automático se o relay principal cair durante o piloto.</p>
-            </div>
-
-            ${renderTurnFields(customTurn)}
-
-            <div class="form-group" style="display:flex; align-items:center; gap:0.6rem; margin-top:0.75rem;">
-              <input type="checkbox" id="net-bg-relay" ${isBg ? "checked" : ""} style="width:1rem; height:1rem;" />
-              <div style="flex:1;">
-                <label for="net-bg-relay" style="margin:0; font-weight:600;">Segundo plano via Service Worker (Wi-Fi)</label>
-                <div style="margin-top:0.2rem;">${notifNotice}</div>
-              </div>
-            </div>
-
-            <div style="margin-top:0.75rem; border-top:1px solid var(--border); padding-top:0.6rem;">
-              <div class="meta" style="margin-bottom:0.4rem;">
-                Conexões ativas: <strong>${rtcCount} aparelhos</strong> · Conteúdos via WebRTC: <strong>${metrics?.blobsServedRtc || 0}</strong>
-              </div>
-              <button type="button" id="btn-check-relay" class="btn btn-outline btn-sm">Verificar Relay HTTP</button>
-              <span class="meta" style="margin-left:0.5rem;">${relayHealthLabel(relayStatus, relayHttpUrl)}</span>
-            </div>
-
-            <div style="margin-top:0.75rem; border-top:1px solid var(--border); padding-top:0.6rem;">
-              <label style="font-weight:600; font-size:0.85rem; display:block; margin-bottom:0.25rem;">Tour de Demonstração</label>
-              <p class="desc" style="font-size:0.8rem; margin:0 0 0.4rem;">Recarrega os 5 perfis e posts educativos de exemplo no seu aparelho:</p>
-              <button type="button" id="btn-reset-demo" class="btn btn-outline btn-sm">🔄 Restaurar tour demo</button>
-            </div>
-          </div>
-        </details>
-
+        ${renderGeneralPreferencesHtml(opts.settings, opts.meshDiscoverable, opts.customSignalingUrl)}
+        ${renderAdvancedServerSettingsHtml(opts)}
         <div class="actions-row" style="margin-top:1rem;">
           <button type="submit" class="btn btn-primary">Salvar Preferências</button>
           <button type="button" id="btn-clear-cache" class="btn btn-outline">Limpar Cache Local</button>
@@ -352,103 +371,75 @@ function renderModerationSettingsSection(blockedUsers = [], mutedUsers = []) {
       </div>
     </div>`;
 }
-export function renderNetworkSettings(main, {
-  settings,
-  metrics,
-  cacheStats,
-  relayStatus,
-  dailyUsage,
-  notifPermission,
-  rtcStatus,
-  customSignalingUrl,
-  customRelayHttpUrl,
-  customRelayBuddyHttpUrl = "",
-  customTurn,
-  relayHttpUrl,
-  gatewayHealth,
-  blockedUsers = [],
-  mutedUsers = [],
-  meshDiscoverable = false,
-  posseWebhooks = [],
-}) {
-  const isEnabled = Boolean(settings?.enabled);
-  let html = renderNetworkHeader(isEnabled, relayStatus, rtcStatus, gatewayHealth);
-  html += renderNetworkStats(metrics, cacheStats, dailyUsage, settings);
-  html += renderNetworkForm(
-    settings,
-    notifPermission,
-    customSignalingUrl,
-    customRelayHttpUrl,
-    customTurn,
-    relayStatus,
-    rtcStatus,
-    metrics,
-    relayHttpUrl,
-    meshDiscoverable,
-    customRelayBuddyHttpUrl,
-  );
+export function renderNetworkSettings(main, props = {}) {
+  const isEnabled = Boolean(props.settings?.enabled);
+  let html = renderNetworkHeader(isEnabled, props.relayStatus, props.rtcStatus, props.gatewayHealth);
+  html += renderNetworkStats(props.metrics, props.cacheStats, props.dailyUsage, props.settings);
+  html += renderNetworkForm(props);
   html += renderStatusLinkBlock();
-  html += renderPosseWebhooksSection(posseWebhooks);
-  html += renderModerationSettingsSection(blockedUsers, mutedUsers);
+  html += renderPosseWebhooksSection(props.posseWebhooks || []);
+  html += renderModerationSettingsSection(props.blockedUsers || [], props.mutedUsers || []);
   main.innerHTML = html;
 }
 
 /** Wizard operador steward (V-P01) — MVP 5 passos. */
+const STEWARD_STEP_RENDERERS = {
+  1: (d) => `
+    <p class="desc" style="font-size:0.85rem;">Camada Steward: espelho e relay para leitura mais rápida. Leia <code>COMPLIANCE-BR.md</code> no repositório Vox (Marco Civil, espelho).</p>
+    <label style="display:flex; gap:0.5rem; align-items:flex-start; margin-top:0.75rem;">
+      <input type="checkbox" id="sw-pledge" ${d.pledge ? "checked" : ""} required style="margin-top:0.2rem;" />
+      <span>Comprometo-me a operar infra <strong>voluntária</strong>, com quotas e sem inspecionar DMs.</span>
+    </label>`,
+  2: (d) => `
+    <div class="form-group">
+      <label for="sw-community-id">Community-Id ou slug da comunidade</label>
+      <input type="text" id="sw-community-id" class="form-control" value="${escapeHtml(d.communityId || "")}" placeholder="ex. bairro-centro" required />
+    </div>`,
+  3: () => `
+    <p class="desc"><strong>VPS (coletivo):</strong> Docker em <code>relay/deploy</code> — Caddy expõe WSS e relay HTTP no mesmo domínio (<code>docs/steward-relay-kit.md</code>).</p>
+    <ul class="desc" style="font-size:0.85rem; margin:0.5rem 0 0 1rem;">
+      <li>DNS + <code>docker compose up -d --build</code></li>
+      <li><code>cp .env.example .env</code> — quota <code>VOX_RELAY_MAX_CACHE_MB</code></li>
+      <li>Conferir <code>curl …/health</code> (espelhos + cache)</li>
+    </ul>
+    <p class="desc" style="font-size:0.85rem; margin-top:0.75rem;"><strong>Desktop / LAN:</strong> Windows <code>tools/steward-kit-windows/Start-StewardKit.ps1</code> ou Linux <code>tools/steward-kit-linux/start-steward-kit.sh</code> — relay em <code>http://127.0.0.1:8787</code>.</p>`,
+  4: (d) => `
+    <div class="form-group">
+      <label for="sw-signaling">WSS signaling</label>
+      <input type="text" id="sw-signaling" class="form-control" value="${escapeHtml(d.signalingUrl || "")}" placeholder="wss://signal.coletivo.org" />
+    </div>
+    <p class="meta" style="font-size:0.8rem;">TURN (usuário/senha): configure em <a href="#/settings/network">Preferências de rede</a> após o wizard.</p>
+    <div class="form-group">
+      <label for="sw-relay-http">URL HTTP relay</label>
+      <input type="text" id="sw-relay-http" class="form-control" value="${escapeHtml(d.relayHttpUrl || "")}" placeholder="https://signal.coletivo.org" />
+    </div>
+    <p class="meta" style="font-size:0.8rem;">Na VPS, use a <strong>mesma origem HTTPS</strong> do signaling (Caddy encaminha <code>/health</code> e <code>/vox/*</code>). Local: <code>http://127.0.0.1:8787</code>.</p>
+    <button type="button" id="sw-verify-relay" class="btn btn-outline btn-sm">Verificar Relay HTTP</button>
+    <span id="sw-verify-result" class="meta" style="margin-left:0.5rem;"></span>`,
+  5: (d, mirrorLast) => `
+    <p class="desc">Salve as URLs acima em <a href="#/settings/network">Preferências de rede</a>. Depois, teste o espelho no relay e compartilhe <code>#/c/&lt;slug&gt;</code>.</p>
+    <button type="button" id="sw-test-mirror" class="btn btn-outline btn-sm">Testar espelho agora</button>
+    <span id="sw-mirror-result" class="meta" style="margin-left:0.5rem;"></span>
+    ${mirrorLast && !mirrorLast.ok ? `<p class="meta" id="sw-mirror-last-code">Último código: <code>${escapeHtml(mirrorLast.code || "—")}</code></p>` : ""}
+    <div class="form-group" style="margin-top:0.75rem;">
+      <label for="sw-share-link">Link para compartilhar</label>
+      <input type="text" id="sw-share-link" class="form-control" value="${escapeHtml(d.shareLink || "")}" placeholder="#/c/minha-comunidade" />
+    </div>`,
+};
+
 export function renderStewardWizard(main, { draft = {}, step = 1, mirrorLast = null } = {}) {
   const s = Math.min(5, Math.max(1, Number(step) || 1));
   const d = draft || {};
+  const stepRenderer = STEWARD_STEP_RENDERERS[s] || STEWARD_STEP_RENDERERS[1];
+  const stepHtml = stepRenderer(d, mirrorLast);
+
   main.innerHTML = `
     <a class="back-link" href="#/settings/network">← Voltar às preferências de rede</a>
     <div class="card">
       <h2>Assistente steward</h2>
       <p class="desc">Voluntário da <strong>comunidade</strong> — não o mantenedor do código. Passo ${s} de 5.</p>
       <form id="form-steward-wizard">
-        ${s === 1 ? `
-          <p class="desc" style="font-size:0.85rem;">Camada Steward: espelho e relay para leitura mais rápida. Leia <code>COMPLIANCE-BR.md</code> no repositório Vox (Marco Civil, espelho).</p>
-          <label style="display:flex; gap:0.5rem; align-items:flex-start; margin-top:0.75rem;">
-            <input type="checkbox" id="sw-pledge" ${d.pledge ? "checked" : ""} required style="margin-top:0.2rem;" />
-            <span>Comprometo-me a operar infra <strong>voluntária</strong>, com quotas e sem inspecionar DMs.</span>
-          </label>
-        ` : ""}
-        ${s === 2 ? `
-          <div class="form-group">
-            <label for="sw-community-id">Community-Id ou slug da comunidade</label>
-            <input type="text" id="sw-community-id" class="form-control" value="${escapeHtml(d.communityId || "")}" placeholder="ex. bairro-centro" required />
-          </div>
-        ` : ""}
-        ${s === 3 ? `
-          <p class="desc"><strong>VPS (coletivo):</strong> Docker em <code>relay/deploy</code> — Caddy expõe WSS e relay HTTP no mesmo domínio (<code>docs/steward-relay-kit.md</code>).</p>
-          <ul class="desc" style="font-size:0.85rem; margin:0.5rem 0 0 1rem;">
-            <li>DNS + <code>docker compose up -d --build</code></li>
-            <li><code>cp .env.example .env</code> — quota <code>VOX_RELAY_MAX_CACHE_MB</code></li>
-            <li>Conferir <code>curl …/health</code> (espelhos + cache)</li>
-          </ul>
-          <p class="desc" style="font-size:0.85rem; margin-top:0.75rem;"><strong>Desktop / LAN:</strong> Windows <code>tools/steward-kit-windows/Start-StewardKit.ps1</code> ou Linux <code>tools/steward-kit-linux/start-steward-kit.sh</code> — relay em <code>http://127.0.0.1:8787</code>.</p>
-        ` : ""}
-        ${s === 4 ? `
-          <div class="form-group">
-            <label for="sw-signaling">WSS signaling</label>
-            <input type="text" id="sw-signaling" class="form-control" value="${escapeHtml(d.signalingUrl || "")}" placeholder="wss://signal.coletivo.org" />
-          </div>
-          <p class="meta" style="font-size:0.8rem;">TURN (usuário/senha): configure em <a href="#/settings/network">Preferências de rede</a> após o wizard.</p>
-          <div class="form-group">
-            <label for="sw-relay-http">URL HTTP relay</label>
-            <input type="text" id="sw-relay-http" class="form-control" value="${escapeHtml(d.relayHttpUrl || "")}" placeholder="https://signal.coletivo.org" />
-          </div>
-          <p class="meta" style="font-size:0.8rem;">Na VPS, use a <strong>mesma origem HTTPS</strong> do signaling (Caddy encaminha <code>/health</code> e <code>/vox/*</code>). Local: <code>http://127.0.0.1:8787</code>.</p>
-          <button type="button" id="sw-verify-relay" class="btn btn-outline btn-sm">Verificar Relay HTTP</button>
-          <span id="sw-verify-result" class="meta" style="margin-left:0.5rem;"></span>
-        ` : ""}
-        ${s === 5 ? `
-          <p class="desc">Salve as URLs acima em <a href="#/settings/network">Preferências de rede</a>. Depois, teste o espelho no relay e compartilhe <code>#/c/&lt;slug&gt;</code>.</p>
-          <button type="button" id="sw-test-mirror" class="btn btn-outline btn-sm">Testar espelho agora</button>
-          <span id="sw-mirror-result" class="meta" style="margin-left:0.5rem;"></span>
-          ${mirrorLast && !mirrorLast.ok ? `<p class="meta" id="sw-mirror-last-code">Último código: <code>${escapeHtml(mirrorLast.code || "—")}</code></p>` : ""}
-          <div class="form-group" style="margin-top:0.75rem;">
-            <label for="sw-share-link">Link para compartilhar</label>
-            <input type="text" id="sw-share-link" class="form-control" value="${escapeHtml(d.shareLink || "")}" placeholder="#/c/minha-comunidade" />
-          </div>
-        ` : ""}
+        ${stepHtml}
         <div style="display:flex; gap:0.5rem; margin-top:1rem; flex-wrap:wrap;">
           ${s > 1 ? `<button type="button" id="sw-prev" class="btn btn-outline">← Anterior</button>` : ""}
           ${s < 5 ? `<button type="submit" class="btn btn-primary">Próximo →</button>` : `<button type="submit" class="btn btn-primary">Concluir</button>`}
