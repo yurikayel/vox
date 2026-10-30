@@ -98,7 +98,7 @@ function renderDmHeroCard(contactList = []) {
     </div>`;
 }
 
-export function renderDmList(main, conversations = [], myAddress = "", { contactList = [], searchQuery = "" } = {}) {
+export function renderDmList(main, conversations = [], _myAddress = "", { contactList = [], searchQuery = "" } = {}) {
   const sorted = sortAndFilterConversations(conversations, { query: searchQuery, welcomeId: WELCOME_ROUTE_ID, resolveLabel: resolvePeerLabel });
   const emptyText = searchQuery ? "Nenhuma conversa encontrada para esta busca." : "Nenhuma conversa ainda. Toque em <strong>Nova conversa</strong> ou peça para alguém te mandar mensagem.";
   const listHtml = !sorted.length ? `<div class="empty dm-empty-state"><p>${emptyText}</p></div>` : `<div class="dm-inbox-list" id="dm-inbox-list">${sorted.map(renderDmInboxItem).join("")}</div>`;

@@ -19,6 +19,8 @@ import socketserver
 WS_GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 DEFAULT_HOST = "0.0.0.0"
 DEFAULT_PORT = 3921
+MAX_WS_FRAME_SIZE = 1024 * 1024  # 1 MB max frame size
+MAX_HEADER_SIZE = 64 * 1024  # 64 KB max handshake headers
 
 
 def compute_accept_key(sec_key: str) -> str:
@@ -54,13 +56,17 @@ def parse_frame_length(sock, second_byte: int):
         ext = read_exact(sock, 2)
         if not ext:
             return None
-        return struct.unpack(">H", ext)[0]
-    if payload_len == 127:
+        length = struct.unpack(">H", ext)[0]
+    elif payload_len == 127:
         ext = read_exact(sock, 8)
         if not ext:
             return None
-        return struct.unpack(">Q", ext)[0]
-    return payload_len
+        length = struct.unpack(">Q", ext)[0]
+    else:
+        length = payload_len
+    if length > MAX_WS_FRAME_SIZE:
+        return None
+    return length
 
 
 def read_ws_frame(sock):
@@ -231,6 +237,8 @@ class WebSocketHandler(socketserver.BaseRequestHandler):
     def perform_handshake(self) -> bool:
         request_data = bytearray()
         while b"\r\n\r\n" not in request_data:
+            if len(request_data) > MAX_HEADER_SIZE:
+                return False
             chunk = self.request.recv(1024)
             if not chunk:
                 return False
