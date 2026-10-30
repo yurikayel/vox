@@ -470,8 +470,15 @@ a:hover {
   animation: none;
 }
 
-.network-chip.paused {
+.network-chip.paused,
+.network-chip.offline {
   color: var(--muted);
+}
+
+.network-chip.offline .chip-dot {
+  background: var(--muted);
+  box-shadow: none;
+  animation: none;
 }
 
 /* Wallet Badge Glass */
@@ -2749,11 +2756,25 @@ body.post-lightbox-open {
   border: 1px solid var(--outline);
   border-radius: var(--radius-sm);
   box-shadow: var(--paper-highlight);
+  transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
-.post-comments-surface.is-open {
+.post-comments-surface.is-open,
+.post-comments.is-open {
   /* Painel de comentários — nunca herda overlay/scrim do hero */
   z-index: auto;
+  animation: fadeInComment 0.2s ease-out;
+}
+
+@keyframes fadeInComment {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .post-comments[hidden] {

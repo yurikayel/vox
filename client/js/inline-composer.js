@@ -75,6 +75,92 @@ export function expandInlineComposer() {
   syncInlineComposerUi();
 }
 
+let isInlineSubmitting = false;
+
+function attachComposerMediaToPayload(payload) {
+  const mtype = inlineComposerMedia.type;
+  if (mtype === "image" && (inlineComposerImageDataUrl || inlineComposerMedia.dataUrl)) {
+    payload.image = inlineComposerImageDataUrl || inlineComposerMedia.dataUrl;
+    payload.imageAlt = payload.title || "Foto";
+    payload.aspectRatio = inlineComposerAspectRatio || "original";
+    if (inlineComposerPhotoTags.length > 0) {
+      payload.photoTags = [...inlineComposerPhotoTags];
+    }
+  } else if (mtype === "audio" && inlineComposerMedia.dataUrl) {
+    payload.audio = inlineComposerMedia.dataUrl;
+  } else if (mtype === "video" && inlineComposerMedia.dataUrl) {
+    payload.video = inlineComposerMedia.dataUrl;
+  }
+}
+
+function buildInlineTopicPayload({ title, body, commSlug }) {
+  const topicId = "top_" + Math.random().toString(36).slice(2, 10);
+  const enrichment = localAccount.getProfileEnrichment();
+  const myDisplayName = localAccount.getDisplayName() || enrichment?.displayName || "";
+  const myAvatar = enrichment?.avatarUrl || "";
+  const payload = {
+    id: topicId,
+    type: "topic",
+    communityId: commSlug,
+    title: title || "",
+    body: body || "",
+    authorDisplay: myDisplayName,
+    authorAvatar: myAvatar,
+  };
+  attachComposerMediaToPayload(payload);
+  return payload;
+}
+
+async function uploadTopicMediaToPermaweb(blob) {
+  if (!blob?.dataUrl || !mediaBlob.isDataUrl(blob.dataUrl)) return null;
+  const rawBytes = mediaBlob.dataUrlToUint8Array(blob.dataUrl);
+  if (rawBytes.length > upload.FREE_TIER_MAX_BYTES) return null;
+
+  const mediaTags = upload.buildTags("media", {
+    "Content-Type": blob.mime || "image/webp",
+    "Media-Type": blob.mime || "image/webp",
+    "Blob-Hash": blob.hash,
+    "Aspect-Ratio": inlineComposerAspectRatio || "original",
+  });
+  const mediaRes = await upload.postBinary(rawBytes, mediaTags);
+  return mediaRes?.success ? mediaRes.id : null;
+}
+
+async function uploadTopicToPermaweb({ topicId, commSlug, title, body, blob }) {
+  if (!wallet.hasWallet()) return null;
+  try {
+    const mediaTxId = await uploadTopicMediaToPermaweb(blob);
+    const tags = upload.buildTags("topic", {
+      "Community-Id": commSlug,
+      "Topic-Title": title,
+      Title: title,
+      "Local-Origin-Id": topicId,
+      ...(mediaTxId ? { "Media-Tx": mediaTxId, "Media-Type": blob?.mime || "image/webp", "Aspect-Ratio": inlineComposerAspectRatio || "original" } : {}),
+    });
+    return await upload.postData({
+      title,
+      body,
+      communityId: commSlug,
+      mediaTx: mediaTxId,
+      aspectRatio: inlineComposerAspectRatio || "original",
+    }, tags);
+  } catch (err) {
+    console.warn("Falha no upload Permaweb:", err);
+    return null;
+  }
+}
+
+function showPublishToast(permawebResult) {
+  if (permawebResult?.success) {
+    const badge = permawebResult.via === "turbo" ? "Turbo ⚡" : "Arweave";
+    share.showToast(`Post publicado no P2P e gravado na Permaweb (${badge})!`);
+  } else if (wallet.hasWallet()) {
+    share.showToast("Post publicado no P2P local (Permaweb indisponível).", "warning");
+  } else {
+    share.showToast("Post publicado na rede P2P!");
+  }
+}
+
 export function attachInlineComposerHandlers(onPublished) {
   const root = document.getElementById("feed-inline-composer");
   if (!root) return;
@@ -449,45 +535,23 @@ export function attachInlineComposerHandlers(onPublished) {
 
   form?.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const btn = document.getElementById("btn-inline-submit");
+    if (isInlineSubmitting) return;
+
     const bodyRaw = document.getElementById("inline-topic-body")?.value?.trim() || "";
-    const commSlug =
-      document.getElementById("inline-topic-comm")?.value?.trim().toLowerCase() || "geral";
+    const commSlug = document.getElementById("inline-topic-comm")?.value?.trim().toLowerCase() || "geral";
     const hasMedia = Boolean(inlineComposerImageDataUrl || inlineComposerMedia.dataUrl);
     if (!bodyRaw && !hasMedia) return;
 
-    const { title, body } = postOwnership.deriveTopicTitleFromBody(bodyRaw || "");
-
+    const btn = document.getElementById("btn-inline-submit");
+    isInlineSubmitting = true;
     if (btn) {
       btn.disabled = true;
       btn.textContent = "Publicando…";
     }
-    try {
-      const topicId = "top_" + Math.random().toString(36).slice(2, 10);
-      const myDisplayName = localAccount.getDisplayName() || localAccount.getProfileEnrichment()?.displayName || "";
-      const myAvatar = localAccount.getProfileEnrichment()?.avatarUrl || "";
-      const payload = {
-        id: topicId,
-        type: "topic",
-        communityId: commSlug,
-        title: title || "",
-        body: body || "",
-        authorDisplay: myDisplayName,
-        authorAvatar: myAvatar,
-      };
-      if (inlineComposerMedia.type === "image" && (inlineComposerImageDataUrl || inlineComposerMedia.dataUrl)) {
-        payload.image = inlineComposerImageDataUrl || inlineComposerMedia.dataUrl;
-        payload.imageAlt = title || "Foto";
-        payload.aspectRatio = inlineComposerAspectRatio || "original";
-        if (inlineComposerPhotoTags.length > 0) {
-          payload.photoTags = [...inlineComposerPhotoTags];
-        }
-      } else if (inlineComposerMedia.type === "audio" && inlineComposerMedia.dataUrl) {
-        payload.audio = inlineComposerMedia.dataUrl;
-      } else if (inlineComposerMedia.type === "video" && inlineComposerMedia.dataUrl) {
-        payload.video = inlineComposerMedia.dataUrl;
-      }
 
+    try {
+      const { title, body } = postOwnership.deriveTopicTitleFromBody(bodyRaw || "");
+      const payload = buildInlineTopicPayload({ title, body, commSlug });
       const signed = await localAccount.signPayload(payload);
       await cacheNode.saveLocalPost(signed);
       if (payload.photoTags?.length) {
@@ -500,55 +564,20 @@ export function attachInlineComposerHandlers(onPublished) {
       }
       peers.broadcastGossip(detachedPost);
 
-      let permawebResult = null;
-      let mediaTxId = null;
-      if (wallet.hasWallet()) {
-        try {
-          if (blob?.dataUrl && mediaBlob.isDataUrl(blob.dataUrl)) {
-            const rawBytes = mediaBlob.dataUrlToUint8Array(blob.dataUrl);
-            if (rawBytes.length <= upload.FREE_TIER_MAX_BYTES) {
-              const mediaTags = upload.buildTags("media", {
-                "Content-Type": blob.mime || "image/webp",
-                "Media-Type": blob.mime || "image/webp",
-                "Blob-Hash": blob.hash,
-                "Aspect-Ratio": selectedAspect,
-              });
-              const mediaRes = await upload.postBinary(rawBytes, mediaTags);
-              if (mediaRes?.success) mediaTxId = mediaRes.id;
-            }
-          }
-
-          const tags = upload.buildTags("topic", {
-            "Community-Id": commSlug,
-            "Topic-Title": title,
-            Title: title,
-            "Local-Origin-Id": topicId,
-            ...(mediaTxId ? { "Media-Tx": mediaTxId, "Media-Type": blob?.mime || "image/webp", "Aspect-Ratio": selectedAspect } : {}),
-          });
-          permawebResult = await upload.postData({
-            title,
-            body,
-            communityId: commSlug,
-            mediaTx: mediaTxId,
-            aspectRatio: selectedAspect,
-          }, tags);
-        } catch (permaErr) {
-          console.warn("Falha no upload Permaweb:", permaErr);
-        }
-      }
+      const permawebResult = await uploadTopicToPermaweb({
+        topicId: payload.id,
+        commSlug,
+        title,
+        body,
+        blob,
+      });
 
       form.reset();
       clearMedia();
       syncInlineComposerUi();
       collapseInlineComposer();
-      if (permawebResult?.success) {
-        const badge = permawebResult.via === "turbo" ? "Turbo ⚡" : "Arweave";
-        share.showToast(`Post publicado no P2P e gravado na Permaweb (${badge})!`);
-      } else if (wallet.hasWallet()) {
-        share.showToast("Post publicado no P2P local (Permaweb indisponível).", "warning");
-      } else {
-        share.showToast("Post publicado na rede P2P!");
-      }
+      showPublishToast(permawebResult);
+
       if (typeof onPublished === "function") {
         onPublished(signed);
       } else {
@@ -557,6 +586,7 @@ export function attachInlineComposerHandlers(onPublished) {
     } catch (err) {
       share.showToast(`Erro ao publicar: ${err.message}`, "error");
     } finally {
+      isInlineSubmitting = false;
       if (btn) {
         btn.disabled = false;
         btn.textContent = "Postar";

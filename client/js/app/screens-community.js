@@ -594,6 +594,28 @@ async function mergeTopicReplies(topicId, remoteReplies) {
   return { merged, hasLocal: Boolean(local.length) };
 }
 
+function bindLiveProfileSync(topicAuthor, filteredReplies) {
+  const authors = new Set(filteredReplies.map((r) => r.author || r.owner).filter(Boolean));
+  if (topicAuthor) authors.add(topicAuthor);
+
+  return peers.onGossipPost((item) => {
+    if (!item?.author || !authors.has(item.author)) return;
+    const card = profileDirectory.getProfileCard(item.author);
+    if (!card?.name && !card?.avatarUrl) return;
+
+    const authorLinks = document.querySelectorAll(`a.post-author[href="#/u/${encodeURIComponent(item.author)}"]`);
+    authorLinks.forEach((link) => {
+      if (card.name) link.textContent = card.name;
+    });
+
+    const avatarLinks = document.querySelectorAll(`a.avatar-link[href="#/u/${encodeURIComponent(item.author)}"]`);
+    avatarLinks.forEach((alink) => {
+      const img = alink.querySelector("img.avatar-img");
+      if (card.avatarUrl && img) img.src = card.avatarUrl;
+    });
+  });
+}
+
 function bindTopicScreenEvents(topicId, topic, finalCommId) {
   document.getElementById("btn-share-topic")?.addEventListener("click", () => {
     shareTopicUnlessQuarantined({ title: topic.title || "Tópico no Vox", topicId, communityId: finalCommId });
@@ -655,6 +677,7 @@ export async function showTopic(topicId, commIdParam = "") {
 
   render.renderTopic(main, topicId, topic, filteredReplies, { topicData, isMod: isUserMod, communityId: finalCommId });
   hydrateMissingReplyBodies(filteredReplies, finalCommId);
+  bindLiveProfileSync(topic.author || topic.owner, filteredReplies);
   bindTopicScreenEvents(topicId, topic, finalCommId);
 }
 

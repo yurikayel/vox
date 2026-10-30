@@ -41,7 +41,7 @@ export function renderInlineComposer({ userRouteId = "", displayName = "" } = {}
     : `<span class="avatar">✍</span>`;
   return `
     <div class="inline-composer" id="feed-inline-composer" data-user-route="${escapeHtml(userRouteId || "")}">
-      <div class="inline-composer-collapsed" tabindex="0" role="button" aria-expanded="false" aria-controls="form-inline-topic">
+      <div class="inline-composer-collapsed" tabindex="0" role="button" aria-expanded="false" aria-controls="form-inline-topic" aria-label="Abrir formulário de publicação">
         <div class="inline-composer-avatar">${avatarHtml}</div>
         <span class="inline-composer-placeholder">O que está acontecendo na sua rede?</span>
       </div>
@@ -80,7 +80,7 @@ export function renderInlineComposer({ userRouteId = "", displayName = "" } = {}
             <button type="button" class="composer-aspect-btn" data-aspect="1:1">1:1</button>
           </div>
           <div class="composer-tag-bar" id="composer-tag-bar" style="display:none; margin-top:8px; align-items:center; gap:8px; flex-wrap:wrap;">
-            <button type="button" class="btn btn-outline btn-xs" id="btn-inline-tag-people">🏷️ Marcar pessoas</button>
+            <button type="button" class="btn btn-outline btn-xs" id="btn-inline-tag-people" aria-haspopup="dialog" aria-expanded="false">🏷️ Marcar pessoas</button>
             <div id="inline-composer-tags-chips" class="inline-composer-tags-chips" style="display:inline-flex; gap:4px; flex-wrap:wrap;"></div>
           </div>
           <button type="button" class="btn btn-outline btn-sm inline-composer-remove-img" id="btn-inline-remove-img" style="margin-top:8px;">Remover anexo</button>
@@ -102,7 +102,7 @@ export function renderInlineComposer({ userRouteId = "", displayName = "" } = {}
               <input type="file" id="inline-topic-file" accept="image/jpeg,image/png,image/webp,image/gif" hidden />
               <span aria-hidden="true">📷</span> Foto
             </label>
-            <button type="button" class="inline-composer-tool" id="btn-inline-mic" title="Gravar voz pelo microfone (até 60s)">
+            <button type="button" class="inline-composer-tool" id="btn-inline-mic" title="Gravar voz pelo microfone (até 60s)" aria-label="Gravar voz pelo microfone (até 60s)">
               <span aria-hidden="true">🔴</span> Gravar
             </button>
             <label class="inline-composer-tool" title="Anexar áudio (até 60s)">
@@ -116,7 +116,7 @@ export function renderInlineComposer({ userRouteId = "", displayName = "" } = {}
             <input type="text" id="inline-topic-comm" class="inline-composer-comm" list="inline-comm-list" placeholder="Comunidade (opcional)" maxlength="64" aria-label="Slug da comunidade" />
             <datalist id="inline-comm-list"></datalist>
           </div>
-          <button type="submit" class="btn btn-primary btn-sm" id="btn-inline-submit" disabled>Postar</button>
+          <button type="submit" class="btn btn-primary btn-sm" aria-label="Publicar mensagem no feed" id="btn-inline-submit" disabled>Postar</button>
         </div>
         <p class="inline-composer-meta" aria-live="polite">
           <span class="inline-composer-char" id="inline-topic-char">0 / 2000</span>
