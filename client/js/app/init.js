@@ -5,7 +5,6 @@ import * as mock from "../mock.js";
 import * as share from "../share.js";
 import * as cacheNode from "../cache-node.js";
 import * as peers from "../peers.js";
-import * as cryptoDm from "../crypto-dm.js";
 import * as localAccount from "../local-account.js";
 import * as social from "../social.js";
 import * as frames from "../frames.js";
@@ -21,7 +20,6 @@ import {
   showTopic,
   showProposal,
 } from "./screens-community.js";
-import { showDmThread, initDmListeners } from "./screens-dm.js";
 import {
   togglePostComments,
   bumpReplyCount,

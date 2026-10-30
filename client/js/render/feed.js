@@ -17,7 +17,6 @@ import {
 } from "../vox-welcome-profile.js";
 import {
   escapeHtml,
-  shortId,
   resolvePostAuthorLabels,
   renderPostAuthorMetaLines,
   renderAvatarHtml,
@@ -29,7 +28,7 @@ import { renderPhotoTagLayerHtml } from "./photo-tag-pins.js";
 import { renderRepostCiteHtml } from "./repost-cite.js";
 import { renderRepostBtn } from "./repost-btn.js";
 import { rememberVisible } from "../repost-index.js";
-import { renderPhotoTitleHtml, renderPhotoHiddenMessageHtml } from "./photo-chrome.js";
+import { renderPhotoHiddenMessageHtml } from "./photo-chrome.js";
 
 export function renderComposerStrip(displayName = "") {
   return renderInlineComposer({ displayName });
@@ -581,40 +580,6 @@ function renderZapToolbarBtn(t, author, authorDisplay) {
   return `<button class="action-btn btn-zap-post" data-id="${escapeHtml(t.id)}" data-author="${escapeHtml(author)}" data-author-name="${escapeHtml(authorDisplay)}" data-pix="${escapeHtml(pix)}" data-title="${escapeHtml(t.title)}" aria-label="Apoiar com Pix" title="Apoiar com Pix">${icon}</button>`;
 }
 
-function renderToolbarUtilityMenu(t, author, authorDisplay, authorHandle, baseStars, starred, stars, saved, { overlay = false } = {}) {
-  const pix = t.contactPix || (author ? mock.getAuthorPixKey(author) : "") || "";
-  const overflowCls = overlay ? "toolbar-overflow post-overlay-actions-more" : "toolbar-overflow";
-  const menuCls = overlay ? "toolbar-overflow-menu toolbar-overflow-menu--overlay" : "toolbar-overflow-menu";
-  const zapItem = pix
-    ? `<button type="button" class="action-btn btn-zap-post" data-id="${escapeHtml(t.id)}" data-author="${escapeHtml(author)}" data-author-name="${escapeHtml(authorDisplay)}" data-pix="${escapeHtml(pix)}" data-title="${escapeHtml(t.title)}" role="menuitem" aria-label="Apoiar com Pix">
-        <svg class="action-icon icon-zap" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-        <span class="toolbar-overflow-label">Apoiar</span>
-      </button>`
-    : `<button type="button" class="action-btn btn-zap-post disabled" disabled role="menuitem" aria-label="Autor sem Pix informado">
-        <svg class="action-icon icon-zap" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-        <span class="toolbar-overflow-label">Apoiar</span>
-      </button>`;
-  return `<details class="${overflowCls}">
-    <summary class="action-btn btn-toolbar-more${overlay ? " overlay-action-btn btn-post-actions-more" : ""}" aria-label="Mais ações"><span aria-hidden="true">⋯</span></summary>
-    <div class="${menuCls}" role="menu">
-      ${zapItem}
-      <button type="button" class="action-btn btn-save ${saved ? "active" : ""}" data-id="${escapeHtml(t.id)}" role="menuitem" aria-label="Salvar post">
-        <svg class="action-icon icon-bookmark" width="18" height="18" viewBox="0 0 24 24" fill="${saved ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
-        <span class="toolbar-overflow-label">Salvar</span>
-      </button>
-      <button type="button" class="action-btn btn-star ${starred ? "active" : ""}" data-id="${escapeHtml(t.id)}" data-count="${baseStars}" role="menuitem" aria-label="Estrelar post">
-        <svg class="action-icon icon-star" width="18" height="18" viewBox="0 0 24 24" fill="${starred ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-        <span class="action-count count-stars">${stars > 0 ? stars : ""}</span>
-        <span class="toolbar-overflow-label">Estrelar</span>
-      </button>
-      <button type="button" class="action-btn btn-copy-md" data-id="${escapeHtml(t.id)}" data-title="${escapeHtml(t.title)}" data-body="${escapeHtml(t.body || "")}" data-author="${escapeHtml(authorDisplay)}" data-handle="${escapeHtml(authorHandle)}" role="menuitem" aria-label="Copiar Markdown">
-        <svg class="action-icon icon-copy" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
-        <span class="toolbar-overflow-label">Copiar .md</span>
-      </button>
-      ${renderQuarantineAction(t.id)}
-    </div>
-  </details>`;
-}
 
 function renderToolbarOverflow(t, author, authorDisplay, authorHandle, baseStars, starred, stars) {
   return `<details class="toolbar-overflow">

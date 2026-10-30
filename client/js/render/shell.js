@@ -245,8 +245,8 @@ export function updateTopBarSync(active, detail = "") {
 }
 
 export function renderShell({
-  title,
-  subtitle,
+  title: _title,
+  subtitle: _subtitle,
   breadcrumb,
   walletAddress,
   activeTab = "home",
