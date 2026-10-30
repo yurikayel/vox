@@ -94,18 +94,16 @@ Deno.serve((req) => {
 
   socket.onclose = () => {
     if (currentPeerId) {
-      peers.delete(currentPeerId);
-      addresses.delete(currentPeerId);
-      dmPubs.delete(currentPeerId);
-      const leftMsg = { type: "peer-left", peerId: currentPeerId };
-      broadcastLocal(currentPeerId, leftMsg);
-      channel.postMessage({ kind: "broadcast", from: currentPeerId, data: leftMsg });
+      cleanupPeer(currentPeerId);
       currentPeerId = null;
     }
   };
 
   socket.onerror = () => {
-    try { socket.close(); } catch {}
+    if (currentPeerId) {
+      cleanupPeer(currentPeerId);
+      currentPeerId = null;
+    }
   };
 
   return response;
@@ -123,11 +121,38 @@ channel.onmessage = (event) => {
   }
 };
 
+function cleanupPeer(peerId) {
+  if (!peerId) return;
+  const ws = peers.get(peerId);
+  peers.delete(peerId);
+  addresses.delete(peerId);
+  dmPubs.delete(peerId);
+  if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) {
+    try { ws.close(); } catch {}
+  }
+  const leftMsg = { type: "peer-left", peerId };
+  broadcastLocal(peerId, leftMsg);
+  try {
+    channel.postMessage({ kind: "broadcast", from: peerId, data: leftMsg });
+  } catch {}
+}
+
 function broadcastLocal(excludeId, data) {
   const raw = JSON.stringify(data);
+  const dead = [];
   for (const [id, ws] of peers.entries()) {
-    if (id !== excludeId && ws.readyState === WebSocket.OPEN) {
-      try { ws.send(raw); } catch {}
+    if (id === excludeId) continue;
+    if (ws.readyState === WebSocket.OPEN) {
+      try {
+        ws.send(raw);
+      } catch {
+        dead.push(id);
+      }
+    } else if (ws.readyState === WebSocket.CLOSED || ws.readyState === WebSocket.CLOSING) {
+      dead.push(id);
     }
+  }
+  for (const deadId of dead) {
+    cleanupPeer(deadId);
   }
 }
