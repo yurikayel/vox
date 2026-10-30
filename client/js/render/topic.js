@@ -93,7 +93,7 @@ export function renderTopic(main, topicId, topic, replies, { topicData = null, i
     <article class="topic-root insta-topic-root card" style="padding:1.25rem;">
       <div class="post-header post-header-inline">
         <div class="post-header-user">
-          <a class="avatar-link" href="#/u/${encodeURIComponent(author)}">${renderAvatarHtml(author, authorDisplay)}</a>
+          <a class="avatar-link" href="#/u/${encodeURIComponent(author)}">${renderAvatarHtml(author, authorDisplay, "", topic?.authorAvatar)}</a>
           ${topicAuthorMeta}
         </div>
         <div class="post-header-aside">
@@ -170,7 +170,7 @@ export function renderTopic(main, topicId, topic, replies, { topicData = null, i
       : "";
     return `
       <div class="reply-item card reply" id="reply-${escapeHtml(r.id)}">
-        <a class="avatar-link" href="#/u/${encodeURIComponent(rAuthor)}">${renderAvatarHtml(rAuthor, rAuthorDisplay)}</a>
+        <a class="avatar-link" href="#/u/${encodeURIComponent(rAuthor)}">${renderAvatarHtml(rAuthor, rAuthorDisplay, "", r.authorAvatar)}</a>
         <div class="post-content">
           <div class="reply-header" style="display:flex; justify-content:space-between; align-items:center;">
             <div>

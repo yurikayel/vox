@@ -88,6 +88,17 @@ async function buildCommunityTitleMap() {
   return commMap;
 }
 
+function applyReplyCountsToTopics(topics, replyCounts) {
+  if (!replyCounts || typeof replyCounts !== "object") return topics;
+  for (const t of topics) {
+    const extra = replyCounts[t.id] || 0;
+    if (extra > 0 || !t.repliesCount) {
+      t.repliesCount = (Number(t.repliesCount) || 0) + extra;
+    }
+  }
+  return topics;
+}
+
 function mergeLocalAndRemoteTopics(localPosts, remoteItems, commMap, user) {
   const seen = new Set();
   const merged = [];
@@ -175,8 +186,12 @@ export async function showHome(feed = "for-you") {
       gateway = res.gateway || "";
     }
     const localPosts = (await cacheNode.getLocalPosts({ type: "topic" })).filter((p) => p.type !== "listing");
+    const replyCounts = await cacheNode.getReplyCountsMap().catch(() => ({}));
     const commMap = await buildCommunityTitleMap();
-    const merged = mergeLocalAndRemoteTopics(localPosts, remoteItems, commMap, user);
+    const merged = applyReplyCountsToTopics(
+      mergeLocalAndRemoteTopics(localPosts, remoteItems, commMap, user),
+      replyCounts,
+    );
     const filtered = await filterTopicsForActiveFeed(merged, activeFeed);
     const isWelcomeDismissed = localStorage.getItem("vox-welcome-post-dismissed") === "1";
     const welcomeTopic = welcomeProfile.getOfficialWelcomeTopic();
@@ -190,8 +205,12 @@ export async function showHome(feed = "for-you") {
   } catch {
     main.innerHTML = "";
     const localPosts = (await cacheNode.getLocalPosts({ type: "topic" })).filter((p) => p.type !== "listing");
+    const replyCounts = await cacheNode.getReplyCountsMap().catch(() => ({}));
     const fb = mock.mockRecentTopics();
-    const merged = mergeLocalAndRemoteTopics(localPosts, fb.items, new Map(), user);
+    const merged = applyReplyCountsToTopics(
+      mergeLocalAndRemoteTopics(localPosts, fb.items, new Map(), user),
+      replyCounts,
+    );
     const filtered = await filterTopicsForActiveFeed(merged, activeFeed);
     const isWelcomeDismissed = localStorage.getItem("vox-welcome-post-dismissed") === "1";
     const welcomeTopic = welcomeProfile.getOfficialWelcomeTopic();
