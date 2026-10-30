@@ -453,176 +453,113 @@ function renderProfileActions(
   return "";
 }
 
-export function renderProfile(main, address, memberships = [], isCurrentWallet = false, _dmPubStr = "", {
-  handle = "",
-  isConflict = false,
-  claimants = [],
-  displayName = "",
-  profileBio = "",
-  stats = null,
-  posts = [],
-  starredPosts = [],
-  savedPosts = [],
-  hasWallet = false,
-  balance = "0.000",
-  pixKey = "",
-  pixKeyMasked = "",
-  githubHandle = "",
-  readme = "",
-  activeTab = "posts",
-  pinnedPostId = "",
-  oauthProvider = "",
-  isBlocked = false,
-  isMuted = false,
-  meshDiscoverable = false,
-} = {}) {
+function resolveProfileCustomFields(address, isCurrentWallet, githubHandle, readme, pinnedPostId) {
   const finalGithub = githubHandle || (isCurrentWallet ? social.getLocalGithubHandle() : mock.getAuthorGithub(address));
   const finalReadme = readme || (isCurrentWallet ? social.getLocalReadme() : mock.getAuthorReadme(address));
   const finalPinned = pinnedPostId || (isCurrentWallet ? social.getPinnedPostId(address) : mock.getAuthorPinnedPostId(address));
-
-  const authorPostList = [...(posts || [])];
-  if (finalPinned) {
-    const pinIdx = authorPostList.findIndex((p) => p.id === finalPinned);
-    if (pinIdx > 0) {
-      const [pinnedItem] = authorPostList.splice(pinIdx, 1);
-      authorPostList.unshift(pinnedItem);
-    }
-  }
-
-  const starredList = starredPosts || [];
-  const savedList = savedPosts || [];
-  const postsCount = authorPostList.length || stats?.posts || 0;
-  const mockProf = mock.getMockProfile(address);
-  const hasStereotypeAbout = Boolean(mockProf?.isStereotypeDemo || mockProf?.stereotypeTitle);
-  const showAboutTab = isCurrentWallet || finalReadme || hasStereotypeAbout || isWelcomeRouteId(address)
-    || starredList.length || memberships.length;
-
-  let currentTab = activeTab || "posts";
-  if (currentTab === "starred" || currentTab === "communities") currentTab = "about";
-  if (currentTab === "saved" && !isCurrentWallet) currentTab = "posts";
-
-  let html = `<div class="profile-grid-layout" data-profile-address="${escapeHtml(address)}">`;
-  html += renderProfileGridHeader(
-    address,
-    isCurrentWallet,
-    handle,
-    isConflict,
-    claimants,
-    displayName,
-    profileBio,
-    stats,
-    postsCount,
-    pixKeyMasked,
-    pixKey,
-    finalGithub,
-    isBlocked,
-    isMuted,
-  );
-
-  html += renderProfileGridTabs(address, currentTab, showAboutTab, isCurrentWallet);
-  html += `<div class="profile-tab-content-slot" id="profile-tab-content">`;
-  html += renderProfileTabContent(currentTab, {
-    address,
-    isCurrentWallet,
-    handle,
-    authorPostList,
-    finalPinned,
-    savedList,
-    displayName,
-    finalReadme,
-    hasWallet,
-    balance,
-    pixKey,
-    finalGithub,
-    oauthProvider,
-    isBlocked,
-    isMuted,
-    meshDiscoverable,
-    starredList,
-    memberships,
-    activeTab,
-  });
-  html += `</div>`;
-  html += `</div>`;
-  main.innerHTML = html;
+  return { finalGithub, finalReadme, finalPinned };
 }
 
-export function renderProfileTabContent(currentTab = "posts", {
-  address = "",
-  isCurrentWallet = false,
-  handle = "",
-  authorPostList = [],
-  finalPinned = "",
-  savedList = [],
-  displayName = "",
-  finalReadme = "",
-  hasWallet = false,
-  balance = "0.000",
-  pixKey = "",
-  finalGithub = "",
-  oauthProvider = "",
-  isBlocked = false,
-  isMuted = false,
-  meshDiscoverable = false,
-  starredList = [],
-  memberships = [],
-  activeTab = "posts",
-} = {}) {
-  let normalizedTab = currentTab || "posts";
-  if (normalizedTab === "starred" || normalizedTab === "communities") normalizedTab = "about";
-  if (normalizedTab === "saved" && !isCurrentWallet) normalizedTab = "posts";
-
-  let html = "";
-  if (normalizedTab === "posts") {
-    html += renderProfilePostGrid(authorPostList, finalPinned);
-  } else if (normalizedTab === "following" || normalizedTab === "followers") {
-    html += renderProfileNetworkTab(address, isCurrentWallet, normalizedTab);
-  } else if (normalizedTab === "saved") {
-    html += savedList.length
-      ? renderProfilePostGrid(savedList)
-      : `<div class="profile-grid-empty empty"><p>Nenhum post salvo neste aparelho.</p></div>`;
-  } else {
-    html += `<div class="profile-grid-about">`;
-    html += renderOfficialPlatformAboutBlurb(address);
-    html += `<p class="meta profile-route-id">ID de rede: <code>${escapeHtml(address)}</code></p>`;
-    html += renderProfileReadme(address, displayName, finalReadme, isCurrentWallet);
-    if (isCurrentWallet) {
-      html += renderProfileActions(
-        address,
-        isCurrentWallet,
-        handle,
-        displayName,
-        hasWallet,
-        balance,
-        pixKey,
-        finalGithub,
-        oauthProvider,
-        isBlocked,
-        isMuted,
-        meshDiscoverable,
-      );
+function prepareAuthorPostList(posts, finalPinned) {
+  const list = [...(posts || [])];
+  if (finalPinned) {
+    const idx = list.findIndex((p) => p.id === finalPinned);
+    if (idx > 0) {
+      const [item] = list.splice(idx, 1);
+      list.unshift(item);
     }
-    if (starredList.length) {
-      html += `<h3 class="profile-grid-about-heading">Estrelados (${starredList.length})</h3>`;
-      html += `<div class="feed-container profile-grid-about-feed">${starredList.map((p) => renderPostItem(p)).join("")}</div>`;
-    }
-    if (memberships.length) {
-      html += `<h3 class="profile-grid-about-heading">Comunidades (${memberships.length})</h3>`;
-      html += `<div class="card-list">${memberships.map((m) => `
-        <div class="card" style="padding:10px 14px; margin-top:0.5rem;">
-          <a href="#/c/${encodeURIComponent(m.communityId)}"><h3 style="margin:0 0 2px;">${escapeHtml(m.communityId)}</h3></a>
-          <span class="meta">Membro confirmado</span>
-        </div>`).join("")}</div>`;
-    }
-    if (activeTab === "starred" && !starredList.length) {
-      html += `<div class="empty"><p>Nenhum post favoritado com estrela ⭐ ainda.</p></div>`;
-    }
-    if (activeTab === "communities" && !memberships.length) {
-      html += `<div class="empty"><p>Nenhuma comunidade registrada neste perfil.</p></div>`;
-    }
-    html += `</div>`;
   }
-  return html;
+  return list;
+}
+
+function shouldShowProfileAboutTab(address, isCurrentWallet, finalReadme, starredList, memberships) {
+  const mockProf = mock.getMockProfile(address);
+  const hasStereotype = Boolean(mockProf?.isStereotypeDemo || mockProf?.stereotypeTitle);
+  return isCurrentWallet || finalReadme || hasStereotype || isWelcomeRouteId(address) || starredList.length || memberships.length;
+}
+
+export function normalizeProfileTab(tab, isCurrentWallet) {
+  let t = tab || "posts";
+  if (t === "starred" || t === "communities") return "about";
+  if (t === "saved" && !isCurrentWallet) return "posts";
+  return t;
+}
+
+export function renderProfile(main, address, memberships = [], isCurrentWallet = false, _dmPubStr = "", opts = {}) {
+  const { finalGithub, finalReadme, finalPinned } = resolveProfileCustomFields(address, isCurrentWallet, opts.githubHandle, opts.readme, opts.pinnedPostId);
+  const authorPostList = prepareAuthorPostList(opts.posts, finalPinned);
+  const starredList = opts.starredPosts || [];
+  const savedList = opts.savedPosts || [];
+  const postsCount = authorPostList.length || opts.stats?.posts || 0;
+  const showAboutTab = shouldShowProfileAboutTab(address, isCurrentWallet, finalReadme, starredList, memberships);
+  const currentTab = normalizeProfileTab(opts.activeTab, isCurrentWallet);
+
+  const headerHtml = renderProfileGridHeader(
+    address, isCurrentWallet, opts.handle || "", opts.isConflict, opts.claimants, opts.displayName,
+    opts.profileBio, opts.stats, postsCount, opts.pixKeyMasked, opts.pixKey, finalGithub, opts.isBlocked, opts.isMuted,
+  );
+  const tabsHtml = renderProfileGridTabs(address, currentTab, showAboutTab, isCurrentWallet);
+  const contentHtml = renderProfileTabContent(currentTab, {
+    address, isCurrentWallet, handle: opts.handle, authorPostList, finalPinned, savedList, displayName: opts.displayName,
+    finalReadme, hasWallet: opts.hasWallet, balance: opts.balance, pixKey: opts.pixKey, finalGithub,
+    oauthProvider: opts.oauthProvider, isBlocked: opts.isBlocked, isMuted: opts.isMuted,
+    meshDiscoverable: opts.meshDiscoverable, starredList, memberships, activeTab: opts.activeTab,
+  });
+
+  main.innerHTML = `<div class="profile-grid-layout" data-profile-address="${escapeHtml(address)}">${headerHtml}${tabsHtml}<div class="profile-tab-content-slot" id="profile-tab-content">${contentHtml}</div></div>`;
+}
+
+function renderProfileAboutStarredSection(starredList, activeTab) {
+  if (starredList.length) {
+    return `<h3 class="profile-grid-about-heading">Estrelados (${starredList.length})</h3><div class="feed-container profile-grid-about-feed">${starredList.map((p) => renderPostItem(p)).join("")}</div>`;
+  }
+  if (activeTab === "starred") {
+    return `<div class="empty"><p>Nenhum post favoritado com estrela ⭐ ainda.</p></div>`;
+  }
+  return "";
+}
+
+function renderProfileAboutCommunitiesSection(memberships, activeTab) {
+  if (memberships.length) {
+    const items = memberships.map((m) => `
+      <div class="card" style="padding:10px 14px; margin-top:0.5rem;">
+        <a href="#/c/${encodeURIComponent(m.communityId)}"><h3 style="margin:0 0 2px;">${escapeHtml(m.communityId)}</h3></a>
+        <span class="meta">Membro confirmado</span>
+      </div>`).join("");
+    return `<h3 class="profile-grid-about-heading">Comunidades (${memberships.length})</h3><div class="card-list">${items}</div>`;
+  }
+  if (activeTab === "communities") {
+    return `<div class="empty"><p>Nenhuma comunidade registrada neste perfil.</p></div>`;
+  }
+  return "";
+}
+
+function renderProfileAboutTab(p) {
+  const blurb = renderOfficialPlatformAboutBlurb(p.address);
+  const routeIdLine = `<p class="meta profile-route-id">ID de rede: <code>${escapeHtml(p.address)}</code></p>`;
+  const readmeHtml = renderProfileReadme(p.address, p.displayName, p.finalReadme, p.isCurrentWallet);
+  const actionsHtml = p.isCurrentWallet
+    ? renderProfileActions(p.address, p.isCurrentWallet, p.handle, p.displayName, p.hasWallet, p.balance, p.pixKey, p.finalGithub, p.oauthProvider, p.isBlocked, p.isMuted, p.meshDiscoverable)
+    : "";
+  const starredHtml = renderProfileAboutStarredSection(p.starredList || [], p.activeTab);
+  const commHtml = renderProfileAboutCommunitiesSection(p.memberships || [], p.activeTab);
+
+  return `<div class="profile-grid-about">${blurb}${routeIdLine}${readmeHtml}${actionsHtml}${starredHtml}${commHtml}</div>`;
+}
+
+function renderProfileSavedTab(savedList) {
+  if (savedList && savedList.length) {
+    return renderProfilePostGrid(savedList);
+  }
+  return `<div class="profile-grid-empty empty"><p>Nenhum post salvo neste aparelho.</p></div>`;
+}
+
+export function renderProfileTabContent(currentTab = "posts", params = {}) {
+  const norm = normalizeProfileTab(currentTab, params.isCurrentWallet);
+  if (norm === "posts") return renderProfilePostGrid(params.authorPostList, params.finalPinned);
+  if (norm === "following" || norm === "followers") return renderProfileNetworkTab(params.address, params.isCurrentWallet, norm);
+  if (norm === "saved") return renderProfileSavedTab(params.savedList);
+  return renderProfileAboutTab(params);
 }
 
 export function renderPixLookup(main, query = "", profile = null) {
