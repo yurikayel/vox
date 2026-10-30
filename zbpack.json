@@ -1,0 +1,4 @@
+{
+  "build_command": "echo 'Vox Zeabur Build OK'",
+  "start_command": "python -u relay/signaling.py --host 0.0.0.0"
+}
