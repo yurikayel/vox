@@ -14,6 +14,13 @@ export function deriveTopicTitleFromBody(bodyRaw) {
  * Evita título + corpo duplicados quando title === primeira linha do body.
  * @returns {{ mode: "empty"|"caption"|"title-body", text?: string, title?: string, body?: string }}
  */
+function stripLeadingTitle(b, t) {
+  let rest = b.slice(t.length);
+  if (rest.startsWith("\r\n")) rest = rest.slice(2);
+  else if (rest.startsWith("\n")) rest = rest.slice(1);
+  return rest.trimStart();
+}
+
 export function formatPostDisplay({ title = "", body = "" } = {}) {
   const t = String(title || "").trim();
   const b = String(body || "").trim();
@@ -21,14 +28,13 @@ export function formatPostDisplay({ title = "", body = "" } = {}) {
   if (!b || b === t) return { mode: "caption", text: t || b };
 
   if (b.startsWith(t)) {
-    let rest = b.slice(t.length);
-    if (rest.startsWith("\r\n")) rest = rest.slice(2);
-    else if (rest.startsWith("\n")) rest = rest.slice(1);
-    if (!rest.trim()) return { mode: "caption", text: t };
-    return { mode: "title-body", title: t, body: rest.trimStart() };
+    const rest = stripLeadingTitle(b, t);
+    if (!rest) return { mode: "caption", text: t };
+    return { mode: "title-body", title: t, body: rest };
   }
 
-  return { mode: "title-body", title: t || b.split(/\r?\n/)[0].trim(), body: b };
+  const fallbackTitle = t || b.split(/\r?\n/)[0].trim();
+  return { mode: "title-body", title: fallbackTitle, body: b };
 }
 
 export function canMutateLocalPost(post, routeId) {
