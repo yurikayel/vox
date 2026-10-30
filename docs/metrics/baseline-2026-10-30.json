@@ -1,50 +1,8 @@
 {
-  "generatedAt": "2026-10-30T22:43:43.473Z",
+  "generatedAt": "2026-10-30T23:46:48.514Z",
   "filesScanned": 130,
-  "violationCount": 137,
+  "violationCount": 122,
   "violations": [
-    {
-      "file": "client/js/app/screens-home.js",
-      "line": 164,
-      "rule": "complexity",
-      "message": "Async function 'showHome' has a complexity of 20. Maximum allowed is 15.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/app/screens-network.js",
-      "line": 23,
-      "rule": "complexity",
-      "message": "Function 'readNetworkFormValues' has a complexity of 30. Maximum allowed is 15.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/app/screens-network.js",
-      "line": 341,
-      "rule": "complexity",
-      "message": "Arrow function has a complexity of 17. Maximum allowed is 15.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/app/screens-profile.js",
-      "line": 85,
-      "rule": "complexity",
-      "message": "Async function 'loadProfileIdentity' has a complexity of 18. Maximum allowed is 15.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/app/screens-profile.js",
-      "line": 122,
-      "rule": "complexity",
-      "message": "Async function 'loadProfileData' has a complexity of 28. Maximum allowed is 15.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/app/screens-profile.js",
-      "line": 287,
-      "rule": "complexity",
-      "message": "Function 'bindProfileButtons' has a complexity of 38. Maximum allowed is 15.",
-      "severity": "warn"
-    },
     {
       "file": "client/js/bsky-feed.js",
       "line": 159,
@@ -200,13 +158,6 @@
       "severity": "warn"
     },
     {
-      "file": "client/js/profile-directory.js",
-      "line": 61,
-      "rule": "complexity",
-      "message": "Async function 'resolveProfile' has a complexity of 41. Maximum allowed is 15.",
-      "severity": "warn"
-    },
-    {
       "file": "client/js/render/community.js",
       "line": 144,
       "rule": "complexity",
@@ -337,55 +288,6 @@
       "line": 662,
       "rule": "max-lines-per-function",
       "message": "Async function 'onNestedCommentReplySubmit' has too many lines (32). Maximum allowed is 30.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/app/screens-home.js",
-      "line": 164,
-      "rule": "max-lines-per-function",
-      "message": "Async function 'showHome' has too many lines (61). Maximum allowed is 30.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/app/screens-network.js",
-      "line": 303,
-      "rule": "max-lines-per-function",
-      "message": "Function 'bindLinkedAccountFormsAndButtons' has too many lines (59). Maximum allowed is 30.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/app/screens-profile.js",
-      "line": 122,
-      "rule": "max-lines-per-function",
-      "message": "Async function 'loadProfileData' has too many lines (48). Maximum allowed is 30.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/app/screens-profile.js",
-      "line": 287,
-      "rule": "max-lines-per-function",
-      "message": "Function 'bindProfileButtons' has too many lines (306). Maximum allowed is 30.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/app/screens-profile.js",
-      "line": 618,
-      "rule": "max-lines-per-function",
-      "message": "Async function 'showHandleLookup' has too many lines (32). Maximum allowed is 30.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/app/screens-profile.js",
-      "line": 655,
-      "rule": "max-lines-per-function",
-      "message": "Async function 'showWallet' has too many lines (60). Maximum allowed is 30.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/app/screens-profile.js",
-      "line": 724,
-      "rule": "max-lines-per-function",
-      "message": "Async function 'showPixLookup' has too many lines (31). Maximum allowed is 30.",
       "severity": "warn"
     },
     {
@@ -631,13 +533,6 @@
       "line": 128,
       "rule": "max-lines-per-function",
       "message": "Function 'computePolisReport' has too many lines (36). Maximum allowed is 30.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/profile-directory.js",
-      "line": 61,
-      "rule": "max-lines-per-function",
-      "message": "Async function 'resolveProfile' has too many lines (34). Maximum allowed is 30.",
       "severity": "warn"
     },
     {
