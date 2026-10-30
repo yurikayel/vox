@@ -6,7 +6,6 @@ import * as profileDirectory from "../profile-directory.js";
 import {
   escapeHtml,
   shortId,
-  renderAvatarHtml,
   renderMarkdownLight,
 } from "./util.js";
 import { renderPostItem } from "./feed.js";
@@ -385,8 +384,8 @@ function renderProfileActions(
   currentPixKey = "",
   currentGithub = "",
   oauthProvider = "",
-  isBlocked = false,
-  isMuted = false,
+  _isBlocked = false,
+  _isMuted = false,
   meshDiscoverable = false,
 ) {
   if (isCurrentWallet) {
@@ -454,7 +453,7 @@ function renderProfileActions(
   return "";
 }
 
-export function renderProfile(main, address, memberships = [], isCurrentWallet = false, dmPubStr = "", {
+export function renderProfile(main, address, memberships = [], isCurrentWallet = false, _dmPubStr = "", {
   handle = "",
   isConflict = false,
   claimants = [],

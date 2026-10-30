@@ -6,7 +6,6 @@ import * as postOwnership from "../post-ownership.js";
 import * as gossipRetract from "../gossip-retract-ui.js";
 import {
   escapeHtml,
-  shortId,
   resolvePostAuthorLabels,
   renderPostAuthorMetaLines,
   renderAvatarHtml,

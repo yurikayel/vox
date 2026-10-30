@@ -17,7 +17,7 @@ export function renderPhotoTagPinsHtml(tags, { visible = true } = {}) {
   return `<div class="photo-tag-pins"${hide} aria-label="Pessoas marcadas">${pins}</div>`;
 }
 
-export function renderPhotoTagBarHtml(post, { isOwn = false } = {}) {
+export function renderPhotoTagBarHtml(post, { isOwn: _isOwn = false } = {}) {
   const tags = photoTags.listTags(post);
   const n = tags.length;
   if (!n) return "";
