@@ -4,7 +4,7 @@ Este documento descreve como testar o fluxo de leitura, autoria (upload de trans
 
 **Malha P2P / handoff Antigravity:** ver [`docs/antigravity-operating.md`](../docs/antigravity-operating.md). **Cache offline:** valor canônico em `CACHE_NAME` dentro de [`sw.js`](./sw.js) (não duplicar string fixa nos parágrafos abaixo — consulte o arquivo).
 
-**Release line:** SHA canônico na tabela de release do [README](../README.md) e em [`docs/release-metadata.json`](../docs/release-metadata.json). Regenerar: `npm run release-metadata` (contagens) ou `npm run release-line` (metadata + README). Suíte: **605** testes (**572** JS + **33** Python) via `npm test`. `CACHE_NAME` só em [`sw.js`](./sw.js). Pages: **hard refresh** após deploy.
+**Release line:** SHA canônico na tabela de release do [README](../README.md) e em [`docs/release-metadata.json`](../docs/release-metadata.json). Regenerar: `npm run release-metadata` (contagens) ou `npm run release-line` (metadata + README). Suíte: **606** testes (**573** JS + **33** Python) via `npm test`. `CACHE_NAME` só em [`sw.js`](./sw.js). Pages: **hard refresh** após deploy.
 
 ---
 
@@ -48,7 +48,7 @@ Abra no navegador: `http://127.0.0.1:8080/`
 
 ### 1.1 Executar Testes Unitários Locais (Tudo)
 
-O Vox inclui suíte completa de testes unitários locais (**605** testes: **572** client JS + **33** relay/signaling Python), sem dependências pesadas externas:
+O Vox inclui suíte completa de testes unitários locais (**606** testes: **573** client JS + **33** relay/signaling Python), sem dependências pesadas externas:
 
 ```bash
 # Na raiz do repositório vox/
@@ -59,7 +59,7 @@ npm run test:all
 
 Comandos específicos disponíveis no package.json:
 ```bash
-# Apenas testes do cliente PWA (572 testes)
+# Apenas testes do cliente PWA (573 testes)
 npm run test:js
 
 # Apenas testes do servidor relay/signaling (33 testes)
