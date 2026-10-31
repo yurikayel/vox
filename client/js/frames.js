@@ -114,15 +114,20 @@ export function buildFrameActionPayload({ postId, frameKind, buttonIndex, button
   };
 }
 
+function applyActionsToLatestMap(actions) {
+  const latest = new Map();
+  for (const a of actions) {
+    if (a.author && a.buttonIndex) latest.set(a.author, a.buttonIndex);
+  }
+  return latest;
+}
+
 function tallyVotes(frame, actions = [], localAction = null) {
   const counts = {};
   for (const b of frame.buttons) {
     counts[b.index] = Number(frame.initialVotes?.[b.index]) || 0;
   }
-  const latest = new Map();
-  for (const a of actions) {
-    if (a.author && a.buttonIndex) latest.set(a.author, a.buttonIndex);
-  }
+  const latest = applyActionsToLatestMap(actions);
   for (const idx of latest.values()) {
     if (counts[idx] !== undefined) counts[idx]++;
   }
@@ -169,42 +174,34 @@ export function computePetitionState(frame, actions = [], localAction = null) {
   return { kind: "petition", signaturesCount: total, goal, percent, hasSigned };
 }
 
+const CLT_SIMULATION_RESULTS = {
+  1: {
+    activeIndex: 1,
+    title: "Férias Constitucionais (+1/3)",
+    result: "R$ 2.024,00",
+    detail: "Base: Salário integral (R$ 1518.00) + 1/3 de abono constitucional (R$ 506.00).",
+  },
+  2: {
+    activeIndex: 2,
+    title: "13º Salário Integral",
+    result: "R$ 1.518,00",
+    detail: "Pago em 2 parcelas: R$ 759.00 até 30/nov e R$ 759.00 até 20/dez.",
+  },
+  3: {
+    activeIndex: 3,
+    title: "Rescisão Básica (1 ano de vínculo)",
+    result: "R$ 2.732,40*",
+    detail: "Estimativa com aviso prévio indenizado, saldo de salário e 40% da multa sobre o FGTS.",
+  },
+};
+
 /**
  * Calculadora rápida CLT: simulação local determinística baseada no salário mínimo (R$ 1.518,00).
  */
-export function computeCltState(frame, actions = [], localAction = null) {
+export function computeCltState(frame, _actions = [], localAction = null) {
   const choice = localAction?.buttonIndex || 0;
-  const minWage = 1518.0;
-
-  if (choice === 1) {
-    return {
-      kind: "clt",
-      activeIndex: 1,
-      title: "Férias Constitucionais (+1/3)",
-      result: "R$ 2.024,00",
-      detail: `Base: Salário integral (R$ ${minWage.toFixed(2)}) + 1/3 de abono constitucional (R$ ${(minWage / 3).toFixed(2)}).`,
-    };
-  }
-
-  if (choice === 2) {
-    return {
-      kind: "clt",
-      activeIndex: 2,
-      title: "13º Salário Integral",
-      result: "R$ 1.518,00",
-      detail: `Pago em 2 parcelas: R$ ${(minWage / 2).toFixed(2)} até 30/nov e R$ ${(minWage / 2).toFixed(2)} até 20/dez.`,
-    };
-  }
-
-  if (choice === 3) {
-    return {
-      kind: "clt",
-      activeIndex: 3,
-      title: "Rescisão Básica (1 ano de vínculo)",
-      result: "R$ 2.732,40*",
-      detail: "Estimativa com aviso prévio indenizado, saldo de salário e 40% da multa sobre o FGTS.",
-    };
-  }
+  const match = CLT_SIMULATION_RESULTS[choice];
+  if (match) return { kind: "clt", ...match };
 
   return {
     kind: "clt",

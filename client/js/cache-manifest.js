@@ -36,31 +36,32 @@ export function validatePinEntry(entry) {
   return { valid: true, entry: normalized };
 }
 
+function validatePinsCollection(pins) {
+  if (!Array.isArray(pins) || !pins.length) return { valid: false, error: "pins não pode ser vazio." };
+  if (pins.length > 512) return { valid: false, error: "pins excede limite de 512 entradas." };
+
+  const normalized = [];
+  const seen = new Set();
+  for (const p of pins) {
+    const res = validatePinEntry(p);
+    if (!res.valid) return res;
+    if (seen.has(res.entry.txId)) return { valid: false, error: "txId duplicado no manifesto." };
+    seen.add(res.entry.txId);
+    normalized.push(res.entry);
+  }
+  return { valid: true, pins: normalized };
+}
+
 export function validateManifestBody(body = {}) {
   const communityId = String(body.communityId || "").trim();
   if (!communityId) return { valid: false, error: "communityId obrigatório." };
   const v = Number(body.v ?? body.manifestVersion ?? MANIFEST_VERSION);
   if (v !== MANIFEST_VERSION) return { valid: false, error: "manifestVersion incompatível." };
 
-  const pins = Array.isArray(body.pins) ? body.pins : [];
-  if (!pins.length) return { valid: false, error: "pins não pode ser vazio." };
-  if (pins.length > 512) return { valid: false, error: "pins excede limite de 512 entradas." };
+  const pinsResult = validatePinsCollection(body.pins);
+  if (!pinsResult.valid) return pinsResult;
 
-  const normalized = [];
-  for (const p of pins) {
-    const res = validatePinEntry(p);
-    if (!res.valid) return res;
-    normalized.push(res.entry);
-  }
-  const seen = new Set();
-  for (const p of normalized) {
-    if (seen.has(p.txId)) return { valid: false, error: "txId duplicado no manifesto." };
-    seen.add(p.txId);
-  }
-
-  const previousManifestTx = body.previousManifestTx
-    ? String(body.previousManifestTx).trim()
-    : undefined;
+  const previousManifestTx = body.previousManifestTx ? String(body.previousManifestTx).trim() : undefined;
   if (previousManifestTx && !isArweaveTxId(previousManifestTx)) {
     return { valid: false, error: "previousManifestTx inválido." };
   }
@@ -71,7 +72,7 @@ export function validateManifestBody(body = {}) {
       v: MANIFEST_VERSION,
       communityId,
       issuedAt: Number(body.issuedAt) || 0,
-      pins: normalized,
+      pins: pinsResult.pins,
       previousManifestTx,
     },
   };
