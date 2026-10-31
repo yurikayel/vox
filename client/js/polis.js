@@ -14,6 +14,29 @@ export function normalizePolisVote(value) {
   return VOTE_PASS;
 }
 
+function tallyStatementVoteCounts(statementVotes) {
+  let agrees = 0;
+  let disagrees = 0;
+  let passes = 0;
+  for (const v of statementVotes) {
+    const val = normalizePolisVote(v.vote);
+    if (val === VOTE_AGREE) agrees++;
+    else if (val === VOTE_DISAGREE) disagrees++;
+    else passes++;
+  }
+  return { agrees, disagrees, passes };
+}
+
+function calculateStatementMetrics(agrees, disagrees, total) {
+  const agreePct = Math.round((agrees / total) * 100);
+  const disagreePct = Math.round((disagrees / total) * 100);
+  const passPct = 100 - agreePct - disagreePct;
+  const p = agrees / total;
+  const q = disagrees / total;
+  const variance = parseFloat((p * (1 - p) + q * (1 - q)).toFixed(4));
+  return { agreePct, disagreePct, passPct, variance };
+}
+
 export function computeStatementStats(statementId, votes = []) {
   const statementVotes = votes.filter((v) => v.statementId === statementId);
   const total = statementVotes.length;
@@ -21,23 +44,8 @@ export function computeStatementStats(statementId, votes = []) {
     return { statementId, total: 0, agreePct: 0, disagreePct: 0, passPct: 0, variance: 0 };
   }
 
-  let agrees = 0;
-  let disagrees = 0;
-  let passes = 0;
-
-  for (const v of statementVotes) {
-    const val = normalizePolisVote(v.vote);
-    if (val === VOTE_AGREE) agrees++;
-    else if (val === VOTE_DISAGREE) disagrees++;
-    else passes++;
-  }
-
-  const agreePct = Math.round((agrees / total) * 100);
-  const disagreePct = Math.round((disagreePctCalc(disagrees, total)));
-  const passPct = 100 - agreePct - disagreePct;
-  const p = agrees / total;
-  const q = disagrees / total;
-  const variance = p * (1 - p) + q * (1 - q);
+  const { agrees, disagrees, passes } = tallyStatementVoteCounts(statementVotes);
+  const metrics = calculateStatementMetrics(agrees, disagrees, total);
 
   return {
     statementId,
@@ -45,18 +53,11 @@ export function computeStatementStats(statementId, votes = []) {
     agrees,
     disagrees,
     passes,
-    agreePct,
-    disagreePct,
-    passPct,
-    variance: parseFloat(variance.toFixed(4)),
+    ...metrics,
   };
 }
 
-function disagreePctCalc(disagrees, total) {
-  return (disagrees / total) * 100;
-}
-
-export function buildVoterMatrix(statements = [], votes = []) {
+export function buildVoterMatrix(_statements = [], votes = []) {
   const voterMap = new Map();
   for (const v of votes) {
     const voter = v.voter || v.voterId;
@@ -125,33 +126,39 @@ export function evaluateStatementAcrossGroups(statementId, votes, groupA = [], g
   };
 }
 
-export function computePolisReport(statements = [], votes = []) {
-  const voterMap = buildVoterMatrix(statements, votes);
-  const totalVoters = voterMap.size;
-  const { groupA, groupB } = clusterVotersIntoTwoGroups(statements, votes);
+function buildStatementReport(s, votes, groupA, groupB) {
+  const globalStats = computeStatementStats(s.id, votes);
+  const groupEval = evaluateStatementAcrossGroups(s.id, votes, groupA, groupB);
+  return {
+    id: s.id,
+    text: s.text || "",
+    ...globalStats,
+    groupA: groupEval.statsA,
+    groupB: groupEval.statsB,
+    isBridge: groupEval.isBridge,
+    isDivisive: groupEval.isDivisive,
+  };
+}
 
+function evaluateAllStatements(statements, votes, groupA, groupB) {
   const statementReports = [];
   const bridgeStatements = [];
   const divisiveStatements = [];
 
   for (const s of statements) {
-    const globalStats = computeStatementStats(s.id, votes);
-    const groupEval = evaluateStatementAcrossGroups(s.id, votes, groupA, groupB);
-
-    const rep = {
-      id: s.id,
-      text: s.text || "",
-      ...globalStats,
-      groupA: groupEval.statsA,
-      groupB: groupEval.statsB,
-      isBridge: groupEval.isBridge,
-      isDivisive: groupEval.isDivisive,
-    };
-
+    const rep = buildStatementReport(s, votes, groupA, groupB);
     statementReports.push(rep);
-    if (groupEval.isBridge) bridgeStatements.push(rep);
-    if (groupEval.isDivisive) divisiveStatements.push(rep);
+    if (rep.isBridge) bridgeStatements.push(rep);
+    if (rep.isDivisive) divisiveStatements.push(rep);
   }
+  return { statementReports, bridgeStatements, divisiveStatements };
+}
+
+export function computePolisReport(statements = [], votes = []) {
+  const totalVoters = buildVoterMatrix(statements, votes).size;
+  const { groupA, groupB } = clusterVotersIntoTwoGroups(statements, votes);
+  const { statementReports, bridgeStatements, divisiveStatements } =
+    evaluateAllStatements(statements, votes, groupA, groupB);
 
   return {
     totalStatements: statements.length,

@@ -54,24 +54,37 @@ export function formatRelayHealthSummary(data) {
   return `${n} espelho(s)`;
 }
 
+function readStepOne() {
+  return { pledge: Boolean(document.getElementById("sw-pledge")?.checked) };
+}
+
+function readStepTwo() {
+  return { communityId: document.getElementById("sw-community-id")?.value.trim() || "" };
+}
+
+function readStepFour() {
+  return {
+    signalingUrl: document.getElementById("sw-signaling")?.value.trim() || "",
+    relayHttpUrl: document.getElementById("sw-relay-http")?.value.trim() || "",
+  };
+}
+
+function readStepFive() {
+  const cid = loadDraft().communityId || "";
+  const slug = cid.replace(/^#\/c\//, "");
+  const defaultLink = slug ? `#/c/${slug}` : "";
+  const link = document.getElementById("sw-share-link")?.value.trim() || defaultLink;
+  return { shareLink: link };
+}
+
+const STEP_READERS = {
+  1: readStepOne,
+  2: readStepTwo,
+  4: readStepFour,
+  5: readStepFive,
+};
+
 export function readFormStep(step) {
-  if (step === 1) {
-    return { pledge: Boolean(document.getElementById("sw-pledge")?.checked) };
-  }
-  if (step === 2) {
-    return { communityId: document.getElementById("sw-community-id")?.value.trim() || "" };
-  }
-  if (step === 4) {
-    return {
-      signalingUrl: document.getElementById("sw-signaling")?.value.trim() || "",
-      relayHttpUrl: document.getElementById("sw-relay-http")?.value.trim() || "",
-    };
-  }
-  if (step === 5) {
-    const cid = loadDraft().communityId || "";
-    const slug = cid.replace(/^#\/c\//, "");
-    const link = document.getElementById("sw-share-link")?.value.trim() || (slug ? `#/c/${slug}` : "");
-    return { shareLink: link };
-  }
-  return {};
+  const reader = STEP_READERS[step];
+  return reader ? reader() : {};
 }

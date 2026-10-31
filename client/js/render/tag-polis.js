@@ -3,13 +3,8 @@ import * as hashtags from "../hashtags.js";
 import { escapeHtml } from "./util.js";
 import { renderPostItem } from "./feed.js";
 
-export function renderTagFeed(main, slug, posts = []) {
-  if (!main) return;
-  const cleanSlug = hashtags.slugifyTag(slug) || slug;
-  const count = posts ? posts.length : 0;
-  const countLabel = count === 1 ? "1 post no seu índice" : `${count} posts no seu índice`;
-
-  const headerHtml = `
+function renderTagFeedHeader(cleanSlug, countLabel) {
+  return `
     <header class="page-header tag-feed-header">
       <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.25rem;">
         <a class="back-link" href="#/" style="margin-bottom:0;">← Início</a>
@@ -24,10 +19,10 @@ export function renderTagFeed(main, slug, posts = []) {
       </div>
     </header>
   `;
+}
 
-  if (!posts || posts.length === 0) {
-    main.innerHTML = `
-      ${headerHtml}
+function renderTagFeedEmptyState(cleanSlug) {
+  return `
       <div class="empty-state card" style="text-align:center; padding:2.5rem 1.5rem; margin-top:1rem;">
         <div style="font-size:2rem; margin-bottom:0.5rem;">🔍</div>
         <h3 style="margin:0 0 0.5rem; font-size:1.1rem;">Nenhum post com #${escapeHtml(cleanSlug)} no seu índice ainda</h3>
@@ -36,7 +31,18 @@ export function renderTagFeed(main, slug, posts = []) {
         </p>
         <a class="btn btn-primary btn-sm" href="#/compose/topic">Criar post com #${escapeHtml(cleanSlug)}</a>
       </div>
-    `;
+  `;
+}
+
+export function renderTagFeed(main, slug, posts = []) {
+  if (!main) return;
+  const cleanSlug = hashtags.slugifyTag(slug) || slug;
+  const count = posts ? posts.length : 0;
+  const countLabel = count === 1 ? "1 post no seu índice" : `${count} posts no seu índice`;
+  const headerHtml = renderTagFeedHeader(cleanSlug, countLabel);
+
+  if (!posts || posts.length === 0) {
+    main.innerHTML = `${headerHtml}${renderTagFeedEmptyState(cleanSlug)}`;
     return;
   }
 

@@ -19,6 +19,22 @@ export function canonicalizeDocumentText(text) {
     .trim();
 }
 
+function buildNotaryArweaveTags(documentHash, communityId, timestamp) {
+  return [
+    { name: "App-Name", value: "vox-perma-notary" },
+    { name: "Protocol", value: NOTARY_PROTOCOL },
+    { name: "Document-Hash", value: documentHash },
+    { name: "Type", value: "civic-notary-record" },
+    { name: "Community-Id", value: communityId },
+    { name: "Unix-Time", value: String(timestamp) },
+  ];
+}
+
+function sanitizeWitnesses(witnesses) {
+  if (!Array.isArray(witnesses)) return [];
+  return [...new Set(witnesses.map((w) => String(w || "").trim()).filter(Boolean))];
+}
+
 /**
  * Cria o registro de cartório cívico com hash SHA-256, timestamp e testemunhas.
  */
@@ -36,9 +52,7 @@ export async function createCivicNotaryRecord({
 
   const documentHash = await computeBlobHash(canonical);
   const timestamp = Date.now();
-  const cleanWitnesses = Array.isArray(witnesses)
-    ? [...new Set(witnesses.map((w) => String(w || "").trim()).filter(Boolean))]
-    : [];
+  const cleanWitnesses = sanitizeWitnesses(witnesses);
 
   return {
     protocol: NOTARY_PROTOCOL,
@@ -51,14 +65,7 @@ export async function createCivicNotaryRecord({
     witnessCount: cleanWitnesses.length,
     witnesses: cleanWitnesses,
     byteLength: new TextEncoder().encode(canonical).byteLength,
-    arweaveTags: [
-      { name: "App-Name", value: "vox-perma-notary" },
-      { name: "Protocol", value: NOTARY_PROTOCOL },
-      { name: "Document-Hash", value: documentHash },
-      { name: "Type", value: "civic-notary-record" },
-      { name: "Community-Id", value: communityId },
-      { name: "Unix-Time", value: String(timestamp) },
-    ],
+    arweaveTags: buildNotaryArweaveTags(documentHash, communityId, timestamp),
   };
 }
 
@@ -95,22 +102,24 @@ export async function verifyCivicNotaryRecord(notaryRecord, currentText = "") {
   };
 }
 
+function formatNotaryDate(timestamp) {
+  if (!timestamp) return "Data registrada";
+  return new Date(timestamp).toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 /**
  * Renderiza o selo visual de cartório popular para inclusão em atas e posts.
  */
 export function renderNotaryBadgeHtml(notaryRecord, { isVerified = true } = {}) {
   if (!notaryRecord?.documentHash) return "";
   const shortHash = notaryRecord.documentHash.slice(0, 12);
-  const dateStr = notaryRecord.timestamp
-    ? new Date(notaryRecord.timestamp).toLocaleDateString("pt-BR", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      })
-    : "Data registrada";
-
+  const dateStr = formatNotaryDate(notaryRecord.timestamp);
   const statusCls = isVerified ? "notary-badge--verified" : "notary-badge--tampered";
   const icon = isVerified ? "📜" : "⚠️";
   const label = isVerified ? "Ata Cívica Imutável" : "Carimbo Divergente";
