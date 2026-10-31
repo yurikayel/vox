@@ -91,76 +91,70 @@ export async function readComposerImageFromFile(file) {
   }
 }
 
-export async function processComposerLofiImage(fileOrDataUrl, { filter = "normal", aspect = "original" } = {}) {
-  let dataUrl = "";
-  if (typeof fileOrDataUrl === "string") {
-    dataUrl = fileOrDataUrl;
-  } else if (fileOrDataUrl && typeof fileOrDataUrl.slice === "function") {
-    dataUrl = await readFileAsDataUrl(fileOrDataUrl);
-  } else {
-    return { ok: false, message: "Arquivo inválido para processamento Lo-Fi." };
+async function resolveLofiImageDataUrl(fileOrDataUrl) {
+  if (typeof fileOrDataUrl === "string") return fileOrDataUrl;
+  if (fileOrDataUrl && typeof fileOrDataUrl.slice === "function") {
+    return readFileAsDataUrl(fileOrDataUrl);
   }
+  return null;
+}
 
-  if (!isDataUrl(dataUrl)) {
-    return { ok: false, message: "Formato de imagem inválido." };
-  }
+function renderLofiCanvasResult(img, filter, aspect) {
+  const naturalW = img.naturalWidth || img.width || 1;
+  const naturalH = img.naturalHeight || img.height || 1;
+  const bounds = mediaLofi.calculateCropAndBounds(naturalW, naturalH, {
+    aspect,
+    maxLong: 1920,
+    maxShort: 1080,
+  });
 
-  if (typeof document === "undefined" || !document.createElement) {
-    return { ok: true, dataUrl, byteLength: dataUrl.length, filter, aspect, isUnder99Kb: true };
-  }
+  const canvas = document.createElement("canvas");
+  canvas.width = bounds.destW;
+  canvas.height = bounds.destH;
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(img, bounds.sx, bounds.sy, bounds.sWidth, bounds.sHeight, 0, 0, bounds.destW, bounds.destH);
+  mediaLofi.applyLofiFilter(ctx, bounds.destW, bounds.destH, filter);
 
+  const clamped = mediaLofi.compressCanvasWithClamp(canvas, {
+    maxBytes: mediaLofi.LOFI_LIMITS.PHOTO_MAX_BYTES,
+  });
+
+  return {
+    ok: true,
+    dataUrl: clamped.dataUrl,
+    byteLength: clamped.byteLength,
+    width: bounds.destW,
+    height: bounds.destH,
+    filter,
+    aspect,
+    qualityUsed: clamped.qualityUsed,
+    isUnder99Kb: clamped.byteLength <= mediaLofi.LOFI_LIMITS.PHOTO_MAX_BYTES,
+  };
+}
+
+function processLofiImageElement(dataUrl, filter, aspect) {
   return new Promise((resolve) => {
     const img = new Image();
     img.onload = () => {
       try {
-        const naturalW = img.naturalWidth || img.width || 1;
-        const naturalH = img.naturalHeight || img.height || 1;
-        const bounds = mediaLofi.calculateCropAndBounds(naturalW, naturalH, {
-          aspect,
-          maxLong: 1920,
-          maxShort: 1080,
-        });
-
-        const canvas = document.createElement("canvas");
-        canvas.width = bounds.destW;
-        canvas.height = bounds.destH;
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(
-          img,
-          bounds.sx,
-          bounds.sy,
-          bounds.sWidth,
-          bounds.sHeight,
-          0,
-          0,
-          bounds.destW,
-          bounds.destH
-        );
-
-        mediaLofi.applyLofiFilter(ctx, bounds.destW, bounds.destH, filter);
-
-        const clamped = mediaLofi.compressCanvasWithClamp(canvas, {
-          maxBytes: mediaLofi.LOFI_LIMITS.PHOTO_MAX_BYTES,
-        });
-
-        resolve({
-          ok: true,
-          dataUrl: clamped.dataUrl,
-          byteLength: clamped.byteLength,
-          width: bounds.destW,
-          height: bounds.destH,
-          filter,
-          aspect,
-          qualityUsed: clamped.qualityUsed,
-          isUnder99Kb: clamped.byteLength <= mediaLofi.LOFI_LIMITS.PHOTO_MAX_BYTES,
-        });
-      } catch (err) {
+        resolve(renderLofiCanvasResult(img, filter, aspect));
+      } catch {
         resolve({ ok: true, dataUrl, byteLength: dataUrl.length, filter, aspect, isUnder99Kb: true });
       }
     };
     img.onerror = () => resolve({ ok: false, message: "Falha ao decodificar imagem para compressão Lo-Fi." });
     img.src = dataUrl;
   });
+}
+
+export async function processComposerLofiImage(fileOrDataUrl, { filter = "normal", aspect = "original" } = {}) {
+  const dataUrl = await resolveLofiImageDataUrl(fileOrDataUrl);
+  if (!dataUrl) return { ok: false, message: "Arquivo inválido para processamento Lo-Fi." };
+  if (!isDataUrl(dataUrl)) return { ok: false, message: "Formato de imagem inválido." };
+  if (typeof document === "undefined" || !document.createElement) {
+    return { ok: true, dataUrl, byteLength: dataUrl.length, filter, aspect, isUnder99Kb: true };
+  }
+  return processLofiImageElement(dataUrl, filter, aspect);
 }
 
 export const COMPOSER_AUDIO_MAX_BYTES = 10 * 1024 * 1024;

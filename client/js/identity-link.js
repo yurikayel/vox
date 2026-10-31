@@ -53,6 +53,22 @@ export function getLinkedRouteId(arweaveAddress) {
   return loadIdentityMap().arToRoute[arweaveAddress] || null;
 }
 
+async function signStatementWithRsaJwk(statementBytes, currentJwk) {
+  const rsaKey = await crypto.subtle.importKey(
+    "jwk",
+    currentJwk,
+    { name: "RSA-PSS", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  const rsaSigBuf = await crypto.subtle.sign(
+    { name: "RSA-PSS", saltLength: 32 },
+    rsaKey,
+    statementBytes
+  );
+  return ans104.bytesToB64Url(new Uint8Array(rsaSigBuf));
+}
+
 export async function createIdentityLink({ routeId, arweaveAddress, jwk } = {}) {
   const currentRouteId = routeId || (await localAccount.getRouteId());
   const currentJwk = jwk || (await wallet.ensureWallet());
@@ -66,25 +82,9 @@ export async function createIdentityLink({ routeId, arweaveAddress, jwk } = {}) 
     issuedAt: Date.now(),
   };
 
-  // 1. Assinatura ECDSA P-256 pela chave da malha local (vx_)
   const vxSigned = await localAccount.signPayload(baseStatement);
   const statement = { ...baseStatement, ts: vxSigned.ts };
-
-  // 2. Assinatura RSA-PSS pela carteira Arweave
-  const statementBytes = canonicalStatementBytes(statement);
-  const rsaKey = await crypto.subtle.importKey(
-    "jwk",
-    currentJwk,
-    { name: "RSA-PSS", hash: "SHA-256" },
-    false,
-    ["sign"]
-  );
-  const rsaSigBuf = await crypto.subtle.sign(
-    { name: "RSA-PSS", saltLength: 32 },
-    rsaKey,
-    statementBytes
-  );
-  const arSig = ans104.bytesToB64Url(new Uint8Array(rsaSigBuf));
+  const arSig = await signStatementWithRsaJwk(canonicalStatementBytes(statement), currentJwk);
 
   const link = {
     statement,
@@ -98,32 +98,13 @@ export async function createIdentityLink({ routeId, arweaveAddress, jwk } = {}) 
   return link;
 }
 
-export async function verifyIdentityLink(link) {
-  if (!link?.statement || !link?.vxPubKey || !link?.vxSig || !link?.arPubKey || !link?.arSig) {
-    return false;
-  }
-  const { statement, vxPubKey, vxSig, arPubKey, arSig } = link;
-  if (statement.type !== IDENTITY_LINK_TYPE) return false;
-  if (!statement.routeId || !statement.arweaveAddress) return false;
+function hasValidLinkStructure(link) {
+  if (!link?.statement || !link?.vxPubKey || !link?.vxSig || !link?.arPubKey || !link?.arSig) return false;
+  if (link.statement.type !== IDENTITY_LINK_TYPE) return false;
+  return Boolean(link.statement.routeId && link.statement.arweaveAddress);
+}
 
-  // 1. Confere se routeId bate com a chave pública P-256
-  const computedRouteId = await localAccount.computeRouteId(vxPubKey);
-  if (computedRouteId !== statement.routeId) return false;
-
-  // 2. Confere se arweaveAddress bate com a chave pública RSA
-  const computedArAddress = await ans104.jwkToAddress(arPubKey);
-  if (computedArAddress !== statement.arweaveAddress) return false;
-
-  // 3. Valida assinatura P-256
-  const vxValid = await localAccount.verifyPayload({
-    ...statement,
-    author: statement.routeId,
-    pubKey: vxPubKey,
-    sig: vxSig,
-  });
-  if (!vxValid) return false;
-
-  // 4. Valida assinatura RSA-PSS
+async function verifyRsaStatementSignature(statement, arPubKey, arSig) {
   try {
     const statementBytes = canonicalStatementBytes(statement);
     const rsaVerifyKey = await crypto.subtle.importKey(
@@ -143,6 +124,27 @@ export async function verifyIdentityLink(link) {
   } catch {
     return false;
   }
+}
+
+export async function verifyIdentityLink(link) {
+  if (!hasValidLinkStructure(link)) return false;
+  const { statement, vxPubKey, vxSig, arPubKey, arSig } = link;
+
+  const computedRouteId = await localAccount.computeRouteId(vxPubKey);
+  if (computedRouteId !== statement.routeId) return false;
+
+  const computedArAddress = await ans104.jwkToAddress(arPubKey);
+  if (computedArAddress !== statement.arweaveAddress) return false;
+
+  const vxValid = await localAccount.verifyPayload({
+    ...statement,
+    author: statement.routeId,
+    pubKey: vxPubKey,
+    sig: vxSig,
+  });
+  if (!vxValid) return false;
+
+  return verifyRsaStatementSignature(statement, arPubKey, arSig);
 }
 
 export function buildIdentityLinkArweaveTags(link) {
