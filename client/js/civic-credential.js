@@ -8,34 +8,48 @@ import { escapeHtml } from "./render/util.js";
 
 export const CREDENTIAL_SCHEMA_VERSION = "vox-civic-cred-v1";
 
-export async function issueCivicCredential({
-  issuerRouteId = "",
-  issuerName = "Comitê Popular",
-  recipientRouteId = "",
-  recipientName = "Militante",
-  courseTitle = "Formação em Soberania Digital",
-  workloadHours = 8,
-  skills = ["Soberania Digital", "Criptografia Local"],
-} = {}) {
-  const cleanIssuer = String(issuerRouteId || "").trim();
-  const cleanRecipient = String(recipientRouteId || "").trim();
+function validateAndNormalizeCredentialInput(params = {}) {
+  const cleanIssuer = String(params.issuerRouteId || "").trim();
+  const cleanRecipient = String(params.recipientRouteId || "").trim();
   if (!cleanIssuer || !cleanRecipient) {
     throw new Error("Emissor e destinatário são obrigatórios para emissão de credencial");
   }
-
-  const cleanCourse = String(courseTitle || "").trim();
+  const cleanCourse = String(params.courseTitle || "Formação em Soberania Digital").trim();
   if (!cleanCourse) {
     throw new Error("Título da formação é obrigatório");
   }
+  return {
+    cleanIssuer,
+    cleanRecipient,
+    cleanCourse,
+    issuerName: String(params.issuerName || "Comitê Popular").trim(),
+    recipientName: String(params.recipientName || "Militante").trim(),
+    workloadHours: Number(params.workloadHours) || 8,
+    skills: Array.isArray(params.skills) ? [...params.skills] : ["Soberania Digital", "Criptografia Local"],
+  };
+}
 
+function buildCredentialArweaveTags(id, hash, issuer, recipient) {
+  return [
+    { name: "App-Name", value: "vox-civic-credential" },
+    { name: "Type", value: "civic-credential" },
+    { name: "Credential-Id", value: id },
+    { name: "Credential-Hash", value: hash },
+    { name: "Issuer", value: issuer },
+    { name: "Recipient", value: recipient },
+  ];
+}
+
+export async function issueCivicCredential(params) {
+  const norm = validateAndNormalizeCredentialInput(params);
   const issuedAt = Date.now();
   const canonicalPayload = JSON.stringify({
     schema: CREDENTIAL_SCHEMA_VERSION,
-    issuer: cleanIssuer,
-    recipient: cleanRecipient,
-    courseTitle: cleanCourse,
-    workloadHours: Number(workloadHours) || 1,
-    skills: Array.isArray(skills) ? skills.sort() : [],
+    issuer: norm.cleanIssuer,
+    recipient: norm.cleanRecipient,
+    courseTitle: norm.cleanCourse,
+    workloadHours: norm.workloadHours,
+    skills: [...norm.skills].sort(),
     issuedAt,
   });
 
@@ -46,26 +60,13 @@ export async function issueCivicCredential({
     schema: CREDENTIAL_SCHEMA_VERSION,
     id: credentialId,
     credentialHash,
-    issuer: {
-      routeId: cleanIssuer,
-      name: String(issuerName || "Comitê").trim(),
-    },
-    recipient: {
-      routeId: cleanRecipient,
-      name: String(recipientName || "Estudante").trim(),
-    },
-    courseTitle: cleanCourse,
-    workloadHours: Number(workloadHours) || 1,
-    skills: Array.isArray(skills) ? skills : [],
+    issuer: { routeId: norm.cleanIssuer, name: norm.issuerName },
+    recipient: { routeId: norm.cleanRecipient, name: norm.recipientName },
+    courseTitle: norm.cleanCourse,
+    workloadHours: norm.workloadHours,
+    skills: norm.skills,
     issuedAt,
-    arweaveTags: [
-      { name: "App-Name", value: "vox-civic-credential" },
-      { name: "Type", value: "civic-credential" },
-      { name: "Credential-Id", value: credentialId },
-      { name: "Credential-Hash", value: credentialHash },
-      { name: "Issuer", value: cleanIssuer },
-      { name: "Recipient", value: cleanRecipient },
-    ],
+    arweaveTags: buildCredentialArweaveTags(credentialId, credentialHash, norm.cleanIssuer, norm.cleanRecipient),
   };
 }
 

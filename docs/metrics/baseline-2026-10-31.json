@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-10-31T09:44:45.280Z",
+  "generatedAt": "2026-10-31T09:50:07.795Z",
   "filesScanned": 130,
-  "violationCount": 34,
+  "violationCount": 22,
   "violations": [
     {
       "file": "client/js/bsky-feed.js",
@@ -11,38 +11,10 @@
       "severity": "warn"
     },
     {
-      "file": "client/js/cache-manifest.js",
-      "line": 39,
-      "rule": "complexity",
-      "message": "Function 'validateManifestBody' has a complexity of 18. Maximum allowed is 15.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/civic-credential.js",
-      "line": 11,
-      "rule": "complexity",
-      "message": "Async function 'issueCivicCredential' has a complexity of 21. Maximum allowed is 15.",
-      "severity": "warn"
-    },
-    {
       "file": "client/js/demo-seed.js",
       "line": 12,
       "rule": "complexity",
       "message": "Async function 'purgeMockDemoSeed' has a complexity of 18. Maximum allowed is 15.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/frames.js",
-      "line": 117,
-      "rule": "complexity",
-      "message": "Function 'tallyVotes' has a complexity of 16. Maximum allowed is 15.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/governance.js",
-      "line": 91,
-      "rule": "complexity",
-      "message": "Function 'computeTally' has a complexity of 28. Maximum allowed is 15.",
       "severity": "warn"
     },
     {
@@ -64,20 +36,6 @@
       "line": 77,
       "rule": "complexity",
       "message": "Function 'buildPosseExportPayload' has a complexity of 31. Maximum allowed is 15.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/render/shell.js",
-      "line": 184,
-      "rule": "complexity",
-      "message": "Function 'renderSidebar' has a complexity of 16. Maximum allowed is 15.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/render/status.js",
-      "line": 4,
-      "rule": "complexity",
-      "message": "Function 'renderStatusPage' has a complexity of 18. Maximum allowed is 15.",
       "severity": "warn"
     },
     {
@@ -106,34 +64,6 @@
       "line": 24,
       "rule": "max-lines-per-function",
       "message": "Function 'bindZapModalEvents' has too many lines (60). Maximum allowed is 30.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/cache-manifest.js",
-      "line": 39,
-      "rule": "max-lines-per-function",
-      "message": "Function 'validateManifestBody' has too many lines (36). Maximum allowed is 30.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/civic-credential.js",
-      "line": 11,
-      "rule": "max-lines-per-function",
-      "message": "Async function 'issueCivicCredential' has too many lines (56). Maximum allowed is 30.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/frames.js",
-      "line": 175,
-      "rule": "max-lines-per-function",
-      "message": "Function 'computeCltState' has too many lines (38). Maximum allowed is 30.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/governance.js",
-      "line": 91,
-      "rule": "max-lines-per-function",
-      "message": "Function 'computeTally' has too many lines (63). Maximum allowed is 30.",
       "severity": "warn"
     },
     {
@@ -204,20 +134,6 @@
       "line": 94,
       "rule": "max-lines-per-function",
       "message": "Function 'renderAutoReplicationBannerHtml' has too many lines (32). Maximum allowed is 30.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/render/shell.js",
-      "line": 184,
-      "rule": "max-lines-per-function",
-      "message": "Function 'renderSidebar' has too many lines (53). Maximum allowed is 30.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/render/status.js",
-      "line": 4,
-      "rule": "max-lines-per-function",
-      "message": "Function 'renderStatusPage' has too many lines (41). Maximum allowed is 30.",
       "severity": "warn"
     },
     {
