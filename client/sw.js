@@ -44,6 +44,8 @@ const SHELL_ASSETS = [
 
   "./js/color-mode.js",
 
+  "./js/sky-theme.js",
+
   "./js/app/cantina-gate.js",
 
   "./js/app/context.js",
@@ -77,6 +79,8 @@ const SHELL_ASSETS = [
   "./js/app/screens-profile.js",
 
   "./js/app/screens-voxpedia.js",
+
+  "./js/app/screens-ajuda-teste.js",
 
   "./js/app/screens-status.js",
 
@@ -148,6 +152,8 @@ const SHELL_ASSETS = [
   "./js/local-account.js",
 
   "./js/account-backup-wrap.js",
+
+  "./js/contribution-attestation.js",
 
   "./js/contacts.js",
 
@@ -255,6 +261,8 @@ const SHELL_ASSETS = [
   "./js/render/tag-polis.js",
 
   "./js/render/voxpedia.js",
+
+  "./js/render/ajuda-teste.js",
 
   "./js/share.js",
 
