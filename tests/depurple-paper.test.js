@@ -25,6 +25,40 @@ test("depurple paper - service worker cache id", () => {
   assert.ok(sw.includes('"./js/repost-index.js"'));
   assert.ok(sw.includes('"./js/render/repost-btn.js"'));
   assert.ok(sw.includes('"./js/app/repost-ui.js"'));
+  assert.ok(sw.includes('"./js/sky-theme.js"'));
+  assert.ok(sw.includes('"./js/contribution-attestation.js"'));
+  assert.ok(sw.includes('"./js/render/ajuda-teste.js"'));
+  assert.ok(sw.includes('"./js/app/screens-ajuda-teste.js"'));
+});
+
+test("service worker - shell assets 100% complete and exist on disk", () => {
+  const match = sw.match(/const SHELL_ASSETS = \[([\s\S]*?)\];/);
+  assert.ok(match, "SHELL_ASSETS array must be defined");
+  const assets = match[1]
+    .split("\n")
+    .map((s) => s.trim().replace(/^['"]|['"],?$/g, ""))
+    .filter((s) => s && !s.startsWith("//"));
+
+  for (const a of assets) {
+    if (a === "./") continue;
+    const p = path.join(root, a);
+    assert.ok(fs.existsSync(p), `Asset ${a} in SHELL_ASSETS must exist on disk`);
+  }
+
+  function walk(dir) {
+    const res = [];
+    for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, ent.name);
+      if (ent.isDirectory()) res.push(...walk(full));
+      else if (ent.name.endsWith(".js")) res.push(full);
+    }
+    return res;
+  }
+  const allJs = walk(path.join(root, "js"));
+  for (const js of allJs) {
+    const rel = "./" + path.relative(root, js).replace(/\\/g, "/");
+    assert.ok(assets.includes(rel), `Client JS file ${rel} must be listed in SHELL_ASSETS`);
+  }
 });
 
 test("onboarding paper - modal sheet/card in CSS, neutral scrim", () => {
