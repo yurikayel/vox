@@ -2,7 +2,7 @@
  * Vox Media Lo-Fi Engine — Ultraleveza Cívica e Soberana.
  * Limites calibrados: fotos <= 99 KB (1080p), áudios <= 60s (blocos de 15s), vídeos <= 10s (blocos de 2s @ 360p).
  */
-import { computeBlobHash, isDataUrl, parseDataUrl } from "./media-blob.js";
+import { computeBlobHash, parseDataUrl } from "./media-blob.js";
 
 export const LOFI_LIMITS = Object.freeze({
   PHOTO_MAX_BYTES: 99 * 1024, // 101.376 bytes cravados (Arweave Free Tier <= 100 KiB)
@@ -140,59 +140,65 @@ export function applyLofiFilter(ctx, width, height, filterName = "normal") {
   if (filterName === "vhs") return applyVhsCamcorder(ctx, width, height);
 }
 
-export function optimizeCanvasQualityUnderCeiling(canvas, { maxBytes = LOFI_LIMITS.PHOTO_MAX_BYTES } = {}) {
-  let low = 0.15;
-  let high = 0.95;
-  let best = null;
-
+function probeCanvasQuality(canvas, quality, maxBytes) {
   try {
-    const probeUrl = canvas.toDataURL("image/webp", high);
-    const probeParsed = parseDataUrl(probeUrl);
-    if (probeParsed.byteLength <= maxBytes) {
+    const dataUrl = canvas.toDataURL("image/webp", quality);
+    const parsed = parseDataUrl(dataUrl);
+    if (parsed.byteLength <= maxBytes) {
       return {
-        dataUrl: probeUrl,
-        byteLength: probeParsed.byteLength,
-        qualityUsed: high,
+        dataUrl,
+        byteLength: parsed.byteLength,
+        qualityUsed: quality,
         mime: "image/webp",
         isWithinLimit: true,
       };
     }
   } catch {}
+  return null;
+}
 
+function binarySearchCanvasQuality(canvas, maxBytes) {
+  let low = 0.15;
+  let high = 0.95;
+  let best = null;
   for (let iter = 0; iter < 6; iter++) {
     const mid = Number(((low + high) / 2).toFixed(3));
-    try {
-      const dataUrl = canvas.toDataURL("image/webp", mid);
-      const parsed = parseDataUrl(dataUrl);
-      if (parsed.byteLength <= maxBytes) {
-        best = {
-          dataUrl,
-          byteLength: parsed.byteLength,
-          qualityUsed: mid,
-          mime: "image/webp",
-          isWithinLimit: true,
-        };
-        low = mid;
-      } else {
-        high = mid;
-      }
-    } catch {
+    const probe = probeCanvasQuality(canvas, mid, maxBytes);
+    if (probe) {
+      best = probe;
+      low = mid;
+    } else {
       high = mid;
     }
   }
+  return best;
+}
 
-  if (best) return best;
-
-  if (canvas.width > 320 && canvas.height > 320 && typeof document !== "undefined" && document.createElement) {
-    try {
-      const down = document.createElement("canvas");
-      down.width = Math.max(1, Math.round(canvas.width * 0.85));
-      down.height = Math.max(1, Math.round(canvas.height * 0.85));
-      const dctx = down.getContext("2d");
-      dctx.drawImage(canvas, 0, 0, down.width, down.height);
-      return optimizeCanvasQualityUnderCeiling(down, { maxBytes });
-    } catch {}
+function downscaleAndReoptimizeCanvas(canvas, maxBytes) {
+  if (canvas.width <= 320 || canvas.height <= 320 || typeof document === "undefined" || !document.createElement) {
+    return null;
   }
+  try {
+    const down = document.createElement("canvas");
+    down.width = Math.max(1, Math.round(canvas.width * 0.85));
+    down.height = Math.max(1, Math.round(canvas.height * 0.85));
+    const dctx = down.getContext("2d");
+    dctx.drawImage(canvas, 0, 0, down.width, down.height);
+    return optimizeCanvasQualityUnderCeiling(down, { maxBytes });
+  } catch {
+    return null;
+  }
+}
+
+export function optimizeCanvasQualityUnderCeiling(canvas, { maxBytes = LOFI_LIMITS.PHOTO_MAX_BYTES } = {}) {
+  const initial = probeCanvasQuality(canvas, 0.95, maxBytes);
+  if (initial) return initial;
+
+  const binaryResult = binarySearchCanvasQuality(canvas, maxBytes);
+  if (binaryResult) return binaryResult;
+
+  const downscaled = downscaleAndReoptimizeCanvas(canvas, maxBytes);
+  if (downscaled) return downscaled;
 
   const fallbackUrl = canvas.toDataURL("image/webp", 0.15);
   const fallbackParsed = parseDataUrl(fallbackUrl);
@@ -205,7 +211,7 @@ export function optimizeCanvasQualityUnderCeiling(canvas, { maxBytes = LOFI_LIMI
   };
 }
 
-export function compressCanvasWithClamp(canvas, { quality = LOFI_LIMITS.PHOTO_DEFAULT_QUALITY, maxBytes = LOFI_LIMITS.PHOTO_MAX_BYTES } = {}) {
+export function compressCanvasWithClamp(canvas, { quality: _quality = LOFI_LIMITS.PHOTO_DEFAULT_QUALITY, maxBytes = LOFI_LIMITS.PHOTO_MAX_BYTES } = {}) {
   return optimizeCanvasQualityUnderCeiling(canvas, { maxBytes });
 }
 

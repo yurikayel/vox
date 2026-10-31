@@ -21,20 +21,7 @@ export function openZapModal({ pixKey, authorName = "Autor", title = "", default
   bindZapModalEvents(container, { pixKey, authorName });
 }
 
-export function bindZapModalEvents(container, { pixKey, authorName }) {
-  const overlay = container.querySelector("#zap-modal-overlay");
-  const area = container.querySelector("#zap-payload-area");
-  const customContainer = container.querySelector(".zap-custom-container");
-  const customInput = container.querySelector("#zap-custom-input");
-
-  const update = (amt) => {
-    try {
-      area.value = brcode.buildPixPayload({ key: pixKey, name: authorName, amount: amt, description: "Apoio Vox" });
-    } catch {
-      area.value = pixKey;
-    }
-  };
-
+function bindZapValueButtons(container, customContainer, customInput, onSelectAmount) {
   container.querySelectorAll(".btn-zap-val").forEach((btn) => {
     btn.addEventListener("click", () => {
       container.querySelectorAll(".btn-zap-val").forEach((b) => {
@@ -48,21 +35,16 @@ export function bindZapModalEvents(container, { pixKey, authorName }) {
       if (val === "custom") {
         if (customContainer) customContainer.style.display = "block";
         const customAmt = customInput ? brcode.parseNumericAmount(customInput.value) : null;
-        update(customAmt);
+        onSelectAmount(customAmt);
       } else {
         if (customContainer) customContainer.style.display = "none";
-        update(parseFloat(val));
+        onSelectAmount(parseFloat(val));
       }
     });
   });
+}
 
-  if (customInput) {
-    customInput.addEventListener("input", () => {
-      const parsed = brcode.parseNumericAmount(customInput.value);
-      update(parsed);
-    });
-  }
-
+function bindZapCopyAndClose(container, area, pixKey) {
   const copyBtn = container.querySelector("#btn-copy-zap-payload");
   if (copyBtn) {
     copyBtn.addEventListener("click", async () => {
@@ -81,9 +63,32 @@ export function bindZapModalEvents(container, { pixKey, authorName }) {
   if (closeBtn) {
     closeBtn.addEventListener("click", () => render.closeZapModal(container));
   }
+  const overlay = container.querySelector("#zap-modal-overlay");
   if (overlay) {
     overlay.addEventListener("click", (e) => {
       if (e.target === overlay) render.closeZapModal(container);
     });
   }
+}
+
+export function bindZapModalEvents(container, { pixKey, authorName }) {
+  const area = container.querySelector("#zap-payload-area");
+  const customContainer = container.querySelector(".zap-custom-container");
+  const customInput = container.querySelector("#zap-custom-input");
+
+  const update = (amt) => {
+    try {
+      area.value = brcode.buildPixPayload({ key: pixKey, name: authorName, amount: amt, description: "Apoio Vox" });
+    } catch {
+      area.value = pixKey;
+    }
+  };
+
+  bindZapValueButtons(container, customContainer, customInput, update);
+  if (customInput) {
+    customInput.addEventListener("input", () => {
+      update(brcode.parseNumericAmount(customInput.value));
+    });
+  }
+  bindZapCopyAndClose(container, area, pixKey);
 }

@@ -33,29 +33,22 @@ function renderConnectedCardBody(net, linkedData) {
     <div class="linked-test-feedback" id="test-feedback-${escapeHtml(net.id)}" style="display:none; font-size:0.78rem; padding:6px 8px; border-radius:var(--radius-sm); margin-top:6px;"></div>`;
 }
 
-function renderLinkNetworkForm(net) {
-  const suggested = getSuggestedHandle(net.id);
-  const authUrl = getNetworkAuthUrl(net.id, suggested);
-
+function renderOneClickConnectButton(net, authUrl) {
+  const color = escapeHtml(net.color || "#1e293b");
   return `
-    <div class="network-connect-box" data-net-id="${escapeHtml(net.id)}" style="margin-top:0.4rem;">
-      <div style="display:flex; flex-direction:column; gap:8px;">
         <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-          <button type="button" class="btn btn-sm btn-primary btn-one-click-connect" data-net-id="${escapeHtml(net.id)}" data-auth-url="${escapeHtml(authUrl)}" style="background:${escapeHtml(net.color || "#1e293b")}; border-color:${escapeHtml(net.color || "#1e293b")}; color:#fff; font-weight:600; padding:7px 16px; border-radius:var(--radius-sm); display:inline-flex; align-items:center; gap:6px;">
+          <button type="button" class="btn btn-sm btn-primary btn-one-click-connect" data-net-id="${escapeHtml(net.id)}" data-auth-url="${escapeHtml(authUrl)}" style="background:${color}; border-color:${color}; color:#fff; font-weight:600; padding:7px 16px; border-radius:var(--radius-sm); display:inline-flex; align-items:center; gap:6px;">
             <span>${net.icon}</span>
             <span>Conectar ${escapeHtml(net.name)} (1 Clique)</span>
           </button>
           <span class="meta" style="font-size:0.75rem; color:var(--muted); line-height:1.2;">
             Abre a rede no navegador, loga sozinho e volta ao Vox
           </span>
-        </div>
+        </div>`;
+}
 
-        <div style="display:flex; align-items:center; gap:6px;">
-          <span class="meta" style="font-size:0.82rem; font-weight:600; color:var(--muted);">@</span>
-          <input type="text" class="input-net-handle form-control" placeholder="seu_usuario" value="${escapeHtml(suggested)}" style="font-size:0.8rem; padding:4px 8px; max-width:220px;" aria-label="Usuário nesta rede" />
-          <button type="button" class="btn btn-xs btn-outline btn-save-handle-quick" data-net-id="${escapeHtml(net.id)}" title="Vincular com este @handle">Vincular @</button>
-        </div>
-
+function renderAdvancedCredentialsForm(net) {
+  return `
         <details class="network-advanced-opts" style="margin-top:2px; font-size:0.75rem; color:var(--muted);">
           <summary style="cursor:pointer; user-select:none; padding:2px 0;">⚙️ Configuração avançada (App Password / Webhook manual)</summary>
           <form class="form-link-network" data-net-id="${escapeHtml(net.id)}" style="margin-top:6px; display:flex; flex-direction:column; gap:6px;">
@@ -67,7 +60,23 @@ function renderLinkNetworkForm(net) {
             ` : ""}
             <button type="submit" class="btn btn-xs btn-outline" style="align-self:flex-start;">Salvar credenciais manuais</button>
           </form>
-        </details>
+        </details>`;
+}
+
+function renderLinkNetworkForm(net) {
+  const suggested = getSuggestedHandle(net.id);
+  const authUrl = getNetworkAuthUrl(net.id, suggested);
+
+  return `
+    <div class="network-connect-box" data-net-id="${escapeHtml(net.id)}" style="margin-top:0.4rem;">
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        ${renderOneClickConnectButton(net, authUrl)}
+        <div style="display:flex; align-items:center; gap:6px;">
+          <span class="meta" style="font-size:0.82rem; font-weight:600; color:var(--muted);">@</span>
+          <input type="text" class="input-net-handle form-control" placeholder="seu_usuario" value="${escapeHtml(suggested)}" style="font-size:0.8rem; padding:4px 8px; max-width:220px;" aria-label="Usuário nesta rede" />
+          <button type="button" class="btn btn-xs btn-outline btn-save-handle-quick" data-net-id="${escapeHtml(net.id)}" title="Vincular com este @handle">Vincular @</button>
+        </div>
+        ${renderAdvancedCredentialsForm(net)}
       </div>
     </div>`;
 }
@@ -91,6 +100,32 @@ function renderNetworkCard(net, linkedData) {
     </div>`;
 }
 
+function renderAutoReplicationCheckboxHtml(autoRep) {
+  return `
+      <div style="padding:0.75rem; background:var(--surface-soft); border-radius:var(--radius-sm); margin-bottom:1rem; border:1px solid var(--outline);">
+        <label style="display:flex; align-items:center; gap:8px; font-weight:600; font-size:0.9rem; cursor:pointer;">
+          <input type="checkbox" id="chk-auto-replicate-master" ${autoRep ? "checked" : ""} />
+          <span>⚡ Ativar Auto-Replicação ao Publicar</span>
+        </label>
+        <p class="meta" style="margin:4px 0 0 24px; font-size:0.78rem;">
+          Quando ativado, novos posts no Vox disparam automaticamente para as redes vinculadas habilitadas.
+        </p>
+      </div>`;
+}
+
+function renderGeneralWebhookInputHtml(generalWebhook) {
+  return `
+      <div style="margin-bottom:0.25rem;">
+        <label for="input-general-webhook" style="font-size:0.82rem; font-weight:600; display:block; margin-bottom:4px;">
+          Webhook Unificado de Automação (n8n / Make / Zapier):
+        </label>
+        <div style="display:flex; gap:8px;">
+          <input type="url" id="input-general-webhook" class="form-control" placeholder="https://seu-n8n.com/webhook/vox-replicate" value="${escapeHtml(generalWebhook)}" style="font-size:0.8rem; flex:1;" />
+          <button type="button" id="btn-save-general-webhook" class="btn btn-sm btn-primary">Salvar</button>
+        </div>
+      </div>`;
+}
+
 function renderAutoReplicationBannerHtml(autoRep, generalWebhook) {
   return `
     <div class="card" style="margin:0.75rem 0 1.25rem; padding:1rem; border:1px solid var(--outline); border-radius:var(--radius-sm); background:var(--surface);">
@@ -103,24 +138,8 @@ function renderAutoReplicationBannerHtml(autoRep, generalWebhook) {
       <p class="desc" style="font-size:0.84rem; margin:0 0 0.85rem; color:var(--muted);">
         O Vox é o seu escudo cívico soberano. Publique com sua chave <code>vx_*</code> permanente e replique automaticamente para as Big Techs (ATProto direto no Bluesky + Webhooks pessoais + Launchpad em 1 toque).
       </p>
-      <div style="padding:0.75rem; background:var(--surface-soft); border-radius:var(--radius-sm); margin-bottom:1rem; border:1px solid var(--outline);">
-        <label style="display:flex; align-items:center; gap:8px; font-weight:600; font-size:0.9rem; cursor:pointer;">
-          <input type="checkbox" id="chk-auto-replicate-master" ${autoRep ? "checked" : ""} />
-          <span>⚡ Ativar Auto-Replicação ao Publicar</span>
-        </label>
-        <p class="meta" style="margin:4px 0 0 24px; font-size:0.78rem;">
-          Quando ativado, novos posts no Vox disparam automaticamente para as redes vinculadas habilitadas.
-        </p>
-      </div>
-      <div style="margin-bottom:0.25rem;">
-        <label for="input-general-webhook" style="font-size:0.82rem; font-weight:600; display:block; margin-bottom:4px;">
-          Webhook Unificado de Automação (n8n / Make / Zapier):
-        </label>
-        <div style="display:flex; gap:8px;">
-          <input type="url" id="input-general-webhook" class="form-control" placeholder="https://seu-n8n.com/webhook/vox-replicate" value="${escapeHtml(generalWebhook)}" style="font-size:0.8rem; flex:1;" />
-          <button type="button" id="btn-save-general-webhook" class="btn btn-sm btn-primary">Salvar</button>
-        </div>
-      </div>
+      ${renderAutoReplicationCheckboxHtml(autoRep)}
+      ${renderGeneralWebhookInputHtml(generalWebhook)}
     </div>`;
 }
 

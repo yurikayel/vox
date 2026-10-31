@@ -20,32 +20,39 @@ export function isModerator(userAddress, communityOwner, rawModerators = "") {
   return list.some((m) => m.toLowerCase() === userAddress.toLowerCase());
 }
 
-export function applyFilters(items, actions = [], communityOwner = "", rawModerators = "") {
-  if (!Array.isArray(items) || !items.length) return [];
-  if (!Array.isArray(actions) || !actions.length) return items;
-
+function buildValidModeratorsSet(communityOwner = "", rawModerators = "") {
   const validModerators = new Set();
   if (communityOwner) validModerators.add(communityOwner.toLowerCase());
   for (const m of parseModerators(rawModerators)) {
     validModerators.add(m.toLowerCase());
   }
+  return validModerators;
+}
 
+function collectModerationRestrictions(actions, validModerators) {
   const hiddenTargets = new Set();
   const bannedOwners = new Set();
 
   for (const act of actions) {
     const actOwner = (act.owner || "").toLowerCase();
-    // Ação só tem efeito se partiu de um moderador legítimo
     if (validModerators.size > 0 && !validModerators.has(actOwner)) {
       continue;
     }
-
     if (act.action === "hide" && act.target) {
       hiddenTargets.add(act.target);
     } else if (act.action === "ban" && act.target) {
       bannedOwners.add(act.target.toLowerCase());
     }
   }
+  return { hiddenTargets, bannedOwners };
+}
+
+export function applyFilters(items, actions = [], communityOwner = "", rawModerators = "") {
+  if (!Array.isArray(items) || !items.length) return [];
+  if (!Array.isArray(actions) || !actions.length) return items;
+
+  const validModerators = buildValidModeratorsSet(communityOwner, rawModerators);
+  const { hiddenTargets, bannedOwners } = collectModerationRestrictions(actions, validModerators);
 
   return items.filter((item) => {
     if (hiddenTargets.has(item.id)) return false;

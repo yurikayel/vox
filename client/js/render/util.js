@@ -242,6 +242,14 @@ function formatInlineMd(str) {
     .replace(/`([^`]+)`/g, "<code>$1</code>");
 }
 
+function formatHeadingOrParagraph(trimmed) {
+  if (trimmed.startsWith("### ")) return `<h4>${trimmed.slice(4)}</h4>`;
+  if (trimmed.startsWith("## ")) return `<h3>${trimmed.slice(3)}</h3>`;
+  if (trimmed.startsWith("# ")) return `<h2>${trimmed.slice(2)}</h2>`;
+  if (!trimmed) return "";
+  return `<p>${formatInlineMd(trimmed)}</p>`;
+}
+
 export function renderMarkdownLight(md) {
   if (!md) return "";
   const lines = String(md).split("\n");
@@ -249,9 +257,7 @@ export function renderMarkdownLight(md) {
   let inList = false;
 
   for (const rawLine of lines) {
-    const line = escapeHtml(rawLine);
-    const trimmed = line.trim();
-
+    const trimmed = escapeHtml(rawLine).trim();
     if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
       if (!inList) {
         out.push("<ul>");
@@ -260,23 +266,12 @@ export function renderMarkdownLight(md) {
       out.push(`<li>${formatInlineMd(trimmed.slice(2))}</li>`);
       continue;
     }
-
     if (inList) {
       out.push("</ul>");
       inList = false;
     }
-
-    if (trimmed.startsWith("### ")) {
-      out.push(`<h4>${trimmed.slice(4)}</h4>`);
-    } else if (trimmed.startsWith("## ")) {
-      out.push(`<h3>${trimmed.slice(3)}</h3>`);
-    } else if (trimmed.startsWith("# ")) {
-      out.push(`<h2>${trimmed.slice(2)}</h2>`);
-    } else if (!trimmed) {
-      // blank line
-    } else {
-      out.push(`<p>${formatInlineMd(trimmed)}</p>`);
-    }
+    const block = formatHeadingOrParagraph(trimmed);
+    if (block) out.push(block);
   }
 
   if (inList) out.push("</ul>");
