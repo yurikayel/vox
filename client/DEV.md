@@ -4,7 +4,7 @@ Este documento descreve como testar o fluxo de leitura, autoria (upload de trans
 
 **Malha P2P / handoff Antigravity:** ver [`docs/antigravity-operating.md`](../docs/antigravity-operating.md). **Cache offline:** valor canônico em `CACHE_NAME` dentro de [`sw.js`](./sw.js) (não duplicar string fixa nos parágrafos abaixo — consulte o arquivo).
 
-**Release line:** SHA canônico na tabela de release do [README](../README.md) e em [`docs/release-metadata.json`](../docs/release-metadata.json). Regenerar: `npm run release-metadata` (contagens) ou `npm run release-line` (metadata + README). Suíte: **463** testes (**440** JS + **23** Python) via `npm test`. `CACHE_NAME` só em [`sw.js`](./sw.js). Pages: **hard refresh** após deploy.
+**Release line:** SHA canônico na tabela de release do [README](../README.md) e em [`docs/release-metadata.json`](../docs/release-metadata.json). Regenerar: `npm run release-metadata` (contagens) ou `npm run release-line` (metadata + README). Suíte: **605** testes (**572** JS + **33** Python) via `npm test`. `CACHE_NAME` só em [`sw.js`](./sw.js). Pages: **hard refresh** após deploy.
 
 ---
 
@@ -48,18 +48,18 @@ Abra no navegador: `http://127.0.0.1:8080/`
 
 ### 1.1 Executar Testes Unitários Locais (Tudo)
 
-O Vox inclui suíte completa de testes unitários locais (**601** testes: **568** client JS + **33** relay/signaling Python), sem dependências pesadas externas:
+O Vox inclui suíte completa de testes unitários locais (**605** testes: **572** client JS + **33** relay/signaling Python), sem dependências pesadas externas:
 
-`ash
+```bash
 # Na raiz do repositório vox/
 npm test
 # ou:
 npm run test:all
-`
+```
 
 Comandos específicos disponíveis no package.json:
-`ash
-# Apenas testes do cliente PWA (568 testes)
+```bash
+# Apenas testes do cliente PWA (572 testes)
 npm run test:js
 
 # Apenas testes do servidor relay/signaling (33 testes)
@@ -70,7 +70,7 @@ npm run lint:relay
 
 # Auditoria automatizada de complexidade ciclomática e LLOC
 npm run audit:complexity
-`
+```
 
 ### 1.2 Integração Contínua & Deploy (GitHub Actions)
 
