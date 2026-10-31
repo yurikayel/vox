@@ -4,7 +4,7 @@
  */
 
 import { validateManifestBody } from "./cache-manifest.js";
-import { getRelayHttpUrl, getRelayHttpUrls } from "./inbox.js";
+import { getRelayHttpUrls } from "./inbox.js";
 
 export const MIRROR_MAX_BODY_BYTES = 256 * 1024;
 export const MIRROR_MAX_TOPICS = 500;
@@ -91,17 +91,7 @@ export function getMirrorLastErrorExport() {
   };
 }
 
-export function validateCommunityMirrorPayload(payload, bodyBytes = null) {
-  const communityId = String(payload?.communityId || "").trim();
-  if (!communityId || !COMMUNITY_ID_PATTERN.test(communityId)) {
-    return {
-      valid: false,
-      code: "mirror.community_id_invalid",
-      error: "communityId inválido ou ausente.",
-    };
-  }
-
-  const topics = payload?.topics;
+function validateCommunityTopics(topics) {
   if (topics !== undefined && topics !== null && !Array.isArray(topics)) {
     return { valid: false, code: "mirror.topics_invalid", error: "topics deve ser um array." };
   }
@@ -112,29 +102,37 @@ export function validateCommunityMirrorPayload(payload, bodyBytes = null) {
       error: `topics excede limite de ${MIRROR_MAX_TOPICS} entradas.`,
     };
   }
+  return null;
+}
 
-  if (payload?.cacheManifest != null) {
-    const cmCheck = validateManifestBody(payload.cacheManifest);
-    if (!cmCheck.valid) {
-      return {
-        valid: false,
-        code: "mirror.cache_manifest_invalid",
-        error: cmCheck.error || "cacheManifest inválido.",
-      };
-    }
-  }
-
-  const bytes =
-    bodyBytes ??
-    new TextEncoder().encode(JSON.stringify(payload)).length;
-  if (bytes > MIRROR_MAX_BODY_BYTES) {
+function validateCommunityCacheManifest(cacheManifest) {
+  if (cacheManifest == null) return null;
+  const cmCheck = validateManifestBody(cacheManifest);
+  if (!cmCheck.valid) {
     return {
       valid: false,
-      code: "mirror.body_too_large",
-      error: "Corpo excede 256 KiB.",
+      code: "mirror.cache_manifest_invalid",
+      error: cmCheck.error || "cacheManifest inválido.",
     };
   }
+  return null;
+}
 
+export function validateCommunityMirrorPayload(payload, bodyBytes = null) {
+  const communityId = String(payload?.communityId || "").trim();
+  if (!communityId || !COMMUNITY_ID_PATTERN.test(communityId)) {
+    return { valid: false, code: "mirror.community_id_invalid", error: "communityId inválido ou ausente." };
+  }
+  const topicsCheck = validateCommunityTopics(payload?.topics);
+  if (topicsCheck) return topicsCheck;
+
+  const manifestCheck = validateCommunityCacheManifest(payload?.cacheManifest);
+  if (manifestCheck) return manifestCheck;
+
+  const bytes = bodyBytes ?? new TextEncoder().encode(JSON.stringify(payload)).length;
+  if (bytes > MIRROR_MAX_BODY_BYTES) {
+    return { valid: false, code: "mirror.body_too_large", error: "Corpo excede 256 KiB." };
+  }
   return { valid: true };
 }
 
@@ -186,11 +184,32 @@ async function parseMirrorErrorResponse(res) {
   return { code: null, error: text || `HTTP ${res.status}`, httpStatus: res.status };
 }
 
+async function postMirrorToSingleTarget(root, body) {
+  try {
+    const url = `${root}/vox/mirror`;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body,
+    });
+    if (res.ok) {
+      return { ok: true, result: await res.json() };
+    }
+    const parsed = await parseMirrorErrorResponse(res);
+    const err = new Error(
+      mirrorUserMessage(parsed.code, parsed.error) || `Falha ao espelhar comunidade (HTTP ${res.status})`,
+    );
+    err.code = parsed.code || "mirror.relay_error";
+    err.httpStatus = parsed.httpStatus;
+    return { ok: false, error: err };
+  } catch (e) {
+    return { ok: false, error: e };
+  }
+}
+
 export async function postCommunityMirrorToRelay(indexPayload, baseUrl = null) {
   const communityId = indexPayload?.communityId;
-  if (!communityId) {
-    throw new Error("communityId obrigatório");
-  }
+  if (!communityId) throw new Error("communityId obrigatório");
 
   const body = JSON.stringify(indexPayload);
   const check = validateCommunityMirrorPayload(indexPayload, new TextEncoder().encode(body).length);
@@ -206,34 +225,16 @@ export async function postCommunityMirrorToRelay(indexPayload, baseUrl = null) {
   let successCount = 0;
 
   for (const root of targets) {
-    try {
-      const url = `${root}/vox/mirror`;
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body,
-      });
-      if (res.ok) {
-        successCount++;
-        lastResult = await res.json();
-      } else {
-        const parsed = await parseMirrorErrorResponse(res);
-        const err = new Error(
-          mirrorUserMessage(parsed.code, parsed.error) ||
-            `Falha ao espelhar comunidade (HTTP ${res.status})`,
-        );
-        err.code = parsed.code || "mirror.relay_error";
-        err.httpStatus = parsed.httpStatus;
-        lastErr = err;
-      }
-    } catch (e) {
-      lastErr = e;
+    const res = await postMirrorToSingleTarget(root, body);
+    if (res.ok) {
+      successCount++;
+      lastResult = res.result;
+    } else {
+      lastErr = res.error;
     }
   }
 
-  if (successCount > 0) {
-    return lastResult || { ok: true, mirrored: true };
-  }
+  if (successCount > 0) return lastResult || { ok: true, mirrored: true };
   throw lastErr || new Error("Falha ao espelhar comunidade em todos os relays configurados");
 }
 

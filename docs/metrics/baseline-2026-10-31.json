@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-10-31T09:33:21.761Z",
+  "generatedAt": "2026-10-31T09:38:06.717Z",
   "filesScanned": 130,
-  "violationCount": 61,
+  "violationCount": 46,
   "violations": [
     {
       "file": "client/js/bsky-feed.js",
@@ -25,38 +25,10 @@
       "severity": "warn"
     },
     {
-      "file": "client/js/community-mirror.js",
-      "line": 94,
-      "rule": "complexity",
-      "message": "Function 'validateCommunityMirrorPayload' has a complexity of 18. Maximum allowed is 15.",
-      "severity": "warn"
-    },
-    {
       "file": "client/js/demo-seed.js",
       "line": 12,
       "rule": "complexity",
       "message": "Async function 'purgeMockDemoSeed' has a complexity of 18. Maximum allowed is 15.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/dm-messenger.js",
-      "line": 36,
-      "rule": "complexity",
-      "message": "Function 'normalizeContextCard' has a complexity of 18. Maximum allowed is 15.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/dm-messenger.js",
-      "line": 161,
-      "rule": "complexity",
-      "message": "Function 'parseDmContextFromHash' has a complexity of 22. Maximum allowed is 15.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/dm-messenger.js",
-      "line": 188,
-      "rule": "complexity",
-      "message": "Function 'normalizeListingHrefArgs' has a complexity of 18. Maximum allowed is 15.",
       "severity": "warn"
     },
     {
@@ -71,34 +43,6 @@
       "line": 91,
       "rule": "complexity",
       "message": "Function 'computeTally' has a complexity of 28. Maximum allowed is 15.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/identity-link.js",
-      "line": 101,
-      "rule": "complexity",
-      "message": "Async function 'verifyIdentityLink' has a complexity of 18. Maximum allowed is 15.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/linked-accounts.js",
-      "line": 30,
-      "rule": "complexity",
-      "message": "Function 'saveLinkedAccount' has a complexity of 18. Maximum allowed is 15.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/linked-accounts.js",
-      "line": 270,
-      "rule": "complexity",
-      "message": "Function 'getNetworkAuthUrl' has a complexity of 16. Maximum allowed is 15.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/linked-accounts.js",
-      "line": 296,
-      "rule": "complexity",
-      "message": "Function 'getSuggestedHandle' has a complexity of 16. Maximum allowed is 15.",
       "severity": "warn"
     },
     {
@@ -179,41 +123,6 @@
       "severity": "warn"
     },
     {
-      "file": "client/js/community-mirror.js",
-      "line": 94,
-      "rule": "max-lines-per-function",
-      "message": "Function 'validateCommunityMirrorPayload' has too many lines (42). Maximum allowed is 30.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/community-mirror.js",
-      "line": 189,
-      "rule": "max-lines-per-function",
-      "message": "Async function 'postCommunityMirrorToRelay' has too many lines (46). Maximum allowed is 30.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/composer-media.js",
-      "line": 94,
-      "rule": "max-lines-per-function",
-      "message": "Async function 'processComposerLofiImage' has too many lines (64). Maximum allowed is 30.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/composer-media.js",
-      "line": 112,
-      "rule": "max-lines-per-function",
-      "message": "Arrow function has too many lines (48). Maximum allowed is 30.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/composer-media.js",
-      "line": 114,
-      "rule": "max-lines-per-function",
-      "message": "Arrow function has too many lines (43). Maximum allowed is 30.",
-      "severity": "warn"
-    },
-    {
       "file": "client/js/data/profiles-brazil-uf.js",
       "line": 470,
       "rule": "max-lines-per-function",
@@ -246,20 +155,6 @@
       "line": 91,
       "rule": "max-lines-per-function",
       "message": "Function 'computeTally' has too many lines (63). Maximum allowed is 30.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/identity-link.js",
-      "line": 56,
-      "rule": "max-lines-per-function",
-      "message": "Async function 'createIdentityLink' has too many lines (37). Maximum allowed is 30.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/identity-link.js",
-      "line": 101,
-      "rule": "max-lines-per-function",
-      "message": "Async function 'verifyIdentityLink' has too many lines (38). Maximum allowed is 30.",
       "severity": "warn"
     },
     {
