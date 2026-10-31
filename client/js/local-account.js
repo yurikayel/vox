@@ -49,7 +49,7 @@ function b64UrlToBytes(b64url) {
 }
 
 function canonicalString(obj) {
-  const { sig, pubKey, ...rest } = obj;
+  const { sig: _sig, pubKey: _pubKey, ...rest } = obj;
   return JSON.stringify(rest, Object.keys(rest).sort());
 }
 
@@ -62,23 +62,20 @@ export async function computeRouteId(pubJwk) {
   return "vx_" + bytesToB64Url(hash).slice(0, 20);
 }
 
-export async function ensureLocalAccount() {
+async function loadStoredLocalAccount() {
   try {
     const stored = localStorage.getItem(ACCOUNT_STORAGE);
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      if (parsed?.routeId && parsed?.publicJwk && parsed?.privateJwk) {
-        cachedAccount = parsed;
-        // Garante também as chaves ECDH para DMs
-        await cryptoDm.ensureDmKeys();
-        return cachedAccount;
-      }
+    if (!stored) return null;
+    const parsed = JSON.parse(stored);
+    if (parsed?.routeId && parsed?.publicJwk && parsed?.privateJwk) {
+      await cryptoDm.ensureDmKeys();
+      return parsed;
     }
   } catch {}
+  return null;
+}
 
-  cachedAccount = null;
-
-  // Gera par de chaves ECDSA P-256 para autoria e assinatura P2P
+async function generateNewAccountKeys() {
   const pair = await crypto.subtle.generateKey(
     { name: "ECDSA", namedCurve: "P-256" },
     true,
@@ -87,21 +84,26 @@ export async function ensureLocalAccount() {
   const publicJwk = await crypto.subtle.exportKey("jwk", pair.publicKey);
   const privateJwk = await crypto.subtle.exportKey("jwk", pair.privateKey);
   const routeId = await computeRouteId(publicJwk);
-
-  // Inicializa chaves DM
   await cryptoDm.ensureDmKeys();
-
-  cachedAccount = {
+  return {
     routeId,
     publicJwk,
     privateJwk,
     createdAt: Date.now(),
   };
+}
 
+export async function ensureLocalAccount() {
+  const existing = await loadStoredLocalAccount();
+  if (existing) {
+    cachedAccount = existing;
+    return cachedAccount;
+  }
+
+  cachedAccount = await generateNewAccountKeys();
   try {
     localStorage.setItem(ACCOUNT_STORAGE, JSON.stringify(cachedAccount));
   } catch {}
-
   return cachedAccount;
 }
 
@@ -244,6 +246,24 @@ export function clearPixKey() {
   }
 }
 
+function buildEnrichedPayloadForSigning(payload, routeId) {
+  const enrich = getProfileEnrichment();
+  const fallbackDisplay = getDisplayName() || enrich?.displayName || "";
+  const fallbackAvatar = enrich?.avatarUrl || "";
+  return {
+    ...payload,
+    id: payload.id || "p_" + bytesToB64Url(crypto.getRandomValues(new Uint8Array(12))),
+    author: routeId,
+    ...(payload.authorDisplay !== undefined
+      ? { authorDisplay: payload.authorDisplay }
+      : (fallbackDisplay ? { authorDisplay: fallbackDisplay } : {})),
+    ...(payload.authorAvatar !== undefined
+      ? { authorAvatar: payload.authorAvatar }
+      : (fallbackAvatar ? { authorAvatar: fallbackAvatar } : {})),
+    ts: payload.ts || Date.now(),
+  };
+}
+
 export async function signPayload(payload) {
   const acc = await ensureLocalAccount();
   const privateKey = await crypto.subtle.importKey(
@@ -254,22 +274,7 @@ export async function signPayload(payload) {
     ["sign"]
   );
 
-  const enrich = getProfileEnrichment();
-  const fallbackDisplay = getDisplayName() || enrich?.displayName || "";
-  const fallbackAvatar = enrich?.avatarUrl || "";
-  const enriched = {
-    ...payload,
-    id: payload.id || "p_" + bytesToB64Url(crypto.getRandomValues(new Uint8Array(12))),
-    author: acc.routeId,
-    ...(payload.authorDisplay !== undefined
-      ? { authorDisplay: payload.authorDisplay }
-      : (fallbackDisplay ? { authorDisplay: fallbackDisplay } : {})),
-    ...(payload.authorAvatar !== undefined
-      ? { authorAvatar: payload.authorAvatar }
-      : (fallbackAvatar ? { authorAvatar: fallbackAvatar } : {})),
-    ts: payload.ts || Date.now(),
-  };
-
+  const enriched = buildEnrichedPayloadForSigning(payload, acc.routeId);
   const rawData = new TextEncoder().encode(canonicalString(enriched));
   const sigBuffer = await crypto.subtle.sign(
     { name: "ECDSA", hash: "SHA-256" },
@@ -516,20 +521,7 @@ export async function listVaultAccounts() {
   return listVaultAccountsSync();
 }
 
-export async function switchActiveAccount(targetRouteId) {
-  if (!targetRouteId) return false;
-  await syncActiveAccountToVault();
-  const vault = readVaultMap();
-  const target = vault[targetRouteId];
-  if (!target?.routeId || !target?.publicJwk || !target?.privateJwk) return false;
-
-  cachedAccount = {
-    routeId: target.routeId,
-    publicJwk: target.publicJwk,
-    privateJwk: target.privateJwk,
-    createdAt: target.createdAt || Date.now(),
-  };
-  localStorage.setItem(ACCOUNT_STORAGE, JSON.stringify(cachedAccount));
+async function restoreTargetAccountSettings(target) {
   if (target.dmKeypair) {
     cryptoDm.setDmKeypair(target.dmKeypair);
   } else {
@@ -547,6 +539,23 @@ export async function switchActiveAccount(targetRouteId) {
     localStorage.removeItem(PIX_STORAGE);
   }
   setMeshDiscoverable(Boolean(target.meshDiscoverable));
+}
+
+export async function switchActiveAccount(targetRouteId) {
+  if (!targetRouteId) return false;
+  await syncActiveAccountToVault();
+  const vault = readVaultMap();
+  const target = vault[targetRouteId];
+  if (!target?.routeId || !target?.publicJwk || !target?.privateJwk) return false;
+
+  cachedAccount = {
+    routeId: target.routeId,
+    publicJwk: target.publicJwk,
+    privateJwk: target.privateJwk,
+    createdAt: target.createdAt || Date.now(),
+  };
+  localStorage.setItem(ACCOUNT_STORAGE, JSON.stringify(cachedAccount));
+  await restoreTargetAccountSettings(target);
   target.lastUsedAt = Date.now();
   vault[targetRouteId] = target;
   writeVaultMap(vault);
