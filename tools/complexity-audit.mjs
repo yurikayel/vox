@@ -38,6 +38,10 @@ function messageKey(m) {
 
 async function main() {
   const files = collectJsFiles(CLIENT_JS);
+  const swPath = path.join(ROOT, "client", "sw.js");
+  if (fs.existsSync(swPath)) {
+    files.push(swPath);
+  }
   const results = await eslint.lintFiles(files);
   const violations = [];
 

@@ -46,7 +46,7 @@ export function buildListingDraft({
 
 export function stripListingSignatureFields(item) {
   if (!item) return null;
-  const { sig, pubKey, ...rest } = item;
+  const { sig: _sig, pubKey: _pubKey, ...rest } = item;
   return rest;
 }
 
@@ -120,7 +120,7 @@ export function formatListingStatus(status) {
   return "Disponível";
 }
 
-export function validateListingInput({ title, body, priceLabel } = {}) {
+export function validateListingInput({ title, body, priceLabel: _priceLabel } = {}) {
   const cleanTitle = String(title || "").trim();
   const cleanBody = String(body || "").trim();
 
