@@ -34,11 +34,108 @@ export function renderComposerStrip(displayName = "") {
   return renderInlineComposer({ displayName });
 }
 
+function renderComposerFilterBar() {
+  return `
+    <div class="lofi-filter-bar" id="lofi-filter-bar">
+      <span class="meta lofi-filter-label">Estilo Lo-Fi:</span>
+      <button type="button" class="lofi-filter-btn active" data-filter="normal">Padrão</button>
+      <button type="button" class="lofi-filter-btn" data-filter="xerox">📰 Xerox</button>
+      <button type="button" class="lofi-filter-btn" data-filter="vhs">📼 VHS 90s</button>
+      <button type="button" class="lofi-filter-btn" data-filter="risograph">🎨 Risógrafo</button>
+      <span class="lofi-weight-pill" id="lofi-weight-badge">⚡ ~45 KB (100% Grátis)</span>
+    </div>`;
+}
+
+function renderComposerAspectBar() {
+  return `
+    <div class="composer-aspect-bar" id="composer-aspect-bar" style="display:none;">
+      <span class="meta composer-aspect-label">Proporção:</span>
+      <button type="button" class="composer-aspect-btn active" data-aspect="original">Original (padrão)</button>
+      <button type="button" class="composer-aspect-btn" data-aspect="16:9">16:9</button>
+      <button type="button" class="composer-aspect-btn" data-aspect="9:16">9:16</button>
+      <button type="button" class="composer-aspect-btn" data-aspect="4:3">4:3</button>
+      <button type="button" class="composer-aspect-btn" data-aspect="3:4">3:4</button>
+      <button type="button" class="composer-aspect-btn" data-aspect="1:1">1:1</button>
+    </div>`;
+}
+
+function renderComposerPreviewWrap() {
+  return `
+    <div class="inline-composer-preview hidden" id="inline-topic-preview-wrap">
+      <img id="inline-topic-preview" class="inline-composer-preview-img hidden" alt="Prévia da imagem" />
+      <div id="inline-topic-preview-audio-wrap" class="hidden" style="margin:8px 0; padding:10px 14px; background:var(--surface-soft); border-radius:var(--radius-sm); border:1px solid var(--border);">
+        <div style="display:flex; align-items:center; gap:6px; margin-bottom:6px;">
+          <span>🎙️</span>
+          <strong style="font-size:0.85rem;">Recado de Voz (Lo-Fi 48kbps)</strong>
+        </div>
+        <audio id="inline-topic-preview-audio" controls style="width:100%;"></audio>
+      </div>
+      <div id="inline-topic-preview-video-wrap" class="hidden" style="margin:8px 0; background:#000; border-radius:var(--radius-sm); overflow:hidden;">
+        <video id="inline-topic-preview-video" controls playsinline style="width:100%; max-height:240px; display:block;"></video>
+      </div>
+      ${renderComposerFilterBar()}
+      ${renderComposerAspectBar()}
+      <div class="composer-tag-bar" id="composer-tag-bar" style="display:none; margin-top:8px; align-items:center; gap:8px; flex-wrap:wrap;">
+        <button type="button" class="btn btn-outline btn-xs" id="btn-inline-tag-people" aria-haspopup="dialog" aria-expanded="false">🏷️ Marcar pessoas</button>
+        <div id="inline-composer-tags-chips" class="inline-composer-tags-chips" style="display:inline-flex; gap:4px; flex-wrap:wrap;"></div>
+      </div>
+      <button type="button" class="btn btn-outline btn-sm inline-composer-remove-img" id="btn-inline-remove-img" style="margin-top:8px;">Remover anexo</button>
+    </div>`;
+}
+
+function renderComposerRecordingIndicator() {
+  return `
+    <div id="inline-recording-indicator" class="hidden" style="margin:8px 0; padding:10px 14px; background:rgba(220, 53, 69, 0.08); border:1px solid rgba(220, 53, 69, 0.4); border-radius:var(--radius-sm); display:flex; align-items:center; justify-content:space-between;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span class="recording-pulse" style="width:12px; height:12px; background:#dc3545; border-radius:50%; display:inline-block;"></span>
+        <strong style="color:var(--danger, #dc3545); font-size:0.85rem;">Gravando voz:</strong>
+        <span id="inline-recording-timer" style="font-family:monospace; font-weight:700;">00:00 / 01:00</span>
+      </div>
+      <div style="display:flex; gap:6px;">
+        <button type="button" id="btn-inline-stop-rec" class="btn btn-xs btn-primary">⏹ Concluir</button>
+        <button type="button" id="btn-inline-cancel-rec" class="btn btn-xs btn-outline">❌ Cancelar</button>
+      </div>
+    </div>`;
+}
+
+function renderComposerToolbar() {
+  return `
+    <div class="inline-composer-toolbar">
+      <div class="inline-composer-tools" style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+        <label class="inline-composer-tool" title="Anexar foto (até 99 KB)">
+          <input type="file" id="inline-topic-file" accept="image/jpeg,image/png,image/webp,image/gif" hidden />
+          <span aria-hidden="true">📷</span> Foto
+        </label>
+        <button type="button" class="inline-composer-tool" id="btn-inline-mic" title="Gravar voz pelo microfone (até 60s)" aria-label="Gravar voz pelo microfone (até 60s)">
+          <span aria-hidden="true">🔴</span> Gravar
+        </button>
+        <label class="inline-composer-tool" title="Anexar áudio (até 60s)">
+          <input type="file" id="inline-topic-audio" accept="audio/mpeg,audio/mp3,audio/wav,audio/ogg,audio/webm,audio/aac,audio/m4a" hidden />
+          <span aria-hidden="true">🎙️</span> Áudio
+        </label>
+        <label class="inline-composer-tool" title="Anexar vídeo (até 10s)">
+          <input type="file" id="inline-topic-video" accept="video/mp4,video/webm,video/ogg" hidden />
+          <span aria-hidden="true">🎬</span> Vídeo
+        </label>
+        <input type="text" id="inline-topic-comm" class="inline-composer-comm" list="inline-comm-list" placeholder="Comunidade (opcional)" maxlength="64" aria-label="Slug da comunidade" />
+        <datalist id="inline-comm-list"></datalist>
+      </div>
+      <button type="submit" class="btn btn-primary btn-sm" aria-label="Publicar mensagem no feed" id="btn-inline-submit" disabled>Postar</button>
+    </div>`;
+}
+
+function renderComposerMeta() {
+  return `
+    <p class="inline-composer-meta" aria-live="polite">
+      <span class="inline-composer-char" id="inline-topic-char">0 / 2000</span>
+      <span class="inline-composer-hint meta"> · assinado no aparelho · <a href="#/compose/topic">formulário completo</a> · <a href="#/wallet">Criar ou importar chave</a></span>
+      <span class="inline-composer-local-hint meta" title="${escapeHtml(i18n.localMutateEditDeleteTooltip)}"> · ${escapeHtml(i18n.localMutateComposerHint)}</span>
+    </p>`;
+}
+
 export function renderInlineComposer({ userRouteId = "", displayName = "" } = {}) {
   const label = displayName || (userRouteId ? mock.getAuthorDisplay(userRouteId) : "") || "Você";
-  const avatarHtml = userRouteId
-    ? renderAvatarHtml(userRouteId, label)
-    : `<span class="avatar">✍</span>`;
+  const avatarHtml = userRouteId ? renderAvatarHtml(userRouteId, label) : '<span class="avatar">✍</span>';
   return `
     <div class="inline-composer" id="feed-inline-composer" data-user-route="${escapeHtml(userRouteId || "")}">
       <div class="inline-composer-collapsed" tabindex="0" role="button" aria-expanded="false" aria-controls="form-inline-topic" aria-label="Abrir formulário de publicação">
@@ -50,79 +147,10 @@ export function renderInlineComposer({ userRouteId = "", displayName = "" } = {}
           ${avatarHtml}
           <textarea id="inline-topic-body" class="inline-composer-textarea" rows="3" maxlength="2000" placeholder="Compartilhe texto, #hashtags ou anexe uma foto…" aria-label="Texto da publicação"></textarea>
         </div>
-                <div class="inline-composer-preview hidden" id="inline-topic-preview-wrap">
-          <img id="inline-topic-preview" class="inline-composer-preview-img hidden" alt="Prévia da imagem" />
-          <div id="inline-topic-preview-audio-wrap" class="hidden" style="margin:8px 0; padding:10px 14px; background:var(--surface-soft); border-radius:var(--radius-sm); border:1px solid var(--border);">
-            <div style="display:flex; align-items:center; gap:6px; margin-bottom:6px;">
-              <span>🎙️</span>
-              <strong style="font-size:0.85rem;">Recado de Voz (Lo-Fi 48kbps)</strong>
-            </div>
-            <audio id="inline-topic-preview-audio" controls style="width:100%;"></audio>
-          </div>
-          <div id="inline-topic-preview-video-wrap" class="hidden" style="margin:8px 0; background:#000; border-radius:var(--radius-sm); overflow:hidden;">
-            <video id="inline-topic-preview-video" controls playsinline style="width:100%; max-height:240px; display:block;"></video>
-          </div>
-          <div class="lofi-filter-bar" id="lofi-filter-bar">
-            <span class="meta lofi-filter-label">Estilo Lo-Fi:</span>
-            <button type="button" class="lofi-filter-btn active" data-filter="normal">Padrão</button>
-            <button type="button" class="lofi-filter-btn" data-filter="xerox">📰 Xerox</button>
-            <button type="button" class="lofi-filter-btn" data-filter="vhs">📼 VHS 90s</button>
-            <button type="button" class="lofi-filter-btn" data-filter="risograph">🎨 Risógrafo</button>
-            <span class="lofi-weight-pill" id="lofi-weight-badge">⚡ ~45 KB (100% Grátis)</span>
-          </div>
-          <div class="composer-aspect-bar" id="composer-aspect-bar" style="display:none;">
-            <span class="meta composer-aspect-label">Proporção:</span>
-            <button type="button" class="composer-aspect-btn active" data-aspect="original">Original (padrão)</button>
-            <button type="button" class="composer-aspect-btn" data-aspect="16:9">16:9</button>
-            <button type="button" class="composer-aspect-btn" data-aspect="9:16">9:16</button>
-            <button type="button" class="composer-aspect-btn" data-aspect="4:3">4:3</button>
-            <button type="button" class="composer-aspect-btn" data-aspect="3:4">3:4</button>
-            <button type="button" class="composer-aspect-btn" data-aspect="1:1">1:1</button>
-          </div>
-          <div class="composer-tag-bar" id="composer-tag-bar" style="display:none; margin-top:8px; align-items:center; gap:8px; flex-wrap:wrap;">
-            <button type="button" class="btn btn-outline btn-xs" id="btn-inline-tag-people" aria-haspopup="dialog" aria-expanded="false">🏷️ Marcar pessoas</button>
-            <div id="inline-composer-tags-chips" class="inline-composer-tags-chips" style="display:inline-flex; gap:4px; flex-wrap:wrap;"></div>
-          </div>
-          <button type="button" class="btn btn-outline btn-sm inline-composer-remove-img" id="btn-inline-remove-img" style="margin-top:8px;">Remover anexo</button>
-        </div>
-        <div id="inline-recording-indicator" class="hidden" style="margin:8px 0; padding:10px 14px; background:rgba(220, 53, 69, 0.08); border:1px solid rgba(220, 53, 69, 0.4); border-radius:var(--radius-sm); display:flex; align-items:center; justify-content:space-between;">
-          <div style="display:flex; align-items:center; gap:8px;">
-            <span class="recording-pulse" style="width:12px; height:12px; background:#dc3545; border-radius:50%; display:inline-block;"></span>
-            <strong style="color:var(--danger, #dc3545); font-size:0.85rem;">Gravando voz:</strong>
-            <span id="inline-recording-timer" style="font-family:monospace; font-weight:700;">00:00 / 01:00</span>
-          </div>
-          <div style="display:flex; gap:6px;">
-            <button type="button" id="btn-inline-stop-rec" class="btn btn-xs btn-primary">⏹ Concluir</button>
-            <button type="button" id="btn-inline-cancel-rec" class="btn btn-xs btn-outline">❌ Cancelar</button>
-          </div>
-        </div>
-        <div class="inline-composer-toolbar">
-          <div class="inline-composer-tools" style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
-            <label class="inline-composer-tool" title="Anexar foto (até 99 KB)">
-              <input type="file" id="inline-topic-file" accept="image/jpeg,image/png,image/webp,image/gif" hidden />
-              <span aria-hidden="true">📷</span> Foto
-            </label>
-            <button type="button" class="inline-composer-tool" id="btn-inline-mic" title="Gravar voz pelo microfone (até 60s)" aria-label="Gravar voz pelo microfone (até 60s)">
-              <span aria-hidden="true">🔴</span> Gravar
-            </button>
-            <label class="inline-composer-tool" title="Anexar áudio (até 60s)">
-              <input type="file" id="inline-topic-audio" accept="audio/mpeg,audio/mp3,audio/wav,audio/ogg,audio/webm,audio/aac,audio/m4a" hidden />
-              <span aria-hidden="true">🎙️</span> Áudio
-            </label>
-            <label class="inline-composer-tool" title="Anexar vídeo (até 10s)">
-              <input type="file" id="inline-topic-video" accept="video/mp4,video/webm,video/ogg" hidden />
-              <span aria-hidden="true">🎬</span> Vídeo
-            </label>
-            <input type="text" id="inline-topic-comm" class="inline-composer-comm" list="inline-comm-list" placeholder="Comunidade (opcional)" maxlength="64" aria-label="Slug da comunidade" />
-            <datalist id="inline-comm-list"></datalist>
-          </div>
-          <button type="submit" class="btn btn-primary btn-sm" aria-label="Publicar mensagem no feed" id="btn-inline-submit" disabled>Postar</button>
-        </div>
-        <p class="inline-composer-meta" aria-live="polite">
-          <span class="inline-composer-char" id="inline-topic-char">0 / 2000</span>
-          <span class="inline-composer-hint meta"> · assinado no aparelho · <a href="#/compose/topic">formulário completo</a> · <a href="#/wallet">Criar ou importar chave</a></span>
-          <span class="inline-composer-local-hint meta" title="${escapeHtml(i18n.localMutateEditDeleteTooltip)}"> · ${escapeHtml(i18n.localMutateComposerHint)}</span>
-        </p>
+        ${renderComposerPreviewWrap()}
+        ${renderComposerRecordingIndicator()}
+        ${renderComposerToolbar()}
+        ${renderComposerMeta()}
       </form>
     </div>`;
 }
@@ -188,6 +216,12 @@ function renderCommentReactBtn(r) {
     </button>`;
 }
 
+function renderReplyNestedList(children, byParent, topicId, commId) {
+  if (!children || !children.length) return "";
+  const items = children.map((c) => renderInlineReplyItem(c, { byParent, topicId, commId })).join("");
+  return `<ul class="post-comment-nested-list">${items}</ul>`;
+}
+
 export function renderInlineReplyItem(r, { byParent = null, topicId = "", commId = "" } = {}) {
   const rAuthor = r.author || r.owner || "";
   const rLabels = resolvePostAuthorLabels(rAuthor, {
@@ -195,33 +229,27 @@ export function renderInlineReplyItem(r, { byParent = null, topicId = "", commId
     authorHandle: r.authorHandle,
     isOwnLocalPost: r.isOwnLocalPost,
   });
-  const rAuthorDisplay = rLabels.authorDisplay;
-  const handleHtml = rLabels.secondaryHandle
-    ? `<span class="post-handle" title="${escapeHtml(rLabels.routeTitle)}">@${escapeHtml(rLabels.secondaryHandle)}</span>`
-    : "";
+  const handleHtml = rLabels.secondaryHandle ? `<span class="post-handle" title="${escapeHtml(rLabels.routeTitle)}">@${escapeHtml(rLabels.secondaryHandle)}</span>` : "";
   const mentionHandle = rLabels.secondaryHandle || rLabels.authorHandle || "";
   const children = byParent && byParent[r.id] ? byParent[r.id] : [];
-  const nestedList =
-    children.length > 0
-      ? `<ul class="post-comment-nested-list">${children
-          .map((child) => renderInlineReplyItem(child, { byParent, topicId, commId }))
-          .join("")}</ul>`
-      : "";
+  const nestedList = renderReplyNestedList(children, byParent, topicId, commId);
+  const composerHtml = topicId ? renderCommentNestedReplyComposer(r.id, topicId, commId, mentionHandle) : "";
+
   return `
     <li class="post-comment-item" id="inline-reply-${escapeHtml(r.id)}" data-comment-id="${escapeHtml(r.id)}">
-      <a class="avatar-link" href="#/u/${encodeURIComponent(rAuthor)}">${renderAvatarHtml(rAuthor, rAuthorDisplay, "sm", r.authorAvatar)}</a>
+      <a class="avatar-link" href="#/u/${encodeURIComponent(rAuthor)}">${renderAvatarHtml(rAuthor, rLabels.authorDisplay, "sm", r.authorAvatar)}</a>
       <div class="post-comment-body">
         <div class="post-comment-meta">
-          <a class="post-author" href="#/u/${encodeURIComponent(rAuthor)}">${escapeHtml(rAuthorDisplay)}</a>
+          <a class="post-author" href="#/u/${encodeURIComponent(rAuthor)}">${escapeHtml(rLabels.authorDisplay)}</a>
           ${handleHtml}
         </div>
         <p class="reply-body">${hashtags.linkifyHashtags(escapeHtml(r.body || ""))}</p>
         <div class="post-comment-actions">
           ${renderCommentReactBtn(r)}
-          <button type="button" class="post-comment-action btn-comment-reply" data-comment-id="${escapeHtml(r.id)}" aria-label="Responder a ${escapeHtml(rAuthorDisplay)}">Responder</button>
+          <button type="button" class="post-comment-action btn-comment-reply" data-comment-id="${escapeHtml(r.id)}" aria-label="Responder a ${escapeHtml(rLabels.authorDisplay)}">Responder</button>
         </div>
         ${nestedList}
-        ${topicId ? renderCommentNestedReplyComposer(r.id, topicId, commId, mentionHandle) : ""}
+        ${composerHtml}
       </div>
     </li>`;
 }
@@ -412,11 +440,10 @@ function renderPostMediaHeader(t, author, labels) {
   </div>`;
 }
 
-function renderPostMediaHero(t, overlayHeaderHtml = "", overlayFooterHtml = "") {
-  const layer = renderPhotoTagLayerHtml(t, { isOwn: Boolean(t.isOwnLocalPost) });
-  if (t?.video) {
-    const src = escapeHtml(t.video);
-    return `<div class="post-media-container post-media-hero post-media-video-container" style="background:#000; border-radius:var(--radius-sm); overflow:hidden; position:relative;">
+function renderVideoHero(videoSrc, overlayHeaderHtml, overlayFooterHtml) {
+  const src = escapeHtml(videoSrc);
+  return `
+    <div class="post-media-container post-media-hero post-media-video-container" style="background:#000; border-radius:var(--radius-sm); overflow:hidden; position:relative;">
       ${overlayHeaderHtml}
       <div class="lofi-video-header" style="position:absolute; top:52px; left:8px; z-index:2; display:flex; align-items:center; gap:6px;">
         <span class="badge-pill" style="font-size:0.7rem; padding:2px 6px; background:rgba(0,0,0,0.65); color:#fff; border:1px solid rgba(255,255,255,0.2);">📼 Lo-Fi 360p</span>
@@ -424,10 +451,12 @@ function renderPostMediaHero(t, overlayHeaderHtml = "", overlayFooterHtml = "") 
       <video class="post-media-video" src="${src}" controls playsinline preload="metadata" style="width:100%; max-height:480px; display:block;"></video>
       ${overlayFooterHtml}
     </div>`;
-  }
-  if (t?.audio) {
-    const src = escapeHtml(t.audio);
-    return `<div class="post-media-audio-card" style="margin:8px 0; padding:12px 14px; background:var(--surface-soft); border-radius:var(--radius-sm); border:1px solid var(--border);">
+}
+
+function renderAudioHero(audioSrc, overlayHeaderHtml, overlayFooterHtml) {
+  const src = escapeHtml(audioSrc);
+  return `
+    <div class="post-media-audio-card" style="margin:8px 0; padding:12px 14px; background:var(--surface-soft); border-radius:var(--radius-sm); border:1px solid var(--border);">
       <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
         <div style="display:flex; align-items:center; gap:8px;">
           <span style="font-size:1.1rem;">🎙️</span>
@@ -439,14 +468,15 @@ function renderPostMediaHero(t, overlayHeaderHtml = "", overlayFooterHtml = "") 
       ${overlayHeaderHtml}
       ${overlayFooterHtml}
     </div>`;
-  }
-  if (t?.image) {
-    const altRaw = t.imageAlt || t.title || "";
-    const alt = escapeHtml(altRaw);
-    const src = escapeHtml(t.image);
-    const aspect = t?.aspectRatio || "original";
-    const aspectClass = `post-aspect-${aspect.replace(":", "-")}`;
-    return `<div class="post-media-container post-media-hero ${aspectClass}" data-aspect="${escapeHtml(aspect)}">
+}
+
+function renderImageHero(t, layer, overlayHeaderHtml, overlayFooterHtml) {
+  const alt = escapeHtml(t.imageAlt || t.title || "");
+  const src = escapeHtml(t.image);
+  const aspect = t?.aspectRatio || "original";
+  const aspectClass = `post-aspect-${aspect.replace(":", "-")}`;
+  return `
+    <div class="post-media-container post-media-hero ${aspectClass}" data-aspect="${escapeHtml(aspect)}">
       <button type="button" class="post-media-lightbox-trigger" aria-label="Ver imagem em tela cheia" data-media-src="${src}" data-media-alt="${alt}">
         <img class="post-media post-media-hero-img" src="${src}" alt="${alt}" loading="lazy" />
       </button>
@@ -454,15 +484,26 @@ function renderPostMediaHero(t, overlayHeaderHtml = "", overlayFooterHtml = "") 
       ${overlayHeaderHtml}
       ${overlayFooterHtml}
     </div>`;
-  }
-  if (t?.mediaRef?.hash) {
-    return `<div class="post-media-container post-media-hero post-media-lazy" data-media-hash="${escapeHtml(t.mediaRef.hash)}">
-      <div class="media-placeholder" style="aspect-ratio:4/5; display:flex; align-items:center; justify-content:center; background:var(--surface-soft); color:var(--muted); font-size:0.85rem;"><span>📦 Mídia P2P (${escapeHtml(t.mediaRef.mime || "mídia")})</span></div>
+}
+
+function renderLazyMediaHero(t, layer, overlayHeaderHtml, overlayFooterHtml) {
+  return `
+    <div class="post-media-container post-media-hero post-media-lazy" data-media-hash="${escapeHtml(t.mediaRef.hash)}">
+      <div class="media-placeholder" style="aspect-ratio:4/5; display:flex; align-items:center; justify-content:center; background:var(--surface-soft); color:var(--muted); font-size:0.85rem;">
+        <span>📦 Mídia P2P (${escapeHtml(t.mediaRef.mime || "mídia")})</span>
+      </div>
       ${layer}
       ${overlayHeaderHtml}
       ${overlayFooterHtml}
     </div>`;
-  }
+}
+
+function renderPostMediaHero(t, overlayHeaderHtml = "", overlayFooterHtml = "") {
+  const layer = renderPhotoTagLayerHtml(t, { isOwn: Boolean(t.isOwnLocalPost) });
+  if (t?.video) return renderVideoHero(t.video, overlayHeaderHtml, overlayFooterHtml);
+  if (t?.audio) return renderAudioHero(t.audio, overlayHeaderHtml, overlayFooterHtml);
+  if (t?.image) return renderImageHero(t, layer, overlayHeaderHtml, overlayFooterHtml);
+  if (t?.mediaRef?.hash) return renderLazyMediaHero(t, layer, overlayHeaderHtml, overlayFooterHtml);
   return "";
 }
 
@@ -483,39 +524,48 @@ function renderPostText(t) {
   return renderPostTextHtml(t);
 }
 
-export function renderFrameContentHtml(frame, state) {
-  if (!state) return "";
-  if (state.kind === "poll") {
-    if (state.userVotedIndex) {
-      const bars = state.options
-        .map((opt) => {
-          const isUser = state.userVotedIndex === opt.index;
-          return `<div class="frame-poll-bar-wrapper ${isUser ? "user-choice" : ""}">
-            <div class="frame-poll-bar-fill" style="width:${opt.percent}%"></div>
-            <div class="frame-poll-bar-label"><span>${escapeHtml(opt.label)} ${isUser ? "✓" : ""}</span> <strong>${opt.percent}% (${opt.count})</strong></div>
-          </div>`;
-        })
-        .join("");
-      return `<div class="frame-poll-results">${bars}</div>`;
-    }
-    return `<p class="frame-prompt">Vote na enquete abaixo para ver os resultados parciais em tempo real:</p>`;
+function renderFramePollContent(state) {
+  if (state.userVotedIndex) {
+    const bars = state.options
+      .map((opt) => {
+        const isUser = state.userVotedIndex === opt.index;
+        return `<div class="frame-poll-bar-wrapper ${isUser ? "user-choice" : ""}">
+          <div class="frame-poll-bar-fill" style="width:${opt.percent}%"></div>
+          <div class="frame-poll-bar-label"><span>${escapeHtml(opt.label)} ${isUser ? "✓" : ""}</span> <strong>${opt.percent}% (${opt.count})</strong></div>
+        </div>`;
+      })
+      .join("");
+    return `<div class="frame-poll-results">${bars}</div>`;
   }
+  return `<p class="frame-prompt">Vote na enquete abaixo para ver os resultados parciais em tempo real:</p>`;
+}
 
-  if (state.kind === "petition") {
-    return `<div class="frame-petition-box">
+function renderFramePetitionContent(state) {
+  const msg = state.hasSigned
+    ? '<p class="frame-signed-msg">✓ Você assinou este abaixo-assinado.</p>'
+    : '<p class="frame-prompt">Adicione sua assinatura com 1 clique (identidade criptográfica local):</p>';
+  return `
+    <div class="frame-petition-box">
       <div class="frame-petition-metric"><strong>${state.signaturesCount}</strong> assinaturas (meta: ${state.goal}) · ${state.percent}%</div>
       <div class="frame-petition-bar"><div class="frame-petition-bar-fill" style="width:${state.percent}%"></div></div>
-      ${state.hasSigned ? '<p class="frame-signed-msg">✓ Você assinou este abaixo-assinado.</p>' : '<p class="frame-prompt">Adicione sua assinatura com 1 clique (identidade criptográfica local):</p>'}
+      ${msg}
     </div>`;
-  }
+}
 
-  if (state.kind === "clt") {
-    return `<div class="frame-clt-box">
+function renderFrameCltContent(state) {
+  return `
+    <div class="frame-clt-box">
       <h4 class="frame-clt-title">${escapeHtml(state.title)}</h4>
       ${state.result ? `<div class="frame-clt-result">${escapeHtml(state.result)}</div>` : ""}
       <p class="frame-clt-detail">${escapeHtml(state.detail)}</p>
     </div>`;
-  }
+}
+
+export function renderFrameContentHtml(frame, state) {
+  if (!state) return "";
+  if (state.kind === "poll") return renderFramePollContent(state);
+  if (state.kind === "petition") return renderFramePetitionContent(state);
+  if (state.kind === "clt") return renderFrameCltContent(state);
   return "";
 }
 
@@ -580,7 +630,6 @@ function renderZapToolbarBtn(t, author, authorDisplay) {
   return `<button class="action-btn btn-zap-post" data-id="${escapeHtml(t.id)}" data-author="${escapeHtml(author)}" data-author-name="${escapeHtml(authorDisplay)}" data-pix="${escapeHtml(pix)}" data-title="${escapeHtml(t.title)}" aria-label="Apoiar com Pix" title="Apoiar com Pix">${icon}</button>`;
 }
 
-
 function renderToolbarOverflow(t, author, authorDisplay, authorHandle, baseStars, starred, stars) {
   return `<details class="toolbar-overflow">
     <summary class="action-btn btn-toolbar-more" aria-label="Mais ações do post"><span aria-hidden="true">⋯</span></summary>
@@ -610,6 +659,29 @@ function renderExplodeButton(t, authorDisplay) {
   </button>`;
 }
 
+function renderToolbarPrimary(t, liked, baseLikes, likes, authorDisplay) {
+  const quoteBtn = t.isExternal ? `
+    <button class="action-btn btn-quote-external" data-id="${escapeHtml(t.id)}" data-title="${escapeHtml(t.title)}" data-author="${escapeHtml(authorDisplay || "")}" data-handle="${escapeHtml(t.authorHandle || "")}" data-body="${escapeHtml((t.body || t.title || "").slice(0, 280))}" data-url="${escapeHtml(t.externalUrl || "")}" aria-label="Citar e debater no Vox" title="💬 Citar e debater no Vox">
+      <svg class="action-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span class="action-count">Citar</span>
+    </button>` : "";
+
+  return `
+    <div class="toolbar-primary">
+      <button class="action-btn btn-like ${liked ? "active" : ""}" data-id="${escapeHtml(t.id)}" data-count="${baseLikes}" aria-label="Curtir post">
+        <svg class="action-icon icon-heart" width="20" height="20" viewBox="0 0 24 24" fill="${liked ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+        <span class="action-count count-likes">${likes > 0 ? likes : ""}</span>
+      </button>
+      ${renderCommentButton(t)}
+      ${renderRepostBtn(t, { size: 20 })}
+      <button class="action-btn btn-share btn-share-post" data-id="${escapeHtml(t.id)}" data-title="${escapeHtml(t.title)}" data-author="${escapeHtml(authorDisplay || "")}" data-body="${escapeHtml((t.body || "").slice(0, 160))}" aria-label="Compartilhar post"${quarantineShareAttrs(t.id)}>
+        <svg class="action-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+      </button>
+      ${renderExplodeButton(t, authorDisplay)}
+      ${quoteBtn}
+    </div>`;
+}
+
 function renderPostToolbar(t, author, authorDisplay, authorHandle) {
   const baseLikes = Number(t.likesCount) || 0;
   const liked = social.isLiked(t.id);
@@ -618,35 +690,69 @@ function renderPostToolbar(t, author, authorDisplay, authorHandle) {
   const starred = social.isStarred(t.id);
   const stars = social.getStarsCount(t.id, baseStars);
   const saved = social.isSaved(t.id);
+
   return `
-        <div class="post-actions insta-actions post-toolbar">
-          <div class="toolbar-primary">
-            <button class="action-btn btn-like ${liked ? "active" : ""}" data-id="${escapeHtml(t.id)}" data-count="${baseLikes}" aria-label="Curtir post">
-              <svg class="action-icon icon-heart" width="20" height="20" viewBox="0 0 24 24" fill="${liked ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
-              <span class="action-count count-likes">${likes > 0 ? likes : ""}</span>
-            </button>
-            ${renderCommentButton(t)}
-            ${renderRepostBtn(t, { size: 20 })}
-            <button class="action-btn btn-share btn-share-post" data-id="${escapeHtml(t.id)}" data-title="${escapeHtml(t.title)}" data-author="${escapeHtml(authorDisplay || "")}" data-body="${escapeHtml((t.body || "").slice(0, 160))}" aria-label="Compartilhar post"${quarantineShareAttrs(t.id)}>
-              <svg class="action-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
-            </button>
-            ${renderExplodeButton(t, authorDisplay)}
-            ${t.isExternal ? `
-            <button class="action-btn btn-quote-external" data-id="${escapeHtml(t.id)}" data-title="${escapeHtml(t.title)}" data-author="${escapeHtml(authorDisplay || "")}" data-handle="${escapeHtml(t.authorHandle || "")}" data-body="${escapeHtml((t.body || t.title || "").slice(0, 280))}" data-url="${escapeHtml(t.externalUrl || "")}" aria-label="Citar e debater no Vox" title="💬 Citar e debater no Vox">
-              <svg class="action-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-              <span class="action-count">Citar</span>
-            </button>` : ""}
-          </div>
-          <div class="toolbar-secondary">
-            ${renderToolbarOverflow(t, author, authorDisplay, authorHandle, baseStars, starred, stars)}
-            <button class="action-btn btn-save ${saved ? "active" : ""}" data-id="${escapeHtml(t.id)}" aria-label="Salvar post">
-              <svg class="action-icon icon-bookmark" width="19" height="19" viewBox="0 0 24 24" fill="${saved ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
-            </button>
-          </div>
-        </div>`;
+    <div class="post-actions insta-actions post-toolbar">
+      ${renderToolbarPrimary(t, liked, baseLikes, likes, authorDisplay)}
+      <div class="toolbar-secondary">
+        ${renderToolbarOverflow(t, author, authorDisplay, authorHandle, baseStars, starred, stars)}
+        <button class="action-btn btn-save ${saved ? "active" : ""}" data-id="${escapeHtml(t.id)}" aria-label="Salvar post">
+          <svg class="action-icon icon-bookmark" width="19" height="19" viewBox="0 0 24 24" fill="${saved ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
+        </button>
+      </div>
+    </div>`;
 }
 
-export function renderPostItem(t, { isPinned = false } = {}) {
+function renderPostPinnedRibbon(t, isPinned) {
+  const isPostPinned = Boolean(isPinned || t.isPinned);
+  if (!isPostPinned) return "";
+  const dismissBtn = t.id === "vox-official-manifesto-welcome" || t.isDismissable
+    ? '<button type="button" class="btn-dismiss-welcome-topic" title="Dispensar este post" aria-label="Dispensar post de boas-vindas" style="margin-left:auto; background:none; border:none; color:inherit; cursor:pointer; font-size:0.9rem; padding:0 4px; opacity:0.8;">✕</button>'
+    : "";
+  return `<div class="post-pinned-ribbon"><span class="pin-icon">📌</span> <span>${t.isOfficial ? "Bem-vindo à Vox" : "Publicação Fixada"}</span>${dismissBtn}</div>`;
+}
+
+function renderPhotoPostItem(t, author, labels) {
+  const header = renderPostHeaderBlock(t, author, labels, { photoOverlay: true });
+  const igHead = renderPostMediaHeader(t, author, labels);
+  const igBar = renderIgToolbar(t, labels.authorDisplay);
+  const media = renderPostMediaHero(t, igHead, igBar);
+  const fallbackIgBar = !media ? igBar : "";
+  const preface = renderPhotoHiddenMessageHtml(t);
+  const comments = renderPostComments(t.id, t.communityId, { prefaceHtml: preface });
+
+  return `
+    <article class="post insta-post post-layout-photo post-photo-bleed" data-id="${escapeHtml(t.id)}" data-layout="photo"${t.isOwnLocalPost ? ' data-is-own="true"' : ""}>
+      ${media}
+      ${header}
+      ${fallbackIgBar}
+      ${renderPostFrame(t)}
+      ${comments}
+    </article>`;
+}
+
+function renderTextOrGithubPostItem(t, author, labels, layout, isPinned) {
+  const isPostPinned = Boolean(isPinned || t.isPinned);
+  const pinnedRibbon = renderPostPinnedRibbon(t, isPinned);
+  const header = renderPostHeaderBlock(t, author, labels, { photoOverlay: false });
+  const caption = `<div class="post-caption-block">${renderPostText(t)}${renderRepostCiteHtml(t)}</div>`;
+  const gist = layout === "github" ? renderPostGithubGist(t) : "";
+  const toolbar = renderPostToolbar(t, author, labels.authorDisplay, labels.authorHandle);
+  const comments = renderPostComments(t.id, t.communityId);
+
+  return `
+    <article class="post insta-post post-layout-${layout}${isPostPinned ? " post-pinned-highlight" : ""}" data-id="${escapeHtml(t.id)}" data-layout="${layout}">
+      ${pinnedRibbon}
+      ${header}
+      ${caption}
+      ${gist}
+      ${renderPostFrame(t)}
+      ${toolbar}
+      ${comments}
+    </article>`;
+}
+
+export function renderPostItem(t, opts = {}) {
   if (gossipRetract.shouldHideGossipDeletedPost(t)) return "";
   const author = t.author || t.owner || "";
   const labels = resolvePostAuthorLabels(author, {
@@ -654,51 +760,11 @@ export function renderPostItem(t, { isPinned = false } = {}) {
     authorHandle: t.authorHandle,
     isOwnLocalPost: t.isOwnLocalPost,
   });
-  const { authorDisplay, authorHandle } = labels;
   const layout = getPostFeedLayout(t);
-  const isPhoto = layout === "photo";
-  const header = renderPostHeaderBlock(t, author, labels, { photoOverlay: isPhoto });
-
-  const igHead = isPhoto ? renderPostMediaHeader(t, author, labels) : "";
-  const igBar = isPhoto ? renderIgToolbar(t, authorDisplay) : "";
-  const media = isPhoto ? renderPostMediaHero(t, igHead, igBar) : "";
-  const frame = renderPostFrame(t);
-
-  const fallbackIgBar = isPhoto && !media ? igBar : "";
-  const toolbar = isPhoto ? "" : renderPostToolbar(t, author, authorDisplay, authorHandle);
-  const caption = isPhoto ? "" : `<div class="post-caption-block">${renderPostText(t)}${renderRepostCiteHtml(t)}</div>`;
-  const gist = layout === "github" ? renderPostGithubGist(t) : "";
-  const preface = isPhoto ? renderPhotoHiddenMessageHtml(t) : "";
-  const comments = renderPostComments(t.id, t.communityId, { prefaceHtml: preface });
-  const isPostPinned = Boolean(isPinned || t.isPinned);
-  const dismissBtn = t.id === "vox-official-manifesto-welcome" || t.isDismissable
-    ? `<button type="button" class="btn-dismiss-welcome-topic" title="Dispensar este post" aria-label="Dispensar post de boas-vindas" style="margin-left:auto; background:none; border:none; color:inherit; cursor:pointer; font-size:0.9rem; padding:0 4px; opacity:0.8;">✕</button>`
-    : "";
-  const pinnedRibbon = isPostPinned
-    ? `<div class="post-pinned-ribbon"><span class="pin-icon">📌</span> <span>${t.isOfficial ? "Bem-vindo à Vox" : "Publicação Fixada"}</span>${dismissBtn}</div>`
-    : "";
-
-  if (layout === "text" || layout === "github") {
-    return `
-    <article class="post insta-post post-layout-${layout}${isPostPinned ? " post-pinned-highlight" : ""}" data-id="${escapeHtml(t.id)}" data-layout="${layout}">
-      ${pinnedRibbon}
-      ${header}
-      ${caption}
-      ${gist}
-      ${frame}
-      ${toolbar}
-      ${comments}
-    </article>`;
+  if (layout === "photo") {
+    return renderPhotoPostItem(t, author, labels);
   }
-
-  return `
-    <article class="post insta-post post-layout-photo post-photo-bleed" data-id="${escapeHtml(t.id)}" data-layout="photo"${t.isOwnLocalPost ? ' data-is-own="true"' : ""}>
-      ${media}
-      ${header}
-      ${fallbackIgBar}
-      ${frame}
-      ${comments}
-    </article>`;
+  return renderTextOrGithubPostItem(t, author, labels, layout, opts.isPinned);
 }
 
 export function renderStoriesStrip(customProfiles = null) {
@@ -758,12 +824,39 @@ function renderCitizenShieldBarHtml() {
     </div>`;
 }
 
+function renderBskySuggestionsRow() {
+  return `
+    <div class="bsky-suggestions-row">
+      <span class="bsky-sugg-label">Sugestões cívicas:</span>
+      <button type="button" class="btn-add-suggestion" data-handle="lula.com.br">+ @lula.com.br</button>
+      <button type="button" class="btn-add-suggestion" data-handle="brasildefato.com.br">+ @brasildefato.com.br</button>
+      <button type="button" class="btn-add-suggestion" data-handle="theintercept.com">+ @theintercept.com</button>
+      <button type="button" class="btn-add-suggestion" data-handle="apublica.org">+ @apublica.org</button>
+      <button type="button" class="btn-add-suggestion" data-handle="cartacapital.com.br">+ @cartacapital.com.br</button>
+    </div>`;
+}
+
+function renderBskyFormAndImport() {
+  return `
+    <form id="form-add-bsky" class="bsky-add-form" aria-label="Adicionar perfil do Bluesky">
+      <div class="bsky-input-group">
+        <input type="text" id="input-bsky-handle" class="bsky-input" placeholder="Digite @handle.bsky.social..." required aria-label="Handle do Bluesky" />
+        <button type="submit" class="btn btn-primary btn-sm btn-submit-bsky">+ Acompanhar no Vox</button>
+      </div>
+    </form>
+    <div class="bsky-import-section">
+      <div class="bsky-import-follows-row">
+        <input type="text" id="input-bsky-import-me" class="bsky-input" placeholder="Seu @handle para importar quem você segue..." aria-label="Seu perfil do Bluesky" />
+        <button type="button" id="btn-import-bsky-follows" class="btn btn-outline btn-sm">📥 Puxar quem eu sigo</button>
+      </div>
+      ${renderBskySuggestionsRow()}
+    </div>`;
+}
+
 export function renderExternalFeedManagerHtml(subscriptions = []) {
   const list = Array.isArray(subscriptions) ? subscriptions : [];
   const chips = list
-    .map(
-      (h) => `<span class="bsky-sub-chip"><span class="bsky-sub-name">@${escapeHtml(h)}</span><button type="button" class="btn-remove-bsky-sub" data-handle="${escapeHtml(h)}" aria-label="Remover @${escapeHtml(h)}" title="Deixar de acompanhar">×</button></span>`,
-    )
+    .map((h) => `<span class="bsky-sub-chip"><span class="bsky-sub-name">@${escapeHtml(h)}</span><button type="button" class="btn-remove-bsky-sub" data-handle="${escapeHtml(h)}" aria-label="Remover @${escapeHtml(h)}" title="Deixar de acompanhar">×</button></span>`)
     .join("");
 
   return `
@@ -774,26 +867,7 @@ export function renderExternalFeedManagerHtml(subscriptions = []) {
         <h3 class="bsky-manager-title">Feeds Externos sob Proteção Cívica</h3>
         <p class="bsky-manager-desc">Consuma e interaja (curta, salve, comente, cite e exploda) com perfis externos dentro da soberania do Vox.</p>
       </div>
-      <form id="form-add-bsky" class="bsky-add-form" aria-label="Adicionar perfil do Bluesky">
-        <div class="bsky-input-group">
-          <input type="text" id="input-bsky-handle" class="bsky-input" placeholder="Digite @handle.bsky.social..." required aria-label="Handle do Bluesky" />
-          <button type="submit" class="btn btn-primary btn-sm btn-submit-bsky">+ Acompanhar no Vox</button>
-        </div>
-      </form>
-      <div class="bsky-import-section">
-        <div class="bsky-import-follows-row">
-          <input type="text" id="input-bsky-import-me" class="bsky-input" placeholder="Seu @handle para importar quem você segue..." aria-label="Seu perfil do Bluesky" />
-          <button type="button" id="btn-import-bsky-follows" class="btn btn-outline btn-sm">📥 Puxar quem eu sigo</button>
-        </div>
-        <div class="bsky-suggestions-row">
-          <span class="bsky-sugg-label">Sugestões cívicas:</span>
-          <button type="button" class="btn-add-suggestion" data-handle="lula.com.br">+ @lula.com.br</button>
-          <button type="button" class="btn-add-suggestion" data-handle="brasildefato.com.br">+ @brasildefato.com.br</button>
-          <button type="button" class="btn-add-suggestion" data-handle="theintercept.com">+ @theintercept.com</button>
-          <button type="button" class="btn-add-suggestion" data-handle="apublica.org">+ @apublica.org</button>
-          <button type="button" class="btn-add-suggestion" data-handle="cartacapital.com.br">+ @cartacapital.com.br</button>
-        </div>
-      </div>
+      ${renderBskyFormAndImport()}
       <div class="bsky-subs-list">
         <span class="bsky-subs-label">Perfis integrados:</span>
         <div class="bsky-subs-chips">${chips || '<span class="meta">Nenhum perfil cadastrado.</span>'}</div>
@@ -801,13 +875,43 @@ export function renderExternalFeedManagerHtml(subscriptions = []) {
     </div>`;
 }
 
-export function renderFeed(main, topics = [], { activeFeed = "for-you", userRouteId = "", externalSubs = null } = {}) {
+function renderFeedEmptyState(activeFeed) {
+  if (activeFeed === "external") {
+    return `<div class="empty external-empty">
+      <p><strong>Nenhum post externo encontrado.</strong></p>
+      <p class="desc" style="max-width:440px; margin:0.4rem auto 0.8rem;">Adicione um perfil do Bluesky acima ou verifique sua conexão com a internet.</p>
+    </div>`;
+  }
+  if (activeFeed === "following") {
+    return `<div class="empty following-empty">
+      <div style="font-size:2rem; margin-bottom:0.5rem;">👥</div>
+      <p><strong>Você ainda não acompanha ninguém.</strong></p>
+      <p class="desc" style="max-width:440px; margin:0.4rem auto 0.8rem;">Clique em <strong>👁️ Acompanhar (Watch)</strong> nos perfis de autores para ver as publicações deles reunidas nesta aba.</p>
+      <div style="display:flex; gap:0.5rem; justify-content:center; flex-wrap:wrap;">
+        <a class="btn btn-primary btn-sm" href="#/">Explorar feed "Para você"</a>
+        <a class="btn btn-outline btn-sm" href="#/pessoas">Encontrar pessoas na rede</a>
+      </div>
+    </div>`;
+  }
+  return `<div class="empty">
+    <div style="font-size:2rem; margin-bottom:0.5rem;">🌱</div>
+    <p><strong>Nenhuma publicação no feed ainda.</strong></p>
+    <p class="desc" style="max-width:440px; margin:0.4rem auto 0.8rem;">Seja a primeira voz soberana a compartilhar uma ideia, foto Lo-Fi, áudio ou vídeo nesta rede.</p>
+    <div style="display:flex; gap:0.5rem; justify-content:center; flex-wrap:wrap;">
+      <button type="button" class="btn btn-primary btn-sm" onclick="document.querySelector('#feed-inline-composer .inline-composer-collapsed')?.click()">Criar publicação</button>
+      <a class="btn btn-outline btn-sm" href="#/pessoas">Encontrar pessoas</a>
+    </div>
+  </div>`;
+}
+
+export function renderFeed(main, topics = [], opts = {}) {
+  const activeFeed = opts.activeFeed || "for-you";
+  const userRouteId = opts.userRouteId || "";
   const isForYou = activeFeed !== "following" && activeFeed !== "external" && activeFeed !== "all";
-  const displayName =
-    userRouteId ? profileDirectory.getAuthorDisplaySync(userRouteId) || mock.getAuthorDisplay(userRouteId) : "";
+  const displayName = userRouteId ? profileDirectory.getAuthorDisplaySync(userRouteId) || mock.getAuthorDisplay(userRouteId) : "";
   const welcomeHint = isForYou ? renderWelcomeFeedHintHtml() : "";
   const tabsBar = renderFeedTabsBar(activeFeed);
-  const managerHtml = activeFeed === "external" ? renderExternalFeedManagerHtml(externalSubs) : "";
+  const managerHtml = activeFeed === "external" ? renderExternalFeedManagerHtml(opts.externalSubs) : "";
 
   let html = `
     <div class="feed-chrome">
@@ -821,42 +925,12 @@ export function renderFeed(main, topics = [], { activeFeed = "for-you", userRout
     </div>`;
 
   if (!topics.length) {
-    if (activeFeed === "external") {
-      html += `
-        <div class="empty external-empty">
-          <p><strong>Nenhum post externo encontrado.</strong></p>
-          <p class="desc" style="max-width:440px; margin:0.4rem auto 0.8rem;">Adicione um perfil do Bluesky acima ou verifique sua conexão com a internet.</p>
-        </div>`;
-    } else if (activeFeed === "following") {
-      html += `
-        <div class="empty following-empty">
-          <div style="font-size:2rem; margin-bottom:0.5rem;">👥</div>
-          <p><strong>Você ainda não acompanha ninguém.</strong></p>
-          <p class="desc" style="max-width:440px; margin:0.4rem auto 0.8rem;">Clique em <strong>👁️ Acompanhar (Watch)</strong> nos perfis de autores para ver as publicações deles reunidas nesta aba.</p>
-          <div style="display:flex; gap:0.5rem; justify-content:center; flex-wrap:wrap;">
-            <a class="btn btn-primary btn-sm" href="#/">Explorar feed "Para você"</a>
-            <a class="btn btn-outline btn-sm" href="#/pessoas">Encontrar pessoas na rede</a>
-          </div>
-        </div>`;
-    } else {
-      html += `
-        <div class="empty">
-          <div style="font-size:2rem; margin-bottom:0.5rem;">🌱</div>
-          <p><strong>Nenhuma publicação no feed ainda.</strong></p>
-          <p class="desc" style="max-width:440px; margin:0.4rem auto 0.8rem;">Seja a primeira voz soberana a compartilhar uma ideia, foto Lo-Fi, áudio ou vídeo nesta rede.</p>
-          <div style="display:flex; gap:0.5rem; justify-content:center; flex-wrap:wrap;">
-            <button type="button" class="btn btn-primary btn-sm" onclick="document.querySelector('#feed-inline-composer .inline-composer-collapsed')?.click()">Criar publicação</button>
-            <a class="btn btn-outline btn-sm" href="#/pessoas">Encontrar pessoas</a>
-          </div>
-        </div>`;
-    }
-    main.innerHTML += html;
+    main.innerHTML += html + renderFeedEmptyState(activeFeed);
     return;
   }
 
   const visible = gossipRetract.filterFeedTopicsForGossipRetract(topics);
   rememberVisible(visible, userRouteId);
   const items = visible.map((t) => renderPostItem(t)).join("");
-  html += `<div class="feed-container">${items}</div>`;
-  main.innerHTML += html;
+  main.innerHTML += `${html}<div class="feed-container">${items}</div>`;
 }
