@@ -33,15 +33,32 @@ export function normalizeReplyMeta(raw) {
   };
 }
 
+function fallbackProp(obj, ...keys) {
+  for (const k of keys) {
+    if (obj && obj[k] != null && obj[k] !== "") return obj[k];
+  }
+  return "";
+}
+
+function getFirstParam(params, ...keys) {
+  for (const k of keys) {
+    const val = params.get(k);
+    if (val) return val;
+  }
+  return "";
+}
+
 export function normalizeContextCard(raw) {
   if (!raw || typeof raw !== "object") return null;
   const type = String(raw.type || "listing").toLowerCase();
   if (!["listing", "topic", "pix", "community"].includes(type)) return null;
+
   const title = clip(raw.title || "", 100);
-  const pixKey = String(raw.pixKey || raw.pix || "").trim();
+  const pixKey = String(fallbackProp(raw, "pixKey", "pix")).trim();
   if (!title && !pixKey) return null;
-  const price = clip(raw.price || raw.priceBrl || "", 32);
-  const url = String(raw.url || raw.href || "").trim();
+
+  const price = clip(fallbackProp(raw, "price", "priceBrl"), 32);
+  const url = String(fallbackProp(raw, "url", "href")).trim();
   return {
     type,
     id: String(raw.id || "").trim(),
@@ -49,7 +66,7 @@ export function normalizeContextCard(raw) {
     price,
     priceBrl: price,
     pixKey,
-    communityId: String(raw.communityId || raw.comm || "").trim(),
+    communityId: String(fallbackProp(raw, "communityId", "comm")).trim(),
     url,
     href: url,
   };
@@ -158,43 +175,47 @@ export function toggleReactionMap(reactions = {}, emoji = "", actor = "") {
   return next;
 }
 
+function resolveDmContextUrl(type, id, communityId) {
+  if (type === "topic" && id) return `#/t/${encodeURIComponent(id)}`;
+  if (communityId) return `#/c/${encodeURIComponent(communityId)}?tab=listings`;
+  return "";
+}
+
 export function parseDmContextFromHash(hashStr = "") {
   const qIdx = String(hashStr || "").indexOf("?");
   if (qIdx < 0) return null;
   const q = new URLSearchParams(String(hashStr).slice(qIdx + 1));
-  const title = q.get("ctxTitle") || q.get("title") || "";
-  const pixKey = q.get("ctxPix") || q.get("pix") || "";
+  const title = getFirstParam(q, "ctxTitle", "title");
+  const pixKey = getFirstParam(q, "ctxPix", "pix");
   if (!title && !pixKey) return null;
+
   const type = q.get("ctxType") || (q.get("topicId") ? "topic" : "listing");
-  const id = q.get("listingId") || q.get("topicId") || q.get("ctxId") || "";
-  const communityId = q.get("c") || q.get("comm") || "";
-  const url =
-    type === "topic" && id
-      ? `#/t/${encodeURIComponent(id)}`
-      : communityId
-        ? `#/c/${encodeURIComponent(communityId)}?tab=listings`
-        : "";
+  const id = getFirstParam(q, "listingId", "topicId", "ctxId");
+  const communityId = getFirstParam(q, "c", "comm");
   return normalizeContextCard({
     type,
     id,
     title,
-    price: q.get("ctxPrice") || q.get("price") || "",
+    price: getFirstParam(q, "ctxPrice", "price"),
     pixKey,
     communityId,
-    url,
+    url: resolveDmContextUrl(type, id, communityId),
   });
+}
+
+function extractItemListingArgs(it, itemOrComm) {
+  return {
+    author: fallbackProp(it, "author", "owner"),
+    item: it,
+    communityId: typeof itemOrComm === "string" ? itemOrComm : (it.communityId || ""),
+    price: fallbackProp(it, "priceBrl", "price", "priceLabel"),
+    pixKey: fallbackProp(it, "pixKey", "contactPix"),
+  };
 }
 
 function normalizeListingHrefArgs(authorOrItem, itemOrComm, opts = {}) {
   if (authorOrItem && typeof authorOrItem === "object") {
-    const it = authorOrItem;
-    return {
-      author: it.author || it.owner || "",
-      item: it,
-      communityId: typeof itemOrComm === "string" ? itemOrComm : it.communityId || "",
-      price: it.priceBrl || it.price || it.priceLabel || "",
-      pixKey: it.pixKey || it.contactPix || "",
-    };
+    return extractItemListingArgs(authorOrItem, itemOrComm);
   }
   return {
     author: String(authorOrItem || ""),

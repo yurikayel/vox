@@ -127,6 +127,13 @@ class TestSignalingIntegration(unittest.TestCase):
         cls.server.shutdown()
         cls.server.server_close()
 
+    def setUp(self):
+        from relay.signaling import registry
+        with registry.lock:
+            registry.peers.clear()
+            registry.addresses.clear()
+            registry.dm_pubs.clear()
+
     def _connect_client(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect(("127.0.0.1", self.port))

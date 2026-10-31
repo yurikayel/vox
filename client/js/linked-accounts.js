@@ -27,19 +27,26 @@ export function loadLinkedAccounts() {
   }
 }
 
-export function saveLinkedAccount(netId, { handle = "", webhook = "", appPassword = "", enabled = true } = {}) {
+function resolveField(val, fallback) {
+  if (val != null) return String(val).trim();
+  if (fallback != null) return String(fallback).trim();
+  return "";
+}
+
+export function saveLinkedAccount(netId, options) {
   if (typeof localStorage === "undefined") return {};
   const current = loadLinkedAccounts();
   const cleanId = String(netId || "").trim().toLowerCase();
   if (!cleanId) return current;
 
-  const cleanHandle = String(handle || "").trim().replace(/^@/, "");
+  const opts = options || {};
+  const cleanHandle = String(opts.handle || "").trim().replace(/^@/, "");
   const prev = current[cleanId] || {};
   current[cleanId] = {
     handle: cleanHandle,
-    webhook: String(webhook ?? prev.webhook ?? "").trim(),
-    appPassword: String(appPassword ?? prev.appPassword ?? "").trim(),
-    enabled: Boolean(enabled),
+    webhook: resolveField(opts.webhook, prev.webhook),
+    appPassword: resolveField(opts.appPassword, prev.appPassword),
+    enabled: opts.enabled !== undefined ? Boolean(opts.enabled) : true,
     linkedAt: prev.linkedAt || new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
@@ -267,30 +274,52 @@ export async function testLinkedAccount(netId) {
   };
 }
 
+const NETWORK_AUTH_TEMPLATES = {
+  bsky: { withHandle: (h) => `https://bsky.app/profile/${encodeURIComponent(h)}`, fallback: "https://bsky.app/" },
+  twitter: { withHandle: (h) => `https://x.com/${encodeURIComponent(h)}`, fallback: "https://x.com/" },
+  threads: { withHandle: (h) => `https://www.threads.net/@${encodeURIComponent(h)}`, fallback: "https://www.threads.net/" },
+  instagram: { withHandle: (h) => `https://www.instagram.com/${encodeURIComponent(h)}/`, fallback: "https://www.instagram.com/" },
+  facebook: { fallback: "https://www.facebook.com/" },
+  tiktok: { withHandle: (h) => `https://www.tiktok.com/@${encodeURIComponent(h)}`, fallback: "https://www.tiktok.com/" },
+  github: { withHandle: (h) => `https://github.com/${encodeURIComponent(h)}`, fallback: "https://github.com/login" },
+};
+
 export function getNetworkAuthUrl(netId, handle = "") {
   const h = String(handle || "").trim().replace(/^@/, "");
-  if (netId === "bsky") {
-    return h ? `https://bsky.app/profile/${encodeURIComponent(h)}` : "https://bsky.app/";
+  const tmpl = NETWORK_AUTH_TEMPLATES[netId];
+  if (!tmpl) return "https://google.com";
+  if (h && tmpl.withHandle) return tmpl.withHandle(h);
+  return tmpl.fallback;
+}
+
+function getEnrichmentSlug() {
+  try {
+    const rawEnrich = localStorage.getItem("vox-profile-enrichment");
+    if (!rawEnrich) return "";
+    const enrichment = JSON.parse(rawEnrich);
+    if (!enrichment?.displayName) return "";
+    return enrichment.displayName
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9_]/g, "");
+  } catch {
+    return "";
   }
-  if (netId === "twitter") {
-    return h ? `https://x.com/${encodeURIComponent(h)}` : "https://x.com/";
+}
+
+function getBskySubSlug() {
+  try {
+    const subs = JSON.parse(localStorage.getItem("vox-bsky-subs-v1") || "[]");
+    return subs.length > 0 ? String(subs[0]).replace(/^@/, "") : "";
+  } catch {
+    return "";
   }
-  if (netId === "threads") {
-    return h ? `https://www.threads.net/@${encodeURIComponent(h)}` : "https://www.threads.net/";
-  }
-  if (netId === "instagram") {
-    return h ? `https://www.instagram.com/${encodeURIComponent(h)}/` : "https://www.instagram.com/";
-  }
-  if (netId === "facebook") {
-    return "https://www.facebook.com/";
-  }
-  if (netId === "tiktok") {
-    return h ? `https://www.tiktok.com/@${encodeURIComponent(h)}` : "https://www.tiktok.com/";
-  }
-  if (netId === "github") {
-    return h ? `https://github.com/${encodeURIComponent(h)}` : "https://github.com/login";
-  }
-  return "https://google.com";
+}
+
+function getRouteSlug() {
+  const myRoute = localStorage.getItem("vox-local-account-route-id") || "";
+  return myRoute && !myRoute.startsWith("0x") ? myRoute.replace(/^@/, "") : "";
 }
 
 export function getSuggestedHandle(netId = "") {
@@ -298,33 +327,14 @@ export function getSuggestedHandle(netId = "") {
   const saved = localStorage.getItem(`vox-profile-${netId}`);
   if (saved) return saved.replace(/^@/, "");
 
-  try {
-    const rawEnrich = localStorage.getItem("vox-profile-enrichment");
-    if (rawEnrich) {
-      const enrichment = JSON.parse(rawEnrich);
-      if (enrichment?.displayName) {
-        const slug = enrichment.displayName
-          .toLowerCase()
-          .normalize("NFD")
-          .replace(/[\u0300-\u036f]/g, "")
-          .replace(/[^a-z0-9_]/g, "");
-        if (slug) return slug;
-      }
-    }
-  } catch {}
+  const slug = getEnrichmentSlug();
+  if (slug) return slug;
 
   if (netId === "bsky") {
-    try {
-      const subs = JSON.parse(localStorage.getItem("vox-bsky-subs-v1") || "[]");
-      if (subs.length > 0) return String(subs[0]).replace(/^@/, "");
-    } catch {}
+    const sub = getBskySubSlug();
+    if (sub) return sub;
   }
-
-  const myRoute = localStorage.getItem("vox-local-account-route-id") || "";
-  if (myRoute && !myRoute.startsWith("0x")) {
-    return myRoute.replace(/^@/, "");
-  }
-  return "";
+  return getRouteSlug();
 }
 
 export function connectWithOneClick(netId, inputHandle = "") {
