@@ -167,29 +167,32 @@ function renderProfileGridAvatar(address, displayName, handle, isOwn) {
   return `<div class="profile-grid-avatar-stage">${inner}${bubble}</div>`;
 }
 
-function renderProfileGridActionRow(address, isCurrentWallet, isBlocked, isMuted, pixKeyRaw = "", displayName = "") {
-  if (isCurrentWallet) {
-    return `
-      <div class="profile-grid-actions">
-        <a class="profile-grid-btn profile-grid-btn-outline" href="#/u/${encodeURIComponent(address)}?tab=about">Editar perfil</a>
-        <a class="profile-grid-btn profile-grid-btn-outline" href="#/settings/linked-accounts">🔗 Redes</a>
-        <button type="button" class="profile-grid-btn profile-grid-btn-outline" id="btn-copy-my-dm-link" data-route="${escapeHtml(address)}">Compartilhar</button>
-        <button type="button" class="profile-grid-btn profile-grid-btn-outline" id="btn-copy-connect-link" data-route="${escapeHtml(address)}">Link connect</button>
-        <button type="button" class="profile-grid-btn profile-grid-btn-outline" id="btn-qr-connect-link" data-qr-share="connect" data-qr-id="${escapeHtml(address)}">QR deste link</button>
-      </div>`;
-  }
-  if (isWelcomeRouteId(address)) {
-    return `
-      <div class="profile-grid-actions">
-        <a class="profile-grid-btn profile-grid-btn-outline" href="#/voxpedia">Voxpedia</a>
-        <a class="profile-grid-btn profile-grid-btn-outline" href="#/dm/${encodeURIComponent(address)}">Mensagem</a>
-      </div>`;
-  }
+function renderCurrentWalletActionRow(address) {
+  return `
+    <div class="profile-grid-actions">
+      <a class="profile-grid-btn profile-grid-btn-outline" href="#/u/${encodeURIComponent(address)}?tab=about">Editar perfil</a>
+      <a class="profile-grid-btn profile-grid-btn-outline" href="#/settings/linked-accounts">🔗 Redes</a>
+      <button type="button" class="profile-grid-btn profile-grid-btn-outline" id="btn-copy-my-dm-link" data-route="${escapeHtml(address)}">Compartilhar</button>
+      <button type="button" class="profile-grid-btn profile-grid-btn-outline" id="btn-copy-connect-link" data-route="${escapeHtml(address)}">Link connect</button>
+      <button type="button" class="profile-grid-btn profile-grid-btn-outline" id="btn-qr-connect-link" data-qr-share="connect" data-qr-id="${escapeHtml(address)}">QR deste link</button>
+    </div>`;
+}
+
+function renderWelcomeActionRow(address) {
+  return `
+    <div class="profile-grid-actions">
+      <a class="profile-grid-btn profile-grid-btn-outline" href="#/voxpedia">Voxpedia</a>
+      <a class="profile-grid-btn profile-grid-btn-outline" href="#/dm/${encodeURIComponent(address)}">Mensagem</a>
+    </div>`;
+}
+
+function renderOtherUserActionRow(address, isBlocked, isMuted, pixKeyRaw = "", displayName = "") {
   const isWatchingAuthor = social.isWatching(address);
   const followClass = isWatchingAuthor ? "profile-grid-btn-outline is-following" : "profile-grid-btn-primary";
   const zapBtn = pixKeyRaw
     ? `<button type="button" class="profile-grid-btn profile-grid-btn-outline btn-zap-profile" data-pix="${escapeHtml(pixKeyRaw)}" data-author="${escapeHtml(address)}" data-author-name="${escapeHtml(displayName || address)}" aria-label="Apoiar com Pix">⚡ Apoiar</button>`
     : "";
+
   return `
     <div class="profile-grid-actions">
       <button type="button" class="profile-grid-btn ${followClass} btn-watch-profile" data-route="${escapeHtml(address)}" aria-pressed="${isWatchingAuthor ? "true" : "false"}">
@@ -213,56 +216,50 @@ function renderProfileGridActionRow(address, isCurrentWallet, isBlocked, isMuted
     </details>`;
 }
 
-function renderProfileGridHeader(
-  address,
-  isCurrentWallet,
-  handle,
-  isConflict,
-  claimants,
-  displayName,
-  profileBio = "",
-  stats = null,
-  postsCount = 0,
-  pixKeyMasked = "",
-  pixKeyRaw = "",
-  githubHandle = "",
-  isBlocked = false,
-  isMuted = false,
-) {
-  const handleLabel = handle ? `@${handle}` : (isWelcomeRouteId(address) ? "@vox" : `@${shortId(address)}`);
-  const statsData = stats || mock.getMockProfile(address)?.stats;
-  const bioHtml = profileBio ? `<p class="profile-grid-bio desc">${escapeHtml(profileBio)}</p>` : "";
-  const pixBadge = renderProfilePixBadge(pixKeyMasked, pixKeyRaw);
-  const githubBadge = renderProfileGithubBadge(githubHandle);
+function renderProfileGridActionRow(address, isCurrentWallet, isBlocked, isMuted, pixKeyRaw = "", displayName = "") {
+  if (isCurrentWallet) return renderCurrentWalletActionRow(address);
+  if (isWelcomeRouteId(address)) return renderWelcomeActionRow(address);
+  return renderOtherUserActionRow(address, isBlocked, isMuted, pixKeyRaw, displayName);
+}
+
+function renderProfileConflictBanner(isConflict, claimants, handle) {
+  if (!isConflict || !claimants?.length) return "";
+  const claimantItems = claimants.map((c) => `<div>• <a href="#/u/${c.owner}">${escapeHtml(shortId(c.owner))}</a></div>`).join("");
+  return `
+    <div class="card error profile-grid-conflict">
+      ⚠️ <strong>Conflito de Handle:</strong> <code>@${escapeHtml(handle)}</code> reivindicado por mais de uma conta.
+      <div style="font-size:0.8rem; margin-top:0.3rem;">${claimantItems}</div>
+    </div>`;
+}
+
+function renderProfileIdentityBlock(address, displayName, handleLabel, profileBio, isCurrentWallet, pixBadge, githubBadge) {
   const primaryName = displayName || (isWelcomeRouteId(address) ? "Vox" : handleLabel);
   const secondaryHandle = displayName ? handleLabel : "";
-
-  const conflictBanner = isConflict
-    ? `<div class="card error profile-grid-conflict">
-        ⚠️ <strong>Conflito de Handle:</strong> <code>@${escapeHtml(handle)}</code> reivindicado por mais de uma conta.
-        <div style="font-size:0.8rem; margin-top:0.3rem;">
-          ${claimants.map((c) => `<div>• <a href="#/u/${c.owner}">${escapeHtml(shortId(c.owner))}</a></div>`).join("")}
-        </div>
-      </div>`
-    : "";
+  const bioHtml = profileBio ? `<p class="profile-grid-bio desc">${escapeHtml(profileBio)}</p>` : "";
+  const badgesHtml = (pixBadge || githubBadge) ? `<div class="profile-grid-meta-badges">${pixBadge}${githubBadge}</div>` : "";
+  const selfBadge = isCurrentWallet ? '<p class="profile-grid-self-badge meta">Sua conta neste aparelho</p>' : "";
 
   return `
-    <header class="profile-grid-header">
-      <div class="profile-grid-top">
-        ${renderProfileGridAvatar(address, displayName, handle, isCurrentWallet)}
-        ${renderProfileGridStats(postsCount, statsData, address, isCurrentWallet)}
-      </div>
-      <div class="profile-grid-identity">
-        <h1 class="profile-grid-name">${escapeHtml(primaryName)}${renderOfficialPlatformBadge(address)}</h1>
-        ${secondaryHandle ? `<p class="profile-grid-handle meta">${escapeHtml(secondaryHandle)}</p>` : ""}
-        ${bioHtml}
-        ${isCurrentWallet ? `<p class="profile-grid-self-badge meta">Sua conta neste aparelho</p>` : ""}
-        ${(pixBadge || githubBadge) ? `<div class="profile-grid-meta-badges">${pixBadge}${githubBadge}</div>` : ""}
-      </div>
-      ${renderProfileGridActionRow(address, isCurrentWallet, isBlocked, isMuted, pixKeyRaw, displayName)}
-      ${renderStereotypeDemoBanner(address)}
-      ${conflictBanner}
-    </header>`;
+    <div class="profile-grid-identity">
+      <h1 class="profile-grid-name">${escapeHtml(primaryName)}${renderOfficialPlatformBadge(address)}</h1>
+      ${secondaryHandle ? `<p class="profile-grid-handle meta">${escapeHtml(secondaryHandle)}</p>` : ""}
+      ${bioHtml}
+      ${selfBadge}
+      ${badgesHtml}
+    </div>`;
+}
+
+function renderProfileGridHeader(address, isCurrentWallet, handle, isConflict, claimants, displayName, profileBio, stats, postsCount, pixKeyMasked, pixKeyRaw, githubHandle, isBlocked, isMuted) {
+  const handleLabel = handle ? `@${handle}` : (isWelcomeRouteId(address) ? "@vox" : `@${shortId(address)}`);
+  const statsData = stats || mock.getMockProfile(address)?.stats;
+  const pixBadge = renderProfilePixBadge(pixKeyMasked, pixKeyRaw);
+  const githubBadge = renderProfileGithubBadge(githubHandle);
+  const conflictBanner = renderProfileConflictBanner(isConflict, claimants, handle);
+  const topDiv = `<div class="profile-grid-top">${renderProfileGridAvatar(address, displayName, handle, isCurrentWallet)}${renderProfileGridStats(postsCount, statsData, address, isCurrentWallet)}</div>`;
+  const identity = renderProfileIdentityBlock(address, displayName, handleLabel, profileBio, isCurrentWallet, pixBadge, githubBadge);
+  const actions = renderProfileGridActionRow(address, isCurrentWallet, isBlocked, isMuted, pixKeyRaw, displayName);
+
+  return `<header class="profile-grid-header">${topDiv}${identity}${actions}${renderStereotypeDemoBanner(address)}${conflictBanner}</header>`;
 }
 
 function renderProfilePostGrid(posts, pinnedPostId = "") {
@@ -374,6 +371,73 @@ function renderLocalWipeCard() {
       </div>`;
 }
 
+function renderProfileIdentitySettingsCard(displayName, oauthProvider, currentPixKey, currentGithub) {
+  return `
+    <div class="card profile-grid-settings-card" style="margin-top:0.75rem;">
+      <h3>Identidade Local</h3>
+      <form id="form-display-name" style="margin-top:0.5rem; display:flex; gap:0.5rem;">
+        <input type="text" id="input-display-name" class="form-control" placeholder="Seu apelido ou nome..." value="${escapeHtml(displayName || "")}" maxlength="30" />
+        <button type="submit" class="btn btn-sm btn-primary" style="white-space:nowrap;">Salvar Nome</button>
+      </form>
+      ${renderOAuthEnrichmentBlock(oauthProvider)}
+      ${renderPixForm(currentPixKey)}
+      ${renderGithubForm(currentGithub)}
+    </div>`;
+}
+
+function renderProfileMeshDiscoverableCard(meshDiscoverable) {
+  return `
+    <div class="card" style="margin-top:0.75rem;">
+      <h3>Descoberta na malha</h3>
+      <div class="form-group" style="display:flex; align-items:flex-start; gap:0.6rem; margin-top:0.5rem;">
+        <input type="checkbox" id="profile-mesh-discoverable" ${meshDiscoverable ? "checked" : ""} style="width:1.1rem; height:1.1rem; margin-top:0.2rem;" />
+        <div>
+          <label for="profile-mesh-discoverable" style="margin:0; font-weight:600;">Aparecer na busca da malha</label>
+          <p class="desc" style="font-size:0.82rem; margin:0.25rem 0 0;">Cartão assinado opt-in para pares conectados; sem ranking nem servidor central.</p>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderArweaveWalletBox(hasWallet, balance) {
+  if (hasWallet) {
+    return `
+      <p class="meta">Status: Conectada · Saldo: <strong>${escapeHtml(balance || "0.000")} AR</strong></p>
+      <button id="btn-disconnect-wallet" class="btn btn-danger btn-sm">Desconectar Carteira</button>`;
+  }
+  return `
+    <p class="meta">Nenhuma carteira Arweave conectada.</p>
+    <div style="display:flex; gap:0.5rem; margin-top:0.4rem;">
+      <button id="btn-generate-wallet" class="btn btn-primary btn-sm">⚡ Gerar Carteira Arweave</button>
+      <a href="#/wallet" class="btn btn-outline btn-sm">Importar JWK</a>
+    </div>`;
+}
+
+function renderProfileAdvancedSettingsDetails(handle, hasWallet, balance) {
+  return `
+    <details class="advanced-settings card" style="margin-top:0.75rem;">
+      <summary>Avançado — Arquivamento Permanente & Carteira</summary>
+      <div style="margin-top:0.75rem;">
+        <p class="desc">Por padrão, o Vox opera na rede distribuída com custo zero entre aparelhos. Se quiser arquivar publicações e seu @handle permanentemente no permaweb, configure sua carteira Arweave abaixo:</p>
+        <form id="form-claim-handle" style="margin-top:0.75rem;">
+          <label style="font-size:0.85rem; font-weight:600;">Reivindicar @handle on-chain:</label>
+          <div style="display:flex; gap:0.5rem; margin-top:0.25rem;">
+            <input type="text" id="input-handle-slug" class="form-control" placeholder="ex: maria" value="${handle || ""}" />
+            <button type="submit" id="btn-submit-handle" class="btn btn-sm btn-primary" style="white-space:nowrap;">Salvar @handle</button>
+          </div>
+        </form>
+        <div style="margin-top:0.75rem; border-top:1px solid var(--border); padding-top:0.6rem; display:flex; flex-wrap:wrap; gap:0.4rem;">
+          <button id="btn-copy-dmpub" class="btn btn-sm btn-outline">📋 Copiar Chave Pública</button>
+          <button id="btn-publish-dmpub" class="btn btn-sm btn-primary">🌐 Publicar Chave on-chain</button>
+        </div>
+        <div style="margin-top:0.75rem; border-top:1px solid var(--border); padding-top:0.6rem;">
+          <h4>Carteira Arweave</h4>
+          ${renderArweaveWalletBox(hasWallet, balance)}
+        </div>
+      </div>
+    </details>`;
+}
+
 function renderProfileActions(
   address,
   isCurrentWallet,
@@ -388,69 +452,14 @@ function renderProfileActions(
   _isMuted = false,
   meshDiscoverable = false,
 ) {
-  if (isCurrentWallet) {
-    return `
-      ${renderMultiAccountCard(address)}
-      <div class="card profile-grid-settings-card" style="margin-top:0.75rem;">
-        <h3>Identidade Local</h3>
-        <form id="form-display-name" style="margin-top:0.5rem; display:flex; gap:0.5rem;">
-          <input type="text" id="input-display-name" class="form-control" placeholder="Seu apelido ou nome..." value="${escapeHtml(displayName || "")}" maxlength="30" />
-          <button type="submit" class="btn btn-sm btn-primary" style="white-space:nowrap;">Salvar Nome</button>
-        </form>
-        ${renderOAuthEnrichmentBlock(oauthProvider)}
-        ${renderPixForm(currentPixKey)}
-        ${renderGithubForm(currentGithub)}
-      </div>
-
-      <div class="card" style="margin-top:0.75rem;">
-        <h3>Descoberta na malha</h3>
-        <div class="form-group" style="display:flex; align-items:flex-start; gap:0.6rem; margin-top:0.5rem;">
-          <input type="checkbox" id="profile-mesh-discoverable" ${meshDiscoverable ? "checked" : ""} style="width:1.1rem; height:1.1rem; margin-top:0.2rem;" />
-          <div>
-            <label for="profile-mesh-discoverable" style="margin:0; font-weight:600;">Aparecer na busca da malha</label>
-            <p class="desc" style="font-size:0.82rem; margin:0.25rem 0 0;">Cartão assinado opt-in para pares conectados; sem ranking nem servidor central.</p>
-          </div>
-        </div>
-      </div>
-
-      ${renderSovereigntyCard()}
-      ${renderLocalWipeCard()}
-
-      <details class="advanced-settings card" style="margin-top:0.75rem;">
-        <summary>Avançado — Arquivamento Permanente & Carteira</summary>
-        <div style="margin-top:0.75rem;">
-          <p class="desc">Por padrão, o Vox opera na rede distribuída com custo zero entre aparelhos. Se quiser arquivar publicações e seu @handle permanentemente no permaweb, configure sua carteira Arweave abaixo:</p>
-
-          <form id="form-claim-handle" style="margin-top:0.75rem;">
-            <label style="font-size:0.85rem; font-weight:600;">Reivindicar @handle on-chain:</label>
-            <div style="display:flex; gap:0.5rem; margin-top:0.25rem;">
-              <input type="text" id="input-handle-slug" class="form-control" placeholder="ex: maria" value="${handle || ""}" />
-              <button type="submit" id="btn-submit-handle" class="btn btn-sm btn-primary" style="white-space:nowrap;">Salvar @handle</button>
-            </div>
-          </form>
-
-          <div style="margin-top:0.75rem; border-top:1px solid var(--border); padding-top:0.6rem; display:flex; flex-wrap:wrap; gap:0.4rem;">
-            <button id="btn-copy-dmpub" class="btn btn-sm btn-outline">📋 Copiar Chave Pública</button>
-            <button id="btn-publish-dmpub" class="btn btn-sm btn-primary">🌐 Publicar Chave on-chain</button>
-          </div>
-
-          <div style="margin-top:0.75rem; border-top:1px solid var(--border); padding-top:0.6rem;">
-            <h4>Carteira Arweave</h4>
-            ${hasWallet ? `
-              <p class="meta">Status: Conectada · Saldo: <strong>${escapeHtml(balance || "0.000")} AR</strong></p>
-              <button id="btn-disconnect-wallet" class="btn btn-danger btn-sm">Desconectar Carteira</button>
-            ` : `
-              <p class="meta">Nenhuma carteira Arweave conectada.</p>
-              <div style="display:flex; gap:0.5rem; margin-top:0.4rem;">
-                <button id="btn-generate-wallet" class="btn btn-primary btn-sm">⚡ Gerar Carteira Arweave</button>
-                <a href="#/wallet" class="btn btn-outline btn-sm">Importar JWK</a>
-              </div>
-            `}
-          </div>
-        </div>
-      </details>`;
-  }
-  return "";
+  if (!isCurrentWallet) return "";
+  return `
+    ${renderMultiAccountCard(address)}
+    ${renderProfileIdentitySettingsCard(displayName, oauthProvider, currentPixKey, currentGithub)}
+    ${renderProfileMeshDiscoverableCard(meshDiscoverable)}
+    ${renderSovereigntyCard()}
+    ${renderLocalWipeCard()}
+    ${renderProfileAdvancedSettingsDetails(handle, hasWallet, balance)}`;
 }
 
 function resolveProfileCustomFields(address, isCurrentWallet, githubHandle, readme, pinnedPostId) {
@@ -562,50 +571,46 @@ export function renderProfileTabContent(currentTab = "posts", params = {}) {
   return renderProfileAboutTab(params);
 }
 
-export function renderPixLookup(main, query = "", profile = null) {
-  const queryStr = escapeHtml(query);
-  let content = "";
-  if (profile) {
-    const profName = profile.name || shortId(profile.routeId);
-    const profHandle = profile.handle ? `@${profile.handle}` : "";
-    const pixMasked = profile.pixKeyMasked || profile.pixKey || "";
-    content = `
-      <div class="card pix-lookup-card">
-        <div class="pix-lookup-header">
-          <span class="badge-pill p2p-pill">❖ Conta Localizada</span>
-        </div>
-        <h2 style="margin:0.5rem 0 0.2rem;">${escapeHtml(profName)} ${profHandle ? `<span class="meta">${escapeHtml(profHandle)}</span>` : ""}</h2>
-        <p class="meta">ID de Rede: <code>${escapeHtml(profile.routeId)}</code></p>
-        <div class="card" style="margin:0.75rem 0; background:var(--surface-soft);">
-          <span class="meta" style="font-size:0.8rem;">Chave Pix informada:</span>
-          <div style="font-size:1.1rem; font-weight:700; margin-top:0.2rem;"><code>${escapeHtml(pixMasked)}</code></div>
-        </div>
-        <div class="card" style="font-size:0.82rem; color:var(--muted); margin-bottom:1rem;">
-          <p style="margin:0;"><strong>Aviso de Conformidade:</strong> O Vox é um aplicativo peer-to-peer sem servidores centrais e não é uma instituição financeira nem processa pagamentos. Abra seu aplicativo de banco para concluir transações com segurança.</p>
-        </div>
-        <div class="actions-row">
-          <a class="btn btn-primary" href="#/u/${encodeURIComponent(profile.routeId)}">Ver Perfil Completo</a>
-          <a class="btn btn-outline" href="#/dm/${encodeURIComponent(profile.routeId)}">💬 Mensagem Privada</a>
-        </div>
-      </div>`;
-  } else {
-    content = `
-      <div class="card pix-lookup-card empty">
-        <h2>Chave Pix não vinculada</h2>
-        <p class="desc">A chave <code>${queryStr}</code> não consta no seu índice local (perfis e tour neste navegador).</p>
-        <p class="meta" style="margin-top:0.5rem;">Chaves Pix são atributos opcionais declarados localmente — não são posts públicos na malha.</p>
-        <div class="actions-row" style="margin-top:1rem;">
-          <a class="btn btn-outline" href="#/">← Voltar ao Início</a>
-        </div>
-      </div>`;
-  }
+function renderPixFoundCard(profile) {
+  const profName = profile.name || shortId(profile.routeId);
+  const profHandle = profile.handle ? `@${profile.handle}` : "";
+  const pixMasked = profile.pixKeyMasked || profile.pixKey || "";
+  return `
+    <div class="card pix-lookup-card">
+      <div class="pix-lookup-header"><span class="badge-pill p2p-pill">❖ Conta Localizada</span></div>
+      <h2 style="margin:0.5rem 0 0.2rem;">${escapeHtml(profName)} ${profHandle ? `<span class="meta">${escapeHtml(profHandle)}</span>` : ""}</h2>
+      <p class="meta">ID de Rede: <code>${escapeHtml(profile.routeId)}</code></p>
+      <div class="card" style="margin:0.75rem 0; background:var(--surface-soft);">
+        <span class="meta" style="font-size:0.8rem;">Chave Pix informada:</span>
+        <div style="font-size:1.1rem; font-weight:700; margin-top:0.2rem;"><code>${escapeHtml(pixMasked)}</code></div>
+      </div>
+      <div class="card" style="font-size:0.82rem; color:var(--muted); margin-bottom:1rem;">
+        <p style="margin:0;"><strong>Aviso de Conformidade:</strong> O Vox é um aplicativo peer-to-peer sem servidores centrais e não é uma instituição financeira nem processa pagamentos. Abra seu aplicativo de banco para concluir transações com segurança.</p>
+      </div>
+      <div class="actions-row">
+        <a class="btn btn-primary" href="#/u/${encodeURIComponent(profile.routeId)}">Ver Perfil Completo</a>
+        <a class="btn btn-outline" href="#/dm/${encodeURIComponent(profile.routeId)}">💬 Mensagem Privada</a>
+      </div>
+    </div>`;
+}
 
+function renderPixNotFoundCard(queryStr) {
+  return `
+    <div class="card pix-lookup-card empty">
+      <h2>Chave Pix não vinculada</h2>
+      <p class="desc">A chave <code>${queryStr}</code> não consta no seu índice local (perfis e tour neste navegador).</p>
+      <p class="meta" style="margin-top:0.5rem;">Chaves Pix são atributos opcionais declarados localmente — não são posts públicos na malha.</p>
+      <div class="actions-row" style="margin-top:1rem;">
+        <a class="btn btn-outline" href="#/">← Voltar ao Início</a>
+      </div>
+    </div>`;
+}
+
+export function renderPixLookup(main, query = "", profile = null) {
+  const content = profile ? renderPixFoundCard(profile) : renderPixNotFoundCard(escapeHtml(query));
   main.innerHTML = `
-    <div class="actions-bar">
-      <span class="section-title">Consulta de Chave Pix</span>
-    </div>
-    ${content}
-  `;
+    <div class="actions-bar"><span class="section-title">Consulta de Chave Pix</span></div>
+    ${content}`;
 }
 
 export function renderHandleConflict(main, slug, claimants = []) {
@@ -634,10 +639,9 @@ export function renderHandleConflict(main, slug, claimants = []) {
   `;
 }
 
-export function renderWallet(main, { address = null, balance = "0.000", hasWallet = false, error = null } = {}) {
-  let statusBox = "";
+function renderWalletStatusBox(hasWallet, address, balance) {
   if (hasWallet && address) {
-    statusBox = `
+    return `
       <div class="card wallet-info">
         <h3>Carteira Conectada</h3>
         <p class="meta">Endereço: <code>${escapeHtml(address)}</code></p>
@@ -647,32 +651,87 @@ export function renderWallet(main, { address = null, balance = "0.000", hasWalle
           <button id="btn-disconnect-wallet" class="btn btn-danger">Desconectar</button>
         </div>
       </div>`;
-  } else {
-    statusBox = `
-      <div class="card wallet-warning">
-        <p>Conecte ou gere uma carteira Arweave se desejar publicar dados no permaweb permanente.</p>
-        <button id="btn-generate-wallet" class="btn btn-primary">⚡ Gerar Carteira Instantânea</button>
-      </div>`;
   }
+  return `
+    <div class="card wallet-warning">
+      <p>Conecte ou gere uma carteira Arweave se desejar publicar dados no permaweb permanente.</p>
+      <button id="btn-generate-wallet" class="btn btn-primary">⚡ Gerar Carteira Instantânea</button>
+    </div>`;
+}
 
-  let html = `
-    <div class="actions-bar">
-      <span class="section-title">Carteira Arweave</span>
-    </div>
-    ${error ? `<div class="error">${escapeHtml(error)}</div>` : ""}
+export function renderWallet(main, { address = null, balance = "0.000", hasWallet = false, error = null } = {}) {
+  const statusBox = renderWalletStatusBox(hasWallet, address, balance);
+  const errorBox = error ? `<div class="error">${escapeHtml(error)}</div>` : "";
+
+  main.innerHTML += `
+    <div class="actions-bar"><span class="section-title">Carteira Arweave</span></div>
+    ${errorBox}
     ${statusBox}
     <div class="card wallet-import">
       <h3>Importar Carteira (JWK)</h3>
       <p class="meta">Cole o JSON da sua chave privada:</p>
       <form id="form-import-wallet">
         <textarea id="wallet-jwk-input" rows="4" class="form-control" placeholder='{"kty":"RSA","n":"...","e":"AQAB",...}' required></textarea>
-        <div class="form-actions">
-          <button type="submit" class="btn btn-primary">Salvar Carteira</button>
-        </div>
+        <div class="form-actions"><button type="submit" class="btn btn-primary">Salvar Carteira</button></div>
       </form>
     </div>`;
+}
 
-  main.innerHTML += html;
+function renderComposeCommunityPhotoSection() {
+  return `
+    <div class="form-group community-compose-photo-group">
+      <label style="font-weight:600; display:block; margin-bottom:0.4rem;">Foto da Comunidade (estilo Orkut):</label>
+      <div class="community-compose-photo-row" style="display:flex; gap:1rem; align-items:center;">
+        <div id="comm-photo-preview" class="community-avatar-box community-avatar-lg" style="--comm-avatar-accent:var(--brand-chrome); width:80px; height:80px; flex-shrink:0;">
+          <div class="community-avatar-fallback" style="background:var(--brand-chrome); font-size:1.8rem; display:flex; align-items:center; justify-content:center; width:100%; height:100%; color:#fff; font-weight:800; border-radius:14px;">C</div>
+        </div>
+        <div style="flex:1;">
+          <label class="btn btn-sm btn-outline" style="cursor:pointer; display:inline-block; margin-bottom:0.4rem;">
+            📁 Escolher foto do aparelho
+            <input type="file" id="comm-photo-file" accept="image/*" style="display:none;" />
+          </label>
+          <input type="url" id="comm-photo-url" class="form-control" placeholder="Ou cole a URL da imagem (opcional)" style="font-size:0.85rem;" />
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderComposeCommunityMetaFields() {
+  return `
+    <div class="form-group">
+      <label for="comm-id">Identificador único (slug):</label>
+      <input type="text" id="comm-id" class="form-control" placeholder="ex: cinema-nacional" required pattern="^[a-z0-9-]+$" title="Apenas letras minúsculas, números e hífens." />
+    </div>
+    <div class="form-group">
+      <label for="comm-title">Título:</label>
+      <input type="text" id="comm-title" class="form-control" placeholder="ex: Cinema Brasileiro" required maxlength="100" />
+    </div>
+    <div class="form-group">
+      <label for="comm-category">Categoria:</label>
+      <input type="text" id="comm-category" class="form-control" list="comm-category-suggestions" placeholder="ex: Cultura & Artes, Política & Cidadania" maxlength="40" />
+      <datalist id="comm-category-suggestions">
+        <option value="Política & Cidadania"><option value="Cultura & Artes"><option value="Tecnologia & Software Livre"><option value="Cidades & Bairros"><option value="Música & Cinema"><option value="Economia Solidária"><option value="Educação & Ciência"><option value="Humor & Entretenimento">
+      </datalist>
+    </div>`;
+}
+
+function renderComposeCommunityTypeAndDesc() {
+  return `
+    <div class="form-group">
+      <label for="comm-type">Tipo de Comunidade:</label>
+      <select id="comm-type" class="form-control">
+        <option value="open">Pública (Aberta a todos)</option>
+        <option value="closed">Moderada (Requer aprovação)</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="comm-desc">Descrição e Regras:</label>
+      <textarea id="comm-desc" class="form-control" rows="3" placeholder="Qual o propósito desta comunidade? Quais as regras de convivência?" required maxlength="500"></textarea>
+    </div>`;
+}
+
+function renderComposeCommunityFields() {
+  return `${renderComposeCommunityMetaFields()}${renderComposeCommunityTypeAndDesc()}`;
 }
 
 export function renderComposeCommunity(main) {
@@ -681,54 +740,8 @@ export function renderComposeCommunity(main) {
       <a class="back-link" href="#/communities">← Voltar</a>
       <h2>Nova Comunidade</h2>
       <form id="form-compose-community">
-        <div class="form-group community-compose-photo-group">
-          <label style="font-weight:600; display:block; margin-bottom:0.4rem;">Foto da Comunidade (estilo Orkut):</label>
-          <div class="community-compose-photo-row" style="display:flex; gap:1rem; align-items:center;">
-            <div id="comm-photo-preview" class="community-avatar-box community-avatar-lg" style="--comm-avatar-accent:var(--brand-chrome); width:80px; height:80px; flex-shrink:0;">
-              <div class="community-avatar-fallback" style="background:var(--brand-chrome); font-size:1.8rem; display:flex; align-items:center; justify-content:center; width:100%; height:100%; color:#fff; font-weight:800; border-radius:14px;">C</div>
-            </div>
-            <div style="flex:1;">
-              <label class="btn btn-sm btn-outline" style="cursor:pointer; display:inline-block; margin-bottom:0.4rem;">
-                📁 Escolher foto do aparelho
-                <input type="file" id="comm-photo-file" accept="image/*" style="display:none;" />
-              </label>
-              <input type="url" id="comm-photo-url" class="form-control" placeholder="Ou cole a URL da imagem (opcional)" style="font-size:0.85rem;" />
-            </div>
-          </div>
-        </div>
-        <div class="form-group">
-          <label for="comm-id">Identificador único (slug):</label>
-          <input type="text" id="comm-id" class="form-control" placeholder="ex: cinema-nacional" required pattern="^[a-z0-9-]+$" title="Apenas letras minúsculas, números e hífens." />
-        </div>
-        <div class="form-group">
-          <label for="comm-title">Título:</label>
-          <input type="text" id="comm-title" class="form-control" placeholder="ex: Cinema Brasileiro" required maxlength="100" />
-        </div>
-        <div class="form-group">
-          <label for="comm-category">Categoria:</label>
-          <input type="text" id="comm-category" class="form-control" list="comm-category-suggestions" placeholder="ex: Cultura & Artes, Política & Cidadania" maxlength="40" />
-          <datalist id="comm-category-suggestions">
-            <option value="Política & Cidadania">
-            <option value="Cultura & Artes">
-            <option value="Tecnologia & Software Livre">
-            <option value="Cidades & Bairros">
-            <option value="Música & Cinema">
-            <option value="Economia Solidária">
-            <option value="Educação & Ciência">
-            <option value="Humor & Entretenimento">
-          </datalist>
-        </div>
-        <div class="form-group">
-          <label for="comm-type">Tipo de Comunidade:</label>
-          <select id="comm-type" class="form-control">
-            <option value="open">Pública (Aberta a todos)</option>
-            <option value="closed">Moderada (Requer aprovação)</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="comm-desc">Descrição e Regras:</label>
-          <textarea id="comm-desc" class="form-control" rows="3" placeholder="Qual o propósito desta comunidade? Quais as regras de convivência?" required maxlength="500"></textarea>
-        </div>
+        ${renderComposeCommunityPhotoSection()}
+        ${renderComposeCommunityFields()}
         <div class="form-actions">
           <button type="submit" class="btn btn-primary" id="btn-submit-comm">Publicar Comunidade</button>
         </div>
@@ -736,37 +749,39 @@ export function renderComposeCommunity(main) {
     </div>`;
 }
 
+function renderChatTranscriptDetails() {
+  return `
+    <details class="compose-chat-import" style="margin-top:0.65rem; padding:0.6rem 0.75rem; border:1px dashed var(--border); border-radius:var(--radius-sm); background:var(--surface-soft);">
+      <summary style="cursor:pointer; font-size:0.82rem; font-weight:600; color:var(--accent);">📥 Importar Ata / Conversa do Slack ou Discord (Memória Anti-90-dias)</summary>
+      <div style="margin-top:0.5rem;">
+        <p class="meta" style="margin:0 0 0.4rem; font-size:0.76rem;">Cole abaixo o trecho copiado do Slack ou Discord. O Vox formata os turnos de fala em ata Markdown permanente.</p>
+        <textarea id="chat-transcript-input" class="form-control" rows="4" placeholder="Ex:\nHelena — Hoje às 14:30\nAprovamos o mutirão de sábado.\nTiago — Hoje às 14:32\nFechado! Levo as mudas."></textarea>
+        <div style="display:flex; gap:0.5rem; align-items:center; margin-top:0.45rem; flex-wrap:wrap;">
+          <button type="button" id="btn-convert-chat-transcript" class="btn btn-sm btn-outline">Converter em Ata</button>
+          <button type="button" id="btn-convert-and-notarize" class="btn btn-sm btn-primary">🏛️ Converter & Selar Cartório (Arweave)</button>
+        </div>
+      </div>
+    </details>`;
+}
+
 export function renderComposeTopic(main, communityId) {
   const backLink = communityId
     ? `<a class="back-link" href="#/c/${encodeURIComponent(communityId)}">← Voltar à comunidade</a>`
     : `<a class="back-link" href="#/">← Voltar</a>`;
+  const commInput = communityId
+    ? `<input type="hidden" id="topic-comm-id" value="${escapeHtml(communityId)}" />`
+    : `<div class="form-group"><label for="topic-comm-id">Slug da Comunidade:</label><input type="text" id="topic-comm-id" class="form-control" placeholder="ex: cinema-nacional" required /></div>`;
 
   main.innerHTML = `
     <div class="card compose-card">
       ${backLink}
       <h2>${communityId ? `Postar em ${escapeHtml(communityId)}` : "Novo Post na Rede"}</h2>
       <form id="form-compose-topic">
-        ${communityId ? `<input type="hidden" id="topic-comm-id" value="${escapeHtml(communityId)}" />` : `
-          <div class="form-group">
-            <label for="topic-comm-id">Slug da Comunidade:</label>
-            <input type="text" id="topic-comm-id" class="form-control" placeholder="ex: cinema-nacional" required />
-          </div>
-        `}
-
+        ${commInput}
         <div class="form-group">
           <label for="topic-body">Mensagem:</label>
           <textarea id="topic-body" class="form-control" rows="5" placeholder="Escreva seu post aqui..." required></textarea>
-          <details class="compose-chat-import" style="margin-top:0.65rem; padding:0.6rem 0.75rem; border:1px dashed var(--border); border-radius:var(--radius-sm); background:var(--surface-soft);">
-            <summary style="cursor:pointer; font-size:0.82rem; font-weight:600; color:var(--accent);">📥 Importar Ata / Conversa do Slack ou Discord (Memória Anti-90-dias)</summary>
-            <div style="margin-top:0.5rem;">
-              <p class="meta" style="margin:0 0 0.4rem; font-size:0.76rem;">Cole abaixo o trecho copiado do Slack ou Discord. O Vox formata os turnos de fala em ata Markdown permanente.</p>
-              <textarea id="chat-transcript-input" class="form-control" rows="4" placeholder="Ex:\nHelena — Hoje às 14:30\nAprovamos o mutirão de sábado.\nTiago — Hoje às 14:32\nFechado! Levo as mudas."></textarea>
-              <div style="display:flex; gap:0.5rem; align-items:center; margin-top:0.45rem; flex-wrap:wrap;">
-                <button type="button" id="btn-convert-chat-transcript" class="btn btn-sm btn-outline">Converter em Ata</button>
-                <button type="button" id="btn-convert-and-notarize" class="btn btn-sm btn-primary">🏛️ Converter & Selar Cartório (Arweave)</button>
-              </div>
-            </div>
-          </details>
+          ${renderChatTranscriptDetails()}
         </div>
         <div class="form-actions">
           <button type="submit" class="btn btn-primary" id="btn-submit-topic">Publicar Post</button>
@@ -793,46 +808,50 @@ export function renderComposeReply(main, topicId, communityId) {
     </div>`;
 }
 
+function renderComposeListingFields(defaultPix) {
+  return `
+    <div class="form-group">
+      <label for="listing-title">O que você está ofertando?</label>
+      <input type="text" id="listing-title" class="form-control" placeholder="Ex: Pão artesanal de fermentação natural" required maxlength="120" />
+    </div>
+    <div class="form-row" style="display:flex; gap:0.75rem; flex-wrap:wrap;">
+      <div class="form-group" style="flex:1 1 140px;">
+        <label for="listing-price">Preço sugerido:</label>
+        <input type="text" id="listing-price" class="form-control" placeholder="Ex: R$ 35" />
+      </div>
+      <div class="form-group" style="flex:1 1 180px;">
+        <label for="listing-location">Bairro / Região:</label>
+        <input type="text" id="listing-location" class="form-control" placeholder="Ex: Vila Madalena, SP" maxlength="60" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="listing-pix">Chave Pix para recebimento direto (opcional):</label>
+      <input type="text" id="listing-pix" class="form-control" placeholder="E-mail, celular, CPF ou chave aleatória" value="${escapeHtml(defaultPix)}" />
+    </div>
+    <div class="form-group">
+      <label for="listing-image">Foto do item (URL opcional):</label>
+      <input type="text" id="listing-image" class="form-control" placeholder="images/posts/tour-helena.jpg ou https://..." />
+    </div>
+    <div class="form-group">
+      <label for="listing-body">Descrição da oferta:</label>
+      <textarea id="listing-body" class="form-control" rows="4" placeholder="Descreva os detalhes do produto ou serviço, prazos e forma de entrega..." required></textarea>
+    </div>`;
+}
+
 export function renderComposeListing(main, communityId, commTitle = "", prefill = {}) {
   const titleDisplay = commTitle || communityId || "Feira";
-  const backLink = `<a class="back-link" href="#/c/${encodeURIComponent(communityId)}?tab=listings">← Voltar à feira</a>`;
   const defaultPix = prefill.defaultPix || "";
 
   main.innerHTML = `
     <div class="card compose-card compose-listing-card">
-      ${backLink}
+      <a class="back-link" href="#/c/${encodeURIComponent(communityId)}?tab=listings">← Voltar à feira</a>
       <h2>Nova Oferta — ${escapeHtml(titleDisplay)}</h2>
       <p class="listing-form-disclaimer" style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem;">
         ⚡ ${escapeHtml(listing.LISTING_DISCLAIMER)}
       </p>
       <form id="form-compose-listing">
         <input type="hidden" id="listing-comm-id" value="${escapeHtml(communityId)}" />
-        <div class="form-group">
-          <label for="listing-title">O que você está ofertando?</label>
-          <input type="text" id="listing-title" class="form-control" placeholder="Ex: Pão artesanal de fermentação natural" required maxlength="120" />
-        </div>
-        <div class="form-row" style="display:flex; gap:0.75rem; flex-wrap:wrap;">
-          <div class="form-group" style="flex:1 1 140px;">
-            <label for="listing-price">Preço sugerido:</label>
-            <input type="text" id="listing-price" class="form-control" placeholder="Ex: R$ 35" />
-          </div>
-          <div class="form-group" style="flex:1 1 180px;">
-            <label for="listing-location">Bairro / Região:</label>
-            <input type="text" id="listing-location" class="form-control" placeholder="Ex: Vila Madalena, SP" maxlength="60" />
-          </div>
-        </div>
-        <div class="form-group">
-          <label for="listing-pix">Chave Pix para recebimento direto (opcional):</label>
-          <input type="text" id="listing-pix" class="form-control" placeholder="E-mail, celular, CPF ou chave aleatória" value="${escapeHtml(defaultPix)}" />
-        </div>
-        <div class="form-group">
-          <label for="listing-image">Foto do item (URL opcional):</label>
-          <input type="text" id="listing-image" class="form-control" placeholder="images/posts/tour-helena.jpg ou https://..." />
-        </div>
-        <div class="form-group">
-          <label for="listing-body">Descrição da oferta:</label>
-          <textarea id="listing-body" class="form-control" rows="4" placeholder="Descreva os detalhes do produto ou serviço, prazos e forma de entrega..." required></textarea>
-        </div>
+        ${renderComposeListingFields(defaultPix)}
         <div class="form-actions" style="margin-top:1rem;">
           <button type="submit" class="btn btn-primary" id="btn-submit-listing">Publicar na Feira</button>
         </div>
@@ -840,33 +859,35 @@ export function renderComposeListing(main, communityId, commTitle = "", prefill 
     </div>`;
 }
 
+function renderVaultAccountRow(acc, currentAddress, totalAccounts) {
+  const isCurrent = acc.routeId === currentAddress;
+  const name = acc.displayName || shortId(acc.routeId);
+  const badge = isCurrent
+    ? '<span class="badge-pill p2p-pill" style="font-size:0.75rem;">Ativa</span>'
+    : `<button type="button" class="btn btn-xs btn-primary btn-switch-vault-account" data-route="${escapeHtml(acc.routeId)}">Alternar</button>`;
+  const removeBtn = !isCurrent && totalAccounts > 1
+    ? `<button type="button" class="btn btn-xs btn-outline btn-remove-vault-account" data-route="${escapeHtml(acc.routeId)}" title="Remover do cofre local">✕</button>`
+    : "";
+
+  return `
+    <div class="card vault-account-item" style="display:flex; align-items:center; justify-content:space-between; padding:8px 12px; margin-top:6px; background:var(--surface-soft); border-radius:var(--radius-sm);">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <div class="avatar" style="width:32px; height:32px; font-size:0.85rem;">${escapeHtml(name.slice(0, 1).toUpperCase())}</div>
+        <div>
+          <strong>${escapeHtml(name)}</strong>
+          <div class="meta" style="font-size:0.72rem;"><code>${escapeHtml(shortId(acc.routeId))}</code></div>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center; gap:6px;">
+        ${badge}
+        ${removeBtn}
+      </div>
+    </div>`;
+}
 
 function renderMultiAccountCard(currentAddress) {
   const accounts = localAccount.listVaultAccountsSync();
-  const itemsHtml = accounts.map((acc) => {
-    const isCurrent = acc.routeId === currentAddress;
-    const name = acc.displayName || shortId(acc.routeId);
-    const badge = isCurrent
-      ? `<span class="badge-pill p2p-pill" style="font-size:0.75rem;">Ativa</span>`
-      : `<button type="button" class="btn btn-xs btn-primary btn-switch-vault-account" data-route="${escapeHtml(acc.routeId)}">Alternar</button>`;
-    const removeBtn = !isCurrent && accounts.length > 1
-      ? `<button type="button" class="btn btn-xs btn-outline btn-remove-vault-account" data-route="${escapeHtml(acc.routeId)}" title="Remover do cofre local">✕</button>`
-      : "";
-    return `
-      <div class="card vault-account-item" style="display:flex; align-items:center; justify-content:space-between; padding:8px 12px; margin-top:6px; background:var(--surface-soft); border-radius:var(--radius-sm);">
-        <div style="display:flex; align-items:center; gap:8px;">
-          <div class="avatar" style="width:32px; height:32px; font-size:0.85rem;">${escapeHtml(name.slice(0, 1).toUpperCase())}</div>
-          <div>
-            <strong>${escapeHtml(name)}</strong>
-            <div class="meta" style="font-size:0.72rem;"><code>${escapeHtml(shortId(acc.routeId))}</code></div>
-          </div>
-        </div>
-        <div style="display:flex; align-items:center; gap:6px;">
-          ${badge}
-          ${removeBtn}
-        </div>
-      </div>`;
-  }).join("");
+  const itemsHtml = accounts.map((acc) => renderVaultAccountRow(acc, currentAddress, accounts.length)).join("");
 
   return `
     <div class="card profile-vault-accounts" style="margin-top:0.75rem;">
@@ -877,9 +898,7 @@ function renderMultiAccountCard(currentAddress) {
       <p class="desc" style="font-size:0.83rem; margin-bottom:0.5rem;">
         Alterne entre identidades soberanas neste navegador para testar amizades, comunidades e publicações de vida real.
       </p>
-      <div class="vault-account-list" style="margin-bottom:0.75rem;">
-        ${itemsHtml}
-      </div>
+      <div class="vault-account-list" style="margin-bottom:0.75rem;">${itemsHtml}</div>
       <form id="form-create-vault-account" style="display:flex; gap:0.5rem; align-items:center;">
         <input type="text" id="input-new-account-name" class="form-control" placeholder="Nome da nova conta (ex: Alice, Comunidade, Bob)" maxlength="30" required />
         <button type="submit" class="btn btn-sm btn-outline" style="white-space:nowrap;">➕ Nova Conta</button>
@@ -887,11 +906,27 @@ function renderMultiAccountCard(currentAddress) {
     </div>`;
 }
 
+function renderNetworkUserRow(routeId) {
+  const disp = profileDirectory.getAuthorDisplaySync(routeId) || shortId(routeId);
+  return `
+    <div class="card" style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px; margin-top:6px;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div class="avatar">${escapeHtml(disp.slice(0, 1).toUpperCase())}</div>
+        <div>
+          <a href="#/u/${encodeURIComponent(routeId)}"><strong>${escapeHtml(disp)}</strong></a>
+          <div class="meta" style="font-size:0.75rem;"><code>${escapeHtml(shortId(routeId))}</code></div>
+        </div>
+      </div>
+      <div style="display:flex; gap:6px;">
+        <a class="btn btn-xs btn-outline" href="#/dm/${encodeURIComponent(routeId)}">💬 DM</a>
+        <button type="button" class="btn btn-xs btn-outline btn-watch-profile" data-route="${escapeHtml(routeId)}">Seguindo</button>
+      </div>
+    </div>`;
+}
+
 function renderProfileNetworkTab(address, isCurrentWallet, currentTab) {
   const isFollowing = currentTab !== "followers";
-  const list = isCurrentWallet
-    ? social.getWatchedProfiles()
-    : [];
+  const list = isCurrentWallet ? social.getWatchedProfiles() : [];
   const title = isFollowing ? "Acompanhados / Amizades" : "Seguidores";
 
   if (!list.length) {
@@ -905,24 +940,7 @@ function renderProfileNetworkTab(address, isCurrentWallet, currentTab) {
       </div>`;
   }
 
-  const items = list.map((routeId) => {
-    const disp = profileDirectory.getAuthorDisplaySync(routeId) || shortId(routeId);
-    return `
-      <div class="card" style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px; margin-top:6px;">
-        <div style="display:flex; align-items:center; gap:10px;">
-          <div class="avatar">${escapeHtml(disp.slice(0, 1).toUpperCase())}</div>
-          <div>
-            <a href="#/u/${encodeURIComponent(routeId)}"><strong>${escapeHtml(disp)}</strong></a>
-            <div class="meta" style="font-size:0.75rem;"><code>${escapeHtml(shortId(routeId))}</code></div>
-          </div>
-        </div>
-        <div style="display:flex; gap:6px;">
-          <a class="btn btn-xs btn-outline" href="#/dm/${encodeURIComponent(routeId)}">💬 DM</a>
-          <button type="button" class="btn btn-xs btn-outline btn-watch-profile" data-route="${escapeHtml(routeId)}">Seguindo</button>
-        </div>
-      </div>`;
-  }).join("");
-
+  const items = list.map(renderNetworkUserRow).join("");
   return `
     <div class="profile-grid-network">
       <h3 class="profile-grid-about-heading">${title} (${list.length})</h3>
