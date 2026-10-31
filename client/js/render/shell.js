@@ -181,14 +181,41 @@ function attachSidebarBehavior() {
   });
 }
 
-function renderSidebar(activeTab, { showFeedNav, activeFeed, chipHtml, walletBadge }) {
+function renderVoxpediaNavLink(activeTab) {
+  const isVoxpedia = activeTab === "voxpedia";
+  return `<a href="#/voxpedia" class="tab-item ${isVoxpedia ? "active" : ""}"${isVoxpedia ? ' aria-current="page"' : ""}>
+    <span class="tab-icon">${ICONS.voxpedia}</span>
+    <span class="tab-label">Voxpedia</span>
+  </a>`;
+}
+
+function renderSidebarNav(activeTab) {
   const isHome = activeTab === "home";
   const isComm = activeTab === "communities";
-  const isCompose = activeTab === "compose";
-  const isDm = activeTab === "dm";
   const isPeople = activeTab === "people";
+  const isDm = activeTab === "dm";
   const isProfile = activeTab === "profile" || activeTab === "wallet";
-  const isVoxpedia = activeTab === "voxpedia";
+
+  return `<a href="#/" class="tab-item ${isHome ? "active" : ""}"${isHome ? ' aria-current="page"' : ""} aria-label="Início">
+      <span class="tab-icon">${renderHomeIcon()}</span><span class="tab-label">Início</span>
+    </a>
+    <a href="#/communities" class="tab-item ${isComm ? "active" : ""}"${isComm ? ' aria-current="page"' : ""}>
+      <span class="tab-icon">${ICONS.communities}</span><span class="tab-label">Comunidades</span>
+    </a>
+    <a href="#/people" class="tab-item ${isPeople ? "active" : ""}"${isPeople ? ' aria-current="page"' : ""}>
+      <span class="tab-icon">${ICONS.people}</span><span class="tab-label">Pessoas</span>
+    </a>
+    <a href="#/dm" class="tab-item ${isDm ? "active" : ""}"${isDm ? ' aria-current="page"' : ""}>
+      <span class="tab-icon">${ICONS.dm}</span><span class="tab-label">Mensagens</span>
+    </a>
+    <a href="#/perfil" class="tab-item ${isProfile ? "active" : ""}"${isProfile ? ' aria-current="page"' : ""}>
+      <span class="tab-icon">${ICONS.profile}</span><span class="tab-label">Perfil</span>
+    </a>
+    ${renderVoxpediaNavLink(activeTab)}`;
+}
+
+function renderSidebar(activeTab, { showFeedNav, activeFeed, chipHtml, walletBadge }) {
+  const isCompose = activeTab === "compose";
   const feedSlot = renderFeedNavSlot(showFeedNav, activeFeed);
 
   return `
@@ -196,30 +223,7 @@ function renderSidebar(activeTab, { showFeedNav, activeFeed, chipHtml, walletBad
     <aside class="app-sidebar tab-bar" id="app-sidebar" aria-label="Navegação principal">
       <div class="sidebar-scroll">
         <nav class="tab-nav" aria-label="Seções">
-          <a href="#/" class="tab-item ${isHome ? "active" : ""}"${isHome ? ' aria-current="page"' : ""} aria-label="Início">
-            <span class="tab-icon">${renderHomeIcon()}</span>
-            <span class="tab-label">Início</span>
-          </a>
-          <a href="#/communities" class="tab-item ${isComm ? "active" : ""}"${isComm ? ' aria-current="page"' : ""}>
-            <span class="tab-icon">${ICONS.communities}</span>
-            <span class="tab-label">Comunidades</span>
-          </a>
-          <a href="#/people" class="tab-item ${isPeople ? "active" : ""}"${isPeople ? ' aria-current="page"' : ""}>
-            <span class="tab-icon">${ICONS.people}</span>
-            <span class="tab-label">Pessoas</span>
-          </a>
-          <a href="#/dm" class="tab-item ${isDm ? "active" : ""}"${isDm ? ' aria-current="page"' : ""}>
-            <span class="tab-icon">${ICONS.dm}</span>
-            <span class="tab-label">Mensagens</span>
-          </a>
-          <a href="#/perfil" class="tab-item ${isProfile ? "active" : ""}"${isProfile ? ' aria-current="page"' : ""}>
-            <span class="tab-icon">${ICONS.profile}</span>
-            <span class="tab-label">Perfil</span>
-          </a>
-          <a href="#/voxpedia" class="tab-item ${isVoxpedia ? "active" : ""}"${isVoxpedia ? ' aria-current="page"' : ""}>
-            <span class="tab-icon">${ICONS.voxpedia}</span>
-            <span class="tab-label">Voxpedia</span>
-          </a>
+          ${renderSidebarNav(activeTab)}
         </nav>
         <div class="sidebar-compose-slot">
           <a href="#/compose/topic" class="tab-item compose-tab ${isCompose ? "active" : ""}"${isCompose ? ' aria-current="page"' : ""}>
