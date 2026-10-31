@@ -116,17 +116,20 @@ export const OFFICIAL_WELCOME_POST_BODY =
 
 export const OFFICIAL_WELCOME_TOPIC_ID = "vox-official-manifesto-welcome";
 
-export function getOfficialWelcomeTopic() {
+function getOrCreateWelcomeTimestamp() {
   let created = Date.now();
   try {
     const saved = localStorage.getItem("vox-welcome-post-ts");
     if (saved && !isNaN(Number(saved))) {
-      created = Number(saved);
-    } else {
-      localStorage.setItem("vox-welcome-post-ts", String(created));
+      return Number(saved);
     }
+    localStorage.setItem("vox-welcome-post-ts", String(created));
   } catch {}
+  return created;
+}
 
+export function getOfficialWelcomeTopic() {
+  const created = getOrCreateWelcomeTimestamp();
   return {
     id: OFFICIAL_WELCOME_TOPIC_ID,
     type: "topic",

@@ -74,28 +74,35 @@ export function buildBlueskyIntentUrl(text) {
   return `https://bsky.app/intent/compose?text=${encodeURIComponent(String(text || ""))}`;
 }
 
-export function buildPosseExportPayload(post) {
-  const topicId = post?.id || post?.topicId || "";
-  const communityId = post?.communityId || "";
-  const url = post?.canonicalUrl || buildCanonicalTopicUrl(topicId, { communityId });
+function copyPosseOptionalAttributes(post = {}, out = {}) {
+  const nonNullKeys = ["diffText", "tally", "state"];
+  for (const k of nonNullKeys) {
+    if (post[k] != null) out[k] = post[k];
+  }
+  const truthyKeys = ["priceLabel", "locationLabel", "contactPix"];
+  for (const k of truthyKeys) {
+    if (post[k]) out[k] = post[k];
+  }
+}
+
+export function buildPosseExportPayload(post = {}) {
+  const p = post || {};
+  const topicId = p.id || p.topicId || "";
+  const communityId = p.communityId || "";
+  const canonicalUrl = p.canonicalUrl || buildCanonicalTopicUrl(topicId, { communityId });
   const out = {
     v: 1,
     type: "vox-posse-export",
-    kind: post?.kind || post?.type || "topic",
+    kind: p.kind || p.type || "topic",
     topicId,
     communityId,
-    title: post?.title || "",
-    body: post?.body || "",
-    image: post?.image || "",
-    canonicalUrl: url,
+    title: p.title || "",
+    body: p.body || "",
+    image: p.image || "",
+    canonicalUrl,
     exportedAt: new Date().toISOString(),
   };
-  if (post?.diffText != null) out.diffText = post.diffText;
-  if (post?.tally != null) out.tally = post.tally;
-  if (post?.state != null) out.state = post.state;
-  if (post?.priceLabel) out.priceLabel = post.priceLabel;
-  if (post?.locationLabel) out.locationLabel = post.locationLabel;
-  if (post?.contactPix) out.contactPix = post.contactPix;
+  copyPosseOptionalAttributes(p, out);
   return out;
 }
 

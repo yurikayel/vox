@@ -5,8 +5,6 @@
 
 const CPF_REGEX = /^\d{11}$/;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const PHONE_CLEAN_REGEX = /^\+?55\d{10,11}$/;
-const PHONE_LOCAL_REGEX = /^\d{10,11}$/;
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function cleanCpf(val) {
@@ -80,79 +78,60 @@ export function normalizePixKey(raw, typeHint = null) {
   return trimmed;
 }
 
+const PIX_VALIDATORS = {
+  cpf: (norm) => (!CPF_REGEX.test(norm) || !validateCpfDigits(norm) ? "CPF inválido." : ""),
+  email: (norm) => (!EMAIL_REGEX.test(norm) || norm.length > 77 ? "E-mail inválido." : ""),
+  phone: (norm) => (!/^\+55\d{10,11}$/.test(norm) ? "Telefone inválido (use DDD + número com 8 ou 9 dígitos)." : ""),
+  random: (norm) => (!UUID_REGEX.test(norm) ? "Chave aleatória inválida (formato UUID esperado)." : ""),
+};
+
 export function validatePixKey(raw) {
   const trimmed = String(raw || "").trim();
   if (!trimmed) {
     return { ok: false, type: "unknown", normalized: "", errorPt: "Chave Pix não informada." };
   }
-
   const type = detectPixType(trimmed);
   const normalized = normalizePixKey(trimmed, type);
-
-  if (type === "cpf") {
-    if (!CPF_REGEX.test(normalized) || !validateCpfDigits(normalized)) {
-      return { ok: false, type, normalized, errorPt: "CPF inválido." };
-    }
-    return { ok: true, type, normalized, errorPt: "" };
+  const validator = PIX_VALIDATORS[type];
+  if (!validator) {
+    return { ok: false, type: "unknown", normalized, errorPt: "Formato de chave Pix não reconhecido (use CPF, e-mail, celular com DDD ou chave aleatória)." };
   }
-
-  if (type === "email") {
-    if (!EMAIL_REGEX.test(normalized) || normalized.length > 77) {
-      return { ok: false, type, normalized, errorPt: "E-mail inválido." };
-    }
-    return { ok: true, type, normalized, errorPt: "" };
-  }
-
-  if (type === "phone") {
-    if (!/^\+55\d{10,11}$/.test(normalized)) {
-      return { ok: false, type, normalized, errorPt: "Telefone inválido (use DDD + número com 8 ou 9 dígitos)." };
-    }
-    return { ok: true, type, normalized, errorPt: "" };
-  }
-
-  if (type === "random") {
-    if (!UUID_REGEX.test(normalized)) {
-      return { ok: false, type, normalized, errorPt: "Chave aleatória inválida (formato UUID esperado)." };
-    }
-    return { ok: true, type, normalized, errorPt: "" };
-  }
-
-  return { ok: false, type: "unknown", normalized, errorPt: "Formato de chave Pix não reconhecido (use CPF, e-mail, celular com DDD ou chave aleatória)." };
+  const errorPt = validator(normalized);
+  return { ok: !errorPt, type, normalized, errorPt };
 }
+
+function maskCpf(str) {
+  const d = cleanCpf(str);
+  return d.length === 11 ? `***.${d.slice(3, 6)}.${d.slice(6, 9)}-**` : "***.***.***-**";
+}
+
+function maskEmail(str) {
+  const [user, domain] = str.split("@");
+  if (!domain) return "***@***";
+  const maskedUser = user.length <= 2 ? user.slice(0, 1) + "***" : user.slice(0, 2) + "***" + user.slice(-1);
+  return `${maskedUser}@${domain}`;
+}
+
+function maskPhone(str) {
+  const d = str.replace(/\D/g, "");
+  const ddd = d.length >= 12 ? d.slice(2, 4) : d.slice(0, 2);
+  return `+55 (${ddd}) *****-${d.slice(-4)}`;
+}
+
+function maskRandom(str) {
+  return str.length >= 16 ? `${str.slice(0, 4)}••••-••••-••••-${str.slice(-4)}` : "••••-••••-••••";
+}
+
+const PIX_MASKERS = {
+  cpf: maskCpf,
+  email: maskEmail,
+  phone: maskPhone,
+  random: maskRandom,
+};
 
 export function maskForDisplay(key, type = null) {
   if (!key) return "";
   const keyType = type || detectPixType(key);
-  const str = String(key);
-
-  if (keyType === "cpf") {
-    const d = cleanCpf(str);
-    if (d.length === 11) {
-      return `***.${d.slice(3, 6)}.${d.slice(6, 9)}-**`;
-    }
-    return "***.***.***-**";
-  }
-
-  if (keyType === "email") {
-    const [user, domain] = str.split("@");
-    if (!domain) return "***@***";
-    const maskedUser = user.length <= 2 ? user.slice(0, 1) + "***" : user.slice(0, 2) + "***" + user.slice(-1);
-    return `${maskedUser}@${domain}`;
-  }
-
-  if (keyType === "phone") {
-    const d = str.replace(/\D/g, "");
-    const ddd = d.length >= 12 ? d.slice(2, 4) : d.slice(0, 2);
-    const last4 = d.slice(-4);
-    return `+55 (${ddd}) *****-${last4}`;
-  }
-
-  if (keyType === "random") {
-    if (str.length >= 16) {
-      return `${str.slice(0, 4)}••••-••••-••••-${str.slice(-4)}`;
-    }
-    return "••••-••••-••••";
-  }
-
-  return "••••••••";
+  const masker = PIX_MASKERS[keyType];
+  return masker ? masker(String(key)) : "••••••••";
 }

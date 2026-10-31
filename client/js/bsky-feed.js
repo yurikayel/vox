@@ -156,33 +156,56 @@ export function extractPostImage(embed) {
   return embed.thumbnail || "";
 }
 
+function resolveBskyAuthorMeta(author = {}) {
+  const handle = author?.handle || "bluesky";
+  return {
+    handle,
+    displayName: author?.displayName || handle,
+    authorHandle: `@${handle.replace(/^@/, "")}`,
+    avatar: author?.avatar || "",
+  };
+}
+
+function resolveBskyPostIdAndUrl(post = {}, handle = "bluesky") {
+  const uri = String(post?.uri || "");
+  const uriParts = uri.split("/");
+  const rkey = uriParts[uriParts.length - 1] || "";
+  return {
+    id: `bsky_${post?.cid || rkey}`,
+    externalUrl: `https://bsky.app/profile/${handle}/post/${rkey}`,
+  };
+}
+
+function resolveBskyPostTimestamp(record = {}, post = {}) {
+  const tsRaw = record?.createdAt || post?.indexedAt || Date.now();
+  return new Date(tsRaw).getTime();
+}
+
 export function normalizeBskyPost(item) {
   const p = item?.post;
   if (!p) return null;
   const r = p.record || {};
-  const author = p.author || {};
-  const uriParts = String(p.uri || "").split("/");
-  const rkey = uriParts[uriParts.length - 1] || "";
-  const handle = author.handle || "bluesky";
+  const authorMeta = resolveBskyAuthorMeta(p.author);
   const text = String(r.text || "").trim();
+  const { id, externalUrl } = resolveBskyPostIdAndUrl(p, authorMeta.handle);
 
   return {
-    id: `bsky_${p.cid || rkey}`,
+    id,
     type: "topic",
     isExternal: true,
     externalSource: "bluesky",
-    externalUrl: `https://bsky.app/profile/${handle}/post/${rkey}`,
-    author: author.displayName || handle,
-    authorDisplay: author.displayName || handle,
-    authorHandle: `@${handle.replace(/^@/, "")}`,
-    authorAvatar: author.avatar || "",
-    title: text.slice(0, 90) || `Post de @${handle} no Bluesky`,
+    externalUrl,
+    author: authorMeta.displayName,
+    authorDisplay: authorMeta.displayName,
+    authorHandle: authorMeta.authorHandle,
+    authorAvatar: authorMeta.avatar,
+    title: text.slice(0, 90) || `Post de @${authorMeta.handle} no Bluesky`,
     body: text,
     image: extractPostImage(p.embed),
     likesCount: Number(p.likeCount) || 0,
     repliesCount: Number(p.replyCount) || 0,
     repostsCount: Number(p.repostCount) || 0,
-    ts: new Date(r.createdAt || p.indexedAt || Date.now()).getTime(),
+    ts: resolveBskyPostTimestamp(r, p),
   };
 }
 
