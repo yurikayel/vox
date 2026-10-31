@@ -332,72 +332,49 @@ self.addEventListener("activate", (event) => {
 
 });
 
-self.addEventListener("fetch", (event) => {
-
-  const url = new URL(event.request.url);
-
-  // Requisi��es externas (gateways GraphQL, Arweave HTTP) passam direto pela rede
-
-  if (url.origin !== self.location.origin) {
-
-    return;
-
-  }
-
-  // Configuração de sinalização sempre tenta rede primeiro para novos nós base, com fallback offline
-  if (url.pathname.endsWith("/config/signaling.json")) {
-    event.respondWith(
-      fetch(event.request)
-        .then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            const clone = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-          }
-          return networkResponse;
-        })
-        .catch(() => caches.match(event.request))
-    );
-    return;
-  }
-
-  // App shell: cache-first com fallback de rede
-
+function handleSignalingFetch(event) {
   event.respondWith(
-
-    caches.match(event.request).then((cachedResponse) => {
-
-      if (cachedResponse) {
-
-        // Atualiza cache em segundo plano (stale-while-revalidate)
-
-        fetch(event.request)
-
-          .then((networkResponse) => {
-
-            if (networkResponse && networkResponse.status === 200) {
-
-              caches.open(CACHE_NAME).then((cache) => {
-
-                cache.put(event.request, networkResponse);
-
-              });
-
-            }
-
-          })
-
-          .catch(() => {});
-
-        return cachedResponse;
-
-      }
-
-      return fetch(event.request);
-
-    })
-
+    fetch(event.request)
+      .then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200) {
+          const clone = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        }
+        return networkResponse;
+      })
+      .catch(() => caches.match(event.request))
   );
+}
 
+function handleAppShellFetch(event) {
+  event.respondWith(
+    caches.match(event.request).then((cachedResponse) => {
+      if (cachedResponse) {
+        fetch(event.request)
+          .then((networkResponse) => {
+            if (networkResponse && networkResponse.status === 200) {
+              caches.open(CACHE_NAME).then((cache) => {
+                cache.put(event.request, networkResponse);
+              });
+            }
+          })
+          .catch(() => {});
+        return cachedResponse;
+      }
+      return fetch(event.request);
+    })
+  );
+}
+
+self.addEventListener("fetch", (event) => {
+  const url = new URL(event.request.url);
+  if (url.origin !== self.location.origin) return;
+
+  if (url.pathname.endsWith("/config/signaling.json")) {
+    handleSignalingFetch(event);
+    return;
+  }
+  handleAppShellFetch(event);
 });
 
 self.addEventListener("message", (event) => {
@@ -412,9 +389,9 @@ self.addEventListener("message", (event) => {
 
     self.registration
 
-      .showNotification("Vox ? N� Leve em Segundo Plano", {
+      .showNotification("Vox · Nó Leve em Segundo Plano", {
 
-        body: "Participa��o distribu�da ativa (somente Wi-Fi com teto di�rio).",
+        body: "Participação distribuída ativa (somente Wi-Fi com teto diário).",
 
         icon: "./icons/icon.svg",
 
