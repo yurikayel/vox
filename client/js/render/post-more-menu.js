@@ -120,103 +120,103 @@ async function onSocialSheetAction(action, ctx) {
   return false;
 }
 
+async function copyPostLink(postId) {
+  const url = postPermalink(postId);
+  try {
+    await navigator.clipboard.writeText(url);
+    share.showToast("Link copiado!");
+  } catch {
+    share.showToast("Não foi possível copiar o link.", "error");
+  }
+}
+
+function handleQrAction(ctx) {
+  if (!mod.canEchoPost(ctx.postId)) {
+    share.showToast(mod.QUARANTINE_HINT);
+    return;
+  }
+  openQrUrlSheet(share.topicShareUrl(ctx.postId));
+}
+
+async function onNavigationOrShareAction(action, ctx) {
+  if (action === "about-account" && ctx.authorRoute) {
+    window.location.hash = `#/u/${encodeURIComponent(ctx.authorRoute)}`;
+    return true;
+  }
+  if (action === "goto-post") {
+    window.location.hash = `#/t/${encodeURIComponent(ctx.postId)}`;
+    return true;
+  }
+  if (action === "share") {
+    await shareSheetPost(ctx);
+    return true;
+  }
+  if (action === "copy-link") {
+    await copyPostLink(ctx.postId);
+    return true;
+  }
+  if (action === "qr") {
+    handleQrAction(ctx);
+    return true;
+  }
+  return false;
+}
+
 async function onSheetAction(action) {
   const ctx = activeContext;
   closePostMoreMenu();
   if (!ctx) return;
   if (await onSocialSheetAction(action, ctx)) return;
+  if (await onNavigationOrShareAction(action, ctx)) return;
 
-  if (action === "report") {
-    share.showToast("Denúncia registrada localmente — em breve na malha.");
-    return;
+  if (action === "report") share.showToast("Denúncia registrada localmente — em breve na malha.");
+  if (action === "not-interested") share.showToast("Mostraremos menos publicações como esta.");
+  if (action === "embed") share.showToast("Incorporar — em breve.");
+}
+
+function handlePostMoreMenuTriggerClick(openBtn, e) {
+  e.preventDefault();
+  e.stopPropagation();
+  openPostMoreMenu(
+    {
+      postId: openBtn.dataset.postId || "",
+      authorRoute: openBtn.dataset.authorRoute || "",
+      title: openBtn.dataset.title || "",
+      isOwn: openBtn.dataset.isOwn === "1",
+      hasImage: openBtn.dataset.hasImage === "1",
+      pix: openBtn.dataset.pix || "",
+    },
+    openBtn,
+  );
+}
+
+function handlePostMoreMenuDocumentClick(e) {
+  const openBtn = e.target.closest(".btn-post-more-menu");
+  if (openBtn) return handlePostMoreMenuTriggerClick(openBtn, e);
+
+  const sheet = e.target.closest(`#${SHEET_ID}`);
+  if (!sheet?.classList.contains("is-open")) return;
+  if (e.target === sheet) {
+    e.preventDefault();
+    return closePostMoreMenu();
   }
-  if (action === "not-interested") {
-    share.showToast("Mostraremos menos publicações como esta.");
-    return;
-  }
-  if (action === "about-account" && ctx.authorRoute) {
-    window.location.hash = `#/u/${encodeURIComponent(ctx.authorRoute)}`;
-    return;
-  }
-  if (action === "goto-post") {
-    window.location.hash = `#/t/${encodeURIComponent(ctx.postId)}`;
-    return;
-  }
-  if (action === "share") {
-    await shareSheetPost(ctx);
-    return;
-  }
-  if (action === "copy-link") {
-    const url = postPermalink(ctx.postId);
-    try {
-      await navigator.clipboard.writeText(url);
-      share.showToast("Link copiado!");
-    } catch {
-      share.showToast("Não foi possível copiar o link.", "error");
-    }
-    return;
-  }
-  if (action === "qr") {
-    if (!mod.canEchoPost(ctx.postId)) {
-      share.showToast(mod.QUARANTINE_HINT);
-      return;
-    }
-    openQrUrlSheet(share.topicShareUrl(ctx.postId));
-    return;
-  }
-  if (action === "embed") {
-    share.showToast("Incorporar — em breve.");
-  }
+  const item = e.target.closest(".post-more-sheet-item");
+  if (!item) return;
+  e.preventDefault();
+  const action = item.dataset.action || "cancel";
+  if (action === "cancel") return closePostMoreMenu();
+  void onSheetAction(action);
 }
 
 /** Wire sheet + feed ⋯ buttons (idempotent). Sheet DOM is created on first open. */
 export function attachPostMoreMenuHandlers() {
-  if (!wired) {
-    wired = true;
-    document.addEventListener("click", (e) => {
-      const openBtn = e.target.closest(".btn-post-more-menu");
-      if (openBtn) {
-        e.preventDefault();
-        e.stopPropagation();
-        openPostMoreMenu(
-          {
-            postId: openBtn.dataset.postId || "",
-            authorRoute: openBtn.dataset.authorRoute || "",
-            title: openBtn.dataset.title || "",
-            isOwn: openBtn.dataset.isOwn === "1",
-            hasImage: openBtn.dataset.hasImage === "1",
-            pix: openBtn.dataset.pix || "",
-          },
-          openBtn,
-        );
-        return;
-      }
-
-      const sheet = e.target.closest(`#${SHEET_ID}`);
-      if (!sheet?.classList.contains("is-open")) return;
-      if (e.target === sheet) {
-        e.preventDefault();
-        closePostMoreMenu();
-        return;
-      }
-      const item = e.target.closest(".post-more-sheet-item");
-      if (!item) return;
+  if (wired) return;
+  wired = true;
+  document.addEventListener("click", handlePostMoreMenuDocumentClick);
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && document.getElementById(SHEET_ID)?.classList.contains("is-open")) {
       e.preventDefault();
-      const action = item.dataset.action || "cancel";
-      if (action === "cancel") {
-        closePostMoreMenu();
-        return;
-      }
-      void onSheetAction(action);
-    });
-
-    document.addEventListener("keydown", (e) => {
-      if (e.key !== "Escape") return;
-      const sheet = document.getElementById(SHEET_ID);
-      if (sheet?.classList.contains("is-open")) {
-        e.preventDefault();
-        closePostMoreMenu();
-      }
-    });
-  }
+      closePostMoreMenu();
+    }
+  });
 }
