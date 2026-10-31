@@ -61,47 +61,52 @@ function layerPrCivico() {
   return layer("Pull request cívico (regras da comunidade)", PR_CIVICO_BODY);
 }
 
-function renderComecar() {
-  const layers = `
+function layerContaCarteira() {
+  return layer(
+    "Conta, carteira e identidade",
+    `<p>Sem login corporativo: sua conta local usa um identificador <code>vx_…</code> no aparelho. Para publicar na rede Arweave, configure uma carteira em <a href="#/wallet">Carteira</a> (gerar ou importar JWK — fica só no navegador).</p>
     ${layer(
-      "Primeiros passos no app",
-      `<ol class="voxpedia-steps">
-        <li>Abra o Vox no navegador (funciona como app instalável — PWA).</li>
-        <li>Na <strong>Porta da Cantina</strong>, aceite entrar; opcionalmente enriqueça o perfil com Google/Meta ou pule.</li>
-        <li>Leia o <strong>Pacto Vox</strong>: por padrão você ajuda levemente a malha; pode pausar em <a href="#/settings/network">Sua rede</a>.</li>
-        <li>Use <strong>Início</strong> para ver posts; <strong>Postar</strong> para publicar um tópico.</li>
-      </ol>`
-    )}
-    ${layerTresLogicas()}
-    ${layer(
-      "Conta, carteira e identidade",
-      `<p>Sem login corporativo: sua conta local usa um identificador <code>vx_…</code> no aparelho. Para publicar na rede Arweave, configure uma carteira em <a href="#/wallet">Carteira</a> (gerar ou importar JWK — fica só no navegador).</p>
-      ${layer(
-        "Handles @nome",
-        `<p>Handles legíveis (ex.: <code>@helena</code>) são atributos locais e links <code>#/h/nome</code> ou <code>?h=nome</code>. A resolução depende do que você e seus contatos já viram ou indexaram — não há um “registro central” tipo DNS de rede social fechada.</p>`
-      )}
-      ${layer(
-        "Perfil e Pix",
-        `<p>Em <a href="#/perfil">Perfil</a> você edita nome, bio e pode opcionalmente exibir chave Pix para apoio direto entre pessoas — o Vox não processa pagamentos.</p>`
-      )}`
+      "Handles @nome",
+      `<p>Handles legíveis (ex.: <code>@helena</code>) são atributos locais e links <code>#/h/nome</code> ou <code>?h=nome</code>. A resolução depende do que você e seus contatos já viram ou indexaram — não há um “registro central” tipo DNS de rede social fechada.</p>`
     )}
     ${layer(
-      "Feeds Para você e Seguindo",
-      `<p>No menu lateral (quando você está no Início), alterne <strong>Para você</strong> e <strong>Seguindo</strong>. Seguindo mostra autores que você marcou; Para você mistura descoberta e conteúdo recente do índice.</p>
-      ${layer(
-        "Transparência do feed (sem ranking, sem boost)",
-        `<p>O feed é transparente: sem ranking algorítmico de retenção e sem boost pago. A listagem segue o horário de assinatura; a aba Para você pode misturar descoberta recente, sem leilão de ads.</p>`
-      )}
-      ${layer(
-        "POSSE: O Zap continua existindo",
-        `<p>Para combater o efeito de “cidade fantasma”, você não precisa esperar todo mundo migrar: publique no Vox como fonte soberana (chaves no aparelho) e compartilhe o link ou resumo nos seus grupos de WhatsApp e redes sociais (estratégia POSSE). O Vox guarda o original; o Zap continua sendo seu canal de conversa. POSSE <strong>não</strong> publica sozinho no Facebook ou Instagram — você escolhe onde ecoar.</p>`
-      )}
-      ${layer(
-        "Modo demonstração",
-        `<p>Se gateways Arweave falharem e não houver cache nem par, o app entra em <strong>tour de demonstração</strong> (<code>mock.js</code>) — <strong>27 perfis estereótipo</strong> (um por UF, ex. <code>#/h/alice-mg</code>) para testar feed e perfil sem travar.</p>`
-      )}`
-    )}`;
+      "Perfil e Pix",
+      `<p>Em <a href="#/perfil">Perfil</a> você edita nome, bio e pode opcionalmente exibir chave Pix para apoio direto entre pessoas — o Vox não processa pagamentos.</p>`
+    )}`
+  );
+}
 
+function layerFeeds() {
+  return layer(
+    "Feeds Para você e Seguindo",
+    `<p>No menu lateral (quando você está no Início), alterne <strong>Para você</strong> e <strong>Seguindo</strong>. Seguindo mostra autores que você marcou; Para você mistura descoberta e conteúdo recente do índice.</p>
+    ${layer(
+      "Transparência do feed (sem ranking, sem boost)",
+      `<p>O feed é transparente: sem ranking algorítmico de retenção e sem boost pago. A listagem segue o horário de assinatura; a aba Para você pode misturar descoberta recente, sem leilão de ads.</p>`
+    )}
+    ${layer(
+      "POSSE: O Zap continua existindo",
+      `<p>Para combater o efeito de “cidade fantasma”, você não precisa esperar todo mundo migrar: publique no Vox como fonte soberana (chaves no aparelho) e compartilhe o link ou resumo nos seus grupos de WhatsApp e redes sociais (estratégia POSSE). O Vox guarda o original; o Zap continua sendo seu canal de conversa. POSSE <strong>não</strong> publica sozinho no Facebook ou Instagram — você escolhe onde ecoar.</p>`
+    )}
+    ${layer(
+      "Modo demonstração",
+      `<p>Se gateways Arweave falharem e não houver cache nem par, o app entra em <strong>tour de demonstração</strong> (<code>mock.js</code>) — <strong>27 perfis estereótipo</strong> (um por UF, ex. <code>#/h/alice-mg</code>) para testar feed e perfil sem travar.</p>`
+    )}`
+  );
+}
+
+function renderComecar() {
+  const stepsLayer = layer(
+    "Primeiros passos no app",
+    `<ol class="voxpedia-steps">
+      <li>Abra o Vox no navegador (funciona como app instalável — PWA).</li>
+      <li>Na <strong>Porta da Cantina</strong>, aceite entrar; opcionalmente enriqueça o perfil com Google/Meta ou pule.</li>
+      <li>Leia o <strong>Pacto Vox</strong>: por padrão você ajuda levemente a malha; pode pausar em <a href="#/settings/network">Sua rede</a>.</li>
+      <li>Use <strong>Início</strong> para ver posts; <strong>Postar</strong> para publicar um tópico.</li>
+    </ol>`
+  );
+
+  const layers = `${stepsLayer}\n${layerTresLogicas()}\n${layerContaCarteira()}\n${layerFeeds()}`;
   return section(
     "voxpedia-comecar",
     "Começar",
@@ -231,35 +236,40 @@ function renderPrivacidade() {
   );
 }
 
-function renderTecnico() {
-  const layers = `
+function layerLeituraPublicacao() {
+  return layer(
+    "Leitura e publicação",
+    `<p>Consultas GraphQL em <code>graphql.js</code> contra gateways em <code>config/gateways.json</code>. Upload assinado em <code>upload.js</code> com tags Vox. Cache: <code>cache-node.js</code>; malha: <code>peers.js</code>, <code>webrtc-peer.js</code>.</p>
     ${layer(
-      "Stack do cliente",
-      `<p>PWA vanilla ES modules — sem bundler. Entrada <code>client/js/app.js</code>; roteador hash em <code>route-parse.js</code>; render modular em <code>client/js/render/</code>; service worker <code>client/sw.js</code> para shell offline.</p>`
-    )}
-    ${layer(
-      "Leitura e publicação",
-      `<p>Consultas GraphQL em <code>graphql.js</code> contra gateways em <code>config/gateways.json</code>. Upload assinado em <code>upload.js</code> com tags Vox. Cache: <code>cache-node.js</code>; malha: <code>peers.js</code>, <code>webrtc-peer.js</code>.</p>
-      ${layer(
-        "Gossip e retratação",
-        `<p>Ofertas assinadas e retratações (<code>GOSSIP_UPDATE</code> / <code>GOSSIP_DELETE</code>) atualizam status local; UI mostra badge <strong>Editado</strong> ou tombstone quando ativado.</p>`
-      )}`
-    )}
-    ${layer(
-      "Testes e release",
-      `<p>Na raiz do repo: <code>npm test</code> (JS + relay Python). Após merge em <code>main</code>, GitHub Pages publica; usuários precisam de hard refresh para novo <code>CACHE_NAME</code> do SW.</p>
-      ${layer(
-        "Docs no repositório",
-        `<ul class="voxpedia-steps">
-          <li><a href="${VOX_GITHUB_DOCS.devGuide}" target="_blank" rel="noopener noreferrer">client/DEV.md</a> — fluxos de teste manual</li>
-          <li><a href="#/labs/frames">Open Frames (lab)</a> · <a href="#/status">Status da malha</a></li>
-          <li><a href="${VOX_GITHUB_DOCS.docsReadme}" target="_blank" rel="noopener noreferrer">docs/README.md</a> — índice das trilhas</li>
-          <li><a href="${VOX_GITHUB_DOCS.repo}" target="_blank" rel="noopener noreferrer">Repositório yurikayel/vox</a></li>
-        </ul>
-        <p class="desc">Ver também o bloco <a href="#voxpedia-docs-github">Docs técnicas</a> no topo desta página.</p>`
-      )}`
-    )}`;
+      "Gossip e retratação",
+      `<p>Ofertas assinadas e retratações (<code>GOSSIP_UPDATE</code> / <code>GOSSIP_DELETE</code>) atualizam status local; UI mostra badge <strong>Editado</strong> ou tombstone quando ativado.</p>`
+    )}`
+  );
+}
 
+function layerTestesRelease() {
+  return layer(
+    "Testes e release",
+    `<p>Na raiz do repo: <code>npm test</code> (JS + relay Python). Após merge em <code>main</code>, GitHub Pages publica; usuários precisam de hard refresh para novo <code>CACHE_NAME</code> do SW.</p>
+    ${layer(
+      "Docs no repositório",
+      `<ul class="voxpedia-steps">
+        <li><a href="${VOX_GITHUB_DOCS.devGuide}" target="_blank" rel="noopener noreferrer">client/DEV.md</a> — fluxos de teste manual</li>
+        <li><a href="#/labs/frames">Open Frames (lab)</a> · <a href="#/status">Status da malha</a></li>
+        <li><a href="${VOX_GITHUB_DOCS.docsReadme}" target="_blank" rel="noopener noreferrer">docs/README.md</a> — índice das trilhas</li>
+        <li><a href="${VOX_GITHUB_DOCS.repo}" target="_blank" rel="noopener noreferrer">Repositório yurikayel/vox</a></li>
+      </ul>
+      <p class="desc">Ver também o bloco <a href="#voxpedia-docs-github">Docs técnicas</a> no topo desta página.</p>`
+    )}`
+  );
+}
+
+function renderTecnico() {
+  const stackLayer = layer(
+    "Stack do cliente",
+    `<p>PWA vanilla ES modules — sem bundler. Entrada <code>client/js/app.js</code>; roteador hash em <code>route-parse.js</code>; render modular em <code>client/js/render/</code>; service worker <code>client/sw.js</code> para shell offline.</p>`
+  );
+  const layers = `${stackLayer}\n${layerLeituraPublicacao()}\n${layerTestesRelease()}`;
   return section(
     "voxpedia-tecnico",
     "Para curiosos (técnico)",
@@ -268,32 +278,40 @@ function renderTecnico() {
   );
 }
 
+function renderVoxpediaHero() {
+  return `<header class="voxpedia-hero card">
+    <p class="voxpedia-kicker">Ajuda · documentação viva</p>
+    <h1>Voxpedia</h1>
+    <p class="desc voxpedia-hero-lead">
+      <strong>Vox</strong> é uma rede social comunitária cooperativa: posts e comunidades no permaweb,
+      mensagens privadas cifradas e uma malha que ajuda a carregar conteúdo entre aparelhos.
+      <strong>Voxpedia</strong> explica como isso funciona — comece pelo resumo e abra as camadas quando quiser detalhe.
+      Testando o app? Siga o <a href="#/ajuda/teste">roteiro teste aberto (~15 min)</a>.
+    </p>
+  </header>`;
+}
+
+function renderVoxpediaToc() {
+  return `<nav class="voxpedia-toc card" aria-label="Índice da Voxpedia">
+    <p class="section-title">Nesta página</p>
+    <ul class="voxpedia-toc-list">
+      <li><a href="#voxpedia-comecar">Começar</a></li>
+      <li><a href="#voxpedia-mensagens">Mensagens</a></li>
+      <li><a href="#voxpedia-comunidades">Comunidades</a></li>
+      <li><a href="#voxpedia-rede">Rede cooperativa</a></li>
+      <li><a href="#voxpedia-privacidade">Privacidade & dados</a></li>
+      <li><a href="#voxpedia-tecnico">Para curiosos (técnico)</a></li>
+      <li><a href="#/ajuda/teste">Teste aberto (testadores)</a></li>
+    </ul>
+  </nav>`;
+}
+
 /** @returns {string} HTML da página Voxpedia */
 export function renderVoxpedia() {
   return `
     <article class="voxpedia-page">
-      <header class="voxpedia-hero card">
-        <p class="voxpedia-kicker">Ajuda · documentação viva</p>
-        <h1>Voxpedia</h1>
-        <p class="desc voxpedia-hero-lead">
-          <strong>Vox</strong> é uma rede social comunitária cooperativa: posts e comunidades no permaweb,
-          mensagens privadas cifradas e uma malha que ajuda a carregar conteúdo entre aparelhos.
-          <strong>Voxpedia</strong> explica como isso funciona — comece pelo resumo e abra as camadas quando quiser detalhe.
-          Testando o app? Siga o <a href="#/ajuda/teste">roteiro teste aberto (~15 min)</a>.
-        </p>
-      </header>
-      <nav class="voxpedia-toc card" aria-label="Índice da Voxpedia">
-        <p class="section-title">Nesta página</p>
-        <ul class="voxpedia-toc-list">
-          <li><a href="#voxpedia-comecar">Começar</a></li>
-          <li><a href="#voxpedia-mensagens">Mensagens</a></li>
-          <li><a href="#voxpedia-comunidades">Comunidades</a></li>
-          <li><a href="#voxpedia-rede">Rede cooperativa</a></li>
-          <li><a href="#voxpedia-privacidade">Privacidade & dados</a></li>
-          <li><a href="#voxpedia-tecnico">Para curiosos (técnico)</a></li>
-          <li><a href="#/ajuda/teste">Teste aberto (testadores)</a></li>
-        </ul>
-      </nav>
+      ${renderVoxpediaHero()}
+      ${renderVoxpediaToc()}
       ${renderGithubDocsAside()}
       ${renderComecar()}
       ${renderMensagens()}
