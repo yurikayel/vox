@@ -81,6 +81,51 @@ export function resolveProposalState(proposal, yesCount, noCount, now = Date.now
   return yesCount > noCount ? "merged" : "rejected";
 }
 
+function buildMembershipTimestampMap(memberships) {
+  const memberMap = new Map();
+  for (const m of memberships) {
+    const author = m.author || m.owner;
+    if (author) memberMap.set(author, Number(m.ts || m.createdAt || 0));
+  }
+  return memberMap;
+}
+
+function deduplicateLatestVotesByAuthor(votes) {
+  const sortedVotes = [...votes].sort((a, b) => Number(b.ts || 0) - Number(a.ts || 0));
+  const latestByAuthor = new Map();
+  for (const v of sortedVotes) {
+    const author = v.author || v.owner;
+    if (author && !latestByAuthor.has(author)) latestByAuthor.set(author, v);
+  }
+  return latestByAuthor;
+}
+
+function evaluateVoteRecord(author, v, memberMap, proposalCreatedAt, counts) {
+  const choice = normalizeVoteChoice(v.choice);
+  const memberJoinedAt = memberMap.get(author);
+  const hasMembership = memberMap.has(author);
+  const eligible = hasMembership && isEligibleToVote({ membershipTs: memberJoinedAt, proposalCreatedAt });
+
+  let reason = "";
+  if (!hasMembership) {
+    reason = "não é membro da comunidade";
+  } else if (!eligible) {
+    reason = "adesão posterior ao marco de corte (anti-brigading)";
+  }
+
+  if (eligible && choice && counts[choice] !== undefined) {
+    counts[choice] += 1;
+  }
+
+  return {
+    author,
+    choice: choice || "invalid",
+    eligible,
+    reason,
+    ts: v.ts || 0,
+  };
+}
+
 /**
  * Realiza a apuração (tally) estrita e transparente no cliente.
  * Regras canônicas:
@@ -94,70 +139,28 @@ export function computeTally({ proposal, votes = [], memberships = [], now = Dat
   }
 
   const proposalCreatedAt = Number(proposal.createdAt || proposal.ts) || 0;
-  const memberMap = new Map();
-  for (const m of memberships) {
-    const author = m.author || m.owner;
-    if (author) {
-      memberMap.set(author, Number(m.ts || m.createdAt || 0));
-    }
-  }
-
-  // Deduplica votos por autor (o mais recente prevalece)
-  const sortedVotes = [...votes].sort((a, b) => (Number(b.ts || 0)) - (Number(a.ts || 0)));
-  const latestByAuthor = new Map();
-  for (const v of sortedVotes) {
-    const author = v.author || v.owner;
-    if (author && !latestByAuthor.has(author)) {
-      latestByAuthor.set(author, v);
-    }
-  }
-
-  let yes = 0;
-  let no = 0;
-  let abstain = 0;
+  const memberMap = buildMembershipTimestampMap(memberships);
+  const latestByAuthor = deduplicateLatestVotesByAuthor(votes);
+  const counts = { yes: 0, no: 0, abstain: 0 };
   const votesDetail = [];
 
   for (const [author, v] of latestByAuthor.entries()) {
-    const choice = normalizeVoteChoice(v.choice);
-    const memberJoinedAt = memberMap.get(author);
-    const hasMembership = memberMap.has(author);
-    const eligible = hasMembership && isEligibleToVote({ membershipTs: memberJoinedAt, proposalCreatedAt });
-
-    let reason = "";
-    if (!hasMembership) {
-      reason = "não é membro da comunidade";
-    } else if (!eligible) {
-      reason = "adesão posterior ao marco de corte (anti-brigading)";
-    }
-
-    if (eligible && choice) {
-      if (choice === "yes") yes += 1;
-      else if (choice === "no") no += 1;
-      else if (choice === "abstain") abstain += 1;
-    }
-
-    votesDetail.push({
-      author,
-      choice: choice || "invalid",
-      eligible,
-      reason,
-      ts: v.ts || 0,
-    });
+    votesDetail.push(evaluateVoteRecord(author, v, memberMap, proposalCreatedAt, counts));
   }
 
-  const totalEligible = yes + no + abstain;
+  const totalEligible = counts.yes + counts.no + counts.abstain;
   const ineligibleCount = votesDetail.filter((d) => !d.eligible).length;
-  const state = resolveProposalState(proposal, yes, no, now);
+  const state = resolveProposalState(proposal, counts.yes, counts.no, now);
 
   return {
-    yes,
-    no,
-    abstain,
+    yes: counts.yes,
+    no: counts.no,
+    abstain: counts.abstain,
     totalEligible,
     totalVotes: votesDetail.length,
     ineligibleCount,
     state,
-    isPassed: yes > no && state === "merged",
+    isPassed: counts.yes > counts.no && state === "merged",
     votesDetail,
   };
 }
