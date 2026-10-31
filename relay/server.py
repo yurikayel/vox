@@ -82,6 +82,13 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
 
+    def _get_content_length(self):
+        try:
+            cl = int(self.headers.get("Content-Length", 0))
+            return max(0, cl)
+        except (ValueError, TypeError):
+            return 0
+
     def do_OPTIONS(self):
         self.send_response(204)
         self._set_cors_headers()
@@ -216,7 +223,7 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
         
         # Salva espelho local de comunidade
         if path == "/vox/mirror":
-            content_length = int(self.headers.get("Content-Length", 0))
+            content_length = self._get_content_length()
             try:
                 body = self.rfile.read(content_length)
             except Exception as e:
@@ -262,7 +269,7 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
         # Inbox efêmero: POST /inbox/<toAddress>
         if path.startswith("/inbox/"):
             to_addr = path[len("/inbox/"):].split("/")[0]
-            content_length = int(self.headers.get("Content-Length", 0))
+            content_length = self._get_content_length()
             if content_length > inbox.MAX_ENVELOPE_SIZE:
                 self.send_response(413)
                 self._set_cors_headers()
