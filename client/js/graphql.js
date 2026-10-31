@@ -392,6 +392,43 @@ function rawUrlsForTx(cfg, txId) {
   return urls;
 }
 
+function parseGatewayRawPayload(text) {
+  const parsed = { body: text, raw: text };
+  try {
+    const json = JSON.parse(text);
+    if (typeof json === "object" && json !== null) {
+      parsed.body = json.body || json.content || json.text || text;
+      parsed.title = json.title || "";
+    }
+  } catch {}
+  return parsed;
+}
+
+function isValidRawResponse(res, text) {
+  if (!res.ok) return false;
+  const ctype = res.headers?.get?.("content-type") || "";
+  if (ctype.includes("text/html")) return false;
+  const trimmed = text.trim().toLowerCase();
+  return !trimmed.startsWith("<!doctype html") && !trimmed.startsWith("<html");
+}
+
+async function tryFetchRawFromUrl(url, label) {
+  try {
+    const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
+    const text = await res.text();
+    if (!isValidRawResponse(res, text)) {
+      recordGatewayAttempt(label, false);
+      return null;
+    }
+    const parsed = parseGatewayRawPayload(text);
+    recordGatewayAttempt(label, true);
+    return parsed;
+  } catch {
+    recordGatewayAttempt(label, false);
+    return null;
+  }
+}
+
 async function fetchRawFromGateways(txId) {
   const cfg = await loadConfig();
   const tried = new Set();
@@ -400,61 +437,14 @@ async function fetchRawFromGateways(txId) {
     const url = gw.raw.replace("{txId}", txId);
     if (tried.has(url)) continue;
     tried.add(url);
-    const label = gw.label || url;
-    try {
-      const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
-      if (!res.ok) {
-        recordGatewayAttempt(label, false);
-        continue;
-      }
-      const ctype = res.headers?.get?.("content-type") || "";
-      if (ctype.includes("text/html")) {
-        recordGatewayAttempt(label, false);
-        continue;
-      }
-      const text = await res.text();
-      if (text.trim().toLowerCase().startsWith("<!doctype html") || text.trim().toLowerCase().startsWith("<html")) {
-        recordGatewayAttempt(label, false);
-        continue;
-      }
-      let parsed = { body: text, raw: text };
-      try {
-        const json = JSON.parse(text);
-        if (typeof json === "object" && json !== null) {
-          parsed.body = json.body || json.content || json.text || text;
-          parsed.title = json.title || "";
-        }
-      } catch {
-        // texto plano
-      }
-      recordGatewayAttempt(label, true);
-      return parsed;
-    } catch {
-      recordGatewayAttempt(label, false);
-    }
+    const parsed = await tryFetchRawFromUrl(url, gw.label || url);
+    if (parsed) return parsed;
   }
   for (const url of rawUrlsForTx(cfg, txId)) {
     if (tried.has(url)) continue;
     tried.add(url);
-    try {
-      const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
-      if (!res.ok) continue;
-      const text = await res.text();
-      let parsed = { body: text, raw: text };
-      try {
-        const json = JSON.parse(text);
-        if (typeof json === "object" && json !== null) {
-          parsed.body = json.body || json.content || json.text || text;
-          parsed.title = json.title || "";
-        }
-      } catch {
-        // texto plano
-      }
-      recordGatewayAttempt(url, true);
-      return parsed;
-    } catch {
-      recordGatewayAttempt(url, false);
-    }
+    const parsed = await tryFetchRawFromUrl(url, url);
+    if (parsed) return parsed;
   }
   return null;
 }
@@ -508,27 +498,30 @@ export async function queryAllGateways(query, variables) {
   return results;
 }
 
+function recordEdgeInMap(edgeMap, edge, gateway) {
+  const id = edge.node?.id;
+  if (!id) return;
+  if (!edgeMap.has(id)) {
+    edgeMap.set(id, {
+      node: edge.node,
+      cursor: edge.cursor,
+      witnesses: [gateway],
+      conflict: false,
+    });
+    return;
+  }
+  const item = edgeMap.get(id);
+  item.witnesses.push(gateway);
+  if (item.node?.owner?.address !== edge.node?.owner?.address) {
+    item.conflict = true;
+  }
+}
+
 export function mergeTopicEdgesWithConsensus(gatewayResults) {
   const edgeMap = new Map();
   for (const res of gatewayResults || []) {
-    const edges = res.data?.transactions?.edges || [];
-    for (const edge of edges) {
-      const id = edge.node?.id;
-      if (!id) continue;
-      if (!edgeMap.has(id)) {
-        edgeMap.set(id, {
-          node: edge.node,
-          cursor: edge.cursor,
-          witnesses: [res.gateway],
-          conflict: false,
-        });
-      } else {
-        const item = edgeMap.get(id);
-        item.witnesses.push(res.gateway);
-        if (item.node?.owner?.address !== edge.node?.owner?.address) {
-          item.conflict = true;
-        }
-      }
+    for (const edge of res.data?.transactions?.edges || []) {
+      recordEdgeInMap(edgeMap, edge, res.gateway);
     }
   }
 
@@ -720,46 +713,29 @@ export async function fetchModActions(communityId) {
   }
 }
 
+function cacheAndRecordTx(txId, data, origin, comm) {
+  recordReadOrigin(origin, comm);
+  dataCache.set(txId, data);
+  if (origin !== "cache_idb") cacheNode.setCachedTx(txId, data);
+  return data;
+}
+
 export async function fetchTransactionData(txId, { communityId = "" } = {}) {
   if (!txId) return { body: "", raw: "" };
   if (dataCache.has(txId)) return dataCache.get(txId);
 
   const comm = String(communityId || "").trim();
-
-  // 1. Tenta Cache Local Persistente (IndexedDB)
   const cachedDb = await cacheNode.getCachedTx(txId);
-  if (cachedDb) {
-    recordReadOrigin("cache_idb", comm);
-    dataCache.set(txId, cachedDb);
-    return cachedDb;
-  }
+  if (cachedDb) return cacheAndRecordTx(txId, cachedDb, "cache_idb", comm);
 
-  // 2. Tenta relay HTTP configurado (local, LAN ou VPS)
   const relayData = await peers.fetchFromDesktopRelay(txId);
-  if (relayData) {
-    recordReadOrigin("relay", comm);
-    dataCache.set(txId, relayData);
-    cacheNode.setCachedTx(txId, relayData);
-    return relayData;
-  }
+  if (relayData) return cacheAndRecordTx(txId, relayData, "relay", comm);
 
-  // 3. Tenta Rede de Pares (Nós Leves via Broadcast / WebRTC)
   const peerData = await peers.requestTxFromPeers(txId);
-  if (peerData) {
-    recordReadOrigin("mesh", comm);
-    dataCache.set(txId, peerData);
-    cacheNode.setCachedTx(txId, peerData);
-    return peerData;
-  }
+  if (peerData) return cacheAndRecordTx(txId, peerData, "mesh", comm);
 
-  // 4. Fallback: Gateways Públicos (ordem em config/gateways.json — estilo Channel-01)
   const gatewayParsed = await fetchRawFromGateways(txId);
-  if (gatewayParsed) {
-    recordReadOrigin("gateway", comm);
-    dataCache.set(txId, gatewayParsed);
-    cacheNode.setCachedTx(txId, gatewayParsed);
-    return gatewayParsed;
-  }
+  if (gatewayParsed) return cacheAndRecordTx(txId, gatewayParsed, "gateway", comm);
 
   const empty = { body: "", raw: "" };
   dataCache.set(txId, empty);

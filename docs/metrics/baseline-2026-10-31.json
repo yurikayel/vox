@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-10-31T09:26:02.039Z",
+  "generatedAt": "2026-10-31T09:33:21.761Z",
   "filesScanned": 130,
-  "violationCount": 77,
+  "violationCount": 61,
   "violations": [
     {
       "file": "client/js/bsky-feed.js",
@@ -60,20 +60,6 @@
       "severity": "warn"
     },
     {
-      "file": "client/js/explode-dispatch.js",
-      "line": 492,
-      "rule": "complexity",
-      "message": "Async function 'onExplodeAction' has a complexity of 16. Maximum allowed is 15.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/explode-dispatch.js",
-      "line": 531,
-      "rule": "complexity",
-      "message": "Function 'handleDocumentExplodeClick' has a complexity of 22. Maximum allowed is 15.",
-      "severity": "warn"
-    },
-    {
       "file": "client/js/frames.js",
       "line": 117,
       "rule": "complexity",
@@ -85,13 +71,6 @@
       "line": 91,
       "rule": "complexity",
       "message": "Function 'computeTally' has a complexity of 28. Maximum allowed is 15.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/graphql.js",
-      "line": 395,
-      "rule": "complexity",
-      "message": "Async function 'fetchRawFromGateways' has a complexity of 33. Maximum allowed is 15.",
       "severity": "warn"
     },
     {
@@ -144,13 +123,6 @@
       "severity": "warn"
     },
     {
-      "file": "client/js/render/oauth-modals.js",
-      "line": 236,
-      "rule": "complexity",
-      "message": "Function 'renderZapModal' has a complexity of 18. Maximum allowed is 15.",
-      "severity": "warn"
-    },
-    {
       "file": "client/js/render/shell.js",
       "line": 184,
       "rule": "complexity",
@@ -183,34 +155,6 @@
       "line": 198,
       "rule": "max-lines-per-function",
       "message": "Async function 'verifyParsedDataItem' has too many lines (35). Maximum allowed is 30.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/app/screens-compose.js",
-      "line": 21,
-      "rule": "max-lines-per-function",
-      "message": "Async function 'showComposeCommunity' has too many lines (101). Maximum allowed is 30.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/app/screens-compose.js",
-      "line": 78,
-      "rule": "max-lines-per-function",
-      "message": "Async arrow function has too many lines (48). Maximum allowed is 30.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/app/screens-compose.js",
-      "line": 171,
-      "rule": "max-lines-per-function",
-      "message": "Async function 'showComposeTopic' has too many lines (114). Maximum allowed is 30.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/app/screens-compose.js",
-      "line": 662,
-      "rule": "max-lines-per-function",
-      "message": "Async function 'onNestedCommentReplySubmit' has too many lines (32). Maximum allowed is 30.",
       "severity": "warn"
     },
     {
@@ -291,20 +235,6 @@
       "severity": "warn"
     },
     {
-      "file": "client/js/explode-dispatch.js",
-      "line": 212,
-      "rule": "max-lines-per-function",
-      "message": "Function 'buildExplodeGridHtml' has too many lines (43). Maximum allowed is 30.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/explode-dispatch.js",
-      "line": 531,
-      "rule": "max-lines-per-function",
-      "message": "Function 'handleDocumentExplodeClick' has too many lines (40). Maximum allowed is 30.",
-      "severity": "warn"
-    },
-    {
       "file": "client/js/frames.js",
       "line": 175,
       "rule": "max-lines-per-function",
@@ -316,27 +246,6 @@
       "line": 91,
       "rule": "max-lines-per-function",
       "message": "Function 'computeTally' has too many lines (63). Maximum allowed is 30.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/graphql.js",
-      "line": 395,
-      "rule": "max-lines-per-function",
-      "message": "Async function 'fetchRawFromGateways' has too many lines (64). Maximum allowed is 30.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/graphql.js",
-      "line": 511,
-      "rule": "max-lines-per-function",
-      "message": "Function 'mergeTopicEdgesWithConsensus' has too many lines (32). Maximum allowed is 30.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/graphql.js",
-      "line": 723,
-      "rule": "max-lines-per-function",
-      "message": "Async function 'fetchTransactionData' has too many lines (35). Maximum allowed is 30.",
       "severity": "warn"
     },
     {
@@ -442,27 +351,6 @@
       "line": 94,
       "rule": "max-lines-per-function",
       "message": "Function 'renderAutoReplicationBannerHtml' has too many lines (32). Maximum allowed is 30.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/render/oauth-modals.js",
-      "line": 91,
-      "rule": "max-lines-per-function",
-      "message": "Function 'renderPeopleSearch' has too many lines (36). Maximum allowed is 30.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/render/oauth-modals.js",
-      "line": 129,
-      "rule": "max-lines-per-function",
-      "message": "Function 'renderPostPactConnectModal' has too many lines (39). Maximum allowed is 30.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/render/oauth-modals.js",
-      "line": 236,
-      "rule": "max-lines-per-function",
-      "message": "Function 'renderZapModal' has too many lines (47). Maximum allowed is 30.",
       "severity": "warn"
     },
     {

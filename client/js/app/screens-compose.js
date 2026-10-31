@@ -18,115 +18,125 @@ import { parseChatTranscriptToMarkdown } from "../chat-bridge.js";
 import { createCivicNotaryRecord } from "../perma-notary.js";
 import { getActiveUser, makeShellProps } from "./context.js";
 
-export async function showComposeCommunity() {
-  const user = await getActiveUser();
-  const main = render.renderShell(makeShellProps(user, "compose", "Nova Comunidade"));
-  render.renderComposeCommunity(main);
+function updateCommunityPhotoPreview(previewEl, src, initial = "C") {
+  if (!previewEl) return;
+  if (src) {
+    previewEl.innerHTML = `<img class="community-avatar-img" src="${src}" alt="Preview" style="width:100%; height:100%; object-fit:cover; border-radius:14px;" />`;
+  } else {
+    previewEl.innerHTML = `<div class="community-avatar-fallback" style="background:var(--brand-chrome); font-size:1.8rem; display:flex; align-items:center; justify-content:center; width:100%; height:100%; color:#fff; font-weight:800; border-radius:14px;">${initial}</div>`;
+  }
+}
 
-  let photoDataUrl = "";
+function bindPhotoFileInput(fileInput, previewEl, state) {
+  fileInput?.addEventListener("change", (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      state.photoDataUrl = reader.result;
+      updateCommunityPhotoPreview(previewEl, state.photoDataUrl);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function bindCommunityPhotoInputs(state) {
   const fileInput = document.getElementById("comm-photo-file");
   const urlInput = document.getElementById("comm-photo-url");
   const previewEl = document.getElementById("comm-photo-preview");
   const titleInput = document.getElementById("comm-title");
 
-  const updatePreview = (src, initial = "C") => {
-    if (!previewEl) return;
-    if (src) {
-      previewEl.innerHTML = `<img class="community-avatar-img" src="${src}" alt="Preview" style="width:100%; height:100%; object-fit:cover; border-radius:14px;" />`;
-    } else {
-      previewEl.innerHTML = `<div class="community-avatar-fallback" style="background:var(--brand-chrome); font-size:1.8rem; display:flex; align-items:center; justify-content:center; width:100%; height:100%; color:#fff; font-weight:800; border-radius:14px;">${initial}</div>`;
+  bindPhotoFileInput(fileInput, previewEl, state);
+
+  urlInput?.addEventListener("input", () => {
+    const url = urlInput.value.trim();
+    if (url) {
+      state.photoDataUrl = url;
+      updateCommunityPhotoPreview(previewEl, url);
+    } else if (!fileInput?.files?.[0]) {
+      state.photoDataUrl = "";
+      updateCommunityPhotoPreview(previewEl, "", (titleInput?.value || "C").slice(0, 1).toUpperCase());
     }
+  });
+
+  titleInput?.addEventListener("input", () => {
+    if (!state.photoDataUrl) {
+      updateCommunityPhotoPreview(previewEl, "", (titleInput.value || "C").slice(0, 1).toUpperCase());
+    }
+  });
+}
+
+async function uploadCommunityToPermaweb(communityRecord) {
+  if (!wallet.hasWallet()) return;
+  try {
+    const { id, title, category, description, image } = communityRecord;
+    const tags = upload.buildTags("community", {
+      "Community-Id": id,
+      Title: title,
+      Category: category,
+      Description: description,
+      Image: image,
+    });
+    await upload.postData({ id, title, category, description, image }, tags);
+  } catch {}
+}
+
+function readCommunityInputs(state) {
+  return {
+    id: document.getElementById("comm-id")?.value.trim().toLowerCase(),
+    title: document.getElementById("comm-title")?.value.trim(),
+    category: document.getElementById("comm-category")?.value.trim() || "Geral",
+    desc: document.getElementById("comm-desc")?.value.trim(),
+    visibility: document.getElementById("comm-type")?.value || "open",
+    image: state.photoDataUrl || document.getElementById("comm-photo-url")?.value.trim() || "",
   };
+}
 
-  if (fileInput) {
-    fileInput.addEventListener("change", (e) => {
-      const file = e.target.files?.[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = () => {
-          photoDataUrl = reader.result;
-          updatePreview(photoDataUrl);
-        };
-        reader.readAsDataURL(file);
-      }
-    });
+async function signAndBroadcastCommunity(data) {
+  const signed = await localAccount.signPayload({
+    id: "c_" + data.id,
+    type: "community",
+    communityId: data.id,
+    title: data.title,
+    category: data.category,
+    description: data.desc,
+    image: data.image,
+    avatar: data.image,
+    visibility: data.visibility,
+    language: "Português",
+    createdAt: Date.now(),
+  });
+  await cacheNode.saveLocalPost(signed);
+  peers.broadcastGossip(signed);
+}
+
+async function handleCommunityCreate(state, e) {
+  e.preventDefault();
+  const btn = document.getElementById("btn-submit-comm");
+  const data = readCommunityInputs(state);
+  btn.disabled = true;
+  btn.textContent = "Assinando…";
+  try {
+    await signAndBroadcastCommunity(data);
+    await uploadCommunityToPermaweb({ id: data.id, title: data.title, category: data.category, description: data.desc, image: data.image });
+    communitySeed.markSeedPending(data.id);
+    share.showToast("Comunidade criada na rede!");
+    location.hash = `#/c/${encodeURIComponent(data.id)}?seed=1`;
+  } catch (err) {
+    share.showToast(`Erro: ${err.message}`, "error");
+    btn.disabled = false;
+    btn.textContent = "Publicar Comunidade";
   }
+}
 
-  if (urlInput) {
-    urlInput.addEventListener("input", () => {
-      const url = urlInput.value.trim();
-      if (url) {
-        photoDataUrl = url;
-        updatePreview(url);
-      } else if (!fileInput?.files?.[0]) {
-        photoDataUrl = "";
-        updatePreview("", (titleInput?.value || "C").slice(0, 1).toUpperCase());
-      }
-    });
-  }
+export async function showComposeCommunity() {
+  const user = await getActiveUser();
+  const main = render.renderShell(makeShellProps(user, "compose", "Nova Comunidade"));
+  render.renderComposeCommunity(main);
 
-  if (titleInput) {
-    titleInput.addEventListener("input", () => {
-      if (!photoDataUrl) {
-        updatePreview("", (titleInput.value || "C").slice(0, 1).toUpperCase());
-      }
-    });
-  }
-
-  const form = document.getElementById("form-compose-community");
-  if (form) {
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const btn = document.getElementById("btn-submit-comm");
-      const id = document.getElementById("comm-id")?.value.trim().toLowerCase();
-      const title = document.getElementById("comm-title")?.value.trim();
-      const category = document.getElementById("comm-category")?.value.trim() || "Geral";
-      const desc = document.getElementById("comm-desc")?.value.trim();
-      const visibility = document.getElementById("comm-type")?.value || "open";
-      const image = photoDataUrl || urlInput?.value.trim() || "";
-
-      btn.disabled = true;
-      btn.textContent = "Assinando…";
-      try {
-        const signed = await localAccount.signPayload({
-          id: "c_" + id,
-          type: "community",
-          communityId: id,
-          title,
-          category,
-          description: desc,
-          image,
-          avatar: image,
-          visibility,
-          language: "Português",
-          createdAt: Date.now(),
-        });
-        await cacheNode.saveLocalPost(signed);
-        peers.broadcastGossip(signed);
-
-        if (wallet.hasWallet()) {
-          try {
-            const tags = upload.buildTags("community", {
-              "Community-Id": id,
-              Title: title,
-              Category: category,
-              Description: desc,
-              Image: image,
-            });
-            await upload.postData({ id, title, category, description: desc, image }, tags);
-          } catch {}
-        }
-
-        communitySeed.markSeedPending(id);
-        share.showToast("Comunidade criada na rede!");
-        location.hash = `#/c/${encodeURIComponent(id)}?seed=1`;
-      } catch (err) {
-        share.showToast(`Erro: ${err.message}`, "error");
-        btn.disabled = false;
-        btn.textContent = "Publicar Comunidade";
-      }
-    });
-  }
+  const state = { photoDataUrl: "" };
+  bindCommunityPhotoInputs(state);
+  document.getElementById("form-compose-community")?.addEventListener("submit", (e) => handleCommunityCreate(state, e));
 }
 
 async function buildNotarizedBadge(parsed, title, user) {
@@ -168,12 +178,7 @@ function bindChatTranscriptImportHandler(user) {
   document.getElementById("btn-convert-and-notarize")?.addEventListener("click", () => applyTranscriptToComposer(true, user));
 }
 
-export async function showComposeTopic(communityId) {
-  const user = await getActiveUser();
-  const main = render.renderShell(makeShellProps(user, "compose", "Novo Post"));
-  render.renderComposeTopic(main, communityId);
-  bindChatTranscriptImportHandler(user);
-
+function applyQuotePrefillToTopicComposer() {
   try {
     const quotePrefill = sessionStorage.getItem("vox_quote_prefill");
     if (quotePrefill) {
@@ -184,6 +189,7 @@ export async function showComposeTopic(communityId) {
       if (titleEl && !titleEl.value) titleEl.value = "Debate Cívico Soberano";
     }
   } catch {}
+}
 
 async function tryUploadTopicToPermaweb(topicId, finalComm, title, body) {
   if (!wallet.hasWallet()) return null;
@@ -286,11 +292,16 @@ async function handleComposeTopicSubmit(e, communityId) {
   }
 }
 
+export async function showComposeTopic(communityId) {
+  const user = await getActiveUser();
+  const main = render.renderShell(makeShellProps(user, "compose", "Novo Post"));
+  render.renderComposeTopic(main, communityId);
+  bindChatTranscriptImportHandler(user);
+  applyQuotePrefillToTopicComposer();
+
   const form = document.getElementById("form-compose-topic");
   if (form) {
-    form.addEventListener("submit", (e) => {
-      handleComposeTopicSubmit(e, communityId);
-    });
+    form.addEventListener("submit", (e) => handleComposeTopicSubmit(e, communityId));
   }
 }
 
@@ -659,6 +670,20 @@ export function toggleCommentReplyComposer(item, open) {
   }
 }
 
+function updateFormAfterReplySent(form, signed) {
+  const myName = localAccount.getDisplayName() || localAccount.getProfileEnrichment()?.displayName || "";
+  appendInlineReply(form.closest(".post-comments"), {
+    ...signed,
+    isOwnLocalPost: true,
+    authorDisplay: signed.authorDisplay || myName,
+  });
+  bumpReplyCount(form.closest("article"));
+  form.reset();
+  toggleCommentReplyComposer(form.closest(".post-comment-item"), false);
+  const panel = form.closest(".post-comments");
+  if (panel) panel.dataset.loaded = "1";
+}
+
 export async function onNestedCommentReplySubmit(form) {
   const body = form.querySelector(".post-comment-nested-input")?.value.trim();
   if (!body) return;
@@ -671,17 +696,7 @@ export async function onNestedCommentReplySubmit(form) {
     const signed = await persistLocalReply(form.dataset.topic, form.dataset.comm || "", body, {
       parentId: form.dataset.parent || "",
     });
-    const myName = localAccount.getDisplayName() || localAccount.getProfileEnrichment()?.displayName || "";
-    appendInlineReply(form.closest(".post-comments"), {
-      ...signed,
-      isOwnLocalPost: true,
-      authorDisplay: signed.authorDisplay || myName,
-    });
-    bumpReplyCount(form.closest("article"));
-    form.reset();
-    toggleCommentReplyComposer(form.closest(".post-comment-item"), false);
-    const panel = form.closest(".post-comments");
-    if (panel) panel.dataset.loaded = "1";
+    updateFormAfterReplySent(form, signed);
     share.showToast("Resposta enviada!");
   } catch (err) {
     share.showToast(`Erro: ${err.message}`, "error");
