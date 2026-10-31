@@ -119,7 +119,7 @@ function buildUfStereotypeSeeds() {
   return UF_REGION_META.map((meta, i) => {
     const { displayName, gender } = names[i];
     const handle = handleFromNameAndUf(displayName, meta.uf);
-    const { regional, emoji, ...rest } = meta;
+    const { regional: _regional, emoji: _emoji, ...rest } = meta;
     return {
       ...rest,
       displayName,
@@ -467,39 +467,71 @@ function pixFor(seed) {
   return `${seed.handle.replace("-", ".")}@voxbrasil.org`;
 }
 
+function buildSingleUfDemoProfile(seed, i) {
+  const routeId = `vx_demo_${seed.uf.toLowerCase()}`;
+  const avatarUrl = PORTRAIT(seed.gender, 10 + i);
+  return {
+    routeId,
+    handle: seed.handle,
+    name: seed.displayName,
+    avatar: avatarUrl,
+    avatarUrl,
+    uf: seed.uf,
+    stateName: seed.stateName,
+    stereotypeTitle: seed.stereotypeTitle,
+    stereotypeGreeting: seed.stereotypeGreeting,
+    stereotypeDisclaimerNote: seed.disclaimerNote,
+    bio: seed.tagline,
+    pixKey: pixFor(seed),
+    pinnedPostId: `demo-post-${seed.uf.toLowerCase()}`,
+    readme: readmeFor(seed),
+    isStereotypeDemo: true,
+    stats: {
+      posts: MOCK_DEMO_POSTS_PER_UF,
+      peersConnected: 2 + (i % 4),
+      communities: 1,
+      followers: 12 + (i * 3) % 40,
+      stars: 8 + (i * 2) % 30,
+      isTourDemo: true,
+      isStereotypeDemo: true,
+    },
+  };
+}
+
 export function buildUfDemoProfilesMap() {
   const map = {};
   UF_STEREOTYPE_SEEDS.forEach((seed, i) => {
-    const routeId = `vx_demo_${seed.uf.toLowerCase()}`;
-    const avatarUrl = PORTRAIT(seed.gender, 10 + i);
-    map[routeId] = {
-      routeId,
-      handle: seed.handle,
-      name: seed.displayName,
-      avatar: avatarUrl,
-      avatarUrl,
-      uf: seed.uf,
-      stateName: seed.stateName,
-      stereotypeTitle: seed.stereotypeTitle,
-      stereotypeGreeting: seed.stereotypeGreeting,
-      stereotypeDisclaimerNote: seed.disclaimerNote,
-      bio: seed.tagline,
-      pixKey: pixFor(seed),
-      pinnedPostId: `demo-post-${seed.uf.toLowerCase()}`,
-      readme: readmeFor(seed),
-      isStereotypeDemo: true,
-      stats: {
-        posts: MOCK_DEMO_POSTS_PER_UF,
-        peersConnected: 2 + (i % 4),
-        communities: 1,
-        followers: 12 + (i * 3) % 40,
-        stars: 8 + (i * 2) % 30,
-        isTourDemo: true,
-        isStereotypeDemo: true,
-      },
-    };
+    map[`vx_demo_${seed.uf.toLowerCase()}`] = buildSingleUfDemoProfile(seed, i);
   });
   return map;
+}
+
+function buildTopicsForUfSeed(seed, i, replyTotals, now) {
+  const uf = seed.uf.toLowerCase();
+  const routeId = `vx_demo_${uf}`;
+  const mediaArr = postMediaByUf[uf] || postMediaByUf.ac;
+  const topics = [];
+  for (let slot = 0; slot < MOCK_DEMO_POSTS_PER_UF; slot++) {
+    const postId = ufDemoPostId(seed.uf, slot);
+    const media = mediaArr[slot] || mediaArr[0];
+    topics.push({
+      id: postId,
+      communityId: "demo-aprenda-vox",
+      title: titleForUfPost(seed, slot),
+      body: `${bodyForUfPost(seed, slot)} #${seed.hashtag} #perfildemo #brasil`,
+      image: media.postImageUrl,
+      imageAlt: media.postAlt,
+      author: routeId,
+      owner: routeId,
+      externalPain: "Redes centralizadas — alcance pago e extração de dados",
+      voxResolution: "now",
+      likesCount: 20 + (i * 7 + slot * 3) % 55,
+      repliesCount: replyTotals[postId] || 0,
+      isLocalP2p: true,
+      ts: now - (i * MOCK_DEMO_POSTS_PER_UF + slot + 1) * 45 * 60 * 1000,
+    });
+  }
+  return topics;
 }
 
 export function buildUfDemoTopics(now = Date.now()) {
@@ -509,29 +541,7 @@ export function buildUfDemoTopics(now = Date.now()) {
   }
   const topics = [];
   UF_STEREOTYPE_SEEDS.forEach((seed, i) => {
-    const uf = seed.uf.toLowerCase();
-    const routeId = `vx_demo_${uf}`;
-    const mediaArr = postMediaByUf[uf] || postMediaByUf.ac;
-    for (let slot = 0; slot < MOCK_DEMO_POSTS_PER_UF; slot++) {
-      const postId = ufDemoPostId(seed.uf, slot);
-      const media = mediaArr[slot] || mediaArr[0];
-      topics.push({
-        id: postId,
-        communityId: "demo-aprenda-vox",
-        title: titleForUfPost(seed, slot),
-        body: `${bodyForUfPost(seed, slot)} #${seed.hashtag} #perfildemo #brasil`,
-        image: media.postImageUrl,
-        imageAlt: media.postAlt,
-        author: routeId,
-        owner: routeId,
-        externalPain: "Redes centralizadas — alcance pago e extração de dados",
-        voxResolution: "now",
-        likesCount: 20 + (i * 7 + slot * 3) % 55,
-        repliesCount: replyTotals[postId] || 0,
-        isLocalP2p: true,
-        ts: now - (i * MOCK_DEMO_POSTS_PER_UF + slot + 1) * 45 * 60 * 1000,
-      });
-    }
+    topics.push(...buildTopicsForUfSeed(seed, i, replyTotals, now));
   });
   return topics;
 }
@@ -648,6 +658,28 @@ export function attachDemoCommentsToSeeds(replies) {
   }
 }
 
+function populateSyntheticRepliesForHost(host, i, replies, seenIds, perPost) {
+  const n = UF_STEREOTYPE_SEEDS.length;
+  for (let postSlot = 0; postSlot < MOCK_DEMO_POSTS_PER_UF; postSlot++) {
+    const postId = ufDemoPostId(host.uf, postSlot);
+    const targetPerPost = postSlot === 0 ? 3 : 2;
+    let slot = 0;
+    while ((perPost[postId] || 0) < targetPerPost && slot < 12) {
+      const j = (i + 1 + postSlot * 3 + slot * 7) % n;
+      slot += 1;
+      if (UF_STEREOTYPE_SEEDS[j].uf === host.uf) continue;
+      const from = UF_STEREOTYPE_SEEDS[j];
+      const id = `demo-reply-${from.uf.toLowerCase()}-${host.uf.toLowerCase()}-s${postSlot}-${slot}`;
+      if (seenIds.has(id)) continue;
+      replies.push(
+        replyRow(id, host.uf, from.uf, respectfulBanter(from, host, slot + postSlot), postId),
+      );
+      seenIds.add(id);
+      perPost[postId] = (perPost[postId] || 0) + 1;
+    }
+  }
+}
+
 export function buildUfDemoReplies() {
   const replies = handcraftedUfReplies();
   const seenIds = new Set(replies.map((r) => r.id));
@@ -656,27 +688,8 @@ export function buildUfDemoReplies() {
     perPost[r.replyTo] = (perPost[r.replyTo] || 0) + 1;
   }
 
-  const n = UF_STEREOTYPE_SEEDS.length;
-
   UF_STEREOTYPE_SEEDS.forEach((host, i) => {
-    for (let postSlot = 0; postSlot < MOCK_DEMO_POSTS_PER_UF; postSlot++) {
-      const postId = ufDemoPostId(host.uf, postSlot);
-      const targetPerPost = postSlot === 0 ? 3 : 2;
-      let slot = 0;
-      while ((perPost[postId] || 0) < targetPerPost && slot < 12) {
-        const j = (i + 1 + postSlot * 3 + slot * 7) % n;
-        slot += 1;
-        if (UF_STEREOTYPE_SEEDS[j].uf === host.uf) continue;
-        const from = UF_STEREOTYPE_SEEDS[j];
-        const id = `demo-reply-${from.uf.toLowerCase()}-${host.uf.toLowerCase()}-s${postSlot}-${slot}`;
-        if (seenIds.has(id)) continue;
-        replies.push(
-          replyRow(id, host.uf, from.uf, respectfulBanter(from, host, slot + postSlot), postId),
-        );
-        seenIds.add(id);
-        perPost[postId] = (perPost[postId] || 0) + 1;
-      }
-    }
+    populateSyntheticRepliesForHost(host, i, replies, seenIds, perPost);
   });
 
   attachDemoCommentsToSeeds(replies);

@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-10-31T09:38:06.717Z",
+  "generatedAt": "2026-10-31T09:44:45.280Z",
   "filesScanned": 130,
-  "violationCount": 46,
+  "violationCount": 34,
   "violations": [
     {
       "file": "client/js/bsky-feed.js",
@@ -123,27 +123,6 @@
       "severity": "warn"
     },
     {
-      "file": "client/js/data/profiles-brazil-uf.js",
-      "line": 470,
-      "rule": "max-lines-per-function",
-      "message": "Function 'buildUfDemoProfilesMap' has too many lines (34). Maximum allowed is 30.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/data/profiles-brazil-uf.js",
-      "line": 505,
-      "rule": "max-lines-per-function",
-      "message": "Function 'buildUfDemoTopics' has too many lines (33). Maximum allowed is 30.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/data/profiles-brazil-uf.js",
-      "line": 651,
-      "rule": "max-lines-per-function",
-      "message": "Function 'buildUfDemoReplies' has too many lines (31). Maximum allowed is 30.",
-      "severity": "warn"
-    },
-    {
       "file": "client/js/frames.js",
       "line": 175,
       "rule": "max-lines-per-function",
@@ -155,27 +134,6 @@
       "line": 91,
       "rule": "max-lines-per-function",
       "message": "Function 'computeTally' has too many lines (63). Maximum allowed is 30.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/local-account.js",
-      "line": 65,
-      "rule": "max-lines-per-function",
-      "message": "Async function 'ensureLocalAccount' has too many lines (33). Maximum allowed is 30.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/local-account.js",
-      "line": 247,
-      "rule": "max-lines-per-function",
-      "message": "Async function 'signPayload' has too many lines (36). Maximum allowed is 30.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/local-account.js",
-      "line": 519,
-      "rule": "max-lines-per-function",
-      "message": "Async function 'switchActiveAccount' has too many lines (35). Maximum allowed is 30.",
       "severity": "warn"
     },
     {
@@ -249,27 +207,6 @@
       "severity": "warn"
     },
     {
-      "file": "client/js/render/post-more-menu.js",
-      "line": 123,
-      "rule": "max-lines-per-function",
-      "message": "Async function 'onSheetAction' has too many lines (47). Maximum allowed is 30.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/render/post-more-menu.js",
-      "line": 173,
-      "rule": "max-lines-per-function",
-      "message": "Function 'attachPostMoreMenuHandlers' has too many lines (48). Maximum allowed is 30.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/render/post-more-menu.js",
-      "line": 176,
-      "rule": "max-lines-per-function",
-      "message": "Arrow function has too many lines (35). Maximum allowed is 30.",
-      "severity": "warn"
-    },
-    {
       "file": "client/js/render/shell.js",
       "line": 184,
       "rule": "max-lines-per-function",
@@ -295,27 +232,6 @@
       "line": 245,
       "rule": "max-lines-per-function",
       "message": "Function 'renderMarkdownLight' has too many lines (34). Maximum allowed is 30.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/render/voxpedia.js",
-      "line": 64,
-      "rule": "max-lines-per-function",
-      "message": "Function 'renderComecar' has too many lines (47). Maximum allowed is 30.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/render/voxpedia.js",
-      "line": 234,
-      "rule": "max-lines-per-function",
-      "message": "Function 'renderTecnico' has too many lines (35). Maximum allowed is 30.",
-      "severity": "warn"
-    },
-    {
-      "file": "client/js/render/voxpedia.js",
-      "line": 272,
-      "rule": "max-lines-per-function",
-      "message": "Function 'renderVoxpedia' has too many lines (40). Maximum allowed is 30.",
       "severity": "warn"
     },
     {
