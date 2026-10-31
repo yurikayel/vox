@@ -55,6 +55,17 @@
   --success-soft: rgba(31, 168, 85, 0.14);
   --radius: 12px;
   --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-pill: 9999px;
+  --text-muted: var(--muted);
+  --text-secondary: var(--muted);
+  --surface-hover: rgba(20, 18, 24, 0.05);
+  --border-hover: var(--outline);
+  --community-accent: var(--brand-chrome);
+  --warn-bg: #fef3c7;
+  --color-warning: var(--warning);
+  --accent-emerald: var(--brand-green);
   --feed-max: 640px;
   --feed-post-gap: 2.7rem;
   --sidebar-width: 240px;
@@ -115,6 +126,13 @@
     --danger-soft: rgba(255, 107, 122, 0.16);
     --success: #3dd982;
     --success-soft: rgba(61, 217, 130, 0.16);
+    --text-muted: var(--muted);
+    --text-secondary: var(--muted);
+    --surface-hover: rgba(255, 255, 255, 0.06);
+    --border-hover: var(--outline);
+    --warn-bg: rgba(245, 196, 0, 0.14);
+    --color-warning: var(--warning);
+    --accent-emerald: var(--success);
     --shadow: var(--elevation-2);
   }
 }
@@ -163,6 +181,13 @@
     --danger-soft: rgba(255, 107, 122, 0.16);
     --success: #3dd982;
     --success-soft: rgba(61, 217, 130, 0.16);
+    --text-muted: var(--muted);
+    --text-secondary: var(--muted);
+    --surface-hover: rgba(255, 255, 255, 0.06);
+    --border-hover: var(--outline);
+    --warn-bg: rgba(245, 196, 0, 0.14);
+    --color-warning: var(--warning);
+    --accent-emerald: var(--success);
     --shadow: var(--elevation-2);
   }
 }

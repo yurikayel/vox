@@ -88,7 +88,7 @@ flowchart TB
 ## Testes e Auditoria
 
 - `tests/*.test.js` — Node test runner + mocks em `tests/setup.js` (573 testes unitários/integração JS).
-- `relay/test_*.py` — unittest Python para espelho, inbox e sinalização (33 testes).
+- `relay/test_*.py` — unittest Python para espelho, inbox e sinalização (34 testes).
 - `tools/lint_relay.py` — linter estático e AST para nós relay.
 - `tools/complexity-audit.mjs` — auditoria contínua de complexidade cognitiva e LLOC (131 arquivos, 0 violações).
 
