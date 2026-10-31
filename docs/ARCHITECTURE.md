@@ -67,17 +67,13 @@ flowchart TB
 ## DM E2E
 
 - [crypto-dm.js](../client/js/crypto-dm.js) — ECDH + AES-GCM ponta-a-ponta via RTCDataChannel prioritário.
-- Relay [
-elay/inbox.py](../relay/inbox.py) — caixa cega TTL 72h quando peer offline.
+- Relay [`relay/inbox.py`](../relay/inbox.py) — caixa cega TTL 72h quando peer offline.
 
 ## Relay HTTP e Nós de Sinalização
 
-- [
-elay/server.py](../relay/server.py) — cache/tx espelho Arweave.
-- [
-elay/signaling.py](../relay/signaling.py) — WebRTC signaling Python RFC 6455 com teto de frames (1 MB) e headers seguros.
-- [
-elay/deno-signaling.js](../relay/deno-signaling.js) — Sinalização WebRTC serverless em Deno Deploy via BroadcastChannel.
+- [`relay/server.py`](../relay/server.py) — cache/tx espelho Arweave.
+- [`relay/signaling.py`](../relay/signaling.py) — WebRTC signaling Python RFC 6455 com teto de frames (1 MB) e headers seguros.
+- [`relay/deno-signaling.js`](../relay/deno-signaling.js) — Sinalização WebRTC serverless em Deno Deploy via BroadcastChannel.
 
 ## ADRs
 
@@ -87,15 +83,15 @@ elay/deno-signaling.js](../relay/deno-signaling.js) — Sinalização WebRTC ser
 - [004 Gateway honest fallback](adr/004-gateway-honest-fallback.md)
 - [005 Perfil coletivo M-of-N](adr/005-collective-profile-m-of-n.md)
 - [006 Hardening P2P, WebRTC e Cache](adr/006-p2p-profile-identity-gossip-hardening.md)
+- [007 Decomposição de Monólitos e Zero Violações](adr/007-zero-complexity-monolith-decomposition.md)
 
-## Testes
+## Testes e Auditoria
 
-- 	ests/*.test.js — Node test runner + mocks em 	ests/setup.js (568 testes unitários/integração JS).
-- 
-elay/test_*.py — unittest Python para espelho, inbox e sinalização (33 testes).
-- 	ools/lint_relay.py — linter estático e AST para nós relay.
-- 	ools/complexity-audit.mjs — auditoria contínua de complexidade ciclomática e LLOC.
+- `tests/*.test.js` — Node test runner + mocks em `tests/setup.js` (572 testes unitários/integração JS).
+- `relay/test_*.py` — unittest Python para espelho, inbox e sinalização (33 testes).
+- `tools/lint_relay.py` — linter estático e AST para nós relay.
+- `tools/complexity-audit.mjs` — auditoria contínua de complexidade cognitiva e LLOC (131 arquivos, 0 violações).
 
 ## Offline
 
-- [client/sw.js](../client/sw.js) — SHELL_ASSETS lista módulos cacheados com chave inviolável ox-pwa-v7.16-real-network-audio-video-upload.
+- [client/sw.js](../client/sw.js) — SHELL_ASSETS lista módulos cacheados com chave inviolável `vox-pwa-v7.16-real-network-audio-video-upload`.
