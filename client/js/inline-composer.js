@@ -161,290 +161,260 @@ function showPublishToast(permawebResult) {
   }
 }
 
-export function attachInlineComposerHandlers(onPublished) {
-  const root = document.getElementById("feed-inline-composer");
-  if (!root) return;
+function formatRecordingTime(sec) {
+  const m = String(Math.floor(sec / 60)).padStart(2, "0");
+  const s = String(sec % 60).padStart(2, "0");
+  return `${m}:${s} / 01:00`;
+}
 
-  const collapsed = root.querySelector(".inline-composer-collapsed");
-  const form = document.getElementById("form-inline-topic");
+function setupVoiceRecorderCallbacks(recorder, recordingChunks, onAudioReady) {
+  recorder.ondataavailable = (e) => {
+    if (e.data && e.data.size > 0) recordingChunks.push(e.data);
+  };
+  recorder.onstop = () => {
+    const type = recorder.mimeType || "audio/webm";
+    const blob = new Blob(recordingChunks, { type });
+    const reader = new FileReader();
+    reader.onload = () => onAudioReady(reader.result, blob.size);
+    reader.readAsDataURL(blob);
+  };
+}
+
+function resetMediaDomElements() {
   const fileInput = document.getElementById("inline-topic-file");
   const audioInput = document.getElementById("inline-topic-audio");
   const videoInput = document.getElementById("inline-topic-video");
   const previewWrap = document.getElementById("inline-topic-preview-wrap");
   const previewImg = document.getElementById("inline-topic-preview");
-  const previewAudioWrap = document.getElementById("inline-topic-preview-audio-wrap");
   const previewAudio = document.getElementById("inline-topic-preview-audio");
-  const previewVideoWrap = document.getElementById("inline-topic-preview-video-wrap");
+  const previewAudioWrap = document.getElementById("inline-topic-preview-audio-wrap");
   const previewVideo = document.getElementById("inline-topic-preview-video");
-  const removeBtn = document.getElementById("btn-inline-remove-img");
+  const previewVideoWrap = document.getElementById("inline-topic-preview-video-wrap");
 
-  let rawSourceFile = null;
-  let activeLofiFilter = "normal";
-  let activeStream = null;
-  let activeRecorder = null;
-  let recordingChunks = [];
-  let recordingTimer = null;
-  let recordingSeconds = 0;
+  if (fileInput) fileInput.value = "";
+  if (audioInput) audioInput.value = "";
+  if (videoInput) videoInput.value = "";
+  previewWrap?.classList.add("hidden");
+  if (previewImg) {
+    previewImg.removeAttribute("src");
+    previewImg.classList.add("hidden");
+    previewImg.classList.remove("composer-aspect-1-1", "composer-aspect-4-3", "composer-aspect-16-9");
+    previewImg.classList.add("composer-aspect-original");
+  }
+  if (previewAudio) {
+    previewAudio.removeAttribute("src");
+    previewAudioWrap?.classList.add("hidden");
+  }
+  if (previewVideo) {
+    previewVideo.removeAttribute("src");
+    previewVideoWrap?.classList.add("hidden");
+  }
+}
 
-  const formatRecordingTime = (sec) => {
-    const m = String(Math.floor(sec / 60)).padStart(2, "0");
-    const s = String(sec % 60).padStart(2, "0");
-    return `${m}:${s} / 01:00`;
-  };
+function resetMediaControlBars() {
+  const filterBar = document.getElementById("lofi-filter-bar");
+  if (filterBar) filterBar.style.display = "flex";
+  const aspectBar = document.getElementById("composer-aspect-bar");
+  if (aspectBar) aspectBar.style.display = "none";
+  const tagBar = document.getElementById("composer-tag-bar");
+  if (tagBar) tagBar.style.display = "none";
+  const tagsChips = document.getElementById("inline-composer-tags-chips");
+  if (tagsChips) tagsChips.innerHTML = "";
+  const badge = document.getElementById("lofi-weight-badge");
+  if (badge) badge.textContent = "⚡ ~45 KB (100% Grátis)";
+}
 
-  const cleanupRecordingState = () => {
-    if (recordingTimer) {
-      clearInterval(recordingTimer);
-      recordingTimer = null;
-    }
-    if (activeStream) {
-      activeStream.getTracks().forEach((t) => t.stop());
-      activeStream = null;
-    }
-    activeRecorder = null;
-    recordingChunks = [];
-    recordingSeconds = 0;
-    const indicator = document.getElementById("inline-recording-indicator");
-    if (indicator) indicator.classList.add("hidden");
-  };
+function clearMedia(state) {
+  state.cleanupRecordingState();
+  state.rawSourceFile = null;
+  state.activeLofiFilter = "normal";
+  inlineComposerAspectRatio = "original";
+  inlineComposerPhotoTags = [];
+  inlineComposerMedia = { type: "", dataUrl: "", byteLength: 0 };
+  inlineComposerImageDataUrl = "";
+  resetMediaDomElements();
+  resetMediaControlBars();
+}
 
-  const startVoiceRecording = async () => {
-    if (!navigator?.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
-      share.showToast("Gravação de voz não suportada neste ambiente.", "error");
-      return;
-    }
-    clearMedia();
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      activeStream = stream;
-      recordingChunks = [];
-      recordingSeconds = 0;
-      let mimeType = "audio/webm;codecs=opus";
-      if (!MediaRecorder.isTypeSupported(mimeType)) {
-        mimeType = MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "";
-      }
-      const options = mimeType ? { mimeType, audioBitsPerSecond: 48000 } : {};
-      const recorder = new MediaRecorder(stream, options);
-      activeRecorder = recorder;
-      recorder.ondataavailable = (e) => {
-        if (e.data && e.data.size > 0) recordingChunks.push(e.data);
-      };
-      recorder.onstop = () => {
-        const type = recorder.mimeType || "audio/webm";
-        const blob = new Blob(recordingChunks, { type });
-        const kb = Math.max(1, Math.round(blob.size / 1024));
-        const reader = new FileReader();
-        reader.onload = () => {
-          const dataUrl = reader.result;
-          inlineComposerMedia = { type: "audio", dataUrl, byteLength: blob.size };
-          if (previewAudio) previewAudio.src = dataUrl;
-          previewAudioWrap?.classList.remove("hidden");
-          const filterBar = document.getElementById("lofi-filter-bar");
-          if (filterBar) filterBar.style.display = "none";
-          const badge = document.getElementById("lofi-weight-badge");
-          if (badge) badge.textContent = `⚡ ~${kb} KB (Voz Gravada Lo-Fi ${kb <= 99 ? "100% Grátis" : "48k"})`;
-          previewWrap?.classList.remove("hidden");
-          cleanupRecordingState();
-          syncInlineComposerUi();
-        };
-        reader.readAsDataURL(blob);
-      };
-      recorder.start(500);
-      const indicator = document.getElementById("inline-recording-indicator");
-      const timerEl = document.getElementById("inline-recording-timer");
-      if (indicator) indicator.classList.remove("hidden");
-      if (timerEl) timerEl.textContent = "00:00 / 01:00";
-      recordingTimer = setInterval(() => {
-        recordingSeconds++;
-        if (timerEl) timerEl.textContent = formatRecordingTime(recordingSeconds);
-        if (recordingSeconds >= 60) stopVoiceRecording();
-      }, 1000);
-    } catch (err) {
-      cleanupRecordingState();
-      share.showToast(`Erro ao acessar microfone: ${err.message}`, "error");
-    }
-  };
+function setupImagePreviewBars() {
+  const previewImg = document.getElementById("inline-topic-preview");
+  const previewWrap = document.getElementById("inline-topic-preview-wrap");
+  const filterBar = document.getElementById("lofi-filter-bar");
+  const aspectBar = document.getElementById("composer-aspect-bar");
+  const tagBar = document.getElementById("composer-tag-bar");
+  const tagsChips = document.getElementById("inline-composer-tags-chips");
 
-  const stopVoiceRecording = () => {
-    if (activeRecorder && activeRecorder.state === "recording") {
-      activeRecorder.stop();
-    }
-    if (recordingTimer) {
-      clearInterval(recordingTimer);
-      recordingTimer = null;
-    }
-  };
+  previewImg?.classList.remove("hidden");
+  if (filterBar) filterBar.style.display = "flex";
+  filterBar?.querySelectorAll(".lofi-filter-btn").forEach((b) => b.classList.toggle("active", b.dataset.filter === "normal"));
+  if (aspectBar) aspectBar.style.display = "flex";
+  aspectBar?.querySelectorAll(".composer-aspect-btn").forEach((b) => b.classList.toggle("active", b.dataset.aspect === "original"));
+  if (tagBar) tagBar.style.display = "flex";
+  if (tagsChips) tagsChips.innerHTML = "";
+  previewImg?.classList.remove("composer-aspect-1-1", "composer-aspect-4-3", "composer-aspect-16-9");
+  previewImg?.classList.add("composer-aspect-original");
+  previewWrap?.classList.remove("hidden");
+}
 
-  const cancelVoiceRecording = () => {
-    if (activeRecorder && activeRecorder.state === "recording") {
-      activeRecorder.ondataavailable = null;
-      activeRecorder.onstop = null;
-      try { activeRecorder.stop(); } catch {}
-    }
-    cleanupRecordingState();
-    share.showToast("Gravação cancelada.");
-  };
-
-  const clearMedia = () => {
-    cleanupRecordingState();
-    rawSourceFile = null;
-    activeLofiFilter = "normal";
-    inlineComposerAspectRatio = "original";
-    inlineComposerPhotoTags = [];
-    inlineComposerMedia = { type: "", dataUrl: "", byteLength: 0 };
-    inlineComposerImageDataUrl = "";
-    if (fileInput) fileInput.value = "";
-    if (audioInput) audioInput.value = "";
-    if (videoInput) videoInput.value = "";
-    previewWrap?.classList.add("hidden");
-    if (previewImg) {
-      previewImg.removeAttribute("src");
-      previewImg.classList.add("hidden");
-      previewImg.classList.remove("composer-aspect-1-1", "composer-aspect-4-3", "composer-aspect-16-9");
-      previewImg.classList.add("composer-aspect-original");
-    }
-    if (previewAudio) {
-      previewAudio.removeAttribute("src");
-      previewAudioWrap?.classList.add("hidden");
-    }
-    if (previewVideo) {
-      previewVideo.removeAttribute("src");
-      previewVideoWrap?.classList.add("hidden");
-    }
-    const filterBar = document.getElementById("lofi-filter-bar");
-    if (filterBar) filterBar.style.display = "flex";
-    const aspectBar = document.getElementById("composer-aspect-bar");
-    if (aspectBar) aspectBar.style.display = "none";
-    const tagBar = document.getElementById("composer-tag-bar");
-    if (tagBar) tagBar.style.display = "none";
-    const tagsChips = document.getElementById("inline-composer-tags-chips");
-    if (tagsChips) tagsChips.innerHTML = "";
-    const badge = document.getElementById("lofi-weight-badge");
-    if (badge) badge.textContent = "⚡ ~45 KB (100% Grátis)";
-  };
-
-  const renderLofiPreview = async () => {
-    if (!rawSourceFile || inlineComposerMedia.type !== "image") return;
-    const badge = document.getElementById("lofi-weight-badge");
-    if (badge) badge.textContent = "⚡ Otimizando qualidade (~100 KB)…";
-    const result = await composerMedia.processComposerLofiImage(rawSourceFile, {
-      filter: activeLofiFilter,
-      aspect: inlineComposerAspectRatio,
-    });
-    if (result.ok) {
-      inlineComposerImageDataUrl = result.dataUrl;
-      inlineComposerMedia.dataUrl = result.dataUrl;
-      if (previewImg) previewImg.src = result.dataUrl;
-      const kb = Math.max(1, Math.round((result.byteLength || 0) / 1024));
-      const qPct = Math.round((result.qualityUsed || 0.8) * 100);
-      if (badge) badge.textContent = `⚡ ~${kb} KB (${qPct}% qualidade · Permaweb Arweave)`;
-    } else {
-      share.showToast(result.message || "Erro no processamento da imagem", "error");
-    }
-  };
-
-  collapsed?.addEventListener("click", () => expandInlineComposer());
-  collapsed?.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      expandInlineComposer();
-    }
+async function renderLofiPreview(state) {
+  if (!state.rawSourceFile || inlineComposerMedia.type !== "image") return;
+  const badge = document.getElementById("lofi-weight-badge");
+  if (badge) badge.textContent = "⚡ Otimizando qualidade (~100 KB)…";
+  const result = await composerMedia.processComposerLofiImage(state.rawSourceFile, {
+    filter: state.activeLofiFilter,
+    aspect: inlineComposerAspectRatio,
   });
+  if (result.ok) {
+    inlineComposerImageDataUrl = result.dataUrl;
+    inlineComposerMedia.dataUrl = result.dataUrl;
+    const previewImg = document.getElementById("inline-topic-preview");
+    if (previewImg) previewImg.src = result.dataUrl;
+    const kb = Math.max(1, Math.round((result.byteLength || 0) / 1024));
+    const qPct = Math.round((result.qualityUsed || 0.8) * 100);
+    if (badge) badge.textContent = `⚡ ~${kb} KB (${qPct}% qualidade · Permaweb Arweave)`;
+  } else {
+    share.showToast(result.message || "Erro no processamento da imagem", "error");
+  }
+}
 
+function handleVoiceAudioReady(dataUrl, byteSize, state) {
+  const kb = Math.max(1, Math.round(byteSize / 1024));
+  inlineComposerMedia = { type: "audio", dataUrl, byteLength: byteSize };
+  const previewAudio = document.getElementById("inline-topic-preview-audio");
+  const previewAudioWrap = document.getElementById("inline-topic-preview-audio-wrap");
+  const previewWrap = document.getElementById("inline-topic-preview-wrap");
+  if (previewAudio) previewAudio.src = dataUrl;
+  previewAudioWrap?.classList.remove("hidden");
+  const filterBar = document.getElementById("lofi-filter-bar");
+  if (filterBar) filterBar.style.display = "none";
+  const badge = document.getElementById("lofi-weight-badge");
+  if (badge) badge.textContent = `⚡ ~${kb} KB (Voz Gravada Lo-Fi ${kb <= 99 ? "100% Grátis" : "48k"})`;
+  previewWrap?.classList.remove("hidden");
+  state.cleanupRecordingState();
+  syncInlineComposerUi();
+}
+
+function startVoiceRecording(state) {
+  if (!navigator?.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
+    share.showToast("Gravação de voz não suportada neste ambiente.", "error");
+    return;
+  }
+  clearMedia(state);
+  navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+    state.activeStream = stream;
+    state.recordingChunks = [];
+    state.recordingSeconds = 0;
+    const mime = MediaRecorder.isTypeSupported("audio/webm;codecs=opus") ? "audio/webm;codecs=opus" : "";
+    const options = mime ? { mimeType: mime, audioBitsPerSecond: 48000 } : {};
+    const recorder = new MediaRecorder(stream, options);
+    state.activeRecorder = recorder;
+    setupVoiceRecorderCallbacks(recorder, state.recordingChunks, (url, sz) => handleVoiceAudioReady(url, sz, state));
+    recorder.start(500);
+    state.startTimer();
+  }).catch((err) => {
+    state.cleanupRecordingState();
+    share.showToast(`Erro ao acessar microfone: ${err.message}`, "error");
+  });
+}
+
+function bindVoiceButtons(state) {
+  document.getElementById("btn-inline-mic")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    startVoiceRecording(state);
+  });
+  document.getElementById("btn-inline-stop-rec")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    state.stopVoiceRecording();
+  });
+  document.getElementById("btn-inline-cancel-rec")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    state.cancelVoiceRecording();
+  });
+}
+
+function bindImageFileInput(state) {
+  const fileInput = document.getElementById("inline-topic-file");
   fileInput?.addEventListener("change", async () => {
     const file = fileInput.files?.[0];
     if (!file) return;
     const check = composerMedia.validateComposerImageFile(file);
-    if (!check.ok) {
-      share.showToast(check.message, "error");
-      clearMedia();
-      return;
-    }
-    clearMedia();
-    rawSourceFile = file;
+    if (!check.ok) { share.showToast(check.message, "error"); clearMedia(state); return; }
+    clearMedia(state);
+    state.rawSourceFile = file;
     inlineComposerMedia = { type: "image", dataUrl: "", byteLength: file.size };
-    activeLofiFilter = "normal";
+    state.activeLofiFilter = "normal";
     inlineComposerAspectRatio = "original";
     inlineComposerPhotoTags = [];
-    previewImg?.classList.remove("hidden");
-    const filterBar = document.getElementById("lofi-filter-bar");
-    if (filterBar) filterBar.style.display = "flex";
-    filterBar?.querySelectorAll(".lofi-filter-btn").forEach((b) => {
-      b.classList.toggle("active", b.dataset.filter === "normal");
-    });
-    const aspectBar = document.getElementById("composer-aspect-bar");
-    if (aspectBar) aspectBar.style.display = "flex";
-    aspectBar?.querySelectorAll(".composer-aspect-btn").forEach((b) => {
-      b.classList.toggle("active", b.dataset.aspect === "original");
-    });
-    const tagBar = document.getElementById("composer-tag-bar");
-    if (tagBar) tagBar.style.display = "flex";
-    const tagsChips = document.getElementById("inline-composer-tags-chips");
-    if (tagsChips) tagsChips.innerHTML = "";
-    previewImg?.classList.remove("composer-aspect-1-1", "composer-aspect-4-3", "composer-aspect-16-9");
-    previewImg?.classList.add("composer-aspect-original");
-    previewWrap?.classList.remove("hidden");
-    await renderLofiPreview();
+    setupImagePreviewBars();
+    await renderLofiPreview(state);
     syncInlineComposerUi();
   });
+}
 
+function bindAudioFileInput(state) {
+  const audioInput = document.getElementById("inline-topic-audio");
   audioInput?.addEventListener("change", async () => {
     const file = audioInput.files?.[0];
     if (!file) return;
     const check = composerMedia.validateComposerAudioFile(file);
-    if (!check.ok) {
-      share.showToast(check.message, "error");
-      clearMedia();
-      return;
-    }
-    clearMedia();
-    rawSourceFile = file;
+    if (!check.ok) { share.showToast(check.message, "error"); clearMedia(state); return; }
+    clearMedia(state);
+    state.rawSourceFile = file;
     const dataUrl = await composerMedia.readComposerMediaFile(file);
     const kb = Math.max(1, Math.round(file.size / 1024));
     inlineComposerMedia = { type: "audio", dataUrl, byteLength: file.size };
+    const previewAudio = document.getElementById("inline-topic-preview-audio");
     if (previewAudio) previewAudio.src = dataUrl;
-    previewAudioWrap?.classList.remove("hidden");
-    const filterBar = document.getElementById("lofi-filter-bar");
-    if (filterBar) filterBar.style.display = "none";
-    const badge = document.getElementById("lofi-weight-badge");
-    if (badge) badge.textContent = `⚡ ~${kb} KB (Áudio Lo-Fi ${kb <= 99 ? "100% Grátis" : "48k"})`;
-    previewWrap?.classList.remove("hidden");
+    document.getElementById("inline-topic-preview-audio-wrap")?.classList.remove("hidden");
+    const fb = document.getElementById("lofi-filter-bar");
+    if (fb) fb.style.display = "none";
+    const bg = document.getElementById("lofi-weight-badge");
+    if (bg) bg.textContent = `⚡ ~${kb} KB (Áudio Lo-Fi ${kb <= 99 ? "100% Grátis" : "48k"})`;
+    document.getElementById("inline-topic-preview-wrap")?.classList.remove("hidden");
     syncInlineComposerUi();
   });
+}
 
+function bindVideoFileInput(state) {
+  const videoInput = document.getElementById("inline-topic-video");
   videoInput?.addEventListener("change", async () => {
     const file = videoInput.files?.[0];
     if (!file) return;
     const check = composerMedia.validateComposerVideoFile(file);
-    if (!check.ok) {
-      share.showToast(check.message, "error");
-      clearMedia();
-      return;
-    }
-    clearMedia();
-    rawSourceFile = file;
+    if (!check.ok) { share.showToast(check.message, "error"); clearMedia(state); return; }
+    clearMedia(state);
+    state.rawSourceFile = file;
     const dataUrl = await composerMedia.readComposerMediaFile(file);
     const kb = Math.max(1, Math.round(file.size / 1024));
     inlineComposerMedia = { type: "video", dataUrl, byteLength: file.size };
+    const previewVideo = document.getElementById("inline-topic-preview-video");
     if (previewVideo) previewVideo.src = dataUrl;
-    previewVideoWrap?.classList.remove("hidden");
-    const filterBar = document.getElementById("lofi-filter-bar");
-    if (filterBar) filterBar.style.display = "none";
-    const badge = document.getElementById("lofi-weight-badge");
-    if (badge) badge.textContent = `⚡ ~${kb} KB (Vídeo Lo-Fi 360p)`;
-    previewWrap?.classList.remove("hidden");
+    document.getElementById("inline-topic-preview-video-wrap")?.classList.remove("hidden");
+    const fb = document.getElementById("lofi-filter-bar");
+    if (fb) fb.style.display = "none";
+    const bg = document.getElementById("lofi-weight-badge");
+    if (bg) bg.textContent = `⚡ ~${kb} KB (Vídeo Lo-Fi 360p)`;
+    document.getElementById("inline-topic-preview-wrap")?.classList.remove("hidden");
     syncInlineComposerUi();
   });
+}
 
+function bindMediaFileInputs(state) {
+  bindImageFileInput(state);
+  bindAudioFileInput(state);
+  bindVideoFileInput(state);
+}
+
+function bindFilterAndAspectBars(state) {
   const filterBar = document.getElementById("lofi-filter-bar");
   filterBar?.addEventListener("click", async (e) => {
     const btn = e.target.closest(".lofi-filter-btn");
-    if (!btn || !rawSourceFile || inlineComposerMedia.type !== "image") return;
+    if (!btn || !state.rawSourceFile || inlineComposerMedia.type !== "image") return;
     e.preventDefault();
     filterBar.querySelectorAll(".lofi-filter-btn").forEach((b) => b.classList.remove("active"));
     btn.classList.add("active");
-    activeLofiFilter = btn.dataset.filter || "normal";
-    await renderLofiPreview();
+    state.activeLofiFilter = btn.dataset.filter || "normal";
+    await renderLofiPreview(state);
   });
 
   const aspectBar = document.getElementById("composer-aspect-bar");
@@ -455,20 +425,16 @@ export function attachInlineComposerHandlers(onPublished) {
     aspectBar.querySelectorAll(".composer-aspect-btn").forEach((b) => b.classList.remove("active"));
     btn.classList.add("active");
     inlineComposerAspectRatio = btn.dataset.aspect || "original";
+    const previewImg = document.getElementById("inline-topic-preview");
     if (previewImg) {
-      previewImg.classList.remove(
-        "composer-aspect-original",
-        "composer-aspect-16-9",
-        "composer-aspect-9-16",
-        "composer-aspect-4-3",
-        "composer-aspect-3-4",
-        "composer-aspect-1-1"
-      );
+      previewImg.classList.remove("composer-aspect-original", "composer-aspect-16-9", "composer-aspect-9-16", "composer-aspect-4-3", "composer-aspect-3-4", "composer-aspect-1-1");
       previewImg.classList.add(`composer-aspect-${inlineComposerAspectRatio.replace(":", "-")}`);
     }
-    await renderLofiPreview();
+    await renderLofiPreview(state);
   });
+}
 
+function bindPhotoTagging() {
   const tagPeopleBtn = document.getElementById("btn-inline-tag-people");
   const tagsChips = document.getElementById("inline-composer-tags-chips");
 
@@ -497,100 +463,132 @@ export function attachInlineComposerHandlers(onPublished) {
       renderTagChips();
     }
   });
+}
 
-  removeBtn?.addEventListener("click", (e) => {
-    e.preventDefault();
-    clearMedia();
-    syncInlineComposerUi();
-  });
+function cleanupRecordingState(state) {
+  if (state.recordingTimer) { clearInterval(state.recordingTimer); state.recordingTimer = null; }
+  if (state.activeStream) { state.activeStream.getTracks().forEach((t) => t.stop()); state.activeStream = null; }
+  state.activeRecorder = null;
+  state.recordingChunks = [];
+  state.recordingSeconds = 0;
+  document.getElementById("inline-recording-indicator")?.classList.add("hidden");
+}
 
-  const micBtn = document.getElementById("btn-inline-mic");
-  const stopRecBtn = document.getElementById("btn-inline-stop-rec");
-  const cancelRecBtn = document.getElementById("btn-inline-cancel-rec");
+function startRecordingTimer(state) {
+  const indicator = document.getElementById("inline-recording-indicator");
+  const timerEl = document.getElementById("inline-recording-timer");
+  if (indicator) indicator.classList.remove("hidden");
+  if (timerEl) timerEl.textContent = "00:00 / 01:00";
+  state.recordingTimer = setInterval(() => {
+    state.recordingSeconds++;
+    if (timerEl) timerEl.textContent = formatRecordingTime(state.recordingSeconds);
+    if (state.recordingSeconds >= 60) state.stopVoiceRecording();
+  }, 1000);
+}
 
-  micBtn?.addEventListener("click", (e) => {
-    e.preventDefault();
-    startVoiceRecording();
-  });
-  stopRecBtn?.addEventListener("click", (e) => {
-    e.preventDefault();
-    stopVoiceRecording();
-  });
-  cancelRecBtn?.addEventListener("click", (e) => {
-    e.preventDefault();
-    cancelVoiceRecording();
-  });
+function stopVoiceRecording(state) {
+  if (state.activeRecorder?.state === "recording") state.activeRecorder.stop();
+  if (state.recordingTimer) { clearInterval(state.recordingTimer); state.recordingTimer = null; }
+}
 
-  const textarea = document.getElementById("inline-topic-body");
-  textarea?.addEventListener("input", syncInlineComposerUi);
-  form?.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") {
-      e.preventDefault();
-      form.reset();
-      clearMedia();
-      syncInlineComposerUi();
-      collapseInlineComposer();
-    }
-  });
+function cancelVoiceRecording(state) {
+  if (state.activeRecorder?.state === "recording") {
+    state.activeRecorder.ondataavailable = null;
+    state.activeRecorder.onstop = null;
+    try { state.activeRecorder.stop(); } catch {}
+  }
+  cleanupRecordingState(state);
+  share.showToast("Gravação cancelada.");
+}
 
+function createComposerControllerState() {
+  const state = {
+    rawSourceFile: null,
+    activeLofiFilter: "normal",
+    activeStream: null,
+    activeRecorder: null,
+    recordingChunks: [],
+    recordingTimer: null,
+    recordingSeconds: 0,
+    cleanupRecordingState: () => cleanupRecordingState(state),
+    startTimer: () => startRecordingTimer(state),
+    stopVoiceRecording: () => stopVoiceRecording(state),
+    cancelVoiceRecording: () => cancelVoiceRecording(state),
+  };
+  return state;
+}
+
+async function executeInlinePublish(form, onPublished, state) {
+  const bodyRaw = document.getElementById("inline-topic-body")?.value?.trim() || "";
+  const commSlug = document.getElementById("inline-topic-comm")?.value?.trim().toLowerCase() || "geral";
+  const hasMedia = Boolean(inlineComposerImageDataUrl || inlineComposerMedia.dataUrl);
+  if (!bodyRaw && !hasMedia) return;
+
+  const { title, body } = postOwnership.deriveTopicTitleFromBody(bodyRaw || "");
+  const payload = buildInlineTopicPayload({ title, body, commSlug });
+  const signed = await localAccount.signPayload(payload);
+  await cacheNode.saveLocalPost(signed);
+  if (payload.photoTags?.length) photoTags.setLocalTags(signed.id, payload.photoTags);
+
+  const { detachedPost, mediaBlob: blob } = await mediaBlob.detachMedia(signed);
+  if (blob) await mediaBlob.defaultBlobStorage.put(blob);
+  peers.broadcastGossip(detachedPost);
+
+  const permawebResult = await uploadTopicToPermaweb({ topicId: payload.id, commSlug, title, body, blob });
+  form.reset();
+  clearMedia(state);
+  syncInlineComposerUi();
+  collapseInlineComposer();
+  showPublishToast(permawebResult);
+  if (typeof onPublished === "function") onPublished(signed);
+  else location.reload();
+}
+
+function bindFormSubmit(form, onPublished, state) {
   form?.addEventListener("submit", async (e) => {
     e.preventDefault();
     if (isInlineSubmitting) return;
-
-    const bodyRaw = document.getElementById("inline-topic-body")?.value?.trim() || "";
-    const commSlug = document.getElementById("inline-topic-comm")?.value?.trim().toLowerCase() || "geral";
-    const hasMedia = Boolean(inlineComposerImageDataUrl || inlineComposerMedia.dataUrl);
-    if (!bodyRaw && !hasMedia) return;
-
     const btn = document.getElementById("btn-inline-submit");
     isInlineSubmitting = true;
-    if (btn) {
-      btn.disabled = true;
-      btn.textContent = "Publicando…";
-    }
-
+    if (btn) { btn.disabled = true; btn.textContent = "Publicando…"; }
     try {
-      const { title, body } = postOwnership.deriveTopicTitleFromBody(bodyRaw || "");
-      const payload = buildInlineTopicPayload({ title, body, commSlug });
-      const signed = await localAccount.signPayload(payload);
-      await cacheNode.saveLocalPost(signed);
-      if (payload.photoTags?.length) {
-        photoTags.setLocalTags(signed.id, payload.photoTags);
-      }
-
-      const { detachedPost, mediaBlob: blob } = await mediaBlob.detachMedia(signed);
-      if (blob) {
-        await mediaBlob.defaultBlobStorage.put(blob);
-      }
-      peers.broadcastGossip(detachedPost);
-
-      const permawebResult = await uploadTopicToPermaweb({
-        topicId: payload.id,
-        commSlug,
-        title,
-        body,
-        blob,
-      });
-
-      form.reset();
-      clearMedia();
-      syncInlineComposerUi();
-      collapseInlineComposer();
-      showPublishToast(permawebResult);
-
-      if (typeof onPublished === "function") {
-        onPublished(signed);
-      } else {
-        location.reload();
-      }
+      await executeInlinePublish(form, onPublished, state);
     } catch (err) {
       share.showToast(`Erro ao publicar: ${err.message}`, "error");
     } finally {
       isInlineSubmitting = false;
-      if (btn) {
-        btn.disabled = false;
-        btn.textContent = "Postar";
-      }
+      if (btn) { btn.disabled = false; btn.textContent = "Postar"; }
     }
   });
+}
+
+export function attachInlineComposerHandlers(onPublished) {
+  const root = document.getElementById("feed-inline-composer");
+  if (!root) return;
+
+  const collapsed = root.querySelector(".inline-composer-collapsed");
+  const form = document.getElementById("form-inline-topic");
+  const removeBtn = document.getElementById("btn-inline-remove-img");
+  const textarea = document.getElementById("inline-topic-body");
+  const state = createComposerControllerState();
+
+  collapsed?.addEventListener("click", () => expandInlineComposer());
+  collapsed?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); expandInlineComposer(); }
+  });
+  removeBtn?.addEventListener("click", (e) => {
+    e.preventDefault();
+    clearMedia(state);
+    syncInlineComposerUi();
+  });
+  textarea?.addEventListener("input", syncInlineComposerUi);
+  form?.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") { e.preventDefault(); form.reset(); clearMedia(state); syncInlineComposerUi(); collapseInlineComposer(); }
+  });
+
+  bindVoiceButtons(state);
+  bindMediaFileInputs(state);
+  bindFilterAndAspectBars(state);
+  bindPhotoTagging();
+  bindFormSubmit(form, onPublished, state);
 }
