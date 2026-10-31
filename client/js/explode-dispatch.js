@@ -209,48 +209,33 @@ function buildExplodeHeaderHtml() {
   </div>`;
 }
 
+const EXPLODE_GRID_BUTTONS = [
+  { action: "whatsapp", css: "btn-zap", name: "WhatsApp", iconKey: "whatsapp" },
+  { action: "instagram", css: "btn-instagram", name: "Instagram", iconKey: "instagram", linkId: "instagram" },
+  { action: "tiktok", css: "btn-tiktok", name: "TikTok", iconKey: "tiktok", linkId: "tiktok" },
+  { action: "twitter", css: "btn-x", name: "X (Twitter)", iconKey: "twitter", linkId: "twitter" },
+  { action: "bluesky", css: "btn-bluesky", name: "Bluesky", iconKey: "bluesky", linkId: "bsky" },
+  { action: "threads", css: "btn-threads", name: "Threads", iconKey: "threads", linkId: "threads" },
+  { action: "telegram", css: "btn-telegram", name: "Telegram", iconKey: "telegram" },
+  { action: "facebook", css: "btn-facebook", name: "Facebook", iconKey: "facebook", linkId: "facebook" },
+  { action: "webhooks", css: "btn-webhooks", name: "Discord/Slack", iconKey: "webhooks" },
+];
+
+function renderExplodeGridButton(btn, linked) {
+  const badge = btn.linkId && linked[btn.linkId]?.enabled && linked[btn.linkId]?.handle
+    ? `<span class="explode-grid-connected" title="Conectado: @${escapeHtml(linked[btn.linkId].handle)}">✓</span>`
+    : "";
+  return `<button type="button" class="explode-grid-btn ${btn.css}" data-explode-action="${btn.action}">
+      <span class="explode-grid-icon">${APP_ICONS[btn.iconKey]}</span>
+      <span class="explode-grid-name">${btn.name}</span>${badge}
+    </button>`;
+}
+
 function buildExplodeGridHtml() {
   const linked = loadLinkedAccounts();
-  const isLinked = (id) => Boolean(linked[id]?.enabled && linked[id]?.handle);
-  const badge = (id) => isLinked(id) ? `<span class="explode-grid-connected" title="Conectado: @${escapeHtml(linked[id].handle)}">✓</span>` : "";
-
+  const buttonsHtml = EXPLODE_GRID_BUTTONS.map((btn) => renderExplodeGridButton(btn, linked)).join("\n    ");
   return `<div class="explode-grid" role="group" aria-label="Redes para disparo">
-    <button type="button" class="explode-grid-btn btn-zap" data-explode-action="whatsapp">
-      <span class="explode-grid-icon">${APP_ICONS.whatsapp}</span>
-      <span class="explode-grid-name">WhatsApp</span>
-    </button>
-    <button type="button" class="explode-grid-btn btn-instagram" data-explode-action="instagram">
-      <span class="explode-grid-icon">${APP_ICONS.instagram}</span>
-      <span class="explode-grid-name">Instagram</span>${badge("instagram")}
-    </button>
-    <button type="button" class="explode-grid-btn btn-tiktok" data-explode-action="tiktok">
-      <span class="explode-grid-icon">${APP_ICONS.tiktok}</span>
-      <span class="explode-grid-name">TikTok</span>${badge("tiktok")}
-    </button>
-    <button type="button" class="explode-grid-btn btn-x" data-explode-action="twitter">
-      <span class="explode-grid-icon">${APP_ICONS.twitter}</span>
-      <span class="explode-grid-name">X (Twitter)</span>${badge("twitter")}
-    </button>
-    <button type="button" class="explode-grid-btn btn-bluesky" data-explode-action="bluesky">
-      <span class="explode-grid-icon">${APP_ICONS.bluesky}</span>
-      <span class="explode-grid-name">Bluesky</span>${badge("bsky")}
-    </button>
-    <button type="button" class="explode-grid-btn btn-threads" data-explode-action="threads">
-      <span class="explode-grid-icon">${APP_ICONS.threads}</span>
-      <span class="explode-grid-name">Threads</span>${badge("threads")}
-    </button>
-    <button type="button" class="explode-grid-btn btn-telegram" data-explode-action="telegram">
-      <span class="explode-grid-icon">${APP_ICONS.telegram}</span>
-      <span class="explode-grid-name">Telegram</span>
-    </button>
-    <button type="button" class="explode-grid-btn btn-facebook" data-explode-action="facebook">
-      <span class="explode-grid-icon">${APP_ICONS.facebook}</span>
-      <span class="explode-grid-name">Facebook</span>${badge("facebook")}
-    </button>
-    <button type="button" class="explode-grid-btn btn-webhooks" data-explode-action="webhooks">
-      <span class="explode-grid-icon">${APP_ICONS.webhooks}</span>
-      <span class="explode-grid-name">Discord/Slack</span>
-    </button>
+    ${buttonsHtml}
   </div>`;
 }
 
@@ -489,6 +474,28 @@ export function startCascadeExplode(post) {
   bar.querySelector(".btn-cascade-next")?.focus();
 }
 
+async function handleExplodeBurst(post) {
+  const res = await executeExplodeBurst(post);
+  share.showToast(res.webhooksSent > 0 ? `📢 Rajada disparada! (${res.webhooksSent} destinos)` : "📢 Mensagem copiada! Cole nos grupos!");
+  closeExplodeSheet();
+}
+
+async function handleExplodeCopy(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    share.showToast("Pacote de mensagem copiado com sucesso! 📢");
+  } catch {}
+  closeExplodeSheet();
+}
+
+async function handleExplodeNativeShare(post, text, canonicalUrl) {
+  if (!navigator.share) return;
+  try {
+    await navigator.share({ title: post.title || "Vox", text, url: canonicalUrl });
+  } catch {}
+  closeExplodeSheet();
+}
+
 async function onExplodeAction(action) {
   if (!activeExplodePost) return;
   if (action === "close") return closeExplodeSheet();
@@ -498,24 +505,14 @@ async function onExplodeAction(action) {
   const text = buildExplodeText({ title: activeExplodePost.title, body: activeExplodePost.body, url: canonicalUrl });
   const payload = buildPosseExportPayload({ ...activeExplodePost, canonicalUrl });
 
-  if (action === "burst") {
-    const res = await executeExplodeBurst(activeExplodePost);
-    share.showToast(res.webhooksSent > 0 ? `📢 Rajada disparada! (${res.webhooksSent} destinos)` : "📢 Mensagem copiada! Cole nos grupos!");
-    return closeExplodeSheet();
-  }
+  if (action === "burst") return handleExplodeBurst(activeExplodePost);
   if (activeExplodePost?.id) {
     const exp = recordExplosion(activeExplodePost.id, activeExplodePost.explodesCount || 0);
     updateExplodeButtonsUi(activeExplodePost.id, exp.count);
   }
   if (await handleExplodeGridActions(action, text, canonicalUrl, payload, activeExplodePost)) return closeExplodeSheet();
-  if (action === "copy") {
-    try { await navigator.clipboard.writeText(text); share.showToast("Pacote de mensagem copiado com sucesso! 📢"); } catch {}
-    return closeExplodeSheet();
-  }
-  if (action === "native" && navigator.share) {
-    try { await navigator.share({ title: activeExplodePost.title || "Vox", text, url: canonicalUrl }); } catch {}
-    closeExplodeSheet();
-  }
+  if (action === "copy") return handleExplodeCopy(text);
+  if (action === "native") return handleExplodeNativeShare(activeExplodePost, text, canonicalUrl);
 }
 
 function extractExplodeBtnPost(btn) {
@@ -528,40 +525,56 @@ function extractExplodeBtnPost(btn) {
   };
 }
 
-function handleDocumentExplodeClick(e) {
+function handleCascadeClick(e) {
   if (e.target.closest?.(".btn-cascade-next") || e.target.closest?.(".btn-cascade-skip")) {
     e.preventDefault();
-    return advanceCascadeExplode();
+    advanceCascadeExplode();
+    return true;
   }
   if (e.target.closest?.(".btn-cascade-close")) {
     e.preventDefault();
-    return removeCascadeBar();
+    removeCascadeBar();
+    return true;
   }
+  return false;
+}
+
+function handleExplodePostTriggerClick(e) {
   const explodePostBtn = e.target.closest?.(".btn-explode-post");
-  if (explodePostBtn) {
-    e.preventDefault();
-    const postData = extractExplodeBtnPost(explodePostBtn);
-    if (e.shiftKey || e.altKey) return void quickExplodePost(postData);
-    return openExplodeSheet(postData);
+  if (!explodePostBtn) return false;
+  e.preventDefault();
+  const postData = extractExplodeBtnPost(explodePostBtn);
+  if (e.shiftKey || e.altKey) {
+    quickExplodePost(postData);
+  } else {
+    openExplodeSheet(postData);
   }
+  return true;
+}
+
+function handleExplodePreviewToggle(e) {
+  const toggleBtn = e.target.closest?.("#explode-preview-toggle");
+  if (!toggleBtn) return false;
+  e.preventDefault();
+  const preview = document.getElementById("explode-preview-text");
+  if (preview) {
+    const isHidden = preview.hidden;
+    preview.hidden = !isHidden;
+    toggleBtn.textContent = isHidden ? "Ocultar texto ▲" : "Ver texto ▼";
+    toggleBtn.setAttribute("aria-expanded", String(isHidden));
+  }
+  return true;
+}
+
+function handleDocumentExplodeClick(e) {
+  if (handleCascadeClick(e) || handleExplodePostTriggerClick(e)) return;
   const sheet = document.getElementById(EXPLODE_SHEET_ID);
   if (!sheet || sheet.hidden || !sheet.classList.contains("is-open")) return;
   if (!e.target.closest(".explode-panel")) {
     e.preventDefault();
     return closeExplodeSheet();
   }
-  const toggleBtn = e.target.closest?.("#explode-preview-toggle");
-  if (toggleBtn) {
-    e.preventDefault();
-    const preview = document.getElementById("explode-preview-text");
-    if (preview) {
-      const isHidden = preview.hidden;
-      preview.hidden = !isHidden;
-      toggleBtn.textContent = isHidden ? "Ocultar texto ▲" : "Ver texto ▼";
-      toggleBtn.setAttribute("aria-expanded", String(isHidden));
-    }
-    return;
-  }
+  if (handleExplodePreviewToggle(e)) return;
   const btn = e.target.closest?.("[data-explode-action]");
   if (btn && sheet.contains(btn)) {
     e.preventDefault();
