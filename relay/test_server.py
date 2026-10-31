@@ -207,6 +207,26 @@ class TestVoxRelayServer(unittest.TestCase):
         self.assertEqual(server.resolve_listen_port({"VOX_RELAY_PORT": "abc"}), 3920)
         self.assertEqual(server.resolve_listen_port({"VOX_RELAY_PORT": ""}), 3920)
 
+    def test_get_content_length_robustness(self):
+        class DummyHandler:
+            headers = {}
+            _get_content_length = server.VoxRelayHandler._get_content_length
+
+        h = DummyHandler()
+        self.assertEqual(h._get_content_length(), 0)
+
+        h.headers = {"Content-Length": "42"}
+        self.assertEqual(h._get_content_length(), 42)
+
+        h.headers = {"Content-Length": "-10"}
+        self.assertEqual(h._get_content_length(), 0)
+
+        h.headers = {"Content-Length": "invalid"}
+        self.assertEqual(h._get_content_length(), 0)
+
+        h.headers = {"Content-Length": None}
+        self.assertEqual(h._get_content_length(), 0)
+
 
 if __name__ == "__main__":
     unittest.main()
