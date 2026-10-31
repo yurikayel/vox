@@ -151,53 +151,55 @@ export async function jwkToAddress(jwk) {
  * Faz o parsing da estrutura binária de um data item ANS-104.
  * @param {Uint8Array} bytes
  */
-export function parseBinaryDataItem(bytes) {
-  if (!bytes || bytes.length < 1076) {
-    return { ok: false, reason: "tam-insuficiente" };
-  }
-  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+function parseDataHeaders(bytes, view) {
   const sigType = view.getUint16(0, true);
   if (sigType !== SIG_TYPE_ARWEAVE) {
     return { ok: false, reason: "tipo-assinatura-invalido" };
   }
-
-  const signature = bytes.slice(2, 514);
-  const owner = bytes.slice(514, 1026);
-  let offset = 1026;
-
-  const hasTarget = bytes[offset++] === 1;
-  const target = hasTarget ? bytes.slice(offset, offset + 32) : new Uint8Array(0);
-  if (hasTarget) offset += 32;
-
-  const hasAnchor = bytes[offset++] === 1;
-  const anchor = hasAnchor ? bytes.slice(offset, offset + 32) : new Uint8Array(0);
-  if (hasAnchor) offset += 32;
-
-  const tagCount = Number(view.getBigUint64(offset, true)); offset += 8;
-  const tagBytesLen = Number(view.getBigUint64(offset, true)); offset += 8;
-  const tagBytes = bytes.slice(offset, offset + tagBytesLen); offset += tagBytesLen;
-  const data = bytes.slice(offset);
-
   return {
     ok: true,
     sigType,
-    signature,
-    owner,
+    signature: bytes.slice(2, 514),
+    owner: bytes.slice(514, 1026),
+  };
+}
+
+function readFlagged32(bytes, offset) {
+  const exists = bytes[offset++] === 1;
+  const value = exists ? bytes.slice(offset, offset + 32) : new Uint8Array(0);
+  return { value, offset: exists ? offset + 32 : offset };
+}
+
+export function parseBinaryDataItem(bytes) {
+  if (!bytes || bytes.length < 1076) return { ok: false, reason: "tam-insuficiente" };
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const headers = parseDataHeaders(bytes, view);
+  if (!headers.ok) return headers;
+
+  const { value: target, offset: o1 } = readFlagged32(bytes, 1026);
+  const { value: anchor, offset: o2 } = readFlagged32(bytes, o1);
+
+  let offset = o2;
+  const tagCount = Number(view.getBigUint64(offset, true)); offset += 8;
+  const tagBytesLen = Number(view.getBigUint64(offset, true)); offset += 8;
+  const tagBytes = bytes.slice(offset, offset + tagBytesLen); offset += tagBytesLen;
+
+  return {
+    ok: true,
+    sigType: headers.sigType,
+    signature: headers.signature,
+    owner: headers.owner,
     target,
     anchor,
     tagCount,
     tagBytesLen,
     tagBytes,
-    data,
+    data: bytes.slice(offset),
   };
 }
 
-/**
- * Valida matematicamente a assinatura RSA-PSS de um data item dissecado.
- */
-export async function verifyParsedDataItem(parsed) {
-  if (!parsed?.ok) return { valid: false, reason: parsed?.reason || "invalido" };
-  const message = await deepHash([
+async function buildDataItemDeepHash(parsed) {
+  return deepHash([
     enc.encode("dataitem"),
     enc.encode("1"),
     enc.encode(String(parsed.sigType)),
@@ -207,22 +209,26 @@ export async function verifyParsedDataItem(parsed) {
     parsed.tagBytes,
     parsed.data,
   ]);
+}
 
+async function verifyRsaPssSignature(ownerBytes, signature, message) {
   const pubKey = await crypto.subtle.importKey(
     "jwk",
-    { kty: "RSA", n: bytesToB64Url(parsed.owner), e: "AQAB" },
+    { kty: "RSA", n: bytesToB64Url(ownerBytes), e: "AQAB" },
     { name: "RSA-PSS", hash: "SHA-256" },
     false,
     ["verify"]
   );
+  return crypto.subtle.verify({ name: "RSA-PSS", saltLength: 32 }, pubKey, signature, message);
+}
 
-  const valid = await crypto.subtle.verify(
-    { name: "RSA-PSS", saltLength: 32 },
-    pubKey,
-    parsed.signature,
-    message
-  );
-
+/**
+ * Valida matematicamente a assinatura RSA-PSS de um data item dissecado.
+ */
+export async function verifyParsedDataItem(parsed) {
+  if (!parsed?.ok) return { valid: false, reason: parsed?.reason || "invalido" };
+  const message = await buildDataItemDeepHash(parsed);
+  const valid = await verifyRsaPssSignature(parsed.owner, parsed.signature, message);
   const id = bytesToB64Url(await sha("SHA-256", parsed.signature));
   const ownerAddress = bytesToB64Url(await sha("SHA-256", parsed.owner));
 

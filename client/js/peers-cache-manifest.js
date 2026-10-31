@@ -49,33 +49,54 @@ export function isManifestPriorityTx(txId) {
   return collectPriorityPinTxIds().has(txId);
 }
 
-export async function ingestSignedCacheManifestItem(item, verifyFn) {
+function validateItemShape(item) {
   if (!item?.id || item.type !== CACHE_MANIFEST_TYPE || !item.communityId) {
     return { ok: false, reason: "formato" };
   }
-  if (typeof verifyFn !== "function" || !(await verifyFn(item))) {
-    return { ok: false, reason: "sig" };
-  }
+  return { ok: true };
+}
+
+function validateManifestPayload(item) {
   const check = validateManifestBody(item.manifest || {});
-  if (!check.valid) return { ok: false, reason: check.error || "manifest" };
+  if (!check.valid) {
+    return { ok: false, reason: check.error || "manifest" };
+  }
   if (check.manifest.communityId !== item.communityId) {
     return { ok: false, reason: "communityId" };
   }
+  return { ok: true, manifest: check.manifest };
+}
+
+function isOutdatedManifest(prev, item, manifest) {
+  if (!prev) return false;
+  const incomingAt = Number(manifest.issuedAt || item.ts || 0);
+  const prevAt = Number(prev?.manifest?.issuedAt || prev?.ts || 0);
+  return prevAt >= incomingAt;
+}
+
+export async function ingestSignedCacheManifestItem(item, verifyFn) {
+  const shapeCheck = validateItemShape(item);
+  if (!shapeCheck.ok) return shapeCheck;
+
+  if (typeof verifyFn !== "function" || !(await verifyFn(item))) {
+    return { ok: false, reason: "sig" };
+  }
+
+  const manifestCheck = validateManifestPayload(item);
+  if (!manifestCheck.ok) return manifestCheck;
 
   const store = readStore();
   const prev = store[item.communityId];
-  const incomingAt = Number(check.manifest.issuedAt || item.ts || 0);
-  const prevAt = Number(prev?.manifest?.issuedAt || prev?.ts || 0);
-  if (prev && prevAt >= incomingAt) {
+  if (isOutdatedManifest(prev, item, manifestCheck.manifest)) {
     return { ok: true, skipped: true };
   }
 
   store[item.communityId] = {
     ...item,
-    manifest: check.manifest,
+    manifest: manifestCheck.manifest,
   };
   writeStore(store);
-  return { ok: true, skipped: false, manifest: check.manifest };
+  return { ok: true, skipped: false, manifest: manifestCheck.manifest };
 }
 
 export function buildCacheManifestGossipDraft({ communityId, manifest }) {

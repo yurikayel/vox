@@ -20,11 +20,8 @@ function renderTresLogicasTeste() {
       </section>`;
 }
 
-/** @returns {string} HTML da página Teste aberto */
-export function renderAjudaTeste() {
-  const { docsReadme, devGuide, docsIndex, repo } = VOX_GITHUB_DOCS;
+function renderAjudaHero() {
   return `
-    <article class="voxpedia-page ajuda-teste-page">
       <header class="voxpedia-hero card">
         <p class="voxpedia-kicker">Ajuda · teste aberto</p>
         <h1>Teste aberto (~15 min)</h1>
@@ -33,8 +30,11 @@ export function renderAjudaTeste() {
           Não prometemos rede perfeita no celular: gateways públicos, cache local e vizinhos na malha
           se complementam — com transparência.
         </p>
-      </header>
+      </header>`;
+}
 
+function renderAjudaRoteiro() {
+  return `
       <section class="voxpedia-section card" id="teste-roteiro" aria-labelledby="teste-roteiro-title">
         <h2 id="teste-roteiro-title">O que fazer agora</h2>
         <p class="desc voxpedia-lead">Siga na ordem; anote o que confundir ou quebrar.</p>
@@ -46,8 +46,11 @@ export function renderAjudaTeste() {
           <li>Abra <a href="#/status">Status da malha</a> neste aparelho e veja gateways, relay e versão do cache (Service Worker).</li>
           <li>Encontrou bug ou texto confuso? Abra um issue no <a href="${VOX_GITHUB_ISSUES}" target="_blank" rel="noopener noreferrer">GitHub</a> (screenshot + navegador ajudam).</li>
         </ol>
-      </section>
+      </section>`;
+}
 
+function renderAjudaFeedEPosse() {
+  return `
       <section class="voxpedia-section card" id="teste-transparencia-feed" aria-labelledby="teste-transparencia-feed-title">
         <h2 id="teste-transparencia-feed-title">Feed transparente: sem ranking, sem boost</h2>
         <p class="desc">
@@ -66,7 +69,11 @@ export function renderAjudaTeste() {
           O Vox é a fonte soberana; os grupos de mensagem continuam sendo o canal onde a conversa acontece.
         </p>
       </section>
-      ${renderTresLogicasTeste()}
+      ${renderTresLogicasTeste()}`;
+}
+
+function renderAjudaPactoEAtualizar() {
+  return `
       <section class="voxpedia-section card" id="teste-pacto" aria-labelledby="teste-pacto-title">
         <h2 id="teste-pacto-title">Pacto e opt-out</h2>
         <p class="desc">
@@ -84,8 +91,11 @@ export function renderAjudaTeste() {
           A “versão” visível é o nome do cache <code>CACHE_NAME</code> do Service Worker — confira em
           <a href="#/status">#/status</a> (deve bater com o release publicado).
         </p>
-      </section>
+      </section>`;
+}
 
+function renderAjudaReservaERelay(docsReadme) {
+  return `
       <section class="voxpedia-section card" id="teste-leitura-reserva" aria-labelledby="teste-leitura-reserva-title">
         <h2 id="teste-leitura-reserva-title">“Leitura reserva” não é culpa sua</h2>
         <p class="desc">
@@ -101,8 +111,11 @@ export function renderAjudaTeste() {
           Stewards voluntários fazem isso depois, se a comunidade quiser — veja
           <a href="${docsReadme}" target="_blank" rel="noopener noreferrer">docs no GitHub</a>, não é requisito deste roteiro.
         </p>
-      </section>
+      </section>`;
+}
 
+function renderAjudaPrivacidadeESaida() {
+  return `
       <section class="voxpedia-section card" id="teste-privacidade" aria-labelledby="teste-privacidade-title">
         <h2 id="teste-privacidade-title">Privacidade (honesta)</h2>
         <ul class="voxpedia-steps">
@@ -119,8 +132,11 @@ export function renderAjudaTeste() {
           <li><a href="#/settings/network">Sua rede</a> → <strong>Pausar ajuda à rede</strong> (para de repassar cache).</li>
           <li>No navegador, limpe <strong>dados do site</strong> / cache do Vox (configuração do SO ou do browser) — apaga chaves e histórico local; transações já publicadas no permaweb permanecem indexáveis.</li>
         </ol>
-      </section>
+      </section>`;
+}
 
+function renderAjudaCarteiraEFeira() {
+  return `
       <section class="voxpedia-section card" id="teste-carteira" aria-labelledby="teste-carteira-title">
         <h2 id="teste-carteira-title">Carteira Arweave (opcional no teste)</h2>
         <p class="desc">
@@ -136,8 +152,11 @@ export function renderAjudaTeste() {
           Classificados na <a href="#/c/${escapeHtml(DEMO_FEIRA)}?tab=listings">Feira demo</a>:
           <strong>piloto</strong> — BR Code Pix gerado offline no navegador; o Vox não custodia pagamento nem cobra taxa.
         </p>
-      </section>
+      </section>`;
+}
 
+function renderAjudaFooter({ docsReadme, devGuide, docsIndex, repo }) {
+  return `
       <footer class="voxpedia-footer card">
         <p class="desc voxpedia-docs-github-links">
           <a class="voxpedia-gh-link" href="${docsReadme}" target="_blank" rel="noopener noreferrer">Documentação técnica (GitHub)</a>
@@ -147,6 +166,21 @@ export function renderAjudaTeste() {
           · <a class="voxpedia-gh-link" href="${VOX_GITHUB_ISSUES}" target="_blank" rel="noopener noreferrer">Issues / feedback</a>
         </p>
         <p class="desc"><a href="#/voxpedia">← Voxpedia</a> · <a href="#/status">Status</a></p>
-      </footer>
+      </footer>`;
+}
+
+/** @returns {string} HTML da página Teste aberto */
+export function renderAjudaTeste() {
+  const docs = VOX_GITHUB_DOCS;
+  return `
+    <article class="voxpedia-page ajuda-teste-page">
+      ${renderAjudaHero()}
+      ${renderAjudaRoteiro()}
+      ${renderAjudaFeedEPosse()}
+      ${renderAjudaPactoEAtualizar()}
+      ${renderAjudaReservaERelay(docs.docsReadme)}
+      ${renderAjudaPrivacidadeESaida()}
+      ${renderAjudaCarteiraEFeira()}
+      ${renderAjudaFooter(docs)}
     </article>`;
 }
