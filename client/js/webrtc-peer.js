@@ -3,11 +3,7 @@
  * Conexão peer-to-peer entre dispositivos via RTCDataChannel ("vox-peer-v0").
  * Troca de mensagens WANT/HAVE/BLOB com sinalização WebSocket opcional e autohospedada.
  */
-import {
-  buildNostrSignalingCandidates,
-  createNostrSignalEnvelope,
-  parseNostrSignalMessage,
-} from "./nostr-signaling.js";
+import { buildNostrSignalingCandidates } from "./nostr-signaling.js";
 
 let signalingWs = null;
 let currentPeerId = null;
