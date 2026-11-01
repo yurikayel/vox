@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Vox Seeder</string>
+    <string name="app_name">Vox Populi</string>
     <string name="channel_name">Vox Nó Comunitário</string>
     <string name="channel_desc">Mantém o serviço de rede mesh e sincronização ativo em background</string>
     <string name="notif_title">Vox Nó Ativo</string>

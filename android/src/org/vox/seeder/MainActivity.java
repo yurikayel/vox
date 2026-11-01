@@ -26,7 +26,7 @@ public class MainActivity extends Activity {
     }
 
     private void startSeederService() {
-        Intent srv = new Intent(this, VoxSeederService.class);
+        Intent srv = new Intent(this, VoxPopuliService.class);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(srv);
         } else {
