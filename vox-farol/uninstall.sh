@@ -6,12 +6,14 @@ set -euo pipefail
 
 TARGET_DIR="/opt/vox-farol"
 SERVICE_NAME="vox-farol.service"
+TIMER_NAME="vox-farol-health.timer"
+HEALTH_SERVICE="vox-farol-health.service"
 USER_NAME="vox-farol"
 
 echo "======================================================================"
 echo "          Vox Farol — Desinstalação do Nó Comunitário                 "
 echo "======================================================================"
-echo "Este script removerá o serviço systemd e os binários do Vox Farol."
+echo "Este script removerá o serviço systemd, temporizador e os binários do Vox Farol."
 echo "----------------------------------------------------------------------"
 
 if [[ "${1:-}" != "--yes" ]]; then
@@ -32,7 +34,15 @@ if [[ $EUID -ne 0 ]]; then
     fi
 fi
 
-echo "[*] Parando e desativando serviço systemd..."
+echo "[*] Parando e desativando temporizador de saúde..."
+if systemctl is-active --quiet "${TIMER_NAME}" 2>/dev/null; then
+    $SUDO systemctl stop "${TIMER_NAME}" || true
+fi
+if systemctl is-enabled --quiet "${TIMER_NAME}" 2>/dev/null; then
+    $SUDO systemctl disable "${TIMER_NAME}" || true
+fi
+
+echo "[*] Parando e desativando serviço principal..."
 if systemctl is-active --quiet "${SERVICE_NAME}" 2>/dev/null; then
     $SUDO systemctl stop "${SERVICE_NAME}" || true
 fi
@@ -40,7 +50,9 @@ if systemctl is-enabled --quiet "${SERVICE_NAME}" 2>/dev/null; then
     $SUDO systemctl disable "${SERVICE_NAME}" || true
 fi
 
-echo "[*] Removendo arquivo de serviço..."
+echo "[*] Removendo arquivos de unidades systemd..."
+$SUDO rm -f "/etc/systemd/system/${TIMER_NAME}"
+$SUDO rm -f "/etc/systemd/system/${HEALTH_SERVICE}"
 $SUDO rm -f "/etc/systemd/system/${SERVICE_NAME}"
 $SUDO systemctl daemon-reload
 
