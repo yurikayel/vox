@@ -6,10 +6,13 @@ Dependências: Nenhuma (usa apenas a biblioteca padrão do Python 3).
 """
 
 import argparse
+import hashlib
+import hmac
 import json
 import os
 import re
 import sys
+import tempfile
 import urllib.error
 import urllib.request
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -48,6 +51,8 @@ UPSTREAM_GATEWAYS = [
 ]
 
 TX_ID_REGEX = re.compile(r"^[A-Za-z0-9_-]{43}$")
+CACHE_HASH_SUFFIX = ".sha256"
+INTEGRITY_FAILURES = 0
 
 def ensure_cache_dir():
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
@@ -55,7 +60,12 @@ def ensure_cache_dir():
 def count_cached_items():
     if not CACHE_DIR.exists():
         return 0
-    return len([f for f in CACHE_DIR.glob("*") if f.is_file() and not f.name.startswith("index_")])
+    return len([
+        f for f in CACHE_DIR.glob("*")
+        if f.is_file()
+        and not f.name.startswith(("index_", ".vox-"))
+        and not f.name.endswith(CACHE_HASH_SUFFIX)
+    ])
 
 
 def list_community_indexes():
@@ -91,6 +101,52 @@ def max_cache_bytes():
         return None
 
 
+def cache_hash_path(cache_file):
+    return cache_file.with_name(cache_file.name + CACHE_HASH_SUFFIX)
+
+
+def atomic_write(path, content):
+    temporary_path = None
+    try:
+        with tempfile.NamedTemporaryFile(dir=CACHE_DIR, prefix=".vox-", suffix=".tmp", delete=False) as temporary:
+            temporary.write(content)
+            temporary_path = Path(temporary.name)
+        os.replace(temporary_path, path)
+    finally:
+        if temporary_path and temporary_path.exists():
+            temporary_path.unlink()
+
+
+def write_cache_entry(cache_file, data):
+    digest = hashlib.sha256(data).hexdigest().encode("ascii")
+    atomic_write(cache_file, data)
+    atomic_write(cache_hash_path(cache_file), digest)
+
+
+def remove_cache_entry(cache_file):
+    for path in (cache_file, cache_hash_path(cache_file)):
+        try:
+            path.unlink(missing_ok=True)
+        except OSError:
+            pass
+
+
+def read_verified_cache_entry(cache_file):
+    global INTEGRITY_FAILURES
+    try:
+        data = cache_file.read_bytes()
+        expected = cache_hash_path(cache_file).read_text(encoding="ascii").strip()
+        actual = hashlib.sha256(data).hexdigest()
+        if len(expected) != 64 or not hmac.compare_digest(expected, actual):
+            INTEGRITY_FAILURES += 1
+            remove_cache_entry(cache_file)
+            return None
+        os.utime(cache_file, None)
+        return data
+    except (OSError, UnicodeError):
+        INTEGRITY_FAILURES += 1
+        remove_cache_entry(cache_file)
+        return None
 def evict_cache_if_needed(incoming_bytes=0):
     max_b = max_cache_bytes()
     if max_b is None or not CACHE_DIR.exists():
@@ -98,20 +154,36 @@ def evict_cache_if_needed(incoming_bytes=0):
     current_bytes = cache_dir_bytes()
     if current_bytes + incoming_bytes <= max_b:
         return
+    _evict_cache_entries(_cache_candidates(), current_bytes, incoming_bytes, max_b)
 
+def _cache_candidates():
     files = []
     for f in CACHE_DIR.glob("*"):
-        if f.is_file() and not f.name.startswith("index_"):
-            try:
-                files.append((f.stat().st_mtime, f.stat().st_size, f))
-            except OSError:
-                pass
+        if not f.is_file():
+            continue
+        try:
+            if f.name.endswith(CACHE_HASH_SUFFIX):
+                data_file = f.with_name(f.name[:-len(CACHE_HASH_SUFFIX)])
+                if data_file.is_file():
+                    continue
+                files.append((f.stat().st_mtime, f.stat().st_size, f, None))
+                continue
+            hash_file = cache_hash_path(f)
+            hash_size = hash_file.stat().st_size if hash_file.is_file() else 0
+            files.append((f.stat().st_mtime, f.stat().st_size + hash_size, f, hash_file if hash_size else None))
+        except OSError:
+            pass
     files.sort(key=lambda x: x[0])
-    for _, size, f in files:
-        if current_bytes + incoming_bytes <= max_b:
+    return files
+
+def _evict_cache_entries(files, current_bytes, incoming_bytes, max_bytes):
+    for _, size, f, hash_file in files:
+        if current_bytes + incoming_bytes <= max_bytes:
             break
         try:
             f.unlink()
+            if hash_file:
+                hash_file.unlink(missing_ok=True)
             current_bytes -= size
         except OSError:
             pass
@@ -136,212 +208,165 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         path = self.path.split("?")[0].rstrip("/")
-        
-        # 1. Health check
-        if path == "/health" or path == "":
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json; charset=utf-8")
-            self._set_cors_headers()
-            self.end_headers()
-            indexes = list_community_indexes()
-            cache_bytes = cache_dir_bytes()
-            max_b = max_cache_bytes()
-            payload = {
-                "status": "ok",
-                "app": "vox-relay",
-                "version": "0.2.1",
-                "cachedCount": count_cached_items(),
-                "communityIndexes": indexes,
-                "communityIndexCount": len(indexes),
-                "cacheBytes": cache_bytes,
-                "maxCacheBytes": max_b,
-                "cacheDir": str(CACHE_DIR),
-            }
-            self.wfile.write(json.dumps(payload).encode("utf-8"))
+        if path in ("/health", ""):
+            self._handle_health()
+        elif path.startswith("/tx/"):
+            self._handle_transaction(path[4:])
+        elif path.startswith("/vox/index/") and path.endswith(".json"):
+            self._handle_index(path[len("/vox/index/"):-5])
+        elif path.startswith("/inbox/"):
+            self._handle_inbox_get(path[len("/inbox/"):].split("/")[0])
+        else:
+            self._reply_not_found(b"Rota nao encontrada no Vox Relay")
+
+    def _handle_health(self):
+        self._send_json(self._health_payload())
+
+    def _health_payload(self):
+        indexes = list_community_indexes()
+        return {
+            "status": "ok",
+            "app": "vox-relay",
+            "version": "0.2.1",
+            "cachedCount": count_cached_items(),
+            "communityIndexes": indexes,
+            "communityIndexCount": len(indexes),
+            "cacheBytes": cache_dir_bytes(),
+            "maxCacheBytes": max_cache_bytes(),
+            "cacheDir": str(CACHE_DIR),
+            "cacheIntegrity": {
+                "algorithm": "sha256",
+                "verifiedReads": True,
+                "failures": INTEGRITY_FAILURES,
+            },
+        }
+
+    def _handle_transaction(self, tx_id):
+        if not TX_ID_REGEX.match(tx_id):
+            self._reply_not_found(b"TX ID invalido", 400)
             return
 
-        # 2. Proxy de Transação: /tx/<txId>
-        if path.startswith("/tx/"):
-            tx_id = path[4:]
-            if not TX_ID_REGEX.match(tx_id):
-                self.send_response(400)
-                self._set_cors_headers()
-                self.end_headers()
-                self.wfile.write(b"TX ID invalido")
-                return
+        ensure_cache_dir()
+        cache_file = CACHE_DIR / tx_id
+        data = read_verified_cache_entry(cache_file) if cache_file.is_file() else None
+        if data is not None:
+            self._reply_transaction(data, "HIT")
+            return
 
+        data = self._fetch_transaction(tx_id)
+        if data is None:
+            self._reply_not_found(b"Transacao nao encontrada nos gateways upstream")
+            return
+        self._cache_transaction(cache_file, data)
+        self._reply_transaction(data, "MISS")
+
+    def _fetch_transaction(self, tx_id):
+        for gateway in UPSTREAM_GATEWAYS:
+            try:
+                request = urllib.request.Request(
+                    f"{gateway}/{tx_id}", headers={"User-Agent": "VoxRelay/0.2"}
+                )
+                with urllib.request.urlopen(request, timeout=8) as response:
+                    if response.status == 200:
+                        return response.read()
+            except Exception:
+                continue
+        return None
+
+    def _cache_transaction(self, cache_file, data):
+        try:
             ensure_cache_dir()
-            cache_file = CACHE_DIR / tx_id
+            hash_bytes = len(hashlib.sha256(data).hexdigest())
+            incoming_bytes = len(data) + hash_bytes
+            evict_cache_if_needed(incoming_bytes)
+            limit = max_cache_bytes()
+            if limit is None or cache_dir_bytes() + incoming_bytes <= limit:
+                write_cache_entry(cache_file, data)
+        except Exception:
+            pass
 
-            # Cache HIT
-            if cache_file.is_file():
-                try:
-                    data = cache_file.read_bytes()
-                    self.send_response(200)
-                    self.send_header("Content-Type", "application/json; charset=utf-8")
-                    self.send_header("X-Vox-Cache", "HIT")
-                    self._set_cors_headers()
-                    self.end_headers()
-                    self.wfile.write(data)
-                    return
-                except Exception:
-                    pass
-
-            # Cache MISS -> busca nos gateways upstream
-            fetched_data = None
-            for gw in UPSTREAM_GATEWAYS:
-                url = f"{gw}/{tx_id}"
-                try:
-                    req = urllib.request.Request(url, headers={"User-Agent": "VoxRelay/0.2"})
-                    with urllib.request.urlopen(req, timeout=8) as resp:
-                        if resp.status == 200:
-                            fetched_data = resp.read()
-                            break
-                except Exception:
-                    continue
-
-            if fetched_data is not None:
-                # Salva no cache local em disco com respeito a cotas e LRU
-                try:
-                    ensure_cache_dir()
-                    evict_cache_if_needed(len(fetched_data))
-                    max_b = max_cache_bytes()
-                    if max_b is None or cache_dir_bytes() + len(fetched_data) <= max_b:
-                        cache_file.write_bytes(fetched_data)
-                except Exception:
-                    pass
-
-                self.send_response(200)
-                self.send_header("Content-Type", "application/json; charset=utf-8")
-                self.send_header("X-Vox-Cache", "MISS")
-                self._set_cors_headers()
-                self.end_headers()
-                self.wfile.write(fetched_data)
-                return
-
-            self.send_response(404)
-            self._set_cors_headers()
-            self.end_headers()
-            self.wfile.write(b"Transacao nao encontrada nos gateways upstream")
-            return
-
-        # 3. Espelho de comunidade: /vox/index/<communityId>.json
-        if path.startswith("/vox/index/") and path.endswith(".json"):
-            comm_slug = path[len("/vox/index/"):-5]
-            ensure_cache_dir()
-            index_file = CACHE_DIR / f"index_{comm_slug}.json"
-            if index_file.is_file():
-                self.send_response(200)
-                self.send_header("Content-Type", "application/json; charset=utf-8")
-                self.send_header("X-Vox-Cache", "HIT")
-                self._set_cors_headers()
-                self.end_headers()
-                self.wfile.write(index_file.read_bytes())
-                return
-            else:
-                self.send_response(404)
-                self._set_cors_headers()
-                self.end_headers()
-                self.wfile.write(json.dumps({"error": "Espelho de comunidade nao encontrado"}).encode("utf-8"))
-                return
-
-        # 4. Inbox efêmero de mensagens diretas (Fase 4): /inbox/<toAddress>
-        if path.startswith("/inbox/"):
-            to_addr = path[len("/inbox/"):].split("/")[0]
-            envelopes = inbox.get_envelopes(to_addr)
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json; charset=utf-8")
-            self._set_cors_headers()
-            self.end_headers()
-            self.wfile.write(json.dumps({"envelopes": envelopes}).encode("utf-8"))
-            return
-
-        # 5. Rota desconhecida
-        self.send_response(404)
+    def _reply_transaction(self, data, cache_state):
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("X-Vox-Cache", cache_state)
         self._set_cors_headers()
         self.end_headers()
-        self.wfile.write(b"Rota nao encontrada no Vox Relay")
+        self.wfile.write(data)
+
+    def _handle_index(self, comm_slug):
+        ensure_cache_dir()
+        index_file = CACHE_DIR / f"index_{comm_slug}.json"
+        if index_file.is_file():
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("X-Vox-Cache", "HIT")
+            self._set_cors_headers()
+            self.end_headers()
+            self.wfile.write(index_file.read_bytes())
+            return
+        self._send_json({"error": "Espelho de comunidade nao encontrado"}, 404)
+
+    def _handle_inbox_get(self, to_addr):
+        self._send_json({"envelopes": inbox.get_envelopes(to_addr)})
+
+    def _send_json(self, payload, status=200):
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self._set_cors_headers()
+        self.end_headers()
+        self.wfile.write(json.dumps(payload).encode("utf-8"))
+
+    def _reply_not_found(self, message=b"Rota nao encontrada no Vox Relay", status=404):
+        self.send_response(status)
+        self._set_cors_headers()
+        self.end_headers()
+        self.wfile.write(message)
 
     def do_POST(self):
         path = self.path.split("?")[0].rstrip("/")
-        
-        # Salva espelho local de comunidade
         if path == "/vox/mirror":
-            content_length = self._get_content_length()
-            try:
-                body = self.rfile.read(content_length)
-            except Exception as e:
-                self.send_response(500)
-                self._set_cors_headers()
-                self.end_headers()
-                self.wfile.write(json.dumps({"error": str(e)}).encode("utf-8"))
-                return
+            self._handle_mirror_post()
+        elif path.startswith("/inbox/"):
+            self._handle_inbox_post(path[len("/inbox/"):].split("/")[0])
+        else:
+            self._reply_not_found(b"")
 
-            ok, payload, err, status = mirror_validate.validate_mirror_body(body)
-            if not ok:
-                self.send_response(status)
-                self.send_header("Content-Type", "application/json; charset=utf-8")
-                self._set_cors_headers()
-                self.end_headers()
-                self.wfile.write(json.dumps(err).encode("utf-8"))
-                return
-
-            comm_id = str(payload.get("communityId", "")).strip()
-            try:
-                ensure_cache_dir()
-                evict_cache_if_needed(len(body))
-                max_b = max_cache_bytes()
-                if max_b is not None and cache_dir_bytes() + len(body) > max_b:
-                    self.send_response(507)
-                    self._set_cors_headers()
-                    self.end_headers()
-                    self.wfile.write(json.dumps({"error": "quota de cache excedida"}).encode("utf-8"))
-                    return
-                index_file = CACHE_DIR / f"index_{comm_id}.json"
-                index_file.write_bytes(body)
-                self.send_response(200)
-                self.send_header("Content-Type", "application/json; charset=utf-8")
-                self._set_cors_headers()
-                self.end_headers()
-                self.wfile.write(json.dumps({"status": "mirrored", "communityId": comm_id}).encode("utf-8"))
-            except Exception as e:
-                self.send_response(500)
-                self._set_cors_headers()
-                self.end_headers()
-                self.wfile.write(json.dumps({"error": str(e)}).encode("utf-8"))
+    def _handle_mirror_post(self):
+        try:
+            body = self.rfile.read(self._get_content_length())
+        except Exception as error:
+            self._send_json({"error": str(error)}, 500)
             return
+        ok, payload, error, status = mirror_validate.validate_mirror_body(body)
+        if not ok:
+            self._send_json(error, status)
+            return
+        self._store_mirror(body, str(payload.get("communityId", "")).strip())
 
-        # Inbox efêmero: POST /inbox/<toAddress>
-        if path.startswith("/inbox/"):
-            to_addr = path[len("/inbox/"):].split("/")[0]
-            content_length = self._get_content_length()
-            if content_length > inbox.MAX_ENVELOPE_SIZE:
-                self.send_response(413)
-                self._set_cors_headers()
-                self.end_headers()
-                self.wfile.write(b"Envelope excede limite maximo de 32 KB")
+    def _store_mirror(self, body, comm_id):
+        try:
+            ensure_cache_dir()
+            evict_cache_if_needed(len(body))
+            limit = max_cache_bytes()
+            if limit is not None and cache_dir_bytes() + len(body) > limit:
+                self._send_json({"error": "quota de cache excedida"}, 507)
                 return
+            (CACHE_DIR / f"index_{comm_id}.json").write_bytes(body)
+            self._send_json({"status": "mirrored", "communityId": comm_id})
+        except Exception as error:
+            self._send_json({"error": str(error)}, 500)
+
+    def _handle_inbox_post(self, to_addr):
+        content_length = self._get_content_length()
+        if content_length > inbox.MAX_ENVELOPE_SIZE:
+            self._reply_not_found(b"Envelope excede limite maximo de 32 KB", 413)
+            return
+        try:
             body = self.rfile.read(content_length)
-            try:
-                envelope = json.loads(body.decode("utf-8"))
-                res = inbox.store_envelope(to_addr, envelope)
-                self.send_response(200)
-                self.send_header("Content-Type", "application/json; charset=utf-8")
-                self._set_cors_headers()
-                self.end_headers()
-                self.wfile.write(json.dumps(res).encode("utf-8"))
-                return
-            except Exception as e:
-                self.send_response(400)
-                self._set_cors_headers()
-                self.end_headers()
-                self.wfile.write(json.dumps({"error": str(e)}).encode("utf-8"))
-                return
-
-        self.send_response(404)
-        self._set_cors_headers()
-        self.end_headers()
-
+            envelope = json.loads(body.decode("utf-8"))
+            self._send_json(inbox.store_envelope(to_addr, envelope))
+        except Exception as error:
+            self._send_json({"error": str(error)}, 400)
     def do_DELETE(self):
         path = self.path.split("?")[0].rstrip("/")
         if path.startswith("/inbox/"):
