@@ -27,7 +27,21 @@ def resolve_listen_port(env=None, default=DEFAULT_PORT):
     return int(raw) if raw.isdigit() else default
 
 
-CACHE_DIR = Path(__file__).resolve().parent / ".cache"
+def resolve_cache_dir(env=None):
+    raw = str((env if env is not None else os.environ).get("VOX_RELAY_CACHE_DIR") or "").strip()
+    if raw:
+        return Path(raw).resolve()
+    return Path(__file__).resolve().parent / ".cache"
+
+
+CACHE_DIR = resolve_cache_dir()
+
+
+def set_cache_dir(path):
+    global CACHE_DIR
+    CACHE_DIR = Path(path).resolve()
+    return CACHE_DIR
+
 UPSTREAM_GATEWAYS = [
     "https://arweave.net",
     "https://turbo-gateway.com/raw",
@@ -75,6 +89,32 @@ def max_cache_bytes():
         return int(float(raw)) * 1024 * 1024
     except ValueError:
         return None
+
+
+def evict_cache_if_needed(incoming_bytes=0):
+    max_b = max_cache_bytes()
+    if max_b is None or not CACHE_DIR.exists():
+        return
+    current_bytes = cache_dir_bytes()
+    if current_bytes + incoming_bytes <= max_b:
+        return
+
+    files = []
+    for f in CACHE_DIR.glob("*"):
+        if f.is_file() and not f.name.startswith("index_"):
+            try:
+                files.append((f.stat().st_mtime, f.stat().st_size, f))
+            except OSError:
+                pass
+    files.sort(key=lambda x: x[0])
+    for _, size, f in files:
+        if current_bytes + incoming_bytes <= max_b:
+            break
+        try:
+            f.unlink()
+            current_bytes -= size
+        except OSError:
+            pass
 
 class VoxRelayHandler(BaseHTTPRequestHandler):
     def _set_cors_headers(self):
@@ -161,9 +201,13 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
                     continue
 
             if fetched_data is not None:
-                # Salva no cache local em disco
+                # Salva no cache local em disco com respeito a cotas e LRU
                 try:
-                    cache_file.write_bytes(fetched_data)
+                    ensure_cache_dir()
+                    evict_cache_if_needed(len(fetched_data))
+                    max_b = max_cache_bytes()
+                    if max_b is None or cache_dir_bytes() + len(fetched_data) <= max_b:
+                        cache_file.write_bytes(fetched_data)
                 except Exception:
                     pass
 
@@ -245,6 +289,7 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
             comm_id = str(payload.get("communityId", "")).strip()
             try:
                 ensure_cache_dir()
+                evict_cache_if_needed(len(body))
                 max_b = max_cache_bytes()
                 if max_b is not None and cache_dir_bytes() + len(body) > max_b:
                     self.send_response(507)
@@ -341,6 +386,12 @@ if __name__ == "__main__":
     default_port = resolve_listen_port()
     parser = argparse.ArgumentParser(description="Vox Relay Desktop Server")
     parser.add_argument("--host", default=DEFAULT_HOST, help="Host/IP para escutar (padrão 127.0.0.1)")
+    parser.add_argument("--bind", dest="host", help="Alias retrocompatível para --host")
     parser.add_argument("--port", type=int, default=default_port, help=f"Porta para escutar (padrão {default_port})")
+    parser.add_argument("--cache-dir", default=None, help="Diretório de cache (sobrescreve VOX_RELAY_CACHE_DIR)")
     args = parser.parse_args()
+    if args.cache_dir:
+        os.environ["VOX_RELAY_CACHE_DIR"] = str(args.cache_dir)
+        set_cache_dir(args.cache_dir)
     run_server(host=args.host, port=args.port)
+
