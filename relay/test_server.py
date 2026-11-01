@@ -228,5 +228,61 @@ class TestVoxRelayServer(unittest.TestCase):
         self.assertEqual(h._get_content_length(), 0)
 
 
+    def test_cache_dir_resolution_and_custom_env(self):
+        default_dir = server.resolve_cache_dir({})
+        self.assertTrue(str(default_dir).endswith(".cache"))
+
+        custom_path = "/var/lib/vox-farol/cache"
+        resolved = server.resolve_cache_dir({"VOX_RELAY_CACHE_DIR": custom_path})
+        self.assertEqual(str(resolved), str(Path(custom_path).resolve()))
+
+    def test_inbox_dir_resolution_and_custom_env(self):
+        default_dir = inbox.resolve_inbox_dir({})
+        self.assertTrue(str(default_dir).endswith(".inbox"))
+
+        custom_inbox = "/var/lib/vox-farol/inbox"
+        resolved_inbox = inbox.resolve_inbox_dir({"VOX_RELAY_INBOX_DIR": custom_inbox})
+        self.assertEqual(str(resolved_inbox), str(Path(custom_inbox).resolve()))
+
+        # Fallback to VOX_RELAY_CACHE_DIR / "inbox"
+        from_cache = inbox.resolve_inbox_dir({"VOX_RELAY_CACHE_DIR": "/tmp/custom_cache"})
+        self.assertEqual(str(from_cache), str(Path("/tmp/custom_cache/inbox").resolve()))
+
+    def test_lru_cache_eviction_under_quota(self):
+        prev = os.environ.get("VOX_RELAY_MAX_CACHE_MB")
+        test_cache = Path(self.temp_dir) / "evict_test"
+        test_cache.mkdir(parents=True, exist_ok=True)
+        orig = server.CACHE_DIR
+        server.CACHE_DIR = test_cache
+
+        try:
+            # Configura teto de 1 MB
+            os.environ["VOX_RELAY_MAX_CACHE_MB"] = "1"
+
+            # Cria arquivo 1 antigo (500 KB)
+            f1 = test_cache / ("1" * 43)
+            f1.write_bytes(b"X" * (500 * 1024))
+            os.utime(f1, (time.time() - 200, time.time() - 200))
+
+            # Cria arquivo 2 recente (400 KB)
+            f2 = test_cache / ("2" * 43)
+            f2.write_bytes(b"Y" * (400 * 1024))
+            os.utime(f2, (time.time() - 100, time.time() - 100))
+
+            # Total atual ~900 KB. Se tentarmos adicionar 300 KB (total > 1 MB),
+            # evict_cache_if_needed deve purgar f1 (mais antigo) e manter f2!
+            server.evict_cache_if_needed(300 * 1024)
+
+            self.assertFalse(f1.exists(), "Arquivo f1 mais antigo deve ter sido expurgado")
+            self.assertTrue(f2.exists(), "Arquivo f2 mais recente deve ter sido preservado")
+        finally:
+            server.CACHE_DIR = orig
+            if prev is None:
+                os.environ.pop("VOX_RELAY_MAX_CACHE_MB", None)
+            else:
+                os.environ["VOX_RELAY_MAX_CACHE_MB"] = prev
+
+
 if __name__ == "__main__":
     unittest.main()
+

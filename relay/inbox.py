@@ -7,11 +7,31 @@ Nunca armazena nem inspeciona o texto claro (plaintext).
 
 import json
 import time
+import os
 from pathlib import Path
 
 DEFAULT_TTL_SECONDS = 72 * 3600  # 72 horas
 MAX_ENVELOPE_SIZE = 32 * 1024     # 32 KB por mensagem
-INBOX_DIR = Path(__file__).resolve().parent / ".inbox"
+
+
+def resolve_inbox_dir(env=None):
+    raw = str((env if env is not None else os.environ).get("VOX_RELAY_INBOX_DIR") or "").strip()
+    if raw:
+        return Path(raw).resolve()
+    base = str((env if env is not None else os.environ).get("VOX_RELAY_CACHE_DIR") or "").strip()
+    if base:
+        return Path(base).resolve() / "inbox"
+    return Path(__file__).resolve().parent / ".inbox"
+
+
+INBOX_DIR = resolve_inbox_dir()
+
+
+def set_inbox_dir(path):
+    global INBOX_DIR
+    INBOX_DIR = Path(path).resolve()
+    return INBOX_DIR
+
 
 
 def ensure_inbox_dir():
