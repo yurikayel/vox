@@ -1,4 +1,4 @@
-# Build script do Micro-APK Vox Seeder
+# Build script do Micro-APK Vox Populi
 $ErrorActionPreference = "Stop"
 
 $ROOT = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -48,7 +48,7 @@ Push-Location "$BUILD_DIR\dex"
 Pop-Location
 
 Write-Host "6. Alinhando APK (zipalign 4)..."
-& $ZIPALIGN -p -f 4 "$BUILD_DIR\unaligned.apk" "$BUILD_DIR\vox-seeder-aligned.apk"
+& $ZIPALIGN -p -f 4 "$BUILD_DIR\unaligned.apk" "$BUILD_DIR\vox-populi-aligned.apk"
 
 Write-Host "7. Gerando keystore de debug e assinando..."
 $KEYSTORE = "$BUILD_DIR\debug.keystore"
@@ -56,8 +56,8 @@ if (-not (Test-Path $KEYSTORE)) {
     cmd.exe /c "`"$KEYTOOL`" -genkeypair -keystore `"$KEYSTORE`" -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname CN=Vox,O=Democracia,C=BR 2>nul"
 }
 
-$FINAL_APK = "$ROOT\vox-seeder.apk"
-& cmd.exe /c "`"$APKSIGNER`" sign --ks `"$KEYSTORE`" --ks-pass pass:android --ks-key-alias androiddebugkey --key-pass pass:android --out `"$FINAL_APK`" `"$BUILD_DIR\vox-seeder-aligned.apk`""
+$FINAL_APK = "$ROOT\vox-populi.apk"
+& cmd.exe /c "`"$APKSIGNER`" sign --ks `"$KEYSTORE`" --ks-pass pass:android --ks-key-alias androiddebugkey --key-pass pass:android --out `"$FINAL_APK`" `"$BUILD_DIR\vox-populi-aligned.apk`""
 
 $BYTES = (Get-Item $FINAL_APK).Length
 $KB = [math]::Round($BYTES / 1024, 2)

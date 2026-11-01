@@ -15,9 +15,9 @@ import android.webkit.WebView;
 /**
  * Foreground Service que mantém a malha P2P/WebRTC ativa mesmo com a tela apagada.
  */
-public class VoxSeederService extends Service {
+public class VoxPopuliService extends Service {
 
-    public static final String CHANNEL_ID = "vox_seeder_channel";
+    public static final String CHANNEL_ID = "vox_seeder_channel"; // ID estável para preservar preferências de notificações instaladas.
     public static final int NOTIF_ID = 1001;
     private static final String SEED_URL = "https://vox-9df.pages.dev/#/status";
 
@@ -58,7 +58,7 @@ public class VoxSeederService extends Service {
 
         Notification notif = b.setContentTitle(getString(R.string.notif_title))
                 .setContentText(text)
-                .setSmallIcon(R.drawable.ic_vox_seeder)
+                .setSmallIcon(R.drawable.ic_vox_populi)
                 .setContentIntent(pi)
                 .setOngoing(true)
                 .build();

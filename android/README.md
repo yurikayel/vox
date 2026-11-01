@@ -1,4 +1,4 @@
-# Vox Seeder — Micro-APK Android (Foreground Node)
+# Vox Populi — Micro-APK Android (Foreground Node)
 
 Micro-aplicativo Android nativo em Java puro (sem AndroidX / sem Jetpack) projetado para rodar como **Nó Seeder permanente** em segundo plano, mesmo com a tela apagada ou no bolso.
 
@@ -26,7 +26,7 @@ powershell -ExecutionPolicy Bypass -File build.ps1
 
 ### Via ADB (computador):
 ```bash
-adb install vox-seeder.apk
+adb install vox-populi.apk
 ```
 
 ### Via Sideload (celular / TV Box):
