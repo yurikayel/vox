@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# update.sh — Atualização Segura do Vox Farol com Verificação de Integridade
+# update.sh — Atualização Segura do Vox Populi com Verificação de Integridade
 # ==============================================================================
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-TARGET_DIR="/opt/vox-farol"
-SERVICE_NAME="vox-farol.service"
+TARGET_DIR="/opt/vox-populi"
+SERVICE_NAME="vox-populi.service"
 
 echo "======================================================================"
-echo "          Vox Farol — Atualização do Nó Comunitário                   "
+echo "          Vox Populi — Atualização do Nó Comunitário                   "
 echo "======================================================================"
 
 if [[ ! -d "${TARGET_DIR}" ]]; then
@@ -60,20 +60,20 @@ for attempt in {1..10}; do
 done
 
 if [[ "${IS_UP}" != "true" ]]; then
-    echo "[!] ERRO FATAL: Falha no reinício do Vox Farol após atualização."
+    echo "[!] ERRO FATAL: Falha no reinício do Vox Populi após atualização."
     exit 1
 fi
 
 echo "[*] Executando verificação de saúde e telemetria..."
 if command -v sudo >/dev/null 2>&1; then
-    sudo -u vox-farol bash "${TARGET_DIR}/health-check.sh"
+    sudo -u vox-populi bash "${TARGET_DIR}/health-check.sh"
 elif command -v runuser >/dev/null 2>&1; then
-    runuser -u vox-farol -- bash "${TARGET_DIR}/health-check.sh"
+    runuser -u vox-populi -- bash "${TARGET_DIR}/health-check.sh"
 else
-    su -s /bin/bash vox-farol -c "bash \"${TARGET_DIR}/health-check.sh\""
+    su -s /bin/bash vox-populi -c "bash \"${TARGET_DIR}/health-check.sh\""
 fi
 
 
 echo "----------------------------------------------------------------------"
-echo "[+] SUCESSO: Vox Farol atualizado com sucesso!"
+echo "[+] SUCESSO: Vox Populi atualizado com sucesso!"
 echo "======================================================================"

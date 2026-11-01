@@ -1,6 +1,6 @@
-"""Vox Desktop & P2P Seeder — Aplicativo Nativo Windows (WebView2).
+"""Vox Populi Desktop — Aplicativo Nativo Windows (WebView2).
 
-Equivalente desktop ao aplicativo Android (vox-seeder.apk), permitindo que qualquer
+Equivalente desktop ao aplicativo Android (vox-populi.apk), permitindo que qualquer
 pessoa utilize a rede social civica em janela nativa independente e atue como no
 semeador ativo na malha WebRTC P2P (swarm), com fallback offline automatico.
 """
@@ -24,7 +24,7 @@ try:
 except ImportError:
     webview = None
 
-APP_TITLE = "Vox • Rede Social Civica & Seeder P2P"
+APP_TITLE = "Vox Populi • Rede Social Cívica"
 DEFAULT_REMOTE_URL = os.environ.get("VOX_REMOTE_URL", "https://vox-9df.pages.dev/")
 LOCAL_PORT_DEFAULT = int(os.environ.get("VOX_CLIENT_PORT", "8085"))
 
@@ -152,7 +152,7 @@ def resolve_startup_url(
 
 def run_self_check(root: Path) -> int:
     """Executa bateria de autoteste para CI e validacao sem abrir GUI."""
-    print("--- [Autoteste Vox Desktop Seeder] ---")
+    print("--- [Autoteste Vox Populi Desktop] ---")
     server = LocalClientServer(root, port=18085)
     port = server.start()
     if port == 0:
@@ -186,7 +186,7 @@ def run_self_check(root: Path) -> int:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Vox Desktop Seeder")
+    parser = argparse.ArgumentParser(description="Vox Populi Desktop")
     parser.add_argument("--check", action="store_true", help="Executa autoteste e encerra")
     parser.add_argument("--local", action="store_true", help="Forca uso do cliente local")
     parser.add_argument("--port", type=int, default=LOCAL_PORT_DEFAULT, help="Porta local")
