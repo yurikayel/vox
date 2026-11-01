@@ -1,0 +1,31 @@
+[Unit]
+Description=Vox Farol — Nó Comunitário Autônomo e Relay P2P
+Documentation=https://github.com/yurikayel/vox
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=vox-farol
+Group=vox-farol
+WorkingDirectory=/opt/vox-farol
+ExecStart=/usr/bin/python3 -m relay.server --port 3921 --bind 127.0.0.1
+Restart=always
+RestartSec=5
+KillMode=mixed
+TimeoutStopSec=15
+
+# Isolamento e Segurança do Processo
+NoNewPrivileges=true
+ProtectSystem=full
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/vox-farol /var/log/vox-farol /opt/vox-farol/monitoring
+
+# Gestão de Logs
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=vox-farol
+
+[Install]
+WantedBy=multi-user.target
