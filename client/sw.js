@@ -201,6 +201,9 @@ const SHELL_ASSETS = [
   "./js/pix-key.js",
 
   "./js/webrtc-peer.js",
+  "./js/seeder-guardian.js",
+  "./js/nostr-signaling.js",
+  "./js/render/settings-guardian.js",
 
   "./js/render.js",
 
