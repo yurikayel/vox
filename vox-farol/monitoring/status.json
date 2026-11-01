@@ -1,0 +1,22 @@
+{
+  "nodeStatus": "initialized",
+  "version": "0.1.0",
+  "updatedAt": "2026-11-01T00:00:00Z",
+  "uptimeSeconds": 0,
+  "system": {
+    "cpuPercent": 0.0,
+    "ramUsageMb": 0,
+    "temperatureC": null,
+    "storageUsedMb": 0,
+    "storageAvailableMb": 2048
+  },
+  "network": {
+    "lanPeersCount": 0,
+    "signalingReachable": true,
+    "lastHealthCheck": "never"
+  },
+  "services": {
+    "relayRunning": false,
+    "seederActive": false
+  }
+}
