@@ -102,10 +102,11 @@ class TestVoxRelayServer(unittest.TestCase):
             self.assertEqual(e.code, 400)
 
     def test_tx_cache_hit(self):
+        server.ensure_cache_dir()
         valid_id = "A" * 43
         payload = json.dumps({"title": "Topico Teste", "body": "Conteudo"}).encode("utf-8")
         file_path = server.CACHE_DIR / valid_id
-        file_path.write_bytes(payload)
+        server.write_cache_entry(file_path, payload)
 
         req = urllib.request.Request(self._url(f"/tx/{valid_id}"))
         with urllib.request.urlopen(req, timeout=2) as resp:
@@ -113,6 +114,30 @@ class TestVoxRelayServer(unittest.TestCase):
             self.assertEqual(resp.headers.get("X-Vox-Cache"), "HIT")
             body = resp.read()
             self.assertEqual(body, payload)
+
+    def test_tx_cache_rejects_missing_hash_sidecar(self):
+        server.ensure_cache_dir()
+        valid_id = "B" * 43
+        file_path = server.CACHE_DIR / valid_id
+        file_path.write_bytes(b"cache entry without digest")
+        failures_before = server.INTEGRITY_FAILURES
+
+        self.assertIsNone(server.read_verified_cache_entry(file_path))
+        self.assertFalse(file_path.exists())
+        self.assertEqual(server.INTEGRITY_FAILURES, failures_before + 1)
+
+    def test_tx_cache_rejects_invalid_hash_sidecar(self):
+        server.ensure_cache_dir()
+        valid_id = "C" * 43
+        file_path = server.CACHE_DIR / valid_id
+        server.write_cache_entry(file_path, b"original content")
+        server.cache_hash_path(file_path).write_text("0" * 64, encoding="ascii")
+        failures_before = server.INTEGRITY_FAILURES
+
+        self.assertIsNone(server.read_verified_cache_entry(file_path))
+        self.assertFalse(file_path.exists())
+        self.assertFalse(server.cache_hash_path(file_path).exists())
+        self.assertEqual(server.INTEGRITY_FAILURES, failures_before + 1)
 
     def test_mirror_post_and_get_index(self):
         comm_id = "comunidade_livre"
@@ -232,7 +257,7 @@ class TestVoxRelayServer(unittest.TestCase):
         default_dir = server.resolve_cache_dir({})
         self.assertTrue(str(default_dir).endswith(".cache"))
 
-        custom_path = "/var/lib/vox-farol/cache"
+        custom_path = "/var/lib/vox-populi/cache"
         resolved = server.resolve_cache_dir({"VOX_RELAY_CACHE_DIR": custom_path})
         self.assertEqual(str(resolved), str(Path(custom_path).resolve()))
 
@@ -240,7 +265,7 @@ class TestVoxRelayServer(unittest.TestCase):
         default_dir = inbox.resolve_inbox_dir({})
         self.assertTrue(str(default_dir).endswith(".inbox"))
 
-        custom_inbox = "/var/lib/vox-farol/inbox"
+        custom_inbox = "/var/lib/vox-populi/inbox"
         resolved_inbox = inbox.resolve_inbox_dir({"VOX_RELAY_INBOX_DIR": custom_inbox})
         self.assertEqual(str(resolved_inbox), str(Path(custom_inbox).resolve()))
 
