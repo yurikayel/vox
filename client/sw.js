@@ -204,6 +204,12 @@ const SHELL_ASSETS = [
   "./js/seeder-guardian.js",
   "./js/nostr-signaling.js",
   "./js/render/settings-guardian.js",
+  "./js/node-health-model.js",
+  "./js/node-health-evaluator.js",
+  "./js/node-health-api.js",
+  "./js/node-health-ux.js",
+  "./js/node-health-state.js",
+  "./js/render/node-health-badge.js",
 
   "./js/render.js",
 
