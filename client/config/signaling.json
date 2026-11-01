@@ -10,5 +10,15 @@
     "wss://vox-sentinel.onrender.com",
     "ws://127.0.0.1:3921"
   ],
+  "webtorrentTrackers": [
+    "wss://tracker.openwebtorrent.com",
+    "wss://tracker.btorrent.xyz",
+    "wss://tracker.webtorrent.dev"
+  ],
+  "nostrRelays": [
+    "wss://relay.damus.io",
+    "wss://nos.lol",
+    "wss://relay.snort.social"
+  ],
   "maxRtcPeers": 8
 }
