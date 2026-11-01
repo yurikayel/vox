@@ -1,0 +1,651 @@
+{
+  "manifest": "arweave/paths",
+  "version": "0.2.0",
+  "index": {
+    "path": "index.html"
+  },
+  "paths": {
+    "images/cantina-wuher-caricature.png": {
+      "id": "tx_images/cantina-wuher-caricature.png"
+    },
+    "icons/icon-1024.png": {
+      "id": "tx_icons/icon-1024.png"
+    },
+    "images/posts/tour-fernanda.jpg": {
+      "id": "tx_images/posts/tour-fernanda.jpg"
+    },
+    "icons/icon-mark-1024.png": {
+      "id": "tx_icons/icon-mark-1024.png"
+    },
+    "images/posts/tour-kaue.jpg": {
+      "id": "tx_images/posts/tour-kaue.jpg"
+    },
+    "images/posts/tour-juliana.jpg": {
+      "id": "tx_images/posts/tour-juliana.jpg"
+    },
+    "images/posts/tour-helena.jpg": {
+      "id": "tx_images/posts/tour-helena.jpg"
+    },
+    "images/posts/tour-mei.jpg": {
+      "id": "tx_images/posts/tour-mei.jpg"
+    },
+    "css/style.css": {
+      "id": "tx_css/style.css"
+    },
+    "icons/icon-512.png": {
+      "id": "tx_icons/icon-512.png"
+    },
+    "images/posts/tour-salma.jpg": {
+      "id": "tx_images/posts/tour-salma.jpg"
+    },
+    "images/posts/tour-yara.jpg": {
+      "id": "tx_images/posts/tour-yara.jpg"
+    },
+    "icons/profile-vox-official-512.png": {
+      "id": "tx_icons/profile-vox-official-512.png"
+    },
+    "images/posts/tour-lucas.jpg": {
+      "id": "tx_images/posts/tour-lucas.jpg"
+    },
+    "images/cantina-gate.jpg": {
+      "id": "tx_images/cantina-gate.jpg"
+    },
+    "images/posts/tour-andre.jpg": {
+      "id": "tx_images/posts/tour-andre.jpg"
+    },
+    "icons/icon-white-512.png": {
+      "id": "tx_icons/icon-white-512.png"
+    },
+    "icons/icon-mark.png": {
+      "id": "tx_icons/icon-mark.png"
+    },
+    "images/posts/tour-raj.jpg": {
+      "id": "tx_images/posts/tour-raj.jpg"
+    },
+    "DEV.md": {
+      "id": "tx_DEV.md"
+    },
+    "images/avatars/raj.jpg": {
+      "id": "tx_images/avatars/raj.jpg"
+    },
+    "images/posts/tour-entrar.jpg": {
+      "id": "tx_images/posts/tour-entrar.jpg"
+    },
+    "images/posts/tour-rede.jpg": {
+      "id": "tx_images/posts/tour-rede.jpg"
+    },
+    "images/posts/tour-comunidades.jpg": {
+      "id": "tx_images/posts/tour-comunidades.jpg"
+    },
+    "images/avatars/juliana.jpg": {
+      "id": "tx_images/avatars/juliana.jpg"
+    },
+    "images/posts/tour-mensagens.jpg": {
+      "id": "tx_images/posts/tour-mensagens.jpg"
+    },
+    "js/render/community.js": {
+      "id": "tx_js/render/community.js"
+    },
+    "js/render/profile.js": {
+      "id": "tx_js/render/profile.js"
+    },
+    "js/render/feed.js": {
+      "id": "tx_js/render/feed.js"
+    },
+    "images/avatars/mei.jpg": {
+      "id": "tx_images/avatars/mei.jpg"
+    },
+    "images/avatars/salma.jpg": {
+      "id": "tx_images/avatars/salma.jpg"
+    },
+    "images/posts/tour-celular.jpg": {
+      "id": "tx_images/posts/tour-celular.jpg"
+    },
+    "js/data/profiles-brazil-uf.js": {
+      "id": "tx_js/data/profiles-brazil-uf.js"
+    },
+    "images/avatars/yara.jpg": {
+      "id": "tx_images/avatars/yara.jpg"
+    },
+    "js/app/screens-community.js": {
+      "id": "tx_js/app/screens-community.js"
+    },
+    "js/app/screens-profile.js": {
+      "id": "tx_js/app/screens-profile.js"
+    },
+    "icons/icon-192.png": {
+      "id": "tx_icons/icon-192.png"
+    },
+    "images/avatars/andre.jpg": {
+      "id": "tx_images/avatars/andre.jpg"
+    },
+    "js/explode-dispatch.js": {
+      "id": "tx_js/explode-dispatch.js"
+    },
+    "images/welcome/brinde-mesa.jpg": {
+      "id": "tx_images/welcome/brinde-mesa.jpg"
+    },
+    "js/app/screens-compose.js": {
+      "id": "tx_js/app/screens-compose.js"
+    },
+    "js/render/network.js": {
+      "id": "tx_js/render/network.js"
+    },
+    "js/inline-composer.js": {
+      "id": "tx_js/inline-composer.js"
+    },
+    "images/avatars/fernanda.jpg": {
+      "id": "tx_images/avatars/fernanda.jpg"
+    },
+    "images/welcome/artista-rua.jpg": {
+      "id": "tx_images/welcome/artista-rua.jpg"
+    },
+    "icons/icon-white-192.png": {
+      "id": "tx_icons/icon-white-192.png"
+    },
+    "js/peers.js": {
+      "id": "tx_js/peers.js"
+    },
+    "images/welcome/maos-juntas.jpg": {
+      "id": "tx_images/welcome/maos-juntas.jpg"
+    },
+    "images/welcome/riso-celular.jpg": {
+      "id": "tx_images/welcome/riso-celular.jpg"
+    },
+    "js/graphql.js": {
+      "id": "tx_js/graphql.js"
+    },
+    "js/render/oauth-modals.js": {
+      "id": "tx_js/render/oauth-modals.js"
+    },
+    "images/welcome/turma-notebook.jpg": {
+      "id": "tx_images/welcome/turma-notebook.jpg"
+    },
+    "js/app/screens-network.js": {
+      "id": "tx_js/app/screens-network.js"
+    },
+    "js/cache-node.js": {
+      "id": "tx_js/cache-node.js"
+    },
+    "js/local-account.js": {
+      "id": "tx_js/local-account.js"
+    },
+    "js/render/voxpedia.js": {
+      "id": "tx_js/render/voxpedia.js"
+    },
+    "js/webrtc-peer.js": {
+      "id": "tx_js/webrtc-peer.js"
+    },
+    "js/render/shell.js": {
+      "id": "tx_js/render/shell.js"
+    },
+    "images/welcome/roda-amigos.jpg": {
+      "id": "tx_images/welcome/roda-amigos.jpg"
+    },
+    "js/render/topic.js": {
+      "id": "tx_js/render/topic.js"
+    },
+    "js/app/init.js": {
+      "id": "tx_js/app/init.js"
+    },
+    "js/render/dm.js": {
+      "id": "tx_js/render/dm.js"
+    },
+    "js/linked-accounts.js": {
+      "id": "tx_js/linked-accounts.js"
+    },
+    "js/posse-dispatch.js": {
+      "id": "tx_js/posse-dispatch.js"
+    },
+    "js/app/screens-dm.js": {
+      "id": "tx_js/app/screens-dm.js"
+    },
+    "images/avatars/pri.jpg": {
+      "id": "tx_images/avatars/pri.jpg"
+    },
+    "js/app/screens-home.js": {
+      "id": "tx_js/app/screens-home.js"
+    },
+    "images/avatars/camila.jpg": {
+      "id": "tx_images/avatars/camila.jpg"
+    },
+    "images/avatars/helena.jpg": {
+      "id": "tx_images/avatars/helena.jpg"
+    },
+    "images/avatars/davi.jpg": {
+      "id": "tx_images/avatars/davi.jpg"
+    },
+    "images/avatars/lucas.jpg": {
+      "id": "tx_images/avatars/lucas.jpg"
+    },
+    "js/media-lofi.js": {
+      "id": "tx_js/media-lofi.js"
+    },
+    "js/dm-messenger.js": {
+      "id": "tx_js/dm-messenger.js"
+    },
+    "js/chat-bridge.js": {
+      "id": "tx_js/chat-bridge.js"
+    },
+    "js/render/ajuda-teste.js": {
+      "id": "tx_js/render/ajuda-teste.js"
+    },
+    "images/avatars/kaue.jpg": {
+      "id": "tx_images/avatars/kaue.jpg"
+    },
+    "images/avatars/rafa.jpg": {
+      "id": "tx_images/avatars/rafa.jpg"
+    },
+    "js/render/util.js": {
+      "id": "tx_js/render/util.js"
+    },
+    "js/render/linked-accounts-ui.js": {
+      "id": "tx_js/render/linked-accounts-ui.js"
+    },
+    "js/community-mirror.js": {
+      "id": "tx_js/community-mirror.js"
+    },
+    "images/avatars/lia.jpg": {
+      "id": "tx_images/avatars/lia.jpg"
+    },
+    "js/bsky-feed.js": {
+      "id": "tx_js/bsky-feed.js"
+    },
+    "sw.js": {
+      "id": "tx_sw.js"
+    },
+    "js/frames.js": {
+      "id": "tx_js/frames.js"
+    },
+    "js/ans104.js": {
+      "id": "tx_js/ans104.js"
+    },
+    "js/social.js": {
+      "id": "tx_js/social.js"
+    },
+    "js/people-index.js": {
+      "id": "tx_js/people-index.js"
+    },
+    "js/render/post-more-menu.js": {
+      "id": "tx_js/render/post-more-menu.js"
+    },
+    "js/composer-media.js": {
+      "id": "tx_js/composer-media.js"
+    },
+    "js/moderation.js": {
+      "id": "tx_js/moderation.js"
+    },
+    "js/app/onboarding.js": {
+      "id": "tx_js/app/onboarding.js"
+    },
+    "js/governance.js": {
+      "id": "tx_js/governance.js"
+    },
+    "js/story-card.js": {
+      "id": "tx_js/story-card.js"
+    },
+    "js/profile-directory.js": {
+      "id": "tx_js/profile-directory.js"
+    },
+    "js/idb-store.js": {
+      "id": "tx_js/idb-store.js"
+    },
+    "privacy.html": {
+      "id": "tx_privacy.html"
+    },
+    "js/render/tag-polis.js": {
+      "id": "tx_js/render/tag-polis.js"
+    },
+    "js/qr-url-layout.js": {
+      "id": "tx_js/qr-url-layout.js"
+    },
+    "js/labs/collective-mofn.js": {
+      "id": "tx_js/labs/collective-mofn.js"
+    },
+    "js/share.js": {
+      "id": "tx_js/share.js"
+    },
+    "js/polis.js": {
+      "id": "tx_js/polis.js"
+    },
+    "js/identity-link.js": {
+      "id": "tx_js/identity-link.js"
+    },
+    "js/oauth-profile.js": {
+      "id": "tx_js/oauth-profile.js"
+    },
+    "js/civic-credential.js": {
+      "id": "tx_js/civic-credential.js"
+    },
+    "js/render/ig-toolbar.js": {
+      "id": "tx_js/render/ig-toolbar.js"
+    },
+    "js/media-blob.js": {
+      "id": "tx_js/media-blob.js"
+    },
+    "js/perma-notary.js": {
+      "id": "tx_js/perma-notary.js"
+    },
+    "data-deletion.html": {
+      "id": "tx_data-deletion.html"
+    },
+    "js/gateway-telemetry.js": {
+      "id": "tx_js/gateway-telemetry.js"
+    },
+    "js/vox-welcome-profile.js": {
+      "id": "tx_js/vox-welcome-profile.js"
+    },
+    "js/labs/mofn-lab.js": {
+      "id": "tx_js/labs/mofn-lab.js"
+    },
+    "js/qr-url.js": {
+      "id": "tx_js/qr-url.js"
+    },
+    "js/brcode.js": {
+      "id": "tx_js/brcode.js"
+    },
+    "js/app/route-parse.js": {
+      "id": "tx_js/app/route-parse.js"
+    },
+    "js/cache-manifest.js": {
+      "id": "tx_js/cache-manifest.js"
+    },
+    "icons/emoji-vox-vermelho.png": {
+      "id": "tx_icons/emoji-vox-vermelho.png"
+    },
+    "icons/emoji-vox-brasil.png": {
+      "id": "tx_icons/emoji-vox-brasil.png"
+    },
+    "js/profile-card.js": {
+      "id": "tx_js/profile-card.js"
+    },
+    "js/wallet.js": {
+      "id": "tx_js/wallet.js"
+    },
+    "js/app/photo-tag-ui.js": {
+      "id": "tx_js/app/photo-tag-ui.js"
+    },
+    "js/pix-key.js": {
+      "id": "tx_js/pix-key.js"
+    },
+    "images/cantina-gate.svg": {
+      "id": "tx_images/cantina-gate.svg"
+    },
+    "js/chunked-transfer.js": {
+      "id": "tx_js/chunked-transfer.js"
+    },
+    "js/inbox.js": {
+      "id": "tx_js/inbox.js"
+    },
+    "js/airgap-webrtc.js": {
+      "id": "tx_js/airgap-webrtc.js"
+    },
+    "js/mock.js": {
+      "id": "tx_js/mock.js"
+    },
+    "js/testimonials.js": {
+      "id": "tx_js/testimonials.js"
+    },
+    "js/listing.js": {
+      "id": "tx_js/listing.js"
+    },
+    "js/crypto-dm.js": {
+      "id": "tx_js/crypto-dm.js"
+    },
+    "js/app/post-media-lightbox.js": {
+      "id": "tx_js/app/post-media-lightbox.js"
+    },
+    "js/upload.js": {
+      "id": "tx_js/upload.js"
+    },
+    "js/account-backup-wrap.js": {
+      "id": "tx_js/account-backup-wrap.js"
+    },
+    "js/app/photo-tag-picker.js": {
+      "id": "tx_js/app/photo-tag-picker.js"
+    },
+    "js/sky-theme.js": {
+      "id": "tx_js/sky-theme.js"
+    },
+    "js/render/settings-guardian.js": {
+      "id": "tx_js/render/settings-guardian.js"
+    },
+    "js/community-seed-checklist.js": {
+      "id": "tx_js/community-seed-checklist.js"
+    },
+    "js/peers-blob-affinity.js": {
+      "id": "tx_js/peers-blob-affinity.js"
+    },
+    "js/bridging-rank.js": {
+      "id": "tx_js/bridging-rank.js"
+    },
+    "js/render/welcome-pact.js": {
+      "id": "tx_js/render/welcome-pact.js"
+    },
+    "js/app/zap-modal.js": {
+      "id": "tx_js/app/zap-modal.js"
+    },
+    "index.html": {
+      "id": "tx_index.html"
+    },
+    "js/listing-ui.js": {
+      "id": "tx_js/listing-ui.js"
+    },
+    "js/peers-cache-manifest.js": {
+      "id": "tx_js/peers-cache-manifest.js"
+    },
+    "js/seeder-guardian.js": {
+      "id": "tx_js/seeder-guardian.js"
+    },
+    "js/handles.js": {
+      "id": "tx_js/handles.js"
+    },
+    "js/render/status.js": {
+      "id": "tx_js/render/status.js"
+    },
+    "js/app/profile-note-ui.js": {
+      "id": "tx_js/app/profile-note-ui.js"
+    },
+    "js/color-mode.js": {
+      "id": "tx_js/color-mode.js"
+    },
+    "js/steward-wizard.js": {
+      "id": "tx_js/steward-wizard.js"
+    },
+    "js/app/route.js": {
+      "id": "tx_js/app/route.js"
+    },
+    "js/repost.js": {
+      "id": "tx_js/repost.js"
+    },
+    "js/app/context.js": {
+      "id": "tx_js/app/context.js"
+    },
+    "js/render.js": {
+      "id": "tx_js/render.js"
+    },
+    "js/qr-url-codec.js": {
+      "id": "tx_js/qr-url-codec.js"
+    },
+    "js/hashtags.js": {
+      "id": "tx_js/hashtags.js"
+    },
+    "js/app/cantina-gate.js": {
+      "id": "tx_js/app/cantina-gate.js"
+    },
+    "images/welcome/av-yara.jpg": {
+      "id": "tx_images/welcome/av-yara.jpg"
+    },
+    "js/profile-note.js": {
+      "id": "tx_js/profile-note.js"
+    },
+    "js/post-ownership.js": {
+      "id": "tx_js/post-ownership.js"
+    },
+    "js/photo-tags.js": {
+      "id": "tx_js/photo-tags.js"
+    },
+    "icons/favicon.png": {
+      "id": "tx_icons/favicon.png"
+    },
+    "js/i18n-pt-br.js": {
+      "id": "tx_js/i18n-pt-br.js"
+    },
+    "images/welcome/av-mei.jpg": {
+      "id": "tx_images/welcome/av-mei.jpg"
+    },
+    "js/render/markdown-body.js": {
+      "id": "tx_js/render/markdown-body.js"
+    },
+    "js/nostr-signaling.js": {
+      "id": "tx_js/nostr-signaling.js"
+    },
+    "js/app/screens-people.js": {
+      "id": "tx_js/app/screens-people.js"
+    },
+    "images/welcome/av-andre.jpg": {
+      "id": "tx_images/welcome/av-andre.jpg"
+    },
+    "js/gossip-retract-ui.js": {
+      "id": "tx_js/gossip-retract-ui.js"
+    },
+    "images/welcome/av-pri.jpg": {
+      "id": "tx_images/welcome/av-pri.jpg"
+    },
+    "images/welcome/av-kaue.jpg": {
+      "id": "tx_images/welcome/av-kaue.jpg"
+    },
+    "js/repost-draft.js": {
+      "id": "tx_js/repost-draft.js"
+    },
+    "js/demo-seed.js": {
+      "id": "tx_js/demo-seed.js"
+    },
+    "images/welcome/av-fernanda.jpg": {
+      "id": "tx_images/welcome/av-fernanda.jpg"
+    },
+    "js/contribution-attestation.js": {
+      "id": "tx_js/contribution-attestation.js"
+    },
+    "js/render/post-more-actions.js": {
+      "id": "tx_js/render/post-more-actions.js"
+    },
+    "js/app/screens-labs.js": {
+      "id": "tx_js/app/screens-labs.js"
+    },
+    "js/render/profile-note-bubble.js": {
+      "id": "tx_js/render/profile-note-bubble.js"
+    },
+    "js/repost-index.js": {
+      "id": "tx_js/repost-index.js"
+    },
+    "js/render/repost-btn.js": {
+      "id": "tx_js/render/repost-btn.js"
+    },
+    "js/app.js": {
+      "id": "tx_js/app.js"
+    },
+    "js/open-frames-host.js": {
+      "id": "tx_js/open-frames-host.js"
+    },
+    "js/peers-gossip-profile.js": {
+      "id": "tx_js/peers-gossip-profile.js"
+    },
+    "js/render/photo-tag-pins.js": {
+      "id": "tx_js/render/photo-tag-pins.js"
+    },
+    "js/mesh-profile.js": {
+      "id": "tx_js/mesh-profile.js"
+    },
+    "icons/emoji-vox-vermelho-32.png": {
+      "id": "tx_icons/emoji-vox-vermelho-32.png"
+    },
+    "icons/emoji-vox-brasil-32.png": {
+      "id": "tx_icons/emoji-vox-brasil-32.png"
+    },
+    "icons/favicon-32.png": {
+      "id": "tx_icons/favicon-32.png"
+    },
+    "embed/vox-embed.js": {
+      "id": "tx_embed/vox-embed.js"
+    },
+    "js/render/photo-chrome.js": {
+      "id": "tx_js/render/photo-chrome.js"
+    },
+    "redirect.html": {
+      "id": "tx_redirect.html"
+    },
+    "js/app/screens-status.js": {
+      "id": "tx_js/app/screens-status.js"
+    },
+    "js/qr-url-gf.js": {
+      "id": "tx_js/qr-url-gf.js"
+    },
+    "js/contacts.js": {
+      "id": "tx_js/contacts.js"
+    },
+    "embed/frame-demo.html": {
+      "id": "tx_embed/frame-demo.html"
+    },
+    "js/app/photo-tag-persist.js": {
+      "id": "tx_js/app/photo-tag-persist.js"
+    },
+    "js/render/diff-html.js": {
+      "id": "tx_js/render/diff-html.js"
+    },
+    "icons/emoji-vox-brasil.svg": {
+      "id": "tx_icons/emoji-vox-brasil.svg"
+    },
+    "icons/emoji-vox-vermelho.svg": {
+      "id": "tx_icons/emoji-vox-vermelho.svg"
+    },
+    "icons/icon.svg": {
+      "id": "tx_icons/icon.svg"
+    },
+    "js/app/repost-ui.js": {
+      "id": "tx_js/app/repost-ui.js"
+    },
+    "manifest.webmanifest": {
+      "id": "tx_manifest.webmanifest"
+    },
+    "js/render/repost-cite.js": {
+      "id": "tx_js/render/repost-cite.js"
+    },
+    "icons/favicon-16.png": {
+      "id": "tx_icons/favicon-16.png"
+    },
+    "config/signaling.json": {
+      "id": "tx_config/signaling.json"
+    },
+    "embed/demo.html": {
+      "id": "tx_embed/demo.html"
+    },
+    "js/app/onboarding-side-effects.js": {
+      "id": "tx_js/app/onboarding-side-effects.js"
+    },
+    "config/gateways.json": {
+      "id": "tx_config/gateways.json"
+    },
+    "js/app/screens-ajuda-teste.js": {
+      "id": "tx_js/app/screens-ajuda-teste.js"
+    },
+    "js/app/screens-voxpedia.js": {
+      "id": "tx_js/app/screens-voxpedia.js"
+    },
+    "config/oauth.example.json": {
+      "id": "tx_config/oauth.example.json"
+    },
+    "js/app/navigation.js": {
+      "id": "tx_js/app/navigation.js"
+    },
+    "config/oauth.json": {
+      "id": "tx_config/oauth.json"
+    },
+    "config/upload.json": {
+      "id": "tx_config/upload.json"
+    },
+    "config/wallet.example.json": {
+      "id": "tx_config/wallet.example.json"
+    }
+  }
+}
