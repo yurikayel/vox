@@ -121,11 +121,11 @@ VETOR 5: GitHub Actions Cron Keep-Alive
 
 ---
 
-## 4. O Movimento "Adote um Farol" (Hardware Comunitário)
+## 4. O Movimento "Adote um Vox Populi" (Hardware Comunitário)
 
 - Milhões de famílias brasileiras têm um celular com tela trincada em uma gaveta ou um TV Box na sala de TV.
 - Um celular velho conectado ao carregador no Wi-Fi de uma associação de moradores ou sindicato consome menos de 2 Watts (menos de R$ 1,50/mês).
-- Rodando o **Micro-APK Vox Seeder de 16 KiB**, esse aparelho se torna o **Farol Cívico do Bairro**, garantindo sinalização e cache permanente para todas as pessoas do quarteirão.
+- Rodando o **Micro-APK Vox Populi de 16 KiB**, esse aparelho se torna o **Vox Populi Cívico do Bairro**, garantindo sinalização e cache permanente para todas as pessoas do quarteirão.
 
 ---
 
@@ -134,5 +134,5 @@ VETOR 5: GitHub Actions Cron Keep-Alive
 1. **Frente 1 (Multi-Gateway GQL):** Implementar no cliente fallback automático com quorum entre os 5 gateways GraphQL da Arweave.
 2. **Frente 2 (Descoberta Dinâmica de Relays Nostr):** Puxar relays abertos via NIP-65 para não depender de uma lista fixa estática.
 3. **Frente 3 (Micro-Sharding 16 KiB):** Criar particionador Reed-Solomon leve no navegador para cache comunitário fracionado.
-4. **Frente 4 (Banner Farol no PWA):** Adicionar botão amigável nas configurações: *"Tem um celular velho em casa? Transforme-o em Farol Comunitário com 1 clique"*, baixando o Micro-APK.
+4. **Frente 4 (Banner Vox Populi no PWA):** Adicionar botão amigável nas configurações: *"Tem um celular velho em casa? Transforme-o em Vox Populi Comunitário com 1 clique"*, baixando o Micro-APK.
 5. **Frente 5 (BEP 44 DHT Rendezvous):** Registrar ponte de handshake no DHT público do BitTorrent.

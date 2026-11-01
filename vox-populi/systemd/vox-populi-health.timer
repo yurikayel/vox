@@ -1,5 +1,5 @@
 [Unit]
-Description=Vox Farol — Agendador de Verificação Periódica de Saúde (5 min)
+Description=Vox Populi — Agendador de Verificação Periódica de Saúde (5 min)
 Documentation=https://github.com/yurikayel/vox
 
 [Timer]

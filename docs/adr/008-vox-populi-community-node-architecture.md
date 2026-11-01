@@ -1,4 +1,4 @@
-# ADR-008: Arquitetura do Vox Farol — Nó Comunitário Autônomo de Baixo Consumo
+# ADR-008: Arquitetura do Vox Populi — Nó Comunitário Autônomo de Baixo Consumo
 
 **Status:** accepted · **Fase 3.4 (Perenidade e Autonomia)**
 
@@ -17,27 +17,27 @@ O brainstorm inicial explorou ideias de nós perpétuos em smartphones e micro-s
 
 ## 2. Decisão
 
-Aprova-se a criação do **Vox Farol (MVP Linux)** como subsistema independente empacotado em `vox-farol/`, governado pelos seguintes princípios arquiteturais:
+Aprova-se a criação do **Vox Populi (MVP Linux)** como subsistema independente empacotado em `vox-populi/`, governado pelos seguintes princípios arquiteturais:
 
-### A. Papel do Farol na Malha Cívica
-O Vox Farol atua como um nó servidor de baixo consumo operado voluntariamente por coletivos, sindicatos, associações ou militantes domésticos. Ele cumpre quatro funções conceituais delimitadas:
+### A. Papel do Vox Populi na Malha Cívica
+O Vox Populi atua como um nó servidor de baixo consumo operado voluntariamente por coletivos, sindicatos, associações ou militantes domésticos. Ele cumpre quatro funções conceituais delimitadas:
 1. **Relay & Cache Local:** Espelha e retém em cache SSD/microSD os tópicos e mídias das comunidades inscritas, servindo clientes na rede local (Wi-Fi comunitário) ou via rendezvous WebRTC.
 2. **Discovery Anchor:** Atua como ponto de presença estável para sinalização WebSocket e troca de endereços efêmeros.
 3. **Seeder Silencioso:** Retransmite dados via WebTorrent DataChannels sem que nenhum usuário individual precise manter a aba do navegador aberta.
 4. **Health Guardian:** Mede e expõe localmente telemetria objetiva de integridade (temperatura de hardware, uso de memória, latência com gateways Arweave e status de conectividade).
 
 ### B. Especificação Operacional Estrita
-1. **Usuário Dedicado sem Privilégios:** A execução ocorre sob o usuário de sistema `vox-farol`, sem acesso root e sem permissão de sudo.
-2. **Zero Portas Inbound Obrigatórias:** O Farol opera primordialmente em modo outbound (conectando-se a relays Nostr, trackers WebTorrent e gateways GraphQL) ou vinculado à interface de loopback / LAN privada (`127.0.0.1` / `192.168.x.x:3921`). Nenhuma porta WAN precisa ser aberta no roteador doméstico.
-3. **Limites Rígidos de Recursos:** O arquivo de configuração `config/farol.json` impõe limites de armazenamento (padrão: 2 GB), cota máxima de tráfego mensal e limitação de threads de CPU.
+1. **Usuário Dedicado sem Privilégios:** A execução ocorre sob o usuário de sistema `vox-populi`, sem acesso root e sem permissão de sudo.
+2. **Zero Portas Inbound Obrigatórias:** O Vox Populi opera primordialmente em modo outbound (conectando-se a relays Nostr, trackers WebTorrent e gateways GraphQL) ou vinculado à interface de loopback / LAN privada (`127.0.0.1` / `192.168.x.x:3921`). Nenhuma porta WAN precisa ser aberta no roteador doméstico.
+3. **Limites Rígidos de Recursos:** O arquivo de configuração `config/vox-populi.json` impõe limites de armazenamento (padrão: 2 GB), cota máxima de tráfego mensal e limitação de threads de CPU.
 4. **Instalação Reproduzível e Desinstalação Limpa:** Scripts shell idempotentes (`install.sh`, `uninstall.sh`, `update.sh`, `health-check.sh`) com validação de checksum e confirmação interativa explícita.
-5. **Autonomia do Criador:** O nó opera e sobrevive independentemente de qualquer servidor central; se o mantenedor desaparecer, o Farol continua servindo sua comunidade.
+5. **Autonomia do Criador:** O nó opera e sobrevive independentemente de qualquer servidor central; se o mantenedor desaparecer, o Vox Populi continua servindo sua comunidade.
 
 ---
 
 ## 3. Rejeitado / Não Permitido
 
-- **Não** introduzir dependências pesadas como Docker obrigatório, Kubernetes ou Node.js runtime no Farol (utiliza o relay nativo Python 3 da biblioteca padrão já auditado em `vox/relay/server.py`).
+- **Não** introduzir dependências pesadas como Docker obrigatório, Kubernetes ou Node.js runtime no Vox Populi (utiliza o relay nativo Python 3 da biblioteca padrão já auditado em `vox/relay/server.py`).
 - **Não** anunciar consumo de energia fixo inferior a 2W sem aferição de bancada com wattímetro em cada modelo específico de hardware.
 - **Não** implementar fragmentação Reed-Solomon diretamente em produção antes de validação experimental controlada em laboratório.
 - **Não** fazer phoning home ou telemetria centralizada: os dados de status residem estritamente no nó (`monitoring/status.json`).
@@ -46,7 +46,7 @@ O Vox Farol atua como um nó servidor de baixo consumo operado voluntariamente p
 
 ## 4. Consequências
 
-- O pacote do Farol é auto-contido na pasta `vox-farol/` no sub-repo `vox/`.
+- O pacote do Vox Populi é auto-contido na pasta `vox-populi/` no sub-repo `vox/`.
 - Permite que qualquer usuário com um Raspberry Pi 3/4/5 ou mini-PC crie um nó resiliente em 2 minutos via `bash install.sh`.
-- Prepara o terreno técnico para o futuro Farol em TV Box Android (Fase 2 do roadmap).
-- Cobertura de integridade garantida por testes unitários e de sintaxe shell em `tests/vox-farol.test.js`.
+- Prepara o terreno técnico para o futuro Vox Populi em TV Box Android (Fase 2 do roadmap).
+- Cobertura de integridade garantida por testes unitários e de sintaxe shell em `tests/vox-populi.test.js`.

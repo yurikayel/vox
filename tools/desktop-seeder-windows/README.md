@@ -1,13 +1,13 @@
-# Vox Desktop & P2P Seeder — Windows 1-Clique (.EXE)
+# Vox Populi Desktop — Windows 1-Clique (.EXE)
 
-Equivalente desktop nativo ao aplicativo Android (`vox-seeder.apk`), desenvolvido para que qualquer pessoa possa usar o Vox no PC em uma janela independente e colaborar diretamente com a rede semeando dados na malha WebRTC P2P (swarm).
+Equivalente desktop nativo ao aplicativo Android (`vox-populi.apk`), desenvolvido para que qualquer pessoa possa usar o Vox no PC em uma janela independente e colaborar diretamente com a rede semeando dados na malha WebRTC P2P (swarm).
 
 ---
 
 ## 🚀 Como Usar
 
 Basta baixar e dar duplo clique em:
-👉 **`dist/VoxSeeder.exe`**
+👉 **`dist/VoxPopuliDesktop.exe`**
 
 - **Sem necessidade de emuladores ou WSA.**
 - **Sem necessidade de ter Python ou Node.js instalados.**
@@ -21,12 +21,12 @@ Basta baixar e dar duplo clique em:
 Para validar o binário em terminal ou esteiras CI sem abrir a interface gráfica:
 
 ```powershell
-.\dist\VoxSeeder.exe --check
+.\dist\VoxPopuliDesktop.exe --check
 ```
 
 Saída esperada:
 ```
---- [Autoteste Vox Desktop Seeder] ---
+--- [Autoteste Vox Populi Desktop] ---
 [OK] Servidor local ativo na porta 18085
 [OK] Resposta HTTP 200 recebida (3245 bytes)
 [OK] Bridge JavaScript <-> Python validada com sucesso

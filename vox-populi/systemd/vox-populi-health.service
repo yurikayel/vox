@@ -1,0 +1,14 @@
+[Unit]
+Description=Vox Populi — Verificação Periódica de Saúde e Telemetria Local
+Documentation=https://github.com/yurikayel/vox
+After=vox-populi.service
+
+[Service]
+Type=oneshot
+User=vox-populi
+Group=vox-populi
+WorkingDirectory=/opt/vox-populi
+ExecStart=/opt/vox-populi/health-check.sh
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=vox-populi-health

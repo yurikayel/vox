@@ -1,27 +1,31 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# install.sh — Instalador Automatizado e Verificável do Vox Farol para Linux
+# install.sh — Instalador Automatizado e Verificável do Vox Populi para Linux
 # ==============================================================================
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-TARGET_DIR="/opt/vox-farol"
-SERVICE_NAME="vox-farol.service"
-TIMER_NAME="vox-farol-health.timer"
-HEALTH_SERVICE="vox-farol-health.service"
-USER_NAME="vox-farol"
+TARGET_DIR="/opt/vox-populi"
+SERVICE_NAME="vox-populi.service"
+TIMER_NAME="vox-populi-health.timer"
+HEALTH_SERVICE="vox-populi-health.service"
+USER_NAME="vox-populi"
+LEGACY_TARGET_DIR="/opt/vox-farol"
+LEGACY_SERVICE_NAME="vox-farol.service"
+LEGACY_TIMER_NAME="vox-farol-health.timer"
+LEGACY_HEALTH_SERVICE="vox-farol-health.service"
 
 echo "======================================================================"
-echo "          Vox Farol — Instalador do Nó Comunitário Autônomo           "
+echo "          Vox Populi — Instalador do Nó Comunitário Autônomo           "
 echo "======================================================================"
-echo "Este script instalará o Vox Farol como serviço systemd de baixo consumo."
+echo "Este script instalará o Vox Populi como serviço systemd de baixo consumo."
 echo "Destino da instalação: ${TARGET_DIR}"
 echo "Usuário do serviço:    ${USER_NAME} (sem privilégios administrativos)"
 echo "Porta padrão:          127.0.0.1:3921 (sem portas abertas na WAN)"
 echo "----------------------------------------------------------------------"
 
 if [[ "${1:-}" != "--yes" ]]; then
-    read -rp "Deseja prosseguir com a instalação do Vox Farol? [s/N]: " CONFIRM
+    read -rp "Deseja prosseguir com a instalação do Vox Populi? [s/N]: " CONFIRM
     if [[ "${CONFIRM}" != "s" && "${CONFIRM}" != "S" && "${CONFIRM}" != "sim" ]]; then
         echo "[-] Instalação cancelada pelo operador."
         exit 0
@@ -38,15 +42,35 @@ if [[ $EUID -ne 0 ]]; then
     fi
 fi
 
+echo "[*] Migrando instalação anterior, se encontrada..."
+if [[ -d "${LEGACY_TARGET_DIR}" || -f "/etc/systemd/system/${LEGACY_SERVICE_NAME}" ]]; then
+    for legacy_unit in "${LEGACY_TIMER_NAME}" "${LEGACY_SERVICE_NAME}"; do
+        $SUDO systemctl disable --now "${legacy_unit}" 2>/dev/null || true
+    done
+    if [[ -d "${LEGACY_TARGET_DIR}" && ! -e "${TARGET_DIR}" ]]; then
+        $SUDO mv "${LEGACY_TARGET_DIR}" "${TARGET_DIR}"
+    fi
+    if [[ -d /var/lib/vox-farol && ! -e /var/lib/vox-populi ]]; then
+        $SUDO mv /var/lib/vox-farol /var/lib/vox-populi
+    fi
+    if [[ -d /var/log/vox-farol && ! -e /var/log/vox-populi ]]; then
+        $SUDO mv /var/log/vox-farol /var/log/vox-populi
+    fi
+    $SUDO rm -f "/etc/systemd/system/${LEGACY_TIMER_NAME}" \
+        "/etc/systemd/system/${LEGACY_HEALTH_SERVICE}" \
+        "/etc/systemd/system/${LEGACY_SERVICE_NAME}"
+    $SUDO systemctl daemon-reload
+fi
+
 echo "[*] Criando usuário de sistema '${USER_NAME}' (sem privilégios)..."
 if ! id -u "${USER_NAME}" >/dev/null 2>&1; then
-    $SUDO useradd -r -s /usr/sbin/nologin -d /var/lib/vox-farol -M "${USER_NAME}" 2>/dev/null || \
+    $SUDO useradd -r -s /usr/sbin/nologin -d /var/lib/vox-populi -M "${USER_NAME}" 2>/dev/null || \
     $SUDO adduser --system --no-create-home --group "${USER_NAME}"
 fi
 
 echo "[*] Preparando diretórios de dados e logs..."
-$SUDO mkdir -p /var/lib/vox-farol/cache
-$SUDO mkdir -p /var/log/vox-farol
+$SUDO mkdir -p /var/lib/vox-populi/cache
+$SUDO mkdir -p /var/log/vox-populi
 $SUDO mkdir -p "${TARGET_DIR}/monitoring"
 $SUDO mkdir -p "${TARGET_DIR}/config"
 
@@ -59,14 +83,14 @@ else
     echo "[!] Erro: Módulo relay não encontrado em ${SCRIPT_DIR}/relay nem ${SCRIPT_DIR}/../relay."
     exit 1
 fi
-$SUDO cp "${SCRIPT_DIR}/config/farol.json" "${TARGET_DIR}/config/"
+$SUDO cp "${SCRIPT_DIR}/config/vox-populi.json" "${TARGET_DIR}/config/"
 $SUDO cp "${SCRIPT_DIR}/monitoring/status.json" "${TARGET_DIR}/monitoring/"
 $SUDO cp "${SCRIPT_DIR}/health-check.sh" "${TARGET_DIR}/"
 $SUDO chmod +x "${TARGET_DIR}/health-check.sh"
 
 echo "[*] Ajustando permissões de propriedade..."
-$SUDO chown -R "${USER_NAME}:${USER_NAME}" /var/lib/vox-farol
-$SUDO chown -R "${USER_NAME}:${USER_NAME}" /var/log/vox-farol
+$SUDO chown -R "${USER_NAME}:${USER_NAME}" /var/lib/vox-populi
+$SUDO chown -R "${USER_NAME}:${USER_NAME}" /var/log/vox-populi
 $SUDO chown -R "${USER_NAME}:${USER_NAME}" "${TARGET_DIR}"
 
 echo "[*] Instalando unidades systemd (serviço e temporizador de saúde)..."
@@ -102,7 +126,7 @@ for attempt in {1..10}; do
 done
 
 if [[ "${IS_OPERATIONAL}" != "true" ]]; then
-    echo "[!] ERRO FATAL: O serviço Vox Farol falhou na verificação de inicialização."
+    echo "[!] ERRO FATAL: O serviço Vox Populi falhou na verificação de inicialização."
     echo "[!] Verificando status do systemd:"
     systemctl status "${SERVICE_NAME}" --no-pager || true
     echo "[!] Últimos logs de erro (journalctl):"
@@ -120,7 +144,7 @@ else
 fi
 
 echo "----------------------------------------------------------------------"
-echo "[+] SUCESSO COMPROVADO: Vox Farol instalado, ativo e validado via systemd!"
+echo "[+] SUCESSO COMPROVADO: Vox Populi instalado, ativo e validado via systemd!"
 echo "Status do serviço:     systemctl status ${SERVICE_NAME}"
 echo "Temporizador de saúde: systemctl status ${TIMER_NAME}"
 echo "Verificação manual:    ${TARGET_DIR}/health-check.sh"

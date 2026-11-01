@@ -6,7 +6,7 @@
 
 ## 1. Contexto e Motivação
 
-O projeto Vox atingiu a validação funcional de nós autônomos permanentes ([ADR-008](008-vox-farol-community-node-architecture.md) / Farol Linux) e resiliência multi-gateway ([ADR-009](009-multi-gateway-graphql-corroboration.md)). Contudo, a sobrevivência e escalabilidade de uma rede social cívica soberana a custo zero ($0) não pode depender exclusivamente de servidores dedicados ou de infraestrutura mantida pelo criador.
+O projeto Vox atingiu a validação funcional de nós autônomos permanentes ([ADR-008](008-vox-populi-community-node-architecture.md) / Vox Populi Linux) e resiliência multi-gateway ([ADR-009](009-multi-gateway-graphql-corroboration.md)). Contudo, a sobrevivência e escalabilidade de uma rede social cívica soberana a custo zero ($0) não pode depender exclusivamente de servidores dedicados ou de infraestrutura mantida pelo criador.
 
 A maior reserva computacional existente reside nos próprios aparelhos dos usuários:
 - **Computadores Desktop (Windows/Mac/Linux):** Conexões banda larga estáveis, armazenamento abundante em disco (HD/SSD) e alimentação contínua na tomada.
@@ -29,7 +29,7 @@ Adota-se a iniciativa **Vox Contribution Engine (Motor de Contribuição Vox)**,
          ┌──────────────────┬──────────────┴─────┬──────────────────┐
          ▼                  ▼                    ▼                  ▼
 ┌─────────────────┐ ┌───────────────┐ ┌───────────────────┐ ┌────────────────┐
-│   Windows EXE   │ │  Android APK  │ │   Linux Farol     │ │    PWA Web     │
+│   Windows EXE   │ │  Android APK  │ │   Linux Vox Populi     │ │    PWA Web     │
 │   Full Worker   │ │ Light Worker  │ │  Persistent Node  │ │  Browser Peer  │
 │(Bandeja/Desktop)│ │ (Oportunista) │ │(Raspberry/Mini-PC)│ │(Sessão Efêmera)│
 └─────────────────┘ └───────────────┘ └───────────────────┘ └────────────────┘
@@ -37,7 +37,7 @@ Adota-se a iniciativa **Vox Contribution Engine (Motor de Contribuição Vox)**,
 
 ### 2.1. Matriz de Capacidades por Plataforma
 
-| Capacidade | Windows EXE | Android APK | Linux Farol | PWA Web |
+| Capacidade | Windows EXE | Android APK | Linux Vox Populi | PWA Web |
 | :--- | :---: | :---: | :---: | :---: |
 | **WebTorrent Seeding** | **Sim (Nativo/WebRTC)** | Não (Restrição bateria) | Sim (Fase posterior) | Efêmero (Aba aberta) |
 | **Cache HTTP Local** | **Sim (1–5 GB)** | Oportunista (100–300 MB) | Sim (2–10 GB) | IndexedDB (~50 MB) |
@@ -49,7 +49,7 @@ Adota-se a iniciativa **Vox Contribution Engine (Motor de Contribuição Vox)**,
 
 ## 3. Especificação dos Módulos Principais
 
-### 3.1. Windows: `VoxSeeder.exe` (Full Worker)
+### 3.1. Windows: `VoxPopuli.exe` (Full Worker)
 O executável Windows é o pilar de maior capacidade da rede:
 1. **Operação em Bandeja (System Tray):** Executa em segundo plano com consumo ínfimo de RAM (~15 MB via Python/C++ headless).
 2. **WebTorrent Seeder Real:** Mantém arquivos públicos do Vox (snapshots do feed, avatares, mídias e manifests de comunidades) semeados via protocolo BitTorrent/WebRTC para clientes web.
@@ -73,7 +73,7 @@ Reconhecendo as restrições estritas de economia de bateria do Android 14+ (Doz
 ### 3.3. Descoberta Local Zero-Config (mDNS / DNS-SD)
 Para eliminar a dependência de trackers externos na mesma rede física (bibliotecas, comitês, praças com Wi-Fi):
 - O nó anuncia o serviço: `_vox-relay._tcp.local` na porta `3921`.
-- Clientes Android (via `NsdManager`) e computadores locais descobrem o endereço IP privado do Farol/VoxSeeder automaticamente.
+- Clientes Android (via `NsdManager`) e computadores locais descobrem o endereço IP privado dos nós Vox Populi automaticamente.
 - Todas as requisições de leitura de mídia e tópicos são atendidas pela rede local em velocidade de gigabit, sem consumir tráfego de internet.
 
 ---
@@ -105,7 +105,7 @@ Para eliminar a dependência de trackers externos na mesma rede física (bibliot
 
 ## 6. Roteiro de Implementação do MVP (Fase 1)
 
-1. **Passo 1:** Transformação do `VoxSeeder.exe` em Seeder WebTorrent real para Windows (distribuição de pacotes públicos em background).
+1. **Passo 1:** Transformação do `VoxPopuli.exe` em Seeder WebTorrent real para Windows (distribuição de pacotes públicos em background).
 2. **Passo 2:** Anúncio e Descoberta LAN via mDNS em Python (`zeroconf` leve ou socket nativo) e Android (`NsdManager`).
-3. **Passo 3:** Botão "Ajude o Vox" com 3 perfis (Ajudante, Guardião, Farol) na interface de configurações.
+3. **Passo 3:** Botão "Ajude o Vox" com 3 perfis (Ajudante, Guardião e Nó Comunitário) na interface de configurações.
 4. **Passo 4:** Integração do Guardião Noturno com restrições de bateria no Android.

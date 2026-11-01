@@ -1,23 +1,35 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# health-check.sh — Verificação de Saúde e Telemetria Local Honesta do Vox Farol
+# health-check.sh — Verificação de Saúde e Telemetria Local Honesta do Vox Populi
 # ==============================================================================
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 STATUS_FILE="${SCRIPT_DIR}/monitoring/status.json"
-CONFIG_FILE="${SCRIPT_DIR}/config/farol.json"
+CONFIG_FILE="${SCRIPT_DIR}/config/vox-populi.json"
 
 read_temperature() {
     if [[ -f "/sys/class/thermal/thermal_zone0/temp" ]]; then
         local raw
         raw=$(cat /sys/class/thermal/thermal_zone0/temp 2>/dev/null || echo "0")
-        echo "$((raw / 1000))"
-    elif command -v vcgencmd >/dev/null 2>&1; then
-        vcgencmd measure_temp 2>/dev/null | tr -cd '0-9.' | cut -d. -f1 || echo "null"
-    else
-        echo "null"
+        if [[ -n "${raw}" && "${raw}" =~ ^[0-9]+$ && "${raw}" -gt 0 ]]; then
+            echo "$((raw / 1000))"
+            return
+        fi
     fi
+    if command -v vcgencmd >/dev/null 2>&1; then
+        local t
+        t=$(vcgencmd measure_temp 2>/dev/null | tr -cd '0-9.' | cut -d. -f1 || echo "")
+        if [[ -n "${t}" && "${t}" =~ ^[0-9]+$ ]]; then
+            echo "${t}"
+            return
+        fi
+    fi
+    echo "null"
+}
+
+read_architecture() {
+    uname -m 2>/dev/null || echo "unknown"
 }
 
 read_ram_mb() {
@@ -42,7 +54,7 @@ read_cpu_percent() {
 }
 
 read_storage_metrics() {
-    local cache_dir="${1:-/var/lib/vox-farol/cache}"
+    local cache_dir="${1:-/var/lib/vox-populi/cache}"
     local used_mb=0
     local avail_mb=0
 
@@ -88,7 +100,7 @@ check_relay_health() {
 
 main() {
     local port="3921"
-    local cache_dir="/var/lib/vox-farol/cache"
+    local cache_dir="/var/lib/vox-populi/cache"
 
     if [[ -f "${CONFIG_FILE}" ]] && command -v grep >/dev/null 2>&1; then
         local parsed_port parsed_dir
@@ -102,7 +114,8 @@ main() {
         fi
     fi
 
-    local temp ram cpu relay_alive gw_reach now storage_info used_mb avail_mb node_status
+    local arch temp ram cpu relay_alive gw_reach now storage_info used_mb avail_mb node_status
+    arch=$(read_architecture)
     temp=$(read_temperature)
     ram=$(read_ram_mb)
     cpu=$(read_cpu_percent)
@@ -127,6 +140,7 @@ main() {
   "version": "0.1.1",
   "updatedAt": "${now}",
   "system": {
+    "arch": "${arch}",
     "cpuPercent": ${cpu:-0.0},
     "ramUsageMb": ${ram:-0},
     "temperatureC": ${temp},
@@ -147,7 +161,7 @@ main() {
 }
 EOF
     mv -f "${STATUS_FILE}.tmp" "${STATUS_FILE}"
-    echo "[+] Vox Farol health check completed: status=${node_status} (relayRunning=${relay_alive}, cacheUsed=${used_mb}MB)"
+    echo "[+] Vox Populi health check completed: status=${node_status} (relayRunning=${relay_alive}, cacheUsed=${used_mb}MB)"
 }
 
 main "$@"

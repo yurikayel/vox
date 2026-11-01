@@ -1,10 +1,10 @@
-# Vox Farol — Nó Comunitário Autônomo para Linux (Raspberry Pi / x86)
+# Vox Populi — Nó Comunitário Autônomo para Linux (Raspberry Pi / x86)
 
-> **Módulo:** `vox-farol`  
-> **Arquitetura Canônica:** [ADR-008](../docs/adr/008-vox-farol-community-node-architecture.md)  
+> **Módulo:** `vox-populi`<br>
+> **Arquitetura Canônica:** [ADR-008](../docs/adr/008-vox-populi-community-node-architecture.md)<br>
 > **Doutrina:** Operação Silenciosa / Prontidão Fria (Cold Readiness)
 
-O **Vox Farol** é um pacote para implantação de nós comunitários autônomos de baixo consumo energético em sistemas operacionais baseados em Linux (Raspberry Pi 3/4/5, mini-PCs x86_64/ARM64 e servidores caseiros).
+O **Vox Populi** é um pacote para implantação de nós comunitários autônomos de baixo consumo energético em sistemas operacionais baseados em Linux (Raspberry Pi 3/4/5, mini-PCs x86_64/ARM64 e servidores caseiros).
 
 ---
 
@@ -12,14 +12,14 @@ O **Vox Farol** é um pacote para implantação de nós comunitários autônomos
 
 1. **Autonomia do Criador:** O nó funciona indefinidamente mesmo que o computador do mantenedor esteja offline e todos os serviços de nuvem sejam desativados.
 2. **Segurança por Padrão (Loopback):** O serviço é iniciado estritamente em `127.0.0.1:3921`. Nenhuma interface de rede externa (LAN ou WAN) é aberta automaticamente na instalação.
-3. **Mínimo Privilégio e Sandboxing:** O serviço executa sob usuário isolado (`vox-farol`), sem privilégios administrativos e sob proteção estrita do systemd (`ProtectSystem=full`, `ProtectHome=true`, `PrivateTmp=true`, `NoNewPrivileges=true`).
+3. **Mínimo Privilégio e Sandboxing:** O serviço executa sob usuário isolado (`vox-populi`), sem privilégios administrativos e sob proteção estrita do systemd (`ProtectSystem=full`, `ProtectHome=true`, `PrivateTmp=true`, `NoNewPrivileges=true`).
 4. **Aplicação Real de Limites de Recursos:**
    - **CPU:** `CPUQuota=40%` aplicado via cgroups do systemd.
    - **Memória RAM:** `MemoryMax=512M` aplicado via cgroups do systemd.
    - **Armazenamento:** `VOX_RELAY_MAX_CACHE_MB=2048` (2 GB) aplicado em tempo de execução com descarte LRU automático de transações antigas.
 5. **Transparência e Telemetria Honesta:**
    - O serviço declara explicitamente o status real de cada subsistema: o relay HTTP está operacional; o processo daemon WebTorrent seeder ainda não está implementado neste MVP e é reportado honestamente como `seederStatus: not_implemented`.
-   - Telemetria de CPU, memória, temperatura e disco é medida no hardware real e salva localmente em `/opt/vox-farol/monitoring/status.json` via temporizador systemd a cada 5 minutos.
+   - Telemetria de CPU, memória, temperatura e disco é medida no hardware real e salva localmente em `/opt/vox-populi/monitoring/status.json` via temporizador systemd a cada 5 minutos.
    - Zero telemetria centralizada (sem phone-home).
 
 ---
@@ -27,13 +27,13 @@ O **Vox Farol** é um pacote para implantação de nós comunitários autônomos
 ## 2. Estrutura do Pacote
 
 ```
-vox-farol/
+vox-populi/
 ├── config/
-│   └── farol.json                 # Configuração de rede e cotas de disco
+│   └── vox-populi.json                 # Configuração de rede e cotas de disco
 ├── systemd/
-│   ├── vox-farol.service          # Unidade do relay com isolamento e cgroups
-│   ├── vox-farol-health.service   # Serviço de verificação de telemetria
-│   └── vox-farol-health.timer     # Agendador periódico (5 minutos)
+│   ├── vox-populi.service          # Unidade do relay com isolamento e cgroups
+│   ├── vox-populi-health.service   # Serviço de verificação de telemetria
+│   └── vox-populi-health.timer     # Agendador periódico (5 minutos)
 ├── monitoring/
 │   └── status.json                # Telemetria local honesta
 ├── install.sh                     # Instalador com verificação estrita de boot
@@ -54,7 +54,7 @@ vox-farol/
 
 ### Instalação Interativa:
 ```bash
-cd vox-farol
+cd vox-populi
 bash install.sh
 ```
 
@@ -65,13 +65,15 @@ bash install.sh --yes
 
 O instalador executa uma verificação obrigatória de prontidão (`systemctl is-active` + `HTTP GET http://127.0.0.1:3921/health`) e encerra com erro fatal (`exit 1`) caso o serviço não inicie com sucesso.
 
+Ao atualizar uma instalação anterior, o instalador desativa as unidades antigas, migra o diretório de instalação e move cache/logs para os novos caminhos quando os destinos ainda não existem. Dados existentes nunca são apagados pela instalação.
+
 ---
 
 ## 4. Configuração de Rede e Acesso LAN (Opcional)
 
-Por padrão de segurança, o Farol escuta apenas em `127.0.0.1` (loopback). Caso deseje disponibilizar o cache local para outros dispositivos conectados na mesma rede Wi-Fi/Ethernet doméstica:
+Por padrão de segurança, o Vox Populi escuta apenas em `127.0.0.1` (loopback). Caso deseje disponibilizar o cache local para outros dispositivos conectados na mesma rede Wi-Fi/Ethernet doméstica:
 
-1. Edite `config/farol.json`:
+1. Edite `config/vox-populi.json`:
    ```json
    "network": {
      "listenHost": "0.0.0.0",
@@ -79,18 +81,18 @@ Por padrão de segurança, o Farol escuta apenas em `127.0.0.1` (loopback). Caso
      "enableLanDiscovery": true
    }
    ```
-2. Configure o serviço systemd para escutar no host desejado ou `0.0.0.0` em `/etc/systemd/system/vox-farol.service`:
+2. Configure o serviço systemd para escutar no host desejado ou `0.0.0.0` em `/etc/systemd/system/vox-populi.service`:
    ```ini
    ExecStart=/usr/bin/python3 -m relay.server --port 3921 --host 0.0.0.0
    ```
 3. Configure o firewall local (UFW) para restringir o acesso apenas à sub-rede local (ex: `192.168.1.0/24`), **nunca expondo a porta 3921 à WAN**:
    ```bash
-   sudo ufw allow from 192.168.1.0/24 to any port 3921 proto tcp comment "Vox Farol LAN"
+   sudo ufw allow from 192.168.1.0/24 to any port 3921 proto tcp comment "Vox Populi LAN"
    ```
 4. Reinicie o serviço:
    ```bash
    sudo systemctl daemon-reload
-   sudo systemctl restart vox-farol.service
+   sudo systemctl restart vox-populi.service
    ```
 
 ---
@@ -99,20 +101,20 @@ Por padrão de segurança, o Farol escuta apenas em `127.0.0.1` (loopback). Caso
 
 - **Status do serviço principal:**
   ```bash
-  systemctl status vox-farol.service
+  systemctl status vox-populi.service
   ```
 - **Status do temporizador de saúde:**
   ```bash
-  systemctl status vox-farol-health.timer
+  systemctl status vox-populi-health.timer
   ```
 - **Logs ao vivo:**
   ```bash
-  journalctl -u vox-farol.service -f
+  journalctl -u vox-populi.service -f
   ```
 - **Executar diagnóstico manual:**
   ```bash
-  bash /opt/vox-farol/health-check.sh
-  cat /opt/vox-farol/monitoring/status.json
+  bash /opt/vox-populi/health-check.sh
+  cat /opt/vox-populi/monitoring/status.json
   ```
 - **Desinstalação limpa:**
   ```bash

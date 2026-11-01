@@ -1,15 +1,15 @@
 [Unit]
-Description=Vox Farol — Nó Comunitário Autônomo e Relay P2P
+Description=Vox Populi — Nó Comunitário Autônomo e Relay P2P
 Documentation=https://github.com/yurikayel/vox
 After=network-online.target
 Wants=network-online.target
 
 [Service]
 Type=simple
-User=vox-farol
-Group=vox-farol
-WorkingDirectory=/opt/vox-farol
-Environment="VOX_RELAY_CACHE_DIR=/var/lib/vox-farol/cache"
+User=vox-populi
+Group=vox-populi
+WorkingDirectory=/opt/vox-populi
+Environment="VOX_RELAY_CACHE_DIR=/var/lib/vox-populi/cache"
 Environment="VOX_RELAY_MAX_CACHE_MB=2048"
 Environment="VOX_RELAY_PORT=3921"
 ExecStart=/usr/bin/python3 -m relay.server --port 3921 --host 127.0.0.1
@@ -28,14 +28,14 @@ NoNewPrivileges=true
 ProtectSystem=full
 ProtectHome=true
 PrivateTmp=true
-StateDirectory=vox-farol
-LogsDirectory=vox-farol
-ReadWritePaths=/var/lib/vox-farol /var/log/vox-farol /opt/vox-farol/monitoring
+StateDirectory=vox-populi
+LogsDirectory=vox-populi
+ReadWritePaths=/var/lib/vox-populi /var/log/vox-populi /opt/vox-populi/monitoring
 
 # Gestão de Logs
 StandardOutput=journal
 StandardError=journal
-SyslogIdentifier=vox-farol
+SyslogIdentifier=vox-populi
 
 [Install]
 WantedBy=multi-user.target

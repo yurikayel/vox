@@ -1,4 +1,4 @@
-"""Unit tests for Windows desktop launchers (VoxSeeder and VoxStewardKit)."""
+"""Unit tests for Windows desktop launchers (VoxPopuli and VoxStewardKit)."""
 from __future__ import annotations
 
 import importlib.util
