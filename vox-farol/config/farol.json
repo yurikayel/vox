@@ -1,11 +1,11 @@
 {
   "nodeName": "Vox Farol Comunitário",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "role": "lighthouse",
   "network": {
     "listenHost": "127.0.0.1",
     "listenPort": 3921,
-    "enableLanDiscovery": true,
+    "enableLanDiscovery": false,
     "enablePublicInbound": false
   },
   "resources": {
@@ -19,7 +19,7 @@
   },
   "services": {
     "relay": true,
-    "seeder": true,
+    "seeder": false,
     "healthCheckIntervalSec": 300
   },
   "communities": [

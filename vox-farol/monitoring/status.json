@@ -1,22 +1,23 @@
 {
-  "nodeStatus": "initialized",
-  "version": "0.1.0",
-  "updatedAt": "2026-11-01T00:00:00Z",
-  "uptimeSeconds": 0,
+  "nodeStatus": "uninitialized",
+  "version": "0.1.1",
+  "updatedAt": "1970-01-01T00:00:00Z",
   "system": {
     "cpuPercent": 0.0,
     "ramUsageMb": 0,
     "temperatureC": null,
     "storageUsedMb": 0,
-    "storageAvailableMb": 2048
+    "storageAvailableMb": 0
   },
   "network": {
     "lanPeersCount": 0,
-    "signalingReachable": true,
-    "lastHealthCheck": "never"
+    "upstreamGatewayReachable": false,
+    "signalingReachable": "unknown",
+    "lastHealthCheck": "1970-01-01T00:00:00Z"
   },
   "services": {
     "relayRunning": false,
-    "seederActive": false
+    "seederActive": false,
+    "seederStatus": "not_implemented"
   }
 }

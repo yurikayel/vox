@@ -9,17 +9,27 @@ Type=simple
 User=vox-farol
 Group=vox-farol
 WorkingDirectory=/opt/vox-farol
-ExecStart=/usr/bin/python3 -m relay.server --port 3921 --bind 127.0.0.1
+Environment="VOX_RELAY_CACHE_DIR=/var/lib/vox-farol/cache"
+Environment="VOX_RELAY_MAX_CACHE_MB=2048"
+Environment="VOX_RELAY_PORT=3921"
+ExecStart=/usr/bin/python3 -m relay.server --port 3921 --host 127.0.0.1
 Restart=always
 RestartSec=5
 KillMode=mixed
 TimeoutStopSec=15
+
+# Limites de Recursos Efetivos (cgroups)
+CPUQuota=40%
+MemoryMax=512M
+TasksMax=100
 
 # Isolamento e Segurança do Processo
 NoNewPrivileges=true
 ProtectSystem=full
 ProtectHome=true
 PrivateTmp=true
+StateDirectory=vox-farol
+LogsDirectory=vox-farol
 ReadWritePaths=/var/lib/vox-farol /var/log/vox-farol /opt/vox-farol/monitoring
 
 # Gestão de Logs
