@@ -6,8 +6,9 @@ import * as cacheNode from "../cache-node.js";
 import * as social from "../social.js";
 import * as postOwnership from "../post-ownership.js";
 import * as frames from "../open-frames-host.js";
-import { i18n } from "../i18n-pt-br.js";
-import { parseRoute, route } from "./route.js";
+import * as i18n from "../i18n-pt-br.js";
+import { parseRoute } from "./route-parse.js";
+import { route } from "./navigation.js";
 import { getActiveUser } from "./context.js";
 import { openZapModal } from "./zap-modal.js";
 import * as peers from "../peers.js";
@@ -15,10 +16,6 @@ import * as localAccount from "../local-account.js";
 import {
   showHome,
   showTagFeed,
-  togglePostComments,
-  toggleCommentReplyComposer,
-  onInlineReplySubmit,
-  onNestedCommentReplySubmit,
 } from "./screens-home.js";
 import {
   showCommunity,
@@ -28,6 +25,10 @@ import {
 import {
   bumpReplyCount,
   appendInlineReply,
+  togglePostComments,
+  toggleCommentReplyComposer,
+  onInlineReplySubmit,
+  onNestedCommentReplySubmit,
 } from "./screens-compose.js";
 import { handleRepostClick } from "./repost-ui.js";
 
