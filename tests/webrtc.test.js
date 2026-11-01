@@ -119,3 +119,26 @@ test("webrtc - createRtcConfig combina STUN, TURN estático e TURN customizado",
     credential: "segredo_123",
   });
 });
+
+test("webrtc - getWebTorrentTrackers e getNostrRelays fornecem fallbacks gratuitos", () => {
+  const cfg = {
+    webtorrentTrackers: ["wss://custom.tracker.org", ""],
+    nostrRelays: ["wss://custom.nostr.io", null],
+  };
+
+  const trackers = webrtcPeer.getWebTorrentTrackers(cfg);
+  assert.equal(trackers.length, 1);
+  assert.equal(trackers[0], "wss://custom.tracker.org");
+
+  const relays = webrtcPeer.getNostrRelays(cfg);
+  assert.equal(relays.length, 1);
+  assert.equal(relays[0], "wss://custom.nostr.io");
+
+  const fallbackTrackers = webrtcPeer.getWebTorrentTrackers({});
+  assert.ok(fallbackTrackers.length >= 2);
+  assert.ok(fallbackTrackers[0].includes("tracker"));
+
+  const fallbackRelays = webrtcPeer.getNostrRelays({});
+  assert.ok(fallbackRelays.length >= 2);
+  assert.ok(fallbackRelays[0].includes("relay"));
+});

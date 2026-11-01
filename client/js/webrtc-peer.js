@@ -3,6 +3,11 @@
  * Conexão peer-to-peer entre dispositivos via RTCDataChannel ("vox-peer-v0").
  * Troca de mensagens WANT/HAVE/BLOB com sinalização WebSocket opcional e autohospedada.
  */
+import {
+  buildNostrSignalingCandidates,
+  createNostrSignalEnvelope,
+  parseNostrSignalMessage,
+} from "./nostr-signaling.js";
 
 let signalingWs = null;
 let currentPeerId = null;
@@ -35,6 +40,16 @@ export async function loadSignalingConfig() {
     stun: ["stun:stun.l.google.com:19302"],
     turn: [],
     signalingUrls: ["ws://127.0.0.1:3921"],
+    webtorrentTrackers: [
+      "wss://tracker.openwebtorrent.com",
+      "wss://tracker.btorrent.xyz",
+      "wss://tracker.webtorrent.dev",
+    ],
+    nostrRelays: [
+      "wss://relay.damus.io",
+      "wss://nos.lol",
+      "wss://relay.snort.social",
+    ],
     maxRtcPeers: 8,
   };
   return configCache;
@@ -150,6 +165,36 @@ export function getActiveSignalingIndex() {
 
 export function resetSignalingIndex() {
   activeSignalingIndex = 0;
+}
+
+export function getWebTorrentTrackers(config) {
+  const trackers = Array.isArray(config?.webtorrentTrackers)
+    ? config.webtorrentTrackers.map((t) => String(t || "").trim()).filter(Boolean)
+    : [];
+  return trackers.length > 0
+    ? trackers
+    : ["wss://tracker.openwebtorrent.com", "wss://tracker.btorrent.xyz"];
+}
+
+export function getNostrRelays(config) {
+  const relays = Array.isArray(config?.nostrRelays)
+    ? config.nostrRelays.map((r) => String(r || "").trim()).filter(Boolean)
+    : [];
+  return relays.length > 0
+    ? relays
+    : ["wss://relay.damus.io", "wss://nos.lol"];
+}
+
+export function getDecentralizedSignalingMesh(config) {
+  const baseUrls = getSignalingCandidates(config);
+  const trackers = getWebTorrentTrackers(config);
+  const nostr = getNostrRelays(config);
+  return {
+    baseUrls,
+    webtorrentTrackers: trackers,
+    nostrRelays: buildNostrSignalingCandidates(nostr),
+    totalEndpoints: baseUrls.length + trackers.length + nostr.length,
+  };
 }
 
 export function getSignalingUrl(config) {
