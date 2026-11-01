@@ -51,7 +51,14 @@ $SUDO mkdir -p "${TARGET_DIR}/monitoring"
 $SUDO mkdir -p "${TARGET_DIR}/config"
 
 echo "[*] Copiando arquivos do serviço e relay Python..."
-$SUDO cp -r "${SCRIPT_DIR}/../relay" "${TARGET_DIR}/"
+if [[ -d "${SCRIPT_DIR}/relay" ]]; then
+    $SUDO cp -r "${SCRIPT_DIR}/relay" "${TARGET_DIR}/"
+elif [[ -d "${SCRIPT_DIR}/../relay" ]]; then
+    $SUDO cp -r "${SCRIPT_DIR}/../relay" "${TARGET_DIR}/"
+else
+    echo "[!] Erro: Módulo relay não encontrado em ${SCRIPT_DIR}/relay nem ${SCRIPT_DIR}/../relay."
+    exit 1
+fi
 $SUDO cp "${SCRIPT_DIR}/config/farol.json" "${TARGET_DIR}/config/"
 $SUDO cp "${SCRIPT_DIR}/monitoring/status.json" "${TARGET_DIR}/monitoring/"
 $SUDO cp "${SCRIPT_DIR}/health-check.sh" "${TARGET_DIR}/"
@@ -66,6 +73,10 @@ echo "[*] Instalando unidades systemd (serviço e temporizador de saúde)..."
 $SUDO cp "${SCRIPT_DIR}/systemd/${SERVICE_NAME}" "/etc/systemd/system/${SERVICE_NAME}"
 $SUDO cp "${SCRIPT_DIR}/systemd/${HEALTH_SERVICE}" "/etc/systemd/system/${HEALTH_SERVICE}"
 $SUDO cp "${SCRIPT_DIR}/systemd/${TIMER_NAME}" "/etc/systemd/system/${TIMER_NAME}"
+$SUDO chmod 0644 "/etc/systemd/system/${SERVICE_NAME}"
+$SUDO chmod 0644 "/etc/systemd/system/${HEALTH_SERVICE}"
+$SUDO chmod 0644 "/etc/systemd/system/${TIMER_NAME}"
+
 
 $SUDO systemctl daemon-reload
 $SUDO systemctl enable "${SERVICE_NAME}"
@@ -100,7 +111,13 @@ if [[ "${IS_OPERATIONAL}" != "true" ]]; then
 fi
 
 echo "[*] Executando verificação de saúde inicial e gerando telemetria..."
-$SUDO -u "${USER_NAME}" bash "${TARGET_DIR}/health-check.sh"
+if command -v sudo >/dev/null 2>&1; then
+    sudo -u "${USER_NAME}" bash "${TARGET_DIR}/health-check.sh"
+elif command -v runuser >/dev/null 2>&1; then
+    runuser -u "${USER_NAME}" -- bash "${TARGET_DIR}/health-check.sh"
+else
+    su -s /bin/bash "${USER_NAME}" -c "bash \"${TARGET_DIR}/health-check.sh\""
+fi
 
 echo "----------------------------------------------------------------------"
 echo "[+] SUCESSO COMPROVADO: Vox Farol instalado, ativo e validado via systemd!"
