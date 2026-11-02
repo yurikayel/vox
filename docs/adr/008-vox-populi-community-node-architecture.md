@@ -26,9 +26,11 @@ O Vox Populi atua como um nó servidor de baixo consumo operado voluntariamente 
 3. **Seeder Silencioso:** Retransmite dados via WebTorrent DataChannels sem que nenhum usuário individual precise manter a aba do navegador aberta.
 4. **Health Guardian:** Mede e expõe localmente telemetria objetiva de integridade (temperatura de hardware, uso de memória, latência com gateways Arweave e status de conectividade).
 
+Essas funções descrevem a arquitetura-alvo, não o estado completo do código. Em 1º de novembro de 2026, os pacotes Linux e Windows implementam relay/cache HTTP local; WebTorrent seeding e descoberta P2P ainda não estão implementados. No cliente, os endereços Nostr são apenas candidatos catalogados: não há publicação, subscrição nem transporte de sinalização Nostr integrado ao WebRTC. O tráfego outbound implementado pelo relay busca dados nos gateways Arweave configurados.
+
 ### B. Especificação Operacional Estrita
 1. **Usuário Dedicado sem Privilégios:** A execução ocorre sob o usuário de sistema `vox-populi`, sem acesso root e sem permissão de sudo.
-2. **Zero Portas Inbound Obrigatórias:** O Vox Populi opera primordialmente em modo outbound (conectando-se a relays Nostr, trackers WebTorrent e gateways GraphQL) ou vinculado à interface de loopback / LAN privada (`127.0.0.1` / `192.168.x.x:3921`). Nenhuma porta WAN precisa ser aberta no roteador doméstico.
+2. **Zero Portas Inbound Obrigatórias:** O relay/cache atual usa loopback por padrão (`127.0.0.1:3921`) e faz consultas outbound aos gateways Arweave configurados. A lista de relays Nostr não é conectada e o seeder WebTorrent ainda não existe; portanto, não se deve inferir tráfego para esses serviços a partir desta ADR. Uma implantação LAN opcional pode vincular o relay a um endereço privado, sem exigir porta WAN no roteador doméstico.
 3. **Limites Rígidos de Recursos:** O arquivo de configuração `config/vox-populi.json` impõe limites de armazenamento (padrão: 2 GB), cota máxima de tráfego mensal e limitação de threads de CPU.
 4. **Instalação Reproduzível e Desinstalação Limpa:** Scripts shell idempotentes (`install.sh`, `uninstall.sh`, `update.sh`, `health-check.sh`) com validação de checksum e confirmação interativa explícita.
 5. **Autonomia do Criador:** O nó opera e sobrevive independentemente de qualquer servidor central; se o mantenedor desaparecer, o Vox Populi continua servindo sua comunidade.

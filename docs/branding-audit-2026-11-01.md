@@ -16,14 +16,16 @@
 
 ## Alegações corrigidas
 
-O desktop WebView não faz seeding WebTorrent, descoberta de peers nem relay comunitário. O bridge agora reporta `seed_active: false`; README, texto de build e saída de console não anunciam uma malha P2P ativa. O serviço Node Zero permanece relay/cache local, com os estados de seeder declarados como não implementados.
+O desktop WebView não faz seeding WebTorrent, descoberta de peers nem relay comunitário. O bridge reporta `seed_active: false`; README, texto de build e saída de console não anunciam uma malha P2P ativa. O serviço Node Zero permanece relay/cache local, com os estados de seeder declarados como não implementados.
+
+Na revisão ampliada de 1º de novembro, foram encontrados textos antigos que ainda prometiam seeding ou nós participativos ativos em `docs/adr/010-vox-contribution-engine-execute-e-ajude.md`, `android/README.md`, nas strings e comentários do wrapper Android e em `POSITIONING.md`. Esses textos agora distinguem arquitetura proposta do estado atual: relay/cache local em Windows/Linux; sem WebTorrent seeding ou descoberta de nós na LAN; APK Android descrito como wrapper PWA/foreground WebView. A descrição do estado Android não foi recompilada em APK nesta rodada.
 
 ## Validação visual
 
-A bandeja é uma aplicação sem janela principal. A automação desta sessão não expôs uma janela do VoxPopuli para inspeção do menu. Portanto, ícones em execução, apresentação visual do menu e feedback de cada ação continuam **pendentes de inspeção manual**; não foram aprovados nem classificados como falha funcional.
+A bandeja é uma aplicação sem janela principal. A tentativa de abrir `VoxPopuli.exe` via Computer Use foi bloqueada pelo controle da sessão (`Computer Use was not approved to use voxpopuli`). Nenhuma alternativa foi usada para contornar o bloqueio. Ícone, apresentação do menu e feedback de cada ação continuam **pendentes de inspeção manual**; não foram aprovados nem classificados como falha funcional.
 
 ## Evidências e limites
 
-- Specs, scripts de build, README desktop, README do Node Zero, serviço systemd, tray e launcher foram inspecionados.
+- Specs, scripts de build, README desktop, README do Node Zero, serviço systemd, tray, launcher, README Android, textos do app, posicionamento e ADR-010 foram inspecionados.
 - Os dois builds PyInstaller 6.22.3 terminaram em `C:\Users\yurik\AppData\Local\Temp\vox-brand-audit-1dd007409d52489ea57240158db3cd50`; os dois recursos PE exibem os nomes e versões esperados, conferidos com `pyi-grab_version`. O build desktop emitiu um aviso não fatal porque uma coleta opcional tentou importar o módulo Android do WebView, ausente no Windows.
 - Nenhum instalador foi executado, nenhum autostart foi ativado e nenhum executável ativo foi substituído.

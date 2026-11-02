@@ -13,7 +13,7 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 
 /**
- * Foreground Service que mantém a malha P2P/WebRTC ativa mesmo com a tela apagada.
+ * Foreground Service do wrapper Android; não implementa transporte P2P/WebRTC.
  */
 public class VoxPopuliService extends Service {
 

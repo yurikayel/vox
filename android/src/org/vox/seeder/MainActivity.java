@@ -9,7 +9,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 /**
- * Interface principal do Vox: renderiza o PWA em tela cheia e inicia o Seeder em background.
+ * Interface principal do Vox: renderiza o PWA em tela cheia e inicia o wrapper em primeiro plano.
  */
 public class MainActivity extends Activity {
 
