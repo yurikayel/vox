@@ -11,8 +11,10 @@ import hmac
 import json
 import os
 import re
+import stat
 import sys
 import tempfile
+import threading
 import urllib.error
 import urllib.request
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -53,9 +55,18 @@ UPSTREAM_GATEWAYS = [
 TX_ID_REGEX = re.compile(r"^[A-Za-z0-9_-]{43}$")
 CACHE_HASH_SUFFIX = ".sha256"
 INTEGRITY_FAILURES = 0
+_CACHE_WRITE_LOCK = threading.RLock()
 
 def ensure_cache_dir():
-    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    with _CACHE_WRITE_LOCK:
+        CACHE_DIR.mkdir(parents=True, exist_ok=True)
+        for sidecar in CACHE_DIR.glob(f"*{CACHE_HASH_SUFFIX}"):
+            data_file = sidecar.with_name(sidecar.name[:-len(CACHE_HASH_SUFFIX)])
+            if not data_file.is_file():
+                try:
+                    sidecar.unlink(missing_ok=True)
+                except OSError:
+                    pass
 
 def count_cached_items():
     if not CACHE_DIR.exists():
@@ -119,8 +130,12 @@ def atomic_write(path, content):
 
 def write_cache_entry(cache_file, data):
     digest = hashlib.sha256(data).hexdigest().encode("ascii")
-    atomic_write(cache_file, data)
-    atomic_write(cache_hash_path(cache_file), digest)
+    try:
+        atomic_write(cache_file, data)
+        atomic_write(cache_hash_path(cache_file), digest)
+    except Exception:
+        remove_cache_entry(cache_file)
+        raise
 
 
 def remove_cache_entry(cache_file):
@@ -130,31 +145,123 @@ def remove_cache_entry(cache_file):
         except OSError:
             pass
 
+def _cache_file_identity(file_stat):
+    return (
+        file_stat.st_dev,
+        file_stat.st_ino,
+        file_stat.st_size,
+        getattr(file_stat, "st_mtime_ns", None),
+    )
+
+
+def _read_stable_cache_file(path):
+    flags = os.O_RDONLY | getattr(os, "O_BINARY", 0) | getattr(os, "O_NOFOLLOW", 0)
+    before = path.lstat()
+    reparse_flag = getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0)
+    if stat.S_ISLNK(before.st_mode) or getattr(before, "st_file_attributes", 0) & reparse_flag:
+        raise OSError("cache path is a link or reparse point")
+    descriptor = os.open(path, flags)
+    try:
+        opened = os.fstat(descriptor)
+        if not stat.S_ISREG(opened.st_mode) or _cache_file_identity(before) != _cache_file_identity(opened):
+            raise OSError("cache file changed during open")
+        chunks = []
+        while True:
+            chunk = os.read(descriptor, 1024 * 1024)
+            if not chunk:
+                break
+            chunks.append(chunk)
+        finished = os.fstat(descriptor)
+        current_path = path.lstat()
+        if (
+            _cache_file_identity(opened) != _cache_file_identity(finished)
+            or _cache_file_identity(finished) != _cache_file_identity(current_path)
+        ):
+            raise OSError("cache file changed during read")
+        return b"".join(chunks)
+    finally:
+        os.close(descriptor)
+
+
+def _is_allowed_cache_entry(cache_file, sidecar=False):
+    try:
+        path = Path(cache_file)
+        resolved = path.resolve()
+        cache_root = CACHE_DIR.resolve()
+        return (
+            path.parent.absolute() == CACHE_DIR.absolute()
+            and resolved.parent == cache_root
+            and resolved == path.absolute()
+            and (sidecar or not path.name.endswith(CACHE_HASH_SUFFIX))
+            and not path.name.startswith(".vox-")
+        )
+    except (OSError, RuntimeError, TypeError, ValueError):
+        return False
+
 
 def read_verified_cache_entry(cache_file):
     global INTEGRITY_FAILURES
     try:
-        data = cache_file.read_bytes()
-        expected = cache_hash_path(cache_file).read_text(encoding="ascii").strip()
+        cache_file = Path(cache_file)
+    except (TypeError, ValueError):
+        INTEGRITY_FAILURES += 1
+        return None
+    if not _is_allowed_cache_entry(cache_file):
+        INTEGRITY_FAILURES += 1
+        return None
+    try:
+        data = _read_stable_cache_file(cache_file)
+        hash_file = cache_hash_path(cache_file)
+        if not _is_allowed_cache_entry(hash_file, sidecar=True):
+            raise OSError("cache sidecar path is outside the cache root")
+        expected = _read_stable_cache_file(hash_file).decode("ascii")
         actual = hashlib.sha256(data).hexdigest()
-        if len(expected) != 64 or not hmac.compare_digest(expected, actual):
+        if (
+            len(expected) != 64
+            or re.fullmatch(r"[0-9a-f]{64}", expected) is None
+            or not hmac.compare_digest(expected, actual)
+        ):
             INTEGRITY_FAILURES += 1
             remove_cache_entry(cache_file)
             return None
         os.utime(cache_file, None)
         return data
-    except (OSError, UnicodeError):
+    except (OSError, UnicodeError, ValueError, TypeError):
         INTEGRITY_FAILURES += 1
         remove_cache_entry(cache_file)
         return None
-def evict_cache_if_needed(incoming_bytes=0):
-    max_b = max_cache_bytes()
-    if max_b is None or not CACHE_DIR.exists():
-        return
-    current_bytes = cache_dir_bytes()
-    if current_bytes + incoming_bytes <= max_b:
-        return
-    _evict_cache_entries(_cache_candidates(), current_bytes, incoming_bytes, max_b)
+
+
+def store_cache_entry_with_quota(cache_file, data):
+    incoming_bytes = len(data) + len(hashlib.sha256(data).hexdigest())
+    with _CACHE_WRITE_LOCK:
+        ensure_cache_dir()
+        hash_file = cache_hash_path(cache_file)
+        existing_bytes = sum(
+            path.stat().st_size
+            for path in (cache_file, hash_file)
+            if path.is_file()
+        )
+        additional_bytes = max(0, incoming_bytes - existing_bytes)
+        evict_cache_if_needed(additional_bytes, protected_path=cache_file)
+        limit = max_cache_bytes()
+        if limit is not None and cache_dir_bytes() + additional_bytes > limit:
+            return False
+        write_cache_entry(cache_file, data)
+        return True
+
+
+def evict_cache_if_needed(incoming_bytes=0, protected_path=None):
+    with _CACHE_WRITE_LOCK:
+        max_b = max_cache_bytes()
+        if max_b is None or not CACHE_DIR.exists():
+            return
+        current_bytes = cache_dir_bytes()
+        if current_bytes + incoming_bytes <= max_b:
+            return
+        _evict_cache_entries(
+            _cache_candidates(), current_bytes, incoming_bytes, max_b, protected_path
+        )
 
 def _cache_candidates():
     files = []
@@ -170,16 +277,18 @@ def _cache_candidates():
                 continue
             hash_file = cache_hash_path(f)
             hash_size = hash_file.stat().st_size if hash_file.is_file() else 0
-            files.append((f.stat().st_mtime, f.stat().st_size + hash_size, f, hash_file if hash_size else None))
+            files.append((f.stat().st_mtime, f.stat().st_size + hash_size, f, hash_file if hash_file.is_file() else None))
         except OSError:
             pass
     files.sort(key=lambda x: x[0])
     return files
 
-def _evict_cache_entries(files, current_bytes, incoming_bytes, max_bytes):
+def _evict_cache_entries(files, current_bytes, incoming_bytes, max_bytes, protected_path=None):
     for _, size, f, hash_file in files:
         if current_bytes + incoming_bytes <= max_bytes:
             break
+        if protected_path is not None and f == protected_path:
+            continue
         try:
             f.unlink()
             if hash_file:
@@ -275,13 +384,7 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
 
     def _cache_transaction(self, cache_file, data):
         try:
-            ensure_cache_dir()
-            hash_bytes = len(hashlib.sha256(data).hexdigest())
-            incoming_bytes = len(data) + hash_bytes
-            evict_cache_if_needed(incoming_bytes)
-            limit = max_cache_bytes()
-            if limit is None or cache_dir_bytes() + incoming_bytes <= limit:
-                write_cache_entry(cache_file, data)
+            store_cache_entry_with_quota(cache_file, data)
         except Exception:
             pass
 
@@ -297,13 +400,15 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
         ensure_cache_dir()
         index_file = CACHE_DIR / f"index_{comm_slug}.json"
         if index_file.is_file():
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json; charset=utf-8")
-            self.send_header("X-Vox-Cache", "HIT")
-            self._set_cors_headers()
-            self.end_headers()
-            self.wfile.write(index_file.read_bytes())
-            return
+            data = read_verified_cache_entry(index_file)
+            if data is not None:
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("X-Vox-Cache", "HIT")
+                self._set_cors_headers()
+                self.end_headers()
+                self.wfile.write(data)
+                return
         self._send_json({"error": "Espelho de comunidade nao encontrado"}, 404)
 
     def _handle_inbox_get(self, to_addr):
@@ -346,12 +451,10 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
     def _store_mirror(self, body, comm_id):
         try:
             ensure_cache_dir()
-            evict_cache_if_needed(len(body))
-            limit = max_cache_bytes()
-            if limit is not None and cache_dir_bytes() + len(body) > limit:
+            index_file = CACHE_DIR / f"index_{comm_id}.json"
+            if not store_cache_entry_with_quota(index_file, body):
                 self._send_json({"error": "quota de cache excedida"}, 507)
                 return
-            (CACHE_DIR / f"index_{comm_id}.json").write_bytes(body)
             self._send_json({"status": "mirrored", "communityId": comm_id})
         except Exception as error:
             self._send_json({"error": str(error)}, 500)
