@@ -1,6 +1,6 @@
-# Vox Populi — Nó Zero para Windows
+# VoxPopuli Node Zero — Community Node
 
-Launcher sem janela principal para iniciar o primeiro nó no **Argon18** usando o relay/cache já existente no repositório. O `VoxPopuli.exe` fica na área de notificação do Windows e abre um menu de controle com clique direito.
+Nó comunitário para operação local de relay e cache, com controle de recursos e gerenciamento pelo tray. O `VoxPopuli.exe` fica na área de notificação do Windows e abre um menu de controle com clique direito.
 
 ## Máquina de referência
 
@@ -51,7 +51,7 @@ python .\tools\node-zero-windows\node_zero.py stop
 .\tools\node-zero-windows\build.ps1
 ```
 
-O build produz `dist\VoxPopuli.exe` como executável único sem console. O desktop WebView do Vox é empacotado separadamente como `dist\VoxPopuliDesktop.exe`.
+O build produz `dist\VoxPopuli.exe` como executável único sem console e com metadados de versão do produto. O desktop WebView do Vox é empacotado separadamente como `dist\VoxPopuliDesktop.exe`.
 
 ## Limites conhecidos
 

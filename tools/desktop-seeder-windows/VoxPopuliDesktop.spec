@@ -42,4 +42,5 @@ exe = EXE(
     upx=True,
     console=False,
     icon=str(root / "tools" / "desktop-seeder-windows" / "vox.ico"),
+    version=str(root / "tools" / "desktop-seeder-windows" / "version_info.txt"),
 )

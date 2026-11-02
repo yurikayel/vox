@@ -1,4 +1,4 @@
-# Build VoxPopuliDesktop.exe (Desktop App + P2P Seeder com WebView2)
+# Build VoxPopuliDesktop.exe (app desktop WebView2)
 $ErrorActionPreference = "Stop"
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $Root = Split-Path -Parent (Split-Path -Parent $ScriptDir)

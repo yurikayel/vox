@@ -1,6 +1,6 @@
 # Vox Populi Desktop — Windows 1-Clique (.EXE)
 
-Equivalente desktop nativo ao aplicativo Android (`vox-populi.apk`), desenvolvido para que qualquer pessoa possa usar o Vox no PC em uma janela independente e colaborar diretamente com a rede semeando dados na malha WebRTC P2P (swarm).
+Aplicativo desktop WebView2 para usar o Vox no PC em uma janela independente. Ele pode servir os arquivos estáticos do cliente por loopback como fallback local. Não executa relay comunitário, descoberta de peers nem seeding WebTorrent.
 
 ---
 
@@ -13,6 +13,8 @@ Basta baixar e dar duplo clique em:
 - **Sem necessidade de ter Python ou Node.js instalados.**
 - **Janela nativa fluida:** renderizada via Microsoft Edge WebView2 Evergreen nativo do Windows.
 - **Fallback offline:** se a conexão com a nuvem falhar, o executável inicia automaticamente um micro-servidor HTTP local servindo o cliente estático embutido.
+
+O executável desktop é um cliente. Para relay/cache local controlado pela bandeja, use o **VoxPopuli Node Zero — Community Node** (`tools/node-zero-windows`). O seeder WebTorrent continua não implementado.
 
 ---
 
