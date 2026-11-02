@@ -764,14 +764,23 @@ class TestVoxRelayServer(unittest.TestCase):
             server.write_cache_entry(f2, b"Y" * (400 * 1024))
             os.utime(f2, (time.time() - 100, time.time() - 100))
 
-            # Os sidecars também contam: ao adicionar 300 KB, remove a entrada LRU inteira.
-            incoming_bytes = (300 * 1024) + 64
-            server.evict_cache_if_needed(incoming_bytes)
+            # A gravação deve remover a entrada LRU como par antes de persistir a nova.
+            f3 = test_cache / ("3" * 43)
+            accepted = server.store_cache_entry_with_quota(f3, b"Z" * (300 * 1024))
 
+            self.assertTrue(accepted, "Nova entrada deve caber após eviction da entrada LRU")
             self.assertFalse(f1.exists(), "Arquivo f1 mais antigo deve ter sido expurgado")
             self.assertFalse(server.cache_hash_path(f1).exists(), "Sidecar da entrada expurgada deve sair junto")
             self.assertTrue(f2.exists(), "Arquivo f2 mais recente deve ter sido preservado")
             self.assertTrue(server.cache_hash_path(f2).exists(), "Sidecar da entrada recente deve permanecer")
+            self.assertTrue(f3.exists(), "Nova entrada deve ser gravada após a eviction")
+            self.assertTrue(server.cache_hash_path(f3).exists(), "Sidecar da nova entrada deve ser gravado")
+            expected_bytes = sum(
+                path.stat().st_size
+                for path in (f2, server.cache_hash_path(f2), f3, server.cache_hash_path(f3))
+            )
+            self.assertEqual(server.cache_dir_bytes(), expected_bytes)
+            self.assertLessEqual(server.cache_dir_bytes(), 1024 * 1024)
         finally:
             server.CACHE_DIR = orig
             if prev is None:
