@@ -1,14 +1,14 @@
-# Vox Populi — Micro-APK Android (Foreground Node)
+# Vox Populi — aplicativo Android leve
 
-Micro-aplicativo Android nativo em Java puro (sem AndroidX / sem Jetpack) projetado para rodar como **Nó Seeder permanente** em segundo plano, mesmo com a tela apagada ou no bolso.
+Wrapper Android nativo em Java puro (sem AndroidX / sem Jetpack) que abre o PWA Vox Populi e inicia um foreground service com uma WebView. O serviço não implementa seeding WebTorrent, descoberta de nós na LAN nem cache compartilhado; o pacote não deve ser apresentado como seeder P2P.
 
 ## 1. Características Técnicas
 
 - **Tamanho do APK:** **16.870 bytes (~16.47 KiB)** (6 vezes menor que o teto de 100 KiB do Turbo Arweave);
 - **Hospedagem Permaweb:** Hospedado e distribuído de forma perpétua e gratuita na rede Arweave/Turbo:
   - Link permanente: [`https://turbo-gateway.com/raw/FHDkOo2ZSac_u5gMu-kBiQikU836ux6q_vDOaSLgPpE`](https://turbo-gateway.com/raw/FHDkOo2ZSac_u5gMu-kBiQikU836ux6q_vDOaSLgPpE)
-- **Foreground Service:** Mantém o socket de rede e processo vivos no Android sem sofrer suspensão pelo *Doze Mode*;
-- **Cidadania de Dados (NetworkGuard):** Monitora ativamente conexão Wi-Fi e carregador, evitando queima de franquia 4G/5G;
+- **Foreground Service:** mantém o processo do wrapper ativo conforme as regras do Android; isso não significa que há tráfego P2P ou seeding;
+- **NetworkGuard:** consulta conexão Wi-Fi e estado de carregamento para compor o estado exibido pelo app;
 - **Compatibilidade:** Android 7.0 (API 24) até Android 15 (API 35), arquitetura agnóstica (`classes.dex` universal).
 
 ## 2. Compilação Local

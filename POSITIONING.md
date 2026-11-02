@@ -41,11 +41,11 @@ Para aprofundamento das lições e armadilhas evitadas, consulte [LESSONS.md](./
 
 | Aspecto | Narrativa comum (ex. BemTeVi) | Vox |
 |--------|-------------------------------|-----|
-| Infra | “Rede brasileira”, servidores/nós no país | Permaweb global + nós locais default-on (Pacto Vox: seus dados são seus ↔ cache cooperativo) |
+| Infra | “Rede brasileira”, servidores/nós no país | Permaweb global + relay/cache local opcional, operado pelo usuário; sem seeding WebTorrent ativo |
 | Dados | Dependem de operadores nacionais | Transações públicas indexadas via GraphQL em gateways abertos |
 | Moderação | Central ou institucional | Client-side + `mod-action` assinado por moderadores da comunidade |
 | Conexão com outras redes | Rede isolada | Ponte ativa: publica no Vox e despacha para WhatsApp, Insta, X e TikTok |
-| Fase atual | Varia por produto | **Fases 1, 2, 3 e 3.1 entregues** — nós participativos default-on operacionais; DMs na Fase 4 |
+| Fase atual | Varia por produto | PWA e relay/cache local disponíveis; WebTorrent seeding e descoberta de nós na LAN não implementados; piloto humano pendente |
 
 ## O que é imutável vs o que o cliente esconde
 

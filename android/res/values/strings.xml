@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Vox Populi</string>
-    <string name="channel_name">Vox Nó Comunitário</string>
-    <string name="channel_desc">Mantém o serviço de rede mesh e sincronização ativo em background</string>
-    <string name="notif_title">Vox Nó Ativo</string>
-    <string name="notif_desc_wifi">Semeando comunidades no Wi-Fi · 0 MB móveis</string>
-    <string name="notif_desc_paused">Pausado (aguardando conexão Wi-Fi)</string>
+    <string name="channel_name">Vox Populi</string>
+    <string name="channel_desc">Mantém o aplicativo Vox Populi em execução em primeiro plano</string>
+    <string name="notif_title">Vox Populi em execução</string>
+    <string name="notif_desc_wifi">Aplicativo ativo no Wi-Fi; seeding WebTorrent não implementado</string>
+    <string name="notif_desc_paused">Aguardando conexão Wi-Fi</string>
 </resources>
