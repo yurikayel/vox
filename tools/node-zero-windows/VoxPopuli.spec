@@ -37,4 +37,5 @@ exe = EXE(
     upx=True,
     console=False,
     icon=str(icon_path),
+    version=str(node_zero_tools / "version_info.txt"),
 )

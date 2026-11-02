@@ -1,5 +1,5 @@
 [Unit]
-Description=Vox Populi — Nó Comunitário Autônomo e Relay P2P
+Description=Vox Populi — Nó Comunitário de Relay e Cache Local
 Documentation=https://github.com/yurikayel/vox
 After=network-online.target
 Wants=network-online.target

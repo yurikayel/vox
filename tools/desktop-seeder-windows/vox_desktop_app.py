@@ -1,8 +1,8 @@
 """Vox Populi Desktop — Aplicativo Nativo Windows (WebView2).
 
-Equivalente desktop ao aplicativo Android (vox-populi.apk), permitindo que qualquer
-pessoa utilize a rede social civica em janela nativa independente e atue como no
-semeador ativo na malha WebRTC P2P (swarm), com fallback offline automatico.
+Aplicativo desktop WebView2 para usar o Vox em uma janela independente, com
+servidor HTTP local de fallback. Relay comunitário e seeding WebTorrent não são
+implementados por este launcher.
 """
 from __future__ import annotations
 
@@ -118,7 +118,7 @@ class DesktopBridge:
             "version": "1.0.0",
             "remote_active": self.remote_active,
             "local_port": self.local_port,
-            "seed_active": True,
+            "seed_active": False,
         }
 
     def open_external(self, url: str) -> bool:
@@ -175,7 +175,7 @@ def run_self_check(root: Path) -> int:
     bridge = DesktopBridge(port, remote_active=True)
     status = bridge.get_status()
     assert status["is_desktop"] is True
-    assert status["seed_active"] is True
+    assert status["seed_active"] is False
     assert bridge.ping() == "pong"
     print("[OK] Bridge JavaScript <-> Python validada com sucesso")
 
@@ -204,12 +204,13 @@ def main() -> int:
     bridge = DesktopBridge(local_port, is_remote)
 
     print("======================================================")
-    print("  Vox Desktop & No Seeder — Windows")
+    print("  Vox Populi Desktop — Windows")
     print(f"  URL Ativa:    {target_url}")
     print(f"  Modo:         {'Remoto (Cloudflare)' if is_remote else 'Espelho Local'}")
     if local_port:
         print(f"  Backup Local: http://127.0.0.1:{local_port}")
-    print("  Malha P2P:    Ativa (WebRTC Swarm)")
+    print("  Relay local:  Não iniciado por este aplicativo")
+    print("  Seeder:       Não implementado")
     print("======================================================")
 
     if webview is None:

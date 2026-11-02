@@ -41,7 +41,7 @@ class TestDesktopLaunchers(unittest.TestCase):
         status = bridge.get_status()
         self.assertTrue(status["is_desktop"])
         self.assertEqual(status["platform"], "windows")
-        self.assertTrue(status["seed_active"])
+        self.assertFalse(status["seed_active"])
         self.assertEqual(bridge.ping(), "pong")
 
     def test_local_client_server_lifecycle(self) -> None:

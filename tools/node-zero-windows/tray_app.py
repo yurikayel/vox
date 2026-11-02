@@ -15,7 +15,7 @@ from pathlib import Path
 import node_zero
 
 
-APP_TITLE = "Vox Populi"
+APP_TITLE = "VoxPopuli Node Zero — Community Node"
 RUN_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
 RUN_VALUE = "VoxPopuliNodeZero"
 WM_APP = 0x8000
