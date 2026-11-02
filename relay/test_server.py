@@ -25,6 +25,7 @@ class TestVoxRelayServer(unittest.TestCase):
     def setUp(self):
         server.CACHE_DIR = Path(self.temp_dir) / self._testMethodName / "cache"
         inbox.INBOX_DIR = Path(self.temp_dir) / self._testMethodName / "inbox"
+        server.INTEGRITY_FAILURES = 0
         server.ensure_cache_dir()
 
     @classmethod
@@ -63,6 +64,8 @@ class TestVoxRelayServer(unittest.TestCase):
             self.assertIn("communityIndexCount", data)
             self.assertEqual(data.get("communityIndexCount"), 0)
             self.assertIn("cacheBytes", data)
+            self.assertEqual(data.get("cacheBytes"), 0)
+            self.assertEqual(data.get("cachedCount"), 0)
             self.assertIn("maxCacheBytes", data)
 
     def test_health_exposes_max_cache_from_env(self):
@@ -93,6 +96,7 @@ class TestVoxRelayServer(unittest.TestCase):
         with urllib.request.urlopen(req, timeout=2) as resp:
             data = json.loads(resp.read().decode("utf-8"))
             self.assertIn("test-comm", data.get("communityIndexes", []))
+            self.assertEqual(data.get("cacheBytes"), len(body) + 64)
 
     def test_options_cors(self):
         req = urllib.request.Request(self._url("/health"), method="OPTIONS")
@@ -121,6 +125,11 @@ class TestVoxRelayServer(unittest.TestCase):
             self.assertEqual(resp.headers.get("X-Vox-Cache"), "HIT")
             body = resp.read()
             self.assertEqual(body, payload)
+
+        with urllib.request.urlopen(self._url("/health"), timeout=2) as resp:
+            health = json.loads(resp.read().decode("utf-8"))
+            self.assertEqual(health.get("cachedCount"), 1)
+            self.assertEqual(health.get("cacheBytes"), len(payload) + 64)
 
     def test_tx_cache_rejects_missing_hash_sidecar(self):
         server.ensure_cache_dir()
@@ -319,10 +328,46 @@ class TestVoxRelayServer(unittest.TestCase):
                 body = response.read()
                 self.assertNotEqual(response.status, 200)
         except urllib.error.HTTPError as error:
-            self.assertNotEqual(error.code, 200)
+            self.assertEqual(error.code, 404)
             self.assertNotEqual(error.headers.get("X-Vox-Cache"), "HIT")
             body = error.read()
         self.assertNotIn(payload, body)
+        self.assertEqual(body, b"Transacao nao encontrada nos gateways upstream")
+
+    def test_transaction_route_rejects_file_removed_during_read(self):
+        tx_id = "W" * 43
+        payload = b"private-tx-removed-during-read"
+        cache_file = server.CACHE_DIR / tx_id
+        sidecar = server.cache_hash_path(cache_file)
+        server.write_cache_entry(cache_file, payload)
+        original_read = server._read_stable_cache_file
+
+        def remove_payload_after_sidecar_read(path):
+            result = original_read(path)
+            if path == sidecar:
+                cache_file.unlink()
+            return result
+
+        with patch.object(server, "_read_stable_cache_file", remove_payload_after_sidecar_read):
+            with patch.object(server.VoxRelayHandler, "_fetch_transaction", return_value=None):
+                self._assert_transaction_response_rejects_payload(tx_id, payload)
+
+        self.assertFalse(cache_file.exists())
+
+    def test_transaction_route_rejects_external_symlink_without_leaking_file(self):
+        tx_id = "V" * 43
+        payload = b"private-external-transaction"
+        external_file = Path(self.temp_dir) / "external-transaction"
+        external_file.write_bytes(payload)
+        cache_file = server.CACHE_DIR / tx_id
+        try:
+            cache_file.symlink_to(external_file)
+        except (OSError, NotImplementedError) as error:
+            self.skipTest(f"symlinks unavailable in this Windows environment: {error}")
+
+        with patch.object(server.VoxRelayHandler, "_fetch_transaction", return_value=None):
+            self._assert_transaction_response_rejects_payload(tx_id, payload)
+        self.assertTrue(external_file.exists())
 
     def test_tx_cache_write_failure_never_produces_hit(self):
         file_path = server.CACHE_DIR / ("I" * 43)
@@ -392,8 +437,7 @@ class TestVoxRelayServer(unittest.TestCase):
         with urllib.request.urlopen(get_req, timeout=2) as resp:
             self.assertEqual(resp.status, 200)
             self.assertEqual(resp.headers.get("X-Vox-Cache"), "HIT")
-            ret_data = json.loads(resp.read().decode("utf-8"))
-            self.assertEqual(ret_data.get("title"), "Comunidade Livre")
+            self.assertEqual(resp.read(), raw_bytes)
         self.assertTrue((server.CACHE_DIR / f"index_{comm_id}.json.sha256").is_file())
 
     def test_community_index_without_valid_sidecar_is_never_hit(self):
@@ -412,10 +456,11 @@ class TestVoxRelayServer(unittest.TestCase):
                 body = response.read()
                 self.assertNotEqual(response.status, 200)
         except urllib.error.HTTPError as error:
-            self.assertNotEqual(error.code, 200)
+            self.assertEqual(error.code, 404)
             self.assertNotEqual(error.headers.get("X-Vox-Cache"), "HIT")
             body = error.read()
         self.assertNotIn(payload, body)
+        self.assertEqual(body, b'{"error": "Espelho de comunidade nao encontrado"}')
 
     def test_community_index_rejects_bad_hash_sidecars_before_response(self):
         for suffix, sidecar_value, mutate_payload in (
