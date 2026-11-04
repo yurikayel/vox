@@ -1,4 +1,4 @@
-# Build script do Micro-APK Vox Populi
+# Build script do Micro-APK Vox (Client)
 $ErrorActionPreference = "Stop"
 
 $ROOT = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -13,6 +13,7 @@ $PLATFORM = "$SDK\platforms\android-35\android.jar"
 $JAVAC = "$env:JAVA_HOME\bin\javac.exe"
 $JAR = "$env:JAVA_HOME\bin\jar.exe"
 $KEYTOOL = "$env:JAVA_HOME\bin\keytool.exe"
+$JARSIGNER = "$env:JAVA_HOME\bin\jarsigner.exe"
 
 $AAPT2 = "$BUILD_TOOLS\aapt2.exe"
 $D8 = "$BUILD_TOOLS\d8.bat"
@@ -47,23 +48,34 @@ Push-Location "$BUILD_DIR\dex"
 & $JAR uf "$BUILD_DIR\unaligned.apk" classes.dex
 Pop-Location
 
-Write-Host "6. Alinhando APK (zipalign 4)..."
-& $ZIPALIGN -p -f 4 "$BUILD_DIR\unaligned.apk" "$BUILD_DIR\vox-populi-aligned.apk"
-
-Write-Host "7. Gerando keystore de debug e assinando..."
+Write-Host "6. Gerando keystore se necessario e assinando com v1 (JAR signing)..."
 $KEYSTORE = "$BUILD_DIR\debug.keystore"
 if (-not (Test-Path $KEYSTORE)) {
     cmd.exe /c "`"$KEYTOOL`" -genkeypair -keystore `"$KEYSTORE`" -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname CN=Vox,O=Democracia,C=BR 2>nul"
 }
+& $JARSIGNER -keystore $KEYSTORE -storepass android -keypass android "$BUILD_DIR\unaligned.apk" androiddebugkey
 
-$FINAL_APK = "$ROOT\vox-populi.apk"
-& cmd.exe /c "`"$APKSIGNER`" sign --ks `"$KEYSTORE`" --ks-pass pass:android --ks-key-alias androiddebugkey --key-pass pass:android --out `"$FINAL_APK`" `"$BUILD_DIR\vox-populi-aligned.apk`""
+Write-Host "7. Alinhando APK (zipalign 4)..."
+& $ZIPALIGN -p -f 4 "$BUILD_DIR\unaligned.apk" "$BUILD_DIR\vox-aligned.apk"
+
+Write-Host "8. Assinando com v2 e v3 (apksigner)..."
+$FINAL_APK = "$ROOT\vox.apk"
+& cmd.exe /c "`"$APKSIGNER`" sign --ks `"$KEYSTORE`" --ks-pass pass:android --ks-key-alias androiddebugkey --key-pass pass:android --v1-signing-enabled true --v2-signing-enabled true --v3-signing-enabled true --out `"$FINAL_APK`" `"$BUILD_DIR\vox-aligned.apk`""
+
+$DIST_DIR = "$ROOT\..\dist"
+if (Test-Path $DIST_DIR) {
+    Copy-Item $FINAL_APK "$DIST_DIR\vox.apk" -Force
+}
+if (Test-Path "D:\Downloads") {
+    Copy-Item $FINAL_APK "D:\Downloads\vox.apk" -Force
+    Copy-Item $FINAL_APK "D:\Downloads\vox-populi.apk" -Force
+}
 
 $BYTES = (Get-Item $FINAL_APK).Length
 $KB = [math]::Round($BYTES / 1024, 2)
 Write-Host ""
 Write-Host "==========================================================" -ForegroundColor Green
-Write-Host "  APK GERADO COM SUCESSO: $FINAL_APK" -ForegroundColor Green
+Write-Host "  APK DO CLIENTE GERADO COM SUCESSO: $FINAL_APK" -ForegroundColor Green
 Write-Host "  TAMANHO FINAL: $BYTES bytes ($KB KiB)" -ForegroundColor Yellow
 if ($BYTES -le 101376) {
     Write-Host "  STATUS: CABE NO FREE TIER DO TURBO ARWEAVE (<= 100 KiB)! ⚡" -ForegroundColor Cyan

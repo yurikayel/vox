@@ -20,13 +20,13 @@ O cliente é um PWA local-first. Identidade e chaves são criadas no aparelho; p
 
 ## ⚡ Executáveis & Downloads Rápidos (1-Clique)
 
-Acesso direto às aplicações prontas para uso do ecossistema ([ADR-011](docs/adr/011-taxonomia-tripartite-produtos-vox.md)):
+Acesso direto às aplicações prontas para uso do ecossistema:
 
-| Aplicativo | Tipo / Plataforma | Executável / Pacote | Como Funciona e Operação |
+| Papel | Aplicativo | Executável / Pacote | Como Funciona e Operação |
 |:---|:---|:---|:---|
-| 🖥️ **Vox Populi Desktop** | Windows 1-Clique (WebView2) | [**`dist/VoxPopuliDesktop.exe`**](dist/VoxPopuliDesktop.exe) | **Cliente completo para PC:** abre o Vox em janela nativa no PC, conecta/inicia o nó Farol em segundo plano e exibe o ícone e notificação na bandeja (*system tray*) com status e opções de controle. |
-| 🌐 **Vox Farol** | Windows Nó Silencioso (Daemon + Tray) | [**`dist/VoxFarol.exe`**](dist/VoxFarol.exe) | **Somente o nó rodando sem o client:** executa relay HTTP (`127.0.0.1:3921`) e cache SHA-256 com menu de controle na bandeja, sem abrir janela de navegador. *(Compatibilidade: `dist/VoxPopuli.exe`)*. |
-| 📱 **Vox Populi Android** | Micro-APK Mobile (Java puro) | [**`android/vox-populi.apk`**](android/vox-populi.apk) | **Aplicativo móvel para celular:** pacote ultraleve (~16.5 KiB) com Foreground Service (`org.vox.populi`) para mobilidade. |
+| 🖥️ **CLIENTE** | **Vox (Desktop)** | [**`dist/Vox.exe`**](dist/Vox.exe) *(ou [`dist/VoxPopuliDesktop.exe`](dist/VoxPopuliDesktop.exe))* | **Cliente gráfico para PC:** interface WebView2 nativa com notificação na bandeja (*system tray*) e conexão com **boost** automático ao nó dedicado local. |
+| 📱 **CLIENTE** | **Vox (Android)** | [**`android/vox.apk`**](android/vox.apk) *(ou [`dist/vox.apk`](dist/vox.apk))* | **Cliente móvel para celular:** micro-APK ultraleve (~20.8 KiB, `org.vox.client`) com suporte a v1+v2+v3 e ícone nativo pronto para sideload/WSA. |
+| 🌐 **NÓ DEDICADO** | **Vox Populi (Nó)** | [**`dist/VoxPopuli.exe`**](dist/VoxPopuli.exe) *(ou [`dist/VoxFarol.exe`](dist/VoxFarol.exe))* | **Nó comunitário dedicado em background:** sem navegador/UI, opera relay HTTP (`127.0.0.1:3921`), cache SHA-256 e controle (`127.0.0.1:3922`) com ícone de controle na bandeja. |
 
 ---
 
