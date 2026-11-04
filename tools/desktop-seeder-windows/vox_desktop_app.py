@@ -8,9 +8,11 @@ from __future__ import annotations
 
 import argparse
 import http.server
+import json
 import os
 import socket
 import socketserver
+import subprocess
 import sys
 import threading
 import time
@@ -56,6 +58,39 @@ def check_remote_available(url: str, timeout: float = 2.0) -> bool:
             return resp.status < 400
     except Exception:
         return False
+
+
+def check_node_active(host: str = "127.0.0.1") -> bool:
+    """Verifica se o no Farol (relay HTTP ou controle) esta ativo."""
+    return check_port_open(3921, host=host) or check_port_open(3922, host=host)
+
+
+def start_node_background(root: Path) -> bool:
+    """Inicia o no Farol em segundo plano se ainda nao estiver ativo."""
+    if check_node_active():
+        return True
+
+    frozen = getattr(sys, "frozen", False)
+    base_exe_dir = Path(sys.executable).parent if frozen else root / "dist"
+    for candidate in ("VoxFarol.exe", "VoxPopuli.exe"):
+        exe_path = base_exe_dir / candidate
+        if exe_path.exists():
+            try:
+                flags = 0x08000000 | 0x00000200
+                subprocess.Popen([str(exe_path), "--node-service"], creationflags=flags)
+                return True
+            except OSError:
+                continue
+
+    node_py = root / "tools" / "node-zero-windows" / "node_zero.py"
+    if node_py.exists():
+        try:
+            flags = getattr(subprocess, "CREATE_NO_WINDOW", 0) | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)
+            subprocess.Popen([sys.executable, str(node_py), "start"], creationflags=flags)
+            return True
+        except OSError:
+            pass
+    return False
 
 
 class QuietHandler(http.server.SimpleHTTPRequestHandler):
@@ -119,6 +154,7 @@ class DesktopBridge:
             "remote_active": self.remote_active,
             "local_port": self.local_port,
             "seed_active": False,
+            "node_active": check_node_active(),
         }
 
     def open_external(self, url: str) -> bool:
@@ -131,6 +167,164 @@ class DesktopBridge:
     def ping(self) -> str:
         """Ping basico para teste de comunicacao bidirecional."""
         return "pong"
+
+
+class DesktopNodeTray:
+    """Controlador de bandeja do sistema com notificacao de no Farol ativo."""
+
+    def __init__(self, root: Path, window: Optional[Any] = None) -> None:
+        self.root = root
+        self.window = window
+        self.notify_icon = None
+        self._thread: Optional[threading.Thread] = None
+        self._stop_event = threading.Event()
+        self.node_active = False
+        self._node_menu_item = None
+
+    def start(self) -> None:
+        """Inicia a presenca na bandeja do sistema em thread separada."""
+        if os.name != "nt":
+            return
+        self._thread = threading.Thread(target=self._run_tray_thread, daemon=True)
+        self._thread.start()
+
+    def _run_tray_thread(self) -> None:
+        try:
+            start_node_background(self.root)
+            time.sleep(0.5)
+            self._init_notify_icon()
+        except Exception:
+            pass
+
+    def _resolve_icon(self) -> Any:
+        try:
+            from System.Drawing import Icon, SystemIcons
+            ico_file = self.root / "tools" / "desktop-seeder-windows" / "vox.ico"
+            if not ico_file.exists():
+                bundle = getattr(sys, "_MEIPASS", None)
+                if bundle:
+                    ico_file = Path(bundle) / "vox.ico"
+            if ico_file.exists():
+                return Icon(str(ico_file))
+            return SystemIcons.Application
+        except Exception:
+            return None
+
+    def _init_notify_icon(self) -> None:
+        try:
+            import clr
+            clr.AddReference("System.Windows.Forms")
+            clr.AddReference("System.Drawing")
+            from System.Windows.Forms import Application, NotifyIcon, ToolTipIcon
+        except Exception:
+            return
+
+        ni = NotifyIcon()
+        icon = self._resolve_icon()
+        if icon:
+            ni.Icon = icon
+
+        self.node_active = check_node_active()
+        status_txt = "Ativo (127.0.0.1:3921)" if self.node_active else "Iniciando..."
+        ni.Text = f"Vox Populi • Nó {status_txt}"[:63]
+        ni.ContextMenuStrip = self._build_context_menu()
+        ni.DoubleClick += self._on_restore
+        ni.Visible = True
+        self.notify_icon = ni
+
+        balloon_title = "Vox Populi — Nó Farol em Execução"
+        balloon_msg = (
+            "O nó comunitário está ativo em segundo plano "
+            "(relay HTTP e cache local em 127.0.0.1:3921)."
+        )
+        ni.ShowBalloonTip(3000, balloon_title, balloon_msg, ToolTipIcon.Info)
+
+        while not self._stop_event.is_set():
+            Application.DoEvents()
+            self._update_node_status()
+            time.sleep(1.0)
+
+    def _build_context_menu(self) -> Any:
+        from System.Windows.Forms import ContextMenuStrip, ToolStripMenuItem, ToolStripSeparator
+        cms = ContextMenuStrip()
+
+        header = ToolStripMenuItem("Vox Populi Desktop")
+        header.Enabled = False
+        cms.Items.Add(header)
+        cms.Items.Add(ToolStripSeparator())
+
+        node_lbl = "Nó Farol: Ativo (127.0.0.1:3921)" if self.node_active else "Nó Farol: Parado"
+        self._node_menu_item = ToolStripMenuItem(node_lbl)
+        self._node_menu_item.Enabled = False
+        cms.Items.Add(self._node_menu_item)
+
+        restore_item = ToolStripMenuItem("Abrir Vox Populi", None, self._on_restore)
+        cms.Items.Add(restore_item)
+
+        pause_item = ToolStripMenuItem("Pausar / Retomar Nó", None, self._on_toggle_node)
+        cms.Items.Add(pause_item)
+
+        cms.Items.Add(ToolStripSeparator())
+        exit_item = ToolStripMenuItem("Fechar Aplicativo", None, self._on_exit)
+        cms.Items.Add(exit_item)
+        return cms
+
+    def _update_node_status(self) -> None:
+        active = check_node_active()
+        if active == self.node_active:
+            return
+        self.node_active = active
+        if self._node_menu_item:
+            lbl = "Nó Farol: Ativo (127.0.0.1:3921)" if active else "Nó Farol: Parado"
+            self._node_menu_item.Text = lbl
+        if self.notify_icon:
+            st = "Ativo" if active else "Parado"
+            self.notify_icon.Text = f"Vox Populi • Nó {st}"[:63]
+
+    def _on_restore(self, sender: Any = None, event: Any = None) -> None:
+        if not self.window:
+            return
+        try:
+            self.window.restore()
+            self.window.show()
+        except Exception:
+            pass
+
+    def _on_toggle_node(self, sender: Any = None, event: Any = None) -> None:
+        try:
+            action = "pause" if self.node_active else "resume"
+            data = json.dumps({"action": action}).encode("utf-8")
+            req = urllib.request.Request(
+                "http://127.0.0.1:3922/api/control",
+                data=data,
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+            with urllib.request.urlopen(req, timeout=1.5):
+                pass
+        except Exception:
+            pass
+
+    def _on_exit(self, sender: Any = None, event: Any = None) -> None:
+        self.stop()
+        if not self.window:
+            return
+        try:
+            self.window.destroy()
+        except Exception:
+            pass
+
+    def stop(self) -> None:
+        """Encerra a presenca na bandeja do sistema."""
+        self._stop_event.set()
+        if not self.notify_icon:
+            return
+        try:
+            self.notify_icon.Visible = False
+            self.notify_icon.Dispose()
+        except Exception:
+            pass
+        self.notify_icon = None
 
 
 def resolve_startup_url(
@@ -176,8 +370,13 @@ def run_self_check(root: Path) -> int:
     status = bridge.get_status()
     assert status["is_desktop"] is True
     assert status["seed_active"] is False
+    assert "node_active" in status
     assert bridge.ping() == "pong"
     print("[OK] Bridge JavaScript <-> Python validada com sucesso")
+
+    tray = DesktopNodeTray(root)
+    assert tray.notify_icon is None
+    print("[OK] Controlador de bandeja e status do nó instanciados")
 
     server.stop()
     print("[OK] Servidor local encerrado com sucesso")
@@ -209,7 +408,7 @@ def main() -> int:
     print(f"  Modo:         {'Remoto (Cloudflare)' if is_remote else 'Espelho Local'}")
     if local_port:
         print(f"  Backup Local: http://127.0.0.1:{local_port}")
-    print("  Relay local:  Não iniciado por este aplicativo")
+    print("  Relay Farol:  Ativo em segundo plano com notificacao na bandeja")
     print("  Seeder:       Não implementado")
     print("======================================================")
 
@@ -227,9 +426,12 @@ def main() -> int:
         min_size=(420, 600),
         background_color="#090d12",
     )
+    tray = DesktopNodeTray(root, window=window)
+    tray.start()
     try:
         webview.start(debug=False)
     finally:
+        tray.stop()
         server.stop()
 
     return 0

@@ -1,6 +1,6 @@
-# VoxPopuli Node Zero — Community Node
+# Vox Farol (Node Zero) — Executável Dedicado do Nó sem o Client
 
-Nó comunitário para operação local de relay e cache, com controle de recursos e gerenciamento pelo tray. O `VoxPopuli.exe` fica na área de notificação do Windows e abre um menu de controle com clique direito.
+Nó comunitário para operação local de relay e cache, com controle de recursos e gerenciamento pelo tray. O **`VoxFarol.exe`** (e `VoxPopuli.exe`) fica na área de notificação do Windows e abre um menu de controle com clique direito, operando de forma 100% autônoma **sem abrir janela de cliente ou navegador**.
 
 ## Máquina de referência
 
@@ -22,7 +22,7 @@ Dados informados na captura do usuário: Windows 11 Pro 25H2, AMD Ryzen 9 5900X 
 
 ## Usar o executável
 
-Abra `dist\VoxPopuli.exe`. O ícone aparece na bandeja e o relay/cache inicia em segundo plano. O menu oferece status, preferências, pausar/retomar, iniciar/parar o nó, habilitar/desabilitar inicialização com o Windows e sair. Sair encerra o nó local; se o controle não confirmar o encerramento, o app permanece na bandeja e mostra um aviso. A inicialização com o Windows fica desligada até ser ativada no menu; a opção usa apenas o perfil atual e não exige administrador. Se o Explorer reiniciar, o launcher recria o ícone da bandeja.
+Abra `dist\VoxFarol.exe` (ou `dist\VoxPopuli.exe`). O ícone aparece na bandeja e o relay/cache inicia em segundo plano sem abrir nenhuma janela de navegador. O menu oferece status, preferências, pausar/retomar, iniciar/parar o nó, habilitar/desabilitar inicialização com o Windows e sair. Sair encerra o nó local; se o controle não confirmar o encerramento, o app permanece na bandeja e mostra um aviso. A inicialização com o Windows fica desligada até ser ativada no menu; a opção usa apenas o perfil atual e não exige administrador. Se o Explorer reiniciar, o launcher recria o ícone da bandeja.
 
 O aplicativo não abre janela, não mostra balões periódicos, não altera firewall e não instala serviços globais. Duplo clique no ícone abre um resumo do estado e dos limites aplicados.
 
