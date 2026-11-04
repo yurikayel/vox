@@ -1,4 +1,4 @@
-package org.vox.seeder;
+package org.vox.populi;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -20,12 +20,12 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        startSeederService();
+        startPopuliService();
         setupWebView();
         setContentView(webView);
     }
 
-    private void startSeederService() {
+    private void startPopuliService() {
         Intent srv = new Intent(this, VoxPopuliService.class);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(srv);
