@@ -53,6 +53,31 @@ python .\tools\node-zero-windows\node_zero.py stop
 
 O build produz `dist\VoxPopuli.exe` como executável único sem console e com metadados de versão do produto. O desktop WebView do Vox é empacotado separadamente como `dist\VoxPopuliDesktop.exe`.
 
+### Smoke test Windows
+
+Com Python 3.12 e PyInstaller 6.22.3 instalados, execute:
+
+```powershell
+python -m pip install pyinstaller==6.22.3
+.\tools\node-zero-windows\smoke-test.ps1
+```
+
+O teste compila em diretório temporário, verifica os metadados e exercita health, bind loopback e parada autenticada. Ele recusa iniciar se as portas `3921` ou `3922` já estiverem ocupadas; não encerra uma instância existente nem grava em `dist/`.
+
+O caso de colisão de portas pode ser validado separadamente, sem build nem uso das portas do produto:
+
+```powershell
+.\tools\node-zero-windows\test-smoke-preflight.ps1
+```
+
+Esse teste ocupa portas temporárias de loopback, confere as colisões HTTP e de controle separadas e simultâneas, verifica que os listeners continuam ativos após a recusa e repete o preflight depois de liberá-los.
+
+O contrato de rede do runner Windows também tem testes Python que abrem sockets HTTP reais em loopback e verificam que configuração ausente, inválida ou com campos legados (`listenHost` e `enableLanDiscovery`) não muda o endereço de bind:
+
+```powershell
+python -m unittest discover -s tools/node-zero-windows -p test_network_contract.py -v
+```
+
 ## Limites conhecidos
 
 - Esta entrega é um relay/cache local, não um nó P2P completo.

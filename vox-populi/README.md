@@ -69,31 +69,11 @@ Ao atualizar uma instalação anterior, o instalador desativa as unidades antiga
 
 ---
 
-## 4. Configuração de Rede e Acesso LAN (Opcional)
+## 4. Contrato de rede atual: somente loopback
 
-Por padrão de segurança, o Vox Populi escuta apenas em `127.0.0.1` (loopback). Caso deseje disponibilizar o cache local para outros dispositivos conectados na mesma rede Wi-Fi/Ethernet doméstica:
+O pacote Linux suporta apenas `127.0.0.1:3921`. A unidade `systemd/vox-populi.service` fixa esse bind; o arquivo JSON declara o modo `loopback-only`, mas não é um controle dinâmico do listener. Acesso de outros dispositivos pela LAN, descoberta automática e entrada pública não estão implementados.
 
-1. Edite `config/vox-populi.json`:
-   ```json
-   "network": {
-     "listenHost": "0.0.0.0",
-     "listenPort": 3921,
-     "enableLanDiscovery": true
-   }
-   ```
-2. Configure o serviço systemd para escutar no host desejado ou `0.0.0.0` em `/etc/systemd/system/vox-populi.service`:
-   ```ini
-   ExecStart=/usr/bin/python3 -m relay.server --port 3921 --host 0.0.0.0
-   ```
-3. Configure o firewall local (UFW) para restringir o acesso apenas à sub-rede local (ex: `192.168.1.0/24`), **nunca expondo a porta 3921 à WAN**:
-   ```bash
-   sudo ufw allow from 192.168.1.0/24 to any port 3921 proto tcp comment "Vox Populi LAN"
-   ```
-4. Reinicie o serviço:
-   ```bash
-   sudo systemctl daemon-reload
-   sudo systemctl restart vox-populi.service
-   ```
+Não altere o bind do serviço nem regras de firewall para expor o relay. Os campos `lanDiscovery: "not_implemented"` e `publicInbound: false` registram essa limitação; mudar o JSON não habilita essas capacidades. Um modo LAN só deve ser documentado depois de existir uma opção explícita, validada por testes de bind e acesso, com proteção contra exposição WAN.
 
 ---
 
