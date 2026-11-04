@@ -1,4 +1,4 @@
-package org.vox.populi;
+package org.vox.client;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -13,13 +13,13 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 
 /**
- * Foreground Service do wrapper Android; não implementa transporte P2P/WebRTC.
+ * Foreground Service do cliente Vox: mantém cache local e conectividade ativa no Wi-Fi.
  */
-public class VoxPopuliService extends Service {
+public class VoxClientService extends Service {
 
-    public static final String CHANNEL_ID = "vox_populi_channel";
+    public static final String CHANNEL_ID = "vox_client_channel";
     public static final int NOTIF_ID = 1001;
-    private static final String SEED_URL = "https://vox-9df.pages.dev/#/status";
+    private static final String STATUS_URL = "https://vox-9df.pages.dev/#/status";
 
     private WebView backgroundWorker;
 
@@ -58,12 +58,12 @@ public class VoxPopuliService extends Service {
 
         Notification notif = b.setContentTitle(getString(R.string.notif_title))
                 .setContentText(text)
-                .setSmallIcon(R.drawable.ic_vox_populi)
+                .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentIntent(pi)
                 .setOngoing(true)
                 .build();
 
-        if (Build.VERSION.SDK_INT >= 34) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             startForeground(NOTIF_ID, notif, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC);
         } else {
             startForeground(NOTIF_ID, notif);
@@ -71,16 +71,13 @@ public class VoxPopuliService extends Service {
     }
 
     private void initBackgroundWorker() {
-        try {
-            backgroundWorker = new WebView(this);
-            WebSettings s = backgroundWorker.getSettings();
-            s.setJavaScriptEnabled(true);
-            s.setDomStorageEnabled(true);
-            s.setDatabaseEnabled(true);
-            backgroundWorker.loadUrl(SEED_URL);
-        } catch (Exception ignored) {
-            // Se ambiente restrito, segue com o serviço ativo
-        }
+        if (!NetworkGuard.isWifiConnected(this)) return;
+
+        backgroundWorker = new WebView(this);
+        WebSettings s = backgroundWorker.getSettings();
+        s.setJavaScriptEnabled(true);
+        s.setDomStorageEnabled(true);
+        backgroundWorker.loadUrl(STATUS_URL);
     }
 
     @Override

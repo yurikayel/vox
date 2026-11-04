@@ -26,7 +26,7 @@ try:
 except ImportError:
     webview = None
 
-APP_TITLE = "Vox Populi • Rede Social Cívica"
+APP_TITLE = "Vox • Rede Cívica de Participação Popular"
 DEFAULT_REMOTE_URL = os.environ.get("VOX_REMOTE_URL", "https://vox-9df.pages.dev/")
 LOCAL_PORT_DEFAULT = int(os.environ.get("VOX_CLIENT_PORT", "8085"))
 
@@ -61,18 +61,35 @@ def check_remote_available(url: str, timeout: float = 2.0) -> bool:
 
 
 def check_node_active(host: str = "127.0.0.1") -> bool:
-    """Verifica se o no Farol (relay HTTP ou controle) esta ativo."""
+    """Verifica se o no dedicado Vox Populi (relay HTTP ou controle) esta ativo."""
     return check_port_open(3921, host=host) or check_port_open(3922, host=host)
 
 
+def boost_dedicated_node(data_dir: Optional[Path] = None) -> bool:
+    """Envia sinal de boost/retomada ao no dedicado Vox Populi para sessao ativa."""
+    if not check_port_open(3922):
+        return False
+    try:
+        local_app = Path(os.environ.get("LOCALAPPDATA", "")) / "VoxPopuli" / "NodeZero"
+        token_path = (data_dir or local_app) / "control.token"
+        token = token_path.read_text(encoding="utf-8").strip() if token_path.exists() else ""
+        headers = {"X-Vox-Node-Token": token} if token else {}
+        req = urllib.request.Request("http://127.0.0.1:3922/api/resume", data=b"", headers=headers, method="POST")
+        with urllib.request.urlopen(req, timeout=0.8) as resp:
+            return resp.status == 200
+    except Exception:
+        return False
+
+
 def start_node_background(root: Path) -> bool:
-    """Inicia o no Farol em segundo plano se ainda nao estiver ativo."""
+    """Inicia o no dedicado Vox Populi em segundo plano se ainda nao estiver ativo."""
     if check_node_active():
+        boost_dedicated_node()
         return True
 
     frozen = getattr(sys, "frozen", False)
     base_exe_dir = Path(sys.executable).parent if frozen else root / "dist"
-    for candidate in ("VoxFarol.exe", "VoxPopuli.exe"):
+    for candidate in ("VoxPopuli.exe", "VoxFarol.exe"):
         exe_path = base_exe_dir / candidate
         if exe_path.exists():
             try:
@@ -226,15 +243,15 @@ class DesktopNodeTray:
 
         self.node_active = check_node_active()
         status_txt = "Ativo (127.0.0.1:3921)" if self.node_active else "Iniciando..."
-        ni.Text = f"Vox Populi • Nó {status_txt}"[:63]
+        ni.Text = f"Vox • Nó Dedicado {status_txt}"[:63]
         ni.ContextMenuStrip = self._build_context_menu()
         ni.DoubleClick += self._on_restore
         ni.Visible = True
         self.notify_icon = ni
 
-        balloon_title = "Vox Populi — Nó Farol em Execução"
+        balloon_title = "Vox — Nó Dedicado Vox Populi Conectado"
         balloon_msg = (
-            "O nó comunitário está ativo em segundo plano "
+            "O nó dedicado Vox Populi está ativo em segundo plano "
             "(relay HTTP e cache local em 127.0.0.1:3921)."
         )
         ni.ShowBalloonTip(3000, balloon_title, balloon_msg, ToolTipIcon.Info)
@@ -248,20 +265,20 @@ class DesktopNodeTray:
         from System.Windows.Forms import ContextMenuStrip, ToolStripMenuItem, ToolStripSeparator
         cms = ContextMenuStrip()
 
-        header = ToolStripMenuItem("Vox Populi Desktop")
+        header = ToolStripMenuItem("Vox (Cliente)")
         header.Enabled = False
         cms.Items.Add(header)
         cms.Items.Add(ToolStripSeparator())
 
-        node_lbl = "Nó Farol: Ativo (127.0.0.1:3921)" if self.node_active else "Nó Farol: Parado"
+        node_lbl = "Nó Dedicado: Ativo (127.0.0.1:3921)" if self.node_active else "Nó Dedicado: Parado"
         self._node_menu_item = ToolStripMenuItem(node_lbl)
         self._node_menu_item.Enabled = False
         cms.Items.Add(self._node_menu_item)
 
-        restore_item = ToolStripMenuItem("Abrir Vox Populi", None, self._on_restore)
+        restore_item = ToolStripMenuItem("Abrir Vox", None, self._on_restore)
         cms.Items.Add(restore_item)
 
-        pause_item = ToolStripMenuItem("Pausar / Retomar Nó", None, self._on_toggle_node)
+        pause_item = ToolStripMenuItem("Pausar / Retomar Nó Dedicado", None, self._on_toggle_node)
         cms.Items.Add(pause_item)
 
         cms.Items.Add(ToolStripSeparator())
@@ -275,11 +292,11 @@ class DesktopNodeTray:
             return
         self.node_active = active
         if self._node_menu_item:
-            lbl = "Nó Farol: Ativo (127.0.0.1:3921)" if active else "Nó Farol: Parado"
+            lbl = "Nó Dedicado: Ativo (127.0.0.1:3921)" if active else "Nó Dedicado: Parado"
             self._node_menu_item.Text = lbl
         if self.notify_icon:
             st = "Ativo" if active else "Parado"
-            self.notify_icon.Text = f"Vox Populi • Nó {st}"[:63]
+            self.notify_icon.Text = f"Vox • Nó Dedicado {st}"[:63]
 
     def _on_restore(self, sender: Any = None, event: Any = None) -> None:
         if not self.window:
@@ -346,7 +363,7 @@ def resolve_startup_url(
 
 def run_self_check(root: Path) -> int:
     """Executa bateria de autoteste para CI e validacao sem abrir GUI."""
-    print("--- [Autoteste Vox Populi Desktop] ---")
+    print("--- [Autoteste Vox Desktop] ---")
     server = LocalClientServer(root, port=18085)
     port = server.start()
     if port == 0:
@@ -385,7 +402,7 @@ def run_self_check(root: Path) -> int:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Vox Populi Desktop")
+    parser = argparse.ArgumentParser(description="Vox Desktop (Cliente)")
     parser.add_argument("--check", action="store_true", help="Executa autoteste e encerra")
     parser.add_argument("--local", action="store_true", help="Forca uso do cliente local")
     parser.add_argument("--port", type=int, default=LOCAL_PORT_DEFAULT, help="Porta local")
@@ -403,13 +420,13 @@ def main() -> int:
     bridge = DesktopBridge(local_port, is_remote)
 
     print("======================================================")
-    print("  Vox Populi Desktop — Windows")
-    print(f"  URL Ativa:    {target_url}")
-    print(f"  Modo:         {'Remoto (Cloudflare)' if is_remote else 'Espelho Local'}")
+    print("  Vox Desktop (Cliente) — Windows")
+    print(f"  URL Ativa:     {target_url}")
+    print(f"  Modo:          {'Remoto (Cloudflare)' if is_remote else 'Espelho Local'}")
     if local_port:
-        print(f"  Backup Local: http://127.0.0.1:{local_port}")
-    print("  Relay Farol:  Ativo em segundo plano com notificacao na bandeja")
-    print("  Seeder:       Não implementado")
+        print(f"  Backup Local:  http://127.0.0.1:{local_port}")
+    print("  Nó Dedicado:   Vox Populi conectado em 127.0.0.1:3921")
+    print("  Seeder:        Não implementado")
     print("======================================================")
 
     if webview is None:

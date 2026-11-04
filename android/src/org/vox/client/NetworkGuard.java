@@ -1,4 +1,4 @@
-package org.vox.populi;
+package org.vox.client;
 
 import android.content.Context;
 import android.content.Intent;
