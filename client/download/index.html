@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Baixar o Vox — Rede Cívica de Participação Popular</title>
+  <meta name="description" content="Baixe o aplicativo Vox (Cliente) ou o nó comunitário Vox Populi (Nó Dedicado) para Windows, Android, Linux, iOS e macOS." />
+  <link rel="canonical" href="https://yurikayel.github.io/vox/download" />
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+  <link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png" />
+  <link rel="icon" href="icons/favicon-16.png" sizes="16x16" type="image/png" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #090D14;
+      --card-bg: #121824;
+      --card-border: #1E293B;
+      --card-hover: #1E293D;
+      --text: #F8FAFC;
+      --text-muted: #94A3B8;
+      --text-sub: #64748B;
+      --primary: #2563EB;
+      --primary-hover: #1D4ED8;
+      --accent: #38BDF8;
+      --emerald: #10B981;
+      --emerald-dark: #064E3B;
+      --amber: #F59E0B;
+      --max-w: 1120px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'Source Sans 3', system-ui, -apple-system, sans-serif;
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 0 1rem 4rem 1rem;
+      background-image: 
+        radial-gradient(circle at 50% 0%, rgba(37, 99, 235, 0.15), transparent 45%),
+        radial-gradient(circle at 10% 20%, rgba(16, 185, 129, 0.08), transparent 35%);
+      background-attachment: fixed;
+    }
+
+    header {
+      max-width: var(--max-w);
+      margin: 2.5rem auto 2.5rem auto;
+      text-align: center;
+    }
+
+    .brand-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(37, 99, 235, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      color: var(--accent);
+      padding: 0.35rem 0.9rem;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 1.25rem;
+      letter-spacing: 0.02em;
+    }
+
+    .brand-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .brand-logo {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: #FFFFFF;
+      padding: 4px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+    }
+
+    .subtitle {
+      max-width: 680px;
+      margin: 0.75rem auto 0 auto;
+      font-size: 1.15rem;
+      color: var(--text-muted);
+    }
+
+    main {
+      max-width: var(--max-w);
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    /* Boost Card */
+    .boost-banner {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(37, 99, 235, 0.15));
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: 16px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 2.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+    }
+
+    .boost-icon {
+      font-size: 2rem;
+      flex-shrink: 0;
+      background: rgba(16, 185, 129, 0.2);
+      width: 52px;
+      height: 52px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .boost-text h3 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.15rem;
+      color: #34D399;
+      margin-bottom: 0.2rem;
+    }
+
+    .boost-text p {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+    }
+
+    /* Grid 2x2 */
+    .grid-duo {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.75rem;
+      margin-bottom: 3rem;
+    }
+
+    @media (min-width: 840px) {
+      .grid-duo {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .product-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .product-card:hover {
+      border-color: rgba(56, 189, 248, 0.4);
+    }
+
+    .product-card.client-card {
+      box-shadow: 0 8px 30px rgba(37, 99, 235, 0.1);
+    }
+
+    .card-tag {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+      color: var(--accent);
+    }
+
+    .card-tag.node-tag {
+      color: #34D399;
+    }
+
+    .product-card h2 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.85rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .product-desc {
+      color: var(--text-muted);
+      font-size: 1rem;
+      margin-bottom: 1.75rem;
+      min-height: 48px;
+    }
+
+    .download-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      margin-top: auto;
+    }
+
+    .dl-btn {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #162032;
+      border: 1px solid #24344D;
+      padding: 0.9rem 1.15rem;
+      border-radius: 12px;
+      text-decoration: none;
+      color: var(--text);
+      transition: all 0.15s ease-in-out;
+    }
+
+    .dl-btn:hover {
+      background: #1C2B44;
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    .dl-btn.primary-btn {
+      background: var(--primary);
+      border-color: #3B82F6;
+    }
+
+    .dl-btn.primary-btn:hover {
+      background: var(--primary-hover);
+      border-color: #60A5FA;
+    }
+
+    .dl-info {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    .dl-icon {
+      font-size: 1.4rem;
+    }
+
+    .dl-meta {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .dl-title {
+      font-weight: 600;
+      font-size: 1rem;
+    }
+
+    .dl-sub {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .dl-badge {
+      background: rgba(255, 255, 255, 0.1);
+      font-size: 0.75rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 9999px;
+      font-weight: 600;
+      color: #E2E8F0;
+    }
+
+    .primary-btn .dl-badge {
+      background: rgba(0, 0, 0, 0.25);
+    }
+
+    /* PWA Web Access */
+    .web-access-box {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 1.75rem;
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .web-access-box h3 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.35rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .web-access-box p {
+      color: var(--text-muted);
+      max-width: 600px;
+      margin: 0 auto 1.25rem auto;
+      font-size: 0.95rem;
+    }
+
+    .cta-web {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      padding: 0.65rem 1.4rem;
+      border-radius: 10px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.15s;
+    }
+
+    .cta-web:hover {
+      background: rgba(56, 189, 248, 0.1);
+      border-color: #7DD3FC;
+    }
+
+    /* Pillars */
+    .pillars-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.25rem;
+      margin-top: 2rem;
+    }
+
+    .pillar-item {
+      background: rgba(18, 24, 36, 0.6);
+      border: 1px solid rgba(30, 41, 59, 0.7);
+      padding: 1.25rem;
+      border-radius: 12px;
+    }
+
+    .pillar-item h4 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.05rem;
+      color: var(--text);
+      margin-bottom: 0.35rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .pillar-item p {
+      color: var(--text-muted);
+      font-size: 0.88rem;
+    }
+
+    footer {
+      max-width: var(--max-w);
+      margin: 3rem auto 0 auto;
+      text-align: center;
+      color: var(--text-sub);
+      font-size: 0.85rem;
+      border-top: 1px solid var(--card-border);
+      padding-top: 1.5rem;
+    }
+
+    footer a {
+      color: var(--text-muted);
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand-badge">Democracia Direta • Soberania Local-First • Código Aberto</div>
+    <div class="brand-header">
+      <img src="icons/icon-192.png" alt="Vox" class="brand-logo" />
+      <h1>Vox</h1>
+    </div>
+    <p class="subtitle">
+      Participe de comunidades sem censura algorítmica, crie enquetes com votação real e mantenha seus dados no seu aparelho. Escolha como quer fazer parte da rede:
+    </p>
+  </header>
+
+  <main>
+
+    <!-- Boost Sinergia Banner -->
+    <div class="boost-banner">
+      <div class="boost-icon">⚡</div>
+      <div class="boost-text">
+        <h3>Sinergia do Efeito Boost</h3>
+        <p>
+          O <strong>Vox (Cliente)</strong> é a interface para você participar e debater. O <strong>Vox Populi (Nó Dedicado)</strong> é a infraestrutura silenciosa em segundo plano. 
+          Se você abrir ambos no mesmo computador ou celular, o Cliente se conecta ao Nó local e ativa o <strong>Modo Boost</strong>, acelerando o carregamento via cache seguro sem gastar sua internet!
+        </p>
+      </div>
+    </div>
+
+    <!-- 2x2 Grid -->
+    <div class="grid-duo">
+
+      <!-- PRODUTO 1: CLIENTE -->
+      <section class="product-card client-card">
+        <span class="card-tag">Para Cidadãos & Participação</span>
+        <h2>Vox (Cliente)</h2>
+        <p class="product-desc">
+          O aplicativo de uso diário: navegue pelas comunidades, publique tópicos, vote em consultas públicas, converse em chats cifrados e apoie iniciativas populares.
+        </p>
+
+        <div class="download-list">
+          <!-- Windows Desktop -->
+          <a href="downloads/Vox.exe" class="dl-btn primary-btn" download>
+            <div class="dl-info">
+              <span class="dl-icon">🖥️</span>
+              <div class="dl-meta">
+                <span class="dl-title">Vox para Windows</span>
+                <span class="dl-sub">Nativo 1-Clique (.EXE) • Início Instantâneo</span>
+              </div>
+            </div>
+            <span class="dl-badge">967 KiB</span>
+          </a>
+
+          <!-- Android APK -->
+          <a href="downloads/vox.apk" class="dl-btn" download>
+            <div class="dl-info">
+              <span class="dl-icon">📱</span>
+              <div class="dl-meta">
+                <span class="dl-title">Vox para Android</span>
+                <span class="dl-sub">Micro-APK (Android 7+) • org.vox.client</span>
+              </div>
+            </div>
+            <span class="dl-badge">72 KiB</span>
+          </a>
+
+          <!-- iOS / iPhone -->
+          <a href="https://vox-9df.pages.dev/" target="_blank" class="dl-btn">
+            <div class="dl-info">
+              <span class="dl-icon">🍏</span>
+              <div class="dl-meta">
+                <span class="dl-title">iPhone / iPad (iOS)</span>
+                <span class="dl-sub">Abra no Safari e toque em "Adicionar à Tela de Início"</span>
+              </div>
+            </div>
+            <span class="dl-badge">PWA</span>
+          </a>
+
+          <!-- Linux -->
+          <a href="https://github.com/yurikayel/vox/tree/develop/tools/desktop-linux" target="_blank" class="dl-btn">
+            <div class="dl-info">
+              <span class="dl-icon">🐧</span>
+              <div class="dl-meta">
+                <span class="dl-title">Vox para Linux</span>
+                <span class="dl-sub">Script WebKitGTK nativo (< 30 KiB) & atalho .desktop</span>
+              </div>
+            </div>
+            <span class="dl-badge">Linux</span>
+          </a>
+        </div>
+      </section>
+
+      <!-- PRODUTO 2: NÓ DEDICADO -->
+      <section class="product-card">
+        <span class="card-tag node-tag">Para Infraestrutura & Apoio</span>
+        <h2>Vox Populi (Nó Dedicado)</h2>
+        <p class="product-desc">
+          O daemon comunitário: roda em segundo plano sem janela de navegador, guardando cache seguro (SHA-256) e servindo relay local para manter a malha cívica viva.
+        </p>
+
+        <div class="download-list">
+          <!-- Windows Tray -->
+          <a href="downloads/VoxPopuli.exe" class="dl-btn" download>
+            <div class="dl-info">
+              <span class="dl-icon">🖥️</span>
+              <div class="dl-meta">
+                <span class="dl-title">Vox Populi para Windows</span>
+                <span class="dl-sub">Executável com Menu na Bandeja (System Tray)</span>
+              </div>
+            </div>
+            <span class="dl-badge">11.7 MB</span>
+          </a>
+
+          <!-- Android Node -->
+          <a href="downloads/vox-populi.apk" class="dl-btn" download>
+            <div class="dl-info">
+              <span class="dl-icon">📱</span>
+              <div class="dl-meta">
+                <span class="dl-title">Vox Populi para Android</span>
+                <span class="dl-sub">Nó Móvel • Foreground Service leve em Wi-Fi</span>
+              </div>
+            </div>
+            <span class="dl-badge">72 KiB</span>
+          </a>
+
+          <!-- Linux Daemon -->
+          <a href="https://github.com/yurikayel/vox/tree/develop/vox-populi" target="_blank" class="dl-btn">
+            <div class="dl-info">
+              <span class="dl-icon">🐧</span>
+              <div class="dl-meta">
+                <span class="dl-title">Linux (Raspberry Pi / Servidor)</span>
+                <span class="dl-sub">Serviço systemd com cgroups e consumo mínimo</span>
+              </div>
+            </div>
+            <span class="dl-badge">systemd</span>
+          </a>
+
+          <!-- macOS Daemon -->
+          <a href="https://github.com/yurikayel/vox/tree/develop/tools/node-macos" target="_blank" class="dl-btn">
+            <div class="dl-info">
+              <span class="dl-icon">🍏</span>
+              <div class="dl-meta">
+                <span class="dl-title">macOS (LaunchAgent)</span>
+                <span class="dl-sub">Daemon nativo via launchd em 127.0.0.1:3921</span>
+              </div>
+            </div>
+            <span class="dl-badge">launchd</span>
+          </a>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- Web Access Box -->
+    <div class="web-access-box">
+      <h3>Prefere usar agora sem baixar nada?</h3>
+      <p>Você pode acessar a versão web oficial imediatamente em qualquer navegador moderno com todas as funcionalidades de criptografia e participação ativa.</p>
+      <a href="index.html#/" class="cta-web">🚀 Abrir Vox no Navegador Agora</a>
+    </div>
+
+    <!-- Trust Pillars -->
+    <div class="pillars-grid">
+      <div class="pillar-item">
+        <h4>🔒 Privacidade e Soberania</h4>
+        <p>Suas chaves criptográficas (Ed25519/P-256) são geradas no seu aparelho. Sem rastreadores e sem cartório central.</p>
+      </div>
+      <div class="pillar-item">
+        <h4>📦 Ultraleveza Real</h4>
+        <p>APKs e binários de até 72 KiB. Feitos para economizar seus dados móveis e rodar até nos aparelhos mais simples.</p>
+      </div>
+      <div class="pillar-item">
+        <h4>🤝 Código Aberto & Livre</h4>
+        <p>Sem algoritmos opacos de polarização. O código é 100% aberto e auditável pela comunidade internacional.</p>
+      </div>
+    </div>
+
+  </main>
+
+  <footer>
+    <p>
+      Vox • Projeto cívico e bem comum aberto · 
+      <a href="https://github.com/yurikayel/vox" target="_blank">Código-fonte no GitHub</a> · 
+      <a href="privacy.html">Privacidade</a>
+    </p>
+  </footer>
+
+</body>
+</html>
