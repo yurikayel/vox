@@ -1,4 +1,4 @@
-package org.vox.seeder;
+package org.vox.populi;
 
 import android.content.Context;
 import android.content.Intent;

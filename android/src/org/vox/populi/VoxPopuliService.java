@@ -1,4 +1,4 @@
-package org.vox.seeder;
+package org.vox.populi;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -17,7 +17,7 @@ import android.webkit.WebView;
  */
 public class VoxPopuliService extends Service {
 
-    public static final String CHANNEL_ID = "vox_seeder_channel"; // ID estável para preservar preferências de notificações instaladas.
+    public static final String CHANNEL_ID = "vox_populi_channel";
     public static final int NOTIF_ID = 1001;
     private static final String SEED_URL = "https://vox-9df.pages.dev/#/status";
 
