@@ -36,6 +36,7 @@ const ROUTE_DISPATCH_TABLE = {
   "dm-list": () => showDmList(),
   "dm-thread": (r) => showDmThread(r.address),
   voxpedia: () => showVoxpedia(),
+  download: () => { window.location.href = "download.html"; },
   "ajuda-teste": () => showAjudaTeste(),
   status: () => showStatus(),
   "labs-frames": () => showLabsFrames(),

@@ -100,6 +100,8 @@ const STATIC_ROUTES = {
   status: () => ({ name: "status" }),
   wallet: () => ({ name: "wallet" }),
   voxpedia: () => ({ name: "voxpedia" }),
+  download: () => ({ name: "download" }),
+  downloads: () => ({ name: "download" }),
 };
 
 function parseStaticRoute(parts, query) {
