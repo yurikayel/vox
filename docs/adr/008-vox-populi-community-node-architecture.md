@@ -30,7 +30,7 @@ Essas funções descrevem a arquitetura-alvo, não o estado completo do código.
 
 ### B. Especificação Operacional Estrita
 1. **Usuário Dedicado sem Privilégios:** A execução ocorre sob o usuário de sistema `vox-populi`, sem acesso root e sem permissão de sudo.
-2. **Zero Portas Inbound Obrigatórias:** O relay/cache atual usa loopback por padrão (`127.0.0.1:3921`) e faz consultas outbound aos gateways Arweave configurados. A lista de relays Nostr não é conectada e o seeder WebTorrent ainda não existe; portanto, não se deve inferir tráfego para esses serviços a partir desta ADR. Uma implantação LAN opcional pode vincular o relay a um endereço privado, sem exigir porta WAN no roteador doméstico.
+2. **Zero Portas Inbound Obrigatórias:** O pacote Linux atual fixa o relay/cache em loopback (`127.0.0.1:3921`) e faz consultas outbound aos gateways Arweave configurados. A lista de relays Nostr não é conectada, o seeder WebTorrent e a descoberta LAN não existem; portanto, não se deve inferir tráfego para esses serviços a partir desta ADR. Acesso LAN exige implementação e validação explícitas futuras; não edite a unidade atual nem regras de firewall para expor o serviço.
 3. **Limites Rígidos de Recursos:** O arquivo de configuração `config/vox-populi.json` impõe limites de armazenamento (padrão: 2 GB), cota máxima de tráfego mensal e limitação de threads de CPU.
 4. **Instalação Reproduzível e Desinstalação Limpa:** Scripts shell idempotentes (`install.sh`, `uninstall.sh`, `update.sh`, `health-check.sh`) com validação de checksum e confirmação interativa explícita.
 5. **Autonomia do Criador:** O nó opera e sobrevive independentemente de qualquer servidor central; se o mantenedor desaparecer, o Vox Populi continua servindo sua comunidade.

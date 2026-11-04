@@ -1,0 +1,40 @@
+name: Windows Node Zero smoke
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows-node-zero:
+    name: Build and exercise VoxPopuli Node Zero
+    runs-on: windows-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Configure Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install pinned PyInstaller
+        run: python -m pip install pyinstaller==6.22.3
+
+      - name: Verify effective loopback sockets and legacy settings
+        run: python -m unittest discover -s tools/node-zero-windows -p test_network_contract.py -v
+
+      - name: Build and smoke-test in temporary directories
+        shell: pwsh
+        run: .\tools\node-zero-windows\smoke-test.ps1
+
+      - name: Verify safe port-collision preflight
+        shell: pwsh
+        run: .\tools\node-zero-windows\test-smoke-preflight.ps1
