@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>org.vox.populi</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/python3</string>
+        <string>/usr/local/share/vox/relay/server.py</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>/tmp/vox-populi.log</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/vox-populi-err.log</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>VOX_RELAY_PORT</key>
+        <string>3921</string>
+        <key>VOX_BIND_HOST</key>
+        <string>127.0.0.1</string>
+    </dict>
+</dict>
+</plist>
