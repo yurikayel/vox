@@ -89,15 +89,14 @@ def start_node_background(root: Path) -> bool:
 
     frozen = getattr(sys, "frozen", False)
     base_exe_dir = Path(sys.executable).parent if frozen else root / "dist"
-    for candidate in ("VoxPopuli.exe", "VoxFarol.exe"):
-        exe_path = base_exe_dir / candidate
-        if exe_path.exists():
-            try:
-                flags = 0x08000000 | 0x00000200
-                subprocess.Popen([str(exe_path), "--node-service"], creationflags=flags)
-                return True
-            except OSError:
-                continue
+    exe_path = base_exe_dir / "VoxPopuli.exe"
+    if exe_path.exists():
+        try:
+            flags = 0x08000000 | 0x00000200
+            subprocess.Popen([str(exe_path), "--node-service"], creationflags=flags)
+            return True
+        except OSError:
+            pass
 
     node_py = root / "tools" / "node-zero-windows" / "node_zero.py"
     if node_py.exists():
@@ -187,7 +186,7 @@ class DesktopBridge:
 
 
 class DesktopNodeTray:
-    """Controlador de bandeja do sistema com notificacao de no Farol ativo."""
+    """Controlador de bandeja do sistema com notificacao de no dedicado Vox Populi ativo."""
 
     def __init__(self, root: Path, window: Optional[Any] = None) -> None:
         self.root = root

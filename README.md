@@ -26,7 +26,8 @@ Acesso direto às aplicações prontas para uso do ecossistema:
 |:---|:---|:---|:---|
 | 🖥️ **CLIENTE** | **Vox (Desktop)** | [**`dist/Vox.exe`**](dist/Vox.exe) *(ou [`dist/VoxPopuliDesktop.exe`](dist/VoxPopuliDesktop.exe))* | **Cliente gráfico para PC:** interface WebView2 nativa com notificação na bandeja (*system tray*) e conexão com **boost** automático ao nó dedicado local. |
 | 📱 **CLIENTE** | **Vox (Android)** | [**`android/vox.apk`**](android/vox.apk) *(ou [`dist/vox.apk`](dist/vox.apk))* | **Cliente móvel para celular:** micro-APK ultraleve (~20.8 KiB, `org.vox.client`) com suporte a v1+v2+v3 e ícone nativo pronto para sideload/WSA. |
-| 🌐 **NÓ DEDICADO** | **Vox Populi (Nó)** | [**`dist/VoxPopuli.exe`**](dist/VoxPopuli.exe) *(ou [`dist/VoxFarol.exe`](dist/VoxFarol.exe))* | **Nó comunitário dedicado em background:** sem navegador/UI, opera relay HTTP (`127.0.0.1:3921`), cache SHA-256 e controle (`127.0.0.1:3922`) com ícone de controle na bandeja. |
+| 🌐 **NÓ DEDICADO** | **Vox Populi (Windows)** | [**`dist/VoxPopuli.exe`**](dist/VoxPopuli.exe) | **Nó comunitário dedicado em background:** sem navegador/UI, opera relay HTTP (`127.0.0.1:3921`), cache SHA-256 e controle (`127.0.0.1:3922`) com ícone de controle na bandeja. |
+| 📱 **NÓ DEDICADO** | **Vox Populi (Android)** | [**`android/vox-populi.apk`**](android/vox-populi.apk) *(ou [`dist/vox-populi.apk`](dist/vox-populi.apk))* | **Nó comunitário dedicado para celular:** micro-APK ultraleve (`org.vox.populi`), foreground service de relay/cache em Wi-Fi e tela nativa de status do nó. |
 
 ---
 
@@ -66,13 +67,13 @@ O Service Worker pode manter uma versão anterior do cliente em cache. Depois de
 
 ---
 
-## 📦 Os Três Produtos do Ecossistema Vox
+## 📦 Arquitetura dos Produtos: Vox (Cliente) e Vox Populi (Nó Dedicado)
 
-Para garantir clareza entre o uso cotidiano pelas pessoas e a sustentação técnica por operadores comunitários, o ecossistema organiza-se em três frentes canônicas ([ADR-011](docs/adr/011-taxonomia-tripartite-produtos-vox.md)):
+Para garantir clareza entre o uso cotidiano pelas pessoas e a sustentação técnica por operadores comunitários, o ecossistema organiza-se em dois papéis complementares ([ADR-011](docs/adr/011-taxonomia-tripartite-produtos-vox.md)):
 
-1. **Vox Populi Android:** Aplicativo móvel nativo ultraleve (~16.5 KiB, sem frameworks externos) que executa o PWA em tela cheia com Foreground Service para mobilidade (`org.vox.populi`).
-2. **Vox Populi Desktop:** Aplicação 1-clique para Windows em janela nativa WebView2, com inicialização local transparente e fallback de leitura loopback (`VoxPopuliDesktop.exe`).
-3. **Vox Farol (Nó Comunitário):** Serviço de infraestrutura cívica de baixo consumo para retenção de cache verificável SHA-256 e relay HTTP em loopback (`VoxPopuli.exe` / daemon Linux).
+1. **Vox (Cliente):** Aplicativo voltado à pessoa usuária e à deliberação cívica. Disponível em Desktop (`Vox.exe`) e Android (`vox.apk`, `org.vox.client`), com PWA em tela cheia, navegação rápida, composição cívica e detecção de nó local para ativação automática de **boost**.
+2. **Vox Populi (Nó Dedicado):** Serviço de infraestrutura comunitária de baixo consumo. Disponível em Windows (`VoxPopuli.exe`), Android (`vox-populi.apk`, `org.vox.populi`) e Linux (`vox-populi/`), operando relay HTTP em loopback (`127.0.0.1:3921`), cache SHA-256 e controle de recursos.
+3. **Sinergia do Boost:** Abrir ambos potencializa a experiência: o cliente se conecta ao nó dedicado local, acelerando o carregamento via cache local verificado e ativando o modo de alta prontidão.
 
 ---
 
