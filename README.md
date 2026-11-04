@@ -54,6 +54,16 @@ O Service Worker pode manter uma versão anterior do cliente em cache. Depois de
 
 ---
 
+## 📦 Os Três Produtos do Ecossistema Vox
+
+Para garantir clareza entre o uso cotidiano pelas pessoas e a sustentação técnica por operadores comunitários, o ecossistema organiza-se em três frentes canônicas ([ADR-011](docs/adr/011-taxonomia-tripartite-produtos-vox.md)):
+
+1. **Vox Populi Android:** Aplicativo móvel nativo ultraleve (~16.5 KiB, sem frameworks externos) que executa o PWA em tela cheia com Foreground Service para mobilidade (`org.vox.populi`).
+2. **Vox Populi Desktop:** Aplicação 1-clique para Windows em janela nativa WebView2, com inicialização local transparente e fallback de leitura loopback (`VoxPopuliDesktop.exe`).
+3. **Vox Farol (Nó Comunitário):** Serviço de infraestrutura cívica de baixo consumo para retenção de cache verificável SHA-256 e relay HTTP em loopback (`VoxPopuli.exe` / daemon Linux).
+
+---
+
 ## ⚙️ Arquitetura do Sistema
 
 ```
