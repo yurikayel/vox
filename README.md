@@ -148,6 +148,22 @@ Servidor leve em Python (stdlib, sem dependências externas), provendo proxy de 
 
 ---
 
+## 🏛️ Ecossistema Cívico
+
+O Vox explora interoperabilidade com iniciativas independentes de tecnologia cívica, incluindo plataformas de transparência legislativa.
+
+**Proposta em estudo:** integração experimental com o Tramitado, preservando:
+* Independência operacional.
+* Privacidade das decisões individuais.
+* Referências legislativas verificáveis.
+* Interoperabilidade por padrões abertos.
+
+Esta é uma proposta exploratória, não uma integração ou parceria formalizada.
+
+Detalhes: [Brainstorm Tramitado × Vox](docs/brainstorm-sinergia-tramitado-vox-2026-11.md).
+
+---
+
 ## 🔍 Compromisso de Transparência Técnica
 
 Em conformidade com a auditoria de honestidade cívica ([docs/honest-copy-audit-2026-10-23.md](./docs/honest-copy-audit-2026-10-23.md)):

@@ -20,9 +20,10 @@ test("vox-populi - config/vox-populi.json possui schema valido e limites de recu
   assert.equal(typeof cfg.nodeName, "string");
   assert.equal(typeof cfg.version, "string");
   assert.equal(typeof cfg.network.listenPort, "number");
+  assert.equal(cfg.network.mode, "loopback-only");
   assert.equal(cfg.network.listenHost, "127.0.0.1", "listenHost deve ser loopback seguro");
-  assert.equal(cfg.network.enableLanDiscovery, false, "enableLanDiscovery deve ser false por padrao");
-  assert.equal(cfg.network.enablePublicInbound, false);
+  assert.equal(cfg.network.lanDiscovery, "not_implemented");
+  assert.equal(cfg.network.publicInbound, false);
   assert.ok(cfg.resources.maxStorageMb <= 10240, "Armazenamento deve ter limite razoavel");
   assert.equal(cfg.resources.maxCpuPercent, 40);
   assert.equal(typeof cfg.resources.maxBandwidthMonthlyGb, "number");
@@ -68,6 +69,16 @@ test("vox-populi - systemd/vox-populi.service possui argumentos corretos, cgroup
   assert.ok(content.includes("ProtectHome=true"));
   assert.ok(content.includes("StateDirectory=vox-populi"));
   assert.ok(content.includes("Restart=always"));
+});
+
+test("vox-populi - README declara loopback-only e não orienta exposição LAN", () => {
+  const readme = fs.readFileSync(path.join(root, "README.md"), "utf8");
+
+  assert.ok(readme.includes("somente loopback"));
+  assert.ok(readme.includes("Acesso de outros dispositivos pela LAN"));
+  assert.ok(readme.includes('lanDiscovery: "not_implemented"'));
+  assert.ok(!readme.includes("0.0.0.0"));
+  assert.ok(!readme.includes("ufw allow"));
 });
 
 test("vox-populi - systemd temporizador de saude (5 minutos) existe e possui configuracao valida", () => {
