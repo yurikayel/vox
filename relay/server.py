@@ -24,6 +24,7 @@ from relay import blind_relay
 from relay import central_memory
 from relay import inbox
 from relay import mirror_validate
+from relay import p2p_seeder
 
 DEFAULT_PORT = 3920
 DEFAULT_HOST = "127.0.0.1"
@@ -344,6 +345,19 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
                 self._reply_not_found(b"Snapshot nao encontrado")
         elif path.startswith("/memory"):
             self._handle_memory_get(path)
+        elif path == "/p2p/status":
+            self._send_json(p2p_seeder.get_p2p_summary())
+        elif path == "/p2p/blobs":
+            self._send_json({"seeds": p2p_seeder.SEEDER_MANAGER.list_seeds()})
+        elif path.startswith("/p2p/seed/"):
+            blob_hash = path[len("/p2p/seed/"):].split("/")[0]
+            seed = p2p_seeder.SEEDER_MANAGER.get_seed(blob_hash)
+            if seed:
+                self._send_json(seed)
+            else:
+                self._reply_not_found(b"Seed P2P nao encontrado")
+        elif path in ("/peer/beacon", "/p2p/peers"):
+            self._send_json({"peers": p2p_seeder.PEER_DISCOVERY.list_peers()})
         else:
             self._reply_not_found(b"Rota nao encontrada no Vox Relay")
 
@@ -405,6 +419,7 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
                 "failures": INTEGRITY_FAILURES,
             },
             "centralMemory": central_memory.get_status_summary(),
+            "p2p": p2p_seeder.get_p2p_summary(),
         }
 
     def _handle_transaction(self, tx_id):
@@ -496,6 +511,10 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
             self._handle_blind_snapshot_post(path[len("/relay/snapshot/"):].split("/")[0])
         elif path in ("/memory/ingest", "/memory/sync") or path.startswith("/memory/vault/"):
             self._handle_memory_post(path)
+        elif path == "/peer/beacon":
+            self._handle_peer_beacon_post()
+        elif path == "/p2p/seed":
+            self._handle_p2p_seed_post()
         else:
             self._reply_not_found(b"")
 
@@ -587,8 +606,61 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
             self._send_json(inbox.store_envelope(to_addr, envelope))
         except Exception as error:
             self._send_json({"error": str(error)}, 400)
+
+    def _handle_peer_beacon_post(self):
+        content_length = self._get_content_length()
+        if content_length <= 0 or content_length > 16 * 1024:
+            self._reply_not_found(b"Payload do beacon invalido", 400)
+            return
+        try:
+            body = self.rfile.read(content_length)
+            payload = json.loads(body.decode("utf-8"))
+            record = p2p_seeder.PEER_DISCOVERY.register_peer(payload)
+            self._send_json(record, 201)
+        except ValueError as err:
+            self._send_json({"error": str(err)}, 400)
+        except Exception as error:
+            self._send_json({"error": str(error)}, 500)
+
+    def _handle_p2p_seed_post(self):
+        content_length = self._get_content_length()
+        if content_length <= 0 or content_length > 16 * 1024:
+            self._reply_not_found(b"Payload de seed invalido", 400)
+            return
+        try:
+            body = self.rfile.read(content_length)
+            payload = json.loads(body.decode("utf-8"))
+            blob_hash = str(payload.get("hash") or "").strip().lower()
+            # Se já presente na memória central, autoriza automaticamente
+            blob_data = central_memory.get_blob(blob_hash)
+            if blob_data:
+                p2p_seeder.SEEDER_MANAGER.authorize_hash(blob_hash)
+                size_bytes = blob_data.get("sizeBytes") or len(blob_data.get("base64Data", ""))
+                mime_type = blob_data.get("mimeType", "application/octet-stream")
+                record = p2p_seeder.SEEDER_MANAGER.register_blob_seed(blob_hash, size_bytes, mime_type)
+                self._send_json(record, 201)
+                return
+            # Se explicitamente autorizado
+            size_bytes = int(payload.get("sizeBytes", 0))
+            mime_type = str(payload.get("mimeType", "application/octet-stream"))
+            record = p2p_seeder.SEEDER_MANAGER.register_blob_seed(blob_hash, size_bytes, mime_type)
+            self._send_json(record, 201)
+        except (ValueError, PermissionError) as err:
+            self._send_json({"error": str(err)}, 400)
+        except OverflowError as err:
+            self._send_json({"error": str(err)}, 413)
+        except Exception as error:
+            self._send_json({"error": str(error)}, 500)
+
     def do_DELETE(self):
         path = self.path.split("?")[0].rstrip("/")
+        if path.startswith("/p2p/seed/"):
+            blob_hash = path[len("/p2p/seed/"):].split("/")[0]
+            if p2p_seeder.SEEDER_MANAGER.unregister_blob_seed(blob_hash):
+                self._send_json({"status": "unseeded", "hash": blob_hash}, 200)
+            else:
+                self._reply_not_found(b"Seed P2P nao encontrado")
+            return
         if path.startswith("/inbox/"):
             parts = path[len("/inbox/"):].split("/")
             to_addr = parts[0] if len(parts) > 0 else ""

@@ -64,6 +64,21 @@ test("community-topic-order - orderCommunityTopics mantém tópicos fixados (isP
   ]);
 });
 
+test("community-topic-order - orderCommunityTopics com mode pinned filtra exclusivamente tópicos fixados", () => {
+  const topics = [
+    { id: "reg_ativo", ts: 100, lastReplyTs: 1000 },
+    { id: "pinned_antigo", ts: 50, isPinned: true },
+    { id: "reg_novo", ts: 500 },
+    { id: "pinned_mais_ativo", ts: 40, lastReplyTs: 200, isPinned: true },
+  ];
+  const sorted = orderCommunityTopics(topics, "pinned");
+  assert.deepEqual(sorted.map((t) => t.id), [
+    "pinned_mais_ativo",
+    "pinned_antigo",
+  ]);
+  assert.deepEqual(orderCommunityTopics([{ id: "reg_1" }], "pinned"), []);
+});
+
 test("community-topic-order - lida com array vazio ou nulo sem quebrar", () => {
   assert.deepEqual(sortTopicsByActivity([]), []);
   assert.deepEqual(sortTopicsByActivity(null), []);

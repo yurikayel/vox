@@ -3,7 +3,8 @@
 [![Client](https://img.shields.io/badge/PWA-Vanilla%20ES%20Modules-orange.svg)](./client)
 [![Identity](https://img.shields.io/badge/Identity-WebCrypto%20P--256-blueviolet.svg)](./client/js/local-account.js)
 [![Storage](https://img.shields.io/badge/Storage-Arweave%20Permaweb-black.svg)](https://arweave.org)
-[![Tests](https://img.shields.io/badge/Tests-778%20passing%20(704%20JS%20%2B%2074%20Py)-brightgreen.svg)](./tests)
+[![License: AGPL v3](https://img.shields.io/badge/License-GNU%20AGPLv3-crimson.svg)](./LICENSE)
+[![Tests](https://img.shields.io/badge/Tests-797%20passing%20(714%20JS%20%2B%2083%20Py)-brightgreen.svg)](./tests)
 [![Service Worker](https://img.shields.io/badge/SW-v7.20--real--network--audio--video--upload-informational.svg)](./client/sw.js)
 
 O Vox é um projeto cívico em construção para ampliar a participação popular e a autonomia das comunidades na vida digital. Sua ambição é ser um bem comum aberto: o projeto deve permanecer transparente, copiável, modificável e maior que qualquer fundador, mantenedor, empresa ou plataforma.
@@ -243,6 +244,9 @@ Em conformidade com a auditoria de honestidade cívica ([docs/honest-copy-audit-
 * **[ADR-010](./docs/adr/010-vox-contribution-engine-execute-e-ajude.md):** Motor de contribuição voluntária e nós anfitriões.
 * **[ADR-011](./docs/adr/011-taxonomia-tripartite-produtos-vox.md):** Taxonomia Canônica Dual — Vox (Cliente) e Vox Populi (Nó Dedicado).
 * **[ADR-012](./docs/adr/012-soberania-digital-cintura-fina-cartuchos-webxdc.md):** Soberania Digital na Vox — Cintura Fina Criptográfica e Cartuchos Cívicos Webxdc.
+* **[ADR-013](./docs/adr/013-sistema-voxels-e-conquistas-civicas.md):** Sistema de Voxels e Conquistas Cívicas.
+* **[ADR-014](./docs/adr/014-zero-knowledge-vault-recuperacao-soberana.md):** Zero-Knowledge Vault e Recuperação Soberana Multi-dispositivo.
+* **[ADR-015](./docs/adr/015-licenciamento-agplv3-e-governanca-de-bem-comum.md):** Licenciamento AGPL-3.0-or-later e Governança de Bem Comum.
 
 ---
 
@@ -252,18 +256,22 @@ O compromisso do Vox é permanecer aberto: código, protocolos, documentação e
 
 **Estado atual, sem eufemismos:** o repositório ainda tem controle administrativo concentrado em uma pessoa. A governança descrita em [GOVERNANCE.md](./GOVERNANCE.md) trata principalmente das regras de moderação e deliberação de cada comunidade Vox; ela não distribui controle sobre o repositório, releases ou infraestrutura do projeto. Votos dentro de uma comunidade não elegem automaticamente mantenedores nem alteram o código canônico.
 
-**Licença:** Este repositório é formalmente distribuído sob os termos da licença [MIT](LICENSE). A licença assegura a liberdade de uso, estudo, modificação e redistribuição do código por qualquer cidadão ou coletivo.
+**Licença e Governança Institucional:**
+- **Licença Canônica:** Distribuído sob a **GNU Affero General Public License v3.0 (AGPL-3.0-or-later)** ([`LICENSE`](LICENSE)), fechando expressamente a brecha de SaaS/nuvem privada (Seção 13). Mais detalhes em [docs/licenca-e-contribuicoes.md](./docs/licenca-e-contribuicoes.md) e [ADR-015](./docs/adr/015-licenciamento-agplv3-e-governanca-de-bem-comum.md).
+- **Autoria e Mantenedores:** Reconhecimento em [`AUTHORS.md`](./AUTHORS.md).
+- **Diretrizes de Contribuição & DCO:** Processo de submissão em [`CONTRIBUTORS.md`](./CONTRIBUTORS.md).
+- **Política de Segurança e Resposta Responsável:** Protocolo fail-closed em [`SECURITY.md`](./SECURITY.md).
 
 ### Como a participação funciona hoje
 
 * Qualquer pessoa pode ler o código e a documentação, testar, relatar problemas e propor mudanças por issues e pull requests públicos no [GitHub](https://github.com/yurikayel/vox).
 * O histórico de revisão deve registrar motivação, evidências, testes e limitações. Mudanças que alterem protocolos ou regras precisam de explicação pública e tempo para contestação.
 * A revisão do mantenedor é hoje o caminho de integração; uma proposta pública não garante merge. Enquanto a administração permanecer concentrada, isso deve ser reconhecido como limite real da participação, não descrito como governança popular já alcançada.
-* O guia [CONTRIBUTING-DOCS.md](./docs/CONTRIBUTING-DOCS.md) cobre documentação e mutex de edição; ainda não existe neste repositório uma carta completa de governança, sucessão e seleção de múltiplos mantenedores.
+* O guia [CONTRIBUTING-DOCS.md](./docs/CONTRIBUTING-DOCS.md) cobre documentação e mutex de edição; diretrizes gerais de código residem em [`CONTRIBUTORS.md`](./CONTRIBUTORS.md).
 
 ### Trabalho necessário para que o projeto seja maior que qualquer indivíduo
 
-1. Publicar uma licença livre após confirmar os direitos das contribuições existentes e estabelecer como novas contribuições serão licenciadas.
+1. ~~Publicar uma licença livre após confirmar os direitos das contribuições existentes e estabelecer como novas contribuições serão licenciadas.~~ **(Concluído — AGPL-3.0-or-later, `AUTHORS.md`, `CONTRIBUTORS.md`, `SECURITY.md`, ADR-015).**
 2. Definir critérios públicos e revisáveis para adicionar, remover e substituir mantenedores; incluir sucessão e recuperação de acesso.
 3. Distribuir a custódia do repositório, releases, domínios e credenciais entre mais de uma pessoa confiável, com procedimentos auditáveis.
 4. Manter builds, protocolos e dados portáveis o bastante para que a comunidade possa continuar por forks se o mantenedor ou a plataforma original sair do ar.

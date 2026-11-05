@@ -18,7 +18,7 @@ import * as postOwnership from "../post-ownership.js";
 import * as communityMirror from "../community-mirror.js";
 import * as gatewayTelemetry from "../gateway-telemetry.js";
 import * as communitySeed from "../community-seed-checklist.js";
-import { computeCommunityNeighborStats } from "../render/community.js";
+import { computeCommunityNeighborStats, TOPICS_PAGE_SIZE } from "../render/community.js";
 import { orderCommunityTopics } from "../community-topic-order.js";
 import { markCommunitySeen } from "../community-unread.js";
 import * as contacts from "../contacts.js";
@@ -464,29 +464,81 @@ function bindCommunityTopicSearch(main) {
   return searchInput;
 }
 
-function bindCommunityTopicSort(main, communityId, filteredTopics, searchInput) {
+function renderPagedTopicRows(listEl, topics, communityId) {
+  listEl.innerHTML = topics
+    .map((t) => render.renderCommunityTopicRow({ ...t, communityId }))
+    .join("");
+}
+
+function updatePaginationControl(main, totalCount, currentLimit, onMore) {
+  let paginationEl = main.querySelector(".community-topic-pagination");
+  if (totalCount <= currentLimit) {
+    if (paginationEl) paginationEl.remove();
+    return;
+  }
+  const remaining = totalCount - currentLimit;
+  const label = `Carregar tópicos anteriores (${remaining} ${remaining === 1 ? "restante" : "restantes"})`;
+  if (!paginationEl) {
+    paginationEl = document.createElement("div");
+    paginationEl.className = "community-topic-pagination";
+    paginationEl.style.cssText = "text-align:center; padding:12px 0 6px;";
+    const feedEl = main.querySelector(".community-vox-feed");
+    if (feedEl) feedEl.appendChild(paginationEl);
+  }
+  paginationEl.innerHTML = `<button type="button" class="btn btn-outline btn-sm btn-load-more-topics">${label}</button>`;
+  paginationEl.querySelector(".btn-load-more-topics")?.addEventListener("click", onMore);
+}
+
+function refreshCommunityTopicList(main, communityId, filteredTopics, state, searchInput) {
+  const listEl = main.querySelector(".community-vox-topic-list");
+  if (!listEl) return;
+  const ordered = orderCommunityTopics(filteredTopics, state.sort);
+  if (state.sort === "pinned" && ordered.length === 0) {
+    listEl.innerHTML = `<div class="empty community-vox-empty"><p>Nenhuma pauta ou tópico fixado no momento.</p></div>`;
+    updatePaginationControl(main, 0, state.limit, null);
+    return;
+  }
+  const slice = ordered.slice(0, state.limit);
+  renderPagedTopicRows(listEl, slice, communityId);
+  updatePaginationControl(main, ordered.length, state.limit, () => {
+    state.limit += TOPICS_PAGE_SIZE;
+    refreshCommunityTopicList(main, communityId, filteredTopics, state, searchInput);
+  });
+  if (searchInput && searchInput.value.trim()) {
+    filterTopicRows(main.querySelectorAll(".community-topic-row"), searchInput.value, main);
+  }
+}
+
+function bindCommunityTopicSort(main, onSortChange) {
   main.querySelectorAll(".btn-sort-topic").forEach((btn) => {
     btn.addEventListener("click", () => {
       const mode = btn.dataset.sort;
       if (!mode) return;
       main.querySelectorAll(".btn-sort-topic").forEach((b) => {
-        b.classList.toggle("active", b === btn);
-        b.setAttribute("aria-pressed", b === btn ? "true" : "false");
+        const isActive = b === btn;
+        b.classList.toggle("active", isActive);
+        b.setAttribute("aria-pressed", isActive ? "true" : "false");
       });
-      const listEl = main.querySelector(".community-vox-topic-list");
-      if (!listEl) return;
-      const ordered = orderCommunityTopics(filteredTopics, mode);
-      listEl.innerHTML = ordered.map((t) => render.renderCommunityTopicRow({ ...t, communityId })).join("");
-      if (searchInput && searchInput.value.trim()) {
-        searchInput.dispatchEvent(new Event("input"));
-      }
+      onSortChange(mode);
     });
   });
 }
 
 function bindCommunityTopicControls(main, communityId, filteredTopics) {
+  const state = { sort: "active", limit: TOPICS_PAGE_SIZE };
   const searchInput = bindCommunityTopicSearch(main);
-  bindCommunityTopicSort(main, communityId, filteredTopics, searchInput);
+  bindCommunityTopicSort(main, (newSort) => {
+    state.sort = newSort;
+    state.limit = TOPICS_PAGE_SIZE;
+    refreshCommunityTopicList(main, communityId, filteredTopics, state, searchInput);
+  });
+  const paginationBtn = main.querySelector(".btn-load-more-topics");
+  if (paginationBtn) {
+    paginationBtn.addEventListener("click", () => {
+      state.limit += TOPICS_PAGE_SIZE;
+      refreshCommunityTopicList(main, communityId, filteredTopics, state, searchInput);
+    });
+  }
 }
 
 function bindCommunityHeaderEvents(main, communityId, meta, user, isMember, peerSettings, filteredTopics) {

@@ -770,6 +770,21 @@ function renderChatTranscriptDetails() {
     </details>`;
 }
 
+function renderTopicCivicTagBar() {
+  return `
+    <div class="form-group topic-tag-selector-group">
+      <label>Categoria Cívica (opcional):</label>
+      <div class="civic-tag-bar" style="display:flex; gap:6px; flex-wrap:wrap; margin-top:4px;">
+        <button type="button" class="btn btn-sm btn-subtle civic-tag-btn active" data-tag="" aria-pressed="true">Geral</button>
+        <button type="button" class="btn btn-sm btn-subtle civic-tag-btn" data-tag="[Pauta]" aria-pressed="false">🏛️ [Pauta]</button>
+        <button type="button" class="btn btn-sm btn-subtle civic-tag-btn" data-tag="[Bug]" aria-pressed="false">🐛 [Bug]</button>
+        <button type="button" class="btn btn-sm btn-subtle civic-tag-btn" data-tag="[Ideia]" aria-pressed="false">💡 [Ideia]</button>
+        <button type="button" class="btn btn-sm btn-subtle civic-tag-btn" data-tag="[Debate Geral]" aria-pressed="false">💬 [Debate Geral]</button>
+      </div>
+      <input type="hidden" id="topic-civic-tag" value="" />
+    </div>`;
+}
+
 export function renderComposeTopic(main, communityId) {
   const backLink = communityId
     ? `<a class="back-link" href="#/c/${encodeURIComponent(communityId)}">← Voltar à comunidade</a>`
@@ -788,6 +803,7 @@ export function renderComposeTopic(main, communityId) {
           <label for="topic-title">Título do Tópico (opcional):</label>
           <input type="text" id="topic-title" class="form-control" placeholder="ex: Dúvida sobre governança / Ideia de melhoria" />
         </div>
+        ${renderTopicCivicTagBar()}
         <div class="form-group">
           <label for="topic-body">Mensagem:</label>
           <textarea id="topic-body" class="form-control" rows="5" placeholder="Escreva seu post aqui..." required></textarea>

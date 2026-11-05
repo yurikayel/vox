@@ -93,6 +93,34 @@ O catálogo canônico inicial é dividido entre as três trilhas vitais:
 | `cuidado_guia_boas_vindas`| Guia Cívico | Cuidado | Apoio comprovado ao onboarding e sincronização de novo membro | 🤝 |
 | `cuidado_acessibilidade` | Voz Acessível | Cuidado | Fornecimento de transcrição/audiodescrição para mídia pública | 👁️ |
 
+### 4.3. Passaporte Cívico Assinado (`voxel-passport-v1`)
+
+```json
+{
+  "schema": "vox-voxel-passport-v1",
+  "routeId": "vx_1a2b3c4d5e6f...",
+  "generatedAt": 1793894400000,
+  "balance": {
+    "total": 55,
+    "byCategory": { "forja": 25, "agora": 30, "cuidado": 0 },
+    "validReceiptsCount": 2
+  },
+  "achievements": [
+    {
+      "id": "forja_farol_iniciante",
+      "title": "Farol de Entrada",
+      "category": "forja",
+      "icon": "🕯️",
+      "description": "Iniciou e operou um nó dedicado com status comprovado"
+    }
+  ],
+  "author": "vx_1a2b3c4d5e6f...",
+  "pubKey": { "kty": "EC", "crv": "P-256", "x": "...", "y": "..." },
+  "sig": "MEQCIG9...",
+  "ts": 1793894400000
+}
+```
+
 ---
 
 ## 5. Aplicações e Utilidade Prática
@@ -111,7 +139,32 @@ Se Voxels não são dinheiro e não compram alcance, quais são seus benefícios
 
 ---
 
-## 6. Conformidade e Compatibilidade
+## 6. Persistência Local e Ciclo de Vida dos Recibos
+
+1. **Buffer Circular de Segurança (Ring Buffer / FIFO):**
+   - O armazenamento local armazena até $500$ recibos mais recentes por `routeId` (`MAX_STORED_RECEIPTS`).
+   - Ao ultrapassar a cota, ocorre poda automática (*FIFO pruning*) para prevenir estouro de cota do navegador (IndexedDB / localStorage) e garantir renderização sub-milissegundo.
+2. **Compensação Automática de Nó Dedicado (`checkAndRecordNodeZeroReward`):**
+   - O cliente `Vox` consulta em loopback o nó dedicado (`127.0.0.1:3920` / `:3921`).
+   - Se o nó estiver ativo e responder `/health` com sucesso, um recibo da Forja (`relay_cache_uptime`, $+10$ Voxels) é registrado.
+   - Aplica-se **cooldown estrito de 1 hora** (`3.600.000 ms`) para impedir inundação de recibos no mesmo período.
+3. **Assinatura e Verificação de Passaporte:**
+   - O passaporte consolidado é assinado via WebCrypto P-256 (`signPayload`), permitindo que receptores validem de forma independente a autenticidade e a correspondência entre `author` e `pubKey`.
+
+---
+
+## 7. Análise Crítica e Mitigações de Segurança
+
+| Risco / Vetor | Potencial de Dano | Mitigação Arquitetural |
+| :--- | :--- | :--- |
+| **Tampering Local (Edição via Console)** | Usuário altera saldo de Voxels em memória. | O Passaporte é assinado digitalmente com chave P-256. Qualquer adulteração invalida a verificação matemática. Além disso, nós pares aceitam apenas recibos atestados por testemunhas conhecidas. |
+| **Estouro de Armazenamento Local** | Milhares de interações excederem cota de disco. | Poda estrita (`MAX_STORED_RECEIPTS = 500`) com snapshot cumulativo de saldo. |
+| **Flood de Recompensas de Nó** | Reiniciar cliente sucessivas vezes para acumular pontos de nó. | Bloqueio temporal com timestamp persistido (`LAST_NODE_REWARD_KEY`) e janela de carência de 60 minutos. |
+| **Captura Plutocrática** | Grupos técnicos imporem regras cívicas pelo acúmulo de Voxels de Forja. | Votações deliberativas da comunidade utilizam exclusivamente o princípio de 1 Cidadão = 1 Voto Nominal. Voxels são categoricamente proibidos de ponderar votos comunitários. |
+
+---
+
+## 8. Conformidade e Compatibilidade
 
 - **ADR-001:** O esquema estende a atestação de métricas (`contribution-attestation.js`), mantendo exportação opt-in e cooldown de segurança.
 - **ADR-010:** Integra-se perfeitamente ao modelo *Execute e Ajude*, capturando dados reais do governador de recursos sem métricas inflacionárias.

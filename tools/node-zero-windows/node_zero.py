@@ -392,15 +392,27 @@ class NodeZero:
 
     def _service_status(self) -> dict:
         state = "active" if self.relay and not self.paused else "paused"
+        seeder_active = False
+        seeder_status = "ready"
+        peer_discovery = "ready"
+        try:
+            from relay import p2p_seeder
+            p2p_st = p2p_seeder.SEEDER_MANAGER.get_status()
+            seeder_active = p2p_st.get("seederActive", False)
+            seeder_status = p2p_st.get("seederStatus", "ready")
+            disc_st = p2p_seeder.PEER_DISCOVERY.get_status()
+            peer_discovery = disc_st.get("peerDiscovery", "ready")
+        except Exception:
+            pass
         return {
             "bootstrap": "local_only",
             "mode": "zero-central-memory",
             "relay": state,
             "cache": state,
             "centralMemory": state,
-            "seederActive": False,
-            "seederStatus": "not_implemented",
-            "peerDiscovery": "not_implemented",
+            "seederActive": seeder_active,
+            "seederStatus": seeder_status,
+            "peerDiscovery": peer_discovery,
         }
 
     def _write_status(self) -> None:

@@ -67,6 +67,11 @@ export {
   computeCommunityNeighborStats,
   renderCommunitySeedChecklist,
   renderCommunityTabContent,
+  renderCommunityTopicFeedInner,
+  renderCommunityPostsTab,
+  TOPICS_PAGE_SIZE,
+  CIVIC_TAGS,
+  extractTopicCivicTag,
 } from "./render/community.js";
 
 export {

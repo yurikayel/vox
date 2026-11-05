@@ -4591,6 +4591,86 @@ p.profile-grid-handle {
   display: block;
 }
 
+.community-civic-tag-pill {
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+  color: var(--primary);
+  border: 1px solid color-mix(in srgb, var(--primary) 28%, transparent);
+  font-size: 0.72rem;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.community-pinned-pill {
+  background: color-mix(in srgb, var(--accent, #eab308) 14%, transparent);
+  color: var(--accent-dark, #ca8a04);
+  border: 1px solid color-mix(in srgb, var(--accent, #eab308) 32%, transparent);
+  font-size: 0.72rem;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.community-locked-pill {
+  background: color-mix(in srgb, var(--muted) 14%, transparent);
+  color: var(--muted);
+  border: 1px solid color-mix(in srgb, var(--muted) 28%, transparent);
+  font-size: 0.72rem;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.civic-tag-bar {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.civic-tag-btn {
+  font-size: 0.8rem;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-2, transparent);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.civic-tag-btn:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.civic-tag-btn.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+  font-weight: 600;
+}
+
+.community-sort-bar .btn-sort-topic.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+  font-weight: 600;
+}
+
+.community-topic-pagination {
+  text-align: center;
+  padding: 1rem 0 0.5rem;
+}
+
+.community-topic-pagination .btn-load-more-topics {
+  font-size: 0.85rem;
+  padding: 6px 16px;
+  border-radius: 999px;
+}
+
 .community-vox-panel {
   padding: 0.85rem 1rem 1.1rem;
   border-radius: var(--radius);

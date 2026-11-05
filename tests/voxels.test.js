@@ -271,3 +271,126 @@ test("voxels-ui: renderProfileTabContent integra aba voxels no perfil", () => {
   assert.ok(html.includes("profile-grid-voxels"), "Deve incluir container da aba voxels");
   assert.ok(html.includes("Passaporte Cívico"));
 });
+
+function createMockStorage() {
+  const map = new Map();
+  return {
+    getItem: (k) => (map.has(k) ? map.get(k) : null),
+    setItem: (k, v) => map.set(k, String(v)),
+    removeItem: (k) => map.delete(k),
+    clear: () => map.clear(),
+  };
+}
+
+test("voxels-storage: saveVoxelReceipt e loadVoxelReceipts persistem e recuperam recibos", async () => {
+  const storage = createMockStorage();
+  const receipt = await voxels.createVoxelReceipt({
+    routeId: "vx_persist_user",
+    category: "agora",
+    action: "agora_structured_proposal",
+    amount: 20,
+    timestamp: 1000,
+  });
+
+  const res = voxels.saveVoxelReceipt(receipt, storage);
+  assert.equal(res.ok, true);
+  assert.equal(res.count, 1);
+
+  const loaded = voxels.loadVoxelReceipts("vx_persist_user", storage);
+  assert.equal(loaded.length, 1);
+  assert.equal(loaded[0].id, receipt.id);
+  assert.equal(loaded[0].amount, 20);
+
+  voxels.clearVoxelReceipts("vx_persist_user", storage);
+  assert.equal(voxels.loadVoxelReceipts("vx_persist_user", storage).length, 0);
+});
+
+test("voxels-storage: saveVoxelReceipt poda histórico excedente acima de MAX_STORED_RECEIPTS", async () => {
+  const storage = createMockStorage();
+  const baseReceipt = {
+    schema: voxels.SCHEMA_VOXEL_RECEIPT,
+    id: "vxr_sample",
+    routeId: "vx_bulk_user",
+    category: "cuidado",
+    action: "cuidado_peer_onboarding",
+    amount: 15,
+    timestamp: 1000,
+  };
+
+  // Simula armazenamento com 502 itens
+  const bulk = Array.from({ length: 502 }, (_, i) => ({ ...baseReceipt, id: `vxr_${i}` }));
+  storage.setItem(voxels.getStorageKey("vx_bulk_user"), JSON.stringify(bulk));
+
+  const newReceipt = { ...baseReceipt, id: "vxr_new_503" };
+  const res = voxels.saveVoxelReceipt(newReceipt, storage);
+  assert.equal(res.ok, true);
+  assert.equal(res.count, voxels.MAX_STORED_RECEIPTS);
+
+  const loaded = voxels.loadVoxelReceipts("vx_bulk_user", storage);
+  assert.equal(loaded.length, voxels.MAX_STORED_RECEIPTS);
+  assert.equal(loaded[loaded.length - 1].id, "vxr_new_503");
+});
+
+test("voxels-storage: recordCivicAction cria e armazena recibo em 1 passo", async () => {
+  const storage = createMockStorage();
+  const receipt = await voxels.recordCivicAction({
+    routeId: "vx_action_user",
+    category: "forja",
+    action: "seed_blob_share",
+  }, storage);
+
+  assert.ok(receipt.id.startsWith("vxr_"));
+  const stored = voxels.loadVoxelReceipts("vx_action_user", storage);
+  assert.equal(stored.length, 1);
+  assert.equal(stored[0].action, "seed_blob_share");
+});
+
+test("voxels-passport: exportSignedVoxelPassport e verifySignedVoxelPassport validam envelope criptográfico", async () => {
+  const mockSign = async (payload) => ({
+    ...payload,
+    author: payload.routeId,
+    pubKey: { kty: "EC", crv: "P-256", x: "mockX", y: "mockY" },
+    sig: "mock_ecdsa_signature",
+    ts: 1793894400000,
+  });
+
+  const exportResult = await voxels.exportSignedVoxelPassport("vx_signed_user", [], [], mockSign);
+  assert.equal(exportResult.ok, true);
+  assert.equal(exportResult.isSigned, true);
+  assert.ok(exportResult.filename.includes("vox-passaporte-civico-vx_signed_user"));
+
+  const mockVerifyValid = async () => true;
+  const checkValid = await voxels.verifySignedVoxelPassport(exportResult.signedPassport, mockVerifyValid);
+  assert.equal(checkValid.isValid, true);
+  assert.equal(checkValid.isSigned, true);
+
+  const mockVerifyInvalid = async () => false;
+  const checkInvalid = await voxels.verifySignedVoxelPassport(exportResult.signedPassport, mockVerifyInvalid);
+  assert.equal(checkInvalid.isValid, false);
+  assert.equal(checkInvalid.reason, "signature-failed");
+});
+
+test("voxels-node: checkAndRecordNodeZeroReward bonifica nó ativo e respeita cooldown de 1h", async () => {
+  const storage = createMockStorage();
+  const now = 10_000_000;
+
+  // Nó offline não gera recompensa
+  const offlineCheck = await voxels.checkAndRecordNodeZeroReward("vx_node_host", false, now, storage);
+  assert.equal(offlineCheck.rewarded, false);
+  assert.equal(offlineCheck.reason, "node-offline");
+
+  // Nó online gera 10 voxels de forja
+  const firstReward = await voxels.checkAndRecordNodeZeroReward("vx_node_host", true, now, storage);
+  assert.equal(firstReward.rewarded, true);
+  assert.equal(firstReward.amount, 10);
+
+  // Chamada repetida antes de 1h aciona cooldown
+  const cooldownCheck = await voxels.checkAndRecordNodeZeroReward("vx_node_host", true, now + 1000, storage);
+  assert.equal(cooldownCheck.rewarded, false);
+  assert.equal(cooldownCheck.reason, "cooldown-active");
+
+  // Após 1h (3600_000 ms), nova recompensa é concedida
+  const secondReward = await voxels.checkAndRecordNodeZeroReward("vx_node_host", true, now + 3600_001, storage);
+  assert.equal(secondReward.rewarded, true);
+  assert.equal(secondReward.amount, 10);
+});
