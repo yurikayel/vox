@@ -1143,13 +1143,54 @@ main#app-main,
   outline: none;
 }
 
+/* Utilitário universal de ocultação */
+.hidden,
+[hidden] {
+  display: none !important;
+}
+
 .inline-composer-preview {
   margin: 8px 0 8px 50px;
   max-width: 100%;
 }
 
-.inline-composer-preview.hidden {
-  display: none;
+@media (max-width: 480px) {
+  .inline-composer-preview {
+    margin-left: 0;
+  }
+}
+
+.inline-composer-preview.hidden,
+.inline-composer-preview-img.hidden,
+.inline-composer-preview-audio.hidden,
+.inline-composer-preview-video.hidden,
+#inline-topic-preview-audio-wrap.hidden,
+#inline-topic-preview-video-wrap.hidden {
+  display: none !important;
+}
+
+.inline-composer-preview-audio {
+  margin: 8px 0;
+  padding: 10px 14px;
+  background: var(--surface-soft, rgba(255, 255, 255, 0.05));
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.1));
+}
+
+.inline-composer-preview-audio-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  font-size: 0.85rem;
+}
+
+.inline-composer-preview-video {
+  margin: 8px 0;
+  background: #000;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.1));
 }
 
 .inline-composer-preview-img {

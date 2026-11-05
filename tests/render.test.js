@@ -495,6 +495,9 @@ test("render - inline composer e post-toolbar no feed", () => {
   assert.ok(strip.includes('id="inline-recording-timer"'));
   assert.ok(strip.includes('id="btn-inline-cancel-rec"'));
   assert.ok(!strip.includes('id="inline-recording-indicator"'), "bulky legacy indicator bar should be removed");
+  assert.ok(strip.includes("inline-composer-preview-audio hidden"));
+  assert.ok(strip.includes("inline-composer-preview-video hidden"));
+  assert.ok(strip.includes("inline-composer-preview-img hidden"));
 
   const main = createContainer();
   const topics = [
