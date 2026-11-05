@@ -51,7 +51,7 @@ async function fetchRawCommunityTopics(communityId) {
   }
 }
 
-async function resolveCommunityMetadata(communityId) {
+export async function resolveCommunityMetadata(communityId) {
   let meta = { id: communityId, title: communityId, owner: "" };
   try {
     const comms = await gql.fetchCommunities().catch(() => mock.mockCommunities());
@@ -107,6 +107,12 @@ async function loadCommunityMetaAndTopics(communityId, user) {
   const replyCounts = await cacheNode.getReplyCountsMap().catch(() => ({}));
   const replyActivity = await cacheNode.getReplyActivityMap().catch(() => ({}));
   const merged = mergeTopicsWithLocalReplies(localTopics, topics, user, replyCounts, replyActivity);
+  if (communityId === "vox" || meta.isOfficial) {
+    const welcome = welcomeProfile.getOfficialWelcomeTopic();
+    if (!merged.some((t) => t.id === welcome.id)) {
+      merged.unshift(welcome);
+    }
+  }
 
   let modActions = [];
   try { modActions = await mod.fetchModActions(communityId); } catch {}
@@ -154,7 +160,7 @@ async function loadCommunityTabSpecifics(communityId, tab, user, demo) {
   return { listings, proposals };
 }
 
-async function checkCommunityMembership(communityId, user, meta = null) {
+export async function checkCommunityMembership(communityId, user, meta = null) {
   if (!user) return false;
   if (meta?.owner && meta.owner.toLowerCase() === user.toLowerCase()) {
     return true;
@@ -186,12 +192,32 @@ async function checkCommunityMembership(communityId, user, meta = null) {
   }
 }
 
-function buildCommunityRecentPeople(filteredTopics, meta, user, isMember, tab, communityId = "") {
-  let recentPeople = (tab === "posts" || tab === "members")
-    ? peopleIndex.extractRecentAuthors(filteredTopics, 24)
-    : [];
+async function appendVoxDirectoryMembers(recentPeople, peopleSet) {
+  try {
+    const leaves = await cacheNode.getLocalPosts({ type: "membership_leave", communityId: "vox" }).catch(() => []);
+    const leftSet = new Set(leaves.map((l) => l.author || l.owner));
+    const discoverable = profileDirectory.listDiscoverableProfileCards();
+    for (const card of discoverable) {
+      if (card?.routeId && !leftSet.has(card.routeId) && !peopleSet.has(card.routeId)) {
+        recentPeople.push({
+          routeId: card.routeId,
+          name: card.name || card.displayName || card.handle || card.routeId,
+        });
+        peopleSet.add(card.routeId);
+      }
+    }
+  } catch {}
+}
+
+export async function buildCommunityRecentPeople(filteredTopics, meta, user, isMember, tab, communityId = "") {
+  const isRelevantTab = tab === "posts" || tab === "members";
+  const recentPeople = isRelevantTab ? peopleIndex.extractRecentAuthors(filteredTopics, 32) : [];
   const peopleSet = new Set(recentPeople.map((p) => p.routeId));
-  if (meta.owner && !peopleSet.has(meta.owner)) {
+
+  if (communityId === "vox") {
+    await appendVoxDirectoryMembers(recentPeople, peopleSet);
+  }
+  if (meta?.owner && !peopleSet.has(meta.owner)) {
     const ownerName = profileDirectory.getAuthorDisplaySync(meta.owner) || meta.owner;
     recentPeople.unshift({ routeId: meta.owner, name: ownerName });
     peopleSet.add(meta.owner);
@@ -536,7 +562,7 @@ export async function showCommunity(communityId, tab = "posts") {
     meta = { ...meta, commercialEnabled: true };
   }
   const isMember = await checkCommunityMembership(communityId, user, meta);
-  const recentPeople = buildCommunityRecentPeople(base.filteredTopics, meta, user, isMember, tab, communityId);
+  const recentPeople = await buildCommunityRecentPeople(base.filteredTopics, meta, user, isMember, tab, communityId);
   const memberCount = meta.memberCount != null ? Number(meta.memberCount) : (communityId === "vox" ? Math.max(1, recentPeople.length) : null);
   const tabProps = buildCommunityTabProps(communityId, meta, base, specifics, recentPeople, isMember, memberCount);
 
@@ -653,7 +679,7 @@ async function fetchRemoteTopicFallback(topicId, commIdParam) {
   return { topic: topic || { title: "Tópico", owner: "", communityId: commIdParam }, topicData };
 }
 
-async function resolveTopicContent(topicId, commIdParam, user) {
+export async function resolveTopicContent(topicId, commIdParam, user) {
   const isOfficial = topicId === welcomeProfile.OFFICIAL_WELCOME_TOPIC_ID || topicId === "vox-official-manifesto-welcome";
   if (isOfficial) {
     const welcome = welcomeProfile.getOfficialWelcomeTopic();
