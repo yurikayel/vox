@@ -65,6 +65,18 @@ describe("route-parse", () => {
     });
   });
 
+  it("download and revolucao routes", () => {
+    withLocation({ hash: "#/download" }, () => {
+      assert.deepEqual(parseRoute(), { name: "download" });
+    });
+    withLocation({ hash: "#/revolucao" }, () => {
+      assert.deepEqual(parseRoute(), { name: "revolucao" });
+    });
+    withLocation({ hash: "#/revolução" }, () => {
+      assert.deepEqual(parseRoute(), { name: "revolucao" });
+    });
+  });
+
   it("connect and dm thread", () => {
     withLocation({ hash: "#/connect/vx_abc" }, () => {
       assert.deepEqual(parseRoute(), { name: "connect", routeId: "vx_abc" });

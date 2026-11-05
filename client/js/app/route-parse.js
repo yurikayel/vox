@@ -102,6 +102,8 @@ const STATIC_ROUTES = {
   voxpedia: () => ({ name: "voxpedia" }),
   download: () => ({ name: "download" }),
   downloads: () => ({ name: "download" }),
+  revolucao: () => ({ name: "revolucao" }),
+  "revolução": () => ({ name: "revolucao" }),
 };
 
 function parseStaticRoute(parts, query) {

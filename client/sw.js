@@ -159,6 +159,8 @@ const SHELL_ASSETS = [
 
   "./js/contribution-attestation.js",
 
+  "./js/voxels.js",
+
   "./js/contacts.js",
 
   "./js/oauth-profile.js",
