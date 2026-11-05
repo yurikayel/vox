@@ -34,13 +34,60 @@ function loadScript(src) {
   });
 }
 
-function applyGoogleCredential(credential, resolve) {
+function extractJwtPayload(credential) {
   try {
-    const payload = JSON.parse(atob(credential.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
+    return JSON.parse(atob(credential.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
+  } catch {
+    return {};
+  }
+}
+
+async function handleGoogleOAuthMatch(matched, currentRouteId, name, picture, resolve) {
+  if (localAccount.isAccountDisposable(currentRouteId)) {
+    localAccount.removeVaultAccount(currentRouteId);
+  }
+  await localAccount.switchActiveAccount(matched.routeId);
+  resolve({
+    ok: true,
+    switched: true,
+    profile: { displayName: matched.displayName || name, avatarUrl: matched.avatarUrl || picture },
+    reason: `Esta conta Google já pertence ao seu perfil "${matched.displayName || "existente"}". Alternamos para ele!`,
+  });
+}
+
+function resolveGoogleAccountEnrichment(name, picture, sub, email) {
+  localAccount.setProfileEnrichment({
+    displayName: name,
+    avatarUrl: picture,
+    bio: "",
+    oauthProvider: "google",
+    oauthSub: sub,
+    oauthEmail: email,
+  });
+  return { ok: true, profile: { displayName: name, avatarUrl: picture } };
+}
+
+export async function applyGoogleCredential(credential, resolve) {
+  try {
+    const payload = extractJwtPayload(credential);
+    const sub = String(payload.sub || "").trim();
+    const email = String(payload.email || "").trim();
     const name = payload.name || payload.given_name || "";
     const picture = payload.picture || "";
-    localAccount.setProfileEnrichment({ displayName: name, avatarUrl: picture, bio: "", oauthProvider: "google" });
-    resolve({ ok: true, profile: { displayName: name, avatarUrl: picture } });
+
+    const currentRouteId = localAccount.getCachedRouteIdSync();
+    const matched = localAccount.findVaultAccountByOAuth({
+      oauthProvider: "google",
+      oauthSub: sub,
+      oauthEmail: email,
+      avatarUrl: picture,
+    });
+
+    if (matched && matched.routeId && matched.routeId !== currentRouteId) {
+      await handleGoogleOAuthMatch(matched, currentRouteId, name, picture, resolve);
+      return;
+    }
+    resolve(resolveGoogleAccountEnrichment(name, picture, sub, email));
   } catch (e) {
     resolve({ ok: false, reason: e.message });
   }

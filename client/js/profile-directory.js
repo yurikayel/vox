@@ -25,6 +25,16 @@ export function setProfileCard(routeId, partial) {
   if (!id) return;
   const cards = loadCards();
   const nextCard = { ...cards[id], ...partial, routeId: id, updatedAt: Date.now() };
+
+  const googleAv = nextCard.avatarUrl || nextCard.avatar || "";
+  if (googleAv && googleAv.includes("lh3.googleusercontent.com/a/")) {
+    for (const [otherId, c] of Object.entries(cards)) {
+      if (otherId !== id && (c?.avatarUrl === googleAv || c?.avatar === googleAv)) {
+        delete cards[otherId];
+      }
+    }
+  }
+
   cards[id] = nextCard;
   try {
     localStorage.setItem(CARDS_KEY, JSON.stringify(cards));

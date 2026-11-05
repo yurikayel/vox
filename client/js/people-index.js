@@ -25,22 +25,47 @@ function chooseBestName(existingName, incomingName, routeId) {
   return existingName || incomingName || String(routeId || "").slice(0, 14);
 }
 
+function findDuplicateOAuthEntry(map, entry) {
+  const inAv = entry.avatarUrl || profileDirectory.getAuthorAvatarSync(entry.routeId) || "";
+  if (!inAv || !inAv.includes("lh3.googleusercontent.com/a/")) return null;
+  for (const [id, ex] of map.entries()) {
+    if (id !== entry.routeId) {
+      const exAv = ex.avatarUrl || profileDirectory.getAuthorAvatarSync(id) || "";
+      if (exAv && exAv === inAv) {
+        return { id, ex };
+      }
+    }
+  }
+  return null;
+}
+
 function upsert(map, entry, preferSources = DEFAULT_PREFER_SOURCES) {
+  const rank = (s) => {
+    const i = preferSources.indexOf(s);
+    return i >= 0 ? i : 99;
+  };
+
+  const dup = findDuplicateOAuthEntry(map, entry);
+  if (dup) {
+    if (rank(entry.source) < rank(dup.ex.source)) {
+      map.delete(dup.id);
+      map.set(entry.routeId, entry);
+    }
+    return;
+  }
+
   const existing = map.get(entry.routeId);
   if (!existing) {
     map.set(entry.routeId, entry);
     return;
   }
-  const rank = (s) => {
-    const i = preferSources.indexOf(s);
-    return i >= 0 ? i : 99;
-  };
   const bestName = chooseBestName(existing.name, entry.name, entry.routeId);
   const bestHandle = existing.handle || entry.handle || "";
+  const bestAvatar = existing.avatarUrl || entry.avatarUrl || "";
   if (rank(entry.source) < rank(existing.source)) {
-    map.set(entry.routeId, { ...existing, ...entry, name: bestName, handle: bestHandle, source: entry.source });
+    map.set(entry.routeId, { ...existing, ...entry, name: bestName, handle: bestHandle, avatarUrl: bestAvatar, source: entry.source });
   } else {
-    map.set(entry.routeId, { ...existing, name: bestName, handle: bestHandle });
+    map.set(entry.routeId, { ...existing, name: bestName, handle: bestHandle, avatarUrl: bestAvatar });
   }
 }
 
@@ -51,7 +76,8 @@ function resolveMeshAuthorEntry(post) {
   const dirName = profileDirectory.getAuthorDisplaySync(author);
   const name = dirName || post.authorDisplay || author.slice(0, 14);
   const handle = post.authorHandle || mock.getAuthorHandle(author) || handles.getCachedAddressHandle(author) || "";
-  return { routeId: author, name, handle, source: "mesh-author" };
+  const avatarUrl = post.authorAvatar || profileDirectory.getAuthorAvatarSync(author) || "";
+  return { routeId: author, name, handle, avatarUrl, source: "mesh-author" };
 }
 
 function indexSignalingPeers(map) {
@@ -84,6 +110,7 @@ function indexMeshCards(map) {
       routeId,
       name: card.name || card.displayName || profileDirectory.getAuthorDisplaySync(routeId) || routeId.slice(0, 14),
       handle: card.handle || handles.getCachedAddressHandle(routeId) || mock.getAuthorHandle(routeId) || "",
+      avatarUrl: card.avatarUrl || card.avatar || "",
       source: "mesh-card",
     });
   }
@@ -100,6 +127,7 @@ function indexSelfAccount(map) {
     routeId: myId,
     name: myName || myId.slice(0, 14),
     handle: handles.getCachedAddressHandle(myId) || "",
+    avatarUrl: localAccount.getProfileEnrichment()?.avatarUrl || profileDirectory.getAuthorAvatarSync(myId) || "",
     source: "self",
   });
 }
@@ -112,6 +140,7 @@ function indexVaultAccounts(map) {
       routeId: v.routeId,
       name: v.displayName || profileDirectory.getAuthorDisplaySync(v.routeId) || v.routeId.slice(0, 14),
       handle: handles.getCachedAddressHandle(v.routeId) || "",
+      avatarUrl: v.avatarUrl || "",
       source: "vault",
     });
   }
