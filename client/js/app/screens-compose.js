@@ -217,17 +217,23 @@ function getInputValue(id) {
 function readTopicInputs() {
   const commInput = document.getElementById("topic-comm-id");
   const rawComm = commInput ? commInput.value.trim().toLowerCase() : "";
+  const tag = getInputValue("topic-civic-tag");
+  let rawTitle = getInputValue("topic-title");
+  if (tag && !rawTitle.toLowerCase().includes(tag.toLowerCase())) {
+    rawTitle = rawTitle ? `${tag} ${rawTitle}` : tag;
+  }
   return {
     commId: rawComm || "geral",
-    title: getInputValue("topic-title"),
+    title: rawTitle,
+    civicTag: tag,
     body: getInputValue("topic-body"),
   };
 }
 
-async function signAndBroadcastTopic(topicId, finalComm, title, body) {
+async function signAndBroadcastTopic(topicId, finalComm, title, body, civicTag = "") {
   const myDisplayName = localAccount.getDisplayName() || localAccount.getProfileEnrichment()?.displayName || "";
   const myAvatar = localAccount.getProfileEnrichment()?.avatarUrl || "";
-  const signed = await localAccount.signPayload({
+  const payload = {
     id: topicId,
     type: "topic",
     communityId: finalComm,
@@ -235,7 +241,9 @@ async function signAndBroadcastTopic(topicId, finalComm, title, body) {
     body,
     authorDisplay: myDisplayName,
     authorAvatar: myAvatar,
-  });
+  };
+  if (civicTag) payload.civicTag = civicTag;
+  const signed = await localAccount.signPayload(payload);
   await cacheNode.saveLocalPost(signed);
   peers.broadcastGossip(signed);
 }
@@ -281,11 +289,11 @@ async function handleComposeTopicSubmit(e, communityId) {
   btn.textContent = "Publicando…";
   try {
     const topicId = "top_" + Math.random().toString(36).slice(2, 10);
-    await signAndBroadcastTopic(topicId, finalComm, inputs.title, inputs.body);
+    await signAndBroadcastTopic(topicId, finalComm, inputs.title, inputs.body, inputs.civicTag);
     const permaResult = await tryUploadTopicToPermaweb(topicId, finalComm, inputs.title, inputs.body);
     showTopicPublishToast(permaResult);
 
-    await triggerTopicReplicationAndPosse({ id: topicId, communityId: finalComm, title: inputs.title, body: inputs.body });
+    await triggerTopicReplicationAndPosse({ id: topicId, communityId: finalComm, title: inputs.title, civicTag: inputs.civicTag, body: inputs.body });
     location.hash = `#/t/${encodeURIComponent(topicId)}?c=${encodeURIComponent(finalComm)}`;
   } catch (err) {
     share.showToast(`Erro: ${err.message}`, "error");
@@ -294,12 +302,28 @@ async function handleComposeTopicSubmit(e, communityId) {
   }
 }
 
+function bindCivicTagSelector() {
+  const hiddenInput = document.getElementById("topic-civic-tag");
+  if (!hiddenInput) return;
+  document.querySelectorAll(".civic-tag-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".civic-tag-btn").forEach((b) => {
+        const isActive = b === btn;
+        b.classList.toggle("active", isActive);
+        b.setAttribute("aria-pressed", isActive ? "true" : "false");
+      });
+      hiddenInput.value = btn.dataset.tag || "";
+    });
+  });
+}
+
 export async function showComposeTopic(communityId) {
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "compose", "Novo Post"));
   render.renderComposeTopic(main, communityId);
   bindChatTranscriptImportHandler(user);
   applyQuotePrefillToTopicComposer();
+  bindCivicTagSelector();
 
   const form = document.getElementById("form-compose-topic");
   if (form) {

@@ -254,3 +254,111 @@ export function buildVoxelPassport(routeId, receipts = [], unlockedIds = [], opt
     receiptCount: balance.validReceiptsCount,
   };
 }
+
+export const STORAGE_VOXELS_RECEIPTS_PREFIX = "vox_voxel_receipts_";
+export const MAX_STORED_RECEIPTS = 500;
+export const LAST_NODE_REWARD_KEY = "vox_last_node_uptime_reward";
+export const COOLDOWN_NODE_REWARD_MS = 3600_000;
+
+export function getStorageKey(routeId) {
+  return `${STORAGE_VOXELS_RECEIPTS_PREFIX}${normalizeRouteId(routeId)}`;
+}
+
+export function loadVoxelReceipts(routeId, storage = globalThis.localStorage) {
+  if (!storage) return [];
+  try {
+    const raw = storage.getItem(getStorageKey(routeId));
+    if (!raw) return [];
+    const list = JSON.parse(raw);
+    if (!Array.isArray(list)) return [];
+    return list.filter((r) => validateVoxelReceipt(r).ok);
+  } catch {
+    return [];
+  }
+}
+
+export function saveVoxelReceipt(receipt, storage = globalThis.localStorage) {
+  const val = validateVoxelReceipt(receipt);
+  if (!val.ok) throw new Error(`Recibo de voxel inválido: ${val.reason}`);
+  if (!storage) return { ok: false, reason: "no-storage" };
+
+  const key = getStorageKey(receipt.routeId);
+  const current = loadVoxelReceipts(receipt.routeId, storage);
+  current.push(receipt);
+
+  const pruned = current.length > MAX_STORED_RECEIPTS
+    ? current.slice(current.length - MAX_STORED_RECEIPTS)
+    : current;
+
+  storage.setItem(key, JSON.stringify(pruned));
+  return { ok: true, count: pruned.length };
+}
+
+export function clearVoxelReceipts(routeId, storage = globalThis.localStorage) {
+  if (!storage) return;
+  storage.removeItem(getStorageKey(routeId));
+}
+
+export async function recordCivicAction(params = {}, storage = globalThis.localStorage) {
+  const receipt = await createVoxelReceipt(params);
+  saveVoxelReceipt(receipt, storage);
+  return receipt;
+}
+
+export function passportDownloadFilename(routeId, ts = Date.now()) {
+  const slug = String(routeId || "local").replace(/[^\w-]/g, "").slice(0, 24);
+  return `vox-passaporte-civico-${slug}-${ts}.json`;
+}
+
+export async function exportSignedVoxelPassport(routeId, receipts = [], unlockedIds = [], signFn = null, options = {}) {
+  const passportDraft = buildVoxelPassport(routeId, receipts, unlockedIds, options);
+  if (typeof signFn !== "function") {
+    return {
+      ok: true,
+      signedPassport: passportDraft,
+      isSigned: false,
+      filename: passportDownloadFilename(routeId, passportDraft.generatedAt),
+    };
+  }
+  const signed = await signFn(passportDraft);
+  return {
+    ok: true,
+    signedPassport: signed,
+    isSigned: true,
+    filename: passportDownloadFilename(routeId, signed.ts || passportDraft.generatedAt),
+  };
+}
+
+export async function verifySignedVoxelPassport(passport, verifyFn = null) {
+  if (!passport || typeof passport !== "object") return { isValid: false, reason: "invalid-object" };
+  if (passport.schema !== SCHEMA_VOXEL_PASSPORT) return { isValid: false, reason: "invalid-schema" };
+  if (!passport.routeId || !passport.balance) return { isValid: false, reason: "missing-core-fields" };
+
+  if (typeof verifyFn === "function" && passport.sig) {
+    const isCryptoValid = await verifyFn(passport);
+    if (!isCryptoValid) return { isValid: false, reason: "signature-failed" };
+    return { isValid: true, isSigned: true, reason: "Passaporte autêntico com assinatura P-256 válida" };
+  }
+
+  return { isValid: true, isSigned: false, reason: "Passaporte íntegro em formato padrão (sem assinatura)" };
+}
+
+export async function checkAndRecordNodeZeroReward(routeId, isNodeOnline, now = Date.now(), storage = globalThis.localStorage) {
+  if (!isNodeOnline || !storage) return { rewarded: false, reason: "node-offline" };
+  const lastTs = Number(storage.getItem(LAST_NODE_REWARD_KEY) || 0);
+  if (now - lastTs < COOLDOWN_NODE_REWARD_MS) {
+    return { rewarded: false, reason: "cooldown-active", retryInMs: COOLDOWN_NODE_REWARD_MS - (now - lastTs) };
+  }
+
+  const receipt = await recordCivicAction({
+    routeId,
+    category: "forja",
+    action: "relay_cache_uptime",
+    amount: DEFAULT_ACTION_REWARDS.relay_cache_uptime,
+    timestamp: now,
+    metadata: { uptimeHours: 1, source: "node_zero_loopback" },
+  }, storage);
+
+  storage.setItem(LAST_NODE_REWARD_KEY, String(now));
+  return { rewarded: true, receipt, amount: receipt.amount };
+}

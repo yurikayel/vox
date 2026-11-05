@@ -24,6 +24,7 @@ import { openOAuthEnrichModal } from "./onboarding.js";
 import { getActiveUser, makeShellProps } from "./context.js";
 import { syncIdentity } from "./screens-network.js";
 import { KIND_WRAPPED, peekBackupKind } from "../account-backup-wrap.js";
+import * as voxels from "../voxels.js";
 
 function collectByIds(posts, ids) {
   const set = new Set(ids);
@@ -186,6 +187,7 @@ function buildProfileDataObject({
     isBlocked: mod.isUserBlocked(targetAddress),
     isMuted: mod.isUserMuted(targetAddress),
     meshDiscoverable: localAccount.getMeshDiscoverable(),
+    receipts: voxels.loadVoxelReceipts(targetAddress),
     memberships, dmPub, activeTab,
   };
 }
@@ -782,6 +784,31 @@ function bindBlockAndMuteButtons(address, activeTab, isSelf) {
   }
 }
 
+function bindVoxelButtons(address, activeTab, isSelf) {
+  if (activeTab !== "voxels" || !isSelf) return;
+  const btn = document.getElementById("btn-export-voxel-passport");
+  if (!btn) return;
+  btn.addEventListener("click", async () => {
+    btn.disabled = true;
+    try {
+      const receipts = voxels.loadVoxelReceipts(address);
+      const out = await voxels.exportSignedVoxelPassport(address, receipts, [], localAccount.signPayload);
+      const blob = new Blob([JSON.stringify(out.signedPassport, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = out.filename;
+      a.click();
+      URL.revokeObjectURL(url);
+      share.showToast("Passaporte Cívico exportado com sucesso! Guarde seu arquivo.");
+    } catch (err) {
+      share.showToast(`Erro ao exportar passaporte: ${err.message}`, "error");
+    } finally {
+      btn.disabled = false;
+    }
+  });
+}
+
 export function bindProfileButtons(user, address, isSelf, dmPub, activeTab = "posts") {
   bindPixButtons(address, activeTab, isSelf);
   bindGithubButtons(address, activeTab, isSelf);
@@ -793,6 +820,7 @@ export function bindProfileButtons(user, address, isSelf, dmPub, activeTab = "po
   bindSovereigntyBackup(isSelf, activeTab);
   bindLocalWipe(isSelf, activeTab);
   bindBlockAndMuteButtons(address, activeTab, isSelf);
+  bindVoxelButtons(address, activeTab, isSelf);
 }
 
 function renderHandleLookupResult(main, slug, result) {

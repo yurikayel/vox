@@ -41,6 +41,7 @@ namespace Vox.ZeroMemory {
         private readonly string bakFile;
         private readonly string journalFile;
         private readonly string logFile;
+        private readonly Queue<string> recentLogsRing = new Queue<string>(256);
         private Dictionary<string, object> state;
         private volatile bool isDirty;
         private System.Threading.Timer batchFlushTimer;
@@ -70,10 +71,12 @@ namespace Vox.ZeroMemory {
         public void WriteLog(string category, string message) {
             try {
                 Directory.CreateDirectory(dataDir);
-                string line = string.Format("[{0}] [{1}] {2}\r\n",
+                string line = string.Format("[{0}] [{1}] {2}",
                     DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), category, message);
                 lock (syncLock) {
-                    File.AppendAllText(logFile, line, Encoding.UTF8);
+                    File.AppendAllText(logFile, line + "\r\n", Encoding.UTF8);
+                    recentLogsRing.Enqueue(line);
+                    while (recentLogsRing.Count > 250) recentLogsRing.Dequeue();
                 }
             } catch { }
         }
@@ -300,6 +303,19 @@ namespace Vox.ZeroMemory {
         }
 
         public List<string> GetRecentLogs(int maxLines = 150) {
+            lock (syncLock) {
+                if (recentLogsRing.Count > 0) {
+                    var arr = recentLogsRing.ToArray();
+                    var res = new List<string>();
+                    int start = Math.Max(0, arr.Length - maxLines);
+                    for (int i = start; i < arr.Length; i++) res.Add(arr[i]);
+                    return res;
+                }
+            }
+            return ReadTailLogLines(maxLines);
+        }
+
+        private List<string> ReadTailLogLines(int maxLines) {
             var list = new List<string>();
             try {
                 if (!File.Exists(logFile)) return list;
@@ -312,11 +328,54 @@ namespace Vox.ZeroMemory {
                             if (!string.IsNullOrEmpty(line)) all.Add(line);
                         }
                         int start = Math.Max(0, all.Count - maxLines);
-                        for (int i = start; i < all.Count; i++) list.Add(all[i]);
+                        for (int i = start; i < all.Count; i++) {
+                            list.Add(all[i]);
+                            recentLogsRing.Enqueue(all[i]);
+                        }
+                        while (recentLogsRing.Count > 250) recentLogsRing.Dequeue();
                     }
                 }
             } catch { }
             return list;
+        }
+
+        public List<Dictionary<string, object>> GetVaultsSummary() {
+            var list = new List<Dictionary<string, object>>();
+            try {
+                if (!Directory.Exists(vaultsDir)) return list;
+                foreach (string file in Directory.GetFiles(vaultsDir, "*.json")) {
+                    var fi = new FileInfo(file);
+                    string key = Path.GetFileNameWithoutExtension(file);
+                    var item = new Dictionary<string, object>();
+                    item["key"] = key;
+                    item["sizeBytes"] = fi.Length;
+                    item["updatedAt"] = (long)(fi.LastWriteTimeUtc - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalMilliseconds;
+                    item["updatedAtIso"] = fi.LastWriteTimeUtc.ToString("yyyy-MM-ddTHH:mm:ssZ");
+                    item["algorithm"] = "AES-256-GCM / PBKDF2";
+                    item["isEncrypted"] = true;
+                    list.Add(item);
+                }
+            } catch { }
+            return list;
+        }
+
+        public static Dictionary<string, object> GetHostTelemetry() {
+            var d = new Dictionary<string, object>();
+            try {
+                using (var proc = Process.GetCurrentProcess()) {
+                    d["pid"] = proc.Id;
+                    d["workingSetMb"] = Math.Round((double)proc.WorkingSet64 / (1024 * 1024), 1);
+                    d["privateMemoryMb"] = Math.Round((double)proc.PrivateMemorySize64 / (1024 * 1024), 1);
+                    d["threads"] = proc.Threads.Count;
+                    d["uptimeSec"] = (long)(DateTime.UtcNow - proc.StartTime.ToUniversalTime()).TotalSeconds;
+                }
+                d["machine"] = Environment.MachineName;
+                d["os"] = Environment.OSVersion.VersionString;
+                d["cpuCores"] = Environment.ProcessorCount;
+                d["is64Bit"] = Environment.Is64BitProcess;
+                d["timestamp"] = NowMs();
+            } catch { }
+            return d;
         }
 
         private void BumpRevision() {
@@ -702,6 +761,7 @@ namespace Vox.ZeroMemory {
         private TcpListener control3922;
         private volatile bool running;
         private volatile bool paused;
+        private long requestCounter = 0;
 
         public LoopbackNodeServer(MemoryStore memoryStore) {
             store = memoryStore;
@@ -711,6 +771,7 @@ namespace Vox.ZeroMemory {
 
         public bool IsRunning { get { return running; } }
         public bool IsPaused { get { return paused; } set { paused = value; } }
+        public long RequestCount { get { return Interlocked.Read(ref requestCounter); } }
 
         private static string EnsureControlToken(string path) {
             Directory.CreateDirectory(Path.GetDirectoryName(path));
@@ -813,6 +874,7 @@ namespace Vox.ZeroMemory {
         private void HandleClient(TcpClient client, bool isControl) {
             using (client) {
                 try {
+                    Interlocked.Increment(ref requestCounter);
                     client.ReceiveTimeout = 4000;
                     client.SendTimeout = 4000;
                     var stream = client.GetStream();
@@ -896,6 +958,8 @@ namespace Vox.ZeroMemory {
             d["machine"] = Environment.MachineName;
             d["platform"] = "windows";
             d["state"] = !running ? "STOPPED" : (paused ? "PAUSED" : "ACTIVE");
+            d["requestsServed"] = Interlocked.Read(ref requestCounter);
+            d["telemetry"] = MemoryStore.GetHostTelemetry();
             var relay = new Dictionary<string, object>();
             relay["active"] = running && !paused;
             relay["url"] = "http://127.0.0.1:3921";
@@ -908,12 +972,12 @@ namespace Vox.ZeroMemory {
 
         private void HandleRelayRequest(NetworkStream stream, string method, string path, string body) {
             var ser = MemoryStore.CreateSerializer();
-            if (method == "GET") {
-                HandleRelayGet(stream, path, ser);
+            if (method == "GET" || method == "HEAD") {
+                HandleRelayGet(stream, path, ser, method == "HEAD");
                 return;
             }
             if (method == "POST") {
-                if (paused) {
+                if (paused && path != "/memory/resume") {
                     WriteHttpResponse(stream, 503, "Service Unavailable", "{\"error\":\"node_paused\"}");
                     return;
                 }
@@ -923,10 +987,10 @@ namespace Vox.ZeroMemory {
             WriteHttpResponse(stream, 404, "Not Found", "{\"error\":\"not_found\"}");
         }
 
-        private void HandleRelayGet(NetworkStream stream, string path, JavaScriptSerializer ser) {
+        private void HandleRelayGet(NetworkStream stream, string path, JavaScriptSerializer ser, bool isHead = false) {
             if (path == "" || path == "/" || path == "/dashboard" || path == "/monitor") {
                 string dashHtml = store.GetDashboardHtml();
-                WriteHttpResponse(stream, 200, "OK", dashHtml, "text/html; charset=utf-8");
+                WriteHttpResponse(stream, 200, "OK", dashHtml, "text/html; charset=utf-8", isHead);
                 return;
             }
             if (path == "/memory/logs" || path == "/api/logs") {
@@ -935,7 +999,27 @@ namespace Vox.ZeroMemory {
                 resp["status"] = "ok";
                 resp["count"] = logs.Count;
                 resp["logs"] = logs;
-                WriteHttpResponse(stream, 200, "OK", ser.Serialize(resp));
+                WriteHttpResponse(stream, 200, "OK", ser.Serialize(resp), "application/json; charset=utf-8", isHead);
+                return;
+            }
+            if (path == "/memory/vaults") {
+                var vlist = store.GetVaultsSummary();
+                var resp = new Dictionary<string, object>();
+                resp["status"] = "ok";
+                resp["count"] = vlist.Count;
+                resp["vaults"] = vlist;
+                WriteHttpResponse(stream, 200, "OK", ser.Serialize(resp), "application/json; charset=utf-8", isHead);
+                return;
+            }
+            if (path == "/memory/telemetry" || path == "/api/telemetry") {
+                var t = MemoryStore.GetHostTelemetry();
+                t["requestsServed"] = Interlocked.Read(ref requestCounter);
+                t["isPaused"] = paused;
+                t["isRunning"] = running;
+                var resp = new Dictionary<string, object>();
+                resp["status"] = "ok";
+                resp["telemetry"] = t;
+                WriteHttpResponse(stream, 200, "OK", ser.Serialize(resp), "application/json; charset=utf-8", isHead);
                 return;
             }
             if (path == "/health") {
@@ -944,22 +1028,37 @@ namespace Vox.ZeroMemory {
                 h["app"] = "vox-relay";
                 h["version"] = "0.5.0-dev-alpha-beta";
                 h["mode"] = "zero-central-memory";
-                h["centralMemory"] = store.GetStatusSummary();
-                WriteHttpResponse(stream, 200, "OK", ser.Serialize(h));
+                var summary = store.GetStatusSummary();
+                var t = MemoryStore.GetHostTelemetry();
+                t["requestsServed"] = Interlocked.Read(ref requestCounter);
+                t["isPaused"] = paused;
+                summary["telemetry"] = t;
+                h["centralMemory"] = summary;
+                WriteHttpResponse(stream, 200, "OK", ser.Serialize(h), "application/json; charset=utf-8", isHead);
                 return;
             }
             if (path == "/memory" || path == "/memory/status") {
-                WriteHttpResponse(stream, 200, "OK", ser.Serialize(store.GetStatusSummary()));
+                var summary = store.GetStatusSummary();
+                var t = MemoryStore.GetHostTelemetry();
+                t["requestsServed"] = Interlocked.Read(ref requestCounter);
+                t["isPaused"] = paused;
+                summary["telemetry"] = t;
+                WriteHttpResponse(stream, 200, "OK", ser.Serialize(summary), "application/json; charset=utf-8", isHead);
                 return;
             }
             if (path == "/memory/state") {
-                WriteHttpResponse(stream, 200, "OK", ser.Serialize(store.ExportState(true)));
+                var exp = store.ExportState(true);
+                var t = MemoryStore.GetHostTelemetry();
+                t["requestsServed"] = Interlocked.Read(ref requestCounter);
+                t["isPaused"] = paused;
+                exp["telemetry"] = t;
+                WriteHttpResponse(stream, 200, "OK", ser.Serialize(exp), "application/json; charset=utf-8", isHead);
                 return;
             }
             if (path.StartsWith("/memory/blob/")) {
                 var blob = store.GetBlob(path.Substring("/memory/blob/".Length));
-                if (blob != null) WriteHttpResponse(stream, 200, "OK", ser.Serialize(blob));
-                else WriteHttpResponse(stream, 404, "Not Found", "{\"error\":\"blob_not_found\"}");
+                if (blob != null) WriteHttpResponse(stream, 200, "OK", ser.Serialize(blob), "application/json; charset=utf-8", isHead);
+                else WriteHttpResponse(stream, 404, "Not Found", "{\"error\":\"blob_not_found\"}", "application/json; charset=utf-8", isHead);
                 return;
             }
             if (path == "/memory/checkpoint") {
@@ -968,7 +1067,7 @@ namespace Vox.ZeroMemory {
                 resp["status"] = "ok";
                 resp["checkpointFile"] = Path.GetFileName(chkPath);
                 resp["fullPath"] = chkPath;
-                WriteHttpResponse(stream, 200, "OK", ser.Serialize(resp));
+                WriteHttpResponse(stream, 200, "OK", ser.Serialize(resp), "application/json; charset=utf-8", isHead);
                 return;
             }
             if (path.StartsWith("/memory/vault/")) {
@@ -979,26 +1078,26 @@ namespace Vox.ZeroMemory {
                     resp["status"] = "ok";
                     resp["vaultKey"] = key;
                     resp["record"] = vrec;
-                    WriteHttpResponse(stream, 200, "OK", ser.Serialize(resp));
+                    WriteHttpResponse(stream, 200, "OK", ser.Serialize(resp), "application/json; charset=utf-8", isHead);
                 } else {
-                    WriteHttpResponse(stream, 404, "Not Found", "{\"error\":\"vault_not_found\"}");
+                    WriteHttpResponse(stream, 404, "Not Found", "{\"error\":\"vault_not_found\"}", "application/json; charset=utf-8", isHead);
                 }
                 return;
             }
             if (path.StartsWith("/vox/index/") && path.EndsWith(".json")) {
                 string comm = path.Substring("/vox/index/".Length, path.Length - "/vox/index/".Length - 5);
                 string mirror = store.ReadCommunityMirror(comm);
-                if (mirror != null) WriteHttpResponse(stream, 200, "OK", mirror);
-                else WriteHttpResponse(stream, 404, "Not Found", "{\"error\":\"mirror_not_found\"}");
+                if (mirror != null) WriteHttpResponse(stream, 200, "OK", mirror, "application/json; charset=utf-8", isHead);
+                else WriteHttpResponse(stream, 404, "Not Found", "{\"error\":\"mirror_not_found\"}", "application/json; charset=utf-8", isHead);
                 return;
             }
             if (path.StartsWith("/tx/")) {
                 string cached = store.ReadCachedTx(path.Substring(4));
-                if (cached != null) WriteHttpResponse(stream, 200, "OK", cached);
-                else WriteHttpResponse(stream, 404, "Not Found", "{\"error\":\"tx_not_found\"}");
+                if (cached != null) WriteHttpResponse(stream, 200, "OK", cached, "application/json; charset=utf-8", isHead);
+                else WriteHttpResponse(stream, 404, "Not Found", "{\"error\":\"tx_not_found\"}", "application/json; charset=utf-8", isHead);
                 return;
             }
-            WriteHttpResponse(stream, 404, "Not Found", "{\"error\":\"not_found\"}");
+            WriteHttpResponse(stream, 404, "Not Found", "{\"error\":\"not_found\"}", "application/json; charset=utf-8", isHead);
         }
 
         private void HandleRelayPost(NetworkStream stream, string path, string body, JavaScriptSerializer ser) {
@@ -1009,6 +1108,18 @@ namespace Vox.ZeroMemory {
                 } else {
                     WriteHttpResponse(stream, 400, "Bad Request", "{\"error\":\"invalid_mirror\"}");
                 }
+                return;
+            }
+            if (path == "/memory/pause") {
+                paused = true;
+                WriteStatusFile();
+                WriteHttpResponse(stream, 200, "OK", "{\"status\":\"ok\",\"action\":\"paused\",\"paused\":true}");
+                return;
+            }
+            if (path == "/memory/resume") {
+                paused = false;
+                WriteStatusFile();
+                WriteHttpResponse(stream, 200, "OK", "{\"status\":\"ok\",\"action\":\"resumed\",\"paused\":false}");
                 return;
             }
             var payload = ser.Deserialize<Dictionary<string, object>>(body);
@@ -1041,20 +1152,22 @@ namespace Vox.ZeroMemory {
             WriteHttpResponse(stream, 404, "Not Found", "{\"error\":\"not_found\"}");
         }
 
-        private static void WriteHttpResponse(NetworkStream stream, int code, string reason, string body, string contentType = "application/json; charset=utf-8") {
+        private static void WriteHttpResponse(NetworkStream stream, int code, string reason, string body, string contentType = "application/json; charset=utf-8", bool isHead = false) {
             byte[] bodyBytes = Encoding.UTF8.GetBytes(body ?? "");
             var sb = new StringBuilder();
             sb.AppendFormat("HTTP/1.1 {0} {1}\r\n", code, reason);
             sb.AppendFormat("Content-Type: {0}\r\n", contentType);
             sb.Append("Access-Control-Allow-Origin: *\r\n");
-            sb.Append("Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS\r\n");
+            sb.Append("Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS, HEAD\r\n");
             sb.Append("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With\r\n");
             sb.Append("Access-Control-Allow-Private-Network: true\r\n");
+            sb.Append("X-Content-Type-Options: nosniff\r\n");
+            sb.Append("X-Frame-Options: SAMEORIGIN\r\n");
             sb.Append("Connection: close\r\n");
             sb.AppendFormat("Content-Length: {0}\r\n\r\n", bodyBytes.Length);
             byte[] hdrBytes = Encoding.ASCII.GetBytes(sb.ToString());
             stream.Write(hdrBytes, 0, hdrBytes.Length);
-            if (bodyBytes.Length > 0) stream.Write(bodyBytes, 0, bodyBytes.Length);
+            if (!isHead && bodyBytes.Length > 0) stream.Write(bodyBytes, 0, bodyBytes.Length);
             stream.Flush();
         }
     }

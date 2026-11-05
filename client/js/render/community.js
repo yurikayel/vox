@@ -160,6 +160,17 @@ function resolveTopicAuthorMeta(topic) {
   return { author, authorHandle, authorDisplay, authorAvatar };
 }
 
+export const TOPICS_PAGE_SIZE = 20;
+
+export const CIVIC_TAGS = ["[Pauta]", "[Bug]", "[Ideia]", "[Debate Geral]"];
+
+export function extractTopicCivicTag(topic = {}) {
+  if (topic.civicTag) return String(topic.civicTag);
+  if (topic.tag) return String(topic.tag);
+  const match = String(topic.title || "").match(/^\[(Pauta|Bug|Ideia|Debate Geral)\]/i);
+  return match ? match[0] : "";
+}
+
 function resolveTopicBadgesHtml(topic) {
   const pin = topic.isPinned
     ? `<span class="badge-pill community-pinned-pill" title="Tópico fixado pela moderação">📌 Fixado</span> · `
@@ -167,7 +178,11 @@ function resolveTopicBadgesHtml(topic) {
   const lock = topic.isLocked
     ? `<span class="badge-pill community-locked-pill" title="Discussão encerrada para novas respostas">🔒 Encerrado</span> · `
     : "";
-  return `${pin}${lock}`;
+  const tag = extractTopicCivicTag(topic);
+  const tagHtml = tag
+    ? `<span class="badge-pill community-civic-tag-pill" data-tag="${escapeHtml(tag)}">${escapeHtml(tag)}</span> · `
+    : "";
+  return `${pin}${lock}${tagHtml}`;
 }
 
 function resolveTopicBumpSpan(topic) {
@@ -177,29 +192,44 @@ function resolveTopicBumpSpan(topic) {
   return `<span class="community-topic-bump" title="Atividade recente no tópico"> · ${escapeHtml(phrase)}</span>`;
 }
 
-export function renderCommunityTopicRow(topic, { communityId: _communityId = "", communityTitle: _communityTitle = "" } = {}) {
+function resolveTopicCleanTitle(topic) {
+  let title = topic.title || topicExcerptOneParagraph(topic) || "Sem título";
+  const civicTag = extractTopicCivicTag(topic);
+  if (civicTag && title.toLowerCase().startsWith(civicTag.toLowerCase())) {
+    title = title.slice(civicTag.length).trim() || title;
+  }
+  return title;
+}
+
+function renderTopicRowMeta(topic) {
   const { author, authorHandle, authorAvatar } = resolveTopicAuthorMeta(topic);
   const { display: timeDisplay, titleAttr: timeTitle } = postTimeParts(topic.ts);
   const replies = topicReplyCount(topic);
   const replyLabel = replies === 1 ? "1 resposta" : `${replies} respostas`;
   const bumpSpan = resolveTopicBumpSpan(topic);
+  return `
+    <p class="community-topic-row-meta">
+      <a class="community-topic-row-author" href="#/u/${encodeURIComponent(author)}">${authorAvatar}<span>@${escapeHtml(authorHandle)}</span></a>
+      <span class="community-topic-row-dot" aria-hidden="true">·</span>
+      <span>${escapeHtml(replyLabel)}</span>${bumpSpan}
+      <span class="community-topic-row-dot" aria-hidden="true">·</span>
+      <span class="community-topic-row-time"${timeTitle}>${escapeHtml(timeDisplay)}</span>
+    </p>`;
+}
+
+export function renderCommunityTopicRow(topic, { communityId: _communityId = "", communityTitle: _communityTitle = "" } = {}) {
   const badgesHtml = resolveTopicBadgesHtml(topic);
-  const title = topic.title || topicExcerptOneParagraph(topic) || "Sem título";
+  const title = resolveTopicCleanTitle(topic);
   const excerpt = topicExcerptOneParagraph(topic);
   const topicHref = `#/t/${encodeURIComponent(topic.id)}`;
   const thumb = renderTopicRowThumb(topic, topicHref);
+  const metaHtml = renderTopicRowMeta(topic);
 
   return `
     <article class="community-topic-row${topic.isPinned ? " is-pinned" : ""}${topic.isLocked ? " is-locked" : ""}" data-id="${escapeHtml(topic.id)}">
       <div class="community-topic-row-body">
         <h3 class="community-topic-row-title"><a href="${topicHref}">${badgesHtml}${escapeHtml(title)}</a></h3>
-        <p class="community-topic-row-meta">
-          <a class="community-topic-row-author" href="#/u/${encodeURIComponent(author)}">${authorAvatar}<span>@${escapeHtml(authorHandle)}</span></a>
-          <span class="community-topic-row-dot" aria-hidden="true">·</span>
-          <span>${escapeHtml(replyLabel)}</span>${bumpSpan}
-          <span class="community-topic-row-dot" aria-hidden="true">·</span>
-          <span class="community-topic-row-time"${timeTitle}>${escapeHtml(timeDisplay)}</span>
-        </p>
+        ${metaHtml}
         ${excerpt && excerpt !== title ? `<p class="community-topic-row-excerpt">${escapeHtml(excerpt)}</p>` : ""}
       </div>
       ${thumb}
@@ -607,28 +637,42 @@ export function renderCommunityTabContent(tab = "posts", ctx = {}) {
   </div>`;
 }
 
-function renderCommunityTopicFeedInner(topics, communityId, commTitle, composeHref) {
+function renderTopicPaginationButton(totalCount, visibleCount) {
+  if (totalCount <= visibleCount) return "";
+  const remaining = totalCount - visibleCount;
+  return `
+    <div class="community-topic-pagination" style="text-align:center; padding:12px 0 6px;">
+      <button type="button" class="btn btn-outline btn-sm btn-load-more-topics" data-visible="${visibleCount}">
+        Carregar tópicos anteriores (${remaining} ${remaining === 1 ? "restante" : "restantes"})
+      </button>
+    </div>`;
+}
+
+export function renderCommunityTopicFeedInner(topics, communityId, commTitle, composeHref, visibleCount = TOPICS_PAGE_SIZE) {
   if (!topics.length) {
     return `<div class="empty community-vox-empty"><p>Nenhum post nesta comunidade ainda.</p><a class="btn btn-primary btn-sm" href="${composeHref}">Criar o primeiro post</a></div>`;
   }
-  const items = topics
+  const paged = topics.slice(0, visibleCount);
+  const items = paged
     .map((t) => renderCommunityTopicRow({ ...t, communityId, communityTitle: commTitle }))
     .join("");
-  return `<div class="community-vox-topic-list">${items}</div>`;
+  const paginationHtml = renderTopicPaginationButton(topics.length, visibleCount);
+  return `<div class="community-vox-topic-list">${items}</div>${paginationHtml}`;
 }
 
-function renderCommunityPostsTab(communityId, commTitle, topics, { sortMode = "active" } = {}) {
+export function renderCommunityPostsTab(communityId, commTitle, topics, { sortMode = "active", visibleCount = TOPICS_PAGE_SIZE } = {}) {
   const composeHref = `#/compose/topic?c=${encodeURIComponent(communityId)}`;
-  const inner = renderCommunityTopicFeedInner(topics, communityId, commTitle, composeHref);
+  const inner = renderCommunityTopicFeedInner(topics, communityId, commTitle, composeHref, visibleCount);
   return `
     <section class="community-vox-feed card" aria-labelledby="community-vox-feed-title">
       <header class="community-vox-feed-head">
         <div class="community-feed-header-main" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
           <div>
             <h2 id="community-vox-feed-title" class="community-vox-feed-title" style="margin:0;">Tópicos e posts</h2>
-            <div class="community-sort-bar" style="margin-top:4px; display:inline-flex; gap:6px; font-size:0.8rem;">
-              <button type="button" class="btn btn-sm btn-subtle btn-sort-topic ${sortMode === "active" ? "active" : ""}" data-sort="active" aria-pressed="${sortMode === "active"}">🔄 Ativos</button>
-              <button type="button" class="btn btn-sm btn-subtle btn-sort-topic ${sortMode === "newest" ? "active" : ""}" data-sort="newest" aria-pressed="${sortMode === "newest"}">⏱️ Recentes</button>
+            <div class="community-sort-bar" style="margin-top:4px; display:inline-flex; gap:6px; font-size:0.8rem; flex-wrap:wrap;">
+              <button type="button" class="btn btn-sm btn-subtle btn-sort-topic ${sortMode === "active" ? "active" : ""}" data-sort="active" aria-pressed="${sortMode === "active"}">🔥 Atividade Recente</button>
+              <button type="button" class="btn btn-sm btn-subtle btn-sort-topic ${sortMode === "newest" ? "active" : ""}" data-sort="newest" aria-pressed="${sortMode === "newest"}">✨ Mais Recentes</button>
+              <button type="button" class="btn btn-sm btn-subtle btn-sort-topic ${sortMode === "pinned" ? "active" : ""}" data-sort="pinned" aria-pressed="${sortMode === "pinned"}">📌 Fixados / Governança</button>
             </div>
           </div>
           <div style="display:flex; align-items:center; gap:8px;">

@@ -276,3 +276,62 @@ test("community-forum-refinements - renderTopicRepliesBlock omite botão respond
   assert.equal(container.innerHTML.includes("btn-reply-to-reply"), false, "Não deve conter botões de responder nas respostas de tópico trancado");
   assert.ok(container.innerHTML.includes("🔒 Esta discussão foi encerrada"));
 });
+
+test("community-forum-refinements - renderCommunityPostsTab renderiza 3 botões de ordenação no fórum", () => {
+  const html = render.renderCommunityPostsTab("vox", "Vox", []);
+  assert.ok(html.includes('data-sort="active"'), "Deve incluir botão Atividade Recente");
+  assert.ok(html.includes("🔥 Atividade Recente"));
+  assert.ok(html.includes('data-sort="newest"'), "Deve incluir botão Mais Recentes");
+  assert.ok(html.includes("✨ Mais Recentes"));
+  assert.ok(html.includes('data-sort="pinned"'), "Deve incluir botão Fixados / Governança");
+  assert.ok(html.includes("📌 Fixados / Governança"));
+});
+
+test("community-forum-refinements - renderCommunityTopicFeedInner aplica paginação finita de 20 tópicos", () => {
+  const topics = Array.from({ length: 45 }, (_, i) => ({
+    id: `top_${i + 1}`,
+    title: `Tópico ${i + 1}`,
+    body: `Corpo do tópico ${i + 1}`,
+    ts: 1000 + i,
+    author: `vx_autor_${i + 1}`,
+  }));
+
+  const html = render.renderCommunityTopicFeedInner(topics, "vox", "Vox", "#/compose/topic?c=vox", 20);
+  assert.ok(html.includes("community-topic-pagination"), "Deve incluir container de paginação");
+  assert.ok(html.includes("Carregar tópicos anteriores (25 restantes)"), "Deve indicar 25 restantes");
+  assert.ok(html.includes('data-visible="20"'));
+
+  // Com <= 20 tópicos, não renderiza botão de paginação
+  const smallListHtml = render.renderCommunityTopicFeedInner(topics.slice(0, 15), "vox", "Vox", "#/compose/topic?c=vox", 20);
+  assert.equal(smallListHtml.includes("community-topic-pagination"), false, "Não deve conter botão se topics <= visibleCount");
+});
+
+test("community-forum-refinements - extractTopicCivicTag extrai tags cívicas e renderTopicRow renderiza badge", () => {
+  const topicPauta = { id: "top_pauta", title: "[Pauta] Reforma estatutária da ágora", ts: 500, author: "vx_rep" };
+  const topicBug = { id: "top_bug", title: "Problema no avatar", civicTag: "[Bug]", ts: 400, author: "vx_dev" };
+  const topicSemTag = { id: "top_livre", title: "Debate livre sem tag", ts: 300, author: "vx_cid" };
+
+  assert.equal(render.extractTopicCivicTag(topicPauta), "[Pauta]");
+  assert.equal(render.extractTopicCivicTag(topicBug), "[Bug]");
+  assert.equal(render.extractTopicCivicTag(topicSemTag), "");
+
+  const rowHtml = render.renderCommunityTopicRow(topicPauta, { communityId: "vox" });
+  assert.ok(rowHtml.includes("community-civic-tag-pill"), "Deve renderizar badge da tag cívica");
+  assert.ok(rowHtml.includes('data-tag="[Pauta]"'));
+  // Título não deve duplicar [Pauta]
+  assert.ok(rowHtml.includes("Reforma estatutária da ágora"));
+  assert.equal(rowHtml.includes("[Pauta] [Pauta]"), false);
+});
+
+test("community-forum-refinements - renderComposeTopic renderiza seletor de categorias cívicas", () => {
+  const main = createMockEl("div");
+  render.renderComposeTopic(main, "vox");
+
+  const html = main.innerHTML;
+  assert.ok(html.includes("topic-tag-selector-group"), "Deve conter container topic-tag-selector-group");
+  assert.ok(html.includes('id="topic-civic-tag"'), "Deve conter hidden input topic-civic-tag");
+  assert.ok(html.includes('data-tag="[Pauta]"'), "Deve conter botão [Pauta]");
+  assert.ok(html.includes('data-tag="[Bug]"'), "Deve conter botão [Bug]");
+  assert.ok(html.includes('data-tag="[Ideia]"'), "Deve conter botão [Ideia]");
+  assert.ok(html.includes('data-tag="[Debate Geral]"'), "Deve conter botão [Debate Geral]");
+});

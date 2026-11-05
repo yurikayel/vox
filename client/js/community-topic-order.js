@@ -41,12 +41,18 @@ export function sortTopicsByNewest(topics = []) {
 
 /**
  * Ponto de entrada de ordenação com base na preferência do usuário ou padrão comunitário.
- * Tópicos fixados (isPinned: true) flutuam sempre no topo, seguidos pelos tópicos regulares.
+ * - "active": Bumping de atividade (tópicos fixados flutuam no topo).
+ * - "newest": Cronológico estrito de criação (tópicos fixados flutuam no topo).
+ * - "pinned": Exibe exclusivamente tópicos fixados e pautas ativas de governança.
  * @param {Array} topics
- * @param {"active"|"newest"} mode
+ * @param {"active"|"newest"|"pinned"} mode
  */
 export function orderCommunityTopics(topics = [], mode = "active") {
   if (!Array.isArray(topics)) return [];
+  if (mode === "pinned") {
+    const pinnedOnly = topics.filter((t) => Boolean(t?.isPinned));
+    return sortTopicsByActivity(pinnedOnly);
+  }
   const pinned = [];
   const regular = [];
   for (const t of topics) {
