@@ -239,3 +239,40 @@ test("community-forum-refinements - buildCommunityRecentPeople traz diretório d
 
   profileDirectory.__resetProfileCardsForTests();
 });
+
+test("community-forum-refinements - renderTopicDetailText renderiza título do tópico com h1", () => {
+  const html = render.renderTopicDetailText("top_123", "Título da Proposta Cívica", "Corpo da mensagem sobre governança popular");
+  assert.ok(html.includes("topic-detail-title"), "Deve conter classe topic-detail-title");
+  assert.ok(html.includes("Título da Proposta Cívica"), "Deve exibir o título formatado");
+  assert.ok(html.includes("Corpo da mensagem sobre governança popular"));
+});
+
+test("community-forum-refinements - renderTopic exibe link de retorno para início se commId ausente", () => {
+  const container = { innerHTML: "" };
+  const topic = {
+    id: "top_solto",
+    title: "Tópico Sem Comunidade Explícita",
+    body: "Conteúdo do post direto",
+    author: "vx_autor",
+  };
+  render.renderTopic(container, "top_solto", topic, [], { isMod: false, communityId: "" });
+  assert.ok(container.innerHTML.includes("href=\"#/\""), "Deve conter link para início #/");
+  assert.ok(container.innerHTML.includes("Voltar ao início"));
+});
+
+test("community-forum-refinements - renderTopicRepliesBlock omite botão responder quando tópico trancado", () => {
+  const container = { innerHTML: "" };
+  const topic = {
+    id: "top_trancado_total",
+    title: "Debate Encerrado",
+    body: "Conteúdo congelado",
+    author: "vx_autor",
+    isLocked: true,
+  };
+  const replies = [
+    { id: "rep_1", body: "Comentário anterior ao trancamento", author: "vx_user_1", ts: 1000 },
+  ];
+  render.renderTopic(container, "top_trancado_total", topic, replies, { isMod: false, communityId: "vox" });
+  assert.equal(container.innerHTML.includes("btn-reply-to-reply"), false, "Não deve conter botões de responder nas respostas de tópico trancado");
+  assert.ok(container.innerHTML.includes("🔒 Esta discussão foi encerrada"));
+});

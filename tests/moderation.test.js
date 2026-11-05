@@ -106,3 +106,19 @@ test("moderation - applyFilters anota isPinned e isLocked em tópicos via mod-ac
   assert.equal(normal.isPinned, undefined);
 });
 
+test("moderation - parseModerators aceita Array de moderadores e applyFilters ordena ações por timestamp", () => {
+  assert.deepEqual(mod.parseModerators(["mod1", "mod2 "]), ["mod1", "mod2"]);
+
+  const items = [
+    { id: "top_fixado_inicial", title: "Regras Antigas", owner: "user_a", isPinned: true },
+  ];
+  // Ações chegam fora de ordem pela rede: primeiro unpin (ts 200), depois pin (ts 100)
+  const actions = [
+    { action: "unpin", target: "top_fixado_inicial", owner: "dono", ts: 200 },
+    { action: "pin", target: "top_fixado_inicial", owner: "dono", ts: 100 },
+  ];
+  const out = mod.applyFilters(items, actions, "dono");
+  // O unpin tem timestamp maior, logo deve vencer e desfixar o tópico
+  assert.equal(out[0].isPinned, false);
+});
+
