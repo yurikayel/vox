@@ -280,25 +280,27 @@ function excerptForTarget(post) {
 function buildExplodeTargetHtml(post) {
   const title = String(post?.title || "").trim() || "Esta pauta";
   const excerpt = excerptForTarget(post);
+  const canonicalUrl = buildCanonicalTopicUrl(post?.id, { communityId: post?.communityId });
   return `<figure class="explode-target">
     <span class="explode-megaphone-wrap" aria-hidden="true">${APP_ICONS.megaphone}</span>
     <figcaption class="explode-target-text">
       <strong>${escapeHtml(title)}</strong>${excerpt ? `<span>${escapeHtml(excerpt)}</span>` : ""}
+      <span class="explode-canonical-hint meta" style="font-size:0.75rem; margin-top:2px;">🔗 <code>${escapeHtml(canonicalUrl)}</code></span>
     </figcaption>
   </figure>`;
 }
 
-/** Hierarquia: 1 ação proposta → 4 rápidas → resto recolhido (Lei de Hick). */
+/** Hierarquia: 1 ação proposta → 5 rápidas (Bluesky, X, Telegram, Instagram, Copiar) → resto recolhido (Lei de Hick). */
 const EXPLODE_QUICK_BUTTONS = [
-  { action: "instagram", css: "btn-instagram", name: "Instagram", iconKey: "instagram", linkId: "instagram" },
+  { action: "bluesky", css: "btn-bluesky", name: "Bluesky", iconKey: "bluesky", linkId: "bsky" },
   { action: "twitter", css: "btn-x", name: "X", iconKey: "twitter", linkId: "twitter" },
   { action: "telegram", css: "btn-telegram", name: "Telegram", iconKey: "telegram" },
+  { action: "instagram", css: "btn-instagram", name: "Instagram", iconKey: "instagram", linkId: "instagram" },
   { action: "copy", css: "btn-copy", name: "Copiar texto", iconKey: "copy" },
 ];
 
 const EXPLODE_MORE_BUTTONS = [
   { action: "tiktok", css: "btn-tiktok", name: "TikTok", iconKey: "tiktok", linkId: "tiktok" },
-  { action: "bluesky", css: "btn-bluesky", name: "Bluesky", iconKey: "bluesky", linkId: "bsky" },
   { action: "threads", css: "btn-threads", name: "Threads", iconKey: "threads", linkId: "threads" },
   { action: "facebook", css: "btn-facebook", name: "Facebook", iconKey: "facebook", linkId: "facebook" },
   { action: "webhooks", css: "btn-webhooks", name: "Discord/Slack", iconKey: "webhooks" },

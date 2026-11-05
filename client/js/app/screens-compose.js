@@ -265,8 +265,8 @@ async function triggerTopicReplicationAndPosse(topicPayload) {
     }
   } catch {}
   try {
-    const { openPosseSheetAfterPublish } = await import("../posse-dispatch.js");
-    openPosseSheetAfterPublish(topicPayload);
+    const { openExplodeSheet } = await import("../explode-dispatch.js");
+    openExplodeSheet(topicPayload);
   } catch {}
 }
 

@@ -32,6 +32,8 @@ export function syncInlineComposerUi() {
   if (charEl) charEl.textContent = `${len} / 2000`;
   const hasContent = Boolean(text.trim() || inlineComposerImageDataUrl || inlineComposerMedia.dataUrl);
   if (submitBtn) submitBtn.disabled = !hasContent;
+  const echoBtn = document.getElementById("btn-inline-echo");
+  if (echoBtn) echoBtn.disabled = !hasContent;
 }
 
 export function collapseInlineComposer() {
@@ -575,7 +577,18 @@ function createComposerControllerState() {
   return state;
 }
 
-async function executeInlinePublish(form, onPublished, state) {
+async function broadcastAndPersistInlineTopic(payload, title, body, commSlug) {
+  const signed = await localAccount.signPayload(payload);
+  await cacheNode.saveLocalPost(signed);
+  if (payload.photoTags?.length) photoTags.setLocalTags(signed.id, payload.photoTags);
+  const { detachedPost, mediaBlob: blob } = await mediaBlob.detachMedia(signed);
+  if (blob) await mediaBlob.defaultBlobStorage.put(blob);
+  peers.broadcastGossip(detachedPost);
+  const permaResult = await uploadTopicToPermaweb({ topicId: payload.id, commSlug, title, body, blob });
+  return { signed, permaResult };
+}
+
+async function executeInlinePublish(form, onPublished, state, shouldEcho = false) {
   const bodyRaw = document.getElementById("inline-topic-body")?.value?.trim() || "";
   const commSlug = document.getElementById("inline-topic-comm")?.value?.trim().toLowerCase() || "geral";
   const hasMedia = Boolean(inlineComposerImageDataUrl || inlineComposerMedia.dataUrl);
@@ -583,38 +596,55 @@ async function executeInlinePublish(form, onPublished, state) {
 
   const { title, body } = postOwnership.deriveTopicTitleFromBody(bodyRaw || "");
   const payload = buildInlineTopicPayload({ title, body, commSlug });
-  const signed = await localAccount.signPayload(payload);
-  await cacheNode.saveLocalPost(signed);
-  if (payload.photoTags?.length) photoTags.setLocalTags(signed.id, payload.photoTags);
+  const { signed, permaResult } = await broadcastAndPersistInlineTopic(payload, title, body, commSlug);
 
-  const { detachedPost, mediaBlob: blob } = await mediaBlob.detachMedia(signed);
-  if (blob) await mediaBlob.defaultBlobStorage.put(blob);
-  peers.broadcastGossip(detachedPost);
-
-  const permawebResult = await uploadTopicToPermaweb({ topicId: payload.id, commSlug, title, body, blob });
   form.reset();
   clearMedia(state);
   syncInlineComposerUi();
   collapseInlineComposer();
-  showPublishToast(permawebResult);
-  if (typeof onPublished === "function") onPublished(signed);
+  showPublishToast(permaResult);
+  if (typeof onPublished === "function") await onPublished(signed);
   else location.reload();
+
+  if (shouldEcho) {
+    const { openExplodeSheet } = await import("./explode-dispatch.js");
+    openExplodeSheet(signed);
+  }
+}
+
+function updateSubmitButtonsState(isSubmitting) {
+  const btn = document.getElementById("btn-inline-submit");
+  const echoBtn = document.getElementById("btn-inline-echo");
+  if (btn) {
+    btn.disabled = isSubmitting;
+    btn.textContent = isSubmitting ? "Publicando…" : "Postar";
+  }
+  if (echoBtn) {
+    echoBtn.disabled = isSubmitting;
+    echoBtn.textContent = isSubmitting ? "Publicando…" : "🚀 Postar & Ecoar";
+  }
 }
 
 function bindFormSubmit(form, onPublished, state) {
+  let shouldEchoNext = false;
+  document.getElementById("btn-inline-echo")?.addEventListener("click", () => {
+    shouldEchoNext = true;
+  });
+
   form?.addEventListener("submit", async (e) => {
     e.preventDefault();
     if (isInlineSubmitting) return;
-    const btn = document.getElementById("btn-inline-submit");
+    const isEcho = shouldEchoNext;
+    shouldEchoNext = false;
     isInlineSubmitting = true;
-    if (btn) { btn.disabled = true; btn.textContent = "Publicando…"; }
+    updateSubmitButtonsState(true);
     try {
-      await executeInlinePublish(form, onPublished, state);
+      await executeInlinePublish(form, onPublished, state, isEcho);
     } catch (err) {
       share.showToast(`Erro ao publicar: ${err.message}`, "error");
     } finally {
       isInlineSubmitting = false;
-      if (btn) { btn.disabled = false; btn.textContent = "Postar"; }
+      updateSubmitButtonsState(false);
     }
   });
 }

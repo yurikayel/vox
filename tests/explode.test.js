@@ -484,3 +484,22 @@ test("explode - tryAutoSubmitExplodeIntent clicks publish button when #vox-explo
   assert.equal(clicked, true);
 });
 
+test("explode - compositor do feed inclui botão Postar & Ecoar para disparo POSSE", () => {
+  const composerHtml = feed.renderInlineComposer();
+  assert.ok(composerHtml.includes("btn-inline-echo"));
+  assert.ok(composerHtml.includes("Postar & Ecoar") || composerHtml.includes("Postar &amp; Ecoar"));
+  assert.ok(composerHtml.includes("btn-inline-submit"));
+});
+
+test("explode - exibe link canônico no card de pauta e traz Bluesky nas ações rápidas", () => {
+  const html = explode.buildExplodeSheetHtml({
+    id: "top_canon_999",
+    title: "Soberania Digital",
+    body: "Post sobre autonomia popular",
+  });
+  assert.ok(html.includes("top_canon_999"));
+  assert.ok(html.includes("explode-canonical-hint"));
+  const quickRow = html.slice(html.indexOf('aria-label="Outras redes"'), html.indexOf("<details"));
+  assert.ok(quickRow.includes('data-explode-action="bluesky"'));
+});
+
