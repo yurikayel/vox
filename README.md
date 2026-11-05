@@ -11,23 +11,31 @@ Essa é uma direção e um compromisso, não uma descrição de governança já 
 
 O cliente é um PWA local-first. Identidade e chaves são criadas no aparelho; publicações públicas podem ser ancoradas no Arweave e lidas por gateways. Há recursos de relay, cache e comunicação local, mas descoberta automática de nós, acesso LAN entre dispositivos e seeding WebTorrent não estão implementados. O projeto documenta capacidades reais e limitações conhecidas; propostas não são anunciadas como funcionalidades prontas.
 
-> 🌐 **Demo Pública:** [https://yurikayel.github.io/vox/](https://yurikayel.github.io/vox/)  
+> 📥 **Central de Downloads (Multiplataforma):** [https://yurikayel.github.io/vox/download](https://yurikayel.github.io/vox/download)  
+> 🌐 **Aplicação Web (PWA Oficial):** [https://yurikayel.github.io/vox/](https://yurikayel.github.io/vox/)  
 > 🧪 **Guia para Testadores:** [#/ajuda/teste](https://yurikayel.github.io/vox/#/ajuda/teste)  
 > 📚 **Índice Mestre de Documentação:** [docs/README.md](./docs/README.md)  
 > 📋 **Plano Mestre & Checklist Vivo:** [dossiê N=25 §3.6](./docs/dossie-geral-inventario-master-breakdown-2026-11.md#36-checklist-master-vivo-n25)
 
 ---
 
-## ⚡ Executáveis & Downloads Rápidos (1-Clique)
+## 📥 Central de Downloads e Matriz de Plataformas
 
-Acesso direto às aplicações prontas para uso do ecossistema:
+Acesse a página visual interativa em **[https://yurikayel.github.io/vox/download](https://yurikayel.github.io/vox/download)** ou obtenha os pacotes diretamente abaixo.
 
-| Papel | Aplicativo | Executável / Pacote | Como Funciona e Operação |
+O ecossistema é estritamente dividido em dois papéis complementares ([ADR-011](docs/adr/011-taxonomia-tripartite-produtos-vox.md)):
+- **`vox` (Cliente):** Para quem quer **só usar a rede e fim**. Interface cívica, composição de mensagens, enquetes, votações populares e mensagens ponto a ponto criptografadas sem precisar entender de técnica ou servidores.
+- **`vox populi` (Nó de Apoio):** Para quem quiser **colaborar ativamente com a infraestrutura**. Opera em segundo plano mantendo cache seguro (SHA-256) e provendo relay cego local para sua vizinhança ou residência, sem interface gráfica pesada e sem telemetria.
+- **⚡ Efeito Boost Local:** Abrir ambos no mesmo computador ou rede Wi-Fi conecta o cliente ao nó em loopback (`127.0.0.1:3921`), acelerando a renderização através de cache local verificado sem consumir franquia de internet.
+
+### Matriz de Distribuição e Suporte aos 4 Sistemas Operacionais
+
+| Sistema Operacional | Papel: `vox` (Cliente Cívico) | Papel: `vox populi` (Nó de Apoio Comunitário) | Como Funciona Sob o Capô |
 |:---|:---|:---|:---|
-| 🖥️ **CLIENTE** | **Vox (Desktop)** | [**`dist/Vox.exe`**](dist/Vox.exe) *(ou [`dist/VoxPopuliDesktop.exe`](dist/VoxPopuliDesktop.exe))* | **Cliente gráfico para PC:** interface WebView2 nativa com notificação na bandeja (*system tray*) e conexão com **boost** automático ao nó dedicado local. |
-| 📱 **CLIENTE** | **Vox (Android)** | [**`android/vox.apk`**](android/vox.apk) *(ou [`dist/vox.apk`](dist/vox.apk))* | **Cliente móvel para celular:** micro-APK ultraleve (~20.8 KiB, `org.vox.client`) com suporte a v1+v2+v3 e ícone nativo pronto para sideload/WSA. |
-| 🌐 **NÓ DEDICADO** | **Vox Populi (Windows)** | [**`dist/VoxPopuli.exe`**](dist/VoxPopuli.exe) | **Nó comunitário dedicado em background:** sem navegador/UI, opera relay HTTP (`127.0.0.1:3921`), cache SHA-256 e controle (`127.0.0.1:3922`) com ícone de controle na bandeja. |
-| 📱 **NÓ DEDICADO** | **Vox Populi (Android)** | [**`android/vox-populi.apk`**](android/vox-populi.apk) *(ou [`dist/vox-populi.apk`](dist/vox-populi.apk))* | **Nó comunitário dedicado para celular:** micro-APK ultraleve (`org.vox.populi`), foreground service de relay/cache em Wi-Fi e tela nativa de status do nó. |
+| **1. Microsoft Windows**<br>(10 / 11) | [**`Vox.exe`**](client/downloads/Vox.exe) *(967 KiB)* | [**`VoxPopuli.exe`**](client/downloads/VoxPopuli.exe) *(11.7 MB)* | **Cliente:** Executável nativo com runtime WebView2 já presente no Windows (sem inchaço do Chromium/Electron; consome < 40 MB RAM).<br>**Nó:** Serviço sem janela com ícone na bandeja (*System Tray*), operando relay local e cache criptográfico. |
+| **2. Google Android**<br>(5.0+) | [**`vox.apk`**](client/downloads/vox.apk) *(74 KiB)* | [**`vox-populi.apk`**](client/downloads/vox-populi.apk) *(74 KiB)* | **Cliente (`org.vox.client`):** Micro-APK ultraleve instalável via sideload direto. Roda a PWA em tela cheia via WebView do Android com aceleração gráfica.<br>**Nó (`org.vox.populi`):** Projetado para celulares antigos ligados na tomada em Wi-Fi. Foreground service silencioso emitindo sinal e mantendo a malha viva 24/7 sem gastar 4G/5G. |
+| **3. GNU/Linux & Pi**<br>(x86_64, ARM64, SBC) | [**Guia Linux WebKitGTK**](tools/desktop-linux/) *(< 30 KiB)* | [**Guia Daemon systemd**](vox-populi/) *(daemon)* | **Cliente:** Lançador ultraleve integrando com WebKitGTK nativo do GNOME/KDE.<br>**Nó:** Daemon de baixo consumo (< 15 MB RAM) empacotado para `systemd`, ideal para Raspberry Pi (3, 4, 5, Zero 2W) e servidores domésticos. |
+| **4. Apple**<br>(iOS / iPadOS & macOS) | [**Abrir Safari PWA**](https://vox-9df.pages.dev/) *(PWA)* | [**Guia macOS launchd**](tools/node-macos/) *(launchd)* | **Cliente (iOS):** Adicione à *Tela de Início* no Safari (*Compartilhar* &rarr; *Tela de Início*). Ganha contêiner isolado, **fica isento da limpeza de 7 dias do Safari (ITP)** e expande a quota de armazenamento para até 60% do disco.<br>**Nó (macOS):** Serviço de segundo plano via `launchd` para Mac Mini ou MacBooks como nó doméstico. |
 
 ---
 
@@ -219,6 +227,9 @@ Em conformidade com a auditoria de honestidade cívica ([docs/honest-copy-audit-
 * **[ADR-003](./docs/adr/003-profile-card-gossip.md):** Cartão de malha e propagação gossip de perfis.
 * **[ADR-004](./docs/adr/004-gateway-honest-fallback.md):** Fallback transparente e honesto de leitura reserva de gateways.
 * **[ADR-005](./docs/adr/005-collective-profile-m-of-n.md):** Perfil coletivo M-de-N via multi-assinatura independente (Tese T02).
+* **[ADR-008](./docs/adr/008-vox-populi-community-node-architecture.md):** Arquitetura do Nó Comunitário Vox Populi.
+* **[ADR-011](./docs/adr/011-taxonomia-tripartite-produtos-vox.md):** Taxonomia Canônica Dual — Vox (Cliente) e Vox Populi (Nó Dedicado).
+* **[ADR-012](./docs/adr/012-soberania-digital-cintura-fina-cartuchos-webxdc.md):** Soberania Digital na Vox — Cintura Fina Criptográfica e Cartuchos Cívicos Webxdc.
 
 ---
 
