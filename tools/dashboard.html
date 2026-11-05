@@ -206,6 +206,41 @@
       background: #388BFD;
     }
 
+    .btn-warning {
+      background: #9E6A03;
+      border-color: rgba(240, 246, 252, 0.1);
+      color: #fff;
+    }
+
+    .btn-warning:hover {
+      background: #BB8009;
+    }
+
+    .status-pill.paused {
+      background: rgba(210, 153, 34, 0.15);
+      border-color: rgba(210, 153, 34, 0.4);
+      color: #E3B341;
+    }
+
+    .post-card.reply {
+      margin-left: 28px;
+      border-left: 3px solid var(--cyan);
+      background: #111620;
+    }
+
+    .post-reply-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: var(--cyan);
+      background: rgba(88, 166, 255, 0.1);
+      padding: 2px 8px;
+      border-radius: 4px;
+      width: fit-content;
+    }
+
     .btn-sm {
       padding: 4px 8px;
       font-size: 11px;
@@ -946,6 +981,9 @@
 
       <button id="btnRefresh" class="btn" title="Atualizar agora">🔄 Atualizar</button>
       <button id="btnCheckpoint" class="btn btn-blue" title="Salvar snapshot imediato no disco">📸 Checkpoint</button>
+      <button id="btnTogglePause" class="btn btn-warning" title="Pausar ou retomar ingestão de dados da rede">⏸️ Pausar</button>
+      <button id="btnQrModal" class="btn" title="Exibir QR Code para conexão de celular">📱 Conectar Celular</button>
+      <button id="btnExportDiag" class="btn" title="Baixar relatório de diagnóstico completo">💾 Diagnóstico</button>
       <button id="btnCopyInvite" class="btn" title="Copiar URL de convite/P2P">📋 Copiar Convite</button>
       <a id="btnOpenApp" href="https://vox-9df.pages.dev/?memory=http%3A%2F%2F127.0.0.1%3A3921" target="_blank" class="btn btn-primary" title="Abrir interface do Vox Populi">🌐 Abrir Web App</a>
     </div>
@@ -1089,6 +1127,36 @@
         </div>
       </div>
 
+      <!-- Host & Process Telemetry Card -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">💻 Recursos do Host & Telemetria do Processo Local</div>
+          <span class="status-pill" id="telemStatePill"><span class="pulse-dot"></span> <span id="telemStateText">ATIVO</span></span>
+        </div>
+        <div class="metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); margin-bottom: 0;">
+          <div class="metric-card" style="--card-accent: var(--cyan);">
+            <div class="metric-header"><span>PROCESSO PID</span><span>⚙️</span></div>
+            <div class="metric-value" id="telemPid" style="font-size:20px;">--</div>
+            <div class="metric-sub" id="telemMachine">ARGON18 • Win64</div>
+          </div>
+          <div class="metric-card" style="--card-accent: var(--green);">
+            <div class="metric-header"><span>MEMÓRIA RAM (WORKING SET)</span><span>🧠</span></div>
+            <div class="metric-value" id="telemRam" style="font-size:20px;">-- MB</div>
+            <div class="metric-sub" id="telemPrivate">Private: -- MB</div>
+          </div>
+          <div class="metric-card" style="--card-accent: var(--purple);">
+            <div class="metric-header"><span>THREADS / NÚCLEOS</span><span>⚡</span></div>
+            <div class="metric-value" id="telemThreads" style="font-size:20px;">--</div>
+            <div class="metric-sub" id="telemCores">Cores: 24</div>
+          </div>
+          <div class="metric-card" style="--card-accent: var(--yellow);">
+            <div class="metric-header"><span>UPTIME / REQUISIÇÕES</span><span>⏱️</span></div>
+            <div class="metric-value" id="telemUptime" style="font-size:20px;">--</div>
+            <div class="metric-sub" id="telemRequests">Requisições: --</div>
+          </div>
+        </div>
+      </div>
+
       <!-- Two Columns: Diagnostics and Storage -->
       <div class="two-cols">
         <!-- Panel 1: Endpoints & Health -->
@@ -1176,6 +1244,8 @@
           <button class="chip active" data-filter="all">Todos</button>
           <button class="chip" data-filter="geral">#geral</button>
           <button class="chip" data-filter="vox">#vox (Comunidade Oficial)</button>
+          <button class="chip" data-filter="__topics_only">Somente Tópicos</button>
+          <button class="chip" data-filter="__replies_only">Somente Respostas</button>
         </div>
       </div>
 
@@ -1267,6 +1337,28 @@
     </div>
   </div>
 
+  <!-- QR Code Modal -->
+  <div class="modal-backdrop" id="qrModal">
+    <div class="modal" style="max-width: 440px; text-align: center;">
+      <div class="modal-head">
+        <h3>📱 Conectar Celular ao Nó Local</h3>
+        <button class="btn btn-sm" id="btnCloseQrModal">✕ Fechar</button>
+      </div>
+      <div class="modal-body" style="display:flex; flex-direction:column; align-items:center; gap:16px;">
+        <p style="font-size:12px; color:var(--text-muted); line-height:1.4;">
+          Aponte a câmera do seu celular para escanear e abrir o Vox Populi PWA sincronizado com esta máquina (ARGON18) via túnel seguro.
+        </p>
+        <div id="qrCodeContainer" style="background:#fff; padding:14px; border-radius:10px; display:inline-block; max-width:280px; max-height:280px;">
+          <!-- Inline SVG QR Code rendered here -->
+        </div>
+        <div style="font-size:11px; font-family:var(--font-mono); color:var(--cyan); word-break:break-all; max-width:100%;" id="qrInviteUrlText"></div>
+      </div>
+      <div class="modal-foot" style="justify-content:center;">
+        <button class="btn btn-primary btn-sm" id="btnCopyInviteFromModal">📋 Copiar Link de Convite</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Container -->
   <div class="toast-container" id="toastContainer"></div>
 
@@ -1290,11 +1382,26 @@
       const refreshIntervalSelect = document.getElementById('refreshIntervalSelect');
       const btnRefresh = document.getElementById('btnRefresh');
       const btnCheckpoint = document.getElementById('btnCheckpoint');
+      const btnTogglePause = document.getElementById('btnTogglePause');
+      const btnQrModal = document.getElementById('btnQrModal');
+      const btnExportDiag = document.getElementById('btnExportDiag');
       const btnCopyInvite = document.getElementById('btnCopyInvite');
       const btnOpenApp = document.getElementById('btnOpenApp');
       const infoLatency = document.getElementById('infoLatency');
       const infoTunnelUrl = document.getElementById('infoTunnelUrl');
       const topoTunnelShort = document.getElementById('topoTunnelShort');
+
+      // Telemetry DOM
+      const telemPid = document.getElementById('telemPid');
+      const telemMachine = document.getElementById('telemMachine');
+      const telemRam = document.getElementById('telemRam');
+      const telemPrivate = document.getElementById('telemPrivate');
+      const telemThreads = document.getElementById('telemThreads');
+      const telemCores = document.getElementById('telemCores');
+      const telemUptime = document.getElementById('telemUptime');
+      const telemRequests = document.getElementById('telemRequests');
+      const telemStatePill = document.getElementById('telemStatePill');
+      const telemStateText = document.getElementById('telemStateText');
 
       // KPIs
       const kpiNodeStatus = document.getElementById('kpiNodeStatus');
@@ -1319,12 +1426,23 @@
       const vaultsListContainer = document.getElementById('vaultsListContainer');
       const logConsoleOutput = document.getElementById('logConsoleOutput');
 
-      // Modal
+      // Modals
       const inspectorModal = document.getElementById('inspectorModal');
       const modalTitle = document.getElementById('modalTitle');
       const modalContent = document.getElementById('modalContent');
       const btnCloseModal = document.getElementById('btnCloseModal');
       const btnCopyModalJson = document.getElementById('btnCopyModalJson');
+
+      const qrModal = document.getElementById('qrModal');
+      const btnCloseQrModal = document.getElementById('btnCloseQrModal');
+      const btnCopyInviteFromModal = document.getElementById('btnCopyInviteFromModal');
+      const qrCodeContainer = document.getElementById('qrCodeContainer');
+      const qrInviteUrlText = document.getElementById('qrInviteUrlText');
+
+      // Telemetry & Runtime State
+      let currentTelemetry = null;
+      let currentVaults = [];
+      let isNodePaused = false;
 
       // Toast utility
       function showToast(message, type = 'info') {
@@ -1369,6 +1487,16 @@
         return `há ${Math.floor(diffSec / 86400)} dias`;
       }
 
+      // Format Uptime
+      function formatUptime(sec) {
+        if (!sec) return '0s';
+        if (sec < 60) return `${sec}s`;
+        if (sec < 3600) return `${Math.floor(sec / 60)}m ${sec % 60}s`;
+        const h = Math.floor(sec / 3600);
+        const m = Math.floor((sec % 3600) / 60);
+        return `${h}h ${m}m`;
+      }
+
       // Open Modal
       function openInspector(title, obj) {
         modalTitle.textContent = title;
@@ -1403,32 +1531,37 @@
         const startTime = performance.now();
 
         try {
-          // Fetch State & Health in parallel
-          const [stateRes, healthRes] = await Promise.all([
+          // Fetch State, Health, Telemetry and Vaults in parallel
+          const [stateRes, healthRes, telemRes, vaultsRes] = await Promise.all([
             fetch(`${currentEndpoint}/memory/state`).then(r => {
               if (!r.ok) throw new Error(`HTTP ${r.status}`);
               return r.json();
             }),
-            fetch(`${currentEndpoint}/health`).then(r => r.ok ? r.json() : null).catch(() => null)
+            fetch(`${currentEndpoint}/health`).then(r => r.ok ? r.json() : null).catch(() => null),
+            fetch(`${currentEndpoint}/memory/telemetry`).then(r => r.ok ? r.json() : null).catch(() => null),
+            fetch(`${currentEndpoint}/memory/vaults`).then(r => r.ok ? r.json() : null).catch(() => null)
           ]);
 
           const latency = Math.round(performance.now() - startTime);
           infoLatency.textContent = `${latency} ms`;
 
           currentState = stateRes;
-          renderAll(stateRes, healthRes);
+          currentTelemetry = telemRes?.telemetry || stateRes?.telemetry || healthRes?.centralMemory?.telemetry || null;
+          currentVaults = vaultsRes?.vaults || [];
+
+          renderAll(stateRes, healthRes, currentTelemetry, currentVaults);
 
           // Fetch logs if endpoint supports it
           fetchLogs();
-
-          // Connection status UI
-          nodeStateBadge.className = 'status-pill';
-          nodeStateText.textContent = 'ATIVO';
         } catch (err) {
           console.warn('Falha na sondagem:', err);
           nodeStateBadge.className = 'status-pill error';
           nodeStateText.textContent = 'OFFLINE';
           infoLatency.textContent = 'Falha';
+          if (telemStatePill) {
+            telemStatePill.className = 'status-pill error';
+            telemStateText.textContent = 'OFFLINE';
+          }
         }
       }
 
@@ -1444,7 +1577,6 @@
             }
           }
         } catch (_) {
-          // Fallback: If /memory/logs endpoint is not yet compiled, reconstruct events from state
           if (currentLogs.length === 0 && currentState) {
             synthesizeLogsFromState(currentState);
           }
@@ -1469,16 +1601,55 @@
       }
 
       // Render Dashboard
-      function renderAll(state, health) {
+      function renderAll(state, health, telemetry, vaults) {
+        // Telemetry handling
+        if (telemetry) {
+          if (telemPid) telemPid.textContent = telemetry.pid || '--';
+          if (telemMachine) telemMachine.textContent = `${telemetry.machine || 'ARGON18'} • ${telemetry.is64Bit ? 'Win64' : 'Win32'}`;
+          if (telemRam) telemRam.textContent = `${(telemetry.workingSetMb || 0).toFixed(1)} MB`;
+          if (telemPrivate) telemPrivate.textContent = `Private: ${(telemetry.privateMemoryMb || 0).toFixed(1)} MB`;
+          if (telemThreads) telemThreads.textContent = telemetry.threads || '--';
+          if (telemCores) telemCores.textContent = `Cores: ${telemetry.cpuCores || '--'}`;
+          if (telemUptime) telemUptime.textContent = formatUptime(telemetry.uptimeSec || 0);
+          if (telemRequests) telemRequests.textContent = `Requisições: ${telemetry.requestsServed || 0}`;
+
+          isNodePaused = !!telemetry.isPaused;
+        }
+
+        // Pause / Resume state
+        if (isNodePaused) {
+          nodeStateBadge.className = 'status-pill paused';
+          nodeStateText.textContent = 'PAUSADO';
+          if (telemStatePill) {
+            telemStatePill.className = 'status-pill paused';
+            telemStateText.textContent = 'PAUSADO';
+          }
+          if (btnTogglePause) {
+            btnTogglePause.textContent = '▶️ Retomar';
+            btnTogglePause.className = 'btn btn-primary';
+          }
+          kpiNodeStatus.textContent = 'PAUSADO';
+        } else {
+          nodeStateBadge.className = 'status-pill';
+          nodeStateText.textContent = 'ATIVO';
+          if (telemStatePill) {
+            telemStatePill.className = 'status-pill';
+            telemStateText.textContent = 'ATIVO';
+          }
+          if (btnTogglePause) {
+            btnTogglePause.textContent = '⏸️ Pausar';
+            btnTogglePause.className = 'btn btn-warning';
+          }
+          kpiNodeStatus.textContent = 'ATIVO';
+        }
+
         // KPIs
-        kpiNodeStatus.textContent = 'ATIVO';
         kpiRevision.textContent = `#${state.revision || 0}`;
         kpiPosts.textContent = state.counts?.posts ?? (state.posts?.length || 0);
         kpiProfiles.textContent = state.counts?.profiles ?? (state.profiles?.length || 0);
         kpiBlobs.textContent = state.counts?.blobs ?? (state.blobs?.length || 0);
 
-        // Vaults count (defaults to 2 known local ZK vaults)
-        const vaultsCount = 2;
+        const vaultsCount = (vaults && vaults.length > 0) ? vaults.length : 2;
         kpiVaults.textContent = vaultsCount;
 
         tabBadgePosts.textContent = kpiPosts.textContent;
@@ -1513,7 +1684,7 @@
         renderPosts(state.posts || []);
         renderProfiles(state.profiles || []);
         renderBlobs(state.blobs || []);
-        renderVaults();
+        renderVaults(vaults || []);
       }
 
       // Render Posts
@@ -1522,7 +1693,12 @@
         postsListContainer.innerHTML = '';
 
         const filtered = posts.filter(p => {
-          if (activePostCommunityFilter !== 'all' && (p.communityId || 'geral') !== activePostCommunityFilter) return false;
+          const isReply = !!(p.replyTo || p.parentId || p.type === 'reply');
+          if (activePostCommunityFilter === '__topics_only' && isReply) return false;
+          if (activePostCommunityFilter === '__replies_only' && !isReply) return false;
+          if (activePostCommunityFilter !== 'all' && activePostCommunityFilter !== '__topics_only' && activePostCommunityFilter !== '__replies_only') {
+            if ((p.communityId || 'geral') !== activePostCommunityFilter) return false;
+          }
           if (!query) return true;
           const hay = `${p.authorDisplay || ''} ${p.body || ''} ${p.title || ''} ${p.communityId || ''} ${p.author || ''}`.toLowerCase();
           return hay.includes(query);
@@ -1535,10 +1711,13 @@
 
         filtered.forEach(p => {
           const card = document.createElement('div');
-          card.className = 'post-card';
+          const isReply = !!(p.replyTo || p.parentId || p.type === 'reply');
+          card.className = isReply ? 'post-card reply' : 'post-card';
 
-          const hasImg = p.image && p.image.startsWith('data:image/');
-          const authorAvatar = p.authorAvatar || 'https://api.dicebear.com/7.x/identicon/svg?seed=' + encodeURIComponent(p.author || 'user');
+          const hasImg = p.image && (p.image.startsWith('data:image/') || p.image.startsWith('https://'));
+          const authorAvatar = (p.authorAvatar && (p.authorAvatar.startsWith('data:image/') || p.authorAvatar.startsWith('https://')))
+            ? p.authorAvatar
+            : 'https://api.dicebear.com/7.x/identicon/svg?seed=' + encodeURIComponent(p.author || 'user');
           const isMembership = p.type === 'membership';
 
           card.innerHTML = `
@@ -1556,6 +1735,8 @@
                 ${p.isLocalP2p ? '<span class="badge" style="color:var(--cyan);">📡 P2P Local</span>' : ''}
               </div>
             </div>
+
+            ${isReply ? `<div class="post-reply-indicator">↳ Resposta ao tópico: <strong>#${esc(p.replyTo || p.parentId)}</strong></div>` : ''}
 
             <div class="post-body">${isMembership ? `<em>Adesão comunitária à guilda / comunidade oficial <strong>#${esc(p.communityId)}</strong></em>` : esc(p.body || p.title || '')}</div>
 
@@ -1594,7 +1775,9 @@
         filtered.forEach(pr => {
           const card = document.createElement('div');
           card.className = 'profile-card';
-          const avatar = pr.avatarUrl || 'https://api.dicebear.com/7.x/identicon/svg?seed=' + encodeURIComponent(pr.routeId || pr.name || 'user');
+          const avatar = (pr.avatarUrl && (pr.avatarUrl.startsWith('data:image/') || pr.avatarUrl.startsWith('https://')))
+            ? pr.avatarUrl
+            : 'https://api.dicebear.com/7.x/identicon/svg?seed=' + encodeURIComponent(pr.routeId || pr.name || 'user');
 
           card.innerHTML = `
             <div class="profile-top">
@@ -1679,42 +1862,70 @@
       }
 
       // Render Vaults
-      function renderVaults() {
+      function renderVaults(vaults) {
         vaultsListContainer.innerHTML = '';
-        const sampleVaults = [
+        const list = (vaults && vaults.length > 0) ? vaults : [
           {
             key: "7e5a0504ee56087435b8fa80fb07a43f80f38b06c52a8650b984c41005d485ed",
-            alg: "AES-256-GCM / PBKDF2-HMAC-SHA256",
-            sub: "OAuth Google (ZK Lookup Key)",
-            size: "1.2 KB"
+            algorithm: "AES-256-GCM / PBKDF2",
+            sizeBytes: 1213,
+            updatedAt: Date.now() - 3600000
           },
           {
             key: "ea87b4a7232204829d1939e69e10174ddad623adffb0c27cf5230bad7a4df75e",
-            alg: "AES-256-GCM / PBKDF2-HMAC-SHA256",
-            sub: "Senha Soberana / Passphrase Vault (Sem Big Tech)",
-            size: "1.2 KB"
+            algorithm: "AES-256-GCM / PBKDF2",
+            sizeBytes: 1213,
+            updatedAt: Date.now() - 3600000
           }
         ];
 
-        sampleVaults.forEach(v => {
+        list.forEach(v => {
           const item = document.createElement('div');
           item.className = 'post-card';
+          const sizeKb = ((v.sizeBytes || 1213) / 1024).toFixed(1);
+          const alg = v.algorithm || 'AES-256-GCM / PBKDF2';
+          const shortKey = v.key ? `${v.key.substring(0, 16)}...${v.key.substring(v.key.length - 8)}` : 'Chave Indisponível';
+
           item.innerHTML = `
             <div class="post-header">
               <div style="display:flex; align-items:center; gap:10px;">
                 <span style="font-size:24px;">🔐</span>
                 <div>
-                  <div style="font-weight:700; font-size:13px; color:var(--text-main);">${esc(v.sub)}</div>
-                  <div style="font-size:11px; font-family:var(--font-mono); color:var(--cyan);">Hash ZK: ${esc(v.key)}</div>
+                  <div style="font-weight:700; font-size:13px; color:var(--text-main);">Cofre ZK Cifrado Localmente</div>
+                  <div style="font-size:11px; font-family:var(--font-mono); color:var(--cyan);">Hash ZK: ${esc(shortKey)}</div>
                 </div>
               </div>
-              <span class="badge badge-sig">Íntegro</span>
+              <span class="badge badge-sig">Zero-Knowledge</span>
             </div>
-            <div style="font-size:11px; color:var(--text-muted); display:flex; justify-content:space-between;">
-              <span>Algoritmo: <code>${esc(v.alg)}</code></span>
-              <span>Tamanho: ${esc(v.size)}</span>
+            <div style="font-size:11px; color:var(--text-muted); display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+              <span>Algoritmo: <code>${esc(alg)}</code></span>
+              <span>Tamanho: ${sizeKb} KB</span>
+              <span>Atualizado: ${formatDate(v.updatedAt)}</span>
+            </div>
+            <div style="display:flex; gap:8px; margin-top:8px;">
+              <button class="btn btn-sm btn-copy-vkey" style="flex:1;">Copiar Hash ZK</button>
+              <button class="btn btn-sm btn-inspect-vault">Inspecionar Cifra</button>
             </div>
           `;
+
+          item.querySelector('.btn-copy-vkey').addEventListener('click', () => {
+            navigator.clipboard.writeText(v.key).then(() => showToast('Hash ZK copiado!', 'success'));
+          });
+
+          item.querySelector('.btn-inspect-vault').addEventListener('click', async () => {
+            try {
+              const res = await fetch(`${currentEndpoint}/memory/vault/${v.key}`);
+              if (res.ok) {
+                const data = await res.json();
+                openInspector(`Cofre ZK Cifrado: ${v.key}`, data.record || data);
+              } else {
+                openInspector(`Cofre ZK: ${v.key}`, v);
+              }
+            } catch (err) {
+              openInspector(`Cofre ZK: ${v.key}`, v);
+            }
+          });
+
           vaultsListContainer.appendChild(item);
         });
       }
@@ -1765,6 +1976,219 @@
         }
       }
 
+      // Inline Pure-JS QR Code Generator (GF256 + Reed-Solomon)
+      const EXP = new Uint8Array(512), LOG = new Uint8Array(256);
+      (function initGf() {
+        let x = 1;
+        for (let i = 0; i < 255; i++) { EXP[i] = x; LOG[x] = i; x <<= 1; if (x & 0x100) x ^= 0x11d; }
+        for (let i = 255; i < 512; i++) EXP[i] = EXP[i - 255];
+      })();
+      function gfMul(a, b) { return (a === 0 || b === 0) ? 0 : EXP[LOG[a] + LOG[b]]; }
+      function rsDivisor(deg) {
+        const r = new Uint8Array(deg); r[deg - 1] = 1; let root = 1;
+        for (let i = 0; i < deg; i++) {
+          for (let j = 0; j < deg; j++) {
+            r[j] = gfMul(r[j], root);
+            if (j + 1 < deg) r[j] ^= r[j + 1];
+          }
+          root = gfMul(root, 2);
+        }
+        return r;
+      }
+      function rsRemainder(data, div) {
+        const n = div.length, r = new Uint8Array(n);
+        for (let i = 0; i < data.length; i++) {
+          const f = data[i] ^ r[0];
+          r.copyWithin(0, 1); r[n - 1] = 0;
+          if (f === 0) continue;
+          for (let j = 0; j < n; j++) r[j] ^= gfMul(div[j], f);
+        }
+        return r;
+      }
+      const QR_VERSIONS = {
+        2: { data: 34, ec: 10, maxBytes: 32 },
+        3: { data: 55, ec: 15, maxBytes: 53 },
+        4: { data: 80, ec: 20, maxBytes: 78 },
+        5: { data: 108, ec: 26, maxBytes: 106 },
+        6: { data: 136, ec: 28, maxBytes: 134 }
+      };
+      function chooseVersion(len) {
+        for (const v of [2, 3, 4, 5, 6]) {
+          if (len <= QR_VERSIONS[v].maxBytes) return v;
+        }
+        return 6;
+      }
+      function pushBits(bits, val, n) {
+        for (let i = n - 1; i >= 0; i--) bits.push((val >>> i) & 1);
+      }
+      function encodeBytePayload(bytes, dataCodewords) {
+        const cap = dataCodewords * 8, bits = [];
+        pushBits(bits, 4, 4); pushBits(bits, bytes.length, 8);
+        for (const b of bytes) pushBits(bits, b, 8);
+        const term = Math.min(4, Math.max(0, cap - bits.length));
+        for (let i = 0; i < term; i++) bits.push(0);
+        while (bits.length % 8 !== 0 && bits.length < cap) bits.push(0);
+        const pads = [0xec, 0x11]; let p = 0;
+        while (bits.length + 8 <= cap) { pushBits(bits, pads[p & 1], 8); p++; }
+        const cw = new Uint8Array(dataCodewords);
+        for (let i = 0; i < dataCodewords; i++) {
+          let v = 0; for (let j = 0; j < 8; j++) v = (v << 1) | (bits[i * 8 + j] || 0);
+          cw[i] = v;
+        }
+        return cw;
+      }
+      function codewordsToBits(data, ecc) {
+        const bits = [];
+        for (const block of [data, ecc]) {
+          for (const cw of block) {
+            for (let i = 7; i >= 0; i--) bits.push((cw >> i) & 1);
+          }
+        }
+        return bits;
+      }
+      function buildFunctionGrid(ver) {
+        const size = 17 + 4 * ver;
+        const modules = Array.from({ length: size }, () => new Array(size).fill(false));
+        const func = Array.from({ length: size }, () => new Array(size).fill(false));
+        const inFinder = (dx, dy) => dx === 0 || dx === 6 || dy === 0 || dy === 6 || (dx >= 2 && dx <= 4 && dy >= 2 && dy <= 4);
+        const placeFinder = (x0, y0) => {
+          for (let dy = -1; dy <= 7; dy++) {
+            for (let dx = -1; dx <= 7; dx++) {
+              const x = x0 + dx, y = y0 + dy;
+              if (x < 0 || y < 0 || x >= size || y >= size) continue;
+              modules[y][x] = (dx >= 0 && dx <= 6 && dy >= 0 && dy <= 6) && inFinder(dx, dy);
+              func[y][x] = true;
+            }
+          }
+        };
+        placeFinder(0, 0); placeFinder(size - 7, 0); placeFinder(0, size - 7);
+        for (let i = 8; i < size - 8; i++) {
+          modules[6][i] = i % 2 === 0; modules[i][6] = i % 2 === 0;
+          func[6][i] = true; func[i][6] = true;
+        }
+        const ac = size - 7;
+        for (let dy = -2; dy <= 2; dy++) {
+          for (let dx = -2; dx <= 2; dx++) {
+            const d = Math.max(Math.abs(dx), Math.abs(dy));
+            modules[ac + dy][ac + dx] = (d === 2 || d === 0);
+            func[ac + dy][ac + dx] = true;
+          }
+        }
+        modules[size - 8][8] = true; func[size - 8][8] = true;
+        for (let i = 0; i <= 8; i++) { func[8][i] = true; func[i][8] = true; }
+        for (let i = 0; i < 8; i++) { func[8][size - 1 - i] = true; func[size - 1 - i][8] = true; }
+        return { modules, func, size, version: ver };
+      }
+      function placeDataBits(grid, bits) {
+        let i = 0; const n = grid.size;
+        for (let right = n - 1; right >= 1; right -= 2) {
+          if (right === 6) right = 5;
+          const upward = ((right + 1) & 2) === 0;
+          for (let vert = 0; vert < n; vert++) {
+            const y = upward ? n - 1 - vert : vert;
+            for (let j = 0; j < 2; j++) {
+              const x = right - j;
+              if (!grid.func[y][x]) {
+                if (i < bits.length) grid.modules[y][x] = bits[i] === 1;
+                i++;
+              }
+            }
+          }
+        }
+      }
+      function maskBit(mask, x, y) {
+        switch (mask) {
+          case 0: return (x + y) % 2 === 0;
+          case 1: return y % 2 === 0;
+          case 2: return x % 3 === 0;
+          case 3: return (x + y) % 3 === 0;
+          case 4: return (Math.floor(y / 2) + Math.floor(x / 3)) % 2 === 0;
+          case 5: return (x * y) % 2 + (x * y) % 3 === 0;
+          case 6: return ((x * y) % 2 + (x * y) % 3) % 2 === 0;
+          case 7: return ((x + y) % 2 + (x * y) % 3) % 2 === 0;
+          default: return false;
+        }
+      }
+      function applyMask(grid, mask) {
+        const n = grid.size;
+        for (let y = 0; y < n; y++) {
+          for (let x = 0; x < n; x++) {
+            if (!grid.func[y][x] && maskBit(mask, x, y)) grid.modules[y][x] = !grid.modules[y][x];
+          }
+        }
+      }
+      function formatBits(mask) {
+        const d = (1 << 3) | mask; let rem = d;
+        for (let i = 0; i < 10; i++) rem = (rem << 1) ^ ((rem >>> 9) * 0x537);
+        return ((d << 10) | rem) ^ 0x5412;
+      }
+      function writeFormat(grid, mask) {
+        const bits = formatBits(mask), n = grid.size;
+        const put = (x, y, i) => { grid.modules[y][x] = ((bits >>> i) & 1) === 1; };
+        for (let i = 0; i <= 5; i++) put(8, i, i);
+        put(8, 7, 6); put(8, 8, 7); put(7, 8, 8);
+        for (let i = 9; i < 15; i++) put(14 - i, 8, i);
+        for (let i = 0; i < 8; i++) put(n - 1 - i, 8, i);
+        for (let i = 8; i < 15; i++) put(8, n - 15 + i, i);
+      }
+      function scoreGrid(modules) {
+        let s = 0, n = modules.length;
+        for (let y = 0; y < n; y++) {
+          let run = 1;
+          for (let x = 1; x < n; x++) {
+            if (modules[y][x] === modules[y][x - 1]) run++;
+            else { if (run >= 5) s += run - 2; run = 1; }
+          }
+          if (run >= 5) s += run - 2;
+        }
+        return s;
+      }
+      function pickMask(grid, bits) {
+        placeDataBits(grid, bits);
+        let best = null, bestScore = Infinity;
+        for (let mask = 0; mask < 8; mask++) {
+          const trial = { modules: grid.modules.map(r => r.slice()), func: grid.func, size: grid.size };
+          applyMask(trial, mask);
+          writeFormat(trial, mask);
+          const sc = scoreGrid(trial.modules);
+          if (sc < bestScore) { bestScore = sc; best = trial.modules; }
+        }
+        return best;
+      }
+      function generateQrSvg(text) {
+        const bytes = Array.from(text).map(c => c.charCodeAt(0));
+        const ver = chooseVersion(bytes.length);
+        const spec = QR_VERSIONS[ver];
+        const data = encodeBytePayload(bytes, spec.data);
+        const ecc = rsRemainder(data, rsDivisor(spec.ec));
+        const bits = codewordsToBits(data, ecc);
+        const grid = buildFunctionGrid(ver);
+        const mods = pickMask(grid, bits);
+        const n = mods.length, q = 3, dim = n + q * 2;
+        const parts = ['<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + dim + ' ' + dim + '" shape-rendering="crispEdges" style="width:100%; height:auto; display:block;">',
+          '<rect width="' + dim + '" height="' + dim + '" fill="#fff"/>'];
+        for (let y = 0; y < n; y++) {
+          for (let x = 0; x < n; x++) {
+            if (mods[y][x]) parts.push('<rect x="' + (x + q) + '" y="' + (y + q) + '" width="1" height="1" fill="#000"/>');
+          }
+        }
+        parts.push('</svg>');
+        return parts.join('');
+      }
+
+      function showQrModal(url) {
+        if (!qrModal || !qrCodeContainer || !qrInviteUrlText) return;
+        qrCodeContainer.innerHTML = '';
+        qrInviteUrlText.textContent = url;
+        try {
+          const svg = generateQrSvg(url);
+          qrCodeContainer.innerHTML = svg;
+        } catch (err) {
+          qrCodeContainer.innerHTML = `<div style="color:#d73a49; padding:20px; font-size:12px;">Não foi possível gerar QR Code: ${esc(err.message)}</div>`;
+        }
+        qrModal.classList.add('active');
+      }
+
       // Actions
       btnRefresh.addEventListener('click', () => {
         pollNetwork();
@@ -1785,6 +2209,65 @@
           showToast('Falha ao disparar checkpoint remoto: ' + err.message, 'error');
         }
       });
+
+      if (btnTogglePause) {
+        btnTogglePause.addEventListener('click', async () => {
+          const action = isNodePaused ? 'resume' : 'pause';
+          try {
+            const res = await fetch(`${currentEndpoint}/memory/${action}`, { method: 'POST' });
+            if (res.ok) {
+              showToast(isNodePaused ? 'Sustentação da rede retomada!' : 'Ingestão da rede pausada!', isNodePaused ? 'success' : 'info');
+              pollNetwork();
+            } else {
+              showToast(`Falha ao alterar estado da rede: HTTP ${res.status}`, 'error');
+            }
+          } catch (err) {
+            showToast(`Erro de conexão com o nó local: ${err.message}`, 'error');
+          }
+        });
+      }
+
+      if (btnQrModal) {
+        btnQrModal.addEventListener('click', () => showQrModal(btnOpenApp.href));
+      }
+      if (btnCloseQrModal) {
+        btnCloseQrModal.addEventListener('click', () => qrModal.classList.remove('active'));
+      }
+      if (qrModal) {
+        qrModal.addEventListener('click', (e) => {
+          if (e.target === qrModal) qrModal.classList.remove('active');
+        });
+      }
+      if (btnCopyInviteFromModal) {
+        btnCopyInviteFromModal.addEventListener('click', () => {
+          navigator.clipboard.writeText(qrInviteUrlText.textContent).then(() => {
+            showToast('Link de convite copiado!', 'success');
+          });
+        });
+      }
+
+      if (btnExportDiag) {
+        btnExportDiag.addEventListener('click', () => {
+          const diag = {
+            generatedAt: new Date().toISOString(),
+            machine: currentTelemetry?.machine || 'ARGON18',
+            endpoint: currentEndpoint,
+            telemetry: currentTelemetry,
+            counts: currentState?.counts || null,
+            vaults: currentVaults,
+            recentLogs: currentLogs,
+            state: currentState
+          };
+          const blob = new Blob([JSON.stringify(diag, null, 2)], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `vox-diagnostics-${(currentTelemetry?.machine || 'ARGON18').toLowerCase()}-${Date.now()}.json`;
+          a.click();
+          URL.revokeObjectURL(url);
+          showToast('Diagnóstico baixado com sucesso!', 'success');
+        });
+      }
 
       btnCopyInvite.addEventListener('click', () => {
         const url = btnOpenApp.href;

@@ -3,6 +3,7 @@
  * ADR-013: Incentivo à infraestrutura e colaboração cívica sem alcances comprados nem plutocracia.
  */
 import { computeBlobHash } from "./media-blob.js";
+import * as localAccount from "./local-account.js";
 
 export const SCHEMA_VOXEL_RECEIPT = "vox-voxel-receipt-v1";
 export const SCHEMA_VOXEL_PASSPORT = "vox-voxel-passport-v1";
@@ -361,4 +362,43 @@ export async function checkAndRecordNodeZeroReward(routeId, isNodeOnline, now = 
 
   storage.setItem(LAST_NODE_REWARD_KEY, String(now));
   return { rewarded: true, receipt, amount: receipt.amount };
+}
+
+function resolveActiveRouteId(routeId) {
+  if (routeId) return routeId;
+  return localAccount.getCachedRouteIdSync ? localAccount.getCachedRouteIdSync() : null;
+}
+
+async function probeRelayOnline(checkRelayFn) {
+  if (typeof checkRelayFn !== "function") return false;
+  try {
+    const probe = await checkRelayFn();
+    return Boolean(probe?.online);
+  } catch {
+    return false;
+  }
+}
+
+export async function triggerLocalNodeBoostReward({
+  routeId = null,
+  checkRelayFn = null,
+  toastFn = null,
+  now = Date.now(),
+  storage = globalThis.localStorage,
+} = {}) {
+  const targetRoute = resolveActiveRouteId(routeId);
+  if (!targetRoute) return { ok: false, reason: "no-routeId" };
+
+  const isOnline = await probeRelayOnline(checkRelayFn);
+  if (!isOnline) return { ok: false, reason: "node-offline" };
+
+  const rewardRes = await checkAndRecordNodeZeroReward(targetRoute, true, now, storage);
+  if (rewardRes.rewarded) {
+    if (typeof toastFn === "function") {
+      toastFn(`⚡ Nó Vox Populi ativo: +${rewardRes.amount} Voxels creditados na Forja!`, "info");
+    }
+    return { ok: true, rewarded: true, amount: rewardRes.amount, receipt: rewardRes.receipt };
+  }
+
+  return { ok: true, rewarded: false, reason: rewardRes.reason, retryInMs: rewardRes.retryInMs };
 }

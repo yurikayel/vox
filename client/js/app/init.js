@@ -14,6 +14,7 @@ import { openZapModal } from "./zap-modal.js";
 import * as centralMemory from "../central-memory.js";
 import * as peers from "../peers.js";
 import * as localAccount from "../local-account.js";
+import * as voxels from "../voxels.js";
 import {
   showHome,
   showTagFeed,
@@ -127,6 +128,11 @@ export function initGossipListeners() {
 
   centralMemory.startCentralMemoryLoop({
     onHydrated: () => refreshAfterCentralMemorySync(),
+  });
+
+  void voxels.triggerLocalNodeBoostReward({
+    checkRelayFn: peers.checkDesktopRelay,
+    toastFn: share.showToast,
   });
 }
 

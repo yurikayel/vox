@@ -394,3 +394,56 @@ test("voxels-node: checkAndRecordNodeZeroReward bonifica nó ativo e respeita co
   assert.equal(secondReward.rewarded, true);
   assert.equal(secondReward.amount, 10);
 });
+
+test("voxels-boost: triggerLocalNodeBoostReward integra probe de rede e toast de notificacao", async () => {
+  const storage = createMockStorage();
+  let toastMsg = "";
+  const mockToast = (msg) => { toastMsg = msg; };
+  const now = 50_000_000;
+
+  // Sem routeId
+  const noRoute = await voxels.triggerLocalNodeBoostReward({ routeId: "", storage });
+  assert.equal(noRoute.ok, false);
+  assert.equal(noRoute.reason, "no-routeId");
+
+  // Nó offline
+  const offlineProbe = async () => ({ online: false });
+  const offlineRes = await voxels.triggerLocalNodeBoostReward({
+    routeId: "vx_boost_tester",
+    checkRelayFn: offlineProbe,
+    toastFn: mockToast,
+    now,
+    storage,
+  });
+  assert.equal(offlineRes.ok, false);
+  assert.equal(offlineRes.reason, "node-offline");
+  assert.equal(toastMsg, "");
+
+  // Nó online com sucesso
+  const onlineProbe = async () => ({ online: true, data: { cachedCount: 42 } });
+  const successRes = await voxels.triggerLocalNodeBoostReward({
+    routeId: "vx_boost_tester",
+    checkRelayFn: onlineProbe,
+    toastFn: mockToast,
+    now,
+    storage,
+  });
+  assert.equal(successRes.ok, true);
+  assert.equal(successRes.rewarded, true);
+  assert.equal(successRes.amount, 10);
+  assert.ok(toastMsg.includes("+10 Voxels creditados na Forja"));
+
+  // Nova checagem em cooldown não dispara toast
+  toastMsg = "";
+  const cooldownRes = await voxels.triggerLocalNodeBoostReward({
+    routeId: "vx_boost_tester",
+    checkRelayFn: onlineProbe,
+    toastFn: mockToast,
+    now: now + 500,
+    storage,
+  });
+  assert.equal(cooldownRes.ok, true);
+  assert.equal(cooldownRes.rewarded, false);
+  assert.equal(cooldownRes.reason, "cooldown-active");
+  assert.equal(toastMsg, "");
+});
