@@ -29,9 +29,12 @@ function shareTopicAria(topicId) {
 export function renderTopicDetailText(topicId, title, bodyText, notaryRecord = null) {
   const disp = postOwnership.formatPostDisplay({ title, body: bodyText });
   if (disp.mode === "empty") return "";
-  const fullText = bodyText || disp.body || disp.text || "";
+  const titleHtml = (disp.mode === "title-body" && disp.title)
+    ? `<h1 class="topic-detail-title" style="margin:0 0 0.75rem; font-size:1.35rem; line-height:1.3;">${escapeHtml(disp.title)}</h1>`
+    : "";
+  const fullText = disp.body || bodyText || disp.text || "";
   const notaryHtml = notaryRecord ? renderNotaryBadgeHtml(notaryRecord) : "";
-  return `<div class="post-body post-body-md post-topic-detail" style="font-size:0.98rem; line-height:1.5; margin:0.75rem 0 0;">${renderPostBodyMarkdown(fullText)}${notaryHtml}</div>`;
+  return `<div class="post-body post-body-md post-topic-detail" style="font-size:0.98rem; line-height:1.5; margin:0.75rem 0 0;">${titleHtml}${renderPostBodyMarkdown(fullText)}${notaryHtml}</div>`;
 }
 
 function renderTopicVideoHtml(v) {
@@ -199,15 +202,15 @@ function renderTopicHeader(author, labels, topic, topicTs) {
     </div>`;
 }
 
-function renderTopicReplyRow(r, isMod, { depth = 0, topicId = "", commId = "" } = {}) {
+function renderTopicReplyRow(r, isMod, { depth = 0, topicId = "", commId = "", isLocked = false } = {}) {
   const rAuthor = r.author || r.owner || "";
   const rLabels = resolvePostAuthorLabels(rAuthor, { authorDisplay: r.authorDisplay, isOwnLocalPost: r.isOwnLocalPost });
   const rBadge = r.isLocalP2p ? `<span class="badge-pill p2p-pill">Na rede</span>` : `<span class="badge-pill permanent-pill">Guardado</span>`;
   const rTime = postTimeParts(r.ts);
   const modBtn = isMod ? `<button class="btn btn-sm btn-danger btn-mod-hide" data-id="${escapeHtml(r.id)}" data-type="reply">🛡️</button>` : "";
   const replyHref = `#/compose/reply?t=${encodeURIComponent(topicId)}&c=${encodeURIComponent(commId)}&p=${encodeURIComponent(r.id)}`;
-  const replyBtn = topicId ? `<a class="post-comment-action btn-reply-to-reply" href="${replyHref}" aria-label="Responder a ${escapeHtml(rLabels.authorDisplay)}">Responder</a>` : "";
-  const indent = depth > 0 ? ` style="margin-left:${depth * 20}px; border-left:2px solid var(--border, #ddd);"` : "";
+  const replyBtn = (topicId && !isLocked) ? `<a class="post-comment-action btn-reply-to-reply" href="${replyHref}" aria-label="Responder a ${escapeHtml(rLabels.authorDisplay)}">Responder</a>` : "";
+  const indent = depth > 0 ? ` style="margin-left:${Math.min(depth * 14, 48)}px; border-left:2px solid var(--border, #ddd);"` : "";
 
   return `
     <div class="reply-item card reply" id="reply-${escapeHtml(r.id)}" data-depth="${depth}"${indent}>
@@ -243,7 +246,7 @@ function renderTopicRepliesBlock(topicId, commId, replies, isMod, isLocked = fal
     return `${actionBar}${lockNotice}<div class="empty"><p>${isLocked ? "Nenhuma resposta antes do encerramento." : "Sem respostas ainda. Inicie o debate!"}</p></div>`;
   }
   const rows = flattenReplyThread(replies)
-    .map(({ reply, depth }) => renderTopicReplyRow(reply, isMod, { depth, topicId, commId }))
+    .map(({ reply, depth }) => renderTopicReplyRow(reply, isMod, { depth, topicId, commId, isLocked }))
     .join("");
   return `${actionBar}${lockNotice}<div class="thread-replies">${rows}</div>`;
 }
@@ -262,7 +265,9 @@ function extractTopicViewContext(topic, topicData, communityId) {
 
 export function renderTopic(main, topicId, topic, replies, { topicData = null, isMod = false, communityId = "" } = {}) {
   const ctx = extractTopicViewContext(topic, topicData, communityId);
-  const backLink = ctx.commId ? `<a class="back-link" href="#/c/${encodeURIComponent(ctx.commId)}">← Voltar à comunidade</a>` : "";
+  const backLink = ctx.commId
+    ? `<a class="back-link" href="#/c/${encodeURIComponent(ctx.commId)}">← Voltar à comunidade</a>`
+    : `<a class="back-link" href="#/">← Voltar ao início</a>`;
   if (gossipRetract.shouldHideGossipDeletedPost(topic)) {
     main.innerHTML = `${backLink}${gossipRetract.renderGossipDeletedTopicShellHtml()}`;
     return;

@@ -45,7 +45,7 @@ export {
   renderFeed,
 } from "./render/feed.js";
 
-export { renderTopic } from "./render/topic.js";
+export { renderTopic, renderTopicDetailText } from "./render/topic.js";
 
 export {
   renderHome,

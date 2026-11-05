@@ -424,11 +424,20 @@ function bindCommunityModHideButtons(communityId) {
   });
 }
 
+function normalizeSearchText(str) {
+  return String(str || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
 function filterTopicRows(rows, q, main) {
   let visibleCount = 0;
+  const normQ = normalizeSearchText(q);
   rows.forEach((row) => {
-    const text = row.textContent.toLowerCase();
-    const matches = !q || text.includes(q);
+    const text = normalizeSearchText(row.textContent);
+    const matches = !normQ || text.includes(normQ);
     row.style.display = matches ? "" : "none";
     if (matches) visibleCount++;
   });
@@ -450,8 +459,7 @@ function bindCommunityTopicSearch(main) {
   const searchInput = main.querySelector("#input-comm-topic-search");
   if (!searchInput) return null;
   searchInput.addEventListener("input", (e) => {
-    const q = e.target.value.toLowerCase().trim();
-    filterTopicRows(main.querySelectorAll(".community-topic-row"), q, main);
+    filterTopicRows(main.querySelectorAll(".community-topic-row"), e.target.value, main);
   });
   return searchInput;
 }

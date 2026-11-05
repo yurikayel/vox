@@ -172,7 +172,9 @@ function resolveTopicBadgesHtml(topic) {
 
 function resolveTopicBumpSpan(topic) {
   if (Number(topic.lastReplyTs) <= Number(topic.ts)) return "";
-  return `<span class="community-topic-bump" title="Atividade recente no tópico"> · ativa ${escapeHtml(formatTimeAgo(topic.lastReplyTs))}</span>`;
+  const rel = formatTimeAgo(topic.lastReplyTs);
+  const phrase = rel === "agora" ? "ativa agora" : `ativa há ${rel}`;
+  return `<span class="community-topic-bump" title="Atividade recente no tópico"> · ${escapeHtml(phrase)}</span>`;
 }
 
 export function renderCommunityTopicRow(topic, { communityId: _communityId = "", communityTitle: _communityTitle = "" } = {}) {
