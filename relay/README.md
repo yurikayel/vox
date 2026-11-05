@@ -38,10 +38,29 @@ Ao abrir o Vox no navegador (`http://127.0.0.1:8080`), o cliente consulta automa
 
 | Rota | Método | Descrição |
 |---|---|---|
-| `/health` | `GET` | Status, `communityIndexes`, `cacheBytes`, `maxCacheBytes` (env `VOX_RELAY_MAX_CACHE_MB`). |
+| `/health` | `GET` | Status, `communityIndexes`, `cacheBytes`, `maxCacheBytes` e resumo `centralMemory`. |
 | `/tx/<txId>` | `GET` | Retorna o payload da transação (Cache HIT se local; busca em `arweave.net` se MISS). |
 | `/vox/index/<commId>.json` | `GET` | Retorna índice consolidado da comunidade armazenado localmente. |
 | `/vox/mirror` | `POST` | Salva espelho local de comunidade recebido pelo cliente. |
+| `/inbox/<address>` | `GET` / `POST` / `DELETE` | Inbox efêmero com TTL para envelopes E2E cifrados de DM (`inbox.py`). |
+| `/relay/envelope/<room>` | `GET` / `POST` | Relay cego (*Blind Relay* — `blind_relay.py`) para pacotes opacos sem inspeção de conteúdo. |
+| `/memory/status` | `GET` | Status e contadores da memória central (`posts`, `profiles`, `tombstones`, `manifests`, `blobs`, `tunnelUrl`). |
+| `/memory/state` | `GET` | Exportação completa do estado persistido localmente (`central_memory.py`). |
+| `/memory/ingest` | `POST` | Ingestão unitária (`GOSSIP`, `GOSSIP_UPDATE`, `GOSSIP_DELETE`, `PROFILE_CARD`, `MEDIA_BLOB`) com journal append-only. |
+| `/memory/sync` | `POST` | Sincronização bidirecional incremental (Delta Sync via `clientRevision`, `since` e `knownBlobs`). |
+| `/memory/blob/<hash>` | `GET` | Recuperação direta de blob multimídia deduplicado por SHA-256. |
+
+---
+
+## 💾 Nó Windows System Tray Modo 3 (`VoxPopuli-ZeroMemory.exe`)
+
+Para sustentar a memória da rede durante Alpha e Beta sem depender de janela de terminal aberta:
+
+* **Código-fonte e compilador:** [`../tools/zero-central-memory-windows/`](../tools/zero-central-memory-windows/) (`build.ps1`, usa `csc.exe` nativo do Windows, gerando binário standalone de **~170 KB**).
+* **Arquitetura Modo 3:**
+  * **WAL append-only (`< 0,2 ms`):** grava cada evento imediatamente em `central_memory.journal.ndjson`.
+  * **Batch Snapshot (2s):** consolida atomicamente em `central_memory.state.json` + `.bak` a cada 2 segundos se houver alterações.
+  * **Túnel HTTPS Cloudflare + Signaling Beacon:** inicia automaticamente `cloudflared` (se instalado) e anuncia a URL pública em `wss://vox-sentinel.onrender.com` (`vx_zero_memory_beacon`) para descoberta automática por clientes remotos.
 
 ---
 

@@ -76,6 +76,7 @@ O **Dossiê N=25** foi escolhido como a fonte viva e exclusiva de checkboxes `[ 
   - [adr/009-multi-gateway-graphql-corroboration.md](./adr/009-multi-gateway-graphql-corroboration.md) — ADR-009: Corroboração de múltiplos gateways GraphQL
   - [adr/010-vox-contribution-engine-execute-e-ajude.md](./adr/010-vox-contribution-engine-execute-e-ajude.md) — ADR-010: Motor de contribuição voluntária e nós anfitriões
   - [adr/011-taxonomia-tripartite-produtos-vox.md](./adr/011-taxonomia-tripartite-produtos-vox.md) — ADR-011: Taxonomia canônica dual (Vox Cliente e Vox Populi Nó Dedicado)
+  - [adr/012-soberania-digital-cintura-fina-cartuchos-webxdc.md](./adr/012-soberania-digital-cintura-fina-cartuchos-webxdc.md) — ADR-012: Soberania Digital na Vox (Cintura Fina Criptográfica e Cartuchos Cívicos Webxdc)
 - [piloto-comunidade-go-no-go.md](./piloto-comunidade-go-no-go.md) — gate humano do piloto (V-P09)  
 - [piloto-comunidade-retrospectiva-template.md](./piloto-comunidade-retrospectiva-template.md) — template retrospectiva  
 - [../client/DEV.md](../client/DEV.md) — guia de desenvolvimento §0–37  
@@ -84,4 +85,4 @@ O **Dossiê N=25** foi escolhido como a fonte viva e exclusiva de checkboxes `[ 
 - `client/sw.js` — `CACHE_NAME` canônico  
 - [revisao-estado-2026-10-25.md](./revisao-estado-2026-10-25.md) — snapshot auditoria pós-agentes (o que shipped vs P0 humano)
 
-**Versão:** 1.2 · out/2026
+**Versão:** 1.3 · nov/2026

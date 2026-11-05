@@ -10,10 +10,12 @@ client/config/oauth.local.json
 *.jwk.json
 relay/.cache/
 relay/.inbox/
+relay/.central_memory/
 __pycache__/
 *.pyc
 
 build/
+scratch/
 
 # Test & Coverage
 .coverage
