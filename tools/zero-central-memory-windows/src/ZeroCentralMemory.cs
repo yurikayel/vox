@@ -801,15 +801,8 @@ namespace Vox.ZeroMemory {
 
         public bool TryStart() {
             if (running) return true;
-            try {
-                relay3921 = new TcpListener(IPAddress.Loopback, 3921);
-                relay3921.ExclusiveAddressUse = false;
-                relay3921.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-                relay3921.Start();
-            } catch {
-                relay3921 = null;
-                return false;
-            }
+            relay3921 = CreateListenerWithRetry(3921, 5);
+            if (relay3921 == null) return false;
             running = true;
             StartAcceptLoop(relay3921, false);
             TryStartOptional(ref relay3920, 3920, false);
@@ -821,16 +814,24 @@ namespace Vox.ZeroMemory {
             return true;
         }
 
-        private void TryStartOptional(ref TcpListener listener, int port, bool isControl) {
-            try {
-                listener = new TcpListener(IPAddress.Loopback, port);
-                listener.ExclusiveAddressUse = false;
-                listener.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-                listener.Start();
-                StartAcceptLoop(listener, isControl);
-            } catch {
-                listener = null;
+        private static TcpListener CreateListenerWithRetry(int port, int maxAttempts) {
+            for (int i = 0; i < maxAttempts; i++) {
+                try {
+                    var l = new TcpListener(IPAddress.Loopback, port);
+                    l.ExclusiveAddressUse = false;
+                    l.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+                    l.Start();
+                    return l;
+                } catch {
+                    if (i < maxAttempts - 1) Thread.Sleep(250);
+                }
             }
+            return null;
+        }
+
+        private void TryStartOptional(ref TcpListener listener, int port, bool isControl) {
+            listener = CreateListenerWithRetry(port, 3);
+            if (listener != null) StartAcceptLoop(listener, isControl);
         }
 
         private void StartAcceptLoop(TcpListener listener, bool isControl) {
