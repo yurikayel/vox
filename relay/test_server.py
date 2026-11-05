@@ -19,12 +19,14 @@ from unittest.mock import patch
 
 from relay import server
 from relay import inbox
+from relay import blind_relay
 
 
 class TestVoxRelayServer(unittest.TestCase):
     def setUp(self):
         server.CACHE_DIR = Path(self.temp_dir) / self._testMethodName / "cache"
         inbox.INBOX_DIR = Path(self.temp_dir) / self._testMethodName / "inbox"
+        blind_relay.RELAY_DIR = Path(self.temp_dir) / self._testMethodName / "blind_relay"
         server.INTEGRITY_FAILURES = 0
         server.ensure_cache_dir()
 
@@ -33,8 +35,10 @@ class TestVoxRelayServer(unittest.TestCase):
         cls.temp_dir = tempfile.mkdtemp(prefix="vox_test_cache_")
         cls.orig_cache_dir = server.CACHE_DIR
         cls.orig_inbox_dir = inbox.INBOX_DIR
+        cls.orig_relay_dir = blind_relay.RELAY_DIR
         server.CACHE_DIR = Path(cls.temp_dir) / "cache"
         inbox.INBOX_DIR = Path(cls.temp_dir) / "inbox"
+        blind_relay.RELAY_DIR = Path(cls.temp_dir) / "blind_relay"
 
         cls.httpd = HTTPServer(("127.0.0.1", 0), server.VoxRelayHandler)
         cls.port = cls.httpd.server_address[1]
@@ -48,6 +52,7 @@ class TestVoxRelayServer(unittest.TestCase):
         cls.httpd.server_close()
         server.CACHE_DIR = cls.orig_cache_dir
         inbox.INBOX_DIR = cls.orig_inbox_dir
+        blind_relay.RELAY_DIR = cls.orig_relay_dir
         shutil.rmtree(cls.temp_dir, ignore_errors=True)
 
     def _url(self, path):
@@ -787,6 +792,59 @@ class TestVoxRelayServer(unittest.TestCase):
                 os.environ.pop("VOX_RELAY_MAX_CACHE_MB", None)
             else:
                 os.environ["VOX_RELAY_MAX_CACHE_MB"] = prev
+
+    def test_blind_relay_envelope_http_roundtrip(self):
+        env = {
+            "version": 1,
+            "sender": "feed" * 16,
+            "audience": "aud" * 21 + "a",
+            "documentId": "bairro_centro",
+            "timestamp": 1700000000000,
+            "nonce": "n" * 16,
+            "payload": "payload_cifrado",
+            "sig": "s" * 128,
+        }
+        body = json.dumps(env).encode("utf-8")
+        req = urllib.request.Request(
+            self._url("/relay/envelope/bairro_centro"),
+            data=body,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req) as resp:
+            self.assertEqual(resp.status, 201)
+            stored = json.loads(resp.read().decode("utf-8"))
+            self.assertEqual(stored["channelId"], "bairro_centro")
+
+        # GET da lista de envelopes
+        with urllib.request.urlopen(self._url("/relay/envelope/bairro_centro")) as resp:
+            self.assertEqual(resp.status, 200)
+            items = json.loads(resp.read().decode("utf-8"))
+            self.assertEqual(len(items), 1)
+            self.assertEqual(items[0]["documentId"], "bairro_centro")
+
+    def test_blind_relay_snapshot_http_roundtrip(self):
+        snap = {
+            "epoch": 3,
+            "timestamp": 1700000500000,
+            "snapshot": "YJS_V2_SNAPSHOT_BASE64",
+        }
+        body = json.dumps(snap).encode("utf-8")
+        req = urllib.request.Request(
+            self._url("/relay/snapshot/sindicato_trabalho"),
+            data=body,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req) as resp:
+            self.assertEqual(resp.status, 201)
+
+        # GET do snapshot mais recente
+        with urllib.request.urlopen(self._url("/relay/snapshot/sindicato_trabalho")) as resp:
+            self.assertEqual(resp.status, 200)
+            data = json.loads(resp.read().decode("utf-8"))
+            self.assertEqual(data["epoch"], 3)
+            self.assertEqual(data["snapshot"], "YJS_V2_SNAPSHOT_BASE64")
 
 
 if __name__ == "__main__":
