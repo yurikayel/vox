@@ -26,15 +26,15 @@ Acesse a página visual interativa em **[https://yurikayel.github.io/vox/downloa
 O ecossistema é estritamente dividido em dois papéis complementares ([ADR-011](docs/adr/011-taxonomia-tripartite-produtos-vox.md)):
 - **`vox` (Cliente):** Para quem quer **só usar a rede e fim**. Interface cívica, composição de mensagens, enquetes, votações populares e mensagens ponto a ponto criptografadas sem precisar entender de técnica ou servidores.
 - **`vox populi` (Nó de Apoio):** Para quem quiser **colaborar ativamente com a infraestrutura**. Opera em segundo plano mantendo cache seguro (SHA-256) e provendo relay cego local para sua vizinhança ou residência, sem interface gráfica pesada e sem telemetria.
-- **⚡ Efeito Boost Local:** Abrir ambos no mesmo computador ou rede Wi-Fi conecta o cliente ao nó em loopback (`127.0.0.1:3921`), acelerando a renderização através de cache local verificado sem consumir franquia de internet.
+- **⚡ Efeito Boost Local:** Abrir ambos no mesmo computador ou rede Wi-Fi conecta o cliente ao nó em loopback HTTP (`127.0.0.1:3920`), acelerando a renderização através de cache local verificado sem consumir franquia de internet.
 
 ### Matriz de Distribuição e Suporte aos 4 Sistemas Operacionais
 
 | Sistema Operacional | Papel: `vox` (Cliente Cívico) | Papel: `vox populi` (Nó de Apoio Comunitário) | Como Funciona Sob o Capô |
 |:---|:---|:---|:---|
-| **1. Microsoft Windows**<br>(10 / 11) | [**`Vox.exe`**](client/downloads/Vox.exe) *(967 KiB)* | [**`VoxPopuli.exe`**](client/downloads/VoxPopuli.exe) *(11.7 MB)* | **Cliente:** Executável nativo com runtime WebView2 já presente no Windows (sem inchaço do Chromium/Electron; consome < 40 MB RAM).<br>**Nó:** Serviço sem janela com ícone na bandeja (*System Tray*), operando relay local e cache criptográfico. |
-| **2. Google Android**<br>(5.0+) | [**`vox.apk`**](client/downloads/vox.apk) *(74 KiB)* | [**`vox-populi.apk`**](client/downloads/vox-populi.apk) *(74 KiB)* | **Cliente (`org.vox.client`):** Micro-APK ultraleve instalável via sideload direto. Roda a PWA em tela cheia via WebView do Android com aceleração gráfica.<br>**Nó (`org.vox.populi`):** Projetado para celulares antigos ligados na tomada em Wi-Fi. Foreground service silencioso emitindo sinal e mantendo a malha viva 24/7 sem gastar 4G/5G. |
-| **3. GNU/Linux & Pi**<br>(x86_64, ARM64, SBC) | [**Guia Linux WebKitGTK**](tools/desktop-linux/) *(< 30 KiB)* | [**Guia Daemon systemd**](vox-populi/) *(daemon)* | **Cliente:** Lançador ultraleve integrando com WebKitGTK nativo do GNOME/KDE.<br>**Nó:** Daemon de baixo consumo (< 15 MB RAM) empacotado para `systemd`, ideal para Raspberry Pi (3, 4, 5, Zero 2W) e servidores domésticos. |
+| **1. Microsoft Windows**<br>(10 / 11) | [**`Vox.exe`**](client/downloads/Vox.exe) *(967 KiB)* | [**`VoxPopuli.exe`**](client/downloads/VoxPopuli.exe) *(11.7 MB)* | **Cliente:** Executável nativo com runtime WebView2 já presente no Windows (sem empacotar o Chromium/Electron; consome ~40 MB RAM em medições locais).<br>**Nó:** Serviço sem janela com ícone na bandeja (*System Tray*), operando relay local HTTP (`:3920`) e cache criptográfico. |
+| **2. Google Android**<br>(5.0+) | [**`vox.apk`**](client/downloads/vox.apk) *(74 KiB)* | [**`vox-populi.apk`**](client/downloads/vox-populi.apk) *(74 KiB)* | **Cliente (`org.vox.client`):** Micro-APK leve instalável via sideload direto. Roda a PWA em tela cheia via WebView do Android com aceleração gráfica.<br>**Nó (`org.vox.populi`):** Projetado para celulares ligados na tomada em Wi-Fi. Foreground service silencioso mantendo a malha viva 24/7 sem gastar dados móveis. |
+| **3. GNU/Linux & Pi**<br>(x86_64, ARM64, SBC) | [**Guia Linux WebKitGTK**](tools/desktop-linux/) *(< 30 KiB)* | [**Guia Daemon systemd**](vox-populi/) *(daemon)* | **Cliente:** Lançador leve integrando com WebKitGTK nativo do GNOME/KDE.<br>**Nó:** Daemon de baixo consumo (~15 MB RAM em repouso) empacotado para `systemd`, ideal para Raspberry Pi (3, 4, 5, Zero 2W) e servidores domésticos. |
 | **4. Apple**<br>(iOS / iPadOS & macOS) | [**Abrir Safari PWA**](https://vox-9df.pages.dev/) *(PWA)* | [**Guia macOS launchd**](tools/node-macos/) *(launchd)* | **Cliente (iOS):** Adicione à *Tela de Início* no Safari (*Compartilhar* &rarr; *Tela de Início*). Ganha contêiner isolado, **fica isento da limpeza de 7 dias do Safari (ITP)** e expande a quota de armazenamento para até 60% do disco.<br>**Nó (macOS):** Serviço de segundo plano via `launchd` para Mac Mini ou MacBooks como nó doméstico. |
 
 ---
@@ -80,8 +80,8 @@ O Service Worker pode manter uma versão anterior do cliente em cache. Depois de
 Para garantir clareza entre o uso cotidiano pelas pessoas e a sustentação técnica por operadores comunitários, o ecossistema organiza-se em dois papéis complementares ([ADR-011](docs/adr/011-taxonomia-tripartite-produtos-vox.md)):
 
 1. **Vox (Cliente):** Aplicativo voltado à pessoa usuária e à deliberação cívica. Disponível em Desktop (`Vox.exe`) e Android (`vox.apk`, `org.vox.client`), com PWA em tela cheia, navegação rápida, composição cívica e detecção de nó local para ativação automática de **boost**.
-2. **Vox Populi (Nó Dedicado):** Serviço de infraestrutura comunitária de baixo consumo. Disponível em Windows (`VoxPopuli.exe`), Android (`vox-populi.apk`, `org.vox.populi`) e Linux (`vox-populi/`), operando relay HTTP em loopback (`127.0.0.1:3921`), cache SHA-256 e controle de recursos.
-3. **Sinergia do Boost:** Abrir ambos potencializa a experiência: o cliente se conecta ao nó dedicado local, acelerando o carregamento via cache local verificado e ativando o modo de alta prontidão.
+2. **Vox Populi (Nó Dedicado):** Serviço de infraestrutura comunitária de baixo consumo. Disponível em Windows (`VoxPopuli.exe`), Android (`vox-populi.apk`, `org.vox.populi`) e Linux (`vox-populi/`), operando relay HTTP em loopback (`127.0.0.1:3920`), cache SHA-256 e controle de recursos (com sinalização WebRTC opcional em `ws://127.0.0.1:3921`).
+3. **Sinergia do Boost:** Abrir ambos potencializa a experiência: o cliente se conecta ao nó dedicado local em `127.0.0.1:3920`, acelerando o carregamento via cache local verificado e ativando o modo de alta prontidão.
 
 ---
 
@@ -239,7 +239,7 @@ O compromisso do Vox é permanecer aberto: código, protocolos, documentação e
 
 **Estado atual, sem eufemismos:** o repositório ainda tem controle administrativo concentrado em uma pessoa. A governança descrita em [GOVERNANCE.md](./GOVERNANCE.md) trata principalmente das regras de moderação e deliberação de cada comunidade Vox; ela não distribui controle sobre o repositório, releases ou infraestrutura do projeto. Votos dentro de uma comunidade não elegem automaticamente mantenedores nem alteram o código canônico.
 
-**Licença é uma lacuna que precisa ser resolvida:** este repositório não contém um arquivo `LICENSE`. O badge MIT removido anteriormente apontava para um arquivo inexistente, portanto não era evidência de licenciamento. A intenção de manter o Vox aberto está declarada, mas este README não substitui uma licença válida nem esclarece os direitos sobre todas as contribuições existentes. Antes de chamar o checkout atual de software formalmente licenciado como open source, é preciso escolher e publicar uma licença com os direitos necessários confirmados.
+**Licença:** Este repositório é formalmente distribuído sob os termos da licença [MIT](LICENSE). A licença assegura a liberdade de uso, estudo, modificação e redistribuição do código por qualquer cidadão ou coletivo.
 
 ### Como a participação funciona hoje
 

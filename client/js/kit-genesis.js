@@ -3,17 +3,31 @@
  *
  * Implementa:
  * 1. 3 arquétipos de comunidade soberana congelados (Kit Bairro, Sindicato, Coletivo);
- * 2. Validação estrita de esquema (roles convergentes, canais, cartuchos .xdc, securityPolicy);
- * 3. Motor de gênese para instanciar comunidades cívicas com canais e cartuchos pré-configurados;
- * 4. Zero dependências externas e 100% de integridade declarativa.
+ * 2. Validação estrita de esquema e coerência cruzada (roles x canais x cartuchos x securityPolicy);
+ * 3. Regra anti-rebaixamento (no-downgrade) em securityPolicyOverrides;
+ * 4. Validação estrita de creatorAddr e IDs aleatórios livres de colisão.
  */
 
-function deepFreeze(obj) {
-  if (obj === null || typeof obj !== "object") return obj;
+const ALLOWED_POLICY_KEYS = new Set([
+  "requirePresenceQr",
+  "allowGuestRead",
+  "minTrustScore",
+  "requirePadesGovBrOnVote",
+  "requireWorkerRegistration",
+  "requireHashVerifiedPin",
+]);
+
+const ALLOWED_CRDT_STRATEGIES = new Set(["id-lookup", "audit-log"]);
+
+export function deepFreeze(obj, seen = new WeakSet()) {
+  if (obj === null || typeof obj !== "object" || Object.isFrozen(obj)) return obj;
+  if (seen.has(obj)) return obj;
+  seen.add(obj);
+
   for (const prop of Object.getOwnPropertyNames(obj)) {
     const val = obj[prop];
     if (val !== null && (typeof val === "object" || typeof val === "function")) {
-      deepFreeze(val);
+      deepFreeze(val, seen);
     }
   }
   return Object.freeze(obj);
@@ -28,7 +42,7 @@ export const KIT_BAIRRO = deepFreeze({
     Admin: ["*"],
     Merchant: ["write:channel:feira-livre-do-bairro", "send:xdc:feira-pix", "read:channel:*"],
     Resident: ["write:channel:zeladoria-e-obras", "read:channel:*"],
-    VerifiedPeer: ["read:channel:*", "write:channel:avisos-comunitarios"],
+    VerifiedPeer: ["read:channel:*", "write:channel:mural-entregas"],
   },
   channels: [
     {
@@ -83,10 +97,16 @@ export const KIT_SINDICATO = deepFreeze({
   id: "kit-sindicato",
   version: "1.0.0",
   title: "Sindicato & Associação de Trabalhadores",
-  description: "Deliberação coletiva, assembleias soberanas com voto assinado PAdES/gov.br e prestação de contas.",
+  description: "Deliberação coletiva, assembleias sindicais, preparação para urna eletrônica e prestação de contas.",
   roles: {
     Admin: ["*"],
-    Delegate: ["create:poll", "close:poll", "write:channel:*", "read:channel:*"],
+    Delegate: [
+      "create:poll",
+      "close:poll",
+      "write:channel:assembleia-permanente",
+      "write:channel:votacoes-e-editais",
+      "read:channel:*",
+    ],
     VerifiedWorker: ["vote:xdc:urna-pades-govbr", "read:channel:*", "write:channel:assembleia-permanente"],
     Auditor: ["audit:signatures", "read:channel:*"],
   },
@@ -100,7 +120,7 @@ export const KIT_SINDICATO = deepFreeze({
     {
       id: "votacoes-e-editais",
       title: "Votações e Editais Oficiais",
-      description: "Urna cívica para deliberações com fé pública",
+      description: "Urna e editais para consultas e deliberações estatutárias",
       writeRole: "Delegate",
     },
     {
@@ -141,7 +161,12 @@ export const KIT_COLETIVO = deepFreeze({
   roles: {
     Admin: ["*"],
     Curator: ["manage:catalog", "write:channel:acervo-livros", "read:channel:*"],
-    Member: ["reserve:item", "write:channel:leituras-e-debates", "read:channel:*"],
+    Member: [
+      "reserve:item",
+      "write:channel:leituras-e-debates",
+      "write:channel:agenda-cultural",
+      "read:channel:*",
+    ],
   },
   channels: [
     {
@@ -207,8 +232,8 @@ export function validateKitManifest(manifest) {
   }
   validateKitMeta(manifest);
   validateKitRoles(manifest.roles);
-  validateKitChannels(manifest.channels);
-  validateKitCartridges(manifest.cartridges);
+  validateKitChannels(manifest.channels, manifest.roles);
+  validateKitCartridges(manifest.cartridges, manifest.channels);
   validateKitSecurityPolicy(manifest.securityPolicy);
   return true;
 }
@@ -236,31 +261,90 @@ function validateKitRoles(roles) {
   }
 }
 
-function validateKitChannels(channels) {
+function validateKitChannels(channels, roles) {
   if (!Array.isArray(channels) || channels.length === 0) {
     throw new Error("Manifesto deve conter uma lista não vazia de canais");
   }
+  const seenIds = new Set();
   for (const ch of channels) {
-    if (!ch.id || !ch.title || typeof ch.writeRole !== "string") {
-      throw new Error("Canal no manifesto deve conter id, title e writeRole");
+    validateSingleChannel(ch, roles, seenIds);
+  }
+}
+
+function validateSingleChannel(ch, roles, seenIds) {
+  if (!ch.id || !ch.title || typeof ch.writeRole !== "string") {
+    throw new Error("Canal no manifesto deve conter id, title e writeRole");
+  }
+  if (seenIds.has(ch.id)) {
+    throw new Error(`ID de canal duplicado no manifesto: '${ch.id}'`);
+  }
+  seenIds.add(ch.id);
+
+  if (!Object.prototype.hasOwnProperty.call(roles, ch.writeRole)) {
+    throw new Error(`writeRole '${ch.writeRole}' do canal '${ch.id}' não existe no mapa de roles`);
+  }
+  if (!hasChannelWritePermission(roles[ch.writeRole], ch.id)) {
+    throw new Error(`writeRole '${ch.writeRole}' não possui permissão de escrita para o canal '${ch.id}'`);
+  }
+  validateAdminChannelIsolation(ch, roles);
+}
+
+function hasChannelWritePermission(permissions, channelId) {
+  if (!Array.isArray(permissions)) return false;
+  return permissions.includes("*") || permissions.includes("write:channel:*") || permissions.includes(`write:channel:${channelId}`);
+}
+
+function validateAdminChannelIsolation(ch, roles) {
+  if (ch.writeRole !== "Admin") return;
+  for (const [roleName, perms] of Object.entries(roles)) {
+    if (roleName === "Admin") continue;
+    if (perms.includes(`write:channel:${ch.id}`)) {
+      throw new Error(`Canal restrito ao Admin '${ch.id}' foi indevidamente atribuído ao papel '${roleName}'`);
     }
   }
 }
 
-function validateKitCartridges(cartridges) {
+function validateKitCartridges(cartridges, channels) {
   if (!Array.isArray(cartridges)) {
     throw new Error("Manifesto deve conter lista de cartuchos (array)");
   }
+  const validChannelIds = new Set(channels.map((c) => c.id));
+  const seenCartIds = new Set();
+
   for (const c of cartridges) {
-    if (!c.id || !c.filename || !c.channelId || !c.crdtStrategy) {
-      throw new Error("Cartucho no manifesto deve conter id, filename, channelId e crdtStrategy");
-    }
+    validateSingleCartridge(c, validChannelIds, seenCartIds);
+  }
+}
+
+function validateSingleCartridge(c, validChannelIds, seenCartIds) {
+  if (!c.id || !c.filename || !c.channelId || !c.crdtStrategy) {
+    throw new Error("Cartucho no manifesto deve conter id, filename, channelId e crdtStrategy");
+  }
+  if (seenCartIds.has(c.id)) {
+    throw new Error(`ID de cartucho duplicado no manifesto: '${c.id}'`);
+  }
+  seenCartIds.add(c.id);
+
+  if (!validChannelIds.has(c.channelId)) {
+    throw new Error(`channelId '${c.channelId}' do cartucho '${c.id}' não existe na lista de canais`);
+  }
+  if (!ALLOWED_CRDT_STRATEGIES.has(c.crdtStrategy)) {
+    throw new Error(`Estratégia CRDT inválida no cartucho '${c.id}': '${c.crdtStrategy}'`);
+  }
+  const threshold = Number(c.epochThreshold);
+  if (!Number.isInteger(threshold) || threshold < 1) {
+    throw new Error(`epochThreshold do cartucho '${c.id}' deve ser um inteiro positivo`);
   }
 }
 
 function validateKitSecurityPolicy(policy) {
   if (!policy || typeof policy !== "object") {
     throw new Error("Manifesto deve definir um objeto securityPolicy");
+  }
+  for (const key of Object.keys(policy)) {
+    if (!ALLOWED_POLICY_KEYS.has(key)) {
+      throw new Error(`Chave desconhecida na política de segurança: '${key}'`);
+    }
   }
 }
 
@@ -271,13 +355,64 @@ export function instantiateCommunityFromKit(kitId, communityMeta = {}) {
   }
   validateKitManifest(manifest);
 
-  const communityId = buildCommunityId(manifest.id, communityMeta.id);
-  const payload = buildCommunityPayload(manifest, communityId, communityMeta);
+  const creatorAddr = validateCreatorAddr(communityMeta.creatorAddr);
+  const communityId = resolveCommunityId(manifest.id, communityMeta.id);
+  const securityPolicy = applyPolicyOverrides(manifest.securityPolicy, communityMeta.securityPolicyOverrides);
+
+  const payload = buildCommunityPayload(manifest, communityId, creatorAddr, communityMeta, securityPolicy);
   return deepFreeze(payload);
 }
 
-function buildCommunityPayload(manifest, communityId, meta) {
-  const creatorAddr = String(meta.creatorAddr || "").trim();
+function validateCreatorAddr(addr) {
+  const clean = String(addr || "").trim();
+  if (!clean) {
+    throw new Error("creatorAddr é obrigatório para instanciar a comunidade");
+  }
+  if (!clean.startsWith("vx_") || clean.length < 8) {
+    throw new Error("creatorAddr deve possuir identificador válido com prefixo 'vx_' e ao menos 8 caracteres");
+  }
+  return clean;
+}
+
+function resolveCommunityId(kitId, customId) {
+  if (customId !== undefined && customId !== null) {
+    const clean = String(customId).trim();
+    if (!/^[a-z0-9_-]{3,64}$/i.test(clean)) {
+      throw new Error("ID de comunidade inválido (deve conter 3 a 64 caracteres alfanuméricos, '-' ou '_')");
+    }
+    return clean;
+  }
+  const cleanPrefix = kitId.replace(/^kit-/, "");
+  const randomSuffix = generateCryptoEntropy();
+  return `comm_${cleanPrefix}_${Date.now().toString(36)}_${randomSuffix}`;
+}
+
+function generateCryptoEntropy() {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID().replace(/-/g, "").slice(0, 8);
+  }
+  return Math.random().toString(36).slice(2, 10);
+}
+
+function applyPolicyOverrides(basePolicy, overrides) {
+  if (!overrides || typeof overrides !== "object") {
+    return { ...basePolicy };
+  }
+  for (const [key, val] of Object.entries(overrides)) {
+    if (!ALLOWED_POLICY_KEYS.has(key)) {
+      throw new Error(`Chave desconhecida em securityPolicyOverrides: '${key}'`);
+    }
+    if (basePolicy[key] === true && val === false) {
+      throw new Error(`Não é permitido rebaixar a política de segurança: '${key}'`);
+    }
+    if (typeof basePolicy[key] === "number" && typeof val === "number" && val < basePolicy[key]) {
+      throw new Error(`Não é permitido reduzir o limiar numérico da política: '${key}'`);
+    }
+  }
+  return { ...basePolicy, ...overrides };
+}
+
+function buildCommunityPayload(manifest, communityId, creatorAddr, meta, securityPolicy) {
   return {
     communityId,
     kitId: manifest.id,
@@ -287,20 +422,9 @@ function buildCommunityPayload(manifest, communityId, meta) {
     createdAt: Date.now(),
     creatorAddr,
     roles: { ...manifest.roles },
-    memberRoles: creatorAddr ? { [creatorAddr]: ["Admin"] } : {},
+    memberRoles: { [creatorAddr]: ["Admin"] },
     channels: manifest.channels.map((ch) => ({ ...ch, communityId })),
     cartridges: manifest.cartridges.map((cart) => ({ ...cart, communityId })),
-    securityPolicy: {
-      ...manifest.securityPolicy,
-      ...(meta.securityPolicyOverrides || {}),
-    },
+    securityPolicy,
   };
-}
-
-function buildCommunityId(kitId, customId) {
-  if (customId && typeof customId === "string" && customId.trim()) {
-    return customId.trim();
-  }
-  const cleanPrefix = kitId.replace(/^kit-/, "");
-  return `comm_${cleanPrefix}_${Date.now()}`;
 }

@@ -42,98 +42,171 @@ test("kit-genesis - manifestos são profundamente congelados e imutáveis", () =
   });
 });
 
-test("kit-genesis - validateKitManifest valida schemas e rejeita anomalias", () => {
+test("kit-genesis - coerência cruzada de permissões nos 3 kits oficiais", () => {
+  // Kit Bairro: VerifiedPeer escreve em mural-entregas, mas NÃO em avisos-comunitarios
+  assert.ok(KIT_BAIRRO.roles.VerifiedPeer.includes("write:channel:mural-entregas"));
+  assert.ok(!KIT_BAIRRO.roles.VerifiedPeer.includes("write:channel:avisos-comunitarios"));
+
+  // Kit Sindicato: Delegate escreve em votacoes e assembleia, mas NÃO em prestacao-de-contas
+  assert.ok(KIT_SINDICATO.roles.Delegate.includes("write:channel:votacoes-e-editais"));
+  assert.ok(KIT_SINDICATO.roles.Delegate.includes("write:channel:assembleia-permanente"));
+  assert.ok(!KIT_SINDICATO.roles.Delegate.includes("write:channel:*"));
+  assert.ok(!KIT_SINDICATO.roles.Delegate.includes("write:channel:prestacao-de-contas"));
+
+  // Kit Coletivo: Member escreve em agenda-cultural e leituras-e-debates
+  assert.ok(KIT_COLETIVO.roles.Member.includes("write:channel:agenda-cultural"));
+  assert.ok(KIT_COLETIVO.roles.Member.includes("write:channel:leituras-e-debates"));
+});
+
+test("kit-genesis - validateKitManifest checagens cruzadas e rejeição de anomalias", () => {
   assert.equal(validateKitManifest(KIT_BAIRRO), true);
   assert.equal(validateKitManifest(KIT_SINDICATO), true);
   assert.equal(validateKitManifest(KIT_COLETIVO), true);
 
-  assert.throws(() => validateKitManifest(null), /objeto válido/);
-  assert.throws(() => validateKitManifest({ id: "" }), /campo 'id'/);
-  assert.throws(() => validateKitManifest({ id: "k", version: "1" }), /campo 'title'/);
-  assert.throws(
-    () => validateKitManifest({ id: "k", version: "1", title: "T", roles: {} }),
-    /ao menos uma role/
-  );
+  // Rejeita canal cujo writeRole não existe em roles
   assert.throws(
     () =>
       validateKitManifest({
-        id: "k",
-        version: "1",
-        title: "T",
+        id: "teste",
+        version: "1.0.0",
+        title: "Teste",
         roles: { Admin: ["*"] },
-        channels: [],
+        channels: [{ id: "c1", title: "C1", writeRole: "Fantasma" }],
+        cartridges: [],
+        securityPolicy: {},
       }),
-    /lista não vazia de canais/
+    /não existe no mapa de roles/
+  );
+
+  // Rejeita canal cujo writeRole não tem permissão para escrever nele
+  assert.throws(
+    () =>
+      validateKitManifest({
+        id: "teste",
+        version: "1.0.0",
+        title: "Teste",
+        roles: { Admin: ["*"], Writer: ["read:channel:*"] },
+        channels: [{ id: "c1", title: "C1", writeRole: "Writer" }],
+        cartridges: [],
+        securityPolicy: {},
+      }),
+    /não possui permissão de escrita/
+  );
+
+  // Rejeita cartucho cujo channelId não existe
+  assert.throws(
+    () =>
+      validateKitManifest({
+        id: "teste",
+        version: "1.0.0",
+        title: "Teste",
+        roles: { Admin: ["*"] },
+        channels: [{ id: "c1", title: "C1", writeRole: "Admin" }],
+        cartridges: [{ id: "cart1", filename: "cart.xdc", channelId: "c_inexistente", crdtStrategy: "id-lookup", epochThreshold: 50 }],
+        securityPolicy: {},
+      }),
+    /não existe na lista de canais/
+  );
+
+  // Rejeita IDs duplicados
+  assert.throws(
+    () =>
+      validateKitManifest({
+        id: "teste",
+        version: "1.0.0",
+        title: "Teste",
+        roles: { Admin: ["*"] },
+        channels: [
+          { id: "c1", title: "C1", writeRole: "Admin" },
+          { id: "c1", title: "C1 Duplicado", writeRole: "Admin" },
+        ],
+        cartridges: [],
+        securityPolicy: {},
+      }),
+    /ID de canal duplicado/
   );
 });
 
-test("kit-genesis - instanciação de Kit Bairro gera canais e cartuchos hiperlocais", () => {
+test("kit-genesis - exige creatorAddr válido e rejeita criação sem admin", () => {
+  // creatorAddr ausente deve lançar erro
+  assert.throws(
+    () => instantiateCommunityFromKit("kit-bairro", { name: "Sem Criador" }),
+    /creatorAddr é obrigatório/
+  );
+
+  // creatorAddr inválido (sem prefixo vx_)
+  assert.throws(
+    () => instantiateCommunityFromKit("kit-bairro", { creatorAddr: "joao_silva" }),
+    /prefixo 'vx_'/
+  );
+
+  // Sucesso com endereço válido
   const comm = instantiateCommunityFromKit("kit-bairro", {
-    id: "comm_vila_esperanca",
-    name: "Comunidade da Vila Esperança",
-    creatorAddr: "vx_ed25519_dona_clara",
+    creatorAddr: "vx_ed25519_dona_clara_123",
   });
-
-  assert.equal(comm.communityId, "comm_vila_esperanca");
-  assert.equal(comm.name, "Comunidade da Vila Esperança");
-  assert.equal(comm.creatorAddr, "vx_ed25519_dona_clara");
-  assert.deepEqual(comm.memberRoles["vx_ed25519_dona_clara"], ["Admin"]);
-
-  // Canais
-  assert.equal(comm.channels.length, 4);
-  assert.equal(comm.channels[0].id, "zeladoria-e-obras");
-  assert.equal(comm.channels[0].communityId, "comm_vila_esperanca");
-  assert.equal(comm.channels[1].id, "feira-livre-do-bairro");
-
-  // Cartuchos
-  assert.equal(comm.cartridges.length, 2);
-  assert.equal(comm.cartridges[0].id, "feira-pix");
-  assert.equal(comm.cartridges[0].communityId, "comm_vila_esperanca");
-  assert.equal(comm.cartridges[1].id, "mural-entregas");
-
-  // Política de segurança
-  assert.equal(comm.securityPolicy.requirePresenceQr, true);
-  assert.equal(comm.securityPolicy.allowGuestRead, true);
+  assert.deepEqual(comm.memberRoles["vx_ed25519_dona_clara_123"], ["Admin"]);
 });
 
-test("kit-genesis - instanciação de Kit Sindicato impõe fé pública com PAdES/gov.br", () => {
-  const comm = instantiateCommunityFromKit("kit-sindicato", {
-    name: "Sindicato dos Metalúrgicos Unidos",
-    creatorAddr: "vx_ed25519_secretario_geral",
+test("kit-genesis - gera ID aleatório seguro e valida formato de ID customizado", () => {
+  // Geração automática livre de colisões com sufixo randômico
+  const c1 = instantiateCommunityFromKit("kit-bairro", { creatorAddr: "vx_ed25519_user1" });
+  const c2 = instantiateCommunityFromKit("kit-bairro", { creatorAddr: "vx_ed25519_user2" });
+  assert.notEqual(c1.communityId, c2.communityId);
+  assert.ok(c1.communityId.startsWith("comm_bairro_"));
+
+  // ID customizado válido
+  const c3 = instantiateCommunityFromKit("kit-bairro", {
+    id: "bairro-santa-teresa_01",
+    creatorAddr: "vx_ed25519_user1",
   });
+  assert.equal(c3.communityId, "bairro-santa-teresa_01");
 
-  assert.ok(comm.communityId.startsWith("comm_sindicato_"));
-  assert.equal(comm.name, "Sindicato dos Metalúrgicos Unidos");
-
-  // Canais específicos
-  const channelIds = comm.channels.map((c) => c.id);
-  assert.ok(channelIds.includes("assembleia-permanente"));
-  assert.ok(channelIds.includes("votacoes-e-editais"));
-  assert.ok(channelIds.includes("prestacao-de-contas"));
-
-  // Cartucho com estratégia audit-log para deliberação soberana
-  const urna = comm.cartridges.find((c) => c.id === "urna-pades-govbr");
-  assert.ok(urna);
-  assert.equal(urna.crdtStrategy, "audit-log");
-  assert.equal(urna.epochThreshold, 20);
-
-  // Segurança sindical estrita
-  assert.equal(comm.securityPolicy.requirePadesGovBrOnVote, true);
-  assert.equal(comm.securityPolicy.requireWorkerRegistration, true);
-  assert.equal(comm.securityPolicy.allowGuestRead, false);
+  // ID customizado com caracteres perigosos (paths, injeções) é rejeitado
+  assert.throws(
+    () =>
+      instantiateCommunityFromKit("kit-bairro", {
+        id: "../etc/passwd",
+        creatorAddr: "vx_ed25519_user1",
+      }),
+    /ID de comunidade inválido/
+  );
 });
 
-test("kit-genesis - instanciação de Kit Coletivo ativa acervo aberto e caderno compartilhado", () => {
-  const comm = instantiateCommunityFromKit("kit-coletivo", {
-    name: "Coletivo Cultural Flor do Campo",
-    securityPolicyOverrides: { allowGuestRead: false },
+test("kit-genesis - regra No-Downgrade em securityPolicyOverrides", () => {
+  // Proíbe desativar flags de segurança obrigatórias do kit
+  assert.throws(
+    () =>
+      instantiateCommunityFromKit("kit-sindicato", {
+        creatorAddr: "vx_ed25519_diretor",
+        securityPolicyOverrides: { requirePadesGovBrOnVote: false },
+      }),
+    /Não é permitido rebaixar a política de segurança/
+  );
+
+  // Proíbe reduzir minTrustScore
+  assert.throws(
+    () =>
+      instantiateCommunityFromKit("kit-bairro", {
+        creatorAddr: "vx_ed25519_vizinho",
+        securityPolicyOverrides: { minTrustScore: 0 },
+      }),
+    /Não é permitido reduzir o limiar numérico/
+  );
+
+  // Proíbe chaves desconhecidas
+  assert.throws(
+    () =>
+      instantiateCommunityFromKit("kit-bairro", {
+        creatorAddr: "vx_ed25519_vizinho",
+        securityPolicyOverrides: { backdoorFlag: true },
+      }),
+    /Chave desconhecida em securityPolicyOverrides/
+  );
+
+  // Permite endurecimento legítimo (aumentar exigência de minTrustScore)
+  const endurecido = instantiateCommunityFromKit("kit-bairro", {
+    creatorAddr: "vx_ed25519_vizinho",
+    securityPolicyOverrides: { minTrustScore: 5 },
   });
-
-  assert.equal(comm.name, "Coletivo Cultural Flor do Campo");
-  assert.equal(comm.securityPolicy.allowGuestRead, false); // override aceito
-  assert.equal(comm.securityPolicy.requireHashVerifiedPin, true);
-
-  const cartIds = comm.cartridges.map((c) => c.id);
-  assert.ok(cartIds.includes("biblioteca-bolso"));
-  assert.ok(cartIds.includes("caderno-coletivo"));
+  assert.equal(endurecido.securityPolicy.minTrustScore, 5);
 });

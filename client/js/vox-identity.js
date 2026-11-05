@@ -393,7 +393,14 @@ export async function requestStoragePersistence() {
 }
 
 export function getCachedIdentity() {
-  return cachedIdentity;
+  if (!cachedIdentity) return null;
+  return Object.freeze({
+    routeId: cachedIdentity.routeId,
+    publicKeyHex: cachedIdentity.publicKeyHex,
+    agreementPublicKeyHex: cachedIdentity.agreementPublicKeyHex,
+    isExtractable: Boolean(cachedIdentity.isExtractable),
+    createdAt: cachedIdentity.createdAt,
+  });
 }
 
 export function resetIdentityCacheForTesting() {
