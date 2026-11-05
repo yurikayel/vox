@@ -28,6 +28,10 @@ export async function fetchModActions(communityId) {
 
 export function parseModerators(rawModerators = "") {
   if (!rawModerators) return [];
+  if (Array.isArray(rawModerators)) {
+    return rawModerators.map((s) => String(s).trim()).filter(Boolean);
+  }
+  if (typeof rawModerators !== "string") return [];
   return rawModerators
     .split(",")
     .map((s) => s.trim())
@@ -56,10 +60,11 @@ function buildValidModeratorsSet(communityOwner = "", rawModerators = "") {
 function collectModerationState(actions, validModerators) {
   const hiddenTargets = new Set();
   const bannedOwners = new Set();
-  const pinnedTargets = new Set();
-  const lockedTargets = new Set();
+  const pinState = new Map();
+  const lockState = new Map();
 
-  for (const act of actions) {
+  const sortedActions = [...actions].sort((a, b) => (Number(a.ts) || 0) - (Number(b.ts) || 0));
+  for (const act of sortedActions) {
     const actOwner = (act.owner || act.author || "").toLowerCase();
     if (!actOwner || !validModerators.has(actOwner)) {
       continue;
@@ -72,12 +77,12 @@ function collectModerationState(actions, validModerators) {
     else if (action === "unhide") hiddenTargets.delete(target);
     else if (action === "ban") bannedOwners.add(target.toLowerCase());
     else if (action === "unban") bannedOwners.delete(target.toLowerCase());
-    else if (action === "pin") pinnedTargets.add(target);
-    else if (action === "unpin") pinnedTargets.delete(target);
-    else if (action === "lock") lockedTargets.add(target);
-    else if (action === "unlock") lockedTargets.delete(target);
+    else if (action === "pin") pinState.set(target, true);
+    else if (action === "unpin") pinState.set(target, false);
+    else if (action === "lock") lockState.set(target, true);
+    else if (action === "unlock") lockState.set(target, false);
   }
-  return { hiddenTargets, bannedOwners, pinnedTargets, lockedTargets };
+  return { hiddenTargets, bannedOwners, pinState, lockState };
 }
 
 export function applyFilters(items, actions = [], communityOwner = "", rawModerators = "") {
@@ -85,7 +90,7 @@ export function applyFilters(items, actions = [], communityOwner = "", rawModera
   if (!Array.isArray(actions) || !actions.length) return items;
 
   const validModerators = buildValidModeratorsSet(communityOwner, rawModerators);
-  const { hiddenTargets, bannedOwners, pinnedTargets, lockedTargets } = collectModerationState(actions, validModerators);
+  const { hiddenTargets, bannedOwners, pinState, lockState } = collectModerationState(actions, validModerators);
 
   return items
     .filter((item) => {
@@ -94,8 +99,8 @@ export function applyFilters(items, actions = [], communityOwner = "", rawModera
       return true;
     })
     .map((item) => {
-      const isPinned = pinnedTargets.has(item.id) ? true : item.isPinned;
-      const isLocked = lockedTargets.has(item.id) ? true : item.isLocked;
+      const isPinned = pinState.has(item.id) ? pinState.get(item.id) : item.isPinned;
+      const isLocked = lockState.has(item.id) ? lockState.get(item.id) : item.isLocked;
       if (isPinned !== item.isPinned || isLocked !== item.isLocked) {
         return { ...item, isPinned, isLocked };
       }
