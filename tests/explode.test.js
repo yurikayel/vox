@@ -414,3 +414,73 @@ test("explode - APP_ICONS contains official vector SVG logos for all 9 apps", ()
     assert.ok(explode.APP_ICONS[app].includes("app-logo-svg"), `Icon for ${app} must have app-logo-svg class`);
   }
 });
+
+test("explode - executeExplodeBurst opens connected networks and mounts dynamic cascade bar", async () => {
+  const linkedModule = await import("../client/js/linked-accounts.js");
+  localStorage.clear();
+  linkedModule.saveLinkedAccount("twitter", { handle: "yurix", enabled: true });
+  linkedModule.saveLinkedAccount("threads", { handle: "yurithreads", enabled: true });
+
+  const openedUrls = [];
+  const elements = new Map();
+  const prevWin = globalThis.window;
+  const prevDoc = globalThis.document;
+  globalThis.window = {
+    open: (u) => {
+      openedUrls.push(u);
+      return {};
+    },
+  };
+  globalThis.document = {
+    body: { appendChild: (el) => { if (el.id) elements.set(el.id, el); } },
+    getElementById: (id) => elements.get(id) || null,
+    createElement: () => ({
+      attributes: {},
+      innerHTML: "",
+      setAttribute(k, v) { this.attributes[k] = String(v); },
+      querySelector() { return { focus() {} }; },
+      remove() { elements.delete(this.id); },
+    }),
+    querySelectorAll: () => [],
+  };
+
+  try {
+    const res = await explode.executeExplodeBurst({
+      id: "post_connected_burst",
+      title: "Pauta Conectada",
+      body: "Disparo multi-redes",
+    });
+
+    assert.equal(res.connectedCount, 2);
+    assert.equal(res.intentsLaunched, 2);
+    assert.ok(openedUrls.some((u) => u.includes("twitter.com") && u.includes("#vox-explode=1")));
+    assert.ok(openedUrls.some((u) => u.includes("threads.net") && u.includes("#vox-explode=1")));
+
+    const bar = elements.get(explode.CASCADE_BAR_ID);
+    assert.ok(bar);
+    assert.ok(bar.innerHTML.includes("@yurix"));
+    assert.ok(bar.innerHTML.includes("@yurithreads"));
+  } finally {
+    globalThis.window = prevWin;
+    globalThis.document = prevDoc;
+  }
+});
+
+test("explode - tryAutoSubmitExplodeIntent clicks publish button when #vox-explode=1 is present", () => {
+  let clicked = false;
+  const mockDoc = {
+    querySelector: (sel) => {
+      if (sel.includes("tweetButton")) {
+        return { click: () => { clicked = true; } };
+      }
+      return null;
+    },
+  };
+
+  assert.equal(explode.tryAutoSubmitExplodeIntent(mockDoc, { hash: "" }), false);
+  assert.equal(clicked, false);
+
+  assert.equal(explode.tryAutoSubmitExplodeIntent(mockDoc, { hash: "#vox-explode=1" }), true);
+  assert.equal(clicked, true);
+});
+

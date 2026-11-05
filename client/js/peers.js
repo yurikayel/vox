@@ -7,6 +7,7 @@ import * as moderation from "./moderation.js";
 import * as profileCard from "./profile-card.js";
 import * as gossipProfile from "./peers-gossip-profile.js";
 import * as profileDirectory from "./profile-directory.js";
+import * as centralMemory from "./central-memory.js";
 import { getRelayHttpUrls } from "./inbox.js";
 
 export {
@@ -347,6 +348,8 @@ function handleDirectoryProfileCard(card) {
 const VOX_MESSAGE_HANDLERS = {
   PROFILE_CARD_HELLO: (msg) => handleProfileCardHello(msg.card),
   PROFILE_CARD: (msg) => handleDirectoryProfileCard(msg.card),
+  MEMORY_BEACON: (msg) =>
+    msg.memoryUrl ? centralMemory.registerDiscoveredMemoryUrl(msg.memoryUrl) : null,
   WANT: (msg, replyFn, settings, source) => handleWantMessage(msg, replyFn, settings, source),
   BLOB: (msg) => handleBlobMessage(msg),
   DM: (msg, _replyFn, _settings, source) => {
@@ -604,7 +607,25 @@ webrtcPeer.onDmMessage((envelope) => {
   dispatchDirectMessage(envelope, "rtc");
 });
 
+webrtcPeer.onPeerIdentity((address, dmPub) => {
+  if (dmPub && typeof dmPub === "object" && dmPub.memoryUrl) {
+    centralMemory.registerDiscoveredMemoryUrl(dmPub.memoryUrl);
+  }
+  if (address && address.startsWith("vx_") && address !== "vx_zero_memory_beacon") {
+    handleDirectoryProfileCard({
+      routeId: address,
+      name: dmPub?.displayName || dmPub?.name || "",
+      avatarUrl: dmPub?.avatarUrl || "",
+      discoverable: true,
+    });
+  }
+});
+
 async function sendRecentStateOnPeerConnect(sendFn) {
+  const publicMemoryUrl = centralMemory.getDiscoveredPublicMemoryUrl();
+  if (publicMemoryUrl) {
+    sendFn({ type: "MEMORY_BEACON", memoryUrl: publicMemoryUrl, fromPeer: myPeerId });
+  }
   for (const card of profileDirectory.listDiscoverableProfileCards().slice(0, 256)) {
     if (card?.routeId) {
       sendFn({ type: "PROFILE_CARD", card, fromPeer: myPeerId });

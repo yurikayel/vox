@@ -19,28 +19,38 @@ const OAUTH_SVG_META = `<svg class="oauth-btn__icon oauth-btn__icon--meta" width
 
 const OAUTH_SVG_GITHUB = `<svg class="oauth-btn__icon oauth-btn__icon--github" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>`;
 
+function renderOAuthProviderButtonsHtml() {
+  return `<div class="oauth-enrich-actions">
+    <button type="button" id="btn-oauth-google" class="oauth-btn oauth-btn--google" aria-label="Entrar com Google para importar nome e foto">
+      ${OAUTH_SVG_GOOGLE}
+      <span class="oauth-btn__label">Continuar com Google</span>
+    </button>
+    <button type="button" id="btn-oauth-meta" class="oauth-btn oauth-btn--meta" aria-label="Entrar com Meta para importar nome e foto">
+      ${OAUTH_SVG_META}
+      <span class="oauth-btn__label">Continuar com Meta</span>
+    </button>
+    <button type="button" id="btn-oauth-github" class="oauth-btn oauth-btn--github" aria-label="Entrar com GitHub para importar nome e foto">
+      ${OAUTH_SVG_GITHUB}
+      <span class="oauth-btn__label">Continuar com GitHub</span>
+    </button>
+  </div>`;
+}
+
 export function renderOAuthEnrich(container) {
   if (!container) return;
+  const currentName = escapeHtml(localAccount.getDisplayName() || "");
   container.innerHTML = `
     <div class="modal-overlay modal-sheet oauth-enrich-overlay" id="oauth-enrich-overlay" role="dialog" aria-modal="true" aria-labelledby="oauth-enrich-title">
       <div class="modal-dialog modal-card modal-dialog-solid oauth-enrich-dialog">
         <h2 id="oauth-enrich-title" class="oauth-enrich-title">Como quer aparecer?</h2>
-        <p class="desc oauth-enrich-lead">Importe <strong>nome e foto</strong> (opcional). Seu ID na rede continua sendo <code>vx_*</code> neste aparelho — não é login centralizado.</p>
+        <p class="desc oauth-enrich-lead">Escolha seu nome para que outras pessoas encontrem você em <strong>Pessoas</strong>. Seu ID na rede continua sendo <code>vx_*</code> neste aparelho.</p>
         <div id="oauth-enrich-error" class="oauth-enrich-error" role="alert" aria-live="polite" hidden></div>
-        <div class="oauth-enrich-actions">
-          <button type="button" id="btn-oauth-google" class="oauth-btn oauth-btn--google" aria-label="Entrar com Google para importar nome e foto">
-            ${OAUTH_SVG_GOOGLE}
-            <span class="oauth-btn__label">Continuar com Google</span>
-          </button>
-          <button type="button" id="btn-oauth-meta" class="oauth-btn oauth-btn--meta" aria-label="Entrar com Meta para importar nome e foto">
-            ${OAUTH_SVG_META}
-            <span class="oauth-btn__label">Continuar com Meta</span>
-          </button>
-          <button type="button" id="btn-oauth-github" class="oauth-btn oauth-btn--github" aria-label="Entrar com GitHub para importar nome e foto">
-            ${OAUTH_SVG_GITHUB}
-            <span class="oauth-btn__label">Continuar com GitHub</span>
-          </button>
-        </div>
+        <form id="form-oauth-custom-name" style="display:flex; gap:0.5rem; margin-bottom:0.75rem;">
+          <input type="text" id="oauth-custom-name-input" class="form-control" maxlength="30" placeholder="Digite seu nome ou apelido…" value="${currentName}" style="flex:1;" />
+          <button type="submit" id="btn-oauth-save-name" class="btn btn-primary">Entrar</button>
+        </form>
+        <p class="oauth-enrich-divider" role="presentation"><span>ou importe nome e foto</span></p>
+        ${renderOAuthProviderButtonsHtml()}
         <p class="oauth-enrich-divider" role="presentation"><span>ou</span></p>
         <button type="button" id="btn-oauth-skip" class="oauth-btn oauth-btn--skip">Pular — continuar só com vx_</button>
         <p class="meta oauth-enrich-legal">Só claims públicos de perfil; tokens OAuth não são armazenados (LGPD — ver COMPLIANCE-BR.md).</p>
@@ -52,12 +62,19 @@ export function closeOAuthEnrich(container) {
   if (container) container.innerHTML = "";
 }
 
+function resolvePersonBadgeHtml(p, isSelf) {
+  if (isSelf) return `<span class="badge" style="margin-left:0.35rem; font-size:0.7rem;">Você</span>`;
+  if (p.source === "contact") return `<span class="badge" style="margin-left:0.35rem; font-size:0.7rem;">Contato</span>`;
+  return "";
+}
+
 function renderPeopleResultRow(p) {
   const name = escapeHtml(p.name || p.routeId.slice(0, 14));
   const handle = p.handle ? `@${escapeHtml(p.handle)}` : "";
   const av = renderAvatarHtml(p.routeId, name);
   const myId = localAccount.getCachedRouteIdSync();
   const isSelf = Boolean(myId && p.routeId === myId);
+  const badgeHtml = resolvePersonBadgeHtml(p, isSelf);
   const actionsHtml = isSelf
     ? `<a class="btn btn-sm btn-outline" href="#/u/${encodeURIComponent(p.routeId)}">Meu perfil</a>`
     : `
@@ -69,7 +86,7 @@ function renderPeopleResultRow(p) {
       ${av}
       <div style="flex:1; min-width:0;">
         <a href="#/u/${encodeURIComponent(p.routeId)}" style="font-weight:600;">${name}</a>
-        ${handle ? `<span class="meta"> ${handle}</span>` : ""}
+        ${handle ? `<span class="meta"> ${handle}</span>` : ""}${badgeHtml}
         <p class="meta" style="margin:2px 0 0;"><code>${escapeHtml(shortId(p.routeId))}</code></p>
       </div>
       <div style="display:flex; flex-direction:column; gap:0.25rem;">
@@ -97,14 +114,18 @@ export function resolvePeopleSearchBody(sections, results, query) {
       : results.map((p) => renderPeopleResultRow(p)).join("");
   }
   if (sections) {
+    if (Array.isArray(sections.all)) {
+      const total = sections.all.length;
+      if (!total) return `<div class="empty"><p>Ninguém indexado ainda.</p></div>`;
+      const summaryHtml = `<p class="meta" style="margin:0.5rem 0 0.25rem; font-size:0.8rem;">Mostrando lista completa (${total} ${total === 1 ? "pessoa cadastrada" : "pessoas cadastradas"}).</p>`;
+      return summaryHtml + sections.all.map((p) => renderPeopleResultRow(p)).join("");
+    }
     const cLen = sections.contacts?.length || 0;
     const mLen = sections.mesh?.length || 0;
     const tLen = sections.tour?.length || 0;
-    const total = sections.all?.length || (cLen + mLen + tLen);
+    const total = cLen + mLen + tLen;
     if (!total) return `<div class="empty"><p>Ninguém indexado ainda.</p></div>`;
-    const summaryHtml = `<p class="meta" style="margin:0.5rem 0 0.25rem; font-size:0.8rem;">Mostrando lista completa (${total} ${total === 1 ? "pessoa cadastrada" : "pessoas cadastradas"}).</p>`;
     return (
-      summaryHtml +
       renderPeopleSection("Contatos", sections.contacts) +
       renderPeopleSection("Na malha", sections.mesh) +
       renderPeopleSection("Tour (demonstração)", sections.tour)

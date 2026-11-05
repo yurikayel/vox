@@ -25,11 +25,44 @@ let autoPushEnabled = false;
 let lastServerRevision = 0;
 let lastServerTimestamp = 0;
 let lastLocalSyncMs = 0;
+let lastHydratedCallback = null;
 
 export function resetCentralMemoryCursor() {
   lastServerRevision = 0;
   lastServerTimestamp = 0;
   lastLocalSyncMs = 0;
+}
+
+export function registerDiscoveredMemoryUrl(rawUrl, { triggerSync = true } = {}) {
+  const raw = String(rawUrl || "").trim().replace(/\/+$/, "");
+  if (!raw || !/^https:\/\//i.test(raw)) return "";
+  let prev = "";
+  try {
+    prev = String(localStorage.getItem(MEMORY_URL_STORAGE_KEY) || "").trim();
+    localStorage.setItem(MEMORY_URL_STORAGE_KEY, raw);
+    localStorage.setItem(BUDDY_RELAY_STORAGE_KEY, raw);
+  } catch {
+    /* ignore */
+  }
+  if (prev !== raw) {
+    if (!preferredUrl || !preferredUrl.startsWith("http://127.0.0.1")) {
+      preferredUrl = raw;
+    }
+    if (triggerSync) {
+      resetCentralMemoryCursor();
+      void syncWithCentralMemory();
+    }
+  }
+  return raw;
+}
+
+export function getDiscoveredPublicMemoryUrl() {
+  try {
+    const stored = String(localStorage.getItem(MEMORY_URL_STORAGE_KEY) || "").trim();
+    return /^https:\/\//i.test(stored) ? stored.replace(/\/+$/, "") : "";
+  } catch {
+    return "";
+  }
 }
 
 export function setCentralMemoryAutoPush(enabled) {
@@ -328,9 +361,12 @@ async function hydratePosts(posts, blobsByHash) {
 
 function shouldApplyIncomingProfile(existing, incoming) {
   if (!existing) return true;
-  const inName = String(incoming?.name || incoming?.displayName || "").trim();
+  const inName = cleanStr(incoming?.name || incoming?.displayName);
+  const inAvatar = cleanStr(incoming?.avatarUrl || incoming?.avatar);
+  const inBio = cleanStr(incoming?.bio);
+  if (!hasCardChanges(existing, inName, inAvatar, inBio)) return false;
   if (inName && !existing.name) return true;
-  if (incoming?.avatarUrl && !existing.avatarUrl) return true;
+  if (inAvatar && !existing.avatarUrl) return true;
   return itemTimestamp(incoming) > itemTimestamp(existing);
 }
 
@@ -367,6 +403,15 @@ async function applyRemoteBundle(remote) {
   }
 }
 
+function recordRemoteSyncWatermark(remote, syncStartedMs) {
+  if (remote.tunnelUrl) {
+    registerDiscoveredMemoryUrl(remote.tunnelUrl, { triggerSync: false });
+  }
+  lastServerRevision = Number(remote.revision || lastServerRevision);
+  lastServerTimestamp = Number(remote.updatedAt || lastServerTimestamp);
+  lastLocalSyncMs = syncStartedMs;
+}
+
 export async function syncWithCentralMemory({ onHydrated } = {}) {
   if (syncInFlight) return { ok: false, skipped: true };
   syncInFlight = true;
@@ -377,12 +422,11 @@ export async function syncWithCentralMemory({ onHydrated } = {}) {
     if (!remote || remote.status !== "ok") {
       return { ok: false, hydratedCount: 0 };
     }
-    lastServerRevision = Number(remote.revision || lastServerRevision);
-    lastServerTimestamp = Number(remote.updatedAt || lastServerTimestamp);
-    lastLocalSyncMs = syncStartedMs;
+    recordRemoteSyncWatermark(remote, syncStartedMs);
     const hydratedCount = remote.upToDate ? 0 : await applyRemoteBundle(remote);
-    if (hydratedCount > 0 && typeof onHydrated === "function") {
-      onHydrated({ hydratedCount, revision: remote.revision });
+    const cb = typeof onHydrated === "function" ? onHydrated : lastHydratedCallback;
+    if (hydratedCount > 0 && typeof cb === "function") {
+      cb({ hydratedCount, revision: remote.revision });
     }
     return { ok: true, hydratedCount, revision: remote.revision, counts: remote.counts };
   } finally {
@@ -391,6 +435,7 @@ export async function syncWithCentralMemory({ onHydrated } = {}) {
 }
 
 export function startCentralMemoryLoop({ intervalMs = 15000, onHydrated } = {}) {
+  if (typeof onHydrated === "function") lastHydratedCallback = onHydrated;
   setCentralMemoryAutoPush(true);
   if (syncTimerId !== null) clearInterval(syncTimerId);
   void syncWithCentralMemory({ onHydrated });

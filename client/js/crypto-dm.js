@@ -79,13 +79,23 @@ function buildAad(from, to) {
   return new TextEncoder().encode(`v1|${from || ""}|${to || ""}`);
 }
 
-export async function seal(toPubInput, plaintext, { from = "", to = "" } = {}) {
+function sanitizeEcPublicJwk(toPubInput) {
   const toPubJwk = parseJwkInput(toPubInput);
   if (!toPubJwk || toPubJwk.kty !== "EC") {
     throw new Error("Chave pública Dm-Pub inválida");
   }
+  return {
+    kty: toPubJwk.kty,
+    crv: toPubJwk.crv || "P-256",
+    x: toPubJwk.x,
+    y: toPubJwk.y,
+    ext: true,
+  };
+}
 
-  const recipientPubKey = await crypto.subtle.importKey("jwk", toPubJwk, ECDH_ALGO, false, []);
+export async function seal(toPubInput, plaintext, { from = "", to = "" } = {}) {
+  const cleanJwk = sanitizeEcPublicJwk(toPubInput);
+  const recipientPubKey = await crypto.subtle.importKey("jwk", cleanJwk, ECDH_ALGO, false, []);
   const ephPair = await crypto.subtle.generateKey(ECDH_ALGO, true, ["deriveKey"]);
   const ephPub = await crypto.subtle.exportKey("jwk", ephPair.publicKey);
   const aesKey = await deriveAesKey(ephPair.privateKey, recipientPubKey, "encrypt");

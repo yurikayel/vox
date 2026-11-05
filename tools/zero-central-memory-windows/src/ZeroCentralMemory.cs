@@ -5,8 +5,10 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Net;
+using System.Net.Security;
 using System.Net.Sockets;
 using System.Reflection;
+using System.Security.Authentication;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -340,9 +342,12 @@ namespace Vox.ZeroMemory {
                 if (ex != null) {
                     string exName = GetStr(ex, "name");
                     if (string.IsNullOrEmpty(exName)) exName = GetStr(ex, "displayName");
-                    bool sameMeta = (exName == inName) && (GetStr(ex, "avatarUrl") == GetStr(card, "avatarUrl"));
-                    if (sameMeta && (ItemTimestamp(ex) >= inTs || inTs <= 0)) return false;
-                    if (!sameMeta && string.IsNullOrEmpty(inName) && !string.IsNullOrEmpty(exName)) {
+                    bool sameMeta = (exName == inName) &&
+                                    (GetStr(ex, "avatarUrl") == GetStr(card, "avatarUrl")) &&
+                                    (GetStr(ex, "bio") == GetStr(card, "bio")) &&
+                                    (GetStr(ex, "handle") == GetStr(card, "handle"));
+                    if (sameMeta) return false;
+                    if (string.IsNullOrEmpty(inName) && !string.IsNullOrEmpty(exName)) {
                         card["name"] = exName;
                     }
                 }
@@ -904,8 +909,11 @@ namespace Vox.ZeroMemory {
 
     public static class TunnelManager {
         private static readonly Regex TryCloudflareRegex = new Regex(@"https://[a-zA-Z0-9-]+\.trycloudflare\.com", RegexOptions.Compiled);
+        private const string BeaconHost = "vox-sentinel.onrender.com";
         private static Process tunnelProc;
         private static volatile string tunnelUrl = "";
+        private static volatile bool beaconActive;
+        private static Thread beaconThread;
 
         public static string CurrentTunnelUrl { get { return tunnelUrl; } }
         public static string CurrentInviteUrl {
@@ -926,6 +934,84 @@ namespace Vox.ZeroMemory {
                 if (c == "cloudflared.exe" || File.Exists(c)) return c;
             }
             return "";
+        }
+
+        private static void SendMaskedWsText(Stream stream, string text) {
+            byte[] payload = Encoding.UTF8.GetBytes(text);
+            byte[] mask = new byte[] { 0x37, 0xFA, 0x21, 0x3D };
+            var frame = new List<byte>();
+            frame.Add(0x81);
+            if (payload.Length < 126) {
+                frame.Add((byte)(0x80 | payload.Length));
+            } else {
+                frame.Add((byte)(0x80 | 126));
+                frame.Add((byte)((payload.Length >> 8) & 0xFF));
+                frame.Add((byte)(payload.Length & 0xFF));
+            }
+            frame.AddRange(mask);
+            for (int i = 0; i < payload.Length; i++) {
+                frame.Add((byte)(payload[i] ^ mask[i % 4]));
+            }
+            byte[] raw = frame.ToArray();
+            stream.Write(raw, 0, raw.Length);
+            stream.Flush();
+        }
+
+        private static void RunSingleBeaconSession() {
+            using (var tcp = new TcpClient()) {
+                tcp.ReceiveTimeout = 30000;
+                tcp.SendTimeout = 10000;
+                tcp.Connect(BeaconHost, 443);
+                using (var ssl = new SslStream(tcp.GetStream(), false)) {
+                    ssl.AuthenticateAsClient(BeaconHost, null, SslProtocols.Tls12, false);
+                    string req = "GET / HTTP/1.1\r\n" +
+                                 "Host: " + BeaconHost + "\r\n" +
+                                 "Upgrade: websocket\r\n" +
+                                 "Connection: Upgrade\r\n" +
+                                 "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n" +
+                                 "Sec-WebSocket-Version: 13\r\n\r\n";
+                    byte[] reqBytes = Encoding.ASCII.GetBytes(req);
+                    ssl.Write(reqBytes, 0, reqBytes.Length);
+                    ssl.Flush();
+
+                    var hdr = new StringBuilder();
+                    int b;
+                    while ((b = ssl.ReadByte()) != -1) {
+                        hdr.Append((char)b);
+                        if (hdr.Length >= 4 && hdr.ToString(hdr.Length - 4, 4) == "\r\n\r\n") break;
+                        if (hdr.Length > 8192) return;
+                    }
+                    if (!hdr.ToString().Contains("101")) return;
+
+                    byte[] drainBuf = new byte[2048];
+                    while (beaconActive && !string.IsNullOrEmpty(tunnelUrl)) {
+                        string msg = "{\"type\":\"register\",\"peerId\":\"peer_zero_memory_beacon\",\"address\":\"vx_zero_memory_beacon\",\"dmPub\":{\"memoryUrl\":\"" + tunnelUrl + "\",\"service\":\"zero-central-memory\"}}";
+                        SendMaskedWsText(ssl, msg);
+                        for (int i = 0; i < 40 && beaconActive; i++) {
+                            if (tcp.Available > 0) {
+                                int r = ssl.Read(drainBuf, 0, drainBuf.Length);
+                                if (r <= 0) return;
+                            }
+                            Thread.Sleep(500);
+                        }
+                    }
+                }
+            }
+        }
+
+        private static void EnsureBeaconThread() {
+            beaconActive = true;
+            if (beaconThread != null && beaconThread.IsAlive) return;
+            beaconThread = new Thread(() => {
+                while (beaconActive) {
+                    if (!string.IsNullOrEmpty(tunnelUrl)) {
+                        try { RunSingleBeaconSession(); } catch { }
+                    }
+                    for (int i = 0; i < 10 && beaconActive; i++) Thread.Sleep(500);
+                }
+            });
+            beaconThread.IsBackground = true;
+            beaconThread.Start();
         }
 
         public static void StartTunnel(string dataDir) {
@@ -950,6 +1036,7 @@ namespace Vox.ZeroMemory {
                         try {
                             File.WriteAllText(Path.Combine(dataDir, "tunnel_url.txt"), tunnelUrl + "\r\n" + CurrentInviteUrl, Encoding.UTF8);
                         } catch { }
+                        EnsureBeaconThread();
                     }
                 };
                 tunnelProc.OutputDataReceived += onLine;
@@ -963,6 +1050,7 @@ namespace Vox.ZeroMemory {
         }
 
         public static void StopTunnel() {
+            beaconActive = false;
             try {
                 if (tunnelProc != null && !tunnelProc.HasExited) {
                     tunnelProc.Kill();

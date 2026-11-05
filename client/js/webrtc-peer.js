@@ -103,17 +103,29 @@ export function announceIdentity(address, dmPub = null) {
   }
 }
 
+function isBeaconIdentity(address, peerId) {
+  return (
+    address === "vx_zero_memory_beacon" ||
+    String(peerId || "").startsWith("peer_zero_memory")
+  );
+}
+
 export function registerAddressMapping(address, peerId, dmPub = null) {
   if (!address || !peerId) return;
+  if (dmPub && identityHandler) {
+    identityHandler(address, dmPub);
+  }
+  if (isBeaconIdentity(address, peerId)) return;
   addressToPeer.set(address, peerId);
   if (dmPub) {
     dmPubByAddress.set(address, dmPub);
-    if (identityHandler) identityHandler(address, dmPub);
   }
 }
 
 export function listKnownPeerAddresses() {
-  return Array.from(addressToPeer.keys()).filter((a) => String(a || "").startsWith("vx_"));
+  return Array.from(addressToPeer.keys()).filter(
+    (a) => String(a || "").startsWith("vx_") && a !== "vx_zero_memory_beacon",
+  );
 }
 
 export function getPeerDmPub(address) {
@@ -308,6 +320,14 @@ function scheduleReconnect(immediate = false) {
   }, delay);
 }
 
+function unregisterPeerAddress(remotePeerId) {
+  for (const [addr, pid] of addressToPeer.entries()) {
+    if (pid === remotePeerId) {
+      addressToPeer.delete(addr);
+    }
+  }
+}
+
 async function handleSignalingMessage(msg) {
   const mtype = msg.type;
   if (mtype === "registered") {
@@ -329,6 +349,7 @@ async function handleSignalingMessage(msg) {
   } else if (mtype === "ice") {
     handleIncomingIce(msg.from, msg.candidate);
   } else if (mtype === "peer-left") {
+    unregisterPeerAddress(msg.peerId);
     closePeerConnection(msg.peerId);
   }
 }
@@ -337,13 +358,14 @@ function handleRegisteredPeers(peersList) {
   const maxPeers = configCache?.maxRtcPeers || 8;
   for (const remoteId of peersList) {
     if (peerConnections.size >= maxPeers) break;
-    if (remoteId && remoteId !== currentPeerId) {
+    if (remoteId && remoteId !== currentPeerId && !isBeaconIdentity("", remoteId)) {
       createPeerConnection(remoteId, true);
     }
   }
 }
 
 function handlePeerJoined(remoteId) {
+  if (!remoteId || isBeaconIdentity("", remoteId) || peerConnections.has(remoteId)) return;
   const maxPeers = configCache?.maxRtcPeers || 8;
   if (peerConnections.size < maxPeers && currentPeerId < remoteId) {
     createPeerConnection(remoteId, true);
@@ -496,6 +518,11 @@ async function createPeerConnection(remotePeerId, isInitiator) {
 }
 
 async function handleIncomingOffer(fromPeer, sdp) {
+  const existing = peerConnections.get(fromPeer);
+  if (existing && existing.pc && existing.pc.signalingState !== "stable") {
+    if (currentPeerId < fromPeer) return;
+    closePeerConnection(fromPeer);
+  }
   const { pc } = await createPeerConnection(fromPeer, false);
   try {
     await pc.setRemoteDescription(new RTCSessionDescription(sdp));
@@ -556,11 +583,6 @@ export function closePeerConnection(remotePeerId) {
     disposePeerChannels(entry);
   } catch {}
   peerConnections.delete(remotePeerId);
-  for (const [addr, pid] of addressToPeer.entries()) {
-    if (pid === remotePeerId) {
-      addressToPeer.delete(addr);
-    }
-  }
 }
 
 export function sendDmRtc(toAddress, envelope) {

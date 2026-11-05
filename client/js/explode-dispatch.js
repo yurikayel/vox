@@ -10,7 +10,12 @@ import {
   buildTwitterIntentUrl,
   buildBlueskyIntentUrl,
 } from "./posse-dispatch.js";
-import { dispatchAutoReplication, loadLinkedAccounts } from "./linked-accounts.js";
+import {
+  dispatchAutoReplication,
+  getConnectedIntentTargets,
+  hasDirectReplicationTargets,
+  loadLinkedAccounts,
+} from "./linked-accounts.js";
 import { copyStoryCardToClipboard } from "./story-card.js";
 import { recordExplosion } from "./social.js";
 import { escapeHtml } from "./render/util.js";
@@ -113,31 +118,74 @@ export function updateExplodeButtonsUi(postId, count) {
   });
 }
 
-export async function executeExplodeBurst(post) {
-  const canonicalUrl = buildCanonicalTopicUrl(post?.id, { communityId: post?.communityId });
-  const text = buildExplodeText({
-    title: post?.title,
-    body: post?.body,
-    url: canonicalUrl,
-  });
+async function prepareVisualMediaIfNeeded(intentTargets, post) {
+  const needsCard = intentTargets.some((t) => t.id === "instagram" || t.id === "tiktok");
+  if (!needsCard) return null;
+  return copyStoryCardToClipboard(post).catch(() => null);
+}
 
-  let copied = false;
+function launchConnectedIntentsSync(intentTargets, post, text, canonicalUrl) {
+  if (!intentTargets.length || typeof window === "undefined" || typeof window.open !== "function") {
+    return { opened: 0, blocked: [] };
+  }
+  let opened = 0;
+  const blocked = [];
+  for (const step of intentTargets) {
+    const targetUrl = resolveBurstTargetUrl(step.id, text, canonicalUrl, post);
+    if (!targetUrl) continue;
+    const win = window.open(targetUrl, "_blank", "noopener,noreferrer");
+    if (win === null) blocked.push(step);
+    else opened += 1;
+  }
+  return { opened, blocked };
+}
+
+async function tryCopyToClipboard(text) {
   try {
     await navigator.clipboard.writeText(text);
-    copied = true;
-  } catch {}
+    return true;
+  } catch {
+    return false;
+  }
+}
 
+async function fireAllBurstChannels(post, canonicalUrl) {
   const payload = buildPosseExportPayload({ ...post, canonicalUrl });
   const webhooks = loadPosseWebhooks();
-  const res = webhooks.length ? await firePosseWebhooks(payload, webhooks) : { sent: 0, failed: 0 };
-  const autoRep = await dispatchAutoReplication({ ...post, canonicalUrl }).catch(() => ({ count: 0 }));
+  const res = webhooks.length ? await firePosseWebhooks(payload, webhooks) : { sent: 0 };
+  const autoRep = await dispatchAutoReplication({ ...post, canonicalUrl }, { force: true }).catch(() => ({ count: 0 }));
+  return (res.sent || 0) + (autoRep.count || 0);
+}
 
-  if (post?.id) {
-    const exp = recordExplosion(post.id, post.explodesCount || 0);
-    updateExplodeButtonsUi(post.id, exp.count);
+function bumpPostExplodeCounter(post) {
+  if (!post?.id) return;
+  const exp = recordExplosion(post.id, post.explodesCount || 0);
+  updateExplodeButtonsUi(post.id, exp.count);
+}
+
+export async function executeExplodeBurst(post, { triggerIntents = true } = {}) {
+  const canonicalUrl = buildCanonicalTopicUrl(post?.id, { communityId: post?.communityId });
+  const text = buildExplodeText({ title: post?.title, body: post?.body, url: canonicalUrl });
+  const intentTargets = triggerIntents ? getConnectedIntentTargets() : [];
+  const launched = launchConnectedIntentsSync(intentTargets, post, text, canonicalUrl);
+
+  if (intentTargets.length > 1 || launched.blocked.length > 0) {
+    mountCascadeBar(intentTargets, post, 0);
   }
 
-  return { copied, webhooksSent: res.sent + (autoRep.count || 0), text, canonicalUrl };
+  const copied = await tryCopyToClipboard(text);
+  await prepareVisualMediaIfNeeded(intentTargets, post);
+  const bgSent = await fireAllBurstChannels(post, canonicalUrl);
+  bumpPostExplodeCounter(post);
+
+  return {
+    copied,
+    webhooksSent: bgSent + launched.opened,
+    intentsLaunched: launched.opened,
+    connectedCount: intentTargets.length,
+    text,
+    canonicalUrl,
+  };
 }
 
 let activeExplodePost = null;
@@ -369,7 +417,7 @@ function resolveIntentTargetUrl(action, text, url, post) {
     const twText = buildTwitterExplodeText({ title: post?.title, body: post?.body });
     return buildTwitterIntentUrl(twText, url);
   }
-  if (action === "bluesky") {
+  if (action === "bluesky" || action === "bsky") {
     const bskyText = buildBlueskyExplodeText({ title: post?.title, body: post?.body, url });
     return buildBlueskyIntentUrl(bskyText);
   }
@@ -377,6 +425,34 @@ function resolveIntentTargetUrl(action, text, url, post) {
   if (action === "threads") return buildThreadsIntentUrl(text, url);
   if (action === "facebook") return buildFacebookShareUrl(url, text);
   return "";
+}
+
+export function resolveBurstTargetUrl(action, text, url, post) {
+  if (action === "instagram") return "https://www.instagram.com/#vox-explode=1";
+  if (action === "tiktok") return "https://www.tiktok.com/upload#vox-explode=1";
+  const base = resolveIntentTargetUrl(action, text, url, post);
+  if (!base) return "";
+  return base.includes("#") ? base : `${base}#vox-explode=1`;
+}
+
+const AUTO_SUBMIT_SELECTORS = [
+  '[data-testid="tweetButton"]:not([aria-disabled="true"])',
+  '[data-testid="composerPublishBtn"]:not([disabled])',
+  'button[aria-label="Publish"]:not([disabled])',
+  'button[aria-label="Publicar"]:not([disabled])',
+  'div[role="dialog"] div[role="button"]:not([aria-disabled="true"])',
+];
+
+export function tryAutoSubmitExplodeIntent(doc = globalThis.document, loc = globalThis.location) {
+  if (!doc || !loc || !String(loc.hash || "").includes("vox-explode=1")) return false;
+  for (const sel of AUTO_SUBMIT_SELECTORS) {
+    const btn = doc.querySelector?.(sel);
+    if (btn && typeof btn.click === "function") {
+      btn.click();
+      return true;
+    }
+  }
+  return false;
 }
 
 async function handleExplodeGridActions(action, text, url, payload, post) {
@@ -422,24 +498,34 @@ export function removeCascadeBar() {
   activeCascade = null;
 }
 
+function getActiveCascadeSteps() {
+  return activeCascade?.steps?.length ? activeCascade.steps : CASCADE_STEPS;
+}
+
 function openCascadeStep(step, post) {
   const canonicalUrl = buildCanonicalTopicUrl(post?.id, { communityId: post?.communityId });
   const text = buildExplodeText({ title: post?.title, body: post?.body, url: canonicalUrl });
-  const targetUrl = resolveIntentTargetUrl(step.id, text, canonicalUrl, post);
-  if (targetUrl) window.open(targetUrl, "_blank", "noopener,noreferrer");
+  if (step.id === "instagram" || step.id === "tiktok") {
+    void copyStoryCardToClipboard(post).catch(() => null);
+  }
+  const targetUrl = resolveBurstTargetUrl(step.id, text, canonicalUrl, post);
+  if (targetUrl && typeof window !== "undefined" && typeof window.open === "function") {
+    window.open(targetUrl, "_blank", "noopener,noreferrer");
+  }
 }
 
 function updateCascadeBarUi() {
   const root = document.getElementById(CASCADE_BAR_ID);
   if (!root || !activeCascade) return;
+  const steps = getActiveCascadeSteps();
   const { stepIndex } = activeCascade;
-  const current = CASCADE_STEPS[stepIndex];
-  const next = CASCADE_STEPS[stepIndex + 1];
+  const current = steps[stepIndex];
+  const next = steps[stepIndex + 1];
 
   const infoEl = root.querySelector(".explode-cascade-info");
   const nextBtn = root.querySelector(".btn-cascade-next");
-  if (infoEl) {
-    infoEl.innerHTML = `<span class="explode-cascade-badge">Etapa ${stepIndex + 1}/${CASCADE_STEPS.length}</span> <strong>${current.icon} ${current.label} aberto ✓</strong>`;
+  if (infoEl && current) {
+    infoEl.innerHTML = `<span class="explode-cascade-badge">Etapa ${stepIndex + 1}/${steps.length}</span> <strong>${current.icon} ${current.label} aberto ✓</strong>`;
   }
   if (nextBtn) {
     nextBtn.textContent = next ? `👉 Próximo: ${next.icon} ${next.label}` : "🏁 Concluir Disparo";
@@ -449,38 +535,35 @@ function updateCascadeBarUi() {
 
 export function advanceCascadeExplode() {
   if (!activeCascade) return;
+  const steps = getActiveCascadeSteps();
   activeCascade.stepIndex += 1;
-  if (activeCascade.stepIndex >= CASCADE_STEPS.length) {
+  if (activeCascade.stepIndex >= steps.length) {
     share.showToast("🎉 Disparo em onda concluído em todas as redes!");
     return removeCascadeBar();
   }
-  openCascadeStep(CASCADE_STEPS[activeCascade.stepIndex], activeCascade.post);
+  openCascadeStep(steps[activeCascade.stepIndex], activeCascade.post);
   updateCascadeBarUi();
 }
 
-function buildCascadeBarHtml(stepIndex) {
-  const current = CASCADE_STEPS[stepIndex];
-  const next = CASCADE_STEPS[stepIndex + 1];
+function buildCascadeBarHtml(stepIndex, steps = CASCADE_STEPS) {
+  const current = steps[stepIndex] || steps[0];
+  const next = steps[stepIndex + 1];
+  const nextLabel = next ? `👉 Próximo: ${next.icon} ${next.label}` : "🏁 Concluir Disparo";
   return `
     <div class="explode-cascade-info">
-      <span class="explode-cascade-badge">Etapa ${stepIndex + 1}/${CASCADE_STEPS.length}</span>
+      <span class="explode-cascade-badge">Etapa ${stepIndex + 1}/${steps.length}</span>
       <strong>${current.icon} ${current.label} aberto ✓</strong>
     </div>
     <div class="explode-cascade-actions">
-      <button type="button" class="btn btn-sm btn-primary btn-cascade-next">👉 Próximo: ${next.icon} ${next.label}</button>
+      <button type="button" class="btn btn-sm btn-primary btn-cascade-next">${nextLabel}</button>
       <button type="button" class="btn btn-sm btn-outline btn-cascade-skip">Pular</button>
       <button type="button" class="btn btn-sm btn-text btn-cascade-close" aria-label="Fechar esteira">✕</button>
     </div>`;
 }
 
-export function startCascadeExplode(post) {
-  if (!post?.id || typeof document === "undefined") return;
-  closeExplodeSheet();
-  void executeExplodeBurst(post);
-
-  activeCascade = { post: { ...post }, stepIndex: 0 };
-  openCascadeStep(CASCADE_STEPS[0], activeCascade.post);
-
+function mountCascadeBar(steps, post, stepIndex = 0) {
+  if (typeof document === "undefined" || !document.body?.appendChild) return;
+  activeCascade = { post: { ...post }, stepIndex, steps };
   let bar = document.getElementById(CASCADE_BAR_ID);
   if (!bar) {
     bar = document.createElement("div");
@@ -490,14 +573,41 @@ export function startCascadeExplode(post) {
     bar.setAttribute("aria-label", "Esteira de Disparo");
     document.body.appendChild(bar);
   }
-  bar.innerHTML = buildCascadeBarHtml(0);
+  bar.innerHTML = buildCascadeBarHtml(stepIndex, steps);
   bar.querySelector(".btn-cascade-next")?.focus();
 }
 
-async function handleExplodeBurst(post) {
-  const res = await executeExplodeBurst(post);
-  share.showToast(res.webhooksSent > 0 ? `📢 Rajada disparada! (${res.webhooksSent} destinos)` : "📢 Mensagem copiada! Cole nos grupos!");
+export function startCascadeExplode(post, { steps = CASCADE_STEPS, skipBurst = false } = {}) {
+  if (!post?.id || typeof document === "undefined") return;
   closeExplodeSheet();
+  if (!skipBurst) {
+    void executeExplodeBurst(post, { triggerIntents: false });
+  }
+  const validSteps = steps?.length ? steps : CASCADE_STEPS;
+  openCascadeStep(validSteps[0], post);
+  mountCascadeBar(validSteps, post, 0);
+}
+
+function hasAnyConfiguredBurstChannel() {
+  if (getConnectedIntentTargets().length > 0) return true;
+  if (hasDirectReplicationTargets()) return true;
+  return loadPosseWebhooks().length > 0;
+}
+
+async function handleExplodeBurst(post) {
+  closeExplodeSheet();
+  if (!hasAnyConfiguredBurstChannel()) {
+    startCascadeExplode(post);
+    share.showToast("📢 Disparo em onda iniciado! Mensagem copiada.");
+    return;
+  }
+  const res = await executeExplodeBurst(post);
+  const total = res.webhooksSent || res.connectedCount || 0;
+  share.showToast(
+    total > 0
+      ? `📢 Rajada disparada! (${total} destino(s))`
+      : "📢 Mensagem copiada! Cole nos grupos!",
+  );
 }
 
 async function handleExplodeCopy(text) {

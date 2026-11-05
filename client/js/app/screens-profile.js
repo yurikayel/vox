@@ -18,6 +18,7 @@ import * as postOwnership from "../post-ownership.js";
 import * as profileDirectory from "../profile-directory.js";
 import * as welcomeProfile from "../vox-welcome-profile.js";
 import * as meshProfile from "../mesh-profile.js";
+import * as centralMemory from "../central-memory.js";
 import { getCachedBskyPosts } from "../bsky-feed.js";
 import { openOAuthEnrichModal } from "./onboarding.js";
 import { getActiveUser, makeShellProps } from "./context.js";
@@ -463,36 +464,46 @@ function bindSharingAndClipboardButtons(address) {
   bindQrShareButtons(address);
 }
 
-function bindDisplayNameAndOAuthButtons(address, activeTab) {
-  const formDisplayName = document.getElementById("form-display-name");
-  if (formDisplayName) {
-    formDisplayName.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const name = document.getElementById("input-display-name")?.value.trim();
-      invalidateProfileCache();
-      localAccount.setDisplayName(name);
-      share.showToast("Nome local atualizado!");
-      void meshProfile.syncMeshProfileCard();
-      showProfile(address);
-    });
-  }
+function broadcastActiveIdentityChanges() {
+  void syncIdentity();
+  void meshProfile.syncMeshProfileCard();
+  void centralMemory.syncWithCentralMemory();
+}
 
+function bindDisplayNameForm(address) {
+  document.getElementById("form-display-name")?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const name = document.getElementById("input-display-name")?.value.trim();
+    invalidateProfileCache();
+    localAccount.setDisplayName(name);
+    share.showToast("Nome local atualizado!");
+    broadcastActiveIdentityChanges();
+    showProfile(address);
+  });
+}
+
+function bindDisplayNameAndOAuthButtons(address, activeTab) {
+  bindDisplayNameForm(address);
   document.getElementById("profile-mesh-discoverable")?.addEventListener("change", (e) => {
     localAccount.setMeshDiscoverable(Boolean(e.target.checked));
     void meshProfile.syncMeshProfileCard().then(() => {
+      void centralMemory.syncWithCentralMemory();
       share.showToast(e.target.checked ? "Cartão publicado na malha." : "Cartão revogado na malha.");
       showProfile(address, activeTab);
     });
   });
-
   document.getElementById("btn-open-oauth-modal")?.addEventListener("click", () => {
-    openOAuthEnrichModal({ onComplete: () => showProfile(address, activeTab) });
+    openOAuthEnrichModal({
+      onComplete: () => {
+        broadcastActiveIdentityChanges();
+        showProfile(address, activeTab);
+      },
+    });
   });
-
   document.getElementById("btn-clear-oauth-enrich")?.addEventListener("click", () => {
     localAccount.clearProfileEnrichment();
     share.showToast("Nome/foto importados removidos.");
-    void meshProfile.syncMeshProfileCard();
+    broadcastActiveIdentityChanges();
     showProfile(address, activeTab);
   });
 }
@@ -506,7 +517,8 @@ function bindCreateVaultAccount(isSelf) {
     if (!name) return;
     try {
       const newAcc = await localAccount.createAdditionalAccount({ displayName: name });
-      profileDirectory.setProfileCard(newAcc.routeId, { name, updatedAt: Date.now() });
+      profileDirectory.setProfileCard(newAcc.routeId, { name, discoverable: true, updatedAt: Date.now() });
+      broadcastActiveIdentityChanges();
       share.showToast(`Nova conta "${name}" criada e ativada!`);
       await showProfile(newAcc.routeId, "about");
     } catch (err) {
@@ -539,6 +551,8 @@ function bindSwitchAndRemoveVaultAccounts(address) {
       try {
         const ok = await localAccount.switchActiveAccount(targetRoute);
         if (ok) {
+          invalidateProfileCache();
+          broadcastActiveIdentityChanges();
           share.showToast("Identidade alternada com sucesso!");
           await showProfile(targetRoute, "about");
         } else {

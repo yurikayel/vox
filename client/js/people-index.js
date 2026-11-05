@@ -122,6 +122,19 @@ function indexLocalAndVaultAccounts(map) {
   indexVaultAccounts(map);
 }
 
+function comparePeopleEntries(a, b) {
+  if (a.routeId === WELCOME_ROUTE_ID) return -1;
+  if (b.routeId === WELCOME_ROUTE_ID) return 1;
+  const aFallback = isFallbackRouteName(a.name, a.routeId);
+  const bFallback = isFallbackRouteName(b.name, b.routeId);
+  if (aFallback !== bFallback) return aFallback ? 1 : -1;
+  const nameCmp = String(a.name || "").localeCompare(String(b.name || ""), "pt-BR", {
+    sensitivity: "base",
+  });
+  if (nameCmp !== 0) return nameCmp;
+  return String(a.routeId || "").localeCompare(String(b.routeId || ""));
+}
+
 export async function buildPeopleIndex() {
   const map = new Map();
 
@@ -147,7 +160,7 @@ export async function buildPeopleIndex() {
   await indexMeshAuthors(map);
   indexMeshCards(map);
 
-  return Array.from(map.values());
+  return Array.from(map.values()).sort(comparePeopleEntries);
 }
 
 export async function buildPeopleSections() {

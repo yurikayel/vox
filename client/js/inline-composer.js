@@ -295,6 +295,10 @@ function handleVoiceAudioReady(dataUrl, byteSize, state) {
 }
 
 function startVoiceRecording(state) {
+  if (state.isRecording) {
+    state.stopVoiceRecording();
+    return;
+  }
   if (!navigator?.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
     share.showToast("Gravação de voz não suportada neste ambiente.", "error");
     return;
@@ -320,7 +324,11 @@ function startVoiceRecording(state) {
 function bindVoiceButtons(state) {
   document.getElementById("btn-inline-mic")?.addEventListener("click", (e) => {
     e.preventDefault();
-    startVoiceRecording(state);
+    if (state.isRecording) {
+      state.stopVoiceRecording();
+    } else {
+      startVoiceRecording(state);
+    }
   });
   document.getElementById("btn-inline-stop-rec")?.addEventListener("click", (e) => {
     e.preventDefault();
@@ -465,20 +473,50 @@ function bindPhotoTagging() {
   });
 }
 
+function resetMicToggleUi() {
+  const toolsBar = document.querySelector(".inline-composer-tools");
+  toolsBar?.classList.remove("is-recording-mode");
+  const micBtn = document.getElementById("btn-inline-mic");
+  if (micBtn) {
+    micBtn.classList.remove("is-recording");
+    micBtn.setAttribute("aria-pressed", "false");
+    micBtn.setAttribute("title", "Gravar voz pelo microfone (até 60s)");
+    micBtn.setAttribute("aria-label", "Gravar voz pelo microfone (até 60s)");
+  }
+  document.getElementById("btn-inline-cancel-rec")?.classList.add("hidden");
+  const timerEl = document.getElementById("inline-recording-timer");
+  if (timerEl) timerEl.textContent = "00:00 / 01:00";
+}
+
+function setMicRecordingUi() {
+  const toolsBar = document.querySelector(".inline-composer-tools");
+  toolsBar?.classList.add("is-recording-mode");
+  const micBtn = document.getElementById("btn-inline-mic");
+  if (micBtn) {
+    micBtn.classList.add("is-recording");
+    micBtn.setAttribute("aria-pressed", "true");
+    micBtn.setAttribute("title", "Gravando... Toque para concluir gravação");
+    micBtn.setAttribute("aria-label", "Gravando voz. Toque para concluir a gravação.");
+  }
+  document.getElementById("btn-inline-cancel-rec")?.classList.remove("hidden");
+  const timerEl = document.getElementById("inline-recording-timer");
+  if (timerEl) timerEl.textContent = "00:00 / 01:00";
+}
+
 function cleanupRecordingState(state) {
   if (state.recordingTimer) { clearInterval(state.recordingTimer); state.recordingTimer = null; }
   if (state.activeStream) { state.activeStream.getTracks().forEach((t) => t.stop()); state.activeStream = null; }
   state.activeRecorder = null;
   state.recordingChunks = [];
   state.recordingSeconds = 0;
-  document.getElementById("inline-recording-indicator")?.classList.add("hidden");
+  state.isRecording = false;
+  resetMicToggleUi();
 }
 
 function startRecordingTimer(state) {
-  const indicator = document.getElementById("inline-recording-indicator");
+  state.isRecording = true;
+  setMicRecordingUi();
   const timerEl = document.getElementById("inline-recording-timer");
-  if (indicator) indicator.classList.remove("hidden");
-  if (timerEl) timerEl.textContent = "00:00 / 01:00";
   state.recordingTimer = setInterval(() => {
     state.recordingSeconds++;
     if (timerEl) timerEl.textContent = formatRecordingTime(state.recordingSeconds);
@@ -510,6 +548,7 @@ function createComposerControllerState() {
     recordingChunks: [],
     recordingTimer: null,
     recordingSeconds: 0,
+    isRecording: false,
     cleanupRecordingState: () => cleanupRecordingState(state),
     startTimer: () => startRecordingTimer(state),
     stopVoiceRecording: () => stopVoiceRecording(state),

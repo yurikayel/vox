@@ -5,6 +5,8 @@ import * as share from "../share.js";
 import * as localAccount from "../local-account.js";
 import * as oauthProfile from "../oauth-profile.js";
 import * as meshProfile from "../mesh-profile.js";
+import * as centralMemory from "../central-memory.js";
+import { syncIdentity } from "./screens-network.js";
 import { parseRoute } from "./route-parse.js";
 import {
   CANTINA_STORAGE_KEY,
@@ -77,6 +79,12 @@ function applyOAuthProviderAvailability() {
   });
 }
 
+function syncIdentityAndDirectoryAfterOnboarding() {
+  void syncIdentity();
+  void meshProfile.syncMeshProfileCard();
+  void centralMemory.syncWithCentralMemory();
+}
+
 function bindOAuthProviderButton(btnId, signInFn, fallbackError, labelFn, modalContainer, onDone) {
   document.getElementById(btnId)?.addEventListener("click", async () => {
     const btn = document.getElementById(btnId);
@@ -85,9 +93,29 @@ function bindOAuthProviderButton(btnId, signInFn, fallbackError, labelFn, modalC
       oauthProfile.skipOAuthEnrichment();
       render.closeOAuthEnrich(modalContainer);
       share.showToast(labelFn(res));
-      void meshProfile.syncMeshProfileCard();
+      syncIdentityAndDirectoryAfterOnboarding();
       if (onDone) onDone(res);
     }
+  });
+}
+
+function bindCustomNameForm(modalContainer, onComplete) {
+  const form = document.getElementById("form-oauth-custom-name");
+  if (!form) return;
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const rawName = document.getElementById("oauth-custom-name-input")?.value.trim() || "";
+    if (!rawName) {
+      setOAuthEnrichError("Digite um nome ou apelido para continuar.");
+      return;
+    }
+    setOAuthEnrichError("");
+    localAccount.setDisplayName(rawName);
+    oauthProfile.skipOAuthEnrichment();
+    render.closeOAuthEnrich(modalContainer);
+    share.showToast(`Bem-vindo, ${rawName}!`);
+    syncIdentityAndDirectoryAfterOnboarding();
+    if (onComplete) onComplete({ ok: true, customName: rawName });
   });
 }
 
@@ -97,11 +125,13 @@ export function openOAuthEnrichModal({ onComplete } = {}) {
 
   render.renderOAuthEnrich(modalContainer);
   applyOAuthProviderAvailability();
+  bindCustomNameForm(modalContainer, onComplete);
 
   document.getElementById("btn-oauth-skip")?.addEventListener("click", () => {
     setOAuthEnrichError("");
     oauthProfile.skipOAuthEnrichment();
     render.closeOAuthEnrich(modalContainer);
+    syncIdentityAndDirectoryAfterOnboarding();
     if (onComplete) onComplete({ skipped: true });
   });
 

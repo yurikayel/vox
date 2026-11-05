@@ -103,33 +103,23 @@ function iconCommunity() {
   return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`;
 }
 
-function renderComposerRecordingIndicator() {
-  return `
-    <div id="inline-recording-indicator" class="inline-recording-indicator hidden">
-      <div class="inline-recording-left">
-        <span class="recording-pulse" aria-hidden="true"></span>
-        <span class="recording-label">Gravando voz</span>
-        <div class="recording-waves" aria-hidden="true">
-          <span></span><span></span><span></span><span></span><span></span>
-        </div>
-        <span id="inline-recording-timer" class="recording-timer">00:00 / 01:00</span>
-      </div>
-      <div class="inline-recording-actions">
-        <button type="button" id="btn-inline-stop-rec" class="btn-rec-stop">⏹ Concluir</button>
-        <button type="button" id="btn-inline-cancel-rec" class="btn-rec-cancel" title="Cancelar gravação" aria-label="Cancelar gravação">✕</button>
-      </div>
-    </div>`;
-}
-
 function renderMediaTools() {
   return `
     <label class="inline-composer-tool" title="Foto (até 99 KB)" aria-label="Anexar foto">
       <input type="file" id="inline-topic-file" accept="image/jpeg,image/png,image/webp,image/gif" hidden />
       ${iconMediaPhoto()}
     </label>
-    <button type="button" class="inline-composer-tool" id="btn-inline-mic" title="Gravar voz pelo microfone (até 60s)" aria-label="Gravar voz pelo microfone (até 60s)">
-      ${iconMediaMic()}
-    </button>
+    <div class="inline-mic-wrapper">
+      <button type="button" class="inline-composer-tool btn-inline-mic" id="btn-inline-mic" title="Gravar voz (toque para iniciar, até 1 min)" aria-label="Gravar voz pelo microfone (até 60s)" aria-pressed="false">
+        <span class="btn-mic-icon" aria-hidden="true">${iconMediaMic()}</span>
+        <span class="btn-mic-recording-content" aria-hidden="true">
+          <span class="recording-pulse"></span>
+          <span id="inline-recording-timer" class="recording-timer">00:00 / 01:00</span>
+          <span class="recording-stop-icon">⏹</span>
+        </span>
+      </button>
+      <button type="button" id="btn-inline-cancel-rec" class="btn-rec-cancel hidden" title="Cancelar gravação" aria-label="Cancelar gravação">✕</button>
+    </div>
     <label class="inline-composer-tool" title="Áudio (até 60s)" aria-label="Anexar áudio">
       <input type="file" id="inline-topic-audio" accept="audio/mpeg,audio/mp3,audio/wav,audio/ogg,audio/webm,audio/aac,audio/m4a" hidden />
       ${iconMediaAudio()}
@@ -191,7 +181,6 @@ export function renderInlineComposer({ userRouteId = "", displayName = "" } = {}
         </div>
         ${renderComposerAudience()}
         ${renderComposerPreviewWrap()}
-        ${renderComposerRecordingIndicator()}
         ${renderComposerToolbar()}
         ${renderComposerMeta()}
       </form>
@@ -351,6 +340,7 @@ export function renderQuarantineAction(postId, { asMenuItem = true } = {}) {
   const label = on ? "Tirar da quarentena local" : mod.QUARANTINE_ACTION_LABEL;
   const role = asMenuItem ? ' role="menuitem"' : "";
   return `<button type="button" class="action-btn btn-quarantine-post${on ? " is-quarantined" : ""}" data-id="${escapeHtml(id)}" title="${escapeHtml(mod.QUARANTINE_HINT)}" aria-label="${escapeHtml(label)}" aria-pressed="${on ? "true" : "false"}"${role}>
+    <svg class="action-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="4.93" x2="19.07" y1="4.93" y2="19.07"/></svg>
     <span class="toolbar-overflow-label">${escapeHtml(label)}</span>
   </button>`;
 }

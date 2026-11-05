@@ -1267,33 +1267,79 @@ main#app-main,
   color: var(--danger, #dc3545);
 }
 
-/* Gravação de Voz Inline (Estilo Twitter / WhatsApp Voice Note) */
-.inline-recording-indicator {
-  margin: 10px 0;
-  padding: 8px 14px;
-  background: rgba(239, 68, 68, 0.08);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+/* Botão Toggle Simplificado de Gravação de Voz */
+.inline-mic-wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+}
+
+.btn-inline-mic {
+  position: relative;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-inline-mic .btn-mic-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-inline-mic .btn-mic-recording-content {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* Estado Ativo do Toggle: Gravando voz */
+.btn-inline-mic.is-recording {
+  width: auto !important;
+  min-width: 128px;
+  padding: 0 12px;
+  background: rgba(239, 68, 68, 0.14);
+  border: 1.5px solid rgba(239, 68, 68, 0.6);
   border-radius: 999px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  animation: fadeIn 0.2s ease;
+  color: #ef4444;
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.22);
+  animation: pulseRecordingBorder 2s infinite ease-in-out;
 }
 
-.inline-recording-indicator.hidden {
-  display: none !important;
+.btn-inline-mic.is-recording:hover {
+  background: rgba(239, 68, 68, 0.22);
+  border-color: #ef4444;
+  transform: scale(1.02);
 }
 
-.inline-recording-left {
-  display: flex;
+.btn-inline-mic.is-recording:active {
+  transform: scale(0.97);
+}
+
+.btn-inline-mic.is-recording .btn-mic-icon {
+  display: none;
+}
+
+.btn-inline-mic.is-recording .btn-mic-recording-content {
+  display: inline-flex;
+}
+
+.btn-inline-mic.is-recording .recording-stop-icon {
+  display: inline-flex;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
+  font-size: 0.72rem;
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.2);
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
 }
 
 .recording-pulse {
-  width: 10px;
-  height: 10px;
+  width: 9px;
+  height: 9px;
   background: #ef4444;
   border-radius: 50%;
   display: inline-block;
@@ -1303,84 +1349,22 @@ main#app-main,
 
 @keyframes pulseRed {
   0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-  70% { transform: scale(1.1); box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+  70% { transform: scale(1.15); box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
   100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
 }
 
-.recording-label {
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: #ef4444;
-}
-
-.recording-waves {
-  display: flex;
-  align-items: center;
-  gap: 2.5px;
-  height: 16px;
-}
-
-.recording-waves span {
-  display: block;
-  width: 3px;
-  background: #ef4444;
-  border-radius: 2px;
-  animation: waveAnim 1s ease-in-out infinite alternate;
-}
-
-.recording-waves span:nth-child(1) { height: 6px; animation-delay: 0.1s; }
-.recording-waves span:nth-child(2) { height: 14px; animation-delay: 0.3s; }
-.recording-waves span:nth-child(3) { height: 10px; animation-delay: 0.2s; }
-.recording-waves span:nth-child(4) { height: 16px; animation-delay: 0.4s; }
-.recording-waves span:nth-child(5) { height: 8px; animation-delay: 0.15s; }
-
-@keyframes waveAnim {
-  0% { height: 4px; }
-  100% { height: 16px; }
+@keyframes pulseRecordingBorder {
+  0%, 100% { border-color: rgba(239, 68, 68, 0.5); box-shadow: 0 0 8px rgba(239, 68, 68, 0.2); }
+  50% { border-color: rgba(239, 68, 68, 0.9); box-shadow: 0 0 14px rgba(239, 68, 68, 0.35); }
 }
 
 .recording-timer {
-  font-family: monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-weight: 700;
   font-size: 0.84rem;
-  color: var(--text);
+  color: var(--text, #fff);
   white-space: nowrap;
-  flex-shrink: 0;
-}
-
-@media (max-width: 480px) {
-  .inline-recording-indicator {
-    padding: 6px 10px;
-    gap: 8px;
-  }
-  .recording-label {
-    display: none;
-  }
-}
-
-.inline-recording-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
-.btn-rec-stop {
-  background: #06b6d4;
-  color: #000;
-  border: none;
-  border-radius: 999px;
-  padding: 5px 14px;
-  font-size: 0.78rem;
-  font-weight: 700;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: filter 0.15s ease, transform 0.15s ease;
-}
-
-.btn-rec-stop:hover {
-  filter: brightness(1.1);
-  transform: translateY(-1px);
+  letter-spacing: 0.5px;
 }
 
 .btn-rec-cancel {
@@ -1395,12 +1379,25 @@ main#app-main,
   justify-content: center;
   font-size: 0.8rem;
   cursor: pointer;
-  transition: color 0.15s ease, border-color 0.15s ease;
+  transition: color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+.btn-rec-cancel.hidden {
+  display: none !important;
 }
 
 .btn-rec-cancel:hover {
   color: #ef4444;
   border-color: #ef4444;
+  transform: scale(1.08);
+}
+
+.inline-composer-tools.is-recording-mode > *:not(.inline-mic-wrapper) {
+  display: none;
+}
+
+.inline-recording-indicator {
+  display: none !important;
 }
 
 /* Toolbar Estilo Twitter / Instagram */
@@ -2892,7 +2889,8 @@ body.post-lightbox-open {
   margin-left: auto;
 }
 
-.post:has(.toolbar-overflow[open]) {
+.post:has(.toolbar-overflow[open]),
+.topic-root:has(.toolbar-overflow[open]) {
   overflow: visible;
   z-index: 8;
 }
@@ -2946,6 +2944,14 @@ body.post-lightbox-open {
   font-size: 0.82rem;
   font-weight: 600;
   color: var(--text);
+}
+
+.btn-quarantine-post.is-quarantined {
+  color: #eab308;
+}
+
+.btn-quarantine-post.is-quarantined .toolbar-overflow-label {
+  color: #eab308;
 }
 
 .action-btn {
