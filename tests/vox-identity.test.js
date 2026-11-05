@@ -205,3 +205,31 @@ test("vox-identity - persiste metadados de identidade no idbStore", async () => 
   assert.equal(stored.rawPublicKey, voxIdentity.bytesToHex(identity.rawPublicKey));
   assert.ok(stored.backupBundle);
 });
+
+test("vox-identity - getCachedIdentity retorna projeção pública segura e imutável", async () => {
+  voxIdentity.resetIdentityCacheForTesting();
+  assert.equal(voxIdentity.getCachedIdentity(), null);
+
+  const identity = await voxIdentity.generateIdentity({
+    passphrase: "senha-ultra-segura",
+    persist: false,
+  });
+
+  const cached = voxIdentity.getCachedIdentity();
+  assert.ok(cached);
+  assert.equal(cached.routeId, identity.routeId);
+  assert.equal(cached.publicKeyHex, identity.publicKeyHex);
+  assert.equal(cached.agreementPublicKeyHex, identity.agreementPublicKeyHex);
+  assert.equal(cached.isExtractable, false);
+
+  // Material privado e chaves criptográficas NUNCA vazam na projeção
+  assert.equal(cached.privateKey, undefined);
+  assert.equal(cached.agreementPrivateKey, undefined);
+  assert.equal(cached.backupBundle, undefined);
+
+  // Projeção congelada contra adulteração
+  assert.ok(Object.isFrozen(cached));
+  assert.throws(() => {
+    cached.routeId = "vx_hacked";
+  });
+});
