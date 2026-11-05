@@ -204,7 +204,7 @@ export function setProfileEnrichment({ displayName, bio, avatarUrl, oauthProvide
     };
     localStorage.setItem(ENRICHMENT_STORAGE, JSON.stringify(next));
     if (next.displayName) setDisplayName(next.displayName);
-    else syncCurrentAccountMetadataToVault();
+    syncCurrentAccountMetadataToVault();
     return next;
   } catch {
     return null;

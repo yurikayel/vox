@@ -20,20 +20,84 @@ function loadCards() {
   }
 }
 
+function normalizeSocialAvatarBase(av) {
+  if (!av) return "";
+  const clean = String(av).trim();
+  if (clean.includes("googleusercontent.com/")) return clean.split("=")[0];
+  if (clean.includes("fbsbx.com") || clean.includes("fbcdn.net") || clean.includes("facebook.com")) {
+    return clean.split("?")[0];
+  }
+  return clean;
+}
+
+function hasSameSocialAvatar(avA, avB) {
+  if (!avA || !avB) return false;
+  if (avA === avB) return true;
+  const isSocialA = avA.includes("googleusercontent.com") || avA.includes("fbcdn") || avA.includes("fbsbx");
+  const isSocialB = avB.includes("googleusercontent.com") || avB.includes("fbcdn") || avB.includes("fbsbx");
+  return isSocialA && isSocialB;
+}
+
+function hasMatchingNamedIdentity(nameA, nameB, avA, avB) {
+  if (!nameA || nameA.startsWith("vx_") || nameA !== nameB) return false;
+  if (hasSameSocialAvatar(avA, avB)) return true;
+  return Boolean(avA && avB && avA === avB);
+}
+
+export function isSameCardIdentity(cardA, cardB) {
+  if (!cardA || !cardB) return false;
+  const isAlias = Boolean(cardA.arweaveAddress && cardB.arweaveAddress && cardA.arweaveAddress === cardB.arweaveAddress);
+  if (isAlias) return false;
+
+  const avA = normalizeSocialAvatarBase(cardA.avatarUrl || cardA.avatar || "");
+  const avB = normalizeSocialAvatarBase(cardB.avatarUrl || cardB.avatar || "");
+  if (hasSameSocialAvatar(avA, avB)) return true;
+
+  const nameA = String(cardA.name || cardA.displayName || "").trim();
+  const nameB = String(cardB.name || cardB.displayName || "").trim();
+  return hasMatchingNamedIdentity(nameA, nameB, avA, avB);
+}
+
+export function pruneCardsMatchingSocialIdentity({ canonicalRouteId, displayName, avatarUrl } = {}) {
+  const cards = loadCards();
+  const target = { name: displayName, avatarUrl };
+  let changed = false;
+  for (const [id, c] of Object.entries(cards)) {
+    if (id !== canonicalRouteId && isSameCardIdentity(c, target)) {
+      delete cards[id];
+      changed = true;
+    }
+  }
+  if (changed) {
+    try {
+      localStorage.setItem(CARDS_KEY, JSON.stringify(cards));
+    } catch {}
+  }
+}
+
+function isAliasProfileCard(c, id, nextCard) {
+  if (c?.arweaveAddress && (c.arweaveAddress === id || c.arweaveAddress === nextCard.arweaveAddress)) {
+    return true;
+  }
+  return Boolean(c?.onChainTxId && nextCard.onChainTxId && c.onChainTxId === nextCard.onChainTxId);
+}
+
+function pruneConflictingIdentityCards(cards, id, nextCard) {
+  for (const [otherId, c] of Object.entries(cards)) {
+    if (otherId === id) continue;
+    if (!isAliasProfileCard(c, id, nextCard) && isSameCardIdentity(c, nextCard)) {
+      delete cards[otherId];
+    }
+  }
+}
+
 export function setProfileCard(routeId, partial) {
   const id = String(routeId || "").trim();
   if (!id) return;
   const cards = loadCards();
   const nextCard = { ...cards[id], ...partial, routeId: id, updatedAt: Date.now() };
 
-  const googleAv = nextCard.avatarUrl || nextCard.avatar || "";
-  if (googleAv && googleAv.includes("lh3.googleusercontent.com/a/")) {
-    for (const [otherId, c] of Object.entries(cards)) {
-      if (otherId !== id && (c?.avatarUrl === googleAv || c?.avatar === googleAv)) {
-        delete cards[otherId];
-      }
-    }
-  }
+  pruneConflictingIdentityCards(cards, id, nextCard);
 
   cards[id] = nextCard;
   try {
@@ -64,7 +128,19 @@ export function removeProfileCard(routeId) {
 
 export function listDiscoverableProfileCards() {
   const cards = loadCards();
-  return Object.values(cards).filter((c) => c && c.discoverable !== false && c.routeId);
+  const all = Object.values(cards).filter((c) => c && c.discoverable !== false && c.routeId);
+  const deduped = [];
+  for (const card of all) {
+    const existingIdx = deduped.findIndex((ex) => isSameCardIdentity(ex, card));
+    if (existingIdx >= 0) {
+      if ((card.updatedAt || 0) > (deduped[existingIdx].updatedAt || 0)) {
+        deduped[existingIdx] = card;
+      }
+    } else {
+      deduped.push(card);
+    }
+  }
+  return deduped;
 }
 
 export function __resetProfileCardsForTests() {

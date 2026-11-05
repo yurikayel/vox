@@ -7,6 +7,7 @@
  */
 
 import * as localAccount from "./local-account.js";
+import * as profileDirectory from "./profile-directory.js";
 import { getCentralMemoryUrls } from "./central-memory.js";
 
 const VAULT_STORAGE_PREFIX = "vox-oauth-vault-v1:";
@@ -132,27 +133,68 @@ async function findEncryptedVaultRecord(lookupKey) {
   return remote;
 }
 
+function cleanupSupersededIdentity(prevId, canonicalId, displayName, avatarUrl) {
+  if (prevId && prevId !== canonicalId && localAccount.isAccountDisposable(prevId)) {
+    localAccount.removeVaultAccount(prevId);
+    profileDirectory.removeProfileCard(prevId);
+  }
+  profileDirectory.pruneCardsMatchingSocialIdentity({
+    canonicalRouteId: canonicalId,
+    displayName,
+    avatarUrl,
+  });
+  if (canonicalId && displayName) {
+    profileDirectory.setProfileCard(canonicalId, {
+      name: displayName,
+      avatarUrl: avatarUrl || "",
+      discoverable: true,
+    });
+  }
+}
+
 async function tryRestoreFromEncryptedRecord(record, encKey, profile, provider = "google") {
   if (!record) return null;
   try {
     const bundle = await decryptVaultBundle(record, encKey);
     if (bundle?.routeId && bundle?.publicJwk && bundle?.privateJwk) {
+      const prevId = localAccount.getCachedRouteIdSync();
       await localAccount.importLocalAccountBundle(bundle);
+      const name = profile.name || bundle.displayName;
+      const avatarUrl = profile.picture || bundle.avatarUrl;
       if (provider !== "passphrase") {
         localAccount.setProfileEnrichment({
-          displayName: profile.name || bundle.displayName,
-          avatarUrl: profile.picture || bundle.avatarUrl,
+          displayName: name,
+          avatarUrl,
           oauthProvider: provider,
           oauthSub: profile.sub,
           oauthEmail: profile.email,
         });
       }
-      return { restored: true, routeId: bundle.routeId, displayName: bundle.displayName || profile.name };
+      cleanupSupersededIdentity(prevId, bundle.routeId, name, avatarUrl);
+      return { restored: true, routeId: bundle.routeId, displayName: name };
     }
   } catch (err) {
     console.warn(`Falha ao decifrar cofre ${provider}:`, err);
   }
   return null;
+}
+
+function persistEncryptedVaultRecord(lookupKey, encrypted) {
+  try {
+    localStorage.setItem(VAULT_STORAGE_PREFIX + lookupKey, JSON.stringify(encrypted));
+  } catch {}
+  saveRemoteVaultRecord(lookupKey, encrypted);
+}
+
+function enrichAccountFromProfile(provider, { name, picture, sub, email }) {
+  if (provider === "passphrase") return;
+  localAccount.setProfileEnrichment({
+    displayName: name,
+    avatarUrl: picture,
+    oauthProvider: provider,
+    oauthSub: sub,
+    oauthEmail: email,
+  });
 }
 
 async function bindAndPersistNewVault(profile, lookupKey, encKey, provider = "google") {
@@ -164,29 +206,17 @@ async function bindAndPersistNewVault(profile, lookupKey, encKey, provider = "go
     avatarUrl: picture,
   });
   const localBundle = resolveCanonicalLocalBundle(matched);
+  const prevId = localAccount.getCachedRouteIdSync();
   const bundleToPersist = localBundle || (await localAccount.exportLocalAccountBundle());
 
-  if (localBundle && localBundle.routeId !== localAccount.getCachedRouteIdSync()) {
+  if (localBundle && localBundle.routeId !== prevId) {
     await localAccount.importLocalAccountBundle(localBundle);
   }
 
   const encrypted = await encryptVaultBundle(bundleToPersist, encKey);
-  try {
-    localStorage.setItem(VAULT_STORAGE_PREFIX + lookupKey, JSON.stringify(encrypted));
-  } catch {
-    /* ignore */
-  }
-  saveRemoteVaultRecord(lookupKey, encrypted);
-
-  if (provider !== "passphrase") {
-    localAccount.setProfileEnrichment({
-      displayName: name,
-      avatarUrl: picture,
-      oauthProvider: provider,
-      oauthSub: sub,
-      oauthEmail: email,
-    });
-  }
+  persistEncryptedVaultRecord(lookupKey, encrypted);
+  enrichAccountFromProfile(provider, profile);
+  cleanupSupersededIdentity(prevId, bundleToPersist.routeId, name, picture);
   return { restored: Boolean(localBundle), routeId: bundleToPersist.routeId, displayName: name };
 }
 
@@ -210,6 +240,24 @@ export async function restoreOrBindMetaIdentity({ sub, email, name, picture }) {
   return restoreOrBindOAuthIdentity({ provider: "meta", sub, email, name, picture });
 }
 
+export function encodeVaultBundleForUrl(record) {
+  if (!record?.iv || !record?.ciphertext) return "";
+  const compact = `${record.iv}:${record.ciphertext}`;
+  return btoa(compact).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+export function decodeVaultBundleFromUrl(encoded) {
+  if (!encoded) return null;
+  try {
+    const raw = atob(encoded.replace(/-/g, "+").replace(/_/g, "/"));
+    const [iv, ciphertext] = raw.split(":");
+    if (!iv || !ciphertext) return null;
+    return { iv, ciphertext, updatedAt: Date.now() };
+  } catch {
+    return null;
+  }
+}
+
 export async function savePassphraseVault(passphrase) {
   const clean = String(passphrase || "").trim();
   if (clean.length < 4) {
@@ -219,32 +267,46 @@ export async function savePassphraseVault(passphrase) {
   const encKey = await deriveVaultEncryptionKey(clean, "passphrase");
   const bundle = await localAccount.exportLocalAccountBundle();
   const encrypted = await encryptVaultBundle(bundle, encKey);
-  try {
-    localStorage.setItem(VAULT_STORAGE_PREFIX + lookupKey, JSON.stringify(encrypted));
-  } catch {
-    /* ignore */
-  }
-  saveRemoteVaultRecord(lookupKey, encrypted);
-  return { ok: true, lookupKey, routeId: bundle.routeId, displayName: bundle.displayName };
+  persistEncryptedVaultRecord(lookupKey, encrypted);
+  return {
+    ok: true,
+    lookupKey,
+    routeId: bundle.routeId,
+    displayName: bundle.displayName,
+    bundle: encrypted,
+  };
 }
 
-export async function restoreFromPassphraseVault(passphrase, lookupKeyOverride = null) {
-  const clean = String(passphrase || "").trim();
-  if (!clean) return { ok: false, reason: "Senha soberana não informada." };
-  const lookupKey = lookupKeyOverride || (await computeVaultLookupKey(clean, "passphrase"));
-  const record = await findEncryptedVaultRecord(lookupKey);
-  if (!record) return { ok: false, reason: "Nenhum cofre encontrado para esta senha ou chave." };
+function isValidAccountBundle(bundle) {
+  return Boolean(bundle?.routeId && bundle?.publicJwk && bundle?.privateJwk);
+}
 
-  const encKey = await deriveVaultEncryptionKey(clean, "passphrase");
-  let bundle = null;
+async function tryDecryptPassphraseRecord(record, cleanPassphrase) {
+  const encKey = await deriveVaultEncryptionKey(cleanPassphrase, "passphrase");
   try {
-    bundle = await decryptVaultBundle(record, encKey);
+    const bundle = await decryptVaultBundle(record, encKey);
+    return isValidAccountBundle(bundle)
+      ? { ok: true, bundle }
+      : { ok: false, reason: "Dados do cofre inválidos ou corrompidos." };
   } catch {
     return { ok: false, reason: "Senha incorreta." };
   }
-  if (!bundle?.routeId || !bundle?.publicJwk || !bundle?.privateJwk) {
-    return { ok: false, reason: "Dados do cofre inválidos ou corrompidos." };
-  }
+}
+
+export async function restoreFromPassphraseVault(passphrase, lookupKeyOverride = null, directRecord = null) {
+  const clean = String(passphrase || "").trim();
+  if (!clean) return { ok: false, reason: "Senha soberana não informada." };
+
+  const lookupKey = lookupKeyOverride || (await computeVaultLookupKey(clean, "passphrase"));
+  const record = directRecord || (await findEncryptedVaultRecord(lookupKey));
+  if (!record) return { ok: false, reason: "Nenhum cofre encontrado para esta senha ou chave." };
+
+  const decryptResult = await tryDecryptPassphraseRecord(record, clean);
+  if (!decryptResult.ok) return decryptResult;
+
+  const bundle = decryptResult.bundle;
+  const prevId = localAccount.getCachedRouteIdSync();
   await localAccount.importLocalAccountBundle(bundle);
+  cleanupSupersededIdentity(prevId, bundle.routeId, bundle.displayName, bundle.avatarUrl || bundle.enrichment?.avatarUrl);
   return { ok: true, routeId: bundle.routeId, displayName: bundle.displayName || "" };
 }

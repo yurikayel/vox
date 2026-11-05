@@ -45,7 +45,8 @@ function isSameNamedLocalIdentity(entryA, entryB, nameA, nameB) {
   if (!isNamedA || !isNamedB || nameA !== nameB) return false;
   const isLocalA = entryA.source === "self" || entryA.source === "vault";
   const isLocalB = entryB.source === "self" || entryB.source === "vault";
-  return isLocalA && isLocalB;
+  if (isLocalA && isLocalB) return true;
+  return Boolean(isLocalA || isLocalB);
 }
 
 function isSameSocialIdentity(entryA, entryB) {

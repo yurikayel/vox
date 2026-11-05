@@ -56,7 +56,7 @@ const ROUTE_DISPATCH_TABLE = {
 };
 
 async function handleSyncRoute(r) {
-  const { restoreFromPassphraseVault } = await import("../oauth-vault.js");
+  const { restoreFromPassphraseVault, decodeVaultBundleFromUrl } = await import("../oauth-vault.js");
   const { showToast } = await import("../share.js");
   const pass = r.passphrase;
   if (!pass) {
@@ -65,7 +65,10 @@ async function handleSyncRoute(r) {
     return;
   }
   try {
-    const res = await restoreFromPassphraseVault(pass, r.lookupKey || null);
+    const directRecord = r.bundle && typeof decodeVaultBundleFromUrl === "function"
+      ? decodeVaultBundleFromUrl(r.bundle)
+      : null;
+    const res = await restoreFromPassphraseVault(pass, r.lookupKey || null, directRecord);
     if (res.ok) {
       showToast(`Conta sincronizada com sucesso! Bem-vindo(a), ${res.displayName || "Cidadão"}!`);
     } else {
