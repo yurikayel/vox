@@ -367,6 +367,32 @@ function bindImageFileInput(state) {
   });
 }
 
+function hideComposerImageOptionBars() {
+  const fb = document.getElementById("lofi-filter-bar");
+  if (fb) fb.style.display = "none";
+  const ab = document.getElementById("composer-aspect-bar");
+  if (ab) ab.style.display = "none";
+  const tb = document.getElementById("composer-tag-bar");
+  if (tb) tb.style.display = "none";
+}
+
+function updateComposerMediaPreview(type, dataUrl, weightLabel) {
+  const isAudio = type === "audio";
+  const mediaEl = document.getElementById(isAudio ? "inline-topic-preview-audio" : "inline-topic-preview-video");
+  const wrap = document.getElementById(isAudio ? "inline-topic-preview-audio-wrap" : "inline-topic-preview-video-wrap");
+  const otherWrap = document.getElementById(isAudio ? "inline-topic-preview-video-wrap" : "inline-topic-preview-audio-wrap");
+  const previewImg = document.getElementById("inline-topic-preview");
+  if (mediaEl) mediaEl.src = dataUrl;
+  wrap?.classList.remove("hidden");
+  previewImg?.classList.add("hidden");
+  otherWrap?.classList.add("hidden");
+  hideComposerImageOptionBars();
+  const bg = document.getElementById("lofi-weight-badge");
+  if (bg) bg.textContent = weightLabel;
+  document.getElementById("inline-topic-preview-wrap")?.classList.remove("hidden");
+  syncInlineComposerUi();
+}
+
 function bindAudioFileInput(state) {
   const audioInput = document.getElementById("inline-topic-audio");
   audioInput?.addEventListener("change", async () => {
@@ -379,24 +405,7 @@ function bindAudioFileInput(state) {
     const dataUrl = await composerMedia.readComposerMediaFile(file);
     const kb = Math.max(1, Math.round(file.size / 1024));
     inlineComposerMedia = { type: "audio", dataUrl, byteLength: file.size };
-    const previewAudio = document.getElementById("inline-topic-preview-audio");
-    const previewAudioWrap = document.getElementById("inline-topic-preview-audio-wrap");
-    const previewVideoWrap = document.getElementById("inline-topic-preview-video-wrap");
-    const previewImg = document.getElementById("inline-topic-preview");
-    if (previewAudio) previewAudio.src = dataUrl;
-    previewAudioWrap?.classList.remove("hidden");
-    previewImg?.classList.add("hidden");
-    previewVideoWrap?.classList.add("hidden");
-    const fb = document.getElementById("lofi-filter-bar");
-    if (fb) fb.style.display = "none";
-    const ab = document.getElementById("composer-aspect-bar");
-    if (ab) ab.style.display = "none";
-    const tb = document.getElementById("composer-tag-bar");
-    if (tb) tb.style.display = "none";
-    const bg = document.getElementById("lofi-weight-badge");
-    if (bg) bg.textContent = `⚡ ~${kb} KB (Áudio Lo-Fi ${kb <= 99 ? "100% Grátis" : "48k"})`;
-    document.getElementById("inline-topic-preview-wrap")?.classList.remove("hidden");
-    syncInlineComposerUi();
+    updateComposerMediaPreview("audio", dataUrl, `⚡ ~${kb} KB (Áudio Lo-Fi ${kb <= 99 ? "100% Grátis" : "48k"})`);
   });
 }
 
@@ -412,24 +421,7 @@ function bindVideoFileInput(state) {
     const dataUrl = await composerMedia.readComposerMediaFile(file);
     const kb = Math.max(1, Math.round(file.size / 1024));
     inlineComposerMedia = { type: "video", dataUrl, byteLength: file.size };
-    const previewVideo = document.getElementById("inline-topic-preview-video");
-    const previewVideoWrap = document.getElementById("inline-topic-preview-video-wrap");
-    const previewAudioWrap = document.getElementById("inline-topic-preview-audio-wrap");
-    const previewImg = document.getElementById("inline-topic-preview");
-    if (previewVideo) previewVideo.src = dataUrl;
-    previewVideoWrap?.classList.remove("hidden");
-    previewImg?.classList.add("hidden");
-    previewAudioWrap?.classList.add("hidden");
-    const fb = document.getElementById("lofi-filter-bar");
-    if (fb) fb.style.display = "none";
-    const ab = document.getElementById("composer-aspect-bar");
-    if (ab) ab.style.display = "none";
-    const tb = document.getElementById("composer-tag-bar");
-    if (tb) tb.style.display = "none";
-    const bg = document.getElementById("lofi-weight-badge");
-    if (bg) bg.textContent = `⚡ ~${kb} KB (Vídeo Lo-Fi 360p)`;
-    document.getElementById("inline-topic-preview-wrap")?.classList.remove("hidden");
-    syncInlineComposerUi();
+    updateComposerMediaPreview("video", dataUrl, `⚡ ~${kb} KB (Vídeo Lo-Fi 360p)`);
   });
 }
 

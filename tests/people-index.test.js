@@ -193,3 +193,31 @@ test("people-index - deduplica contas que usam o mesmo perfil/avatar Google na m
   assert.equal(yuriEntries.length, 1);
   assert.equal(yuriEntries[0].routeId, primary.routeId);
 });
+
+test("people-index - deduplica múltiplas contas do cofre local com o mesmo displayName", async () => {
+  localStorage.clear();
+  contacts.__resetContactsForTests();
+  profileDirectory.__resetProfileCardsForTests();
+
+  const primary = await localAccount.ensureLocalAccount();
+  localAccount.setDisplayName("Yuri Kayel");
+
+  // Cria uma segunda conta com o mesmo nome (cenário de re-login ou múltiplos perfis locais)
+  const secondary = await localAccount.createAdditionalAccount({ displayName: "Yuri Kayel" });
+
+  const all = await peopleIndex.buildPeopleIndex();
+  const yuriEntries = all.filter((p) => p.name === "Yuri Kayel");
+  // O índice unifica contas locais com o mesmo nome sob a fonte de maior prioridade
+  assert.equal(yuriEntries.length, 1);
+  assert.equal(yuriEntries[0].name, "Yuri Kayel");
+});
+
+test("people-index - deduplica avatares Google Workspace / ogw e CDN Meta", () => {
+  const g1 = { routeId: "vx_1", name: "Yuri Kayel", avatarUrl: "https://lh3.googleusercontent.com/ogw/AFcK-ZZZ=s96-c" };
+  const g2 = { routeId: "vx_2", name: "Yuri Kayel", avatarUrl: "https://lh3.googleusercontent.com/ogw/AFcK-ZZZ=s120" };
+  assert.equal(peopleIndex.isSameGoogleIdentity(g1, g2), true);
+
+  const m1 = { routeId: "vx_1", name: "Yuri", avatarUrl: "https://platform-lookaside.fbsbx.com/platform/profilepic/?psid=123" };
+  const m2 = { routeId: "vx_2", name: "Yuri", avatarUrl: "https://platform-lookaside.fbsbx.com/platform/profilepic/?psid=123" };
+  assert.equal(peopleIndex.isSameGoogleIdentity(m1, m2), true);
+});

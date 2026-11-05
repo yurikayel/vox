@@ -80,30 +80,34 @@ function renderTopicZapButton(topicId, topic, author, authorDisplay) {
   </button>`;
 }
 
-function renderTopicFeedbackActions(topicId, topic, author, authorDisplay) {
+function renderTopicLikeButton(topicId, topic) {
   const baseLikes = Number(topic?.likesCount) || 0;
   const liked = social.isLiked(topicId);
   const curLikes = social.getLikesCount(topicId, baseLikes);
-
-  const baseStars = Number(topic?.starsCount) || 0;
-  const starred = social.isStarred(topicId);
-  const curStars = social.getStarsCount(topicId, baseStars);
-
-  const likeBtn = `<button class="action-btn btn-like ${liked ? "active" : ""}" data-id="${escapeHtml(topicId)}" data-count="${baseLikes}" aria-label="Curtir post">
+  return `<button class="action-btn btn-like ${liked ? "active" : ""}" data-id="${escapeHtml(topicId)}" data-count="${baseLikes}" aria-label="Curtir post">
     <svg class="action-icon icon-heart" width="18" height="18" viewBox="0 0 24 24" fill="${liked ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
     <span class="action-count count-likes">${curLikes > 0 ? curLikes : ""}</span>
   </button>`;
+}
 
+function renderTopicStarButton(topicId, topic) {
+  const baseStars = Number(topic?.starsCount) || 0;
+  const starred = social.isStarred(topicId);
+  const curStars = social.getStarsCount(topicId, baseStars);
+  return `<button class="action-btn btn-star ${starred ? "active" : ""}" data-id="${escapeHtml(topicId)}" data-count="${baseStars}" aria-label="Dar estrela ao post">
+    <svg class="action-icon icon-star" width="18" height="18" viewBox="0 0 24 24" fill="${starred ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+    <span class="action-count count-stars">${curStars > 0 ? curStars : ""}</span>
+  </button>`;
+}
+
+function renderTopicFeedbackActions(topicId, topic, author, authorDisplay) {
+  const likeBtn = renderTopicLikeButton(topicId, topic);
   const commentBtn = `<button type="button" class="action-btn btn-comment" data-id="${escapeHtml(topicId)}" data-comm="${escapeHtml(topic?.communityId || "")}" aria-label="Comentar" onclick="document.querySelector('#compose-reply, .thread-reply-input, .post-comment-input')?.focus() || location.assign('#/compose/reply?t=${encodeURIComponent(topicId)}&c=${encodeURIComponent(topic?.communityId || "")}')">
     <svg class="action-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
   </button>`;
 
   const repostBtn = renderRepostBtn({ ...(topic || {}), id: topicId, title: topic?.title || "", author }, { size: 18 });
-
-  const starBtn = `<button class="action-btn btn-star ${starred ? "active" : ""}" data-id="${escapeHtml(topicId)}" data-count="${baseStars}" aria-label="Dar estrela ao post">
-    <svg class="action-icon icon-star" width="18" height="18" viewBox="0 0 24 24" fill="${starred ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-    <span class="action-count count-stars">${curStars > 0 ? curStars : ""}</span>
-  </button>`;
+  const starBtn = renderTopicStarButton(topicId, topic);
 
   return `${likeBtn}${commentBtn}${repostBtn}${starBtn}${renderTopicZapButton(topicId, topic, author, authorDisplay)}`;
 }
