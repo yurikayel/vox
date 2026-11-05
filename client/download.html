@@ -169,13 +169,13 @@
       font-weight: 600;
     }
 
-    /* Seções de Produtos: vox e vox populi em sequência */
+    /* Seções de Produtos */
     .section-block {
-      margin-bottom: 3.25rem;
+      margin-bottom: 3.5rem;
     }
 
     .section-header {
-      margin-bottom: 1.25rem;
+      margin-bottom: 1.35rem;
     }
 
     .section-tag {
@@ -202,9 +202,13 @@
     }
 
     .section-desc {
-      font-size: 0.92rem;
+      font-size: 0.95rem;
       color: var(--text-muted);
       line-height: 1.5;
+    }
+
+    .section-desc strong {
+      color: #FFFFFF;
     }
 
     /* ROW com 4 botões coloridos dos 4 OS */
@@ -272,21 +276,6 @@
       border: 1px solid rgba(61, 220, 132, 0.3);
     }
 
-    /* Apple (iOS / macOS): Prata / Branco */
-    .os-card.apple {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-    .os-card.apple:hover {
-      border-color: #FFFFFF;
-      box-shadow: 0 10px 30px rgba(255, 255, 255, 0.18);
-    }
-    .os-card.apple .os-size {
-      background: rgba(255, 255, 255, 0.12);
-      color: #F8FAFC;
-      border: 1px solid rgba(255, 255, 255, 0.25);
-    }
-
     /* Linux: Tux Dourado / Amarelo */
     .os-card.linux {
       background: rgba(252, 198, 36, 0.06);
@@ -302,7 +291,22 @@
       border: 1px solid rgba(252, 198, 36, 0.3);
     }
 
-    /* Logo Grande do OS */
+    /* Apple (iOS / macOS): Prata / Branco */
+    .os-card.apple {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .os-card.apple:hover {
+      border-color: #FFFFFF;
+      box-shadow: 0 10px 30px rgba(255, 255, 255, 0.18);
+    }
+    .os-card.apple .os-size {
+      background: rgba(255, 255, 255, 0.12);
+      color: #F8FAFC;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+    }
+
+    /* Logo Grande do OS no Cliente */
     .os-logo-wrap {
       width: 72px;
       height: 72px;
@@ -317,6 +321,38 @@
       height: 100%;
       object-fit: contain;
       filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.35));
+    }
+
+    /* Logo Duplo (SO + Servidor / Hardware) no Vox Populi */
+    .os-logo-wrap.duo {
+      width: auto;
+      height: 72px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.65rem;
+      margin-bottom: 1.15rem;
+    }
+
+    .os-logo-wrap.duo .logo-os {
+      width: 52px;
+      height: 52px;
+      object-fit: contain;
+      filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.35));
+    }
+
+    .os-logo-wrap.duo .logo-node {
+      width: 48px;
+      height: 48px;
+      object-fit: contain;
+      filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.45));
+    }
+
+    .os-logo-wrap.duo .logo-plus {
+      color: var(--text-dim);
+      font-size: 0.95rem;
+      font-weight: 700;
+      opacity: 0.5;
     }
 
     /* Tamanho do Download DENTRO do Logo/Botão */
@@ -478,20 +514,20 @@
       </p>
     </div>
 
-    <!-- SEÇÃO 1: VOX (CLIENTE) -->
+    <!-- SEÇÃO 1: VOX (CLIENTE - PRA QUEM QUER SÓ USAR A REDE E FIM) -->
     <section class="section-block">
       <div class="section-header">
-        <span class="section-tag">Para Cidadãos & Participação</span>
+        <span class="section-tag">Uso Diário • Cidadãos</span>
         <h2 class="section-title">vox</h2>
         <p class="section-desc">
-          Aplicativo de uso diário: navegue por comunidades, crie e vote em enquetes populares e converse com criptografia no aparelho.
+          <strong>Pra quem quer só usar a rede e fim.</strong> Navegue pelas comunidades, crie e vote em enquetes populares, converse com segurança ponto a ponto e guarde suas chaves criptográficas sob seu controle — sem precisar entender de técnica, servidores ou infraestrutura.
         </p>
       </div>
 
-      <!-- ROW COM OS 4 BOTÕES DO VOX -->
+      <!-- ROW DO CLIENTE: 1. WINDOWS, 2. ANDROID, 3. LINUX, 4. APPLE -->
       <div class="os-row">
 
-        <!-- Windows -->
+        <!-- 1. Windows -->
         <a href="downloads/Vox.exe" class="os-card windows" download title="Baixar Vox para Windows">
           <div class="os-logo-wrap">
             <img src="icons/microsoft-windows-tiles.svg" alt="Windows" />
@@ -501,7 +537,7 @@
           <span class="os-spec">Nativo WebView2</span>
         </a>
 
-        <!-- Android -->
+        <!-- 2. Android -->
         <a href="downloads/vox.apk" class="os-card android" download title="Baixar Vox para Android">
           <div class="os-logo-wrap">
             <img src="icons/android-icon.svg" alt="Android" />
@@ -511,17 +547,7 @@
           <span class="os-spec">Micro-APK</span>
         </a>
 
-        <!-- Apple iOS -->
-        <a href="https://vox-9df.pages.dev/" target="_blank" rel="noopener" class="os-card apple" title="Abrir Vox no Safari (iOS)">
-          <div class="os-logo-wrap">
-            <img src="icons/apple-white.svg" alt="Apple iOS" />
-          </div>
-          <span class="os-size">PWA</span>
-          <span class="os-name">iOS</span>
-          <span class="os-spec">Safari Tela de Início</span>
-        </a>
-
-        <!-- Linux -->
+        <!-- 3. Linux -->
         <a href="https://github.com/yurikayel/vox/tree/develop/tools/desktop-linux" target="_blank" rel="noopener" class="os-card linux" title="Guia Vox para Linux">
           <div class="os-logo-wrap">
             <img src="icons/linux-tux.svg" alt="Linux Tux" />
@@ -531,60 +557,78 @@
           <span class="os-spec">WebKitGTK</span>
         </a>
 
+        <!-- 4. Apple iOS -->
+        <a href="https://vox-9df.pages.dev/" target="_blank" rel="noopener" class="os-card apple" title="Abrir Vox no Safari (iOS)">
+          <div class="os-logo-wrap">
+            <img src="icons/apple-white.svg" alt="Apple iOS" />
+          </div>
+          <span class="os-size">PWA</span>
+          <span class="os-name">iOS</span>
+          <span class="os-spec">Safari Tela de Início</span>
+        </a>
+
       </div>
     </section>
 
-    <!-- SEÇÃO 2: VOX POPULI (NÓ DEDICADO) -->
+    <!-- SEÇÃO 2: VOX POPULI (NÓ DEDICADO - PRA QUEM QUISER COLABORAR ATIVAMENTE) -->
     <section class="section-block">
       <div class="section-header">
-        <span class="section-tag node">Para Infraestrutura & Apoio</span>
+        <span class="section-tag node">Infraestrutura Comunitária • Servidores & Nós</span>
         <h2 class="section-title">vox populi</h2>
         <p class="section-desc">
-          Nó comunitário silencioso: executa em segundo plano para guardar cache seguro (SHA-256) e fornecer relay local.
+          <strong>Pra quem quiser colaborar ativamente com a rede.</strong> Execute um nó silencioso de segundo plano no PC doméstico, em um celular antigo na tomada ou num Raspberry Pi. Guarda cache seguro (SHA-256) e serve relay local para manter a malha cívica viva e imune a censura.
         </p>
       </div>
 
-      <!-- ROW COM OS 4 BOTÕES DO VOX POPULI -->
+      <!-- ROW DO NÓ: 1. WINDOWS, 2. ANDROID, 3. LINUX, 4. APPLE (COM AR DE SERVIDOR) -->
       <div class="os-row">
 
-        <!-- Windows Tray -->
-        <a href="downloads/VoxPopuli.exe" class="os-card windows" download title="Baixar Vox Populi para Windows">
-          <div class="os-logo-wrap">
-            <img src="icons/microsoft-windows-tiles.svg" alt="Windows" />
+        <!-- 1. Windows + Servidor -->
+        <a href="downloads/VoxPopuli.exe" class="os-card windows" download title="Baixar Vox Populi para Servidor Windows">
+          <div class="os-logo-wrap duo">
+            <img src="icons/microsoft-windows-tiles.svg" alt="Windows" class="logo-os" />
+            <span class="logo-plus">+</span>
+            <img src="icons/node-server.svg" alt="Servidor Doméstico" class="logo-node" />
           </div>
           <span class="os-size">11.7 MB</span>
           <span class="os-name">Windows</span>
-          <span class="os-spec">Menu na Bandeja</span>
+          <span class="os-spec">Servidor / Bandeja</span>
         </a>
 
-        <!-- Android Node -->
-        <a href="downloads/vox-populi.apk" class="os-card android" download title="Baixar Vox Populi para Android">
-          <div class="os-logo-wrap">
-            <img src="icons/android-icon.svg" alt="Android" />
+        <!-- 2. Android + Celular Velho na Tomada emitindo sinal -->
+        <a href="downloads/vox-populi.apk" class="os-card android" download title="Baixar Vox Populi para Android Nó">
+          <div class="os-logo-wrap duo">
+            <img src="icons/android-icon.svg" alt="Android" class="logo-os" />
+            <span class="logo-plus">+</span>
+            <img src="icons/node-phone-signal.svg" alt="Celular na Tomada emitindo sinal" class="logo-node" />
           </div>
           <span class="os-size">74 KiB</span>
           <span class="os-name">Android</span>
-          <span class="os-spec">Nó Móvel Wi-Fi</span>
+          <span class="os-spec">Celular Velho na Tomada</span>
         </a>
 
-        <!-- Linux Daemon -->
-        <a href="https://github.com/yurikayel/vox/tree/develop/vox-populi" target="_blank" rel="noopener" class="os-card linux" title="Guia Vox Populi para Linux">
-          <div class="os-logo-wrap">
-            <img src="icons/linux-tux.svg" alt="Linux Tux" />
+        <!-- 3. Linux + Raspberry Pi -->
+        <a href="https://github.com/yurikayel/vox/tree/develop/vox-populi" target="_blank" rel="noopener" class="os-card linux" title="Guia Vox Populi para Linux / Raspberry Pi">
+          <div class="os-logo-wrap duo">
+            <img src="icons/linux-tux.svg" alt="Linux Tux" class="logo-os" />
+            <span class="logo-plus">+</span>
+            <img src="icons/raspberry-pi.svg" alt="Raspberry Pi" class="logo-node" />
           </div>
           <span class="os-size">daemon</span>
           <span class="os-name">Linux / Pi</span>
-          <span class="os-spec">Serviço systemd</span>
+          <span class="os-spec">Raspberry Pi & Servidor</span>
         </a>
 
-        <!-- macOS Daemon -->
-        <a href="https://github.com/yurikayel/vox/tree/develop/tools/node-macos" target="_blank" rel="noopener" class="os-card apple" title="Guia Vox Populi para macOS">
-          <div class="os-logo-wrap">
-            <img src="icons/apple-white.svg" alt="Apple macOS" />
+        <!-- 4. macOS + Mac Mini Headless -->
+        <a href="https://github.com/yurikayel/vox/tree/develop/tools/node-macos" target="_blank" rel="noopener" class="os-card apple" title="Guia Vox Populi para macOS Server">
+          <div class="os-logo-wrap duo">
+            <img src="icons/apple-white.svg" alt="Apple" class="logo-os" />
+            <span class="logo-plus">+</span>
+            <img src="icons/node-mac-mini.svg" alt="Mac Mini Headless" class="logo-node" />
           </div>
           <span class="os-size">launchd</span>
           <span class="os-name">macOS</span>
-          <span class="os-spec">Serviço nativo</span>
+          <span class="os-spec">Mac Mini Headless</span>
         </a>
 
       </div>
