@@ -283,6 +283,42 @@ namespace Vox.ZeroMemory {
             }
         }
 
+        public string GetDashboardHtml() {
+            string[] candidates = new string[] {
+                Path.Combine(dataDir, "dashboard.html"),
+                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "dashboard.html"),
+                Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "", "dashboard.html"),
+                @"C:\project\politica\vox\tools\dashboard.html",
+                @"C:\project\politica\vox\dist\dashboard.html"
+            };
+            foreach (string p in candidates) {
+                try {
+                    if (File.Exists(p)) return File.ReadAllText(p, Encoding.UTF8);
+                } catch { }
+            }
+            return "<!DOCTYPE html><html><body><h2>Vox Populi • Dashboard</h2><p>dashboard.html não localizado nos caminhos padrão.</p></body></html>";
+        }
+
+        public List<string> GetRecentLogs(int maxLines = 150) {
+            var list = new List<string>();
+            try {
+                if (!File.Exists(logFile)) return list;
+                lock (syncLock) {
+                    using (var fs = new FileStream(logFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                    using (var reader = new StreamReader(fs, Encoding.UTF8)) {
+                        var all = new List<string>();
+                        string line;
+                        while ((line = reader.ReadLine()) != null) {
+                            if (!string.IsNullOrEmpty(line)) all.Add(line);
+                        }
+                        int start = Math.Max(0, all.Count - maxLines);
+                        for (int i = start; i < all.Count; i++) list.Add(all[i]);
+                    }
+                }
+            } catch { }
+            return list;
+        }
+
         private void BumpRevision() {
             state["revision"] = ToLong(state["revision"], 0L) + 1L;
         }
@@ -706,6 +742,8 @@ namespace Vox.ZeroMemory {
             if (running) return true;
             try {
                 relay3921 = new TcpListener(IPAddress.Loopback, 3921);
+                relay3921.ExclusiveAddressUse = false;
+                relay3921.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                 relay3921.Start();
             } catch {
                 relay3921 = null;
@@ -725,6 +763,8 @@ namespace Vox.ZeroMemory {
         private void TryStartOptional(ref TcpListener listener, int port, bool isControl) {
             try {
                 listener = new TcpListener(IPAddress.Loopback, port);
+                listener.ExclusiveAddressUse = false;
+                listener.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                 listener.Start();
                 StartAcceptLoop(listener, isControl);
             } catch {
@@ -884,6 +924,20 @@ namespace Vox.ZeroMemory {
         }
 
         private void HandleRelayGet(NetworkStream stream, string path, JavaScriptSerializer ser) {
+            if (path == "" || path == "/" || path == "/dashboard" || path == "/monitor") {
+                string dashHtml = store.GetDashboardHtml();
+                WriteHttpResponse(stream, 200, "OK", dashHtml, "text/html; charset=utf-8");
+                return;
+            }
+            if (path == "/memory/logs" || path == "/api/logs") {
+                var logs = store.GetRecentLogs(150);
+                var resp = new Dictionary<string, object>();
+                resp["status"] = "ok";
+                resp["count"] = logs.Count;
+                resp["logs"] = logs;
+                WriteHttpResponse(stream, 200, "OK", ser.Serialize(resp));
+                return;
+            }
             if (path == "/health") {
                 var h = new Dictionary<string, object>();
                 h["status"] = "ok";
@@ -906,6 +960,15 @@ namespace Vox.ZeroMemory {
                 var blob = store.GetBlob(path.Substring("/memory/blob/".Length));
                 if (blob != null) WriteHttpResponse(stream, 200, "OK", ser.Serialize(blob));
                 else WriteHttpResponse(stream, 404, "Not Found", "{\"error\":\"blob_not_found\"}");
+                return;
+            }
+            if (path == "/memory/checkpoint") {
+                string chkPath = store.SaveDatedCheckpoint();
+                var resp = new Dictionary<string, object>();
+                resp["status"] = "ok";
+                resp["checkpointFile"] = Path.GetFileName(chkPath);
+                resp["fullPath"] = chkPath;
+                WriteHttpResponse(stream, 200, "OK", ser.Serialize(resp));
                 return;
             }
             if (path.StartsWith("/memory/vault/")) {
@@ -959,6 +1022,15 @@ namespace Vox.ZeroMemory {
                 WriteHttpResponse(stream, 200, "OK", ser.Serialize(store.SyncBundle(payload)));
                 return;
             }
+            if (path == "/memory/checkpoint") {
+                string chkPath = store.SaveDatedCheckpoint();
+                var resp = new Dictionary<string, object>();
+                resp["status"] = "ok";
+                resp["checkpointFile"] = Path.GetFileName(chkPath);
+                resp["fullPath"] = chkPath;
+                WriteHttpResponse(stream, 200, "OK", ser.Serialize(resp));
+                return;
+            }
             if (path.StartsWith("/memory/vault/")) {
                 string key = path.Substring("/memory/vault/".Length).Trim();
                 var record = payload != null && payload.ContainsKey("record") ? MemoryStore.AsDict(payload["record"]) : payload;
@@ -969,11 +1041,11 @@ namespace Vox.ZeroMemory {
             WriteHttpResponse(stream, 404, "Not Found", "{\"error\":\"not_found\"}");
         }
 
-        private static void WriteHttpResponse(NetworkStream stream, int code, string reason, string jsonBody) {
-            byte[] bodyBytes = Encoding.UTF8.GetBytes(jsonBody ?? "");
+        private static void WriteHttpResponse(NetworkStream stream, int code, string reason, string body, string contentType = "application/json; charset=utf-8") {
+            byte[] bodyBytes = Encoding.UTF8.GetBytes(body ?? "");
             var sb = new StringBuilder();
             sb.AppendFormat("HTTP/1.1 {0} {1}\r\n", code, reason);
-            sb.Append("Content-Type: application/json; charset=utf-8\r\n");
+            sb.AppendFormat("Content-Type: {0}\r\n", contentType);
             sb.Append("Access-Control-Allow-Origin: *\r\n");
             sb.Append("Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS\r\n");
             sb.Append("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With\r\n");
@@ -1267,17 +1339,20 @@ namespace Vox.ZeroMemory {
                 AutoEllipsis = true
             };
 
-            var snapBtn = CreateBtn("Checkpoint Alpha/Beta", new Point(18, 232), 132, "#1F6FEB", (s, e) => {
+            var dashBtn = CreateBtn("Dashboard", new Point(18, 232), 98, "#238636", (s, e) => {
+                try { Process.Start("http://127.0.0.1:3921/dashboard"); } catch { }
+            });
+            var snapBtn = CreateBtn("Checkpoint", new Point(122, 232), 98, "#1F6FEB", (s, e) => {
                 if (onCheckpoint != null) onCheckpoint();
                 RefreshView();
             });
-            var dirBtn = CreateBtn("Abrir Pasta", new Point(156, 232), 132, "#21262D", (s, e) => {
+            var dirBtn = CreateBtn("Abrir Pasta", new Point(226, 232), 98, "#21262D", (s, e) => {
                 Directory.CreateDirectory(store.MemoryDir);
                 Process.Start("explorer.exe", store.MemoryDir);
             });
-            var hideBtn = CreateBtn("Ocultar na Bandeja", new Point(294, 232), 132, "#21262D", (s, e) => Hide());
+            var hideBtn = CreateBtn("Ocultar", new Point(330, 232), 96, "#21262D", (s, e) => Hide());
 
-            Controls.AddRange(new Control[] { header, statusBadge, metricsBox, pathLabel, snapBtn, dirBtn, hideBtn });
+            Controls.AddRange(new Control[] { header, statusBadge, metricsBox, pathLabel, dashBtn, snapBtn, dirBtn, hideBtn });
         }
 
         private static Button CreateBtn(string text, Point pt, int width, string bgHex, EventHandler onClick) {
@@ -1358,12 +1433,14 @@ namespace Vox.ZeroMemory {
             pollTimer.Tick += OnTimerTick;
             pollTimer.Start();
 
-            var counts = store.GetCounts();
-            trayIcon.ShowBalloonTip(
-                3000,
-                "Vox Populi • Zero-Central-Memory (Alpha/Beta)",
-                string.Format("Sustentando a rede na bandeja (127.0.0.1:3921 / 3920). Memória carregada: {0} posts, {1} perfis.", counts["posts"], counts["profiles"]),
-                ToolTipIcon.Info);
+            try {
+                var counts = store.GetCounts();
+                trayIcon.ShowBalloonTip(
+                    3000,
+                    "Vox Populi • Zero-Central-Memory (Alpha/Beta)",
+                    string.Format("Sustentando a rede na bandeja (127.0.0.1:3921 / 3920). Memória carregada: {0} posts, {1} perfis.", counts["posts"], counts["profiles"]),
+                    ToolTipIcon.Info);
+            } catch { }
 
             if (openPanelOnBoot) ShowStatusPanel();
         }
@@ -1393,6 +1470,9 @@ namespace Vox.ZeroMemory {
             menu.Items.Add(tunnelMenuItem);
 
             menu.Items.Add(new ToolStripSeparator());
+            menu.Items.Add("Abrir Dashboard Interativo (Navegador)", null, (s, e) => {
+                try { Process.Start("http://127.0.0.1:3921/dashboard"); } catch { }
+            });
             menu.Items.Add("Copiar Link de Convite Alpha/Beta (Modo 3)", null, (s, e) => CopyInviteUrlToClipboard());
             menu.Items.Add("Copiar URL do Túnel HTTPS (Buddy Relay)", null, (s, e) => CopyTunnelUrlToClipboard());
             menu.Items.Add("Abrir Painel de Status", null, (s, e) => ShowStatusPanel());
@@ -1580,13 +1660,20 @@ namespace Vox.ZeroMemory {
                 }
 
                 if (!createdNew) {
+                    store.WriteLog("WARN", "Instância já em execução (Mutex detectado). Ativando painel existente.");
                     return 0;
                 }
 
-                Application.EnableVisualStyles();
-                Application.SetCompatibleTextRenderingDefault(false);
-                Application.Run(new VoxPopuliTrayContext(store, server, openPanel));
-                return 0;
+                try {
+                    Application.EnableVisualStyles();
+                    Application.SetCompatibleTextRenderingDefault(false);
+                    Application.Run(new VoxPopuliTrayContext(store, server, openPanel));
+                    return 0;
+                } catch (Exception ex) {
+                    store.WriteLog("FATAL", "Erro na inicialização da UI/Tray: " + ex.ToString());
+                    while (server.IsRunning) { Thread.Sleep(1000); }
+                    return 1;
+                }
             }
         }
 

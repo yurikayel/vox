@@ -3,7 +3,7 @@
 [![Client](https://img.shields.io/badge/PWA-Vanilla%20ES%20Modules-orange.svg)](./client)
 [![Identity](https://img.shields.io/badge/Identity-WebCrypto%20P--256-blueviolet.svg)](./client/js/local-account.js)
 [![Storage](https://img.shields.io/badge/Storage-Arweave%20Permaweb-black.svg)](https://arweave.org)
-[![Tests](https://img.shields.io/badge/Tests-743%20passing%20(669%20JS%20%2B%2074%20Py)-brightgreen.svg)](./tests)
+[![Tests](https://img.shields.io/badge/Tests-751%20passing%20(677%20JS%20%2B%2074%20Py)-brightgreen.svg)](./tests)
 [![Service Worker](https://img.shields.io/badge/SW-v7.20--real--network--audio--video--upload-informational.svg)](./client/sw.js)
 
 O Vox é um projeto cívico em construção para ampliar a participação popular e a autonomia das comunidades na vida digital. Sua ambição é ser um bem comum aberto: o projeto deve permanecer transparente, copiável, modificável e maior que qualquer fundador, mantenedor, empresa ou plataforma.
@@ -136,7 +136,9 @@ Os objetos públicos usam transações com tags semânticas. O cliente também m
 
 O estado varia entre cliente, navegador e versão. A lista abaixo não é uma certificação de segurança, disponibilidade contínua ou funcionamento entre quaisquer dois hosts. Consulte a documentação vinculada e os testes do commit antes de depender de um recurso.
 
-* **Fóruns & Comunidades (Espírito Orkut):** Espaços temáticos, membros visíveis no perfil, feeds cronológicos por comunidade e busca pública aberta.
+* **Fórum Cívico Oficial e Comunidades (Espírito Orkut):** A comunidade canônica `"vox"` atua como ágora central e fórum oficial de deliberação, issues abertas e governança transparente, inscrevendo novos participantes por padrão no onboarding mas garantindo o direito soberano de sair (`leave`) ou retornar (`join`) a qualquer momento.
+* **Moderação Comunitária & Bumping de Fórum:** Suporte fail-closed estrito para moderadores fixarem tópicos no topo (`📌 Fixado`), trancarem discussões encerradas (`🔒 Encerrado`), reordenação dinâmica por atividade recente (`max(topic.ts, lastReplyTs)`) e busca instantânea de tópicos.
+* **Recuperação Zero-Knowledge de Identidade & Sincronização Cross-Device ([ADR-014](./docs/adr/014-zero-knowledge-vault-recuperacao-soberana.md)):** Restauração canônica determinística do perfil (`routeId`, chave privada P-256 e chaves de DM) em qualquer navegador ou celular via cofre cifrado no cliente (PBKDF2 50k iters + AES-GCM-256) ancorado em Google (`sub`), Meta (`profile.id`) ou **Senha Soberana** (sem Big Tech). Sincronização instantânea entre computadores e celulares via rota segura `#/sync?p=...` e QR Code nativo sem digitação manual.
 * **Áudio e Vídeo Nativos Lo-Fi (Walkie-Talkie & Vídeo Curto):** Gravação direta pelo navegador em 1 toque (toggle iniciar/parar) ou anexo de arquivo para posts e comentários, com compressão WebM/Opus e MP4/WebM $\le 320\text{p}$ (`media-lofi.js`), deduplicação por hash SHA-256 (`media-blob.js`) e replicação P2P/memória central.
 * **Diretório Unificado de Pessoas (`#/people`) & Onboarding Direto:** Lista determinística completa de todas as contas cadastradas na rede com filtro em tempo real, entrada direta de nome/apelido no onboarding (sem obrigatoriedade de OAuth) e sincronização automática via `PROFILE_CARD` e `zero-central-memory`.
 * **Nó Local `zero-central-memory` Modo 3 (`VoxPopuli-ZeroMemory.exe` / `central_memory.py`):** Persistência local em disco com journal append-only (`< 0,2 ms`), snapshot atômico em lote a cada 2s, delta sync incremental (`clientRevision`/`since`), túnel HTTPS Cloudflare integrado e descoberta zero-config via *Signaling Beacon* (`vx_zero_memory_beacon`).
@@ -172,7 +174,7 @@ Na raiz do repositório:
 ```bash
 npm test
 ```
-Executa as suítes atuais de JavaScript (651 testes) e Python (74 testes), totalizando **725 testes automatizados**.
+Executa as suítes atuais de JavaScript (677 testes) e Python (74 testes), totalizando **751 testes automatizados**.
 
 ### 3. Rodar o Relay / Memória Central Doméstica (Opcional)
 

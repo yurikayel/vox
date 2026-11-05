@@ -1,6 +1,28 @@
 {
-  "generatedAt": "2026-11-05T13:39:25.948Z",
-  "filesScanned": 147,
-  "violationCount": 0,
-  "violations": []
+  "generatedAt": "2026-11-05T18:16:53.381Z",
+  "filesScanned": 152,
+  "violationCount": 3,
+  "violations": [
+    {
+      "file": "client/js/render/topic.js",
+      "line": 80,
+      "rule": "complexity",
+      "message": "Function 'renderTopicFeedbackActions' has a complexity of 18. Maximum allowed is 15.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/inline-composer.js",
+      "line": 370,
+      "rule": "max-lines-per-function",
+      "message": "Function 'bindAudioFileInput' has too many lines (32). Maximum allowed is 30.",
+      "severity": "warn"
+    },
+    {
+      "file": "client/js/inline-composer.js",
+      "line": 403,
+      "rule": "max-lines-per-function",
+      "message": "Function 'bindVideoFileInput' has too many lines (32). Maximum allowed is 30.",
+      "severity": "warn"
+    }
+  ]
 }

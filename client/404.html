@@ -12,6 +12,12 @@
         window.location.replace(repoPrefix + "/download.html" + window.location.search);
         return;
       }
+      // Trata rotas de revolucao / revolução no GitHub Pages
+      if (path.indexOf("/revolucao") !== -1 || path.indexOf("/revolu%C3%A7%C3%A3o") !== -1 || decodeURIComponent(path).indexOf("/revolução") !== -1) {
+        var repoPrefix = path.indexOf("/vox/") !== -1 ? "/vox" : "";
+        window.location.replace(repoPrefix + "/revolucao.html" + window.location.search);
+        return;
+      }
       // Trata fallback geral para a raiz do PWA
       var repoPrefix = path.indexOf("/vox/") !== -1 ? "/vox/" : "/";
       window.location.replace(repoPrefix);

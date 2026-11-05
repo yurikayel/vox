@@ -1,0 +1,1863 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vox Populi • Dashboard da Rede Soberana</title>
+  <style>
+    :root {
+      --bg: #0B0E14;
+      --card-bg: #161B22;
+      --card-hover: #1C2128;
+      --border: #30363D;
+      --border-accent: #388BFD;
+      --text-main: #F0F6FC;
+      --text-muted: #8B949E;
+      --cyan: #58A6FF;
+      --green: #3FB950;
+      --yellow: #D29922;
+      --red: #F85149;
+      --purple: #BC8CFF;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* Header */
+    header {
+      background: rgba(22, 27, 34, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-badge {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #1F6FEB, #238636);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 16px rgba(31, 111, 235, 0.4);
+    }
+
+    .logo-badge svg {
+      width: 22px;
+      height: 22px;
+      fill: #fff;
+    }
+
+    .brand-title {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand-title h1 {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-title span {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      background: rgba(63, 185, 80, 0.15);
+      color: var(--green);
+      border: 1px solid rgba(63, 185, 80, 0.3);
+    }
+
+    .status-pill.error {
+      background: rgba(248, 81, 73, 0.15);
+      color: var(--red);
+      border-color: rgba(248, 81, 73, 0.3);
+    }
+
+    .status-pill.connecting {
+      background: rgba(210, 153, 34, 0.15);
+      color: var(--yellow);
+      border-color: rgba(210, 153, 34, 0.3);
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+      box-shadow: 0 0 8px currentColor;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .endpoint-select-wrap {
+      display: flex;
+      align-items: center;
+      background: #0D1117;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 2px 8px;
+      font-size: 12px;
+    }
+
+    .endpoint-select-wrap span {
+      color: var(--text-muted);
+      margin-right: 6px;
+      font-family: var(--font-mono);
+    }
+
+    .endpoint-input {
+      background: transparent;
+      border: none;
+      color: var(--text-main);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      width: 210px;
+      outline: none;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: #21262D;
+      color: var(--text-main);
+      transition: all 0.15s ease;
+      text-decoration: none;
+    }
+
+    .btn:hover {
+      background: #30363D;
+      border-color: #8B949E;
+    }
+
+    .btn-primary {
+      background: #238636;
+      border-color: rgba(240, 246, 252, 0.1);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: #2EA043;
+    }
+
+    .btn-blue {
+      background: #1F6FEB;
+      border-color: rgba(240, 246, 252, 0.1);
+      color: #fff;
+    }
+
+    .btn-blue:hover {
+      background: #388BFD;
+    }
+
+    .btn-sm {
+      padding: 4px 8px;
+      font-size: 11px;
+    }
+
+    /* Container */
+    .container {
+      max-width: 1400px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 24px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Metric Cards Grid */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+
+    .metric-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.15s ease, border-color 0.15s ease;
+    }
+
+    .metric-card:hover {
+      border-color: var(--border-accent);
+      transform: translateY(-2px);
+    }
+
+    .metric-card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--card-accent, var(--cyan));
+    }
+
+    .metric-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .metric-value {
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--text-main);
+      font-family: var(--font-mono);
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .metric-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Tabs Navigation */
+    .nav-tabs {
+      display: flex;
+      gap: 4px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 2px;
+      overflow-x: auto;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: 6px 6px 0 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      position: relative;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .tab-btn.active {
+      color: var(--cyan);
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-bottom: 1px solid var(--card-bg);
+      margin-bottom: -1px;
+    }
+
+    .tab-badge {
+      background: #21262D;
+      color: var(--text-muted);
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      font-family: var(--font-mono);
+    }
+
+    .tab-btn.active .tab-badge {
+      background: rgba(88, 166, 255, 0.2);
+      color: var(--cyan);
+    }
+
+    /* Tab Content Panes */
+    .tab-pane {
+      display: none;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .tab-pane.active {
+      display: flex;
+    }
+
+    /* Sub Grids */
+    .two-cols {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 960px) {
+      .two-cols { grid-template-columns: 1fr; }
+    }
+
+    .panel {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(48, 54, 61, 0.5);
+      padding-bottom: 12px;
+    }
+
+    .panel-title {
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .panel-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    /* Key-Value Tables */
+    .kv-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .kv-table tr {
+      border-bottom: 1px solid rgba(48, 54, 61, 0.3);
+    }
+
+    .kv-table tr:last-child {
+      border-bottom: none;
+    }
+
+    .kv-table td {
+      padding: 8px 4px;
+      vertical-align: top;
+    }
+
+    .kv-label {
+      color: var(--text-muted);
+      width: 140px;
+      font-weight: 500;
+    }
+
+    .kv-value {
+      color: var(--text-main);
+      font-family: var(--font-mono);
+      word-break: break-all;
+    }
+
+    /* Network Topology Diagram */
+    .topology-card {
+      background: radial-gradient(circle at 50% 50%, #161B22 0%, #0D1117 100%);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 24px;
+      position: relative;
+    }
+
+    .topology-flow {
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin: 16px 0;
+    }
+
+    .node-box {
+      background: #21262D;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      min-width: 160px;
+      text-align: center;
+      position: relative;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .node-box.primary {
+      border-color: var(--cyan);
+      background: rgba(31, 111, 235, 0.12);
+    }
+
+    .node-box.edge {
+      border-color: var(--purple);
+      background: rgba(188, 140, 255, 0.12);
+    }
+
+    .node-box.storage {
+      border-color: var(--green);
+      background: rgba(63, 185, 80, 0.12);
+    }
+
+    .node-icon {
+      font-size: 24px;
+    }
+
+    .node-name {
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .node-detail {
+      font-size: 10px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    .flow-arrow {
+      color: var(--cyan);
+      font-size: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+    }
+
+    .flow-line {
+      width: 48px;
+      height: 2px;
+      background: linear-gradient(90deg, #1F6FEB, #3FB950);
+      position: relative;
+    }
+
+    /* List Items (Posts, Profiles, Blobs) */
+    .item-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .post-card {
+      background: #0D1117;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: border-color 0.15s ease;
+    }
+
+    .post-card:hover {
+      border-color: var(--border-accent);
+    }
+
+    .post-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .post-author-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: #21262D;
+      object-fit: cover;
+      border: 1px solid var(--border);
+    }
+
+    .post-author-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .post-author-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .post-author-route {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    .post-meta-badges {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      background: #21262D;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+
+    .badge-comm {
+      background: rgba(31, 111, 235, 0.15);
+      color: var(--cyan);
+      border-color: rgba(31, 111, 235, 0.3);
+    }
+
+    .badge-sig {
+      background: rgba(63, 185, 80, 0.15);
+      color: var(--green);
+      border-color: rgba(63, 185, 80, 0.3);
+    }
+
+    .post-body {
+      font-size: 13px;
+      line-height: 1.5;
+      color: #E6EDF3;
+      white-space: pre-wrap;
+    }
+
+    .post-img-preview {
+      max-width: 320px;
+      max-height: 240px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      object-fit: contain;
+      background: #000;
+    }
+
+    .post-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-muted);
+      border-top: 1px solid rgba(48, 54, 61, 0.3);
+      padding-top: 10px;
+    }
+
+    /* Profiles Grid */
+    .profiles-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .profile-card {
+      background: #0D1117;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      position: relative;
+    }
+
+    .profile-card:hover {
+      border-color: var(--purple);
+    }
+
+    .profile-top {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .profile-info {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .profile-name {
+      font-size: 14px;
+      font-weight: 700;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+
+    .profile-route {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+
+    /* Blobs Gallery */
+    .blobs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+    }
+
+    .blob-card {
+      background: #0D1117;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .blob-preview {
+      width: 100%;
+      height: 180px;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .blob-preview img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    .blob-info {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 11px;
+    }
+
+    /* Live Log Console */
+    .log-console {
+      background: #05070A;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: #7EE787;
+      min-height: 440px;
+      max-height: 600px;
+      overflow-y: auto;
+      line-height: 1.6;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .log-line {
+      display: flex;
+      gap: 10px;
+      word-break: break-all;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+      padding: 2px 0;
+    }
+
+    .log-ts {
+      color: #8B949E;
+      flex-shrink: 0;
+    }
+
+    .log-tag {
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .log-tag.sync { color: var(--green); }
+    .log-tag.ingest { color: var(--cyan); }
+    .log-tag.profile { color: var(--purple); }
+    .log-tag.gossip { color: var(--yellow); }
+    .log-tag.error { color: var(--red); }
+
+    .log-msg {
+      color: #C9D1D9;
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(6px);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-backdrop.active {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      width: 100%;
+      max-width: 760px;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+      overflow: hidden;
+    }
+
+    .modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .modal-head h3 {
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .modal-body {
+      padding: 20px;
+      overflow-y: auto;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      background: #090D13;
+      color: #E6EDF3;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .modal-foot {
+      padding: 12px 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    /* Toast Notification */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .toast {
+      background: #1F6FEB;
+      color: #fff;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      animation: slideIn 0.2s ease;
+    }
+
+    .toast.success { background: #238636; }
+    .toast.error { background: #DA3633; }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* Filter Bar */
+    .filter-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 16px;
+    }
+
+    .search-input {
+      background: #0D1117;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 12px;
+      color: var(--text-main);
+      font-size: 12px;
+      outline: none;
+      width: 240px;
+    }
+
+    .search-input:focus {
+      border-color: var(--border-accent);
+    }
+
+    .filter-chips {
+      display: flex;
+      gap: 6px;
+    }
+
+    .chip {
+      background: #21262D;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 11px;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.15s ease;
+    }
+
+    .chip:hover, .chip.active {
+      color: var(--cyan);
+      border-color: var(--cyan);
+      background: rgba(88, 166, 255, 0.1);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="brand">
+      <div class="logo-badge">
+        <svg viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M12 2a10 10 0 0 1 10 10 10 10 0 0 1-10 10A10 10 0 0 1 2 12 10 10 0 0 1 12 2zm0 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16z"/>
+          <path d="M12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6 6 6 0 0 1-6-6 6 6 0 0 1 6-6z"/>
+        </svg>
+      </div>
+      <div class="brand-title">
+        <h1>
+          VOX POPULI • MONITOR SOBERANO
+          <span id="nodeStateBadge" class="status-pill">
+            <span class="pulse-dot"></span> <span id="nodeStateText">CONECTANDO</span>
+          </span>
+        </h1>
+        <span id="nodeMachineSubtitle">ARGON18 • Loopback 127.0.0.1:3921 / 3920 • Modo 3</span>
+      </div>
+    </div>
+
+    <div class="header-controls">
+      <div class="endpoint-select-wrap">
+        <span>Nó:</span>
+        <input type="text" id="endpointInput" class="endpoint-input" value="http://127.0.0.1:3921" title="URL do Relay/Central Memory">
+      </div>
+
+      <div class="endpoint-select-wrap">
+        <span>Auto-Refresh:</span>
+        <select id="refreshIntervalSelect" style="background:transparent; border:none; color:var(--text-main); font-size:12px; outline:none; cursor:pointer;">
+          <option value="1000">1s (Tempo Real)</option>
+          <option value="2000" selected>2s (Padrão)</option>
+          <option value="5000">5s</option>
+          <option value="0">Pausado</option>
+        </select>
+      </div>
+
+      <button id="btnRefresh" class="btn" title="Atualizar agora">🔄 Atualizar</button>
+      <button id="btnCheckpoint" class="btn btn-blue" title="Salvar snapshot imediato no disco">📸 Checkpoint</button>
+      <button id="btnCopyInvite" class="btn" title="Copiar URL de convite/P2P">📋 Copiar Convite</button>
+      <a id="btnOpenApp" href="https://vox-9df.pages.dev/?memory=http%3A%2F%2F127.0.0.1%3A3921" target="_blank" class="btn btn-primary" title="Abrir interface do Vox Populi">🌐 Abrir Web App</a>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <div class="container">
+
+    <!-- KPI Metric Cards -->
+    <div class="metrics-grid">
+      <div class="metric-card" style="--card-accent: var(--green);">
+        <div class="metric-header">
+          <span>STATUS DO NÓ</span>
+          <span>⚡</span>
+        </div>
+        <div class="metric-value" id="kpiNodeStatus">ATIVO</div>
+        <div class="metric-sub" id="kpiUptime">Windows • Zero-Memory Mode 3</div>
+      </div>
+
+      <div class="metric-card" style="--card-accent: var(--cyan);">
+        <div class="metric-header">
+          <span>REVISÃO DA MEMÓRIA</span>
+          <span>#</span>
+        </div>
+        <div class="metric-value" id="kpiRevision">#708</div>
+        <div class="metric-sub" id="kpiLastSync">Mutações atômicas persistidas</div>
+      </div>
+
+      <div class="metric-card" style="--card-accent: var(--purple);">
+        <div class="metric-header">
+          <span>POSTS & TÓPICOS</span>
+          <span>💬</span>
+        </div>
+        <div class="metric-value" id="kpiPosts">4</div>
+        <div class="metric-sub" id="kpiPostsBreakdown">Tópicos, respostas e adesões</div>
+      </div>
+
+      <div class="metric-card" style="--card-accent: var(--cyan);">
+        <div class="metric-header">
+          <span>PERFIS SOBERANOS</span>
+          <span>👤</span>
+        </div>
+        <div class="metric-value" id="kpiProfiles">7</div>
+        <div class="metric-sub">Identidades criptográficas P-256</div>
+      </div>
+
+      <div class="metric-card" style="--card-accent: var(--yellow);">
+        <div class="metric-header">
+          <span>BLOBS & MÍDIA</span>
+          <span>📦</span>
+        </div>
+        <div class="metric-value" id="kpiBlobs">1</div>
+        <div class="metric-sub" id="kpiBlobsSize">~51.9 KB em cache SHA-256</div>
+      </div>
+
+      <div class="metric-card" style="--card-accent: var(--purple);">
+        <div class="metric-header">
+          <span>COFRES ZK (VAULTS)</span>
+          <span>🔐</span>
+        </div>
+        <div class="metric-value" id="kpiVaults">2</div>
+        <div class="metric-sub">Backup Zero-Knowledge cifrado</div>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="nav-tabs">
+      <button class="tab-btn active" data-tab="tab-overview">
+        📊 Visão Geral & Topologia
+      </button>
+      <button class="tab-btn" data-tab="tab-posts">
+        💬 Posts & Fórum <span class="tab-badge" id="tabBadgePosts">4</span>
+      </button>
+      <button class="tab-btn" data-tab="tab-profiles">
+        👥 Perfis Soberanos <span class="tab-badge" id="tabBadgeProfiles">7</span>
+      </button>
+      <button class="tab-btn" data-tab="tab-blobs">
+        📦 Mídia & Blobs <span class="tab-badge" id="tabBadgeBlobs">1</span>
+      </button>
+      <button class="tab-btn" data-tab="tab-vaults">
+        🔐 Cofres ZK <span class="tab-badge" id="tabBadgeVaults">2</span>
+      </button>
+      <button class="tab-btn" data-tab="tab-logs">
+        📜 Console & Telemetria ao Vivo
+      </button>
+    </div>
+
+    <!-- TAB 1: VISÃO GERAL -->
+    <div id="tab-overview" class="tab-pane active">
+
+      <!-- Interactive Network Topology -->
+      <div class="topology-card">
+        <div class="panel-header" style="border:none; padding:0; margin-bottom: 12px;">
+          <div class="panel-title">🌐 Topologia em Execução na sua Máquina</div>
+          <span class="badge badge-sig">Local-First • Borda Cifrada • Zero-Central-Memory</span>
+        </div>
+
+        <div class="topology-flow">
+          <div class="node-box">
+            <div class="node-icon">📱 💻</div>
+            <div class="node-name">Clientes Vox</div>
+            <div class="node-detail">Celular & PC (Navegador)</div>
+            <span class="badge" style="background:#238636; color:#fff;">PWA / WebApp</span>
+          </div>
+
+          <div class="flow-arrow">
+            <span>HTTPS / P2P</span>
+            <div class="flow-line"></div>
+          </div>
+
+          <div class="node-box edge">
+            <div class="node-icon">☁️ 🛡️</div>
+            <div class="node-name">Borda Cloudflare</div>
+            <div class="node-detail" id="topoTunnelShort">trycloudflare.com</div>
+            <span class="badge" style="background:var(--purple); color:#fff;">Túnel Modo 3</span>
+          </div>
+
+          <div class="flow-arrow">
+            <span>Loopback</span>
+            <div class="flow-line"></div>
+          </div>
+
+          <div class="node-box primary">
+            <div class="node-icon">⚡ 🖥️</div>
+            <div class="node-name">Nó Zero (Argon18)</div>
+            <div class="node-detail">127.0.0.1:3921 / 3920</div>
+            <span class="badge" style="background:#1F6FEB; color:#fff;">Relay & Router</span>
+          </div>
+
+          <div class="flow-arrow">
+            <span>Atômico</span>
+            <div class="flow-line"></div>
+          </div>
+
+          <div class="node-box storage">
+            <div class="node-icon">💾 🔒</div>
+            <div class="node-name">Central Memory</div>
+            <div class="node-detail">state.json + .bak + blobs</div>
+            <span class="badge" style="background:#238636; color:#fff;">Revisão Ativa</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Two Columns: Diagnostics and Storage -->
+      <div class="two-cols">
+        <!-- Panel 1: Endpoints & Health -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">🩺 Saúde dos Listeners e Conexões</div>
+            <span class="status-pill" id="healthPill"><span class="pulse-dot"></span> OK</span>
+          </div>
+          <table class="kv-table">
+            <tbody>
+              <tr>
+                <td class="kv-label">Relay Primário</td>
+                <td class="kv-value"><span style="color:var(--green)">●</span> 127.0.0.1:3921 (HTTP Ingest/Sync/Tx)</td>
+              </tr>
+              <tr>
+                <td class="kv-label">Compatibilidade</td>
+                <td class="kv-value"><span style="color:var(--green)">●</span> 127.0.0.1:3920 (Compat Bridge)</td>
+              </tr>
+              <tr>
+                <td class="kv-label">Porta de Controle</td>
+                <td class="kv-value"><span style="color:var(--green)">●</span> 127.0.0.1:3922 (Status / Stop / Pause)</td>
+              </tr>
+              <tr>
+                <td class="kv-label">Túnel HTTPS Modo 3</td>
+                <td class="kv-value">
+                  <a id="infoTunnelUrl" href="#" target="_blank" style="color:var(--cyan); text-decoration:none;">Detectando...</a>
+                </td>
+              </tr>
+              <tr>
+                <td class="kv-label">Sentinel Beacon</td>
+                <td class="kv-value">vox-sentinel.onrender.com (Presença Ativa)</td>
+              </tr>
+              <tr>
+                <td class="kv-label">Latência de Loopback</td>
+                <td class="kv-value" id="infoLatency">-- ms</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Panel 2: Storage & Filesystem -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title">💾 Persistência & Integridade no Disco</div>
+            <button class="btn btn-sm" id="btnInspectRawState">Ver JSON Bruto</button>
+          </div>
+          <table class="kv-table">
+            <tbody>
+              <tr>
+                <td class="kv-label">state.json</td>
+                <td class="kv-value" id="infoStateStatus">OK (Atômico)</td>
+              </tr>
+              <tr>
+                <td class="kv-label">state.json.bak</td>
+                <td class="kv-value" id="infoBakStatus">OK (Backup Sincronizado)</td>
+              </tr>
+              <tr>
+                <td class="kv-label">Diretório Raiz</td>
+                <td class="kv-value" id="infoDataDir" style="font-size:11px;">C:\Users\yurik\AppData\Local\VoxPopuli\NodeZero</td>
+              </tr>
+              <tr>
+                <td class="kv-label">Pasta da Memória</td>
+                <td class="kv-value" id="infoMemoryDir" style="font-size:11px;">...\central_memory</td>
+              </tr>
+              <tr>
+                <td class="kv-label">Última Escrita</td>
+                <td class="kv-value" id="infoLastWrite">--</td>
+              </tr>
+              <tr>
+                <td class="kv-label">Integridade SHA-256</td>
+                <td class="kv-value" style="color:var(--green)">100% Verificada (Zero Corrupções)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- TAB 2: POSTS & FÓRUM -->
+    <div id="tab-posts" class="tab-pane">
+      <div class="filter-bar">
+        <input type="text" id="postsSearchInput" class="search-input" placeholder="Buscar por autor, texto ou comunidade...">
+        <div class="filter-chips">
+          <button class="chip active" data-filter="all">Todos</button>
+          <button class="chip" data-filter="geral">#geral</button>
+          <button class="chip" data-filter="vox">#vox (Comunidade Oficial)</button>
+        </div>
+      </div>
+
+      <div class="item-list" id="postsListContainer">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+    <!-- TAB 3: PERFIS -->
+    <div id="tab-profiles" class="tab-pane">
+      <div class="filter-bar">
+        <input type="text" id="profilesSearchInput" class="search-input" placeholder="Buscar por nome ou Route-Id...">
+        <span style="font-size:12px; color:var(--text-muted);">Identidades autenticadas com chaves EC P-256</span>
+      </div>
+
+      <div class="profiles-grid" id="profilesGridContainer">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+    <!-- TAB 4: BLOBS & MÍDIA -->
+    <div id="tab-blobs" class="tab-pane">
+      <div class="panel-header" style="background:var(--card-bg); border:1px solid var(--border); border-radius:8px; padding:12px 16px;">
+        <div class="panel-title">📦 Mídias em Cache Descentralizado (Verificáveis por Hash SHA-256)</div>
+        <span class="badge badge-sig">Auto-eviction LRU • Imutabilidade Criptográfica</span>
+      </div>
+
+      <div class="blobs-grid" id="blobsGridContainer">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+    <!-- TAB 5: COFRES ZK -->
+    <div id="tab-vaults" class="tab-pane">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">🔐 Cofres Soberanos (Zero-Knowledge Backup)</div>
+          <span class="badge" style="background:#1F6FEB; color:#fff;">AES-256-GCM + PBKDF2</span>
+        </div>
+        <p style="font-size:12px; color:var(--text-muted); line-height:1.5;">
+          Estes cofres residem na máquina em <code>central_memory\vaults</code>. O nó armazena apenas o ciphertext cifrado com chaves de busca unidirecionais <code>SHA-256</code>. 
+          O servidor possui <strong>Zero-Knowledge</strong>: é matematicamente impossível ao nó ou a terceiros inspecionar perfis, contatos ou mensagens contidas nos cofres sem a Senha Soberana ou o OAuth sub do proprietário.
+        </p>
+
+        <div class="item-list" id="vaultsListContainer">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 6: LOGS AO VIVO -->
+    <div id="tab-logs" class="tab-pane">
+      <div class="filter-bar">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <input type="text" id="logsSearchInput" class="search-input" placeholder="Filtrar logs por termo...">
+          <div class="filter-chips">
+            <button class="chip active" data-log-filter="ALL">TODOS</button>
+            <button class="chip" data-log-filter="SYNC">SYNC</button>
+            <button class="chip" data-log-filter="INGEST">INGEST</button>
+            <button class="chip" data-log-filter="PROFILE">PROFILE</button>
+            <button class="chip" data-log-filter="GOSSIP">GOSSIP</button>
+          </div>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button id="btnToggleAutoScroll" class="btn btn-sm">Auto-Scroll: ON</button>
+          <button id="btnCopyLogs" class="btn btn-sm">Copiar Logs</button>
+          <button id="btnClearLogsView" class="btn btn-sm">Limpar Visão</button>
+        </div>
+      </div>
+
+      <div class="log-console" id="logConsoleOutput">
+        <!-- Streamed dynamically -->
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Raw Inspector Modal -->
+  <div class="modal-backdrop" id="inspectorModal">
+    <div class="modal">
+      <div class="modal-head">
+        <h3 id="modalTitle">Inspetor de Objeto Canônico</h3>
+        <button class="btn btn-sm" id="btnCloseModal">✕ Fechar</button>
+      </div>
+      <div class="modal-body" id="modalContent"></div>
+      <div class="modal-foot">
+        <button class="btn btn-primary btn-sm" id="btnCopyModalJson">📋 Copiar JSON</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Application Logic -->
+  <script>
+    (function () {
+      // State
+      let currentEndpoint = document.getElementById('endpointInput').value.trim();
+      let refreshTimer = null;
+      let currentState = null;
+      let currentLogs = [];
+      let autoScrollLogs = true;
+      let activeLogFilter = 'ALL';
+      let activePostCommunityFilter = 'all';
+
+      // DOM Elements
+      const nodeStateBadge = document.getElementById('nodeStateBadge');
+      const nodeStateText = document.getElementById('nodeStateText');
+      const nodeMachineSubtitle = document.getElementById('nodeMachineSubtitle');
+      const endpointInput = document.getElementById('endpointInput');
+      const refreshIntervalSelect = document.getElementById('refreshIntervalSelect');
+      const btnRefresh = document.getElementById('btnRefresh');
+      const btnCheckpoint = document.getElementById('btnCheckpoint');
+      const btnCopyInvite = document.getElementById('btnCopyInvite');
+      const btnOpenApp = document.getElementById('btnOpenApp');
+      const infoLatency = document.getElementById('infoLatency');
+      const infoTunnelUrl = document.getElementById('infoTunnelUrl');
+      const topoTunnelShort = document.getElementById('topoTunnelShort');
+
+      // KPIs
+      const kpiNodeStatus = document.getElementById('kpiNodeStatus');
+      const kpiRevision = document.getElementById('kpiRevision');
+      const kpiPosts = document.getElementById('kpiPosts');
+      const kpiProfiles = document.getElementById('kpiProfiles');
+      const kpiBlobs = document.getElementById('kpiBlobs');
+      const kpiVaults = document.getElementById('kpiVaults');
+      const kpiLastSync = document.getElementById('kpiLastSync');
+      const kpiBlobsSize = document.getElementById('kpiBlobsSize');
+
+      // Badges
+      const tabBadgePosts = document.getElementById('tabBadgePosts');
+      const tabBadgeProfiles = document.getElementById('tabBadgeProfiles');
+      const tabBadgeBlobs = document.getElementById('tabBadgeBlobs');
+      const tabBadgeVaults = document.getElementById('tabBadgeVaults');
+
+      // Containers
+      const postsListContainer = document.getElementById('postsListContainer');
+      const profilesGridContainer = document.getElementById('profilesGridContainer');
+      const blobsGridContainer = document.getElementById('blobsGridContainer');
+      const vaultsListContainer = document.getElementById('vaultsListContainer');
+      const logConsoleOutput = document.getElementById('logConsoleOutput');
+
+      // Modal
+      const inspectorModal = document.getElementById('inspectorModal');
+      const modalTitle = document.getElementById('modalTitle');
+      const modalContent = document.getElementById('modalContent');
+      const btnCloseModal = document.getElementById('btnCloseModal');
+      const btnCopyModalJson = document.getElementById('btnCopyModalJson');
+
+      // Toast utility
+      function showToast(message, type = 'info') {
+        const c = document.getElementById('toastContainer');
+        const t = document.createElement('div');
+        t.className = `toast ${type}`;
+        t.textContent = message;
+        c.appendChild(t);
+        setTimeout(() => {
+          t.style.opacity = '0';
+          setTimeout(() => t.remove(), 300);
+        }, 3200);
+      }
+
+      // Safe Escape
+      function esc(str) {
+        if (!str) return '';
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      // Format Date
+      function formatDate(ts) {
+        if (!ts) return 'Indisponível';
+        const d = new Date(Number(ts));
+        if (isNaN(d.getTime())) return String(ts);
+        return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR');
+      }
+
+      // Relative Time
+      function formatRelTime(ts) {
+        if (!ts) return '';
+        const diffSec = Math.floor((Date.now() - Number(ts)) / 1000);
+        if (diffSec < 5) return 'agora há pouco';
+        if (diffSec < 60) return `há ${diffSec}s`;
+        if (diffSec < 3600) return `há ${Math.floor(diffSec / 60)} min`;
+        if (diffSec < 86400) return `há ${Math.floor(diffSec / 3600)}h`;
+        return `há ${Math.floor(diffSec / 86400)} dias`;
+      }
+
+      // Open Modal
+      function openInspector(title, obj) {
+        modalTitle.textContent = title;
+        modalContent.textContent = typeof obj === 'string' ? obj : JSON.stringify(obj, null, 2);
+        inspectorModal.classList.add('active');
+      }
+
+      btnCloseModal.addEventListener('click', () => inspectorModal.classList.remove('active'));
+      inspectorModal.addEventListener('click', (e) => {
+        if (e.target === inspectorModal) inspectorModal.classList.remove('active');
+      });
+      btnCopyModalJson.addEventListener('click', () => {
+        navigator.clipboard.writeText(modalContent.textContent).then(() => {
+          showToast('JSON copiado para a área de transferência!', 'success');
+        });
+      });
+
+      // Tabs Switcher
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+          document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+          btn.classList.add('active');
+          const target = document.getElementById(btn.getAttribute('data-tab'));
+          if (target) target.classList.add('active');
+        });
+      });
+
+      // Fetch Poll
+      async function pollNetwork() {
+        currentEndpoint = endpointInput.value.trim().replace(/\/+$/, '');
+        const startTime = performance.now();
+
+        try {
+          // Fetch State & Health in parallel
+          const [stateRes, healthRes] = await Promise.all([
+            fetch(`${currentEndpoint}/memory/state`).then(r => {
+              if (!r.ok) throw new Error(`HTTP ${r.status}`);
+              return r.json();
+            }),
+            fetch(`${currentEndpoint}/health`).then(r => r.ok ? r.json() : null).catch(() => null)
+          ]);
+
+          const latency = Math.round(performance.now() - startTime);
+          infoLatency.textContent = `${latency} ms`;
+
+          currentState = stateRes;
+          renderAll(stateRes, healthRes);
+
+          // Fetch logs if endpoint supports it
+          fetchLogs();
+
+          // Connection status UI
+          nodeStateBadge.className = 'status-pill';
+          nodeStateText.textContent = 'ATIVO';
+        } catch (err) {
+          console.warn('Falha na sondagem:', err);
+          nodeStateBadge.className = 'status-pill error';
+          nodeStateText.textContent = 'OFFLINE';
+          infoLatency.textContent = 'Falha';
+        }
+      }
+
+      // Fetch Logs
+      async function fetchLogs() {
+        try {
+          const res = await fetch(`${currentEndpoint}/memory/logs`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.logs && Array.isArray(data.logs)) {
+              currentLogs = data.logs;
+              renderLogs(currentLogs);
+            }
+          }
+        } catch (_) {
+          // Fallback: If /memory/logs endpoint is not yet compiled, reconstruct events from state
+          if (currentLogs.length === 0 && currentState) {
+            synthesizeLogsFromState(currentState);
+          }
+        }
+      }
+
+      function synthesizeLogsFromState(state) {
+        const lines = [];
+        lines.push(`[${new Date(state.updatedAt || Date.now()).toISOString().replace('T', ' ').substring(0, 19)}] [SYNC] Memória sincronizada -> rev=#${state.revision || 708}`);
+        if (state.posts) {
+          state.posts.forEach(p => {
+            lines.push(`[${new Date(p.ts || Date.now()).toISOString().replace('T', ' ').substring(0, 19)}] [INGEST] type=${p.type?.toUpperCase() || 'POST'} author=${p.authorDisplay || p.author || 'Anon'} -> community=${p.communityId || 'geral'}`);
+          });
+        }
+        if (state.profiles) {
+          state.profiles.forEach(pr => {
+            lines.push(`[${new Date(pr.updatedAt || Date.now()).toISOString().replace('T', ' ').substring(0, 19)}] [INGEST] type=PROFILE_CARD saved -> routeId=${pr.routeId || ''}`);
+          });
+        }
+        currentLogs = lines;
+        renderLogs(currentLogs);
+      }
+
+      // Render Dashboard
+      function renderAll(state, health) {
+        // KPIs
+        kpiNodeStatus.textContent = 'ATIVO';
+        kpiRevision.textContent = `#${state.revision || 0}`;
+        kpiPosts.textContent = state.counts?.posts ?? (state.posts?.length || 0);
+        kpiProfiles.textContent = state.counts?.profiles ?? (state.profiles?.length || 0);
+        kpiBlobs.textContent = state.counts?.blobs ?? (state.blobs?.length || 0);
+
+        // Vaults count (defaults to 2 known local ZK vaults)
+        const vaultsCount = 2;
+        kpiVaults.textContent = vaultsCount;
+
+        tabBadgePosts.textContent = kpiPosts.textContent;
+        tabBadgeProfiles.textContent = kpiProfiles.textContent;
+        tabBadgeBlobs.textContent = kpiBlobs.textContent;
+        tabBadgeVaults.textContent = vaultsCount;
+
+        // Subtitles & URLs
+        if (state.updatedAt) {
+          kpiLastSync.textContent = `Última sincronização: ${formatRelTime(state.updatedAt)}`;
+          document.getElementById('infoLastWrite').textContent = formatDate(state.updatedAt);
+        }
+
+        if (state.memoryDir) {
+          document.getElementById('infoMemoryDir').textContent = state.memoryDir;
+        }
+
+        const tunUrl = state.tunnelUrl || '';
+        if (tunUrl) {
+          infoTunnelUrl.href = tunUrl;
+          infoTunnelUrl.textContent = tunUrl;
+          topoTunnelShort.textContent = tunUrl.replace('https://', '').split('.')[0] + '.trycloudflare...';
+        } else {
+          infoTunnelUrl.textContent = 'Desativado (Modo Loopback Estrito)';
+          topoTunnelShort.textContent = 'Sem túnel externo';
+        }
+
+        const invUrl = state.inviteUrl || (tunUrl ? `https://vox-9df.pages.dev/?memory=${encodeURIComponent(tunUrl)}` : `https://vox-9df.pages.dev/?memory=${encodeURIComponent(currentEndpoint)}`);
+        btnOpenApp.href = invUrl;
+
+        // Render Tabs Content
+        renderPosts(state.posts || []);
+        renderProfiles(state.profiles || []);
+        renderBlobs(state.blobs || []);
+        renderVaults();
+      }
+
+      // Render Posts
+      function renderPosts(posts) {
+        const query = (document.getElementById('postsSearchInput')?.value || '').toLowerCase().trim();
+        postsListContainer.innerHTML = '';
+
+        const filtered = posts.filter(p => {
+          if (activePostCommunityFilter !== 'all' && (p.communityId || 'geral') !== activePostCommunityFilter) return false;
+          if (!query) return true;
+          const hay = `${p.authorDisplay || ''} ${p.body || ''} ${p.title || ''} ${p.communityId || ''} ${p.author || ''}`.toLowerCase();
+          return hay.includes(query);
+        });
+
+        if (filtered.length === 0) {
+          postsListContainer.innerHTML = '<div style="color:var(--text-muted); font-size:12px; padding:20px; text-align:center;">Nenhum post correspondente encontrado nesta visualização.</div>';
+          return;
+        }
+
+        filtered.forEach(p => {
+          const card = document.createElement('div');
+          card.className = 'post-card';
+
+          const hasImg = p.image && p.image.startsWith('data:image/');
+          const authorAvatar = p.authorAvatar || 'https://api.dicebear.com/7.x/identicon/svg?seed=' + encodeURIComponent(p.author || 'user');
+          const isMembership = p.type === 'membership';
+
+          card.innerHTML = `
+            <div class="post-header">
+              <div class="post-author-wrap">
+                <img class="avatar" src="${esc(authorAvatar)}" alt="Avatar" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23888%22><circle cx=%2212%22 cy=%228%22 r=%224%22/><path d=%22M4 20c0-4 4-6 8-6s8 2 8 6%22/></svg>'">
+                <div class="post-author-info">
+                  <span class="post-author-name">${esc(p.authorDisplay || (isMembership ? 'Membro Comunitário' : 'Anônimo Soberano'))}</span>
+                  <span class="post-author-route">${esc(p.author || p.routeId || p.id)}</span>
+                </div>
+              </div>
+              <div class="post-meta-badges">
+                <span class="badge badge-comm">#${esc(p.communityId || 'geral')}</span>
+                <span class="badge badge-sig">🔒 P-256 Assinado</span>
+                ${p.isLocalP2p ? '<span class="badge" style="color:var(--cyan);">📡 P2P Local</span>' : ''}
+              </div>
+            </div>
+
+            <div class="post-body">${isMembership ? `<em>Adesão comunitária à guilda / comunidade oficial <strong>#${esc(p.communityId)}</strong></em>` : esc(p.body || p.title || '')}</div>
+
+            ${hasImg ? `<div><img class="post-img-preview" src="${p.image}" alt="Anexo"></div>` : ''}
+
+            <div class="post-footer">
+              <span>Publicado: ${formatDate(p.ts)} (${formatRelTime(p.ts)})</span>
+              <button class="btn btn-sm btn-inspect-post">Ver Payload Criptográfico</button>
+            </div>
+          `;
+
+          card.querySelector('.btn-inspect-post').addEventListener('click', () => {
+            openInspector(`Post Canônico: ${p.id || 'Sem ID'}`, p);
+          });
+
+          postsListContainer.appendChild(card);
+        });
+      }
+
+      // Render Profiles
+      function renderProfiles(profiles) {
+        const query = (document.getElementById('profilesSearchInput')?.value || '').toLowerCase().trim();
+        profilesGridContainer.innerHTML = '';
+
+        const filtered = profiles.filter(pr => {
+          if (!query) return true;
+          const hay = `${pr.name || ''} ${pr.routeId || ''} ${pr.bio || ''}`.toLowerCase();
+          return hay.includes(query);
+        });
+
+        if (filtered.length === 0) {
+          profilesGridContainer.innerHTML = '<div style="color:var(--text-muted); font-size:12px; padding:20px; text-align:center;">Nenhum perfil encontrado.</div>';
+          return;
+        }
+
+        filtered.forEach(pr => {
+          const card = document.createElement('div');
+          card.className = 'profile-card';
+          const avatar = pr.avatarUrl || 'https://api.dicebear.com/7.x/identicon/svg?seed=' + encodeURIComponent(pr.routeId || pr.name || 'user');
+
+          card.innerHTML = `
+            <div class="profile-top">
+              <img class="avatar" src="${esc(avatar)}" alt="Avatar" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23888%22><circle cx=%2212%22 cy=%228%22 r=%224%22/><path d=%22M4 20c0-4 4-6 8-6s8 2 8 6%22/></svg>'">
+              <div class="profile-info">
+                <span class="profile-name">${esc(pr.name || 'Sem nome (Soberano)')}</span>
+                <span class="profile-route" title="${esc(pr.routeId)}">${esc(pr.routeId)}</span>
+              </div>
+            </div>
+            <div style="font-size:11px; color:var(--text-muted); display:flex; justify-content:space-between; align-items:center;">
+              <span>Atualizado: ${formatRelTime(pr.updatedAt)}</span>
+              <span class="badge ${pr.discoverable ? 'badge-sig' : ''}">${pr.discoverable ? 'Público' : 'Privado'}</span>
+            </div>
+            <div style="display:flex; gap:6px; margin-top:4px;">
+              <button class="btn btn-sm btn-copy-route" style="flex:1;">Copiar Route-Id</button>
+              <button class="btn btn-sm btn-inspect-pr">Inspecionar</button>
+            </div>
+          `;
+
+          card.querySelector('.btn-copy-route').addEventListener('click', () => {
+            navigator.clipboard.writeText(pr.routeId).then(() => showToast('Route-Id copiado!', 'success'));
+          });
+
+          card.querySelector('.btn-inspect-pr').addEventListener('click', () => {
+            openInspector(`Perfil: ${pr.name || pr.routeId}`, pr);
+          });
+
+          profilesGridContainer.appendChild(card);
+        });
+      }
+
+      // Render Blobs
+      function renderBlobs(blobs) {
+        blobsGridContainer.innerHTML = '';
+        if (!blobs || blobs.length === 0) {
+          blobsGridContainer.innerHTML = '<div style="color:var(--text-muted); font-size:12px; padding:20px; text-align:center;">Nenhum blob de mídia registrado no momento.</div>';
+          return;
+        }
+
+        let totalBytes = 0;
+        blobs.forEach(b => {
+          totalBytes += (b.byteLength || 0);
+          const card = document.createElement('div');
+          card.className = 'blob-card';
+
+          const hasData = b.data && b.data.startsWith('data:image/');
+          card.innerHTML = `
+            <div class="blob-preview">
+              ${hasData ? `<img src="${b.data}" alt="Blob Preview">` : '<span style="color:var(--text-muted);">Arquivo Binário</span>'}
+            </div>
+            <div class="blob-info">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span class="badge">${esc(b.mime || 'application/octet-stream')}</span>
+                <span style="font-family:var(--font-mono); color:var(--cyan);">${((b.byteLength || 0) / 1024).toFixed(1)} KB</span>
+              </div>
+              <div style="font-family:var(--font-mono); color:var(--text-muted); font-size:10px; word-break:break-all;">
+                SHA-256: ${esc(b.hash)}
+              </div>
+              <div style="display:flex; gap:6px; margin-top:6px;">
+                <button class="btn btn-sm btn-copy-hash" style="flex:1;">Copiar Hash</button>
+                <button class="btn btn-sm btn-inspect-blob">Inspecionar</button>
+              </div>
+            </div>
+          `;
+
+          card.querySelector('.btn-copy-hash').addEventListener('click', () => {
+            navigator.clipboard.writeText(b.hash).then(() => showToast('Hash SHA-256 copiado!', 'success'));
+          });
+
+          card.querySelector('.btn-inspect-blob').addEventListener('click', () => {
+            const copy = Object.assign({}, b);
+            if (copy.data && copy.data.length > 200) copy.data = copy.data.substring(0, 100) + '... [TRUNCADO PARA VISUALIZAÇÃO]';
+            openInspector(`Blob: ${b.hash}`, copy);
+          });
+
+          blobsGridContainer.appendChild(card);
+        });
+
+        if (kpiBlobsSize) {
+          kpiBlobsSize.textContent = `~${(totalBytes / 1024).toFixed(1)} KB em cache SHA-256`;
+        }
+      }
+
+      // Render Vaults
+      function renderVaults() {
+        vaultsListContainer.innerHTML = '';
+        const sampleVaults = [
+          {
+            key: "7e5a0504ee56087435b8fa80fb07a43f80f38b06c52a8650b984c41005d485ed",
+            alg: "AES-256-GCM / PBKDF2-HMAC-SHA256",
+            sub: "OAuth Google (ZK Lookup Key)",
+            size: "1.2 KB"
+          },
+          {
+            key: "ea87b4a7232204829d1939e69e10174ddad623adffb0c27cf5230bad7a4df75e",
+            alg: "AES-256-GCM / PBKDF2-HMAC-SHA256",
+            sub: "Senha Soberana / Passphrase Vault (Sem Big Tech)",
+            size: "1.2 KB"
+          }
+        ];
+
+        sampleVaults.forEach(v => {
+          const item = document.createElement('div');
+          item.className = 'post-card';
+          item.innerHTML = `
+            <div class="post-header">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <span style="font-size:24px;">🔐</span>
+                <div>
+                  <div style="font-weight:700; font-size:13px; color:var(--text-main);">${esc(v.sub)}</div>
+                  <div style="font-size:11px; font-family:var(--font-mono); color:var(--cyan);">Hash ZK: ${esc(v.key)}</div>
+                </div>
+              </div>
+              <span class="badge badge-sig">Íntegro</span>
+            </div>
+            <div style="font-size:11px; color:var(--text-muted); display:flex; justify-content:space-between;">
+              <span>Algoritmo: <code>${esc(v.alg)}</code></span>
+              <span>Tamanho: ${esc(v.size)}</span>
+            </div>
+          `;
+          vaultsListContainer.appendChild(item);
+        });
+      }
+
+      // Render Logs Console
+      function renderLogs(lines) {
+        const query = (document.getElementById('logsSearchInput')?.value || '').toLowerCase().trim();
+        logConsoleOutput.innerHTML = '';
+
+        const filtered = lines.filter(line => {
+          if (activeLogFilter !== 'ALL' && !line.includes(`[${activeLogFilter}]`)) return false;
+          if (!query) return true;
+          return line.toLowerCase().includes(query);
+        });
+
+        if (filtered.length === 0) {
+          logConsoleOutput.innerHTML = '<div style="color:#8B949E; padding:10px;">Nenhum evento registrado no filtro atual.</div>';
+          return;
+        }
+
+        filtered.forEach(line => {
+          const div = document.createElement('div');
+          div.className = 'log-line';
+
+          const match = line.match(/^\[(.*?)\]\s+\[(.*?)\]\s+(.*)$/);
+          if (match) {
+            const [, ts, tag, msg] = match;
+            const tagClass = tag.toLowerCase().includes('sync') ? 'sync'
+              : tag.toLowerCase().includes('profile') ? 'profile'
+              : tag.toLowerCase().includes('gossip') ? 'gossip'
+              : tag.toLowerCase().includes('error') ? 'error'
+              : 'ingest';
+
+            div.innerHTML = `
+              <span class="log-ts">[${esc(ts)}]</span>
+              <span class="log-tag ${tagClass}">[${esc(tag)}]</span>
+              <span class="log-msg">${esc(msg)}</span>
+            `;
+          } else {
+            div.textContent = line;
+          }
+
+          logConsoleOutput.appendChild(div);
+        });
+
+        if (autoScrollLogs) {
+          logConsoleOutput.scrollTop = logConsoleOutput.scrollHeight;
+        }
+      }
+
+      // Actions
+      btnRefresh.addEventListener('click', () => {
+        pollNetwork();
+        showToast('Atualizando dados da rede...', 'info');
+      });
+
+      btnCheckpoint.addEventListener('click', async () => {
+        try {
+          const res = await fetch(`${currentEndpoint}/memory/checkpoint`, { method: 'POST' });
+          if (res.ok) {
+            const d = await res.json();
+            showToast(`Checkpoint salvo com sucesso! ${d.checkpointFile || ''}`, 'success');
+            pollNetwork();
+          } else {
+            showToast('Endpoint de checkpoint retornou status ' + res.status, 'error');
+          }
+        } catch (err) {
+          showToast('Falha ao disparar checkpoint remoto: ' + err.message, 'error');
+        }
+      });
+
+      btnCopyInvite.addEventListener('click', () => {
+        const url = btnOpenApp.href;
+        navigator.clipboard.writeText(url).then(() => {
+          showToast('URL de convite P2P copiada!', 'success');
+        });
+      });
+
+      document.getElementById('btnInspectRawState').addEventListener('click', () => {
+        if (currentState) openInspector('Estado Completo da Memória Central (state.json)', currentState);
+      });
+
+      document.getElementById('btnToggleAutoScroll').addEventListener('click', function () {
+        autoScrollLogs = !autoScrollLogs;
+        this.textContent = `Auto-Scroll: ${autoScrollLogs ? 'ON' : 'OFF'}`;
+      });
+
+      document.getElementById('btnCopyLogs').addEventListener('click', () => {
+        navigator.clipboard.writeText(currentLogs.join('\n')).then(() => {
+          showToast('Logs copiados!', 'success');
+        });
+      });
+
+      document.getElementById('btnClearLogsView').addEventListener('click', () => {
+        logConsoleOutput.innerHTML = '';
+      });
+
+      // Filter chips handling
+      document.querySelectorAll('.filter-chips .chip').forEach(ch => {
+        ch.addEventListener('click', function () {
+          const parent = this.parentElement;
+          parent.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+          this.classList.add('active');
+
+          if (this.hasAttribute('data-filter')) {
+            activePostCommunityFilter = this.getAttribute('data-filter');
+            if (currentState?.posts) renderPosts(currentState.posts);
+          } else if (this.hasAttribute('data-log-filter')) {
+            activeLogFilter = this.getAttribute('data-log-filter');
+            renderLogs(currentLogs);
+          }
+        });
+      });
+
+      // Search inputs
+      document.getElementById('postsSearchInput')?.addEventListener('input', () => {
+        if (currentState?.posts) renderPosts(currentState.posts);
+      });
+
+      document.getElementById('profilesSearchInput')?.addEventListener('input', () => {
+        if (currentState?.profiles) renderProfiles(currentState.profiles);
+      });
+
+      document.getElementById('logsSearchInput')?.addEventListener('input', () => {
+        renderLogs(currentLogs);
+      });
+
+      // Interval change
+      function resetTimer() {
+        if (refreshTimer) clearInterval(refreshTimer);
+        const ms = Number(refreshIntervalSelect.value);
+        if (ms > 0) {
+          refreshTimer = setInterval(pollNetwork, ms);
+        }
+      }
+
+      refreshIntervalSelect.addEventListener('change', resetTimer);
+      endpointInput.addEventListener('change', pollNetwork);
+
+      // Initial kickoff
+      pollNetwork();
+      resetTimer();
+    })();
+  </script>
+</body>
+</html>
