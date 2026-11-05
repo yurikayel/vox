@@ -1025,7 +1025,7 @@ test("render - renderPostItem pilha vertical foto com header sobre m�dia, tool
   const actionsIdx = html.indexOf("post-ig-toolbar");
   const commentsIdx = html.indexOf('class="post-comments');
 
-  assert.ok(mediaIdx < html.indexOf("post-ig-header") && html.indexOf("post-ig-header") < actionsIdx);
+  assert.ok(html.indexOf("post-ig-header") < mediaIdx && mediaIdx < actionsIdx);
   assert.ok(actionsIdx < commentsIdx);
   const mediaSlice = html.slice(html.indexOf("post-media-container"), commentsIdx);
   assert.ok(mediaSlice.includes("post-ig-toolbar"));

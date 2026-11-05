@@ -50,7 +50,7 @@ const ROUTE_DISPATCH_TABLE = {
   "compose-listing": (r) => showComposeListing(r.communityId),
   "compose-proposal": (r) => showComposeProposal(r.communityId),
   "compose-topic": (r) => showComposeTopic(r.communityId),
-  "compose-reply": (r) => showComposeReply(r.topicId, r.communityId),
+  "compose-reply": (r) => showComposeReply(r.topicId, r.communityId, r.parentId),
 };
 
 export async function routeImpl() {

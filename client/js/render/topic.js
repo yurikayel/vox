@@ -19,6 +19,7 @@ import { renderRepostBtn } from "./repost-btn.js";
 import * as mod from "../moderation.js";
 import { renderPostBodyMarkdown } from "./markdown-body.js";
 import { renderNotaryBadgeHtml } from "../perma-notary.js";
+import { flattenReplyThread } from "../reply-thread.js";
 
 function shareTopicAria(topicId) {
   if (mod.canEchoPost(topicId)) return "Compartilhar post";
@@ -90,6 +91,10 @@ function renderTopicFeedbackActions(topicId, topic, author, authorDisplay) {
     <span class="action-count count-likes">${curLikes > 0 ? curLikes : ""}</span>
   </button>`;
 
+  const commentBtn = `<button type="button" class="action-btn btn-comment" data-id="${escapeHtml(topicId)}" data-comm="${escapeHtml(topic?.communityId || "")}" aria-label="Comentar" onclick="document.querySelector('#compose-reply, .thread-reply-input, .post-comment-input')?.focus() || location.assign('#/compose/reply?t=${encodeURIComponent(topicId)}&c=${encodeURIComponent(topic?.communityId || "")}')">
+    <svg class="action-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+  </button>`;
+
   const repostBtn = renderRepostBtn({ ...(topic || {}), id: topicId, title: topic?.title || "", author }, { size: 18 });
 
   const starBtn = `<button class="action-btn btn-star ${starred ? "active" : ""}" data-id="${escapeHtml(topicId)}" data-count="${baseStars}" aria-label="Dar estrela ao post">
@@ -97,7 +102,7 @@ function renderTopicFeedbackActions(topicId, topic, author, authorDisplay) {
     <span class="action-count count-stars">${curStars > 0 ? curStars : ""}</span>
   </button>`;
 
-  return `${likeBtn}${repostBtn}${starBtn}${renderTopicZapButton(topicId, topic, author, authorDisplay)}`;
+  return `${likeBtn}${commentBtn}${repostBtn}${starBtn}${renderTopicZapButton(topicId, topic, author, authorDisplay)}`;
 }
 
 function renderTopicOverflowMenu(topicId, topic, authorDisplay, authorHandle, bodyText, isMod) {
@@ -126,11 +131,12 @@ function renderTopicDistributeActions(topicId, topic, authorDisplay, commId) {
   const baseExpl = Number(topic?.explodesCount) || 0;
   const curExpl = social.getExplodesCount(topicId, baseExpl);
   const expl = social.isExploded(topicId);
-  const countSpan = curExpl > 0 ? `<span class="action-count count-explodes">${curExpl} disparos</span>` : "";
+  const countSpan = curExpl > 0
+    ? `<span class="action-count count-explodes" title="${curExpl} disparos" aria-label="${curExpl} disparos"><span class="sr-only">${curExpl} disparos</span><span aria-hidden="true">${curExpl}</span></span>`
+    : `<span class="action-count count-explodes"></span>`;
 
   const shareBtn = `<button id="btn-share-topic" class="action-btn btn-share btn-share-post ${expl ? "exploded" : ""}" data-id="${escapeHtml(topicId)}" data-count="${baseExpl}" data-title="${escapeHtml(topic?.title || "")}" data-author="${escapeHtml(authorDisplay || "")}" data-body="${escapeHtml((topic?.body || "").slice(0, 200))}" data-comm="${escapeHtml(commId || "")}" aria-label="${escapeHtml(shareTopicAria(topicId))}" title="Compartilhar (EXPLODE!)"${quarantineShareAttrs(topicId)}>
-    <svg class="action-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
-    <span class="action-count">Compartilhar</span>${countSpan}
+    <svg class="action-icon icon-plane" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22 11 13 2 9z"/></svg>${countSpan}
   </button>`;
   const saveBtn = `<button class="action-btn btn-save ${saved ? "active" : ""}" data-id="${escapeHtml(topicId)}" aria-label="Salvar post">
     <svg class="action-icon icon-bookmark" width="18" height="18" viewBox="0 0 24 24" fill="${saved ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
@@ -171,15 +177,18 @@ function renderTopicHeader(author, labels, topic, topicTs) {
     </div>`;
 }
 
-function renderTopicReplyRow(r, isMod) {
+function renderTopicReplyRow(r, isMod, { depth = 0, topicId = "", commId = "" } = {}) {
   const rAuthor = r.author || r.owner || "";
   const rLabels = resolvePostAuthorLabels(rAuthor, { authorDisplay: r.authorDisplay, isOwnLocalPost: r.isOwnLocalPost });
   const rBadge = r.isLocalP2p ? `<span class="badge-pill p2p-pill">Na rede</span>` : `<span class="badge-pill permanent-pill">Guardado</span>`;
   const rTime = postTimeParts(r.ts);
   const modBtn = isMod ? `<button class="btn btn-sm btn-danger btn-mod-hide" data-id="${escapeHtml(r.id)}" data-type="reply">🛡️</button>` : "";
+  const replyHref = `#/compose/reply?t=${encodeURIComponent(topicId)}&c=${encodeURIComponent(commId)}&p=${encodeURIComponent(r.id)}`;
+  const replyBtn = topicId ? `<a class="post-comment-action btn-reply-to-reply" href="${replyHref}" aria-label="Responder a ${escapeHtml(rLabels.authorDisplay)}">Responder</a>` : "";
+  const indent = depth > 0 ? ` style="margin-left:${depth * 20}px; border-left:2px solid var(--border, #ddd);"` : "";
 
   return `
-    <div class="reply-item card reply" id="reply-${escapeHtml(r.id)}">
+    <div class="reply-item card reply" id="reply-${escapeHtml(r.id)}" data-depth="${depth}"${indent}>
       <a class="avatar-link" href="#/u/${encodeURIComponent(rAuthor)}">${renderAvatarHtml(rAuthor, rLabels.authorDisplay, "", r.authorAvatar)}</a>
       <div class="post-content">
         <div class="reply-header" style="display:flex; justify-content:space-between; align-items:center;">
@@ -191,6 +200,7 @@ function renderTopicReplyRow(r, isMod) {
           ${modBtn}
         </div>
         <p class="reply-body">${hashtags.linkifyHashtags(escapeHtml(r.body || "(carregando conteúdo...)"))}</p>
+        ${replyBtn}
       </div>
     </div>`;
 }
@@ -199,12 +209,14 @@ function renderTopicRepliesBlock(topicId, commId, replies, isMod) {
   const actionBar = `
     <div class="actions-bar">
       <span class="section-title">Respostas (${replies.length})</span>
-      <a class="btn btn-sm btn-primary" href="#/compose/reply?t=${encodeURIComponent(topicId)}&c=${encodeURIComponent(commId)}">+ Responder</a>
+      <a class="btn btn-sm btn-primary" href="#/compose/reply?t=${encodeURIComponent(topicId)}&c=${encodeURIComponent(commId)}">💬 Responder</a>
     </div>`;
   if (!replies.length) {
     return `${actionBar}<div class="empty"><p>Sem respostas ainda. Inicie o debate!</p></div>`;
   }
-  const rows = replies.map((r) => renderTopicReplyRow(r, isMod)).join("");
+  const rows = flattenReplyThread(replies)
+    .map(({ reply, depth }) => renderTopicReplyRow(reply, isMod, { depth, topicId, commId }))
+    .join("");
   return `${actionBar}<div class="thread-replies">${rows}</div>`;
 }
 
@@ -240,9 +252,9 @@ export function renderTopic(main, topicId, topic, replies, { topicData = null, i
     <article class="topic-root insta-topic-root card" style="padding:1.25rem;">
       ${headerHtml}
       ${mediaHtml}
-      ${citeHtml}
-      ${detailHtml}
       ${toolbarHtml}
+      ${detailHtml}
+      ${citeHtml}
     </article>
     ${repliesHtml}`;
 }

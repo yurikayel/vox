@@ -28,6 +28,7 @@ import { renderPhotoTagLayerHtml } from "./photo-tag-pins.js";
 import { renderRepostCiteHtml } from "./repost-cite.js";
 import { renderRepostBtn } from "./repost-btn.js";
 import { rememberVisible } from "../repost-index.js";
+import { groupRepliesForThread } from "../reply-thread.js";
 import { renderPhotoHiddenMessageHtml } from "./photo-chrome.js";
 
 export function renderComposerStrip(displayName = "") {
@@ -61,16 +62,16 @@ function renderComposerAspectBar() {
 
 function renderComposerPreviewWrap() {
   return `
-    <div class="inline-composer-preview hidden" id="inline-topic-preview-wrap">
-      <img id="inline-topic-preview" class="inline-composer-preview-img hidden" alt="Prévia da imagem" />
-      <div id="inline-topic-preview-audio-wrap" class="inline-composer-preview-audio hidden">
+    <div class="inline-composer-preview hidden" id="inline-topic-preview-wrap" hidden>
+      <img id="inline-topic-preview" class="inline-composer-preview-img hidden" alt="Prévia da imagem" hidden />
+      <div id="inline-topic-preview-audio-wrap" class="inline-composer-preview-audio hidden" hidden>
         <div class="inline-composer-preview-audio-header">
           <span>🎙️</span>
           <strong style="font-size:0.85rem;">Recado de Voz (Lo-Fi 48kbps)</strong>
         </div>
         <audio id="inline-topic-preview-audio" controls style="width:100%;"></audio>
       </div>
-      <div id="inline-topic-preview-video-wrap" class="inline-composer-preview-video hidden">
+      <div id="inline-topic-preview-video-wrap" class="inline-composer-preview-video hidden" hidden>
         <video id="inline-topic-preview-video" controls playsinline style="width:100%; max-height:240px; display:block;"></video>
       </div>
       ${renderComposerFilterBar()}
@@ -286,21 +287,6 @@ export function renderInlineReplyItem(r, { byParent = null, topicId = "", commId
     </li>`;
 }
 
-function groupRepliesForThread(replies) {
-  const byParent = {};
-  const tops = [];
-  for (const r of replies) {
-    const pid = r.parentId || "";
-    if (pid) {
-      if (!byParent[pid]) byParent[pid] = [];
-      byParent[pid].push(r);
-    } else {
-      tops.push(r);
-    }
-  }
-  return { tops, byParent };
-}
-
 export function renderCommentList(replies = [], { topicId = "", commId = "" } = {}) {
   if (!replies.length) {
     return `<div class="post-comments-feed"><p class="post-comments-empty">Nenhuma resposta ainda.</p></div>`;
@@ -510,11 +496,11 @@ function renderImageHero(t, layer, overlayHeaderHtml, overlayFooterHtml) {
   const aspectClass = `post-aspect-${aspect.replace(":", "-")}`;
   return `
     <div class="post-media-container post-media-hero ${aspectClass}" data-aspect="${escapeHtml(aspect)}">
+      ${overlayHeaderHtml}
       <button type="button" class="post-media-lightbox-trigger" aria-label="Ver imagem em tela cheia" data-media-src="${src}" data-media-alt="${alt}">
         <img class="post-media post-media-hero-img" src="${src}" alt="${alt}" loading="lazy" />
       </button>
       ${layer}
-      ${overlayHeaderHtml}
       ${overlayFooterHtml}
     </div>`;
 }
@@ -690,7 +676,7 @@ function renderToolbarShareBtn(t, authorDisplay) {
   const bodySlice = escapeHtml((t.body || t.title || "").slice(0, 200));
 
   return `<button class="action-btn btn-share btn-share-post ${exploded ? "exploded" : ""}" data-id="${escapeHtml(t.id)}" data-count="${baseExplodes}" data-title="${escapeHtml(t.title)}" data-author="${escapeHtml(authorDisplay || "")}" data-body="${bodySlice}" data-comm="${escapeHtml(t.communityId || "")}" aria-label="Compartilhar post" title="Compartilhar (EXPLODE!)"${quarantineShareAttrs(t.id)}>
-    <svg class="action-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+    <svg class="action-icon icon-plane" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22 11 13 2 9z"/></svg>
     ${countSpan}
   </button>`;
 }
@@ -746,19 +732,22 @@ function renderPostPinnedRibbon(t, isPinned) {
 }
 
 function renderPhotoPostItem(t, author, labels) {
-  const header = renderPostHeaderBlock(t, author, labels, { photoOverlay: true });
   const igHead = renderPostMediaHeader(t, author, labels);
   const igBar = renderIgToolbar(t, labels.authorDisplay);
-  const media = renderPostMediaHero(t, igHead, igBar);
+  const media = renderPostMediaHero(t, "", "");
   const fallbackIgBar = !media ? igBar : "";
   const preface = renderPhotoHiddenMessageHtml(t);
+  const textHtml = renderPostText(t);
+  const captionHtml = textHtml ? `<div class="post-photo-caption post-photo-message"><strong class="post-photo-caption-author">${escapeHtml(labels.authorDisplay)}</strong> ${textHtml}${renderRepostCiteHtml(t)}</div>` : "";
   const comments = renderPostComments(t.id, t.communityId, { prefaceHtml: preface });
 
   return `
     <article class="post insta-post post-layout-photo post-photo-bleed" data-id="${escapeHtml(t.id)}" data-layout="photo"${t.isOwnLocalPost ? ' data-is-own="true"' : ""}>
+      ${igHead}
       ${media}
-      ${header}
+      ${igBar}
       ${fallbackIgBar}
+      ${captionHtml}
       ${renderPostFrame(t)}
       ${comments}
     </article>`;

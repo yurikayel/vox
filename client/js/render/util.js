@@ -21,8 +21,8 @@ export function shortId(id) {
   if (id.startsWith("vx_")) return id.length <= 10 ? id : id.slice(0, 9);
   if (id.startsWith("0x")) return id.length <= 10 ? id : id.slice(0, 8);
   if (id.startsWith("did:")) return id.slice(0, 12);
-  if (id.length <= 32) return id;
-  return id.slice(0, 24) + "…";
+  if (id.length > 14) return id.slice(0, 10) + "…";
+  return id;
 }
 
 function normAuthorToken(s) {
@@ -34,7 +34,7 @@ function normAuthorToken(s) {
 
 function isRawAddressToken(str) {
   if (!str || typeof str !== "string") return true;
-  return str.startsWith("vx_") || str.startsWith("0x") || str.startsWith("did:");
+  return str.startsWith("vx_") || str.startsWith("0x") || str.startsWith("did:") || (str.length >= 20 && !str.includes(" "));
 }
 
 function resolveSelfName(routeId, isOwnLocalPost) {

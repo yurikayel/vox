@@ -25,40 +25,56 @@ function chooseBestName(existingName, incomingName, routeId) {
   return existingName || incomingName || String(routeId || "").slice(0, 14);
 }
 
-function findDuplicateOAuthEntry(map, entry) {
-  const inAv = entry.avatarUrl || profileDirectory.getAuthorAvatarSync(entry.routeId) || "";
-  if (!inAv || !inAv.includes("lh3.googleusercontent.com/a/")) return null;
-  for (const [id, ex] of map.entries()) {
-    if (id !== entry.routeId) {
-      const exAv = ex.avatarUrl || profileDirectory.getAuthorAvatarSync(id) || "";
-      if (exAv && exAv === inAv) {
-        return { id, ex };
-      }
-    }
+function isSameGoogleIdentity(entryA, entryB) {
+  const avA = entryA.avatarUrl || profileDirectory.getAuthorAvatarSync(entryA.routeId) || "";
+  const avB = entryB.avatarUrl || profileDirectory.getAuthorAvatarSync(entryB.routeId) || "";
+  const isGoogleA = avA.includes("lh3.googleusercontent.com/a/");
+  const isGoogleB = avB.includes("lh3.googleusercontent.com/a/");
+  if (isGoogleA && isGoogleB) {
+    if (avA.split("=")[0] === avB.split("=")[0]) return true;
+    if (entryA.name && entryB.name && entryA.name === entryB.name) return true;
   }
-  return null;
+  return false;
 }
 
-function upsert(map, entry, preferSources = DEFAULT_PREFER_SOURCES) {
+function pruneGoogleDuplicates(map, entry, preferSources) {
   const rank = (s) => {
     const i = preferSources.indexOf(s);
     return i >= 0 ? i : 99;
   };
+  const toDelete = [];
+  let shouldDropIncoming = false;
 
-  const dup = findDuplicateOAuthEntry(map, entry);
-  if (dup) {
-    if (rank(entry.source) < rank(dup.ex.source)) {
-      map.delete(dup.id);
-      map.set(entry.routeId, entry);
+  for (const [id, ex] of map.entries()) {
+    if (id === entry.routeId) continue;
+    if (isSameGoogleIdentity(entry, ex)) {
+      if (rank(entry.source) < rank(ex.source)) {
+        toDelete.push(id);
+      } else {
+        shouldDropIncoming = true;
+      }
     }
-    return;
   }
+
+  for (const id of toDelete) {
+    map.delete(id);
+  }
+  return shouldDropIncoming;
+}
+
+function upsert(map, entry, preferSources = DEFAULT_PREFER_SOURCES) {
+  const shouldDrop = pruneGoogleDuplicates(map, entry, preferSources);
+  if (shouldDrop) return;
 
   const existing = map.get(entry.routeId);
   if (!existing) {
     map.set(entry.routeId, entry);
     return;
   }
+  const rank = (s) => {
+    const i = preferSources.indexOf(s);
+    return i >= 0 ? i : 99;
+  };
   const bestName = chooseBestName(existing.name, entry.name, entry.routeId);
   const bestHandle = existing.handle || entry.handle || "";
   const bestAvatar = existing.avatarUrl || entry.avatarUrl || "";

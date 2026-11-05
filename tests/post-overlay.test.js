@@ -50,7 +50,8 @@ test("photo chrome - caption-only não duplica título no expander", () => {
     author: "vx_demo_sp",
   });
   assert.ok(!html.includes("post-photo-title"));
-  assert.ok(!html.includes("post-photo-message"));
+  const commentsSlice = html.slice(html.indexOf("post-comments-surface"));
+  assert.ok(!commentsSlice.includes("post-photo-message"), "Expander não duplica legenda quando title == body");
 });
 
 test("post overlay - index.html exposes lightbox shell", () => {

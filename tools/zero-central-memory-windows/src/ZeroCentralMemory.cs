@@ -36,6 +36,7 @@ namespace Vox.ZeroMemory {
         private readonly string memoryDir;
         private readonly string blobsDir;
         private readonly string checkpointsDir;
+        private readonly string vaultsDir;
         private readonly string stateFile;
         private readonly string bakFile;
         private readonly string journalFile;
@@ -51,6 +52,7 @@ namespace Vox.ZeroMemory {
             memoryDir = Path.Combine(rootDataDir, "central_memory");
             blobsDir = Path.Combine(memoryDir, "blobs");
             checkpointsDir = Path.Combine(memoryDir, "checkpoints");
+            vaultsDir = Path.Combine(memoryDir, "vaults");
             stateFile = Path.Combine(memoryDir, "state.json");
             bakFile = Path.Combine(memoryDir, "state.json.bak");
             journalFile = Path.Combine(memoryDir, "events.jsonl");
@@ -439,6 +441,26 @@ namespace Vox.ZeroMemory {
             if (!Hex64.IsMatch(clean)) return null;
             lock (syncLock) {
                 return ReadJsonFile(Path.Combine(blobsDir, clean + ".json"));
+            }
+        }
+
+        public Dictionary<string, object> GetVaultRecord(string key) {
+            string clean = (key ?? "").Trim().ToLowerInvariant();
+            if (!Hex64.IsMatch(clean)) return null;
+            lock (syncLock) {
+                return ReadJsonFile(Path.Combine(vaultsDir, clean + ".json"));
+            }
+        }
+
+        public bool SaveVaultRecord(string key, Dictionary<string, object> payload) {
+            string clean = (key ?? "").Trim().ToLowerInvariant();
+            if (!Hex64.IsMatch(clean) || payload == null) return false;
+            lock (syncLock) {
+                EnsureDirs();
+                Directory.CreateDirectory(vaultsDir);
+                string filePath = Path.Combine(vaultsDir, clean + ".json");
+                AtomicWriteBytes(filePath, Encoding.UTF8.GetBytes(CreateSerializer().Serialize(payload)));
+                return true;
             }
         }
 
@@ -886,6 +908,20 @@ namespace Vox.ZeroMemory {
                 else WriteHttpResponse(stream, 404, "Not Found", "{\"error\":\"blob_not_found\"}");
                 return;
             }
+            if (path.StartsWith("/memory/vault/")) {
+                string key = path.Substring("/memory/vault/".Length).Trim();
+                var vrec = store.GetVaultRecord(key);
+                if (vrec != null) {
+                    var resp = new Dictionary<string, object>();
+                    resp["status"] = "ok";
+                    resp["vaultKey"] = key;
+                    resp["record"] = vrec;
+                    WriteHttpResponse(stream, 200, "OK", ser.Serialize(resp));
+                } else {
+                    WriteHttpResponse(stream, 404, "Not Found", "{\"error\":\"vault_not_found\"}");
+                }
+                return;
+            }
             if (path.StartsWith("/vox/index/") && path.EndsWith(".json")) {
                 string comm = path.Substring("/vox/index/".Length, path.Length - "/vox/index/".Length - 5);
                 string mirror = store.ReadCommunityMirror(comm);
@@ -921,6 +957,13 @@ namespace Vox.ZeroMemory {
             }
             if (path == "/memory/sync") {
                 WriteHttpResponse(stream, 200, "OK", ser.Serialize(store.SyncBundle(payload)));
+                return;
+            }
+            if (path.StartsWith("/memory/vault/")) {
+                string key = path.Substring("/memory/vault/".Length).Trim();
+                var record = payload != null && payload.ContainsKey("record") ? MemoryStore.AsDict(payload["record"]) : payload;
+                bool ok = store.SaveVaultRecord(key, record);
+                WriteHttpResponse(stream, ok ? 200 : 400, "OK", ok ? "{\"status\":\"saved\"}" : "{\"error\":\"save_failed\"}");
                 return;
             }
             WriteHttpResponse(stream, 404, "Not Found", "{\"error\":\"not_found\"}");

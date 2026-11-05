@@ -470,7 +470,7 @@ export async function publishProposal({ communityId, title, body, diffText, user
   }
 }
 
-export async function showComposeReply(topicId, communityId) {
+export async function showComposeReply(topicId, communityId, parentId = "") {
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "home", "Responder"));
   render.renderComposeReply(main, topicId, communityId);
@@ -485,7 +485,7 @@ export async function showComposeReply(topicId, communityId) {
       btn.disabled = true;
       btn.textContent = "Enviando…";
       try {
-        await persistLocalReply(topicId, communityId, body);
+        await persistLocalReply(topicId, communityId, body, { parentId });
         share.showToast("Resposta enviada!");
         location.hash = `#/t/${encodeURIComponent(topicId)}?c=${encodeURIComponent(communityId)}`;
       } catch (err) {

@@ -15,6 +15,7 @@ import * as welcomeProfile from "../vox-welcome-profile.js";
 import { getActiveUser, makeShellProps, attachPostShareHandlers } from "./context.js";
 import { attachPostMoreMenuHandlers } from "../render/post-more-menu.js";
 import { ensureOnboardingSideEffects } from "./onboarding-side-effects.js";
+import { getCommunityLastSeenTs, computeCommunityUnreadCount } from "../community-unread.js";
 
 let postOverlayMenuHandlersBound = false;
 let quoteExternalBound = false;
@@ -285,6 +286,21 @@ export function attachBskyManagerHandlers(onRefresh) {
   bindBskyChipActions(onRefresh);
 }
 
+async function enrichCommunitiesWithUnread(communities = []) {
+  let totalUnread = 0;
+  const enriched = await Promise.all(
+    communities.map(async (c) => {
+      const lastSeen = getCommunityLastSeenTs(c.id);
+      if (!lastSeen) return { ...c, unreadCount: 0 };
+      const topics = await cacheNode.getLocalPosts({ type: "topic", communityId: c.id }).catch(() => []);
+      const unreadCount = computeCommunityUnreadCount(topics, lastSeen);
+      totalUnread += unreadCount;
+      return { ...c, unreadCount };
+    }),
+  );
+  return { enriched, totalUnread };
+}
+
 export async function showCommunities() {
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "communities", "Comunidades"));
@@ -298,14 +314,16 @@ export async function showCommunities() {
       ...localComms,
       ...(remoteItems || []).filter((c) => !seen.has(c.id)).map((c) => ({ ...c, isLocalP2p: false })),
     ];
+    const { enriched, totalUnread } = await enrichCommunitiesWithUnread(merged);
     main.innerHTML = "";
     if (gateway) render.renderGatewayBanner(main, gateway);
-    render.renderHome(main, merged);
+    render.renderHome(main, enriched, { totalUnread });
   } catch {
     main.innerHTML = "";
     const localComms = await cacheNode.getLocalCommunities();
     const fb = mock.mockCommunities();
-    render.renderHome(main, [...localComms, ...fb.items]);
+    const { enriched, totalUnread } = await enrichCommunitiesWithUnread([...localComms, ...fb.items]);
+    render.renderHome(main, enriched, { totalUnread });
   }
 }
 

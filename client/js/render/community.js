@@ -6,6 +6,7 @@ import * as hashtags from "../hashtags.js";
 import * as listingUi from "../listing-ui.js";
 import * as gossipRetract from "../gossip-retract-ui.js";
 import * as profileDirectory from "../profile-directory.js";
+import { renderCommunityUnreadBadge, renderCommunityCatchupBanner } from "../community-unread.js";
 import { renderUnifiedDiffHtml } from "./diff-html.js";
 import { buildListingDmHref } from "../dm-messenger.js";
 import { getReadOriginAggregate } from "../gateway-telemetry.js";
@@ -163,6 +164,10 @@ export function renderCommunityTopicRow(topic, { communityId: _communityId = "",
   const { display: timeDisplay, titleAttr: timeTitle } = postTimeParts(topic.ts);
   const replies = topicReplyCount(topic);
   const replyLabel = replies === 1 ? "1 resposta" : `${replies} respostas`;
+  const hasBump = Number(topic.lastReplyTs) > Number(topic.ts);
+  const bumpSpan = hasBump
+    ? `<span class="community-topic-bump" title="Atividade recente no tópico"> · ativa ${escapeHtml(formatTimeAgo(topic.lastReplyTs))}</span>`
+    : "";
   const title = topic.title || topicExcerptOneParagraph(topic) || "Sem título";
   const excerpt = topicExcerptOneParagraph(topic);
   const topicHref = `#/t/${encodeURIComponent(topic.id)}`;
@@ -175,7 +180,7 @@ export function renderCommunityTopicRow(topic, { communityId: _communityId = "",
         <p class="community-topic-row-meta">
           <a class="community-topic-row-author" href="#/u/${encodeURIComponent(author)}">${authorAvatar}<span>@${escapeHtml(authorHandle)}</span></a>
           <span class="community-topic-row-dot" aria-hidden="true">·</span>
-          <span>${escapeHtml(replyLabel)}</span>
+          <span>${escapeHtml(replyLabel)}</span>${bumpSpan}
           <span class="community-topic-row-dot" aria-hidden="true">·</span>
           <span class="community-topic-row-time"${timeTitle}>${escapeHtml(timeDisplay)}</span>
         </p>
@@ -398,13 +403,15 @@ function renderHomeCommunityCard(c) {
   const memberLine = members != null ? `<p class="community-vox-card-members">${escapeHtml(formatCommunityMembers(members))}</p>` : "";
   const typeLine = buildCommunityTypeSubtitle(c, c.id);
   const avatarHtml = renderCommunityAvatarHtml(c, c.id, "community-avatar-md");
+  const unreadBadge = renderCommunityUnreadBadge(c.unreadCount || 0);
+  const badgeHtml = unreadBadge ? ` ${unreadBadge}` : "";
   return `
     <article class="community-card community-vox-card community-vox-card-list card" style="--community-accent:${getCommunityColor(c.id)};">
       <div class="community-vox-card-accent" aria-hidden="true"></div>
       <div class="community-vox-card-layout">
         <a class="community-vox-card-avatar-link community-vox-card-avatar-wrap" href="#/c/${encodeURIComponent(c.id)}" aria-label="${escapeHtml(c.title)}">${avatarHtml}</a>
         <div class="community-vox-card-main">
-          <a class="community-vox-card-title" href="#/c/${encodeURIComponent(c.id)}"><h3>${escapeHtml(c.title)}</h3></a>
+          <a class="community-vox-card-title" href="#/c/${encodeURIComponent(c.id)}"><h3>${escapeHtml(c.title)}${badgeHtml}</h3></a>
           ${memberLine}
           <p class="community-vox-card-type">${escapeHtml(typeLine)}</p>
           <p class="community-vox-card-desc desc">${escapeHtml(c.description || "Sem descrição.")}</p>
@@ -416,14 +423,15 @@ function renderHomeCommunityCard(c) {
     </article>`;
 }
 
-export function renderHome(main, communities) {
+export function renderHome(main, communities, { totalUnread = 0 } = {}) {
+  const catchupBanner = renderCommunityCatchupBanner({ totalUnread });
   const bar = `<div class="actions-bar"><span class="section-title">Comunidades</span><a class="btn btn-primary btn-sm" href="#/compose/community">+ Nova</a></div>`;
   if (!communities.length) {
-    main.innerHTML += `${bar}<div class="empty"><p>Nenhuma comunidade criada ainda.</p><a class="btn btn-primary" href="#/compose/community">+ Criar Comunidade</a></div>`;
+    main.innerHTML += `${catchupBanner}${bar}<div class="empty"><p>Nenhuma comunidade criada ainda.</p><a class="btn btn-primary" href="#/compose/community">+ Criar Comunidade</a></div>`;
     return;
   }
   const items = communities.map(renderHomeCommunityCard).join("");
-  main.innerHTML += `${bar}<div class="community-grid">${items}</div>`;
+  main.innerHTML += `${catchupBanner}${bar}<div class="community-grid">${items}</div>`;
 }
 
 export function renderCommunityPeopleStrip(people = []) {
