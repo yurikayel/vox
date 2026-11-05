@@ -785,33 +785,48 @@ function renderTopicCivicTagBar() {
     </div>`;
 }
 
-export function renderComposeTopic(main, communityId) {
-  const backLink = communityId
-    ? `<a class="back-link" href="#/c/${encodeURIComponent(communityId)}">← Voltar à comunidade</a>`
-    : `<a class="back-link" href="#/">← Voltar</a>`;
-  const commInput = communityId
-    ? `<input type="hidden" id="topic-comm-id" value="${escapeHtml(communityId)}" />`
-    : `<div class="form-group"><label for="topic-comm-id">Slug da Comunidade:</label><input type="text" id="topic-comm-id" class="form-control" placeholder="ex: cinema-nacional" required /></div>`;
+function renderComposeTargetPill(communityId) {
+  if (communityId) {
+    return `<input type="hidden" id="topic-comm-id" value="${escapeHtml(communityId)}" /><span class="compose-pill-tag">👥 Comunidade: <strong>${escapeHtml(communityId)}</strong></span>`;
+  }
+  return `<div class="compose-pill-group"><span class="compose-pill-tag">👥 Postar em:</span> <input type="text" id="topic-comm-id" class="compose-pill-input" value="geral" placeholder="ex: geral, cinema-nacional" required /></div>`;
+}
 
-  main.innerHTML = `
-    <div class="card compose-card">
-      ${backLink}
-      <h2>${communityId ? `Postar em ${escapeHtml(communityId)}` : "Novo Post na Rede"}</h2>
-      <form id="form-compose-topic">
-        ${commInput}
-        <div class="form-group">
-          <label for="topic-title">Título do Tópico (opcional):</label>
+function renderComposeAdvancedDrawer() {
+  return `
+    <details class="compose-advanced-drawer">
+      <summary class="compose-advanced-summary">⚙️ Mais opções (título, categoria cívica, atas)</summary>
+      <div class="compose-advanced-content">
+        <div class="form-group" style="margin-bottom:10px;">
+          <label for="topic-title" style="font-size:0.82rem; color:var(--muted); font-weight:600;">Título da pauta (opcional):</label>
           <input type="text" id="topic-title" class="form-control" placeholder="ex: Dúvida sobre governança / Ideia de melhoria" />
         </div>
         ${renderTopicCivicTagBar()}
-        <div class="form-group">
-          <label for="topic-body">Mensagem:</label>
-          <textarea id="topic-body" class="form-control" rows="5" placeholder="Escreva seu post aqui..." required></textarea>
-          ${renderChatTranscriptDetails()}
+        ${renderChatTranscriptDetails()}
+      </div>
+    </details>`;
+}
+
+export function renderComposeTopic(main, communityId) {
+  const backLink = communityId
+    ? `<a class="back-link compose-back-link" href="#/c/${encodeURIComponent(communityId)}">← Voltar</a>`
+    : `<a class="back-link compose-back-link" href="#/">← Voltar</a>`;
+  const commInput = renderComposeTargetPill(communityId);
+  const heading = communityId ? `Postar em ${escapeHtml(communityId)}` : "Criar Publicação";
+
+  main.innerHTML = `
+    <div class="card compose-card compose-card-sleek">
+      <div class="compose-header-bar">
+        ${backLink}
+        <h2 class="compose-heading">${heading}</h2>
+        <button type="submit" form="form-compose-topic" class="btn btn-primary btn-sm btn-publish-pill" id="btn-submit-topic">Publicar</button>
+      </div>
+      <form id="form-compose-topic">
+        <div class="compose-target-row">${commInput}</div>
+        <div class="compose-body-field">
+          <textarea id="topic-body" class="form-control compose-textarea-seamless" rows="4" placeholder="O que você gostaria de compartilhar na rede?" required></textarea>
         </div>
-        <div class="form-actions">
-          <button type="submit" class="btn btn-primary" id="btn-submit-topic">Publicar Post</button>
-        </div>
+        ${renderComposeAdvancedDrawer()}
       </form>
     </div>`;
 }

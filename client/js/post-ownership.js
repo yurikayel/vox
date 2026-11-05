@@ -21,9 +21,25 @@ function stripLeadingTitle(b, t) {
   return rest.trimStart();
 }
 
+function sanitizeBodyString(rawBody) {
+  const b = String(rawBody || "").trim();
+  if (b.startsWith("{") && b.endsWith("}")) {
+    try {
+      const obj = JSON.parse(b);
+      if (typeof obj === "object" && obj !== null) {
+        if (typeof obj.body === "string") return obj.body.trim();
+        if (typeof obj.content === "string") return obj.content.trim();
+        if (typeof obj.text === "string") return obj.text.trim();
+        return "";
+      }
+    } catch {}
+  }
+  return b;
+}
+
 export function formatPostDisplay({ title = "", body = "" } = {}) {
   const t = String(title || "").trim();
-  const b = String(body || "").trim();
+  const b = sanitizeBodyString(body);
   if (!t && !b) return { mode: "empty" };
   if (!b || b === t) return { mode: "caption", text: t || b };
 

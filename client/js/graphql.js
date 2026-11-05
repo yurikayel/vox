@@ -397,8 +397,18 @@ function parseGatewayRawPayload(text) {
   try {
     const json = JSON.parse(text);
     if (typeof json === "object" && json !== null) {
-      parsed.body = json.body || json.content || json.text || text;
-      parsed.title = json.title || "";
+      if (typeof json.body === "string") {
+        parsed.body = json.body;
+      } else if (typeof json.content === "string") {
+        parsed.body = json.content;
+      } else if (typeof json.text === "string") {
+        parsed.body = json.text;
+      } else {
+        parsed.body = "";
+      }
+      parsed.title = typeof json.title === "string" ? json.title : "";
+      if (json.mediaTx) parsed.mediaTx = json.mediaTx;
+      if (json.communityId) parsed.communityId = json.communityId;
     }
   } catch {}
   return parsed;
