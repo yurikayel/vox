@@ -100,34 +100,55 @@ function renderTopicFeedbackActions(topicId, topic, author, authorDisplay) {
   return `${likeBtn}${repostBtn}${starBtn}${renderTopicZapButton(topicId, topic, author, authorDisplay)}`;
 }
 
-function renderTopicDistributeActions(topicId, topic, authorDisplay, authorHandle, bodyText, commId, isMod) {
+function renderTopicOverflowMenu(topicId, topic, authorDisplay, authorHandle, bodyText, isMod) {
+  const copyMdBtn = `<button type="button" class="action-btn btn-copy-md" data-id="${escapeHtml(topicId)}" data-title="${escapeHtml(topic?.title || "")}" data-body="${escapeHtml(bodyText)}" data-author="${escapeHtml(authorDisplay)}" data-handle="${escapeHtml(authorHandle)}" role="menuitem" aria-label="Copiar post como Markdown">
+    <svg class="action-icon icon-copy" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
+    <span class="toolbar-overflow-label">Copiar .md</span>
+  </button>`;
+  const quarAction = renderQuarantineAction(topicId, { asMenuItem: true });
+  const modBtn = isMod ? `<button type="button" class="action-btn btn-mod-hide" data-id="${escapeHtml(topicId)}" data-type="topic" role="menuitem" aria-label="Ocultar da rede">
+    <svg class="action-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    <span class="toolbar-overflow-label">Ocultar da rede</span>
+  </button>` : "";
+
+  return `<details class="toolbar-overflow">
+    <summary class="action-btn btn-toolbar-more" aria-label="Mais opções do post"><span aria-hidden="true">⋯</span></summary>
+    <div class="toolbar-overflow-menu" role="menu">
+      ${copyMdBtn}
+      ${quarAction}
+      ${modBtn}
+    </div>
+  </details>`;
+}
+
+function renderTopicDistributeActions(topicId, topic, authorDisplay, commId) {
   const saved = social.isSaved(topicId);
   const baseExpl = Number(topic?.explodesCount) || 0;
   const curExpl = social.getExplodesCount(topicId, baseExpl);
   const expl = social.isExploded(topicId);
   const countSpan = curExpl > 0 ? `<span class="action-count count-explodes">${curExpl} disparos</span>` : "";
 
-  const shareBtn = `<button id="btn-share-topic" class="action-btn btn-share btn-share-post ${expl ? "exploded" : ""}" data-id="${escapeHtml(topicId)}" data-count="${baseExpl}" data-title="${escapeHtml(topic?.title || "")}" data-author="${escapeHtml(authorDisplay || "")}" data-body="${escapeHtml((bodyText || "").slice(0, 200))}" data-comm="${escapeHtml(commId || "")}" aria-label="${escapeHtml(shareTopicAria(topicId))}" title="Compartilhar (EXPLODE!)"${quarantineShareAttrs(topicId)}>
+  const shareBtn = `<button id="btn-share-topic" class="action-btn btn-share btn-share-post ${expl ? "exploded" : ""}" data-id="${escapeHtml(topicId)}" data-count="${baseExpl}" data-title="${escapeHtml(topic?.title || "")}" data-author="${escapeHtml(authorDisplay || "")}" data-body="${escapeHtml((topic?.body || "").slice(0, 200))}" data-comm="${escapeHtml(commId || "")}" aria-label="${escapeHtml(shareTopicAria(topicId))}" title="Compartilhar (EXPLODE!)"${quarantineShareAttrs(topicId)}>
     <svg class="action-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
     <span class="action-count">Compartilhar</span>${countSpan}
-  </button>`;
-  const copyMdBtn = `<button class="action-btn btn-copy-md" data-id="${escapeHtml(topicId)}" data-title="${escapeHtml(topic?.title || "")}" data-body="${escapeHtml(bodyText)}" data-author="${escapeHtml(authorDisplay)}" data-handle="${escapeHtml(authorHandle)}" aria-label="Copiar post como Markdown">
-    <svg class="action-icon icon-copy" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
   </button>`;
   const saveBtn = `<button class="action-btn btn-save ${saved ? "active" : ""}" data-id="${escapeHtml(topicId)}" aria-label="Salvar post">
     <svg class="action-icon icon-bookmark" width="18" height="18" viewBox="0 0 24 24" fill="${saved ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
   </button>`;
-  const replyLink = `<a class="btn btn-primary btn-sm" href="#/compose/reply?t=${encodeURIComponent(topicId)}&c=${encodeURIComponent(commId)}" style="margin-left:auto;">💬 Responder</a>`;
-  const modBtn = isMod ? `<button class="btn btn-sm btn-danger btn-mod-hide" data-id="${escapeHtml(topicId)}" data-type="topic">🛡️ Ocultar</button>` : "";
-  const quarAction = renderQuarantineAction(topicId, { asMenuItem: false });
 
-  return `${shareBtn}${copyMdBtn}${saveBtn}${replyLink}${modBtn}${quarAction}`;
+  return `${shareBtn}${saveBtn}`;
 }
 
 function renderTopicToolbar(topicId, topic, author, authorDisplay, authorHandle, bodyText, commId, isMod) {
   const fb = renderTopicFeedbackActions(topicId, topic, author, authorDisplay);
-  const dist = renderTopicDistributeActions(topicId, topic, authorDisplay, authorHandle, bodyText, commId, isMod);
-  return `<div class="post-actions insta-actions post-toolbar" style="margin-top:12px; padding-top:8px;">${fb}${dist}</div>`;
+  const dist = renderTopicDistributeActions(topicId, topic, authorDisplay, commId);
+  const overflow = renderTopicOverflowMenu(topicId, topic, authorDisplay, authorHandle, bodyText, isMod);
+  const replyLink = `<a class="btn btn-primary btn-sm" href="#/compose/reply?t=${encodeURIComponent(topicId)}&c=${encodeURIComponent(commId)}">💬 Responder</a>`;
+
+  return `<div class="post-actions insta-actions post-toolbar" style="margin-top:12px; padding-top:8px;">
+    <div class="toolbar-primary">${fb}${dist}</div>
+    <div class="toolbar-secondary">${overflow}${replyLink}</div>
+  </div>`;
 }
 
 function renderTopicHeader(author, labels, topic, topicTs) {

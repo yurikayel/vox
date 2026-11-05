@@ -183,8 +183,47 @@ function collectWebhookTargets(accounts) {
   return targets;
 }
 
-export async function dispatchAutoReplication(post) {
-  if (!isAutoReplicationEnabled()) {
+export const INTENT_NETWORK_META = Object.freeze({
+  twitter: { id: "twitter", label: "X (Twitter)", icon: "🐦" },
+  threads: { id: "threads", label: "Threads", icon: "🧵" },
+  bsky: { id: "bluesky", label: "Bluesky", icon: "🦋" },
+  instagram: { id: "instagram", label: "Instagram", icon: "📸" },
+  facebook: { id: "facebook", label: "Facebook", icon: "👥" },
+  tiktok: { id: "tiktok", label: "TikTok", icon: "🎵" },
+});
+
+function isAccountNeedingIntent(netId, acc) {
+  if (!acc || acc.enabled === false || !acc.handle) return false;
+  if (acc.webhook) return false;
+  if (netId === "bsky" && acc.appPassword) return false;
+  return true;
+}
+
+export function getConnectedIntentTargets(accounts = loadLinkedAccounts()) {
+  const list = [];
+  for (const [netId, meta] of Object.entries(INTENT_NETWORK_META)) {
+    const acc = accounts?.[netId];
+    if (!isAccountNeedingIntent(netId, acc)) continue;
+    list.push({
+      id: meta.id,
+      netId,
+      handle: acc.handle,
+      label: `${meta.label} (@${acc.handle})`,
+      icon: meta.icon,
+    });
+  }
+  return list;
+}
+
+export function hasDirectReplicationTargets(accounts = loadLinkedAccounts()) {
+  const targets = collectWebhookTargets(accounts);
+  const bskyAcc = accounts?.bsky;
+  const hasBskyDirect = Boolean(bskyAcc?.enabled && bskyAcc?.handle && bskyAcc?.appPassword);
+  return targets.length > 0 || hasBskyDirect;
+}
+
+export async function dispatchAutoReplication(post, { force = false } = {}) {
+  if (!force && !isAutoReplicationEnabled()) {
     return { dispatched: false, reason: "auto_replication_disabled", count: 0 };
   }
 

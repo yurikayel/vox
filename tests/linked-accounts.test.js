@@ -201,3 +201,43 @@ test("linked-accounts - 1-click connect opens network, saves account and renders
   assert.ok(html.includes("Conectar Threads (1 Clique)"));
   assert.ok(!html.includes('required style="font-size:0.8rem; padding:5px 8px;"'));
 });
+
+test("linked-accounts - getConnectedIntentTargets returns enabled accounts without direct webhook/ATProto", () => {
+  localStorage.clear();
+  linked.saveLinkedAccount("twitter", { handle: "yurix", enabled: true });
+  linked.saveLinkedAccount("instagram", { handle: "kayel_yuri", enabled: true });
+  linked.saveLinkedAccount("bsky", { handle: "yuri.bsky.social", appPassword: "secret", enabled: true });
+  linked.saveLinkedAccount("threads", { handle: "yuri_th", webhook: "https://hook.test/th", enabled: true });
+  linked.saveLinkedAccount("facebook", { handle: "yuri_fb", enabled: false });
+
+  const targets = linked.getConnectedIntentTargets();
+  assert.equal(targets.length, 2);
+  assert.equal(targets[0].id, "twitter");
+  assert.ok(targets[0].label.includes("@yurix"));
+  assert.equal(targets[1].id, "instagram");
+  assert.ok(targets[1].label.includes("@kayel_yuri"));
+  assert.equal(linked.hasDirectReplicationTargets(), true);
+});
+
+test("linked-accounts - dispatchAutoReplication with force:true fires even when master toggle is false", async () => {
+  localStorage.clear();
+  linked.setAutoReplicationEnabled(false);
+  linked.setGeneralWebhookUrl("https://hook.test/forced");
+
+  const origFetch = globalThis.fetch;
+  const called = [];
+  globalThis.fetch = async (u) => {
+    called.push(String(u));
+    return { ok: true };
+  };
+
+  try {
+    const res = await linked.dispatchAutoReplication({ id: "p_force", title: "Forçado" }, { force: true });
+    assert.equal(res.dispatched, true);
+    assert.equal(res.count, 1);
+    assert.ok(called.includes("https://hook.test/forced"));
+  } finally {
+    globalThis.fetch = origFetch;
+  }
+});
+

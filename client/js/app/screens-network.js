@@ -305,7 +305,10 @@ export async function syncIdentity() {
   const user = await getActiveUser();
   if (user) {
     const dmPub = await cryptoDm.getPublicJwk();
-    peers.announceIdentity(user, dmPub);
+    const enrich = localAccount.getProfileEnrichment() || {};
+    const displayName = localAccount.getDisplayName() || enrich.displayName || "";
+    const avatarUrl = enrich.avatarUrl && enrich.avatarUrl.length <= 512 ? enrich.avatarUrl : "";
+    peers.announceIdentity(user, { ...dmPub, displayName, avatarUrl });
   }
 }
 
@@ -334,6 +337,7 @@ function bindOneClickConnectButtons(onRefresh) {
       const box = btn.closest(".network-connect-box") || btn.closest(".linked-network-card");
       const handle = box?.querySelector(".input-net-handle")?.value?.trim() || "";
       linkedAccounts.connectWithOneClick(netId, handle);
+      linkedAccounts.setAutoReplicationEnabled(true);
       share.showToast(`Conectando ao ${netId}... Rede aberta no navegador! 🔗`);
       if (onRefresh) onRefresh();
       linkedAccounts.testLinkedAccount(netId).catch(() => {});
@@ -355,6 +359,7 @@ function bindSaveHandleQuickButtons(onRefresh) {
         return;
       }
       linkedAccounts.saveLinkedAccount(netId, { handle, enabled: true });
+      linkedAccounts.setAutoReplicationEnabled(true);
       share.showToast(`Conta @${handle.replace(/^@/, "")} vinculada com sucesso! 🔗`);
       if (onRefresh) onRefresh();
     });
@@ -373,6 +378,7 @@ function bindFormLinkNetwork(onRefresh) {
       const webhook = form.querySelector(".input-net-webhook")?.value?.trim() || "";
       const appPassword = form.querySelector(".input-net-app-password")?.value?.trim() || "";
       linkedAccounts.saveLinkedAccount(netId, { handle, webhook, appPassword, enabled: true });
+      linkedAccounts.setAutoReplicationEnabled(true);
       share.showToast(`Credenciais de @${handle.replace(/^@/, "")} salvas com sucesso! 🔗`);
       if (onRefresh) onRefresh();
     });

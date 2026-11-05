@@ -93,6 +93,26 @@ async function generateNewAccountKeys() {
   };
 }
 
+function resolveVaultDisplayName(enrich, existing) {
+  return getDisplayName() || enrich?.displayName || existing.displayName || "";
+}
+
+function buildVaultAccountEntry(acc, existing, extras = {}) {
+  const enrich = getProfileEnrichment() || existing.enrichment || null;
+  const now = Date.now();
+  return {
+    ...existing,
+    routeId: acc.routeId,
+    publicJwk: acc.publicJwk || existing.publicJwk,
+    privateJwk: acc.privateJwk || existing.privateJwk,
+    displayName: resolveVaultDisplayName(enrich, existing),
+    enrichment: enrich,
+    createdAt: acc.createdAt || existing.createdAt || now,
+    lastUsedAt: existing.lastUsedAt || now,
+    ...extras,
+  };
+}
+
 function syncCurrentAccountMetadataToVault() {
   const acc = cachedAccount;
   if (!acc?.routeId) return;
@@ -100,16 +120,7 @@ function syncCurrentAccountMetadataToVault() {
     const raw = localStorage.getItem(VAULT_STORAGE);
     const vault = raw ? JSON.parse(raw) : {};
     const existing = vault[acc.routeId] || {};
-    vault[acc.routeId] = {
-      ...existing,
-      routeId: acc.routeId,
-      publicJwk: acc.publicJwk || existing.publicJwk,
-      privateJwk: acc.privateJwk || existing.privateJwk,
-      displayName: getDisplayName() || existing.displayName || "",
-      enrichment: getProfileEnrichment() || existing.enrichment || null,
-      createdAt: acc.createdAt || existing.createdAt || Date.now(),
-      lastUsedAt: existing.lastUsedAt || Date.now(),
-    };
+    vault[acc.routeId] = buildVaultAccountEntry(acc, existing);
     localStorage.setItem(VAULT_STORAGE, JSON.stringify(vault));
   } catch {}
 }
@@ -509,19 +520,12 @@ export async function syncActiveAccountToVault() {
   const vault = readVaultMap();
   const existing = vault[acc.routeId] || {};
   const dmKeys = await cryptoDm.getDmKeypair();
-  vault[acc.routeId] = {
-    ...existing,
-    routeId: acc.routeId,
-    publicJwk: acc.publicJwk,
-    privateJwk: acc.privateJwk,
+  vault[acc.routeId] = buildVaultAccountEntry(acc, existing, {
     dmKeypair: dmKeys || existing.dmKeypair || null,
-    displayName: getDisplayName() || existing.displayName || "",
-    enrichment: getProfileEnrichment() || existing.enrichment || null,
     pixKey: getPixKey() || existing.pixKey || null,
     meshDiscoverable: getMeshDiscoverable(),
-    createdAt: acc.createdAt || existing.createdAt || Date.now(),
     lastUsedAt: Date.now(),
-  };
+  });
   writeVaultMap(vault);
   return vault[acc.routeId];
 }
@@ -531,7 +535,7 @@ export function listVaultAccountsSync() {
   const currentId = getCachedRouteIdSync();
   return Object.values(vault).map((item) => ({
     routeId: item.routeId,
-    displayName: item.displayName || "",
+    displayName: item.displayName || item.enrichment?.displayName || "",
     avatarUrl: item.enrichment?.avatarUrl || "",
     bio: item.enrichment?.bio || "",
     createdAt: item.createdAt || 0,
@@ -551,7 +555,7 @@ async function restoreTargetAccountSettings(target) {
   } else {
     await cryptoDm.ensureDmKeys();
   }
-  setDisplayName(target.displayName || "");
+  setDisplayName(target.displayName || target.enrichment?.displayName || "");
   if (target.enrichment) {
     localStorage.setItem(ENRICHMENT_STORAGE, JSON.stringify(target.enrichment));
   } else {
@@ -604,7 +608,7 @@ export async function createAdditionalAccount({ displayName = "" } = {}) {
   );
   const dmPublicJwk = await crypto.subtle.exportKey("jwk", dmPair.publicKey);
   const dmPrivateJwk = await crypto.subtle.exportKey("jwk", dmPair.privateKey);
-  const dmKeypair = { publicKey: dmPublicJwk, privateKey: dmPrivateJwk };
+  const dmKeypair = { publicJwk: dmPublicJwk, privateJwk: dmPrivateJwk };
 
   cachedAccount = { routeId, publicJwk, privateJwk, createdAt: Date.now() };
   localStorage.setItem(ACCOUNT_STORAGE, JSON.stringify(cachedAccount));
