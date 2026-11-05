@@ -99,15 +99,43 @@ export async function ensureWelcomeDmSeed(myRouteId) {
   return true;
 }
 
+export const OFFICIAL_COMMUNITY_ID = "vox";
+
 export function ensureWelcomeWatch() {
   if (!social.getWatchedProfiles().includes(WELCOME_ROUTE_ID)) {
     social.toggleWatch(WELCOME_ROUTE_ID);
   }
 }
 
+export async function ensureDefaultCommunityMembership(myRouteId) {
+  if (!myRouteId) return;
+  try {
+    const leaves = await cacheNode.getLocalPosts({ type: "membership_leave", communityId: OFFICIAL_COMMUNITY_ID }).catch(() => []);
+    const hasLeft = leaves.some((l) => (l.author || l.owner) === myRouteId);
+    if (hasLeft) return;
+
+    const existing = await cacheNode.getLocalPosts({ type: "membership", communityId: OFFICIAL_COMMUNITY_ID }).catch(() => []);
+    const hasMember = existing.some((m) => (m.author || m.owner) === myRouteId);
+    if (hasMember) return;
+
+    const joinPost = {
+      id: `mem_${OFFICIAL_COMMUNITY_ID}_${myRouteId}`,
+      type: "membership",
+      communityId: OFFICIAL_COMMUNITY_ID,
+      author: myRouteId,
+      owner: myRouteId,
+      joinedAt: Date.now(),
+      ts: Date.now(),
+      isDefaultAutoJoin: true,
+    };
+    await cacheNode.saveLocalPost(joinPost);
+  } catch {}
+}
+
 export async function runWelcomeOnboarding(myRouteId) {
   const dmJustSeeded = await ensureWelcomeDmSeed(myRouteId);
   ensureWelcomeWatch();
+  await ensureDefaultCommunityMembership(myRouteId);
   return { dmJustSeeded };
 }
 
@@ -133,8 +161,8 @@ export function getOfficialWelcomeTopic() {
   return {
     id: OFFICIAL_WELCOME_TOPIC_ID,
     type: "topic",
-    communityId: "geral",
-    communityTitle: "Praça Cívica",
+    communityId: OFFICIAL_COMMUNITY_ID,
+    communityTitle: "Vox",
     title: "",
     body: OFFICIAL_WELCOME_POST_BODY,
     author: WELCOME_ROUTE_ID,

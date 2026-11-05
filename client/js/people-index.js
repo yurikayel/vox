@@ -25,19 +25,29 @@ function chooseBestName(existingName, incomingName, routeId) {
   return existingName || incomingName || String(routeId || "").slice(0, 14);
 }
 
-function isSameGoogleIdentity(entryA, entryB) {
-  const avA = entryA.avatarUrl || profileDirectory.getAuthorAvatarSync(entryA.routeId) || "";
-  const avB = entryB.avatarUrl || profileDirectory.getAuthorAvatarSync(entryB.routeId) || "";
+function isSameGoogleAvatar(avA, avB, nameA, nameB) {
   const isGoogleA = avA.includes("lh3.googleusercontent.com/a/");
   const isGoogleB = avB.includes("lh3.googleusercontent.com/a/");
-  if (isGoogleA && isGoogleB) {
-    if (avA.split("=")[0] === avB.split("=")[0]) return true;
-    if (entryA.name && entryB.name && entryA.name === entryB.name) return true;
-  }
-  return false;
+  if (!isGoogleA || !isGoogleB) return false;
+  return avA.split("=")[0] === avB.split("=")[0] || Boolean(nameA && nameA === nameB);
 }
 
-function pruneGoogleDuplicates(map, entry, preferSources) {
+function isSameMetaAvatar(avA, avB, nameA, nameB) {
+  const isMetaA = avA.includes("facebook.com") || avA.includes("fbsbx.com");
+  const isMetaB = avB.includes("facebook.com") || avB.includes("fbsbx.com");
+  if (!isMetaA || !isMetaB) return false;
+  return avA === avB || Boolean(nameA && nameA === nameB);
+}
+
+function isSameSocialIdentity(entryA, entryB) {
+  const avA = entryA.avatarUrl || profileDirectory.getAuthorAvatarSync(entryA.routeId) || "";
+  const avB = entryB.avatarUrl || profileDirectory.getAuthorAvatarSync(entryB.routeId) || "";
+  return isSameGoogleAvatar(avA, avB, entryA.name, entryB.name) || isSameMetaAvatar(avA, avB, entryA.name, entryB.name);
+}
+
+export const isSameGoogleIdentity = isSameSocialIdentity;
+
+function pruneSocialDuplicates(map, entry, preferSources) {
   const rank = (s) => {
     const i = preferSources.indexOf(s);
     return i >= 0 ? i : 99;
@@ -47,7 +57,7 @@ function pruneGoogleDuplicates(map, entry, preferSources) {
 
   for (const [id, ex] of map.entries()) {
     if (id === entry.routeId) continue;
-    if (isSameGoogleIdentity(entry, ex)) {
+    if (isSameSocialIdentity(entry, ex)) {
       if (rank(entry.source) < rank(ex.source)) {
         toDelete.push(id);
       } else {
@@ -63,7 +73,7 @@ function pruneGoogleDuplicates(map, entry, preferSources) {
 }
 
 function upsert(map, entry, preferSources = DEFAULT_PREFER_SOURCES) {
-  const shouldDrop = pruneGoogleDuplicates(map, entry, preferSources);
+  const shouldDrop = pruneSocialDuplicates(map, entry, preferSources);
   if (shouldDrop) return;
 
   const existing = map.get(entry.routeId);

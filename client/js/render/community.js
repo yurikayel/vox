@@ -65,10 +65,11 @@ export function renderCommunityOrkutMembersBox(meta, communityId, recentPeople =
 }
 
 function resolveCommunityMemberCount(meta, communityId) {
-  if (meta.memberCount != null && !Number.isNaN(Number(meta.memberCount))) {
+  if (meta && meta.memberCount != null && !Number.isNaN(Number(meta.memberCount))) {
     return Number(meta.memberCount);
   }
   if (communityId === mock.MOCK_DEMO_COMMUNITY.id) return mock.MOCK_DEMO_UF_COUNT;
+  if (communityId === "vox" || meta?.isOfficial) return 1;
   return null;
 }
 

@@ -14,6 +14,24 @@ export { UF_ROUTE_IDS, MOCK_DEMO_UF_COUNT, MOCK_DEMO_TOPIC_COUNT };
 
 const UF_PROFILES_CACHE = buildUfDemoProfilesMap();
 
+export const MOCK_OFFICIAL_COMMUNITY_VOX = {
+  id: "vox",
+  communityId: "vox",
+  title: "Vox",
+  category: "Fórum Oficial",
+  description: "Fórum oficial da rede Vox. Debates abertos, governança, issues e espaço comum de encontro de todas as pessoas da rede.",
+  owner: "vx_voxbrasil_welcome",
+  author: "vx_voxbrasil_welcome",
+  image: "./icons/profile-vox-official-512.png",
+  avatar: "./icons/profile-vox-official-512.png",
+  commercialEnabled: false,
+  visibility: "open",
+  isOfficial: true,
+  isOfficialPlatform: true,
+  welcomeRecado: "Bem-vindo ao fórum oficial do Vox! Debates públicos, propostas de melhoria, dúvidas e issues abertas. Todo usuário da rede começa aqui e pode interagir livremente.",
+  headerTagline: "Fórum aberto e governança da rede Vox",
+};
+
 export const MOCK_DEMO_COMMUNITY = {
   id: "demo-aprenda-vox",
   communityId: "demo-aprenda-vox",
@@ -117,7 +135,7 @@ export function getAuthorPinnedPostId(authorId) {
 }
 
 export function mockCommunities() {
-  return { items: [], demo: false };
+  return { items: [MOCK_OFFICIAL_COMMUNITY_VOX], demo: false };
 }
 
 export function mockTopics(communityId) {

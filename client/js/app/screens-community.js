@@ -68,6 +68,9 @@ async function resolveCommunityMetadata(communityId) {
   if (!meta.commercialEnabled && communityId === mock.MOCK_DEMO_COMMUNITY_FEIRA.id) {
     meta = { ...mock.MOCK_DEMO_COMMUNITY_FEIRA, ...meta, commercialEnabled: true };
   }
+  if (communityId === "vox" || communityId === mock.MOCK_OFFICIAL_COMMUNITY_VOX?.id) {
+    meta = { ...mock.MOCK_OFFICIAL_COMMUNITY_VOX, ...meta };
+  }
   return meta;
 }
 
@@ -151,21 +154,41 @@ async function loadCommunityTabSpecifics(communityId, tab, user, demo) {
   return { listings, proposals };
 }
 
-async function checkCommunityMembership(communityId, user) {
+async function checkCommunityMembership(communityId, user, meta = null) {
   if (!user) return false;
+  if (meta?.owner && meta.owner.toLowerCase() === user.toLowerCase()) {
+    return true;
+  }
   try {
-    const localMems = await cacheNode.getLocalPosts({ type: "membership", communityId });
-    if (localMems.some((m) => m.author === user)) return true;
+    const localLeaves = await cacheNode.getLocalPosts({ type: "membership_leave", communityId }).catch(() => []);
+    const userLeaves = localLeaves.filter((m) => (m.author || m.owner) === user);
+    const lastLeaveTs = userLeaves.length ? Math.max(...userLeaves.map((m) => Number(m.leftAt || m.ts || 0))) : 0;
+
+    const localMems = await cacheNode.getLocalPosts({ type: "membership", communityId }).catch(() => []);
+    const userMems = localMems.filter((m) => (m.author || m.owner) === user);
+    const lastJoinTs = userMems.length ? Math.max(...userMems.map((m) => Number(m.joinedAt || m.ts || 0))) : 0;
+
+    if (lastLeaveTs > 0 && lastLeaveTs >= lastJoinTs) {
+      return false;
+    }
+    if (lastJoinTs > 0 && lastJoinTs > lastLeaveTs) {
+      return true;
+    }
+    // Comunidade 'vox': todo mundo é membro no ato do login por padrão (a menos que tenha saído)!
+    if (communityId === "vox") {
+      return lastLeaveTs === 0;
+    }
     const mems = await gql.fetchUserMemberships(user);
     return mems.some((m) => m.communityId === communityId);
   } catch {
+    if (communityId === "vox") return true;
     return false;
   }
 }
 
-function buildCommunityRecentPeople(filteredTopics, meta, user, isMember, tab) {
-  const recentPeople = (tab === "posts" || tab === "members")
-    ? peopleIndex.extractRecentAuthors(filteredTopics)
+function buildCommunityRecentPeople(filteredTopics, meta, user, isMember, tab, communityId = "") {
+  let recentPeople = (tab === "posts" || tab === "members")
+    ? peopleIndex.extractRecentAuthors(filteredTopics, 24)
     : [];
   const peopleSet = new Set(recentPeople.map((p) => p.routeId));
   if (meta.owner && !peopleSet.has(meta.owner)) {
@@ -430,9 +453,9 @@ export async function showCommunity(communityId, tab = "posts") {
   if (specifics.proposals.some((p) => p.state === "merged" && (p.diffText || "").includes("commercialEnabled: true"))) {
     meta = { ...meta, commercialEnabled: true };
   }
-  const isMember = await checkCommunityMembership(communityId, user);
-  const recentPeople = buildCommunityRecentPeople(base.filteredTopics, meta, user, isMember, tab);
-  const memberCount = meta.memberCount != null ? Number(meta.memberCount) : null;
+  const isMember = await checkCommunityMembership(communityId, user, meta);
+  const recentPeople = buildCommunityRecentPeople(base.filteredTopics, meta, user, isMember, tab, communityId);
+  const memberCount = meta.memberCount != null ? Number(meta.memberCount) : (communityId === "vox" ? Math.max(1, recentPeople.length) : null);
   const tabProps = buildCommunityTabProps(communityId, meta, base, specifics, recentPeople, isMember, memberCount);
 
   if (existingComm && slot) {

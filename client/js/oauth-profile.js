@@ -1,7 +1,7 @@
 /** OAuth client-only — enriquece perfil local (V-DIS-08/10) com Google, Meta ou GitHub. */
 
 import * as localAccount from "./local-account.js";
-import { restoreOrBindGoogleIdentity } from "./oauth-vault.js";
+import { restoreOrBindGoogleIdentity, restoreOrBindMetaIdentity } from "./oauth-vault.js";
 
 let configCache = null;
 
@@ -88,11 +88,23 @@ export async function signInWithGoogle() {
 }
 
 function fetchMetaProfile(resolve) {
-  window.FB.api("/me", { fields: "name,picture" }, (profile) => {
+  window.FB.api("/me", { fields: "name,picture,id,email" }, async (profile) => {
     if (!profile?.name) return resolve({ ok: false, reason: "Perfil Meta vazio" });
     const picture = profile.picture?.data?.url || "";
-    localAccount.setProfileEnrichment({ displayName: profile.name, avatarUrl: picture, bio: "", oauthProvider: "facebook" });
-    resolve({ ok: true, profile: { displayName: profile.name, avatarUrl: picture } });
+    const sub = String(profile.id || "").trim();
+    const email = String(profile.email || "").trim();
+    const name = profile.name;
+    try {
+      const result = await restoreOrBindMetaIdentity({ sub, email, name, picture });
+      resolve({
+        ok: true,
+        restored: result.restored,
+        switched: result.restored,
+        profile: { displayName: result.displayName || name, avatarUrl: picture, routeId: result.routeId },
+      });
+    } catch (err) {
+      resolve({ ok: false, reason: err?.message || "Erro no cofre Meta" });
+    }
   });
 }
 

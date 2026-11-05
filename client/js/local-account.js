@@ -534,35 +534,51 @@ export async function syncActiveAccountToVault() {
 
 export function deduplicateVaultAccounts() {
   const vault = readVaultMap();
-  const seenGoogle = new Map();
+  const seenSocial = new Map();
   let changed = false;
   const currentId = getCachedRouteIdSync();
 
   for (const [id, acc] of Object.entries(vault)) {
     const enrich = acc.enrichment || {};
-    const googleKey = enrich.oauthSub || (enrich.avatarUrl?.includes("lh3.googleusercontent.com/a/") ? enrich.avatarUrl : null);
-    if (!googleKey) continue;
+    const prov = enrich.oauthProvider || (enrich.avatarUrl?.includes("lh3.googleusercontent.com/a/") ? "google" : null);
+    const socialKey = enrich.oauthSub
+      ? `${prov || "oauth"}:${enrich.oauthSub}`
+      : (enrich.avatarUrl?.includes("lh3.googleusercontent.com/a/") ? enrich.avatarUrl : null);
+    if (!socialKey) continue;
 
-    if (seenGoogle.has(googleKey)) {
-      const canonicalId = seenGoogle.get(googleKey);
+    if (seenSocial.has(socialKey)) {
+      const canonicalId = seenSocial.get(socialKey);
       const toRemove = id === currentId ? canonicalId : id;
       delete vault[toRemove];
       changed = true;
-      if (toRemove === canonicalId) seenGoogle.set(googleKey, id);
+      if (toRemove === canonicalId) seenSocial.set(socialKey, id);
     } else {
-      seenGoogle.set(googleKey, id);
+      seenSocial.set(socialKey, id);
     }
   }
   if (changed) writeVaultMap(vault);
 }
 
-function matchesOAuthEnrichment(enrich, cleanSub, cleanEmail, isGoogleAv, cleanAv) {
-  if (cleanSub && enrich.oauthSub === cleanSub) return true;
-  if (cleanEmail && enrich.oauthEmail && enrich.oauthEmail.toLowerCase() === cleanEmail) return true;
-  return Boolean(isGoogleAv && enrich.avatarUrl === cleanAv);
+function isSameProvider(expected, current) {
+  if (!expected || !current || expected === current) return true;
+  return expected === "meta" && current === "facebook";
 }
 
-export function findVaultAccountByOAuth({ oauthProvider: _p, oauthSub, oauthEmail, avatarUrl } = {}) {
+function matchesSocialAvatar(enrichAv, targetAv, isGoogleAv) {
+  if (!enrichAv || !targetAv) return false;
+  if (isGoogleAv && enrichAv === targetAv) return true;
+  const isMetaAv = targetAv.includes("facebook.com") || targetAv.includes("fbsbx.com");
+  return Boolean(isMetaAv && enrichAv === targetAv);
+}
+
+function matchesOAuthEnrichment(enrich, cleanSub, cleanEmail, isGoogleAv, cleanAv, provider = "") {
+  if (!isSameProvider(provider, enrich.oauthProvider)) return false;
+  if (cleanSub && enrich.oauthSub === cleanSub) return true;
+  if (cleanEmail && enrich.oauthEmail && enrich.oauthEmail.toLowerCase() === cleanEmail) return true;
+  return matchesSocialAvatar(enrich.avatarUrl, cleanAv, isGoogleAv);
+}
+
+export function findVaultAccountByOAuth({ oauthProvider = "", oauthSub, oauthEmail, avatarUrl } = {}) {
   const vault = readVaultMap();
   const cleanSub = String(oauthSub || "").trim();
   const cleanEmail = String(oauthEmail || "").trim().toLowerCase();
@@ -570,7 +586,7 @@ export function findVaultAccountByOAuth({ oauthProvider: _p, oauthSub, oauthEmai
   const isGoogleAv = cleanAv.includes("lh3.googleusercontent.com/a/");
 
   for (const item of Object.values(vault)) {
-    if (matchesOAuthEnrichment(item.enrichment || {}, cleanSub, cleanEmail, isGoogleAv, cleanAv)) {
+    if (matchesOAuthEnrichment(item.enrichment || {}, cleanSub, cleanEmail, isGoogleAv, cleanAv, oauthProvider)) {
       return item;
     }
   }

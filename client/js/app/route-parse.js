@@ -110,6 +110,9 @@ function parseStaticRoute(parts, query) {
   if (root === "people" || root === "pessoas") {
     return { name: "people", query: query.get("q") || "" };
   }
+  if (root === "sync") {
+    return { name: "sync", passphrase: query.get("p") || parts[1] || "", lookupKey: query.get("k") || "" };
+  }
   if (root === "ajuda") {
     if (parts[1] === "voxpedia") return { name: "voxpedia" };
     if (parts[1] === "teste") return { name: "ajuda-teste" };

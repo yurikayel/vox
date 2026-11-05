@@ -3,7 +3,15 @@ import assert from "node:assert/strict";
 import "./setup.js";
 import * as oauth from "../client/js/oauth-profile.js";
 import * as localAccount from "../client/js/local-account.js";
-import { restoreOrBindGoogleIdentity, computeVaultLookupKey } from "../client/js/oauth-vault.js";
+import {
+  restoreOrBindGoogleIdentity,
+  restoreOrBindMetaIdentity,
+  computeVaultLookupKey,
+  savePassphraseVault,
+  restoreFromPassphraseVault,
+} from "../client/js/oauth-vault.js";
+import { encodeVoxUrl } from "../client/js/qr-url.js";
+import { parseRoute } from "../client/js/app/route-parse.js";
 
 test("oauth-profile - skip marks step complete", () => {
   localStorage.clear();
@@ -176,5 +184,127 @@ test("oauth-vault - restoreOrBindGoogleIdentity restores canonical routeId after
     assert.equal(localAccount.getCachedRouteIdSync(), acc1.routeId);
   } finally {
     globalThis.fetch = origFetch;
+  }
+});
+
+test("oauth-vault - restoreOrBindMetaIdentity restores canonical routeId after localStorage wipe", async () => {
+  const origFetch = globalThis.fetch;
+  const mockVault = new Map();
+  globalThis.fetch = async (url, opts) => {
+    if (String(url).includes("/memory/vault/")) {
+      const key = String(url).split("/memory/vault/")[1];
+      if (opts?.method === "POST") {
+        const body = JSON.parse(opts.body);
+        mockVault.set(key, body.record);
+        return { ok: true, json: async () => ({ status: "saved" }) };
+      }
+      if (mockVault.has(key)) {
+        return { ok: true, json: async () => ({ status: "ok", record: mockVault.get(key) }) };
+      }
+      return { ok: false, status: 404, json: async () => ({ error: "not_found" }) };
+    }
+    return origFetch(url, opts);
+  };
+
+  try {
+    localAccount.wipeLocalAccount();
+    const acc1 = await localAccount.ensureLocalAccount();
+    const sub = "meta_user_987654";
+
+    const res1 = await restoreOrBindMetaIdentity({
+      sub,
+      email: "alice@meta.com",
+      name: "Alice Meta",
+      picture: "https://graph.facebook.com/987654/picture",
+    });
+    assert.equal(res1.routeId, acc1.routeId);
+    assert.equal(res1.restored, false);
+
+    const lookupKey = await computeVaultLookupKey(sub, "meta");
+    const vaultCipher = localStorage.getItem("vox-oauth-vault-v1:" + lookupKey);
+    assert.ok(vaultCipher);
+
+    localAccount.wipeLocalAccount();
+    assert.equal(localStorage.getItem("vox-local-account-v1"), null);
+
+    localStorage.setItem("vox-oauth-vault-v1:" + lookupKey, vaultCipher);
+
+    const res2 = await restoreOrBindMetaIdentity({
+      sub,
+      email: "alice@meta.com",
+      name: "Alice Meta",
+      picture: "https://graph.facebook.com/987654/picture",
+    });
+
+    assert.equal(res2.restored, true);
+    assert.equal(res2.routeId, acc1.routeId);
+    assert.equal(localAccount.getCachedRouteIdSync(), acc1.routeId);
+  } finally {
+    globalThis.fetch = origFetch;
+  }
+});
+
+test("oauth-vault - sovereign passphrase vault save, wrong passphrase reject, and successful restore", async () => {
+  const origFetch = globalThis.fetch;
+  const mockVault = new Map();
+  globalThis.fetch = async (url, opts) => {
+    if (String(url).includes("/memory/vault/")) {
+      const key = String(url).split("/memory/vault/")[1];
+      if (opts?.method === "POST") {
+        const body = JSON.parse(opts.body);
+        mockVault.set(key, body.record);
+        return { ok: true, json: async () => ({ status: "saved" }) };
+      }
+      if (mockVault.has(key)) {
+        return { ok: true, json: async () => ({ status: "ok", record: mockVault.get(key) }) };
+      }
+      return { ok: false, status: 404, json: async () => ({ error: "not_found" }) };
+    }
+    return origFetch(url, opts);
+  };
+
+  try {
+    localAccount.wipeLocalAccount();
+    const acc = await localAccount.ensureLocalAccount();
+    localAccount.setDisplayName("Alice Soberana");
+
+    const pass = "segredo-forte-soberano-42";
+    const saveRes = await savePassphraseVault(pass);
+    assert.equal(saveRes.ok, true);
+    assert.equal(saveRes.routeId, acc.routeId);
+
+    // Limpa chaves deste aparelho (simula aparelho B virgem)
+    localAccount.wipeLocalAccount();
+    assert.equal(localStorage.getItem("vox-local-account-v1"), null);
+
+    // Senha errada deve falhar
+    const badRes = await restoreFromPassphraseVault("senha-errada-qualquer");
+    assert.equal(badRes.ok, false);
+
+    // Senha correta restaura identidade
+    const okRes = await restoreFromPassphraseVault(pass);
+    assert.equal(okRes.ok, true);
+    assert.equal(okRes.routeId, acc.routeId);
+    assert.equal(okRes.displayName, "Alice Soberana");
+    assert.equal(localAccount.getCachedRouteIdSync(), acc.routeId);
+    assert.equal(localAccount.getDisplayName(), "Alice Soberana");
+  } finally {
+    globalThis.fetch = origFetch;
+  }
+});
+
+test("oauth-vault - cross-device sync URL and QR code encoding", () => {
+  const origLocation = globalThis.location;
+  try {
+    globalThis.location = { hash: "#/sync?p=segredo-forte-soberano-42" };
+    const r = parseRoute();
+    assert.equal(r.name, "sync");
+    assert.equal(r.passphrase, "segredo-forte-soberano-42");
+
+    const qr = encodeVoxUrl("https://vox.local/#/sync?p=segredo-forte-soberano-42");
+    assert.ok(qr.modules);
+    assert.ok(qr.modules.length > 0);
+  } finally {
+    globalThis.location = origLocation;
   }
 });
