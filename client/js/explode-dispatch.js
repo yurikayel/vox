@@ -197,6 +197,14 @@ export const APP_ICONS = {
     <path fill="#fff" d="M17.4 6.9a13.3 13.3 0 0 0-3.3-1 .05.05 0 0 0-.05.02c-.15.26-.3.6-.42.87a12.3 12.3 0 0 0-3.7 0 8 8 0 0 0-.42-.87.05.05 0 0 0-.05-.02c-1.16.2-2.3.55-3.3 1a.05.05 0 0 0-.02.02C4.1 10.3 3.5 13.6 3.8 16.8a.06.06 0 0 0 .02.04 13.4 13.4 0 0 0 4 2 .05.05 0 0 0 .06-.02c.3-.43.6-.88.83-1.35a.05.05 0 0 0-.03-.07c-.42-.16-.82-.36-1.2-.58a.05.05 0 0 1 0-.09c.08-.06.16-.12.24-.18a.05.05 0 0 1 .05 0 9.5 9.5 0 0 0 8.7 0 .05.05 0 0 1 .05 0c.08.06.16.12.24.18a.05.05 0 0 1 0 .09c-.38.22-.78.42-1.2.58a.05.05 0 0 0-.03.07c.24.47.53.92.83 1.35a.05.05 0 0 0 .06.02 13.3 13.3 0 0 0 4-2 .06.06 0 0 0 .02-.04c.4-3.8-.7-7-2.3-9.9a.05.05 0 0 0-.02-.02zM8.9 14.8c-.8 0-1.4-.7-1.4-1.6s.6-1.6 1.4-1.6c.8 0 1.4.7 1.4 1.6s-.6 1.6-1.4 1.6zm6.2 0c-.8 0-1.4-.7-1.4-1.6s.6-1.6 1.4-1.6c.8 0 1.4.7 1.4 1.6s-.6 1.6-1.4 1.6z"/>
   </svg>`,
 
+  whatsappMono: `<svg class="app-logo-svg" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/>
+  </svg>`,
+
+  megaphone: `<svg class="explode-megaphone" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>
+  </svg>`,
+
   copy: `<svg class="app-logo-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
     <rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
   </svg>`,
@@ -211,6 +219,25 @@ function buildExplodeHeaderHtml() {
     <h3 class="explode-title">📢 Espalhe esta pauta</h3>
     <button type="button" class="explode-close-btn" data-explode-action="close" aria-label="Fechar">✕</button>
   </div>`;
+}
+
+function excerptForTarget(post) {
+  const title = String(post?.title || "").trim();
+  const body = String(post?.body || "").replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
+  if (!body || body === title) return "";
+  return body.length > 110 ? `${body.slice(0, 107)}…` : body;
+}
+
+/** Ponte visual: o mesmo megafone do feed "fala" o conteúdo que será espalhado. */
+function buildExplodeTargetHtml(post) {
+  const title = String(post?.title || "").trim() || "Esta pauta";
+  const excerpt = excerptForTarget(post);
+  return `<figure class="explode-target">
+    <span class="explode-megaphone-wrap" aria-hidden="true">${APP_ICONS.megaphone}</span>
+    <figcaption class="explode-target-text">
+      <strong>${escapeHtml(title)}</strong>${excerpt ? `<span>${escapeHtml(excerpt)}</span>` : ""}
+    </figcaption>
+  </figure>`;
 }
 
 /** Hierarquia: 1 ação proposta → 4 rápidas → resto recolhido (Lei de Hick). */
@@ -235,7 +262,7 @@ const EXPLODE_EXTRA_CHIPS = [
   { action: "cascade", icon: "🌊", label: "Uma rede por vez", title: "Abre WhatsApp, X, Threads e Bluesky em sequência" },
 ];
 
-export const VOX_LOGO_SRC = "./icons/icon-white-192.png";
+export const VOX_LOGO_SRC = "./icons/icon-mark-black-128.png";
 
 function renderExplodeGridButton(btn, linked) {
   const badge = btn.linkId && linked[btn.linkId]?.enabled && linked[btn.linkId]?.handle
@@ -258,11 +285,11 @@ function buildExplodeGridHtml(buttons, label) {
 function buildExplodePrimaryHtml() {
   return `<div class="explode-primary-row">
       <button type="button" class="explode-primary btn-zap" data-explode-action="whatsapp">
-        <span class="explode-primary-icon">${APP_ICONS.whatsapp}</span>
+        <span class="explode-primary-icon">${APP_ICONS.whatsappMono}</span>
         <span>WhatsApp</span>
       </button>
       <button type="button" class="explode-primary btn-explode-burst" data-explode-action="burst" aria-label="EXPLODE! Disparo automático" title="Disparo automático: copia a mensagem e envia às contas e webhooks conectados">
-        <span class="explode-primary-icon"><img src="${VOX_LOGO_SRC}" alt="" width="22" height="22" /></span>
+        <span class="explode-primary-icon"><img src="${VOX_LOGO_SRC}" alt="" width="24" height="24" /></span>
         <span>EXPLODE!</span>
       </button>
     </div>
@@ -283,10 +310,11 @@ function buildExplodeMoreHtml() {
   </details>`;
 }
 
-export function buildExplodeSheetHtml() {
+export function buildExplodeSheetHtml(post) {
   return `
     <div class="explode-panel post-more-sheet-panel" role="document">
       ${buildExplodeHeaderHtml()}
+      ${buildExplodeTargetHtml(post)}
       ${buildExplodePrimaryHtml()}
       ${buildExplodeGridHtml(EXPLODE_QUICK_BUTTONS, "Outras redes")}
       ${buildExplodeMoreHtml()}

@@ -7579,7 +7579,7 @@ blockquote.repost-cite {
   gap: 8px;
   padding: 13px 12px;
   background: #25D366;
-  color: #062b16;
+  color: #000;
   border: none;
   border-radius: 999px;
   font-size: 0.98rem;
@@ -7592,7 +7592,7 @@ blockquote.repost-cite {
 
 .explode-primary.btn-explode-burst {
   background: #FACC15;
-  color: #2a1d00;
+  color: #000;
   letter-spacing: 0.02em;
   box-shadow: 0 6px 18px rgba(250, 204, 21, 0.3);
 }
@@ -7617,16 +7617,95 @@ blockquote.repost-cite {
 
 .explode-primary-icon {
   display: flex;
-  background: #fff;
-  border-radius: 50%;
-  padding: 2px;
+  color: #000;
 }
 
 .explode-primary-icon .app-logo-svg,
 .explode-primary-icon img {
   display: block;
-  width: 22px;
-  height: 22px;
+  width: 28px;
+  height: 28px;
+}
+
+/* Ponte visual: megafone do feed → conteúdo que será espalhado */
+.explode-target {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  background: var(--bg);
+  border: 1px solid var(--outline);
+  border-left: 3px solid #FACC15;
+  border-radius: var(--radius, 10px);
+}
+
+.explode-megaphone-wrap {
+  position: relative;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000;
+  background: #FACC15;
+}
+
+.explode-megaphone-wrap::before,
+.explode-megaphone-wrap::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(250, 204, 21, 0.6);
+  animation: explodeWave 1.8s ease-out infinite;
+  pointer-events: none;
+}
+
+.explode-megaphone-wrap::after {
+  animation-delay: 0.9s;
+}
+
+@keyframes explodeWave {
+  from { transform: scale(1); opacity: 0.9; }
+  to { transform: scale(1.9); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .explode-megaphone-wrap::before,
+  .explode-megaphone-wrap::after {
+    animation: none;
+    opacity: 0;
+  }
+}
+
+.explode-target-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.explode-target-text strong {
+  font-size: 0.92rem;
+  font-weight: 800;
+  line-height: 1.3;
+  color: var(--text);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.explode-target-text span {
+  font-size: 0.76rem;
+  line-height: 1.35;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .explode-hint {
@@ -7636,11 +7715,11 @@ blockquote.repost-cite {
   margin: 8px 0 14px;
 }
 
-/* Redes secundárias: ícones circulares, sem molduras */
+/* Redes secundárias: ícones livres e ampliados, sem botões escuros em volta */
 .explode-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 4px;
+  gap: 8px 4px;
 }
 
 .explode-grid-btn {
@@ -7663,40 +7742,49 @@ blockquote.repost-cite {
 }
 
 .explode-grid-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg);
-  border: 1px solid var(--outline);
-  transition: transform 0.15s ease, border-color 0.15s ease;
+  background: transparent;
+  border: none;
+  transition: transform 0.15s ease, filter 0.15s ease;
 }
 
 .explode-grid-btn:hover .explode-grid-icon {
-  transform: translateY(-2px);
-  border-color: rgba(245, 158, 11, 0.55);
+  transform: translateY(-2px) scale(1.12);
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.45));
 }
 
 .app-logo-svg {
   display: block;
 }
 
+.explode-grid-icon .app-logo-svg {
+  width: 38px;
+  height: 38px;
+}
+
 .explode-grid-name {
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   font-weight: 600;
   color: var(--muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 100%;
+  transition: color 0.15s ease;
+}
+
+.explode-grid-btn:hover .explode-grid-name {
+  color: var(--text);
 }
 
 .explode-grid-connected {
   position: absolute;
-  top: 4px;
-  right: calc(50% - 26px);
+  top: 0;
+  right: calc(50% - 22px);
   font-size: 0.58rem;
   font-weight: 800;
   line-height: 1;
