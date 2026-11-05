@@ -26,23 +26,35 @@ function chooseBestName(existingName, incomingName, routeId) {
 }
 
 function isSameGoogleAvatar(avA, avB, nameA, nameB) {
-  const isGoogleA = avA.includes("lh3.googleusercontent.com/a/");
-  const isGoogleB = avB.includes("lh3.googleusercontent.com/a/");
+  const isGoogleA = avA.includes("googleusercontent.com/");
+  const isGoogleB = avB.includes("googleusercontent.com/");
   if (!isGoogleA || !isGoogleB) return false;
   return avA.split("=")[0] === avB.split("=")[0] || Boolean(nameA && nameA === nameB);
 }
 
 function isSameMetaAvatar(avA, avB, nameA, nameB) {
-  const isMetaA = avA.includes("facebook.com") || avA.includes("fbsbx.com");
-  const isMetaB = avB.includes("facebook.com") || avB.includes("fbsbx.com");
+  const isMetaA = avA.includes("facebook.com") || avA.includes("fbsbx.com") || avA.includes("fbcdn.net");
+  const isMetaB = avB.includes("facebook.com") || avB.includes("fbsbx.com") || avB.includes("fbcdn.net");
   if (!isMetaA || !isMetaB) return false;
   return avA === avB || Boolean(nameA && nameA === nameB);
+}
+
+function isSameNamedLocalIdentity(entryA, entryB, nameA, nameB) {
+  const isNamedA = !isFallbackRouteName(nameA, entryA.routeId);
+  const isNamedB = !isFallbackRouteName(nameB, entryB.routeId);
+  if (!isNamedA || !isNamedB || nameA !== nameB) return false;
+  const isLocalA = entryA.source === "self" || entryA.source === "vault";
+  const isLocalB = entryB.source === "self" || entryB.source === "vault";
+  return isLocalA && isLocalB;
 }
 
 function isSameSocialIdentity(entryA, entryB) {
   const avA = entryA.avatarUrl || profileDirectory.getAuthorAvatarSync(entryA.routeId) || "";
   const avB = entryB.avatarUrl || profileDirectory.getAuthorAvatarSync(entryB.routeId) || "";
-  return isSameGoogleAvatar(avA, avB, entryA.name, entryB.name) || isSameMetaAvatar(avA, avB, entryA.name, entryB.name);
+  if (avA && avB && avA === avB) return true;
+  if (isSameGoogleAvatar(avA, avB, entryA.name, entryB.name)) return true;
+  if (isSameMetaAvatar(avA, avB, entryA.name, entryB.name)) return true;
+  return isSameNamedLocalIdentity(entryA, entryB, entryA.name, entryB.name);
 }
 
 export const isSameGoogleIdentity = isSameSocialIdentity;

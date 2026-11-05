@@ -532,6 +532,25 @@ export async function syncActiveAccountToVault() {
   return vault[acc.routeId];
 }
 
+function detectSocialAvatarType(av) {
+  if (!av) return null;
+  if (av.includes("googleusercontent.com/")) return "google";
+  if (av.includes("facebook.com") || av.includes("fbsbx.com") || av.includes("fbcdn.net")) return "meta";
+  return null;
+}
+
+function computeAccountSocialKey(acc) {
+  const enrich = acc?.enrichment || {};
+  const av = enrich.avatarUrl || "";
+  const avatarType = detectSocialAvatarType(av);
+  const prov = enrich.oauthProvider || avatarType || "oauth";
+  if (enrich.oauthSub) return `${prov}:${enrich.oauthSub}`;
+  if (enrich.oauthEmail) return `${prov}:${enrich.oauthEmail.toLowerCase()}`;
+  if (avatarType) return av.split("=")[0];
+  const cleanName = (acc?.displayName && !acc.displayName.startsWith("vx_")) ? acc.displayName.trim() : null;
+  return (cleanName && av) ? `name-av:${cleanName}:${av}` : null;
+}
+
 export function deduplicateVaultAccounts() {
   const vault = readVaultMap();
   const seenSocial = new Map();
@@ -539,11 +558,7 @@ export function deduplicateVaultAccounts() {
   const currentId = getCachedRouteIdSync();
 
   for (const [id, acc] of Object.entries(vault)) {
-    const enrich = acc.enrichment || {};
-    const prov = enrich.oauthProvider || (enrich.avatarUrl?.includes("lh3.googleusercontent.com/a/") ? "google" : null);
-    const socialKey = enrich.oauthSub
-      ? `${prov || "oauth"}:${enrich.oauthSub}`
-      : (enrich.avatarUrl?.includes("lh3.googleusercontent.com/a/") ? enrich.avatarUrl : null);
+    const socialKey = computeAccountSocialKey(acc);
     if (!socialKey) continue;
 
     if (seenSocial.has(socialKey)) {
@@ -566,9 +581,9 @@ function isSameProvider(expected, current) {
 
 function matchesSocialAvatar(enrichAv, targetAv, isGoogleAv) {
   if (!enrichAv || !targetAv) return false;
-  if (isGoogleAv && enrichAv === targetAv) return true;
-  const isMetaAv = targetAv.includes("facebook.com") || targetAv.includes("fbsbx.com");
-  return Boolean(isMetaAv && enrichAv === targetAv);
+  if (isGoogleAv && enrichAv.split("=")[0] === targetAv.split("=")[0]) return true;
+  const isMetaAv = targetAv.includes("facebook.com") || targetAv.includes("fbsbx.com") || targetAv.includes("fbcdn.net");
+  return Boolean(isMetaAv && (enrichAv === targetAv || enrichAv.includes("fbcdn.net") || enrichAv.includes("fbsbx.com")));
 }
 
 function matchesOAuthEnrichment(enrich, cleanSub, cleanEmail, isGoogleAv, cleanAv, provider = "") {
@@ -583,7 +598,7 @@ export function findVaultAccountByOAuth({ oauthProvider = "", oauthSub, oauthEma
   const cleanSub = String(oauthSub || "").trim();
   const cleanEmail = String(oauthEmail || "").trim().toLowerCase();
   const cleanAv = String(avatarUrl || "").trim();
-  const isGoogleAv = cleanAv.includes("lh3.googleusercontent.com/a/");
+  const isGoogleAv = cleanAv.includes("googleusercontent.com/");
 
   for (const item of Object.values(vault)) {
     if (matchesOAuthEnrichment(item.enrichment || {}, cleanSub, cleanEmail, isGoogleAv, cleanAv, oauthProvider)) {
