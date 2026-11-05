@@ -20,6 +20,7 @@ import urllib.request
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
+from relay import blind_relay
 from relay import inbox
 from relay import mirror_validate
 
@@ -325,8 +326,30 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
             self._handle_index(path[len("/vox/index/"):-5])
         elif path.startswith("/inbox/"):
             self._handle_inbox_get(path[len("/inbox/"):].split("/")[0])
+        elif path.startswith("/relay/envelope/"):
+            channel_id = path[len("/relay/envelope/"):].split("/")[0]
+            since_ts = self._get_query_param_int("since", 0)
+            self._send_json(blind_relay.list_envelopes(channel_id, since_ts=since_ts))
+        elif path.startswith("/relay/snapshot/"):
+            channel_id = path[len("/relay/snapshot/"):].split("/")[0]
+            snap = blind_relay.get_latest_snapshot(channel_id)
+            if snap is not None:
+                self._send_json(snap)
+            else:
+                self._reply_not_found(b"Snapshot nao encontrado")
         else:
             self._reply_not_found(b"Rota nao encontrada no Vox Relay")
+
+    def _get_query_param_int(self, param_name, default=0):
+        try:
+            if "?" in self.path:
+                query = self.path.split("?", 1)[1]
+                for part in query.split("&"):
+                    if part.startswith(f"{param_name}="):
+                        return int(part.split("=", 1)[1])
+        except (ValueError, IndexError):
+            pass
+        return default
 
     def _handle_health(self):
         self._send_json(self._health_payload())
@@ -433,8 +456,42 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
             self._handle_mirror_post()
         elif path.startswith("/inbox/"):
             self._handle_inbox_post(path[len("/inbox/"):].split("/")[0])
+        elif path.startswith("/relay/envelope/"):
+            self._handle_blind_envelope_post(path[len("/relay/envelope/"):].split("/")[0])
+        elif path.startswith("/relay/snapshot/"):
+            self._handle_blind_snapshot_post(path[len("/relay/snapshot/"):].split("/")[0])
         else:
             self._reply_not_found(b"")
+
+    def _handle_blind_envelope_post(self, channel_id):
+        content_length = self._get_content_length()
+        if content_length > blind_relay.MAX_ENVELOPE_SIZE:
+            self._reply_not_found(b"Envelope excede limite maximo de 64 KB", 413)
+            return
+        try:
+            body = self.rfile.read(content_length)
+            envelope = json.loads(body.decode("utf-8"))
+            record = blind_relay.store_envelope(channel_id, envelope)
+            self._send_json(record, 201)
+        except ValueError as err:
+            self._send_json({"error": str(err)}, 400)
+        except Exception as error:
+            self._send_json({"error": str(error)}, 500)
+
+    def _handle_blind_snapshot_post(self, channel_id):
+        content_length = self._get_content_length()
+        if content_length > blind_relay.MAX_SNAPSHOT_SIZE:
+            self._reply_not_found(b"Snapshot excede limite maximo de 512 KB", 413)
+            return
+        try:
+            body = self.rfile.read(content_length)
+            snap_data = json.loads(body.decode("utf-8"))
+            record = blind_relay.store_snapshot(channel_id, snap_data, prune_older=True)
+            self._send_json(record, 201)
+        except ValueError as err:
+            self._send_json({"error": str(err)}, 400)
+        except Exception as error:
+            self._send_json({"error": str(error)}, 500)
 
     def _handle_mirror_post(self):
         try:
