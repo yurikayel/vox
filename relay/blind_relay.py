@@ -78,7 +78,7 @@ def store_envelope(channel_id: str, envelope: Dict[str, Any], ttl_seconds: int =
         return record
 
 
-def list_envelopes(channel_id: str, since_ts: int = 0, limit: int = 100) -> List[Dict[str, Any]]:
+def list_envelopes(channel_id: str, since_ts: int = 0, since_serial: int = 0, limit: int = 100) -> List[Dict[str, Any]]:
     with _RELAY_LOCK:
         try:
             chan_path = ensure_channel_dir(channel_id)
@@ -93,9 +93,14 @@ def list_envelopes(channel_id: str, since_ts: int = 0, limit: int = 100) -> List
                 if data.get("expiresAt", 0) < now:
                     file.unlink(missing_ok=True)
                     continue
-                ts = int(data.get("envelope", {}).get("timestamp", 0))
-                if ts >= since_ts:
-                    results.append(data.get("envelope"))
+                env = data.get("envelope", {})
+                ts = int(env.get("timestamp", 0))
+                serial = int(env.get("serial", 0))
+                if since_serial > 0:
+                    if serial > since_serial:
+                        results.append(env)
+                elif ts >= since_ts:
+                    results.append(env)
             except (json.JSONDecodeError, OSError):
                 continue
 
@@ -115,14 +120,25 @@ def store_snapshot(channel_id: str, snapshot_data: Dict[str, Any], prune_older: 
 
     epoch = int(snapshot_data.get("epoch") or 1)
     timestamp = int(snapshot_data.get("timestamp") or (time.time() * 1000))
+    covered_serial = int(snapshot_data.get("coveredSerial") or snapshot_data.get("covered_serial") or 0)
 
     with _RELAY_LOCK:
         chan_path = ensure_channel_dir(channel_id)
         snap_path = chan_path / "latest_snapshot.json"
+        if snap_path.is_file():
+            try:
+                curr = json.loads(snap_path.read_text(encoding="utf-8"))
+                curr_epoch = int(curr.get("epoch", 0))
+                if epoch <= curr_epoch:
+                    raise ValueError(f"Época do snapshot ({epoch}) deve ser estritamente maior que a época atual ({curr_epoch})")
+            except (json.JSONDecodeError, OSError):
+                pass
+
         record = {
             "channelId": channel_id,
             "epoch": epoch,
             "timestamp": timestamp,
+            "coveredSerial": covered_serial,
             "storedAt": int(time.time()),
             "data": snapshot_data,
         }

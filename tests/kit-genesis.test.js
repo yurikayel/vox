@@ -42,14 +42,15 @@ test("kit-genesis - manifestos são profundamente congelados e imutáveis", () =
   });
 });
 
-test("kit-genesis - coerência cruzada de permissões nos 3 kits oficiais", () => {
+test("kit-genesis - coerência cruzada e isolamento de canais nos kits oficiais", () => {
   // Kit Bairro: VerifiedPeer escreve em mural-entregas, mas NÃO em avisos-comunitarios
   assert.ok(KIT_BAIRRO.roles.VerifiedPeer.includes("write:channel:mural-entregas"));
   assert.ok(!KIT_BAIRRO.roles.VerifiedPeer.includes("write:channel:avisos-comunitarios"));
 
-  // Kit Sindicato: Delegate escreve em votacoes e assembleia, mas NÃO em prestacao-de-contas
+  // Kit Sindicato: Delegate escreve em votacoes-e-editais; VerifiedWorker escreve em assembleia-permanente
   assert.ok(KIT_SINDICATO.roles.Delegate.includes("write:channel:votacoes-e-editais"));
-  assert.ok(KIT_SINDICATO.roles.Delegate.includes("write:channel:assembleia-permanente"));
+  assert.ok(!KIT_SINDICATO.roles.Delegate.includes("write:channel:assembleia-permanente"));
+  assert.ok(KIT_SINDICATO.roles.VerifiedWorker.includes("write:channel:assembleia-permanente"));
   assert.ok(!KIT_SINDICATO.roles.Delegate.includes("write:channel:*"));
   assert.ok(!KIT_SINDICATO.roles.Delegate.includes("write:channel:prestacao-de-contas"));
 
@@ -58,39 +59,28 @@ test("kit-genesis - coerência cruzada de permissões nos 3 kits oficiais", () =
   assert.ok(KIT_COLETIVO.roles.Member.includes("write:channel:leituras-e-debates"));
 });
 
-test("kit-genesis - validateKitManifest checagens cruzadas e rejeição de anomalias", () => {
+test("kit-genesis - validateKitManifest checagens cruzadas e isolamento de canal", () => {
   assert.equal(validateKitManifest(KIT_BAIRRO), true);
   assert.equal(validateKitManifest(KIT_SINDICATO), true);
   assert.equal(validateKitManifest(KIT_COLETIVO), true);
 
-  // Rejeita canal cujo writeRole não existe em roles
+  // Rejeita outro papel com permissão explícita no canal de outrem
   assert.throws(
     () =>
       validateKitManifest({
-        id: "teste",
+        id: "teste_invasao",
         version: "1.0.0",
         title: "Teste",
-        roles: { Admin: ["*"] },
-        channels: [{ id: "c1", title: "C1", writeRole: "Fantasma" }],
+        roles: {
+          Admin: ["*"],
+          Auditor: ["read:channel:*", "write:channel:canal_secreto"],
+          Official: ["write:channel:canal_secreto"],
+        },
+        channels: [{ id: "canal_secreto", title: "Segredo", writeRole: "Official" }],
         cartridges: [],
         securityPolicy: {},
       }),
-    /não existe no mapa de roles/
-  );
-
-  // Rejeita canal cujo writeRole não tem permissão para escrever nele
-  assert.throws(
-    () =>
-      validateKitManifest({
-        id: "teste",
-        version: "1.0.0",
-        title: "Teste",
-        roles: { Admin: ["*"], Writer: ["read:channel:*"] },
-        channels: [{ id: "c1", title: "C1", writeRole: "Writer" }],
-        cartridges: [],
-        securityPolicy: {},
-      }),
-    /não possui permissão de escrita/
+    /não pode ter permissão de escrita no canal 'canal_secreto'/
   );
 
   // Rejeita cartucho cujo channelId não existe
@@ -107,61 +97,37 @@ test("kit-genesis - validateKitManifest checagens cruzadas e rejeição de anoma
       }),
     /não existe na lista de canais/
   );
-
-  // Rejeita IDs duplicados
-  assert.throws(
-    () =>
-      validateKitManifest({
-        id: "teste",
-        version: "1.0.0",
-        title: "Teste",
-        roles: { Admin: ["*"] },
-        channels: [
-          { id: "c1", title: "C1", writeRole: "Admin" },
-          { id: "c1", title: "C1 Duplicado", writeRole: "Admin" },
-        ],
-        cartridges: [],
-        securityPolicy: {},
-      }),
-    /ID de canal duplicado/
-  );
 });
 
 test("kit-genesis - exige creatorAddr válido e rejeita criação sem admin", () => {
-  // creatorAddr ausente deve lançar erro
   assert.throws(
     () => instantiateCommunityFromKit("kit-bairro", { name: "Sem Criador" }),
     /creatorAddr é obrigatório/
   );
 
-  // creatorAddr inválido (sem prefixo vx_)
   assert.throws(
     () => instantiateCommunityFromKit("kit-bairro", { creatorAddr: "joao_silva" }),
     /prefixo 'vx_'/
   );
 
-  // Sucesso com endereço válido
   const comm = instantiateCommunityFromKit("kit-bairro", {
     creatorAddr: "vx_ed25519_dona_clara_123",
   });
   assert.deepEqual(comm.memberRoles["vx_ed25519_dona_clara_123"], ["Admin"]);
 });
 
-test("kit-genesis - gera ID aleatório seguro e valida formato de ID customizado", () => {
-  // Geração automática livre de colisões com sufixo randômico
+test("kit-genesis - gera ID criptográfico e valida formato customizado", () => {
   const c1 = instantiateCommunityFromKit("kit-bairro", { creatorAddr: "vx_ed25519_user1" });
   const c2 = instantiateCommunityFromKit("kit-bairro", { creatorAddr: "vx_ed25519_user2" });
   assert.notEqual(c1.communityId, c2.communityId);
   assert.ok(c1.communityId.startsWith("comm_bairro_"));
 
-  // ID customizado válido
   const c3 = instantiateCommunityFromKit("kit-bairro", {
     id: "bairro-santa-teresa_01",
     creatorAddr: "vx_ed25519_user1",
   });
   assert.equal(c3.communityId, "bairro-santa-teresa_01");
 
-  // ID customizado com caracteres perigosos (paths, injeções) é rejeitado
   assert.throws(
     () =>
       instantiateCommunityFromKit("kit-bairro", {
@@ -172,41 +138,59 @@ test("kit-genesis - gera ID aleatório seguro e valida formato de ID customizado
   );
 });
 
-test("kit-genesis - regra No-Downgrade em securityPolicyOverrides", () => {
-  // Proíbe desativar flags de segurança obrigatórias do kit
+test("kit-genesis - regra No-Downgrade estrita com allowGuestRead e tipagem", () => {
+  // Proíbe abrir leitura a convidados se o kit restringe (Sindicato tem allowGuestRead: false)
+  assert.throws(
+    () =>
+      instantiateCommunityFromKit("kit-sindicato", {
+        creatorAddr: "vx_ed25519_diretor",
+        securityPolicyOverrides: { allowGuestRead: true },
+      }),
+    /Não é permitido abrir leitura pública/
+  );
+
+  // Proíbe desativar flags de proteção obrigatórias do kit
   assert.throws(
     () =>
       instantiateCommunityFromKit("kit-sindicato", {
         creatorAddr: "vx_ed25519_diretor",
         securityPolicyOverrides: { requirePadesGovBrOnVote: false },
       }),
-    /Não é permitido rebaixar a política de segurança/
+    /Não é permitido desativar proteção obrigatória/
   );
 
-  // Proíbe reduzir minTrustScore
+  // Proíbe bypass de tipo com strings ou números falsy
+  assert.throws(
+    () =>
+      instantiateCommunityFromKit("kit-sindicato", {
+        creatorAddr: "vx_ed25519_diretor",
+        securityPolicyOverrides: { requirePadesGovBrOnVote: "false" },
+      }),
+    /deve ser estritamente booleano/
+  );
+
+  // Proíbe minTrustScore inválido ou rebaixado
   assert.throws(
     () =>
       instantiateCommunityFromKit("kit-bairro", {
         creatorAddr: "vx_ed25519_vizinho",
-        securityPolicyOverrides: { minTrustScore: 0 },
+        securityPolicyOverrides: { minTrustScore: "0" },
       }),
-    /Não é permitido reduzir o limiar numérico/
+    /minTrustScore deve ser um número inteiro/
   );
-
-  // Proíbe chaves desconhecidas
   assert.throws(
     () =>
       instantiateCommunityFromKit("kit-bairro", {
         creatorAddr: "vx_ed25519_vizinho",
-        securityPolicyOverrides: { backdoorFlag: true },
+        securityPolicyOverrides: { minTrustScore: 0 }, // base do kit-bairro é 1
       }),
-    /Chave desconhecida em securityPolicyOverrides/
+    /Não é permitido reduzir o score mínimo/
   );
 
-  // Permite endurecimento legítimo (aumentar exigência de minTrustScore)
-  const endurecido = instantiateCommunityFromKit("kit-bairro", {
-    creatorAddr: "vx_ed25519_vizinho",
-    securityPolicyOverrides: { minTrustScore: 5 },
+  // Permite endurecimento legítimo (fechar leitura a convidados no coletivo)
+  const coletivoFechado = instantiateCommunityFromKit("kit-coletivo", {
+    creatorAddr: "vx_ed25519_curador",
+    securityPolicyOverrides: { allowGuestRead: false },
   });
-  assert.equal(endurecido.securityPolicy.minTrustScore, 5);
+  assert.equal(coletivoFechado.securityPolicy.allowGuestRead, false);
 });

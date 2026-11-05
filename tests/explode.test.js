@@ -65,8 +65,8 @@ test("explode - buildExplodeSheetHtml renders launchpad with all 9 network actio
   });
 
   assert.ok(html.includes("explode-panel"));
-  assert.ok(html.includes("EXPLODE NAS REDES!"));
-  assert.ok(html.includes("REPLICAÇÃO MULTI-REDES"));
+  assert.ok(html.includes("Espalhe esta pauta"));
+  assert.ok(!html.includes("REPLICAÇÃO MULTI-REDES"));
   assert.ok(!html.includes("MÉTODO JANONES"));
   assert.ok(!html.includes("Janones"));
   assert.ok(html.includes("btn-explode-burst"));
@@ -87,9 +87,25 @@ test("explode - buildExplodeSheetHtml renders launchpad with all 9 network actio
   assert.ok(html.includes("app-logo-svg"));
   assert.ok(html.includes("explode-close-btn"));
   assert.ok(html.includes("explode-actions-list"));
-  assert.ok(html.includes("Gerar Card de Story"));
-  assert.ok(html.includes("Copiar Mensagem Formatada"));
+  assert.ok(html.includes("Card para Stories"));
+  assert.ok(html.includes("Copiar texto"));
+});
 
+test("explode - sheet tops with WhatsApp + EXPLODE! side by side and collapses the rest", () => {
+  const html = explode.buildExplodeSheetHtml({ id: "post_hier", title: "Hierarquia" });
+  const rowIdx = html.indexOf('class="explode-primary-row"');
+  const moreIdx = html.indexOf('<details class="explode-more"');
+  assert.ok(rowIdx > -1 && moreIdx > rowIdx);
+  const row = html.slice(rowIdx, html.indexOf("explode-hint"));
+  assert.equal((row.match(/class="explode-primary /g) || []).length, 2);
+  assert.ok(row.indexOf('data-explode-action="whatsapp"') < row.indexOf('data-explode-action="burst"'));
+  assert.ok(row.includes("EXPLODE!"));
+  assert.ok(row.includes(explode.VOX_LOGO_SRC));
+  const visible = html.slice(0, moreIdx);
+  for (const advanced of ["cascade", "webhooks", "story-card", "native"]) {
+    assert.ok(!visible.includes(`data-explode-action="${advanced}"`), `${advanced} deve ficar recolhido`);
+  }
+  assert.ok(!html.includes("post-more-sheet-cancel"));
 });
 
 test("explode - renderIgToolbar includes btn-explode-post after share", () => {
@@ -141,8 +157,7 @@ test("explode - posse post-publish sheet offers explode option and omits Janones
 
 test("explode - megaphone emoji and SVG icon are used to clarify civic nature", () => {
   const html = explode.buildExplodeSheetHtml({ id: "post_megaphone", title: "Cívico" });
-  assert.ok(html.includes("📢 REPLICAÇÃO MULTI-REDES"));
-  assert.ok(html.includes("<span>📢</span>"));
+  assert.ok(html.includes("📢 Espalhe esta pauta"));
 
   const igHtml = igToolbar.renderIgToolbar({ id: "post_ig_mega", title: "Foto" }, "Autor");
   assert.ok(igHtml.includes("m3 11 18-5v12L3 14v-3z"));
