@@ -160,24 +160,37 @@ function resolveTopicAuthorMeta(topic) {
   return { author, authorHandle, authorDisplay, authorAvatar };
 }
 
+function resolveTopicBadgesHtml(topic) {
+  const pin = topic.isPinned
+    ? `<span class="badge-pill community-pinned-pill" title="Tópico fixado pela moderação">📌 Fixado</span> · `
+    : "";
+  const lock = topic.isLocked
+    ? `<span class="badge-pill community-locked-pill" title="Discussão encerrada para novas respostas">🔒 Encerrado</span> · `
+    : "";
+  return `${pin}${lock}`;
+}
+
+function resolveTopicBumpSpan(topic) {
+  if (Number(topic.lastReplyTs) <= Number(topic.ts)) return "";
+  return `<span class="community-topic-bump" title="Atividade recente no tópico"> · ativa ${escapeHtml(formatTimeAgo(topic.lastReplyTs))}</span>`;
+}
+
 export function renderCommunityTopicRow(topic, { communityId: _communityId = "", communityTitle: _communityTitle = "" } = {}) {
   const { author, authorHandle, authorAvatar } = resolveTopicAuthorMeta(topic);
   const { display: timeDisplay, titleAttr: timeTitle } = postTimeParts(topic.ts);
   const replies = topicReplyCount(topic);
   const replyLabel = replies === 1 ? "1 resposta" : `${replies} respostas`;
-  const hasBump = Number(topic.lastReplyTs) > Number(topic.ts);
-  const bumpSpan = hasBump
-    ? `<span class="community-topic-bump" title="Atividade recente no tópico"> · ativa ${escapeHtml(formatTimeAgo(topic.lastReplyTs))}</span>`
-    : "";
+  const bumpSpan = resolveTopicBumpSpan(topic);
+  const badgesHtml = resolveTopicBadgesHtml(topic);
   const title = topic.title || topicExcerptOneParagraph(topic) || "Sem título";
   const excerpt = topicExcerptOneParagraph(topic);
   const topicHref = `#/t/${encodeURIComponent(topic.id)}`;
   const thumb = renderTopicRowThumb(topic, topicHref);
 
   return `
-    <article class="community-topic-row" data-id="${escapeHtml(topic.id)}">
+    <article class="community-topic-row${topic.isPinned ? " is-pinned" : ""}${topic.isLocked ? " is-locked" : ""}" data-id="${escapeHtml(topic.id)}">
       <div class="community-topic-row-body">
-        <h3 class="community-topic-row-title"><a href="${topicHref}">${escapeHtml(title)}</a></h3>
+        <h3 class="community-topic-row-title"><a href="${topicHref}">${badgesHtml}${escapeHtml(title)}</a></h3>
         <p class="community-topic-row-meta">
           <a class="community-topic-row-author" href="#/u/${encodeURIComponent(author)}">${authorAvatar}<span>@${escapeHtml(authorHandle)}</span></a>
           <span class="community-topic-row-dot" aria-hidden="true">·</span>
@@ -587,26 +600,39 @@ export function renderCommunityTabContent(tab = "posts", ctx = {}) {
   if (renderer) return renderer(ctx);
   return `<div class="community-vox-posts-wrap">
     ${renderCommunityOrkutMembersBox(ctx.meta, ctx.communityId, ctx.recentPeople, ctx.memberCount)}
-    ${renderCommunityPostsTab(ctx.communityId, ctx.commTitle, ctx.topics || [])}
+    ${renderCommunityPostsTab(ctx.communityId, ctx.commTitle, ctx.topics || [], { sortMode: ctx.sortMode || "active" })}
   </div>`;
 }
 
-function renderCommunityPostsTab(communityId, commTitle, topics) {
-  const composeHref = `#/compose/topic?c=${encodeURIComponent(communityId)}`;
-  let inner = "";
+function renderCommunityTopicFeedInner(topics, communityId, commTitle, composeHref) {
   if (!topics.length) {
-    inner = `<div class="empty community-vox-empty"><p>Nenhum post nesta comunidade ainda.</p><a class="btn btn-primary btn-sm" href="${composeHref}">Criar o primeiro post</a></div>`;
-  } else {
-    const items = topics
-      .map((t) => renderCommunityTopicRow({ ...t, communityId, communityTitle: commTitle }))
-      .join("");
-    inner = `<div class="community-vox-topic-list">${items}</div>`;
+    return `<div class="empty community-vox-empty"><p>Nenhum post nesta comunidade ainda.</p><a class="btn btn-primary btn-sm" href="${composeHref}">Criar o primeiro post</a></div>`;
   }
+  const items = topics
+    .map((t) => renderCommunityTopicRow({ ...t, communityId, communityTitle: commTitle }))
+    .join("");
+  return `<div class="community-vox-topic-list">${items}</div>`;
+}
+
+function renderCommunityPostsTab(communityId, commTitle, topics, { sortMode = "active" } = {}) {
+  const composeHref = `#/compose/topic?c=${encodeURIComponent(communityId)}`;
+  const inner = renderCommunityTopicFeedInner(topics, communityId, commTitle, composeHref);
   return `
     <section class="community-vox-feed card" aria-labelledby="community-vox-feed-title">
       <header class="community-vox-feed-head">
-        <h2 id="community-vox-feed-title" class="community-vox-feed-title">Tópicos e posts</h2>
-        <a class="btn btn-sm btn-outline" href="${composeHref}">+ Post</a>
+        <div class="community-feed-header-main" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+          <div>
+            <h2 id="community-vox-feed-title" class="community-vox-feed-title" style="margin:0;">Tópicos e posts</h2>
+            <div class="community-sort-bar" style="margin-top:4px; display:inline-flex; gap:6px; font-size:0.8rem;">
+              <button type="button" class="btn btn-sm btn-subtle btn-sort-topic ${sortMode === "active" ? "active" : ""}" data-sort="active" aria-pressed="${sortMode === "active"}">🔄 Ativos</button>
+              <button type="button" class="btn btn-sm btn-subtle btn-sort-topic ${sortMode === "newest" ? "active" : ""}" data-sort="newest" aria-pressed="${sortMode === "newest"}">⏱️ Recentes</button>
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <input type="search" id="input-comm-topic-search" class="input input-sm community-topic-search" placeholder="🔍 Filtrar tópicos..." style="max-width:180px; padding:4px 8px; font-size:0.82rem;" aria-label="Filtrar tópicos da comunidade" />
+            <a class="btn btn-sm btn-outline" href="${composeHref}">+ Post</a>
+          </div>
+        </div>
       </header>
       ${inner}
     </section>`;

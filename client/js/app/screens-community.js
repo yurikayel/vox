@@ -351,6 +351,35 @@ function bindCommunityMembershipToggle(communityId, user, isMember) {
   }
 }
 
+export async function dispatchCommunityModAction(communityId, action, targetId) {
+  const modActionPost = {
+    id: `mod_${action}_${targetId}_${Date.now()}`,
+    type: "mod-action",
+    action,
+    target: targetId,
+    communityId,
+    ts: Date.now(),
+  };
+  try {
+    const signed = await localAccount.signPayload(modActionPost);
+    await cacheNode.saveLocalPost(signed);
+    peers.broadcastGossip(signed);
+  } catch {
+    await cacheNode.saveLocalPost(modActionPost).catch(() => {});
+  }
+  if (wallet.hasWallet()) {
+    try {
+      const tags = upload.buildTags("mod-action", {
+        "Community-Id": communityId,
+        Action: action,
+        Target: targetId,
+      });
+      await upload.postData({ action, target: targetId, communityId }, tags);
+    } catch {}
+  }
+  return modActionPost;
+}
+
 function bindCommunityModHideButtons(communityId) {
   document.querySelectorAll(".btn-mod-hide").forEach((btn) => {
     btn.addEventListener("click", async (e) => {
@@ -358,12 +387,7 @@ function bindCommunityModHideButtons(communityId) {
       if (!confirm(`Ocultar o item ${targetId}?`)) return;
       e.target.disabled = true;
       try {
-        const tags = upload.buildTags("mod-action", {
-          "Community-Id": communityId,
-          Action: "hide",
-          Target: targetId,
-        });
-        await upload.postData({ action: "hide", target: targetId, communityId }, tags);
+        await dispatchCommunityModAction(communityId, "hide", targetId);
         share.showToast("Ação de moderação enviada.");
         e.target.closest(".card")?.remove();
       } catch (err) {
@@ -372,6 +396,63 @@ function bindCommunityModHideButtons(communityId) {
       }
     });
   });
+}
+
+function filterTopicRows(rows, q, main) {
+  let visibleCount = 0;
+  rows.forEach((row) => {
+    const text = row.textContent.toLowerCase();
+    const matches = !q || text.includes(q);
+    row.style.display = matches ? "" : "none";
+    if (matches) visibleCount++;
+  });
+  const listEl = main.querySelector(".community-vox-topic-list");
+  let emptySearchEl = main.querySelector(".community-topic-search-empty");
+  if (visibleCount === 0 && q) {
+    if (!emptySearchEl && listEl) {
+      emptySearchEl = document.createElement("div");
+      emptySearchEl.className = "empty community-topic-search-empty";
+      emptySearchEl.innerHTML = `<p>Nenhum tópico encontrado para "${escapeHtml(q)}".</p>`;
+      listEl.appendChild(emptySearchEl);
+    }
+  } else if (emptySearchEl) {
+    emptySearchEl.remove();
+  }
+}
+
+function bindCommunityTopicSearch(main) {
+  const searchInput = main.querySelector("#input-comm-topic-search");
+  if (!searchInput) return null;
+  searchInput.addEventListener("input", (e) => {
+    const q = e.target.value.toLowerCase().trim();
+    filterTopicRows(main.querySelectorAll(".community-topic-row"), q, main);
+  });
+  return searchInput;
+}
+
+function bindCommunityTopicSort(main, communityId, filteredTopics, searchInput) {
+  main.querySelectorAll(".btn-sort-topic").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const mode = btn.dataset.sort;
+      if (!mode) return;
+      main.querySelectorAll(".btn-sort-topic").forEach((b) => {
+        b.classList.toggle("active", b === btn);
+        b.setAttribute("aria-pressed", b === btn ? "true" : "false");
+      });
+      const listEl = main.querySelector(".community-vox-topic-list");
+      if (!listEl) return;
+      const ordered = orderCommunityTopics(filteredTopics, mode);
+      listEl.innerHTML = ordered.map((t) => render.renderCommunityTopicRow({ ...t, communityId })).join("");
+      if (searchInput && searchInput.value.trim()) {
+        searchInput.dispatchEvent(new Event("input"));
+      }
+    });
+  });
+}
+
+function bindCommunityTopicControls(main, communityId, filteredTopics) {
+  const searchInput = bindCommunityTopicSearch(main);
+  bindCommunityTopicSort(main, communityId, filteredTopics, searchInput);
 }
 
 function bindCommunityHeaderEvents(main, communityId, meta, user, isMember, peerSettings, filteredTopics) {
@@ -400,6 +481,7 @@ function bindCommunityHeaderEvents(main, communityId, meta, user, isMember, peer
   bindCommunityPhotoInput(communityId, meta);
   bindCommunityMembershipToggle(communityId, user, isMember);
   bindCommunityModHideButtons(communityId);
+  bindCommunityTopicControls(main, communityId, filteredTopics);
 }
 
 function renderCommunityBanners(main, base, tab) {
@@ -648,31 +730,56 @@ function bindLiveProfileSync(topicAuthor, filteredReplies) {
   });
 }
 
+const MOD_ACTION_LABELS = {
+  pin: "Tópico fixado no topo!",
+  unpin: "Tópico desafixado.",
+  lock: "Tópico trancado para novas respostas.",
+  unlock: "Tópico reaberto.",
+};
+
+function bindTopicModToggleActions(finalCommId, topicId) {
+  document.querySelectorAll(".btn-mod-action").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const targetId = btn.dataset.id;
+      const action = btn.dataset.action;
+      if (!targetId || !action) return;
+      btn.disabled = true;
+      try {
+        await dispatchCommunityModAction(finalCommId, action, targetId);
+        share.showToast(MOD_ACTION_LABELS[action] || "Ação de moderação aplicada.");
+        route(parseRoute(location.hash.slice(1) || `/t/${topicId}`));
+      } catch (err) {
+        share.showToast(`Erro: ${err.message}`, "error");
+        btn.disabled = false;
+      }
+    });
+  });
+}
+
+function bindTopicModHideActions(finalCommId) {
+  document.querySelectorAll(".btn-mod-hide").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const targetId = btn.dataset.id;
+      if (!confirm(`Ocultar o item ${targetId}?`)) return;
+      btn.disabled = true;
+      try {
+        await dispatchCommunityModAction(finalCommId, "hide", targetId);
+        share.showToast("Item ocultado.");
+        btn.closest(".reply-item, .card")?.remove();
+      } catch (err) {
+        share.showToast(`Erro: ${err.message}`, "error");
+        btn.disabled = false;
+      }
+    });
+  });
+}
+
 function bindTopicScreenEvents(topicId, topic, finalCommId) {
   document.getElementById("btn-share-topic")?.addEventListener("click", () => {
     shareTopicUnlessQuarantined({ title: topic.title || "Tópico no Vox", topicId, communityId: finalCommId });
   });
-
-  document.querySelectorAll(".btn-mod-hide").forEach((btn) => {
-    btn.addEventListener("click", async (e) => {
-      const targetId = e.target.dataset.id;
-      if (!confirm(`Ocultar o item ${targetId}?`)) return;
-      e.target.disabled = true;
-      try {
-        const tags = upload.buildTags("mod-action", {
-          "Community-Id": finalCommId,
-          Action: "hide",
-          Target: targetId,
-        });
-        await upload.postData({ action: "hide", target: targetId }, tags);
-        share.showToast("Item ocultado.");
-        e.target.closest(".reply-item")?.remove();
-      } catch (err) {
-        share.showToast(`Erro: ${err.message}`, "error");
-        e.target.disabled = false;
-      }
-    });
-  });
+  bindTopicModToggleActions(finalCommId, topicId);
+  bindTopicModHideActions(finalCommId);
 }
 
 function hydrateMissingReplyBodies(filteredReplies, finalCommId) {
@@ -689,13 +796,16 @@ function hydrateMissingReplyBodies(filteredReplies, finalCommId) {
 }
 
 /** Moderação do tópico com dono/moderadores reais da comunidade (fail-closed sem metadados). */
-async function resolveTopicModeration(communityId, user, replies) {
-  if (!communityId) return { filteredReplies: replies, isUserMod: false };
+async function resolveTopicModeration(communityId, user, replies, topic = null) {
+  if (!communityId) return { filteredReplies: replies, filteredTopic: topic, isUserMod: false };
   const meta = await resolveCommunityMetadata(communityId).catch(() => ({ owner: "" }));
   let modActions = [];
   try { modActions = await mod.fetchModActions(communityId); } catch {}
+  const filteredReplies = mod.applyFilters(replies, modActions, meta.owner, meta.moderators);
+  const filteredTopic = topic ? mod.applyFilters([topic], modActions, meta.owner, meta.moderators)[0] || topic : topic;
   return {
-    filteredReplies: mod.applyFilters(replies, modActions, meta.owner, meta.moderators),
+    filteredReplies,
+    filteredTopic,
     isUserMod: mod.isModerator(user, meta.owner, meta.moderators),
   };
 }
@@ -710,16 +820,17 @@ export async function showTopic(topicId, commIdParam = "") {
   const { merged: mergedReplies, hasLocal: hasLocalReplies } = await mergeTopicReplies(topicId, rawReplies);
 
   const finalCommId = topic.communityId || commIdParam;
-  const { filteredReplies, isUserMod } = await resolveTopicModeration(finalCommId, user, mergedReplies);
+  const { filteredReplies, filteredTopic, isUserMod } = await resolveTopicModeration(finalCommId, user, mergedReplies, topic);
+  const currentTopic = filteredTopic || topic;
 
   main.innerHTML = "";
   if (demo && !isLocal && !hasLocalReplies) render.renderDemoBanner(main);
   else if (gateway) render.renderGatewayBanner(main, gateway);
 
-  render.renderTopic(main, topicId, topic, filteredReplies, { topicData, isMod: isUserMod, communityId: finalCommId });
+  render.renderTopic(main, topicId, currentTopic, filteredReplies, { topicData, isMod: isUserMod, communityId: finalCommId });
   hydrateMissingReplyBodies(filteredReplies, finalCommId);
-  bindLiveProfileSync(topic.author || topic.owner, filteredReplies);
-  bindTopicScreenEvents(topicId, topic, finalCommId);
+  bindLiveProfileSync(currentTopic.author || currentTopic.owner, filteredReplies);
+  bindTopicScreenEvents(topicId, currentTopic, finalCommId);
 }
 
 export async function showProposal(communityId, proposalId) {

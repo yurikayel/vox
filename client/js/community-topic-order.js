@@ -34,12 +34,18 @@ export function sortTopicsByNewest(topics = []) {
 
 /**
  * Ponto de entrada de ordenação com base na preferência do usuário ou padrão comunitário.
+ * Tópicos fixados (isPinned: true) flutuam sempre no topo, seguidos pelos tópicos regulares.
  * @param {Array} topics
  * @param {"active"|"newest"} mode
  */
 export function orderCommunityTopics(topics = [], mode = "active") {
-  if (mode === "newest") {
-    return sortTopicsByNewest(topics);
+  if (!Array.isArray(topics)) return [];
+  const pinned = [];
+  const regular = [];
+  for (const t of topics) {
+    if (t?.isPinned) pinned.push(t);
+    else regular.push(t);
   }
-  return sortTopicsByActivity(topics);
+  const sortFn = mode === "newest" ? sortTopicsByNewest : sortTopicsByActivity;
+  return [...sortFn(pinned), ...sortFn(regular)];
 }

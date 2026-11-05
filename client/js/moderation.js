@@ -1,6 +1,29 @@
 export async function fetchModActions(communityId) {
-  const { fetchModActions: gqlFetchModActions } = await import("./graphql.js");
-  return gqlFetchModActions(communityId);
+  let localActions = [];
+  try {
+    const { getLocalPosts } = await import("./cache-node.js");
+    localActions = await getLocalPosts({ type: "mod-action", communityId });
+  } catch {}
+
+  let remoteActions = [];
+  try {
+    const { fetchModActions: gqlFetchModActions } = await import("./graphql.js");
+    remoteActions = await gqlFetchModActions(communityId);
+  } catch {}
+
+  const seen = new Set();
+  const merged = [];
+  for (const a of localActions) {
+    seen.add(a.id);
+    merged.push({ ...a, owner: a.author || a.owner });
+  }
+  for (const a of remoteActions) {
+    if (!seen.has(a.id)) {
+      seen.add(a.id);
+      merged.push(a);
+    }
+  }
+  return merged;
 }
 
 export function parseModerators(rawModerators = "") {
@@ -30,22 +53,31 @@ function buildValidModeratorsSet(communityOwner = "", rawModerators = "") {
 }
 
 /** Fail-closed: sem dono/moderadores conhecidos, nenhuma ação de terceiros é aplicada. */
-function collectModerationRestrictions(actions, validModerators) {
+function collectModerationState(actions, validModerators) {
   const hiddenTargets = new Set();
   const bannedOwners = new Set();
+  const pinnedTargets = new Set();
+  const lockedTargets = new Set();
 
   for (const act of actions) {
-    const actOwner = (act.owner || "").toLowerCase();
+    const actOwner = (act.owner || act.author || "").toLowerCase();
     if (!actOwner || !validModerators.has(actOwner)) {
       continue;
     }
-    if (act.action === "hide" && act.target) {
-      hiddenTargets.add(act.target);
-    } else if (act.action === "ban" && act.target) {
-      bannedOwners.add(act.target.toLowerCase());
-    }
+    const action = act.action;
+    const target = act.target;
+    if (!target) continue;
+
+    if (action === "hide") hiddenTargets.add(target);
+    else if (action === "unhide") hiddenTargets.delete(target);
+    else if (action === "ban") bannedOwners.add(target.toLowerCase());
+    else if (action === "unban") bannedOwners.delete(target.toLowerCase());
+    else if (action === "pin") pinnedTargets.add(target);
+    else if (action === "unpin") pinnedTargets.delete(target);
+    else if (action === "lock") lockedTargets.add(target);
+    else if (action === "unlock") lockedTargets.delete(target);
   }
-  return { hiddenTargets, bannedOwners };
+  return { hiddenTargets, bannedOwners, pinnedTargets, lockedTargets };
 }
 
 export function applyFilters(items, actions = [], communityOwner = "", rawModerators = "") {
@@ -53,13 +85,22 @@ export function applyFilters(items, actions = [], communityOwner = "", rawModera
   if (!Array.isArray(actions) || !actions.length) return items;
 
   const validModerators = buildValidModeratorsSet(communityOwner, rawModerators);
-  const { hiddenTargets, bannedOwners } = collectModerationRestrictions(actions, validModerators);
+  const { hiddenTargets, bannedOwners, pinnedTargets, lockedTargets } = collectModerationState(actions, validModerators);
 
-  return items.filter((item) => {
-    if (hiddenTargets.has(item.id)) return false;
-    if (item.owner && bannedOwners.has(item.owner.toLowerCase())) return false;
-    return true;
-  });
+  return items
+    .filter((item) => {
+      if (hiddenTargets.has(item.id)) return false;
+      if (item.owner && bannedOwners.has(item.owner.toLowerCase())) return false;
+      return true;
+    })
+    .map((item) => {
+      const isPinned = pinnedTargets.has(item.id) ? true : item.isPinned;
+      const isLocked = lockedTargets.has(item.id) ? true : item.isLocked;
+      if (isPinned !== item.isPinned || isLocked !== item.isLocked) {
+        return { ...item, isPinned, isLocked };
+      }
+      return item;
+    });
 }
 
 
