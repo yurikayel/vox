@@ -294,6 +294,8 @@ const SHELL_ASSETS = [
 
   "./js/wallet.js",
   "./js/idb-store.js",
+  "./js/vox-identity.js",
+  "./js/storage-persistence.js",
   "./js/chunked-transfer.js",
   "./js/airgap-webrtc.js",
   "./js/testimonials.js",
