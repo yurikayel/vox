@@ -63,14 +63,14 @@ function renderComposerPreviewWrap() {
   return `
     <div class="inline-composer-preview hidden" id="inline-topic-preview-wrap">
       <img id="inline-topic-preview" class="inline-composer-preview-img hidden" alt="Prévia da imagem" />
-      <div id="inline-topic-preview-audio-wrap" class="hidden" style="margin:8px 0; padding:10px 14px; background:var(--surface-soft); border-radius:var(--radius-sm); border:1px solid var(--border);">
-        <div style="display:flex; align-items:center; gap:6px; margin-bottom:6px;">
+      <div id="inline-topic-preview-audio-wrap" class="inline-composer-preview-audio hidden">
+        <div class="inline-composer-preview-audio-header">
           <span>🎙️</span>
           <strong style="font-size:0.85rem;">Recado de Voz (Lo-Fi 48kbps)</strong>
         </div>
         <audio id="inline-topic-preview-audio" controls style="width:100%;"></audio>
       </div>
-      <div id="inline-topic-preview-video-wrap" class="hidden" style="margin:8px 0; background:#000; border-radius:var(--radius-sm); overflow:hidden;">
+      <div id="inline-topic-preview-video-wrap" class="inline-composer-preview-video hidden">
         <video id="inline-topic-preview-video" controls playsinline style="width:100%; max-height:240px; display:block;"></video>
       </div>
       ${renderComposerFilterBar()}

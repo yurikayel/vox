@@ -201,14 +201,10 @@ function resetMediaDomElements() {
     previewImg.classList.remove("composer-aspect-1-1", "composer-aspect-4-3", "composer-aspect-16-9");
     previewImg.classList.add("composer-aspect-original");
   }
-  if (previewAudio) {
-    previewAudio.removeAttribute("src");
-    previewAudioWrap?.classList.add("hidden");
-  }
-  if (previewVideo) {
-    previewVideo.removeAttribute("src");
-    previewVideoWrap?.classList.add("hidden");
-  }
+  if (previewAudio) previewAudio.removeAttribute("src");
+  previewAudioWrap?.classList.add("hidden");
+  if (previewVideo) previewVideo.removeAttribute("src");
+  previewVideoWrap?.classList.add("hidden");
 }
 
 function resetMediaControlBars() {
@@ -239,12 +235,16 @@ function clearMedia(state) {
 function setupImagePreviewBars() {
   const previewImg = document.getElementById("inline-topic-preview");
   const previewWrap = document.getElementById("inline-topic-preview-wrap");
+  const previewAudioWrap = document.getElementById("inline-topic-preview-audio-wrap");
+  const previewVideoWrap = document.getElementById("inline-topic-preview-video-wrap");
   const filterBar = document.getElementById("lofi-filter-bar");
   const aspectBar = document.getElementById("composer-aspect-bar");
   const tagBar = document.getElementById("composer-tag-bar");
   const tagsChips = document.getElementById("inline-composer-tags-chips");
 
   previewImg?.classList.remove("hidden");
+  previewAudioWrap?.classList.add("hidden");
+  previewVideoWrap?.classList.add("hidden");
   if (filterBar) filterBar.style.display = "flex";
   filterBar?.querySelectorAll(".lofi-filter-btn").forEach((b) => b.classList.toggle("active", b.dataset.filter === "normal"));
   if (aspectBar) aspectBar.style.display = "flex";
@@ -282,11 +282,19 @@ function handleVoiceAudioReady(dataUrl, byteSize, state) {
   inlineComposerMedia = { type: "audio", dataUrl, byteLength: byteSize };
   const previewAudio = document.getElementById("inline-topic-preview-audio");
   const previewAudioWrap = document.getElementById("inline-topic-preview-audio-wrap");
+  const previewVideoWrap = document.getElementById("inline-topic-preview-video-wrap");
+  const previewImg = document.getElementById("inline-topic-preview");
   const previewWrap = document.getElementById("inline-topic-preview-wrap");
   if (previewAudio) previewAudio.src = dataUrl;
   previewAudioWrap?.classList.remove("hidden");
+  previewImg?.classList.add("hidden");
+  previewVideoWrap?.classList.add("hidden");
   const filterBar = document.getElementById("lofi-filter-bar");
   if (filterBar) filterBar.style.display = "none";
+  const aspectBar = document.getElementById("composer-aspect-bar");
+  if (aspectBar) aspectBar.style.display = "none";
+  const tagBar = document.getElementById("composer-tag-bar");
+  if (tagBar) tagBar.style.display = "none";
   const badge = document.getElementById("lofi-weight-badge");
   if (badge) badge.textContent = `⚡ ~${kb} KB (Voz Gravada Lo-Fi ${kb <= 99 ? "100% Grátis" : "48k"})`;
   previewWrap?.classList.remove("hidden");
@@ -372,10 +380,19 @@ function bindAudioFileInput(state) {
     const kb = Math.max(1, Math.round(file.size / 1024));
     inlineComposerMedia = { type: "audio", dataUrl, byteLength: file.size };
     const previewAudio = document.getElementById("inline-topic-preview-audio");
+    const previewAudioWrap = document.getElementById("inline-topic-preview-audio-wrap");
+    const previewVideoWrap = document.getElementById("inline-topic-preview-video-wrap");
+    const previewImg = document.getElementById("inline-topic-preview");
     if (previewAudio) previewAudio.src = dataUrl;
-    document.getElementById("inline-topic-preview-audio-wrap")?.classList.remove("hidden");
+    previewAudioWrap?.classList.remove("hidden");
+    previewImg?.classList.add("hidden");
+    previewVideoWrap?.classList.add("hidden");
     const fb = document.getElementById("lofi-filter-bar");
     if (fb) fb.style.display = "none";
+    const ab = document.getElementById("composer-aspect-bar");
+    if (ab) ab.style.display = "none";
+    const tb = document.getElementById("composer-tag-bar");
+    if (tb) tb.style.display = "none";
     const bg = document.getElementById("lofi-weight-badge");
     if (bg) bg.textContent = `⚡ ~${kb} KB (Áudio Lo-Fi ${kb <= 99 ? "100% Grátis" : "48k"})`;
     document.getElementById("inline-topic-preview-wrap")?.classList.remove("hidden");
@@ -396,10 +413,19 @@ function bindVideoFileInput(state) {
     const kb = Math.max(1, Math.round(file.size / 1024));
     inlineComposerMedia = { type: "video", dataUrl, byteLength: file.size };
     const previewVideo = document.getElementById("inline-topic-preview-video");
+    const previewVideoWrap = document.getElementById("inline-topic-preview-video-wrap");
+    const previewAudioWrap = document.getElementById("inline-topic-preview-audio-wrap");
+    const previewImg = document.getElementById("inline-topic-preview");
     if (previewVideo) previewVideo.src = dataUrl;
-    document.getElementById("inline-topic-preview-video-wrap")?.classList.remove("hidden");
+    previewVideoWrap?.classList.remove("hidden");
+    previewImg?.classList.add("hidden");
+    previewAudioWrap?.classList.add("hidden");
     const fb = document.getElementById("lofi-filter-bar");
     if (fb) fb.style.display = "none";
+    const ab = document.getElementById("composer-aspect-bar");
+    if (ab) ab.style.display = "none";
+    const tb = document.getElementById("composer-tag-bar");
+    if (tb) tb.style.display = "none";
     const bg = document.getElementById("lofi-weight-badge");
     if (bg) bg.textContent = `⚡ ~${kb} KB (Vídeo Lo-Fi 360p)`;
     document.getElementById("inline-topic-preview-wrap")?.classList.remove("hidden");
