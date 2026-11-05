@@ -675,8 +675,8 @@ function renderToolbarShareBtn(t, authorDisplay) {
   const countSpan = explodes > 0 ? `<span class="action-count count-explodes">${explodes}</span>` : `<span class="action-count count-explodes"></span>`;
   const bodySlice = escapeHtml((t.body || t.title || "").slice(0, 200));
 
-  return `<button class="action-btn btn-share btn-share-post ${exploded ? "exploded" : ""}" data-id="${escapeHtml(t.id)}" data-count="${baseExplodes}" data-title="${escapeHtml(t.title)}" data-author="${escapeHtml(authorDisplay || "")}" data-body="${bodySlice}" data-comm="${escapeHtml(t.communityId || "")}" aria-label="Compartilhar post" title="Compartilhar (EXPLODE!)"${quarantineShareAttrs(t.id)}>
-    <svg class="action-icon icon-plane" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22 11 13 2 9z"/></svg>
+  return `<button class="action-btn btn-share btn-share-post ${exploded ? "exploded" : ""}" data-id="${escapeHtml(t.id)}" data-count="${baseExplodes}" data-title="${escapeHtml(t.title)}" data-author="${escapeHtml(authorDisplay || "")}" data-body="${bodySlice}" data-comm="${escapeHtml(t.communityId || "")}" aria-label="Compartilhar post" title="Compartilhar"${quarantineShareAttrs(t.id)}>
+    <svg class="action-icon icon-share" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
     ${countSpan}
   </button>`;
 }
@@ -745,9 +745,9 @@ function renderPhotoPostItem(t, author, labels) {
     <article class="post insta-post post-layout-photo post-photo-bleed" data-id="${escapeHtml(t.id)}" data-layout="photo"${t.isOwnLocalPost ? ' data-is-own="true"' : ""}>
       ${igHead}
       ${media}
+      ${captionHtml}
       ${igBar}
       ${fallbackIgBar}
-      ${captionHtml}
       ${renderPostFrame(t)}
       ${comments}
     </article>`;

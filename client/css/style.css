@@ -2670,8 +2670,11 @@ body.post-more-sheet-open {
 
 .post-layout-text.post,
 .post-layout-github.post {
-  max-width: 540px;
-  border-radius: 12px;
+  max-width: var(--feed-max, 640px);
+  width: 100%;
+  margin: 0 auto;
+  border-radius: var(--radius);
+  box-sizing: border-box;
 }
 
 .post-layout-text .post-caption-block .post-body,
