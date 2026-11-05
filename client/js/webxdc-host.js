@@ -52,20 +52,7 @@ export function createWebxdcHost({
     container.appendChild(iframe);
   }
 
-  function handleMessage(event) {
-    if (!iframe || event.source !== iframe.contentWindow) {
-      return; // Rejeita mensagens que não venham estritamente deste iframe
-    }
-    const data = event.data;
-    if (!data || typeof data !== "object") return;
-
-    if (data.type === "webxdc_send_update") {
-      processSendUpdate(data, onSendUpdate);
-    } else if (data.type === "webxdc_ready" && typeof onReady === "function") {
-      onReady(Number(data.serial || 0));
-    }
-  }
-
+  const handleMessage = createHostMessageHandler(iframe, onSendUpdate, onReady);
   if (typeof window !== "undefined") {
     window.addEventListener("message", handleMessage);
   }
@@ -75,6 +62,22 @@ export function createWebxdcHost({
     instanceId,
     sendUpdate: (update) => dispatchUpdateToIframe(iframe, update),
     destroy: () => teardownHost(iframe, handleMessage),
+  };
+}
+
+function createHostMessageHandler(iframe, onSendUpdate, onReady) {
+  return function handleMessage(event) {
+    if (!iframe || event.source !== iframe.contentWindow) {
+      return;
+    }
+    const data = event.data;
+    if (!data || typeof data !== "object") return;
+
+    if (data.type === "webxdc_send_update") {
+      processSendUpdate(data, onSendUpdate);
+    } else if (data.type === "webxdc_ready" && typeof onReady === "function") {
+      onReady(Number(data.serial || 0));
+    }
   };
 }
 

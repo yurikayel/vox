@@ -298,6 +298,8 @@ const SHELL_ASSETS = [
   "./js/storage-persistence.js",
   "./js/webxdc-loader.js",
   "./js/webxdc-host.js",
+  "./js/webxdc-crdt.js",
+  "./js/kit-genesis.js",
   "./js/chunked-transfer.js",
   "./js/airgap-webrtc.js",
   "./js/testimonials.js",
