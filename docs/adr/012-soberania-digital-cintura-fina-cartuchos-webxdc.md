@@ -141,7 +141,33 @@ flowchart LR
 
 ---
 
-## 6. Consequências
+## 6. Blindagens Técnicas de Implementação (Corner Cases)
+
+Para mitigar riscos de regressão e incompatibilidade entre motores JS (V8 vs JavaScriptCore) e políticas restritivas de navegadores móveis, a implementação deve seguir quatro blindagens explícitas:
+
+1. **Cabeçalho Binário Fixo Determinístico (152 Bytes) para Assinatura Ed25519:**
+   - Em vez de serializar JSON com `JSON.stringify` (sujeito a divergência de ordenação de chaves e floats entre plataformas), o `vox-identity.js` monta um buffer binário canônico de 152 bytes:
+     - `sender` (32 bytes Ed25519) + `audience` (32 bytes) + `timestamp` (8 bytes BigUint64BE) + `nonce` (16 bytes) + `sha256(capabilityChain)` (32 bytes) + `sha256(payload)` (32 bytes).
+   - O `crypto.subtle.sign("Ed25519", privateKey, binaryHeader)` assina exclusivamente este bloco, tornando a validação imune a variações de parsers e ordens de grandeza mais rápida em lotes CRDT.
+
+2. **Padrão Wrap/Unwrap com Descarte de Semente RAM (CryptoKey Não-Extraível):**
+   - Para compatibilizar a proteção `extractable: false` no IndexedDB com o backup cifrado (`Argon2id + AES-256-GCM`) e pareamento de Chave Proxy via QR Code:
+     - No momento da geração, cria-se a semente bruta de 32 bytes em memória.
+     - Deriva-se imediatamente o payload de backup cifrado e a chave efêmera de pareamento.
+     - Importa-se a chave privada no `SubtleCrypto` com `extractable: false` para gravação definitiva no IndexedDB.
+     - Zera-se a memória da semente via `seed.fill(0)` antes do término do ciclo de execução.
+
+3. **Inlining e Data URLs no Runtime Webxdc (Mitigação de Bloqueio `blob:` em `Origin: null`):**
+   - Navegadores com particionamento estrito de armazenamento (WebKit/Safari e Chromium recente) bloqueiam `blob:https://...` dentro de iframes com `Origin: null`.
+   - O `webxdc-host.js` realiza inlining de scripts e folhas de estilo diretamente no HTML montado em memória (`<script>` e `<style>`), e converte imagens, fontes e ativos estáticos em **Data URLs (`data:...;base64,...`)**, que são independentes de origem e atravessam o sandbox sem restrições de CORS.
+
+4. **Compactação de Época no `y-webxdc` (Prevenção de Inchaço de Deltas):**
+   - Para evitar que novos nós precisem reexecutar milhares de deltas do Yjs desde a gênese (`serial = 1`), a cada rotação de chave de época ou após 200 operações, o nó emite um snapshot consolidado via `Y.encodeStateAsUpdateV2(doc)`.
+   - O Relay Cego (`Vox Populi`) descarta os deltas intermediários antigos da época anterior, mantendo o tempo de carga (*cold boot*) do cartucho inferior a 15 ms.
+
+---
+
+## 7. Consequências
 
 - **Positivas:** Blindagem criptográfica definitiva antes da proliferação de dados; compatibilidade com todo o ecossistema existente de mini-apps Webxdc; custo de servidor zero; independência jurídica e técnica em relação a plataformas corporativas e mudanças de governo.
 - **Ressalvas & Cuidados:** Requer disciplina estrita no isolamento do iframe para garantir que nenhum cartucho consiga contornar a CSP; exige suporte a navegadores com WebCrypto moderna e fallbacks para dispositivos mais antigos.
