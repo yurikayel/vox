@@ -736,7 +736,6 @@ function renderPhotoPostItem(t, author, labels) {
   const igHead = renderPostMediaHeader(t, author, labels);
   const igBar = renderIgToolbar(t, labels.authorDisplay);
   const media = renderPostMediaHero(t, "", "");
-  const fallbackIgBar = !media ? igBar : "";
   const preface = renderPhotoHiddenMessageHtml(t);
   const textHtml = renderPostText(t);
   const captionHtml = textHtml ? `<div class="post-photo-caption post-photo-message"><strong class="post-photo-caption-author">${escapeHtml(labels.authorDisplay)}</strong> ${textHtml}${renderRepostCiteHtml(t)}</div>` : "";
@@ -748,7 +747,6 @@ function renderPhotoPostItem(t, author, labels) {
       ${media}
       ${captionHtml}
       ${igBar}
-      ${fallbackIgBar}
       ${renderPostFrame(t)}
       ${comments}
     </article>`;

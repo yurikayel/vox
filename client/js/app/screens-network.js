@@ -16,6 +16,7 @@ import * as posseDispatch from "../posse-dispatch.js";
 import * as meshProfile from "../mesh-profile.js";
 import * as contributionAttestation from "../contribution-attestation.js";
 import * as linkedAccounts from "../linked-accounts.js";
+import * as voxels from "../voxels.js";
 import { escapeHtml } from "../render/util.js";
 import { openOAuthEnrichModal } from "./onboarding.js";
 import { getActiveUser, makeShellProps } from "./context.js";
@@ -177,6 +178,12 @@ function bindRelayAndNotifButtons() {
       status.online ? `Relay desktop online! ${status.data?.cachedCount || 0} itens em disco.` : `Relay HTTP não detectado em ${inbox.getRelayHttpUrl()}.`,
       status.online ? "info" : "error",
     );
+    if (status.online) {
+      void voxels.triggerLocalNodeBoostReward({
+        checkRelayFn: async () => status,
+        toastFn: share.showToast,
+      });
+    }
     showNetworkSettings();
   });
 
