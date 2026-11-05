@@ -1096,3 +1096,67 @@ OAuth e compartilhamento nativo citam provedores apenas onde exigido por integra
   - **T06 (`post-quarantine.js`):** Quarentena local contra iscas emocionais e bloqueio de compartilhamento acidental.
   - **T11 (`qr-url.js`):** QR code vanilla offline para rotas `#/t/`, `#/c/` e `#/connect/`.
 
+---
+
+## 38. Comunidade Oficial "vox" como Fórum Padrão e Diretório Cívico
+
+**Data:** 2026-11-05 · **SW:** `vox-pwa-v7.19-real-network-audio-video-upload`
+
+- **Inscrição Universal por Padrão:** Instituída a comunidade canônica `"vox"` (`mock.js`) como primeiro fórum oficial da rede. Todo usuário novo ou existente que ingressa na rede é inscrito como membro ativo via `runWelcomeOnboarding` (`vox-welcome-profile.js`).
+- **Soberania do Usuário (Sair e Voltar Livremente):** `checkCommunityMembership` (`screens-community.js`) respeita a decisão cívica do usuário: se sair via `btn-leave-comm`, o sistema grava `membership_leave` e não força reinscrição compulsoriamente. Se decidir voltar via `btn-join-comm`, reativa status de membro pleno.
+- **Ágora de Debates e Issues Abertas:** O manifesto oficial e os tópicos de governança transparente passam a ser ancorados na comunidade `"vox"`, viabilizando feedback direto com a comunidade.
+- **Diretório Cívico de Membros:** Aba de membros (`#/c/vox?tab=members`) agrega todos os participantes conhecidos da malha.
+- **Testes dedicados:** `tests/community-vox-default.test.js`.
+
+---
+
+## 39. Moderação Comunitária & Bumping de Fórum (Pareto 4 Vitais + Pinning/Locking)
+
+**Data:** 2026-11-05 · **Módulos:** `moderation.js`, `community-topic-order.js`, `reply-thread.js`, `community-unread.js`, `render/community.js`, `render/topic.js`.
+
+- **V1 (Segurança Fail-Closed):** Moderação estrita — apenas donos da comunidade e moderadores listados em `moderators` podem aplicar ações `hide`, `ban`, `pin` e `lock`.
+- **V2 (Bumping Clássico):** Ordenação dinâmica de tópicos por atividade recente via `resolveTopicLastActivityTs(max(topic.ts, lastReplyTs))`.
+- **V3 (Árvore Aninhada de Respostas):** Algoritmo DFS com travamento de profundidade visual em nível 4 e resgate de nós órfãos (`reply-thread.js`).
+- **V4 (Anti-Abandono Orkut):** Rastreamento de última visita (`community-unread.js`) e banner "Você está em dia com suas comunidades".
+- **Pinning & Locking:**
+  - Tópicos fixados (`isPinned: true`) flutuam sempre no topo da comunidade com badge `📌 Fixado`.
+  - Tópicos trancados (`isLocked: true`) bloqueiam o formulário de resposta e exibem badge `🔒 Encerrado`.
+  - Busca rápida e alternador de ordenação (`🔄 Ativos` / `⏱️ Recentes`) no cabeçalho de posts.
+- **Testes dedicados:** `tests/moderation.test.js`, `tests/community-topic-order.test.js`, `tests/reply-thread.test.js`, `tests/community-unread.test.js`.
+
+---
+
+## 40. Zero-Knowledge OAuth Vault Recovery & Login Soberano Cross-Device (ADR-014)
+
+**Data:** 2026-11-05 · **SW:** `vox-pwa-v7.20-real-network-audio-video-upload` · **Testes:** 751 testes verdes.
+
+- **Docs:** `docs/adr/014-zero-knowledge-vault-recuperacao-soberana.md`.
+- **Módulos:** `client/js/oauth-vault.js`, `client/js/oauth-profile.js`, `client/js/local-account.js`, `client/js/people-index.js`, `client/js/qr-url-codec.js`.
+- **Cofre de Conhecimento Zero:**
+  - Derivação PBKDF2 (50.000 iterações) e cifra AES-GCM-256 no cliente a partir de identificadores perenes: Google (`sub`), Meta (`profile.id`) ou **Senha Soberana** (sem Big Tech).
+  - O servidor/relay (`zero-central-memory` / `relay/central_memory.py`) armazena apenas hash SHA-256 e ciphertext — servidores nunca têm custódia nem acesso a chaves privadas.
+- **Sincronização Cross-Device (QR Code & Rota `#/sync`):**
+  - Rota `#/sync?p=...` decodifica a senha e importa a identidade instantaneamente.
+  - No perfil (`#/profile`), botão `📲 QR Code para Celular` renderiza QR code nativo; ao apontar a câmera do celular, a conta é transferida com zero digitação manual.
+  - No onboarding (`renderOAuthEnrich`), formulário direto para restauração de conta soberana via senha.
+- **Deduplicação de Pessoas:**
+  - `people-index.js` e `local-account.js` higienizam e colapsam contas clonadas com o mesmo vínculo social, garantindo um único cartão no diretório de Pessoas.
+- **Testes dedicados:** `tests/oauth-profile.test.js`.
+
+---
+
+## 41. Canal Soberano "vox/revolução" & Diálogo com Marxistas-Leninistas
+
+**Data:** 2026-11-05 · **Arquivos:** `client/revolucao.html`, `client/revolucao/index.html`, `client/revolução/index.html`, `client/js/app/route-parse.js`, `client/js/app/route.js`, `client/404.html`.
+
+- **Canal de Diálogo com a Vanguarda Revolucionária:**
+  - Rota dedicada `vox/revolução` (e `vox/revolucao`) para apresentar o viés marxista-leninista do Vox: ferramenta como andaime (*Iskra* moderna de Lênin) para organização da voz operária, sem solucionismo tecnológico.
+  - Crítica materialista das Big Techs como monopólios do imperialismo digital, superexploração de dados e precarização (escala 6x1).
+  - Destaque pedagógico da grade do curso da Escola Nacional de Formação Marxista (Formação e Ação / PSTU, com Gustavo Machado).
+  - Caixa de ferramentas da classe trabalhadora: Local-First, Nós Populares (Vox Populi), M-de-N, POSSE e Pix Zaps sem taxas.
+- **Roteamento SPA e Servidores Estáticos:**
+  - `STATIC_ROUTES` em `route-parse.js` resolve `revolucao` e `revolução`.
+  - `404.html` intercepta caminhos no GitHub Pages.
+- **Testes dedicados:** `tests/route-parse.test.js`.
+
+
