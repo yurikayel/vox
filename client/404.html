@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <title>Vox — Redirecionando</title>
+  <script>
+    (function() {
+      var path = window.location.pathname;
+      // Trata rotas de download no GitHub Pages
+      if (path.indexOf("/download") !== -1) {
+        var repoPrefix = path.indexOf("/vox/") !== -1 ? "/vox" : "";
+        window.location.replace(repoPrefix + "/download.html" + window.location.search);
+        return;
+      }
+      // Trata fallback geral para a raiz do PWA
+      var repoPrefix = path.indexOf("/vox/") !== -1 ? "/vox/" : "/";
+      window.location.replace(repoPrefix);
+    })();
+  </script>
+  <meta http-equiv="refresh" content="0; url=download.html" />
+</head>
+<body>
+  <p>Redirecionando para <a href="download.html">download</a>...</p>
+</body>
+</html>
