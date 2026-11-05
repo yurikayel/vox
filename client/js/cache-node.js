@@ -377,6 +377,7 @@ export async function getPostRecord(id) {
 }
 
 let cachedReplyCountsMap = null;
+let cachedReplyActivityMap = null;
 let centralMemorySink = null;
 
 export function registerCentralMemorySink(fn) {
@@ -385,6 +386,7 @@ export function registerCentralMemorySink(fn) {
 
 export function invalidateReplyCountsCache() {
   cachedReplyCountsMap = null;
+  cachedReplyActivityMap = null;
 }
 
 const LOCAL_POST_DEFAULTS = Object.freeze({
@@ -558,6 +560,27 @@ export async function getReplyCountsMap() {
   }
   cachedReplyCountsMap = counts;
   return { ...counts };
+}
+
+/** Retorna mapa de { [topicId]: { count: number, lastTs: number } } para bumping determinístico. */
+export async function getReplyActivityMap() {
+  if (cachedReplyActivityMap) {
+    return { ...cachedReplyActivityMap };
+  }
+  const replies = await getLocalPosts({ type: "reply" });
+  const act = {};
+  for (const r of replies) {
+    if (r.replyTo) {
+      const prev = act[r.replyTo] || { count: 0, lastTs: 0 };
+      const ts = Number(r.ts) || 0;
+      act[r.replyTo] = {
+        count: prev.count + 1,
+        lastTs: Math.max(prev.lastTs, ts),
+      };
+    }
+  }
+  cachedReplyActivityMap = act;
+  return { ...act };
 }
 
 function buildLocalCommunityRecord(c) {

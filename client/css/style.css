@@ -2029,7 +2029,7 @@ main#app-main,
 .post-media-container:not([class*="post-aspect-"]) .post-media-hero-img {
   width: 100%;
   height: auto;
-  max-height: 85vh;
+  max-height: 560px;
   object-fit: contain;
   margin: 0 auto;
 }

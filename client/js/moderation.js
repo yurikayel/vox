@@ -29,13 +29,14 @@ function buildValidModeratorsSet(communityOwner = "", rawModerators = "") {
   return validModerators;
 }
 
+/** Fail-closed: sem dono/moderadores conhecidos, nenhuma ação de terceiros é aplicada. */
 function collectModerationRestrictions(actions, validModerators) {
   const hiddenTargets = new Set();
   const bannedOwners = new Set();
 
   for (const act of actions) {
     const actOwner = (act.owner || "").toLowerCase();
-    if (validModerators.size > 0 && !validModerators.has(actOwner)) {
+    if (!actOwner || !validModerators.has(actOwner)) {
       continue;
     }
     if (act.action === "hide" && act.target) {

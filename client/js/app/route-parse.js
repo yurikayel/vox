@@ -67,7 +67,7 @@ function parseComposeRoute(parts, query) {
   if (parts[1] === "proposal") return { name: "compose-proposal", communityId: query.get("c") || "" };
   if (parts[1] === "topic") return { name: "compose-topic", communityId: query.get("c") || "" };
   if (parts[1] === "reply") {
-    return { name: "compose-reply", topicId: query.get("t") || "", communityId: query.get("c") || "" };
+    return { name: "compose-reply", topicId: query.get("t") || "", communityId: query.get("c") || "", parentId: query.get("p") || "" };
   }
   return null;
 }

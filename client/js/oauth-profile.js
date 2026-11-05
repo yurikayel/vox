@@ -1,6 +1,7 @@
 /** OAuth client-only — enriquece perfil local (V-DIS-08/10) com Google, Meta ou GitHub. */
 
 import * as localAccount from "./local-account.js";
+import { restoreOrBindGoogleIdentity } from "./oauth-vault.js";
 
 let configCache = null;
 
@@ -42,31 +43,6 @@ function extractJwtPayload(credential) {
   }
 }
 
-async function handleGoogleOAuthMatch(matched, currentRouteId, name, picture, resolve) {
-  if (localAccount.isAccountDisposable(currentRouteId)) {
-    localAccount.removeVaultAccount(currentRouteId);
-  }
-  await localAccount.switchActiveAccount(matched.routeId);
-  resolve({
-    ok: true,
-    switched: true,
-    profile: { displayName: matched.displayName || name, avatarUrl: matched.avatarUrl || picture },
-    reason: `Esta conta Google já pertence ao seu perfil "${matched.displayName || "existente"}". Alternamos para ele!`,
-  });
-}
-
-function resolveGoogleAccountEnrichment(name, picture, sub, email) {
-  localAccount.setProfileEnrichment({
-    displayName: name,
-    avatarUrl: picture,
-    bio: "",
-    oauthProvider: "google",
-    oauthSub: sub,
-    oauthEmail: email,
-  });
-  return { ok: true, profile: { displayName: name, avatarUrl: picture } };
-}
-
 export async function applyGoogleCredential(credential, resolve) {
   try {
     const payload = extractJwtPayload(credential);
@@ -75,19 +51,13 @@ export async function applyGoogleCredential(credential, resolve) {
     const name = payload.name || payload.given_name || "";
     const picture = payload.picture || "";
 
-    const currentRouteId = localAccount.getCachedRouteIdSync();
-    const matched = localAccount.findVaultAccountByOAuth({
-      oauthProvider: "google",
-      oauthSub: sub,
-      oauthEmail: email,
-      avatarUrl: picture,
+    const result = await restoreOrBindGoogleIdentity({ sub, email, name, picture });
+    resolve({
+      ok: true,
+      restored: result.restored,
+      switched: result.restored,
+      profile: { displayName: result.displayName || name, avatarUrl: picture, routeId: result.routeId },
     });
-
-    if (matched && matched.routeId && matched.routeId !== currentRouteId) {
-      await handleGoogleOAuthMatch(matched, currentRouteId, name, picture, resolve);
-      return;
-    }
-    resolve(resolveGoogleAccountEnrichment(name, picture, sub, email));
   } catch (e) {
     resolve({ ok: false, reason: e.message });
   }

@@ -19,6 +19,8 @@ import * as communityMirror from "../community-mirror.js";
 import * as gatewayTelemetry from "../gateway-telemetry.js";
 import * as communitySeed from "../community-seed-checklist.js";
 import { computeCommunityNeighborStats } from "../render/community.js";
+import { orderCommunityTopics } from "../community-topic-order.js";
+import { markCommunitySeen } from "../community-unread.js";
 import * as contacts from "../contacts.js";
 import * as peopleIndex from "../people-index.js";
 import * as profileDirectory from "../profile-directory.js";
@@ -69,7 +71,7 @@ async function resolveCommunityMetadata(communityId) {
   return meta;
 }
 
-function mergeTopicsWithLocalReplies(localTopics, topics, user, replyCounts) {
+function mergeTopicsWithLocalReplies(localTopics, topics, user, replyCounts, replyActivity = {}) {
   const seen = new Set();
   const merged = [];
   for (const t of localTopics) {
@@ -83,9 +85,13 @@ function mergeTopicsWithLocalReplies(localTopics, topics, user, replyCounts) {
     }
   }
   for (const t of merged) {
-    const extra = replyCounts[t.id] || 0;
+    const act = replyActivity[t.id];
+    const extra = (act?.count != null) ? act.count : (replyCounts[t.id] || 0);
     if (extra > 0 || !t.repliesCount) {
       t.repliesCount = (Number(t.repliesCount) || 0) + extra;
+    }
+    if (act?.lastTs) {
+      t.lastReplyTs = Math.max(Number(t.lastReplyTs) || 0, act.lastTs);
     }
   }
   return merged;
@@ -96,11 +102,13 @@ async function loadCommunityMetaAndTopics(communityId, user) {
   const meta = await resolveCommunityMetadata(communityId);
   const localTopics = await cacheNode.getLocalPosts({ type: "topic", communityId });
   const replyCounts = await cacheNode.getReplyCountsMap().catch(() => ({}));
-  const merged = mergeTopicsWithLocalReplies(localTopics, topics, user, replyCounts);
+  const replyActivity = await cacheNode.getReplyActivityMap().catch(() => ({}));
+  const merged = mergeTopicsWithLocalReplies(localTopics, topics, user, replyCounts, replyActivity);
 
   let modActions = [];
   try { modActions = await mod.fetchModActions(communityId); } catch {}
-  const filteredTopics = mod.applyFilters(merged, modActions, meta.owner, meta.moderators);
+  const filtered = mod.applyFilters(merged, modActions, meta.owner, meta.moderators);
+  const filteredTopics = orderCommunityTopics(filtered, "active");
   const isUserMod = mod.isModerator(user, meta.owner, meta.moderators);
 
   return { meta, filteredTopics, localTopics, demo, gateway, isUserMod };
@@ -411,6 +419,7 @@ function buildCommunityTabProps(communityId, meta, base, specifics, recentPeople
 }
 
 export async function showCommunity(communityId, tab = "posts") {
+  markCommunitySeen(communityId);
   const user = await getActiveUser();
   const existingComm = document.querySelector(`.community-vox-page[data-community-id="${communityId}"]`);
   const slot = existingComm?.querySelector("#community-tab-content");
@@ -656,6 +665,18 @@ function hydrateMissingReplyBodies(filteredReplies, finalCommId) {
   });
 }
 
+/** Moderação do tópico com dono/moderadores reais da comunidade (fail-closed sem metadados). */
+async function resolveTopicModeration(communityId, user, replies) {
+  if (!communityId) return { filteredReplies: replies, isUserMod: false };
+  const meta = await resolveCommunityMetadata(communityId).catch(() => ({ owner: "" }));
+  let modActions = [];
+  try { modActions = await mod.fetchModActions(communityId); } catch {}
+  return {
+    filteredReplies: mod.applyFilters(replies, modActions, meta.owner, meta.moderators),
+    isUserMod: mod.isModerator(user, meta.owner, meta.moderators),
+  };
+}
+
 export async function showTopic(topicId, commIdParam = "") {
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "home", "Tópico"));
@@ -666,10 +687,7 @@ export async function showTopic(topicId, commIdParam = "") {
   const { merged: mergedReplies, hasLocal: hasLocalReplies } = await mergeTopicReplies(topicId, rawReplies);
 
   const finalCommId = topic.communityId || commIdParam;
-  let modActions = [];
-  if (finalCommId) { try { modActions = await mod.fetchModActions(finalCommId); } catch {} }
-  const filteredReplies = mod.applyFilters(mergedReplies, modActions);
-  const isUserMod = mod.isModerator(user, "", "");
+  const { filteredReplies, isUserMod } = await resolveTopicModeration(finalCommId, user, mergedReplies);
 
   main.innerHTML = "";
   if (demo && !isLocal && !hasLocalReplies) render.renderDemoBanner(main);

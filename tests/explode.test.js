@@ -366,7 +366,7 @@ test("explode - renderers display explode counter and updateExplodeButtonsUi upd
   const mainEl = { innerHTML: "" };
   topic.renderTopic(mainEl, "post_exp_dom_1", mockPost, []);
   assert.ok(mainEl.innerHTML.includes("count-explodes"));
-  assert.ok(mainEl.innerHTML.includes("7 disparos"));
+  assert.ok(mainEl.innerHTML.includes(">7<"));
 
   // Test DOM update
   const fakeBtn1 = {

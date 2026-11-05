@@ -363,6 +363,14 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
             else:
                 self._reply_not_found(b"Blob nao encontrado na memoria central")
             return
+        if path.startswith("/memory/vault/"):
+            key = path[len("/memory/vault/"):].split("/")[0]
+            rec = central_memory.get_vault(key)
+            if rec is not None:
+                self._send_json({"status": "ok", "vaultKey": key, "record": rec})
+            else:
+                self._reply_not_found(b"Vault nao encontrado")
+            return
         self._reply_not_found(b"Rota de memoria nao encontrada")
 
     def _get_query_param_int(self, param_name, default=0):
@@ -486,7 +494,7 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
             self._handle_blind_envelope_post(path[len("/relay/envelope/"):].split("/")[0])
         elif path.startswith("/relay/snapshot/"):
             self._handle_blind_snapshot_post(path[len("/relay/snapshot/"):].split("/")[0])
-        elif path in ("/memory/ingest", "/memory/sync"):
+        elif path in ("/memory/ingest", "/memory/sync") or path.startswith("/memory/vault/"):
             self._handle_memory_post(path)
         else:
             self._reply_not_found(b"")
@@ -500,6 +508,11 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
             return
         try:
             payload = json.loads(self.rfile.read(content_length).decode("utf-8"))
+            if path.startswith("/memory/vault/"):
+                key = path[len("/memory/vault/"):].split("/")[0]
+                ok = central_memory.save_vault(key, payload)
+                self._send_json({"status": "saved" if ok else "error"}, 200 if ok else 400)
+                return
             if path == "/memory/ingest":
                 result = central_memory.ingest_event(payload)
                 self._send_json(result, 201 if result.get("changed") else 200)

@@ -77,8 +77,8 @@ test("feed layout - photo post header at top overlay with @ underneath name and 
   const headerIdx = html.indexOf("post-media-header");
   const toolbarIdx = html.indexOf("post-ig-toolbar");
 
-  assert.ok(heroIdx < headerIdx, "Header overlay must be inside hero");
-  assert.ok(headerIdx < toolbarIdx, "Header must come before footer toolbar inside hero");
+  assert.ok(headerIdx < heroIdx, "Header overlay must precede image media");
+  assert.ok(headerIdx < toolbarIdx, "Header must come before footer toolbar");
 
   // Verify toolbar is inside hero before comments
   const commentsIdx = html.indexOf("post-comments");

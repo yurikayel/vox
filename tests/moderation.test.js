@@ -61,3 +61,26 @@ test("moderation - applyFilters filtra autores banidos", () => {
   assert.equal(filtered.length, 1);
   assert.equal(filtered[0].owner, "autor_gentil");
 });
+
+test("moderation - applyFilters fail-closed: sem dono/moderadores, ignora ações de terceiros", () => {
+  const replies = [{ id: "r1", owner: "autor" }, { id: "r2", owner: "autor2" }];
+  const actions = [
+    { action: "hide", target: "r1", owner: "qualquer_um" },
+    { action: "ban", target: "autor2", owner: "qualquer_um" },
+  ];
+  assert.equal(mod.applyFilters(replies, actions).length, 2);
+  assert.equal(mod.applyFilters(replies, actions, "", "").length, 2);
+});
+
+test("moderation - applyFilters ignora ação sem owner mesmo com moderadores definidos", () => {
+  const items = [{ id: "t1", owner: "a" }];
+  const actions = [{ action: "hide", target: "t1" }];
+  assert.equal(mod.applyFilters(items, actions, "dono", "mod1").length, 1);
+});
+
+test("moderation - applyFilters aceita ação de moderador da lista (não só do dono)", () => {
+  const items = [{ id: "t1", owner: "a" }, { id: "t2", owner: "b" }];
+  const actions = [{ action: "hide", target: "t2", owner: "MOD1" }];
+  const out = mod.applyFilters(items, actions, "dono", "mod1, mod2");
+  assert.deepEqual(out.map((i) => i.id), ["t1"]);
+});
