@@ -105,23 +105,46 @@ function renderTopicFeedbackActions(topicId, topic, author, authorDisplay) {
   return `${likeBtn}${commentBtn}${repostBtn}${starBtn}${renderTopicZapButton(topicId, topic, author, authorDisplay)}`;
 }
 
+function renderTopicModActions(isMod, topicId, topic) {
+  if (!isMod) return "";
+  const isPinned = Boolean(topic?.isPinned);
+  const pinAction = isPinned ? "unpin" : "pin";
+  const pinText = isPinned ? "Desafixar tópico" : "Fixar no topo";
+  const pinBtn = `<button type="button" class="action-btn btn-mod-action" data-action="${pinAction}" data-id="${escapeHtml(topicId)}" role="menuitem" aria-label="${pinText}">
+    <span aria-hidden="true">📌</span>
+    <span class="toolbar-overflow-label">${pinText}</span>
+  </button>`;
+
+  const isLocked = Boolean(topic?.isLocked);
+  const lockAction = isLocked ? "unlock" : "lock";
+  const lockText = isLocked ? "Reabrir debate" : "Trancar debate";
+  const lockBtn = `<button type="button" class="action-btn btn-mod-action" data-action="${lockAction}" data-id="${escapeHtml(topicId)}" role="menuitem" aria-label="${lockText}">
+    <span aria-hidden="true">🔒</span>
+    <span class="toolbar-overflow-label">${lockText}</span>
+  </button>`;
+
+  const hideBtn = `<button type="button" class="action-btn btn-mod-hide" data-id="${escapeHtml(topicId)}" data-type="topic" role="menuitem" aria-label="Ocultar da rede">
+    <svg class="action-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    <span class="toolbar-overflow-label">Ocultar da rede</span>
+  </button>`;
+
+  return `${pinBtn}${lockBtn}${hideBtn}`;
+}
+
 function renderTopicOverflowMenu(topicId, topic, authorDisplay, authorHandle, bodyText, isMod) {
   const copyMdBtn = `<button type="button" class="action-btn btn-copy-md" data-id="${escapeHtml(topicId)}" data-title="${escapeHtml(topic?.title || "")}" data-body="${escapeHtml(bodyText)}" data-author="${escapeHtml(authorDisplay)}" data-handle="${escapeHtml(authorHandle)}" role="menuitem" aria-label="Copiar post como Markdown">
     <svg class="action-icon icon-copy" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
     <span class="toolbar-overflow-label">Copiar .md</span>
   </button>`;
   const quarAction = renderQuarantineAction(topicId, { asMenuItem: true });
-  const modBtn = isMod ? `<button type="button" class="action-btn btn-mod-hide" data-id="${escapeHtml(topicId)}" data-type="topic" role="menuitem" aria-label="Ocultar da rede">
-    <svg class="action-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-    <span class="toolbar-overflow-label">Ocultar da rede</span>
-  </button>` : "";
+  const modBtns = renderTopicModActions(isMod, topicId, topic);
 
   return `<details class="toolbar-overflow">
     <summary class="action-btn btn-toolbar-more" aria-label="Mais opções do post"><span aria-hidden="true">⋯</span></summary>
     <div class="toolbar-overflow-menu" role="menu">
       ${copyMdBtn}
       ${quarAction}
-      ${modBtn}
+      ${modBtns}
     </div>
   </details>`;
 }
@@ -205,19 +228,25 @@ function renderTopicReplyRow(r, isMod, { depth = 0, topicId = "", commId = "" } 
     </div>`;
 }
 
-function renderTopicRepliesBlock(topicId, commId, replies, isMod) {
+function renderTopicRepliesBlock(topicId, commId, replies, isMod, isLocked = false) {
+  const replyAction = isLocked
+    ? `<span class="badge-pill community-locked-pill" title="Discussão encerrada">🔒 Encerrado</span>`
+    : `<a class="btn btn-sm btn-primary" href="#/compose/reply?t=${encodeURIComponent(topicId)}&c=${encodeURIComponent(commId)}">💬 Responder</a>`;
   const actionBar = `
     <div class="actions-bar">
       <span class="section-title">Respostas (${replies.length})</span>
-      <a class="btn btn-sm btn-primary" href="#/compose/reply?t=${encodeURIComponent(topicId)}&c=${encodeURIComponent(commId)}">💬 Responder</a>
+      ${replyAction}
     </div>`;
+  const lockNotice = isLocked
+    ? `<div class="card community-locked-notice" style="padding:0.75rem 1rem; margin-bottom:1rem; text-align:center;"><p class="meta" style="margin:0;">🔒 Esta discussão foi encerrada pela moderação. Não recebe novas respostas.</p></div>`
+    : "";
   if (!replies.length) {
-    return `${actionBar}<div class="empty"><p>Sem respostas ainda. Inicie o debate!</p></div>`;
+    return `${actionBar}${lockNotice}<div class="empty"><p>${isLocked ? "Nenhuma resposta antes do encerramento." : "Sem respostas ainda. Inicie o debate!"}</p></div>`;
   }
   const rows = flattenReplyThread(replies)
     .map(({ reply, depth }) => renderTopicReplyRow(reply, isMod, { depth, topicId, commId }))
     .join("");
-  return `${actionBar}<div class="thread-replies">${rows}</div>`;
+  return `${actionBar}${lockNotice}<div class="thread-replies">${rows}</div>`;
 }
 
 function extractTopicViewContext(topic, topicData, communityId) {
@@ -245,7 +274,7 @@ export function renderTopic(main, topicId, topic, replies, { topicData = null, i
   const citeHtml = renderRepostCiteHtml(topic || {});
   const detailHtml = renderTopicDetailText(topicId, topic?.title || "", ctx.bodyText, ctx.notary);
   const toolbarHtml = renderTopicToolbar(topicId, topic, ctx.author, ctx.labels.authorDisplay, ctx.labels.authorHandle, ctx.bodyText, ctx.commId, isMod);
-  const repliesHtml = renderTopicRepliesBlock(topicId, ctx.commId, replies, isMod);
+  const repliesHtml = renderTopicRepliesBlock(topicId, ctx.commId, replies, isMod, Boolean(topic?.isLocked));
 
   main.innerHTML = `
     ${backLink}

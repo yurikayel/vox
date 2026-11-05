@@ -84,3 +84,25 @@ test("moderation - applyFilters aceita ação de moderador da lista (não só do
   const out = mod.applyFilters(items, actions, "dono", "mod1, mod2");
   assert.deepEqual(out.map((i) => i.id), ["t1"]);
 });
+
+test("moderation - applyFilters anota isPinned e isLocked em tópicos via mod-actions de moderadores válidos", () => {
+  const items = [
+    { id: "top_regras", title: "Regras", owner: "user_a" },
+    { id: "top_debate", title: "Debate Encerado", owner: "user_b" },
+    { id: "top_normal", title: "Conversa Normal", owner: "user_c" },
+  ];
+  const actions = [
+    { action: "pin", target: "top_regras", owner: "dono" },
+    { action: "lock", target: "top_debate", owner: "mod1" },
+    { action: "pin", target: "top_normal", owner: "hacker_nao_mod" }, // deve ser ignorado
+  ];
+  const out = mod.applyFilters(items, actions, "dono", "mod1");
+  const regras = out.find((t) => t.id === "top_regras");
+  const debate = out.find((t) => t.id === "top_debate");
+  const normal = out.find((t) => t.id === "top_normal");
+
+  assert.equal(regras.isPinned, true);
+  assert.equal(debate.isLocked, true);
+  assert.equal(normal.isPinned, undefined);
+});
+
