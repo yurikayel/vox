@@ -7,7 +7,7 @@ export const VERSIONS = {
   5: { data: 108, ec: 26, maxBytes: 106 },
 };
 
-export const VOX_SHARE_HASH = /#\/(t|connect|c)\//;
+export const VOX_SHARE_HASH = /#\/(t|connect|c|sync)(\/|\?|$)/;
 
 export function isVoxShareUrl(url) {
   return VOX_SHARE_HASH.test(String(url || ""));
@@ -16,7 +16,7 @@ export function isVoxShareUrl(url) {
 export function assertVoxShareUrl(url) {
   const text = String(url || "").trim();
   if (!isVoxShareUrl(text)) {
-    throw new Error("QR: expected Vox share URL (#/t/, #/connect/, or #/c/)");
+    throw new Error("QR: expected Vox share URL (#/t/, #/connect/, #/c/, or #/sync)");
   }
   return text;
 }

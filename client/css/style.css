@@ -2574,17 +2574,21 @@ body.post-more-sheet-open {
 }
 
 .post-layout-photo.post-photo-bleed {
-  border: none;
-  box-shadow: none;
-  border-radius: 0;
+  border: 1px solid var(--outline);
+  box-shadow: var(--elevation-1), var(--paper-highlight);
+  border-radius: var(--radius);
   padding: 0;
+  background: var(--surface-1);
   background: transparent;
-  max-width: min(var(--feed-max, 640px), 100%);
-  overflow: visible;
+  max-width: var(--feed-max, 640px);
+  width: 100%;
+  margin: 0 auto;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .post-layout-photo.post-photo-bleed:hover {
-  border-color: transparent;
+  border-color: color-mix(in srgb, var(--brand-navy) 22%, var(--outline));
 }
 
 .post-layout-photo.post-photo-bleed .post-media-container {
@@ -2594,18 +2598,32 @@ body.post-more-sheet-open {
   margin: 0;
   align-items: stretch;
   justify-content: flex-start;
+  width: 100%;
+  max-width: 100%;
+  background: #000;
 }
 
 .post-layout-photo.post-photo-bleed .post-media-lightbox-trigger {
   flex: 1 1 auto;
   align-self: stretch;
   width: 100%;
-  height: 100%;
-  min-height: 100%;
+  height: auto;
+  max-height: 560px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+  border: none;
+  padding: 0;
 }
 
 .post-layout-photo.post-photo-bleed .post-media-hero-img {
-  object-position: center top;
+  width: 100%;
+  height: auto;
+  max-height: 560px;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
 }
 
 .post-layout-photo.post-photo-bleed .post-media-container.post-aspect-original,
@@ -2621,14 +2639,14 @@ body.post-more-sheet-open {
   justify-content: center;
   width: 100%;
   height: auto;
-  max-height: 85vh;
+  max-height: 560px;
 }
 
 .post-layout-photo.post-photo-bleed .post-media-container.post-aspect-original .post-media-hero-img,
 .post-layout-photo.post-photo-bleed .post-media-container:not([class*="post-aspect-"]) .post-media-hero-img {
   width: 100%;
   height: auto;
-  max-height: 85vh;
+  max-height: 560px;
   object-fit: contain;
 }
 
@@ -6727,6 +6745,18 @@ p.profile-grid-handle {
   white-space: nowrap;
 }
 
+.post-layout-photo > .post-ig-header,
+.post-layout-photo > .post-media-header {
+  position: relative;
+  top: auto;
+  bottom: auto;
+  left: auto;
+  right: auto;
+  z-index: 3;
+  padding: 10px 14px 8px;
+  background: transparent;
+}
+
 .post-media-header-text {
   display: flex;
   flex-direction: column;
@@ -6855,6 +6885,20 @@ p.profile-grid-handle {
   line-height: 1.4;
 }
 
+.post-photo-caption {
+  padding: 4px 14px 10px;
+  font-size: 0.94rem;
+  line-height: 1.45;
+  color: var(--text);
+  word-break: break-word;
+}
+
+.post-photo-caption-author {
+  font-weight: 700;
+  margin-right: 6px;
+  color: var(--text);
+}
+
 .post-photo-message .post-md-para {
   margin: 0;
 }
@@ -6886,6 +6930,49 @@ p.profile-grid-handle {
   padding: 24px 12px 10px;
   background: linear-gradient(to top, rgba(6, 10, 18, 0.9) 0%, rgba(6, 10, 18, 0.45) 60%, rgba(6, 10, 18, 0) 100%);
   pointer-events: auto;
+}
+
+.post-layout-photo > .post-ig-toolbar {
+  position: relative;
+  bottom: auto;
+  left: auto;
+  right: auto;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px 4px;
+  background: transparent;
+  pointer-events: auto;
+}
+
+.post-layout-photo > .post-ig-toolbar .action-btn {
+  color: var(--text);
+  min-height: 36px;
+  padding: 4px 6px;
+  font-size: 0.85rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-shadow: none;
+}
+
+.post-layout-photo > .post-ig-toolbar .action-icon {
+  width: 22px;
+  height: 22px;
+  stroke: currentColor;
+  filter: none;
+}
+
+.post-layout-photo > .post-ig-toolbar .action-count {
+  color: var(--text);
+  text-shadow: none;
+}
+
+.post-layout-photo > .post-ig-toolbar .btn-like.active .action-icon,
+.post-layout-photo > .post-ig-toolbar .btn-save.active .action-icon {
+  fill: var(--danger, #f43f5e);
+  stroke: var(--danger, #f43f5e);
 }
 
 .post-layout-photo .post-media-hero .post-ig-toolbar .action-btn {
@@ -7320,12 +7407,12 @@ body.photo-tagging .post-media-hero.photo-tag-mode {
     box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.25);
   }
 
-  /* Fotos sangradas no feed expandem até a borda física da tela */
+  /* Fotos no feed no mobile respeitam a largura sem estourar */
   .post-layout-photo.post-photo-bleed {
-    margin-left: -16px;
-    margin-right: -16px;
-    width: calc(100% + 32px);
-    max-width: none;
+    margin-left: 0;
+    margin-right: 0;
+    width: 100%;
+    max-width: 100%;
   }
 
   .stories-strip {

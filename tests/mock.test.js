@@ -3,9 +3,10 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import * as mock from "../client/js/mock.js";
 
-test("mock - mockCommunities retorna lista vazia e demo false (modo real)", () => {
+test("mock - mockCommunities retorna lista com forum oficial vox e demo false (modo real)", () => {
   const res = mock.mockCommunities();
-  assert.deepEqual(res.items, []);
+  assert.equal(res.items.length, 1);
+  assert.equal(res.items[0].id, "vox");
   assert.equal(res.demo, false);
 });
 

@@ -310,10 +310,13 @@ export async function showCommunities() {
     const { items: remoteItems, gateway } = await gql.fetchCommunities().catch(async () => mock.mockCommunities());
     const localComms = await cacheNode.getLocalCommunities();
     const seen = new Set(localComms.map((c) => c.id));
+    const officialVox = mock.MOCK_OFFICIAL_COMMUNITY_VOX;
+    const hasVox = localComms.some((c) => c.id === "vox") || (remoteItems || []).some((c) => c.id === "vox");
     const merged = [
+      ...(hasVox ? [] : [officialVox]),
       ...localComms,
       ...(remoteItems || []).filter((c) => !seen.has(c.id)).map((c) => ({ ...c, isLocalP2p: false })),
-    ];
+    ].sort((a, b) => (a.id === "vox" ? -1 : b.id === "vox" ? 1 : 0));
     const { enriched, totalUnread } = await enrichCommunitiesWithUnread(merged);
     main.innerHTML = "";
     if (gateway) render.renderGatewayBanner(main, gateway);
@@ -322,7 +325,8 @@ export async function showCommunities() {
     main.innerHTML = "";
     const localComms = await cacheNode.getLocalCommunities();
     const fb = mock.mockCommunities();
-    const { enriched, totalUnread } = await enrichCommunitiesWithUnread([...localComms, ...fb.items]);
+    const list = [...localComms, ...fb.items].sort((a, b) => (a.id === "vox" ? -1 : b.id === "vox" ? 1 : 0));
+    const { enriched, totalUnread } = await enrichCommunitiesWithUnread(list);
     render.renderHome(main, enriched, { totalUnread });
   }
 }

@@ -4,6 +4,7 @@ import * as render from "../render.js";
 import * as share from "../share.js";
 import * as localAccount from "../local-account.js";
 import * as oauthProfile from "../oauth-profile.js";
+import * as oauthVault from "../oauth-vault.js";
 import * as meshProfile from "../mesh-profile.js";
 import * as centralMemory from "../central-memory.js";
 import { syncIdentity } from "./screens-network.js";
@@ -119,6 +120,35 @@ function bindCustomNameForm(modalContainer, onComplete) {
   });
 }
 
+function bindSovereignPassphraseForm(modalContainer, onComplete) {
+  const form = document.getElementById("form-oauth-restore-passphrase");
+  if (!form) return;
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const pass = document.getElementById("oauth-sovereign-passphrase-input")?.value.trim() || "";
+    if (!pass) return setOAuthEnrichError("Digite sua Senha Soberana para restaurar.");
+    const btn = document.getElementById("btn-oauth-restore-passphrase");
+    setOAuthButtonBusy(btn, true);
+    setOAuthEnrichError("");
+    try {
+      const res = await oauthVault.restoreFromPassphraseVault(pass);
+      if (res.ok) {
+        oauthProfile.skipOAuthEnrichment();
+        render.closeOAuthEnrich(modalContainer);
+        share.showToast(`Identidade restaurada com sucesso! Bem-vindo(a), ${res.displayName || "Cidadão"}!`);
+        syncIdentityAndDirectoryAfterOnboarding();
+        if (onComplete) onComplete({ ok: true, restored: true, routeId: res.routeId });
+      } else {
+        setOAuthEnrichError(res.reason || "Senha incorreta ou cofre não encontrado.");
+      }
+    } catch (err) {
+      setOAuthEnrichError(err?.message || "Erro ao decifrar cofre soberano.");
+    } finally {
+      setOAuthButtonBusy(btn, false);
+    }
+  });
+}
+
 export function openOAuthEnrichModal({ onComplete } = {}) {
   const modalContainer = document.getElementById("modal-container");
   if (!modalContainer) return;
@@ -126,6 +156,7 @@ export function openOAuthEnrichModal({ onComplete } = {}) {
   render.renderOAuthEnrich(modalContainer);
   applyOAuthProviderAvailability();
   bindCustomNameForm(modalContainer, onComplete);
+  bindSovereignPassphraseForm(modalContainer, onComplete);
 
   document.getElementById("btn-oauth-skip")?.addEventListener("click", () => {
     setOAuthEnrichError("");

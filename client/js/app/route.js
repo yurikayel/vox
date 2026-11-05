@@ -51,7 +51,30 @@ const ROUTE_DISPATCH_TABLE = {
   "compose-proposal": (r) => showComposeProposal(r.communityId),
   "compose-topic": (r) => showComposeTopic(r.communityId),
   "compose-reply": (r) => showComposeReply(r.topicId, r.communityId, r.parentId),
+  sync: (r) => handleSyncRoute(r),
 };
+
+async function handleSyncRoute(r) {
+  const { restoreFromPassphraseVault } = await import("../oauth-vault.js");
+  const { showToast } = await import("../share.js");
+  const pass = r.passphrase;
+  if (!pass) {
+    showToast("Link de sincronização incompleto.", "error");
+    window.location.hash = "#/";
+    return;
+  }
+  try {
+    const res = await restoreFromPassphraseVault(pass, r.lookupKey || null);
+    if (res.ok) {
+      showToast(`Conta sincronizada com sucesso! Bem-vindo(a), ${res.displayName || "Cidadão"}!`);
+    } else {
+      showToast(`Falha na sincronização: ${res.reason}`, "error");
+    }
+  } catch (err) {
+    showToast(`Erro na sincronização: ${err?.message || "falha desconhecida"}`, "error");
+  }
+  window.location.hash = "#/";
+}
 
 export async function routeImpl() {
   closePostMoreMenu();

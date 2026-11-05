@@ -301,10 +301,82 @@ function bindSovereigntyImport(activeTab) {
   });
 }
 
+function buildSyncUrl(passphrase) {
+  const base = `${window.location.origin}${window.location.pathname}`;
+  return `${base}#/sync?p=${encodeURIComponent(passphrase)}`;
+}
+
+function updateSovereigntySyncFeedback(message, isError = false) {
+  const el = document.getElementById("sovereignty-sync-feedback");
+  if (!el) return;
+  el.hidden = false;
+  el.style.color = isError ? "var(--danger)" : "var(--accent)";
+  el.innerHTML = message;
+}
+
+function bindSovereigntyCloudSync() {
+  const btn = document.getElementById("btn-save-sovereign-vault");
+  if (!btn) return;
+  btn.addEventListener("click", async () => {
+    const pass = readSovereigntyPassphrase().trim();
+    if (pass.length < 4) {
+      share.showToast("Digite uma senha com pelo menos 4 caracteres no campo acima.", "error");
+      return;
+    }
+    const { savePassphraseVault } = await import("../oauth-vault.js");
+    btn.disabled = true;
+    try {
+      const res = await savePassphraseVault(pass);
+      if (res.ok) {
+        share.showToast("Cofre soberano sincronizado com sucesso!");
+        const syncUrl = buildSyncUrl(pass);
+        updateSovereigntySyncFeedback(
+          `✅ <strong>Pronto para outro aparelho!</strong> No outro celular ou navegador, acesse o Vox e entre com sua senha, ou use este link: <a href="${syncUrl}" target="_blank" style="color:var(--primary); word-break:break-all;">${syncUrl}</a>`
+        );
+      } else {
+        share.showToast(res.reason || "Erro ao salvar cofre soberano.", "error");
+      }
+    } catch (err) {
+      share.showToast(`Erro ao sincronizar cofre: ${err.message}`, "error");
+    } finally {
+      btn.disabled = false;
+    }
+  });
+}
+
+function bindSovereigntyQrSync() {
+  const btn = document.getElementById("btn-sync-qr-device");
+  if (!btn) return;
+  btn.addEventListener("click", async () => {
+    const pass = readSovereigntyPassphrase().trim();
+    if (pass.length < 4) {
+      share.showToast("Digite sua Senha Soberana no campo acima para gerar o QR Code.", "error");
+      return;
+    }
+    const { savePassphraseVault } = await import("../oauth-vault.js");
+    btn.disabled = true;
+    try {
+      const res = await savePassphraseVault(pass);
+      if (res.ok) {
+        const syncUrl = buildSyncUrl(pass);
+        openQrUrlSheet(syncUrl);
+      } else {
+        share.showToast(res.reason || "Erro ao preparar cofre para QR.", "error");
+      }
+    } catch (err) {
+      share.showToast(`Erro ao gerar QR de sincronização: ${err.message}`, "error");
+    } finally {
+      btn.disabled = false;
+    }
+  });
+}
+
 function bindSovereigntyBackup(isSelf, activeTab) {
   if (!isSelf) return;
   bindSovereigntyExport();
   bindSovereigntyImport(activeTab);
+  bindSovereigntyCloudSync();
+  bindSovereigntyQrSync();
 }
 
 function clearPassphraseField() {

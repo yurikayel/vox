@@ -132,31 +132,33 @@ async function findEncryptedVaultRecord(lookupKey) {
   return remote;
 }
 
-async function tryRestoreFromEncryptedRecord(record, encKey, profile) {
+async function tryRestoreFromEncryptedRecord(record, encKey, profile, provider = "google") {
   if (!record) return null;
   try {
     const bundle = await decryptVaultBundle(record, encKey);
     if (bundle?.routeId && bundle?.publicJwk && bundle?.privateJwk) {
       await localAccount.importLocalAccountBundle(bundle);
-      localAccount.setProfileEnrichment({
-        displayName: profile.name || bundle.displayName,
-        avatarUrl: profile.picture || bundle.avatarUrl,
-        oauthProvider: "google",
-        oauthSub: profile.sub,
-        oauthEmail: profile.email,
-      });
+      if (provider !== "passphrase") {
+        localAccount.setProfileEnrichment({
+          displayName: profile.name || bundle.displayName,
+          avatarUrl: profile.picture || bundle.avatarUrl,
+          oauthProvider: provider,
+          oauthSub: profile.sub,
+          oauthEmail: profile.email,
+        });
+      }
       return { restored: true, routeId: bundle.routeId, displayName: bundle.displayName || profile.name };
     }
   } catch (err) {
-    console.warn("Falha ao decifrar cofre Google:", err);
+    console.warn(`Falha ao decifrar cofre ${provider}:`, err);
   }
   return null;
 }
 
-async function bindAndPersistNewGoogleVault(profile, lookupKey, encKey) {
+async function bindAndPersistNewVault(profile, lookupKey, encKey, provider = "google") {
   const { sub, email, name, picture } = profile;
   const matched = localAccount.findVaultAccountByOAuth({
-    oauthProvider: "google",
+    oauthProvider: provider,
     oauthSub: sub,
     oauthEmail: email,
     avatarUrl: picture,
@@ -176,24 +178,73 @@ async function bindAndPersistNewGoogleVault(profile, lookupKey, encKey) {
   }
   saveRemoteVaultRecord(lookupKey, encrypted);
 
-  localAccount.setProfileEnrichment({
-    displayName: name,
-    avatarUrl: picture,
-    oauthProvider: "google",
-    oauthSub: sub,
-    oauthEmail: email,
-  });
+  if (provider !== "passphrase") {
+    localAccount.setProfileEnrichment({
+      displayName: name,
+      avatarUrl: picture,
+      oauthProvider: provider,
+      oauthSub: sub,
+      oauthEmail: email,
+    });
+  }
   return { restored: Boolean(localBundle), routeId: bundleToPersist.routeId, displayName: name };
 }
 
-export async function restoreOrBindGoogleIdentity({ sub, email, name, picture }) {
+export async function restoreOrBindOAuthIdentity({ provider = "google", sub, email, name, picture }) {
   if (!sub) return { restored: false };
-  const lookupKey = await computeVaultLookupKey(sub, "google");
-  const encKey = await deriveVaultEncryptionKey(sub, "google");
+  const lookupKey = await computeVaultLookupKey(sub, provider);
+  const encKey = await deriveVaultEncryptionKey(sub, provider);
 
   const record = await findEncryptedVaultRecord(lookupKey);
-  const restored = await tryRestoreFromEncryptedRecord(record, encKey, { sub, email, name, picture });
+  const restored = await tryRestoreFromEncryptedRecord(record, encKey, { sub, email, name, picture }, provider);
   if (restored) return restored;
 
-  return bindAndPersistNewGoogleVault({ sub, email, name, picture }, lookupKey, encKey);
+  return bindAndPersistNewVault({ sub, email, name, picture }, lookupKey, encKey, provider);
+}
+
+export async function restoreOrBindGoogleIdentity({ sub, email, name, picture }) {
+  return restoreOrBindOAuthIdentity({ provider: "google", sub, email, name, picture });
+}
+
+export async function restoreOrBindMetaIdentity({ sub, email, name, picture }) {
+  return restoreOrBindOAuthIdentity({ provider: "meta", sub, email, name, picture });
+}
+
+export async function savePassphraseVault(passphrase) {
+  const clean = String(passphrase || "").trim();
+  if (clean.length < 4) {
+    return { ok: false, reason: "A senha soberana deve ter pelo menos 4 caracteres." };
+  }
+  const lookupKey = await computeVaultLookupKey(clean, "passphrase");
+  const encKey = await deriveVaultEncryptionKey(clean, "passphrase");
+  const bundle = await localAccount.exportLocalAccountBundle();
+  const encrypted = await encryptVaultBundle(bundle, encKey);
+  try {
+    localStorage.setItem(VAULT_STORAGE_PREFIX + lookupKey, JSON.stringify(encrypted));
+  } catch {
+    /* ignore */
+  }
+  saveRemoteVaultRecord(lookupKey, encrypted);
+  return { ok: true, lookupKey, routeId: bundle.routeId, displayName: bundle.displayName };
+}
+
+export async function restoreFromPassphraseVault(passphrase, lookupKeyOverride = null) {
+  const clean = String(passphrase || "").trim();
+  if (!clean) return { ok: false, reason: "Senha soberana não informada." };
+  const lookupKey = lookupKeyOverride || (await computeVaultLookupKey(clean, "passphrase"));
+  const record = await findEncryptedVaultRecord(lookupKey);
+  if (!record) return { ok: false, reason: "Nenhum cofre encontrado para esta senha ou chave." };
+
+  const encKey = await deriveVaultEncryptionKey(clean, "passphrase");
+  let bundle = null;
+  try {
+    bundle = await decryptVaultBundle(record, encKey);
+  } catch {
+    return { ok: false, reason: "Senha incorreta." };
+  }
+  if (!bundle?.routeId || !bundle?.publicJwk || !bundle?.privateJwk) {
+    return { ok: false, reason: "Dados do cofre inválidos ou corrompidos." };
+  }
+  await localAccount.importLocalAccountBundle(bundle);
+  return { ok: true, routeId: bundle.routeId, displayName: bundle.displayName || "" };
 }

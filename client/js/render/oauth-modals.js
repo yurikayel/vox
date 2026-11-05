@@ -51,6 +51,11 @@ export function renderOAuthEnrich(container) {
         </form>
         <p class="oauth-enrich-divider" role="presentation"><span>ou importe nome e foto</span></p>
         ${renderOAuthProviderButtonsHtml()}
+        <p class="oauth-enrich-divider" role="presentation"><span>ou acesse conta soberana de outro aparelho</span></p>
+        <form id="form-oauth-restore-passphrase" style="display:flex; gap:0.5rem; margin-bottom:0.75rem;">
+          <input type="password" id="oauth-sovereign-passphrase-input" class="form-control" placeholder="Sua Senha Soberana / Frase Secreta…" style="flex:1;" autocomplete="current-password" />
+          <button type="submit" id="btn-oauth-restore-passphrase" class="btn btn-outline" style="white-space:nowrap;">Restaurar</button>
+        </form>
         <p class="oauth-enrich-divider" role="presentation"><span>ou</span></p>
         <button type="button" id="btn-oauth-skip" class="oauth-btn oauth-btn--skip">Pular — continuar só com vx_</button>
         <p class="meta oauth-enrich-legal">Só claims públicos de perfil; tokens OAuth não são armazenados (LGPD — ver COMPLIANCE-BR.md).</p>
