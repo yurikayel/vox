@@ -1584,6 +1584,35 @@ main#app-main,
   box-shadow: 0 4px 12px rgba(29, 155, 240, 0.35);
 }
 
+.btn-inline-echo {
+  background: rgba(250, 204, 21, 0.1);
+  color: #FACC15;
+  border: 1px solid rgba(250, 204, 21, 0.45);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: background 0.15s ease, opacity 0.15s ease, transform 0.15s ease, border-color 0.15s ease;
+}
+
+.btn-inline-echo:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  border-color: rgba(250, 204, 21, 0.2);
+}
+
+.btn-inline-echo:not(:disabled):hover {
+  background: rgba(250, 204, 21, 0.22);
+  border-color: #FACC15;
+  color: #FEF08A;
+  transform: translateY(-1px);
+}
+
 /* Footer / Microcopy Removida Visualmente da Tela (Redução de Carga Cognitiva) */
 .inline-composer-meta {
   display: none !important;

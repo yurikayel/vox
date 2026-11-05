@@ -150,6 +150,7 @@ function renderComposerToolbar() {
       </div>
       <div class="inline-composer-actions">
         <span class="inline-composer-char" id="inline-topic-char">0 / 2000</span>
+        <button type="submit" class="btn btn-outline btn-sm btn-inline-echo" id="btn-inline-echo" aria-label="Publicar e ecoar em outras redes" disabled title="Publica no Vox e abre o Cockpit POSSE para WhatsApp, Bluesky, Telegram, X, etc.">🚀 Postar & Ecoar</button>
         <button type="submit" class="btn btn-primary btn-sm btn-inline-submit" aria-label="Publicar mensagem no feed" id="btn-inline-submit" disabled>Postar</button>
       </div>
     </div>`;
