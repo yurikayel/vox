@@ -93,10 +93,32 @@ async function generateNewAccountKeys() {
   };
 }
 
+function syncCurrentAccountMetadataToVault() {
+  const acc = cachedAccount;
+  if (!acc?.routeId) return;
+  try {
+    const raw = localStorage.getItem(VAULT_STORAGE);
+    const vault = raw ? JSON.parse(raw) : {};
+    const existing = vault[acc.routeId] || {};
+    vault[acc.routeId] = {
+      ...existing,
+      routeId: acc.routeId,
+      publicJwk: acc.publicJwk || existing.publicJwk,
+      privateJwk: acc.privateJwk || existing.privateJwk,
+      displayName: getDisplayName() || existing.displayName || "",
+      enrichment: getProfileEnrichment() || existing.enrichment || null,
+      createdAt: acc.createdAt || existing.createdAt || Date.now(),
+      lastUsedAt: existing.lastUsedAt || Date.now(),
+    };
+    localStorage.setItem(VAULT_STORAGE, JSON.stringify(vault));
+  } catch {}
+}
+
 export async function ensureLocalAccount() {
   const existing = await loadStoredLocalAccount();
   if (existing) {
     cachedAccount = existing;
+    syncCurrentAccountMetadataToVault();
     return cachedAccount;
   }
 
@@ -104,6 +126,7 @@ export async function ensureLocalAccount() {
   try {
     localStorage.setItem(ACCOUNT_STORAGE, JSON.stringify(cachedAccount));
   } catch {}
+  syncCurrentAccountMetadataToVault();
   return cachedAccount;
 }
 
@@ -139,6 +162,7 @@ export function setDisplayName(name) {
   try {
     const clean = String(name || "").trim().slice(0, 30);
     localStorage.setItem(DISPLAY_NAME_STORAGE, clean);
+    syncCurrentAccountMetadataToVault();
     return clean;
   } catch {
     return "";
@@ -167,6 +191,7 @@ export function setProfileEnrichment({ displayName, bio, avatarUrl, oauthProvide
     };
     localStorage.setItem(ENRICHMENT_STORAGE, JSON.stringify(next));
     if (next.displayName) setDisplayName(next.displayName);
+    else syncCurrentAccountMetadataToVault();
     return next;
   } catch {
     return null;
@@ -319,16 +344,15 @@ export async function verifyPayload(signed) {
 
 export function getMeshDiscoverable() {
   try {
-    return localStorage.getItem(DISCOVERABLE_STORAGE) === "1";
+    return localStorage.getItem(DISCOVERABLE_STORAGE) !== "0";
   } catch {
-    return false;
+    return true;
   }
 }
 
 export function setMeshDiscoverable(on) {
   try {
-    if (on) localStorage.setItem(DISCOVERABLE_STORAGE, "1");
-    else localStorage.removeItem(DISCOVERABLE_STORAGE);
+    localStorage.setItem(DISCOVERABLE_STORAGE, on ? "1" : "0");
     return true;
   } catch {
     return false;
@@ -538,7 +562,7 @@ async function restoreTargetAccountSettings(target) {
   } else {
     localStorage.removeItem(PIX_STORAGE);
   }
-  setMeshDiscoverable(Boolean(target.meshDiscoverable));
+  setMeshDiscoverable(target.meshDiscoverable !== false);
 }
 
 export async function switchActiveAccount(targetRouteId) {

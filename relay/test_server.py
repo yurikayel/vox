@@ -846,6 +846,79 @@ class TestVoxRelayServer(unittest.TestCase):
             self.assertEqual(data["epoch"], 3)
             self.assertEqual(data["snapshot"], "YJS_V2_SNAPSHOT_BASE64")
 
+    def test_central_memory_ingest_sync_and_crash_restart_persistence(self):
+        from relay import central_memory
+
+        mem_dir = Path(self.temp_dir) / "zero_central_memory_test"
+        central_memory.set_memory_dir(mem_dir)
+        post_item = {
+            "id": "top_persist_001",
+            "type": "topic",
+            "author": "vx_alice123",
+            "communityId": "c_geral",
+            "title": "Persistência Real Zero Central Memory",
+            "body": "Estado salvo localmente no disco.",
+            "ts": 1700001000000,
+            "editedAt": 1700001000000,
+        }
+        req = urllib.request.Request(
+            self._url("/memory/ingest"),
+            data=json.dumps({"type": "GOSSIP", "item": post_item}).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=2) as resp:
+            self.assertEqual(resp.status, 201)
+            self.assertEqual(resp.headers.get("Access-Control-Allow-Private-Network"), "true")
+            res = json.loads(resp.read().decode("utf-8"))
+            self.assertTrue(res["changed"])
+            self.assertEqual(res["counts"]["posts"], 1)
+
+        blob_hash = "a" * 64
+        sync_payload = {
+            "posts": [
+                {
+                    "id": "rep_persist_002",
+                    "type": "reply",
+                    "replyTo": "top_persist_001",
+                    "author": "vx_bob456",
+                    "body": "Resposta persistida",
+                    "ts": 1700001005000,
+                }
+            ],
+            "profiles": [{"routeId": "vx_alice123", "name": "Alice", "updatedAt": 1700001001000}],
+            "blobs": [{"hash": blob_hash, "mime": "image/png", "byteLength": 12, "data": "data:image/png;base64,AAAA"}],
+        }
+        sync_req = urllib.request.Request(
+            self._url("/memory/sync"),
+            data=json.dumps(sync_payload).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(sync_req, timeout=2) as resp:
+            self.assertEqual(resp.status, 200)
+            synced = json.loads(resp.read().decode("utf-8"))
+            self.assertEqual(synced["counts"]["posts"], 2)
+            self.assertEqual(synced["counts"]["profiles"], 1)
+            self.assertEqual(synced["counts"]["blobs"], 1)
+
+        # Simula queda e reinício do processo limpando cache em memória
+        central_memory.set_memory_dir(mem_dir)
+        reloaded = central_memory.load_state(force_reload=True)
+        self.assertIn("top_persist_001", reloaded["posts"])
+        self.assertIn("rep_persist_002", reloaded["posts"])
+        self.assertIn("vx_alice123", reloaded["profiles"])
+
+        # Simula corrupção do state.json para validar fallback automático via state.json.bak
+        (mem_dir / "state.json").write_text("{corrupted_json", encoding="utf-8")
+        recovered = central_memory.load_state(force_reload=True)
+        self.assertIn("top_persist_001", recovered["posts"])
+
+        with urllib.request.urlopen(self._url(f"/memory/blob/{blob_hash}"), timeout=2) as resp:
+            self.assertEqual(resp.status, 200)
+            blob_data = json.loads(resp.read().decode("utf-8"))
+            self.assertEqual(blob_data["hash"], blob_hash)
+
 
 if __name__ == "__main__":
     unittest.main()

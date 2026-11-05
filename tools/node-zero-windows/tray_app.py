@@ -313,9 +313,13 @@ class TrayApp:
         else:
             resources = status.get("resources", {})
             governor = resources.get("governor", {})
+            cm = status.get("centralMemory", {})
+            counts = cm.get("counts", {})
             detail = (
-                f"Estado: {status.get('state', 'desconhecido')}\n"
+                f"Estado: {status.get('state', 'desconhecido')} (Zero-Central-Memory • Dev Alpha/Beta)\n"
                 f"Relay/cache: {'ativo' if status.get('relay', {}).get('active') else 'pausado'}\n"
+                f"Memória Central: {counts.get('posts', 0)} posts | {counts.get('profiles', 0)} perfis | "
+                f"{counts.get('tombstones', 0)} tombstones | {counts.get('blobs', 0)} blobs (Rev #{cm.get('revision', 0)})\n"
                 f"CPU: {governor.get('cpuBudgetPercent', '—')}% "
                 f"({'aplicado' if governor.get('cpuLimitApplied') else 'prioridade reduzida'})\n"
                 f"RAM: {governor.get('memoryBudgetMb', '—')} MB "
@@ -417,8 +421,14 @@ class TrayApp:
 
     def _refresh_tip(self) -> None:
         status = self._status()
-        state = status.get("state", "indisponível") if status else "indisponível"
-        self._set_tip(f"Vox Populi — {state}")
+        if not status:
+            self._set_tip("Vox Populi [Dev Alpha/Beta] — indisponível")
+            return
+        state = status.get("state", "indisponível")
+        cm = status.get("centralMemory", {})
+        posts = cm.get("counts", {}).get("posts", 0)
+        rev = cm.get("revision", 0)
+        self._set_tip(f"Vox Populi [Alpha/Beta] — {state} • {posts} posts (Rev #{rev})")
 
     def _menu(self) -> int:
         menu = self.user32.CreatePopupMenu()

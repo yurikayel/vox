@@ -112,6 +112,10 @@ export function registerAddressMapping(address, peerId, dmPub = null) {
   }
 }
 
+export function listKnownPeerAddresses() {
+  return Array.from(addressToPeer.keys()).filter((a) => String(a || "").startsWith("vx_"));
+}
+
 export function getPeerDmPub(address) {
   return dmPubByAddress.get(address) || null;
 }
@@ -333,7 +337,7 @@ function handleRegisteredPeers(peersList) {
   const maxPeers = configCache?.maxRtcPeers || 8;
   for (const remoteId of peersList) {
     if (peerConnections.size >= maxPeers) break;
-    if (currentPeerId < remoteId) {
+    if (remoteId && remoteId !== currentPeerId) {
       createPeerConnection(remoteId, true);
     }
   }

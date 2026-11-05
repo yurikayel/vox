@@ -8,10 +8,10 @@
   ],
   "turn": [],
   "signalingUrls": [
-    "wss://vox.vox.deno.net",
-    "wss://vox-2.vox.deno.net",
     "wss://vox-sentinel.onrender.com",
-    "ws://127.0.0.1:3921"
+    "ws://127.0.0.1:3921",
+    "wss://vox.vox.deno.net",
+    "wss://vox-2.vox.deno.net"
   ],
   "webtorrentTrackers": [
     "wss://tracker.openwebtorrent.com",

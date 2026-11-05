@@ -490,6 +490,11 @@ test("render - inline composer e post-toolbar no feed", () => {
   assert.ok(strip.includes("inline-topic-char"));
   assert.ok(strip.includes('id="btn-inline-submit" disabled'));
   assert.ok(!strip.includes("composer-strip-link"));
+  assert.ok(strip.includes('id="btn-inline-mic"'));
+  assert.ok(strip.includes("inline-mic-wrapper"));
+  assert.ok(strip.includes('id="inline-recording-timer"'));
+  assert.ok(strip.includes('id="btn-inline-cancel-rec"'));
+  assert.ok(!strip.includes('id="inline-recording-indicator"'), "bulky legacy indicator bar should be removed");
 
   const main = createContainer();
   const topics = [
@@ -1130,6 +1135,25 @@ test("render - renderTopic inclui menu Editar/Apagar para post próprio", () => 
   assert.ok(main.innerHTML.includes('data-id="top_own_detail"'));
 });
 
+test("render - renderTopic agrupa ações secundárias no menu overflow sem vazar quarentena na toolbar", () => {
+  const main = createContainer();
+  const topic = {
+    id: "top_overflow_test",
+    title: "Post de teste",
+    body: "Conteúdo do post",
+    author: "vx_other",
+    type: "topic",
+    ts: Date.now(),
+  };
+  render.renderTopic(main, "top_overflow_test", topic, []);
+  assert.ok(main.innerHTML.includes("toolbar-overflow"));
+  assert.ok(main.innerHTML.includes("toolbar-overflow-menu"));
+  assert.ok(main.innerHTML.includes("btn-quarantine-post"));
+  assert.ok(main.innerHTML.includes("btn-copy-md"));
+  assert.ok(main.innerHTML.includes("btn-share-topic"));
+  assert.ok(main.innerHTML.includes("💬 Responder"));
+});
+
 test("render - compositor inline inclui microcopy honesta de edit/apagar local", () => {
   const html = render.renderInlineComposer({ userRouteId: "vx_me", displayName: "Eu" });
   assert.ok(html.includes("inline-composer-local-hint"));
@@ -1155,7 +1179,8 @@ test("render - renderPeopleSearch seções e paste connect", () => {
   });
   assert.ok(main.innerHTML.includes("Contatos"));
   assert.ok(main.innerHTML.includes("Na malha"));
-  assert.ok(main.innerHTML.includes("form-people-paste-link"));
+  assert.ok(main.innerHTML.includes("people-search-input"));
+  assert.ok(!main.innerHTML.includes("form-people-paste-link"), "formulário redundante de colar link deve ser removido");
 });
 
 test("render - renderNetworkSettings inclui toggle malha", () => {
