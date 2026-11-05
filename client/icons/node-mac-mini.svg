@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="100%" height="100%">
+  <!-- Mac Mini / Headless macOS Server -->
+  <defs>
+    <linearGradient id="mac-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#E2E8F0"/>
+      <stop offset="35%" stop-color="#CBD5E1"/>
+      <stop offset="100%" stop-color="#94A3B8"/>
+    </linearGradient>
+    <linearGradient id="top-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F8FAFC"/>
+      <stop offset="100%" stop-color="#E2E8F0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Base / Sombra -->
+  <rect x="8" y="22" width="48" height="28" rx="8" fill="#090D14"/>
+
+  <!-- Gabinete Mac Mini em perspectiva isométrica suave -->
+  <!-- Corpo Frontal -->
+  <rect x="6" y="24" width="52" height="22" rx="7" fill="url(#mac-grad)" stroke="#FFFFFF" stroke-width="1.2"/>
+  
+  <!-- Chanfro Superior -->
+  <path d="M 13 24 L 51 24 A 6 6 0 0 1 57 28 L 7 28 A 6 6 0 0 1 13 24 Z" fill="url(#top-grad)" opacity="0.6"/>
+
+  <!-- LED indicador frontal piloto (branco brilhante) -->
+  <circle cx="48" cy="35" r="1.8" fill="#FFFFFF"/>
+  <circle cx="48" cy="35" r="3.5" fill="none" stroke="#FFFFFF" stroke-width="0.8" opacity="0.4"/>
+
+  <!-- Slot receptor / sensor infravermelho escuro -->
+  <rect x="12" y="34" width="6" height="2" rx="1" fill="#475569"/>
+</svg>
