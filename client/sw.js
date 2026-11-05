@@ -28,6 +28,8 @@ const SHELL_ASSETS = [
 
   "./icons/icon-white-192.png",
 
+  "./icons/icon-mark-black-128.png",
+
   "./icons/profile-vox-official-512.png",
 
   "./images/cantina-gate.jpg",

@@ -50,7 +50,10 @@
       min-height: 100vh;
       display: flex;
       flex-direction: column;
-      padding: 0 1.25rem 4rem 1.25rem;
+      padding-top: max(1rem, env(safe-area-inset-top, 0px));
+      padding-right: max(1.25rem, env(safe-area-inset-right, 0px));
+      padding-bottom: max(4rem, env(safe-area-inset-bottom, 0px));
+      padding-left: max(1.25rem, env(safe-area-inset-left, 0px));
       -webkit-font-smoothing: antialiased;
     }
 
@@ -194,10 +197,12 @@
       transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
       cursor: pointer;
       backdrop-filter: blur(12px);
+      -webkit-tap-highlight-color: transparent;
     }
 
-    .os-card:hover {
-      transform: translateY(-4px);
+    .os-card:active {
+      transform: scale(0.97);
+      transition: transform 0.08s ease;
     }
 
     /* Cores Temáticas Oficiais de cada OS */
@@ -437,8 +442,351 @@
       text-decoration: none;
     }
 
-    footer a:hover {
-      text-decoration: underline;
+    /* Smart Device Hero Card (Detecção 0-latência) */
+    .smart-device-card {
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.15rem 1.35rem;
+      margin: 0 auto 2.5rem auto;
+      max-width: 680px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.25rem;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(14px);
+      position: relative;
+      overflow: hidden;
+      animation: fadeInDown 0.3s ease-out;
+    }
+
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .smart-device-card.android {
+      border-color: rgba(61, 220, 132, 0.4);
+      box-shadow: 0 8px 32px rgba(61, 220, 132, 0.15);
+    }
+
+    .smart-device-card.apple {
+      border-color: rgba(255, 255, 255, 0.35);
+      box-shadow: 0 8px 32px rgba(255, 255, 255, 0.12);
+    }
+
+    .smart-device-card.windows {
+      border-color: rgba(0, 164, 239, 0.4);
+      box-shadow: 0 8px 32px rgba(0, 164, 239, 0.15);
+    }
+
+    .smart-device-card.linux {
+      border-color: rgba(252, 198, 36, 0.4);
+      box-shadow: 0 8px 32px rgba(252, 198, 36, 0.15);
+    }
+
+    .smart-device-left {
+      display: flex;
+      align-items: center;
+      gap: 1.1rem;
+    }
+
+    .smart-device-icon {
+      width: 44px;
+      height: 44px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3));
+    }
+
+    .smart-device-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .smart-device-meta {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .smart-device-badge {
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--emerald);
+      margin-bottom: 0.2rem;
+    }
+
+    .smart-device-title {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #FFFFFF;
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+    }
+
+    .smart-device-sub {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-top: 0.1rem;
+    }
+
+    .smart-device-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      padding: 0.75rem 1.45rem;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: transform 0.15s ease, filter 0.15s ease;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+      min-height: 48px;
+    }
+
+    .smart-device-card.android .smart-device-cta {
+      background: #3DDC84;
+      color: #052e16;
+    }
+
+    .smart-device-card.apple .smart-device-cta {
+      background: #FFFFFF;
+      color: #000000;
+    }
+
+    .smart-device-card.windows .smart-device-cta {
+      background: #00A4EF;
+      color: #FFFFFF;
+    }
+
+    .smart-device-card.linux .smart-device-cta {
+      background: #FCC624;
+      color: #422006;
+    }
+
+    .smart-device-cta svg {
+      width: 18px;
+      height: 18px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2.2;
+    }
+
+    /* Badge flutuante 'Seu Aparelho' no cartão */
+    .os-card.is-current-device {
+      border-width: 2px;
+    }
+
+    .os-card.is-current-device.android {
+      border-color: #3DDC84;
+      box-shadow: 0 0 24px rgba(61, 220, 132, 0.28);
+    }
+
+    .os-card.is-current-device.apple {
+      border-color: #FFFFFF;
+      box-shadow: 0 0 24px rgba(255, 255, 255, 0.25);
+    }
+
+    .os-card.is-current-device.windows {
+      border-color: #00A4EF;
+      box-shadow: 0 0 24px rgba(0, 164, 239, 0.28);
+    }
+
+    .os-card.is-current-device.linux {
+      border-color: #FCC624;
+      box-shadow: 0 0 24px rgba(252, 198, 36, 0.28);
+    }
+
+    .device-pill {
+      position: absolute;
+      top: -11px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #10B981;
+      color: #064E3B;
+      font-size: 0.64rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 0.2rem 0.65rem;
+      border-radius: 9999px;
+      white-space: nowrap;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+      z-index: 2;
+    }
+
+    /* Hover exclusivo para telas com cursor real (evita bug de hover preso no mobile) */
+    @media (hover: hover) {
+      .os-card:hover {
+        transform: translateY(-4px);
+      }
+      .quick-web-btn:hover {
+        background: var(--accent-hover);
+      }
+      .smart-device-cta:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.1);
+      }
+      footer a:hover {
+        text-decoration: underline;
+      }
+    }
+
+    /* Otimizações Responsivas Mobile */
+    @media (max-width: 767px) {
+      body {
+        background-attachment: scroll, scroll, scroll, scroll;
+        padding-top: max(0.85rem, env(safe-area-inset-top, 0px));
+        padding-right: max(0.85rem, env(safe-area-inset-right, 0px));
+        padding-bottom: max(3rem, env(safe-area-inset-bottom, 0px));
+        padding-left: max(0.85rem, env(safe-area-inset-left, 0px));
+      }
+
+      header {
+        margin: 1.75rem auto 1.5rem auto;
+      }
+
+      .brand-top {
+        margin-bottom: 0.85rem;
+      }
+
+      h1 {
+        font-size: clamp(1.85rem, 8vw, 2.5rem);
+        margin-bottom: 0.65rem;
+      }
+
+      .subtitle {
+        font-size: 0.95rem;
+        line-height: 1.5;
+        padding: 0 0.25rem;
+      }
+
+      .smart-device-card {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+        padding: 1.15rem 1rem;
+        gap: 1rem;
+        margin-bottom: 2rem;
+      }
+
+      .smart-device-left {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .smart-device-cta {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .section-block {
+        margin-bottom: 2.5rem;
+      }
+
+      .section-header {
+        margin-bottom: 1.1rem;
+      }
+
+      .section-title {
+        font-size: 1.55rem;
+      }
+
+      .section-desc {
+        font-size: 0.88rem;
+        line-height: 1.45;
+      }
+
+      .os-row {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+      }
+
+      .os-card {
+        padding: 1.35rem 0.65rem 1.15rem 0.65rem;
+        border-radius: 16px;
+      }
+
+      .os-logo-wrap {
+        width: 52px;
+        height: 52px;
+        margin-bottom: 0.85rem;
+      }
+
+      .os-logo-wrap.duo {
+        height: 48px;
+        gap: 0.35rem;
+        margin-bottom: 0.85rem;
+      }
+
+      .os-logo-wrap.duo .logo-os {
+        width: 38px;
+        height: 38px;
+      }
+
+      .os-logo-wrap.duo .logo-node {
+        width: 36px;
+        height: 36px;
+      }
+
+      .os-logo-wrap.duo .logo-plus {
+        font-size: 0.8rem;
+      }
+
+      .os-size {
+        font-size: 0.78rem;
+        padding: 0.22rem 0.65rem;
+        margin-bottom: 0.55rem;
+      }
+
+      .os-name {
+        font-size: 0.98rem;
+      }
+
+      .os-spec {
+        font-size: 0.72rem;
+      }
+
+      .quick-web {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+        padding: 1.25rem 1.1rem;
+        gap: 0.85rem;
+        margin-bottom: 2.25rem;
+      }
+
+      .quick-web-btn {
+        width: 100%;
+        justify-content: center;
+        min-height: 48px;
+        font-size: 0.92rem;
+      }
+
+      .civic-traits {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        padding-top: 1.5rem;
+        margin-bottom: 2.5rem;
+      }
+    }
+
+    /* Telas ultra-estreitas (iPhone SE 1st gen, feature phones e split screens < 350px) */
+    @media (max-width: 350px) {
+      .os-row {
+        grid-template-columns: 1fr;
+      }
+      .os-card {
+        padding: 1.25rem 1rem;
+      }
     }
   </style>
 </head>
@@ -458,6 +806,9 @@
   </header>
 
   <main>
+
+    <!-- Slot para Hero Card de 1 Toque do Aparelho Detectado -->
+    <div id="smart-device-slot"></div>
 
     <!-- SEÇÃO 1: VOX (CLIENTE - PRA QUEM QUER SÓ USAR A REDE E FIM) -->
     <section class="section-block">
@@ -616,6 +967,96 @@
       <a href="privacy.html">Privacidade</a>
     </p>
   </footer>
+
+  <script>
+    (function () {
+      try {
+        var ua = navigator.userAgent || '';
+        var plat = navigator.platform || '';
+        var os = null;
+        var label = '';
+        var href = '';
+        var isDl = true;
+        var icon = '';
+        var cClass = '';
+        var sub = '';
+
+        if (/android/i.test(ua)) {
+          os = 'android';
+          label = 'Android';
+          href = 'downloads/vox.apk';
+          isDl = true;
+          icon = 'icons/android-icon.svg';
+          cClass = 'android';
+          sub = 'Micro-APK • 74 KiB • Sideload Direto';
+        } else if (/iPad|iPhone|iPod/i.test(ua) || (plat === 'MacIntel' && navigator.maxTouchPoints > 1)) {
+          os = 'ios';
+          label = 'iPhone / iPad (iOS)';
+          href = 'https://vox-9df.pages.dev/';
+          isDl = false;
+          icon = 'icons/apple-white.svg';
+          cClass = 'apple';
+          sub = 'PWA Instantâneo • Safari Tela de Início';
+        } else if (/Win/i.test(plat) || /Windows/i.test(ua)) {
+          os = 'windows';
+          label = 'Windows';
+          href = 'downloads/Vox.exe';
+          isDl = true;
+          icon = 'icons/microsoft-windows-tiles.svg';
+          cClass = 'windows';
+          sub = 'Executável WebView2 • 967 KiB';
+        } else if (/Linux/i.test(plat) || /Linux/i.test(ua)) {
+          os = 'linux';
+          label = 'GNU/Linux';
+          href = 'https://github.com/yurikayel/vox/tree/develop/tools/desktop-linux';
+          isDl = false;
+          icon = 'icons/linux-tux.svg';
+          cClass = 'linux';
+          sub = 'WebKitGTK • < 30 KiB';
+        } else if (/Mac/i.test(plat) || /Macintosh/i.test(ua)) {
+          os = 'macos';
+          label = 'macOS';
+          href = 'https://vox-9df.pages.dev/';
+          isDl = false;
+          icon = 'icons/apple-white.svg';
+          cClass = 'apple';
+          sub = 'Web App & Suporte launchd';
+        }
+
+        if (os) {
+          var targetSelector = '.os-card.' + (os === 'ios' ? 'apple' : os);
+          var targetCard = document.querySelector('.section-block:first-of-type ' + targetSelector);
+          if (targetCard) {
+            targetCard.classList.add('is-current-device');
+            var pill = document.createElement('span');
+            pill.className = 'device-pill';
+            pill.textContent = 'Seu Aparelho';
+            targetCard.prepend(pill);
+          }
+
+          var slot = document.getElementById('smart-device-slot');
+          if (slot) {
+            var ctaHtml = isDl
+              ? '<a href="' + href + '" class="smart-device-cta" download><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Baixar para ' + label + '</a>'
+              : '<a href="' + href + '" class="smart-device-cta" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Abrir no Safari</a>';
+
+            slot.innerHTML =
+              '<div class="smart-device-card ' + cClass + '">' +
+                '<div class="smart-device-left">' +
+                  '<div class="smart-device-icon"><img src="' + icon + '" alt="' + label + '" /></div>' +
+                  '<div class="smart-device-meta">' +
+                    '<span class="smart-device-badge">Detectado neste aparelho</span>' +
+                    '<strong class="smart-device-title">Vox para ' + label + '</strong>' +
+                    '<span class="smart-device-sub">' + sub + '</span>' +
+                  '</div>' +
+                '</div>' +
+                ctaHtml +
+              '</div>';
+          }
+        }
+      } catch (_e) {}
+    })();
+  </script>
 
 </body>
 </html>

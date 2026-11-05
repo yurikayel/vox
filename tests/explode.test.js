@@ -101,6 +101,10 @@ test("explode - sheet tops with WhatsApp + EXPLODE! side by side and collapses t
   assert.ok(row.indexOf('data-explode-action="whatsapp"') < row.indexOf('data-explode-action="burst"'));
   assert.ok(row.includes("EXPLODE!"));
   assert.ok(row.includes(explode.VOX_LOGO_SRC));
+  assert.ok(row.includes("icon-mark-black-128.png"));
+  assert.ok(html.includes("explode-target"));
+  assert.ok(html.includes("explode-megaphone-wrap"));
+  assert.ok(html.includes("Hierarquia"));
   const visible = html.slice(0, moreIdx);
   for (const advanced of ["cascade", "webhooks", "story-card", "native"]) {
     assert.ok(!visible.includes(`data-explode-action="${advanced}"`), `${advanced} deve ficar recolhido`);
