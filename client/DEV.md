@@ -1152,7 +1152,7 @@ OAuth e compartilhamento nativo citam provedores apenas onde exigido por integra
 - **Canal de Diálogo com a Vanguarda Revolucionária:**
   - Rota dedicada `vox/revolução` (e `vox/revolucao`) para apresentar o viés marxista-leninista do Vox: ferramenta como andaime (*Iskra* moderna de Lênin) para organização da voz operária, sem solucionismo tecnológico.
   - Crítica materialista das Big Techs como monopólios do imperialismo digital, superexploração de dados e precarização (escala 6x1).
-  - Destaque pedagógico da grade do curso da Escola Nacional de Formação Marxista (Formação e Ação / PSTU, com Gustavo Machado).
+  - Análise materialista atemporal das 7 trincheiras teóricas (Dependência e Soberania, Exploração e Escala 6x1, Estado Burguês e Poder Popular, Raça/Gênero/Classe, Antifascismo, Socialismo e Organização Operária).
   - Caixa de ferramentas da classe trabalhadora: Local-First, Nós Populares (Vox Populi), M-de-N, POSSE e Pix Zaps sem taxas.
 - **Roteamento SPA e Servidores Estáticos:**
   - `STATIC_ROUTES` em `route-parse.js` resolve `revolucao` e `revolução`.

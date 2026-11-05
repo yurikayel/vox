@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-11-05T18:16:53.381Z",
-  "filesScanned": 152,
+  "generatedAt": "2026-11-05T18:25:36.630Z",
+  "filesScanned": 153,
   "violationCount": 3,
   "violations": [
     {
       "file": "client/js/render/topic.js",
-      "line": 80,
+      "line": 83,
       "rule": "complexity",
       "message": "Function 'renderTopicFeedbackActions' has a complexity of 18. Maximum allowed is 15.",
       "severity": "warn"

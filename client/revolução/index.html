@@ -5,7 +5,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>vox — Revolução, Marxismo-Leninismo e Tecnologia Popular</title>
-  <meta name="description" content="Ferramental web livre, local-first e descentralizado da classe trabalhadora para contrapor as Big Techs, combater o capitalismo e organizar a voz popular soberana." />
+  <meta name="description" content="Ferramental web livre, local-first e descentralizado da classe trabalhadora para contrapor o monopólio das Big Techs, combater o capitalismo e organizar a voz popular soberana." />
   <link rel="canonical" href="https://yurikayel.github.io/vox/revolucao" />
   <link rel="icon" href="icons/emoji-vox-vermelho.svg" type="image/svg+xml" />
   <link rel="icon" href="icons/emoji-vox-vermelho-32.png" sizes="32x32" type="image/png" />
@@ -123,7 +123,7 @@
     }
 
     .subtitle {
-      max-width: 740px;
+      max-width: 760px;
       margin: 0 auto 1.75rem auto;
       font-size: 1.08rem;
       color: var(--text-muted);
@@ -306,9 +306,9 @@
       line-height: 1.55;
     }
 
-    /* Caixa em Destaque do Curso de Formação Marxista */
-    .course-banner {
-      background: linear-gradient(145deg, rgba(30, 16, 20, 0.94) 0%, rgba(14, 19, 28, 0.96) 100%);
+    /* Banner Metodológico: A Ferramenta como Andaime */
+    .method-banner {
+      background: linear-gradient(145deg, rgba(28, 14, 18, 0.95) 0%, rgba(14, 19, 28, 0.96) 100%);
       border: 1.5px solid var(--border-red);
       border-radius: 20px;
       padding: 2.25rem;
@@ -318,7 +318,7 @@
       margin-bottom: 3.75rem;
     }
 
-    .course-banner::before {
+    .method-banner::before {
       content: '';
       position: absolute;
       top: 0;
@@ -329,37 +329,22 @@
       pointer-events: none;
     }
 
-    .course-badge-row {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 0.65rem;
-      margin-bottom: 1.15rem;
-    }
-
-    .course-badge {
+    .method-badge {
       font-size: 0.74rem;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.07em;
+      letter-spacing: 0.08em;
       padding: 0.25rem 0.75rem;
       border-radius: 9999px;
-    }
-
-    .course-badge.pstu {
       background: var(--red-primary);
       color: #FFFFFF;
+      display: inline-block;
+      margin-bottom: 1.15rem;
     }
 
-    .course-badge.dates {
-      background: rgba(245, 158, 11, 0.15);
-      color: var(--gold-light);
-      border: 1px solid rgba(245, 158, 11, 0.3);
-    }
-
-    .course-title {
+    .method-title {
       font-family: 'Plus Jakarta Sans', sans-serif;
-      font-size: clamp(1.4rem, 4vw, 2rem);
+      font-size: clamp(1.4rem, 4vw, 2.1rem);
       font-weight: 800;
       color: #FFFFFF;
       letter-spacing: -0.03em;
@@ -367,100 +352,62 @@
       margin-bottom: 0.85rem;
     }
 
-    .course-summary {
-      font-size: 1rem;
+    .method-summary {
+      font-size: 1.02rem;
       color: var(--text-muted);
-      line-height: 1.6;
+      line-height: 1.65;
       margin-bottom: 1.75rem;
-      max-width: 840px;
+      max-width: 860px;
     }
 
-    .course-schedule-grid {
+    .method-summary strong {
+      color: #FFFFFF;
+    }
+
+    .method-pillars-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 0.85rem;
-      margin-bottom: 2rem;
+      grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.85rem;
     }
 
-    .schedule-item {
+    .pillar-box {
       background: rgba(255, 255, 255, 0.03);
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 12px;
-      padding: 0.95rem 1.15rem;
+      padding: 1.1rem 1.25rem;
       transition: background 0.15s ease, border-color 0.15s ease;
     }
 
-    .schedule-item:hover {
+    .pillar-box:hover {
       background: rgba(220, 38, 38, 0.06);
       border-color: rgba(220, 38, 38, 0.3);
     }
 
-    .schedule-date {
+    .pillar-tag {
       font-family: 'JetBrains Mono', monospace;
       font-size: 0.74rem;
       font-weight: 700;
       color: var(--gold);
       display: block;
-      margin-bottom: 0.25rem;
+      margin-bottom: 0.35rem;
     }
 
-    .schedule-theme {
-      font-size: 0.92rem;
-      font-weight: 600;
-      color: #FFFFFF;
-      line-height: 1.35;
-    }
-
-    .schedule-speaker {
-      font-size: 0.8rem;
-      color: var(--text-dim);
-      margin-top: 0.2rem;
-    }
-
-    .course-cta-box {
-      background: rgba(0, 0, 0, 0.35);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 14px;
-      padding: 1.25rem 1.5rem;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1.25rem;
-    }
-
-    .course-cta-text h4 {
+    .pillar-heading {
       font-size: 1.05rem;
       font-weight: 700;
       color: #FFFFFF;
-      margin-bottom: 0.2rem;
+      margin-bottom: 0.45rem;
+      line-height: 1.3;
     }
 
-    .course-cta-text p {
+    .pillar-desc {
       font-size: 0.88rem;
       color: var(--text-muted);
+      line-height: 1.5;
     }
 
-    .course-cta-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.55rem;
-      background: var(--gold);
-      color: #1a1002;
-      font-size: 0.92rem;
-      font-weight: 700;
-      padding: 0.75rem 1.45rem;
-      border-radius: 10px;
-      text-decoration: none;
-      transition: background 0.15s ease, transform 0.15s ease;
-    }
-
-    .course-cta-btn:hover {
-      background: #EAB308;
-      transform: translateY(-2px);
-    }
-
-    /* As 7 Trincheiras do Presente: Matriz Teórica e Tecnológica */
+    /* As 7 Trincheiras Teóricas do Presente */
     .trenches-grid {
       display: grid;
       grid-template-columns: 1fr;
@@ -542,7 +489,7 @@
       color: var(--red-light);
     }
 
-    /* Caixa de Ferramentas Vox: 5 Pilares Concretos */
+    /* Caixa de Ferramentas Vox: 6 Pilares Concretos */
     .tools-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -726,20 +673,8 @@
         font-size: 1.55rem;
       }
 
-      .course-banner {
+      .method-banner {
         padding: 1.35rem 1.15rem;
-      }
-
-      .course-cta-box {
-        flex-direction: column;
-        align-items: stretch;
-        text-align: center;
-        padding: 1.15rem;
-      }
-
-      .course-cta-btn {
-        width: 100%;
-        justify-content: center;
       }
 
       .trench-item {
@@ -771,7 +706,7 @@
     <div class="brand-top">
       <img src="icons/emoji-vox-vermelho.svg" alt="vox revolução" class="brand-mark" />
       <span class="brand-wordmark">vox</span>
-      <span class="brand-pill">revolução & soberania popular</span>
+      <span class="brand-pill">voz popular & soberania operária</span>
     </div>
 
     <h1>
@@ -780,7 +715,7 @@
     </h1>
 
     <p class="subtitle">
-      A internet das Big Techs foi desenhada para a <strong>extração de mais-valia</strong>, o <strong>controle ideológico</strong> e o <strong>avanço do fascismo</strong>. O Vox é o ferramental web livre, local-first e descentralizado para organizar a voz operária e a luta revolucionária fora do jugo do grande capital.
+      A internet monopolizada pelas Big Techs foi desenhada para a <strong>extração de mais-valia</strong>, o <strong>controle ideológico</strong> e a <strong>reprodução do fascismo</strong>. O Vox é o ferramental técnico livre, local-first e descentralizado para dar voz ativa ao povo e organizar a classe trabalhadora fora do jugo do grande capital.
     </p>
 
     <div class="hero-actions">
@@ -792,9 +727,9 @@
         <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Baixar Aplicativo & Nós
       </a>
-      <a href="#curso-marxismo" class="btn-action secondary">
-        <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-        Curso de Marxismo (PSTU)
+      <a href="#metodologia" class="btn-action secondary">
+        <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+        Metodologia & Andaime
       </a>
       <a href="https://github.com/yurikayel/vox" target="_blank" rel="noopener" class="btn-action secondary">
         <svg viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
@@ -805,13 +740,13 @@
 
   <main>
 
-    <!-- BLOCO 1: O DIAGNÓSTICO MATERIALISTA HISTÓRICO -->
+    <!-- BLOCO 1: O PROBLEMA - O CAPITALISMO DE PLATAFORMA E O LATIFÚNDIO DIGITAL -->
     <section class="section-block">
       <div class="section-header">
-        <span class="section-tag"><span class="tag-bullet"></span> Diagnóstico Materialista Histórico</span>
+        <span class="section-tag"><span class="tag-bullet"></span> O Problema Concreto</span>
         <h2 class="section-title">A tecnologia sob o capital monopolista</h2>
         <p class="section-desc">
-          Para o marxismo-leninismo, as forças produtivas não flutuam no vácuo abstrato. As plataformas digitais contemporâneas (Google, Meta, Apple, Microsoft, Amazon) não são “praças públicas neutras”: são a expressão máxima do <strong>capital financeiro monopolista transnacional</strong>.
+          Para o marxismo-leninismo, as forças produtivas não flutuam no vácuo moral. As plataformas digitais contemporâneas (Google, Meta, Apple, Microsoft, Amazon) não são “praças públicas neutras”: são a expressão máxima do <strong>capital financeiro monopolista transnacional</strong>.
         </p>
       </div>
 
@@ -820,7 +755,7 @@
           <span class="card-num">01 / MAIS-VALIA & DADOS</span>
           <h3>Trabalho social expropriado</h3>
           <p>
-            Toda a riqueza, dados e códigos que sustentam a internet são gerados pela classe trabalhadora mundial. No entanto, o capital de plataforma se apropria privadamente dessa inteligência coletiva, convertendo atenção humana em mercadoria, precarizando a força de trabalho (uberização, escala 6x1) e acumulando lucros bilionários no centro imperialista.
+            Toda a riqueza, dados e códigos que sustentam a internet são gerados pela classe trabalhadora. No entanto, o capital de plataforma se apropria privadamente dessa inteligência coletiva, convertendo atenção humana em mercadoria, precarizando a força de trabalho (uberização, escala 6x1) e acumulando lucros bilionários no centro imperialista.
           </p>
         </div>
 
@@ -828,99 +763,75 @@
           <span class="card-num">02 / CENSURA & VIGILÂNCIA</span>
           <h3>O Estado burguês e as Big Techs</h3>
           <p>
-            O Estado capitalista é o comitê executivo da classe dominante. As Big Techs colaboram ativamente com agências imperialistas de espionagem e aparatos de repressão policial. Construir a organização de base dentro de plataformas proprietárias significa entregar o organograma militante, as atas e as comunicações de mão beijada à inteligência burguesa.
+            O Estado capitalista é o comitê executivo da classe dominante. As Big Techs colaboram ativamente com aparatos imperialistas de vigilância e repressão policial. Construir a organização militante dentro de plataformas proprietárias significa entregar o organograma, as atas e as comunicações de mão beijada à inteligência burguesa.
           </p>
         </div>
 
         <div class="critique-card">
-          <span class="card-num">03 / A FÁBRICA DO FASCISMO</span>
-          <h3>O algoritmo do ódio e da reação</h3>
+          <span class="card-num">03 / A FÁBRICA DA REAÇÃO</span>
+          <h3>O algoritmo do ódio e do fascismo</h3>
           <p>
-            Como ensinou Georgi Dimitrov, o fascismo é a ditadura terrorista aberta dos setores mais reacionários do capital financeiro em crise. Os algoritmos comerciais premiam sistematicamente o pânico moral, o racismo, a misoginia e a desinformação extremista porque o ódio maximiza o engajamento e divide a classe trabalhadora.
+            Como demonstrou Georgi Dimitrov, o fascismo é a ditadura terrorista aberta dos setores mais reacionários do capital financeiro em crise. Os algoritmos comerciais premiam o pânico moral, o racismo e a misoginia porque o ódio gera cliques comerciais e fragmenta a solidariedade proletária.
           </p>
         </div>
       </div>
     </section>
 
-    <!-- BLOCO 2: DESTAQUE CURSO FORMAÇÃO MARXISTA (PSTU) -->
-    <section class="section-block" id="curso-marxismo">
-      <div class="course-banner">
-        <div class="course-badge-row">
-          <span class="course-badge pstu">Escola Nacional de Formação Marxista</span>
-          <span class="course-badge dates">Quintas-feiras • 19h às 22h • Online</span>
-        </div>
+    <!-- BLOCO 2: A METODOLOGIA - A FERRAMENTA COMO ANDAIME (ANTI-SOLUCIONISMO) -->
+    <section class="section-block" id="metodologia">
+      <div class="method-banner">
+        <span class="method-badge">Metodologia Revolucionária & Método Materialista</span>
 
-        <h2 class="course-title">
-          Introdução ao Marxismo: Compreender a sociedade para transformar o mundo
+        <h2 class="method-title">
+          A ferramenta é o andaime; o edifício é a organização popular.
         </h2>
 
-        <p class="course-summary">
-          Como o marxismo explica a sociedade em que vivemos? O que ele nos oferece para compreender o Brasil, a exploração do trabalho, as opressões e o avanço da extrema-direita? Uma iniciativa do <strong>Formação e Ação (PSTU)</strong> que conecta o estudo teórico rigoroso às urgências táticas e estratégicas da luta de classes no presente.
+        <p class="method-summary">
+          Recusamos frontalmente a ilusão pequeno-burguesa do <strong>solucionismo tecnológico</strong>: nenhum software faz revolução sozinho. A transformação real é obra das massas organizadas em seus sindicatos combativos, comitês de bairro, coletivos de base e partidos de vanguarda. Mas uma classe sem meios próprios de comunicação é presa fácil para os latifúndios digitais.
         </p>
 
-        <div class="course-schedule-grid">
-          <div class="schedule-item">
-            <span class="schedule-date">05/NOVEMBRO/2026 • AULA INAUGURAL</span>
-            <div class="schedule-theme">A formação do Brasil e as propostas para sua transformação</div>
-            <div class="schedule-speaker">Com Gustavo Machado</div>
+        <div class="method-pillars-grid">
+          <div class="pillar-box">
+            <span class="pillar-tag">PRINCÍPIO 01</span>
+            <div class="pillar-heading">Voz popular ativa e direta</div>
+            <div class="pillar-desc">
+              Devolver ao povo trabalhador o poder de pautar, debater e deliberar sem o filtro predatório de algoritmos desenhados para extrair atenção comercial.
+            </div>
           </div>
 
-          <div class="schedule-item">
-            <span class="schedule-date">12/NOVEMBRO/2026 • AULA 2</span>
-            <div class="schedule-theme">O capitalismo, a exploração e a luta de classes</div>
-            <div class="schedule-speaker">Teoria do valor, mais-valia e contradição capital-trabalho</div>
+          <div class="pillar-box">
+            <span class="pillar-tag">PRINCÍPIO 02</span>
+            <div class="pillar-heading">Descentralização fora do capital</div>
+            <div class="pillar-desc">
+              Infraestrutura distribuída nas pontas, onde servidores comunitários operados pela própria classe eliminam pontos únicos de falha e cartórios corporativos.
+            </div>
           </div>
 
-          <div class="schedule-item">
-            <span class="schedule-date">19/NOVEMBRO/2026 • AULA 3</span>
-            <div class="schedule-theme">As eleições, o Estado e o poder</div>
-            <div class="schedule-speaker">O caráter de classe do Estado burguês e a via revolucionária</div>
-          </div>
-
-          <div class="schedule-item">
-            <span class="schedule-date">26/NOVEMBRO/2026 • AULA 4</span>
-            <div class="schedule-theme">As relações entre raça, gênero e classe</div>
-            <div class="schedule-speaker">O combate sem trégua às opressões estruturais na luta anticapitalista</div>
-          </div>
-
-          <div class="schedule-item">
-            <span class="schedule-date">03/DEZEMBRO/2026 • AULA 5</span>
-            <div class="schedule-theme">O fascismo e seu enfrentamento</div>
-            <div class="schedule-speaker">A reação extremista do grande capital e os métodos de autodefesa da classe</div>
-          </div>
-
-          <div class="schedule-item">
-            <span class="schedule-date">10/DEZEMBRO/2026 • AULA 6</span>
-            <div class="schedule-theme">A revolução e a perspectiva socialista</div>
-            <div class="schedule-speaker">A tomada do poder pelos trabalhadores e a socialização da produção</div>
-          </div>
-
-          <div class="schedule-item">
-            <span class="schedule-date">17/DEZEMBRO/2026 • AULA 7</span>
-            <div class="schedule-theme">O papel da organização e do partido revolucionário</div>
-            <div class="schedule-speaker">A vanguarda proletária, o centralismo democrático e a disciplina de luta</div>
+          <div class="pillar-box">
+            <span class="pillar-tag">PRINCÍPIO 03</span>
+            <div class="pillar-heading">Organização coletiva e memória</div>
+            <div class="pillar-desc">
+              Impedir o sequestro e o apagamento do histórico das lutas populares, garantindo registros criptograficamente verificáveis e inalienáveis.
+            </div>
           </div>
         </div>
 
-        <div class="course-cta-box">
-          <div class="course-cta-text">
-            <h4>Quer participar deste curso formativo?</h4>
-            <p>A coordenação do curso entrará em contato via WhatsApp para fornecer o link da sala e as apostilas de leitura.</p>
-          </div>
-          <a href="https://api.whatsapp.com/send?text=Ol%C3%A1!%20Quero%20me%20inscrever%20no%20Curso%20de%20Introdu%C3%A7%C3%A3o%20ao%20Marxismo%20(Forma%C3%A7%C3%A3o%20e%20A%C3%A7%C3%A3o%20/%20PSTU)" target="_blank" rel="noopener" class="course-cta-btn">
-            Garantir Vaga no WhatsApp
-          </a>
+        <div class="quote-box" style="margin: 0; background: rgba(0, 0, 0, 0.4); border-color: var(--gold);">
+          <p class="quote-text" style="font-size: 1rem; margin-bottom: 0.45rem;">
+            “O jornal não é apenas um propagandista coletivo e um agitador coletivo, mas também um organizador coletivo. (...) Pode ser comparado aos andaimes que se levantam em redor de um edifício em construção: marcam os seus contornos, facilitam as comunicações entre os diferentes grupos de operários, ajudam-nos a distribuir o trabalho e a abraçar o conjunto dos resultados obtidos.”
+          </p>
+          <span class="quote-author" style="color: var(--gold-light);">V. I. Lênin — <em>Que Fazer? (1902)</em></span>
         </div>
       </div>
     </section>
 
-    <!-- BLOCO 3: AS 7 TRINCHEIRAS DO MARXISMO NA ERA DIGITAL -->
+    <!-- BLOCO 3: AS 7 TRINCHEIRAS CONCEITUAIS DO MARXISMO NA ERA DIGITAL -->
     <section class="section-block">
       <div class="section-header">
-        <span class="section-tag gold"><span class="tag-bullet"></span> A Teoria Aplicada à Matéria</span>
-        <h2 class="section-title">As 7 trincheiras: Teoria marxista e soberania digital</h2>
+        <span class="section-tag gold"><span class="tag-bullet"></span> Teoria Marxista Viva</span>
+        <h2 class="section-title">As 7 trincheiras: Teoria materialista e soberania digital</h2>
         <p class="section-desc">
-          O estudo marxista não é dogma de gabinete: é um guia para a ação. Veja como os 7 eixos teóricos fundamentais respondem diretamente à necessidade de uma infraestrutura de comunicação independente.
+          O marxismo não é dogma abstrato, mas o método científico da emancipação da classe trabalhadora. Veja como os pilares teóricos fundamentais respondem às batalhas contemporâneas pela comunicação e tecnologia:
         </p>
       </div>
 
@@ -928,112 +839,112 @@
 
         <div class="trench-item">
           <div class="trench-meta">
-            <span class="trench-num">Eixo 01 • Dependência</span>
-            <h3 class="trench-theme">Formação do Brasil & Soberania Nacional</h3>
+            <span class="trench-num">Trincheira 01 • Teoria da Dependência</span>
+            <h3 class="trench-theme">Formação Social & Soberania Tecnológica</h3>
           </div>
           <div class="trench-content">
             <h4>O Brasil como colônia de dados</h4>
             <p>
-              Historicamente inserido na divisão internacional do trabalho como exportador de bens primários, o Brasil hoje reproduz a dependência tecnológica: exporta os dados da sua juventude e dos seus trabalhadores para os datacenters de Delaware e Califórnia, importando software fechado e regras corporativas que drenam a soberania popular.
+              Historicamente subordinado na divisão internacional do trabalho como fornecedor de matérias-primas, o Brasil reproduz no século XXI a dependência tecnológica: exporta os dados da sua juventude e dos seus trabalhadores para os datacenters de Delaware e Califórnia, importando software proprietário que drena a riqueza e a soberania nacional.
             </p>
             <div class="trench-vox-solution">
-              <strong>Como o Vox atua:</strong> Armazenamento local-first nos aparelhos brasileiros e redes comunitárias territoriais no país, quebrando o dreno colonial de dados e a dependência de corporações estrangeiras.
+              <strong>Como o Vox atua:</strong> Armazenamento local-first nos aparelhos e nós comunitários em território brasileiro, rompendo o dreno colonial e a vassalagem às Big Techs norte-americanas.
             </div>
           </div>
         </div>
 
         <div class="trench-item">
           <div class="trench-meta">
-            <span class="trench-num">Eixo 02 • Economia Política</span>
-            <h3 class="trench-theme">Capitalismo, Exploração & Luta de Classes</h3>
+            <span class="trench-num">Trincheira 02 • Crítica da Economia Política</span>
+            <h3 class="trench-theme">Capitalismo, Exploração & Escala 6x1</h3>
           </div>
           <div class="trench-content">
-            <h4>A mais-valia no século XXI</h4>
+            <h4>A extração de mais-valia em tempo real</h4>
             <p>
-              O capital digital se nutre da precarização absoluta: da escala extenuante 6x1 aos entregadores algorítmicos. Enquanto os operários do código e da logística produzem toda a riqueza circulante, os bilionários das plataformas leiloam anúncios para enriquecer o capital financeiro parasitário.
+              O capital digital aprofunda a precarização absoluta da força de trabalho: da rotina extenuante da escala 6x1 ao confinamento algorítmico de entregadores e motoristas. Enquanto o proletariado da logística e do código gera toda a riqueza circulante, as plataformas retêm monopólios parasitários.
             </p>
             <div class="trench-vox-solution">
-              <strong>Como o Vox atua:</strong> Código 100% aberto e sem anúncios. Zero extração de lucros sobre a interação popular. Apoio solidário direto (Pix Zaps) sem intermediários financeiros burgueses retendo comissões.
+              <strong>Como o Vox atua:</strong> Código aberto, sem anúncios e sem exploração da atenção alheia. Apoio mútuo e sustentação solidária direta (Pix Zaps) sem intermediários financeiros burgueses cobrando pedágio.
             </div>
           </div>
         </div>
 
         <div class="trench-item">
           <div class="trench-meta">
-            <span class="trench-num">Eixo 03 • Teoria do Estado</span>
-            <h3 class="trench-theme">As Eleições, o Estado & o Poder</h3>
+            <span class="trench-num">Trincheira 03 • Teoria Marxista do Estado</span>
+            <h3 class="trench-theme">O Estado Burguês & o Poder Popular</h3>
           </div>
           <div class="trench-content">
-            <h4>A farsa da neutralidade institucional</h4>
+            <h4>A democracia limitada pelos monopólios</h4>
             <p>
-              O parlamento e as instituições burguesas não tocarão no monopólio dos conglomerados de mídia e tecnologia, pois deles dependem para manter a classe trabalhadora domesticada. A emancipação da classe exige a construção de instâncias de poder popular e canais de deliberação independentes dos cartórios estatais e corporativos.
+              Não há democracia real quando os canais por onde circula o debate público pertencem a quatro monopólios transnacionais subordinados ao imperialismo. A emancipação da classe exige instâncias de deliberação coletiva e poder popular independentes dos cartórios do Estado e das corporações.
             </p>
             <div class="trench-vox-solution">
-              <strong>Como o Vox atua:</strong> Governança operária direta (1 membro = 1 voto) nas comunidades, deliberação com diffs transparentes e travas anti-fraude (Eligibility-Cutoff), fora do controle de tribunais ou diretorias corporativas.
+              <strong>Como o Vox atua:</strong> Governança operária direta (1 membro = 1 voto) nas comunidades, deliberação com propostas transparentes e travas anti-invasão (Eligibility-Cutoff), fora do controle de conselhos corporativos.
             </div>
           </div>
         </div>
 
         <div class="trench-item">
           <div class="trench-meta">
-            <span class="trench-num">Eixo 04 • Opressões Estruturais</span>
+            <span class="trench-num">Trincheira 04 • Opressões Estruturais</span>
             <h3 class="trench-theme">Raça, Gênero & Classe</h3>
           </div>
           <div class="trench-content">
-            <h4>O algoritmo racista e patriarcal</h4>
+            <h4>O algoritmo que divide a classe trabalhadora</h4>
             <p>
-              O capitalismo se utiliza do racismo e do machismo para superexplorar mulheres e negros, barateando a força de trabalho global. As redes comerciais amplificam a violência misógina e a segregação racial como modelos lucrativos de engajamento predatório.
+              O capitalismo utiliza historicamente o racismo estrutural e o machismo para dividir os explorados e rebaixar o custo geral da reprodução da força de trabalho. As plataformas comerciais lucram intensamente com a misoginia, a transfobia e o ódio racial, transformando o linchamento virtual em modelo de negócios.
             </p>
             <div class="trench-vox-solution">
-              <strong>Como o Vox atua:</strong> Ausência total de feeds de recomendação algorítmica desenhados para inflamar ofensas. Moderação comunitária autônoma operada pela base para blindar espaços de mulheres, negros e periféricos contra o assédio organizado.
+              <strong>Como o Vox atua:</strong> Rejeição absoluta de feeds de engajamento baseados em discórdia. Moderação comunitária pela base para blindar coletivos de mulheres, negros, indígenas e LGBTQIA+ contra o assédio fascista.
             </div>
           </div>
         </div>
 
         <div class="trench-item">
           <div class="trench-meta">
-            <span class="trench-num">Eixo 05 • Antifascismo</span>
+            <span class="trench-num">Trincheira 05 • Antifascismo</span>
             <h3 class="trench-theme">O Fascismo & seu Enfrentamento</h3>
           </div>
           <div class="trench-content">
-            <h4>Desarmar a máquina de guerra híbrida</h4>
+            <h4>Desarmar a engrenagem do ódio</h4>
             <p>
-              O fascismo cresce quando a classe trabalhadora é atomizada pelo pânico moral e por teorias da conspiração fabricadas em laboratórios de guerra psicológica. Não se combate o neofascismo pedindo que o Vale do Silício seja o árbitro da verdade: o combate real se faz com contrainformação factual e mobilização territorial.
+              O fascismo alimenta-se do desespero e da atomização da classe trabalhadora. Ele não será derrotado confiando na regulação benevolente dos próprios monopolistas que lucram com ele: o combate real ao fascismo exige contrainformação factual primária, memória viva e enraizamento no território.
             </p>
             <div class="trench-vox-solution">
-              <strong>Como o Vox atua:</strong> Distribuição em rede imune ao rage-bait corporativo. Ferramenta para produção e disparo em massa de contrainformação auditada diretamente para o WhatsApp e territórios da classe trabalhadora.
+              <strong>Como o Vox atua:</strong> Distribuição imune a leilões de alcance corporativo. Ferramenta para produção e disparo em massa de contrainformação auditada diretamente para o WhatsApp e territórios da classe trabalhadora.
             </div>
           </div>
         </div>
 
         <div class="trench-item">
           <div class="trench-meta">
-            <span class="trench-num">Eixo 06 • Socialismo</span>
-            <h3 class="trench-theme">A Revolução & a Perspectiva Socialista</h3>
+            <span class="trench-num">Trincheira 06 • Perspectiva Socialista</span>
+            <h3 class="trench-theme">Socialização das Forças Produtivas</h3>
           </div>
           <div class="trench-content">
-            <h4>Socialização das forças produtivas digitais</h4>
+            <h4>A tecnologia como bem comum (Commons)</h4>
             <p>
-              A perspectiva socialista não é o retorno à caneta e ao papel, mas a expropriação dos meios de produção da comunicação. No socialismo, redes digitais, supercomputadores e conexões serão bens comuns geridos democraticamente pela sociedade para satisfazer as necessidades da vida, e não para inflar o valor das ações nas bolsas de valores.
+              A perspectiva socialista não é a negação da técnica, mas a expropriação dos expropriadores. No socialismo, as redes de telecomunicação, servidores e softwares devem funcionar como bens comuns operados democraticamente para servir à vida, à cultura e à emancipação de todos.
             </p>
             <div class="trench-vox-solution">
-              <strong>Como o Vox atua:</strong> Protótipo vivo de bem comum digital (Commons): infraestrutura sem dono único, sem servidores proprietários e com código pertencente à coletividade humana.
+              <strong>Como o Vox atua:</strong> Arquitetura descentralizada sem dono central, sem servidores proprietários e com código pertencente à coletividade.
             </div>
           </div>
         </div>
 
         <div class="trench-item">
           <div class="trench-meta">
-            <span class="trench-num">Eixo 07 • Organização</span>
-            <h3 class="trench-theme">O Papel da Organização & do Partido</h3>
+            <span class="trench-num">Trincheira 07 • Organização Proletária</span>
+            <h3 class="trench-theme">O Partido, o Coletivo & a Vanguarda</h3>
           </div>
           <div class="trench-content">
-            <h4>O andaime contemporâneo de Lênin</h4>
+            <h4>Segurança e disciplina na era digital</h4>
             <p>
-              Em 1902, Lênin propôs que o jornal operário clandestino <em>Iskra</em> funcionasse como o andaime organizativo do partido proletário. Sem disciplina, memória preservada e segurança conspirativa contra a repressão, nenhuma vanguarda é capaz de conduzir as massas à vitória.
+              Sem disciplina, memória inalterável e proteção contra a devassa dos órgãos de repressão, nenhuma organização proletária resiste às tempestades da luta de classes. A vanguarda necessita de instrumentos seguros de comunicação e deliberação coletiva.
             </p>
             <div class="trench-vox-solution">
-              <strong>Como o Vox atua:</strong> O andaime técnico do século XXI: criptografia de ponta (P-256 e Ed25519), perfis coletivos multi-assinatura (M-de-N) para núcleos partidários e capacidade de operação offline em momentos de crise institucional ou cortes de sinal.
+              <strong>Como o Vox atua:</strong> Criptografia de ponta (P-256 e Ed25519), perfis coletivos multi-assinatura (M-de-N) para núcleos partidários e capacidade de operação offline em momentos de crise institucional ou cortes de sinal.
             </div>
           </div>
         </div>
@@ -1041,21 +952,13 @@
       </div>
     </section>
 
-    <!-- CITAÇÃO LÊNIN / ISKRA -->
-    <div class="quote-box">
-      <p class="quote-text">
-        “O jornal não é apenas um propagandista coletivo e um agitador coletivo, mas também um organizador coletivo. (...) Sob este aspecto, pode ser comparado aos andaimes que se levantam em redor de um edifício em construção: marcam os seus contornos, facilitam as comunicações entre os diferentes grupos de operários, ajudam-nos a distribuir o trabalho e a abraçar o conjunto dos resultados obtidos.”
-      </p>
-      <span class="quote-author">V. I. Lênin — <em>Que Fazer? (1902)</em></span>
-    </div>
-
-    <!-- BLOCO 4: A ARQUITETURA CONCRETA DO VOX PARA REVOLUCIONÁRIOS -->
+    <!-- BLOCO 4: O FERRAMENTAL MATERIAL DO VOX PARA A LUTA -->
     <section class="section-block">
       <div class="section-header">
-        <span class="section-tag emerald"><span class="tag-bullet"></span> Ferramental Concreto</span>
-        <h2 class="section-title">O que o Vox entrega materialmente para a luta</h2>
+        <span class="section-tag emerald"><span class="tag-bullet"></span> A Abordagem e o Ferramental</span>
+        <h2 class="section-title">O que o Vox entrega materialmente para a classe</h2>
         <p class="section-desc">
-          Recusamos o solucionismo tecnológico: <strong>nenhum aplicativo substitui a luta de massas, o sindicato combativo e a greve operária</strong>. Mas uma vanguarda sem comunicação segura é presa fácil para a reação. Veja os 5 pilares do Vox:
+          Disponibilizamos ferramentas práticas, robustas e auditáveis para que movimentos sociais, coletivos revolucionários, sindicatos e trabalhadores exerçam sua voz soberana:
         </p>
       </div>
 
@@ -1066,7 +969,7 @@
           </div>
           <h3>Chaves no bolso (Local-First)</h3>
           <p>
-            Suas identidades criptográficas e senhas soberanas são geradas localmente no seu aparelho via WebCrypto (Ed25519 e P-256). Não há banco de dados centralizado em servidor onde a polícia política possa apreender quem são os membros do seu comitê.
+            Identidades criptográficas e senhas soberanas geradas localmente no seu aparelho via WebCrypto (Ed25519 e P-256). Não há banco de dados centralizado em servidor onde a polícia política possa apreender quem são os membros do seu comitê.
           </p>
         </div>
 
@@ -1086,7 +989,7 @@
           </div>
           <h3>Nó popular autônomo (Vox Populi)</h3>
           <p>
-            Rode um nó silencioso de retransmissão e cache SHA-256 na sede do sindicato, em um PC antigo de 2012, num Raspberry Pi ou num celular velho na tomada. Se as redes do Estado caírem, a malha territorial operária continua ativa na rede local.
+            Rode um nó silencioso de retransmissão e cache SHA-256 na sede do sindicato, em um PC antigo de 2012, num Raspberry Pi ou num celular velho na tomada. Se as redes corporativas caírem, a malha territorial operária continua ativa na rede local.
           </p>
         </div>
 
@@ -1125,51 +1028,51 @@
     <!-- BLOCO 5: COMO COLABORAR & CONVOCATÓRIA REVOLUCIONÁRIA -->
     <section class="section-block">
       <div class="section-header">
-        <span class="section-tag"><span class="tag-bullet"></span> Plano de Ação Militante</span>
-        <h2 class="section-title">Como revolucionários marxistas podem colaborar hoje</h2>
+        <span class="section-tag"><span class="tag-bullet"></span> Plano de Ação Permanente</span>
+        <h2 class="section-title">Como revolucionários e trabalhadores de TI podem colaborar</h2>
         <p class="section-desc">
-          A construção da soberania popular não é um projeto comercial: é uma tarefa coletiva dos construtores da classe trabalhadora.
+          A soberania popular sobre a tecnologia não será outorgada por governos ou corporações: ela é construída pelas próprias mãos dos trabalhadores organizados.
         </p>
       </div>
 
       <div class="collab-grid">
         <div class="collab-card">
-          <span class="collab-step">PASSO 01</span>
-          <h4>Crie a Comunidade do seu Núcleo</h4>
+          <span class="collab-step">FRENTE 01</span>
+          <h4>Estruture o seu Núcleo ou Comitê</h4>
           <p>
             Abra o espaço deliberativo da sua célula partidária, centro acadêmico, oposição sindical ou comitê popular no Vox. Realize debates internos com voto transparente (1 membro = 1 voto) e arquivo permanente.
           </p>
         </div>
 
         <div class="collab-card">
-          <span class="collab-step">PASSO 02</span>
-          <h4>Suba um Nó Comunitário</h4>
+          <span class="collab-step">FRENTE 02</span>
+          <h4>Suba um Nó de Infraestrutura Comunitária</h4>
           <p>
             Instale o <a href="download.html">Vox Populi</a> na sede do seu partido ou sindicato. Um computador com Windows, Linux ou Raspberry Pi garante cache local e relay para os militantes da sua região.
           </p>
         </div>
 
         <div class="collab-card">
-          <span class="collab-step">PASSO 03</span>
-          <h4>Trabalhadores de TI: Auditem o Código</h4>
+          <span class="collab-step">FRENTE 03</span>
+          <h4>Trabalhadores da Tecnologia: Auditem o Código</h4>
           <p>
             Programadores, administradores de sistemas e pesquisadores de segurança comunistas: contribuam no <a href="https://github.com/yurikayel/vox" target="_blank" rel="noopener">GitHub do Vox</a> com hardening criptográfico, embalagem Linux e otimização de nós.
           </p>
         </div>
 
         <div class="collab-card">
-          <span class="collab-step">PASSO 04</span>
-          <h4>Difunda a Formação Teórica</h4>
+          <span class="collab-step">FRENTE 04</span>
+          <h4>Batalha das Ideias & Agitação Popular</h4>
           <p>
-            Compartilhe cursos marxistas, jornais operários, denúncias contra a escala 6x1 e a superexploração patronal. Use o Vox como arma de conscientização política massiva nas ruas e nas redes.
+            Compartilhe materiais de formação política, jornais operários, denúncias contra a escala 6x1 e a superexploração patronal. Use o Vox como arma de conscientização política massiva nas ruas e nas redes.
           </p>
         </div>
       </div>
 
       <div class="quick-web" style="background: linear-gradient(135deg, rgba(220, 38, 38, 0.12) 0%, rgba(14, 19, 28, 0.95) 100%); border-color: var(--border-red); border-radius: 16px; padding: 1.5rem 1.75rem;">
         <div class="quick-web-text">
-          <h3 style="color: #FFFFFF; font-size: 1.15rem; margin-bottom: 0.35rem;">Junte-se ao debate na comunidade oficial vox</h3>
-          <p style="color: var(--text-muted); font-size: 0.92rem;">Entre na ágora central do Vox na web para conversar diretamente com mantenedores, militantes populares e construtores de tecnologia livre.</p>
+          <h3 style="color: #FFFFFF; font-size: 1.15rem; margin-bottom: 0.35rem;">Participe do debate na comunidade oficial vox</h3>
+          <p style="color: var(--text-muted); font-size: 0.92rem;">Entre na ágora central do Vox na web para dialogar diretamente com mantenedores, militantes populares e construtores de tecnologia livre.</p>
         </div>
         <a href="index.html#/c/vox" class="btn-action red" style="white-space: nowrap;">
           Entrar na Comunidade Oficial

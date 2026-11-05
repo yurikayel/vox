@@ -275,6 +275,8 @@ const SHELL_ASSETS = [
 
   "./js/render/profile.js",
 
+  "./js/render/profile-voxels.js",
+
   "./js/render/oauth-modals.js",
 
   "./js/render/network.js",
