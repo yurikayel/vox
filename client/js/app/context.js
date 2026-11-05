@@ -35,7 +35,16 @@ export function shareTopicUnlessQuarantined(opts = {}) {
     share.showToast(mod.QUARANTINE_HINT);
     return false;
   }
-  return share.shareTopic(opts);
+  import("../explode-dispatch.js").then((m) => {
+    m.openExplodeSheet({
+      id: opts.topicId,
+      title: opts.title || "Post no Vox",
+      author: opts.author || "",
+      body: opts.body || "",
+      communityId: opts.communityId || "",
+    });
+  });
+  return true;
 }
 
 function quarantineButtonLabel(on) {

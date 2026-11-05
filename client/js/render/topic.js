@@ -100,24 +100,17 @@ function renderTopicFeedbackActions(topicId, topic, author, authorDisplay) {
   return `${likeBtn}${repostBtn}${starBtn}${renderTopicZapButton(topicId, topic, author, authorDisplay)}`;
 }
 
-function renderTopicExplodeButton(topicId, topic, authorDisplay, bodyText, commId) {
+function renderTopicDistributeActions(topicId, topic, authorDisplay, authorHandle, bodyText, commId, isMod) {
+  const saved = social.isSaved(topicId);
   const baseExpl = Number(topic?.explodesCount) || 0;
   const curExpl = social.getExplodesCount(topicId, baseExpl);
   const expl = social.isExploded(topicId);
-  const label = curExpl > 0 ? `${curExpl} disparos` : "EXPLODE!";
-  return `<button id="btn-explode-topic" class="action-btn btn-explode btn-explode-post ${expl ? "exploded" : ""}" data-id="${escapeHtml(topicId)}" data-count="${baseExpl}" data-title="${escapeHtml(topic?.title || "")}" data-author="${escapeHtml(authorDisplay || "")}" data-body="${escapeHtml((bodyText || "").slice(0, 200))}" data-comm="${escapeHtml(commId || "")}" aria-label="Explodir nas redes (EXPLODE!)" title="EXPLODE! Disparo multi-redes (Shift+clique para disparo rápido)">
-    <svg class="action-icon icon-explode" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
-    <span class="action-count count-explodes">${label}</span>
-  </button>`;
-}
+  const countSpan = curExpl > 0 ? `<span class="action-count count-explodes">${curExpl} disparos</span>` : "";
 
-function renderTopicDistributeActions(topicId, topic, authorDisplay, authorHandle, bodyText, commId, isMod) {
-  const saved = social.isSaved(topicId);
-  const shareBtn = `<button id="btn-share-topic" class="action-btn btn-share btn-share-post" data-id="${escapeHtml(topicId)}" data-title="${escapeHtml(topic?.title || "")}" data-author="${escapeHtml(authorDisplay || "")}" data-body="${escapeHtml((bodyText || "").slice(0, 160))}" aria-label="${escapeHtml(shareTopicAria(topicId))}"${quarantineShareAttrs(topicId)}>
+  const shareBtn = `<button id="btn-share-topic" class="action-btn btn-share btn-share-post ${expl ? "exploded" : ""}" data-id="${escapeHtml(topicId)}" data-count="${baseExpl}" data-title="${escapeHtml(topic?.title || "")}" data-author="${escapeHtml(authorDisplay || "")}" data-body="${escapeHtml((bodyText || "").slice(0, 200))}" data-comm="${escapeHtml(commId || "")}" aria-label="${escapeHtml(shareTopicAria(topicId))}" title="Compartilhar (EXPLODE!)"${quarantineShareAttrs(topicId)}>
     <svg class="action-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
-    <span class="action-count">Compartilhar</span>
+    <span class="action-count">Compartilhar</span>${countSpan}
   </button>`;
-  const explodeBtn = renderTopicExplodeButton(topicId, topic, authorDisplay, bodyText, commId);
   const copyMdBtn = `<button class="action-btn btn-copy-md" data-id="${escapeHtml(topicId)}" data-title="${escapeHtml(topic?.title || "")}" data-body="${escapeHtml(bodyText)}" data-author="${escapeHtml(authorDisplay)}" data-handle="${escapeHtml(authorHandle)}" aria-label="Copiar post como Markdown">
     <svg class="action-icon icon-copy" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
   </button>`;
@@ -128,7 +121,7 @@ function renderTopicDistributeActions(topicId, topic, authorDisplay, authorHandl
   const modBtn = isMod ? `<button class="btn btn-sm btn-danger btn-mod-hide" data-id="${escapeHtml(topicId)}" data-type="topic">🛡️ Ocultar</button>` : "";
   const quarAction = renderQuarantineAction(topicId, { asMenuItem: false });
 
-  return `${shareBtn}${explodeBtn}${copyMdBtn}${saveBtn}${replyLink}${modBtn}${quarAction}`;
+  return `${shareBtn}${copyMdBtn}${saveBtn}${replyLink}${modBtn}${quarAction}`;
 }
 
 function renderTopicToolbar(topicId, topic, author, authorDisplay, authorHandle, bodyText, commId, isMod) {

@@ -101,13 +101,13 @@ export async function quickExplodePost(post) {
 
 export function updateExplodeButtonsUi(postId, count) {
   if (typeof document === "undefined" || !postId) return;
-  const buttons = document.querySelectorAll(`.btn-explode-post[data-id="${postId}"]`);
+  const buttons = document.querySelectorAll(`.btn-share-post[data-id="${postId}"], .btn-explode-post[data-id="${postId}"]`);
   buttons.forEach((btn) => {
     btn.classList.add("exploded");
     const countEl = btn.querySelector(".count-explodes");
     if (countEl) {
-      countEl.textContent = btn.id === "btn-explode-topic"
-        ? (count > 0 ? `${count} disparos` : "EXPLODE!")
+      countEl.textContent = btn.id === "btn-share-topic" || btn.id === "btn-explode-topic"
+        ? (count > 0 ? `${count} disparos` : "")
         : (count > 0 ? String(count) : "");
     }
   });
@@ -560,10 +560,10 @@ function handleCascadeClick(e) {
 }
 
 function handleExplodePostTriggerClick(e) {
-  const explodePostBtn = e.target.closest?.(".btn-explode-post");
-  if (!explodePostBtn) return false;
+  const shareBtn = e.target.closest?.(".btn-share-post, #btn-share-topic, .btn-explode-post");
+  if (!shareBtn) return false;
   e.preventDefault();
-  const postData = extractExplodeBtnPost(explodePostBtn);
+  const postData = extractExplodeBtnPost(shareBtn);
   if (e.shiftKey || e.altKey) {
     quickExplodePost(postData);
   } else {

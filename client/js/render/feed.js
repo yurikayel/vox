@@ -83,54 +83,90 @@ function renderComposerPreviewWrap() {
     </div>`;
 }
 
+function iconMediaPhoto() {
+  return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>`;
+}
+
+function iconMediaMic() {
+  return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>`;
+}
+
+function iconMediaAudio() {
+  return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>`;
+}
+
+function iconMediaVideo() {
+  return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="2" y="5" rx="2"/><polygon points="22 8 16 12 22 16 22 8"/></svg>`;
+}
+
+function iconCommunity() {
+  return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`;
+}
+
 function renderComposerRecordingIndicator() {
   return `
-    <div id="inline-recording-indicator" class="hidden" style="margin:8px 0; padding:10px 14px; background:rgba(220, 53, 69, 0.08); border:1px solid rgba(220, 53, 69, 0.4); border-radius:var(--radius-sm); display:flex; align-items:center; justify-content:space-between;">
-      <div style="display:flex; align-items:center; gap:8px;">
-        <span class="recording-pulse" style="width:12px; height:12px; background:#dc3545; border-radius:50%; display:inline-block;"></span>
-        <strong style="color:var(--danger, #dc3545); font-size:0.85rem;">Gravando voz:</strong>
-        <span id="inline-recording-timer" style="font-family:monospace; font-weight:700;">00:00 / 01:00</span>
+    <div id="inline-recording-indicator" class="inline-recording-indicator hidden">
+      <div class="inline-recording-left">
+        <span class="recording-pulse" aria-hidden="true"></span>
+        <span class="recording-label">Gravando voz</span>
+        <div class="recording-waves" aria-hidden="true">
+          <span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <span id="inline-recording-timer" class="recording-timer">00:00 / 01:00</span>
       </div>
-      <div style="display:flex; gap:6px;">
-        <button type="button" id="btn-inline-stop-rec" class="btn btn-xs btn-primary">⏹ Concluir</button>
-        <button type="button" id="btn-inline-cancel-rec" class="btn btn-xs btn-outline">❌ Cancelar</button>
+      <div class="inline-recording-actions">
+        <button type="button" id="btn-inline-stop-rec" class="btn-rec-stop">⏹ Concluir</button>
+        <button type="button" id="btn-inline-cancel-rec" class="btn-rec-cancel" title="Cancelar gravação" aria-label="Cancelar gravação">✕</button>
       </div>
     </div>`;
+}
+
+function renderMediaTools() {
+  return `
+    <label class="inline-composer-tool" title="Foto (até 99 KB)" aria-label="Anexar foto">
+      <input type="file" id="inline-topic-file" accept="image/jpeg,image/png,image/webp,image/gif" hidden />
+      ${iconMediaPhoto()}
+    </label>
+    <button type="button" class="inline-composer-tool" id="btn-inline-mic" title="Gravar voz pelo microfone (até 60s)" aria-label="Gravar voz pelo microfone (até 60s)">
+      ${iconMediaMic()}
+    </button>
+    <label class="inline-composer-tool" title="Áudio (até 60s)" aria-label="Anexar áudio">
+      <input type="file" id="inline-topic-audio" accept="audio/mpeg,audio/mp3,audio/wav,audio/ogg,audio/webm,audio/aac,audio/m4a" hidden />
+      ${iconMediaAudio()}
+    </label>
+    <label class="inline-composer-tool" title="Vídeo (até 10s)" aria-label="Anexar vídeo">
+      <input type="file" id="inline-topic-video" accept="video/mp4,video/webm,video/ogg" hidden />
+      ${iconMediaVideo()}
+    </label>`;
 }
 
 function renderComposerToolbar() {
   return `
     <div class="inline-composer-toolbar">
-      <div class="inline-composer-tools" style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
-        <label class="inline-composer-tool" title="Anexar foto (até 99 KB)">
-          <input type="file" id="inline-topic-file" accept="image/jpeg,image/png,image/webp,image/gif" hidden />
-          <span aria-hidden="true">📷</span> Foto
-        </label>
-        <button type="button" class="inline-composer-tool" id="btn-inline-mic" title="Gravar voz pelo microfone (até 60s)" aria-label="Gravar voz pelo microfone (até 60s)">
-          <span aria-hidden="true">🔴</span> Gravar
-        </button>
-        <label class="inline-composer-tool" title="Anexar áudio (até 60s)">
-          <input type="file" id="inline-topic-audio" accept="audio/mpeg,audio/mp3,audio/wav,audio/ogg,audio/webm,audio/aac,audio/m4a" hidden />
-          <span aria-hidden="true">🎙️</span> Áudio
-        </label>
-        <label class="inline-composer-tool" title="Anexar vídeo (até 10s)">
-          <input type="file" id="inline-topic-video" accept="video/mp4,video/webm,video/ogg" hidden />
-          <span aria-hidden="true">🎬</span> Vídeo
-        </label>
-        <input type="text" id="inline-topic-comm" class="inline-composer-comm" list="inline-comm-list" placeholder="Comunidade (opcional)" maxlength="64" aria-label="Slug da comunidade" />
+      <div class="inline-composer-tools">
+        ${renderMediaTools()}
+        <div class="inline-composer-comm-wrap" title="Comunidade de destino">
+          ${iconCommunity()}
+          <input type="text" id="inline-topic-comm" class="inline-composer-comm" list="inline-comm-list" placeholder="Comunidade" maxlength="64" aria-label="Slug da comunidade" />
+        </div>
         <datalist id="inline-comm-list"></datalist>
       </div>
-      <button type="submit" class="btn btn-primary btn-sm" aria-label="Publicar mensagem no feed" id="btn-inline-submit" disabled>Postar</button>
+      <div class="inline-composer-actions">
+        <span class="inline-composer-char" id="inline-topic-char">0 / 2000</span>
+        <button type="submit" class="btn btn-primary btn-sm btn-inline-submit" aria-label="Publicar mensagem no feed" id="btn-inline-submit" disabled>Postar</button>
+      </div>
     </div>`;
 }
 
 function renderComposerMeta() {
   return `
-    <p class="inline-composer-meta" aria-live="polite">
-      <span class="inline-composer-char" id="inline-topic-char">0 / 2000</span>
-      <span class="inline-composer-hint meta"> · assinado no aparelho · <a href="#/compose/topic">formulário completo</a> · <a href="#/wallet">Criar ou importar chave</a></span>
-      <span class="inline-composer-local-hint meta" title="${escapeHtml(i18n.localMutateEditDeleteTooltip)}"> · ${escapeHtml(i18n.localMutateComposerHint)}</span>
-    </p>`;
+    <div class="inline-composer-meta" aria-live="polite">
+      <div class="inline-composer-meta-left">
+        <span class="inline-composer-badge-sovereign" title="Assinado no aparelho e sincronizado na malha peer-to-peer sem controle central.">🔒 Soberano</span>
+        <span class="inline-composer-hint meta"> · <a href="#/compose/topic">Formulário completo</a> · <a href="#/wallet">Criar ou importar chave</a></span>
+        <span class="inline-composer-local-hint meta" title="${escapeHtml(i18n.localMutateEditDeleteTooltip)}"> · ${escapeHtml(i18n.localMutateComposerHint)}</span>
+      </div>
+    </div>`;
 }
 
 export function renderInlineComposer({ userRouteId = "", displayName = "" } = {}) {
@@ -649,13 +685,16 @@ function renderToolbarOverflow(t, author, authorDisplay, authorHandle, baseStars
   </details>`;
 }
 
-function renderExplodeButton(t, authorDisplay) {
+function renderToolbarShareBtn(t, authorDisplay) {
   const baseExplodes = Number(t.explodesCount) || 0;
   const explodes = social.getExplodesCount(t.id, baseExplodes);
   const exploded = social.isExploded(t.id);
-  const countSpan = `<span class="action-count count-explodes">${explodes > 0 ? explodes : ""}</span>`;
-  return `<button class="action-btn btn-explode btn-explode-post ${exploded ? "exploded" : ""}" data-id="${escapeHtml(t.id)}" data-count="${baseExplodes}" data-title="${escapeHtml(t.title)}" data-author="${escapeHtml(authorDisplay || "")}" data-body="${escapeHtml((t.body || t.title || "").slice(0, 200))}" data-comm="${escapeHtml(t.communityId || "")}" aria-label="Explodir nas redes (EXPLODE!)" title="EXPLODE! Disparo multi-redes (Shift+clique para disparo rápido)">
-    <svg class="action-icon icon-explode" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>${countSpan}
+  const countSpan = explodes > 0 ? `<span class="action-count count-explodes">${explodes}</span>` : `<span class="action-count count-explodes"></span>`;
+  const bodySlice = escapeHtml((t.body || t.title || "").slice(0, 200));
+
+  return `<button class="action-btn btn-share btn-share-post ${exploded ? "exploded" : ""}" data-id="${escapeHtml(t.id)}" data-count="${baseExplodes}" data-title="${escapeHtml(t.title)}" data-author="${escapeHtml(authorDisplay || "")}" data-body="${bodySlice}" data-comm="${escapeHtml(t.communityId || "")}" aria-label="Compartilhar post" title="Compartilhar (EXPLODE!)"${quarantineShareAttrs(t.id)}>
+    <svg class="action-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+    ${countSpan}
   </button>`;
 }
 
@@ -674,10 +713,7 @@ function renderToolbarPrimary(t, liked, baseLikes, likes, authorDisplay) {
       </button>
       ${renderCommentButton(t)}
       ${renderRepostBtn(t, { size: 20 })}
-      <button class="action-btn btn-share btn-share-post" data-id="${escapeHtml(t.id)}" data-title="${escapeHtml(t.title)}" data-author="${escapeHtml(authorDisplay || "")}" data-body="${escapeHtml((t.body || "").slice(0, 160))}" aria-label="Compartilhar post"${quarantineShareAttrs(t.id)}>
-        <svg class="action-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
-      </button>
-      ${renderExplodeButton(t, authorDisplay)}
+      ${renderToolbarShareBtn(t, authorDisplay)}
       ${quoteBtn}
     </div>`;
 }
