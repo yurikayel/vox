@@ -1394,17 +1394,18 @@ main#app-main,
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  margin-top: 10px;
+  gap: 8px;
+  margin-top: 8px;
   padding-top: 10px;
-  border-top: 1px solid var(--border-subtle);
+  border-top: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
 }
 
 .inline-composer-tools {
   display: flex;
   align-items: center;
   gap: 4px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
 }
 
 /* Ícones limpos sem caixas escuras em volta (Redução de Carga Cognitiva) */
@@ -1420,13 +1421,14 @@ main#app-main,
   border: none;
   cursor: pointer;
   padding: 0;
+  flex-shrink: 0;
   transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
 }
 
 .inline-composer-tool:hover {
   background: rgba(29, 155, 240, 0.12);
   color: #1a8cd8;
-  transform: scale(1.1);
+  transform: scale(1.08);
 }
 
 .inline-composer-tool:active {
@@ -1437,23 +1439,41 @@ main#app-main,
   display: block;
 }
 
+/* Seletor de audiência / comunidade em linha própria sutil */
+.inline-composer-audience {
+  display: flex;
+  align-items: center;
+  padding: 4px 0 6px 50px;
+}
+
+@media (max-width: 480px) {
+  .inline-composer-audience {
+    padding-left: 0;
+  }
+}
+
 /* Comunidade em Pill elegante */
 .inline-composer-comm-wrap {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 10px;
-  margin-left: 4px;
+  padding: 4px 12px;
   border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.12));
   border-radius: 999px;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.03);
   color: var(--muted);
-  transition: border-color 0.15s ease, color 0.15s ease;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.inline-composer-comm-wrap:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .inline-composer-comm-wrap:focus-within {
   border-color: #1d9bf0;
-  color: var(--text);
+  background: rgba(29, 155, 240, 0.08);
+  color: #1d9bf0;
 }
 
 .inline-composer-comm {
@@ -1463,7 +1483,7 @@ main#app-main,
   font-size: 0.8rem;
   padding: 0;
   outline: none;
-  max-width: 130px;
+  max-width: 140px;
 }
 
 .inline-composer-comm::placeholder {
@@ -1475,13 +1495,15 @@ main#app-main,
 .inline-composer-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  flex-shrink: 0;
 }
 
 .inline-composer-char {
   font-size: 0.78rem;
   font-variant-numeric: tabular-nums;
   color: var(--muted);
+  white-space: nowrap;
 }
 
 .btn-inline-submit {
@@ -1489,10 +1511,11 @@ main#app-main,
   color: #fff;
   border: none;
   border-radius: 999px;
-  padding: 7px 20px;
+  padding: 7px 18px;
   font-size: 0.88rem;
   font-weight: 700;
   cursor: pointer;
+  white-space: nowrap;
   transition: background 0.15s ease, opacity 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
   box-shadow: 0 2px 8px rgba(29, 155, 240, 0.25);
 }
@@ -1509,21 +1532,9 @@ main#app-main,
   box-shadow: 0 4px 12px rgba(29, 155, 240, 0.35);
 }
 
-/* Footer / Microcopy Despoluída */
+/* Footer / Microcopy Removida Visualmente da Tela (Redução de Carga Cognitiva) */
 .inline-composer-meta {
-  margin: 8px 0 0;
-  padding: 4px 0 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 0.72rem;
-  color: var(--muted);
-  opacity: 0.65;
-  transition: opacity 0.2s ease;
-}
-
-.inline-composer-meta:hover {
-  opacity: 0.95;
+  display: none !important;
 }
 
 .inline-composer-meta-left {
@@ -7018,78 +7029,234 @@ body.photo-tagging .post-media-hero.photo-tag-mode {
   outline-offset: -2px;
 }
 
+/* Mobile: Barra de Navegação Inferior (Bottom Tab Bar) e Otimização Touch */
 @media (max-width: 767px) {
   .app-sidebar.tab-bar {
-    width: 0;
-    padding: 0;
-    border: 0;
-    overflow: visible;
-    background: transparent;
-    box-shadow: none;
-  }
-
-  .app-layout:not(.sidebar-drawer-open) .sidebar-scroll,
-  .app-layout:not(.sidebar-drawer-open) .sidebar-footer {
-    display: none;
-  }
-
-  /* Botão do Drawer no Mobile — nunca mais sobrepõe títulos, avatares ou ações */
-  .app-layout:not(.sidebar-drawer-open) .sidebar-collapse-btn {
     position: fixed;
-    left: max(12px, env(safe-area-inset-left, 0px));
-    top: max(10px, env(safe-area-inset-top, 0px));
-    z-index: 96;
-    width: 40px;
-    height: 40px;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: auto;
+    min-height: 54px;
+    z-index: 95;
     background: var(--surface-1);
-    border: 1px solid var(--outline);
-    border-radius: 999px;
-    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
+    border-top: 1px solid var(--outline);
+    border-right: none;
+    box-shadow: 0 -2px 14px rgba(0, 0, 0, 0.32);
     display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-around;
+    padding: 4px 6px calc(4px + env(safe-area-inset-bottom, 0px));
+    box-sizing: border-box;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    overflow: visible;
+  }
+
+  /* Quando na thread de DM, a navegação inferior cede 100% de espaço ao composer */
+  .app-layout:has(.dm-thread-container) .app-sidebar.tab-bar,
+  .app-layout.in-dm-thread .app-sidebar.tab-bar {
+    display: none !important;
+  }
+
+  .sidebar-scroll {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-around;
+    width: 100%;
+    overflow: visible;
+    gap: 0;
+    margin: 0;
+    padding: 0;
+  }
+
+  .tab-nav {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-around;
+    flex: 1;
+    gap: 2px;
+  }
+
+  .tab-item {
+    display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    color: var(--text);
-    backdrop-filter: blur(12px);
+    padding: 6px 10px;
+    border-radius: var(--radius-sm);
+    min-width: 44px;
+    min-height: 44px;
+    color: var(--muted);
+    text-decoration: none;
+    gap: 2px;
+    transition: color 0.15s ease, background 0.15s ease, transform 0.1s ease;
     -webkit-tap-highlight-color: transparent;
-    cursor: pointer;
-    transition: transform 0.15s ease, background 0.15s ease;
   }
 
-  .app-layout:not(.sidebar-drawer-open) .sidebar-collapse-btn:active {
+  .tab-item:active {
     transform: scale(0.92);
   }
 
-  /* Ícone aponta para a direita (abrir menu) quando fechado */
-  .app-layout:not(.sidebar-drawer-open) .sidebar-collapse-btn svg {
-    transform: rotate(180deg);
-    transition: transform 0.2s ease;
+  .tab-item.active {
+    color: var(--accent);
+    background: var(--accent-soft);
   }
 
-  .app-layout.sidebar-drawer-open .app-sidebar.tab-bar {
-    width: min(var(--sidebar-width), 88vw);
-    padding: 0.65rem 0.45rem;
-    background: var(--surface-1);
-    border-right: 1px solid var(--outline);
-    box-shadow: 8px 0 32px rgba(0, 0, 0, 0.35);
+  .tab-icon svg,
+  .tab-svg {
+    width: 22px;
+    height: 22px;
   }
 
-  .app-layout.sidebar-drawer-open .sidebar-collapse-btn svg {
-    transform: rotate(0deg);
-    transition: transform 0.2s ease;
+  /* Rótulos de texto ocultos na bottom bar para visual minimalista e espaçado */
+  .tab-label,
+  .sidebar-feed-label,
+  .brand-word,
+  .sidebar-sync-hint,
+  .wallet-badge-label,
+  .theme-mode-label {
+    display: none !important;
+  }
+
+  /* Botão Postar no centro da navegação */
+  .sidebar-compose-slot {
+    padding: 0 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .sidebar-compose-slot .tab-item.compose-tab {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    min-height: 42px;
+    border-radius: 50%;
+    background: var(--brand-navy);
+    color: #fff;
+    padding: 0;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+  }
+
+  .sidebar-compose-slot .tab-item.compose-tab svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  /* Elementos não-essenciais na bottom bar móvel */
+  .sidebar-feed-slot,
+  .sidebar-footer,
+  .sidebar-backdrop,
+  .sidebar-collapse-btn {
+    display: none !important;
   }
 
   .main-column {
     margin-left: 0;
+    width: 100%;
   }
 
   /* Espaçamento mobile generoso para o conteúdo respirar livremente */
   main#app-main {
-    padding-top: calc(58px + env(safe-area-inset-top, 0px));
+    padding-top: max(16px, env(safe-area-inset-top, 0px));
     padding-left: max(16px, env(safe-area-inset-left, 0px));
     padding-right: max(16px, env(safe-area-inset-right, 0px));
-    padding-bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
     max-width: 100%;
     box-sizing: border-box;
+  }
+
+  /* Na thread de DM, o padding inferior do main vai a zero para o composer colar no rodapé */
+  .app-layout:has(.dm-thread-container) main#app-main,
+  .app-layout.in-dm-thread main#app-main {
+    padding-bottom: 0;
+  }
+
+  /* Link de voltar ergonômico com tap target confortável */
+  .back-link {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    min-height: 40px !important;
+    padding: 6px 10px 6px 2px !important;
+    margin: 0.25rem 0 0.65rem !important;
+    font-size: 0.92rem !important;
+    font-weight: 600 !important;
+    color: var(--text) !important;
+    text-decoration: none !important;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .back-link:active {
+    opacity: 0.7;
+  }
+
+  /* Thread DM no Mobile: layout flex de tela inteira onde apenas a lista de mensagens rola */
+  .app-layout:has(.dm-thread-container),
+  .app-layout.in-dm-thread {
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  .app-layout:has(.dm-thread-container) .main-column,
+  .app-layout.in-dm-thread .main-column {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .app-layout:has(.dm-thread-container) main#app-main,
+  .app-layout.in-dm-thread main#app-main {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: max(8px, env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-left, 0px)) 0 max(12px, env(safe-area-inset-right, 0px)) !important;
+    overflow: hidden;
+  }
+
+  .app-layout:has(.dm-thread-container) .app-footer,
+  .app-layout.in-dm-thread .app-footer {
+    display: none;
+  }
+
+  .app-layout:has(.dm-thread-container) .dm-thread-container,
+  .app-layout.in-dm-thread .dm-thread-container {
+    flex: 1;
+    min-height: 0;
+    height: auto;
+    max-height: none;
+    display: flex;
+    flex-direction: column;
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 0;
+  }
+
+  .app-layout:has(.dm-thread-container) .dm-thread-list,
+  .app-layout.in-dm-thread .dm-thread-list {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 10px 12px;
+  }
+
+  .app-layout:has(.dm-thread-container) .dm-form-sticky,
+  .app-layout.in-dm-thread .dm-form-sticky {
+    position: static;
+    flex-shrink: 0;
+    padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px));
+    background: var(--surface-2);
+    border-top: 1px solid var(--outline);
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.25);
   }
 
   /* Fotos sangradas no feed expandem até a borda física da tela */

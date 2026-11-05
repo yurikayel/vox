@@ -265,6 +265,9 @@ export function renderDmThread(main, peerAddress, messages = [], myAddress = "",
     ? `<span class="badge-pill" style="background:var(--success-soft); color:var(--success);">Online agora</span>`
     : `<span class="badge-pill">Entrega quando conectar</span>`;
 
+  if (typeof main?.closest === "function") {
+    main.closest(".app-layout")?.classList.add("in-dm-thread");
+  }
   main.innerHTML = `
     <a class="back-link" href="#/dm">← Voltar às conversas</a>
     ${welcomeIntro}

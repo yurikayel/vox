@@ -140,16 +140,22 @@ function renderMediaTools() {
     </label>`;
 }
 
+function renderComposerAudience() {
+  return `
+    <div class="inline-composer-audience">
+      <div class="inline-composer-comm-wrap" title="Comunidade de destino">
+        ${iconCommunity()}
+        <input type="text" id="inline-topic-comm" class="inline-composer-comm" list="inline-comm-list" placeholder="Comunidade (opcional)" maxlength="64" aria-label="Slug da comunidade" />
+      </div>
+      <datalist id="inline-comm-list"></datalist>
+    </div>`;
+}
+
 function renderComposerToolbar() {
   return `
     <div class="inline-composer-toolbar">
       <div class="inline-composer-tools">
         ${renderMediaTools()}
-        <div class="inline-composer-comm-wrap" title="Comunidade de destino">
-          ${iconCommunity()}
-          <input type="text" id="inline-topic-comm" class="inline-composer-comm" list="inline-comm-list" placeholder="Comunidade" maxlength="64" aria-label="Slug da comunidade" />
-        </div>
-        <datalist id="inline-comm-list"></datalist>
       </div>
       <div class="inline-composer-actions">
         <span class="inline-composer-char" id="inline-topic-char">0 / 2000</span>
@@ -183,6 +189,7 @@ export function renderInlineComposer({ userRouteId = "", displayName = "" } = {}
           ${avatarHtml}
           <textarea id="inline-topic-body" class="inline-composer-textarea" rows="3" maxlength="2000" placeholder="Compartilhe texto, #hashtags ou anexe uma foto…" aria-label="Texto da publicação"></textarea>
         </div>
+        ${renderComposerAudience()}
         ${renderComposerPreviewWrap()}
         ${renderComposerRecordingIndicator()}
         ${renderComposerToolbar()}
