@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80">
+  <defs>
+    <pattern id="mesh" width="80" height="80" patternUnits="userSpaceOnUse">
+      <!-- Grade tênue de 80x80 -->
+      <path d="M 80 0 L 0 0 0 80" fill="none" stroke="rgba(255, 255, 255, 0.025)" stroke-width="1"/>
+      <path d="M 40 0 L 40 80 M 0 40 L 80 40" fill="none" stroke="rgba(255, 255, 255, 0.012)" stroke-width="0.5" stroke-dasharray="2 6"/>
+      <!-- Cruzes de precisão nas junções (Crosshairs cívicos) -->
+      <path d="M 0 5 L 0 -5 M -5 0 L 5 0 M 80 5 L 80 -5 M 75 0 L 85 0 M 0 85 L 0 75 M -5 80 L 5 80 M 80 85 L 80 75 M 75 80 L 85 80" fill="none" stroke="rgba(255, 255, 255, 0.06)" stroke-width="1"/>
+      <!-- Ponto de nó central de convergência -->
+      <circle cx="40" cy="40" r="1" fill="rgba(255, 255, 255, 0.05)"/>
+    </pattern>
+  </defs>
+  <rect width="100%" height="100%" fill="url(#mesh)" />
+</svg>
