@@ -112,19 +112,18 @@ test("explode - sheet tops with WhatsApp + EXPLODE! side by side and collapses t
   assert.ok(!html.includes("post-more-sheet-cancel"));
 });
 
-test("explode - renderIgToolbar includes btn-explode-post after share", () => {
+test("explode - renderIgToolbar unifies share and explode in btn-share-post", () => {
   const html = igToolbar.renderIgToolbar({
     id: "post_ig_1",
     title: "Post de foto",
     likesCount: 3,
   }, "Maria Acre");
 
-  assert.ok(html.includes("btn-explode-post"));
-  assert.ok(html.includes("icon-explode"));
-  assert.ok(html.indexOf("btn-share-post") < html.indexOf("btn-explode-post"));
+  assert.ok(html.includes("btn-share-post"));
+  assert.ok(!html.includes("btn-explode-post"));
 });
 
-test("explode - feed renderPostItem includes btn-explode-post", () => {
+test("explode - feed renderPostItem unifies share and explode in btn-share-post", () => {
   const html = feed.renderPostItem({
     id: "post_feed_1",
     title: "Texto do feed",
@@ -133,11 +132,11 @@ test("explode - feed renderPostItem includes btn-explode-post", () => {
     ts: Date.now(),
   });
 
-  assert.ok(html.includes("btn-explode-post"));
-  assert.ok(html.includes("icon-explode"));
+  assert.ok(html.includes("btn-share-post"));
+  assert.ok(!html.includes("btn-explode-post"));
 });
 
-test("explode - topic view includes btn-explode-topic", () => {
+test("explode - topic view unifies share and explode in btn-share-topic", () => {
   const main = { innerHTML: "" };
   topic.renderTopic(main, "topic_view_1", {
     id: "topic_view_1",
@@ -147,9 +146,8 @@ test("explode - topic view includes btn-explode-topic", () => {
     communityId: "comm_demo",
   }, []);
 
-  assert.ok(main.innerHTML.includes("btn-explode-topic"));
-  assert.ok(main.innerHTML.includes("btn-explode-post"));
-  assert.ok(main.innerHTML.includes("EXPLODE!"));
+  assert.ok(main.innerHTML.includes("btn-share-topic"));
+  assert.ok(!main.innerHTML.includes("btn-explode-topic"));
 });
 
 test("explode - posse post-publish sheet offers explode option and omits Janones", () => {
@@ -162,16 +160,7 @@ test("explode - posse post-publish sheet offers explode option and omits Janones
 test("explode - megaphone emoji and SVG icon are used to clarify civic nature", () => {
   const html = explode.buildExplodeSheetHtml({ id: "post_megaphone", title: "Cívico" });
   assert.ok(html.includes("📢 Espalhe esta pauta"));
-
-  const igHtml = igToolbar.renderIgToolbar({ id: "post_ig_mega", title: "Foto" }, "Autor");
-  assert.ok(igHtml.includes("m3 11 18-5v12L3 14v-3z"));
-
-  const feedHtml = feed.renderPostItem({ id: "post_feed_mega", title: "Feed", ts: Date.now() });
-  assert.ok(feedHtml.includes("m3 11 18-5v12L3 14v-3z"));
-
-  const main = { innerHTML: "" };
-  topic.renderTopic(main, "topic_mega", { id: "topic_mega", title: "Tema" }, []);
-  assert.ok(main.innerHTML.includes("m3 11 18-5v12L3 14v-3z"));
+  assert.ok(html.includes("m3 11 18-5v12L3 14v-3z"));
 });
 
 test("explode - UI copy, buttons and aria labels do not mention Janones", () => {
@@ -367,7 +356,7 @@ test("explode - renderers display explode counter and updateExplodeButtonsUi upd
 
   const feedHtml = feed.renderPostItem(mockPost, "0x123", "Helena", "@helena");
   assert.ok(feedHtml.includes("count-explodes"));
-  assert.ok(feedHtml.includes("btn-explode-post"));
+  assert.ok(feedHtml.includes("btn-share-post"));
   assert.ok(feedHtml.includes(">7<"));
 
   const igHtml = igToolbar.renderIgToolbar(mockPost, "Helena");
@@ -390,7 +379,7 @@ test("explode - renderers display explode counter and updateExplodeButtonsUi upd
   const fakeSpan1 = { textContent: "" };
 
   const fakeBtnTopic = {
-    id: "btn-explode-topic",
+    id: "btn-share-topic",
     dataset: { id: "post_exp_dom_1" },
     classList: { add: (c) => fakeBtnTopic.classes.add(c) },
     classes: new Set(),
