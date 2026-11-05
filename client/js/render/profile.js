@@ -13,6 +13,7 @@ import { isWelcomeRouteId } from "../vox-welcome-profile.js";
 import * as localAccount from "../local-account.js";
 import { LOCAL_WIPE_NOTICE } from "../local-account.js";
 import { renderProfileNoteBubbleHtml } from "./profile-note-bubble.js";
+import { renderProfileVoxelsTab } from "./profile-voxels.js";
 
 function renderProfileGithubBadge(githubHandle) {
   if (!githubHandle) return "";
@@ -62,12 +63,14 @@ function renderProfileGridTabs(address, currentTab, showAbout, showSaved) {
     ? `<a href="${href("saved")}" class="profile-grid-tab ${currentTab === "saved" ? "active" : ""}" data-tab="saved" aria-label="Salvos">${PROFILE_SAVED_TAB_ICON}</a>`
     : "";
   const following = `<a href="${href("following")}" class="profile-grid-tab profile-grid-tab-text ${currentTab === "following" || currentTab === "followers" ? "active" : ""}" data-tab="following">Amizades</a>`;
+  const voxelsTab = `<a href="${href("voxels")}" class="profile-grid-tab profile-grid-tab-text ${currentTab === "voxels" ? "active" : ""}" data-tab="voxels">Voxels</a>`;
   const about = showAbout
     ? `<a href="${href("about")}" class="profile-grid-tab profile-grid-tab-text ${currentTab === "about" ? "active" : ""}" data-tab="about">Sobre</a>`
     : "";
   return `<nav class="profile-grid-tabs" aria-label="Seções do perfil">
       <a href="${href("posts")}" class="profile-grid-tab ${currentTab === "posts" ? "active" : ""}" data-tab="posts" aria-label="Publicações">${PROFILE_GRID_TAB_ICON}</a>
       ${following}
+      ${voxelsTab}
       ${saved}
       ${about}
     </nav>`;
@@ -570,6 +573,7 @@ export function renderProfileTabContent(currentTab = "posts", params = {}) {
   if (norm === "posts") return renderProfilePostGrid(params.authorPostList, params.finalPinned);
   if (norm === "following" || norm === "followers") return renderProfileNetworkTab(params.address, params.isCurrentWallet, norm);
   if (norm === "saved") return renderProfileSavedTab(params.savedList);
+  if (norm === "voxels") return renderProfileVoxelsTab(params);
   return renderProfileAboutTab(params);
 }
 

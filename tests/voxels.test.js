@@ -5,6 +5,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import * as voxels from "../client/js/voxels.js";
+import * as profileVoxels from "../client/js/render/profile-voxels.js";
+import * as profileRender from "../client/js/render/profile.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, "..", "client");
@@ -203,7 +205,69 @@ test("voxels: buildVoxelPassport consolida passaporte cívico local", () => {
   assert.ok(passport.achievements.some((a) => a.id === "forja_farol_iniciante"));
 });
 
-test("voxels: sw.js armazena voxels.js em cache offline", () => {
+test("voxels: sw.js armazena voxels.js e profile-voxels.js em cache offline", () => {
   const sw = fs.readFileSync(path.join(root, "sw.js"), "utf8");
   assert.ok(sw.includes("./js/voxels.js"), "sw.js deve conter ./js/voxels.js no SHELL_ASSETS");
+  assert.ok(sw.includes("./js/render/profile-voxels.js"), "sw.js deve conter ./js/render/profile-voxels.js no SHELL_ASSETS");
+});
+
+test("voxels-ui: renderProfileVoxelsTab renderiza hero, 3 trilhas e conquistas", () => {
+  const receipts = [
+    {
+      schema: voxels.SCHEMA_VOXEL_RECEIPT,
+      id: "vxr_1",
+      routeId: "vx_cidadao_1",
+      category: "forja",
+      action: "relay_cache_uptime",
+      amount: 25,
+      timestamp: 1000,
+      metadata: { uptimeHours: 2 },
+    },
+    {
+      schema: voxels.SCHEMA_VOXEL_RECEIPT,
+      id: "vxr_2",
+      routeId: "vx_cidadao_1",
+      category: "agora",
+      action: "agora_consensus_synthesis",
+      amount: 30,
+      timestamp: 2000,
+    },
+  ];
+
+  const html = profileVoxels.renderProfileVoxelsTab({
+    address: "vx_cidadao_1",
+    isCurrentWallet: true,
+    receipts,
+  });
+
+  assert.ok(html.includes("55"), "Deve exibir saldo total de 55 voxels");
+  assert.ok(html.includes("Passaporte Cívico"), "Deve conter título do passaporte");
+  assert.ok(html.includes("Forja"), "Deve renderizar card da Forja");
+  assert.ok(html.includes("Ágora"), "Deve renderizar card da Ágora");
+  assert.ok(html.includes("Cuidado"), "Deve renderizar card do Cuidado");
+  assert.ok(html.includes("Farol de Entrada"), "Deve conter insígnia Farol de Entrada");
+  assert.ok(html.includes("Conquistado"), "Deve exibir badge conquistado para farol");
+  assert.ok(html.includes("btn-export-voxel-passport"), "Usuário dono deve ver botão de exportar passaporte");
+});
+
+test("voxels-ui: renderProfileVoxelsTab oculta botão de exportação para terceiros", () => {
+  const html = profileVoxels.renderProfileVoxelsTab({
+    address: "vx_outro_usuario",
+    isCurrentWallet: false,
+    receipts: [],
+  });
+
+  assert.ok(!html.includes("btn-export-voxel-passport"), "Terceiros não devem ver botão de exportar passaporte");
+  assert.ok(html.includes("0"), "Saldo zerado exibido com clareza");
+});
+
+test("voxels-ui: renderProfileTabContent integra aba voxels no perfil", () => {
+  const html = profileRender.renderProfileTabContent("voxels", {
+    address: "vx_cidadao_1",
+    isCurrentWallet: true,
+  });
+
+  assert.ok(!html.includes("profile-grid-header"), "Aba voxels não deve repetir header do perfil");
+  assert.ok(html.includes("profile-grid-voxels"), "Deve incluir container da aba voxels");
+  assert.ok(html.includes("Passaporte Cívico"));
 });
