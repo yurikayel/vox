@@ -3,9 +3,9 @@
  *
  * Implementa:
  * 1. 3 arquétipos de comunidade soberana congelados (Kit Bairro, Sindicato, Coletivo);
- * 2. Validação estrita de esquema e coerência cruzada (roles x canais x cartuchos x securityPolicy);
- * 3. Regra anti-rebaixamento (no-downgrade) em securityPolicyOverrides;
- * 4. Validação estrita de creatorAddr e IDs aleatórios livres de colisão.
+ * 2. Validação estrita de esquema e isolamento generalizado de canais;
+ * 3. Regra anti-rebaixamento estrita e tipada (no-downgrade) em securityPolicyOverrides;
+ * 4. Validação estrita de creatorAddr e IDs com CSPRNG livre de colisões.
  */
 
 const ALLOWED_POLICY_KEYS = new Set([
@@ -20,7 +20,7 @@ const ALLOWED_POLICY_KEYS = new Set([
 const ALLOWED_CRDT_STRATEGIES = new Set(["id-lookup", "audit-log"]);
 
 export function deepFreeze(obj, seen = new WeakSet()) {
-  if (obj === null || typeof obj !== "object" || Object.isFrozen(obj)) return obj;
+  if (obj === null || typeof obj !== "object") return obj;
   if (seen.has(obj)) return obj;
   seen.add(obj);
 
@@ -103,7 +103,6 @@ export const KIT_SINDICATO = deepFreeze({
     Delegate: [
       "create:poll",
       "close:poll",
-      "write:channel:assembleia-permanente",
       "write:channel:votacoes-e-editais",
       "read:channel:*",
     ],
@@ -286,7 +285,7 @@ function validateSingleChannel(ch, roles, seenIds) {
   if (!hasChannelWritePermission(roles[ch.writeRole], ch.id)) {
     throw new Error(`writeRole '${ch.writeRole}' não possui permissão de escrita para o canal '${ch.id}'`);
   }
-  validateAdminChannelIsolation(ch, roles);
+  validateChannelRoleIsolation(ch, roles);
 }
 
 function hasChannelWritePermission(permissions, channelId) {
@@ -294,12 +293,11 @@ function hasChannelWritePermission(permissions, channelId) {
   return permissions.includes("*") || permissions.includes("write:channel:*") || permissions.includes(`write:channel:${channelId}`);
 }
 
-function validateAdminChannelIsolation(ch, roles) {
-  if (ch.writeRole !== "Admin") return;
+function validateChannelRoleIsolation(ch, roles) {
   for (const [roleName, perms] of Object.entries(roles)) {
-    if (roleName === "Admin") continue;
-    if (perms.includes(`write:channel:${ch.id}`)) {
-      throw new Error(`Canal restrito ao Admin '${ch.id}' foi indevidamente atribuído ao papel '${roleName}'`);
+    if (roleName === ch.writeRole || roleName === "Admin") continue;
+    if (perms.includes("*") || perms.includes("write:channel:*") || perms.includes(`write:channel:${ch.id}`)) {
+      throw new Error(`Papel '${roleName}' não pode ter permissão de escrita no canal '${ch.id}', restrito ao papel '${ch.writeRole}'`);
     }
   }
 }
@@ -341,10 +339,21 @@ function validateKitSecurityPolicy(policy) {
   if (!policy || typeof policy !== "object") {
     throw new Error("Manifesto deve definir um objeto securityPolicy");
   }
-  for (const key of Object.keys(policy)) {
-    if (!ALLOWED_POLICY_KEYS.has(key)) {
-      throw new Error(`Chave desconhecida na política de segurança: '${key}'`);
+  for (const [key, val] of Object.entries(policy)) {
+    validatePolicyKeyValue(key, val);
+  }
+}
+
+function validatePolicyKeyValue(key, val) {
+  if (!ALLOWED_POLICY_KEYS.has(key)) {
+    throw new Error(`Chave desconhecida na política de segurança: '${key}'`);
+  }
+  if (key === "minTrustScore") {
+    if (!Number.isInteger(val) || val < 0) {
+      throw new Error(`minTrustScore deve ser um número inteiro maior ou igual a zero`);
     }
+  } else if (typeof val !== "boolean") {
+    throw new Error(`Valor para flag de segurança '${key}' deve ser estritamente booleano`);
   }
 }
 
@@ -388,10 +397,17 @@ function resolveCommunityId(kitId, customId) {
 }
 
 function generateCryptoEntropy() {
-  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
-    return crypto.randomUUID().replace(/-/g, "").slice(0, 8);
+  if (typeof crypto !== "undefined") {
+    if (typeof crypto.randomUUID === "function") {
+      return crypto.randomUUID().replace(/-/g, "");
+    }
+    if (typeof crypto.getRandomValues === "function") {
+      const buf = new Uint8Array(16);
+      crypto.getRandomValues(buf);
+      return Array.from(buf, (b) => b.toString(16).padStart(2, "0")).join("");
+    }
   }
-  return Math.random().toString(36).slice(2, 10);
+  throw new Error("Módulo criptográfico CSPRNG não disponível no ambiente para geração de identificador");
 }
 
 function applyPolicyOverrides(basePolicy, overrides) {
@@ -399,17 +415,28 @@ function applyPolicyOverrides(basePolicy, overrides) {
     return { ...basePolicy };
   }
   for (const [key, val] of Object.entries(overrides)) {
-    if (!ALLOWED_POLICY_KEYS.has(key)) {
-      throw new Error(`Chave desconhecida em securityPolicyOverrides: '${key}'`);
-    }
-    if (basePolicy[key] === true && val === false) {
-      throw new Error(`Não é permitido rebaixar a política de segurança: '${key}'`);
-    }
-    if (typeof basePolicy[key] === "number" && typeof val === "number" && val < basePolicy[key]) {
-      throw new Error(`Não é permitido reduzir o limiar numérico da política: '${key}'`);
-    }
+    validatePolicyKeyValue(key, val);
+    validateNoDowngrade(key, basePolicy[key], val);
   }
   return { ...basePolicy, ...overrides };
+}
+
+function validateNoDowngrade(key, baseVal, overrideVal) {
+  // Para allowGuestRead: false é a política mais restrita; mudar para true é rebaixamento!
+  if (key === "allowGuestRead") {
+    if (baseVal === false && overrideVal === true) {
+      throw new Error("Não é permitido abrir leitura pública em comunidade com restrição de acesso a convidados");
+    }
+    return;
+  }
+  // Para outras flags booleanas: true é a proteção ativa; mudar para false é rebaixamento!
+  if (baseVal === true && overrideVal === false) {
+    throw new Error(`Não é permitido desativar proteção obrigatória de segurança: '${key}'`);
+  }
+  // Para minTrustScore: só pode aumentar o rigor, nunca diminuir
+  if (key === "minTrustScore" && overrideVal < baseVal) {
+    throw new Error(`Não é permitido reduzir o score mínimo de segurança (mínimo exigido: ${baseVal})`);
+  }
 }
 
 function buildCommunityPayload(manifest, communityId, creatorAddr, meta, securityPolicy) {

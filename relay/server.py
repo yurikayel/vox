@@ -329,7 +329,8 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
         elif path.startswith("/relay/envelope/"):
             channel_id = path[len("/relay/envelope/"):].split("/")[0]
             since_ts = self._get_query_param_int("since", 0)
-            self._send_json(blind_relay.list_envelopes(channel_id, since_ts=since_ts))
+            since_serial = self._get_query_param_int("since_serial", 0)
+            self._send_json(blind_relay.list_envelopes(channel_id, since_ts=since_ts, since_serial=since_serial))
         elif path.startswith("/relay/snapshot/"):
             channel_id = path[len("/relay/snapshot/"):].split("/")[0]
             snap = blind_relay.get_latest_snapshot(channel_id)

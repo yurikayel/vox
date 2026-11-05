@@ -196,30 +196,46 @@ export const APP_ICONS = {
     <rect width="24" height="24" rx="6" fill="#5865F2"/>
     <path fill="#fff" d="M17.4 6.9a13.3 13.3 0 0 0-3.3-1 .05.05 0 0 0-.05.02c-.15.26-.3.6-.42.87a12.3 12.3 0 0 0-3.7 0 8 8 0 0 0-.42-.87.05.05 0 0 0-.05-.02c-1.16.2-2.3.55-3.3 1a.05.05 0 0 0-.02.02C4.1 10.3 3.5 13.6 3.8 16.8a.06.06 0 0 0 .02.04 13.4 13.4 0 0 0 4 2 .05.05 0 0 0 .06-.02c.3-.43.6-.88.83-1.35a.05.05 0 0 0-.03-.07c-.42-.16-.82-.36-1.2-.58a.05.05 0 0 1 0-.09c.08-.06.16-.12.24-.18a.05.05 0 0 1 .05 0 9.5 9.5 0 0 0 8.7 0 .05.05 0 0 1 .05 0c.08.06.16.12.24.18a.05.05 0 0 1 0 .09c-.38.22-.78.42-1.2.58a.05.05 0 0 0-.03.07c.24.47.53.92.83 1.35a.05.05 0 0 0 .06.02 13.3 13.3 0 0 0 4-2 .06.06 0 0 0 .02-.04c.4-3.8-.7-7-2.3-9.9a.05.05 0 0 0-.02-.02zM8.9 14.8c-.8 0-1.4-.7-1.4-1.6s.6-1.6 1.4-1.6c.8 0 1.4.7 1.4 1.6s-.6 1.6-1.4 1.6zm6.2 0c-.8 0-1.4-.7-1.4-1.6s.6-1.6 1.4-1.6c.8 0 1.4.7 1.4 1.6s-.6 1.6-1.4 1.6z"/>
   </svg>`,
+
+  copy: `<svg class="app-logo-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+  </svg>`,
+
+  share: `<svg class="app-logo-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/>
+  </svg>`,
 };
 
 function buildExplodeHeaderHtml() {
   return `<div class="explode-header">
-    <div class="explode-header-top">
-      <span class="explode-badge">📢 REPLICAÇÃO MULTI-REDES</span>
-      <button type="button" class="explode-close-btn" data-explode-action="close" aria-label="Fechar">✕</button>
-    </div>
-    <h3 class="explode-title">EXPLODE NAS REDES!</h3>
-    <p class="explode-subtitle">Toque no app desejado para compartilhar em 1 clique:</p>
+    <h3 class="explode-title">📢 Espalhe esta pauta</h3>
+    <button type="button" class="explode-close-btn" data-explode-action="close" aria-label="Fechar">✕</button>
   </div>`;
 }
 
-const EXPLODE_GRID_BUTTONS = [
-  { action: "whatsapp", css: "btn-zap", name: "WhatsApp", iconKey: "whatsapp" },
+/** Hierarquia: 1 ação proposta → 4 rápidas → resto recolhido (Lei de Hick). */
+const EXPLODE_QUICK_BUTTONS = [
   { action: "instagram", css: "btn-instagram", name: "Instagram", iconKey: "instagram", linkId: "instagram" },
+  { action: "twitter", css: "btn-x", name: "X", iconKey: "twitter", linkId: "twitter" },
+  { action: "telegram", css: "btn-telegram", name: "Telegram", iconKey: "telegram" },
+  { action: "copy", css: "btn-copy", name: "Copiar texto", iconKey: "copy" },
+];
+
+const EXPLODE_MORE_BUTTONS = [
   { action: "tiktok", css: "btn-tiktok", name: "TikTok", iconKey: "tiktok", linkId: "tiktok" },
-  { action: "twitter", css: "btn-x", name: "X (Twitter)", iconKey: "twitter", linkId: "twitter" },
   { action: "bluesky", css: "btn-bluesky", name: "Bluesky", iconKey: "bluesky", linkId: "bsky" },
   { action: "threads", css: "btn-threads", name: "Threads", iconKey: "threads", linkId: "threads" },
-  { action: "telegram", css: "btn-telegram", name: "Telegram", iconKey: "telegram" },
   { action: "facebook", css: "btn-facebook", name: "Facebook", iconKey: "facebook", linkId: "facebook" },
   { action: "webhooks", css: "btn-webhooks", name: "Discord/Slack", iconKey: "webhooks" },
+  { action: "native", css: "btn-native", name: "Outros apps", iconKey: "share" },
 ];
+
+const EXPLODE_EXTRA_CHIPS = [
+  { action: "story-card", icon: "🖼️", label: "Card para Stories", title: "Baixa imagem vertical 9:16 com a pauta" },
+  { action: "cascade", icon: "🌊", label: "Uma rede por vez", title: "Abre WhatsApp, X, Threads e Bluesky em sequência" },
+];
+
+export const VOX_LOGO_SRC = "./icons/icon-white-192.png";
 
 function renderExplodeGridButton(btn, linked) {
   const badge = btn.linkId && linked[btn.linkId]?.enabled && linked[btn.linkId]?.handle
@@ -231,73 +247,49 @@ function renderExplodeGridButton(btn, linked) {
     </button>`;
 }
 
-function buildExplodeGridHtml() {
+function buildExplodeGridHtml(buttons, label) {
   const linked = loadLinkedAccounts();
-  const buttonsHtml = EXPLODE_GRID_BUTTONS.map((btn) => renderExplodeGridButton(btn, linked)).join("\n    ");
-  return `<div class="explode-grid" role="group" aria-label="Redes para disparo">
+  const buttonsHtml = buttons.map((btn) => renderExplodeGridButton(btn, linked)).join("\n    ");
+  return `<div class="explode-grid" role="group" aria-label="${label}">
     ${buttonsHtml}
   </div>`;
 }
 
-function buildExplodeActionsHtml() {
-  return `<div class="explode-actions-list">
-    <button type="button" class="explode-action-row" data-explode-action="story-card">
-      <span class="explode-action-icon">📸</span>
-      <span class="explode-action-text">
-        <strong>Gerar Card de Story (9:16)</strong>
-        <small>Imagem vertical para Stories do Instagram e TikTok</small>
-      </span>
-      <span class="explode-action-arrow">Criar →</span>
-    </button>
-    <button type="button" class="explode-action-row" data-explode-action="copy">
-      <span class="explode-action-icon">📋</span>
-      <span class="explode-action-text">
-        <strong>Copiar Mensagem Formatada</strong>
-        <small>Texto completo com chamada, hashtags e link</small>
-      </span>
-      <span class="explode-action-arrow">Copiar</span>
-    </button>
-    <button type="button" class="explode-action-row" data-explode-action="native">
-      <span class="explode-action-icon">📱</span>
-      <span class="explode-action-text">
-        <strong>Mais Opções do Aparelho…</strong>
-        <small>Compartilhar via menu nativo do sistema</small>
-      </span>
-      <span class="explode-action-arrow">Abrir →</span>
-    </button>
-  </div>`;
-}
-
-function buildExplodeBatchHtml(text) {
-  return `<div class="explode-batch-card">
-    <div class="explode-batch-header">
-      <span>⚡ AUTOMAÇÃO EM LOTE</span>
-      <button type="button" class="explode-preview-toggle" id="explode-preview-toggle" aria-expanded="false">Ver texto ▼</button>
-    </div>
-    <div class="explode-preview" id="explode-preview-text" hidden>${escapeHtml(text)}</div>
-    <div class="explode-batch-buttons">
-      <button type="button" class="btn-explode-burst" data-explode-action="burst">
-        <span>📢</span>
-        <span>Disparo Rápido (Webhooks + Copiar)</span>
+function buildExplodePrimaryHtml() {
+  return `<div class="explode-primary-row">
+      <button type="button" class="explode-primary btn-zap" data-explode-action="whatsapp">
+        <span class="explode-primary-icon">${APP_ICONS.whatsapp}</span>
+        <span>WhatsApp</span>
       </button>
-      <button type="button" class="btn-explode-cascade" data-explode-action="cascade">
-        <span>🌊</span>
-        <span>Disparo em Onda</span>
+      <button type="button" class="explode-primary btn-explode-burst" data-explode-action="burst" aria-label="EXPLODE! Disparo automático" title="Disparo automático: copia a mensagem e envia às contas e webhooks conectados">
+        <span class="explode-primary-icon"><img src="${VOX_LOGO_SRC}" alt="" width="22" height="22" /></span>
+        <span>EXPLODE!</span>
       </button>
     </div>
-  </div>`;
+    <p class="explode-hint">Mensagem pronta, com link e hashtags.</p>`;
 }
 
-export function buildExplodeSheetHtml(post) {
-  const url = buildCanonicalTopicUrl(post?.id, { communityId: post?.communityId });
-  const text = buildExplodeText({ title: post?.title, body: post?.body, url });
+function renderExplodeChip(chip) {
+  return `<button type="button" class="explode-chip ${chip.css || ""}" data-explode-action="${chip.action}" title="${chip.title}">
+      <span aria-hidden="true">${chip.icon}</span> ${chip.label}
+    </button>`;
+}
+
+function buildExplodeMoreHtml() {
+  return `<details class="explode-more">
+    <summary>Mais redes e opções</summary>
+    ${buildExplodeGridHtml(EXPLODE_MORE_BUTTONS, "Mais redes")}
+    <div class="explode-actions-list">${EXPLODE_EXTRA_CHIPS.map(renderExplodeChip).join("")}</div>
+  </details>`;
+}
+
+export function buildExplodeSheetHtml() {
   return `
     <div class="explode-panel post-more-sheet-panel" role="document">
       ${buildExplodeHeaderHtml()}
-      ${buildExplodeGridHtml()}
-      ${buildExplodeActionsHtml()}
-      ${buildExplodeBatchHtml(text)}
-      <button type="button" class="post-more-sheet-item post-more-sheet-cancel" data-explode-action="close">Fechar</button>
+      ${buildExplodePrimaryHtml()}
+      ${buildExplodeGridHtml(EXPLODE_QUICK_BUTTONS, "Outras redes")}
+      ${buildExplodeMoreHtml()}
     </div>`;
 }
 
@@ -309,7 +301,7 @@ function ensureExplodeSheet(post) {
     root.className = "explode-sheet modal-overlay modal-sheet";
     root.setAttribute("role", "dialog");
     root.setAttribute("aria-modal", "true");
-    root.setAttribute("aria-label", "Painel Tático EXPLODE!");
+    root.setAttribute("aria-label", "Espalhe esta pauta");
     root.addEventListener("click", (e) => {
       if (e.target === root) {
         e.preventDefault();
@@ -330,7 +322,7 @@ export function openExplodeSheet(post) {
   sheet.classList.add("is-open");
   sheet.setAttribute("aria-hidden", "false");
   document.body.classList.add("post-more-sheet-open");
-  sheet.querySelector(".btn-explode-burst")?.focus();
+  sheet.querySelector(".explode-primary")?.focus();
 }
 
 export function closeExplodeSheet() {
@@ -483,13 +475,13 @@ async function handleExplodeBurst(post) {
 async function handleExplodeCopy(text) {
   try {
     await navigator.clipboard.writeText(text);
-    share.showToast("Pacote de mensagem copiado com sucesso! 📢");
+    share.showToast("📋 Mensagem copiada! Cole onde quiser.");
   } catch {}
   closeExplodeSheet();
 }
 
 async function handleExplodeNativeShare(post, text, canonicalUrl) {
-  if (!navigator.share) return;
+  if (!navigator.share) return handleExplodeCopy(text);
   try {
     await navigator.share({ title: post.title || "Vox", text, url: canonicalUrl });
   } catch {}
@@ -552,20 +544,6 @@ function handleExplodePostTriggerClick(e) {
   return true;
 }
 
-function handleExplodePreviewToggle(e) {
-  const toggleBtn = e.target.closest?.("#explode-preview-toggle");
-  if (!toggleBtn) return false;
-  e.preventDefault();
-  const preview = document.getElementById("explode-preview-text");
-  if (preview) {
-    const isHidden = preview.hidden;
-    preview.hidden = !isHidden;
-    toggleBtn.textContent = isHidden ? "Ocultar texto ▲" : "Ver texto ▼";
-    toggleBtn.setAttribute("aria-expanded", String(isHidden));
-  }
-  return true;
-}
-
 function handleDocumentExplodeClick(e) {
   if (handleCascadeClick(e) || handleExplodePostTriggerClick(e)) return;
   const sheet = document.getElementById(EXPLODE_SHEET_ID);
@@ -574,7 +552,6 @@ function handleDocumentExplodeClick(e) {
     e.preventDefault();
     return closeExplodeSheet();
   }
-  if (handleExplodePreviewToggle(e)) return;
   const btn = e.target.closest?.("[data-explode-action]");
   if (btn && sheet.contains(btn)) {
     e.preventDefault();

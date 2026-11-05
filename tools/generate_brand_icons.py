@@ -370,6 +370,19 @@ def write_ico(path: Path, im: Image.Image) -> None:
     im.save(path, format="ICO", sizes=sizes)
 
 
+def tint_mark(rgba: Image.Image, color: tuple[int, int, int]) -> Image.Image:
+    """Monochrome silhouette: keeps alpha (shape), replaces RGB with one color."""
+    alpha = rgba.convert("RGBA").split()[3]
+    solid = Image.new("RGBA", rgba.size, (*color, 255))
+    solid.putalpha(alpha)
+    return solid
+
+
+def write_black_mark(mark_rgba: Image.Image, size: int = 128) -> None:
+    """Black alpha mark for CTAs on bright fills (EXPLODE! amarelo)."""
+    write_png(ICONS / f"icon-mark-black-{size}.png", fit_mark(tint_mark(mark_rgba, (0, 0, 0)), size, pad_ratio=0.02))
+
+
 def main() -> None:
     BRANDING.mkdir(parents=True, exist_ok=True)
     if not WHITE_SRC.is_file():
@@ -385,6 +398,7 @@ def main() -> None:
     write_png(ICONS / "favicon-16.png", fit_mark(mark_white, 16, pad_ratio=0.02, bg=(0, 0, 0, 0)))
     write_png(ICONS / "icon-mark-1024.png", fit_mark(mark_white, 1024, pad_ratio=0.06, bg=(0, 0, 0, 0)))
     write_png(ICONS / "icon-mark.png", fit_mark(mark_white, 512, pad_ratio=0.06, bg=(0, 0, 0, 0)))
+    write_black_mark(mark_white)
 
     # 2. PWA e UI Web: Fundo branco normalizado
     write_png(ICONS / "icon-white-192.png", fit_opaque_square(white_im, 192))
