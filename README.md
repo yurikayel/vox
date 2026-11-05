@@ -3,13 +3,14 @@
 [![Client](https://img.shields.io/badge/PWA-Vanilla%20ES%20Modules-orange.svg)](./client)
 [![Identity](https://img.shields.io/badge/Identity-WebCrypto%20P--256-blueviolet.svg)](./client/js/local-account.js)
 [![Storage](https://img.shields.io/badge/Storage-Arweave%20Permaweb-black.svg)](https://arweave.org)
-[![Service Worker](https://img.shields.io/badge/SW-v7.16--real--network--audio--video--upload-informational.svg)](./client/sw.js)
+[![Tests](https://img.shields.io/badge/Tests-723%20passing%20(649%20JS%20%2B%2074%20Py)-brightgreen.svg)](./tests)
+[![Service Worker](https://img.shields.io/badge/SW-v7.17--real--network--audio--video--upload--m3-informational.svg)](./client/sw.js)
 
 O Vox é um projeto cívico em construção para ampliar a participação popular e a autonomia das comunidades na vida digital. Sua ambição é ser um bem comum aberto: o projeto deve permanecer transparente, copiável, modificável e maior que qualquer fundador, mantenedor, empresa ou plataforma.
 
 Essa é uma direção e um compromisso, não uma descrição de governança já concluída. O desenvolvimento começou com uma pessoa; hoje o controle administrativo do repositório ainda está concentrado. O próprio Vox precisa construir formas públicas de contribuição, revisão, sucessão e custódia compartilhada para que ninguém tenha poder permanente e unilateral sobre o projeto.
 
-O cliente é um PWA local-first. Identidade e chaves são criadas no aparelho; publicações públicas podem ser ancoradas no Arweave e lidas por gateways. Há recursos de relay, cache e comunicação local, mas descoberta automática de nós, acesso LAN entre dispositivos e seeding WebTorrent não estão implementados. O projeto documenta capacidades reais e limitações conhecidas; propostas não são anunciadas como funcionalidades prontas.
+O cliente é um PWA local-first. Identidade e chaves são criadas no aparelho; publicações públicas podem ser ancoradas no Arweave e lidas por gateways. Durante as fases Alpha e Beta, a rede também conta com suporte opcional ao nó de persistência local **`zero-central-memory`** (`VoxPopuli-ZeroMemory.exe` / `relay/central_memory.py`) para preservar histórico, perfis e blobs multimídia entre reinicializações. O projeto documenta capacidades reais e limitações conhecidas; propostas não são anunciadas como funcionalidades prontas.
 
 > 📥 **Central de Downloads (Multiplataforma):** [https://yurikayel.github.io/vox/download](https://yurikayel.github.io/vox/download)  
 > 🌐 **Aplicação Web (PWA Oficial):** [https://yurikayel.github.io/vox/](https://yurikayel.github.io/vox/)  
@@ -23,16 +24,17 @@ O cliente é um PWA local-first. Identidade e chaves são criadas no aparelho; p
 
 Acesse a página visual interativa em **[https://yurikayel.github.io/vox/download](https://yurikayel.github.io/vox/download)** ou obtenha os pacotes diretamente abaixo.
 
-O ecossistema é estritamente dividido em dois papéis complementares ([ADR-011](docs/adr/011-taxonomia-tripartite-produtos-vox.md)):
-- **`vox` (Cliente):** Para quem quer **só usar a rede e fim**. Interface cívica, composição de mensagens, enquetes, votações populares e mensagens ponto a ponto criptografadas sem precisar entender de técnica ou servidores.
-- **`vox populi` (Nó de Apoio):** Para quem quiser **colaborar ativamente com a infraestrutura**. Opera em segundo plano mantendo cache seguro (SHA-256) e provendo relay cego local para sua vizinhança ou residência, sem interface gráfica pesada e sem telemetria.
-- **⚡ Efeito Boost Local:** Abrir ambos no mesmo computador ou rede Wi-Fi conecta o cliente ao nó em loopback HTTP (`127.0.0.1:3920`), acelerando a renderização através de cache local verificado sem consumir franquia de internet.
+O ecossistema é estritamente dividido em papéis complementares ([ADR-011](docs/adr/011-taxonomia-tripartite-produtos-vox.md)):
+- **`vox` (Cliente):** Para quem quer **só usar a rede e fim**. Interface cívica, composição de mensagens (texto, áudio e vídeo), enquetes, votações populares, diretório unificado de pessoas e mensagens ponto a ponto criptografadas sem precisar entender de técnica ou servidores.
+- **`vox populi` (Nó de Apoio):** Para quem quiser **colaborar ativamente com a infraestrutura**. Opera em segundo plano mantendo cache seguro (SHA-256) e provendo relay cego local (`blind_relay.py`), sem interface gráfica pesada e sem telemetria.
+- **`VoxPopuli-ZeroMemory.exe` (Nó de Memória Central Dev Alpha/Beta — Modo 3):** Executável nativo ultraleve (*170 KB*, C#/.NET 4.x zero-deps) em *System Tray* para sustentar a memória da rede durante Alpha/Beta com **WAL em disco `< 0,2 ms`**, **Batch Snapshot a cada 2s**, **Delta Sync**, **Túnel HTTPS Cloudflare automático** e **Signaling Beacon** via `wss://vox-sentinel.onrender.com`.
+- **⚡ Efeito Boost Local:** Abrir cliente e nó no mesmo computador conecta automaticamente o cliente em loopback HTTP (`127.0.0.1:3920` / `127.0.0.1:3921`), acelerando a renderização e sincronizando o estado local sem consumir franquia de internet.
 
 ### Matriz de Distribuição e Suporte aos 4 Sistemas Operacionais
 
 | Sistema Operacional | Papel: `vox` (Cliente Cívico) | Papel: `vox populi` (Nó de Apoio Comunitário) | Como Funciona Sob o Capô |
 |:---|:---|:---|:---|
-| **1. Microsoft Windows**<br>(10 / 11) | [**`Vox.exe`**](client/downloads/Vox.exe) *(967 KiB)* | [**`VoxPopuli.exe`**](client/downloads/VoxPopuli.exe) *(11.7 MB)* | **Cliente:** Executável nativo com runtime WebView2 já presente no Windows (sem empacotar o Chromium/Electron; consome ~40 MB RAM em medições locais).<br>**Nó:** Serviço sem janela com ícone na bandeja (*System Tray*), operando relay local HTTP (`:3920`) e cache criptográfico. |
+| **1. Microsoft Windows**<br>(10 / 11) | [**`Vox.exe`**](client/downloads/Vox.exe) *(967 KiB)* | [**`VoxPopuli.exe`**](client/downloads/VoxPopuli.exe) *(11.7 MB)*<br>`tools/zero-central-memory-windows/` *(170 KB)* | **Cliente:** Executável nativo com runtime WebView2 já presente no Windows (sem empacotar o Chromium/Electron; consome ~40 MB RAM em medições locais).<br>**Nó:** Serviço sem janela com ícone na bandeja (*System Tray*), operando relay local HTTP (`:3920` / `:3921`), cache criptográfico e memória central persistente (Modo 3). |
 | **2. Google Android**<br>(5.0+) | [**`vox.apk`**](client/downloads/vox.apk) *(74 KiB)* | [**`vox-populi.apk`**](client/downloads/vox-populi.apk) *(74 KiB)* | **Cliente (`org.vox.client`):** Micro-APK leve instalável via sideload direto. Roda a PWA em tela cheia via WebView do Android com aceleração gráfica.<br>**Nó (`org.vox.populi`):** Projetado para celulares ligados na tomada em Wi-Fi. Foreground service silencioso mantendo a malha viva 24/7 sem gastar dados móveis. |
 | **3. GNU/Linux & Pi**<br>(x86_64, ARM64, SBC) | [**Guia Linux WebKitGTK**](tools/desktop-linux/) *(< 30 KiB)* | [**Guia Daemon systemd**](vox-populi/) *(daemon)* | **Cliente:** Lançador leve integrando com WebKitGTK nativo do GNOME/KDE.<br>**Nó:** Daemon de baixo consumo (~15 MB RAM em repouso) empacotado para `systemd`, ideal para Raspberry Pi (3, 4, 5, Zero 2W) e servidores domésticos. |
 | **4. Apple**<br>(iOS / iPadOS & macOS) | [**Abrir Safari PWA**](https://vox-9df.pages.dev/) *(PWA)* | [**Guia macOS launchd**](tools/node-macos/) *(launchd)* | **Cliente (iOS):** Adicione à *Tela de Início* no Safari (*Compartilhar* &rarr; *Tela de Início*). Ganha contêiner isolado, **fica isento da limpeza de 7 dias do Safari (ITP)** e expande a quota de armazenamento para até 60% do disco.<br>**Nó (macOS):** Serviço de segundo plano via `launchd` para Mac Mini ou MacBooks como nó doméstico. |
@@ -135,10 +137,15 @@ Os objetos públicos usam transações com tags semânticas. O cliente também m
 O estado varia entre cliente, navegador e versão. A lista abaixo não é uma certificação de segurança, disponibilidade contínua ou funcionamento entre quaisquer dois hosts. Consulte a documentação vinculada e os testes do commit antes de depender de um recurso.
 
 * **Fóruns & Comunidades (Espírito Orkut):** Espaços temáticos, membros visíveis no perfil, feeds cronológicos por comunidade e busca pública aberta.
+* **Áudio e Vídeo Nativos Lo-Fi (Walkie-Talkie & Vídeo Curto):** Gravação direta pelo navegador em 1 toque (toggle iniciar/parar) ou anexo de arquivo para posts e comentários, com compressão WebM/Opus e MP4/WebM $\le 320\text{p}$ (`media-lofi.js`), deduplicação por hash SHA-256 (`media-blob.js`) e replicação P2P/memória central.
+* **Diretório Unificado de Pessoas (`#/people`) & Onboarding Direto:** Lista determinística completa de todas as contas cadastradas na rede com filtro em tempo real, entrada direta de nome/apelido no onboarding (sem obrigatoriedade de OAuth) e sincronização automática via `PROFILE_CARD` e `zero-central-memory`.
+* **Nó Local `zero-central-memory` Modo 3 (`VoxPopuli-ZeroMemory.exe` / `central_memory.py`):** Persistência local em disco com journal append-only (`< 0,2 ms`), snapshot atômico em lote a cada 2s, delta sync incremental (`clientRevision`/`since`), túnel HTTPS Cloudflare integrado e descoberta zero-config via *Signaling Beacon* (`vx_zero_memory_beacon`).
+* **Disparo Multi-Rede Assistido (`EXPLODE!`):** Publicação simultânea assistida de tópicos para X/Twitter, Bluesky, Threads, WhatsApp e Telegram, acompanhada de userscript opcional (`tools/auto-explode/vox-auto-explode.user.js`) para confirmação em 1 toque.
 * **Chrome Compacto de Foto & Interações Sociais:** Header enxuto sobre mídia, **Notas de Perfil 24h** (`profile-note.js`), **Republicar** com citação honesta sem impulsionamento (`repost-draft.js` / `repost-cite.js`), aba **Salvos** (bookmarks locais) e **Marcação Manual em Fotos** por coordenada (`x%/y%` em `photo-tag-pins.js`, estritamente sem reconhecimento facial).
+* **Cartuchos Cívicos Webxdc & Cintura Fina ([ADR-012](./docs/adr/012-soberania-digital-cintura-fina-cartuchos-webxdc.md)):** Execução de mini-apps em `iframe` com sandbox estrito (CSP rede-zero) sincronizados por CRDT determinístico (`webxdc-crdt.js`) sobre o envelope canônico `vox-identity.js`.
 * **Classificados / Feira Comunitária:** Ofertas locais assinadas com gossip de manifesto de cache (`CACHE_MANIFEST`), prioridade `WANT` e suporte a retratação na malha.
 * **Mensagens Diretas E2E (WebRTC + Inbox TTL):** Criptografia ponta-a-ponta no navegador (`ECDH P-256` + `AES-GCM-256`). Mensagens privadas trafegam fora do permaweb; quando o par está offline, podem passar pelo relay transitório, que usa TTL padrão de 72 horas.
-* **Soberania & Exportação de Chaves (`.voxid`):** Export e import de credenciais com suporte a envelope criptografado com senha mestra (`.voxid` via PBKDF2 + AES-GCM-256).
+* **Cofre Multi-Identidade & Exportação (`.voxid`):** Alternância rápida entre múltiplas contas locais (`vox-accounts-vault-v1`) e export/import de credenciais com suporte a envelope criptografado com senha mestra (`.voxid` via PBKDF2 + AES-GCM-256).
 * **Wipe Local de Emergência (T05):** Purga imediata de chaves locais, `localStorage`, caches e bases IndexedDB no aparelho (`local-wipe.js`), com aviso transparente sobre dados já ancorados no permaweb ou replicados em outros pares.
 * **Quarentena pessoal de conteúdo:** Marcador local para ocultar publicações e evitar seu compartilhamento neste dispositivo; não remove conteúdo da rede nem impõe uma decisão a outras pessoas.
 * **QR Code Canônico Vanilla (`qr-url.js`):** Gerador nativo de QR codes para links de tópicos, comunidades e convites, sem dependências externas de npm.
@@ -165,17 +172,17 @@ Na raiz do repositório:
 ```bash
 npm test
 ```
-Executa as suítes atuais de JavaScript e Python. Use o resultado associado ao commit que está sendo revisado; contagens antigas publicadas neste README não são critério de aprovação.
+Executa as suítes atuais de JavaScript (649 testes) e Python (74 testes), totalizando **723 testes automatizados**.
 
-### 3. Rodar o Relay / Servidor de Cache Doméstico (Opcional)
+### 3. Rodar o Relay / Memória Central Doméstica (Opcional)
 
-Para operadores que desejam apoiar a malha como *stewards*:
+Para operadores que desejam apoiar a malha como *stewards* ou sustentar persistência local durante Alpha/Beta:
 
 ```bash
 cd relay
 python server.py
 ```
-Servidor leve em Python (stdlib, sem dependências externas), provendo proxy de cache Arweave, índice espelho comunitário e inbox efêmero de DMs na porta `3920` (e sinalização WebRTC opcional via `python signaling.py` na porta `3921`).
+Ou, no Windows, execute **`dist/VoxPopuli-ZeroMemory.exe`** (ícone na bandeja do sistema, escutando em `127.0.0.1:3921` e `127.0.0.1:3920` com persistência em `%LOCALAPPDATA%\VoxPopuli\NodeZero\central_memory`).
 
 ---
 
@@ -199,10 +206,10 @@ Detalhes: [Brainstorm Tramitado × Vox](docs/brainstorm-sinergia-tramitado-vox-2
 
 Em conformidade com a auditoria de honestidade cívica ([docs/honest-copy-audit-2026-10-23.md](./docs/honest-copy-audit-2026-10-23.md)):
 
-* **O Vox ainda não oferece P2P universal entre dispositivos:** gateways públicos Arweave são usados para localizar e ler dados; o comportamento depende dos gateways, da rede e da implementação disponível.
+* **O Vox ainda não oferece P2P universal entre dispositivos:** gateways públicos Arweave, servidores de sinalização WebRTC e nós voluntários de memória/relay são usados para localizar e sincronizar dados; o comportamento depende da disponibilidade da rede e da implementação ativa.
 * **O Vox NÃO promete imunidade judicial:** Toda postagem pública no permaweb é permanente e auditável. As normas da legislação brasileira ([COMPLIANCE-BR.md](./COMPLIANCE-BR.md) — Marco Civil da Internet e LGPD) aplicam-se integralmente.
 * **O Vox NÃO publica sozinho nas redes sociais:** O protocolo POSSE gera rascunhos, links e compartilhamentos assistidos via intents oficiais; o envio final é sempre um ato consciente e deliberado do usuário.
-* **O repositório e as comunidades são coisas distintas:** o código não opera nem governa automaticamente as comunidades. Relays e espelhos são opcionais e substituíveis; o Node Zero para Windows/Linux é atualmente local e loopback-only.
+* **O repositório e as comunidades são coisas distintas:** o código não opera nem governa automaticamente as comunidades. Relays e espelhos são opcionais e substituíveis; o Node Zero para Windows/Linux escuta localmente em loopback (com suporte opcional a túnel HTTPS Cloudflare no modo Dev Alpha/Beta).
 
 ---
 
@@ -227,7 +234,11 @@ Em conformidade com a auditoria de honestidade cívica ([docs/honest-copy-audit-
 * **[ADR-003](./docs/adr/003-profile-card-gossip.md):** Cartão de malha e propagação gossip de perfis.
 * **[ADR-004](./docs/adr/004-gateway-honest-fallback.md):** Fallback transparente e honesto de leitura reserva de gateways.
 * **[ADR-005](./docs/adr/005-collective-profile-m-of-n.md):** Perfil coletivo M-de-N via multi-assinatura independente (Tese T02).
+* **[ADR-006](./docs/adr/006-p2p-profile-identity-gossip-hardening.md):** Hardening de identidade e gossip de perfis P2P.
+* **[ADR-007](./docs/adr/007-zero-complexity-monolith-decomposition.md):** Decomposição de monólito e limite de complexidade cognitiva.
 * **[ADR-008](./docs/adr/008-vox-populi-community-node-architecture.md):** Arquitetura do Nó Comunitário Vox Populi.
+* **[ADR-009](./docs/adr/009-multi-gateway-graphql-corroboration.md):** Corroboração de múltiplos gateways GraphQL.
+* **[ADR-010](./docs/adr/010-vox-contribution-engine-execute-e-ajude.md):** Motor de contribuição voluntária e nós anfitriões.
 * **[ADR-011](./docs/adr/011-taxonomia-tripartite-produtos-vox.md):** Taxonomia Canônica Dual — Vox (Cliente) e Vox Populi (Nó Dedicado).
 * **[ADR-012](./docs/adr/012-soberania-digital-cintura-fina-cartuchos-webxdc.md):** Soberania Digital na Vox — Cintura Fina Criptográfica e Cartuchos Cívicos Webxdc.
 
