@@ -88,7 +88,7 @@ function renderPeopleSection(title, people) {
     </div>`;
 }
 
-function resolvePeopleSearchBody(sections, results, query) {
+export function resolvePeopleSearchBody(sections, results, query) {
   const q = escapeHtml(query);
   const hasQuery = Boolean(String(query || "").trim());
   if (hasQuery) {
@@ -97,9 +97,14 @@ function resolvePeopleSearchBody(sections, results, query) {
       : results.map((p) => renderPeopleResultRow(p)).join("");
   }
   if (sections) {
-    const hasAny = Boolean(sections.contacts?.length || sections.mesh?.length || sections.tour?.length);
-    if (!hasAny) return `<div class="empty"><p>Ninguém indexado ainda.</p></div>`;
+    const cLen = sections.contacts?.length || 0;
+    const mLen = sections.mesh?.length || 0;
+    const tLen = sections.tour?.length || 0;
+    const total = sections.all?.length || (cLen + mLen + tLen);
+    if (!total) return `<div class="empty"><p>Ninguém indexado ainda.</p></div>`;
+    const summaryHtml = `<p class="meta" style="margin:0.5rem 0 0.25rem; font-size:0.8rem;">Mostrando lista completa (${total} ${total === 1 ? "pessoa cadastrada" : "pessoas cadastradas"}).</p>`;
     return (
+      summaryHtml +
       renderPeopleSection("Contatos", sections.contacts) +
       renderPeopleSection("Na malha", sections.mesh) +
       renderPeopleSection("Tour (demonstração)", sections.tour)
@@ -113,20 +118,15 @@ export function renderPeopleSearch(main, { sections = null, results = [], query 
   const body = resolvePeopleSearchBody(sections, results, query);
 
   main.innerHTML = `
-    <div class="card">
+    <div class="card people-search-card">
       <h2 style="margin:0 0 4px;">Pessoas</h2>
-      <p class="desc" style="margin:0 0 0.75rem;">Busca local: contatos, autores vistos na malha, cartões opt-in e tour (só se vazio).</p>
-      <form id="form-people-search" style="display:flex; gap:0.5rem;">
-        <input type="search" id="people-search-input" class="form-control" placeholder="Nome, @handle ou vx_…" value="${q}" />
-        <button type="submit" class="btn btn-primary">Buscar</button>
+      <p class="desc" style="margin:0 0 0.65rem; font-size:0.85rem;">Lista completa de pessoas cadastradas na rede. Digite abaixo para filtrar:</p>
+      <form id="form-people-search" style="display:flex; gap:0.5rem; align-items:center;">
+        <input type="search" id="people-search-input" class="form-control" placeholder="Filtrar por nome, @handle, vx_ ou link de convite…" value="${q}" style="flex:1;" />
+        <button type="submit" class="btn btn-primary">Filtrar</button>
       </form>
-      <form id="form-people-paste-link" style="margin-top:0.65rem; display:flex; gap:0.5rem; flex-wrap:wrap;">
-        <input type="text" id="people-paste-input" class="form-control" placeholder="#/connect/… ou vx_…" style="flex:1; min-width:12rem;" />
-        <button type="submit" class="btn btn-outline">Abrir conexão</button>
-      </form>
-      <p class="meta" style="margin:0.35rem 0 0; font-size:0.78rem;">Cole um link #/connect ou vx_ para conectar sem busca.</p>
     </div>
-    <div class="people-results">${body}</div>`;
+    <div class="people-results" id="people-results-container">${body}</div>`;
 }
 
 function renderPostPactIdentityHtml(routeId) {

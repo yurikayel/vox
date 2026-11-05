@@ -293,27 +293,31 @@ export async function deleteDmThread(peerAddress) {
 }
 
 export async function saveTombstone(tombstone) {
-  if (!tombstone?.id) return;
+  if (!tombstone?.id) return false;
+  const record = {
+    id: tombstone.id,
+    type: "tombstone",
+    kind: "post-tombstone",
+    author: tombstone.author || "",
+    ts: tombstone.ts || Date.now(),
+    editedAt: tombstone.editedAt || Date.now(),
+    sig: tombstone.sig || "",
+    pubKey: tombstone.pubKey || null,
+    isLocalP2p: true,
+  };
   try {
     const db = await openDB();
     await new Promise((resolve) => {
       const tx = db.transaction(LOCAL_POSTS_STORE, "readwrite");
-      const store = tx.objectStore(LOCAL_POSTS_STORE);
-      store.put({
-        id: tombstone.id,
-        type: "tombstone",
-        kind: "post-tombstone",
-        author: tombstone.author || "",
-        ts: tombstone.ts || Date.now(),
-        editedAt: tombstone.editedAt || Date.now(),
-        sig: tombstone.sig || "",
-        pubKey: tombstone.pubKey || null,
-        isLocalP2p: true,
-      });
+      tx.objectStore(LOCAL_POSTS_STORE).put(record);
       tx.oncomplete = () => resolve();
       tx.onerror = () => resolve();
     });
-  } catch {}
+    if (centralMemorySink) centralMemorySink({ type: "GOSSIP_DELETE", tombstone: record });
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export async function getTombstone(id) {
@@ -339,6 +343,23 @@ export async function getTombstone(id) {
   }
 }
 
+export async function getAllTombstones() {
+  try {
+    const db = await openDB();
+    return await new Promise((resolve) => {
+      const tx = db.transaction(LOCAL_POSTS_STORE, "readonly");
+      const req = tx.objectStore(LOCAL_POSTS_STORE).getAll();
+      req.onsuccess = () => {
+        const list = req.result || [];
+        resolve(list.filter((p) => p && (p.type === "tombstone" || p.kind === "post-tombstone")));
+      };
+      req.onerror = () => resolve([]);
+    });
+  } catch {
+    return [];
+  }
+}
+
 export async function getPostRecord(id) {
   if (!id) return null;
   try {
@@ -356,6 +377,11 @@ export async function getPostRecord(id) {
 }
 
 let cachedReplyCountsMap = null;
+let centralMemorySink = null;
+
+export function registerCentralMemorySink(fn) {
+  centralMemorySink = typeof fn === "function" ? fn : null;
+}
 
 export function invalidateReplyCountsCache() {
   cachedReplyCountsMap = null;
@@ -419,10 +445,10 @@ function normalizeLocalPost(post) {
 }
 
 export async function saveLocalPost(post) {
-  if (!post?.id || !post?.type) return;
+  if (!post?.id || !post?.type) return false;
   const tombstone = await getTombstone(post.id);
   const postTime = post.editedAt || post.ts || 0;
-  if (tombstone && (tombstone.editedAt || 0) >= postTime) return;
+  if (tombstone && (tombstone.editedAt || 0) >= postTime) return false;
 
   const record = normalizeLocalPost(post);
   try {
@@ -436,7 +462,11 @@ export async function saveLocalPost(post) {
       };
       tx.onerror = () => resolve();
     });
-  } catch {}
+    if (centralMemorySink) centralMemorySink({ type: "GOSSIP", item: record });
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export async function getLocalPost(id) {
@@ -509,6 +539,10 @@ export async function getLocalPosts({ type = null, communityId = null, replyTo =
   } catch {
     return [];
   }
+}
+
+export async function getAllLocalPosts() {
+  return getLocalPosts();
 }
 
 export async function getReplyCountsMap() {

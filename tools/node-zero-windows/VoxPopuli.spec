@@ -13,6 +13,8 @@ a = Analysis(
     hiddenimports=[
         "node_zero",
         "windows_host",
+        "relay.blind_relay",
+        "relay.central_memory",
         "relay.inbox",
         "relay.mirror_validate",
         "relay.server",

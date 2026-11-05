@@ -316,8 +316,37 @@ function handleBlobMessage(msg) {
   pendingRequests.delete(msg.txId);
 }
 
+function shouldUpdateDirectoryCard(existing, inName, card) {
+  if (!existing) return true;
+  if (inName && !existing.name) return true;
+  return Number(card.updatedAt) > Number(existing.updatedAt);
+}
+
+function pickCardField(primary, fallback) {
+  return primary ? String(primary).trim() : String(fallback || "").trim();
+}
+
+function handleDirectoryProfileCard(card) {
+  if (!card || typeof card !== "object") return;
+  const routeId = pickCardField(card.routeId, card.author);
+  if (!routeId.startsWith("vx_") || moderation.shouldDropGossip(routeId)) return;
+  const existing = profileDirectory.getProfileCard(routeId);
+  const inName = pickCardField(card.name, card.displayName);
+  if (!shouldUpdateDirectoryCard(existing, inName, card)) return;
+  const ex = existing ? existing : {};
+  const inAvatar = pickCardField(card.avatarUrl, card.avatar);
+  profileDirectory.setProfileCard(routeId, {
+    name: pickCardField(inName, ex.name),
+    avatarUrl: pickCardField(inAvatar, ex.avatarUrl),
+    bio: pickCardField(card.bio, ex.bio),
+    handle: pickCardField(card.handle, ex.handle),
+    discoverable: card.discoverable !== false,
+  });
+}
+
 const VOX_MESSAGE_HANDLERS = {
   PROFILE_CARD_HELLO: (msg) => handleProfileCardHello(msg.card),
+  PROFILE_CARD: (msg) => handleDirectoryProfileCard(msg.card),
   WANT: (msg, replyFn, settings, source) => handleWantMessage(msg, replyFn, settings, source),
   BLOB: (msg) => handleBlobMessage(msg),
   DM: (msg, _replyFn, _settings, source) => {
@@ -575,10 +604,33 @@ webrtcPeer.onDmMessage((envelope) => {
   dispatchDirectMessage(envelope, "rtc");
 });
 
+async function sendRecentStateOnPeerConnect(sendFn) {
+  for (const card of profileDirectory.listDiscoverableProfileCards().slice(0, 256)) {
+    if (card?.routeId) {
+      sendFn({ type: "PROFILE_CARD", card, fromPeer: myPeerId });
+    }
+  }
+  const [tombstones, posts] = await Promise.all([
+    cacheNode.getAllTombstones(),
+    cacheNode.getAllLocalPosts(),
+  ]);
+  for (const tombstone of tombstones.slice(0, 64)) {
+    if (tombstone?.sig && tombstone?.pubKey) {
+      sendFn({ type: "GOSSIP_DELETE", item: tombstone, tombstone, fromPeer: myPeerId });
+    }
+  }
+  for (const post of posts.slice(0, 128)) {
+    if (post?.sig && post?.pubKey) {
+      sendFn({ type: "GOSSIP", item: post, fromPeer: myPeerId });
+    }
+  }
+}
+
 webrtcPeer.onPeerConnect(async (remotePeerId, sendFn) => {
   try {
     const card = await profileCard.buildSignedProfileCard();
     sendFn({ type: "PROFILE_CARD_HELLO", card });
+    await sendRecentStateOnPeerConnect(sendFn);
   } catch {}
 });
 

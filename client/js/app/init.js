@@ -11,12 +11,14 @@ import { parseRoute } from "./route-parse.js";
 import { route } from "./navigation.js";
 import { getActiveUser } from "./context.js";
 import { openZapModal } from "./zap-modal.js";
+import * as centralMemory from "../central-memory.js";
 import * as peers from "../peers.js";
 import * as localAccount from "../local-account.js";
 import {
   showHome,
   showTagFeed,
 } from "./screens-home.js";
+import { showPeople } from "./screens-people.js";
 import {
   showCommunity,
   showTopic,
@@ -91,6 +93,23 @@ function handleGossipTombstone(tombstone, cur) {
   }
 }
 
+function refreshAfterCentralMemorySync() {
+  const cur = parseRoute();
+  if (cur.name === "home") {
+    showHome(cur.feed);
+  } else if (cur.name === "people") {
+    showPeople(cur.query);
+  } else if (cur.name === "community") {
+    showCommunity(cur.id, cur.tab);
+  } else if (cur.name === "topic") {
+    showTopic(cur.id, cur.communityId);
+  } else if (cur.name === "proposal") {
+    showProposal(cur.communityId, cur.proposalId);
+  } else if (cur.name === "tag-feed" && cur.slug) {
+    showTagFeed(cur.slug);
+  }
+}
+
 export function initGossipListeners() {
   peers.onGossipPost((item) => {
     const cur = parseRoute();
@@ -104,6 +123,10 @@ export function initGossipListeners() {
 
   peers.onGossipTombstone((tombstone) => {
     handleGossipTombstone(tombstone, parseRoute());
+  });
+
+  centralMemory.startCentralMemoryLoop({
+    onHydrated: () => refreshAfterCentralMemorySync(),
   });
 }
 

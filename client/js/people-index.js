@@ -7,12 +7,25 @@ import * as mock from "./mock.js";
 import { getWelcomeProfile, WELCOME_ROUTE_ID } from "./vox-welcome-profile.js";
 import * as profileDirectory from "./profile-directory.js";
 import * as localAccount from "./local-account.js";
+import * as webrtcPeer from "./webrtc-peer.js";
 import { shortId } from "./render/util.js";
 
-const MESH_POST_TYPES = new Set(["topic", "reply", "membership"]);
+const DEFAULT_PREFER_SOURCES = ["system", "self", "contact", "vault", "mesh-card", "mesh-author", "route-direct"];
 export const PEOPLE_SEARCH_OK_METRIC = "vox-metric-people-search-ok";
 
-function upsert(map, entry, preferSources = []) {
+function isFallbackRouteName(name, routeId) {
+  if (!name) return true;
+  return name === routeId || name === String(routeId || "").slice(0, 14) || name === String(routeId || "").slice(0, 12);
+}
+
+function chooseBestName(existingName, incomingName, routeId) {
+  if (!isFallbackRouteName(incomingName, routeId) && isFallbackRouteName(existingName, routeId)) {
+    return incomingName;
+  }
+  return existingName || incomingName || String(routeId || "").slice(0, 14);
+}
+
+function upsert(map, entry, preferSources = DEFAULT_PREFER_SOURCES) {
   const existing = map.get(entry.routeId);
   if (!existing) {
     map.set(entry.routeId, entry);
@@ -22,76 +35,85 @@ function upsert(map, entry, preferSources = []) {
     const i = preferSources.indexOf(s);
     return i >= 0 ? i : 99;
   };
+  const bestName = chooseBestName(existing.name, entry.name, entry.routeId);
+  const bestHandle = existing.handle || entry.handle || "";
   if (rank(entry.source) < rank(existing.source)) {
-    map.set(entry.routeId, { ...existing, ...entry, source: entry.source });
+    map.set(entry.routeId, { ...existing, ...entry, name: bestName, handle: bestHandle, source: entry.source });
+  } else {
+    map.set(entry.routeId, { ...existing, name: bestName, handle: bestHandle });
+  }
+}
+
+function resolveMeshAuthorEntry(post) {
+  if (!post) return null;
+  const author = post.author ? post.author : post.owner;
+  if (!author) return null;
+  const dirName = profileDirectory.getAuthorDisplaySync(author);
+  const name = dirName || post.authorDisplay || author.slice(0, 14);
+  const handle = post.authorHandle || mock.getAuthorHandle(author) || handles.getCachedAddressHandle(author) || "";
+  return { routeId: author, name, handle, source: "mesh-author" };
+}
+
+function indexSignalingPeers(map) {
+  if (typeof webrtcPeer.listKnownPeerAddresses !== "function") return;
+  for (const addr of webrtcPeer.listKnownPeerAddresses()) {
+    upsert(map, {
+      routeId: addr,
+      name: profileDirectory.getAuthorDisplaySync(addr) || addr.slice(0, 14),
+      handle: handles.getCachedAddressHandle(addr) || mock.getAuthorHandle(addr) || "",
+      source: "mesh-author",
+    });
   }
 }
 
 async function indexMeshAuthors(map) {
-  const posts = await cacheNode.getLocalPosts({});
+  const posts = typeof cacheNode.getAllLocalPosts === "function"
+    ? await cacheNode.getAllLocalPosts()
+    : await cacheNode.getLocalPosts({});
   for (const p of posts) {
-    if (!MESH_POST_TYPES.has(p.type)) continue;
-    const author = p.author || p.owner;
-    if (!author) continue;
-    upsert(
-      map,
-      {
-        routeId: author,
-        name: profileDirectory.getAuthorDisplaySync(author) || author.slice(0, 14),
-        handle: mock.getAuthorHandle(author),
-        source: "mesh-author",
-      },
-      ["contact", "mesh-card", "mesh-author"],
-    );
+    const entry = resolveMeshAuthorEntry(p);
+    if (entry) upsert(map, entry);
   }
+  indexSignalingPeers(map);
 }
 
 function indexMeshCards(map) {
   for (const card of profileDirectory.listDiscoverableProfileCards()) {
     const routeId = card.routeId;
-    upsert(
-      map,
-      {
-        routeId,
-        name: card.name || profileDirectory.getAuthorDisplaySync(routeId) || routeId.slice(0, 14),
-        handle: card.handle || mock.getAuthorHandle(routeId),
-        source: "mesh-card",
-      },
-      ["contact", "mesh-card", "mesh-author"],
-    );
+    upsert(map, {
+      routeId,
+      name: card.name || card.displayName || profileDirectory.getAuthorDisplaySync(routeId) || routeId.slice(0, 14),
+      handle: card.handle || handles.getCachedAddressHandle(routeId) || mock.getAuthorHandle(routeId) || "",
+      source: "mesh-card",
+    });
   }
 }
 
 function indexSelfAccount(map) {
   const myId = localAccount.getCachedRouteIdSync();
   if (!myId) return;
-  const myName = localAccount.getDisplayName() || localAccount.getProfileEnrichment()?.displayName || "";
-  upsert(
-    map,
-    {
-      routeId: myId,
-      name: myName || myId.slice(0, 14),
-      handle: handles.getCachedAddressHandle(myId) || "",
-      source: "self",
-    },
-    ["self", "contact", "vault", "mesh-card", "mesh-author"],
-  );
+  const myName = localAccount.getDisplayName()
+    || localAccount.getProfileEnrichment()?.displayName
+    || profileDirectory.getAuthorDisplaySync(myId)
+    || "";
+  upsert(map, {
+    routeId: myId,
+    name: myName || myId.slice(0, 14),
+    handle: handles.getCachedAddressHandle(myId) || "",
+    source: "self",
+  });
 }
 
 function indexVaultAccounts(map) {
   if (typeof localAccount.listVaultAccountsSync !== "function") return;
   for (const v of localAccount.listVaultAccountsSync()) {
     if (!v?.routeId) continue;
-    upsert(
-      map,
-      {
-        routeId: v.routeId,
-        name: v.displayName || profileDirectory.getAuthorDisplaySync(v.routeId) || v.routeId.slice(0, 14),
-        handle: handles.getCachedAddressHandle(v.routeId) || "",
-        source: "vault",
-      },
-      ["self", "contact", "vault", "mesh-card", "mesh-author"],
-    );
+    upsert(map, {
+      routeId: v.routeId,
+      name: v.displayName || profileDirectory.getAuthorDisplaySync(v.routeId) || v.routeId.slice(0, 14),
+      handle: handles.getCachedAddressHandle(v.routeId) || "",
+      source: "vault",
+    });
   }
 }
 
@@ -114,10 +136,10 @@ export async function buildPeopleIndex() {
   indexLocalAndVaultAccounts(map);
 
   for (const c of contacts.listContacts()) {
-    map.set(c.routeId, {
+    upsert(map, {
       routeId: c.routeId,
       name: c.label || profileDirectory.getAuthorDisplaySync(c.routeId) || c.routeId,
-      handle: "",
+      handle: handles.getCachedAddressHandle(c.routeId) || "",
       source: "contact",
     });
   }
@@ -190,7 +212,7 @@ function matchesPerson(p, ql, cleanQl, handleRoute) {
 export async function searchPeople(query) {
   const q = String(query || "").trim();
   const all = await buildPeopleIndex();
-  if (!q) return all.slice(0, 50);
+  if (!q) return all;
 
   const cleanQ = q.replace(/^@/, "").trim();
   let handleRoute = "";

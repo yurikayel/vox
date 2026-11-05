@@ -3,9 +3,19 @@
 import * as render from "../render.js";
 import * as share from "../share.js";
 import * as contacts from "../contacts.js";
+import * as centralMemory from "../central-memory.js";
 import * as peopleIndex from "../people-index.js";
 import * as profileDirectory from "../profile-directory.js";
 import { getActiveUser, makeShellProps } from "./context.js";
+
+async function updatePeopleResultsContainer(rawQuery) {
+  const container = document.getElementById("people-results-container");
+  if (!container) return;
+  const q = String(rawQuery || "").trim();
+  const sections = q ? null : await peopleIndex.buildPeopleSections();
+  const results = q ? await peopleIndex.searchPeople(q) : [];
+  container.innerHTML = render.resolvePeopleSearchBody(sections, results, q);
+}
 
 export async function showPeople(initialQuery = "") {
   const user = await getActiveUser();
@@ -16,18 +26,26 @@ export async function showPeople(initialQuery = "") {
   const results = hasQ ? await peopleIndex.searchPeople(q) : [];
   render.renderPeopleSearch(main, { sections, results, query: q });
 
+  const searchInput = document.getElementById("people-search-input");
+  searchInput?.addEventListener("input", () => {
+    void updatePeopleResultsContainer(searchInput.value);
+  });
+
   document.getElementById("form-people-search")?.addEventListener("submit", (e) => {
     e.preventDefault();
-    const next = document.getElementById("people-search-input")?.value.trim() || "";
+    const next = searchInput?.value.trim() || "";
+    const target = peopleIndex.parseConnectTarget(next);
+    if (target) {
+      location.hash = `#/connect/${encodeURIComponent(target)}`;
+      return;
+    }
     location.hash = next ? `#/people?q=${encodeURIComponent(next)}` : "#/people";
   });
 
-  document.getElementById("form-people-paste-link")?.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const raw = document.getElementById("people-paste-input")?.value.trim() || "";
-    const target = peopleIndex.parseConnectTarget(raw);
-    if (target) location.hash = `#/connect/${encodeURIComponent(target)}`;
-    else share.showToast("Cole um link #/connect ou vx_…", "error");
+  void centralMemory.syncWithCentralMemory({
+    onHydrated: () => {
+      void updatePeopleResultsContainer(searchInput?.value || q);
+    },
   });
 }
 

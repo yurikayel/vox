@@ -27,6 +27,7 @@ from windows_host import WindowsHost, WindowsJobGovernor
 APP_NAME = "Vox Populi Node Zero"
 RELAY_HOST = "127.0.0.1"
 RELAY_PORT = 3921
+LEGACY_RELAY_PORT = 3920
 CONTROL_HOST = "127.0.0.1"
 CONTROL_PORT = 3922
 
@@ -230,6 +231,7 @@ class NodeZero:
         self.data_dir = data_dir
         self.cache_dir = data_dir / "cache"
         self.inbox_dir = data_dir / "inbox"
+        self.memory_dir = data_dir / "central_memory"
         self.identity_path = data_dir / "identity.json"
         self.token_path = data_dir / "control.token"
         self.status_path = data_dir / "status.json"
@@ -243,7 +245,10 @@ class NodeZero:
         self.governor = WindowsJobGovernor()
         self.relay = None
         self.relay_module = None
+        self.central_memory_module = None
         self.relay_thread = None
+        self.compat_relay = None
+        self.compat_relay_thread = None
         self.control = None
         self.control_thread = None
         self.last_snapshot = {}
@@ -256,11 +261,15 @@ class NodeZero:
             sys.path.insert(0, str(repo_root))
         os.environ["VOX_RELAY_CACHE_DIR"] = str(self.cache_dir)
         os.environ["VOX_RELAY_INBOX_DIR"] = str(self.inbox_dir)
+        os.environ["VOX_CENTRAL_MEMORY_DIR"] = str(self.memory_dir)
         os.environ["VOX_RELAY_MAX_CACHE_MB"] = str(self.config["cacheLimitMb"])
-        from relay import inbox, server
+        from relay import central_memory, inbox, server
 
         server.set_cache_dir(self.cache_dir)
         inbox.set_inbox_dir(self.inbox_dir)
+        central_memory.set_memory_dir(self.memory_dir)
+        central_memory.load_state()
+        self.central_memory_module = central_memory
         return server
 
     def _start_relay(self) -> None:
@@ -278,8 +287,28 @@ class NodeZero:
             target=self.relay.serve_forever, name="vox-relay", daemon=True
         )
         self.relay_thread.start()
+        self._start_compat_relay(module.VoxRelayHandler)
+
+    def _start_compat_relay(self, handler_cls) -> None:
+        if self.compat_relay or LEGACY_RELAY_PORT == RELAY_PORT:
+            return
+        try:
+            self.compat_relay = ThreadingHTTPServer((RELAY_HOST, LEGACY_RELAY_PORT), handler_cls)
+            self.compat_relay.daemon_threads = True
+            self.compat_relay_thread = threading.Thread(
+                target=self.compat_relay.serve_forever, name="vox-relay-compat", daemon=True
+            )
+            self.compat_relay_thread.start()
+        except OSError:
+            self.compat_relay = None
 
     def _stop_relay(self) -> None:
+        if self.compat_relay:
+            self.compat_relay.shutdown()
+            self.compat_relay.server_close()
+            if self.compat_relay_thread:
+                self.compat_relay_thread.join(timeout=2)
+            self.compat_relay = None
         if not self.relay:
             return
         self.relay.shutdown()
@@ -287,6 +316,8 @@ class NodeZero:
         if self.relay_thread:
             self.relay_thread.join(timeout=3)
         self.relay = None
+        if self.central_memory_module:
+            self.central_memory_module.save_state()
 
     def _set_resource_limits(self, snapshot: dict) -> dict:
         cpu_limit = cpu_budget(
@@ -317,12 +348,14 @@ class NodeZero:
         disk = shutil.disk_usage(self.data_dir)
         return {
             "app": APP_NAME,
+            "mode": "zero-central-memory",
             "nodeId": self.node_id,
             "updatedAt": utc_now(),
             "machine": socket.gethostname(),
             "platform": "windows",
             "state": "PAUSED" if self.paused else snapshot.get("state", "STARTING"),
             "relay": self._relay_status(cache_bytes),
+            "centralMemory": self._central_memory_status(),
             "control": {"url": f"http://{CONTROL_HOST}:{CONTROL_PORT}"},
             "services": self._service_status(),
             "resources": {
@@ -332,6 +365,15 @@ class NodeZero:
                 "diskTotalBytes": disk.total,
             },
             "settings": dict(self.config),
+        }
+
+    def _central_memory_status(self) -> dict:
+        if self.central_memory_module:
+            return self.central_memory_module.get_status_summary()
+        return {
+            "status": "stopped",
+            "mode": "zero-central-memory",
+            "memoryDir": str(self.memory_dir),
         }
 
     def _cache_bytes(self) -> int:
@@ -352,8 +394,10 @@ class NodeZero:
         state = "active" if self.relay and not self.paused else "paused"
         return {
             "bootstrap": "local_only",
+            "mode": "zero-central-memory",
             "relay": state,
             "cache": state,
+            "centralMemory": state,
             "seederActive": False,
             "seederStatus": "not_implemented",
             "peerDiscovery": "not_implemented",

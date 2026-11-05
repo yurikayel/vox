@@ -85,6 +85,7 @@ export {
 export {
   renderOAuthEnrich,
   closeOAuthEnrich,
+  resolvePeopleSearchBody,
   renderPeopleSearch,
   renderPostPactConnectModal,
   closePostPactConnectModal,

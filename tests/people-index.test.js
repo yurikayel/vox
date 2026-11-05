@@ -132,3 +132,36 @@ test("people-index - indexa contas do cofre e exibe em contatos", async () => {
   const found = await peopleIndex.searchPeople("Clarice");
   assert.ok(found.some((p) => p.routeId === accVault.routeId));
 });
+
+test("people-index - preserva source self mesmo quando autor possui posts locais e unifica todos os cadastrados", async () => {
+  localStorage.clear();
+  contacts.__resetContactsForTests();
+  profileDirectory.__resetProfileCardsForTests();
+
+  const primary = await localAccount.ensureLocalAccount();
+  localAccount.setDisplayName("Yuri Kayel");
+  const secondary = await localAccount.createAdditionalAccount({ displayName: "Segunda Conta" });
+
+  await cacheNode.saveLocalPost({
+    id: "t_self_post_1",
+    type: "topic",
+    author: secondary.routeId,
+    title: "Post da segunda conta",
+    ts: Date.now(),
+  });
+  profileDirectory.setProfileCard("vx_peer_externo_001", {
+    name: "Peer Externo",
+    discoverable: true,
+  });
+
+  const sections = await peopleIndex.buildPeopleSections();
+  const selfEntry = sections.contacts.find((p) => p.routeId === secondary.routeId);
+  const vaultEntry = sections.contacts.find((p) => p.routeId === primary.routeId);
+  const meshEntry = sections.mesh.find((p) => p.routeId === "vx_peer_externo_001");
+
+  assert.equal(selfEntry?.source, "self");
+  assert.equal(selfEntry?.name, "Segunda Conta");
+  assert.equal(vaultEntry?.name, "Yuri Kayel");
+  assert.equal(meshEntry?.name, "Peer Externo");
+  assert.equal(sections.all.length >= 4, true);
+});

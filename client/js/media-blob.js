@@ -144,6 +144,12 @@ export function formatBlobSize(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+let blobMemorySink = null;
+
+export function registerBlobMemorySink(fn) {
+  blobMemorySink = typeof fn === "function" ? fn : null;
+}
+
 // Armazenamento em memória / LRU leve
 class BlobStorage {
   constructor(maxItems = 100) {
@@ -163,6 +169,7 @@ class BlobStorage {
       this.map.delete(oldestKey);
     }
     this.map.set(blob.hash, blob);
+    if (blobMemorySink) blobMemorySink({ type: "MEDIA_BLOB", blob });
     return true;
   }
 

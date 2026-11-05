@@ -21,6 +21,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
 from relay import blind_relay
+from relay import central_memory
 from relay import inbox
 from relay import mirror_validate
 
@@ -46,6 +47,8 @@ CACHE_DIR = resolve_cache_dir()
 def set_cache_dir(path):
     global CACHE_DIR
     CACHE_DIR = Path(path).resolve()
+    if not str(os.environ.get("VOX_CENTRAL_MEMORY_DIR") or "").strip():
+        central_memory.set_memory_dir(CACHE_DIR / "central_memory")
     return CACHE_DIR
 
 UPSTREAM_GATEWAYS = [
@@ -303,6 +306,7 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
+        self.send_header("Access-Control-Allow-Private-Network", "true")
 
     def _get_content_length(self):
         try:
@@ -338,8 +342,28 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
                 self._send_json(snap)
             else:
                 self._reply_not_found(b"Snapshot nao encontrado")
+        elif path.startswith("/memory"):
+            self._handle_memory_get(path)
         else:
             self._reply_not_found(b"Rota nao encontrada no Vox Relay")
+
+    def _handle_memory_get(self, path):
+        if path in ("/memory", "/memory/status"):
+            self._send_json(central_memory.get_status_summary())
+            return
+        if path == "/memory/state":
+            since = self._get_query_param_int("since", 0)
+            include_blobs = self._get_query_param_int("includeBlobs", 1) != 0
+            self._send_json(central_memory.export_state(since=since, include_blobs=include_blobs))
+            return
+        if path.startswith("/memory/blob/"):
+            blob = central_memory.get_blob(path[len("/memory/blob/"):].split("/")[0])
+            if blob is not None:
+                self._send_json(blob)
+            else:
+                self._reply_not_found(b"Blob nao encontrado na memoria central")
+            return
+        self._reply_not_found(b"Rota de memoria nao encontrada")
 
     def _get_query_param_int(self, param_name, default=0):
         try:
@@ -372,6 +396,7 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
                 "verifiedReads": True,
                 "failures": INTEGRITY_FAILURES,
             },
+            "centralMemory": central_memory.get_status_summary(),
         }
 
     def _handle_transaction(self, tx_id):
@@ -461,8 +486,29 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
             self._handle_blind_envelope_post(path[len("/relay/envelope/"):].split("/")[0])
         elif path.startswith("/relay/snapshot/"):
             self._handle_blind_snapshot_post(path[len("/relay/snapshot/"):].split("/")[0])
+        elif path in ("/memory/ingest", "/memory/sync"):
+            self._handle_memory_post(path)
         else:
             self._reply_not_found(b"")
+
+    def _handle_memory_post(self, path):
+        content_length = self._get_content_length()
+        max_bytes = central_memory.MAX_BLOB_BYTES * 2
+        if content_length <= 0 or content_length > max_bytes:
+            status = 413 if content_length > max_bytes else 400
+            self._reply_not_found(b"Payload invalido ou excede limite da memoria central", status)
+            return
+        try:
+            payload = json.loads(self.rfile.read(content_length).decode("utf-8"))
+            if path == "/memory/ingest":
+                result = central_memory.ingest_event(payload)
+                self._send_json(result, 201 if result.get("changed") else 200)
+            else:
+                self._send_json(central_memory.sync_bundle(payload), 200)
+        except ValueError as err:
+            self._send_json({"error": str(err)}, 400)
+        except Exception as error:
+            self._send_json({"error": str(error)}, 500)
 
     def _handle_blind_envelope_post(self, channel_id):
         content_length = self._get_content_length()

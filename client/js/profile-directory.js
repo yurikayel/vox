@@ -5,6 +5,11 @@ import * as localAccount from "./local-account.js";
 import { getWelcomeProfile, isWelcomeRouteId } from "./vox-welcome-profile.js";
 
 const CARDS_KEY = "vox-profile-cards-v1";
+let profileMemorySink = null;
+
+export function registerProfileMemorySink(fn) {
+  profileMemorySink = typeof fn === "function" ? fn : null;
+}
 
 function loadCards() {
   try {
@@ -19,12 +24,14 @@ export function setProfileCard(routeId, partial) {
   const id = String(routeId || "").trim();
   if (!id) return;
   const cards = loadCards();
-  cards[id] = { ...cards[id], ...partial, routeId: id, updatedAt: Date.now() };
+  const nextCard = { ...cards[id], ...partial, routeId: id, updatedAt: Date.now() };
+  cards[id] = nextCard;
   try {
     localStorage.setItem(CARDS_KEY, JSON.stringify(cards));
   } catch {
     /* ignore */
   }
+  if (profileMemorySink) profileMemorySink({ type: "PROFILE_CARD", card: nextCard });
 }
 
 export function getProfileCard(routeId) {
