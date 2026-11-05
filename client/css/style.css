@@ -1344,12 +1344,25 @@ main#app-main,
   font-weight: 700;
   font-size: 0.84rem;
   color: var(--text);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+@media (max-width: 480px) {
+  .inline-recording-indicator {
+    padding: 6px 10px;
+    gap: 8px;
+  }
+  .recording-label {
+    display: none;
+  }
 }
 
 .inline-recording-actions {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-shrink: 0;
 }
 
 .btn-rec-stop {
@@ -1361,6 +1374,7 @@ main#app-main,
   font-size: 0.78rem;
   font-weight: 700;
   cursor: pointer;
+  white-space: nowrap;
   transition: filter 0.15s ease, transform 0.15s ease;
 }
 
