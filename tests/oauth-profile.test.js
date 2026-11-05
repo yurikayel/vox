@@ -10,6 +10,9 @@ import {
   savePassphraseVault,
   restoreFromPassphraseVault,
 } from "../client/js/oauth-vault.js";
+import * as oauthVault from "../client/js/oauth-vault.js";
+import * as profileDirectory from "../client/js/profile-directory.js";
+import * as peopleIndex from "../client/js/people-index.js";
 import { encodeVoxUrl } from "../client/js/qr-url.js";
 import { parseRoute } from "../client/js/app/route-parse.js";
 
@@ -307,4 +310,86 @@ test("oauth-vault - cross-device sync URL and QR code encoding", () => {
   } finally {
     globalThis.location = origLocation;
   }
+});
+
+test("oauth-vault - cross-device offline restore via URL hash bundle (no server needed)", async () => {
+  localAccount.wipeLocalAccount();
+  const originalAcc = await localAccount.ensureLocalAccount();
+  localAccount.setDisplayName("Yuri Celular");
+
+  const pass = "senha-soberana-teste-cross-device-offline";
+  const saved = await savePassphraseVault(pass);
+  assert.equal(saved.ok, true);
+  assert.ok(saved.bundle);
+
+  const encodedBundle = oauthVault.encodeVaultBundleForUrl(saved.bundle);
+  assert.ok(encodedBundle.length > 50);
+
+  // Simula outro aparelho (limpando localStorage e gerando conta efêmera)
+  localAccount.wipeLocalAccount();
+  const ephemeralDeviceAcc = await localAccount.ensureLocalAccount();
+  assert.notEqual(ephemeralDeviceAcc.routeId, originalAcc.routeId);
+
+  // Decodifica e restaura usando o bundle passado na URL (zero chamadas fetch)
+  const decodedRecord = oauthVault.decodeVaultBundleFromUrl(encodedBundle);
+  assert.ok(decodedRecord);
+  const restoreRes = await restoreFromPassphraseVault(pass, null, decodedRecord);
+  assert.equal(restoreRes.ok, true);
+  assert.equal(restoreRes.routeId, originalAcc.routeId);
+  assert.equal(localAccount.getCachedRouteIdSync(), originalAcc.routeId);
+  assert.equal(localAccount.getDisplayName(), "Yuri Celular");
+
+  // Conta efêmera foi limpa do cofre
+  const vault = localAccount.listVaultAccountsSync();
+  assert.equal(vault.some((v) => v.routeId === ephemeralDeviceAcc.routeId), false);
+});
+
+test("oauth-vault - re-login Google não duplica perfil em profileDirectory e peopleIndex", async () => {
+  localAccount.wipeLocalAccount();
+  profileDirectory.__resetProfileCardsForTests();
+
+  const fakePayload = {
+    sub: "google_yuri_12345",
+    email: "yuri.kayel@gmail.com",
+    name: "Yuri Kayel",
+    picture: "https://lh3.googleusercontent.com/ogw/AF2bZq_fake=s96-c",
+  };
+  const token = `eyJhbGciOiJSUzI1NiJ9.${Buffer.from(JSON.stringify(fakePayload)).toString("base64")}.sig`;
+
+  // 1. Primeiro login
+  await new Promise((resolve) => oauth.applyGoogleCredential(token, resolve));
+  const canonicalId = localAccount.getCachedRouteIdSync();
+  assert.ok(canonicalId.startsWith("vx_"));
+
+  // 2. Simula criação de cartão no diretório
+  profileDirectory.setProfileCard(canonicalId, {
+    name: "Yuri Kayel",
+    avatarUrl: fakePayload.picture,
+    discoverable: true,
+  });
+
+  // 3. Simula novo acesso onde nasce conta efêmera
+  const ephemeral = await localAccount.createAdditionalAccount();
+  profileDirectory.setProfileCard(ephemeral.routeId, {
+    name: "Yuri Kayel",
+    avatarUrl: "https://lh3.googleusercontent.com/ogw/AF2bZq_fake=s192-c",
+    discoverable: true,
+  });
+
+  // 4. Reconecta mesma conta Google
+  await new Promise((resolve) => oauth.applyGoogleCredential(token, resolve));
+
+  // Conta ativa deve ser a canônica
+  assert.equal(localAccount.getCachedRouteIdSync(), canonicalId);
+
+  // Cartões duplicados em profileDirectory e peopleIndex devem estar limpos
+  const cards = profileDirectory.listDiscoverableProfileCards();
+  const yuriCards = cards.filter((c) => c.name === "Yuri Kayel");
+  assert.equal(yuriCards.length, 1);
+  assert.equal(yuriCards[0].routeId, canonicalId);
+
+  const people = await peopleIndex.buildPeopleIndex();
+  const yuriPeople = people.filter((p) => p.name === "Yuri Kayel");
+  assert.equal(yuriPeople.length, 1);
+  assert.equal(yuriPeople[0].routeId, canonicalId);
 });

@@ -303,9 +303,10 @@ function bindSovereigntyImport(activeTab) {
   });
 }
 
-function buildSyncUrl(passphrase) {
+function buildSyncUrl(passphrase, bundleRecord = null, encodeFn = null) {
   const base = `${window.location.origin}${window.location.pathname}`;
-  return `${base}#/sync?p=${encodeURIComponent(passphrase)}`;
+  const bParam = bundleRecord && encodeFn ? `&b=${encodeURIComponent(encodeFn(bundleRecord))}` : "";
+  return `${base}#/sync?p=${encodeURIComponent(passphrase)}${bParam}`;
 }
 
 function updateSovereigntySyncFeedback(message, isError = false) {
@@ -325,13 +326,13 @@ function bindSovereigntyCloudSync() {
       share.showToast("Digite uma senha com pelo menos 4 caracteres no campo acima.", "error");
       return;
     }
-    const { savePassphraseVault } = await import("../oauth-vault.js");
+    const { savePassphraseVault, encodeVaultBundleForUrl } = await import("../oauth-vault.js");
     btn.disabled = true;
     try {
       const res = await savePassphraseVault(pass);
       if (res.ok) {
         share.showToast("Cofre soberano sincronizado com sucesso!");
-        const syncUrl = buildSyncUrl(pass);
+        const syncUrl = buildSyncUrl(pass, res.bundle, encodeVaultBundleForUrl);
         updateSovereigntySyncFeedback(
           `✅ <strong>Pronto para outro aparelho!</strong> No outro celular ou navegador, acesse o Vox e entre com sua senha, ou use este link: <a href="${syncUrl}" target="_blank" style="color:var(--primary); word-break:break-all;">${syncUrl}</a>`
         );
@@ -355,12 +356,12 @@ function bindSovereigntyQrSync() {
       share.showToast("Digite sua Senha Soberana no campo acima para gerar o QR Code.", "error");
       return;
     }
-    const { savePassphraseVault } = await import("../oauth-vault.js");
+    const { savePassphraseVault, encodeVaultBundleForUrl } = await import("../oauth-vault.js");
     btn.disabled = true;
     try {
       const res = await savePassphraseVault(pass);
       if (res.ok) {
-        const syncUrl = buildSyncUrl(pass);
+        const syncUrl = buildSyncUrl(pass, res.bundle, encodeVaultBundleForUrl);
         openQrUrlSheet(syncUrl);
       } else {
         share.showToast(res.reason || "Erro ao preparar cofre para QR.", "error");

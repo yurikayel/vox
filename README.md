@@ -4,7 +4,7 @@
 [![Identity](https://img.shields.io/badge/Identity-WebCrypto%20P--256-blueviolet.svg)](./client/js/local-account.js)
 [![Storage](https://img.shields.io/badge/Storage-Arweave%20Permaweb-black.svg)](https://arweave.org)
 [![License: AGPL v3](https://img.shields.io/badge/License-GNU%20AGPLv3-crimson.svg)](./LICENSE)
-[![Tests](https://img.shields.io/badge/Tests-797%20passing%20(714%20JS%20%2B%2083%20Py)-brightgreen.svg)](./tests)
+[![Tests](https://img.shields.io/badge/Tests-800%20passing%20(717%20JS%20%2B%2083%20Py)-brightgreen.svg)](./tests)
 [![Service Worker](https://img.shields.io/badge/SW-v7.20--real--network--audio--video--upload-informational.svg)](./client/sw.js)
 
 O Vox é um projeto cívico em construção para ampliar a participação popular e a autonomia das comunidades na vida digital. Sua ambição é ser um bem comum aberto: o projeto deve permanecer transparente, copiável, modificável e maior que qualquer fundador, mantenedor, empresa ou plataforma.
