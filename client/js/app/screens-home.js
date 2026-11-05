@@ -16,6 +16,7 @@ import { getActiveUser, makeShellProps, attachPostShareHandlers } from "./contex
 import { attachPostMoreMenuHandlers } from "../render/post-more-menu.js";
 import { ensureOnboardingSideEffects } from "./onboarding-side-effects.js";
 import { getCommunityLastSeenTs, computeCommunityUnreadCount } from "../community-unread.js";
+import { resolveCommunityMetadata, checkCommunityMembership } from "./screens-community.js";
 
 let postOverlayMenuHandlersBound = false;
 let quoteExternalBound = false;
@@ -175,6 +176,40 @@ async function fetchRemoteHomeItems(activeFeed) {
   return { items: res.items || [], gateway: res.gateway || "" };
 }
 
+async function isCommunityTopicPermitted(cId, user, commClosedCache, membershipCache) {
+  if (!cId || cId === "vox") return true;
+  let isClosed = commClosedCache.get(cId);
+  if (isClosed === undefined) {
+    try {
+      const meta = await resolveCommunityMetadata(cId);
+      isClosed = Boolean(meta && (meta.visibility === "closed" || meta.type === "closed"));
+    } catch {
+      isClosed = false;
+    }
+    commClosedCache.set(cId, isClosed);
+  }
+  if (!isClosed) return true;
+  if (!user) return false;
+  let isMember = membershipCache.get(cId);
+  if (isMember === undefined) {
+    isMember = await checkCommunityMembership(cId, user);
+    membershipCache.set(cId, isMember);
+  }
+  return Boolean(isMember);
+}
+
+export async function filterClosedCommunityTopics(topics, user) {
+  const commClosedCache = new Map();
+  const membershipCache = new Map();
+  const allowed = [];
+
+  for (const t of topics) {
+    const ok = await isCommunityTopicPermitted(t.communityId, user, commClosedCache, membershipCache);
+    if (ok) allowed.push(t);
+  }
+  return allowed;
+}
+
 async function assembleHomeFeedTopics(remoteItems, commMap, user, activeFeed) {
   const localPosts = (await cacheNode.getLocalPosts({ type: "topic" })).filter((p) => p.type !== "listing");
   const replyCounts = await cacheNode.getReplyCountsMap().catch(() => ({}));
@@ -182,7 +217,8 @@ async function assembleHomeFeedTopics(remoteItems, commMap, user, activeFeed) {
     mergeLocalAndRemoteTopics(localPosts, remoteItems, commMap, user),
     replyCounts,
   );
-  const filtered = await filterTopicsForActiveFeed(merged, activeFeed);
+  const privacyFiltered = await filterClosedCommunityTopics(merged, user);
+  const filtered = await filterTopicsForActiveFeed(privacyFiltered, activeFeed);
   const isWelcomeDismissed = localStorage.getItem("vox-welcome-post-dismissed") === "1";
   const welcomeTopic = welcomeProfile.getOfficialWelcomeTopic();
   const shouldIncludeWelcome = !isWelcomeDismissed && !filtered.some((p) => p.id === welcomeTopic.id);

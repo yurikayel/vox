@@ -13,10 +13,12 @@ import * as pixKeyHelper from "../pix-key.js";
 import * as listing from "../listing.js";
 import * as i18n from "../i18n-pt-br.js";
 import * as gov from "../governance.js";
+import * as mod from "../moderation.js";
 import * as communitySeed from "../community-seed-checklist.js";
 import { parseChatTranscriptToMarkdown } from "../chat-bridge.js";
 import { createCivicNotaryRecord } from "../perma-notary.js";
 import { getActiveUser, makeShellProps } from "./context.js";
+import { resolveCommunityMetadata, resolveTopicContent } from "./screens-community.js";
 
 function updateCommunityPhotoPreview(previewEl, src, initial = "C") {
   if (!previewEl) return;
@@ -470,10 +472,55 @@ export async function publishProposal({ communityId, title, body, diffText, user
   }
 }
 
+async function resolveTopicLockState(topicId, communityId, user) {
+  if (!topicId) return false;
+  try {
+    const { topic } = await resolveTopicContent(topicId, communityId, user);
+    if (!topic) return false;
+    const meta = await resolveCommunityMetadata(communityId).catch(() => null);
+    const modActions = await mod.fetchModActions(communityId).catch(() => []);
+    const filtered = mod.applyFilters([topic], modActions, meta?.owner, meta?.moderators);
+    return Boolean(filtered[0]?.isLocked);
+  } catch {
+    return false;
+  }
+}
+
+async function resolveParentReplyContext(parentId, communityId) {
+  if (!parentId) return { parentAuthor: "", parentExcerpt: "" };
+  try {
+    const parentPost = (await cacheNode.getLocalPost(parentId)) || (await gql.fetchTransactionData(parentId, { communityId }).catch(() => null));
+    if (!parentPost) return { parentAuthor: "", parentExcerpt: "" };
+    const parentAuthor = parentPost.authorDisplay || parentPost.author || parentPost.owner || "";
+    let parentExcerpt = (parentPost.body || "").slice(0, 100);
+    if (parentPost.body && parentPost.body.length > 100) parentExcerpt += "…";
+    return { parentAuthor, parentExcerpt };
+  } catch {
+    return { parentAuthor: "", parentExcerpt: "" };
+  }
+}
+
+function renderLockedTopicNotice(main, topicId, communityId) {
+  main.innerHTML = `
+    <div class="card compose-card" style="text-align:center; padding: 2rem 1rem;">
+      <h3 style="margin-top:0;">🔒 Discussão Encerrada</h3>
+      <p class="meta" style="margin-bottom: 1.5rem;">Este debate foi trancado pela moderação da comunidade e não aceita novas respostas.</p>
+      <a href="#/t/${encodeURIComponent(topicId)}?c=${encodeURIComponent(communityId)}" class="btn btn-primary">Voltar ao Tópico</a>
+    </div>`;
+}
+
 export async function showComposeReply(topicId, communityId, parentId = "") {
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "home", "Responder"));
-  render.renderComposeReply(main, topicId, communityId);
+
+  const isLocked = await resolveTopicLockState(topicId, communityId, user);
+  if (isLocked) {
+    renderLockedTopicNotice(main, topicId, communityId);
+    return;
+  }
+
+  const { parentAuthor, parentExcerpt } = await resolveParentReplyContext(parentId, communityId);
+  render.renderComposeReply(main, topicId, communityId, { parentId, parentAuthor, parentExcerpt });
 
   const form = document.getElementById("form-compose-reply");
   if (form) {
@@ -497,7 +544,24 @@ export async function showComposeReply(topicId, communityId, parentId = "") {
   }
 }
 
+async function tryUploadReplyToPermaweb(topicId, communityId, body, replyId, authorDisplay) {
+  if (!wallet.hasWallet()) return;
+  try {
+    const tags = upload.buildTags("reply", {
+      "Reply-To": topicId,
+      "Community-Id": communityId,
+      "Local-Origin-Id": replyId,
+    });
+    await upload.postData({ replyTo: topicId, body, communityId, authorDisplay }, tags);
+  } catch {}
+}
+
 export async function persistLocalReply(topicId, communityId, body, { parentId = "" } = {}) {
+  const isLocked = await resolveTopicLockState(topicId, communityId, null);
+  if (isLocked) {
+    throw new Error("Este debate foi encerrado pela moderação e não aceita novas respostas.");
+  }
+
   const replyId = "rep_" + Math.random().toString(36).slice(2, 10);
   const myDisplayName = localAccount.getDisplayName() || localAccount.getProfileEnrichment()?.displayName || "";
   const myAvatar = localAccount.getProfileEnrichment()?.avatarUrl || "";
@@ -513,15 +577,7 @@ export async function persistLocalReply(topicId, communityId, body, { parentId =
   });
   await cacheNode.saveLocalPost(signed);
   peers.broadcastGossip(signed);
-  if (!wallet.hasWallet()) return signed;
-  try {
-    const tags = upload.buildTags("reply", {
-      "Reply-To": topicId,
-      "Community-Id": communityId,
-      "Local-Origin-Id": replyId,
-    });
-    await upload.postData({ replyTo: topicId, body, communityId, authorDisplay: myDisplayName }, tags);
-  } catch {}
+  await tryUploadReplyToPermaweb(topicId, communityId, body, replyId, myDisplayName);
   return signed;
 }
 

@@ -172,11 +172,10 @@ function renderTopicToolbar(topicId, topic, author, authorDisplay, authorHandle,
   const fb = renderTopicFeedbackActions(topicId, topic, author, authorDisplay);
   const dist = renderTopicDistributeActions(topicId, topic, authorDisplay, commId);
   const overflow = renderTopicOverflowMenu(topicId, topic, authorDisplay, authorHandle, bodyText, isMod);
-  const replyLink = `<a class="btn btn-primary btn-sm" href="#/compose/reply?t=${encodeURIComponent(topicId)}&c=${encodeURIComponent(commId)}">💬 Responder</a>`;
 
   return `<div class="post-actions insta-actions post-toolbar" style="margin-top:12px; padding-top:8px;">
     <div class="toolbar-primary">${fb}${dist}</div>
-    <div class="toolbar-secondary">${overflow}${replyLink}</div>
+    <div class="toolbar-secondary">${overflow}</div>
   </div>`;
 }
 

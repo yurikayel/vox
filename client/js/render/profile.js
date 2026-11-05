@@ -781,6 +781,10 @@ export function renderComposeTopic(main, communityId) {
       <form id="form-compose-topic">
         ${commInput}
         <div class="form-group">
+          <label for="topic-title">Título do Tópico (opcional):</label>
+          <input type="text" id="topic-title" class="form-control" placeholder="ex: Dúvida sobre governança / Ideia de melhoria" />
+        </div>
+        <div class="form-group">
           <label for="topic-body">Mensagem:</label>
           <textarea id="topic-body" class="form-control" rows="5" placeholder="Escreva seu post aqui..." required></textarea>
           ${renderChatTranscriptDetails()}
@@ -792,11 +796,18 @@ export function renderComposeTopic(main, communityId) {
     </div>`;
 }
 
-export function renderComposeReply(main, topicId, communityId) {
+export function renderComposeReply(main, topicId, communityId, { parentId = "", parentAuthor = "", parentExcerpt = "" } = {}) {
+  const replyContextHtml = parentId
+    ? `<div class="reply-context-banner" style="background:var(--bg-subtle, #f3f4f6); border-left:3px solid var(--primary, #2563eb); padding:8px 12px; margin-bottom:12px; border-radius:4px; font-size:0.88rem;">
+         <div style="font-weight:600; color:var(--text-muted, #4b5563);">↩️ Respondendo a ${escapeHtml(parentAuthor ? `@${parentAuthor}` : "comentário")}:</div>
+         ${parentExcerpt ? `<div style="font-style:italic; margin-top:2px; color:var(--text, #1f2937);">${escapeHtml(parentExcerpt)}</div>` : ""}
+       </div>`
+    : "";
   main.innerHTML = `
     <div class="card compose-card">
       <a class="back-link" href="#/t/${encodeURIComponent(topicId)}">← Voltar ao post</a>
       <h2>Responder</h2>
+      ${replyContextHtml}
       <form id="form-compose-reply">
         <input type="hidden" id="reply-topic-id" value="${escapeHtml(topicId)}" />
         <input type="hidden" id="reply-comm-id" value="${escapeHtml(communityId)}" />

@@ -209,9 +209,10 @@ function buildCommunityMembersSummary(meta, communityId, recentPeople = [], isMe
   const online = resolveCommunityOnlinePeople(recentPeople, communityId, onlineLimit);
   const onlineExtra = Math.max(0, (memberCount || online.length) - online.length);
   const modCount = Array.isArray(meta.moderators) ? meta.moderators.length : 0;
-  const onlineHint = online.length
-    ? `${online.length}${onlineExtra ? `+${onlineExtra}` : ""} agora (demo)`
-    : "Demo offline";
+  const isDemo = communityId.startsWith("demo-");
+  const onlineHint = isDemo
+    ? (online.length ? `${online.length}${onlineExtra ? `+${onlineExtra}` : ""} agora (demo)` : "Demo offline")
+    : (online.length ? `${online.length} pessoas na malha recente` : "Sem atividade recente");
   return { memberCount, online, onlineHint, modCount, isMember };
 }
 
