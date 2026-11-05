@@ -1,4 +1,7 @@
-# Build script do Micro-APK Vox Populi
+# Build script para os Micro-APKs do Ecossistema Vox:
+# 1. vox.apk         -> Cliente Vox (org.vox.client)
+# 2. vox-populi.apk  -> Nó Dedicado Vox Populi (org.vox.populi)
+
 $ErrorActionPreference = "Stop"
 
 $ROOT = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -13,6 +16,7 @@ $PLATFORM = "$SDK\platforms\android-35\android.jar"
 $JAVAC = "$env:JAVA_HOME\bin\javac.exe"
 $JAR = "$env:JAVA_HOME\bin\jar.exe"
 $KEYTOOL = "$env:JAVA_HOME\bin\keytool.exe"
+$JARSIGNER = "$env:JAVA_HOME\bin\jarsigner.exe"
 
 $AAPT2 = "$BUILD_TOOLS\aapt2.exe"
 $D8 = "$BUILD_TOOLS\d8.bat"
@@ -21,53 +25,87 @@ $APKSIGNER = "$BUILD_TOOLS\apksigner.bat"
 
 $BUILD_DIR = "$ROOT\build"
 if (Test-Path $BUILD_DIR) { Remove-Item -Recurse -Force $BUILD_DIR }
-New-Item -ItemType Directory -Force -Path "$BUILD_DIR\compiled_res", "$BUILD_DIR\gen", "$BUILD_DIR\classes", "$BUILD_DIR\dex" | Out-Null
+New-Item -ItemType Directory -Force -Path "$BUILD_DIR\compiled_res" | Out-Null
 
-Write-Host "1. Compilando recursos com AAPT2..."
+$KEYSTORE = "$BUILD_DIR\debug.keystore"
+Write-Host "Criando keystore de debug compartilhada..."
+cmd.exe /c "`"$KEYTOOL`" -genkeypair -keystore `"$KEYSTORE`" -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname `"CN=Vox Populi,O=Democracia,C=BR`" 2>nul"
+
+Write-Host "Compilando recursos comuns com AAPT2..."
 & $AAPT2 compile --dir res -o "$BUILD_DIR\compiled_res\res.zip"
 
-Write-Host "2. Linkando recursos e gerando R.java..."
-& $AAPT2 link -I $PLATFORM `
-    --manifest AndroidManifest.xml `
-    -o "$BUILD_DIR\base.apk" `
-    --java "$BUILD_DIR\gen" `
-    "$BUILD_DIR\compiled_res\res.zip"
+function Build-AppVariant {
+    param(
+        [string]$Name,          # "vox" ou "vox-populi"
+        [string]$Package,       # "org.vox.client" ou "org.vox.populi"
+        [string]$ManifestFile,  # "AndroidManifest-client.xml" ou "AndroidManifest-node.xml"
+        [string]$SourceSubDir   # "client" ou "populi"
+    )
 
-Write-Host "3. Compilando código Java..."
-$JAVA_FILES = Get-ChildItem -Recurse "$BUILD_DIR\gen\*.java", "$ROOT\src\*.java" | Select-Object -ExpandProperty FullName
-& $JAVAC -encoding UTF-8 -source 11 -target 11 -cp $PLATFORM -d "$BUILD_DIR\classes" $JAVA_FILES
+    Write-Host "`n>>> [BUILD] Compilando variante: $Name ($Package) <<<" -ForegroundColor Cyan
+    $VAR_DIR = "$BUILD_DIR\$Name"
+    New-Item -ItemType Directory -Force -Path "$VAR_DIR\gen", "$VAR_DIR\classes", "$VAR_DIR\dex" | Out-Null
 
-Write-Host "4. Gerando classes.dex com D8..."
-$CLASS_FILES = Get-ChildItem -Recurse "$BUILD_DIR\classes\*.class" | Select-Object -ExpandProperty FullName
-& cmd.exe /c "$D8 --min-api 24 --lib $PLATFORM --output $BUILD_DIR\dex $CLASS_FILES"
+    # 1. Linkar recursos e gerar R.java
+    Write-Host "1. Linkando recursos com AAPT2..."
+    & $AAPT2 link -I $PLATFORM `
+        --manifest $ManifestFile `
+        -o "$VAR_DIR\base.apk" `
+        --java "$VAR_DIR\gen" `
+        "$BUILD_DIR\compiled_res\res.zip"
 
-Write-Host "5. Adicionando classes.dex ao APK..."
-Copy-Item "$BUILD_DIR\base.apk" "$BUILD_DIR\unaligned.apk"
-Push-Location "$BUILD_DIR\dex"
-& $JAR uf "$BUILD_DIR\unaligned.apk" classes.dex
-Pop-Location
+    # 2. Compilar Java
+    Write-Host "2. Compilando codigo Java ($SourceSubDir)..."
+    $JAVA_FILES = Get-ChildItem -Recurse "$VAR_DIR\gen\*.java", "$ROOT\src\org\vox\$SourceSubDir\*.java" | Select-Object -ExpandProperty FullName
+    & $JAVAC -encoding UTF-8 -source 11 -target 11 -cp $PLATFORM -d "$VAR_DIR\classes" $JAVA_FILES
 
-Write-Host "6. Alinhando APK (zipalign 4)..."
-& $ZIPALIGN -p -f 4 "$BUILD_DIR\unaligned.apk" "$BUILD_DIR\vox-populi-aligned.apk"
+    # 3. Converter para DEX com D8
+    Write-Host "3. Gerando classes.dex com D8..."
+    $CLASS_FILES = Get-ChildItem -Recurse "$VAR_DIR\classes\*.class" | Select-Object -ExpandProperty FullName
+    & cmd.exe /c "$D8 --min-api 24 --lib $PLATFORM --output $VAR_DIR\dex $CLASS_FILES"
 
-Write-Host "7. Gerando keystore de debug e assinando..."
-$KEYSTORE = "$BUILD_DIR\debug.keystore"
-if (-not (Test-Path $KEYSTORE)) {
-    cmd.exe /c "`"$KEYTOOL`" -genkeypair -keystore `"$KEYSTORE`" -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname CN=Vox,O=Democracia,C=BR 2>nul"
+    # 4. Inserir classes.dex no APK
+    Write-Host "4. Empacotando classes.dex..."
+    Copy-Item "$VAR_DIR\base.apk" "$VAR_DIR\unaligned.apk"
+    Push-Location "$VAR_DIR\dex"
+    & $JAR uf "$VAR_DIR\unaligned.apk" classes.dex
+    Pop-Location
+
+    # 5. Alinhar APK antes da assinatura com apksigner (zipalign 4)
+    Write-Host "5. Alinhando APK (zipalign 4)..."
+    & $ZIPALIGN -p -f 4 "$VAR_DIR\unaligned.apk" "$VAR_DIR\aligned.apk"
+
+    # 6. Assinar com v1 (JAR) + v2 + v3 via apksigner (forçando min-sdk-version 1 para incluir JAR signature v1)
+    Write-Host "6. Assinando com v1, v2 e v3 (apksigner)..."
+    $FINAL_APK = "$ROOT\$Name.apk"
+    & cmd.exe /c "`"$APKSIGNER`" sign --ks `"$KEYSTORE`" --ks-pass pass:android --ks-key-alias androiddebugkey --key-pass pass:android --min-sdk-version 1 --v1-signing-enabled true --v2-signing-enabled true --v3-signing-enabled true --out `"$FINAL_APK`" `"$VAR_DIR\aligned.apk`""
+
+    # 8. Copiar para dist/ e Downloads
+    $DIST_DIR = "$ROOT\..\dist"
+    if (Test-Path $DIST_DIR) {
+        Copy-Item $FINAL_APK "$DIST_DIR\$Name.apk" -Force
+    }
+    if (Test-Path "D:\Downloads") {
+        Copy-Item $FINAL_APK "D:\Downloads\$Name.apk" -Force
+    }
+
+    $BYTES = (Get-Item $FINAL_APK).Length
+    $KB = [math]::Round($BYTES / 1024, 2)
+    Write-Host "  -> APK GERADO: $FINAL_APK" -ForegroundColor Green
+    Write-Host "  -> TAMANHO: $BYTES bytes ($KB KiB)" -ForegroundColor Yellow
+    if ($BYTES -le 101376) {
+        Write-Host "  -> STATUS: CABE NO FREE TIER DO TURBO ARWEAVE (<= 100 KiB)!" -ForegroundColor Green
+    } else {
+        Write-Host "  -> ALERTA: Excedeu 100 KiB ($KB KiB)" -ForegroundColor Red
+    }
 }
 
-$FINAL_APK = "$ROOT\vox-populi.apk"
-& cmd.exe /c "`"$APKSIGNER`" sign --ks `"$KEYSTORE`" --ks-pass pass:android --ks-key-alias androiddebugkey --key-pass pass:android --out `"$FINAL_APK`" `"$BUILD_DIR\vox-populi-aligned.apk`""
+# Compilar ambos os produtos do ecossistema:
+Build-AppVariant -Name "vox" -Package "org.vox.client" -ManifestFile "AndroidManifest-client.xml" -SourceSubDir "client"
+Build-AppVariant -Name "vox-populi" -Package "org.vox.populi" -ManifestFile "AndroidManifest-node.xml" -SourceSubDir "populi"
 
-$BYTES = (Get-Item $FINAL_APK).Length
-$KB = [math]::Round($BYTES / 1024, 2)
-Write-Host ""
-Write-Host "==========================================================" -ForegroundColor Green
-Write-Host "  APK GERADO COM SUCESSO: $FINAL_APK" -ForegroundColor Green
-Write-Host "  TAMANHO FINAL: $BYTES bytes ($KB KiB)" -ForegroundColor Yellow
-if ($BYTES -le 101376) {
-    Write-Host "  STATUS: CABE NO FREE TIER DO TURBO ARWEAVE (<= 100 KiB)! ⚡" -ForegroundColor Cyan
-} else {
-    Write-Host "  STATUS: EXCEDEU 100 KiB" -ForegroundColor Red
-}
+Write-Host "`n==========================================================" -ForegroundColor Green
+Write-Host "  AMBOS OS APKS GERADOS E ASSINADOS COM SUCESSO!" -ForegroundColor Green
+Write-Host "  1. vox.apk        -> Cliente Vox (org.vox.client)" -ForegroundColor Cyan
+Write-Host "  2. vox-populi.apk -> Nó Dedicado (org.vox.populi)" -ForegroundColor Cyan
 Write-Host "==========================================================" -ForegroundColor Green

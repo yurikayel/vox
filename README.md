@@ -18,6 +18,19 @@ O cliente é um PWA local-first. Identidade e chaves são criadas no aparelho; p
 
 ---
 
+## ⚡ Executáveis & Downloads Rápidos (1-Clique)
+
+Acesso direto às aplicações prontas para uso do ecossistema:
+
+| Papel | Aplicativo | Executável / Pacote | Como Funciona e Operação |
+|:---|:---|:---|:---|
+| 🖥️ **CLIENTE** | **Vox (Desktop)** | [**`dist/Vox.exe`**](dist/Vox.exe) *(ou [`dist/VoxPopuliDesktop.exe`](dist/VoxPopuliDesktop.exe))* | **Cliente gráfico para PC:** interface WebView2 nativa com notificação na bandeja (*system tray*) e conexão com **boost** automático ao nó dedicado local. |
+| 📱 **CLIENTE** | **Vox (Android)** | [**`android/vox.apk`**](android/vox.apk) *(ou [`dist/vox.apk`](dist/vox.apk))* | **Cliente móvel para celular:** micro-APK ultraleve (~20.8 KiB, `org.vox.client`) com suporte a v1+v2+v3 e ícone nativo pronto para sideload/WSA. |
+| 🌐 **NÓ DEDICADO** | **Vox Populi (Windows)** | [**`dist/VoxPopuli.exe`**](dist/VoxPopuli.exe) | **Nó comunitário dedicado em background:** sem navegador/UI, opera relay HTTP (`127.0.0.1:3921`), cache SHA-256 e controle (`127.0.0.1:3922`) com ícone de controle na bandeja. |
+| 📱 **NÓ DEDICADO** | **Vox Populi (Android)** | [**`android/vox-populi.apk`**](android/vox-populi.apk) *(ou [`dist/vox-populi.apk`](dist/vox-populi.apk))* | **Nó comunitário dedicado para celular:** micro-APK ultraleve (`org.vox.populi`), foreground service de relay/cache em Wi-Fi e tela nativa de status do nó. |
+
+---
+
 ## 🏛️ Visão: VOX POPULI
 
 VOX POPULI — a voz do povo — é o propósito político do projeto: pessoas e comunidades devem poder participar, propor, contestar, construir e manter os espaços digitais que usam. O Vox não fala em nome do povo e não substitui organização, deliberação ou decisão humana.
@@ -51,6 +64,16 @@ Redes centralizadas, instâncias federadas e protocolos locais têm custos, vant
 O histórico Git, a configuração de CI e [docs/release-metadata.json](./docs/release-metadata.json) são as referências para releases. Os metadados descrevem uma release registrada; não representam automaticamente o branch de trabalho, alterações locais ou o estado do deploy neste instante. Consulte os resultados da CI associados ao commit antes de tratar um build como validado.
 
 O Service Worker pode manter uma versão anterior do cliente em cache. Depois de uma atualização, recarregue a página; se a versão não mudar, faça uma atualização forçada (`Ctrl+Shift+R`).
+
+---
+
+## 📦 Arquitetura dos Produtos: Vox (Cliente) e Vox Populi (Nó Dedicado)
+
+Para garantir clareza entre o uso cotidiano pelas pessoas e a sustentação técnica por operadores comunitários, o ecossistema organiza-se em dois papéis complementares ([ADR-011](docs/adr/011-taxonomia-tripartite-produtos-vox.md)):
+
+1. **Vox (Cliente):** Aplicativo voltado à pessoa usuária e à deliberação cívica. Disponível em Desktop (`Vox.exe`) e Android (`vox.apk`, `org.vox.client`), com PWA em tela cheia, navegação rápida, composição cívica e detecção de nó local para ativação automática de **boost**.
+2. **Vox Populi (Nó Dedicado):** Serviço de infraestrutura comunitária de baixo consumo. Disponível em Windows (`VoxPopuli.exe`), Android (`vox-populi.apk`, `org.vox.populi`) e Linux (`vox-populi/`), operando relay HTTP em loopback (`127.0.0.1:3921`), cache SHA-256 e controle de recursos.
+3. **Sinergia do Boost:** Abrir ambos potencializa a experiência: o cliente se conecta ao nó dedicado local, acelerando o carregamento via cache local verificado e ativando o modo de alta prontidão.
 
 ---
 

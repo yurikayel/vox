@@ -1,0 +1,12 @@
+[Desktop Entry]
+Name=Vox
+GenericName=Rede Cívica de Participação Popular
+Comment=Rede social comunitária e deliberação popular local-first
+Exec=/usr/local/bin/vox %u
+Icon=vox
+Terminal=false
+Type=Application
+Categories=Network;Chat;Social;News;
+MimeType=x-scheme-handler/vox;
+StartupWMClass=Vox
+Keywords=vox;populi;civico;democracia;orkut;forum;comunidade;

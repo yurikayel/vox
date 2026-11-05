@@ -6,6 +6,7 @@ root = pathlib.Path(SPECPATH).resolve().parents[1]
 
 datas = [
     (str(root / "client"), "client"),
+    (str(root / "tools" / "desktop-seeder-windows" / "vox.ico"), "."),
 ]
 datas += collect_data_files("webview")
 

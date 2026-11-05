@@ -12,10 +12,7 @@ DOCS = ROOT / "docs"
 BRANDING = DOCS / "branding"
 ICONS = ROOT / "client" / "icons"
 
-WHITE_SRC = DOCS / "vox_logo_branco.jpg"
-NAVY_SRC = DOCS / "vox_logo_azul.jpg"
-
-BRAND_NAVY = (49, 35, 131)
+WHITE_SRC = BRANDING / "vox_logo_branco.jpg" if (BRANDING / "vox_logo_branco.jpg").is_file() else DOCS / "vox_logo_branco.jpg"
 
 
 def _color_dist(a: tuple[int, ...], b: tuple[int, ...]) -> float:
@@ -352,41 +349,70 @@ def build_transparent_mark(im: Image.Image, bg: tuple[int, int, int], tolerance:
     return rgba
 
 
+def make_white_squircle_icon(mark_rgba: Image.Image, size: int, corner_ratio: float = 0.22, pad_ratio: float = 0.10) -> Image.Image:
+    mark = crop_alpha_bbox(mark_rgba)
+    mw, mh = mark.size
+    side = max(mw, mh)
+    pad = max(1, int(side * pad_ratio))
+    canvas = side + 2 * pad
+
+    base = Image.new("RGBA", (canvas, canvas), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(base)
+    r = int(canvas * corner_ratio)
+    draw.rounded_rectangle([0, 0, canvas - 1, canvas - 1], radius=r, fill=(255, 255, 255, 255))
+    base.paste(mark, ((canvas - mw) // 2, (canvas - mh) // 2), mark)
+    return base.resize((size, size), Image.Resampling.LANCZOS)
+
+
+def write_ico(path: Path, im: Image.Image) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    sizes = [(16, 16), (32, 32), (48, 48), (64, 64), (128, 128), (256, 256)]
+    im.save(path, format="ICO", sizes=sizes)
+
+
 def main() -> None:
     BRANDING.mkdir(parents=True, exist_ok=True)
-    if not WHITE_SRC.is_file() or not NAVY_SRC.is_file():
-        raise SystemExit(f"Missing sources: {WHITE_SRC} / {NAVY_SRC}")
+    if not WHITE_SRC.is_file():
+        raise SystemExit(f"Missing source: {WHITE_SRC}")
 
     white_im = Image.open(WHITE_SRC)
-    navy_im = Image.open(NAVY_SRC)
-
     mark_white = build_transparent_mark(white_im, (255, 255, 255), tolerance=24, white_paper=True)
-    mark_navy = build_transparent_mark(navy_im, BRAND_NAVY, tolerance=30, white_paper=False)
-
     write_png(BRANDING / "vox_logo_mark-transparent.png", mark_white)
-    write_png(BRANDING / "vox_logo_mark-from-navy-transparent.png", mark_navy)
 
-    for label, mark in (("white", mark_white), ("navy", mark_navy)):
-        x, y, a = _o_hole_center_alpha(mark)
-        if a != 0:
-            raise SystemExit(f"O hole not transparent ({label}): ({x},{y}) alpha={a}")
-        print(f"O hole center ({label}): ({x},{y}) alpha=0")
+    # 1. Favicons e Marcas: PNG sem fundo (100% transparente)
+    write_png(ICONS / "favicon.png", fit_mark(mark_white, 32, pad_ratio=0.03, bg=(0, 0, 0, 0)))
+    write_png(ICONS / "favicon-32.png", fit_mark(mark_white, 32, pad_ratio=0.03, bg=(0, 0, 0, 0)))
+    write_png(ICONS / "favicon-16.png", fit_mark(mark_white, 16, pad_ratio=0.02, bg=(0, 0, 0, 0)))
+    write_png(ICONS / "icon-mark-1024.png", fit_mark(mark_white, 1024, pad_ratio=0.06, bg=(0, 0, 0, 0)))
+    write_png(ICONS / "icon-mark.png", fit_mark(mark_white, 512, pad_ratio=0.06, bg=(0, 0, 0, 0)))
 
-    for size, name in ((192, "icon-192.png"),):
-        write_png(ICONS / name, fit_mark(mark_white, size, pad_ratio=0.07, bg=(0, 0, 0, 0)))
-
-    write_png(ICONS / "icon-mark-1024.png", fit_mark(mark_white, 1024, pad_ratio=0.07))
-    write_png(ICONS / "icon-mark.png", fit_mark(mark_white, 512, pad_ratio=0.07))
-    write_png(ICONS / "favicon.png", fit_mark(mark_white, 32, pad_ratio=0.05, bg=(0, 0, 0, 0)))
-
-    # Opaque squircle tiles for UI + PWA (official JPG fields, not cutout composites).
+    # 2. PWA e UI Web: Fundo branco normalizado
     write_png(ICONS / "icon-white-192.png", fit_opaque_square(white_im, 192))
     write_png(ICONS / "icon-white-512.png", fit_opaque_square(white_im, 512))
-    write_png(ICONS / "icon-1024.png", fit_opaque_square(navy_im, 1024))
-    write_png(ICONS / "icon-512.png", fit_opaque_square(navy_im, 512))
+    write_png(ICONS / "icon-192.png", fit_opaque_square(white_im, 192))
+    write_png(ICONS / "icon-512.png", fit_opaque_square(white_im, 512))
+    write_png(ICONS / "icon-1024.png", fit_opaque_square(white_im, 1024))
     write_png(ICONS / "profile-vox-official-512.png", fit_opaque_squircle(white_im, 512))
 
-    print("Wrote branding + client icons from official docs JPGs.")
+    # 3. Windows Desktop .ICO: Fundo branco normalizado
+    ico_master = make_white_squircle_icon(mark_white, 256)
+    write_ico(ROOT / "tools" / "desktop-seeder-windows" / "vox.ico", ico_master)
+    write_ico(ROOT / "tools" / "steward-kit-windows" / "vox.ico", ico_master)
+
+    # 4. Android Launcher: Fundo branco normalizado
+    android_res = ROOT / "android" / "res"
+    android_sizes = {
+        "mipmap-mdpi": 48,
+        "mipmap-hdpi": 72,
+        "mipmap-xhdpi": 96,
+        "mipmap-xxhdpi": 144,
+        "mipmap-xxxhdpi": 192,
+    }
+    for folder, sz in android_sizes.items():
+        icon_img = make_white_squircle_icon(mark_white, sz)
+        write_png(android_res / folder / "ic_launcher.png", icon_img)
+
+    print("Wrote all normalized white-background brand icons + transparent favicons.")
 
 
 if __name__ == "__main__":
