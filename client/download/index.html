@@ -4,102 +4,118 @@
   <base href="../" />
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Baixar o Vox — Rede Cívica de Participação Popular</title>
-  <meta name="description" content="Baixe o aplicativo Vox (Cliente) ou o nó comunitário Vox Populi (Nó Dedicado) para Windows, Android, Linux, iOS e macOS." />
+  <title>vox — Baixe, colabore e use</title>
+  <meta name="description" content="Rede cívica local-first de participação e deliberação popular. Baixe o cliente vox ou execute o nó comunitário vox populi." />
   <link rel="canonical" href="https://yurikayel.github.io/vox/download" />
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
   <link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png" />
   <link rel="icon" href="icons/favicon-16.png" sizes="16x16" type="image/png" />
-  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="icons/icon-white-192.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg: #090D14;
-      --card-bg: #121824;
-      --card-border: #1E293B;
-      --card-hover: #1E293D;
-      --text: #F8FAFC;
-      --text-muted: #94A3B8;
-      --text-sub: #64748B;
-      --primary: #2563EB;
-      --primary-hover: #1D4ED8;
-      --accent: #38BDF8;
+      --bg: #080A0E;
+      --surface: #0E131C;
+      --surface-hover: #141B27;
+      --surface-card: rgba(14, 19, 28, 0.88);
+      --border: #1E2638;
+      --border-focus: #334155;
+      --text: #F1F5F9;
+      --text-muted: #8E9BAE;
+      --text-dim: #5B687C;
+      --accent: #2563EB;
+      --accent-hover: #1D4ED8;
+      --accent-light: #60A5FA;
       --emerald: #10B981;
-      --emerald-dark: #064E3B;
-      --amber: #F59E0B;
-      --max-w: 1120px;
+      --max-w: 1040px;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       background-color: var(--bg);
+      background-image: 
+        radial-gradient(ellipse 90% 55% at 50% -10%, rgba(30, 41, 59, 0.45) 0%, rgba(14, 19, 28, 0.2) 60%, transparent 100%),
+        url('images/wallpaper-grid.svg');
+      background-repeat: no-repeat, repeat;
+      background-size: 100% 900px, 80px 80px;
+      background-attachment: scroll, fixed;
       color: var(--text);
-      font-family: 'Source Sans 3', system-ui, -apple-system, sans-serif;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       line-height: 1.5;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
-      padding: 0 1rem 4rem 1rem;
-      background-image: 
-        radial-gradient(circle at 50% 0%, rgba(37, 99, 235, 0.15), transparent 45%),
-        radial-gradient(circle at 10% 20%, rgba(16, 185, 129, 0.08), transparent 35%);
-      background-attachment: fixed;
+      padding: 0 1.25rem 4rem 1.25rem;
+      -webkit-font-smoothing: antialiased;
     }
 
     header {
       max-width: var(--max-w);
-      margin: 2.5rem auto 2.5rem auto;
+      width: 100%;
+      margin: 3.5rem auto 2.5rem auto;
       text-align: center;
     }
 
-    .brand-badge {
+    .brand-top {
       display: inline-flex;
       align-items: center;
-      gap: 0.5rem;
-      background: rgba(37, 99, 235, 0.12);
-      border: 1px solid rgba(56, 189, 248, 0.25);
-      color: var(--accent);
-      padding: 0.35rem 0.9rem;
-      border-radius: 9999px;
-      font-size: 0.85rem;
-      font-weight: 600;
+      gap: 0.65rem;
       margin-bottom: 1.25rem;
-      letter-spacing: 0.02em;
+      padding: 0.35rem 0.85rem 0.35rem 0.45rem;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      border-radius: 9999px;
+      backdrop-filter: blur(8px);
     }
 
-    .brand-header {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.75rem;
-      margin-bottom: 0.75rem;
-    }
-
-    .brand-logo {
-      width: 48px;
-      height: 48px;
-      border-radius: 12px;
+    .brand-mark {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
       background: #FFFFFF;
-      padding: 4px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      padding: 2px;
+      display: block;
+    }
+
+    /* Logotipo vox: rigor geométrico, tudo minúsculo */
+    .brand-wordmark {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.045em;
+      color: var(--text);
+      line-height: 1;
+    }
+
+    .brand-pill {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      border-left: 1px solid var(--border);
+      padding-left: 0.65rem;
     }
 
     h1 {
-      font-family: 'Outfit', sans-serif;
-      font-size: clamp(2rem, 4vw, 3rem);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: clamp(2.2rem, 5vw, 3.4rem);
       font-weight: 800;
-      letter-spacing: -0.02em;
-      line-height: 1.15;
+      letter-spacing: -0.04em;
+      line-height: 1.1;
+      margin-bottom: 0.85rem;
+      color: #FFFFFF;
     }
 
     .subtitle {
-      max-width: 680px;
-      margin: 0.75rem auto 0 auto;
-      font-size: 1.15rem;
+      max-width: 620px;
+      margin: 0 auto;
+      font-size: 1.05rem;
       color: var(--text-muted);
+      line-height: 1.6;
     }
 
     main {
@@ -108,260 +124,312 @@
       margin: 0 auto;
     }
 
-    /* Boost Card */
-    .boost-banner {
-      background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(37, 99, 235, 0.15));
-      border: 1px solid rgba(16, 185, 129, 0.3);
-      border-radius: 16px;
-      padding: 1.25rem 1.5rem;
-      margin-bottom: 2.5rem;
-      display: flex;
-      align-items: center;
-      gap: 1.25rem;
-    }
-
-    .boost-icon {
-      font-size: 2rem;
-      flex-shrink: 0;
-      background: rgba(16, 185, 129, 0.2);
-      width: 52px;
-      height: 52px;
+    /* Faixa de Boost: concisa, sóbria e funcional */
+    .boost-strip {
+      background: var(--surface-card);
+      border: 1px solid rgba(16, 185, 129, 0.25);
       border-radius: 12px;
+      padding: 0.85rem 1.25rem;
+      margin-bottom: 2rem;
       display: flex;
       align-items: center;
-      justify-content: center;
+      gap: 1rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     }
 
-    .boost-text h3 {
-      font-family: 'Outfit', sans-serif;
-      font-size: 1.15rem;
+    .boost-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(16, 185, 129, 0.12);
       color: #34D399;
-      margin-bottom: 0.2rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.25rem 0.6rem;
+      border-radius: 6px;
+      white-space: nowrap;
     }
 
-    .boost-text p {
-      font-size: 0.95rem;
+    .boost-badge svg {
+      width: 14px;
+      height: 14px;
+      fill: currentColor;
+    }
+
+    .boost-desc {
+      font-size: 0.88rem;
       color: var(--text-muted);
+      line-height: 1.4;
     }
 
-    /* Grid 2x2 */
+    .boost-desc strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    /* Grade 2 Colunas */
     .grid-duo {
       display: grid;
       grid-template-columns: 1fr;
-      gap: 1.75rem;
-      margin-bottom: 3rem;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
     }
 
-    @media (min-width: 840px) {
+    @media (min-width: 820px) {
       .grid-duo {
         grid-template-columns: 1fr 1fr;
       }
     }
 
-    .product-card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 20px;
-      padding: 2rem;
+    .product-panel {
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.75rem;
       display: flex;
       flex-direction: column;
-      position: relative;
-      transition: transform 0.2s, border-color 0.2s;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
     }
 
-    .product-card:hover {
-      border-color: rgba(56, 189, 248, 0.4);
+    .panel-header {
+      margin-bottom: 1.25rem;
     }
 
-    .product-card.client-card {
-      box-shadow: 0 8px 30px rgba(37, 99, 235, 0.1);
-    }
-
-    .card-tag {
-      font-size: 0.75rem;
-      text-transform: uppercase;
+    .panel-tag {
+      font-size: 0.72rem;
       font-weight: 700;
-      letter-spacing: 0.05em;
-      margin-bottom: 0.5rem;
-      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--accent-light);
+      margin-bottom: 0.35rem;
+      display: block;
     }
 
-    .card-tag.node-tag {
+    .panel-tag.node {
       color: #34D399;
     }
 
-    .product-card h2 {
-      font-family: 'Outfit', sans-serif;
-      font-size: 1.85rem;
+    .panel-title {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 1.65rem;
       font-weight: 700;
-      margin-bottom: 0.5rem;
-    }
-
-    .product-desc {
-      color: var(--text-muted);
-      font-size: 1rem;
-      margin-bottom: 1.75rem;
-      min-height: 48px;
-    }
-
-    .download-list {
-      display: flex;
-      flex-direction: column;
-      gap: 0.85rem;
-      margin-top: auto;
-    }
-
-    .dl-btn {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: #162032;
-      border: 1px solid #24344D;
-      padding: 0.9rem 1.15rem;
-      border-radius: 12px;
-      text-decoration: none;
-      color: var(--text);
-      transition: all 0.15s ease-in-out;
-    }
-
-    .dl-btn:hover {
-      background: #1C2B44;
-      border-color: var(--accent);
-      transform: translateY(-2px);
-    }
-
-    .dl-btn.primary-btn {
-      background: var(--primary);
-      border-color: #3B82F6;
-    }
-
-    .dl-btn.primary-btn:hover {
-      background: var(--primary-hover);
-      border-color: #60A5FA;
-    }
-
-    .dl-info {
-      display: flex;
-      align-items: center;
-      gap: 0.85rem;
-    }
-
-    .dl-icon {
-      font-size: 1.4rem;
-    }
-
-    .dl-meta {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .dl-title {
-      font-weight: 600;
-      font-size: 1rem;
-    }
-
-    .dl-sub {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-    }
-
-    .dl-badge {
-      background: rgba(255, 255, 255, 0.1);
-      font-size: 0.75rem;
-      padding: 0.2rem 0.6rem;
-      border-radius: 9999px;
-      font-weight: 600;
-      color: #E2E8F0;
-    }
-
-    .primary-btn .dl-badge {
-      background: rgba(0, 0, 0, 0.25);
-    }
-
-    /* PWA Web Access */
-    .web-access-box {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 16px;
-      padding: 1.75rem;
-      text-align: center;
-      margin-bottom: 3rem;
-    }
-
-    .web-access-box h3 {
-      font-family: 'Outfit', sans-serif;
-      font-size: 1.35rem;
+      letter-spacing: -0.03em;
+      color: #FFFFFF;
       margin-bottom: 0.4rem;
     }
 
-    .web-access-box p {
+    .panel-desc {
+      font-size: 0.9rem;
       color: var(--text-muted);
-      max-width: 600px;
-      margin: 0 auto 1.25rem auto;
-      font-size: 0.95rem;
+      line-height: 1.5;
     }
 
-    .cta-web {
+    .download-table {
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+      margin-top: auto;
+    }
+
+    .dl-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      text-decoration: none;
+      color: var(--text);
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .dl-row:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: var(--border-focus);
+    }
+
+    .dl-row.featured {
+      background: rgba(37, 99, 235, 0.08);
+      border-color: rgba(37, 99, 235, 0.35);
+    }
+
+    .dl-row.featured:hover {
+      background: rgba(37, 99, 235, 0.15);
+      border-color: rgba(37, 99, 235, 0.55);
+    }
+
+    .platform-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    .platform-icon {
+      width: 22px;
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text);
+      flex-shrink: 0;
+    }
+
+    .platform-icon svg {
+      width: 100%;
+      height: 100%;
+      fill: currentColor;
+    }
+
+    .platform-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .platform-name {
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: #FFFFFF;
+      line-height: 1.25;
+    }
+
+    .platform-sub {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+    }
+
+    .action-group {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+    }
+
+    .badge-size {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text-dim);
+      background: rgba(255, 255, 255, 0.04);
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-family: monospace;
+    }
+
+    .btn-action {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--accent-light);
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .featured .btn-action {
+      color: #93C5FD;
+    }
+
+    /* Web Instant Link */
+    .quick-web {
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem 1.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .quick-web-text h3 {
+      font-size: 0.98rem;
+      font-weight: 600;
+      color: #FFFFFF;
+    }
+
+    .quick-web-text p {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    .quick-web-btn {
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
-      background: transparent;
-      color: var(--accent);
-      border: 1px solid var(--accent);
-      padding: 0.65rem 1.4rem;
-      border-radius: 10px;
-      font-weight: 600;
+      background: var(--accent);
+      color: #FFFFFF;
       text-decoration: none;
-      transition: all 0.15s;
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 0.55rem 1rem;
+      border-radius: 8px;
+      transition: background 0.15s;
     }
 
-    .cta-web:hover {
-      background: rgba(56, 189, 248, 0.1);
-      border-color: #7DD3FC;
+    .quick-web-btn:hover {
+      background: var(--accent-hover);
     }
 
-    /* Pillars */
-    .pillars-grid {
+    .quick-web-btn svg {
+      width: 16px;
+      height: 16px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+    }
+
+    /* Pilares Institucionais: Concisos, sem emojis */
+    .civic-traits {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
       gap: 1.25rem;
-      margin-top: 2rem;
+      margin-bottom: 3.5rem;
+      border-top: 1px solid var(--border);
+      padding-top: 2rem;
     }
 
-    .pillar-item {
-      background: rgba(18, 24, 36, 0.6);
-      border: 1px solid rgba(30, 41, 59, 0.7);
-      padding: 1.25rem;
-      border-radius: 12px;
-    }
-
-    .pillar-item h4 {
-      font-family: 'Outfit', sans-serif;
-      font-size: 1.05rem;
-      color: var(--text);
+    .trait-item h4 {
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: #FFFFFF;
       margin-bottom: 0.35rem;
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.45rem;
     }
 
-    .pillar-item p {
-      color: var(--text-muted);
-      font-size: 0.88rem;
+    .trait-bullet {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent-light);
+      display: inline-block;
+    }
+
+    .trait-item p {
+      font-size: 0.82rem;
+      color: var(--text-dim);
+      line-height: 1.5;
     }
 
     footer {
       max-width: var(--max-w);
-      margin: 3rem auto 0 auto;
+      width: 100%;
+      margin: 0 auto;
       text-align: center;
-      color: var(--text-sub);
-      font-size: 0.85rem;
-      border-top: 1px solid var(--card-border);
-      padding-top: 1.5rem;
+      color: var(--text-dim);
+      font-size: 0.82rem;
+      line-height: 1.6;
     }
 
     footer a {
       color: var(--text-muted);
+      text-decoration: none;
+    }
+
+    footer a:hover {
       text-decoration: underline;
     }
   </style>
@@ -369,173 +437,247 @@
 <body>
 
   <header>
-    <div class="brand-badge">Democracia Direta • Soberania Local-First • Código Aberto</div>
-    <div class="brand-header">
-      <img src="icons/icon-192.png" alt="Vox" class="brand-logo" />
-      <h1>Vox</h1>
+    <div class="brand-top">
+      <img src="icons/icon-white-192.png" alt="vox" class="brand-mark" />
+      <span class="brand-wordmark">vox</span>
+      <span class="brand-pill">código aberto</span>
     </div>
+
+    <h1>Baixe, colabore e use.</h1>
     <p class="subtitle">
-      Participe de comunidades sem censura algorítmica, crie enquetes com votação real e mantenha seus dados no seu aparelho. Escolha como quer fazer parte da rede:
+      Rede cívica local-first de participação e deliberação popular. Criptografia no seu aparelho, sem cartório central e sem algoritmo de polarização.
     </p>
   </header>
 
   <main>
 
-    <!-- Boost Sinergia Banner -->
-    <div class="boost-banner">
-      <div class="boost-icon">⚡</div>
-      <div class="boost-text">
-        <h3>Sinergia do Efeito Boost</h3>
-        <p>
-          O <strong>Vox (Cliente)</strong> é a interface para você participar e debater. O <strong>Vox Populi (Nó Dedicado)</strong> é a infraestrutura silenciosa em segundo plano. 
-          Se você abrir ambos no mesmo computador ou celular, o Cliente se conecta ao Nó local e ativa o <strong>Modo Boost</strong>, acelerando o carregamento via cache seguro sem gastar sua internet!
-        </p>
+    <!-- Boost Conciso -->
+    <div class="boost-strip">
+      <div class="boost-badge">
+        <svg viewBox="0 0 24 24"><path d="M13 2L3 14h7v8l10-12h-7z"/></svg>
+        Boost
       </div>
+      <p class="boost-desc">
+        O <strong>vox</strong> é o cliente de uso diário; o <strong>vox populi</strong> é o nó de apoio. Abrir ambos no mesmo computador ou celular ativa o cache local e fortalece a rede sem consumir sua franquia móvel.
+      </p>
     </div>
 
-    <!-- 2x2 Grid -->
+    <!-- Grade Dupla Institucional -->
     <div class="grid-duo">
 
-      <!-- PRODUTO 1: CLIENTE -->
-      <section class="product-card client-card">
-        <span class="card-tag">Para Cidadãos & Participação</span>
-        <h2>Vox (Cliente)</h2>
-        <p class="product-desc">
-          O aplicativo de uso diário: navegue pelas comunidades, publique tópicos, vote em consultas públicas, converse em chats cifrados e apoie iniciativas populares.
-        </p>
+      <!-- COLUNA 1: CLIENTE VOX -->
+      <section class="product-panel">
+        <div class="panel-header">
+          <span class="panel-tag">Para Cidadãos & Participação</span>
+          <h2 class="panel-title">vox</h2>
+          <p class="panel-desc">
+            Navegue por comunidades, crie e vote em consultas populares, converse com segurança ponto a ponto e guarde suas chaves criptográficas sob seu controle direto.
+          </p>
+        </div>
 
-        <div class="download-list">
-          <!-- Windows Desktop -->
-          <a href="downloads/Vox.exe" class="dl-btn primary-btn" download>
-            <div class="dl-info">
-              <span class="dl-icon">🖥️</span>
-              <div class="dl-meta">
-                <span class="dl-title">Vox para Windows</span>
-                <span class="dl-sub">Nativo 1-Clique (.EXE) • Início Instantâneo</span>
+        <div class="download-table">
+
+          <!-- Windows -->
+          <a href="downloads/Vox.exe" class="dl-row featured" download>
+            <div class="platform-meta">
+              <span class="platform-icon" title="Microsoft Windows">
+                <!-- SVG Oficial Windows Moderno -->
+                <svg viewBox="0 0 24 24">
+                  <path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-13.051-1.802"/>
+                </svg>
+              </span>
+              <div class="platform-text">
+                <span class="platform-name">Windows</span>
+                <span class="platform-sub">Executável nativo WebView2</span>
               </div>
             </div>
-            <span class="dl-badge">967 KiB</span>
+            <div class="action-group">
+              <span class="badge-size">967 KiB</span>
+              <span class="btn-action">Baixar .exe &rarr;</span>
+            </div>
           </a>
 
-          <!-- Android APK -->
-          <a href="downloads/vox.apk" class="dl-btn" download>
-            <div class="dl-info">
-              <span class="dl-icon">📱</span>
-              <div class="dl-meta">
-                <span class="dl-title">Vox para Android</span>
-                <span class="dl-sub">Micro-APK (Android 7+) • org.vox.client</span>
+          <!-- Android -->
+          <a href="downloads/vox.apk" class="dl-row featured" download>
+            <div class="platform-meta">
+              <span class="platform-icon" title="Google Android">
+                <!-- SVG Oficial Android Bugdroid -->
+                <svg viewBox="0 0 24 24">
+                  <path d="M17.523 15.3414c-.5511 0-.9993-.4486-.9993-1.0003s.4482-.9993 1.0003-.9993c.551 0 .9992.4476.9992.9993.001 1.5517-.4472 1.0003-.9992 1.0003m-11.046 0c-.5511 0-.9993-.4486-.9993-1.0003s.4482-.9993 1.0003-.9993c.5511 0 .9993.4476.9993.9993s-.4482 1.0003-.9993 1.0003m11.4045-6.02l1.9973-3.4592a.416.416 0 00-.1521-.5676.416.416 0 00-.5676.1521l-2.0223 3.503C15.5902 8.4116 13.8533 8 12 8s-3.5902.4116-5.1368.9507L4.841 5.4477a.416.416 0 00-.5677-.1521.4157.4157 0 00-.152 1.5676l1.9972 3.4592C2.6889 12.1867 2 15.011 2 18.0667h20c0-3.0557-.6889-5.88-4.1185-8.7453"/>
+                </svg>
+              </span>
+              <div class="platform-text">
+                <span class="platform-name">Android</span>
+                <span class="platform-sub">Micro-APK • org.vox.client</span>
               </div>
             </div>
-            <span class="dl-badge">72 KiB</span>
+            <div class="action-group">
+              <span class="badge-size">74 KiB</span>
+              <span class="btn-action">Baixar .apk &rarr;</span>
+            </div>
           </a>
 
-          <!-- iOS / iPhone -->
-          <a href="https://vox-9df.pages.dev/" target="_blank" class="dl-btn">
-            <div class="dl-info">
-              <span class="dl-icon">🍏</span>
-              <div class="dl-meta">
-                <span class="dl-title">iPhone / iPad (iOS)</span>
-                <span class="dl-sub">Abra no Safari e toque em "Adicionar à Tela de Início"</span>
+          <!-- Apple iOS -->
+          <a href="https://vox-9df.pages.dev/" target="_blank" class="dl-row">
+            <div class="platform-meta">
+              <span class="platform-icon" title="Apple iOS">
+                <!-- SVG Oficial Apple -->
+                <svg viewBox="0 0 24 24">
+                  <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.42c.62-.75 1.04-1.8 0.93-2.85-.9.04-1.99.6-2.63 1.35-.57.66-.99 1.74-.86 2.76 1.01.08 2.04-.51 2.56-1.26z"/>
+                </svg>
+              </span>
+              <div class="platform-text">
+                <span class="platform-name">iOS (iPhone / iPad)</span>
+                <span class="platform-sub">PWA • Safari "Tela de Início"</span>
               </div>
             </div>
-            <span class="dl-badge">PWA</span>
+            <div class="action-group">
+              <span class="badge-size">PWA</span>
+              <span class="btn-action">Abrir &rarr;</span>
+            </div>
           </a>
 
           <!-- Linux -->
-          <a href="https://github.com/yurikayel/vox/tree/develop/tools/desktop-linux" target="_blank" class="dl-btn">
-            <div class="dl-info">
-              <span class="dl-icon">🐧</span>
-              <div class="dl-meta">
-                <span class="dl-title">Vox para Linux</span>
-                <span class="dl-sub">Script WebKitGTK nativo (< 30 KiB) & atalho .desktop</span>
+          <a href="https://github.com/yurikayel/vox/tree/develop/tools/desktop-linux" target="_blank" class="dl-row">
+            <div class="platform-meta">
+              <span class="platform-icon" title="Linux">
+                <!-- SVG Oficial Linux Tux -->
+                <svg viewBox="0 0 24 24">
+                  <path d="M12.002 2c-3.12 0-4.66 2.14-4.66 4.88 0 1.03.35 2.45.69 3.51-.55.77-1.46 1.95-1.95 3.12-.55 1.3-.69 2.57-.46 3.42.27.99 1.08 1.57 2.22 1.57.44 0 .93-.09 1.44-.28.84.97 2.12 1.63 3.65 1.63 1.54 0 2.81-.66 3.65-1.63.51.19 1 .28 1.44.28 1.14 0 1.95-.58 2.22-1.57.23-.85.09-2.12-.46-3.42-.49-1.17-1.4-2.35-1.95-3.12.34-1.06.69-2.48.69-3.51C18.662 4.14 17.122 2 12.002 2z"/>
+                </svg>
+              </span>
+              <div class="platform-text">
+                <span class="platform-name">Linux</span>
+                <span class="platform-sub">Script nativo WebKitGTK</span>
               </div>
             </div>
-            <span class="dl-badge">Linux</span>
+            <div class="action-group">
+              <span class="badge-size">&lt; 30 KiB</span>
+              <span class="btn-action">Guia &rarr;</span>
+            </div>
           </a>
+
         </div>
       </section>
 
-      <!-- PRODUTO 2: NÓ DEDICADO -->
-      <section class="product-card">
-        <span class="card-tag node-tag">Para Infraestrutura & Apoio</span>
-        <h2>Vox Populi (Nó Dedicado)</h2>
-        <p class="product-desc">
-          O daemon comunitário: roda em segundo plano sem janela de navegador, guardando cache seguro (SHA-256) e servindo relay local para manter a malha cívica viva.
-        </p>
+      <!-- COLUNA 2: NÓ DEDICADO VOX POPULI -->
+      <section class="product-panel">
+        <div class="panel-header">
+          <span class="panel-tag node">Para Infraestrutura & Apoio</span>
+          <h2 class="panel-title">vox populi</h2>
+          <p class="panel-desc">
+            Execute em segundo plano para armazenar cache seguro (SHA-256) e prover relay local para sua vizinhança ou comunidade, sem interface pesada e sem telemetria.
+          </p>
+        </div>
 
-        <div class="download-list">
+        <div class="download-table">
+
           <!-- Windows Tray -->
-          <a href="downloads/VoxPopuli.exe" class="dl-btn" download>
-            <div class="dl-info">
-              <span class="dl-icon">🖥️</span>
-              <div class="dl-meta">
-                <span class="dl-title">Vox Populi para Windows</span>
-                <span class="dl-sub">Executável com Menu na Bandeja (System Tray)</span>
+          <a href="downloads/VoxPopuli.exe" class="dl-row featured" download>
+            <div class="platform-meta">
+              <span class="platform-icon" title="Microsoft Windows">
+                <svg viewBox="0 0 24 24">
+                  <path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-13.051-1.802"/>
+                </svg>
+              </span>
+              <div class="platform-text">
+                <span class="platform-name">Windows</span>
+                <span class="platform-sub">Serviço com ícone na bandeja</span>
               </div>
             </div>
-            <span class="dl-badge">11.7 MB</span>
+            <div class="action-group">
+              <span class="badge-size">11.7 MB</span>
+              <span class="btn-action">Baixar .exe &rarr;</span>
+            </div>
           </a>
 
           <!-- Android Node -->
-          <a href="downloads/vox-populi.apk" class="dl-btn" download>
-            <div class="dl-info">
-              <span class="dl-icon">📱</span>
-              <div class="dl-meta">
-                <span class="dl-title">Vox Populi para Android</span>
-                <span class="dl-sub">Nó Móvel • Foreground Service leve em Wi-Fi</span>
+          <a href="downloads/vox-populi.apk" class="dl-row featured" download>
+            <div class="platform-meta">
+              <span class="platform-icon" title="Google Android">
+                <svg viewBox="0 0 24 24">
+                  <path d="M17.523 15.3414c-.5511 0-.9993-.4486-.9993-1.0003s.4482-.9993 1.0003-.9993c.551 0 .9992.4476.9992.9993.001 1.5517-.4472 1.0003-.9992 1.0003m-11.046 0c-.5511 0-.9993-.4486-.9993-1.0003s.4482-.9993 1.0003-.9993c.5511 0 .9993.4476.9993.9993s-.4482 1.0003-.9993 1.0003m11.4045-6.02l1.9973-3.4592a.416.416 0 00-.1521-.5676.416.416 0 00-.5676.1521l-2.0223 3.503C15.5902 8.4116 13.8533 8 12 8s-3.5902.4116-5.1368.9507L4.841 5.4477a.416.416 0 00-.5677-.1521.4157.4157 0 00-.152 1.5676l1.9972 3.4592C2.6889 12.1867 2 15.011 2 18.0667h20c0-3.0557-.6889-5.88-4.1185-8.7453"/>
+                </svg>
+              </span>
+              <div class="platform-text">
+                <span class="platform-name">Android</span>
+                <span class="platform-sub">Micro-Nó Wi-Fi • org.vox.populi</span>
               </div>
             </div>
-            <span class="dl-badge">72 KiB</span>
+            <div class="action-group">
+              <span class="badge-size">74 KiB</span>
+              <span class="btn-action">Baixar .apk &rarr;</span>
+            </div>
           </a>
 
           <!-- Linux Daemon -->
-          <a href="https://github.com/yurikayel/vox/tree/develop/vox-populi" target="_blank" class="dl-btn">
-            <div class="dl-info">
-              <span class="dl-icon">🐧</span>
-              <div class="dl-meta">
-                <span class="dl-title">Linux (Raspberry Pi / Servidor)</span>
-                <span class="dl-sub">Serviço systemd com cgroups e consumo mínimo</span>
+          <a href="https://github.com/yurikayel/vox/tree/develop/vox-populi" target="_blank" class="dl-row">
+            <div class="platform-meta">
+              <span class="platform-icon" title="Linux">
+                <svg viewBox="0 0 24 24">
+                  <path d="M12.002 2c-3.12 0-4.66 2.14-4.66 4.88 0 1.03.35 2.45.69 3.51-.55.77-1.46 1.95-1.95 3.12-.55 1.3-.69 2.57-.46 3.42.27.99 1.08 1.57 2.22 1.57.44 0 .93-.09 1.44-.28.84.97 2.12 1.63 3.65 1.63 1.54 0 2.81-.66 3.65-1.63.51.19 1 .28 1.44.28 1.14 0 1.95-.58 2.22-1.57.23-.85.09-2.12-.46-3.42-.49-1.17-1.4-2.35-1.95-3.12.34-1.06.69-2.48.69-3.51C18.662 4.14 17.122 2 12.002 2z"/>
+                </svg>
+              </span>
+              <div class="platform-text">
+                <span class="platform-name">Linux / Raspberry Pi</span>
+                <span class="platform-sub">Daemon nativo systemd</span>
               </div>
             </div>
-            <span class="dl-badge">systemd</span>
+            <div class="action-group">
+              <span class="badge-size">daemon</span>
+              <span class="btn-action">Guia &rarr;</span>
+            </div>
           </a>
 
           <!-- macOS Daemon -->
-          <a href="https://github.com/yurikayel/vox/tree/develop/tools/node-macos" target="_blank" class="dl-btn">
-            <div class="dl-info">
-              <span class="dl-icon">🍏</span>
-              <div class="dl-meta">
-                <span class="dl-title">macOS (LaunchAgent)</span>
-                <span class="dl-sub">Daemon nativo via launchd em 127.0.0.1:3921</span>
+          <a href="https://github.com/yurikayel/vox/tree/develop/tools/node-macos" target="_blank" class="dl-row">
+            <div class="platform-meta">
+              <span class="platform-icon" title="macOS">
+                <svg viewBox="0 0 24 24">
+                  <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.42c.62-.75 1.04-1.8 0.93-2.85-.9.04-1.99.6-2.63 1.35-.57.66-.99 1.74-.86 2.76 1.01.08 2.04-.51 2.56-1.26z"/>
+                </svg>
+              </span>
+              <div class="platform-text">
+                <span class="platform-name">macOS</span>
+                <span class="platform-sub">Serviço em segundo plano launchd</span>
               </div>
             </div>
-            <span class="dl-badge">launchd</span>
+            <div class="action-group">
+              <span class="badge-size">launchd</span>
+              <span class="btn-action">Guia &rarr;</span>
+            </div>
           </a>
+
         </div>
       </section>
 
     </div>
 
-    <!-- Web Access Box -->
-    <div class="web-access-box">
-      <h3>Prefere usar agora sem baixar nada?</h3>
-      <p>Você pode acessar a versão web oficial imediatamente em qualquer navegador moderno com todas as funcionalidades de criptografia e participação ativa.</p>
-      <a href="index.html#/" class="cta-web">🚀 Abrir Vox no Navegador Agora</a>
+    <!-- Acesso Web Rápido -->
+    <div class="quick-web">
+      <div class="quick-web-text">
+        <h3>Acesso Imediato sem Instalação</h3>
+        <p>Você pode abrir o cliente diretamente no seu navegador com suporte total a criptografia local.</p>
+      </div>
+      <a href="index.html#/" class="quick-web-btn">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        Abrir vox na Web
+      </a>
     </div>
 
-    <!-- Trust Pillars -->
-    <div class="pillars-grid">
-      <div class="pillar-item">
-        <h4>🔒 Privacidade e Soberania</h4>
-        <p>Suas chaves criptográficas (Ed25519/P-256) são geradas no seu aparelho. Sem rastreadores e sem cartório central.</p>
+    <!-- Pilares Institucionais -->
+    <div class="civic-traits">
+      <div class="trait-item">
+        <h4><span class="trait-bullet"></span> Soberania Local-First</h4>
+        <p>Suas chaves criptográficas (Ed25519 e P-256) são geradas e guardadas exclusivamente no seu dispositivo.</p>
       </div>
-      <div class="pillar-item">
-        <h4>📦 Ultraleveza Real</h4>
-        <p>APKs e binários de até 72 KiB. Feitos para economizar seus dados móveis e rodar até nos aparelhos mais simples.</p>
+      <div class="trait-item">
+        <h4><span class="trait-bullet"></span> Economia de Franquia</h4>
+        <p>Binários a partir de 74 KiB projetados para rodar com baixíssimo consumo de bateria e de rede.</p>
       </div>
-      <div class="pillar-item">
-        <h4>🤝 Código Aberto & Livre</h4>
-        <p>Sem algoritmos opacos de polarização. O código é 100% aberto e auditável pela comunidade internacional.</p>
+      <div class="trait-item">
+        <h4><span class="trait-bullet"></span> Código Aberto e Auditável</h4>
+        <p>Transparência integral de governança cívica. Sem portas dos fundos e sem algoritmos de engajamento predatório.</p>
       </div>
     </div>
 
@@ -543,8 +685,8 @@
 
   <footer>
     <p>
-      Vox • Projeto cívico e bem comum aberto · 
-      <a href="https://github.com/yurikayel/vox" target="_blank">Código-fonte no GitHub</a> · 
+      vox &bull; Baixe, colabore e use. &bull; 
+      <a href="https://github.com/yurikayel/vox" target="_blank" rel="noopener">Código-fonte no GitHub</a> &bull; 
       <a href="privacy.html">Privacidade</a>
     </p>
   </footer>
