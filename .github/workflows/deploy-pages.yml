@@ -39,6 +39,7 @@ jobs:
         run: |
           mkdir -p _site
           cp -r client/* _site/
+          touch _site/.nojekyll
           if [ -f docs/proposta-vox.html ]; then
             cp docs/proposta-vox.html _site/proposta-vox.html
           fi

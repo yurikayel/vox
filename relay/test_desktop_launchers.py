@@ -32,6 +32,9 @@ steward_mod = _import_from_path(
 DesktopBridge = seeder_mod.DesktopBridge
 LocalClientServer = seeder_mod.LocalClientServer
 resolve_startup_url = seeder_mod.resolve_startup_url
+check_node_active = seeder_mod.check_node_active
+boost_dedicated_node = seeder_mod.boost_dedicated_node
+DesktopNodeTray = seeder_mod.DesktopNodeTray
 ThreadedServers = steward_mod.ThreadedServers
 
 
@@ -42,7 +45,17 @@ class TestDesktopLaunchers(unittest.TestCase):
         self.assertTrue(status["is_desktop"])
         self.assertEqual(status["platform"], "windows")
         self.assertFalse(status["seed_active"])
+        self.assertIn("node_active", status)
         self.assertEqual(bridge.ping(), "pong")
+
+    def test_desktop_node_tray_instantiation(self) -> None:
+        tray = DesktopNodeTray(VOX_ROOT)
+        self.assertIsNone(tray.notify_icon)
+        tray.stop()
+
+    def test_boost_dedicated_node_graceful(self) -> None:
+        result = boost_dedicated_node()
+        self.assertIsInstance(result, bool)
 
     def test_local_client_server_lifecycle(self) -> None:
         server = LocalClientServer(VOX_ROOT, port=19085)

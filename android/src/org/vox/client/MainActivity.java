@@ -1,4 +1,4 @@
-package org.vox.seeder;
+package org.vox.client;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -20,13 +20,13 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        startSeederService();
+        startClientService();
         setupWebView();
         setContentView(webView);
     }
 
-    private void startSeederService() {
-        Intent srv = new Intent(this, VoxPopuliService.class);
+    private void startClientService() {
+        Intent srv = new Intent(this, VoxClientService.class);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(srv);
         } else {
@@ -60,14 +60,5 @@ public class MainActivity extends Activity {
             return;
         }
         super.onBackPressed();
-    }
-
-    @Override
-    protected void onDestroy() {
-        if (webView != null) {
-            webView.destroy();
-            webView = null;
-        }
-        super.onDestroy();
     }
 }

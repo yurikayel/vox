@@ -1,20 +1,27 @@
-# Vox Populi Desktop — Windows 1-Clique (.EXE)
+# Vox Desktop — Windows 1-Clique (.EXE)
 
-Aplicativo desktop WebView2 para usar o Vox no PC em uma janela independente. Ele pode servir os arquivos estáticos do cliente por loopback como fallback local. Não executa relay comunitário, descoberta de peers nem seeding WebTorrent.
+Aplicativo desktop WebView2 para usar o Vox no PC em uma janela independente, com servidor HTTP local de fallback e **notificação na bandeja do sistema (system tray) do nó dedicado Vox Populi em execução em segundo plano**.
 
 ---
 
 ## 🚀 Como Usar
 
 Basta baixar e dar duplo clique em:
-👉 **`dist/VoxPopuliDesktop.exe`**
+👉 **`dist/Vox.exe`** *(ou `dist/VoxPopuliDesktop.exe`)*
 
 - **Sem necessidade de emuladores ou WSA.**
 - **Sem necessidade de ter Python ou Node.js instalados.**
 - **Janela nativa fluida:** renderizada via Microsoft Edge WebView2 Evergreen nativo do Windows.
+- **Notificação e Integração na Bandeja (*System Tray*):** ao abrir o cliente, o aplicativo verifica ou inicia o nó dedicado Vox Populi em segundo plano e emite uma notificação nativa na bandeja informando que o nó comunitário está ativo (`127.0.0.1:3921`) com **boost** automático.
+- **Menu da Bandeja:** permite consultar o status do nó, pausar/retomar a contribuição, restaurar a janela e fechar o aplicativo.
 - **Fallback offline:** se a conexão com a nuvem falhar, o executável inicia automaticamente um micro-servidor HTTP local servindo o cliente estático embutido.
 
-O executável desktop é um cliente. Para relay/cache local controlado pela bandeja, use o **VoxPopuli Node Zero — Community Node** (`tools/node-zero-windows`). O seeder WebTorrent continua não implementado.
+---
+
+## 📦 Executável Dedicado do Nó (Sem o Client)
+
+Se o objetivo for **somente executar o nó de infraestrutura comunitária sem abrir a interface de usuário do cliente**, utilize o executável dedicado:
+👉 **`dist/VoxPopuli.exe`** em [`tools/node-zero-windows`](../node-zero-windows/README.md).
 
 ---
 

@@ -70,6 +70,12 @@ O **Dossiê N=25** foi escolhido como a fonte viva e exclusiva de checkboxes `[ 
   - [adr/003-profile-card-gossip.md](./adr/003-profile-card-gossip.md) — ADR-003: Cartão de malha e propagação gossip de perfis
   - [adr/004-gateway-honest-fallback.md](./adr/004-gateway-honest-fallback.md) — ADR-004: Fallback honesto de gateway (leitura reserva)
   - [adr/005-collective-profile-m-of-n.md](./adr/005-collective-profile-m-of-n.md) — ADR-005: Perfil coletivo M-de-N via multi-assinatura independente (Tese T02)
+  - [adr/006-p2p-profile-identity-gossip-hardening.md](./adr/006-p2p-profile-identity-gossip-hardening.md) — ADR-006: Hardening de identidade e gossip de perfis P2P
+  - [adr/007-zero-complexity-monolith-decomposition.md](./adr/007-zero-complexity-monolith-decomposition.md) — ADR-007: Decomposição de monólito e limite de complexidade cognitiva
+  - [adr/008-vox-populi-community-node-architecture.md](./adr/008-vox-populi-community-node-architecture.md) — ADR-008: Arquitetura do Vox Populi Nó Comunitário
+  - [adr/009-multi-gateway-graphql-corroboration.md](./adr/009-multi-gateway-graphql-corroboration.md) — ADR-009: Corroboração de múltiplos gateways GraphQL
+  - [adr/010-vox-contribution-engine-execute-e-ajude.md](./adr/010-vox-contribution-engine-execute-e-ajude.md) — ADR-010: Motor de contribuição voluntária e nós anfitriões
+  - [adr/011-taxonomia-tripartite-produtos-vox.md](./adr/011-taxonomia-tripartite-produtos-vox.md) — ADR-011: Taxonomia canônica dual (Vox Cliente e Vox Populi Nó Dedicado)
 - [piloto-comunidade-go-no-go.md](./piloto-comunidade-go-no-go.md) — gate humano do piloto (V-P09)  
 - [piloto-comunidade-retrospectiva-template.md](./piloto-comunidade-retrospectiva-template.md) — template retrospectiva  
 - [../client/DEV.md](../client/DEV.md) — guia de desenvolvimento §0–37  

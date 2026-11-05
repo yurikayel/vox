@@ -322,6 +322,7 @@ export function renderVoxpedia() {
       <footer class="voxpedia-footer card">
         <p class="desc">
           <a class="voxpedia-gh-link" href="${VOX_GITHUB_DOCS.docsReadme}" target="_blank" rel="noopener noreferrer">Documentação técnica (GitHub)</a>
+          · <a href="download.html">Baixar Aplicativos (Desktop & Android)</a>
           — código, specs e runbooks; o repositório é a fonte, não um helpdesk.
         </p>
       </footer>

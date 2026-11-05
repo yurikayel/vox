@@ -1,14 +1,8 @@
-# Build VoxPopuliDesktop.exe (app desktop WebView2)
+# Build Vox.exe / VoxPopuliDesktop.exe (app desktop nativo ultraleve)
 $ErrorActionPreference = "Stop"
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $Root = Split-Path -Parent (Split-Path -Parent $ScriptDir)
 Set-Location $Root
 
-Write-Host "Compilando VoxPopuliDesktop.exe com PyInstaller..."
-pyinstaller --clean tools/desktop-seeder-windows/VoxPopuliDesktop.spec
-
-if (Test-Path "$Root/dist/VoxPopuliDesktop.exe") {
-    Write-Host "[SUCESSO] Gerado: dist/VoxPopuliDesktop.exe"
-} else {
-    Write-Error "[FALHA] VoxPopuliDesktop.exe nao encontrado em dist/"
-}
+Write-Host "Iniciando compilação do executável nativo ultraleve Vox..." -ForegroundColor Cyan
+& powershell -ExecutionPolicy Bypass -File "$Root/tools/desktop-windows-native/build.ps1"

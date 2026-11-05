@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="org.vox.seeder"
+    package="org.vox.client"
     android:versionCode="1"
     android:versionName="1.0.0">
 
@@ -17,12 +17,15 @@
 
     <application
         android:label="@string/app_name"
-        android:icon="@drawable/ic_vox_populi"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher"
         android:theme="@android:style/Theme.DeviceDefault.NoActionBar"
         android:usesCleartextTraffic="true">
 
         <activity
             android:name=".MainActivity"
+            android:label="@string/app_name"
+            android:icon="@mipmap/ic_launcher"
             android:exported="true"
             android:configChanges="orientation|screenSize|keyboardHidden">
             <intent-filter>
@@ -32,7 +35,7 @@
         </activity>
 
         <service
-            android:name=".VoxPopuliService"
+            android:name=".VoxClientService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
