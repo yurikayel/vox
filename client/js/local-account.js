@@ -189,7 +189,7 @@ export function getProfileEnrichment() {
   }
 }
 
-export function setProfileEnrichment({ displayName, bio, avatarUrl, oauthProvider } = {}) {
+export function setProfileEnrichment({ displayName, bio, avatarUrl, oauthProvider, oauthSub, oauthEmail } = {}) {
   try {
     const prev = getProfileEnrichment() || {};
     const next = {
@@ -198,6 +198,8 @@ export function setProfileEnrichment({ displayName, bio, avatarUrl, oauthProvide
       bio: bio !== undefined ? String(bio).trim().slice(0, 280) : prev.bio,
       avatarUrl: avatarUrl !== undefined ? String(avatarUrl).trim().slice(0, 512) : prev.avatarUrl,
       oauthProvider: oauthProvider !== undefined ? String(oauthProvider).trim() : prev.oauthProvider,
+      oauthSub: oauthSub !== undefined ? String(oauthSub).trim() : prev.oauthSub,
+      oauthEmail: oauthEmail !== undefined ? String(oauthEmail).trim() : prev.oauthEmail,
       linkedAt: Date.now(),
     };
     localStorage.setItem(ENRICHMENT_STORAGE, JSON.stringify(next));
@@ -530,7 +532,64 @@ export async function syncActiveAccountToVault() {
   return vault[acc.routeId];
 }
 
+export function deduplicateVaultAccounts() {
+  const vault = readVaultMap();
+  const seenGoogle = new Map();
+  let changed = false;
+  const currentId = getCachedRouteIdSync();
+
+  for (const [id, acc] of Object.entries(vault)) {
+    const enrich = acc.enrichment || {};
+    const googleKey = enrich.oauthSub || (enrich.avatarUrl?.includes("lh3.googleusercontent.com/a/") ? enrich.avatarUrl : null);
+    if (!googleKey) continue;
+
+    if (seenGoogle.has(googleKey)) {
+      const canonicalId = seenGoogle.get(googleKey);
+      const toRemove = id === currentId ? canonicalId : id;
+      delete vault[toRemove];
+      changed = true;
+      if (toRemove === canonicalId) seenGoogle.set(googleKey, id);
+    } else {
+      seenGoogle.set(googleKey, id);
+    }
+  }
+  if (changed) writeVaultMap(vault);
+}
+
+function matchesOAuthEnrichment(enrich, cleanSub, cleanEmail, isGoogleAv, cleanAv) {
+  if (cleanSub && enrich.oauthSub === cleanSub) return true;
+  if (cleanEmail && enrich.oauthEmail && enrich.oauthEmail.toLowerCase() === cleanEmail) return true;
+  return Boolean(isGoogleAv && enrich.avatarUrl === cleanAv);
+}
+
+export function findVaultAccountByOAuth({ oauthProvider: _p, oauthSub, oauthEmail, avatarUrl } = {}) {
+  const vault = readVaultMap();
+  const cleanSub = String(oauthSub || "").trim();
+  const cleanEmail = String(oauthEmail || "").trim().toLowerCase();
+  const cleanAv = String(avatarUrl || "").trim();
+  const isGoogleAv = cleanAv.includes("lh3.googleusercontent.com/a/");
+
+  for (const item of Object.values(vault)) {
+    if (matchesOAuthEnrichment(item.enrichment || {}, cleanSub, cleanEmail, isGoogleAv, cleanAv)) {
+      return item;
+    }
+  }
+  return null;
+}
+
+export function isAccountDisposable(routeId) {
+  if (!routeId) return false;
+  const vault = readVaultMap();
+  const item = vault[routeId];
+  if (!item) return false;
+  const isNamed = item.displayName && !item.displayName.startsWith("vx_");
+  const hasPix = Boolean(item.pixKey);
+  const hasEnrich = Boolean(item.enrichment?.oauthProvider);
+  return !isNamed && !hasPix && !hasEnrich;
+}
+
 export function listVaultAccountsSync() {
+  deduplicateVaultAccounts();
   const vault = readVaultMap();
   const currentId = getCachedRouteIdSync();
   return Object.values(vault).map((item) => ({

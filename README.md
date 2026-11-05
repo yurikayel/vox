@@ -3,8 +3,8 @@
 [![Client](https://img.shields.io/badge/PWA-Vanilla%20ES%20Modules-orange.svg)](./client)
 [![Identity](https://img.shields.io/badge/Identity-WebCrypto%20P--256-blueviolet.svg)](./client/js/local-account.js)
 [![Storage](https://img.shields.io/badge/Storage-Arweave%20Permaweb-black.svg)](https://arweave.org)
-[![Tests](https://img.shields.io/badge/Tests-723%20passing%20(649%20JS%20%2B%2074%20Py)-brightgreen.svg)](./tests)
-[![Service Worker](https://img.shields.io/badge/SW-v7.17--real--network--audio--video--upload--m3-informational.svg)](./client/sw.js)
+[![Tests](https://img.shields.io/badge/Tests-725%20passing%20(651%20JS%20%2B%2074%20Py)-brightgreen.svg)](./tests)
+[![Service Worker](https://img.shields.io/badge/SW-v7.18--real--network--audio--video--upload-informational.svg)](./client/sw.js)
 
 O Vox é um projeto cívico em construção para ampliar a participação popular e a autonomia das comunidades na vida digital. Sua ambição é ser um bem comum aberto: o projeto deve permanecer transparente, copiável, modificável e maior que qualquer fundador, mantenedor, empresa ou plataforma.
 
@@ -172,7 +172,7 @@ Na raiz do repositório:
 ```bash
 npm test
 ```
-Executa as suítes atuais de JavaScript (649 testes) e Python (74 testes), totalizando **723 testes automatizados**.
+Executa as suítes atuais de JavaScript (651 testes) e Python (74 testes), totalizando **725 testes automatizados**.
 
 ### 3. Rodar o Relay / Memória Central Doméstica (Opcional)
 

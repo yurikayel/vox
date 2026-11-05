@@ -165,3 +165,31 @@ test("people-index - preserva source self mesmo quando autor possui posts locais
   assert.equal(meshEntry?.name, "Peer Externo");
   assert.equal(sections.all.length >= 4, true);
 });
+
+test("people-index - deduplica contas que usam o mesmo perfil/avatar Google na malha e no cofre", async () => {
+  localStorage.clear();
+  contacts.__resetContactsForTests();
+  profileDirectory.__resetProfileCardsForTests();
+
+  const googleAvatar = "https://lh3.googleusercontent.com/a/ACg8ocJ0M8bek1QZ5cqpBxLshqEBN8hx-vUegj1uOWfbTCwgQTwqjuWj=s96-c";
+  const primary = await localAccount.ensureLocalAccount();
+  localAccount.setProfileEnrichment({
+    displayName: "Yuri Kayel",
+    avatarUrl: googleAvatar,
+    oauthProvider: "google",
+    oauthSub: "google-sub-12345",
+  });
+
+  // Simula um perfil duplicado na malha com o mesmo avatar do Google mas outro routeId
+  profileDirectory.setProfileCard("vx_kRS3iAuYHMWVcp9p7NTc", {
+    name: "Yuri Kayel",
+    avatarUrl: googleAvatar,
+    discoverable: true,
+  });
+
+  const all = await peopleIndex.buildPeopleIndex();
+  const yuriEntries = all.filter((p) => p.name === "Yuri Kayel");
+  // Deve haver EXATAMENTE UMA entrada para Yuri Kayel!
+  assert.equal(yuriEntries.length, 1);
+  assert.equal(yuriEntries[0].routeId, primary.routeId);
+});

@@ -116,6 +116,20 @@ def _normalize_loaded_state(raw: Optional[Dict[str, Any]]) -> Dict[str, Any]:
         val = raw.get(key)
         if isinstance(val, dict):
             state[key] = dict(val)
+    profiles = state.get("profiles")
+    if isinstance(profiles, dict):
+        seen_google = set()
+        to_del = []
+        for r_id, p in profiles.items():
+            if isinstance(p, dict):
+                av = str(p.get("avatarUrl") or "")
+                if "lh3.googleusercontent.com/a/" in av:
+                    if av in seen_google:
+                        to_del.append(r_id)
+                    else:
+                        seen_google.add(av)
+        for r_id in to_del:
+            del profiles[r_id]
     return state
 
 
@@ -277,6 +291,14 @@ def _apply_profile(state: Dict[str, Any], card: Dict[str, Any]) -> bool:
             return False
         if existing == card:
             return False
+    in_avatar = str(card.get("avatarUrl") or "")
+    if "lh3.googleusercontent.com/a/" in in_avatar:
+        dup_keys = [
+            k for k, v in state["profiles"].items()
+            if k != route_id and isinstance(v, dict) and v.get("avatarUrl") == in_avatar
+        ]
+        for k in dup_keys:
+            del state["profiles"][k]
     state["profiles"][route_id] = card
     state["revision"] += 1
     return True

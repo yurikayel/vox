@@ -165,6 +165,28 @@ namespace Vox.ZeroMemory {
                     if (sub != null) norm[k] = sub;
                 }
             }
+            if (norm.ContainsKey("profiles")) {
+                var profs = norm["profiles"] as Dictionary<string, object>;
+                if (profs != null) {
+                    var seenGoogle = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                    var removeKeys = new List<string>();
+                    foreach (var kvp in profs) {
+                        var card = AsDict(kvp.Value);
+                        if (card == null) continue;
+                        string av = GetStr(card, "avatarUrl");
+                        if (!string.IsNullOrEmpty(av) && av.Contains("lh3.googleusercontent.com/a/")) {
+                            if (seenGoogle.ContainsKey(av)) {
+                                removeKeys.Add(kvp.Key);
+                            } else {
+                                seenGoogle[av] = kvp.Key;
+                            }
+                        }
+                    }
+                    foreach (string rk in removeKeys) {
+                        profs.Remove(rk);
+                    }
+                }
+            }
             return norm;
         }
 
@@ -353,6 +375,21 @@ namespace Vox.ZeroMemory {
                 }
             }
             if (!string.IsNullOrEmpty(inName)) card["name"] = inName;
+            string inAvatar = GetStr(card, "avatarUrl");
+            if (!string.IsNullOrEmpty(inAvatar) && inAvatar.Contains("lh3.googleusercontent.com/a/")) {
+                var toRemove = new List<string>();
+                foreach (var kvp in profiles) {
+                    if (kvp.Key != routeId) {
+                        var exCard = AsDict(kvp.Value);
+                        if (exCard != null && GetStr(exCard, "avatarUrl") == inAvatar) {
+                            toRemove.Add(kvp.Key);
+                        }
+                    }
+                }
+                foreach (string dupId in toRemove) {
+                    profiles.Remove(dupId);
+                }
+            }
             card["routeId"] = routeId;
             profiles[routeId] = card;
             BumpRevision();
