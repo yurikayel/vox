@@ -392,6 +392,10 @@ export async function requestStoragePersistence() {
   return false;
 }
 
+export function getCachedIdentity() {
+  return cachedIdentity;
+}
+
 export function resetIdentityCacheForTesting() {
   cachedIdentity = null;
 }
