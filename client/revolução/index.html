@@ -4,34 +4,32 @@
   <base href="../" />
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>vox — Revolução, Marxismo-Leninismo e Tecnologia Popular</title>
-  <meta name="description" content="Ferramental web livre, local-first e descentralizado da classe trabalhadora para contrapor o monopólio das Big Techs, combater o capitalismo e organizar a voz popular soberana." />
+  <title>vox — Revolução, Marxismo e Tecnologia Popular</title>
+  <meta name="description" content="Ferramental web livre, local-first e descentralizado para contrapor os monopólios das Big Techs, enfrentar o capitalismo e organizar a voz da classe trabalhadora." />
   <link rel="canonical" href="https://yurikayel.github.io/vox/revolucao" />
   <link rel="icon" href="icons/emoji-vox-vermelho.svg" type="image/svg+xml" />
   <link rel="icon" href="icons/emoji-vox-vermelho-32.png" sizes="32x32" type="image/png" />
   <link rel="apple-touch-icon" href="icons/icon-white-192.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg: #080A0E;
-      --surface: #0E131C;
-      --surface-card: rgba(14, 19, 28, 0.90);
-      --surface-elevated: rgba(22, 28, 40, 0.85);
-      --border: #261E24;
-      --border-red: rgba(220, 38, 38, 0.35);
-      --border-focus: #DC2626;
+      --bg: #06080B;
+      --surface: #0B0F17;
+      --surface-card: rgba(11, 15, 23, 0.88);
+      --surface-elevated: rgba(18, 23, 34, 0.82);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-red: rgba(220, 38, 38, 0.40);
       --text: #F1F5F9;
       --text-muted: #94A3B8;
       --text-dim: #64748B;
       --red-primary: #DC2626;
       --red-hover: #B91C1C;
       --red-light: #F87171;
-      --red-glow: rgba(220, 38, 38, 0.28);
+      --red-glow: rgba(220, 38, 38, 0.35);
       --gold: #F59E0B;
       --gold-light: #FCD34D;
-      --gold-soft: rgba(245, 158, 11, 0.12);
       --emerald: #10B981;
       --max-w: 1040px;
     }
@@ -41,12 +39,12 @@
     body {
       background-color: var(--bg);
       background-image: 
-        linear-gradient(to bottom, rgba(8, 10, 14, 0.78) 0%, rgba(8, 10, 14, 0.90) 450px, rgba(8, 10, 14, 0.97) 900px, rgba(8, 10, 14, 0.99) 100%),
-        radial-gradient(ellipse 90% 55% at 50% -10%, rgba(220, 38, 38, 0.22) 0%, transparent 65%),
-        url('images/wallpaper-grid.svg'),
-        url('images/wallpaper-brasil.jpg');
+        linear-gradient(to bottom, rgba(6, 8, 11, 0.80) 0%, rgba(6, 8, 11, 0.90) 450px, rgba(6, 8, 11, 0.97) 900px, #06080B 100%),
+        radial-gradient(ellipse 90% 55% at 50% -10%, rgba(220, 38, 38, 0.28) 0%, transparent 65%),
+        url('images/revolucao/mesh-revolucao.svg'),
+        url('images/revolucao/wallpaper-revolucao.jpg');
       background-repeat: no-repeat, no-repeat, repeat, no-repeat;
-      background-size: 100% 100%, 100% 900px, 80px 80px, cover;
+      background-size: 100% 100%, 100% 850px, 96px 96px, cover;
       background-position: center top, center top, 0 0, center top;
       background-attachment: scroll, scroll, fixed, fixed;
       color: var(--text);
@@ -55,7 +53,7 @@
       min-height: 100vh;
       display: flex;
       flex-direction: column;
-      padding-top: max(1rem, env(safe-area-inset-top, 0px));
+      padding-top: max(1.25rem, env(safe-area-inset-top, 0px));
       padding-right: max(1.25rem, env(safe-area-inset-right, 0px));
       padding-bottom: max(4rem, env(safe-area-inset-bottom, 0px));
       padding-left: max(1.25rem, env(safe-area-inset-left, 0px));
@@ -65,7 +63,7 @@
     header {
       max-width: var(--max-w);
       width: 100%;
-      margin: 3rem auto 2.25rem auto;
+      margin: 2.5rem auto 2.5rem auto;
       text-align: center;
     }
 
@@ -75,66 +73,66 @@
       gap: 0.65rem;
       margin-bottom: 1.25rem;
       padding: 0.35rem 0.95rem 0.35rem 0.45rem;
-      background: rgba(220, 38, 38, 0.08);
+      background: rgba(220, 38, 38, 0.10);
       border: 1px solid var(--border-red);
       border-radius: 9999px;
-      backdrop-filter: blur(8px);
+      backdrop-filter: blur(12px);
     }
 
     .brand-mark {
-      width: 28px;
-      height: 28px;
+      width: 26px;
+      height: 26px;
       display: block;
-      filter: drop-shadow(0 2px 6px rgba(220, 38, 38, 0.4));
+      filter: drop-shadow(0 2px 6px rgba(220, 38, 38, 0.5));
     }
 
     .brand-wordmark {
       font-family: 'Plus Jakarta Sans', sans-serif;
-      font-size: 1.25rem;
+      font-size: 1.2rem;
       font-weight: 800;
-      letter-spacing: -0.045em;
+      letter-spacing: -0.04em;
       color: #FFFFFF;
       line-height: 1;
     }
 
     .brand-pill {
-      font-size: 0.72rem;
+      font-size: 0.70rem;
       font-weight: 700;
       color: var(--red-light);
       text-transform: uppercase;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.08em;
       border-left: 1px solid var(--border-red);
       padding-left: 0.65rem;
     }
 
     h1 {
       font-family: 'Plus Jakarta Sans', sans-serif;
-      font-size: clamp(2.1rem, 5vw, 3.3rem);
+      font-size: clamp(2.2rem, 5.5vw, 3.4rem);
       font-weight: 800;
       letter-spacing: -0.04em;
-      line-height: 1.15;
+      line-height: 1.12;
       margin-bottom: 1rem;
       color: #FFFFFF;
     }
 
     h1 .highlight-red {
       color: var(--red-light);
-      text-shadow: 0 0 25px rgba(220, 38, 38, 0.35);
+      text-shadow: 0 0 28px rgba(220, 38, 38, 0.45);
     }
 
     .subtitle {
-      max-width: 780px;
-      margin: 0 auto 1.75rem auto;
+      max-width: 760px;
+      margin: 0 auto 1.85rem auto;
       font-size: 1.08rem;
       color: var(--text-muted);
-      line-height: 1.65;
+      line-height: 1.6;
     }
 
     .subtitle strong {
       color: #FFFFFF;
     }
 
-    /* Barra Superior de Ações Imediatas */
+    /* Barra de Ações Rápidas */
     .hero-actions {
       display: flex;
       flex-wrap: wrap;
@@ -161,26 +159,26 @@
     .btn-action.red {
       background: var(--red-primary);
       color: #FFFFFF;
-      box-shadow: 0 4px 18px var(--red-glow);
-      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 4px 20px var(--red-glow);
+      border: 1px solid rgba(255, 255, 255, 0.2);
     }
 
     .btn-action.red:hover {
       background: var(--red-hover);
       transform: translateY(-2px);
-      box-shadow: 0 6px 24px rgba(220, 38, 38, 0.4);
+      box-shadow: 0 6px 26px rgba(220, 38, 38, 0.45);
     }
 
     .btn-action.secondary {
-      background: rgba(255, 255, 255, 0.05);
+      background: rgba(255, 255, 255, 0.04);
       color: var(--text);
       border: 1px solid var(--border);
       backdrop-filter: blur(10px);
     }
 
     .btn-action.secondary:hover {
-      background: rgba(255, 255, 255, 0.09);
-      border-color: var(--text-dim);
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.2);
       transform: translateY(-2px);
     }
 
@@ -198,65 +196,86 @@
       margin: 0 auto;
     }
 
-    /* Seções Gerais */
+    /* Títulos de Seção Despoluídos */
     .section-block {
-      margin-bottom: 3.75rem;
+      margin-bottom: 4rem;
     }
 
     .section-header {
-      margin-bottom: 1.5rem;
+      margin-bottom: 1.35rem;
     }
 
     .section-tag {
-      font-size: 0.74rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.08em;
       color: var(--red-light);
-      margin-bottom: 0.4rem;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-    }
-
-    .section-tag.gold {
-      color: var(--gold);
-    }
-
-    .section-tag.emerald {
-      color: var(--emerald);
-    }
-
-    .tag-bullet {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: currentColor;
+      margin-bottom: 0.35rem;
       display: inline-block;
     }
 
+    .section-tag.gold { color: var(--gold); }
+    .section-tag.emerald { color: var(--emerald); }
+
     .section-title {
       font-family: 'Plus Jakarta Sans', sans-serif;
-      font-size: 1.9rem;
+      font-size: clamp(1.6rem, 3.8vw, 2.1rem);
       font-weight: 800;
       letter-spacing: -0.035em;
       color: #FFFFFF;
-      margin-bottom: 0.45rem;
       line-height: 1.2;
+      margin-bottom: 0.45rem;
     }
 
-    .section-desc {
-      font-size: 1rem;
+    .section-lead {
+      font-size: 1.02rem;
       color: var(--text-muted);
-      line-height: 1.6;
-      max-width: 840px;
+      line-height: 1.55;
+      max-width: 820px;
     }
 
-    .section-desc strong {
+    .section-lead strong {
       color: #FFFFFF;
     }
 
-    /* Moldura e Estilização de Imagens Documentais da Materialidade Operária */
+    /* Cards Críticos Enxutos */
+    .critique-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+      gap: 1.15rem;
+    }
+
+    .critique-card {
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.45rem;
+      backdrop-filter: blur(14px);
+      transition: border-color 0.18s ease;
+    }
+
+    .critique-card:hover {
+      border-color: var(--border-red);
+    }
+
+    .critique-card h3 {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #FFFFFF;
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.02em;
+    }
+
+    .critique-card p {
+      font-size: 0.90rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* Galeria & Molduras Documentais */
     .material-photo {
       border-radius: 14px;
       overflow: hidden;
@@ -270,7 +289,7 @@
     .material-photo img {
       width: 100%;
       height: auto;
-      max-height: 460px;
+      max-height: 480px;
       object-fit: cover;
       display: block;
       filter: contrast(1.05) brightness(0.97);
@@ -278,384 +297,351 @@
     }
 
     .material-photo:hover img {
-      transform: scale(1.015);
+      transform: scale(1.012);
       filter: contrast(1.1) brightness(1.02);
     }
 
     .photo-caption {
-      padding: 0.9rem 1.25rem;
-      background: rgba(10, 14, 22, 0.95);
+      padding: 0.85rem 1.15rem;
+      background: rgba(11, 15, 23, 0.96);
       border-top: 1px solid var(--border);
-      font-size: 0.85rem;
+      font-size: 0.84rem;
       color: var(--text-muted);
-      line-height: 1.55;
-    }
-
-    .photo-caption .caption-tag {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.72rem;
-      font-weight: 700;
-      color: var(--red-light);
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      display: block;
-      margin-bottom: 0.25rem;
+      line-height: 1.5;
     }
 
     .photo-caption strong {
       color: #FFFFFF;
     }
 
-    /* Grade de Análise Materialista (Big Techs e Capitalismo) */
-    .critique-grid {
+    .caption-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.70rem;
+      font-weight: 700;
+      color: var(--red-light);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      display: block;
+      margin-bottom: 0.2rem;
+    }
+
+    .caption-tag.gold { color: var(--gold-light); }
+    .caption-tag.emerald { color: var(--emerald); }
+
+    /* Grid Duplo para Fotografias (Dípticos Operários) */
+    .photos-diptych {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.25rem;
+      margin-top: 1.5rem;
+    }
+
+    .photos-diptych .material-photo {
+      margin-top: 0;
+    }
+
+    /* INFOGRÁFICO 1: O Confronto Material (Latifúndio Digital vs. Vox) */
+    .infographic-box {
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 1.75rem;
+      margin: 2rem 0;
+      backdrop-filter: blur(14px);
+    }
+
+    .infographic-title {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #FFFFFF;
+      margin-bottom: 0.35rem;
+      text-align: center;
+    }
+
+    .infographic-subtitle {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .infographic-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
       gap: 1.25rem;
     }
 
-    .critique-card {
-      background: var(--surface-card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 1.6rem;
-      backdrop-filter: blur(14px);
-      position: relative;
-      transition: border-color 0.18s ease, transform 0.18s ease;
-    }
-
-    .critique-card:hover {
-      border-color: var(--border-red);
-      transform: translateY(-3px);
-    }
-
-    .critique-card .card-num {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.78rem;
-      font-weight: 700;
-      color: var(--red-light);
-      background: rgba(220, 38, 38, 0.12);
-      border: 1px solid rgba(220, 38, 38, 0.25);
-      padding: 0.18rem 0.6rem;
-      border-radius: 6px;
-      display: inline-block;
-      margin-bottom: 0.85rem;
-    }
-
-    .critique-card h3 {
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      font-size: 1.18rem;
-      font-weight: 700;
-      color: #FFFFFF;
-      margin-bottom: 0.65rem;
-      letter-spacing: -0.02em;
-    }
-
-    .critique-card p {
-      font-size: 0.92rem;
-      color: var(--text-muted);
-      line-height: 1.55;
-    }
-
-    /* Banner Metodológico: A Ferramenta como Andaime */
-    .method-banner {
-      background: linear-gradient(145deg, rgba(28, 14, 18, 0.95) 0%, rgba(14, 19, 28, 0.96) 100%);
-      border: 1.5px solid var(--border-red);
-      border-radius: 20px;
-      padding: 2.25rem;
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 35px rgba(220, 38, 38, 0.15);
-      position: relative;
-      overflow: hidden;
-      margin-bottom: 3.75rem;
-    }
-
-    .method-banner::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      right: 0;
-      width: 280px;
-      height: 280px;
-      background: radial-gradient(circle, rgba(220, 38, 38, 0.22) 0%, transparent 70%);
-      pointer-events: none;
-    }
-
-    .method-badge {
-      font-size: 0.74rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      padding: 0.25rem 0.75rem;
-      border-radius: 9999px;
-      background: var(--red-primary);
-      color: #FFFFFF;
-      display: inline-block;
-      margin-bottom: 1.15rem;
-    }
-
-    .method-title {
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      font-size: clamp(1.4rem, 4vw, 2.1rem);
-      font-weight: 800;
-      color: #FFFFFF;
-      letter-spacing: -0.03em;
-      line-height: 1.2;
-      margin-bottom: 0.85rem;
-    }
-
-    .method-summary {
-      font-size: 1.02rem;
-      color: var(--text-muted);
-      line-height: 1.65;
-      margin-bottom: 1.75rem;
-      max-width: 860px;
-    }
-
-    .method-summary strong {
-      color: #FFFFFF;
-    }
-
-    .method-pillars-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
-      gap: 1rem;
-      margin-bottom: 1.85rem;
-    }
-
-    .pillar-box {
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+    .infographic-col {
+      background: rgba(0, 0, 0, 0.35);
       border-radius: 12px;
-      padding: 1.1rem 1.25rem;
-      transition: background 0.15s ease, border-color 0.15s ease;
+      padding: 1.25rem;
+      border: 1px solid var(--border);
     }
 
-    .pillar-box:hover {
-      background: rgba(220, 38, 38, 0.06);
-      border-color: rgba(220, 38, 38, 0.3);
+    .infographic-col.bad {
+      border-color: rgba(239, 68, 68, 0.25);
+      background: linear-gradient(180deg, rgba(239, 68, 68, 0.05) 0%, rgba(0, 0, 0, 0.4) 100%);
     }
 
-    .pillar-tag {
+    .infographic-col.good {
+      border-color: rgba(16, 185, 129, 0.30);
+      background: linear-gradient(180deg, rgba(16, 185, 129, 0.06) 0%, rgba(0, 0, 0, 0.4) 100%);
+    }
+
+    .col-header {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .col-header.bad { color: var(--red-light); }
+    .col-header.good { color: var(--emerald); }
+
+    .compare-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .compare-item {
+      font-size: 0.86rem;
+      line-height: 1.45;
+      color: #E2E8F0;
+    }
+
+    .compare-item strong {
+      display: block;
+      font-size: 0.76rem;
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.74rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.15rem;
+    }
+
+    .col-header.bad ~ .compare-list .compare-item strong { color: var(--red-light); }
+    .col-header.good ~ .compare-list .compare-item strong { color: var(--emerald); }
+
+    /* INFOGRÁFICO 2: Fluxo da Estratégia POSSE */
+    .flow-card {
+      background: var(--surface-card);
+      border: 1px solid var(--border-red);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin: 1.75rem 0;
+    }
+
+    .flow-steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-top: 1.15rem;
+      position: relative;
+    }
+
+    .flow-step {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem;
+    }
+
+    .step-idx {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
       font-weight: 700;
       color: var(--gold);
       display: block;
       margin-bottom: 0.35rem;
     }
 
-    .pillar-heading {
-      font-size: 1.05rem;
+    .step-name {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 0.96rem;
       font-weight: 700;
       color: #FFFFFF;
-      margin-bottom: 0.45rem;
-      line-height: 1.3;
+      margin-bottom: 0.35rem;
     }
 
-    .pillar-desc {
-      font-size: 0.88rem;
+    .step-desc {
+      font-size: 0.82rem;
       color: var(--text-muted);
-      line-height: 1.5;
+      line-height: 1.4;
     }
 
-    /* As 7 Trincheiras Teóricas do Presente */
-    .trenches-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 1.35rem;
+    /* O Andaime e a Metodologia */
+    .method-box {
+      background: linear-gradient(145deg, rgba(22, 10, 14, 0.95) 0%, rgba(11, 15, 23, 0.96) 100%);
+      border: 1.5px solid var(--border-red);
+      border-radius: 18px;
+      padding: 2rem;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
+      margin-bottom: 3.5rem;
     }
 
-    .trench-item {
+    .method-quote {
+      border-left: 3px solid var(--gold);
+      background: rgba(0, 0, 0, 0.4);
+      padding: 1.15rem 1.35rem;
+      border-radius: 0 12px 12px 0;
+      margin-top: 1.5rem;
+      font-size: 0.95rem;
+      font-style: italic;
+      color: #E2E8F0;
+      line-height: 1.55;
+    }
+
+    .method-quote cite {
+      display: block;
+      margin-top: 0.45rem;
+      font-size: 0.80rem;
+      font-style: normal;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--gold-light);
+    }
+
+    /* As 7 Trincheiras em Lista Direta e Concisa */
+    .trenches-compact {
+      display: flex;
+      flex-direction: column;
+      gap: 1.15rem;
+    }
+
+    .trench-card {
       background: var(--surface-card);
       border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 1.65rem;
+      border-radius: 14px;
+      padding: 1.35rem 1.5rem;
       display: grid;
-      grid-template-columns: 240px 1fr;
-      gap: 1.5rem;
+      grid-template-columns: 220px 1fr;
+      gap: 1.25rem;
       align-items: start;
       backdrop-filter: blur(12px);
       transition: border-color 0.15s ease;
     }
 
-    .trench-item:hover {
+    .trench-card:hover {
       border-color: var(--border-red);
     }
 
-    .trench-meta {
-      border-right: 1px solid var(--border);
-      padding-right: 1.25rem;
-    }
-
-    .trench-num {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.74rem;
-      font-weight: 700;
-      color: var(--red-light);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin-bottom: 0.35rem;
-      display: block;
-    }
-
-    .trench-theme {
+    .trench-head h3 {
       font-family: 'Plus Jakarta Sans', sans-serif;
-      font-size: 1.15rem;
+      font-size: 1.08rem;
       font-weight: 700;
       color: #FFFFFF;
       line-height: 1.3;
     }
 
-    .trench-content h4 {
-      font-size: 0.88rem;
+    .trench-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.70rem;
       font-weight: 700;
+      color: var(--red-light);
+      display: block;
+      margin-bottom: 0.25rem;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--gold-light);
-      margin-bottom: 0.35rem;
     }
 
-    .trench-content p {
-      font-size: 0.93rem;
+    .trench-body p {
+      font-size: 0.90rem;
       color: var(--text-muted);
-      line-height: 1.6;
-      margin-bottom: 0.65rem;
-    }
-
-    .trench-content p:last-child {
-      margin-bottom: 0;
-    }
-
-    .trench-vox-solution {
-      background: rgba(220, 38, 38, 0.06);
-      border-left: 3px solid var(--red-primary);
-      padding: 0.75rem 1rem;
-      border-radius: 0 8px 8px 0;
-      font-size: 0.88rem;
-      color: #F8FAFC;
-      line-height: 1.55;
-      margin-top: 0.85rem;
-    }
-
-    .trench-vox-solution strong {
-      color: var(--red-light);
-    }
-
-    /* Caixa de Ferramentas Vox: 6 Pilares Concretos */
-    .tools-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 1.25rem;
-    }
-
-    .tool-card {
-      background: var(--surface-card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 1.65rem;
-      backdrop-filter: blur(12px);
-      transition: transform 0.18s ease, border-color 0.18s ease;
-    }
-
-    .tool-card:hover {
-      transform: translateY(-3px);
-      border-color: rgba(245, 158, 11, 0.35);
-    }
-
-    .tool-icon {
-      width: 44px;
-      height: 44px;
-      border-radius: 10px;
-      background: rgba(220, 38, 38, 0.12);
-      border: 1px solid var(--border-red);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 1.1rem;
-      color: var(--red-light);
-    }
-
-    .tool-card h3 {
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      font-size: 1.2rem;
-      font-weight: 700;
-      color: #FFFFFF;
+      line-height: 1.5;
       margin-bottom: 0.55rem;
     }
 
-    .tool-card p {
-      font-size: 0.92rem;
-      color: var(--text-muted);
-      line-height: 1.55;
+    .trench-body .trench-fix {
+      background: rgba(220, 38, 38, 0.06);
+      border-left: 2.5px solid var(--red-primary);
+      padding: 0.55rem 0.85rem;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.85rem;
+      color: #F8FAFC;
+      line-height: 1.45;
     }
 
-    /* Como Colaborar (Guia de Ação Militante) */
-    .collab-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(235px, 1fr));
-      gap: 1.15rem;
-      margin-bottom: 2.5rem;
-    }
-
-    .collab-card {
-      background: var(--surface-elevated);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 1.5rem 1.35rem;
-      position: relative;
-    }
-
-    .collab-step {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.76rem;
-      font-weight: 700;
+    .trench-fix strong {
       color: var(--red-light);
-      margin-bottom: 0.5rem;
-      display: block;
     }
 
-    .collab-card h4 {
-      font-size: 1.05rem;
+    /* Ferramentas em Grade Simples */
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.15rem;
+    }
+
+    .tool-item {
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.4rem;
+      transition: border-color 0.15s ease;
+    }
+
+    .tool-item:hover {
+      border-color: rgba(245, 158, 11, 0.4);
+    }
+
+    .tool-item h3 {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 1.1rem;
       font-weight: 700;
       color: #FFFFFF;
-      margin-bottom: 0.45rem;
-      line-height: 1.3;
+      margin-bottom: 0.4rem;
     }
 
-    .collab-card p {
-      font-size: 0.86rem;
+    .tool-item p {
+      font-size: 0.88rem;
       color: var(--text-muted);
       line-height: 1.5;
     }
 
-    .collab-card a {
+    /* Frentes de Ação em 4 Colunas */
+    .action-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .action-card {
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.25rem;
+    }
+
+    .action-card .step {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--red-light);
+      display: block;
+      margin-bottom: 0.35rem;
+    }
+
+    .action-card h4 {
+      font-size: 0.98rem;
+      font-weight: 700;
+      color: #FFFFFF;
+      margin-bottom: 0.35rem;
+    }
+
+    .action-card p {
+      font-size: 0.84rem;
+      color: var(--text-muted);
+      line-height: 1.45;
+    }
+
+    .action-card a {
       color: var(--red-light);
       text-decoration: underline;
       font-weight: 600;
-    }
-
-    /* Citação Lênin / Iskra Banner */
-    .quote-box {
-      border-left: 4px solid var(--red-primary);
-      background: rgba(220, 38, 38, 0.05);
-      padding: 1.5rem 1.85rem;
-      border-radius: 0 16px 16px 0;
-      margin: 3.5rem 0;
-    }
-
-    .quote-text {
-      font-size: 1.08rem;
-      font-style: italic;
-      color: #E2E8F0;
-      line-height: 1.65;
-      margin-bottom: 0.75rem;
-    }
-
-    .quote-author {
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: var(--red-light);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
     }
 
     /* Footer */
@@ -682,33 +668,17 @@
       text-decoration: underline;
     }
 
-    /* Otimizações Responsivas Mobile */
+    /* Mobile */
     @media (max-width: 767px) {
       body {
         padding-top: max(0.85rem, env(safe-area-inset-top, 0px));
         padding-right: max(0.95rem, env(safe-area-inset-right, 0px));
-        padding-bottom: max(3rem, env(safe-area-inset-bottom, 0px));
         padding-left: max(0.95rem, env(safe-area-inset-left, 0px));
-      }
-
-      header {
-        margin: 1.85rem auto 1.5rem auto;
-      }
-
-      h1 {
-        font-size: clamp(1.8rem, 7.5vw, 2.4rem);
-        margin-bottom: 0.75rem;
-      }
-
-      .subtitle {
-        font-size: 0.96rem;
       }
 
       .hero-actions {
         flex-direction: column;
-        align-items: stretch;
         gap: 0.65rem;
-        margin-bottom: 2.75rem;
       }
 
       .btn-action {
@@ -716,37 +686,14 @@
         justify-content: center;
       }
 
-      .section-block {
-        margin-bottom: 2.75rem;
-      }
-
-      .section-title {
-        font-size: 1.55rem;
-      }
-
-      .method-banner {
-        padding: 1.35rem 1.15rem;
-      }
-
-      .trench-item {
+      .infographic-grid {
         grid-template-columns: 1fr;
-        gap: 1rem;
-        padding: 1.35rem 1.15rem;
       }
 
-      .trench-meta {
-        border-right: none;
-        border-bottom: 1px solid var(--border);
-        padding-right: 0;
-        padding-bottom: 0.85rem;
-      }
-
-      .quote-box {
-        padding: 1.25rem 1.15rem;
-      }
-
-      .quote-text {
-        font-size: 0.98rem;
+      .trench-card {
+        grid-template-columns: 1fr;
+        gap: 0.85rem;
+        padding: 1.15rem;
       }
     }
   </style>
@@ -755,7 +702,7 @@
 
   <header>
     <div class="brand-top">
-      <img src="icons/emoji-vox-vermelho.svg" alt="vox revolução" class="brand-mark" />
+      <img src="icons/emoji-vox-vermelho.svg" alt="vox" class="brand-mark" />
       <span class="brand-wordmark">vox</span>
       <span class="brand-pill">voz popular & soberania operária</span>
     </div>
@@ -766,7 +713,7 @@
     </h1>
 
     <p class="subtitle">
-      A internet monopolizada pelas Big Techs foi desenhada para a <strong>extração de mais-valia</strong>, a <strong>vigilância imperialista</strong> e a <strong>reprodução do fascismo</strong>. O Vox é o ferramental técnico livre, local-first e descentralizado para armar a classe trabalhadora com meios próprios de debate, memória e organização fora do controle do capital.
+      A internet monopolizada pelas Big Techs serve à <strong>extração de mais-valia</strong>, à <strong>vigilância imperialista</strong> e à <strong>reprodução do fascismo</strong>. O Vox é o ferramental técnico livre, local-first e descentralizado para armar a classe trabalhadora com meios próprios de comunicação fora do jugo do grande capital.
     </p>
 
     <div class="hero-actions">
@@ -780,395 +727,387 @@
       </a>
       <a href="#metodologia" class="btn-action secondary">
         <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-        Metodologia & Andaime
+        Metodologia do Andaime
       </a>
       <a href="https://github.com/yurikayel/vox" target="_blank" rel="noopener" class="btn-action secondary">
         <svg viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
-        Código Aberto no GitHub
+        Código Aberto
       </a>
     </div>
   </header>
 
   <main>
 
-    <!-- BLOCO 1: O PROBLEMA - O CAPITALISMO DE PLATAFORMA E O LATIFÚNDIO DIGITAL -->
+    <!-- BLOCO 1: O PROBLEMA - A TECNOLOGIA SOB O CAPITAL MONOPOLISTA -->
     <section class="section-block">
       <div class="section-header">
-        <span class="section-tag"><span class="tag-bullet"></span> O Problema Concreto</span>
-        <h2 class="section-title">A tecnologia sob o capital monopolista</h2>
-        <p class="section-desc">
-          Para o materialismo histórico-dialético, as forças produtivas não flutuam no vácuo. As plataformas contemporâneas das Big Techs (Google, Meta, Apple, Microsoft, Amazon) não são serviços públicos: são a expressão do <strong>capital financeiro transnacional parasitário</strong>, operando como latifúndios digitais de vigilância e expropriação.
+        <span class="section-tag">Diagnóstico Materialista</span>
+        <h2 class="section-title">O latifúndio digital e a exploração do trabalho</h2>
+        <p class="section-lead">
+          Para o marxismo-leninismo, as forças produtivas não são neutras. As plataformas das Big Techs (Google, Meta, Apple, Microsoft, Amazon) são a ponta de lança do <strong>capital financeiro monopolista transnacional</strong>.
         </p>
       </div>
 
       <div class="critique-grid">
         <div class="critique-card">
-          <span class="card-num">01 / MAIS-VALIA & DADOS</span>
           <h3>Trabalho social expropriado</h3>
           <p>
-            Toda a riqueza, infraestrutura e códigos que sustentam a internet foram forjados pelo trabalho social. No entanto, o capital de plataforma apropria-se privadamente dessa inteligência coletiva, convertendo atenção humana em mercadoria, aprofundando a escala 6x1 e transferindo lucros bilionários ao centro imperialista.
+            Toda a riqueza e códigos da rede nascem do trabalho humano. As plataformas apropriam-se dessa produção coletiva para impor a escala 6x1, precarizar entregadores e remeter lucros bilionários ao centro imperialista.
           </p>
         </div>
 
         <div class="critique-card">
-          <span class="card-num">02 / CENSURA & VIGILÂNCIA</span>
-          <h3>O Estado burguês e as Big Techs</h3>
+          <h3>Vigilância e repressão</h3>
           <p>
-            O Estado capitalista é o comitê gestor dos negócios da classe dominante. As corporações do Vale do Silício cooperam organicamente com aparatos imperialistas de repressão e inteligência policial. Construir a organização militante dentro de plataformas proprietárias é entregar atas, membros e planos diretamente aos algozes da classe.
+            O Estado capitalista opera como comitê gestor da burguesia. As Big Techs colaboram entregando dados, atas e comunicações de militantes à repressão policial. Organizar-se em redes comerciais é vulnerabilidade tática.
           </p>
         </div>
 
         <div class="critique-card">
-          <span class="card-num">03 / A FÁBRICA DA REAÇÃO</span>
-          <h3>O algoritmo do ódio e da divisão</h3>
+          <h3>A máquina da reação</h3>
           <p>
-            Como ensinou Dimitrov, o fascismo é a ofensiva mais reacionária do capital financeiro acossado. Os algoritmos comerciais impulsionam o pânico moral, o racismo e a misoginia porque o linchamento virtual gera cliques comerciais rápidos e fratura deliberadamente a solidariedade proletária.
+            Como ensinou Dimitrov, o fascismo é a ditadura terrorista aberta do capital em crise. Os algoritmos comerciais impulsionam o ódio, o racismo e o linchamento virtual porque o pânico moral garante lucros rápidos e divide a classe.
           </p>
         </div>
       </div>
 
-      <!-- FOTO 1: Entregador / Uberização / Escala 6x1 -->
-      <div class="material-photo" style="margin-top: 1.5rem; border-color: var(--border-red);">
-        <img src="images/revolucao/entregador_plataforma.jpg" alt="Trabalhador entregador por aplicativo sob chuva torrencial em São Paulo com mochila nas costas e celular no guidão" loading="lazy" />
-        <div class="photo-caption">
-          <span class="caption-tag">Materialidade 01 &bull; A Mais-Valia em Tempo Real</span>
-          <strong>A carne e o osso do capitalismo de plataforma:</strong> Enquanto acionistas norte-americanos acumulam fortunas sem possuir uma única bicicleta, o trabalhador periférico brasileiro pedala sob tempestades na exaustiva escala 6x1, sob as ordens de um algoritmo opaco e sem garantias trabalhistas. O capital digital transforma vidas em métricas de lucro; o Vox devolve ao trabalhador a propriedade soberana de seus canais de comunicação.
-        </div>
-      </div>
-    </section>
-
-    <!-- BLOCO 2: A METODOLOGIA - A FERRAMENTA COMO ANDAIME (ANTI-SOLUCIONISMO) -->
-    <section class="section-block" id="metodologia">
-      <div class="method-banner">
-        <span class="method-badge">Metodologia Revolucionária & Método Materialista</span>
-
-        <h2 class="method-title">
-          A ferramenta é o andaime; o edifício é a organização popular.
-        </h2>
-
-        <p class="method-summary">
-          Recusamos com firmeza a ilusão do <strong>solucionismo tecnológico</strong>: nenhum software derruba o capitalismo. A revolução é obra consciente das massas trabalhadoras organizadas em seus sindicatos combativos, ocupações, comitês de fábrica e partidos revolucionários. Mas uma classe sem tecnologia própria vira refém dos meios de desinformação da burguesia.
-        </p>
-
-        <div class="method-pillars-grid">
-          <div class="pillar-box">
-            <span class="pillar-tag">PRINCÍPIO 01</span>
-            <div class="pillar-heading">Voz popular ativa e direta</div>
-            <div class="pillar-desc">
-              Devolver aos explorados o poder de pautar, debater e deliberar sem o filtro predatório de algoritmos de publicidade e monetização de ódio.
-            </div>
-          </div>
-
-          <div class="pillar-box">
-            <span class="pillar-tag">PRINCÍPIO 02</span>
-            <div class="pillar-heading">Descentralização fora do capital</div>
-            <div class="pillar-desc">
-              Infraestrutura distribuída nas pontas, onde servidores comunitários operados pela própria classe eliminam pontos centrais de corte ou chantagem.
-            </div>
-          </div>
-
-          <div class="pillar-box">
-            <span class="pillar-tag">PRINCÍPIO 03</span>
-            <div class="pillar-heading">Memória operária e soberania</div>
-            <div class="pillar-desc">
-              Blindar o histórico das lutas contra o apagamento e a censura corporativa, através de registros criptográficos inalteráveis e locais.
-            </div>
-          </div>
-        </div>
-
-        <!-- FOTO 2: Assembleia Popular / Soberania da Base -->
-        <div class="material-photo" style="margin: 1.5rem 0; border-color: rgba(245, 158, 11, 0.45);">
-          <img src="images/revolucao/assembleia_popular.jpg" alt="Assembleia popular e sindical com trabalhadores operários erguendo mãos e punhos em votação soberana" loading="lazy" />
+      <!-- DÍPTICO FOTOGRÁFICO: A Materialidade da Luta dos Entregadores -->
+      <div class="photos-diptych">
+        <div class="material-photo">
+          <img src="images/revolucao/entregador_plataforma.jpg" alt="Entregador de aplicativo sob tempestade em São Paulo na escala 6x1" loading="lazy" />
           <div class="photo-caption">
-            <span class="caption-tag" style="color: var(--gold-light);">Materialidade 02 &bull; Soberania Operária & Democracia Direta</span>
-            <strong>O protagonismo das massas em ato:</strong> Nenhum aplicativo substitui a assembleia, a greve e a coragem coletiva da classe. A tecnologia revolucionária é apenas o andaime: protege as decisões da base contra apagões, vazamentos a órgãos repressivos e filtros burgueses, garantindo que a vontade operária se expresse de ponta a ponta sem tutela patronal.
+            <span class="caption-tag">Materialidade 01 &bull; A Mais-Valia em Tempo Real</span>
+            <strong>O custo humano da plataforma:</strong> Enquanto monopólios lucram bilhões sem possuir uma bicicleta, o trabalhador pedala sob chuva na escala 6x1 sob a opacidade de algoritmos patronais.
           </div>
         </div>
 
-        <div class="quote-box" style="margin: 0; background: rgba(0, 0, 0, 0.45); border-color: var(--gold);">
-          <p class="quote-text" style="font-size: 1rem; margin-bottom: 0.45rem;">
-            “O jornal não é apenas um propagandista coletivo e um agitador coletivo, mas também um organizador coletivo. (...) Pode ser comparado aos andaimes que se levantam em redor de um edifício em construção: marcam os seus contornos, facilitam as comunicações entre os diferentes grupos de operários, ajudam-nos a distribuir o trabalho e a abraçar o conjunto dos resultados obtidos.”
-          </p>
-          <span class="quote-author" style="color: var(--gold-light);">V. I. Lênin — <em>Que Fazer? (1902)</em></span>
+        <div class="material-photo">
+          <img src="images/revolucao/breque_dos_apps.jpg" alt="Greve e piquete massivo do Breque dos Apps ocupando avenida em São Paulo" loading="lazy" />
+          <div class="photo-caption">
+            <span class="caption-tag">Materialidade 02 &bull; A Classe em Movimento</span>
+            <strong>O Breque dos Apps na avenida:</strong> Entregadores periféricos paralisam as vias e erguem punhos: sem o trabalho da classe, nenhum aplicativo se move. A mobilização real sobrepuja a tirania algorítmica.
+          </div>
+        </div>
+      </div>
+
+      <!-- INFOGRÁFICO 1: CONFRONTO MATERIAL (LATIFÚNDIO vs. VOX) -->
+      <div class="infographic-box">
+        <div class="infographic-title">O Confronto das Forças Produtivas</div>
+        <div class="infographic-subtitle">Comparativo estrutural entre a tecnologia subordinada ao capital e a infraestrutura operária soberana</div>
+
+        <div class="infographic-grid">
+          <div class="infographic-col bad">
+            <div class="col-header bad">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+              Latifúndio Digital (Big Techs)
+            </div>
+            <ul class="compare-list">
+              <li class="compare-item">
+                <strong>Servidores & Controle</strong>
+                Datacenters centralizados nos EUA subordinados a agências imperialistas e vigilância policial.
+              </li>
+              <li class="compare-item">
+                <strong>Algoritmo & Moderação</strong>
+                Leilão de atenção, impulsionamento pago de fascismo e retenção viciante pelo pânico moral.
+              </li>
+              <li class="compare-item">
+                <strong>Relação Econômica</strong>
+                Extração parasitária de mais-valia, publicidade invasiva e pedágio financeiro sobre vaquinhas populares.
+              </li>
+              <li class="compare-item">
+                <strong>Propriedade dos Dados</strong>
+                Sequestro da identidade militante e apagamento unilateral de canais combativos por decisão corporativa.
+              </li>
+            </ul>
+          </div>
+
+          <div class="infographic-col good">
+            <div class="col-header good">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              Ferramental Soberano (Vox)
+            </div>
+            <ul class="compare-list">
+              <li class="compare-item">
+                <strong>Servidores & Controle</strong>
+                Nós populares (Vox Populi) em PCs reciclados em sindicatos, associações e aparelhos de militantes (Local-First).
+              </li>
+              <li class="compare-item">
+                <strong>Algoritmo & Moderação</strong>
+                Zero leilão de alcance. Deliberação pela base (1 membro = 1 voto) com trava anti-ataque (Eligibility-Cutoff).
+              </li>
+              <li class="compare-item">
+                <strong>Relação Econômica</strong>
+                Código livre sem anúncios. Apoio mútuo direto via Pix Zaps (padrão EMV offline) com 0% taxa de intermediação.
+              </li>
+              <li class="compare-item">
+                <strong>Propriedade dos Dados</strong>
+                Chaves criptográficas no bolso (Ed25519/P-256), perfis coletivos M-de-N e memória operária imutável.
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- BLOCO 3: AS 7 TRINCHEIRAS CONCEITUAIS DO MARXISMO NA ERA DIGITAL -->
+    <!-- BLOCO 2: A METODOLOGIA - A FERRAMENTA COMO ANDAIME -->
+    <section class="section-block" id="metodologia">
+      <div class="method-box">
+        <span class="section-tag gold">Metodologia Revolucionária</span>
+        <h2 class="section-title">A ferramenta é o andaime; o edifício é a organização operária</h2>
+        <p class="section-lead">
+          Recusamos o <strong>solucionismo tecnológico</strong>: nenhum software substitui a luta de massas, o sindicato e o partido de vanguarda. O Vox existe como andaime técnico para blindar a comunicação popular contra a censura e os apagões do capital.
+        </p>
+
+        <!-- FOTO: Assembleia Popular -->
+        <div class="material-photo" style="margin-top: 1.5rem; border-color: rgba(245, 158, 11, 0.45);">
+          <img src="images/revolucao/assembleia_popular.jpg" alt="Assembleia popular operária com punhos e mãos erguidas em votação unânime" loading="lazy" />
+          <div class="photo-caption">
+            <span class="caption-tag gold">Materialidade 03 &bull; Soberania da Base em Ato</span>
+            <strong>A decisão coletiva soberana:</strong> Assembleia operária em galpão com votação de braços erguidos. A tecnologia é ferramenta de retaguarda para executar a vontade política deliberada pelos próprios trabalhadores.
+          </div>
+        </div>
+
+        <div class="method-quote">
+          “O jornal pode ser comparado aos andaimes que se levantam em redor de um edifício em construção: marcam os seus contornos, facilitam as comunicações entre os diferentes grupos de operários, ajudam-nos a distribuir o trabalho e a abraçar o conjunto dos resultados obtidos.”
+          <cite>— V. I. Lênin, Que Fazer? (1902)</cite>
+        </div>
+      </div>
+    </section>
+
+    <!-- BLOCO 3: AS 7 TRINCHEIRAS DO MARXISMO APLICADAS À TECNOLOGIA -->
     <section class="section-block">
       <div class="section-header">
-        <span class="section-tag gold"><span class="tag-bullet"></span> Teoria Materialista Viva</span>
-        <h2 class="section-title">As 7 trincheiras: Teoria marxista e soberania digital</h2>
-        <p class="section-desc">
-          O marxismo não é catálogo acadêmico fossilizado, mas bússola de combate para a emancipação do proletariado. Analisamos como as categorias fundamentais do método respondem às batalhas reais da comunicação contemporânea:
+        <span class="section-tag gold">Teoria Materialista Aplicada</span>
+        <h2 class="section-title">As 7 trincheiras teóricas da emancipação digital</h2>
+        <p class="section-lead">
+          Categorias fundamentais do método marxista respondendo às batalhas materiais da tecnologia contemporânea:
         </p>
       </div>
 
-      <div class="trenches-grid">
-
-        <div class="trench-item">
-          <div class="trench-meta">
-            <span class="trench-num">Trincheira 01 • Teoria da Dependência</span>
-            <h3 class="trench-theme">Formação Social & Soberania Tecnológica</h3>
+      <div class="trenches-compact">
+        <div class="trench-card">
+          <div class="trench-head">
+            <span class="trench-tag">01 &bull; Dependência</span>
+            <h3>Colônia de Dados</h3>
           </div>
-          <div class="trench-content">
-            <h4>O Brasil como colônia de dados</h4>
-            <p>
-              Historicamente forçado à condição de exportador de bens primários e importador de manufaturas caras, o Brasil do século XXI reproduz a dependência na esfera digital: cede gratuitamente os dados de sua população trabalhadora aos monopólios da Califórnia e aluga de volta software proprietário que extrai soberania e renda nacional.
-            </p>
-            <div class="trench-vox-solution">
-              <strong>Como o Vox atua:</strong> Armazenamento local-first nos aparelhos e nós populares em território nacional, estancando a sangria colonial de dados e a vassalagem às Big Techs imperialistas.
-            </div>
+          <div class="trench-body">
+            <p>O Brasil cede dados brutos ao Vale do Silício e aluga de volta software proprietário que drena a riqueza nacional.</p>
+            <div class="trench-fix"><strong>Solução Vox:</strong> Armazenamento local-first nos celulares e nós comunitários em território brasileiro.</div>
           </div>
         </div>
 
-        <div class="trench-item">
-          <div class="trench-meta">
-            <span class="trench-num">Trincheira 02 • Crítica da Economia Política</span>
-            <h3 class="trench-theme">Capitalismo, Exploração & Escala 6x1</h3>
+        <div class="trench-card">
+          <div class="trench-head">
+            <span class="trench-tag">02 &bull; Mais-Valia</span>
+            <h3>Escala 6x1 & Algoritmo</h3>
           </div>
-          <div class="trench-content">
-            <h4>A extração de mais-valia algorítmica</h4>
-            <p>
-              O capital digital redefine a superexploração: na jornada extenuante da escala 6x1 ou nas doze horas diárias sobre uma motocicleta, a tecnologia sob o mando burguês serve unicamente para intensificar o ritmo de trabalho e baratear os custos de reprodução da classe trabalhadora.
-            </p>
-            <div class="trench-vox-solution">
-              <strong>Como o Vox atua:</strong> Software 100% livre, sem anúncios e sem exploração da atenção alheia. Apoio mútuo e sustentação solidária direta (Pix Zaps) sem pedágios cobrados pelo sistema financeiro burguês.
-            </div>
+          <div class="trench-body">
+            <p>O capital de plataforma intensifica jornadas extenuantes e barateia a reprodução da força de trabalho.</p>
+            <div class="trench-fix"><strong>Solução Vox:</strong> Software sem exploração comercial. Sustentação solidária direta via Pix Zaps (0% taxa).</div>
           </div>
         </div>
 
-        <div class="trench-item">
-          <div class="trench-meta">
-            <span class="trench-num">Trincheira 03 • Teoria Marxista do Estado</span>
-            <h3 class="trench-theme">O Estado Burguês & o Poder Popular</h3>
+        <div class="trench-card">
+          <div class="trench-head">
+            <span class="trench-tag">03 &bull; Estado Burguês</span>
+            <h3>Vigilância & Repressão</h3>
           </div>
-          <div class="trench-content">
-            <h4>A democracia limitada pelos monopólios e o cerco policial</h4>
-            <p>
-              Não há soberania popular substantiva quando as vias de informação pertencem a corporações estrangeiras alinhadas aos órgãos de inteligência do Estado burguês. Organizar piquetes, greves e protestos em canais comerciais equivale a entregar os planos da classe aos tribunais e à polícia política.
-            </p>
-            <div class="trench-vox-solution">
-              <strong>Como o Vox atua:</strong> Governança operária direta (1 membro = 1 voto) nas comunidades, deliberação transparente com travas anti-infiltração (Eligibility-Cutoff) e operação fora de servidores corporativos centralizados.
-            </div>
-            
-            <!-- FOTO 3: Vigilância Policial & Repressão do Estado Burguês -->
-            <div class="material-photo" style="margin-top: 1rem; border-color: rgba(220, 38, 38, 0.35);">
-              <img src="images/revolucao/vigilancia_repressao.jpg" alt="Aparato de vigilância e repressão policial com tropa de choque e câmeras corporativas de reconhecimento facial" loading="lazy" />
-              <div class="photo-caption">
-                <span class="caption-tag">Materialidade 03 &bull; O Panóptico do Capital Monopolista</span>
-                <strong>O braço armado e a vigilância eletrônica:</strong> Tropas de choque e sistemas proprietários de reconhecimento facial monitorando a classe em luta. As Big Techs colaboram entregando metadados de militantes aos aparatos repressivos. A criptografia local-first do Vox assegura o sigilo e a integridade da vanguarda.
-              </div>
-            </div>
+          <div class="trench-body">
+            <p>Big Techs cooperam com aparatos policiais entregando metadados de mobilizações populares.</p>
+            <div class="trench-fix"><strong>Solução Vox:</strong> Criptografia de ponta a ponta gerada no aparelho e governança direta pela base (1 membro = 1 voto).</div>
           </div>
         </div>
 
-        <div class="trench-item">
-          <div class="trench-meta">
-            <span class="trench-num">Trincheira 04 • Opressões Estruturais</span>
-            <h3 class="trench-theme">Raça, Gênero & Classe</h3>
-          </div>
-          <div class="trench-content">
-            <h4>O algoritmo que divide a classe trabalhadora</h4>
-            <p>
-              O racismo estrutural e o patriarcado são instrumentos históricos indispensáveis para rebaixar os salários e fragmentar a unidade proletária. As redes capitalistas transformam discursos misóginos, racistas e transfóbicos em máquinas de engajamento comercial, lucrando abertamente com o linchamento de grupos historicamente oprimidos.
-            </p>
-            <div class="trench-vox-solution">
-              <strong>Como o Vox atua:</strong> Eliminação de feeds de recomendação algorítmica desenhados para a discórdia. Moderação pela base operária e canais fechados autônomos para proteger coletivos de mulheres, negras, indígenas e LGBTQIA+.
-            </div>
-
-            <!-- FOTO 4: Mulheres Negras Trabalhadoras na Resistência Popular -->
-            <div class="material-photo" style="margin-top: 1rem; border-color: rgba(245, 158, 11, 0.35);">
-              <img src="images/revolucao/mulheres_negras_resistencia.jpg" alt="Mulheres negras trabalhadoras na linha de frente da organização comunitária periférica no Brasil" loading="lazy" />
-              <div class="photo-caption">
-                <span class="caption-tag" style="color: var(--gold-light);">Materialidade 04 &bull; A Vanguarda Periférica na Linha de Frente</span>
-                <strong>Sem a mulher trabalhadora, não há vitória revolucionária:</strong> Na ponta mais vulnerável da divisão social do trabalho, as mulheres negras mantêm as redes de apoio mútuo vivas e lideram a resistência nas periferias e ocupações. O Vox combate os algoritmos comerciais de ódio, fornecendo trincheiras seguras de voz e mobilização popular.
-              </div>
-            </div>
+        <!-- FOTO: Repressão e Vigilância -->
+        <div class="material-photo" style="border-color: rgba(220, 38, 38, 0.35);">
+          <img src="images/revolucao/vigilancia_repressao.jpg" alt="Aparato de vigilância e repressão policial com tropa de choque e câmeras corporativas" loading="lazy" />
+          <div class="photo-caption">
+            <span class="caption-tag">Materialidade 04 &bull; O Panóptico do Capital</span>
+            <strong>O cerco policial e os dados:</strong> Tropa de choque e câmeras corporativas vigiando protestos. O Vox protege a integridade e o segredo tático da vanguarda com chaves locais no bolso.
           </div>
         </div>
 
-        <div class="trench-item">
-          <div class="trench-meta">
-            <span class="trench-num">Trincheira 05 • Antifascismo</span>
-            <h3 class="trench-theme">O Fascismo & seu Enfrentamento</h3>
+        <div class="trench-card">
+          <div class="trench-head">
+            <span class="trench-tag">04 &bull; Opressões</span>
+            <h3>Raça, Gênero & Classe</h3>
           </div>
-          <div class="trench-content">
-            <h4>Desmantelar a engrenagem do ódio</h4>
-            <p>
-              O fascismo cresce alimentado pelo desespero provocado pelas crises cíclicas do capitalismo. Não será detido com apelos ingênuos à “autorregulação ética” dos próprios magnatas da tecnologia que lucram com sua ascensão: a derrota da extrema-direita requer combate ideológico frontal, verdade material factual e organização no território.
-            </p>
-            <div class="trench-vox-solution">
-              <strong>Como o Vox atua:</strong> Distribuição imune a leilões de alcance pago. Ferramentas para gerar e despachar contrainformação factual verificada diretamente aos grupos de bairro e círculos operários do WhatsApp.
-            </div>
+          <div class="trench-body">
+            <p>Monopólios lucram com o linchamento virtual misógino e racista que fratura a unidade da classe trabalhadora.</p>
+            <div class="trench-fix"><strong>Solução Vox:</strong> Canais autônomos e moderação comunitária pela base para blindar coletivos periféricos e LGBTQIA+.</div>
           </div>
         </div>
 
-        <div class="trench-item">
-          <div class="trench-meta">
-            <span class="trench-num">Trincheira 06 • Perspectiva Socialista</span>
-            <h3 class="trench-theme">Socialização das Forças Produtivas</h3>
-          </div>
-          <div class="trench-content">
-            <h4>A tecnologia como bem comum (Commons)</h4>
-            <p>
-              A saída socialista para a humanidade passa pela expropriação dos meios fundamentais de produção e circulação. No socialismo, as redes de dados, os centros de processamento e o software não pertencem a bilionários: convertem-se em patrimônio coletivo democraticamente gerido a serviço da vida, da ciência e da cultura.
-            </p>
-            <div class="trench-vox-solution">
-              <strong>Como o Vox atua:</strong> Arquitetura descentralizada sem donos corporativos, sem datacenters privados obrigatórios e com código integralmente público e auditável.
-            </div>
+        <!-- FOTO: Mulheres Negras na Luta -->
+        <div class="material-photo" style="border-color: rgba(245, 158, 11, 0.35);">
+          <img src="images/revolucao/mulheres_negras_resistencia.jpg" alt="Mulheres negras trabalhadoras na vanguarda da resistência comunitária periférica" loading="lazy" />
+          <div class="photo-caption">
+            <span class="caption-tag gold">Materialidade 05 &bull; A Vanguarda Periférica</span>
+            <strong>A sustentação da luta popular:</strong> Mulheres negras na linha de frente da solidariedade militante nos bairros operários. Redes livres para organizar quem constrói e sustenta a vida coletiva.
           </div>
         </div>
 
-        <div class="trench-item">
-          <div class="trench-meta">
-            <span class="trench-num">Trincheira 07 • Organização Proletária</span>
-            <h3 class="trench-theme">O Partido, o Coletivo & a Vanguarda</h3>
+        <div class="trench-card">
+          <div class="trench-head">
+            <span class="trench-tag">05 &bull; Antifascismo</span>
+            <h3>Máquina de Desinformação</h3>
           </div>
-          <div class="trench-content">
-            <h4>Segurança e disciplina na era digital</h4>
-            <p>
-              Sem disciplina coletiva, memória inviolável e proteção estrita contra infiltrações e grampos, nenhuma organização da classe trabalhadora sobrevive às tempestades da luta de classes. A vanguarda operária necessita de instrumentos que garantam comando coletivo e resistência a cortes de rede.
-            </p>
-            <div class="trench-vox-solution">
-              <strong>Como o Vox atua:</strong> Criptografia assimétrica de padrão aberto (P-256 e Ed25519), perfis coletivos multi-assinatura (M-de-N) para núcleos partidários e capacidade nativa de operação offline em momentos de crise institucional.
-            </div>
+          <div class="trench-body">
+            <p>O fascismo alimenta-se do ódio algorítmico e não será contido pela regulação dos donos das plataformas.</p>
+            <div class="trench-fix"><strong>Solução Vox:</strong> Geração e disparo em massa de contrainformação factual verificada imune a leilões de alcance corporativo.</div>
           </div>
         </div>
 
+        <div class="trench-card">
+          <div class="trench-head">
+            <span class="trench-tag">06 &bull; Socialismo</span>
+            <h3>Bens Comuns (Commons)</h3>
+          </div>
+          <div class="trench-body">
+            <p>A tecnologia deve pertencer democraticamente à sociedade para atender às necessidades humanas, não a bilionários.</p>
+            <div class="trench-fix"><strong>Solução Vox:</strong> Arquitetura descentralizada, sem servidores centrais proprietários e com código 100% aberto.</div>
+          </div>
+        </div>
+
+        <div class="trench-card">
+          <div class="trench-head">
+            <span class="trench-tag">07 &bull; Organização</span>
+            <h3>Disciplina Criptográfica</h3>
+          </div>
+          <div class="trench-body">
+            <p>A vanguarda necessita de instrumentos invioláveis para manter o comando coletivo e resistir a cortes de sinal.</p>
+            <div class="trench-fix"><strong>Solução Vox:</strong> Contas coletivas multi-assinatura (M-de-N) e sincronização offline em momentos de crise institucional.</div>
+          </div>
+        </div>
       </div>
     </section>
 
-    <!-- BLOCO 4: O FERRAMENTAL MATERIAL DO VOX PARA A LUTA -->
+    <!-- BLOCO 4: O FERRAMENTAL MATERIAL DO VOX -->
     <section class="section-block">
       <div class="section-header">
-        <span class="section-tag emerald"><span class="tag-bullet"></span> A Abordagem e o Ferramental</span>
-        <h2 class="section-title">O que o Vox entrega materialmente para a classe</h2>
-        <p class="section-desc">
-          Disponibilizamos tecnologia prática, auditável e sem barreiras proprietárias para que coletivos, sindicatos combativos e trabalhadores exerçam sua voz sem mediação patronal:
+        <span class="section-tag emerald">Ferramental Prático</span>
+        <h2 class="section-title">O que o Vox entrega materialmente à classe</h2>
+        <p class="section-lead">
+          Soluções técnicas auditáveis para atuação imediata de núcleos, sindicatos e movimentos populares:
         </p>
       </div>
 
       <div class="tools-grid">
-        <div class="tool-card">
-          <div class="tool-icon">
-            <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" fill="none" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          </div>
+        <div class="tool-item">
           <h3>Chaves no bolso (Local-First)</h3>
-          <p>
-            Identidades criptográficas e senhas geradas exclusivamente no dispositivo do usuário (WebCrypto Ed25519 e P-256). Inexistência de banco de dados centralizado vulnerável a mandados de busca e apreensão da polícia burguesa.
-          </p>
+          <p>Identidades geradas via WebCrypto (Ed25519 e P-256) direto no aparelho. Sem servidor central que possa ser apreendido pela polícia burguesa.</p>
         </div>
 
-        <div class="tool-card">
-          <div class="tool-icon">
-            <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" fill="none" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
-          </div>
+        <div class="tool-item">
           <h3>Perfis coletivos M-de-N</h3>
-          <p>
-            A conta de um diretório ou sindicato não pode pertencer ao e-mail individual de alguém. Com perfis multi-assinatura M-de-N, documentos e manifestos só são publicados com o aval de delegados eleitos pela base.
-          </p>
+          <p>Contas de diretórios e sindicatos assinadas coletivamente por delegados eleitos pela base. Fim do monopólio do e-mail pessoal.</p>
         </div>
 
-        <div class="tool-card">
-          <div class="tool-icon">
-            <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" fill="none" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
-          </div>
+        <div class="tool-item">
           <h3>Nó popular autônomo (Vox Populi)</h3>
-          <p>
-            Execute um servidor silencioso de retransmissão e cache SHA-256 em um PC de 2012, no Raspberry Pi ou num celular na tomada da associação. Caso a internet comercial caia, a comunicação local do bairro segue em pé.
-          </p>
+          <p>Cache e retransmissão operando em PCs antigos de 2012, Raspberry Pi ou celulares velhos. A malha do bairro segue ativa mesmo sob blecaute.</p>
         </div>
 
-        <div class="tool-card">
-          <div class="tool-icon">
-            <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" fill="none" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-          </div>
-          <h3>Estratégia POSSE (Irradiar às massas)</h3>
-          <p>
-            Rejeitamos guetos sectários. O militante ancora a declaração original no Vox (imutável e soberana) e irradia o texto diretamente para WhatsApp, Telegram e redes onde as massas estão, puxando-as para o ambiente seguro.
-          </p>
+        <div class="tool-item">
+          <h3>Financiamento Pix Zaps (0% Taxa)</h3>
+          <p>Sustentação de jornais operários e caixas de greve via algoritmo BR Code EMV offline: 100% do apoio vai de classe para classe.</p>
         </div>
 
-        <div class="tool-card">
-          <div class="tool-icon">
-            <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" fill="none" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-          </div>
-          <h3>Financiamento da luta (Pix Zaps 0% Taxa)</h3>
-          <p>
-            Plataformas comerciais confiscam até 30% em taxas sobre apoios solidários. No Vox, o financiamento de fundos de greve e jornais operários utiliza o padrão BR Code EMV offline: 100% dos recursos vão de classe para classe, com zero taxa.
-          </p>
+        <div class="tool-item">
+          <h3>Micro-cliente PWA (&lt; 100 KiB)</h3>
+          <p>Interface hiperleve que roda em aparelhos simples com conexões 3G/4G populares, sem exigir celulares caros.</p>
         </div>
 
-        <div class="tool-card">
-          <div class="tool-icon">
-            <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" fill="none" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-          </div>
-          <h3>Micro-cliente PWA (< 100 KiB)</h3>
-          <p>
-            Aplicativos do capital pesam centenas de megabytes e exigem celulares caros. O cliente do Vox carrega em menos de 100 KiB, consome pacote mínimo de dados 3G/4G e roda com fluidez em celulares simples da juventude trabalhadora.
-          </p>
+        <div class="tool-item">
+          <h3>Memória operária auditável</h3>
+          <p>Registros protegidos criptograficamente por hashes SHA-256. Nenhuma corporação pode apagar a história das lutas dos trabalhadores.</p>
         </div>
       </div>
 
-      <!-- FOTO 5: Nó Comunitário em Hardware Reciclado -->
+      <!-- FOTO: Nó Comunitário em Hardware Reciclado -->
       <div class="material-photo" style="margin-top: 1.5rem; border-color: rgba(16, 185, 129, 0.4);">
-        <img src="images/revolucao/no_comunitario_popular.jpg" alt="Servidor popular autônomo com gabinete antigo dos anos 2010 e smartphone em mesa de centro comunitário no Brasil" loading="lazy" />
+        <img src="images/revolucao/no_comunitario_popular.jpg" alt="Servidor popular autônomo com gabinete antigo dos anos 2010 e smartphone em mesa de centro comunitário" loading="lazy" />
         <div class="photo-caption">
-          <span class="caption-tag" style="color: var(--emerald);">Materialidade 05 &bull; As Forças Produtivas em Mãos Proletárias</span>
-          <strong>Hardware reaproveitado contra os monopólios da nuvem:</strong> Um computador dos anos 2010 e um smartphone antigo operando o Vox Populi na mesa de uma associação de bairro ou sindicato. Sem contas mensais na AWS ou Google Cloud: dados assinados criptograficamente com hashes SHA-256 e espelhados ponto a ponto entre os próprios trabalhadores.
+          <span class="caption-tag emerald">Materialidade 06 &bull; As Forças Produtivas em Mãos Proletárias</span>
+          <strong>Hardware reaproveitado contra a nuvem monopolista:</strong> Computador dos anos 2010 e celular reciclado rodando o nó Vox Populi em centro operário. Cache local descentralizado sem mensalidades corporativas.
+        </div>
+      </div>
+
+      <!-- INFOGRÁFICO 2: FLUXO DA ESTRATÉGIA POSSE -->
+      <div class="flow-card">
+        <span class="section-tag emerald">Estratégia POSSE de Comunicação</span>
+        <h3 style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.15rem; color: #FFFFFF; margin-top: 0.25rem;">
+          Como irradiar a verdade operária da retaguarda segura para as massas
+        </h3>
+
+        <div class="flow-steps">
+          <div class="flow-step">
+            <span class="step-idx">ETAPA 01</span>
+            <div class="step-name">Ancorar no Nó Livre</div>
+            <div class="step-desc">O texto da greve ou do partido é assinado com chave M-de-N e ancorado soberanamente no Vox.</div>
+          </div>
+
+          <div class="flow-step">
+            <span class="step-idx">ETAPA 02</span>
+            <div class="step-name">Cache Territorial</div>
+            <div class="step-desc">O nó Vox Populi no sindicato replica os dados na rede local, imune a apagões deliberados.</div>
+          </div>
+
+          <div class="flow-step">
+            <span class="step-idx">ETAPA 03</span>
+            <div class="step-name">Irradiação POSSE</div>
+            <div class="step-desc">Disparo automático e formatado com resumo e links diretamente para grupos de WhatsApp e Telegram.</div>
+          </div>
+
+          <div class="flow-step">
+            <span class="step-idx">ETAPA 04</span>
+            <div class="step-name">Consciência de Massa</div>
+            <div class="step-desc">O trabalhador lê a denúncia na rede comercial e é chamado para a trincheira segura e soberana.</div>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- BLOCO 5: COMO COLABORAR & CONVOCATÓRIA REVOLUCIONÁRIA -->
+    <!-- BLOCO 5: PLANO DE AÇÃO IMEDIATO -->
     <section class="section-block">
       <div class="section-header">
-        <span class="section-tag"><span class="tag-bullet"></span> Plano de Ação Permanente</span>
-        <h2 class="section-title">Como revolucionários e trabalhadores de TI podem colaborar</h2>
-        <p class="section-desc">
-          A soberania popular sobre as comunicações não será presenteada pela burguesia: ela precisa ser conquistada e mantida pela práxis da classe trabalhadora organizada.
+        <span class="section-tag">Ação Concreta</span>
+        <h2 class="section-title">Como militar e colaborar pela soberania tecnológica</h2>
+        <p class="section-lead">
+          A autonomia técnica popular é construída pela práxis diária da classe trabalhadora:
         </p>
       </div>
 
-      <div class="collab-grid">
-        <div class="collab-card">
-          <span class="collab-step">FRENTE 01</span>
-          <h4>Estruture o seu Núcleo ou Comitê</h4>
-          <p>
-            Abra o espaço deliberativo da sua célula partidária, centro acadêmico, oposição sindical ou comitê popular no Vox. Realize debates internos com voto transparente (1 membro = 1 voto) e arquivo permanente.
-          </p>
+      <div class="action-grid">
+        <div class="action-card">
+          <span class="step">FRENTE 01</span>
+          <h4>Estruture seu Núcleo</h4>
+          <p>Abra seu coletivo no Vox. Delibere com votação direta (1 membro = 1 voto) e histórico imutável.</p>
         </div>
 
-        <div class="collab-card">
-          <span class="collab-step">FRENTE 02</span>
-          <h4>Suba um Nó de Infraestrutura Comunitária</h4>
-          <p>
-            Instale o <a href="download.html">Vox Populi</a> na sede do seu partido ou sindicato. Um computador com Windows, Linux ou Raspberry Pi garante cache local e relay para os militantes da sua região.
-          </p>
+        <div class="action-card">
+          <span class="step">FRENTE 02</span>
+          <h4>Suba um Nó Comunitário</h4>
+          <p>Instale o <a href="download.html">Vox Populi</a> na sede partidária ou sindical em um PC antigo.</p>
         </div>
 
-        <div class="collab-card">
-          <span class="collab-step">FRENTE 03</span>
-          <h4>Trabalhadores da Tecnologia: Auditem o Código</h4>
-          <p>
-            Programadores, administradores de sistemas e pesquisadores de segurança comunistas: contribuam no <a href="https://github.com/yurikayel/vox" target="_blank" rel="noopener">GitHub do Vox</a> com hardening criptográfico, embalagem Linux e otimização de nós.
-          </p>
+        <div class="action-card">
+          <span class="step">FRENTE 03</span>
+          <h4>Trabalhadores de TI: Auditem</h4>
+          <p>Contribuam no <a href="https://github.com/yurikayel/vox" target="_blank" rel="noopener">GitHub</a> com hardening de nós, empacotamento Linux e testes.</p>
         </div>
 
-        <div class="collab-card">
-          <span class="collab-step">FRENTE 04</span>
-          <h4>Batalha das Ideias & Agitação Popular</h4>
-          <p>
-            Compartilhe materiais de formação política, jornais operários, denúncias contra a escala 6x1 e a superexploração patronal. Use o Vox como arma de conscientização política massiva nas ruas e nas redes.
-          </p>
+        <div class="action-card">
+          <span class="step">FRENTE 04</span>
+          <h4>Batalha das Ideias</h4>
+          <p>Dispare denúncias contra a escala 6x1 e jornais operários usando a estratégia de irradiação POSSE.</p>
         </div>
       </div>
 
-      <div class="quick-web" style="background: linear-gradient(135deg, rgba(220, 38, 38, 0.12) 0%, rgba(14, 19, 28, 0.95) 100%); border: 1px solid var(--border-red); border-radius: 16px; padding: 1.5rem 1.75rem; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem;">
-        <div class="quick-web-text">
-          <h3 style="color: #FFFFFF; font-size: 1.15rem; margin-bottom: 0.35rem;">Participe do debate na comunidade oficial vox</h3>
-          <p style="color: var(--text-muted); font-size: 0.92rem;">Entre na ágora central do Vox na web para dialogar diretamente com mantenedores, militantes populares e construtores de tecnologia livre.</p>
+      <div style="background: linear-gradient(135deg, rgba(220, 38, 38, 0.14) 0%, rgba(11, 15, 23, 0.95) 100%); border: 1px solid var(--border-red); border-radius: 14px; padding: 1.35rem 1.6rem; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem;">
+        <div>
+          <h3 style="color: #FFFFFF; font-size: 1.1rem; margin-bottom: 0.25rem;">Participe da comunidade oficial vox</h3>
+          <p style="color: var(--text-muted); font-size: 0.88rem;">Diálogo direto entre militantes populares, desenvolvedores e mantenedores da tecnologia livre.</p>
         </div>
         <a href="index.html#/c/vox" class="btn-action red" style="white-space: nowrap;">
           Entrar na Comunidade Oficial
@@ -1181,12 +1120,12 @@
   <footer>
     <p>
       <strong>vox</strong> &bull; Ferramental tecnológico popular da classe trabalhadora &bull; 
-      <a href="index.html#/">Abrir App Web</a> &bull; 
+      <a href="index.html#/">App Web</a> &bull; 
       <a href="download.html">Baixar Aplicativos & Nós</a> &bull; 
-      <a href="https://github.com/yurikayel/vox" target="_blank" rel="noopener">Código-fonte no GitHub</a> &bull; 
+      <a href="https://github.com/yurikayel/vox" target="_blank" rel="noopener">GitHub</a> &bull; 
       <a href="privacy.html">Privacidade</a>
     </p>
-    <p style="margin-top: 0.5rem; color: #475569; font-size: 0.78rem;">
+    <p style="margin-top: 0.45rem; color: #475569; font-size: 0.78rem;">
       "Os proletários não têm nada a perder a não ser suas correntes. Têm um mundo a ganhar. Proletários de todos os países, uni-vos!" — Karl Marx & Friedrich Engels
     </p>
   </footer>

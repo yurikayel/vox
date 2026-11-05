@@ -165,8 +165,8 @@ function renderTopicDistributeActions(topicId, topic, authorDisplay, commId) {
     ? `<span class="action-count count-explodes" title="${curExpl} disparos" aria-label="${curExpl} disparos"><span class="sr-only">${curExpl} disparos</span><span aria-hidden="true">${curExpl}</span></span>`
     : `<span class="action-count count-explodes"></span>`;
 
-  const shareBtn = `<button id="btn-share-topic" class="action-btn btn-share btn-share-post ${expl ? "exploded" : ""}" data-id="${escapeHtml(topicId)}" data-count="${baseExpl}" data-title="${escapeHtml(topic?.title || "")}" data-author="${escapeHtml(authorDisplay || "")}" data-body="${escapeHtml((topic?.body || "").slice(0, 200))}" data-comm="${escapeHtml(commId || "")}" aria-label="${escapeHtml(shareTopicAria(topicId))}" title="Compartilhar (EXPLODE!)"${quarantineShareAttrs(topicId)}>
-    <svg class="action-icon icon-plane" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22 11 13 2 9z"/></svg>${countSpan}
+  const shareBtn = `<button id="btn-share-topic" class="action-btn btn-share btn-share-post ${expl ? "exploded" : ""}" data-id="${escapeHtml(topicId)}" data-count="${baseExpl}" data-title="${escapeHtml(topic?.title || "")}" data-author="${escapeHtml(authorDisplay || "")}" data-body="${escapeHtml((topic?.body || "").slice(0, 200))}" data-comm="${escapeHtml(commId || "")}" aria-label="${escapeHtml(shareTopicAria(topicId))}" title="Compartilhar"${quarantineShareAttrs(topicId)}>
+    <svg class="action-icon icon-share" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>${countSpan}
   </button>`;
   const saveBtn = `<button class="action-btn btn-save ${saved ? "active" : ""}" data-id="${escapeHtml(topicId)}" aria-label="Salvar post">
     <svg class="action-icon icon-bookmark" width="18" height="18" viewBox="0 0 24 24" fill="${saved ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
@@ -289,8 +289,8 @@ export function renderTopic(main, topicId, topic, replies, { topicData = null, i
     <article class="topic-root insta-topic-root card" style="padding:1.25rem;">
       ${headerHtml}
       ${mediaHtml}
-      ${toolbarHtml}
       ${detailHtml}
+      ${toolbarHtml}
       ${citeHtml}
     </article>
     ${repliesHtml}`;
