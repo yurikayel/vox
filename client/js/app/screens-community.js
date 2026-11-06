@@ -1041,3 +1041,25 @@ export function attachProposalVotingHandlers(proposal, user) {
     });
   });
 }
+
+export async function showVote() {
+  const user = await getActiveUser();
+  const main = render.renderShell(makeShellProps(user, "vote", "Democracia Direta"));
+  main.innerHTML = render.renderVoteDashboard();
+
+  const voteBtns = main.querySelectorAll(".btn-vote-choice");
+  voteBtns.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const choice = btn.dataset.choice;
+      const id = btn.dataset.id;
+      if (btn.classList.contains("btn-vote-endorse")) {
+        share.showToast(`Endosso ed25519 emitido para #${id}!`);
+        return;
+      }
+      if (choice) {
+        const label = choice === "yes" ? "Sim (Favorável)" : "Contestar (Contrário)";
+        share.showToast(`Voto "${label}" registrado na pauta #${id}!`);
+      }
+    });
+  });
+}

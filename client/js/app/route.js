@@ -4,7 +4,7 @@ import { parseRoute } from "./route-parse.js";
 import { setRoute } from "./navigation.js";
 import { checkCantinaGate } from "./onboarding.js";
 import { showHome, showCommunities, showTagFeed } from "./screens-home.js";
-import { showCommunity, showTopic, showProposal } from "./screens-community.js";
+import { showCommunity, showTopic, showProposal, showVote } from "./screens-community.js";
 import { showProfile, showHandleLookup, showWallet, showPixLookup } from "./screens-profile.js";
 import { showPeople, showConnect } from "./screens-people.js";
 import { showNetworkSettings, showStewardWizard, showLinkedAccounts } from "./screens-network.js";
@@ -23,6 +23,7 @@ import {
 
 const ROUTE_DISPATCH_TABLE = {
   home: (r) => showHome(r.feed),
+  vote: () => showVote(),
   "tag-feed": (r) => showTagFeed(r.slug),
   communities: () => showCommunities(),
   people: (r) => showPeople(r.query),

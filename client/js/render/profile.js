@@ -252,6 +252,39 @@ function renderProfileIdentityBlock(address, displayName, handleLabel, profileBi
     </div>`;
 }
 
+const CIVIC_HIGHLIGHTS_DATA = [
+  { id: "guardia", name: "Guardiã Nvl 4", icon: "🏛️", ringClass: "ring-emerald" },
+  { id: "solar", name: "Microrrede Solar", icon: "⚡", ringClass: "ring-amber" },
+  { id: "quorum", name: "Quórum 100%", icon: "🗳️", ringClass: "ring-cyan" },
+  { id: "coletivo", name: "Pinheiros SP", icon: "📍", ringClass: "ring-cobalt" },
+  { id: "sementeira", name: "Sementeira", icon: "🌱", ringClass: "ring-emerald" },
+];
+
+function renderProfileCivicHighlights(address) {
+  const items = CIVIC_HIGHLIGHTS_DATA.map((h) => `
+    <a class="civic-highlight-item" href="#/u/${encodeURIComponent(address)}?tab=voxels" title="${escapeHtml(h.name)} &bull; Ver no Passaporte Cívico">
+      <div class="civic-highlight-ring ${h.ringClass}">
+        <div class="civic-highlight-inner">${h.icon}</div>
+      </div>
+      <span class="civic-highlight-name">${escapeHtml(h.name)}</span>
+    </a>
+  `).join("");
+
+  return `
+    <div class="profile-civic-highlights" aria-label="Selos e Insígnias Cívicas">
+      <div class="profile-civic-highlights-header">
+        <div class="profile-civic-highlights-title">
+          <span>🎖️</span>
+          <span>Selos &amp; Insígnias Cívicas</span>
+        </div>
+        <span class="profile-civic-highlights-meta">Registro Imutável</span>
+      </div>
+      <div class="profile-civic-highlights-scroll">
+        ${items}
+      </div>
+    </div>`;
+}
+
 function renderProfileGridHeader(address, isCurrentWallet, handle, isConflict, claimants, displayName, profileBio, stats, postsCount, pixKeyMasked, pixKeyRaw, githubHandle, isBlocked, isMuted) {
   const handleLabel = handle ? `@${handle}` : (isWelcomeRouteId(address) ? "@vox" : `@${shortId(address)}`);
   const statsData = stats || mock.getMockProfile(address)?.stats;
@@ -261,8 +294,9 @@ function renderProfileGridHeader(address, isCurrentWallet, handle, isConflict, c
   const topDiv = `<div class="profile-grid-top">${renderProfileGridAvatar(address, displayName, handle, isCurrentWallet)}${renderProfileGridStats(postsCount, statsData, address, isCurrentWallet)}</div>`;
   const identity = renderProfileIdentityBlock(address, displayName, handleLabel, profileBio, isCurrentWallet, pixBadge, githubBadge);
   const actions = renderProfileGridActionRow(address, isCurrentWallet, isBlocked, isMuted, pixKeyRaw, displayName);
+  const highlights = renderProfileCivicHighlights(address);
 
-  return `<header class="profile-grid-header">${topDiv}${identity}${actions}${renderStereotypeDemoBanner(address)}${conflictBanner}</header>`;
+  return `<header class="profile-grid-header">${topDiv}${identity}${actions}${highlights}${renderStereotypeDemoBanner(address)}${conflictBanner}</header>`;
 }
 
 function renderProfilePostGrid(posts, pinnedPostId = "") {

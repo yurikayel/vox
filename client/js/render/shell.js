@@ -24,6 +24,7 @@ function renderHomeIcon() {
 }
 
 const ICONS = {
+  vote: `<svg class="tab-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 12 2 2 4-4"/><path d="M5 7c0-1.1.9-2 2-2h10a2 2 0 0 1 2 2v12H5V7Z"/><path d="M22 19H2"/></svg>`,
   communities: `<svg class="tab-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
   people: `<svg class="tab-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>`,
   feedForYou: `<svg class="tab-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 14.5 8.5 20 9l-4 3.5L17 18l-5-3-5 3 1-5.5L4 9l5.5-.5Z"/></svg>`,
@@ -191,6 +192,7 @@ function renderVoxpediaNavLink(activeTab) {
 
 function renderSidebarNav(activeTab) {
   const isHome = activeTab === "home";
+  const isVote = activeTab === "vote";
   const isComm = activeTab === "communities";
   const isPeople = activeTab === "people";
   const isDm = activeTab === "dm";
@@ -198,6 +200,9 @@ function renderSidebarNav(activeTab) {
 
   return `<a href="#/" class="tab-item ${isHome ? "active" : ""}"${isHome ? ' aria-current="page"' : ""} aria-label="Início">
       <span class="tab-icon">${renderHomeIcon()}</span><span class="tab-label">Início</span>
+    </a>
+    <a href="#/vote" class="tab-item ${isVote ? "active" : ""}"${isVote ? ' aria-current="page"' : ""} aria-label="Vote">
+      <span class="tab-icon">${ICONS.vote}</span><span class="tab-label">Vote</span>
     </a>
     <a href="#/communities" class="tab-item ${isComm ? "active" : ""}"${isComm ? ' aria-current="page"' : ""}>
       <span class="tab-icon">${ICONS.communities}</span><span class="tab-label">Comunidades</span>
