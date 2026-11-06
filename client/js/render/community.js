@@ -6,8 +6,9 @@ import * as hashtags from "../hashtags.js";
 import * as listingUi from "../listing-ui.js";
 import * as gossipRetract from "../gossip-retract-ui.js";
 import * as profileDirectory from "../profile-directory.js";
-import { renderCommunityUnreadBadge, renderCommunityCatchupBanner } from "../community-unread.js";
+import { renderCommunityCatchupBanner } from "../community-unread.js";
 import { renderUnifiedDiffHtml } from "./diff-html.js";
+import { renderPageHead } from "./shell.js";
 import { buildListingDmHref } from "../dm-messenger.js";
 import { getReadOriginAggregate } from "../gateway-telemetry.js";
 import {
@@ -76,15 +77,6 @@ function resolveCommunityMemberCount(meta, communityId) {
 function formatCommunityMembers(n) {
   if (n == null) return "";
   return `${n.toLocaleString("pt-BR")} membros`;
-}
-
-function buildCommunityTypeSubtitle(meta, communityId) {
-  const parts = [];
-  const vis = meta.visibility === "closed" ? "fechada" : "aberta";
-  parts.push(`Tipo: ${vis}`);
-  if (meta.communityForkOf || meta.forkOf) parts.push("espelho");
-  if (communityId === mock.MOCK_DEMO_COMMUNITY.id || meta.demo) parts.push("Demo");
-  return parts.join(" · ");
 }
 
 function renderCommunityForkBanner(meta) {
@@ -445,40 +437,69 @@ function renderCommunityMetaChips(meta, communityId, memberCount) {
   return `<ul class="community-vox-chip-list" aria-label="Informações da comunidade">${chips.join("")}</ul>`;
 }
 
-function renderHomeCommunityCard(c) {
+function renderCommunityMetric(label, value, tone = "") {
+  const toneCls = tone ? ` agora-metric-value--${tone}` : "";
+  return `<div class="agora-metric"><span class="agora-metric-label">${escapeHtml(label)}</span><span class="agora-metric-value${toneCls}">${escapeHtml(value)}</span></div>`;
+}
+
+function renderHomeCommunityPills(c) {
+  const isClosed = c.visibility === "closed" || c.type === "closed";
+  const isFork = Boolean(c.communityForkOf || c.forkOf);
+  const isDemo = c.id === mock.MOCK_DEMO_COMMUNITY.id || c.demo;
+  return [
+    c.isOfficial || c.id === "vox" ? `<span class="agora-pill agora-pill--emerald">Oficial</span>` : "",
+    `<span class="agora-pill">${isClosed ? "Fechada" : "Aberta"}</span>`,
+    c.category ? `<span class="agora-pill">${escapeHtml(c.category)}</span>` : "",
+    isFork ? `<span class="agora-pill agora-pill--cobalt">Espelho</span>` : "",
+    isDemo ? `<span class="agora-pill agora-pill--amber">Demo</span>` : "",
+  ].join("");
+}
+
+function renderHomeCommunityMetrics(c) {
   const members = resolveCommunityMemberCount(c, c.id);
-  const memberLine = members != null ? `<p class="community-vox-card-members">${escapeHtml(formatCommunityMembers(members))}</p>` : "";
-  const typeLine = buildCommunityTypeSubtitle(c, c.id);
-  const avatarHtml = renderCommunityAvatarHtml(c, c.id, "community-avatar-md");
-  const unreadBadge = renderCommunityUnreadBadge(c.unreadCount || 0);
-  const badgeHtml = unreadBadge ? ` ${unreadBadge}` : "";
+  const unread = Number(c.unreadCount) || 0;
+  return [
+    renderCommunityMetric("Membros", members != null ? members.toLocaleString("pt-BR") : "—"),
+    renderCommunityMetric("Novidades", unread > 0 ? `${unread} novos` : "Em dia", unread > 0 ? "emerald" : ""),
+    renderCommunityMetric("Origem", c.isLocalP2p === false ? "Permaweb" : "Rede local", "cobalt"),
+  ].join("");
+}
+
+function renderHomeCommunityCard(c) {
+  const href = `#/c/${encodeURIComponent(c.id)}`;
+  const avatarHtml = renderCommunityAvatarHtml(c, c.id, "community-avatar-md agora-community-avatar");
+  const pills = renderHomeCommunityPills(c);
+  const metrics = renderHomeCommunityMetrics(c);
+  const owner = c.owner || c.author || "";
+  const ownerLabel = owner ? `Fundada por ${escapeHtml(profileDirectory.getAuthorDisplaySync(owner) || shortId(owner))}` : `#${escapeHtml(c.id)}`;
   return `
-    <article class="community-card community-vox-card community-vox-card-list card" style="--community-accent:${getCommunityColor(c.id)};">
-      <div class="community-vox-card-accent" aria-hidden="true"></div>
-      <div class="community-vox-card-layout">
-        <a class="community-vox-card-avatar-link community-vox-card-avatar-wrap" href="#/c/${encodeURIComponent(c.id)}" aria-label="${escapeHtml(c.title)}">${avatarHtml}</a>
-        <div class="community-vox-card-main">
-          <a class="community-vox-card-title" href="#/c/${encodeURIComponent(c.id)}"><h3>${escapeHtml(c.title)}${badgeHtml}</h3></a>
-          ${memberLine}
-          <p class="community-vox-card-type">${escapeHtml(typeLine)}</p>
-          <p class="community-vox-card-desc desc">${escapeHtml(c.description || "Sem descrição.")}</p>
-          <div class="community-vox-card-actions">
-            <a class="btn btn-sm community-vox-enter-btn" href="#/c/${encodeURIComponent(c.id)}">Entrar →</a>
-          </div>
-        </div>
+    <article class="agora-community community-vox-card community-vox-card-list" style="--community-accent:${getCommunityColor(c.id)};">
+      <a class="community-vox-card-avatar-wrap" href="${href}" aria-label="${escapeHtml(c.title)}">${avatarHtml}</a>
+      <div class="agora-community-main">
+        <h2 class="agora-community-title"><a href="${href}">${escapeHtml(c.title)}</a>${pills}</h2>
+        <p class="agora-community-desc">${escapeHtml(c.description || "Sem descrição.")}</p>
+      </div>
+      <div class="agora-metrics" aria-label="Indicadores da comunidade">${metrics}</div>
+      <div class="agora-community-foot">
+        <span class="agora-mono">${ownerLabel}</span>
+        <a class="agora-btn agora-btn--primary community-vox-enter-btn" href="${href}">Entrar na comunidade</a>
       </div>
     </article>`;
 }
 
 export function renderHome(main, communities, { totalUnread = 0 } = {}) {
   const catchupBanner = renderCommunityCatchupBanner({ totalUnread });
-  const bar = `<div class="actions-bar"><span class="section-title">Comunidades</span><a class="btn btn-primary btn-sm" href="#/compose/community">+ Nova</a></div>`;
+  const head = renderPageHead({
+    title: "Comunidades",
+    subtitle: "Fóruns e células da sua rede. Cada comunidade decide suas pautas, regras e moderação.",
+    actionsHtml: `<a class="agora-btn agora-btn--primary" href="#/compose/community">+ Nova comunidade</a>`,
+  }).replace("agora-page-head", "agora-page-head agora-page-head--wide");
   if (!communities.length) {
-    main.innerHTML += `${catchupBanner}${bar}<div class="empty"><p>Nenhuma comunidade criada ainda.</p><a class="btn btn-primary" href="#/compose/community">+ Criar Comunidade</a></div>`;
+    main.innerHTML += `${head}<div class="agora-empty"><h2>Nenhuma comunidade ainda</h2><p>Crie a primeira comunidade da sua rede — um bairro, um coletivo, um grupo de estudo.</p><a class="agora-btn agora-btn--primary" href="#/compose/community">+ Criar comunidade</a></div>`;
     return;
   }
   const items = communities.map(renderHomeCommunityCard).join("");
-  main.innerHTML += `${catchupBanner}${bar}<div class="community-grid">${items}</div>`;
+  main.innerHTML += `${head}<div class="agora-community-list">${catchupBanner}${items}</div>`;
 }
 
 export function renderCommunityPeopleStrip(people = []) {

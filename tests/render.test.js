@@ -313,7 +313,7 @@ test("render - renderDmList e renderDmThread", () => {
   ];
   render.renderDmList(mainList, convs, "addr_alice");
   assert.ok(mainList.innerHTML.includes("Mensagens"));
-  assert.ok(mainList.innerHTML.includes("Conversas privadas neste navegador."));
+  assert.ok(mainList.innerHTML.includes("Conversas privadas, guardadas só neste aparelho."));
   assert.ok(mainList.innerHTML.includes("addr_bob"));
   assert.ok(mainList.innerHTML.includes("E aí Alice"));
 
