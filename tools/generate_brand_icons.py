@@ -12,7 +12,12 @@ DOCS = ROOT / "docs"
 BRANDING = DOCS / "branding"
 ICONS = ROOT / "client" / "icons"
 
-WHITE_SRC = BRANDING / "vox_logo_branco.jpg" if (BRANDING / "vox_logo_branco.jpg").is_file() else DOCS / "vox_logo_branco.jpg"
+TRANSPARENT_SRC = BRANDING / "vox-transparent.png"
+WHITE_SRC = (
+    BRANDING / "vox-white.png"
+    if (BRANDING / "vox-white.png").is_file()
+    else (BRANDING / "vox_logo_branco.jpg" if (BRANDING / "vox_logo_branco.jpg").is_file() else DOCS / "vox_logo_branco.jpg")
+)
 
 
 def _color_dist(a: tuple[int, ...], b: tuple[int, ...]) -> float:
@@ -385,12 +390,21 @@ def write_black_mark(mark_rgba: Image.Image, size: int = 128) -> None:
 
 def main() -> None:
     BRANDING.mkdir(parents=True, exist_ok=True)
-    if not WHITE_SRC.is_file():
-        raise SystemExit(f"Missing source: {WHITE_SRC}")
+    if not WHITE_SRC.is_file() and not TRANSPARENT_SRC.is_file():
+        raise SystemExit(f"Missing branding source in {BRANDING}")
 
-    white_im = Image.open(WHITE_SRC)
-    mark_white = build_transparent_mark(white_im, (255, 255, 255), tolerance=24, white_paper=True)
-    write_png(BRANDING / "vox_logo_mark-transparent.png", mark_white)
+    if TRANSPARENT_SRC.is_file():
+        mark_white = Image.open(TRANSPARENT_SRC).convert("RGBA")
+        write_png(BRANDING / "vox_logo_mark-transparent.png", mark_white)
+    else:
+        white_im = Image.open(WHITE_SRC)
+        mark_white = build_transparent_mark(white_im, (255, 255, 255), tolerance=24, white_paper=True)
+        write_png(BRANDING / "vox_logo_mark-transparent.png", mark_white)
+
+    if WHITE_SRC.is_file():
+        white_im = Image.open(WHITE_SRC)
+    else:
+        white_im = fit_mark(mark_white, 2048, pad_ratio=0.10, bg=(255, 255, 255, 255))
 
     # 1. Favicons e Marcas: PNG sem fundo (100% transparente)
     write_png(ICONS / "favicon.png", fit_mark(mark_white, 32, pad_ratio=0.03, bg=(0, 0, 0, 0)))
