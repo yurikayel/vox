@@ -67,7 +67,7 @@
   --color-warning: var(--warning);
   --accent-emerald: var(--brand-green);
   --feed-max: 640px;
-  --feed-post-gap: 16px;
+  --feed-post-gap: 20px;
   --sidebar-width: 240px;
   --sidebar-width-collapsed: 72px;
   --space-xs: 4px;
@@ -84,8 +84,8 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-color-mode="light"]) {
-    --theme-chrome: var(--bg-carbon);
-    --bg: var(--bg-carbon);
+    --theme-chrome: #000000;
+    --bg: #000000;
     --surface-1: #222224;
     --surface-2: #28282c;
     --surface-3: #323238;
@@ -98,7 +98,7 @@
     --surface-solid: var(--surface-1);
     --surface-soft: var(--surface-3);
     --border: #2c2938;
-    --border-subtle: #1a1826;
+    --border-subtle: #262626;
     --border-glow: rgba(255, 255, 255, 0.08);
     --text: #ebe9e4;
     --muted: #9a9690;
@@ -139,8 +139,8 @@
 
 @media (prefers-color-scheme: light) {
   :root[data-color-mode="dark"] {
-    --theme-chrome: var(--bg-carbon);
-    --bg: var(--bg-carbon);
+    --theme-chrome: #000000;
+    --bg: #000000;
     --surface-1: #222224;
     --surface-2: #28282c;
     --surface-3: #323238;
@@ -153,7 +153,7 @@
     --surface-solid: var(--surface-1);
     --surface-soft: var(--surface-3);
     --border: #2c2938;
-    --border-subtle: #1a1826;
+    --border-subtle: #262626;
     --border-glow: rgba(255, 255, 255, 0.08);
     --text: #ebe9e4;
     --muted: #9a9690;
@@ -612,6 +612,20 @@ a:hover {
   padding-bottom: calc(0.65rem + env(safe-area-inset-bottom, 0px));
 }
 
+@media (prefers-color-scheme: dark) {
+  :root:not([data-color-mode="light"]) .app-sidebar.tab-bar {
+    background: #000000;
+    border-right: 1px solid var(--border-subtle);
+    box-shadow: none;
+  }
+}
+
+:root[data-color-mode="dark"] .app-sidebar.tab-bar {
+  background: #000000;
+  border-right: 1px solid var(--border-subtle);
+  box-shadow: none;
+}
+
 .sidebar-scroll {
   flex: 1;
   min-height: 0;
@@ -1021,7 +1035,7 @@ main#app-main,
   width: 100%;
   max-width: var(--feed-max);
   margin: 0 auto;
-  padding: 0.65rem 1rem 2.5rem;
+  padding: 0.65rem 0 2.5rem;
   flex: 1;
   background: transparent;
 }
@@ -1033,7 +1047,7 @@ main#app-main,
 
 @media (min-width: 768px) {
   main#app-main {
-    padding: 1.5rem 1.5rem 3rem;
+    padding: 1.5rem 0 3rem;
   }
 }
 
@@ -1077,6 +1091,20 @@ main#app-main,
   border-radius: var(--radius);
   box-shadow: var(--elevation-1), var(--paper-highlight);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-color-mode="light"]) .inline-composer {
+    background: #000000;
+    border: 1px solid var(--border-subtle);
+    box-shadow: none;
+  }
+}
+
+:root[data-color-mode="dark"] .inline-composer {
+  background: #000000;
+  border: 1px solid var(--border-subtle);
+  box-shadow: none;
 }
 
 .inline-composer:hover {
@@ -3866,18 +3894,16 @@ p.profile-grid-handle {
 /* Feed Container - Fundo Preto, Espaçamento Instagram, Sem Card */
 .feed-container {
   background: #000000;
-  border-left: 1px solid var(--border-subtle);
-  border-right: 1px solid var(--border-subtle);
-  border-top: none;
-  border-bottom: none;
+  border: none;
   border-radius: 0;
   overflow: visible;
   box-shadow: none;
   max-width: var(--feed-max, 640px);
+  width: 100%;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: var(--feed-post-gap, 16px);
+  gap: var(--feed-post-gap, 20px);
 }
 
 .feed-container > .post {
@@ -3888,9 +3914,8 @@ p.profile-grid-handle {
 
 @media (max-width: 680px) {
   .feed-container {
-    border-left: none;
-    border-right: none;
-    gap: var(--feed-post-gap, 16px);
+    border: none;
+    gap: var(--feed-post-gap, 20px);
   }
 }
 
@@ -5825,6 +5850,18 @@ p.profile-grid-handle {
   border-radius: var(--radius-md, 8px);
   border: 1px solid var(--border);
   background: var(--surface-soft, var(--surface));
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-color-mode="light"]) .welcome-feed-hint {
+    background: #000000;
+    border: 1px solid var(--border-subtle);
+  }
+}
+
+:root[data-color-mode="dark"] .welcome-feed-hint {
+  background: #000000;
+  border: 1px solid var(--border-subtle);
 }
 
 .welcome-feed-hint-text a {
@@ -8857,9 +8894,8 @@ blockquote.repost-cite {
   gap: 0;
   overflow-x: auto;
   padding: 0;
-  margin: 0 auto 0 auto;
-  border-left: 1px solid var(--border-subtle);
-  border-right: 1px solid var(--border-subtle);
+  margin: 0 auto;
+  border: none;
   border-bottom: 1px solid var(--border-subtle);
   background: #000000;
   border-radius: 0;
@@ -9222,8 +9258,9 @@ blockquote.repost-cite {
 }
 
 .post.post-pinned-highlight {
-  border: 1px solid rgba(245, 158, 11, 0.35) !important;
-  box-shadow: 0 4px 20px rgba(245, 158, 11, 0.08) !important;
+  border: none !important;
+  border-bottom: 1px solid var(--border-subtle) !important;
+  box-shadow: none !important;
 }
 
 /* Lo-Fi Cívico e Estética Retrô */
