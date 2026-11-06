@@ -33,13 +33,11 @@ test("shell brand — same squircle mark in light and dark", () => {
   assert.ok(!shellSrc.includes("icons/icon-512.png"));
 });
 
-test("shell brand — Início uses mark as icon, no top wordmark", () => {
+test("shell brand — ADR-016: wordmark VOX epigráfico no topo do menu e na topbar móvel", () => {
   assert.ok(shellSrc.includes("renderHomeIcon()"));
-  assert.ok(!shellSrc.includes("sidebar-brand"));
-  assert.ok(!shellSrc.includes("renderBrandWordmark"));
-  assert.ok(!shellSrc.includes("renderBrandLink"));
-  assert.ok(!shellSrc.includes(">Vox</span>"));
-  assert.ok(!shellSrc.includes(">vox</span>"));
+  assert.ok(shellSrc.includes("function renderAgoraWordmark()"));
+  assert.ok(shellSrc.includes('class="agora-wordmark-text">VOX</span>'));
+  assert.ok(!/class="sidebar-brand/.test(shellSrc), "usa agora-sidebar-brand, não o legado sidebar-brand");
 });
 
 test("shell sidebar — IA estável (nav, postar, feed slot, footer)", () => {
@@ -61,10 +59,12 @@ test("shell sidebar — IA estável (nav, postar, feed slot, footer)", () => {
   assert.ok(shellSrc.includes("classList.add(\"is-active\")"));
 });
 
-test("shell layout — no page top bar strip", () => {
-  assert.ok(!shellSrc.includes("top-bar"));
-  assert.ok(!shellSrc.includes("<header class=\"top-bar\""));
-  assert.ok(!shellSrc.includes("topBarHtml"));
-  assert.ok(!styleCss.includes(".top-bar"));
+test("shell layout — ADR-016: topbar Stitch com busca, Votar agora e chip de identidade", () => {
+  assert.ok(shellSrc.includes('<header class="agora-topbar"'));
+  assert.ok(shellSrc.includes('id="agora-search-form"'));
+  assert.ok(shellSrc.includes('href="#/vote" class="agora-btn agora-btn--ghost agora-topbar-vote"'));
+  assert.ok(shellSrc.includes('id="agora-identity-toggle"'));
+  assert.ok(shellSrc.includes('id="agora-identity-drawer"'));
+  assert.ok(!styleCss.includes(".top-bar"), "o legado .top-bar continua fora do style.css");
   assert.ok(shellSrc.includes("<main id=\"app-main\"></main>"));
 });

@@ -339,6 +339,31 @@ function bindDmThreadFormEvents(main, user, peerAddress, peerDmPub) {
   }
 }
 
+/** Desktop largo: lista de conversas ao lado da conversa aberta (Stitch "Mensagens desktop"). */
+function isDmSplitViewport() {
+  return typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(min-width: 1100px)").matches;
+}
+
+function renderCompactDmList(pane, convs, user, peerAddress, searchQuery = "") {
+  render.renderDmList(pane, convs, user, { compact: true, activePeer: peerAddress, searchQuery });
+  const input = pane.querySelector("#dm-search-input");
+  input?.addEventListener("input", () => {
+    const val = input.value;
+    renderCompactDmList(pane, convs, user, peerAddress, val);
+    const next = pane.querySelector("#dm-search-input");
+    next?.focus();
+    next?.setSelectionRange(val.length, val.length);
+  });
+}
+
+async function mountDmSplitIfWide(main, user, peerAddress) {
+  if (!isDmSplitViewport()) return main;
+  main.innerHTML = `<div class="agora-dm-split"><aside class="agora-dm-list-pane" id="dm-list-pane" aria-label="Conversas"></aside><section class="agora-dm-thread-pane" id="dm-thread-pane"></section></div>`;
+  const convs = await cacheNode.getDmConversations();
+  renderCompactDmList(main.querySelector("#dm-list-pane"), convs, user, peerAddress);
+  return main.querySelector("#dm-thread-pane");
+}
+
 export async function showDmThread(peerAddress) {
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "dm", "Conversa"));
@@ -359,7 +384,8 @@ export async function showDmThread(peerAddress) {
     peers.getPeerDmPub(peerAddress) ||
     (await gql.fetchUserDmPub(peerAddress));
 
-  render.renderDmThread(main, peerAddress, messages, user, {
+  const threadTarget = await mountDmSplitIfWide(main, user, peerAddress);
+  render.renderDmThread(threadTarget, peerAddress, messages, user, {
     isRtcOnline,
     hasDmPub: Boolean(peerDmPub),
     pendingContextCard: pendingContextDraft,

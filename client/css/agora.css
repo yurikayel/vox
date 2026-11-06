@@ -1,0 +1,1940 @@
+/*
+ * agora.css — Sovereign Agora Luminescent Matrix (ADR-016)
+ * Fonte: stitch_vox_civic_network_interface/sovereign_agora_luminescent_matrix/DESIGN.md
+ *
+ * Camada carregada DEPOIS de style.css. Estratégia:
+ *  1. Remapeia os tokens semânticos que style.css já usa (--bg, --surface-*, --text, --accent,
+ *     --radius…) para a paleta Stitch — isso re-tematiza a maior parte do app sem tocar nas
+ *     10k linhas legadas.
+ *  2. Define os tokens próprios do design system num único :root (antes duplicados em style.css).
+ *  3. Componentes de layout (shell, topbar, cabeçalho de página, stelae, vote) com prefixo
+ *     `agora-` ou escopados em `.agora-ui`.
+ * Regra para próximos lotes: não adicionar novos :root em style.css; migrar regras para cá e
+ * apagar as equivalentes legadas.
+ */
+
+/* ── 1. Tokens do design system (modo único; o tema escuro é o canônico do Stitch) ── */
+:root {
+  --obsidian-oled: #0d0f12;
+  --slate-deep: #111316;
+  --surface-monolith: #171a1f;
+  --surface-column: #1f2329;
+  --travertine-linen: #f4eedd;
+  --travertine-muted: #e2dcce;
+  --emerald-consensus: #10b981;
+  --emerald-bright: #34d399;
+  --emerald-primary: #4edea3;
+  --cobalt-telemetry: #3b82f6;
+  --cobalt-soft: #7aa7ff;
+  --cobalt-pure: #2563eb;
+  --cyan-bridge: #06b6d4;
+  --entablature-hairline: #232830;
+  --entablature-active: rgba(244, 238, 221, 0.15);
+  --aurora-gradient: linear-gradient(135deg, #10b981 0%, #06b6d4 50%, #3b82f6 100%);
+  --aurora-glow: 0 0 24px rgba(16, 185, 129, 0.25), 0 0 48px rgba(59, 130, 246, 0.15);
+  --presence-pulse: 0 0 12px rgba(16, 185, 129, 0.6);
+
+  /* Tipografia — fontes do sistema (sem Google Fonts: LGPD + soberania). Inter/Noto Serif são
+     usadas se instaladas localmente; o próximo passo é auto-hospedar woff2 em client/fonts/. */
+  --font-epigraphic: "Noto Serif", "Iowan Old Style", "Palatino Linotype", Georgia, "Times New Roman", serif;
+  --font-telemetry: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-sans: var(--font-telemetry);
+  --font-display: var(--font-epigraphic);
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", Consolas, "Liberation Mono", monospace;
+
+  /* Forma: "Precision Architectural Softness" — 4px estrutural, círculos só para presença */
+  --radius: 4px;
+  --radius-sm: 4px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
+
+  --sidebar-width: 264px;
+  --feed-max: 680px;
+  --agora-content-max: 960px;
+  --agora-topbar-h: 64px;
+}
+
+/* ── 2. Remapeamento dos tokens legados no tema escuro (padrão Stitch) ── */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-color-mode="light"]) {
+    --theme-chrome: var(--obsidian-oled);
+    --bg: var(--obsidian-oled);
+    --surface-1: var(--slate-deep);
+    --surface-2: var(--surface-monolith);
+    --surface-3: var(--surface-column);
+    --surface: var(--slate-deep);
+    --surface-solid: var(--slate-deep);
+    --surface-soft: var(--surface-column);
+    --surface-card: var(--slate-deep);
+    --surface-hover: var(--surface-monolith);
+    --outline: var(--entablature-hairline);
+    --border: var(--entablature-hairline);
+    --border-subtle: var(--entablature-hairline);
+    --border-hover: var(--entablature-active);
+    --text: #e2e2e6;
+    --muted: #8b929d;
+    --text-muted: #8b929d;
+    --text-secondary: var(--travertine-muted);
+    --text-tertiary: #8b929d;
+    --link: var(--cobalt-soft);
+    --accent: var(--emerald-primary);
+    --accent-hover: var(--emerald-bright);
+    --accent-soft: rgba(16, 185, 129, 0.12);
+    --accent-glow: rgba(16, 185, 129, 0.25);
+    --accent-gradient: var(--aurora-gradient);
+    --nav-active-bg: var(--emerald-consensus);
+    --nav-active-indicator: var(--emerald-consensus);
+    --success: var(--emerald-bright);
+    --success-soft: rgba(16, 185, 129, 0.12);
+    --danger: #ffb4ab;
+    --danger-soft: rgba(255, 180, 171, 0.12);
+    --overlay: rgba(13, 15, 18, 0.85);
+    --on-accent: var(--obsidian-oled);
+    --elevation-1: none;
+    --elevation-2: none;
+    --shadow: none;
+  }
+}
+
+:root[data-color-mode="dark"] {
+  --theme-chrome: var(--obsidian-oled);
+  --bg: var(--obsidian-oled);
+  --surface-1: var(--slate-deep);
+  --surface-2: var(--surface-monolith);
+  --surface-3: var(--surface-column);
+  --surface: var(--slate-deep);
+  --surface-solid: var(--slate-deep);
+  --surface-soft: var(--surface-column);
+  --surface-card: var(--slate-deep);
+  --surface-hover: var(--surface-monolith);
+  --outline: var(--entablature-hairline);
+  --border: var(--entablature-hairline);
+  --border-subtle: var(--entablature-hairline);
+  --border-hover: var(--entablature-active);
+  --text: #e2e2e6;
+  --muted: #8b929d;
+  --text-muted: #8b929d;
+  --text-secondary: var(--travertine-muted);
+  --text-tertiary: #8b929d;
+  --link: var(--cobalt-soft);
+  --accent: var(--emerald-primary);
+  --accent-hover: var(--emerald-bright);
+  --accent-soft: rgba(16, 185, 129, 0.12);
+  --accent-glow: rgba(16, 185, 129, 0.25);
+  --accent-gradient: var(--aurora-gradient);
+  --nav-active-bg: var(--emerald-consensus);
+  --nav-active-indicator: var(--emerald-consensus);
+  --success: var(--emerald-bright);
+  --success-soft: rgba(16, 185, 129, 0.12);
+  --danger: #ffb4ab;
+  --danger-soft: rgba(255, 180, 171, 0.12);
+  --overlay: rgba(13, 15, 18, 0.85);
+  --on-accent: var(--obsidian-oled);
+  --elevation-1: none;
+  --elevation-2: none;
+  --shadow: none;
+}
+
+/* Tema claro: o Stitch não definiu (ver prompt pendente). Mantém o pergaminho legado com a
+   tipografia e as formas novas; cores de marca puxadas para o esmeralda/cobalto. */
+@media (prefers-color-scheme: light) {
+  :root:not([data-color-mode="dark"]) {
+    --accent: #047857;
+    --accent-hover: #065f46;
+    --accent-soft: rgba(4, 120, 87, 0.1);
+    --link: #1d4ed8;
+    --nav-active-bg: #047857;
+    --nav-active-indicator: #047857;
+    --travertine-linen: #141218;
+    --travertine-muted: #3a3640;
+    --entablature-hairline: #ddd7cc;
+    --obsidian-oled: #f4f0e8;
+    --slate-deep: #faf7f0;
+    --surface-monolith: #f0ebe3;
+    --surface-column: #e4ddd2;
+    --cobalt-soft: #1d4ed8;
+    --emerald-bright: #047857;
+    --emerald-primary: #047857;
+  }
+}
+
+:root[data-color-mode="light"] {
+  --accent: #047857;
+  --accent-hover: #065f46;
+  --accent-soft: rgba(4, 120, 87, 0.1);
+  --link: #1d4ed8;
+  --nav-active-bg: #047857;
+  --nav-active-indicator: #047857;
+  --travertine-linen: #141218;
+  --travertine-muted: #3a3640;
+  --entablature-hairline: #ddd7cc;
+  --obsidian-oled: #f4f0e8;
+  --slate-deep: #faf7f0;
+  --surface-monolith: #f0ebe3;
+  --surface-column: #e4ddd2;
+  --cobalt-soft: #1d4ed8;
+  --emerald-bright: #047857;
+  --emerald-primary: #047857;
+}
+
+/* ── 3. Base tipográfica ── */
+html,
+body {
+  font-family: var(--font-telemetry);
+  font-feature-settings: "cv11" 1, "ss01" 1;
+  -webkit-font-smoothing: antialiased;
+}
+
+body,
+#app-root,
+.app-layout {
+  background: var(--bg);
+}
+
+::selection {
+  background: var(--emerald-consensus);
+  color: #0d0f12;
+}
+
+.agora-ui h1,
+.agora-ui h2,
+.agora-ui h3,
+.agora-ui .topic-title,
+.agora-ui .post-title,
+.agora-ui .profile-grid-name,
+.agora-ui .community-title,
+.agora-ui .vote-header-title,
+.agora-ui .deliberation-title {
+  font-family: var(--font-epigraphic);
+  color: var(--travertine-linen);
+  letter-spacing: -0.01em;
+}
+
+.agora-mono,
+.agora-ui code,
+.agora-ui .post-handle,
+.agora-ui .meta .route-id {
+  font-family: var(--font-mono);
+  font-feature-settings: "tnum" 1, "zero" 1;
+}
+
+.agora-title-monument {
+  font-family: var(--font-epigraphic);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--travertine-linen);
+  margin: 0 0 0.75rem;
+}
+
+.agora-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.agora-muted {
+  color: var(--muted);
+}
+
+/* ── 4. Shell: sidebar (desktop) ── */
+@media (min-width: 768px) {
+  .agora-ui .app-sidebar.tab-bar {
+    width: var(--sidebar-width);
+    background: var(--obsidian-oled);
+    border-right: 1px solid var(--entablature-hairline);
+    box-shadow: none;
+    padding: 0 1rem calc(1rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .agora-ui .main-column {
+    margin-left: var(--sidebar-width);
+  }
+
+  .agora-ui.sidebar-collapsed .app-sidebar.tab-bar {
+    width: var(--sidebar-width-collapsed);
+    padding: 0 0.5rem 1rem;
+  }
+
+  .agora-ui.sidebar-collapsed .main-column {
+    margin-left: var(--sidebar-width-collapsed);
+  }
+
+  .agora-ui.sidebar-collapsed .agora-wordmark-text,
+  .agora-ui.sidebar-collapsed .tab-label,
+  .agora-ui.sidebar-collapsed .sidebar-feed-label {
+    display: none;
+  }
+
+  .agora-ui .agora-sidebar-brand {
+    flex-shrink: 0;
+    height: var(--agora-topbar-h);
+    display: flex;
+    align-items: center;
+    padding: 0 0.5rem;
+    margin: 0 -1rem 0.75rem;
+    padding-left: 1.5rem;
+    border-bottom: 1px solid var(--entablature-hairline);
+  }
+
+  .agora-ui .tab-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .agora-ui .tab-item {
+    justify-content: flex-start;
+    gap: 0.85rem;
+    padding: 0.7rem 0.9rem;
+    border-radius: var(--radius);
+    color: var(--travertine-muted);
+    font-size: 0.9375rem;
+    font-weight: 500;
+    box-shadow: none;
+  }
+
+  .agora-ui .tab-item:hover {
+    background: var(--surface-monolith);
+    color: var(--travertine-linen);
+  }
+
+  .agora-ui .tab-item.active {
+    background: var(--nav-active-bg);
+    color: var(--obsidian-oled);
+    font-weight: 700;
+    box-shadow: none;
+  }
+
+  .agora-ui .tab-item.active .tab-svg {
+    color: currentColor;
+  }
+
+  .agora-ui .tab-item.active .tab-brand-mark {
+    filter: none;
+  }
+
+  .agora-ui .tab-item--secondary {
+    font-size: 0.875rem;
+    color: var(--muted);
+  }
+
+  .agora-ui .tab-item--secondary:first-of-type,
+  .agora-ui .tab-nav > .tab-item--secondary:nth-child(6) {
+    margin-top: 0.5rem;
+    position: relative;
+  }
+
+  .agora-ui .tab-nav > .tab-item--secondary:nth-child(6)::before {
+    content: "";
+    position: absolute;
+    top: -0.3rem;
+    left: 0.9rem;
+    right: 0.9rem;
+    height: 1px;
+    background: var(--entablature-hairline);
+  }
+
+  .agora-ui .sidebar-compose-slot {
+    padding: 0.85rem 0 0.5rem;
+  }
+
+  .agora-ui .sidebar-compose-slot .tab-item.compose-tab {
+    justify-content: center;
+    background: var(--aurora-gradient);
+    color: #0d0f12 !important;
+    border-radius: var(--radius);
+    padding: 0.75rem 1rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-size: 0.8125rem;
+    box-shadow: none;
+  }
+
+  .agora-ui .sidebar-compose-slot .tab-item.compose-tab:hover {
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.35), 0 0 20px rgba(59, 130, 246, 0.35);
+    transform: translateY(1px);
+  }
+
+  .agora-ui .sidebar-feed-slot {
+    border-top: 1px solid var(--entablature-hairline);
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+  }
+
+  .agora-ui .sidebar-feed-slot::before {
+    content: "Feeds";
+    display: block;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 0 0.9rem 0.4rem;
+  }
+
+  .agora-ui .sidebar-feed-tab {
+    border-radius: var(--radius);
+    color: var(--travertine-muted);
+    font-size: 0.875rem;
+    box-shadow: none;
+  }
+
+  .agora-ui .sidebar-feed-tab.active {
+    background: var(--accent-soft);
+    color: var(--emerald-bright);
+    box-shadow: inset 2px 0 0 var(--emerald-consensus);
+  }
+
+  .agora-ui .sidebar-footer {
+    border-top: 1px solid var(--entablature-hairline);
+    padding-top: 0.75rem;
+  }
+
+  .agora-ui .sidebar-footer .theme-mode-toggle,
+  .agora-ui .sidebar-footer .wallet-badge {
+    border-radius: var(--radius);
+    background: var(--slate-deep);
+    border: 1px solid var(--entablature-hairline);
+    color: var(--travertine-muted);
+  }
+
+  .agora-ui .sidebar-collapse-btn {
+    border-radius: var(--radius);
+    background: var(--slate-deep);
+    border: 1px solid var(--entablature-hairline);
+  }
+}
+
+/* Wordmark */
+.agora-wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  text-decoration: none;
+  color: var(--travertine-linen);
+}
+
+.agora-wordmark:hover {
+  text-decoration: none;
+}
+
+.agora-wordmark-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius);
+}
+
+.agora-wordmark-text {
+  font-family: var(--font-epigraphic);
+  font-weight: 700;
+  font-size: 1.15rem;
+  letter-spacing: 0.22em;
+}
+
+/* ── 5. Topbar ── */
+.agora-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 80;
+  height: var(--agora-topbar-h);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0 1.5rem;
+  background: color-mix(in srgb, var(--obsidian-oled) 88%, transparent);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--entablature-hairline);
+}
+
+.agora-topbar-brand {
+  display: none;
+}
+
+.agora-search {
+  position: relative;
+  flex: 1;
+  max-width: 440px;
+  margin: 0;
+}
+
+.agora-search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.agora-search input {
+  width: 100%;
+  height: 40px;
+  padding: 0 0.85rem 0 2.4rem;
+  background: var(--slate-deep);
+  border: 1px solid var(--entablature-hairline);
+  border-radius: var(--radius);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.875rem;
+  box-sizing: border-box;
+}
+
+.agora-search input:focus {
+  outline: none;
+  border-color: var(--entablature-active);
+  box-shadow: inset 0 -2px 0 var(--emerald-consensus);
+}
+
+.agora-topbar-vote {
+  margin-left: auto;
+}
+
+.agora-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 40px;
+  padding: 0 1rem;
+  border-radius: var(--radius);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease, transform 0.1s ease;
+}
+
+.agora-btn:hover {
+  text-decoration: none;
+}
+
+.agora-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.agora-btn--primary {
+  background: var(--aurora-gradient);
+  color: #0d0f12;
+}
+
+.agora-btn--primary:hover {
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.35), 0 0 20px rgba(59, 130, 246, 0.35);
+  transform: translateY(1px);
+  color: #0d0f12;
+}
+
+.agora-btn--secondary {
+  background: var(--slate-deep);
+  border-color: rgba(244, 238, 221, 0.2);
+  color: var(--travertine-linen);
+}
+
+.agora-btn--secondary:hover {
+  border-color: var(--travertine-linen);
+  color: var(--travertine-linen);
+}
+
+.agora-btn--ghost {
+  background: var(--accent-soft);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: var(--emerald-bright);
+}
+
+.agora-btn--ghost:hover {
+  border-color: var(--emerald-consensus);
+  color: var(--emerald-bright);
+}
+
+.agora-btn[disabled],
+.agora-btn[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.agora-identity-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.25rem 0.25rem 0.25rem 0.5rem;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  text-align: right;
+}
+
+.agora-identity-chip:hover,
+.agora-identity-chip[aria-expanded="true"] {
+  border-color: var(--entablature-hairline);
+  background: var(--slate-deep);
+}
+
+.agora-identity-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.agora-identity-name {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.4rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--travertine-linen);
+}
+
+.agora-identity-key {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--muted);
+}
+
+.agora-presence-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--emerald-consensus);
+  box-shadow: var(--presence-pulse);
+  flex-shrink: 0;
+}
+
+.agora-topbar-avatar,
+.agora-identity-chip .avatar-wrap {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  border-radius: var(--radius) !important;
+  font-size: 0.9rem;
+}
+
+.agora-identity-chip .avatar,
+.agora-identity-chip .avatar-img {
+  border-radius: var(--radius) !important;
+  width: 36px;
+  height: 36px;
+}
+
+.agora-identity-chip .avatar svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Gaveta de identidade/rede (Stitch: "Menu da Rede P2P") */
+.agora-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 140;
+  background: var(--overlay);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.agora-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 150;
+  width: min(420px, 100vw);
+  overflow-y: auto;
+  background: var(--slate-deep);
+  border-left: 1px solid var(--entablature-hairline);
+  padding: 1.5rem;
+  box-sizing: border-box;
+}
+
+.agora-drawer::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--aurora-gradient);
+}
+
+.agora-drawer[hidden],
+.agora-drawer-backdrop[hidden] {
+  display: none;
+}
+
+.agora-drawer-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.agora-drawer-name {
+  margin: 0;
+  font-family: var(--font-epigraphic);
+  color: var(--travertine-linen);
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.agora-icon-btn {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--entablature-hairline);
+  border-radius: var(--radius);
+  color: var(--travertine-muted);
+  cursor: pointer;
+}
+
+.agora-icon-btn:hover {
+  border-color: var(--travertine-linen);
+}
+
+.agora-drawer-key {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.25rem 0.75rem;
+  align-items: center;
+  padding: 0.85rem 1rem;
+  background: var(--obsidian-oled);
+  border: 1px solid var(--entablature-hairline);
+  border-radius: var(--radius);
+  margin-bottom: 1.25rem;
+}
+
+.agora-drawer-key .agora-label {
+  grid-column: 1 / -1;
+}
+
+.agora-drawer-key code {
+  font-size: 0.75rem;
+  color: var(--cobalt-soft);
+  overflow-wrap: anywhere;
+}
+
+.agora-link-btn {
+  background: none;
+  border: none;
+  color: var(--emerald-bright);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.agora-drawer-section {
+  border-top: 1px solid var(--entablature-hairline);
+  padding-top: 1.25rem;
+  margin-top: 1.25rem;
+}
+
+.agora-drawer-network {
+  margin-bottom: 0.5rem;
+}
+
+.agora-drawer-link {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.8rem 0.25rem;
+  border-bottom: 1px solid var(--entablature-hairline);
+  color: var(--travertine-muted);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.agora-drawer-link:hover {
+  color: var(--travertine-linen);
+  text-decoration: none;
+  box-shadow: inset 2px 0 0 var(--emerald-consensus);
+  padding-left: 0.6rem;
+}
+
+@media (min-width: 768px) {
+  .agora-drawer-link--mobile {
+    display: none;
+  }
+}
+
+/* ── 6. Conteúdo principal ── */
+@media (min-width: 768px) {
+  .agora-ui main#app-main {
+    padding: 2rem 1.5rem 4rem;
+  }
+}
+
+/* Telas de painel (Vote, Comunidades) usam coluna larga; perfil, intermediária; feed, a coluna de leitura. */
+.agora-ui[data-active-tab="vote"] main#app-main,
+.agora-ui[data-active-tab="communities"] main#app-main:has(.agora-community-list, .agora-empty) {
+  max-width: calc(var(--agora-content-max) + 3rem);
+}
+
+.agora-ui[data-active-tab="profile"] main#app-main {
+  max-width: calc(820px + 3rem);
+}
+
+.agora-ui[data-active-tab="profile"] {
+  --feed-max: 820px;
+}
+
+.agora-page-head {
+  max-width: var(--feed-max);
+  margin: 0 auto 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--entablature-hairline);
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem 1.5rem;
+  flex-wrap: wrap;
+}
+
+.agora-page-head--wide {
+  max-width: var(--agora-content-max);
+}
+
+.agora-page-head-text {
+  min-width: 0;
+  flex: 1 1 320px;
+}
+
+.agora-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.75rem;
+  padding: 0.25rem 0.65rem;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  background: rgba(16, 185, 129, 0.12);
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--emerald-bright);
+}
+
+.agora-page-title {
+  margin: 0;
+  font-family: var(--font-epigraphic);
+  font-size: clamp(1.75rem, 1.2rem + 2vw, 2.5rem);
+  line-height: 1.15;
+  font-weight: 500;
+  color: var(--travertine-linen);
+  letter-spacing: -0.02em;
+}
+
+.agora-page-sub {
+  margin: 0.6rem 0 0;
+  max-width: 60ch;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: var(--travertine-muted);
+}
+
+.agora-page-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* Abas segmentadas (feed e filtros) */
+.agora-ui .feed-tabs-bar {
+  display: flex;
+  justify-content: flex-start;
+  gap: 0.5rem;
+  border: none;
+  background: transparent;
+  padding: 0 0 1rem;
+  margin: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.agora-ui .feed-tab-chip {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 0.9rem;
+  border: 1px solid var(--entablature-hairline);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--travertine-muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: none;
+}
+
+.agora-ui .feed-tab-chip::after {
+  display: none;
+}
+
+.agora-ui .feed-tab-chip:hover {
+  border-color: var(--entablature-active);
+  color: var(--travertine-linen);
+  text-decoration: none;
+}
+
+.agora-ui .feed-tab-chip.active {
+  border-color: rgba(16, 185, 129, 0.45);
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.18), rgba(6, 182, 212, 0.06));
+  color: var(--emerald-bright);
+}
+
+/* Planar Stelae: posts e listas sem card, divididos por hairlines */
+.agora-ui .feed-container {
+  border-top: 1px solid var(--entablature-hairline);
+  gap: 0;
+}
+
+.agora-ui .feed-container > .post,
+.agora-ui .feed-container > article {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--entablature-hairline);
+  border-radius: 0;
+  box-shadow: none;
+  margin: 0;
+  padding-top: 1.25rem;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+
+@media (hover: hover) {
+  .agora-ui .feed-container > .post:hover,
+  .agora-ui .feed-container > article:hover {
+    background: var(--slate-deep);
+    box-shadow: inset 2px 0 0 var(--emerald-consensus);
+  }
+}
+
+.agora-ui .post-header-user strong,
+.agora-ui .post-author-name {
+  color: var(--travertine-linen);
+}
+
+.agora-ui .post-handle,
+.agora-ui .post-time {
+  color: var(--muted);
+}
+
+.agora-ui .post-pinned-ribbon {
+  color: var(--emerald-bright);
+  letter-spacing: 0.1em;
+}
+
+.agora-ui .avatar,
+.agora-ui .avatar-img {
+  border-radius: 50%;
+}
+
+.agora-ui .feed-composer-section .inline-composer,
+.agora-ui .feed-composer-section > * {
+  background: var(--slate-deep);
+  border: 1px solid var(--entablature-hairline);
+  border-radius: var(--radius);
+  box-shadow: none;
+}
+
+.agora-ui .welcome-feed-hint {
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: var(--radius);
+}
+
+.agora-ui .story-ring {
+  border-radius: var(--radius-lg);
+}
+
+/* Cards legados → monólitos planares */
+.agora-ui .card,
+.agora-ui .community-card,
+.agora-ui .dm-header-card,
+.agora-ui .people-result {
+  background: var(--slate-deep);
+  border: 1px solid var(--entablature-hairline);
+  border-radius: var(--radius);
+  box-shadow: none;
+}
+
+.agora-ui .btn {
+  border-radius: var(--radius);
+}
+
+.agora-ui .btn-primary,
+.agora-ui .btn.btn-primary {
+  background: var(--aurora-gradient);
+  color: #0d0f12;
+  border: none;
+  font-weight: 700;
+}
+
+.agora-ui .btn-outline,
+.agora-ui .btn.btn-outline {
+  background: var(--slate-deep);
+  border: 1px solid rgba(244, 238, 221, 0.2);
+  color: var(--travertine-linen);
+}
+
+.agora-ui .btn-outline:hover {
+  border-color: var(--travertine-linen);
+}
+
+.agora-ui input[type="text"],
+.agora-ui input[type="search"],
+.agora-ui input[type="url"],
+.agora-ui textarea,
+.agora-ui select {
+  border-radius: var(--radius);
+}
+
+.agora-ui input[type="text"]:focus,
+.agora-ui input[type="search"]:focus,
+.agora-ui textarea:focus {
+  outline: none;
+  box-shadow: inset 0 -2px 0 var(--emerald-consensus);
+}
+
+.agora-ui .app-footer {
+  color: var(--muted);
+  border-top: 1px solid var(--entablature-hairline);
+  padding: 1rem;
+}
+
+/* ── 7. Comunidades (Stitch: Células Vicinais) ── */
+.agora-ui .agora-community-list {
+  max-width: var(--agora-content-max);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.agora-community {
+  display: grid;
+  grid-template-columns: 64px 1fr auto;
+  gap: 1rem 1.25rem;
+  align-items: start;
+  padding: 1.5rem;
+  background: var(--slate-deep);
+  border: 1px solid var(--entablature-hairline);
+  border-radius: var(--radius);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.agora-community:hover {
+  border-color: rgba(16, 185, 129, 0.3);
+  box-shadow: inset 2px 0 0 var(--emerald-consensus);
+}
+
+.agora-community-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius);
+  object-fit: cover;
+  background: var(--surface-column);
+  border: 1px solid var(--entablature-hairline);
+}
+
+.agora-community-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0 0 0.35rem;
+  font-family: var(--font-epigraphic);
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--travertine-linen);
+}
+
+.agora-community-title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.agora-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid var(--entablature-hairline);
+  font-family: var(--font-telemetry);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--travertine-muted);
+  background: var(--surface-monolith);
+}
+
+.agora-pill--emerald {
+  color: var(--emerald-bright);
+  border-color: rgba(16, 185, 129, 0.35);
+  background: rgba(16, 185, 129, 0.12);
+}
+
+.agora-pill--cobalt {
+  color: var(--cobalt-soft);
+  border-color: rgba(59, 130, 246, 0.35);
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.agora-pill--amber {
+  color: #fbbf24;
+  border-color: rgba(251, 191, 36, 0.35);
+  background: rgba(251, 191, 36, 0.1);
+}
+
+.agora-community-desc {
+  margin: 0;
+  color: var(--travertine-muted);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.agora-metrics {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1px;
+  background: var(--entablature-hairline);
+  border: 1px solid var(--entablature-hairline);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.agora-metric {
+  background: var(--obsidian-oled);
+  padding: 0.75rem 1rem;
+}
+
+.agora-metric-label {
+  display: block;
+  font-size: 0.6875rem;
+  color: var(--muted);
+  margin-bottom: 0.25rem;
+}
+
+.agora-metric-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--travertine-linen);
+  font-feature-settings: "tnum" 1, "zero" 1;
+}
+
+.agora-metric-value--emerald {
+  color: var(--emerald-bright);
+}
+
+.agora-metric-value--cobalt {
+  color: var(--cobalt-soft);
+}
+
+.agora-ui .community-catchup-card p {
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+
+.agora-community-foot {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.agora-community-foot .agora-mono {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+/* ── 8. Vote (Democracia Direta) ── */
+.agora-vote {
+  max-width: var(--agora-content-max);
+  margin: 0 auto;
+}
+
+.agora-vote-hero {
+  position: relative;
+  padding: 2rem;
+  background:
+    radial-gradient(120% 140% at 100% 0%, rgba(16, 185, 129, 0.1), transparent 55%),
+    var(--slate-deep);
+  border: 1px solid var(--entablature-hairline);
+  border-radius: var(--radius);
+  margin-bottom: 1.5rem;
+}
+
+.agora-vote-hero .agora-page-head {
+  max-width: none;
+  border: none;
+  padding: 0;
+  margin: 0 0 1.5rem;
+}
+
+.agora-stat-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.75rem;
+}
+
+.agora-stat {
+  padding: 1rem 1.1rem;
+  background: var(--obsidian-oled);
+  border: 1px solid var(--entablature-hairline);
+  border-radius: var(--radius);
+}
+
+.agora-stat-label {
+  display: block;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.agora-stat-value {
+  display: block;
+  margin: 0.4rem 0 0.25rem;
+  font-family: var(--font-epigraphic);
+  font-size: 1.85rem;
+  font-weight: 600;
+  color: var(--travertine-linen);
+  font-feature-settings: "tnum" 1, "lnum" 1;
+}
+
+.agora-stat-value--emerald {
+  color: var(--emerald-bright);
+}
+
+.agora-stat-hint {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.agora-filter-bar {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 1.5rem;
+}
+
+.agora-filter-btn {
+  padding: 0.55rem 0.9rem;
+  border: 1px solid var(--entablature-hairline);
+  border-radius: var(--radius);
+  background: var(--obsidian-oled);
+  color: var(--travertine-muted);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.agora-filter-btn:hover {
+  border-color: var(--entablature-active);
+  color: var(--travertine-linen);
+}
+
+.agora-filter-btn[aria-pressed="true"] {
+  background: var(--emerald-primary);
+  border-color: var(--emerald-primary);
+  color: #0d0f12;
+}
+
+.agora-deliberation {
+  position: relative;
+  padding: 1.75rem 2rem;
+  background: var(--slate-deep);
+  border: 1px solid var(--entablature-hairline);
+  border-radius: var(--radius);
+  margin-bottom: 1rem;
+  overflow: hidden;
+}
+
+.agora-deliberation::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--aurora-gradient);
+  opacity: 0.85;
+}
+
+.agora-deliberation[data-state="merged"]::before {
+  background: var(--emerald-consensus);
+}
+
+.agora-deliberation[data-state="rejected"]::before,
+.agora-deliberation[data-state="expired"]::before {
+  background: var(--entablature-hairline);
+}
+
+.agora-deliberation-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.agora-deliberation-meta .agora-countdown {
+  margin-left: auto;
+  padding: 0.3rem 0.65rem;
+  border: 1px solid rgba(251, 191, 36, 0.35);
+  border-radius: var(--radius);
+  color: #fbbf24;
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-feature-settings: "tnum" 1;
+}
+
+.agora-deliberation-title {
+  margin: 1rem 0 0.5rem;
+  font-family: var(--font-epigraphic);
+  font-size: clamp(1.3rem, 1rem + 1vw, 1.75rem);
+  font-weight: 500;
+  line-height: 1.25;
+}
+
+.agora-deliberation-title a {
+  color: var(--travertine-linen);
+  text-decoration: none;
+}
+
+.agora-deliberation-title a:hover {
+  text-decoration: underline;
+  text-decoration-color: var(--emerald-consensus);
+}
+
+.agora-deliberation-body {
+  margin: 0 0 1.25rem;
+  color: var(--travertine-muted);
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.agora-tally {
+  padding: 1rem 1.1rem;
+  background: var(--obsidian-oled);
+  border: 1px solid var(--entablature-hairline);
+  border-radius: var(--radius);
+  margin-bottom: 1.25rem;
+}
+
+.agora-tally-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.8125rem;
+  font-feature-settings: "tnum" 1;
+}
+
+.agora-tally-yes {
+  color: var(--emerald-bright);
+  font-weight: 700;
+}
+
+.agora-tally-no {
+  color: #ffb4ab;
+  font-weight: 700;
+}
+
+.agora-tally-bar {
+  display: flex;
+  height: 6px;
+  margin: 0.6rem 0;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--surface-column);
+}
+
+.agora-tally-bar > span {
+  display: block;
+  height: 100%;
+}
+
+.agora-tally-bar .yes {
+  background: var(--emerald-consensus);
+}
+
+.agora-tally-bar .no {
+  background: #f87171;
+}
+
+.agora-tally-bar .abstain {
+  background: #6b7280;
+}
+
+.agora-tally-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.agora-vote-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.agora-vote-actions .agora-vote-note {
+  flex-basis: 100%;
+  margin: 0.25rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.agora-btn--yes[aria-pressed="true"] {
+  background: var(--emerald-consensus);
+  color: #0d0f12;
+  border-color: var(--emerald-consensus);
+}
+
+.agora-btn--no[aria-pressed="true"] {
+  background: #f87171;
+  color: #0d0f12;
+  border-color: #f87171;
+}
+
+.agora-empty {
+  max-width: var(--agora-content-max);
+  margin: 0 auto;
+  padding: 3rem 1.5rem;
+  text-align: center;
+  border: 1px solid var(--entablature-hairline);
+  border-radius: var(--radius);
+  background: var(--slate-deep);
+}
+
+.agora-empty h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.35rem;
+  font-weight: 500;
+}
+
+.agora-empty p {
+  margin: 0 auto 1.25rem;
+  max-width: 52ch;
+  color: var(--travertine-muted);
+  line-height: 1.55;
+}
+
+/* ── 9. Perfil (Stitch: Identidade Cívica) ── */
+.agora-ui .profile-grid-avatar-wrap {
+  width: 112px;
+  height: 112px;
+  padding: 3px;
+  background: var(--aurora-gradient);
+  box-shadow: var(--aurora-glow);
+}
+
+.agora-ui .profile-grid-avatar-wrap .avatar,
+.agora-ui .profile-grid-avatar-fallback {
+  background: var(--slate-deep);
+  border-radius: 50%;
+  color: var(--travertine-linen);
+  font-family: var(--font-epigraphic);
+}
+
+.agora-ui .profile-grid-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.agora-ui .profile-grid-stat {
+  align-items: flex-start;
+  text-align: left;
+  padding: 0.85rem 1rem;
+  background: var(--slate-deep);
+  border: 1px solid var(--entablature-hairline);
+  border-radius: var(--radius);
+  text-decoration: none;
+}
+
+.agora-ui .profile-grid-stat:hover {
+  border-color: var(--entablature-active);
+  text-decoration: none;
+}
+
+.agora-ui .profile-grid-stat-value {
+  font-family: var(--font-epigraphic);
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--travertine-linen);
+  font-feature-settings: "tnum" 1, "lnum" 1;
+}
+
+.agora-ui .profile-grid-stat-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.agora-ui .profile-grid-handle {
+  font-family: var(--font-mono);
+  color: var(--emerald-bright);
+}
+
+.agora-ui .profile-grid-header {
+  border-bottom: 1px solid var(--entablature-hairline);
+}
+
+.agora-ui .profile-grid-name {
+  font-size: clamp(1.6rem, 1.2rem + 1.4vw, 2.2rem);
+  font-weight: 500;
+}
+
+.agora-ui .profile-grid-stats .stat-num,
+.agora-ui .profile-grid-stats strong {
+  font-family: var(--font-epigraphic);
+  color: var(--travertine-linen);
+  font-feature-settings: "tnum" 1;
+}
+
+.agora-ui .profile-civic-highlights-title {
+  font-family: var(--font-epigraphic);
+  letter-spacing: 0.16em;
+  color: var(--travertine-linen);
+}
+
+.agora-ui .civic-highlight-ring {
+  border-radius: var(--radius-lg);
+}
+
+.agora-ui .civic-highlight-item.is-locked {
+  opacity: 0.4;
+  filter: grayscale(1);
+}
+
+.agora-ui .civic-highlight-item.is-locked:hover {
+  opacity: 0.75;
+}
+
+.agora-ui .profile-civic-highlights-empty {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.agora-ui .profile-tabs a.active,
+.agora-ui .profile-tab.active {
+  color: var(--emerald-bright);
+  box-shadow: inset 0 -2px 0 var(--emerald-consensus);
+}
+
+/* ── 10. Mensagens ── */
+.agora-ui .dm-recent-bar {
+  max-width: var(--feed-max);
+  margin: 0 auto 0.75rem;
+  gap: 0.75rem;
+}
+
+.agora-ui .dm-inbox-list {
+  border-top: 1px solid var(--entablature-hairline);
+}
+
+.agora-ui .dm-inbox-row {
+  border: none;
+  border-bottom: 1px solid var(--entablature-hairline);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.agora-ui .dm-inbox-row:hover {
+  background: var(--slate-deep);
+  box-shadow: inset 2px 0 0 var(--emerald-consensus);
+}
+
+.agora-ui .dm-inbox-row.is-unread .dm-inbox-peer {
+  color: var(--travertine-linen);
+}
+
+.agora-ui .dm-inbox-peer {
+  font-family: var(--font-epigraphic);
+  font-weight: 600;
+  color: var(--travertine-muted);
+}
+
+.agora-ui .dm-unread-badge {
+  background: var(--emerald-consensus);
+  color: #0d0f12;
+}
+
+.agora-ui[data-active-tab="dm"] main#app-main:has(.agora-dm-split) {
+  max-width: 1240px;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+.agora-dm-split {
+  display: grid;
+  grid-template-columns: 340px minmax(0, 1fr);
+  height: calc(100dvh - var(--agora-topbar-h) - 2rem);
+  border: 1px solid var(--entablature-hairline);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--obsidian-oled);
+}
+
+.agora-dm-list-pane {
+  border-right: 1px solid var(--entablature-hairline);
+  padding: 1rem;
+  overflow-y: auto;
+  background: var(--slate-deep);
+}
+
+.agora-dm-list-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.agora-dm-list-pane .dm-search-input {
+  width: 100%;
+  margin-bottom: 0.75rem;
+  box-sizing: border-box;
+}
+
+.agora-dm-list-pane .dm-inbox-row.is-active {
+  background: var(--surface-monolith);
+  box-shadow: inset 2px 0 0 var(--emerald-consensus);
+}
+
+.agora-dm-thread-pane {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 1rem 1.25rem 0;
+}
+
+.agora-dm-thread-pane > .back-link {
+  display: none;
+}
+
+.agora-dm-thread-pane .dm-thread-container {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  max-width: none;
+  margin: 0;
+  border: none;
+  background: transparent;
+}
+
+.agora-dm-thread-pane .dm-thread-list {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+  overflow-y: auto;
+}
+
+.agora-ui .dm-thread-header {
+  border-bottom: 1px solid var(--entablature-hairline);
+  padding-bottom: 0.75rem;
+}
+
+.agora-ui .dm-thread-header strong {
+  font-family: var(--font-epigraphic);
+}
+
+.agora-ui .dm-bubble {
+  border-radius: var(--radius);
+}
+
+.agora-ui .dm-bubble.received {
+  background: var(--surface-monolith);
+  border: 1px solid var(--entablature-hairline);
+  color: var(--text);
+}
+
+.agora-ui .dm-bubble.sent {
+  background: var(--emerald-consensus);
+  border: none;
+  color: #0d0f12;
+}
+
+.agora-ui .dm-bubble.sent .dm-bubble-meta {
+  color: rgba(13, 15, 18, 0.7);
+}
+
+.agora-ui .dm-advanced {
+  margin-top: 1rem;
+  color: var(--travertine-muted);
+}
+
+.agora-ui .dm-list-item,
+.agora-ui .dm-conversation-item {
+  border-radius: 0;
+  border: none;
+  border-bottom: 1px solid var(--entablature-hairline);
+  background: transparent;
+}
+
+.agora-ui .dm-list-item:hover,
+.agora-ui .dm-conversation-item:hover {
+  background: var(--slate-deep);
+  box-shadow: inset 2px 0 0 var(--emerald-consensus);
+}
+
+/* Tablet: menu mais estreito e busca recolhida para não espremer a topbar */
+@media (min-width: 768px) and (max-width: 1099px) {
+  :root {
+    --sidebar-width: 216px;
+  }
+
+  .agora-search {
+    display: none;
+  }
+
+  .agora-topbar-vote {
+    margin-left: auto;
+  }
+}
+
+/* ── 11. Mobile (< 768px): topbar compacta + barra inferior com 5 primários + FAB Postar ── */
+@media (max-width: 767px) {
+  .agora-topbar {
+    height: 56px;
+    padding: 0 max(12px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px));
+    gap: 0.5rem;
+  }
+
+  .agora-topbar-brand {
+    display: block;
+    margin-right: auto;
+  }
+
+  .agora-wordmark-mark {
+    width: 26px;
+    height: 26px;
+  }
+
+  .agora-search,
+  .agora-topbar-vote,
+  .agora-identity-text {
+    display: none;
+  }
+
+  .agora-sidebar-brand {
+    display: none;
+  }
+
+  .agora-ui .app-sidebar.tab-bar {
+    background: color-mix(in srgb, var(--obsidian-oled) 92%, transparent);
+    border-top: 1px solid var(--entablature-hairline);
+    box-shadow: none;
+  }
+
+  .agora-ui .tab-item--secondary {
+    display: none !important;
+  }
+
+  .agora-ui .tab-item {
+    flex: 1;
+    min-width: 0;
+    padding: 6px 2px;
+    color: var(--muted);
+    background: transparent;
+  }
+
+  .agora-ui .tab-item .tab-label {
+    position: static !important;
+    display: block !important;
+    width: auto !important;
+    height: auto !important;
+    margin: 0 !important;
+    clip: auto !important;
+    overflow: visible !important;
+    white-space: nowrap;
+    font-size: 0.625rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+
+  .agora-ui .tab-item.active {
+    color: var(--emerald-bright);
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .agora-ui .tab-item.active .tab-icon {
+    filter: drop-shadow(0 0 6px rgba(16, 185, 129, 0.5));
+  }
+
+  .agora-ui .sidebar-compose-slot {
+    position: fixed;
+    right: max(16px, env(safe-area-inset-right, 0px));
+    bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+    z-index: 96;
+    padding: 0;
+  }
+
+  .agora-ui .sidebar-compose-slot .tab-item.compose-tab {
+    width: auto;
+    height: 48px;
+    min-height: 48px;
+    padding: 0 1.1rem;
+    gap: 0.4rem;
+    flex-direction: row;
+    border-radius: var(--radius) !important;
+    box-shadow: var(--aurora-glow);
+  }
+
+  .agora-ui .sidebar-compose-slot .tab-item.compose-tab .tab-label {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: #0d0f12;
+  }
+
+  .agora-ui main#app-main {
+    padding-top: 1rem;
+  }
+
+  .agora-page-head {
+    padding: 0 0 1rem;
+    margin-bottom: 1rem;
+  }
+
+  main#app-main:has(.feed-chrome) > .agora-page-head {
+    padding: 0 16px 1rem;
+  }
+
+  .agora-page-title {
+    font-size: 1.75rem;
+  }
+
+  .agora-page-sub {
+    font-size: 0.875rem;
+  }
+
+  .agora-ui .feed-tabs-bar {
+    padding: 0 16px 0.75rem;
+  }
+
+  .agora-community {
+    grid-template-columns: 48px 1fr;
+    padding: 1.1rem;
+  }
+
+  .agora-community-avatar {
+    width: 48px;
+    height: 48px;
+  }
+
+  .agora-metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .agora-metric {
+    padding: 0.6rem 0.65rem;
+  }
+
+  .agora-metric-value {
+    font-size: 0.875rem;
+  }
+
+  .agora-vote-hero,
+  .agora-deliberation {
+    padding: 1.25rem;
+  }
+
+  .agora-vote-hero .agora-page-head {
+    padding: 0;
+  }
+
+  .agora-stat-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+
+  .agora-stat {
+    padding: 0.75rem;
+  }
+
+  .agora-stat-value {
+    font-size: 1.5rem;
+  }
+
+  .agora-ui .profile-grid-avatar-wrap {
+    width: 88px;
+    height: 88px;
+  }
+
+  .agora-ui .profile-grid-stat {
+    padding: 0.6rem 0.5rem;
+    align-items: center;
+    text-align: center;
+  }
+
+  .agora-ui .profile-grid-stat-value {
+    font-size: 1.2rem;
+  }
+
+  .agora-ui .profile-grid-stat-label {
+    font-size: 0.625rem;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  .agora-ui .profile-civic-highlights-title {
+    letter-spacing: 0.08em;
+  }
+
+  .agora-deliberation-meta .agora-countdown {
+    margin-left: 0;
+  }
+
+  .agora-vote-actions .agora-btn {
+    flex: 1 1 calc(50% - 0.5rem);
+  }
+
+  .app-layout.in-dm-thread .agora-topbar,
+  .app-layout:has(.dm-thread-container) .agora-topbar {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .agora-btn,
+  .agora-ui .tab-item,
+  .agora-ui .feed-container > .post {
+    transition: none;
+  }
+}

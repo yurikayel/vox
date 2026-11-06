@@ -1011,6 +1011,28 @@ function attachProposalBridgeHandlers(proposal, tally) {
   });
 }
 
+/**
+ * Assina e propaga um voto de governança (mesmo formato usado pelo detalhe da pauta).
+ * @returns {Promise<object>} voto assinado
+ */
+export async function castGovernanceVote(proposal, user, choice) {
+  const normalized = gov.normalizeVoteChoice(choice);
+  if (!normalized) throw new Error("Escolha de voto inválida");
+  const signedVote = await localAccount.signPayload({
+    id: `vote_${proposal.id}_${user}_${Date.now()}`,
+    type: "governance-vote",
+    proposalId: proposal.id,
+    choice: normalized,
+    communityId: proposal.communityId,
+    author: user,
+    owner: user,
+    ts: Date.now(),
+  });
+  await cacheNode.saveLocalPost(signedVote);
+  peers.broadcastGossip(signedVote);
+  return signedVote;
+}
+
 export function attachProposalVotingHandlers(proposal, user) {
   const buttons = document.querySelectorAll(".vote-btn");
   buttons.forEach((btn) => {
@@ -1020,18 +1042,7 @@ export function attachProposalVotingHandlers(proposal, user) {
       buttons.forEach((b) => (b.disabled = true));
       btn.textContent = "Assinando…";
       try {
-        const signedVote = await localAccount.signPayload({
-          id: `vote_${proposal.id}_${user}_${Date.now()}`,
-          type: "governance-vote",
-          proposalId: proposal.id,
-          choice,
-          communityId: proposal.communityId,
-          author: user,
-          owner: user,
-          ts: Date.now(),
-        });
-        await cacheNode.saveLocalPost(signedVote);
-        peers.broadcastGossip(signedVote);
+        await castGovernanceVote(proposal, user, choice);
         share.showToast(`Voto "${choice}" registrado!`);
         showProposal(proposal.communityId, proposal.id);
       } catch (err) {
@@ -1042,24 +1053,86 @@ export function attachProposalVotingHandlers(proposal, user) {
   });
 }
 
-export async function showVote() {
-  const user = await getActiveUser();
-  const main = render.renderShell(makeShellProps(user, "vote", "Democracia Direta"));
-  main.innerHTML = render.renderVoteDashboard();
+async function buildVoteCommunityTitles() {
+  const titles = new Map([["vox", mock.MOCK_OFFICIAL_COMMUNITY_VOX.title]]);
+  const local = await cacheNode.getLocalCommunities().catch(() => []);
+  for (const c of local) if (c?.id) titles.set(c.id, c.title || c.id);
+  return titles;
+}
 
-  const voteBtns = main.querySelectorAll(".btn-vote-choice");
-  voteBtns.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const choice = btn.dataset.choice;
-      const id = btn.dataset.id;
-      if (btn.classList.contains("btn-vote-endorse")) {
-        share.showToast(`Endosso ed25519 emitido para #${id}!`);
+/** Carrega todas as pautas de governança conhecidas por este aparelho, com apuração real. */
+export async function loadVoteItems(user) {
+  const proposals = await cacheNode.getLocalPosts({ type: "governance-proposal" }).catch(() => []);
+  const titles = await buildVoteCommunityTitles();
+  const items = [];
+  for (const p of proposals) {
+    const data = await fetchProposalData(p.communityId, p.id, user).catch(() => null);
+    if (data) items.push(normalizeVoteItem(data, titles));
+  }
+  const order = { open: 0, merged: 1, rejected: 2, expired: 2 };
+  items.sort((a, b) => (order[a.state] ?? 3) - (order[b.state] ?? 3) || (a.closesAt || 0) - (b.closesAt || 0));
+  return items;
+}
+
+function normalizeVoteItem({ proposal, tally, userVote, isEligible, isMember }, titles) {
+  return {
+    id: proposal.id,
+    communityId: proposal.communityId,
+    communityTitle: titles.get(proposal.communityId) || proposal.communityId,
+    title: proposal.title,
+    body: proposal.body,
+    author: proposal.author || proposal.owner || "",
+    authorLabel: profileDirectory.getAuthorDisplaySync(proposal.author || proposal.owner || "") || "",
+    createdAt: Number(proposal.createdAt || proposal.ts) || 0,
+    closesAt: Number(proposal.closesAt) || 0,
+    minQuorum: Number(proposal.minQuorum) || 1,
+    state: tally.state,
+    tally,
+    userVote,
+    isEligible,
+    isMember,
+    proposal,
+  };
+}
+
+function bindVoteChoiceButtons(main, items, user, rerender) {
+  main.querySelectorAll(".agora-vote-btn").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const item = items.find((i) => i.id === btn.dataset.proposalId);
+      if (!item || !user) {
+        share.showToast("Crie sua identidade neste aparelho para votar.", "warning");
         return;
       }
-      if (choice) {
-        const label = choice === "yes" ? "Sim (Favorável)" : "Contestar (Contrário)";
-        share.showToast(`Voto "${label}" registrado na pauta #${id}!`);
+      main.querySelectorAll(".agora-vote-btn").forEach((b) => (b.disabled = true));
+      btn.textContent = "Assinando…";
+      try {
+        await castGovernanceVote(item.proposal, user, btn.dataset.voteChoice);
+        share.showToast("Voto assinado e registrado neste aparelho.");
+        rerender(true);
+      } catch (err) {
+        share.showToast(`Erro ao votar: ${err.message}`, "error");
+        rerender(false);
       }
     });
   });
+}
+
+export async function showVote({ filter = "all" } = {}) {
+  const user = await getActiveUser();
+  const main = render.renderShell(makeShellProps(user, "vote", "Democracia Direta"));
+  render.renderLoading(main);
+  const items = await loadVoteItems(user);
+  let activeFilter = filter;
+
+  const paint = () => {
+    main.innerHTML = render.renderVoteDashboard(items, { filter: activeFilter });
+    main.querySelectorAll("[data-vote-filter]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        activeFilter = btn.dataset.voteFilter || "all";
+        paint();
+      });
+    });
+    bindVoteChoiceButtons(main, items, user, (reload) => (reload ? showVote({ filter: activeFilter }) : paint()));
+  };
+  paint();
 }

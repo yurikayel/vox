@@ -1,6 +1,6 @@
 # ADR-016: Design System Sovereign Agora Luminescent Matrix, Arquitetura Planar Stelae e Módulo de Democracia Direta
 
-- **Status:** Ratificado
+- **Status:** Aceito — revisado em 2026-11-06 (seção 5). A versão anterior foi marcada "Ratificado" no mesmo dia, sem período de revisão; esta revisão corrige o que nela não correspondia ao código.
 - **Data:** 2026-11-06
 - **Contexto:** Integração do pacote Stitch (`stitch_vox_civic_network_interface`) ao cliente Vox de produção (`vox/client`)
 - **Autores:** Yuri Kayel / Antigravity Agentic Hardening Framework
@@ -88,3 +88,24 @@ Em conformidade com a arquitetura Local-First, o módulo `client/js/render/vote.
 - **Mitigações:**
   - Compatibilidade garantida com o Service Worker e cache PWA.
   - Regras de abstração do shell preservadas (estabilidade de IA e conformidade com testes de contrato).
+
+---
+
+## 5. Revisão 2026-11-06 — UI/UX rework conforme Stitch (branch `feat/stitch-ui-rework`)
+
+### 5.1. O que mudou
+- **Camada `client/css/agora.css`** (carregada depois de `style.css`): concentra os tokens Stitch num único `:root`, remapeia os tokens legados (`--bg`, `--surface-*`, `--text`, `--accent`, `--radius`…) para a paleta Obsidian/Travertino/Esmeralda/Cobalto e define os componentes `agora-*`. O bloco de tokens Stitch duplicado e ~300 linhas de CSS morto da Vote antiga saíram de `style.css`; 25 `background: #000000` fixos viraram `var(--bg)` (o modo claro tinha posts pretos).
+- **Shell:** wordmark VOX epigráfico, navegação primária Ágora · Vote · Comunidades · Mensagens · Perfil (Pessoas e Voxpedia como secundários), topbar com busca, "Votar agora" e chip de identidade que abre a gaveta "Identidade e rede" (dados reais do aparelho, links para `#/status` e configurações). No celular: topbar compacta, barra inferior com os 5 primários e FAB "Postar".
+- **Cabeçalhos de página** (`renderPageHead`) em Ágora, Comunidades, Mensagens e Vote.
+- **Comunidades:** estelas planares com indicadores reais (membros, novidades, origem) — sem números de tesouro/ZK inventados.
+- **Mensagens:** em telas ≥1100px a conversa abre ao lado da lista (layout de duas colunas do Stitch).
+- **Perfil:** avatar com anel Aurora, estatísticas em monólitos, selos vindos do catálogo real de `voxels.js` (bloqueados até haver recibos). Em perfis de terceiros os selos não aparecem, porque este aparelho não tem o passaporte assinado deles.
+- **Fontes:** removido o Google Fonts (LGPD/soberania). Pilhas locais: Inter → system-ui; Noto Serif → Georgia. Próximo passo: auto-hospedar woff2 em `client/fonts/`.
+
+### 5.2. Correções de honestidade (substituem 2.4 e 2.5)
+- A rota `#/vote` deixou de exibir pautas, votos, quórum de 70%, "tesouro ZK-BRL" e "endosso ed25519" fictícios — os botões só mostravam toasts. Agora lista as `governance-proposal` reais do aparelho, apura com `governance.computeTally` (1 membro = 1 voto, corte anti-brigading) e assina o voto com a chave P-256 do aparelho (`castGovernanceVote`, compartilhado com o detalhe da pauta). Sem pautas, mostra estado vazio.
+- O carrossel de selos deixou de mostrar insígnias fixas ("Guardiã Nvl 4", "Pinheiros SP"…) para qualquer usuário.
+- `client/agora-stitch.html` (rascunho publicado no Pages) foi removido.
+
+### 5.3. Fora do escopo / pendente de layout Stitch
+Ver `docs/design/stitch-telas-faltantes.md`.

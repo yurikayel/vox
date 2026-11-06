@@ -2,9 +2,9 @@
 
 // NOTA ARQUITETURAL: WebRTC DataChannels operam exclusivamente na thread principal (DOM/Window).
 
-// O Service Worker atua no cache offline do shell e notifica��es de status, sem abrir WebRTC.
+// O Service Worker atua no cache offline do shell e notificações de status, sem abrir WebRTC.
 
-const CACHE_NAME = "vox-pwa-v7.20-real-network-audio-video-upload";
+const CACHE_NAME = "vox-pwa-v7.21-real-network-audio-video-upload";
 
 const SHELL_ASSETS = [
 
@@ -15,6 +15,8 @@ const SHELL_ASSETS = [
   "./manifest.webmanifest",
 
   "./css/style.css",
+
+  "./css/agora.css",
 
   "./icons/icon.svg",
 

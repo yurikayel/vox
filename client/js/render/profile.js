@@ -14,6 +14,7 @@ import * as localAccount from "../local-account.js";
 import { LOCAL_WIPE_NOTICE } from "../local-account.js";
 import { renderProfileNoteBubbleHtml } from "./profile-note-bubble.js";
 import { renderProfileVoxelsTab } from "./profile-voxels.js";
+import { ACHIEVEMENT_CATALOG, evaluateAchievements, loadVoxelReceipts } from "../voxels.js";
 
 function renderProfileGithubBadge(githubHandle) {
   if (!githubHandle) return "";
@@ -252,32 +253,44 @@ function renderProfileIdentityBlock(address, displayName, handleLabel, profileBi
     </div>`;
 }
 
-const CIVIC_HIGHLIGHTS_DATA = [
-  { id: "guardia", name: "Guardiã Nvl 4", icon: "🏛️", ringClass: "ring-emerald" },
-  { id: "solar", name: "Microrrede Solar", icon: "⚡", ringClass: "ring-amber" },
-  { id: "quorum", name: "Quórum 100%", icon: "🗳️", ringClass: "ring-cyan" },
-  { id: "coletivo", name: "Pinheiros SP", icon: "📍", ringClass: "ring-cobalt" },
-  { id: "sementeira", name: "Sementeira", icon: "🌱", ringClass: "ring-emerald" },
-];
+const CATEGORY_RING = { forja: "ring-cobalt", agora: "ring-emerald", cuidado: "ring-amber" };
 
-function renderProfileCivicHighlights(address) {
-  const items = CIVIC_HIGHLIGHTS_DATA.map((h) => `
-    <a class="civic-highlight-item" href="#/u/${encodeURIComponent(address)}?tab=voxels" title="${escapeHtml(h.name)} &bull; Ver no Passaporte Cívico">
-      <div class="civic-highlight-ring ${h.ringClass}">
-        <div class="civic-highlight-inner">${h.icon}</div>
+function readOwnUnlockedAchievementIds(address) {
+  try {
+    const receipts = loadVoxelReceipts(address);
+    return new Set(evaluateAchievements(receipts).unlocked.map((a) => a.id));
+  } catch {
+    return new Set();
+  }
+}
+
+/**
+ * Selos cívicos reais (catálogo de voxels.js). Só aparecem no próprio perfil: as conquistas de
+ * terceiros dependem do passaporte assinado deles, que este aparelho não tem.
+ */
+function renderProfileCivicHighlights(address, isCurrentWallet) {
+  if (!isCurrentWallet || !address) return "";
+  const unlockedIds = readOwnUnlockedAchievementIds(address);
+  const voxelsHref = `#/u/${encodeURIComponent(address)}?tab=voxels`;
+  const items = ACHIEVEMENT_CATALOG.map((item) => {
+    const unlocked = unlockedIds.has(item.id);
+    const state = unlocked ? "Conquistado" : "Ainda não conquistado";
+    return `
+    <a class="civic-highlight-item${unlocked ? "" : " is-locked"}" href="${voxelsHref}" title="${escapeHtml(item.title)} — ${escapeHtml(item.description)} (${state})">
+      <div class="civic-highlight-ring ${CATEGORY_RING[item.category] || "ring-emerald"}">
+        <div class="civic-highlight-inner" aria-hidden="true">${item.icon}</div>
       </div>
-      <span class="civic-highlight-name">${escapeHtml(h.name)}</span>
-    </a>
-  `).join("");
+      <span class="civic-highlight-name">${escapeHtml(item.title)}</span>
+    </a>`;
+  }).join("");
 
   return `
     <div class="profile-civic-highlights" aria-label="Selos e Insígnias Cívicas">
       <div class="profile-civic-highlights-header">
         <div class="profile-civic-highlights-title">
-          <span>🎖️</span>
           <span>Selos &amp; Insígnias Cívicas</span>
         </div>
-        <span class="profile-civic-highlights-meta">Registro Imutável</span>
+        <span class="profile-civic-highlights-meta">${unlockedIds.size}/${ACHIEVEMENT_CATALOG.length} conquistados</span>
       </div>
       <div class="profile-civic-highlights-scroll">
         ${items}
@@ -294,7 +307,7 @@ function renderProfileGridHeader(address, isCurrentWallet, handle, isConflict, c
   const topDiv = `<div class="profile-grid-top">${renderProfileGridAvatar(address, displayName, handle, isCurrentWallet)}${renderProfileGridStats(postsCount, statsData, address, isCurrentWallet)}</div>`;
   const identity = renderProfileIdentityBlock(address, displayName, handleLabel, profileBio, isCurrentWallet, pixBadge, githubBadge);
   const actions = renderProfileGridActionRow(address, isCurrentWallet, isBlocked, isMuted, pixKeyRaw, displayName);
-  const highlights = renderProfileCivicHighlights(address);
+  const highlights = renderProfileCivicHighlights(address, isCurrentWallet);
 
   return `<header class="profile-grid-header">${topDiv}${identity}${actions}${highlights}${renderStereotypeDemoBanner(address)}${conflictBanner}</header>`;
 }
