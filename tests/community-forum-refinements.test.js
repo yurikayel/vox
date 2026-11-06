@@ -247,6 +247,18 @@ test("community-forum-refinements - renderTopicDetailText renderiza título do t
   assert.ok(html.includes("Corpo da mensagem sobre governança popular"));
 });
 
+test("community-forum-refinements - renderTopicDetailText e renderPostTextHtml não vazam JSON cru de payload", () => {
+  const rawPayload = JSON.stringify({ title: "", body: "", communityId: "geral", mediaTx: null, aspectRatio: "original" });
+  const detailHtml = render.renderTopicDetailText("top_json", "Tópico Limpo", rawPayload);
+  assert.ok(!detailHtml.includes("communityId"), "renderTopicDetailText não deve conter chave JSON crua");
+  assert.ok(!detailHtml.includes("mediaTx"), "renderTopicDetailText não deve conter mediaTx cru");
+  assert.ok(detailHtml.includes("Tópico Limpo"), "Deve exibir título limpo");
+
+  const feedHtml = render.renderPostTextHtml({ id: "p_json", title: "Tópico Feed", body: rawPayload });
+  assert.ok(!feedHtml.includes("communityId"), "renderPostTextHtml não deve vazar JSON cru");
+  assert.ok(feedHtml.includes("Tópico Feed"), "renderPostTextHtml deve exibir texto sanitizado");
+});
+
 test("community-forum-refinements - renderTopic exibe link de retorno para início se commId ausente", () => {
   const container = { innerHTML: "" };
   const topic = {

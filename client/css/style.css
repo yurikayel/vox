@@ -4741,14 +4741,18 @@ p.profile-grid-handle {
   text-align: right;
 }
 
-/* Tópicos e Threads Estilo X */
+/* Tópicos e Threads Estilo X / Instagram (fundo preto puro, sem card) */
 .topic-root {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px;
-  box-shadow: var(--shadow);
-  margin-bottom: 12px;
+  background: #000000;
+  border: none;
+  border-bottom: 1px solid var(--border-subtle);
+  border-radius: 0;
+  padding: 0 0 16px;
+  box-shadow: none;
+  margin: 0 auto 16px;
+  max-width: var(--feed-max, 640px);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .topic-root h2 {
@@ -4758,18 +4762,25 @@ p.profile-grid-handle {
 }
 
 .thread-replies {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  background: #000000;
+  border: none;
+  border-radius: 0;
   overflow: hidden;
-  box-shadow: var(--shadow);
+  box-shadow: none;
+  margin: 0 auto;
+  max-width: var(--feed-max, 640px);
+  width: 100%;
 }
 
 .reply-item {
+  background: #000000;
   display: flex;
   gap: 12px;
   padding: 12px 16px;
+  border: none;
   border-bottom: 1px solid var(--border-subtle);
+  border-radius: 0;
+  box-shadow: none;
   position: relative;
 }
 
@@ -5196,13 +5207,13 @@ p.profile-grid-handle {
 }
 
 .empty {
-  padding: 3rem 1.5rem;
-  background: var(--surface-1);
-  border: 1px dashed var(--outline);
-  border-radius: var(--radius);
+  padding: 2.5rem 1.5rem;
+  background: transparent;
+  border: 1px dashed var(--border-subtle);
+  border-radius: var(--radius-sm);
   margin: 1rem auto;
   max-width: var(--feed-max, 640px);
-  box-shadow: var(--elevation-1);
+  box-shadow: none;
 }
 
 .error {
@@ -7681,21 +7692,25 @@ body.photo-tagging .post-media-hero.photo-tag-mode {
     min-height: 44px;
   }
 
-  /* Raiz do tópico e bloco de respostas no mobile sem margens vazadas */
+  /* Raiz do tópico e bloco de respostas no mobile sem margens vazadas e fundo preto puro */
+  .topic-root,
   .topic-root.card {
-    border-left: none;
-    border-right: none;
+    background: #000000;
+    border: none;
+    border-bottom: 1px solid var(--border-subtle);
     border-radius: 0;
+    box-shadow: none;
     margin-left: 0;
     margin-right: 0;
     width: 100%;
-    padding: 1rem 12px;
+    padding: 0 0 16px;
   }
 
   .thread-replies {
-    border-left: none;
-    border-right: none;
+    background: #000000;
+    border: none;
     border-radius: 0;
+    box-shadow: none;
     width: 100%;
   }
 

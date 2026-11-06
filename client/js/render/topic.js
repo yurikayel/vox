@@ -29,12 +29,14 @@ function shareTopicAria(topicId) {
 export function renderTopicDetailText(topicId, title, bodyText, notaryRecord = null) {
   const disp = postOwnership.formatPostDisplay({ title, body: bodyText });
   if (disp.mode === "empty") return "";
-  const titleHtml = (disp.mode === "title-body" && disp.title)
-    ? `<h1 class="topic-detail-title" style="margin:0 0 0.75rem; font-size:1.35rem; line-height:1.3;">${escapeHtml(disp.title)}</h1>`
+  const displayTitle = disp.mode === "title-body" ? disp.title : (disp.title || (disp.body ? "" : disp.text));
+  const titleHtml = displayTitle
+    ? `<h1 class="topic-detail-title" style="margin:0 0 0.75rem; font-size:1.35rem; line-height:1.3;">${escapeHtml(displayTitle)}</h1>`
     : "";
-  const fullText = disp.body || bodyText || disp.text || "";
+  const fullText = disp.mode === "title-body" ? (disp.body || "") : (disp.body || (displayTitle ? "" : disp.text) || "");
   const notaryHtml = notaryRecord ? renderNotaryBadgeHtml(notaryRecord) : "";
-  return `<div class="post-body post-body-md post-topic-detail" style="font-size:0.98rem; line-height:1.5; margin:0.75rem 0 0;">${titleHtml}${renderPostBodyMarkdown(fullText)}${notaryHtml}</div>`;
+  const bodyHtml = fullText ? renderPostBodyMarkdown(fullText) : "";
+  return `<div class="post-body post-body-md post-topic-detail" style="font-size:0.98rem; line-height:1.5; margin:0.75rem 0 0;">${titleHtml}${bodyHtml}${notaryHtml}</div>`;
 }
 
 function renderTopicVideoHtml(v) {
@@ -218,7 +220,7 @@ function renderTopicReplyRow(r, isMod, { depth = 0, topicId = "", commId = "", i
   const indent = depth > 0 ? ` style="margin-left:${Math.min(depth * 14, 48)}px; border-left:2px solid var(--border, #ddd);"` : "";
 
   return `
-    <div class="reply-item card reply" id="reply-${escapeHtml(r.id)}" data-depth="${depth}"${indent}>
+    <div class="reply-item reply" id="reply-${escapeHtml(r.id)}" data-depth="${depth}"${indent}>
       <a class="avatar-link" href="#/u/${encodeURIComponent(rAuthor)}">${renderAvatarHtml(rAuthor, rLabels.authorDisplay, "", r.authorAvatar)}</a>
       <div class="post-content">
         <div class="reply-header" style="display:flex; justify-content:space-between; align-items:center;">
@@ -245,7 +247,7 @@ function renderTopicRepliesBlock(topicId, commId, replies, isMod, isLocked = fal
       ${replyAction}
     </div>`;
   const lockNotice = isLocked
-    ? `<div class="card community-locked-notice" style="padding:0.75rem 1rem; margin-bottom:1rem; text-align:center;"><p class="meta" style="margin:0;">🔒 Esta discussão foi encerrada pela moderação. Não recebe novas respostas.</p></div>`
+    ? `<div class="community-locked-notice" style="padding:0.75rem 1rem; margin-bottom:1rem; text-align:center;"><p class="meta" style="margin:0;">🔒 Esta discussão foi encerrada pela moderação. Não recebe novas respostas.</p></div>`
     : "";
   if (!replies.length) {
     return `${actionBar}${lockNotice}<div class="empty"><p>${isLocked ? "Nenhuma resposta antes do encerramento." : "Sem respostas ainda. Inicie o debate!"}</p></div>`;
@@ -287,7 +289,7 @@ export function renderTopic(main, topicId, topic, replies, { topicData = null, i
 
   main.innerHTML = `
     ${backLink}
-    <article class="topic-root insta-topic-root card" style="padding:1.25rem;">
+    <article class="topic-root insta-topic-root">
       ${headerHtml}
       ${mediaHtml}
       ${detailHtml}

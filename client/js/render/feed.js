@@ -536,7 +536,8 @@ export function renderPostTextHtml(post) {
     const linked = hashtags.linkifyHashtags(escapeHtml(disp.text));
     return `<p class="post-body post-caption-only"><a href="${href}">${linked}</a></p>`;
   }
-  const fullText = post?.body || (disp.title ? `${disp.title}\n${disp.body}` : disp.body);
+  const bodyPart = disp.body ? String(disp.body) : "";
+  const fullText = disp.title ? `${disp.title}\n\n${bodyPart}`.trim() : bodyPart;
   return `<div class="post-body post-body-md">${renderPostBodyMarkdown(fullText)}</div>`;
 }
 
