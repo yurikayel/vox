@@ -1,0 +1,461 @@
+<!DOCTYPE html><html class="dark" lang="pt-BR"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><meta content="web_dashboard" name="shell-type"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"><link href="https://fonts.googleapis.com" rel="preconnect"><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Noto+Serif:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"on-primary-fixed":"#002113","text-primary":"#f4eedd","travertine-linen":"#f4eedd","on-tertiary-fixed-variant":"#4a473b","outline-variant":"#3c4a42","primary":"#4edea3","text-tertiary":"#8b929d","surface-variant":"#333538","on-tertiary-container":"#3c392e","entablature-hairline":"#232830","error-container":"#93000a","secondary-fixed-dim":"#adc6ff","obsidian-oled":"#0d0f12","emerald-consensus":"#10b981","secondary-container":"#0566d9","tertiary":"#ccc6b6","on-primary":"#003824","surface":"#111317","tertiary-fixed":"#e8e2d1","primary-fixed":"#6ffbbe","text-secondary":"#e2dcce","primary-fixed-dim":"#4edea3","surface-tint":"#4edea3","inverse-primary":"#006c49","on-primary-fixed-variant":"#005236","on-secondary-container":"#e6ecff","on-background":"#e2e2e6","slate-deep":"#111316","cobalt-telemetry":"#3b82f6","surface-container-low":"#1a1c1f","cyan-bridge":"#06b6d4","on-secondary-fixed":"#001a42","surface-monolith":"#171a1f","surface-column":"#1f2329","travertine-muted":"#e2dcce","on-primary-container":"#00422b","secondary":"#adc6ff","surface-container-highest":"#333538","surface-container-high":"#282a2d","entablature-active":"rgba(244, 238, 221, 0.15)","on-tertiary-fixed":"#1e1c12","surface-dim":"#111317","on-secondary":"#002e6a","inverse-surface":"#e2e2e6","tertiary-container":"#a7a394","primary-container":"#10b981","background":"#111317","cobalt-pure":"#2563eb","on-surface":"#e2e2e6","on-surface-variant":"#bbcabf","surface-container":"#1e2023","outline":"#86948a","emerald-bright":"#34d399","on-tertiary":"#333125","surface-bright":"#37393d","on-error-container":"#ffdad6","error":"#ffb4ab","surface-container-lowest":"#0c0e11","on-secondary-fixed-variant":"#004395","inverse-on-surface":"#2f3034","on-error":"#690005","secondary-fixed":"#d8e2ff","tertiary-fixed-dim":"#ccc6b6"},borderRadius:{"DEFAULT":"0.125rem","lg":"0.25rem","xl":"0.5rem","full":"0.75rem"},spacing:{"space-xs":"0.25rem","space-2xl":"4.5rem","gutter":"1.75rem","gutter-mobile":"1rem","space-md":"1rem","margin":"3.5rem","space-xl":"2.75rem","space-sm":"0.5rem","margin-mobile":"1.25rem","space-lg":"1.75rem"},fontFamily:{"body-lg":["Inter"],"headline-lg-mobile":["Noto Serif"],"body-sm":["Inter"],"label-civic":["Inter"],"headline-sm":["Noto Serif"],"body-md":["Inter"],"headline-md":["Noto Serif"],"display":["Noto Serif"],"title-monument":["Noto Serif"],"display-mobile":["Noto Serif"],"headline-lg":["Noto Serif"],"code-telemetry":["Inter"]},fontSize:{"body-lg":["1.125rem",{"lineHeight":"1.75rem","letterSpacing":"-0.01em","fontWeight":"400"}],"headline-lg-mobile":["1.75rem",{"lineHeight":"2.25rem","letterSpacing":"-0.01em","fontWeight":"500"}],"body-sm":["0.8125rem",{"lineHeight":"1.25rem","letterSpacing":"0em","fontWeight":"400"}],"label-civic":["0.75rem",{"lineHeight":"1rem","letterSpacing":"0.08em","fontWeight":"600"}],"headline-sm":["1.25rem",{"lineHeight":"1.75rem","letterSpacing":"0em","fontWeight":"600"}],"body-md":["0.9375rem",{"lineHeight":"1.5rem","letterSpacing":"-0.005em","fontWeight":"400"}],"headline-md":["1.75rem",{"lineHeight":"2.25rem","letterSpacing":"-0.01em","fontWeight":"500"}],"display":["3.5rem",{"lineHeight":"4rem","letterSpacing":"-0.025em","fontWeight":"600"}],"title-monument":["0.875rem",{"lineHeight":"1.25rem","letterSpacing":"0.18em","fontWeight":"700"}],"display-mobile":["2.25rem",{"lineHeight":"2.75rem","letterSpacing":"-0.015em","fontWeight":"600"}],"headline-lg":["2.25rem",{"lineHeight":"2.875rem","letterSpacing":"-0.02em","fontWeight":"500"}],"code-telemetry":["0.8125rem",{"lineHeight":"1.25rem","letterSpacing":"0.02em","fontWeight":"500"}]}}}};</script></head><body class="bg-surface-container-lowest font-body-md text-body-md text-on-surface antialiased selection:bg-primary selection:text-obsidian-oled">
+<!-- Coluna 1: Sidebar Unificada à Esquerda (w-80) -->
+<aside class="fixed left-0 top-0 h-screen w-80 bg-obsidian-oled z-50 flex flex-col justify-between p-space-md shadow-[0_1px_8px_rgba(0,0,0,0.04)] overflow-y-auto">
+<div class="flex flex-col gap-space-md">
+<!-- Logo VOX Limpo (sem 'Sovereign Agora') -->
+<div class="flex items-center justify-between px-space-xs py-space-xs border-b border-surface-container-high/40 pb-space-sm">
+<div class="flex items-center gap-space-sm">
+<img alt="vox_logo_mark" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCxncXU8csj3hwIRqKBiTCUrrvl8HL53zHh8-StBL0f8l8T2OO8QVgwCxRsvyuw3FhwvvaXlHJweSyDTI9xwo9uP0lYiQI9Yz9Dwp89xXjg6oRl1Cpb_NjL_QZm_XhAto0s76Gm5htJH0i_n_vJ9oroh0djW4aIFG6kKLHKXyRJpWxhCeCb8WGI9b8mJvRmVSw0aZVvE2mdHaSlo8WCJFCKIvHcZaiLHZFFq-s3jT8gjUxnB4S-Wmyb">
+<span class="font-title-monument text-title-monument text-text-primary tracking-widest uppercase font-bold text-lg">VOX</span>
+</div>
+<button class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-text-tertiary hover:text-text-primary transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">dark_mode</span>
+</button>
+</div>
+<!-- Menu Vertical Estrito (Lista Vertical Empilhada) -->
+<nav class="flex flex-col gap-1.5" data-purpose="main-navigation">
+<a class="flex items-center gap-space-sm px-space-md py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-monolith hover:text-on-surface transition-colors" data-path="agora" href="#">
+<span class="material-symbols-outlined text-[20px]">account_balance</span>
+<span class="font-body-md text-body-md">Ágora</span>
+</a>
+<a aria-current="page" class="flex items-center gap-space-sm px-space-md py-2.5 transition-colors bg-primary-container text-on-primary-container font-bold rounded-lg shadow-sm" data-path="vote" href="#">
+<span class="material-symbols-outlined text-[20px]">how_to_vote</span>
+<span class="font-body-md text-body-md">Vote</span>
+</a>
+<a class="flex items-center gap-space-sm px-space-md py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-monolith hover:text-on-surface transition-colors" data-path="comunidades" href="#">
+<span class="material-symbols-outlined text-[20px]">hub</span>
+<span class="font-body-md text-body-md">Comunidades</span>
+</a>
+<a class="flex items-center gap-space-sm px-space-md py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-monolith hover:text-on-surface transition-colors" data-path="mensagens" href="#">
+<span class="material-symbols-outlined text-[20px]">mark_chat_unread</span>
+<span class="font-body-md text-body-md">Mensagens</span>
+</a>
+<a class="flex items-center gap-space-sm px-space-md py-2.5 rounded-lg text-on-surface-variant hover:bg-surface-monolith hover:text-on-surface transition-colors" data-path="perfil" href="#">
+<span class="material-symbols-outlined text-[20px]">shield_person</span>
+<span class="font-body-md text-body-md">Perfil</span>
+</a>
+</nav>
+<!-- Botão de Compor Pauta -->
+<button class="w-full py-space-sm px-space-md rounded-lg bg-gradient-to-r from-emerald-consensus via-cyan-bridge to-cobalt-telemetry text-obsidian-oled font-label-civic text-label-civic font-bold flex items-center justify-center gap-space-xs hover:opacity-95 shadow-md transition-opacity" type="button"><span class="font-label-civic text-label-civic font-bold tracking-wider">+ Postar</span></button>
+<!-- Seção Consolidada: Células Vicinais -->
+<div class="flex flex-col gap-space-xs pt-space-xs">
+<div class="flex items-center justify-between px-space-xs">
+<span class="font-label-civic text-label-civic text-text-tertiary uppercase tracking-wider">Células Vicinais</span>
+<span class="font-code-telemetry text-code-telemetry text-text-tertiary">2 ativas</span>
+</div>
+<div class="flex flex-col gap-1">
+<a class="flex items-center justify-between px-space-sm py-2 rounded-lg text-on-surface-variant hover:bg-surface-monolith hover:text-on-surface transition-colors" data-path="comunidades" href="#">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[16px] text-cobalt-telemetry">location_on</span>
+<span class="font-code-telemetry text-code-telemetry">#SP-011 Pinheiros</span>
+</div>
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-consensus"></span>
+</a>
+<a class="flex items-center justify-between px-space-sm py-2 rounded-lg text-on-surface-variant hover:bg-surface-monolith hover:text-on-surface transition-colors" data-path="comunidades" href="#">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[16px] text-cyan-bridge">location_on</span>
+<span class="font-code-telemetry text-code-telemetry">#SP-004 Bela Vista</span>
+</div>
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-consensus"></span>
+</a>
+</div>
+</div>
+<!-- Seção Consolidada: Dados da Terceira Coluna (Nós em Consenso) -->
+
+<!-- Seção Consolidada: Quórum da Sessão & Estatutos Vicinais -->
+<div class="flex flex-col gap-space-xs pt-space-sm border-t border-surface-container-high/40">
+<div class="flex items-center justify-between px-space-xs">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-primary">gavel</span>
+<span class="font-label-civic text-label-civic text-text-tertiary uppercase tracking-wider">Estatuto Vicinal</span>
+</div>
+<span class="font-code-telemetry text-[10px] text-text-tertiary">C-011.89</span>
+</div>
+<div class="p-3 rounded-lg bg-surface-container-lowest border border-surface-container-high/30 flex flex-col gap-1.5">
+<div class="flex items-center justify-between">
+<span class="font-body-sm text-[12px] text-text-primary font-semibold">Quórum da Sessão</span>
+<span class="font-code-telemetry text-emerald-bright font-bold text-[12px]">82.4%</span>
+</div>
+<div class="w-full h-1.5 rounded-full bg-surface-container overflow-hidden">
+<div class="h-full bg-emerald-consensus" style="width: 82.4%;"></div>
+</div>
+<span class="font-body-sm text-[11px] text-travertine-muted font-medium mt-1">Exigência Estrita: 70% min</span>
+<p class="font-code-telemetry text-[10px] text-text-tertiary leading-relaxed">
+          Deliberações vinculantes exigem quórum de 70% com resistência Sybil atestada via Bluetooth BLE.
+        </p>
+</div>
+</div>
+</div>
+<!-- Rodapé da Sidebar: Sincronia Global -->
+
+</aside>
+<!-- Coluna 2: Área Principal de Votação/Deliberação à Direita (pl-80) -->
+<div class="pl-80">
+<header class="fixed top-0 left-80 right-0 h-16 bg-obsidian-oled/85 backdrop-blur-xl z-40 px-space-lg flex items-center justify-between shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
+<div class="flex items-center gap-space-md w-96">
+<div class="flex items-center gap-space-sm w-full px-space-md py-space-xs rounded-lg bg-surface-monolith border border-surface-container-high/40">
+<span class="material-symbols-outlined text-text-tertiary text-[20px]">search</span>
+<input class="bg-transparent w-full text-on-surface placeholder:text-text-tertiary focus:outline-none font-body-sm text-body-sm" placeholder="Buscar pautas deliberativas, cidadãos ou chaves..." type="text">
+</div>
+</div>
+<div class="flex items-center gap-space-md">
+<a class="hidden sm:flex items-center gap-space-xs px-space-md py-space-xs rounded-lg bg-surface-monolith text-primary hover:bg-surface-container transition-colors" data-path="vote" href="#">
+<span class="material-symbols-outlined text-[18px]">how_to_vote</span>
+<span class="font-label-civic text-label-civic">Votar Agora</span>
+</a>
+<div class="flex items-center gap-space-sm pl-space-sm"><div class="flex flex-col text-right hidden sm:flex"><div class="flex items-center justify-end gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-consensus"></span><span class="font-body-sm text-body-sm text-text-primary font-semibold">Cidadão Soberano</span></div><span class="font-code-telemetry text-code-telemetry text-text-tertiary">ed25519:7a4f...9c1 • Bloco #4.891k (1.284 nós)</span></div><button class="w-8 h-8 rounded-full bg-primary flex items-center justify-center relative hover:ring-2 ring-primary/40 transition-all" title="ed25519:7a4f...9c1 | Nó Conectado" type="button"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></button></div>
+</div>
+</header>
+<main class="w-full pt-16 px-space-lg bg-surface-container-lowest min-h-screen">
+<div class="flex flex-col w-full pb-space-2xl">
+<!-- Top Stratum: Civic Telemetry & Constitutional Header -->
+<section class="relative overflow-hidden bg-obsidian-oled py-space-xl px-space-lg rounded-xl mb-space-xl shadow-xl mt-space-md border border-surface-container-high/50">
+<div class="absolute -top-32 -right-24 w-96 h-96 rounded-full bg-emerald-consensus/10 blur-3xl pointer-events-none"></div>
+<div class="absolute top-1/2 -left-20 w-80 h-80 rounded-full bg-cobalt-telemetry/10 blur-3xl pointer-events-none"></div>
+<div class="relative z-10 flex flex-col lg:flex-row lg:items-end justify-between gap-space-lg">
+<div class="flex flex-col gap-space-xs max-w-2xl">
+<div class="flex items-center gap-space-sm">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-high text-primary font-label-civic text-label-civic tracking-wider uppercase">
+<span class="w-2 h-2 rounded-full bg-emerald-bright animate-ping"></span>
+                Câmara Distrital Soberana • ZK-SNARK Proved
+              </span>
+<span class="font-code-telemetry text-code-telemetry text-text-tertiary">#SP-011 PINHEIROS</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-text-primary tracking-tight">
+              Democracia Direta &amp; Deliberação Vicinal
+            </h1>
+<p class="font-body-md text-body-md text-text-secondary leading-relaxed">
+              Pautas soberanas com poder executório local. O sufrágio é criptograficamente assinado pela sua chave ed25519 e verificado em tempo real via prova de conhecimento zero sem exposição identitária.
+            </p>
+</div>
+<!-- Live Quick Stats -->
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-space-md w-full lg:w-auto shrink-0">
+<div class="flex flex-col justify-between bg-surface-monolith p-space-md rounded-lg shadow-sm border border-surface-container-high/40 min-w-[150px]">
+<span class="font-label-civic text-[11px] text-text-tertiary uppercase tracking-normal leading-tight whitespace-nowrap">Quórum da Sessão</span>
+<div class="flex items-baseline gap-space-xs mt-1.5">
+<span class="font-headline-md text-headline-md text-emerald-bright font-bold">82.4%</span>
+<span class="font-code-telemetry text-code-telemetry text-text-tertiary">/ 70% min</span>
+</div>
+<span class="font-code-telemetry text-[11px] text-text-secondary mt-1 whitespace-nowrap">Legítimo &amp; Vinculante</span>
+</div>
+<div class="flex flex-col justify-between bg-surface-monolith p-space-md rounded-lg shadow-sm border border-surface-container-high/40 min-w-[150px]">
+<span class="font-label-civic text-[11px] text-text-tertiary uppercase tracking-normal leading-tight whitespace-nowrap">Tesouro em Pauta</span>
+<div class="flex items-baseline gap-space-xs mt-1.5">
+<span class="font-headline-md text-headline-md text-travertine-linen font-bold">142.8k</span>
+<span class="font-code-telemetry text-code-telemetry text-cyan-bridge">ZK-BRL</span>
+</div>
+<span class="font-code-telemetry text-[11px] text-text-secondary mt-1 whitespace-nowrap">Contratos Descentralizados</span>
+</div>
+<div class="flex flex-col justify-between bg-surface-monolith p-space-md rounded-lg shadow-sm border border-surface-container-high/40 min-w-[150px]">
+<span class="font-label-civic text-[11px] text-text-tertiary uppercase tracking-normal leading-tight whitespace-nowrap">Pautas Abertas</span>
+<div class="flex items-baseline gap-space-xs mt-1.5">
+<span class="font-headline-md text-headline-md text-secondary font-bold">06</span>
+<span class="font-code-telemetry text-code-telemetry text-text-tertiary">itens</span>
+</div>
+<span class="font-code-telemetry text-[11px] text-text-secondary mt-1 whitespace-nowrap">1 encerramento iminente</span>
+</div>
+</div>
+</div>
+<!-- Segmented Navigation Filters -->
+<div class="relative z-10 flex items-center gap-space-xs mt-space-xl overflow-x-auto pb-1" id="filter-container">
+<button class="filter-btn px-space-md py-space-xs rounded-lg font-label-civic text-label-civic tracking-wider uppercase bg-primary text-on-primary font-bold shadow-md transition-all" data-filter="all" type="button">
+            Todas as Pautas (6)
+          </button>
+<button class="filter-btn px-space-md py-space-xs rounded-lg font-label-civic text-label-civic tracking-wider uppercase bg-surface-monolith text-text-secondary hover:text-text-primary hover:bg-surface-container transition-all" data-filter="urgent" type="button">
+            Em Votação Urgente (2)
+          </button>
+<button class="filter-btn px-space-md py-space-xs rounded-lg font-label-civic text-label-civic tracking-wider uppercase bg-surface-monolith text-text-secondary hover:text-text-primary hover:bg-surface-container transition-all" data-filter="ready" type="button">
+            Prontas para Execução (1)
+          </button>
+<button class="filter-btn px-space-md py-space-xs rounded-lg font-label-civic text-label-civic tracking-wider uppercase bg-surface-monolith text-text-secondary hover:text-text-primary hover:bg-surface-container transition-all" data-filter="advisory" type="button">
+            Consultas Consultivas (3)
+          </button>
+<button class="filter-btn px-space-md py-space-xs rounded-lg font-label-civic text-label-civic tracking-wider uppercase bg-surface-monolith text-text-secondary hover:text-text-primary hover:bg-surface-container transition-all" data-filter="history" type="button">
+            Histórico Votado (38)
+          </button>
+</div>
+</section>
+<!-- Core Body: Ampla visualização de pautas em votação e quórum -->
+<div class="flex flex-col gap-space-xl w-full">
+<!-- Primary Highlighted Deliberation Card: #DEL-882 -->
+<article class="relative bg-obsidian-oled border border-surface-container-high/60 rounded-xl p-space-xl shadow-2xl overflow-hidden group">
+<div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-consensus via-cyan-bridge to-cobalt-telemetry"></div>
+<div class="absolute -right-20 -bottom-20 w-80 h-80 rounded-full bg-emerald-consensus/5 blur-3xl pointer-events-none"></div>
+<div class="flex flex-col gap-space-lg">
+<div class="flex flex-wrap items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm">
+<span class="px-3 py-1 rounded-full bg-emerald-consensus/15 text-emerald-bright font-label-civic text-label-civic uppercase tracking-widest flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-bright animate-ping"></span>
+                  Deliberação Vinculante
+                </span>
+<span class="font-code-telemetry text-code-telemetry text-cyan-bridge font-bold">#DEL-882</span>
+<span class="hidden sm:inline font-code-telemetry text-code-telemetry text-text-tertiary">• Proposta por @célula_são_simão</span>
+</div>
+<div class="flex items-center gap-space-xs text-error font-code-telemetry text-code-telemetry bg-surface-container-low px-3 py-1.5 rounded-lg border border-error/20">
+<span class="material-symbols-outlined text-[16px] animate-pulse">timer</span>
+<span id="countdown-timer" class="">Encerra em 13h 29m 20s</span>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-12 gap-space-lg items-center mt-space-xs">
+<div class="md:col-span-5 relative overflow-hidden rounded-xl h-64 bg-slate-deep shadow-md">
+<img alt="Praça Horácio Sabino" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="Modern urban parklet with permeable stone pavement and lush native vegetation taking over former car parking spaces in a sunny street in São Paulo." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAks0ObjBfKh3brBOEoJoN_Km42-7Tz9yk6Yd-UFs8eYvtBu1-Jw4uXSMvykhDx4qtBVvxbTndOfcrAazgvr_ei2R7d19fitAQnaAm_qDrJ-im5WdQF_n6UimOu96b1YRcZQqrBSlxuYbccYD-lW5zDT3FspWVgk2E0FPzvX2n8jloucr6iu_mHE4zynswkV4SItJjPD5ZG-CB-EGI2we0IqHZ21g11jIDomH9eGOg">
+<div class="absolute inset-0 bg-gradient-to-t from-obsidian-oled via-transparent to-transparent opacity-85"></div>
+<div class="absolute bottom-3 left-3 right-3 px-space-xs flex items-center justify-between">
+<span class="font-label-civic text-label-civic text-travertine-linen">Praça Horácio Sabino</span>
+<span class="font-code-telemetry text-code-telemetry text-emerald-bright font-bold">420m² convertidos</span>
+</div>
+</div>
+<div class="md:col-span-7 flex flex-col justify-between h-full gap-space-md">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-text-primary tracking-tight leading-snug">
+                    Reconversão de Vagas Automotivas em Micropraças Permeáveis
+                  </h2>
+<p class="font-body-md text-body-md text-text-secondary mt-space-sm leading-relaxed">
+                    Autorização orçamentária distrital para remoção de 8 vagas asfálticas ao redor do parque infantil, implantando canteiros drenantes de retenção pluvial e bancos comunitários de taipa de pilão.
+                  </p>
+</div>
+<!-- Luminescent Vote Tally Progress Track -->
+<div class="flex flex-col gap-2 bg-slate-deep/80 p-space-md rounded-xl border border-surface-container-high/40">
+<div class="flex justify-between items-center font-code-telemetry text-code-telemetry">
+<span class="text-emerald-bright font-semibold flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">thumb_up</span> 94.2% A Favor (1.134 votos)
+                    </span>
+<span class="text-error font-semibold flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">thumb_down</span> 5.8% Rejeição (70 votos)
+                    </span>
+</div>
+<div class="w-full h-3.5 rounded-full bg-surface-container-lowest overflow-hidden flex shadow-inner">
+<div class="h-full bg-gradient-to-r from-emerald-consensus to-cyan-bridge transition-all duration-1000 shadow-[0_0_14px_rgba(16,185,129,0.6)]" style="width: 94.2%;"></div>
+<div class="h-full bg-error transition-all duration-1000" style="width: 5.8%;"></div>
+</div>
+<div class="flex justify-between items-center text-text-tertiary font-code-telemetry text-xs pt-1">
+<span class="">1.204 votos computados</span>
+<span class="text-emerald-bright font-medium">Quórum Atingido: 172% da meta distrital</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Cryptographic Deliberation Ledger & Vote Buttons -->
+<div class="mt-space-xs pt-space-md flex flex-col md:flex-row items-center justify-between gap-space-md bg-surface-container-lowest/80 p-space-md rounded-xl border border-surface-container-high/40">
+<div class="flex items-center gap-space-sm w-full md:w-auto">
+<div class="w-10 h-10 rounded-full bg-surface-column flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined text-[20px]">fingerprint</span>
+</div>
+<div class="flex flex-col">
+<span class="font-body-sm text-body-sm text-text-primary font-medium">Assinatura Local Anônima</span>
+<span class="font-code-telemetry text-code-telemetry text-text-tertiary">Identidade mascarada por ZK-Relay #011-SP</span>
+</div>
+</div>
+<div class="flex items-center gap-space-sm w-full md:w-auto justify-end" id="del-882-actions">
+<button class="px-space-md py-space-sm rounded-lg bg-surface-column hover:bg-error-container text-text-secondary hover:text-on-error-container font-label-civic text-label-civic tracking-wider uppercase transition-all flex items-center gap-1.5" id="btn-vote-reject" title="Assinar com rejeição" type="button">
+<span class="material-symbols-outlined text-[16px]">close</span>
+                  Rejeitar
+                </button>
+<button class="px-space-lg py-space-sm rounded-lg bg-gradient-to-r from-emerald-consensus via-cyan-bridge to-cobalt-telemetry text-obsidian-oled font-label-civic text-label-civic font-bold tracking-wider uppercase shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_28px_rgba(59,130,246,0.45)] active:translate-y-0.5 transition-all flex items-center gap-2" id="btn-vote-approve" type="button">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+                  Emitir Voto com Chave Local Ed25519
+                </button>
+</div>
+</div>
+<!-- Secret Vote Confirmation Drawer -->
+<div class="hidden p-space-md rounded-lg bg-emerald-consensus/10 text-emerald-bright items-center justify-between transition-all" id="vote-success-banner">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-[24px]">task_alt</span>
+<div class="flex flex-col">
+<span class="font-body-md text-body-md font-semibold text-text-primary">Voto Registrado no Bloco #4.891.022</span>
+<span class="font-code-telemetry text-code-telemetry text-text-tertiary">Hash ZK: zk-proof:0x9fa8e71c6d332400b...c2b | Sem rastro nominal</span>
+</div>
+</div>
+<button class="text-xs font-label-civic text-emerald-bright underline hover:text-travertine-linen" type="button">Ver Prova de Inclusão</button>
+</div>
+</div>
+</article>
+<!-- Section Title for Other Deliberations -->
+<div class="flex items-center justify-between pt-space-md pb-space-xs border-b border-surface-container-high/50">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[22px]">how_to_vote</span>
+<h3 class="font-headline-md text-headline-md text-text-primary">Outras Deliberações do Distrito</h3>
+</div>
+<span class="font-code-telemetry text-code-telemetry text-text-tertiary">Ordem por urgência de quórum</span>
+</div>
+<!-- Deliberation Items List -->
+<div class="flex flex-col gap-space-lg">
+<!-- Deliberation #DEL-883 -->
+<article class="bg-obsidian-oled border border-surface-container-high/40 rounded-xl p-space-lg hover:border-cyan-bridge/40 transition-all shadow-lg group">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-space-lg">
+<div class="flex items-start gap-space-md">
+<div class="w-12 h-12 rounded-lg bg-slate-deep flex flex-col items-center justify-center shrink-0 text-cyan-bridge border border-cyan-bridge/20">
+<span class="material-symbols-outlined text-[26px]">solar_power</span>
+</div>
+<div class="flex flex-col gap-1.5">
+<div class="flex items-center gap-space-sm flex-wrap">
+<span class="font-code-telemetry text-code-telemetry text-cyan-bridge font-bold">#DEL-883</span>
+<span class="px-2.5 py-0.5 rounded-full bg-surface-container-high text-travertine-muted font-label-civic text-label-civic">Orçamento Participativo</span>
+<span class="font-code-telemetry text-code-telemetry text-emerald-bright">28.000 ZK-BRL em jogo</span>
+</div>
+<h4 class="font-headline-sm text-headline-sm text-text-primary group-hover:text-primary transition-colors">
+                    Alocação de Tesouro Comunitário para Microrredes Solares na Rua Artur de Azevedo
+                  </h4>
+<p class="font-body-md text-body-md text-text-secondary leading-relaxed line-clamp-2">
+                    Financiamento de 14 painéis fotovoltaicos bifaciais e baterias de lítio de segunda vida para manter o centro comunitário e iluminação pública autônomos da concessionária central.
+                  </p>
+</div>
+</div>
+<div class="flex md:flex-col items-end justify-between md:justify-center gap-space-sm shrink-0 w-full md:w-56 pl-space-md md:pl-0">
+<div class="flex flex-col items-end">
+<div class="flex items-baseline gap-1 font-code-telemetry text-code-telemetry">
+<span class="text-emerald-bright font-semibold">78.1% a favor</span>
+<span class="text-text-tertiary">(810 votos)</span>
+</div>
+<div class="w-40 h-2 rounded-full bg-surface-container-lowest overflow-hidden mt-1.5 shadow-inner">
+<div class="h-full bg-emerald-consensus" style="width: 78.1%;"></div>
+</div>
+<span class="font-code-telemetry text-code-telemetry text-text-tertiary text-xs mt-1">Encerra em 3 dias</span>
+</div>
+<button class="px-space-md py-space-xs rounded-lg bg-surface-container hover:bg-surface-bright text-travertine-linen font-label-civic text-label-civic tracking-wider uppercase transition-colors flex items-center gap-1.5" type="button">
+<span class="">Votar Pauta</span>
+<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</article>
+<!-- Deliberation #DEL-884 -->
+<article class="bg-obsidian-oled border border-surface-container-high/40 rounded-xl p-space-lg hover:border-emerald-consensus/40 transition-all shadow-lg group">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-space-lg">
+<div class="flex items-start gap-space-md">
+<div class="w-12 h-12 rounded-lg bg-slate-deep flex flex-col items-center justify-center shrink-0 text-emerald-bright border border-emerald-consensus/20">
+<span class="material-symbols-outlined text-[26px]">recycling</span>
+</div>
+<div class="flex flex-col gap-1.5">
+<div class="flex items-center gap-space-sm flex-wrap">
+<span class="font-code-telemetry text-code-telemetry text-emerald-consensus font-bold">#DEL-884</span>
+<span class="px-2.5 py-0.5 rounded-full bg-surface-container-high text-travertine-muted font-label-civic text-label-civic">Diretriz Regulatória</span>
+<span class="font-code-telemetry text-code-telemetry text-text-tertiary">Normativa Vicinal</span>
+</div>
+<h4 class="font-headline-sm text-headline-sm text-text-primary group-hover:text-primary transition-colors">
+                    Diretriz Distrital de Coleta Seletiva P2P e Compostagem Descentralizada
+                  </h4>
+<p class="font-body-md text-body-md text-text-secondary leading-relaxed line-clamp-2">
+                    Criação de rotas autogeridas por coletores autônomos cooperados com remuneração direta em tokens comunitários e 4 pontos térmicos de compostagem biológica em praças públicas.
+                  </p>
+</div>
+</div>
+<div class="flex md:flex-col items-end justify-between md:justify-center gap-space-sm shrink-0 w-full md:w-56 pl-space-md md:pl-0">
+<div class="flex flex-col items-end">
+<div class="flex items-baseline gap-1 font-code-telemetry text-code-telemetry">
+<span class="text-cyan-bridge font-semibold">61.4% a favor</span>
+<span class="text-text-tertiary">(522 votos)</span>
+</div>
+<div class="w-40 h-2 rounded-full bg-surface-container-lowest overflow-hidden mt-1.5 shadow-inner">
+<div class="h-full bg-cyan-bridge" style="width: 61.4%;"></div>
+</div>
+<span class="font-code-telemetry text-code-telemetry text-text-tertiary text-xs mt-1">Faltam 8.6% p/ quórum</span>
+</div>
+<button class="px-space-md py-space-xs rounded-lg bg-surface-container hover:bg-surface-bright text-travertine-linen font-label-civic text-label-civic tracking-wider uppercase transition-colors flex items-center gap-1.5" type="button">
+<span class="">Votar Pauta</span>
+<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</article>
+<!-- Deliberation #DEL-885 -->
+<article class="bg-obsidian-oled border border-surface-container-high/40 rounded-xl p-space-lg hover:border-secondary/40 transition-all shadow-lg group opacity-95 hover:opacity-100">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-space-lg">
+<div class="flex items-start gap-space-md">
+<div class="w-12 h-12 rounded-lg bg-slate-deep flex flex-col items-center justify-center shrink-0 text-secondary border border-secondary/20">
+<span class="material-symbols-outlined text-[26px]">traffic</span>
+</div>
+<div class="flex flex-col gap-1.5">
+<div class="flex items-center gap-space-sm flex-wrap">
+<span class="font-code-telemetry text-code-telemetry text-secondary font-bold">#DEL-885</span>
+<span class="px-2.5 py-0.5 rounded-full bg-surface-container-high text-text-tertiary font-label-civic text-label-civic">Consulta Consultiva</span>
+<span class="font-code-telemetry text-code-telemetry text-text-tertiary">Sem ônus orçamentário</span>
+</div>
+<h4 class="font-headline-sm text-headline-sm text-text-primary group-hover:text-primary transition-colors">
+                    Adoção de Limite de Velocidade de 30 km/h nas Vias Residenciais Internas
+                  </h4>
+<p class="font-body-md text-body-md text-text-secondary leading-relaxed line-clamp-2">
+                    Sondagem cívica para encaminhamento conjunto à autoridade municipal de trânsito visando a moderação de tráfego (zona 30) e instalação de radares pedagógicos geridos pela célula.
+                  </p>
+</div>
+</div>
+<div class="flex md:flex-col items-end justify-between md:justify-center gap-space-sm shrink-0 w-full md:w-56 pl-space-md md:pl-0">
+<div class="flex flex-col items-end">
+<div class="flex items-baseline gap-1 font-code-telemetry text-code-telemetry">
+<span class="text-secondary font-semibold">88.9% a favor</span>
+<span class="text-text-tertiary">(1.410 votos)</span>
+</div>
+<div class="w-40 h-2 rounded-full bg-surface-container-lowest overflow-hidden mt-1.5 shadow-inner">
+<div class="h-full bg-secondary-fixed-dim" style="width: 88.9%;"></div>
+</div>
+<span class="font-code-telemetry text-code-telemetry text-text-tertiary text-xs mt-1">Finaliza hoje</span>
+</div>
+<button class="px-space-md py-space-xs rounded-lg bg-surface-container hover:bg-surface-bright text-travertine-linen font-label-civic text-label-civic tracking-wider uppercase transition-colors flex items-center gap-1.5" type="button">
+<span class="">Votar Pauta</span>
+<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</article>
+</div>
+</div>
+</div>
+<script>
+      // Simple filter switching logic
+      const filterButtons = document.querySelectorAll('.filter-btn');
+      filterButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          filterButtons.forEach(b => {
+            b.classList.remove('bg-primary', 'text-on-primary', 'font-bold', 'shadow-md');
+            b.classList.add('bg-surface-monolith', 'text-text-secondary');
+          });
+          btn.classList.add('bg-primary', 'text-on-primary', 'font-bold', 'shadow-md');
+          btn.classList.remove('bg-surface-monolith', 'text-text-secondary');
+        });
+      });
+
+      // Zero-Knowledge Vote Simulation Micro-interaction
+      const approveBtn = document.getElementById('btn-vote-approve');
+      const rejectBtn = document.getElementById('btn-vote-reject');
+      const actionsContainer = document.getElementById('del-882-actions');
+      const successBanner = document.getElementById('vote-success-banner');
+
+      function handleVote(choice) {
+        if (!approveBtn) return;
+        approveBtn.disabled = true;
+        approveBtn.innerHTML = '<span class="material-symbols-outlined text-[18px] animate-spin">sync</span> Gerando Prova ZK...';
+        
+        setTimeout(() => {
+          actionsContainer.classList.add('hidden');
+          successBanner.classList.remove('hidden');
+          successBanner.classList.add('flex');
+        }, 1100);
+      }
+
+      if (approveBtn) {
+        approveBtn.addEventListener('click', () => handleVote('favor'));
+      }
+      if (rejectBtn) {
+        rejectBtn.addEventListener('click', () => handleVote('contra'));
+      }
+
+      // Interactive Live Countdown Micro-ticker
+      let seconds = 48 * 60 + 22;
+      const timerEl = document.getElementById('countdown-timer');
+      if (timerEl) {
+        setInterval(() => {
+          if (seconds > 0) {
+            seconds--;
+            const m = Math.floor(seconds / 60);
+            const s = seconds % 60;
+            timerEl.innerText = `Encerra em 13h ${m}m ${s < 10 ? '0' : ''}${s}s`;
+          }
+        }, 1000);
+      }
+    </script>
+</main>
+</div>
+
+
+</body></html>

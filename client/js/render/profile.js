@@ -154,7 +154,7 @@ function renderProfilePixBadge(pixKeyMasked, pixKeyRaw) {
 function renderProfileGridAvatarInner(address, displayName, handle) {
   const initial = (displayName || handle || address || "U").slice(0, 1).toUpperCase();
   const avatarUrl = profileDirectory.getAuthorAvatarSync(address) || mock.getAuthorAvatar(address);
-  const squircle = isWelcomeRouteId(address) ? " avatar-squircle" : "";
+  const squircle = "";
   if (avatarUrl) {
     return `<div class="profile-grid-avatar-wrap">
       <img class="profile-grid-avatar-img${squircle}" src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(displayName || address)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />

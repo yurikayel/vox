@@ -1,0 +1,321 @@
+<!DOCTYPE html><html class="dark" lang="pt-BR"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><meta content="web_dashboard" name="shell-type"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"><link href="https://fonts.googleapis.com" rel="preconnect"><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Noto+Serif:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"on-primary-fixed":"#002113","text-primary":"#f4eedd","travertine-linen":"#f4eedd","on-tertiary-fixed-variant":"#4a473b","outline-variant":"#3c4a42","primary":"#4edea3","text-tertiary":"#8b929d","surface-variant":"#333538","on-tertiary-container":"#3c392e","entablature-hairline":"#232830","error-container":"#93000a","secondary-fixed-dim":"#adc6ff","obsidian-oled":"#0d0f12","emerald-consensus":"#10b981","secondary-container":"#0566d9","tertiary":"#ccc6b6","on-primary":"#003824","surface":"#111317","tertiary-fixed":"#e8e2d1","primary-fixed":"#6ffbbe","text-secondary":"#e2dcce","primary-fixed-dim":"#4edea3","surface-tint":"#4edea3","inverse-primary":"#006c49","on-primary-fixed-variant":"#005236","on-secondary-container":"#e6ecff","on-background":"#e2e2e6","slate-deep":"#111316","cobalt-telemetry":"#3b82f6","surface-container-low":"#1a1c1f","cyan-bridge":"#06b6d4","on-secondary-fixed":"#001a42","surface-monolith":"#171a1f","surface-column":"#1f2329","travertine-muted":"#e2dcce","on-primary-container":"#00422b","secondary":"#adc6ff","surface-container-highest":"#333538","surface-container-high":"#282a2d","entablature-active":"rgba(244, 238, 221, 0.15)","on-tertiary-fixed":"#1e1c12","surface-dim":"#111317","on-secondary":"#002e6a","inverse-surface":"#e2e2e6","tertiary-container":"#a7a394","primary-container":"#10b981","background":"#111317","cobalt-pure":"#2563eb","on-surface":"#e2e2e6","on-surface-variant":"#bbcabf","surface-container":"#1e2023","outline":"#86948a","emerald-bright":"#34d399","on-tertiary":"#333125","surface-bright":"#37393d","on-error-container":"#ffdad6","error":"#ffb4ab","surface-container-lowest":"#0c0e11","on-secondary-fixed-variant":"#004395","inverse-on-surface":"#2f3034","on-error":"#690005","secondary-fixed":"#d8e2ff","tertiary-fixed-dim":"#ccc6b6"},borderRadius:{"DEFAULT":"0.125rem","lg":"0.25rem","xl":"0.5rem","full":"0.75rem"},spacing:{"space-xs":"0.25rem","space-2xl":"4.5rem","gutter":"1.75rem","gutter-mobile":"1rem","space-md":"1rem","margin":"3.5rem","space-xl":"2.75rem","space-sm":"0.5rem","margin-mobile":"1.25rem","space-lg":"1.75rem"},fontFamily:{"body-lg":["Inter"],"headline-lg-mobile":["Noto Serif"],"body-sm":["Inter"],"label-civic":["Inter"],"headline-sm":["Noto Serif"],"body-md":["Inter"],"headline-md":["Noto Serif"],"display":["Noto Serif"],"title-monument":["Noto Serif"],"display-mobile":["Noto Serif"],"headline-lg":["Noto Serif"],"code-telemetry":["Inter"]},fontSize:{"body-lg":["1.125rem",{"lineHeight":"1.75rem","letterSpacing":"-0.01em","fontWeight":"400"}],"headline-lg-mobile":["1.75rem",{"lineHeight":"2.25rem","letterSpacing":"-0.01em","fontWeight":"500"}],"body-sm":["0.8125rem",{"lineHeight":"1.25rem","letterSpacing":"0em","fontWeight":"400"}],"label-civic":["0.75rem",{"lineHeight":"1rem","letterSpacing":"0.08em","fontWeight":"600"}],"headline-sm":["1.25rem",{"lineHeight":"1.75rem","letterSpacing":"0em","fontWeight":"600"}],"body-md":["0.9375rem",{"lineHeight":"1.5rem","letterSpacing":"-0.005em","fontWeight":"400"}],"headline-md":["1.75rem",{"lineHeight":"2.25rem","letterSpacing":"-0.01em","fontWeight":"500"}],"display":["3.5rem",{"lineHeight":"4rem","letterSpacing":"-0.025em","fontWeight":"600"}],"title-monument":["0.875rem",{"lineHeight":"1.25rem","letterSpacing":"0.18em","fontWeight":"700"}],"display-mobile":["2.25rem",{"lineHeight":"2.75rem","letterSpacing":"-0.015em","fontWeight":"600"}],"headline-lg":["2.25rem",{"lineHeight":"2.875rem","letterSpacing":"-0.02em","fontWeight":"500"}],"code-telemetry":["0.8125rem",{"lineHeight":"1.25rem","letterSpacing":"0.02em","fontWeight":"500"}]}}}};</script></head><body class="bg-surface-container-lowest font-body-md text-body-md text-on-surface antialiased selection:bg-primary selection:text-obsidian-oled"><div class="flex min-h-screen w-full">
+<!-- COLUNA 1: SIDEBAR UNIFICADA (Navegação Vertical Estrita + Métricas Territoriais e Células) -->
+<aside class="fixed left-0 top-0 h-screen w-72 bg-obsidian-oled z-50 flex flex-col justify-between py-space-md px-space-md border-r border-surface-container/60 overflow-y-auto">
+<div class="flex flex-col gap-space-md">
+<!-- Logo VOX Limpo sem subtítulo e com botão de tema -->
+<div class="flex items-center justify-between px-space-xs">
+<div class="flex items-center gap-space-sm"><img alt="VOX" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCxncXU8csj3hwIRqKBiTCUrrvl8HL53zHh8-StBL0f8l8T2OO8QVgwCxRsvyuw3FhwvvaXlHJweSyDTI9xwo9uP0lYiQI9Yz9Dwp89xXjg6oRl1Cpb_NjL_QZm_XhAto0s76Gm5htJH0i_n_vJ9oroh0djW4aIFG6kKLHKXyRJpWxhCeCb8WGI9b8mJvRmVSw0aZVvE2mdHaSlo8WCJFCKIvHcZaiLHZFFq-s3jT8gjUxnB4S-Wmyb"><span class="font-title-monument text-title-monument text-text-primary tracking-widest uppercase text-base">VOX</span></div>
+<button class="w-7 h-7 rounded-lg bg-surface-container flex items-center justify-center text-text-tertiary hover:text-text-primary transition-colors" title="Modo de Luz/Escuro" type="button">
+<span class="material-symbols-outlined text-[16px]">dark_mode</span>
+</button>
+</div>
+<!-- MENU VERTICAL ESTRITO (Empilhado verticalmente) -->
+<nav class="flex flex-col gap-1 mt-space-xs">
+<a class="flex items-center gap-space-sm px-space-sm py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-monolith hover:text-on-surface transition-colors" data-path="agora" href="#">
+<span class="material-symbols-outlined text-[20px]">account_balance</span>
+<span class="font-body-md text-body-md">Ágora</span>
+</a>
+<a class="flex items-center gap-space-sm px-space-sm py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-monolith hover:text-on-surface transition-colors" data-path="vote" href="#">
+<span class="material-symbols-outlined text-[20px]">how_to_vote</span>
+<span class="font-body-md text-body-md">Vote</span>
+</a>
+<a aria-current="page" class="flex items-center gap-space-sm px-space-sm py-space-sm transition-colors bg-primary-container text-on-primary-container font-semibold rounded-lg shadow-sm" data-path="comunidades" href="#">
+<span class="material-symbols-outlined text-[20px]">hub</span>
+<span class="font-body-md text-body-md">Comunidades</span>
+</a>
+<a class="flex items-center gap-space-sm px-space-sm py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-monolith hover:text-on-surface transition-colors" data-path="mensagens" href="#">
+<span class="material-symbols-outlined text-[20px]">mark_chat_unread</span>
+<span class="font-body-md text-body-md">Mensagens</span>
+</a>
+<a class="flex items-center gap-space-sm px-space-sm py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-monolith hover:text-on-surface transition-colors" data-path="perfil" href="#">
+<span class="material-symbols-outlined text-[20px]">shield_person</span>
+<span class="font-body-md text-body-md">Perfil</span>
+</a>
+</nav>
+<!-- Botão Compor Pauta / Criar Comunidade -->
+<button class="w-full py-space-sm px-space-md rounded-lg bg-gradient-to-r from-emerald-consensus via-cyan-bridge to-cobalt-telemetry text-obsidian-oled font-label-civic text-label-civic font-bold flex items-center justify-center gap-space-xs hover:opacity-95 transition-opacity shadow-sm" type="button"><span class="material-symbols-outlined text-[18px]">add</span><span class="">+ Postar</span></button>
+<!-- Seção Integrada: Células Vicinais Ativas -->
+<div class="flex flex-col gap-space-xs pt-space-xs border-t border-surface-container/60">
+<div class="flex items-center justify-between px-space-xs">
+<span class="font-label-civic text-label-civic text-text-tertiary uppercase tracking-wider">Células Vicinais</span>
+<span class="font-code-telemetry text-code-telemetry text-emerald-bright">2 ativas</span>
+</div>
+<div class="flex flex-col gap-1">
+<a class="flex items-center justify-between px-space-sm py-space-xs rounded-lg text-on-surface-variant hover:bg-surface-monolith hover:text-on-surface transition-colors" data-path="comunidades" href="#">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[16px] text-cobalt-telemetry">location_on</span>
+<span class="font-code-telemetry text-code-telemetry">#SP-011 Pinheiros</span>
+</div>
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-consensus"></span>
+</a>
+<a class="flex items-center justify-between px-space-sm py-space-xs rounded-lg text-on-surface-variant hover:bg-surface-monolith hover:text-on-surface transition-colors" data-path="comunidades" href="#">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[16px] text-cyan-bridge">location_on</span>
+<span class="font-code-telemetry text-code-telemetry">#SP-004 Bela Vista</span>
+</div>
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-consensus"></span>
+</a>
+</div>
+</div>
+<!-- Seção Integrada: Radar Territorial & Federação Distrital -->
+<div class="flex flex-col gap-space-xs pt-space-xs border-t border-surface-container/60">
+<div class="flex items-center justify-between px-space-xs">
+<span class="font-label-civic text-label-civic text-text-tertiary uppercase tracking-wider">Radar Territorial</span>
+<span class="font-code-telemetry text-code-telemetry text-cyan-bridge">12.4 km²</span>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-monolith border border-surface-container/60 flex flex-col gap-2">
+<div class="flex items-center justify-between text-text-secondary text-body-sm">
+<span class="font-body-sm text-text-tertiary">Orçamento Alocado:</span>
+<span class="font-code-telemetry text-emerald-bright font-bold">412.5k ZK-BRL</span>
+</div>
+<div class="flex items-center justify-between text-text-secondary text-body-sm">
+<span class="font-body-sm text-text-tertiary">Pautas Distritais:</span>
+<span class="font-code-telemetry text-text-primary font-medium">12 em curso</span>
+</div>
+<div class="flex items-center justify-between text-text-secondary text-body-sm">
+<span class="font-body-sm text-text-tertiary">Federação Regional:</span>
+<span class="font-code-telemetry text-secondary-fixed-dim">Multi-Sig 7/11</span>
+</div>
+<div class="w-full bg-surface-container h-1 rounded-full overflow-hidden mt-1">
+<div class="h-full bg-gradient-to-r from-emerald-consensus via-cyan-bridge to-cobalt-telemetry w-[82%]"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Rodapé da Coluna 1: Sincronia de Rede & Guardiões -->
+
+</aside>
+<!-- COLUNA 2: FEED/GRID DE COMUNIDADES E CÉLULAS TERRITORIAIS (Layout Arejado e Leve) -->
+<div class="pl-72 flex-1 flex flex-col min-w-0">
+<!-- Topbar de Busca & Perfil -->
+<header class="sticky top-0 h-16 bg-obsidian-oled/90 backdrop-blur-xl z-40 px-space-lg flex items-center justify-between border-b border-surface-container/60">
+<div class="flex items-center gap-space-md w-full max-w-md">
+<div class="flex items-center gap-space-sm w-full px-space-md py-space-xs rounded-lg bg-surface-monolith border border-surface-container/50">
+<span class="material-symbols-outlined text-text-tertiary text-[20px]">search</span>
+<input class="bg-transparent w-full text-on-surface placeholder:text-text-tertiary focus:outline-none font-body-sm text-body-sm" placeholder="Buscar pautas deliberativas, cidadãos ou chaves..." type="text">
+</div>
+</div>
+<div class="flex items-center gap-space-md">
+<a class="hidden sm:flex items-center gap-space-xs px-space-md py-space-xs rounded-lg bg-surface-monolith text-primary hover:bg-surface-container transition-colors border border-surface-container/50" data-path="vote" href="#">
+<span class="material-symbols-outlined text-[18px]">how_to_vote</span>
+<span class="font-label-civic text-label-civic">Votar Agora</span>
+</a>
+<div class="relative flex items-center pl-space-sm border-l border-surface-container/60">
+<button class="flex items-center gap-space-sm p-1 rounded-lg hover:bg-surface-monolith transition-colors text-left focus:outline-none" type="button">
+<div class="flex flex-col text-right hidden sm:flex">
+<div class="flex items-center justify-end gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-consensus"></span>
+<span class="font-body-sm text-body-sm text-text-primary font-semibold">Cidadão Soberano</span>
+</div>
+<span class="font-code-telemetry text-code-telemetry text-text-tertiary">ed25519:7a4f...9c1</span>
+</div>
+<div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center relative">
+<span class="material-symbols-outlined text-on-primary text-[18px]">person</span>
+<span class="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-emerald-consensus border border-obsidian-oled"></span>
+</div>
+<span class="material-symbols-outlined text-text-tertiary text-[18px]">expand_more</span>
+</button>
+</div>
+</div>
+</header>
+<main class="w-full px-space-lg py-space-lg bg-surface-container-lowest min-h-[calc(100vh-4rem)]">
+<div class="flex flex-col w-full max-w-5xl mx-auto gap-space-lg">
+<!-- Cabeçalho Arejado de Comunidades -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-space-md border-b border-surface-container/60 pb-space-md">
+<div>
+<div class="flex items-center gap-space-xs mb-1">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-consensus/10 text-emerald-bright font-code-telemetry text-[11px]">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-consensus"></span>
+ZONA OESTE &amp; CENTRO • SP
+</span>
+<span class="font-code-telemetry text-code-telemetry text-text-tertiary">Federação Ativa</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-text-primary tracking-tight">Células Vicinais &amp; Hubs Territoriais</h1>
+<p class="font-body-md text-body-md text-text-secondary mt-1">Autogoverno deliberativo local com verificação de residência em Zero-Knowledge.</p>
+</div>
+<div class="flex items-center gap-space-xs shrink-0 bg-obsidian-oled p-1 rounded-lg border border-surface-container/60 self-start md:self-auto">
+<button class="px-space-md py-space-xs rounded-md bg-surface-container text-text-primary font-label-civic text-label-civic font-semibold flex items-center gap-1.5" type="button">
+<span class="material-symbols-outlined text-[16px] text-emerald-bright">radio_button_checked</span>
+Minhas Células (2)
+</button>
+<button class="px-space-md py-space-xs rounded-md text-text-tertiary hover:bg-surface-monolith hover:text-text-primary font-label-civic text-label-civic transition-colors flex items-center gap-1.5" type="button">
+<span class="material-symbols-outlined text-[16px]">travel_explore</span>
+Descobrir Todas
+</button>
+</div>
+</div>
+<!-- Grid Arejado de Comunidades e Células Territoriais -->
+<div class="flex flex-col gap-space-md">
+<!-- Card 1: Pinheiros -->
+<article class="bg-surface-monolith/60 hover:bg-surface-monolith rounded-xl p-space-md sm:p-space-lg transition-all border border-surface-container/70 flex flex-col gap-space-md">
+<div class="flex flex-col sm:flex-row sm:items-start justify-between gap-space-sm">
+<div class="flex items-start gap-space-md">
+<div class="w-14 h-14 rounded-lg overflow-hidden shrink-0 relative border border-surface-container">
+<img alt="Pinheiros e Jardins" class="w-full h-full object-cover" data-alt="Fotografia documental arquitetônica e urbana em ângulo alto do bairro de Pinheiros e Jardins em São Paulo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBR6d8pQC-Bjf2asUvl7kz1dA122bVncfVPmifuUcjZVxVjZ5OEFjuITzauqTcCznO97T5-Zn2LzIGBRoyMHPDwY1H4wMKhqtMFC11t2kjNoAHjAMnrTLF0p7tWDj7C6-jrAbxI5LE0G51rtm6xI6QGhopjBsAis-mpYK2gDmop5I_0kCqnTikXxQyrIAfxUEyffuqmS2rhTqa1jAxAQ9D4wB1OqL0ngYSB1K_wDig">
+<span class="absolute bottom-1 left-1 text-[10px] font-code-telemetry text-primary font-bold bg-obsidian-oled/90 px-1 rounded">#SP-011</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs flex-wrap">
+<h2 class="font-headline-sm text-headline-sm text-text-primary font-semibold">Pinheiros &amp; Jardins Soberano</h2>
+<span class="px-2 py-0.5 rounded-full bg-emerald-consensus/15 text-emerald-bright font-label-civic text-[11px]">Célula Ativa</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container text-travertine-muted font-code-telemetry text-[11px]">Zona Oeste</span>
+</div>
+<p class="font-body-sm text-body-sm text-text-secondary mt-1">Distrito descentralizado focado em corredores verdes urbanos, mobilidade ativa ciclável e monitoramento acústico descentralizado.</p>
+</div>
+</div>
+<div class="flex sm:flex-col items-end justify-between sm:justify-start gap-0.5 shrink-0 bg-surface-container-low px-space-sm py-1 rounded-lg">
+<span class="font-title-monument text-title-monument text-emerald-bright">142.8k ZK-BRL</span>
+<span class="font-code-telemetry text-[11px] text-text-tertiary">Tesouro Comunitário</span>
+</div>
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-space-sm bg-obsidian-oled/60 p-space-sm rounded-lg border border-surface-container/40">
+<div class="flex flex-col">
+<span class="font-code-telemetry text-[11px] text-text-tertiary">Cidadãos ZK</span>
+<span class="font-body-md text-body-md font-bold text-text-primary flex items-center gap-1"><span class="material-symbols-outlined text-[16px] text-cyan-bridge">fingerprint</span>4.850</span>
+</div>
+<div class="flex flex-col">
+<span class="font-code-telemetry text-[11px] text-text-tertiary">Quórum em Curso</span>
+<span class="font-body-md text-body-md font-bold text-emerald-bright flex items-center gap-1"><span class="material-symbols-outlined text-[16px] text-emerald-consensus">how_to_reg</span>68.4%</span>
+</div>
+<div class="flex flex-col">
+<span class="font-code-telemetry text-[11px] text-text-tertiary">Pautas Abertas</span>
+<span class="font-body-md text-body-md font-bold text-secondary-fixed-dim flex items-center gap-1"><span class="material-symbols-outlined text-[16px] text-cobalt-telemetry">ballot</span>3 pautas</span>
+</div>
+<div class="flex flex-col">
+<span class="font-code-telemetry text-[11px] text-text-tertiary">Conectividade</span>
+<span class="font-body-md text-body-md font-bold text-text-primary flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-consensus"></span>98.2% Malha</span>
+</div>
+</div>
+<div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-space-sm pt-space-xs border-t border-surface-container/40">
+<div class="flex items-center gap-space-xs text-text-tertiary font-code-telemetry text-code-telemetry">
+<span class="material-symbols-outlined text-[16px] text-emerald-consensus">verified</span>
+<span class="">Chave: ed25519:sp011...98ae</span>
+</div>
+<div class="flex items-center gap-space-sm justify-end">
+<button class="px-space-md py-space-xs rounded-lg bg-surface-container hover:bg-surface-container-high text-travertine-linen font-label-civic text-label-civic transition-colors flex items-center gap-1" type="button">
+<span class="material-symbols-outlined text-[16px]">sync</span>Sincronizar
+</button>
+<button class="px-space-md py-space-xs rounded-lg bg-gradient-to-r from-emerald-consensus to-cyan-bridge text-obsidian-oled font-label-civic text-label-civic font-bold hover:brightness-110 transition-all flex items-center gap-1" type="button">
+<span class="material-symbols-outlined text-[16px]">login</span>Entrar na Célula
+</button>
+</div>
+</div>
+</article>
+<!-- Card 2: Bela Vista -->
+<article class="bg-surface-monolith/60 hover:bg-surface-monolith rounded-xl p-space-md sm:p-space-lg transition-all border border-surface-container/70 flex flex-col gap-space-md">
+<div class="flex flex-col sm:flex-row sm:items-start justify-between gap-space-sm">
+<div class="flex items-start gap-space-md">
+<div class="w-14 h-14 rounded-lg overflow-hidden shrink-0 relative border border-surface-container">
+<img alt="Bela Vista e Bixiga" class="w-full h-full object-cover" data-alt="Casarios históricos da Bela Vista e Bixiga em São Paulo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDYVum510pmp_A5yDgPJq7hpnxLZ73WfYzjD68MMS80OWf4dnB0N2SJu4b6kpTjkRLyqQ-bUEadQANtOBmQrfh3n_Na-N9ogMdD_eOfnOZC9AJl5p4wiIafLBG_cMPncd4ALc9KnApM-NPheYQgp0iHnAkvEEMmZEWje212s4Ox3bS4egabfwvPrIwvxSdgTZUX2dE7htLLGavgMb7Qnb_H35vU9MngHnwdiLViJfw">
+<span class="absolute bottom-1 left-1 text-[10px] font-code-telemetry text-cyan-bridge font-bold bg-obsidian-oled/90 px-1 rounded">#SP-004</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs flex-wrap">
+<h2 class="font-headline-sm text-headline-sm text-text-primary font-semibold">Bela Vista &amp; Bixiga Cultural</h2>
+<span class="px-2 py-0.5 rounded-full bg-cyan-bridge/15 text-cyan-bridge font-label-civic text-[11px]">Célula Ativa</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container text-travertine-muted font-code-telemetry text-[11px]">Centro Expandido</span>
+</div>
+<p class="font-body-sm text-body-sm text-text-secondary mt-1">Foco prioritário em salvaguarda do patrimônio imaterial, hortas comunitárias em terrenos baldios ociosos e circuito de teatro de rua independente.</p>
+</div>
+</div>
+<div class="flex sm:flex-col items-end justify-between sm:justify-start gap-0.5 shrink-0 bg-surface-container-low px-space-sm py-1 rounded-lg">
+<span class="font-title-monument text-title-monument text-travertine-linen">88.3k ZK-BRL</span>
+<span class="font-code-telemetry text-[11px] text-text-tertiary">Tesouro Comunitário</span>
+</div>
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-space-sm bg-obsidian-oled/60 p-space-sm rounded-lg border border-surface-container/40">
+<div class="flex flex-col">
+<span class="font-code-telemetry text-[11px] text-text-tertiary">Cidadãos ZK</span>
+<span class="font-body-md text-body-md font-bold text-text-primary flex items-center gap-1"><span class="material-symbols-outlined text-[16px] text-cyan-bridge">fingerprint</span>3.120</span>
+</div>
+<div class="flex flex-col">
+<span class="font-code-telemetry text-[11px] text-text-tertiary">Quórum em Curso</span>
+<span class="font-body-md text-body-md font-bold text-emerald-bright flex items-center gap-1"><span class="material-symbols-outlined text-[16px] text-emerald-consensus">how_to_reg</span>54.1%</span>
+</div>
+<div class="flex flex-col">
+<span class="font-code-telemetry text-[11px] text-text-tertiary">Pautas Abertas</span>
+<span class="font-body-md text-body-md font-bold text-secondary-fixed-dim flex items-center gap-1"><span class="material-symbols-outlined text-[16px] text-cobalt-telemetry">ballot</span>1 pauta ativa</span>
+</div>
+<div class="flex flex-col">
+<span class="font-code-telemetry text-[11px] text-text-tertiary">Pacto Histórico</span>
+<span class="font-body-md text-body-md font-bold text-text-primary flex items-center gap-1"><span class="material-symbols-outlined text-[16px] text-travertine-muted">museum</span>Tombamento</span>
+</div>
+</div>
+<div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-space-sm pt-space-xs border-t border-surface-container/40">
+<div class="flex items-center gap-space-xs text-text-tertiary font-code-telemetry text-code-telemetry">
+<span class="material-symbols-outlined text-[16px] text-cyan-bridge">theater_comedy</span>
+<span class="">Comissão de Artes &amp; Solo Urbano</span>
+</div>
+<div class="flex items-center gap-space-sm justify-end">
+<button class="px-space-md py-space-xs rounded-lg bg-surface-container hover:bg-surface-container-high text-travertine-linen font-label-civic text-label-civic transition-colors flex items-center gap-1" type="button">
+<span class="material-symbols-outlined text-[16px]">visibility</span>Explorar Atas
+</button>
+<button class="px-space-md py-space-xs rounded-lg bg-surface-container hover:bg-surface-monolith text-primary font-label-civic text-label-civic transition-colors flex items-center gap-1 border border-primary/30" type="button">
+<span class="material-symbols-outlined text-[16px]">sensors</span>Conectar Célula
+</button>
+</div>
+</div>
+</article>
+<!-- Card 3: Sé & Centro Histórico -->
+<article class="bg-surface-monolith/60 hover:bg-surface-monolith rounded-xl p-space-md sm:p-space-lg transition-all border border-surface-container/70 flex flex-col gap-space-md">
+<div class="flex flex-col sm:flex-row sm:items-start justify-between gap-space-sm">
+<div class="flex items-start gap-space-md">
+<div class="w-14 h-14 rounded-lg overflow-hidden shrink-0 relative border border-surface-container">
+<img alt="Praça da Sé e Pateo do Collegio" class="w-full h-full object-cover" data-alt="Monumento da Praça da Sé e Pateo do Collegio" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBKmvdK2ub5aMF_x2piUeULOC-0q65Qgq_DQhrTHOxgA_Se7krxDd1qb-kgQWQ1THJY53MH-QdgwxiZMIs-A02z9bhOR0OTF4BW_lTNXHUgabgefKwfnrQIxdKXzw4o-Q2liQeNA0XGqcKGUH30ZhDDHepL0DpK9-Yet3WUugqynxU_0uCJi713PW5SigHlLkGuJj77VMvZeTKLRislPJ-yPehML9K9MXMRsnmdEaY">
+<span class="absolute bottom-1 left-1 text-[10px] font-code-telemetry text-secondary-fixed-dim font-bold bg-obsidian-oled/90 px-1 rounded">#SP-001</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs flex-wrap">
+<h2 class="font-headline-sm text-headline-sm text-text-primary font-semibold">Sé &amp; Centro Histórico Democrático</h2>
+<span class="px-2 py-0.5 rounded-full bg-cobalt-telemetry/15 text-secondary-fixed-dim font-label-civic text-[11px]">Célula Fundadora</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container text-travertine-muted font-code-telemetry text-[11px]">Marco Zero</span>
+</div>
+<p class="font-body-sm text-body-sm text-text-secondary mt-1">Assembleias deliberativas semanais para revitalização participativa de edifícios vazios, moradia popular e reocupação do espaço público.</p>
+</div>
+</div>
+<div class="flex sm:flex-col items-end justify-between sm:justify-start gap-0.5 shrink-0 bg-surface-container-low px-space-sm py-1 rounded-lg">
+<span class="font-title-monument text-title-monument text-emerald-bright">210.4k ZK-BRL</span>
+<span class="font-code-telemetry text-[11px] text-text-tertiary">Tesouro Comunitário</span>
+</div>
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-space-sm bg-obsidian-oled/60 p-space-sm rounded-lg border border-surface-container/40">
+<div class="flex flex-col">
+<span class="font-code-telemetry text-[11px] text-text-tertiary">Cidadãos ZK</span>
+<span class="font-body-md text-body-md font-bold text-text-primary flex items-center gap-1"><span class="material-symbols-outlined text-[16px] text-cyan-bridge">fingerprint</span>5.400</span>
+</div>
+<div class="flex flex-col">
+<span class="font-code-telemetry text-[11px] text-text-tertiary">Quórum em Curso</span>
+<span class="font-body-md text-body-md font-bold text-emerald-bright flex items-center gap-1"><span class="material-symbols-outlined text-[16px] text-emerald-consensus">how_to_reg</span>81.6%</span>
+</div>
+<div class="flex flex-col">
+<span class="font-code-telemetry text-[11px] text-text-tertiary">Assembleia Física</span>
+<span class="font-body-md text-body-md font-bold text-travertine-linen flex items-center gap-1"><span class="material-symbols-outlined text-[16px] text-travertine-muted">event</span>Quinta, 19h</span>
+</div>
+<div class="flex flex-col">
+<span class="font-code-telemetry text-[11px] text-text-tertiary">Propostas ZK</span>
+<span class="font-body-md text-body-md font-bold text-secondary-fixed-dim flex items-center gap-1"><span class="material-symbols-outlined text-[16px] text-cobalt-telemetry">gavel</span>6 ativas</span>
+</div>
+</div>
+<div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-space-sm pt-space-xs border-t border-surface-container/40">
+<div class="flex items-center gap-space-xs text-text-tertiary font-code-telemetry text-code-telemetry">
+<span class="material-symbols-outlined text-[16px] text-cobalt-telemetry">forum</span>
+<span class="">Assembleia Híbrida Criptografada</span>
+</div>
+<div class="flex items-center gap-space-sm justify-end">
+<button class="px-space-md py-space-xs rounded-lg bg-surface-container hover:bg-surface-container-high text-travertine-linen font-label-civic text-label-civic transition-colors flex items-center gap-1" type="button">
+<span class="material-symbols-outlined text-[16px]">menu_book</span>Constituição Local
+</button>
+<button class="px-space-md py-space-xs rounded-lg bg-gradient-to-r from-cyan-bridge to-cobalt-telemetry text-obsidian-oled font-label-civic text-label-civic font-bold hover:brightness-110 transition-all flex items-center gap-1" type="button">
+<span class="material-symbols-outlined text-[16px]">hub</span>Federação Regional
+</button>
+</div>
+</div>
+</article>
+</div>
+</div>
+</main>
+</div>
+</div>
+
+</body></html>
