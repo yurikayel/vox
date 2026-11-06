@@ -78,6 +78,23 @@
   --font-sans: "Source Sans 3", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-display: "Outfit", var(--font-sans);
   --font-weight-nav: 600;
+  /* Sovereign Agora Luminescent Matrix (Stitch Design System Tokens) */
+  --obsidian-oled: #0d0f12;
+  --slate-deep: #111316;
+  --surface-monolith: #171a1f;
+  --surface-column: #1f2329;
+  --travertine-linen: #f4eedd;
+  --travertine-muted: #e2dcce;
+  --emerald-consensus: #10b981;
+  --emerald-bright: #34d399;
+  --cobalt-telemetry: #3b82f6;
+  --cobalt-pure: #2563eb;
+  --cyan-bridge: #06b6d4;
+  --entablature-hairline: #232830;
+  --entablature-active: rgba(244, 238, 221, 0.15);
+  --aurora-gradient: linear-gradient(135deg, #10b981 0%, #06b6d4 50%, #3b82f6 100%);
+  --font-epigraphic: "Noto Serif", serif;
+  --font-telemetry: "Inter", var(--font-sans);
   font-family: var(--font-sans);
   color-scheme: light dark;
 }
