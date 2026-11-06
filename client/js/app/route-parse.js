@@ -95,6 +95,8 @@ function parseEntityRoute(parts, query) {
 }
 
 const STATIC_ROUTES = {
+  vote: () => ({ name: "vote" }),
+  votacao: () => ({ name: "vote" }),
   communities: () => ({ name: "communities" }),
   perfil: (_parts, query) => ({ name: "perfil", tab: (query.get("tab") || "posts").toLowerCase() }),
   status: () => ({ name: "status" }),

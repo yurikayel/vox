@@ -865,15 +865,18 @@ a:hover {
 }
 
 .tab-item.compose-tab {
-  background: var(--brand-navy);
-  color: var(--on-accent);
-  border-radius: var(--radius-sm);
+  background: var(--aurora-gradient, var(--brand-navy));
+  color: #0d0f12 !important;
+  font-weight: 700 !important;
+  border-radius: var(--radius-sm, 8px);
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.25);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .tab-item.compose-tab:hover {
-  color: var(--on-accent);
-  background: var(--brand-chrome-hover);
-  box-shadow: var(--elevation-2);
+  color: #0d0f12 !important;
+  box-shadow: 0 0 24px rgba(16, 185, 129, 0.4), 0 0 32px rgba(59, 130, 246, 0.2);
+  transform: translateY(1px);
 }
 
 .tab-icon {
@@ -7534,15 +7537,15 @@ body.photo-tagging .post-media-hero.photo-tag-mode {
   }
 
   .sidebar-compose-slot .tab-item.compose-tab {
-    width: 42px;
-    height: 42px;
-    min-width: 42px;
-    min-height: 42px;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
     border-radius: 50%;
-    background: var(--brand-navy);
-    color: #fff;
+    background: var(--aurora-gradient, linear-gradient(135deg, #10b981 0%, #06b6d4 50%, #3b82f6 100%)) !important;
+    color: #0d0f12 !important;
     padding: 0;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+    box-shadow: 0 0 16px rgba(16, 185, 129, 0.35);
   }
 
   .sidebar-compose-slot .tab-item.compose-tab svg {
@@ -9897,4 +9900,421 @@ blockquote.repost-cite {
 
 .compose-advanced-content {
   margin-top: 0.85rem;
+}
+
+/* ==========================================================================
+   Sovereign Agora Luminescent Matrix — Vote & Civic Highlights (Stitch)
+   ========================================================================== */
+.vote-container {
+  max-width: 960px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 1rem 0 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.vote-banner {
+  position: relative;
+  overflow: hidden;
+  background: var(--obsidian-oled, #0d0f12);
+  border: 1px solid var(--entablature-hairline, #232830);
+  border-radius: var(--radius-lg, 16px);
+  padding: 1.75rem;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+
+.vote-banner-glow-1 {
+  position: absolute;
+  top: -80px;
+  right: -80px;
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  background: rgba(16, 185, 129, 0.12);
+  filter: blur(48px);
+  pointer-events: none;
+}
+
+.vote-banner-glow-2 {
+  position: absolute;
+  bottom: -60px;
+  left: -60px;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: rgba(59, 130, 246, 0.1);
+  filter: blur(48px);
+  pointer-events: none;
+}
+
+.vote-tag-district {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(16, 185, 129, 0.14);
+  color: var(--emerald-bright, #34d399);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.vote-tag-district-pulse {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--emerald-bright, #34d399);
+  box-shadow: 0 0 8px var(--emerald-bright, #34d399);
+}
+
+.vote-header-title {
+  font-family: var(--font-epigraphic, "Noto Serif", serif);
+  font-size: 1.85rem;
+  font-weight: 600;
+  color: var(--travertine-linen, #f4eedd);
+  line-height: 1.25;
+  margin: 0.75rem 0 0.4rem;
+  letter-spacing: -0.015em;
+}
+
+.vote-header-desc {
+  font-size: 0.92rem;
+  color: var(--travertine-muted, #e2dcce);
+  line-height: 1.55;
+  max-width: 680px;
+  margin: 0 0 1.25rem;
+}
+
+.vote-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-top: 1rem;
+}
+
+.vote-stat-box {
+  background: var(--surface-monolith, #171a1f);
+  border: 1px solid var(--entablature-hairline, #232830);
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.vote-stat-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-tertiary, #8b929d);
+}
+
+.vote-stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--travertine-linen, #f4eedd);
+  margin-top: 4px;
+  font-feature-settings: "tnum" 1, "zero" 1;
+}
+
+.vote-stat-value.text-emerald {
+  color: var(--emerald-bright, #34d399);
+}
+
+.vote-stat-sub {
+  font-size: 0.74rem;
+  color: var(--travertine-muted, #e2dcce);
+  margin-top: 4px;
+}
+
+.vote-filters-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 0 8px;
+  scrollbar-width: none;
+}
+
+.vote-filters-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.vote-filter-btn {
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  background: var(--surface-monolith, #171a1f);
+  border: 1px solid var(--entablature-hairline, #232830);
+  color: var(--travertine-muted, #e2dcce);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.vote-filter-btn:hover {
+  color: var(--travertine-linen, #f4eedd);
+  border-color: rgba(244, 238, 221, 0.2);
+}
+
+.vote-filter-btn.active {
+  background: var(--emerald-consensus, #10b981);
+  color: var(--obsidian-oled, #0d0f12);
+  border-color: var(--emerald-consensus, #10b981);
+}
+
+.vote-proposal-item {
+  position: relative;
+  overflow: hidden;
+  background: var(--obsidian-oled, #0d0f12);
+  border: 1px solid var(--entablature-hairline, #232830);
+  border-radius: var(--radius-lg, 16px);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+}
+
+.vote-proposal-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--aurora-gradient, linear-gradient(135deg, #10b981, #06b6d4, #3b82f6));
+}
+
+.vote-proposal-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.vote-proposal-title {
+  font-family: var(--font-epigraphic, "Noto Serif", serif);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--travertine-linen, #f4eedd);
+  margin: 0;
+  line-height: 1.35;
+}
+
+.vote-proposal-desc {
+  font-size: 0.92rem;
+  color: var(--travertine-muted, #e2dcce);
+  line-height: 1.55;
+  margin: 0;
+}
+
+.quorum-progress-block {
+  background: var(--surface-monolith, #171a1f);
+  border: 1px solid var(--entablature-hairline, #232830);
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.quorum-progress-bar {
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--surface-column, #1f2329);
+  overflow: hidden;
+  display: flex;
+}
+
+.quorum-fill-yes {
+  background: linear-gradient(90deg, #10b981, #34d399);
+  height: 100%;
+}
+
+.quorum-fill-no {
+  background: #ef4444;
+  height: 100%;
+}
+
+.vote-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-top: 4px;
+}
+
+.btn-vote-choice {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-vote-choice.btn-vote-yes {
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--emerald-bright, #34d399);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.btn-vote-choice.btn-vote-yes:hover {
+  background: rgba(16, 185, 129, 0.28);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
+}
+
+.btn-vote-choice.btn-vote-no {
+  background: var(--surface-monolith, #171a1f);
+  color: var(--travertine-muted, #e2dcce);
+  border: 1px solid var(--entablature-hairline, #232830);
+}
+
+.btn-vote-choice.btn-vote-no:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.35);
+}
+
+.btn-vote-choice.btn-vote-endorse {
+  margin-left: auto;
+  background: var(--aurora-gradient, linear-gradient(135deg, #10b981, #06b6d4, #3b82f6));
+  color: var(--obsidian-oled, #0d0f12);
+  border: none;
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.25);
+}
+
+.btn-vote-choice.btn-vote-endorse:hover {
+  box-shadow: 0 0 24px rgba(16, 185, 129, 0.45);
+  transform: translateY(1px);
+}
+
+/* Selos & Insígnias Cívicas (Carrossel Estilo Highlights / Stories) */
+.profile-civic-highlights {
+  margin: 1rem 0 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--entablature-hairline, #232830);
+}
+
+.profile-civic-highlights-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  padding: 0 4px;
+}
+
+.profile-civic-highlights-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--travertine-linen, #f4eedd);
+}
+
+.profile-civic-highlights-meta {
+  font-size: 0.74rem;
+  color: var(--text-tertiary, #8b929d);
+  font-feature-settings: "tnum" 1, "zero" 1;
+}
+
+.profile-civic-highlights-scroll {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  overflow-x: auto;
+  padding: 4px 2px 8px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.profile-civic-highlights-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.civic-highlight-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  flex-shrink: 0;
+  width: 76px;
+  cursor: pointer;
+}
+
+.civic-highlight-ring {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.civic-highlight-ring:hover {
+  transform: scale(1.08);
+}
+
+.civic-highlight-ring.ring-emerald {
+  background: linear-gradient(135deg, #10b981, #34d399);
+  box-shadow: 0 0 14px rgba(16, 185, 129, 0.3);
+}
+
+.civic-highlight-ring.ring-amber {
+  background: linear-gradient(135deg, #f59e0b, #fbbf24);
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.3);
+}
+
+.civic-highlight-ring.ring-cyan {
+  background: linear-gradient(135deg, #06b6d4, #22d3ee);
+  box-shadow: 0 0 14px rgba(6, 182, 212, 0.3);
+}
+
+.civic-highlight-ring.ring-cobalt {
+  background: linear-gradient(135deg, #3b82f6, #60a5fa);
+  box-shadow: 0 0 14px rgba(59, 130, 246, 0.3);
+}
+
+.civic-highlight-inner {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: var(--obsidian-oled, #0d0f12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.35rem;
+}
+
+.civic-highlight-name {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--travertine-linen, #f4eedd);
+  text-align: center;
+  line-height: 1.2;
+  max-width: 76px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }

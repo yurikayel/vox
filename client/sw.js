@@ -273,6 +273,8 @@ const SHELL_ASSETS = [
 
   "./js/render/community.js",
 
+  "./js/render/vote.js",
+
   "./js/render/profile.js",
 
   "./js/render/profile-voxels.js",
