@@ -22,7 +22,15 @@ function renderInboxPinButton(peer, isWelcome, pinned) {
   return `<button type="button" class="${cls}" data-peer="${escapeHtml(peer)}" title="${label}" aria-label="${label}">📌</button>`;
 }
 
-function renderDmInboxItem(c) {
+function buildInboxRowClass({ unread, pinned, active }) {
+  const parts = ["dm-inbox-row"];
+  if (unread > 0) parts.push("is-unread");
+  if (pinned) parts.push("is-pinned");
+  if (active) parts.push("is-active");
+  return parts.join(" ");
+}
+
+function renderDmInboxItem(c, activePeer = "") {
   const peer = c.peerAddress || "";
   const label = resolvePeerLabel(peer);
   const timeStr = c.lastTs ? new Date(c.lastTs).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
@@ -32,7 +40,7 @@ function renderDmInboxItem(c) {
   const welcomeBadge = isWelcome ? `<span class="badge-pill" style="font-size:0.65rem;">Boas-vindas</span> ` : "";
   const pinBadge = pinned ? `<span class="badge-pill dm-pin-pill" title="Fixada">📌</span> ` : "";
   const unreadBadge = unread > 0 ? `<span class="dm-unread-badge" aria-label="${unread} não lidas">${unread}</span>` : "";
-  const rowCls = `dm-inbox-row${unread > 0 ? " is-unread" : ""}${pinned ? " is-pinned" : ""}`;
+  const rowCls = buildInboxRowClass({ unread, pinned, active: Boolean(activePeer) && activePeer === peer });
 
   return `
     <div class="${rowCls}">
@@ -87,26 +95,39 @@ function renderDmAdvancedSection(contactList = []) {
 
 function renderDmHeroCard(contactList = []) {
   return `
-    <div class="card dm-hero-simple">
-      <h2 class="dm-hero-title">Mensagens</h2>
-      <p class="desc dm-hero-lead">Conversas privadas neste navegador.</p>
-      <div class="dm-hero-actions">
-        <a href="#/people" class="btn btn-primary dm-hero-primary">Nova conversa</a>
-        <button type="button" id="btn-copy-my-dm-link" class="btn btn-outline">Copiar meu link</button>
+    <header class="agora-page-head dm-hero-simple">
+      <div class="agora-page-head-text">
+        <h1 class="agora-page-title dm-hero-title">Mensagens</h1>
+        <p class="agora-page-sub dm-hero-lead">Conversas privadas, guardadas só neste aparelho.</p>
       </div>
-      ${renderContactQuickHtml(contactList)}
-    </div>`;
+      <div class="agora-page-actions dm-hero-actions">
+        <a href="#/people" class="agora-btn agora-btn--primary dm-hero-primary">Nova conversa</a>
+        <button type="button" id="btn-copy-my-dm-link" class="agora-btn agora-btn--secondary">Copiar meu link</button>
+      </div>
+    </header>
+    ${renderContactQuickHtml(contactList)}`;
 }
 
-export function renderDmList(main, conversations = [], _myAddress = "", { contactList = [], searchQuery = "" } = {}) {
+export function renderDmList(main, conversations = [], _myAddress = "", { contactList = [], searchQuery = "", compact = false, activePeer = "" } = {}) {
   const sorted = sortAndFilterConversations(conversations, { query: searchQuery, welcomeId: WELCOME_ROUTE_ID, resolveLabel: resolvePeerLabel });
   const emptyText = searchQuery ? "Nenhuma conversa encontrada para esta busca." : "Nenhuma conversa ainda. Toque em <strong>Nova conversa</strong> ou peça para alguém te mandar mensagem.";
-  const listHtml = !sorted.length ? `<div class="empty dm-empty-state"><p>${emptyText}</p></div>` : `<div class="dm-inbox-list" id="dm-inbox-list">${sorted.map(renderDmInboxItem).join("")}</div>`;
+  const listHtml = !sorted.length ? `<div class="empty dm-empty-state"><p>${emptyText}</p></div>` : `<div class="dm-inbox-list" id="dm-inbox-list">${sorted.map((c) => renderDmInboxItem(c, activePeer)).join("")}</div>`;
+
+  if (compact) {
+    main.innerHTML = `
+      <div class="agora-dm-list-head">
+        <p class="agora-title-monument">Conversas</p>
+        <a href="#/dm" class="agora-link-btn">Todas</a>
+      </div>
+      <input type="search" id="dm-search-input" class="form-control dm-search-input" value="${escapeHtml(searchQuery)}" placeholder="Buscar conversa…" aria-label="Buscar conversa" />
+      ${listHtml}`;
+    return;
+  }
 
   main.innerHTML = `
     ${renderDmHeroCard(contactList)}
     <div class="actions-bar dm-recent-bar">
-      <span class="section-title">Conversas recentes</span>
+      <span class="agora-label">Conversas recentes</span>
       <div class="dm-recent-controls">
         <input type="search" id="dm-search-input" class="form-control dm-search-input" value="${escapeHtml(searchQuery)}" placeholder="Buscar conversa…" aria-label="Buscar conversa" />
         <button type="button" id="btn-pull-inbox" class="btn btn-sm btn-outline">Atualizar</button>

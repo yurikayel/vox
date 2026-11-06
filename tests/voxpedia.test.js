@@ -120,6 +120,6 @@ describe("voxpedia shell nav", () => {
   it("sidebar link to #/voxpedia", () => {
     assert.match(shellSrc, /href="#\/voxpedia"/);
     assert.match(shellSrc, /Voxpedia/);
-    assert.match(shellSrc, /activeTab === "voxpedia"/);
+    assert.match(shellSrc, /tab: "voxpedia"/);
   });
 });
