@@ -30,6 +30,7 @@ import { renderRepostBtn } from "./repost-btn.js";
 import { rememberVisible } from "../repost-index.js";
 import { groupRepliesForThread } from "../reply-thread.js";
 import { renderPhotoHiddenMessageHtml } from "./photo-chrome.js";
+import { renderPageHead } from "./shell.js";
 
 export function renderComposerStrip(displayName = "") {
   return renderInlineComposer({ displayName });
@@ -823,18 +824,29 @@ export function renderWelcomeFeedHintHtml() {
     </div>`;
 }
 
-export function renderFeedTabsBar(activeFeed = "for-you") {
-  const isForYou = activeFeed === "for-you";
-  const isExternal = activeFeed === "external";
-  const isAll = activeFeed === "all";
-  const isFollowing = activeFeed === "following";
+const FEED_TAB_ICONS = {
+  vox: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18"/><path d="M5 21V10M9 21V10M15 21V10M19 21V10"/><path d="M2 10 12 3l10 7Z"/></svg>`,
+  external: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>`,
+  all: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>`,
+  following: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m16 11 2 2 4-4"/></svg>`,
+};
 
+export function renderFeedTabsBar(activeFeed = "for-you") {
+  const tabs = [
+    { key: "for-you", href: "#/", icon: FEED_TAB_ICONS.vox, label: "Vox" },
+    { key: "external", href: "#/?feed=external", icon: FEED_TAB_ICONS.external, label: "Redes (Bluesky)" },
+    { key: "all", href: "#/?feed=all", icon: FEED_TAB_ICONS.all, label: "Tudo" },
+    { key: "following", href: "#/?feed=following", icon: FEED_TAB_ICONS.following, label: "Seguindo" },
+  ];
+  const items = tabs
+    .map((t) => {
+      const active = activeFeed === t.key;
+      return `<a href="${t.href}" class="feed-tab-chip ${active ? "active" : ""}" role="tab" aria-selected="${active}">${t.icon}<span>${t.label}</span></a>`;
+    })
+    .join("\n      ");
   return `
     <div class="feed-tabs-bar" role="tablist" aria-label="Filtro de feeds">
-      <a href="#/" class="feed-tab-chip ${isForYou ? "active" : ""}" role="tab" aria-selected="${isForYou}">🏛️ Vox</a>
-      <a href="#/?feed=external" class="feed-tab-chip ${isExternal ? "active" : ""}" role="tab" aria-selected="${isExternal}">🌐 Redes (Bluesky)</a>
-      <a href="#/?feed=all" class="feed-tab-chip ${isAll ? "active" : ""}" role="tab" aria-selected="${isAll}">🔀 Tudo</a>
-      <a href="#/?feed=following" class="feed-tab-chip ${isFollowing ? "active" : ""}" role="tab" aria-selected="${isFollowing}">⭐ Seguindo</a>
+      ${items}
     </div>`;
 }
 
@@ -926,6 +938,13 @@ function renderFeedEmptyState(activeFeed) {
   </div>`;
 }
 
+function renderFeedPageHead() {
+  return renderPageHead({
+    title: "Ágora",
+    subtitle: "Debates, pautas e registros das pessoas e comunidades da sua rede — em ordem cronológica, sem algoritmo.",
+  });
+}
+
 export function renderFeed(main, topics = [], opts = {}) {
   const activeFeed = opts.activeFeed || "for-you";
   const userRouteId = opts.userRouteId || "";
@@ -936,6 +955,7 @@ export function renderFeed(main, topics = [], opts = {}) {
   const managerHtml = activeFeed === "external" ? renderExternalFeedManagerHtml(opts.externalSubs) : "";
 
   let html = `
+    ${renderFeedPageHead()}
     <div class="feed-chrome">
       ${renderStoriesStrip()}
       ${tabsBar}
