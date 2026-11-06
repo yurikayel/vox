@@ -833,25 +833,22 @@ export function renderComposeTopic(main, communityId) {
 
 export function renderComposeReply(main, topicId, communityId, { parentId = "", parentAuthor = "", parentExcerpt = "" } = {}) {
   const replyContextHtml = parentId
-    ? `<div class="reply-context-banner" style="background:var(--bg-subtle, #f3f4f6); border-left:3px solid var(--primary, #2563eb); padding:8px 12px; margin-bottom:12px; border-radius:4px; font-size:0.88rem;">
-         <div style="font-weight:600; color:var(--text-muted, #4b5563);">↩️ Respondendo a ${escapeHtml(parentAuthor ? `@${parentAuthor}` : "comentário")}:</div>
-         ${parentExcerpt ? `<div style="font-style:italic; margin-top:2px; color:var(--text, #1f2937);">${escapeHtml(parentExcerpt)}</div>` : ""}
+    ? `<div class="reply-context-banner" style="background:var(--surface-soft, rgba(255, 255, 255, 0.04)); border-left:3px solid var(--primary, #00b4d8); padding:10px 14px; margin-bottom:14px; border-radius:var(--radius-sm); font-size:0.88rem;">
+         <div style="font-weight:600; color:var(--text-muted, #94a3b8);">↩️ Respondendo a ${escapeHtml(parentAuthor ? `@${parentAuthor}` : "comentário")}:</div>
+         ${parentExcerpt ? `<div style="font-style:italic; margin-top:4px; color:var(--text); opacity:0.9;">${escapeHtml(parentExcerpt)}</div>` : ""}
        </div>`
     : "";
   main.innerHTML = `
-    <div class="card compose-card">
-      <a class="back-link" href="#/t/${encodeURIComponent(topicId)}">← Voltar ao post</a>
-      <h2>Responder</h2>
-      ${replyContextHtml}
+    <div class="compose-card compose-card-sleek">
       <form id="form-compose-reply">
+        <div class="compose-header-bar">
+          <a class="compose-back-pill" href="#/t/${encodeURIComponent(topicId)}">← Voltar</a>
+          <button type="submit" class="btn btn-primary btn-publish-pill" id="btn-submit-reply">Responder</button>
+        </div>
+        ${replyContextHtml}
         <input type="hidden" id="reply-topic-id" value="${escapeHtml(topicId)}" />
         <input type="hidden" id="reply-comm-id" value="${escapeHtml(communityId)}" />
-        <div class="form-group">
-          <textarea id="reply-body" class="form-control" rows="4" placeholder="Sua resposta..." required></textarea>
-        </div>
-        <div class="form-actions">
-          <button type="submit" class="btn btn-primary" id="btn-submit-reply">Enviar Resposta</button>
-        </div>
+        <textarea id="reply-body" class="compose-textarea-seamless" rows="4" placeholder="Escreva sua resposta..." required></textarea>
       </form>
     </div>`;
 }
