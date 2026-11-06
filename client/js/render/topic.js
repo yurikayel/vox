@@ -250,7 +250,7 @@ function renderTopicRepliesBlock(topicId, commId, replies, isMod, isLocked = fal
     ? `<div class="community-locked-notice" style="padding:0.75rem 1rem; margin-bottom:1rem; text-align:center;"><p class="meta" style="margin:0;">🔒 Esta discussão foi encerrada pela moderação. Não recebe novas respostas.</p></div>`
     : "";
   if (!replies.length) {
-    return `${actionBar}${lockNotice}<div class="empty"><p>${isLocked ? "Nenhuma resposta antes do encerramento." : "Sem respostas ainda. Inicie o debate!"}</p></div>`;
+    return `${actionBar}${lockNotice}<div class="empty empty-seamless"><p>${isLocked ? "Nenhuma resposta antes do encerramento." : "Sem respostas ainda. Inicie o debate!"}</p></div>`;
   }
   const rows = flattenReplyThread(replies)
     .map(({ reply, depth }) => renderTopicReplyRow(reply, isMod, { depth, topicId, commId, isLocked }))
@@ -262,7 +262,7 @@ function extractTopicViewContext(topic, topicData, communityId) {
   const t = topic || {};
   const d = topicData || {};
   const commId = communityId || t.communityId || "";
-  const bodyText = d.body || t.body || "Sem conteúdo textual.";
+  const bodyText = d.body ?? t.body ?? "";
   const author = t.author || t.owner || "";
   const labels = resolvePostAuthorLabels(author, { authorDisplay: t.authorDisplay, isOwnLocalPost: t.isOwnLocalPost });
   const topicTs = t.ts || d.ts;

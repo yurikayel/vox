@@ -21,34 +21,84 @@ function stripLeadingTitle(b, t) {
   return rest.trimStart();
 }
 
-function sanitizeBodyString(rawBody) {
-  const b = String(rawBody || "").trim();
-  if (b.startsWith("{") && b.endsWith("}")) {
-    try {
-      const obj = JSON.parse(b);
-      if (typeof obj === "object" && obj !== null) {
-        if (typeof obj.body === "string") return obj.body.trim();
-        if (typeof obj.content === "string") return obj.content.trim();
-        if (typeof obj.text === "string") return obj.text.trim();
-        return "";
-      }
-    } catch {}
+const BODY_CANDIDATE_KEYS = [
+  "body", "content", "text", "message", "mensagem", "desc", "description"
+];
+
+function extractCandidateFromObject(obj) {
+  if (!obj || typeof obj !== "object") return "";
+  for (const key of BODY_CANDIDATE_KEYS) {
+    const val = obj[key];
+    if (typeof val === "string" && val.trim()) {
+      return val.trim();
+    }
   }
-  return b;
+  return "";
+}
+
+function stripCodeFences(text) {
+  if (text.startsWith("```json") && text.endsWith("```")) {
+    return text.slice(7, -3).trim();
+  }
+  if (text.startsWith("```") && text.endsWith("```")) {
+    return text.slice(3, -3).trim();
+  }
+  return text;
+}
+
+function tryParseJsonObject(str) {
+  const isEnclosed = (str.startsWith("{") && str.endsWith("}")) || (str.startsWith("[") && str.endsWith("]"));
+  if (!isEnclosed) return null;
+  try {
+    const parsed = JSON.parse(str);
+    return typeof parsed === "object" ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+export function sanitizeBodyString(rawBody) {
+  if (!rawBody) return "";
+  if (typeof rawBody === "object") {
+    const fromObj = extractCandidateFromObject(rawBody);
+    return fromObj ? sanitizeBodyString(fromObj) : "";
+  }
+  const stripped = stripCodeFences(String(rawBody).trim());
+  const parsedObj = tryParseJsonObject(stripped);
+  if (parsedObj) {
+    const candidate = extractCandidateFromObject(parsedObj);
+    return candidate ? sanitizeBodyString(candidate) : "";
+  }
+  return stripped;
+}
+
+function extractTitleFromPossibleJson(title) {
+  const parsed = tryParseJsonObject(title);
+  if (!parsed) return title;
+  return String(parsed.title || parsed.caption || "").trim();
+}
+
+function isGenericTitle(t) {
+  return t === "Tópico" || t === "Publicação" || t === "Sem título";
 }
 
 export function formatPostDisplay({ title = "", body = "" } = {}) {
-  const t = String(title || "").trim();
+  const t = extractTitleFromPossibleJson(String(title || "").trim());
   const b = sanitizeBodyString(body);
-  if (!t && !b) return { mode: "empty" };
-  if (!b || b === t) return { mode: "caption", text: t || b };
 
+  if (!b && isGenericTitle(t)) {
+    return { mode: "empty" };
+  }
+  if (!t && !b) {
+    return { mode: "empty" };
+  }
+  if (!b || b === t) {
+    return { mode: "caption", text: t || b };
+  }
   if (b.startsWith(t)) {
     const rest = stripLeadingTitle(b, t);
-    if (!rest) return { mode: "caption", text: t };
-    return { mode: "title-body", title: t, body: rest };
+    return rest ? { mode: "title-body", title: t, body: rest } : { mode: "caption", text: t };
   }
-
   const fallbackTitle = t || b.split(/\r?\n/)[0].trim();
   return { mode: "title-body", title: fallbackTitle, body: b };
 }

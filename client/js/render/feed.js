@@ -746,8 +746,8 @@ function renderPhotoPostItem(t, author, labels) {
     <article class="post insta-post post-layout-photo post-photo-bleed" data-id="${escapeHtml(t.id)}" data-layout="photo"${t.isOwnLocalPost ? ' data-is-own="true"' : ""}>
       ${igHead}
       ${media}
-      ${captionHtml}
       ${igBar}
+      ${captionHtml}
       ${renderPostFrame(t)}
       ${comments}
     </article>`;
