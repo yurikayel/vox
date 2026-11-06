@@ -742,14 +742,14 @@ function renderComposeCommunityFields() {
 
 export function renderComposeCommunity(main) {
   main.innerHTML = `
-    <div class="card compose-card compose-community-card">
-      <a class="back-link" href="#/communities">← Voltar</a>
-      <h2>Nova Comunidade</h2>
+    <div class="compose-card compose-card-sleek compose-community-card">
+      <a class="back-link compose-back-link" href="#/communities">← Voltar</a>
+      <h2 class="compose-heading" style="margin: 0.5rem 0 1rem;">Nova Comunidade</h2>
       <form id="form-compose-community">
         ${renderComposeCommunityPhotoSection()}
         ${renderComposeCommunityFields()}
-        <div class="form-actions">
-          <button type="submit" class="btn btn-primary" id="btn-submit-comm">Publicar Comunidade</button>
+        <div class="form-actions" style="margin-top: 1rem;">
+          <button type="submit" class="btn btn-primary btn-publish-pill" id="btn-submit-comm">Publicar Comunidade</button>
         </div>
       </form>
     </div>`;
@@ -757,12 +757,12 @@ export function renderComposeCommunity(main) {
 
 function renderChatTranscriptDetails() {
   return `
-    <details class="compose-chat-import" style="margin-top:0.65rem; padding:0.6rem 0.75rem; border:1px dashed var(--border); border-radius:var(--radius-sm); background:var(--surface-soft);">
+    <details class="compose-chat-import" style="margin-top:0.75rem; padding:0.75rem 1rem; border:1px solid var(--border-subtle); border-radius:var(--radius-sm); background:var(--surface-soft, rgba(255, 255, 255, 0.03));">
       <summary style="cursor:pointer; font-size:0.82rem; font-weight:600; color:var(--accent);">📥 Importar Ata / Conversa do Slack ou Discord (Memória Anti-90-dias)</summary>
-      <div style="margin-top:0.5rem;">
-        <p class="meta" style="margin:0 0 0.4rem; font-size:0.76rem;">Cole abaixo o trecho copiado do Slack ou Discord. O Vox formata os turnos de fala em ata Markdown permanente.</p>
+      <div style="margin-top:0.6rem;">
+        <p class="meta" style="margin:0 0 0.5rem; font-size:0.78rem;">Cole abaixo o trecho copiado do Slack ou Discord. O Vox formata os turnos de fala em ata Markdown permanente.</p>
         <textarea id="chat-transcript-input" class="form-control" rows="4" placeholder="Ex:\nHelena — Hoje às 14:30\nAprovamos o mutirão de sábado.\nTiago — Hoje às 14:32\nFechado! Levo as mudas."></textarea>
-        <div style="display:flex; gap:0.5rem; align-items:center; margin-top:0.45rem; flex-wrap:wrap;">
+        <div style="display:flex; gap:0.5rem; align-items:center; margin-top:0.6rem; flex-wrap:wrap;">
           <button type="button" id="btn-convert-chat-transcript" class="btn btn-sm btn-outline">Converter em Ata</button>
           <button type="button" id="btn-convert-and-notarize" class="btn btn-sm btn-primary">🏛️ Converter & Selar Cartório (Arweave)</button>
         </div>
@@ -773,13 +773,13 @@ function renderChatTranscriptDetails() {
 function renderTopicCivicTagBar() {
   return `
     <div class="form-group topic-tag-selector-group">
-      <label>Categoria Cívica (opcional):</label>
-      <div class="civic-tag-bar" style="display:flex; gap:6px; flex-wrap:wrap; margin-top:4px;">
+      <label style="font-size:0.82rem; color:var(--muted); font-weight:600;">Categoria Cívica (opcional):</label>
+      <div class="civic-tag-bar" style="display:flex; gap:6px; flex-wrap:wrap; margin-top:6px;">
         <button type="button" class="btn btn-sm btn-subtle civic-tag-btn active" data-tag="" aria-pressed="true">Geral</button>
-        <button type="button" class="btn btn-sm btn-subtle civic-tag-btn" data-tag="[Pauta]" aria-pressed="false">🏛️ [Pauta]</button>
-        <button type="button" class="btn btn-sm btn-subtle civic-tag-btn" data-tag="[Bug]" aria-pressed="false">🐛 [Bug]</button>
-        <button type="button" class="btn btn-sm btn-subtle civic-tag-btn" data-tag="[Ideia]" aria-pressed="false">💡 [Ideia]</button>
-        <button type="button" class="btn btn-sm btn-subtle civic-tag-btn" data-tag="[Debate Geral]" aria-pressed="false">💬 [Debate Geral]</button>
+        <button type="button" class="btn btn-sm btn-subtle civic-tag-btn" data-tag="[Pauta]" aria-pressed="false">🏛️ Pauta</button>
+        <button type="button" class="btn btn-sm btn-subtle civic-tag-btn" data-tag="[Bug]" aria-pressed="false">🐛 Bug</button>
+        <button type="button" class="btn btn-sm btn-subtle civic-tag-btn" data-tag="[Ideia]" aria-pressed="false">💡 Ideia</button>
+        <button type="button" class="btn btn-sm btn-subtle civic-tag-btn" data-tag="[Debate Geral]" aria-pressed="false">💬 Debate</button>
       </div>
       <input type="hidden" id="topic-civic-tag" value="" />
     </div>`;
@@ -797,7 +797,7 @@ function renderComposeAdvancedDrawer() {
     <details class="compose-advanced-drawer">
       <summary class="compose-advanced-summary">⚙️ Mais opções (título, categoria cívica, atas)</summary>
       <div class="compose-advanced-content">
-        <div class="form-group" style="margin-bottom:10px;">
+        <div class="form-group" style="margin-bottom:12px;">
           <label for="topic-title" style="font-size:0.82rem; color:var(--muted); font-weight:600;">Título da pauta (opcional):</label>
           <input type="text" id="topic-title" class="form-control" placeholder="ex: Dúvida sobre governança / Ideia de melhoria" />
         </div>
@@ -815,7 +815,7 @@ export function renderComposeTopic(main, communityId) {
   const heading = communityId ? `Postar em ${escapeHtml(communityId)}` : "Criar Publicação";
 
   main.innerHTML = `
-    <div class="card compose-card compose-card-sleek">
+    <div class="compose-card compose-card-sleek">
       <div class="compose-header-bar">
         ${backLink}
         <h2 class="compose-heading">${heading}</h2>

@@ -5241,6 +5241,13 @@ p.profile-grid-handle {
   box-shadow: none;
 }
 
+.empty.empty-seamless {
+  border: none;
+  background: transparent;
+  padding: 2.5rem 1rem;
+  box-shadow: none;
+}
+
 .error {
   background: var(--danger-soft);
   border: 1px solid var(--danger-soft);
@@ -7166,16 +7173,16 @@ p.profile-grid-handle {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 2px 12px 4px;
+  padding: 8px 12px 6px;
   background: transparent;
   pointer-events: auto;
 }
 
 .post-layout-photo > .post-ig-toolbar .action-btn {
   color: var(--text);
-  min-height: 24px;
-  padding: 2px 4px;
-  font-size: 0.78rem;
+  min-height: 28px;
+  padding: 4px;
+  font-size: 0.85rem;
   background: transparent;
   border: none;
   cursor: pointer;
@@ -7183,14 +7190,14 @@ p.profile-grid-handle {
 }
 
 .post-layout-photo > .post-ig-toolbar .action-icon {
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
   stroke: currentColor;
   filter: none;
 }
 
 .post-layout-photo > .post-ig-toolbar .action-count {
-  font-size: 0.74rem;
+  font-size: 0.78rem;
   color: var(--text);
   text-shadow: none;
 }
@@ -7225,19 +7232,22 @@ p.profile-grid-handle {
 .post-ig-toolbar-left {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 16px;
 }
 
 .post-ig-toolbar .action-btn {
   color: var(--text);
-  min-height: 26px;
-  padding: 2px 5px;
-  font-size: 0.78rem;
+  min-height: 28px;
+  padding: 4px;
+  font-size: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .post-ig-toolbar .action-icon {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
 }
 
 .post-ig-toolbar .btn-like.active,
@@ -9242,18 +9252,18 @@ blockquote.repost-cite {
   flex: 1;
 }
 
-/* Post Pinned Ribbon e Destaque Oficial */
+/* Post Pinned Ribbon e Destaque Oficial (Sem card, fundo preto puro, estilo Instagram/Twitter) */
 .post-pinned-ribbon {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 7px 14px;
-  font-size: 0.78rem;
+  padding: 8px 12px 6px;
+  font-size: 0.74rem;
   font-weight: 700;
   color: #f59e0b;
-  background: rgba(245, 158, 11, 0.08);
-  border-bottom: 1px solid rgba(245, 158, 11, 0.2);
-  letter-spacing: 0.02em;
+  background: transparent;
+  border-bottom: 1px solid var(--border-subtle);
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
@@ -9261,6 +9271,7 @@ blockquote.repost-cite {
   border: none !important;
   border-bottom: 1px solid var(--border-subtle) !important;
   box-shadow: none !important;
+  background: #000000 !important;
 }
 
 /* Lo-Fi Cívico e Estética Retrô */
@@ -9746,6 +9757,26 @@ blockquote.repost-cite {
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-color-mode="light"]) .compose-card-sleek {
+    background: #000000;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    margin: 0 auto;
+    padding: 1.25rem 0;
+  }
+}
+
+:root[data-color-mode="dark"] .compose-card-sleek {
+  background: #000000;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  margin: 0 auto;
+  padding: 1.25rem 0;
 }
 
 .compose-header-bar {
