@@ -100,16 +100,13 @@ function renderTopicStarButton(topicId, topic) {
   </button>`;
 }
 
-function renderTopicFeedbackActions(topicId, topic, author, authorDisplay) {
+function renderTopicFeedbackActions(topicId, topic, author) {
   const likeBtn = renderTopicLikeButton(topicId, topic);
   const commentBtn = `<button type="button" class="action-btn btn-comment" data-id="${escapeHtml(topicId)}" data-comm="${escapeHtml(topic?.communityId || "")}" aria-label="Comentar" onclick="document.querySelector('#compose-reply, .thread-reply-input, .post-comment-input')?.focus() || location.assign('#/compose/reply?t=${encodeURIComponent(topicId)}&c=${encodeURIComponent(topic?.communityId || "")}')">
     <svg class="action-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
   </button>`;
-
   const repostBtn = renderRepostBtn({ ...(topic || {}), id: topicId, title: topic?.title || "", author }, { size: 18 });
-  const starBtn = renderTopicStarButton(topicId, topic);
-
-  return `${likeBtn}${commentBtn}${repostBtn}${starBtn}${renderTopicZapButton(topicId, topic, author, authorDisplay)}`;
+  return `${likeBtn}${commentBtn}${repostBtn}`;
 }
 
 function renderTopicModActions(isMod, topicId, topic) {
@@ -138,7 +135,9 @@ function renderTopicModActions(isMod, topicId, topic) {
   return `${pinBtn}${lockBtn}${hideBtn}`;
 }
 
-function renderTopicOverflowMenu(topicId, topic, authorDisplay, authorHandle, bodyText, isMod) {
+function renderTopicOverflowMenu(topicId, topic, author, authorDisplay, authorHandle, bodyText, isMod) {
+  const zapBtn = renderTopicZapButton(topicId, topic, author, authorDisplay);
+  const starBtn = renderTopicStarButton(topicId, topic);
   const copyMdBtn = `<button type="button" class="action-btn btn-copy-md" data-id="${escapeHtml(topicId)}" data-title="${escapeHtml(topic?.title || "")}" data-body="${escapeHtml(bodyText)}" data-author="${escapeHtml(authorDisplay)}" data-handle="${escapeHtml(authorHandle)}" role="menuitem" aria-label="Copiar post como Markdown">
     <svg class="action-icon icon-copy" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
     <span class="toolbar-overflow-label">Copiar .md</span>
@@ -149,6 +148,8 @@ function renderTopicOverflowMenu(topicId, topic, authorDisplay, authorHandle, bo
   return `<details class="toolbar-overflow">
     <summary class="action-btn btn-toolbar-more" aria-label="Mais opções do post"><span aria-hidden="true">⋯</span></summary>
     <div class="toolbar-overflow-menu" role="menu">
+      ${zapBtn}
+      ${starBtn}
       ${copyMdBtn}
       ${quarAction}
       ${modBtns}
@@ -176,9 +177,9 @@ function renderTopicDistributeActions(topicId, topic, authorDisplay, commId) {
 }
 
 function renderTopicToolbar(topicId, topic, author, authorDisplay, authorHandle, bodyText, commId, isMod) {
-  const fb = renderTopicFeedbackActions(topicId, topic, author, authorDisplay);
+  const fb = renderTopicFeedbackActions(topicId, topic, author);
   const dist = renderTopicDistributeActions(topicId, topic, authorDisplay, commId);
-  const overflow = renderTopicOverflowMenu(topicId, topic, authorDisplay, authorHandle, bodyText, isMod);
+  const overflow = renderTopicOverflowMenu(topicId, topic, author, authorDisplay, authorHandle, bodyText, isMod);
 
   return `<div class="post-actions insta-actions post-toolbar" style="margin-top:12px; padding-top:8px;">
     <div class="toolbar-primary">${fb}${dist}</div>
