@@ -546,13 +546,13 @@ a:hover {
 
 @media (max-width: 480px) {
   .post-header-inline {
-    padding: 10px 12px 6px;
+    padding: 4px 10px 2px;
   }
   .post-caption-block {
-    padding: 8px 12px 12px;
+    padding: 2px 10px;
   }
   .insta-actions {
-    padding: 6px 8px 8px;
+    padding: 2px 6px 4px;
   }
 }
 
@@ -7492,6 +7492,17 @@ body.photo-tagging .post-media-hero.photo-tag-mode {
     box-sizing: border-box;
   }
 
+  /* Na tela de Feed / Stream contínuo no mobile, sangra de ponta a ponta sem sarjetas laterais */
+  .app-layout:has(.feed-container) main#app-main,
+  .app-layout:has(.feed-chrome) main#app-main,
+  .app-layout:has(.feed-stream) main#app-main,
+  main#app-main:has(.feed-container),
+  main#app-main:has(.feed-chrome),
+  main#app-main:has(.feed-stream) {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
   /* Na thread de DM, o padding inferior do main vai a zero para o composer colar no rodapé */
   .app-layout:has(.dm-thread-container) main#app-main,
   .app-layout.in-dm-thread main#app-main {
@@ -7646,6 +7657,134 @@ body.photo-tagging .post-media-hero.photo-tag-mode {
 
   .post-toolbar .btn-zap-post {
     display: none;
+  }
+
+  /* Abas do feed estilo flat nativo de ponta a ponta */
+  .feed-tabs-bar {
+    width: 100%;
+    max-width: 100%;
+    border-left: none;
+    border-right: none;
+    margin: 0;
+  }
+
+  .feed-tab-chip {
+    padding: 10px 8px;
+    font-size: 0.82rem;
+    min-height: 44px;
+  }
+
+  /* Raiz do tópico e bloco de respostas no mobile sem margens vazadas */
+  .topic-root.card {
+    border-left: none;
+    border-right: none;
+    border-radius: 0;
+    margin-left: 0;
+    margin-right: 0;
+    width: 100%;
+    padding: 1rem 12px;
+  }
+
+  .thread-replies {
+    border-left: none;
+    border-right: none;
+    border-radius: 0;
+    width: 100%;
+  }
+
+  .post-comment-nested-list {
+    padding-left: 8px;
+  }
+
+  /* Grade de comunidades e abas de navegação interna */
+  .community-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .community-card {
+    border-radius: var(--radius-sm);
+  }
+
+  .community-nav-tabs,
+  .community-tab-bar {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+  }
+
+  /* Busca de pessoas e diretório cívico */
+  .people-search-card {
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+  }
+
+  .people-result {
+    flex-wrap: wrap;
+    padding: 8px 10px;
+  }
+
+  .people-result .meta {
+    word-break: break-all;
+  }
+
+  /* Perfil mosaico contínuo 3xN e estatísticas compactas */
+  .profile-grid {
+    gap: 2px;
+    padding: 0;
+  }
+
+  .profile-grid-item {
+    border-radius: 0;
+    border: none;
+  }
+
+  .profile-grid-stats {
+    gap: 0.25rem;
+  }
+
+  .profile-grid-stat-value {
+    font-size: 1.05rem;
+  }
+
+  .profile-grid-stat-label {
+    font-size: 0.7rem;
+  }
+
+  /* Compositores sleek sem card rígido no mobile */
+  .compose-card-sleek {
+    margin: 0 auto;
+    padding: 1rem 0.85rem;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    box-shadow: none;
+    background: transparent;
+  }
+
+  .compose-pill-group {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .compose-pill-input {
+    flex: 1;
+    width: auto;
+    min-width: 0;
+  }
+
+  /* Modais e diálogos otimizados para toque e espaço útil */
+  .modal-overlay {
+    padding: 0.5rem;
+  }
+
+  .modal-dialog {
+    padding: 1.15rem 1rem;
+    border-radius: 14px;
+    max-height: 88dvh;
+    width: 100%;
   }
 }
 
