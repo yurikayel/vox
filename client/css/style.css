@@ -67,7 +67,7 @@
   --color-warning: var(--warning);
   --accent-emerald: var(--brand-green);
   --feed-max: 640px;
-  --feed-post-gap: 0px;
+  --feed-post-gap: 16px;
   --sidebar-width: 240px;
   --sidebar-width-collapsed: 72px;
   --space-xs: 4px;
@@ -1755,12 +1755,6 @@ main#app-main,
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.feed-container > .post:not(:last-child) {
-  margin-bottom: 0;
-  padding-bottom: 0;
-  border-bottom: none;
-}
-
 .post:hover {
   border-color: color-mix(in srgb, var(--brand-navy) 22%, var(--outline));
   box-shadow: var(--elevation-2), var(--paper-highlight);
@@ -2608,7 +2602,6 @@ body.post-more-sheet-open {
   border-radius: var(--radius);
   padding: 0;
   background: var(--surface-1);
-  background: transparent;
   max-width: var(--feed-max, 640px);
   width: 100%;
   margin: 0 auto;
@@ -3860,45 +3853,29 @@ p.profile-grid-handle {
   background: var(--accent-soft);
 }
 
-/* Feed Container - Stream Contínuo Hairline (Twitter/Threads/Instagram) */
+/* Feed Container - Grade de Cards Discretos (Híbrido Twitter/Instagram) */
 .feed-container {
-  background: var(--surface-1);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius);
-  overflow: hidden;
-  box-shadow: var(--elevation-1), var(--paper-highlight);
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  overflow: visible;
+  box-shadow: none;
   max-width: var(--feed-max, 640px);
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: var(--feed-post-gap, 16px);
 }
 
-.feed-container > .post,
-.feed-container > .post.post-layout-photo,
-.feed-container > .post-layout-photo.post-photo-bleed {
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid var(--border-subtle);
-  border-radius: 0 !important;
-  box-shadow: none;
+.feed-container > .post {
   max-width: 100%;
-  margin: 0;
-}
-
-.feed-container > .post:last-child {
-  border-bottom: none;
-}
-
-.feed-container > .post:hover {
-  background: var(--paper-highlight, rgba(255, 255, 255, 0.025));
+  width: 100%;
+  box-sizing: border-box;
 }
 
 @media (max-width: 680px) {
   .feed-container {
-    border-left: none;
-    border-right: none;
-    border-radius: 0;
+    gap: 12px;
   }
 }
 
@@ -7126,7 +7103,7 @@ p.profile-grid-handle {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 14px 4px;
+  padding: 8px 16px 12px;
   background: transparent;
   pointer-events: auto;
 }
