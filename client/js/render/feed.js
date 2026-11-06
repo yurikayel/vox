@@ -730,7 +730,7 @@ function renderPostPinnedRibbon(t, isPinned) {
   const dismissBtn = t.id === "vox-official-manifesto-welcome" || t.isDismissable
     ? '<button type="button" class="btn-dismiss-welcome-topic" title="Dispensar este post" aria-label="Dispensar post de boas-vindas" style="margin-left:auto; background:none; border:none; color:inherit; cursor:pointer; font-size:0.9rem; padding:0 4px; opacity:0.8;">✕</button>'
     : "";
-  return `<div class="post-pinned-ribbon"><span class="pin-icon">📌</span> <span>${t.isOfficial ? "Bem-vindo à Vox" : "Publicação Fixada"}</span>${dismissBtn}</div>`;
+  return `<div class="post-pinned-ribbon"><span class="pin-icon">📌</span> <span>${t.isOfficial ? "Bem-vindo ao Vox" : "Publicação Fixada"}</span>${dismissBtn}</div>`;
 }
 
 function renderPhotoPostItem(t, author, labels) {

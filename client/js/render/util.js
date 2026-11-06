@@ -213,7 +213,7 @@ export function renderAvatarHtml(author, authorDisplay, sizeClass = "", avatarOv
   const display =
     authorDisplay || profileDirectory.getAuthorDisplaySync(author) || mock.getAuthorDisplay(author) || author;
   const authorInitial = escapeHtml((display || "V").slice(0, 1).toUpperCase());
-  const squircle = isWelcomeRouteId(author) ? " avatar-squircle" : "";
+  const squircle = "";
   if (avatarUrl) {
     return `<span class="avatar-wrap${squircle} ${sizeClass}"><img class="avatar-img${squircle}" src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(display)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" /><span class="avatar avatar-fallback${squircle}" style="display:none;">${authorInitial}</span></span>`;
   }

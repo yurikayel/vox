@@ -1895,11 +1895,12 @@ main#app-main,
 .avatar-wrap.avatar-squircle,
 .avatar-img.avatar-squircle,
 .profile-avatar-img.avatar-squircle {
-  border-radius: 22%;
+  border-radius: 50%;
 }
 
 .avatar-wrap.avatar-squircle .avatar-img.avatar-squircle {
   object-fit: cover;
+  border-radius: 50%;
 }
 
 .post-content {
@@ -9277,12 +9278,12 @@ blockquote.repost-cite {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 12px 6px;
+  padding: 8px 12px 4px;
   font-size: 0.74rem;
   font-weight: 700;
   color: #f59e0b;
   background: transparent;
-  border-bottom: 1px solid var(--border-subtle);
+  border: none;
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
