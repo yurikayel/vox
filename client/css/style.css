@@ -67,7 +67,7 @@
   --color-warning: var(--warning);
   --accent-emerald: var(--brand-green);
   --feed-max: 640px;
-  --feed-post-gap: 0px;
+  --feed-post-gap: 16px;
   --sidebar-width: 240px;
   --sidebar-width-collapsed: 72px;
   --space-xs: 4px;
@@ -1736,13 +1736,13 @@ main#app-main,
   text-align: center;
 }
 
-/* Post / item de feed (cartão padrão) */
+/* Post / item de feed (sem card, fundo preto, estilo Instagram) */
 .post {
   display: flex;
   flex-direction: column;
   gap: 0;
-  padding: 0;
-  background: var(--surface-1);
+  padding: 0 0 16px;
+  background: #000000;
   border: none;
   border-bottom: 1px solid var(--border-subtle);
   border-radius: 0;
@@ -1757,7 +1757,7 @@ main#app-main,
 }
 
 .post:hover {
-  background: var(--paper-highlight, rgba(255, 255, 255, 0.02));
+  background: #000000;
   box-shadow: none;
 }
 
@@ -2602,8 +2602,8 @@ body.post-more-sheet-open {
   border-bottom: 1px solid var(--border-subtle);
   box-shadow: none;
   border-radius: 0;
-  padding: 0;
-  background: var(--surface-1);
+  padding: 0 0 16px;
+  background: #000000;
   max-width: var(--feed-max, 640px);
   width: 100%;
   margin: 0 auto;
@@ -2612,7 +2612,7 @@ body.post-more-sheet-open {
 }
 
 .post-layout-photo.post-photo-bleed:hover {
-  background: var(--paper-highlight, rgba(255, 255, 255, 0.02));
+  background: #000000;
 }
 
 .post-layout-photo.post-photo-bleed .post-media-container {
@@ -2694,6 +2694,12 @@ body.post-more-sheet-open {
 
 .post-layout-text.post,
 .post-layout-github.post {
+  background: #000000;
+  border: none;
+  border-bottom: 1px solid var(--border-subtle);
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0 0 16px;
   max-width: var(--feed-max, 640px);
   width: 100%;
   margin: 0 auto;
@@ -3857,9 +3863,9 @@ p.profile-grid-handle {
   background: var(--accent-soft);
 }
 
-/* Feed Container - Stream Contínuo sem Card (Fundo Cinza Escuro) */
+/* Feed Container - Fundo Preto, Espaçamento Instagram, Sem Card */
 .feed-container {
-  background: var(--surface-1);
+  background: #000000;
   border-left: 1px solid var(--border-subtle);
   border-right: 1px solid var(--border-subtle);
   border-top: none;
@@ -3871,7 +3877,7 @@ p.profile-grid-handle {
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: var(--feed-post-gap, 16px);
 }
 
 .feed-container > .post {
@@ -3884,7 +3890,7 @@ p.profile-grid-handle {
   .feed-container {
     border-left: none;
     border-right: none;
-    gap: 0;
+    gap: var(--feed-post-gap, 16px);
   }
 }
 
@@ -7666,6 +7672,7 @@ body.photo-tagging .post-media-hero.photo-tag-mode {
     border-left: none;
     border-right: none;
     margin: 0;
+    background: #000000;
   }
 
   .feed-tab-chip {
@@ -8839,7 +8846,7 @@ blockquote.repost-cite {
   border-left: 1px solid var(--border-subtle);
   border-right: 1px solid var(--border-subtle);
   border-bottom: 1px solid var(--border-subtle);
-  background: var(--surface-1);
+  background: #000000;
   border-radius: 0;
   max-width: var(--feed-max, 640px);
   -webkit-overflow-scrolling: touch;
