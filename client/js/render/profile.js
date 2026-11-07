@@ -721,7 +721,7 @@ function renderWalletStatusBox(hasWallet, address, balance) {
         ${renderWalletPixRow()}
         <div class="actions-row agora-wallet-actions">
           <a class="agora-btn agora-btn--solid" href="#/perfil">Meu perfil</a>
-          <a class="agora-btn agora-btn--secondary" href="#/vote">Apoiar pauta</a>
+          <a class="agora-btn agora-btn--secondary" href="#/wallet/guia">Configuração guiada</a>
           <button id="btn-disconnect-wallet" class="agora-btn agora-btn--bronze btn-danger">Desconectar</button>
         </div>
       </section>`;
@@ -817,7 +817,7 @@ function communityNameStepHtml() {
       </div>
       <div class="form-group">
         <label for="comm-id">Endereço (slug):</label>
-        <input type="text" id="comm-id" class="form-control" placeholder="ex: cinema-nacional" required pattern="^[a-z0-9-]+$" title="Apenas letras minúsculas, números e hífens." />
+        <input type="text" id="comm-id" class="form-control" placeholder="ex: cinema-nacional" required pattern="[a-z0-9\\-]+" title="Apenas letras minúsculas, números e hífens." />
       </div>`;
 }
 
@@ -907,9 +907,21 @@ function renderTopicCivicTagBar() {
         <button type="button" class="btn btn-sm btn-subtle civic-tag-btn" data-tag="[Debate Geral]" aria-pressed="false">💬 Debate</button>
         <button type="button" class="btn btn-sm btn-subtle civic-tag-btn" data-tag="[Enquete]" aria-pressed="false">📊 Enquete</button>
       </div>
-      <p class="civic-tag-hint">Pauta, Ideia, Debate e Enquete tornam o post <strong>cívico</strong> (aba Cívico, com posicionamento assinado) se ele tiver título com 8+ caracteres, argumento com 40+ e for publicado em um círculo. Na enquete, liste de 2 a 6 opções, uma por linha começando com “- ”.</p>
+      <p class="civic-tag-hint">Pauta, Ideia, Debate e Enquete tornam o post <strong>cívico</strong> (aba Cívico, com posicionamento assinado) se ele tiver título com 8+ caracteres, argumento com 40+ e for publicado em um círculo.</p>
       <input type="hidden" id="topic-civic-tag" value="" />
+      ${renderPollBuilder()}
     </div>`;
+}
+
+/** Construtor de enquete: 2 a 6 opções, adicionar/remover (aparece com a categoria Enquete). */
+function renderPollBuilder() {
+  const row = (i) => `<li class="civic-poll-row"><input type="text" class="form-control civic-poll-input" maxlength="80" placeholder="Opção ${i}" aria-label="Opção ${i}" /><button type="button" class="civic-poll-remove" aria-label="Remover opção">×</button></li>`;
+  return `
+      <div class="civic-poll-builder" id="civic-poll-builder" hidden>
+        <p class="agora-field-label">Opções da enquete <span class="agora-muted">(2 a 6)</span></p>
+        <ol class="civic-poll-options" id="civic-poll-options">${row(1)}${row(2)}</ol>
+        <button type="button" class="agora-btn agora-btn--secondary" id="btn-civic-poll-add">+ Adicionar opção</button>
+      </div>`;
 }
 
 function renderComposeTargetPill(communityId) {
