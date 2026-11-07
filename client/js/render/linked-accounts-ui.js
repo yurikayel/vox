@@ -6,7 +6,6 @@ import {
   loadLinkedAccounts,
   isAutoReplicationEnabled,
   getGeneralWebhookUrl,
-  getNetworkAuthUrl,
   getSuggestedHandle,
 } from "../linked-accounts.js";
 
@@ -18,7 +17,7 @@ function renderConnectedCardBody(net, linkedData) {
 
   return `
     <div class="linked-connected-info" style="font-size:0.82rem; margin-bottom:0.6rem;">
-      <p style="margin:0 0 4px;">Handle: <strong>@${escapeHtml(handle)}</strong></p>
+      <p style="margin:0 0 4px;">Usuário: <strong>@${escapeHtml(handle)}</strong></p>
       ${hasAppPwd ? `<p class="meta" style="margin:0 0 4px; font-size:0.75rem; color:var(--success);">🦋 AT Protocol direto configurado</p>` : ""}
       ${webhook ? `<p class="meta" style="margin:0 0 4px; font-size:0.75rem;">Webhook ativo: <code>${escapeHtml(webhook.slice(0, 32))}…</code></p>` : ""}
       <label style="display:flex; align-items:center; gap:6px; font-size:0.8rem; cursor:pointer; margin-top:4px;">
@@ -28,23 +27,10 @@ function renderConnectedCardBody(net, linkedData) {
     </div>
     <div style="display:flex; gap:6px; flex-wrap:wrap;">
       <button type="button" class="btn btn-sm btn-primary btn-test-network" data-net-id="${escapeHtml(net.id)}">🧪 Testar se conectou</button>
+      ${linkedData?.verified ? "" : `<button type="button" class="btn btn-sm btn-outline btn-confirm-network" data-net-id="${escapeHtml(net.id)}">É minha conta</button>`}
       <button type="button" class="btn btn-sm btn-outline btn-unlink-network" data-net-id="${escapeHtml(net.id)}">Desvincular @${escapeHtml(handle)}</button>
     </div>
     <div class="linked-test-feedback" id="test-feedback-${escapeHtml(net.id)}" style="display:none; font-size:0.78rem; padding:6px 8px; border-radius:var(--radius-sm); margin-top:6px;"></div>`;
-}
-
-function renderOneClickConnectButton(net, authUrl) {
-  const color = escapeHtml(net.color || "#1e293b");
-  return `
-        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-          <button type="button" class="btn btn-sm btn-primary btn-one-click-connect" data-net-id="${escapeHtml(net.id)}" data-auth-url="${escapeHtml(authUrl)}" style="background:${color}; border-color:${color}; color:#fff; font-weight:600; padding:7px 16px; border-radius:var(--radius-sm); display:inline-flex; align-items:center; gap:6px;">
-            <span>${net.icon}</span>
-            <span>Conectar ${escapeHtml(net.name)} (1 Clique)</span>
-          </button>
-          <span class="meta" style="font-size:0.75rem; color:var(--muted); line-height:1.2;">
-            Abre a rede no navegador, loga sozinho e volta ao Vox
-          </span>
-        </div>`;
 }
 
 function renderAdvancedCredentialsForm(net) {
@@ -63,19 +49,19 @@ function renderAdvancedCredentialsForm(net) {
         </details>`;
 }
 
+const HANDLE_PLACEHOLDERS = { bsky: "voce.bsky.social", github: "seu-usuario" };
+
 function renderLinkNetworkForm(net) {
   const suggested = getSuggestedHandle(net.id);
-  const authUrl = getNetworkAuthUrl(net.id, suggested);
-
   return `
     <div class="network-connect-box" data-net-id="${escapeHtml(net.id)}" style="margin-top:0.4rem;">
       <div style="display:flex; flex-direction:column; gap:8px;">
-        ${renderOneClickConnectButton(net, authUrl)}
-        <div style="display:flex; align-items:center; gap:6px;">
+        <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
           <span class="meta" style="font-size:0.82rem; font-weight:600; color:var(--muted);">@</span>
-          <input type="text" class="input-net-handle form-control" placeholder="seu_usuario" value="${escapeHtml(suggested)}" style="font-size:0.8rem; padding:4px 8px; max-width:220px;" aria-label="Usuário nesta rede" />
-          <button type="button" class="btn btn-xs btn-outline btn-save-handle-quick" data-net-id="${escapeHtml(net.id)}" title="Vincular com este @handle">Vincular @</button>
+          <input type="text" class="input-net-handle form-control" placeholder="${escapeHtml(HANDLE_PLACEHOLDERS[net.id] || "seu_usuario")}" value="${escapeHtml(suggested)}" autocomplete="off" autocapitalize="off" spellcheck="false" style="font-size:0.8rem; padding:4px 8px; max-width:240px;" aria-label="Seu usuário no ${escapeHtml(net.name)}" />
+          <button type="button" class="btn btn-sm btn-primary btn-one-click-connect" data-net-id="${escapeHtml(net.id)}">Vincular ${escapeHtml(net.name)}</button>
         </div>
+        <p class="meta" style="margin:0; font-size:0.75rem; color:var(--muted);">Digite o <strong>seu</strong> @usuário. Vamos abrir o perfil para você conferir — o Vox não faz login na sua conta.</p>
         ${renderAdvancedCredentialsForm(net)}
       </div>
     </div>`;
@@ -83,8 +69,10 @@ function renderLinkNetworkForm(net) {
 
 function renderNetworkCard(net, linkedData) {
   const isLinked = Boolean(linkedData?.handle);
+  const verifiedBadge = `<span class="badge badge-success" style="font-size:0.7rem; background:rgba(22,163,74,0.15); color:#16a34a; border:1px solid #16a34a; padding:2px 6px; border-radius:999px;">🟢 Verificado</span>`;
+  const unverifiedBadge = `<span class="badge badge-warning" style="font-size:0.7rem; background:rgba(231,194,107,0.12); color:var(--sa-secondary, #b07a00); border:1px solid currentColor; padding:2px 6px; border-radius:999px;">🟡 Não verificado</span>`;
   const statusBadge = isLinked
-    ? `<span class="badge badge-success" style="font-size:0.7rem; background:rgba(22,163,74,0.15); color:#16a34a; border:1px solid #16a34a; padding:2px 6px; border-radius:999px;">🟢 Vinculado</span>`
+    ? (linkedData?.verified ? verifiedBadge : unverifiedBadge)
     : `<span class="badge badge-muted" style="font-size:0.7rem; background:var(--surface-soft); color:var(--muted); border:1px solid var(--outline); padding:2px 6px; border-radius:999px;">⚪ Não conectado</span>`;
 
   return `
