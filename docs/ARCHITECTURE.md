@@ -54,7 +54,7 @@ flowchart TB
 - **Tríade Sentinela de Sinalização:** nós de sinalização independentes com fallback automático:
   1. Hugging Face Spaces (wss://yurikayel-vox.hf.space)
   2. Render Cloud (wss://vox-sentinel.onrender.com)
-  3. Deno Deploy Edge Global (wss://vox-2.vox.deno.net)
+  3. ~~Deno Deploy Edge Global (wss://vox-2.vox.deno.net)~~ — pausado em 2026-11 (ver `relay/deno-signaling.js`)
 - Posts/listings: cache-node.saveLocalPost com invalidação reativa de cache indexado (getReplyCountsMap) + dispatchGossipPost.
 
 ## Identidade e perfil
@@ -73,7 +73,7 @@ flowchart TB
 
 - [`relay/server.py`](../relay/server.py) — cache/tx espelho Arweave.
 - [`relay/signaling.py`](../relay/signaling.py) — WebRTC signaling Python RFC 6455 com teto de frames (1 MB) e headers seguros.
-- [`relay/deno-signaling.js`](../relay/deno-signaling.js) — Sinalização WebRTC serverless em Deno Deploy via BroadcastChannel.
+- [`relay/deno-signaling.js`](../relay/deno-signaling.js) — Sinalização WebRTC serverless em Deno Deploy via BroadcastChannel (**pausado**; código mantido para reativação).
 
 ## ADRs
 

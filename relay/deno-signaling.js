@@ -1,4 +1,8 @@
 // Servidor de Sinalização WebRTC Vox para Deno Deploy / Edge Runtime
+// PAUSADO (2026-11): o deploy no Deno foi descontinuado por enquanto — sem deno.json
+// nem entrypoint na raiz, e os endpoints *.deno.net saíram de client/config/signaling.json.
+// Para reativar: recriar deno.json (entrypoint relay/deno-signaling.js), religar o projeto
+// no Deno Deploy e devolver os wss:// ao signaling.json e ao sentinel-keepalive.yml.
 // Compatível com RFC 6455 e protocolo de mensagens do Vox (register, offer, answer, ice)
 // Usa BroadcastChannel para sincronizar nós de borda globalmente sem banco de dados.
 

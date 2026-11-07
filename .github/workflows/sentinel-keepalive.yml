@@ -31,9 +31,8 @@ jobs:
           [ -n "$SENTINEL_NODE_3" ] && nodes+=("$SENTINEL_NODE_3")
 
           if [ ${#nodes[@]} -eq 0 ]; then
-            echo "Nenhum segredo manual configurado. Usando a tríade de nós ativos (Deno Edge 1, Deno Edge 2 e Render)."
-            nodes+=("https://vox.vox.deno.net")
-            nodes+=("https://vox-2.vox.deno.net")
+            # Deno Deploy pausado (organização suspensa) — só o nó Render entra no ping padrão.
+            echo "Nenhum segredo manual configurado. Usando o nó ativo padrão (Render)."
             nodes+=("https://vox-sentinel.onrender.com")
           fi
 
