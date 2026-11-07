@@ -320,9 +320,7 @@ body,
   }
 
   .agora-ui.sidebar-collapsed .agora-wordmark-text,
-  .agora-ui.sidebar-collapsed .agora-wordmark-sub,
   .agora-ui.sidebar-collapsed .agora-circles,
-  .agora-ui.sidebar-collapsed .agora-node-stele,
   .agora-ui.sidebar-collapsed .tab-label,
   .agora-ui.sidebar-collapsed .sidebar-feed-label {
     display: none;
@@ -495,16 +493,6 @@ body,
   color: var(--sa-primary);
 }
 
-.agora-wordmark-sub {
-  font-family: var(--font-telemetry);
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--sa-secondary);
-  white-space: nowrap;
-}
-
 /* ── 5. Topbar ── */
 .agora-topbar {
   position: sticky;
@@ -666,12 +654,6 @@ body,
   font-size: 0.8125rem;
   font-weight: 700;
   color: var(--travertine-linen);
-}
-
-.agora-identity-key {
-  font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  color: var(--muted);
 }
 
 .agora-presence-dot {
@@ -882,21 +864,6 @@ body,
 .agora-page-head-text {
   min-width: 0;
   flex: 1 1 320px;
-}
-
-.agora-kicker {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin: 0 0 0.6rem;
-  padding: 0;
-  border: none;
-  background: none;
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--sa-tertiary);
 }
 
 .agora-page-title {
@@ -2097,56 +2064,6 @@ body,
   background: rgba(232, 144, 126, 0.12);
 }
 
-/* Faixa de entablamento: "PROTOCOLO ÁGORA ◆ SEÇÃO ◆ PÁGINA" */
-.agora-protocol-strip {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  min-height: 48px;
-  padding: 0.5rem 1.5rem;
-  background: var(--sa-surface);
-  border-bottom: 1px solid var(--sa-hairline);
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--sa-outline);
-  overflow-x: auto;
-  scrollbar-width: none;
-  white-space: nowrap;
-}
-
-.agora-protocol-strip::-webkit-scrollbar { display: none; }
-
-.agora-strip-sep {
-  color: var(--sa-secondary);
-  font-size: 0.625rem;
-}
-
-.agora-strip-section { color: var(--sa-secondary); }
-
-.agora-strip-leaf {
-  color: var(--sa-primary);
-  letter-spacing: 0.04em;
-  text-transform: none;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 32ch;
-}
-
-.agora-strip-status {
-  margin-left: auto;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0.3rem 0.6rem;
-  border-radius: var(--radius-sm);
-  background: rgba(105, 219, 169, 0.08);
-  color: var(--sa-tertiary);
-  letter-spacing: 0.04em;
-  text-transform: none;
-}
-
 /* Topbar: chip de malha + ícones (escudo → saúde do nó, engrenagem → rede) */
 .agora-topbar {
   background: color-mix(in srgb, var(--sa-surface-low) 92%, transparent);
@@ -2285,41 +2202,6 @@ body,
   font-size: 0.75rem;
   font-weight: 600;
   color: var(--sa-tertiary);
-}
-
-.agora-node-stele {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 0.35rem 0.75rem;
-  margin: 0 -1rem 0.75rem;
-  padding: 0.9rem 1.25rem;
-  background: var(--sa-surface);
-  border-top: 1px solid var(--sa-hairline);
-  border-bottom: 1px solid var(--sa-hairline);
-  font-size: 0.75rem;
-}
-
-.agora-node-stele-label {
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--sa-on-surface-variant);
-}
-
-.agora-node-stele-key {
-  font-family: var(--font-hash);
-  color: var(--sa-primary);
-  text-align: right;
-}
-
-.agora-node-stele-peers {
-  grid-column: 1 / -1;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  color: var(--sa-on-surface-variant);
 }
 
 /* Botões epigráficos */
@@ -2662,13 +2544,6 @@ body,
 
 /* Mobile: barra inferior Stitch — Ágora · Vote · [Publicar] · Comunidades · Perfil */
 @media (max-width: 767px) {
-  .agora-protocol-strip {
-    min-height: 40px;
-    padding: 0.4rem 16px;
-    font-size: 0.6875rem;
-  }
-
-  .agora-strip-status { display: none; }
 
   .agora-topbar-tools { gap: 0; }
   .agora-topbar-icon--mobile { display: inline-flex; }
@@ -2681,10 +2556,7 @@ body,
     margin-right: 0;
   }
 
-  .agora-wordmark-sub { display: none; }
-
-  .agora-circles,
-  .agora-node-stele { display: none !important; }
+  .agora-circles { display: none !important; }
 
   .agora-ui .app-sidebar.tab-bar { background: color-mix(in srgb, var(--sa-surface-low) 96%, transparent); }
 
@@ -2794,15 +2666,6 @@ body,
   box-sizing: border-box;
 }
 
-.genesis-brand-kicker {
-  margin: 0;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  color: var(--sa-secondary);
-}
-
 .genesis-brand-name {
   margin: 0.15rem 0 0;
   font-family: var(--font-epigraphic);
@@ -2815,21 +2678,6 @@ body,
 .genesis-hero .agora-frieze {
   max-width: 520px;
   margin: 1.25rem auto 1.5rem;
-}
-
-.genesis-protocol {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin: 0 0 1.25rem;
-  padding: 0.4rem 0.75rem;
-  border-radius: var(--radius-sm);
-  background: var(--sa-surface-high);
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--sa-tertiary);
 }
 
 .genesis-title {
@@ -2868,15 +2716,6 @@ body,
   background: var(--sa-surface-container);
   border: 1px solid var(--sa-hairline);
   border-radius: var(--radius);
-}
-
-.genesis-panel-kicker {
-  margin: 0;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--sa-secondary);
 }
 
 .genesis-panel-title {
@@ -2929,20 +2768,6 @@ body,
   color: var(--sa-on-surface-variant);
 }
 
-.genesis-method-meta {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  margin: 0.75rem 0 0;
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--sa-secondary);
-}
-
-.genesis-method-meta code { font-family: var(--font-hash); text-transform: none; letter-spacing: 0; }
-
 .genesis-inline-form {
   display: flex;
   flex-wrap: wrap;
@@ -2984,21 +2809,6 @@ body,
   min-height: 42px;
   border-radius: var(--radius-sm);
   font-size: 0.8125rem;
-}
-
-.genesis-isolation {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin: 1rem 0 0.75rem;
-  padding: 0.75rem 0.9rem;
-  background: var(--sa-surface-lowest);
-  border-radius: var(--radius-sm);
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--sa-on-surface-variant);
 }
 
 .genesis-overlay .genesis-skip {
@@ -3081,7 +2891,7 @@ body,
 
 @media (max-width: 640px) {
   .genesis-shell { padding: 1.5rem 16px 2.5rem; }
-  .genesis-brand-kicker { letter-spacing: 0.18em; font-size: 0.6875rem; }
+
   .genesis-brand-name { font-size: 0.95rem; letter-spacing: 0.08em; }
   .genesis-panel { padding: 1.1rem; }
   .genesis-method { grid-template-columns: minmax(0, 1fr); }
@@ -3254,17 +3064,6 @@ body,
 }
 
 .agora-citizen-summary strong { color: var(--sa-secondary); }
-
-.agora-citizen-summary-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--sa-tertiary);
-}
 
 .agora-citizen-section { margin-bottom: 1.75rem; }
 .agora-citizen-section .agora-section-label { margin-bottom: 0.75rem; }
@@ -3935,8 +3734,6 @@ body,
   border-radius: var(--radius-sm) var(--radius-sm) 0 0;
 }
 
-.agora-composer-head .agora-kicker { display: flex; }
-
 .agora-field-hint {
   display: block;
   margin-top: 0.35rem;
@@ -3949,6 +3746,150 @@ body,
   font-size: 0.8125rem;
 }
 
-@media (min-width: 768px) and (max-width: 1099px) {
-  .agora-wordmark-sub { display: none; }
+/* ── 20. Wordmark VOX nas três cores primárias do tema ── */
+.agora-wordmark-text { letter-spacing: 0.06em; }
+.agora-wordmark-v { color: var(--sa-primary); }
+.agora-wordmark-o { color: var(--sa-secondary); }
+.agora-wordmark-x { color: var(--sa-tertiary); }
+
+/* ── 21. Esfera cívica no feed (aba Cívico, bloco de posicionamento/enquete) ── */
+.civic-feed-intro {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem 1.5rem;
+  flex-wrap: wrap;
+  padding: 1.25rem 1.5rem;
+  margin: 0 0 1rem;
+  background: var(--sa-surface-container);
+  border: 1px solid var(--sa-hairline);
+  border-top: 2px solid var(--sa-secondary);
+  border-radius: var(--radius);
+}
+
+.civic-feed-intro-text { flex: 1 1 320px; min-width: 0; }
+
+.civic-feed-intro-title {
+  margin: 0 0 0.35rem;
+  font-family: var(--font-epigraphic);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--sa-on-surface);
+}
+
+.civic-feed-intro p { margin: 0 0 0.6rem; font-size: 0.875rem; line-height: 1.55; color: var(--sa-on-surface-variant); }
+
+.civic-requirements {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.2rem;
+  font-size: 0.8125rem;
+  color: var(--sa-on-surface-variant);
+}
+
+.civic-requirements li::marker { color: var(--sa-tertiary); }
+
+.civic-block {
+  margin: 0.75rem 1rem 0.5rem;
+  padding: 0.9rem 1rem;
+  background: var(--sa-surface-low);
+  border: 1px solid var(--sa-hairline);
+  border-left: 3px solid var(--sa-secondary);
+  border-radius: var(--radius-sm);
+}
+
+.civic-block-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  margin-bottom: 0.65rem;
+}
+
+.civic-tag-stamp {
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-sm);
+  background: rgba(231, 194, 107, 0.12);
+  color: var(--sa-secondary);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.civic-block-question { font-size: 0.8125rem; font-weight: 600; color: var(--sa-on-surface); }
+.civic-block-total { margin-left: auto; font-size: 0.75rem; color: var(--sa-outline); }
+
+.civic-choices { display: grid; gap: 0.4rem; }
+.civic-choices--pauta,
+.civic-choices--ideia,
+.civic-choices--debate { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+.civic-choice-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-height: 40px;
+  padding: 0 0.75rem;
+  overflow: hidden;
+  background: var(--sa-surface-high);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--sa-on-surface);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.civic-choice-btn:hover:not(:disabled) { border-color: var(--entablature-active); }
+.civic-choice-btn:disabled { opacity: 0.6; cursor: progress; }
+
+.civic-choice-btn.is-mine {
+  border-color: rgba(120, 214, 207, 0.55);
+  color: var(--sa-primary);
+}
+
+.civic-choice-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: rgba(105, 219, 169, 0.14);
+  pointer-events: none;
+}
+
+.civic-choice-label,
+.civic-choice-count { position: relative; }
+.civic-choice-count { font-size: 0.75rem; font-weight: 500; color: var(--sa-on-surface-variant); font-feature-settings: "tnum" 1; }
+
+.civic-formal-link {
+  display: inline-block;
+  margin-top: 0.65rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--sa-primary);
+}
+
+.civic-pending-note {
+  margin: 0.5rem 1rem;
+  padding: 0.65rem 0.85rem;
+  background: rgba(231, 194, 107, 0.08);
+  border-radius: var(--radius-sm);
+  font-size: 0.8125rem;
+  color: var(--sa-on-surface-variant);
+}
+
+.civic-pending-note p { margin: 0 0 0.3rem; }
+.civic-pending-note ul { margin: 0; padding-left: 1.1rem; }
+
+.civic-tag-hint { margin: 0.6rem 0 0; font-size: 0.8125rem; line-height: 1.5; color: var(--sa-on-surface-variant); }
+
+@media (max-width: 767px) {
+  .civic-feed-intro { margin: 0 16px 1rem; padding: 1rem; }
+  .civic-choices--pauta,
+  .civic-choices--ideia,
+  .civic-choices--debate { grid-template-columns: minmax(0, 1fr); }
 }

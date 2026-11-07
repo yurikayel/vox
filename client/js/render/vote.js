@@ -82,7 +82,6 @@ function renderFilterBar(items, activeFilter) {
 function renderHero(items, activeFilter) {
   const stats = computeVoteStats(items);
   const head = renderPageHead({
-    kicker: "Câmara deliberativa · 1 membro = 1 voto",
     title: "Democracia Direta",
     subtitle:
       "Pautas abertas nas comunidades que este aparelho conhece. Cada voto é assinado com a chave do seu aparelho e contado como 1 membro = 1 voto; quem entrou depois da pauta não altera o resultado.",

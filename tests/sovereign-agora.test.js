@@ -41,11 +41,13 @@ test("sovereign agora — círculos territoriais só com dados locais, sem conta
   assert.ok(!/civitas|nós/.test(html), "nenhuma métrica fictícia de população");
 });
 
-test("sovereign agora — cabeçalho de página com pílone, selos e friso", () => {
-  const html = renderPageHead({ kicker: "Inscrição cívica", title: "Teste", stamps: ["PL-01"], wide: true });
-  assert.ok(html.includes('class="agora-pylon"'));
-  assert.ok(html.includes('class="agora-stamp">PL-01'));
+test("sovereign agora — cabeçalho de página sem etiquetas decorativas", () => {
+  const html = renderPageHead({ title: "Teste", subtitle: "Sub", wide: true });
+  assert.ok(html.includes('<h1 class="agora-page-title">Teste</h1>'));
   assert.ok(html.includes("agora-page-head--wide"));
+  assert.ok(!html.includes("agora-kicker"));
+  assert.ok(!agoraCss.includes(".agora-protocol-strip"));
+  assert.ok(!agoraCss.includes(".agora-node-stele"));
 });
 
 test("sovereign agora — compositor: tipos de registro mapeiam rotas existentes", () => {

@@ -745,7 +745,6 @@ export function renderWallet(main, { address = null, balance = "0.000", hasWalle
     <div class="agora-wide agora-wallet">
       <header class="agora-page-head agora-page-head--wide">
         <div class="agora-page-head-text">
-          <p class="agora-kicker"><span class="agora-pylon" aria-hidden="true"></span>Enclave local · tesouraria pessoal P2P</p>
           <h1 class="agora-page-title">Carteira Soberana</h1>
           <p class="agora-page-sub">Sua chave e seus recibos ficam só neste navegador. O Vox não processa pagamentos nem guarda saldo.</p>
         </div>
@@ -848,7 +847,6 @@ export function renderComposeCommunity(main) {
     <div class="compose-card compose-card-sleek compose-community-card agora-composer">
       <div class="agora-composer-head">
         <a class="back-link compose-back-link" href="#/communities">← Voltar</a>
-        <p class="agora-kicker"><span class="agora-pylon agora-pylon--teal" aria-hidden="true"></span>Fundação de círculo</p>
         <h2 class="compose-heading agora-page-title">Nova Comunidade</h2>
         <p class="agora-page-sub">Um bairro, um coletivo, um grupo de estudo — com regras e governança próprias.</p>
       </div>
@@ -890,7 +888,9 @@ function renderTopicCivicTagBar() {
         <button type="button" class="btn btn-sm btn-subtle civic-tag-btn" data-tag="[Bug]" aria-pressed="false">🐛 Bug</button>
         <button type="button" class="btn btn-sm btn-subtle civic-tag-btn" data-tag="[Ideia]" aria-pressed="false">💡 Ideia</button>
         <button type="button" class="btn btn-sm btn-subtle civic-tag-btn" data-tag="[Debate Geral]" aria-pressed="false">💬 Debate</button>
+        <button type="button" class="btn btn-sm btn-subtle civic-tag-btn" data-tag="[Enquete]" aria-pressed="false">📊 Enquete</button>
       </div>
+      <p class="civic-tag-hint">Pauta, Ideia, Debate e Enquete tornam o post <strong>cívico</strong> (aba Cívico, com posicionamento assinado) se ele tiver título com 8+ caracteres, argumento com 40+ e for publicado em um círculo. Na enquete, liste de 2 a 6 opções, uma por linha começando com “- ”.</p>
       <input type="hidden" id="topic-civic-tag" value="" />
     </div>`;
 }
@@ -905,7 +905,7 @@ function renderComposeTargetPill(communityId) {
 function renderComposeAdvancedDrawer() {
   return `
     <details class="compose-advanced-drawer">
-      <summary class="compose-advanced-summary">Categoria cívica e importação de atas</summary>
+      <summary class="compose-advanced-summary">Tornar cívico (pauta, ideia, debate, enquete) e importar atas</summary>
       <div class="compose-advanced-content">
         ${renderTopicCivicTagBar()}
         ${renderChatTranscriptDetails()}
@@ -923,7 +923,6 @@ export function renderComposeTopic(main, communityId) {
       <div class="compose-header-bar agora-composer-head">
         <div>
           <a class="back-link compose-back-link" href="${backHref}">← Voltar</a>
-          <p class="agora-kicker"><span class="agora-pylon agora-pylon--teal" aria-hidden="true"></span>Inscrição cívica</p>
           <h2 class="compose-heading agora-page-title">${heading}</h2>
           <p class="agora-page-sub">Componha publicações, pautas e avisos assinados no seu aparelho.</p>
         </div>
@@ -1014,7 +1013,6 @@ export function renderComposeListing(main, communityId, commTitle = "", prefill 
     <div class="card compose-card compose-listing-card agora-composer">
       <div class="agora-composer-head">
         <a class="back-link" href="#/c/${encodeURIComponent(communityId)}?tab=listings">← Voltar à feira</a>
-        <p class="agora-kicker"><span class="agora-pylon agora-pylon--bronze" aria-hidden="true"></span>Feira local · economia P2P</p>
         <h2 class="agora-page-title">Nova Oferta — ${escapeHtml(titleDisplay)}</h2>
       </div>
       ${renderComposeTypeSelector("listing", communityId)}

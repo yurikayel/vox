@@ -40,24 +40,13 @@ const SECTION_ORDER = [
   "voxpedia-tecnico",
 ];
 
-const SECTION_CATEGORY = {
-  "voxpedia-comecar": "Conceito cívico",
-  "voxpedia-mensagens": "Criptografia",
-  "voxpedia-comunidades": "Governança",
-  "voxpedia-rede": "Topologia P2P",
-  "voxpedia-privacidade": "Soberania de dados",
-  "voxpedia-tecnico": "Protocolo",
-};
-
 function section(id, title, lead, layersHtml) {
   const n = String(SECTION_ORDER.indexOf(id) + 1).padStart(2, "0");
-  const category = SECTION_CATEGORY[id] || "Verbete";
   return `
     <section class="voxpedia-section card agora-entry" id="${id}" aria-labelledby="${id}-title">
       <header class="agora-entry-head">
         <span class="agora-entry-num">${n}</span>
         <h2 id="${id}-title" class="agora-entry-title">${escapeHtml(title)}</h2>
-        <span class="agora-stamp agora-stamp--bronze">${escapeHtml(category)}</span>
       </header>
       <p class="desc voxpedia-lead">${lead}</p>
       ${layersHtml}
@@ -304,7 +293,6 @@ function renderTecnico() {
 
 function renderVoxpediaHero() {
   return `<header class="voxpedia-hero agora-codex-hero">
-    <div class="agora-stamps"><span class="agora-stamp agora-stamp--bronze">Enciclopédia P2P</span><span class="agora-stamp">Tratado cívico</span></div>
     <h1>Voxpedia</h1>
     <p class="agora-codex-subtitle">Glossário cívico &amp; técnico</p>
     <p class="desc voxpedia-hero-lead">
@@ -327,10 +315,9 @@ const TOC_ITEMS = [
 ];
 
 function renderVoxpediaToc() {
-  const items = TOC_ITEMS.map(([href, label], i) => `
-      <li><a href="${href}"><span class="agora-pylon${i === 0 ? "" : " agora-pylon--muted"}" aria-hidden="true"></span>${escapeHtml(label)}</a></li>`).join("");
+  const items = TOC_ITEMS.map(([href, label]) => `
+      <li><a href="${href}">${escapeHtml(label)}</a></li>`).join("");
   return `<nav class="voxpedia-toc card agora-codex-toc" aria-label="Índice da Voxpedia">
-    <p class="agora-section-label">Compêndio</p>
     <p class="agora-codex-toc-title">Tópicos do cânone</p>
     <p class="section-title">Nesta página</p>
     <ul class="voxpedia-toc-list">${items}
