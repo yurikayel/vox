@@ -31,6 +31,7 @@ import { rememberVisible } from "../repost-index.js";
 import { groupRepliesForThread } from "../reply-thread.js";
 import { renderPhotoHiddenMessageHtml } from "./photo-chrome.js";
 import { renderPageHead } from "./shell.js";
+import { renderCivicBlock, renderCivicPendingNote, renderCivicFeedIntro } from "./civic-block.js";
 
 export function renderComposerStrip(displayName = "") {
   return renderInlineComposer({ displayName });
@@ -750,6 +751,8 @@ function renderPhotoPostItem(t, author, labels) {
       ${igBar}
       ${captionHtml}
       ${renderPostFrame(t)}
+      ${renderCivicBlock(t)}
+      ${renderCivicPendingNote(t)}
       ${comments}
     </article>`;
 }
@@ -770,6 +773,8 @@ function renderTextOrGithubPostItem(t, author, labels, layout, isPinned) {
       ${caption}
       ${gist}
       ${renderPostFrame(t)}
+      ${renderCivicBlock(t)}
+      ${renderCivicPendingNote(t)}
       ${toolbar}
       ${comments}
     </article>`;
@@ -825,6 +830,7 @@ export function renderWelcomeFeedHintHtml() {
 }
 
 const FEED_TAB_ICONS = {
+  social: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 9a2 2 0 0 1-2 2H6l-4 4V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2z"/><path d="M18 9h2a2 2 0 0 1 2 2v11l-4-4h-6a2 2 0 0 1-2-2v-1"/></svg>`,
   vox: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18"/><path d="M5 21V10M9 21V10M15 21V10M19 21V10"/><path d="M2 10 12 3l10 7Z"/></svg>`,
   external: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>`,
   all: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>`,
@@ -833,7 +839,8 @@ const FEED_TAB_ICONS = {
 
 export function renderFeedTabsBar(activeFeed = "for-you") {
   const tabs = [
-    { key: "for-you", href: "#/", icon: FEED_TAB_ICONS.vox, label: "Vox" },
+    { key: "for-you", href: "#/", icon: FEED_TAB_ICONS.social, label: "Social" },
+    { key: "civic", href: "#/?feed=civic", icon: FEED_TAB_ICONS.vox, label: "Cívico" },
     { key: "external", href: "#/?feed=external", icon: FEED_TAB_ICONS.external, label: "Redes (Bluesky)" },
     { key: "all", href: "#/?feed=all", icon: FEED_TAB_ICONS.all, label: "Tudo" },
     { key: "following", href: "#/?feed=following", icon: FEED_TAB_ICONS.following, label: "Seguindo" },
@@ -909,7 +916,13 @@ export function renderExternalFeedManagerHtml(subscriptions = []) {
     </div>`;
 }
 
+const CIVIC_EMPTY_HTML = `<div class="empty civic-empty">
+    <p><strong>Nenhum post cívico ainda.</strong></p>
+    <p class="desc">Publique uma pauta, ideia, debate ou enquete com título e argumento — ela aparece aqui para posicionamento assinado.</p>
+  </div>`;
+
 function renderFeedEmptyState(activeFeed) {
+  if (activeFeed === "civic") return CIVIC_EMPTY_HTML;
   if (activeFeed === "external") {
     return `<div class="empty external-empty">
       <p><strong>Nenhum post externo encontrado.</strong></p>
@@ -940,7 +953,6 @@ function renderFeedEmptyState(activeFeed) {
 
 function renderFeedPageHead() {
   return renderPageHead({
-    kicker: "Feed cívico · ordem cronológica",
     title: "Ágora",
     subtitle: "Debates, pautas e registros das pessoas e comunidades da sua rede — em ordem cronológica, sem algoritmo.",
   });
@@ -949,7 +961,8 @@ function renderFeedPageHead() {
 export function renderFeed(main, topics = [], opts = {}) {
   const activeFeed = opts.activeFeed || "for-you";
   const userRouteId = opts.userRouteId || "";
-  const isForYou = activeFeed !== "following" && activeFeed !== "external" && activeFeed !== "all";
+  const isForYou = activeFeed === "for-you";
+  const isCivic = activeFeed === "civic";
   const displayName = userRouteId ? profileDirectory.getAuthorDisplaySync(userRouteId) || mock.getAuthorDisplay(userRouteId) : "";
   const welcomeHint = isForYou ? renderWelcomeFeedHintHtml() : "";
   const tabsBar = renderFeedTabsBar(activeFeed);
@@ -958,13 +971,13 @@ export function renderFeed(main, topics = [], opts = {}) {
   let html = `
     ${renderFeedPageHead()}
     <div class="feed-chrome">
-      ${renderStoriesStrip()}
+      ${isCivic ? "" : renderStoriesStrip()}
       ${tabsBar}
       ${managerHtml}
       ${welcomeHint}
-      <div class="feed-composer-section">
+      ${isCivic ? renderCivicFeedIntro() : `<div class="feed-composer-section">
         ${renderInlineComposer({ userRouteId, displayName })}
-      </div>
+      </div>`}
     </div>`;
 
   if (!topics.length) {

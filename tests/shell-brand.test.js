@@ -35,8 +35,9 @@ test("shell brand — same squircle mark in light and dark", () => {
 
 test("shell brand — ADR-016: wordmark VOX epigráfico no topo do menu e na topbar móvel", () => {
   assert.ok(shellSrc.includes("function renderAgoraWordmark()"));
-  assert.ok(shellSrc.includes('class="agora-wordmark-text">VOX</span>'));
-  assert.ok(shellSrc.includes('class="agora-wordmark-sub">Ágora Soberana</span>'));
+  // VOX nas três cores primárias do tema, uma por letra; sem subtítulo decorativo.
+  assert.ok(shellSrc.includes('<span class="agora-wordmark-v">V</span><span class="agora-wordmark-o">O</span><span class="agora-wordmark-x">X</span>'));
+  assert.ok(!shellSrc.includes("agora-wordmark-sub"));
   assert.ok(!/class="sidebar-brand/.test(shellSrc), "usa agora-sidebar-brand, não o legado sidebar-brand");
 });
 
@@ -47,7 +48,7 @@ test("shell sidebar — IA estável (nav, postar, feed slot, footer)", () => {
   assert.ok(shellSrc.includes("sidebar-network-slot"));
   assert.ok(shellSrc.includes("sidebar-account-slot"));
   assert.ok(shellSrc.includes("ICONS.people"));
-  assert.ok(shellSrc.includes("ICONS.feedForYou"));
+  assert.ok(shellSrc.includes('href="#/?feed=civic"'));
   assert.ok(shellSrc.includes("ICONS.following"));
   const sidebarBlock = shellSrc.match(/function renderSidebar\([\s\S]*?^}/m)?.[0] ?? "";
   const navIdx = sidebarBlock.indexOf('aria-label="Seções"');
@@ -65,7 +66,8 @@ test("shell layout — Sovereign Agora: topbar com busca, chip de malha, escudo/
   assert.ok(shellSrc.includes('class="agora-mesh-chip'));
   assert.ok(shellSrc.includes('href="#/status" class="agora-topbar-icon" aria-label="Saúde do nó"'));
   assert.ok(shellSrc.includes('href="#/settings/network" class="agora-topbar-icon"'));
-  assert.ok(shellSrc.includes('class="agora-protocol-strip"'));
+  assert.ok(!shellSrc.includes("agora-protocol-strip"), "sem faixa decorativa de protocolo");
+  assert.ok(!shellSrc.includes("agora-identity-key"), "chip de identidade mostra só o nome");
   assert.ok(!shellSrc.includes("agora-topbar-vote"), "Vote fica na navegação primária, não na topbar");
   assert.ok(shellSrc.includes('id="agora-identity-toggle"'));
   assert.ok(shellSrc.includes('id="agora-identity-drawer"'));
