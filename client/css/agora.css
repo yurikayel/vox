@@ -4039,3 +4039,53 @@ body,
 .guided-result { margin-top: 1rem; padding: 0.85rem 1rem; background: rgba(105, 219, 169, 0.1); border-left: 3px solid var(--sa-tertiary); border-radius: var(--radius-sm); color: var(--sa-on-surface); }
 .guided-result[hidden], [data-wg-hint][hidden] { display: none; }
 .network-guided-btn { margin: 0.5rem 0 0.25rem; }
+
+/* ── 29. Redes Vinculadas — uma linha por rede, um botão ── */
+.agora-ui .linked-accounts-screen { max-width: 640px; margin: 0 auto; }
+.link-head { margin: 0.75rem 0 1.25rem; }
+.link-head .agora-page-title { font-size: clamp(1.75rem, 1.3rem + 1.5vw, 2.25rem); }
+.link-master { display: flex; align-items: center; gap: 0.6rem; margin-top: 1rem; padding: 0.85rem 1rem; background: var(--sa-surface-container); border-radius: var(--radius-sm); font-weight: 600; color: var(--sa-on-surface); cursor: pointer; }
+.link-master input { width: 1.15rem; height: 1.15rem; accent-color: var(--sa-primary); }
+.link-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.link-row { padding: 0.85rem 1rem; background: var(--sa-surface-container); border-radius: var(--radius-sm); }
+.link-row-main { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto auto; gap: 0.75rem; align-items: center; }
+.link-row-main:has(.btn-link-connect) { grid-template-columns: 32px minmax(0, 1fr) auto; }
+.link-icon { font-size: 1.4rem; text-align: center; }
+.link-text { display: flex; flex-direction: column; min-width: 0; }
+.link-text strong { color: var(--sa-on-surface); font-size: 0.95rem; }
+.link-sub { font-size: 0.8125rem; color: var(--sa-on-surface-variant); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.link-ok { color: var(--sa-tertiary); }
+.link-warn { color: var(--sa-secondary); }
+.btn-link-connect { min-height: 38px; padding: 0 1.1rem; }
+.link-switch { position: relative; width: 40px; height: 22px; flex-shrink: 0; cursor: pointer; }
+.link-switch input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.link-switch span { position: absolute; inset: 0; border-radius: 999px; background: var(--sa-surface-highest); transition: background 0.15s; }
+.link-switch span::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: var(--sa-on-surface-variant); transition: transform 0.15s, background 0.15s; }
+.link-switch input:checked + span { background: var(--sa-primary-container); }
+.link-switch input:checked + span::after { transform: translateX(18px); background: var(--on-gradient); }
+.link-switch input:focus-visible + span { outline: 2px solid var(--sa-primary); outline-offset: 2px; }
+.link-menu { position: relative; }
+.link-menu summary { list-style: none; cursor: pointer; width: 32px; height: 32px; display: grid; place-items: center; border-radius: var(--radius-sm); color: var(--sa-on-surface-variant); font-size: 1.1rem; }
+.link-menu summary::-webkit-details-marker { display: none; }
+.link-menu summary:hover { background: var(--sa-surface-high); }
+.link-menu-pop { position: absolute; right: 0; top: calc(100% + 4px); z-index: 20; min-width: 170px; display: grid; padding: 4px; background: var(--sa-surface-high); border: 1px solid var(--sa-hairline); border-radius: var(--radius-sm); box-shadow: var(--sa-chisel-shadow); }
+.link-menu-pop button { padding: 0.55rem 0.75rem; background: none; border: none; border-radius: var(--radius-sm); color: var(--sa-on-surface); font: inherit; font-size: 0.875rem; text-align: left; cursor: pointer; }
+.link-menu-pop button:hover { background: var(--sa-surface-highest); }
+.link-menu-pop .btn-unlink-network { color: var(--sa-terracotta); }
+.link-manual { margin: 0.75rem 0 0 44px; }
+.link-manual[hidden], .link-alt[hidden] { display: none; }
+.link-manual-row { display: flex; gap: 0.5rem; align-items: center; }
+.link-manual-row .form-control { flex: 1; min-width: 0; }
+.link-hint { margin: 0.4rem 0 0; font-size: 0.78rem; color: var(--sa-outline); }
+.link-alt { margin: 0.4rem 0 0 44px; padding: 0; background: none; border: none; color: var(--sa-primary); font: inherit; font-size: 0.8125rem; cursor: pointer; }
+.link-feedback { margin: 0.6rem 0 0 44px; padding: 0.55rem 0.75rem; border-radius: var(--radius-sm); font-size: 0.8125rem; }
+.link-advanced { margin-top: 1.5rem; padding: 0.85rem 1rem; background: var(--sa-surface-container); border-radius: var(--radius-sm); }
+.link-advanced summary { cursor: pointer; font-size: 0.875rem; font-weight: 600; color: var(--sa-on-surface-variant); }
+.link-advanced[open] summary { margin-bottom: 0.75rem; }
+.link-adv-form { display: grid; grid-template-columns: 120px repeat(auto-fit, minmax(140px, 1fr)); gap: 0.5rem; align-items: center; margin-top: 0.75rem; }
+.link-adv-name { font-size: 0.875rem; color: var(--sa-on-surface); }
+@media (max-width: 767px) {
+  .agora-ui .linked-accounts-screen { padding: 0 16px; }
+  .link-manual, .link-alt, .link-feedback { margin-left: 0; }
+  .link-adv-form { grid-template-columns: 1fr; }
+}
