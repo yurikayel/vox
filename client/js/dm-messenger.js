@@ -293,6 +293,11 @@ export function markThreadRead(peerAddress, ts = Date.now()) {
   try {
     localStorage.setItem(DM_READ_STORAGE_KEY, JSON.stringify(map));
   } catch {}
+  try {
+    if (typeof window !== "undefined" && typeof CustomEvent === "function") {
+      window.dispatchEvent(new CustomEvent("vox:dm-changed"));
+    }
+  } catch {}
 }
 
 export function computeUnreadCount(messages = [], peerAddress = "", myAddress = "") {

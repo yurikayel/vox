@@ -71,13 +71,6 @@ export function attachPostOverlayActionMenuHandlers() {
   });
 }
 
-function attachWelcomeFeedHintHandlers() {
-  document.getElementById("btn-welcome-hint-dismiss")?.addEventListener("click", () => {
-    welcomeProfile.markWelcomeIntroSeen();
-    document.getElementById("welcome-feed-hint")?.remove();
-  });
-}
-
 async function buildCommunityTitleMap() {
   const commMap = new Map();
   try {
@@ -175,7 +168,6 @@ function wireHomeInteractiveHandlers(activeFeed) {
   attachPostMoreMenuHandlers();
   attachPostOverlayActionMenuHandlers();
   attachInlineComposerHandlers(() => showHome(activeFeed));
-  attachWelcomeFeedHintHandlers();
   attachWelcomeTopicDismissHandlers(() => showHome(activeFeed));
   attachBskyManagerHandlers(() => showHome(activeFeed));
   attachQuoteExternalHandlers();
@@ -248,7 +240,7 @@ export async function showHome(feed = "for-you") {
   const validFeeds = ["for-you", "civic", "following", "external", "all"];
   const activeFeed = validFeeds.includes(feed) ? feed : "for-you";
   const user = await getActiveUser();
-  const onboarding = user ? await ensureOnboardingSideEffects(user) : { dmJustSeeded: false };
+  if (user) await ensureOnboardingSideEffects(user);
   const main = render.renderShell({ ...makeShellProps(user, "home"), activeFeed, showFeedNav: true });
   render.renderLoading(main);
   const externalSubs = bskyFeed.loadBskySubscriptions();
@@ -272,9 +264,6 @@ export async function showHome(feed = "for-you") {
   wireHomeInteractiveHandlers(activeFeed);
   const byId = new Map(finalTopics.map((t) => [t.id, t]));
   attachCivicVoteHandlers((id) => byId.get(id), user, () => showHome(activeFeed));
-  if (onboarding.dmJustSeeded && activeFeed === "for-you") {
-    share.showToast("Vox te mandou uma mensagem — veja em Mensagens 💬");
-  }
 }
 
 function bindBskyImportButton(onRefresh) {
