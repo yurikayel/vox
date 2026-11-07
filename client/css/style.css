@@ -75,34 +75,19 @@
   --space-md: 16px;
   --space-lg: 24px;
   --shadow: var(--elevation-2);
-  --font-sans: "Source Sans 3", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-display: "Outfit", var(--font-sans);
+  /* ADR-016: fontes locais (sem Google Fonts). Fonte canônica dos tokens: css/agora.css */
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Noto Serif", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
   --font-weight-nav: 600;
-  /* Sovereign Agora Luminescent Matrix (Stitch Design System Tokens) */
-  --obsidian-oled: #0d0f12;
-  --slate-deep: #111316;
-  --surface-monolith: #171a1f;
-  --surface-column: #1f2329;
-  --travertine-linen: #f4eedd;
-  --travertine-muted: #e2dcce;
-  --emerald-consensus: #10b981;
-  --emerald-bright: #34d399;
-  --cobalt-telemetry: #3b82f6;
-  --cobalt-pure: #2563eb;
-  --cyan-bridge: #06b6d4;
-  --entablature-hairline: #232830;
-  --entablature-active: rgba(244, 238, 221, 0.15);
-  --aurora-gradient: linear-gradient(135deg, #10b981 0%, #06b6d4 50%, #3b82f6 100%);
-  --font-epigraphic: "Noto Serif", serif;
-  --font-telemetry: "Inter", var(--font-sans);
+  /* Tokens do design system Sovereign Agora: ver css/agora.css (ADR-016). */
   font-family: var(--font-sans);
   color-scheme: light dark;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-color-mode="light"]) {
-    --theme-chrome: #000000;
-    --bg: #000000;
+    --theme-chrome: var(--obsidian-oled, #0d0f12);
+    --bg: var(--obsidian-oled, #0d0f12);
     --surface-1: #222224;
     --surface-2: #28282c;
     --surface-3: #323238;
@@ -156,8 +141,8 @@
 
 @media (prefers-color-scheme: light) {
   :root[data-color-mode="dark"] {
-    --theme-chrome: #000000;
-    --bg: #000000;
+    --theme-chrome: var(--obsidian-oled, #0d0f12);
+    --bg: var(--obsidian-oled, #0d0f12);
     --surface-1: #222224;
     --surface-2: #28282c;
     --surface-3: #323238;
@@ -631,14 +616,14 @@ a:hover {
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-color-mode="light"]) .app-sidebar.tab-bar {
-    background: #000000;
+    background: var(--bg);
     border-right: 1px solid var(--border-subtle);
     box-shadow: none;
   }
 }
 
 :root[data-color-mode="dark"] .app-sidebar.tab-bar {
-  background: #000000;
+  background: var(--bg);
   border-right: 1px solid var(--border-subtle);
   box-shadow: none;
 }
@@ -1115,14 +1100,14 @@ main#app-main,
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-color-mode="light"]) .inline-composer {
-    background: #000000;
+    background: var(--bg);
     border: 1px solid var(--border-subtle);
     box-shadow: none;
   }
 }
 
 :root[data-color-mode="dark"] .inline-composer {
-  background: #000000;
+  background: var(--bg);
   border: 1px solid var(--border-subtle);
   box-shadow: none;
 }
@@ -1790,7 +1775,7 @@ main#app-main,
   flex-direction: column;
   gap: 0;
   padding: 0 0 16px;
-  background: #000000;
+  background: var(--bg);
   border: none;
   border-bottom: 1px solid var(--border-subtle);
   border-radius: 0;
@@ -1805,7 +1790,7 @@ main#app-main,
 }
 
 .post:hover {
-  background: #000000;
+  background: var(--bg);
   box-shadow: none;
 }
 
@@ -2652,7 +2637,7 @@ body.post-more-sheet-open {
   box-shadow: none;
   border-radius: 0;
   padding: 0 0 16px;
-  background: #000000;
+  background: var(--bg);
   max-width: var(--feed-max, 640px);
   width: 100%;
   margin: 0 auto;
@@ -2661,7 +2646,7 @@ body.post-more-sheet-open {
 }
 
 .post-layout-photo.post-photo-bleed:hover {
-  background: #000000;
+  background: var(--bg);
 }
 
 .post-layout-photo.post-photo-bleed .post-media-container {
@@ -2743,7 +2728,7 @@ body.post-more-sheet-open {
 
 .post-layout-text.post,
 .post-layout-github.post {
-  background: #000000;
+  background: var(--bg);
   border: none;
   border-bottom: 1px solid var(--border-subtle);
   border-radius: 0;
@@ -3914,7 +3899,7 @@ p.profile-grid-handle {
 
 /* Feed Container - Fundo Preto, Espaçamento Instagram, Sem Card */
 .feed-container {
-  background: #000000;
+  background: var(--bg);
   border: none;
   border-radius: 0;
   overflow: visible;
@@ -4789,7 +4774,7 @@ p.profile-grid-handle {
 
 /* Tópicos e Threads Estilo X / Instagram (fundo preto puro, sem card) */
 .topic-root {
-  background: #000000;
+  background: var(--bg);
   border: none;
   border-bottom: 1px solid var(--border-subtle);
   border-radius: 0;
@@ -4808,7 +4793,7 @@ p.profile-grid-handle {
 }
 
 .thread-replies {
-  background: #000000;
+  background: var(--bg);
   border: none;
   border-radius: 0;
   overflow: hidden;
@@ -4819,7 +4804,7 @@ p.profile-grid-handle {
 }
 
 .reply-item {
-  background: #000000;
+  background: var(--bg);
   display: flex;
   gap: 12px;
   padding: 12px 16px;
@@ -5882,13 +5867,13 @@ p.profile-grid-handle {
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-color-mode="light"]) .welcome-feed-hint {
-    background: #000000;
+    background: var(--bg);
     border: 1px solid var(--border-subtle);
   }
 }
 
 :root[data-color-mode="dark"] .welcome-feed-hint {
-  background: #000000;
+  background: var(--bg);
   border: 1px solid var(--border-subtle);
 }
 
@@ -7751,7 +7736,7 @@ body.photo-tagging .post-media-hero.photo-tag-mode {
     border-left: none;
     border-right: none;
     margin: 0;
-    background: #000000;
+    background: var(--bg);
   }
 
   .feed-tab-chip {
@@ -7763,7 +7748,7 @@ body.photo-tagging .post-media-hero.photo-tag-mode {
   /* Raiz do tópico e bloco de respostas no mobile sem margens vazadas e fundo preto puro */
   .topic-root,
   .topic-root.card {
-    background: #000000;
+    background: var(--bg);
     border: none;
     border-bottom: 1px solid var(--border-subtle);
     border-radius: 0;
@@ -7775,7 +7760,7 @@ body.photo-tagging .post-media-hero.photo-tag-mode {
   }
 
   .thread-replies {
-    background: #000000;
+    background: var(--bg);
     border: none;
     border-radius: 0;
     box-shadow: none;
@@ -8928,7 +8913,7 @@ blockquote.repost-cite {
   margin: 0 auto;
   border: none;
   border-bottom: 1px solid var(--border-subtle);
-  background: #000000;
+  background: var(--bg);
   border-radius: 0;
   max-width: var(--feed-max, 640px);
   -webkit-overflow-scrolling: touch;
@@ -9292,7 +9277,7 @@ blockquote.repost-cite {
   border: none !important;
   border-bottom: 1px solid var(--border-subtle) !important;
   box-shadow: none !important;
-  background: #000000 !important;
+  background: var(--bg) !important;
 }
 
 /* Lo-Fi Cívico e Estética Retrô */
@@ -9782,7 +9767,7 @@ blockquote.repost-cite {
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-color-mode="light"]) .compose-card-sleek {
-    background: #000000;
+    background: var(--bg);
     border: none;
     border-radius: 0;
     box-shadow: none;
@@ -9792,7 +9777,7 @@ blockquote.repost-cite {
 }
 
 :root[data-color-mode="dark"] .compose-card-sleek {
-  background: #000000;
+  background: var(--bg);
   border: none;
   border-radius: 0;
   box-shadow: none;
@@ -9903,305 +9888,7 @@ blockquote.repost-cite {
   margin-top: 0.85rem;
 }
 
-/* ==========================================================================
-   Sovereign Agora Luminescent Matrix — Vote & Civic Highlights (Stitch)
-   ========================================================================== */
-.vote-container {
-  max-width: 960px;
-  width: 100%;
-  margin: 0 auto;
-  padding: 1rem 0 3rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.vote-banner {
-  position: relative;
-  overflow: hidden;
-  background: var(--obsidian-oled, #0d0f12);
-  border: 1px solid var(--entablature-hairline, #232830);
-  border-radius: var(--radius-lg, 16px);
-  padding: 1.75rem;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
-}
-
-.vote-banner-glow-1 {
-  position: absolute;
-  top: -80px;
-  right: -80px;
-  width: 260px;
-  height: 260px;
-  border-radius: 50%;
-  background: rgba(16, 185, 129, 0.12);
-  filter: blur(48px);
-  pointer-events: none;
-}
-
-.vote-banner-glow-2 {
-  position: absolute;
-  bottom: -60px;
-  left: -60px;
-  width: 220px;
-  height: 220px;
-  border-radius: 50%;
-  background: rgba(59, 130, 246, 0.1);
-  filter: blur(48px);
-  pointer-events: none;
-}
-
-.vote-tag-district {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(16, 185, 129, 0.14);
-  color: var(--emerald-bright, #34d399);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  padding: 4px 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(16, 185, 129, 0.3);
-}
-
-.vote-tag-district-pulse {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--emerald-bright, #34d399);
-  box-shadow: 0 0 8px var(--emerald-bright, #34d399);
-}
-
-.vote-header-title {
-  font-family: var(--font-epigraphic, "Noto Serif", serif);
-  font-size: 1.85rem;
-  font-weight: 600;
-  color: var(--travertine-linen, #f4eedd);
-  line-height: 1.25;
-  margin: 0.75rem 0 0.4rem;
-  letter-spacing: -0.015em;
-}
-
-.vote-header-desc {
-  font-size: 0.92rem;
-  color: var(--travertine-muted, #e2dcce);
-  line-height: 1.55;
-  max-width: 680px;
-  margin: 0 0 1.25rem;
-}
-
-.vote-stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 12px;
-  margin-top: 1rem;
-}
-
-.vote-stat-box {
-  background: var(--surface-monolith, #171a1f);
-  border: 1px solid var(--entablature-hairline, #232830);
-  border-radius: 8px;
-  padding: 0.85rem 1rem;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-.vote-stat-label {
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-tertiary, #8b929d);
-}
-
-.vote-stat-value {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--travertine-linen, #f4eedd);
-  margin-top: 4px;
-  font-feature-settings: "tnum" 1, "zero" 1;
-}
-
-.vote-stat-value.text-emerald {
-  color: var(--emerald-bright, #34d399);
-}
-
-.vote-stat-sub {
-  font-size: 0.74rem;
-  color: var(--travertine-muted, #e2dcce);
-  margin-top: 4px;
-}
-
-.vote-filters-bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  overflow-x: auto;
-  padding: 4px 0 8px;
-  scrollbar-width: none;
-}
-
-.vote-filters-bar::-webkit-scrollbar {
-  display: none;
-}
-
-.vote-filter-btn {
-  padding: 6px 14px;
-  border-radius: 8px;
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  background: var(--surface-monolith, #171a1f);
-  border: 1px solid var(--entablature-hairline, #232830);
-  color: var(--travertine-muted, #e2dcce);
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.15s ease;
-}
-
-.vote-filter-btn:hover {
-  color: var(--travertine-linen, #f4eedd);
-  border-color: rgba(244, 238, 221, 0.2);
-}
-
-.vote-filter-btn.active {
-  background: var(--emerald-consensus, #10b981);
-  color: var(--obsidian-oled, #0d0f12);
-  border-color: var(--emerald-consensus, #10b981);
-}
-
-.vote-proposal-item {
-  position: relative;
-  overflow: hidden;
-  background: var(--obsidian-oled, #0d0f12);
-  border: 1px solid var(--entablature-hairline, #232830);
-  border-radius: var(--radius-lg, 16px);
-  padding: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
-}
-
-.vote-proposal-bar {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: var(--aurora-gradient, linear-gradient(135deg, #10b981, #06b6d4, #3b82f6));
-}
-
-.vote-proposal-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.vote-proposal-title {
-  font-family: var(--font-epigraphic, "Noto Serif", serif);
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: var(--travertine-linen, #f4eedd);
-  margin: 0;
-  line-height: 1.35;
-}
-
-.vote-proposal-desc {
-  font-size: 0.92rem;
-  color: var(--travertine-muted, #e2dcce);
-  line-height: 1.55;
-  margin: 0;
-}
-
-.quorum-progress-block {
-  background: var(--surface-monolith, #171a1f);
-  border: 1px solid var(--entablature-hairline, #232830);
-  border-radius: 8px;
-  padding: 0.85rem 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.quorum-progress-bar {
-  width: 100%;
-  height: 8px;
-  border-radius: 999px;
-  background: var(--surface-column, #1f2329);
-  overflow: hidden;
-  display: flex;
-}
-
-.quorum-fill-yes {
-  background: linear-gradient(90deg, #10b981, #34d399);
-  height: 100%;
-}
-
-.quorum-fill-no {
-  background: #ef4444;
-  height: 100%;
-}
-
-.vote-actions-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  padding-top: 4px;
-}
-
-.btn-vote-choice {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  border-radius: 8px;
-  font-size: 0.82rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.btn-vote-choice.btn-vote-yes {
-  background: rgba(16, 185, 129, 0.15);
-  color: var(--emerald-bright, #34d399);
-  border: 1px solid rgba(16, 185, 129, 0.35);
-}
-
-.btn-vote-choice.btn-vote-yes:hover {
-  background: rgba(16, 185, 129, 0.28);
-  box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
-}
-
-.btn-vote-choice.btn-vote-no {
-  background: var(--surface-monolith, #171a1f);
-  color: var(--travertine-muted, #e2dcce);
-  border: 1px solid var(--entablature-hairline, #232830);
-}
-
-.btn-vote-choice.btn-vote-no:hover {
-  background: rgba(239, 68, 68, 0.15);
-  color: #ef4444;
-  border-color: rgba(239, 68, 68, 0.35);
-}
-
-.btn-vote-choice.btn-vote-endorse {
-  margin-left: auto;
-  background: var(--aurora-gradient, linear-gradient(135deg, #10b981, #06b6d4, #3b82f6));
-  color: var(--obsidian-oled, #0d0f12);
-  border: none;
-  box-shadow: 0 0 16px rgba(16, 185, 129, 0.25);
-}
-
-.btn-vote-choice.btn-vote-endorse:hover {
-  box-shadow: 0 0 24px rgba(16, 185, 129, 0.45);
-  transform: translateY(1px);
-}
+/* Vote (Democracia Direta): estilos em css/agora.css (ADR-016). */
 
 /* Selos & Insígnias Cívicas (Carrossel Estilo Highlights / Stories) */
 .profile-civic-highlights {

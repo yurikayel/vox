@@ -5,6 +5,7 @@ import * as i18n from "../i18n-pt-br.js";
 import * as postOwnership from "../post-ownership.js";
 import * as localAccount from "../local-account.js";
 import { escapeHtml, shortId, renderAvatarHtml } from "./util.js";
+import { renderPageHead } from "./shell.js";
 
 const CANTINA_ART_ALT =
   "Ilustração anime de uma cantina: o bartender de túnica bege aponta para a câmera; dois balões pintados na arte dizem 'Seus bots tem que esperar lá fora!' e 'Aqui não servimos esse tipo.'";
@@ -36,29 +37,121 @@ function renderOAuthProviderButtonsHtml() {
   </div>`;
 }
 
+const GENESIS_ICONS = {
+  fingerprint: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4"/><path d="M14 13.12c0 2.38 0 6.38-1 8.88"/><path d="M17.29 21.02c.12-.6.43-2.3.5-3.02"/><path d="M2 12a10 10 0 0 1 18-6"/><path d="M2 16h.01"/><path d="M21.8 16c.2-2 .131-5.354 0-6"/><path d="M5 19.5C5.5 18 6 15 6 12a6 6 0 0 1 .34-2"/><path d="M8.65 22c.21-.66.45-1.32.57-2"/><path d="M9 6.8a6 6 0 0 1 9 5.2v2"/></svg>`,
+  restore: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>`,
+  import: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 12 0v1"/><path d="M19 8v6M16 11h6"/></svg>`,
+  lock: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>`,
+  columns: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M3 21h18M4 10h16M12 3 3 8h18z"/><path d="M6 10v8M10 10v8M14 10v8M18 10v8"/></svg>`,
+  radio: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49M7.76 16.24a6 6 0 0 1 0-8.49M19.07 4.93a10 10 0 0 1 0 14.14M4.93 19.07a10 10 0 0 1 0-14.14"/></svg>`,
+};
+
+const POLIS_FOUNDATIONS = [
+  { n: "01", tag: "Constituição", title: "Privacidade por design", body: "Seus dados ficam no seu aparelho — sem nuvem corporativa, sem silo analítico, sem CPF.", icon: "lock", tone: "teal" },
+  { n: "02", tag: "Deliberação", title: "Democracia direta", body: "Propostas e votos assinados com a sua chave, apurados de forma verificável pela comunidade.", icon: "columns", tone: "bronze" },
+  { n: "03", tag: "Soberania", title: "Resiliência offline", body: "A rede continua funcionando entre aparelhos próximos, mesmo sem servidor central.", icon: "radio", tone: "teal" },
+];
+
+function renderPolisFoundationsHtml() {
+  const cards = POLIS_FOUNDATIONS.map((f) => `
+        <article class="genesis-foundation genesis-foundation--${f.tone}">
+          <span class="genesis-foundation-icon">${GENESIS_ICONS[f.icon]}</span>
+          <div>
+            <p class="genesis-foundation-tag">${f.n} // ${escapeHtml(f.tag)}</p>
+            <h3 class="genesis-foundation-title">${escapeHtml(f.title)}</h3>
+            <p class="genesis-foundation-body">${escapeHtml(f.body)}</p>
+          </div>
+        </article>`).join("");
+  return `
+      <aside class="genesis-polis" aria-label="Fundamentos da Polis">
+        <h2 class="genesis-polis-title">Fundamentos da Polis</h2>
+        <p class="genesis-polis-sub">A arquitetura da autonomia cívica.</p>
+        ${cards}
+      </aside>`;
+}
+
+function renderGenesisNewIdentityHtml(currentName) {
+  return `
+          <div class="genesis-method genesis-method--active">
+            <span class="genesis-method-icon">${GENESIS_ICONS.fingerprint}</span>
+            <div class="genesis-method-body">
+              <h3 class="genesis-method-title">Gerar identidade cívica local</h3>
+              <p class="genesis-method-desc">Seu par de chaves Ed25519 nasce neste navegador. Sem e-mail, sem telefone, sem custódia central — escolha só como quer ser chamado.</p>
+              <form id="form-oauth-custom-name" class="genesis-inline-form">
+                <input type="text" id="oauth-custom-name-input" class="agora-inscription genesis-input" maxlength="30" placeholder="Seu nome ou apelido…" value="${currentName}" aria-label="Nome ou apelido" />
+                <button type="submit" id="btn-oauth-save-name" class="agora-btn agora-btn--primary">Iniciar identidade <span aria-hidden="true">→</span></button>
+              </form>
+              <p class="genesis-method-meta"><span class="agora-pylon agora-pylon--bronze" aria-hidden="true"></span>ID na rede: <code>vx_*</code> — gerado localmente</p>
+            </div>
+          </div>`;
+}
+
+function renderGenesisRestoreHtml() {
+  return `
+          <div class="genesis-method">
+            <span class="genesis-method-icon genesis-method-icon--bronze">${GENESIS_ICONS.restore}</span>
+            <div class="genesis-method-body">
+              <h3 class="genesis-method-title">Restaurar com Senha Soberana</h3>
+              <p class="genesis-method-desc">Já tem conta em outro aparelho? Recupere sua identidade a partir da frase secreta do seu cofre.</p>
+              <form id="form-oauth-restore-passphrase" class="genesis-inline-form">
+                <input type="password" id="oauth-sovereign-passphrase-input" class="agora-inscription genesis-input" placeholder="Senha Soberana / frase secreta…" autocomplete="current-password" aria-label="Senha Soberana" />
+                <button type="submit" id="btn-oauth-restore-passphrase" class="agora-btn agora-btn--bronze">Restaurar</button>
+              </form>
+            </div>
+          </div>`;
+}
+
+function renderGenesisImportHtml() {
+  return `
+          <div class="genesis-method">
+            <span class="genesis-method-icon">${GENESIS_ICONS.import}</span>
+            <div class="genesis-method-body">
+              <h3 class="genesis-method-title">Importar nome e foto</h3>
+              <p class="genesis-method-desc">Opcional: traga só o nome público e a foto. Tokens OAuth não são armazenados.</p>
+              ${renderOAuthProviderButtonsHtml()}
+            </div>
+          </div>`;
+}
+
+function renderGenesisMethodsHtml(currentName) {
+  return `
+        <section class="genesis-panel" aria-labelledby="oauth-enrich-title">
+          <p class="genesis-panel-kicker">Gênese de acesso</p>
+          <h2 id="oauth-enrich-title" class="genesis-panel-title">Como quer entrar na Ágora?</h2>
+          <div id="oauth-enrich-error" class="oauth-enrich-error" role="alert" aria-live="polite" hidden></div>
+          ${renderGenesisNewIdentityHtml(currentName)}
+          ${renderGenesisRestoreHtml()}
+          ${renderGenesisImportHtml()}
+          <div class="genesis-isolation"><span class="agora-pylon" aria-hidden="true"></span>Chave privada confinada a este aparelho</div>
+          <button type="button" id="btn-oauth-skip" class="oauth-btn oauth-btn--skip genesis-skip">Pular — continuar só com vx_</button>
+          <p class="meta oauth-enrich-legal">Só claims públicos de perfil; tokens OAuth não são armazenados (LGPD — ver COMPLIANCE-BR.md).</p>
+        </section>`;
+}
+
+/** Onboarding — Stitch tela 12 "Entrada criptográfica": hero epigráfico + métodos + fundamentos. */
 export function renderOAuthEnrich(container) {
   if (!container) return;
   const currentName = escapeHtml(localAccount.getDisplayName() || "");
   container.innerHTML = `
-    <div class="modal-overlay modal-sheet oauth-enrich-overlay" id="oauth-enrich-overlay" role="dialog" aria-modal="true" aria-labelledby="oauth-enrich-title">
-      <div class="modal-dialog modal-card modal-dialog-solid oauth-enrich-dialog">
-        <h2 id="oauth-enrich-title" class="oauth-enrich-title">Como quer aparecer?</h2>
-        <p class="desc oauth-enrich-lead">Escolha seu nome para que outras pessoas encontrem você em <strong>Pessoas</strong>. Seu ID na rede continua sendo <code>vx_*</code> neste aparelho.</p>
-        <div id="oauth-enrich-error" class="oauth-enrich-error" role="alert" aria-live="polite" hidden></div>
-        <form id="form-oauth-custom-name" style="display:flex; gap:0.5rem; margin-bottom:0.75rem;">
-          <input type="text" id="oauth-custom-name-input" class="form-control" maxlength="30" placeholder="Digite seu nome ou apelido…" value="${currentName}" style="flex:1;" />
-          <button type="submit" id="btn-oauth-save-name" class="btn btn-primary">Entrar</button>
-        </form>
-        <p class="oauth-enrich-divider" role="presentation"><span>ou importe nome e foto</span></p>
-        ${renderOAuthProviderButtonsHtml()}
-        <p class="oauth-enrich-divider" role="presentation"><span>ou acesse conta soberana de outro aparelho</span></p>
-        <form id="form-oauth-restore-passphrase" style="display:flex; gap:0.5rem; margin-bottom:0.75rem;">
-          <input type="password" id="oauth-sovereign-passphrase-input" class="form-control" placeholder="Sua Senha Soberana / Frase Secreta…" style="flex:1;" autocomplete="current-password" />
-          <button type="submit" id="btn-oauth-restore-passphrase" class="btn btn-outline" style="white-space:nowrap;">Restaurar</button>
-        </form>
-        <p class="oauth-enrich-divider" role="presentation"><span>ou</span></p>
-        <button type="button" id="btn-oauth-skip" class="oauth-btn oauth-btn--skip">Pular — continuar só com vx_</button>
-        <p class="meta oauth-enrich-legal">Só claims públicos de perfil; tokens OAuth não são armazenados (LGPD — ver COMPLIANCE-BR.md).</p>
+    <div class="modal-overlay oauth-enrich-overlay genesis-overlay" id="oauth-enrich-overlay" role="dialog" aria-modal="true" aria-labelledby="oauth-enrich-title">
+      <div class="genesis-shell oauth-enrich-dialog">
+        <header class="genesis-hero">
+          <div class="genesis-brand">
+            <img class="genesis-brand-mark" src="icons/icon-white-512.png" width="48" height="48" alt="" decoding="async" />
+            <div>
+              <p class="genesis-brand-kicker">Estatuto de fundação P2P</p>
+              <p class="genesis-brand-name">VOX · Rede cívica soberana</p>
+            </div>
+          </div>
+          <div class="agora-frieze" aria-hidden="true"><span class="agora-frieze-glyph">◆◆◆</span></div>
+          <p class="genesis-protocol"><span class="agora-pylon" aria-hidden="true"></span>Camada protocolar: Ed25519 · armazenamento local</p>
+          <h1 class="genesis-title">Sua Voz. Seu Território.<br /><span>Sua Chave.</span></h1>
+          <p class="genesis-lead">Uma rede social e cívica operada pelos próprios cidadãos, sem servidores corporativos intermediários.</p>
+        </header>
+        <div class="genesis-grid">
+          ${renderGenesisMethodsHtml(currentName)}
+          ${renderPolisFoundationsHtml()}
+        </div>
       </div>
     </div>`;
 }
@@ -67,47 +160,49 @@ export function closeOAuthEnrich(container) {
   if (container) container.innerHTML = "";
 }
 
-function resolvePersonBadgeHtml(p, isSelf) {
-  if (isSelf) return `<span class="badge" style="margin-left:0.35rem; font-size:0.7rem;">Você</span>`;
-  if (p.source === "contact") return `<span class="badge" style="margin-left:0.35rem; font-size:0.7rem;">Contato</span>`;
-  return "";
+function resolvePersonStampsHtml(p, isSelf) {
+  const stamps = [];
+  if (isSelf) stamps.push(`<span class="agora-stamp agora-stamp--bronze">Você</span>`);
+  else if (p.source === "contact") stamps.push(`<span class="agora-stamp agora-stamp--teal"><span class="agora-pylon agora-pylon--teal" aria-hidden="true"></span>Contato</span>`);
+  else if (p.source === "mesh-card" || p.source === "mesh") stamps.push(`<span class="agora-stamp agora-stamp--consensus"><span class="agora-pylon" aria-hidden="true"></span>Na malha</span>`);
+  stamps.push(`<span class="agora-stamp">Chave local</span>`);
+  return stamps.join("");
 }
 
+/** Linha do Diretório de Cidadãos (Stitch tela 10): avatar, nome epigráfico, selos, chave e ações. */
 function renderPeopleResultRow(p) {
   const name = escapeHtml(p.name || p.routeId.slice(0, 14));
   const handle = p.handle ? `@${escapeHtml(p.handle)}` : "";
   const av = renderAvatarHtml(p.routeId, name);
   const myId = localAccount.getCachedRouteIdSync();
   const isSelf = Boolean(myId && p.routeId === myId);
-  const badgeHtml = resolvePersonBadgeHtml(p, isSelf);
+  const rid = encodeURIComponent(p.routeId);
   const actionsHtml = isSelf
-    ? `<a class="btn btn-sm btn-outline" href="#/u/${encodeURIComponent(p.routeId)}">Meu perfil</a>`
+    ? `<a class="agora-btn agora-btn--secondary" href="#/u/${rid}">Meu perfil</a>`
     : `
-        <a class="btn btn-sm btn-outline" href="#/connect/${encodeURIComponent(p.routeId)}">Conectar</a>
-        <a class="btn btn-sm btn-primary" href="#/dm/${encodeURIComponent(p.routeId)}">DM</a>
-      `;
+        <a class="agora-btn agora-btn--secondary" href="#/connect/${rid}">Conectar</a>
+        <a class="agora-btn agora-btn--solid" href="#/dm/${rid}">Mensagem P2P</a>`;
   return `
-    <div class="card people-result" style="padding:0.65rem 0.85rem; margin-top:0.45rem; display:flex; gap:0.65rem; align-items:center;">
-      ${av}
-      <div style="flex:1; min-width:0;">
-        <a href="#/u/${encodeURIComponent(p.routeId)}" style="font-weight:600;">${name}</a>
-        ${handle ? `<span class="meta"> ${handle}</span>` : ""}${badgeHtml}
-        <p class="meta" style="margin:2px 0 0;"><code>${escapeHtml(shortId(p.routeId))}</code></p>
+    <article class="card people-result agora-citizen">
+      <div class="agora-citizen-avatar">${av}</div>
+      <div class="agora-citizen-body">
+        <h3 class="agora-citizen-name"><a href="#/u/${rid}">${name}</a>${handle ? `<span class="agora-citizen-handle">${handle}</span>` : ""}</h3>
+        <div class="agora-citizen-stamps">${resolvePersonStampsHtml(p, isSelf)}</div>
+        <p class="agora-citizen-meta">Chave: <code class="agora-hash">${escapeHtml(shortId(p.routeId))}</code></p>
       </div>
-      <div style="display:flex; flex-direction:column; gap:0.25rem;">
-        ${actionsHtml}
+      <div class="agora-citizen-actions">${actionsHtml}
       </div>
-    </div>`;
+    </article>`;
 }
 
 function renderPeopleSection(title, people) {
   if (!people?.length) return "";
   const rows = people.map((p) => renderPeopleResultRow(p)).join("");
   return `
-    <div class="people-section" style="margin-top:0.75rem;">
-      <h3 class="section-title" style="font-size:0.95rem; margin:0 0 0.35rem;">${escapeHtml(title)}</h3>
+    <section class="people-section agora-citizen-section">
+      <h3 class="agora-section-label"><span class="agora-pylon agora-pylon--bronze" aria-hidden="true"></span>${escapeHtml(title)}<span class="agora-citizen-count">${people.length}</span></h3>
       ${rows}
-    </div>`;
+    </section>`;
 }
 
 export function resolvePeopleSearchBody(sections, results, query) {
@@ -122,7 +217,7 @@ export function resolvePeopleSearchBody(sections, results, query) {
     if (Array.isArray(sections.all)) {
       const total = sections.all.length;
       if (!total) return `<div class="empty"><p>Ninguém indexado ainda.</p></div>`;
-      const summaryHtml = `<p class="meta" style="margin:0.5rem 0 0.25rem; font-size:0.8rem;">Mostrando lista completa (${total} ${total === 1 ? "pessoa cadastrada" : "pessoas cadastradas"}).</p>`;
+      const summaryHtml = `<p class="agora-citizen-summary"><span>Registros autenticados: <strong>${total} ${total === 1 ? "cidadão" : "cidadãos"}</strong></span><span class="agora-citizen-summary-tag"><span class="agora-pylon" aria-hidden="true"></span>Chaves não revogadas</span></p>`;
       return summaryHtml + sections.all.map((p) => renderPeopleResultRow(p)).join("");
     }
     const cLen = sections.contacts?.length || 0;
@@ -142,17 +237,23 @@ export function resolvePeopleSearchBody(sections, results, query) {
 export function renderPeopleSearch(main, { sections = null, results = [], query = "" } = {}) {
   const q = escapeHtml(query);
   const body = resolvePeopleSearchBody(sections, results, query);
+  const head = renderPageHead({
+    kicker: "Protocolo Ed25519 · raiz de confiança coletiva",
+    title: "Diretório de Cidadãos",
+    subtitle: "Pessoas com identidade criptográfica verificada no aparelho de quem publicou. Sem servidor central decidindo quem existe.",
+    wide: true,
+  });
 
   main.innerHTML = `
-    <div class="card people-search-card">
-      <h2 style="margin:0 0 4px;">Pessoas</h2>
-      <p class="desc" style="margin:0 0 0.65rem; font-size:0.85rem;">Lista completa de pessoas cadastradas na rede. Digite abaixo para filtrar:</p>
-      <form id="form-people-search" style="display:flex; gap:0.5rem; align-items:center;">
-        <input type="search" id="people-search-input" class="form-control" placeholder="Filtrar por nome, @handle, vx_ ou link de convite…" value="${q}" style="flex:1;" />
-        <button type="submit" class="btn btn-primary">Filtrar</button>
+    <div class="agora-wide agora-directory">
+      ${head}
+      <form id="form-people-search" class="card people-search-card agora-directory-search" role="search">
+        <svg class="agora-directory-search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4"/><path d="M14 13.12c0 2.38 0 6.38-1 8.88"/><path d="M2 12a10 10 0 0 1 18-6"/><path d="M21.8 16c.2-2 .131-5.354 0-6"/><path d="M5 19.5C5.5 18 6 15 6 12a6 6 0 0 1 .34-2"/><path d="M9 6.8a6 6 0 0 1 9 5.2v2"/></svg>
+        <input type="search" id="people-search-input" class="form-control" placeholder="Buscar por nome, @arroba cívica, chave vx_ ou link de convite…" value="${q}" aria-label="Buscar pessoas" />
+        <button type="submit" class="agora-btn agora-btn--solid">Buscar</button>
       </form>
-    </div>
-    <div class="people-results" id="people-results-container">${body}</div>`;
+      <div class="people-results agora-citizen-list" id="people-results-container">${body}</div>
+    </div>`;
 }
 
 function renderPostPactIdentityHtml(routeId) {

@@ -1,0 +1,3954 @@
+/*
+ * agora.css — Sovereign Agora (ADR-016, rev. 2026-11)
+ * Fonte: stitch_vox_civic_network_interface/sovereign_agora/DESIGN.md
+ *
+ * Camada carregada DEPOIS de style.css. Estratégia:
+ *  1. Tokens canônicos `--sa-*` espelham o DESIGN.md (Marina Teal, Bronze Dórico, Esmeralda de
+ *     Consenso, Basalto Obsidiana e camadas de superfície).
+ *  2. Os nomes históricos da camada anterior (--emerald-*, --cobalt-*, --travertine-*,
+ *     --aurora-gradient…) viram ALIASES dos tokens novos — todo seletor já escrito herda a
+ *     paleta nova sem reescrita.
+ *  3. Os tokens semânticos legados de style.css (--bg, --surface-*, --text, --accent…) são
+ *     remapeados para a paleta Stitch, re-tematizando as 10k linhas legadas.
+ *  4. Componentes com prefixo `agora-` ou escopados em `.agora-ui`.
+ * Regra para próximos lotes: não adicionar novos :root em style.css; migrar regras para cá.
+ */
+
+/* ── 1. Tokens do design system (o tema escuro é o canônico do Stitch) ── */
+:root {
+  /* Sovereign Agora — paleta canônica */
+  --sa-surface: #111316;
+  --sa-surface-lowest: #0c0e11;
+  --sa-surface-low: #1a1c1f;
+  --sa-surface-container: #1e2023;
+  --sa-surface-high: #282a2d;
+  --sa-surface-highest: #333538;
+  --sa-on-surface: #e2e2e6;
+  --sa-on-surface-variant: #bdc9c7;
+  --sa-outline: #879391;
+  --sa-outline-variant: #3e4948;
+  --sa-hairline: #2a3032;
+  --sa-primary: #78d6cf;
+  --sa-primary-container: #4baca5;
+  --sa-on-primary: #003734;
+  --sa-on-primary-fixed: #00201e;
+  --sa-secondary: #e7c26b;
+  --sa-secondary-container: #6e5301;
+  --sa-on-secondary: #3e2e00;
+  --sa-tertiary: #69dba9;
+  --sa-tertiary-container: #39b081;
+  --sa-on-tertiary: #003825;
+  --sa-error: var(--sa-error);
+  --sa-error-container: #93000a;
+  --sa-terracotta: #e8907e;
+  --sa-gradient-sovereign: linear-gradient(90deg, #39b081 0%, #4baca5 55%, #78d6cf 100%);
+  --sa-gradient-entablature: linear-gradient(90deg, #4baca5 0%, #e7c26b 100%);
+  --sa-bronze-halo: 0 0 0 1px rgba(231, 194, 107, 0.55), 0 0 18px rgba(231, 194, 107, 0.18);
+  --sa-chisel-shadow: 6px 6px 0 rgba(0, 0, 0, 0.45);
+
+  /* Aliases históricos (camada Luminescent Matrix) → Sovereign Agora */
+  --obsidian-oled: var(--sa-surface);
+  --slate-deep: var(--sa-surface-container);
+  --surface-monolith: var(--sa-surface-high);
+  --surface-column: var(--sa-surface-highest);
+  --travertine-linen: var(--sa-on-surface);
+  --travertine-muted: var(--sa-on-surface-variant);
+  --emerald-consensus: var(--sa-tertiary);
+  --emerald-bright: var(--sa-primary);
+  --emerald-primary: var(--sa-primary);
+  --cobalt-telemetry: var(--sa-primary-container);
+  --cobalt-soft: var(--sa-primary);
+  --cobalt-pure: var(--sa-primary-container);
+  --cyan-bridge: var(--sa-tertiary);
+  --bronze: var(--sa-secondary);
+  --entablature-hairline: var(--sa-hairline);
+  --entablature-active: rgba(231, 194, 107, 0.4);
+  --aurora-gradient: var(--sa-gradient-sovereign);
+  --aurora-glow: 0 0 0 1px rgba(231, 194, 107, 0.35), 0 8px 24px rgba(0, 0, 0, 0.45);
+  --presence-pulse: 0 0 10px rgba(105, 219, 169, 0.55);
+  --on-gradient: var(--sa-on-primary-fixed);
+
+  /* Tipografia — Domine (epigráfica) + Work Sans (prosa/protocolo). Sem Google Fonts (LGPD +
+     soberania): usadas se instaladas/auto-hospedadas; fallback para serifas e sans do sistema. */
+  --font-epigraphic: "Domine", "Noto Serif", "Iowan Old Style", "Palatino Linotype", Georgia, "Times New Roman", serif;
+  --font-telemetry: "Work Sans", "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-sans: var(--font-telemetry);
+  --font-display: var(--font-epigraphic);
+  --font-mono: "Work Sans", ui-monospace, "SF Mono", "Cascadia Mono", Consolas, monospace;
+  --font-hash: ui-monospace, "SF Mono", "Cascadia Mono", Consolas, "Liberation Mono", monospace;
+
+  /* Forma: geometria arquitetônica — 0.5rem base, 0.25rem para selos/chips, círculo só p/ presença */
+  --radius: 0.5rem;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+
+  --sa-gutter: 2rem;
+  --sa-margin: 3rem;
+
+  --sidebar-width: 280px;
+  --feed-max: 720px;
+  --agora-content-max: 1080px;
+  --agora-topbar-h: 64px;
+}
+
+/* ── 2. Remapeamento dos tokens legados no tema escuro (padrão Stitch) ── */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-color-mode="light"]) {
+    --theme-chrome: var(--sa-surface-low);
+    --bg: var(--sa-surface);
+    --surface-1: var(--sa-surface-container);
+    --surface-2: var(--sa-surface-high);
+    --surface-3: var(--sa-surface-highest);
+    --surface: var(--sa-surface-container);
+    --surface-solid: var(--sa-surface-container);
+    --surface-soft: var(--sa-surface-high);
+    --surface-card: var(--sa-surface-container);
+    --surface-hover: var(--sa-surface-high);
+    --outline: var(--sa-hairline);
+    --border: var(--sa-hairline);
+    --border-subtle: var(--sa-hairline);
+    --border-hover: var(--entablature-active);
+    --text: var(--sa-on-surface);
+    --muted: var(--sa-outline);
+    --text-muted: var(--sa-outline);
+    --text-secondary: var(--sa-on-surface-variant);
+    --text-tertiary: var(--sa-outline);
+    --link: var(--sa-primary);
+    --accent: var(--sa-primary);
+    --accent-hover: #94f3eb;
+    --accent-soft: rgba(120, 214, 207, 0.12);
+    --accent-glow: rgba(120, 214, 207, 0.25);
+    --accent-gradient: var(--sa-gradient-sovereign);
+    --nav-active-bg: var(--sa-surface-high);
+    --nav-active-indicator: var(--sa-primary);
+    --success: var(--sa-tertiary);
+    --success-soft: rgba(105, 219, 169, 0.12);
+    --danger: var(--sa-error);
+    --danger-soft: rgba(255, 180, 171, 0.12);
+    --overlay: rgba(12, 14, 17, 0.85);
+    --on-accent: var(--sa-on-primary-fixed);
+    --elevation-1: none;
+    --elevation-2: none;
+    --shadow: none;
+  }
+}
+
+:root[data-color-mode="dark"] {
+  --theme-chrome: var(--sa-surface-low);
+  --bg: var(--sa-surface);
+  --surface-1: var(--sa-surface-container);
+  --surface-2: var(--sa-surface-high);
+  --surface-3: var(--sa-surface-highest);
+  --surface: var(--sa-surface-container);
+  --surface-solid: var(--sa-surface-container);
+  --surface-soft: var(--sa-surface-high);
+  --surface-card: var(--sa-surface-container);
+  --surface-hover: var(--sa-surface-high);
+  --outline: var(--sa-hairline);
+  --border: var(--sa-hairline);
+  --border-subtle: var(--sa-hairline);
+  --border-hover: var(--entablature-active);
+  --text: var(--sa-on-surface);
+  --muted: var(--sa-outline);
+  --text-muted: var(--sa-outline);
+  --text-secondary: var(--sa-on-surface-variant);
+  --text-tertiary: var(--sa-outline);
+  --link: var(--sa-primary);
+  --accent: var(--sa-primary);
+  --accent-hover: #94f3eb;
+  --accent-soft: rgba(120, 214, 207, 0.12);
+  --accent-glow: rgba(120, 214, 207, 0.25);
+  --accent-gradient: var(--sa-gradient-sovereign);
+  --nav-active-bg: var(--sa-surface-high);
+  --nav-active-indicator: var(--sa-primary);
+  --success: var(--sa-tertiary);
+  --success-soft: rgba(105, 219, 169, 0.12);
+  --danger: var(--sa-error);
+  --danger-soft: rgba(255, 180, 171, 0.12);
+  --overlay: rgba(12, 14, 17, 0.85);
+  --on-accent: var(--sa-on-primary-fixed);
+  --elevation-1: none;
+  --elevation-2: none;
+  --shadow: none;
+}
+
+/* Tema claro: o Stitch só definiu o escuro. Variante "mármore pentélico" — calcário claro com
+   teal profundo (inverse-primary) e bronze oxidado, mantendo contraste AA. */
+@media (prefers-color-scheme: light) {
+  :root:not([data-color-mode="dark"]) {
+    --sa-surface: #f3f1ec;
+    --sa-surface-lowest: #ffffff;
+    --sa-surface-low: #ebe8e1;
+    --sa-surface-container: #faf8f4;
+    --sa-surface-high: #e6e2d9;
+    --sa-surface-highest: #dbd6cb;
+    --sa-on-surface: #1a1c1f;
+    --sa-on-surface-variant: #3e4948;
+    --sa-outline: #5f6b69;
+    --sa-hairline: #d6d1c6;
+    --sa-primary: #006a65;
+    --sa-primary-container: #00504c;
+    --sa-secondary: #7a5c00;
+    --sa-tertiary: #006c4a;
+    --sa-error: #ba1a1a;
+    --sa-terracotta: #a3402c;
+    --sa-on-primary-fixed: #ffffff;
+    --sa-gradient-sovereign: linear-gradient(90deg, #006c4a 0%, #006a65 100%);
+    --accent: #006a65;
+    --accent-hover: #00504c;
+    --accent-soft: rgba(0, 106, 101, 0.1);
+    --link: #006a65;
+    --nav-active-bg: #e6e2d9;
+    --nav-active-indicator: #006a65;
+    --on-accent: #ffffff;
+  }
+}
+
+:root[data-color-mode="light"] {
+  --sa-surface: #f3f1ec;
+  --sa-surface-lowest: #ffffff;
+  --sa-surface-low: #ebe8e1;
+  --sa-surface-container: #faf8f4;
+  --sa-surface-high: #e6e2d9;
+  --sa-surface-highest: #dbd6cb;
+  --sa-on-surface: #1a1c1f;
+  --sa-on-surface-variant: #3e4948;
+  --sa-outline: #5f6b69;
+  --sa-hairline: #d6d1c6;
+  --sa-primary: #006a65;
+  --sa-primary-container: #00504c;
+  --sa-secondary: #7a5c00;
+  --sa-tertiary: #006c4a;
+  --sa-error: #ba1a1a;
+  --sa-terracotta: #a3402c;
+  --sa-on-primary-fixed: #ffffff;
+  --sa-gradient-sovereign: linear-gradient(90deg, #006c4a 0%, #006a65 100%);
+  --accent: #006a65;
+  --accent-hover: #00504c;
+  --accent-soft: rgba(0, 106, 101, 0.1);
+  --link: #006a65;
+  --nav-active-bg: #e6e2d9;
+  --nav-active-indicator: #006a65;
+  --on-accent: #ffffff;
+}
+
+/* ── 3. Base tipográfica ── */
+html,
+body {
+  font-family: var(--font-telemetry);
+  font-feature-settings: "cv11" 1, "ss01" 1;
+  -webkit-font-smoothing: antialiased;
+}
+
+body,
+#app-root,
+.app-layout {
+  background: var(--bg);
+}
+
+::selection {
+  background: var(--emerald-consensus);
+  color: var(--on-gradient);
+}
+
+.agora-ui h1,
+.agora-ui h2,
+.agora-ui h3,
+.agora-ui .topic-title,
+.agora-ui .post-title,
+.agora-ui .profile-grid-name,
+.agora-ui .community-title,
+.agora-ui .vote-header-title,
+.agora-ui .deliberation-title {
+  font-family: var(--font-epigraphic);
+  color: var(--travertine-linen);
+  letter-spacing: -0.01em;
+}
+
+.agora-mono,
+.agora-ui code,
+.agora-ui .post-handle,
+.agora-ui .meta .route-id {
+  font-family: var(--font-mono);
+  font-feature-settings: "tnum" 1, "zero" 1;
+}
+
+.agora-title-monument {
+  font-family: var(--font-epigraphic);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--travertine-linen);
+  margin: 0 0 0.75rem;
+}
+
+.agora-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.agora-muted {
+  color: var(--muted);
+}
+
+/* ── 4. Shell: sidebar (desktop) ── */
+@media (min-width: 768px) {
+  .agora-ui .app-sidebar.tab-bar {
+    width: var(--sidebar-width);
+    background: var(--sa-surface-low);
+    border-right: 1px solid var(--entablature-hairline);
+    box-shadow: none;
+    padding: 0 1rem calc(1rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .agora-ui .main-column {
+    margin-left: var(--sidebar-width);
+  }
+
+  .agora-ui.sidebar-collapsed .app-sidebar.tab-bar {
+    width: var(--sidebar-width-collapsed);
+    padding: 0 0.5rem 1rem;
+  }
+
+  .agora-ui.sidebar-collapsed .main-column {
+    margin-left: var(--sidebar-width-collapsed);
+  }
+
+  .agora-ui.sidebar-collapsed .agora-wordmark-text,
+  .agora-ui.sidebar-collapsed .agora-wordmark-sub,
+  .agora-ui.sidebar-collapsed .agora-circles,
+  .agora-ui.sidebar-collapsed .agora-node-stele,
+  .agora-ui.sidebar-collapsed .tab-label,
+  .agora-ui.sidebar-collapsed .sidebar-feed-label {
+    display: none;
+  }
+
+  .agora-ui .agora-sidebar-brand {
+    flex-shrink: 0;
+    height: var(--agora-topbar-h);
+    display: flex;
+    align-items: center;
+    padding: 0 0.5rem;
+    margin: 0 -1rem 0.75rem;
+    padding-left: 1.5rem;
+    border-bottom: 1px solid var(--entablature-hairline);
+  }
+
+  .agora-ui .tab-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .agora-ui .tab-item {
+    justify-content: flex-start;
+    gap: 0.85rem;
+    padding: 0.7rem 0.9rem;
+    border-radius: var(--radius);
+    color: var(--travertine-muted);
+    font-size: 0.9375rem;
+    font-weight: 500;
+    box-shadow: none;
+  }
+
+  .agora-ui .tab-item:hover {
+    background: var(--surface-monolith);
+    color: var(--travertine-linen);
+  }
+
+  .agora-ui .tab-item.active {
+    background: var(--nav-active-bg);
+    color: var(--sa-primary);
+    font-weight: 600;
+    box-shadow: inset 2px 0 0 var(--sa-secondary);
+  }
+
+  .agora-ui .tab-item.active .tab-svg {
+    color: currentColor;
+  }
+
+  .agora-ui .tab-item.active .tab-brand-mark {
+    filter: none;
+  }
+
+  .agora-ui .tab-item--secondary {
+    font-size: 0.875rem;
+    color: var(--muted);
+  }
+
+  .agora-ui .tab-item--secondary:first-of-type,
+  .agora-ui .tab-nav > .tab-item--secondary:nth-child(6) {
+    margin-top: 0.5rem;
+    position: relative;
+  }
+
+  .agora-ui .tab-nav > .tab-item--secondary:nth-child(6)::before {
+    content: "";
+    position: absolute;
+    top: -0.3rem;
+    left: 0.9rem;
+    right: 0.9rem;
+    height: 1px;
+    background: var(--entablature-hairline);
+  }
+
+  .agora-ui .sidebar-compose-slot {
+    padding: 0.85rem 0 0.5rem;
+  }
+
+  .agora-ui .sidebar-compose-slot .tab-item.compose-tab {
+    justify-content: center;
+    background: var(--aurora-gradient);
+    color: var(--on-gradient) !important;
+    border-radius: var(--radius);
+    padding: 0.75rem 1rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-size: 0.8125rem;
+    box-shadow: none;
+  }
+
+  .agora-ui .sidebar-compose-slot .tab-item.compose-tab:hover {
+    box-shadow: 0 0 20px rgba(120, 214, 207, 0.35), 0 0 20px rgba(231, 194, 107, 0.35);
+    transform: translateY(1px);
+  }
+
+  .agora-ui .sidebar-feed-slot {
+    border-top: 1px solid var(--entablature-hairline);
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+  }
+
+  .agora-ui .sidebar-feed-slot::before {
+    content: "Feeds";
+    display: block;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 0 0.9rem 0.4rem;
+  }
+
+  .agora-ui .sidebar-feed-tab {
+    border-radius: var(--radius);
+    color: var(--travertine-muted);
+    font-size: 0.875rem;
+    box-shadow: none;
+  }
+
+  .agora-ui .sidebar-feed-tab.active {
+    background: var(--accent-soft);
+    color: var(--emerald-bright);
+    box-shadow: inset 2px 0 0 var(--emerald-consensus);
+  }
+
+  .agora-ui .sidebar-footer {
+    border-top: 1px solid var(--entablature-hairline);
+    padding-top: 0.75rem;
+  }
+
+  .agora-ui .sidebar-footer .theme-mode-toggle,
+  .agora-ui .sidebar-footer .wallet-badge {
+    border-radius: var(--radius);
+    background: var(--slate-deep);
+    border: 1px solid var(--entablature-hairline);
+    color: var(--travertine-muted);
+  }
+
+  .agora-ui .sidebar-collapse-btn {
+    border-radius: var(--radius);
+    background: var(--slate-deep);
+    border: 1px solid var(--entablature-hairline);
+  }
+}
+
+/* Wordmark */
+.agora-wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  text-decoration: none;
+  color: var(--travertine-linen);
+}
+
+.agora-wordmark:hover {
+  text-decoration: none;
+}
+
+.agora-wordmark-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius);
+}
+
+.agora-wordmark-text {
+  font-family: var(--font-epigraphic);
+  font-weight: 700;
+  font-size: 1.15rem;
+  letter-spacing: 0.08em;
+  color: var(--sa-primary);
+}
+
+.agora-wordmark-sub {
+  font-family: var(--font-telemetry);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sa-secondary);
+  white-space: nowrap;
+}
+
+/* ── 5. Topbar ── */
+.agora-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 80;
+  height: var(--agora-topbar-h);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0 1.5rem;
+  background: color-mix(in srgb, var(--obsidian-oled) 88%, transparent);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--entablature-hairline);
+}
+
+.agora-topbar-brand {
+  display: none;
+}
+
+.agora-search {
+  position: relative;
+  flex: 1;
+  max-width: 440px;
+  margin: 0;
+}
+
+.agora-search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.agora-search input {
+  width: 100%;
+  height: 40px;
+  padding: 0 0.85rem 0 2.4rem;
+  background: var(--slate-deep);
+  border: 1px solid var(--entablature-hairline);
+  border-radius: var(--radius);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.875rem;
+  box-sizing: border-box;
+}
+
+.agora-search input:focus {
+  outline: none;
+  border-color: var(--entablature-active);
+  box-shadow: inset 0 -2px 0 var(--emerald-consensus);
+}
+
+.agora-topbar-vote {
+  margin-left: auto;
+}
+
+.agora-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 40px;
+  padding: 0 1rem;
+  border-radius: var(--radius);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease, transform 0.1s ease;
+}
+
+.agora-btn:hover {
+  text-decoration: none;
+}
+
+.agora-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.agora-btn--primary {
+  background: var(--aurora-gradient);
+  color: var(--on-gradient);
+}
+
+.agora-btn--primary:hover {
+  box-shadow: 0 0 20px rgba(120, 214, 207, 0.35), 0 0 20px rgba(231, 194, 107, 0.35);
+  transform: translateY(1px);
+  color: var(--on-gradient);
+}
+
+.agora-btn--secondary {
+  background: var(--slate-deep);
+  border-color: rgba(226, 226, 230, 0.2);
+  color: var(--travertine-linen);
+}
+
+.agora-btn--secondary:hover {
+  border-color: var(--travertine-linen);
+  color: var(--travertine-linen);
+}
+
+.agora-btn--ghost {
+  background: var(--accent-soft);
+  border-color: rgba(120, 214, 207, 0.3);
+  color: var(--emerald-bright);
+}
+
+.agora-btn--ghost:hover {
+  border-color: var(--emerald-consensus);
+  color: var(--emerald-bright);
+}
+
+.agora-btn[disabled],
+.agora-btn[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.agora-identity-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.25rem 0.25rem 0.25rem 0.5rem;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  text-align: right;
+}
+
+.agora-identity-chip:hover,
+.agora-identity-chip[aria-expanded="true"] {
+  border-color: var(--entablature-hairline);
+  background: var(--slate-deep);
+}
+
+.agora-identity-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.agora-identity-name {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.4rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--travertine-linen);
+}
+
+.agora-identity-key {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--muted);
+}
+
+.agora-presence-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--emerald-consensus);
+  box-shadow: var(--presence-pulse);
+  flex-shrink: 0;
+}
+
+.agora-topbar-avatar,
+.agora-identity-chip .avatar-wrap {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  border-radius: var(--radius) !important;
+  font-size: 0.9rem;
+}
+
+.agora-identity-chip .avatar,
+.agora-identity-chip .avatar-img {
+  border-radius: var(--radius) !important;
+  width: 36px;
+  height: 36px;
+}
+
+.agora-identity-chip .avatar svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Gaveta de identidade/rede (Stitch: "Menu da Rede P2P") */
+.agora-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 140;
+  background: var(--overlay);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.agora-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 150;
+  width: min(420px, 100vw);
+  overflow-y: auto;
+  background: var(--slate-deep);
+  border-left: 1px solid var(--entablature-hairline);
+  padding: 1.5rem;
+  box-sizing: border-box;
+}
+
+.agora-drawer::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--aurora-gradient);
+}
+
+.agora-drawer[hidden],
+.agora-drawer-backdrop[hidden] {
+  display: none;
+}
+
+.agora-drawer-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.agora-drawer-name {
+  margin: 0;
+  font-family: var(--font-epigraphic);
+  color: var(--travertine-linen);
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.agora-icon-btn {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--entablature-hairline);
+  border-radius: var(--radius);
+  color: var(--travertine-muted);
+  cursor: pointer;
+}
+
+.agora-icon-btn:hover {
+  border-color: var(--travertine-linen);
+}
+
+.agora-drawer-key {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.25rem 0.75rem;
+  align-items: center;
+  padding: 0.85rem 1rem;
+  background: var(--obsidian-oled);
+  border: 1px solid var(--entablature-hairline);
+  border-radius: var(--radius);
+  margin-bottom: 1.25rem;
+}
+
+.agora-drawer-key .agora-label {
+  grid-column: 1 / -1;
+}
+
+.agora-drawer-key code {
+  font-size: 0.75rem;
+  color: var(--cobalt-soft);
+  overflow-wrap: anywhere;
+}
+
+.agora-link-btn {
+  background: none;
+  border: none;
+  color: var(--emerald-bright);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.agora-drawer-section {
+  border-top: 1px solid var(--entablature-hairline);
+  padding-top: 1.25rem;
+  margin-top: 1.25rem;
+}
+
+.agora-drawer-network {
+  margin-bottom: 0.5rem;
+}
+
+.agora-drawer-link {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.8rem 0.25rem;
+  border-bottom: 1px solid var(--entablature-hairline);
+  color: var(--travertine-muted);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.agora-drawer-link:hover {
+  color: var(--travertine-linen);
+  text-decoration: none;
+  box-shadow: inset 2px 0 0 var(--emerald-consensus);
+  padding-left: 0.6rem;
+}
+
+@media (min-width: 768px) {
+  .agora-drawer-link--mobile {
+    display: none;
+  }
+}
+
+/* ── 6. Conteúdo principal ── */
+@media (min-width: 768px) {
+  .agora-ui main#app-main {
+    padding: 2rem 1.5rem 4rem;
+  }
+}
+
+/* Telas de painel (Vote, Comunidades) usam coluna larga; perfil, intermediária; feed, a coluna de leitura. */
+.agora-ui[data-active-tab="vote"] main#app-main,
+.agora-ui[data-active-tab="communities"] main#app-main:has(.agora-community-list, .agora-empty) {
+  max-width: calc(var(--agora-content-max) + 3rem);
+}
+
+.agora-ui[data-active-tab="profile"] main#app-main {
+  max-width: calc(820px + 3rem);
+}
+
+.agora-ui[data-active-tab="profile"] {
+  --feed-max: 820px;
+}
+
+.agora-page-head {
+  max-width: var(--feed-max);
+  margin: 0 auto 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--entablature-hairline);
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem 1.5rem;
+  flex-wrap: wrap;
+}
+
+.agora-page-head--wide {
+  max-width: var(--agora-content-max);
+}
+
+.agora-page-head-text {
+  min-width: 0;
+  flex: 1 1 320px;
+}
+
+.agora-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.6rem;
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sa-tertiary);
+}
+
+.agora-page-title {
+  margin: 0;
+  font-family: var(--font-epigraphic);
+  font-size: clamp(1.75rem, 1.2rem + 2vw, 2.5rem);
+  line-height: 1.15;
+  font-weight: 500;
+  color: var(--travertine-linen);
+  letter-spacing: -0.02em;
+}
+
+.agora-page-sub {
+  margin: 0.6rem 0 0;
+  max-width: 60ch;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: var(--travertine-muted);
+}
+
+.agora-page-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* Abas segmentadas (feed e filtros) */
+.agora-ui .feed-tabs-bar {
+  display: flex;
+  justify-content: flex-start;
+  gap: 0.5rem;
+  border: none;
+  background: transparent;
+  padding: 0 0 1rem;
+  margin: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.agora-ui .feed-tab-chip {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 0.9rem;
+  border: 1px solid var(--entablature-hairline);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--travertine-muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: none;
+}
+
+.agora-ui .feed-tab-chip::after {
+  display: none;
+}
+
+.agora-ui .feed-tab-chip:hover {
+  border-color: var(--entablature-active);
+  color: var(--travertine-linen);
+  text-decoration: none;
+}
+
+.agora-ui .feed-tab-chip.active {
+  border-color: rgba(120, 214, 207, 0.45);
+  background: linear-gradient(135deg, rgba(120, 214, 207, 0.18), rgba(105, 219, 169, 0.06));
+  color: var(--emerald-bright);
+}
+
+/* Tábuas líticas: cada publicação é um bloco assentado na grade, com hover em bronze */
+.agora-ui .feed-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  border-top: none;
+}
+
+.agora-ui .feed-container > .post,
+.agora-ui .feed-container > article {
+  background: var(--sa-surface-container);
+  border: 1px solid var(--sa-hairline);
+  border-radius: var(--radius);
+  box-shadow: none;
+  margin: 0;
+  padding-top: 1.25rem;
+  overflow: hidden;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+
+@media (hover: hover) {
+  .agora-ui .feed-container > .post:hover,
+  .agora-ui .feed-container > article:hover {
+    background: var(--sa-surface-low);
+    box-shadow: inset 2px 0 0 var(--sa-secondary);
+  }
+}
+
+@media (max-width: 767px) {
+  .agora-ui .feed-container { gap: 0; }
+
+  .agora-ui .feed-container > .post,
+  .agora-ui .feed-container > article {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    border-top: none;
+    background: transparent;
+  }
+}
+
+.agora-ui .post-header-user strong,
+.agora-ui .post-author-name {
+  color: var(--travertine-linen);
+}
+
+.agora-ui .post-handle,
+.agora-ui .post-time {
+  color: var(--muted);
+}
+
+.agora-ui .post-pinned-ribbon {
+  color: var(--sa-secondary);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.agora-ui .avatar,
+.agora-ui .avatar-img {
+  border-radius: 50%;
+}
+
+.agora-ui .feed-composer-section .inline-composer,
+.agora-ui .feed-composer-section > * {
+  background: var(--slate-deep);
+  border: 1px solid var(--entablature-hairline);
+  border-radius: var(--radius);
+  box-shadow: none;
+}
+
+.agora-ui .welcome-feed-hint {
+  background: rgba(231, 194, 107, 0.08);
+  border: 1px solid rgba(231, 194, 107, 0.3);
+  border-radius: var(--radius);
+}
+
+.agora-ui .story-ring {
+  border-radius: var(--radius-lg);
+}
+
+/* Cards legados → monólitos planares */
+.agora-ui .card,
+.agora-ui .community-card,
+.agora-ui .dm-header-card,
+.agora-ui .people-result {
+  background: var(--slate-deep);
+  border: 1px solid var(--entablature-hairline);
+  border-radius: var(--radius);
+  box-shadow: none;
+}
+
+.agora-ui .btn {
+  border-radius: var(--radius);
+}
+
+.agora-ui .btn-primary,
+.agora-ui .btn.btn-primary {
+  background: var(--aurora-gradient);
+  color: var(--on-gradient);
+  border: none;
+  font-weight: 700;
+}
+
+.agora-ui .btn-outline,
+.agora-ui .btn.btn-outline {
+  background: var(--slate-deep);
+  border: 1px solid rgba(226, 226, 230, 0.2);
+  color: var(--travertine-linen);
+}
+
+.agora-ui .btn-outline:hover {
+  border-color: var(--travertine-linen);
+}
+
+.agora-ui input[type="text"],
+.agora-ui input[type="search"],
+.agora-ui input[type="url"],
+.agora-ui textarea,
+.agora-ui select {
+  border-radius: var(--radius);
+}
+
+.agora-ui input[type="text"]:focus,
+.agora-ui input[type="search"]:focus,
+.agora-ui textarea:focus {
+  outline: none;
+  box-shadow: inset 0 -2px 0 var(--emerald-consensus);
+}
+
+.agora-ui .app-footer {
+  color: var(--muted);
+  border-top: 1px solid var(--entablature-hairline);
+  padding: 1rem;
+}
+
+/* ── 7. Comunidades (Stitch: Células Vicinais) ── */
+.agora-ui .agora-community-list {
+  max-width: var(--agora-content-max);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.agora-community {
+  display: grid;
+  grid-template-columns: 64px 1fr auto;
+  gap: 1rem 1.25rem;
+  align-items: start;
+  padding: 1.5rem;
+  background: var(--slate-deep);
+  border: 1px solid var(--entablature-hairline);
+  border-radius: var(--radius);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.agora-community:hover {
+  border-color: rgba(120, 214, 207, 0.3);
+  box-shadow: inset 2px 0 0 var(--emerald-consensus);
+}
+
+.agora-community-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius);
+  object-fit: cover;
+  background: var(--surface-column);
+  border: 1px solid var(--entablature-hairline);
+}
+
+.agora-community-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0 0 0.35rem;
+  font-family: var(--font-epigraphic);
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--travertine-linen);
+}
+
+.agora-community-title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.agora-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid var(--entablature-hairline);
+  font-family: var(--font-telemetry);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--travertine-muted);
+  background: var(--surface-monolith);
+}
+
+.agora-pill--emerald {
+  color: var(--emerald-bright);
+  border-color: rgba(120, 214, 207, 0.35);
+  background: rgba(120, 214, 207, 0.12);
+}
+
+.agora-pill--cobalt {
+  color: var(--cobalt-soft);
+  border-color: rgba(231, 194, 107, 0.35);
+  background: rgba(231, 194, 107, 0.1);
+}
+
+.agora-pill--amber {
+  color: var(--sa-secondary);
+  border-color: rgba(231, 194, 107, 0.35);
+  background: rgba(231, 194, 107, 0.1);
+}
+
+.agora-community-desc {
+  margin: 0;
+  color: var(--travertine-muted);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.agora-metrics {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1px;
+  background: var(--entablature-hairline);
+  border: 1px solid var(--entablature-hairline);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.agora-metric {
+  background: var(--obsidian-oled);
+  padding: 0.75rem 1rem;
+}
+
+.agora-metric-label {
+  display: block;
+  font-size: 0.6875rem;
+  color: var(--muted);
+  margin-bottom: 0.25rem;
+}
+
+.agora-metric-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--travertine-linen);
+  font-feature-settings: "tnum" 1, "zero" 1;
+}
+
+.agora-metric-value--emerald {
+  color: var(--emerald-bright);
+}
+
+.agora-metric-value--cobalt {
+  color: var(--cobalt-soft);
+}
+
+.agora-ui .community-catchup-card p {
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+
+.agora-community-foot {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.agora-community-foot .agora-mono {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+/* ── 8. Vote (Democracia Direta) ── */
+.agora-vote {
+  max-width: var(--agora-content-max);
+  margin: 0 auto;
+}
+
+.agora-vote-hero {
+  position: relative;
+  padding: 2rem;
+  background:
+    radial-gradient(120% 140% at 100% 0%, rgba(120, 214, 207, 0.1), transparent 55%),
+    var(--slate-deep);
+  border: 1px solid var(--entablature-hairline);
+  border-radius: var(--radius);
+  margin-bottom: 1.5rem;
+}
+
+.agora-vote-hero .agora-page-head {
+  max-width: none;
+  border: none;
+  padding: 0;
+  margin: 0 0 1.5rem;
+}
+
+.agora-stat-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.75rem;
+}
+
+.agora-stat {
+  padding: 1rem 1.1rem;
+  background: var(--obsidian-oled);
+  border: 1px solid var(--entablature-hairline);
+  border-radius: var(--radius);
+}
+
+.agora-stat-label {
+  display: block;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.agora-stat-value {
+  display: block;
+  margin: 0.4rem 0 0.25rem;
+  font-family: var(--font-epigraphic);
+  font-size: 1.85rem;
+  font-weight: 600;
+  color: var(--travertine-linen);
+  font-feature-settings: "tnum" 1, "lnum" 1;
+}
+
+.agora-stat-value--emerald {
+  color: var(--emerald-bright);
+}
+
+.agora-stat-hint {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.agora-filter-bar {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 1.5rem;
+}
+
+.agora-filter-btn {
+  padding: 0.55rem 0.9rem;
+  border: 1px solid var(--entablature-hairline);
+  border-radius: var(--radius);
+  background: var(--obsidian-oled);
+  color: var(--travertine-muted);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.agora-filter-btn:hover {
+  border-color: var(--entablature-active);
+  color: var(--travertine-linen);
+}
+
+.agora-filter-btn[aria-pressed="true"] {
+  background: var(--emerald-primary);
+  border-color: var(--emerald-primary);
+  color: var(--on-gradient);
+}
+
+.agora-deliberation {
+  position: relative;
+  padding: 1.75rem 2rem;
+  background: var(--slate-deep);
+  border: 1px solid var(--entablature-hairline);
+  border-radius: var(--radius);
+  margin-bottom: 1rem;
+  overflow: hidden;
+}
+
+.agora-deliberation::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--aurora-gradient);
+  opacity: 0.85;
+}
+
+.agora-deliberation[data-state="merged"]::before {
+  background: var(--emerald-consensus);
+}
+
+.agora-deliberation[data-state="rejected"]::before,
+.agora-deliberation[data-state="expired"]::before {
+  background: var(--entablature-hairline);
+}
+
+.agora-deliberation-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.agora-deliberation-meta .agora-countdown {
+  margin-left: auto;
+  padding: 0.3rem 0.65rem;
+  border: 1px solid rgba(231, 194, 107, 0.35);
+  border-radius: var(--radius);
+  color: var(--sa-secondary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-feature-settings: "tnum" 1;
+}
+
+.agora-deliberation-title {
+  margin: 1rem 0 0.5rem;
+  font-family: var(--font-epigraphic);
+  font-size: clamp(1.3rem, 1rem + 1vw, 1.75rem);
+  font-weight: 500;
+  line-height: 1.25;
+}
+
+.agora-deliberation-title a {
+  color: var(--travertine-linen);
+  text-decoration: none;
+}
+
+.agora-deliberation-title a:hover {
+  text-decoration: underline;
+  text-decoration-color: var(--emerald-consensus);
+}
+
+.agora-deliberation-body {
+  margin: 0 0 1.25rem;
+  color: var(--travertine-muted);
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.agora-tally {
+  padding: 1rem 1.1rem;
+  background: var(--obsidian-oled);
+  border: 1px solid var(--entablature-hairline);
+  border-radius: var(--radius);
+  margin-bottom: 1.25rem;
+}
+
+.agora-tally-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.8125rem;
+  font-feature-settings: "tnum" 1;
+}
+
+.agora-tally-yes {
+  color: var(--emerald-bright);
+  font-weight: 700;
+}
+
+.agora-tally-no {
+  color: var(--sa-error);
+  font-weight: 700;
+}
+
+.agora-tally-bar {
+  display: flex;
+  height: 6px;
+  margin: 0.6rem 0;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--surface-column);
+}
+
+.agora-tally-bar > span {
+  display: block;
+  height: 100%;
+}
+
+.agora-tally-bar .yes {
+  background: var(--emerald-consensus);
+}
+
+.agora-tally-bar .no {
+  background: var(--sa-terracotta);
+}
+
+.agora-tally-bar .abstain {
+  background: var(--sa-surface-highest);
+}
+
+.agora-tally-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.agora-vote-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.agora-vote-actions .agora-vote-note {
+  flex-basis: 100%;
+  margin: 0.25rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.agora-btn--yes[aria-pressed="true"] {
+  background: var(--emerald-consensus);
+  color: var(--on-gradient);
+  border-color: var(--emerald-consensus);
+}
+
+.agora-btn--no[aria-pressed="true"] {
+  background: var(--sa-terracotta);
+  color: var(--on-gradient);
+  border-color: var(--sa-terracotta);
+}
+
+.agora-empty {
+  max-width: var(--agora-content-max);
+  margin: 0 auto;
+  padding: 3rem 1.5rem;
+  text-align: center;
+  border: 1px solid var(--entablature-hairline);
+  border-radius: var(--radius);
+  background: var(--slate-deep);
+}
+
+.agora-empty h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.35rem;
+  font-weight: 500;
+}
+
+.agora-empty p {
+  margin: 0 auto 1.25rem;
+  max-width: 52ch;
+  color: var(--travertine-muted);
+  line-height: 1.55;
+}
+
+/* ── 9. Perfil (Stitch: Identidade Cívica) ── */
+.agora-ui .profile-grid-avatar-wrap {
+  width: 112px;
+  height: 112px;
+  padding: 3px;
+  background: var(--aurora-gradient);
+  box-shadow: var(--aurora-glow);
+}
+
+.agora-ui .profile-grid-avatar-wrap .avatar,
+.agora-ui .profile-grid-avatar-fallback {
+  background: var(--slate-deep);
+  border-radius: 50%;
+  color: var(--travertine-linen);
+  font-family: var(--font-epigraphic);
+}
+
+.agora-ui .profile-grid-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.agora-ui .profile-grid-stat {
+  align-items: flex-start;
+  text-align: left;
+  padding: 0.85rem 1rem;
+  background: var(--slate-deep);
+  border: 1px solid var(--entablature-hairline);
+  border-radius: var(--radius);
+  text-decoration: none;
+}
+
+.agora-ui .profile-grid-stat:hover {
+  border-color: var(--entablature-active);
+  text-decoration: none;
+}
+
+.agora-ui .profile-grid-stat-value {
+  font-family: var(--font-epigraphic);
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--travertine-linen);
+  font-feature-settings: "tnum" 1, "lnum" 1;
+}
+
+.agora-ui .profile-grid-stat-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.agora-ui .profile-grid-handle {
+  font-family: var(--font-mono);
+  color: var(--emerald-bright);
+}
+
+.agora-ui .profile-grid-header {
+  border-bottom: 1px solid var(--entablature-hairline);
+}
+
+.agora-ui .profile-grid-name {
+  font-size: clamp(1.6rem, 1.2rem + 1.4vw, 2.2rem);
+  font-weight: 500;
+}
+
+.agora-ui .profile-grid-stats .stat-num,
+.agora-ui .profile-grid-stats strong {
+  font-family: var(--font-epigraphic);
+  color: var(--travertine-linen);
+  font-feature-settings: "tnum" 1;
+}
+
+.agora-ui .profile-civic-highlights-title {
+  font-family: var(--font-epigraphic);
+  letter-spacing: 0.16em;
+  color: var(--travertine-linen);
+}
+
+.agora-ui .civic-highlight-ring {
+  border-radius: var(--radius-lg);
+}
+
+.agora-ui .civic-highlight-item.is-locked {
+  opacity: 0.4;
+  filter: grayscale(1);
+}
+
+.agora-ui .civic-highlight-item.is-locked:hover {
+  opacity: 0.75;
+}
+
+.agora-ui .profile-civic-highlights-empty {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.agora-ui .profile-tabs a.active,
+.agora-ui .profile-tab.active {
+  color: var(--emerald-bright);
+  box-shadow: inset 0 -2px 0 var(--emerald-consensus);
+}
+
+/* ── 10. Mensagens ── */
+.agora-ui .dm-recent-bar {
+  max-width: var(--feed-max);
+  margin: 0 auto 0.75rem;
+  gap: 0.75rem;
+}
+
+.agora-ui .dm-inbox-list {
+  border-top: 1px solid var(--entablature-hairline);
+}
+
+.agora-ui .dm-inbox-row {
+  border: none;
+  border-bottom: 1px solid var(--entablature-hairline);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.agora-ui .dm-inbox-row:hover {
+  background: var(--slate-deep);
+  box-shadow: inset 2px 0 0 var(--emerald-consensus);
+}
+
+.agora-ui .dm-inbox-row.is-unread .dm-inbox-peer {
+  color: var(--travertine-linen);
+}
+
+.agora-ui .dm-inbox-peer {
+  font-family: var(--font-epigraphic);
+  font-weight: 600;
+  color: var(--travertine-muted);
+}
+
+.agora-ui .dm-unread-badge {
+  background: var(--emerald-consensus);
+  color: var(--on-gradient);
+}
+
+.agora-ui[data-active-tab="dm"] main#app-main:has(.agora-dm-split) {
+  max-width: 1240px;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+.agora-dm-split {
+  display: grid;
+  grid-template-columns: 340px minmax(0, 1fr);
+  height: calc(100dvh - var(--agora-topbar-h) - 2rem);
+  border: 1px solid var(--entablature-hairline);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--obsidian-oled);
+}
+
+.agora-dm-list-pane {
+  border-right: 1px solid var(--entablature-hairline);
+  padding: 1rem;
+  overflow-y: auto;
+  background: var(--slate-deep);
+}
+
+.agora-dm-list-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.agora-dm-list-pane .dm-search-input {
+  width: 100%;
+  margin-bottom: 0.75rem;
+  box-sizing: border-box;
+}
+
+.agora-dm-list-pane .dm-inbox-row.is-active {
+  background: var(--surface-monolith);
+  box-shadow: inset 2px 0 0 var(--emerald-consensus);
+}
+
+.agora-dm-thread-pane {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 1rem 1.25rem 0;
+}
+
+.agora-dm-thread-pane > .back-link {
+  display: none;
+}
+
+.agora-dm-thread-pane .dm-thread-container {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  max-width: none;
+  margin: 0;
+  border: none;
+  background: transparent;
+}
+
+.agora-dm-thread-pane .dm-thread-list {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+  overflow-y: auto;
+}
+
+.agora-ui .dm-thread-header {
+  border-bottom: 1px solid var(--entablature-hairline);
+  padding-bottom: 0.75rem;
+}
+
+.agora-ui .dm-thread-header strong {
+  font-family: var(--font-epigraphic);
+}
+
+.agora-ui .dm-bubble {
+  border-radius: var(--radius);
+}
+
+.agora-ui .dm-bubble.received {
+  background: var(--surface-monolith);
+  border: 1px solid var(--entablature-hairline);
+  color: var(--text);
+}
+
+.agora-ui .dm-bubble.sent {
+  background: var(--emerald-consensus);
+  border: none;
+  color: var(--on-gradient);
+}
+
+.agora-ui .dm-bubble.sent .dm-bubble-meta {
+  color: rgba(13, 15, 18, 0.7);
+}
+
+.agora-ui .dm-advanced {
+  margin-top: 1rem;
+  color: var(--travertine-muted);
+}
+
+.agora-ui .dm-list-item,
+.agora-ui .dm-conversation-item {
+  border-radius: 0;
+  border: none;
+  border-bottom: 1px solid var(--entablature-hairline);
+  background: transparent;
+}
+
+.agora-ui .dm-list-item:hover,
+.agora-ui .dm-conversation-item:hover {
+  background: var(--slate-deep);
+  box-shadow: inset 2px 0 0 var(--emerald-consensus);
+}
+
+/* Tablet: menu mais estreito e busca recolhida para não espremer a topbar */
+@media (min-width: 768px) and (max-width: 1099px) {
+  :root {
+    --sidebar-width: 216px;
+  }
+
+  .agora-search {
+    display: none;
+  }
+
+  .agora-topbar-vote {
+    margin-left: auto;
+  }
+}
+
+/* ── 11. Mobile (< 768px): topbar compacta + barra inferior com 5 primários + FAB Postar ── */
+@media (max-width: 767px) {
+  .agora-topbar {
+    height: 56px;
+    padding: 0 max(12px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px));
+    gap: 0.5rem;
+  }
+
+  .agora-topbar-brand {
+    display: block;
+    margin-right: auto;
+  }
+
+  .agora-wordmark-mark {
+    width: 26px;
+    height: 26px;
+  }
+
+  .agora-search,
+  .agora-topbar-vote,
+  .agora-identity-text {
+    display: none;
+  }
+
+  .agora-sidebar-brand {
+    display: none;
+  }
+
+  .agora-ui .app-sidebar.tab-bar {
+    background: color-mix(in srgb, var(--obsidian-oled) 92%, transparent);
+    border-top: 1px solid var(--entablature-hairline);
+    box-shadow: none;
+  }
+
+  .agora-ui .tab-item--secondary {
+    display: none !important;
+  }
+
+  .agora-ui .tab-item {
+    flex: 1;
+    min-width: 0;
+    padding: 6px 2px;
+    color: var(--muted);
+    background: transparent;
+  }
+
+  .agora-ui .tab-item .tab-label {
+    position: static !important;
+    display: block !important;
+    width: auto !important;
+    height: auto !important;
+    margin: 0 !important;
+    clip: auto !important;
+    overflow: visible !important;
+    white-space: nowrap;
+    font-size: 0.625rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+
+  .agora-ui .tab-item.active {
+    color: var(--emerald-bright);
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .agora-ui .tab-item.active .tab-icon {
+    filter: drop-shadow(0 0 6px rgba(120, 214, 207, 0.5));
+  }
+
+  .agora-ui .sidebar-compose-slot {
+    position: fixed;
+    right: max(16px, env(safe-area-inset-right, 0px));
+    bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+    z-index: 96;
+    padding: 0;
+  }
+
+  .agora-ui .sidebar-compose-slot .tab-item.compose-tab {
+    width: auto;
+    height: 48px;
+    min-height: 48px;
+    padding: 0 1.1rem;
+    gap: 0.4rem;
+    flex-direction: row;
+    border-radius: var(--radius) !important;
+    box-shadow: var(--aurora-glow);
+  }
+
+  .agora-ui .sidebar-compose-slot .tab-item.compose-tab .tab-label {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: var(--on-gradient);
+  }
+
+  .agora-ui main#app-main {
+    padding-top: 1rem;
+  }
+
+  .agora-page-head {
+    padding: 0 0 1rem;
+    margin-bottom: 1rem;
+  }
+
+  main#app-main:has(.feed-chrome) > .agora-page-head {
+    padding: 0 16px 1rem;
+  }
+
+  .agora-page-title {
+    font-size: 1.75rem;
+  }
+
+  .agora-page-sub {
+    font-size: 0.875rem;
+  }
+
+  .agora-ui .feed-tabs-bar {
+    padding: 0 16px 0.75rem;
+  }
+
+  .agora-community {
+    grid-template-columns: 48px 1fr;
+    padding: 1.1rem;
+  }
+
+  .agora-community-avatar {
+    width: 48px;
+    height: 48px;
+  }
+
+  .agora-metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .agora-metric {
+    padding: 0.6rem 0.65rem;
+  }
+
+  .agora-metric-value {
+    font-size: 0.875rem;
+  }
+
+  .agora-vote-hero,
+  .agora-deliberation {
+    padding: 1.25rem;
+  }
+
+  .agora-vote-hero .agora-page-head {
+    padding: 0;
+  }
+
+  .agora-stat-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+
+  .agora-stat {
+    padding: 0.75rem;
+  }
+
+  .agora-stat-value {
+    font-size: 1.5rem;
+  }
+
+  .agora-ui .profile-grid-avatar-wrap {
+    width: 88px;
+    height: 88px;
+  }
+
+  .agora-ui .profile-grid-stat {
+    padding: 0.6rem 0.5rem;
+    align-items: center;
+    text-align: center;
+  }
+
+  .agora-ui .profile-grid-stat-value {
+    font-size: 1.2rem;
+  }
+
+  .agora-ui .profile-grid-stat-label {
+    font-size: 0.625rem;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  .agora-ui .profile-civic-highlights-title {
+    letter-spacing: 0.08em;
+  }
+
+  .agora-deliberation-meta .agora-countdown {
+    margin-left: 0;
+  }
+
+  .agora-vote-actions .agora-btn {
+    flex: 1 1 calc(50% - 0.5rem);
+  }
+
+  .app-layout.in-dm-thread .agora-topbar,
+  .app-layout:has(.dm-thread-container) .agora-topbar {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .agora-btn,
+  .agora-ui .tab-item,
+  .agora-ui .feed-container > .post {
+    transition: none;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+ * 12. Sovereign Agora — componentes do design system (rev. 2026-11)
+ * ════════════════════════════════════════════════════════════════════════════ */
+
+/* Pílone quadrado: indicador de quórum/estado (substitui pontos redondos fora de presença) */
+.agora-pylon {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  background: var(--sa-tertiary);
+}
+
+.agora-pylon--teal { background: var(--sa-primary); }
+.agora-pylon--bronze { background: var(--sa-secondary); }
+.agora-pylon--muted { background: var(--sa-outline); }
+.agora-pylon--danger { background: var(--sa-terracotta); }
+
+.agora-presence-dot.is-idle {
+  background: var(--sa-outline);
+  box-shadow: none;
+}
+
+/* Selos de pedra (chips/badges) */
+.agora-stamps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0 0 0.75rem;
+}
+
+.agora-stamp,
+.agora-ui .agora-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: var(--sa-surface-high);
+  color: var(--sa-on-surface-variant);
+  font-family: var(--font-telemetry);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  line-height: 1.3;
+}
+
+.agora-stamp--teal,
+.agora-ui .agora-pill--emerald {
+  color: var(--sa-primary);
+  background: rgba(120, 214, 207, 0.1);
+}
+
+.agora-stamp--bronze,
+.agora-ui .agora-pill--amber,
+.agora-ui .agora-pill--cobalt {
+  color: var(--sa-secondary);
+  background: rgba(231, 194, 107, 0.1);
+}
+
+.agora-stamp--consensus {
+  color: var(--sa-tertiary);
+  background: rgba(105, 219, 169, 0.1);
+}
+
+.agora-stamp--danger {
+  color: var(--sa-terracotta);
+  background: rgba(232, 144, 126, 0.12);
+}
+
+/* Faixa de entablamento: "PROTOCOLO ÁGORA ◆ SEÇÃO ◆ PÁGINA" */
+.agora-protocol-strip {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 48px;
+  padding: 0.5rem 1.5rem;
+  background: var(--sa-surface);
+  border-bottom: 1px solid var(--sa-hairline);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sa-outline);
+  overflow-x: auto;
+  scrollbar-width: none;
+  white-space: nowrap;
+}
+
+.agora-protocol-strip::-webkit-scrollbar { display: none; }
+
+.agora-strip-sep {
+  color: var(--sa-secondary);
+  font-size: 0.625rem;
+}
+
+.agora-strip-section { color: var(--sa-secondary); }
+
+.agora-strip-leaf {
+  color: var(--sa-primary);
+  letter-spacing: 0.04em;
+  text-transform: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 32ch;
+}
+
+.agora-strip-status {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: var(--radius-sm);
+  background: rgba(105, 219, 169, 0.08);
+  color: var(--sa-tertiary);
+  letter-spacing: 0.04em;
+  text-transform: none;
+}
+
+/* Topbar: chip de malha + ícones (escudo → saúde do nó, engrenagem → rede) */
+.agora-topbar {
+  background: color-mix(in srgb, var(--sa-surface-low) 92%, transparent);
+}
+
+.agora-topbar-tools {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.agora-mesh-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  height: 30px;
+  padding: 0 0.65rem;
+  margin-right: 0.35rem;
+  border-radius: var(--radius-sm);
+  background: rgba(105, 219, 169, 0.1);
+  color: var(--sa-tertiary);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.agora-mesh-chip:hover { text-decoration: none; box-shadow: inset 0 0 0 1px rgba(105, 219, 169, 0.4); }
+.agora-mesh-chip.is-offline { background: rgba(232, 144, 126, 0.12); color: var(--sa-terracotta); }
+.agora-mesh-chip.is-offline .agora-presence-dot { background: var(--sa-terracotta); box-shadow: none; }
+.agora-mesh-chip.is-paused { background: rgba(231, 194, 107, 0.1); color: var(--sa-secondary); }
+.agora-mesh-chip.is-paused .agora-presence-dot { background: var(--sa-secondary); box-shadow: none; }
+
+.agora-topbar-icon {
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius);
+  color: var(--sa-on-surface-variant);
+  text-decoration: none;
+}
+
+.agora-topbar-icon:hover {
+  background: var(--sa-surface-high);
+  color: var(--sa-primary);
+  text-decoration: none;
+}
+
+.agora-topbar-icon--mobile { display: none; }
+
+.agora-identity-chip { margin-left: 0.25rem; }
+
+/* Sidebar: botão Postar (gradiente soberano), Círculos territoriais e estela do nó */
+@media (min-width: 768px) {
+  .agora-ui .agora-sidebar-brand {
+    border-bottom: none;
+    margin-bottom: 0.25rem;
+  }
+
+  .agora-ui .sidebar-compose-slot .tab-item.compose-tab {
+    background: var(--sa-gradient-sovereign);
+    color: var(--on-gradient) !important;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    min-height: 52px;
+  }
+
+  .agora-ui .sidebar-compose-slot .tab-item.compose-tab:hover {
+    box-shadow: var(--sa-bronze-halo);
+    background: var(--sa-gradient-sovereign);
+  }
+}
+
+.agora-circles {
+  margin-top: 1rem;
+  padding-top: 0.25rem;
+}
+
+.agora-circles[hidden] { display: none; }
+
+.agora-circles-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0 0.4rem 0.5rem;
+}
+
+.agora-circles-title {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sa-on-surface-variant);
+}
+
+.agora-circles-count {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--sa-secondary);
+}
+
+.agora-circle-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.6rem;
+  margin-bottom: 2px;
+  border-radius: var(--radius-sm);
+  background: var(--sa-surface-container);
+  color: var(--sa-on-surface-variant);
+  font-size: 0.8125rem;
+  text-decoration: none;
+}
+
+.agora-circle-row:hover {
+  color: var(--sa-on-surface);
+  text-decoration: none;
+  box-shadow: inset 2px 0 0 var(--sa-secondary);
+}
+
+.agora-circle-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.agora-circle-meta {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--sa-tertiary);
+}
+
+.agora-node-stele {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.35rem 0.75rem;
+  margin: 0 -1rem 0.75rem;
+  padding: 0.9rem 1.25rem;
+  background: var(--sa-surface);
+  border-top: 1px solid var(--sa-hairline);
+  border-bottom: 1px solid var(--sa-hairline);
+  font-size: 0.75rem;
+}
+
+.agora-node-stele-label {
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sa-on-surface-variant);
+}
+
+.agora-node-stele-key {
+  font-family: var(--font-hash);
+  color: var(--sa-primary);
+  text-align: right;
+}
+
+.agora-node-stele-peers {
+  grid-column: 1 / -1;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--sa-on-surface-variant);
+}
+
+/* Botões epigráficos */
+.agora-btn {
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.agora-btn--primary,
+.agora-ui .btn-primary,
+.agora-ui .btn.btn-primary {
+  background: var(--sa-gradient-sovereign);
+  color: var(--on-gradient);
+}
+
+.agora-btn--primary:hover,
+.agora-ui .btn-primary:hover {
+  box-shadow: var(--sa-bronze-halo);
+  transform: translateY(1px);
+}
+
+.agora-btn--solid {
+  background: var(--sa-primary-container);
+  color: var(--on-gradient);
+}
+
+.agora-btn--solid:hover {
+  box-shadow: var(--sa-bronze-halo);
+  transform: translateY(1px);
+  color: var(--on-gradient);
+}
+
+.agora-btn--bronze {
+  background: transparent;
+  border-color: var(--sa-secondary);
+  color: var(--sa-secondary);
+}
+
+.agora-btn--bronze:hover {
+  background: rgba(231, 194, 107, 0.08);
+  color: var(--sa-secondary);
+}
+
+.agora-btn--secondary {
+  background: var(--sa-surface-high);
+  border-color: transparent;
+  color: var(--sa-on-surface);
+}
+
+.agora-btn--secondary:hover {
+  border-color: var(--entablature-active);
+}
+
+.agora-btn--ghost {
+  background: rgba(120, 214, 207, 0.08);
+  border-color: rgba(120, 214, 207, 0.3);
+  color: var(--sa-primary);
+}
+
+.agora-btn--block { width: 100%; min-height: 52px; }
+
+/* Tábuas líticas (cards) */
+.agora-tablet {
+  position: relative;
+  padding: 1.5rem;
+  background: var(--sa-surface-container);
+  border: 1px solid var(--sa-hairline);
+  border-radius: var(--radius);
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.agora-tablet--interactive:hover {
+  background: var(--sa-surface-high);
+  box-shadow: inset 2px 0 0 var(--sa-secondary);
+}
+
+.agora-tablet--accent { border-top: 2px solid var(--sa-primary-container); }
+.agora-tablet--bronze { border-top: 2px solid var(--sa-secondary); }
+
+.agora-tablet + .agora-tablet { margin-top: 1rem; }
+
+.agora-tablet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.agora-section-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sa-secondary);
+}
+
+.agora-section-label--teal { color: var(--sa-primary); }
+.agora-section-label--muted { color: var(--sa-on-surface-variant); }
+
+.agora-section-title {
+  margin: 0;
+  font-family: var(--font-epigraphic);
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--sa-on-surface);
+}
+
+.agora-tablet p {
+  color: var(--sa-on-surface-variant);
+  line-height: 1.6;
+}
+
+/* Friso de entablamento (substitui <hr>) */
+.agora-frieze {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1.75rem 0;
+  color: var(--sa-secondary);
+}
+
+.agora-frieze::before,
+.agora-frieze::after {
+  content: "";
+  flex: 1;
+  height: 3px;
+  border-top: 1px solid var(--sa-hairline);
+  border-bottom: 1px solid var(--sa-hairline);
+}
+
+.agora-frieze-glyph {
+  font-size: 0.625rem;
+  letter-spacing: 0.3em;
+  opacity: 0.85;
+}
+
+/* Grade de chave-valor (parâmetros, condições de consenso) */
+.agora-kv {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+}
+
+.agora-kv-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  align-items: baseline;
+  padding: 0.6rem 0.75rem;
+  background: var(--sa-surface-high);
+  border-radius: var(--radius-sm);
+  font-size: 0.8125rem;
+}
+
+.agora-kv-row dt { color: var(--sa-on-surface-variant); }
+
+.agora-kv-row dd {
+  margin: 0;
+  text-align: right;
+  font-weight: 600;
+  color: var(--sa-tertiary);
+  overflow-wrap: anywhere;
+}
+
+.agora-kv-row dd.is-bronze { color: var(--sa-secondary); }
+.agora-kv-row dd.is-hash { font-family: var(--font-hash); color: var(--sa-primary); font-weight: 500; }
+
+/* Ladrilhos de métrica (Voxpedia, saúde do nó, carteira) */
+.agora-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+  margin: 0 0 1.5rem;
+}
+
+.agora-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+  padding: 1.1rem 1.2rem;
+  background: var(--sa-surface-container);
+  border: 1px solid var(--sa-hairline);
+  border-left: 3px solid var(--sa-tertiary);
+  border-radius: var(--radius);
+}
+
+.agora-tile--bronze { border-left-color: var(--sa-secondary); }
+.agora-tile--teal { border-left-color: var(--sa-primary); }
+
+.agora-tile-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sa-on-surface-variant);
+}
+
+.agora-tile-value {
+  font-family: var(--font-epigraphic);
+  font-size: 1.6rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--sa-on-surface);
+  overflow-wrap: anywhere;
+}
+
+.agora-tile-hint {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--sa-tertiary);
+}
+
+.agora-tile--bronze .agora-tile-hint { color: var(--sa-secondary); }
+
+/* Barras de apuração/armazenamento */
+.agora-bar {
+  height: 8px;
+  border-radius: var(--radius-sm);
+  background: var(--sa-surface-highest);
+  overflow: hidden;
+  display: flex;
+}
+
+.agora-bar > span { display: block; height: 100%; background: var(--sa-tertiary); }
+.agora-bar > span.is-teal { background: var(--sa-primary); }
+.agora-bar > span.is-bronze { background: var(--sa-secondary); }
+.agora-bar > span.is-danger { background: var(--sa-terracotta); }
+.agora-bar > span.is-muted { background: var(--sa-outline); }
+
+/* Inscrições (inputs): linha de base em bronze, foco teal */
+.agora-ui .agora-inscription,
+.agora-ui .compose-form input[type="text"],
+.agora-ui .compose-form textarea,
+.agora-ui .compose-card input[type="text"],
+.agora-ui .compose-card textarea {
+  background: var(--sa-surface-high);
+  border: none;
+  border-bottom: 2px solid rgba(231, 194, 107, 0.4);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  color: var(--sa-on-surface);
+}
+
+.agora-ui .agora-inscription:focus,
+.agora-ui .compose-form input[type="text"]:focus,
+.agora-ui .compose-form textarea:focus,
+.agora-ui .compose-card input[type="text"]:focus,
+.agora-ui .compose-card textarea:focus {
+  outline: none;
+  border-bottom-color: var(--sa-primary);
+  box-shadow: none;
+}
+
+.agora-search input {
+  background: var(--sa-surface-container);
+  border-color: transparent;
+  border-radius: var(--radius-sm);
+}
+
+.agora-search input:focus { box-shadow: inset 0 -2px 0 var(--sa-primary); }
+
+/* Abas e filtros como selos */
+.agora-ui .feed-tab-chip,
+.agora-filter-btn {
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.agora-ui .feed-tab-chip.active {
+  border-color: transparent;
+  background: rgba(120, 214, 207, 0.14);
+  color: var(--sa-primary);
+}
+
+.agora-filter-btn[aria-pressed="true"] {
+  background: rgba(120, 214, 207, 0.14);
+  border-color: transparent;
+  color: var(--sa-primary);
+}
+
+/* Títulos epigráficos com friso de entablamento */
+.agora-page-head {
+  border-bottom: none;
+  padding-bottom: 0.5rem;
+}
+
+.agora-page-head::after {
+  content: "";
+  flex-basis: 100%;
+  height: 3px;
+  margin-top: 0.75rem;
+  border-top: 1px solid var(--sa-hairline);
+  border-bottom: 1px solid var(--sa-hairline);
+}
+
+/* Layout de duas colunas (painel lateral + câmara principal) */
+.agora-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.5rem;
+  max-width: var(--agora-content-max);
+  margin: 0 auto;
+}
+
+@media (min-width: 1100px) {
+  .agora-split { grid-template-columns: 300px minmax(0, 1fr); }
+  .agora-split--right { grid-template-columns: minmax(0, 1fr) 300px; }
+}
+
+.agora-split-aside { display: flex; flex-direction: column; gap: 1rem; min-width: 0; }
+.agora-split-main { min-width: 0; }
+
+.agora-ui main#app-main:has(> .agora-split),
+.agora-ui main#app-main:has(> .agora-wide) {
+  max-width: calc(var(--agora-content-max) + 3rem);
+}
+
+.agora-wide {
+  max-width: var(--agora-content-max);
+  margin: 0 auto;
+}
+
+.agora-hash {
+  font-family: var(--font-hash);
+  font-size: 0.8125rem;
+  color: var(--sa-primary);
+  overflow-wrap: anywhere;
+}
+
+/* Mobile: barra inferior Stitch — Ágora · Vote · [Publicar] · Comunidades · Perfil */
+@media (max-width: 767px) {
+  .agora-protocol-strip {
+    min-height: 40px;
+    padding: 0.4rem 16px;
+    font-size: 0.6875rem;
+  }
+
+  .agora-strip-status { display: none; }
+
+  .agora-topbar-tools { gap: 0; }
+  .agora-topbar-icon--mobile { display: inline-flex; }
+  .agora-topbar-tools .agora-topbar-icon[href="#/settings/network"] { display: none; }
+
+  .agora-mesh-chip {
+    height: 26px;
+    padding: 0 0.5rem;
+    font-size: 0.625rem;
+    margin-right: 0;
+  }
+
+  .agora-wordmark-sub { display: none; }
+
+  .agora-circles,
+  .agora-node-stele { display: none !important; }
+
+  .agora-ui .app-sidebar.tab-bar { background: color-mix(in srgb, var(--sa-surface-low) 96%, transparent); }
+
+  .agora-ui .tab-nav {
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .agora-ui .tab-nav > .tab-item[data-tab="home"] { grid-column: 1; grid-row: 1; }
+  .agora-ui .tab-nav > .tab-item[data-tab="vote"] { grid-column: 2; grid-row: 1; }
+  .agora-ui .tab-nav > .tab-item[data-tab="communities"] { grid-column: 4; grid-row: 1; }
+  .agora-ui .tab-nav > .tab-item[data-tab="profile"] { grid-column: 5; grid-row: 1; }
+  .agora-ui .tab-nav > .tab-item[data-tab="dm"] { display: none !important; }
+
+  .agora-ui .tab-item.active { color: var(--sa-primary); box-shadow: none; }
+  .agora-ui .tab-item.active .tab-icon { filter: none; }
+
+  .agora-ui .tab-item .tab-label {
+    font-size: 0.5625rem !important;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .agora-ui .sidebar-compose-slot {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    z-index: 101;
+  }
+
+  .agora-ui .sidebar-compose-slot .tab-item.compose-tab {
+    width: 54px;
+    height: 54px;
+    min-height: 54px;
+    padding: 0;
+    flex-direction: column;
+    justify-content: center;
+    background: var(--sa-primary-container);
+    border-radius: var(--radius) !important;
+    box-shadow: 0 0 0 4px var(--sa-surface-low), var(--sa-chisel-shadow);
+  }
+
+  .agora-ui .sidebar-compose-slot .tab-item.compose-tab .tab-label {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    overflow: hidden !important;
+    clip: rect(0 0 0 0) !important;
+  }
+
+  .agora-ui .sidebar-compose-slot .tab-item.compose-tab .tab-svg { color: var(--on-gradient); }
+
+  .agora-tablet { padding: 1.1rem; }
+  .agora-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .agora-tile-value { font-size: 1.25rem; }
+}
+
+/* ── 13. Onboarding — "Entrada criptográfica" (Stitch tela 12) ── */
+.genesis-overlay.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: block;
+  overflow-y: auto;
+  padding: 0;
+  background:
+    radial-gradient(80% 50% at 50% 0%, rgba(75, 172, 165, 0.12), transparent 70%),
+    var(--sa-surface);
+  backdrop-filter: none;
+}
+
+.genesis-shell.oauth-enrich-dialog {
+  border: none;
+  background: none;
+  box-shadow: none;
+}
+
+.genesis-shell {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 3rem;
+  box-sizing: border-box;
+  color: var(--sa-on-surface);
+}
+
+.genesis-hero {
+  text-align: center;
+  max-width: 760px;
+  margin: 0 auto 2.5rem;
+}
+
+.genesis-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+  text-align: left;
+}
+
+.genesis-brand-mark {
+  width: 48px;
+  height: 48px;
+  padding: 6px;
+  border-radius: var(--radius);
+  background: var(--sa-surface-container);
+  box-sizing: border-box;
+}
+
+.genesis-brand-kicker {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--sa-secondary);
+}
+
+.genesis-brand-name {
+  margin: 0.15rem 0 0;
+  font-family: var(--font-epigraphic);
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.genesis-hero .agora-frieze {
+  max-width: 520px;
+  margin: 1.25rem auto 1.5rem;
+}
+
+.genesis-protocol {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 1.25rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--radius-sm);
+  background: var(--sa-surface-high);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--sa-tertiary);
+}
+
+.genesis-title {
+  margin: 0;
+  font-family: var(--font-epigraphic);
+  font-size: clamp(2.25rem, 1.4rem + 3.5vw, 3.5rem);
+  font-weight: 600;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  color: var(--sa-on-surface);
+}
+
+.genesis-title span { color: var(--sa-primary); }
+
+.genesis-lead {
+  margin: 1.25rem auto 0;
+  max-width: 56ch;
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  color: var(--sa-on-surface-variant);
+}
+
+.genesis-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2rem;
+  align-items: start;
+}
+
+@media (min-width: 960px) {
+  .genesis-grid { grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); }
+}
+
+.genesis-panel {
+  padding: 1.75rem;
+  background: var(--sa-surface-container);
+  border: 1px solid var(--sa-hairline);
+  border-radius: var(--radius);
+}
+
+.genesis-panel-kicker {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sa-secondary);
+}
+
+.genesis-panel-title {
+  margin: 0.3rem 0 1.25rem;
+  font-family: var(--font-epigraphic);
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+.genesis-method {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 1rem;
+  padding: 1.1rem 1.1rem 1.1rem 1rem;
+  margin-bottom: 0.75rem;
+  background: var(--sa-surface-high);
+  border-left: 3px solid var(--sa-outline-variant);
+  border-radius: var(--radius-sm);
+}
+
+.genesis-method--active { border-left-color: var(--sa-primary); }
+
+.genesis-method-icon {
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  background: rgba(120, 214, 207, 0.12);
+  color: var(--sa-primary);
+}
+
+.genesis-method-icon--bronze {
+  background: rgba(231, 194, 107, 0.12);
+  color: var(--sa-secondary);
+}
+
+.genesis-method-title {
+  margin: 0 0 0.3rem;
+  font-family: var(--font-epigraphic);
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.genesis-method-desc {
+  margin: 0 0 0.85rem;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--sa-on-surface-variant);
+}
+
+.genesis-method-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0.75rem 0 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sa-secondary);
+}
+
+.genesis-method-meta code { font-family: var(--font-hash); text-transform: none; letter-spacing: 0; }
+
+.genesis-inline-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.genesis-input {
+  flex: 1 1 220px;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 0.85rem;
+  font: inherit;
+  font-size: 0.9375rem;
+  box-sizing: border-box;
+}
+
+.genesis-overlay .agora-inscription {
+  background: var(--sa-surface-container);
+  border: none;
+  border-bottom: 2px solid rgba(231, 194, 107, 0.4);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  color: var(--sa-on-surface);
+}
+
+.genesis-overlay .agora-inscription:focus {
+  outline: none;
+  border-bottom-color: var(--sa-primary);
+}
+
+.genesis-inline-form .agora-btn { min-height: 44px; }
+
+.genesis-overlay .oauth-enrich-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.5rem;
+}
+
+.genesis-overlay .oauth-btn {
+  min-height: 42px;
+  border-radius: var(--radius-sm);
+  font-size: 0.8125rem;
+}
+
+.genesis-isolation {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 1rem 0 0.75rem;
+  padding: 0.75rem 0.9rem;
+  background: var(--sa-surface-lowest);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--sa-on-surface-variant);
+}
+
+.genesis-overlay .genesis-skip {
+  width: 100%;
+  background: transparent;
+  border: 1px solid var(--sa-hairline);
+  color: var(--sa-on-surface-variant);
+}
+
+.genesis-overlay .genesis-skip:hover { border-color: var(--entablature-active); color: var(--sa-on-surface); }
+
+.genesis-overlay .oauth-enrich-legal {
+  margin: 0.75rem 0 0;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--sa-outline);
+}
+
+.genesis-polis-title {
+  margin: 0;
+  font-family: var(--font-epigraphic);
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+.genesis-polis-sub {
+  margin: 0.25rem 0 1.25rem;
+  font-size: 0.875rem;
+  color: var(--sa-on-surface-variant);
+}
+
+.genesis-foundation {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 1rem;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  background: var(--sa-surface-container);
+  border-top: 2px solid var(--sa-primary-container);
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+}
+
+.genesis-foundation--bronze { border-top-color: var(--sa-secondary); }
+
+.genesis-foundation-icon {
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  background: var(--sa-surface-high);
+  color: var(--sa-on-surface-variant);
+}
+
+.genesis-foundation--bronze .genesis-foundation-icon { color: var(--sa-secondary); }
+
+.genesis-foundation-tag {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--sa-secondary);
+}
+
+.genesis-foundation-title {
+  margin: 0.2rem 0 0.4rem;
+  font-family: var(--font-epigraphic);
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.genesis-foundation-body {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--sa-on-surface-variant);
+}
+
+@media (max-width: 640px) {
+  .genesis-shell { padding: 1.5rem 16px 2.5rem; }
+  .genesis-brand-kicker { letter-spacing: 0.18em; font-size: 0.6875rem; }
+  .genesis-brand-name { font-size: 0.95rem; letter-spacing: 0.08em; }
+  .genesis-panel { padding: 1.1rem; }
+  .genesis-method { grid-template-columns: minmax(0, 1fr); }
+  .genesis-method-icon { width: 36px; height: 36px; }
+}
+
+/* ── 14. Modais, botões legados e cantina (fora de .agora-ui: #modal-container é irmão do app) ── */
+.btn {
+  border-radius: var(--radius-sm);
+  font-family: var(--font-telemetry);
+  letter-spacing: 0.02em;
+}
+
+.btn-primary,
+.modal-sheet .btn-primary.btn-cantina-enter {
+  background: var(--sa-gradient-sovereign);
+  color: var(--on-gradient);
+  border-color: transparent;
+  box-shadow: none;
+  font-weight: 700;
+}
+
+.btn-primary:hover,
+.modal-sheet .btn-primary.btn-cantina-enter:hover {
+  background: var(--sa-gradient-sovereign);
+  color: var(--on-gradient);
+  filter: none;
+  box-shadow: var(--sa-bronze-halo);
+}
+
+.btn-outline {
+  background: transparent;
+  border-color: var(--sa-hairline);
+  color: var(--sa-on-surface);
+}
+
+.btn-outline:hover {
+  border-color: var(--entablature-active);
+  color: var(--sa-on-surface);
+}
+
+.btn-cantina-enter-lg {
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.875rem;
+}
+
+.modal-overlay,
+.modal-sheet {
+  background: var(--overlay, rgba(12, 14, 17, 0.85));
+}
+
+.modal-dialog,
+.modal-card {
+  background: var(--sa-surface-container);
+  color: var(--sa-on-surface);
+  border: 1px solid var(--sa-hairline);
+  border-top: 2px solid var(--sa-secondary);
+  border-radius: var(--radius);
+  box-shadow: var(--sa-chisel-shadow);
+}
+
+.modal-dialog h2,
+.modal-dialog h3,
+.modal-card-title,
+.modal-card-heading {
+  font-family: var(--font-epigraphic);
+  font-weight: 600;
+  color: var(--sa-on-surface);
+}
+
+.modal-dialog .form-control,
+.modal-dialog input[type="text"],
+.modal-dialog input[type="password"],
+.modal-dialog textarea {
+  background: var(--sa-surface-high);
+  border: none;
+  border-bottom: 2px solid rgba(231, 194, 107, 0.4);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  color: var(--sa-on-surface);
+}
+
+.modal-dialog .form-control:focus,
+.modal-dialog input:focus,
+.modal-dialog textarea:focus {
+  outline: none;
+  border-bottom-color: var(--sa-primary);
+  box-shadow: none;
+}
+
+.cantina-dialog { border-top-color: var(--sa-primary-container); }
+
+/* Toasts */
+.toast,
+.vox-toast {
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--sa-tertiary);
+  background: var(--sa-surface-high);
+  color: var(--sa-on-surface);
+}
+
+/* Rodapé do menu: a estela do nó substitui chip de rede e atalho de conta (ambos já na topbar) */
+@media (min-width: 768px) {
+  .agora-ui .sidebar-footer .sidebar-network-slot,
+  .agora-ui .sidebar-footer .sidebar-account-slot {
+    display: none;
+  }
+
+  .agora-ui .sidebar-footer {
+    border-top: none;
+    padding-top: 0;
+  }
+
+  .agora-ui .sidebar-footer .theme-mode-toggle {
+    width: 100%;
+    justify-content: center;
+    background: transparent;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .agora-ui .sidebar-feed-slot::before { color: var(--sa-on-surface-variant); letter-spacing: 0.12em; }
+  .agora-ui .sidebar-feed-tab.active {
+    background: var(--sa-surface-container);
+    color: var(--sa-primary);
+    box-shadow: inset 2px 0 0 var(--sa-secondary);
+  }
+}
+
+/* ── 15. Diretório de Cidadãos (Stitch tela 10) ── */
+.agora-directory .agora-page-head { max-width: none; }
+
+.agora-ui .agora-directory-search {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.5rem 0.5rem 1rem;
+  margin: 0 0 1.5rem;
+  background: var(--sa-surface-container);
+  border: 1px solid var(--sa-hairline);
+  border-radius: var(--radius);
+}
+
+.agora-directory-search-icon { color: var(--sa-secondary); flex-shrink: 0; }
+
+.agora-ui .agora-directory-search input {
+  flex: 1;
+  min-width: 0;
+  height: 44px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  color: var(--sa-on-surface);
+  font: inherit;
+  font-size: 0.9375rem;
+}
+
+.agora-ui .agora-directory-search input:focus { outline: none; box-shadow: inset 0 -2px 0 var(--sa-primary); }
+
+.agora-citizen-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  margin: 0 0 1rem;
+  font-size: 0.8125rem;
+  color: var(--sa-on-surface-variant);
+}
+
+.agora-citizen-summary strong { color: var(--sa-secondary); }
+
+.agora-citizen-summary-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sa-tertiary);
+}
+
+.agora-citizen-section { margin-bottom: 1.75rem; }
+.agora-citizen-section .agora-section-label { margin-bottom: 0.75rem; }
+
+.agora-citizen-count {
+  margin-left: 0.25rem;
+  color: var(--sa-on-surface-variant);
+  font-weight: 600;
+}
+
+.agora-ui .card.people-result.agora-citizen {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) auto;
+  gap: 1.25rem;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  margin: 0 0 0.75rem;
+  background: var(--sa-surface-container);
+  border: 1px solid var(--sa-hairline);
+  border-radius: var(--radius);
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.agora-ui .card.people-result.agora-citizen:hover {
+  background: var(--sa-surface-low);
+  box-shadow: inset 2px 0 0 var(--sa-secondary);
+}
+
+.agora-citizen-avatar .avatar,
+.agora-citizen-avatar .avatar-img,
+.agora-citizen-avatar .avatar-wrap {
+  width: 64px !important;
+  height: 64px !important;
+  min-width: 64px;
+  border-radius: var(--radius-sm) !important;
+  font-family: var(--font-epigraphic);
+  font-size: 1.4rem;
+}
+
+.agora-citizen-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.5rem;
+  margin: 0 0 0.45rem;
+  font-family: var(--font-epigraphic);
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.agora-citizen-name a { color: var(--sa-on-surface); text-decoration: none; }
+.agora-citizen-name a:hover { color: var(--sa-primary); }
+
+.agora-citizen-handle {
+  font-family: var(--font-telemetry);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--sa-primary);
+}
+
+.agora-citizen-stamps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 0.5rem;
+}
+
+.agora-citizen-meta {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--sa-on-surface-variant);
+}
+
+.agora-citizen-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+@media (max-width: 767px) {
+  .agora-ui .card.people-result.agora-citizen {
+    grid-template-columns: 48px minmax(0, 1fr);
+    padding: 1rem;
+    gap: 0.85rem;
+  }
+
+  .agora-citizen-avatar .avatar,
+  .agora-citizen-avatar .avatar-img,
+  .agora-citizen-avatar .avatar-wrap {
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px;
+  }
+
+  .agora-citizen-actions {
+    grid-column: 1 / -1;
+    justify-content: stretch;
+  }
+
+  .agora-citizen-actions .agora-btn { flex: 1; }
+  .agora-ui .agora-directory-search { margin: 0 0 1rem; }
+}
+
+/* ── 16. Voxpedia — Códex (Stitch tela 13) ── */
+.agora-ui[data-active-tab="voxpedia"] main#app-main {
+  max-width: calc(var(--agora-content-max) + 3rem);
+}
+
+.agora-ui .voxpedia-page.agora-codex {
+  max-width: var(--agora-content-max);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.5rem;
+  padding-top: 0;
+}
+
+@media (min-width: 1024px) {
+  .agora-ui .voxpedia-page.agora-codex { grid-template-columns: 260px minmax(0, 1fr); align-items: start; }
+  .agora-codex-aside { position: sticky; top: calc(var(--agora-topbar-h) + 1rem); }
+}
+
+.agora-codex-aside { display: flex; flex-direction: column; gap: 1rem; min-width: 0; }
+.agora-codex-main { min-width: 0; display: flex; flex-direction: column; gap: 1rem; }
+
+.agora-ui .agora-codex-toc,
+.agora-ui .voxpedia-docs-github {
+  padding: 1.25rem;
+  background: var(--sa-surface-container);
+  border: 1px solid var(--sa-hairline);
+  border-radius: var(--radius);
+}
+
+.agora-codex-toc-title {
+  margin: 0.2rem 0 1rem;
+  font-family: var(--font-epigraphic);
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--sa-on-surface);
+}
+
+.agora-codex-toc .section-title {
+  margin: 0 0 0.4rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sa-on-surface-variant);
+}
+
+.agora-ui .agora-codex-toc .voxpedia-toc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+}
+
+.agora-ui .agora-codex-toc .voxpedia-toc-list a {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: var(--radius-sm);
+  color: var(--sa-on-surface-variant);
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.agora-ui .agora-codex-toc .voxpedia-toc-list a:hover {
+  background: var(--sa-surface-high);
+  color: var(--sa-primary);
+  text-decoration: none;
+}
+
+.agora-ui .voxpedia-docs-github .section-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sa-secondary);
+}
+
+.agora-ui .voxpedia-docs-github-lead { font-size: 0.8125rem; color: var(--sa-on-surface-variant); }
+.agora-ui .voxpedia-gh-link { color: var(--sa-primary); }
+
+.agora-ui .agora-codex-hero {
+  padding: 0.5rem 0 1.25rem;
+  background: none;
+  border: none;
+}
+
+.agora-ui .agora-codex-hero h1 {
+  margin: 0;
+  font-family: var(--font-epigraphic);
+  font-size: clamp(2.25rem, 1.5rem + 2.5vw, 3.5rem);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--sa-on-surface);
+}
+
+.agora-codex-subtitle {
+  margin: 0.25rem 0 0.75rem;
+  font-family: var(--font-epigraphic);
+  font-size: clamp(1.25rem, 1rem + 1vw, 1.75rem);
+  color: var(--sa-primary);
+}
+
+.agora-ui .agora-codex-hero .voxpedia-hero-lead {
+  max-width: 62ch;
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--sa-on-surface-variant);
+}
+
+.agora-ui .voxpedia-section.agora-entry {
+  padding: 1.5rem 1.75rem;
+  background: var(--sa-surface-container);
+  border: 1px solid var(--sa-hairline);
+  border-radius: var(--radius);
+}
+
+.agora-entry-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6rem 0.9rem;
+  margin-bottom: 0.75rem;
+}
+
+.agora-entry-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 28px;
+  padding: 0 0.4rem;
+  border-radius: var(--radius-sm);
+  background: var(--sa-surface-high);
+  color: var(--sa-primary);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  font-feature-settings: "tnum" 1;
+}
+
+.agora-ui .agora-entry-title {
+  margin: 0;
+  font-family: var(--font-epigraphic);
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: var(--sa-on-surface);
+}
+
+.agora-ui .agora-entry .voxpedia-lead {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--sa-on-surface);
+}
+
+.agora-ui .voxpedia-layer {
+  background: var(--sa-surface-high);
+  border: none;
+  border-left: 2px solid var(--sa-outline-variant);
+  border-radius: var(--radius-sm);
+}
+
+.agora-ui .voxpedia-layer[open] { border-left-color: var(--sa-secondary); }
+.agora-ui .voxpedia-layer > summary { color: var(--sa-on-surface); font-weight: 600; }
+.agora-ui .voxpedia-layer > summary::before { color: var(--sa-secondary); }
+.agora-ui .voxpedia-layer-body { color: var(--sa-on-surface-variant); }
+.agora-ui .voxpedia-layer .voxpedia-layer { background: var(--sa-surface-container); }
+
+.agora-ui .voxpedia-footer {
+  padding: 1rem 1.25rem;
+  background: transparent;
+  border: none;
+  border-top: 1px solid var(--sa-hairline);
+  border-radius: 0;
+}
+
+@media (max-width: 767px) {
+  .agora-ui .voxpedia-page.agora-codex { padding: 0 16px; }
+  .agora-ui .voxpedia-section.agora-entry { padding: 1.1rem; }
+  .agora-ui .agora-entry-title { font-size: 1.3rem; }
+}
+
+/* ── 17. Saúde do nó e Carteira Soberana (Stitch telas 11 e 14) ── */
+.agora-node-health .agora-tablet + .agora-tablet,
+.agora-wallet .agora-tablet + .agora-tablet { margin-top: 1rem; }
+
+.agora-ui .agora-node-health .card,
+.agora-ui .agora-wallet .card {
+  background: var(--sa-surface-container);
+  border: 1px solid var(--sa-hairline);
+  border-radius: var(--radius);
+}
+
+.agora-node-health .agora-bar { margin: 0.25rem 0 0.75rem; height: 10px; }
+.agora-node-health .status-storage-note { margin: 0; font-size: 0.8125rem; }
+.agora-node-health .agora-kv { margin: 1rem 0; }
+.agora-node-health .status-mirror-line p { margin: 0 0 0.75rem; font-size: 0.8125rem; color: var(--sa-on-surface-variant); }
+
+.agora-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 2px;
+  font-size: 0.8125rem;
+}
+
+.agora-table th {
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sa-on-surface-variant);
+}
+
+.agora-table td {
+  padding: 0.6rem 0.75rem;
+  background: var(--sa-surface-high);
+  color: var(--sa-on-surface);
+  font-feature-settings: "tnum" 1;
+}
+
+.agora-table td:first-child { border-radius: var(--radius-sm) 0 0 var(--radius-sm); }
+.agora-table td:last-child { border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+.agora-table td:nth-child(2) { color: var(--sa-tertiary); font-weight: 600; }
+.agora-table td:nth-child(3) { color: var(--sa-secondary); font-weight: 600; }
+
+.agora-ui .agora-wallet-hero {
+  position: relative;
+  padding: 1.75rem;
+  margin-bottom: 1rem;
+  overflow: hidden;
+}
+
+.agora-ui .agora-wallet-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: var(--sa-gradient-entablature);
+}
+
+.agora-wallet-balance {
+  margin: 0.4rem 0 0.25rem;
+  font-family: var(--font-epigraphic);
+  font-size: clamp(2rem, 1.4rem + 2vw, 3rem);
+  line-height: 1.1;
+  color: var(--sa-on-surface);
+}
+
+.agora-wallet-balance strong { font-weight: 600; }
+
+.agora-wallet-address,
+.agora-wallet-empty {
+  margin: 0 0 1.25rem;
+  font-size: 0.875rem;
+  color: var(--sa-on-surface-variant);
+}
+
+.agora-wallet-pix {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  margin-bottom: 1.25rem;
+  background: var(--sa-surface-lowest);
+  border-radius: var(--radius-sm);
+}
+
+.agora-wallet-pix > div { display: flex; flex-direction: column; gap: 0.25rem; min-width: 0; }
+
+.agora-wallet-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.6rem;
+}
+
+.agora-wallet-actions .agora-btn { min-height: 52px; }
+
+.agora-ui .agora-wallet .wallet-import textarea {
+  width: 100%;
+  min-height: 110px;
+  padding: 0.75rem;
+  box-sizing: border-box;
+  font-family: var(--font-hash);
+  font-size: 0.8125rem;
+}
+
+.agora-ui .agora-wallet .wallet-import .form-actions { margin-top: 0.75rem; display: flex; justify-content: flex-end; }
+.agora-wallet .agora-split-aside .agora-btn--block { margin-top: 0.5rem; min-height: 44px; }
+
+/* ── 18. Compositor unificado (Stitch tela 9) ── */
+.agora-ui .compose-card.agora-composer {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 1.75rem 2rem 2rem;
+  background: var(--sa-surface-container);
+  border: 1px solid var(--sa-hairline);
+  border-radius: var(--radius);
+  box-shadow: none;
+}
+
+.agora-ui .agora-composer .compose-header-bar,
+.agora-composer-head {
+  display: block;
+  margin: 0 0 1.5rem;
+  padding: 0;
+  border: none;
+  background: none;
+  position: static;
+}
+
+.agora-composer-head .back-link {
+  display: inline-block;
+  margin-bottom: 0.75rem;
+  font-size: 0.8125rem;
+  color: var(--sa-on-surface-variant);
+}
+
+.agora-ui .agora-composer .agora-page-title {
+  margin: 0;
+  font-size: clamp(1.75rem, 1.2rem + 2vw, 2.5rem);
+  text-align: left;
+}
+
+.agora-field-label {
+  display: block;
+  margin: 0 0 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sa-on-surface-variant);
+}
+
+.agora-field-label .agora-muted { text-transform: none; letter-spacing: 0; font-weight: 500; }
+
+.agora-compose-types { margin: 0 0 1.5rem; }
+
+.agora-compose-types-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.agora-compose-type {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.85rem 0.9rem;
+  background: var(--sa-surface-high);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.agora-compose-type:hover {
+  text-decoration: none;
+  border-color: var(--entablature-active);
+}
+
+.agora-compose-type.is-active {
+  background: var(--sa-surface-highest);
+  border-color: rgba(120, 214, 207, 0.4);
+  box-shadow: inset 0 -2px 0 var(--sa-primary);
+}
+
+.agora-compose-type-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--sa-on-surface);
+}
+
+.agora-compose-type.is-active .agora-compose-type-label { color: var(--sa-primary); }
+
+.agora-compose-type-hint {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sa-on-surface-variant);
+}
+
+.agora-compose-field { margin: 0 0 1.25rem; }
+.agora-compose-target { display: flex; flex-direction: column; margin: 0 0 1.25rem; }
+
+.agora-ui .agora-composer .agora-inscription,
+.agora-ui .agora-composer .form-control {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.75rem 0.9rem;
+  background: var(--sa-surface-high);
+  border: none;
+  border-bottom: 2px solid rgba(231, 194, 107, 0.4);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  color: var(--sa-on-surface);
+  font: inherit;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+.agora-ui .agora-composer .agora-inscription:focus,
+.agora-ui .agora-composer .form-control:focus {
+  outline: none;
+  border-bottom-color: var(--sa-primary);
+  box-shadow: none;
+}
+
+.agora-ui .agora-composer .agora-inscription--title {
+  font-family: var(--font-epigraphic);
+  font-size: 1.25rem;
+}
+
+.agora-ui .agora-composer .compose-textarea-seamless { min-height: 200px; resize: vertical; }
+
+.agora-ui .agora-composer label:not(.agora-field-label):not(.btn) {
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sa-on-surface-variant) !important;
+}
+
+.agora-ui .agora-composer .compose-advanced-drawer {
+  margin: 0 0 1.25rem;
+  padding: 0.85rem 1rem;
+  background: var(--sa-surface-high);
+  border-left: 2px solid var(--sa-outline-variant);
+  border-radius: var(--radius-sm);
+}
+
+.agora-ui .agora-composer .compose-advanced-drawer[open] { border-left-color: var(--sa-secondary); }
+
+.agora-ui .agora-composer .compose-advanced-summary {
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sa-secondary);
+}
+
+.agora-ui .agora-composer .civic-tag-btn {
+  border-radius: var(--radius-sm);
+  background: var(--sa-surface-container);
+  border: 1px solid var(--sa-hairline);
+  color: var(--sa-on-surface-variant);
+}
+
+.agora-ui .agora-composer .civic-tag-btn.active {
+  background: rgba(120, 214, 207, 0.14);
+  border-color: transparent;
+  color: var(--sa-primary);
+}
+
+.agora-signature-panel {
+  margin: 0 0 1.5rem;
+  padding: 1rem 1.1rem;
+  background: var(--sa-surface-lowest);
+  border: 1px solid var(--sa-hairline);
+  border-radius: var(--radius-sm);
+}
+
+.agora-signature-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.agora-signature-body { margin: 0; font-size: 0.8125rem; line-height: 1.6; color: var(--sa-on-surface-variant); }
+
+.agora-composer-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.agora-composer-actions .agora-btn { min-height: 52px; padding: 0 1.5rem; }
+
+@media (max-width: 767px) {
+  .agora-ui .compose-card.agora-composer { padding: 1.1rem 16px 1.5rem; border-radius: 0; border-left: none; border-right: none; }
+  .agora-compose-types-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .agora-composer-actions .agora-btn { flex: 1; }
+}
+
+/* ── 19. Remapeamento das variáveis de marca legadas (--brand-*) ──
+ * style.css tinge --brand-chrome por período do dia (data-sky-period) com seletores de até
+ * (0,3,0). O Sovereign Agora é tema único: `:not(#sa-brand)` soma especificidade de ID e
+ * garante que a paleta Stitch prevaleça sem !important. Amarelo/azul ficam (letras do logo). */
+:root:not(#sa-brand) {
+  --brand-chrome: var(--sa-primary-container);
+  --brand-chrome-hover: var(--sa-primary);
+  --brand-navy: var(--sa-primary-container);
+  --brand-green: var(--sa-tertiary-container);
+}
+
+/* Comunidade (cabeçalho Orkut → tábua lítica com friso teal→bronze) */
+.agora-ui .community-vox-accent-rail { background: var(--sa-gradient-entablature); }
+
+.agora-ui .community-vox-header {
+  background: var(--sa-surface-container);
+  border: 1px solid var(--sa-hairline);
+  border-radius: var(--radius);
+}
+
+.agora-ui .community-vox-kicker {
+  color: var(--sa-secondary);
+  letter-spacing: 0.12em;
+  font-weight: 700;
+}
+
+.agora-ui .community-vox-name { font-family: var(--font-epigraphic); color: var(--sa-on-surface); }
+
+.agora-ui .community-vox-chip {
+  border-radius: var(--radius-sm);
+  border: none;
+  background: var(--sa-surface-high);
+  color: var(--sa-on-surface-variant);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.agora-ui .community-vox-join-pill {
+  border-radius: var(--radius-sm);
+  background: var(--sa-primary-container);
+  color: var(--on-gradient);
+  box-shadow: none;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.agora-ui .community-vox-join-pill.is-member {
+  background: rgba(105, 219, 169, 0.14);
+  color: var(--sa-tertiary);
+}
+
+.agora-ui .tab-btn { border-radius: var(--radius-sm); letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.75rem; }
+.agora-ui .tab-btn.active { color: var(--sa-primary); box-shadow: inset 0 -2px 0 var(--sa-secondary); }
+
+/* Compositor: alvo como inscrição (não pílula) */
+.agora-ui .agora-composer .compose-pill-group.agora-compose-target {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: 0;
+  text-align: left;
+}
+
+.agora-ui .agora-composer .compose-pill-input {
+  width: 100%;
+  text-align: left;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+
+.agora-composer-head .agora-kicker { display: flex; }
+
+.agora-field-hint {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.75rem;
+  color: var(--sa-outline);
+}
+
+.agora-ui .agora-composer .agora-diff-input {
+  font-family: var(--font-hash);
+  font-size: 0.8125rem;
+}
+
+@media (min-width: 768px) and (max-width: 1099px) {
+  .agora-wordmark-sub { display: none; }
+}

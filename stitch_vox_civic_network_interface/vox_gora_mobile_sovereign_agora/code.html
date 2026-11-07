@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="pt-BR"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Domine:wght@400;500;600;700&amp;family=Work+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#111316;color:#e2e2e6;}body{overscroll-behavior:none;-webkit-tap-highlight-color:transparent;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "surface-container-lowest": "#0c0e11", "surface-bright": "#37393d", "on-secondary-fixed": "#251a00", "on-background": "#e2e2e6", "on-primary": "#003734", "tertiary": "#69dba9", "tertiary-container": "#39b081", "on-secondary-container": "#eec971", "surface-variant": "#333538", "outline-variant": "#3e4948", "on-tertiary-fixed-variant": "#005137", "primary-container": "#4baca5", "on-surface": "#e2e2e6", "secondary-fixed": "#ffdf97", "inverse-on-surface": "#2f3034", "surface-container-low": "#1a1c1f", "surface": "#111316", "background": "#111316", "inverse-primary": "#006a65", "on-error-container": "#ffdad6", "error-container": "#93000a", "on-secondary": "#3e2e00", "secondary-fixed-dim": "#e7c26b", "on-secondary-fixed-variant": "#5a4300", "secondary-container": "#6e5301", "tertiary-fixed": "#86f8c4", "on-surface-variant": "#bdc9c7", "on-tertiary-container": "#003d28", "on-primary-fixed": "#00201e", "surface-container-high": "#282a2d", "tertiary-fixed-dim": "#69dba9", "on-tertiary-fixed": "#002114", "inverse-surface": "#e2e2e6", "surface-dim": "#111316", "on-tertiary": "#003825", "outline": "#879391", "primary-fixed": "#94f3eb", "secondary": "#e7c26b", "on-primary-fixed-variant": "#00504c", "on-error": "#690005", "on-primary-container": "#003c38", "error": "#ffb4ab", "surface-container-highest": "#333538", "surface-tint": "#78d6cf", "surface-container": "#1e2023", "primary-fixed-dim": "#78d6cf", "primary": "#78d6cf" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "gutter": "2rem", "gutter-mobile": "1rem", "space-sm": "0.5rem", "space-xl": "2.5rem", "space-2xl": "4rem", "margin": "3rem", "space-lg": "1.5rem", "space-md": "1rem", "space-xs": "0.25rem", "margin-mobile": "1.25rem" }, "fontFamily": { "headline-md": ["Domine"], "display": ["Domine"], "title-monument": ["Domine"], "body-md": ["Work Sans"], "body-sm": ["Work Sans"], "headline-lg": ["Domine"], "code-hash": ["Work Sans"], "headline-sm": ["Domine"], "headline-lg-mobile": ["Domine"], "label-sovereign": ["Work Sans"], "body-lg": ["Work Sans"], "display-mobile": ["Domine"] }, "fontSize": { "headline-md": ["1.75rem", { "lineHeight": "2.25rem", "letterSpacing": "0em", "fontWeight": "500" }], "display": ["3.5rem", { "lineHeight": "4rem", "letterSpacing": "-0.02em", "fontWeight": "600" }], "title-monument": ["1rem", { "lineHeight": "1.5rem", "letterSpacing": "0.15em", "fontWeight": "700" }], "body-md": ["0.9375rem", { "lineHeight": "1.5rem", "letterSpacing": "0.01em", "fontWeight": "400" }], "body-sm": ["0.8125rem", { "lineHeight": "1.25rem", "letterSpacing": "0.02em", "fontWeight": "400" }], "headline-lg": ["2.5rem", { "lineHeight": "3rem", "letterSpacing": "-0.015em", "fontWeight": "500" }], "code-hash": ["0.8125rem", { "lineHeight": "1.25rem", "letterSpacing": "0.05em", "fontWeight": "500" }], "headline-sm": ["1.25rem", { "lineHeight": "1.75rem", "letterSpacing": "0.02em", "fontWeight": "600" }], "headline-lg-mobile": ["1.75rem", { "lineHeight": "2.25rem", "letterSpacing": "0em", "fontWeight": "500" }], "label-sovereign": ["0.75rem", { "lineHeight": "1rem", "letterSpacing": "0.12em", "fontWeight": "600" }], "body-lg": ["1.125rem", { "lineHeight": "1.75rem", "letterSpacing": "0.01em", "fontWeight": "400" }], "display-mobile": ["2.25rem", { "lineHeight": "2.75rem", "letterSpacing": "-0.01em", "fontWeight": "600" }] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface text-on-surface font-body-md text-body-md min-h-screen flex flex-col selection:bg-primary selection:text-on-primary"><header class="fixed top-0 inset-x-0 z-50 bg-surface/85 backdrop-blur-xl pt-safe shadow-[0_1px_8px_rgba(0,0,0,0.4)]"><div class="h-16 px-space-md flex items-center justify-between"><div class="flex items-center gap-space-sm"><div class="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center bg-surface-container-high"><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida/AEtjO1V3cLZIJpH5zYoVr-w456O18NDcQ3cwivCksvVLsxSKGh6jHd8xpVW_KrsJvKr5SGU5s3i3Q-b2dAYD90Rdzy0CL_ojWxHf7G-0j3aziBYjmUuw8i8RK2sgoZETsZstG7UP5Zk5ax_xcXixLiyNCZi3HOUJnLheHeiiEariDdOoUQZSW8EwZx67-HgFGHB4RHUIDAl9cLiDEqfVeV92rQO_HZ90F7Iur2-4bTY7oxJZbKvn0u85plwIJQ"/></div><div class="flex flex-col"><div class="flex items-center gap-1.5"><span class="font-title-monument text-title-monument text-secondary tracking-widest uppercase">VOX</span><span class="w-1 h-1 rounded-full bg-outline-variant"></span><span class="font-headline-sm text-headline-sm text-on-surface">Agora</span></div><span class="font-label-sovereign text-label-sovereign text-on-surface-variant uppercase tracking-wider">Ágora Soberana</span></div></div><div class="flex items-center gap-space-sm"><div class="flex items-center gap-1 px-2.5 py-1 bg-surface-container-low rounded-full"><span class="w-2 h-2 rounded-full bg-tertiary animate-pulse"></span><span class="font-code-hash text-code-hash text-tertiary">P2P MESH</span></div></div></div></header><main class="flex-1 flex flex-col relative w-full px-space-md pt-16 pb-28 bg-surface"><div class="flex flex-col w-full pb-8">
+<!-- Círculos Territoriais / Histórias da Célula -->
+<section class="w-full pt-1 pb-4 overflow-x-auto scrollbar-none flex items-center gap-3">
+<!-- Célula Ativa / Seu Território -->
+<button class="flex flex-col items-center gap-1.5 shrink-0 group focus:outline-none text-left" type="button">
+<div class="relative p-[1.5px] rounded-full bg-gradient-to-tr from-primary to-secondary">
+<div class="w-14 h-14 rounded-full overflow-hidden bg-surface-container-lowest p-[2px]">
+<img class="w-full h-full object-cover rounded-full" data-alt="Close up architectural photo of leafy urban boulevard in Pinheiros São Paulo with modern stone benches and lush jacaranda trees, cinematic dusk golden lighting, documentary style" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBiobYYeu0Ql3RSXoln1U8mzlZf-n0A5hk2fMmlP5wyXNUanI4CeHHk2HyU4r5Sj9V8-uCDjmKVHvYJRhW0AUxGeOa4XkJVXd0XsZ5Vw_EG6wRgMlAlzdSq9MI569HeDfEhseWHSTxc9jQPpmuJ9OalD0F4l0nLtlg9HEn5d8UHiwIpHvVWv9UU9puIb3Xl8C6sBv6dzDhbu5EPTjWoRG9NYxnFjWnHUfvSKZd237g"/>
+</div>
+<span class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-tertiary shadow-sm flex items-center justify-center">
+<span class="w-1.5 h-1.5 rounded-full bg-on-tertiary"></span>
+</span>
+</div>
+<span class="font-label-sovereign text-label-sovereign text-primary font-semibold tracking-wider uppercase">Pinheiros</span>
+</button>
+<!-- Outros Territórios Federados -->
+<button class="flex flex-col items-center gap-1.5 shrink-0 opacity-80 hover:opacity-100 transition-opacity focus:outline-none text-left" type="button">
+<div class="p-[1px] rounded-full bg-surface-variant">
+<div class="w-14 h-14 rounded-full overflow-hidden bg-surface-container-lowest p-[2px]">
+<img class="w-full h-full object-cover rounded-full" data-alt="Dense urban canopy and historical neoclassical brick facades of Jardins district in Sao Paulo, moody twilight ambient lighting with antique street lamps" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBOR94XlQfK853-7DIyGB_FXYGxfRz0ElXBZ0oGu6Pl0BVjhugWhdE2xNdPCFojdfoNlLsA8R_Flbfp_WBh3I77BsOXCmSq61-u-q7Xi5pj2T7sgbw2aeL0dgRCSHDXGY0vHWsmhVRUDsmGPXNPJ8ANk6ZrEtTTBvto1nu2J9SYIeM4VWjwYf2_tkYA6_MSmPJXTxlnt6TTdSEXnoNAEcOSd1cGcjrbOVxXusvaxX8"/>
+</div>
+</div>
+<span class="font-label-sovereign text-label-sovereign text-on-surface-variant uppercase tracking-wider">Jardins</span>
+</button>
+<button class="flex flex-col items-center gap-1.5 shrink-0 opacity-80 hover:opacity-100 transition-opacity focus:outline-none text-left" type="button">
+<div class="p-[1px] rounded-full bg-surface-variant">
+<div class="w-14 h-14 rounded-full overflow-hidden bg-surface-container-lowest p-[2px]">
+<img class="w-full h-full object-cover rounded-full" data-alt="Sloped streets and vibrant architectural stone arches of Bela Vista Bixiga São Paulo with hanging community planters and festive communal atmosphere" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC8xkPajQwHkPVZm5AatrC9tc-w8x27oCxXY_42ViVDKYYuf0gmrscLjamEfPlvariUpk4wYx2K1sMOiJ7zQCuEd-2Dn4bRmDp5BWERlkTp3hlrI1jLMpReyuWCI5ni9Y1L4MuKlQJUcDotIAoQmXEhjwxcEo5DdUiCw-9C77zq8gIUvhX5SSH4EfW4AGH2HWcT_2HEkq3ng19z9yZWCHHJT5swdHOL5piixuzRYTc"/>
+</div>
+</div>
+<span class="font-label-sovereign text-label-sovereign text-on-surface-variant uppercase tracking-wider">Bela Vista</span>
+</button>
+<button class="flex flex-col items-center gap-1.5 shrink-0 opacity-80 hover:opacity-100 transition-opacity focus:outline-none text-left" type="button">
+<div class="p-[1px] rounded-full bg-surface-variant">
+<div class="w-14 h-14 rounded-full overflow-hidden bg-surface-container-lowest p-[2px]">
+<img class="w-full h-full object-cover rounded-full" data-alt="Cobblestone alleys and mural covered ochre walls in Vila Madalena São Paulo framed by vibrant urban vegetation, soft morning mist and warm sunlight" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQhmg2b9P0sd0sTJKkYrSy0M8q8MPjzx1PCNVLTnpMx7zdg6utMicsmmGGoQ9IWfyra6Tt7zNnyf7WYLZMt2-Dc18xPjiI0O7g2-7Hof7uBnNvYkySd8TAzQCTz7PFcMqMdz4TE2dEWgFX6_dQL9W4Q5wPn4Zjg2vIyhbfOW4bIabxjlKoOZLD-edLkNON7n7zhn4aIo17ddVblEQQ-hrcy2by2b7ZB3f2t4nwGOk"/>
+</div>
+</div>
+<span class="font-label-sovereign text-label-sovereign text-on-surface-variant uppercase tracking-wider">V. Madalena</span>
+</button>
+<!-- Explorar mais Células -->
+<button class="flex flex-col items-center gap-1.5 shrink-0 opacity-60 hover:opacity-100 transition-opacity focus:outline-none text-left" type="button">
+<div class="w-14 h-14 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined text-lg">explore</span>
+</div>
+<span class="font-label-sovereign text-label-sovereign text-on-surface-variant uppercase tracking-wider">Mais</span>
+</button>
+</section>
+<!-- Entablature Line Minimal -->
+<div class="w-full h-[1px] bg-gradient-to-r from-transparent via-outline-variant/40 to-transparent my-2"></div>
+<!-- FEED UNIFICADO -->
+<div class="flex flex-col space-y-7 mt-3">
+<!-- POST 1: Proposta Cívica Deliberativa (Dra. Helena Morais) -->
+<article class="flex flex-col w-full text-on-surface" id="deliberacao-782">
+<!-- Metadados do Autor & Status Constitucional -->
+<div class="flex items-start justify-between gap-2 mb-2.5">
+<div class="flex items-center gap-2.5 min-w-0">
+<div class="relative shrink-0">
+<img class="w-10 h-10 rounded-full object-cover" data-alt="Portrait photo of a Brazilian woman urbanist and environmental architect in her late 30s with wire glasses, natural curls, serene expression, atmospheric architectural studio background with sketches" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAEzAhHvk8GnI6SM81EZ_Q3MDJ7l48kNgmn_7gbxw9uqUc-TTQPialfIJgXrEEAXqC4gYAfabl5xWtfVdbjfygEdH3Wmx1ZzwO1eyrjwOGaYTk4_B9ZkHsbgTlAmFaUgmNCZ-aw5Y5K2D2C7MUvL7sCsBFk-4RnHIbPPSUZNry9_SVbPmhnxf-EbK7oEEfKNRjQVt3vpM8nmDAGs6o3W5vKlQVc6Rcaiw0VcwwN5bk"/>
+<div class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[10px] text-on-primary font-bold">verified</span>
+</div>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-1.5">
+<span class="font-headline-sm text-body-md font-semibold text-on-surface truncate">Dra. Helena Morais</span>
+<span class="font-code-hash text-code-hash text-secondary font-medium">#CÉL-PIN</span>
+</div>
+<div class="flex items-center gap-1 font-label-sovereign text-label-sovereign text-on-surface-variant">
+<span>@helena.civica</span>
+<span>•</span>
+<span>há 2h via LoRa</span>
+</div>
+</div>
+</div>
+<!-- Quórum Badge P2P -->
+<div class="flex items-center gap-1.5 px-2 py-0.5 bg-surface-container-high rounded text-right shrink-0">
+<span class="w-1.5 h-1.5 rounded-sm bg-tertiary"></span>
+<span class="font-code-hash text-code-hash text-tertiary font-medium">QUÓRUM 78%</span>
+</div>
+</div>
+<!-- Título Monumental & Ementa da Proposta -->
+<div class="space-y-1.5">
+<div class="flex items-center gap-2">
+<span class="font-label-sovereign text-label-sovereign tracking-widest text-primary uppercase font-bold">Deliberação Soberana #089</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface leading-snug">
+          Expansão dos Corredores Verdes &amp; Drenagem Biosustentável na Rua dos Pinheiros
+        </h2>
+<p class="font-body-md text-body-md text-on-surface-variant leading-relaxed">
+          Submeto à chancela do conselho descentralizado o plano de conversão de 640m² de asfalto ocioso em jardins de chuva polinizadores e microrreservas hídricas para mitigação de ilhas de calor entre a Fradique Coutinho e a Pedroso de Moraes.
+        </p>
+</div>
+<!-- Registro Fotográfico da Intervenção -->
+<div class="relative w-full h-56 rounded-lg overflow-hidden my-3">
+<img class="w-full h-full object-cover" data-alt="High quality architectural visualization photo of a modern street with rain gardens, native Brazilian Atlantic forest vegetation, micro swales, porous light stone paving, pedestrians walking peacefully under sunset glow" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCNlW8viL9ShevYwMRjiZ2wjv0Utlep_fVLUkuaUZKUYCeHQOL8uCPWl_yIC7nAItDI_d7MAiIvQx709l6wn886e6fQVzeKQlAObkOX3cc4vIp8PkaeEu4Yy7vvtw1tuu-yY1901sUX4uMOpRMW2diMs14eZ1JA26BgLB2YC_LzrbphwTDmx677jjumbYoHNymGpIMxdL1fresbMsuuiI2MAiOE-wW6XIe5b4vGoMw"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest/90 via-surface-container-lowest/20 to-transparent flex items-end p-3">
+<div class="flex items-center justify-between w-full">
+<span class="font-code-hash text-code-hash text-on-surface/90 flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-primary">map</span>
+              Trecho I • Polígono de Drenagem 04
+            </span>
+<span class="font-label-sovereign text-label-sovereign bg-surface-container-lowest/80 px-2 py-0.5 rounded text-secondary-fixed">
+              Custo Estimado: 4.2k VOX
+            </span>
+</div>
+</div>
+</div>
+<!-- Barra de Consenso / Quórum Visual -->
+<div class="flex flex-col gap-1.5 my-1">
+<div class="flex items-center justify-between font-label-sovereign text-label-sovereign">
+<span class="text-tertiary font-semibold flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary animate-pulse"></span>
+            Aprovação Soberana (1.428 Chaves)
+          </span>
+<span class="font-code-hash text-code-hash text-on-surface-variant">Faltam 42 p/ Cláusula Pétrea</span>
+</div>
+<div class="w-full h-1 bg-surface-container rounded-full overflow-hidden flex">
+<div class="h-full bg-gradient-to-r from-primary-container via-primary to-tertiary" style="width: 78%;"></div>
+<div class="h-full bg-error-container opacity-60" style="width: 6%;"></div>
+</div>
+</div>
+<!-- Botões de Ação Cívico-Social -->
+<div class="flex items-center justify-between pt-3 text-on-surface-variant">
+<button class="flex items-center gap-1.5 font-label-sovereign text-label-sovereign hover:text-primary transition-colors focus:outline-none" onclick="this.classList.toggle('text-primary')" type="button">
+<span class="material-symbols-outlined text-[20px]">how_to_vote</span>
+<span class="tracking-wider">ENDOSSAR</span>
+<span class="font-code-hash text-code-hash ml-0.5 text-on-surface-variant">1.4k</span>
+</button>
+<button class="flex items-center gap-1.5 font-label-sovereign text-label-sovereign hover:text-secondary transition-colors focus:outline-none" type="button">
+<span class="material-symbols-outlined text-[20px]">forum</span>
+<span class="tracking-wider">DELIBERAR</span>
+<span class="font-code-hash text-code-hash ml-0.5 text-on-surface-variant">89</span>
+</button>
+<button class="flex items-center gap-1.5 font-label-sovereign text-label-sovereign hover:text-tertiary transition-colors focus:outline-none" type="button">
+<span class="material-symbols-outlined text-[20px]">repeat</span>
+<span class="tracking-wider">PROPAGAR</span>
+<span class="font-code-hash text-code-hash ml-0.5 text-on-surface-variant">312</span>
+</button>
+<button class="flex items-center gap-1 font-label-sovereign text-label-sovereign hover:text-secondary-fixed transition-colors focus:outline-none" title="Assinatura P2P Lightning" type="button">
+<span class="material-symbols-outlined text-[20px] text-secondary">bolt</span>
+<span class="tracking-wider text-secondary">ZAP</span>
+</button>
+</div>
+</article>
+<!-- Linha Divisora Sutil com Glifo Geométrico da Ágora -->
+<div class="flex items-center gap-3 w-full py-1">
+<div class="flex-1 h-[1px] bg-surface-variant/50"></div>
+<div class="w-1.5 h-1.5 rotate-45 bg-outline-variant/60"></div>
+<div class="flex-1 h-[1px] bg-surface-variant/50"></div>
+</div>
+<!-- POST 2: Alerta Territorial IoT / Qualidade do Ar LoRaWAN -->
+<section class="flex flex-col w-full text-on-surface">
+<div class="flex items-center justify-between mb-2">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-tertiary animate-ping"></div>
+<span class="font-label-sovereign text-label-sovereign text-tertiary tracking-widest uppercase font-semibold">
+            Malha de Sensores LoRaWAN • Zona Oeste
+          </span>
+</div>
+<span class="font-code-hash text-code-hash text-on-surface-variant">Sinc: 30s atrás</span>
+</div>
+<!-- Painel Esmeralda Embelezado (Sem borda, integrado ao fluxo) -->
+<div class="relative w-full rounded-lg bg-gradient-to-r from-surface-container-low via-surface-container-high/40 to-surface-container-low p-3.5 overflow-hidden">
+<!-- Aurora Sutil no Fundo -->
+<div class="absolute -top-12 -right-12 w-32 h-32 bg-primary/10 rounded-full blur-2xl pointer-events-none"></div>
+<div class="flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-label-sovereign text-label-sovereign text-on-surface-variant uppercase">Índice Atmosférico Cívico</span>
+<div class="flex items-baseline gap-2 mt-0.5">
+<span class="font-headline-md text-headline-md text-tertiary font-bold">14</span>
+<span class="font-title-monument text-body-md text-tertiary uppercase">AQI • Excelente</span>
+</div>
+</div>
+<!-- Mini SVG Sparkline Histórico das últimas 6h -->
+<div class="flex flex-col items-end">
+<svg class="w-24 h-9 text-tertiary" fill="none" stroke="currentColor" viewbox="0 0 100 35">
+<path d="M0,28 L15,25 L32,30 L50,18 L68,22 L85,12 L100,10" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"></path>
+<path d="M0,28 L15,25 L32,30 L50,18 L68,22 L85,12 L100,10 L100,35 L0,35 Z" fill="currentColor" fill-opacity="0.12"></path>
+</svg>
+<span class="font-code-hash text-code-hash text-on-surface-variant mt-1">PM2.5: 3.8 µg/m³</span>
+</div>
+</div>
+<div class="mt-2 pt-2 border-t border-surface-variant/30 flex items-center justify-between font-label-sovereign text-label-sovereign text-on-surface-variant">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px] text-primary">router</span>
+            18 nós validados
+          </span>
+<span class="text-primary font-medium">Brisa continental favorável</span>
+</div>
+</div>
+</section>
+<!-- Linha Divisora Sutil com Glifo Geométrico da Ágora -->
+<div class="flex items-center gap-3 w-full py-1">
+<div class="flex-1 h-[1px] bg-surface-variant/50"></div>
+<div class="w-1.5 h-1.5 rotate-45 bg-outline-variant/60"></div>
+<div class="flex-1 h-[1px] bg-surface-variant/50"></div>
+</div>
+<!-- POST 3: Comunitário Agroecológico (Marcos Silveira) -->
+<article class="flex flex-col w-full text-on-surface" id="comunidade-441">
+<!-- Metadados do Autor -->
+<div class="flex items-start justify-between gap-2 mb-2.5">
+<div class="flex items-center gap-2.5 min-w-0">
+<img class="w-10 h-10 rounded-full object-cover shrink-0" data-alt="Portrait photo of a Brazilian male organic farmer and community organizer in his 40s wearing a simple linen apron and straw hat, gentle smile, outdoors natural daylight with sun-drenched greenery" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDP_7ZegVnY-Ulu7juqKrwa6XxYqtZB3AdVQq0Mm3a7_T3MYo7zUcUr0-6ZERPonQY3UgUGzy5gaIi5jotl3HS92X7yO7m3VHGc5KSH0eTJk9PRwqS0d4EBBIzSWYcffzV83e7_cSx7sn4bDs7xjm6kCX5EcKa8JTKsHlw64xkofyimEU_hK2o6eyFaZjk93YiN1kKh5kVW9SnlkypSsx22aaiKoSAG7caCl148qLs"/>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-1.5">
+<span class="font-headline-sm text-body-md font-semibold text-on-surface truncate">Marcos Silveira</span>
+<span class="font-code-hash text-code-hash text-tertiary">#AGRO-P2P</span>
+</div>
+<div class="flex items-center gap-1 font-label-sovereign text-label-sovereign text-on-surface-variant">
+<span>@marcos.horta</span>
+<span>•</span>
+<span>há 4h • Pç. Benedito Calixto</span>
+</div>
+</div>
+</div>
+<button class="text-on-surface-variant hover:text-on-surface p-1" type="button">
+<span class="material-symbols-outlined text-[20px]">more_horiz</span>
+</button>
+</div>
+<!-- Texto Comunitário -->
+<div class="space-y-1.5">
+<p class="font-body-md text-body-md text-on-surface leading-relaxed">
+          Bancadas montadas na Benedito Calixto! 🌿 Colheita matinal direta do cinturão de Parelheiros: café biodinâmico, queijo de cabra artesanal, PANCs frescas e favos de mel silvestre.
+        </p>
+<p class="font-body-sm text-body-sm text-secondary-fixed-dim">
+          Pagamentos aceitos diretamente no nó comunitário local via Pix Soberano e Sats.
+        </p>
+</div>
+<!-- Galeria Grid Duo Orgânica -->
+<div class="grid grid-cols-2 gap-2 my-3 rounded-lg overflow-hidden">
+<div class="relative h-44">
+<img class="w-full h-full object-cover" data-alt="Close up photography of vibrant organic heirloom tomatoes, fresh purple basil, and artisanal sourdough bread displayed on rustic wooden crates in an open air market in Sao Paulo with warm morning sunlight" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBlf_JVEjg9ztxVxHsEG1LOcaYLwveGQtOypm0Ay2rn_P0ooplYWfzQvwB7f7k40ib96T3ZgaHw0BnMWvhXGFRpeMcSyCMffR8ER2T_X7P0xm08i0pAmGl3Y0UFZkd_aAx-lGJ4PiBnsg75j7O8NrMp0oXx1jrKWom3Obl341QJPDrm2mjngzegUmgNuNSmY_NpAUNdUk3U8zWnaW_e6u_zPkhxuB9PVhMKxPyeWuo"/>
+</div>
+<div class="relative h-44">
+<img class="w-full h-full object-cover" data-alt="Warm atmospheric documentary photo of community market stalls on stone square Plaza Benedito Calixto under jacaranda trees with happy neighbors chatting and holding woven baskets" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCWLnPfxkMWTwAuDOgKqzex84acg46GXgeosvFRMzgQCpyH5SZMQ3ZeughFDGPp6frW45MBPdMGv-8OVqMlsb1u5HqLSP6gzCj6oqZidxfRgYEkoQWybvn2SVwiVU9SEE-AS1Q6VtoS2d-kV6Vz4SpGog1IcnkyiqOuN3N3Q56_AaBpMrHI_o1jdCHl5JCQq9jIvDCG1rXoOxuOfMB5e69CpGUWWvG6wpkDqC2vmPw"/>
+<div class="absolute bottom-2 right-2 px-1.5 py-0.5 rounded bg-surface-container-lowest/80 text-[11px] font-code-hash text-on-surface">
+            +3 fotos
+          </div>
+</div>
+</div>
+<!-- Interação Social Limpa & Direta -->
+<div class="flex items-center justify-between pt-2 text-on-surface-variant">
+<button class="flex items-center gap-1.5 font-label-sovereign text-label-sovereign hover:text-secondary transition-colors focus:outline-none" onclick="this.classList.toggle('text-secondary')" type="button">
+<span class="material-symbols-outlined text-[20px]">favorite</span>
+<span class="font-code-hash text-code-hash ml-0.5 text-on-surface-variant">426</span>
+</button>
+<button class="flex items-center gap-1.5 font-label-sovereign text-label-sovereign hover:text-primary transition-colors focus:outline-none" type="button">
+<span class="material-symbols-outlined text-[20px]">chat_bubble_outline</span>
+<span class="tracking-wider">RECURSOS</span>
+<span class="font-code-hash text-code-hash ml-0.5 text-on-surface-variant">34</span>
+</button>
+<button class="flex items-center gap-1.5 font-label-sovereign text-label-sovereign hover:text-tertiary transition-colors focus:outline-none" type="button">
+<span class="material-symbols-outlined text-[20px]">share</span>
+<span class="tracking-wider">COMPARTILHAR</span>
+</button>
+<button class="flex items-center gap-1 font-label-sovereign text-label-sovereign hover:text-primary transition-colors focus:outline-none" type="button">
+<span class="material-symbols-outlined text-[20px]">bookmark_border</span>
+</button>
+</div>
+</article>
+<!-- Fim do Fluxo / Selo Criptográfico de Integridade -->
+<div class="flex flex-col items-center justify-center pt-4 pb-2 text-center">
+<div class="w-7 h-7 rounded-full bg-surface-container-high flex items-center justify-center text-primary mb-1.5">
+<span class="material-symbols-outlined text-[16px]">token</span>
+</div>
+<span class="font-label-sovereign text-label-sovereign text-on-surface-variant uppercase tracking-widest">
+        Todos os 34 Blocos Sincronizados
+      </span>
+<span class="font-code-hash text-code-hash text-outline mt-0.5">
+        Raiz de Merkle: #08f2...b49a
+      </span>
+</div>
+</div>
+</div></main><nav class="fixed bottom-0 inset-x-0 z-50 pb-safe bg-surface-container-lowest/90 backdrop-blur-xl shadow-[0_-1px_12px_rgba(0,0,0,0.5)]" data-active-classes="text-primary"><div class="flex justify-between items-center h-20 px-space-sm"><a aria-current="page" class="flex flex-col items-center justify-center min-w-[56px] min-h-[44px] transition-colors text-primary" data-path="agora" href="#"><span class="material-symbols-outlined text-[24px]">forum</span><span class="font-label-sovereign text-label-sovereign mt-0.5">Ágora</span></a><a class="flex flex-col items-center justify-center min-w-[56px] min-h-[44px] text-on-surface-variant transition-colors" data-path="vote" href="#"><span class="material-symbols-outlined text-[24px]">how_to_vote</span><span class="font-label-sovereign text-label-sovereign mt-0.5">Vote</span></a><a class="flex flex-col items-center justify-center min-w-[56px] min-h-[44px] -mt-5 transition-transform active:scale-95" data-path="compositor" href="#"><div class="w-13 h-13 w-[52px] h-[52px] rounded-lg bg-primary-container text-on-primary-container flex items-center justify-center shadow-[0_4px_14px_rgba(75,172,165,0.35)]"><span class="material-symbols-outlined text-[28px]">edit_square</span></div><span class="font-label-sovereign text-label-sovereign text-on-surface-variant mt-1">Publicar</span></a><a class="flex flex-col items-center justify-center min-w-[56px] min-h-[44px] text-on-surface-variant transition-colors" data-path="comunidades" href="#"><span class="material-symbols-outlined text-[24px]">hub</span><span class="font-label-sovereign text-label-sovereign mt-0.5">Células</span></a><a class="flex flex-col items-center justify-center min-w-[56px] min-h-[44px] text-on-surface-variant transition-colors" data-path="perfil" href="#"><span class="material-symbols-outlined text-[24px]">badge</span><span class="font-label-sovereign text-label-sovereign mt-0.5">Cidadão</span></a></div></nav></body></html>

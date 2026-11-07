@@ -9,13 +9,21 @@ import { getActiveUser, makeShellProps } from "./context.js";
 export async function showStatus() {
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "network", "Status"));
+  render.renderLoading(main, "Medindo a saúde do nó…");
   const relayStatus = await peers.checkDesktopRelay();
   render.renderStatusPage(main, {
     gatewayHealth: gatewayTelemetry.getGatewayHealthSummary(),
     relayStatus,
     relayHttpUrl: inbox.getRelayHttpUrl(),
     mirrorExport: communityMirror.getMirrorLastErrorExport(),
+    rtcStatus: peers.getRtcStatus(),
   });
+
+  if (typeof navigator !== "undefined" && navigator.storage?.estimate) {
+    navigator.storage.estimate().then((est) => render.hydrateStatusStorage(est)).catch(() => render.hydrateStatusStorage({}));
+  } else {
+    render.hydrateStatusStorage({});
+  }
 
   const cacheEl = document.getElementById("status-sw-cache");
   if (cacheEl && typeof caches !== "undefined") {

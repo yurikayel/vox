@@ -136,7 +136,7 @@ test("community-orkut - renderHome displays community photo thumbnail in card li
   render.renderHome(main, communities);
   const html = main.innerHTML;
 
-  assert.ok(html.includes("community-vox-card-layout"));
+  assert.ok(html.includes("agora-community"));
   assert.ok(html.includes("community-vox-card-avatar-wrap"));
   assert.ok(html.includes("https://example.com/cine.jpg"));
   assert.ok(html.includes("Cinema Nacional"));
