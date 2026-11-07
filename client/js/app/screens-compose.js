@@ -139,6 +139,7 @@ export async function showComposeCommunity() {
 
   const state = { photoDataUrl: "" };
   bindCommunityPhotoInputs(state);
+  bindComposeStepper(document.getElementById("form-compose-community"));
   document.getElementById("form-compose-community")?.addEventListener("submit", (e) => handleCommunityCreate(state, e));
 }
 
@@ -359,6 +360,7 @@ export async function showComposeListing(communityId) {
   const defaultPix = (await localAccount.getPixKey()) || "";
   render.renderComposeListing(main, targetComm, meta.title, { defaultPix });
 
+  bindComposeStepper(document.getElementById("form-compose-listing"));
   document.getElementById("form-compose-listing")?.addEventListener("submit", (e) => {
     e.preventDefault();
     handleComposeListingSubmit(user, targetComm);
@@ -448,6 +450,7 @@ export async function showComposeProposal(communityId) {
 
 export function attachComposeProposalHandlers(communityId, user) {
   const form = document.getElementById("form-compose-proposal");
+  bindComposeStepper(form);
   if (!form) return;
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
