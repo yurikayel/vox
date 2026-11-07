@@ -187,7 +187,7 @@ Não introduza bancos SQL centrais ou dependência de servidores corporativos.
 
 Preserve a sinalização redundante existente:
 
-1. Tríade Sentinela: Deno Edge A/B + Render.
+1. Sentinela: Render (Deno Edge A/B pausados desde 2026-11 — não reintroduzir sem religar o Deno Deploy).
 2. Trackers WebTorrent públicos.
 3. Sinalização Nostr efêmera.
 4. Nós locais e relays próprios.
