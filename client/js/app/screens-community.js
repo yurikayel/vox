@@ -1,4 +1,5 @@
 import * as welcomeProfile from "../vox-welcome-profile.js";
+import { confirmGovernanceVote } from "./vote-confirm.js";
 /** @file Community, topic, listings, proposals. */
 
 import * as gql from "../graphql.js";
@@ -1039,6 +1040,7 @@ export function attachProposalVotingHandlers(proposal, user) {
     btn.addEventListener("click", async () => {
       const choice = btn.dataset.choice;
       if (!choice || !user) return;
+      if (!(await confirmGovernanceVote(proposal, choice))) return;
       buttons.forEach((b) => (b.disabled = true));
       btn.textContent = "Assinando…";
       try {
@@ -1103,6 +1105,7 @@ function bindVoteChoiceButtons(main, items, user, rerender) {
         share.showToast("Crie sua identidade neste aparelho para votar.", "warning");
         return;
       }
+      if (!(await confirmGovernanceVote(item.proposal, btn.dataset.voteChoice))) return;
       main.querySelectorAll(".agora-vote-btn").forEach((b) => (b.disabled = true));
       btn.textContent = "Assinando…";
       try {

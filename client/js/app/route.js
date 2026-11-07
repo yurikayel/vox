@@ -12,6 +12,7 @@ import { showDmList, showDmThread } from "./screens-dm.js";
 import { showVoxpedia } from "./screens-voxpedia.js";
 import { showAjudaTeste } from "./screens-ajuda-teste.js";
 import { showStatus } from "./screens-status.js";
+import { showNetworkWizard, showBackupWizard, showWalletWizard } from "./screens-guided.js";
 import { showLabsFrames, showLabsMofn } from "./screens-labs.js";
 import {
   showComposeCommunity,
@@ -48,6 +49,9 @@ const ROUTE_DISPATCH_TABLE = {
   topic: (r) => showTopic(r.id, r.communityId),
   profile: (r) => showProfile(r.address, r.tab),
   wallet: () => showWallet(),
+  "wallet-wizard": () => showWalletWizard(),
+  "network-wizard": () => showNetworkWizard(),
+  "backup-wizard": () => showBackupWizard(),
   "compose-community": () => showComposeCommunity(),
   "compose-listing": (r) => showComposeListing(r.communityId),
   "compose-proposal": (r) => showComposeProposal(r.communityId),

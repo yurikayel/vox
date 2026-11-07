@@ -23,6 +23,7 @@ function parseSettingsRoute(parts) {
   if (parts[0] !== "settings") return null;
   if (parts[1] === "linked-accounts") return { name: "linked-accounts" };
   if (parts[1] === "network" && parts[2] === "steward") return { name: "steward-wizard" };
+  if (parts[1] === "network" && parts[2] === "guia") return { name: "network-wizard" };
   return { name: "network-settings" };
 }
 
@@ -100,7 +101,8 @@ const STATIC_ROUTES = {
   communities: () => ({ name: "communities" }),
   perfil: (_parts, query) => ({ name: "perfil", tab: (query.get("tab") || "posts").toLowerCase() }),
   status: () => ({ name: "status" }),
-  wallet: () => ({ name: "wallet" }),
+  wallet: (parts) => (parts[1] === "guia" ? { name: "wallet-wizard" } : { name: "wallet" }),
+  backup: () => ({ name: "backup-wizard" }),
   voxpedia: () => ({ name: "voxpedia" }),
   download: () => ({ name: "download" }),
   downloads: () => ({ name: "download" }),
