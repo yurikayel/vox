@@ -148,26 +148,20 @@ test("linked-accounts - testLinkedAccount verifies webhook, bsky, github and pro
   }
 });
 
-test("linked-accounts - renderLinkedAccountsHtml renders networks, ATProto field and OAuth button", () => {
+test("linked-accounts - tela simples: uma linha por rede, um botão Conectar, avançado recolhido", () => {
   localStorage.clear();
   linked.saveLinkedAccount("bsky", { handle: "teste.bsky.social", appPassword: "secret" });
 
   const html = linkedUi.renderLinkedAccountsHtml();
   assert.ok(html.includes("Redes Vinculadas"));
-  assert.ok(html.includes("Bluesky"));
-  assert.ok(html.includes("btn-test-network"));
-  assert.ok(html.includes("Testar se conectou"));
-  assert.ok(html.includes("AT Protocol direto configurado"));
-  assert.ok(html.includes("btn-open-oauth-from-linked"));
-  assert.ok(html.includes("Twitter / X"));
-  assert.ok(html.includes("Threads"));
-  assert.ok(html.includes("Instagram"));
-  assert.ok(html.includes("Facebook"));
-  assert.ok(html.includes("TikTok"));
-  assert.ok(html.includes("GitHub"));
+  for (const name of ["Bluesky", "Twitter / X", "Threads", "Instagram", "Facebook", "TikTok", "GitHub"]) assert.ok(html.includes(name), name);
   assert.ok(html.includes("@teste.bsky.social"));
+  assert.ok(html.includes("btn-test-network") && html.includes("btn-unlink-network"), "ações da conta no menu ⋯");
+  assert.equal((html.match(/btn-link-connect/g) || []).length, 6, "um Conectar por rede não conectada");
   assert.ok(html.includes("chk-auto-replicate-master"));
-  assert.ok(html.includes("input-general-webhook"));
+  assert.ok(html.includes('<details class="link-advanced">') && html.includes("input-general-webhook"), "webhook fica em Opções avançadas");
+  assert.ok(html.includes("input-net-app-password"));
+  assert.ok(!html.includes("escudo cívico soberano"), "sem texto de manifesto na tela de tarefa");
 });
 
 test("sw.js caches linked-accounts.js and linked-accounts-ui.js", () => {
@@ -210,7 +204,7 @@ test("linked-accounts - vincular exige o @usuário digitado: sem palpites e sem 
   localStorage.clear();
   const html = linkedUi.renderLinkedAccountsHtml();
   assert.ok(html.includes("btn-one-click-connect"));
-  assert.ok(html.includes("Vincular Instagram"));
+  assert.ok(html.includes('aria-label="Seu usuário no Instagram"'));
   assert.ok(!html.includes("loga sozinho"));
   assert.ok(!html.includes("(1 Clique)"));
 });

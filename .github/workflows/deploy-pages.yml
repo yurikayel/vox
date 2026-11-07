@@ -36,6 +36,14 @@ jobs:
         env:
           VOX_GOOGLE_CLIENT_ID: ${{ secrets.VOX_GOOGLE_CLIENT_ID }}
           VOX_FACEBOOK_APP_ID: ${{ secrets.VOX_FACEBOOK_APP_ID }}
+          # Login social: IDs PÚBLICOS dos apps (segredos ficam só no relay) + URL do relay.
+          VOX_X_CLIENT_ID: ${{ vars.VOX_X_CLIENT_ID }}
+          VOX_GITHUB_CLIENT_ID: ${{ vars.VOX_GITHUB_CLIENT_ID }}
+          VOX_THREADS_APP_ID: ${{ vars.VOX_THREADS_APP_ID }}
+          VOX_TIKTOK_CLIENT_KEY: ${{ vars.VOX_TIKTOK_CLIENT_KEY }}
+          VOX_INSTAGRAM_APP_ID: ${{ vars.VOX_INSTAGRAM_APP_ID }}
+          VOX_OAUTH_RELAY_URL: ${{ vars.VOX_OAUTH_RELAY_URL }}
+          VOX_SITE_URL: ${{ vars.VOX_SITE_URL }}
         run: |
           mkdir -p _site
           cp -r client/* _site/

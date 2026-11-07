@@ -131,6 +131,24 @@ export async function signInWithMeta() {
   });
 }
 
+/**
+ * Só identidade do Facebook para "Redes Vinculadas" (sem enriquecer perfil nem cofre).
+ * A Graph API não devolve @usuário público; retorna nome e id escopado do app.
+ */
+export async function signInWithMetaIdentity() {
+  const cfg = await loadOAuthConfig();
+  const appId = cfg?.facebookAppId || "";
+  if (!appId || appId.includes("YOUR_")) throw new Error("Login do Facebook não configurado neste Vox.");
+  await loadScript("https://connect.facebook.net/pt_BR/sdk.js");
+  if (!window.FB) throw new Error("SDK do Facebook indisponível.");
+  window.FB.init({ appId, cookie: false, xfbml: false, version: "v19.0" });
+  const auth = await new Promise((resolve) => window.FB.login(resolve, { scope: "public_profile" }));
+  if (!auth?.authResponse) throw new Error("Login do Facebook cancelado.");
+  const me = await new Promise((resolve) => window.FB.api("/me", { fields: "name,id" }, resolve));
+  if (!me?.id) throw new Error("O Facebook não devolveu o perfil.");
+  return { netId: "facebook", handle: "", name: me.name || "", id: String(me.id) };
+}
+
 function resolveGithubHandleInput(handle) {
   const clean = String(handle || "").trim().replace(/^@/, "");
   if (clean) return clean;

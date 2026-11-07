@@ -2,6 +2,7 @@
 
 import * as render from "../render.js";
 import * as share from "../share.js";
+import * as socialLogin from "../social-login.js";
 import * as mod from "../moderation.js";
 import * as cacheNode from "../cache-node.js";
 import * as peers from "../peers.js";
@@ -324,6 +325,63 @@ export async function showLinkedAccounts() {
   const main = render.renderShell(makeShellProps(user, "network", "Redes Vinculadas"));
   render.renderLinkedAccountsPage(main);
   bindLinkedAccountsUi(() => showLinkedAccounts());
+  void revealSocialLoginButtons();
+  const cb = socialLogin.takePendingCallback();
+  if (cb) void finishSocialLogin(() => socialLogin.completeSocialLogin(cb));
+}
+
+let loginAvailability = { bsky: true };
+
+/** Disponibilidade de login por rede; nas que têm login, oferece "ou digitar @usuário" como alternativa. */
+async function revealSocialLoginButtons() {
+  loginAvailability = await socialLogin.availableLoginProviders().catch(() => ({ bsky: true }));
+  document.querySelectorAll(".btn-link-manual").forEach((alt) => { alt.hidden = !loginAvailability[alt.dataset.netId]; });
+}
+
+function openManualLink(netId) {
+  const panel = document.querySelector(`.link-manual[data-net-id="${netId}"]`);
+  if (!panel) return;
+  panel.hidden = false;
+  panel.querySelector(".input-net-handle")?.focus();
+}
+
+function saveLoginResult(r) {
+  linkedAccounts.saveLinkedAccount(r.netId, {
+    handle: r.handle || "", did: r.did || "", accountId: r.id || "", displayName: r.name || "",
+    enabled: true, verified: true, via: "oauth",
+  });
+  linkedAccounts.setAutoReplicationEnabled(true);
+}
+
+async function finishSocialLogin(run) {
+  try {
+    const r = await run();
+    if (!r) return;
+    saveLoginResult(r);
+    share.showToast(`Conectado: ${r.handle ? `@${r.handle}` : r.name || r.netId} ✅`);
+    showLinkedAccounts();
+  } catch (err) {
+    share.showToast(err?.message || "Não foi possível conectar.", "error");
+  }
+}
+
+/** Um botão "Conectar" por rede: login quando disponível; senão abre o campo do @usuário. */
+function bindSocialLoginButtons() {
+  document.querySelectorAll(".btn-link-connect").forEach((btn) => {
+    if (btn.dataset.wired) return;
+    btn.dataset.wired = "1";
+    btn.addEventListener("click", () => {
+      const netId = btn.dataset.netId;
+      if (!loginAvailability[netId]) return openManualLink(netId);
+      btn.disabled = true;
+      void finishSocialLogin(() => socialLogin.startSocialLogin(netId)).finally(() => { btn.disabled = false; });
+    });
+  });
+  document.querySelectorAll(".btn-link-manual").forEach((alt) => {
+    if (alt.dataset.wired) return;
+    alt.dataset.wired = "1";
+    alt.addEventListener("click", () => openManualLink(alt.dataset.netId));
+  });
 }
 
 function resolveNetworkFormHandle(box, form, netId) {
@@ -426,6 +484,7 @@ function bindConfirmNetworkButtons(onRefresh) {
 }
 
 function bindLinkedAccountFormsAndButtons(onRefresh) {
+  bindSocialLoginButtons();
   bindConfirmNetworkButtons(onRefresh);
   bindOneClickConnectButtons(onRefresh);
   bindSaveHandleQuickButtons(onRefresh);

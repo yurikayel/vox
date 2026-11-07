@@ -1,6 +1,7 @@
 /** @file Gerenciador soberano de contas vinculadas e auto-replicação multi-redes (ATProto + Webhooks). */
 
 import { addBskySubscription } from "./bsky-feed.js";
+import { loadBskySession, clearBskySession, postWithBskySession } from "./bsky-oauth.js";
 
 export const LINKED_ACCOUNTS_KEY = "vox-linked-accounts-v1";
 export const AUTO_REPLICATE_KEY = "vox-auto-replicate-enabled";
@@ -64,7 +65,8 @@ export function validateHandle(netId, raw) {
 export function sanitizeLinkedAccounts(accounts) {
   const out = {};
   for (const [netId, acc] of Object.entries(accounts || {})) {
-    if (acc?.handle && validateHandle(netId, acc.handle).ok) out[netId] = acc;
+    const viaLogin = acc?.via === "oauth" && (acc.accountId || acc.did);
+    if ((acc?.handle && validateHandle(netId, acc.handle).ok) || (viaLogin && !acc?.handle)) out[netId] = acc;
   }
   return out;
 }
@@ -90,6 +92,19 @@ function resolveField(val, fallback) {
   return "";
 }
 
+/** Campos de identidade: herdados só quando o @usuário não mudou. */
+function identityFields(opts, prev, cleanHandle) {
+  const same = prev.handle === cleanHandle;
+  const keep = (k) => (same ? prev[k] : "");
+  return {
+    verified: opts.verified !== undefined ? Boolean(opts.verified) : same && Boolean(prev.verified),
+    via: opts.via || keep("via") || "manual",
+    did: resolveField(opts.did, keep("did")),
+    accountId: resolveField(opts.accountId, keep("accountId")),
+    displayName: resolveField(opts.displayName, keep("displayName")),
+  };
+}
+
 export function saveLinkedAccount(netId, options) {
   if (typeof localStorage === "undefined") return {};
   const current = loadLinkedAccounts();
@@ -104,7 +119,7 @@ export function saveLinkedAccount(netId, options) {
     webhook: resolveField(opts.webhook, prev.webhook),
     appPassword: resolveField(opts.appPassword, prev.appPassword),
     enabled: opts.enabled !== undefined ? Boolean(opts.enabled) : true,
-    verified: opts.verified !== undefined ? Boolean(opts.verified) : (prev.handle === cleanHandle && Boolean(prev.verified)),
+    ...identityFields(opts, prev, cleanHandle),
     linkedAt: prev.linkedAt || new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
@@ -120,6 +135,7 @@ export function removeLinkedAccount(netId) {
   const cleanId = String(netId || "").trim().toLowerCase();
   delete current[cleanId];
   localStorage.setItem(LINKED_ACCOUNTS_KEY, JSON.stringify(current));
+  if (cleanId === "bsky") clearBskySession();
   return current;
 }
 
@@ -253,7 +269,7 @@ export const INTENT_NETWORK_META = Object.freeze({
 function isAccountNeedingIntent(netId, acc) {
   if (!acc || acc.enabled === false || !acc.handle) return false;
   if (acc.webhook) return false;
-  if (netId === "bsky" && acc.appPassword) return false;
+  if (netId === "bsky" && (acc.appPassword || acc.via === "oauth")) return false;
   return true;
 }
 
@@ -276,8 +292,18 @@ export function getConnectedIntentTargets(accounts = loadLinkedAccounts()) {
 export function hasDirectReplicationTargets(accounts = loadLinkedAccounts()) {
   const targets = collectWebhookTargets(accounts);
   const bskyAcc = accounts?.bsky;
-  const hasBskyDirect = Boolean(bskyAcc?.enabled && bskyAcc?.handle && bskyAcc?.appPassword);
+  const hasBskyDirect = Boolean(bskyAcc?.enabled && bskyAcc?.handle && (bskyAcc?.appPassword || bskyAcc?.via === "oauth"));
   return targets.length > 0 || hasBskyDirect;
+}
+
+/** Postagem direta no Bluesky: sessão OAuth (preferida) ou App Password. */
+function bskyReplicationTask(acc, payload) {
+  if (!acc?.enabled) return null;
+  if (acc.via === "oauth" && loadBskySession()) {
+    return () => postWithBskySession([payload.title, payload.body, payload.url].filter(Boolean).join("\n\n"));
+  }
+  if (acc.handle && acc.appPassword) return () => postToBlueskyAtProto(acc.handle, acc.appPassword, payload);
+  return null;
 }
 
 export async function dispatchAutoReplication(post, { force = false } = {}) {
@@ -288,17 +314,14 @@ export async function dispatchAutoReplication(post, { force = false } = {}) {
   const accounts = loadLinkedAccounts();
   const payload = buildReplicationPayload(post);
   const targets = collectWebhookTargets(accounts);
-  const bskyAcc = accounts.bsky;
-  const hasBskyDirect = Boolean(bskyAcc?.enabled && bskyAcc?.handle && bskyAcc?.appPassword);
+  const bskyTask = bskyReplicationTask(accounts.bsky, payload);
 
-  if (!targets.length && !hasBskyDirect) {
+  if (!targets.length && !bskyTask) {
     return { dispatched: false, reason: "no_webhooks_configured", count: 0 };
   }
 
   const tasks = targets.map((u) => sendWebhookPost(u, payload));
-  if (hasBskyDirect) {
-    tasks.push(postToBlueskyAtProto(bskyAcc.handle, bskyAcc.appPassword, payload));
-  }
+  if (bskyTask) tasks.push(bskyTask());
 
   const results = await Promise.allSettled(tasks);
   const successful = results.filter((r) => r.status === "fulfilled" && r.value?.ok).length;
@@ -346,25 +369,33 @@ async function testGithubConnection(data) {
   }
 }
 
+function oauthTestResult(netId, data) {
+  const who = data.handle ? `@${data.handle}` : data.displayName || "sua conta";
+  return { ok: true, state: "verified", profileUrl: resolveNetworkProfileUrl(netId, data.handle), message: `✅ ${who} conectada por login na própria rede.` };
+}
+
+async function testWebhookConnection(netId, data, webhookUrl) {
+  const payload = { event: "vox.connection.test", network: netId, handle: data.handle, testedAt: new Date().toISOString() };
+  const res = await sendWebhookPost(webhookUrl, payload);
+  return res.ok
+    ? { ok: true, message: `✅ Webhook testado com sucesso para @${data.handle}!`, profileUrl: resolveNetworkProfileUrl(netId, data.handle) }
+    : { ok: false, message: `⚠️ Falha ao contactar webhook: ${res.error || "erro de rede"}` };
+}
+
+async function testPublicApiConnection(netId, data) {
+  const res = netId === "bsky" ? await testBskyConnection(data) : await testGithubConnection(data);
+  if (res.ok) saveLinkedAccount(netId, { ...data, verified: true });
+  return { ...res, state: res.ok ? "verified" : "error", profileUrl: resolveNetworkProfileUrl(netId, data.handle) };
+}
+
 export async function testLinkedAccount(netId) {
   const accounts = loadLinkedAccounts();
   const data = accounts[netId];
-  if (!data?.handle) return { ok: false, message: "Nenhuma conta vinculada." };
-
+  if (!data?.handle && data?.via !== "oauth") return { ok: false, message: "Nenhuma conta vinculada." };
+  if (data.via === "oauth") return oauthTestResult(netId, data);
   const webhookUrl = data.webhook || getGeneralWebhookUrl();
-  if (webhookUrl) {
-    const payload = { event: "vox.connection.test", network: netId, handle: data.handle, testedAt: new Date().toISOString() };
-    const res = await sendWebhookPost(webhookUrl, payload);
-    return res.ok
-      ? { ok: true, message: `✅ Webhook testado com sucesso para @${data.handle}!`, profileUrl: resolveNetworkProfileUrl(netId, data.handle) }
-      : { ok: false, message: `⚠️ Falha ao contactar webhook: ${res.error || "erro de rede"}` };
-  }
-
-  if (netId === "bsky" || netId === "github") {
-    const res = netId === "bsky" ? await testBskyConnection(data) : await testGithubConnection(data);
-    if (res.ok) saveLinkedAccount(netId, { ...data, verified: true });
-    return { ...res, state: res.ok ? "verified" : "error", profileUrl: resolveNetworkProfileUrl(netId, data.handle) };
-  }
+  if (webhookUrl) return testWebhookConnection(netId, data, webhookUrl);
+  if (netId === "bsky" || netId === "github") return testPublicApiConnection(netId, data);
 
   const profileUrl = resolveNetworkProfileUrl(netId, data.handle);
   const name = SUPPORTED_NETWORKS.find((n) => n.id === netId)?.name || netId;
