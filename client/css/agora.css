@@ -3967,3 +3967,11 @@ body,
 }
 
 .agora-ui .tab-item[data-tab="dm"] { position: relative; }
+
+/* Feed seamless: mídia dos posts sem faixa preta — a imagem assenta direto no fundo da página. */
+.agora-ui .feed-container .post-media-container,
+.agora-ui .feed-container .post-layout-photo.post-photo-bleed .post-media-container,
+.agora-ui .feed-container .post-layout-photo.post-photo-bleed .post-media-lightbox-trigger,
+.agora-ui .feed-container .vox-frame-media {
+  background: transparent;
+}
