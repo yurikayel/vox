@@ -1,5 +1,5 @@
 /** @file OAuth, cantina gate, pact/zap/edit modals, people search. */
-import { renderPactModalHtml } from "./welcome-pact.js";
+import { renderPactModalHtml, renderPactStepHtml } from "./welcome-pact.js";
 import * as brcode from "../brcode.js";
 import * as i18n from "../i18n-pt-br.js";
 import * as postOwnership from "../post-ownership.js";
@@ -146,6 +146,7 @@ function renderGenesisStepsHtml(currentName) {
           ${genesisStep("new", renderGenesisNewIdentityHtml(currentName), { back: "pick" })}
           ${genesisStep("restore", renderGenesisRestoreHtml(), { back: "pick" })}
           ${genesisStep("import", renderGenesisImportHtml(), { back: "pick" })}
+          ${genesisStep("pact", renderPactStepHtml())}
           <p class="meta oauth-enrich-legal">Só claims públicos de perfil; tokens OAuth não são armazenados (LGPD — ver COMPLIANCE-BR.md).</p>
         </section>`;
 }
