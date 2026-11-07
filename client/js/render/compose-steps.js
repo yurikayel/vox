@@ -37,10 +37,29 @@ export function renderStepNav(index, { backHref = "#/", last = false, submitId =
 /** Envolve o conteúdo de uma etapa; só a primeira começa visível. */
 export function renderStep(index, bodyHtml, navOpts, steps = COMPOSE_TOPIC_STEPS) {
   const last = index === steps.length - 1;
+  const req = steps[index].required || [];
+  const reqAttr = req.length ? ` data-step-required="${escapeHtml(req.join(","))}"` : "";
+  const errHtml = req.length ? `<p class="compose-step-error" data-step-error hidden>${escapeHtml(steps[index].requiredMsg || "Preencha os campos obrigatórios para continuar.")}</p>` : "";
   return `
-      <section class="compose-step" data-step="${index}" data-step-key="${steps[index].key}"${index === 0 ? "" : " hidden"}>
+      <section class="compose-step" data-step="${index}" data-step-key="${steps[index].key}"${reqAttr}${index === 0 ? "" : " hidden"}>
         ${renderStepHeader(index, steps)}
-        <div class="compose-step-body">${bodyHtml}</div>
+        <div class="compose-step-body">${bodyHtml}${errHtml}</div>
         ${renderStepNav(index, { ...navOpts, last })}
       </section>`;
+}
+
+/**
+ * Lista de revisão genérica: cada linha copia, ao abrir a etapa, o valor do campo `from`.
+ * @param {Array<{label:string, from:string, empty?:string, long?:boolean}>} rows
+ */
+export function renderReviewList(rows) {
+  const items = rows.map((r) => `
+          <div${r.long ? ' class="compose-review-body"' : ""}><dt>${escapeHtml(r.label)}</dt><dd data-review-from="${escapeHtml(r.from)}" data-review-empty="${escapeHtml(r.empty || "—")}">${escapeHtml(r.empty || "—")}</dd></div>`).join("");
+  return `<dl class="compose-review" data-compose-review>${items}
+        </dl>`;
+}
+
+/** Monta todas as etapas de um formulário a partir de uma lista `[{key,title,required?,body}]`. */
+export function renderSteps(steps, navOpts) {
+  return steps.map((st, i) => renderStep(i, st.body, navOpts, steps)).join("");
 }

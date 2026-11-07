@@ -28,13 +28,44 @@ export function fillComposeReview(form) {
   set("body", body.length > 280 ? `${body.slice(0, 280)}…` : body || "—");
 }
 
+function requiredIds(step) {
+  const declared = (step.dataset.stepRequired || "").split(",").map((x) => x.trim()).filter(Boolean);
+  const legacy = REQUIRED_BY_STEP[step.dataset.stepKey];
+  return legacy ? [...declared, legacy] : declared;
+}
+
+function fieldFilled(id) {
+  const el = document.getElementById(id);
+  if (!el) return true;
+  if (el.type === "checkbox" || el.type === "radio") return el.checked;
+  if (el.type === "file") return (el.files?.length || 0) > 0;
+  const filled = String(el.value || "").trim().length > 0;
+  return filled && (typeof el.checkValidity !== "function" || el.checkValidity());
+}
+
 function stepIsValid(step) {
-  const reqId = REQUIRED_BY_STEP[step.dataset.stepKey];
-  const ok = !reqId || textOf(reqId).length > 0;
+  const missing = requiredIds(step).find((id) => !fieldFilled(id));
+  const ok = !missing;
   const err = step.querySelector("[data-step-error]");
   if (err) err.hidden = ok;
-  if (!ok) document.getElementById(reqId)?.focus();
+  if (!ok) document.getElementById(missing)?.focus();
   return ok;
+}
+
+function displayValue(el) {
+  if (!el) return "";
+  if (el.tagName === "SELECT") return el.selectedOptions?.[0]?.textContent?.trim() || el.value;
+  if (el.type === "checkbox") return el.checked ? "Sim" : "Não";
+  if (el.type === "file") return el.files?.[0]?.name || "";
+  return String(el.value || "").trim();
+}
+
+/** Revisão genérica: `[data-review-from="id"]` recebe o valor do campo correspondente. */
+function fillGenericReview(form) {
+  form.querySelectorAll("[data-review-from]").forEach((dd) => {
+    const v = displayValue(document.getElementById(dd.dataset.reviewFrom));
+    dd.textContent = v ? (v.length > 280 ? `${v.slice(0, 280)}…` : v) : dd.dataset.reviewEmpty || "—";
+  });
 }
 
 function focusStep(step) {
@@ -47,7 +78,10 @@ export function goToComposeStep(form, index) {
   const steps = stepEls(form);
   const target = Math.max(0, Math.min(index, steps.length - 1));
   steps.forEach((s, i) => { s.hidden = i !== target; });
-  if (steps[target].dataset.stepKey === "review") fillComposeReview(form);
+  if (steps[target].dataset.stepKey === "review") {
+    fillComposeReview(form);
+    fillGenericReview(form);
+  }
   focusStep(steps[target]);
 }
 
@@ -80,11 +114,11 @@ function guardSubmit(form, e) {
     if (stepIsValid(steps[i])) goToComposeStep(form, i + 1);
     return;
   }
-  const writeIdx = steps.findIndex((s) => s.dataset.stepKey === "write");
-  if (writeIdx >= 0 && !textOf(REQUIRED_BY_STEP.write)) {
+  const firstInvalid = steps.findIndex((st) => requiredIds(st).some((id) => !fieldFilled(id)));
+  if (firstInvalid >= 0) {
     e.preventDefault();
     e.stopImmediatePropagation();
-    goToComposeStep(form, writeIdx);
-    stepIsValid(steps[writeIdx]);
+    goToComposeStep(form, firstInvalid);
+    stepIsValid(steps[firstInvalid]);
   }
 }

@@ -317,10 +317,14 @@ function renderTopBar(identity, chipText, chipHtml) {
     </header>`;
 }
 
-function renderIdentityDrawer(identity, chipHtml) {
-  const keyRow = identity.address
+function renderDrawerKeyRow(identity) {
+  return identity.address
     ? `<div class="agora-drawer-key"><span class="agora-label">ID na rede</span><code class="agora-mono">${escapeHtml(identity.address)}</code><button type="button" class="agora-link-btn" id="agora-copy-id">Copiar</button></div>`
     : `<p class="agora-muted">Você ainda não criou uma identidade neste aparelho.</p>`;
+}
+
+function renderIdentityDrawer(identity, chipHtml) {
+  const keyRow = renderDrawerKeyRow(identity);
   return `
     <div class="agora-drawer-backdrop" id="agora-drawer-backdrop" hidden></div>
     <aside class="agora-drawer" id="agora-identity-drawer" role="dialog" aria-modal="true" aria-label="Identidade e rede" hidden>
@@ -342,6 +346,7 @@ function renderIdentityDrawer(identity, chipHtml) {
         <p class="agora-title-monument">Opções da identidade</p>
         <a class="agora-drawer-link" href="#/perfil">Ver e editar perfil<span aria-hidden="true">›</span></a>
         <a class="agora-drawer-link" href="#/settings/linked-accounts">Contas vinculadas<span aria-hidden="true">›</span></a>
+        <a class="agora-drawer-link" href="#/backup">Backup da Senha Soberana<span aria-hidden="true">›</span></a>
         <a class="agora-drawer-link agora-drawer-link--mobile" href="#/people">Pessoas<span aria-hidden="true">›</span></a>
         <a class="agora-drawer-link agora-drawer-link--mobile" href="#/voxpedia">Voxpedia<span aria-hidden="true">›</span></a>
       </section>

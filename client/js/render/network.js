@@ -98,6 +98,7 @@ function renderNetworkHeader(isEnabled, relayStatus, rtcStatus, gatewayHealth) {
     <div class="card network-card">
       <h2>Sua rede</h2>
       <p class="desc">Você ajuda a manter o Vox funcionando para todo mundo, direto do seu aparelho.</p>
+      <a class="agora-btn agora-btn--primary network-guided-btn" href="#/settings/network/guia">Configuração guiada</a>
       
       <div class="network-status" style="margin-top:0.75rem; display:flex; flex-wrap:wrap; gap:0.4rem;">
         ${statusBadge}
