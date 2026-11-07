@@ -17,11 +17,68 @@ export const SUPPORTED_NETWORKS = Object.freeze([
   { id: "github", name: "GitHub", icon: "🐙", color: "#24292f", canAutoWebhook: false, supportsAtProto: false, hasFeed: false },
 ]);
 
+/** Formato de @usuário aceito por rede (regras públicas de cada plataforma). */
+const HANDLE_RULES = {
+  bsky: { re: /^(?=.{3,253}$)([a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z]{2,}$/i, hint: "domínio completo, ex.: voce.bsky.social" },
+  twitter: { re: /^[A-Za-z0-9_]{1,15}$/, hint: "até 15 letras, números ou _" },
+  threads: { re: /^(?!.*\.\.)(?!\.)(?!.*\.$)[A-Za-z0-9._]{1,30}$/, hint: "até 30 letras, números, . ou _" },
+  instagram: { re: /^(?!.*\.\.)(?!\.)(?!.*\.$)[A-Za-z0-9._]{1,30}$/, hint: "até 30 letras, números, . ou _" },
+  facebook: { re: /^[A-Za-z0-9.]{5,50}$/, hint: "5 a 50 letras, números ou ." },
+  tiktok: { re: /^[A-Za-z0-9._]{2,24}$/, hint: "2 a 24 letras, números, . ou _" },
+  github: { re: /^[A-Za-z0-9](?:[A-Za-z0-9]|-(?=[A-Za-z0-9])){0,38}$/, hint: "até 39 letras, números ou -" },
+};
+
+/** Perfis oficiais das próprias redes — nunca são "a sua conta". */
+const OFFICIAL_HANDLES = {
+  bsky: ["bsky.app", "bluesky", "bsky.social"],
+  twitter: ["x", "twitter", "xdevelopers"],
+  threads: ["threads", "instagram", "meta"],
+  instagram: ["instagram", "meta", "creators"],
+  facebook: ["facebook", "meta", "zuck"],
+  tiktok: ["tiktok"],
+  github: ["github"],
+};
+
+export function normalizeHandle(raw) {
+  return String(raw || "").trim().replace(/^@+/, "").replace(/^https?:\/\/\S*?\/(?:@)?/i, "").replace(/\/+$/, "");
+}
+
+/**
+ * Valida o @usuário digitado. Nada é inventado: sem handle válido, não há vínculo.
+ * @returns {{ ok: boolean, handle: string, error?: string }}
+ */
+export function validateHandle(netId, raw) {
+  const handle = normalizeHandle(raw);
+  const net = SUPPORTED_NETWORKS.find((n) => n.id === netId);
+  const name = net?.name || netId;
+  if (!handle) return { ok: false, handle, error: `Digite o seu @usuário no ${name}.` };
+  const rule = HANDLE_RULES[netId];
+  if (rule && !rule.re.test(handle)) return { ok: false, handle, error: `@${handle} não é um usuário válido no ${name} (${rule.hint}).` };
+  if ((OFFICIAL_HANDLES[netId] || []).includes(handle.toLowerCase()) || handle.toLowerCase() === String(netId).toLowerCase()) {
+    return { ok: false, handle, error: `@${handle} é o perfil oficial do ${name}, não o seu. Digite o seu @usuário.` };
+  }
+  return { ok: true, handle };
+}
+
+/** Remove vínculos salvos com handle inválido ou de perfil oficial (ex.: @instagram inventado). */
+export function sanitizeLinkedAccounts(accounts) {
+  const out = {};
+  for (const [netId, acc] of Object.entries(accounts || {})) {
+    if (acc?.handle && validateHandle(netId, acc.handle).ok) out[netId] = acc;
+  }
+  return out;
+}
+
 export function loadLinkedAccounts() {
   if (typeof localStorage === "undefined") return {};
   try {
     const raw = localStorage.getItem(LINKED_ACCOUNTS_KEY);
-    return raw ? JSON.parse(raw) : {};
+    const parsed = raw ? JSON.parse(raw) : {};
+    const clean = sanitizeLinkedAccounts(parsed);
+    if (Object.keys(clean).length !== Object.keys(parsed).length) {
+      localStorage.setItem(LINKED_ACCOUNTS_KEY, JSON.stringify(clean));
+    }
+    return clean;
   } catch {
     return {};
   }
@@ -47,6 +104,7 @@ export function saveLinkedAccount(netId, options) {
     webhook: resolveField(opts.webhook, prev.webhook),
     appPassword: resolveField(opts.appPassword, prev.appPassword),
     enabled: opts.enabled !== undefined ? Boolean(opts.enabled) : true,
+    verified: opts.verified !== undefined ? Boolean(opts.verified) : (prev.handle === cleanHandle && Boolean(prev.verified)),
     linkedAt: prev.linkedAt || new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
@@ -302,15 +360,28 @@ export async function testLinkedAccount(netId) {
       : { ok: false, message: `⚠️ Falha ao contactar webhook: ${res.error || "erro de rede"}` };
   }
 
-  if (netId === "bsky") return await testBskyConnection(data);
-  if (netId === "github") return await testGithubConnection(data);
+  if (netId === "bsky" || netId === "github") {
+    const res = netId === "bsky" ? await testBskyConnection(data) : await testGithubConnection(data);
+    if (res.ok) saveLinkedAccount(netId, { ...data, verified: true });
+    return { ...res, state: res.ok ? "verified" : "error", profileUrl: resolveNetworkProfileUrl(netId, data.handle) };
+  }
 
   const profileUrl = resolveNetworkProfileUrl(netId, data.handle);
+  const name = SUPPORTED_NETWORKS.find((n) => n.id === netId)?.name || netId;
   return {
-    ok: true,
+    ok: false,
+    state: "unverified",
     profileUrl,
-    message: `✅ Conta @${data.handle} registrada no Vox! Disparo em 1 toque (EXPLODE!) pronto.`,
+    message: `O ${name} não permite verificar a conta sem login. Abra o perfil @${data.handle}, confira se é você e confirme. Sem webhook, o Vox replica abrindo o app da rede com o texto copiado — não posta sozinho.`,
   };
+}
+
+/** Marca o vínculo como confirmado pelo próprio usuário (após conferir o perfil). */
+export function confirmLinkedAccount(netId) {
+  const acc = loadLinkedAccounts()[netId];
+  if (!acc?.handle) return false;
+  saveLinkedAccount(netId, { ...acc, verified: true });
+  return true;
 }
 
 const NETWORK_AUTH_TEMPLATES = {
@@ -331,68 +402,31 @@ export function getNetworkAuthUrl(netId, handle = "") {
   return tmpl.fallback;
 }
 
-function getEnrichmentSlug() {
-  try {
-    const rawEnrich = localStorage.getItem("vox-profile-enrichment");
-    if (!rawEnrich) return "";
-    const enrichment = JSON.parse(rawEnrich);
-    if (!enrichment?.displayName) return "";
-    return enrichment.displayName
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-z0-9_]/g, "");
-  } catch {
-    return "";
-  }
-}
-
-function getBskySubSlug() {
-  try {
-    const subs = JSON.parse(localStorage.getItem("vox-bsky-subs-v1") || "[]");
-    return subs.length > 0 ? String(subs[0]).replace(/^@/, "") : "";
-  } catch {
-    return "";
-  }
-}
-
-function getRouteSlug() {
-  const myRoute = localStorage.getItem("vox-local-account-route-id") || "";
-  return myRoute && !myRoute.startsWith("0x") ? myRoute.replace(/^@/, "") : "";
-}
-
+/**
+ * Handle já informado pelo próprio usuário para esta rede (nunca um palpite a partir do nome,
+ * do ID local ou de contas seguidas — isso gerava vínculos com perfis de outras pessoas).
+ */
 export function getSuggestedHandle(netId = "") {
   if (typeof localStorage === "undefined") return "";
   const saved = localStorage.getItem(`vox-profile-${netId}`);
-  if (saved) return saved.replace(/^@/, "");
-
-  const slug = getEnrichmentSlug();
-  if (slug) return slug;
-
-  if (netId === "bsky") {
-    const sub = getBskySubSlug();
-    if (sub) return sub;
-  }
-  return getRouteSlug();
+  const v = saved ? validateHandle(netId, saved) : null;
+  return v?.ok ? v.handle : "";
 }
 
+/**
+ * Vincula a conta com o @usuário digitado e abre o perfil público para a pessoa conferir.
+ * Não faz login na rede: o vínculo fica "não verificado" até o teste ou a confirmação.
+ */
 export function connectWithOneClick(netId, inputHandle = "") {
   const cleanId = String(netId || "").trim().toLowerCase();
-  let handle = String(inputHandle || "").trim().replace(/^@/, "");
-  if (!handle) {
-    handle = getSuggestedHandle(cleanId);
-  }
-  if (!handle) {
-    handle = cleanId;
-  }
-
-  const authUrl = getNetworkAuthUrl(cleanId, handle);
+  const v = validateHandle(cleanId, inputHandle);
+  if (!v.ok) return { ok: false, netId: cleanId, error: v.error };
+  const profileUrl = getNetworkAuthUrl(cleanId, v.handle);
   if (typeof window !== "undefined" && typeof window.open === "function") {
     try {
-      window.open(authUrl, "_blank", "noopener,noreferrer");
+      window.open(profileUrl, "_blank", "noopener,noreferrer");
     } catch {}
   }
-
-  saveLinkedAccount(cleanId, { handle, enabled: true });
-  return { ok: true, netId: cleanId, handle, authUrl };
+  saveLinkedAccount(cleanId, { handle: v.handle, enabled: true, verified: false });
+  return { ok: true, netId: cleanId, handle: v.handle, authUrl: profileUrl };
 }

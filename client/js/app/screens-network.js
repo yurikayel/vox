@@ -331,7 +331,7 @@ function resolveNetworkFormHandle(box, form, netId) {
   if (boxHandle) return boxHandle;
   const formHandle = form?.querySelector(".input-net-handle")?.value?.trim();
   if (formHandle) return formHandle;
-  return linkedAccounts.getSuggestedHandle(netId) || netId;
+  return linkedAccounts.getSuggestedHandle(netId);
 }
 
 function bindOneClickConnectButtons(onRefresh) {
@@ -342,12 +342,16 @@ function bindOneClickConnectButtons(onRefresh) {
       const netId = btn.dataset.netId;
       if (!netId) return;
       const box = btn.closest(".network-connect-box") || btn.closest(".linked-network-card");
-      const handle = box?.querySelector(".input-net-handle")?.value?.trim() || "";
-      linkedAccounts.connectWithOneClick(netId, handle);
+      const input = box?.querySelector(".input-net-handle");
+      const res = linkedAccounts.connectWithOneClick(netId, input?.value || "");
+      if (!res.ok) {
+        share.showToast(res.error, "error");
+        input?.focus();
+        return;
+      }
       linkedAccounts.setAutoReplicationEnabled(true);
-      share.showToast(`Conectando ao ${netId}... Rede aberta no navegador! 🔗`);
+      share.showToast(`@${res.handle} vinculado. Confira o perfil que abrimos e toque em “É minha conta”.`);
       if (onRefresh) onRefresh();
-      linkedAccounts.testLinkedAccount(netId).catch(() => {});
     });
   });
 }
@@ -360,14 +364,14 @@ function bindSaveHandleQuickButtons(onRefresh) {
       const netId = btn.dataset.netId;
       if (!netId) return;
       const box = btn.closest(".network-connect-box") || btn.closest(".linked-network-card");
-      const handle = box?.querySelector(".input-net-handle")?.value?.trim() || "";
-      if (!handle) {
-        share.showToast("Informe o @handle para vincular.", "warning");
+      const v = linkedAccounts.validateHandle(netId, box?.querySelector(".input-net-handle")?.value || "");
+      if (!v.ok) {
+        share.showToast(v.error, "warning");
         return;
       }
-      linkedAccounts.saveLinkedAccount(netId, { handle, enabled: true });
+      linkedAccounts.saveLinkedAccount(netId, { handle: v.handle, enabled: true, verified: false });
       linkedAccounts.setAutoReplicationEnabled(true);
-      share.showToast(`Conta @${handle.replace(/^@/, "")} vinculada com sucesso! 🔗`);
+      share.showToast(`@${v.handle} vinculado (não verificado).`);
       if (onRefresh) onRefresh();
     });
   });
@@ -381,7 +385,12 @@ function bindFormLinkNetwork(onRefresh) {
       e.preventDefault();
       const netId = form.dataset.netId;
       const box = form.closest(".network-connect-box") || form.closest(".linked-network-card");
-      const handle = resolveNetworkFormHandle(box, form, netId);
+      const v = linkedAccounts.validateHandle(netId, resolveNetworkFormHandle(box, form, netId));
+      if (!v.ok) {
+        share.showToast(v.error, "warning");
+        return;
+      }
+      const handle = v.handle;
       const webhook = form.querySelector(".input-net-webhook")?.value?.trim() || "";
       const appPassword = form.querySelector(".input-net-app-password")?.value?.trim() || "";
       linkedAccounts.saveLinkedAccount(netId, { handle, webhook, appPassword, enabled: true });
@@ -405,7 +414,19 @@ function bindUnlinkNetworkButtons(onRefresh) {
   });
 }
 
+function bindConfirmNetworkButtons(onRefresh) {
+  document.querySelectorAll(".btn-confirm-network").forEach((btn) => {
+    if (btn.dataset.wired) return;
+    btn.dataset.wired = "1";
+    btn.addEventListener("click", () => {
+      if (linkedAccounts.confirmLinkedAccount(btn.dataset.netId)) share.showToast("Conta confirmada por você.");
+      if (onRefresh) onRefresh();
+    });
+  });
+}
+
 function bindLinkedAccountFormsAndButtons(onRefresh) {
+  bindConfirmNetworkButtons(onRefresh);
   bindOneClickConnectButtons(onRefresh);
   bindSaveHandleQuickButtons(onRefresh);
   bindFormLinkNetwork(onRefresh);
@@ -431,9 +452,10 @@ function displayTestFeedback(netId, res) {
   const fb = document.getElementById(`test-feedback-${netId}`);
   if (!fb) return;
   fb.style.display = "block";
-  fb.style.background = res.ok ? "rgba(22,163,74,0.12)" : "rgba(220,38,38,0.12)";
-  fb.style.color = res.ok ? "#16a34a" : "#dc2626";
-  fb.style.border = `1px solid ${res.ok ? "#16a34a" : "#dc2626"}`;
+  const tone = res.ok ? "#16a34a" : res.state === "unverified" ? "#b07a00" : "#dc2626";
+  fb.style.background = res.ok ? "rgba(22,163,74,0.12)" : res.state === "unverified" ? "rgba(231,194,107,0.12)" : "rgba(220,38,38,0.12)";
+  fb.style.color = tone;
+  fb.style.border = `1px solid ${tone}`;
   const link = res.profileUrl
     ? ` <a href="${res.profileUrl}" target="_blank" rel="noopener noreferrer" style="font-weight:bold; text-decoration:underline; color:inherit; margin-left:4px;">Ver perfil ↗</a>`
     : "";
@@ -452,7 +474,7 @@ function bindLinkedAccountTestButtons() {
       try {
         const res = await linkedAccounts.testLinkedAccount(netId);
         displayTestFeedback(netId, res);
-        share.showToast(res.message, res.ok ? "info" : "error");
+        share.showToast(res.ok ? res.message : res.state === "unverified" ? "Não verificado — confira o perfil." : res.message, res.ok || res.state === "unverified" ? "info" : "error");
       } catch (err) {
         share.showToast(`Erro ao testar: ${err?.message}`, "error");
       } finally {
