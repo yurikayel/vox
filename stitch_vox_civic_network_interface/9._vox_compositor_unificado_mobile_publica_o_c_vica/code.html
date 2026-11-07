@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="pt-BR"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Domine:wght@400;500;600;700&amp;family=Work+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;min-height:100vh;margin:0;padding:0;background-color:#111316;color:#e2e2e6;-webkit-tap-highlight-color:transparent;}body{overscroll-behavior-y:none;}.pb-safe{padding-bottom:calc(env(safe-area-inset-bottom, 0px) + 0.5rem);}.pt-safe{padding-top:env(safe-area-inset-top, 0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "surface-container-high": "#282a2d", "on-background": "#e2e2e6", "on-secondary-fixed": "#251a00", "error": "#ffb4ab", "on-tertiary": "#003825", "primary": "#78d6cf", "tertiary-container": "#39b081", "on-tertiary-fixed": "#002114", "outline": "#879391", "on-tertiary-container": "#003d28", "surface": "#111316", "on-surface-variant": "#bdc9c7", "background": "#111316", "on-primary": "#003734", "surface-dim": "#111316", "on-primary-fixed": "#00201e", "secondary-fixed": "#ffdf97", "secondary-container": "#6e5301", "primary-fixed": "#94f3eb", "inverse-primary": "#006a65", "secondary-fixed-dim": "#e7c26b", "tertiary-fixed-dim": "#69dba9", "surface-tint": "#78d6cf", "tertiary": "#69dba9", "surface-variant": "#333538", "on-error": "#690005", "on-error-container": "#ffdad6", "primary-container": "#4baca5", "on-secondary-container": "#eec971", "on-primary-fixed-variant": "#00504c", "secondary": "#e7c26b", "outline-variant": "#3e4948", "on-secondary-fixed-variant": "#5a4300", "surface-container-highest": "#333538", "on-tertiary-fixed-variant": "#005137", "primary-fixed-dim": "#78d6cf", "on-secondary": "#3e2e00", "tertiary-fixed": "#86f8c4", "surface-container-low": "#1a1c1f", "inverse-surface": "#e2e2e6", "inverse-on-surface": "#2f3034", "on-surface": "#e2e2e6", "surface-container-lowest": "#0c0e11", "on-primary-container": "#003c38", "surface-bright": "#37393d", "error-container": "#93000a", "surface-container": "#1e2023" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "space-md": "1rem", "space-sm": "0.5rem", "margin-mobile": "1.25rem", "gutter": "2rem", "space-xl": "2.5rem", "space-2xl": "4rem", "gutter-mobile": "1rem", "space-lg": "1.5rem", "margin": "3rem", "space-xs": "0.25rem" }, fontFamily: { "code-hash": ["Work Sans"], "headline-lg-mobile": ["Domine"], "body-sm": ["Work Sans"], "display": ["Domine"], "title-monument": ["Domine"], "headline-sm": ["Domine"], "headline-lg": ["Domine"], "headline-md": ["Domine"], "body-lg": ["Work Sans"], "label-sovereign": ["Work Sans"], "display-mobile": ["Domine"], "body-md": ["Work Sans"] }, fontSize: { "code-hash": ["0.8125rem", { lineHeight: "1.25rem", letterSpacing: "0.05em", fontWeight: "500" }], "headline-lg-mobile": ["1.75rem", { lineHeight: "2.25rem", letterSpacing: "0em", fontWeight: "500" }], "body-sm": ["0.8125rem", { lineHeight: "1.25rem", letterSpacing: "0.02em", fontWeight: "400" }], "display": ["3.5rem", { lineHeight: "4rem", letterSpacing: "-0.02em", fontWeight: "600" }], "title-monument": ["1rem", { lineHeight: "1.5rem", letterSpacing: "0.15em", fontWeight: "700" }], "headline-sm": ["1.25rem", { lineHeight: "1.75rem", letterSpacing: "0.02em", fontWeight: "600" }], "headline-lg": ["2.5rem", { lineHeight: "3rem", letterSpacing: "-0.015em", fontWeight: "500" }], "headline-md": ["1.75rem", { lineHeight: "2.25rem", letterSpacing: "0em", fontWeight: "500" }], "body-lg": ["1.125rem", { lineHeight: "1.75rem", letterSpacing: "0.01em", fontWeight: "400" }], "label-sovereign": ["0.75rem", { lineHeight: "1rem", letterSpacing: "0.12em", fontWeight: "600" }], "display-mobile": ["2.25rem", { lineHeight: "2.75rem", letterSpacing: "-0.01em", fontWeight: "600" }], "body-md": ["0.9375rem", { lineHeight: "1.5rem", letterSpacing: "0.01em", fontWeight: "400" }] } } } }</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface font-body-md text-on-surface flex flex-col min-h-screen selection:bg-primary-container selection:text-on-primary-container"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.4)]"><div class="h-16 px-margin-mobile flex items-center justify-between"><div class="flex items-center gap-space-sm"><img alt="VOX Agora" class="h-7 w-auto object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCnReYlsaQsiXyqjsvhrOp-K85kC-s6-oJg3zwANdSupFIKlVh9Fp5EBfnvKy1xttUZ0hgLlUCIENppZtVJM1Br-SAvtaq6xpHRna-F_7_rElHCXiOiTzYpVQDtzmqQDW-o9Gojq-4tm9X8QyuOirWhjCkbnF4tt1jrHDFx5O0gvNZ2q-G1v1bWDAZfjWjSW_OvLj70fKvngFseKTgAxvg0XclwihOt9DQ2qHTO7G8"/><span class="hidden font-title-monument text-title-monument uppercase text-primary tracking-widest sm:inline-block">Vox</span><span class="font-title-monument text-title-monument text-on-surface uppercase tracking-wider pl-space-xs">Publicar</span></div><div class="flex items-center gap-space-sm"><div class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-surface-container-high/90 text-tertiary shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"><span class="w-1.5 h-1.5 rounded-full bg-tertiary animate-pulse"></span><span class="material-symbols-outlined text-[15px]">hub</span><span class="font-code-hash text-code-hash uppercase text-on-surface-variant">Mesh P2P</span></div><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida/AEtjO1V3cLZIJpH5zYoVr-w456O18NDcQ3cwivCksvVLsxSKGh6jHd8xpVW_KrsJvKr5SGU5s3i3Q-b2dAYD90Rdzy0CL_ojWxHf7G-0j3aziBYjmUuw8i8RK2sgoZETsZstG7UP5Zk5ax_xcXixLiyNCZi3HOUJnLheHeiiEariDdOoUQZSW8EwZx67-HgFGHB4RHUIDAl9cLiDEqfVeV92rQO_HZ90F7Iur2-4bTY7oxJZbKvn0u85plwIJQ"/></div></div></header><main class="flex-1 flex flex-col relative w-full pt-16 pb-24 bg-surface min-h-screen"><div class="flex flex-col w-full px-margin-mobile pb-space-xl">
+<!-- Top Dismiss & Cryptographic Local State -->
+<div class="flex items-center justify-between py-space-sm">
+<button aria-label="Cancelar" class="w-10 h-10 flex items-center justify-center rounded bg-surface-container text-on-surface-variant active:bg-surface-container-high transition-colors" type="button">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+<div class="flex items-center gap-1.5 px-3 py-1 rounded bg-surface-container-lowest text-on-surface-variant">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+<span class="font-code-hash text-code-hash uppercase tracking-wider text-tertiary-fixed-dim">IndexedDB Local</span>
+<span class="material-symbols-outlined text-[15px] text-tertiary">lock</span>
+</div>
+</div>
+<!-- Horizontal Agora Modality Selector -->
+<div class="pt-space-sm pb-space-md">
+<div class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+<button class="flex items-center gap-1.5 px-3.5 py-2 rounded bg-primary-container text-on-primary-container font-label-sovereign text-label-sovereign uppercase whitespace-nowrap shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px]">forum</span>
+<span>Publicação Social</span>
+</button>
+<button class="flex items-center gap-1.5 px-3.5 py-2 rounded bg-surface-container-high text-on-surface-variant font-label-sovereign text-label-sovereign uppercase whitespace-nowrap active:bg-surface-bright" type="button">
+<span class="material-symbols-outlined text-[18px]">how_to_vote</span>
+<span>Deliberação Cívica</span>
+</button>
+<button class="flex items-center gap-1.5 px-3.5 py-2 rounded bg-surface-container-high text-on-surface-variant font-label-sovereign text-label-sovereign uppercase whitespace-nowrap active:bg-surface-bright" type="button">
+<span class="material-symbols-outlined text-[18px]">fmd_bad</span>
+<span>Alerta Territorial</span>
+</button>
+<button class="flex items-center gap-1.5 px-3.5 py-2 rounded bg-surface-container-high text-on-surface-variant font-label-sovereign text-label-sovereign uppercase whitespace-nowrap active:bg-surface-bright" type="button">
+<span class="material-symbols-outlined text-[18px]">storefront</span>
+<span>Feira Local</span>
+</button>
+</div>
+</div>
+<!-- Inscription Basalt Title Surface -->
+<div class="pt-space-sm pb-space-xs">
+<label class="sr-only" for="post-title">Título da Inscrição</label>
+<input class="w-full bg-transparent font-headline-lg-mobile text-headline-lg-mobile text-on-surface placeholder:text-on-surface-variant focus:outline-none" id="post-title" placeholder="Título monumental..." type="text" value="Reflorestamento das Margens do Córrego das Corujas"/>
+</div>
+<!-- Monumental Frieze Subtle Accent -->
+<div class="w-full h-1 bg-surface-container-highest my-space-xs rounded-full overflow-hidden">
+<div class="h-full w-24 bg-secondary"></div>
+</div>
+<!-- Continuous Lithic Writing Canvas -->
+<div class="pt-space-xs flex flex-col">
+<label class="sr-only" for="post-body">Conteúdo Deliberativo</label>
+<textarea class="w-full bg-transparent font-body-lg text-body-lg text-on-surface placeholder:text-outline focus:outline-none resize-none leading-relaxed" id="post-body" placeholder="Escreva a crônica, proposta ou anúncio soberano com Markdown..." rows="6">Iniciamos o preparo dos canteiros na nascente secundária. Conseguimos reunir 120 mudas nativas da Mata Atlântica para recompor a mata ciliar antes das chuvas de verão. Tragam luvas e ferramentas de escavação amanhã às 8h.</textarea>
+<!-- Epigraphic Char Count & Formatting Tools -->
+<div class="flex items-center justify-between pt-space-xs pb-space-sm">
+<div class="flex items-center gap-1 bg-surface-container-low px-2 py-1 rounded">
+<button class="w-8 h-8 flex items-center justify-center rounded bg-surface-container text-on-surface hover:bg-surface-container-high active:scale-95" title="Negrito" type="button">
+<span class="material-symbols-outlined text-[18px]">format_bold</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded bg-surface-container text-on-surface hover:bg-surface-container-high active:scale-95" title="Itálico" type="button">
+<span class="material-symbols-outlined text-[18px]">format_italic</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded bg-surface-container text-on-surface hover:bg-surface-container-high active:scale-95" title="Título" type="button">
+<span class="material-symbols-outlined text-[18px]">title</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded bg-surface-container text-on-surface hover:bg-surface-container-high active:scale-95" title="Citação" type="button">
+<span class="material-symbols-outlined text-[18px]">format_quote</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded bg-surface-container text-on-surface hover:bg-surface-container-high active:scale-95" title="Link" type="button">
+<span class="material-symbols-outlined text-[18px]">link</span>
+</button>
+</div>
+<div class="flex items-center gap-1.5 px-2.5 py-1 bg-surface-container-lowest rounded">
+<span class="font-code-hash text-code-hash text-secondary">58/120</span>
+<span class="material-symbols-outlined text-[16px] text-secondary">history_edu</span>
+</div>
+</div>
+</div>
+<!-- Visual Evidence Attachments -->
+<div class="pt-space-sm pb-space-md flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-label-sovereign text-label-sovereign text-on-surface-variant uppercase tracking-widest">Evidências Visuais (2 anexadas)</span>
+<div class="flex items-center gap-1 text-tertiary">
+<span class="material-symbols-outlined text-[15px]">verified_user</span>
+<span class="font-code-hash text-code-hash text-tertiary">EXIF Sanitizado</span>
+</div>
+</div>
+<!-- Dual Media Canvas -->
+<div class="grid grid-cols-2 gap-space-sm pt-space-xs">
+<div class="relative h-32 rounded bg-surface-container-high overflow-hidden shadow-md">
+<img class="w-full h-full object-cover" data-alt="Community volunteers digging dark rich soil beside a babbling urban stream, holding young Atlantic Forest tree saplings, soft golden morning light, documentary photographic style with deep shadows and lush emerald greens" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCnCmFuIM7TYCK65jMoKdXsDxpsrCby3IqyrtkXmk2cv_87VqpdWva4PTGxTQ4RdKdCRN67x9XfZKmt9Whb5r43ofVoEz_Q69eobdI_ZHanFV9ycWvZH0a2qX-zB6j9VnKN7W8X_0x_Kxx8GH8psvjjP5qHQ-okKl0gilN13-iQLd7IIbs5QgNeZHP5j4ZNJ1nMJPOAoUxi8b5IqCRARO5xw40-szVYqBRkBWDPdws"/>
+<div class="absolute bottom-1.5 left-1.5 px-2 py-0.5 rounded bg-surface-container-lowest/80 backdrop-blur-md">
+<span class="font-code-hash text-code-hash text-on-surface">120_mudas.webp</span>
+</div>
+<button class="absolute top-1.5 right-1.5 w-6 h-6 rounded bg-surface-container-lowest/80 text-on-surface flex items-center justify-center" type="button">
+<span class="material-symbols-outlined text-[14px]">close</span>
+</button>
+</div>
+<div class="relative h-32 rounded bg-surface-container-high overflow-hidden shadow-md">
+<img class="w-full h-full object-cover" data-alt="Close up of collective citizen hands planting a small green native seedling into dark moist earth, soil covered with dried leaf mulch, architectural botanical clarity, cinematic lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBXG5bgYyYROZr_u5opPX9ybutjlsU0rvNXMW1DeoymJYfy-aAvS4oftwqOr4kczsMbOFn0H0HjjF4RspEinz0PZSxJjWt8Lco2vYZr6uzJYqjy7tJ6wf0TCqMEWfClpgvYgrviQAVugQIgg-Or3usR7CZIK-QwJmAzl_rc0qWF1S-PmSNBuNDY09BChzNndYDdUq7kYhsdew4zgFvTj2MXlhrpvJKeuZqRGulfDm0"/>
+<div class="absolute bottom-1.5 left-1.5 px-2 py-0.5 rounded bg-surface-container-lowest/80 backdrop-blur-md">
+<span class="font-code-hash text-code-hash text-on-surface">mutirao_córrego.webp</span>
+</div>
+<button class="absolute top-1.5 right-1.5 w-6 h-6 rounded bg-surface-container-lowest/80 text-on-surface flex items-center justify-center" type="button">
+<span class="material-symbols-outlined text-[14px]">close</span>
+</button>
+</div>
+</div>
+<!-- Anonymous Local Ingestion Info Pill -->
+<div class="flex items-center gap-2 px-3 py-2 rounded bg-surface-container-low text-on-surface-variant mt-1">
+<span class="material-symbols-outlined text-[18px] text-primary">security</span>
+<p class="font-body-sm text-body-sm leading-tight">Metadados EXIF, geolocalização bruta de GPS e número serial de câmera foram higienizados no dispositivo.</p>
+</div>
+</div>
+<!-- Peer-to-Peer Gossip Range Radial Mesh -->
+<div class="pt-space-xs pb-space-md flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-label-sovereign text-label-sovereign text-on-surface-variant uppercase tracking-widest">Alcance de Propagação Gossip</span>
+<span class="font-code-hash text-code-hash text-primary">TTL: 4 saltos</span>
+</div>
+<div class="grid grid-cols-3 gap-space-sm pt-space-xs">
+<button class="flex flex-col items-center justify-center py-2.5 px-2 rounded bg-secondary-container text-on-secondary-container shadow-sm" type="button">
+<span class="font-title-monument text-title-monument">1 km</span>
+<span class="font-label-sovereign text-label-sovereign uppercase mt-0.5 tracking-tighter">Vizinhança</span>
+</button>
+<button class="flex flex-col items-center justify-center py-2.5 px-2 rounded bg-surface-container-high text-on-surface-variant active:bg-surface-bright" type="button">
+<span class="font-title-monument text-title-monument text-on-surface">3 km</span>
+<span class="font-label-sovereign text-label-sovereign uppercase mt-0.5 tracking-tighter">Distrito</span>
+</button>
+<button class="flex flex-col items-center justify-center py-2.5 px-2 rounded bg-surface-container-high text-on-surface-variant active:bg-surface-bright" type="button">
+<span class="material-symbols-outlined text-[20px] text-on-surface">public</span>
+<span class="font-label-sovereign text-label-sovereign uppercase mt-0.5 tracking-tighter">Federação</span>
+</button>
+</div>
+</div>
+<!-- Monumental Cryptographic Signature Panel & Dispatch -->
+<div class="flex flex-col gap-space-sm pt-space-xs">
+<div class="flex items-center justify-between px-3.5 py-2.5 rounded bg-surface-container-lowest">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded bg-surface-container-high flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[17px]">fingerprint</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sovereign text-label-sovereign uppercase text-on-surface-variant tracking-wider">Assinatura Local</span>
+<span class="font-code-hash text-code-hash text-on-surface">ed25519:vox-4f9a...88e1</span>
+</div>
+</div>
+<div class="flex items-center gap-1 text-tertiary">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+<span class="font-label-sovereign text-label-sovereign uppercase">Chave Ativa</span>
+</div>
+</div>
+<!-- Canonical Sovereign Broadcaster Trigger -->
+<button class="relative group w-full py-4 px-4 rounded bg-gradient-to-r from-tertiary-container via-primary-container to-primary text-on-tertiary flex items-center justify-center gap-2 shadow-lg active:scale-[0.99] transition-all" id="btn-broadcast" type="button">
+<span class="material-symbols-outlined text-[22px] group-hover:rotate-12 transition-transform">send</span>
+<span class="font-title-monument text-title-monument uppercase tracking-widest text-on-primary-container">Publicar no Nó Soberano</span>
+</button>
+</div>
+</div>
+<script>
+  (() => {
+    const btn = document.getElementById('btn-broadcast');
+    if (btn) {
+      btn.addEventListener('click', () => {
+        btn.classList.add('opacity-90');
+        const originalContent = btn.innerHTML;
+        btn.innerHTML = `
+          <span class="material-symbols-outlined text-[22px] animate-spin">sync</span>
+          <span class="font-title-monument text-title-monument uppercase tracking-widest text-on-primary-container">Propagando na Malha P2P...</span>
+        `;
+        setTimeout(() => {
+          btn.innerHTML = `
+            <span class="material-symbols-outlined text-[22px] text-tertiary-fixed">done_all</span>
+            <span class="font-title-monument text-title-monument uppercase tracking-widest text-on-primary-container">Confirmado no Bloco Vicinal</span>
+          `;
+          setTimeout(() => {
+            btn.innerHTML = originalContent;
+            btn.classList.remove('opacity-90');
+          }, 2200);
+        }, 1400);
+      });
+    }
+  })();
+</script></main><nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface-container-lowest/90 backdrop-blur-xl shadow-[0_-1px_12px_rgba(0,0,0,0.5)]" data-active-classes="text-primary"><div class="flex items-center justify-around h-16 px-space-xs max-w-lg mx-auto"><a class="flex flex-col items-center justify-center min-w-[52px] min-h-[44px] text-on-surface-variant transition-colors hover:text-on-surface" data-path="agora" href="#"><span class="material-symbols-outlined text-[22px]">forum</span><span class="font-label-sovereign text-label-sovereign uppercase mt-0.5">Ágora</span></a><a class="flex flex-col items-center justify-center min-w-[52px] min-h-[44px] text-on-surface-variant transition-colors hover:text-on-surface" data-path="vote" href="#"><span class="material-symbols-outlined text-[22px]">how_to_vote</span><span class="font-label-sovereign text-label-sovereign uppercase mt-0.5">Vote</span></a><a aria-current="page" class="relative -top-2 flex flex-col items-center justify-center text-primary" data-path="publicar" href="#"><div class="w-12 h-12 rounded-lg bg-tertiary-container text-on-tertiary flex items-center justify-center shadow-[0_4px_16px_rgba(57,176,129,0.35)] transition-transform active:scale-95"><span class="material-symbols-outlined text-[26px]">edit_square</span></div></a><a class="flex flex-col items-center justify-center min-w-[52px] min-h-[44px] text-on-surface-variant transition-colors hover:text-on-surface" data-path="celulas" href="#"><span class="material-symbols-outlined text-[22px]">share_location</span><span class="font-label-sovereign text-label-sovereign uppercase mt-0.5">Células</span></a><a class="flex flex-col items-center justify-center min-w-[52px] min-h-[44px] text-on-surface-variant transition-colors hover:text-on-surface" data-path="cidadao" href="#"><span class="material-symbols-outlined text-[22px]">shield_person</span><span class="font-label-sovereign text-label-sovereign uppercase mt-0.5">Cidadão</span></a></div></nav></body></html>

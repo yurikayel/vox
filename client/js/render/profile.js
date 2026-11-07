@@ -13,7 +13,9 @@ import { isWelcomeRouteId } from "../vox-welcome-profile.js";
 import * as localAccount from "../local-account.js";
 import { LOCAL_WIPE_NOTICE } from "../local-account.js";
 import { renderProfileNoteBubbleHtml } from "./profile-note-bubble.js";
+import { renderComposeTypeSelector, renderComposeSignaturePanel } from "./compose-chrome.js";
 import { renderProfileVoxelsTab } from "./profile-voxels.js";
+import { ACHIEVEMENT_CATALOG, evaluateAchievements, loadVoxelReceipts } from "../voxels.js";
 
 function renderProfileGithubBadge(githubHandle) {
   if (!githubHandle) return "";
@@ -252,32 +254,44 @@ function renderProfileIdentityBlock(address, displayName, handleLabel, profileBi
     </div>`;
 }
 
-const CIVIC_HIGHLIGHTS_DATA = [
-  { id: "guardia", name: "Guardiã Nvl 4", icon: "🏛️", ringClass: "ring-emerald" },
-  { id: "solar", name: "Microrrede Solar", icon: "⚡", ringClass: "ring-amber" },
-  { id: "quorum", name: "Quórum 100%", icon: "🗳️", ringClass: "ring-cyan" },
-  { id: "coletivo", name: "Pinheiros SP", icon: "📍", ringClass: "ring-cobalt" },
-  { id: "sementeira", name: "Sementeira", icon: "🌱", ringClass: "ring-emerald" },
-];
+const CATEGORY_RING = { forja: "ring-cobalt", agora: "ring-emerald", cuidado: "ring-amber" };
 
-function renderProfileCivicHighlights(address) {
-  const items = CIVIC_HIGHLIGHTS_DATA.map((h) => `
-    <a class="civic-highlight-item" href="#/u/${encodeURIComponent(address)}?tab=voxels" title="${escapeHtml(h.name)} &bull; Ver no Passaporte Cívico">
-      <div class="civic-highlight-ring ${h.ringClass}">
-        <div class="civic-highlight-inner">${h.icon}</div>
+function readOwnUnlockedAchievementIds(address) {
+  try {
+    const receipts = loadVoxelReceipts(address);
+    return new Set(evaluateAchievements(receipts).unlocked.map((a) => a.id));
+  } catch {
+    return new Set();
+  }
+}
+
+/**
+ * Selos cívicos reais (catálogo de voxels.js). Só aparecem no próprio perfil: as conquistas de
+ * terceiros dependem do passaporte assinado deles, que este aparelho não tem.
+ */
+function renderProfileCivicHighlights(address, isCurrentWallet) {
+  if (!isCurrentWallet || !address) return "";
+  const unlockedIds = readOwnUnlockedAchievementIds(address);
+  const voxelsHref = `#/u/${encodeURIComponent(address)}?tab=voxels`;
+  const items = ACHIEVEMENT_CATALOG.map((item) => {
+    const unlocked = unlockedIds.has(item.id);
+    const state = unlocked ? "Conquistado" : "Ainda não conquistado";
+    return `
+    <a class="civic-highlight-item${unlocked ? "" : " is-locked"}" href="${voxelsHref}" title="${escapeHtml(item.title)} — ${escapeHtml(item.description)} (${state})">
+      <div class="civic-highlight-ring ${CATEGORY_RING[item.category] || "ring-emerald"}">
+        <div class="civic-highlight-inner" aria-hidden="true">${item.icon}</div>
       </div>
-      <span class="civic-highlight-name">${escapeHtml(h.name)}</span>
-    </a>
-  `).join("");
+      <span class="civic-highlight-name">${escapeHtml(item.title)}</span>
+    </a>`;
+  }).join("");
 
   return `
     <div class="profile-civic-highlights" aria-label="Selos e Insígnias Cívicas">
       <div class="profile-civic-highlights-header">
         <div class="profile-civic-highlights-title">
-          <span>🎖️</span>
           <span>Selos &amp; Insígnias Cívicas</span>
         </div>
-        <span class="profile-civic-highlights-meta">Registro Imutável</span>
+        <span class="profile-civic-highlights-meta">${unlockedIds.size}/${ACHIEVEMENT_CATALOG.length} conquistados</span>
       </div>
       <div class="profile-civic-highlights-scroll">
         ${items}
@@ -294,7 +308,7 @@ function renderProfileGridHeader(address, isCurrentWallet, handle, isConflict, c
   const topDiv = `<div class="profile-grid-top">${renderProfileGridAvatar(address, displayName, handle, isCurrentWallet)}${renderProfileGridStats(postsCount, statsData, address, isCurrentWallet)}</div>`;
   const identity = renderProfileIdentityBlock(address, displayName, handleLabel, profileBio, isCurrentWallet, pixBadge, githubBadge);
   const actions = renderProfileGridActionRow(address, isCurrentWallet, isBlocked, isMuted, pixKeyRaw, displayName);
-  const highlights = renderProfileCivicHighlights(address);
+  const highlights = renderProfileCivicHighlights(address, isCurrentWallet);
 
   return `<header class="profile-grid-header">${topDiv}${identity}${actions}${highlights}${renderStereotypeDemoBanner(address)}${conflictBanner}</header>`;
 }
@@ -679,42 +693,97 @@ export function renderHandleConflict(main, slug, claimants = []) {
   `;
 }
 
+function renderWalletPixRow() {
+  const pix = localAccount.getPixKey?.();
+  if (!pix?.normalized) {
+    return `<div class="agora-wallet-pix agora-wallet-pix--empty">
+        <span class="agora-tile-label">Chave Pix para apoios</span>
+        <a class="agora-link-btn" href="#/perfil">Configurar no perfil</a>
+      </div>`;
+  }
+  const shown = pix.masked || pix.normalized;
+  return `<div class="agora-wallet-pix">
+        <div>
+          <span class="agora-tile-label">Chave Pix soberana · ${escapeHtml(pix.type || "chave")}</span>
+          <code class="agora-hash">${escapeHtml(shown)}</code>
+        </div>
+      </div>`;
+}
+
 function renderWalletStatusBox(hasWallet, address, balance) {
   if (hasWallet && address) {
     return `
-      <div class="card wallet-info">
-        <h3>Carteira Conectada</h3>
-        <p class="meta">Endereço: <code>${escapeHtml(address)}</code></p>
-        <p class="balance">Saldo: <strong>${escapeHtml(balance)} AR</strong></p>
-        <div class="actions-row">
-          <a class="btn btn-outline" href="#/perfil">Meu Perfil</a>
-          <button id="btn-disconnect-wallet" class="btn btn-danger">Desconectar</button>
+      <section class="card wallet-info agora-wallet-hero">
+        <span class="agora-tile-label">Saldo vinculado · Arweave</span>
+        <p class="balance agora-wallet-balance"><strong>${escapeHtml(balance)} AR</strong></p>
+        <p class="agora-wallet-address">Endereço: <code class="agora-hash">${escapeHtml(address)}</code></p>
+        ${renderWalletPixRow()}
+        <div class="actions-row agora-wallet-actions">
+          <a class="agora-btn agora-btn--solid" href="#/perfil">Meu perfil</a>
+          <a class="agora-btn agora-btn--secondary" href="#/vote">Apoiar pauta</a>
+          <button id="btn-disconnect-wallet" class="agora-btn agora-btn--bronze btn-danger">Desconectar</button>
         </div>
-      </div>`;
+      </section>`;
   }
   return `
-    <div class="card wallet-warning">
-      <p>Conecte ou gere uma carteira Arweave se desejar publicar dados no permaweb permanente.</p>
-      <button id="btn-generate-wallet" class="btn btn-primary">⚡ Gerar Carteira Instantânea</button>
-    </div>`;
+    <section class="card wallet-warning agora-wallet-hero">
+      <span class="agora-tile-label">Nenhuma carteira neste aparelho</span>
+      <p class="agora-wallet-empty">Conecte ou gere uma carteira Arweave se desejar publicar dados no permaweb permanente.</p>
+      ${renderWalletPixRow()}
+      <div class="agora-wallet-actions">
+        <button id="btn-generate-wallet" class="agora-btn agora-btn--primary btn-primary">⚡ Gerar carteira instantânea</button>
+      </div>
+    </section>`;
 }
 
+/** Carteira Soberana (Stitch tela 14): saldo real, Pix configurado, custódia e importação JWK. */
 export function renderWallet(main, { address = null, balance = "0.000", hasWallet = false, error = null } = {}) {
   const statusBox = renderWalletStatusBox(hasWallet, address, balance);
   const errorBox = error ? `<div class="error">${escapeHtml(error)}</div>` : "";
 
   main.innerHTML += `
-    <div class="actions-bar"><span class="section-title">Carteira Arweave</span></div>
-    ${errorBox}
-    ${statusBox}
-    <div class="card wallet-import">
-      <h3>Importar Carteira (JWK)</h3>
-      <p class="meta">Cole o JSON da sua chave privada:</p>
-      <form id="form-import-wallet">
-        <textarea id="wallet-jwk-input" rows="4" class="form-control" placeholder='{"kty":"RSA","n":"...","e":"AQAB",...}' required></textarea>
-        <div class="form-actions"><button type="submit" class="btn btn-primary">Salvar Carteira</button></div>
-      </form>
+    <div class="agora-wide agora-wallet">
+      <header class="agora-page-head agora-page-head--wide">
+        <div class="agora-page-head-text">
+          <p class="agora-kicker"><span class="agora-pylon" aria-hidden="true"></span>Enclave local · tesouraria pessoal P2P</p>
+          <h1 class="agora-page-title">Carteira Soberana</h1>
+          <p class="agora-page-sub">Sua chave e seus recibos ficam só neste navegador. O Vox não processa pagamentos nem guarda saldo.</p>
+        </div>
+      </header>
+      <div class="actions-bar" hidden><span class="section-title">Carteira Arweave</span></div>
+      ${errorBox}
+      <div class="agora-split agora-split--right">
+        <div class="agora-split-main">${statusBox}${renderWalletImportHtml()}</div>
+        ${renderWalletAsideHtml()}
+      </div>
     </div>`;
+}
+
+function renderWalletImportHtml() {
+  return `
+          <section class="card wallet-import agora-tablet">
+            <div class="agora-tablet-head"><h3 class="agora-section-title">Importar carteira (JWK)</h3></div>
+            <p class="meta">Cole o JSON da sua chave privada:</p>
+            <form id="form-import-wallet">
+              <textarea id="wallet-jwk-input" rows="4" class="form-control agora-inscription" placeholder='{"kty":"RSA","n":"...","e":"AQAB",...}' required></textarea>
+              <div class="form-actions"><button type="submit" class="agora-btn agora-btn--solid btn-primary">Salvar carteira</button></div>
+            </form>
+          </section>`;
+}
+
+function renderWalletAsideHtml() {
+  return `
+        <aside class="agora-split-aside">
+          <section class="agora-tablet agora-tablet--bronze">
+            <p class="agora-section-label">Custódia descentralizada</p>
+            <p>Fundos, recibos e chave de assinatura residem no armazenamento deste aparelho. Nenhum servidor central retém sua chave.</p>
+            <a class="agora-btn agora-btn--secondary agora-btn--block" href="#/settings/linked-accounts">Backup e contas vinculadas</a>
+          </section>
+          <section class="agora-tablet">
+            <p class="agora-section-label agora-section-label--teal">Zaps cívicos</p>
+            <p>Apoie autores e pautas direto pelo Pix deles — o pagamento sai do seu banco, sem intermediário.</p>
+          </section>
+        </aside>`;
 }
 
 function renderComposeCommunityPhotoSection() {
@@ -776,14 +845,21 @@ function renderComposeCommunityFields() {
 
 export function renderComposeCommunity(main) {
   main.innerHTML = `
-    <div class="compose-card compose-card-sleek compose-community-card">
-      <a class="back-link compose-back-link" href="#/communities">← Voltar</a>
-      <h2 class="compose-heading" style="margin: 0.5rem 0 1rem;">Nova Comunidade</h2>
+    <div class="compose-card compose-card-sleek compose-community-card agora-composer">
+      <div class="agora-composer-head">
+        <a class="back-link compose-back-link" href="#/communities">← Voltar</a>
+        <p class="agora-kicker"><span class="agora-pylon agora-pylon--teal" aria-hidden="true"></span>Fundação de círculo</p>
+        <h2 class="compose-heading agora-page-title">Nova Comunidade</h2>
+        <p class="agora-page-sub">Um bairro, um coletivo, um grupo de estudo — com regras e governança próprias.</p>
+      </div>
+      ${renderComposeTypeSelector("community")}
       <form id="form-compose-community">
         ${renderComposeCommunityPhotoSection()}
         ${renderComposeCommunityFields()}
-        <div class="form-actions" style="margin-top: 1rem;">
-          <button type="submit" class="btn btn-primary btn-publish-pill" id="btn-submit-comm">Publicar Comunidade</button>
+        ${renderComposeSignaturePanel()}
+        <div class="form-actions agora-composer-actions">
+          <a class="agora-btn agora-btn--secondary" href="#/communities">Cancelar</a>
+          <button type="submit" class="agora-btn agora-btn--primary btn-publish-pill" id="btn-submit-comm">Publicar comunidade</button>
         </div>
       </form>
     </div>`;
@@ -821,20 +897,16 @@ function renderTopicCivicTagBar() {
 
 function renderComposeTargetPill(communityId) {
   if (communityId) {
-    return `<input type="hidden" id="topic-comm-id" value="${escapeHtml(communityId)}" /><span class="compose-pill-tag">👥 Comunidade: <strong>${escapeHtml(communityId)}</strong></span>`;
+    return `<input type="hidden" id="topic-comm-id" value="${escapeHtml(communityId)}" /><span class="compose-pill-tag agora-stamp agora-stamp--teal">Círculo: <strong>${escapeHtml(communityId)}</strong></span>`;
   }
-  return `<div class="compose-pill-group"><span class="compose-pill-tag">👥 Postar em:</span> <input type="text" id="topic-comm-id" class="compose-pill-input" value="geral" placeholder="ex: geral, cinema-nacional" required /></div>`;
+  return `<div class="compose-pill-group agora-compose-target"><label class="agora-field-label" for="topic-comm-id">Círculo de destino</label> <input type="text" id="topic-comm-id" class="compose-pill-input agora-inscription" value="geral" placeholder="ex: geral, cinema-nacional" required /></div>`;
 }
 
 function renderComposeAdvancedDrawer() {
   return `
     <details class="compose-advanced-drawer">
-      <summary class="compose-advanced-summary">⚙️ Mais opções (título, categoria cívica, atas)</summary>
+      <summary class="compose-advanced-summary">Categoria cívica e importação de atas</summary>
       <div class="compose-advanced-content">
-        <div class="form-group" style="margin-bottom:12px;">
-          <label for="topic-title" style="font-size:0.82rem; color:var(--muted); font-weight:600;">Título da pauta (opcional):</label>
-          <input type="text" id="topic-title" class="form-control" placeholder="ex: Dúvida sobre governança / Ideia de melhoria" />
-        </div>
         ${renderTopicCivicTagBar()}
         ${renderChatTranscriptDetails()}
       </div>
@@ -842,27 +914,44 @@ function renderComposeAdvancedDrawer() {
 }
 
 export function renderComposeTopic(main, communityId) {
-  const backLink = communityId
-    ? `<a class="back-link compose-back-link" href="#/c/${encodeURIComponent(communityId)}">← Voltar</a>`
-    : `<a class="back-link compose-back-link" href="#/">← Voltar</a>`;
+  const backHref = communityId ? `#/c/${encodeURIComponent(communityId)}` : "#/";
   const commInput = renderComposeTargetPill(communityId);
-  const heading = communityId ? `Postar em ${escapeHtml(communityId)}` : "Criar Publicação";
+  const heading = communityId ? `Inscrever em ${escapeHtml(communityId)}` : "Novo registro soberano";
 
   main.innerHTML = `
-    <div class="compose-card compose-card-sleek">
-      <div class="compose-header-bar">
-        ${backLink}
-        <h2 class="compose-heading">${heading}</h2>
-        <button type="submit" form="form-compose-topic" class="btn btn-primary btn-sm btn-publish-pill" id="btn-submit-topic">Publicar</button>
+    <div class="compose-card compose-card-sleek agora-composer">
+      <div class="compose-header-bar agora-composer-head">
+        <div>
+          <a class="back-link compose-back-link" href="${backHref}">← Voltar</a>
+          <p class="agora-kicker"><span class="agora-pylon agora-pylon--teal" aria-hidden="true"></span>Inscrição cívica</p>
+          <h2 class="compose-heading agora-page-title">${heading}</h2>
+          <p class="agora-page-sub">Componha publicações, pautas e avisos assinados no seu aparelho.</p>
+        </div>
       </div>
+      ${renderComposeTypeSelector("topic", communityId)}
+      ${renderComposeTopicForm(commInput, backHref)}
+    </div>`;
+}
+
+function renderComposeTopicForm(commInput, backHref) {
+  return `
       <form id="form-compose-topic">
         <div class="compose-target-row">${commInput}</div>
-        <div class="compose-body-field">
-          <textarea id="topic-body" class="form-control compose-textarea-seamless" rows="4" placeholder="O que você gostaria de compartilhar na rede?" required></textarea>
+        <div class="form-group agora-compose-field">
+          <label class="agora-field-label" for="topic-title">Título do registro <span class="agora-muted">(opcional)</span></label>
+          <input type="text" id="topic-title" class="form-control agora-inscription agora-inscription--title" maxlength="120" placeholder="ex: Mutirão de reflorestamento no córrego" />
+        </div>
+        <div class="compose-body-field agora-compose-field">
+          <label class="agora-field-label" for="topic-body">Texto <span class="agora-muted">· Markdown</span></label>
+          <textarea id="topic-body" class="form-control compose-textarea-seamless agora-inscription" rows="8" placeholder="O que você gostaria de compartilhar na rede?" required></textarea>
         </div>
         ${renderComposeAdvancedDrawer()}
-      </form>
-    </div>`;
+        ${renderComposeSignaturePanel()}
+        <div class="agora-composer-actions">
+          <a class="agora-btn agora-btn--secondary" href="${backHref}">Cancelar</a>
+          <button type="submit" form="form-compose-topic" class="agora-btn agora-btn--primary btn-publish-pill" id="btn-submit-topic">Publicar no nó soberano</button>
+        </div>
+      </form>`;
 }
 
 export function renderComposeReply(main, topicId, communityId, { parentId = "", parentAuthor = "", parentExcerpt = "" } = {}) {
@@ -922,9 +1011,13 @@ export function renderComposeListing(main, communityId, commTitle = "", prefill 
   const defaultPix = prefill.defaultPix || "";
 
   main.innerHTML = `
-    <div class="card compose-card compose-listing-card">
-      <a class="back-link" href="#/c/${encodeURIComponent(communityId)}?tab=listings">← Voltar à feira</a>
-      <h2>Nova Oferta — ${escapeHtml(titleDisplay)}</h2>
+    <div class="card compose-card compose-listing-card agora-composer">
+      <div class="agora-composer-head">
+        <a class="back-link" href="#/c/${encodeURIComponent(communityId)}?tab=listings">← Voltar à feira</a>
+        <p class="agora-kicker"><span class="agora-pylon agora-pylon--bronze" aria-hidden="true"></span>Feira local · economia P2P</p>
+        <h2 class="agora-page-title">Nova Oferta — ${escapeHtml(titleDisplay)}</h2>
+      </div>
+      ${renderComposeTypeSelector("listing", communityId)}
       <p class="listing-form-disclaimer" style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem;">
         ⚡ ${escapeHtml(listing.LISTING_DISCLAIMER)}
       </p>
@@ -932,7 +1025,7 @@ export function renderComposeListing(main, communityId, commTitle = "", prefill 
         <input type="hidden" id="listing-comm-id" value="${escapeHtml(communityId)}" />
         ${renderComposeListingFields(defaultPix)}
         <div class="form-actions" style="margin-top:1rem;">
-          <button type="submit" class="btn btn-primary" id="btn-submit-listing">Publicar na Feira</button>
+          <button type="submit" class="agora-btn agora-btn--primary btn-primary" id="btn-submit-listing">Publicar na Feira</button>
         </div>
       </form>
     </div>`;

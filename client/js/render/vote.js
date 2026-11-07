@@ -1,176 +1,223 @@
 /**
- * @fileoverview Sovereign Agora Luminescent Matrix — Vote & Direct Democracy View (Stitch).
- * Deliberação vicinal com quórum qualificado (mínimo 70%) e sufrágio assinado ed25519.
+ * @fileoverview Vote — Democracia Direta (layout Stitch, ADR-016).
+ *
+ * Mostra as pautas reais de governança (`governance-proposal`) das comunidades conhecidas por este
+ * aparelho, com a apuração de `governance.computeTally` (1 membro = 1 voto, último voto vale,
+ * corte anti-brigading). Nenhum número é inventado: sem pautas, a tela mostra um estado vazio.
  */
-import { escapeHtml } from "./util.js";
+import { escapeHtml, shortId, formatTimeAgo } from "./util.js";
+import { renderPageHead } from "./shell.js";
 
-const DEFAULT_VOTE_STATS = {
-  quorum: "82.4%",
-  quorumMin: "70% min",
-  treasury: "142.8k ZK-BRL",
-  openCount: "06",
+export const VOTE_FILTERS = Object.freeze([
+  { key: "all", label: "Todas" },
+  { key: "open", label: "Em votação" },
+  { key: "merged", label: "Aprovadas" },
+  { key: "closed", label: "Encerradas" },
+]);
+
+const STATE_LABELS = {
+  open: "Em votação",
+  merged: "Aprovada",
+  rejected: "Rejeitada",
+  expired: "Expirada sem quórum",
 };
 
-const DEMO_DELIBERATIONS = [
-  {
-    id: "DEL-882",
-    title: "Instalação de Corredor Verde e Ciclovia Integrada na Rua Fradique Coutinho",
-    description: "Reconfiguração do trecho arterial entre Rua dos Pinheiros e Cardeal Arcoverde. Eliminação de 42 vagas de estacionamento para implantação de biovaletas pluviais e via ciclável bidirecional com pavimento drenante.",
-    tag: "Deliberação Vinculante",
-    district: "Distrito Pinheiros / Vila Madalena",
-    author: "@célula_são_simão",
-    authorKey: "ed25519:3b19...74e",
-    countdown: "Encerra em 13h 29m",
-    approvalPct: 88.2,
-    votesYes: 13071,
-    votesNo: 1749,
-    status: "active",
-  },
-  {
-    id: "DEL-883",
-    title: "Aporte Coletivo: Implementação de Captação e Purificação Solar de Água na Praça Benedito Calixto",
-    description: "Plano de soberania hídrica barrial prevendo micro-estação autônoma de dessalinização e filtragem via osmose reversa energizada por matriz fotovoltaica comunitária. Relatório técnico auditado por nós descentralizados.",
-    tag: "Alocação de Fundos",
-    district: "Regional Oeste",
-    author: "Coletivo Raízes Urbanas",
-    authorKey: "ed25519:80c1...42a",
-    countdown: "Encerra em 42h 15m",
-    approvalPct: 94.5,
-    votesYes: 84500,
-    votesNo: 5500,
-    status: "active",
-  },
-  {
-    id: "DEL-884",
-    title: "Alargamento e Drenagem Sustentável das Calçadas da Rua Simão Álvares",
-    description: "Substituição do asfalto de calçada por blocos intertravados permeáveis e plantio de 32 mudas nativas da Mata Atlântica em cooperação com pequenos comerciantes locais.",
-    tag: "Urbanismo Tático",
-    district: "Subprefeitura de Pinheiros",
-    author: "@mobilidade_ativa",
-    authorKey: "ed25519:12a8...41f",
-    countdown: "Encerra em 5 dias",
-    approvalPct: 91.0,
-    votesYes: 6240,
-    votesNo: 618,
-    status: "active",
-  },
-];
-
-function renderVoteHeroHeader() {
-  return `
-    <header class="vote-banner">
-      <div class="vote-banner-glow-1" aria-hidden="true"></div>
-      <div class="vote-banner-glow-2" aria-hidden="true"></div>
-      <div style="position:relative; z-index:2;">
-        <span class="vote-tag-district">
-          <span class="vote-tag-district-pulse"></span>
-          Câmara Distrital Soberana &bull; ZK-SNARK Proved &bull; #SP-011 PINHEIROS
-        </span>
-        <h1 class="vote-header-title">Democracia Direta &amp; Deliberação Vicinal</h1>
-        <p class="vote-header-desc">
-          Pautas soberanas com poder executório local. O sufrágio é criptograficamente assinado pela sua chave ed25519 e verificado em tempo real via prova de conhecimento zero sem exposição identitária.
-        </p>
-        ${renderVoteQuickStats(DEFAULT_VOTE_STATS)}
-      </div>
-    </header>`;
+/** @param {{ state?: string }} item @param {string} filter */
+export function matchesVoteFilter(item, filter) {
+  const state = item?.state || "open";
+  if (filter === "open") return state === "open";
+  if (filter === "merged") return state === "merged";
+  if (filter === "closed") return state === "rejected" || state === "expired";
+  return true;
 }
 
-function renderVoteQuickStats(stats) {
+/**
+ * Agrega indicadores reais para o cabeçalho.
+ * @param {Array<{ state?: string, tally?: { totalEligible?: number }, communityId?: string }>} items
+ */
+export function computeVoteStats(items = []) {
+  const open = items.filter((i) => (i.state || "open") === "open").length;
+  const merged = items.filter((i) => i.state === "merged").length;
+  const votes = items.reduce((sum, i) => sum + (Number(i.tally?.totalEligible) || 0), 0);
+  const communities = new Set(items.map((i) => i.communityId).filter(Boolean)).size;
+  return { open, merged, votes, communities, total: items.length };
+}
+
+/** @param {number} closesAt @param {number} now */
+export function formatCountdown(closesAt, now = Date.now()) {
+  const ms = Number(closesAt) - now;
+  if (!closesAt || Number.isNaN(ms)) return "";
+  if (ms <= 0) return "Encerrada";
+  const h = Math.floor(ms / 3600000);
+  const m = Math.floor((ms % 3600000) / 60000);
+  if (h >= 48) return `Encerra em ${Math.floor(h / 24)} dias`;
+  if (h >= 1) return `Encerra em ${h}h ${m}m`;
+  return `Encerra em ${Math.max(1, m)} min`;
+}
+
+function pct(part, total) {
+  if (!total) return 0;
+  return Math.round((part / total) * 1000) / 10;
+}
+
+function renderStat(label, value, hint, tone = "") {
+  const toneCls = tone ? ` agora-stat-value--${tone}` : "";
   return `
-    <div class="vote-stats-grid">
-      <div class="vote-stat-box">
-        <span class="vote-stat-label">Quórum da Sessão</span>
-        <div class="vote-stat-value text-emerald">${escapeHtml(stats.quorum)}</div>
-        <span class="vote-stat-sub">Legítimo (${escapeHtml(stats.quorumMin)})</span>
+    <div class="agora-stat">
+      <span class="agora-stat-label">${escapeHtml(label)}</span>
+      <span class="agora-stat-value${toneCls}">${escapeHtml(String(value))}</span>
+      <span class="agora-stat-hint">${escapeHtml(hint)}</span>
+    </div>`;
+}
+
+function renderFilterBar(items, activeFilter) {
+  const buttons = VOTE_FILTERS.map((f) => {
+    const count = items.filter((i) => matchesVoteFilter(i, f.key)).length;
+    const pressed = f.key === activeFilter;
+    return `<button type="button" class="agora-filter-btn" data-vote-filter="${f.key}" aria-pressed="${pressed}">${escapeHtml(f.label)} (${count})</button>`;
+  }).join("");
+  return `<div class="agora-filter-bar" role="group" aria-label="Filtrar pautas">${buttons}</div>`;
+}
+
+function renderHero(items, activeFilter) {
+  const stats = computeVoteStats(items);
+  const head = renderPageHead({
+    kicker: "Câmara deliberativa · 1 membro = 1 voto",
+    title: "Democracia Direta",
+    subtitle:
+      "Pautas abertas nas comunidades que este aparelho conhece. Cada voto é assinado com a chave do seu aparelho e contado como 1 membro = 1 voto; quem entrou depois da pauta não altera o resultado.",
+    actionsHtml: `<a class="agora-btn agora-btn--primary" href="#/compose/proposal?c=vox">+ Propor votação</a>`,
+  });
+  return `
+    <section class="agora-vote-hero" aria-label="Resumo da governança">
+      ${head}
+      <div class="agora-stat-row">
+        ${renderStat("Pautas em votação", stats.open, stats.open === 1 ? "1 aberta agora" : `${stats.open} abertas agora`, "emerald")}
+        ${renderStat("Votos válidos", stats.votes.toLocaleString("pt-BR"), "Somando todas as pautas")}
+        ${renderStat("Aprovadas", stats.merged, `De ${stats.total} pautas registradas`)}
+        ${renderStat("Comunidades", stats.communities, "Com pautas neste aparelho")}
       </div>
-      <div class="vote-stat-box">
-        <span class="vote-stat-label">Tesouro em Pauta</span>
-        <div class="vote-stat-value">${escapeHtml(stats.treasury)}</div>
-        <span class="vote-stat-sub">Contratos Descentralizados</span>
+      ${renderFilterBar(items, activeFilter)}
+    </section>`;
+}
+
+function renderTally(item) {
+  const t = item.tally || {};
+  const yes = Number(t.yes) || 0;
+  const no = Number(t.no) || 0;
+  const abstain = Number(t.abstain) || 0;
+  const total = yes + no + abstain;
+  const minQuorum = Number(item.minQuorum) || 1;
+  const quorumLabel = total >= minQuorum ? `Quórum atingido (${total}/${minQuorum})` : `Quórum: ${total}/${minQuorum} votos`;
+  const ineligible = Number(t.ineligibleCount) || 0;
+  return `
+    <div class="agora-tally" aria-label="Apuração">
+      <div class="agora-tally-row">
+        <span class="agora-tally-yes">${pct(yes, total)}% a favor (${yes})</span>
+        <span class="agora-tally-no">${pct(no, total)}% contra (${no})</span>
       </div>
-      <div class="vote-stat-box">
-        <span class="vote-stat-label">Pautas Abertas</span>
-        <div class="vote-stat-value text-emerald">${escapeHtml(stats.openCount)}</div>
-        <span class="vote-stat-sub">1 encerramento iminente</span>
+      <div class="agora-tally-bar" role="img" aria-label="${yes} a favor, ${no} contra, ${abstain} abstenções">
+        <span class="yes" style="width:${pct(yes, total)}%"></span>
+        <span class="no" style="width:${pct(no, total)}%"></span>
+        <span class="abstain" style="width:${pct(abstain, total)}%"></span>
+      </div>
+      <div class="agora-tally-foot">
+        <span>${escapeHtml(quorumLabel)} · ${abstain} ${abstain === 1 ? "abstenção" : "abstenções"}</span>
+        <span>${ineligible ? `${ineligible} voto${ineligible === 1 ? "" : "s"} fora do corte` : "Apuração local verificável"}</span>
       </div>
     </div>`;
 }
 
-function renderVoteFiltersBar() {
-  return `
-    <nav class="vote-filters-bar" aria-label="Filtros de Pautas">
-      <button type="button" class="vote-filter-btn active" data-filter="all">Todas as Pautas (3)</button>
-      <button type="button" class="vote-filter-btn" data-filter="urgent">Em Votação Urgente (1)</button>
-      <button type="button" class="vote-filter-btn" data-filter="ready">Prontas para Execução (1)</button>
-      <button type="button" class="vote-filter-btn" data-filter="consult">Consultas Consultivas (1)</button>
-    </nav>`;
+function renderVoteActions(item) {
+  const href = `#/c/${encodeURIComponent(item.communityId)}/proposal/${encodeURIComponent(item.id)}`;
+  const detailBtn = `<a class="agora-btn agora-btn--secondary" href="${href}">Ver pauta e debate</a>`;
+  if ((item.state || "open") !== "open") {
+    return `<div class="agora-vote-actions">${detailBtn}</div>`;
+  }
+  if (!item.isMember) {
+    return `
+      <div class="agora-vote-actions">
+        <a class="agora-btn agora-btn--ghost" href="#/c/${encodeURIComponent(item.communityId)}">Entrar na comunidade para votar</a>
+        ${detailBtn}
+      </div>`;
+  }
+  if (!item.isEligible) {
+    return `
+      <div class="agora-vote-actions">
+        ${detailBtn}
+        <p class="agora-vote-note">Você entrou na comunidade depois da abertura desta pauta, então seu voto não entra na contagem (regra anti-brigading).</p>
+      </div>`;
+  }
+  return renderBallot(item, detailBtn);
 }
 
-function renderDeliberationQuorum(p) {
-  const yesPct = p.approvalPct;
-  const noPct = (100 - yesPct).toFixed(1);
+function renderBallot(item, detailBtn) {
+  const current = item.userVote?.choice || "";
+  const btn = (choice, label, cls) =>
+    `<button type="button" class="agora-btn agora-btn--secondary ${cls} agora-vote-btn" data-vote-choice="${choice}" data-proposal-id="${escapeHtml(item.id)}" aria-pressed="${current === choice}">${label}</button>`;
+  const note = current ? `<p class="agora-vote-note">Seu voto atual: <strong>${escapeHtml(STATE_CHOICE_LABEL[current] || current)}</strong>. Você pode mudar até o encerramento — vale o mais recente.</p>` : "";
   return `
-    <div class="quorum-progress-block">
-      <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.8rem;">
-        <span style="font-weight:700; color:var(--emerald-bright);">Aprovação ${yesPct}%</span>
-        <span style="color:var(--text-tertiary); font-size:0.75rem;">${p.votesYes.toLocaleString("pt-BR")} a favor &bull; ${p.votesNo.toLocaleString("pt-BR")} contra</span>
-      </div>
-      <div class="quorum-progress-bar">
-        <div class="quorum-fill-yes" style="width: ${yesPct}%"></div>
-        <div class="quorum-fill-no" style="width: ${noPct}%"></div>
-      </div>
-      <div style="display:flex; justify-content:space-between; font-size:0.72rem; color:var(--text-tertiary);">
-        <span>Quórum territorial validado via ZK</span>
-        <span>${escapeHtml(p.countdown)}</span>
-      </div>
+    <div class="agora-vote-actions">
+      ${btn("yes", "✓ Votar sim", "agora-btn--yes")}
+      ${btn("no", "✕ Votar não", "agora-btn--no")}
+      ${btn("abstain", "Abster", "")}
+      ${detailBtn}
+      ${note}
     </div>`;
 }
 
-function renderDeliberationActions(p) {
-  return `
-    <div class="vote-actions-row">
-      <button type="button" class="btn-vote-choice btn-vote-yes" data-id="${escapeHtml(p.id)}" data-choice="yes">
-        <span>✓</span> Votar Sim
-      </button>
-      <button type="button" class="btn-vote-choice btn-vote-no" data-id="${escapeHtml(p.id)}" data-choice="no">
-        <span>✕</span> Contestar
-      </button>
-      <a href="#/t/${encodeURIComponent(p.id)}" class="btn-vote-choice btn-vote-no" style="text-decoration:none;">
-        <span>💬</span> Debate Público
-      </a>
-      <button type="button" class="btn-vote-choice btn-vote-endorse" data-id="${escapeHtml(p.id)}">
-        <span>🔑</span> Endossar (ed25519)
-      </button>
-    </div>`;
-}
+const STATE_CHOICE_LABEL = { yes: "Sim", no: "Não", abstain: "Abstenção" };
 
-function renderDeliberationCard(p) {
+/**
+ * @param {object} item pauta normalizada (ver showVote em screens-community.js)
+ */
+export function renderDeliberation(item) {
+  const state = item.state || "open";
+  const href = `#/c/${encodeURIComponent(item.communityId)}/proposal/${encodeURIComponent(item.id)}`;
+  const statePill = state === "open"
+    ? `<span class="agora-pill agora-pill--emerald">${STATE_LABELS.open}</span>`
+    : `<span class="agora-pill${state === "merged" ? " agora-pill--cobalt" : ""}">${escapeHtml(STATE_LABELS[state] || state)}</span>`;
+  const countdown = state === "open" ? formatCountdown(item.closesAt) : "";
+  const author = item.authorLabel || (item.author ? shortId(item.author) : "");
+  const when = item.createdAt ? formatTimeAgo(item.createdAt) : "";
   return `
-    <article class="vote-proposal-item" data-id="${escapeHtml(p.id)}">
-      <div class="vote-proposal-bar" aria-hidden="true"></div>
-      <div class="vote-proposal-top">
-        <div style="display:flex; align-items:center; gap:8px;">
-          <span class="vote-tag-district">${escapeHtml(p.tag)}</span>
-          <span style="font-family:var(--font-telemetry); font-size:0.75rem; color:var(--cyan-bridge); font-weight:700;">#${escapeHtml(p.id)}</span>
-          <span style="color:var(--text-tertiary); font-size:0.75rem;">&bull; ${escapeHtml(p.author)}</span>
-        </div>
-        <span style="font-size:0.75rem; color:var(--emerald-bright); font-family:var(--font-telemetry);">${escapeHtml(p.countdown)}</span>
+    <article class="agora-deliberation" data-state="${escapeHtml(state)}" data-proposal-id="${escapeHtml(item.id)}">
+      <div class="agora-deliberation-meta">
+        ${statePill}
+        <a class="agora-pill" href="#/c/${encodeURIComponent(item.communityId)}">${escapeHtml(item.communityTitle || item.communityId)}</a>
+        ${author ? `<span>por ${escapeHtml(author)}</span>` : ""}
+        ${when ? `<span>· ${escapeHtml(when)}</span>` : ""}
+        ${countdown ? `<span class="agora-countdown">${escapeHtml(countdown)}</span>` : ""}
       </div>
-      <h2 class="vote-proposal-title">${escapeHtml(p.title)}</h2>
-      <p class="vote-proposal-desc">${escapeHtml(p.description)}</p>
-      ${renderDeliberationQuorum(p)}
-      ${renderDeliberationActions(p)}
+      <h2 class="agora-deliberation-title"><a href="${href}">${escapeHtml(item.title || "Pauta sem título")}</a></h2>
+      ${item.body ? `<p class="agora-deliberation-body">${escapeHtml(item.body)}</p>` : ""}
+      ${renderTally(item)}
+      ${renderVoteActions(item)}
     </article>`;
 }
 
-export function renderVoteDashboard(deliberations = DEMO_DELIBERATIONS) {
-  const cardsHtml = deliberations.map((d) => renderDeliberationCard(d)).join("");
+function renderEmpty(activeFilter, hasAny) {
+  if (hasAny) {
+    return `<div class="agora-empty"><h2>Nada neste filtro</h2><p>Não há pautas com esse status agora.</p></div>`;
+  }
   return `
-    <div class="vote-container">
-      ${renderVoteHeroHeader()}
-      ${renderVoteFiltersBar()}
-      <div class="vote-proposals-stream" style="display:flex; flex-direction:column; gap:1.25rem;">
-        ${cardsHtml}
-      </div>
+    <div class="agora-empty">
+      <h2>Nenhuma pauta por aqui ainda</h2>
+      <p>Pautas são propostas que uma comunidade decide em votação. Abra a primeira no fórum Vox ou na comunidade do seu bairro.</p>
+      <a class="agora-btn agora-btn--primary" href="#/compose/proposal?c=vox">+ Abrir uma pauta</a>
+    </div>`;
+}
+
+/**
+ * @param {Array<object>} items pautas normalizadas
+ * @param {{ filter?: string }} [opts]
+ */
+export function renderVoteDashboard(items = [], { filter = "all" } = {}) {
+  const visible = items.filter((i) => matchesVoteFilter(i, filter));
+  const list = visible.length ? visible.map(renderDeliberation).join("") : renderEmpty(filter, items.length > 0);
+  return `
+    <div class="agora-vote">
+      ${renderHero(items, filter)}
+      <div class="agora-deliberation-list">${list}</div>
     </div>`;
 }
