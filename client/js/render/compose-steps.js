@@ -6,9 +6,9 @@ import { escapeHtml } from "./util.js";
 
 export const COMPOSE_TOPIC_STEPS = [
   { key: "type", title: "O que você vai publicar?" },
-  { key: "where", title: "Onde e sobre o quê?" },
+  { key: "civic", title: "Que tipo de post cívico?" },
+  { key: "where", title: "Onde e sobre o quê?", required: ["topic-title"], requiredMsg: "Dê um título com pelo menos 8 caracteres." },
   { key: "write", title: "Escreva" },
-  { key: "civic", title: "Tornar cívico?" },
   { key: "review", title: "Revisar e publicar" },
 ];
 
@@ -24,14 +24,14 @@ export function renderStepHeader(index, steps = COMPOSE_TOPIC_STEPS) {
 }
 
 /** Rodapé com Voltar/Continuar (ou Publicar na última etapa). */
-export function renderStepNav(index, { backHref = "#/", last = false, submitId = "", submitLabel = "Publicar" } = {}) {
+export function renderStepNav(index, { backHref = "#/", last = false, submitId = "", submitLabel = "Publicar", hideNext = false } = {}) {
   const back = index === 0
     ? `<a class="agora-btn agora-btn--secondary" href="${escapeHtml(backHref)}">Cancelar</a>`
     : `<button type="button" class="agora-btn agora-btn--secondary" data-step-prev>Voltar</button>`;
   const next = last
     ? `<button type="submit" class="agora-btn agora-btn--primary btn-publish-pill" id="${escapeHtml(submitId)}">${escapeHtml(submitLabel)}</button>`
     : `<button type="button" class="agora-btn agora-btn--primary" data-step-next>Continuar</button>`;
-  return `<div class="agora-composer-actions compose-step-nav">${back}${next}</div>`;
+  return `<div class="agora-composer-actions compose-step-nav">${back}${hideNext ? "" : next}</div>`;
 }
 
 /** Envolve o conteúdo de uma etapa; só a primeira começa visível. */
