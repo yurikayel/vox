@@ -10,9 +10,7 @@ import * as gossipRetract from "../gossip-retract-ui.js";
 import * as profileDirectory from "../profile-directory.js";
 import * as mod from "../moderation.js";
 import {
-  WELCOME_ROUTE_ID,
   isWelcomeRouteId,
-  shouldShowWelcomeFeedHint,
   getWelcomeProfile,
 } from "../vox-welcome-profile.js";
 import {
@@ -30,7 +28,6 @@ import { renderRepostBtn } from "./repost-btn.js";
 import { rememberVisible } from "../repost-index.js";
 import { groupRepliesForThread } from "../reply-thread.js";
 import { renderPhotoHiddenMessageHtml } from "./photo-chrome.js";
-import { renderPageHead } from "./shell.js";
 import { renderCivicBlock, renderCivicPendingNote, renderCivicFeedIntro } from "./civic-block.js";
 
 export function renderComposerStrip(displayName = "") {
@@ -74,8 +71,9 @@ function renderComposerPreviewWrap() {
         <audio id="inline-topic-preview-audio" controls style="width:100%;"></audio>
       </div>
       <div id="inline-topic-preview-video-wrap" class="inline-composer-preview-video hidden" hidden>
-        <video id="inline-topic-preview-video" controls playsinline style="width:100%; max-height:240px; display:block;"></video>
+        <video id="inline-topic-preview-video" controls playsinline preload="metadata" style="width:100%; max-height:240px; display:block;"></video>
       </div>
+      <p id="inline-topic-attach-meta" class="inline-composer-attach-meta hidden" hidden aria-live="polite"></p>
       ${renderComposerFilterBar()}
       ${renderComposerAspectBar()}
       <div class="composer-tag-bar" id="composer-tag-bar" style="display:none; margin-top:8px; align-items:center; gap:8px; flex-wrap:wrap;">
@@ -816,19 +814,6 @@ export function renderStoriesStrip(customProfiles = null) {
   return `<div class="stories-strip" aria-label="Stories em destaque">${items}</div>`;
 }
 
-export function renderWelcomeFeedHintHtml() {
-  if (!shouldShowWelcomeFeedHint()) return "";
-  const dmHref = `#/dm/${encodeURIComponent(WELCOME_ROUTE_ID)}`;
-  return `
-    <div class="welcome-feed-hint" id="welcome-feed-hint" role="status">
-      <span class="welcome-feed-hint-text">
-        💬 <strong>Vox</strong> te mandou uma mensagem —
-        <a href="${dmHref}">Abrir conversa</a>
-      </span>
-      <button type="button" class="welcome-feed-hint-dismiss" id="btn-welcome-hint-dismiss" aria-label="Dispensar aviso">×</button>
-    </div>`;
-}
-
 const FEED_TAB_ICONS = {
   social: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 9a2 2 0 0 1-2 2H6l-4 4V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2z"/><path d="M18 9h2a2 2 0 0 1 2 2v11l-4-4h-6a2 2 0 0 1-2-2v-1"/></svg>`,
   vox: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18"/><path d="M5 21V10M9 21V10M15 21V10M19 21V10"/><path d="M2 10 12 3l10 7Z"/></svg>`,
@@ -951,30 +936,19 @@ function renderFeedEmptyState(activeFeed) {
   </div>`;
 }
 
-function renderFeedPageHead() {
-  return renderPageHead({
-    title: "Ágora",
-    subtitle: "Debates, pautas e registros das pessoas e comunidades da sua rede — em ordem cronológica, sem algoritmo.",
-  });
-}
-
 export function renderFeed(main, topics = [], opts = {}) {
   const activeFeed = opts.activeFeed || "for-you";
   const userRouteId = opts.userRouteId || "";
-  const isForYou = activeFeed === "for-you";
   const isCivic = activeFeed === "civic";
   const displayName = userRouteId ? profileDirectory.getAuthorDisplaySync(userRouteId) || mock.getAuthorDisplay(userRouteId) : "";
-  const welcomeHint = isForYou ? renderWelcomeFeedHintHtml() : "";
   const tabsBar = renderFeedTabsBar(activeFeed);
   const managerHtml = activeFeed === "external" ? renderExternalFeedManagerHtml(opts.externalSubs) : "";
 
   let html = `
-    ${renderFeedPageHead()}
     <div class="feed-chrome">
       ${isCivic ? "" : renderStoriesStrip()}
       ${tabsBar}
       ${managerHtml}
-      ${welcomeHint}
       ${isCivic ? renderCivicFeedIntro() : `<div class="feed-composer-section">
         ${renderInlineComposer({ userRouteId, displayName })}
       </div>`}

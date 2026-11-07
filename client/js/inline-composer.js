@@ -182,6 +182,37 @@ function setupVoiceRecorderCallbacks(recorder, recordingChunks, onAudioReady) {
   };
 }
 
+/**
+ * A prévia usa o atributo `hidden` **e** a classe `.hidden` na marcação; alternar só a classe
+ * deixava a miniatura do anexo invisível. Este helper mantém os dois em sincronia.
+ */
+function setPreviewVisible(el, visible) {
+  if (!el) return;
+  el.classList.toggle("hidden", !visible);
+  el.hidden = !visible;
+}
+
+function formatAttachmentSize(bytes) {
+  const n = Number(bytes) || 0;
+  if (n >= 1024 * 1024) return `${(n / (1024 * 1024)).toFixed(1)} MB`;
+  return `${Math.max(1, Math.round(n / 1024))} KB`;
+}
+
+const ATTACHMENT_ICONS = { image: "🖼️", audio: "🎵", voice: "🎙️", video: "🎬" };
+
+/** Linha "ícone · nome · tamanho" do anexo atual, abaixo da miniatura. */
+function setAttachmentMeta(kind, name, bytes) {
+  const el = document.getElementById("inline-topic-attach-meta");
+  if (!el) return;
+  if (!kind) {
+    el.textContent = "";
+    setPreviewVisible(el, false);
+    return;
+  }
+  el.textContent = `${ATTACHMENT_ICONS[kind] || "📎"} ${name || "Anexo"} · ${formatAttachmentSize(bytes)}`;
+  setPreviewVisible(el, true);
+}
+
 function resetMediaDomElements() {
   const fileInput = document.getElementById("inline-topic-file");
   const audioInput = document.getElementById("inline-topic-audio");
@@ -196,17 +227,18 @@ function resetMediaDomElements() {
   if (fileInput) fileInput.value = "";
   if (audioInput) audioInput.value = "";
   if (videoInput) videoInput.value = "";
-  previewWrap?.classList.add("hidden");
+  setPreviewVisible(previewWrap, false);
   if (previewImg) {
     previewImg.removeAttribute("src");
-    previewImg.classList.add("hidden");
+    setPreviewVisible(previewImg, false);
     previewImg.classList.remove("composer-aspect-1-1", "composer-aspect-4-3", "composer-aspect-16-9");
     previewImg.classList.add("composer-aspect-original");
   }
   if (previewAudio) previewAudio.removeAttribute("src");
-  previewAudioWrap?.classList.add("hidden");
+  setPreviewVisible(previewAudioWrap, false);
   if (previewVideo) previewVideo.removeAttribute("src");
-  previewVideoWrap?.classList.add("hidden");
+  setPreviewVisible(previewVideoWrap, false);
+  setAttachmentMeta("", "", 0);
 }
 
 function resetMediaControlBars() {
@@ -244,9 +276,9 @@ function setupImagePreviewBars() {
   const tagBar = document.getElementById("composer-tag-bar");
   const tagsChips = document.getElementById("inline-composer-tags-chips");
 
-  previewImg?.classList.remove("hidden");
-  previewAudioWrap?.classList.add("hidden");
-  previewVideoWrap?.classList.add("hidden");
+  setPreviewVisible(previewImg, true);
+  setPreviewVisible(previewAudioWrap, false);
+  setPreviewVisible(previewVideoWrap, false);
   if (filterBar) filterBar.style.display = "flex";
   filterBar?.querySelectorAll(".lofi-filter-btn").forEach((b) => b.classList.toggle("active", b.dataset.filter === "normal"));
   if (aspectBar) aspectBar.style.display = "flex";
@@ -255,7 +287,7 @@ function setupImagePreviewBars() {
   if (tagsChips) tagsChips.innerHTML = "";
   previewImg?.classList.remove("composer-aspect-1-1", "composer-aspect-4-3", "composer-aspect-16-9");
   previewImg?.classList.add("composer-aspect-original");
-  previewWrap?.classList.remove("hidden");
+  setPreviewVisible(previewWrap, true);
 }
 
 async function renderLofiPreview(state) {
@@ -282,15 +314,16 @@ async function renderLofiPreview(state) {
 function handleVoiceAudioReady(dataUrl, byteSize, state) {
   const kb = Math.max(1, Math.round(byteSize / 1024));
   inlineComposerMedia = { type: "audio", dataUrl, byteLength: byteSize };
+  setAttachmentMeta("voice", "Recado de voz", byteSize);
   const previewAudio = document.getElementById("inline-topic-preview-audio");
   const previewAudioWrap = document.getElementById("inline-topic-preview-audio-wrap");
   const previewVideoWrap = document.getElementById("inline-topic-preview-video-wrap");
   const previewImg = document.getElementById("inline-topic-preview");
   const previewWrap = document.getElementById("inline-topic-preview-wrap");
   if (previewAudio) previewAudio.src = dataUrl;
-  previewAudioWrap?.classList.remove("hidden");
-  previewImg?.classList.add("hidden");
-  previewVideoWrap?.classList.add("hidden");
+  setPreviewVisible(previewAudioWrap, true);
+  setPreviewVisible(previewImg, false);
+  setPreviewVisible(previewVideoWrap, false);
   const filterBar = document.getElementById("lofi-filter-bar");
   if (filterBar) filterBar.style.display = "none";
   const aspectBar = document.getElementById("composer-aspect-bar");
@@ -299,7 +332,7 @@ function handleVoiceAudioReady(dataUrl, byteSize, state) {
   if (tagBar) tagBar.style.display = "none";
   const badge = document.getElementById("lofi-weight-badge");
   if (badge) badge.textContent = `⚡ ~${kb} KB (Voz Gravada Lo-Fi ${kb <= 99 ? "100% Grátis" : "48k"})`;
-  previewWrap?.classList.remove("hidden");
+  setPreviewVisible(previewWrap, true);
   state.cleanupRecordingState();
   syncInlineComposerUi();
 }
@@ -364,6 +397,7 @@ function bindImageFileInput(state) {
     inlineComposerAspectRatio = "original";
     inlineComposerPhotoTags = [];
     setupImagePreviewBars();
+    setAttachmentMeta("image", file.name, file.size);
     await renderLofiPreview(state);
     syncInlineComposerUi();
   });
@@ -385,13 +419,13 @@ function updateComposerMediaPreview(type, dataUrl, weightLabel) {
   const otherWrap = document.getElementById(isAudio ? "inline-topic-preview-video-wrap" : "inline-topic-preview-audio-wrap");
   const previewImg = document.getElementById("inline-topic-preview");
   if (mediaEl) mediaEl.src = dataUrl;
-  wrap?.classList.remove("hidden");
-  previewImg?.classList.add("hidden");
-  otherWrap?.classList.add("hidden");
+  setPreviewVisible(wrap, true);
+  setPreviewVisible(previewImg, false);
+  setPreviewVisible(otherWrap, false);
   hideComposerImageOptionBars();
   const bg = document.getElementById("lofi-weight-badge");
   if (bg) bg.textContent = weightLabel;
-  document.getElementById("inline-topic-preview-wrap")?.classList.remove("hidden");
+  setPreviewVisible(document.getElementById("inline-topic-preview-wrap"), true);
   syncInlineComposerUi();
 }
 
@@ -407,6 +441,7 @@ function bindAudioFileInput(state) {
     const dataUrl = await composerMedia.readComposerMediaFile(file);
     const kb = Math.max(1, Math.round(file.size / 1024));
     inlineComposerMedia = { type: "audio", dataUrl, byteLength: file.size };
+    setAttachmentMeta("audio", file.name, file.size);
     updateComposerMediaPreview("audio", dataUrl, `⚡ ~${kb} KB (Áudio Lo-Fi ${kb <= 99 ? "100% Grátis" : "48k"})`);
   });
 }
@@ -423,6 +458,7 @@ function bindVideoFileInput(state) {
     const dataUrl = await composerMedia.readComposerMediaFile(file);
     const kb = Math.max(1, Math.round(file.size / 1024));
     inlineComposerMedia = { type: "video", dataUrl, byteLength: file.size };
+    setAttachmentMeta("video", file.name, file.size);
     updateComposerMediaPreview("video", dataUrl, `⚡ ~${kb} KB (Vídeo Lo-Fi 360p)`);
   });
 }

@@ -195,6 +195,16 @@ export async function saveDmMessage(msg) {
       tx.oncomplete = () => resolve();
       tx.onerror = () => resolve();
     });
+    notifyDmChanged();
+  } catch {}
+}
+
+/** Avisa a shell (contador de não lidas em Mensagens) que as conversas mudaram. */
+export function notifyDmChanged() {
+  try {
+    if (typeof window !== "undefined" && typeof CustomEvent === "function") {
+      window.dispatchEvent(new CustomEvent("vox:dm-changed"));
+    }
   } catch {}
 }
 

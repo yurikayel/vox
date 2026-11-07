@@ -209,12 +209,56 @@ const NAV_ITEMS = [
   { tab: "voxpedia", href: "#/voxpedia", label: "Voxpedia", icon: () => ICONS.voxpedia, secondary: true },
 ];
 
+const DM_BADGE_HTML = `<span class="agora-dm-badge" data-dm-badge hidden aria-hidden="true"></span>`;
+
+/** Total de mensagens recebidas e não lidas, somando todas as conversas. */
+export function sumUnreadDms(conversations = []) {
+  return conversations.reduce((acc, c) => acc + (Number(c?.unreadCount) || 0), 0);
+}
+
+/** Texto do contador: vazio quando zero, "99+" acima de 99. */
+export function formatDmBadge(count) {
+  const n = Number(count) || 0;
+  if (n <= 0) return "";
+  return n > 99 ? "99+" : String(n);
+}
+
+function applyDmBadge(count) {
+  const label = formatDmBadge(count);
+  document.querySelectorAll("[data-dm-badge]").forEach((el) => {
+    el.textContent = label;
+    el.hidden = !label;
+  });
+  document.querySelectorAll('a[href="#/dm"]').forEach((a) => {
+    const base = "Mensagens";
+    a.setAttribute("aria-label", label ? `${base} · ${count} não ${count === 1 ? "lida" : "lidas"}` : base);
+  });
+}
+
+async function refreshDmBadge() {
+  try {
+    const cacheNode = await import("../cache-node.js");
+    applyDmBadge(sumUnreadDms(await cacheNode.getDmConversations()));
+  } catch {
+    /* sem IndexedDB: contador fica oculto */
+  }
+}
+
+let dmBadgeListenerBound = false;
+
+function bindDmBadge() {
+  void refreshDmBadge();
+  if (dmBadgeListenerBound || typeof window?.addEventListener !== "function") return;
+  dmBadgeListenerBound = true;
+  window.addEventListener("vox:dm-changed", () => { void refreshDmBadge(); });
+}
+
 function renderSidebarNav(activeTab) {
   return NAV_ITEMS.map((item) => {
     const isActive = activeTab === item.tab || (item.alias || []).includes(activeTab);
     const cls = ["tab-item", isActive ? "active" : "", item.secondary ? "tab-item--secondary" : ""].filter(Boolean).join(" ");
     return `<a href="${item.href}" class="${cls}" data-tab="${item.tab}"${isActive ? ' aria-current="page"' : ""} aria-label="${item.label}">
-      <span class="tab-icon">${item.icon()}</span><span class="tab-label">${item.label}</span>
+      <span class="tab-icon">${item.icon()}</span><span class="tab-label">${item.label}</span>${item.tab === "dm" ? DM_BADGE_HTML : ""}
     </a>`;
   }).join("\n    ");
 }
@@ -265,7 +309,7 @@ function renderTopBar(identity, chipText, chipHtml) {
       </form>
       <div class="agora-topbar-tools">
         <a href="#/status" class="agora-mesh-chip ${mesh.cls}" title="${escapeHtml(chipText)}"><span class="agora-presence-dot" aria-hidden="true"></span><span>${escapeHtml(mesh.label)}</span></a>
-        <a href="#/dm" class="agora-topbar-icon agora-topbar-icon--mobile" aria-label="Mensagens">${ICONS.dmTop}</a>
+        <a href="#/dm" class="agora-topbar-icon agora-topbar-icon--mobile" aria-label="Mensagens">${ICONS.dmTop}${DM_BADGE_HTML}</a>
         <a href="#/status" class="agora-topbar-icon" aria-label="Saúde do nó">${ICONS.shield}</a>
         <a href="#/settings/network" class="agora-topbar-icon" aria-label="Configurações da rede">${ICONS.gear}</a>
       </div>
@@ -470,6 +514,7 @@ export function renderShell({
 
   attachShellBehaviors();
   hydrateSidebarCircles();
+  bindDmBadge();
   const main = document.getElementById("app-main");
   if (breadcrumb) main.insertAdjacentHTML("afterbegin", breadcrumb);
   return main;
