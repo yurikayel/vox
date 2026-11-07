@@ -491,7 +491,6 @@ function renderHomeCommunityCard(c) {
 export function renderHome(main, communities, { totalUnread = 0 } = {}) {
   const catchupBanner = renderCommunityCatchupBanner({ totalUnread });
   const head = renderPageHead({
-    kicker: "Hub territorial · círculos da sua rede",
     title: "Comunidades",
     subtitle: "Fóruns e círculos territoriais da sua rede. Cada comunidade decide suas pautas, regras e moderação.",
     actionsHtml: `<a class="agora-btn agora-btn--primary" href="#/compose/community">+ Fundar comunidade</a>`,
@@ -1085,7 +1084,6 @@ export function renderComposeProposal(main, communityId, commTitle = "") {
     <div class="card compose-card compose-proposal-card agora-composer">
       <div class="agora-composer-head">
         <a class="back-link" href="#/c/${encodeURIComponent(communityId)}?tab=governance">← Voltar à governança</a>
-        <p class="agora-kicker"><span class="agora-pylon agora-pylon--bronze" aria-hidden="true"></span>Deliberação cívica · votação vinculante</p>
         <h2 class="agora-page-title">Nova Proposta — ${escapeHtml(commTitle || communityId)}</h2>
         <p class="agora-page-sub">Mudanças de regras acompanham um diff transparente. Membros decidem por voto direto (1 membro = 1 voto).</p>
       </div>

@@ -81,7 +81,6 @@ function renderGenesisNewIdentityHtml(currentName) {
                 <input type="text" id="oauth-custom-name-input" class="agora-inscription genesis-input" maxlength="30" placeholder="Seu nome ou apelido…" value="${currentName}" aria-label="Nome ou apelido" />
                 <button type="submit" id="btn-oauth-save-name" class="agora-btn agora-btn--primary">Iniciar identidade <span aria-hidden="true">→</span></button>
               </form>
-              <p class="genesis-method-meta"><span class="agora-pylon agora-pylon--bronze" aria-hidden="true"></span>ID na rede: <code>vx_*</code> — gerado localmente</p>
             </div>
           </div>`;
 }
@@ -116,13 +115,11 @@ function renderGenesisImportHtml() {
 function renderGenesisMethodsHtml(currentName) {
   return `
         <section class="genesis-panel" aria-labelledby="oauth-enrich-title">
-          <p class="genesis-panel-kicker">Gênese de acesso</p>
           <h2 id="oauth-enrich-title" class="genesis-panel-title">Como quer entrar na Ágora?</h2>
           <div id="oauth-enrich-error" class="oauth-enrich-error" role="alert" aria-live="polite" hidden></div>
           ${renderGenesisNewIdentityHtml(currentName)}
           ${renderGenesisRestoreHtml()}
           ${renderGenesisImportHtml()}
-          <div class="genesis-isolation"><span class="agora-pylon" aria-hidden="true"></span>Chave privada confinada a este aparelho</div>
           <button type="button" id="btn-oauth-skip" class="oauth-btn oauth-btn--skip genesis-skip">Pular — continuar só com vx_</button>
           <p class="meta oauth-enrich-legal">Só claims públicos de perfil; tokens OAuth não são armazenados (LGPD — ver COMPLIANCE-BR.md).</p>
         </section>`;
@@ -138,13 +135,9 @@ export function renderOAuthEnrich(container) {
         <header class="genesis-hero">
           <div class="genesis-brand">
             <img class="genesis-brand-mark" src="icons/icon-white-512.png" width="48" height="48" alt="" decoding="async" />
-            <div>
-              <p class="genesis-brand-kicker">Estatuto de fundação P2P</p>
-              <p class="genesis-brand-name">VOX · Rede cívica soberana</p>
-            </div>
+            <p class="genesis-brand-name">VOX · Rede cívica soberana</p>
           </div>
           <div class="agora-frieze" aria-hidden="true"><span class="agora-frieze-glyph">◆◆◆</span></div>
-          <p class="genesis-protocol"><span class="agora-pylon" aria-hidden="true"></span>Camada protocolar: Ed25519 · armazenamento local</p>
           <h1 class="genesis-title">Sua Voz. Seu Território.<br /><span>Sua Chave.</span></h1>
           <p class="genesis-lead">Uma rede social e cívica operada pelos próprios cidadãos, sem servidores corporativos intermediários.</p>
         </header>
@@ -165,7 +158,6 @@ function resolvePersonStampsHtml(p, isSelf) {
   if (isSelf) stamps.push(`<span class="agora-stamp agora-stamp--bronze">Você</span>`);
   else if (p.source === "contact") stamps.push(`<span class="agora-stamp agora-stamp--teal"><span class="agora-pylon agora-pylon--teal" aria-hidden="true"></span>Contato</span>`);
   else if (p.source === "mesh-card" || p.source === "mesh") stamps.push(`<span class="agora-stamp agora-stamp--consensus"><span class="agora-pylon" aria-hidden="true"></span>Na malha</span>`);
-  stamps.push(`<span class="agora-stamp">Chave local</span>`);
   return stamps.join("");
 }
 
@@ -200,7 +192,7 @@ function renderPeopleSection(title, people) {
   const rows = people.map((p) => renderPeopleResultRow(p)).join("");
   return `
     <section class="people-section agora-citizen-section">
-      <h3 class="agora-section-label"><span class="agora-pylon agora-pylon--bronze" aria-hidden="true"></span>${escapeHtml(title)}<span class="agora-citizen-count">${people.length}</span></h3>
+      <h3 class="agora-section-label">${escapeHtml(title)}<span class="agora-citizen-count">${people.length}</span></h3>
       ${rows}
     </section>`;
 }
@@ -217,7 +209,7 @@ export function resolvePeopleSearchBody(sections, results, query) {
     if (Array.isArray(sections.all)) {
       const total = sections.all.length;
       if (!total) return `<div class="empty"><p>Ninguém indexado ainda.</p></div>`;
-      const summaryHtml = `<p class="agora-citizen-summary"><span>Registros autenticados: <strong>${total} ${total === 1 ? "cidadão" : "cidadãos"}</strong></span><span class="agora-citizen-summary-tag"><span class="agora-pylon" aria-hidden="true"></span>Chaves não revogadas</span></p>`;
+      const summaryHtml = `<p class="agora-citizen-summary"><span>Registros autenticados: <strong>${total} ${total === 1 ? "cidadão" : "cidadãos"}</strong></span></p>`;
       return summaryHtml + sections.all.map((p) => renderPeopleResultRow(p)).join("");
     }
     const cLen = sections.contacts?.length || 0;
@@ -238,7 +230,6 @@ export function renderPeopleSearch(main, { sections = null, results = [], query 
   const q = escapeHtml(query);
   const body = resolvePeopleSearchBody(sections, results, query);
   const head = renderPageHead({
-    kicker: "Protocolo Ed25519 · raiz de confiança coletiva",
     title: "Diretório de Cidadãos",
     subtitle: "Pessoas com identidade criptográfica verificada no aparelho de quem publicou. Sem servidor central decidindo quem existe.",
     wide: true,

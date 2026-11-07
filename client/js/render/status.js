@@ -74,7 +74,6 @@ function renderNodeHealthHeadHtml() {
   return `
       <header class="agora-page-head agora-page-head--wide">
         <div class="agora-page-head-text">
-          <p class="agora-kicker"><span class="agora-pylon" aria-hidden="true"></span>Nó local · telemetria honesta</p>
           <h1 class="agora-page-title">Saúde do nó</h1>
           <p class="agora-page-sub">Sem envio externo — só cache local e tentativas de leitura registradas neste aparelho.</p>
         </div>

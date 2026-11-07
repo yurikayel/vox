@@ -748,10 +748,12 @@ test("render - post v3 híbrido (mídia antes do texto, star, copy-md e pinned)"
   assert.ok(html.includes("soberania"));
 });
 
-test("render - feed nav na sidebar (Para você e Seguindo)", () => {
+test("render - feed nav na sidebar (Social, Cívico e Seguindo)", () => {
   const forYou = render.renderFeedNav("for-you");
   assert.ok(forYou.includes("sidebar-feed-nav"));
-  assert.ok(forYou.includes("Para você"));
+  assert.ok(forYou.includes("Social"));
+  assert.ok(forYou.includes("Cívico"));
+  assert.ok(render.renderFeedNav("civic").includes('href="#/?feed=civic" class="sidebar-feed-tab active"'));
   assert.ok(forYou.includes("Seguindo"));
   assert.ok(forYou.includes("sidebar-feed-tab active"));
   assert.ok(!forYou.includes('m3 9 9-7 9 7v11'));
