@@ -3975,3 +3975,20 @@ body,
 .agora-ui .feed-container .vox-frame-media {
   background: transparent;
 }
+
+/* ── 25. Onboarding em etapas ── */
+.genesis-shell--steps { max-width: 640px; }
+.genesis-shell--steps .genesis-hero { margin-bottom: 1.5rem; }
+.genesis-shell--steps .genesis-title { font-size: clamp(1.9rem, 1.3rem + 2.5vw, 2.75rem); margin-top: 1rem; }
+.genesis-step[hidden] { display: none; }
+.genesis-step .genesis-polis-title { margin-bottom: 0.25rem; }
+.genesis-step .genesis-method { margin-bottom: 0; }
+.genesis-back { margin: 0 0 1rem; padding: 0; background: none; border: none; color: var(--sa-on-surface-variant); font: inherit; font-size: 0.875rem; cursor: pointer; }
+.genesis-back:hover { color: var(--sa-primary); }
+.genesis-picks { display: grid; gap: 0.6rem; margin-bottom: 1rem; }
+.genesis-pick { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 1rem; align-items: center; padding: 1rem; background: var(--sa-surface-high); border: 1px solid transparent; border-left: 3px solid var(--sa-outline-variant); border-radius: var(--radius-sm); color: var(--sa-on-surface); font: inherit; text-align: left; cursor: pointer; }
+.genesis-pick:hover, .genesis-pick:focus-visible { border-left-color: var(--sa-primary); border-color: var(--entablature-active); }
+.genesis-pick-text { display: flex; flex-direction: column; gap: 0.2rem; }
+.genesis-pick-text strong { font-family: var(--font-epigraphic); font-size: 1.1rem; font-weight: 600; }
+.genesis-pick-text span { font-size: 0.875rem; color: var(--sa-on-surface-variant); }
+.genesis-pick-arrow { color: var(--sa-secondary); font-size: 1.2rem; }

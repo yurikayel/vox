@@ -112,41 +112,74 @@ function renderGenesisImportHtml() {
           </div>`;
 }
 
-function renderGenesisMethodsHtml(currentName) {
+const GENESIS_PICKS = [
+  { key: "new", icon: "fingerprint", title: "Sou novo no Vox", desc: "Criar minha identidade neste aparelho." },
+  { key: "restore", icon: "restore", title: "Já tenho conta", desc: "Restaurar com a minha Senha Soberana." },
+  { key: "import", icon: "import", title: "Importar nome e foto", desc: "Usar Google, Meta ou GitHub só para o perfil." },
+];
+
+function genesisStep(key, bodyHtml, { back = "", hidden = true } = {}) {
+  const backBtn = back ? `<button type="button" class="genesis-back" data-genesis-go="${back}">← Voltar</button>` : "";
+  return `<section class="genesis-step" data-genesis-step="${key}"${hidden ? " hidden" : ""}>${backBtn}${bodyHtml}</section>`;
+}
+
+function renderGenesisPickHtml() {
+  const cards = GENESIS_PICKS.map((p) => `
+            <button type="button" class="genesis-pick" data-genesis-go="${p.key}">
+              <span class="genesis-method-icon">${GENESIS_ICONS[p.icon]}</span>
+              <span class="genesis-pick-text"><strong>${escapeHtml(p.title)}</strong><span>${escapeHtml(p.desc)}</span></span>
+              <span class="genesis-pick-arrow" aria-hidden="true">→</span>
+            </button>`).join("");
   return `
-        <section class="genesis-panel" aria-labelledby="oauth-enrich-title">
-          <h2 id="oauth-enrich-title" class="genesis-panel-title">Como quer entrar na Ágora?</h2>
+          <h2 id="oauth-enrich-title" class="genesis-panel-title">Como quer entrar?</h2>
+          <div class="genesis-picks">${cards}</div>
+          <button type="button" id="btn-oauth-skip" class="oauth-btn oauth-btn--skip genesis-skip">Pular — continuar só com vx_</button>`;
+}
+
+/** Onboarding em etapas: boas-vindas → como entrar → um único método por vez. */
+function renderGenesisStepsHtml(currentName) {
+  return `
+        <section class="genesis-panel genesis-panel--steps">
           <div id="oauth-enrich-error" class="oauth-enrich-error" role="alert" aria-live="polite" hidden></div>
-          ${renderGenesisNewIdentityHtml(currentName)}
-          ${renderGenesisRestoreHtml()}
-          ${renderGenesisImportHtml()}
-          <button type="button" id="btn-oauth-skip" class="oauth-btn oauth-btn--skip genesis-skip">Pular — continuar só com vx_</button>
+          ${genesisStep("welcome", `${renderPolisFoundationsHtml()}<button type="button" class="agora-btn agora-btn--primary agora-btn--block" data-genesis-go="pick">Começar</button>`, { hidden: false })}
+          ${genesisStep("pick", renderGenesisPickHtml(), { back: "welcome" })}
+          ${genesisStep("new", renderGenesisNewIdentityHtml(currentName), { back: "pick" })}
+          ${genesisStep("restore", renderGenesisRestoreHtml(), { back: "pick" })}
+          ${genesisStep("import", renderGenesisImportHtml(), { back: "pick" })}
           <p class="meta oauth-enrich-legal">Só claims públicos de perfil; tokens OAuth não são armazenados (LGPD — ver COMPLIANCE-BR.md).</p>
         </section>`;
 }
 
-/** Onboarding — Stitch tela 12 "Entrada criptográfica": hero epigráfico + métodos + fundamentos. */
+/** Onboarding — Stitch tela 12, em etapas (uma decisão por tela). */
 export function renderOAuthEnrich(container) {
   if (!container) return;
   const currentName = escapeHtml(localAccount.getDisplayName() || "");
   container.innerHTML = `
-    <div class="modal-overlay oauth-enrich-overlay genesis-overlay" id="oauth-enrich-overlay" role="dialog" aria-modal="true" aria-labelledby="oauth-enrich-title">
-      <div class="genesis-shell oauth-enrich-dialog">
+    <div class="modal-overlay oauth-enrich-overlay genesis-overlay" id="oauth-enrich-overlay" role="dialog" aria-modal="true" aria-label="Entrar no Vox">
+      <div class="genesis-shell genesis-shell--steps oauth-enrich-dialog">
         <header class="genesis-hero">
           <div class="genesis-brand">
             <img class="genesis-brand-mark" src="icons/icon-white-512.png" width="48" height="48" alt="" decoding="async" />
             <p class="genesis-brand-name">VOX · Rede cívica soberana</p>
           </div>
-          <div class="agora-frieze" aria-hidden="true"><span class="agora-frieze-glyph">◆◆◆</span></div>
           <h1 class="genesis-title">Sua Voz. Seu Território.<br /><span>Sua Chave.</span></h1>
-          <p class="genesis-lead">Uma rede social e cívica operada pelos próprios cidadãos, sem servidores corporativos intermediários.</p>
         </header>
-        <div class="genesis-grid">
-          ${renderGenesisMethodsHtml(currentName)}
-          ${renderPolisFoundationsHtml()}
-        </div>
+        ${renderGenesisStepsHtml(currentName)}
       </div>
     </div>`;
+}
+
+/** Mostra só a etapa `key` do onboarding e foca o primeiro campo dela. */
+export function showGenesisStep(root, key) {
+  const steps = root?.querySelectorAll?.("[data-genesis-step]") || [];
+  let target = null;
+  steps.forEach((s) => {
+    const on = s.dataset.genesisStep === key;
+    s.hidden = !on;
+    if (on) target = s;
+  });
+  target?.querySelector("input, button:not(.genesis-back)")?.focus({ preventScroll: true });
+  return Boolean(target);
 }
 
 export function closeOAuthEnrich(container) {

@@ -154,6 +154,12 @@ export function openOAuthEnrichModal({ onComplete } = {}) {
   if (!modalContainer) return;
 
   render.renderOAuthEnrich(modalContainer);
+  modalContainer.querySelector(".genesis-panel--steps")?.addEventListener("click", (e) => {
+    const go = e.target.closest("[data-genesis-go]");
+    if (!go) return;
+    setOAuthEnrichError("");
+    render.showGenesisStep(modalContainer, go.dataset.genesisGo);
+  });
   applyOAuthProviderAvailability();
   bindCustomNameForm(modalContainer, onComplete);
   bindSovereignPassphraseForm(modalContainer, onComplete);
