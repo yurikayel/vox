@@ -64,8 +64,7 @@ test("login social — conta conectada por login (sem @ no Facebook) persiste e 
   assert.equal(acc.facebook.displayName, "Yuri Kayel");
   assert.equal(acc.twitter.via, "oauth");
   const html = linkedUi.renderLinkedAccountsHtml();
-  assert.ok(html.includes("Conectado por login como"));
   assert.ok(html.includes("Yuri Kayel"));
-  assert.ok(html.includes("🟢 Verificado"));
-  assert.ok(html.includes('data-login-net="bsky"'), "Bluesky sempre oferece login");
+  assert.ok(html.includes("@yurix"));
+  assert.equal((html.match(/✓ verificado/g) || []).length, 2);
 });

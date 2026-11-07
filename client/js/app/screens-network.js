@@ -330,15 +330,19 @@ export async function showLinkedAccounts() {
   if (cb) void finishSocialLogin(() => socialLogin.completeSocialLogin(cb));
 }
 
-/** Mostra "Conectar com login" das redes configuradas; nas demais, o vínculo manual fica aberto. */
+let loginAvailability = { bsky: true };
+
+/** Disponibilidade de login por rede; nas que têm login, oferece "ou digitar @usuário" como alternativa. */
 async function revealSocialLoginButtons() {
-  const avail = await socialLogin.availableLoginProviders().catch(() => ({ bsky: true }));
-  document.querySelectorAll("[data-login-net]").forEach((row) => {
-    const on = Boolean(avail[row.dataset.loginNet]);
-    row.hidden = !on;
-    const manual = document.querySelector(`[data-manual-net="${row.dataset.loginNet}"]`);
-    if (manual) manual.open = !on;
-  });
+  loginAvailability = await socialLogin.availableLoginProviders().catch(() => ({ bsky: true }));
+  document.querySelectorAll(".btn-link-manual").forEach((alt) => { alt.hidden = !loginAvailability[alt.dataset.netId]; });
+}
+
+function openManualLink(netId) {
+  const panel = document.querySelector(`.link-manual[data-net-id="${netId}"]`);
+  if (!panel) return;
+  panel.hidden = false;
+  panel.querySelector(".input-net-handle")?.focus();
 }
 
 function saveLoginResult(r) {
@@ -361,14 +365,22 @@ async function finishSocialLogin(run) {
   }
 }
 
+/** Um botão "Conectar" por rede: login quando disponível; senão abre o campo do @usuário. */
 function bindSocialLoginButtons() {
-  document.querySelectorAll(".btn-social-login").forEach((btn) => {
+  document.querySelectorAll(".btn-link-connect").forEach((btn) => {
     if (btn.dataset.wired) return;
     btn.dataset.wired = "1";
     btn.addEventListener("click", () => {
+      const netId = btn.dataset.netId;
+      if (!loginAvailability[netId]) return openManualLink(netId);
       btn.disabled = true;
-      void finishSocialLogin(() => socialLogin.startSocialLogin(btn.dataset.netId)).finally(() => { btn.disabled = false; });
+      void finishSocialLogin(() => socialLogin.startSocialLogin(netId)).finally(() => { btn.disabled = false; });
     });
+  });
+  document.querySelectorAll(".btn-link-manual").forEach((alt) => {
+    if (alt.dataset.wired) return;
+    alt.dataset.wired = "1";
+    alt.addEventListener("click", () => openManualLink(alt.dataset.netId));
   });
 }
 
