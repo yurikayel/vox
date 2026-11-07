@@ -39,7 +39,6 @@ export {
   renderPostFrame,
   renderPostItem,
   renderStoriesStrip,
-  renderWelcomeFeedHintHtml,
   renderFeedTabsBar,
   renderExternalFeedManagerHtml,
   renderFeed,

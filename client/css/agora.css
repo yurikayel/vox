@@ -3893,3 +3893,68 @@ body,
   .civic-choices--ideia,
   .civic-choices--debate { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* ── 22. Contador de mensagens não lidas (bronze do tema) ── */
+.agora-dm-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  margin-left: auto;
+  border-radius: 999px;
+  background: var(--sa-secondary);
+  color: var(--sa-on-secondary);
+  font-family: var(--font-telemetry);
+  font-size: 0.6875rem;
+  font-weight: 800;
+  line-height: 1;
+  font-feature-settings: "tnum" 1;
+  box-sizing: border-box;
+}
+
+.agora-dm-badge[hidden] { display: none; }
+
+.agora-topbar-icon { position: relative; }
+
+.agora-topbar-icon .agora-dm-badge {
+  position: absolute;
+  top: 2px;
+  right: 0;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  margin: 0;
+  font-size: 0.625rem;
+  box-shadow: 0 0 0 2px var(--sa-surface-low);
+}
+
+.agora-ui.sidebar-collapsed .tab-item .agora-dm-badge {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  font-size: 0.5625rem;
+}
+
+/* ── 23. Composer: linha do anexo (ícone · nome · tamanho) sob a miniatura ── */
+.inline-composer-attach-meta {
+  margin: 0.5rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--sa-on-surface-variant);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.agora-ui .inline-composer-preview-img {
+  max-height: 320px;
+  border-radius: var(--radius-sm);
+  object-fit: contain;
+  background: var(--sa-surface-lowest);
+}
+
+.agora-ui .tab-item[data-tab="dm"] { position: relative; }
