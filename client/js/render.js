@@ -88,6 +88,7 @@ export {
 
 export {
   renderOAuthEnrich,
+  showGenesisStep,
   closeOAuthEnrich,
   resolvePeopleSearchBody,
   renderPeopleSearch,
