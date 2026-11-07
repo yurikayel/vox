@@ -17,6 +17,7 @@ import * as mod from "../moderation.js";
 import * as communitySeed from "../community-seed-checklist.js";
 import { parseChatTranscriptToMarkdown } from "../chat-bridge.js";
 import { createCivicNotaryRecord } from "../perma-notary.js";
+import { bindComposeStepper } from "./compose-stepper.js";
 import { getActiveUser, makeShellProps } from "./context.js";
 import { resolveCommunityMetadata, resolveTopicContent } from "./screens-community.js";
 
@@ -327,6 +328,7 @@ export async function showComposeTopic(communityId) {
 
   const form = document.getElementById("form-compose-topic");
   if (form) {
+    bindComposeStepper(form);
     form.addEventListener("submit", (e) => handleComposeTopicSubmit(e, communityId));
   }
 }
