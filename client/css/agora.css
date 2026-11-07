@@ -3975,3 +3975,23 @@ body,
 .agora-ui .feed-container .vox-frame-media {
   background: transparent;
 }
+
+/* ── 24. Compositor em etapas (uma decisão por tela) ── */
+.agora-composer--steps .agora-composer-head { margin-bottom: 1rem; }
+.agora-composer-kicker { margin: 0.25rem 0 0; font-size: 0.875rem; color: var(--sa-on-surface-variant); }
+.compose-step[hidden] { display: none; }
+.compose-step-head { margin-bottom: 1.5rem; }
+.compose-step-count { margin: 0 0 0.5rem; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--sa-secondary); }
+.compose-step-bar { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; margin-bottom: 1.25rem; }
+.compose-step-seg { height: 4px; border-radius: 2px; background: var(--sa-surface-highest); }
+.compose-step-seg.is-done { background: var(--sa-primary); }
+.compose-step-title { margin: 0; font-family: var(--font-epigraphic); font-size: clamp(1.6rem, 1.2rem + 1.5vw, 2.25rem); font-weight: 500; color: var(--sa-on-surface); }
+.compose-step-body { min-height: 180px; }
+.compose-step-lead { margin: 0 0 1rem; font-size: 0.9375rem; color: var(--sa-on-surface-variant); }
+.compose-step-error { margin: 0.5rem 0 0; font-size: 0.8125rem; color: var(--sa-error); }
+.compose-step-nav { margin-top: 1.75rem; }
+.compose-review { display: grid; gap: 2px; margin: 0 0 1.25rem; }
+.compose-review > div { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 1rem; padding: 0.75rem 0.9rem; background: var(--sa-surface-high); border-radius: var(--radius-sm); }
+.compose-review dt { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--sa-on-surface-variant); }
+.compose-review dd { margin: 0; color: var(--sa-on-surface); white-space: pre-wrap; overflow-wrap: anywhere; }
+@media (max-width: 767px) { .compose-review > div { grid-template-columns: minmax(0, 1fr); gap: 0.25rem; } }
