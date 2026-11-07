@@ -943,10 +943,11 @@ body,
   border-top: none;
 }
 
+/* Cards do feed sem presença: fundo transparente e sem borda; só o hover (filete dourado) aparece. */
 .agora-ui .feed-container > .post,
 .agora-ui .feed-container > article {
-  background: var(--sa-surface-container);
-  border: 1px solid var(--sa-hairline);
+  background: transparent;
+  border: none;
   border-radius: var(--radius);
   box-shadow: none;
   margin: 0;
@@ -958,21 +959,29 @@ body,
 @media (hover: hover) {
   .agora-ui .feed-container > .post:hover,
   .agora-ui .feed-container > article:hover {
-    background: var(--sa-surface-low);
+    background: transparent;
     box-shadow: inset 2px 0 0 var(--sa-secondary);
   }
 }
 
+.agora-ui .post.post-pinned-highlight {
+  background: transparent !important;
+  border: none !important;
+}
+
+@media (hover: hover) {
+  .agora-ui .post.post-pinned-highlight:hover {
+    background: transparent !important;
+    box-shadow: inset 2px 0 0 var(--sa-secondary) !important;
+  }
+}
+
 @media (max-width: 767px) {
-  .agora-ui .feed-container { gap: 0; }
+  .agora-ui .feed-container { gap: 0.5rem; }
 
   .agora-ui .feed-container > .post,
   .agora-ui .feed-container > article {
     border-radius: 0;
-    border-left: none;
-    border-right: none;
-    border-top: none;
-    background: transparent;
   }
 }
 
@@ -3958,3 +3967,11 @@ body,
 }
 
 .agora-ui .tab-item[data-tab="dm"] { position: relative; }
+
+/* Feed seamless: mídia dos posts sem faixa preta — a imagem assenta direto no fundo da página. */
+.agora-ui .feed-container .post-media-container,
+.agora-ui .feed-container .post-layout-photo.post-photo-bleed .post-media-container,
+.agora-ui .feed-container .post-layout-photo.post-photo-bleed .post-media-lightbox-trigger,
+.agora-ui .feed-container .vox-frame-media {
+  background: transparent;
+}
