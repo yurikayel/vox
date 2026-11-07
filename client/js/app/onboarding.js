@@ -92,10 +92,9 @@ function bindOAuthProviderButton(btnId, signInFn, fallbackError, labelFn, modalC
     const res = await runOAuthEnrichSignIn(btn, signInFn, { fallbackError });
     if (res.ok) {
       oauthProfile.skipOAuthEnrichment();
-      render.closeOAuthEnrich(modalContainer);
       share.showToast(labelFn(res));
       syncIdentityAndDirectoryAfterOnboarding();
-      if (onDone) onDone(res);
+      endGenesis(modalContainer, onDone, res);
     }
   });
 }
@@ -113,10 +112,9 @@ function bindCustomNameForm(modalContainer, onComplete) {
     setOAuthEnrichError("");
     localAccount.setDisplayName(rawName);
     oauthProfile.skipOAuthEnrichment();
-    render.closeOAuthEnrich(modalContainer);
     share.showToast(`Bem-vindo, ${rawName}!`);
     syncIdentityAndDirectoryAfterOnboarding();
-    if (onComplete) onComplete({ ok: true, customName: rawName });
+    endGenesis(modalContainer, onComplete, { ok: true, customName: rawName });
   });
 }
 
@@ -134,10 +132,9 @@ function bindSovereignPassphraseForm(modalContainer, onComplete) {
       const res = await oauthVault.restoreFromPassphraseVault(pass);
       if (res.ok) {
         oauthProfile.skipOAuthEnrichment();
-        render.closeOAuthEnrich(modalContainer);
         share.showToast(`Identidade restaurada com sucesso! Bem-vindo(a), ${res.displayName || "Cidadão"}!`);
         syncIdentityAndDirectoryAfterOnboarding();
-        if (onComplete) onComplete({ ok: true, restored: true, routeId: res.routeId });
+        endGenesis(modalContainer, onComplete, { ok: true, restored: true, routeId: res.routeId });
       } else {
         setOAuthEnrichError(res.reason || "Senha incorreta ou cofre não encontrado.");
       }
@@ -149,9 +146,27 @@ function bindSovereignPassphraseForm(modalContainer, onComplete) {
   });
 }
 
-export function openOAuthEnrichModal({ onComplete } = {}) {
+/** Quando true, o pacto de boas-vindas é a última etapa do próprio onboarding (sem 2º modal). */
+let genesisWithPact = false;
+
+/**
+ * Fim de um método de entrada: se o pacto ainda não foi aceito e este fluxo é o de primeiro
+ * acesso, avança para a etapa "pacto" no mesmo modal; senão fecha e segue o callback.
+ */
+function endGenesis(modalContainer, onComplete, res) {
+  const pactPending = genesisWithPact && localStorage.getItem("vox-pact-accepted") !== "true";
+  if (pactPending && render.showGenesisStep(modalContainer, "pact")) {
+    bindPactActions(modalContainer);
+    return;
+  }
+  render.closeOAuthEnrich(modalContainer);
+  if (onComplete) onComplete(res);
+}
+
+export function openOAuthEnrichModal({ onComplete, withPact = false } = {}) {
   const modalContainer = document.getElementById("modal-container");
   if (!modalContainer) return;
+  genesisWithPact = withPact;
 
   render.renderOAuthEnrich(modalContainer);
   modalContainer.querySelector(".genesis-panel--steps")?.addEventListener("click", (e) => {
@@ -167,9 +182,8 @@ export function openOAuthEnrichModal({ onComplete } = {}) {
   document.getElementById("btn-oauth-skip")?.addEventListener("click", () => {
     setOAuthEnrichError("");
     oauthProfile.skipOAuthEnrichment();
-    render.closeOAuthEnrich(modalContainer);
     syncIdentityAndDirectoryAfterOnboarding();
-    if (onComplete) onComplete({ skipped: true });
+    endGenesis(modalContainer, onComplete, { skipped: true });
   });
 
   bindOAuthProviderButton("btn-oauth-google", () => oauthProfile.signInWithGoogle(), "Google indisponível", () => "Perfil enriquecido com Google.", modalContainer, onComplete);
@@ -187,7 +201,7 @@ export function checkOAuthEnrichStep() {
     checkPactModal();
     return;
   }
-  openOAuthEnrichModal({ onComplete: () => checkPactModal() });
+  openOAuthEnrichModal({ onComplete: () => checkPactModal(), withPact: true });
 }
 
 export function checkCantinaGate() {
@@ -238,7 +252,15 @@ export function checkPactModal() {
   if (!modalContainer) return;
 
   render.renderPactModal(modalContainer);
-  document.getElementById("btn-pact-accept")?.addEventListener("click", () => {
+  bindPactActions(modalContainer);
+}
+
+/** Liga "Entrar na roda" / "Ajustar rede depois" (modal avulso ou etapa final do onboarding). */
+function bindPactActions(modalContainer) {
+  const accept = document.getElementById("btn-pact-accept");
+  if (!accept || accept.dataset.bound === "1") return;
+  accept.dataset.bound = "1";
+  accept.addEventListener("click", () => {
     void finishPactAcceptance(modalContainer);
   });
   document.getElementById("btn-pact-settings")?.addEventListener("click", () => {

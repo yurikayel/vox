@@ -8,11 +8,12 @@ test("onboarding em etapas — boas-vindas visível, demais etapas ocultas, IDs 
   const c = { innerHTML: "" };
   render.renderOAuthEnrich(c);
   const html = c.innerHTML;
-  for (const k of ["welcome", "pick", "new", "restore", "import"]) {
+  for (const k of ["welcome", "pick", "new", "restore", "import", "pact"]) {
     assert.ok(html.includes(`data-genesis-step="${k}"`), `falta etapa ${k}`);
   }
   assert.ok(html.includes('data-genesis-step="welcome">'), "boas-vindas começa visível");
-  assert.equal((html.match(/data-genesis-step="[a-z]+" hidden/g) || []).length, 4);
+  assert.equal((html.match(/data-genesis-step="[a-z]+" hidden/g) || []).length, 5);
+  assert.ok(html.includes('id="btn-pact-accept"') && html.includes('id="btn-pact-settings"'), "pacto é a etapa final");
   for (const id of ["form-oauth-custom-name", "form-oauth-restore-passphrase", "btn-oauth-google", "btn-oauth-skip", "oauth-enrich-error"]) {
     assert.ok(html.includes(`id="${id}"`), `falta #${id}`);
   }
