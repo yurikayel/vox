@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="pt-BR"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Domine:wght@400;500;600;700&amp;family=Work+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script><script id="tailwind-config">tailwind.config={"darkMode":"class","theme":{"extend":{"colors":{"on-primary-container":"#003c38","on-tertiary-fixed":"#002114","surface-container":"#1e2023","on-tertiary-container":"#003d28","surface-container-highest":"#333538","surface-container-high":"#282a2d","surface-variant":"#333538","outline-variant":"#3e4948","inverse-surface":"#e2e2e6","primary-container":"#4baca5","surface":"#111316","surface-bright":"#37393d","on-primary-fixed":"#00201e","surface-container-lowest":"#0c0e11","surface-tint":"#78d6cf","on-secondary-fixed":"#251a00","on-secondary-container":"#eec971","background":"#111316","on-error":"#690005","inverse-on-surface":"#2f3034","on-primary":"#003734","tertiary-container":"#39b081","surface-container-low":"#1a1c1f","primary":"#78d6cf","error-container":"#93000a","on-secondary-fixed-variant":"#5a4300","on-secondary":"#3e2e00","surface-dim":"#111316","inverse-primary":"#006a65","on-error-container":"#ffdad6","primary-fixed":"#94f3eb","on-tertiary-fixed-variant":"#005137","on-surface-variant":"#bdc9c7","secondary":"#e7c26b","on-background":"#e2e2e6","outline":"#879391","on-primary-fixed-variant":"#00504c","on-tertiary":"#003825","error":"#ffb4ab","tertiary-fixed-dim":"#69dba9","primary-fixed-dim":"#78d6cf","secondary-container":"#6e5301","tertiary-fixed":"#86f8c4","on-surface":"#e2e2e6","secondary-fixed-dim":"#e7c26b","secondary-fixed":"#ffdf97","tertiary":"#69dba9"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"space-sm":"0.5rem","space-lg":"1.5rem","space-xs":"0.25rem","margin-mobile":"1.25rem","space-xl":"2.5rem","space-2xl":"4rem","margin":"3rem","gutter-mobile":"1rem","space-md":"1rem","gutter":"2rem"},"fontFamily":{"headline-md":["Domine"],"display":["Domine"],"headline-lg":["Domine"],"title-monument":["Domine"],"body-sm":["Work Sans"],"code-hash":["Work Sans"],"body-lg":["Work Sans"],"body-md":["Work Sans"],"label-sovereign":["Work Sans"],"headline-sm":["Domine"],"display-mobile":["Domine"],"headline-lg-mobile":["Domine"]},"fontSize":{"headline-md":["1.75rem",{"lineHeight":"2.25rem","letterSpacing":"0em","fontWeight":"500"}],"display":["3.5rem",{"lineHeight":"4rem","letterSpacing":"-0.02em","fontWeight":"600"}],"headline-lg":["2.5rem",{"lineHeight":"3rem","letterSpacing":"-0.015em","fontWeight":"500"}],"title-monument":["1rem",{"lineHeight":"1.5rem","letterSpacing":"0.15em","fontWeight":"700"}],"body-sm":["0.8125rem",{"lineHeight":"1.25rem","letterSpacing":"0.02em","fontWeight":"400"}],"code-hash":["0.8125rem",{"lineHeight":"1.25rem","letterSpacing":"0.05em","fontWeight":"500"}],"body-lg":["1.125rem",{"lineHeight":"1.75rem","letterSpacing":"0.01em","fontWeight":"400"}],"body-md":["0.9375rem",{"lineHeight":"1.5rem","letterSpacing":"0.01em","fontWeight":"400"}],"label-sovereign":["0.75rem",{"lineHeight":"1rem","letterSpacing":"0.12em","fontWeight":"600"}],"headline-sm":["1.25rem",{"lineHeight":"1.75rem","letterSpacing":"0.02em","fontWeight":"600"}],"display-mobile":["2.25rem",{"lineHeight":"2.75rem","letterSpacing":"-0.01em","fontWeight":"600"}],"headline-lg-mobile":["1.75rem",{"lineHeight":"2.25rem","letterSpacing":"0em","fontWeight":"500"}]}}}};</script></head><body class="bg-surface-container-lowest font-body-md text-on-surface antialiased flex min-h-screen">
+<!-- Column 1: Left Sidebar -->
+<aside class="fixed left-0 top-0 h-screen w-80 bg-surface-container-lowest border-r border-outline-variant/30 z-50 flex flex-col justify-between overflow-y-auto">
+<div class="flex flex-col p-space-md">
+<!-- Brand Logo & Header -->
+<div class="flex items-center gap-space-sm pb-space-md border-b border-outline-variant/20 mb-space-sm">
+<img alt="VOX Logo" class="w-10 h-10 object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBAhiOmfQwCOcDDX0mb1uxyUGQQ6Q5QkoMi9GEyWPihLMfZIozXCunv5id7ENOK3gZz6w5CoTjMS2lS4Y23pg0s40DYP5dpPTJoMOBWzSbhjOlAVFFTmlikboeYdJcq052JWpKal0y3CFf_LtZTbiZky_Fnb66EzeJCCO6qGFC45x3lb-FWzrhty-4sJ_c5mcEq0n5kEtfHSFQbmX62QbmmJObNxUZaG8jOJzHKXGHcvlNpV7U-zU2o"/>
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs">
+<span class="font-title-monument text-title-monument text-primary tracking-widest text-lg font-bold">VOX</span>
+<span class="font-label-sovereign text-[10px] text-secondary bg-surface-container px-1.5 py-0.5 rounded uppercase tracking-wider font-semibold">Ágora Soberana</span>
+</div>
+<span class="font-code-hash text-[11px] text-on-surface-variant tracking-wider">REDE CÍVICA DESCENTRALIZADA</span>
+</div>
+</div>
+<!-- Vertical Navigation -->
+<nav class="flex flex-col gap-space-xs mb-space-md" data-active-classes="bg-surface-container-high text-primary font-bold">
+<a aria-current="page" class="flex items-center gap-space-sm px-space-md py-space-sm rounded transition-colors bg-surface-container-high text-primary font-bold shadow-sm" data-path="agora" href="#">
+<span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">forum</span>
+<span class="font-body-md text-body-md">Ágora</span>
+</a>
+<a class="flex items-center gap-space-sm px-space-md py-space-sm rounded text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="vote" href="#">
+<span class="material-symbols-outlined text-xl">how_to_vote</span>
+<span class="font-body-md text-body-md">Vote</span>
+</a>
+<a class="flex items-center gap-space-sm px-space-md py-space-sm rounded text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="comunidades" href="#">
+<span class="material-symbols-outlined text-xl">hub</span>
+<span class="font-body-md text-body-md">Comunidades</span>
+</a>
+<a class="flex items-center gap-space-sm px-space-md py-space-sm rounded text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="mensagens" href="#">
+<span class="material-symbols-outlined text-xl">lock</span>
+<span class="font-body-md text-body-md">Mensagens</span>
+</a>
+<a class="flex items-center gap-space-sm px-space-md py-space-sm rounded text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="perfil" href="#">
+<span class="material-symbols-outlined text-xl">badge</span>
+<span class="font-body-md text-body-md">Perfil</span>
+</a>
+</nav>
+<!-- Action Button (+ POSTAR) -->
+<div class="mb-space-md">
+<button class="w-full py-2.5 px-space-md rounded font-title-monument text-body-md font-bold uppercase tracking-wider bg-gradient-to-r from-[#10b981] to-[#0284c7] text-white shadow-lg shadow-emerald-950/40 hover:brightness-110 active:translate-y-px transition-all flex items-center justify-center gap-space-xs" type="button">
+<span class="material-symbols-outlined text-xl font-bold">add</span>
+<span>POSTAR</span>
+</button>
+</div>
+<!-- Contextual Section: Círculos Territoriais -->
+<div class="pt-space-xs mb-space-md">
+<div class="flex items-center justify-between mb-space-xs px-space-xs">
+<span class="font-label-sovereign text-label-sovereign text-on-surface-variant uppercase tracking-wider">Círculos Territoriais</span>
+<span class="font-code-hash text-[11px] text-secondary font-semibold">3 ativos</span>
+</div>
+<div class="flex flex-col gap-1.5">
+<a class="flex items-center justify-between px-space-sm py-2 rounded bg-surface-container/70 text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors border border-outline-variant/10" href="#">
+<span class="font-body-sm text-body-sm text-on-surface">Pinheiros</span>
+<span class="font-code-hash text-xs text-tertiary">1.4k civitas</span>
+</a>
+<a class="flex items-center justify-between px-space-sm py-2 rounded bg-surface-container/70 text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors border border-outline-variant/10" href="#">
+<span class="font-body-sm text-body-sm text-on-surface">Jardins</span>
+<span class="font-code-hash text-xs text-tertiary">890 civitas</span>
+</a>
+<a class="flex items-center justify-between px-space-sm py-2 rounded bg-surface-container/70 text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors border border-outline-variant/10" href="#">
+<span class="font-body-sm text-body-sm text-on-surface">Bela Vista</span>
+<span class="font-code-hash text-xs text-tertiary">2.1k civitas</span>
+</a>
+</div>
+</div>
+<!-- Contextual Section: Parâmetros do Fundo -->
+<div class="pt-space-xs border-t border-outline-variant/30 flex flex-col gap-space-xs">
+<div class="flex items-center gap-space-xs py-1">
+<span class="material-symbols-outlined text-secondary text-sm">account_balance_wallet</span>
+<span class="font-title-monument text-xs text-on-surface uppercase tracking-wider font-bold">Parâmetros do Fundo</span>
+</div>
+<div class="grid grid-cols-2 gap-space-xs">
+<div class="bg-surface-container/80 p-space-xs rounded border border-outline-variant/10 flex flex-col">
+<span class="font-label-sovereign text-[10px] text-on-surface-variant uppercase">Alocação</span>
+<span class="font-headline-sm text-sm text-secondary font-bold">R$ 142.800</span>
+</div>
+<div class="bg-surface-container/80 p-space-xs rounded border border-outline-variant/10 flex flex-col">
+<span class="font-label-sovereign text-[10px] text-on-surface-variant uppercase">Postos</span>
+<span class="font-headline-sm text-sm text-primary font-bold">38 Unid.</span>
+</div>
+</div>
+<div class="pt-1">
+<div class="flex items-center justify-between mb-1">
+<span class="font-label-sovereign text-[11px] text-on-surface-variant uppercase">Tesouro Vicinal</span>
+<span class="font-code-hash text-xs text-tertiary font-bold">14.2%</span>
+</div>
+<div class="w-full h-1.5 bg-surface-container-highest rounded overflow-hidden flex">
+<div class="h-full bg-secondary" style="width: 14.2%"></div>
+<div class="h-full bg-primary-container" style="width: 32.5%"></div>
+<div class="h-full bg-surface-container-high" style="width: 53.3%"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom Node Status -->
+<div class="p-space-md bg-[#08090b] border-t border-outline-variant/20">
+<div class="flex items-center justify-between mb-1">
+<span class="font-label-sovereign text-[10px] text-on-surface-variant uppercase tracking-wider">Ed25519 Local</span>
+<span class="font-code-hash text-xs text-primary font-semibold">0x7f..9a2c</span>
+</div>
+<div class="flex items-center justify-between text-xs font-code-hash text-on-surface-variant">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-tertiary animate-pulse"></span>
+<span>P2P: 48 pares</span>
+</div>
+<span class="text-tertiary font-mono">14 ms</span>
+</div>
+</div>
+</aside>
+<!-- Column 2: Main Content Area (Full remainder width) -->
+<div class="pl-80 flex-1 flex flex-col min-h-screen bg-surface-container-lowest">
+<!-- Top Navigation Header -->
+<header class="sticky top-0 right-0 h-16 bg-surface-container-lowest/95 backdrop-blur-xl z-40 px-space-xl flex items-center justify-between border-b border-outline-variant/30">
+<div class="w-96 flex items-center bg-surface-container px-space-md py-1.5 rounded-lg border border-outline-variant/20 gap-space-sm">
+<span class="material-symbols-outlined text-outline text-lg">search</span>
+<input class="bg-transparent border-none outline-none font-body-sm text-body-sm text-on-surface placeholder:text-outline w-full" placeholder="Buscar deliberações, votos ou chaves cívicas..." type="text"/>
+</div>
+<div class="flex items-center gap-space-lg">
+<div class="flex items-center gap-space-xs px-space-sm py-1 rounded-full bg-surface-container border border-tertiary/20">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+<span class="font-label-sovereign text-[11px] text-tertiary uppercase tracking-wider font-semibold">Malha Ativa</span>
+</div>
+<div class="flex items-center gap-space-md">
+<button class="text-on-surface-variant hover:text-on-surface transition-colors flex items-center" title="Segurança da Sessão" type="button">
+<span class="material-symbols-outlined text-xl">security</span>
+</button>
+<button class="text-on-surface-variant hover:text-on-surface transition-colors flex items-center" title="Configurações" type="button">
+<span class="material-symbols-outlined text-xl">settings</span>
+</button>
+<div class="flex items-center gap-space-sm cursor-pointer pl-2 border-l border-outline-variant/30">
+<img alt="Nó Ateniense #402" class="w-8 h-8 rounded-full object-cover border border-primary/40" src="https://lh3.googleusercontent.com/aida/AEtjO1V3cLZIJpH5zYoVr-w456O18NDcQ3cwivCksvVLsxSKGh6jHd8xpVW_KrsJvKr5SGU5s3i3Q-b2dAYD90Rdzy0CL_ojWxHf7G-0j3aziBYjmUuw8i8RK2sgoZETsZstG7UP5Zk5ax_xcXixLiyNCZi3HOUJnLheHeiiEariDdOoUQZSW8EwZx67-HgFGHB4RHUIDAl9cLiDEqfVeV92rQO_HZ90F7Iur2-4bTY7oxJZbKvn0u85plwIJQ"/>
+<div class="hidden md:flex flex-col text-left">
+<span class="font-body-sm text-xs text-on-surface font-semibold leading-tight">Nó Ateniense #402</span>
+<span class="font-code-hash text-[11px] text-primary">Soberano</span>
+</div>
+</div>
+</div>
+</div>
+</header>
+<!-- Thread Main Content Body -->
+<main class="flex-1 w-full max-w-5xl mx-auto px-space-lg py-space-md flex flex-col gap-space-md">
+<!-- Top Subheader & Civic Registry Breadcrumbs -->
+<div class="flex flex-wrap items-center justify-between pb-space-sm border-b border-outline-variant/30 gap-y-2">
+<div class="flex items-center gap-space-xs text-xs font-label-sovereign uppercase tracking-wider">
+<a class="flex items-center gap-1 text-outline hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-sm">arrow_back</span>
+          Ágora Deliberativa
+        </a>
+<span class="text-outline-variant">/</span>
+<span class="text-secondary">Círculo Pinheiros &amp; Bela Vista</span>
+<span class="text-outline-variant">/</span>
+<span class="text-on-surface-variant font-code-hash">PL-2025/04</span>
+</div>
+<div class="flex items-center gap-space-md text-xs">
+<div class="flex items-center gap-1.5 bg-surface-container px-space-sm py-1 rounded border border-outline-variant/20 font-code-hash">
+<span class="w-1.5 h-1.5 bg-primary"></span>
+<span class="text-outline">MERKLE-ROOT:</span>
+<span class="text-primary font-mono font-medium">0x93f4..de88</span>
+</div>
+<div class="flex items-center gap-1.5 bg-surface-container px-space-sm py-1 rounded border border-outline-variant/20 font-code-hash">
+<span class="text-outline font-label-sovereign uppercase">Quórum Atual:</span>
+<span class="text-tertiary font-bold">78.4%</span>
+<span class="text-on-surface-variant text-[11px]">(Supermaioria)</span>
+</div>
+</div>
+</div>
+<!-- Thread OP Article Card -->
+<article class="bg-surface-container-low rounded-xl p-space-lg border border-outline-variant/30 shadow-2xl flex flex-col gap-space-md">
+<!-- Proponent & Status Header -->
+<div class="flex flex-wrap items-start justify-between gap-space-md border-b border-outline-variant/20 pb-space-md">
+<div class="flex items-center gap-space-sm">
+<div class="w-12 h-12 rounded-lg bg-surface-container-high border border-primary/30 flex items-center justify-center text-primary font-title-monument text-lg font-bold shadow-inner">
+            CVP
+          </div>
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs">
+<span class="font-title-monument text-base text-on-surface font-semibold">Conselho Vicinal Pinheiros</span>
+<span class="material-symbols-outlined text-primary text-base" style="font-variation-settings: 'FILL' 1;" title="Entidade Coletiva Cívica Autenticada">verified</span>
+<span class="font-label-sovereign text-[10px] text-secondary bg-surface-container px-1.5 py-0.5 rounded uppercase font-semibold">Proponente Oficial</span>
+</div>
+<div class="flex items-center gap-space-sm text-outline-variant font-code-hash text-xs mt-0.5">
+<span class="text-primary">@cv.pinheiros</span>
+<span>•</span>
+<span>Há 4 horas</span>
+<span>•</span>
+<span class="text-tertiary">Bloco #41.809</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-space-sm">
+<span class="px-space-sm py-1 rounded-full bg-emerald-950/70 text-tertiary border border-tertiary/40 font-label-sovereign text-xs uppercase font-bold tracking-wider flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-tertiary animate-ping"></span>
+            Em Votação Ativa
+          </span>
+<button class="p-1.5 rounded hover:bg-surface-container text-outline hover:text-on-surface transition-colors" title="Compartilhar Hash P2P">
+<span class="material-symbols-outlined text-lg">share</span>
+</button>
+</div>
+</div>
+<!-- Title & Tags -->
+<div class="flex flex-col gap-1.5">
+<div class="flex items-center gap-space-xs">
+<span class="px-space-xs py-0.5 rounded bg-surface-container-high font-label-sovereign text-[11px] text-secondary uppercase font-semibold">Projeto de Lei Vicinal</span>
+<span class="px-space-xs py-0.5 rounded bg-surface-container-high font-label-sovereign text-[11px] text-outline uppercase font-semibold">Infraestrutura Sustentável &amp; Microrede</span>
+</div>
+<h1 class="font-headline-md text-2xl lg:text-3xl text-on-surface font-medium leading-tight">
+          PL-2025/04: Implementação de Iluminação Autônoma Solar nas Praças do Quadrante Sul
+        </h1>
+</div>
+<!-- Featured Plaza Visualization Image -->
+<div class="relative w-full h-80 rounded-lg overflow-hidden border border-outline-variant/30">
+<img alt="Visualização técnica da iluminação solar autônoma nas praças" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB4oFLxKhaMOcrW-8Hc-R31zHhZopFz8EvwsPMk1QvKPG174O5r65avV81kbO4jy_ajRxJ8Fr7zI_yxQhOtSB6seW-JG4IKTfNGqUOmzeh6mGviFWiGCJdI8XsY3sPrSlULzsjyNYvBEctIYcUM08ruOupeC4eYrhX-MX7ROk1YmPGefXdoJtrtzKr4K4ss9nFkXCVowtfCibx_NARSrPBFdD58xRSr43bZ_1n5pV0"/>
+<div class="absolute inset-0 bg-gradient-to-t from-[#0c0e11] via-transparent to-transparent opacity-80"></div>
+<div class="absolute bottom-space-sm left-space-md right-space-md flex items-center justify-between text-on-surface text-xs">
+<span class="font-label-sovereign text-on-surface uppercase tracking-widest bg-surface-container-lowest/80 px-2 py-1 rounded backdrop-blur-sm border border-outline-variant/20">
+            Render Fotométrico: Praça Horácio Sabino e Rafael Sapienza
+          </span>
+<span class="font-code-hash text-secondary bg-surface-container-lowest/80 px-2 py-1 rounded backdrop-blur-sm border border-outline-variant/20">
+            Nível Médio: 22 Lux (Conforme NBR 5101)
+          </span>
+</div>
+</div>
+<!-- Post Body & Technical Specifications -->
+<div class="flex flex-col gap-space-md text-on-surface/90 font-body-md text-base leading-relaxed">
+<p>
+          Cidadãos e deliberadores do quadrante sul: apresentamos formalmente a especificação técnica para a substituição de <strong>38 luminárias de vapor de sódio obsoletas</strong> nas praças Horácio Sabino, Rafael Sapienza e adjacências por sistemas fotovoltaicos autônomos descentralizados fora da rede tradicional.
+        </p>
+<!-- Technical Cards Grid -->
+<div class="bg-surface-container p-space-md rounded-lg border border-outline-variant/20 flex flex-col gap-space-sm">
+<div class="flex items-center gap-space-xs text-primary font-title-monument text-xs uppercase tracking-wider font-bold">
+<span class="material-symbols-outlined text-base">tune</span>
+            Especificações de Grau Arquitetônico e Engenharia
+          </div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-sm pt-space-xs">
+<div class="flex flex-col bg-surface-container-high p-space-sm rounded border border-outline-variant/10">
+<span class="font-label-sovereign text-[10px] text-on-surface-variant uppercase">Temperatura Espectral</span>
+<span class="font-headline-sm text-base text-secondary font-bold">2700K Âmbar</span>
+<span class="font-body-sm text-xs text-on-surface-variant mt-1">Corte rigoroso acima de 500nm para proteção biológica de insetos e aves noturnas.</span>
+</div>
+<div class="flex flex-col bg-surface-container-high p-space-sm rounded border border-outline-variant/10">
+<span class="font-label-sovereign text-[10px] text-on-surface-variant uppercase">Bancos de Energia</span>
+<span class="font-headline-sm text-base text-primary font-bold">LiFePO4 12.8V</span>
+<span class="font-body-sm text-xs text-on-surface-variant mt-1">4.500 ciclos úteis (&gt;12 anos) com telemetria em malha e zero risco de fuga térmica.</span>
+</div>
+<div class="flex flex-col bg-surface-container-high p-space-sm rounded border border-outline-variant/10">
+<span class="font-label-sovereign text-[10px] text-on-surface-variant uppercase">Resiliência Microrede</span>
+<span class="font-headline-sm text-base text-tertiary font-bold">72h Autonomia</span>
+<span class="font-body-sm text-xs text-on-surface-variant mt-1">Capacidade contínua para 3 dias de cobertura nublada total sem interrupção de serviço.</span>
+</div>
+</div>
+</div>
+<p>
+          O critério fundamental desta proposição foca no <strong>impacto na avifauna noturna</strong> e morcegos frugívoros locais. O comprimento de onda estabelecido reduz a atração desorientada de insetos em 84% quando comparado aos refletores convencionais de 4000K-5000K, restaurando a quietude biológica do dossel arbóreo vicinal.
+        </p>
+<p>
+          A estimativa orçamentária total de <strong>R$ 142.800</strong> contempla o fornecimento dos fustes em aço corten de geometria prismática, módulos fotovoltaicos monocristalinos bifaciais de alta eficiência e nós telemétricos via rádio LoRaWAN integrados à malha P2P Vox.
+        </p>
+</div>
+<!-- Cryptographic Signature Block -->
+<div class="bg-surface-container-lowest p-space-sm rounded-lg border border-outline-variant/30 flex flex-wrap items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-secondary text-sm">lock_clock</span>
+<span class="font-label-sovereign text-xs text-on-surface-variant uppercase">Assinatura Criptográfica:</span>
+<span class="font-code-hash text-xs text-primary font-mono bg-surface-container px-2 py-0.5 rounded">ed25519:78a3..c9f28a9b1c</span>
+</div>
+<div class="flex items-center gap-space-xs text-xs font-code-hash text-on-surface-variant">
+<span>Hash do Bloco:</span>
+<span class="text-tertiary font-mono">0x41809::d81e3a</span>
+</div>
+</div>
+<!-- Thread Action Bar -->
+<div class="flex flex-wrap items-center justify-between pt-space-md border-t border-outline-variant/20 gap-y-3">
+<div class="flex items-center gap-space-md">
+<!-- Endossar/Apoiar -->
+<button class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-primary hover:text-primary-fixed border border-primary/20 transition-all" type="button">
+<span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">recommend</span>
+<span class="font-headline-sm text-sm font-bold">428</span>
+<span class="font-label-sovereign text-xs uppercase tracking-wider text-on-surface-variant">Apoiar</span>
+</button>
+<!-- Responder -->
+<button class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-secondary hover:text-secondary-fixed border border-secondary/20 transition-all" type="button">
+<span class="material-symbols-outlined text-lg">chat_bubble</span>
+<span class="font-headline-sm text-sm font-bold">39</span>
+<span class="font-label-sovereign text-xs uppercase tracking-wider text-on-surface-variant">Responder</span>
+</button>
+<!-- Compartilhar P2P -->
+<button class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-tertiary hover:text-tertiary-fixed border border-tertiary/20 transition-all" type="button">
+<span class="material-symbols-outlined text-lg">cached</span>
+<span class="font-headline-sm text-sm font-bold">82</span>
+<span class="font-label-sovereign text-xs uppercase tracking-wider text-on-surface-variant">Compartilhar P2P</span>
+</button>
+</div>
+<!-- Votar na Proposta (Primary Action) -->
+<button class="py-2 px-space-md rounded-lg bg-primary-container text-on-primary-fixed hover:brightness-110 active:translate-y-px font-title-monument text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-md shadow-teal-950/40 transition-all" type="button">
+<span class="material-symbols-outlined text-base" style="font-variation-settings: 'FILL' 1;">how_to_vote</span>
+<span>Votar na Proposta</span>
+</button>
+</div>
+</article>
+<!-- Discussion Section Divider -->
+<div class="flex items-center gap-space-md my-space-xs">
+<div class="flex-1 h-px bg-outline-variant/30"></div>
+<div class="flex items-center gap-space-xs font-title-monument text-xs text-outline uppercase tracking-widest">
+<span class="w-1.5 h-1.5 bg-secondary rotate-45"></span>
+<span>Árvore de Deliberação Planar (39 Contribuições)</span>
+<span class="w-1.5 h-1.5 bg-secondary rotate-45"></span>
+</div>
+<div class="flex-1 h-px bg-outline-variant/30"></div>
+</div>
+<!-- Nested Replies Tree (3 Levels) -->
+<div class="flex flex-col gap-space-md pb- space-2xl">
+<!-- LEVEL 1: Reply 1 - Dra. Helena Morais -->
+<div class="bg-surface-container-low rounded-xl p-space-md border border-outline-variant/30 shadow-md flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<img alt="Dra. Helena Morais" class="w-9 h-9 rounded-lg object-cover border border-primary/30" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxpGSpA1-kafgve2BmBb9QSyhJoflSu6XbCc14-uavo4EB3-8sTVglEq4OkPwFsucYe_kyow6PvKVoxUmzp5CHBKFif8vMofBH0Sd5rwMCO-0DzeoJpj3clc9CzQOBU46Dl_0Bo6T07RExd-wWw1pizx6jushi_qJfliUp2HvwmvVKDJYYG4rUIevmmlpM30nQjQza6x0QxOUpYC6tTs9jtfV0r2z2tRnh7gT7S-k"/>
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs">
+<span class="font-title-monument text-sm text-on-surface font-semibold">Dra. Helena Morais</span>
+<span class="material-symbols-outlined text-primary text-sm" style="font-variation-settings: 'FILL' 1;">verified</span>
+<span class="font-label-sovereign text-[10px] text-tertiary bg-surface-container px-1 py-0.2 rounded uppercase">Bióloga Urbana</span>
+</div>
+<div class="flex items-center gap-space-xs font-code-hash text-[11px] text-outline">
+<span class="text-primary font-medium">@helena.civica</span>
+<span>•</span>
+<span>Há 3 horas</span>
+<span>•</span>
+<span class="text-tertiary">Bloco #41.815</span>
+</div>
+</div>
+</div>
+<span class="font-label-sovereign text-[10px] text-secondary bg-surface-container px-2 py-0.5 rounded uppercase font-semibold">
+            Parecer Técnico
+          </span>
+</div>
+<div class="font-body-md text-sm text-on-surface/90 leading-relaxed pl-11">
+<p>
+            Parabenizo a comissão pela precisão técnica na escolha do espectro de 2700K. A blindagem espectral com corte total abaixo de 500nm é uma vitória para os polinizadores noturnos, mariposas saturnídeas e morcegos frugívoros da microbacia do Córrego das Corujas.
+          </p>
+</div>
+<div class="flex items-center gap-space-md pl-11 pt-1 text-xs text-outline border-t border-outline-variant/10">
+<button class="flex items-center gap-1 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-sm">thumb_up</span>
+<span class="font-code-hash font-semibold text-primary">74 apoios</span>
+</button>
+<button class="flex items-center gap-1 hover:text-secondary transition-colors text-primary font-medium">
+<span class="material-symbols-outlined text-sm">reply</span>
+<span>Responder</span>
+</button>
+</div>
+<!-- LEVEL 2: Nested Child Reply - Marcos Silveira -->
+<div class="relative ml-8 pl-6 border-l-2 border-outline-variant/30 mt-space-xs flex flex-col gap-space-sm">
+<div class="bg-surface-container rounded-lg p-space-sm border border-outline-variant/20 flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded-lg bg-surface-container-high border border-secondary/30 flex items-center justify-center text-secondary font-bold text-xs">
+                  MS
+                </div>
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs">
+<span class="font-title-monument text-xs text-on-surface font-semibold">Marcos Silveira</span>
+<span class="font-label-sovereign text-[10px] text-secondary bg-surface-container-high px-1 rounded uppercase">Horta Comunitária</span>
+</div>
+<div class="flex items-center gap-space-xs font-code-hash text-[11px] text-outline">
+<span class="text-primary">@marcos.horta</span>
+<span>•</span>
+<span>Há 2 horas</span>
+</div>
+</div>
+</div>
+</div>
+<p class="font-body-sm text-xs text-on-surface/90 leading-relaxed pl-10">
+              Excelente colocação, Dra. Helena. Os apiários urbanos de abelhas nativas sem ferrão (Jataí e Mandaçaia) situados no entorno da Benedito Calixto e Praça Rafael Sapienza sofreram muito com a temperatura fria de 5000K anterior. Esse ajuste salvará milhares de enxames!
+            </p>
+<div class="flex items-center gap-space-md pl-10 pt-1 text-xs text-outline border-t border-outline-variant/10">
+<button class="flex items-center gap-1 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-sm">thumb_up</span>
+<span class="font-code-hash text-primary">31 apoios</span>
+</button>
+<button class="flex items-center gap-1 hover:text-secondary transition-colors text-primary">
+<span class="material-symbols-outlined text-sm">reply</span>
+<span>Responder</span>
+</button>
+</div>
+<!-- LEVEL 3: Nested Grandchild Reply - Carlos Mendonça -->
+<div class="relative ml-6 pl-5 border-l-2 border-primary/40 mt-1 flex flex-col gap-space-xs">
+<div class="bg-surface-container-high rounded p-2.5 border border-outline-variant/20 flex flex-col gap-1">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded bg-primary/20 text-primary flex items-center justify-center font-bold text-[10px]">
+                      CM
+                    </div>
+<div class="flex items-center gap-1.5">
+<span class="font-body-sm text-xs text-on-surface font-bold">Carlos Mendonça</span>
+<span class="font-code-hash text-[10px] text-tertiary">@carlos.mendonca</span>
+<span class="text-outline text-[10px]">• Há 45 min</span>
+</div>
+</div>
+<span class="font-code-hash text-[10px] text-primary bg-surface-container px-1 py-0.2 rounded">Open-Hardware</span>
+</div>
+<p class="font-body-sm text-xs text-on-surface/90 leading-relaxed pl-8">
+                  Já disponibilizei os arquivos de calibração do controlador ESP32 e do sensor LDR com curva de dimerização adaptativa no repositório cívico:
+                  <a class="text-primary hover:underline font-code-hash" href="#">p2p://vox.repo/luz-solar-pinheiros-v1.git</a>.
+                  O firmware é 100% aberto e aceita submissões de nós verificados.
+                </p>
+<div class="flex items-center gap-3 pl-8 pt-1 text-[11px] text-outline">
+<button class="flex items-center gap-1 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-xs">thumb_up</span>
+<span class="font-code-hash">18 apoios</span>
+</button>
+<button class="flex items-center gap-1 hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-xs">share</span>
+<span>Ecoar</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- LEVEL 1: Reply 2 - Coletivo Urbano Bela Vista -->
+<div class="bg-surface-container-low rounded-xl p-space-md border border-outline-variant/30 shadow-md flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<div class="w-9 h-9 rounded-lg bg-surface-container-high border border-secondary/40 flex items-center justify-center text-secondary font-title-monument text-xs font-bold">
+              BV
+            </div>
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs">
+<span class="font-title-monument text-sm text-on-surface font-semibold">Coletivo Urbano Bela Vista</span>
+<span class="material-symbols-outlined text-primary text-sm" style="font-variation-settings: 'FILL' 1;">verified</span>
+<span class="font-label-sovereign text-[10px] text-secondary bg-surface-container px-1 py-0.2 rounded uppercase">Círculo Irmão</span>
+</div>
+<div class="flex items-center gap-space-xs font-code-hash text-[11px] text-outline">
+<span class="text-primary">@bixiga.livre</span>
+<span>•</span>
+<span>Há 1 hora</span>
+<span>•</span>
+<span class="text-tertiary">Bloco #41.828</span>
+</div>
+</div>
+</div>
+<span class="font-label-sovereign text-[10px] text-primary bg-surface-container px-2 py-0.5 rounded uppercase font-semibold">
+            Consulta de Extensão
+          </span>
+</div>
+<div class="font-body-md text-sm text-on-surface/90 leading-relaxed pl-11">
+<p>
+            Gostaríamos de saber se o lote de aquisição via contrato inteligente já prevê cláusula de expansão para a <strong>Praça Dom Orione</strong> no Bixiga. Temos 12 postes em estado crítico e o nosso círculo territorial já dispõe de R$ 48.000 em saldo soberano para contrapartida de compra conjunta de baterias LiFePO4!
+          </p>
+</div>
+<div class="flex items-center gap-space-md pl-11 pt-1 text-xs text-outline border-t border-outline-variant/10">
+<button class="flex items-center gap-1 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-sm">thumb_up</span>
+<span class="font-code-hash font-semibold text-primary">52 apoios</span>
+</button>
+<button class="flex items-center gap-1 hover:text-secondary transition-colors text-primary font-medium">
+<span class="material-symbols-outlined text-sm">reply</span>
+<span>Responder Consulta</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Sticky Bottom Inline Composer with Markdown & Cryptographic Signing -->
+<div class="sticky bottom-4 z-30 bg-[#0e1013]/95 backdrop-blur-xl rounded-xl p-space-md border border-outline-variant/40 shadow-2xl flex flex-col gap-space-xs">
+<div class="flex items-center justify-between border-b border-outline-variant/20 pb-2">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-base">edit_note</span>
+<span class="font-label-sovereign text-xs text-on-surface uppercase tracking-wider font-semibold">Adicionar Deliberação Técnica / Resposta</span>
+</div>
+<!-- Markdown toolbar -->
+<div class="flex items-center gap-1">
+<button class="p-1 hover:bg-surface-container text-outline hover:text-on-surface rounded transition-colors" title="Negrito" type="button">
+<span class="material-symbols-outlined text-base">format_bold</span>
+</button>
+<button class="p-1 hover:bg-surface-container text-outline hover:text-on-surface rounded transition-colors" title="Itálico" type="button">
+<span class="material-symbols-outlined text-base">format_italic</span>
+</button>
+<button class="p-1 hover:bg-surface-container text-outline hover:text-on-surface rounded transition-colors" title="Inserir Código/Hash" type="button">
+<span class="material-symbols-outlined text-base">code</span>
+</button>
+<button class="p-1 hover:bg-surface-container text-outline hover:text-on-surface rounded transition-colors" title="Lista" type="button">
+<span class="material-symbols-outlined text-base">format_list_bulleted</span>
+</button>
+<button class="p-1 hover:bg-surface-container text-outline hover:text-on-surface rounded transition-colors" title="Inserir Citação" type="button">
+<span class="material-symbols-outlined text-base">format_quote</span>
+</button>
+</div>
+</div>
+<div class="relative mt-1">
+<textarea class="w-full bg-surface-container-high rounded-lg p-space-sm font-body-md text-sm text-on-surface placeholder:text-outline border border-outline-variant/30 focus:border-primary outline-none transition-all resize-none shadow-inner" placeholder="Escreva sua contribuição deliberativa, proponha emendas ou vincule hashes da malha..." rows="2"></textarea>
+</div>
+<div class="flex flex-wrap items-center justify-between gap-space-sm pt-2">
+<div class="flex items-center gap-space-xs text-xs">
+<span class="font-code-hash text-outline">Assinando com:</span>
+<span class="font-code-hash text-tertiary font-mono">Nó Ateniense #402 (Ed25519)</span>
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+</div>
+<div class="flex items-center gap-space-sm">
+<button class="px-space-sm py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-body-sm text-xs transition-colors border border-outline-variant/20" type="button">
+            Pré-visualizar
+          </button>
+<button class="px-space-md py-1.5 rounded-lg bg-gradient-to-r from-tertiary to-primary text-on-tertiary font-title-monument text-xs uppercase tracking-wider font-bold hover:brightness-110 active:translate-y-px transition-all shadow-md flex items-center gap-1.5" type="button">
+<span class="material-symbols-outlined text-sm font-bold">verified_user</span>
+<span>Selar no Bloco</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

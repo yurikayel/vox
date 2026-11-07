@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="pt-BR"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_stack" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Domine:wght@500;600;700&amp;family=Work+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#111316;color:#e2e2e6;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"on-secondary-fixed":"#251a00","on-tertiary-fixed":"#002114","surface-container":"#1e2023","tertiary-fixed":"#86f8c4","surface":"#111316","on-primary-fixed-variant":"#00504c","on-secondary-fixed-variant":"#5a4300","primary-fixed-dim":"#78d6cf","error":"#ffb4ab","background":"#111316","tertiary-container":"#39b081","on-tertiary-container":"#003d28","surface-container-low":"#1a1c1f","on-error":"#690005","on-error-container":"#ffdad6","on-primary":"#003734","inverse-on-surface":"#2f3034","surface-bright":"#37393d","on-tertiary":"#003825","on-secondary-container":"#eec971","primary-fixed":"#94f3eb","on-primary-fixed":"#00201e","on-tertiary-fixed-variant":"#005137","surface-container-lowest":"#0c0e11","secondary-fixed-dim":"#e7c26b","inverse-primary":"#006a65","secondary":"#e7c26b","secondary-fixed":"#ffdf97","surface-variant":"#333538","inverse-surface":"#e2e2e6","on-surface":"#e2e2e6","on-background":"#e2e2e6","tertiary":"#69dba9","secondary-container":"#6e5301","error-container":"#93000a","surface-dim":"#111316","surface-container-high":"#282a2d","primary":"#78d6cf","on-surface-variant":"#bdc9c7","outline-variant":"#3e4948","on-secondary":"#3e2e00","on-primary-container":"#003c38","surface-tint":"#78d6cf","surface-container-highest":"#333538","outline":"#879391","tertiary-fixed-dim":"#69dba9","primary-container":"#4baca5"},borderRadius:{DEFAULT:"0.25rem",lg:"0.5rem",xl:"0.75rem",full:"9999px"},spacing:{"space-md":"1rem","margin-mobile":"1.25rem","space-2xl":"4rem","gutter-mobile":"1rem","space-sm":"0.5rem","space-xs":"0.25rem","gutter":"2rem","space-xl":"2.5rem","margin":"3rem","space-lg":"1.5rem"},fontFamily:{"label-sovereign":["Work Sans"],"headline-md":["Domine"],"title-monument":["Domine"],"headline-lg-mobile":["Domine"],"headline-sm":["Domine"],display:["Domine"],"headline-lg":["Domine"],"body-md":["Work Sans"],"display-mobile":["Domine"],"body-lg":["Work Sans"],"code-hash":["Work Sans"],"body-sm":["Work Sans"]},fontSize:{"label-sovereign":["0.75rem",{lineHeight:"1rem",letterSpacing:"0.12em",fontWeight:"600"}],"headline-md":["1.75rem",{lineHeight:"2.25rem",letterSpacing:"0em",fontWeight:"500"}],"title-monument":["1rem",{lineHeight:"1.5rem",letterSpacing:"0.15em",fontWeight:"700"}],"headline-lg-mobile":["1.75rem",{lineHeight:"2.25rem",letterSpacing:"0em",fontWeight:"500"}],"headline-sm":["1.25rem",{lineHeight:"1.75rem",letterSpacing:"0.02em",fontWeight:"600"}],display:["3.5rem",{lineHeight:"4rem",letterSpacing:"-0.02em",fontWeight:"600"}],"headline-lg":["2.5rem",{lineHeight:"3rem",letterSpacing:"-0.015em",fontWeight:"500"}],"body-md":["0.9375rem",{lineHeight:"1.5rem",letterSpacing:"0.01em",fontWeight:"400"}],"display-mobile":["2.25rem",{lineHeight:"2.75rem",letterSpacing:"-0.01em",fontWeight:"600"}],"body-lg":["1.125rem",{lineHeight:"1.75rem",letterSpacing:"0.01em",fontWeight:"400"}],"code-hash":["0.8125rem",{lineHeight:"1.25rem",letterSpacing:"0.05em",fontWeight:"500"}],"body-sm":["0.8125rem",{lineHeight:"1.25rem",letterSpacing:"0.02em",fontWeight:"400"}]}}}};</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface text-on-surface font-body-md flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 bg-surface-container-lowest/80 backdrop-blur-xl pt-safe shadow-[0_1px_8px_rgba(0,0,0,0.35)]"><div class="h-16 px-margin-mobile flex items-center justify-between"><div class="flex items-center gap-space-xs"><button class="w-11 h-11 flex items-center justify-center text-on-surface hover:text-primary transition-colors active:scale-95" onclick="history.back()"><span class="material-symbols-outlined text-2xl">arrow_back</span></button><h1 class="font-headline-sm text-headline-sm text-on-surface tracking-wide uppercase line-clamp-1">Voxpedia</h1></div><div class="flex items-center gap-space-sm"><div class="flex items-center gap-space-xs px-space-xs py-0.5 bg-surface-container-low rounded"><span class="w-1.5 h-1.5 rounded-full bg-secondary"></span><span class="font-code-hash text-[11px] text-secondary font-bold tracking-widest">PROMPT-STOA</span></div><img alt="Profile" class="w-8 h-8 rounded-full object-cover ring-1 ring-secondary/40" src="https://lh3.googleusercontent.com/aida/AEtjO1V3cLZIJpH5zYoVr-w456O18NDcQ3cwivCksvVLsxSKGh6jHd8xpVW_KrsJvKr5SGU5s3i3Q-b2dAYD90Rdzy0CL_ojWxHf7G-0j3aziBYjmUuw8i8RK2sgoZETsZstG7UP5Zk5ax_xcXixLiyNCZi3HOUJnLheHeiiEariDdOoUQZSW8EwZx67-HgFGHB4RHUIDAl9cLiDEqfVeV92rQO_HZ90F7Iur2-4bTY7oxJZbKvn0u85plwIJQ"/></div></div></header><main class="flex flex-col relative w-full pt-16 pb-safe bg-surface min-h-screen"><div class="flex flex-col w-full">
+<!-- Sub-Header Entablature: Versão e Identidade Epistêmica -->
+<section class="px-margin-mobile pt-space-sm pb-space-md bg-surface-container-lowest">
+<div class="flex items-center justify-between gap-space-xs">
+<div class="flex items-center gap-space-xs">
+<span class="w-2 h-2 bg-secondary rounded-none rotate-45"></span>
+<span class="font-code-hash text-[10px] uppercase text-secondary tracking-widest font-semibold">Codex Iuris &amp; Technica</span>
+</div>
+<span class="px-space-xs py-0.5 bg-surface-container text-on-surface-variant font-code-hash text-[10px] rounded tracking-wider">v4.8.2-canon</span>
+</div>
+<div class="mt-space-xs flex items-baseline gap-space-xs">
+<h2 class="font-headline-sm text-headline-sm text-on-surface tracking-normal">Tratado Cívico &amp; Técnico</h2>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Compêndio público imutável para autodeterminação informada e governança criptográfica.</p>
+</section>
+<!-- Visual Hero / Gravitas Lithic Inscription Banner -->
+<div class="relative w-full h-28 bg-surface-container-low overflow-hidden">
+<img class="w-full h-full object-cover opacity-35 mix-blend-luminosity" data-alt="Close up architectural detail of ancient Greek Ionic and Doric entablature carved in dark Pentelic basalt stone with glowing subtle teal and antique bronze veins, atmospheric dusk lighting, museum grade archive mood, cinematic depth of field." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAg6fwTiok0XM4nZ3UzEUXS2uyDTxcE8-WKLdMbHuMk2TDuM5oACuGnlBRcKx4E0H4lBusBUTttKIrqQlK5PElrdOSvFP_BJcKVr2gw_T6grQ_nn8Pzhozc2yaZYH69GcRelP12iOc0sjUPfsUev6IuFfwfSnPY9hokZqSrfH_7Ym2IWc3KC1ueQ86bUQISw8RMJmmf5oBe2EjbYVAP0ki9Bak06qwCkdLVK-09lVg"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface via-surface/60 to-transparent"></div>
+<div class="absolute inset-0 flex items-center justify-between px-margin-mobile">
+<div class="flex flex-col">
+<span class="font-code-hash text-[11px] text-primary tracking-widest uppercase">Repositório Dogmático da Pólis</span>
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold">Episteme Cidadã</span>
+</div>
+<div class="w-10 h-10 bg-surface-container-high/80 backdrop-blur-md flex items-center justify-center text-secondary rounded">
+<span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">auto_stories</span>
+</div>
+</div>
+</div>
+<!-- Campo de Pesquisa Epistêmica & Filtros -->
+<section class="px-margin-mobile -mt-3 relative z-10 space-y-space-md">
+<!-- Basalt Search Inscription -->
+<div class="bg-surface-container-high shadow-lg px-space-md py-space-sm flex items-center gap-space-sm rounded">
+<span class="material-symbols-outlined text-primary text-xl">search</span>
+<input class="bg-transparent w-full text-on-surface font-body-md text-body-md placeholder:text-outline focus:outline-none focus:ring-0" id="lexicon-search" placeholder="Buscar termo, protocolo ou prova ZK..." type="text"/>
+<span class="material-symbols-outlined text-outline text-lg cursor-pointer hover:text-secondary transition-colors" onclick="document.getElementById('lexicon-search').value='';">close</span>
+</div>
+<!-- Pílulas Horizontais de Categorias -->
+<div class="flex items-center gap-space-xs overflow-x-auto no-scrollbar py-0.5">
+<button class="shrink-0 px-space-sm py-1.5 bg-primary text-on-primary font-label-sovereign text-label-sovereign tracking-wider uppercase rounded font-bold shadow-sm transition-transform active:scale-95">
+        Todos (5)
+      </button>
+<button class="shrink-0 px-space-sm py-1.5 bg-surface-container text-on-surface-variant hover:text-on-surface font-label-sovereign text-label-sovereign tracking-wider uppercase rounded transition-transform active:scale-95">
+        Conceitos Cívicos
+      </button>
+<button class="shrink-0 px-space-sm py-1.5 bg-surface-container text-on-surface-variant hover:text-on-surface font-label-sovereign text-label-sovereign tracking-wider uppercase rounded transition-transform active:scale-95">
+        Criptografia
+      </button>
+<button class="shrink-0 px-space-sm py-1.5 bg-surface-container text-on-surface-variant hover:text-on-surface font-label-sovereign text-label-sovereign tracking-wider uppercase rounded transition-transform active:scale-95">
+        Governança
+      </button>
+<button class="shrink-0 px-space-sm py-1.5 bg-surface-container text-on-surface-variant hover:text-on-surface font-label-sovereign text-label-sovereign tracking-wider uppercase rounded transition-transform active:scale-95">
+        Topologia P2P
+      </button>
+</div>
+<!-- Teclado Alfabético Epistêmico -->
+<div class="flex items-center justify-between px-space-xs py-1.5 bg-surface-container-lowest rounded overflow-x-auto no-scrollbar gap-1">
+<button class="w-7 h-7 flex items-center justify-center font-code-hash text-[11px] font-bold text-on-primary bg-primary rounded">A</button>
+<button class="w-7 h-7 flex items-center justify-center font-code-hash text-[11px] font-semibold text-on-surface-variant hover:text-secondary bg-surface-container-low rounded">B</button>
+<button class="w-7 h-7 flex items-center justify-center font-code-hash text-[11px] font-bold text-secondary bg-surface-container rounded shadow-sm">C</button>
+<button class="w-7 h-7 flex items-center justify-center font-code-hash text-[11px] font-semibold text-on-surface-variant hover:text-secondary bg-surface-container-low rounded">D</button>
+<button class="w-7 h-7 flex items-center justify-center font-code-hash text-[11px] font-bold text-secondary bg-surface-container rounded shadow-sm">E</button>
+<button class="w-7 h-7 flex items-center justify-center font-code-hash text-[11px] font-semibold text-on-surface-variant hover:text-secondary bg-surface-container-low rounded">F</button>
+<button class="w-7 h-7 flex items-center justify-center font-code-hash text-[11px] font-semibold text-on-surface-variant hover:text-secondary bg-surface-container-low rounded">G</button>
+<button class="w-7 h-7 flex items-center justify-center font-code-hash text-[11px] font-semibold text-on-surface-variant hover:text-secondary bg-surface-container-low rounded">H</button>
+<button class="w-7 h-7 flex items-center justify-center font-code-hash text-[11px] font-bold text-secondary bg-surface-container rounded shadow-sm">M</button>
+<button class="w-7 h-7 flex items-center justify-center font-code-hash text-[11px] font-semibold text-on-surface-variant hover:text-secondary bg-surface-container-low rounded">P</button>
+<button class="w-7 h-7 flex items-center justify-center font-code-hash text-[11px] font-bold text-secondary bg-surface-container rounded shadow-sm">Z</button>
+</div>
+</section>
+<!-- Métricas da Enciclopédia (Grid de Gravitas) -->
+<section class="px-margin-mobile pt-space-lg pb-space-xs">
+<div class="grid grid-cols-3 gap-space-xs">
+<!-- Métrica 1 -->
+<div class="bg-surface-container-low p-space-sm rounded flex flex-col justify-between">
+<div class="flex items-center gap-1">
+<span class="w-1.5 h-1.5 bg-primary rounded-none"></span>
+<span class="font-code-hash text-[9px] uppercase tracking-wider text-on-surface-variant font-medium">Verbetes</span>
+</div>
+<div class="my-space-xs">
+<span class="font-headline-sm text-headline-sm text-primary font-bold">5</span>
+</div>
+<span class="font-code-hash text-[9px] text-secondary tracking-tight">Auditados ZK</span>
+</div>
+<!-- Métrica 2 -->
+<div class="bg-surface-container-low p-space-sm rounded flex flex-col justify-between">
+<div class="flex items-center gap-1">
+<span class="w-1.5 h-1.5 bg-secondary rounded-none"></span>
+<span class="font-code-hash text-[9px] uppercase tracking-wider text-on-surface-variant font-medium">Nós P2P</span>
+</div>
+<div class="my-space-xs">
+<span class="font-headline-sm text-headline-sm text-secondary font-bold">1.842</span>
+</div>
+<span class="font-code-hash text-[9px] text-on-surface-variant tracking-tight">Sem Gateway</span>
+</div>
+<!-- Métrica 3 -->
+<div class="bg-surface-container-low p-space-sm rounded flex flex-col justify-between">
+<div class="flex items-center gap-1">
+<span class="w-1.5 h-1.5 bg-tertiary rounded-none"></span>
+<span class="font-code-hash text-[9px] uppercase tracking-wider text-on-surface-variant font-medium">Consenso</span>
+</div>
+<div class="my-space-xs">
+<span class="font-headline-sm text-headline-sm text-tertiary font-bold">100%</span>
+</div>
+<span class="font-code-hash text-[9px] text-tertiary tracking-tight">LoRa / Mesh</span>
+</div>
+</div>
+</section>
+<!-- Frieze Divider: Estilo Stoa Clássico -->
+<div class="px-margin-mobile my-space-md flex items-center gap-space-sm">
+<div class="h-px bg-surface-container-highest flex-1"></div>
+<div class="flex items-center gap-1">
+<span class="w-1.5 h-1.5 bg-secondary/80 rotate-45"></span>
+<span class="font-label-sovereign text-[10px] text-on-surface-variant uppercase tracking-widest font-semibold">Tábua Canônica</span>
+<span class="w-1.5 h-1.5 bg-secondary/80 rotate-45"></span>
+</div>
+<div class="h-px bg-surface-container-highest flex-1"></div>
+</div>
+<!-- Lista de Verbetes Canônicos (Lithic Tablets) -->
+<section class="px-margin-mobile space-y-space-md">
+<!-- Verbete 01: Ágora Soberana -->
+<article class="bg-surface-container p-space-md rounded transition-all hover:bg-surface-container-high relative overflow-hidden">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-primary"></div>
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex items-center gap-space-xs">
+<span class="w-2 h-2 bg-primary rounded-none"></span>
+<span class="font-code-hash text-[10px] uppercase tracking-widest text-primary font-bold">Conceito Cívico • Ativo</span>
+</div>
+<div class="flex items-center gap-1 text-secondary font-code-hash text-[11px]">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">verified</span>
+<span>14.890 chaves</span>
+</div>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mt-space-xs">Ágora Soberana</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-space-xs leading-relaxed">
+        Espaço público digital imutável para deliberação, onde a visibilidade é determinada por relevância geográfica e engajamento orgânico, livre de algoritmos de retenção comercial.
+      </p>
+<!-- Parâmetros Técnicos Inscriptos -->
+<div class="mt-space-sm p-space-sm bg-surface-container-lowest rounded space-y-1">
+<div class="font-label-sovereign text-[10px] uppercase text-secondary tracking-widest font-semibold">Parâmetros de Auditoria</div>
+<div class="grid grid-cols-1 gap-1 text-[11px] font-code-hash text-on-surface">
+<div class="flex items-center justify-between">
+<span class="text-on-surface-variant">Feed Algorítmico:</span>
+<span class="text-tertiary font-bold">Nulo (0%)</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-on-surface-variant">Distribuição:</span>
+<span>Mapeamento Radial / Bacia</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-on-surface-variant">Camada Base:</span>
+<span class="text-primary font-medium">P2P IPFS / NOSTR</span>
+</div>
+</div>
+</div>
+<!-- Termos Correlatos -->
+<div class="mt-space-sm flex flex-wrap gap-space-xs items-center">
+<span class="font-code-hash text-[10px] text-on-surface-variant uppercase tracking-wider">Léxico:</span>
+<span class="px-space-xs py-0.5 bg-surface-container-low text-secondary font-code-hash text-[11px] rounded">#democracia-direta</span>
+<span class="px-space-xs py-0.5 bg-surface-container-low text-secondary font-code-hash text-[11px] rounded">#anti-extracao</span>
+<span class="px-space-xs py-0.5 bg-surface-container-low text-secondary font-code-hash text-[11px] rounded">#polis-digital</span>
+</div>
+</article>
+<!-- Verbete 02: Chave Ed25519 -->
+<article class="bg-surface-container p-space-md rounded transition-all hover:bg-surface-container-high relative overflow-hidden">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-secondary"></div>
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex items-center gap-space-xs">
+<span class="w-2 h-2 bg-secondary rounded-none"></span>
+<span class="font-code-hash text-[10px] uppercase tracking-widest text-secondary font-bold">Criptografia • Padrão Ativo</span>
+</div>
+<div class="flex items-center gap-1 text-primary font-code-hash text-[11px]">
+<span class="material-symbols-outlined text-sm">enhanced_encryption</span>
+<span>RFC 8032</span>
+</div>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mt-space-xs">Chave Ed25519</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-space-xs leading-relaxed">
+        Algoritmo de assinatura criptográfica de curva elíptica utilizado pelo Vox para garantir que cada voto e publicação seja autenticado pelo próprio cidadão sem servidor central.
+      </p>
+<!-- Parâmetros Técnicos Inscriptos -->
+<div class="mt-space-sm p-space-sm bg-surface-container-lowest rounded space-y-1">
+<div class="font-label-sovereign text-[10px] uppercase text-secondary tracking-widest font-semibold">Parâmetros de Cifra</div>
+<div class="grid grid-cols-1 gap-1 text-[11px] font-code-hash text-on-surface">
+<div class="flex items-center justify-between">
+<span class="text-on-surface-variant">Tamanho da Chave:</span>
+<span class="text-primary font-bold">256 bits</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-on-surface-variant">Velocidade Verificação:</span>
+<span class="text-tertiary">&lt; 0.2 ms / nó</span>
+</div>
+</div>
+</div>
+<!-- Termos Correlatos -->
+<div class="mt-space-sm flex flex-wrap gap-space-xs items-center">
+<span class="font-code-hash text-[10px] text-on-surface-variant uppercase tracking-wider">Léxico:</span>
+<span class="px-space-xs py-0.5 bg-surface-container-low text-secondary font-code-hash text-[11px] rounded">#autenticacao-p2p</span>
+<span class="px-space-xs py-0.5 bg-surface-container-low text-secondary font-code-hash text-[11px] rounded">#curva-eliptica</span>
+</div>
+</article>
+<!-- Verbete 03: Célula Territorial -->
+<article class="bg-surface-container p-space-md rounded transition-all hover:bg-surface-container-high relative overflow-hidden">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-tertiary"></div>
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex items-center gap-space-xs">
+<span class="w-2 h-2 bg-tertiary rounded-none"></span>
+<span class="font-code-hash text-[10px] uppercase tracking-widest text-tertiary font-bold">Governança • Operacional</span>
+</div>
+<div class="flex items-center gap-1 text-on-surface-variant font-code-hash text-[11px]">
+<span class="material-symbols-outlined text-sm">pin_drop</span>
+<span>Bacia Hidrográfica</span>
+</div>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mt-space-xs">Célula Territorial</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-space-xs leading-relaxed">
+        Agrupamento vicinal autônomo baseado em bacias hidrográficas e bairros físicos para deliberações de impacto imediato e zeladoria comunitária.
+      </p>
+<!-- Parâmetros Técnicos Inscriptos -->
+<div class="mt-space-sm p-space-sm bg-surface-container-lowest rounded space-y-1">
+<div class="font-label-sovereign text-[10px] uppercase text-secondary tracking-widest font-semibold">Regras Subsidárias</div>
+<div class="grid grid-cols-1 gap-1 text-[11px] font-code-hash text-on-surface">
+<div class="flex items-center justify-between">
+<span class="text-on-surface-variant">Raio Físico:</span>
+<span>500m — 2.5km</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-on-surface-variant">Quórum Mínimo:</span>
+<span class="text-secondary font-bold">12% do Eleitorado Local</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-on-surface-variant">Poder de Resolução:</span>
+<span class="text-tertiary font-medium">Pleno Local Soberano</span>
+</div>
+</div>
+</div>
+<!-- Termos Correlatos -->
+<div class="mt-space-sm flex flex-wrap gap-space-xs items-center">
+<span class="font-code-hash text-[10px] text-on-surface-variant uppercase tracking-wider">Léxico:</span>
+<span class="px-space-xs py-0.5 bg-surface-container-low text-secondary font-code-hash text-[11px] rounded">#bioregionalismo</span>
+<span class="px-space-xs py-0.5 bg-surface-container-low text-secondary font-code-hash text-[11px] rounded">#subsidiaridade</span>
+</div>
+</article>
+<!-- Verbete 04: Escrutínio ZK (Zero-Knowledge) -->
+<article class="bg-surface-container p-space-md rounded transition-all hover:bg-surface-container-high relative overflow-hidden">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-primary"></div>
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex items-center gap-space-xs">
+<span class="w-2 h-2 bg-primary rounded-none"></span>
+<span class="font-code-hash text-[10px] uppercase tracking-widest text-primary font-bold">Criptografia • Auditoria</span>
+</div>
+<div class="flex items-center gap-1 text-tertiary font-code-hash text-[11px]">
+<span class="material-symbols-outlined text-sm">visibility_off</span>
+<span>Groth16</span>
+</div>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mt-space-xs">Escrutínio ZK (Zero-Knowledge)</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-space-xs leading-relaxed">
+        Protocolo matemático que permite provar que um voto é válido e elegível sem revelar a identidade do votante, eliminando coerção e compra de votos.
+      </p>
+<!-- Parâmetros Técnicos Inscriptos -->
+<div class="mt-space-sm p-space-sm bg-surface-container-lowest rounded space-y-1">
+<div class="font-label-sovereign text-[10px] uppercase text-secondary tracking-widest font-semibold">Hermetismo Matemático</div>
+<div class="grid grid-cols-1 gap-1 text-[11px] font-code-hash text-on-surface">
+<div class="flex items-center justify-between">
+<span class="text-on-surface-variant">Grau de Privacidade:</span>
+<span class="text-tertiary font-bold">100% Hermética</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-on-surface-variant">Tamanho da Prova:</span>
+<span class="text-primary font-medium">128 bytes</span>
+</div>
+</div>
+</div>
+<!-- Termos Correlatos -->
+<div class="mt-space-sm flex flex-wrap gap-space-xs items-center">
+<span class="font-code-hash text-[10px] text-on-surface-variant uppercase tracking-wider">Léxico:</span>
+<span class="px-space-xs py-0.5 bg-surface-container-low text-secondary font-code-hash text-[11px] rounded">#zero-knowledge</span>
+<span class="px-space-xs py-0.5 bg-surface-container-low text-secondary font-code-hash text-[11px] rounded">#voto-secreto-matematico</span>
+</div>
+</article>
+<!-- Verbete 05: Malha Mesh / LoRa -->
+<article class="bg-surface-container p-space-md rounded transition-all hover:bg-surface-container-high relative overflow-hidden">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-secondary"></div>
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex items-center gap-space-xs">
+<span class="w-2 h-2 bg-secondary rounded-none"></span>
+<span class="font-code-hash text-[10px] uppercase tracking-widest text-secondary font-bold">Topologia P2P • Resiliente</span>
+</div>
+<div class="flex items-center gap-1 text-secondary font-code-hash text-[11px]">
+<span class="material-symbols-outlined text-sm">hub</span>
+<span>915 MHz ISM</span>
+</div>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mt-space-xs">Malha Mesh / LoRa</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-space-xs leading-relaxed">
+        Topologia de transmissão descentralizada onde aparelhos comunicam-se de nó a nó por rádiofrequência sub-GHz sem depender de operadoras de telecomunicações.
+      </p>
+<!-- Parâmetros Técnicos Inscriptos -->
+<div class="mt-space-sm p-space-sm bg-surface-container-lowest rounded space-y-1">
+<div class="font-label-sovereign text-[10px] uppercase text-secondary tracking-widest font-semibold">Especificações de Rádio</div>
+<div class="grid grid-cols-1 gap-1 text-[11px] font-code-hash text-on-surface">
+<div class="flex items-center justify-between">
+<span class="text-on-surface-variant">Alcance Típico:</span>
+<span>3km — 12km (Linha de Visada)</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-on-surface-variant">Dependência Telco:</span>
+<span class="text-tertiary font-bold">0% (Soberano)</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-on-surface-variant">Espectro:</span>
+<span class="text-primary font-medium">Livre / Isento</span>
+</div>
+</div>
+</div>
+<!-- Termos Correlatos -->
+<div class="mt-space-sm flex flex-wrap gap-space-xs items-center">
+<span class="font-code-hash text-[10px] text-on-surface-variant uppercase tracking-wider">Léxico:</span>
+<span class="px-space-xs py-0.5 bg-surface-container-low text-secondary font-code-hash text-[11px] rounded">#resiliencia-infra</span>
+<span class="px-space-xs py-0.5 bg-surface-container-low text-secondary font-code-hash text-[11px] rounded">#mesh-civica</span>
+</div>
+</article>
+</section>
+<!-- Chamada de Inclusão Comunitária (Pedestal de Proposição) -->
+<section class="px-margin-mobile pt-space-xl pb-space-2xl">
+<div class="bg-gradient-to-b from-surface-container-high to-surface-container-low p-space-md rounded relative shadow-lg">
+<div class="flex items-center gap-space-xs mb-space-xs">
+<span class="material-symbols-outlined text-secondary text-lg">gavel</span>
+<span class="font-label-sovereign text-[11px] uppercase tracking-wider text-secondary font-bold">Proposta de Inclusão no Cânone</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface leading-relaxed">
+        Novos termos demandam quórum de <strong>250 assinaturas ZK</strong> para validação no índice permanente e difusão pelas malhas operacionais da rede.
+      </p>
+<div class="mt-space-md flex flex-col gap-space-xs">
+<button class="w-full py-space-sm px-space-md bg-primary-container text-on-primary font-label-sovereign text-label-sovereign uppercase tracking-widest font-bold rounded flex items-center justify-center gap-space-xs shadow-md transition-all active:scale-[0.98] hover:brightness-110">
+<span class="material-symbols-outlined text-base">post_add</span>
+<span>Submeter Ementa Cívica</span>
+</button>
+<div class="text-center mt-1">
+<span class="font-code-hash text-[10px] text-on-surface-variant tracking-wider">Custódia Criptográfica Direta • Sem Moderação Central</span>
+</div>
+</div>
+</div>
+</section>
+</div>
+<script>
+  // Micro-interatividade de filtro de busca do glossário
+  const searchInput = document.getElementById('lexicon-search');
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      const term = e.target.value.toLowerCase().trim();
+      const articles = document.querySelectorAll('article');
+      articles.forEach(article => {
+        const text = article.innerText.toLowerCase();
+        if (text.includes(term)) {
+          article.style.display = 'block';
+        } else {
+          article.style.display = 'none';
+        }
+      });
+    });
+  }
+</script></main></body></html>
