@@ -4012,3 +4012,30 @@ body,
 .genesis-pick-text strong { font-family: var(--font-epigraphic); font-size: 1.1rem; font-weight: 600; }
 .genesis-pick-text span { font-size: 0.875rem; color: var(--sa-on-surface-variant); }
 .genesis-pick-arrow { color: var(--sa-secondary); font-size: 1.2rem; }
+
+/* ── 26. Construtor de enquete cívica ── */
+.civic-poll-builder { margin-top: 1rem; padding: 1rem; background: var(--sa-surface-high); border-left: 2px solid var(--sa-secondary); border-radius: var(--radius-sm); }
+.civic-poll-builder[hidden] { display: none; }
+.civic-poll-options { display: grid; gap: 0.5rem; margin: 0 0 0.75rem; padding-left: 1.25rem; }
+.civic-poll-row { display: flex; gap: 0.5rem; align-items: center; }
+.civic-poll-row .form-control { flex: 1; }
+.civic-poll-remove { width: 36px; height: 36px; flex-shrink: 0; border: 1px solid var(--sa-hairline); border-radius: var(--radius-sm); background: transparent; color: var(--sa-on-surface-variant); font-size: 1.1rem; cursor: pointer; }
+.civic-poll-remove:disabled, #btn-civic-poll-add:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── 27. Confirmação de voto em etapas ── */
+.vote-confirm-overlay { position: fixed; inset: 0; z-index: 10050; display: flex; align-items: center; justify-content: center; padding: 1rem; background: var(--overlay, rgba(12, 14, 17, 0.85)); }
+.vote-confirm-sheet { width: min(560px, 100%); max-height: 90vh; overflow-y: auto; padding: 1.75rem; background: var(--sa-surface-container); border: 1px solid var(--sa-hairline); border-top: 2px solid var(--sa-secondary); border-radius: var(--radius); }
+.vote-confirm-step[hidden] { display: none; }
+.vote-confirm-title { margin: 1rem 0 0.5rem; font-family: var(--font-epigraphic); font-size: 1.25rem; font-weight: 600; color: var(--sa-on-surface); }
+.vote-confirm-body { margin: 0 0 1.5rem; line-height: 1.6; color: var(--sa-on-surface-variant); white-space: pre-wrap; }
+.vote-confirm-choice { margin: 1rem 0 0.5rem; font-size: 1.05rem; color: var(--sa-on-surface); }
+.vote-confirm-choice strong { color: var(--sa-primary); }
+.vote-confirm-note { margin: 0 0 1.5rem; font-size: 0.875rem; color: var(--sa-on-surface-variant); }
+
+/* ── 28. Assistentes guiados (rede, Senha Soberana, carteira) ── */
+.guided-wizard { margin-top: 0.5rem; }
+.guided-check { display: flex; align-items: center; gap: 0.6rem; font-size: 0.9375rem; color: var(--sa-on-surface); }
+.guided-check input { width: 1.1rem; height: 1.1rem; }
+.guided-result { margin-top: 1rem; padding: 0.85rem 1rem; background: rgba(105, 219, 169, 0.1); border-left: 3px solid var(--sa-tertiary); border-radius: var(--radius-sm); color: var(--sa-on-surface); }
+.guided-result[hidden], [data-wg-hint][hidden] { display: none; }
+.network-guided-btn { margin: 0.5rem 0 0.25rem; }

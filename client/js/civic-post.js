@@ -188,3 +188,22 @@ export function splitFeedBySphere(posts = [], { votes = [], me = "" } = {}) {
 export function describeMissingRequirements(missing = []) {
   return CIVIC_REQUIREMENTS.filter((r) => missing.includes(r.key)).map((r) => r.label);
 }
+
+/**
+ * Acrescenta as opções do construtor de enquete ao corpo como linhas "- opção" (formato que
+ * `parsePollOptions` lê). Ignora vazias, repetidas e as que já estão no texto; respeita o máximo.
+ */
+export function appendPollOptionsToBody(body = "", options = []) {
+  const existing = new Set(parsePollOptions(body).map((o) => o.toLowerCase()));
+  const clean = [];
+  for (const raw of options) {
+    const o = String(raw || "").trim();
+    if (!o || existing.has(o.toLowerCase())) continue;
+    existing.add(o.toLowerCase());
+    clean.push(o);
+  }
+  const room = Math.max(0, CIVIC_POLL_MAX - (existing.size - clean.length));
+  const lines = clean.slice(0, room).map((o) => `- ${o}`);
+  if (!lines.length) return body;
+  return `${String(body).replace(/\s+$/, "")}\n\n${lines.join("\n")}`;
+}
