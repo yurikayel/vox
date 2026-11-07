@@ -959,7 +959,7 @@ body,
 @media (hover: hover) {
   .agora-ui .feed-container > .post:hover,
   .agora-ui .feed-container > article:hover {
-    background: var(--sa-surface-low);
+    background: transparent;
     box-shadow: inset 2px 0 0 var(--sa-secondary);
   }
 }
@@ -971,7 +971,7 @@ body,
 
 @media (hover: hover) {
   .agora-ui .post.post-pinned-highlight:hover {
-    background: var(--sa-surface-low) !important;
+    background: transparent !important;
     box-shadow: inset 2px 0 0 var(--sa-secondary) !important;
   }
 }
