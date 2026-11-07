@@ -239,6 +239,7 @@ function resetMediaDomElements() {
   if (previewVideo) previewVideo.removeAttribute("src");
   setPreviewVisible(previewVideoWrap, false);
   setAttachmentMeta("", "", 0);
+  if (previewWrap) previewWrap.dataset.open = "";
 }
 
 function resetMediaControlBars() {
@@ -685,6 +686,23 @@ function bindFormSubmit(form, onPublished, state) {
   });
 }
 
+/**
+ * Painel do anexo organizado: Estilo e Proporção ficam recolhidos e abrem (um por vez) pelos
+ * botões da linha de edição — antes as duas barras ficavam sempre abertas.
+ */
+function bindEditPanels(root) {
+  const wrap = root.querySelector("#inline-topic-preview-wrap");
+  root.querySelectorAll(".composer-edit-btn[data-edit-panel]").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      const panel = btn.dataset.editPanel;
+      const open = wrap?.dataset.open === panel ? "" : panel;
+      if (wrap) wrap.dataset.open = open;
+      root.querySelectorAll(".composer-edit-btn[data-edit-panel]").forEach((b) => b.setAttribute("aria-expanded", String(b.dataset.editPanel === open)));
+    });
+  });
+}
+
 export function attachInlineComposerHandlers(onPublished) {
   const root = document.getElementById("feed-inline-composer");
   if (!root) return;
@@ -709,6 +727,7 @@ export function attachInlineComposerHandlers(onPublished) {
     if (e.key === "Escape") { e.preventDefault(); form.reset(); clearMedia(state); syncInlineComposerUi(); collapseInlineComposer(); }
   });
 
+  bindEditPanels(root);
   bindVoiceButtons(state);
   bindMediaFileInputs(state);
   bindFilterAndAspectBars(state);
