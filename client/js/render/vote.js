@@ -82,11 +82,11 @@ function renderFilterBar(items, activeFilter) {
 function renderHero(items, activeFilter) {
   const stats = computeVoteStats(items);
   const head = renderPageHead({
-    kicker: "Governança das suas comunidades",
+    kicker: "Câmara deliberativa · 1 membro = 1 voto",
     title: "Democracia Direta",
     subtitle:
       "Pautas abertas nas comunidades que este aparelho conhece. Cada voto é assinado com a chave do seu aparelho e contado como 1 membro = 1 voto; quem entrou depois da pauta não altera o resultado.",
-    actionsHtml: `<a class="agora-btn agora-btn--primary" href="#/compose/proposal?c=vox">+ Nova pauta</a>`,
+    actionsHtml: `<a class="agora-btn agora-btn--primary" href="#/compose/proposal?c=vox">+ Propor votação</a>`,
   });
   return `
     <section class="agora-vote-hero" aria-label="Resumo da governança">

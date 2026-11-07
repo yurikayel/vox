@@ -16,12 +16,12 @@ const shellSrc = fs.readFileSync(
   "utf8"
 );
 
-test("shell brand — single squircle img in markup", () => {
-  const block = shellSrc.match(/function renderHomeIcon\(\)[\s\S]*?^}/m)?.[0] ?? "";
-  assert.ok(block.includes('class="brand-logo brand-mark tab-brand-mark"'));
-  assert.equal((block.match(/<img/g) || []).length, 1);
-  assert.ok(!block.includes("brand-mark--light"));
-  assert.ok(!block.includes("brand-mark--dark"));
+test("shell brand — Sovereign Agora: nav Ágora usa ícone de fórum, marca fica só no wordmark", () => {
+  const navBlock = shellSrc.match(/const NAV_ITEMS = \[[\s\S]*?\];/)?.[0] ?? "";
+  assert.ok(navBlock.includes('tab: "home"') && navBlock.includes("ICONS.agora"));
+  const wordmark = shellSrc.match(/function renderAgoraWordmark\(\)[\s\S]*?^}/m)?.[0] ?? "";
+  assert.equal((wordmark.match(/<img/g) || []).length, 1);
+  assert.ok(wordmark.includes("${BRAND_MARK_SRC}"));
 });
 
 test("shell brand — same squircle mark in light and dark", () => {
@@ -34,9 +34,9 @@ test("shell brand — same squircle mark in light and dark", () => {
 });
 
 test("shell brand — ADR-016: wordmark VOX epigráfico no topo do menu e na topbar móvel", () => {
-  assert.ok(shellSrc.includes("renderHomeIcon()"));
   assert.ok(shellSrc.includes("function renderAgoraWordmark()"));
   assert.ok(shellSrc.includes('class="agora-wordmark-text">VOX</span>'));
+  assert.ok(shellSrc.includes('class="agora-wordmark-sub">Ágora Soberana</span>'));
   assert.ok(!/class="sidebar-brand/.test(shellSrc), "usa agora-sidebar-brand, não o legado sidebar-brand");
 });
 
@@ -59,10 +59,14 @@ test("shell sidebar — IA estável (nav, postar, feed slot, footer)", () => {
   assert.ok(shellSrc.includes("classList.add(\"is-active\")"));
 });
 
-test("shell layout — ADR-016: topbar Stitch com busca, Votar agora e chip de identidade", () => {
+test("shell layout — Sovereign Agora: topbar com busca, chip de malha, escudo/engrenagem e identidade", () => {
   assert.ok(shellSrc.includes('<header class="agora-topbar"'));
   assert.ok(shellSrc.includes('id="agora-search-form"'));
-  assert.ok(shellSrc.includes('href="#/vote" class="agora-btn agora-btn--ghost agora-topbar-vote"'));
+  assert.ok(shellSrc.includes('class="agora-mesh-chip'));
+  assert.ok(shellSrc.includes('href="#/status" class="agora-topbar-icon" aria-label="Saúde do nó"'));
+  assert.ok(shellSrc.includes('href="#/settings/network" class="agora-topbar-icon"'));
+  assert.ok(shellSrc.includes('class="agora-protocol-strip"'));
+  assert.ok(!shellSrc.includes("agora-topbar-vote"), "Vote fica na navegação primária, não na topbar");
   assert.ok(shellSrc.includes('id="agora-identity-toggle"'));
   assert.ok(shellSrc.includes('id="agora-identity-drawer"'));
   assert.ok(!styleCss.includes(".top-bar"), "o legado .top-bar continua fora do style.css");

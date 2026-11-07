@@ -20,13 +20,19 @@ export function brandMarkSrcForColorScheme(_dark) {
   return BRAND_MARK_SRC;
 }
 
-function renderHomeIcon() {
-  return `<img class="brand-logo brand-mark tab-brand-mark" src="${BRAND_MARK_SRC}" width="22" height="22" alt="" decoding="async" />`;
-}
+/** Ícones de linha no vocabulário Stitch (Material Symbols outline, traço 1.75). */
+const svg = (body, cls = "tab-svg", size = 22) =>
+  `<svg class="${cls}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
 
 const ICONS = {
-  vote: `<svg class="tab-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 12 2 2 4-4"/><path d="M5 7c0-1.1.9-2 2-2h10a2 2 0 0 1 2 2v12H5V7Z"/><path d="M22 19H2"/></svg>`,
-  communities: `<svg class="tab-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+  agora: svg(`<path d="M14 9a2 2 0 0 1-2 2H6l-4 4V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2z"/><path d="M18 9h2a2 2 0 0 1 2 2v11l-4-4h-6a2 2 0 0 1-2-2v-1"/>`),
+  vote: svg(`<path d="m9 12 2 2 4-4"/><path d="M5 7c0-1.1.9-2 2-2h10a2 2 0 0 1 2 2v12H5V7Z"/><path d="M22 19H2"/>`),
+  communities: svg(`<circle cx="12" cy="12" r="2.2"/><circle cx="5" cy="5" r="1.8"/><circle cx="19" cy="5" r="1.8"/><circle cx="5" cy="19" r="1.8"/><circle cx="19" cy="19" r="1.8"/><path d="M6.4 6.4 10.4 10.4M17.6 6.4l-4 4M6.4 17.6l4-4M17.6 17.6l-4-4"/>`),
+  lock: svg(`<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/><path d="M12 15v2"/>`),
+  badge: svg(`<rect x="3" y="6" width="18" height="15" rx="2"/><path d="M9 6V3h6v3"/><circle cx="9" cy="13" r="2"/><path d="M6 18c.5-1.4 1.7-2.3 3-2.3s2.5.9 3 2.3"/><path d="M15 12h3M15 15h3"/>`),
+  shield: svg(`<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/>`, "agora-topbar-svg", 20),
+  gear: svg(`<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>`, "agora-topbar-svg", 20),
+  dmTop: svg(`<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>`, "agora-topbar-svg", 20),
   people: `<svg class="tab-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>`,
   feedForYou: `<svg class="tab-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 14.5 8.5 20 9l-4 3.5L17 18l-5-3-5 3 1-5.5L4 9l5.5-.5Z"/></svg>`,
   following: `<svg class="tab-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>`,
@@ -139,10 +145,23 @@ function attachThemeModeToggle() {
   });
 }
 
-function renderSidebarFooter(chipHtml, walletBadge) {
+/** Estela do nó local (Stitch): chave Ed25519 curta + pares P2P conectados — só dados reais. */
+function renderNodeStele(walletAddress, rtcStatus) {
+  const n = peersCount(rtcStatus);
+  const key = walletAddress ? shortId(walletAddress) : "sem chave";
+  return `
+          <div class="agora-node-stele" aria-label="Nó local">
+            <span class="agora-node-stele-label">Ed25519 local</span>
+            <code class="agora-node-stele-key">${escapeHtml(key)}</code>
+            <span class="agora-node-stele-peers"><span class="agora-presence-dot${n > 0 ? "" : " is-idle"}" aria-hidden="true"></span>P2P: ${n} ${n === 1 ? "par" : "pares"}</span>
+          </div>`;
+}
+
+function renderSidebarFooter(chipHtml, walletBadge, walletAddress, rtcStatus) {
   const themeToggle = renderThemeModeToggle(readColorMode(typeof localStorage !== "undefined" ? localStorage : null));
   return `
         <div class="sidebar-footer">
+          ${renderNodeStele(walletAddress, rtcStatus)}
           <div class="sidebar-theme-slot">${themeToggle}</div>
           <div class="sidebar-sync-slot">
             <span class="sidebar-sync-hint" id="top-sync-hint" aria-live="polite">${SIDEBAR_SYNC_PLACEHOLDER}</span>
@@ -189,11 +208,11 @@ function attachSidebarBehavior() {
  * no celular (a barra inferior mostra só os cinco primários).
  */
 const NAV_ITEMS = [
-  { tab: "home", href: "#/", label: "Ágora", icon: () => renderHomeIcon() },
+  { tab: "home", href: "#/", label: "Ágora", icon: () => ICONS.agora },
   { tab: "vote", href: "#/vote", label: "Vote", icon: () => ICONS.vote },
   { tab: "communities", href: "#/communities", label: "Comunidades", icon: () => ICONS.communities },
-  { tab: "dm", href: "#/dm", label: "Mensagens", icon: () => ICONS.dm },
-  { tab: "profile", href: "#/perfil", label: "Perfil", icon: () => ICONS.profile, alias: ["wallet"] },
+  { tab: "dm", href: "#/dm", label: "Mensagens", icon: () => ICONS.lock },
+  { tab: "profile", href: "#/perfil", label: "Perfil", icon: () => ICONS.badge, alias: ["wallet"] },
   { tab: "people", href: "#/people", label: "Pessoas", icon: () => ICONS.people, secondary: true },
   { tab: "voxpedia", href: "#/voxpedia", label: "Voxpedia", icon: () => ICONS.voxpedia, secondary: true },
 ];
@@ -202,7 +221,7 @@ function renderSidebarNav(activeTab) {
   return NAV_ITEMS.map((item) => {
     const isActive = activeTab === item.tab || (item.alias || []).includes(activeTab);
     const cls = ["tab-item", isActive ? "active" : "", item.secondary ? "tab-item--secondary" : ""].filter(Boolean).join(" ");
-    return `<a href="${item.href}" class="${cls}"${isActive ? ' aria-current="page"' : ""} aria-label="${item.label}">
+    return `<a href="${item.href}" class="${cls}" data-tab="${item.tab}"${isActive ? ' aria-current="page"' : ""} aria-label="${item.label}">
       <span class="tab-icon">${item.icon()}</span><span class="tab-label">${item.label}</span>
     </a>`;
   }).join("\n    ");
@@ -212,7 +231,43 @@ function renderAgoraWordmark() {
   return `<a href="#/" class="agora-wordmark" aria-label="Vox — Ágora">
       <img class="agora-wordmark-mark" src="${BRAND_MARK_SRC}" width="28" height="28" alt="" decoding="async" />
       <span class="agora-wordmark-text">VOX</span>
+      <span class="agora-wordmark-sub">Ágora Soberana</span>
     </a>`;
+}
+
+/** Rótulo de seção do "Protocolo Ágora" exibido na faixa de entablamento abaixo da topbar. */
+const SECTION_LABELS = {
+  home: "Ágora cívica",
+  vote: "Câmara deliberativa",
+  communities: "Círculos territoriais",
+  dm: "Canal cifrado P2P",
+  profile: "Identidade cívica",
+  people: "Diretório de cidadãos",
+  voxpedia: "Códex Voxpedia",
+  compose: "Câmara de inscrição",
+  network: "Saúde do nó",
+};
+
+function peersCount(rtcStatus) {
+  return Number(rtcStatus?.remotePeersConnected || 0);
+}
+
+function renderProtocolStrip(activeTab, title, rtcStatus, settings) {
+  const section = SECTION_LABELS[activeTab] || "Ágora cívica";
+  const titleHtml = title && title !== section
+    ? `<span class="agora-strip-sep" aria-hidden="true">◆</span><span class="agora-strip-leaf">${escapeHtml(title)}</span>`
+    : "";
+  const n = peersCount(rtcStatus);
+  const isEnabled = settings?.enabled !== false;
+  const meshLabel = !isEnabled ? "Somente leitura" : n > 0 ? `${n} ${n === 1 ? "par conectado" : "pares conectados"}` : "Armazenamento local";
+  return `
+    <nav class="agora-protocol-strip" aria-label="Localização">
+      <span class="agora-strip-root">Protocolo Ágora</span>
+      <span class="agora-strip-sep" aria-hidden="true">◆</span>
+      <span class="agora-strip-section">${escapeHtml(section)}</span>
+      ${titleHtml}
+      <span class="agora-strip-status"><span class="agora-pylon" aria-hidden="true"></span>${escapeHtml(meshLabel)}</span>
+    </nav>`;
 }
 
 function readIdentitySummary(walletAddress) {
@@ -239,15 +294,27 @@ function renderIdentityChip(identity, chipText) {
     </button>`;
 }
 
-function renderTopBar(identity, chipText) {
+function meshChipState(chipHtml) {
+  if (chipHtml.includes("network-chip offline")) return { cls: "is-offline", label: "Offline" };
+  if (chipHtml.includes("network-chip paused")) return { cls: "is-paused", label: "Só leitura" };
+  return { cls: "is-active", label: "Malha ativa" };
+}
+
+function renderTopBar(identity, chipText, chipHtml) {
+  const mesh = meshChipState(chipHtml);
   return `
     <header class="agora-topbar" role="banner">
       <div class="agora-topbar-brand">${renderAgoraWordmark()}</div>
       <form class="agora-search" role="search" id="agora-search-form" action="#/people">
         <svg class="agora-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-        <input type="search" name="q" id="agora-search-input" placeholder="Buscar pessoas e cidadãos…" aria-label="Buscar pessoas" autocomplete="off" />
+        <input type="search" name="q" id="agora-search-input" placeholder="Buscar cidadãos, @arrobas ou chaves cívicas…" aria-label="Buscar pessoas" autocomplete="off" />
       </form>
-      <a href="#/vote" class="agora-btn agora-btn--ghost agora-topbar-vote">${ICONS.vote}<span>Votar agora</span></a>
+      <div class="agora-topbar-tools">
+        <a href="#/status" class="agora-mesh-chip ${mesh.cls}" title="${escapeHtml(chipText)}"><span class="agora-presence-dot" aria-hidden="true"></span><span>${escapeHtml(mesh.label)}</span></a>
+        <a href="#/dm" class="agora-topbar-icon agora-topbar-icon--mobile" aria-label="Mensagens">${ICONS.dmTop}</a>
+        <a href="#/status" class="agora-topbar-icon" aria-label="Saúde do nó">${ICONS.shield}</a>
+        <a href="#/settings/network" class="agora-topbar-icon" aria-label="Configurações da rede">${ICONS.gear}</a>
+      </div>
       ${renderIdentityChip(identity, chipText)}
     </header>`;
 }
@@ -332,7 +399,44 @@ function networkChipText(chipHtml) {
   return m ? m[1] : "Rede";
 }
 
-function renderSidebar(activeTab, { showFeedNav, activeFeed, chipHtml, walletBadge }) {
+/**
+ * Círculos territoriais (Stitch): comunidades locais deste aparelho. Renderizado vazio e
+ * hidratado de forma assíncrona a partir do IndexedDB — nenhuma contagem fictícia.
+ * @param {Array<{id:string,name?:string,title?:string,unread?:number}>} communities
+ */
+export function renderCirclesList(communities = []) {
+  const items = communities.filter((c) => c && c.id).slice(0, 6);
+  if (!items.length) return "";
+  const rows = items.map((c) => {
+    const name = c.name || c.title || c.id;
+    const unread = Number(c.unread || 0);
+    const meta = unread > 0 ? `<span class="agora-circle-meta">${unread} ${unread === 1 ? "nova" : "novas"}</span>` : "";
+    return `<a class="agora-circle-row" href="#/c/${encodeURIComponent(c.id)}"><span class="agora-circle-name">${escapeHtml(name)}</span>${meta}</a>`;
+  }).join("");
+  return `
+      <div class="agora-circles-head">
+        <span class="agora-circles-title">Círculos territoriais</span>
+        <span class="agora-circles-count">${items.length} ${items.length === 1 ? "ativo" : "ativos"}</span>
+      </div>
+      ${rows}`;
+}
+
+async function hydrateSidebarCircles() {
+  const slot = document.getElementById("agora-sidebar-circles");
+  if (!slot) return;
+  try {
+    const cacheNode = await import("../cache-node.js");
+    const list = await cacheNode.getLocalCommunities?.();
+    const html = renderCirclesList(Array.isArray(list) ? list : []);
+    if (!html || !document.body.contains(slot)) return;
+    slot.innerHTML = html;
+    slot.hidden = false;
+  } catch {
+    /* sem IndexedDB (modo privado/teste): a seção permanece oculta */
+  }
+}
+
+function renderSidebar(activeTab, { showFeedNav, activeFeed, chipHtml, walletBadge, walletAddress, rtcStatus }) {
   const isCompose = activeTab === "compose";
   const feedSlot = renderFeedNavSlot(showFeedNav, activeFeed);
 
@@ -351,8 +455,9 @@ function renderSidebar(activeTab, { showFeedNav, activeFeed, chipHtml, walletBad
           </a>
         </div>
         ${feedSlot}
+        <section class="agora-circles" id="agora-sidebar-circles" aria-label="Círculos territoriais" hidden></section>
       </div>
-      ${renderSidebarFooter(chipHtml, walletBadge)}
+      ${renderSidebarFooter(chipHtml, walletBadge, walletAddress, rtcStatus)}
       <button type="button" class="sidebar-collapse-btn" id="sidebar-collapse-btn" aria-expanded="true" aria-controls="app-sidebar" aria-label="Recolher ou expandir menu">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
@@ -371,12 +476,13 @@ export function updateTopBarSync(active, detail = "") {
   }
 }
 
-function renderShellMarkup({ activeTab, sidebarHtml, identity, chipHtml }) {
+function renderShellMarkup({ activeTab, sidebarHtml, identity, chipHtml, stripHtml }) {
   return `
     <div class="app-layout agora-ui" data-active-tab="${escapeHtml(activeTab)}">
       ${sidebarHtml}
       <div class="main-column">
-        ${renderTopBar(identity, networkChipText(chipHtml))}
+        ${renderTopBar(identity, networkChipText(chipHtml), chipHtml)}
+        ${stripHtml}
         <main id="app-main"></main>
         <footer class="app-footer">Vox · ${escapeHtml(appShellFooterTagline)} · <a href="#/ajuda/teste">Teste aberto</a> · <a href="./proposta-vox.html" target="_blank">Proposta</a></footer>
       </div>
@@ -392,7 +498,7 @@ function attachShellBehaviors() {
 }
 
 export function renderShell({
-  title: _title,
+  title = "",
   subtitle: _subtitle,
   breadcrumb,
   walletAddress,
@@ -404,12 +510,16 @@ export function renderShell({
   showFeedNav = false,
 }) {
   const chipHtml = renderNetworkChip(metrics, rtcStatus, settings);
-  const sidebarHtml = renderSidebar(activeTab, { showFeedNav, activeFeed, chipHtml, walletBadge: renderWalletBadge(walletAddress) });
+  const sidebarHtml = renderSidebar(activeTab, {
+    showFeedNav, activeFeed, chipHtml, walletBadge: renderWalletBadge(walletAddress), walletAddress, rtcStatus,
+  });
   const identity = readIdentitySummary(walletAddress);
+  const stripHtml = renderProtocolStrip(activeTab, title, rtcStatus, settings);
 
-  root().innerHTML = renderShellMarkup({ activeTab, sidebarHtml, identity, chipHtml });
+  root().innerHTML = renderShellMarkup({ activeTab, sidebarHtml, identity, chipHtml, stripHtml });
 
   attachShellBehaviors();
+  hydrateSidebarCircles();
   const main = document.getElementById("app-main");
   if (breadcrumb) main.insertAdjacentHTML("afterbegin", breadcrumb);
   return main;
@@ -419,14 +529,17 @@ export function renderShell({
  * Cabeçalho de página no padrão Stitch (título epigráfico + subtítulo + ações).
  * @param {{ kicker?: string, title: string, subtitle?: string, actionsHtml?: string, id?: string }} opts
  */
-export function renderPageHead({ kicker = "", title, subtitle = "", actionsHtml = "", id = "" }) {
-  const kickerHtml = kicker ? `<p class="agora-kicker"><span class="agora-presence-dot" aria-hidden="true"></span>${escapeHtml(kicker)}</p>` : "";
+export function renderPageHead({ kicker = "", title, subtitle = "", actionsHtml = "", id = "", stamps = [], wide = false }) {
+  const kickerHtml = kicker ? `<p class="agora-kicker"><span class="agora-pylon" aria-hidden="true"></span>${escapeHtml(kicker)}</p>` : "";
+  const stampsHtml = stamps.length
+    ? `<div class="agora-stamps">${stamps.map((s) => `<span class="agora-stamp">${escapeHtml(s)}</span>`).join("")}</div>`
+    : "";
   const subHtml = subtitle ? `<p class="agora-page-sub">${escapeHtml(subtitle)}</p>` : "";
   const actions = actionsHtml ? `<div class="agora-page-actions">${actionsHtml}</div>` : "";
   return `
-    <header class="agora-page-head"${id ? ` id="${escapeHtml(id)}"` : ""}>
+    <header class="agora-page-head${wide ? " agora-page-head--wide" : ""}"${id ? ` id="${escapeHtml(id)}"` : ""}>
       <div class="agora-page-head-text">
-        ${kickerHtml}
+        ${kickerHtml}${stampsHtml}
         <h1 class="agora-page-title">${escapeHtml(title)}</h1>
         ${subHtml}
       </div>

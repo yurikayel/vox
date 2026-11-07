@@ -940,6 +940,7 @@ function renderFeedEmptyState(activeFeed) {
 
 function renderFeedPageHead() {
   return renderPageHead({
+    kicker: "Feed cívico · ordem cronológica",
     title: "Ágora",
     subtitle: "Debates, pautas e registros das pessoas e comunidades da sua rede — em ordem cronológica, sem algoritmo.",
   });
