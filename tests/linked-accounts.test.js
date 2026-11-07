@@ -47,7 +47,7 @@ test("linked-accounts - auto-replication and general webhook toggles", () => {
 
 test("linked-accounts - buildReplicationPayload formats event data", () => {
   localStorage.clear();
-  linked.saveLinkedAccount("bsky", { handle: "cidadao", enabled: true });
+  linked.saveLinkedAccount("bsky", { handle: "cidadao.bsky.social", enabled: true });
   linked.saveLinkedAccount("threads", { handle: "cidadao_threads", enabled: false });
 
   const post = {
@@ -126,9 +126,11 @@ test("linked-accounts - testLinkedAccount verifies webhook, bsky, github and pro
   localStorage.clear();
   linked.saveLinkedAccount("instagram", { handle: "kayel_yuri" });
   const resInsta = await linked.testLinkedAccount("instagram");
-  assert.equal(resInsta.ok, true);
+  assert.equal(resInsta.ok, false, "Instagram não pode ser verificado sem login — nada de ✅ falso");
+  assert.equal(resInsta.state, "unverified");
   assert.equal(resInsta.profileUrl, "https://www.instagram.com/kayel_yuri/");
   assert.ok(resInsta.message.includes("@kayel_yuri"));
+  assert.ok(!resInsta.message.includes("✅"));
 
   linked.saveLinkedAccount("twitter", { handle: "vox_br", webhook: "https://hook.test/ping" });
   const origFetch = globalThis.fetch;
@@ -175,31 +177,42 @@ test("sw.js caches linked-accounts.js and linked-accounts-ui.js", () => {
 });
 
 
-test("linked-accounts - 1-click connect opens network, saves account and renders button without required block", () => {
+test("linked-accounts - vincular exige o @usuário digitado: sem palpites e sem perfil oficial", () => {
   localStorage.clear();
   localStorage.setItem("vox-profile-enrichment", JSON.stringify({ displayName: "Yuri Kayel" }));
 
-  // 1. Suggested handle resolves from profile name
-  assert.equal(linked.getSuggestedHandle("bsky"), "yurikayel");
-  assert.equal(linked.getSuggestedHandle("twitter"), "yurikayel");
+  // Nada de adivinhar pelo nome do perfil, ID local ou contas seguidas.
+  assert.equal(linked.getSuggestedHandle("bsky"), "");
+  assert.equal(linked.getSuggestedHandle("instagram"), "");
 
-  // 2. Auth URLs point directly to the networks
-  assert.equal(linked.getNetworkAuthUrl("bsky", "yurikayel"), "https://bsky.app/profile/yurikayel");
-  assert.equal(linked.getNetworkAuthUrl("twitter", "yurikayel"), "https://x.com/yurikayel");
-  assert.equal(linked.getNetworkAuthUrl("threads", "yurikayel"), "https://www.threads.net/@yurikayel");
+  // Sem handle, ou com o perfil oficial da rede, não vincula.
+  assert.equal(linked.connectWithOneClick("instagram").ok, false);
+  assert.match(linked.connectWithOneClick("instagram", "instagram").error, /perfil oficial/);
+  assert.match(linked.connectWithOneClick("twitter", "nome com espaço").error, /não é um usuário válido/);
+  assert.equal(linked.loadLinkedAccounts().instagram, undefined);
 
-  // 3. 1-Click Connect immediately links account in Vox and returns auth URL
-  const res = linked.connectWithOneClick("bsky");
+  // Com o handle real: vincula como "não verificado" e aponta para o perfil dele.
+  const res = linked.connectWithOneClick("instagram", "@kayel_yuri");
   assert.equal(res.ok, true);
-  assert.equal(res.handle, "yurikayel");
-  assert.equal(linked.loadLinkedAccounts().bsky?.handle, "yurikayel");
+  assert.equal(res.authUrl, "https://www.instagram.com/kayel_yuri/");
+  assert.equal(linked.loadLinkedAccounts().instagram.verified, false);
+  assert.equal(linked.confirmLinkedAccount("instagram"), true);
+  assert.equal(linked.loadLinkedAccounts().instagram.verified, true);
 
-  // 4. UI renders 1-Click connect button without required attribute blocking submission
+  // URL colada vira handle.
+  assert.equal(linked.validateHandle("instagram", "https://www.instagram.com/kayel_yuri/").handle, "kayel_yuri");
+
+  // Vínculo inválido já salvo (ex.: @instagram inventado) é descartado ao carregar.
+  localStorage.setItem(linked.LINKED_ACCOUNTS_KEY, JSON.stringify({ instagram: { handle: "instagram" }, twitter: { handle: "yurix" } }));
+  assert.deepEqual(Object.keys(linked.loadLinkedAccounts()), ["twitter"]);
+
+  // UI: campo do @usuário + botão "Vincular", sem a promessa falsa de login automático.
+  localStorage.clear();
   const html = linkedUi.renderLinkedAccountsHtml();
   assert.ok(html.includes("btn-one-click-connect"));
-  assert.ok(html.includes("Conectar Twitter / X (1 Clique)"));
-  assert.ok(html.includes("Conectar Threads (1 Clique)"));
-  assert.ok(!html.includes('required style="font-size:0.8rem; padding:5px 8px;"'));
+  assert.ok(html.includes("Vincular Instagram"));
+  assert.ok(!html.includes("loga sozinho"));
+  assert.ok(!html.includes("(1 Clique)"));
 });
 
 test("linked-accounts - getConnectedIntentTargets returns enabled accounts without direct webhook/ATProto", () => {
