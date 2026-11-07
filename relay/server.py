@@ -21,6 +21,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
 from relay import blind_relay
+from relay import oauth_exchange
 from relay import central_memory
 from relay import inbox
 from relay import mirror_validate
@@ -515,8 +516,24 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
             self._handle_peer_beacon_post()
         elif path == "/p2p/seed":
             self._handle_p2p_seed_post()
+        elif path == "/oauth/exchange":
+            self._handle_oauth_exchange_post()
         else:
             self._reply_not_found(b"")
+
+    def _handle_oauth_exchange_post(self):
+        """Código OAuth -> @usuário (o token da rede é descartado; nada é salvo)."""
+        content_length = self._get_content_length()
+        if content_length <= 0 or content_length > 8192:
+            self._send_json({"error": "Payload inválido"}, 400)
+            return
+        try:
+            payload = json.loads(self.rfile.read(content_length).decode("utf-8"))
+            self._send_json(oauth_exchange.exchange(payload), 200)
+        except oauth_exchange.OAuthError as err:
+            self._send_json({"error": str(err)}, err.status)
+        except Exception:
+            self._send_json({"error": "Falha ao concluir o login."}, 502)
 
     def _handle_memory_post(self, path):
         content_length = self._get_content_length()

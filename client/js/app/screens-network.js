@@ -2,6 +2,7 @@
 
 import * as render from "../render.js";
 import * as share from "../share.js";
+import * as socialLogin from "../social-login.js";
 import * as mod from "../moderation.js";
 import * as cacheNode from "../cache-node.js";
 import * as peers from "../peers.js";
@@ -324,6 +325,51 @@ export async function showLinkedAccounts() {
   const main = render.renderShell(makeShellProps(user, "network", "Redes Vinculadas"));
   render.renderLinkedAccountsPage(main);
   bindLinkedAccountsUi(() => showLinkedAccounts());
+  void revealSocialLoginButtons();
+  const cb = socialLogin.takePendingCallback();
+  if (cb) void finishSocialLogin(() => socialLogin.completeSocialLogin(cb));
+}
+
+/** Mostra "Conectar com login" das redes configuradas; nas demais, o vínculo manual fica aberto. */
+async function revealSocialLoginButtons() {
+  const avail = await socialLogin.availableLoginProviders().catch(() => ({ bsky: true }));
+  document.querySelectorAll("[data-login-net]").forEach((row) => {
+    const on = Boolean(avail[row.dataset.loginNet]);
+    row.hidden = !on;
+    const manual = document.querySelector(`[data-manual-net="${row.dataset.loginNet}"]`);
+    if (manual) manual.open = !on;
+  });
+}
+
+function saveLoginResult(r) {
+  linkedAccounts.saveLinkedAccount(r.netId, {
+    handle: r.handle || "", did: r.did || "", accountId: r.id || "", displayName: r.name || "",
+    enabled: true, verified: true, via: "oauth",
+  });
+  linkedAccounts.setAutoReplicationEnabled(true);
+}
+
+async function finishSocialLogin(run) {
+  try {
+    const r = await run();
+    if (!r) return;
+    saveLoginResult(r);
+    share.showToast(`Conectado: ${r.handle ? `@${r.handle}` : r.name || r.netId} ✅`);
+    showLinkedAccounts();
+  } catch (err) {
+    share.showToast(err?.message || "Não foi possível conectar.", "error");
+  }
+}
+
+function bindSocialLoginButtons() {
+  document.querySelectorAll(".btn-social-login").forEach((btn) => {
+    if (btn.dataset.wired) return;
+    btn.dataset.wired = "1";
+    btn.addEventListener("click", () => {
+      btn.disabled = true;
+      void finishSocialLogin(() => socialLogin.startSocialLogin(btn.dataset.netId)).finally(() => { btn.disabled = false; });
+    });
+  });
 }
 
 function resolveNetworkFormHandle(box, form, netId) {
@@ -426,6 +472,7 @@ function bindConfirmNetworkButtons(onRefresh) {
 }
 
 function bindLinkedAccountFormsAndButtons(onRefresh) {
+  bindSocialLoginButtons();
   bindConfirmNetworkButtons(onRefresh);
   bindOneClickConnectButtons(onRefresh);
   bindSaveHandleQuickButtons(onRefresh);
