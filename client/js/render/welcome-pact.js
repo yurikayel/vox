@@ -58,6 +58,19 @@ function renderPillar(p) {
     </li>`;
 }
 
+/** Corpo do pacto (prova social + pilares + ações) — reaproveitado como etapa final do onboarding. */
+export function renderPactStepHtml() {
+  return `
+    <h2 class="genesis-panel-title">Último passo: o pacto</h2>
+    <p class="genesis-polis-sub">Sua turma, sua família e seu bairro conversando direto de aparelho pra aparelho.</p>
+    ${renderAvatarStack()}
+    <ul class="welcome-pillars">${PILLARS.map(renderPillar).join("")}</ul>
+    <div class="modal-actions modal-actions--stack">
+      <button id="btn-pact-accept" class="agora-btn agora-btn--primary agora-btn--block btn-pact-continue">Entrar na roda</button>
+      <button id="btn-pact-settings" class="agora-btn agora-btn--secondary agora-btn--block btn-pact-settings">Ajustar rede depois</button>
+    </div>`;
+}
+
 export function renderPactModalHtml() {
   return `
     <div class="modal-overlay modal-sheet" id="pact-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="pact-welcome-title">
