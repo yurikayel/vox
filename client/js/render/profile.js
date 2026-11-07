@@ -14,6 +14,7 @@ import * as localAccount from "../local-account.js";
 import { LOCAL_WIPE_NOTICE } from "../local-account.js";
 import { renderProfileNoteBubbleHtml } from "./profile-note-bubble.js";
 import { renderComposeTypeSelector, renderComposeSignaturePanel } from "./compose-chrome.js";
+import { renderStep } from "./compose-steps.js";
 import { renderProfileVoxelsTab } from "./profile-voxels.js";
 import { ACHIEVEMENT_CATALOG, evaluateAchievements, loadVoxelReceipts } from "../voxels.js";
 
@@ -902,55 +903,63 @@ function renderComposeTargetPill(communityId) {
   return `<div class="compose-pill-group agora-compose-target"><label class="agora-field-label" for="topic-comm-id">Círculo de destino</label> <input type="text" id="topic-comm-id" class="compose-pill-input agora-inscription" value="geral" placeholder="ex: geral, cinema-nacional" required /></div>`;
 }
 
-function renderComposeAdvancedDrawer() {
-  return `
-    <details class="compose-advanced-drawer">
-      <summary class="compose-advanced-summary">Tornar cívico (pauta, ideia, debate, enquete) e importar atas</summary>
-      <div class="compose-advanced-content">
-        ${renderTopicCivicTagBar()}
-        ${renderChatTranscriptDetails()}
-      </div>
-    </details>`;
-}
-
+/** Compositor em 5 etapas (Stitch tela 9 + uma decisão por tela). IDs do formulário preservados. */
 export function renderComposeTopic(main, communityId) {
   const backHref = communityId ? `#/c/${encodeURIComponent(communityId)}` : "#/";
   const commInput = renderComposeTargetPill(communityId);
   const heading = communityId ? `Inscrever em ${escapeHtml(communityId)}` : "Novo registro soberano";
+  const nav = { backHref, submitId: "btn-submit-topic", submitLabel: "Publicar no nó soberano" };
 
   main.innerHTML = `
-    <div class="compose-card compose-card-sleek agora-composer">
+    <div class="compose-card compose-card-sleek agora-composer agora-composer--steps">
       <div class="compose-header-bar agora-composer-head">
-        <div>
-          <a class="back-link compose-back-link" href="${backHref}">← Voltar</a>
-          <h2 class="compose-heading agora-page-title">${heading}</h2>
-          <p class="agora-page-sub">Componha publicações, pautas e avisos assinados no seu aparelho.</p>
-        </div>
+        <a class="back-link compose-back-link" href="${backHref}">← Voltar</a>
+        <p class="compose-heading agora-composer-kicker">${heading}</p>
       </div>
-      ${renderComposeTypeSelector("topic", communityId)}
-      ${renderComposeTopicForm(commInput, backHref)}
+      <form id="form-compose-topic" novalidate>
+        ${renderStep(0, renderComposeTypeSelector("topic", communityId), nav)}
+        ${renderStep(1, renderComposeWhereStep(commInput), nav)}
+        ${renderStep(2, renderComposeWriteStep(), nav)}
+        ${renderStep(3, renderComposeCivicStep(), nav)}
+        ${renderStep(4, renderComposeReviewStep(), nav)}
+      </form>
     </div>`;
 }
 
-function renderComposeTopicForm(commInput, backHref) {
+function renderComposeWhereStep(commInput) {
   return `
-      <form id="form-compose-topic">
         <div class="compose-target-row">${commInput}</div>
         <div class="form-group agora-compose-field">
           <label class="agora-field-label" for="topic-title">Título do registro <span class="agora-muted">(opcional)</span></label>
           <input type="text" id="topic-title" class="form-control agora-inscription agora-inscription--title" maxlength="120" placeholder="ex: Mutirão de reflorestamento no córrego" />
-        </div>
+        </div>`;
+}
+
+function renderComposeWriteStep() {
+  return `
         <div class="compose-body-field agora-compose-field">
           <label class="agora-field-label" for="topic-body">Texto <span class="agora-muted">· Markdown</span></label>
           <textarea id="topic-body" class="form-control compose-textarea-seamless agora-inscription" rows="8" placeholder="O que você gostaria de compartilhar na rede?" required></textarea>
-        </div>
-        ${renderComposeAdvancedDrawer()}
-        ${renderComposeSignaturePanel()}
-        <div class="agora-composer-actions">
-          <a class="agora-btn agora-btn--secondary" href="${backHref}">Cancelar</a>
-          <button type="submit" form="form-compose-topic" class="agora-btn agora-btn--primary btn-publish-pill" id="btn-submit-topic">Publicar no nó soberano</button>
-        </div>
-      </form>`;
+          <p class="compose-step-error" data-step-error hidden>Escreva algo antes de continuar.</p>
+        </div>`;
+}
+
+function renderComposeCivicStep() {
+  return `
+        <p class="compose-step-lead">Opcional. Marque uma categoria cívica para o post ganhar posicionamento ou enquete assinados na aba Cívico.</p>
+        ${renderTopicCivicTagBar()}
+        ${renderChatTranscriptDetails()}`;
+}
+
+function renderComposeReviewStep() {
+  return `
+        <dl class="compose-review" data-compose-review>
+          <div><dt>Círculo</dt><dd data-review="circle">—</dd></div>
+          <div><dt>Título</dt><dd data-review="title">—</dd></div>
+          <div><dt>Categoria</dt><dd data-review="tag">Social</dd></div>
+          <div class="compose-review-body"><dt>Texto</dt><dd data-review="body">—</dd></div>
+        </dl>
+        ${renderComposeSignaturePanel()}`;
 }
 
 export function renderComposeReply(main, topicId, communityId, { parentId = "", parentAuthor = "", parentExcerpt = "" } = {}) {
