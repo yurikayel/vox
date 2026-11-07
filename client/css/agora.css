@@ -4120,3 +4120,17 @@ body,
 .agora-composer--post .civic-tag-btn[data-tag=""], .agora-composer--post .civic-tag-btn[data-tag="[Bug]"] { display: none; }
 .agora-composer--post .compose-social-panel .inline-composer { background: transparent; border: none; padding: 0; }
 @media (max-width: 640px) { .compose-sphere { grid-template-columns: minmax(0, 1fr); } }
+
+/* ── 33. Squircle em tudo: avatares, fotos de perfil e de comunidade (superelipse, não círculo) ── */
+:root {
+  --sa-squircle: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 0C10 0 0 10 0 50s10 50 50 50 50-10 50-50S90 0 50 0z'/%3E%3C/svg%3E");
+}
+.avatar, .avatar-img, .avatar-wrap, .avatar-sm, .avatar-squircle, .story-avatar, .skeleton-avatar,
+.agora-citizen-avatar, .agora-community-avatar, .post-media-header-avatar,
+.profile-avatar-img, .profile-avatar-wrap, .profile-grid-avatar-wrap, .profile-grid-avatar-img, .profile-grid-avatar-fallback,
+.community-avatar-img, .community-avatar-fallback, .community-avatar-sm, .community-avatar-md, .community-avatar-lg,
+.community-vox-card-avatar-wrap, .community-vox-avatar-wrap, .welcome-avatars > * {
+  border-radius: 0 !important;
+  -webkit-mask: var(--sa-squircle) center / 100% 100% no-repeat;
+  mask: var(--sa-squircle) center / 100% 100% no-repeat;
+}
