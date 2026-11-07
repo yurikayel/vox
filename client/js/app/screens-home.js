@@ -11,6 +11,9 @@ import * as social from "../social.js";
 import * as hashtags from "../hashtags.js";
 import * as postOwnership from "../post-ownership.js";
 import { attachInlineComposerHandlers } from "../inline-composer.js";
+import { splitFeedBySphere } from "../civic-post.js";
+import * as localAccount from "../local-account.js";
+import { loadCivicVotes, attachCivicVoteHandlers } from "./civic-actions.js";
 import * as welcomeProfile from "../vox-welcome-profile.js";
 import { getActiveUser, makeShellProps, attachPostShareHandlers } from "./context.js";
 import { attachPostMoreMenuHandlers } from "../render/post-more-menu.js";
@@ -122,7 +125,22 @@ function mergeLocalAndRemoteTopics(localPosts, remoteItems, commMap, user) {
   return merged;
 }
 
-async function filterTopicsForActiveFeed(merged, activeFeed) {
+/**
+ * Social (padrão) e Cívico dividem os posts Vox pela esfera — ver `civic-post.js`.
+ * "Meu" voto/post usa o ID local (`vx_…`): `signPayload` sempre assina com ele como autor,
+ * mesmo quando o usuário ativo é o endereço da carteira.
+ */
+async function filterTopicsBySphere(merged, activeFeed, user) {
+  const votes = await loadCivicVotes();
+  const me = (await localAccount.getRouteId().catch(() => "")) || user || "";
+  const { social: socialPosts, civic } = splitFeedBySphere(merged, { votes, me });
+  return activeFeed === "civic" ? civic : socialPosts;
+}
+
+async function filterTopicsForActiveFeed(merged, activeFeed, user = "") {
+  if (activeFeed === "for-you" || activeFeed === "civic") {
+    return filterTopicsBySphere(merged, activeFeed, user);
+  }
   if (activeFeed === "following") {
     const watchedSet = new Set(social.getWatchedProfiles());
     return merged.filter((p) => watchedSet.has(p.author || p.owner));
@@ -218,27 +236,28 @@ async function assembleHomeFeedTopics(remoteItems, commMap, user, activeFeed) {
     replyCounts,
   );
   const privacyFiltered = await filterClosedCommunityTopics(merged, user);
-  const filtered = await filterTopicsForActiveFeed(privacyFiltered, activeFeed);
+  const filtered = await filterTopicsForActiveFeed(privacyFiltered, activeFeed, user);
   const isWelcomeDismissed = localStorage.getItem("vox-welcome-post-dismissed") === "1";
   const welcomeTopic = welcomeProfile.getOfficialWelcomeTopic();
-  const shouldIncludeWelcome = !isWelcomeDismissed && !filtered.some((p) => p.id === welcomeTopic.id);
+  const shouldIncludeWelcome = activeFeed !== "civic" && !isWelcomeDismissed && !filtered.some((p) => p.id === welcomeTopic.id);
   const withWelcome = shouldIncludeWelcome ? [welcomeTopic, ...filtered] : filtered;
   return mod.filterFeedPosts(withWelcome);
 }
 
 export async function showHome(feed = "for-you") {
-  const validFeeds = ["for-you", "following", "external", "all"];
+  const validFeeds = ["for-you", "civic", "following", "external", "all"];
   const activeFeed = validFeeds.includes(feed) ? feed : "for-you";
   const user = await getActiveUser();
   const onboarding = user ? await ensureOnboardingSideEffects(user) : { dmJustSeeded: false };
   const main = render.renderShell({ ...makeShellProps(user, "home"), activeFeed, showFeedNav: true });
   render.renderLoading(main);
   const externalSubs = bskyFeed.loadBskySubscriptions();
+  let finalTopics = [];
 
   try {
     const { items: remoteItems, gateway } = await fetchRemoteHomeItems(activeFeed);
     const commMap = await buildCommunityTitleMap();
-    const finalTopics = await assembleHomeFeedTopics(remoteItems, commMap, user, activeFeed);
+    finalTopics = await assembleHomeFeedTopics(remoteItems, commMap, user, activeFeed);
 
     main.innerHTML = "";
     if (gateway) render.renderGatewayBanner(main, gateway);
@@ -246,11 +265,13 @@ export async function showHome(feed = "for-you") {
   } catch {
     main.innerHTML = "";
     const fallbackItems = mock.mockRecentTopics()?.items || [];
-    const finalTopics = await assembleHomeFeedTopics(fallbackItems, new Map(), user, activeFeed);
+    finalTopics = await assembleHomeFeedTopics(fallbackItems, new Map(), user, activeFeed);
     render.renderFeed(main, finalTopics, { activeFeed, userRouteId: user || "", externalSubs });
   }
 
   wireHomeInteractiveHandlers(activeFeed);
+  const byId = new Map(finalTopics.map((t) => [t.id, t]));
+  attachCivicVoteHandlers((id) => byId.get(id), user, () => showHome(activeFeed));
   if (onboarding.dmJustSeeded && activeFeed === "for-you") {
     share.showToast("Vox te mandou uma mensagem — veja em Mensagens 💬");
   }

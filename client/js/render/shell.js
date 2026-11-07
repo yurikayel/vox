@@ -11,7 +11,7 @@ import {
 import { applySkyTheme } from "../sky-theme.js";
 import { appShellFooterTagline } from "../i18n-pt-br.js";
 import * as localAccount from "../local-account.js";
-import { escapeHtml, root, shortId, renderAvatarHtml } from "./util.js";
+import { escapeHtml, root, renderAvatarHtml } from "./util.js";
 
 /** Squircle branco + X azul — mesmo asset em claro/escuro (sem tile navy na shell). */
 export const BRAND_MARK_SRC = "icons/icon-white-512.png";
@@ -75,14 +75,19 @@ function renderWalletBadge(walletAddress) {
 
 export function renderFeedNav(activeFeed = "for-you") {
   const isForYou = activeFeed === "for-you";
+  const isCivic = activeFeed === "civic";
   const isFollowing = activeFeed === "following";
   const isExternal = activeFeed === "external";
   const isAll = activeFeed === "all";
   return `
     <nav class="sidebar-feed-nav" aria-label="Alternar feed">
       <a href="#/" class="sidebar-feed-tab ${isForYou ? "active" : ""}"${isForYou ? ' aria-current="page"' : ""}>
-        <span class="sidebar-feed-icon" aria-hidden="true">${ICONS.feedForYou}</span>
-        <span class="sidebar-feed-label">Para você</span>
+        <span class="sidebar-feed-icon" aria-hidden="true">${ICONS.agora}</span>
+        <span class="sidebar-feed-label">Social</span>
+      </a>
+      <a href="#/?feed=civic" class="sidebar-feed-tab ${isCivic ? "active" : ""}"${isCivic ? ' aria-current="page"' : ""}>
+        <span class="sidebar-feed-icon" aria-hidden="true">${ICONS.vote}</span>
+        <span class="sidebar-feed-label">Cívico</span>
       </a>
       <a href="#/?feed=following" class="sidebar-feed-tab ${isFollowing ? "active" : ""}"${isFollowing ? ' aria-current="page"' : ""}>
         <span class="sidebar-feed-icon" aria-hidden="true">${ICONS.following}</span>
@@ -145,23 +150,10 @@ function attachThemeModeToggle() {
   });
 }
 
-/** Estela do nó local (Stitch): chave Ed25519 curta + pares P2P conectados — só dados reais. */
-function renderNodeStele(walletAddress, rtcStatus) {
-  const n = peersCount(rtcStatus);
-  const key = walletAddress ? shortId(walletAddress) : "sem chave";
-  return `
-          <div class="agora-node-stele" aria-label="Nó local">
-            <span class="agora-node-stele-label">Ed25519 local</span>
-            <code class="agora-node-stele-key">${escapeHtml(key)}</code>
-            <span class="agora-node-stele-peers"><span class="agora-presence-dot${n > 0 ? "" : " is-idle"}" aria-hidden="true"></span>P2P: ${n} ${n === 1 ? "par" : "pares"}</span>
-          </div>`;
-}
-
-function renderSidebarFooter(chipHtml, walletBadge, walletAddress, rtcStatus) {
+function renderSidebarFooter(chipHtml, walletBadge) {
   const themeToggle = renderThemeModeToggle(readColorMode(typeof localStorage !== "undefined" ? localStorage : null));
   return `
         <div class="sidebar-footer">
-          ${renderNodeStele(walletAddress, rtcStatus)}
           <div class="sidebar-theme-slot">${themeToggle}</div>
           <div class="sidebar-sync-slot">
             <span class="sidebar-sync-hint" id="top-sync-hint" aria-live="polite">${SIDEBAR_SYNC_PLACEHOLDER}</span>
@@ -230,44 +222,8 @@ function renderSidebarNav(activeTab) {
 function renderAgoraWordmark() {
   return `<a href="#/" class="agora-wordmark" aria-label="Vox — Ágora">
       <img class="agora-wordmark-mark" src="${BRAND_MARK_SRC}" width="28" height="28" alt="" decoding="async" />
-      <span class="agora-wordmark-text">VOX</span>
-      <span class="agora-wordmark-sub">Ágora Soberana</span>
+      <span class="agora-wordmark-text" aria-label="VOX"><span class="agora-wordmark-v">V</span><span class="agora-wordmark-o">O</span><span class="agora-wordmark-x">X</span></span>
     </a>`;
-}
-
-/** Rótulo de seção do "Protocolo Ágora" exibido na faixa de entablamento abaixo da topbar. */
-const SECTION_LABELS = {
-  home: "Ágora cívica",
-  vote: "Câmara deliberativa",
-  communities: "Círculos territoriais",
-  dm: "Canal cifrado P2P",
-  profile: "Identidade cívica",
-  people: "Diretório de cidadãos",
-  voxpedia: "Códex Voxpedia",
-  compose: "Câmara de inscrição",
-  network: "Saúde do nó",
-};
-
-function peersCount(rtcStatus) {
-  return Number(rtcStatus?.remotePeersConnected || 0);
-}
-
-function renderProtocolStrip(activeTab, title, rtcStatus, settings) {
-  const section = SECTION_LABELS[activeTab] || "Ágora cívica";
-  const titleHtml = title && title !== section
-    ? `<span class="agora-strip-sep" aria-hidden="true">◆</span><span class="agora-strip-leaf">${escapeHtml(title)}</span>`
-    : "";
-  const n = peersCount(rtcStatus);
-  const isEnabled = settings?.enabled !== false;
-  const meshLabel = !isEnabled ? "Somente leitura" : n > 0 ? `${n} ${n === 1 ? "par conectado" : "pares conectados"}` : "Armazenamento local";
-  return `
-    <nav class="agora-protocol-strip" aria-label="Localização">
-      <span class="agora-strip-root">Protocolo Ágora</span>
-      <span class="agora-strip-sep" aria-hidden="true">◆</span>
-      <span class="agora-strip-section">${escapeHtml(section)}</span>
-      ${titleHtml}
-      <span class="agora-strip-status"><span class="agora-pylon" aria-hidden="true"></span>${escapeHtml(meshLabel)}</span>
-    </nav>`;
 }
 
 function readIdentitySummary(walletAddress) {
@@ -284,11 +240,9 @@ function renderIdentityChip(identity, chipText) {
   const avatar = identity.address
     ? renderAvatarHtml(identity.address, identity.displayName, "agora-topbar-avatar", identity.avatarUrl)
     : `<span class="avatar agora-topbar-avatar">${ICONS.profile}</span>`;
-  const sub = identity.address ? shortId(identity.address) : "sem conta";
-  return `<button type="button" class="agora-identity-chip" id="agora-identity-toggle" aria-haspopup="dialog" aria-controls="agora-identity-drawer" aria-expanded="false" aria-label="Identidade e rede">
+  return `<button type="button" class="agora-identity-chip" id="agora-identity-toggle" aria-haspopup="dialog" aria-controls="agora-identity-drawer" aria-expanded="false" aria-label="Identidade e rede · ${escapeHtml(chipText)}">
       <span class="agora-identity-text">
-        <span class="agora-identity-name"><span class="agora-presence-dot" aria-hidden="true"></span>${escapeHtml(identity.displayName)}</span>
-        <span class="agora-identity-key">${escapeHtml(sub)} · ${escapeHtml(chipText)}</span>
+        <span class="agora-identity-name">${escapeHtml(identity.displayName)}</span>
       </span>
       ${avatar}
     </button>`;
@@ -436,7 +390,7 @@ async function hydrateSidebarCircles() {
   }
 }
 
-function renderSidebar(activeTab, { showFeedNav, activeFeed, chipHtml, walletBadge, walletAddress, rtcStatus }) {
+function renderSidebar(activeTab, { showFeedNav, activeFeed, chipHtml, walletBadge }) {
   const isCompose = activeTab === "compose";
   const feedSlot = renderFeedNavSlot(showFeedNav, activeFeed);
 
@@ -457,7 +411,7 @@ function renderSidebar(activeTab, { showFeedNav, activeFeed, chipHtml, walletBad
         ${feedSlot}
         <section class="agora-circles" id="agora-sidebar-circles" aria-label="Círculos territoriais" hidden></section>
       </div>
-      ${renderSidebarFooter(chipHtml, walletBadge, walletAddress, rtcStatus)}
+      ${renderSidebarFooter(chipHtml, walletBadge)}
       <button type="button" class="sidebar-collapse-btn" id="sidebar-collapse-btn" aria-expanded="true" aria-controls="app-sidebar" aria-label="Recolher ou expandir menu">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
@@ -476,13 +430,12 @@ export function updateTopBarSync(active, detail = "") {
   }
 }
 
-function renderShellMarkup({ activeTab, sidebarHtml, identity, chipHtml, stripHtml }) {
+function renderShellMarkup({ activeTab, sidebarHtml, identity, chipHtml }) {
   return `
     <div class="app-layout agora-ui" data-active-tab="${escapeHtml(activeTab)}">
       ${sidebarHtml}
       <div class="main-column">
         ${renderTopBar(identity, networkChipText(chipHtml), chipHtml)}
-        ${stripHtml}
         <main id="app-main"></main>
         <footer class="app-footer">Vox · ${escapeHtml(appShellFooterTagline)} · <a href="#/ajuda/teste">Teste aberto</a> · <a href="./proposta-vox.html" target="_blank">Proposta</a></footer>
       </div>
@@ -498,7 +451,7 @@ function attachShellBehaviors() {
 }
 
 export function renderShell({
-  title = "",
+  title: _title,
   subtitle: _subtitle,
   breadcrumb,
   walletAddress,
@@ -510,13 +463,10 @@ export function renderShell({
   showFeedNav = false,
 }) {
   const chipHtml = renderNetworkChip(metrics, rtcStatus, settings);
-  const sidebarHtml = renderSidebar(activeTab, {
-    showFeedNav, activeFeed, chipHtml, walletBadge: renderWalletBadge(walletAddress), walletAddress, rtcStatus,
-  });
+  const sidebarHtml = renderSidebar(activeTab, { showFeedNav, activeFeed, chipHtml, walletBadge: renderWalletBadge(walletAddress) });
   const identity = readIdentitySummary(walletAddress);
-  const stripHtml = renderProtocolStrip(activeTab, title, rtcStatus, settings);
 
-  root().innerHTML = renderShellMarkup({ activeTab, sidebarHtml, identity, chipHtml, stripHtml });
+  root().innerHTML = renderShellMarkup({ activeTab, sidebarHtml, identity, chipHtml });
 
   attachShellBehaviors();
   hydrateSidebarCircles();
@@ -526,20 +476,15 @@ export function renderShell({
 }
 
 /**
- * Cabeçalho de página no padrão Stitch (título epigráfico + subtítulo + ações).
- * @param {{ kicker?: string, title: string, subtitle?: string, actionsHtml?: string, id?: string }} opts
+ * Cabeçalho de página no padrão Stitch (título epigráfico + subtítulo + ações), sem etiquetas.
+ * @param {{ title: string, subtitle?: string, actionsHtml?: string, id?: string, wide?: boolean }} opts
  */
-export function renderPageHead({ kicker = "", title, subtitle = "", actionsHtml = "", id = "", stamps = [], wide = false }) {
-  const kickerHtml = kicker ? `<p class="agora-kicker"><span class="agora-pylon" aria-hidden="true"></span>${escapeHtml(kicker)}</p>` : "";
-  const stampsHtml = stamps.length
-    ? `<div class="agora-stamps">${stamps.map((s) => `<span class="agora-stamp">${escapeHtml(s)}</span>`).join("")}</div>`
-    : "";
+export function renderPageHead({ title, subtitle = "", actionsHtml = "", id = "", wide = false }) {
   const subHtml = subtitle ? `<p class="agora-page-sub">${escapeHtml(subtitle)}</p>` : "";
   const actions = actionsHtml ? `<div class="agora-page-actions">${actionsHtml}</div>` : "";
   return `
     <header class="agora-page-head${wide ? " agora-page-head--wide" : ""}"${id ? ` id="${escapeHtml(id)}"` : ""}>
       <div class="agora-page-head-text">
-        ${kickerHtml}${stampsHtml}
         <h1 class="agora-page-title">${escapeHtml(title)}</h1>
         ${subHtml}
       </div>

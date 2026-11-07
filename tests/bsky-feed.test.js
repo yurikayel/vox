@@ -139,10 +139,12 @@ test("bsky - quoteExternalPostText formats markdown quote block with original li
   assert.ok(quote.includes("Denúncia aponta irregularidade fiscal grave."));
 });
 
-test("feed - renderFeedTabsBar renders 4 tabs with active state", () => {
+test("feed - renderFeedTabsBar renders Social, Cívico, Redes, Tudo e Seguindo", () => {
   const voxTabs = feed.renderFeedTabsBar("for-you");
   assert.ok(voxTabs.includes("feed-tabs-bar"));
-  assert.ok(voxTabs.includes("<span>Vox</span>"));
+  assert.ok(voxTabs.includes("<span>Social</span>"));
+  assert.ok(voxTabs.includes("<span>Cívico</span>"));
+  assert.ok(voxTabs.includes('href="#/?feed=civic"'));
   assert.ok(voxTabs.includes("<span>Redes (Bluesky)</span>"));
   assert.ok(voxTabs.includes("<span>Tudo</span>"));
   assert.ok(voxTabs.includes("<span>Seguindo</span>"));
