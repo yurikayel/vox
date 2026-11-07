@@ -9,7 +9,8 @@ import * as profileDirectory from "../profile-directory.js";
 import { renderCommunityCatchupBanner } from "../community-unread.js";
 import { renderUnifiedDiffHtml } from "./diff-html.js";
 import { renderPageHead } from "./shell.js";
-import { renderComposeTypeSelector, renderComposeSignaturePanel } from "./compose-chrome.js";
+import { renderComposeSignaturePanel } from "./compose-chrome.js";
+import { renderSteps, renderReviewList } from "./compose-steps.js";
 import { buildListingDmHref } from "../dm-messenger.js";
 import { getReadOriginAggregate } from "../gateway-telemetry.js";
 import {
@@ -1062,40 +1063,62 @@ export function renderProposalVotesList(tally) {
     </div>`;
 }
 
-function renderProposalFieldsHtml() {
+
+/** Nova proposta em etapas: o que muda → por quê → regras (diff) → revisar. */
+function proposalWhatStepHtml() {
   return `
         <div class="form-group agora-compose-field">
-          <label for="prop-title" class="agora-field-label">Título da proposta *</label>
+          <label for="prop-title" class="agora-field-label">Título da proposta</label>
           <input type="text" id="prop-title" class="form-control" placeholder="Ex: Ativar feira comunitária popular" required maxlength="120" />
-        </div>
-        <div class="form-group agora-compose-field">
-          <label for="prop-body" class="agora-field-label">Motivação e Descrição *</label>
-          <textarea id="prop-body" class="form-control" rows="4" placeholder="Explique os motivos da mudança e benefícios para a comunidade..." required></textarea>
-        </div>
-        <div class="form-group agora-compose-field">
-          <label for="prop-diff" class="agora-field-label">Diff unificado das regras (Pull Request) [opcional]:</label>
-          <textarea id="prop-diff" class="form-control agora-diff-input" rows="3" placeholder="@@ -1,2 +1,3 @@&#10;- regra antiga&#10;+ nova regra"></textarea>
-          <span class="agora-field-hint">Linhas com + indicam inclusões e - indicam exclusões.</span>
         </div>`;
 }
 
+function proposalWhyStepHtml() {
+  return `
+        <div class="form-group agora-compose-field">
+          <label for="prop-body" class="agora-field-label">Motivação e descrição</label>
+          <textarea id="prop-body" class="form-control" rows="6" placeholder="Explique os motivos da mudança e benefícios para a comunidade..." required></textarea>
+        </div>`;
+}
+
+function proposalDiffStepHtml() {
+  return `
+        <div class="form-group agora-compose-field">
+          <label for="prop-diff" class="agora-field-label">Diff unificado das regras</label>
+          <textarea id="prop-diff" class="form-control agora-diff-input" rows="6" placeholder="@@ -1,2 +1,3 @@&#10;- regra antiga&#10;+ nova regra"></textarea>
+          <span class="agora-field-hint">Linhas com + indicam inclusões e - indicam exclusões. Pode pular.</span>
+        </div>`;
+}
+
+function proposalReviewStepHtml() {
+  return `
+        ${renderReviewList([
+          { label: "Título", from: "prop-title" },
+          { label: "Motivação", from: "prop-body", long: true },
+          { label: "Regras", from: "prop-diff", empty: "Sem diff", long: true },
+        ])}
+        <p class="compose-step-lead">Membros decidem por voto direto: 1 membro = 1 voto. Só vota quem já era membro quando a proposta nasceu.</p>
+        ${renderComposeSignaturePanel()}`;
+}
+
 export function renderComposeProposal(main, communityId, commTitle = "") {
+  const backHref = `#/c/${encodeURIComponent(communityId)}?tab=governance`;
+  const nav = { backHref, submitId: "btn-submit-proposal", submitLabel: "Publicar Proposta Assinada" };
+  const steps = [
+    { key: "what", title: "O que muda?", required: ["prop-title"], requiredMsg: "Dê um título à proposta.", body: proposalWhatStepHtml() },
+    { key: "why", title: "Por quê?", required: ["prop-body"], requiredMsg: "Explique a motivação.", body: proposalWhyStepHtml() },
+    { key: "diff", title: "Quais regras mudam? (opcional)", body: proposalDiffStepHtml() },
+    { key: "review", title: "Revisar a proposta", body: proposalReviewStepHtml() },
+  ];
   main.innerHTML = `
-    <div class="card compose-card compose-proposal-card agora-composer">
+    <div class="card compose-card compose-proposal-card agora-composer agora-composer--steps">
       <div class="agora-composer-head">
-        <a class="back-link" href="#/c/${encodeURIComponent(communityId)}?tab=governance">← Voltar à governança</a>
-        <h2 class="agora-page-title">Nova Proposta — ${escapeHtml(commTitle || communityId)}</h2>
-        <p class="agora-page-sub">Mudanças de regras acompanham um diff transparente. Membros decidem por voto direto (1 membro = 1 voto).</p>
+        <a class="back-link" href="${backHref}">← Voltar à governança</a>
+        <p class="agora-composer-kicker">Nova Proposta — ${escapeHtml(commTitle || communityId)}</p>
       </div>
-      ${renderComposeTypeSelector("proposal", communityId)}
-      <form id="form-compose-proposal">
+      <form id="form-compose-proposal" novalidate>
         <input type="hidden" id="prop-comm-id" value="${escapeHtml(communityId)}" />
-        ${renderProposalFieldsHtml()}
-        ${renderComposeSignaturePanel()}
-        <div class="form-actions agora-composer-actions">
-          <a href="#/c/${encodeURIComponent(communityId)}?tab=governance" class="agora-btn agora-btn--secondary">Cancelar</a>
-          <button type="submit" class="agora-btn agora-btn--primary btn-primary" id="btn-submit-proposal">Publicar Proposta Assinada</button>
-        </div>
+        ${renderSteps(steps, nav)}
       </form>
     </div>`;
 }

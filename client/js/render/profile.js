@@ -14,7 +14,7 @@ import * as localAccount from "../local-account.js";
 import { LOCAL_WIPE_NOTICE } from "../local-account.js";
 import { renderProfileNoteBubbleHtml } from "./profile-note-bubble.js";
 import { renderComposeTypeSelector, renderComposeSignaturePanel } from "./compose-chrome.js";
-import { renderStep } from "./compose-steps.js";
+import { renderStep, renderSteps, renderReviewList } from "./compose-steps.js";
 import { renderProfileVoxelsTab } from "./profile-voxels.js";
 import { ACHIEVEMENT_CATALOG, evaluateAchievements, loadVoxelReceipts } from "../voxels.js";
 
@@ -721,7 +721,7 @@ function renderWalletStatusBox(hasWallet, address, balance) {
         ${renderWalletPixRow()}
         <div class="actions-row agora-wallet-actions">
           <a class="agora-btn agora-btn--solid" href="#/perfil">Meu perfil</a>
-          <a class="agora-btn agora-btn--secondary" href="#/vote">Apoiar pauta</a>
+          <a class="agora-btn agora-btn--secondary" href="#/wallet/guia">Configuração guiada</a>
           <button id="btn-disconnect-wallet" class="agora-btn agora-btn--bronze btn-danger">Desconectar</button>
         </div>
       </section>`;
@@ -805,61 +805,77 @@ function renderComposeCommunityPhotoSection() {
     </div>`;
 }
 
-function renderComposeCommunityMetaFields() {
+
+
+
+/** Nova comunidade em etapas: nome e endereço → foto → tipo → regras → revisar. */
+function communityNameStepHtml() {
   return `
-    <div class="form-group">
-      <label for="comm-id">Identificador único (slug):</label>
-      <input type="text" id="comm-id" class="form-control" placeholder="ex: cinema-nacional" required pattern="^[a-z0-9-]+$" title="Apenas letras minúsculas, números e hífens." />
-    </div>
-    <div class="form-group">
-      <label for="comm-title">Título:</label>
-      <input type="text" id="comm-title" class="form-control" placeholder="ex: Cinema Brasileiro" required maxlength="100" />
-    </div>
-    <div class="form-group">
-      <label for="comm-category">Categoria:</label>
-      <input type="text" id="comm-category" class="form-control" list="comm-category-suggestions" placeholder="ex: Cultura & Artes, Política & Cidadania" maxlength="40" />
-      <datalist id="comm-category-suggestions">
-        <option value="Política & Cidadania"><option value="Cultura & Artes"><option value="Tecnologia & Software Livre"><option value="Cidades & Bairros"><option value="Música & Cinema"><option value="Economia Solidária"><option value="Educação & Ciência"><option value="Humor & Entretenimento">
-      </datalist>
-    </div>`;
+      <div class="form-group">
+        <label for="comm-title">Título:</label>
+        <input type="text" id="comm-title" class="form-control" placeholder="ex: Cinema Brasileiro" required maxlength="100" />
+      </div>
+      <div class="form-group">
+        <label for="comm-id">Endereço (slug):</label>
+        <input type="text" id="comm-id" class="form-control" placeholder="ex: cinema-nacional" required pattern="[a-z0-9\\-]+" title="Apenas letras minúsculas, números e hífens." />
+      </div>`;
 }
 
-function renderComposeCommunityTypeAndDesc() {
+function communityPhotoStepHtml() {
   return `
-    <div class="form-group">
-      <label for="comm-type">Tipo de Comunidade:</label>
-      <select id="comm-type" class="form-control">
-        <option value="open">Pública (Aberta a todos)</option>
-        <option value="closed">Moderada (Requer aprovação)</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label for="comm-desc">Descrição e Regras:</label>
-      <textarea id="comm-desc" class="form-control" rows="3" placeholder="Qual o propósito desta comunidade? Quais as regras de convivência?" required maxlength="500"></textarea>
-    </div>`;
+      <div class="form-group">
+        <label for="comm-type">Tipo de Comunidade:</label>
+        <select id="comm-type" class="form-control">
+          <option value="open">Pública (Aberta a todos)</option>
+          <option value="closed">Moderada (Requer aprovação)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="comm-category">Categoria:</label>
+        <input type="text" id="comm-category" class="form-control" list="comm-category-suggestions" placeholder="ex: Cultura & Artes, Política & Cidadania" maxlength="40" />
+        <datalist id="comm-category-suggestions">
+          <option value="Política & Cidadania"><option value="Cultura & Artes"><option value="Tecnologia & Software Livre"><option value="Cidades & Bairros"><option value="Música & Cinema"><option value="Economia Solidária"><option value="Educação & Ciência"><option value="Humor & Entretenimento">
+        </datalist>
+      </div>`;
 }
 
-function renderComposeCommunityFields() {
-  return `${renderComposeCommunityMetaFields()}${renderComposeCommunityTypeAndDesc()}`;
+function communityRulesStepHtml() {
+  return `
+      <div class="form-group">
+        <label for="comm-desc">Descrição e Regras:</label>
+        <textarea id="comm-desc" class="form-control" rows="6" placeholder="Qual o propósito desta comunidade? Quais as regras de convivência?" required maxlength="500"></textarea>
+      </div>`;
+}
+
+function communityReviewStepHtml() {
+  return `
+      ${renderReviewList([
+        { label: "Título", from: "comm-title" },
+        { label: "Endereço", from: "comm-id" },
+        { label: "Tipo", from: "comm-type" },
+        { label: "Categoria", from: "comm-category", empty: "Sem categoria" },
+        { label: "Regras", from: "comm-desc", long: true },
+      ])}
+      ${renderComposeSignaturePanel()}`;
 }
 
 export function renderComposeCommunity(main) {
+  const nav = { backHref: "#/communities", submitId: "btn-submit-comm", submitLabel: "Publicar comunidade" };
+  const steps = [
+    { key: "name", title: "Nome e endereço", required: ["comm-title", "comm-id"], requiredMsg: "Preencha o título e um endereço válido (letras minúsculas, números e hífens).", body: communityNameStepHtml() },
+    { key: "photo", title: "Foto (opcional)", body: renderComposeCommunityPhotoSection() },
+    { key: "type", title: "Tipo e visibilidade", body: communityPhotoStepHtml() },
+    { key: "rules", title: "Propósito e regras", required: ["comm-desc"], requiredMsg: "Descreva o propósito e as regras.", body: communityRulesStepHtml() },
+    { key: "review", title: "Revisar a comunidade", body: communityReviewStepHtml() },
+  ];
   main.innerHTML = `
-    <div class="compose-card compose-card-sleek compose-community-card agora-composer">
+    <div class="compose-card compose-card-sleek compose-community-card agora-composer agora-composer--steps">
       <div class="agora-composer-head">
         <a class="back-link compose-back-link" href="#/communities">← Voltar</a>
-        <h2 class="compose-heading agora-page-title">Nova Comunidade</h2>
-        <p class="agora-page-sub">Um bairro, um coletivo, um grupo de estudo — com regras e governança próprias.</p>
+        <p class="agora-composer-kicker">Nova Comunidade</p>
       </div>
-      ${renderComposeTypeSelector("community")}
-      <form id="form-compose-community">
-        ${renderComposeCommunityPhotoSection()}
-        ${renderComposeCommunityFields()}
-        ${renderComposeSignaturePanel()}
-        <div class="form-actions agora-composer-actions">
-          <a class="agora-btn agora-btn--secondary" href="#/communities">Cancelar</a>
-          <button type="submit" class="agora-btn agora-btn--primary btn-publish-pill" id="btn-submit-comm">Publicar comunidade</button>
-        </div>
+      <form id="form-compose-community" novalidate>
+        ${renderSteps(steps, nav)}
       </form>
     </div>`;
 }
@@ -891,9 +907,21 @@ function renderTopicCivicTagBar() {
         <button type="button" class="btn btn-sm btn-subtle civic-tag-btn" data-tag="[Debate Geral]" aria-pressed="false">💬 Debate</button>
         <button type="button" class="btn btn-sm btn-subtle civic-tag-btn" data-tag="[Enquete]" aria-pressed="false">📊 Enquete</button>
       </div>
-      <p class="civic-tag-hint">Pauta, Ideia, Debate e Enquete tornam o post <strong>cívico</strong> (aba Cívico, com posicionamento assinado) se ele tiver título com 8+ caracteres, argumento com 40+ e for publicado em um círculo. Na enquete, liste de 2 a 6 opções, uma por linha começando com “- ”.</p>
+      <p class="civic-tag-hint">Pauta, Ideia, Debate e Enquete tornam o post <strong>cívico</strong> (aba Cívico, com posicionamento assinado) se ele tiver título com 8+ caracteres, argumento com 40+ e for publicado em um círculo.</p>
       <input type="hidden" id="topic-civic-tag" value="" />
+      ${renderPollBuilder()}
     </div>`;
+}
+
+/** Construtor de enquete: 2 a 6 opções, adicionar/remover (aparece com a categoria Enquete). */
+function renderPollBuilder() {
+  const row = (i) => `<li class="civic-poll-row"><input type="text" class="form-control civic-poll-input" maxlength="80" placeholder="Opção ${i}" aria-label="Opção ${i}" /><button type="button" class="civic-poll-remove" aria-label="Remover opção">×</button></li>`;
+  return `
+      <div class="civic-poll-builder" id="civic-poll-builder" hidden>
+        <p class="agora-field-label">Opções da enquete <span class="agora-muted">(2 a 6)</span></p>
+        <ol class="civic-poll-options" id="civic-poll-options">${row(1)}${row(2)}</ol>
+        <button type="button" class="agora-btn agora-btn--secondary" id="btn-civic-poll-add">+ Adicionar opção</button>
+      </div>`;
 }
 
 function renderComposeTargetPill(communityId) {
@@ -984,56 +1012,76 @@ export function renderComposeReply(main, topicId, communityId, { parentId = "", 
     </div>`;
 }
 
-function renderComposeListingFields(defaultPix) {
+
+/** Nova oferta em etapas: o quê → preço e local → Pix → foto e descrição → revisar. */
+function listingWhatStepHtml() {
   return `
-    <div class="form-group">
-      <label for="listing-title">O que você está ofertando?</label>
-      <input type="text" id="listing-title" class="form-control" placeholder="Ex: Pão artesanal de fermentação natural" required maxlength="120" />
-    </div>
-    <div class="form-row" style="display:flex; gap:0.75rem; flex-wrap:wrap;">
-      <div class="form-group" style="flex:1 1 140px;">
+      <div class="form-group">
+        <label for="listing-title">Oferta:</label>
+        <input type="text" id="listing-title" class="form-control" placeholder="Ex: Pão artesanal de fermentação natural" required maxlength="120" />
+      </div>`;
+}
+
+function listingPriceStepHtml() {
+  return `
+      <div class="form-group">
         <label for="listing-price">Preço sugerido:</label>
         <input type="text" id="listing-price" class="form-control" placeholder="Ex: R$ 35" />
       </div>
-      <div class="form-group" style="flex:1 1 180px;">
+      <div class="form-group">
         <label for="listing-location">Bairro / Região:</label>
         <input type="text" id="listing-location" class="form-control" placeholder="Ex: Vila Madalena, SP" maxlength="60" />
+      </div>`;
+}
+
+function listingPixStepHtml(defaultPix) {
+  return `
+      <div class="form-group">
+        <label for="listing-pix">Chave Pix para recebimento direto:</label>
+        <input type="text" id="listing-pix" class="form-control" placeholder="E-mail, celular, CPF ou chave aleatória" value="${escapeHtml(defaultPix)}" />
       </div>
-    </div>
-    <div class="form-group">
-      <label for="listing-pix">Chave Pix para recebimento direto (opcional):</label>
-      <input type="text" id="listing-pix" class="form-control" placeholder="E-mail, celular, CPF ou chave aleatória" value="${escapeHtml(defaultPix)}" />
-    </div>
-    <div class="form-group">
-      <label for="listing-image">Foto do item (URL opcional):</label>
-      <input type="text" id="listing-image" class="form-control" placeholder="images/posts/tour-helena.jpg ou https://..." />
-    </div>
-    <div class="form-group">
-      <label for="listing-body">Descrição da oferta:</label>
-      <textarea id="listing-body" class="form-control" rows="4" placeholder="Descreva os detalhes do produto ou serviço, prazos e forma de entrega..." required></textarea>
-    </div>`;
+      <p class="listing-form-disclaimer compose-step-lead">⚡ ${escapeHtml(listing.LISTING_DISCLAIMER)}</p>`;
+}
+
+function listingDetailsStepHtml() {
+  return `
+      <div class="form-group">
+        <label for="listing-image">Foto do item (URL opcional):</label>
+        <input type="text" id="listing-image" class="form-control" placeholder="images/posts/tour-helena.jpg ou https://..." />
+      </div>
+      <div class="form-group">
+        <label for="listing-body">Descrição da oferta:</label>
+        <textarea id="listing-body" class="form-control" rows="5" placeholder="Descreva os detalhes do produto ou serviço, prazos e forma de entrega..." required></textarea>
+      </div>`;
 }
 
 export function renderComposeListing(main, communityId, commTitle = "", prefill = {}) {
   const titleDisplay = commTitle || communityId || "Feira";
   const defaultPix = prefill.defaultPix || "";
-
+  const backHref = `#/c/${encodeURIComponent(communityId)}?tab=listings`;
+  const nav = { backHref, submitId: "btn-submit-listing", submitLabel: "Publicar na Feira" };
+  const steps = [
+    { key: "what", title: "O que você está ofertando?", required: ["listing-title"], requiredMsg: "Diga o que é a oferta.", body: listingWhatStepHtml() },
+    { key: "price", title: "Preço e local", body: listingPriceStepHtml() },
+    { key: "pix", title: "Como receber? (opcional)", body: listingPixStepHtml(defaultPix) },
+    { key: "details", title: "Foto e descrição", required: ["listing-body"], requiredMsg: "Descreva a oferta.", body: listingDetailsStepHtml() },
+    { key: "review", title: "Revisar a oferta", body: renderReviewList([
+      { label: "Oferta", from: "listing-title" },
+      { label: "Preço", from: "listing-price", empty: "A combinar" },
+      { label: "Local", from: "listing-location", empty: "Não informado" },
+      { label: "Pix", from: "listing-pix", empty: "Sem Pix" },
+      { label: "Descrição", from: "listing-body", long: true },
+    ]) },
+  ];
   main.innerHTML = `
-    <div class="card compose-card compose-listing-card agora-composer">
+    <div class="card compose-card compose-listing-card agora-composer agora-composer--steps">
       <div class="agora-composer-head">
-        <a class="back-link" href="#/c/${encodeURIComponent(communityId)}?tab=listings">← Voltar à feira</a>
-        <h2 class="agora-page-title">Nova Oferta — ${escapeHtml(titleDisplay)}</h2>
+        <a class="back-link" href="${backHref}">← Voltar à feira</a>
+        <p class="agora-composer-kicker">Nova Oferta — ${escapeHtml(titleDisplay)}</p>
       </div>
-      ${renderComposeTypeSelector("listing", communityId)}
-      <p class="listing-form-disclaimer" style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem;">
-        ⚡ ${escapeHtml(listing.LISTING_DISCLAIMER)}
-      </p>
-      <form id="form-compose-listing">
+      <form id="form-compose-listing" novalidate>
         <input type="hidden" id="listing-comm-id" value="${escapeHtml(communityId)}" />
-        ${renderComposeListingFields(defaultPix)}
-        <div class="form-actions" style="margin-top:1rem;">
-          <button type="submit" class="agora-btn agora-btn--primary btn-primary" id="btn-submit-listing">Publicar na Feira</button>
-        </div>
+        ${renderSteps(steps, nav)}
       </form>
     </div>`;
 }
