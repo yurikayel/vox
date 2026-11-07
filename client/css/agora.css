@@ -943,10 +943,11 @@ body,
   border-top: none;
 }
 
+/* Cards do feed sem presença: fundo transparente e sem borda; só o hover (filete dourado) aparece. */
 .agora-ui .feed-container > .post,
 .agora-ui .feed-container > article {
-  background: var(--sa-surface-container);
-  border: 1px solid var(--sa-hairline);
+  background: transparent;
+  border: none;
   border-radius: var(--radius);
   box-shadow: none;
   margin: 0;
@@ -963,16 +964,24 @@ body,
   }
 }
 
+.agora-ui .post.post-pinned-highlight {
+  background: transparent !important;
+  border: none !important;
+}
+
+@media (hover: hover) {
+  .agora-ui .post.post-pinned-highlight:hover {
+    background: var(--sa-surface-low) !important;
+    box-shadow: inset 2px 0 0 var(--sa-secondary) !important;
+  }
+}
+
 @media (max-width: 767px) {
-  .agora-ui .feed-container { gap: 0; }
+  .agora-ui .feed-container { gap: 0.5rem; }
 
   .agora-ui .feed-container > .post,
   .agora-ui .feed-container > article {
     border-radius: 0;
-    border-left: none;
-    border-right: none;
-    border-top: none;
-    background: transparent;
   }
 }
 
