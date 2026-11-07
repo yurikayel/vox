@@ -13,8 +13,9 @@ const agoraCss = fs.readFileSync(path.join(root, "css/agora.css"), "utf8");
 test("typography civic — CSS tokens and display pairing", () => {
   assert.match(css, /--font-sans:\s*"Inter"/);
   assert.match(css, /--font-display:\s*"Noto Serif"/);
-  assert.match(agoraCss, /--font-epigraphic:\s*"Noto Serif"/);
-  assert.match(agoraCss, /--font-telemetry:\s*"Inter"/);
+  // Sovereign Agora (Stitch): Domine epigráfica + Work Sans, com Noto Serif/Inter como fallback local.
+  assert.match(agoraCss, /--font-epigraphic:\s*"Domine",\s*"Noto Serif"/);
+  assert.match(agoraCss, /--font-telemetry:\s*"Work Sans",\s*"Inter"/);
   assert.match(css, /--font-weight-nav:\s*600/);
   assert.ok(css.includes("font-family: var(--font-sans)"));
   assert.ok(css.includes(".brand-word") && css.includes("var(--font-display)"));

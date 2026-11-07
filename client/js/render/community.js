@@ -9,6 +9,7 @@ import * as profileDirectory from "../profile-directory.js";
 import { renderCommunityCatchupBanner } from "../community-unread.js";
 import { renderUnifiedDiffHtml } from "./diff-html.js";
 import { renderPageHead } from "./shell.js";
+import { renderComposeTypeSelector, renderComposeSignaturePanel } from "./compose-chrome.js";
 import { buildListingDmHref } from "../dm-messenger.js";
 import { getReadOriginAggregate } from "../gateway-telemetry.js";
 import {
@@ -490,10 +491,12 @@ function renderHomeCommunityCard(c) {
 export function renderHome(main, communities, { totalUnread = 0 } = {}) {
   const catchupBanner = renderCommunityCatchupBanner({ totalUnread });
   const head = renderPageHead({
+    kicker: "Hub territorial · círculos da sua rede",
     title: "Comunidades",
-    subtitle: "Fóruns e células da sua rede. Cada comunidade decide suas pautas, regras e moderação.",
-    actionsHtml: `<a class="agora-btn agora-btn--primary" href="#/compose/community">+ Nova comunidade</a>`,
-  }).replace("agora-page-head", "agora-page-head agora-page-head--wide");
+    subtitle: "Fóruns e círculos territoriais da sua rede. Cada comunidade decide suas pautas, regras e moderação.",
+    actionsHtml: `<a class="agora-btn agora-btn--primary" href="#/compose/community">+ Fundar comunidade</a>`,
+    wide: true,
+  });
   if (!communities.length) {
     main.innerHTML += `${head}<div class="agora-empty"><h2>Nenhuma comunidade ainda</h2><p>Crie a primeira comunidade da sua rede — um bairro, um coletivo, um grupo de estudo.</p><a class="agora-btn agora-btn--primary" href="#/compose/community">+ Criar comunidade</a></div>`;
     return;
@@ -1060,32 +1063,40 @@ export function renderProposalVotesList(tally) {
     </div>`;
 }
 
-export function renderComposeProposal(main, communityId, commTitle = "") {
-  main.innerHTML = `
-    <div class="card compose-card compose-proposal-card" style="max-width: 640px; margin: 1rem auto; padding: 1.5rem;">
-      <a class="back-link" href="#/c/${encodeURIComponent(communityId)}?tab=governance">← Voltar à governança</a>
-      <h2>Nova Proposta — ${escapeHtml(commTitle || communityId)}</h2>
-      <p class="desc" style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem;">
-        🏛️ No espírito FOSS, mudanças de regras acompanham um diff transparente. Membros decidirão via voto direto (1 membro = 1 voto).
-      </p>
-      <form id="form-compose-proposal">
-        <input type="hidden" id="prop-comm-id" value="${escapeHtml(communityId)}" />
-        <div class="form-group" style="margin-bottom: 1rem;">
-          <label for="prop-title" style="display:block; font-weight:600; margin-bottom:0.3rem;">Título da proposta *</label>
+function renderProposalFieldsHtml() {
+  return `
+        <div class="form-group agora-compose-field">
+          <label for="prop-title" class="agora-field-label">Título da proposta *</label>
           <input type="text" id="prop-title" class="form-control" placeholder="Ex: Ativar feira comunitária popular" required maxlength="120" />
         </div>
-        <div class="form-group" style="margin-bottom: 1rem;">
-          <label for="prop-body" style="display:block; font-weight:600; margin-bottom:0.3rem;">Motivação e Descrição *</label>
+        <div class="form-group agora-compose-field">
+          <label for="prop-body" class="agora-field-label">Motivação e Descrição *</label>
           <textarea id="prop-body" class="form-control" rows="4" placeholder="Explique os motivos da mudança e benefícios para a comunidade..." required></textarea>
         </div>
-        <div class="form-group" style="margin-bottom: 1.25rem;">
-          <label for="prop-diff" style="display:block; font-weight:600; margin-bottom:0.3rem;">Diff unificado das regras (Pull Request) [opcional]:</label>
-          <textarea id="prop-diff" class="form-control" rows="3" style="font-family:monospace; font-size:0.85rem;" placeholder="@@ -1,2 +1,3 @@&#10;- regra antiga&#10;+ nova regra"></textarea>
-          <span style="font-size:0.75rem; color:var(--muted); display:block; margin-top:0.25rem;">Linhas com + indicam inclusões e - indicam exclusões.</span>
-        </div>
-        <div class="form-actions" style="margin-top:1rem; display:flex; justify-content:flex-end; gap:0.75rem;">
-          <a href="#/c/${encodeURIComponent(communityId)}?tab=governance" class="btn btn-outline">Cancelar</a>
-          <button type="submit" class="btn btn-primary" id="btn-submit-proposal">Publicar Proposta Assinada</button>
+        <div class="form-group agora-compose-field">
+          <label for="prop-diff" class="agora-field-label">Diff unificado das regras (Pull Request) [opcional]:</label>
+          <textarea id="prop-diff" class="form-control agora-diff-input" rows="3" placeholder="@@ -1,2 +1,3 @@&#10;- regra antiga&#10;+ nova regra"></textarea>
+          <span class="agora-field-hint">Linhas com + indicam inclusões e - indicam exclusões.</span>
+        </div>`;
+}
+
+export function renderComposeProposal(main, communityId, commTitle = "") {
+  main.innerHTML = `
+    <div class="card compose-card compose-proposal-card agora-composer">
+      <div class="agora-composer-head">
+        <a class="back-link" href="#/c/${encodeURIComponent(communityId)}?tab=governance">← Voltar à governança</a>
+        <p class="agora-kicker"><span class="agora-pylon agora-pylon--bronze" aria-hidden="true"></span>Deliberação cívica · votação vinculante</p>
+        <h2 class="agora-page-title">Nova Proposta — ${escapeHtml(commTitle || communityId)}</h2>
+        <p class="agora-page-sub">Mudanças de regras acompanham um diff transparente. Membros decidem por voto direto (1 membro = 1 voto).</p>
+      </div>
+      ${renderComposeTypeSelector("proposal", communityId)}
+      <form id="form-compose-proposal">
+        <input type="hidden" id="prop-comm-id" value="${escapeHtml(communityId)}" />
+        ${renderProposalFieldsHtml()}
+        ${renderComposeSignaturePanel()}
+        <div class="form-actions agora-composer-actions">
+          <a href="#/c/${encodeURIComponent(communityId)}?tab=governance" class="agora-btn agora-btn--secondary">Cancelar</a>
+          <button type="submit" class="agora-btn agora-btn--primary btn-primary" id="btn-submit-proposal">Publicar Proposta Assinada</button>
         </div>
       </form>
     </div>`;

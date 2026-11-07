@@ -31,10 +31,34 @@ function layer(summary, bodyHtml, extraClass = "") {
   return `<details class="${cls}"><summary>${escapeHtml(summary)}</summary><div class="voxpedia-layer-body">${bodyHtml}</div></details>`;
 }
 
+const SECTION_ORDER = [
+  "voxpedia-comecar",
+  "voxpedia-mensagens",
+  "voxpedia-comunidades",
+  "voxpedia-rede",
+  "voxpedia-privacidade",
+  "voxpedia-tecnico",
+];
+
+const SECTION_CATEGORY = {
+  "voxpedia-comecar": "Conceito cívico",
+  "voxpedia-mensagens": "Criptografia",
+  "voxpedia-comunidades": "Governança",
+  "voxpedia-rede": "Topologia P2P",
+  "voxpedia-privacidade": "Soberania de dados",
+  "voxpedia-tecnico": "Protocolo",
+};
+
 function section(id, title, lead, layersHtml) {
+  const n = String(SECTION_ORDER.indexOf(id) + 1).padStart(2, "0");
+  const category = SECTION_CATEGORY[id] || "Verbete";
   return `
-    <section class="voxpedia-section card" id="${id}" aria-labelledby="${id}-title">
-      <h2 id="${id}-title">${escapeHtml(title)}</h2>
+    <section class="voxpedia-section card agora-entry" id="${id}" aria-labelledby="${id}-title">
+      <header class="agora-entry-head">
+        <span class="agora-entry-num">${n}</span>
+        <h2 id="${id}-title" class="agora-entry-title">${escapeHtml(title)}</h2>
+        <span class="agora-stamp agora-stamp--bronze">${escapeHtml(category)}</span>
+      </header>
       <p class="desc voxpedia-lead">${lead}</p>
       ${layersHtml}
     </section>`;
@@ -279,9 +303,10 @@ function renderTecnico() {
 }
 
 function renderVoxpediaHero() {
-  return `<header class="voxpedia-hero card">
-    <p class="voxpedia-kicker">Ajuda · documentação viva</p>
+  return `<header class="voxpedia-hero agora-codex-hero">
+    <div class="agora-stamps"><span class="agora-stamp agora-stamp--bronze">Enciclopédia P2P</span><span class="agora-stamp">Tratado cívico</span></div>
     <h1>Voxpedia</h1>
+    <p class="agora-codex-subtitle">Glossário cívico &amp; técnico</p>
     <p class="desc voxpedia-hero-lead">
       <strong>Vox</strong> é uma rede social comunitária cooperativa: posts e comunidades no permaweb,
       mensagens privadas cifradas e uma malha que ajuda a carregar conteúdo entre aparelhos.
@@ -291,41 +316,52 @@ function renderVoxpediaHero() {
   </header>`;
 }
 
+const TOC_ITEMS = [
+  ["#voxpedia-comecar", "Começar"],
+  ["#voxpedia-mensagens", "Mensagens"],
+  ["#voxpedia-comunidades", "Comunidades"],
+  ["#voxpedia-rede", "Rede cooperativa"],
+  ["#voxpedia-privacidade", "Privacidade & dados"],
+  ["#voxpedia-tecnico", "Para curiosos (técnico)"],
+  ["#/ajuda/teste", "Teste aberto (testadores)"],
+];
+
 function renderVoxpediaToc() {
-  return `<nav class="voxpedia-toc card" aria-label="Índice da Voxpedia">
+  const items = TOC_ITEMS.map(([href, label], i) => `
+      <li><a href="${href}"><span class="agora-pylon${i === 0 ? "" : " agora-pylon--muted"}" aria-hidden="true"></span>${escapeHtml(label)}</a></li>`).join("");
+  return `<nav class="voxpedia-toc card agora-codex-toc" aria-label="Índice da Voxpedia">
+    <p class="agora-section-label">Compêndio</p>
+    <p class="agora-codex-toc-title">Tópicos do cânone</p>
     <p class="section-title">Nesta página</p>
-    <ul class="voxpedia-toc-list">
-      <li><a href="#voxpedia-comecar">Começar</a></li>
-      <li><a href="#voxpedia-mensagens">Mensagens</a></li>
-      <li><a href="#voxpedia-comunidades">Comunidades</a></li>
-      <li><a href="#voxpedia-rede">Rede cooperativa</a></li>
-      <li><a href="#voxpedia-privacidade">Privacidade & dados</a></li>
-      <li><a href="#voxpedia-tecnico">Para curiosos (técnico)</a></li>
-      <li><a href="#/ajuda/teste">Teste aberto (testadores)</a></li>
+    <ul class="voxpedia-toc-list">${items}
     </ul>
   </nav>`;
 }
 
-/** @returns {string} HTML da página Voxpedia */
+/** @returns {string} HTML da página Voxpedia (Stitch tela 13: códex com índice lateral). */
 export function renderVoxpedia() {
   return `
-    <article class="voxpedia-page">
-      ${renderVoxpediaHero()}
-      ${renderVoxpediaToc()}
-      ${renderGithubDocsAside()}
-      ${renderComecar()}
-      ${renderMensagens()}
-      ${renderComunidades()}
-      ${renderRede()}
-      ${renderPrivacidade()}
-      ${renderTecnico()}
-      <footer class="voxpedia-footer card">
-        <p class="desc">
-          <a class="voxpedia-gh-link" href="${VOX_GITHUB_DOCS.docsReadme}" target="_blank" rel="noopener noreferrer">Documentação técnica (GitHub)</a>
-          · <a href="download.html">Baixar Aplicativos (Desktop & Android)</a>
-          · <a href="revolucao.html">Revolução & Soberania Popular</a>
-          — código, specs e runbooks; o repositório é a fonte, não um helpdesk.
-        </p>
-      </footer>
+    <article class="voxpedia-page agora-codex">
+      <aside class="agora-codex-aside">
+        ${renderVoxpediaToc()}
+        ${renderGithubDocsAside()}
+      </aside>
+      <div class="agora-codex-main">
+        ${renderVoxpediaHero()}
+        ${renderComecar()}
+        ${renderMensagens()}
+        ${renderComunidades()}
+        ${renderRede()}
+        ${renderPrivacidade()}
+        ${renderTecnico()}
+        <footer class="voxpedia-footer card">
+          <p class="desc">
+            <a class="voxpedia-gh-link" href="${VOX_GITHUB_DOCS.docsReadme}" target="_blank" rel="noopener noreferrer">Documentação técnica (GitHub)</a>
+            · <a href="download.html">Baixar Aplicativos (Desktop & Android)</a>
+            · <a href="revolucao.html">Revolução & Soberania Popular</a>
+            — código, specs e runbooks; o repositório é a fonte, não um helpdesk.
+          </p>
+        </footer>
+      </div>
     </article>`;
 }
