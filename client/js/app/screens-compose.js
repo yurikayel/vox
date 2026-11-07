@@ -17,7 +17,8 @@ import * as mod from "../moderation.js";
 import * as communitySeed from "../community-seed-checklist.js";
 import { parseChatTranscriptToMarkdown } from "../chat-bridge.js";
 import { createCivicNotaryRecord } from "../perma-notary.js";
-import { bindComposeStepper } from "./compose-stepper.js";
+import { bindComposeStepper, goToComposeStep } from "./compose-stepper.js";
+import { attachInlineComposerHandlers, expandInlineComposer } from "../inline-composer.js";
 import { appendPollOptionsToBody } from "../civic-post.js";
 import { getActiveUser, makeShellProps } from "./context.js";
 import { resolveCommunityMetadata, resolveTopicContent } from "./screens-community.js";
@@ -366,16 +367,49 @@ function readPollOptions() {
 export async function showComposeTopic(communityId) {
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "compose", "Novo Post"));
-  render.renderComposeTopic(main, communityId);
+  const displayName = localAccount.getDisplayName() || "";
+  render.renderComposeTopic(main, communityId, { userRouteId: user || "", displayName });
   bindChatTranscriptImportHandler(user);
   applyQuotePrefillToTopicComposer();
   bindCivicTagSelector();
+  bindSphereChoice(communityId);
 
   const form = document.getElementById("form-compose-topic");
   if (form) {
     bindComposeStepper(form);
     form.addEventListener("submit", (e) => handleComposeTopicSubmit(e, communityId));
   }
+}
+
+/** Primeira escolha: Social abre o composer completo (mídias); Cívico segue as etapas. */
+function bindSphereChoice(communityId) {
+  const form = document.getElementById("form-compose-topic");
+  const social = document.getElementById("compose-social-panel");
+  let socialBound = false;
+  document.querySelector('[data-sphere="social"]')?.addEventListener("click", () => {
+    form.hidden = true;
+    social.hidden = false;
+    if (communityId) {
+      const comm = document.getElementById("inline-topic-comm");
+      if (comm) comm.value = communityId;
+    }
+    if (!socialBound) {
+      attachInlineComposerHandlers(() => { location.hash = communityId ? `#/c/${encodeURIComponent(communityId)}` : "#/"; });
+      socialBound = true;
+    }
+    expandInlineComposer();
+    document.getElementById("inline-topic-body")?.focus();
+  });
+  document.querySelector('[data-sphere="civic"]')?.addEventListener("click", () => {
+    const tag = document.getElementById("topic-civic-tag");
+    if (tag && !tag.value) document.querySelector('.civic-tag-btn[data-tag="[Pauta]"]')?.click();
+    goToComposeStep(form, 1);
+  });
+  social?.querySelector("[data-sphere-back]")?.addEventListener("click", () => {
+    social.hidden = true;
+    form.hidden = false;
+    goToComposeStep(form, 0);
+  });
 }
 
 export async function showComposeListing(communityId) {

@@ -4089,3 +4089,34 @@ body,
   .link-manual, .link-alt, .link-feedback { margin-left: 0; }
   .link-adv-form { grid-template-columns: 1fr; }
 }
+
+/* ── 31. Painel do anexo organizado ── */
+.agora-ui .inline-composer-preview { display: grid; gap: 0.5rem; }
+.composer-attach-line { display: flex; align-items: center; gap: 0.5rem; }
+.composer-attach-line .inline-composer-attach-meta { flex: 1; margin: 0; }
+.composer-attach-remove { width: 30px; height: 30px; flex-shrink: 0; border: 1px solid var(--sa-hairline); border-radius: 50%; background: transparent; color: var(--sa-on-surface-variant); cursor: pointer; }
+.composer-attach-remove:hover { color: var(--sa-terracotta); border-color: currentColor; }
+.agora-ui .composer-attach-weight { justify-self: start; padding: 0; background: none; border: none; font-size: 0.75rem; color: var(--sa-outline); }
+.composer-edit-row[style*="flex"], .composer-edit-row[style*="block"] { display: flex !important; flex-wrap: wrap; gap: 0.4rem; align-items: center; }
+.composer-edit-btn { padding: 0.4rem 0.75rem; border: 1px solid var(--sa-hairline); border-radius: 999px; background: var(--sa-surface-high); color: var(--sa-on-surface); font: inherit; font-size: 0.8125rem; cursor: pointer; }
+.composer-edit-btn[aria-expanded="true"] { border-color: var(--sa-primary); color: var(--sa-primary); }
+.inline-composer-preview:not([data-open="style"]) #lofi-filter-bar,
+.inline-composer-preview:not([data-open="aspect"]) #composer-aspect-bar { display: none !important; }
+.agora-ui #lofi-filter-bar .lofi-filter-label, .agora-ui #composer-aspect-bar .composer-aspect-label { display: none; }
+.inline-composer-tags-chips { display: inline-flex; gap: 4px; flex-wrap: wrap; }
+
+/* ── 32. Postar estilo Instagram: Social ou Cívico ── */
+.compose-sphere { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; }
+.compose-sphere-card { display: flex; flex-direction: column; align-items: flex-start; gap: 0.35rem; padding: 1.4rem 1.25rem; background: var(--sa-surface-high); border: 1px solid transparent; border-radius: var(--radius); color: var(--sa-on-surface); font: inherit; text-align: left; cursor: pointer; transition: border-color 0.15s, transform 0.1s; }
+.compose-sphere-card:hover, .compose-sphere-card:focus-visible { border-color: var(--sa-primary); transform: translateY(-1px); }
+.compose-sphere-card--civic:hover, .compose-sphere-card--civic:focus-visible { border-color: var(--sa-secondary); }
+.compose-sphere-icon { font-size: 2rem; }
+.compose-sphere-name { font-family: var(--font-epigraphic); font-size: 1.35rem; font-weight: 600; }
+.compose-sphere-desc { font-size: 0.875rem; color: var(--sa-on-surface-variant); line-height: 1.45; }
+.compose-sphere-more { margin: 1rem 0 0; font-size: 0.8125rem; color: var(--sa-outline); }
+.compose-sphere-more a { color: var(--sa-primary); }
+.compose-social-panel[hidden], #form-compose-topic[hidden] { display: none; }
+.compose-sphere-back { margin: 0 0 0.75rem; padding: 0; background: none; border: none; color: var(--sa-on-surface-variant); font: inherit; font-size: 0.875rem; cursor: pointer; }
+.agora-composer--post .civic-tag-btn[data-tag=""], .agora-composer--post .civic-tag-btn[data-tag="[Bug]"] { display: none; }
+.agora-composer--post .compose-social-panel .inline-composer { background: transparent; border: none; padding: 0; }
+@media (max-width: 640px) { .compose-sphere { grid-template-columns: minmax(0, 1fr); } }

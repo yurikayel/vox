@@ -9,7 +9,7 @@ test("compose-steps — cabeçalho mostra etapa N de M e progresso", () => {
   const html = renderStepHeader(2);
   assert.ok(html.includes(`Etapa 3 de ${COMPOSE_TOPIC_STEPS.length}`));
   assert.equal((html.match(/compose-step-seg is-done/g) || []).length, 3);
-  assert.ok(html.includes("Escreva"));
+  assert.ok(html.includes("Onde e sobre o quê?"));
 });
 
 test("compose-steps — só a primeira etapa começa visível; a última publica", () => {
@@ -31,4 +31,6 @@ test("compose-steps — compositor de post tem 5 etapas e preserva os campos", (
     assert.ok(html.includes(`id="${id}"`), `falta #${id}`);
   }
   assert.ok(html.includes("data-compose-review"));
+  assert.ok(html.includes('data-sphere="social"') && html.includes('data-sphere="civic"'), "primeiro escolhe Social ou Cívico");
+  assert.ok(html.includes('id="compose-social-panel"') && html.includes('id="inline-topic-file"'), "Social traz o composer com mídias");
 });
