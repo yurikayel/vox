@@ -42,7 +42,6 @@ function renderComposerFilterBar() {
       <button type="button" class="lofi-filter-btn" data-filter="xerox">📰 Xerox</button>
       <button type="button" class="lofi-filter-btn" data-filter="vhs">📼 VHS 90s</button>
       <button type="button" class="lofi-filter-btn" data-filter="risograph">🎨 Risógrafo</button>
-      <span class="lofi-weight-pill" id="lofi-weight-badge">⚡ ~45 KB (100% Grátis)</span>
     </div>`;
 }
 
@@ -73,14 +72,19 @@ function renderComposerPreviewWrap() {
       <div id="inline-topic-preview-video-wrap" class="inline-composer-preview-video hidden" hidden>
         <video id="inline-topic-preview-video" controls playsinline preload="metadata" style="width:100%; max-height:240px; display:block;"></video>
       </div>
-      <p id="inline-topic-attach-meta" class="inline-composer-attach-meta hidden" hidden aria-live="polite"></p>
+      <div class="composer-attach-line">
+        <p id="inline-topic-attach-meta" class="inline-composer-attach-meta hidden" hidden aria-live="polite"></p>
+        <button type="button" class="composer-attach-remove inline-composer-remove-img" id="btn-inline-remove-img" aria-label="Remover anexo" title="Remover anexo">✕</button>
+      </div>
+      <span class="lofi-weight-pill composer-attach-weight" id="lofi-weight-badge">⚡ ~45 KB (100% Grátis)</span>
+      <div class="composer-tag-bar composer-edit-row" id="composer-tag-bar" style="display:none;">
+        <button type="button" class="composer-edit-btn" data-edit-panel="style" aria-expanded="false">🎨 Estilo</button>
+        <button type="button" class="composer-edit-btn" data-edit-panel="aspect" aria-expanded="false">⬚ Proporção</button>
+        <button type="button" class="composer-edit-btn" id="btn-inline-tag-people" aria-haspopup="dialog" aria-expanded="false">🏷️ Marcar pessoas</button>
+        <div id="inline-composer-tags-chips" class="inline-composer-tags-chips"></div>
+      </div>
       ${renderComposerFilterBar()}
       ${renderComposerAspectBar()}
-      <div class="composer-tag-bar" id="composer-tag-bar" style="display:none; margin-top:8px; align-items:center; gap:8px; flex-wrap:wrap;">
-        <button type="button" class="btn btn-outline btn-xs" id="btn-inline-tag-people" aria-haspopup="dialog" aria-expanded="false">🏷️ Marcar pessoas</button>
-        <div id="inline-composer-tags-chips" class="inline-composer-tags-chips" style="display:inline-flex; gap:4px; flex-wrap:wrap;"></div>
-      </div>
-      <button type="button" class="btn btn-outline btn-sm inline-composer-remove-img" id="btn-inline-remove-img" style="margin-top:8px;">Remover anexo</button>
     </div>`;
 }
 
