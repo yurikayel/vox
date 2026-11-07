@@ -97,7 +97,7 @@ async function exchangeViaRelay(flow, code) {
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok || !data.handle) throw new Error(data.error || "Não foi possível concluir o login.");
-  return { netId: flow.provider, handle: data.handle, id: data.id || "", name: data.name || "" };
+  return { netId: flow.provider, handle: data.handle, id: data.id || "", name: data.name || "", avatar: data.avatar || "" };
 }
 
 /** Lê e consome o callback guardado por oauth-callback.html. */

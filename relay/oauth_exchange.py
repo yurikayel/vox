@@ -17,7 +17,7 @@ TIMEOUT = 12
 PROVIDERS = {
     "twitter": {
         "token_url": "https://api.x.com/2/oauth2/token",
-        "me_url": "https://api.x.com/2/users/me",
+        "me_url": "https://api.x.com/2/users/me?user.fields=profile_image_url",
         "basic_auth": True,
         "id_field": "client_id",
     },
@@ -35,7 +35,7 @@ PROVIDERS = {
     },
     "tiktok": {
         "token_url": "https://open.tiktokapis.com/v2/oauth/token/",
-        "me_url": "https://open.tiktokapis.com/v2/user/info/?fields=open_id,username,display_name",
+        "me_url": "https://open.tiktokapis.com/v2/user/info/?fields=open_id,username,display_name,avatar_url",
         "basic_auth": False,
         "id_field": "client_key",
     },
@@ -90,12 +90,12 @@ def parse_identity(provider, me):
     """Normaliza a resposta /me de cada rede para {handle, id, name}."""
     if provider == "twitter":
         d = me.get("data") or {}
-        return {"handle": d.get("username", ""), "id": d.get("id", ""), "name": d.get("name", "")}
+        return {"handle": d.get("username", ""), "id": d.get("id", ""), "name": d.get("name", ""), "avatar": d.get("profile_image_url", "")}
     if provider == "github":
         return {"handle": me.get("login", ""), "id": str(me.get("id", "")), "name": me.get("name") or ""}
     if provider == "tiktok":
         u = (me.get("data") or {}).get("user") or {}
-        return {"handle": u.get("username", ""), "id": u.get("open_id", ""), "name": u.get("display_name", "")}
+        return {"handle": u.get("username", ""), "id": u.get("open_id", ""), "name": u.get("display_name", ""), "avatar": u.get("avatar_url", "")}
     return {"handle": me.get("username", ""), "id": str(me.get("id", "")), "name": me.get("name") or ""}
 
 

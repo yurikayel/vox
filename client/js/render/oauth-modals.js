@@ -20,20 +20,32 @@ const OAUTH_SVG_META = `<svg class="oauth-btn__icon oauth-btn__icon--meta" width
 
 const OAUTH_SVG_GITHUB = `<svg class="oauth-btn__icon oauth-btn__icon--github" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>`;
 
+const OAUTH_SVG_BSKY = `<svg class="oauth-btn__icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="#1185fe" d="M5.2 3.6C7.9 5.6 10.8 9.7 12 12c1.2-2.3 4.1-6.4 6.8-8.4 2-1.4 5.2-2.6 5.2 1 0 .7-.4 6.1-.7 7-.9 3.1-4.1 3.9-6.9 3.4 4.9.8 6.2 3.6 3.5 6.4-5.1 5.2-7.3-1.3-7.9-3-.1-.3-.1-.5-.2-.3 0-.2 0 0-.2.3-.6 1.7-2.8 8.2-7.9 3-2.7-2.8-1.4-5.6 3.5-6.4-2.8.5-6-.3-6.9-3.4C.4 10.7 0 5.3 0 4.6c0-3.6 3.2-2.4 5.2-1z"/></svg>`;
+
+const OAUTH_SVG_X = `<svg class="oauth-btn__icon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="M18.9 1.2h3.7l-8 9.2L24 22.8h-7.4l-5.8-7.6-6.6 7.6H.5l8.6-9.8L0 1.2h7.6l5.2 6.9 6.1-6.9Zm-1.3 19.4h2L6.5 3.3H4.3l13.3 17.3Z"/></svg>`;
+
+const OAUTH_SVG_TIKTOK = `<svg class="oauth-btn__icon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="M16.6 0h-3.9v16.3a3.4 3.4 0 1 1-2.4-3.3V9a7.3 7.3 0 1 0 6.3 7.3V8.1a9.3 9.3 0 0 0 5.4 1.7V5.9A5.4 5.4 0 0 1 16.6 0Z"/></svg>`;
+
+const OAUTH_SVG_KWAI = `<svg class="oauth-btn__icon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="M4 3h4v8l7-8h5l-7.6 8.3L21 21h-5.2l-6-7.2L8 15.8V21H4z"/></svg>`;
+
+/** Botões de importar nome e foto, empilhados na vertical. Kwai: sem API de login pública ainda. */
+const IMPORT_PROVIDERS = [
+  { id: "google", cls: "google", icon: () => OAUTH_SVG_GOOGLE, label: "Google" },
+  { id: "meta", cls: "meta", icon: () => OAUTH_SVG_META, label: "Meta" },
+  { id: "bsky", cls: "bsky", icon: () => OAUTH_SVG_BSKY, label: "Bluesky" },
+  { id: "twitter", cls: "twitter", icon: () => OAUTH_SVG_X, label: "X (Twitter)" },
+  { id: "tiktok", cls: "tiktok", icon: () => OAUTH_SVG_TIKTOK, label: "TikTok" },
+  { id: "github", cls: "github", icon: () => OAUTH_SVG_GITHUB, label: "GitHub" },
+  { id: "kwai", cls: "kwai", icon: () => OAUTH_SVG_KWAI, label: "Kwai", soon: true },
+];
+
 function renderOAuthProviderButtonsHtml() {
-  return `<div class="oauth-enrich-actions">
-    <button type="button" id="btn-oauth-google" class="oauth-btn oauth-btn--google" aria-label="Entrar com Google para importar nome e foto">
-      ${OAUTH_SVG_GOOGLE}
-      <span class="oauth-btn__label">Continuar com Google</span>
-    </button>
-    <button type="button" id="btn-oauth-meta" class="oauth-btn oauth-btn--meta" aria-label="Entrar com Meta para importar nome e foto">
-      ${OAUTH_SVG_META}
-      <span class="oauth-btn__label">Continuar com Meta</span>
-    </button>
-    <button type="button" id="btn-oauth-github" class="oauth-btn oauth-btn--github" aria-label="Entrar com GitHub para importar nome e foto">
-      ${OAUTH_SVG_GITHUB}
-      <span class="oauth-btn__label">Continuar com GitHub</span>
-    </button>
+  const btns = IMPORT_PROVIDERS.map((p) => `
+    <button type="button" id="btn-oauth-${p.id}" class="oauth-btn oauth-btn--${p.cls}"${p.soon ? ' disabled title="O Kwai ainda não oferece login para sites."' : ""} aria-label="Entrar com ${p.label} para importar nome e foto">
+      ${p.icon()}
+      <span class="oauth-btn__label">Entrar com ${p.label}${p.soon ? " <small>(em breve)</small>" : ""}</span>
+    </button>`).join("");
+  return `<div class="oauth-enrich-actions oauth-enrich-actions--stack">${btns}
   </div>`;
 }
 

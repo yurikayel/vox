@@ -4089,3 +4089,12 @@ body,
   .link-manual, .link-alt, .link-feedback { margin-left: 0; }
   .link-adv-form { grid-template-columns: 1fr; }
 }
+
+/* ── 30. Importar nome e foto: provedores empilhados ── */
+.genesis-overlay .oauth-enrich-actions.oauth-enrich-actions--stack { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.5rem; }
+.genesis-overlay .oauth-enrich-actions--stack .oauth-btn { width: 100%; justify-content: flex-start; padding-left: 1rem; gap: 0.75rem; }
+.genesis-overlay .oauth-btn--bsky { background: #fff; color: #1185fe; border: 1px solid #d0d7de; }
+.genesis-overlay .oauth-btn--twitter, .genesis-overlay .oauth-btn--tiktok { background: #000; color: #fff; border: 1px solid #333; }
+.genesis-overlay .oauth-btn--kwai { background: var(--sa-surface-high); color: var(--sa-on-surface-variant); border: 1px dashed var(--sa-hairline); }
+.genesis-overlay .oauth-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.genesis-overlay .oauth-btn small { font-weight: 400; opacity: 0.8; }

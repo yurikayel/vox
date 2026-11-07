@@ -21,7 +21,9 @@
           if (q.get(k)) data[k] = q.get(k);
         });
         try { sessionStorage.setItem("vox-oauth-callback", JSON.stringify(data)); } catch (e) {}
-        location.replace("./#/settings/linked-accounts");
+        var purpose = "";
+        try { purpose = sessionStorage.getItem("vox-oauth-purpose") || ""; } catch (e) {}
+        location.replace(purpose === "profile" ? "./#/" : "./#/settings/linked-accounts");
       })();
     </script>
   </body>

@@ -31,8 +31,8 @@ class OAuthExchangeTest(unittest.TestCase):
 
     def test_twitter_returns_handle_and_discards_token(self):
         seen = []
-        out = ox.exchange(self.payload(), ENV, fake_opener({"access_token": "TKN"}, {"data": {"id": "1", "username": "yurix", "name": "Yuri"}}, seen))
-        self.assertEqual(out, {"provider": "twitter", "handle": "yurix", "id": "1", "name": "Yuri"})
+        out = ox.exchange(self.payload(), ENV, fake_opener({"access_token": "TKN"}, {"data": {"id": "1", "username": "yurix", "name": "Yuri", "profile_image_url": "https://pbs/x.jpg"}}, seen))
+        self.assertEqual(out, {"provider": "twitter", "handle": "yurix", "id": "1", "name": "Yuri", "avatar": "https://pbs/x.jpg"})
         self.assertNotIn("TKN", json.dumps(out))
         token_req = seen[0]
         self.assertTrue(token_req.get_header("Authorization").startswith("Basic "))

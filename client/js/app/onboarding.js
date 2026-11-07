@@ -1,6 +1,8 @@
 /** @file Cantina gate, OAuth enrich (Google / Meta / GitHub), pact modals. */
 
 import * as render from "../render.js";
+import * as socialLogin from "../social-login.js";
+import * as linkedAccounts from "../linked-accounts.js";
 import * as share from "../share.js";
 import * as localAccount from "../local-account.js";
 import * as oauthProfile from "../oauth-profile.js";
@@ -72,12 +74,66 @@ function applyOAuthProviderAvailability() {
       btnMeta.disabled = !metaReady;
       if (!metaReady) btnMeta.title = "Meta não configurado (oauth.json)";
     }
-    if (!googleReady && !metaReady) {
-      setOAuthEnrichError(
-        "Google/Meta requerem oauth.json — você pode entrar com GitHub agora ou clicar em Pular.",
-      );
-    }
   });
+  socialLogin.availableLoginProviders().then((avail) => {
+    for (const id of ["twitter", "tiktok"]) {
+      const btn = document.getElementById(`btn-oauth-${id}`);
+      if (btn && !avail[id]) {
+        btn.disabled = true;
+        btn.title = "Login ainda não configurado neste Vox.";
+      }
+    }
+  }).catch(() => {});
+}
+
+export const PROFILE_PURPOSE_KEY = "vox-oauth-purpose";
+
+/** Bluesky/X/TikTok: sai para a rede e volta pelo callback direto para o onboarding. */
+function bindRedirectImportButtons() {
+  for (const id of ["bsky", "twitter", "tiktok"]) {
+    document.getElementById(`btn-oauth-${id}`)?.addEventListener("click", async (e) => {
+      const btn = e.currentTarget;
+      setOAuthButtonBusy(btn, true);
+      try {
+        sessionStorage.setItem(PROFILE_PURPOSE_KEY, "profile");
+        await socialLogin.startSocialLogin(id);
+      } catch (err) {
+        sessionStorage.removeItem(PROFILE_PURPOSE_KEY);
+        setOAuthEnrichError(err?.message || "Não foi possível iniciar o login.");
+        setOAuthButtonBusy(btn, false);
+      }
+    });
+  }
+}
+
+async function fetchBskyPublicProfile(handle) {
+  try {
+    const r = await fetch(`https://public.api.bsky.app/xrpc/app.bsky.actor.getProfile?actor=${encodeURIComponent(handle)}`);
+    return r.ok ? await r.json() : {};
+  } catch {
+    return {};
+  }
+}
+
+/**
+ * Volta de um login iniciado em "Importar nome e foto": aplica nome/foto ao perfil, já deixa
+ * a rede vinculada para replicação e segue para o pacto.
+ */
+async function completeProfileImport(cb) {
+  sessionStorage.removeItem(PROFILE_PURPOSE_KEY);
+  try {
+    const r = await socialLogin.completeSocialLogin(cb);
+    const pub = r.netId === "bsky" ? await fetchBskyPublicProfile(r.handle) : {};
+    const displayName = pub.displayName || r.name || r.handle;
+    localAccount.setProfileEnrichment({ displayName, avatarUrl: pub.avatar || r.avatar || "", oauthProvider: r.netId });
+    linkedAccounts.saveLinkedAccount(r.netId, { handle: r.handle || "", did: r.did || "", accountId: r.id || "", displayName, enabled: true, verified: true, via: "oauth" });
+    oauthProfile.skipOAuthEnrichment();
+    share.showToast(`Bem-vindo(a), ${displayName}!`);
+    syncIdentityAndDirectoryAfterOnboarding();
+  } catch (err) {
+    share.showToast(err?.message || "Não foi possível importar o perfil.", "error");
+  }
+  checkOAuthEnrichStep();
 }
 
 function syncIdentityAndDirectoryAfterOnboarding() {
@@ -176,6 +232,7 @@ export function openOAuthEnrichModal({ onComplete, withPact = false } = {}) {
     render.showGenesisStep(modalContainer, go.dataset.genesisGo);
   });
   applyOAuthProviderAvailability();
+  bindRedirectImportButtons();
   bindCustomNameForm(modalContainer, onComplete);
   bindSovereignPassphraseForm(modalContainer, onComplete);
 
@@ -192,6 +249,13 @@ export function openOAuthEnrichModal({ onComplete, withPact = false } = {}) {
 }
 
 export function checkOAuthEnrichStep() {
+  if (sessionStorage.getItem(PROFILE_PURPOSE_KEY) === "profile") {
+    const cb = socialLogin.takePendingCallback();
+    if (cb) {
+      void completeProfileImport(cb);
+      return;
+    }
+  }
   if (oauthProfile.hasCompletedOAuthStep()) {
     checkPactModal();
     return;
@@ -233,15 +297,6 @@ async function finishPactAcceptance(modalContainer) {
   const user = await localAccount.getRouteId().catch(() => "");
   await ensureOnboardingSideEffects(user);
   share.showToast("Bem-vindo ao Vox! Rede ativa.");
-  if (user) {
-    render.renderPostPactConnectModal(modalContainer, user);
-    document.getElementById("btn-post-pact-connect-close")?.addEventListener("click", () => {
-      render.closePostPactConnectModal(modalContainer);
-    });
-    document.getElementById("btn-post-pact-share-connect")?.addEventListener("click", () => {
-      void share.shareConnect({ routeId: user, displayName: localAccount.getDisplayName() });
-    });
-  }
   const cur = parseRoute();
   if (cur.name === "home") showHome(cur.feed);
 }
