@@ -30,6 +30,7 @@ import { rememberVisible } from "../repost-index.js";
 import { groupRepliesForThread } from "../reply-thread.js";
 import { renderPhotoHiddenMessageHtml } from "./photo-chrome.js";
 import { renderCivicBlock, renderCivicPendingNote, renderCivicFeedIntro } from "./civic-block.js";
+import { isElectoralModeActive } from "../electoral-period.js";
 
 export function renderComposerStrip(displayName = "") {
   return renderInlineComposer({ displayName });
@@ -857,6 +858,9 @@ function renderCitizenShieldBarHtml() {
 }
 
 function renderBskySuggestionsRow() {
+  if (isElectoralModeActive()) {
+    return '<p class="meta bsky-suggestions-row" role="note">Período eleitoral: o Vox não sugere perfis nem ranqueia conteúdo político (Res. TSE 23.755/2026).</p>';
+  }
   return `
     <div class="bsky-suggestions-row">
       <span class="bsky-sugg-label">Sugestões cívicas:</span>
