@@ -11,6 +11,7 @@ import {
   renderAvatarHtml,
   formatTimeAgo,
   postTimeParts,
+  renderReportMenuItem,
 } from "./util.js";
 import { renderPostOwnerMenu, renderQuarantineAction, quarantineShareAttrs } from "./feed.js";
 import { renderPhotoTagLayerHtml } from "./photo-tag-pins.js";
@@ -104,7 +105,7 @@ function renderTopicStarButton(topicId, topic) {
 
 function renderTopicFeedbackActions(topicId, topic, author) {
   const likeBtn = renderTopicLikeButton(topicId, topic);
-  const commentBtn = `<button type="button" class="action-btn btn-comment" data-id="${escapeHtml(topicId)}" data-comm="${escapeHtml(topic?.communityId || "")}" aria-label="Comentar" onclick="document.querySelector('#compose-reply, .thread-reply-input, .post-comment-input')?.focus() || location.assign('#/compose/reply?t=${encodeURIComponent(topicId)}&c=${encodeURIComponent(topic?.communityId || "")}')">
+  const commentBtn = `<button type="button" class="action-btn btn-comment" data-id="${escapeHtml(topicId)}" data-comm="${escapeHtml(topic?.communityId || "")}" aria-label="Comentar" data-focus-target="#compose-reply, .thread-reply-input, .post-comment-input" data-focus-fallback="#/compose/reply?t=${encodeURIComponent(topicId)}&amp;c=${encodeURIComponent(topic?.communityId || "")}">
     <svg class="action-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
   </button>`;
   const repostBtn = renderRepostBtn({ ...(topic || {}), id: topicId, title: topic?.title || "", author }, { size: 18 });
@@ -154,6 +155,7 @@ function renderTopicOverflowMenu(topicId, topic, author, authorDisplay, authorHa
       ${starBtn}
       ${copyMdBtn}
       ${quarAction}
+      ${renderReportMenuItem(topicId, author, topic?.communityId || "")}
       ${modBtns}
     </div>
   </details>`;

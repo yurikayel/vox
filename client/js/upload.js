@@ -1,5 +1,6 @@
 import { getStoredJwk, ensureWallet } from "./wallet.js";
 import { createSignedDataItem } from "./ans104.js";
+import { assertFeatureEnabled } from "./feature-flags.js";
 
 export const TURBO_ENDPOINTS = Object.freeze([
   "https://upload.ardrive.io/v1/tx",
@@ -72,6 +73,7 @@ async function postViaL1(payload, tags, jwk) {
 }
 
 export async function postData(dataObj, tags = [], options = {}) {
+  assertFeatureEnabled("arweaveUpload");
   let jwk = options.jwk || getStoredJwk();
   if (!jwk && options.autoCreate) {
     jwk = await ensureWallet();
@@ -104,6 +106,7 @@ export async function postData(dataObj, tags = [], options = {}) {
 }
 
 export async function postBinary(rawBytes, tags = [], options = {}) {
+  assertFeatureEnabled("arweaveUpload");
   let jwk = options.jwk || getStoredJwk();
   if (!jwk && options.autoCreate) {
     jwk = await ensureWallet();

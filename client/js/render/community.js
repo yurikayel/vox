@@ -32,7 +32,7 @@ export function renderCommunityAvatarHtml(meta = {}, communityId = "", sizeClass
   const accent = getCommunityColor(communityId);
   if (image) {
     return `<div class="community-avatar-box ${sizeClass}" style="--comm-avatar-accent:${accent};">
-      <img class="community-avatar-img" src="${escapeHtml(image)}" alt="${escapeHtml(title)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
+      <img class="community-avatar-img" src="${escapeHtml(image)}" alt="${escapeHtml(title)}" data-fallback-next="1" />
       <div class="community-avatar-fallback" style="display:none; background:${accent};">${escapeHtml(initial)}</div>
     </div>`;
   }
@@ -71,7 +71,7 @@ function resolveCommunityMemberCount(meta, communityId) {
   if (meta && meta.memberCount != null && !Number.isNaN(Number(meta.memberCount))) {
     return Number(meta.memberCount);
   }
-  if (communityId === mock.MOCK_DEMO_COMMUNITY.id) return mock.MOCK_DEMO_UF_COUNT;
+  if (communityId === mock.MOCK_DEMO_COMMUNITY.id && mock.isDemoMode()) return mock.MOCK_DEMO_UF_COUNT;
   if (communityId === "vox" || meta?.isOfficial) return 1;
   return null;
 }
@@ -110,7 +110,7 @@ function renderCommunityWelcomeRecado(text) {
 function resolveCommunityOnlinePeople(recentPeople, communityId, limit = 9) {
   const people = recentPeople.slice(0, limit);
   if (people.length >= limit) return people;
-  if (communityId !== mock.MOCK_DEMO_COMMUNITY.id) return people;
+  if (communityId !== mock.MOCK_DEMO_COMMUNITY.id || !mock.isDemoMode()) return people;
   const seen = new Set(people.map((p) => p.routeId));
   for (const routeId of mock.UF_ROUTE_IDS) {
     if (people.length >= limit) break;

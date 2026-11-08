@@ -22,9 +22,29 @@ test("mock - mockTopics retorna lista vazia para qualquer comunidade", () => {
   assert.equal(tour.demo, false);
 });
 
-test("mock - getMockProfile rejeita perfis demo legados e preserva bot vox", () => {
-  assert.ok(mock.getMockProfile("vx_demo_mg"));
-  assert.ok(mock.getMockProfile("vx_demo_sp"));
+test("mock - LAN-10: fora do modo demonstração, perfis UF fictícios não resolvem", () => {
+  mock.setDemoMode(false);
+  assert.equal(mock.isDemoMode(), false);
+  assert.equal(mock.getMockProfile("vx_demo_mg"), null);
+  assert.equal(mock.getAuthorDisplay("vx_demo_mg"), "");
+  assert.equal(mock.getAuthorPixKey("vx_demo_mg"), "");
+  assert.equal(mock.findMockByPixKey("alice.mg@voxbrasil.org"), null);
+});
+
+test("mock - LAN-10: modo demonstração explícito liga os perfis UF (e chave Pix fictícia)", () => {
+  mock.setDemoMode(true);
+  try {
+    const mg = mock.getMockProfile("vx_demo_mg");
+    assert.ok(mg);
+    assert.ok(mg.isStereotypeDemo);
+    assert.ok(mock.findMockByPixKey(mg.pixKey));
+  } finally {
+    mock.setDemoMode(false);
+  }
+});
+
+test("mock - getMockProfile preserva bot vox fora do modo demonstração", () => {
+  mock.setDemoMode(false);
   assert.equal(mock.getMockProfile("vx_desconhecido"), null);
   const voxOfficial = mock.getMockProfile("vx_voxbrasil_welcome");
   assert.ok(voxOfficial);

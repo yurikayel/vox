@@ -3,6 +3,7 @@
 import * as render from "../render.js";
 import * as share from "../share.js";
 import * as brcode from "../brcode.js";
+import * as featureFlags from "../feature-flags.js";
 
 export function getOrCreateZapModalContainer() {
   let container = document.getElementById("zap-modal-container");
@@ -16,6 +17,10 @@ export function getOrCreateZapModalContainer() {
 
 export function openZapModal({ pixKey, authorName = "Autor", title = "", defaultAmount = 5 } = {}) {
   if (!pixKey) return;
+  if (!featureFlags.isFeatureEnabled("pixZaps")) {
+    share.showToast(featureFlags.disabledMessage("pixZaps"), "error");
+    return;
+  }
   const container = getOrCreateZapModalContainer();
   render.renderZapModal(container, { authorName, pixKey, title, defaultAmount });
   bindZapModalEvents(container, { pixKey, authorName });

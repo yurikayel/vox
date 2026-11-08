@@ -1,6 +1,7 @@
 /** @file OAuth, cantina gate, pact/zap/edit modals, people search. */
 import { renderPactModalHtml, renderPactStepHtml } from "./welcome-pact.js";
 import * as brcode from "../brcode.js";
+import { PIX_PAYER_CHECK_NOTICE_PT } from "../pix-key.js";
 import * as i18n from "../i18n-pt-br.js";
 import * as postOwnership from "../post-ownership.js";
 import * as localAccount from "../local-account.js";
@@ -449,6 +450,7 @@ export function renderZapModal(container, { author: _author = "", authorName = "
         <button id="btn-copy-zap-payload" class="btn btn-primary" style="width:100%; margin-bottom:0.75rem; font-weight:600;">
           ⚡ Copiar Pix Copia e Cola
         </button>
+        <p class="zap-payer-check" role="note" style="font-size:0.78rem; line-height:1.4; margin:0 0 0.5rem;">🔎 ${escapeHtml(PIX_PAYER_CHECK_NOTICE_PT)}</p>
         <div class="zap-disclaimer banner-info" style="font-size:0.74rem; line-height:1.4; margin:0; padding:0.5rem 0.75rem;">
           🛡️ <strong>O Vox não é PSP:</strong> Código gerado 100% offline no seu navegador. O Vox não custodia valores nem cobra taxas. A liquidação é feita diretamente no seu banco pelo Banco Central.
         </div>

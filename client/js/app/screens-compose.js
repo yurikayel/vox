@@ -5,6 +5,8 @@ import * as render from "../render.js";
 import * as mock from "../mock.js";
 import * as wallet from "../wallet.js";
 import * as upload from "../upload.js";
+import * as featureFlags from "../feature-flags.js";
+import * as permanence from "../permanence-notice.js";
 import * as share from "../share.js";
 import * as cacheNode from "../cache-node.js";
 import * as peers from "../peers.js";
@@ -134,9 +136,17 @@ async function handleCommunityCreate(state, e) {
   }
 }
 
+/** LAN-08: se o recurso estiver pausado no kill-switch, mostra o aviso e retorna true. */
+function renderIfPaused(main, flag) {
+  if (featureFlags.isFeatureEnabled(flag)) return false;
+  render.renderError(main, featureFlags.disabledMessage(flag));
+  return true;
+}
+
 export async function showComposeCommunity() {
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "compose", "Nova Comunidade"));
+  if (renderIfPaused(main, "communityCreate")) return;
   render.renderComposeCommunity(main);
 
   const state = { photoDataUrl: "" };
@@ -199,6 +209,7 @@ function applyQuotePrefillToTopicComposer() {
 
 async function tryUploadTopicToPermaweb(topicId, finalComm, title, body) {
   if (!wallet.hasWallet()) return null;
+  if (!(await permanence.confirmPermanentPublish())) return permanence.MESH_ONLY_RESULT;
   try {
     const tags = upload.buildTags("topic", {
       "Community-Id": finalComm,
@@ -256,6 +267,8 @@ function showTopicPublishToast(permawebResult) {
   if (permawebResult?.success) {
     const badge = permawebResult.via === "turbo" ? "Turbo ⚡" : "Arweave";
     share.showToast(`Post publicado no P2P e gravado na Permaweb (${badge})!`);
+  } else if (permawebResult?.skipped === permanence.CHOICE_MESH) {
+    share.showToast("Post publicado só na malha P2P (não permanente).");
   } else if (wallet.hasWallet()) {
     share.showToast("Post publicado no P2P local (Permaweb indisponível).", "warning");
   } else {
@@ -416,6 +429,7 @@ export async function showComposeListing(communityId) {
   const targetComm = communityId || mock.MOCK_DEMO_COMMUNITY_FEIRA.id;
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "compose", "Nova Oferta"));
+  if (renderIfPaused(main, "feira")) return;
 
   let meta = { id: targetComm, title: targetComm, commercialEnabled: false };
   try {
@@ -653,6 +667,7 @@ export async function showComposeReply(topicId, communityId, parentId = "") {
 
 async function tryUploadReplyToPermaweb(topicId, communityId, body, replyId, authorDisplay) {
   if (!wallet.hasWallet()) return;
+  if (!(await permanence.confirmPermanentPublish())) return;
   try {
     const tags = upload.buildTags("reply", {
       "Reply-To": topicId,

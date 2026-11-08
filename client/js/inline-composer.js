@@ -10,6 +10,7 @@ import * as mediaBlob from "./media-blob.js";
 import * as photoTags from "./photo-tags.js";
 import { openPhotoTagPicker } from "./app/photo-tag-picker.js";
 import { escapeHtml } from "./render/util.js";
+import * as permanence from "./permanence-notice.js";
 
 let inlineComposerImageDataUrl = "";
 let inlineComposerMedia = { type: "", dataUrl: "", byteLength: 0 };
@@ -130,6 +131,7 @@ async function uploadTopicMediaToPermaweb(blob) {
 
 async function uploadTopicToPermaweb({ topicId, commSlug, title, body, blob }) {
   if (!wallet.hasWallet()) return null;
+  if (!(await permanence.confirmPermanentPublish())) return permanence.MESH_ONLY_RESULT;
   try {
     const mediaTxId = await uploadTopicMediaToPermaweb(blob);
     const tags = upload.buildTags("topic", {
@@ -156,6 +158,8 @@ function showPublishToast(permawebResult) {
   if (permawebResult?.success) {
     const badge = permawebResult.via === "turbo" ? "Turbo ⚡" : "Arweave";
     share.showToast(`Post publicado no P2P e gravado na Permaweb (${badge})!`);
+  } else if (permawebResult?.skipped === permanence.CHOICE_MESH) {
+    share.showToast("Post publicado só na malha P2P (não permanente).");
   } else if (wallet.hasWallet()) {
     share.showToast("Post publicado no P2P local (Permaweb indisponível).", "warning");
   } else {
