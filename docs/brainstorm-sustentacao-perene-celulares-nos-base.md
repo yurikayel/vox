@@ -33,7 +33,7 @@ flowchart LR
 ### A. Upload Descentralizado Direto (Client-to-Permaweb)
 - O cliente JavaScript no navegador já monta e assina itens ANS-104 nativamente (`ans104.js`).
 - Posts, fotos comprimidas (WebP Lo-Fi $\le 50\text{ KiB}$) e cartões de identidade são enviados diretamente do celular do usuário para os endpoints do Turbo Bundler (`https://upload.ardrive.io` / `https://turbo-gateway.com/tx`).
-- **Custo:** R$ 0,00 para sempre (itens $\le 100\text{ KiB}$ são permanentemente subsidiados com 0 AR no Turbo Free Tier).
+- **Custo:** ~~R$ 0,00 para sempre~~ — **desatualizado (2026-11-07):** o grátis do Turbo tem cota (~10 MiB por carteira/IP, segundo `upload.ardrive.io/info`). Ver [INFRA-CUSTOS.md](./INFRA-CUSTOS.md).
 
 ### B. Leitura Multi-Gateway com Consenso e Quorum
 - Não depender de um único gateway Arweave. O cliente consulta uma lista circular de gateways públicos:

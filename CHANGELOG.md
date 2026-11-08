@@ -9,6 +9,7 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 ### Documentação
 - Revisão de estado de nov/2026: novos [CONTRIBUTING.md](./CONTRIBUTING.md), [docs/FEATURES.md](./docs/FEATURES.md), [docs/INFRA-CUSTOS.md](./docs/INFRA-CUSTOS.md), [docs/relay-api.md](./docs/relay-api.md), [docs/TESTES.md](./docs/TESTES.md), [docs/ROADMAP.md](./docs/ROADMAP.md), [índice de ADRs](./docs/adr/README.md) e [ADR-017](./docs/adr/017-consolidacao-roadmap-unico.md) (ROADMAP único substitui o dossiê N=25 como checklist vivo).
 - Números de testes e `CACHE_NAME` passam a viver só no README e no `release-metadata.json`.
+- Corrigida a premissa de "upload grátis para sempre": o Turbo expõe uma cota grátis (~10 MiB por carteira/IP) em `upload.ardrive.io/info`. INFRA-CUSTOS, FEATURES, ROADMAP (REV-07) e a feature F5 foram revisados.
 - Brainstorm de 10 features de autossustento a custo ~zero + 3 prompts de pesquisa: [docs/brainstorm-autossustento-10-features-2026-11.md](./docs/brainstorm-autossustento-10-features-2026-11.md).
 
 ## SW v7.32 — 2026-11-07
