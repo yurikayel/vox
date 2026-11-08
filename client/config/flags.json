@@ -1,0 +1,10 @@
+{
+  "_doc": "Kill-switch LAN-08. Mude um valor para false e faça deploy para pausar o recurso em todos os clientes na próxima recarga. 'notice' (até 280 caracteres) aparece no topo do app. Ver docs/backlog-lancamento-publico-2026-11.md.",
+  "flags": {
+    "arweaveUpload": true,
+    "feira": true,
+    "pixZaps": true,
+    "communityCreate": true
+  },
+  "notice": ""
+}

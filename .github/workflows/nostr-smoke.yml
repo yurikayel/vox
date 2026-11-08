@@ -1,0 +1,36 @@
+name: Nostr Smoke — relays de sinalização (REV-19)
+
+# Publica e lê um evento EFÊMERO (kind 25050, não é guardado pelos relays) em cada relay
+# de client/config/signaling.json e grava a taxa de sucesso no resumo do job e num artefato.
+# Pré-requisito da sinalização por Nostr (REV-09). Ver docs/pesquisa-complementar-2026-11.md §1-G.
+
+on:
+  schedule:
+    - cron: "17 9 * * 1" # segundas, 09:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nostr-smoke
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+      - name: Testar relays Nostr
+        run: node tools/nostr-smoke.mjs --json nostr-smoke.json --timeout 8000 --signaling
+      - name: Guardar resultado
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nostr-smoke-${{ github.run_id }}
+          path: nostr-smoke.json
+          retention-days: 90

@@ -4,6 +4,7 @@
  */
 import { escapeHtml } from "./util.js";
 import { renderSteps, renderReviewList } from "./compose-steps.js";
+import { PIX_RECEIVER_NAME_NOTICE_PT } from "../pix-key.js";
 
 function wizardShell({ backHref, kicker, formId, stepsHtml }) {
   return `
@@ -95,6 +96,7 @@ export function renderWalletWizard(main, { hasWallet = false, pix = "" } = {}) {
       <a class="agora-btn agora-btn--secondary" href="#/backup">Criar Senha Soberana</a>` },
     { key: "pix", title: "Chave Pix para apoios (opcional)", body: `
       <input type="text" id="wg-pix" class="form-control agora-inscription" value="${escapeHtml(pix)}" placeholder="E-mail, celular, CPF ou chave aleatória" aria-label="Chave Pix" />
+      <p class="desc pix-name-notice" role="note">${escapeHtml(PIX_RECEIVER_NAME_NOTICE_PT)}</p>
       <p class="compose-step-lead">Aparece no seu perfil para apoios diretos. O Vox não processa pagamentos.</p>` },
     { key: "review", title: "Revisar", body: renderReviewList([{ label: "Carteira", from: "wg-mode" }, { label: "Pix", from: "wg-pix", empty: "Sem Pix" }]) },
   ];

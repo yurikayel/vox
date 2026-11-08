@@ -235,7 +235,9 @@ test("render - painel Sustentada por vizinhos e seed checklist", () => {
   assert.ok(!html.includes("leaderboard"));
 });
 
-test("render - renderCommunity header compacto, Entrar e layout", () => {
+test("render - renderCommunity header compacto, Entrar e layout", (t) => {
+  mock.setDemoMode(true); // persona fictícia exige modo demonstração (LAN-10)
+  t.after(() => mock.setDemoMode(false));
   const main = createContainer();
   render.renderCommunity(main, "demo-aprenda-vox", [], mock.MOCK_DEMO_COMMUNITY, {
     isMember: false,
@@ -409,7 +411,16 @@ test("render - renderCantinaGate e closeCantinaGate", () => {
   assert.equal(container.innerHTML, "");
 });
 
-test("render - renderFeed e renderProfile com persona mock (MG tour)", () => {
+test("render - LAN-10: faixa do modo demonstração avisa que perfis são fictícios", () => {
+  const html = render.renderDemoModeBanner();
+  assert.ok(html.includes("demo-mode-banner"));
+  assert.ok(html.includes("fictícios"));
+  assert.ok(html.includes("btn-exit-demo"));
+});
+
+test("render - renderFeed e renderProfile com persona mock (MG tour)", (t) => {
+  mock.setDemoMode(true);
+  t.after(() => mock.setDemoMode(false));
   const avatar = "https://randomuser.me/api/portraits/med/women/12.jpg";
   const mainFeed = createContainer();
   const topics = [
@@ -567,7 +578,9 @@ test("render - btn-comment expande post-comments no card (sem #/t)", () => {
   assert.equal(render.commentsPanelId("demo-post-mg"), "post-comments-demo-post-mg");
 });
 
-test("render - renderPostComments lista replies mock no expander", () => {
+test("render - renderPostComments lista replies mock no expander", (t) => {
+  mock.setDemoMode(true); // persona fictícia exige modo demonstração (LAN-10)
+  t.after(() => mock.setDemoMode(false));
   const replies = [
     {
       id: "demo-reply-sp-mg",
@@ -782,7 +795,9 @@ test("render - feed sem abas duplicadas no chrome", () => {
   assert.ok(mainFollowingEmpty.innerHTML.includes("Acompanhar (Watch)"));
 });
 
-test("render - formatPostMarkdown formata citação padrão com link", () => {
+test("render - formatPostMarkdown formata citação padrão com link", (t) => {
+  mock.setDemoMode(true); // persona fictícia exige modo demonstração (LAN-10)
+  t.after(() => mock.setDemoMode(false));
   const post = {
     id: "post_md_test",
     title: "Governança Direta",
@@ -963,6 +978,8 @@ test("render - renderZapModal gera payload BR Code e aviso regulatorio", () => {
   const html = container.innerHTML;
   assert.ok(html.includes(`Pix Zap para ${demoMg.displayName}`));
   assert.ok(html.includes("Post sobre permacultura"));
+  assert.ok(html.includes("zap-payer-check"), "REV-13: pagador é avisado para conferir o nome no banco");
+  assert.ok(html.includes("o Vox não verifica a titularidade"));
   assert.ok(html.includes("btn-zap-val"));
   assert.ok(html.includes("R$ 2"));
   assert.ok(html.includes("R$ 5"));

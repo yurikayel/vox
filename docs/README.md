@@ -25,6 +25,7 @@ Entrada única para quem desenvolve, revisa ou opera. Todo `.md` novo em `docs/`
 | API do relay | [relay-api.md](./relay-api.md) |
 | Testes e CI | [TESTES.md](./TESTES.md) |
 | Limites de complexidade | [HARDENING.md](./HARDENING.md) |
+| Modelo de ameaças | [THREAT-MODEL.md](./THREAT-MODEL.md) |
 | Mutex de agentes | [metodo-agentes-mutex-e-revisor.md](./metodo-agentes-mutex-e-revisor.md) |
 | Licença | [ADR-015](./adr/015-licenciamento-agplv3-e-governanca-de-bem-comum.md) · [licenca-e-contribuicoes.md](./licenca-e-contribuicoes.md) |
 | Decisões de arquitetura | [adr/README.md](./adr/README.md) |

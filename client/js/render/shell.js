@@ -1,5 +1,6 @@
 /** @file App shell, sidebar, feed nav, loading/error banners. */
 import * as mock from "../mock.js";
+import { getFlags } from "../feature-flags.js";
 import {
   colorModeLabel,
   colorModeToggleHint,
@@ -522,7 +523,39 @@ export function renderShell({
   bindDmBadge();
   const main = document.getElementById("app-main");
   if (breadcrumb) main.insertAdjacentHTML("afterbegin", breadcrumb);
+  if (mock.isDemoMode()) mountDemoModeBanner(main);
+  mountOpsNotice(main);
   return main;
+}
+
+/** Aviso operacional do kill-switch (LAN-08), definido em config/flags.json. */
+export function renderOpsNotice(notice) {
+  if (!notice) return "";
+  return `<div class="ops-notice-banner" role="status">${escapeHtml(notice)}</div>`;
+}
+
+function mountOpsNotice(main) {
+  const html = renderOpsNotice(getFlags().notice);
+  if (html && main?.insertAdjacentHTML) main.insertAdjacentHTML("beforebegin", html);
+}
+
+/** Faixa fixa do modo demonstração (LAN-10): nunca deixa perfil fictício parecer real. */
+export function renderDemoModeBanner() {
+  return `
+    <div class="demo-mode-banner" role="status" id="demo-mode-banner">
+      <strong>Modo demonstração</strong> — perfis, chaves Pix e pessoas "online" de exemplo são <strong>fictícios</strong>.
+      <button type="button" class="btn btn-outline btn-sm" id="btn-exit-demo">Sair da demonstração</button>
+    </div>`;
+}
+
+function mountDemoModeBanner(main) {
+  if (!main?.insertAdjacentHTML) return;
+  // Antes do #app-main: as telas reescrevem o innerHTML do main e apagariam a faixa.
+  main.insertAdjacentHTML("beforebegin", renderDemoModeBanner());
+  document.getElementById("btn-exit-demo")?.addEventListener?.("click", () => {
+    mock.setDemoMode(false);
+    globalThis.location?.reload?.();
+  });
 }
 
 /**
@@ -571,7 +604,7 @@ export function renderError(main, message) {
 export function renderDemoBanner(main) {
   main.insertAdjacentHTML(
     "afterbegin",
-    `<p class="feed-notice demo" role="status">Tour de demonstração — conteúdo de exemplo.</p>`
+    `<p class="feed-notice demo" role="status">Sem conexão com a rede agora: mostramos só o que está salvo no seu aparelho. Nada aqui é conteúdo de exemplo.</p>`
   );
 }
 

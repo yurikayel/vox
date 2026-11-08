@@ -10,6 +10,7 @@ import {
 } from "./util.js";
 import { renderPostItem, renderInlineComposer } from "./feed.js";
 import { isWelcomeRouteId } from "../vox-welcome-profile.js";
+import { PIX_RECEIVER_NAME_NOTICE_PT } from "../pix-key.js";
 import * as localAccount from "../local-account.js";
 import { LOCAL_WIPE_NOTICE } from "../local-account.js";
 import { renderProfileNoteBubbleHtml } from "./profile-note-bubble.js";
@@ -160,7 +161,7 @@ function renderProfileGridAvatarInner(address, displayName, handle) {
   const squircle = "";
   if (avatarUrl) {
     return `<div class="profile-grid-avatar-wrap">
-      <img class="profile-grid-avatar-img${squircle}" src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(displayName || address)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
+      <img class="profile-grid-avatar-img${squircle}" src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(displayName || address)}" data-fallback-next="1" />
       <span class="avatar profile-grid-avatar-fallback${squircle}" style="display:none;">${initial}</span>
     </div>`;
   }
@@ -350,6 +351,7 @@ function renderPixForm(currentPixKey) {
     <div class="pix-section">
       <label for="input-pix-key" class="pix-label">Chave Pix (opcional no perfil):</label>
       <p class="desc pix-desc">Chave para apoios diretos. Não é login nem valida titularidade bancária. Seu ID de conta continua sendo sua chave criptográfica local.</p>
+      <p class="desc pix-desc pix-name-notice" role="note">${escapeHtml(PIX_RECEIVER_NAME_NOTICE_PT)}</p>
       <form id="form-pix-key" class="pix-form">
         <input type="text" id="input-pix-key" class="form-control" placeholder="CPF, e-mail, telefone ou chave aleatória" value="${escapeHtml(currentPixKey || "")}" />
         <button type="submit" class="btn btn-sm btn-primary">Salvar Pix</button>

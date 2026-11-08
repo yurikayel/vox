@@ -38,6 +38,22 @@ Gate **humano** antes de anunciar convite público além do círculo fechado. Pr
 | **T2** — URL do espelho shell **B** no convite **ou** waiver documentado (motivo + data + quem aceitou o risco) | [ ] | [ops-shell-mirrors.md](./ops-shell-mirrors.md) |
 | Decisão **feature freeze** piloto (CODE-01): só doc/fix/hotfix em `main` durante as 4 semanas | [ ] | [brainstorm pós-v82 § freeze](./brainstorm-proximas-10-tarefas-pos-v82-2026-11.md) |
 
+## Critério de go para o beta por convite (LAN-28)
+
+Escrito **antes** do piloto, para o resultado não ser interpretado de forma conveniente depois. Medido com métricas locais e honestas (CODE-02), sem telemetria central: cada facilitador coleta e anota na retrospectiva. Rascunho para o grupo revisar e aceitar no dia 0.
+
+| Critério | Meta para "go" | Como medir |
+|---|---|---|
+| Retenção | ≥ 50% das pessoas do círculo postam ou respondem na **semana 4** | contagem manual na comunidade do piloto |
+| Steward externo | ≥ 1 pessoa que **não** é o mantenedor opera relay ou espelho por ≥ 7 dias | URL + print do `#/status` (NET-04) |
+| Incidentes graves | 0 denúncia grave sem resposta em **24 h** | registro de denúncias (LAN-12) + ata do plantão (LAN-04) |
+| Conexão P2P | ≥ 70% das sessões conectam a pelo menos 1 par | `#/settings/network`: aparelhos conectados, anotado pelo facilitador |
+| Cota do Turbo | nenhuma pessoa barrada de postar por cota esgotada sem entender o porquê | relato na retrospectiva + estados de erro (LAN-21) |
+| Perda de conta | 0 pessoa que perdeu a identidade sem conseguir recuperar | relato na retrospectiva |
+| Satisfação | ≥ 70% "recomendaria para outro grupo" | pergunta única na retrospectiva |
+
+**No-go automático:** vazamento de chave ou DM; conteúdo de abuso infantil sem resposta; mantenedor como única pessoa operando tudo na semana 4.
+
 ## Decisão
 
 | Campo | Valor |

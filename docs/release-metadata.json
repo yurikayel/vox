@@ -1,9 +1,9 @@
 {
-  "git_sha": "9271b04",
-  "branch": "docs/revisao-estado-2026-11",
-  "test_js": 758,
+  "git_sha": "040d2bf",
+  "branch": "feat/lan-g1-fundamentos",
+  "test_js": 797,
   "test_python": 89,
-  "test_total": 847,
-  "cache_name": "vox-pwa-v7.32-real-network-audio-video-upload",
-  "generated_at": "2026-11-07T23:52:58Z"
+  "test_total": 886,
+  "cache_name": "vox-pwa-v7.33-real-network-audio-video-upload",
+  "generated_at": "2026-11-08T10:06:28Z"
 }

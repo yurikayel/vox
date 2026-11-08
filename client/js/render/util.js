@@ -215,7 +215,7 @@ export function renderAvatarHtml(author, authorDisplay, sizeClass = "", avatarOv
   const authorInitial = escapeHtml((display || "V").slice(0, 1).toUpperCase());
   const squircle = "";
   if (avatarUrl) {
-    return `<span class="avatar-wrap${squircle} ${sizeClass}"><img class="avatar-img${squircle}" src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(display)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" /><span class="avatar avatar-fallback${squircle}" style="display:none;">${authorInitial}</span></span>`;
+    return `<span class="avatar-wrap${squircle} ${sizeClass}"><img class="avatar-img${squircle}" src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(display)}" data-fallback-next="1" /><span class="avatar avatar-fallback${squircle}" style="display:none;">${authorInitial}</span></span>`;
   }
   return `<span class="avatar${squircle} ${sizeClass}">${authorInitial}</span>`;
 }
@@ -276,4 +276,12 @@ export function renderMarkdownLight(md) {
 
   if (inList) out.push("</ul>");
   return out.join("");
+}
+
+/** LAN-12 — item "Denunciar" dos menus ⋯ (o clique abre app/report-flow.js via delegação). */
+export function renderReportMenuItem(postId, author = "", communityId = "") {
+  return `<button type="button" class="action-btn btn-report-post" data-id="${escapeHtml(postId)}" data-author="${escapeHtml(author)}" data-comm="${escapeHtml(communityId)}" role="menuitem" aria-label="Denunciar publicação">
+    <span aria-hidden="true">⚑</span>
+    <span class="toolbar-overflow-label">Denunciar</span>
+  </button>`;
 }
