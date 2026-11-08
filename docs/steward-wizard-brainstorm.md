@@ -16,3 +16,7 @@
 **Implementação:** `steward-wizard.js`, `renderStewardWizard`, `tests/steward-wizard.test.js` — entregue com V-P01 + V-I08.
 
 *Tom Cantina + detalhes: spike wizard operador (23/10).*
+
+---
+
+*Histórico. Prioridades atuais: [ROADMAP.md](./ROADMAP.md).*

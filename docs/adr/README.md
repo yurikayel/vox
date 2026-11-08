@@ -1,0 +1,26 @@
+# ADRs — Decisões arquiteturais do Vox
+
+> **Status:** canônico (índice) · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-07
+> Nova decisão = novo arquivo `NNN-slug.md` com **Status**, **Contexto**, **Decisão**, **Consequências**. Mudança de protocolo de rede: RFC em [../rfc/](../rfc/README.md).
+
+| ADR | Título | Status |
+|---|---|---|
+| [001](./001-contribution-attestation-export.md) | Atestação exportável de contribuição P2P | proposed |
+| [002](./002-oauth-profile-enrich-client.md) | Enriquecimento de perfil via OAuth (client-only) | accepted |
+| [003](./003-profile-card-gossip.md) | Cartão de perfil na malha (PROFILE_CARD gossip, opt-in) | accepted |
+| [004](./004-gateway-honest-fallback.md) | Fallback de gateway — pill honesta (Leitura reserva) | accepted |
+| [005](./005-collective-profile-m-of-n.md) | Perfil coletivo M-de-N (tese T02) | proposed (spec + lab) |
+| [006](./006-p2p-profile-identity-gossip-hardening.md) | Hardening de identidade P2P, WebRTC e cache de respostas | accepted (Deno pausado desde 2026-11) |
+| [007](./007-zero-complexity-monolith-decomposition.md) | Decomposição de monólitos e dívida de complexidade zero | accepted |
+| [008](./008-vox-populi-community-node-architecture.md) | Vox Populi — nó comunitário autônomo de baixo consumo | accepted |
+| [009](./009-multi-gateway-graphql-corroboration.md) | Corroboração multi-gateway GraphQL sem quorum bloqueante | proposed |
+| [010](./010-vox-contribution-engine-execute-e-ajude.md) | Contribution Engine "Execute e Ajude" | proposed |
+| [011](./011-taxonomia-tripartite-produtos-vox.md) | Taxonomia dual: Vox (cliente) e Vox Populi (nó) | accepted |
+| [012](./012-soberania-digital-cintura-fina-cartuchos-webxdc.md) | Cintura fina criptográfica e cartuchos Webxdc | accepted (runtime ainda não plugado na UI) |
+| [013](./013-sistema-voxels-e-conquistas-civicas.md) | Voxels e conquistas cívicas verificáveis | accepted |
+| [014](./014-zero-knowledge-vault-recuperacao-soberana.md) | Cofre zero-knowledge e restauração cross-device | accepted (implementado) |
+| [015](./015-licenciamento-agplv3-e-governanca-de-bem-comum.md) | Licença AGPL-3.0-or-later e governança de bem comum | accepted |
+| [016](./016-design-system-sovereign-agora-e-democracia-direta.md) | Design system Sovereign Agora e democracia direta | accepted (rev. 2026-11-06) |
+| [017](./017-consolidacao-roadmap-unico.md) | Consolidação do planejamento — ROADMAP único | accepted |
+
+Convenção: título no arquivo como `# ADR-NNN: …` (os ADRs 014 e 015 usam `ADR 0NN`, por histórico).

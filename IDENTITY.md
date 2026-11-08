@@ -2,7 +2,9 @@
 
 Uma história única em fases — evita misturar promessas do README com o que o PWA Fase 1 entrega.
 
-## Fase 1 (atual): leitura anônima
+> **Estado atual (nov/2026):** identidade local `vx_*` (ECDSA P-256) criada no aparelho no onboarding; recuperação por cofre cifrado (ver *Cofre e recuperação* abaixo). As fases abaixo são o histórico de como isso chegou aqui.
+
+## Fase 1 (histórico): leitura anônima
 
 - Nenhuma chave gerada no app.
 - Endereços exibidos são `owner.address` das transações Arweave (identificador público on-chain).
@@ -48,9 +50,17 @@ Ordem recomendada de entrega:
   - Se múltiplas contas reivindicarem o mesmo slug, o PWA sinaliza **ambiguidade/conflito** e apresenta ambos os perfis, sem que nenhum mantenedor tenha poder de veto ou confisco.
 - **ArNS (Fase 5.1):** A resolução de nomes ArNS (.ar) é documentada como evolução futura, evitando custos de leilão e dependências externas no cliente essencial.
 
+## Cofre e recuperação (ADR-014)
+
+- **Cofre multi-identidade** (`vox-accounts-vault-v1`): alternância entre contas locais no mesmo aparelho.
+- **Export `.voxid`:** credenciais em envelope cifrado com senha (PBKDF2 + AES-GCM-256).
+- **Recuperação zero-knowledge:** o cliente cifra a identidade e a ancora em Google (`sub`), Meta (`profile.id`) ou **Senha Soberana** (`#/backup`); a memória central (`/memory/vault/`) só vê texto cifrado. Detalhes: [ADR-014](./docs/adr/014-zero-knowledge-vault-recuperacao-soberana.md).
+- **Sync entre aparelhos:** rota `#/sync?p=…` por QR Code.
+- **Wipe local:** `wipeLocalAccount()` em `client/js/local-account.js`.
+
 ## Boas práticas
 
-- Chaves privadas **nunca** enviadas a servidor Vox (não há servidor).
+- Chaves privadas **nunca** saem do aparelho em claro; relays opcionais só recebem texto cifrado (cofre, DMs).
 - Backup: frase ou export cifrado — responsabilidade do usuário.
 - Rotação: nova chave + transação de “sucessor” no perfil (Fase 2).
 

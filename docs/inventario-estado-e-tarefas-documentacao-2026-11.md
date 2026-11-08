@@ -1,6 +1,8 @@
 # Inventário — estado Vox + tarefas de documentação (nov/2026)
 
-> **Status:** canônico (DoD doc N=20 + DOC-06…08) · **Owner:** revisor doc · **Revisado:** 2026-11 · Release: [README.md](./README.md)  
+> **⚠️ SUPERSEDED (2026-11-07):** o plano vivo e o único checklist agora são o [ROADMAP.md](./ROADMAP.md) ([ADR-017](./adr/017-consolidacao-roadmap-unico.md)). Este documento fica como histórico; **não marque caixas aqui** e não use os números/status abaixo como atuais.
+
+> **Status:** SUPERSEDED (era: DoD doc N=20 + DOC-06…08; catálogo atual em [FEATURES.md](./FEATURES.md)) · **Owner:** revisor doc · **Revisado:** 2026-11 · Release: [README.md](./README.md)  
 > **Escopo:** mapa do que existe hoje + **N=20** tarefas núcleo (4×5 DOC/NET/CODE/PIL **01–05**) **+ DOC-06…08** doc/review — não substitui execução de T2 (2º espelho) nem piloto humano. Plano mestre **N=25:** [dossiê](./dossie-geral-inventario-master-breakdown-2026-11.md).  
 > **Política de agentes:** Composer 2.5 only (lobby politica).
 

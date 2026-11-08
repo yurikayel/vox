@@ -8,15 +8,14 @@ Instruções globais compartilhadas para agentes que operam no sub-repo `vox/`:
 - **Custos Recorrentes:** R$ 0,00 para sempre (Arweave Turbo Free Tier ≤100 KiB, WebTorrent, Nostr).
 
 ## 2. Protocolo Mutex (Um Agente por Arquivo)
+Fonte única: [`docs/metodo-agentes-mutex-e-revisor.md`](../docs/metodo-agentes-mutex-e-revisor.md). Resumo:
 - Nunca editar arquivos simultaneamente com outros agentes.
 - Declarar caminhos antes de alterar.
 - Não reescrever documentos inteiros para modificar trechos isolados.
 - Handoff obrigatório ao concluir tarefas.
 
 ## 3. Limites de Hardening (Métricas Estritas)
-- **LLOC por método:** $\le 30$
-- **Nesting:** $\le 4$
-- **Complexidade Cognitiva:** $\le 15$
+LLOC ≤ 30 · Nesting ≤ 4 · Complexidade Cognitiva ≤ 15 — fonte única: [`docs/HARDENING.md`](../docs/HARDENING.md).
 
 ## 4. Áreas Protegidas (Proibição Absoluta)
 - `tools/wa_extension/`
@@ -25,9 +24,9 @@ Instruções globais compartilhadas para agentes que operam no sub-repo `vox/`:
 - Proibido investigar dados internos do WhatsApp Web (`window.require`, `WAWebMsgCollection`).
 
 ## 5. Invariante de Cache
-- `CACHE_NAME`: `vox-pwa-v7.16-real-network-audio-video-upload` (estritamente preservado).
+- `CACHE_NAME`: valor canônico só em `client/sw.js` (espelhado em `docs/release-metadata.json`). Bump obrigatório quando o shell muda; nunca duplicar a string em docs.
 - 100% de paridade entre `SHELL_ASSETS` e os arquivos reais no disco.
 
 ## 6. Agente Principal do Antigravity
 - Operador Técnico: `.agents/agents/vox-operator.md`
-- Auditor Independente: `.agents/agents/antigravity-auditor.md`
+- Auditor Independente: perfil `antigravity-auditor` definido em `../AGENTS.md` (lobby `politica/`; sem arquivo dedicado aqui).

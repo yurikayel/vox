@@ -120,7 +120,8 @@ Antes de executar qualquer alteração:
    - `README.md`
    - `docs/README.md`
    - `docs/CONTRIBUTING-DOCS.md`
-   - `docs/dossie-geral-inventario-master-breakdown-2026-11.md`
+   - `docs/ROADMAP.md` (único plano vivo — ADR-017; o dossiê N=25 é histórico)
+   - `docs/FEATURES.md` (o que existe vs stub)
 4. Leia os documentos específicos da tarefa.
 5. Verifique o estado atual do Git.
 6. Identifique modificações realizadas por outros agentes.
@@ -362,16 +363,7 @@ Qualidade real tem prioridade sobre otimização cosmética.
 
 ## 10. TESTES E INTEGRIDADE
 
-A baseline documentada é:
-
-- 616 testes.
-- 582 testes JavaScript.
-- 34 testes Python.
-- 134 arquivos auditados.
-- Zero violações de hardening.
-- 153 assets no precache do Service Worker.
-
-Esses números são referências históricas que precisam ser verificadas no workspace.
+A baseline canônica (testes JS/Python, SHA, `CACHE_NAME`) fica **só** em `docs/release-metadata.json` (regenerar com `npm run release-line`). Não copiar números para cá; verificar sempre no workspace.
 
 ### Validação principal
 
@@ -394,11 +386,7 @@ Para qualquer modificação:
 
 ### Service Worker
 
-A chave canônica atual documentada é:
-
-```
-vox-pwa-v7.16-real-network-audio-video-upload
-```
+A chave canônica é a constante `CACHE_NAME` em `client/sw.js` (espelhada em `docs/release-metadata.json`).
 
 Não altere `CACHE_NAME`, precache ou estratégia de atualização sem analisar todos os impactos.
 

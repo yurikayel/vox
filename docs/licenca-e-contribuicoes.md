@@ -2,6 +2,8 @@
 
 ## 1. Decisão Canônica de Licença: GNU Affero General Public License v3.0 (AGPL-3.0-or-later)
 
+> Registro formal da decisão: [ADR-015](./adr/015-licenciamento-agplv3-e-governanca-de-bem-comum.md). DCO e como contribuir: [CONTRIBUTORS.md](../CONTRIBUTORS.md). Este arquivo detalha a política.
+
 O **Vox** é um projeto cívico, popular e local-first cujo propósito é a **emancipação comunicativa da classe trabalhadora** e a construção de infraestrutura digital fora do jugo do grande capital financeiro monopolista.
 
 Em consonância com as metas de governança estabelecidas no inventário do projeto (GOV-02), o repositório é formalmente licenciado sob os termos da:

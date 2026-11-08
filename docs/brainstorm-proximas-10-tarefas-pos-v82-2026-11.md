@@ -1,6 +1,8 @@
 # Brainstorm — próximas 10 tarefas pós-v6.82 (nov/2026)
 
-> **Status:** canônico (Ordem de Execução Ops Sequencial pós-v82) · **Owner:** mantenedor/revisor · **Revisado:** 2026-11 · Release: [README.md](../README.md) · [release-metadata.json](./release-metadata.json)  
+> **⚠️ SUPERSEDED (2026-11-07):** o plano vivo e o único checklist agora são o [ROADMAP.md](./ROADMAP.md) ([ADR-017](./adr/017-consolidacao-roadmap-unico.md)). Este documento fica como histórico; **não marque caixas aqui** e não use os números/status abaixo como atuais.
+
+> **Status:** SUPERSEDED (era: ordem de execução pós-v82) · **Owner:** mantenedor/revisor · **Revisado:** 2026-11 · Release: [README.md](../README.md) · [release-metadata.json](./release-metadata.json)  
 > **Papel canônico:** Sequência linear de dependências operacionais (T2 espelho → V-P09 piloto → V-P08 sucessão → P2). O checklist vivo reside exclusivamente no [Dossiê N=25](./dossie-geral-inventario-master-breakdown-2026-11.md).  
 > **Horizonte:** **2026-Q4 → 2027-Q2** (piloto + malha sustentada por participantes)  
 > **Não é parecer jurídico** — [COMPLIANCE-BR.md](../COMPLIANCE-BR.md)
