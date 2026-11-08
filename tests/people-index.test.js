@@ -86,8 +86,12 @@ test("people-index - demo only in tour when mesh populated", async () => {
     body: "x",
     ts: Date.now(),
   });
+  profileDirectory.setProfileCard("vx_cardnamed00000001", { name: "Ana da Malha", discoverable: true });
   const sections = await peopleIndex.buildPeopleSections();
-  assert.ok(sections.mesh.length >= 1);
+  assert.ok(sections.mesh.some((p) => p.routeId === "vx_cardnamed00000001"));
+  // Autor só com a chave (sem nome escolhido) não entra na lista do diretório.
+  assert.equal(sections.mesh.some((p) => p.routeId === "vx_anyauthor00000001"), false);
+  assert.equal(sections.all.some((p) => p.routeId === "vx_anyauthor00000001"), false);
   assert.equal(sections.tour.length, 0, 'perfis demo foram removidos do índice');
   const demoInMesh = sections.mesh.some((p) => p.source === "demo");
   assert.equal(demoInMesh, false);
