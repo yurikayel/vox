@@ -32,6 +32,9 @@ jobs:
       - name: Instalar dependências (ESLint / audit)
         run: npm ci
 
+      - name: Auditoria de dependências (LAN-20)
+        run: npm audit --audit-level=high
+
       - name: Verificação de sintaxe JS
         run: |
           find client/js -name '*.js' -print0 | xargs -0 node --check
