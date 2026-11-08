@@ -104,7 +104,7 @@ Também exige: PIL-02…05 · REV-12 · REV-20 · REV-23 · REV-09 · REV-10 · 
 | [ ] | **LAN-13** | code | **Lista de ocultação assinada do PWA oficial**, exportável para gateways AR.IO | [backlog §4](./strategy/backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
 | [ ] | **LAN-15** | doc | **Modelo de ameaças** (`docs/THREAT-MODEL.md`) revisado por alguém de segurança fora do time | 🚧 rascunho em [THREAT-MODEL.md](./THREAT-MODEL.md); falta revisão externa · [backlog §4](./strategy/backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
 | [x] | **LAN-16** | code | **CSP e headers** (`_headers` no CF Pages + meta CSP no GitHub Pages) | ✅ entregue no PR #17; scripts inline viraram `js/boot-*.js` · [backlog §4](./strategy/backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
-| [ ] | **LAN-21** | code | **Estados de erro honestos** (sinalização caída, cota esgotada, 402 do gateway, DM sem relay) | [backlog §4](./strategy/backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
+| [ ] | **LAN-21** | code | **Estados de erro honestos** (sinalização caída, cota esgotada, 402 do gateway, DM sem relay) | ✅ `honest-errors.js`: cota, 402, 429, offline, timeout, gateways fora e DM sem relay; falta o aviso de sinalização caída na UI |
 | [ ] | **LAN-24** | doc | **Runbook de incidentes** + 1 simulado datado | [backlog §4](./strategy/backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
 | [ ] | **LAN-28** | doc | **Critério de go para o beta** escrito antes do piloto (retenção, steward externo, incidentes, P2P, cota) | 🚧 rascunho no [go/no-go](./pilot/piloto-comunidade-go-no-go.md#critério-de-go-para-o-beta-por-convite-lan-28); falta o grupo aceitar · [backlog §4](./strategy/backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
 
@@ -125,7 +125,7 @@ Também exige: REV-18 · DOC-04 · REV-02 · REV-04 (ou LAN-21 cobrindo DM offli
 | [ ] | **LAN-23** | code | **Desempenho em Android de entrada** com orçamento que quebra o CI | [backlog §4](./strategy/backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
 | [ ] | **LAN-25** | ops-humano | **Onboarding com 5 leigos** (identidade, backup, post, comunidade, recuperação) | [backlog §4](./strategy/backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
 | [ ] | **LAN-26** | ops-humano | **Suporte:** formulários de issue + canal Zap/Telegram, triagem semanal | [backlog §4](./strategy/backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
-| [ ] | **LAN-27** | code | **Leitura resiliente:** ≥4 gateways, 402 do turbo-gateway = trocar de gateway | [backlog §4](./strategy/backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
+| [x] | **LAN-27** | code | **Leitura resiliente:** ≥4 gateways, 402 do turbo-gateway = trocar de gateway | [backlog §4](./strategy/backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) | · ✅ 4 gateways (turbo, arweave.net, ardrive.net, ar-io.dev) + timeout de 8 s por gateway
 | [ ] | **LAN-29** | doc | **Relatório do beta** e decisão de go público | [backlog §4](./strategy/backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
 | [ ] | **LAN-31** | doc | **Governança do PWA oficial** (lista de ocultação, Termos, releases) no GOVERNANCE.md | [backlog §4](./strategy/backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
 | [ ] | **LAN-32** | doc | **Orçamento de 12 meses** para 1k/10k usuários com cobertura confirmada | [backlog §4](./strategy/backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
