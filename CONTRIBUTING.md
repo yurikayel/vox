@@ -14,7 +14,7 @@ npm test             # node:test (cliente) + unittest (relay)
 cd client && python -m http.server 8080   # abra http://127.0.0.1:8080/
 ```
 
-Opcional: `npm start` sobe a sinalização WebRTC (`relay/signaling.py`, :3921) e `python relay/server.py` o relay completo (:3920). Referência: [docs/relay-api.md](./docs/relay-api.md).
+Opcional: `npm start` sobe a sinalização WebRTC (`relay/signaling.py`, :3921) e `python relay/server.py` o relay completo (:3920). Referência: [docs/specs/relay-api.md](./docs/specs/relay-api.md).
 
 ## 2. Onde as coisas estão
 
@@ -27,6 +27,8 @@ Opcional: `npm start` sobe a sinalização WebRTC (`relay/signaling.py`, :3921) 
 | Infra, deploy e custos | [docs/INFRA-CUSTOS.md](./docs/INFRA-CUSTOS.md) |
 | Escrever/rodar testes | [docs/TESTES.md](./docs/TESTES.md) |
 | Todo o resto | [docs/README.md](./docs/README.md) (índice único) |
+
+Mapa de pastas: seção "Estrutura do repositório" do [README](./README.md). Regra: código de produto em `client/`, `relay/`, `android/`, `vox-populi/`; instaladores em `packaging/`; scripts de manutenção em `scripts/`; documentação em `docs/<categoria>/`.
 
 ## 3. Fluxo de mudança
 
@@ -42,10 +44,10 @@ Opcional: `npm start` sobe a sinalização WebRTC (`relay/signaling.py`, :3921) 
 
 ## 4. Regras do projeto
 
-- **Honestidade de copy:** não descreva como pronto o que é proposta ou stub ([docs/honest-copy-audit-2026-10-23.md](./docs/honest-copy-audit-2026-10-23.md)).
-- **Sem custódia de dinheiro, sem alcance pago, sem telemetria de terceiros** ([POSITIONING.md](./POSITIONING.md), [COMPLIANCE-BR.md](./COMPLIANCE-BR.md)).
+- **Honestidade de copy:** não descreva como pronto o que é proposta ou stub ([docs/audits/honest-copy-audit-2026-10-23.md](./docs/audits/honest-copy-audit-2026-10-23.md)).
+- **Sem custódia de dinheiro, sem alcance pago, sem telemetria de terceiros** ([POSITIONING.md](./docs/product/POSITIONING.md), [COMPLIANCE-BR.md](./docs/legal/COMPLIANCE-BR.md)).
 - **Sem dependências de runtime novas** no cliente sem ADR ([docs/adr/README.md](./docs/adr/README.md)).
-- **Agentes de IA:** um agente por arquivo e handoff explícito — [docs/metodo-agentes-mutex-e-revisor.md](./docs/metodo-agentes-mutex-e-revisor.md). Documentação: [docs/CONTRIBUTING-DOCS.md](./docs/CONTRIBUTING-DOCS.md).
+- **Agentes de IA:** um agente por arquivo e handoff explícito — [docs/process/metodo-agentes-mutex-e-revisor.md](./docs/process/metodo-agentes-mutex-e-revisor.md). Documentação: [docs/CONTRIBUTING-DOCS.md](./docs/CONTRIBUTING-DOCS.md).
 - **Decisão de arquitetura ou protocolo:** abra um ADR em `docs/adr/` (ou RFC em `docs/rfc/` para mudança de protocolo de rede).
 
 ## 5. Segurança

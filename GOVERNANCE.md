@@ -44,7 +44,7 @@ Espelhos são **opcionais** e **substituíveis**; o client Fase 1 fala direto co
 ## Abuso e conteúdo ilegal
 
 - Clientes podem integrar listas de hash/TX reportadas (espelho).
-- Obrigações legais brasileiras (LGPD, conteúdo eleitoral) estão resumidas em [COMPLIANCE-BR.md](./COMPLIANCE-BR.md) — **não substituem assessoria jurídica**.
+- Obrigações legais brasileiras (LGPD, conteúdo eleitoral) estão resumidas em [COMPLIANCE-BR.md](./docs/legal/COMPLIANCE-BR.md) — **não substituem assessoria jurídica**.
 
 ## Nós Participativos, Relays e Responsabilidade sobre Cache (Fases 3 e 3.1)
 
@@ -58,7 +58,7 @@ Espelhos são **opcionais** e **substituíveis**; o client Fase 1 fala direto co
 
 ## Papéis de operador de infra voluntária
 
-A malha Vox não tem operador central de infra. Quem usa ou **adquire espaços digitais** (comunidade, handle, feira) pode optar por camadas de participação definidas em [docs/espacos-digitais-infra.md](./docs/espacos-digitais-infra.md). Obrigações legais (LGPD, Marco Civil, espelho) estão em [COMPLIANCE-BR.md](./COMPLIANCE-BR.md) (§ Infraestrutura voluntária).
+A malha Vox não tem operador central de infra. Quem usa ou **adquire espaços digitais** (comunidade, handle, feira) pode optar por camadas de participação definidas em [docs/strategy/espacos-digitais-infra.md](./docs/strategy/espacos-digitais-infra.md). Obrigações legais (LGPD, Marco Civil, espelho) estão em [COMPLIANCE-BR.md](./docs/legal/COMPLIANCE-BR.md) (§ Infraestrutura voluntária).
 
 | Camada | Operador | Deveres mínimos (comunidade / protocolo) | Relação com moderação e espelho |
 |--------|----------|------------------------------------------|----------------------------------|

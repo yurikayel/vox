@@ -3,7 +3,7 @@
  * `client/config/flags.json` é servido pelo Pages e lido a cada abertura do app (sem cache do SW).
  * Num incidente, o operador muda o JSON e faz deploy: na próxima recarga o cliente obedece.
  * Offline, vale o último estado lido (localStorage); sem nada lido, valem os padrões (tudo ligado).
- * Runbook: docs/backlog-lancamento-publico-2026-11.md (LAN-08, LAN-24).
+ * Runbook: docs/strategy/backlog-lancamento-publico-2026-11.md (LAN-08, LAN-24).
  */
 
 export const FLAGS_URL = "./config/flags.json";

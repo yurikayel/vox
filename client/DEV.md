@@ -2,7 +2,7 @@
 
 Este documento descreve como testar o fluxo de leitura, autoria (upload de transações), compartilhamento, governança e a rede de nós participativos (Fase 3) no PWA vanilla do Vox.
 
-**Malha P2P / handoff Antigravity:** ver [`docs/antigravity-operating.md`](../docs/antigravity-operating.md). **Cache offline:** valor canônico em `CACHE_NAME` dentro de [`sw.js`](./sw.js) (não duplicar string fixa nos parágrafos abaixo — consulte o arquivo).
+**Malha P2P / handoff Antigravity:** ver [`docs/process/antigravity-operating.md`](../docs/process/antigravity-operating.md). **Cache offline:** valor canônico em `CACHE_NAME` dentro de [`sw.js`](./sw.js) (não duplicar string fixa nos parágrafos abaixo — consulte o arquivo).
 
 **Release line:** SHA canônico na tabela de release do [README](../README.md) e em [`docs/release-metadata.json`](../docs/release-metadata.json). Regenerar: `npm run release-metadata` (contagens) ou `npm run release-line` (metadata + README). Suíte: contagem canônica só em [`docs/release-metadata.json`](../docs/release-metadata.json) (`test_js`, `test_python`) via `npm test`. `CACHE_NAME` só em [`sw.js`](./sw.js). Pages: **hard refresh** após deploy.
 
@@ -81,7 +81,7 @@ As pipelines em `.github/workflows/` rodam automaticamente no GitHub:
    - Valida checagem estática de sintaxe e executa os **463** testes unitários (**440** JS + **23** Python).
    - Auditoria de segurança: verifica que nenhuma chave privada foi commitada acidentalmente.
 2. **`deploy-pages.yml`:**
-   - Publica o site composto (`client/**` + `docs/proposta-vox.html`) no GitHub Pages a cada alteração em `client/**` ou `docs/**`.
+   - Publica o site composto (`client/**` + `docs/product/proposta-vox.html`) no GitHub Pages a cada alteração em `client/**` ou `docs/**`.
    - Origem configurada via GitHub Actions (`build_type: workflow`).
    - URLs ativas em produção:
      - **PWA Vox:** `https://yurikayel.github.io/vox/`
@@ -144,7 +144,7 @@ Para validar o *Definition of Done* da Fase 2:
 
 #### 4.2.1 Espelho de comunidade (`POST /vox/mirror`, V-P06)
 
-Spec: [`docs/mirror-validate-v1.md`](../docs/mirror-validate-v1.md).
+Spec: [`docs/specs/mirror-validate-v1.md`](../docs/specs/mirror-validate-v1.md).
 
 - **Cliente:** `community-mirror.js` monta índice leve e pré-valida (`communityId` path-safe, `topics` ≤ 500, corpo ≤ 256 KiB, `cacheManifest` v0 opcional) antes do POST.
 - **Relay:** `relay/mirror_validate.py` aplica as mesmas regras; erros JSON `{ "code": "mirror.*", "error": "…" }` (400 estrutural, 413 corpo grande).
@@ -154,8 +154,8 @@ Spec: [`docs/mirror-validate-v1.md`](../docs/mirror-validate-v1.md).
 
 #### 4.2.2 Kit steward (V-I08)
 
-- **Docs:** [`docs/steward-relay-kit.md`](../docs/steward-relay-kit.md) (health, quota, VPS vs desktop).
-- **1-clique:** `tools/steward-kit-windows/Start-StewardKit.ps1` ou `tools/steward-kit-linux/start-steward-kit.sh` → relay `:8787` + wizard no browser.
+- **Docs:** [`docs/operations/steward-relay-kit.md`](../docs/operations/steward-relay-kit.md) (health, quota, VPS vs desktop).
+- **1-clique:** `packaging/steward-kit-windows/Start-StewardKit.ps1` ou `packaging/steward-kit-linux/start-steward-kit.sh` → relay `:8787` + wizard no browser.
 - **VPS:** `relay/deploy` — mesma origem HTTPS para WSS e relay HTTP; `GET /health` expõe `communityIndexes`, `cacheBytes`, `maxCacheBytes`.
 - **Wizard passo 4:** **Verificar Relay HTTP** usa `steward-wizard.js` (`formatRelayHealthSummary`); testes em `tests/steward-wizard.test.js`.
 
@@ -330,7 +330,7 @@ Para manter a clareza e acolhimento para o usuário leigo, jargões técnicos s�
 | Empty states com parágrafos explicativos| **1 frase objetiva + 1 botão de ação**| Direto ao ponto           |
 
 > [!NOTE]
-> Termos do Varanda e análises de engenharia permanecem exclusivamente em `LESSONS.md` e `README.md` como registro histórico. A interface e a cópia voltadas para o usuário são 100% limpas de jargões técnicos.
+> Termos do Varanda e análises de engenharia permanecem exclusivamente em `docs/process/LESSONS.md` e `README.md` como registro histórico. A interface e a cópia voltadas para o usuário são 100% limpas de jargões técnicos.
 
 Regra de ouro: frases curtas (≤ ~8 palavras na interface principal), contraste WCAG testado e zero dependências externas de ícones ou frameworks.
 
@@ -769,7 +769,7 @@ Implementação dos quatro pilares essenciais do roadmap da rede Vox:
 
 **Data:** 2026-10-24 · **Branch:** `feat/blob-soft-priority-v0` · **Suíte:** 207 testes (193 JS + 14 Python relay).
 
-- **Spec / ADR:** `docs/antigravity-blob-soft-priority-v0.md`.
+- **Spec / ADR:** `docs/specs/antigravity-blob-soft-priority-v0.md`.
 - **Módulo:** `client/js/peers-blob-affinity.js` integrado em `client/js/peers.js` e `client/js/webrtc-peer.js`.
 - **Wire:** Reutiliza mensagens `WANT` e `BLOB` existentes com campo `fromPeer`.
 - **Privacidade & Compliance:** Sem ranking público, sem scoreboard e sem telemetria externa. O mapa de afinidade é estritamente local e efêmero no aparelho (`affinityMap`), com teto de 16 pares, TTL de 15 minutos e decaimento exponencial de pontuação (meia-vida de 5 minutos).
@@ -785,7 +785,7 @@ Implementação dos quatro pilares essenciais do roadmap da rede Vox:
 
 **Data:** 2026-10-24 · **SW:** `vox-pwa-v6.25-roadmap-core`
 
-- **Docs:** `docs/adr/002-oauth-profile-enrich-client.md`, `docs/vox-brasil-welcome-profile.md`, `COMPLIANCE-BR.md` (login social opcional).
+- **Docs:** `docs/adr/002-oauth-profile-enrich-client.md`, `docs/pilot/vox-brasil-welcome-profile.md`, `docs/legal/COMPLIANCE-BR.md` (login social opcional).
 - **Módulos:** `vox-welcome-profile.js`, `profile-directory.js`, `contacts.js`, `people-index.js`, `oauth-profile.js`.
 - **Rotas:** `#/people` (busca local), `#/connect/:routeId` (deep link compartilhável), card *Primeiro contato* no feed, DM institucional `vx_voxbrasil_welcome`.
 - **Onboarding:** Cantina → *Como quer aparecer?* (Google / Meta / Pular) → Pacto → seed DM welcome + watch automático.
@@ -794,7 +794,7 @@ Implementação dos quatro pilares essenciais do roadmap da rede Vox:
 
 ### 25.1 OAuth Google / Meta (operador)
 
-Enriquecimento **client-only** (GIS + Meta JS SDK): importa nome/foto para `localStorage`; **não** há backend Vox nem tokens persistidos (ADR-002, `COMPLIANCE-BR.md`).
+Enriquecimento **client-only** (GIS + Meta JS SDK): importa nome/foto para `localStorage`; **não** há backend Vox nem tokens persistidos (ADR-002, `docs/legal/COMPLIANCE-BR.md`).
 
 #### Arquivos locais (nunca commitar)
 
@@ -877,12 +877,12 @@ O workflow [`.github/workflows/deploy-pages.yml`](../.github/workflows/deploy-pa
 **Operador:**
 
 1. Repositório GitHub → **Settings** → **Secrets and variables** → **Actions** → **New repository secret** (crie os dois nomes acima).
-2. Redeploy: push em `main` que altere `client/**`, `docs/**`, `tools/write-oauth-deploy-config.mjs` ou o workflow — ou **Actions** → *Deploy PWA — GitHub Pages* → **Run workflow**.
+2. Redeploy: push em `main` que altere `client/**`, `docs/**`, `scripts/write-oauth-deploy-config.mjs` ou o workflow — ou **Actions** → *Deploy PWA — GitHub Pages* → **Run workflow**.
 3. Verificar artefato publicado: abrir `https://yurikayel.github.io/vox/config/oauth.json` — deve conter IDs não vazios e `enabledProviders` coerente.
 4. Aba anônima em `https://yurikayel.github.io/vox/` → Cantina → modal *Como quer aparecer?* — botões Google/Meta habilitados, sem caixa vermelha de operador (se secrets preenchidos).
 5. **Hard refresh** após deploy (SW `vox-pwa-v6.26-mesh-discovery` ou posterior).
 
-Script: [`tools/write-oauth-deploy-config.mjs`](../tools/write-oauth-deploy-config.mjs) — se ambos secrets vazios, o job emite `::warning::` e o modal mantém o aviso atual.
+Script: [`scripts/write-oauth-deploy-config.mjs`](../scripts/write-oauth-deploy-config.mjs) — se ambos secrets vazios, o job emite `::warning::` e o modal mantém o aviso atual.
 
 **Troubleshooting:** botões habilitados mas login falha → revisar **Authorized JavaScript origins** (Google: `https://yurikayel.github.io`) e **Valid OAuth Redirect URIs** / **Allowed Domains** (Meta: `https://yurikayel.github.io/vox/`) nas tabelas acima.
 
@@ -898,7 +898,7 @@ Script: [`tools/write-oauth-deploy-config.mjs`](../tools/write-oauth-deploy-conf
 
 **Data:** 2026-10-24 · **SW:** `vox-pwa-v6.26-mesh-discovery`
 
-- **Docs:** `docs/adr/003-profile-card-gossip.md`, `docs/profile-card-gossip-v0.md`, `COMPLIANCE-BR.md` (§ busca na malha).
+- **Docs:** `docs/adr/003-profile-card-gossip.md`, `docs/specs/profile-card-gossip-v0.md`, `docs/legal/COMPLIANCE-BR.md` (§ busca na malha).
 - **P1:** `#/people` indexa contatos, autores de `topic`/`reply`/`membership` vistos no aparelho (`mesh-author`), tour demo só se contatos+malha vazios (ou seção Tour).
 - **P2:** toggle *Aparecer na busca da malha* em `#/perfil` e `#/settings/network` → `profile-card.js` + gossip (`peers.js`) → `profile-directory` (sem poluir feed).
 - **Módulos:** `profile-card.js`, `mesh-profile.js`, extensões em `people-index.js`, `peers.js`, `render.js`, `app.js`.
@@ -943,7 +943,7 @@ Quando a console mostra *Não qualificado para envio* (ícone, privacidade, excl
 | **Exclusão de dados** | `https://yurikayel.github.io/vox/data-deletion.html` |
 | **Categoria** | Ex.: *Utilitários* → *Redes sociais* |
 
-Arquivos: `client/privacy.html`, `client/data-deletion.html`. Deploy: push em `main` que altere `client/**`. Detalhes jurídicos: `COMPLIANCE-BR.md`.
+Arquivos: `client/privacy.html`, `client/data-deletion.html`. Deploy: push em `main` que altere `client/**`. Detalhes jurídicos: `docs/legal/COMPLIANCE-BR.md`.
 
 ---
 
@@ -1174,12 +1174,12 @@ OAuth e compartilhamento nativo citam provedores apenas onde exigido por integra
 
 ## 43. Contas vinculadas por login
 
-**Data:** 2026-11-07 · Rota `#/settings/linked-accounts` · Módulos: `linked-accounts.js`, `bsky-oauth.js`, `render/linked-accounts-ui.js` · Guia de deploy: [docs/login-social.md](../docs/login-social.md).
+**Data:** 2026-11-07 · Rota `#/settings/linked-accounts` · Módulos: `linked-accounts.js`, `bsky-oauth.js`, `render/linked-accounts-ui.js` · Guia de deploy: [docs/specs/login-social.md](../docs/specs/login-social.md).
 
 - Uma linha por rede; botão *Conectar* (login quando a rede permite; senão campo `@usuário`). Interruptor único *Replicar automaticamente*.
 - **Bluesky:** OAuth do AT Protocol 100% no navegador (PAR + PKCE + DPoP ES256), metadados em `oauth/bsky-client-metadata.json` no deploy; a auto-replicação posta com a sessão local.
 - **Facebook:** só identidade (sem `@usuário` público).
-- **X, Threads, GitHub, TikTok, Instagram profissional:** OAuth 2.0 + PKCE; `/oauth/exchange` do relay troca o código pelo `@usuário` e descarta o token ([docs/relay-api.md](../docs/relay-api.md)). O botão só aparece com ID público + relay configurados.
+- **X, Threads, GitHub, TikTok, Instagram profissional:** OAuth 2.0 + PKCE; `/oauth/exchange` do relay troca o código pelo `@usuário` e descarta o token ([docs/specs/relay-api.md](../docs/specs/relay-api.md)). O botão só aparece com ID público + relay configurados.
 - O onboarding importa nome e foto (Google, Meta, Bluesky, X, TikTok, GitHub; Kwai desativado "em breve").
 
 ## 44. Enquetes, voto com confirmação e assistentes

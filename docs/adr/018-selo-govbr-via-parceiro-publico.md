@@ -1,6 +1,6 @@
 # ADR-018: Selo gov.br opcional via parceiro público, desacoplado do login
 
-**Status:** proposed · **Revisado:** 2026-11-08 · **Fase:** D (verificação de cidadania opcional — [COMPLIANCE-BR § Identidade e Política Anti-CPF](../../COMPLIANCE-BR.md#identidade-chave-pix-fase-a-e-política-anti-cpf-fase-57))
+**Status:** proposed · **Revisado:** 2026-11-08 · **Fase:** D (verificação de cidadania opcional — [COMPLIANCE-BR § Identidade e Política Anti-CPF](../legal/COMPLIANCE-BR.md#identidade-chave-pix-fase-a-e-política-anti-cpf-fase-57))
 
 ## 1. Contexto
 
@@ -49,6 +49,6 @@ Rastreados no [ROADMAP](../ROADMAP.md) como **REV-08** ([ADR-017](./017-consolid
 
 - Parceiro público identificado e disposto a solicitar a credencial (ROADMAP **REV-08**).
 - Confirmar com o parceiro e com o Serviço de Integração se um verificador que emite atestado para terceiros é uso permitido do Login Único.
-- Parecer jurídico sobre LGPD (papéis controlador/operador, pseudônimo HMAC como dado pessoal) e acréscimo à [COMPLIANCE-BR](../../COMPLIANCE-BR.md).
+- Parecer jurídico sobre LGPD (papéis controlador/operador, pseudônimo HMAC como dado pessoal) e acréscimo à [COMPLIANCE-BR](../legal/COMPLIANCE-BR.md).
 - Spec do formato do atestado e da lista de emissores (RFC em `docs/rfc/`).
 - Teste em homologação (`sso.staging.acesso.gov.br`) com um verificador de exemplo.

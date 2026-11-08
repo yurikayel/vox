@@ -38,7 +38,7 @@ test("meu-modulo — caso feliz", () => {
 
 ## 3. Relay (`relay/test_*.py`, `unittest`)
 
-Stdlib pura. `test_server.py` sobe o handler HTTP em memória e exercita as rotas descritas em [relay-api.md](./relay-api.md). Os testes usam diretórios temporários via `VOX_RELAY_*_DIR`, nunca o `.cache/` real.
+Stdlib pura. `test_server.py` sobe o handler HTTP em memória e exercita as rotas descritas em [relay-api.md](./specs/relay-api.md). Os testes usam diretórios temporários via `VOX_RELAY_*_DIR`, nunca o `.cache/` real.
 
 ## 4. O que o CI checa (`.github/workflows/ci.yml`)
 
@@ -52,7 +52,7 @@ Stdlib pura. `test_server.py` sobe o handler HTTP em memória e exercita as rota
 
 ## 5. Complexidade
 
-`npm run audit:complexity` (ESLint, `tools/complexity-audit.mjs`) aplica os limites de [HARDENING.md](./HARDENING.md) e escreve um baseline datado em `docs/metrics/`. Meta: **zero violações** ([ADR-007](./adr/007-zero-complexity-monolith-decomposition.md)). `mock.js` fica de fora.
+`npm run audit:complexity` (ESLint, `scripts/complexity-audit.mjs`) aplica os limites de [HARDENING.md](./HARDENING.md) e escreve um baseline datado em `docs/metrics/`. Meta: **zero violações** ([ADR-007](./adr/007-zero-complexity-monolith-decomposition.md)). `mock.js` fica de fora.
 
 ## 6. Release line
 

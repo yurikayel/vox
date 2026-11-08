@@ -22,11 +22,11 @@ def _import_from_path(module_name: str, file_path: Path):
 
 seeder_mod = _import_from_path(
     "vox_desktop_app",
-    VOX_ROOT / "tools" / "desktop-seeder-windows" / "vox_desktop_app.py",
+    VOX_ROOT / "packaging" / "desktop-seeder-windows" / "vox_desktop_app.py",
 )
 steward_mod = _import_from_path(
     "steward_launcher",
-    VOX_ROOT / "tools" / "steward-kit-windows" / "steward_launcher.py",
+    VOX_ROOT / "packaging" / "steward-kit-windows" / "steward_launcher.py",
 )
 
 DesktopBridge = seeder_mod.DesktopBridge

@@ -417,7 +417,7 @@ export function renderCommunitySeedChecklist(communityId, state, ctx = {}) {
       </header>
       <p class="desc community-vox-seed-lead">Ritual rápido para visitantes lerem via vizinhos, não só gateway de reserva.</p>
       ${renderCommunitySeedStepList(communityId, state, { topicCount, peerEnabled, commOnly })}
-      <p class="meta community-vox-seed-foot">Baseado em <code>docs/steward-seed-15min.md</code> — caminho A (sem VPS).</p>
+      <p class="meta community-vox-seed-foot">Baseado em <code>docs/operations/steward-seed-15min.md</code> — caminho A (sem VPS).</p>
     </section>`;
 }
 

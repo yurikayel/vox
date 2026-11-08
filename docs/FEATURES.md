@@ -86,7 +86,7 @@
 | Malha WebRTC + gossip (WANT/HAVE/BLOB, perfis, manifestos) | — | `peers*.js`, `webrtc-peer.js`, `profile-card.js`, `mesh-profile.js` | no ar; **depende da sinalização** (1 nó Render) | `peers*`, `webrtc`, `profile-card` |
 | Prioridade suave de blobs (V-I09) | — | `peers-blob-affinity.js` | no ar, flag padrão **desligada** | `peers-blob-soft-priority` |
 | Sinalização via Nostr (efêmero kind 25050, cifrada entre pares) | — | `nostr-transport.js`, `nostr-event.js` (BIP-340), `nostr-signaling.js` | **no ar em paralelo ao Render** (REV-09; desligável em `signaling.json` → `nostrSignaling.enabled`). Ida e volta validada em relays reais; conexão entre dois navegadores ainda não testada em campo | `nostr-transport`, `nostr-event`, `nostr-signaling` |
-| Teste de fumaça dos relays Nostr | workflow semanal | `tools/nostr-smoke.mjs`, `.github/workflows/nostr-smoke.yml` | no ar (REV-19) | `nostr-smoke` |
+| Teste de fumaça dos relays Nostr | workflow semanal | `scripts/nostr-smoke.mjs`, `.github/workflows/nostr-smoke.yml` | no ar (REV-19) | `nostr-smoke` |
 | Kill-switch por configuração | `config/flags.json` | `feature-flags.js` | no ar (LAN-08): pausa upload, Feira, Pix Zaps, criar comunidade | `feature-flags` |
 | Trackers WebTorrent | — | `client/config/signaling.json` | **stub** (configurados, não usados) | — |
 | Modo guardião (aparelho como nó) | — | `seeder-guardian.js` | **escrito, não plugado** | `seeder-guardian` |
@@ -115,6 +115,6 @@
 2. **Sem relay completo público**: entrega offline de DM, cofre remoto e OAuth de várias redes dependem de stewards.
 3. **Sem TURN**.
 4. O upload grátis do Turbo tem **cota** (~10 MiB por carteira/IP, segundo `upload.ardrive.io/info`); depois dela, e para itens acima de 105 KiB, publicar custa.
-5. Onze módulos prontos não estão plugados (lista acima). Plugar é o caminho mais barato para várias das [10 features de autossustento](./brainstorm-autossustento-10-features-2026-11.md).
+5. Onze módulos prontos não estão plugados (lista acima). Plugar é o caminho mais barato para várias das [10 features de autossustento](./brainstorms/brainstorm-autossustento-10-features-2026-11.md).
 
 Detalhes de custo e risco: [INFRA-CUSTOS.md](./INFRA-CUSTOS.md). Prioridades: [ROADMAP.md](./ROADMAP.md).
