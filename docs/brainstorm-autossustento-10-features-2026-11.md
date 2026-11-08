@@ -147,7 +147,7 @@ Esforço: **P** = plugar um módulo que já existe, com UI pequena · **M** = l�
 
 Os três prompts são **autossuficientes**: cada um traz o contexto do projeto, os links públicos dos arquivos do repositório e as fontes externas por onde começar, para que um agente **sem acesso local ao código** (Gemini Deep Research, Perplexity, ChatGPT Deep Research) consiga trabalhar. Cole um de cada vez, na ordem **1 → 2 → 3**. Se quiser, cole o relatório do anterior no fim do seguinte.
 
-> **Links do repositório:** apontam para a branch `docs/revisao-estado-2026-11` (PR yurikayel/vox#13). Depois do merge, se a branch for apagada, troque `docs/revisao-estado-2026-11` por `main` nas URLs. Os links `raw.githubusercontent.com` entregam o texto puro, que é mais fácil de o agente ler; para navegar, use `https://github.com/yurikayel/vox/tree/main`.
+> **Links do repositório:** apontam para `main`. Os links `raw.githubusercontent.com` entregam o texto puro, que é mais fácil de o agente ler; para navegar, use `https://github.com/yurikayel/vox/tree/main`.
 
 ### Prompt 1 — O que falta para o Vox se sustentar sozinho (diagnóstico + comparação)
 
@@ -185,17 +185,17 @@ O Vox (github.com/yurikayel/vox, AGPL-3.0) é uma rede social cívica brasileira
   A sinalização via Nostr é só um stub.
 
 ## Leia primeiro (fontes do projeto)
-- Estado real de cada funcionalidade: https://raw.githubusercontent.com/yurikayel/vox/docs/revisao-estado-2026-11/docs/FEATURES.md
-- Infra, custos e pontos únicos de falha: https://raw.githubusercontent.com/yurikayel/vox/docs/revisao-estado-2026-11/docs/INFRA-CUSTOS.md
-- Roadmap atual: https://raw.githubusercontent.com/yurikayel/vox/docs/revisao-estado-2026-11/docs/ROADMAP.md
-- As 10 features candidatas (F1–F10): https://raw.githubusercontent.com/yurikayel/vox/docs/revisao-estado-2026-11/docs/brainstorm-autossustento-10-features-2026-11.md
-- Posicionamento e limites: https://raw.githubusercontent.com/yurikayel/vox/docs/revisao-estado-2026-11/POSITIONING.md
-- Tese de infra a custo zero (celulares como nós): https://raw.githubusercontent.com/yurikayel/vox/docs/revisao-estado-2026-11/docs/brainstorm-sustentacao-perene-celulares-nos-base.md
-- Meta de rede sustentada por participantes: https://raw.githubusercontent.com/yurikayel/vox/docs/revisao-estado-2026-11/docs/rede-sustentada-participantes.md
-- API do relay: https://raw.githubusercontent.com/yurikayel/vox/docs/revisao-estado-2026-11/docs/relay-api.md
-- Configuração real de sinalização: https://raw.githubusercontent.com/yurikayel/vox/docs/revisao-estado-2026-11/client/config/signaling.json
-- Upload (Turbo / L1): https://raw.githubusercontent.com/yurikayel/vox/docs/revisao-estado-2026-11/client/js/upload.js
-- Stub de Nostr: https://raw.githubusercontent.com/yurikayel/vox/docs/revisao-estado-2026-11/client/js/nostr-signaling.js
+- Estado real de cada funcionalidade: https://raw.githubusercontent.com/yurikayel/vox/main/docs/FEATURES.md
+- Infra, custos e pontos únicos de falha: https://raw.githubusercontent.com/yurikayel/vox/main/docs/INFRA-CUSTOS.md
+- Roadmap atual: https://raw.githubusercontent.com/yurikayel/vox/main/docs/ROADMAP.md
+- As 10 features candidatas (F1–F10): https://raw.githubusercontent.com/yurikayel/vox/main/docs/brainstorm-autossustento-10-features-2026-11.md
+- Posicionamento e limites: https://raw.githubusercontent.com/yurikayel/vox/main/POSITIONING.md
+- Tese de infra a custo zero (celulares como nós): https://raw.githubusercontent.com/yurikayel/vox/main/docs/brainstorm-sustentacao-perene-celulares-nos-base.md
+- Meta de rede sustentada por participantes: https://raw.githubusercontent.com/yurikayel/vox/main/docs/rede-sustentada-participantes.md
+- API do relay: https://raw.githubusercontent.com/yurikayel/vox/main/docs/relay-api.md
+- Configuração real de sinalização: https://raw.githubusercontent.com/yurikayel/vox/main/client/config/signaling.json
+- Upload (Turbo / L1): https://raw.githubusercontent.com/yurikayel/vox/main/client/js/upload.js
+- Stub de Nostr: https://raw.githubusercontent.com/yurikayel/vox/main/client/js/nostr-signaling.js
 
 ## Projetos para comparar (pesquise como cada um se sustenta e onde gasta dinheiro)
 - Nostr: https://github.com/nostr-protocol/nips (relays pagos, zaps, NIP-01 eventos efêmeros)
@@ -239,8 +239,8 @@ sem servidor próprio pago. Ele publica posts assinados (itens ANS-104) direto d
 Turbo/ArDrive (Arweave), descobre pares WebRTC por UM servidor de sinalização WebSocket no plano gratuito do
 Render (mantido acordado por cron do GitHub Actions a cada 14 min), não tem TURN e hospeda o app no GitHub
 Pages + Cloudflare Pages. Regras do projeto: nenhuma custódia de dinheiro, nenhum alcance pago, LGPD.
-Mapa de infra: https://raw.githubusercontent.com/yurikayel/vox/docs/revisao-estado-2026-11/docs/INFRA-CUSTOS.md
-Features em avaliação: https://raw.githubusercontent.com/yurikayel/vox/docs/revisao-estado-2026-11/docs/brainstorm-autossustento-10-features-2026-11.md
+Mapa de infra: https://raw.githubusercontent.com/yurikayel/vox/main/docs/INFRA-CUSTOS.md
+Features em avaliação: https://raw.githubusercontent.com/yurikayel/vox/main/docs/brainstorm-autossustento-10-features-2026-11.md
 F1 sinalização WebRTC via relays Nostr públicos + trackers WebTorrent; F2 convite por QR que já faz o
 pareamento WebRTC; F3 canal de avisos repassado por gossip; F4 vaquinha transparente via Pix direto na chave
 do coletivo; F5 mídia servida pela malha P2P com só o hash no Arweave; F6 modo guardião (celular no
@@ -326,18 +326,18 @@ descarte ou adapte as features marcadas como inviáveis.
   lotes no mesmo arquivo.
 
 ## Documentos (leia antes)
-- Features F1–F10: https://raw.githubusercontent.com/yurikayel/vox/docs/revisao-estado-2026-11/docs/brainstorm-autossustento-10-features-2026-11.md
-- Catálogo do que existe: https://raw.githubusercontent.com/yurikayel/vox/docs/revisao-estado-2026-11/docs/FEATURES.md
-- Arquitetura (protocolo e tags): https://raw.githubusercontent.com/yurikayel/vox/docs/revisao-estado-2026-11/ARCHITECTURE.md
-- Arquitetura (camadas do cliente): https://raw.githubusercontent.com/yurikayel/vox/docs/revisao-estado-2026-11/docs/ARCHITECTURE.md
-- Limites de complexidade: https://raw.githubusercontent.com/yurikayel/vox/docs/revisao-estado-2026-11/docs/HARDENING.md
-- Testes e CI: https://raw.githubusercontent.com/yurikayel/vox/docs/revisao-estado-2026-11/docs/TESTES.md
-- Como contribuir: https://raw.githubusercontent.com/yurikayel/vox/docs/revisao-estado-2026-11/CONTRIBUTING.md
-- Contrato legislativo LCP (para F9): https://raw.githubusercontent.com/yurikayel/vox/docs/revisao-estado-2026-11/docs/brainstorm-sinergia-tramitado-vox-2026-11.md
-- Conformidade Brasil (para F4): https://raw.githubusercontent.com/yurikayel/vox/docs/revisao-estado-2026-11/COMPLIANCE-BR.md
-- Índice de decisões (ADRs): https://raw.githubusercontent.com/yurikayel/vox/docs/revisao-estado-2026-11/docs/adr/README.md
+- Features F1–F10: https://raw.githubusercontent.com/yurikayel/vox/main/docs/brainstorm-autossustento-10-features-2026-11.md
+- Catálogo do que existe: https://raw.githubusercontent.com/yurikayel/vox/main/docs/FEATURES.md
+- Arquitetura (protocolo e tags): https://raw.githubusercontent.com/yurikayel/vox/main/ARCHITECTURE.md
+- Arquitetura (camadas do cliente): https://raw.githubusercontent.com/yurikayel/vox/main/docs/ARCHITECTURE.md
+- Limites de complexidade: https://raw.githubusercontent.com/yurikayel/vox/main/docs/HARDENING.md
+- Testes e CI: https://raw.githubusercontent.com/yurikayel/vox/main/docs/TESTES.md
+- Como contribuir: https://raw.githubusercontent.com/yurikayel/vox/main/CONTRIBUTING.md
+- Contrato legislativo LCP (para F9): https://raw.githubusercontent.com/yurikayel/vox/main/docs/brainstorm-sinergia-tramitado-vox-2026-11.md
+- Conformidade Brasil (para F4): https://raw.githubusercontent.com/yurikayel/vox/main/COMPLIANCE-BR.md
+- Índice de decisões (ADRs): https://raw.githubusercontent.com/yurikayel/vox/main/docs/adr/README.md
 
-## Código a reaproveitar (prefixo de URL — acrescente o caminho do arquivo; o prefixo sozinho não abre: https://raw.githubusercontent.com/yurikayel/vox/docs/revisao-estado-2026-11/client/js/)
+## Código a reaproveitar (prefixo de URL — acrescente o caminho do arquivo; o prefixo sozinho não abre: https://raw.githubusercontent.com/yurikayel/vox/main/client/js/)
 - F1: nostr-signaling.js, webrtc-peer.js, ../config/signaling.json
 - F2: airgap-webrtc.js, qr-url.js
 - F3: peers.js, posse-dispatch.js, share.js
@@ -350,7 +350,7 @@ descarte ou adapte as features marcadas como inviáveis.
 - F10: story-card.js, share.js
 - Componente de etapas: app/compose-stepper.js, render/compose-steps.js
 - Rotas: app/route-parse.js
-(Exemplo de URL completa: https://raw.githubusercontent.com/yurikayel/vox/docs/revisao-estado-2026-11/client/js/airgap-webrtc.js)
+(Exemplo de URL completa: https://raw.githubusercontent.com/yurikayel/vox/main/client/js/airgap-webrtc.js)
 
 ## Para cada feature F1–F10, entregue
 1. Objetivo em 1 frase e o problema de sustentabilidade que resolve.
