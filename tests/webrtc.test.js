@@ -142,3 +142,22 @@ test("webrtc - getWebTorrentTrackers e getNostrRelays fornecem fallbacks gratuit
   assert.ok(fallbackRelays.length >= 2);
   assert.ok(fallbackRelays[0].includes("relay"));
 });
+
+test("webrtc - modo só TURN tira STUN e força iceTransportPolicy relay (LAN-19)", () => {
+  localStorage.clear();
+  const baseCfg = {
+    stun: ["stun:stun.l.google.com:19302"],
+    turn: [{ urls: "turn:static.org:3478", username: "u1", credential: "p1" }],
+  };
+  assert.equal(webrtcPeer.isTurnOnly(), false);
+  webrtcPeer.setTurnOnly(true);
+  assert.equal(webrtcPeer.isTurnOnly(), true);
+  const cfg = webrtcPeer.createRtcConfig(baseCfg);
+  assert.equal(cfg.iceTransportPolicy, "relay");
+  assert.deepEqual(cfg.iceServers.map((s) => s.urls), ["turn:static.org:3478"]);
+  const semTurn = webrtcPeer.createRtcConfig({ stun: ["stun:x:1"] });
+  assert.equal(semTurn.iceServers.length, 0);
+  assert.equal(semTurn.iceTransportPolicy, "relay");
+  webrtcPeer.setTurnOnly(false);
+  assert.equal(webrtcPeer.createRtcConfig(baseCfg).iceTransportPolicy, undefined);
+});
