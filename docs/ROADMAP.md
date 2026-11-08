@@ -21,17 +21,23 @@ O cliente está maduro: feed Social/Cívico, comunidades, governança, Feira, Pi
 |---|---|---|---|---|
 | [ ] | **NET-01** | ops-humano | Espelho shell **B** no ar + registro público | [ops-shell-mirrors.md](./ops-shell-mirrors.md) — não marcar só por doc |
 | [ ] | **NET-02** | ops-humano | Drill de DR datado | [ops-dr-drill-checklist.md](./ops-dr-drill-checklist.md) |
-| [ ] | **REV-01** | ops-humano | **2º nó de sinalização** em `client/config/signaling.json` (HF Space via `deploy-relay-hf.yml` ou Koyeb) para tirar o Render de SPOF | [INFRA-CUSTOS §4](./INFRA-CUSTOS.md#4-pontos-únicos-de-falha-ordem-de-gravidade) |
+| [ ] | **REV-01** | ops-humano | **2º nó de sinalização** em `client/config/signaling.json` — **Cloudflare Durable Object** (Workers Free, sem sleep) ou Koyeb. ~~HF Space~~: Docker Spaces agora exigem plano pago ([pesquisa V6](./pesquisa-deep-research-2026-11.md)) | [INFRA-CUSTOS §4](./INFRA-CUSTOS.md#4-pontos-únicos-de-falha-ordem-de-gravidade) |
+| [ ] | **REV-09** | code | **F1 sobe para P0:** sinalização por Nostr efêmero cifrado (faixa 20000–29999, ICE agrupado, sem dependência nova). Depois dela, aposentar o cron de keepalive do Render | [pesquisa §4](./pesquisa-deep-research-2026-11.md#4-decisões-viram-linhas-no-roadmap) |
+| [ ] | **REV-12** | ops-humano | **Jurídico pós-STF (Temas 987/533):** parecer sobre canal de denúncia, lista de ocultação assinada no PWA oficial e Feira sob o CDC — antes de qualquer código | [pesquisa V9](./pesquisa-deep-research-2026-11.md) |
+| [ ] | **REV-13** | code | **Aviso nos Pix Zaps (já no ar):** o app do pagador mostra o nome civil de quem recebe; recomendar chave aleatória e dizer isso na UI | [pesquisa §2](./pesquisa-deep-research-2026-11.md#2-plausível-não-verificado-confirmar-antes-de-usar) |
 | [ ] | **PIL-01** | ops-humano | Comunidade + facilitador nomeados (10–30 pessoas) | [piloto-comunidade-go-no-go.md](./piloto-comunidade-go-no-go.md) |
 | [ ] | **PIL-02** | ops-humano | **V-P09** semanas 0–4 (*blocked-human*) | [template de retrospectiva](./piloto-comunidade-retrospectiva-template.md) |
 | [ ] | **PIL-03** | ops-humano | Retrospectiva preenchida | idem |
-| [ ] | **REV-07** | doc | **Confirmar o modelo de cota do Turbo** (`https://upload.ardrive.io/info` em 2026-11-07: `maxItemBytes` 107520 (105 KiB), `lifetimeBytes` 10485760 e `ipBytes` 10485760 (≈10 MiB)) e decidir a política: o que vai para o permaweb, o que fica só na malha, e quem paga o crédito | [INFRA-CUSTOS §4](./INFRA-CUSTOS.md#4-pontos-únicos-de-falha-ordem-de-gravidade), Prompt 2 do brainstorm |
+| [ ] | **REV-07** | doc | ✅ cota confirmada (vitalícia, por carteira e por sub-rede — [pesquisa V1](./pesquisa-deep-research-2026-11.md)); falta a decisão de política, que é o **REV-11**. **Confirmar o modelo de cota do Turbo** (`https://upload.ardrive.io/info` em 2026-11-07: `maxItemBytes` 107520 (105 KiB), `lifetimeBytes` 10485760 e `ipBytes` 10485760 (≈10 MiB)) e decidir a política: o que vai para o permaweb, o que fica só na malha, e quem paga o crédito | [INFRA-CUSTOS §4](./INFRA-CUSTOS.md#4-pontos-únicos-de-falha-ordem-de-gravidade), Prompt 2 do brainstorm |
 | [ ] | **DOC-04** | doc | Re-auditoria de copy honesta, incluindo "Capacidades" do README × [FEATURES.md](./FEATURES.md) (Webxdc já corrigido para "laboratório") | [honest-copy-audit](./honest-copy-audit-2026-10-23.md) |
 
 ## Próximo (P1)
 
 | | ID | Tipo | Item | Evidência / nota |
 |---|---|---|---|---|
+| [ ] | **REV-11** | code | **Efêmero por padrão, permanente por consenso:** post social e Feira só na malha (TTL); no Arweave só propostas, votos consolidados e manifestos (ou hash). Medidor de cota via `getFreeStatus()` | [pesquisa §4](./pesquisa-deep-research-2026-11.md#4-decisões-viram-linhas-no-roadmap) |
+| [ ] | **REV-14** | code | **Chave no iOS:** plugar `storage-persistence`, guia "Adicionar à Tela de Início" no Safari e backup do cofre em cartão QR | [pesquisa §2](./pesquisa-deep-research-2026-11.md#2-plausível-não-verificado-confirmar-antes-de-usar) |
+| [ ] | **REV-10** | code | **TURN:** um Worker gera credenciais temporárias do Cloudflare Realtime TURN (1.000 GB grátis); uso só em falha direta + modo "privacidade de IP" | [pesquisa V5](./pesquisa-deep-research-2026-11.md) |
 | [ ] | **REV-02** | code | Decidir, módulo a módulo, **plugar ou arquivar** os 11 módulos "escritos, não plugados" | lista em [FEATURES.md](./FEATURES.md); vários viram features do brainstorm |
 | [ ] | **REV-03** | code | Teste que falha se `docs/release-metadata.json.cache_name` ≠ `CACHE_NAME` do `sw.js` (impede drift) | [TESTES.md](./TESTES.md) |
 | [ ] | **REV-04** | ops-humano | **Relay completo público** operado por steward (inbox de DM, `/oauth/exchange`, cofre) com buddy | [relay-api.md](./relay-api.md), [steward-relay-buddy.md](./steward-relay-buddy.md) |
@@ -54,6 +60,8 @@ O cliente está maduro: feed Social/Cívico, comunidades, governança, Feira, Pi
 | [ ] | **EXP-04** | code | Backup em HTML standalone | — |
 | [ ] | **EXP-05** | doc | Decisão sobre o Bridge MV3 depois do piloto | [vox-bridge-spike.md](./vox-bridge-spike.md) |
 | [ ] | **REV-08** | ops-humano | **Selo gov.br opcional via parceiro público** ([ADR-018](./adr/018-selo-govbr-via-parceiro-publico.md), proposed): achar parceiro com domínio oficial (`*.edu.br`, `*.leg.br`), confirmar o uso permitido do Login Único, obter parecer LGPD e escrever RFC do atestado | Parceiro nomeado + resposta do Serviço de Integração + parecer citados aqui |
+| [ ] | **REV-15** | code | **F6 redesenhada:** guardião na tomada (app aberto, Wake Lock, só no Wi-Fi); `periodicSync` só como complemento no Chromium | [pesquisa V7/V8](./pesquisa-deep-research-2026-11.md) |
+| [ ] | **REV-16** | doc | Rodar de novo o Prompt 3 **com os arquivos anexados** (o Gemini não abriu os links do repo) e só então escrever as specs F1–F10 | [pesquisa — Como ler](./pesquisa-deep-research-2026-11.md#como-ler) |
 | [ ] | **REV-06** | code | Trocar hotlinks `images.unsplash.com` (~35) por assets locais ou remover | [INFRA-CUSTOS §1](./INFRA-CUSTOS.md) |
 
 ## Candidatas (sem caixa até ganharem DoD e responsável)
@@ -67,8 +75,8 @@ Do [brainstorm de autossustento](./brainstorm-autossustento-10-features-2026-11.
 | F3 | Canal de transmissão da comunidade | alcance | `peers.js`, `posse-dispatch.js` |
 | F4 | Vaquinha transparente (comunidade e projeto) | dinheiro sem custódia | `brcode.js`, `perma-notary.js` |
 | F5 | ~~Mídia fatiada ≤100 KiB~~ → mídia pela malha, hash no Arweave (a cota do Turbo é por bytes totais) | infra | `chunked-transfer.js`, `media-blob.js` |
-| F6 | Modo Guardião noturno | infra | `seeder-guardian.js`, `storage-persistence.js`, `voxels.js` |
-| F7 | Notas da Comunidade por ponte | moderação | `bridging-rank.js` |
+| F6 | Modo Guardião ~~noturno em segundo plano~~ → **na tomada, app aberto** (REV-15) | infra | `seeder-guardian.js`, `storage-persistence.js`, `voxels.js` |
+| F7 | Notas da Comunidade por ponte — **só depois da F8** (anti-Sybil) | moderação | `bridging-rank.js` |
 | F8 | Selo de confiança por aval | anti-sybil | `civic-credential.js`, `identity-link.js` |
 | F9 | Pauta legislativa automática | conteúdo | `frames.js`, contrato LCP |
 | F10 | Resumo semanal + bot do Telegram | crescimento | `story-card.js`, `share.js` |

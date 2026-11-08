@@ -71,6 +71,7 @@ Entrada única para quem desenvolve, revisa ou opera. Todo `.md` novo em `docs/`
 ### Brainstorms (ideias; não são plano)
 
 - [brainstorm-autossustento-10-features-2026-11.md](./brainstorm-autossustento-10-features-2026-11.md): **10 features de autossustento a custo ~zero + 3 prompts de pesquisa**
+- [pesquisa-deep-research-2026-11.md](./pesquisa-deep-research-2026-11.md): **resultado verificado dos 3 prompts** (o que se confirmou, o que falta conferir, o que foi descartado)
 - [brainstorm-sustentacao-perene-celulares-nos-base.md](./brainstorm-sustentacao-perene-celulares-nos-base.md): infra $0, celulares como nós
 - [brainstorm-sinergia-tramitado-vox-2026-11.md](./brainstorm-sinergia-tramitado-vox-2026-11.md): Tramitado × Vox, contrato LCP
 - [brainstorm-auto-escala-organica-2026-10.md](./brainstorm-auto-escala-organica-2026-10.md): flywheel, SLOs, moderação voluntária
