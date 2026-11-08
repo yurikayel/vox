@@ -366,9 +366,9 @@ function renderCommunityNeighborPanel(stats, { commOnly = false } = {}) {
     : ' <span class="community-vox-neighbor-demo meta">(estimativa local)</span>';
   const onlineLabel = `~${stats.onlineDevices.toLocaleString("pt-BR")} aparelho${stats.onlineDevices === 1 ? "" : "s"} online agora`;
   const readLabel = formatNeighborReadLabel(stats);
-  const alert = stats.degraded ? '<p class="community-vox-neighbor-alert" role="status">Velocidade reduzida: poucos apoiadores online nesta comunidade.</p>' : "";
+  const alert = stats.degraded ? '<p class="community-vox-neighbor-alert" role="status">Velocidade reduzida: poucos apoiadores online nesta comunidade. <a href="#/settings/network#net-supporter">Seja um apoiador da rede</a></p>' : "";
   const commCta = commOnly
-    ? '<span class="meta">Você já prioriza suas comunidades na malha (Apoiador).</span>'
+    ? '<span class="meta">Você já prioriza suas comunidades na malha.</span>'
     : '<button type="button" class="btn btn-sm btn-outline" id="btn-neighbor-comm-only">Priorizar esta comunidade na malha</button>';
 
   return `
@@ -399,7 +399,7 @@ function renderCommunitySeedStepList(communityId, state, ctx) {
       ${renderSeedStep(activeDone, "Camada <strong>Ativa</strong> (Pacto Vox)", activeDone ? "" : '<a href="#/settings/network">Revisar rede</a>')}
       ${renderSeedStep(invitesDone, "2 convites", invitesDone ? `${state.invitesSent} enviados` : '<button type="button" class="btn-link community-seed-invite" id="btn-seed-invite">Contar compartilhamento</button>')}
       ${renderSeedStep(topicDone, "Primeiro tópico", topicDone ? "Publicado" : `<a href="${composeHref}">Criar post</a>`)}
-      ${renderSeedStep(state.commOnlyNudgeSeen || ctx.commOnly, "Apoiador <code>commOnly</code> (opcional)", ctx.commOnly ? "Ativo" : '<a href="#/settings/network#net-comm-only-wrap">Ver opção</a>')}
+      ${renderSeedStep(state.commOnlyNudgeSeen || ctx.commOnly, "Priorizar minhas comunidades (opcional)", ctx.commOnly ? "Ativo" : '<a href="#/settings/network#net-comm-only-wrap">Ver opção</a>')}
     </ol>`;
 }
 

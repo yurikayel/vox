@@ -17,8 +17,8 @@ const PARTICIPATION_LAYERS = [
   {
     id: "supporter",
     title: "Apoiador",
-    desc: "Prioriza os espaços digitais em que você participa: o compartilhamento na malha foca nas suas comunidades, não no feed global inteiro.",
-    control: '<a class="participation-link" href="#net-comm-only-wrap">Compartilhar apenas minhas comunidades</a> (<code>commOnly</code>)',
+    desc: "Nó pesado: guarda e repassa mais conteúdo (até 500 MB/dia e 250 MB de disco), só no Wi-Fi. Ajuda comunidades com poucos aparelhos online.",
+    control: '<a class="participation-link" href="#net-supporter">Seja um apoiador da rede</a>',
   },
   {
     id: "steward",
@@ -33,7 +33,7 @@ export function inferParticipationLayer(settings = {}, { customSignalingUrl = ""
   if (settings.enabled === false) return "passive";
   const signaling = String(customSignalingUrl || "").trim();
   if (settings.backgroundRelay || signaling) return "steward";
-  if (settings.commOnly) return "supporter";
+  if (settings.supporter) return "supporter";
   return "active";
 }
 
@@ -224,13 +224,31 @@ function renderQuotaAndLimitFieldsHtml(settings) {
     </div>
     <div id="net-comm-only-wrap" class="form-group" style="display:flex; align-items:center; gap:0.6rem;">
       <input type="checkbox" id="net-comm-only" ${settings?.commOnly ? "checked" : ""} style="width:1rem; height:1rem;" />
-      <label for="net-comm-only" style="margin:0;">Compartilhar apenas minhas comunidades (camada Apoiador)</label>
+      <label for="net-comm-only" style="margin:0;">Compartilhar apenas minhas comunidades </label>
+    </div>`;
+}
+
+/** Card de opt-in do nó pesado (Apoiador); o nó leve segue como padrão. */
+export function renderSupporterCardHtml(settings = {}) {
+  const on = Boolean(settings.supporter);
+  const text = on
+    ? "Você é apoiador: este aparelho guarda e repassa mais conteúdo da rede, só no Wi-Fi."
+    : "Seu aparelho já ajuda como nó leve (até 50 MB/dia). Com Wi-Fi e espaço sobrando, vire apoiador: até 500 MB/dia e 250 MB de disco para manter as comunidades no ar.";
+  const btn = on
+    ? '<button type="button" id="btn-supporter-toggle" class="btn btn-sm btn-outline" data-on="1">Voltar ao nó leve</button>'
+    : '<button type="button" id="btn-supporter-toggle" class="btn btn-sm btn-primary" data-on="0">Seja um apoiador da rede</button>';
+  return `
+    <div id="net-supporter" class="card supporter-card" style="margin:0.5rem 0 1rem; padding:0.85rem 1rem;">
+      <strong style="font-size:0.92rem; display:block;">${on ? "💪 Apoiador da rede" : "🤝 Apoie a rede"}</strong>
+      <p class="desc" style="font-size:0.8rem; margin:0.35rem 0 0.6rem;">${text}</p>
+      ${btn}
     </div>`;
 }
 
 function renderGeneralPreferencesHtml(settings, meshDiscoverable, customSignalingUrl) {
   const isEnabled = Boolean(settings?.enabled);
   return `
+    ${renderSupporterCardHtml(settings)}
     ${renderPauseAndDiscoverableHtml(isEnabled, meshDiscoverable)}
     ${renderQuotaAndLimitFieldsHtml(settings)}
     ${renderParticipationLayers(settings, customSignalingUrl)}
