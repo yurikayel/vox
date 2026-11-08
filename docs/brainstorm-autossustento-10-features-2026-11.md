@@ -337,7 +337,7 @@ descarte ou adapte as features marcadas como inviáveis.
 - Conformidade Brasil (para F4): https://raw.githubusercontent.com/yurikayel/vox/docs/revisao-estado-2026-11/COMPLIANCE-BR.md
 - Índice de decisões (ADRs): https://raw.githubusercontent.com/yurikayel/vox/docs/revisao-estado-2026-11/docs/adr/README.md
 
-## Código a reaproveitar (base: https://raw.githubusercontent.com/yurikayel/vox/docs/revisao-estado-2026-11/client/js/)
+## Código a reaproveitar (prefixo de URL — acrescente o caminho do arquivo; o prefixo sozinho não abre: https://raw.githubusercontent.com/yurikayel/vox/docs/revisao-estado-2026-11/client/js/)
 - F1: nostr-signaling.js, webrtc-peer.js, ../config/signaling.json
 - F2: airgap-webrtc.js, qr-url.js
 - F3: peers.js, posse-dispatch.js, share.js
