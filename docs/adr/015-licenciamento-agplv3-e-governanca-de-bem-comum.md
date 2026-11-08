@@ -28,7 +28,7 @@ Complementarmente, estabelecemos a estrutura documental canônica de governança
 3. **`AUTHORS.md`:** Reconhecimento da autoria moral de Yuri Kayel como fundador e de todos os colaboradores do projeto.
 4. **`CONTRIBUTORS.md`:** Estabelecimento do Developer Certificate of Origin (DCO), copyleft recíproco e diretrizes de submissão de código sob as métricas de hardening do projeto.
 5. **`SECURITY.md`:** Política de segurança *fail-closed*, com SLA de resposta a relatórios de vulnerabilidade e canais confidenciais de divulgação responsável.
-6. **`docs/licenca-e-contribuicoes.md`:** Documento de aprofundamento teórico sobre a proteção do bem comum digital e fundamentação anticapitalista da Seção 13 da AGPLv3.
+6. **`docs/legal/licenca-e-contribuicoes.md`:** Documento de aprofundamento teórico sobre a proteção do bem comum digital e fundamentação anticapitalista da Seção 13 da AGPLv3.
 
 ---
 

@@ -1,3 +1,0 @@
-{
-  "start": "python3 relay/signaling.py --port 3000"
-}

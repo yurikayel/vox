@@ -1,7 +1,7 @@
 import "../tests/setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
-import { parseArgs, classifyRejection, summarize, loadConfiguredRelays } from "../tools/nostr-smoke.mjs";
+import { parseArgs, classifyRejection, summarize, loadConfiguredRelays } from "../scripts/nostr-smoke.mjs";
 
 test("nostr-smoke - parseArgs lê --json, --timeout e relays", () => {
   const o = parseArgs(["--json", "out.json", "--timeout", "5000", "wss://a.example", "lixo"]);

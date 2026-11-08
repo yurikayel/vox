@@ -2,7 +2,7 @@
 
 Cliente estático (ES modules) + relay Python opcional. Identidade local `vx_*`; gossip P2P; permaweb via gateways.
 
-> Este arquivo cobre as **camadas do cliente**. Protocolo, tags e dados: [../ARCHITECTURE.md](../ARCHITECTURE.md). API do relay: [relay-api.md](./relay-api.md). Decisões: [adr/README.md](./adr/README.md).
+> Este arquivo cobre as **camadas do cliente**. Protocolo, tags e dados: [../ARCHITECTURE.md](../ARCHITECTURE.md). API do relay: [relay-api.md](./specs/relay-api.md). Decisões: [adr/README.md](./adr/README.md).
 
 ## Camadas
 
@@ -91,8 +91,8 @@ flowchart TB
 
 - `tests/*.test.js` — Node test runner + mocks em `tests/setup.js` (contagem em [release-metadata.json](./release-metadata.json); guia em [TESTES.md](./TESTES.md)).
 - `relay/test_*.py` — unittest Python para espelho, inbox e sinalização (34 testes).
-- `tools/lint_relay.py` — linter estático e AST para nós relay.
-- `tools/complexity-audit.mjs` — auditoria contínua de complexidade cognitiva e LLOC (131 arquivos, 0 violações).
+- `scripts/lint_relay.py` — linter estático e AST para nós relay.
+- `scripts/complexity-audit.mjs` — auditoria contínua de complexidade cognitiva e LLOC (131 arquivos, 0 violações).
 
 ## Offline
 

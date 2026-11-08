@@ -38,7 +38,7 @@ cp .env.example .env
 # Edite VOX_RELAY_MAX_CACHE_MB (padrão 512)
 ```
 
-O serviço `vox-relay` lê `VOX_RELAY_MAX_CACHE_MB`; quando o disco de cache atinge o teto, novos espelhos retornam HTTP 413. Monitore com `GET /health` (`cacheBytes`, `maxCacheBytes`, `communityIndexes`). Ver [`docs/steward-relay-kit.md`](../../docs/steward-relay-kit.md).
+O serviço `vox-relay` lê `VOX_RELAY_MAX_CACHE_MB`; quando o disco de cache atinge o teto, novos espelhos retornam HTTP 413. Monitore com `GET /health` (`cacheBytes`, `maxCacheBytes`, `communityIndexes`). Ver [`docs/operations/steward-relay-kit.md`](../../docs/operations/steward-relay-kit.md).
 
 ### 5. Subir os Containers
 ```bash

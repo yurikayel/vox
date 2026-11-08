@@ -1,6 +1,6 @@
 /**
  * Open Frames 2.0 — host mínimo (iframe sandbox + postMessage whitelist).
- * Ver docs/open-frames-v2.md
+ * Ver docs/specs/open-frames-v2.md
  */
 
 export const OF_HOST_MESSAGE_TYPES = new Set(["of:ready", "of:resize", "of:action"]);

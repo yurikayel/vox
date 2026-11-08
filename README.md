@@ -36,10 +36,10 @@ O ecossistema é estritamente dividido em papéis complementares ([ADR-011](docs
 
 | Sistema Operacional | Papel: `vox` (Cliente Cívico) | Papel: `vox populi` (Nó de Apoio Comunitário) | Como Funciona Sob o Capô |
 |:---|:---|:---|:---|
-| **1. Microsoft Windows**<br>(10 / 11) | [**`Vox.exe`**](client/downloads/Vox.exe) *(967 KiB)* | [**`VoxPopuli.exe`**](client/downloads/VoxPopuli.exe) *(11.7 MB)*<br>`tools/zero-central-memory-windows/` *(170 KB)* | **Cliente:** Executável nativo com runtime WebView2 já presente no Windows (sem empacotar o Chromium/Electron; consome ~40 MB RAM em medições locais).<br>**Nó:** Serviço sem janela com ícone na bandeja (*System Tray*), operando relay local HTTP (`:3920` / `:3921`), cache criptográfico e memória central persistente (Modo 3). |
+| **1. Microsoft Windows**<br>(10 / 11) | [**`Vox.exe`**](client/downloads/Vox.exe) *(967 KiB)* | [**`VoxPopuli.exe`**](client/downloads/VoxPopuli.exe) *(11.7 MB)*<br>`packaging/zero-central-memory-windows/` *(170 KB)* | **Cliente:** Executável nativo com runtime WebView2 já presente no Windows (sem empacotar o Chromium/Electron; consome ~40 MB RAM em medições locais).<br>**Nó:** Serviço sem janela com ícone na bandeja (*System Tray*), operando relay local HTTP (`:3920` / `:3921`), cache criptográfico e memória central persistente (Modo 3). |
 | **2. Google Android**<br>(5.0+) | [**`vox.apk`**](client/downloads/vox.apk) *(74 KiB)* | [**`vox-populi.apk`**](client/downloads/vox-populi.apk) *(74 KiB)* | **Cliente (`org.vox.client`):** Micro-APK leve instalável via sideload direto. Roda a PWA em tela cheia via WebView do Android com aceleração gráfica.<br>**Nó (`org.vox.populi`):** Projetado para celulares ligados na tomada em Wi-Fi. Foreground service silencioso mantendo a malha viva 24/7 sem gastar dados móveis. |
-| **3. GNU/Linux & Pi**<br>(x86_64, ARM64, SBC) | [**Guia Linux WebKitGTK**](tools/desktop-linux/) *(< 30 KiB)* | [**Guia Daemon systemd**](vox-populi/) *(daemon)* | **Cliente:** Lançador leve integrando com WebKitGTK nativo do GNOME/KDE.<br>**Nó:** Daemon de baixo consumo (~15 MB RAM em repouso) empacotado para `systemd`, ideal para Raspberry Pi (3, 4, 5, Zero 2W) e servidores domésticos. |
-| **4. Apple**<br>(iOS / iPadOS & macOS) | [**Abrir Safari PWA**](https://vox-9df.pages.dev/) *(PWA)* | [**Guia macOS launchd**](tools/node-macos/) *(launchd)* | **Cliente (iOS):** Adicione à *Tela de Início* no Safari (*Compartilhar* &rarr; *Tela de Início*). Ganha contêiner isolado, **fica isento da limpeza de 7 dias do Safari (ITP)** e expande a quota de armazenamento para até 60% do disco.<br>**Nó (macOS):** Serviço de segundo plano via `launchd` para Mac Mini ou MacBooks como nó doméstico. |
+| **3. GNU/Linux & Pi**<br>(x86_64, ARM64, SBC) | [**Guia Linux WebKitGTK**](packaging/desktop-linux/) *(< 30 KiB)* | [**Guia Daemon systemd**](vox-populi/) *(daemon)* | **Cliente:** Lançador leve integrando com WebKitGTK nativo do GNOME/KDE.<br>**Nó:** Daemon de baixo consumo (~15 MB RAM em repouso) empacotado para `systemd`, ideal para Raspberry Pi (3, 4, 5, Zero 2W) e servidores domésticos. |
+| **4. Apple**<br>(iOS / iPadOS & macOS) | [**Abrir Safari PWA**](https://vox-9df.pages.dev/) *(PWA)* | [**Guia macOS launchd**](packaging/node-macos/) *(launchd)* | **Cliente (iOS):** Adicione à *Tela de Início* no Safari (*Compartilhar* &rarr; *Tela de Início*). Ganha contêiner isolado, **fica isento da limpeza de 7 dias do Safari (ITP)** e expande a quota de armazenamento para até 60% do disco.<br>**Nó (macOS):** Serviço de segundo plano via `launchd` para Mac Mini ou MacBooks como nó doméstico. |
 
 ---
 
@@ -57,7 +57,7 @@ Redes centralizadas, instâncias federadas e protocolos locais têm custos, vant
 | **Serviços federados** | Servidores independentes se comunicam por protocolos compartilhados. | Distribuem operação, mas cada instância precisa de administração, recursos e regras próprias. | O Vox pode aprender e interoperar; não afirma substituir ou superar o Fediverso. |
 | **Protocolos e clientes locais** | Dados, chaves e operação podem ser distribuídos entre aparelhos, gateways e operadores comunitários. | A autonomia depende da implementação, da disponibilidade dos pares e da capacidade de manter o software. | O Vox prioriza uso local, exportação de dados, participação comunitária e infraestrutura substituível. |
 
-*(Diagnóstico comparativo aprofundado em [LESSONS.md](./LESSONS.md) e [POSITIONING.md](./POSITIONING.md).)*
+*(Diagnóstico comparativo aprofundado em [LESSONS.md](./docs/process/LESSONS.md) e [POSITIONING.md](./docs/product/POSITIONING.md).)*
 
 ---
 
@@ -152,7 +152,7 @@ Resumo do que entrou no cliente em nov/2026 (detalhes em [CHANGELOG.md](./CHANGE
 * **Fluxos em etapas (uma decisão por tela):** onboarding (boas-vindas → como entrar → método → pacto), compositor, nova proposta, nova comunidade e nova oferta da Feira.
 * **Enquetes e voto com confirmação:** construtor de 2 a 6 opções; voto em pauta com confirmação em 2 etapas antes de assinar.
 * **Assistentes:** rede (`#/settings/network/guia`), Senha Soberana (`#/backup`) e carteira (`#/wallet/guia`).
-* **Contas vinculadas por login (`#/settings/linked-accounts`):** uma linha por rede e um botão *Conectar*. Bluesky por OAuth do AT Protocol 100% no navegador; Facebook só identidade; X, Threads, GitHub, TikTok e Instagram profissional via `/oauth/exchange` do relay quando o deploy está configurado ([docs/login-social.md](./docs/login-social.md)). Onboarding importa nome e foto (Kwai: "em breve", sem API pública).
+* **Contas vinculadas por login (`#/settings/linked-accounts`):** uma linha por rede e um botão *Conectar*. Bluesky por OAuth do AT Protocol 100% no navegador; Facebook só identidade; X, Threads, GitHub, TikTok e Instagram profissional via `/oauth/exchange` do relay quando o deploy está configurado ([docs/specs/login-social.md](./docs/specs/login-social.md)). Onboarding importa nome e foto (Kwai: "em breve", sem API pública).
 * **Mensagens:** contador de não lidas no menu e no topo.
 * **Infra:** Deno Deploy **pausado** (organização suspensa). A sinalização pública hoje é **um** nó Render (`wss://vox-sentinel.onrender.com`) mais o nó local; ver riscos em [docs/INFRA-CUSTOS.md](./docs/INFRA-CUSTOS.md).
 
@@ -211,7 +211,7 @@ cd relay
 python server.py      # relay completo (:3920): cache, inbox, mirror, memória, OAuth
 ```
 
-`npm start` sobe só a **sinalização** WebRTC (`relay/signaling.py`, :3921) — é o que o Dockerfile e o nó público rodam. Endpoints: [docs/relay-api.md](./docs/relay-api.md).
+`npm start` sobe só a **sinalização** WebRTC (`relay/signaling.py`, :3921) — é o que o `relay/Dockerfile` e o nó público rodam. Endpoints: [docs/specs/relay-api.md](./docs/specs/relay-api.md).
 Ou, no Windows, execute **`dist/VoxPopuli-ZeroMemory.exe`** (ícone na bandeja do sistema, escutando em `127.0.0.1:3921` e `127.0.0.1:3920` com persistência em `%LOCALAPPDATA%\VoxPopuli\NodeZero\central_memory`).
 
 ---
@@ -228,20 +228,39 @@ O Vox explora interoperabilidade com iniciativas independentes de tecnologia cí
 
 Esta é uma proposta exploratória, não uma integração ou parceria formalizada.
 
-Detalhes: [Brainstorm Tramitado × Vox](docs/brainstorm-sinergia-tramitado-vox-2026-11.md).
+Detalhes: [Brainstorm Tramitado × Vox](docs/brainstorms/brainstorm-sinergia-tramitado-vox-2026-11.md).
 
 ---
 
 ## 🔍 Compromisso de Transparência Técnica
 
-Em conformidade com a auditoria de honestidade cívica ([docs/honest-copy-audit-2026-10-23.md](./docs/honest-copy-audit-2026-10-23.md)):
+Em conformidade com a auditoria de honestidade cívica ([docs/audits/honest-copy-audit-2026-10-23.md](./docs/audits/honest-copy-audit-2026-10-23.md)):
 
 * **O Vox ainda não oferece P2P universal entre dispositivos:** gateways públicos Arweave, servidores de sinalização WebRTC e nós voluntários de memória/relay são usados para localizar e sincronizar dados; o comportamento depende da disponibilidade da rede e da implementação ativa.
-* **O Vox NÃO promete imunidade judicial:** Toda postagem pública no permaweb é permanente e auditável. As normas da legislação brasileira ([COMPLIANCE-BR.md](./COMPLIANCE-BR.md) — Marco Civil da Internet e LGPD) aplicam-se integralmente.
+* **O Vox NÃO promete imunidade judicial:** Toda postagem pública no permaweb é permanente e auditável. As normas da legislação brasileira ([COMPLIANCE-BR.md](./docs/legal/COMPLIANCE-BR.md) — Marco Civil da Internet e LGPD) aplicam-se integralmente.
 * **O Vox NÃO publica sozinho nas redes sociais:** O protocolo POSSE gera rascunhos, links e compartilhamentos assistidos via intents oficiais; o envio final é sempre um ato consciente e deliberado do usuário.
 * **O repositório e as comunidades são coisas distintas:** o código não opera nem governa automaticamente as comunidades. Relays e espelhos são opcionais e substituíveis; o Node Zero para Windows/Linux escuta localmente em loopback (com suporte opcional a túnel HTTPS Cloudflare no modo Dev Alpha/Beta).
 
 ---
+
+## 🗂️ Estrutura do repositório
+
+```text
+vox/
+├── client/            PWA (JavaScript puro, sem build): app, Service Worker, config, CSS
+├── relay/             Servidor Python stdlib: sinalização, relay completo, Dockerfile e deploy/
+├── android/           App Android (nó Vox Populi)
+├── vox-populi/        Nó dedicado (Raspberry Pi / servidor doméstico)
+├── vox-bridge/        Extensão de navegador MV3 (stub)
+├── packaging/         Instaladores desktop e kits de steward (Linux, Windows, macOS)
+├── tools/             Ferramentas para quem usa/opera: posse-cli, userscript auto-explode
+├── scripts/           Manutenção do repo: release line, auditoria de complexidade, smoke Nostr
+├── tests/             Testes do cliente (node:test); os do relay ficam em relay/test_*.py
+├── docs/              Documentação: índice em docs/README.md
+└── .github/           CI, deploy e templates de issue/PR
+```
+
+Na raiz ficam só os arquivos que o GitHub e as ferramentas esperam ali: `README`, `LICENSE`, `CHANGELOG`, `CONTRIBUTING`, `CONTRIBUTORS`, `AUTHORS`, `SECURITY`, `GOVERNANCE`, `ARCHITECTURE`, `AGENTS` e as configurações (`package.json`, `eslint.config.js`, `ruff.toml`, `.editorconfig`).
 
 ## 📖 Mapa Canônico de Documentação
 
@@ -254,10 +273,10 @@ Em conformidade com a auditoria de honestidade cívica ([docs/honest-copy-audit-
 | **[CONTRIBUTING.md](./CONTRIBUTING.md)** · **[CHANGELOG.md](./CHANGELOG.md)** | Como contribuir em 5 minutos · histórico de mudanças. |
 | **[ARCHITECTURE.md](./ARCHITECTURE.md)** | Protocolo e dados: tags GraphQL, linhagem, mensagens. Camadas do cliente em [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md). |
 | **[GOVERNANCE.md](./GOVERNANCE.md)** | Moderação e deliberação dentro das comunidades Vox; não define a governança do repositório. |
-| **[COMPLIANCE-BR.md](./COMPLIANCE-BR.md)** | Adequação regulatória: Marco Civil da Internet (Art. 19), LGPD e minimização. |
-| **[IDENTITY.md](./IDENTITY.md)** | Criptografia P-256 WebCrypto, gestão de chaves e carteiras Arweave. |
-| **[docs/tese-praca-civica-militancia-pro-democratica-2026-10.md](./docs/tese-praca-civica-militancia-pro-democratica-2026-10.md)** | Tese de militância pró-democrática (cruzamento estratégico T01–T20). |
-| **[docs/steward-seed-15min.md](./docs/steward-seed-15min.md)** | Guia rápido de 15 minutos para operadores e seeds voluntários de relay. |
+| **[docs/legal/COMPLIANCE-BR.md](./docs/legal/COMPLIANCE-BR.md)** | Adequação regulatória: Marco Civil da Internet (Art. 19), LGPD e minimização. |
+| **[docs/IDENTITY.md](./docs/IDENTITY.md)** | Criptografia P-256 WebCrypto, gestão de chaves e carteiras Arweave. |
+| **[docs/strategy/tese-praca-civica-militancia-pro-democratica-2026-10.md](./docs/strategy/tese-praca-civica-militancia-pro-democratica-2026-10.md)** | Tese de militância pró-democrática (cruzamento estratégico T01–T20). |
+| **[docs/operations/steward-seed-15min.md](./docs/operations/steward-seed-15min.md)** | Guia rápido de 15 minutos para operadores e seeds voluntários de relay. |
 | **[docs/CONTRIBUTING-DOCS.md](./docs/CONTRIBUTING-DOCS.md)** | Regras de governança de documentação, mutex de agentes e políticas de commit. |
 
 ### Decisões Arquiteturais Registradas (ADRs)
@@ -292,7 +311,7 @@ O compromisso do Vox é permanecer aberto: código, protocolos, documentação e
 **Estado atual, sem eufemismos:** o repositório ainda tem controle administrativo concentrado em uma pessoa. A governança descrita em [GOVERNANCE.md](./GOVERNANCE.md) trata principalmente das regras de moderação e deliberação de cada comunidade Vox; ela não distribui controle sobre o repositório, releases ou infraestrutura do projeto. Votos dentro de uma comunidade não elegem automaticamente mantenedores nem alteram o código canônico.
 
 **Licença e Governança Institucional:**
-- **Licença Canônica:** Distribuído sob a **GNU Affero General Public License v3.0 (AGPL-3.0-or-later)** ([`LICENSE`](LICENSE)), fechando expressamente a brecha de SaaS/nuvem privada (Seção 13). Mais detalhes em [docs/licenca-e-contribuicoes.md](./docs/licenca-e-contribuicoes.md) e [ADR-015](./docs/adr/015-licenciamento-agplv3-e-governanca-de-bem-comum.md).
+- **Licença Canônica:** Distribuído sob a **GNU Affero General Public License v3.0 (AGPL-3.0-or-later)** ([`LICENSE`](LICENSE)), fechando expressamente a brecha de SaaS/nuvem privada (Seção 13). Mais detalhes em [docs/legal/licenca-e-contribuicoes.md](./docs/legal/licenca-e-contribuicoes.md) e [ADR-015](./docs/adr/015-licenciamento-agplv3-e-governanca-de-bem-comum.md).
 - **Autoria e Mantenedores:** Reconhecimento em [`AUTHORS.md`](./AUTHORS.md).
 - **Diretrizes de Contribuição & DCO:** Processo de submissão em [`CONTRIBUTORS.md`](./CONTRIBUTORS.md).
 - **Política de Segurança e Resposta Responsável:** Protocolo fail-closed em [`SECURITY.md`](./SECURITY.md).
