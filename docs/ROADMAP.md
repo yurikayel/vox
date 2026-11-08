@@ -13,7 +13,8 @@ O cliente está maduro: feed Social/Cívico, comunidades, governança, Feira, Pi
 - a sinalização depende de 1 nó Render;
 - não há relay completo público nem TURN;
 - não existe espelho B registrado;
-- o piloto humano (V-P09) não começou.
+- o piloto humano (V-P09) não começou;
+- para abrir ao público faltam jurídico, resposta a conteúdo grave, demo isolada e bus factor ≥2 — ver [Rumo à rede pública](#rumo-à-rede-pública-lan).
 
 ## Agora (P0)
 
@@ -71,6 +72,72 @@ O cliente está maduro: feed Social/Cívico, comunidades, governança, Feira, Pi
 | [ ] | **REV-24** | code | **Modo eleitoral do ranking (B11):** no período eleitoral, nada de ranquear ou recomendar conteúdo sobre candidato, partido ou campanha (Res. TSE 23.755/2026); feed cronológico. Prazo: antes de ago/2028 | [complementar §1-B](./pesquisa-complementar-2026-11.md) | [complementar B6](./pesquisa-complementar-2026-11.md#4-brainstorm-b1b10-a-partir-dos-achados) |
 | [ ] | **REV-16** | doc | Rodar de novo o Prompt 3 **com os arquivos anexados** (o Gemini não abriu os links do repo) e só então escrever as specs F1–F10 | [pesquisa — Como ler](./pesquisa-deep-research-2026-11.md#como-ler) |
 | [ ] | **REV-06** | code | Trocar hotlinks `images.unsplash.com` (~35) por assets locais ou remover | [INFRA-CUSTOS §1](./INFRA-CUSTOS.md) |
+
+## Rumo à rede pública (LAN)
+
+Porquê, critérios, fases e ordem: [backlog-lancamento-publico-2026-11.md](./backlog-lancamento-publico-2026-11.md). Três portões: **G1** piloto fechado → **G2** beta por convite → **G3** público. O caminho crítico é o **REV-12** (parecer), via LAN-01. "Resp." fica no backlog como papel até haver pessoa nomeada.
+
+### G1 — piloto fechado
+
+Também exige: REV-13 · REV-19 + (REV-01 ou REV-09) · NET-01 ou waiver · PIL-01 · carta E2.
+
+| | ID | Tipo | Item | Evidência / nota |
+|---|---|---|---|---|
+| [ ] | **LAN-01** | ops-humano | **Contratar o parecer do REV-12** (clínica jurídica / direitos digitais), escopo e prazo acordados | [backlog §4](./backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
+| [ ] | **LAN-10** | code | **Demonstração isolada:** `mock.js` só em `#/demo` com faixa; falha de rede mostra "sem conexão", nunca perfis/propostas fictícios | [backlog §4](./backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
+| [ ] | **LAN-11** | code | **Aviso de permanência** antes do 1º post que vai para o Arweave | [backlog §4](./backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
+| [ ] | **LAN-17** | ops-humano | **Divulgação de vulnerabilidades funcionando** (Private Vulnerability Reporting + contato do SECURITY.md testado) | [backlog §4](./backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
+| [ ] | **LAN-30** | ops-humano | **Bus factor ≥2** — G1: 2ª pessoa no GitHub e no Render; G3: todas as contas, domínio e secrets, em organização | [backlog §4](./backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
+
+### G2 — beta por convite
+
+Também exige: PIL-02…05 · REV-12 · REV-20 · REV-23 · REV-09 · REV-10 · NET-02 · REV-21 · REV-14 · REV-11.
+
+| | ID | Tipo | Item | Evidência / nota |
+|---|---|---|---|---|
+| [ ] | **LAN-02** | doc+code | **Termos de Uso** (`client/terms.html`) com aceite no onboarding — revisados pelo parecer | [backlog §4](./backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
+| [ ] | **LAN-03** | doc | **Atualizar privacy, data-deletion e COMPLIANCE-BR** (STF 5–11, Decretos 2026, ECA Digital, TSE 23.755, Pix/DICT, IP na malha) | [backlog §4](./backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
+| [ ] | **LAN-04** | doc+ops-humano | **Procedimento de conteúdo grave** (≤2 h para íntimo não consentido), plantão de 2 pessoas, simulado datado | [backlog §4](./backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
+| [ ] | **LAN-07** | code | **Página de status pública** gerada por workflow (nós, relays Nostr, gateways) | [backlog §4](./backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
+| [ ] | **LAN-08** | code | **Kill-switch por configuração** (`client/config/flags.json`: upload, Feira, Pix Zaps, convites) | [backlog §4](./backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
+| [ ] | **LAN-12** | code | **Denunciar no app** (post/perfil/comunidade) → moderadores; graves → canal do projeto | [backlog §4](./backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
+| [ ] | **LAN-13** | code | **Lista de ocultação assinada do PWA oficial**, exportável para gateways AR.IO | [backlog §4](./backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
+| [ ] | **LAN-15** | doc | **Modelo de ameaças** (`docs/THREAT-MODEL.md`) revisado por alguém de segurança fora do time | [backlog §4](./backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
+| [ ] | **LAN-16** | code | **CSP e headers** (`_headers` no CF Pages + meta CSP no GitHub Pages) | [backlog §4](./backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
+| [ ] | **LAN-21** | code | **Estados de erro honestos** (sinalização caída, cota esgotada, 402 do gateway, DM sem relay) | [backlog §4](./backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
+| [ ] | **LAN-24** | doc | **Runbook de incidentes** + 1 simulado datado | [backlog §4](./backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
+| [ ] | **LAN-28** | doc | **Critério de go para o beta** escrito antes do piloto (retenção, steward externo, incidentes, P2P, cota) | [backlog §4](./backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
+
+### G3 — público
+
+Também exige: REV-18 · DOC-04 · REV-02 · REV-04 (ou LAN-21 cobrindo DM offline) · F8 antes de enquete cívica pública com peso.
+
+| | ID | Tipo | Item | Evidência / nota |
+|---|---|---|---|---|
+| [ ] | **LAN-05** | ops-humano | **Busca de anterioridade da marca "Vox"** no INPI | [backlog §4](./backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
+| [ ] | **LAN-06** | ops-humano | **Domínio próprio** com dois titulares (ou titular PJ) e DNS documentado | [backlog §4](./backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
+| [ ] | **LAN-09** | code+doc | **Teste de carga** (≥500 pares na sinalização, 50 reais na malha); capacidade em INFRA-CUSTOS | [backlog §4](./backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
+| [ ] | **LAN-14** | code | **Anti-spam e limite de taxa** por chave; quarentena de chave nova | [backlog §4](./backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
+| [ ] | **LAN-18** | ops-humano | **Revisão externa de cripto** (DM, cofre, assinaturas); críticos corrigidos | [backlog §4](./backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
+| [ ] | **LAN-19** | code | **Privacidade de IP:** aviso + modo "só TURN" (padrão para menores) | [backlog §4](./backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
+| [ ] | **LAN-20** | code | **Cadeia de suprimentos:** inventário de dependências com SRI + `npm audit` no CI | [backlog §4](./backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
+| [ ] | **LAN-22** | code | **Acessibilidade WCAG 2.2 AA básica** nas 10 rotas principais | [backlog §4](./backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
+| [ ] | **LAN-23** | code | **Desempenho em Android de entrada** com orçamento que quebra o CI | [backlog §4](./backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
+| [ ] | **LAN-25** | ops-humano | **Onboarding com 5 leigos** (identidade, backup, post, comunidade, recuperação) | [backlog §4](./backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
+| [ ] | **LAN-26** | ops-humano | **Suporte:** formulários de issue + canal Zap/Telegram, triagem semanal | [backlog §4](./backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
+| [ ] | **LAN-27** | code | **Leitura resiliente:** ≥4 gateways, 402 do turbo-gateway = trocar de gateway | [backlog §4](./backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
+| [ ] | **LAN-29** | doc | **Relatório do beta** e decisão de go público | [backlog §4](./backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
+| [ ] | **LAN-31** | doc | **Governança do PWA oficial** (lista de ocultação, Termos, releases) no GOVERNANCE.md | [backlog §4](./backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
+| [ ] | **LAN-32** | doc | **Orçamento de 12 meses** para 1k/10k usuários com cobertura confirmada | [backlog §4](./backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
+| [ ] | **LAN-33** | doc+code | **Release v1.0.0** com checklist e rollback ensaiado | [backlog §4](./backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
+| [ ] | **LAN-34** | doc | **Plano de lançamento em ondas** com critérios de pausa | [backlog §4](./backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
+| [ ] | **LAN-35** | doc+code | **Página de apresentação e kit de imprensa** (o que é e o que não é) | [backlog §4](./backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
+
+### Financiamento (sem portão)
+
+| | ID | Tipo | Item | Evidência / nota |
+|---|---|---|---|---|
+| [ ] | **LAN-36** | ops-humano | **Proposta ao NLnet Restack até 03/01/2027** usando o backlog como plano de trabalho | [backlog §4](./backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
 
 ## Candidatas (sem caixa até ganharem DoD e responsável)
 
