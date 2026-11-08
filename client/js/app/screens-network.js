@@ -19,6 +19,7 @@ import * as meshProfile from "../mesh-profile.js";
 import * as contributionAttestation from "../contribution-attestation.js";
 import * as linkedAccounts from "../linked-accounts.js";
 import * as voxels from "../voxels.js";
+import { applySupporterMode } from "../supporter-mode.js";
 import { escapeHtml } from "../render/util.js";
 import { openOAuthEnrichModal } from "./onboarding.js";
 import { getActiveUser, makeShellProps } from "./context.js";
@@ -60,6 +61,17 @@ function readNetworkFormValues() {
   };
 }
 
+export function bindSupporterToggle() {
+  document.getElementById("btn-supporter-toggle")?.addEventListener("click", (e) => {
+    const turnOn = e.currentTarget.dataset.on !== "1";
+    const next = applySupporterMode(peers.getPeerSettings(), turnOn);
+    peers.savePeerSettings(next);
+    cacheNode.enforceMaxCacheSize(next.maxMb);
+    share.showToast(turnOn ? "Obrigado! Você agora é apoiador da rede (só no Wi-Fi)." : "De volta ao nó leve.");
+    showNetworkSettings();
+  });
+}
+
 export function bindNetworkSettingsForm() {
   const form = document.getElementById("form-network-settings");
   if (!form) return;
@@ -72,6 +84,7 @@ export function bindNetworkSettingsForm() {
     inbox.saveRelayBuddyHttpUrl(v.customRelayBuddyHttpUrl);
     peers.saveCustomTurnConfig({ urls: v.turnUrls, username: v.turnUser, credential: v.turnPass });
     peers.savePeerSettings({
+      ...peers.getPeerSettings(),
       enabled: v.enabled,
       maxMb: v.maxMb,
       wifiOnly: v.wifiOnly,
@@ -247,6 +260,7 @@ export async function showNetworkSettings() {
   });
 
   bindNetworkSettingsForm();
+  bindSupporterToggle();
   bindNetworkSettingsButtons();
 }
 
