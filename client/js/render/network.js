@@ -245,6 +245,21 @@ export function renderSupporterCardHtml(settings = {}) {
     </div>`;
 }
 
+/** LAN-19: aviso de IP e modo "só TURN". */
+export function renderTurnOnlyHtml(settings = {}) {
+  return `
+    <p class="desc" id="net-ip-notice" style="font-size:0.78rem; margin:0.25rem 0 0.5rem;">
+      Ao conectar direto, os outros aparelhos veem o endereço IP da sua internet (que pode indicar sua cidade e operadora).
+    </p>
+    <div class="form-group" style="display:flex; align-items:flex-start; gap:0.6rem;">
+      <input type="checkbox" id="net-turn-only" ${settings.turnOnly ? "checked" : ""} style="width:1rem; height:1rem; margin-top:0.2rem;" />
+      <div>
+        <label for="net-turn-only" style="margin:0; font-weight:600;">Esconder meu IP (só via servidor TURN)</label>
+        <p class="desc" style="font-size:0.75rem; margin:0.2rem 0 0;">Tudo passa por um servidor auxiliar. Mais lento, e sem servidor TURN configurado abaixo as conexões diretas ficam desligadas.</p>
+      </div>
+    </div>`;
+}
+
 function renderGeneralPreferencesHtml(settings, meshDiscoverable, customSignalingUrl) {
   const isEnabled = Boolean(settings?.enabled);
   return `
@@ -255,7 +270,8 @@ function renderGeneralPreferencesHtml(settings, meshDiscoverable, customSignalin
     <div class="form-group" style="display:flex; align-items:center; gap:0.6rem;">
       <input type="checkbox" id="net-webrtc" ${settings?.webrtcEnabled !== false ? "checked" : ""} style="width:1rem; height:1rem;" />
       <label for="net-webrtc" style="margin:0;">Conectar diretamente a outros aparelhos</label>
-    </div>`;
+    </div>
+    ${renderTurnOnlyHtml(settings)}`;
 }
 
 function renderRelayUrlInputsHtml(opts) {

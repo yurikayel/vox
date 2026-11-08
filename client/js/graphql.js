@@ -1,3 +1,4 @@
+import { honestMessage } from "./honest-errors.js";
 import * as cacheNode from "./cache-node.js";
 import * as peers from "./peers.js";
 import * as handles from "./handles.js";
@@ -350,11 +351,15 @@ function mapReply(node) {
   };
 }
 
+const GATEWAY_TIMEOUT_MS = 8000;
+
 async function queryOne(gqlUrl, query, variables) {
   const res = await fetch(gqlUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ query, variables }),
+    // LAN-27: gateway lento não segura a leitura; 402/429/5xx caem para o próximo.
+    signal: AbortSignal.timeout(GATEWAY_TIMEOUT_MS),
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const json = await res.json();
@@ -376,7 +381,10 @@ async function withGateways(fn) {
       lastErr = e;
     }
   }
-  throw lastErr || new Error("Nenhum gateway disponível");
+  const err = new Error(honestMessage("gatewaysDown"));
+  err.kind = "gatewaysDown";
+  err.cause = lastErr;
+  throw err;
 }
 
 function rawUrlsForTx(cfg, txId) {
