@@ -1,5 +1,6 @@
 /** @file Direct messages list and thread (DM v2). */
 
+import { honestMessage } from "../honest-errors.js";
 import * as gql from "../graphql.js";
 import * as render from "../render.js";
 import * as share from "../share.js";
@@ -187,6 +188,7 @@ async function sealAndPersistOutgoingDm(user, peerAddress, peerDmPub, text) {
     ts: envelope.ts,
     status,
   });
+  return status;
 }
 
 export async function handleSendDmSubmit(user, peerAddress, peerDmPub) {
@@ -199,7 +201,8 @@ export async function handleSendDmSubmit(user, peerAddress, peerDmPub) {
   if (btn) btn.disabled = true;
 
   try {
-    await sealAndPersistOutgoingDm(user, peerAddress, peerDmPub, text);
+    const status = await sealAndPersistOutgoingDm(user, peerAddress, peerDmPub, text);
+    if (status === "pending-retry") share.showToast(honestMessage("dmNoRelay"));
     activeReplyDraft = null;
     pendingContextDraft = null;
     activeMediaDraft = "";

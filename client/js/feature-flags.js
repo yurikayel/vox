@@ -24,7 +24,7 @@ const DISABLED_MESSAGES_PT = Object.freeze({
   communityCreate: "Criar comunidades está pausado pela equipe do Vox por segurança.",
 });
 
-let current = { flags: { ...FLAG_DEFAULTS }, notice: "" };
+let current = { flags: { ...FLAG_DEFAULTS }, notice: "", electoralMode: false };
 
 export class FeatureDisabledError extends Error {
   constructor(name) {
@@ -42,7 +42,9 @@ export function sanitizeFlags(raw) {
     if (typeof src[key] === "boolean") flags[key] = src[key];
   }
   const notice = typeof raw?.notice === "string" ? raw.notice.trim().slice(0, MAX_NOTICE_LEN) : "";
-  return { flags, notice };
+  // REV-24: força o modo eleitoral fora da janela automática (não é kill-switch).
+  const electoralMode = raw?.electoralMode === true;
+  return { flags, notice, electoralMode };
 }
 
 export function applyFlags(raw) {
@@ -52,6 +54,11 @@ export function applyFlags(raw) {
 
 export function getFlags() {
   return { flags: { ...current.flags }, notice: current.notice };
+}
+
+/** REV-24: o operador forçou o modo eleitoral em client/config/flags.json. */
+export function isElectoralModeForced() {
+  return current.electoralMode === true;
 }
 
 export function isFeatureEnabled(name) {
