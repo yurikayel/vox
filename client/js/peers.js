@@ -1,5 +1,6 @@
 import * as cacheNode from "./cache-node.js";
 import * as webrtcPeer from "./webrtc-peer.js";
+import { allowGossipFromAuthor } from "./rate-limit.js";
 import * as localAccount from "./local-account.js";
 import * as manifestMesh from "./peers-cache-manifest.js";
 import * as blobAffinity from "./peers-blob-affinity.js";
@@ -431,6 +432,8 @@ async function handleGossipMessage(item, source = "rtc") {
     relayToMesh({ type: "GOSSIP", item, fromPeer: myPeerId }, source);
     return;
   }
+
+  if (!allowGossipFromAuthor(item.author)) return;
 
   syncProfileDirectoryFromGossip(item);
   await cacheNode.saveLocalPost(item);
