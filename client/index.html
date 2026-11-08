@@ -2,6 +2,8 @@
 <html lang="pt-BR">
   <head>
     <meta charset="utf-8" />
+    <!-- LAN-16: CSP sem script inline (os boots ficam em js/boot-*.js). frame-ancestors só vale por header (client/_headers); mudou aqui, mude igual lá: tests/csp.test.js confere. -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://esm.sh https://accounts.google.com https://connect.facebook.net; style-src 'self' 'unsafe-inline' https://accounts.google.com; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https: wss: ws://127.0.0.1:* ws://localhost:* http://127.0.0.1:* http://localhost:*; frame-src 'self' https: blob:; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#f4f0e8" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0d0f12" media="(prefers-color-scheme: dark)" />
@@ -19,17 +21,7 @@
     <link rel="stylesheet" href="css/style.css" />
     <!-- ADR-016: camada Sovereign Agora (Stitch). Fontes locais do sistema — sem requisições a terceiros. -->
     <link rel="stylesheet" href="css/agora.css" />
-    <script>
-      (function () {
-        try {
-          var m = localStorage.getItem("vox-color-mode");
-          if (m === "light" || m === "dark") {
-            document.documentElement.setAttribute("data-color-mode", m);
-            document.documentElement.style.colorScheme = m;
-          }
-        } catch (_e) {}
-      })();
-    </script>
+    <script src="js/boot-color-mode.js"></script>
     <title>Vox</title>
   </head>
   <body>
@@ -39,30 +31,8 @@
       <button type="button" class="post-lightbox-close" aria-label="Fechar">×</button>
       <img class="post-lightbox-img" alt="" />
     </div>
-    <script>
-      // Suporte a URLs curtas: query ?h=slug ou subdomínio wildcard (*.comunidade.tld)
-      (function () {
-        const q = new URLSearchParams(window.location.search);
-        const qHandle = q.get("h") || q.get("handle");
-        if (qHandle && (!window.location.hash || window.location.hash === "#/")) {
-          window.location.hash = "#/h/" + encodeURIComponent(qHandle.replace(/^@/, "").toLowerCase());
-        } else if (!window.location.hash || window.location.hash === "#/") {
-          const host = window.location.hostname.toLowerCase();
-          const isHostingPlatform = /pages\.dev$|github\.io$|workers\.dev$|vercel\.app$|netlify\.app$|localhost$|127\.0\.0\.1$/i.test(host);
-          const parts = host.split(".");
-          if (!isHostingPlatform && parts.length >= 3 && parts[0] !== "www" && !parts[0].startsWith("vox")) {
-            window.location.hash = "#/h/" + encodeURIComponent(parts[0].toLowerCase());
-          }
-        }
-      })();
-    </script>
-    <script>
-      if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => {
-          navigator.serviceWorker.register("./sw.js").catch(() => {});
-        });
-      }
-    </script>
+    <script src="js/boot-short-url.js"></script>
+    <script src="js/boot-sw.js"></script>
     <script type="module" src="js/app.js"></script>
   </body>
 </html>

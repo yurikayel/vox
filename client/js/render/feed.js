@@ -20,6 +20,7 @@ import {
   renderAvatarHtml,
   formatTimeAgo,
   postTimeParts,
+  renderReportMenuItem,
 } from "./util.js";
 import { renderIgToolbar } from "./ig-toolbar.js";
 import { renderPhotoTagLayerHtml } from "./photo-tag-pins.js";
@@ -670,6 +671,7 @@ function renderToolbarOverflow(t, author, authorDisplay, authorHandle, baseStars
         <span class="toolbar-overflow-label">Copiar .md</span>
       </button>
       ${renderQuarantineAction(t.id)}
+      ${renderReportMenuItem(t.id, author, t.communityId || "")}
     </div>
   </details>`;
 }
@@ -934,7 +936,7 @@ function renderFeedEmptyState(activeFeed) {
     <p><strong>Nenhuma publicação no feed ainda.</strong></p>
     <p class="desc" style="max-width:440px; margin:0.4rem auto 0.8rem;">Seja a primeira voz soberana a compartilhar uma ideia, foto Lo-Fi, áudio ou vídeo nesta rede.</p>
     <div style="display:flex; gap:0.5rem; justify-content:center; flex-wrap:wrap;">
-      <button type="button" class="btn btn-primary btn-sm" onclick="document.querySelector('#feed-inline-composer .inline-composer-collapsed')?.click()">Criar publicação</button>
+      <button type="button" class="btn btn-primary btn-sm" data-click-target="#feed-inline-composer .inline-composer-collapsed">Criar publicação</button>
       <a class="btn btn-outline btn-sm" href="#/pessoas">Encontrar pessoas</a>
     </div>
   </div>`;

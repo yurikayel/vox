@@ -269,9 +269,11 @@ function renderRelayHealthAndTourHtml(opts) {
       <span class="meta" style="margin-left:0.5rem;">${relayHealthLabel(opts.relayStatus, opts.relayHttpUrl)}</span>
     </div>
     <div style="margin-top:0.75rem; border-top:1px solid var(--border); padding-top:0.6rem;">
-      <label style="font-weight:600; font-size:0.85rem; display:block; margin-bottom:0.25rem;">Tour de Demonstração</label>
-      <p class="desc" style="font-size:0.8rem; margin:0 0 0.4rem;">Recarrega os 5 perfis e posts educativos de exemplo no seu aparelho:</p>
-      <button type="button" id="btn-reset-demo" class="btn btn-outline btn-sm">🔄 Restaurar tour demo</button>
+      <label style="font-weight:600; font-size:0.85rem; display:block; margin-bottom:0.25rem;">Modo demonstração</label>
+      <p class="desc" style="font-size:0.8rem; margin:0 0 0.4rem;">${opts.demoMode
+        ? "Ligado: perfis de exemplo (fictícios) aparecem com uma faixa no topo da tela."
+        : "Desligado: só pessoas e posts reais da rede. Ligue para mostrar perfis de exemplo, sempre marcados como fictícios."}</p>
+      <button type="button" id="btn-reset-demo" class="btn btn-outline btn-sm" data-demo-on="${opts.demoMode ? "1" : "0"}">${opts.demoMode ? "Desligar demonstração" : "Ligar demonstração"}</button>
     </div>`;
 }
 

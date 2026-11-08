@@ -2,6 +2,9 @@
 import { initColorMode } from "./color-mode.js";
 import { applySkyTheme, initSkyTheme } from "./sky-theme.js";
 import * as demoSeed from "./demo-seed.js";
+import { loadRemoteFlags } from "./feature-flags.js";
+import { installDomDelegates } from "./dom-delegates.js";
+import { attachReportHandlers } from "./app/report-flow.js";
 import { wireRoute, setupHashchangeListener, routeImpl as route } from "./app/route.js";
 import { initDmListeners, initGossipListeners, initSocialInteractions } from "./app/init.js";
 import { initPostMediaLightbox } from "./app/post-media-lightbox.js";
@@ -15,6 +18,8 @@ import { attachPostOverlayActionMenuHandlers } from "./app/screens-home.js";
 import { attachQuarantineHandlers } from "./app/context.js";
 import { syncIdentity } from "./app/screens-network.js";
 
+installDomDelegates(document);
+attachReportHandlers(document);
 initColorMode(document, { onApply: () => applySkyTheme(document) });
 initSkyTheme();
 wireRoute();
@@ -32,4 +37,4 @@ attachQrUrlHandlers();
 attachPostOverlayActionMenuHandlers();
 attachQuarantineHandlers();
 syncIdentity();
-demoSeed.purgeMockDemoSeed().finally(() => route());
+Promise.allSettled([loadRemoteFlags(), demoSeed.purgeMockDemoSeed()]).finally(() => route());

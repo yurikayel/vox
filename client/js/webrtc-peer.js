@@ -4,6 +4,7 @@
  * Troca de mensagens WANT/HAVE/BLOB com sinalização WebSocket opcional e autohospedada.
  */
 import { buildNostrSignalingCandidates } from "./nostr-signaling.js";
+import { createNostrTransport, DEFAULT_ROOM } from "./nostr-transport.js";
 
 let signalingWs = null;
 let currentPeerId = null;
@@ -17,6 +18,9 @@ let identityHandler = null;
 let reconnectTimer = null;
 let reconnectAttempts = 0;
 let configCache = null;
+/** REV-09: transporte Nostr paralelo e de onde cada par veio ("nostr" | "ws"). */
+let nostrTransport = null;
+const peerTransport = new Map();
 
 // Mapa de peerId remoto -> { pc: RTCPeerConnection, dc: RTCDataChannel, dmDc: RTCDataChannel }
 const peerConnections = new Map();
@@ -229,7 +233,35 @@ export async function initWebRtc(peerId, customUrl = null) {
     return false;
   }
   connectSignaling();
+  void startNostrSignaling();
   return true;
+}
+
+function isNostrSignalingEnabled(config) {
+  return config?.nostrSignaling?.enabled !== false && getNostrRelays(config).length > 0;
+}
+
+function onNostrSignalingMessage(msg) {
+  const remote = msg.from || msg.peerId;
+  if (remote && !peerTransport.has(remote)) peerTransport.set(remote, "nostr");
+  handleSignalingMessage(msg);
+}
+
+/** REV-09: sinalização por relays Nostr em paralelo ao WebSocket (desligável em signaling.json). */
+async function startNostrSignaling() {
+  if (nostrTransport || !isWebRtcEnabled || !currentPeerId) return;
+  if (typeof process !== "undefined" && process.env?.NODE_ENV === "test") return;
+  const config = await loadSignalingConfig();
+  if (!isNostrSignalingEnabled(config) || typeof WebSocket === "undefined") return;
+  nostrTransport = createNostrTransport({
+    relays: getNostrRelays(config),
+    room: config.nostrSignaling?.room || DEFAULT_ROOM,
+    maxRelays: config.nostrSignaling?.maxRelays || 3,
+    peerId: currentPeerId,
+    getIdentity: () => ({ address: currentAddress, dmPub: currentDmPub }),
+    onMessage: onNostrSignalingMessage,
+  });
+  nostrTransport.start();
 }
 
 export function disconnectWebRtc() {
@@ -244,6 +276,9 @@ export function disconnectWebRtc() {
     } catch {}
     signalingWs = null;
   }
+  nostrTransport?.stop();
+  nostrTransport = null;
+  peerTransport.clear();
   for (const remoteId of Array.from(peerConnections.keys())) {
     closePeerConnection(remoteId);
   }
@@ -296,6 +331,8 @@ function bindSignalingSocket(ws, config) {
   ws.onmessage = (event) => {
     try {
       const msg = JSON.parse(event.data);
+      const remote = msg.from || msg.peerId;
+      if (remote && !peerTransport.has(remote)) peerTransport.set(remote, "ws");
       handleSignalingMessage(msg);
     } catch {}
   };
@@ -373,9 +410,10 @@ function handlePeerJoined(remoteId) {
 }
 
 function sendSignaling(data) {
-  if (signalingWs && signalingWs.readyState === WebSocket.OPEN) {
-    signalingWs.send(JSON.stringify(data));
-  }
+  const viaNostr = peerTransport.get(data?.to) === "nostr";
+  const wsOpen = signalingWs && signalingWs.readyState === WebSocket.OPEN;
+  if ((viaNostr || !wsOpen) && nostrTransport?.send(data)) return;
+  if (wsOpen) signalingWs.send(JSON.stringify(data));
 }
 
 export function createRtcConfig(config = configCache) {

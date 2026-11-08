@@ -20,6 +20,8 @@ export {
   renderLoading,
   renderError,
   renderDemoBanner,
+  renderDemoModeBanner,
+  renderOpsNotice,
   renderGatewayBanner,
 } from "./render/shell.js";
 
