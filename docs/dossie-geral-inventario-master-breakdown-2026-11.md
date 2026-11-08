@@ -1,6 +1,8 @@
 # 🇧🇷 Vox — Dossiê Geral: Inventário do Sistema & Master Breakdown em N=25 Tarefas
 
-> **Status:** canônico (plano mestre N=25) · **Owner:** mantenedor/revisor · **Revisado:** 2026-11 · Release/SHA: [README.md](./README.md)  
+> **⚠️ SUPERSEDED (2026-11-07):** o plano vivo e o único checklist agora são o [ROADMAP.md](./ROADMAP.md) ([ADR-017](./adr/017-consolidacao-roadmap-unico.md)). Este documento fica como histórico; **não marque caixas aqui** e não use os números/status abaixo como atuais.
+
+> **Status:** SUPERSEDED (era: plano mestre N=25) · **Owner:** mantenedor/revisor · **Revisado:** 2026-11 · Release/SHA: [README.md](./README.md)  
 > **Documento:** Inventário de Arquitetura, Estado da Arte & Plano Mestre de Execução  
 > **Suíte de testes / SHA / SW:** [../README.md](../README.md) (tabela release) · [release-metadata.json](./release-metadata.json) — não repetir contagens neste header.  
 > **Arquivos Canônicos Relacionados:** [inventario-estado-e-tarefas-documentacao-2026-11.md](./inventario-estado-e-tarefas-documentacao-2026-11.md), [direcionamento-crescimento-rede-2026-11.md](./direcionamento-crescimento-rede-2026-11.md) e [brainstorm-proximas-10-tarefas-pos-v82-2026-11.md](./brainstorm-proximas-10-tarefas-pos-v82-2026-11.md).

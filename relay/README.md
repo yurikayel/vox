@@ -6,6 +6,8 @@ O **Vox Relay Desktop** é um serviço leve e opcional para computadores pessoai
 
 ## 🚀 Como Iniciar
 
+> **Dois processos:** `server.py` é o relay completo (porta 3920, abaixo). `signaling.py` é só a sinalização WebRTC (porta 3921) — é o que `npm start`, o `Dockerfile` e o nó público Render rodam. Ver [docs/relay-api.md](../docs/relay-api.md).
+
 O servidor utiliza apenas a biblioteca padrão do Python 3 (nenhuma instalação via `pip` é necessária):
 
 ```bash
@@ -49,6 +51,12 @@ Ao abrir o Vox no navegador (`http://127.0.0.1:8080`), o cliente consulta automa
 | `/memory/ingest` | `POST` | Ingestão unitária (`GOSSIP`, `GOSSIP_UPDATE`, `GOSSIP_DELETE`, `PROFILE_CARD`, `MEDIA_BLOB`) com journal append-only. |
 | `/memory/sync` | `POST` | Sincronização bidirecional incremental (Delta Sync via `clientRevision`, `since` e `knownBlobs`). |
 | `/memory/blob/<hash>` | `GET` | Recuperação direta de blob multimídia deduplicado por SHA-256. |
+| `/memory/vault/<chave>` | `GET` / `POST` | Cofre cifrado no cliente para recuperação de identidade (ADR-014). |
+| `/relay/snapshot/<canal>` | `GET` / `POST` | Último snapshot consolidado do relay cego. |
+| `/p2p/*`, `/peer/beacon` | vários | Seeder P2P e anúncio de pares. |
+| `/oauth/exchange` | `POST` | Troca código OAuth pelo `@usuário` (token descartado). |
+
+Referência completa (limites, TTLs, variáveis de ambiente, testes): **[docs/relay-api.md](../docs/relay-api.md)**.
 
 ---
 

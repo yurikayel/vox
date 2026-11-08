@@ -1,7 +1,9 @@
 # Notas de campo: Debate Aberto, NDP e o debate de soberania cívica (out/2026)
 
+> **Não substitui o [ROADMAP.md](./ROADMAP.md)** — prioridades e caixas `[ ]` vivem lá ([ADR-017](./adr/017-consolidacao-roadmap-unico.md)); este documento explica o *porquê*.
+
 > **Status:** canônico (notas de campo) · **Owner:** voluntário doc · **Data:** 2026-10-26  
-> **Aviso:** Não substitui o [direcionamento-crescimento-rede-2026-11.md](./direcionamento-crescimento-rede-2026-11.md) nem o [dossiê N=25](./dossie-geral-inventario-master-breakdown-2026-11.md). Trata-se de observação empírica de campo para balizar posicionamento, produto e piloto.
+> **Aviso:** Não substitui o [direcionamento-crescimento-rede-2026-11.md](./direcionamento-crescimento-rede-2026-11.md) nem o [ROADMAP.md](./ROADMAP.md). Trata-se de observação empírica de campo para balizar posicionamento, produto e piloto.
 
 ---
 

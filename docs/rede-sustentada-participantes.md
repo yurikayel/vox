@@ -1,5 +1,7 @@
 # Rede Vox sustentada majoritariamente pelos participantes
 
+> **Não substitui o [ROADMAP.md](./ROADMAP.md)** — prioridades e caixas `[ ]` vivem lá ([ADR-017](./adr/017-consolidacao-roadmap-unico.md)); este documento explica o *porquê*.
+
 Documento estratégico (v1.0). Complementa [espacos-digitais-infra.md](./espacos-digitais-infra.md) e [backlog-participacao-rede.md](./backlog-participacao-rede.md).
 
 ## Meta trimestre

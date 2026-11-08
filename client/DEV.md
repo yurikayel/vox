@@ -4,7 +4,7 @@ Este documento descreve como testar o fluxo de leitura, autoria (upload de trans
 
 **Malha P2P / handoff Antigravity:** ver [`docs/antigravity-operating.md`](../docs/antigravity-operating.md). **Cache offline:** valor canônico em `CACHE_NAME` dentro de [`sw.js`](./sw.js) (não duplicar string fixa nos parágrafos abaixo — consulte o arquivo).
 
-**Release line:** SHA canônico na tabela de release do [README](../README.md) e em [`docs/release-metadata.json`](../docs/release-metadata.json). Regenerar: `npm run release-metadata` (contagens) ou `npm run release-line` (metadata + README). Suíte: **616** testes (**582** JS + **34** Python) via `npm test`. `CACHE_NAME` só em [`sw.js`](./sw.js). Pages: **hard refresh** após deploy.
+**Release line:** SHA canônico na tabela de release do [README](../README.md) e em [`docs/release-metadata.json`](../docs/release-metadata.json). Regenerar: `npm run release-metadata` (contagens) ou `npm run release-line` (metadata + README). Suíte: contagem canônica só em [`docs/release-metadata.json`](../docs/release-metadata.json) (`test_js`, `test_python`) via `npm test`. `CACHE_NAME` só em [`sw.js`](./sw.js). Pages: **hard refresh** após deploy.
 
 ---
 
@@ -16,7 +16,7 @@ Este documento descreve como testar o fluxo de leitura, autoria (upload de trans
 | **Trabalho novo** | `git pull origin main` → `git checkout -b feat/...` (ou `fix/...`). |
 | **Entrega** | Push da branch → PR ou merge; **não** commitar features direto em `main` (agentes incluídos). |
 
-Ver também [README — Como Contribuir](../README.md#-como-contribuir).
+Ver também [CONTRIBUTING.md](../CONTRIBUTING.md) e [README — Código aberto, participação e governança](../README.md#-código-aberto-participação-e-governança-do-projeto).
 
 ### 0.1 Piloto V-P09 — `PILOT_FREEZE` (feature freeze, opt-in)
 
@@ -48,7 +48,7 @@ Abra no navegador: `http://127.0.0.1:8080/`
 
 ### 1.1 Executar Testes Unitários Locais (Tudo)
 
-O Vox inclui suíte completa de testes unitários locais (**616** testes: **582** client JS + **34** relay/signaling Python), sem dependências pesadas externas:
+O Vox inclui suíte completa de testes unitários locais (`node:test` no cliente + `unittest` no relay; contagem atual em [`docs/release-metadata.json`](../docs/release-metadata.json)), sem dependências pesadas externas. Guia: [docs/TESTES.md](../docs/TESTES.md).
 
 ```bash
 # Na raiz do repositório vox/
@@ -59,10 +59,10 @@ npm run test:all
 
 Comandos específicos disponíveis no package.json:
 ```bash
-# Apenas testes do cliente PWA (582 testes)
+# Apenas testes do cliente PWA
 npm run test:js
 
-# Apenas testes do servidor relay/signaling (33 testes)
+# Apenas testes do servidor relay/signaling
 npm run test:py
 
 # Linter estático e validação AST dos nós relay
@@ -921,11 +921,12 @@ Script: [`tools/write-oauth-deploy-config.mjs`](../tools/write-oauth-deploy-conf
 
 | Uso | Arquivo | Nota |
 |-----|---------|------|
-| **Aba do navegador** | `icons/icon.svg` (+ `favicon-16.png` / `favicon-32.png` / `favicon.png`) | Megafone vetorial estilo emoji — **verde** (`emoji-vox-brasil.svg`) ativo por padrão. |
-| **PWA / “Adicionar à tela”** | `icon-white-192.png`, `icon-white-512.png` | Squircle branco + X azul (G/O/X) — não trocar pelo emoji. |
+| **Aba do navegador** | `icons/icon.svg` (+ `favicon-16.png` / `favicon-32.png` / `favicon.png`) | **V tricolor** nas três cores do tema (desde nov/2026). |
+| **PWA / “Adicionar à tela”** | `icon-192.png`, `icon-512.png`, `icon-white-192.png`, `icon-white-512.png` | Logo VOX tricolor em squircle. |
+| **Avatar oficial** | `profile-vox-official-512.png` | Mesmo logo; avatares da UI em squircle (`agora.css`). |
 | **Meta Dashboard** | `icon-1024.png` (PNG navy, legado) | Upload opcional; shell/PWA usam só tile branco. |
 
-**Trocar para megafone vermelho (estadista):** copiar `emoji-vox-vermelho.svg` → `icon.svg` e `emoji-vox-vermelho-32.png` → `favicon.png` + `favicon-32.png`; regerar ou copiar `favicon-16.png`; bump `CACHE_NAME` em `sw.js`; hard refresh (Ctrl+F5).
+**Histórico (megafone, até out/2026):** as variantes `emoji-vox-*` seguem no repo. Para voltar a usá-las: copiar `emoji-vox-vermelho.svg` → `icon.svg` e `emoji-vox-vermelho-32.png` → `favicon.png` + `favicon-32.png`; regerar ou copiar `favicon-16.png`; bump `CACHE_NAME` em `sw.js`; hard refresh (Ctrl+F5).
 
 Variantes versionadas: `emoji-vox-brasil*` e `emoji-vox-vermelho*` (SVG + PNG 32 e master).
 
@@ -1159,4 +1160,32 @@ OAuth e compartilhamento nativo citam provedores apenas onde exigido por integra
   - `404.html` intercepta caminhos no GitHub Pages.
 - **Testes dedicados:** `tests/route-parse.test.js`.
 
+---
 
+## 42. Postar em etapas — Social ou Cívico
+
+**Data:** 2026-11-07 · Módulos: `app/compose-stepper.js`, `render/compose-steps.js`, `render/compose-chrome.js`, `civic-post.js`.
+
+- **Escolha inicial:** *Social* (foto, vídeo, áudio, texto → composer completo da Ágora) ou *Cívico* (pauta, ideia, debate, enquete). Atalhos menores: feira, comunidade, proposta de regra.
+- **Cívico em etapas:** categoria → onde e título (mín. 8) → argumento → revisar. Classificador puro em `civic-post.js`: cívico = tag cívica **e** título 8+, argumento 40+, autor Vox assinado; sem os requisitos, o post fica em Social com aviso só para o autor.
+- **Componente de etapas genérico:** `data-step-required` (com `checkValidity`), revisão por `data-review-from`, `renderSteps` / `renderReviewList`. Reutilizado em proposta, comunidade e oferta da Feira. Enter fora da última etapa avança em vez de publicar. IDs de formulário preservados.
+- **Feed:** `#/` (Social) e `#/?feed=civic` (Cívico). Voto cívico `civic-vote` assinado, id determinístico por (post, autor) → 1 voto por pessoa.
+- **Painel do anexo:** miniatura, nome + tamanho, ✕ para remover; Estilo/Proporção/Marcar pessoas recolhidos até o toque.
+
+## 43. Contas vinculadas por login
+
+**Data:** 2026-11-07 · Rota `#/settings/linked-accounts` · Módulos: `linked-accounts.js`, `bsky-oauth.js`, `render/linked-accounts-ui.js` · Guia de deploy: [docs/login-social.md](../docs/login-social.md).
+
+- Uma linha por rede; botão *Conectar* (login quando a rede permite; senão campo `@usuário`). Interruptor único *Replicar automaticamente*.
+- **Bluesky:** OAuth do AT Protocol 100% no navegador (PAR + PKCE + DPoP ES256), metadados em `oauth/bsky-client-metadata.json` no deploy; a auto-replicação posta com a sessão local.
+- **Facebook:** só identidade (sem `@usuário` público).
+- **X, Threads, GitHub, TikTok, Instagram profissional:** OAuth 2.0 + PKCE; `/oauth/exchange` do relay troca o código pelo `@usuário` e descarta o token ([docs/relay-api.md](../docs/relay-api.md)). O botão só aparece com ID público + relay configurados.
+- O onboarding importa nome e foto (Google, Meta, Bluesky, X, TikTok, GitHub; Kwai desativado "em breve").
+
+## 44. Enquetes, voto com confirmação e assistentes
+
+**Data:** 2026-11-07 · Módulos: `app/vote-confirm.js`, `app/screens-guided.js`, `render/guided-setup.js`.
+
+- **Enquete:** construtor de 2 a 6 opções; ao publicar viram linhas `- opção` (`appendPollOptionsToBody`), lidas pelo classificador.
+- **Voto em pauta:** confirmação em 2 etapas (entender → confirmar) antes de assinar, no detalhe da proposta e em `#/vote`.
+- **Assistentes:** rede (`#/settings/network/guia`), Senha Soberana (`#/backup`: criar → confirmar → testar → salvar cofre) e carteira (`#/wallet/guia`: gerar/importar → chave → backup → Pix).

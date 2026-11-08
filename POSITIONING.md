@@ -97,4 +97,5 @@ O Vox adota uma terceira via soberana com os **Pix Zaps Nativos** (especificaç�
 
 - Intermediação financeira, custódia de valores ou split de pagamentos (o Vox não é e não será gateway bancário).
 - Impulsionamento pago de posts ou anúncios patrocinados corporativos.
-- Mensagens diretas privadas ponto a ponto — roadmap Fase 4 (ver [README.md](./README.md)).
+
+> Mensagens diretas E2E **já existem** (`crypto-dm.js`, inbox com TTL no relay) — ver [IDENTITY.md](./IDENTITY.md) e [docs/FEATURES.md](./docs/FEATURES.md).

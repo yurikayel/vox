@@ -4,7 +4,7 @@ Wrapper Android nativo em Java puro (sem AndroidX / sem dependências pesadas) q
 
 ## 1. Características Técnicas & Integridade
 
-- **Arquivo do APK:** `vox.apk` (disponível em `vox/android/vox.apk`, `vox/dist/vox.apk` e `D:\Downloads\vox.apk`)
+- **Arquivo do APK:** `vox.apk` (disponível em `vox/android/vox.apk`, `vox/dist/vox.apk` e `client/downloads/vox.apk`)
 - **Tamanho do APK:** **21.370 bytes (~20.87 KiB)** (elegível ao teto de 100 KiB do Turbo Arweave Free Tier);
 - **Identificador de Pacote (Application ID):** `org.vox.client`
 - **Nome da Aplicação:** `Vox`
@@ -30,7 +30,7 @@ powershell -ExecutionPolicy Bypass -File build.ps1
 
 ```powershell
 # Instalar no dispositivo conectado ou no WSA
-adb install -r "D:\Downloads\vox.apk"
+adb install -r "android/vox.apk"
 
 # Iniciar o cliente Vox
 adb shell am start -n org.vox.client/.MainActivity

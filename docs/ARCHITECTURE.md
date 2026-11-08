@@ -2,6 +2,8 @@
 
 Cliente estático (ES modules) + relay Python opcional. Identidade local `vx_*`; gossip P2P; permaweb via gateways.
 
+> Este arquivo cobre as **camadas do cliente**. Protocolo, tags e dados: [../ARCHITECTURE.md](../ARCHITECTURE.md). API do relay: [relay-api.md](./relay-api.md). Decisões: [adr/README.md](./adr/README.md).
+
 ## Camadas
 
 ```mermaid
@@ -51,15 +53,15 @@ flowchart TB
 - [peers-gossip-profile.js](../client/js/peers-gossip-profile.js) — PROFILE_CARD (sem feed, integrado ao diretório).
 - [peers-cache-manifest.js](../client/js/peers-cache-manifest.js) — manifestos de cache assinados.
 - [webrtc-peer.js](../client/js/webrtc-peer.js) — gerenciamento de ciclo de vida RTCDataChannel, rotação automática entre nós sentinela e timeout de negociação de 15s.
-- **Tríade Sentinela de Sinalização:** nós de sinalização independentes com fallback automático:
-  1. Hugging Face Spaces (wss://yurikayel-vox.hf.space)
-  2. Render Cloud (wss://vox-sentinel.onrender.com)
-  3. ~~Deno Deploy Edge Global (wss://vox-2.vox.deno.net)~~ — pausado em 2026-11 (ver `relay/deno-signaling.js`)
+- **Sinalização (lista real em [`client/config/signaling.json`](../client/config/signaling.json)):** fallback automático entre as URLs configuradas:
+  1. Render Cloud (`wss://vox-sentinel.onrender.com`) — único nó público ativo, mantido acordado por `sentinel-keepalive.yml`.
+  2. Nó local (`ws://127.0.0.1:3921`).
+  - O Hugging Face Space (`deploy-relay-hf.yml`) é opcional e só existe se `HF_TOKEN`/`HF_SPACE` estiverem configurados; ~~Deno Deploy~~ pausado em 2026-11 (ver `relay/deno-signaling.js`). Riscos: [INFRA-CUSTOS.md](./INFRA-CUSTOS.md).
 - Posts/listings: cache-node.saveLocalPost com invalidação reativa de cache indexado (getReplyCountsMap) + dispatchGossipPost.
 
 ## Identidade e perfil
 
-- [local-account.js](../client/js/local-account.js) — ECDSA P-256, signPayload / erifyPayload.
+- [local-account.js](../client/js/local-account.js) — ECDSA P-256, signPayload / verifyPayload.
 - [oauth-profile.js](../client/js/oauth-profile.js) — GIS/Meta client-only (ADR-002).
 - [profile-card.js](../client/js/profile-card.js) + [mesh-profile.js](../client/js/mesh-profile.js) — descoberta opt-in (ADR-003).
 - [profile-directory.js](../client/js/profile-directory.js) — cache persistente de cartões de perfil P2P conhecidos.
@@ -87,11 +89,11 @@ flowchart TB
 
 ## Testes e Auditoria
 
-- `tests/*.test.js` — Node test runner + mocks em `tests/setup.js` (582 testes unitários/integração JS).
+- `tests/*.test.js` — Node test runner + mocks em `tests/setup.js` (contagem em [release-metadata.json](./release-metadata.json); guia em [TESTES.md](./TESTES.md)).
 - `relay/test_*.py` — unittest Python para espelho, inbox e sinalização (34 testes).
 - `tools/lint_relay.py` — linter estático e AST para nós relay.
 - `tools/complexity-audit.mjs` — auditoria contínua de complexidade cognitiva e LLOC (131 arquivos, 0 violações).
 
 ## Offline
 
-- [client/sw.js](../client/sw.js) — SHELL_ASSETS lista módulos cacheados com chave inviolável `vox-pwa-v7.16-real-network-audio-video-upload`.
+- [client/sw.js](../client/sw.js) — SHELL_ASSETS lista módulos cacheados com chave `CACHE_NAME` definida no próprio `sw.js` (valor atual em [release-metadata.json](./release-metadata.json); bump obrigatório a cada mudança de shell).

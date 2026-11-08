@@ -2,6 +2,8 @@
 
 **Status:** accepted · **Fase 3.5 (Padronização e Governança de Produto)**
 
+> **Nota de nome:** o arquivo se chama `…-tripartite-…` por histórico (havia 3 papéis); a decisão vigente é **dual** (Cliente + Nó). O nome foi mantido para não quebrar links.
+
 ---
 
 ## 1. Contexto

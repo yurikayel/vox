@@ -1,7 +1,9 @@
 # Revisão de estado — Vox (25 out 2026)
 
-> **Status:** canônico (snapshot auditoria) · **Owner:** revisor doc · **Revisado:** 2026-10-25  
-> **Baseline:** `main` — ver [README.md](../README.md) e [release-metadata.json](./release-metadata.json) · **Testes:** **356** (`334` JS + `22` Python) via `npm test`  
+> **⚠️ SUPERSEDED (2026-11-07):** o plano vivo e o único checklist agora são o [ROADMAP.md](./ROADMAP.md) ([ADR-017](./adr/017-consolidacao-roadmap-unico.md)). Este documento fica como histórico; **não marque caixas aqui** e não use os números/status abaixo como atuais.
+
+> **Status:** histórico (snapshot de auditoria de 25/out) · **Owner:** revisor doc · **Revisado:** 2026-10-25  
+> **Baseline:** `main` — ver [README.md](../README.md) e [release-metadata.json](./release-metadata.json)  
 > **Entrada para voluntários:** [docs/README.md](./README.md) · [CONTRIBUTING-DOCS.md](./CONTRIBUTING-DOCS.md)
 
 Revisão pós-onda de agentes paralelos. Objetivo: um mantenedor comunitário audita sem conhecimento tribal.

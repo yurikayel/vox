@@ -1,0 +1,116 @@
+# Catálogo de funcionalidades — Vox
+
+> **Status:** canônico · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-07
+> Fonte: rotas de `client/js/app/route-parse.js`, imports reais em `client/js/**` e `tests/*.test.js`. Ao plugar ou remover um módulo, atualize a linha correspondente aqui.
+
+**Legenda de status**
+
+| Status | Significado |
+|---|---|
+| **no ar** | Carregado pela UI e usável no PWA publicado. |
+| **depende de config** | Código no ar, mas só funciona com app registrado, relay ou secret configurado. |
+| **lab** | Rota experimental (`#/labs/*`) — não é produção. |
+| **escrito, não plugado** | Módulo e testes existem; **nenhum código da UI importa** (só o precache do `sw.js`). |
+| **stub** | Esqueleto ou lista de configuração, sem a lógica principal. |
+| **demo** | Conteúdo de demonstração (`mock.js`) que aparece quando a rede falha ou em comunidades de exemplo. |
+
+## 1. Social e feed
+
+| Funcionalidade | Rota | Módulos principais | Status | Testes |
+|---|---|---|---|---|
+| Feed Social / Cívico | `#/`, `#/?feed=civic` | `app/screens-home.js`, `render/feed.js`, `civic-post.js` | no ar | `civic-post`, `render`, `feed-*` |
+| Postar (Social ou Cívico, em etapas) | botão Postar | `app/compose-stepper.js`, `render/compose-steps.js`, `inline-composer.js`, `composer-media.js` | no ar | `compose-steps`, `stepped-flows`, `composer-*` |
+| Foto, áudio e vídeo lo-fi | composer | `media-lofi.js`, `media-blob.js`, `upload.js`, `ans104.js` | no ar (≤100 KiB grátis; acima disso, Arweave L1 pago) | `media-*`, `upload`, `verify-data-item` |
+| Republicar com citação | post ⋯ | `repost.js`, `repost-draft.js`, `render/repost-cite.js` | no ar | `repost` |
+| Marcação manual em fotos | foto | `photo-tags.js`, `app/photo-tag-*.js`, `render/photo-tag-pins.js` | no ar | `photo-tags`, `photo-aspect-lightbox-tagging` |
+| Notas de perfil 24h | perfil | `profile-note.js` | no ar | `profile-note` |
+| Hashtags e feed por tag (+ Pol.is-lite) | `#/tag/:slug` | `hashtags.js`, `polis.js`, `render/tag-polis.js` | no ar | `hashtags`, `polis` |
+| Feed do Bluesky (leitura) | feed | `bsky-feed.js` | no ar | `bsky-feed` |
+| Open Frames (mini-apps no feed) | feed, `#/labs/frames` | `frames.js`, `open-frames-host.js` | no ar (host iframe em lab) | `frames`, `open-frames-host` |
+| Cartuchos Webxdc + CRDT | — | `webxdc-crdt.js`, `webxdc-host.js`, `webxdc-loader.js` | **escrito, não plugado** | `webxdc-*` |
+| Depoimentos | — | `testimonials.js` | **escrito, não plugado** | `testimonials` |
+
+## 2. Comunidades, governança e economia local
+
+| Funcionalidade | Rota | Módulos | Status | Testes |
+|---|---|---|---|---|
+| Comunidades estilo Orkut (fórum, tópicos) | `#/communities`, `#/c/:id`, `#/t/:id` | `app/screens-community.js`, `render/community.js`, `community-*.js` | no ar (cai em demo se o GraphQL falhar) | `community-*` |
+| Moderação: fixar, trancar, ocultar | comunidade | `moderation.js` | no ar | `moderation*` |
+| Proposta com diff + voto assinado | `#/c/:id/proposal/:id`, `#/vote` | `governance.js`, `app/vote-confirm.js` | no ar (propostas demo vêm de `mock.js`) | `governance`, `vote-stitch` |
+| Enquete cívica 2–6 opções | composer cívico | `civic-post.js` | no ar | `civic-post` |
+| Feira (classificados assinados) | `#/c/:id?tab=feira`, `#/compose/listing` | `listing.js`, `listing-ui.js` | no ar | `listing*` |
+| Pix Zaps (BR Code offline) | post/perfil, `#/pix/:key` | `brcode.js`, `pix-key.js`, `app/zap-modal.js` | no ar (só Pix; sem Lightning) | `brcode`, `pix-key` |
+| Cartório cívico (hash de atas no Arweave) | composer/tópico | `perma-notary.js` | no ar | `perma-notary` |
+| Kits de comunidade (associação, sindicato…) | — | `kit-genesis.js` | **escrito, não plugado** | `kit-genesis` |
+| Ranking por ponte (bridging) | — | `bridging-rank.js` | **escrito, não plugado** | `bridging-rank` |
+| Perfil coletivo M-de-N | `#/labs/mofn` | `labs/collective-mofn.js`, `labs/mofn-lab.js` | lab | `collective-mofn` |
+
+## 3. Pessoas, identidade e mensagens
+
+| Funcionalidade | Rota | Módulos | Status | Testes |
+|---|---|---|---|---|
+| Onboarding em etapas + pacto | 1º acesso | `app/onboarding.js`, `render/oauth-modals.js` | no ar | `onboarding-steps` |
+| Identidade local P-256 `vx_*` | — | `local-account.js` | no ar | `local-account` |
+| Cofre ZK, Senha Soberana, sync por QR | `#/backup`, `#/sync` | `oauth-vault.js`, `account-backup-wrap.js` | no ar (via Google/Meta, depende de config) | `account-backup`, `wallet-encryption` |
+| Identidade Ed25519/X25519 (cintura fina) | — | `vox-identity.js` | **escrito, não plugado** | `vox-identity` |
+| Credencial cívica / vínculo de identidade | — | `civic-credential.js`, `identity-link.js` | **escrito, não plugado** | `civic-credential`, `identity-link` |
+| Handles `@` | `#/h/:slug`, `#/u/@x` | `handles.js` | no ar | `handles` |
+| Diretório de pessoas | `#/people` | `people-index.js`, `profile-directory.js`, `contacts.js` | no ar | `people-index`, `contacts` |
+| Perfil, Voxels, passaporte | `#/perfil`, `#/u/:addr` | `app/screens-profile.js`, `voxels.js` | no ar (Voxels só locais) | `voxels`, `profile-*` |
+| Importar nome/foto (Google, Meta, Bluesky, X, TikTok, GitHub) | onboarding | `social-login.js`, `oauth-profile.js`, `bsky-oauth.js` | depende de config (Kwai: "em breve") | `social-login`, `oauth-profile` |
+| DMs E2E | `#/dm`, `#/dm/:addr` | `crypto-dm.js`, `dm-messenger.js`, `inbox.js` | no ar; entrega offline **depende de relay** (inbox padrão `127.0.0.1:3920`) | `crypto-dm`, `dm-*`, `inbox` |
+| Pareamento por QR sem servidor | — | `airgap-webrtc.js` | **escrito, não plugado** | `airgap-webrtc` |
+| Carteira Arweave + assistente | `#/wallet`, `#/wallet/guia` | `wallet.js`, `app/screens-guided.js` | no ar | `wallet` |
+
+## 4. Distribuição (POSSE) e outras redes
+
+| Funcionalidade | Rota | Módulos | Status | Testes |
+|---|---|---|---|---|
+| Contas vinculadas + auto-replicação | `#/settings/linked-accounts` | `linked-accounts.js`, `render/linked-accounts-ui.js` | Bluesky no ar; X/Threads/GitHub/TikTok/IG **dependem de** `/oauth/exchange` | `linked-accounts` |
+| Compartilhar / intents (X, Bluesky, WhatsApp, Telegram) | post | `share.js`, `posse-dispatch.js` | no ar (envio final sempre pela pessoa) | `share`, `posse-dispatch` |
+| EXPLODE! (disparo multi-rede assistido) | post | `explode-dispatch.js`, `tools/auto-explode/` | no ar | `explode` |
+| Story card 9:16 | post | `story-card.js` | no ar | `story-card` |
+| Webhooks Discord/Slack | contas vinculadas | `chat-bridge.js` | no ar | `chat-bridge` |
+| Widget embed | — | `client/embed/vox-embed.js` | demo (`embed/demo.html`) | `embed-vox` |
+| Extensão Vox Bridge (MV3) | — | `vox-bridge/` | stub | `vox-bridge-schema` |
+| `posse-cli` | terminal | `tools/posse-cli/` | no ar (ferramenta) | `posse-cli` |
+
+## 5. Rede, malha e infraestrutura
+
+| Funcionalidade | Rota | Módulos | Status | Testes |
+|---|---|---|---|---|
+| Leitura multi-gateway + pill "Leitura reserva" | — | `graphql.js`, `gateway-telemetry.js` | no ar (2 gateways) | `graphql`, `multi-gateway`, `gateway-telemetry` |
+| Cache local "Pacto Vox" (IndexedDB) | — | `cache-node.js`, `idb-store.js` | no ar | `cache-node`, `idb-store` |
+| Malha WebRTC + gossip (WANT/HAVE/BLOB, perfis, manifestos) | — | `peers*.js`, `webrtc-peer.js`, `profile-card.js`, `mesh-profile.js` | no ar; **depende da sinalização** (1 nó Render) | `peers*`, `webrtc`, `profile-card` |
+| Prioridade suave de blobs (V-I09) | — | `peers-blob-affinity.js` | no ar, flag padrão **desligada** | `peers-blob-soft-priority` |
+| Sinalização via Nostr | — | `nostr-signaling.js` | **stub** (só lista relays) | `nostr-signaling` |
+| Trackers WebTorrent | — | `client/config/signaling.json` | **stub** (configurados, não usados) | — |
+| Modo guardião (aparelho como nó) | — | `seeder-guardian.js` | **escrito, não plugado** | `seeder-guardian` |
+| Persistência de storage (anti-evicção) | — | `storage-persistence.js` | **escrito, não plugado** | `storage-persistence` |
+| Transferência em blocos | — | `chunked-transfer.js` | **escrito, não plugado** | `chunked-transfer` |
+| Configurações de rede, assistente, steward | `#/settings/network[/guia\|/steward]` | `app/screens-network.js`, `steward-wizard.js` | no ar | `steward-wizard`, `status-render` |
+| Espelho de comunidade no relay | comunidade | `community-mirror.js` | no ar, depende de relay | `community-mirror` |
+| Memória central (Modo 3) | — | `central-memory.js` + `relay/central_memory.py` | depende de Node Zero / relay | `central-memory` |
+| Atestação de contribuição (ADR-001) | `#/settings/network` | `contribution-attestation.js` | no ar (opt-in, export local) | `contribution-attestation` |
+| Saúde do nó | `#/status`, topbar | `node-health-*.js` | parcial (`node-health-api`/`-state` sem importadores) | `node-health-*` |
+| Nó dedicado Vox Populi | — | `android/`, `vox-populi/`, `tools/*` | no ar (loopback; seeder `not_implemented`) | `vox-populi` |
+
+## 6. Ajuda e conteúdo
+
+| Funcionalidade | Rota | Status |
+|---|---|---|
+| Voxpedia (ajuda leiga) | `#/voxpedia` | no ar |
+| Guia para testadores | `#/ajuda/teste` | no ar |
+| Downloads | `#/download`, `client/download/` | no ar |
+| Canal Revolução | `#/revolucao` | no ar |
+| Comunidade oficial `vox` + demos | — | no ar + demo (`mock.js`, 27 perfis por UF) |
+
+## 7. Lacunas que bloqueiam funcionar sem o mantenedor
+
+1. Sinalização pública depende de **um** nó (Render) — Nostr e trackers são stub.
+2. **Sem relay completo público**: entrega offline de DM, cofre remoto e OAuth de várias redes dependem de stewards.
+3. **Sem TURN**.
+4. Mídia acima de 100 KiB custa AR.
+5. Onze módulos prontos não estão plugados (lista acima). Plugar é o caminho mais barato para várias das [10 features de autossustento](./brainstorm-autossustento-10-features-2026-11.md).
+
+Detalhes de custo e risco: [INFRA-CUSTOS.md](./INFRA-CUSTOS.md). Prioridades: [ROADMAP.md](./ROADMAP.md).

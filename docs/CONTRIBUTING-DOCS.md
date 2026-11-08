@@ -7,7 +7,7 @@ Regras enforçáveis para voluntários e agentes. Objetivo: um revisor novo ente
 
 ## 1. Porta única
 
-- Só [docs/README.md](./README.md) organiza navegação (4 trilhas). Novos docs entram no índice ou ficam claramente **histórico** / **SUPERSEDED** no banner.
+- Só [docs/README.md](./README.md) organiza navegação. Plano vivo e caixas `[ ]`: **só** [ROADMAP.md](./ROADMAP.md) ([ADR-017](./adr/017-consolidacao-roadmap-unico.md)). Novos docs entram no índice ou ficam claramente **histórico** / **SUPERSEDED** no banner.
 - Links **dentro do repo:** caminhos relativos (`./foo.md`, `../client/DEV.md`).
 - Links **fora do repo** (Voxpedia, WhatsApp, Pages): URLs `https://github.com/yurikayel/vox/...` quando apontar para código/specs.
 
@@ -35,8 +35,10 @@ Cada checkbox ou linha de checklist declara **um** tipo:
 
 ## 4. Mutex de arquivo
 
+Regra completa (fonte única): [metodo-agentes-mutex-e-revisor.md](./metodo-agentes-mutex-e-revisor.md). Aplicação a docs:
+
 - **Um autor ou agente por arquivo** (ou seção marcada) por vez. PRs que tocaram o mesmo canon em paralelo: rebase e reconciliar banners antes de merge.
-- Lobby/agentes: ler [README.md](./README.md) + este arquivo antes de editar dossiê, inventário ou direcionamento.
+- Lobby/agentes: ler [README.md](./README.md) + este arquivo antes de editar ROADMAP ou direcionamento.
 
 ## 5. Auditabilidade
 
@@ -51,4 +53,4 @@ Cada checkbox ou linha de checklist declara **um** tipo:
 
 ---
 
-**Versão:** 1.0 · nov/2026
+**Versão:** 1.1 · 2026-11-07 (ROADMAP único — ADR-017)

@@ -1,5 +1,7 @@
 # ADR-007: Decomposição de Monólitos e Eliminação Integral da Dívida de Complexidade
 
+> **Nota (2026-11):** o `CACHE_NAME` citado abaixo é o da época da decisão. O atual fica só em `client/sw.js` (espelhado em [release-metadata.json](../release-metadata.json)) e é atualizado a cada mudança de shell.
+
 **Status:** accepted · **V-HARDENING**
 
 ## Contexto
