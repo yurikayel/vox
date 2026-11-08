@@ -279,6 +279,7 @@ Em conformidade com a auditoria de honestidade cívica ([docs/honest-copy-audit-
 * **[ADR-015](./docs/adr/015-licenciamento-agplv3-e-governanca-de-bem-comum.md):** Licenciamento AGPL-3.0-or-later e Governança de Bem Comum.
 * **[ADR-016](./docs/adr/016-design-system-sovereign-agora-e-democracia-direta.md):** Design System Sovereign Agora e Democracia Direta.
 * **[ADR-017](./docs/adr/017-consolidacao-roadmap-unico.md):** Consolidação do planejamento — ROADMAP único.
+* **[ADR-018](./docs/adr/018-selo-govbr-via-parceiro-publico.md) (proposto):** Selo gov.br opcional via parceiro público, desacoplado do login.
 
 Índice com status: [docs/adr/README.md](./docs/adr/README.md).
 

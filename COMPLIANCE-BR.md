@@ -94,6 +94,7 @@ Participar como **Ativo/Apoiador** no app **não** transfere ao projeto Vox resp
 
 4. **Roadmap e Relação com gov.br (Fase D — Documentação Conceitual):**
    * Eventuais integrações futuras de atestação de reputação ou verificação de cidadania (ex: via credenciais verificáveis OpenID Connect gov.br) serão **estritamente opcionais, desacopladas do login e mantidas na Fase D**.
+   * Proposta concreta: [ADR-018](./docs/adr/018-selo-govbr-via-parceiro-publico.md). O selo é emitido por parceiro público com domínio oficial, o CPF nunca chega ao Vox (pseudônimo HMAC no parceiro), e cada comunidade decide por governança se exige o selo. Pendente de parecer jurídico.
    * O Vox não condiciona a livre expressão, o compartilhamento comunitário e a participação na rede cooperativa a cadastros governamentais ou vigilância de dados civis.
 
 ## Pix Zaps Nativos e BR Code EMV (Fase 6.0)

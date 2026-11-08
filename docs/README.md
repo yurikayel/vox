@@ -43,7 +43,7 @@ Entrada única para quem desenvolve, revisa ou opera. Todo `.md` novo em `docs/`
 - [login-social.md](./login-social.md): login social, contas vinculadas e configuração de deploy do OAuth
 - [relay-api.md](./relay-api.md): endpoints de `server.py` e `signaling.py`
 - [../client/DEV.md](../client/DEV.md): guia do desenvolvedor §0–§44 (histórico por sprint)
-- **ADRs:** [índice com status](./adr/README.md) (001–017) · **RFCs:** [rfc/README.md](./rfc/README.md) · [0001 — POSSE export](./rfc/0001-posse-export.md)
+- **ADRs:** [índice com status](./adr/README.md) (001–018) · **RFCs:** [rfc/README.md](./rfc/README.md) · [0001 — POSSE export](./rfc/0001-posse-export.md)
 
 ### Specs de protocolo (malha, cache, módulos)
 
