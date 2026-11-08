@@ -5,7 +5,7 @@ import pathlib
 root = pathlib.Path(SPECPATH).resolve().parents[1]
 
 a = Analysis(
-    [str(root / "tools" / "steward-kit-windows" / "steward_launcher.py")],
+    [str(root / "packaging" / "steward-kit-windows" / "steward_launcher.py")],
     pathex=[str(root)],
     binaries=[],
     datas=[
@@ -37,5 +37,5 @@ exe = EXE(
     strip=False,
     upx=True,
     console=True,
-    icon=str(root / "tools" / "steward-kit-windows" / "vox.ico"),
+    icon=str(root / "packaging" / "steward-kit-windows" / "vox.ico"),
 )
