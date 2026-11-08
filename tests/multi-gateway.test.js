@@ -113,3 +113,11 @@ test("graphql - fetchRecentTopics com crossCheck consulta todos os gateways", as
     gql.__resetGatewayConfigForTests();
   }
 });
+
+test("LAN-27: config publicada tem ≥4 gateways em hosts distintos", async () => {
+  const { readFileSync } = await import("node:fs");
+  const cfg = JSON.parse(readFileSync(new URL("../client/config/gateways.json", import.meta.url), "utf8"));
+  const hosts = new Set(cfg.gateways.map((g) => new URL(g.graphql).host));
+  assert.ok(hosts.size >= 4, `só ${hosts.size} gateways`);
+  for (const g of cfg.gateways) assert.ok(g.raw.includes("{txId}"), g.id);
+});
