@@ -22,5 +22,6 @@
 | [015](./015-licenciamento-agplv3-e-governanca-de-bem-comum.md) | Licença AGPL-3.0-or-later e governança de bem comum | accepted |
 | [016](./016-design-system-sovereign-agora-e-democracia-direta.md) | Design system Sovereign Agora e democracia direta | accepted (rev. 2026-11-06) |
 | [017](./017-consolidacao-roadmap-unico.md) | Consolidação do planejamento — ROADMAP único | accepted |
+| [018](./018-selo-govbr-via-parceiro-publico.md) | Selo gov.br opcional via parceiro público, desacoplado do login | proposed |
 
 Convenção: título no arquivo como `# ADR-NNN: …` (os ADRs 014 e 015 usam `ADR 0NN`, por histórico).

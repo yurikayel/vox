@@ -53,6 +53,7 @@ O cliente está maduro: feed Social/Cívico, comunidades, governança, Feira, Pi
 | [ ] | **EXP-03** | doc | Spec de fork de comunidade | [pós-v82 T9](./brainstorm-proximas-10-tarefas-pos-v82-2026-11.md) |
 | [ ] | **EXP-04** | code | Backup em HTML standalone | — |
 | [ ] | **EXP-05** | doc | Decisão sobre o Bridge MV3 depois do piloto | [vox-bridge-spike.md](./vox-bridge-spike.md) |
+| [ ] | **REV-08** | ops-humano | **Selo gov.br opcional via parceiro público** ([ADR-018](./adr/018-selo-govbr-via-parceiro-publico.md), proposed): achar parceiro com domínio oficial (`*.edu.br`, `*.leg.br`), confirmar o uso permitido do Login Único, obter parecer LGPD e escrever RFC do atestado | Parceiro nomeado + resposta do Serviço de Integração + parecer citados aqui |
 | [ ] | **REV-06** | code | Trocar hotlinks `images.unsplash.com` (~35) por assets locais ou remover | [INFRA-CUSTOS §1](./INFRA-CUSTOS.md) |
 
 ## Candidatas (sem caixa até ganharem DoD e responsável)
