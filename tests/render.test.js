@@ -101,7 +101,7 @@ test("render - renderNetworkSettings gera painel completo com WebRTC", () => {
   assert.ok(html.includes("Camadas de participação"));
   assert.ok(html.includes("data-layer=\"active\""));
   assert.ok(html.includes("Você está aqui"));
-  assert.ok(html.includes("#net-comm-only-wrap"));
+  assert.ok(html.includes("#net-supporter"));
   assert.ok(html.includes("#net-relay-steward"));
   assert.ok(html.includes("btn-export-contribution-attestation"));
   assert.ok(html.includes("Baixar Comprovante de Contribuição"));
@@ -110,9 +110,10 @@ test("render - renderNetworkSettings gera painel completo com WebRTC", () => {
 test("render - inferParticipationLayer mapeia commOnly e relay", () => {
   assert.equal(render.inferParticipationLayer({ enabled: false }), "passive");
   assert.equal(render.inferParticipationLayer({ enabled: true }), "active");
-  assert.equal(render.inferParticipationLayer({ enabled: true, commOnly: true }), "supporter");
+  assert.equal(render.inferParticipationLayer({ enabled: true, commOnly: true }), "active");
+  assert.equal(render.inferParticipationLayer({ enabled: true, supporter: true }), "supporter");
   assert.equal(
-    render.inferParticipationLayer({ enabled: true, commOnly: true, backgroundRelay: true }),
+    render.inferParticipationLayer({ enabled: true, supporter: true, backgroundRelay: true }),
     "steward",
   );
   assert.equal(
@@ -147,10 +148,10 @@ test("render - renderStewardWizard passo 1", () => {
   assert.ok(main.innerHTML.includes("sw-pledge"));
 });
 
-test("render - renderNetworkSettings destaca Apoiador com commOnly", () => {
+test("render - renderNetworkSettings destaca Apoiador (nó pesado)", () => {
   const main = createContainer();
   render.renderNetworkSettings(main, {
-    settings: { enabled: true, commOnly: true, dailyCapMb: 50, maxMb: 25 },
+    settings: { enabled: true, supporter: true, dailyCapMb: 50, maxMb: 25 },
     metrics: {},
     cacheStats: {},
     relayStatus: { online: false },
