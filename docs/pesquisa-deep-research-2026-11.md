@@ -1,6 +1,6 @@
 # Pesquisa Deep Research (nov/2026) — síntese verificada
 
-> **Status:** pesquisa · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-08 (v2: §5 falhas e equívocos, §6 Prompt 4)
+> **Status:** pesquisa · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-08 (v3: o Prompt 4 foi respondido em [pesquisa-complementar-2026-11.md](./pesquisa-complementar-2026-11.md), que corrige S1 e o REV-13)
 > **Não substitui o [ROADMAP.md](./ROADMAP.md)**: as decisões abaixo viram linhas lá (REV-09 a REV-16). Origem: os 3 prompts de [brainstorm-autossustento-10-features-2026-11.md](./brainstorm-autossustento-10-features-2026-11.md#prompts-de-pesquisa-gemini-deep-research), rodados no Gemini Deep Research em 2026-11-07.
 
 ## Como ler
@@ -40,7 +40,7 @@ Para rodar de novo, anexe os arquivos ao prompt (ver a nota nos prompts).
 - **Política de uso do Render** proibindo contornar limites para evitar pagamento: **não consegui ler o texto da política**. Trate o keepalive como risco, não como proibição confirmada.
 - **Banda de saída do Render Free:** o Relatório 1 diz 100 GB, o Relatório 2 diz 5 GB. Os relatórios se contradizem e a doc não dá o número.
 - **Koyeb** com instância grátis sempre ligada ("adquirida pela Mistral em fev/2026"). Não verificado.
-- **Pix revela o nome civil** (e parte do CPF/CNPJ) do recebedor no app do pagador, mesmo com chave aleatória. *Comportamento conhecido do Pix*, com efeito direto sobre os **Pix Zaps que já estão no ar**: quem usa pseudônimo é exposto.
+- ✅ *(confirmado em 2026-11-08 no Manual de Iniciação do Pix do BCB — [complementar E1](./pesquisa-complementar-2026-11.md#e-pix-e-privacidade-do-recebedor))* **Pix revela o nome civil** (e parte do CPF/CNPJ) do recebedor no app do pagador, mesmo com chave aleatória. *Comportamento conhecido do Pix*, com efeito direto sobre os **Pix Zaps que já estão no ar**: quem usa pseudônimo é exposto.
 - **Dados abertos:** a Câmara dá erro de CORS ao ser chamada do navegador ([issue #357](https://github.com/CamaraDosDeputados/dados-abertos/issues/357)); o Senado tem limite de 10 req/s e as rotas `/materia` foram depreciadas em favor de `/processo`; o e-Cidadania publica CSV diário.
 - **Telegram:** limites de 1 msg/s por chat, 20/min por grupo e ~30/s no total. Polling por cron é lento, e webhook num Worker resolve.
 - **Community Notes:** o modelo `r̂ = μ + i_u + i_n + f_u·f_n` (d = 1), com limiar `i_n ≥ 0,40`, é público no repo Apache-2.0. A vulnerabilidade a pequenos grupos coordenados (artigos de 2026 citados) **não foi conferida**.
@@ -64,7 +64,7 @@ Para rodar de novo, anexe os arquivos ao prompt (ver a nota nos prompts).
 | **REV-10** | **TURN**: um Worker gera credenciais temporárias do Cloudflare Realtime TURN. Ativado só em caso de falha direta, com um modo "privacidade de IP" (`iceTransportPolicy: 'relay'`). | V5 |
 | **REV-11** | **Política "efêmero por padrão, permanente por consenso"**: post social e Feira circulam na malha com TTL. No Arweave entram só propostas, votos consolidados e manifestos (ou o hash). O cliente consulta `getFreeStatus()` e mostra o medidor de cota. Fecha o REV-07. | V1, V2, LGPD |
 | **REV-12** | **Jurídico do pós-STF**: canal de denúncia no PWA, lista de ocultação assinada lida pelo app oficial e a Feira sob o CDC. Exige parecer antes do código. | V9 |
-| **REV-13** | **Aviso de privacidade nos Pix Zaps (já no ar)**: o pagador vê o nome civil de quem recebe. Recomendar chave aleatória e dizer isso na UI. | Seção 2 (comportamento do Pix) |
+| **REV-13** | **Aviso de privacidade nos Pix Zaps (já no ar)**: o pagador vê o nome civil de quem recebe. ~~Recomendar chave aleatória~~ (não protege: ver [complementar E1](./pesquisa-complementar-2026-11.md#e-pix-e-privacidade-do-recebedor)); dizer isso na UI. | Seção 2 (comportamento do Pix) |
 | **REV-14** | **Proteção de chave no iOS**: plugar `storage-persistence`, guia "Adicionar à Tela de Início" no Safari e backup do cofre num cartão QR. | V8, ITP |
 | **REV-15** | **F6 redesenhada** como "guardião na tomada": app aberto, Wake Lock, só no Wi-Fi. O `periodicSync` fica como complemento no Chromium. | V7, V8 |
 | **REV-16** | Ao rodar de novo o Prompt 3, **anexar os arquivos** (ou usar outro agente com acesso ao repo). As specs atuais do Relatório 3 não valem como base. | Limitação acima |

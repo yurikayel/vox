@@ -72,6 +72,7 @@ Entrada única para quem desenvolve, revisa ou opera. Todo `.md` novo em `docs/`
 
 - [brainstorm-autossustento-10-features-2026-11.md](./brainstorm-autossustento-10-features-2026-11.md): **10 features de autossustento a custo ~zero + 3 prompts de pesquisa**
 - [pesquisa-deep-research-2026-11.md](./pesquisa-deep-research-2026-11.md): **resultado verificado dos 3 prompts** (o que se confirmou, o que falta conferir, o que foi descartado)
+- [pesquisa-complementar-2026-11.md](./pesquisa-complementar-2026-11.md): **Prompt 4 respondido (busca direta + avaliação do relatório do Gemini) + brainstorm B1–B12** (STF itens 7–11, decretos de 2026, ECA Digital, TSE 23.755, Pix/DICT, IPv6 por operadora, Render, Nostr, financiamento)
 - [brainstorm-sustentacao-perene-celulares-nos-base.md](./brainstorm-sustentacao-perene-celulares-nos-base.md): infra $0, celulares como nós
 - [brainstorm-sinergia-tramitado-vox-2026-11.md](./brainstorm-sinergia-tramitado-vox-2026-11.md): Tramitado × Vox, contrato LCP
 - [brainstorm-auto-escala-organica-2026-10.md](./brainstorm-auto-escala-organica-2026-10.md): flywheel, SLOs, moderação voluntária
