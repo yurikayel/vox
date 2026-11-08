@@ -20,7 +20,7 @@
 |---|---|---|---|---|
 | Feed Social / Cívico | `#/`, `#/?feed=civic` | `app/screens-home.js`, `render/feed.js`, `civic-post.js` | no ar | `civic-post`, `render`, `feed-*` |
 | Postar (Social ou Cívico, em etapas) | botão Postar | `app/compose-stepper.js`, `render/compose-steps.js`, `inline-composer.js`, `composer-media.js` | no ar | `compose-steps`, `stepped-flows`, `composer-*` |
-| Foto, áudio e vídeo lo-fi | composer | `media-lofi.js`, `media-blob.js`, `upload.js`, `ans104.js` | no ar (≤100 KiB grátis; acima disso, Arweave L1 pago) | `media-*`, `upload`, `verify-data-item` |
+| Foto, áudio e vídeo lo-fi | composer | `media-lofi.js`, `media-blob.js`, `upload.js`, `ans104.js` | no ar (itens ≤105 KiB grátis **até a cota do Turbo**, ~10 MiB por carteira/IP; acima disso, crédito ou L1 pago) | `media-*`, `upload`, `verify-data-item` |
 | Republicar com citação | post ⋯ | `repost.js`, `repost-draft.js`, `render/repost-cite.js` | no ar | `repost` |
 | Marcação manual em fotos | foto | `photo-tags.js`, `app/photo-tag-*.js`, `render/photo-tag-pins.js` | no ar | `photo-tags`, `photo-aspect-lightbox-tagging` |
 | Notas de perfil 24h | perfil | `profile-note.js` | no ar | `profile-note` |
@@ -110,7 +110,7 @@
 1. Sinalização pública depende de **um** nó (Render) — Nostr e trackers são stub.
 2. **Sem relay completo público**: entrega offline de DM, cofre remoto e OAuth de várias redes dependem de stewards.
 3. **Sem TURN**.
-4. Mídia acima de 100 KiB custa AR.
+4. O upload grátis do Turbo tem **cota** (~10 MiB por carteira/IP, segundo `upload.ardrive.io/info`); depois dela, e para itens acima de 105 KiB, publicar custa.
 5. Onze módulos prontos não estão plugados (lista acima). Plugar é o caminho mais barato para várias das [10 features de autossustento](./brainstorm-autossustento-10-features-2026-11.md).
 
 Detalhes de custo e risco: [INFRA-CUSTOS.md](./INFRA-CUSTOS.md). Prioridades: [ROADMAP.md](./ROADMAP.md).

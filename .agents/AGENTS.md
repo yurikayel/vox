@@ -5,7 +5,7 @@ Instruções globais compartilhadas para agentes que operam no sub-repo `vox/`:
 ## 1. Doutrina e Princípios
 - **Cold Readiness / Prontidão Fria:** Nenhuma ação pública, federação prematura ou deploy externo sem autorização expressa do usuário.
 - **Local-First & P2P:** Aplicação PWA estática vanilla, sem frameworks pesados, com funcionamento 100% offline via Service Worker e IndexedDB.
-- **Custos Recorrentes:** R$ 0,00 para sempre (Arweave Turbo Free Tier ≤100 KiB, WebTorrent, Nostr).
+- **Custos Recorrentes:** R$ 0,00 hoje, dependendo de free tiers com cota (o upload grátis do Turbo tem limite por carteira/IP; ver `docs/INFRA-CUSTOS.md`). Não prometer "para sempre".
 
 ## 2. Protocolo Mutex (Um Agente por Arquivo)
 Fonte única: [`docs/metodo-agentes-mutex-e-revisor.md`](../docs/metodo-agentes-mutex-e-revisor.md). Resumo:

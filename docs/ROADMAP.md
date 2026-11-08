@@ -25,6 +25,7 @@ O cliente está maduro: feed Social/Cívico, comunidades, governança, Feira, Pi
 | [ ] | **PIL-01** | ops-humano | Comunidade + facilitador nomeados (10–30 pessoas) | [piloto-comunidade-go-no-go.md](./piloto-comunidade-go-no-go.md) |
 | [ ] | **PIL-02** | ops-humano | **V-P09** semanas 0–4 (*blocked-human*) | [template de retrospectiva](./piloto-comunidade-retrospectiva-template.md) |
 | [ ] | **PIL-03** | ops-humano | Retrospectiva preenchida | idem |
+| [ ] | **REV-07** | doc | **Confirmar o modelo de cota do Turbo** (`https://upload.ardrive.io/info` em 2026-11-07: `maxItemBytes` 107520 (105 KiB), `lifetimeBytes` 10485760 e `ipBytes` 10485760 (≈10 MiB)) e decidir a política: o que vai para o permaweb, o que fica só na malha, e quem paga o crédito | [INFRA-CUSTOS §4](./INFRA-CUSTOS.md#4-pontos-únicos-de-falha-ordem-de-gravidade), Prompt 2 do brainstorm |
 | [ ] | **DOC-04** | doc | Re-auditoria de copy honesta, incluindo "Capacidades" do README × [FEATURES.md](./FEATURES.md) (Webxdc já corrigido para "laboratório") | [honest-copy-audit](./honest-copy-audit-2026-10-23.md) |
 
 ## Próximo (P1)
@@ -64,7 +65,7 @@ Do [brainstorm de autossustento](./brainstorm-autossustento-10-features-2026-11.
 | F2 | Convite por QR/link que já faz o pareamento | crescimento | `airgap-webrtc.js`, `qr-url.js` |
 | F3 | Canal de transmissão da comunidade | alcance | `peers.js`, `posse-dispatch.js` |
 | F4 | Vaquinha transparente (comunidade e projeto) | dinheiro sem custódia | `brcode.js`, `perma-notary.js` |
-| F5 | Mídia fatiada ≤100 KiB | infra | `chunked-transfer.js`, `ans104.js` |
+| F5 | ~~Mídia fatiada ≤100 KiB~~ → mídia pela malha, hash no Arweave (a cota do Turbo é por bytes totais) | infra | `chunked-transfer.js`, `media-blob.js` |
 | F6 | Modo Guardião noturno | infra | `seeder-guardian.js`, `storage-persistence.js`, `voxels.js` |
 | F7 | Notas da Comunidade por ponte | moderação | `bridging-rank.js` |
 | F8 | Selo de confiança por aval | anti-sybil | `civic-credential.js`, `identity-link.js` |
