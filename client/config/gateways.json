@@ -12,6 +12,18 @@
       "label": "arweave.net",
       "graphql": "https://arweave.net/graphql",
       "raw": "https://arweave.net/{txId}"
+    },
+    {
+      "id": "ardrive-net",
+      "label": "ardrive.net (AR.IO)",
+      "graphql": "https://ardrive.net/graphql",
+      "raw": "https://ardrive.net/{txId}"
+    },
+    {
+      "id": "ar-io-dev",
+      "label": "ar-io.dev (AR.IO)",
+      "graphql": "https://ar-io.dev/graphql",
+      "raw": "https://ar-io.dev/{txId}"
     }
   ]
 }
