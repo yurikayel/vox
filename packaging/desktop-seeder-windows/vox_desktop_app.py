@@ -98,7 +98,7 @@ def start_node_background(root: Path) -> bool:
         except OSError:
             pass
 
-    node_py = root / "tools" / "node-zero-windows" / "node_zero.py"
+    node_py = root / "packaging" / "node-zero-windows" / "node_zero.py"
     if node_py.exists():
         try:
             flags = getattr(subprocess, "CREATE_NO_WINDOW", 0) | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)
@@ -215,7 +215,7 @@ class DesktopNodeTray:
     def _resolve_icon(self) -> Any:
         try:
             from System.Drawing import Icon, SystemIcons
-            ico_file = self.root / "tools" / "desktop-seeder-windows" / "vox.ico"
+            ico_file = self.root / "packaging" / "desktop-seeder-windows" / "vox.ico"
             if not ico_file.exists():
                 bundle = getattr(sys, "_MEIPASS", None)
                 if bundle:
