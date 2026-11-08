@@ -45,7 +45,7 @@ O cliente está maduro: feed Social/Cívico, comunidades, governança, Feira, Pi
 | [ ] | **REV-21** | ops-humano | **Banda do Render (B8):** anotar a banda incluída real (Billing → *Monthly Included Usage*). Garantir que o nó só sinaliza, com limite de taxa e `/metrics` de bytes de saída. Sem cartão, estourar a banda suspende **todos** os serviços Free até o fim do mês; 750 h/workspace = um só serviço sempre ligado | [complementar §1-F](./research/pesquisa-complementar-2026-11.md#f-infraestrutura) |
 | [ ] | **REV-22** | ops-humano | **`FUNDING.yml` + GitHub Sponsors (B10):** Brasil é região aceita, 0% em patrocínio pessoal. NGI Zero Commons encerrado (01/06/2026); acompanhar NLnet (03/01/2027) e OTF IFF | [complementar §1-H](./research/pesquisa-complementar-2026-11.md#h-financiamento) |
 | [ ] | **REV-02** | code | Decidir, módulo a módulo, **plugar ou arquivar** os 11 módulos "escritos, não plugados" | lista em [FEATURES.md](./FEATURES.md); vários viram features do brainstorm |
-| [ ] | **REV-03** | code | Teste que falha se `docs/release-metadata.json.cache_name` ≠ `CACHE_NAME` do `sw.js` (impede drift) | [TESTES.md](./TESTES.md) |
+| [x] | **REV-03** | code | Teste que falha se `docs/release-metadata.json.cache_name` ≠ `CACHE_NAME` do `sw.js` (impede drift) | [TESTES.md](./TESTES.md) |
 | [ ] | **REV-04** | ops-humano | **Relay completo público** operado por steward (inbox de DM, `/oauth/exchange`, cofre) com buddy | [relay-api.md](./specs/relay-api.md), [steward-relay-buddy.md](./operations/steward-relay-buddy.md) |
 | [ ] | **NET-04** | ops-humano | Smoke de steward por alguém que não seja o mantenedor | [steward-relay-kit.md](./operations/steward-relay-kit.md) |
 | [ ] | **PIL-04** | ops-humano | Barra da semana 4: ≥3 Apoiadores ou 1 steward + espelho OK | V-P04/05/06 |
@@ -71,7 +71,7 @@ O cliente está maduro: feed Social/Cívico, comunidades, governança, Feira, Pi
 | [ ] | **REV-23** | code | **Padrões seguros por idade sem coletar dado (B6):** faixa etária autodeclarada só no aparelho; abaixo de 18 sem DM de desconhecidos, Pix Zap e Feira geolocalizada; **abaixo de 16, conta vinculada a um responsável** (exigência do ECA Digital) por aval de chave via QR. Depois do REV-12 |
 | [ ] | **REV-24** | code | **Modo eleitoral do ranking (B11):** no período eleitoral, nada de ranquear ou recomendar conteúdo sobre candidato, partido ou campanha (Res. TSE 23.755/2026); feed cronológico. Prazo: antes de ago/2028 | [complementar §1-B](./research/pesquisa-complementar-2026-11.md) | [complementar B6](./research/pesquisa-complementar-2026-11.md#4-brainstorm-b1b10-a-partir-dos-achados) |
 | [ ] | **REV-16** | doc | Rodar de novo o Prompt 3 **com os arquivos anexados** (o Gemini não abriu os links do repo) e só então escrever as specs F1–F10 | [pesquisa — Como ler](./research/pesquisa-deep-research-2026-11.md#como-ler) |
-| [ ] | **REV-06** | code | Trocar hotlinks `images.unsplash.com` (~35) por assets locais ou remover | [INFRA-CUSTOS §1](./INFRA-CUSTOS.md) |
+| [x] | **REV-06** | code | Trocar hotlinks `images.unsplash.com` (~35) por assets locais ou remover | [INFRA-CUSTOS §1](./INFRA-CUSTOS.md) |
 
 ## Rumo à rede pública (LAN)
 
@@ -120,7 +120,7 @@ Também exige: REV-18 · DOC-04 · REV-02 · REV-04 (ou LAN-21 cobrindo DM offli
 | [ ] | **LAN-14** | code | **Anti-spam e limite de taxa** por chave; quarentena de chave nova | [backlog §4](./strategy/backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
 | [ ] | **LAN-18** | ops-humano | **Revisão externa de cripto** (DM, cofre, assinaturas); críticos corrigidos | [backlog §4](./strategy/backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
 | [ ] | **LAN-19** | code | **Privacidade de IP:** aviso + modo "só TURN" (padrão para menores) | [backlog §4](./strategy/backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
-| [ ] | **LAN-20** | code | **Cadeia de suprimentos:** inventário de dependências com SRI + `npm audit` no CI | [backlog §4](./strategy/backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
+| [ ] | **LAN-20** | code | **Cadeia de suprimentos:** inventário de dependências com SRI + `npm audit` no CI | [backlog §4](./strategy/backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) | · ✅ `npm audit --audit-level=high` no CI; falta inventário com SRI
 | [ ] | **LAN-22** | code | **Acessibilidade WCAG 2.2 AA básica** nas 10 rotas principais | [backlog §4](./strategy/backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
 | [ ] | **LAN-23** | code | **Desempenho em Android de entrada** com orçamento que quebra o CI | [backlog §4](./strategy/backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
 | [ ] | **LAN-25** | ops-humano | **Onboarding com 5 leigos** (identidade, backup, post, comunidade, recuperação) | [backlog §4](./strategy/backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
