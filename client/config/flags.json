@@ -6,5 +6,6 @@
     "pixZaps": true,
     "communityCreate": true
   },
+  "electoralMode": false,
   "notice": ""
 }
