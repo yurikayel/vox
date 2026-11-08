@@ -103,7 +103,7 @@ function layerFeeds() {
     )}
     ${layer(
       "Modo demonstração",
-      `<p>Se gateways Arweave falharem e não houver cache nem par, o app entra em <strong>tour de demonstração</strong> (<code>mock.js</code>) — <strong>27 perfis estereótipo</strong> (um por UF, ex. <code>#/h/alice-mg</code>) para testar feed e perfil sem travar.</p>`
+      `<p>O Vox <strong>nunca</strong> mostra conteúdo inventado quando a rede falha: sem gateway, cache ou par, a tela diz que está sem conexão. Para conhecer o app sem rede, ligue o <strong>modo demonstração</strong> em <em>Sua rede</em>: ele mostra <strong>27 perfis fictícios</strong> (um por UF), sempre com uma faixa "Modo demonstração" no topo.</p>`
     )}`
   );
 }

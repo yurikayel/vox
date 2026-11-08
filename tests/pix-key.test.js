@@ -73,3 +73,12 @@ test("pix-key - mascaramento para exibição pública", () => {
   assert.ok(maskedUuid.startsWith("123e"));
   assert.ok(maskedUuid.endsWith("4000"));
 });
+
+test("pix-key - REV-13: aviso diz que o nome civil aparece com qualquer chave, inclusive aleatória", () => {
+  const n = pix.PIX_RECEIVER_NAME_NOTICE_PT;
+  assert.match(n, /nome completo/);
+  assert.match(n, /qualquer tipo de chave/);
+  assert.match(n, /aleatória/);
+  assert.doesNotMatch(n, /use (a )?chave aleatória para (se )?proteger/i);
+  assert.match(pix.PIX_PAYER_CHECK_NOTICE_PT, /Confira/);
+});

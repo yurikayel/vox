@@ -10006,3 +10006,33 @@ blockquote.repost-cite {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
 }
+
+/* LAN-10 — faixa fixa do modo demonstração (perfis fictícios nunca parecem reais) */
+.demo-mode-banner {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.75rem;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid var(--warning);
+  border-radius: var(--radius-sm);
+  background: var(--surface-soft);
+  color: var(--text);
+  font-size: 0.85rem;
+}
+.demo-mode-banner .btn { margin-left: auto; }
+
+/* LAN-08 — aviso operacional do kill-switch (config/flags.json) */
+.ops-notice-banner {
+  margin: 0 0 0.75rem;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid var(--danger);
+  border-radius: var(--radius-sm);
+  background: var(--surface-soft);
+  color: var(--text);
+  font-size: 0.85rem;
+}

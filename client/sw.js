@@ -4,7 +4,7 @@
 
 // O Service Worker atua no cache offline do shell e notificações de status, sem abrir WebRTC.
 
-const CACHE_NAME = "vox-pwa-v7.32-real-network-audio-video-upload";
+const CACHE_NAME = "vox-pwa-v7.33-real-network-audio-video-upload";
 
 const SHELL_ASSETS = [
 
@@ -125,6 +125,13 @@ const SHELL_ASSETS = [
   "./js/demo-seed.js",
 
   "./js/frames.js",
+  "./js/feature-flags.js",
+  "./js/boot-color-mode.js",
+  "./js/boot-short-url.js",
+  "./js/boot-sw.js",
+  "./js/dom-delegates.js",
+  "./js/nostr-event.js",
+  "./js/nostr-transport.js",
 
   "./js/open-frames-host.js",
 
@@ -137,6 +144,9 @@ const SHELL_ASSETS = [
   "./js/i18n-pt-br.js",
 
   "./js/inline-composer.js",
+  "./js/permanence-notice.js",
+  "./js/report.js",
+  "./js/app/report-flow.js",
 
   "./js/posse-dispatch.js",
   "./js/explode-dispatch.js",
@@ -428,6 +438,8 @@ self.addEventListener("fetch", (event) => {
     handleSignalingFetch(event);
     return;
   }
+  // LAN-08: o kill-switch nunca sai do cache do SW — sempre rede (offline, o cliente usa o último estado salvo).
+  if (url.pathname.endsWith("/config/flags.json")) return;
   handleAppShellFetch(event);
 });
 

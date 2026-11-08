@@ -10,6 +10,7 @@ import * as cryptoDm from "../crypto-dm.js";
 import * as inbox from "../inbox.js";
 import * as localAccount from "../local-account.js";
 import * as demoSeed from "../demo-seed.js";
+import * as mock from "../mock.js";
 import * as communityMirror from "../community-mirror.js";
 import * as stewardWizard from "../steward-wizard.js";
 import * as gatewayTelemetry from "../gateway-telemetry.js";
@@ -207,9 +208,10 @@ export function bindNetworkSettingsButtons() {
   const btnResetDemo = document.getElementById("btn-reset-demo");
   btnResetDemo?.addEventListener("click", async () => {
     btnResetDemo.disabled = true;
-    btnResetDemo.textContent = "Restaurando…";
-    await demoSeed.resetDemoSeed();
-    share.showToast("Tour de demonstração restaurado com sucesso!");
+    const turnOn = !mock.isDemoMode();
+    mock.setDemoMode(turnOn);
+    if (!turnOn) await demoSeed.resetDemoSeed();
+    share.showToast(turnOn ? "Modo demonstração ligado: perfis de exemplo são fictícios." : "Modo demonstração desligado.");
     showNetworkSettings();
   });
 
@@ -241,6 +243,7 @@ export async function showNetworkSettings() {
     mutedUsers: mod.getMutedUsers(),
     meshDiscoverable: localAccount.getMeshDiscoverable(),
     posseWebhooks: posseDispatch.loadPosseWebhooks(),
+    demoMode: mock.isDemoMode(),
   });
 
   bindNetworkSettingsForm();

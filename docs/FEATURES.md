@@ -1,6 +1,6 @@
 # Catálogo de funcionalidades — Vox
 
-> **Status:** canônico · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-07
+> **Status:** canônico · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-08
 > Fonte: rotas de `client/js/app/route-parse.js`, imports reais em `client/js/**` e `tests/*.test.js`. Ao plugar ou remover um módulo, atualize a linha correspondente aqui.
 
 **Legenda de status**
@@ -12,7 +12,7 @@
 | **lab** | Rota experimental (`#/labs/*`) — não é produção. |
 | **escrito, não plugado** | Módulo e testes existem; **nenhum código da UI importa** (só o precache do `sw.js`). |
 | **stub** | Esqueleto ou lista de configuração, sem a lógica principal. |
-| **demo** | Conteúdo de demonstração (`mock.js`) que aparece quando a rede falha ou em comunidades de exemplo. |
+| **demo** | Perfis fictícios de `mock.js` que só aparecem com o **modo demonstração** ligado em `#/settings/network`, sempre com a faixa "Modo demonstração" (LAN-10). Fora dele, falha de rede mostra "sem conexão", nunca conteúdo de exemplo. |
 
 ## 1. Social e feed
 
@@ -20,6 +20,7 @@
 |---|---|---|---|---|
 | Feed Social / Cívico | `#/`, `#/?feed=civic` | `app/screens-home.js`, `render/feed.js`, `civic-post.js` | no ar | `civic-post`, `render`, `feed-*` |
 | Postar (Social ou Cívico, em etapas) | botão Postar | `app/compose-stepper.js`, `render/compose-steps.js`, `inline-composer.js`, `composer-media.js` | no ar | `compose-steps`, `stepped-flows`, `composer-*` |
+| Aviso de permanência ("gravar no Arweave" × "só na malha") | 1º post com carteira | `permanence-notice.js` | no ar (LAN-11) | `permanence-notice` |
 | Foto, áudio e vídeo lo-fi | composer | `media-lofi.js`, `media-blob.js`, `upload.js`, `ans104.js` | no ar (itens ≤105 KiB grátis **até a cota do Turbo**, ~10 MiB por carteira/IP; acima disso, crédito ou L1 pago) | `media-*`, `upload`, `verify-data-item` |
 | Republicar com citação | post ⋯ | `repost.js`, `repost-draft.js`, `render/repost-cite.js` | no ar | `repost` |
 | Marcação manual em fotos | foto | `photo-tags.js`, `app/photo-tag-*.js`, `render/photo-tag-pins.js` | no ar | `photo-tags`, `photo-aspect-lightbox-tagging` |
@@ -34,12 +35,13 @@
 
 | Funcionalidade | Rota | Módulos | Status | Testes |
 |---|---|---|---|---|
-| Comunidades estilo Orkut (fórum, tópicos) | `#/communities`, `#/c/:id`, `#/t/:id` | `app/screens-community.js`, `render/community.js`, `community-*.js` | no ar (cai em demo se o GraphQL falhar) | `community-*` |
+| Comunidades estilo Orkut (fórum, tópicos) | `#/communities`, `#/c/:id`, `#/t/:id` | `app/screens-community.js`, `render/community.js`, `community-*.js` | no ar (sem rede: aviso "sem conexão", sem conteúdo de exemplo) | `community-*` |
 | Moderação: fixar, trancar, ocultar | comunidade | `moderation.js` | no ar | `moderation*` |
-| Proposta com diff + voto assinado | `#/c/:id/proposal/:id`, `#/vote` | `governance.js`, `app/vote-confirm.js` | no ar (propostas demo vêm de `mock.js`) | `governance`, `vote-stitch` |
+| Denunciar publicação (motivos, canais oficiais para casos graves, DM cifrada ao moderador) | post ⋯ | `report.js`, `app/report-flow.js` | no ar (LAN-12); registro local, sem fila central | `report`, `report-flow` |
+| Proposta com diff + voto assinado | `#/c/:id/proposal/:id`, `#/vote` | `governance.js`, `app/vote-confirm.js` | no ar | `governance`, `vote-stitch` |
 | Enquete cívica 2–6 opções | composer cívico | `civic-post.js` | no ar | `civic-post` |
 | Feira (classificados assinados) | `#/c/:id?tab=feira`, `#/compose/listing` | `listing.js`, `listing-ui.js` | no ar | `listing*` |
-| Pix Zaps (BR Code offline) | post/perfil, `#/pix/:key` | `brcode.js`, `pix-key.js`, `app/zap-modal.js` | no ar (só Pix; sem Lightning) | `brcode`, `pix-key` |
+| Pix Zaps (BR Code offline) | post/perfil, `#/pix/:key` | `brcode.js`, `pix-key.js`, `app/zap-modal.js` | no ar (só Pix; sem Lightning). Avisa que o nome civil do DICT aparece com qualquer chave (REV-13) | `brcode`, `pix-key` |
 | Cartório cívico (hash de atas no Arweave) | composer/tópico | `perma-notary.js` | no ar | `perma-notary` |
 | Kits de comunidade (associação, sindicato…) | — | `kit-genesis.js` | **escrito, não plugado** | `kit-genesis` |
 | Ranking por ponte (bridging) | — | `bridging-rank.js` | **escrito, não plugado** | `bridging-rank` |
@@ -83,7 +85,9 @@
 | Cache local "Pacto Vox" (IndexedDB) | — | `cache-node.js`, `idb-store.js` | no ar | `cache-node`, `idb-store` |
 | Malha WebRTC + gossip (WANT/HAVE/BLOB, perfis, manifestos) | — | `peers*.js`, `webrtc-peer.js`, `profile-card.js`, `mesh-profile.js` | no ar; **depende da sinalização** (1 nó Render) | `peers*`, `webrtc`, `profile-card` |
 | Prioridade suave de blobs (V-I09) | — | `peers-blob-affinity.js` | no ar, flag padrão **desligada** | `peers-blob-soft-priority` |
-| Sinalização via Nostr | — | `nostr-signaling.js` | **stub** (só lista relays) | `nostr-signaling` |
+| Sinalização via Nostr (efêmero kind 25050, cifrada entre pares) | — | `nostr-transport.js`, `nostr-event.js` (BIP-340), `nostr-signaling.js` | **no ar em paralelo ao Render** (REV-09; desligável em `signaling.json` → `nostrSignaling.enabled`). Ida e volta validada em relays reais; conexão entre dois navegadores ainda não testada em campo | `nostr-transport`, `nostr-event`, `nostr-signaling` |
+| Teste de fumaça dos relays Nostr | workflow semanal | `tools/nostr-smoke.mjs`, `.github/workflows/nostr-smoke.yml` | no ar (REV-19) | `nostr-smoke` |
+| Kill-switch por configuração | `config/flags.json` | `feature-flags.js` | no ar (LAN-08): pausa upload, Feira, Pix Zaps, criar comunidade | `feature-flags` |
 | Trackers WebTorrent | — | `client/config/signaling.json` | **stub** (configurados, não usados) | — |
 | Modo guardião (aparelho como nó) | — | `seeder-guardian.js` | **escrito, não plugado** | `seeder-guardian` |
 | Persistência de storage (anti-evicção) | — | `storage-persistence.js` | **escrito, não plugado** | `storage-persistence` |
@@ -107,7 +111,7 @@
 
 ## 7. Lacunas que bloqueiam funcionar sem o mantenedor
 
-1. Sinalização pública depende de **um** nó (Render) — Nostr e trackers são stub.
+1. Sinalização pública: Render + **Nostr em paralelo** (REV-09). Trackers WebTorrent continuam stub. Falta um 2º nó sem sleep (REV-01) e medir em campo.
 2. **Sem relay completo público**: entrega offline de DM, cofre remoto e OAuth de várias redes dependem de stewards.
 3. **Sem TURN**.
 4. O upload grátis do Turbo tem **cota** (~10 MiB por carteira/IP, segundo `upload.ardrive.io/info`); depois dela, e para itens acima de 105 KiB, publicar custa.

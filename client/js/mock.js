@@ -14,6 +14,27 @@ export { UF_ROUTE_IDS, MOCK_DEMO_UF_COUNT, MOCK_DEMO_TOPIC_COUNT };
 
 const UF_PROFILES_CACHE = buildUfDemoProfilesMap();
 
+/**
+ * LAN-10 — os 27 perfis fictícios por UF só existem em modo demonstração explícito.
+ * Fora dele, nenhum perfil, chave Pix ou "pessoa online" fictícia aparece misturada à rede real.
+ */
+export const DEMO_MODE_KEY = "vox-demo-mode";
+
+export function isDemoMode() {
+  try {
+    return globalThis.localStorage?.getItem(DEMO_MODE_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+export function setDemoMode(on) {
+  try {
+    if (on) globalThis.localStorage?.setItem(DEMO_MODE_KEY, "1");
+    else globalThis.localStorage?.removeItem(DEMO_MODE_KEY);
+  } catch {}
+}
+
 export const MOCK_OFFICIAL_COMMUNITY_VOX = {
   id: "vox",
   communityId: "vox",
@@ -98,6 +119,7 @@ export function getMockProfile(authorId) {
       isSystem: true,
     };
   }
+  if (!isDemoMode()) return null;
   if (typeof authorId === "string" && authorId.startsWith("vx_demo_") && UF_PROFILES_CACHE[authorId]) {
     return UF_PROFILES_CACHE[authorId];
   }
@@ -168,7 +190,7 @@ export function getAuthorPixKey(author) {
 }
 
 export function findMockByPixKey(raw) {
-  if (!raw) return null;
+  if (!raw || !isDemoMode()) return null;
   const clean = String(raw).trim().toLowerCase();
   for (const prof of Object.values(UF_PROFILES_CACHE)) {
     if (prof.pixKey && prof.pixKey.trim().toLowerCase() === clean) {

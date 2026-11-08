@@ -24,6 +24,8 @@
 | **Biblioteca Arweave** | `esm.sh` (em runtime) | import dinâmico | R$ 0 | Dependência de CDN de terceiro no caminho de upload. |
 | **Imagens de demo** | `images.unsplash.com` (~35 refs) | hotlink | R$ 0 | Quebra offline; dado de demo. |
 | **CI** | GitHub Actions (`ci.yml`, `windows-node-zero-smoke.yml`) | push/PR | R$ 0 (repo público) | — |
+| **Sinalização Nostr** (paralela, REV-09) | relays públicos de `signaling.json` → `nostrRelays` (3 por sessão) | — (cliente direto) | R$ 0 | Só eventos efêmeros (kind 25050), não guardados. Saúde medida toda segunda por `nostr-smoke.yml` (REV-19). Um relay pode passar a exigir auth/PoW: o pool é configurável. |
+| **Kill-switch** (LAN-08) | `client/config/flags.json` no Pages | deploy normal | R$ 0 | Mudar para `false` e fazer deploy pausa upload, Feira, Pix Zaps ou criar comunidade na próxima recarga; `notice` aparece no topo. |
 
 ## 2. Secrets e variáveis (nomes, nunca valores)
 

@@ -169,7 +169,11 @@ async function onSheetAction(action) {
   if (await onSocialSheetAction(action, ctx)) return;
   if (await onNavigationOrShareAction(action, ctx)) return;
 
-  if (action === "report") share.showToast("Denúncia registrada localmente — em breve na malha.");
+  if (action === "report") {
+    const { openReportFlow } = await import("../app/report-flow.js");
+    openReportFlow(ctx);
+    return;
+  }
   if (action === "not-interested") share.showToast("Mostraremos menos publicações como esta.");
   if (action === "embed") share.showToast("Incorporar — em breve.");
 }

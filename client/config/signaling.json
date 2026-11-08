@@ -21,9 +21,14 @@
     "wss://relay.damus.io",
     "wss://nos.lol",
     "wss://relay.snort.social",
-    "wss://eden.nostr.land",
+    "wss://offchain.pub",
     "wss://relay.primal.net",
     "wss://nostr.mom"
   ],
-  "maxRtcPeers": 8
+  "maxRtcPeers": 8,
+  "nostrSignaling": {
+    "enabled": true,
+    "room": "vox-brasil-v1",
+    "maxRelays": 3
+  }
 }
