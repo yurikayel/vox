@@ -312,3 +312,38 @@ Preços de jun/2026 (S: [MelhorPlano](https://melhorplano.net/planos-de-celular/
 - Precedente brasileiro sobre operador de nó P2P. *Cobbler Nevada*.
 - Passkey ou carteira embarcada no x402 do Turbo.
 - Federações e cooperativas de pinning como modelo de financiamento.
+
+---
+
+## Confronto com o relatório do Gemini Deep Research (08/11/2026)
+
+O mesmo plano (A–F + R1–R9) foi rodado no Gemini. O relatório dele **não traz URLs por afirmação**, então nada dele entra aqui como (P). Abaixo, o que confirma, o que diverge e qual versão vale.
+
+### Confirma o que já está neste doc
+
+- Negentropy/RBSR (NIP-77) é o melhor custo-benefício para sincronizar (R1); IBLT falha se a estimativa da diferença errar.
+- Hash ou raiz Merkle de dado pessoal é **pseudonimização**, não anonimização; o caminho para o art. 18 é compromisso on-chain + apagar dado e testemunha fora da cadeia (A.3).
+- Redes comparáveis (IPFS, Nostr outbox, SSB rooms, Briar Mailbox, Holochain, Earthstar, Willow) dependem de algum nó sempre ligado (B.2).
+- `navigator.storage.persist()` é pré-requisito; WebKit suspende PWA em segundo plano (B.3, C.2).
+- Eventos assinados imutáveis superam CRDT no modelo bizantino para votos (C.4).
+- ADR-009 deve paginar por cursor e tratar HTTP 429 (C.3).
+- 50 MB/dia no 4G pesa 25–37% de um pré-pago de entrada (D.2).
+
+### Diverge — e qual versão vale
+
+| Tema | Gemini | Este doc / decisão | Vale |
+|---|---|---|---|
+| Âncora no Turbo (A.4) | Manifesto diário de ~5 KiB → 2.048 dias por carteira | DataItem de âncora ~1,5 KiB e **uma âncora agregada (MMR) por dia** → ~19 anos para qualquer *N*; manifesto com `pins` no corpo esgota a cota em ~190 dias | Este doc: o Gemini não modela *N* comunidades nem o crescimento do manifesto |
+| R8 — nó leve por padrão | "Viola a LGPD"; exige opt-in com P2P **desligado** por padrão | **Decisão do mantenedor (08/11/2026):** nó leve segue ligado por padrão, **só no Wi-Fi** (`wifiOnly: true` já é o padrão em `peers.js`), servindo blobs públicos, com medidor e pausa de um toque; o **nó pesado** é opt-in pelo botão "Seja um apoiador da rede" (PR #21) | Decisão do mantenedor. O argumento do Gemini é sobre gastar a franquia móvel, que o padrão Wi-Fi já evita. A base legal (legítimo interesse × consentimento) continua no escopo do parecer **REV-12** |
+| STF, Temas 987/533 | Responsabilidade só após ordem judicial | A tese de 2025 declarou o art. 19 **parcialmente inconstitucional**: notificação extrajudicial basta para crimes e contas falsas, com dever de cuidado para conteúdo grave; os embargos (jun/2026) mantiveram o art. 19 para quem não interfere no fluxo | Este doc. O resumo do Gemini descreve o regime **anterior** a 2025 |
+| ECA Digital × art. 19 | "Neutraliza o escudo" do art. 19 para CSAM | Dever de prevenção e remoção para conteúdo de abuso infantil existe; o alcance sobre nó P2P que só retransmite é pergunta aberta | Pergunta para o **REV-12**; não tratar como fato |
+| x402 / USDC (E.2) | Pagamentos gasless via passkey e multisig com Pix | Nada documenta passkey no x402 do Turbo; pôr USDC na carteira exige on-ramp com KYC; o caminho é **Credit Sharing do steward** | Este doc. x402 no fluxo do usuário segue fora do roadmap |
+| Piso de stewards (B.4) | G1: 1, G2: 2, G3: 5–10; "WebRTC colapsa em 300 membros" | Modelo próprio por portão | Este doc. A tabela do Gemini supõe malha completa (todo mundo ligado em todo mundo), o que o Vox não faz |
+
+### Afirmações sem fonte primária (não usar sem conferir)
+
+- "Mais de 6 a 10 `RTCPeerConnection` degradam o celular".
+- "60% dos usuários brasileiros com IPv6 (NIC.br)" e "40% atrás de CGNAT severo".
+- WebKit: cota de "60% do espaço livre" (a documentação do WebKit fala em fração do disco total, com valores diferentes para navegador e app).
+- Goldsky: "teto de 500.000 nós por chamada"; Loro "acima de 1 MB" (as notas do próprio Gemini davam 180–600 kB).
+- "Brave: menos de 0,1% usavam o nó IPFS".
