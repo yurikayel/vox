@@ -1,9 +1,9 @@
 {
-  "git_sha": "c55679d",
-  "branch": "main",
-  "test_js": 722,
-  "test_python": 83,
-  "test_total": 805,
-  "cache_name": "vox-pwa-v7.20-real-network-audio-video-upload",
-  "generated_at": "2026-11-06T20:55:42Z"
+  "git_sha": "9271b04",
+  "branch": "docs/revisao-estado-2026-11",
+  "test_js": 758,
+  "test_python": 89,
+  "test_total": 847,
+  "cache_name": "vox-pwa-v7.32-real-network-audio-video-upload",
+  "generated_at": "2026-11-07T23:52:58Z"
 }

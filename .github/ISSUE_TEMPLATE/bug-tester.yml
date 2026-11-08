@@ -14,8 +14,8 @@ body:
     id: cache_name
     attributes:
       label: Versão (CACHE_NAME)
-      description: Nome do cache PWA em #/status (ex. vox-pwa-v6.83-…)
-      placeholder: vox-pwa-v6.xx-…
+      description: Nome do cache PWA em #/status (ex. vox-pwa-v7.xx-…)
+      placeholder: vox-pwa-v7.xx-…
     validations:
       required: true
   - type: input

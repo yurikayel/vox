@@ -1,8 +1,10 @@
 # Direcionamento — crescimento da rede (nov/2026)
 
+> **Não substitui o [ROADMAP.md](./ROADMAP.md)** — prioridades e caixas `[ ]` vivem lá ([ADR-017](./adr/017-consolidacao-roadmap-unico.md)); este documento explica o *porquê*.
+
 > **Status:** canônico (Tese Cívica & Flywheel de Tração) · **Owner:** mantenedor doc · **Revisado:** 2026-11 · Release: [README.md](./README.md)  
 > **Papel canônico:** Tese de tração, preceitos não negociáveis (§1–§6), escada de 4 camadas e moderação local E1–E5.  
-> **Horizonte:** **2026-Q4 → 2027-Q2** · **Checklist vivo único:** [Dossiê N=25](./dossie-geral-inventario-master-breakdown-2026-11.md)  
+> **Horizonte:** **2026-Q4 → 2027-Q2** · **Checklist vivo único:** [ROADMAP.md](./ROADMAP.md)  
 > **Não é parecer jurídico** — [COMPLIANCE-BR.md](../COMPLIANCE-BR.md)
 
 Complementa [rede-sustentada-participantes.md](./rede-sustentada-participantes.md), [infra-participativa-blindagem-crescimento.md](./infra-participativa-blindagem-crescimento.md), [brainstorm-proximas-10-tarefas-pos-v82-2026-11.md](./brainstorm-proximas-10-tarefas-pos-v82-2026-11.md), [antigravity-estrategia-mantenedor-revisor-2026.md](./antigravity-estrategia-mantenedor-revisor-2026.md) e [brainstorm-auto-escala-organica-2026-10.md](./brainstorm-auto-escala-organica-2026-10.md).

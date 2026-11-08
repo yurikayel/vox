@@ -9,3 +9,7 @@
 **Testes:** mock fetch primário 503 + backup 200; export diagnóstico opt-in sem `txId`.
 
 *Brainstorm completo: spike gateway fallback (23/10).*
+
+---
+
+*Histórico. Prioridades atuais: [ROADMAP.md](./ROADMAP.md).*

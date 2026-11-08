@@ -1,88 +1,124 @@
 # Vox — índice de documentação
 
-> **Status:** canônico (índice único DOC-03) · **Owner:** voluntário doc (mutex 1 PR/arquivo) · **Revisado:** 2026-11  
-> **Baseline release:** ver [../README.md](../README.md) e [release-metadata.json](./release-metadata.json)  
-> **Checklist vivo único:** [Dossiê geral N=25](./dossie-geral-inventario-master-breakdown-2026-11.md#36-checklist-master-vivo-n25)
+> **Status:** canônico (índice único) · **Owner:** voluntário doc (mutex: 1 PR por arquivo) · **Revisado:** 2026-11-07
+> **Plano vivo e único checklist:** [ROADMAP.md](./ROADMAP.md) ([ADR-017](./adr/017-consolidacao-roadmap-unico.md)) · **Release (SHA, testes, SW):** [release-metadata.json](./release-metadata.json) e tabela do [README](../README.md)
 
-Entrada única para revisores, desenvolvedores e operadores cívicos.
+Entrada única para quem desenvolve, revisa ou opera. Todo `.md` novo em `docs/` entra aqui ([CONTRIBUTING-DOCS.md](./CONTRIBUTING-DOCS.md) §1).
 
-## Fonte de verdade: qual arquivo é master de quê
+## Comece aqui
 
-| Documento | Papel canônico exclusivo | Tipo de conteúdo |
-|---|---|---|
-| [dossie-geral-inventario-master-breakdown-2026-11.md](./dossie-geral-inventario-master-breakdown-2026-11.md) | **Plano Mestre N=25 & Único Checklist Vivo** | Arquitetura, flywheel e **único lugar** com checkboxes `[ ]` e coluna `Tipo DoD`. |
-| [inventario-estado-e-tarefas-documentacao-2026-11.md](./inventario-estado-e-tarefas-documentacao-2026-11.md) | **Inventário Técnico & DoD Documental** | Auditoria de módulos, inventário de specs e detalhamento DOC-01…08 (sem `[ ]` duplicados). |
-| [brainstorm-proximas-10-tarefas-pos-v82-2026-11.md](./brainstorm-proximas-10-tarefas-pos-v82-2026-11.md) | **Ordem de Execução Operacional** | Sequência linear pós-v82 (T2 espelho → V-P09 piloto → V-P08 sucessão → P2). |
-| [direcionamento-crescimento-rede-2026-11.md](./direcionamento-crescimento-rede-2026-11.md) | **Tese Cívica & Flywheel de Tração** | Preceitos não negociáveis (§1–§6), escada de 4 camadas e moderação E1–E5. |
-| [campo-debate-aberto-ndp-2026-10.md](./campo-debate-aberto-ndp-2026-10.md) | **Notas de Campo & Posicionamento Cívico** | Observação empírica (Debate Aberto, NDP, Varanda), modelos A–D e dores reais. |
-| [tese-praca-civica-militancia-pro-democratica-2026-10.md](./tese-praca-civica-militancia-pro-democratica-2026-10.md) | **Tese de militância pró-democrática (praça E+D)** | Mapa T01–T20 como cruzamento (`já existe` / `parcial` / `tese` / `depois do piloto` / `risco`); **não** DoD — gates vivos só no dossiê §3.6. |
-| [brainstorm-10-pontos-fracos-metodo-implementacao-2026-11.md](./brainstorm-10-pontos-fracos-metodo-implementacao-2026-11.md) | **Meta-Processo & Governança de Método** | Auditoria dos 10 gargalos metodológicos, antifrágil e guardrails do fluxo. |
-| [brainstorm-dez-tarefas-estrategia-2026-10.md](./brainstorm-dez-tarefas-estrategia-2026-10.md) | **HISTÓRICO / SUPERSEDED** | Registro de contexto de out/2026; superado pelo pós-v82 e dossiê N=25. |
-| [CONTRIBUTING-DOCS.md](./CONTRIBUTING-DOCS.md) | **Norma de Manutenção Documental** | Regras de mutex de agentes, padrão de banners de status e separação de DoD. |
+1. [README do projeto](../README.md): o que é o Vox, como rodar, novidades.
+2. [CONTRIBUTING.md](../CONTRIBUTING.md): setup em 5 min, fluxo de PR, regras.
+3. [FEATURES.md](./FEATURES.md): catálogo do que está no ar, em lab, stub ou escrito e não plugado.
+4. [ROADMAP.md](./ROADMAP.md): o que falta, por prioridade, com DoD.
+5. [INFRA-CUSTOS.md](./INFRA-CUSTOS.md): onde tudo roda, secrets, free tiers, SPOFs.
+6. [CHANGELOG.md](../CHANGELOG.md): o que mudou.
 
-### Justificativa do checklist vivo único (Dossiê N=25)
-O **Dossiê N=25** foi escolhido como a fonte viva e exclusiva de checkboxes `[ ]` por abranger a totalidade do ecossistema: as 4 trilhas nucleares (DOC, NET, CODE, PIL) somadas à Trilha EXP-01…05 de expansão e POSSE. O documento de Inventário atua como catálogo auditável de código e critérios de texto, sem manter caixas paralelas para impedir conclusões fictícias de "pronto".
+## Fonte de verdade — qual arquivo manda em quê
+
+| Assunto | Documento canônico |
+|---|---|
+| Prioridades, caixas `[ ]`, DoD | [ROADMAP.md](./ROADMAP.md) |
+| Estado real de cada funcionalidade | [FEATURES.md](./FEATURES.md) |
+| SHA, contagem de testes, `CACHE_NAME` | [release-metadata.json](./release-metadata.json) (gerado por `npm run release-line`) |
+| Infra, deploy, secrets, custos | [INFRA-CUSTOS.md](./INFRA-CUSTOS.md) |
+| API do relay | [relay-api.md](./relay-api.md) |
+| Testes e CI | [TESTES.md](./TESTES.md) |
+| Limites de complexidade | [HARDENING.md](./HARDENING.md) |
+| Mutex de agentes | [metodo-agentes-mutex-e-revisor.md](./metodo-agentes-mutex-e-revisor.md) |
+| Licença | [ADR-015](./adr/015-licenciamento-agplv3-e-governanca-de-bem-comum.md) · [licenca-e-contribuicoes.md](./licenca-e-contribuicoes.md) |
+| Decisões de arquitetura | [adr/README.md](./adr/README.md) |
+| Tese de tração e preceitos | [direcionamento-crescimento-rede-2026-11.md](./direcionamento-crescimento-rede-2026-11.md) |
+| Norma de documentação | [CONTRIBUTING-DOCS.md](./CONTRIBUTING-DOCS.md) |
 
 > [!IMPORTANT]
-> **Regra anti-inflação:** É terminantemente proibido criar qualquer novo documento com convenção "N=..." sem um ADR formal de pelo menos 15 linhas que revogue e arquive expressamente o plano mestre anterior.
+> **Regra anti-inflação:** é proibido criar outro plano mestre ("N=…", "T1–T10", checklist paralelo) sem um ADR que revogue o atual — hoje o [ADR-017](./adr/017-consolidacao-roadmap-unico.md). Ideias novas entram como brainstorm (banner + "Não substitui o ROADMAP").
 
 ---
 
-## 1. Participação & malha
+## 1. Arquitetura e protocolo
 
-- [campo-debate-aberto-ndp-2026-10.md](./campo-debate-aberto-ndp-2026-10.md) — notas de campo (Debate Aberto, NDP, modelos A–D)
-- [tese-praca-civica-militancia-pro-democratica-2026-10.md](./tese-praca-civica-militancia-pro-democratica-2026-10.md) — tese praça cívica (E+D institucional); cruzamento T01–T20, sem `[ ]`
-- [rede-sustentada-participantes.md](./rede-sustentada-participantes.md) — meta trimestre, camadas 0→3  
-- [backlog-participacao-rede.md](./backlog-participacao-rede.md) — IDs V-P  
-- Teste aberto (convite, canal, carta E2): [teste-aberto-convite.md](./teste-aberto-convite.md) · [teste-aberto-canal-apoio.md](./teste-aberto-canal-apoio.md) · [teste-aberto-carta-moderacao-e2.md](./teste-aberto-carta-moderacao-e2.md)  
-- [infra-participativa-blindagem-crescimento.md](./infra-participativa-blindagem-crescimento.md) — blindagem regulatória e 4 camadas  
-- [brainstorm-auto-escala-organica-2026-10.md](./brainstorm-auto-escala-organica-2026-10.md) — flywheel E1–E5  
+- [../ARCHITECTURE.md](../ARCHITECTURE.md): protocolo, tags GraphQL, dados · [ARCHITECTURE.md](./ARCHITECTURE.md): camadas do cliente
+- [../IDENTITY.md](../IDENTITY.md): chaves, cofre e recuperação · [DNS-HANDLES.md](./DNS-HANDLES.md): handles `@`
+- [login-social.md](./login-social.md): login social, contas vinculadas e configuração de deploy do OAuth
+- [relay-api.md](./relay-api.md): endpoints de `server.py` e `signaling.py`
+- [../client/DEV.md](../client/DEV.md): guia do desenvolvedor §0–§44 (histórico por sprint)
+- **ADRs:** [índice com status](./adr/README.md) (001–017) · **RFCs:** [rfc/README.md](./rfc/README.md) · [0001 — POSSE export](./rfc/0001-posse-export.md)
 
-## 2. Roadmap & estratégia
+### Specs de protocolo (malha, cache, módulos)
 
-- [dossie-geral-inventario-master-breakdown-2026-11.md](./dossie-geral-inventario-master-breakdown-2026-11.md) — plano mestre N=25 e checklist vivo  
-- [brainstorm-proximas-10-tarefas-pos-v82-2026-11.md](./brainstorm-proximas-10-tarefas-pos-v82-2026-11.md) — T1–T10 pós-v82  
-- [direcionamento-crescimento-rede-2026-11.md](./direcionamento-crescimento-rede-2026-11.md) — direcionamento e tração §1–§6  
-- [brainstorm-10-pontos-fracos-metodo-implementacao-2026-11.md](./brainstorm-10-pontos-fracos-metodo-implementacao-2026-11.md) — crítica ao método de planejamento/ops  
-- [brainstorm-dez-tarefas-estrategia-2026-10.md](./brainstorm-dez-tarefas-estrategia-2026-10.md) — histórico out/2026  
-- [antigravity-estrategia-mantenedor-revisor-2026.md](./antigravity-estrategia-mantenedor-revisor-2026.md) — mantenedor → revisor  
+- [antigravity-gossip-retract-v1.md](./antigravity-gossip-retract-v1.md): retratação no gossip (implementado)
+- [antigravity-blob-soft-priority-v0.md](./antigravity-blob-soft-priority-v0.md): prioridade suave de blobs (flag desligada)
+- [cache-manifest-v0.md](./cache-manifest-v0.md): manifestos de cache assinados
+- [profile-card-gossip-v0.md](./profile-card-gossip-v0.md): cartão de perfil na malha (ver ADR-003)
+- [listing-signed-gossip-v1.md](./listing-signed-gossip-v1.md): ofertas da Feira assinadas
+- [mirror-validate-v1.md](./mirror-validate-v1.md): validação de espelho no relay
+- [community-module-manifest-v0.md](./community-module-manifest-v0.md): manifesto de módulos de comunidade (backlog)
+- [open-frames-v2.md](./open-frames-v2.md): Open Frames no feed
+- [embed-integration.md](./embed-integration.md): widget embed · [vox-bridge-spike.md](./vox-bridge-spike.md): extensão MV3
+- [governance-proposta-feira-pin-template.md](./governance-proposta-feira-pin-template.md): template de proposta Feira ↔ pin
 
-## 3. Operações steward & espelhos
+## 2. Roadmap, estratégia e teses
 
-- [steward-relay-kit.md](./steward-relay-kit.md) · [steward-seed-15min.md](./steward-seed-15min.md)  
-- **V-P08** — [steward-relay-buddy.md](./steward-relay-buddy.md): relay buddy (segundo voluntário) antes do burnout do steward principal.  
-- Handoff `ops-humano`: VPS/compose, `.env`, WSS, backup `index_*.json`, rotação de segredos — checklist no runbook; nomes só offline.  
-- Emergência **72 h** (relay + inbox TTL): restore ou URL alternativa; shell A/B em [ops-dr-drill-checklist.md](./ops-dr-drill-checklist.md) se o PWA cair.  
-- Steward ≠ mod ([GOVERNANCE.md](../GOVERNANCE.md)); buddy não herda `mod-action` — [piloto-comunidade-go-no-go.md](./piloto-comunidade-go-no-go.md) (campo Relay Buddy).  
-- [ops-shell-mirrors.md](./ops-shell-mirrors.md) — espelhos shell A/B, T2 executável (+ bloco V-P08 em § Sucessão relay)  
-- [ops-dr-drill-checklist.md](./ops-dr-drill-checklist.md) — procedimento e checklist de drill DR  
-- [ops-pages-rollback.md](./ops-pages-rollback.md) — runbook de rollback do Pages e SW  
-- [mirror-validate-v1.md](./mirror-validate-v1.md) · [antigravity-operating.md](./antigravity-operating.md)  
+- [ROADMAP.md](./ROADMAP.md): **plano vivo**
+- [direcionamento-crescimento-rede-2026-11.md](./direcionamento-crescimento-rede-2026-11.md): preceitos, escada de 4 camadas, moderação E1–E5
+- [rede-sustentada-participantes.md](./rede-sustentada-participantes.md) · [backlog-participacao-rede.md](./backlog-participacao-rede.md) (IDs V-P) · [infra-participativa-blindagem-crescimento.md](./infra-participativa-blindagem-crescimento.md) · [espacos-digitais-infra.md](./espacos-digitais-infra.md) (V-I01)
+- [campo-debate-aberto-ndp-2026-10.md](./campo-debate-aberto-ndp-2026-10.md): notas de campo, modelos A–D
+- [tese-praca-civica-militancia-pro-democratica-2026-10.md](./tese-praca-civica-militancia-pro-democratica-2026-10.md): praça E+D, T01–T20
+- [antigravity-estrategia-mantenedor-revisor-2026.md](./antigravity-estrategia-mantenedor-revisor-2026.md): transição mantenedor → revisor
+- [../POSITIONING.md](../POSITIONING.md) · [../LESSONS.md](../LESSONS.md) · [../GOVERNANCE.md](../GOVERNANCE.md) · [../COMPLIANCE-BR.md](../COMPLIANCE-BR.md)
 
-## 4. Desenvolvimento & governança
+### Brainstorms (ideias; não são plano)
 
-- [teste-aberto-demo.md](./teste-aberto-demo.md) — comunidade demo `demo-aprenda-vox` · [bug report testadores](../.github/ISSUE_TEMPLATE/bug-tester.yml)  
-- [CONTRIBUTING-DOCS.md](./CONTRIBUTING-DOCS.md) — norma curta para voluntários e agentes  
-- [metodo-agentes-mutex-e-revisor.md](./metodo-agentes-mutex-e-revisor.md) — regras de mutex e operação revisor  
-- **Decisões Arquiteturais (ADRs):**
-  - [adr/001-contribution-attestation-export.md](./adr/001-contribution-attestation-export.md) — ADR-001: Atestação exportável de contribuição P2P
-  - [adr/002-oauth-profile-enrich-client.md](./adr/002-oauth-profile-enrich-client.md) — ADR-002: Enriquecimento de perfil client-only via OAuth
-  - [adr/003-profile-card-gossip.md](./adr/003-profile-card-gossip.md) — ADR-003: Cartão de malha e propagação gossip de perfis
-  - [adr/004-gateway-honest-fallback.md](./adr/004-gateway-honest-fallback.md) — ADR-004: Fallback honesto de gateway (leitura reserva)
-  - [adr/005-collective-profile-m-of-n.md](./adr/005-collective-profile-m-of-n.md) — ADR-005: Perfil coletivo M-de-N via multi-assinatura independente (Tese T02)
-  - [adr/006-p2p-profile-identity-gossip-hardening.md](./adr/006-p2p-profile-identity-gossip-hardening.md) — ADR-006: Hardening de identidade e gossip de perfis P2P
-  - [adr/007-zero-complexity-monolith-decomposition.md](./adr/007-zero-complexity-monolith-decomposition.md) — ADR-007: Decomposição de monólito e limite de complexidade cognitiva
-  - [adr/008-vox-populi-community-node-architecture.md](./adr/008-vox-populi-community-node-architecture.md) — ADR-008: Arquitetura do Vox Populi Nó Comunitário
-  - [adr/009-multi-gateway-graphql-corroboration.md](./adr/009-multi-gateway-graphql-corroboration.md) — ADR-009: Corroboração de múltiplos gateways GraphQL
-  - [adr/010-vox-contribution-engine-execute-e-ajude.md](./adr/010-vox-contribution-engine-execute-e-ajude.md) — ADR-010: Motor de contribuição voluntária e nós anfitriões
-  - [adr/011-taxonomia-tripartite-produtos-vox.md](./adr/011-taxonomia-tripartite-produtos-vox.md) — ADR-011: Taxonomia canônica dual (Vox Cliente e Vox Populi Nó Dedicado)
-  - [adr/012-soberania-digital-cintura-fina-cartuchos-webxdc.md](./adr/012-soberania-digital-cintura-fina-cartuchos-webxdc.md) — ADR-012: Soberania Digital na Vox (Cintura Fina Criptográfica e Cartuchos Cívicos Webxdc)
-- [piloto-comunidade-go-no-go.md](./piloto-comunidade-go-no-go.md) — gate humano do piloto (V-P09)  
-- [piloto-comunidade-retrospectiva-template.md](./piloto-comunidade-retrospectiva-template.md) — template retrospectiva  
-- [../client/DEV.md](../client/DEV.md) — guia de desenvolvimento §0–37  
-- [../README.md](../README.md) — release line e tabela canônica  
-- [../ARCHITECTURE.md](../ARCHITECTURE.md) · [../POSITIONING.md](../POSITIONING.md) · [../GOVERNANCE.md](../GOVERNANCE.md) · [../COMPLIANCE-BR.md](../COMPLIANCE-BR.md)  
-- `client/sw.js` — `CACHE_NAME` canônico  
-- [revisao-estado-2026-10-25.md](./revisao-estado-2026-10-25.md) — snapshot auditoria pós-agentes (o que shipped vs P0 humano)
+- [brainstorm-autossustento-10-features-2026-11.md](./brainstorm-autossustento-10-features-2026-11.md): **10 features de autossustento a custo ~zero + 3 prompts de pesquisa**
+- [brainstorm-sustentacao-perene-celulares-nos-base.md](./brainstorm-sustentacao-perene-celulares-nos-base.md): infra $0, celulares como nós
+- [brainstorm-sinergia-tramitado-vox-2026-11.md](./brainstorm-sinergia-tramitado-vox-2026-11.md): Tramitado × Vox, contrato LCP
+- [brainstorm-auto-escala-organica-2026-10.md](./brainstorm-auto-escala-organica-2026-10.md): flywheel, SLOs, moderação voluntária
+- [brainstorm-tracao-escalabilidade-incubacao.md](./brainstorm-tracao-escalabilidade-incubacao.md) · [incubacao-p2-backlog.md](./incubacao-p2-backlog.md)
+- [brainstorm-oauth-tradicional-descoberta-2026-10-24.md](./brainstorm-oauth-tradicional-descoberta-2026-10-24.md): OAuth e descoberta social
+- [brainstorm-10-pontos-fracos-metodo-implementacao-2026-11.md](./brainstorm-10-pontos-fracos-metodo-implementacao-2026-11.md): crítica ao método (motivou o ADR-017)
 
-**Versão:** 1.3 · nov/2026
+## 3. Operações: steward, espelhos, DR
+
+- [INFRA-CUSTOS.md](./INFRA-CUSTOS.md): mapa de hosts, workflows e secrets
+- [steward-relay-kit.md](./steward-relay-kit.md) · [steward-seed-15min.md](./steward-seed-15min.md) · [steward-relay-buddy.md](./steward-relay-buddy.md) (V-P08: segundo voluntário antes do burnout)
+- [ops-shell-mirrors.md](./ops-shell-mirrors.md): espelhos shell A/B · [ops-dr-drill-checklist.md](./ops-dr-drill-checklist.md) · [ops-pages-rollback.md](./ops-pages-rollback.md)
+- [antigravity-operating.md](./antigravity-operating.md): operação da malha
+- Emergência de **72 h** (relay + TTL do inbox): restaurar ou usar URL alternativa. Se o PWA cair, use o shell A/B. Steward ≠ mod ([GOVERNANCE.md](../GOVERNANCE.md)).
+- Componentes: [relay/README.md](../relay/README.md) · [relay/deploy/README.md](../relay/deploy/README.md) (VPS + TURN) · [vox-populi/README.md](../vox-populi/README.md) · [android/README.md](../android/README.md) · [vox-bridge/README.md](../vox-bridge/README.md)
+- Ferramentas: [desktop-linux](../tools/desktop-linux/README.md) · [desktop-seeder-windows](../tools/desktop-seeder-windows/README.md) · [desktop-windows-native](../tools/desktop-windows-native/README.md) · [node-macos](../tools/node-macos/README.md) · [node-zero-windows](../tools/node-zero-windows/README.md) · [steward-kit-windows](../tools/steward-kit-windows/README.md) · [posse-cli](../tools/posse-cli/README.md)
+- [vox-populi-task-order-004-hardware-validation.md](./vox-populi-task-order-004-hardware-validation.md): validação de hardware do nó
+
+## 4. Piloto e teste aberto
+
+- [piloto-comunidade-go-no-go.md](./piloto-comunidade-go-no-go.md): gate humano (V-P09) · [piloto-comunidade-retrospectiva-template.md](./piloto-comunidade-retrospectiva-template.md)
+- [teste-aberto-convite.md](./teste-aberto-convite.md) · [teste-aberto-canal-apoio.md](./teste-aberto-canal-apoio.md) · [teste-aberto-carta-moderacao-e2.md](./teste-aberto-carta-moderacao-e2.md) · [teste-aberto-demo.md](./teste-aberto-demo.md) (comunidade `demo-aprenda-vox`)
+- [vox-brasil-welcome-profile.md](./vox-brasil-welcome-profile.md): perfil de boas-vindas · [formulário de bug para testadores](../.github/ISSUE_TEMPLATE/bug-tester.yml)
+
+## 5. Desenvolvimento, qualidade e governança do repo
+
+- [../CONTRIBUTING.md](../CONTRIBUTING.md) · [../CONTRIBUTORS.md](../CONTRIBUTORS.md) (DCO) · [../SECURITY.md](../SECURITY.md) · [../AUTHORS.md](../AUTHORS.md)
+- [TESTES.md](./TESTES.md) · [HARDENING.md](./HARDENING.md) · métricas de complexidade: `metrics/baseline-AAAA-MM-DD.md`, geradas por `npm run audit:complexity` (a mais recente: [2026-11-06](./metrics/baseline-2026-11-06.md))
+- [CONTRIBUTING-DOCS.md](./CONTRIBUTING-DOCS.md) · [metodo-agentes-mutex-e-revisor.md](./metodo-agentes-mutex-e-revisor.md) · [licenca-e-contribuicoes.md](./licenca-e-contribuicoes.md)
+- Design: [ADR-016](./adr/016-design-system-sovereign-agora-e-democracia-direta.md) · [Sovereign Agora DESIGN.md](../stitch_vox_civic_network_interface/sovereign_agora/DESIGN.md) · [design/stitch-telas-faltantes.md](./design/stitch-telas-faltantes.md)
+- [proposta-vox.html](./proposta-vox.html): proposta em linguagem leiga
+
+## 6. Auditorias e snapshots
+
+- [honest-copy-audit-2026-10-23.md](./honest-copy-audit-2026-10-23.md): copy honesta (re-auditoria = DOC-04 no ROADMAP)
+- [auditoria-permaweb-descoberta-seguranca-2026-10-29.md](./auditoria-permaweb-descoberta-seguranca-2026-10-29.md)
+- [branding-audit-2026-11-01.md](./branding-audit-2026-11-01.md)
+- [agent-reports/2026-11-05-auditoria-independente.md](./agent-reports/2026-11-05-auditoria-independente.md)
+
+## 7. Histórico / SUPERSEDED (não usar como plano)
+
+Mantidos para registro; cada um tem banner apontando o sucessor.
+
+- [dossie-geral-inventario-master-breakdown-2026-11.md](./dossie-geral-inventario-master-breakdown-2026-11.md): plano N=25 → [ROADMAP.md](./ROADMAP.md)
+- [inventario-estado-e-tarefas-documentacao-2026-11.md](./inventario-estado-e-tarefas-documentacao-2026-11.md) → [FEATURES.md](./FEATURES.md) + ROADMAP
+- [brainstorm-proximas-10-tarefas-pos-v82-2026-11.md](./brainstorm-proximas-10-tarefas-pos-v82-2026-11.md) e [brainstorm-dez-tarefas-estrategia-2026-10.md](./brainstorm-dez-tarefas-estrategia-2026-10.md) → ROADMAP
+- [revisao-estado-2026-10-25.md](./revisao-estado-2026-10-25.md): snapshot de 25/out
+- [gateway-honest-fallback-brainstorm.md](./gateway-honest-fallback-brainstorm.md) → ADR-004 · [steward-wizard-brainstorm.md](./steward-wizard-brainstorm.md) → steward-relay-kit
+- Métricas antigas: [10-24](./metrics/baseline-2026-10-24.md) · [10-30](./metrics/baseline-2026-10-30.md) · [10-31](./metrics/baseline-2026-10-31.md) · [11-01](./metrics/baseline-2026-11-01.md) · [11-04](./metrics/baseline-2026-11-04.md) · [11-05](./metrics/baseline-2026-11-05.md)
+
+**Versão:** 2.0 · 2026-11-07

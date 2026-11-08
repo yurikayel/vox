@@ -1,8 +1,10 @@
 # Tese — praça cívica para militância pró-democrática (E+D institucional)
 
+> **Não substitui o [ROADMAP.md](./ROADMAP.md)** — prioridades e caixas `[ ]` vivem lá ([ADR-017](./adr/017-consolidacao-roadmap-unico.md)); este documento explica o *porquê*.
+
 > **Status:** canônico (tese / mapa; **não** DoD, **não** sprint) · **Owner:** voluntário doc · **Revisado:** 2026-10  
-> **Não substitui** o [dossiê N=25 §3.6](./dossie-geral-inventario-master-breakdown-2026-11.md#36-checklist-master-vivo-n25) (único checklist vivo) nem o [direcionamento de tração](./direcionamento-crescimento-rede-2026-11.md).  
-> Gates vivos, piloto e caixas `[ ]` **só** no dossiê. Este arquivo **não** abre tabela `N=`.
+> **Não substitui** o [ROADMAP.md](./ROADMAP.md) (único checklist vivo) nem o [direcionamento de tração](./direcionamento-crescimento-rede-2026-11.md).  
+> Gates vivos, piloto e caixas `[ ]` **só** no ROADMAP. Este arquivo **não** abre tabela `N=`.
 
 Insumo de campo (out/2026): manifesto *Como o Vox pode ser uma Ferramenta Hoje para a Militância Pró-Democrática (Esquerda e Direita)*. Aqui vira **mapa de tese** cruzado com código e docs já existentes.
 
@@ -123,7 +125,7 @@ Status **não** é checkbox. Não marcar progresso aqui.
 
 ## Relacionados
 
-- Checklist vivo: [dossiê §3.6](./dossie-geral-inventario-master-breakdown-2026-11.md#36-checklist-master-vivo-n25)
+- Checklist vivo: [ROADMAP.md](./ROADMAP.md)
 - Tração: [direcionamento-crescimento-rede-2026-11.md](./direcionamento-crescimento-rede-2026-11.md)
 - Campo: [campo-debate-aberto-ndp-2026-10.md](./campo-debate-aberto-ndp-2026-10.md)
 - Copy: [honest-copy-audit-2026-10-23.md](./honest-copy-audit-2026-10-23.md) · [COMPLIANCE-BR.md](../COMPLIANCE-BR.md)
