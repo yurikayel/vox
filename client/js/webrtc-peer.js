@@ -58,6 +58,26 @@ export async function loadSignalingConfig() {
 const CUSTOM_TURN_KEY = "vox-custom-turn-config";
 const NEGOTIATION_TIMEOUT_MS = 15000;
 
+const TURN_ONLY_KEY = "vox-turn-only";
+
+/** LAN-19: modo "só TURN" — pares não veem o IP real; tráfego passa pelo servidor TURN. */
+export function isTurnOnly() {
+  try {
+    return localStorage.getItem(TURN_ONLY_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+export function setTurnOnly(on) {
+  try {
+    if (on) localStorage.setItem(TURN_ONLY_KEY, "1");
+    else localStorage.removeItem(TURN_ONLY_KEY);
+  } catch {
+    /* sem storage: fica desligado */
+  }
+}
+
 export function getCustomTurnConfig() {
   try {
     const raw = localStorage.getItem(CUSTOM_TURN_KEY);
@@ -416,7 +436,7 @@ function sendSignaling(data) {
   if (wsOpen) signalingWs.send(JSON.stringify(data));
 }
 
-export function createRtcConfig(config = configCache) {
+function collectIceServers(config) {
   const stunList = config?.stun || ["stun:stun.l.google.com:19302"];
   const iceServers = stunList.map((url) => ({ urls: url }));
 
@@ -435,6 +455,19 @@ export function createRtcConfig(config = configCache) {
     if (customTurn.username) entry.username = customTurn.username;
     if (customTurn.credential) entry.credential = customTurn.credential;
     iceServers.push(entry);
+  }
+  return iceServers;
+}
+
+const isTurnUrl = (u) => /^turns?:/i.test(String(u));
+
+export function createRtcConfig(config = configCache, { turnOnly = isTurnOnly() } = {}) {
+  const iceServers = collectIceServers(config);
+  if (turnOnly) {
+    // Sem STUN e com política "relay": o navegador nunca expõe candidatos host/srflx (IP real).
+    // Sem servidor TURN configurado, nenhuma conexão direta acontece — é a promessa de privacidade.
+    const relays = iceServers.filter((s) => [].concat(s.urls).some(isTurnUrl));
+    return { iceServers: relays, iceTransportPolicy: "relay" };
   }
 
   return { iceServers };
