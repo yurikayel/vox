@@ -87,6 +87,8 @@ Esforço: **P** = plugar um módulo que já existe, com UI pequena · **M** = l�
 
 ## F6 — Modo Guardião noturno
 
+> **Revisado em 2026-11-08 ([pesquisa V7/V8](./pesquisa-deep-research-2026-11.md)):** `periodicSync` não existe no Safari iOS nem no Firefox Android, e não mantém WebRTC vivo. O Briar entrou em manutenção depois de anos lutando com isso. A F6 passa a ser **guardião na tomada**: app aberto, Wake Lock, só no Wi-Fi, com prioridade para desktop e celular velho (REV-15). O texto abaixo é a ideia original.
+
 - **Inspiração:** seeding do BitTorrent e economia de dados do Telegram ("só no Wi-Fi").
 - **O que é:** plugar `seeder-guardian.js` + `storage-persistence.js` e registrar `periodicSync` no `sw.js`. Com o aparelho no carregador e no Wi-Fi, ele vira relay/cache da comunidade (gossip, espelho, blobs) e soma **Voxels de uptime**, que já existem no `voxels.js`. O PWA pede `navigator.storage.persist()` para não ser despejado.
 - **Por que sustenta:** a infra passa a vir dos usuários, aplicando na prática a tese "Adote um Vox Populi".
@@ -144,6 +146,8 @@ Esforço: **P** = plugar um módulo que já existe, com UI pequena · **M** = l�
 ---
 
 ## Prompts de pesquisa (Gemini Deep Research)
+
+> **Lição da 1ª rodada (2026-11-07):** o Gemini Deep Research **não conseguiu abrir os links `raw.githubusercontent.com`**, e por isso inventou partes do código no Prompt 3. Ao rodar de novo, **anexe os arquivos** citados (ou um zip do repo) ao prompt. Resultado verificado: [pesquisa-deep-research-2026-11.md](./pesquisa-deep-research-2026-11.md).
 
 Os três prompts são **autossuficientes**: cada um traz o contexto do projeto, os links públicos dos arquivos do repositório e as fontes externas por onde começar, para que um agente **sem acesso local ao código** (Gemini Deep Research, Perplexity, ChatGPT Deep Research) consiga trabalhar. Cole um de cada vez, na ordem **1 → 2 → 3**. Se quiser, cole o relatório do anterior no fim do seguinte.
 
