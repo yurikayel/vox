@@ -6,7 +6,7 @@ export default [
     ignores: ["client/js/mock.js", "docs/**", "node_modules/**"],
   },
   {
-    files: ["client/js/**/*.js", "client/sw.js", "tools/**/*.mjs"],
+    files: ["client/js/**/*.js", "client/sw.js", "scripts/**/*.mjs", "tools/**/*.mjs"],
     languageOptions: {
       ecmaVersion: 2024,
       sourceType: "module",

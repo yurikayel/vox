@@ -6,7 +6,7 @@ O Vox é um bem comum digital sob licença **GNU Affero General Public License v
 
 ## 1. Princípios de Contribuição
 
-1. **Copyleft Recíproco (AGPLv3):** Todas as contribuições submetidas a este repositório são irrevogavelmente licenciadas sob a GNU AGPL-3.0-or-later (conforme detalhado em [`docs/licenca-e-contribuicoes.md`](./docs/licenca-e-contribuicoes.md)).
+1. **Copyleft Recíproco (AGPLv3):** Todas as contribuições submetidas a este repositório são irrevogavelmente licenciadas sob a GNU AGPL-3.0-or-later (conforme detalhado em [`docs/legal/licenca-e-contribuicoes.md`](./docs/legal/licenca-e-contribuicoes.md)).
 2. **Developer Certificate of Origin (DCO):** Ao enviar um commit ou Pull Request com a flag `-s` ou `Signed-off-by: Nome <email>`, você atesta que tem direito autoral sobre o código e consente com sua inclusão pública sob a AGPLv3.
 3. **Hardening e Limites de Complexidade:** limites (LLOC, nesting, complexidade cognitiva) definidos em [`docs/HARDENING.md`](./docs/HARDENING.md) e auditados por `npm run audit:complexity`. Zero dependências de telemetria invasiva ou serviços comerciais proprietários.
 4. **Sem Promessas Falsas (Honest Copy):** Funcionalidades devem descrever capacidades reais testadas e mensuráveis; promessas futuras ou propostas não devem ser vendidas como prontas na interface.

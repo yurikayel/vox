@@ -399,13 +399,13 @@ const STEWARD_STEP_RENDERERS = {
       <input type="text" id="sw-community-id" class="form-control" value="${escapeHtml(d.communityId || "")}" placeholder="ex. bairro-centro" required />
     </div>`,
   3: () => `
-    <p class="desc"><strong>VPS (coletivo):</strong> Docker em <code>relay/deploy</code> — Caddy expõe WSS e relay HTTP no mesmo domínio (<code>docs/steward-relay-kit.md</code>).</p>
+    <p class="desc"><strong>VPS (coletivo):</strong> Docker em <code>relay/deploy</code> — Caddy expõe WSS e relay HTTP no mesmo domínio (<code>docs/operations/steward-relay-kit.md</code>).</p>
     <ul class="desc" style="font-size:0.85rem; margin:0.5rem 0 0 1rem;">
       <li>DNS + <code>docker compose up -d --build</code></li>
       <li><code>cp .env.example .env</code> — quota <code>VOX_RELAY_MAX_CACHE_MB</code></li>
       <li>Conferir <code>curl …/health</code> (espelhos + cache)</li>
     </ul>
-    <p class="desc" style="font-size:0.85rem; margin-top:0.75rem;"><strong>Desktop / LAN:</strong> Windows <code>tools/steward-kit-windows/Start-StewardKit.ps1</code> ou Linux <code>tools/steward-kit-linux/start-steward-kit.sh</code> — relay em <code>http://127.0.0.1:8787</code>.</p>`,
+    <p class="desc" style="font-size:0.85rem; margin-top:0.75rem;"><strong>Desktop / LAN:</strong> Windows <code>packaging/steward-kit-windows/Start-StewardKit.ps1</code> ou Linux <code>packaging/steward-kit-linux/start-steward-kit.sh</code> — relay em <code>http://127.0.0.1:8787</code>.</p>`,
   4: (d) => `
     <div class="form-group">
       <label for="sw-signaling">WSS signaling</label>

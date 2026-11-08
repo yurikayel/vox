@@ -1,6 +1,6 @@
 /*
  * agora.css — Sovereign Agora (ADR-016, rev. 2026-11)
- * Fonte: stitch_vox_civic_network_interface/sovereign_agora/DESIGN.md
+ * Fonte: docs/design/sovereign-agora.md
  *
  * Camada carregada DEPOIS de style.css. Estratégia:
  *  1. Tokens canônicos `--sa-*` espelham o DESIGN.md (Marina Teal, Bronze Dórico, Esmeralda de

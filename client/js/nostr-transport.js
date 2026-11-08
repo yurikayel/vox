@@ -8,7 +8,7 @@
  * - o "hello" público leva só um peerId aleatório da sessão e uma chave Nostr descartável;
  * - endereço, chave de DM, SDP e candidatos ICE vão CIFRADOS para o outro par
  *   (ECDH secp256k1 → SHA-256 → AES-GCM). Decifrar com sucesso autentica o remetente.
- * Pool de relays validado pelo teste de fumaça (REV-19, tools/nostr-smoke.mjs).
+ * Pool de relays validado pelo teste de fumaça (REV-19, scripts/nostr-smoke.mjs).
  */
 import { finalizeEvent, generateSecretKey, getPublicKey, getSharedSecret, bytesToHex, sha256 } from "./nostr-event.js";
 

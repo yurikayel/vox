@@ -10,7 +10,7 @@ Escopo **somente** o sub-repo [`vox/`](.). Não escrever roteiro Matrix/vídeo a
 
 ## Revisor vs implementação
 
-Operação curta: [docs/metodo-agentes-mutex-e-revisor.md](docs/metodo-agentes-mutex-e-revisor.md).
+Operação curta: [docs/process/metodo-agentes-mutex-e-revisor.md](docs/process/metodo-agentes-mutex-e-revisor.md).
 
 ## Testes
 

@@ -3,7 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { bskyClientConfig, appBaseUrl, dpopProof, b64url, BSKY_SCOPE } from "../client/js/bsky-oauth.js";
 import { buildAuthorizeUrl, OAUTH_PROVIDERS } from "../client/js/social-login.js";
-import { buildBskyClientMetadata, resolveSiteUrl } from "../tools/write-oauth-deploy-config.mjs";
+import { buildBskyClientMetadata, resolveSiteUrl } from "../scripts/write-oauth-deploy-config.mjs";
 
 const linked = await import("../client/js/linked-accounts.js");
 const linkedUi = await import("../client/js/render/linked-accounts-ui.js");

@@ -1,0 +1,129 @@
+# Espelhos read-only do shell PWA
+
+**Objetivo:** ≥2 hosts estáticos servindo o mesmo `client/` (`vox-brasil`), sem canal 1→N.
+
+| Mirror | Papel |
+|--------|--------|
+| **A** | GitHub Pages — workflow [`deploy-pages.yml`](../../.github/workflows/deploy-pages.yml) em push `main` |
+| **B** | Cloudflare Pages **ou** nginx coletivo (voluntário) · CI opcional: [`.github/workflows/deploy-shell-b.yml`](../../.github/workflows/deploy-shell-b.yml) *(desligado até secrets)* |
+
+## Como ligar o workflow (GitHub Actions → shell B)
+
+Espelho B continua **`planned`** até URL pública verificada na tabela T2 — ligar o workflow **não** inventa `base_url`.
+
+1. **Cloudflare:** conta com permissão em **Workers & Pages**; criar projeto Pages (nome anotado para o secret abaixo) — pode ficar vazio até o primeiro upload.
+2. **Token API:** Cloudflare → *My Profile* → *API Tokens* → template *Edit Cloudflare Workers* (ou token custom com *Account → Cloudflare Pages → Edit*); copiar **sem** commitar no repo.
+3. **Secrets no GitHub** (`Settings → Secrets and variables → Actions`): `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_PAGES_PROJECT_NAME` (nome exato do projeto Pages); opcional mas recomendado para paridade OAuth com A: `VOX_GOOGLE_CLIENT_ID`, `VOX_FACEBOOK_APP_ID` (pedir ao mantenedor por canal seguro).
+4. **Disparo manual:** *Actions* → **Deploy shell B — Cloudflare Pages** → *Run workflow* → campo `confirm` = `DEPLOY` (só `workflow_dispatch`; push em `main` **não** aciona B).
+5. **Pós-deploy (humano):** anotar URL em *Cloudflare Pages → Custom domains* / `*.pages.dev`; smoke `sw.js` + `#/settings/network`; **só então** preencher `base_url` e marcar `live` na tabela T2 abaixo.
+
+Sem os três secrets Cloudflare, o job termina em **no-op** (notice no log) — comportamento esperado.
+
+## Integridade (release)
+
+1. SHA publicado = commit do último deploy Pages bem-sucedido (ver tabela T2).
+2. `CACHE_NAME` em [`client/sw.js`](../../client/sw.js) **idêntico** entre espelhos da mesma release.
+3. Diff `config/signaling.json` / `gateways.json` documentado por coletivo (fork de config ≠ espelho shell).
+4. Smoke: PWA carrega, `#/settings/network`, opcional `#/c/demo-aprenda-vox-mirror`.
+
+## Steward ≠ shell
+
+Relay WSS/TURN/`POST /vox/mirror` vive na VPS — ver [`steward-seed-15min.md`](./steward-seed-15min.md).
+
+## Sucessão relay (V-P08)
+
+Runbook canônico: [`steward-relay-buddy.md`](./steward-relay-buddy.md) — buddy (segundo voluntário), handoff de credenciais e janela de emergência **72 h** (relay + inbox TTL).
+Espelho shell **A/B** (esta página) distribui só o PWA estático; **não** substitui relay comunitário nem handoff de VPS.
+Steward/buddy cuidam de disco e `/health`; **moderador** cuida de `mod-action` ([GOVERNANCE.md](../../GOVERNANCE.md)) — papéis separados.
+DoD **doc** (runbook publicado) ≠ buddy nomeado na comunidade (`ops-humano` — [go/no-go V-P09](../pilot/piloto-comunidade-go-no-go.md)).
+Kit técnico de subida: [steward-relay-kit.md](./steward-relay-kit.md) (V-I08).
+
+---
+
+## T2 — Registro executável (NET-01)
+
+**Definition of Done (NET-01):** marcar ✓ **somente** quando, para cada linha `live`:
+
+- `base_url` responde HTTP 200 no shell (`/` ou `/index.html`);
+- `CACHE_NAME` lido de `{base_url}/sw.js` = valor da coluna;
+- `git_sha` = `headSha` do último run **Deploy PWA — GitHub Pages** que publicou esse `CACHE_NAME` (espelho A) **ou** commit/tag documentado no deploy de B.
+
+Escrever este doc **não** conta como ✓. Sem credenciais de B, a linha B permanece `planned`.
+
+### Tabela de espelhos
+
+| mirror_id | role | base_url | git_sha | CACHE_NAME | operator | read_only | status | DoD ✓ |
+|-----------|------|----------|---------|------------|----------|-----------|--------|-------|
+| `shell-a` | A (Pages) | https://yurikayel.github.io/vox/ | `8548b06` | `vox-pwa-v7.16-real-network-audio-video-upload` | yurikayel (CI GitHub Actions) | true | **live** | ✓ verificado 2026-10-29 — HTTP 200; `sw.js` live = CACHE_NAME acima; SHA = `8548b06` (`gh run list --workflow=deploy-pages.yml`) |
+| `shell-b` | B (Pages) | https://vox-9df.pages.dev/ | `8548b06` | `vox-pwa-v7.16-real-network-audio-video-upload` | yurikayel (CI GitHub Actions + Cloudflare Pages) | true | **live** | ✓ verificado 2026-10-29 — HTTP 200; `sw.js` live = CACHE_NAME; deploy automático via `deploy-shell-b.yml` |
+
+**Verificação rápida (operador A ou auditor):**
+
+```powershell
+# CACHE_NAME publicado
+(Invoke-WebRequest -Uri "https://yurikayel.github.io/vox/sw.js" -UseBasicParsing).Content -match 'CACHE_NAME = "([^"]+)"' | Out-Null; $matches[1]
+
+# SHA do último deploy Pages
+cd vox; gh run list --workflow=deploy-pages.yml --limit 1 --json headSha,conclusion
+```
+
+Rollback e incidentes em A: [`ops-pages-rollback.md`](./ops-pages-rollback.md). Drill DR (6 passos): [`ops-dr-drill-checklist.md`](./ops-dr-drill-checklist.md).
+
+### Bloqueadores atuais — espelho B (`planned`)
+
+| Bloqueador | Quem resolve |
+|------------|----------------|
+| URL pública + DNS/TLS | Voluntário espelho |
+| Conta Cloudflare **ou** VPS/nginx com certificado | Voluntário espelho |
+| `config/oauth.json` no artefato estático (secrets `VOX_*` no CI de A; B precisa env ou aviso de operador) | Voluntário + mantenedor (orientação OAuth em `client/DEV.md`, sem colar secrets no repo) |
+| Registro desta tabela + smoke antes de convite piloto | Community-doc / voluntário |
+
+---
+
+## Voluntário — publicar espelho B (paridade com A)
+
+Use **um** caminho. Em ambos: faça checkout do **mesmo** `git_sha` da linha A; **não** altere `CACHE_NAME` em `sw.js` salvo release coordenada com A.
+
+### Opção 1 — Cloudflare Pages (recomendado)
+
+1. Fork ou clone [github.com/yurikayel/vox](https://github.com/yurikayel/vox); anote `git rev-parse HEAD` após `git checkout <sha-da-release>`.
+2. Cloudflare Dashboard → **Workers & Pages** → **Create** → **Pages** → Connect Git → repo `vox`, branch `main` (ou deploy manual a partir do SHA).
+3. **Build settings:** Framework preset **None**; root directory `/`; build command:
+
+   ```bash
+   mkdir -p _site && cp -r client/* _site/ && cp docs/product/proposta-vox.html _site/ 2>/dev/null || true && node scripts/write-oauth-deploy-config.mjs
+   ```
+
+   Build output directory: `_site`.
+
+4. **Environment variables** (Production): `VOX_GOOGLE_CLIENT_ID`, `VOX_FACEBOOK_APP_ID` — mesmos valores que GitHub Actions secrets do repo (pedir ao mantenedor por canal seguro; **nunca** commitar).
+5. Deploy; anote `base_url` (ex. `https://vox-shell-b.pages.dev/`).
+6. Confirme paridade:
+
+   ```powershell
+   $b = "https://SUA-URL-B/"
+   (Invoke-WebRequest -Uri ($b + "sw.js") -UseBasicParsing).Content -match 'CACHE_NAME = "([^"]+)"' | Out-Null; $matches[1]
+   ```
+
+7. Atualize a linha `shell-b` nesta tabela: `base_url`, `git_sha`, `operator`, `status: live`, DoD ✓ com data e comando usado.
+
+### Opção 2 — nginx (coletivo / VPS)
+
+1. `git clone https://github.com/yurikayel/vox.git && cd vox && git checkout <sha-da-release>`.
+2. Montar site estático (ex. `/var/www/vox/`):
+
+   ```bash
+   mkdir -p _site && cp -r client/* _site/ && cp docs/product/proposta-vox.html _site/ 2>/dev/null || true
+   export VOX_GOOGLE_CLIENT_ID="..." VOX_FACEBOOK_APP_ID="..."
+   node scripts/write-oauth-deploy-config.mjs
+   rsync -a _site/ /var/www/vox/
+   ```
+
+3. nginx: `root /var/www/vox;` + `try_files $uri $uri/ /index.html;` para SPA; TLS (Let's Encrypt).
+4. Smoke `sw.js` + `#/settings/network` como na opção 1; registrar tabela.
+
+### Registro machine-readable (opcional)
+
+Ver [`mirrors-registry.example.json`](./mirrors-registry.example.json) — copiar para registro do coletivo (não commitar URLs draft sem revisão).
+
+*Playbook: T2 ops P0 · espelho B aguarda voluntário · rollback [#10](ops-pages-rollback.md).*

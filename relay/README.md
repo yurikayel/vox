@@ -6,7 +6,7 @@ O **Vox Relay Desktop** é um serviço leve e opcional para computadores pessoai
 
 ## 🚀 Como Iniciar
 
-> **Dois processos:** `server.py` é o relay completo (porta 3920, abaixo). `signaling.py` é só a sinalização WebRTC (porta 3921) — é o que `npm start`, o `Dockerfile` e o nó público Render rodam. Ver [docs/relay-api.md](../docs/relay-api.md).
+> **Dois processos:** `server.py` é o relay completo (porta 3920, abaixo). `signaling.py` é só a sinalização WebRTC (porta 3921) — é o que `npm start`, o [`relay/Dockerfile`](./Dockerfile) e o nó público Render rodam. Ver [docs/specs/relay-api.md](../docs/specs/relay-api.md).
 
 O servidor utiliza apenas a biblioteca padrão do Python 3 (nenhuma instalação via `pip` é necessária):
 
@@ -56,7 +56,7 @@ Ao abrir o Vox no navegador (`http://127.0.0.1:8080`), o cliente consulta automa
 | `/p2p/*`, `/peer/beacon` | vários | Seeder P2P e anúncio de pares. |
 | `/oauth/exchange` | `POST` | Troca código OAuth pelo `@usuário` (token descartado). |
 
-Referência completa (limites, TTLs, variáveis de ambiente, testes): **[docs/relay-api.md](../docs/relay-api.md)**.
+Referência completa (limites, TTLs, variáveis de ambiente, testes): **[docs/specs/relay-api.md](../docs/specs/relay-api.md)**.
 
 ---
 
@@ -64,7 +64,7 @@ Referência completa (limites, TTLs, variáveis de ambiente, testes): **[docs/re
 
 Para sustentar a memória da rede durante Alpha e Beta sem depender de janela de terminal aberta:
 
-* **Código-fonte e compilador:** [`../tools/zero-central-memory-windows/`](../tools/zero-central-memory-windows/) (`build.ps1`, usa `csc.exe` nativo do Windows, gerando binário standalone de **~170 KB**).
+* **Código-fonte e compilador:** [`../packaging/zero-central-memory-windows/`](../packaging/zero-central-memory-windows/) (`build.ps1`, usa `csc.exe` nativo do Windows, gerando binário standalone de **~170 KB**).
 * **Arquitetura Modo 3:**
   * **WAL append-only (`< 0,2 ms`):** grava cada evento imediatamente em `central_memory.journal.ndjson`.
   * **Batch Snapshot (2s):** consolida atomicamente em `central_memory.state.json` + `.bak` a cada 2 segundos se houver alterações.

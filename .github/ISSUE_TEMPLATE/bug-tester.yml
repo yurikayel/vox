@@ -9,7 +9,7 @@ body:
     attributes:
       value: |
         Obrigado por testar o Vox. Abra **#/status** no app e copie o nome do cache (`CACHE_NAME` do Service Worker).
-        Praça demo padrão: `#/c/demo-aprenda-vox` — ver [docs/teste-aberto-demo.md](https://github.com/yurikayel/vox/blob/main/docs/teste-aberto-demo.md).
+        Praça demo padrão: `#/c/demo-aprenda-vox` — ver [docs/pilot/teste-aberto-demo.md](https://github.com/yurikayel/vox/blob/main/docs/pilot/teste-aberto-demo.md).
   - type: input
     id: cache_name
     attributes:

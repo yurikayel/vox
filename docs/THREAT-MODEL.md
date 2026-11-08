@@ -2,7 +2,7 @@
 
 > **Status:** rascunho para revisão (LAN-15) · **Owner:** revisor · **Revisado:** 2026-11-08
 > **Falta para fechar o LAN-15:** revisão por uma pessoa de segurança de fora do time (registrar nome/data aqui).
-> Relacionados: [SECURITY.md](../SECURITY.md) · [COMPLIANCE-BR](../COMPLIANCE-BR.md) · [backlog §4-E](./backlog-lancamento-publico-2026-11.md#e-segurança-e-privacidade) · [ADR-014 cofre](./adr/014-zero-knowledge-vault-recuperacao-soberana.md)
+> Relacionados: [SECURITY.md](../SECURITY.md) · [COMPLIANCE-BR](legal/COMPLIANCE-BR.md) · [backlog §4-E](./strategy/backlog-lancamento-publico-2026-11.md#e-segurança-e-privacidade) · [ADR-014 cofre](./adr/014-zero-knowledge-vault-recuperacao-soberana.md)
 
 ## 1. O que protegemos (ativos)
 
