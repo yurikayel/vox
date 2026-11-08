@@ -19,6 +19,7 @@ import * as meshProfile from "../mesh-profile.js";
 import * as contributionAttestation from "../contribution-attestation.js";
 import * as linkedAccounts from "../linked-accounts.js";
 import * as voxels from "../voxels.js";
+import * as webrtcPeer from "../webrtc-peer.js";
 import { applySupporterMode } from "../supporter-mode.js";
 import { escapeHtml } from "../render/util.js";
 import { openOAuthEnrichModal } from "./onboarding.js";
@@ -50,6 +51,7 @@ function readNetworkFormValues() {
     commOnly: getChecked("net-comm-only"),
     backgroundRelay: getChecked("net-bg-relay"),
     webrtcEnabled: getChecked("net-webrtc", true),
+    turnOnly: getChecked("net-turn-only"),
     meshDiscoverable: getChecked("net-mesh-discoverable"),
     customSignalingUrl: getValue("net-signaling-url"),
     customRelayHttpUrl: getValue("net-relay-http-url"),
@@ -93,6 +95,7 @@ export function bindNetworkSettingsForm() {
       dailyCapMb: v.dailyCapMb,
       webrtcEnabled: v.webrtcEnabled,
     });
+    webrtcPeer.setTurnOnly(v.turnOnly);
     localAccount.setMeshDiscoverable(v.meshDiscoverable);
     void meshProfile.syncMeshProfileCard();
     cacheNode.enforceMaxCacheSize(v.maxMb);
@@ -239,7 +242,7 @@ export async function showNetworkSettings() {
   const main = render.renderShell(makeShellProps(user, "network", "Sua rede"));
 
   render.renderNetworkSettings(main, {
-    settings: peers.getPeerSettings(),
+    settings: { ...peers.getPeerSettings(), turnOnly: webrtcPeer.isTurnOnly() },
     metrics: peers.getPeerMetrics(),
     cacheStats: await cacheNode.getCacheStats(),
     relayStatus: await peers.checkDesktopRelay(),
