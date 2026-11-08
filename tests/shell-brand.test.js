@@ -24,11 +24,11 @@ test("shell brand — Sovereign Agora: nav Ágora usa ícone de fórum, marca fi
   assert.ok(wordmark.includes("${BRAND_MARK_SRC}"));
 });
 
-test("shell brand — same squircle mark in light and dark", () => {
-  assert.equal(brandMarkSrcForColorScheme(false), "icons/icon-white-512.png");
-  assert.equal(brandMarkSrcForColorScheme(true), "icons/icon-white-512.png");
+test("shell brand — mesmo logo-mark (megafone) no claro e no escuro", () => {
+  assert.equal(brandMarkSrcForColorScheme(false), "icons/logo-mark.png");
+  assert.equal(brandMarkSrcForColorScheme(true), "icons/logo-mark.png");
   assert.ok(shellSrc.includes("export const BRAND_MARK_SRC"));
-  assert.ok(shellSrc.includes("icons/icon-white-512.png"));
+  assert.ok(shellSrc.includes("icons/logo-mark.png"));
   assert.ok(!shellSrc.includes("attachBrandMarkTheme"));
   assert.ok(!shellSrc.includes("icons/icon-512.png"));
 });

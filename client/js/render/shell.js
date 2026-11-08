@@ -15,7 +15,7 @@ import * as localAccount from "../local-account.js";
 import { escapeHtml, root, renderAvatarHtml } from "./util.js";
 
 /** Squircle branco + X azul — mesmo asset em claro/escuro (sem tile navy na shell). */
-export const BRAND_MARK_SRC = "icons/icon-white-512.png";
+export const BRAND_MARK_SRC = "icons/logo-mark.png";
 
 export function brandMarkSrcForColorScheme(_dark) {
   return BRAND_MARK_SRC;
