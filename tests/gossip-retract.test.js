@@ -293,6 +293,8 @@ test("gossip-retract T11: GOSSIP_UPDATE em listing atualiza status (sem corpo)",
   await cacheNode.saveLocalPost(original);
 
   const statusPatch = listing.buildListingStatusUpdate(original, "reserved");
+  // Mesmo milissegundo do rascunho faria a atualização parecer antiga.
+  statusPatch.editedAt = Math.max(statusPatch.editedAt, (original.editedAt || original.ts || 0) + 1);
   const update = await localAccount.signPayload(statusPatch);
   await peers.handleVoxMessage({ type: "GOSSIP_UPDATE", item: update, fromPeer: "peer_feira" }, () => {}, "rtc");
 
