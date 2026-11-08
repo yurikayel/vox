@@ -2,7 +2,7 @@
 
 - **Status:** Aceito — revisado em 2026-11-06 (seção 5). A versão anterior foi marcada "Ratificado" no mesmo dia, sem período de revisão; esta revisão corrige o que nela não correspondia ao código.
 - **Data:** 2026-11-06
-- **Contexto:** Integração do pacote Stitch (`stitch_vox_civic_network_interface`) ao cliente Vox de produção (`vox/client`)
+- **Contexto:** Integração do pacote Stitch (`stitch_vox_civic_network_interface`, removido do repo em 2026-11 depois de aplicado; a especificação ficou em [`docs/design/sovereign-agora.md`](../design/sovereign-agora.md) e os mockups no histórico do git) ao cliente Vox de produção (`vox/client`)
 - **Autores:** Yuri Kayel / Antigravity Agentic Hardening Framework
 
 ---

@@ -8,7 +8,7 @@ Instruções globais compartilhadas para agentes que operam no sub-repo `vox/`:
 - **Custos Recorrentes:** R$ 0,00 hoje, dependendo de free tiers com cota (o upload grátis do Turbo tem limite por carteira/IP; ver `docs/INFRA-CUSTOS.md`). Não prometer "para sempre".
 
 ## 2. Protocolo Mutex (Um Agente por Arquivo)
-Fonte única: [`docs/metodo-agentes-mutex-e-revisor.md`](../docs/metodo-agentes-mutex-e-revisor.md). Resumo:
+Fonte única: [`docs/process/metodo-agentes-mutex-e-revisor.md`](../docs/process/metodo-agentes-mutex-e-revisor.md). Resumo:
 - Nunca editar arquivos simultaneamente com outros agentes.
 - Declarar caminhos antes de alterar.
 - Não reescrever documentos inteiros para modificar trechos isolados.

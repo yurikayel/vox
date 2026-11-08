@@ -14,10 +14,10 @@
     "test": "node --test tests/*.test.js && python -m unittest discover -s relay -p \"test_*.py\"",
     "lint": "eslint \"client/js/**/*.js\" client/sw.js",
     "lint:fix": "eslint \"client/js/**/*.js\" client/sw.js --fix",
-    "lint:relay": "python tools/lint_relay.py",
-    "audit:complexity": "node tools/complexity-audit.mjs",
-    "release-line": "python tools/release_line.py",
-    "release-metadata": "python tools/release_line.py --metadata-only"
+    "lint:relay": "python scripts/lint_relay.py",
+    "audit:complexity": "node scripts/complexity-audit.mjs",
+    "release-line": "python scripts/release_line.py",
+    "release-metadata": "python scripts/release_line.py --metadata-only"
   },
   "devDependencies": {
     "eslint": "^9.39.0",

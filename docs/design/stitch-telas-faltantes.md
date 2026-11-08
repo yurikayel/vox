@@ -1,6 +1,6 @@
 # Telas sem layout Stitch — prompts para gerar
 
-Pacote de referência: `stitch_vox_civic_network_interface/` (design system *Sovereign Agora Luminescent Matrix*).
+Design system: [sovereign-agora.md](./sovereign-agora.md) (*Sovereign Agora Luminescent Matrix*). O pacote de mockups `stitch_vox_civic_network_interface/` foi aplicado e removido do repositório em 2026-11; ele continua no histórico do git.
 Telas já cobertas e aplicadas (ADR-016 §5): Ágora (feed desktop/mobile), Vote (desktop/mobile), Comunidades (lista desktop/mobile), Mensagens (desktop 2 colunas, mobile lista e conversa), Perfil (desktop/mobile), gaveta Identidade/Rede.
 
 ## Prefixo comum (cole antes de cada prompt)

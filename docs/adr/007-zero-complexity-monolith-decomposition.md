@@ -7,7 +7,7 @@
 ## Contexto
 
 Com a expansão de funcionalidades cívicas e descentralizadas no Vox (deliberação Pol.is, cartório popular perma-notary, micro-lofi de mídia, replicador POSSE e integração ATProto Bluesky), o código acumulou concentrações de complexidade cognitiva, aninhamento profundo e métodos extensos.
-A auditoria estática inicial (`tools/complexity-audit.mjs`) mapeou **183 violações** distribuídas em 131 arquivos, apresentando riscos de:
+A auditoria estática inicial (`scripts/complexity-audit.mjs`) mapeou **183 violações** distribuídas em 131 arquivos, apresentando riscos de:
 1. Degradação arquitetural e sobrecarga cognitiva para mantenedores humanos e agentes autônomos.
 2. Riscos de regressão silenciosa durante refatorações e manutenções de rotas cívicas.
 3. Violação dos limites de boas práticas de engenharia de software ($\text{LLOC} \le 30$, $\text{Nesting} \le 4$, $\text{Complexidade Cognitiva} \le 15$).
@@ -22,7 +22,7 @@ Adotou-se o perfil rigoroso de *Code Hardening e Revisão Arquitetural* (`RULE[u
    - Controladores de eventos e formulários (`inline-composer.js`, `screens-compose.js`, `zap-modal.js`) foram desmembrados em rotinas atômicas de vinculação e controladores de estado.
    - Rotinas criptográficas e de validação binária (`ans104.js`, `perma-notary.js`, `pix-key.js`, `polis.js`) foram modularizadas com tabelas de despacho declarativas (`PIX_VALIDATORS`, `PIX_MASKERS`, `STEP_READERS`).
 3. **Invariância do Service Worker:** Refatoração do ouvinte `fetch` e saneamento de strings UTF-8 em `client/sw.js` preservando estritamente a chave de cache `CACHE_NAME = "vox-pwa-v7.16-real-network-audio-video-upload"`.
-4. **Auditoria Estática Contínua:** O script `tools/complexity-audit.mjs` foi integrado para monitorar continuamente os 131 arquivos JavaScript do cliente e Service Worker, gerando relatórios em `docs/metrics/baseline-*.json`.
+4. **Auditoria Estática Contínua:** O script `scripts/complexity-audit.mjs` foi integrado para monitorar continuamente os 131 arquivos JavaScript do cliente e Service Worker, gerando relatórios em `docs/metrics/baseline-*.json`.
 5. **Garantia de Não-Regressão:** A suíte de 605 testes (572 em JavaScript e 33 em Python) foi executada e mantida com 100% de sucesso a cada etapa de refatoração.
 
 ## Resultados e Métricas

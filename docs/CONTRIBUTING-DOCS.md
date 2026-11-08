@@ -23,7 +23,7 @@ No topo, uma linha (blockquote) com:
 
 **SHA / testes / SW:** não repetir em todo header — alinhar com a release line de [../README.md](../README.md) e o baseline de [README.md](./README.md). Se precisar citar commit, uma vez no índice basta.
 
-Brainstorms novos: banner + frase **“Não substitui X”**. Proibido criar outra tabela **N=…** mestre sem ADR que retire/arquive a anterior ([brainstorm 10 fraquezas](./brainstorm-10-pontos-fracos-metodo-implementacao-2026-11.md) §1).
+Brainstorms novos: banner + frase **“Não substitui X”**. Proibido criar outra tabela **N=…** mestre sem ADR que retire/arquive a anterior ([brainstorm 10 fraquezas](./brainstorms/brainstorm-10-pontos-fracos-metodo-implementacao-2026-11.md) §1).
 
 ## 3. Definition of Done por item
 
@@ -35,7 +35,7 @@ Cada checkbox ou linha de checklist declara **um** tipo:
 
 ## 4. Mutex de arquivo
 
-Regra completa (fonte única): [metodo-agentes-mutex-e-revisor.md](./metodo-agentes-mutex-e-revisor.md). Aplicação a docs:
+Regra completa (fonte única): [metodo-agentes-mutex-e-revisor.md](./process/metodo-agentes-mutex-e-revisor.md). Aplicação a docs:
 
 - **Um autor ou agente por arquivo** (ou seção marcada) por vez. PRs que tocaram o mesmo canon em paralelo: rebase e reconciliar banners antes de merge.
 - Lobby/agentes: ler [README.md](./README.md) + este arquivo antes de editar ROADMAP ou direcionamento.

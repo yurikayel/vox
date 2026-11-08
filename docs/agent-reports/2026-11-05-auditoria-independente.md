@@ -23,7 +23,7 @@ Auditoria técnica independente e saneamento arquitetural completo das frentes d
 - **Unificação de Largura:** Eliminado teto discrepante de `540px` que comprimia posts de texto e GitHub em relação a fotos (640px). Toda a linha do feed agora obedece estritamente a `--feed-max: 640px; width: 100%; box-sizing: border-box`.
 - **Hierarquia Visual:** Post text (`captionHtml` no feed e `detailHtml` no tópico) movido para cima da barra inferior de ações (`igBar` / `toolbarHtml`), prevenindo sobreposição e garantindo leitura antes do engajamento.
 - **Saneamento de Ações:** O botão de compartilhamento universal adota a bandeja com seta para cima (`M4 12v8...`), mantendo abertura instantânea do Cockpit POSSE modal. Removido o botão duplicado de comentários em `ig-toolbar.js`.
-- **Conformidade de Hardening:** Métricas LLOC $\le 30$, complexidade cognitiva $\le 15$ e nesting $\le 4$ integralmente respeitadas em todos os 153 arquivos varridos por `tools/complexity-audit.mjs` (0 violações registradas).
+- **Conformidade de Hardening:** Métricas LLOC $\le 30$, complexidade cognitiva $\le 15$ e nesting $\le 4$ integralmente respeitadas em todos os 153 arquivos varridos por `scripts/complexity-audit.mjs` (0 violações registradas).
 
 ## 4. Testes Executados e Resultados Reais
 - **Comando Executado:** `npm test` (`node --test tests/*.test.js && python -m unittest discover -s relay -p "test_*.py"`)
@@ -44,7 +44,7 @@ Ran 83 tests in 4.160s
 OK
 
 > vox@0.5.0 audit:complexity
-> node tools/complexity-audit.mjs
+> node scripts/complexity-audit.mjs
 Wrote docs\metrics\baseline-2026-11-05.json (0 violations)
 ```
 

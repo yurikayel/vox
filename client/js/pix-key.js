@@ -139,7 +139,7 @@ export function maskForDisplay(key, type = null) {
 /**
  * REV-13 — o Manual de Padrões para Iniciação do Pix (BCB) manda o app do pagador mostrar
  * "o nome do usuário recebedor conforme registrado no DICT", com QUALQUER tipo de chave
- * (inclusive aleatória/EVP). Fonte: docs/pesquisa-complementar-2026-11.md §1-E.
+ * (inclusive aleatória/EVP). Fonte: docs/research/pesquisa-complementar-2026-11.md §1-E.
  */
 export const PIX_RECEIVER_NAME_NOTICE_PT =
   "Atenção: quem paga vê o seu nome completo como está no banco (e parte do CPF/CNPJ), com qualquer tipo de chave — inclusive a aleatória. Se você usa pseudônimo no Vox, receba numa chave do seu coletivo ou associação.";
