@@ -4131,6 +4131,15 @@ body,
 .community-avatar-img, .community-avatar-fallback, .community-avatar-sm, .community-avatar-md, .community-avatar-lg,
 .community-vox-card-avatar-wrap, .community-vox-avatar-wrap, .welcome-avatars > * {
   border-radius: 0 !important;
+  /* Borda e sombra viram um contorno quebrado nos cantos quando a máscara corta: fora. */
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
   -webkit-mask: var(--sa-squircle) center / 100% 100% no-repeat;
   mask: var(--sa-squircle) center / 100% 100% no-repeat;
+}
+
+/* Foto de perfil preenche o squircle inteiro (sem miolo menor dentro de um fundo). */
+.avatar-wrap > .avatar-img, .avatar-img, .profile-avatar-img, .profile-grid-avatar-img, .community-avatar-img {
+  object-fit: cover;
 }
