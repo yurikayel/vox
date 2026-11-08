@@ -7,7 +7,7 @@
 
 A auditoria de nov/2026 ([FEATURES.md](./FEATURES.md), [INFRA-CUSTOS.md](./INFRA-CUSTOS.md)) mostra que o custo hoje é **R$ 0**, mas a rede ainda depende de pontos que não se sustentam sozinhos:
 
-- **Infra:** 1 nó de sinalização (Render), nenhum TURN, nenhum relay completo público, e o subsídio do Turbo para itens ≤100 KiB.
+- **Infra:** 1 nó de sinalização (Render), nenhum TURN, nenhum relay completo público, e o upload grátis do Turbo, que **tem cota**: `https://upload.ardrive.io/info` em 2026-11-07: `maxItemBytes` 107520 (105 KiB), `lifetimeBytes` 10485760 e `ipBytes` 10485760 (≈10 MiB). O "R$ 0 para sempre" dos docs antigos não vale para quem posta muito.
 - **Trabalho:** moderação e operação de nós dependem de poucas pessoas.
 - **Conteúdo e crescimento:** não há fonte constante de pauta, e a entrada acontece por link ou onboarding, sem efeito de rede.
 - **Dinheiro:** só existe o Pix entre pessoas. Nada financia os poucos custos reais.
@@ -22,7 +22,7 @@ A auditoria de nov/2026 ([FEATURES.md](./FEATURES.md), [INFRA-CUSTOS.md](./INFRA
 | F2 | Convite que já faz o pareamento | crescimento + infra | links de convite do WhatsApp e Telegram | `airgap-webrtc.js`, `qr-url.js` | P |
 | F3 | Canal de transmissão da comunidade | alcance | Canais do WhatsApp e do Telegram | `peers.js`, `posse-dispatch.js` | M |
 | F4 | Vaquinha transparente | dinheiro sem custódia | Apoia.se, Super Follows (X), assinaturas do Instagram, Wikipedia | `brcode.js`, `perma-notary.js` | P |
-| F5 | Mídia fatiada ≤100 KiB | infra | vídeo curto do TikTok e do Kwai (lo-fi) | `chunked-transfer.js`, `ans104.js` | M |
+| F5 | Mídia pela malha, hash no Arweave | infra | vídeo curto do TikTok e do Kwai (lo-fi) | `chunked-transfer.js`, `media-blob.js` | M |
 | F6 | Modo Guardião noturno | infra | BitTorrent, economia de dados do Telegram | `seeder-guardian.js`, `storage-persistence.js`, `voxels.js` | M |
 | F7 | Notas da Comunidade por ponte | moderação | Community Notes (X) | `bridging-rank.js` | M |
 | F8 | Selo de confiança por aval | anti-sybil | selo do Instagram e do Threads (grátis e distribuído) | `civic-credential.js`, `identity-link.js` | M |
@@ -69,13 +69,20 @@ Esforço: **P** = plugar um módulo que já existe, com UI pequena · **M** = l�
 - **Riscos:** regulatório (não é arranjo de pagamento, mas é preciso revisar a COMPLIANCE-BR) e confiança, o que pede contas públicas obrigatórias para manter o selo de "meta ativa". Pesquisar no Prompt 2, item 8.
 - **DoD:** bloco "Meta da comunidade" na aba Membros; template de prestação de contas; nota no COMPLIANCE-BR; nenhum endpoint novo.
 
-## F5 — Mídia fatiada em itens ≤100 KiB
+## F5 — Mídia pela malha, só o hash no Arweave
+
+> **Revisado em 2026-11-07:** a ideia original era fatiar a mídia em itens de até 100 KiB para ficar no grátis do Turbo. O endpoint público do Turbo mostra que a gratuidade tem **cota por bytes totais** (`https://upload.ardrive.io/info` em 2026-11-07: `maxItemBytes` 107520 (105 KiB), `lifetimeBytes` 10485760 e `ipBytes` 10485760 (≈10 MiB)), então fatiar não economiza nada. A versão abaixo inverte a lógica.
+
+**Ideia original (descartada):**
 
 - **Inspiração:** vídeo curto do TikTok e do Kwai, em versão lo-fi para dados móveis.
 - **O que é:** plugar o `chunked-transfer.js`. A mídia é dividida em itens ANS-104 de até 100 KiB mais um manifesto (no padrão de path manifest do Arweave), e o cliente remonta na leitura. Vídeos de 10 s e carrosséis continuam no free tier do Turbo em vez de cair no L1 pago.
 - **Por que sustenta:** remove o custo por byte, que é o único que cresce com o uso.
 - **Custo:** R$ 0, **se** os termos permitirem.
-- **Riscos:** **bloqueante.** É preciso confirmar se o Turbo/ArDrive permite fatiar mídia em vários itens subsidiados, e por quanto tempo vale o subsídio. Prompt 2, item 1. Se não permitir, a alternativa é a malha (F6) servir a mídia e só o hash ir para o Arweave.
+- **Riscos:** inviável como economia, porque a cota é por bytes.
+
+**Versão revisada:** a mídia circula pela malha (gossip de BLOB, cache local, espelhos de steward e modo Guardião da F6, reaproveitando `chunked-transfer.js` para dividir o blob entre pares). Só o post de texto, com o **SHA-256 da mídia**, vai para o Arweave. Quem quiser a mídia permanente paga o crédito, ou a comunidade paga pela vaquinha (F4). Assim a cota grátis rende para texto, que é o registro cívico que importa.
+- **Risco da versão revisada:** a mídia some se nenhum par guardar. A UI precisa dizer isso com honestidade ("mídia mantida pela comunidade" × "permanente").
 - **DoD:** upload de vídeo de 10 s sem AR na carteira; leitura remonta e confere o SHA-256; teste em `chunked-transfer.test.js` e `upload.test.js`.
 
 ## F6 — Modo Guardião noturno
@@ -136,86 +143,230 @@ Esforço: **P** = plugar um módulo que já existe, com UI pequena · **M** = l�
 
 ---
 
-## Prompts de pesquisa
+## Prompts de pesquisa (Gemini Deep Research)
 
-Use na ordem: **1** (o que falta, olhando o código) → **2** (o que o mundo permite, olhando fontes externas) → **3** (como construir aqui).
+Os três prompts são **autossuficientes**: cada um traz o contexto do projeto, os links públicos dos arquivos do repositório e as fontes externas por onde começar, para que um agente **sem acesso local ao código** (Gemini Deep Research, Perplexity, ChatGPT Deep Research) consiga trabalhar. Cole um de cada vez, na ordem **1 → 2 → 3**. Se quiser, cole o relatório do anterior no fim do seguinte.
 
-### Prompt 1 — Auditoria do que falta (agente com acesso ao repo)
+> **Links do repositório:** apontam para `main`. Os links `raw.githubusercontent.com` entregam o texto puro, que é mais fácil de o agente ler; para navegar, use `https://github.com/yurikayel/vox/tree/main`.
+
+### Prompt 1 — O que falta para o Vox se sustentar sozinho (diagnóstico + comparação)
 
 ```text
-Você é um revisor técnico do repositório Vox (PWA vanilla JS sem build em client/, relay Python stdlib em relay/,
-testes node:test + unittest). Leia docs/FEATURES.md, docs/ROADMAP.md, docs/INFRA-CUSTOS.md,
-client/js/app/route-parse.js e o precache (SHELL_ASSETS) de client/sw.js.
+Responda em português do Brasil. Você é um pesquisador de arquitetura de redes sociais descentralizadas e de
+sustentabilidade de projetos de software livre. Faça uma pesquisa profunda e entregue um relatório.
 
-Para cada módulo em client/js/** classifique: no ar / depende de config / lab / escrito-não-plugado / stub / demo,
-com evidência (quem importa o módulo, rota que o usa, arquivo de teste). Depois liste:
-(a) módulos escritos mas não carregados e o que falta para plugar cada um (UI, rota, flag, testes);
-(b) dependências de servidor que não existem publicamente (inbox de DM, /oauth/exchange, memória central, TURN);
-(c) fluxos que caem em mock.js quando a rede falha e o que o usuário vê nesse caso;
-(d) as lacunas de código para cada uma das 10 features de docs/brainstorm-autossustento-10-features-2026-11.md.
+## Contexto do projeto (resumo confiável, nov/2026)
+O Vox (github.com/yurikayel/vox, AGPL-3.0) é uma rede social cívica brasileira, local-first:
+- Cliente: PWA em JavaScript puro (ES modules, sem build, sem framework), publicado no GitHub Pages
+  (https://yurikayel.github.io/vox/) e num espelho no Cloudflare Pages. Também há micro-APK Android e
+  executáveis desktop que abrem o PWA.
+- Identidade: chave ECDSA P-256 gerada no aparelho; cofre cifrado para recuperação (PBKDF2 + AES-GCM).
+- Dados públicos: posts assinados como itens ANS-104 e enviados direto do navegador ao bundler Turbo
+  (ArDrive) para ficarem permanentes no Arweave; leitura por GraphQL em gateways públicos.
+- Malha P2P: WebRTC DataChannel com gossip (WANT/HAVE/BLOB, cartões de perfil, manifestos de cache).
+  A descoberta de pares depende de UM servidor de sinalização WebSocket no plano gratuito do Render,
+  mantido acordado por um cron do GitHub Actions a cada 14 min. Não há TURN.
+- Relay opcional em Python (stdlib): cache, inbox de DM com TTL de 72 h, espelho de comunidade, memória
+  central, troca de código OAuth. Hoje NÃO existe instância pública; só roda na máquina de voluntários.
+- Produto: feed Social/Cívico, comunidades estilo Orkut, propostas com diff e voto assinado, enquetes,
+  Feira (classificados), Pix Zaps (QR Pix gerado offline, 0% de taxa, sem custódia), DMs E2E,
+  republicação assistida para Bluesky/X/WhatsApp/Telegram (POSSE).
+- Princípios inegociáveis: nenhuma custódia de dinheiro, nenhum alcance pago, nenhuma telemetria de
+  terceiros, copy honesta (nada anunciado como pronto antes de estar no ar), LGPD e Marco Civil.
+- Custo atual em dinheiro: R$ 0/mês, mas sobre free tiers de terceiros. Fato observado em 2026-11-07 no
+  endpoint público https://upload.ardrive.io/info: "freeTier":{"lifetimeBytes":10485760,
+  "ipBytes":10485760,"maxItemBytes":107520} — ou seja, o upload grátis tem cota (~10 MiB por carteira e
+  por IP), e não é ilimitado como a documentação antiga dizia.
+- Onze módulos já escritos e testados não estão plugados na interface: pareamento WebRTC por QR
+  (airgap-webrtc), ranking por ponte estilo Community Notes (bridging-rank), transferência em blocos
+  (chunked-transfer), credencial cívica e vínculo de identidade (civic-credential, identity-link), kits de
+  comunidade (kit-genesis), modo guardião / celular como nó (seeder-guardian), persistência de storage
+  (storage-persistence), depoimentos (testimonials), identidade Ed25519 (vox-identity) e runtime Webxdc.
+  A sinalização via Nostr é só um stub.
 
-Saída: uma tabela priorizada com colunas item · impacto em autossustento (alto/médio/baixo) · esforço (P/M/G) ·
-risco · arquivos envolvidos. Não proponha código novo onde já existe módulo. Aponte qualquer divergência entre
-docs/FEATURES.md e o código. Não edite arquivos.
+## Leia primeiro (fontes do projeto)
+- Estado real de cada funcionalidade: https://raw.githubusercontent.com/yurikayel/vox/main/docs/FEATURES.md
+- Infra, custos e pontos únicos de falha: https://raw.githubusercontent.com/yurikayel/vox/main/docs/INFRA-CUSTOS.md
+- Roadmap atual: https://raw.githubusercontent.com/yurikayel/vox/main/docs/ROADMAP.md
+- As 10 features candidatas (F1–F10): https://raw.githubusercontent.com/yurikayel/vox/main/docs/brainstorm-autossustento-10-features-2026-11.md
+- Posicionamento e limites: https://raw.githubusercontent.com/yurikayel/vox/main/POSITIONING.md
+- Tese de infra a custo zero (celulares como nós): https://raw.githubusercontent.com/yurikayel/vox/main/docs/brainstorm-sustentacao-perene-celulares-nos-base.md
+- Meta de rede sustentada por participantes: https://raw.githubusercontent.com/yurikayel/vox/main/docs/rede-sustentada-participantes.md
+- API do relay: https://raw.githubusercontent.com/yurikayel/vox/main/docs/relay-api.md
+- Configuração real de sinalização: https://raw.githubusercontent.com/yurikayel/vox/main/client/config/signaling.json
+- Upload (Turbo / L1): https://raw.githubusercontent.com/yurikayel/vox/main/client/js/upload.js
+- Stub de Nostr: https://raw.githubusercontent.com/yurikayel/vox/main/client/js/nostr-signaling.js
+
+## Projetos para comparar (pesquise como cada um se sustenta e onde gasta dinheiro)
+- Nostr: https://github.com/nostr-protocol/nips (relays pagos, zaps, NIP-01 eventos efêmeros)
+- Bluesky / AT Protocol: https://docs.bsky.app/ (quem paga PDS, relay e AppView)
+- Mastodon / Fediverso: https://joinmastodon.org/ (custos de instância, financiamento via Patreon/Open Collective)
+- Briar (mesh P2P sem servidor): https://briarproject.org/
+- Delta Chat + Webxdc: https://delta.chat/ e https://webxdc.org/
+- Scuttlebutt / Manyverse: https://scuttlebutt.nz/
+- Financiamento de bens comuns: https://opencollective.com/ e o modelo de doações da Wikipedia
+
+## Perguntas
+1. Que dependências do Vox são pontos únicos de falha ou têm custo escondido que vai aparecer com
+   crescimento (100, 1.000 e 10.000 usuários ativos)? Estime ordem de grandeza.
+2. Para cada uma das 10 features F1–F10: ela ataca um problema real do diagnóstico? Existe projeto que
+   já fez algo parecido? Funcionou? O que deu errado?
+3. Quais lacunas NÃO estão cobertas pelas F1–F10 (ex.: moderação de conteúdo ilegal, abuso, spam em
+   escala, backup de chaves, descoberta de comunidades, onboarding de quem não é técnico)? Proponha até
+   5 features extras com o mesmo critério: custo marginal ~zero, sem custódia, sem alcance pago.
+4. Entre os 11 módulos escritos e não plugados, quais dão mais retorno de sustentabilidade se forem
+   plugados primeiro, e por quê?
+
+## Formato da resposta
+- Resumo executivo (10 linhas).
+- Tabela: item · problema que resolve · evidência (fonte com URL e data) · impacto (alto/médio/baixo) ·
+  esforço estimado (P/M/G) · risco.
+- Seção de comparação com os projetos acima.
+- Lista final priorizada (top 10) do que o Vox deve fazer primeiro.
+Separe claramente FATO (com fonte) de INFERÊNCIA (sua análise). Não invente números; se não achar, diga.
 ```
 
-### Prompt 2 — Pesquisa externa: viabilidade a custo zero
+### Prompt 2 — Viabilidade a custo zero (limites, termos de uso e lei)
 
 ```text
-Pesquise, usando fontes primárias com data (documentação oficial, termos de uso, changelogs e posts de engenharia
-de 2025–2026), a viabilidade técnica e contratual de manter uma rede social P2P cívica brasileira a custo ~zero.
-Para cada item, responda: o que vale hoje, a fonte com URL e data, o risco de mudar, e se isso altera alguma das
-features F1–F10 descritas abaixo.
+Responda em português do Brasil. Você é um pesquisador técnico e regulatório. Faça uma pesquisa profunda
+com fontes primárias e datadas (documentação oficial, termos de uso, changelogs, código-fonte, leis e
+normas — de preferência de 2025–2026) e entregue um relatório.
 
-1. Turbo/ArDrive: limite atual do upload subsidiado (≤100 KiB?), se é permitido fatiar uma mídia em vários itens
-   subsidiados, limites de taxa por IP/carteira, e o histórico de mudanças nessa política.
-2. Free tiers para WebSocket/sinalização: Render, Hugging Face Spaces, Cloudflare Workers/Durable Objects/Pages,
-   Deno Deploy, Koyeb, Fly.io — horas, sleep, conexões simultâneas, proibições de uso.
-3. Sinalização WebRTC sobre relays Nostr públicos: NIPs e kinds efêmeros aplicáveis, rate limits típicos,
-   projetos que já fazem isso, e privacidade do SDP (IP). E também trackers WebTorrent públicos como sinalização.
-4. TURN: opções gratuitas ou comunitárias confiáveis, custo de banda de um coturn em VPS barata, e alternativas
-   (relay pelo próprio par, TURN-over-TCP 443).
-5. Periodic Background Sync, Storage Persistence (navigator.storage.persist) e Web Push sem servidor próprio:
-   suporte real em Chrome Android, Samsung Internet, Firefox Android e Safari iOS 18/19 (PWA instalado).
-6. Dados abertos da Câmara e do Senado: endpoints de proposições e votações, limites, licença de uso; como
-   Tramitado, e-Cidadania (Senado) e "Sua Voz" usam esses dados.
-7. Mecânica de produto copiável sem servidor central: algoritmo de Community Notes (bridging, código aberto do X),
-   Canais do WhatsApp e do Telegram, links de convite, Super Follows/assinaturas, bots do Telegram via polling.
-8. Brasil: regras do Bacen e da LGPD para "vaquinha" via Pix direto à chave de um coletivo, sem custódia nem
-   intermediação; quando algo vira arranjo de pagamento ou exige CNPJ; obrigações de transparência.
-
-Features: F1 sinalização via Nostr/trackers; F2 convite com pareamento por QR; F3 canal de transmissão por gossip;
-F4 vaquinha Pix transparente; F5 mídia fatiada ≤100 KiB no Turbo; F6 modo guardião noturno (periodicSync);
-F7 notas da comunidade por ponte; F8 selo por aval M-de-N; F9 pauta legislativa por cron + manifesto assinado;
+## Contexto
+O Vox (github.com/yurikayel/vox) é uma rede social cívica brasileira, local-first, em PWA JavaScript puro,
+sem servidor próprio pago. Ele publica posts assinados (itens ANS-104) direto do navegador no bundler
+Turbo/ArDrive (Arweave), descobre pares WebRTC por UM servidor de sinalização WebSocket no plano gratuito do
+Render (mantido acordado por cron do GitHub Actions a cada 14 min), não tem TURN e hospeda o app no GitHub
+Pages + Cloudflare Pages. Regras do projeto: nenhuma custódia de dinheiro, nenhum alcance pago, LGPD.
+Mapa de infra: https://raw.githubusercontent.com/yurikayel/vox/main/docs/INFRA-CUSTOS.md
+Features em avaliação: https://raw.githubusercontent.com/yurikayel/vox/main/docs/brainstorm-autossustento-10-features-2026-11.md
+F1 sinalização WebRTC via relays Nostr públicos + trackers WebTorrent; F2 convite por QR que já faz o
+pareamento WebRTC; F3 canal de avisos repassado por gossip; F4 vaquinha transparente via Pix direto na chave
+do coletivo; F5 mídia servida pela malha P2P com só o hash no Arweave; F6 modo guardião (celular no
+carregador + Wi-Fi vira nó, usando Periodic Background Sync); F7 notas de contexto por algoritmo de ponte;
+F8 selo de confiança por aval de M membros; F9 pauta legislativa automática a partir de dados abertos;
 F10 resumo semanal + bot do Telegram por polling no GitHub Actions.
 
-Termine com: (a) as features bloqueadas ou inviáveis; (b) as que ficam mais baratas ou fáceis do que o previsto;
-(c) as 3 perguntas que continuam abertas.
+## Itens a pesquisar (para cada um: o que vale hoje · fonte com URL e data · risco de mudar · impacto nas F1–F10)
+1. Turbo/ArDrive — cota grátis. Em 2026-11-07, https://upload.ardrive.io/info retornou
+   "freeTier":{"lifetimeBytes":10485760,"ipBytes":10485760,"maxItemBytes":107520}. Confirme o significado
+   exato (vitalício por carteira? por IP por período?), quando a política mudou, como o SDK expõe isso
+   (getFreeStatus) e quanto custa o crédito depois da cota. Fontes:
+   https://upload.ardrive.io/info · https://github.com/ardriveapp/turbo-sdk · https://docs.ar.io/learn/turbo ·
+   https://docs.ar.io/build/upload/turbo-credits · ANS-104: https://github.com/ArweaveTeam/arweave-standards/blob/master/ans/ANS-104.md
+2. Free tiers para servidor WebSocket de sinalização: horas/mês, sleep por inatividade, conexões
+   simultâneas, proibições (ex.: keepalive artificial). Render https://render.com/docs/free ·
+   Hugging Face Spaces https://huggingface.co/docs/hub/spaces-overview ·
+   Cloudflare Workers/Durable Objects https://developers.cloudflare.com/workers/platform/limits/ e
+   https://developers.cloudflare.com/durable-objects/ · Deno Deploy https://deno.com/deploy/pricing ·
+   Koyeb https://www.koyeb.com/pricing · Fly.io https://fly.io/docs/about/pricing/ ·
+   GitHub Actions https://docs.github.com/en/billing/managing-billing-for-github-actions/about-billing-for-github-actions
+3. Sinalização WebRTC sobre Nostr: kinds efêmeros (NIP-01, faixa 20000–29999), NIPs relevantes, rate limits
+   típicos de relays públicos (damus, nos.lol, primal…), projetos que já fazem isso, e como esconder o IP
+   que vai no SDP. Fontes: https://github.com/nostr-protocol/nips/blob/master/01.md ·
+   https://github.com/nostr-protocol/nips · trackers WebTorrent como sinalização:
+   https://github.com/webtorrent/bittorrent-tracker
+4. TURN: opções gratuitas ou comunitárias confiáveis, custo de banda de um coturn em VPS barata e
+   alternativas (TURN em TCP 443, um par fazendo relay para outro). Fontes: https://github.com/coturn/coturn ·
+   https://webrtc.org/getting-started/turn-server
+5. Suporte real, em 2026, a Periodic Background Sync, Storage Persistence (navigator.storage.persist) e
+   Web Push em PWA instalado no Chrome Android, Samsung Internet, Firefox Android e Safari iOS.
+   Fontes: https://developer.mozilla.org/en-US/docs/Web/API/Web_Periodic_Background_Synchronization_API ·
+   https://caniuse.com/periodic-background-sync ·
+   https://developer.mozilla.org/en-US/docs/Web/API/StorageManager/persist ·
+   https://webkit.org/blog/13878/web-push-for-web-apps-on-ios-and-ipados/
+6. Dados abertos legislativos: endpoints de proposições, tramitação e votações, limites de uso, licença;
+   como o Tramitado, o e-Cidadania do Senado e plataformas "Sua Voz" usam esses dados.
+   Fontes: https://dadosabertos.camara.leg.br/swagger/api.html · https://legis.senado.leg.br/dadosabertos/docs/ ·
+   https://www12.senado.leg.br/ecidadania · https://tramitado.com.br
+7. Mecânicas copiáveis sem servidor central: algoritmo de Community Notes (matrix factorization, "bridging"),
+   Canais do WhatsApp, links de convite, Super Follows/assinaturas, bots do Telegram por polling (getUpdates).
+   Fontes: https://github.com/twitter/communitynotes ·
+   https://communitynotes.x.com/guide/en/under-the-hood/ranking-notes ·
+   https://faq.whatsapp.com/549900560675125 · https://core.telegram.org/bots/api
+8. Brasil — vaquinha por Pix direto na chave de um coletivo, sem intermediação: quando vira arranjo de
+   pagamento, quando exige CNPJ, implicações tributárias e de transparência, e como a LGPD trata a lista
+   pública de apoiadores. Fontes: https://www.bcb.gov.br/estabilidadefinanceira/pix ·
+   LGPD https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709.htm ·
+   Marco Civil https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2014/lei/l12965.htm ·
+   ANPD https://www.gov.br/anpd/pt-br
+
+## Formato da resposta
+- Uma seção por item (1–8): resposta direta · evidência citada (URL + data de acesso/publicação) · risco ·
+  quais features muda e como.
+- Tabela final: feature F1–F10 · viável? (sim / sim com ressalva / não) · motivo · fonte principal.
+- Listas: (a) features bloqueadas ou inviáveis; (b) features mais baratas ou fáceis do que o previsto;
+  (c) as 3 perguntas que continuam abertas.
+Não é parecer jurídico: indique onde é preciso advogado. Separe FATO (com fonte) de INFERÊNCIA.
 ```
 
-### Prompt 3 — Como construir aqui (agente com acesso ao repo, modo design)
+### Prompt 3 — Como construir cada feature no Vox (especificação técnica)
 
 ```text
-Para cada feature F1–F10 de docs/brainstorm-autossustento-10-features-2026-11.md (use as conclusões da pesquisa
-externa do Prompt 2 se estiverem disponíveis; descarte ou adapte o que ela marcou como inviável), escreva uma
-mini-spec de implementação no Vox, respeitando as regras do projeto:
-- JS vanilla, ES modules, sem build e sem nova dependência de runtime sem ADR;
-- limites de docs/HARDENING.md (LLOC ≤ 30 por método, nesting ≤ 4, complexidade cognitiva ≤ 15),
-  conferidos com npm run audit:complexity;
-- bump de CACHE_NAME e SHELL_ASSETS em client/sw.js quando o shell mudar;
-- mutex de um agente por arquivo (docs/metodo-agentes-mutex-e-revisor.md);
-- AGPL-3.0-or-later; LGPD e COMPLIANCE-BR.md; o Vox não custodia dinheiro nem vende alcance;
-- copy honesta: nada descrito como pronto antes de estar no ar.
+Responda em português do Brasil. Você é um arquiteto de software sênior especialista em PWA, WebRTC e
+protocolos P2P. Leia o código e os documentos públicos indicados abaixo e escreva especificações de
+implementação. Não escreva o código completo; escreva specs que um desenvolvedor ou agente consiga executar.
+Se você tiver os relatórios das pesquisas anteriores (diagnóstico e viabilidade), use as conclusões deles e
+descarte ou adapte as features marcadas como inviáveis.
 
-Cada spec deve ter: objetivo em 1 frase; módulos existentes a reaproveitar (caminhos exatos em client/js/);
-arquivos novos e alterados; formato de mensagem/tag (App-Name: vox-brasil, Type: …) ou de gossip; fluxo de UI
-em etapas no padrão de app/compose-stepper.js e render/compose-steps.js; casos de teste em tests/*.test.js
-(e relay/test_*.py, se tocar o relay); flag de rollout e default; métrica honesta de sucesso, local e sem
-telemetria; riscos e plano de reversão; esforço P/M/G.
+## Contexto e regras do projeto Vox (github.com/yurikayel/vox)
+- PWA em JavaScript puro, ES modules, SEM build e SEM framework; nenhuma dependência de runtime nova sem ADR.
+- Limites de complexidade por função: LLOC ≤ 30, aninhamento ≤ 4, complexidade cognitiva ≤ 15
+  (auditados por ESLint em CI).
+- Service Worker com precache: todo módulo novo entra em SHELL_ASSETS e exige bump de CACHE_NAME.
+- Testes: node:test em tests/*.test.js (com mocks de navegador em tests/setup.js); relay Python com unittest.
+- Fluxos de UI em etapas ("uma decisão por tela") usando o componente genérico de etapas já existente.
+- Transações públicas usam a tag App-Name: vox-brasil e uma tag Type; mensagens de malha são gossip
+  assinado (GOSSIP, UPDATE, DELETE, WANT, BLOB, PROFILE_CARD, CACHE_MANIFEST).
+- Princípios: sem custódia de dinheiro, sem alcance pago, sem telemetria de terceiros, LGPD, copy honesta.
+- Fato importante: o upload grátis do Turbo tem cota (~10 MiB por carteira/IP, maxItemBytes 107520,
+  segundo https://upload.ardrive.io/info em 2026-11-07). Planeje para gastar pouco permaweb.
+- Edição por agentes de IA: um agente por arquivo por vez, então a divisão em lotes não pode pôr dois
+  lotes no mesmo arquivo.
 
-Termine com: (1) a sequência recomendada e o porquê, considerando as dependências entre features;
-(2) a divisão em lotes para agentes paralelos sem dois agentes no mesmo arquivo;
-(3) os rascunhos de ADR necessários (título + decisão em 3 linhas);
-(4) as linhas a acrescentar em docs/ROADMAP.md (ID, tipo de DoD, evidência esperada).
-Não edite arquivos; entregue a spec como texto.
+## Documentos (leia antes)
+- Features F1–F10: https://raw.githubusercontent.com/yurikayel/vox/main/docs/brainstorm-autossustento-10-features-2026-11.md
+- Catálogo do que existe: https://raw.githubusercontent.com/yurikayel/vox/main/docs/FEATURES.md
+- Arquitetura (protocolo e tags): https://raw.githubusercontent.com/yurikayel/vox/main/ARCHITECTURE.md
+- Arquitetura (camadas do cliente): https://raw.githubusercontent.com/yurikayel/vox/main/docs/ARCHITECTURE.md
+- Limites de complexidade: https://raw.githubusercontent.com/yurikayel/vox/main/docs/HARDENING.md
+- Testes e CI: https://raw.githubusercontent.com/yurikayel/vox/main/docs/TESTES.md
+- Como contribuir: https://raw.githubusercontent.com/yurikayel/vox/main/CONTRIBUTING.md
+- Contrato legislativo LCP (para F9): https://raw.githubusercontent.com/yurikayel/vox/main/docs/brainstorm-sinergia-tramitado-vox-2026-11.md
+- Conformidade Brasil (para F4): https://raw.githubusercontent.com/yurikayel/vox/main/COMPLIANCE-BR.md
+- Índice de decisões (ADRs): https://raw.githubusercontent.com/yurikayel/vox/main/docs/adr/README.md
+
+## Código a reaproveitar (prefixo de URL — acrescente o caminho do arquivo; o prefixo sozinho não abre: https://raw.githubusercontent.com/yurikayel/vox/main/client/js/)
+- F1: nostr-signaling.js, webrtc-peer.js, ../config/signaling.json
+- F2: airgap-webrtc.js, qr-url.js
+- F3: peers.js, posse-dispatch.js, share.js
+- F4: brcode.js, pix-key.js, perma-notary.js
+- F5: chunked-transfer.js, media-blob.js, upload.js, peers-blob-affinity.js
+- F6: seeder-guardian.js, storage-persistence.js, voxels.js, ../sw.js
+- F7: bridging-rank.js, civic-post.js, moderation.js
+- F8: civic-credential.js, identity-link.js, governance.js
+- F9: frames.js, open-frames-host.js
+- F10: story-card.js, share.js
+- Componente de etapas: app/compose-stepper.js, render/compose-steps.js
+- Rotas: app/route-parse.js
+(Exemplo de URL completa: https://raw.githubusercontent.com/yurikayel/vox/main/client/js/airgap-webrtc.js)
+
+## Para cada feature F1–F10, entregue
+1. Objetivo em 1 frase e o problema de sustentabilidade que resolve.
+2. Módulos existentes a reaproveitar (caminhos exatos) e o que já fazem hoje (cite o que leu no código).
+3. Arquivos novos e alterados.
+4. Formato de dados: tags (App-Name/Type/…) ou mensagem de gossip, com exemplo JSON.
+5. Fluxo de UI em etapas (rota, telas, textos honestos para o usuário).
+6. Casos de teste (nome do arquivo em tests/ e o que cada caso verifica).
+7. Flag de rollout e valor padrão; métrica honesta de sucesso (local, sem telemetria).
+8. Riscos (segurança, privacidade, abuso, custo) e plano de reversão.
+9. Esforço P/M/G.
+
+## Termine com
+- Sequência recomendada de implementação e o porquê (dependências entre features).
+- Divisão em lotes paralelos sem dois lotes no mesmo arquivo.
+- Rascunhos de ADR necessários (título + decisão em 3 linhas cada).
+- Linhas novas para o ROADMAP no formato: ID · tipo (doc/code/ops-humano) · item · evidência esperada.
+Cite trechos de código pelo caminho do arquivo. Quando não conseguir ler um arquivo, diga qual.
 ```
