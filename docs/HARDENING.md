@@ -1,6 +1,6 @@
 # Code hardening — Vox
 
-Métricas alinhadas ao perfil global em `~/.gemini/config/AGENTS.md`.
+**Fonte única** dos limites de complexidade do Vox (AGENTS.md, CONTRIBUTING e DEV apontam para cá). Auditoria: `npm run audit:complexity` ([ADR-007](./adr/007-zero-complexity-monolith-decomposition.md)).
 
 ## Thresholds
 

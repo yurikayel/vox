@@ -1,5 +1,7 @@
 # 🇧🇷 Vox — Arquitetura de Crescimento Autônomo, Infraestrutura Participativa e Blindagem Regulatória
 
+> **Não substitui o [ROADMAP.md](./ROADMAP.md)** — prioridades e caixas `[ ]` vivem lá ([ADR-017](./adr/017-consolidacao-roadmap-unico.md)); este documento explica o *porquê*.
+
 > **Documento Estratégico & Arquitetural**  
 > **Status:** Canônico  
 > **Data:** 25 de Outubro de 2026  

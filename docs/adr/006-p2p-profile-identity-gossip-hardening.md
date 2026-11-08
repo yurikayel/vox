@@ -1,5 +1,7 @@
 # ADR-006: Hardening do Protocolo de Identidade P2P, WebRTC e Cache de Respostas
 
+> **Nota (2026-11):** o nó Deno Deploy citado abaixo está **pausado** (organização suspensa). O hardening descrito continua valendo para `relay/signaling.py`; `relay/deno-signaling.js` fica no repo para reativação. O `CACHE_NAME` citado é o da época; o atual fica em `client/sw.js` / [release-metadata.json](../release-metadata.json).
+
 **Status:** accepted · **V-HARDENING**
 
 ## Contexto

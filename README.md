@@ -4,8 +4,8 @@
 [![Identity](https://img.shields.io/badge/Identity-WebCrypto%20P--256-blueviolet.svg)](./client/js/local-account.js)
 [![Storage](https://img.shields.io/badge/Storage-Arweave%20Permaweb-black.svg)](https://arweave.org)
 [![License: AGPL v3](https://img.shields.io/badge/License-GNU%20AGPLv3-crimson.svg)](./LICENSE)
-[![Tests](https://img.shields.io/badge/Tests-800%20passing%20(717%20JS%20%2B%2083%20Py)-brightgreen.svg)](./tests)
-[![Service Worker](https://img.shields.io/badge/SW-v7.20--real--network--audio--video--upload-informational.svg)](./client/sw.js)
+[![Tests](https://img.shields.io/badge/tests-847%20passing-success.svg)](./docs/TESTES.md)
+[![Service Worker](https://img.shields.io/badge/SW-v7.32--real--network--audio--video--upload-informational.svg)](./client/sw.js)
 
 O Vox é um projeto cívico em construção para ampliar a participação popular e a autonomia das comunidades na vida digital. Sua ambição é ser um bem comum aberto: o projeto deve permanecer transparente, copiável, modificável e maior que qualquer fundador, mantenedor, empresa ou plataforma.
 
@@ -17,7 +17,8 @@ O cliente é um PWA local-first. Identidade e chaves são criadas no aparelho; p
 > 🌐 **Aplicação Web (PWA Oficial):** [https://yurikayel.github.io/vox/](https://yurikayel.github.io/vox/)  
 > 🧪 **Guia para Testadores:** [#/ajuda/teste](https://yurikayel.github.io/vox/#/ajuda/teste)  
 > 📚 **Índice Mestre de Documentação:** [docs/README.md](./docs/README.md)  
-> 📋 **Plano Mestre & Checklist Vivo:** [dossiê N=25 §3.6](./docs/dossie-geral-inventario-master-breakdown-2026-11.md#36-checklist-master-vivo-n25)
+> 🗺️ **Roadmap & Checklist Vivo:** [docs/ROADMAP.md](./docs/ROADMAP.md) ([ADR-017](./docs/adr/017-consolidacao-roadmap-unico.md))  
+> 🧭 **Catálogo de funcionalidades:** [docs/FEATURES.md](./docs/FEATURES.md) · **Infra e custos:** [docs/INFRA-CUSTOS.md](./docs/INFRA-CUSTOS.md) · **Mudanças:** [CHANGELOG.md](./CHANGELOG.md)
 
 ---
 
@@ -72,7 +73,15 @@ Redes centralizadas, instâncias federadas e protocolos locais têm custos, vant
 
 ## 📊 Releases e validação
 
-O histórico Git, a configuração de CI e [docs/release-metadata.json](./docs/release-metadata.json) são as referências para releases. Os metadados descrevem uma release registrada; não representam automaticamente o branch de trabalho, alterações locais ou o estado do deploy neste instante. Consulte os resultados da CI associados ao commit antes de tratar um build como validado.
+| Campo | Valor |
+|---|---|
+| **Commit SHA** | `9271b04` |
+| **Suíte de Testes** | **847** (`758` JS + `89` Python) |
+| **Service Worker** | `vox-pwa-v7.32-real-network-audio-video-upload` |
+
+*Tabela regenerada por `npm run release-line` (roda a suíte e grava [docs/release-metadata.json](./docs/release-metadata.json)). Nenhum outro documento deve repetir esses números.*
+
+O histórico Git, a configuração de CI, o [CHANGELOG.md](./CHANGELOG.md) e [docs/release-metadata.json](./docs/release-metadata.json) são as referências para releases. Os metadados descrevem uma release registrada; não representam automaticamente o branch de trabalho, alterações locais ou o estado do deploy neste instante. Consulte os resultados da CI associados ao commit antes de tratar um build como validado.
 
 O Service Worker pode manter uma versão anterior do cliente em cache. Depois de uma atualização, recarregue a página; se a versão não mudar, faça uma atualização forçada (`Ctrl+Shift+R`).
 
@@ -133,6 +142,22 @@ Os objetos públicos usam transações com tags semânticas. O cliente também m
 
 ---
 
+## 🆕 Novidades de novembro/2026
+
+Resumo do que entrou no cliente em nov/2026 (detalhes em [CHANGELOG.md](./CHANGELOG.md) e [client/DEV.md §42–§44](./client/DEV.md#42-postar-em-etapas--social-ou-cívico)):
+
+* **Design system Sovereign Agora ([ADR-016](./docs/adr/016-design-system-sovereign-agora-e-democracia-direta.md)):** paleta teal/bronze/esmeralda/basalto, tipografia Domine + Work Sans, variante clara, feed sem cartões e novo favicon/avatar oficial com o **V tricolor** (avatares em squircle).
+* **Feed Social e Cívico:** a Ágora divide-se em `#/` (Social) e `#/?feed=civic` (Cívico). Um post só é cívico com tag cívica (Pauta, Ideia, Debate, Enquete) **e** requisitos mínimos (título 8+, argumento 40+, autor Vox assinado); posts cívicos recebem posicionamento assinado (`civic-vote`, 1 por pessoa) ou enquete com apuração parcial.
+* **Postar estilo Instagram:** a tela Postar começa por **Social** (foto, vídeo, áudio, texto) ou **Cívico** (pauta, ideia, debate, enquete, em etapas). Atalhos para feira, comunidade e proposta de regra.
+* **Fluxos em etapas (uma decisão por tela):** onboarding (boas-vindas → como entrar → método → pacto), compositor, nova proposta, nova comunidade e nova oferta da Feira.
+* **Enquetes e voto com confirmação:** construtor de 2 a 6 opções; voto em pauta com confirmação em 2 etapas antes de assinar.
+* **Assistentes:** rede (`#/settings/network/guia`), Senha Soberana (`#/backup`) e carteira (`#/wallet/guia`).
+* **Contas vinculadas por login (`#/settings/linked-accounts`):** uma linha por rede e um botão *Conectar*. Bluesky por OAuth do AT Protocol 100% no navegador; Facebook só identidade; X, Threads, GitHub, TikTok e Instagram profissional via `/oauth/exchange` do relay quando o deploy está configurado ([docs/login-social.md](./docs/login-social.md)). Onboarding importa nome e foto (Kwai: "em breve", sem API pública).
+* **Mensagens:** contador de não lidas no menu e no topo.
+* **Infra:** Deno Deploy **pausado** (organização suspensa). A sinalização pública hoje é **um** nó Render (`wss://vox-sentinel.onrender.com`) mais o nó local; ver riscos em [docs/INFRA-CUSTOS.md](./docs/INFRA-CUSTOS.md).
+
+---
+
 ## 🛠️ Capacidades implementadas e laboratório
 
 O estado varia entre cliente, navegador e versão. A lista abaixo não é uma certificação de segurança, disponibilidade contínua ou funcionamento entre quaisquer dois hosts. Consulte a documentação vinculada e os testes do commit antes de depender de um recurso.
@@ -144,12 +169,12 @@ O estado varia entre cliente, navegador e versão. A lista abaixo não é uma ce
 * **Diretório Unificado de Pessoas (`#/people`) & Onboarding Direto:** Lista determinística completa de todas as contas cadastradas na rede com filtro em tempo real, entrada direta de nome/apelido no onboarding (sem obrigatoriedade de OAuth) e sincronização automática via `PROFILE_CARD` e `zero-central-memory`.
 * **Nó Local `zero-central-memory` Modo 3 (`VoxPopuli-ZeroMemory.exe` / `central_memory.py`):** Persistência local em disco com journal append-only (`< 0,2 ms`), snapshot atômico em lote a cada 2s, delta sync incremental (`clientRevision`/`since`), túnel HTTPS Cloudflare integrado e descoberta zero-config via *Signaling Beacon* (`vx_zero_memory_beacon`).
 * **Disparo Multi-Rede Assistido (`EXPLODE!`):** Publicação simultânea assistida de tópicos para X/Twitter, Bluesky, Threads, WhatsApp e Telegram, acompanhada de userscript opcional (`tools/auto-explode/vox-auto-explode.user.js`) para confirmação em 1 toque.
-* **Chrome Compacto de Foto & Interações Sociais:** Header enxuto sobre mídia, **Notas de Perfil 24h** (`profile-note.js`), **Republicar** com citação honesta sem impulsionamento (`repost-draft.js` / `repost-cite.js`), aba **Salvos** (bookmarks locais) e **Marcação Manual em Fotos** por coordenada (`x%/y%` em `photo-tag-pins.js`, estritamente sem reconhecimento facial).
-* **Cartuchos Cívicos Webxdc & Cintura Fina ([ADR-012](./docs/adr/012-soberania-digital-cintura-fina-cartuchos-webxdc.md)):** Execução de mini-apps em `iframe` com sandbox estrito (CSP rede-zero) sincronizados por CRDT determinístico (`webxdc-crdt.js`) sobre o envelope canônico `vox-identity.js`.
+* **Chrome Compacto de Foto & Interações Sociais:** Header enxuto sobre mídia, **Notas de Perfil 24h** (`profile-note.js`), **Republicar** com citação honesta sem impulsionamento (`repost-draft.js` / `render/repost-cite.js`), aba **Salvos** (bookmarks locais) e **Marcação Manual em Fotos** por coordenada (`x%/y%` em `render/photo-tag-pins.js`, estritamente sem reconhecimento facial).
+* **Cartuchos Cívicos Webxdc & Cintura Fina ([ADR-012](./docs/adr/012-soberania-digital-cintura-fina-cartuchos-webxdc.md)) — laboratório:** runtime de mini-apps em `iframe` com sandbox estrito (CSP rede-zero) e CRDT determinístico (`webxdc-crdt.js`) sobre o envelope `vox-identity.js`. **Implementado e testado, mas ainda não carregado pela interface** (ver [docs/FEATURES.md](./docs/FEATURES.md)).
 * **Classificados / Feira Comunitária:** Ofertas locais assinadas com gossip de manifesto de cache (`CACHE_MANIFEST`), prioridade `WANT` e suporte a retratação na malha.
 * **Mensagens Diretas E2E (WebRTC + Inbox TTL):** Criptografia ponta-a-ponta no navegador (`ECDH P-256` + `AES-GCM-256`). Mensagens privadas trafegam fora do permaweb; quando o par está offline, podem passar pelo relay transitório, que usa TTL padrão de 72 horas.
 * **Cofre Multi-Identidade & Exportação (`.voxid`):** Alternância rápida entre múltiplas contas locais (`vox-accounts-vault-v1`) e export/import de credenciais com suporte a envelope criptografado com senha mestra (`.voxid` via PBKDF2 + AES-GCM-256).
-* **Wipe Local de Emergência (T05):** Purga imediata de chaves locais, `localStorage`, caches e bases IndexedDB no aparelho (`local-wipe.js`), com aviso transparente sobre dados já ancorados no permaweb ou replicados em outros pares.
+* **Wipe Local de Emergência (T05):** Purga imediata de chaves locais, `localStorage`, caches e bases IndexedDB no aparelho (`wipeLocalAccount()` em `local-account.js`), com aviso transparente sobre dados já ancorados no permaweb ou replicados em outros pares.
 * **Quarentena pessoal de conteúdo:** Marcador local para ocultar publicações e evitar seu compartilhamento neste dispositivo; não remove conteúdo da rede nem impõe uma decisão a outras pessoas.
 * **QR Code Canônico Vanilla (`qr-url.js`):** Gerador nativo de QR codes para links de tópicos, comunidades e convites, sem dependências externas de npm.
 * **Laboratório M-de-N (`#/labs/mofn`):** Especificação ([ADR-005](./docs/adr/005-collective-profile-m-of-n.md)) e simulador experimental de multi-assinatura; não é o controle de governança do repositório nem uma carteira de produção.
@@ -175,7 +200,7 @@ Na raiz do repositório:
 ```bash
 npm test
 ```
-Executa as suítes atuais de JavaScript (700 testes) e Python (74 testes), totalizando **774 testes automatizados**.
+Executa a suíte JavaScript (`node:test`) e a do relay Python (`unittest`). Contagem atual na tabela de release acima; guia completo em [docs/TESTES.md](./docs/TESTES.md).
 
 ### 3. Rodar o Relay / Memória Central Doméstica (Opcional)
 
@@ -183,8 +208,10 @@ Para operadores que desejam apoiar a malha como *stewards* ou sustentar persist�
 
 ```bash
 cd relay
-python server.py
+python server.py      # relay completo (:3920): cache, inbox, mirror, memória, OAuth
 ```
+
+`npm start` sobe só a **sinalização** WebRTC (`relay/signaling.py`, :3921) — é o que o Dockerfile e o nó público rodam. Endpoints: [docs/relay-api.md](./docs/relay-api.md).
 Ou, no Windows, execute **`dist/VoxPopuli-ZeroMemory.exe`** (ícone na bandeja do sistema, escutando em `127.0.0.1:3921` e `127.0.0.1:3920` com persistência em `%LOCALAPPDATA%\VoxPopuli\NodeZero\central_memory`).
 
 ---
@@ -221,8 +248,11 @@ Em conformidade com a auditoria de honestidade cívica ([docs/honest-copy-audit-
 | Documento | Foco & Finalidade |
 |:---|:---|
 | **[docs/README.md](./docs/README.md)** | **Índice Mestre:** Ponto de partida único para desenvolvedores e revisores. |
-| **[docs/dossie-geral-inventario-master-breakdown-2026-11.md](./docs/dossie-geral-inventario-master-breakdown-2026-11.md)** | **Plano Mestre N=25:** Único checklist vivo `[ ]` e Definition of Done global. |
-| **[ARCHITECTURE.md](./ARCHITECTURE.md)** | Topologia técnica, tags GraphQL, linhagem e protocolos de dados. |
+| **[docs/ROADMAP.md](./docs/ROADMAP.md)** | **Roadmap e único checklist vivo** `[ ]` (substitui o dossiê N=25 — [ADR-017](./docs/adr/017-consolidacao-roadmap-unico.md)). |
+| **[docs/FEATURES.md](./docs/FEATURES.md)** | Catálogo de funcionalidades: rota, módulo, status real e testes. |
+| **[docs/INFRA-CUSTOS.md](./docs/INFRA-CUSTOS.md)** | Hosts, deploys, secrets, limites de free tier, SPOFs e custos. |
+| **[CONTRIBUTING.md](./CONTRIBUTING.md)** · **[CHANGELOG.md](./CHANGELOG.md)** | Como contribuir em 5 minutos · histórico de mudanças. |
+| **[ARCHITECTURE.md](./ARCHITECTURE.md)** | Protocolo e dados: tags GraphQL, linhagem, mensagens. Camadas do cliente em [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md). |
 | **[GOVERNANCE.md](./GOVERNANCE.md)** | Moderação e deliberação dentro das comunidades Vox; não define a governança do repositório. |
 | **[COMPLIANCE-BR.md](./COMPLIANCE-BR.md)** | Adequação regulatória: Marco Civil da Internet (Art. 19), LGPD e minimização. |
 | **[IDENTITY.md](./IDENTITY.md)** | Criptografia P-256 WebCrypto, gestão de chaves e carteiras Arweave. |
@@ -247,6 +277,10 @@ Em conformidade com a auditoria de honestidade cívica ([docs/honest-copy-audit-
 * **[ADR-013](./docs/adr/013-sistema-voxels-e-conquistas-civicas.md):** Sistema de Voxels e Conquistas Cívicas.
 * **[ADR-014](./docs/adr/014-zero-knowledge-vault-recuperacao-soberana.md):** Zero-Knowledge Vault e Recuperação Soberana Multi-dispositivo.
 * **[ADR-015](./docs/adr/015-licenciamento-agplv3-e-governanca-de-bem-comum.md):** Licenciamento AGPL-3.0-or-later e Governança de Bem Comum.
+* **[ADR-016](./docs/adr/016-design-system-sovereign-agora-e-democracia-direta.md):** Design System Sovereign Agora e Democracia Direta.
+* **[ADR-017](./docs/adr/017-consolidacao-roadmap-unico.md):** Consolidação do planejamento — ROADMAP único.
+
+Índice com status: [docs/adr/README.md](./docs/adr/README.md).
 
 ---
 
@@ -267,7 +301,7 @@ O compromisso do Vox é permanecer aberto: código, protocolos, documentação e
 * Qualquer pessoa pode ler o código e a documentação, testar, relatar problemas e propor mudanças por issues e pull requests públicos no [GitHub](https://github.com/yurikayel/vox).
 * O histórico de revisão deve registrar motivação, evidências, testes e limitações. Mudanças que alterem protocolos ou regras precisam de explicação pública e tempo para contestação.
 * A revisão do mantenedor é hoje o caminho de integração; uma proposta pública não garante merge. Enquanto a administração permanecer concentrada, isso deve ser reconhecido como limite real da participação, não descrito como governança popular já alcançada.
-* O guia [CONTRIBUTING-DOCS.md](./docs/CONTRIBUTING-DOCS.md) cobre documentação e mutex de edição; diretrizes gerais de código residem em [`CONTRIBUTORS.md`](./CONTRIBUTORS.md).
+* Comece por [CONTRIBUTING.md](./CONTRIBUTING.md) (setup, branch → PR para `main`, testes). O guia [CONTRIBUTING-DOCS.md](./docs/CONTRIBUTING-DOCS.md) cobre documentação e mutex de edição; DCO e lista de contribuidores em [`CONTRIBUTORS.md`](./CONTRIBUTORS.md).
 
 ### Trabalho necessário para que o projeto seja maior que qualquer indivíduo
 
