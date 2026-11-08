@@ -146,124 +146,124 @@ export const UF_ROUTE_IDS = UF_STEREOTYPE_SEEDS.map((s) => `vx_demo_${s.uf.toLow
 /** Mídia de post por UF — tema cultural/regional (nunca retrato de avatar). */
 export const postMediaByUf = {
   ac: {
-    postImageUrl: "https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?w=800&q=80",
+    postImageUrl: "images/welcome/artista-rua.jpg",
     postAlt: "Floresta tropical — calor de porteira acreana (demo)",
   },
   al: {
-    postImageUrl: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80",
+    postImageUrl: "images/welcome/brinde-mesa.jpg",
     postAlt: "Praia e litoral — forró e mar alagoano (demo)",
   },
   ap: {
-    postImageUrl: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&q=80",
+    postImageUrl: "images/welcome/maos-juntas.jpg",
     postAlt: "Vegetação de fronteira norte — Amapá (demo)",
   },
   am: {
-    postImageUrl: "https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=800&q=80",
+    postImageUrl: "images/welcome/riso-celular.jpg",
     postAlt: "Rio e floresta — memória amazonense (demo)",
   },
   ba: {
-    postImageUrl: "https://images.unsplash.com/photo-1545389336-cf090694435e?w=800&q=80",
+    postImageUrl: "images/welcome/roda-amigos.jpg",
     postAlt: "Tambor e festa — axé e samba de roda baiano (demo)",
   },
   ce: {
-    postImageUrl: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=800&q=80",
+    postImageUrl: "images/welcome/turma-notebook.jpg",
     postAlt: "Sol forte do sertão — humor e jerimum cearense (demo)",
   },
   df: {
-    postImageUrl: "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?w=800&q=80",
+    postImageUrl: "images/posts/tour-comunidades.jpg",
     postAlt: "Horizonte urbano — Plano Piloto e candango (demo)",
   },
   es: {
-    postImageUrl: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80",
+    postImageUrl: "images/posts/tour-rede.jpg",
     postAlt: "Montanhas e mar — calma capixaba (demo)",
   },
   go: {
-    postImageUrl: "https://images.unsplash.com/photo-1501004318641-b39e6451bec6?w=800&q=80",
+    postImageUrl: "images/revolucao/assembleia_popular.jpg",
     postAlt: "Cerrado e campo — pequi e festa goiana (demo)",
   },
   ma: {
-    postImageUrl: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&q=80",
+    postImageUrl: "images/revolucao/no_comunitario_popular.jpg",
     postAlt: "Tambores e festa popular — bumba e cultura maranhense (demo)",
   },
   mt: {
-    postImageUrl: "https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=800&q=80",
+    postImageUrl: "images/welcome/artista-rua.jpg",
     postAlt: "Pôr do sol no campo — Pantanal mato-grossense (demo)",
   },
   ms: {
-    postImageUrl: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=800&q=80",
+    postImageUrl: "images/welcome/brinde-mesa.jpg",
     postAlt: "Paisagem de planície — tereré e fronteira sul-mato-grossense (demo)",
   },
   mg: {
-    postImageUrl: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&q=80",
+    postImageUrl: "images/welcome/maos-juntas.jpg",
     postAlt: "Café coado — prosa mineira sem pressa (demo)",
   },
   pa: {
-    postImageUrl: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&q=80",
+    postImageUrl: "images/welcome/riso-celular.jpg",
     postAlt: "Barco no estuário — açaí e Ver-o-Peso paraense (demo)",
   },
   pb: {
-    postImageUrl: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80",
+    postImageUrl: "images/welcome/roda-amigos.jpg",
     postAlt: "Sertão e litoral — forró paraibano (demo)",
   },
   pr: {
-    postImageUrl: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&q=80",
+    postImageUrl: "images/welcome/turma-notebook.jpg",
     postAlt: "Mata de pinheiros — chimarrão paranaense (demo)",
   },
   pe: {
-    postImageUrl: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&q=80",
+    postImageUrl: "images/posts/tour-comunidades.jpg",
     postAlt: "Cores de frevo e maracatu — criatividade pernambucana (demo)",
   },
   pi: {
-    postImageUrl: "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800&q=80",
+    postImageUrl: "images/posts/tour-rede.jpg",
     postAlt: "Estrada no sertão — persistência piauiense (demo)",
   },
   rj: {
-    postImageUrl: "https://images.unsplash.com/photo-1483729558449-99ef09a8c325?w=800&q=80",
+    postImageUrl: "images/revolucao/assembleia_popular.jpg",
     postAlt: "Orla e morros — samba carioca (demo)",
   },
   rn: {
-    postImageUrl: "https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=800&q=80",
+    postImageUrl: "images/revolucao/no_comunitario_popular.jpg",
     postAlt: "Dunas e vento — litoral potiguar (demo)",
   },
   rs: {
-    postImageUrl: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80",
+    postImageUrl: "images/welcome/artista-rua.jpg",
     postAlt: "Campanha gaúcha — chimarrão e tradição (demo)",
   },
   ro: {
-    postImageUrl: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&q=80",
+    postImageUrl: "images/welcome/brinde-mesa.jpg",
     postAlt: "Estrada e café — comunidade rondoniense (demo)",
   },
   rr: {
-    postImageUrl: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80",
+    postImageUrl: "images/welcome/maos-juntas.jpg",
     postAlt: "Montanhas do norte — acolhimento roraimense (demo)",
   },
   sc: {
-    postImageUrl: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80",
+    postImageUrl: "images/welcome/riso-celular.jpg",
     postAlt: "Costa organizada — praia catarinense (demo)",
   },
   se: {
-    postImageUrl: "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=800&q=80",
+    postImageUrl: "images/welcome/roda-amigos.jpg",
     postAlt: "Mesinha com frutos do mar — litoral sergipano (demo)",
   },
   sp: {
-    postImageUrl: "https://images.unsplash.com/photo-1514565131-fce0801e5785?w=800&q=80",
+    postImageUrl: "images/welcome/turma-notebook.jpg",
     postAlt: "Skyline urbano — metrô e pluralidade paulistana (demo)",
   },
   to: {
-    postImageUrl: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=800&q=80",
+    postImageUrl: "images/posts/tour-comunidades.jpg",
     postAlt: "Nascer do sol no cerrado — Jalapão tocantinense (demo)",
   },
 };
 
 const POST_MEDIA_ALT_URLS = [
-  "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80",
-  "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&q=80",
-  "https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=800&q=80",
-  "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=800&q=80",
-  "https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=800&q=80",
-  "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&q=80",
-  "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=800&q=80",
-  "https://images.unsplash.com/photo-1483729558449-99ef09a8c325?w=800&q=80",
+  "images/posts/tour-rede.jpg",
+  "images/revolucao/assembleia_popular.jpg",
+  "images/revolucao/no_comunitario_popular.jpg",
+  "images/welcome/artista-rua.jpg",
+  "images/welcome/brinde-mesa.jpg",
+  "images/welcome/maos-juntas.jpg",
+  "images/welcome/riso-celular.jpg",
+  "images/welcome/roda-amigos.jpg",
 ];
 
 function ensureTriplePostMedia() {
