@@ -1,6 +1,7 @@
 import { getStoredJwk, ensureWallet } from "./wallet.js";
 import { createSignedDataItem } from "./ans104.js";
 import { assertFeatureEnabled } from "./feature-flags.js";
+import { toHonestError } from "./honest-errors.js";
 
 export const TURBO_ENDPOINTS = Object.freeze([
   "https://upload.ardrive.io/v1/tx",
@@ -53,6 +54,7 @@ export async function uploadToTurbo(itemBytes) {
         return { ok: true, status: res.status, body };
       }
       lastErr = new Error(`HTTP ${res.status}`);
+      lastErr.status = res.status;
     } catch (e) {
       lastErr = e;
     }
@@ -67,7 +69,9 @@ async function postViaL1(payload, tags, jwk) {
   await arweave.transactions.sign(tx, jwk);
   const response = await arweave.transactions.post(tx);
   if (response.status !== 200 && response.status !== 208) {
-    throw new Error(`Falha no envio da transação (HTTP ${response.status})`);
+    const err = new Error(`Falha no envio da transação (HTTP ${response.status})`);
+    err.status = response.status;
+    throw toHonestError(err);
   }
   return { success: true, id: tx.id, status: response.status, via: "arweave-l1" };
 }
@@ -98,7 +102,7 @@ export async function postData(dataObj, tags = [], options = {}) {
       };
     }
     if (options.fallbackL1 === false) {
-      throw new Error(`Falha no upload Turbo: ${turbo.error?.message || "erro"}`);
+      throw toHonestError(turbo.error || new Error("Falha no upload Turbo"));
     }
   }
 
@@ -116,7 +120,7 @@ export async function postBinary(rawBytes, tags = [], options = {}) {
   const item = await createSignedDataItem(rawBytes, tags, jwk);
   const turbo = await uploadToTurbo(item.bytes);
   if (!turbo.ok) {
-    throw new Error(`Falha no upload binário Turbo: ${turbo.error?.message || "indisponível"}`);
+    throw toHonestError(turbo.error || new Error("Falha no upload binário Turbo: indisponível"));
   }
   return {
     success: true,
