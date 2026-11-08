@@ -6,7 +6,7 @@ root = pathlib.Path(SPECPATH).resolve().parents[1]
 
 datas = [
     (str(root / "client"), "client"),
-    (str(root / "tools" / "desktop-seeder-windows" / "vox.ico"), "."),
+    (str(root / "packaging" / "desktop-seeder-windows" / "vox.ico"), "."),
 ]
 datas += collect_data_files("webview")
 
@@ -18,7 +18,7 @@ hiddenimports = [
 hiddenimports += collect_submodules("webview")
 
 a = Analysis(
-    [str(root / "tools" / "desktop-seeder-windows" / "vox_desktop_app.py")],
+    [str(root / "packaging" / "desktop-seeder-windows" / "vox_desktop_app.py")],
     pathex=[str(root)],
     binaries=[],
     datas=datas,
@@ -42,6 +42,6 @@ exe = EXE(
     strip=False,
     upx=True,
     console=False,
-    icon=str(root / "tools" / "desktop-seeder-windows" / "vox.ico"),
-    version=str(root / "tools" / "desktop-seeder-windows" / "version_info.txt"),
+    icon=str(root / "packaging" / "desktop-seeder-windows" / "vox.ico"),
+    version=str(root / "packaging" / "desktop-seeder-windows" / "version_info.txt"),
 )

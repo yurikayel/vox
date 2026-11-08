@@ -231,16 +231,28 @@ export async function buildPeopleIndex() {
   return Array.from(map.values()).sort(comparePeopleEntries);
 }
 
+/**
+ * Pares da malha sem nome escolhido (só a chave `vx_…`) são visitantes de passagem ou contas
+ * temporárias: não entram na lista do diretório. Continuam achados pela busca por chave.
+ */
+export function hasChosenName(p) {
+  const name = String(p?.name || "").trim();
+  const id = String(p?.routeId || "");
+  return Boolean(name) && !id.startsWith(name) && !/^vx_/i.test(name);
+}
+
 export async function buildPeopleSections() {
   const all = await buildPeopleIndex();
   const contactsList = all.filter(
     (p) => p.source === "contact" || p.source === "system" || p.source === "self" || p.source === "vault",
   );
   const mesh = all.filter(
-    (p) => p.source === "mesh-author" || p.source === "mesh-card" || p.source === "route-direct",
+    (p) => (p.source === "mesh-author" || p.source === "mesh-card" || p.source === "route-direct") && hasChosenName(p),
   );
   const tour = all.filter((p) => p.source === "demo");
-  return { contacts: contactsList, mesh, tour, all };
+  const isMesh = (p) => p.source === "mesh-author" || p.source === "mesh-card" || p.source === "route-direct";
+  const listed = all.filter((p) => !isMesh(p) || hasChosenName(p));
+  return { contacts: contactsList, mesh, tour, all: listed };
 }
 
 export function recordPeopleSearchOk() {

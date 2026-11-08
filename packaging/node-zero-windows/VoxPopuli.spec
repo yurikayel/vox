@@ -2,8 +2,8 @@
 import pathlib
 
 root = pathlib.Path(SPECPATH).resolve().parents[1]
-node_zero_tools = root / "tools" / "node-zero-windows"
-icon_path = root / "tools" / "desktop-seeder-windows" / "vox.ico"
+node_zero_tools = root / "packaging" / "node-zero-windows"
+icon_path = root / "packaging" / "desktop-seeder-windows" / "vox.ico"
 
 a = Analysis(
     [str(node_zero_tools / "tray_app.py")],
