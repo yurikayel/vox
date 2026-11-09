@@ -6,6 +6,12 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Qualidade (Perfil Canônico v3.2)
+- **Limites que quebram o CI:** no `client/`, função com mais de 30 linhas, aninhamento > 4, complexidade > 15, `==` e variável sem uso são erro de ESLint (antes, só aviso e passo com `continue-on-error`). No Python, Ruff `F` (pyflakes) e `C901` (complexidade > 15) em `relay/`, `scripts/` e `packaging/`, com versão fixa (0.17.4); antes o ruff era opcional.
+- **Dívida medida e informada:** 18 funções JS com mais de 5 parâmetros, 27 arquivos com mais de 350 linhas, 25 testes com mais de 45 linhas (`npm run lint:all`), 7 funções Python com mais de 30 comandos. `docs/HARDENING.md` mostra, regra a regra, o que bloqueia de fato, a dívida e o alvo; complexidade cognitiva e CBO/LCOM aparecem como **não medidos**.
+- **Bug achado pelo pyflakes:** `save_vault()` da memória central chamava `_atomic_write`, que não existe; salvar cofre no relay estourava `NameError`. Corrigido, com teste que falha no código antigo. O `ruff --fix` também apagava o import que verifica o WebKit no cliente Linux; restaurado com `noqa`.
+- **Evidência e auditoria:** [docs/process/qualidade-e-evidencia.md](./docs/process/qualidade-e-evidencia.md) (PASS / FAIL / NOT RUN / BLOCKED, falso verde, determinismo, papéis sem modelo fixo), auditor só-leitura em `.agents/agents/vox-auditor.md`, template de PR com tabela de evidência, `CLAUDE.md` e `npm run validate`.
+
 ### Distribuição (PR #33)
 - **PM-45 binários pelo CI:** `Vox.exe`, `VoxPopuli.exe`, `vox.apk` e `vox-populi.apk` saem do workflow `release-binarios.yml` (runner do GitHub, a cada tag `v*`), com `SHA256SUMS` e atestação de origem (`gh attestation verify <arquivo> --repo yurikayel/vox`). A página de download e o README apontam para `releases/latest/download/…`, e os binários saíram do git (eram compilados numa máquina pessoal). PR que mexe em `android/` ou `packaging/` compila os quatro para provar que o build funciona. `android/build.ps1` aceita `VOX_JAVA_HOME` e `ANDROID_HOME`.
 

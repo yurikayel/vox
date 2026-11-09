@@ -29,4 +29,5 @@ LLOC ≤ 30 · Nesting ≤ 4 · Complexidade Cognitiva ≤ 15 — fonte única: 
 
 ## 6. Agente Principal do Antigravity
 - Operador Técnico: `.agents/agents/vox-operator.md`
+- Auditor independente (só leitura, veredito PASS / PASS_WITH_FINDINGS / BLOCK): `.agents/agents/vox-auditor.md`
 - Auditor Independente: perfil `antigravity-auditor` definido em `../AGENTS.md` (lobby `politica/`; sem arquivo dedicado aqui).

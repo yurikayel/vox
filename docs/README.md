@@ -52,6 +52,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 | Dependências e cadeia de suprimentos | [DEPENDENCIAS.md](./DEPENDENCIAS.md) |
 | Resposta a incidentes | [runbook-incidentes.md](./operations/runbook-incidentes.md) |
 | Mutex de agentes | [metodo-agentes-mutex-e-revisor.md](./process/metodo-agentes-mutex-e-revisor.md) |
+| Evidência de testes, falso verde e auditoria | [qualidade-e-evidencia.md](./process/qualidade-e-evidencia.md) |
 | Licença | [ADR-015](./adr/015-licenciamento-agplv3-e-governanca-de-bem-comum.md) · [licenca-e-contribuicoes.md](./legal/licenca-e-contribuicoes.md) |
 | Decisões de arquitetura | [adr/README.md](./adr/README.md) |
 | Tese de tração e preceitos | [direcionamento-crescimento-rede-2026-11.md](./strategy/direcionamento-crescimento-rede-2026-11.md) |
