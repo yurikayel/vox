@@ -6,6 +6,11 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Documentação (PR #31)
+- **Revisão de estado de 09/11 e backlog de próximas melhorias:** [brainstorm PM-01…PM-46](./docs/brainstorms/brainstorm-backlog-proximas-melhorias-2026-11.md) com o estado medido (peso da instalação, módulos órfãos, telas sem teste, chave em `localStorage`, `community_update` sem conferência de autor) e a ordem sugerida das próximas 10.
+- **LAN-20, binários:** [DEPENDENCIAS.md §6](./docs/DEPENDENCIAS.md#6-binários-no-repositório) lista os `.exe`, `.apk` e DLLs do repositório com SHA-256, e o teste de inventário quebra se um binário mudar sem atualizar a tabela. O `android/README.md` publicava um hash e um tamanho de outro build (corrigidos).
+- **NET-01 fechado com evidência:** o shell B (`vox-9df.pages.dev`) serve a v7.39, igual ao A; a tabela de espelhos estava em v7.16 e o runbook dizia que push não aciona o B (aciona).
+
 ### Rede e anti-spam (SW v7.39, PR #30)
 - **LAN-21 sinalização caída:** quando o servidor WebSocket desistiu de todos os nós e nenhum relay Nostr está aberto por mais de 5 s, o app avisa que a troca com outros aparelhos parou e que ler e escrever continuam; avisa também quando volta. Em `#/settings/network`, "Conectando a aparelhos próximos…" deixa de aparecer para sempre (`honest-errors.js` → `createSignalingHealth`, `nostr-transport.js` conta relays abertos).
 - **LAN-14 quarentena de chave nova e PoW leve:** ao criar uma comunidade, dá para pedir quarentena; posts de chave vista há menos de 24 h ficam recolhidos ("Ver mesmo assim"), a menos que tragam prova de trabalho de 14 bits, que o app calcula sozinho ao publicar (~1 s). Moderação vê tudo, com selo "Chave nova" (`new-key-guard.js`).

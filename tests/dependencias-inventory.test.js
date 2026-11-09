@@ -1,10 +1,12 @@
 /**
- * LAN-20 — o inventário em docs/DEPENDENCIAS.md cobre todo código de terceiros que o Vox carrega.
- * Só lê texto do repositório: não baixa nem executa nada.
+ * LAN-20 — o inventário em docs/DEPENDENCIAS.md cobre o código de terceiros que o Vox carrega,
+ * as ferramentas que o CI instala e os binários do repositório (com SHA-256).
+ * Só lê arquivos do repositório: não baixa nem executa nada.
  */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -60,6 +62,17 @@ test("LAN-20: actions dos workflows estão no inventário", () => {
   assert.deepEqual(missing(uses), []);
 });
 
+test("LAN-20: pacotes pip instalados nos workflows estão no inventário", () => {
+  const pkgs = [];
+  for (const file of walk(".github/workflows", ".yml")) {
+    for (const m of read(file).matchAll(/pip install ([^&\n]+)/g)) {
+      for (const spec of m[1].trim().split(/\s+/)) pkgs.push(spec.split(/[=<>]/)[0]);
+    }
+  }
+  assert.ok(pkgs.length > 0);
+  assert.deepEqual(missing(pkgs.map((p) => `\`${p}\``)), []);
+});
+
 test("LAN-20: imagens de contêiner estão no inventário", () => {
   const images = [];
   for (const m of read("relay/Dockerfile").matchAll(/^FROM\s+(\S+)/gm)) images.push(m[1]);
@@ -80,6 +93,22 @@ test("LAN-20: devDependencies e versões do lock estão no inventário", () => {
     const row = INVENTORY.split("\n").find((l) => l.startsWith(`| ${name} |`));
     assert.ok(row, `${name} sem linha no inventário`);
     assert.ok(row.includes(version), `${name}: inventário diz outra versão (lock: ${version})`);
+  }
+});
+
+test("LAN-20: todo binário do repositório tem linha com o SHA-256 atual", () => {
+  const BIN = /\.(apk|exe|dll|jar|aar|so|dylib|msi)$/i;
+  const found = [];
+  for (const dir of ["android", "client", "packaging", "relay", "dist"]) {
+    if (!existsSync(join(ROOT, dir))) continue;
+    found.push(...walk(dir, "").filter((f) => BIN.test(f)));
+  }
+  assert.ok(found.length > 0, "esperava achar os binários de client/downloads");
+  for (const file of found) {
+    const row = INVENTORY.split("\n").find((l) => l.startsWith(`| \`${file}\` |`));
+    assert.ok(row, `${file} sem linha na seção 6 de docs/DEPENDENCIAS.md`);
+    const sha = createHash("sha256").update(readFileSync(join(ROOT, file))).digest("hex");
+    assert.ok(row.includes(sha), `${file}: SHA-256 mudou (${sha}); atualize docs/DEPENDENCIAS.md`);
   }
 });
 
