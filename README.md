@@ -36,8 +36,8 @@ O ecossistema é estritamente dividido em papéis complementares ([ADR-011](docs
 
 | Sistema Operacional | Papel: `vox` (Cliente Cívico) | Papel: `vox populi` (Nó de Apoio Comunitário) | Como Funciona Sob o Capô |
 |:---|:---|:---|:---|
-| **1. Microsoft Windows**<br>(10 / 11) | [**`Vox.exe`**](client/downloads/Vox.exe) *(967 KiB)* | [**`VoxPopuli.exe`**](client/downloads/VoxPopuli.exe) *(11.7 MB)*<br>`packaging/zero-central-memory-windows/` *(170 KB)* | **Cliente:** Executável nativo com runtime WebView2 já presente no Windows (sem empacotar o Chromium/Electron; consome ~40 MB RAM em medições locais).<br>**Nó:** Serviço sem janela com ícone na bandeja (*System Tray*), operando relay local HTTP (`:3920` / `:3921`), cache criptográfico e memória central persistente (Modo 3). |
-| **2. Google Android**<br>(5.0+) | [**`vox.apk`**](client/downloads/vox.apk) *(74 KiB)* | [**`vox-populi.apk`**](client/downloads/vox-populi.apk) *(74 KiB)* | **Cliente (`org.vox.client`):** Micro-APK leve instalável via sideload direto. Roda a PWA em tela cheia via WebView do Android com aceleração gráfica.<br>**Nó (`org.vox.populi`):** Projetado para celulares ligados na tomada em Wi-Fi. Foreground service silencioso mantendo a malha viva 24/7 sem gastar dados móveis. |
+| **1. Microsoft Windows**<br>(10 / 11) | [**`Vox.exe`**](https://github.com/yurikayel/vox/releases/latest/download/Vox.exe) *(967 KiB)* | [**`VoxPopuli.exe`**](https://github.com/yurikayel/vox/releases/latest/download/VoxPopuli.exe) *(11.7 MB)*<br>`packaging/zero-central-memory-windows/` *(170 KB)* | **Cliente:** Executável nativo com runtime WebView2 já presente no Windows (sem empacotar o Chromium/Electron; consome ~40 MB RAM em medições locais).<br>**Nó:** Serviço sem janela com ícone na bandeja (*System Tray*), operando relay local HTTP (`:3920` / `:3921`), cache criptográfico e memória central persistente (Modo 3). |
+| **2. Google Android**<br>(5.0+) | [**`vox.apk`**](https://github.com/yurikayel/vox/releases/latest/download/vox.apk) *(74 KiB)* | [**`vox-populi.apk`**](https://github.com/yurikayel/vox/releases/latest/download/vox-populi.apk) *(74 KiB)* | **Cliente (`org.vox.client`):** Micro-APK leve instalável via sideload direto. Roda a PWA em tela cheia via WebView do Android com aceleração gráfica.<br>**Nó (`org.vox.populi`):** Projetado para celulares ligados na tomada em Wi-Fi. Foreground service silencioso mantendo a malha viva 24/7 sem gastar dados móveis. |
 | **3. GNU/Linux & Pi**<br>(x86_64, ARM64, SBC) | [**Guia Linux WebKitGTK**](packaging/desktop-linux/) *(< 30 KiB)* | [**Guia Daemon systemd**](vox-populi/) *(daemon)* | **Cliente:** Lançador leve integrando com WebKitGTK nativo do GNOME/KDE.<br>**Nó:** Daemon de baixo consumo (~15 MB RAM em repouso) empacotado para `systemd`, ideal para Raspberry Pi (3, 4, 5, Zero 2W) e servidores domésticos. |
 | **4. Apple**<br>(iOS / iPadOS & macOS) | [**Abrir Safari PWA**](https://vox-9df.pages.dev/) *(PWA)* | [**Guia macOS launchd**](packaging/node-macos/) *(launchd)* | **Cliente (iOS):** Adicione à *Tela de Início* no Safari (*Compartilhar* &rarr; *Tela de Início*). Ganha contêiner isolado, **fica isento da limpeza de 7 dias do Safari (ITP)** e expande a quota de armazenamento para até 60% do disco.<br>**Nó (macOS):** Serviço de segundo plano via `launchd` para Mac Mini ou MacBooks como nó doméstico. |
 
@@ -75,7 +75,7 @@ Redes centralizadas, instâncias federadas e protocolos locais têm custos, vant
 
 | Campo | Valor |
 |---|---|
-| **Commit SHA** | `b1f0b1a` |
+| **Commit SHA** | `d6bb5ce` |
 | **Suíte de Testes** | **944** (`855` JS + `89` Python) |
 | **Service Worker** | `vox-pwa-v7.42-real-network-audio-video-upload` |
 
