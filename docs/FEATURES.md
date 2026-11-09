@@ -27,6 +27,7 @@
 | Notas de perfil 24h | perfil | `profile-note.js` | no ar | `profile-note` |
 | Hashtags e feed por tag (+ Pol.is-lite) | `#/tag/:slug` | `hashtags.js`, `polis.js`, `render/tag-polis.js` | no ar | `hashtags`, `polis` |
 | Feed do Bluesky (leitura) | feed | `bsky-feed.js` | no ar | `bsky-feed` |
+| Modo eleitoral (sem "Sugestões cívicas") | feed | `electoral-period.js`, `render/feed.js` | no ar: automático de 16/08 a 31/10 de ano par, ou forçado por `electoralMode` em `flags.json` (REV-24) | `electoral-period` |
 | Open Frames (mini-apps no feed) | feed, `#/labs/frames` | `frames.js`, `open-frames-host.js` | no ar (host iframe em lab) | `frames`, `open-frames-host` |
 | Cartuchos Webxdc + CRDT | — | `webxdc-crdt.js`, `webxdc-host.js`, `webxdc-loader.js` | **escrito, não plugado** | `webxdc-*` |
 | Depoimentos | — | `testimonials.js` | **escrito, não plugado** | `testimonials` |
@@ -57,7 +58,7 @@
 | Identidade Ed25519/X25519 (cintura fina) | — | `vox-identity.js` | **escrito, não plugado** | `vox-identity` |
 | Credencial cívica / vínculo de identidade | — | `civic-credential.js`, `identity-link.js` | **escrito, não plugado** | `civic-credential`, `identity-link` |
 | Handles `@` | `#/h/:slug`, `#/u/@x` | `handles.js` | no ar | `handles` |
-| Diretório de pessoas | `#/people` | `people-index.js`, `profile-directory.js`, `contacts.js` | no ar | `people-index`, `contacts` |
+| Diretório de pessoas | `#/people` | `people-index.js`, `profile-directory.js`, `contacts.js` | no ar; pares só com a chave `vx_…` (sem nome escolhido) ficam fora da lista, mas a busca pela chave os acha | `people-index`, `contacts` |
 | Perfil, Voxels, passaporte | `#/perfil`, `#/u/:addr` | `app/screens-profile.js`, `voxels.js` | no ar (Voxels só locais) | `voxels`, `profile-*` |
 | Importar nome/foto (Google, Meta, Bluesky, X, TikTok, GitHub) | onboarding | `social-login.js`, `oauth-profile.js`, `bsky-oauth.js` | depende de config (Kwai: "em breve") | `social-login`, `oauth-profile` |
 | DMs E2E | `#/dm`, `#/dm/:addr` | `crypto-dm.js`, `dm-messenger.js`, `inbox.js` | no ar; entrega offline **depende de relay** (inbox padrão `127.0.0.1:3920`) | `crypto-dm`, `dm-*`, `inbox` |
@@ -81,13 +82,17 @@
 
 | Funcionalidade | Rota | Módulos | Status | Testes |
 |---|---|---|---|---|
-| Leitura multi-gateway + pill "Leitura reserva" | — | `graphql.js`, `gateway-telemetry.js` | no ar (2 gateways) | `graphql`, `multi-gateway`, `gateway-telemetry` |
+| Leitura multi-gateway + pill "Leitura reserva" | — | `graphql.js`, `gateway-telemetry.js` | no ar: 4 gateways em `config/gateways.json`, tempo limite de 8 s cada; se todos falham, erro "gateways fora" (LAN-27) | `graphql`, `multi-gateway`, `gateway-telemetry` |
 | Cache local "Pacto Vox" (IndexedDB) | — | `cache-node.js`, `idb-store.js` | no ar | `cache-node`, `idb-store` |
-| Malha WebRTC + gossip (WANT/HAVE/BLOB, perfis, manifestos) | — | `peers*.js`, `webrtc-peer.js`, `profile-card.js`, `mesh-profile.js` | no ar; **depende da sinalização** (1 nó Render) | `peers*`, `webrtc`, `profile-card` |
+| Malha WebRTC + gossip (WANT/HAVE/BLOB, perfis, manifestos) | — | `peers*.js`, `webrtc-peer.js`, `profile-card.js`, `mesh-profile.js` | no ar; **depende da sinalização** (1 nó Render + Nostr em paralelo) | `peers*`, `webrtc`, `profile-card` |
 | Prioridade suave de blobs (V-I09) | — | `peers-blob-affinity.js` | no ar, flag padrão **desligada** | `peers-blob-soft-priority` |
 | Sinalização via Nostr (efêmero kind 25050, cifrada entre pares) | — | `nostr-transport.js`, `nostr-event.js` (BIP-340), `nostr-signaling.js` | **no ar em paralelo ao Render** (REV-09; desligável em `signaling.json` → `nostrSignaling.enabled`). Ida e volta validada em relays reais; conexão entre dois navegadores ainda não testada em campo | `nostr-transport`, `nostr-event`, `nostr-signaling` |
 | Teste de fumaça dos relays Nostr | workflow semanal | `scripts/nostr-smoke.mjs`, `.github/workflows/nostr-smoke.yml` | no ar (REV-19) | `nostr-smoke` |
 | Kill-switch por configuração | `config/flags.json` | `feature-flags.js` | no ar (LAN-08): pausa upload, Feira, Pix Zaps, criar comunidade | `feature-flags` |
+| Nó leve por padrão + modo Apoiador (nó pesado) | `#/settings/network` (botão "Seja um apoiador da rede") | `supporter-mode.js`, `render/network.js` | no ar: leve = 50 MB/dia e 25 MB em disco; Apoiador = 500 MB/dia e 250 MB, só no Wi-Fi | `supporter-mode` |
+| "Esconder meu IP" (só TURN) + aviso de IP | `#/settings/network` | `webrtc-peer.js` (`setTurnOnly`, `iceTransportPolicy: relay`) | no ar, mas **sem efeito prático enquanto não houver TURN** em `signaling.json` (REV-10). LAN-19 parcial | `webrtc` |
+| Limite de taxa por chave no gossip | — | `rate-limit.js` (chamado em `peers.js`) | no ar: 20 posts por chave a cada 10 min; o excesso é descartado e não repassado (LAN-14 parcial) | `rate-limit` |
+| Mensagens de erro honestas | upload, leitura, DM | `honest-errors.js` | no ar: cota, 402, 429, offline, timeout, gateways fora, DM sem relay; falta sinalização caída (LAN-21 parcial) | `honest-errors` |
 | Trackers WebTorrent | — | `client/config/signaling.json` | **stub** (configurados, não usados) | — |
 | Modo guardião (aparelho como nó) | — | `seeder-guardian.js` | **escrito, não plugado** | `seeder-guardian` |
 | Persistência de storage (anti-evicção) | — | `storage-persistence.js` | **escrito, não plugado** | `storage-persistence` |
@@ -113,7 +118,7 @@
 
 1. Sinalização pública: Render + **Nostr em paralelo** (REV-09). Trackers WebTorrent continuam stub. Falta um 2º nó sem sleep (REV-01) e medir em campo.
 2. **Sem relay completo público**: entrega offline de DM, cofre remoto e OAuth de várias redes dependem de stewards.
-3. **Sem TURN**.
+3. **Sem TURN**: pares atrás de CGNAT podem não conectar, e o "Esconder meu IP" não tem por onde passar (REV-10).
 4. O upload grátis do Turbo tem **cota** (~10 MiB por carteira/IP, segundo `upload.ardrive.io/info`); depois dela, e para itens acima de 105 KiB, publicar custa.
 5. Onze módulos prontos não estão plugados (lista acima). Plugar é o caminho mais barato para várias das [10 features de autossustento](./brainstorms/brainstorm-autossustento-10-features-2026-11.md).
 

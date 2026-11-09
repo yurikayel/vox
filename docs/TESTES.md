@@ -1,6 +1,6 @@
 # Testes — como rodar, escrever e o que o CI checa
 
-> **Status:** canônico · **Owner:** mantenedor / qualidade · **Revisado:** 2026-11
+> **Status:** canônico · **Owner:** mantenedor / qualidade · **Revisado:** 2026-11-08
 > Contagem atual de testes: **só** em [release-metadata.json](./release-metadata.json) (`test_js`, `test_python`).
 
 ## 1. Rodar
@@ -21,7 +21,7 @@ Requisitos: Node 22+ (o CI roda 22 e 24) e Python 3.11+ (o CI roda 3.11 e 3.12).
 - **Um arquivo por módulo ou fluxo**, com o nome do módulo: `tests/<modulo>.test.js`.
 - **Ambiente de navegador simulado:** comece com `import "../tests/setup.js";`. Ele define mocks globais (`window`, `localStorage`, `BroadcastChannel`, `navigator`, `location`) para que os ES modules de `client/js/` carreguem em Node. IndexedDB é exercitado pelos próprios módulos (`idb-store.test.js`).
 - **Importe o módulo real** com `await import("../client/js/…")`. Prefira testar funções puras exportadas (ex.: `sumUnreadDms` em `render/shell.js`, o classificador em `civic-post.js`).
-- **Testes de integridade** leem arquivos do repo com `fs`: `entrypoint-integrity.test.js` (imports do entrypoint resolvem) e testes que conferem `SHELL_ASSETS` do `sw.js` (ex.: `voxels.test.js`). Módulo novo no shell = registrar em `SHELL_ASSETS` + bump de `CACHE_NAME`.
+- **Testes de integridade** leem arquivos do repo com `fs`: `entrypoint-integrity.test.js` (imports do entrypoint resolvem) e testes que conferem `SHELL_ASSETS` do `sw.js` (ex.: `voxels.test.js`). Módulo novo no shell = registrar em `SHELL_ASSETS` + bump de `CACHE_NAME`. `release-metadata-drift.test.js` falha se o `cache_name` de `docs/release-metadata.json` não bater com o `CACHE_NAME` do `sw.js` (REV-03): ao subir a versão do SW, rode `npm run release-line`.
 - **Esqueleto:**
 
 ```js
@@ -44,11 +44,12 @@ Stdlib pura. `test_server.py` sobe o handler HTTP em memória e exercita as rota
 
 | Job | O que faz | Bloqueia merge? |
 |---|---|---|
-| `test-client` (Node 22, 24) | `node --check` em todo `client/js` e no `sw.js` · `npm run audit:complexity` (grava `docs/metrics/baseline-*.json` como artefato) · ESLint · `npm run test:client` | Sim, exceto ESLint (só aviso) |
+| `test-client` (Node 22, 24) | `npm audit --audit-level=high` (LAN-20) · `node --check` em todo `client/js` e no `sw.js` · `npm run audit:complexity` (grava `docs/metrics/baseline-*.json` como artefato) · ESLint · `npm run test:client` | Sim, exceto ESLint (só aviso) |
 | `test-relay` (Python 3.11, 3.12) | `py_compile` · `npm run test:relay` · ruff + `lint:relay` | Sim, exceto ruff (só aviso) |
 | `security-audit` | Grep por chaves privadas (`BEGIN … PRIVATE KEY`) | Sim |
 | `pilot-freeze` (só PR) | Com `PILOT_FREEZE=1` ou `.github/pilot-freeze.flag`, falha PRs que tocam `client/js/**`, salvo label `pilot-hotfix` | Sim, quando ativo |
 | `windows-node-zero-smoke.yml` | PyInstaller + smoke do Node Zero no Windows | Sim |
+| `nostr-smoke.yml` (semanal) | Publica e lê um evento efêmero em cada relay Nostr do pool (REV-19) | Não (agenda) |
 
 ## 5. Complexidade
 

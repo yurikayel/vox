@@ -4,8 +4,8 @@
 [![Identity](https://img.shields.io/badge/Identity-WebCrypto%20P--256-blueviolet.svg)](./client/js/local-account.js)
 [![Storage](https://img.shields.io/badge/Storage-Arweave%20Permaweb-black.svg)](https://arweave.org)
 [![License: AGPL v3](https://img.shields.io/badge/License-GNU%20AGPLv3-crimson.svg)](./LICENSE)
-[![Tests](https://img.shields.io/badge/tests-886%20passing-success.svg)](./docs/TESTES.md)
-[![Service Worker](https://img.shields.io/badge/SW-v7.33--real--network--audio--video--upload-informational.svg)](./client/sw.js)
+[![Tests](https://img.shields.io/badge/tests-901%20passing-success.svg)](./docs/TESTES.md)
+[![Service Worker](https://img.shields.io/badge/SW-v7.38--real--network--audio--video--upload-informational.svg)](./client/sw.js)
 
 O Vox é um projeto cívico em construção para ampliar a participação popular e a autonomia das comunidades na vida digital. Sua ambição é ser um bem comum aberto: o projeto deve permanecer transparente, copiável, modificável e maior que qualquer fundador, mantenedor, empresa ou plataforma.
 
@@ -75,9 +75,9 @@ Redes centralizadas, instâncias federadas e protocolos locais têm custos, vant
 
 | Campo | Valor |
 |---|---|
-| **Commit SHA** | `040d2bf` |
-| **Suíte de Testes** | **886** (`797` JS + `89` Python) |
-| **Service Worker** | `vox-pwa-v7.33-real-network-audio-video-upload` |
+| **Commit SHA** | `3d5de79` |
+| **Suíte de Testes** | **901** (`812` JS + `89` Python) |
+| **Service Worker** | `vox-pwa-v7.38-real-network-audio-video-upload` |
 
 *Tabela regenerada por `npm run release-line` (roda a suíte e grava [docs/release-metadata.json](./docs/release-metadata.json)). Nenhum outro documento deve repetir esses números.*
 
@@ -101,7 +101,7 @@ Para garantir clareza entre o uso cotidiano pelas pessoas e a sustentação téc
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
-│                   Vox Web Client (PWA Ultraleve < 50 KB)               │
+│               Vox Web Client (PWA estático, sem etapa de build)        │
 │             Vanilla HTML5 + CSS Moderno + ES Modules Nativos           │
 └───────────────────┬────────────────────────────────┬───────────────────┘
                     │                                │
@@ -146,7 +146,7 @@ Os objetos públicos usam transações com tags semânticas. O cliente também m
 
 Resumo do que entrou no cliente em nov/2026 (detalhes em [CHANGELOG.md](./CHANGELOG.md) e [client/DEV.md §42–§44](./client/DEV.md#42-postar-em-etapas--social-ou-cívico)):
 
-* **Design system Sovereign Agora ([ADR-016](./docs/adr/016-design-system-sovereign-agora-e-democracia-direta.md)):** paleta teal/bronze/esmeralda/basalto, tipografia Domine + Work Sans, variante clara, feed sem cartões e novo favicon/avatar oficial com o **V tricolor** (avatares em squircle).
+* **Design system Sovereign Agora ([ADR-016](./docs/adr/016-design-system-sovereign-agora-e-democracia-direta.md)):** paleta teal/bronze/esmeralda/basalto, tipografia Domine + Work Sans, variante clara e feed sem cartões. A marca (topo, favicon, ícones e avatar oficial) é o **logo do megafone**; avatares em squircle.
 * **Feed Social e Cívico:** a Ágora divide-se em `#/` (Social) e `#/?feed=civic` (Cívico). Um post só é cívico com tag cívica (Pauta, Ideia, Debate, Enquete) **e** requisitos mínimos (título 8+, argumento 40+, autor Vox assinado); posts cívicos recebem posicionamento assinado (`civic-vote`, 1 por pessoa) ou enquete com apuração parcial.
 * **Postar estilo Instagram:** a tela Postar começa por **Social** (foto, vídeo, áudio, texto) ou **Cívico** (pauta, ideia, debate, enquete, em etapas). Atalhos para feira, comunidade e proposta de regra.
 * **Fluxos em etapas (uma decisão por tela):** onboarding (boas-vindas → como entrar → método → pacto), compositor, nova proposta, nova comunidade e nova oferta da Feira.
@@ -154,7 +154,11 @@ Resumo do que entrou no cliente em nov/2026 (detalhes em [CHANGELOG.md](./CHANGE
 * **Assistentes:** rede (`#/settings/network/guia`), Senha Soberana (`#/backup`) e carteira (`#/wallet/guia`).
 * **Contas vinculadas por login (`#/settings/linked-accounts`):** uma linha por rede e um botão *Conectar*. Bluesky por OAuth do AT Protocol 100% no navegador; Facebook só identidade; X, Threads, GitHub, TikTok e Instagram profissional via `/oauth/exchange` do relay quando o deploy está configurado ([docs/specs/login-social.md](./docs/specs/login-social.md)). Onboarding importa nome e foto (Kwai: "em breve", sem API pública).
 * **Mensagens:** contador de não lidas no menu e no topo.
-* **Infra:** Deno Deploy **pausado** (organização suspensa). A sinalização pública hoje é **um** nó Render (`wss://vox-sentinel.onrender.com`) mais o nó local; ver riscos em [docs/INFRA-CUSTOS.md](./docs/INFRA-CUSTOS.md).
+* **Rumo à rede pública (portão G1, PR #17):** kill-switch por configuração (`client/config/flags.json`), denúncia no app com canais oficiais, aviso antes de gravar no Arweave ("permanente" ou "só na malha"), perfis fictícios só no modo demonstração, aviso de que o nome civil aparece no Pix e CSP sem script inline.
+* **Nó leve por padrão, Apoiador por opção:** todo aparelho ajuda a malha com tetos baixos (50 MB/dia, 25 MB em disco); o botão **Seja um apoiador da rede** em `#/settings/network` sobe para 500 MB/dia e 250 MB, só no Wi-Fi.
+* **Privacidade e período eleitoral:** aviso de que outros aparelhos veem seu IP e opção **Esconder meu IP** (só via TURN; sem efeito enquanto não houver TURN configurado). De 16/08 a 31/10 de ano par, ou com `electoralMode` ligado, a linha "Sugestões cívicas" some (Res. TSE 23.755/2026).
+* **Resiliência:** leitura em 4 gateways com tempo limite de 8 s; mensagens de erro que dizem o que houve (cota esgotada, 402, limite, sem conexão, gateways fora, DM sem relay); no máximo 20 posts por chave a cada 10 min no gossip.
+* **Infra:** Deno Deploy **pausado** (organização suspensa). A sinalização pública é **um** nó Render (`wss://vox-sentinel.onrender.com`) com **Nostr em paralelo** (ainda sem medição em campo) mais o nó local; ver riscos em [docs/INFRA-CUSTOS.md](./docs/INFRA-CUSTOS.md).
 
 ---
 
@@ -166,7 +170,7 @@ O estado varia entre cliente, navegador e versão. A lista abaixo não é uma ce
 * **Moderação Comunitária & Bumping de Fórum:** Suporte fail-closed estrito para moderadores fixarem tópicos no topo (`📌 Fixado`), trancarem discussões encerradas (`🔒 Encerrado`), reordenação dinâmica por atividade recente (`max(topic.ts, lastReplyTs)`) e busca instantânea de tópicos.
 * **Recuperação Zero-Knowledge de Identidade & Sincronização Cross-Device ([ADR-014](./docs/adr/014-zero-knowledge-vault-recuperacao-soberana.md)):** Restauração canônica determinística do perfil (`routeId`, chave privada P-256 e chaves de DM) em qualquer navegador ou celular via cofre cifrado no cliente (PBKDF2 50k iters + AES-GCM-256) ancorado em Google (`sub`), Meta (`profile.id`) ou **Senha Soberana** (sem Big Tech). Sincronização instantânea entre computadores e celulares via rota segura `#/sync?p=...` e QR Code nativo sem digitação manual.
 * **Áudio e Vídeo Nativos Lo-Fi (Walkie-Talkie & Vídeo Curto):** Gravação direta pelo navegador em 1 toque (toggle iniciar/parar) ou anexo de arquivo para posts e comentários, com compressão WebM/Opus e MP4/WebM $\le 320\text{p}$ (`media-lofi.js`), deduplicação por hash SHA-256 (`media-blob.js`) e replicação P2P/memória central.
-* **Diretório Unificado de Pessoas (`#/people`) & Onboarding Direto:** Lista determinística completa de todas as contas cadastradas na rede com filtro em tempo real, entrada direta de nome/apelido no onboarding (sem obrigatoriedade de OAuth) e sincronização automática via `PROFILE_CARD` e `zero-central-memory`.
+* **Diretório Unificado de Pessoas (`#/people`) & Onboarding Direto:** Lista das contas que escolheram um nome, com filtro em tempo real (pares só com a chave `vx_…` saem da lista, mas a busca pela chave ainda os acha), entrada direta de nome/apelido no onboarding (sem obrigatoriedade de OAuth) e sincronização automática via `PROFILE_CARD` e `zero-central-memory`.
 * **Nó Local `zero-central-memory` Modo 3 (`VoxPopuli-ZeroMemory.exe` / `central_memory.py`):** Persistência local em disco com journal append-only (`< 0,2 ms`), snapshot atômico em lote a cada 2s, delta sync incremental (`clientRevision`/`since`), túnel HTTPS Cloudflare integrado e descoberta zero-config via *Signaling Beacon* (`vx_zero_memory_beacon`).
 * **Disparo Multi-Rede Assistido (`EXPLODE!`):** Publicação simultânea assistida de tópicos para X/Twitter, Bluesky, Threads, WhatsApp e Telegram, acompanhada de userscript opcional (`tools/auto-explode/vox-auto-explode.user.js`) para confirmação em 1 toque.
 * **Chrome Compacto de Foto & Interações Sociais:** Header enxuto sobre mídia, **Notas de Perfil 24h** (`profile-note.js`), **Republicar** com citação honesta sem impulsionamento (`repost-draft.js` / `render/repost-cite.js`), aba **Salvos** (bookmarks locais) e **Marcação Manual em Fotos** por coordenada (`x%/y%` em `render/photo-tag-pins.js`, estritamente sem reconhecimento facial).
@@ -212,7 +216,7 @@ python server.py      # relay completo (:3920): cache, inbox, mirror, memória, 
 ```
 
 `npm start` sobe só a **sinalização** WebRTC (`relay/signaling.py`, :3921) — é o que o `relay/Dockerfile` e o nó público rodam. Endpoints: [docs/specs/relay-api.md](./docs/specs/relay-api.md).
-Ou, no Windows, execute **`dist/VoxPopuli-ZeroMemory.exe`** (ícone na bandeja do sistema, escutando em `127.0.0.1:3921` e `127.0.0.1:3920` com persistência em `%LOCALAPPDATA%\VoxPopuli\NodeZero\central_memory`).
+Ou, no Windows, gere o **`VoxPopuli-ZeroMemory.exe`** com `packaging/zero-central-memory-windows/build.ps1` e execute-o (ícone na bandeja do sistema, escutando em `127.0.0.1:3921` e `127.0.0.1:3920` com persistência em `%LOCALAPPDATA%\VoxPopuli\NodeZero\central_memory`).
 
 ---
 
