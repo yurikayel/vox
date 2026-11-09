@@ -608,6 +608,7 @@ function buildLocalCommunityRecord(c) {
     visibility: c.visibility || "open",
     createdAt: c.createdAt || c.ts || null,
     commercialEnabled: Boolean(c.commercialEnabled),
+    newKeyQuarantine: Boolean(c.newKeyQuarantine),
     isLocalP2p: true,
   };
 }

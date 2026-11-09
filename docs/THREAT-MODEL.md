@@ -33,7 +33,7 @@
 | # | Ameaça | Mitigação existente | Lacuna / item |
 |---|---|---|---|
 | T1 | XSS rouba a chave do `localStorage` | `escapeHtml` nos templates; **CSP sem script inline** e sem `unsafe-eval` (LAN-16); iframes de cartucho sem `allow-same-origin` | CSP ainda permite `https://esm.sh` e SDKs Google/Meta; chave não fica em armazenamento não-extraível (WebCrypto `extractable:false`) → **revisão LAN-18** |
-| T2 | CDN/dependência comprometida | sem build, poucas dependências | `esm.sh/arweave` carregado em tempo de execução **sem SRI** → LAN-20 (vendorizar ou fixar hash) |
+| T2 | CDN/dependência comprometida | sem build, poucas dependências; inventário em [DEPENDENCIAS.md](./DEPENDENCIAS.md) com teste que quebra o CI e rotina mensal que confere hash de CDN (LAN-20) | `esm.sh/arweave` ainda carregado em tempo de execução **sem SRI**, e a entrada do esm.sh puxa dependências com `^`: falta vendorizar o bundle (hash já anotado). SDKs do Google e da Meta não têm versão fixa (só carregam com login configurado e no toque) |
 | T3 | Conta de deploy (GitHub/Cloudflare) comprometida | — | **bus factor 1** e sem 2FA documentado → LAN-30 |
 | T4 | Leitura de DM por relay | DM cifrada ponta a ponta (ECDH P-256 + AES-GCM); relay cego com TTL | sem forward secrecy; metadados (quem fala com quem, quando) visíveis ao relay → registrar como risco aceito ou planejar |
 | T5 | IP exposto a pares e relays | sinalização Nostr leva **só peerId aleatório em claro**; SDP/ICE e endereço vão cifrados (REV-09) | opção **"Esconder meu IP"** (só TURN, LAN-19) já existe, mas sem TURN configurado não conecta → REV-10; padrão ligado para menores → REV-23 |
@@ -41,7 +41,7 @@
 | T7 | Assédio / conteúdo ilegal | quarentena local, bloquear/silenciar, moderação de comunidade, **denúncia no app (LAN-12)** | sem plantão nem lista de ocultação global (LAN-04, LAN-13) |
 | T8 | Perfil falso | handles com aviso de conflito; **perfis de demonstração só em modo explícito (LAN-10)** | verificação opcional (ADR-018) fora do lançamento |
 | T9 | Pix para chave errada ou que expõe o nome | BR Code offline; **avisos de nome civil e "confira no banco" (REV-13)** | — |
-| T10 | Spam e inundação da malha | limites de banda do nó leve (50 MB/dia), TTL, **20 posts por chave a cada 10 min no gossip (LAN-14)** | chave nova é grátis: falta PoW leve e quarentena de chave nova (LAN-14) |
+| T10 | Spam e inundação da malha | limites de banda do nó leve (50 MB/dia), TTL, **20 posts por chave a cada 10 min no gossip**; comunidade pode pedir **quarentena de chave nova** (menos de 24 h neste aparelho), com saída por **PoW leve de 14 bits** (LAN-14) | a idade da chave é medida em cada aparelho, sem relógio confiável; aparelho recém-instalado passa 24 h aprendendo e trata como conhecido quem viu nesse período; a quarentena só se escolhe na criação da comunidade; PoW de 14 bits encarece, mas não impede, uma fazenda de contas |
 | T11 | Indisponibilidade da sinalização ou da leitura | Render + **Nostr em paralelo (REV-09)** + kill-switch (LAN-08); leitura em 4 gateways com tempo limite (LAN-27) | teste de carga (LAN-09); 2º nó sem sleep (REV-01) |
 | T12 | Perda de chave = perda de identidade | backup por QR/cofre, Senha Soberana | iOS apaga storage (REV-14); fluxo não testado com leigos (LAN-25) |
 | T13 | Dado pessoal gravado para sempre no Arweave | **aviso de permanência + opção "só na malha" (LAN-11)** | eliminação impossível na cadeia → lista de ocultação (LAN-13) e parecer (REV-12) |

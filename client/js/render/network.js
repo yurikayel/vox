@@ -1,5 +1,6 @@
 /** @file Network settings, participation layers, steward wizard. */
 import { escapeHtml, shortId } from "./util.js";
+import { honestMessage } from "../honest-errors.js";
 
 const PARTICIPATION_LAYERS = [
   {
@@ -81,14 +82,26 @@ function renderGatewayHealthBlock(gatewayHealth) {
     </div>`;
 }
 
-function renderNetworkHeader(isEnabled, relayStatus, rtcStatus, gatewayHealth) {
+/** LAN-21: em vez de "conectando…" para sempre, diz quando o servidor de conexão caiu. */
+function renderPeerBadge(rtcStatus) {
   const rtcCount = rtcStatus?.remotePeersConnected || 0;
+  if (rtcCount > 0) {
+    return `<span class="badge-pill" style="background:var(--success-soft); color:var(--success);">${rtcCount} ${rtcCount === 1 ? "aparelho conectado" : "aparelhos conectados"}</span>`;
+  }
+  if (rtcStatus?.signalingDown) {
+    return `<span class="badge-pill" style="background:var(--amber-soft, #fef3c7); color:var(--amber, #b45309);">Servidor de conexão fora do ar</span>`;
+  }
+  return `<span class="badge-pill">Conectando a aparelhos próximos…</span>`;
+}
+
+function renderNetworkHeader(isEnabled, relayStatus, rtcStatus, gatewayHealth) {
   const statusBadge = isEnabled
     ? `<span class="pill" style="background:var(--success); color:#fff;">🟢 Ajudando a rede</span>`
     : `<span class="pill" style="background:var(--danger); color:#fff;">⏸️ Ajuda pausada</span>`;
-  const peerBadge = rtcCount > 0
-    ? `<span class="badge-pill" style="background:var(--success-soft); color:var(--success);">${rtcCount} ${rtcCount === 1 ? "aparelho conectado" : "aparelhos conectados"}</span>`
-    : `<span class="badge-pill">Conectando a aparelhos próximos…</span>`;
+  const peerBadge = renderPeerBadge(rtcStatus);
+  const signalingNotice = rtcStatus?.signalingDown
+    ? `<p class="desc network-signaling-down" role="status" style="margin-top:0.5rem;">${honestMessage("signalingDown")}</p>`
+    : "";
   const reservePill =
     gatewayHealth?.state && gatewayHealth.state !== "all_ok"
       ? `<span class="badge-pill" style="background:var(--amber-soft, #fef3c7); color:var(--amber, #b45309);">Leitura reserva</span>`
@@ -105,6 +118,7 @@ function renderNetworkHeader(isEnabled, relayStatus, rtcStatus, gatewayHealth) {
         ${peerBadge}
         ${reservePill}
       </div>
+      ${signalingNotice}
       ${renderGatewayHealthBlock(gatewayHealth)}
     </div>`;
 }
