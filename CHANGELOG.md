@@ -6,6 +6,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Distribuição (PR #33)
+- **PM-45 binários pelo CI:** `Vox.exe`, `VoxPopuli.exe`, `vox.apk` e `vox-populi.apk` saem do workflow `release-binarios.yml` (runner do GitHub, a cada tag `v*`), com `SHA256SUMS` e atestação de origem (`gh attestation verify <arquivo> --repo yurikayel/vox`). A página de download e o README apontam para `releases/latest/download/…`, e os binários saíram do git (eram compilados numa máquina pessoal). PR que mexe em `android/` ou `packaging/` compila os quatro para provar que o build funciona. `android/build.ps1` aceita `VOX_JAVA_HOME` e `ANDROID_HOME`.
+
 ### Planejamento (09/11, tarde)
 - [Backlog de próximas melhorias](./docs/brainstorms/brainstorm-backlog-proximas-melhorias-2026-11.md) §4: adendo com PM-47…PM-64. As 7 recomendações da pesquisa de ancoragem e churn viram itens; achados novos: `ar-io.dev` não indexa o Vox mas está no catálogo de gateways, e links diretos abrem atrás do portão de boas-vindas.
 

@@ -103,12 +103,25 @@ test("LAN-20: todo binário do repositório tem linha com o SHA-256 atual", () =
     if (!existsSync(join(ROOT, dir))) continue;
     found.push(...walk(dir, "").filter((f) => BIN.test(f)));
   }
-  assert.ok(found.length > 0, "esperava achar os binários de client/downloads");
+  assert.ok(found.length > 0, "esperava achar as DLLs do WebView2");
   for (const file of found) {
     const row = INVENTORY.split("\n").find((l) => l.startsWith(`| \`${file}\` |`));
     assert.ok(row, `${file} sem linha na seção 6 de docs/DEPENDENCIAS.md`);
     const sha = createHash("sha256").update(readFileSync(join(ROOT, file))).digest("hex");
     assert.ok(row.includes(sha), `${file}: SHA-256 mudou (${sha}); atualize docs/DEPENDENCIAS.md`);
+  }
+});
+
+test("PM-45: .exe e .apk saem do CI, não do git", () => {
+  const banned = [];
+  for (const dir of ["client", "android"]) banned.push(...walk(dir, "").filter((f) => /\.(exe|apk)$/i.test(f)));
+  assert.deepEqual(banned, [], "publique pelo release-binarios.yml");
+  for (const page of ["client/download.html", "client/download/index.html"]) {
+    const html = read(page);
+    assert.ok(!/["']downloads\/[^"']+\.(exe|apk)["']/.test(html), `${page} ainda aponta para client/downloads`);
+    for (const f of ["Vox.exe", "VoxPopuli.exe", "vox.apk", "vox-populi.apk"]) {
+      assert.ok(html.includes(`releases/latest/download/${f}`), `${page} sem link da Release para ${f}`);
+    }
   }
 });
 

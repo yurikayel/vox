@@ -58,7 +58,7 @@ Tudo abaixo foi medido no `main` e nos serviços no ar nesta data.
 | **PM-13** | **Revogar e trocar chave:** uma chave de recuperação, impressa num cartão QR (o mesmo do backup do REV-14), assina "esta chave foi substituída por X"; o gossip passa a respeitar a troca | Perdeu o celular ou vazou a chave: hoje não há saída | G | code + doc | IDENTITY.md, `vox-identity.js` |
 | **PM-14** | **Fixar Actions por SHA e contêineres por digest**, começando pelo `cloudflare/wrangler-action` (que vê o token da Cloudflare), pelo `coturn:latest` e pelo `ruff` sem versão no CI | Tags móveis listadas em [DEPENDENCIAS.md](../DEPENDENCIAS.md) | P | code | LAN-20 |
 | **PM-15** | **Shell verificável:** o deploy publica um manifesto assinado (SHA-256 de cada arquivo do shell + git SHA); o app e o `mirror-validate` comparam A, B e o repositório | Prova pública de que um espelho serve o mesmo código do git | M | code | [mirror-validate-v1](../specs/mirror-validate-v1.md), NET-05 |
-| **PM-45** | **Binários compilados no CI:** o `windows-node-zero-smoke.yml` já compila o Vox Populi com PyInstaller. Estender para o cliente Windows e os APKs, publicar como GitHub Release com SHA-256 e atestação de origem (`actions/attest-build-provenance`), e tirar `client/downloads/*.exe`/`*.apk` do git | Hoje ninguém consegue reproduzir o que a página de download entrega | M | code | T2, LAN-20, LAN-33 |
+| **PM-45** ✅ PR #33 | **Binários compilados no CI:** o `windows-node-zero-smoke.yml` já compila o Vox Populi com PyInstaller. Estender para o cliente Windows e os APKs, publicar como GitHub Release com SHA-256 e atestação de origem (`actions/attest-build-provenance`), e tirar `client/downloads/*.exe`/`*.apk` do git | Hoje ninguém consegue reproduzir o que a página de download entrega | M | code | T2, LAN-20, LAN-33 |
 | **PM-46** | **Assinar os executáveis do Windows:** sem assinatura, o SmartScreen bloqueia e não há como provar a origem. Verificar se o programa de assinatura grátis para software livre da SignPath Foundation aceita o Vox | Confiança de quem instala o nó | M | ops-humano | PM-45 |
 | **PM-16** | **Auditoria de `innerHTML`:** regra de lint que exige `escapeHtml` nas interpolações de `render/`; Trusted Types como passo seguinte | Quase toda a UI é HTML montado em string | M | code | LAN-18 |
 
@@ -137,7 +137,7 @@ O convite que já faz o pareamento ([F2](./brainstorm-autossustento-10-features-
 | # | O quê | Por que nesta posição |
 |---|---|---|
 | 1 | ✅ **PM-09** `community_update` só do dono (PR #32) | Furo de integridade barato; precisa estar fechado antes de qualquer piloto |
-| 2 | **PM-45** binários pelo CI, com hash | É o caminho mais curto para alguém entregar código malicioso a quem instala o nó |
+| 2 | ✅ **PM-45** binários pelo CI, com hash (PR #33) | É o caminho mais curto para alguém entregar código malicioso a quem instala o nó |
 | 3 | **PM-10** + **PM-43** ligar proteções do GitHub e Sponsors | Cinco a dez minutos cada |
 | 4 | **PM-42** proposta NLnet | Tem prazo (03/01/2027) e financia o resto |
 | 5 | **PM-17** reconexão Nostr | Bug real no caminho que segura a rede quando o Render cai |
