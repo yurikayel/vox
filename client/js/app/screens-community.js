@@ -234,7 +234,7 @@ async function appendVoxDirectoryMembers(recentPeople, peopleSet) {
   } catch {}
 }
 
-export async function buildCommunityRecentPeople(filteredTopics, meta, user, isMember, tab, communityId = "") {
+export async function buildCommunityRecentPeople({ filteredTopics, meta, user, isMember, tab, communityId = "" }) {
   const isRelevantTab = tab === "posts" || tab === "members";
   const recentPeople = isRelevantTab ? peopleIndex.extractRecentAuthors(filteredTopics, 32) : [];
   const peopleSet = new Set(recentPeople.map((p) => p.routeId));
@@ -570,7 +570,7 @@ function bindCommunityTopicControls(main, communityId, filteredTopics) {
   }
 }
 
-function bindCommunityHeaderEvents(main, communityId, meta, user, isMember, peerSettings, filteredTopics) {
+function bindCommunityHeaderEvents({ main, communityId, meta, user, isMember, peerSettings, filteredTopics }) {
   document.querySelectorAll(".btn-community-add-contact").forEach((btn) => {
     btn.addEventListener("click", () => {
       const id = btn.dataset.route;
@@ -607,7 +607,7 @@ function renderCommunityBanners(main, base, tab) {
   }
 }
 
-async function mountFullCommunityPage(communityId, tab, user, base, specifics, meta, isMember, recentPeople, memberCount) {
+async function mountFullCommunityPage({ communityId, tab, user, base, specifics, meta, isMember, recentPeople, memberCount }) {
   const routeId = await localAccount.getRouteId();
   const main = render.renderShell(makeShellProps(user, "communities", "Comunidade"));
   render.renderLoading(main);
@@ -630,10 +630,10 @@ async function mountFullCommunityPage(communityId, tab, user, base, specifics, m
   if (tab === "posts") void communityMirror.tryMirrorCommunityToRelay(meta, base.filteredTopics);
   attachCommunityListingHandlers(main);
   attachPostShareHandlers();
-  bindCommunityHeaderEvents(main, communityId, meta, user, isMember, peerSettings, base.filteredTopics);
+  bindCommunityHeaderEvents({ main, communityId, meta, user, isMember, peerSettings, filteredTopics: base.filteredTopics });
 }
 
-function buildCommunityTabProps(communityId, meta, base, specifics, recentPeople, isMember, memberCount) {
+function buildCommunityTabProps({ communityId, meta, base, specifics, recentPeople, isMember, memberCount }) {
   return {
     communityId, commTitle: meta.title || communityId, meta, topics: base.filteredTopics,
     listings: specifics.listings, proposals: specifics.proposals, recentPeople, isMember, memberCount,
@@ -653,9 +653,9 @@ export async function showCommunity(communityId, tab = "posts") {
     meta = { ...meta, commercialEnabled: true };
   }
   const isMember = await checkCommunityMembership(communityId, user, meta);
-  const recentPeople = await buildCommunityRecentPeople(base.filteredTopics, meta, user, isMember, tab, communityId);
+  const recentPeople = await buildCommunityRecentPeople({ filteredTopics: base.filteredTopics, meta, user, isMember, tab, communityId });
   const memberCount = meta.memberCount != null ? Number(meta.memberCount) : (communityId === "vox" ? Math.max(1, recentPeople.length) : null);
-  const tabProps = buildCommunityTabProps(communityId, meta, base, specifics, recentPeople, isMember, memberCount);
+  const tabProps = buildCommunityTabProps({ communityId, meta, base, specifics, recentPeople, isMember, memberCount });
 
   if (existingComm && slot) {
     updateCommunityTabIndicator(existingComm, tab);
@@ -664,7 +664,7 @@ export async function showCommunity(communityId, tab = "posts") {
     attachPostShareHandlers();
     return;
   }
-  await mountFullCommunityPage(communityId, tab, user, base, specifics, meta, isMember, recentPeople, memberCount);
+  await mountFullCommunityPage({ communityId, tab, user, base, specifics, meta, isMember, recentPeople, memberCount });
 }
 
 async function handleListingPixClick(btn) {

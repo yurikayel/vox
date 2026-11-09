@@ -17,7 +17,7 @@ function createContainer() {
 
 test("tab-slot-architecture - renderProfile renders persistent layout slot and data attributes", () => {
   const main = createContainer();
-  render.renderProfile(main, "vx_alice_123", [], true, "", {
+  render.renderProfile(main, "vx_alice_123", [], true, {
     displayName: "Alice Soares",
     handle: "alices",
     activeTab: "posts",
