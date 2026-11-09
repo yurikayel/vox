@@ -22,6 +22,7 @@ import * as communitySeed from "../community-seed-checklist.js";
 import { computeCommunityNeighborStats, TOPICS_PAGE_SIZE } from "../render/community.js";
 import { orderCommunityTopics } from "../community-topic-order.js";
 import * as newKeyGuard from "../new-key-guard.js";
+import * as communityUpdates from "../community-updates.js";
 import { markCommunitySeen } from "../community-unread.js";
 import * as contacts from "../contacts.js";
 import * as peopleIndex from "../people-index.js";
@@ -64,8 +65,8 @@ export async function resolveCommunityMetadata(communityId) {
   const localFound = localComms.find((c) => c.id === communityId);
   if (localFound) meta = { ...meta, ...localFound };
   try {
-    const localUpdates = await cacheNode.getLocalPosts({ type: "community_update", communityId });
-    if (localUpdates?.length) meta = { ...meta, ...localUpdates[localUpdates.length - 1] };
+    const localUpdates = await cacheNode.getLocalPosts({ type: communityUpdates.COMMUNITY_UPDATE_TYPE, communityId });
+    meta = communityUpdates.applyCommunityUpdates(meta, localUpdates);
   } catch {}
   if (!meta.commercialEnabled && communityId === mock.MOCK_DEMO_COMMUNITY_FEIRA.id) {
     meta = { ...mock.MOCK_DEMO_COMMUNITY_FEIRA, ...meta, commercialEnabled: true };
@@ -317,12 +318,16 @@ function bindSeedAndNeighborControls(communityId, meta, peerSettings) {
 }
 
 async function uploadCommunityPhoto(file, communityId, meta) {
+  if (!communityUpdates.canUpdateCommunity(meta, await localAccount.getRouteId())) {
+    share.showToast("Só o dono ou um moderador desta comunidade pode trocar a foto.", "error");
+    return;
+  }
   const dataUrl = await new Promise((res, rej) => {
     const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(file);
   });
   const updatePayload = {
     id: `comm_update_${communityId}_${Date.now()}`,
-    type: "community_update",
+    type: communityUpdates.COMMUNITY_UPDATE_TYPE,
     communityId,
     image: dataUrl,
     avatar: dataUrl,
@@ -602,7 +607,8 @@ function renderCommunityBanners(main, base, tab) {
   }
 }
 
-function mountFullCommunityPage(communityId, tab, user, base, specifics, meta, isMember, recentPeople, memberCount) {
+async function mountFullCommunityPage(communityId, tab, user, base, specifics, meta, isMember, recentPeople, memberCount) {
+  const routeId = await localAccount.getRouteId();
   const main = render.renderShell(makeShellProps(user, "communities", "Comunidade"));
   render.renderLoading(main);
   main.innerHTML = "";
@@ -617,7 +623,7 @@ function mountFullCommunityPage(communityId, tab, user, base, specifics, meta, i
   const seedChecklist = resolveCommunitySeedChecklist(communityId, user, meta, base.filteredTopics.length, peerSettings);
 
   render.renderCommunity(main, communityId, base.filteredTopics, meta, {
-    isMember, isMod: base.isUserMod, walletAddress: user, activeTab: tab, listings: specifics.listings,
+    isMember, isMod: base.isUserMod, walletAddress: user, routeId, activeTab: tab, listings: specifics.listings,
     proposals: specifics.proposals, recentPeople, neighborStats, commOnly: peerSettings.commOnly,
     seedChecklist, mirrorStatus: communityMirror.getMirrorStatusForCommunity(communityId),
   });
@@ -658,7 +664,7 @@ export async function showCommunity(communityId, tab = "posts") {
     attachPostShareHandlers();
     return;
   }
-  mountFullCommunityPage(communityId, tab, user, base, specifics, meta, isMember, recentPeople, memberCount);
+  await mountFullCommunityPage(communityId, tab, user, base, specifics, meta, isMember, recentPeople, memberCount);
 }
 
 async function handleListingPixClick(btn) {
