@@ -586,7 +586,7 @@ function matchesSocialAvatar(enrichAv, targetAv, isGoogleAv) {
   return Boolean(isMetaAv && (enrichAv === targetAv || enrichAv.includes("fbcdn.net") || enrichAv.includes("fbsbx.com")));
 }
 
-function matchesOAuthEnrichment(enrich, cleanSub, cleanEmail, isGoogleAv, cleanAv, provider = "") {
+function matchesOAuthEnrichment({ enrich, cleanSub, cleanEmail, isGoogleAv, cleanAv, provider = "" }) {
   if (!isSameProvider(provider, enrich.oauthProvider)) return false;
   if (cleanSub && enrich.oauthSub === cleanSub) return true;
   if (cleanEmail && enrich.oauthEmail && enrich.oauthEmail.toLowerCase() === cleanEmail) return true;
@@ -601,7 +601,7 @@ export function findVaultAccountByOAuth({ oauthProvider = "", oauthSub, oauthEma
   const isGoogleAv = cleanAv.includes("googleusercontent.com/");
 
   for (const item of Object.values(vault)) {
-    if (matchesOAuthEnrichment(item.enrichment || {}, cleanSub, cleanEmail, isGoogleAv, cleanAv, oauthProvider)) {
+    if (matchesOAuthEnrichment({ enrich: item.enrichment || {}, cleanSub, cleanEmail, isGoogleAv, cleanAv, provider: oauthProvider })) {
       return item;
     }
   }

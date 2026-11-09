@@ -7,6 +7,7 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 ## [Não lançado]
 
 ### Qualidade (Perfil Canônico v3.2)
+- **`max-params` zerado e promovido a erro:** as 17 funções com mais de 5 parâmetros passaram a receber um objeto de opções com nomes (`f({ a, b })`), sem mudar comportamento; o 5º parâmetro de `renderProfile` (`_dmPubStr`) não era usado e saiu das 17 chamadas. **PM-62 completo:** `.nvmrc` (22), `engines.node >=22` e `.python-version` (3.12).
 - **Limites que quebram o CI:** no `client/`, função com mais de 30 linhas, aninhamento > 4, complexidade > 15, `==` e variável sem uso são erro de ESLint (antes, só aviso e passo com `continue-on-error`). No Python, Ruff `F` (pyflakes) e `C901` (complexidade > 15) em `relay/`, `scripts/` e `packaging/`, com versão fixa (0.17.4); antes o ruff era opcional.
 - **Dívida medida e informada:** 18 funções JS com mais de 5 parâmetros, 27 arquivos com mais de 350 linhas, 25 testes com mais de 45 linhas (`npm run lint:all`), 7 funções Python com mais de 30 comandos. `docs/HARDENING.md` mostra, regra a regra, o que bloqueia de fato, a dívida e o alvo; complexidade cognitiva e CBO/LCOM aparecem como **não medidos**.
 - **Bug achado pelo pyflakes:** `save_vault()` da memória central chamava `_atomic_write`, que não existe; salvar cofre no relay estourava `NameError`. Corrigido, com teste que falha no código antigo. O `ruff --fix` também apagava o import que verifica o WebKit no cliente Linux; restaurado com `noqa`.

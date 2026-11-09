@@ -231,7 +231,7 @@ test("community-forum-refinements - buildCommunityRecentPeople traz diretório d
   });
 
   const meta = { id: "vox", owner: "vx_voxbrasil_welcome" };
-  const recent = await screensCommunity.buildCommunityRecentPeople([], meta, null, false, "members", "vox");
+  const recent = await screensCommunity.buildCommunityRecentPeople({ filteredTopics: [], meta, user: null, isMember: false, tab: "members", communityId: "vox" });
 
   const routeIds = recent.map((p) => p.routeId);
   assert.ok(routeIds.includes("vx_voxbrasil_welcome"), "Dono da comunidade deve estar na lista");

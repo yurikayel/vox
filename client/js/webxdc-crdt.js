@@ -438,11 +438,11 @@ function mergeRemoteItems(items, order, tombstones, remoteItems) {
     const tomb = tombstones.get(id);
     if (tomb && !isNewer(rTs, rSender, tomb.timestamp, tomb.sender)) continue;
 
-    upsertRemoteItemIfNewer(items, order, id, raw, rTs, rSender);
+    upsertRemoteItemIfNewer({ items, order, id, raw, rTs, rSender });
   }
 }
 
-function upsertRemoteItemIfNewer(items, order, id, raw, rTs, rSender) {
+function upsertRemoteItemIfNewer({ items, order, id, raw, rTs, rSender }) {
   const cur = items.get(id);
   if (!cur || isNewer(rTs, rSender, cur.updatedAt, cur.sender)) {
     const isRawMoved = Boolean(raw.isMoved || (raw.orderRank !== undefined && raw.orderRank !== rTs));
