@@ -6,6 +6,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Planejamento (09/11, tarde)
+- [Backlog de próximas melhorias](./docs/brainstorms/brainstorm-backlog-proximas-melhorias-2026-11.md) §4: adendo com PM-47…PM-64. As 7 recomendações da pesquisa de ancoragem e churn viram itens; achados novos: `ar-io.dev` não indexa o Vox mas está no catálogo de gateways, e links diretos abrem atrás do portão de boas-vindas.
+
 ### Comunidades (SW v7.40, PR #32)
 - **PM-09 foto e título só do dono:** um `community_update` só vale quando quem assina é o dono da comunidade ou um moderador listado, e só muda foto, título, descrição e categoria. Antes, qualquer chave trocava a foto e o título de qualquer comunidade, e o update inteiro (com `id` e `author`) era espalhado sobre o registro. O gossip não grava nem repassa update de quem não pode. Corrigidos junto: a atualização **mais antiga** vencia (a lista vem do mais novo para o mais velho), e um segundo post `community` com o mesmo `communityId` e `ts` antigo tomava a comunidade. Agora só o post `c_<communityId>` define o dono (`community-updates.js`).
 - O botão "Alterar foto" segue a mesma regra, com a chave local (`vx_…`) que assina o update. Em comunidade publicada só no Arweave, cujo dono é um endereço de carteira, o botão some: não há como provar que a chave local é dessa carteira.
