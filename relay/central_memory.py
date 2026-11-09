@@ -545,7 +545,7 @@ def save_vault(lookup_key: str, payload: Any) -> bool:
         vaults_dir.mkdir(parents=True, exist_ok=True)
         record = payload.get("record") if isinstance(payload, dict) and "record" in payload else payload
         body = json.dumps(record, ensure_ascii=False)
-        _atomic_write(vaults_dir / f"{clean}.json", body.encode("utf-8"))
+        _atomic_write_bytes(vaults_dir / f"{clean}.json", body.encode("utf-8"))
         return True
     except OSError:
         return False

@@ -52,10 +52,37 @@ export default [
       },
     },
     rules: {
+      // Limites do docs/HARDENING.md. No client/ são ERRO e quebram o CI (o código já está limpo).
+      complexity: ["error", 15],
+      "max-depth": ["error", 4],
+      "max-lines-per-function": ["error", { max: 30, skipComments: true, skipBlankLines: true }],
+      // 18 funções do client passam de 5 parâmetros (09/11): aviso até virarem objeto de opções.
+      "max-params": ["warn", 5],
+      // Perfil v3.2: arquivo de produção > 350 linhas (sem comentários e brancas) é aviso legado.
+      "max-lines": ["warn", { max: 350, skipComments: true, skipBlankLines: true }],
+      eqeqeq: ["error", "always", { null: "ignore" }],
+      "no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
+    },
+  },
+  {
+    // Testes: até 45 linhas por caso de teste (o callback de test/it), como aviso legado.
+    files: ["tests/**/*.js"],
+    languageOptions: { ecmaVersion: 2024, sourceType: "module", globals: { ...globals.node, ...globals.browser } },
+    rules: {
+      "max-lines-per-function": ["warn", { max: 45, skipComments: true, skipBlankLines: true }],
+      "max-depth": ["warn", 4],
+      complexity: ["warn", 15],
+      "no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
+    },
+  },
+  {
+    // scripts/ e tools/: mesmos limites como aviso até a dívida medida em 09/11 ser paga.
+    files: ["scripts/**/*.mjs", "tools/**/*.mjs"],
+    rules: {
       complexity: ["warn", 15],
       "max-depth": ["warn", 4],
       "max-lines-per-function": ["warn", { max: 30, skipComments: true, skipBlankLines: true }],
-      eqeqeq: ["warn", "always", { null: "ignore" }],
+      "max-params": ["warn", 5],
       "no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
     },
   },

@@ -14,11 +14,9 @@ Implementa as Tarefas 6 e 7 do Nó Zero / Vox Populi:
 from __future__ import annotations
 
 import hashlib
-import json
 import re
 import threading
 import time
-from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
 
 SHA256_HEX_REGEX = re.compile(r"^[0-9a-fA-F]{64}$")
