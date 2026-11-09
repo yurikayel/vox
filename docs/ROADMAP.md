@@ -1,6 +1,6 @@
 # Roadmap — Vox
 
-> **Status:** canônico · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-09 (G1 em `main` até o PR #28; revisão de estado no PR #29; LAN-14 e LAN-21 fechados no PR #30)
+> **Status:** canônico · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-09 (G1 em `main` até o PR #28; revisão de estado no PR #29; LAN-14 e LAN-21 fechados no PR #30; NET-01 verificado e brainstorm PM-01…46 no PR #31)
 > **Único plano vivo e único lugar com caixas `[ ]`** ([ADR-017](./adr/017-consolidacao-roadmap-unico.md)). Substitui o checklist do [dossiê N=25 §3.6](./archive/dossie-geral-inventario-master-breakdown-2026-11.md#36-checklist-master-vivo-n25).
 > Estado do produto: [FEATURES.md](./FEATURES.md) · Infra e riscos: [INFRA-CUSTOS.md](./INFRA-CUSTOS.md) · Teses: [direcionamento-crescimento-rede-2026-11.md](./strategy/direcionamento-crescimento-rede-2026-11.md)
 
@@ -20,7 +20,6 @@ O cliente está maduro: feed Social/Cívico, comunidades, governança, Feira, Pi
 
 | | ID | Tipo | Item | Evidência / nota |
 |---|---|---|---|---|
-| [ ] | **NET-01** | ops-humano | Espelho shell **B** no ar + registro público | [ops-shell-mirrors.md](./operations/ops-shell-mirrors.md) — não marcar só por doc |
 | [ ] | **NET-02** | ops-humano | Drill de DR datado | [ops-dr-drill-checklist.md](./operations/ops-dr-drill-checklist.md) |
 | [ ] | **REV-01** | ops-humano | **2º nó de sinalização** em `client/config/signaling.json` — **Cloudflare Durable Object** (Workers Free, sem sleep). ~~Koyeb~~: escala a zero após 1 h e o Starter vai sair ([complementar F3](./research/pesquisa-complementar-2026-11.md#f-infraestrutura)). ~~HF Space~~: Docker Spaces agora exigem plano pago ([pesquisa V6](./research/pesquisa-deep-research-2026-11.md)) | [INFRA-CUSTOS §4](./INFRA-CUSTOS.md#4-pontos-únicos-de-falha-ordem-de-gravidade) |
 | [ ] | **REV-09** | code | **F1 sobe para P0:** sinalização por Nostr efêmero cifrado (faixa 20000–29999, ICE agrupado, sem dependência nova). Depois dela, aposentar o cron de keepalive do Render | 🚧 no `main` desde o PR #17, em paralelo ao Render. Ida e volta ok em relays reais (3,3 s). Aposentar o keepalive só depois de medir em campo · [pesquisa §4](./research/pesquisa-deep-research-2026-11.md#4-decisões-viram-linhas-no-roadmap) |
@@ -133,6 +132,7 @@ Também exige: REV-18 · DOC-04 · REV-02 · REV-04 (ou LAN-21 cobrindo DM offli
 ## Candidatas (sem caixa até ganharem DoD e responsável)
 
 Do [brainstorm de autossustento](./brainstorms/brainstorm-autossustento-10-features-2026-11.md). Pesquisar antes com os 3 prompts do mesmo doc.
+Mais 46 ideias (PM-01…PM-46: peso do app, segurança, assembleia, Nostr, contribuidores), com a revisão de estado de 09/11: [brainstorm de próximas melhorias](./brainstorms/brainstorm-backlog-proximas-melhorias-2026-11.md).
 
 | # | Feature | Eixo | Reaproveita |
 |---|---|---|---|
@@ -153,6 +153,7 @@ Itens fechados de Agora, Próximo e Depois. Nas tabelas dos portões (LAN), a li
 
 | | ID | Tipo | Item | Evidência / nota |
 |---|---|---|---|---|
+| [x] | **NET-01** | ops-humano | Espelho shell **B** no ar + registro público | ✅ https://vox-9df.pages.dev/ serve o mesmo `sw.js` do A (v7.39) em 09/11/2026; deploy a cada push em `main` (`deploy-shell-b.yml`); linha `shell-b` em [ops-shell-mirrors.md](./operations/ops-shell-mirrors.md#tabela-de-espelhos). Mesmo operador do A: a independência fica com o LAN-30 |
 | [x] | **REV-13** | code | **Aviso nos Pix Zaps (já no ar):** o BCB manda mostrar ao pagador o nome do recebedor **conforme o DICT, com qualquer chave** (inclusive aleatória). A UI deve dizer "seu nome civil aparece para quem paga" e oferecer Zap para a chave do coletivo (B2). ~~Recomendar chave aleatória~~ (não protege) | ✅ entregue no PR #17 · [complementar §1-E](./research/pesquisa-complementar-2026-11.md#e-pix-e-privacidade-do-recebedor) |
 | [x] | **REV-19** | code | **Teste de fumaça Nostr (B7):** workflow semanal que publica e lê um evento efêmero em cada relay do pool (damus, nos.lol, nostr.mom, offchain.pub, snort) e grava a taxa de sucesso. Pré-requisito do REV-09 | ✅ entregue no PR #17; 1ª execução local: 6/7 relays ok, `eden.nostr.land` pede pagamento · [complementar §1-G](./research/pesquisa-complementar-2026-11.md#g-nostr-para-sinalização) |
 | [x] | **REV-03** | code | Teste que falha se `docs/release-metadata.json.cache_name` ≠ `CACHE_NAME` do `sw.js` (impede drift) | ✅ PR #22: `tests/release-metadata-drift.test.js` · [TESTES.md](./TESTES.md) |
