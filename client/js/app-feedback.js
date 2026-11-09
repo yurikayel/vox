@@ -38,10 +38,15 @@ export function buildFeedback({ screen, kind, note = "", version = "" } = {}, no
   };
 }
 
+/** Registro salvo íntegro: tipo conhecido e data válida (o armazenamento pode ter sido mexido). */
+function isValidRecord(rec) {
+  return Boolean(rec) && Boolean(findKind(rec.kind)) && Number.isFinite(rec.ts) && !Number.isNaN(new Date(rec.ts).getTime());
+}
+
 export function listFeedback(storage = globalThis.localStorage) {
   try {
     const raw = JSON.parse(storage?.getItem(FEEDBACK_STORAGE_KEY) || "[]");
-    return Array.isArray(raw) ? raw : [];
+    return Array.isArray(raw) ? raw.filter(isValidRecord) : [];
   } catch {
     return [];
   }

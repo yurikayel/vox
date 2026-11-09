@@ -12,7 +12,7 @@ Cada pessoa guarda a própria mídia no aparelho ("traga seu próprio armazename
 | Grau | Guarda | Prioridade de permanência |
 |---|---|---|
 | **Seus posts** | Mídia v2 completa | **Fora do teto**; nunca sai para abrir espaço |
-| **Amigos próximos** (a pessoa marca; teto de ~15) | Mídia v2 completa, inclusive vídeo | A mais alta |
+| **Amigos próximos** (a pessoa marca; teto proposto de ~15, a decidir) | Mídia v2 completa, inclusive vídeo | A mais alta |
 | **Amigos** | Mídia v2 completa, inclusive vídeo | Alta |
 | **Amigos de amigos** | Texto + imagem AVIF; vídeo só a capa | Média |
 | **Amigos de amigos de amigos** | Texto + miniatura (já embutida no post) | Baixa |
@@ -21,7 +21,7 @@ Cada pessoa guarda a própria mídia no aparelho ("traga seu próprio armazename
 ## Espaço
 
 - **Teto padrão: 500 MB por aparelho**, além dos próprios posts. Se houver menos de 2 GB livres (`navigator.storage.estimate`), cai para 200 MB. A pessoa pode escolher 100 MB, 500 MB ou 1 GB.
-- **Subcota de vídeo:** no máximo 40% do teto (200 MB), para os vídeos não expulsarem as fotos. Pode baixar para 25% se vídeo for raro no piloto.
+- **Subcota de vídeo (proposta, a decidir no piloto):** no máximo 40% do teto (200 MB), para os vídeos não expulsarem as fotos. Pode baixar para 25% se vídeo for raro no piloto.
 - **Quando enche, sai primeiro** o grau mais distante e o mais antigo; o que a pessoa guardou ou fixou não sai.
 - Pedir ao navegador que não apague os dados (`navigator.storage.persist`, `storage-persistence.js`).
 - O teto substitui o limite de armazenamento do `supporter-mode.js` (25 MB leve / 250 MB apoiador); as cotas diárias de transferência continuam.

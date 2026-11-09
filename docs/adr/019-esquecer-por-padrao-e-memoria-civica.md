@@ -14,7 +14,7 @@ Isso pode ser tratado como defeito (e o Arweave entraria para segurar tudo) ou c
 2. **"Guardar" é um gesto com peso:** põe o post no espaço da pessoa sem prazo de saída e o mantém vivo para os outros.
 3. **A interface diz isso com honestidade:** "este post vive enquanto alguém o guardar"; o post pode mostrar em quantos aparelhos está. A interface **não promete apagamento**: "o Vox esquece, mas as pessoas podem lembrar" (print, cópia, aparelho modificado).
 4. **Exceções que não esquecem:**
-   - os **seus próprios originais**, que nunca são apagados do seu aparelho para abrir espaço;
+   - os **seus próprios posts** (na versão da [mídia v2](../specs/midia-v2.md); o original fica na galeria do aparelho), que nunca são apagados do seu aparelho para abrir espaço;
    - **prova de abuso:** denunciar guarda uma cópia para a moderação até o caso fechar, e haverá um "guardar como prova" no aparelho de quem sofreu;
    - **memória cívica**, pelos três caminhos abaixo.
 
@@ -49,5 +49,5 @@ O caminho automático usa quase sempre âncora ou texto.
 - **Jurídico:** o conteúdo não fica hospedado para sempre, o que combina com a minimização da LGPD e reduz a exposição do operador ([ADR-020](./020-postura-de-operacao-do-piloto-g1.md)).
 - **Custo:** o Arweave deixa de ser o destino padrão; a cota grátis de uma carteira da comunidade dura muito (≈ 7 mil âncoras).
 - **Produto:** o feed valoriza o que está vivo agora, não o acúmulo.
-- **Risco:** a pessoa pode perder memórias se perder o aparelho. Por isso o backup dos próprios posts (EXP-04, depois o Drive) ganha prioridade.
+- **Risco:** a pessoa pode perder os próprios posts se perder o aparelho (sobram as cópias dos amigos). Por isso o backup dos próprios posts (EXP-04, depois o Drive) ganha prioridade.
 - **Não implementado ainda:** os três caminhos ficam para depois do piloto; no G1 vale o REV-11 (efêmero por padrão, permanente por consenso) com o fluxo atual.

@@ -65,7 +65,8 @@ function closeFeedbackModal() {
 export async function currentAppVersion(cacheApi = globalThis.caches) {
   try {
     const keys = (await cacheApi?.keys?.()) || [];
-    return keys.filter((k) => k.startsWith("vox-pwa-")).sort().pop() || "";
+    const ours = keys.filter((k) => k.startsWith("vox-pwa-"));
+    return ours.sort((a, b) => a.localeCompare(b, "en", { numeric: true })).pop() || "";
   } catch {
     return "";
   }
@@ -107,10 +108,14 @@ export function openFeedbackFlow(screen = parseRoute().name) {
   document.getElementById("btn-feedback-cancel")?.addEventListener("click", closeFeedbackModal);
   document.getElementById("form-feedback")?.addEventListener("submit", async (e) => {
     e.preventDefault();
+    const submit = e.target.querySelector('button[type="submit"]');
+    if (submit?.disabled) return;
+    if (submit) submit.disabled = true;
     try {
       await submitFeedback(screen, e.target);
     } catch (err) {
       share.showToast(err.message || "Não foi possível salvar o apontamento.", "error");
+      if (submit) submit.disabled = false;
     }
   });
 }

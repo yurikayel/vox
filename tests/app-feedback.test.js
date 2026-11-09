@@ -66,3 +66,16 @@ test("apontamento: versão vem do cache do Service Worker em uso", async () => {
   assert.equal(await flow.currentAppVersion({ keys: async () => { throw new Error("x"); } }), "");
   assert.equal(await flow.currentAppVersion(undefined), "");
 });
+
+test("apontamento: registros corrompidos no armazenamento são ignorados (não quebram o compartilhar)", () => {
+  const storage = memoryStorage();
+  const ok = fb.buildFeedback({ screen: "home", kind: "quebrou" }, 1000);
+  storage.setItem(fb.FEEDBACK_STORAGE_KEY, JSON.stringify([null, { kind: "quebrou", ts: "x" }, { kind: "?", ts: 1 }, { kind: "quebrou", ts: 9e15 }, ok]));
+  assert.deepEqual(fb.listFeedback(storage), [ok]);
+  assert.doesNotThrow(() => fb.formatFeedbackForShare(fb.listFeedback(storage)));
+});
+
+test("apontamento: versão mais nova vence mesmo com número de dígitos diferente", async () => {
+  const caches = { keys: async () => ["vox-pwa-v7.10-x", "vox-pwa-v7.9-x"] };
+  assert.equal(await flow.currentAppVersion(caches), "vox-pwa-v7.10-x");
+});

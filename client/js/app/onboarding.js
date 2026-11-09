@@ -256,8 +256,10 @@ function acceptPact() {
 }
 
 async function finishPactAcceptance(modalContainer) {
+  const returning = localStorage.getItem("vox-pact-accepted") === "true";
   acceptPact();
   render.closePactModal(modalContainer);
+  if (returning) return; // só faltava confirmar os 18+: sem boas-vindas nem convite de novo
   const user = await localAccount.getRouteId().catch(() => "");
   await ensureOnboardingSideEffects(user);
   share.showToast("Bem-vindo ao Vox! Rede ativa.");
