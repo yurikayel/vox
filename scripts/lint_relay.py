@@ -7,7 +7,8 @@ import subprocess
 import sys
 
 def run_external_linter():
-    for cmd in [["ruff", "check", "relay/"], ["flake8", "relay/"]]:
+    # Python de produção, scripts e instaladores (regras em ruff.toml). flake8 é só plano B local.
+    for cmd in [["ruff", "check", "relay/", "scripts/", "packaging/"], ["flake8", "relay/"]]:
         try:
             res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
             print(res.stdout)

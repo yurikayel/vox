@@ -12,7 +12,6 @@ import json
 import os
 import re
 import stat
-import sys
 import tempfile
 import threading
 import urllib.error
@@ -703,13 +702,13 @@ def run_server(host=DEFAULT_HOST, port=DEFAULT_PORT):
     ensure_cache_dir()
     server_address = (host, port)
     httpd = HTTPServer(server_address, VoxRelayHandler)
-    print(f"======================================================")
-    print(f"  Vox Relay Desktop — Nó Local de Espelho & Cache")
+    print("======================================================")
+    print("  Vox Relay Desktop — Nó Local de Espelho & Cache")
     print(f"  Escutando em: http://{host}:{port}")
     print(f"  Verificação de status: http://{host}:{port}/health")
     print(f"  Diretório de cache: {CACHE_DIR}")
-    print(f"  Pressione Ctrl+C para encerrar.")
-    print(f"======================================================")
+    print("  Pressione Ctrl+C para encerrar.")
+    print("======================================================")
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:

@@ -11,8 +11,6 @@ import json
 import base64
 import hashlib
 import struct
-import socket
-import select
 import threading
 import socketserver
 
