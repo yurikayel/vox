@@ -9,6 +9,7 @@ import * as meshProfile from "../mesh-profile.js";
 import * as centralMemory from "../central-memory.js";
 import { syncIdentity } from "./screens-network.js";
 import { parseRoute } from "./route-parse.js";
+import * as ageGate from "../age-gate.js";
 import {
   CANTINA_STORAGE_KEY,
   hasPassedCantinaGate,
@@ -155,7 +156,7 @@ let genesisWithPact = false;
  * acesso, avança para a etapa "pacto" no mesmo modal; senão fecha e segue o callback.
  */
 function endGenesis(modalContainer, onComplete, res) {
-  const pactPending = genesisWithPact && localStorage.getItem("vox-pact-accepted") !== "true";
+  const pactPending = genesisWithPact && !isPactComplete();
   if (pactPending && render.showGenesisStep(modalContainer, "pact")) {
     bindPactActions(modalContainer);
     return;
@@ -244,8 +245,18 @@ function openCantinaGate(modalContainer) {
   });
 }
 
-async function finishPactAcceptance(modalContainer) {
+/** Pacto aceito E maioridade confirmada (ADR-020). Quem aceitou antes do aviso de 18+ vê o pacto uma vez mais. */
+function isPactComplete() {
+  return localStorage.getItem("vox-pact-accepted") === "true" && ageGate.hasConfirmedAdult();
+}
+
+function acceptPact() {
+  ageGate.confirmAdult();
   localStorage.setItem("vox-pact-accepted", "true");
+}
+
+async function finishPactAcceptance(modalContainer) {
+  acceptPact();
   render.closePactModal(modalContainer);
   const user = await localAccount.getRouteId().catch(() => "");
   await ensureOnboardingSideEffects(user);
@@ -264,7 +275,7 @@ async function finishPactAcceptance(modalContainer) {
 }
 
 export function checkPactModal() {
-  if (localStorage.getItem("vox-pact-accepted")) return;
+  if (isPactComplete()) return;
   const modalContainer = document.getElementById("modal-container");
   if (!modalContainer) return;
 
@@ -277,11 +288,15 @@ function bindPactActions(modalContainer) {
   const accept = document.getElementById("btn-pact-accept");
   if (!accept || accept.dataset.bound === "1") return;
   accept.dataset.bound = "1";
+  const settings = document.getElementById("btn-pact-settings");
+  const ageBox = ageGate.bindAdultCheck(document, [accept, settings]);
+  const confirmed = () => Boolean(ageBox?.checked);
   accept.addEventListener("click", () => {
-    void finishPactAcceptance(modalContainer);
+    if (confirmed()) void finishPactAcceptance(modalContainer);
   });
-  document.getElementById("btn-pact-settings")?.addEventListener("click", () => {
-    localStorage.setItem("vox-pact-accepted", "true");
+  settings?.addEventListener("click", () => {
+    if (!confirmed()) return;
+    acceptPact();
     render.closePactModal(modalContainer);
     void localAccount.getRouteId().then((u) => ensureOnboardingSideEffects(u));
     location.hash = "#/settings/network";

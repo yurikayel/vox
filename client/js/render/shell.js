@@ -487,7 +487,7 @@ function renderShellMarkup({ activeTab, sidebarHtml, identity, chipHtml }) {
       <div class="main-column">
         ${renderTopBar(identity, networkChipText(chipHtml), chipHtml)}
         <main id="app-main"></main>
-        <footer class="app-footer">Vox · ${escapeHtml(appShellFooterTagline)} · <a href="#/ajuda/teste">Teste aberto</a> · <a href="./proposta-vox.html" target="_blank">Proposta</a></footer>
+        <footer class="app-footer">Vox · ${escapeHtml(appShellFooterTagline)} · <a href="#/ajuda/teste">Teste aberto</a> · <a href="./proposta-vox.html" target="_blank">Proposta</a> · <button type="button" class="app-footer-feedback" data-app-feedback>Algo errado aqui?</button></footer>
       </div>
     </div>
     ${renderIdentityDrawer(identity, chipHtml)}

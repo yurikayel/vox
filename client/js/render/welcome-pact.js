@@ -1,4 +1,5 @@
 /** @file Modal de boas-vindas (pacto): mosaico de fotos reais, prova social e 3 pilares. */
+import { renderAdultCheckHtml } from "../age-gate.js";
 
 const IMG = "images/welcome";
 
@@ -65,6 +66,7 @@ export function renderPactStepHtml() {
     <p class="genesis-polis-sub">Sua turma, sua família e seu bairro conversando direto de aparelho pra aparelho.</p>
     ${renderAvatarStack()}
     <ul class="welcome-pillars">${PILLARS.map(renderPillar).join("")}</ul>
+    ${renderAdultCheckHtml()}
     <div class="modal-actions modal-actions--stack">
       <button id="btn-pact-accept" class="agora-btn agora-btn--primary agora-btn--block btn-pact-continue">Entrar na roda</button>
       <button id="btn-pact-settings" class="agora-btn agora-btn--secondary agora-btn--block btn-pact-settings">Ajustar rede depois</button>
@@ -79,6 +81,7 @@ export function renderPactModalHtml() {
         <div class="welcome-body">
           ${renderAvatarStack()}
           <ul class="welcome-pillars">${PILLARS.map(renderPillar).join("")}</ul>
+          ${renderAdultCheckHtml()}
           <div class="modal-actions modal-actions--stack">
             <button id="btn-pact-accept" class="btn btn-primary btn-pact-continue">Entrar na roda</button>
             <button id="btn-pact-settings" class="btn btn-outline btn-pact-settings">Ajustar rede depois</button>
