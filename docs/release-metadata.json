@@ -1,9 +1,9 @@
 {
-  "git_sha": "8cd4c46",
-  "branch": "chore/qualidade-limites",
-  "test_js": 847,
+  "git_sha": "144027c",
+  "branch": "chore/max-params-e-versoes",
+  "test_js": 855,
   "test_python": 91,
-  "test_total": 938,
-  "cache_name": "vox-pwa-v7.41-real-network-audio-video-upload",
-  "generated_at": "2026-11-09T17:01:47Z"
+  "test_total": 946,
+  "cache_name": "vox-pwa-v7.42-real-network-audio-video-upload",
+  "generated_at": "2026-11-09T17:23:57Z"
 }

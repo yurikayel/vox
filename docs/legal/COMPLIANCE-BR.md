@@ -25,7 +25,7 @@ Na **Fase 3.1**, o Vox adota o modelo contratual transparente **Pacto Vox**:
   1. **Ciência Prévia no Onboarding:** Na primeira abertura do app, um modal claro apresenta os termos do pacto antes da navegação continuada.
   2. **Salvaguarda Técnica de Dados:** O nó leve trafega e armazena **estritamente dados públicos e imutáveis** já gravados no permaweb (tópicos e respostas comunitárias). Chaves privadas, dados sensíveis ou históricos pessoais de navegação nunca são compartilhados.
   3. **Direito de Opt-Out Preservado:** O usuário mantém a prerrogativa soberana de pausar a contribuição a qualquer momento através de `#/settings/network` ("Pausar contribuição"), convertendo o cliente para modo passivo.
-  4. **Proteção Patrimonial (Banda e Bateria):** Padrão configurado com teto diário de banda (50 MB/dia), limite de armazenamento local (25 MB) e prioridade em conexões Wi-Fi para impedir consumo de dados tarifados 4G/5G.
+  4. **Proteção Patrimonial (Banda e Bateria):** Padrão configurado com teto diário de banda (50 MB/dia no Wi-Fi; **no 4G só por opção da pessoa, com teto próprio de 5 MB/dia** — PM-52), limite de armazenamento local (25 MB) e prioridade em conexões Wi-Fi para impedir consumo de dados tarifados 4G/5G.
   5. **Operação em Segundo Plano:** Se habilitada, a atuação via Service Worker exige permissão de notificação explícita do sistema operacional e desativa-se automaticamente fora de redes Wi-Fi ou caso o teto diário seja atingido.
 
 ## Mensagens Diretas Efêmeras e Privacidade (Fase 4)

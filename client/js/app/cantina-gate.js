@@ -1,5 +1,7 @@
 /** @file Porta da Cantina — policy + in-page link passthrough under overlay. */
 
+import { isReadFirstRoute } from "./read-first.js";
+
 export const CANTINA_STORAGE_KEY = "vox-cantina-v1";
 
 /**
@@ -16,6 +18,8 @@ export function hasPassedCantinaGate(storage = globalThis.localStorage) {
 export function shouldShowCantinaGate(routeName, storage = globalThis.localStorage) {
   if (hasPassedCantinaGate(storage)) return false;
   if (routeName === "ajuda-teste") return false;
+  // PM-54: link direto para conteúdo abre para leitura; o portão vem na primeira ação que escreve.
+  if (isReadFirstRoute(routeName)) return false;
   return true;
 }
 
