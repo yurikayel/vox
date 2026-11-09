@@ -420,6 +420,11 @@ function syncProfileDirectoryFromGossip(item) {
   }
 }
 
+/** PM-09: update de comunidade assinado por quem não é dono nem moderador não entra nem segue adiante. */
+async function isRejectedCommunityUpdate(item) {
+  return item.type === "community_update" && !(await cacheNode.isCommunityUpdateAcceptable(item));
+}
+
 async function handleGossipMessage(item, source = "rtc") {
   if (!item?.id || !item?.sig) return;
   if (moderation.shouldDropGossip(item.author)) return;
@@ -435,6 +440,7 @@ async function handleGossipMessage(item, source = "rtc") {
   }
 
   if (!allowGossipFromAuthor(item.author)) return;
+  if (await isRejectedCommunityUpdate(item)) return;
   noteKeySeen(item.author);
 
   syncProfileDirectoryFromGossip(item);
@@ -470,6 +476,7 @@ async function handleGossipUpdateMessage(item, source = "rtc") {
     relayToMesh({ type: "GOSSIP_UPDATE", item, fromPeer: myPeerId }, source);
     return;
   }
+  if (await isRejectedCommunityUpdate(item)) return;
 
   await cacheNode.saveLocalPost(item);
   dispatchGossipPost(item, source);

@@ -46,6 +46,7 @@
 | T12 | Perda de chave = perda de identidade | backup por QR/cofre, Senha Soberana | iOS apaga storage (REV-14); fluxo não testado com leigos (LAN-25) |
 | T13 | Dado pessoal gravado para sempre no Arweave | **aviso de permanência + opção "só na malha" (LAN-11)** | eliminação impossível na cadeia → lista de ocultação (LAN-13) e parecer (REV-12) |
 | T14 | Ordem judicial para identificar autor | não há cadastro central nem logs do projeto | stewards de relay podem ter logs de IP → política de logs (parecer REV-12) |
+| T15 | Outra chave troca foto, título ou dono de uma comunidade | `community_update` só vale do dono ou de moderador listado e só muda foto, título, descrição e categoria; o gossip não grava nem repassa update de outra chave; o dono vem só do post `c_<communityId>` (PM-09) | o post `c_<communityId>` é o primeiro que o aparelho vê: quem publicar antes, num aparelho que ainda não conhece a comunidade pela malha (inclusive uma que ele só conhece pelo Arweave), fica dono ali. Comunidade só no Arweave (dono = carteira) não aceita update pela malha até existir vínculo carteira↔chave |
 
 ## 4. Riscos aceitos (por enquanto)
 

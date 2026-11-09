@@ -18,7 +18,7 @@ Tudo abaixo foi medido no `main` e nos serviços no ar nesta data.
 | Testes de tela | 22 módulos, quase todos de UI, não aparecem em nenhum teste (`screens-dm`, `screens-people`, `screens-status`, `zap-modal`, `compose-stepper`…) | varredura em `tests/` |
 | Segurança | A chave de assinatura fica em `localStorage` como JWK exportável (`vox-local-account-v1`). O `arweave` vem do esm.sh sem SRI (LAN-20). No GitHub, secret scanning, push protection e alertas do Dependabot estão **desligados** | `local-account.js`, [DEPENDENCIAS.md](../DEPENDENCIAS.md), API do repo |
 | Binários | A página de download serve `VoxPopuli.exe` (12 MB), `Vox.exe` e dois APKs **compilados numa máquina pessoal e commitados** (04/11), sem build no CI e sem assinatura de código. O README do Android publicava um SHA-256 e um tamanho que não batiam com o APK atual (corrigido neste PR). A DLL do WebView2 está vendorizada sem versão anotada | [DEPENDENCIAS.md §6](../DEPENDENCIAS.md#6-binários-no-repositório) |
-| Comunidades | Qualquer chave consegue mudar foto e título de qualquer comunidade: `applyCommunityUpdate` não confere o autor, e `resolveCommunityMetadata` espalha o último `community_update` inteiro sobre o registro, `id` e `author` inclusive | `cache-node.js`, `app/screens-community.js` |
+| Comunidades | ~~Qualquer chave consegue mudar foto e título de qualquer comunidade: `applyCommunityUpdate` não confere o autor, e `resolveCommunityMetadata` espalha o último `community_update` inteiro sobre o registro, `id` e `author` inclusive~~ **Corrigido no PR #32 (PM-09)** | `cache-node.js`, `app/screens-community.js` |
 | Gente | 0 issues, 0 forks, 0 estrelas, 1 pessoa com acesso a tudo (bus factor 1) | API do GitHub |
 | Arrumação | 11 worktrees já mergeados. Dois branches remotos com trabalho fora do `main`: `feat/social-login` (importar nome e foto do Bluesky, X e TikTok; 54 commits atrás) e `feat/post-flow-instagram` (favicon tricolor; provavelmente superado pelo PR #20) | `git worktree list`, `git branch -r --no-merged` |
 
@@ -51,7 +51,7 @@ Tudo abaixo foi medido no `main` e nos serviços no ar nesta data.
 
 | ID | Ideia | Por que | Esforço | Tipo | Liga com |
 |---|---|---|---|---|---|
-| **PM-09** | **`community_update` só do dono:** aplicar o update só quando `author` é o dono (ou moderador) e copiar só os campos permitidos (foto, título, descrição), sem espalhar `id`/`author` sobre o registro | Hoje qualquer chave muda foto e título de qualquer comunidade | P | code | LAN-14, PM-31 |
+| **PM-09** ✅ PR #32 | **`community_update` só do dono:** aplicar o update só quando `author` é o dono (ou moderador) e copiar só os campos permitidos (foto, título, descrição), sem espalhar `id`/`author` sobre o registro | Hoje qualquer chave muda foto e título de qualquer comunidade | P | code | LAN-14, PM-31 |
 | **PM-10** | **Ligar secret scanning, push protection e alertas do Dependabot** no repositório | Grátis em repositório público; hoje desligados | P | ops-humano | LAN-17 |
 | **PM-11** | **Vendorizar o `arweave`** (o bundle de hash já anotado) e tirar `https://esm.sh` do `script-src` | Fecha o LAN-20. Precisa de um teste real de publicação | P | code | LAN-20 |
 | **PM-12** | **Chave de assinatura não exportável:** guardar a `CryptoKey` com `extractable: false` no IndexedDB e manter só a cópia cifrada do cofre para backup. O backup vira passo obrigatório do onboarding | Hoje um XSS leva a identidade inteira | G | code | LAN-18, REV-14 |
@@ -136,7 +136,7 @@ O convite que já faz o pareamento ([F2](./brainstorm-autossustento-10-features-
 
 | # | O quê | Por que nesta posição |
 |---|---|---|
-| 1 | **PM-09** `community_update` só do dono | Furo de integridade barato; precisa estar fechado antes de qualquer piloto |
+| 1 | ✅ **PM-09** `community_update` só do dono (PR #32) | Furo de integridade barato; precisa estar fechado antes de qualquer piloto |
 | 2 | **PM-45** binários pelo CI, com hash | É o caminho mais curto para alguém entregar código malicioso a quem instala o nó |
 | 3 | **PM-10** + **PM-43** ligar proteções do GitHub e Sponsors | Cinco a dez minutos cada |
 | 4 | **PM-42** proposta NLnet | Tem prazo (03/01/2027) e financia o resto |
