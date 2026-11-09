@@ -6,6 +6,7 @@ import * as share from "../share.js";
 import * as cacheNode from "../cache-node.js";
 import { escapeHtml } from "../render/util.js";
 import { getActiveUser } from "./context.js";
+import { modalHost, clearModalHost } from "../render/modal-host.js";
 
 const MODAL_ID = "report-modal-container";
 
@@ -63,20 +64,8 @@ export function renderReportDoneHtml({ grave = false, moderatorHash = "" } = {})
     </div>`;
 }
 
-function container() {
-  let el = document.getElementById(MODAL_ID);
-  if (!el) {
-    el = document.createElement("div");
-    el.id = MODAL_ID;
-    document.body.appendChild(el);
-  }
-  return el;
-}
-
-function closeReportModal() {
-  const el = document.getElementById(MODAL_ID);
-  if (el) el.innerHTML = "";
-}
+const container = () => modalHost(MODAL_ID);
+const closeReportModal = () => clearModalHost(MODAL_ID);
 
 /** Dono da comunidade (moderador conhecido) do post, se houver. */
 export async function resolveModeratorRoute(postId, communityIdHint = "", { getPost = cacheNode.getLocalPost, getCommunity } = {}) {

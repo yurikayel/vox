@@ -30,9 +30,21 @@ export function renderAdultCheckHtml() {
     </label>`;
 }
 
+/**
+ * Devolve a caixa de 18+; se o HTML do pacto veio sem ela (ex.: cache misturando versões),
+ * insere antes dos botões. Sem isso, os botões ficariam desativados para sempre.
+ */
+export function ensureAdultCheck(doc, anchor) {
+  const existing = doc?.getElementById?.(AGE_CHECKBOX_ID) || null;
+  if (existing || !anchor?.insertAdjacentHTML) return existing;
+  const actions = anchor.closest?.(".modal-actions") || anchor;
+  actions.insertAdjacentHTML("beforebegin", renderAdultCheckHtml());
+  return doc.getElementById(AGE_CHECKBOX_ID) || null;
+}
+
 /** Os botões do pacto só ficam ativos com a caixa marcada. Devolve a caixa (ou null). */
 export function bindAdultCheck(doc, buttons = []) {
-  const box = doc?.getElementById?.(AGE_CHECKBOX_ID) || null;
+  const box = ensureAdultCheck(doc, buttons.find(Boolean));
   const sync = () => {
     const ok = Boolean(box?.checked);
     for (const btn of buttons) {

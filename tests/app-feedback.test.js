@@ -79,3 +79,19 @@ test("apontamento: versão mais nova vence mesmo com número de dígitos diferen
   const caches = { keys: async () => ["vox-pwa-v7.10-x", "vox-pwa-v7.9-x"] };
   assert.equal(await flow.currentAppVersion(caches), "vox-pwa-v7.10-x");
 });
+
+test("apontamento: quebras de linha da nota viram espaço (uma linha por apontamento)", () => {
+  const rec = fb.buildFeedback({ screen: "home", kind: "quebrou", note: "não carrega\n\n  tela   branca" });
+  assert.equal(rec.note, "não carrega tela branca");
+  const legacy = { screen: "home", kind: "quebrou", note: "linha 1\nlinha 2", version: "", ts: 0 };
+  assert.equal(fb.formatFeedbackForShare([legacy]).split("\n").length, 3);
+});
+
+test("apontamento: cabeçalho lista todas as versões presentes, não só a última", () => {
+  const list = [
+    fb.buildFeedback({ screen: "home", kind: "quebrou", version: "vox-pwa-v7.44" }, 1),
+    fb.buildFeedback({ screen: "home", kind: "quebrou", version: "vox-pwa-v7.45" }, 2),
+    fb.buildFeedback({ screen: "home", kind: "quebrou", version: "vox-pwa-v7.45" }, 3),
+  ];
+  assert.match(fb.formatFeedbackForShare(list), /^Apontamentos do Vox \(3\) · vox-pwa-v7\.44, vox-pwa-v7\.45\n/);
+});

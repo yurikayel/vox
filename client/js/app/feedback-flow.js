@@ -4,6 +4,7 @@ import * as feedback from "../app-feedback.js";
 import * as share from "../share.js";
 import { escapeHtml } from "../render/util.js";
 import { parseRoute } from "./route-parse.js";
+import { modalHost, clearModalHost } from "../render/modal-host.js";
 
 const MODAL_ID = "feedback-modal-container";
 
@@ -46,20 +47,8 @@ export function renderFeedbackDoneHtml(total = 1) {
     </div>`;
 }
 
-function container() {
-  let el = document.getElementById(MODAL_ID);
-  if (!el) {
-    el = document.createElement("div");
-    el.id = MODAL_ID;
-    document.body.appendChild(el);
-  }
-  return el;
-}
-
-function closeFeedbackModal() {
-  const el = document.getElementById(MODAL_ID);
-  if (el) el.innerHTML = "";
-}
+const container = () => modalHost(MODAL_ID);
+const closeFeedbackModal = () => clearModalHost(MODAL_ID);
 
 /** Nome do cache do Service Worker em uso (ex.: vox-pwa-v7.44-…), ou "". */
 export async function currentAppVersion(cacheApi = globalThis.caches) {
@@ -72,25 +61,13 @@ export async function currentAppVersion(cacheApi = globalThis.caches) {
   }
 }
 
-export async function shareFeedbackList(list = feedback.listFeedback()) {
-  const text = feedback.formatFeedbackForShare(list);
-  if (navigator.share) {
-    try {
-      await navigator.share({ title: "Apontamentos do Vox", text });
-      share.showToast(share.SHARE_NATIVE_SUCCESS_TOAST);
-      return true;
-    } catch (e) {
-      if (e.name === "AbortError") return false;
-    }
-  }
-  try {
-    await navigator.clipboard.writeText(text);
-    share.showToast("Apontamentos copiados: cole no grupo do piloto.");
-    return true;
-  } catch {
-    share.showToast("Não foi possível copiar os apontamentos.", "error");
-    return false;
-  }
+export function shareFeedbackList(list = feedback.listFeedback()) {
+  return share.shareOrCopy({
+    title: "Apontamentos do Vox",
+    text: feedback.formatFeedbackForShare(list),
+    copiedToast: "Apontamentos copiados: cole no grupo do piloto.",
+    failToast: "Não foi possível copiar os apontamentos.",
+  });
 }
 
 async function submitFeedback(screen, form) {
@@ -117,19 +94,5 @@ export function openFeedbackFlow(screen = parseRoute().name) {
       share.showToast(err.message || "Não foi possível salvar o apontamento.", "error");
       if (submit) submit.disabled = false;
     }
-  });
-}
-
-let feedbackHandlersWired = false;
-
-/** Liga todo elemento [data-app-feedback] (o botão do rodapé, presente em todas as telas) ao modal. */
-export function attachFeedbackHandlers(doc = globalThis.document) {
-  if (feedbackHandlersWired || !doc?.addEventListener) return;
-  feedbackHandlersWired = true;
-  doc.addEventListener("click", (e) => {
-    const btn = e.target?.closest?.("[data-app-feedback]");
-    if (!btn) return;
-    e.preventDefault();
-    openFeedbackFlow();
   });
 }

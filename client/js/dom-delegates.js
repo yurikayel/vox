@@ -5,7 +5,10 @@
  * - <img data-fallback-next>: se a imagem falhar, esconde-a e mostra o irmão seguinte (iniciais).
  * - [data-click-target="seletor"]: clica no primeiro elemento que casar com o seletor.
  * - [data-focus-target="seletor"][data-focus-fallback="#/rota"]: foca o alvo ou navega para a rota.
+ * - [data-app-feedback]: abre "Algo errado aqui?", carregando o modal só no clique (fora do boot).
  */
+
+import { showToast } from "./share.js";
 
 export function handleImageFallback(img) {
   if (!img?.matches?.("img[data-fallback-next]")) return false;
@@ -28,11 +31,20 @@ export function handleDelegatedClick(target, doc = globalThis.document, loc = gl
   return true;
 }
 
+/** "Algo errado aqui?": o modal só é importado no clique, para não pesar na abertura do app. */
+export function openFeedbackOnClick(target, load = () => import("./app/feedback-flow.js")) {
+  if (!target?.closest?.("[data-app-feedback]")) return false;
+  load()
+    .then((m) => m.openFeedbackFlow())
+    .catch(() => showToast("Não foi possível abrir \"Algo errado aqui?\" agora. Tente de novo com internet.", "error"));
+  return true;
+}
+
 let installed = false;
 
 export function installDomDelegates(doc = globalThis.document) {
   if (installed || !doc?.addEventListener) return;
   installed = true;
   doc.addEventListener("error", (e) => handleImageFallback(e.target), true);
-  doc.addEventListener("click", (e) => handleDelegatedClick(e.target, doc));
+  doc.addEventListener("click", (e) => openFeedbackOnClick(e.target) || handleDelegatedClick(e.target, doc));
 }
