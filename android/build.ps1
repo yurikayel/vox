@@ -7,12 +7,17 @@ $ErrorActionPreference = "Stop"
 $ROOT = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location $ROOT
 
-$env:JAVA_HOME = "C:\Program Files\Eclipse Adoptium\jdk-21.0.9.10-hotspot"
+# PM-45: no CI o JDK e o SDK vêm do runner (VOX_JAVA_HOME, ANDROID_HOME); na máquina local, os caminhos de sempre.
+$env:JAVA_HOME = if ($env:VOX_JAVA_HOME) { $env:VOX_JAVA_HOME } else { "C:\Program Files\Eclipse Adoptium\jdk-21.0.9.10-hotspot" }
 $env:PATH = "$env:JAVA_HOME\bin;$env:PATH"
 
-$SDK = "C:\Users\yurik\AppData\Local\Android\Sdk"
-$BUILD_TOOLS = "$SDK\build-tools\35.0.0"
+$SDK = if ($env:ANDROID_HOME) { $env:ANDROID_HOME } else { "C:\Users\yurik\AppData\Local\Android\Sdk" }
+$BUILD_TOOLS_VERSION = if ($env:VOX_BUILD_TOOLS) { $env:VOX_BUILD_TOOLS } else { "35.0.0" }
+$BUILD_TOOLS = "$SDK\build-tools\$BUILD_TOOLS_VERSION"
 $PLATFORM = "$SDK\platforms\android-35\android.jar"
+foreach ($required in @($BUILD_TOOLS, $PLATFORM, "$env:JAVA_HOME\bin\javac.exe")) {
+    if (-not (Test-Path $required)) { throw "Nao encontrado: $required" }
+}
 $JAVAC = "$env:JAVA_HOME\bin\javac.exe"
 $JAR = "$env:JAVA_HOME\bin\jar.exe"
 $KEYTOOL = "$env:JAVA_HOME\bin\keytool.exe"
