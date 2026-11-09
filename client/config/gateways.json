@@ -1,4 +1,5 @@
 {
+  "_doc": "graphql = testemunha de indexação (só gateways que indexam vox-brasil); raw = leitura do conteúdo por ID. Ver docs/brainstorms/brainstorm-backlog-proximas-melhorias-2026-11.md (PM-50).",
   "appName": "vox-brasil",
   "gateways": [
     {
@@ -22,8 +23,8 @@
     {
       "id": "ar-io-dev",
       "label": "ar-io.dev (AR.IO)",
-      "graphql": "https://ar-io.dev/graphql",
-      "raw": "https://ar-io.dev/{txId}"
+      "raw": "https://ar-io.dev/{txId}",
+      "note": "Só leitura raw. O GraphQL devolveu 0 itens App-Name vox-brasil em 2026-11-08 e 2026-11-09: como testemunha, geraria falsa omissão (PM-50)."
     }
   ]
 }

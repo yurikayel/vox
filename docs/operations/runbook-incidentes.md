@@ -36,7 +36,7 @@ Rollback do PWA e do `CACHE_NAME`: [ops-pages-rollback.md](./ops-pages-rollback.
 | **Ordem judicial** | Ofício, e-mail de autoridade | **Não** responder sozinho: encaminhar ao jurídico (REV-12/LAN-01). Cumprir o que for tecnicamente possível (ocultação no PWA oficial); o projeto não tem como apagar do Arweave nem da malha | Registrar no relatório de transparência (REV-20) |
 | **Ataque de spam** | Muitos posts de chaves novas, denúncias em massa | O limite por chave do gossip (LAN-14) segura a malha. Se chegar ao Arweave: `arweaveUpload: false`; se for em comunidades novas: `communityCreate: false` | Ajustar `GOSSIP_MAX_PER_WINDOW` em `client/js/rate-limit.js` |
 | **Golpe com Pix Zap** | Denúncia de cobrança falsa | `pixZaps: false` + `notice` explicando | Revisar o aviso do DICT (REV-13) |
-| **Gateway Arweave fora / cobrando (402)** | Leituras falhando | Nada a fazer no cliente: ele já tenta 4 gateways (LAN-27). Se todos falharem, `notice` | Avaliar trocar a ordem em `client/config/gateways.json` |
+| **Gateway Arweave fora / cobrando (402)** | Leituras falhando | Nada a fazer no cliente: ele já tenta 3 gateways GraphQL e 4 para conteúdo (LAN-27, PM-50). Se todos falharem, `notice` | Avaliar trocar a ordem em `client/config/gateways.json` |
 
 ## Simulados
 

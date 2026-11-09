@@ -82,11 +82,11 @@
 
 | Funcionalidade | Rota | Módulos | Status | Testes |
 |---|---|---|---|---|
-| Leitura multi-gateway + pill "Leitura reserva" | — | `graphql.js`, `gateway-telemetry.js` | no ar: 4 gateways em `config/gateways.json`, tempo limite de 8 s cada; se todos falham, erro "gateways fora" (LAN-27) | `graphql`, `multi-gateway`, `gateway-telemetry` |
+| Leitura multi-gateway + pill "Leitura reserva" | — | `graphql.js`, `gateway-telemetry.js` | no ar: 4 gateways em `config/gateways.json` (3 testemunhas GraphQL: turbo, arweave.net, ardrive.net; o `ar-io.dev` só serve conteúdo `raw` porque não indexa o Vox — PM-50), tempo limite de 8 s cada; se todos falham, erro "gateways fora" (LAN-27) | `graphql`, `multi-gateway`, `gateway-telemetry` |
 | Cache local "Pacto Vox" (IndexedDB) | — | `cache-node.js`, `idb-store.js` | no ar | `cache-node`, `idb-store` |
 | Malha WebRTC + gossip (WANT/HAVE/BLOB, perfis, manifestos) | — | `peers*.js`, `webrtc-peer.js`, `profile-card.js`, `mesh-profile.js` | no ar; **depende da sinalização** (1 nó Render + Nostr em paralelo) | `peers*`, `webrtc`, `profile-card` |
 | Prioridade suave de blobs (V-I09) | — | `peers-blob-affinity.js` | no ar, flag padrão **desligada** | `peers-blob-soft-priority` |
-| Sinalização via Nostr (efêmero kind 25050, cifrada entre pares) | — | `nostr-transport.js`, `nostr-event.js` (BIP-340), `nostr-signaling.js` | **no ar em paralelo ao Render** (REV-09; desligável em `signaling.json` → `nostrSignaling.enabled`). Ida e volta validada em relays reais; conexão entre dois navegadores ainda não testada em campo | `nostr-transport`, `nostr-event`, `nostr-signaling` |
+| Sinalização via Nostr (efêmero kind 25050, cifrada entre pares) | — | `nostr-transport.js`, `nostr-event.js` (BIP-340), `nostr-signaling.js` | **no ar em paralelo ao Render** (REV-09; desligável em `signaling.json` → `nostrSignaling.enabled`). Ida e volta validada em relays reais; conexão entre dois navegadores ainda não testada em campo. Relay que cai reconecta com espera crescente e, depois de 3 falhas, troca por outro do pool (PM-17) | `nostr-transport`, `nostr-event`, `nostr-signaling` |
 | Teste de fumaça dos relays Nostr | workflow semanal | `scripts/nostr-smoke.mjs`, `.github/workflows/nostr-smoke.yml` | no ar (REV-19) | `nostr-smoke` |
 | Kill-switch por configuração | `config/flags.json` | `feature-flags.js` | no ar (LAN-08): pausa upload, Feira, Pix Zaps, criar comunidade | `feature-flags` |
 | Nó leve por padrão + modo Apoiador (nó pesado) | `#/settings/network` (botão "Seja um apoiador da rede") | `supporter-mode.js`, `render/network.js` | no ar: leve = 50 MB/dia e 25 MB em disco; Apoiador = 500 MB/dia e 250 MB, só no Wi-Fi | `supporter-mode` |
