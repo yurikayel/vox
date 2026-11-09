@@ -1,6 +1,6 @@
 # Roadmap — Vox
 
-> **Status:** canônico · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-09 (G1 em `main` até o PR #28; revisão de estado no PR #29; LAN-14 e LAN-21 fechados no PR #30; NET-01 verificado e brainstorm PM-01…46 no PR #31; PM-09 no PR #32; PM-45 no PR #33)
+> **Status:** canônico · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-09 (G1 em `main` até o PR #28; revisão de estado no PR #29; LAN-14 e LAN-21 fechados no PR #30; NET-01 verificado e brainstorm PM-01…46 no PR #31; PM-09 no PR #32; PM-45 no PR #33; adendo PM-47…64 no PR #34; PM-17 e PM-50 parcial no PR #35; PM-10 e ruleset PM-62 em 09/11)
 > **Único plano vivo e único lugar com caixas `[ ]`** ([ADR-017](./adr/017-consolidacao-roadmap-unico.md)). Substitui o checklist do [dossiê N=25 §3.6](./archive/dossie-geral-inventario-master-breakdown-2026-11.md#36-checklist-master-vivo-n25).
 > Estado do produto: [FEATURES.md](./FEATURES.md) · Infra e riscos: [INFRA-CUSTOS.md](./INFRA-CUSTOS.md) · Teses: [direcionamento-crescimento-rede-2026-11.md](./strategy/direcionamento-crescimento-rede-2026-11.md)
 
@@ -10,9 +10,9 @@
 
 O cliente está maduro: feed Social/Cívico, comunidades, governança, Feira, Pix Zaps, DMs E2E, contas vinculadas, fluxos em etapas. Ver o [CHANGELOG](../CHANGELOG.md). O que falta para a rede **se sustentar sem o mantenedor** é quase tudo **infra e gente**:
 
-- a sinalização depende de 1 nó Render; o caminho Nostr (REV-09) roda em paralelo, mas ainda não foi medido em campo;
+- a sinalização depende de 1 nó Render; o caminho Nostr (REV-09 + reconexão automática PM-17) roda em paralelo, mas ainda não foi medido em campo;
 - não há relay completo público nem TURN;
-- não existe espelho B registrado;
+- o espelho B (`vox-9df.pages.dev`, NET-01) está no ar e registrado, mas ainda sob o mesmo operador do A (independência depende do LAN-30);
 - o piloto humano (V-P09) não começou;
 - para abrir ao público faltam o parecer jurídico, a resposta a conteúdo grave e bus factor ≥2 — ver [Rumo à rede pública](#rumo-à-rede-pública-lan).
 
@@ -132,7 +132,7 @@ Também exige: REV-18 · DOC-04 · REV-02 · REV-04 (ou LAN-21 cobrindo DM offli
 ## Candidatas (sem caixa até ganharem DoD e responsável)
 
 Do [brainstorm de autossustento](./brainstorms/brainstorm-autossustento-10-features-2026-11.md). Pesquisar antes com os 3 prompts do mesmo doc.
-Mais 46 ideias (PM-01…PM-46: peso do app, segurança, assembleia, Nostr, contribuidores), com a revisão de estado de 09/11: [brainstorm de próximas melhorias](./brainstorms/brainstorm-backlog-proximas-melhorias-2026-11.md).
+Mais 66 ideias (PM-01…PM-66: dieta do shell, segurança, hardening v3.2, pacote de destravamento jurídico, assembleia, Nostr, contribuidores), com a revisão de estado de 09/11: [brainstorm de próximas melhorias](./brainstorms/brainstorm-backlog-proximas-melhorias-2026-11.md).
 
 | # | Feature | Eixo | Reaproveita |
 |---|---|---|---|
@@ -153,6 +153,8 @@ Itens fechados de Agora, Próximo e Depois. Nas tabelas dos portões (LAN), a li
 
 | | ID | Tipo | Item | Evidência / nota |
 |---|---|---|---|---|
+| [x] | **PM-17** | code | Reconexão automática de relay Nostr com backoff exponencial (1 s → 60 s) e troca por relay reserva após 3 falhas consecutivas | ✅ PR #35, SW v7.41; `client/js/nostr-transport.js`, `tests/nostr-transport.test.js` |
+| [x] | **PM-10** | ops-humano | Secret scanning, push protection e alertas do Dependabot ligados no repositório GitHub | ✅ ativados via API do GitHub em 09/11/2026 (junto com ruleset `main protegido` do PM-62 exigindo PR + 5 checks do CI) |
 | [x] | **PM-45** | code | `Vox.exe`, `VoxPopuli.exe` e os dois APKs compilados no CI e publicados como GitHub Release com `SHA256SUMS` e atestação de origem; fora do git | ✅ PR #33; [`release-binarios.yml`](../.github/workflows/release-binarios.yml), [DEPENDENCIAS §6](./DEPENDENCIAS.md#6-binários-no-repositório). Assinatura de código do Windows: PM-46 |
 | [x] | **PM-09** | code | `community_update` só do dono ou de moderador, só com foto, título, descrição e categoria; só o post `c_<communityId>` define o dono | ✅ PR #32, SW v7.40; `client/js/community-updates.js`, `tests/community-updates.test.js` (3 dos 9 testes falham no código anterior). Origem: [brainstorm PM-09](./brainstorms/brainstorm-backlog-proximas-melhorias-2026-11.md#b-segurança-e-integridade) |
 | [x] | **NET-01** | ops-humano | Espelho shell **B** no ar + registro público | ✅ https://vox-9df.pages.dev/ serve o mesmo `sw.js` do A (v7.39) em 09/11/2026; deploy a cada push em `main` (`deploy-shell-b.yml`); linha `shell-b` em [ops-shell-mirrors.md](./operations/ops-shell-mirrors.md#tabela-de-espelhos). Mesmo operador do A: a independência fica com o LAN-30 |

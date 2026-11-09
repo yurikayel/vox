@@ -1,23 +1,23 @@
 # Caminho até a rede pública — brainstorm + backlog (nov/2026)
 
-> **Status:** brainstorm + backlog · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-08
+> **Status:** brainstorm + backlog · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-09 (`main` em `e7f1343`, pós-PR #35, SW v7.41)
 > **Não substitui o [ROADMAP.md](../ROADMAP.md)** ([ADR-017](../adr/017-consolidacao-roadmap-unico.md)). Aqui ficam o *porquê*, os portões e a ordem. As linhas com caixa `[ ]` estão no ROADMAP, seção [Rumo à rede pública](../ROADMAP.md#rumo-à-rede-pública-lan).
 > Insumos: [FEATURES.md](../FEATURES.md) · [INFRA-CUSTOS.md](../INFRA-CUSTOS.md) · [pesquisa-complementar-2026-11.md](../research/pesquisa-complementar-2026-11.md) · [COMPLIANCE-BR](../legal/COMPLIANCE-BR.md) · [piloto go/no-go](../pilot/piloto-comunidade-go-no-go.md)
 
-## 1. Onde estamos (2026-11-08)
+## 1. Onde estamos (2026-11-09 — pós-PR #35)
 
-**O produto está à frente da rede.** O cliente já tem feed Social/Cívico, comunidades, governança, Feira, Pix Zaps, DMs E2E, cofre e POSSE ([FEATURES](../FEATURES.md)). O que impede abrir ao público é:
+**O produto e as fundações técnicas do G1 já estão no ar; o bloqueio agora é institucional, jurídico e humano.** O cliente já tem feed Social/Cívico, comunidades blindadas (`PM-09`), governança, Feira, Pix Zaps (com aviso DICT `REV-13`), DMs E2E, cofre e POSSE ([FEATURES](../FEATURES.md)). Entre 08/11 e 09/11 (PRs #17–#35) foram entregues o isolamento do demo (`LAN-10`), aviso de permanência (`LAN-11`), botão de denúncia (`LAN-12`), kill-switch (`LAN-08`), CSP estrita (`LAN-16`), erros honestos (`LAN-21`), rate-limit + quarentena + PoW (`LAN-14`), rotação de gateways sem falso negativo GraphQL (`LAN-27` + `PM-50`), sinalização Nostr cifrada paralela com reconexão automática (`REV-09` + `PM-17`), espelho B ativo (`NET-01`) e binários compilados no CI com proveniência (`PM-45`). O que ainda impede abrir ao público:
 
-| Frente | Situação | Gravidade para abrir |
+| Frente | Situação em 09/11 | Gravidade para abrir |
 |---|---|---|
-| Jurídico | Sem parecer. A tese do STF exige autorregulação, canal para não usuários, relatório anual e **representante PJ no país** (itens 8–11). Os Decretos 12.975/12.976/2026 põem a ANPD na fiscalização. O ECA Digital exige vínculo com responsável abaixo de 16. **Não há Termos de Uso.** `privacy.html` e COMPLIANCE-BR são anteriores a tudo isso | **bloqueia** |
-| Conteúdo grave | **Não há procedimento** para abuso sexual infantil, terrorismo ou imagem íntima não consentida (o Decreto 12.976 fala em **2 h**). **Não há botão de denúncia** no app | **bloqueia** |
-| Honestidade | O `mock.js` mostra 27 perfis fictícios por UF e propostas de demonstração quando a rede falha, **misturados com conteúdo real**. Numa rede pública isso vira "perfil falso", que foi justamente o caso do Tema 987 | **bloqueia** |
-| Infra | 1 nó de sinalização (Render), sem TURN, sem espelho B, sem drill de DR. **Sem domínio próprio** (`yurikayel.github.io/vox`, `vox-9df.pages.dev`) | **bloqueia** |
-| Pessoas | Uma pessoa detém todas as contas: GitHub, Render, Cloudflare. Nenhum steward além do mantenedor. Piloto não começou (`blocked-human`) | **bloqueia** |
-| Segurança | Sem modelo de ameaças. Sem revisão externa de DM e cofre. **Sem CSP.** Pares WebRTC veem o IP um do outro | alto |
-| Escala | Cota do Turbo de ~10 MiB por carteira/sub-rede; `turbo-gateway` com 5 GB por visitante; banda do Render desconhecida; nenhum teste de carga | alto |
-| Acesso | Sem auditoria de acessibilidade nem de desempenho em Android de entrada. A chave no iOS pode ser apagada pelo Safari | médio |
+| Jurídico | Sem parecer (`REV-12`). A tese do STF exige autorregulação, canal para não usuários, relatório anual e **representante PJ no país** (itens 8–11). Os Decretos 12.975/12.976/2026 põem a ANPD na fiscalização. O ECA Digital exige vínculo com responsável abaixo de 16 (`REV-23`). **Não há Termos de Uso (`LAN-02`).** `privacy.html` e COMPLIANCE-BR ainda aguardam revisão jurídica (`LAN-03`) | **bloqueia** |
+| Conteúdo grave | ✅ **Botão de denúncia no app entregue (`LAN-12`)** (local + DM cifrada ao moderador). **Falta o procedimento operacional e o plantão humano de 2 pessoas (`LAN-04`)** para abuso infantil, terrorismo ou imagem íntima não consentida (Decreto 12.976: **≤2 h**) e a lista de ocultação assinada do PWA oficial (`LAN-13`) | **bloqueia G2/G3** |
+| Honestidade | ✅ **Resolvido no código (PRs #17–#30):** perfis fictícios do `mock.js` só com o modo demonstração ligado, com faixa fixa (`LAN-10`; o `#/demo` do plano virou um interruptor em `#/settings/network`), aviso de permanência Arweave (`LAN-11`), aviso de nome civil no Pix DICT (`REV-13`) e estados de erro honestos (`LAN-21`). Falta re-auditoria final de copy (`DOC-04`) | **G1 destravado no código** |
+| Infra | ✅ **Espelho B no ar (`vox-9df.pages.dev`, `NET-01`)** e **sinalização Nostr paralela com reconexão (`REV-09` + `PM-17`)**. Faltam: 2º nó WebSocket dedicado (`REV-01`), TURN público com orçamento (`REV-10`), drill de DR datado (`NET-02`) e **domínio próprio com ≥2 titulares (`LAN-06`)** | **bloqueia G2/G3** |
+| Pessoas | Uma pessoa detém todas as contas: GitHub, Render, Cloudflare (`LAN-30` bus factor 1). Nenhum steward externo validado (`NET-04`). Piloto não começou (`PIL-01`, `blocked-human`) | **bloqueia** |
+| Segurança | ✅ **CSP estrita (`LAN-16`), rascunho de `THREAT-MODEL.md` (`LAN-15`), aviso/toggle de IP (`LAN-19`), binários no CI (`PM-45`), dono de comunidade (`PM-09`) e proteções do GitHub (`PM-10`/`PM-62`) entregues.** Faltam: revisão externa do modelo de ameaças (`LAN-15`) e de cripto (`LAN-18`), vendorizar `arweave` (`PM-11`/`LAN-20`) e chave não exportável (`PM-12`) | alto |
+| Escala | ✅ **Rotação de 4 gateways com tratamento de 402 (`LAN-27` + `PM-50`) e rate-limit/quarentena (`LAN-14`) entregues.** Faltam: política efêmero por padrão + medidor de cota (`REV-11`), anotar banda do Render (`REV-21`) e teste de carga com 500 pares (`LAN-09`) | alto |
+| Acesso | Sem auditoria WCAG 2.2 AA (`LAN-22`), sem teste com 5 leigos (`LAN-25`) e chave no iOS ainda sem `storage-persistence` plugado (`REV-14`). Dieta do shell (`PM-04`/`PM-02`) e leitura sem portão (`PM-54`) em revisão | médio |
 
 ## 2. Brainstorm — o que significa "rede pública viável"?
 
@@ -112,29 +112,29 @@ Já no ROADMAP: REV-12 (parecer), REV-18 (associação/PJ), REV-20 (autorregula�
 |---|---|---|---|---|---|---|---|
 | LAN-06 | **Domínio próprio** (`.org.br` ou similar) com **dois titulares** ou titular PJ, renovação automática, DNS documentado; Pages e CF Pages atrás dele | ops-humano | Domínio resolvendo, titulares e data de expiração em INFRA-CUSTOS | REV-18 (titular) | P | mantenedor | G3 |
 | LAN-07 | **Página de status pública** gerada por workflow (nós de sinalização, relays Nostr, gateways), publicada no Pages | code | `status.html` no ar, atualizado a cada execução, histórico de 30 dias | REV-19 | M | infra | G2 |
-| LAN-08 | **Kill-switch por configuração:** `client/config/flags.json` desliga upload, Feira, Pix Zaps e convites; o cliente obedece em ≤1 recarga | code | Teste em `tests/`; procedimento no runbook de incidente | — | M | dev | G2 |
-| LAN-27 | **Leitura resiliente:** rotacionar ≥4 gateways (arweave.net, turbo-gateway e gateways AR.IO da rede), tratar o 402 do `turbo-gateway` (5 GB por visitante) como "trocar de gateway", nunca como erro do usuário | code | Testes de `graphql`/`multi-gateway` cobrindo o 402 e a rotação | — | M | dev | G3 |
+| LAN-08 ✅ PR #17 | **Kill-switch por configuração:** `client/config/flags.json` desliga upload, Feira, Pix Zaps e convites; o cliente obedece em ≤1 recarga | code | Teste em `tests/`; procedimento no runbook de incidente | — | M | dev | G2 |
+| LAN-27 ✅ PR #26/#35 | **Leitura resiliente:** rotacionar ≥4 gateways (arweave.net, turbo-gateway e gateways AR.IO da rede), tratar o 402 do `turbo-gateway` (5 GB por visitante) como "trocar de gateway", nunca como erro do usuário (`ar-io.dev` mantido só `raw` via PM-50) | code | Testes de `graphql`/`multi-gateway` cobrindo o 402 e a rotação | — | M | dev | G3 |
 | LAN-09 | **Teste de carga** da sinalização (Render, DO, Nostr) com ≥500 pares simulados e da malha com 50 pares reais em dispositivo; números de capacidade em INFRA-CUSTOS | code+doc | Script em `tools/`, relatório com limites e gargalos | REV-09, REV-01 | G | infra | G3 |
 
-Já no ROADMAP: REV-19 → REV-09 (Nostr), REV-01 (2º nó), REV-10 (TURN com orçamento), REV-21 (banda do Render), NET-01 (espelho B), NET-02 (drill de DR), NET-04 (steward que não seja o mantenedor), REV-04 (relay completo público).
+Já no ROADMAP: REV-19 ✅ → REV-09 🚧 (Nostr + reconexão PM-17 ✅), REV-01 (2º nó), REV-10 (TURN com orçamento), REV-21 (banda do Render), NET-01 ✅ (espelho B), NET-02 (drill de DR), NET-04 (steward que não seja o mantenedor), REV-04 (relay completo público).
 
 ### C. Produto honesto
 
 | ID | Item | Tipo | DoD | Depende | Esf. | Resp. | Portão |
 |---|---|---|---|---|---|---|---|
-| LAN-10 | **Demonstração isolada:** `mock.js` só em `#/demo` (faixa fixa "demonstração"); falha de rede mostra "sem conexão", e não perfis ou propostas fictícios; os 27 perfis por UF saem do caminho real | code | Teste garante que nenhuma rota real importa `mock.js` sem flag de demo; FEATURES atualizado | — | M | dev | G1 |
-| LAN-11 | **Aviso de permanência** antes do 1º post que vai para o Arweave (o que é permanente, quem vê, que não dá para apagar), com "não mostrar de novo" | code | Teste de UI; texto alinhado aos Termos | REV-11 | P | dev + UX | G1 |
-| LAN-21 | **Estados de erro honestos:** sinalização caída, cota do Turbo esgotada (B12), gateway pedindo pagamento (402), DM sem relay ("entrega quando os dois estiverem online") | code | Cada estado com texto e teste; nada "carrega para sempre" | REV-11 | M | dev | G2 |
+| LAN-10 ✅ PR #17 | **Demonstração isolada:** `mock.js` só em `#/demo` (faixa fixa "demonstração"); falha de rede mostra "sem conexão", e não perfis ou propostas fictícios; os 27 perfis por UF saem do caminho real | code | Teste garante que nenhuma rota real importa `mock.js` sem flag de demo; FEATURES atualizado | — | M | dev | G1 |
+| LAN-11 ✅ PR #17 | **Aviso de permanência** antes do 1º post que vai para o Arweave (o que é permanente, quem vê, que não dá para apagar), com "não mostrar de novo" | code | Teste de UI; texto alinhado aos Termos | REV-11 | P | dev + UX | G1 |
+| LAN-21 ✅ PR #26/#30 | **Estados de erro honestos:** sinalização caída, cota do Turbo esgotada (B12), gateway pedindo pagamento (402), DM sem relay ("entrega quando os dois estiverem online") | code | Cada estado com texto e teste; nada "carrega para sempre" | REV-11 | M | dev | G2 |
 
-Já no ROADMAP: DOC-04 (copy honesta), REV-02 (plugar ou arquivar os 11 módulos), REV-05 (Voxpedia), REV-11 (efêmero por padrão), REV-13 (aviso Pix).
+Já no ROADMAP: DOC-04 (copy honesta), REV-02 (plugar ou arquivar os 11 módulos), REV-05 (Voxpedia), REV-11 (efêmero por padrão), REV-13 ✅ (aviso Pix).
 
 ### D. Moderação e confiança
 
 | ID | Item | Tipo | DoD | Depende | Esf. | Resp. | Portão |
 |---|---|---|---|---|---|---|---|
-| LAN-12 | **Denunciar no app** (post, perfil, comunidade ⋯ → motivo): vai assinado para os moderadores da comunidade; categorias graves também vão para o canal do projeto (LAN-04) | code | Fluxo em etapas, teste, aparece na fila de moderação | — | M | dev | G2 |
+| LAN-12 ✅ PR #17 | **Denunciar no app** (post, perfil, comunidade ⋯ → motivo): vai assinado para os moderadores da comunidade; categorias graves também vão para o canal do projeto (LAN-04) | code | Fluxo em etapas, teste, aparece na fila de moderação | — | M | dev | G2 |
 | LAN-13 | **Lista de ocultação assinada do PWA oficial** (global, com motivo e data) que o cliente respeita, exportável no formato dos gateways AR.IO (B5) | code | Lista versionada, verificação de assinatura, teste; procedimento no LAN-04 | REV-12 | M | dev | G2 |
-| LAN-14 | **Anti-spam e limite de taxa:** teto de posts e gossip por chave e por janela, PoW leve opcional para chave nova, quarentena de chave nova em comunidades que pedirem. **Parâmetros no ar:** 20 posts por chave a cada 10 min (`rate-limit.js`); chave nova = vista no aparelho há menos de 24 h; PoW de 14 bits (`new-key-guard.js`) | code | Testes; parâmetros documentados; sem ranking pago | — | M | dev | G3 |
+| LAN-14 ✅ PR #27/#30 | **Anti-spam e limite de taxa:** teto de posts e gossip por chave e por janela, PoW leve opcional para chave nova, quarentena de chave nova em comunidades que pedirem. **Parâmetros no ar:** 20 posts por chave a cada 10 min (`rate-limit.js`); chave nova = vista no aparelho há menos de 24 h; PoW de 14 bits (`new-key-guard.js`) | code | Testes; parâmetros documentados; sem ranking pago | — | M | dev | G3 |
 
 Já no ROADMAP: PIL-05 (ciclo E1–E5), F8 (selo por aval, **obrigatório antes de enquete cívica pública com peso**), REV-20.
 
@@ -142,12 +142,12 @@ Já no ROADMAP: PIL-05 (ciclo E1–E5), F8 (selo por aval, **obrigatório antes 
 
 | ID | Item | Tipo | DoD | Depende | Esf. | Resp. | Portão |
 |---|---|---|---|---|---|---|---|
-| LAN-15 | **Modelo de ameaças** (`docs/THREAT-MODEL.md`): atacantes (stalker, fazenda de contas, Estado, troll), ativos (chave, DM, IP, grafo social, cofre), mitigações e riscos aceitos | doc | Revisado por 1 pessoa de segurança fora do time | — | M | revisor | G2 |
-| LAN-16 | **CSP e headers:** `_headers` no CF Pages e `<meta http-equiv>` no GitHub Pages (CSP, `frame-ancestors`, `Referrer-Policy`, `Permissions-Policy`); inventário de origens externas | code | Sem violação no console nas rotas principais; teste que lê a CSP | — | M | dev | G2 |
+| LAN-15 🚧 PR #17 | **Modelo de ameaças** (`docs/security/THREAT-MODEL.md`): atacantes (stalker, fazenda de contas, Estado, troll), ativos (chave, DM, IP, grafo social, cofre), mitigações e riscos aceitos (rascunho publicado; falta revisão externa) | doc | Revisado por 1 pessoa de segurança fora do time | — | M | revisor | G2 |
+| LAN-16 ✅ PR #17 | **CSP e headers:** `_headers` no CF Pages e `<meta http-equiv>` no GitHub Pages (CSP, `frame-ancestors`, `Referrer-Policy`, `Permissions-Policy`); inventário de origens externas | code | Sem violação no console nas rotas principais; teste que lê a CSP | — | M | dev | G2 |
 | LAN-17 | **Divulgação de vulnerabilidades funcionando:** GitHub Private Vulnerability Reporting ligado, contato do SECURITY.md testado, prazo de resposta escrito | ops-humano | Relato de teste recebido e respondido | — | P | mantenedor | G1 |
 | LAN-18 | **Revisão externa de cripto** (DM ECDH/AES-GCM, cofre ZK, assinatura de posts e votos), via programa de auditoria para software livre ou voluntário qualificado | ops-humano | Relatório recebido; achados críticos corrigidos | LAN-15 | G | mantenedor | G3 |
-| LAN-19 | **Privacidade de IP:** aviso claro de que pares WebRTC veem o IP; modo "só TURN" (REV-10) ligável no perfil; padrão ligado para menores (REV-23) | code | Teste; texto em privacidade e Voxpedia | REV-10 | M | dev | G3 |
-| LAN-20 | **Cadeia de suprimentos:** inventário de dependências vendorizadas e de CDN com versão e hash (SRI), `npm audit` no CI das ferramentas, rotina mensal | code | Lista em `docs/`, job no CI | LAN-16 | P | dev | G3 |
+| LAN-19 🚧 PR #25 | **Privacidade de IP:** aviso claro de que pares WebRTC veem o IP; modo "só TURN" (REV-10) ligável no perfil; padrão ligado para menores (REV-23) (aviso e toggle `iceTransportPolicy: relay` no ar; faltam REV-10 e REV-23) | code | Teste; texto em privacidade e Voxpedia | REV-10 | M | dev | G3 |
+| LAN-20 🚧 PR #22/#30 | **Cadeia de suprimentos:** inventário de dependências vendorizadas e de CDN com versão e hash (SRI), `npm audit` no CI das ferramentas, rotina mensal (`DEPENDENCIAS.md` + `deps-mensal.yml` no ar; falta vendorizar `arweave` — PM-11) | code | Lista em `docs/`, job no CI | LAN-16 | P | dev | G3 |
 
 Já no ROADMAP: REV-14 (chave no iOS), REV-13.
 

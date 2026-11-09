@@ -1,9 +1,17 @@
 line-length = 100
 target-version = "py311"
 
+# Bloqueia no CI (scripts/lint_relay.py): erros de verdade (pyflakes: nome indefinido, import e
+# variável sem uso) e complexidade ciclomática > 15. Ver docs/HARDENING.md.
+# Dívida medida em 09/11/2026, só informada no CI (--exit-zero): estilo (E), ordem de imports (I) e
+# funções com mais de 30 comandos (PLR0915: 12 funções). Promove para cá quando zerar.
 [lint]
-select = ["E", "F", "I"]
+select = ["F", "C901"]
 ignore = []
 
 [lint.mccabe]
 max-complexity = 15
+
+[lint.pylint]
+max-statements = 30
+max-args = 5

@@ -15,10 +15,8 @@ import socket
 import subprocess
 import sys
 import threading
-import time
 import urllib.request
 from pathlib import Path
-from typing import Optional
 
 APP_TITLE = "Vox • Rede Cívica de Participação Popular"
 DEFAULT_URL = os.environ.get("VOX_REMOTE_URL", "https://vox-9df.pages.dev/")
@@ -55,13 +53,11 @@ def run_self_check() -> int:
     print(f"[OK] Sondagem de portas do Nó Dedicado (3921/3922={node_active})")
     
     # Teste de importação de GTK/WebKit se disponível
-    has_webkit = False
     try:
         import gi
         gi.require_version("Gtk", "3.0")
         gi.require_version("WebKit2", "4.0")
-        from gi.repository import Gtk, WebKit2
-        has_webkit = True
+        from gi.repository import Gtk, WebKit2  # noqa: F401 — o import é a própria verificação
         print("[OK] PyGObject + WebKit2GTK disponíveis no ambiente")
     except Exception:
         print("[AVISO] WebKit2GTK não instalado; fallback para navegadores em modo app disponível")
@@ -92,7 +88,7 @@ def launch_webkit_window(url: str) -> None:
     import gi
     gi.require_version("Gtk", "3.0")
     gi.require_version("WebKit2", "4.0")
-    from gi.repository import Gtk, WebKit2, GLib
+    from gi.repository import Gtk, WebKit2
 
     win = Gtk.Window(title=APP_TITLE)
     win.set_default_size(1120, 820)
