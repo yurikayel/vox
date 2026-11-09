@@ -114,10 +114,43 @@ test("graphql - fetchRecentTopics com crossCheck consulta todos os gateways", as
   }
 });
 
-test("LAN-27: config publicada tem ≥4 gateways em hosts distintos", async () => {
+test("LAN-27 + PM-50: ≥4 hosts de leitura raw e ≥3 testemunhas GraphQL; ar-io.dev só raw", async () => {
   const { readFileSync } = await import("node:fs");
   const cfg = JSON.parse(readFileSync(new URL("../client/config/gateways.json", import.meta.url), "utf8"));
-  const hosts = new Set(cfg.gateways.map((g) => new URL(g.graphql).host));
-  assert.ok(hosts.size >= 4, `só ${hosts.size} gateways`);
+  const rawHosts = new Set(cfg.gateways.map((g) => new URL(g.raw.replace("{txId}", "x")).host));
+  assert.ok(rawHosts.size >= 4, `só ${rawHosts.size} hosts raw`);
   for (const g of cfg.gateways) assert.ok(g.raw.includes("{txId}"), g.id);
+  const gqlHosts = new Set(gql.graphqlGateways(cfg).map((g) => new URL(g.graphql).host));
+  assert.ok(gqlHosts.size >= 3, `só ${gqlHosts.size} testemunhas GraphQL`);
+  assert.ok(!gqlHosts.has("ar-io.dev"), "ar-io.dev não indexa vox-brasil (PM-50)");
+});
+
+test("PM-50: gateway sem graphql não entra na consulta nem conta como testemunha", async () => {
+  const originalFetch = globalThis.fetch;
+  const called = [];
+  globalThis.fetch = async (url) => {
+    const s = String(url);
+    if (s.includes("gateways.json")) {
+      return {
+        ok: true,
+        json: async () => ({
+          gateways: [
+            { id: "g1", label: "Gateway 1", graphql: "https://g1.example/graphql", raw: "https://g1.example/{txId}" },
+            { id: "so-raw", label: "Só raw", raw: "https://raw.example/{txId}" },
+          ],
+        }),
+      };
+    }
+    called.push(s);
+    return { ok: true, json: async () => ({ data: { transactions: { edges: [] } } }) };
+  };
+  try {
+    gql.__resetGatewayConfigForTests();
+    const res = await gql.queryAllGateways("{ x }", {});
+    assert.equal(res.length, 1);
+    assert.deepEqual(called, ["https://g1.example/graphql"]);
+  } finally {
+    globalThis.fetch = originalFetch;
+    gql.__resetGatewayConfigForTests();
+  }
 });

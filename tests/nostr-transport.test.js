@@ -146,3 +146,82 @@ test("nostr-transport - LAN-21: conta relays abertos e abrindo; stop zera sem av
     assert.deepEqual(t.status(), { open: 0, pending: 0 });
   }
 });
+
+/** WebSocket falso controlável: `failing` nunca abre; os demais abrem e podem cair com `drop()`. */
+function createFlakyNet(failing = new Set()) {
+  const opened = [];
+  const created = [];
+  class FlakyWS {
+    constructor(url) {
+      this.url = url;
+      this.readyState = 0;
+      created.push(url);
+      setTimeout(() => {
+        if (failing.has(url)) {
+          this.readyState = 3;
+          this.onclose?.();
+          return;
+        }
+        this.readyState = 1;
+        opened.push(this);
+        this.onopen?.();
+      }, 1);
+    }
+    send() {}
+    drop() {
+      this.readyState = 3;
+      this.onclose?.();
+    }
+    close() {
+      this.readyState = 3;
+    }
+  }
+  return { FlakyWS, opened, created };
+}
+
+test("nostr-transport - PM-17: relay que cai depois de abrir reconecta sozinho", async () => {
+  const net = createFlakyNet();
+  const T = createNostrTransport({ relays: ["wss://a"], peerId: "p1", onMessage: () => {}, WebSocketImpl: net.FlakyWS, reconnectBaseMs: 5 });
+  T.start();
+  try {
+    assert.ok(await waitFor(() => T.status().open === 1));
+    net.opened[0].drop();
+    assert.equal(T.status().open, 0);
+    assert.ok(await waitFor(() => T.status().open === 1), "não reconectou");
+    assert.deepEqual(net.created, ["wss://a", "wss://a"]);
+  } finally {
+    T.stop();
+  }
+});
+
+test("nostr-transport - PM-17: relay que nunca abre é trocado por outro do pool", async () => {
+  const net = createFlakyNet(new Set(["wss://morto"]));
+  const T = createNostrTransport({
+    relays: ["wss://morto", "wss://reserva"],
+    maxRelays: 1,
+    peerId: "p1",
+    onMessage: () => {},
+    WebSocketImpl: net.FlakyWS,
+    reconnectBaseMs: 2,
+  });
+  T.start();
+  try {
+    assert.ok(await waitFor(() => T.status().open === 1), "não trocou de relay");
+    assert.deepEqual(T.relays(), ["wss://reserva"]);
+    assert.equal(net.created.filter((u) => u === "wss://morto").length, 3);
+  } finally {
+    T.stop();
+  }
+});
+
+test("nostr-transport - PM-17: stop() cancela a reconexão agendada", async () => {
+  const net = createFlakyNet(new Set(["wss://morto"]));
+  const T = createNostrTransport({ relays: ["wss://morto"], peerId: "p1", onMessage: () => {}, WebSocketImpl: net.FlakyWS, reconnectBaseMs: 30 });
+  T.start();
+  await waitFor(() => net.created.length === 1);
+  await settle(10);
+  T.stop();
+  const count = net.created.length;
+  await settle(120);
+  assert.equal(net.created.length, count);
+});
