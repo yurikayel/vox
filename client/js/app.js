@@ -5,6 +5,7 @@ import * as demoSeed from "./demo-seed.js";
 import { loadRemoteFlags } from "./feature-flags.js";
 import { installDomDelegates } from "./dom-delegates.js";
 import { attachReportHandlers } from "./app/report-flow.js";
+import { attachFeedbackHandlers } from "./app/feedback-flow.js";
 import { wireRoute, setupHashchangeListener, routeImpl as route } from "./app/route.js";
 import { initDmListeners, initGossipListeners, initSocialInteractions } from "./app/init.js";
 import { initPostMediaLightbox } from "./app/post-media-lightbox.js";
@@ -20,6 +21,7 @@ import { syncIdentity } from "./app/screens-network.js";
 
 installDomDelegates(document);
 attachReportHandlers(document);
+attachFeedbackHandlers(document);
 initColorMode(document, { onApply: () => applySkyTheme(document) });
 initSkyTheme();
 wireRoute();

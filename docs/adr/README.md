@@ -23,5 +23,7 @@
 | [016](./016-design-system-sovereign-agora-e-democracia-direta.md) | Design system Sovereign Agora e democracia direta | accepted (rev. 2026-11-06) |
 | [017](./017-consolidacao-roadmap-unico.md) | Consolidação do planejamento — ROADMAP único | accepted |
 | [018](./018-selo-govbr-via-parceiro-publico.md) | Selo gov.br opcional via parceiro público, desacoplado do login | proposed |
+| [019](./019-esquecer-por-padrao-e-memoria-civica.md) | Esquecer por padrão; memória cívica por três caminhos | accepted (não implementado) |
+| [020](./020-postura-de-operacao-do-piloto-g1.md) | Postura de operação do piloto G1: operador, voluntários em baixo risco, 18+, uma denúncia arquiva | accepted (18+ implementado) |
 
 Convenção: título no arquivo como `# ADR-NNN: …` (os ADRs 014 e 015 usam `ADR 0NN`, por histórico).

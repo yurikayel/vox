@@ -1080,6 +1080,13 @@ body,
   padding: 1rem;
 }
 
+/* No celular a barra de abas fica fixa embaixo e cobria o rodapé ("Algo errado aqui?", "Teste aberto"). */
+@media (max-width: 767px) {
+  .agora-ui .app-footer {
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
 /* ── 7. Comunidades (Stitch: Células Vicinais) ── */
 .agora-ui .agora-community-list {
   max-width: var(--agora-content-max);
