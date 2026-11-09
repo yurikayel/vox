@@ -77,35 +77,54 @@ def clear_enclosed_background(
             r, g, b, a = px[x0, y0]
             if a == 0 or _color_dist((r, g, b), bg) > tolerance:
                 continue
-            q: deque[tuple[int, int]] = deque([(x0, y0)])
-            component: list[tuple[int, int]] = []
-            touches_clear = False
-            while q:
-                x, y = q.popleft()
-                i = y * w + x
-                if visited[i]:
-                    continue
-                r, g, b, a = px[x, y]
-                if a == 0:
-                    touches_clear = True
-                    continue
-                if _color_dist((r, g, b), bg) > tolerance:
-                    continue
-                visited[i] = 1
-                component.append((x, y))
-                if x == 0 or y == 0 or x == w - 1 or y == h - 1:
-                    touches_clear = True
-                for nx, ny in ((x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)):
-                    if 0 <= nx < w and 0 <= ny < h:
-                        if px[nx, ny][3] == 0:
-                            touches_clear = True
-                        elif not visited[ny * w + nx]:
-                            q.append((nx, ny))
+            component, touches_clear = _bg_component(px, (w, h), (x0, y0), bg, tolerance, visited)
             if not touches_clear:
                 for x, y in component:
                     c = px[x, y]
                     px[x, y] = (c[0], c[1], c[2], 0)
     return out
+
+
+def _bg_component(px, size, start, bg, tolerance, visited):
+    """Flood-fill da ilha de cor de fundo que começa em `start`.
+
+    Retorna (pixels da ilha, se ela encosta na borda ou em área transparente).
+    Uma ilha que não encosta em nada transparente está cercada pela marca (o miolo do O).
+    """
+    w, h = size
+    q: deque[tuple[int, int]] = deque([start])
+    component: list[tuple[int, int]] = []
+    touches_clear = False
+    while q:
+        x, y = q.popleft()
+        if visited[y * w + x]:
+            continue
+        r, g, b, a = px[x, y]
+        if a == 0:
+            touches_clear = True
+            continue
+        if _color_dist((r, g, b), bg) > tolerance:
+            continue
+        visited[y * w + x] = 1
+        component.append((x, y))
+        touches_clear |= x in (0, w - 1) or y in (0, h - 1)
+        touches_clear |= _queue_neighbors(px, size, (x, y), visited, q)
+    return component, touches_clear
+
+
+def _queue_neighbors(px, size, point, visited, q) -> bool:
+    """Enfileira vizinhos não visitados; devolve True se algum vizinho é transparente."""
+    w, h = size
+    x, y = point
+    saw_clear = False
+    for nx, ny in ((x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)):
+        if not (0 <= nx < w and 0 <= ny < h):
+            continue
+        if px[nx, ny][3] == 0:
+            saw_clear = True
+        elif not visited[ny * w + nx]:
+            q.append((nx, ny))
+    return saw_clear
 
 
 def flood_remove_bg(im: Image.Image, bg: tuple[int, int, int], tolerance: float) -> Image.Image:
