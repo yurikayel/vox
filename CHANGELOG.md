@@ -6,6 +6,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Medição da mídia v2 (PM-70, sem mudança no app)
+- Bancada `tools/media-bench/` (só desenvolvimento) e [medição no desktop](./docs/research/medicao-midia-v2-pm70-2026-11.md) com 29 imagens e 2 vídeos reais: AVIF q66 coube em 86% (o resto em q60) e teve qualidade maior que o WebP 0,78 em todas; vídeo H.264 Q28 ≈1,3 Mbps em 720p; Opus 48 kbps = 355 KiB/min. Achados para o PM-71: codificador AVIF de 3,4 MB, CSP com `'wasm-unsafe-eval'` e `wasm-feature-detect` quebrado no Chrome 152. `@jsquash/avif` 2.1.1 entra só como dependência de desenvolvimento.
+
 ### Piloto G1: decisões e primeiras peças (SW v7.45)
 - **Piloto só 18+ (PM-67, [ADR-020](./docs/adr/020-postura-de-operacao-do-piloto-g1.md)):** o pacto de entrada tem a caixa "tenho 18 anos ou mais"; sem ela, os botões ficam desativados. A confirmação é autodeclarada e fica só no aparelho. Quem aceitou o pacto antes vê o pacto uma vez mais.
 - **"Algo errado aqui?" (PM-68):** link no rodapé de todas as telas para apontar, sobre o app, "não funcionou", "não entendi" ou "não faz o que diz". Guarda só o nome da tela, o tipo, a versão e uma nota opcional, no aparelho; "Compartilhar apontamentos" manda o resumo para o grupo do piloto.

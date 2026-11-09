@@ -52,7 +52,17 @@ Uma versão boa só, em vez de N versões. Qualidade fixa, um piso que não se u
 | Áudio do vídeo | Opus 48 kbps se o iPhone tocar Opus em MP4; senão AAC (a testar) |
 | Fallback | Sem WebCodecs, o MediaRecorder recodifica tocando o vídeo (leva a duração do vídeo); sem nenhum dos dois, o vídeo é recusado com explicação |
 
-## Próximo passo: protótipo de medição
+## Medição (PM-70, 09/11/2026)
+
+Resultados em [medição da mídia v2](../research/medicao-midia-v2-pm70-2026-11.md), feitos no desktop. Resumo:
+
+- **AVIF q66 confirmado:** coube em 86% das 29 imagens reais (mediana de 56 KiB); as outras couberam em q60. Qualidade (PSNR) maior que o WebP 0,78 em 29 de 29.
+- **Vídeo:** Q28 dá ≈1,3 Mbps em 720p (1,55 MiB para 10 s), dentro da estimativa. É o candidato a "q66" do vídeo, sem equivalência visual medida.
+- **Opus 48 kbps:** 355 KiB por minuto, como previsto.
+- **Muda a implementação:** codificador AVIF de 3,4 MB; CSP precisa de `'wasm-unsafe-eval'`; o vendor deve evitar o `wasm-feature-detect` (quebra no Chrome 152); miniatura de 160 px chega a 8 KiB.
+- **Falta:** tempo num celular barato e Safari/iPhone.
+
+## Protótipo de medição (roteiro original)
 
 Com ~20 fotos reais (pessoas, rua, interior, prints) e vídeos curtos, num celular barato:
 
