@@ -110,7 +110,7 @@ Também exige: REV-18 · DOC-04 · REV-02 · REV-04 (ou LAN-21 cobrindo DM offli
 | [x] | **LAN-14** | code | **Anti-spam e limite de taxa** por chave; quarentena de chave nova | ✅ PR #27: 20 posts por chave a cada 10 min no gossip (`rate-limit.js`) + PR #30: quarentena de chave nova por comunidade (opção na criação) e PoW leve de 14 bits preso a autor e id (`new-key-guard.js`). Chave nova = vista neste aparelho há menos de 24 h; parâmetros no topo do módulo · [backlog §4](./strategy/backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
 | [ ] | **LAN-18** | ops-humano | **Revisão externa de cripto** (DM, cofre, assinaturas); críticos corrigidos | [backlog §4](./strategy/backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
 | [ ] | **LAN-19** | code | **Privacidade de IP:** aviso + modo "só TURN" (padrão para menores) | 🚧 PR #25: aviso de IP + "Esconder meu IP" (`iceTransportPolicy: relay`) em `#/settings/network`; falta o padrão ligado para menores (REV-23, depois do REV-12) e um TURN público (REV-10) · [backlog §4](./strategy/backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
-| [ ] | **LAN-20** | code | **Cadeia de suprimentos:** inventário de dependências com SRI + `npm audit` no CI | 🚧 PR #22: `npm audit` no CI + PR #30: inventário em [DEPENDENCIAS.md](./DEPENDENCIAS.md), teste que quebra com dependência fora dele e rotina mensal (`deps-mensal.yml`, confere hash de CDN). Falta vendorizar o `arweave` (bundle com hash já anotado; precisa de teste no app) · [backlog §4](./strategy/backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
+| [x] | **LAN-20** | code | **Cadeia de suprimentos:** inventário de dependências com SRI + `npm audit` no CI | ✅ PR #22: `npm audit` no CI + PR #30: inventário em [DEPENDENCIAS.md](./DEPENDENCIAS.md), teste que quebra com dependência fora dele e rotina mensal (`deps-mensal.yml`, confere hash de CDN) + PM-11: `arweave` vendorizado em `client/vendor/` com hash conferido em teste e `esm.sh` fora da CSP. Ainda fora: SDKs do Google e da Meta sem versão fixa (risco aceito, só carregam com login configurado) · [backlog §4](./strategy/backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
 | [ ] | **LAN-22** | code | **Acessibilidade WCAG 2.2 AA básica** nas 10 rotas principais | [backlog §4](./strategy/backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
 | [ ] | **LAN-23** | code | **Desempenho em Android de entrada** com orçamento que quebra o CI | [backlog §4](./strategy/backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
 | [ ] | **LAN-25** | ops-humano | **Onboarding com 5 leigos** (identidade, backup, post, comunidade, recuperação) | [backlog §4](./strategy/backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
@@ -127,7 +127,7 @@ Também exige: REV-18 · DOC-04 · REV-02 · REV-04 (ou LAN-21 cobrindo DM offli
 
 | | ID | Tipo | Item | Evidência / nota |
 |---|---|---|---|---|
-| [ ] | **LAN-36** | ops-humano | **Proposta ao NLnet Restack até 03/01/2027** usando o backlog como plano de trabalho | [backlog §4](./strategy/backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
+| [ ] | **LAN-36** | ops-humano | **Proposta ao NLnet Restack até 03/01/2027** usando o backlog como plano de trabalho. 🚧 PM-42: rascunho e riscos em [proposta-nlnet-restack-2027.md](./strategy/proposta-nlnet-restack-2027.md). **Dimensão europeia é eliminatória**: perguntar ao NLnet antes; reescrever com as próprias palavras e declarar o uso de IA | [backlog §4](./strategy/backlog-lancamento-publico-2026-11.md#4-backlog-por-épico) |
 
 ## Candidatas (sem caixa até ganharem DoD e responsável)
 
@@ -153,6 +153,7 @@ Itens fechados de Agora, Próximo e Depois. Nas tabelas dos portões (LAN), a li
 
 | | ID | Tipo | Item | Evidência / nota |
 |---|---|---|---|---|
+| [x] | **PM-11** | code | `arweave` vendorizado (`client/vendor/arweave-1.15.7.bundle.js`, carregado por `client/js/arweave-lib.js`) e `https://esm.sh` fora do `script-src` | ✅ SW v7.43; `tests/arweave-vendor.test.js` confere hash, bundle autocontido e assinatura sem rede; testado no navegador sob a CSP nova (assina, verifica e lê saldo real). Não testado: publicação L1 paga (custa AR) |
 | [x] | **PM-17** | code | Reconexão automática de relay Nostr com backoff exponencial (1 s → 60 s) e troca por relay reserva após 3 falhas consecutivas | ✅ PR #35, SW v7.41; `client/js/nostr-transport.js`, `tests/nostr-transport.test.js` |
 | [x] | **PM-10** | ops-humano | Secret scanning, push protection e alertas do Dependabot ligados no repositório GitHub | ✅ ativados via API do GitHub em 09/11/2026 (junto com ruleset `main protegido` do PM-62 exigindo PR + 5 checks do CI) |
 | [x] | **PM-45** | code | `Vox.exe`, `VoxPopuli.exe` e os dois APKs compilados no CI e publicados como GitHub Release com `SHA256SUMS` e atestação de origem; fora do git | ✅ PR #33; [`release-binarios.yml`](../.github/workflows/release-binarios.yml), [DEPENDENCIAS §6](./DEPENDENCIAS.md#6-binários-no-repositório). Assinatura de código do Windows: PM-46 |

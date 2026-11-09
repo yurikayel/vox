@@ -49,7 +49,8 @@ test("LAN-20: todo import()/loadScript() remoto do cliente está no inventário"
     const src = read(file);
     for (const m of src.matchAll(/(?:import\(|loadScript\()\s*["'`](https?:\/\/[^"'`]+)["'`]/g)) urls.push(m[1]);
   }
-  assert.ok(urls.length > 0, "esperava achar o arweave do esm.sh");
+  // PM-11: o arweave é vendorizado; nenhum módulo do app importa código de CDN.
+  assert.deepEqual(urls.filter((u) => u.startsWith("https://esm.sh/")), [], "o arweave vem de client/vendor/");
   assert.deepEqual(missing(urls), [], "adicione a URL em docs/DEPENDENCIAS.md");
 });
 

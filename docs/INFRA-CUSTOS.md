@@ -21,7 +21,7 @@
 | **Inbox de DM, memória central, `/oauth/exchange`** | `relay/server.py` | Só em máquina de steward / Node Zero (loopback ou túnel Cloudflare) | R$ 0 (hardware do voluntário) | **Não existe instância pública.** DMs entre aparelhos offline e login X/TikTok/Threads/GitHub dependem de alguém expor `server.py`. |
 | **Bluesky** | `public.api.bsky.app` + PDS da pessoa | `bsky-feed.js`, `bsky-oauth.js` | R$ 0 | Rate limits da API pública. |
 | **Google / Meta SDK** | CDNs das plataformas | `oauth-profile.js`, `social-login.js` | R$ 0 | Dependem de app registrado (IDs públicos via secrets/vars). |
-| **Biblioteca Arweave** | `esm.sh` (em runtime) | import dinâmico | R$ 0 | Dependência de CDN de terceiro no caminho de upload. |
+| **Biblioteca Arweave** | `client/vendor/` (o próprio site) | import dinâmico do arquivo vendorizado (PM-11) | R$ 0 | Sem CDN de terceiro no caminho de upload; hash conferido em teste. |
 | **Imagens de demo** | `images.unsplash.com` (~35 refs) | hotlink | R$ 0 | Quebra offline; dado de demo. |
 | **CI** | GitHub Actions (`ci.yml`, `windows-node-zero-smoke.yml`) | push/PR | R$ 0 (repo público) | — |
 | **Sinalização Nostr** (paralela, REV-09) | relays públicos de `signaling.json` → `nostrRelays` (3 por sessão) | — (cliente direto) | R$ 0 | Só eventos efêmeros (kind 25050), não guardados. Saúde medida toda segunda por `nostr-smoke.yml` (REV-19). Um relay pode passar a exigir auth/PoW: o pool é configurável. |
