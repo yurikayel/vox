@@ -6,13 +6,40 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Documentação
+- Revisão de estado de 08/11/2026: README, ROADMAP, FEATURES, INFRA-CUSTOS, THREAT-MODEL, TESTES, índice de `docs/` e DEV §27 alinhados ao `main` depois dos PRs #17–#28. ROADMAP com linhas de tabela consertadas, itens fechados movidos para *Concluído* e parciais marcados com 🚧. README sem a afirmação "PWA < 50 KB" (o `client/js` tem ~1,9 MB). Release line regenerada.
+
+### Qualidade
+- `npm test` travava localmente: o teste "dois pares" do `nostr-transport` esperava tempos fixos, falhava com a suíte inteira no mesmo processo e deixava o `setInterval` do hello vivo. Agora espera a condição e para os transportes no `finally`; a suíte roda em segundos.
+
+## SW v7.33 → v7.38 — 2026-11-08 (PRs #13–#28)
+
+### Rede, privacidade e resiliência
+- **Nó leve por padrão, modo Apoiador por opção** (PR #21): todo aparelho ajuda a malha com 50 MB/dia e 25 MB em disco; o botão "Seja um apoiador da rede" sobe para 500 MB/dia e 250 MB, só no Wi-Fi (`supporter-mode.js`).
+- **REV-24 modo eleitoral** (PR #24): de 16/08 a 31/10 de ano par, ou com `electoralMode` em `flags.json`, some a linha "Sugestões cívicas" (`electoral-period.js`).
+- **LAN-19 privacidade de IP** (PR #25): aviso de que outros aparelhos veem o IP e opção "Esconder meu IP" (`iceTransportPolicy: relay`). Só funciona quando houver TURN (REV-10).
+- **LAN-27 leitura resiliente e LAN-21 erros honestos** (PR #26): 4 gateways com tempo limite de 8 s; `honest-errors.js` explica cota, 402, 429, offline, timeout, gateways fora e DM sem relay.
+- **LAN-14 limite de taxa** (PR #27): 20 posts por chave a cada 10 min no gossip; o excesso é descartado e não é repassado (`rate-limit.js`).
+
+### Marca e diretório
+- **Logo do megafone** como marca do topo, favicon, ícones do app e avatar oficial (PR #20); avatares em squircle sem contorno.
+- Diretório: pares só com a chave `vx_…` (sem nome escolhido) saem da lista; a busca pela chave ainda os acha (PR #20).
+
+### Qualidade
+- **REV-03** `tests/release-metadata-drift.test.js`; **REV-06** os 35 hotlinks do Unsplash viraram imagens locais; **LAN-20 (parcial)** `npm audit --audit-level=high` no CI (PR #22).
+- Teste T11 do `gossip-retract` sem corrida de milissegundo no `editedAt` (PR #28).
+
+### Operação
+- [Runbook de incidentes](./docs/operations/runbook-incidentes.md) (LAN-24) e [plano de lançamento em ondas](./docs/strategy/plano-lancamento-ondas.md) (LAN-34), ambos rascunho (PR #28).
+- ROADMAP: itens já entregues no PR #17 marcados como feitos (PR #23).
+
 ### Organização do repositório
 - Pacote de mockups `stitch_vox_civic_network_interface/` removido (já aplicado; ADR-016). A especificação foi para [docs/design/sovereign-agora.md](./docs/design/sovereign-agora.md).
 - Raiz enxuta: `COMPLIANCE-BR.md` → `docs/legal/`, `IDENTITY.md` → `docs/`, `POSITIONING.md` → `docs/product/`, `LESSONS.md` → `docs/process/`; `Dockerfile` duplicado e `glitch.json` removidos; `railway.json`/`zbpack.json` → `relay/deploy/`; `.editorconfig` novo.
 - `tools/` dividido: manutenção do repo em `scripts/`, instaladores em `packaging/`, ferramentas de uso em `tools/` (cada pasta com README).
 - `docs/` organizado em pastas por tipo (`specs/`, `operations/`, `strategy/`, `pilot/`, `research/`, `brainstorms/`, `audits/`, `product/`, `process/`, `legal/`, `archive/`). Links internos e caminhos em código, testes e workflows reescritos; links do download apontavam para a branch inexistente `develop` e agora vão para `main`.
 
-### Rumo à rede pública — G1 (branch `feat/lan-g1-fundamentos`)
+### Rumo à rede pública — G1 (PR #17)
 - **LAN-10 demonstração isolada:** os 27 perfis fictícios (e suas chaves Pix) só aparecem com o modo demonstração ligado, com faixa fixa; o aviso de falha de rede deixou de dizer "conteúdo de exemplo".
 - **REV-13 Pix:** quem cadastra a chave é avisado de que o nome civil (DICT) aparece com qualquer chave; quem paga é lembrado de conferir o nome no banco.
 - **REV-19 teste de fumaça Nostr:** `scripts/nostr-smoke.mjs` + workflow semanal; `eden.nostr.land` (pago) saiu do pool, `offchain.pub` entrou.

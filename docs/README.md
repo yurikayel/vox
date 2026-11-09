@@ -1,6 +1,6 @@
 # Vox — índice de documentação
 
-> **Status:** canônico (índice único) · **Owner:** voluntário doc (mutex: 1 PR por arquivo) · **Revisado:** 2026-11-08 (v2.1: docs organizados em pastas por tipo)
+> **Status:** canônico (índice único) · **Owner:** voluntário doc (mutex: 1 PR por arquivo) · **Revisado:** 2026-11-08 (v2.2: pesquisa separada de brainstorm; runbook, plano em ondas e pesquisa de ancoragem indexados)
 > **Plano vivo e único checklist:** [ROADMAP.md](./ROADMAP.md) ([ADR-017](./adr/017-consolidacao-roadmap-unico.md)) · **Release (SHA, testes, SW):** [release-metadata.json](./release-metadata.json) e tabela do [README](../README.md)
 
 Entrada única para quem desenvolve, revisa ou opera. Todo `.md` novo em `docs/` entra aqui ([CONTRIBUTING-DOCS.md](./CONTRIBUTING-DOCS.md) §1).
@@ -49,6 +49,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 | Testes e CI | [TESTES.md](./TESTES.md) |
 | Limites de complexidade | [HARDENING.md](./HARDENING.md) |
 | Modelo de ameaças | [THREAT-MODEL.md](./THREAT-MODEL.md) |
+| Resposta a incidentes | [runbook-incidentes.md](./operations/runbook-incidentes.md) |
 | Mutex de agentes | [metodo-agentes-mutex-e-revisor.md](./process/metodo-agentes-mutex-e-revisor.md) |
 | Licença | [ADR-015](./adr/015-licenciamento-agplv3-e-governanca-de-bem-comum.md) · [licenca-e-contribuicoes.md](./legal/licenca-e-contribuicoes.md) |
 | Decisões de arquitetura | [adr/README.md](./adr/README.md) |
@@ -92,12 +93,20 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 - [antigravity-estrategia-mantenedor-revisor-2026.md](./strategy/antigravity-estrategia-mantenedor-revisor-2026.md): transição mantenedor → revisor
 - [POSITIONING.md](./product/POSITIONING.md) · [LESSONS.md](./process/LESSONS.md) · [../GOVERNANCE.md](../GOVERNANCE.md) · [COMPLIANCE-BR.md](./legal/COMPLIANCE-BR.md)
 
+### Rede pública (portões G1–G3)
+
+- [backlog-lancamento-publico-2026-11.md](./strategy/backlog-lancamento-publico-2026-11.md): **caminho até a rede pública** — 10 critérios, portões G1–G3, backlog LAN-01…36 por épico, ordem e cortes de escopo
+- [plano-lancamento-ondas.md](./strategy/plano-lancamento-ondas.md): ondas 0–3, quem decide abrir e pausar, gatilhos de pausa (LAN-34, rascunho)
+
+### Pesquisa verificada
+
+- [pesquisa-deep-research-2026-11.md](./research/pesquisa-deep-research-2026-11.md): **resultado verificado dos 3 prompts** (o que se confirmou, o que falta conferir, o que foi descartado)
+- [pesquisa-complementar-2026-11.md](./research/pesquisa-complementar-2026-11.md): **Prompt 4 respondido (busca direta + avaliação do relatório do Gemini) + brainstorm B1–B12** (STF itens 7–11, decretos de 2026, ECA Digital, TSE 23.755, Pix/DICT, IPv6 por operadora, Render, Nostr, financiamento)
+- [pesquisa-ancoragem-churn-infra-2026-11.md](./research/pesquisa-ancoragem-churn-infra-2026-11.md): ancoragem no Arweave, churn P2P, WebRTC móvel, LGPD e auditoria R1–R9, com a comparação ao relatório do Gemini
+
 ### Brainstorms (ideias; não são plano)
 
 - [brainstorm-autossustento-10-features-2026-11.md](./brainstorms/brainstorm-autossustento-10-features-2026-11.md): **10 features de autossustento a custo ~zero + 3 prompts de pesquisa**
-- [pesquisa-deep-research-2026-11.md](./research/pesquisa-deep-research-2026-11.md): **resultado verificado dos 3 prompts** (o que se confirmou, o que falta conferir, o que foi descartado)
-- [backlog-lancamento-publico-2026-11.md](./strategy/backlog-lancamento-publico-2026-11.md): **caminho até a rede pública** — 10 critérios, portões G1–G3, backlog LAN-01…36 por épico, ordem e cortes de escopo
-- [pesquisa-complementar-2026-11.md](./research/pesquisa-complementar-2026-11.md): **Prompt 4 respondido (busca direta + avaliação do relatório do Gemini) + brainstorm B1–B12** (STF itens 7–11, decretos de 2026, ECA Digital, TSE 23.755, Pix/DICT, IPv6 por operadora, Render, Nostr, financiamento)
 - [brainstorm-sustentacao-perene-celulares-nos-base.md](./brainstorms/brainstorm-sustentacao-perene-celulares-nos-base.md): infra $0, celulares como nós
 - [brainstorm-sinergia-tramitado-vox-2026-11.md](./brainstorms/brainstorm-sinergia-tramitado-vox-2026-11.md): Tramitado × Vox, contrato LCP
 - [brainstorm-auto-escala-organica-2026-10.md](./brainstorms/brainstorm-auto-escala-organica-2026-10.md): flywheel, SLOs, moderação voluntária
@@ -108,6 +117,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 ## 3. Operações: steward, espelhos, DR
 
 - [INFRA-CUSTOS.md](./INFRA-CUSTOS.md): mapa de hosts, workflows e secrets
+- [runbook-incidentes.md](./operations/runbook-incidentes.md): o que fazer nos primeiros 15 min de cada incidente, kill-switch e simulados (LAN-24, falta o 1º simulado)
 - [steward-relay-kit.md](./operations/steward-relay-kit.md) · [steward-seed-15min.md](./operations/steward-seed-15min.md) · [steward-relay-buddy.md](./operations/steward-relay-buddy.md) (V-P08: segundo voluntário antes do burnout)
 - [ops-shell-mirrors.md](./operations/ops-shell-mirrors.md): espelhos shell A/B · [ops-dr-drill-checklist.md](./operations/ops-dr-drill-checklist.md) · [ops-pages-rollback.md](./operations/ops-pages-rollback.md)
 - [antigravity-operating.md](./process/antigravity-operating.md): operação da malha
@@ -125,7 +135,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 ## 5. Desenvolvimento, qualidade e governança do repo
 
 - [../CONTRIBUTING.md](../CONTRIBUTING.md) · [../CONTRIBUTORS.md](../CONTRIBUTORS.md) (DCO) · [../SECURITY.md](../SECURITY.md) · [../AUTHORS.md](../AUTHORS.md)
-- [TESTES.md](./TESTES.md) · [HARDENING.md](./HARDENING.md) · métricas de complexidade: `metrics/baseline-AAAA-MM-DD.md`, geradas por `npm run audit:complexity` (a mais recente: [2026-11-06](./metrics/baseline-2026-11-06.md))
+- [TESTES.md](./TESTES.md) · [HARDENING.md](./HARDENING.md) · métricas de complexidade: `metrics/baseline-AAAA-MM-DD.md`, geradas por `npm run audit:complexity` (a mais recente: [2026-11-08](./metrics/baseline-2026-11-08.md))
 - [CONTRIBUTING-DOCS.md](./CONTRIBUTING-DOCS.md) · [metodo-agentes-mutex-e-revisor.md](./process/metodo-agentes-mutex-e-revisor.md) · [licenca-e-contribuicoes.md](./legal/licenca-e-contribuicoes.md)
 - Design: [ADR-016](./adr/016-design-system-sovereign-agora-e-democracia-direta.md) · [Sovereign Agora DESIGN.md](design/sovereign-agora.md) · [design/stitch-telas-faltantes.md](./design/stitch-telas-faltantes.md)
 - [proposta-vox.html](./product/proposta-vox.html): proposta em linguagem leiga
@@ -146,6 +156,6 @@ Mantidos para registro; cada um tem banner apontando o sucessor.
 - [brainstorm-proximas-10-tarefas-pos-v82-2026-11.md](./archive/brainstorm-proximas-10-tarefas-pos-v82-2026-11.md) e [brainstorm-dez-tarefas-estrategia-2026-10.md](./archive/brainstorm-dez-tarefas-estrategia-2026-10.md) → ROADMAP
 - [revisao-estado-2026-10-25.md](./archive/revisao-estado-2026-10-25.md): snapshot de 25/out
 - [gateway-honest-fallback-brainstorm.md](./archive/gateway-honest-fallback-brainstorm.md) → ADR-004 · [steward-wizard-brainstorm.md](./archive/steward-wizard-brainstorm.md) → steward-relay-kit
-- Métricas antigas: [10-24](./metrics/baseline-2026-10-24.md) · [10-30](./metrics/baseline-2026-10-30.md) · [10-31](./metrics/baseline-2026-10-31.md) · [11-01](./metrics/baseline-2026-11-01.md) · [11-04](./metrics/baseline-2026-11-04.md) · [11-05](./metrics/baseline-2026-11-05.md)
+- Métricas antigas: [10-24](./metrics/baseline-2026-10-24.md) · [10-30](./metrics/baseline-2026-10-30.md) · [10-31](./metrics/baseline-2026-10-31.md) · [11-01](./metrics/baseline-2026-11-01.md) · [11-04](./metrics/baseline-2026-11-04.md) · [11-05](./metrics/baseline-2026-11-05.md) · [11-06](./metrics/baseline-2026-11-06.md)
 
-**Versão:** 2.0 · 2026-11-07
+**Versão:** 2.2 · 2026-11-08
