@@ -27,6 +27,7 @@
 
 | Dependência | Onde | Versão | Integridade | Situação |
 |---|---|---|---|---|
+| @jsquash/avif | `package.json` (dev), usado só por `tools/media-bench/` (PM-70) | 2.1.1 no lock (fixa) | `sha512` no `package-lock.json` | Só desenvolvimento; não vai para o navegador. Apache-2.0. A transitiva `wasm-feature-detect` 1.10.0 não carrega no Chrome 152 (`import.source`); a bancada usa direto o codificador de thread única. Se for para o app (PM-71), entra vendorizado com hash. |
 | eslint | `package.json` (dev) | 9.39.5 no lock | `sha512` no `package-lock.json` | Só desenvolvimento e CI; não vai para o navegador. |
 | globals | `package.json` (dev) | 16.5.0 no lock | `sha512` no `package-lock.json` | Idem. |
 | Transitivas do eslint (85 pacotes) | `package-lock.json` | fixas no lock | `sha512` no lock | `npm ci` respeita o lock; `npm audit --audit-level=high` roda em todo PR (`ci.yml`) e todo mês. |
