@@ -10,7 +10,6 @@ import socket
 import threading
 import time
 import unittest
-from io import BytesIO
 
 from relay.signaling import (
     PeerRegistry,
@@ -18,11 +17,8 @@ from relay.signaling import (
     WebSocketHandler,
     compute_accept_key,
     make_ws_frame,
-    parse_frame_length,
     read_ws_frame,
     resolve_port,
-    make_http_response,
-    parse_http_target,
 )
 
 

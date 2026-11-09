@@ -37,7 +37,7 @@
 |---|---|---|---|---|
 | Biblioteca padrão do Python | `relay/` | 3.11 e 3.12 no CI | n/a | `relay/requirements.txt` não lista nenhum pacote pip. |
 | `pyinstaller` | `windows-node-zero-smoke.yml`, `release-binarios.yml` (só CI) | 6.22.3, fixa | sem hash (`--require-hashes` não usado) | Gera o `VoxPopuli.exe` do teste de fumaça; não é o binário de `client/downloads/` (ver §6). |
-| `ruff` | `ci.yml`, job do relay (só CI) | **móvel, sem versão** | sem hash | Só lint, com `continue-on-error`. Fixar a versão. |
+| `ruff` | `ci.yml`, job do relay (só CI) | `0.17.4` | sem hash | Lint obrigatório desde 09/11/2026: pyflakes e complexidade (`ruff.toml`); estilo e tamanho de função só informados |
 
 ## 4. Imagens de contêiner
 

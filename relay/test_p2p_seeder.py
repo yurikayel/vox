@@ -4,8 +4,6 @@ test_p2p_seeder.py — Testes unitários do Seeder P2P e Descoberta Segura de Pe
 """
 
 import hashlib
-import json
-import time
 import unittest
 from relay import p2p_seeder
 
