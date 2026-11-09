@@ -134,7 +134,7 @@ Já no ROADMAP: DOC-04 (copy honesta), REV-02 (plugar ou arquivar os 11 módulos
 |---|---|---|---|---|---|---|---|
 | LAN-12 | **Denunciar no app** (post, perfil, comunidade ⋯ → motivo): vai assinado para os moderadores da comunidade; categorias graves também vão para o canal do projeto (LAN-04) | code | Fluxo em etapas, teste, aparece na fila de moderação | — | M | dev | G2 |
 | LAN-13 | **Lista de ocultação assinada do PWA oficial** (global, com motivo e data) que o cliente respeita, exportável no formato dos gateways AR.IO (B5) | code | Lista versionada, verificação de assinatura, teste; procedimento no LAN-04 | REV-12 | M | dev | G2 |
-| LAN-14 | **Anti-spam e limite de taxa:** teto de posts e gossip por chave e por janela, PoW leve opcional para chave nova, quarentena de chave nova em comunidades que pedirem | code | Testes; parâmetros documentados; sem ranking pago | — | M | dev | G3 |
+| LAN-14 | **Anti-spam e limite de taxa:** teto de posts e gossip por chave e por janela, PoW leve opcional para chave nova, quarentena de chave nova em comunidades que pedirem. **Parâmetros no ar:** 20 posts por chave a cada 10 min (`rate-limit.js`); chave nova = vista no aparelho há menos de 24 h; PoW de 14 bits (`new-key-guard.js`) | code | Testes; parâmetros documentados; sem ranking pago | — | M | dev | G3 |
 
 Já no ROADMAP: PIL-05 (ciclo E1–E5), F8 (selo por aval, **obrigatório antes de enquete cívica pública com peso**), REV-20.
 

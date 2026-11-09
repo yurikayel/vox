@@ -49,6 +49,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 | Testes e CI | [TESTES.md](./TESTES.md) |
 | Limites de complexidade | [HARDENING.md](./HARDENING.md) |
 | Modelo de ameaças | [THREAT-MODEL.md](./THREAT-MODEL.md) |
+| Dependências e cadeia de suprimentos | [DEPENDENCIAS.md](./DEPENDENCIAS.md) |
 | Resposta a incidentes | [runbook-incidentes.md](./operations/runbook-incidentes.md) |
 | Mutex de agentes | [metodo-agentes-mutex-e-revisor.md](./process/metodo-agentes-mutex-e-revisor.md) |
 | Licença | [ADR-015](./adr/015-licenciamento-agplv3-e-governanca-de-bem-comum.md) · [licenca-e-contribuicoes.md](./legal/licenca-e-contribuicoes.md) |
@@ -135,7 +136,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 ## 5. Desenvolvimento, qualidade e governança do repo
 
 - [../CONTRIBUTING.md](../CONTRIBUTING.md) · [../CONTRIBUTORS.md](../CONTRIBUTORS.md) (DCO) · [../SECURITY.md](../SECURITY.md) · [../AUTHORS.md](../AUTHORS.md)
-- [TESTES.md](./TESTES.md) · [HARDENING.md](./HARDENING.md) · métricas de complexidade: `metrics/baseline-AAAA-MM-DD.md`, geradas por `npm run audit:complexity` (a mais recente: [2026-11-08](./metrics/baseline-2026-11-08.md))
+- [TESTES.md](./TESTES.md) · [HARDENING.md](./HARDENING.md) · [DEPENDENCIAS.md](./DEPENDENCIAS.md) (inventário e rotina mensal, LAN-20) · métricas de complexidade: `metrics/baseline-AAAA-MM-DD.md`, geradas por `npm run audit:complexity` (a mais recente: [2026-11-09](./metrics/baseline-2026-11-09.md))
 - [CONTRIBUTING-DOCS.md](./CONTRIBUTING-DOCS.md) · [metodo-agentes-mutex-e-revisor.md](./process/metodo-agentes-mutex-e-revisor.md) · [licenca-e-contribuicoes.md](./legal/licenca-e-contribuicoes.md)
 - Design: [ADR-016](./adr/016-design-system-sovereign-agora-e-democracia-direta.md) · [Sovereign Agora DESIGN.md](design/sovereign-agora.md) · [design/stitch-telas-faltantes.md](./design/stitch-telas-faltantes.md)
 - [proposta-vox.html](./product/proposta-vox.html): proposta em linguagem leiga

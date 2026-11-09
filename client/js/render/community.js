@@ -172,11 +172,22 @@ function resolveTopicBadgesHtml(topic) {
   const lock = topic.isLocked
     ? `<span class="badge-pill community-locked-pill" title="Discussão encerrada para novas respostas">🔒 Encerrado</span> · `
     : "";
+  const newKey = topic.newKeyHeld
+    ? `<span class="badge-pill community-newkey-pill" title="Chave nova sem prova de trabalho: recolhido para quem não modera">🆕 Chave nova</span> · `
+    : "";
   const tag = extractTopicCivicTag(topic);
   const tagHtml = tag
     ? `<span class="badge-pill community-civic-tag-pill" data-tag="${escapeHtml(tag)}">${escapeHtml(tag)}</span> · `
     : "";
-  return `${pin}${lock}${tagHtml}`;
+  return `${pin}${lock}${newKey}${tagHtml}`;
+}
+
+/** LAN-14: aviso de posts recolhidos pela quarentena de chave nova, com "ver mesmo assim". */
+export function renderNewKeyHeldNoticeHtml(count) {
+  const n = Number(count) || 0;
+  const what = n === 1 ? "1 post de chave nova está recolhido" : `${n} posts de chaves novas estão recolhidos`;
+  return `<p class="feed-notice community-newkey-notice" role="status">${what} pela quarentena desta comunidade (anti-spam).
+    <button type="button" class="btn btn-outline btn-sm btn-reveal-new-keys">Ver mesmo assim</button></p>`;
 }
 
 function resolveTopicBumpSpan(topic) {

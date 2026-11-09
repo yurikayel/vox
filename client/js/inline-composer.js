@@ -11,6 +11,7 @@ import * as photoTags from "./photo-tags.js";
 import { openPhotoTagPicker } from "./app/photo-tag-picker.js";
 import { escapeHtml } from "./render/util.js";
 import * as permanence from "./permanence-notice.js";
+import { attachPowIfWanted } from "./new-key-guard.js";
 
 let inlineComposerImageDataUrl = "";
 let inlineComposerMedia = { type: "", dataUrl: "", byteLength: 0 };
@@ -619,6 +620,9 @@ function createComposerControllerState() {
 }
 
 async function broadcastAndPersistInlineTopic(payload, title, body, commSlug) {
+  // LAN-14: comunidade com quarentena de chave nova recebe o post com PoW leve.
+  const community = (await cacheNode.getLocalCommunities()).find((c) => c.id === commSlug);
+  await attachPowIfWanted(payload, community, await localAccount.getRouteId());
   const signed = await localAccount.signPayload(payload);
   await cacheNode.saveLocalPost(signed);
   if (payload.photoTags?.length) photoTags.setLocalTags(signed.id, payload.photoTags);

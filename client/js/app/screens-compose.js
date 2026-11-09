@@ -17,6 +17,7 @@ import * as i18n from "../i18n-pt-br.js";
 import * as gov from "../governance.js";
 import * as mod from "../moderation.js";
 import * as communitySeed from "../community-seed-checklist.js";
+import { attachPowIfWanted } from "../new-key-guard.js";
 import { parseChatTranscriptToMarkdown } from "../chat-bridge.js";
 import { createCivicNotaryRecord } from "../perma-notary.js";
 import { bindComposeStepper, goToComposeStep } from "./compose-stepper.js";
@@ -95,6 +96,7 @@ function readCommunityInputs(state) {
     category: document.getElementById("comm-category")?.value.trim() || "Geral",
     desc: document.getElementById("comm-desc")?.value.trim(),
     visibility: document.getElementById("comm-type")?.value || "open",
+    newKeyQuarantine: Boolean(document.getElementById("comm-new-key-quarantine")?.checked),
     image: state.photoDataUrl || document.getElementById("comm-photo-url")?.value.trim() || "",
   };
 }
@@ -110,6 +112,7 @@ async function signAndBroadcastCommunity(data) {
     image: data.image,
     avatar: data.image,
     visibility: data.visibility,
+    ...(data.newKeyQuarantine ? { newKeyQuarantine: true } : {}),
     language: "Português",
     createdAt: Date.now(),
   });
@@ -258,6 +261,9 @@ async function signAndBroadcastTopic(topicId, finalComm, title, body, civicTag =
     authorAvatar: myAvatar,
   };
   if (civicTag) payload.civicTag = civicTag;
+  // LAN-14: comunidade com quarentena de chave nova recebe o post com PoW leve.
+  const community = (await cacheNode.getLocalCommunities()).find((c) => c.id === finalComm);
+  await attachPowIfWanted(payload, community, await localAccount.getRouteId());
   const signed = await localAccount.signPayload(payload);
   await cacheNode.saveLocalPost(signed);
   peers.broadcastGossip(signed);

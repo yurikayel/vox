@@ -1,6 +1,7 @@
 import * as cacheNode from "./cache-node.js";
 import * as webrtcPeer from "./webrtc-peer.js";
 import { allowGossipFromAuthor } from "./rate-limit.js";
+import { noteKeySeen } from "./new-key-guard.js";
 import * as localAccount from "./local-account.js";
 import * as manifestMesh from "./peers-cache-manifest.js";
 import * as blobAffinity from "./peers-blob-affinity.js";
@@ -434,6 +435,7 @@ async function handleGossipMessage(item, source = "rtc") {
   }
 
   if (!allowGossipFromAuthor(item.author)) return;
+  noteKeySeen(item.author);
 
   syncProfileDirectoryFromGossip(item);
   await cacheNode.saveLocalPost(item);
@@ -784,8 +786,12 @@ export function getRtcStatus() {
   return {
     remotePeersConnected: webrtcPeer.getConnectedRtcPeersCount(),
     myPeerId,
+    signalingDown: webrtcPeer.isSignalingDown(),
   };
 }
+
+/** LAN-21: avisa quando a sinalização cai (WebSocket e Nostr juntos) e quando volta. */
+export const onSignalingHealth = webrtcPeer.onSignalingHealth;
 
 export const getCustomTurnConfig = webrtcPeer.getCustomTurnConfig;
 export const saveCustomTurnConfig = webrtcPeer.saveCustomTurnConfig;

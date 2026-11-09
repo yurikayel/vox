@@ -21,6 +21,7 @@ import * as gatewayTelemetry from "../gateway-telemetry.js";
 import * as communitySeed from "../community-seed-checklist.js";
 import { computeCommunityNeighborStats, TOPICS_PAGE_SIZE } from "../render/community.js";
 import { orderCommunityTopics } from "../community-topic-order.js";
+import * as newKeyGuard from "../new-key-guard.js";
 import { markCommunitySeen } from "../community-unread.js";
 import * as contacts from "../contacts.js";
 import * as peopleIndex from "../people-index.js";
@@ -118,10 +119,32 @@ async function loadCommunityMetaAndTopics(communityId, user) {
   let modActions = [];
   try { modActions = await mod.fetchModActions(communityId); } catch {}
   const filtered = mod.applyFilters(merged, modActions, meta.owner, meta.moderators);
-  const filteredTopics = orderCommunityTopics(filtered, "active");
   const isUserMod = mod.isModerator(user, meta.owner, meta.moderators);
+  const { visible, heldCount } = await applyNewKeyQuarantine(filtered, meta, communityId, user, isUserMod);
+  const filteredTopics = orderCommunityTopics(visible, "active");
 
-  return { meta, filteredTopics, localTopics, demo, gateway, isUserMod };
+  return { meta, filteredTopics, localTopics, demo, gateway, isUserMod, heldCount };
+}
+
+/** LAN-14: recolhe posts de chave nova sem PoW se a comunidade pediu; moderação vê tudo, marcado. */
+async function applyNewKeyQuarantine(topics, meta, communityId, user, isUserMod) {
+  const held = await newKeyGuard.heldByQuarantine(topics, meta, { viewer: user || "" });
+  if (!held.size) return { visible: topics, heldCount: 0 };
+  if (isUserMod || newKeyGuard.isHeldRevealed(communityId)) {
+    return { visible: topics.map((t) => (held.has(t.id) ? { ...t, newKeyHeld: true } : t)), heldCount: 0 };
+  }
+  return { visible: topics.filter((t) => !held.has(t.id)), heldCount: held.size };
+}
+
+function renderNewKeyHeldNotice(main, communityId, count, tab) {
+  if (!count || tab !== "posts") return;
+  main.insertAdjacentHTML("beforeend", render.renderNewKeyHeldNoticeHtml(count));
+  main.querySelector(".btn-reveal-new-keys")?.addEventListener("click", () => {
+    newKeyGuard.revealHeld(communityId);
+    main.querySelector(".community-newkey-notice")?.remove();
+    main.querySelector(".community-vox-page")?.remove();
+    void showCommunity(communityId, tab);
+  });
 }
 
 async function loadCommunityListings(communityId, user, demo) {
@@ -584,6 +607,7 @@ function mountFullCommunityPage(communityId, tab, user, base, specifics, meta, i
   render.renderLoading(main);
   main.innerHTML = "";
   renderCommunityBanners(main, base, tab);
+  renderNewKeyHeldNotice(main, communityId, base.heldCount, tab);
 
   const peerSettings = peers.getPeerSettings();
   const neighborStats = computeCommunityNeighborStats({

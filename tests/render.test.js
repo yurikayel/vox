@@ -141,6 +141,40 @@ test("render - renderNetworkSettings mostra Leitura reserva quando gateway criti
   assert.ok(main.innerHTML.includes("Leitura reserva"));
 });
 
+test("render - LAN-21: rede mostra sinalização caída em vez de conectando para sempre", () => {
+  const main = createContainer();
+  const props = {
+    settings: { enabled: true, dailyCapMb: 50 },
+    metrics: {},
+    cacheStats: { count: 0, sizeKb: "0" },
+    relayStatus: { online: false },
+    dailyUsage: { bytesServedToday: 0 },
+    notifPermission: "default",
+    rtcStatus: { remotePeersConnected: 0, signalingDown: true },
+    customTurn: {},
+    relayHttpUrl: "http://127.0.0.1:3920",
+  };
+  render.renderNetworkSettings(main, props);
+  assert.ok(main.innerHTML.includes("Servidor de conexão fora do ar"));
+  assert.ok(main.innerHTML.includes("network-signaling-down"));
+  assert.ok(!main.innerHTML.includes("Conectando a aparelhos próximos"));
+
+  render.renderNetworkSettings(main, { ...props, rtcStatus: { remotePeersConnected: 0 } });
+  assert.ok(main.innerHTML.includes("Conectando a aparelhos próximos"));
+  assert.ok(!main.innerHTML.includes("network-signaling-down"));
+});
+
+test("render - LAN-14: aviso de quarentena e selo de chave nova", () => {
+  assert.ok(render.renderNewKeyHeldNoticeHtml(1).includes("1 post de chave nova"));
+  const many = render.renderNewKeyHeldNoticeHtml(3);
+  assert.ok(many.includes("3 posts de chaves novas"));
+  assert.ok(many.includes("btn-reveal-new-keys"));
+  const row = render.renderCommunityTopicRow({ id: "t1", title: "Oi", body: "x", newKeyHeld: true, ts: Date.now() });
+  assert.ok(row.includes("Chave nova"));
+  const plain = render.renderCommunityTopicRow({ id: "t2", title: "Oi", body: "x", ts: Date.now() });
+  assert.ok(!plain.includes("Chave nova"));
+});
+
 test("render - renderStewardWizard passo 1", () => {
   const main = createContainer();
   render.renderStewardWizard(main, { step: 1, draft: {} });
