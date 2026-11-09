@@ -6,6 +6,7 @@ import { loadRemoteFlags } from "./feature-flags.js";
 import { installDomDelegates } from "./dom-delegates.js";
 import { attachReportHandlers } from "./app/report-flow.js";
 import { wireRoute, setupHashchangeListener, routeImpl as route } from "./app/route.js";
+import { installEntryGuards } from "./app/onboarding.js";
 import { initDmListeners, initGossipListeners, initSocialInteractions } from "./app/init.js";
 import { initPostMediaLightbox } from "./app/post-media-lightbox.js";
 import { attachPostMoreMenuHandlers } from "./render/post-more-menu.js";
@@ -20,6 +21,7 @@ import { syncIdentity } from "./app/screens-network.js";
 
 installDomDelegates(document);
 attachReportHandlers(document);
+installEntryGuards();
 initColorMode(document, { onApply: () => applySkyTheme(document) });
 initSkyTheme();
 wireRoute();

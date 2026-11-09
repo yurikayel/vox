@@ -1,9 +1,9 @@
 {
-  "git_sha": "b7fa361",
-  "branch": "feat/pm11-arweave-vendor",
-  "test_js": 859,
+  "git_sha": "d978a13",
+  "branch": "feat/g1-decisoes-18mais-apontar",
+  "test_js": 880,
   "test_python": 91,
-  "test_total": 950,
-  "cache_name": "vox-pwa-v7.43-real-network-audio-video-upload",
-  "generated_at": "2026-11-09T19:59:28Z"
+  "test_total": 971,
+  "cache_name": "vox-pwa-v7.45-real-network-audio-video-upload",
+  "generated_at": "2026-11-09T23:26:21Z"
 }

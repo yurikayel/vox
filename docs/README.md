@@ -69,8 +69,11 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 - [IDENTITY.md](./IDENTITY.md): chaves, cofre e recuperação · [DNS-HANDLES.md](./specs/DNS-HANDLES.md): handles `@`
 - [login-social.md](./specs/login-social.md): login social, contas vinculadas e configuração de deploy do OAuth
 - [relay-api.md](./specs/relay-api.md): endpoints de `server.py` e `signaling.py`
+- [midia-v2.md](./specs/midia-v2.md): AVIF q66, Opus 48 kbps e H.264 720p24 com pedaços abaixo de 100 KB (não implementada)
+- [replicacao-por-grau-v0.md](./specs/replicacao-por-grau-v0.md): mídia no aparelho, replicação por grau de amizade com teto de 500 MB (não implementada)
+- [voluntariado-tres-trabalhos.md](./product/voluntariado-tres-trabalhos.md): os três trabalhos voluntários do piloto
 - [../client/DEV.md](../client/DEV.md): guia do desenvolvedor §0–§44 (histórico por sprint)
-- **ADRs:** [índice com status](./adr/README.md) (001–018) · **RFCs:** [rfc/README.md](./rfc/README.md) · [0001 — POSSE export](./rfc/0001-posse-export.md)
+- **ADRs:** [índice com status](./adr/README.md) (001–020) · **RFCs:** [rfc/README.md](./rfc/README.md) · [0001 — POSSE export](./rfc/0001-posse-export.md)
 
 ### Specs de protocolo (malha, cache, módulos)
 

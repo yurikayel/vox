@@ -27,3 +27,15 @@ test("dom-delegates - data-click-target clica no alvo; data-focus-target foca ou
   assert.equal(assigned, "#/compose/reply?t=1");
   handleDelegatedClick(el({ "data-focus-target": 1, dataset: { focusTarget: "#nada", focusFallback: "javascript:alert(1)" } }), doc, { assign: () => { throw new Error("não deveria navegar"); } });
 });
+
+test("dom-delegates - [data-app-feedback] carrega o modal sob demanda; outros cliques não", async () => {
+  const { openFeedbackOnClick } = await import("../client/js/dom-delegates.js");
+  let opened = 0;
+  const load = async () => ({ openFeedbackFlow: () => opened++ });
+  const target = { closest: (sel) => (sel === "[data-app-feedback]" ? {} : null) };
+  assert.equal(openFeedbackOnClick(target, load), true);
+  await new Promise((r) => setTimeout(r, 0));
+  assert.equal(opened, 1);
+  assert.equal(openFeedbackOnClick({ closest: () => null }, load), false);
+  assert.equal(opened, 1);
+});

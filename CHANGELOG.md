@@ -6,6 +6,15 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Piloto G1: decisões e primeiras peças (SW v7.45)
+- **Piloto só 18+ (PM-67, [ADR-020](./docs/adr/020-postura-de-operacao-do-piloto-g1.md)):** o pacto de entrada tem a caixa "tenho 18 anos ou mais"; sem ela, os botões ficam desativados. A confirmação é autodeclarada e fica só no aparelho. Quem aceitou o pacto antes vê o pacto uma vez mais.
+- **"Algo errado aqui?" (PM-68):** link no rodapé de todas as telas para apontar, sobre o app, "não funcionou", "não entendi" ou "não faz o que diz". Guarda só o nome da tela, o tipo, a versão e uma nota opcional, no aparelho; "Compartilhar apontamentos" manda o resumo para o grupo do piloto.
+- **Escrever exige o pacto completo:** curtir, responder, postar e votar ficam bloqueados até concluir o pacto com a confirmação de 18+ (as guardas do "ler antes de entrar" passam a valer desde a abertura do app); o próprio fluxo de entrada e o apontamento não são bloqueados.
+- **"Apagar conta local"** também apaga o pacto, a confirmação de 18+ e os apontamentos guardados.
+- **Compartilhar** (tópico, comunidade, convite, oferta e apontamentos) passa por um helper só (`shareOrCopy` em `share.js`).
+- **Rodapé visível no celular:** a barra de abas fixa cobria o rodapé inteiro (inclusive "Teste aberto"); agora ele tem espaço embaixo.
+- **Decisões registradas:** [ADR-019](./docs/adr/019-esquecer-por-padrao-e-memoria-civica.md) (esquecer por padrão; memória cívica por regra, moderador ou votação), [ADR-020](./docs/adr/020-postura-de-operacao-do-piloto-g1.md) (mantenedor como operador, voluntários só em baixo risco, 18+, uma denúncia arquiva), [mídia v2](./docs/specs/midia-v2.md), [replicação por grau](./docs/specs/replicacao-por-grau-v0.md) e [três trabalhos voluntários](./docs/product/voluntariado-tres-trabalhos.md). Itens PM-67…PM-76 no ROADMAP.
+
 ### Segurança e financiamento (SW v7.43)
 - **PM-11 `arweave` vendorizado:** a biblioteca deixa de vir do `esm.sh` em tempo de execução. O bundle autocontido 1.15.7 (o mesmo arquivo, com o mesmo sha384 já anotado no inventário) fica em `client/vendor/` e é carregado por `client/js/arweave-lib.js`, usado por `upload.js` e `wallet.js`. `https://esm.sh` saiu do `script-src` da CSP; `tests/arweave-vendor.test.js` confere o hash, que o bundle não importa nada de fora e que ele assina e verifica uma transação sem rede. Fecha o LAN-20.
 - **PM-42 rascunho da proposta ao NLnet Restack** (prazo 03/01/2027): [proposta-nlnet-restack-2027.md](./docs/strategy/proposta-nlnet-restack-2027.md), com os riscos que decidem a proposta (dimensão europeia eliminatória, política de IA generativa), checklist de submissão, respostas em inglês dentro dos limites do formulário e orçamento por marcos.
