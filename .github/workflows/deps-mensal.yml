@@ -1,0 +1,47 @@
+name: Dependências — rotina mensal (LAN-20)
+
+# Inventário em docs/DEPENDENCIAS.md. Falha quando: vulnerabilidade alta no npm,
+# código carregando algo fora do inventário, ou hash de CDN diferente do anotado.
+
+on:
+  schedule:
+    - cron: "0 9 1 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deps:
+    name: Auditoria mensal de dependências
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v5
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+
+      - name: Instalar dependências do lock
+        run: npm ci
+
+      - name: npm audit (alto ou crítico falha)
+        run: npm audit --audit-level=high
+
+      - name: Inventário cobre o que o código carrega
+        run: node --test tests/dependencias-inventory.test.js
+
+      - name: Hashes de CDN batem com o inventário
+        run: node scripts/deps-check-cdn.mjs
+
+      - name: Versões desatualizadas (só informa)
+        if: always()
+        run: |
+          {
+            echo "### npm outdated"
+            echo '```'
+            npm outdated || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

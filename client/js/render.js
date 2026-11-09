@@ -73,6 +73,7 @@ export {
   TOPICS_PAGE_SIZE,
   CIVIC_TAGS,
   extractTopicCivicTag,
+  renderNewKeyHeldNoticeHtml,
 } from "./render/community.js";
 
 export {

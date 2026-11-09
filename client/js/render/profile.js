@@ -832,6 +832,14 @@ function communityPhotoStepHtml() {
           <option value="closed">Moderada (Requer aprovação)</option>
         </select>
       </div>
+      <div class="form-group" style="display:flex; gap:0.5rem; align-items:flex-start;">
+        <input type="checkbox" id="comm-new-key-quarantine" style="margin-top:0.25rem;" />
+        <label for="comm-new-key-quarantine" style="margin:0; font-weight:normal;">
+          <strong>Quarentena para chave nova</strong> (anti-spam): posts de quem chegou à rede há menos de 24 h ficam recolhidos,
+          a menos que o aparelho da pessoa faça uma prova de trabalho leve (cerca de 1 segundo) ao publicar.
+          Moderação sempre vê tudo. Só dá para escolher agora, na criação.
+        </label>
+      </div>
       <div class="form-group">
         <label for="comm-category">Categoria:</label>
         <input type="text" id="comm-category" class="form-control" list="comm-category-suggestions" placeholder="ex: Cultura & Artes, Política & Cidadania" maxlength="40" />

@@ -117,10 +117,10 @@ function openRelay(ctx, url) {
     return;
   }
   const subId = `vox-${Math.random().toString(36).slice(2, 8)}`;
-  ws.onopen = () => {
+  trackRelayStatus(ctx, ws, () => {
     ws.send(JSON.stringify(["REQ", subId, { kinds: [SIGNAL_KIND], "#t": [ctx.room], since: Math.floor(Date.now() / 1000) - 30 }]));
     void sendHello(ctx);
-  };
+  });
   ws.onmessage = (ev) => {
     try {
       const msg = JSON.parse(ev.data);
@@ -131,14 +131,42 @@ function openRelay(ctx, url) {
   ctx.sockets.push(ws);
 }
 
+/** LAN-21: conta o relay como "abrindo" até abrir ou fechar; cada socket conta uma vez. */
+function trackRelayStatus(ctx, ws, onOpen) {
+  let phase = "pending";
+  ctx.pending += 1;
+  notifyStatus(ctx);
+  ws.onopen = () => {
+    phase = "open";
+    ctx.pending -= 1;
+    ctx.open += 1;
+    notifyStatus(ctx);
+    onOpen();
+  };
+  ws.onclose = () => {
+    if (phase === "open") ctx.open -= 1;
+    else if (phase === "pending") ctx.pending -= 1;
+    phase = "closed";
+    notifyStatus(ctx);
+  };
+}
+
+/** LAN-21: avisa quantos relays estão abertos e quantos ainda tentam abrir. */
+function notifyStatus(ctx) {
+  ctx.onStatus?.({ open: ctx.open, pending: ctx.pending });
+}
+
 function stopTransport(ctx) {
   clearInterval(ctx.timer);
   for (const ws of ctx.sockets) {
+    ws.onclose = null;
     try {
       ws.close();
     } catch {}
   }
   ctx.sockets = [];
+  ctx.open = 0;
+  ctx.pending = 0;
 }
 
 function sendSignal(ctx, msg) {
@@ -160,6 +188,9 @@ function createContext(opts) {
     relays: (opts.relays || []).slice(0, opts.maxRelays || 3),
     WS: opts.WebSocketImpl || globalThis.WebSocket,
     onMessage: opts.onMessage,
+    onStatus: opts.onStatus,
+    open: 0,
+    pending: 0,
     identity: () => (typeof opts.getIdentity === "function" ? opts.getIdentity() || {} : {}),
     sockets: [],
     pubByPeer: new Map(),
@@ -171,7 +202,8 @@ function createContext(opts) {
 
 /**
  * @param {{ relays: string[], room?: string, peerId: string, getIdentity?: () => ({address?: string, dmPub?: any}),
- *   onMessage: (msg: object) => void, WebSocketImpl?: any, maxRelays?: number }} opts
+ *   onMessage: (msg: object) => void, onStatus?: (s: {open: number, pending: number}) => void,
+ *   WebSocketImpl?: any, maxRelays?: number }} opts
  */
 export function createNostrTransport(opts) {
   const ctx = createContext(opts);
@@ -183,6 +215,8 @@ export function createNostrTransport(opts) {
     },
     stop: () => stopTransport(ctx),
     knows: (peerId) => ctx.pubByPeer.has(peerId),
+    /** Relays abertos e ainda abrindo (LAN-21). */
+    status: () => ({ open: ctx.open, pending: ctx.pending }),
     /** Envia offer/answer/ice para `msg.to` (peerId). Retorna false se o par não é conhecido por Nostr. */
     send: (msg) => sendSignal(ctx, msg),
     _handleEvent: (event) => handleEvent(ctx, event),

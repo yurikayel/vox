@@ -6,6 +6,13 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Rede e anti-spam (SW v7.39, PR #30)
+- **LAN-21 sinalização caída:** quando o servidor WebSocket desistiu de todos os nós e nenhum relay Nostr está aberto por mais de 5 s, o app avisa que a troca com outros aparelhos parou e que ler e escrever continuam; avisa também quando volta. Em `#/settings/network`, "Conectando a aparelhos próximos…" deixa de aparecer para sempre (`honest-errors.js` → `createSignalingHealth`, `nostr-transport.js` conta relays abertos).
+- **LAN-14 quarentena de chave nova e PoW leve:** ao criar uma comunidade, dá para pedir quarentena; posts de chave vista há menos de 24 h ficam recolhidos ("Ver mesmo assim"), a menos que tragam prova de trabalho de 14 bits, que o app calcula sozinho ao publicar (~1 s). Moderação vê tudo, com selo "Chave nova" (`new-key-guard.js`).
+
+### Segurança
+- **LAN-20 inventário de dependências:** [docs/DEPENDENCIAS.md](./docs/DEPENDENCIAS.md) lista o código de terceiros (CDN, SDKs, npm, contêineres, Actions); `tests/dependencias-inventory.test.js` quebra o CI se algo novo entrar sem linha; `deps-mensal.yml` roda `npm audit` e confere o hash do bundle do `arweave` todo mês. Achado: a entrada `esm.sh/arweave@1.15.7` puxa dependências com `^` e varia por User-Agent; vendorizar o bundle fica pendente.
+
 ### Documentação
 - Revisão de estado de 08/11/2026: README, ROADMAP, FEATURES, INFRA-CUSTOS, THREAT-MODEL, TESTES, índice de `docs/` e DEV §27 alinhados ao `main` depois dos PRs #17–#28. ROADMAP com linhas de tabela consertadas, itens fechados movidos para *Concluído* e parciais marcados com 🚧. README sem a afirmação "PWA < 50 KB" (o `client/js` tem ~1,9 MB). Release line regenerada.
 

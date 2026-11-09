@@ -107,3 +107,42 @@ test("nostr-transport - ignora evento de outra sala e mensagens próprias", asyn
   assert.deepEqual(got, []);
   assert.equal(T.knows("peer_y"), false);
 });
+
+test("nostr-transport - LAN-21: conta relays abertos e abrindo; stop zera sem avisar", async () => {
+  const sockets = [];
+  class ScriptedWS {
+    constructor(url) {
+      this.url = url;
+      sockets.push(this);
+    }
+    send() {}
+    close() {
+      this.onclose?.();
+    }
+  }
+  const seen = [];
+  const t = createNostrTransport({
+    relays: ["wss://a", "wss://b"],
+    peerId: "p1",
+    onMessage: () => {},
+    onStatus: (st) => seen.push(st),
+    WebSocketImpl: ScriptedWS,
+  });
+  t.start();
+  try {
+    assert.deepEqual(t.status(), { open: 0, pending: 2 });
+    sockets[0].onopen();
+    assert.deepEqual(t.status(), { open: 1, pending: 1 });
+    sockets[1].onclose();
+    sockets[1].onclose();
+    assert.deepEqual(t.status(), { open: 1, pending: 0 }, "fechar duas vezes não conta duas");
+    sockets[0].onclose();
+    assert.deepEqual(t.status(), { open: 0, pending: 0 });
+    assert.deepEqual(seen.at(-1), { open: 0, pending: 0 });
+  } finally {
+    const before = seen.length;
+    t.stop();
+    assert.equal(seen.length, before, "stop não dispara aviso");
+    assert.deepEqual(t.status(), { open: 0, pending: 0 });
+  }
+});
