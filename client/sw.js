@@ -4,7 +4,7 @@
 
 // O Service Worker atua no cache offline do shell e notificações de status, sem abrir WebRTC.
 
-const CACHE_NAME = "vox-pwa-v7.41-real-network-audio-video-upload";
+const CACHE_NAME = "vox-pwa-v7.42-real-network-audio-video-upload";
 
 const SHELL_ASSETS = [
 
@@ -52,6 +52,7 @@ const SHELL_ASSETS = [
   "./js/sky-theme.js",
 
   "./js/app/cantina-gate.js",
+  "./js/app/read-first.js",
 
   "./js/app/context.js",
 
@@ -218,12 +219,10 @@ const SHELL_ASSETS = [
 
   "./js/peers-gossip-profile.js",
 
-  "./js/polis.js",
 
   "./js/media-blob.js",
   "./js/media-lofi.js",
   "./js/perma-notary.js",
-  "./js/civic-credential.js",
 
   "./js/peers-cache-manifest.js",
 
@@ -236,15 +235,7 @@ const SHELL_ASSETS = [
   "./js/pix-key.js",
 
   "./js/webrtc-peer.js",
-  "./js/seeder-guardian.js",
   "./js/nostr-signaling.js",
-  "./js/render/settings-guardian.js",
-  "./js/node-health-model.js",
-  "./js/node-health-evaluator.js",
-  "./js/node-health-api.js",
-  "./js/node-health-ux.js",
-  "./js/node-health-state.js",
-  "./js/render/node-health-badge.js",
 
   "./js/render.js",
 
@@ -336,23 +327,42 @@ const SHELL_ASSETS = [
   "./js/social.js",
 
   "./js/ans104.js",
-  "./js/identity-link.js",
   "./js/render/welcome-pact.js",
   "./js/upload.js",
 
   "./js/wallet.js",
-  "./js/idb-store.js",
-  "./js/vox-identity.js",
-  "./js/storage-persistence.js",
-  "./js/webxdc-loader.js",
-  "./js/webxdc-host.js",
-  "./js/webxdc-crdt.js",
-  "./js/kit-genesis.js",
-  "./js/chunked-transfer.js",
-  "./js/airgap-webrtc.js",
-  "./js/testimonials.js",
-  "./js/bridging-rank.js",
 
+];
+
+/**
+ * PM-04: módulos escritos e testados, mas que nenhum ponto de entrada carrega (REV-02 decide plugar ou arquivar).
+ * Ficam FORA do precache: a instalação não baixa código que nunca roda. O teste `shell-reachability`
+ * exige que todo módulo inalcançável esteja aqui e que nada daqui esteja no SHELL_ASSETS.
+ */
+// eslint-disable-next-line no-unused-vars
+const UNPLUGGED_MODULES = [
+  "./js/airgap-webrtc.js",
+  "./js/bridging-rank.js",
+  "./js/chunked-transfer.js",
+  "./js/civic-credential.js",
+  "./js/idb-store.js",
+  "./js/identity-link.js",
+  "./js/kit-genesis.js",
+  "./js/node-health-api.js",
+  "./js/node-health-evaluator.js",
+  "./js/node-health-model.js",
+  "./js/node-health-state.js",
+  "./js/node-health-ux.js",
+  "./js/polis.js",
+  "./js/render/node-health-badge.js",
+  "./js/render/settings-guardian.js",
+  "./js/seeder-guardian.js",
+  "./js/storage-persistence.js",
+  "./js/testimonials.js",
+  "./js/vox-identity.js",
+  "./js/webxdc-crdt.js",
+  "./js/webxdc-host.js",
+  "./js/webxdc-loader.js",
 ];
 
 self.addEventListener("install", (event) => {

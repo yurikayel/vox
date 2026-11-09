@@ -21,6 +21,7 @@ on:
         type: string
 
 permissions:
+  issues: write
   contents: read
 
 concurrency:
@@ -73,3 +74,22 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy _site --project-name=${{ secrets.CLOUDFLARE_PAGES_PROJECT_NAME }} --branch=main --commit-dirty=true
+
+      - name: Alerta vira issue (PM-61)
+        if: failure() && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ALERT_TITLE: "Alerta: deploy do shell B falhou"
+        run: |
+          repo="$GITHUB_REPOSITORY"
+          run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          gh label create alerta-automatico --repo "$repo" --color B60205 \
+            --description "Falha de rotina agendada ou de deploy (PM-61)" 2>/dev/null || true
+          existing=$(gh issue list --repo "$repo" --state open --label alerta-automatico \
+            --search "\"$ALERT_TITLE\" in:title" --json number --jq '.[0].number // empty')
+          if [ -n "$existing" ]; then
+            echo "Issue #$existing já aberta para este alerta; não abro outra."
+            exit 0
+          fi
+          gh issue create --repo "$repo" --label alerta-automatico --title "$ALERT_TITLE" \
+            --body "A execução $run_url falhou em $(date -u +%Y-%m-%dT%H:%MZ). Feche esta issue quando resolver; enquanto ela estiver aberta, novas falhas não abrem outra. Runbook: docs/operations/runbook-incidentes.md"

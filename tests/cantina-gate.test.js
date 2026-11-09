@@ -46,3 +46,15 @@ describe("cantina-gate ajuda/teste hrefs", () => {
     assert.equal(hashFromAjudaTesteHref("./#/ajuda/teste"), "#/ajuda/teste");
   });
 });
+
+describe("PM-54 ler antes de entrar", () => {
+  it("link direto para conteúdo não abre o portão; home e telas de escrita continuam com portão", () => {
+    localStorage.clear();
+    for (const r of ["topic", "community", "profile", "handle-lookup", "tag-feed", "proposal"]) {
+      assert.equal(shouldShowCantinaGate(r), false, r);
+    }
+    for (const r of ["home", "compose-topic", "dm-thread", "wallet", "vote"]) {
+      assert.equal(shouldShowCantinaGate(r), true, r);
+    }
+  });
+});

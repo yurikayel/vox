@@ -10,12 +10,17 @@ concurrency:
   group: sentinel-keepalive
   cancel-in-progress: true
 
+permissions:
+  contents: read
+  issues: write
+
 jobs:
   ping:
     name: Ping Nós Base (Sentinelas Vox)
     runs-on: ubuntu-latest
     steps:
       - name: Executar pings de prontidão nos nós sentinelas
+        id: ping
         env:
           SENTINEL_NODE_1: ${{ secrets.SENTINEL_NODE_1 }}
           SENTINEL_NODE_2: ${{ secrets.SENTINEL_NODE_2 }}
@@ -59,4 +64,24 @@ jobs:
 
           echo "=============================================="
           echo "Ping concluído: $((${#nodes[@]} - failed))/${#nodes[@]} nós ativos."
+          echo "failed=$failed" >> "$GITHUB_OUTPUT"
           echo "=============================================="
+
+      - name: Alerta vira issue (PM-61)
+        if: steps.ping.outputs.failed != '0' && github.event_name == 'schedule'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ALERT_TITLE: "Alerta: nó de sinalização (Render) sem resposta no keepalive"
+        run: |
+          repo="$GITHUB_REPOSITORY"
+          run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          gh label create alerta-automatico --repo "$repo" --color B60205 \
+            --description "Falha de rotina agendada ou de deploy (PM-61)" 2>/dev/null || true
+          existing=$(gh issue list --repo "$repo" --state open --label alerta-automatico \
+            --search "\"$ALERT_TITLE\" in:title" --json number --jq '.[0].number // empty')
+          if [ -n "$existing" ]; then
+            echo "Issue #$existing já aberta para este alerta; não abro outra."
+            exit 0
+          fi
+          gh issue create --repo "$repo" --label alerta-automatico --title "$ALERT_TITLE" \
+            --body "A execução $run_url falhou em $(date -u +%Y-%m-%dT%H:%MZ). Feche esta issue quando resolver; enquanto ela estiver aberta, novas falhas não abrem outra. Runbook: docs/operations/runbook-incidentes.md"

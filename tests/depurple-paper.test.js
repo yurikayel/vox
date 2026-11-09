@@ -54,10 +54,16 @@ test("service worker - shell assets 100% complete and exist on disk", () => {
     }
     return res;
   }
+  // PM-04: módulo que nenhum ponto de entrada carrega fica em UNPLUGGED_MODULES, fora do precache.
+  const unpluggedMatch = sw.match(/const UNPLUGGED_MODULES = \[([\s\S]*?)\];/);
+  const unplugged = unpluggedMatch
+    ? unpluggedMatch[1].split("\n").map((s) => s.trim().replace(/^['"]|['"],?$/g, "")).filter(Boolean)
+    : [];
   const allJs = walk(path.join(root, "js"));
   for (const js of allJs) {
     const rel = "./" + path.relative(root, js).replace(/\\/g, "/");
-    assert.ok(assets.includes(rel), `Client JS file ${rel} must be listed in SHELL_ASSETS`);
+    assert.ok(assets.includes(rel) || unplugged.includes(rel), `Client JS file ${rel} must be listed in SHELL_ASSETS or UNPLUGGED_MODULES`);
+    assert.ok(!(assets.includes(rel) && unplugged.includes(rel)), `${rel} não pode estar nas duas listas`);
   }
 });
 

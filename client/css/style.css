@@ -10036,3 +10036,22 @@ blockquote.repost-cite {
   color: var(--text);
   font-size: 0.85rem;
 }
+
+/* PM-54 — faixa "ler antes de entrar" (link direto abre o conteúdo; entrar fica a um toque) */
+.read-first-banner {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 60;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem 0.75rem;
+  padding: 0.6rem 1rem calc(0.6rem + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--border);
+  background: var(--surface-soft);
+  color: var(--text);
+  font-size: 0.85rem;
+}
