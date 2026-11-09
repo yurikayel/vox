@@ -26,6 +26,30 @@ export function showToast(message, type = "info") {
   }, 3500);
 }
 
+/**
+ * Web Share quando o aparelho tem; senão copia para a área de transferência. Avisa por toast.
+ * @returns {Promise<boolean>} true se abriu o compartilhamento ou copiou; false se cancelou ou falhou.
+ */
+export async function shareOrCopy({ title, text, url = "", copyText, copiedToast = SHARE_CLIPBOARD_SUCCESS_TOAST, failToast = "Não foi possível copiar o link." }) {
+  if (navigator.share) {
+    try {
+      await navigator.share(url ? { title, text, url } : { title, text });
+      showToast(SHARE_NATIVE_SUCCESS_TOAST);
+      return true;
+    } catch (e) {
+      if (e.name === "AbortError") return false;
+    }
+  }
+  try {
+    await navigator.clipboard.writeText(copyText ?? (url ? `${text} ${url}` : text));
+    showToast(copiedToast);
+    return true;
+  } catch {
+    showToast(failToast, "error");
+    return false;
+  }
+}
+
 export function formatShareBaseUrl() {
   if (typeof window !== "undefined" && window.location) {
     return `${window.location.origin}${window.location.pathname}`;
@@ -64,82 +88,20 @@ export function buildWhatsAppShareUrl({ title, topicId, communityId = "", author
 export async function shareTopic({ title, topicId, communityId, author = "", body = "" }) {
   const url = topicShareUrl(topicId);
   const formattedFull = buildTopicShareText({ title, topicId, communityId, author, body });
-
-  if (navigator.share) {
-    try {
-      await navigator.share({
-        title: `${title} | Vox`,
-        text: formattedFull,
-        url,
-      });
-      showToast(SHARE_NATIVE_SUCCESS_TOAST);
-      return true;
-    } catch (e) {
-      if (e.name === "AbortError") return false;
-    }
-  }
-
-  try {
-    await navigator.clipboard.writeText(formattedFull);
-    showToast(SHARE_CLIPBOARD_RICH_TOAST);
-    return true;
-  } catch {
-    showToast("Não foi possível copiar o link.", "error");
-    return false;
-  }
+  return shareOrCopy({ title: `${title} | Vox`, text: formattedFull, url, copyText: formattedFull, copiedToast: SHARE_CLIPBOARD_RICH_TOAST });
 }
 
 export async function shareCommunity({ title, communityId }) {
   const url = communityShareUrl(communityId);
   const text = `Participe da comunidade "${title}" no Vox:`;
-
-  if (navigator.share) {
-    try {
-      await navigator.share({
-        title: `${title} | Comunidade Vox`,
-        text,
-        url,
-      });
-      showToast(SHARE_NATIVE_SUCCESS_TOAST);
-      return true;
-    } catch (e) {
-      if (e.name === "AbortError") return false;
-    }
-  }
-
-  try {
-    await navigator.clipboard.writeText(`${text} ${url}`);
-    showToast(SHARE_CLIPBOARD_SUCCESS_TOAST);
-    return true;
-  } catch {
-    showToast("Não foi possível copiar o link.", "error");
-    return false;
-  }
+  return shareOrCopy({ title: `${title} | Comunidade Vox`, text, url });
 }
 
 export async function shareConnect({ routeId, displayName = "" }) {
   const url = connectShareUrl(routeId);
   const who = displayName || routeId.slice(0, 12);
   const text = `Conecte com ${who} no Vox:`;
-
-  if (navigator.share) {
-    try {
-      await navigator.share({ title: `${who} | Vox`, text, url });
-      showToast(SHARE_NATIVE_SUCCESS_TOAST);
-      return true;
-    } catch (e) {
-      if (e.name === "AbortError") return false;
-    }
-  }
-
-  try {
-    await navigator.clipboard.writeText(`${text} ${url}`);
-    showToast(SHARE_CLIPBOARD_SUCCESS_TOAST);
-    return true;
-  } catch {
-    showToast("Não foi possível copiar o link.", "error");
-    return false;
-  }
+  return shareOrCopy({ title: `${who} | Vox`, text, url });
 }
 
 export async function shareListing({ title, communityId, priceLabel = "" }) {
@@ -147,27 +109,5 @@ export async function shareListing({ title, communityId, priceLabel = "" }) {
   const url = `${window.location.origin}${window.location.pathname}${commPart}`;
   const priceText = priceLabel ? ` por ${priceLabel}` : "";
   const text = `Oferta "${title}"${priceText} na Feira do Vox:`;
-
-  if (navigator.share) {
-    try {
-      await navigator.share({
-        title: `${title} | Feira Vox`,
-        text,
-        url,
-      });
-      showToast(SHARE_NATIVE_SUCCESS_TOAST);
-      return true;
-    } catch (e) {
-      if (e.name === "AbortError") return false;
-    }
-  }
-
-  try {
-    await navigator.clipboard.writeText(`${text} ${url}`);
-    showToast(SHARE_CLIPBOARD_SUCCESS_TOAST);
-    return true;
-  } catch {
-    showToast("Não foi possível copiar o link.", "error");
-    return false;
-  }
+  return shareOrCopy({ title: `${title} | Feira Vox`, text, url });
 }

@@ -53,6 +53,7 @@
 | Funcionalidade | Rota | Módulos | Status | Testes |
 |---|---|---|---|---|
 | Onboarding em etapas + pacto | 1º acesso | `app/onboarding.js`, `render/oauth-modals.js` | no ar | `onboarding-steps` |
+| Confirmação "tenho 18 anos ou mais" no pacto (piloto só 18+, ADR-020) | pacto | `age-gate.js`, `render/welcome-pact.js` | no ar (autodeclarada, só no aparelho) | `age-gate` |
 | Identidade local P-256 `vx_*` | — | `local-account.js` | no ar | `local-account` |
 | Cofre ZK, Senha Soberana, sync por QR | `#/backup`, `#/sync` | `oauth-vault.js`, `account-backup-wrap.js` | no ar (via Google/Meta, depende de config) | `account-backup`, `wallet-encryption` |
 | Identidade Ed25519/X25519 (cintura fina) | — | `vox-identity.js` | **escrito, não plugado** | `vox-identity` |
@@ -111,6 +112,7 @@
 |---|---|---|
 | Voxpedia (ajuda leiga) | `#/voxpedia` | no ar |
 | Guia para testadores | `#/ajuda/teste` | no ar |
+| "Algo errado aqui?": apontamento sobre o app (trabalho voluntário 3; `app-feedback.js`, `app/feedback-flow.js`) | rodapé de todas as telas | no ar; fica no aparelho e a pessoa compartilha com o grupo do piloto (sem envio automático) |
 | Downloads | `#/download`, `client/download/` | no ar |
 | Canal Revolução | `#/revolucao` | no ar |
 | Comunidade oficial `vox` + demos | — | no ar + demo (`mock.js`, 27 perfis por UF) |

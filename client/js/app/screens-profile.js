@@ -20,7 +20,7 @@ import * as welcomeProfile from "../vox-welcome-profile.js";
 import * as meshProfile from "../mesh-profile.js";
 import * as centralMemory from "../central-memory.js";
 import { getCachedBskyPosts } from "../bsky-feed.js";
-import { openOAuthEnrichModal } from "./onboarding.js";
+import { openOAuthEnrichModal, wipeLocalDevice } from "./onboarding.js";
 import { getActiveUser, makeShellProps } from "./context.js";
 import { syncIdentity } from "./screens-network.js";
 import { KIND_WRAPPED, peekBackupKind } from "../account-backup-wrap.js";
@@ -390,7 +390,7 @@ function clearPassphraseField() {
 async function runLocalWipe(activeTab) {
   if (!localAccount.confirmLocalWipe()) return;
   clearPassphraseField();
-  localAccount.wipeLocalAccount();
+  wipeLocalDevice();
   share.showToast("Chaves deste navegador apagadas.");
   await showProfile(null, activeTab);
 }
