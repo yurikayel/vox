@@ -209,7 +209,7 @@ A regra da §0 continua: até o PIL-01, só entra código que destrava o piloto,
 | # | O quê | Por que agora |
 |---|---|---|
 | 1 | **PM-50 (só tirar o `ar-io.dev`)** + **PM-17** reconexão Nostr | Dois bugs reais de rede, cada um com menos de um dia de trabalho |
-| 2 | **PM-45** binários pelo CI | Continua o maior furo de integridade |
+| 2 | ✅ **PM-45** binários pelo CI (PR #33) | Era o maior furo de integridade |
 | 3 | **PM-10, PM-43, PM-62** proteções do GitHub, Sponsors e `main` protegido | Minutos cada, e ninguém mais precisa lembrar |
 | 4 | **PM-42** proposta NLnet (03/01/2027) | Prazo fixo |
 | 5 | **PM-54** ler antes de entrar | Destrava o piloto: o grupo vai trocar links no WhatsApp desde o primeiro dia |
