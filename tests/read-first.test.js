@@ -62,3 +62,11 @@ test("read-first - rotas de leitura e faixa", () => {
   assert.ok(html.includes("btn-read-first-enter"));
   assert.ok(html.includes("não pede CPF"));
 });
+
+test("read-first - fluxo de entrada (#modal-container) e apontamento não pedem entrada; o resto pede", () => {
+  const inside = (id) => ({ id, closest: (sel) => (sel === "#modal-container" ? {} : null) });
+  const outside = (id) => ({ id, closest: () => null });
+  assert.equal(rf.submitNeedsEntry(inside("form-oauth-custom-name")), false, "onboarding não pode travar a si mesmo");
+  assert.equal(rf.submitNeedsEntry(outside("form-feedback")), false);
+  assert.equal(rf.submitNeedsEntry(outside("form-compose-topic")), true);
+});

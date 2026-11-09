@@ -144,3 +144,21 @@ test("share - shareListing formata link e texto de oferta para a feira", async (
   assert.ok(copiedText.includes("R$ 28"));
   assert.ok(copiedText.includes("#/c/demo-feira-local?tab=listings"));
 });
+
+test("share - shareOrCopy sem url copia só o texto e usa o aviso pedido", async () => {
+  delete globalThis.navigator.share;
+  let copied = null;
+  globalThis.navigator.clipboard = { writeText: async (t) => { copied = t; } };
+  assert.equal(await share.shareOrCopy({ title: "T", text: "linha", copiedToast: "copiado" }), true);
+  assert.equal(copied, "linha");
+  globalThis.navigator.clipboard = { writeText: async () => { throw new Error("negado"); } };
+  assert.equal(await share.shareOrCopy({ title: "T", text: "x", url: "http://a" }), false);
+});
+
+test("share - shareOrCopy: cancelar o Web Share não copia", async () => {
+  let copied = false;
+  globalThis.navigator.share = async () => { const e = new Error("cancelou"); e.name = "AbortError"; throw e; };
+  globalThis.navigator.clipboard = { writeText: async () => { copied = true; } };
+  assert.equal(await share.shareOrCopy({ title: "T", text: "x", url: "http://a" }), false);
+  assert.equal(copied, false);
+});

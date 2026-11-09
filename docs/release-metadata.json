@@ -1,9 +1,9 @@
 {
-  "git_sha": "14af9d7",
+  "git_sha": "d978a13",
   "branch": "feat/g1-decisoes-18mais-apontar",
-  "test_js": 871,
+  "test_js": 880,
   "test_python": 91,
-  "test_total": 962,
-  "cache_name": "vox-pwa-v7.44-real-network-audio-video-upload",
-  "generated_at": "2026-11-09T23:13:33Z"
+  "test_total": 971,
+  "cache_name": "vox-pwa-v7.45-real-network-audio-video-upload",
+  "generated_at": "2026-11-09T23:26:21Z"
 }

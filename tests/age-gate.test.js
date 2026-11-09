@@ -49,3 +49,26 @@ test("ADR-020: o pacto (modal e etapa final do onboarding) traz a caixa de 18+",
     assert.ok(html.indexOf(age.AGE_CHECKBOX_ID) < html.indexOf('id="btn-pact-accept"'), "a caixa vem antes do botão");
   }
 });
+
+test("ADR-020: pacto sem a caixa (cache misturando versões) ganha a caixa antes dos botões, sem travar", () => {
+  const inserted = [];
+  let box = null;
+  const actions = { insertAdjacentHTML(pos, html) { inserted.push(pos); if (html.includes(age.AGE_CHECKBOX_ID)) box = { checked: false, addEventListener() {} }; } };
+  const btn = {
+    disabled: false,
+    setAttribute() {},
+    closest: (sel) => (sel === ".modal-actions" ? actions : null),
+    insertAdjacentHTML: () => assert.fail("insere antes do grupo de ações, não dentro do botão"),
+  };
+  const doc = { getElementById: (id) => (id === age.AGE_CHECKBOX_ID ? box : null) };
+  const got = age.bindAdultCheck(doc, [btn]);
+  assert.deepEqual(inserted, ["beforebegin"]);
+  assert.equal(got, box, "devolve a caixa inserida");
+  assert.equal(btn.disabled, true, "continua exigindo marcar a caixa");
+});
+
+test("ADR-020: com a caixa já presente, nada é inserido", () => {
+  const box = { checked: true, addEventListener() {} };
+  const btn = { disabled: true, setAttribute() {}, insertAdjacentHTML: () => assert.fail("não deveria inserir") };
+  assert.equal(age.ensureAdultCheck({ getElementById: () => box }, btn), box);
+});

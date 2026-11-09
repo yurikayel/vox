@@ -26,13 +26,18 @@ export function normalizeScreen(screen) {
   return /^[a-z0-9-]{1,40}$/.test(name) ? name : "desconhecida";
 }
 
+/** Quebras de linha e espaços repetidos viram um espaço: cada apontamento ocupa uma linha no texto compartilhado. */
+function oneLine(text) {
+  return String(text || "").replace(/\s+/g, " ").trim();
+}
+
 /** Valida e normaliza; lança Error com mensagem em português. */
 export function buildFeedback({ screen, kind, note = "", version = "" } = {}, now = Date.now()) {
   if (!findKind(kind)) throw new Error("Escolha o que aconteceu.");
   return {
     screen: normalizeScreen(screen),
     kind,
-    note: String(note || "").trim().slice(0, MAX_NOTE_LEN),
+    note: oneLine(note).slice(0, MAX_NOTE_LEN),
     version: String(version || "").slice(0, 80),
     ts: now,
   };
@@ -77,13 +82,15 @@ export function summarizeByScreen(list = []) {
 function formatLine(rec) {
   const label = findKind(rec.kind)?.label || rec.kind;
   const day = new Date(rec.ts).toISOString().slice(0, 10);
-  return `- ${day} · tela ${rec.screen} · ${label}${rec.note ? ` · "${rec.note}"` : ""}`;
+  const note = oneLine(rec.note);
+  return `- ${day} · tela ${rec.screen} · ${label}${note ? ` · "${note}"` : ""}`;
 }
 
 /** Texto para a pessoa colar no grupo do piloto (resumo + lista). */
 export function formatFeedbackForShare(list = []) {
   if (!list.length) return "Nenhum apontamento salvo neste aparelho.";
-  const version = list[list.length - 1].version || "versão desconhecida";
+  const versions = [...new Set(list.map((rec) => rec.version).filter(Boolean))];
+  const version = versions.length ? versions.join(", ") : "versão desconhecida";
   const summary = summarizeByScreen(list).map((s) => `${s.count}× ${s.screen} (${findKind(s.kind)?.label || s.kind})`);
   return [
     `Apontamentos do Vox (${list.length}) · ${version}`,
