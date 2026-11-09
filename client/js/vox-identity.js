@@ -300,7 +300,7 @@ function formatEnvelopePayloadBytes(payload, isBinary) {
   return new TextEncoder().encode(JSON.stringify(payload));
 }
 
-function assembleEnvelopeObject(identity, parsed, docId, caps, serializedPayload, isBinary, sig) {
+function assembleEnvelopeObject({ identity, parsed, docId, caps, serializedPayload, isBinary, sig }) {
   return {
     version: 1,
     sender: bytesToHex(identity.rawPublicKey),
@@ -339,7 +339,7 @@ export async function buildSignedEnvelope({
 
   const sig = await signCanonicalHeader(identity.privateKey, header);
   const parsed = parseCanonicalBinaryHeader(header);
-  return assembleEnvelopeObject(identity, parsed, documentId, capabilityChain, serialized, isBinary, sig);
+  return assembleEnvelopeObject({ identity, parsed, docId: documentId, caps: capabilityChain, serializedPayload: serialized, isBinary, sig });
 }
 
 async function reconstructHeaderFromEnvelope(envelope) {

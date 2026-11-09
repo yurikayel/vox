@@ -847,7 +847,7 @@ function renderListingMedia(item) {
   return `<div class="post-media-container"><img class="post-media" src="${escapeHtml(item.image)}" alt="${escapeHtml(item.imageAlt || item.title || "Oferta")}" /></div>`;
 }
 
-function renderListingActions(item, author, authorDisplay, price, pixKey, commId) {
+function renderListingActions({ item, author, authorDisplay, price, pixKey, commId }) {
   const pixBtn = pixKey
     ? `<button type="button" class="btn btn-secondary btn-sm btn-zap-post btn-copy-pix" data-pix="${escapeHtml(pixKey)}" data-author="${escapeHtml(author)}" data-author-name="${escapeHtml(authorDisplay)}" data-price="${escapeHtml(price || "")}" data-title="${escapeHtml(item.title || "")}" aria-label="Apoiar com Pix" title="Apoiar com Pix">⚡ Apoiar</button>`
     : "";
@@ -914,7 +914,7 @@ export function renderListingItem(item, { communityTitle = "" } = {}) {
       ${listingUi.renderListingOwnerMenu(item)}
       ${renderListingMedia(item)}
       ${renderListingContent(item, price)}
-      ${renderListingActions(item, author, labels.authorDisplay, price, pixKey, commId)}
+      ${renderListingActions({ item, author, authorDisplay: labels.authorDisplay, price, pixKey, commId })}
     </article>`;
 }
 

@@ -138,7 +138,7 @@ function renderTopicModActions(isMod, topicId, topic) {
   return `${pinBtn}${lockBtn}${hideBtn}`;
 }
 
-function renderTopicOverflowMenu(topicId, topic, author, authorDisplay, authorHandle, bodyText, isMod) {
+function renderTopicOverflowMenu({ topicId, topic, author, authorDisplay, authorHandle, bodyText, isMod }) {
   const zapBtn = renderTopicZapButton(topicId, topic, author, authorDisplay);
   const starBtn = renderTopicStarButton(topicId, topic);
   const copyMdBtn = `<button type="button" class="action-btn btn-copy-md" data-id="${escapeHtml(topicId)}" data-title="${escapeHtml(topic?.title || "")}" data-body="${escapeHtml(bodyText)}" data-author="${escapeHtml(authorDisplay)}" data-handle="${escapeHtml(authorHandle)}" role="menuitem" aria-label="Copiar post como Markdown">
@@ -180,10 +180,10 @@ function renderTopicDistributeActions(topicId, topic, authorDisplay, commId) {
   return `${shareBtn}${saveBtn}`;
 }
 
-function renderTopicToolbar(topicId, topic, author, authorDisplay, authorHandle, bodyText, commId, isMod) {
+function renderTopicToolbar({ topicId, topic, author, authorDisplay, authorHandle, bodyText, commId, isMod }) {
   const fb = renderTopicFeedbackActions(topicId, topic, author);
   const dist = renderTopicDistributeActions(topicId, topic, authorDisplay, commId);
-  const overflow = renderTopicOverflowMenu(topicId, topic, author, authorDisplay, authorHandle, bodyText, isMod);
+  const overflow = renderTopicOverflowMenu({ topicId, topic, author, authorDisplay, authorHandle, bodyText, isMod });
 
   return `<div class="post-actions insta-actions post-toolbar" style="margin-top:12px; padding-top:8px;">
     <div class="toolbar-primary">${fb}${dist}</div>
@@ -286,7 +286,7 @@ export function renderTopic(main, topicId, topic, replies, { topicData = null, i
   const mediaHtml = renderTopicMediaHero(topic, topicData);
   const citeHtml = renderRepostCiteHtml(topic || {});
   const detailHtml = renderTopicDetailText(topicId, topic?.title || "", ctx.bodyText, ctx.notary);
-  const toolbarHtml = renderTopicToolbar(topicId, topic, ctx.author, ctx.labels.authorDisplay, ctx.labels.authorHandle, ctx.bodyText, ctx.commId, isMod);
+  const toolbarHtml = renderTopicToolbar({ topicId, topic, author: ctx.author, authorDisplay: ctx.labels.authorDisplay, authorHandle: ctx.labels.authorHandle, bodyText: ctx.bodyText, commId: ctx.commId, isMod });
   const repliesHtml = renderTopicRepliesBlock(topicId, ctx.commId, replies, isMod, Boolean(topic?.isLocked));
 
   main.innerHTML = `

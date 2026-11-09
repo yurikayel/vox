@@ -657,7 +657,7 @@ function renderZapToolbarBtn(t, author, authorDisplay) {
   return `<button class="action-btn btn-zap-post" data-id="${escapeHtml(t.id)}" data-author="${escapeHtml(author)}" data-author-name="${escapeHtml(authorDisplay)}" data-pix="${escapeHtml(pix)}" data-title="${escapeHtml(t.title)}" aria-label="Apoiar com Pix" title="Apoiar com Pix">${icon}</button>`;
 }
 
-function renderToolbarOverflow(t, author, authorDisplay, authorHandle, baseStars, starred, stars) {
+function renderToolbarOverflow({ t, author, authorDisplay, authorHandle, baseStars, starred, stars }) {
   return `<details class="toolbar-overflow">
     <summary class="action-btn btn-toolbar-more" aria-label="Mais ações do post"><span aria-hidden="true">⋯</span></summary>
     <div class="toolbar-overflow-menu" role="menu">
@@ -723,7 +723,7 @@ function renderPostToolbar(t, author, authorDisplay, authorHandle) {
     <div class="post-actions insta-actions post-toolbar">
       ${renderToolbarPrimary(t, liked, baseLikes, likes, authorDisplay)}
       <div class="toolbar-secondary">
-        ${renderToolbarOverflow(t, author, authorDisplay, authorHandle, baseStars, starred, stars)}
+        ${renderToolbarOverflow({ t, author, authorDisplay, authorHandle, baseStars, starred, stars })}
         <button class="action-btn btn-save ${saved ? "active" : ""}" data-id="${escapeHtml(t.id)}" aria-label="Salvar post">
           <svg class="action-icon icon-bookmark" width="16" height="16" viewBox="0 0 24 24" fill="${saved ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
         </button>

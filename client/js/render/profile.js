@@ -223,7 +223,7 @@ function renderOtherUserActionRow(address, isBlocked, isMuted, pixKeyRaw = "", d
     </details>`;
 }
 
-function renderProfileGridActionRow(address, isCurrentWallet, isBlocked, isMuted, pixKeyRaw = "", displayName = "") {
+function renderProfileGridActionRow({ address, isCurrentWallet, isBlocked, isMuted, pixKeyRaw = "", displayName = "" }) {
   if (isCurrentWallet) return renderCurrentWalletActionRow(address);
   if (isWelcomeRouteId(address)) return renderWelcomeActionRow(address);
   return renderOtherUserActionRow(address, isBlocked, isMuted, pixKeyRaw, displayName);
@@ -239,7 +239,7 @@ function renderProfileConflictBanner(isConflict, claimants, handle) {
     </div>`;
 }
 
-function renderProfileIdentityBlock(address, displayName, handleLabel, profileBio, isCurrentWallet, pixBadge, githubBadge) {
+function renderProfileIdentityBlock({ address, displayName, handleLabel, profileBio, isCurrentWallet, pixBadge, githubBadge }) {
   const primaryName = displayName || (isWelcomeRouteId(address) ? "Vox" : handleLabel);
   const secondaryHandle = displayName ? handleLabel : "";
   const bioHtml = profileBio ? `<p class="profile-grid-bio desc">${escapeHtml(profileBio)}</p>` : "";
@@ -301,15 +301,15 @@ function renderProfileCivicHighlights(address, isCurrentWallet) {
     </div>`;
 }
 
-function renderProfileGridHeader(address, isCurrentWallet, handle, isConflict, claimants, displayName, profileBio, stats, postsCount, pixKeyMasked, pixKeyRaw, githubHandle, isBlocked, isMuted) {
+function renderProfileGridHeader({ address, isCurrentWallet, handle, isConflict, claimants, displayName, profileBio, stats, postsCount, pixKeyMasked, pixKeyRaw, githubHandle, isBlocked, isMuted }) {
   const handleLabel = handle ? `@${handle}` : (isWelcomeRouteId(address) ? "@vox" : `@${shortId(address)}`);
   const statsData = stats || mock.getMockProfile(address)?.stats;
   const pixBadge = renderProfilePixBadge(pixKeyMasked, pixKeyRaw);
   const githubBadge = renderProfileGithubBadge(githubHandle);
   const conflictBanner = renderProfileConflictBanner(isConflict, claimants, handle);
   const topDiv = `<div class="profile-grid-top">${renderProfileGridAvatar(address, displayName, handle, isCurrentWallet)}${renderProfileGridStats(postsCount, statsData, address, isCurrentWallet)}</div>`;
-  const identity = renderProfileIdentityBlock(address, displayName, handleLabel, profileBio, isCurrentWallet, pixBadge, githubBadge);
-  const actions = renderProfileGridActionRow(address, isCurrentWallet, isBlocked, isMuted, pixKeyRaw, displayName);
+  const identity = renderProfileIdentityBlock({ address, displayName, handleLabel, profileBio, isCurrentWallet, pixBadge, githubBadge });
+  const actions = renderProfileGridActionRow({ address, isCurrentWallet, isBlocked, isMuted, pixKeyRaw, displayName });
   const highlights = renderProfileCivicHighlights(address, isCurrentWallet);
 
   return `<header class="profile-grid-header">${topDiv}${identity}${actions}${highlights}${renderStereotypeDemoBanner(address)}${conflictBanner}</header>`;
@@ -494,20 +494,7 @@ function renderProfileAdvancedSettingsDetails(handle, hasWallet, balance) {
     </details>`;
 }
 
-function renderProfileActions(
-  address,
-  isCurrentWallet,
-  handle,
-  displayName,
-  hasWallet,
-  balance,
-  currentPixKey = "",
-  currentGithub = "",
-  oauthProvider = "",
-  _isBlocked = false,
-  _isMuted = false,
-  meshDiscoverable = false,
-) {
+function renderProfileActions({ address, isCurrentWallet, handle, displayName, hasWallet, balance, currentPixKey = "", currentGithub = "", oauthProvider = "", _isBlocked = false, _isMuted = false, meshDiscoverable = false }) {
   if (!isCurrentWallet) return "";
   return `
     ${renderMultiAccountCard(address)}
@@ -550,7 +537,7 @@ export function normalizeProfileTab(tab, isCurrentWallet) {
   return t;
 }
 
-export function renderProfile(main, address, memberships = [], isCurrentWallet = false, _dmPubStr = "", opts = {}) {
+export function renderProfile(main, address, memberships = [], isCurrentWallet = false, opts = {}) {
   const { finalGithub, finalReadme, finalPinned } = resolveProfileCustomFields(address, isCurrentWallet, opts.githubHandle, opts.readme, opts.pinnedPostId);
   const authorPostList = prepareAuthorPostList(opts.posts, finalPinned);
   const starredList = opts.starredPosts || [];
@@ -559,10 +546,7 @@ export function renderProfile(main, address, memberships = [], isCurrentWallet =
   const showAboutTab = shouldShowProfileAboutTab(address, isCurrentWallet, finalReadme, starredList, memberships);
   const currentTab = normalizeProfileTab(opts.activeTab, isCurrentWallet);
 
-  const headerHtml = renderProfileGridHeader(
-    address, isCurrentWallet, opts.handle || "", opts.isConflict, opts.claimants, opts.displayName,
-    opts.profileBio, opts.stats, postsCount, opts.pixKeyMasked, opts.pixKey, finalGithub, opts.isBlocked, opts.isMuted,
-  );
+  const headerHtml = renderProfileGridHeader({ address, isCurrentWallet, handle: opts.handle || "", isConflict: opts.isConflict, claimants: opts.claimants, displayName: opts.displayName, profileBio: opts.profileBio, stats: opts.stats, postsCount, pixKeyMasked: opts.pixKeyMasked, pixKeyRaw: opts.pixKey, githubHandle: finalGithub, isBlocked: opts.isBlocked, isMuted: opts.isMuted });
   const tabsHtml = renderProfileGridTabs(address, currentTab, showAboutTab, isCurrentWallet);
   const contentHtml = renderProfileTabContent(currentTab, {
     address, isCurrentWallet, handle: opts.handle, authorPostList, finalPinned, savedList, displayName: opts.displayName,
@@ -604,7 +588,7 @@ function renderProfileAboutTab(p) {
   const routeIdLine = `<p class="meta profile-route-id">ID de rede: <code>${escapeHtml(p.address)}</code></p>`;
   const readmeHtml = renderProfileReadme(p.address, p.displayName, p.finalReadme, p.isCurrentWallet);
   const actionsHtml = p.isCurrentWallet
-    ? renderProfileActions(p.address, p.isCurrentWallet, p.handle, p.displayName, p.hasWallet, p.balance, p.pixKey, p.finalGithub, p.oauthProvider, p.isBlocked, p.isMuted, p.meshDiscoverable)
+    ? renderProfileActions({ address: p.address, isCurrentWallet: p.isCurrentWallet, handle: p.handle, displayName: p.displayName, hasWallet: p.hasWallet, balance: p.balance, currentPixKey: p.pixKey, currentGithub: p.finalGithub, oauthProvider: p.oauthProvider, _isBlocked: p.isBlocked, _isMuted: p.isMuted, meshDiscoverable: p.meshDiscoverable })
     : "";
   const starredHtml = renderProfileAboutStarredSection(p.starredList || [], p.activeTab);
   const commHtml = renderProfileAboutCommunitiesSection(p.memberships || [], p.activeTab);

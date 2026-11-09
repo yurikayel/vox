@@ -87,7 +87,7 @@ test("feed - renderPostItem estiliza áudio Lo-Fi 48k e vídeo Lo-Fi 360p", () =
 
 test("profile - renderiza abas e links de amizades e alternador de contas", () => {
   const container = createContainer();
-  renderProfile.renderProfile(container, "vx_test_user", [], true, null, {
+  renderProfile.renderProfile(container, "vx_test_user", [], true, {
     displayName: "Alice",
     posts: [],
     starredPosts: [],
@@ -100,7 +100,7 @@ test("profile - renderiza abas e links de amizades e alternador de contas", () =
   assert.ok(container.innerHTML.includes("Amizades"));
 
   const netContainer = createContainer();
-  renderProfile.renderProfile(netContainer, "vx_test_user", [], true, null, {
+  renderProfile.renderProfile(netContainer, "vx_test_user", [], true, {
     displayName: "Alice",
     activeTab: "following",
   });

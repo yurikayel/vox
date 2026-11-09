@@ -394,7 +394,7 @@ test("render - renderNetworkChip status e rotulagem", () => {
 
 test("render - renderProfile com handle e renderHandleConflict", () => {
   const mainProf = createContainer();
-  render.renderProfile(mainProf, "addr_maria", [], true, "", {
+  render.renderProfile(mainProf, "addr_maria", [], true, {
     handle: "maria",
     isConflict: true,
     claimants: [{ owner: "addr_maria" }, { owner: "addr_outra_maria" }],
@@ -465,7 +465,7 @@ test("render - renderFeed e renderProfile com persona mock (MG tour)", (t) => {
   assert.ok(mainFeed.innerHTML.includes(demoMg.displayName));
 
   const mainProf = createContainer();
-  render.renderProfile(mainProf, "vx_demo_mg", [{ communityId: "demo-aprenda-vox" }], false, "", {
+  render.renderProfile(mainProf, "vx_demo_mg", [{ communityId: "demo-aprenda-vox" }], false, {
     handle: demoMg.handle,
     displayName: demoMg.displayName,
     profileBio: "Perfil estereotipo demo.",
@@ -651,7 +651,7 @@ test("render - renderPostComments lista replies mock no expander", (t) => {
 
 test("render - renderProfile com Pix e métricas honestas", () => {
   const main = createContainer();
-  render.renderProfile(main, "vx_me", [], true, "", {
+  render.renderProfile(main, "vx_me", [], true, {
     displayName: "Meu Perfil",
     stats: { posts: 3, followers: 4, following: 2 },
     pixKey: "12345678909",
@@ -849,7 +849,7 @@ test("render - formatPostMarkdown formata citação padrão com link", (t) => {
 
 test("render - renderProfile com README.md, GitHub badge e botão Watch", () => {
   const main = createContainer();
-  render.renderProfile(main, "vx_demo_raj", [], false, "", {
+  render.renderProfile(main, "vx_demo_raj", [], false, {
     displayName: "Raj",
     handle: "raj",
     githubHandle: "raj-crypto",
@@ -872,7 +872,7 @@ test("render - renderProfile com README.md, GitHub badge e botão Watch", () => 
   assert.ok(html.includes("Sobre"));
 
   const mainGrid = createContainer();
-  render.renderProfile(mainGrid, "vx_demo_raj", [], false, "", {
+  render.renderProfile(mainGrid, "vx_demo_raj", [], false, {
     handle: "raj",
     posts: [{ id: "post_raj", title: "Criptografia Local", author: "vx_demo_raj", image: "images/x.jpg" }],
     activeTab: "posts",

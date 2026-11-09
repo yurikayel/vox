@@ -42,7 +42,7 @@ test("roadmap-ui: renderPolisReportHtml renderiza pontes de consenso e pontos di
 
 test("roadmap-ui: renderProfile exibe backup de identidade para conta própria", () => {
   const main = createContainer();
-  render.renderProfile(main, "vx_me", [], true, "", {
+  render.renderProfile(main, "vx_me", [], true, {
     displayName: "Minha Conta",
     activeTab: "about",
   });
@@ -62,7 +62,7 @@ test("roadmap-ui: renderProfile exibe backup de identidade para conta própria",
 
 test("roadmap-ui: renderProfile não oferece wipe local para outro autor", () => {
   const main = createContainer();
-  render.renderProfile(main, "vx_outro_usuario", [], false, "", {
+  render.renderProfile(main, "vx_outro_usuario", [], false, {
     displayName: "Outro Usuário",
     activeTab: "about",
   });
@@ -72,7 +72,7 @@ test("roadmap-ui: renderProfile não oferece wipe local para outro autor", () =>
 
 test("roadmap-ui: renderProfile exibe moderação local para outro autor", () => {
   const mainOther = createContainer();
-  render.renderProfile(mainOther, "vx_outro_usuario", [], false, "", {
+  render.renderProfile(mainOther, "vx_outro_usuario", [], false, {
     displayName: "Outro Usuário",
     isBlocked: false,
     isMuted: false,
@@ -84,7 +84,7 @@ test("roadmap-ui: renderProfile exibe moderação local para outro autor", () =>
   assert.ok(htmlOther.includes("Silenciar"));
 
   const mainBlocked = createContainer();
-  render.renderProfile(mainBlocked, "vx_outro_usuario", [], false, "", {
+  render.renderProfile(mainBlocked, "vx_outro_usuario", [], false, {
     displayName: "Outro Usuário",
     isBlocked: true,
     isMuted: true,

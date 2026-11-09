@@ -86,7 +86,7 @@ function syncIdentityAndDirectoryAfterOnboarding() {
   void centralMemory.syncWithCentralMemory();
 }
 
-function bindOAuthProviderButton(btnId, signInFn, fallbackError, labelFn, modalContainer, onDone) {
+function bindOAuthProviderButton({ btnId, signInFn, fallbackError, labelFn, modalContainer, onDone }) {
   document.getElementById(btnId)?.addEventListener("click", async () => {
     const btn = document.getElementById(btnId);
     const res = await runOAuthEnrichSignIn(btn, signInFn, { fallbackError });
@@ -186,9 +186,9 @@ export function openOAuthEnrichModal({ onComplete, withPact = false } = {}) {
     endGenesis(modalContainer, onComplete, { skipped: true });
   });
 
-  bindOAuthProviderButton("btn-oauth-google", () => oauthProfile.signInWithGoogle(), "Google indisponível", () => "Perfil enriquecido com Google.", modalContainer, onComplete);
-  bindOAuthProviderButton("btn-oauth-meta", () => oauthProfile.signInWithMeta(), "Meta indisponível", () => "Perfil enriquecido com Meta.", modalContainer, onComplete);
-  bindOAuthProviderButton("btn-oauth-github", () => oauthProfile.signInWithGithub(), "GitHub indisponível", (res) => `Perfil enriquecido com GitHub (@${res.profile?.handle || ""}).`, modalContainer, onComplete);
+  bindOAuthProviderButton({ btnId: "btn-oauth-google", signInFn: () => oauthProfile.signInWithGoogle(), fallbackError: "Google indisponível", labelFn: () => "Perfil enriquecido com Google.", modalContainer, onDone: onComplete });
+  bindOAuthProviderButton({ btnId: "btn-oauth-meta", signInFn: () => oauthProfile.signInWithMeta(), fallbackError: "Meta indisponível", labelFn: () => "Perfil enriquecido com Meta.", modalContainer, onDone: onComplete });
+  bindOAuthProviderButton({ btnId: "btn-oauth-github", signInFn: () => oauthProfile.signInWithGithub(), fallbackError: "GitHub indisponível", labelFn: (res) => `Perfil enriquecido com GitHub (@${res.profile?.handle || ""}).`, modalContainer, onDone: onComplete });
 }
 
 export function checkOAuthEnrichStep() {

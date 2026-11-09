@@ -79,7 +79,7 @@ describe("vote-stitch — Democracia Direta (pautas reais)", () => {
 
   it("perfil próprio mostra catálogo real de selos (bloqueados sem recibos)", () => {
     const dummyMain = { innerHTML: "" };
-    renderProfile(dummyMain, "vx_test_user_123", [], true, "", {
+    renderProfile(dummyMain, "vx_test_user_123", [], true, {
       displayName: "Maria Cidadã",
       handle: "maria_cidada",
       posts: [],
@@ -94,7 +94,7 @@ describe("vote-stitch — Democracia Direta (pautas reais)", () => {
 
   it("perfil de terceiros não exibe selos que este aparelho não pode verificar", () => {
     const dummyMain = { innerHTML: "" };
-    renderProfile(dummyMain, "vx_other_456", [], false, "", { displayName: "Outra Pessoa", posts: [] });
+    renderProfile(dummyMain, "vx_other_456", [], false, { displayName: "Outra Pessoa", posts: [] });
     assert.ok(!dummyMain.innerHTML.includes("profile-civic-highlights"));
   });
 

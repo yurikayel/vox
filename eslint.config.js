@@ -56,8 +56,8 @@ export default [
       complexity: ["error", 15],
       "max-depth": ["error", 4],
       "max-lines-per-function": ["error", { max: 30, skipComments: true, skipBlankLines: true }],
-      // 18 funções do client passam de 5 parâmetros (09/11): aviso até virarem objeto de opções.
-      "max-params": ["warn", 5],
+      // Dívida zerada em 09/11 (17 funções viraram objeto de opções; 1 parâmetro morto removido): promovida a erro.
+      "max-params": ["error", 5],
       // Perfil v3.2: arquivo de produção > 350 linhas (sem comentários e brancas) é aviso legado.
       "max-lines": ["warn", { max: 350, skipComments: true, skipBlankLines: true }],
       eqeqeq: ["error", "always", { null: "ignore" }],
