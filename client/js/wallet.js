@@ -1,4 +1,5 @@
 import * as ans104 from "./ans104.js";
+import { loadArweave } from "./arweave-lib.js";
 
 const STORAGE_KEY = "vox-wallet-jwk";
 export const WALLET_KIND_PLAIN = "vox-wallet-plain";
@@ -10,14 +11,7 @@ let sessionJwk = null;
 
 async function getArweave() {
   if (arweaveInstance) return arweaveInstance;
-  const module = await import("https://esm.sh/arweave@1.15.7");
-  const Arweave = module.default || module;
-  arweaveInstance = Arweave.init({
-    host: "arweave.net",
-    port: 443,
-    protocol: "https",
-    timeout: 20000,
-  });
+  arweaveInstance = await loadArweave(20000);
   return arweaveInstance;
 }
 

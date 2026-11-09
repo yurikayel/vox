@@ -1,4 +1,5 @@
 import { getStoredJwk, ensureWallet } from "./wallet.js";
+import { loadArweave } from "./arweave-lib.js";
 import { createSignedDataItem } from "./ans104.js";
 import { assertFeatureEnabled } from "./feature-flags.js";
 import { toHonestError } from "./honest-errors.js";
@@ -10,15 +11,8 @@ export const TURBO_ENDPOINTS = Object.freeze([
 
 export const FREE_TIER_MAX_BYTES = 101376; // 99 KiB safe ceiling (Turbo free tier <= 100 KiB)
 
-async function getArweave() {
-  const module = await import("https://esm.sh/arweave@1.15.7");
-  const Arweave = module.default || module;
-  return Arweave.init({
-    host: "arweave.net",
-    port: 443,
-    protocol: "https",
-    timeout: 30000,
-  });
+function getArweave() {
+  return loadArweave(30000);
 }
 
 export function buildTags(type, fields = {}) {
