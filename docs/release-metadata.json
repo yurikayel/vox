@@ -1,9 +1,9 @@
 {
-  "git_sha": "c449934",
-  "branch": "fix/gateways-nostr-reconexao",
-  "test_js": 847,
+  "git_sha": "b1f0b1a",
+  "branch": "feat/proximos-pm-0911",
+  "test_js": 855,
   "test_python": 89,
-  "test_total": 936,
-  "cache_name": "vox-pwa-v7.41-real-network-audio-video-upload",
-  "generated_at": "2026-11-09T14:59:17Z"
+  "test_total": 944,
+  "cache_name": "vox-pwa-v7.42-real-network-audio-video-upload",
+  "generated_at": "2026-11-09T15:07:06Z"
 }

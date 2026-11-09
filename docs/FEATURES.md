@@ -10,7 +10,7 @@
 | **no ar** | Carregado pela UI e usável no PWA publicado. |
 | **depende de config** | Código no ar, mas só funciona com app registrado, relay ou secret configurado. |
 | **lab** | Rota experimental (`#/labs/*`) — não é produção. |
-| **escrito, não plugado** | Módulo e testes existem; **nenhum código da UI importa** (só o precache do `sw.js`). |
+| **escrito, não plugado** | Módulo e testes existem; **nenhum ponto de entrada carrega**. Desde o PM-04 fica em `UNPLUGGED_MODULES` no `sw.js`, **fora do precache**; o teste `shell-reachability` mantém a lista honesta. |
 | **stub** | Esqueleto ou lista de configuração, sem a lógica principal. |
 | **demo** | Perfis fictícios de `mock.js` que só aparecem com o **modo demonstração** ligado em `#/settings/network`, sempre com a faixa "Modo demonstração" (LAN-10). Fora dele, falha de rede mostra "sem conexão", nunca conteúdo de exemplo. |
 
@@ -25,7 +25,7 @@
 | Republicar com citação | post ⋯ | `repost.js`, `repost-draft.js`, `render/repost-cite.js` | no ar | `repost` |
 | Marcação manual em fotos | foto | `photo-tags.js`, `app/photo-tag-*.js`, `render/photo-tag-pins.js` | no ar | `photo-tags`, `photo-aspect-lightbox-tagging` |
 | Notas de perfil 24h | perfil | `profile-note.js` | no ar | `profile-note` |
-| Hashtags e feed por tag (+ Pol.is-lite) | `#/tag/:slug` | `hashtags.js`, `polis.js`, `render/tag-polis.js` | no ar | `hashtags`, `polis` |
+| Hashtags e feed por tag (+ Pol.is-lite) | `#/tag/:slug` | `hashtags.js`, `render/tag-polis.js` | no ar. O agrupamento de opiniões de `polis.js` **não está plugado** (só o `bridging-rank.js`, também órfão, o importa) | `hashtags`, `polis` |
 | Feed do Bluesky (leitura) | feed | `bsky-feed.js` | no ar | `bsky-feed` |
 | Modo eleitoral (sem "Sugestões cívicas") | feed | `electoral-period.js`, `render/feed.js` | no ar: automático de 16/08 a 31/10 de ano par, ou forçado por `electoralMode` em `flags.json` (REV-24) | `electoral-period` |
 | Open Frames (mini-apps no feed) | feed, `#/labs/frames` | `frames.js`, `open-frames-host.js` | no ar (host iframe em lab) | `frames`, `open-frames-host` |
@@ -121,6 +121,6 @@
 2. **Sem relay completo público**: entrega offline de DM, cofre remoto e OAuth de várias redes dependem de stewards.
 3. **Sem TURN**: pares atrás de CGNAT podem não conectar, e o "Esconder meu IP" não tem por onde passar (REV-10).
 4. O upload grátis do Turbo tem **cota** (~10 MiB por carteira/IP, segundo `upload.ardrive.io/info`); depois dela, e para itens acima de 105 KiB, publicar custa.
-5. Onze módulos prontos não estão plugados (lista acima). Plugar é o caminho mais barato para várias das [10 features de autossustento](./brainstorms/brainstorm-autossustento-10-features-2026-11.md).
+5. **22 módulos** não são carregados por nenhuma tela (lista em `UNPLUGGED_MODULES` no `sw.js`: os marcados acima, mais `polis`, `idb-store` e a cadeia `node-health-*`). Desde o PM-04 eles ficam fora do precache (~116 KB a menos na instalação). Plugar é o caminho mais barato para várias das [10 features de autossustento](./brainstorms/brainstorm-autossustento-10-features-2026-11.md).
 
 Detalhes de custo e risco: [INFRA-CUSTOS.md](./INFRA-CUSTOS.md). Prioridades: [ROADMAP.md](./ROADMAP.md).
