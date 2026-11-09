@@ -9,6 +9,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 ### Documentação
 - Revisão de estado de 08/11/2026: README, ROADMAP, FEATURES, INFRA-CUSTOS, THREAT-MODEL, TESTES, índice de `docs/` e DEV §27 alinhados ao `main` depois dos PRs #17–#28. ROADMAP com linhas de tabela consertadas, itens fechados movidos para *Concluído* e parciais marcados com 🚧. README sem a afirmação "PWA < 50 KB" (o `client/js` tem ~1,9 MB). Release line regenerada.
 
+### Qualidade
+- `npm test` travava localmente: o teste "dois pares" do `nostr-transport` esperava tempos fixos, falhava com a suíte inteira no mesmo processo e deixava o `setInterval` do hello vivo. Agora espera a condição e para os transportes no `finally`; a suíte roda em segundos.
+
 ## SW v7.33 → v7.38 — 2026-11-08 (PRs #13–#28)
 
 ### Rede, privacidade e resiliência
