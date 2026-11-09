@@ -141,6 +141,7 @@ function renderContributionAttestationCardHtml() {
 function renderNetworkStats(metrics, cacheStats, dailyUsage, settings) {
   const capMb = settings?.dailyCapMb || 50;
   const servedTodayMb = ((dailyUsage?.bytesServedToday || 0) / (1024 * 1024)).toFixed(1);
+  const cellularTodayMb = ((dailyUsage?.bytesCellularToday || 0) / (1024 * 1024)).toFixed(1);
   const pct = Math.min(100, Math.round((servedTodayMb / capMb) * 100));
 
   return `
@@ -157,7 +158,7 @@ function renderNetworkStats(metrics, cacheStats, dailyUsage, settings) {
       <div class="card" style="text-align:center; padding:0.65rem;">
         <div style="font-size:1.1rem; font-weight:700; color:var(--text);">${servedTodayMb} / ${capMb} MB</div>
         <div class="usage-meter"><div class="usage-fill" style="width:${pct}%;"></div></div>
-        <div class="meta" style="margin-top:0.25rem;">Uso hoje (${pct}%)</div>
+        <div class="meta" style="margin-top:0.25rem;">Uso hoje (${pct}%) · no 4G: ${cellularTodayMb} MB</div>
       </div>
       <div class="card" style="text-align:center; padding:0.65rem;">
         <div style="font-size:1.1rem; font-weight:700; color:var(--text);">${cacheStats?.count || 0}</div>
@@ -234,7 +235,12 @@ function renderQuotaAndLimitFieldsHtml(settings) {
     </div>
     <div class="form-group" style="display:flex; align-items:center; gap:0.6rem;">
       <input type="checkbox" id="net-wifi" ${settings?.wifiOnly ? "checked" : ""} style="width:1rem; height:1rem;" />
-      <label for="net-wifi" style="margin:0;">Ajudar apenas quando estiver no Wi-Fi</label>
+      <label for="net-wifi" style="margin:0;">Ajudar apenas quando estiver no Wi-Fi (recomendado)</label>
+    </div>
+    <div class="form-group">
+      <label for="net-cellular-cap">Se ajudar também no 4G, até quantos MB por dia:</label>
+      <input type="number" id="net-cellular-cap" class="form-control" min="1" max="50" value="${settings?.cellularCapMb || 5}" />
+      <p class="desc" style="font-size:0.8rem; margin:0.25rem 0 0;">Só vale com o "apenas no Wi-Fi" desligado. No pré-pago, cada MB que você repassa sai da sua franquia.</p>
     </div>
     <div id="net-comm-only-wrap" class="form-group" style="display:flex; align-items:center; gap:0.6rem;">
       <input type="checkbox" id="net-comm-only" ${settings?.commOnly ? "checked" : ""} style="width:1rem; height:1rem;" />

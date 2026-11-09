@@ -17,6 +17,7 @@ import {
 } from "./cantina-gate.js";
 import { ensureOnboardingSideEffects } from "./onboarding-side-effects.js";
 import { showHome } from "./screens-home.js";
+import * as readFirst from "./read-first.js";
 
 export { ensureOnboardingSideEffects } from "./onboarding-side-effects.js";
 
@@ -212,17 +213,33 @@ export function checkCantinaGate() {
     if (modalContainer && route.name === "ajuda-teste") {
       render.closeCantinaGate(modalContainer);
     }
-    if (hasPassedCantinaGate()) checkOAuthEnrichStep();
+    if (hasPassedCantinaGate()) {
+      readFirst.removeReadFirstBanner();
+      checkOAuthEnrichStep();
+    } else if (readFirst.isReadFirstRoute(route.name)) {
+      startReadFirst();
+    }
     return;
   }
-  if (!modalContainer) return;
+  openCantinaGate(modalContainer);
+}
 
+/** PM-54: leitura liberada, faixa "Entrar no Vox" e portão na primeira ação que escreve. */
+function startReadFirst() {
+  const enter = () => openCantinaGate(document.getElementById("modal-container"));
+  readFirst.installReadFirstGuards({ doc: document, hasEntered: () => hasPassedCantinaGate(), openEntry: enter });
+  readFirst.mountReadFirstBanner(document, enter);
+}
+
+function openCantinaGate(modalContainer) {
+  if (!modalContainer) return;
   wireCantinaOverlayPassthrough();
   render.renderCantinaGate(modalContainer);
 
   document.getElementById("btn-cantina-enter")?.addEventListener("click", () => {
     localStorage.setItem(CANTINA_STORAGE_KEY, "true");
     render.closeCantinaGate(modalContainer);
+    readFirst.removeReadFirstBanner();
     checkOAuthEnrichStep();
   });
 }
