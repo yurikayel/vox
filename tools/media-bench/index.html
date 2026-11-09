@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bancada de mídia v2 (PM-70)</title>
+  <!-- Ferramenta de desenvolvimento: não é publicada. Precisa de 'wasm-unsafe-eval' para o codificador AVIF. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; img-src 'self' blob: data:; media-src 'self' blob:; style-src 'self' 'unsafe-inline'">
+  <style>
+    body { font: 14px/1.4 system-ui, sans-serif; margin: 16px; background: #111; color: #eee; }
+    table { border-collapse: collapse; margin: 8px 0 16px; }
+    td, th { border: 1px solid #444; padding: 4px 8px; text-align: right; }
+    td:first-child, th:first-child { text-align: left; }
+    .over { color: #f88; }
+    pre { white-space: pre-wrap; background: #222; padding: 8px; }
+  </style>
+</head>
+<body>
+  <h1>Bancada de mídia v2 (PM-70)</h1>
+  <p>Mede a <a href="../../docs/specs/midia-v2.md">mídia v2</a> neste aparelho: AVIF q66 em 1280×720/720×1280 com teto de 99.999 bytes, WebP 0,78 de comparação, miniatura, H.264 720p24 e Opus 48 kbps.</p>
+  <p>
+    <label>Fotos: <input type="file" id="pick-images" accept="image/*" multiple></label>
+    <label>Vídeo: <input type="file" id="pick-video" accept="video/*"></label>
+    <button type="button" id="btn-probe">Sondar vídeo e áudio</button>
+  </p>
+  <div id="out"></div>
+  <pre id="log"></pre>
+  <script type="module" src="./bench.js"></script>
+  <script type="module" src="./av.js"></script>
+</body>
+</html>
