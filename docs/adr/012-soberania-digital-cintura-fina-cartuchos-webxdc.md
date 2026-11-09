@@ -110,7 +110,7 @@ flowchart LR
 
 ### Caminho 2: Feira Livre Digital e Pix Offline
 - Aproveita a presença territorial já existente das comunidades (eliminando o custo proibitivo de atrito bilateral que vitimou o AppJusto).
-- Geração de BR Code Pix Copia e Cola EMVCo 100% offline via módulo nativo [`client/js/brcode.js`](file:///c:/project/politica/vox/client/js/brcode.js), validado matematicamente com CRC-16/CCITT-FALSE (polinômio 0x1021).
+- Geração de BR Code Pix Copia e Cola EMVCo 100% offline via módulo nativo [`client/js/brcode.js`](../../client/js/brcode.js), validado matematicamente com CRC-16/CCITT-FALSE (polinômio 0x1021).
 - Liquidação ponta a ponta na conta do comerciante/entregador, sem taxa e sem custódia intermediária.
 
 ### Caminho 3: Biblioteca de Bolso (OPFS & Merkle Streaming)

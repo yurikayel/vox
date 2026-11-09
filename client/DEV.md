@@ -921,12 +921,12 @@ Script: [`scripts/write-oauth-deploy-config.mjs`](../scripts/write-oauth-deploy-
 
 | Uso | Arquivo | Nota |
 |-----|---------|------|
-| **Aba do navegador** | `icons/icon.svg` (+ `favicon-16.png` / `favicon-32.png` / `favicon.png`) | **V tricolor** nas três cores do tema (desde nov/2026). |
-| **PWA / “Adicionar à tela”** | `icon-192.png`, `icon-512.png`, `icon-white-192.png`, `icon-white-512.png` | Logo VOX tricolor em squircle. |
+| **Aba do navegador** | `icons/icon.svg` (+ `favicon-16.png` / `favicon-32.png` / `favicon.png`) | **Logo do megafone** (`docs/branding/vox_logo_mark-transparent.png`, desde 08/11/2026, PR #20). A marca do topo usa `icons/logo-mark.png`. |
+| **PWA / “Adicionar à tela”** | `icon-192.png`, `icon-512.png`, `icon-white-192.png`, `icon-white-512.png` | O mesmo logo sobre squircle escuro. |
 | **Avatar oficial** | `profile-vox-official-512.png` | Mesmo logo; avatares da UI em squircle (`agora.css`). |
 | **Meta Dashboard** | `icon-1024.png` (PNG navy, legado) | Upload opcional; shell/PWA usam só tile branco. |
 
-**Histórico (megafone, até out/2026):** as variantes `emoji-vox-*` seguem no repo. Para voltar a usá-las: copiar `emoji-vox-vermelho.svg` → `icon.svg` e `emoji-vox-vermelho-32.png` → `favicon.png` + `favicon-32.png`; regerar ou copiar `favicon-16.png`; bump `CACHE_NAME` em `sw.js`; hard refresh (Ctrl+F5).
+**Histórico:** o V tricolor foi a marca de 07/11/2026 (SW v7.32) até o PR #20; antes dele, as variantes `emoji-vox-*` (megafone em emoji, até out/2026) seguem no repo. Para voltar a usá-las: copiar `emoji-vox-vermelho.svg` → `icon.svg` e `emoji-vox-vermelho-32.png` → `favicon.png` + `favicon-32.png`; regerar ou copiar `favicon-16.png`; bump `CACHE_NAME` em `sw.js`; hard refresh (Ctrl+F5).
 
 Variantes versionadas: `emoji-vox-brasil*` e `emoji-vox-vermelho*` (SVG + PNG 32 e master).
 
