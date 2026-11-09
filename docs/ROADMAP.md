@@ -1,6 +1,6 @@
 # Roadmap — Vox
 
-> **Status:** canônico · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-09 (G1 em `main` até o PR #28; revisão de estado no PR #29; LAN-14 e LAN-21 fechados no PR #30; NET-01 verificado e brainstorm PM-01…46 no PR #31; PM-09 no PR #32)
+> **Status:** canônico · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-09 (G1 em `main` até o PR #28; revisão de estado no PR #29; LAN-14 e LAN-21 fechados no PR #30; NET-01 verificado e brainstorm PM-01…46 no PR #31; PM-09 no PR #32; PM-45 no PR #33)
 > **Único plano vivo e único lugar com caixas `[ ]`** ([ADR-017](./adr/017-consolidacao-roadmap-unico.md)). Substitui o checklist do [dossiê N=25 §3.6](./archive/dossie-geral-inventario-master-breakdown-2026-11.md#36-checklist-master-vivo-n25).
 > Estado do produto: [FEATURES.md](./FEATURES.md) · Infra e riscos: [INFRA-CUSTOS.md](./INFRA-CUSTOS.md) · Teses: [direcionamento-crescimento-rede-2026-11.md](./strategy/direcionamento-crescimento-rede-2026-11.md)
 
@@ -153,6 +153,7 @@ Itens fechados de Agora, Próximo e Depois. Nas tabelas dos portões (LAN), a li
 
 | | ID | Tipo | Item | Evidência / nota |
 |---|---|---|---|---|
+| [x] | **PM-45** | code | `Vox.exe`, `VoxPopuli.exe` e os dois APKs compilados no CI e publicados como GitHub Release com `SHA256SUMS` e atestação de origem; fora do git | ✅ PR #33; [`release-binarios.yml`](../.github/workflows/release-binarios.yml), [DEPENDENCIAS §6](./DEPENDENCIAS.md#6-binários-no-repositório). Assinatura de código do Windows: PM-46 |
 | [x] | **PM-09** | code | `community_update` só do dono ou de moderador, só com foto, título, descrição e categoria; só o post `c_<communityId>` define o dono | ✅ PR #32, SW v7.40; `client/js/community-updates.js`, `tests/community-updates.test.js` (3 dos 9 testes falham no código anterior). Origem: [brainstorm PM-09](./brainstorms/brainstorm-backlog-proximas-melhorias-2026-11.md#b-segurança-e-integridade) |
 | [x] | **NET-01** | ops-humano | Espelho shell **B** no ar + registro público | ✅ https://vox-9df.pages.dev/ serve o mesmo `sw.js` do A (v7.39) em 09/11/2026; deploy a cada push em `main` (`deploy-shell-b.yml`); linha `shell-b` em [ops-shell-mirrors.md](./operations/ops-shell-mirrors.md#tabela-de-espelhos). Mesmo operador do A: a independência fica com o LAN-30 |
 | [x] | **REV-13** | code | **Aviso nos Pix Zaps (já no ar):** o BCB manda mostrar ao pagador o nome do recebedor **conforme o DICT, com qualquer chave** (inclusive aleatória). A UI deve dizer "seu nome civil aparece para quem paga" e oferecer Zap para a chave do coletivo (B2). ~~Recomendar chave aleatória~~ (não protege) | ✅ entregue no PR #17 · [complementar §1-E](./research/pesquisa-complementar-2026-11.md#e-pix-e-privacidade-do-recebedor) |

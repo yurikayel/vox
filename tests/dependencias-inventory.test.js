@@ -7,6 +7,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
 import { createHash } from "node:crypto";
+import { execFileSync } from "node:child_process";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -22,6 +23,20 @@ function walk(dir, ext) {
     else if (name.endsWith(ext)) out.push(rel);
   }
   return out;
+}
+
+/**
+ * Binários que o git rastreia em `dir`. Artefatos de build locais e ignorados
+ * (ex.: APKs em android/build/) não são "do repositório" e não podem quebrar o teste.
+ * Sem git (tarball), cai na varredura do disco.
+ */
+function trackedFiles(dir) {
+  try {
+    const out = execFileSync("git", ["ls-files", "-z", "--", dir], { cwd: ROOT, encoding: "utf8" });
+    return out.split(String.fromCharCode(0)).filter(Boolean);
+  } catch {
+    return existsSync(join(ROOT, dir)) ? walk(dir, "") : [];
+  }
 }
 
 function missing(items) {
@@ -100,15 +115,27 @@ test("LAN-20: todo binário do repositório tem linha com o SHA-256 atual", () =
   const BIN = /\.(apk|exe|dll|jar|aar|so|dylib|msi)$/i;
   const found = [];
   for (const dir of ["android", "client", "packaging", "relay", "dist"]) {
-    if (!existsSync(join(ROOT, dir))) continue;
-    found.push(...walk(dir, "").filter((f) => BIN.test(f)));
+    found.push(...trackedFiles(dir).filter((f) => BIN.test(f)));
   }
-  assert.ok(found.length > 0, "esperava achar os binários de client/downloads");
+  assert.ok(found.length > 0, "esperava achar as DLLs do WebView2");
   for (const file of found) {
     const row = INVENTORY.split("\n").find((l) => l.startsWith(`| \`${file}\` |`));
     assert.ok(row, `${file} sem linha na seção 6 de docs/DEPENDENCIAS.md`);
     const sha = createHash("sha256").update(readFileSync(join(ROOT, file))).digest("hex");
     assert.ok(row.includes(sha), `${file}: SHA-256 mudou (${sha}); atualize docs/DEPENDENCIAS.md`);
+  }
+});
+
+test("PM-45: .exe e .apk saem do CI, não do git", () => {
+  const banned = [];
+  for (const dir of ["client", "android"]) banned.push(...trackedFiles(dir).filter((f) => /\.(exe|apk)$/i.test(f)));
+  assert.deepEqual(banned, [], "publique pelo release-binarios.yml");
+  for (const page of ["client/download.html", "client/download/index.html"]) {
+    const html = read(page);
+    assert.ok(!/["']downloads\/[^"']+\.(exe|apk)["']/.test(html), `${page} ainda aponta para client/downloads`);
+    for (const f of ["Vox.exe", "VoxPopuli.exe", "vox.apk", "vox-populi.apk"]) {
+      assert.ok(html.includes(`releases/latest/download/${f}`), `${page} sem link da Release para ${f}`);
+    }
   }
 });
 
