@@ -4,8 +4,8 @@
 [![Identity](https://img.shields.io/badge/Identity-WebCrypto%20P--256-blueviolet.svg)](./client/js/local-account.js)
 [![Storage](https://img.shields.io/badge/Storage-Arweave%20Permaweb-black.svg)](https://arweave.org)
 [![License: AGPL v3](https://img.shields.io/badge/License-GNU%20AGPLv3-crimson.svg)](./LICENSE)
-[![Tests](https://img.shields.io/badge/tests-932%20passing-success.svg)](./docs/TESTES.md)
-[![Service Worker](https://img.shields.io/badge/SW-v7.40--real--network--audio--video--upload-informational.svg)](./client/sw.js)
+[![Tests](https://img.shields.io/badge/tests-936%20passing-success.svg)](./docs/TESTES.md)
+[![Service Worker](https://img.shields.io/badge/SW-v7.41--real--network--audio--video--upload-informational.svg)](./client/sw.js)
 
 O Vox é um projeto cívico em construção para ampliar a participação popular e a autonomia das comunidades na vida digital. Sua ambição é ser um bem comum aberto: o projeto deve permanecer transparente, copiável, modificável e maior que qualquer fundador, mantenedor, empresa ou plataforma.
 
@@ -75,9 +75,9 @@ Redes centralizadas, instâncias federadas e protocolos locais têm custos, vant
 
 | Campo | Valor |
 |---|---|
-| **Commit SHA** | `8b7ecca` |
-| **Suíte de Testes** | **932** (`843` JS + `89` Python) |
-| **Service Worker** | `vox-pwa-v7.40-real-network-audio-video-upload` |
+| **Commit SHA** | `b1f0b1a` |
+| **Suíte de Testes** | **936** (`847` JS + `89` Python) |
+| **Service Worker** | `vox-pwa-v7.41-real-network-audio-video-upload` |
 
 *Tabela regenerada por `npm run release-line` (roda a suíte e grava [docs/release-metadata.json](./docs/release-metadata.json)). Nenhum outro documento deve repetir esses números.*
 
@@ -157,7 +157,7 @@ Resumo do que entrou no cliente em nov/2026 (detalhes em [CHANGELOG.md](./CHANGE
 * **Rumo à rede pública (portão G1, PR #17):** kill-switch por configuração (`client/config/flags.json`), denúncia no app com canais oficiais, aviso antes de gravar no Arweave ("permanente" ou "só na malha"), perfis fictícios só no modo demonstração, aviso de que o nome civil aparece no Pix e CSP sem script inline.
 * **Nó leve por padrão, Apoiador por opção:** todo aparelho ajuda a malha com tetos baixos (50 MB/dia, 25 MB em disco); o botão **Seja um apoiador da rede** em `#/settings/network` sobe para 500 MB/dia e 250 MB, só no Wi-Fi.
 * **Privacidade e período eleitoral:** aviso de que outros aparelhos veem seu IP e opção **Esconder meu IP** (só via TURN; sem efeito enquanto não houver TURN configurado). De 16/08 a 31/10 de ano par, ou com `electoralMode` ligado, a linha "Sugestões cívicas" some (Res. TSE 23.755/2026).
-* **Resiliência:** leitura em 4 gateways com tempo limite de 8 s; mensagens de erro que dizem o que houve (cota esgotada, 402, limite, sem conexão, gateways fora, DM sem relay); no máximo 20 posts por chave a cada 10 min no gossip.
+* **Resiliência:** leitura em 4 gateways com tempo limite de 8 s (3 deles indexam o Vox e servem de testemunha GraphQL; o `ar-io.dev` fica só para leitura do conteúdo); mensagens de erro que dizem o que houve (cota esgotada, 402, limite, sem conexão, gateways fora, DM sem relay); no máximo 20 posts por chave a cada 10 min no gossip.
 * **Infra:** Deno Deploy **pausado** (organização suspensa). A sinalização pública é **um** nó Render (`wss://vox-sentinel.onrender.com`) com **Nostr em paralelo** (ainda sem medição em campo) mais o nó local; ver riscos em [docs/INFRA-CUSTOS.md](./docs/INFRA-CUSTOS.md).
 
 ---

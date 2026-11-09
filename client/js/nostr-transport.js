@@ -17,6 +17,10 @@ export const DEFAULT_ROOM = "vox-brasil-v1";
 const KEY_LABEL = new TextEncoder().encode("vox-nostr-signal-v1");
 const SEEN_LIMIT = 2000;
 const HELLO_INTERVAL_MS = 120000;
+/** PM-17: reconexão com espera crescente e troca de relay depois de falhas seguidas. */
+const RECONNECT_BASE_MS = 1000;
+const RECONNECT_MAX_MS = 60000;
+const MAX_FAILURES = 3;
 
 const b64 = (bytes) => btoa(String.fromCharCode(...bytes));
 const unb64 = (str) => Uint8Array.from(atob(str), (c) => c.charCodeAt(0));
@@ -109,17 +113,22 @@ async function handleEvent(ctx, event) {
   }
 }
 
-function openRelay(ctx, url) {
+function openRelay(ctx, slot) {
   let ws;
   try {
-    ws = new ctx.WS(url);
+    ws = new ctx.WS(slot.url);
   } catch {
+    scheduleReconnect(ctx, slot, false);
     return;
   }
   const subId = `vox-${Math.random().toString(36).slice(2, 8)}`;
   trackRelayStatus(ctx, ws, () => {
+    slot.failures = 0;
     ws.send(JSON.stringify(["REQ", subId, { kinds: [SIGNAL_KIND], "#t": [ctx.room], since: Math.floor(Date.now() / 1000) - 30 }]));
     void sendHello(ctx);
+  }, (wasOpen) => {
+    ctx.sockets = ctx.sockets.filter((s) => s !== ws);
+    scheduleReconnect(ctx, slot, wasOpen);
   });
   ws.onmessage = (ev) => {
     try {
@@ -131,8 +140,38 @@ function openRelay(ctx, url) {
   ctx.sockets.push(ws);
 }
 
+/** PM-17: próximo relay do pool que não está em nenhuma vaga (ou o mesmo, se o pool acabou). */
+function nextSpareRelay(ctx, slot) {
+  const inUse = new Set(ctx.slots.map((s) => s.url));
+  const start = ctx.pool.indexOf(slot.url);
+  for (let i = 1; i <= ctx.pool.length; i++) {
+    const candidate = ctx.pool[(start + i) % ctx.pool.length];
+    if (!inUse.has(candidate)) return candidate;
+  }
+  return slot.url;
+}
+
+/**
+ * PM-17: relay que cai volta sozinho, com espera crescente (1 s, 2 s, 4 s… até 60 s).
+ * Depois de MAX_FAILURES tentativas sem abrir, a vaga troca para outro relay do pool.
+ */
+function scheduleReconnect(ctx, slot, wasOpen) {
+  if (ctx.stopped) return;
+  slot.failures = wasOpen ? 0 : slot.failures + 1;
+  if (slot.failures >= MAX_FAILURES) {
+    slot.url = nextSpareRelay(ctx, slot);
+    slot.failures = 0;
+  }
+  const delay = Math.min(RECONNECT_MAX_MS, ctx.reconnectBaseMs * 2 ** slot.failures);
+  clearTimeout(slot.timer);
+  slot.timer = setTimeout(() => {
+    slot.timer = null;
+    if (!ctx.stopped) openRelay(ctx, slot);
+  }, delay);
+}
+
 /** LAN-21: conta o relay como "abrindo" até abrir ou fechar; cada socket conta uma vez. */
-function trackRelayStatus(ctx, ws, onOpen) {
+function trackRelayStatus(ctx, ws, onOpen, onClosed) {
   let phase = "pending";
   ctx.pending += 1;
   notifyStatus(ctx);
@@ -144,10 +183,12 @@ function trackRelayStatus(ctx, ws, onOpen) {
     onOpen();
   };
   ws.onclose = () => {
-    if (phase === "open") ctx.open -= 1;
+    const wasOpen = phase === "open";
+    if (wasOpen) ctx.open -= 1;
     else if (phase === "pending") ctx.pending -= 1;
     phase = "closed";
     notifyStatus(ctx);
+    onClosed?.(wasOpen);
   };
 }
 
@@ -157,7 +198,12 @@ function notifyStatus(ctx) {
 }
 
 function stopTransport(ctx) {
+  ctx.stopped = true;
   clearInterval(ctx.timer);
+  for (const slot of ctx.slots) {
+    clearTimeout(slot.timer);
+    slot.timer = null;
+  }
   for (const ws of ctx.sockets) {
     ws.onclose = null;
     try {
@@ -180,12 +226,16 @@ function sendSignal(ctx, msg) {
 
 function createContext(opts) {
   const sk = generateSecretKey();
+  const pool = [...new Set((opts.relays || []).filter(Boolean))];
   return {
     sk,
     pub: bytesToHex(getPublicKey(sk)),
     peerId: opts.peerId,
     room: opts.room || DEFAULT_ROOM,
-    relays: (opts.relays || []).slice(0, opts.maxRelays || 3),
+    pool,
+    slots: pool.slice(0, opts.maxRelays || 3).map((url) => ({ url, failures: 0, timer: null })),
+    reconnectBaseMs: opts.reconnectBaseMs || RECONNECT_BASE_MS,
+    stopped: false,
     WS: opts.WebSocketImpl || globalThis.WebSocket,
     onMessage: opts.onMessage,
     onStatus: opts.onStatus,
@@ -203,20 +253,23 @@ function createContext(opts) {
 /**
  * @param {{ relays: string[], room?: string, peerId: string, getIdentity?: () => ({address?: string, dmPub?: any}),
  *   onMessage: (msg: object) => void, onStatus?: (s: {open: number, pending: number}) => void,
- *   WebSocketImpl?: any, maxRelays?: number }} opts
+ *   WebSocketImpl?: any, maxRelays?: number, reconnectBaseMs?: number }} opts
  */
 export function createNostrTransport(opts) {
   const ctx = createContext(opts);
   return {
     publicKey: ctx.pub,
     start() {
-      ctx.relays.forEach((url) => openRelay(ctx, url));
+      ctx.stopped = false;
+      ctx.slots.forEach((slot) => openRelay(ctx, slot));
       ctx.timer = setInterval(() => void sendHello(ctx), HELLO_INTERVAL_MS);
     },
     stop: () => stopTransport(ctx),
     knows: (peerId) => ctx.pubByPeer.has(peerId),
     /** Relays abertos e ainda abrindo (LAN-21). */
     status: () => ({ open: ctx.open, pending: ctx.pending }),
+    /** Relays nas vagas agora (PM-17: muda quando um relay é trocado). */
+    relays: () => ctx.slots.map((s) => s.url),
     /** Envia offer/answer/ice para `msg.to` (peerId). Retorna false se o par não é conhecido por Nostr. */
     send: (msg) => sendSignal(ctx, msg),
     _handleEvent: (event) => handleEvent(ctx, event),
