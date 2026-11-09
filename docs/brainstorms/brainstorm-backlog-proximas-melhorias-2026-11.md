@@ -52,7 +52,7 @@ Tudo abaixo foi medido no `main` e nos serviços no ar nesta data.
 | ID | Ideia | Por que | Esforço | Tipo | Liga com |
 |---|---|---|---|---|---|
 | **PM-09** ✅ PR #32 | **`community_update` só do dono:** aplicar o update só quando `author` é o dono (ou moderador) e copiar só os campos permitidos (foto, título, descrição), sem espalhar `id`/`author` sobre o registro | Hoje qualquer chave muda foto e título de qualquer comunidade | P | code | LAN-14, PM-31 |
-| **PM-10** | **Ligar secret scanning, push protection e alertas do Dependabot** no repositório | Grátis em repositório público; hoje desligados | P | ops-humano | LAN-17 |
+| **PM-10** ✅ 09/11 | **Ligar secret scanning, push protection e alertas do Dependabot** no repositório (ligados via API em 09/11; as atualizações automáticas de segurança do Dependabot seguem desligadas) | Grátis em repositório público; hoje desligados | P | ops-humano | LAN-17 |
 | **PM-11** | **Vendorizar o `arweave`** (o bundle de hash já anotado) e tirar `https://esm.sh` do `script-src` | Fecha o LAN-20. Precisa de um teste real de publicação | P | code | LAN-20 |
 | **PM-12** | **Chave de assinatura não exportável:** guardar a `CryptoKey` com `extractable: false` no IndexedDB e manter só a cópia cifrada do cofre para backup. O backup vira passo obrigatório do onboarding | Hoje um XSS leva a identidade inteira | G | code | LAN-18, REV-14 |
 | **PM-13** | **Revogar e trocar chave:** uma chave de recuperação, impressa num cartão QR (o mesmo do backup do REV-14), assina "esta chave foi substituída por X"; o gossip passa a respeitar a troca | Perdeu o celular ou vazou a chave: hoje não há saída | G | code + doc | IDENTITY.md, `vox-identity.js` |
@@ -198,7 +198,7 @@ Revisão feita no `main` em `1a79122` (depois do PR #32). A §0 continua valendo
 | **PM-59** | **Rotuladores assinados:** listas de ocultação publicadas por comunidades ou stewards que outras comunidades podem assinar e desassinar (moderação componível, estilo labelers) | Divide o trabalho de moderação sem moderador central | M | code + ADR | LAN-13, PM-31 |
 | **PM-60** | **Portabilidade total:** exportar conta, posts, comunidades e votos num pacote aberto (JSON + Markdown), e importar em outro aparelho ou cliente | Sair do Vox sem perder nada é parte da promessa de soberania | M | code | EXP-04, ADR-014 |
 | **PM-61** | **Alerta que vira issue:** falha do `nostr-smoke`, do keepalive, do deploy do shell B ou divergência de espelho abre uma issue com label, sem servidor | Hoje uma falha agendada só aparece para quem abre a aba Actions | P | code | PM-19, LAN-24 |
-| **PM-62** | **Proteger o `main`:** CI obrigatório antes do merge (ruleset), `.nvmrc`/`engines` e versão do Python fixadas | Várias sessões e agentes mergeiam no mesmo `main` | P | ops-humano + code | PM-10, PM-14 |
+| **PM-62** ◐ 09/11 | **Proteger o `main`:** CI obrigatório antes do merge (ruleset), `.nvmrc`/`engines` e versão do Python fixadas. **Feito:** ruleset "main protegido (PM-62)" ativo — sem push direto, sem force-push nem exclusão, merge só por PR com os 5 checks do CI verdes (Cliente PWA Node 22/24, Relay Python 3.11/3.12, Auditoria de segredos), sem exigir aprovação. **Falta:** `.nvmrc`/`engines` e versão do Python | Várias sessões e agentes mergeiam no mesmo `main` | P | ops-humano + code | PM-10, PM-14 |
 | **PM-63** | **`CODE_OF_CONDUCT.md`** (Contributor Covenant 2.1 em português) com contato de conduta | Peça que falta dos arquivos de comunidade do GitHub; pré-requisito para chamar contribuidor de fora | P | doc | PM-41 |
 | **PM-64** | **Devcontainer/Codespaces:** abrir o repositório e rodar `npm test` num clique | Reduz o "funciona na minha máquina" de quem chega | P | code | PM-41 |
 
@@ -210,7 +210,7 @@ A regra da §0 continua: até o PIL-01, só entra código que destrava o piloto,
 |---|---|---|
 | 1 | **PM-50 (só tirar o `ar-io.dev`)** + **PM-17** reconexão Nostr | Dois bugs reais de rede, cada um com menos de um dia de trabalho |
 | 2 | ✅ **PM-45** binários pelo CI (PR #33) | Era o maior furo de integridade |
-| 3 | **PM-10, PM-43, PM-62** proteções do GitHub, Sponsors e `main` protegido | Minutos cada, e ninguém mais precisa lembrar |
+| 3 | ✅ **PM-10**, ◐ **PM-62** (ruleset ativo; falta fixar versões), **PM-43** Sponsors (depende de cadastro na conta) | Minutos cada, e ninguém mais precisa lembrar |
 | 4 | **PM-42** proposta NLnet (03/01/2027) | Prazo fixo |
 | 5 | **PM-54** ler antes de entrar | Destrava o piloto: o grupo vai trocar links no WhatsApp desde o primeiro dia |
 | 6 | **PM-52** 4G com 5 MB/dia | Pequeno e protege quem tem o plano mais barato |
