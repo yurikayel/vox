@@ -1,6 +1,7 @@
 // Cache local persistente para transações e corpos do Vox (IndexedDB + LRU)
 import * as hashtags from "./hashtags.js";
 import * as mock from "./mock.js";
+import * as communityUpdates from "./community-updates.js";
 
 const DB_NAME = "vox-cache-db";
 const DB_VERSION = 4;
@@ -613,32 +614,27 @@ function buildLocalCommunityRecord(c) {
   };
 }
 
-function applyCommunityUpdate(existing, u) {
-  if (u.image || u.avatar) {
-    existing.image = u.image || u.avatar;
-    existing.avatar = u.avatar || u.image;
-  }
-  if (u.title) existing.title = u.title;
-  if (u.description) existing.description = u.description;
-  if (u.category) existing.category = u.category;
-}
-
 export async function getLocalCommunities() {
   const posts = await getLocalPosts({ type: "community" });
-  const updates = await getLocalPosts({ type: "community_update" });
-  const map = new Map();
+  const updates = await getLocalPosts({ type: communityUpdates.COMMUNITY_UPDATE_TYPE });
+  const communities = [];
   for (const c of posts) {
-    const cid = c.communityId || c.id;
-    map.set(cid, buildLocalCommunityRecord(c));
+    if (!communityUpdates.isCanonicalCommunityPost(c)) continue;
+    communities.push(communityUpdates.applyCommunityUpdates(buildLocalCommunityRecord(c), updates));
   }
-  for (const u of updates) {
-    const cid = u.communityId || u.id;
-    const existing = map.get(cid);
-    if (existing) {
-      applyCommunityUpdate(existing, u);
-    }
-  }
-  return Array.from(map.values());
+  return communities;
+}
+
+/**
+ * PM-09: um `community_update` de quem não é dono nem moderador de uma comunidade
+ * conhecida aqui não é gravado nem repassado. Comunidade desconhecida: aceita, e o
+ * filtro de `applyCommunityUpdates` decide na hora de mostrar.
+ */
+export async function isCommunityUpdateAcceptable(update) {
+  if (!update?.communityId) return false;
+  const post = await getLocalPost(communityUpdates.canonicalCommunityPostId(update.communityId));
+  if (!post || post.type !== "community") return true;
+  return communityUpdates.canUpdateCommunity(buildLocalCommunityRecord(post), update.author);
 }
 
 export async function clearLocalPosts() {

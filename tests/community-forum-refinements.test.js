@@ -173,9 +173,10 @@ test("community-forum-refinements - checkCommunityMembership valida regras da co
 test("community-forum-refinements - filterClosedCommunityTopics bloqueia vazamento de tópicos de comunidades fechadas no feed para não-membros", async () => {
   await cacheNode.clearLocalPosts();
 
-  // Salva uma comunidade fechada no cache local
+  // Salva uma comunidade fechada no cache local, no formato que o app grava (id c_<communityId>, PM-09)
   await cacheNode.saveLocalPost({
-    id: "comm_secreta",
+    id: "c_comm_secreta",
+    communityId: "comm_secreta",
     type: "community",
     title: "Grupo Fechado de Debate",
     visibility: "closed",
