@@ -107,7 +107,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 
 ### Brainstorms (ideias; não são plano)
 
-- [brainstorm-backlog-proximas-melhorias-2026-11.md](./brainstorms/brainstorm-backlog-proximas-melhorias-2026-11.md): **revisão de estado de 09/11 + backlog PM-01…PM-46** (peso, segurança, rede, assembleia, Nostr, contribuidores) e ordem sugerida
+- [brainstorm-backlog-proximas-melhorias-2026-11.md](./brainstorms/brainstorm-backlog-proximas-melhorias-2026-11.md): **revisão de estado de 09/11 + backlog PM-01…PM-64** (peso, segurança, rede, assembleia, Nostr, contribuidores; adendo com a pesquisa de churn, ler antes de entrar, voto secreto, ofício) e ordem sugerida
 - [brainstorm-autossustento-10-features-2026-11.md](./brainstorms/brainstorm-autossustento-10-features-2026-11.md): **10 features de autossustento a custo ~zero + 3 prompts de pesquisa**
 - [brainstorm-sustentacao-perene-celulares-nos-base.md](./brainstorms/brainstorm-sustentacao-perene-celulares-nos-base.md): infra $0, celulares como nós
 - [brainstorm-sinergia-tramitado-vox-2026-11.md](./brainstorms/brainstorm-sinergia-tramitado-vox-2026-11.md): Tramitado × Vox, contrato LCP
