@@ -83,7 +83,7 @@ test("author-resolution - persistLocalReply embute authorDisplay e loadInlineRep
 test("profile - cabeçalho exibe display name como título principal h1 e handle secundário", async () => {
   const renderProfile = await import("../client/js/render/profile.js");
   const main = { innerHTML: "" };
-  renderProfile.renderProfile(main, "vx_test_user_777", [], true, "", {
+  renderProfile.renderProfile(main, "vx_test_user_777", [], true, {
     displayName: "Yuri Kayel",
     handle: "yuri_vox",
   });

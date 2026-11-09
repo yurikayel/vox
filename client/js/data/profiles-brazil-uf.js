@@ -596,7 +596,7 @@ function ufRoute(uf) {
   return `vx_demo_${String(uf).toLowerCase()}`;
 }
 
-function replyRow(id, hostUf, fromUf, body, replyToPostId, reactionsCount = 0) {
+function replyRow({ id, hostUf, fromUf, body, replyToPostId, reactionsCount = 0 }) {
   const host = String(hostUf).toLowerCase();
   return {
     id,
@@ -623,29 +623,14 @@ function respectfulBanter(from, host, slot) {
 
 function handcraftedUfReplies() {
   return [
-    replyRow(
-      "demo-reply-sp-mg",
-      "mg",
-      "sp",
-      UF_DEMO_PAIR_COPY["SP-MG"],
-    ),
-    replyRow(
-      "demo-reply-ba-am",
-      "am",
-      "ba",
-      UF_DEMO_PAIR_COPY["BA-AM"],
-    ),
-    replyRow(
-      "demo-reply-rj-ce",
-      "ce",
-      "rj",
-      UF_DEMO_PAIR_COPY["RJ-CE"],
-    ),
-    replyRow("demo-reply-ce-ma-0", "ma", "ce", UF_DEMO_PAIR_COPY["CE-MA"]),
-    replyRow("demo-reply-ba-ma-0", "ma", "ba", UF_DEMO_PAIR_COPY["BA-MA"], undefined, 3),
-    replyRow("demo-reply-rs-ma-0", "ma", "rs", UF_DEMO_PAIR_COPY["RS-MA"]),
-    replyRow("demo-reply-pa-ma-1", "ma", "pa", UF_DEMO_PAIR_COPY["PA-MA"]),
-    replyRow("demo-reply-ma-thanks", "ma", "ma", UF_DEMO_PAIR_COPY["MA-MA"]),
+    replyRow({ id: "demo-reply-sp-mg", hostUf: "mg", fromUf: "sp", body: UF_DEMO_PAIR_COPY["SP-MG"] }),
+    replyRow({ id: "demo-reply-ba-am", hostUf: "am", fromUf: "ba", body: UF_DEMO_PAIR_COPY["BA-AM"] }),
+    replyRow({ id: "demo-reply-rj-ce", hostUf: "ce", fromUf: "rj", body: UF_DEMO_PAIR_COPY["RJ-CE"] }),
+    replyRow({ id: "demo-reply-ce-ma-0", hostUf: "ma", fromUf: "ce", body: UF_DEMO_PAIR_COPY["CE-MA"] }),
+    replyRow({ id: "demo-reply-ba-ma-0", hostUf: "ma", fromUf: "ba", body: UF_DEMO_PAIR_COPY["BA-MA"], replyToPostId: undefined, reactionsCount: 3 }),
+    replyRow({ id: "demo-reply-rs-ma-0", hostUf: "ma", fromUf: "rs", body: UF_DEMO_PAIR_COPY["RS-MA"] }),
+    replyRow({ id: "demo-reply-pa-ma-1", hostUf: "ma", fromUf: "pa", body: UF_DEMO_PAIR_COPY["PA-MA"] }),
+    replyRow({ id: "demo-reply-ma-thanks", hostUf: "ma", fromUf: "ma", body: UF_DEMO_PAIR_COPY["MA-MA"] }),
   ];
 }
 
@@ -672,7 +657,7 @@ function populateSyntheticRepliesForHost(host, i, replies, seenIds, perPost) {
       const id = `demo-reply-${from.uf.toLowerCase()}-${host.uf.toLowerCase()}-s${postSlot}-${slot}`;
       if (seenIds.has(id)) continue;
       replies.push(
-        replyRow(id, host.uf, from.uf, respectfulBanter(from, host, slot + postSlot), postId),
+        replyRow({ id, hostUf: host.uf, fromUf: from.uf, body: respectfulBanter(from, host, slot + postSlot), replyToPostId: postId }),
       );
       seenIds.add(id);
       perPost[postId] = (perPost[postId] || 0) + 1;

@@ -238,7 +238,7 @@ export async function showProfile(address, activeTab = "posts") {
   const pData = await loadProfileData(targetAddress, isSelf, user, activeTab);
 
   main.innerHTML = "";
-  render.renderProfile(main, targetAddress, pData.memberships, isSelf, JSON.stringify(pData.dmPub), pData);
+  render.renderProfile(main, targetAddress, pData.memberships, isSelf, pData);
 
   bindProfileButtons(user, targetAddress, isSelf, pData.dmPub, activeTab);
 }

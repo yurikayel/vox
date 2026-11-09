@@ -71,7 +71,7 @@ test("qr-url - rejects Pix payload and non-share hashes", () => {
 
 test("qr-url - own profile and share sheets expose QR deste link", () => {
   const main = { innerHTML: "" };
-  render.renderProfile(main, "vx_me", [], true, "", { displayName: "Eu", activeTab: "posts" });
+  render.renderProfile(main, "vx_me", [], true, { displayName: "Eu", activeTab: "posts" });
   assert.ok(main.innerHTML.includes("QR deste link"));
   assert.ok(main.innerHTML.includes('id="btn-qr-connect-link"'));
   assert.ok(main.innerHTML.includes('data-qr-share="connect"'));

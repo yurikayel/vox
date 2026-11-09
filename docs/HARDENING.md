@@ -15,7 +15,7 @@ A coluna **Enforcement hoje** diz o que a ferramenta faz de fato; a coluna **Alv
 | Aninhamento | ≤ 2 | **4** | ESLint `max-depth` | **ERROR** no CI (`client/`) | 0 | ERROR |
 | Complexidade ciclomática | ≤ 10 | **15** | ESLint `complexity` (JS) · Ruff `C901` (Python) | **ERROR** no CI (JS e Python) | 0 | ERROR |
 | Complexidade cognitiva | ≤ 10 | **15** | **não medida** (pediria `eslint-plugin-sonarjs`, dependência nova no LAN-20) | — | desconhecida | ERROR |
-| Parâmetros por função | ≤ 3 | **5** | ESLint `max-params` · Ruff `PLR0913` (configurado, fora do gate) | WARN | 18 funções JS | ERROR novo |
+| Parâmetros por função | ≤ 3 | **5** | ESLint `max-params` · Ruff `PLR0913` (configurado, fora do gate) | **ERROR** no CI (`client/`) | 0 (17 funções viraram objeto de opções e 1 parâmetro morto saiu, em 09/11) | ERROR |
 | Linhas por arquivo | ≤ 250 | **350** | ESLint `max-lines` | WARN | 27 arquivos | ERROR novo |
 | Comandos por função Python | — | **30** | Ruff `PLR0915` | só informa no CI (`--exit-zero`) | 7 funções | ERROR |
 | Erros de pyflakes (nome indefinido, import/variável sem uso) | 0 | **0** | Ruff `F` | **ERROR** no CI | 0 | ERROR |
@@ -41,6 +41,7 @@ npm run lint               # ESLint do client (é o que o CI exige)
 npm run lint:all           # + scripts, tools e tests (avisos de dívida)
 npm run lint:relay         # Ruff em relay, scripts e packaging (ruff.toml)
 npm run validate           # lint + lint:relay + audit:complexity + npm test
+# Versões: Node ≥ 22 (.nvmrc, engines; CI testa 22 e 24) · Python 3.12 (.python-version; CI testa 3.11 e 3.12)
 npm test                   # Regressão obrigatória (Node:test + Python unittest)
 ```
 
@@ -63,8 +64,8 @@ Exceções temporárias — exigem justificativa técnica, responsável e data d
 
 ## CI
 
-- **Bloqueia** (`ci.yml`): ESLint do `client/` (linhas por função, aninhamento, complexidade, `===`, variável sem uso) e Ruff `F` + `C901` em `relay/`, `scripts/` e `packaging/` (versão fixa 0.17.4).
-- **Só informa:** `max-params` e `max-lines` no `client/`; avisos de `scripts/`, `tools/` e `tests/` (`npm run lint:all`); Ruff `E`, `I` e `PLR0915` (`--exit-zero`).
+- **Bloqueia** (`ci.yml`): ESLint do `client/` (linhas por função, aninhamento, complexidade, parâmetros, `===`, variável sem uso) e Ruff `F` + `C901` em `relay/`, `scripts/` e `packaging/` (versão fixa 0.17.4).
+- **Só informa:** `max-lines` no `client/`; avisos de `scripts/`, `tools/` e `tests/` (`npm run lint:all`); Ruff `E`, `I` e `PLR0915` (`--exit-zero`).
 - `audit:complexity` gera o artefato de baseline em `docs/metrics/` e não quebra o build.
 - **Promoção `WARN → ERROR`:** quando a dívida de uma regra chega a 0 no `main`, a regra muda para `error` no mesmo PR que a zerou.
 - Não afrouxe limite nem teste para ficar verde: quebre a função com semântica própria (extract method) ou registre waiver acima com motivo, responsável e data.

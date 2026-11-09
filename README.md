@@ -75,7 +75,7 @@ Redes centralizadas, instâncias federadas e protocolos locais têm custos, vant
 
 | Campo | Valor |
 |---|---|
-| **Commit SHA** | `b4533cd` |
+| **Commit SHA** | `144027c` |
 | **Suíte de Testes** | **946** (`855` JS + `91` Python) |
 | **Service Worker** | `vox-pwa-v7.42-real-network-audio-video-upload` |
 
