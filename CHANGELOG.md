@@ -6,6 +6,10 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Segurança e financiamento (SW v7.43)
+- **PM-11 `arweave` vendorizado:** a biblioteca deixa de vir do `esm.sh` em tempo de execução. O bundle autocontido 1.15.7 (o mesmo arquivo, com o mesmo sha384 já anotado no inventário) fica em `client/vendor/` e é carregado por `client/js/arweave-lib.js`, usado por `upload.js` e `wallet.js`. `https://esm.sh` saiu do `script-src` da CSP; `tests/arweave-vendor.test.js` confere o hash, que o bundle não importa nada de fora e que ele assina e verifica uma transação sem rede. Fecha o LAN-20.
+- **PM-42 rascunho da proposta ao NLnet Restack** (prazo 03/01/2027): [proposta-nlnet-restack-2027.md](./docs/strategy/proposta-nlnet-restack-2027.md), com os riscos que decidem a proposta (dimensão europeia eliminatória, política de IA generativa), checklist de submissão, respostas em inglês dentro dos limites do formulário e orçamento por marcos.
+
 ### Qualidade (Perfil Canônico v3.2)
 - **`max-params` zerado e promovido a erro:** as 17 funções com mais de 5 parâmetros passaram a receber um objeto de opções com nomes (`f({ a, b })`), sem mudar comportamento; o 5º parâmetro de `renderProfile` (`_dmPubStr`) não era usado e saiu das 17 chamadas. **PM-62 completo:** `.nvmrc` (22), `engines.node >=22` e `.python-version` (3.12).
 - **Limites que quebram o CI:** no `client/`, função com mais de 30 linhas, aninhamento > 4, complexidade > 15, `==` e variável sem uso são erro de ESLint (antes, só aviso e passo com `continue-on-error`). No Python, Ruff `F` (pyflakes) e `C901` (complexidade > 15) em `relay/`, `scripts/` e `packaging/`, com versão fixa (0.17.4); antes o ruff era opcional.

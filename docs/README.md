@@ -98,6 +98,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 ### Rede pública (portões G1–G3)
 
 - [backlog-lancamento-publico-2026-11.md](./strategy/backlog-lancamento-publico-2026-11.md): **caminho até a rede pública** — 10 critérios, portões G1–G3, backlog LAN-01…36 por épico, ordem e cortes de escopo
+- [proposta-nlnet-restack-2027.md](./strategy/proposta-nlnet-restack-2027.md): rascunho da proposta ao NLnet Restack (PM-42, prazo 03/01/2027), riscos e checklist
 - [plano-lancamento-ondas.md](./strategy/plano-lancamento-ondas.md): ondas 0–3, quem decide abrir e pausar, gatilhos de pausa (LAN-34, rascunho)
 
 ### Pesquisa verificada
