@@ -1,7 +1,7 @@
 # Brainstorm — backlog de próximas melhorias e expansões (nov/2026)
 
-> **Status:** brainstorm · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-09 (`main` em `e8629a9`, depois do PR #30)
-> **Não substitui o [ROADMAP.md](../ROADMAP.md)** ([ADR-017](../adr/017-consolidacao-roadmap-unico.md)). As ideias PM-01…PM-46 só viram linha com caixa quando ganham DoD e responsável. Não repete as [F1–F10](./brainstorm-autossustento-10-features-2026-11.md), as [B1–B12](../research/pesquisa-complementar-2026-11.md#4-brainstorm-b1b10-a-partir-dos-achados) nem o [backlog LAN](../strategy/backlog-lancamento-publico-2026-11.md): quando uma ideia encosta numa delas, a linha aponta para lá.
+> **Status:** brainstorm · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-09 (`main` em `e8629a9`, depois do PR #30; adendo §4 em `1a79122`, depois do PR #32)
+> **Não substitui o [ROADMAP.md](../ROADMAP.md)** ([ADR-017](../adr/017-consolidacao-roadmap-unico.md)). As ideias PM-01…PM-64 só viram linha com caixa quando ganham DoD e responsável. Não repete as [F1–F10](./brainstorm-autossustento-10-features-2026-11.md), as [B1–B12](../research/pesquisa-complementar-2026-11.md#4-brainstorm-b1b10-a-partir-dos-achados) nem o [backlog LAN](../strategy/backlog-lancamento-publico-2026-11.md): quando uma ideia encosta numa delas, a linha aponta para lá.
 
 ## 0. Estado em 09/11/2026
 
@@ -157,7 +157,71 @@ O convite que já faz o pareamento ([F2](./brainstorm-autossustento-10-features-
 - **Plugar módulo órfão sem dono e sem caso de uso no piloto.** O REV-02 decide primeiro (PM-04).
 - **Ranking, placar, impulsionamento pago ou moeda própria.** Seguem proibidos pelos preceitos.
 
-## 4. Como uma ideia daqui vira trabalho
+## 4. Adendo de 09/11 à tarde (PM-47…PM-64)
+
+Revisão feita no `main` em `1a79122` (depois do PR #32). A §0 continua valendo; abaixo, só o que mudou ou faltava.
+
+### 4.1 O que mudou desde a §0
+
+| Área | Agora | Evidência |
+|---|---|---|
+| Código | PR #32 fechou o PM-09. **931 testes**, SW **v7.40**. Nenhum PR aberto | [release-metadata.json](../release-metadata.json) |
+| ROADMAP | **60 abertos**, 26 fechados. O gargalo continua humano: REV-12, PIL-01, NET-04 e REV-18 seguem sem dono | [ROADMAP](../ROADMAP.md) |
+| Arrumação | Os **11 worktrees** do PM-44 continuam lá, e `feat/social-login` e `feat/post-flow-instagram` continuam fora do `main` | `git worktree list`, `git branch -r --no-merged` |
+| Pesquisa | As 7 recomendações da [pesquisa de ancoragem e churn](../research/pesquisa-ancoragem-churn-infra-2026-11.md#recomendações-para-virar-linhas-no-roadmap) (V-A1…V-S1) **não viraram linha em lugar nenhum**: nem no ROADMAP nem neste backlog. Viram PM-47 a PM-53 abaixo | busca no ROADMAP |
+| Gateways | Medido hoje com `App-Name: vox-brasil`: **turbo-gateway, arweave.net e ardrive.net indexam o Vox; `ar-io.dev` devolve 0 itens.** O `ar-io.dev` está em `client/config/gateways.json` desde o LAN-27, então pode contar como "testemunha que não viu" e gerar falsa omissão | consulta GraphQL em 09/11 |
+| Funil de links | Na primeira visita, **qualquer link direto** (post, perfil, comunidade) abre atrás do portão de boas-vindas em tela cheia (`shouldShowCantinaGate` só abre exceção para `#/ajuda/teste`). Quem recebe um link no WhatsApp vê o portão antes do conteúdo | `app/cantina-gate.js` |
+| Nostr | O PM-17 continua válido: o `onclose` do `nostr-transport` atualiza o contador do LAN-21, mas não reconecta | `client/js/nostr-transport.js` |
+| Pacto Vox | O padrão já é **só Wi-Fi** (`wifiOnly: true`), mas o teto é o mesmo de 50 MB/dia em qualquer rede. A pesquisa recomenda 5 MB/dia no 4G, só por opção | `client/js/peers.js` |
+
+### 4.2 Da pesquisa de ancoragem e churn (vira backlog)
+
+| ID | Ideia | Por que | Esforço | Tipo | Liga com |
+|---|---|---|---|---|---|
+| **PM-47** | **Raiz diária agregada (MMR)** de todas as comunidades, com folhas salgadas, assinada M-de-N por stewards e paga por Credit Sharing (V-A1) | Integridade da malha no Arweave em ~1 item/dia, sem gravar post. Folha salgada mantém o hash fora do alcance da LGPD | G | code + ADR | REV-11, PM-15, `perma-notary.js` |
+| **PM-48** | **`Pins-Root` obrigatório** no cache-manifest; a lista de `pins` circula na malha com prova de inclusão (V-A2) | Com `pins` no corpo, a cota esgota em ~190 dias | M | code | [cache-manifest-v0](../specs/cache-manifest-v0.md) |
+| **PM-49** | **Reconciliação por intervalos** (estilo NIP-77/Negentropy, código próprio) quando a comunidade passar de ~1.000 itens (V-R1) | O WANT/HAVE ingênuo cresce com o tamanho da comunidade | G | code + ADR | — |
+| **PM-50** | **ADR-009 realista:** 2 testemunhas de verdade (mais o `ardrive.net`, se for independente), **sonda de cobertura** antes de contar um gateway (consultar uma TX conhecida), `first ≤ 100` e cursor por gateway. **Tirar o `ar-io.dev` das testemunhas GraphQL já** (manter só como `raw`) (V-R7) | Hoje um gateway que não indexa o Vox entra na corroboração | P (tirar) · M (sonda) | code | LAN-27, [ADR-009](../adr/009-multi-gateway-graphql-corroboration.md) |
+| **PM-51** | **Telemetria local de ICE:** tipo de candidato (`host`/`srflx`/`relay`) × família IP × ASN, exportável para a retrospectiva, sem servidor (V-N1) | Diz se o TURN é mesmo necessário e para quem. Complementa o PM-18 | M | code | PM-18, REV-10 |
+| **PM-52** | **4G só por opção, com teto de 5 MB/dia** e medidor visível. Wi-Fi continua com 50 MB/dia (V-P1) | Custo regressivo: quem tem o plano mais barato paga mais pela "contribuição" | P | code + doc | PM-26, [COMPLIANCE-BR](../legal/COMPLIANCE-BR.md) |
+| **PM-53** | **Meta de piso por portão:** 2 stewards "na tomada" por comunidade antes do G1; orçamento de 1 nó em datacenter antes do G3 (V-S1) | Com *p* ≈ 0,04, celular não garante persistência | P | doc + ops-humano | LAN-28, NET-04, REV-04 |
+
+### 4.3 Ideias novas
+
+| ID | Ideia | Por que | Esforço | Tipo | Liga com |
+|---|---|---|---|---|---|
+| **PM-54** | **Ler antes de entrar:** link direto para post, comunidade ou perfil abre o conteúdo com uma faixa "Entrar no Vox". O portão e o pacto só aparecem na primeira ação que escreve (postar, votar, mandar DM) | O POSSE e o compartilhamento no WhatsApp são o principal funil, e hoje o portão vem antes do conteúdo | M | code | F2, F10, POSSE |
+| **PM-55** | **Prévia de link (Open Graph)** por um Worker opcional e sem estado, que monta título e imagem a partir do ID no Arweave. Cada espelho pode rodar o seu | Links do Vox chegam no WhatsApp sem prévia (rota em `#`, e o robô do WhatsApp não roda JS) | M | code | PM-54. Risco: um componente de servidor, ainda que sem estado |
+| **PM-56** | **Voto secreto para decisões sensíveis:** pesquisa e ADR sobre assinatura cega ou de anel, com anti-coerção | Voto assinado e público expõe quem votou contra o patrão ou o síndico. Sindicato e condomínio precisam disso | G | doc + code | PM-23, governança |
+| **PM-57** | **Do voto ao ofício:** proposta aprovada vira documento (ofício ou petição em PDF) com a ata, o resultado e apoiadores que **consentiram** em aparecer, pronto para o Fala.BR, o e-Cidadania ou a câmara municipal | Fecha o ciclo cívico: decisão da comunidade chega ao poder público | M | code | PM-23, F9, `perma-notary.js` |
+| **PM-58** | **Mutirão:** quadro de tarefas da comunidade ("eu faço", prazo, feito), só na malha | Organizar é distribuir tarefa, não só debater | M | code | PM-23, PM-25 |
+| **PM-59** | **Rotuladores assinados:** listas de ocultação publicadas por comunidades ou stewards que outras comunidades podem assinar e desassinar (moderação componível, estilo labelers) | Divide o trabalho de moderação sem moderador central | M | code + ADR | LAN-13, PM-31 |
+| **PM-60** | **Portabilidade total:** exportar conta, posts, comunidades e votos num pacote aberto (JSON + Markdown), e importar em outro aparelho ou cliente | Sair do Vox sem perder nada é parte da promessa de soberania | M | code | EXP-04, ADR-014 |
+| **PM-61** | **Alerta que vira issue:** falha do `nostr-smoke`, do keepalive, do deploy do shell B ou divergência de espelho abre uma issue com label, sem servidor | Hoje uma falha agendada só aparece para quem abre a aba Actions | P | code | PM-19, LAN-24 |
+| **PM-62** | **Proteger o `main`:** CI obrigatório antes do merge (ruleset), `.nvmrc`/`engines` e versão do Python fixadas | Várias sessões e agentes mergeiam no mesmo `main` | P | ops-humano + code | PM-10, PM-14 |
+| **PM-63** | **`CODE_OF_CONDUCT.md`** (Contributor Covenant 2.1 em português) com contato de conduta | Peça que falta dos arquivos de comunidade do GitHub; pré-requisito para chamar contribuidor de fora | P | doc | PM-41 |
+| **PM-64** | **Devcontainer/Codespaces:** abrir o repositório e rodar `npm test` num clique | Reduz o "funciona na minha máquina" de quem chega | P | code | PM-41 |
+
+### 4.4 Ordem sugerida, revista
+
+A regra da §0 continua: até o PIL-01, só entra código que destrava o piloto, conserta segurança ou reduz peso. Dentro dela:
+
+| # | O quê | Por que agora |
+|---|---|---|
+| 1 | **PM-50 (só tirar o `ar-io.dev`)** + **PM-17** reconexão Nostr | Dois bugs reais de rede, cada um com menos de um dia de trabalho |
+| 2 | **PM-45** binários pelo CI | Continua o maior furo de integridade |
+| 3 | **PM-10, PM-43, PM-62** proteções do GitHub, Sponsors e `main` protegido | Minutos cada, e ninguém mais precisa lembrar |
+| 4 | **PM-42** proposta NLnet (03/01/2027) | Prazo fixo |
+| 5 | **PM-54** ler antes de entrar | Destrava o piloto: o grupo vai trocar links no WhatsApp desde o primeiro dia |
+| 6 | **PM-52** 4G com 5 MB/dia | Pequeno e protege quem tem o plano mais barato |
+| 7 | **PM-04 → PM-02 → PM-01** dieta do shell | Peso continua sendo custo |
+| 8 | **PM-53** meta de 2 stewards por comunidade | Tem de estar escrita antes do PIL-01 |
+| 9 | **PM-61** alertas viram issue | Junto com o PM-19 |
+| 10 | **PM-23 → PM-57** assembleia e ofício | Só depois do PIL-01, com a comunidade real |
+
+**Ficam para depois do G2:** PM-47, PM-49, PM-55, PM-56 e PM-59. São boas ideias, mas precisam de ADR e de escala que o piloto ainda não tem.
+
+## 5. Como uma ideia daqui vira trabalho
 
 1. Ganha **DoD** e **responsável** e entra no ROADMAP: em *Candidatas*, ou direto numa prioridade se for correção (PM-09, PM-17).
 2. Uma ideia que encosta em linha existente (LAN, REV, F, B) **complementa aquela linha**, sem criar outra.
