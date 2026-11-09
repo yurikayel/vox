@@ -298,6 +298,14 @@ export async function loadConfig() {
   return gatewayConfig;
 }
 
+/**
+ * PM-50: só gateways com URL GraphQL entram nas consultas. Um gateway que não indexa o
+ * `App-Name` do Vox responderia "nada" e contaria como testemunha de omissão.
+ */
+export function graphqlGateways(cfg) {
+  return (cfg?.gateways || []).filter((gw) => typeof gw.graphql === "string" && gw.graphql.startsWith("http"));
+}
+
 export function __resetGatewayConfigForTests() {
   gatewayConfig = null;
 }
@@ -370,7 +378,7 @@ async function queryOne(gqlUrl, query, variables) {
 async function withGateways(fn) {
   const cfg = await loadConfig();
   let lastErr = null;
-  for (const gw of cfg.gateways) {
+  for (const gw of graphqlGateways(cfg)) {
     const label = gw.label || gw.graphql || "gateway";
     try {
       const data = await fn(gw.graphql);
@@ -500,7 +508,7 @@ export async function fetchTopics(communityId) {
 
 export async function queryAllGateways(query, variables) {
   const cfg = await loadConfig();
-  const gateways = cfg.gateways || [];
+  const gateways = graphqlGateways(cfg);
   const results = [];
 
   for (const gw of gateways) {

@@ -1,9 +1,9 @@
 {
-  "git_sha": "8b7ecca",
-  "branch": "main",
-  "test_js": 843,
+  "git_sha": "b1f0b1a",
+  "branch": "fix/gateways-nostr-reconexao",
+  "test_js": 847,
   "test_python": 89,
-  "test_total": 932,
-  "cache_name": "vox-pwa-v7.40-real-network-audio-video-upload",
-  "generated_at": "2026-11-09T14:41:22Z"
+  "test_total": 936,
+  "cache_name": "vox-pwa-v7.41-real-network-audio-video-upload",
+  "generated_at": "2026-11-09T15:07:34Z"
 }

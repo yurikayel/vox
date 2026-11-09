@@ -7,6 +7,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
 import { createHash } from "node:crypto";
+import { execFileSync } from "node:child_process";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -22,6 +23,20 @@ function walk(dir, ext) {
     else if (name.endsWith(ext)) out.push(rel);
   }
   return out;
+}
+
+/**
+ * Binários que o git rastreia em `dir`. Artefatos de build locais e ignorados
+ * (ex.: APKs em android/build/) não são "do repositório" e não podem quebrar o teste.
+ * Sem git (tarball), cai na varredura do disco.
+ */
+function trackedFiles(dir) {
+  try {
+    const out = execFileSync("git", ["ls-files", "-z", "--", dir], { cwd: ROOT, encoding: "utf8" });
+    return out.split(String.fromCharCode(0)).filter(Boolean);
+  } catch {
+    return existsSync(join(ROOT, dir)) ? walk(dir, "") : [];
+  }
 }
 
 function missing(items) {
@@ -100,8 +115,7 @@ test("LAN-20: todo binário do repositório tem linha com o SHA-256 atual", () =
   const BIN = /\.(apk|exe|dll|jar|aar|so|dylib|msi)$/i;
   const found = [];
   for (const dir of ["android", "client", "packaging", "relay", "dist"]) {
-    if (!existsSync(join(ROOT, dir))) continue;
-    found.push(...walk(dir, "").filter((f) => BIN.test(f)));
+    found.push(...trackedFiles(dir).filter((f) => BIN.test(f)));
   }
   assert.ok(found.length > 0, "esperava achar as DLLs do WebView2");
   for (const file of found) {
@@ -114,7 +128,7 @@ test("LAN-20: todo binário do repositório tem linha com o SHA-256 atual", () =
 
 test("PM-45: .exe e .apk saem do CI, não do git", () => {
   const banned = [];
-  for (const dir of ["client", "android"]) banned.push(...walk(dir, "").filter((f) => /\.(exe|apk)$/i.test(f)));
+  for (const dir of ["client", "android"]) banned.push(...trackedFiles(dir).filter((f) => /\.(exe|apk)$/i.test(f)));
   assert.deepEqual(banned, [], "publique pelo release-binarios.yml");
   for (const page of ["client/download.html", "client/download/index.html"]) {
     const html = read(page);
