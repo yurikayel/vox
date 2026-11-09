@@ -50,6 +50,7 @@ Stdlib pura. `test_server.py` sobe o handler HTTP em memória e exercita as rota
 | `pilot-freeze` (só PR) | Com `PILOT_FREEZE=1` ou `.github/pilot-freeze.flag`, falha PRs que tocam `client/js/**`, salvo label `pilot-hotfix` | Sim, quando ativo |
 | `windows-node-zero-smoke.yml` | PyInstaller + smoke do Node Zero no Windows | Sim |
 | `nostr-smoke.yml` (semanal) | Publica e lê um evento efêmero em cada relay Nostr do pool (REV-19) | Não (agenda) |
+| `deps-mensal.yml` (dia 1 de cada mês) | `npm audit` · teste de inventário · hash de CDN contra [DEPENDENCIAS.md](./DEPENDENCIAS.md) (`scripts/deps-check-cdn.mjs`) · `npm outdated` no resumo (LAN-20) | Não (agenda) |
 
 ## 5. Complexidade
 

@@ -7,6 +7,7 @@ import * as social from "../social.js";
 import * as postOwnership from "../post-ownership.js";
 import * as frames from "../open-frames-host.js";
 import * as i18n from "../i18n-pt-br.js";
+import { honestMessage } from "../honest-errors.js";
 import { parseRoute } from "./route-parse.js";
 import { route } from "./navigation.js";
 import { getActiveUser } from "./context.js";
@@ -124,6 +125,10 @@ export function initGossipListeners() {
 
   peers.onGossipTombstone((tombstone) => {
     handleGossipTombstone(tombstone, parseRoute());
+  });
+
+  peers.onSignalingHealth((down) => {
+    share.showToast(honestMessage(down ? "signalingDown" : "signalingBack"), down ? "error" : "info");
   });
 
   centralMemory.startCentralMemoryLoop({

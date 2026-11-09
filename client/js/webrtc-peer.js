@@ -5,6 +5,7 @@
  */
 import { buildNostrSignalingCandidates } from "./nostr-signaling.js";
 import { createNostrTransport, DEFAULT_ROOM } from "./nostr-transport.js";
+import { createSignalingHealth } from "./honest-errors.js";
 
 let signalingWs = null;
 let currentPeerId = null;
@@ -21,6 +22,9 @@ let configCache = null;
 /** REV-09: transporte Nostr paralelo e de onde cada par veio ("nostr" | "ws"). */
 let nostrTransport = null;
 const peerTransport = new Map();
+/** LAN-21: "sinalização caída" só quando WebSocket e Nostr falham juntos por mais que a carência. */
+let signalingHealthHandler = null;
+const signalingHealth = createSignalingHealth({ onChange: (down) => signalingHealthHandler?.(down) });
 
 // Mapa de peerId remoto -> { pc: RTCPeerConnection, dc: RTCDataChannel, dmDc: RTCDataChannel }
 const peerConnections = new Map();
@@ -108,6 +112,15 @@ export function onVoxMessage(handler) {
 
 export function onDmMessage(handler) {
   dmMessageHandler = handler;
+}
+
+/** `handler(down)` na virada: true quando a sinalização cai, false quando volta. */
+export function onSignalingHealth(handler) {
+  signalingHealthHandler = handler;
+}
+
+export function isSignalingDown() {
+  return signalingHealth.isDown();
 }
 
 export function onPeerIdentity(handler) {
@@ -280,6 +293,7 @@ async function startNostrSignaling() {
     peerId: currentPeerId,
     getIdentity: () => ({ address: currentAddress, dmPub: currentDmPub }),
     onMessage: onNostrSignalingMessage,
+    onStatus: ({ open, pending }) => signalingHealth.update({ nostrOpen: open, nostrPending: pending }),
   });
   nostrTransport.start();
 }
@@ -299,6 +313,7 @@ export function disconnectWebRtc() {
   nostrTransport?.stop();
   nostrTransport = null;
   peerTransport.clear();
+  signalingHealth.reset();
   for (const remoteId of Array.from(peerConnections.keys())) {
     closePeerConnection(remoteId);
   }
@@ -315,6 +330,7 @@ async function connectSignaling() {
     signalingWs = new WebSocket(url);
     bindSignalingSocket(signalingWs, config);
   } catch {
+    signalingHealth.update({ wsOpen: false, wsGaveUp: true });
     rotateSignalingUrl(config);
     scheduleReconnect(true);
   }
@@ -327,8 +343,11 @@ function handleSignalingSocketClose(config, wasOpened) {
     const prevIndex = activeSignalingIndex;
     rotateSignalingUrl(config);
     const wrappedAround = activeSignalingIndex <= prevIndex;
+    // Só desistiu quando a volta pela lista de nós terminou sem nenhum abrir.
+    signalingHealth.update(wrappedAround ? { wsOpen: false, wsGaveUp: true } : { wsOpen: false });
     scheduleReconnect(!wrappedAround);
   } else {
+    signalingHealth.update({ wsOpen: false, wsGaveUp: true });
     scheduleReconnect(false);
   }
 }
@@ -338,6 +357,7 @@ function bindSignalingSocket(ws, config) {
   ws.onopen = () => {
     wasOpened = true;
     reconnectAttempts = 0;
+    signalingHealth.update({ wsOpen: true, wsGaveUp: false });
     ws.send(
       JSON.stringify({
         type: "register",
