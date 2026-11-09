@@ -2,6 +2,7 @@
 
 > **Status:** canônico · **Owner:** mantenedor / qualidade · **Revisado:** 2026-11-08
 > Contagem atual de testes: **só** em [release-metadata.json](./release-metadata.json) (`test_js`, `test_python`).
+> **Como relatar e o que é proibido** (PASS / FAIL / NOT RUN / BLOCKED, falso verde, determinismo, auditoria): [process/qualidade-e-evidencia.md](./process/qualidade-e-evidencia.md). Verificação completa antes do merge: `npm run validate`.
 
 ## 1. Rodar
 

@@ -83,9 +83,11 @@ jobs:
         run: |
           npm run test:relay
 
-      - name: Ruff relay (opcional)
-        run: pip install ruff && npm run lint:relay
-        continue-on-error: true
+      - name: Ruff (pyflakes e complexidade > 15 bloqueiam)
+        run: pip install ruff==0.17.4 && npm run lint:relay
+
+      - name: Ruff — dívida de estilo e de tamanho de função (só informa)
+        run: ruff check relay scripts packaging --select E,I,PLR0915 --exit-zero --statistics
 
   security-audit:
     name: Auditoria de Segurança (Secrets / Chaves)
