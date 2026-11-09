@@ -43,4 +43,6 @@ Exceções temporárias — revisar a cada release.
 ## CI
 
 - `audit:complexity` gera artefato (baseline).
-- `lint` em warn até baseline limpo; depois fail on error (ver `docs/metrics/`).
+- **Desde 09/11/2026, `npm run lint` quebra o CI** em `client/`: função com mais de 30 linhas (sem comentários e linhas em branco), aninhamento > 4, complexidade > 15, `==` e variável não usada são **erro**.
+- **Aviso (dívida medida em 09/11):** `max-params` > 5 no `client/` (18 funções) e os mesmos limites em `scripts/`/`tools/`. No Python, ruff com `PLR0915` (máx. 30 comandos por função) acusa 12 funções; ainda opcional no CI.
+- Não afrouxe limite nem teste para ficar verde: quebre a função (extract method) ou registre waiver acima com motivo e data.

@@ -51,9 +51,8 @@ jobs:
           path: docs/metrics/baseline-*.json
           if-no-files-found: ignore
 
-      - name: ESLint client (warn-only)
+      - name: ESLint client (limites de função e complexidade bloqueiam)
         run: npm run lint
-        continue-on-error: true
 
       - name: Executar testes unitários do cliente (node:test)
         run: |
