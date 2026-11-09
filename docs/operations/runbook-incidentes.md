@@ -28,7 +28,7 @@ Rollback do PWA e do `CACHE_NAME`: [ops-pages-rollback.md](./ops-pages-rollback.
 
 | Cenário | Sinal | Conter (primeiros 15 min) | Depois |
 |---|---|---|---|
-| **Nó de sinalização caiu** | Status (LAN-07) vermelho; usuários sem pares | Conferir o 2º caminho (REV-01 / Nostr REV-09). Se só houver um nó, `notice`: "Conexão entre aparelhos instável; leitura e escrita seguem funcionando" | Reiniciar no Render; ver [ops-dr-drill-checklist.md](./ops-dr-drill-checklist.md) |
+| **Nó de sinalização caiu** | Status (LAN-07) vermelho; usuários sem pares; **issue `alerta-automatico` aberta pelo keepalive** (PM-61) | Conferir o 2º caminho (REV-01 / Nostr REV-09). Se só houver um nó, `notice`: "Conexão entre aparelhos instável; leitura e escrita seguem funcionando" | Reiniciar no Render; ver [ops-dr-drill-checklist.md](./ops-dr-drill-checklist.md) |
 | **Banda do Render estourada** (REV-21) | Alerta de billing ou `/metrics` de bytes | Confirmar que o nó só sinaliza; subir limite de taxa; se preciso, apontar `signaling.json` para o nó reserva | Revisar o teto mensal em INFRA-CUSTOS |
 | **Vazamento de chave do projeto** (secret do CI, token do Render/HF) | Aviso do GitHub secret scanning, uso estranho | **Revogar o token na origem**, trocar o secret no GitHub, reexecutar o deploy | Auditar logs do período; pós-incidente público se afetou usuários |
 | **Vazamento de chave de usuário** (relato de conta tomada) | Denúncia ou post estranho assinado | Orientar a pessoa a criar identidade nova e avisar os contatos; o projeto **não** consegue revogar chave Vox | Se for bug do cliente, tratar como vulnerabilidade (SECURITY.md) |
@@ -43,3 +43,7 @@ Rollback do PWA e do `CACHE_NAME`: [ops-pages-rollback.md](./ops-pages-rollback.
 | Data | Cenário | Quem participou | Tempo até conter | O que mudou no runbook |
 |---|---|---|---|---|
 | — | — | — | — | — |
+
+## Alertas automáticos (PM-61)
+
+Falhas de rotina abrem uma issue com o label `alerta-automatico`, sem servidor: keepalive do Render (`sentinel-keepalive.yml`), teste de fumaça Nostr (`nostr-smoke.yml`), rotina mensal de dependências (`deps-mensal.yml`) e deploy do shell B no `main` (`deploy-shell-b.yml`). Enquanto a issue de um alerta estiver aberta, novas falhas do mesmo tipo não abrem outra: **feche a issue quando resolver**, para o próximo alerta voltar a aparecer.

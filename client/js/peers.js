@@ -97,8 +97,20 @@ const DEFAULT_PEER_SETTINGS = Object.freeze({
   supporter: false,
   backgroundRelay: false,
   dailyCapMb: 50,
+  /** PM-52: no 4G o teto é próprio e baixo (quem tem o plano mais barato paga mais pela ajuda). */
+  cellularCapMb: 5,
   webrtcEnabled: true,
 });
+
+/** PM-52: limites aceitos para o teto no 4G (MB/dia). */
+export const CELLULAR_CAP_MIN_MB = 1;
+export const CELLULAR_CAP_MAX_MB = 50;
+
+export function clampCellularCapMb(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n) || n <= 0) return DEFAULT_PEER_SETTINGS.cellularCapMb;
+  return Math.min(CELLULAR_CAP_MAX_MB, Math.max(CELLULAR_CAP_MIN_MB, Math.round(n)));
+}
 
 export function getPeerSettings() {
   try {
@@ -113,6 +125,7 @@ export function getPeerSettings() {
       supporter: Boolean(p.supporter),
       backgroundRelay: p.backgroundRelay !== undefined ? p.backgroundRelay : DEFAULT_PEER_SETTINGS.backgroundRelay,
       dailyCapMb: p.dailyCapMb || DEFAULT_PEER_SETTINGS.dailyCapMb,
+      cellularCapMb: clampCellularCapMb(p.cellularCapMb ?? DEFAULT_PEER_SETTINGS.cellularCapMb),
       webrtcEnabled: p.webrtcEnabled !== undefined ? p.webrtcEnabled : DEFAULT_PEER_SETTINGS.webrtcEnabled,
     };
   } catch {
@@ -172,13 +185,25 @@ export function getDailyUsage() {
       if (data.date === today) return data;
     }
   } catch {}
-  return { date: today, bytesServedToday: 0 };
+  return { date: today, bytesServedToday: 0, bytesCellularToday: 0 };
 }
 
-export function recordBytesServed(bytes) {
+export function recordBytesServed(bytes, onCellular = !isWifiOrUnlimited()) {
   const usage = getDailyUsage();
   usage.bytesServedToday += bytes;
+  if (onCellular) usage.bytesCellularToday = (usage.bytesCellularToday || 0) + bytes;
   localStorage.setItem(DAILY_USAGE_KEY, JSON.stringify(usage));
+}
+
+/**
+ * PM-52: pode servir dados agora? No Wi-Fi vale o teto diário; no 4G, só se a pessoa
+ * desligou o "só Wi-Fi", e até o teto do 4G (padrão 5 MB/dia).
+ */
+export function canServeNow(settings = getPeerSettings(), onWifi = isWifiOrUnlimited(), usage = getDailyUsage()) {
+  if (usage.bytesServedToday >= (settings.dailyCapMb || 50) * 1024 * 1024) return false;
+  if (onWifi) return true;
+  if (settings.wifiOnly) return false;
+  return (usage.bytesCellularToday || 0) < clampCellularCapMb(settings.cellularCapMb) * 1024 * 1024;
 }
 
 export function isDailyCapReached() {
@@ -279,8 +304,7 @@ async function handleProfileCardHello(card) {
 
 async function handleWantMessage(msg, replyFn, settings, source) {
   if (!isValidTxId(msg.txId) || msg.fromPeer === myPeerId) return;
-  if (isDailyCapReached()) return;
-  if (settings.wifiOnly && !isWifiOrUnlimited()) return;
+  if (!canServeNow(settings)) return;
 
   const cached = await cacheNode.getCachedTx(msg.txId);
   if (!cached || typeof replyFn !== "function") return;
