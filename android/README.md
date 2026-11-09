@@ -4,13 +4,13 @@ Wrapper Android nativo em Java puro (sem AndroidX / sem dependências pesadas) q
 
 ## 1. Características Técnicas & Integridade
 
-- **Arquivo do APK:** `vox.apk` (disponível em `vox/android/vox.apk`, `vox/dist/vox.apk` e `client/downloads/vox.apk`)
-- **Tamanho do APK:** **74.620 bytes (~73 KiB)** em 09/11/2026 (abaixo do teto de 100 KiB do Turbo Arweave Free Tier);
+- **Arquivo do APK:** `vox.apk`, compilado pelo CI ([`release-binarios.yml`](../.github/workflows/release-binarios.yml)) e baixado da [Release mais recente](https://github.com/yurikayel/vox/releases/latest/download/vox.apk). Não fica mais no git (PM-45)
+- **Tamanho do APK:** cerca de 74 KiB (abaixo do teto de 100 KiB do Turbo Arweave Free Tier);
 - **Identificador de Pacote (Application ID):** `org.vox.client`
 - **Nome da Aplicação:** `Vox`
-- **Assinatura Tríplice:** Scheme v1 (JAR signing), Scheme v2 e Scheme v3 com chave RSA-2048 (`CN=Vox, O=Democracia, C=BR`);
+- **Assinatura Tríplice:** Scheme v1 (JAR signing), Scheme v2 e Scheme v3 com chave RSA-2048 de debug criada a cada build (`CN=Vox Populi, O=Democracia, C=BR`): atualizar exige desinstalar antes;
 - **Ícones do Sistema:** Suporte completo a ícones raster em múltiplos densidades (`mipmap-mdpi` até `mipmap-xxxhdpi`), eliminando falhas de renderização em instaladores como WSA-PacMan;
-- **Hash de Integridade (SHA-256):** `CAB0E7E440B450CB4D74EA16F6B01A413061C480D5BA9DB5AA09870C00668A30` (o anterior, `EAC445D1…`, era de outro build). Fonte de verdade dos hashes: [DEPENDENCIAS.md §6](../docs/DEPENDENCIAS.md#6-binários-no-repositório)
+- **Hash de Integridade (SHA-256):** no arquivo `SHA256SUMS` de cada Release, com atestação de origem (`gh attestation verify vox.apk --repo yurikayel/vox`). Ver [DEPENDENCIAS.md §6](../docs/DEPENDENCIAS.md#6-binários-no-repositório)
 - **Foreground Service:** [`VoxClientService`](src/org/vox/client/VoxClientService.java) mantém conectividade de dados e cache local no Wi-Fi;
 - **NetworkGuard:** consulta conexão Wi-Fi e estado de bateria para proteção do usuário;
 - **Compatibilidade:** Android 7.0 (API 24) até Android 15 (API 35), universal.

@@ -36,7 +36,7 @@
 | Dependência | Onde | Versão | Integridade | Situação |
 |---|---|---|---|---|
 | Biblioteca padrão do Python | `relay/` | 3.11 e 3.12 no CI | n/a | `relay/requirements.txt` não lista nenhum pacote pip. |
-| `pyinstaller` | `windows-node-zero-smoke.yml` (só CI) | 6.22.3, fixa | sem hash (`--require-hashes` não usado) | Gera o `VoxPopuli.exe` do teste de fumaça; não é o binário de `client/downloads/` (ver §6). |
+| `pyinstaller` | `windows-node-zero-smoke.yml`, `release-binarios.yml` (só CI) | 6.22.3, fixa | sem hash (`--require-hashes` não usado) | Gera o `VoxPopuli.exe` do teste de fumaça; não é o binário de `client/downloads/` (ver §6). |
 | `ruff` | `ci.yml`, job do relay (só CI) | **móvel, sem versão** | sem hash | Só lint, com `continue-on-error`. Fixar a versão. |
 
 ## 4. Imagens de contêiner
@@ -58,26 +58,29 @@
 | `actions/configure-pages@v5` | `deploy-pages.yml` | móvel (major) | sem SHA | Oficial do GitHub. |
 | `actions/upload-pages-artifact@v3` | `deploy-pages.yml` | móvel (major) | sem SHA | Oficial do GitHub. |
 | `actions/deploy-pages@v4` | `deploy-pages.yml` | móvel (major) | sem SHA | Oficial do GitHub. |
+| `actions/attest-build-provenance@v2` | `release-binarios.yml` | móvel (major) | sem SHA | Oficial do GitHub. Gera a atestação de origem dos binários (PM-45). |
 | `cloudflare/wrangler-action@v3` | `deploy-shell-b.yml` | móvel (major) | sem SHA | **De terceiro** e com acesso ao token da Cloudflare: fixar por SHA de commit antes do G3. |
 
 ## 6. Binários no repositório
 
-Arquivos compilados que estão no git. Os de `client/downloads/` são servidos pelos shells A e B a quem baixa pela página de download. O teste confere que **cada binário** tem linha aqui **com o SHA-256 atual**: recompilar sem atualizar esta tabela quebra o CI, e a troca de binário aparece na revisão do PR.
+`Vox.exe`, `VoxPopuli.exe`, `vox.apk` e `vox-populi.apk` **não ficam mais no git** (PM-45). O workflow [`release-binarios.yml`](../.github/workflows/release-binarios.yml) compila os quatro num runner do GitHub a cada tag `v*`, publica na [GitHub Release](https://github.com/yurikayel/vox/releases/latest) com `SHA256SUMS` e gera uma atestação de origem. A página de download aponta para `releases/latest/download/…`. Para conferir um arquivo baixado:
+
+```
+gh attestation verify Vox.exe --repo yurikayel/vox
+```
+
+Os APKs do CI são assinados com uma chave de debug criada na hora, como já fazia o `android/build.ps1` local: atualizar exige desinstalar antes. Uma chave fixa guardada em secret do repositório fica para o PM-39.
+
+Ficam no git só as DLLs do SDK do WebView2, que o build do `Vox.exe` precisa. O teste confere que **cada binário** que restar tem linha aqui **com o SHA-256 atual**, e que nenhum `.exe` ou `.apk` volta para `client/` ou `android/`.
 
 | Arquivo | Bytes | SHA-256 | O que é | Situação |
 |---|---|---|---|---|
-| `client/downloads/VoxPopuli.exe` | 12 309 097 | `ec2755e86b97e6e5d5109dcf8e583ede2ddb3504b3811ec9f5dfad6ce3a9f157` | Nó Vox Populi (PyInstaller), oferecido em `download/` | Compilado em máquina pessoal e commitado (04/11); **sem assinatura de código** e sem build no CI |
-| `client/downloads/Vox.exe` | 990 208 | `8f353d7d5313cc488393d97713bc49a393c7914ca1d30862be75fc5dc64d0a07` | Cliente Windows (WebView2), oferecido em `download/` | Idem |
-| `client/downloads/vox.apk` | 74 620 | `cab0e7e440b450cb4d74ea16f6b01a413061c480d5ba9db5aa09870c00668a30` | Cliente Android, oferecido em `download/` (mesmo arquivo de `android/vox.apk`) | Assinado com chave RSA própria; compilado em máquina pessoal |
-| `client/downloads/vox-populi.apk` | 74 617 | `defb67a89b9c068ca65a68df32dd417abb8deff4b39037977a601db983cd5884` | Nó Android (mesmo arquivo de `android/vox-populi.apk`) | Idem |
-| `android/vox.apk` | 74 620 | `cab0e7e440b450cb4d74ea16f6b01a413061c480d5ba9db5aa09870c00668a30` | Saída do `android/build.ps1` | Cópia do de `client/downloads/` |
-| `android/vox-populi.apk` | 74 617 | `defb67a89b9c068ca65a68df32dd417abb8deff4b39037977a601db983cd5884` | Saída do `android/build.ps1` | Cópia do de `client/downloads/` |
 | `packaging/desktop-windows-native/lib/Microsoft.Web.WebView2.Core.dll` | 649 800 | `8219a3135436c147f8eb02fb831e99596103eebc18b6d7b794ca93f4c67018a2` | SDK WebView2 da Microsoft (terceiro), vendorizado para o build C# | Versão não anotada; conferir com o pacote NuGet `Microsoft.Web.WebView2` oficial |
 | `packaging/desktop-windows-native/lib/Microsoft.Web.WebView2.WinForms.dll` | 39 016 | `c48f8d729dc531288d2c53a6241effe7922ed1b947850b2442008a945c098c48` | SDK WebView2 da Microsoft (terceiro) | Idem |
 | `packaging/desktop-windows-native/lib/WebView2Loader.dll` | 161 864 | `eb5335edeaa6f2122c044e82aab2351dc8c9b4e0fe5e578c71922fb61be285e7` | SDK WebView2 da Microsoft (terceiro) | Idem; mesmo arquivo de `runtimes/win-x64/native/` |
 | `packaging/desktop-windows-native/lib/runtimes/win-x64/native/WebView2Loader.dll` | 161 864 | `eb5335edeaa6f2122c044e82aab2351dc8c9b4e0fe5e578c71922fb61be285e7` | SDK WebView2 da Microsoft (terceiro) | Idem |
 
-🚧 **Risco aberto (T2):** ninguém além de quem compilou consegue reproduzir esses binários. Proposta no [brainstorm PM-45/PM-46](./brainstorms/brainstorm-backlog-proximas-melhorias-2026-11.md#b-segurança-e-integridade): compilar no CI, publicar como Release com hash e atestação de origem e tirar os binários do git.
+✅ **T2, binários (PM-45):** a atestação prova que cada arquivo saiu deste workflow, a partir de um commit público. O build ainda não é reproduzível bit a bit (o PyInstaller grava data, e a chave dos APKs muda a cada build). Falta assinar os `.exe` do Windows (PM-46).
 
 ## Rotina mensal
 
