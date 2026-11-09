@@ -171,3 +171,24 @@ test("peers - fetchFromDesktopRelay faz failover para o buddy relay quando o pri
     localStorage.clear();
   }
 });
+
+test("peers - PM-52: 4G só com 'apenas Wi-Fi' desligado e até o teto próprio (padrão 5 MB/dia)", () => {
+  const MB = 1024 * 1024;
+  const base = { dailyCapMb: 50, wifiOnly: true, cellularCapMb: 5 };
+  const usage = (total, cel) => ({ date: "x", bytesServedToday: total * MB, bytesCellularToday: cel * MB });
+  assert.equal(peers.canServeNow(base, true, usage(10, 0)), true, "Wi-Fi abaixo do teto serve");
+  assert.equal(peers.canServeNow(base, true, usage(50, 0)), false, "Wi-Fi no teto diário para");
+  assert.equal(peers.canServeNow(base, false, usage(0, 0)), false, "4G com 'apenas Wi-Fi' não serve");
+  const optIn = { ...base, wifiOnly: false };
+  assert.equal(peers.canServeNow(optIn, false, usage(3, 3)), true, "4G opt-in abaixo de 5 MB serve");
+  assert.equal(peers.canServeNow(optIn, false, usage(5, 5)), false, "4G opt-in para em 5 MB");
+  assert.equal(peers.canServeNow(optIn, true, usage(20, 5)), true, "o teto do 4G não trava o Wi-Fi");
+});
+
+test("peers - PM-52: teto do 4G é limitado a 1–50 MB e o padrão é 5", () => {
+  assert.equal(peers.clampCellularCapMb(undefined), 5);
+  assert.equal(peers.clampCellularCapMb(0), 5);
+  assert.equal(peers.clampCellularCapMb(500), 50);
+  assert.equal(peers.clampCellularCapMb(2.4), 2);
+  assert.equal(peers.getPeerSettings().cellularCapMb >= 1, true);
+});
