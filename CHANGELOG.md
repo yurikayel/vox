@@ -6,6 +6,10 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Comunidades (SW v7.40, PR #32)
+- **PM-09 foto e título só do dono:** um `community_update` só vale quando quem assina é o dono da comunidade ou um moderador listado, e só muda foto, título, descrição e categoria. Antes, qualquer chave trocava a foto e o título de qualquer comunidade, e o update inteiro (com `id` e `author`) era espalhado sobre o registro. O gossip não grava nem repassa update de quem não pode. Corrigidos junto: a atualização **mais antiga** vencia (a lista vem do mais novo para o mais velho), e um segundo post `community` com o mesmo `communityId` e `ts` antigo tomava a comunidade. Agora só o post `c_<communityId>` define o dono (`community-updates.js`).
+- O botão "Alterar foto" segue a mesma regra, com a chave local (`vx_…`) que assina o update. Em comunidade publicada só no Arweave, cujo dono é um endereço de carteira, o botão some: não há como provar que a chave local é dessa carteira.
+
 ### Documentação (PR #31)
 - **Revisão de estado de 09/11 e backlog de próximas melhorias:** [brainstorm PM-01…PM-46](./docs/brainstorms/brainstorm-backlog-proximas-melhorias-2026-11.md) com o estado medido (peso da instalação, módulos órfãos, telas sem teste, chave em `localStorage`, `community_update` sem conferência de autor) e a ordem sugerida das próximas 10.
 - **LAN-20, binários:** [DEPENDENCIAS.md §6](./docs/DEPENDENCIAS.md#6-binários-no-repositório) lista os `.exe`, `.apk` e DLLs do repositório com SHA-256, e o teste de inventário quebra se um binário mudar sem atualizar a tabela. O `android/README.md` publicava um hash e um tamanho de outro build (corrigidos).

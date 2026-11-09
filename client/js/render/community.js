@@ -1,5 +1,6 @@
 /** @file Home, communities, listings, governance proposals UI. */
 import * as mock from "../mock.js";
+import * as communityUpdates from "../community-updates.js";
 import * as listing from "../listing.js";
 import * as gov from "../governance.js";
 import * as hashtags from "../hashtags.js";
@@ -585,16 +586,16 @@ function renderCommunityFichaOrkut(meta, ownerLabels, memberCount) {
     </div>`;
 }
 
-function canChangeCommunityPhoto(owner, walletAddress, isMod) {
-  if (isMod) return true;
-  return Boolean(owner && walletAddress && owner === walletAddress);
+/** PM-09: mesma regra de quem aplica o update; a chave que assina é a da conta local (vx_…). */
+function canChangeCommunityPhoto(meta, opts) {
+  return communityUpdates.canUpdateCommunity(meta, opts.routeId || opts.walletAddress);
 }
 
 function renderCommunityHeader(meta, communityId, opts = {}) {
   const commTitle = meta.title || communityId;
   const memberCount = resolveCommunityMemberCount(meta, communityId);
   const metaChips = renderCommunityMetaChips(meta, communityId, memberCount);
-  const canChangePhoto = canChangeCommunityPhoto(meta.owner, opts.walletAddress, opts.isMod);
+  const canChangePhoto = canChangeCommunityPhoto(meta, opts);
   const tagline = meta.headerTagline || (communityId === mock.MOCK_DEMO_COMMUNITY.id ? mock.MOCK_DEMO_COMMUNITY.headerTagline : "");
   const kicker = tagline || (meta.category ? `Comunidade · ${meta.category}` : "Comunidade Vox");
   const ownerLabels = meta.owner ? resolvePostAuthorLabels(meta.owner) : null;
