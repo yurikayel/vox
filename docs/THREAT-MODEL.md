@@ -25,15 +25,15 @@
 | **Troll / assediador** | uma pessoa, várias contas | assédio, doxxing, conteúdo ilegal para derrubar a comunidade |
 | **Golpista** | engenharia social | phishing de chave/cofre, Pix para chave falsa |
 | **Operador malicioso de relay, gateway ou TURN** | vê metadados e IPs que passam por ele | perfilamento, censura seletiva, mentir sobre conteúdo |
-| **Atacante de cadeia de suprimentos** | comprometer CDN (esm.sh), dependência ou conta de deploy | injetar JS que rouba chaves de todos |
+| **Atacante de cadeia de suprimentos** | comprometer CDN, dependência ou conta de deploy | injetar JS que rouba chaves de todos |
 | **Estado / ator com ordem judicial** | ordem a provedores, pressão sobre mantenedores | identificar autores, remover conteúdo |
 
 ## 3. Ameaças × mitigações (o que existe hoje)
 
 | # | Ameaça | Mitigação existente | Lacuna / item |
 |---|---|---|---|
-| T1 | XSS rouba a chave do `localStorage` | `escapeHtml` nos templates; **CSP sem script inline** e sem `unsafe-eval` (LAN-16); iframes de cartucho sem `allow-same-origin` | CSP ainda permite `https://esm.sh` e SDKs Google/Meta; chave não fica em armazenamento não-extraível (WebCrypto `extractable:false`) → **revisão LAN-18** |
-| T2 | CDN/dependência comprometida | sem build, poucas dependências; inventário em [DEPENDENCIAS.md](./DEPENDENCIAS.md) com teste que quebra o CI e rotina mensal que confere hash de CDN (LAN-20) | `esm.sh/arweave` ainda carregado em tempo de execução **sem SRI**, e a entrada do esm.sh puxa dependências com `^`: falta vendorizar o bundle (hash já anotado). SDKs do Google e da Meta não têm versão fixa (só carregam com login configurado e no toque) |
+| T1 | XSS rouba a chave do `localStorage` | `escapeHtml` nos templates; **CSP sem script inline** e sem `unsafe-eval` (LAN-16); iframes de cartucho sem `allow-same-origin` | CSP ainda permite os SDKs Google/Meta; chave não fica em armazenamento não-extraível (WebCrypto `extractable:false`) → **revisão LAN-18** |
+| T2 | CDN/dependência comprometida | sem build, poucas dependências; inventário em [DEPENDENCIAS.md](./DEPENDENCIAS.md) com teste que quebra o CI e rotina mensal que confere hash de CDN (LAN-20) | O `arweave` é vendorizado em `client/vendor/` com hash conferido em teste (PM-11); nenhum código de CDN roda no caminho de upload. SDKs do Google e da Meta não têm versão fixa (só carregam com login configurado e no toque) |
 | T3 | Conta de deploy (GitHub/Cloudflare) comprometida | — | **bus factor 1** e sem 2FA documentado → LAN-30 |
 | T4 | Leitura de DM por relay | DM cifrada ponta a ponta (ECDH P-256 + AES-GCM); relay cego com TTL | sem forward secrecy; metadados (quem fala com quem, quando) visíveis ao relay → registrar como risco aceito ou planejar |
 | T5 | IP exposto a pares e relays | sinalização Nostr leva **só peerId aleatório em claro**; SDP/ICE e endereço vão cifrados (REV-09) | opção **"Esconder meu IP"** (só TURN, LAN-19) já existe, mas sem TURN configurado não conecta → REV-10; padrão ligado para menores → REV-23 |
