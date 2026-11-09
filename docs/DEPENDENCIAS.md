@@ -36,7 +36,7 @@
 | Dependência | Onde | Versão | Integridade | Situação |
 |---|---|---|---|---|
 | Biblioteca padrão do Python | `relay/` | 3.11 e 3.12 no CI | n/a | `relay/requirements.txt` não lista nenhum pacote pip. |
-| `pyinstaller` | `windows-node-zero-smoke.yml` (só CI) | 6.22.3, fixa | sem hash (`--require-hashes` não usado) | Gera o `VoxPopuli.exe` do teste de fumaça; não é o binário de `client/downloads/` (ver §6). |
+| `pyinstaller` | `windows-node-zero-smoke.yml`, `release-binarios.yml` (só CI) | 6.22.3, fixa | sem hash (`--require-hashes` não usado) | Gera o `VoxPopuli.exe` do teste de fumaça; não é o binário de `client/downloads/` (ver §6). |
 | `ruff` | `ci.yml`, job do relay (só CI) | **móvel, sem versão** | sem hash | Só lint, com `continue-on-error`. Fixar a versão. |
 
 ## 4. Imagens de contêiner
@@ -58,6 +58,7 @@
 | `actions/configure-pages@v5` | `deploy-pages.yml` | móvel (major) | sem SHA | Oficial do GitHub. |
 | `actions/upload-pages-artifact@v3` | `deploy-pages.yml` | móvel (major) | sem SHA | Oficial do GitHub. |
 | `actions/deploy-pages@v4` | `deploy-pages.yml` | móvel (major) | sem SHA | Oficial do GitHub. |
+| `actions/attest-build-provenance@v2` | `release-binarios.yml` | móvel (major) | sem SHA | Oficial do GitHub. Gera a atestação de origem dos binários (PM-45). |
 | `cloudflare/wrangler-action@v3` | `deploy-shell-b.yml` | móvel (major) | sem SHA | **De terceiro** e com acesso ao token da Cloudflare: fixar por SHA de commit antes do G3. |
 
 ## 6. Binários no repositório
