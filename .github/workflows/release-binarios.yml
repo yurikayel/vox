@@ -56,9 +56,9 @@ jobs:
 
       - name: vox.apk e vox-populi.apk
         shell: pwsh
-        env:
-          VOX_JAVA_HOME: ${{ env.JAVA_HOME_21_X64 }}
-        run: .\android\build.ps1
+        run: |
+          $env:VOX_JAVA_HOME = if ($env:JAVA_HOME_21_X64) { $env:JAVA_HOME_21_X64 } else { $env:JAVA_HOME_17_X64 }
+          .\android\build.ps1
 
       - name: Juntar arquivos e SHA256SUMS
         shell: pwsh
