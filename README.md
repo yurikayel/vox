@@ -34,6 +34,8 @@ O ecossistema é estritamente dividido em papéis complementares ([ADR-011](docs
 
 ### Matriz de Distribuição e Suporte aos 4 Sistemas Operacionais
 
+> **Proveniência dos binários:** `.exe` e `.apk` não ficam mais no git. São compilados no GitHub Actions ([`release-binarios.yml`](./.github/workflows/release-binarios.yml)) ao publicar uma tag `v*`, com `SHA256SUMS` e atestação de origem (`actions/attest-build-provenance`) anexados à Release. Confira o hash antes de instalar. Tamanhos variam por release e estão na página da Release.
+
 | Sistema Operacional | Papel: `vox` (Cliente Cívico) | Papel: `vox populi` (Nó de Apoio Comunitário) | Como Funciona Sob o Capô |
 |:---|:---|:---|:---|
 | **1. Microsoft Windows**<br>(10 / 11) | [**`Vox.exe`**](https://github.com/yurikayel/vox/releases/latest/download/Vox.exe) *(967 KiB)* | [**`VoxPopuli.exe`**](https://github.com/yurikayel/vox/releases/latest/download/VoxPopuli.exe) *(11.7 MB)*<br>`packaging/zero-central-memory-windows/` *(170 KB)* | **Cliente:** Executável nativo com runtime WebView2 já presente no Windows (sem empacotar o Chromium/Electron; consome ~40 MB RAM em medições locais).<br>**Nó:** Serviço sem janela com ícone na bandeja (*System Tray*), operando relay local HTTP (`:3920` / `:3921`), cache criptográfico e memória central persistente (Modo 3). |
@@ -87,16 +89,6 @@ O Service Worker pode manter uma versão anterior do cliente em cache. Depois de
 
 ---
 
-## 📦 Arquitetura dos Produtos: Vox (Cliente) e Vox Populi (Nó Dedicado)
-
-Para garantir clareza entre o uso cotidiano pelas pessoas e a sustentação técnica por operadores comunitários, o ecossistema organiza-se em dois papéis complementares ([ADR-011](docs/adr/011-taxonomia-tripartite-produtos-vox.md)):
-
-1. **Vox (Cliente):** Aplicativo voltado à pessoa usuária e à deliberação cívica. Disponível em Desktop (`Vox.exe`) e Android (`vox.apk`, `org.vox.client`), com PWA em tela cheia, navegação rápida, composição cívica e detecção de nó local para ativação automática de **boost**.
-2. **Vox Populi (Nó Dedicado):** Serviço de infraestrutura comunitária de baixo consumo. Disponível em Windows (`VoxPopuli.exe`), Android (`vox-populi.apk`, `org.vox.populi`) e Linux (`vox-populi/`), operando relay HTTP em loopback (`127.0.0.1:3920`), cache SHA-256 e controle de recursos (com sinalização WebRTC opcional em `ws://127.0.0.1:3921`).
-3. **Sinergia do Boost:** Abrir ambos potencializa a experiência: o cliente se conecta ao nó dedicado local em `127.0.0.1:3920`, acelerando o carregamento via cache local verificado e ativando o modo de alta prontidão.
-
----
-
 ## ⚙️ Arquitetura do Sistema
 
 ```
@@ -125,6 +117,12 @@ Para garantir clareza entre o uso cotidiano pelas pessoas e a sustentação téc
 
 Este diagrama resume caminhos existentes do cliente, não garante descoberta global ou conexão entre quaisquer dois usuários. O Nó Zero atual escuta apenas em loopback; acesso LAN, descoberta automática e WebTorrent seeding não estão disponíveis.
 
+**O que o diagrama não desenha** (estado real em [docs/FEATURES.md](./docs/FEATURES.md)):
+
+* **Permanente ou só na malha:** antes do 1º post com carteira, o cliente pergunta se grava no Arweave ou só na malha, sem permanência (`permanence-notice.js`, LAN-11). Só o que vai ao Arweave segue o caminho "Autoria" acima.
+* **Malha WebRTC com gossip** (`WANT`/`HAVE`/`BLOB`, perfis e manifestos): os pares se encontram por sinalização em **dois caminhos paralelos**, o WebSocket do nó Render e o **Nostr efêmero cifrado** (kind `25050`, reconexão automática; REV-09, PM-17). O Nostr ainda **não foi medido em campo** entre dois navegadores. Não há TURN configurado.
+* **Leitura com corroboração:** 4 gateways com tempo limite de 8 s; 3 deles indexam o Vox e servem de testemunha GraphQL ([ADR-009](./docs/adr/009-multi-gateway-graphql-corroboration.md)).
+
 ### Esquema de tags e dados públicos
 
 Os objetos públicos usam transações com tags semânticas. O cliente também mantém estado local em IndexedDB e outros armazenamentos do navegador; portanto, nem todo estado é uma transação pública. Não há um banco SQL global que opere o Vox.
@@ -139,6 +137,11 @@ Os objetos públicos usam transações com tags semânticas. O cliente também m
 | **Chave de DM** | `profile-key` | `Dm-Pub` (JWK pública P-256) | Habilita recebimento de mensagens diretas |
 | **Handle Cívico** | `handle` | `Handle` (`[a-z0-9-]{3,24}`), `Owner-Addr` | Mnemônico `@slug` sem cartório central |
 | **Proposta comunitária** | `governance-proposal` | `Community-Id`, `Proposal-Id`, `Diff` | Proposta de alteração das regras daquela comunidade |
+| **Oferta da Feira** | `listing` | `Community-Id` | Classificado local assinado, sem intermediar pagamento |
+| **Alteração da comunidade** | `community_update` (item da malha) | foto, título e descrição | Só vale se o autor é o dono ou moderador (PM-09); `id`, `author` e `owner` nunca são sobrescritos |
+| **Posicionamento cívico** | `civic-vote` (item local e da malha) | post cívico | 1 por pessoa; apuração parcial no cliente |
+
+Denúncias (`report.js`, LAN-12) **não** são transações públicas: ficam registradas no aparelho e seguem por DM cifrada ao moderador.
 
 ---
 
@@ -168,7 +171,7 @@ O estado varia entre cliente, navegador e versão. A lista abaixo não é uma ce
 
 * **Fórum Cívico Oficial e Comunidades (Espírito Orkut):** A comunidade canônica `"vox"` atua como ágora central e fórum oficial de deliberação, issues abertas e governança transparente, inscrevendo novos participantes por padrão no onboarding mas garantindo o direito soberano de sair (`leave`) ou retornar (`join`) a qualquer momento.
 * **Moderação Comunitária & Bumping de Fórum:** Suporte fail-closed estrito para moderadores fixarem tópicos no topo (`📌 Fixado`), trancarem discussões encerradas (`🔒 Encerrado`), reordenação dinâmica por atividade recente (`max(topic.ts, lastReplyTs)`) e busca instantânea de tópicos.
-* **Recuperação Zero-Knowledge de Identidade & Sincronização Cross-Device ([ADR-014](./docs/adr/014-zero-knowledge-vault-recuperacao-soberana.md)):** Restauração canônica determinística do perfil (`routeId`, chave privada P-256 e chaves de DM) em qualquer navegador ou celular via cofre cifrado no cliente (PBKDF2 50k iters + AES-GCM-256) ancorado em Google (`sub`), Meta (`profile.id`) ou **Senha Soberana** (sem Big Tech). Sincronização instantânea entre computadores e celulares via rota segura `#/sync?p=...` e QR Code nativo sem digitação manual.
+* **Recuperação Zero-Knowledge de Identidade & Sincronização Cross-Device ([ADR-014](./docs/adr/014-zero-knowledge-vault-recuperacao-soberana.md)):** Restauração canônica determinística do perfil (`routeId`, chave privada P-256 e chaves de DM) em qualquer navegador ou celular via cofre cifrado no cliente (PBKDF2 50k iters + AES-GCM-256) ancorado na **Senha Soberana** (sem Big Tech) ou, onde o deploy tem app OAuth registrado (*depende de config*), em Google (`sub`) ou Meta (`profile.id`). Sincronização instantânea entre computadores e celulares via rota segura `#/sync?p=...` e QR Code nativo sem digitação manual.
 * **Áudio e Vídeo Nativos Lo-Fi (Walkie-Talkie & Vídeo Curto):** Gravação direta pelo navegador em 1 toque (toggle iniciar/parar) ou anexo de arquivo para posts e comentários, com compressão WebM/Opus e MP4/WebM $\le 320\text{p}$ (`media-lofi.js`), deduplicação por hash SHA-256 (`media-blob.js`) e replicação P2P/memória central.
 * **Diretório Unificado de Pessoas (`#/people`) & Onboarding Direto:** Lista das contas que escolheram um nome, com filtro em tempo real (pares só com a chave `vx_…` saem da lista, mas a busca pela chave ainda os acha), entrada direta de nome/apelido no onboarding (sem obrigatoriedade de OAuth) e sincronização automática via `PROFILE_CARD` e `zero-central-memory`.
 * **Nó Local `zero-central-memory` Modo 3 (`VoxPopuli-ZeroMemory.exe` / `central_memory.py`):** Persistência local em disco com journal append-only (`< 0,2 ms`), snapshot atômico em lote a cada 2s, delta sync incremental (`clientRevision`/`since`), túnel HTTPS Cloudflare integrado e descoberta zero-config via *Signaling Beacon* (`vx_zero_memory_beacon`).
@@ -176,7 +179,11 @@ O estado varia entre cliente, navegador e versão. A lista abaixo não é uma ce
 * **Chrome Compacto de Foto & Interações Sociais:** Header enxuto sobre mídia, **Notas de Perfil 24h** (`profile-note.js`), **Republicar** com citação honesta sem impulsionamento (`repost-draft.js` / `render/repost-cite.js`), aba **Salvos** (bookmarks locais) e **Marcação Manual em Fotos** por coordenada (`x%/y%` em `render/photo-tag-pins.js`, estritamente sem reconhecimento facial).
 * **Cartuchos Cívicos Webxdc & Cintura Fina ([ADR-012](./docs/adr/012-soberania-digital-cintura-fina-cartuchos-webxdc.md)) — laboratório:** runtime de mini-apps em `iframe` com sandbox estrito (CSP rede-zero) e CRDT determinístico (`webxdc-crdt.js`) sobre o envelope `vox-identity.js`. **Implementado e testado, mas ainda não carregado pela interface** (ver [docs/FEATURES.md](./docs/FEATURES.md)).
 * **Classificados / Feira Comunitária:** Ofertas locais assinadas com gossip de manifesto de cache (`CACHE_MANIFEST`), prioridade `WANT` e suporte a retratação na malha.
-* **Mensagens Diretas E2E (WebRTC + Inbox TTL):** Criptografia ponta-a-ponta no navegador (`ECDH P-256` + `AES-GCM-256`). Mensagens privadas trafegam fora do permaweb; quando o par está offline, podem passar pelo relay transitório, que usa TTL padrão de 72 horas.
+* **Mensagens Diretas E2E (WebRTC + Inbox TTL):** Criptografia ponta-a-ponta no navegador (`ECDH P-256` + `AES-GCM-256`). Mensagens privadas trafegam fora do permaweb; quando o par está offline, podem passar pelo relay transitório, que usa TTL padrão de 72 horas. **Hoje não existe relay completo público**: o inbox padrão é `127.0.0.1:3920`, então a entrega offline entre pessoas remotas exige um relay de steward configurado ([FEATURES §7](./docs/FEATURES.md)).
+* **Pix Zaps (BR Code offline):** gera o Pix a partir da chave, sem custódia e sem Lightning (`brcode.js`, `pix-key.js`). O app avisa que o **nome civil do recebedor aparece para quem paga** (DICT, com qualquer chave; REV-13).
+* **Cartório Cívico (`perma-notary.js`):** registra no Arweave o hash de atas, sem publicar o texto.
+* **Hashtags e Pol.is-lite (`#/tag/:slug`):** feed por tag e agrupamento de opiniões (`hashtags.js`, `polis.js`). **Voxels e passaporte cívico** são só locais (`voxels.js`, [ADR-013](./docs/adr/013-sistema-voxels-e-conquistas-civicas.md)).
+* **Chave nova em quarentena (LAN-14):** comunidades podem recolher posts de chave vista há menos de 24 h, a menos que traga prova de trabalho de 14 bits (`new-key-guard.js`). Mudanças de foto, título e descrição só valem do dono ou moderador (PM-09, `community-updates.js`).
 * **Cofre Multi-Identidade & Exportação (`.voxid`):** Alternância rápida entre múltiplas contas locais (`vox-accounts-vault-v1`) e export/import de credenciais com suporte a envelope criptografado com senha mestra (`.voxid` via PBKDF2 + AES-GCM-256).
 * **Wipe Local de Emergência (T05):** Purga imediata de chaves locais, `localStorage`, caches e bases IndexedDB no aparelho (`wipeLocalAccount()` em `local-account.js`), com aviso transparente sobre dados já ancorados no permaweb ou replicados em outros pares.
 * **Quarentena pessoal de conteúdo:** Marcador local para ocultar publicações e evitar seu compartilhamento neste dispositivo; não remove conteúdo da rede nem impõe uma decisão a outras pessoas.
@@ -278,6 +285,9 @@ Na raiz ficam só os arquivos que o GitHub e as ferramentas esperam ali: `README
 | **[ARCHITECTURE.md](./ARCHITECTURE.md)** | Protocolo e dados: tags GraphQL, linhagem, mensagens. Camadas do cliente em [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md). |
 | **[GOVERNANCE.md](./GOVERNANCE.md)** | Moderação e deliberação dentro das comunidades Vox; não define a governança do repositório. |
 | **[docs/legal/COMPLIANCE-BR.md](./docs/legal/COMPLIANCE-BR.md)** | Adequação regulatória: Marco Civil da Internet (Art. 19), LGPD e minimização. |
+| **[docs/HARDENING.md](./docs/HARDENING.md)** | Limites de função e complexidade e perfil de endurecimento do código. |
+| **[docs/DEPENDENCIAS.md](./docs/DEPENDENCIAS.md)** | Inventário de dependências e cadeia de suprimentos (LAN-20). |
+| **[docs/THREAT-MODEL.md](./docs/THREAT-MODEL.md)** | Modelo de ameaças (LAN-15), ainda sem revisão externa. |
 | **[docs/IDENTITY.md](./docs/IDENTITY.md)** | Criptografia P-256 WebCrypto, gestão de chaves e carteiras Arweave. |
 | **[docs/strategy/tese-praca-civica-militancia-pro-democratica-2026-10.md](./docs/strategy/tese-praca-civica-militancia-pro-democratica-2026-10.md)** | Tese de militância pró-democrática (cruzamento estratégico T01–T20). |
 | **[docs/operations/steward-seed-15min.md](./docs/operations/steward-seed-15min.md)** | Guia rápido de 15 minutos para operadores e seeds voluntários de relay. |
