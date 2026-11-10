@@ -19,11 +19,6 @@ let inlineComposerMedia = { type: "", dataUrl: "", byteLength: 0 };
 let inlineComposerAspectRatio = "original";
 let inlineComposerPhotoTags = [];
 
-export function isInlineComposerActive() {
-  const root = document.getElementById("feed-inline-composer");
-  return Boolean(root && !root.classList.contains("is-collapsed"));
-}
-
 export function syncInlineComposerUi() {
   const root = document.getElementById("feed-inline-composer");
   if (!root) return;

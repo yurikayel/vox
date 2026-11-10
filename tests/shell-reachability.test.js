@@ -23,6 +23,8 @@ const sw = fs.readFileSync(path.join(root, "sw.js"), "utf8");
  * 2026-11-10 (PM-80): corte de 18,4 KB (o icon.svg embutia o mesmo PNG duas vezes, em href e xlink:href) pagou o
  * peer-sync.js; medido 2.070.279 bytes em 194 arquivos. O teto desce para 0,2% acima do medido (catraca).
  * 2026-11-10 (PM-87): blob ao lado do GOSSIP pago com a remoção de 4 funções sem uso; medido 2.074.618 bytes em 203 arquivos.
+ * 2026-11-10 (PM-88): blob na sincronização ao conectar (+2,4 KB) pago com a remoção de fetchIdentityLinkOnChain e
+ * suas 2 consultas, mais 4 exportações sem uso; medido 2.074.738 bytes em 203 arquivos (+120 B). Teto mantido.
  */
 const SHELL_BUDGET_BYTES = 2_075_000;
 
