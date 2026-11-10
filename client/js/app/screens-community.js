@@ -119,7 +119,7 @@ async function loadCommunityMetaAndTopics(communityId, user) {
 
   let modActions = [];
   try { modActions = await mod.fetchModActions(communityId); } catch {}
-  const filtered = mod.applyFilters(merged, modActions, meta.owner, meta.moderators);
+  const filtered = mod.applyFilters(merged, modActions, meta.owner, meta.moderators, user);
   const isUserMod = mod.isModerator(user, meta.owner, meta.moderators);
   const { visible, heldCount } = await applyNewKeyQuarantine(filtered, meta, communityId, user, isUserMod);
   const filteredTopics = orderCommunityTopics(visible, "active");
@@ -406,7 +406,7 @@ function bindCommunityMembershipToggle(communityId, user, isMember) {
   }
 }
 
-export async function dispatchCommunityModAction(communityId, action, targetId) {
+export async function dispatchCommunityModAction(communityId, action, targetId, { upload: toArweave = true } = {}) {
   const modActionPost = {
     id: `mod_${action}_${targetId}_${Date.now()}`,
     type: "mod-action",
@@ -422,7 +422,7 @@ export async function dispatchCommunityModAction(communityId, action, targetId) 
   } catch {
     await cacheNode.saveLocalPost(modActionPost).catch(() => {});
   }
-  if (wallet.hasWallet()) {
+  if (toArweave && wallet.hasWallet()) {
     try {
       const tags = upload.buildTags("mod-action", {
         "Community-Id": communityId,
@@ -918,8 +918,8 @@ async function resolveTopicModeration(communityId, user, replies, topic = null) 
   const meta = await resolveCommunityMetadata(communityId).catch(() => ({ owner: "" }));
   let modActions = [];
   try { modActions = await mod.fetchModActions(communityId); } catch {}
-  const filteredReplies = mod.applyFilters(replies, modActions, meta.owner, meta.moderators);
-  const filteredTopic = topic ? mod.applyFilters([topic], modActions, meta.owner, meta.moderators)[0] || topic : topic;
+  const filteredReplies = mod.applyFilters(replies, modActions, meta.owner, meta.moderators, user);
+  const filteredTopic = mod.filterTopicForViewer(topic, modActions, meta.owner, meta.moderators, user);
   return {
     filteredReplies,
     filteredTopic,
