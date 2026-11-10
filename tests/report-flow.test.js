@@ -31,7 +31,9 @@ test("report-flow - PM-69: resultado diz se a denúncia chegou à moderação", 
   const ok = flow.renderReportDoneHtml({ moderatorHash: "#/dm/vx_mod", sent: "queued-relay" });
   assert.match(ok, /enviada à moderação/);
   assert.match(ok, /Acrescentar detalhes na conversa/);
-  const fail = flow.renderReportDoneHtml({ moderatorHash: "#/dm/vx_mod", sent: "pending-retry" });
+  const waiting = flow.renderReportDoneHtml({ moderatorHash: "#/dm/vx_mod", sent: "pending-retry" });
+  assert.match(waiting, /caixa de saída/, "PM-78: sem rota agora, a denúncia espera na caixa de saída");
+  const fail = flow.renderReportDoneHtml({ moderatorHash: "#/dm/vx_mod", sent: "no-key" });
   assert.match(fail, /Não deu para entregar/);
   assert.match(fail, /Enviar aos moderadores/);
   assert.ok(!flow.renderReportDoneHtml({}).includes("report-sent"));

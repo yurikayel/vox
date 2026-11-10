@@ -56,6 +56,9 @@ function renderSentStatusHtml(sent) {
     return `<p class="desc report-sent-ok"><strong>A denúncia foi enviada à moderação</strong>, assinada e cifrada. Quando o aparelho de quem modera a receber, a publicação é <strong>arquivada para todos</strong> até a revisão (prazo de 48 h).</p>`;
   }
   if (!sent) return "";
+  if (sent === "pending-retry") {
+    return `<p class="desc report-sent-wait">A denúncia ficou na <strong>caixa de saída</strong> do seu aparelho: com o Vox aberto, ele tenta entregar sozinho por até 7 dias. Ela chega quando você e quem modera estiverem online ao mesmo tempo.</p>`;
+  }
   return `<p class="desc report-sent-fail">Não deu para entregar a denúncia à moderação agora. Use o botão abaixo para mandar pela conversa.</p>`;
 }
 

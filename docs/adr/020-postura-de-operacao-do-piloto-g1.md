@@ -35,7 +35,8 @@ Custo conhecido: no G1 sem relay completo, o arquivamento para todos acontece qu
 - a ação `review-hide` circula só na malha (não vai ao Arweave, ADR-019); "Mantém arquivado" publica o `hide` de sempre;
 - denúncia contra moderador **não arquiva** e fica como caso manual: o encaminhamento automático a outro moderador ou ao operador ainda não existe;
 - a contestação do autor é pela conversa com a moderação, e o relatório de transparência das pendências vencidas ainda não existe;
-- a fila de casos fica no aparelho de quem recebeu a denúncia.
+- a fila de casos fica no aparelho de quem recebeu a denúncia;
+- sem rota na hora do envio, a denúncia espera na caixa de saída de quem denunciou e é reenviada com o app aberto por até 7 dias (PM-78); o repasse por outros aparelhos é o PM-79 ([mochila de DMs](../specs/mochila-dm-v0.md)).
 
 ### 2.2 Depois do piloto (não decidido para o G1)
 
