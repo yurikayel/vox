@@ -1,6 +1,6 @@
 # Mídia v2: AVIF, Opus e H.264 com teto garantido por pedaço
 
-> **Status:** spec aceita, não implementada · **Owner:** mantenedor · **Revisado:** 2026-11-09 (revisão retrô: 540p q70, Opus 32 kbps, vídeo até 480p)
+> **Status:** spec aceita, não implementada · **Owner:** mantenedor · **Revisado:** 2026-11-10 (revisão retrô de 09/11: 540p q70, Opus 32 kbps, vídeo até 480p; carrossel em 10/11)
 > Substitui os limites de `LOFI_LIMITS` em `client/js/media-lofi.js` quando implementada. Relacionados: [replicação por grau](./replicacao-por-grau-v0.md), [ADR-019](../adr/019-esquecer-por-padrao-e-memoria-civica.md), [medição (PM-70)](../research/medicao-midia-v2-pm70-2026-11.md).
 
 ## Princípio
@@ -59,13 +59,13 @@ Um post pode ter **até 4 fotos, ou até 4 áudios, ou até 4 clipes de vídeo**
 
 | Tipo | Máximo | Tamanho do post (medido por item) |
 |---|---|---|
-| Fotos | 4 × imagem 540p q70 | ≈ 170 KiB na mediana, até ≈ 360 KiB |
+| Fotos | 4 × imagem 540p q70 | ≈ 170 KiB na mediana; teto de 4 × 99.999 bytes (≈ 390 KiB) |
 | Áudios | 4 × 60 s = **4 min**, cada áudio com **uma imagem opcional** que ilustra | ≈ 950 KiB de áudio + até 4 imagens (≈ 170 KiB) |
-| Vídeo | 4 × 10 s = **40 s** | ≈ 2 a 4 MiB (Q28) |
+| Vídeo | 4 × 10 s = **40 s** | ≈ 2 a 4 MiB (Q28); teto de 4 × a trava de cada clipe (≈ 4,8 MiB) |
 
 **Playback contínuo (áudio e vídeo):** o carrossel toca como uma peça só, sem pausa entre as partes.
 
-- **Áudio:** as partes são gravadas como **um fluxo Opus contínuo cortado em fronteiras de pacote**, e não como 4 arquivos independentes. Assim não há o atraso inicial do codificador (*pre-skip*) entre as partes, que geraria um clique ou um silêncio. A reprodução decodifica e agenda as partes uma atrás da outra na Web Audio API (`AudioBufferSourceNode.start(t)`), com precisão de amostra. A imagem de cada parte aparece enquanto ela toca.
+- **Áudio:** as partes viram **um fluxo Opus contínuo cortado em fronteiras de pacote**, e não 4 arquivos independentes. Como cada áudio pode ter sido gravado em outro momento (ou escolhido da galeria), na hora de publicar o app decodifica as partes e as **recodifica em sequência num único codificador**; cada parte do carrossel é o trecho desse fluxo entre duas fronteiras. Assim não há o atraso inicial do codificador (*pre-skip*) entre as partes, que geraria um clique ou um silêncio. A reprodução decodifica e agenda as partes uma atrás da outra na Web Audio API (`AudioBufferSourceNode.start(t)`), com precisão de amostra. A imagem de cada parte aparece enquanto ela toca.
 - **Vídeo:** os clipes são codificados com a **mesma configuração** (resolução, 24 fps, Q28), e **cada parte começa num quadro-chave**, então qualquer parte toca sozinha. Para tocar sem emenda, as partes são anexadas a um único `SourceBuffer` (Media Source Extensions; `ManagedMediaSource` no iPhone com iOS 17.1 ou mais). Isso exige empacotar em MP4 fragmentado, um muxer a escolher no PM-71. Sem MSE, o fallback são dois `<video>` alternados, com a próxima parte já carregada: fica quase sem emenda.
 - **Pausar, avançar e arrastar** valem para o conjunto: a barra de progresso mostra os 40 s (ou 4 min), com marcas nas divisões.
 

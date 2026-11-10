@@ -121,9 +121,14 @@ export async function measureImage(name, blob) {
   };
 }
 
+/** Nome de arquivo vem da pessoa: escapar antes de pôr no HTML. */
+function esc(text) {
+  return String(text).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+}
+
 function renderImageTable(rows) {
   const kb = (n) => (n / 1024).toFixed(1);
-  const body = rows.map((r) => `<tr><td>${r.name}</td><td>${r.source}→${r.size}</td><td class="${r.steps ? "over" : ""}">${kb(r.avifBytes)} (q${r.avifQ})</td>
+  const body = rows.map((r) => `<tr><td>${esc(r.name)}</td><td>${r.source}→${r.size}</td><td class="${r.steps ? "over" : ""}">${kb(r.avifBytes)} (q${r.avifQ})</td>
     <td>${r.avifMsBase}</td><td>${kb(r.webpBytes)}</td><td>${kb(r.thumbBytes)}</td></tr>`).join("");
   out.innerHTML = `<table><tr><th>Imagem</th><th>Original→caixa</th><th>AVIF KiB</th><th>ms q70</th><th>WebP 0,78 KiB</th><th>Miniatura KiB</th></tr>${body}</table>`;
 }
