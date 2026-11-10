@@ -6,6 +6,11 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Correção: foto do composer volta a ir ao Arweave (PM-89, SW v7.59)
+- **A mídia do post agora sobe:** com carteira conectada, o post com foto feito pelo composer ia ao Arweave sem a imagem e sem a tag `Media-Tx`. O código procurava a imagem num campo (`dataUrl`) que o blob separado do post não tem (ele usa `data`). O envio saiu do `inline-composer.js` para `topic-permaweb.js`, que lê o campo certo e tem teste.
+- **Tipo da mídia certo:** `buildTags` punha sempre `Content-Type: application/json` e, para a mídia, acrescentava `image/webp` como segunda tag. Agora um `Content-Type` passado substitui o padrão; a foto vai com uma só tag, a do arquivo.
+- **Peso do precache:** o módulo novo foi pago com a remoção de `buildUfDemoTopics` e das funções e textos que só ele usava (nada o chamava).
+
 ### Correção: foto chega também pela sincronização ao conectar (PM-88, SW v7.58)
 - **A sincronização ao conectar (PM-80) leva a foto ao lado do post**, como a fofoca ao vivo (PM-87). Antes, quem recebia um post com foto por ela via o marcador "Mídia P2P". O blob sai do que está em memória ou, depois de recarregar, da mídia guardada no registro (`_media`); quem recebe só aceita o blob cujo conteúdo bate com `mediaHash`.
 - **Teto de bytes:** até 128 KiB por foto e 2 MiB de fotos por conexão, gastos nos posts mais novos. Passou do teto, o post vai sem a foto (como antes). Aparelhos já sincronizados continuam trocando só o inventário.
