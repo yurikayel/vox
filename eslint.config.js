@@ -6,7 +6,7 @@ export default [
     ignores: ["client/js/mock.js", "docs/**", "node_modules/**"],
   },
   {
-    files: ["client/js/**/*.js", "client/sw.js", "scripts/**/*.mjs", "tools/**/*.mjs"],
+    files: ["client/js/**/*.js", "client/sw.js", "scripts/**/*.mjs", "tools/**/*.mjs", "tools/media-bench/**/*.js"],
     languageOptions: {
       ecmaVersion: 2024,
       sourceType: "module",
@@ -77,7 +77,7 @@ export default [
   },
   {
     // scripts/ e tools/: mesmos limites como aviso até a dívida medida em 09/11 ser paga.
-    files: ["scripts/**/*.mjs", "tools/**/*.mjs"],
+    files: ["scripts/**/*.mjs", "tools/**/*.mjs", "tools/media-bench/**/*.js"],
     rules: {
       complexity: ["warn", 15],
       "max-depth": ["warn", 4],
