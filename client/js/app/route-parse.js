@@ -119,8 +119,8 @@ function parseStaticRoute(parts, query) {
   if (root === "sync") {
     return {
       name: "sync",
-      passphrase: query.get("p") || parts[1] || "",
-      lookupKey: query.get("k") || "",
+      // PM-92: a senha não é mais lida do link; `p` só marca um link antigo, para avisar.
+      legacyPassphrase: Boolean(query.get("p") || parts[1]),
       bundle: query.get("b") || "",
     };
   }

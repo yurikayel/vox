@@ -299,12 +299,18 @@ test("oauth-vault - sovereign passphrase vault save, wrong passphrase reject, an
 test("oauth-vault - cross-device sync URL and QR code encoding", () => {
   const origLocation = globalThis.location;
   try {
-    globalThis.location = { hash: "#/sync?p=segredo-forte-soberano-42" };
+    globalThis.location = { hash: "#/sync?b=Y2lmcmFkbw" };
     const r = parseRoute();
     assert.equal(r.name, "sync");
-    assert.equal(r.passphrase, "segredo-forte-soberano-42");
+    assert.equal(r.bundle, "Y2lmcmFkbw");
+    assert.equal(r.passphrase, undefined, "PM-92: a senha não vem do link");
+    assert.equal(r.legacyPassphrase, false);
+    globalThis.location = { hash: "#/sync?p=segredo-forte-soberano-42" };
+    const legacy = parseRoute();
+    assert.equal(legacy.passphrase, undefined);
+    assert.equal(legacy.legacyPassphrase, true, "link antigo com senha só gera aviso");
 
-    const qr = encodeVoxUrl("https://vox.local/#/sync?p=segredo-forte-soberano-42");
+    const qr = encodeVoxUrl("https://vox.local/#/sync?b=Y2lmcmFkbw");
     assert.ok(qr.modules);
     assert.ok(qr.modules.length > 0);
   } finally {

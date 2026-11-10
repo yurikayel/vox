@@ -4,8 +4,8 @@
 [![Identity](https://img.shields.io/badge/Identity-WebCrypto%20P--256-blueviolet.svg)](./client/js/local-account.js)
 [![Storage](https://img.shields.io/badge/Storage-Arweave%20Permaweb-black.svg)](https://arweave.org)
 [![License: AGPL v3](https://img.shields.io/badge/License-GNU%20AGPLv3-crimson.svg)](./LICENSE)
-[![Tests](https://img.shields.io/badge/tests-1029%20passing-success.svg)](./docs/TESTES.md)
-[![Service Worker](https://img.shields.io/badge/SW-v7.60--real--network--audio--video--upload-informational.svg)](./client/sw.js)
+[![Tests](https://img.shields.io/badge/tests-1033%20passing-success.svg)](./docs/TESTES.md)
+[![Service Worker](https://img.shields.io/badge/SW-v7.61--real--network--audio--video--upload-informational.svg)](./client/sw.js)
 
 O Vox é um projeto cívico em construção para ampliar a participação popular e a autonomia das comunidades na vida digital. Sua ambição é ser um bem comum aberto: o projeto deve permanecer transparente, copiável, modificável e maior que qualquer fundador, mantenedor, empresa ou plataforma.
 
@@ -77,9 +77,9 @@ Redes centralizadas, instâncias federadas e protocolos locais têm custos, vant
 
 | Campo | Valor |
 |---|---|
-| **Commit SHA** | `be02f4d` |
-| **Suíte de Testes** | **1029** (`938` JS + `91` Python) |
-| **Service Worker** | `vox-pwa-v7.60-real-network-audio-video-upload` |
+| **Commit SHA** | `3f86a74` |
+| **Suíte de Testes** | **1033** (`942` JS + `91` Python) |
+| **Service Worker** | `vox-pwa-v7.61-real-network-audio-video-upload` |
 
 *Tabela regenerada por `npm run release-line` (roda a suíte e grava [docs/release-metadata.json](./docs/release-metadata.json)). Nenhum outro documento deve repetir esses números.*
 
@@ -171,9 +171,9 @@ Resumo do que entrou no cliente em nov/2026 (detalhes em [CHANGELOG.md](./CHANGE
 * **Correção: foto enviada ao vivo chega a quem recebe (PM-87):** o post com foto era assinado com a imagem e enviado sem ela, e quem recebia descartava. Agora a imagem sai antes da assinatura e viaja ao lado do post, conferida pelo hash assinado.
 * **Correção: cartão de perfil não circula mais sem fim (PM-84):** o aparelho só repassa a versão nova de cada cartão; antes, duas abas ligadas aos mesmos pares geravam ~1.100 requisições/s à memória central.
 * **Revisão de segurança (DevSecOps, 10/11)** ([relatório](./docs/audits/revisao-devsecops-2026-11-10.md)): o conteúdo que circula entre aparelhos agora é conferido por assinatura em todos os caminhos. Os pontos fracos estão na **guarda e na recuperação da identidade** e na **confiança no servidor de memória central**.
-  * ⚠️ **Até o lote PM-90…PM-94 entrar, não use o cofre de recuperação nem o link de sincronização como guarda segura da conta.** Os detalhes estão sob divulgação responsável ([SECURITY.md](./SECURITY.md)).
+  * ⚠️ **Até o PM-90 entrar, não use o cofre de recuperação como guarda segura da conta.** O link de sincronização não leva mais a senha (PM-92). Os detalhes estão sob divulgação responsável ([SECURITY.md](./SECURITY.md)).
 * **Defeitos abertos** ([THREAT-MODEL T17 e T19–T23](./docs/THREAT-MODEL.md)):
-  * cofre, sincronização e escolha do servidor de memória (PM-90–92, críticos);
+  * cofre de recuperação por login e formato do cofre por senha (PM-90, crítico); link de sincronização e escolha do servidor fechados (PM-92, PM-91);
   * chaves em claro no navegador e relay sem autorização do dono (PM-93, PM-94);
   * campos aninhados (`photoTags`, `mediaRef`) **fora da assinatura** (PM-85);
   * pipeline sem SAST nem Dependabot (PM-95).
