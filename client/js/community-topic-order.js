@@ -1,4 +1,6 @@
-/** @file Ordenação determinística de tópicos de comunidade (Bumping de fórum vs Recentes). */
+/** @file Ordenação determinística de tópicos de comunidade (Bumping de fórum vs Recentes) e junção com os locais. */
+
+import * as postOwnership from "./post-ownership.js";
 
 /**
  * Obtém o timestamp canônico de criação de um tópico, com fallback para createdAt e timestamp.
@@ -61,4 +63,31 @@ export function orderCommunityTopics(topics = [], mode = "active") {
   }
   const sortFn = mode === "newest" ? sortTopicsByNewest : sortTopicsByActivity;
   return [...sortFn(pinned), ...sortFn(regular)];
+}
+
+/** Junta tópicos locais e da rede (sem repetir) e soma as respostas locais à contagem e à última atividade. */
+export function mergeTopicsWithLocalReplies(localTopics, topics, user, replyCounts, replyActivity = {}) {
+  const seen = new Set();
+  const merged = [];
+  for (const t of localTopics) {
+    seen.add(t.id);
+    merged.push(postOwnership.withOwnLocalFlag({ ...t, isLocalP2p: true }, user));
+  }
+  for (const t of topics) {
+    if (!seen.has(t.id)) {
+      seen.add(t.id);
+      merged.push({ ...t, isLocalP2p: false });
+    }
+  }
+  for (const t of merged) {
+    const act = replyActivity[t.id];
+    const extra = (act?.count != null) ? act.count : (replyCounts[t.id] || 0);
+    if (extra > 0 || !t.repliesCount) {
+      t.repliesCount = (Number(t.repliesCount) || 0) + extra;
+    }
+    if (act?.lastTs) {
+      t.lastReplyTs = Math.max(Number(t.lastReplyTs) || 0, act.lastTs);
+    }
+  }
+  return merged;
 }

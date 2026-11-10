@@ -20,7 +20,8 @@ import * as communityMirror from "../community-mirror.js";
 import * as gatewayTelemetry from "../gateway-telemetry.js";
 import * as communitySeed from "../community-seed-checklist.js";
 import { computeCommunityNeighborStats, TOPICS_PAGE_SIZE } from "../render/community.js";
-import { orderCommunityTopics } from "../community-topic-order.js";
+import { orderCommunityTopics, mergeTopicsWithLocalReplies } from "../community-topic-order.js";
+import { filterChannelTopics, filterChannelTopic } from "../community-channel.js";
 import * as newKeyGuard from "../new-key-guard.js";
 import * as communityUpdates from "../community-updates.js";
 import { markCommunitySeen } from "../community-unread.js";
@@ -77,32 +78,6 @@ export async function resolveCommunityMetadata(communityId) {
   return meta;
 }
 
-function mergeTopicsWithLocalReplies(localTopics, topics, user, replyCounts, replyActivity = {}) {
-  const seen = new Set();
-  const merged = [];
-  for (const t of localTopics) {
-    seen.add(t.id);
-    merged.push(postOwnership.withOwnLocalFlag({ ...t, isLocalP2p: true }, user));
-  }
-  for (const t of topics) {
-    if (!seen.has(t.id)) {
-      seen.add(t.id);
-      merged.push({ ...t, isLocalP2p: false });
-    }
-  }
-  for (const t of merged) {
-    const act = replyActivity[t.id];
-    const extra = (act?.count != null) ? act.count : (replyCounts[t.id] || 0);
-    if (extra > 0 || !t.repliesCount) {
-      t.repliesCount = (Number(t.repliesCount) || 0) + extra;
-    }
-    if (act?.lastTs) {
-      t.lastReplyTs = Math.max(Number(t.lastReplyTs) || 0, act.lastTs);
-    }
-  }
-  return merged;
-}
-
 async function loadCommunityMetaAndTopics(communityId, user) {
   const { topics, demo, gateway } = await fetchRawCommunityTopics(communityId);
   const meta = await resolveCommunityMetadata(communityId);
@@ -119,7 +94,7 @@ async function loadCommunityMetaAndTopics(communityId, user) {
 
   let modActions = [];
   try { modActions = await mod.fetchModActions(communityId); } catch {}
-  const filtered = mod.applyFilters(merged, modActions, meta.owner, meta.moderators, user);
+  const filtered = filterChannelTopics(mod.applyFilters(merged, modActions, meta.owner, meta.moderators, user), meta, user);
   const isUserMod = mod.isModerator(user, meta.owner, meta.moderators);
   const { visible, heldCount } = await applyNewKeyQuarantine(filtered, meta, communityId, user, isUserMod);
   const filteredTopics = orderCommunityTopics(visible, "active");
@@ -636,7 +611,7 @@ async function mountFullCommunityPage({ communityId, tab, user, base, specifics,
 function buildCommunityTabProps({ communityId, meta, base, specifics, recentPeople, isMember, memberCount }) {
   return {
     communityId, commTitle: meta.title || communityId, meta, topics: base.filteredTopics,
-    listings: specifics.listings, proposals: specifics.proposals, recentPeople, isMember, memberCount,
+    listings: specifics.listings, proposals: specifics.proposals, recentPeople, isMember, memberCount, isMod: base.isUserMod,
   };
 }
 
@@ -919,7 +894,7 @@ async function resolveTopicModeration(communityId, user, replies, topic = null) 
   let modActions = [];
   try { modActions = await mod.fetchModActions(communityId); } catch {}
   const filteredReplies = mod.applyFilters(replies, modActions, meta.owner, meta.moderators, user);
-  const filteredTopic = mod.filterTopicForViewer(topic, modActions, meta.owner, meta.moderators, user);
+  const filteredTopic = filterChannelTopic(mod.filterTopicForViewer(topic, modActions, meta.owner, meta.moderators, user), meta, user);
   return {
     filteredReplies,
     filteredTopic,

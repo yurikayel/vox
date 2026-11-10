@@ -26,6 +26,8 @@ import {
   renderMarkdownLight,
 } from "./util.js";
 import { extractTopicCivicTag, resolveTopicBadgesHtml } from "./topic-badges.js";
+import { renderCommunityHeaderToolbar } from "./community-toolbar.js";
+import { renderChannelBarHtml, showsComposeButton } from "./channel-bar.js";
 export { CIVIC_TAGS, extractTopicCivicTag } from "./topic-badges.js";
 
 export function renderCommunityAvatarHtml(meta = {}, communityId = "", sizeClass = "community-avatar-lg") {
@@ -513,18 +515,6 @@ export function renderCommunityPeopleStrip(people = []) {
     </div>`;
 }
 
-function renderCommunityHeaderToolbar(communityId, commTitle, isMember) {
-  return `
-    <div class="community-vox-toolbar" role="toolbar" aria-label="Ações da comunidade">
-      <button id="btn-join-comm" type="button" class="community-vox-join-pill${isMember ? " is-member" : ""}" data-id="${escapeHtml(communityId)}" aria-pressed="${isMember ? "true" : "false"}">
-        ${isMember ? "✓ Membro" : "Entrar"}
-      </button>
-      <button id="btn-share-comm" type="button" class="btn btn-sm btn-outline community-vox-btn-share" data-id="${escapeHtml(communityId)}" data-title="${escapeHtml(commTitle)}">Compartilhar</button>
-      <button id="btn-export-comm-genesis" type="button" class="btn btn-sm btn-outline community-vox-btn-export" data-id="${escapeHtml(communityId)}" title="Exportar Gênesis e dados offline desta comunidade">💾 Gênesis</button>
-      <a class="btn btn-sm btn-primary community-vox-btn-compose" href="#/compose/topic?c=${encodeURIComponent(communityId)}">Novo post</a>
-    </div>`;
-}
-
 function renderCommunityHeaderAvatar(meta, communityId, canChangePhoto) {
   const photoBtn = canChangePhoto ? `
     <label class="btn-change-comm-photo" title="Alterar foto da comunidade (estilo Orkut)">
@@ -587,7 +577,7 @@ function renderCommunityHeader(meta, communityId, opts = {}) {
           ${metaChips}
           ${renderCommunityMirrorHint(opts.mirrorStatus)}
         </div>
-        ${renderCommunityHeaderToolbar(communityId, commTitle, opts.isMember)}
+        ${renderCommunityHeaderToolbar(communityId, commTitle, opts.isMember, showsComposeButton(meta, opts.isMod))}
       </div>
       ${renderCommunityFichaOrkut(meta, ownerLabels, memberCount)}
     </header>`;
@@ -622,13 +612,13 @@ export function renderCommunity(main, communityId, topics, meta = {}, opts = {})
     listings: opts.listings,
     proposals: opts.proposals,
     recentPeople: opts.recentPeople,
-    isMember: opts.isMember,
+    isMember: opts.isMember, isMod: opts.isMod,
     memberCount: resolveCommunityMemberCount(meta, communityId),
   });
 
   main.innerHTML += `
     <div class="community-vox-page" data-community-id="${escapeHtml(communityId)}" style="--community-accent:${accent};">
-      ${headerHtml}${neighborHtml}${seedHtml}${renderCommunityForkBanner(meta)}${recadoHtml}${navHtml}
+      ${headerHtml}${renderChannelBarHtml(meta, { communityId, isMod: opts.isMod })}${neighborHtml}${seedHtml}${renderCommunityForkBanner(meta)}${recadoHtml}${navHtml}
       <div class="community-tab-content-slot" id="community-tab-content">${slotHtml}</div>
     </div>`;
 }
@@ -645,7 +635,7 @@ export function renderCommunityTabContent(tab = "posts", ctx = {}) {
   if (renderer) return renderer(ctx);
   return `<div class="community-vox-posts-wrap">
     ${renderCommunityOrkutMembersBox(ctx.meta, ctx.communityId, ctx.recentPeople, ctx.memberCount)}
-    ${renderCommunityPostsTab(ctx.communityId, ctx.commTitle, ctx.topics || [], { sortMode: ctx.sortMode || "active" })}
+    ${renderCommunityPostsTab(ctx.communityId, ctx.commTitle, ctx.topics || [], { sortMode: ctx.sortMode || "active", canCompose: showsComposeButton(ctx.meta, ctx.isMod) })}
   </div>`;
 }
 
@@ -662,7 +652,7 @@ function renderTopicPaginationButton(totalCount, visibleCount) {
 
 export function renderCommunityTopicFeedInner(topics, communityId, commTitle, composeHref, visibleCount = TOPICS_PAGE_SIZE) {
   if (!topics.length) {
-    return `<div class="empty community-vox-empty"><p>Nenhum post nesta comunidade ainda.</p><a class="btn btn-primary btn-sm" href="${composeHref}">Criar o primeiro post</a></div>`;
+    return `<div class="empty community-vox-empty"><p>Nenhum post nesta comunidade ainda.</p>${composeHref ? `<a class="btn btn-primary btn-sm" href="${composeHref}">Criar o primeiro post</a>` : ""}</div>`;
   }
   const paged = topics.slice(0, visibleCount);
   const items = paged
@@ -672,8 +662,8 @@ export function renderCommunityTopicFeedInner(topics, communityId, commTitle, co
   return `<div class="community-vox-topic-list">${items}</div>${paginationHtml}`;
 }
 
-export function renderCommunityPostsTab(communityId, commTitle, topics, { sortMode = "active", visibleCount = TOPICS_PAGE_SIZE } = {}) {
-  const composeHref = `#/compose/topic?c=${encodeURIComponent(communityId)}`;
+export function renderCommunityPostsTab(communityId, commTitle, topics, { sortMode = "active", visibleCount = TOPICS_PAGE_SIZE, canCompose = true } = {}) {
+  const composeHref = canCompose ? `#/compose/topic?c=${encodeURIComponent(communityId)}` : "";
   const inner = renderCommunityTopicFeedInner(topics, communityId, commTitle, composeHref, visibleCount);
   return `
     <section class="community-vox-feed card" aria-labelledby="community-vox-feed-title">
@@ -689,7 +679,7 @@ export function renderCommunityPostsTab(communityId, commTitle, topics, { sortMo
           </div>
           <div style="display:flex; align-items:center; gap:8px;">
             <input type="search" id="input-comm-topic-search" class="input input-sm community-topic-search" placeholder="🔍 Filtrar tópicos..." style="max-width:180px; padding:4px 8px; font-size:0.82rem;" aria-label="Filtrar tópicos da comunidade" />
-            <a class="btn btn-sm btn-outline" href="${composeHref}">+ Post</a>
+            ${composeHref ? `<a class="btn btn-sm btn-outline" href="${composeHref}">+ Post</a>` : ""}
           </div>
         </div>
       </header>
