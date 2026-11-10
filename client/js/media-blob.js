@@ -1,5 +1,6 @@
 // Vox Media Blob - Content-Addressed P2P Media Blobs (SHA-256)
 // Separa o tráfego pesado de mídia base64 do mesh leve de fofocas JSON.
+import { MEDIA_FIELD } from "./post-wire.js";
 
 const DATA_URL_REGEX = /^data:([a-zA-Z0-9/+.-]+);base64,([A-Za-z0-9+/=\r\n]+)$/;
 
@@ -97,6 +98,8 @@ export async function detachMedia(post) {
     ...post,
     image: null,
     mediaRef,
+    // PM-87: a assinatura só cobre chaves de primeiro nível (PM-85); o hash vai também aqui para ficar coberto.
+    mediaHash: mediaRef.hash,
   };
 
   const mediaBlob = {
@@ -113,11 +116,26 @@ export async function detachMedia(post) {
 export function mediaFields(post, mediaBlob) {
   if (!post || typeof post !== "object") return null;
   if (!mediaBlob || typeof mediaBlob !== "object") return null;
-  if (!post.mediaRef || post.mediaRef.hash !== mediaBlob.hash) return null;
-  const mime = String(mediaBlob.mime || post.mediaRef.mime || "").toLowerCase();
+  if (!mediaBlob.hash || (post.mediaHash || post.mediaRef?.hash) !== mediaBlob.hash) return null;
+  const mime = String(mediaBlob.mime || post.mediaRef?.mime || "").toLowerCase();
   if (mime.startsWith("video/")) return { video: mediaBlob.data };
   if (mime.startsWith("audio/")) return { audio: mediaBlob.data };
   return { image: mediaBlob.data };
+}
+
+/** Post com a mídia do blob em `MEDIA_FIELD`, fora da forma assinada; sem blob do post, o post como veio. */
+export function withLocalMedia(post, mediaBlob) {
+  const fields = mediaFields(post, mediaBlob);
+  return fields ? { ...post, [MEDIA_FIELD]: fields } : post;
+}
+
+/** PM-87: blob do `mediaHash` assinado — o que veio junto com o post (se o conteúdo bate) ou o já guardado. */
+export async function blobForPost(post, mediaBlob) {
+  const hash = typeof post?.mediaHash === "string" ? post.mediaHash : "";
+  if (!hash) return null;
+  if (mediaBlob?.hash !== hash || !(await verifyMediaBlob(mediaBlob))) return defaultBlobStorage.get(hash);
+  if (!defaultBlobStorage.has(hash)) await defaultBlobStorage.put(mediaBlob);
+  return mediaBlob;
 }
 
 export async function verifyMediaBlob(mediaBlob) {

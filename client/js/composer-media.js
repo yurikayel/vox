@@ -63,34 +63,6 @@ function readFileAsDataUrl(file) {
   });
 }
 
-function measureDataUrlImage(dataUrl) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
-    img.onerror = () => reject(new Error("Não foi possível decodificar a imagem."));
-    img.src = dataUrl;
-  });
-}
-
-export async function readComposerImageFromFile(file) {
-  const pre = validateComposerImageFile(file);
-  if (!pre.ok) return pre;
-  try {
-    const dataUrl = await readFileAsDataUrl(file);
-    if (COMPOSER_IMAGE_MAX_DIMENSION > 0) {
-      const dims = await measureDataUrlImage(dataUrl);
-      const dimCheck = validateComposerImageDimensions(dims.width, dims.height);
-      if (!dimCheck.ok) return dimCheck;
-    }
-    return { ok: true, dataUrl };
-  } catch (err) {
-    return {
-      ok: false,
-      message: err?.message || "Não foi possível processar a imagem.",
-    };
-  }
-}
-
 async function resolveLofiImageDataUrl(fileOrDataUrl) {
   if (typeof fileOrDataUrl === "string") return fileOrDataUrl;
   if (fileOrDataUrl && typeof fileOrDataUrl.slice === "function") {

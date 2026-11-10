@@ -60,12 +60,6 @@ async function isAcceptablePost(post) {
   return current.author === post.author && itemTimestamp(current) < itemTimestamp(post);
 }
 
-/** Post assinado e, se o blob do `mediaRef` veio junto, a mídia ao lado (fora da assinatura). */
-function withLocalMedia(post, blobsByHash) {
-  const fields = mediaBlob.mediaFields(post, blobsByHash.get(post.mediaRef?.hash));
-  return fields ? { ...post, [MEDIA_FIELD]: fields } : post;
-}
-
 /** `onAccepted(post)` roda para cada post aceito (ex.: cartão de diretório do autor). */
 export async function hydratePosts(posts, blobsByHash = new Map(), onAccepted = () => {}) {
   if (!Array.isArray(posts)) return 0;
@@ -73,7 +67,7 @@ export async function hydratePosts(posts, blobsByHash = new Map(), onAccepted = 
   for (const post of posts) {
     if (!(await isAcceptablePost(post))) continue;
     onAccepted(post);
-    if (await cacheNode.saveLocalPost(withLocalMedia(post, blobsByHash))) added += 1;
+    if (await cacheNode.saveLocalPost(mediaBlob.withLocalMedia(post, blobsByHash.get(post.mediaHash || post.mediaRef?.hash)))) added += 1;
   }
   return added;
 }

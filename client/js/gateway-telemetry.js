@@ -144,31 +144,6 @@ export function getReadOriginAggregate(communityId = "") {
   return { total, localCount, localReadPct, sufficient, counts };
 }
 
-export function formatGatewayHealthPill(state) {
-  if (state === "critical") {
-    return { text: "Leitura reserva (gateways)", className: "gateway-pill-critical" };
-  }
-  if (state === "degraded") {
-    return { text: "Leitura reserva ocasional", className: "gateway-pill-degraded" };
-  }
-  return null;
-}
-
-export function exportGatewayDiagnostic() {
-  const s = getGatewayHealthSummary();
-  return JSON.stringify(
-    {
-      type: "vox-gateway-diagnostic",
-      schemaVersion: 0,
-      at: new Date().toISOString(),
-      state: s.state,
-      gateways: s.gateways,
-    },
-    null,
-    2,
-  );
-}
-
 export function __resetGatewayHealthForTests() {
   localStorage.removeItem(STORAGE_KEY);
   localStorage.removeItem(READ_ORIGIN_KEY);
