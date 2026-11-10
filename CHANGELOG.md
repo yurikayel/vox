@@ -6,9 +6,13 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Revisão de 10/11 (SW v7.55)
+- **Aviso de privacidade corrigido:** o cartão do convite e a documentação diziam que o vínculo (PM-82) e o arquivamento por denúncia (PM-69) circulam "só na malha". Na verdade, todo item gravado no aparelho também vai à **memória central** (servidor de steward), embora nunca ao Arweave. O texto agora diz isso.
+- **Defeitos registrados, ainda abertos:** memória central sem conferência de assinatura (PM-86), campos aninhados fora da assinatura (PM-85) e eco de cartão de perfil (PM-84). Estão no ROADMAP e no [modelo de ameaças](./docs/THREAT-MODEL.md) (T16–T19).
+
 ### Vínculo assinado (PM-82, SW v7.54)
 - **Convite que vira vínculo:** o seu link "Convide amigos" (e o QR do seu perfil) leva um token. Quem abre vê "Fulano te convidou" e aceita. O app de quem convidou confirma sozinho ao receber o aceite, e o vínculo passa a ter a assinatura das duas pessoas. Para uma conta nova, quem convidou vira **padrinho**; é a base do moderador natural (PM-83, [spec](./docs/specs/moderador-natural-v0.md)).
-- Cada convite aceita até 10 pessoas em 30 dias; depois, o link troca sozinho. O vínculo circula só entre os aparelhos (não vai ao Arweave), e o aceite avisa isso antes do botão.
+- Cada convite aceita até 10 pessoas em 30 dias; depois, o link troca sozinho. O vínculo circula entre os aparelhos e pela memória central (servidor de steward), não vai ao Arweave, e o aceite avisa isso antes do botão.
 - **Precache mais enxuto:** o `favicon.png` de 64 px saiu do que o app guarda no aparelho (a página só usa os de 16 e 32 px).
 
 ### Canal: comunidade em que só a moderação publica (PM-81, SW v7.53)
@@ -32,7 +36,7 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ### Uma denúncia arquiva até a revisão (PM-69, SW v7.46)
 - **Denúncia chega à moderação sozinha:** ao denunciar um post de comunidade, o app manda à moderação, por mensagem cifrada, a denúncia **assinada pela conta** de quem denunciou (a identidade não vai para a malha). Se não der para entregar, o app diz isso e oferece mandar pela conversa.
-- **O aparelho de quem modera arquiva para todos** ao receber, se quem denunciou é membro, tem menos de 3 denúncias pendentes e não teve as 3 últimas rejeitadas, e se o post não é de alguém da moderação. Senão, a denúncia fica para decisão manual, com o motivo. O arquivamento circula só na malha (não vai ao Arweave).
+- **O aparelho de quem modera arquiva para todos** ao receber, se quem denunciou é membro, tem menos de 3 denúncias pendentes e não teve as 3 últimas rejeitadas, e se o post não é de alguém da moderação. Senão, a denúncia fica para decisão manual, com o motivo. O arquivamento circula pela malha e pela memória central (servidor de steward); não vai ao Arweave.
 - **Autor e moderação veem "⏳ Em revisão"** com o prazo de 48 h; os outros não veem o post, e o link direto mostra "Publicação arquivada". Quem modera decide no tópico: **Volta para todos** ou **Mantém arquivado**.
 
 ### Mídia v2 retrô e medição (PM-70, sem mudança no app)

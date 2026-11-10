@@ -88,7 +88,7 @@ async function loadReportContext(signed, d) {
 
 /**
  * Aparelho de quem modera: confere assinatura, salvaguardas e, se passar, publica `review-hide`
- * só na malha (gossip), sem gravar no Arweave (ADR-019). Devolve o caso criado, ou null.
+ * na malha (gossip) e na memória central, sem gravar no Arweave (ADR-019). Devolve o caso criado, ou null.
  */
 export async function receiveReportDm(env, signed, deps = null) {
   const d = deps || (await defaultReceiveDeps());

@@ -54,7 +54,7 @@ Qualquer aparelho confere o vínculo sozinho, sem servidor. Ele vale se todas as
 
 ### Privacidade
 
-O vínculo circula **só na malha**, não vai ao Arweave. Qualquer aparelho conectado consegue ver quem convidou quem. Para quem atua em política isso é sensível, e por isso o aceite diz isso antes do botão. Quem não aceita não fica com vínculo nenhum; nesse caso, a denúncia contra essa pessoa segue direto para a moderação tradicional.
+O vínculo **não vai ao Arweave**, mas circula pela malha e é enviado à **memória central** (servidor de steward), como todo item gravado no aparelho. Qualquer aparelho conectado, e quem opera a memória central, consegue ver quem convidou quem. Para quem atua em política isso é sensível, e por isso o aceite diz isso antes do botão. Quem não aceita não fica com vínculo nenhum; nesse caso, a denúncia contra essa pessoa segue direto para a moderação tradicional.
 
 ## PM-83: moderador natural (a implementar)
 
@@ -85,7 +85,7 @@ No Vox, "apagar" um post de outra pessoa sempre significa escondê-lo na malha. 
 | Padrinho que abusa e arquiva o afilhado | O post some até a moderação reverter | Reversível. A partir de 3 reversões, o padrinho perde o papel (no PM-83) |
 | Padrinho offline | Ninguém confirma | 48 h e cai na moderação |
 | Datas do vínculo | A data é escrita pelas partes, então "mais antigo" pode ser forjado por quem combina | Só serve contra terceiros, e quem combina só atrasa o próprio caso |
-| Grafo social exposto na malha | Quem convidou quem fica visível | Consentimento no aceite, e o vínculo não vai ao Arweave |
+| Grafo social exposto na malha | Quem convidou quem fica visível | Consentimento no aceite. O vínculo não vai ao Arweave, mas passa pela memória central |
 | Assinatura aninhada | Campos de objetos aninhados ficam fora da assinatura | O aceite vai como texto. O mesmo problema afeta os `photoTags` dos posts e fica para um passo próprio |
 
 ## Fora desta versão

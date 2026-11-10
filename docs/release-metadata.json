@@ -1,9 +1,9 @@
 {
-  "git_sha": "58add80",
-  "branch": "feat/pm82-vinculo-assinado",
+  "git_sha": "8614d0b",
+  "branch": "docs/revisao-pm78-82",
   "test_js": 924,
   "test_python": 91,
   "test_total": 1015,
-  "cache_name": "vox-pwa-v7.54-real-network-audio-video-upload",
-  "generated_at": "2026-11-10T10:04:19Z"
+  "cache_name": "vox-pwa-v7.55-real-network-audio-video-upload",
+  "generated_at": "2026-11-10T12:03:11Z"
 }

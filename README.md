@@ -5,7 +5,7 @@
 [![Storage](https://img.shields.io/badge/Storage-Arweave%20Permaweb-black.svg)](https://arweave.org)
 [![License: AGPL v3](https://img.shields.io/badge/License-GNU%20AGPLv3-crimson.svg)](./LICENSE)
 [![Tests](https://img.shields.io/badge/tests-1015%20passing-success.svg)](./docs/TESTES.md)
-[![Service Worker](https://img.shields.io/badge/SW-v7.54--real--network--audio--video--upload-informational.svg)](./client/sw.js)
+[![Service Worker](https://img.shields.io/badge/SW-v7.55--real--network--audio--video--upload-informational.svg)](./client/sw.js)
 
 O Vox é um projeto cívico em construção para ampliar a participação popular e a autonomia das comunidades na vida digital. Sua ambição é ser um bem comum aberto: o projeto deve permanecer transparente, copiável, modificável e maior que qualquer fundador, mantenedor, empresa ou plataforma.
 
@@ -77,9 +77,9 @@ Redes centralizadas, instâncias federadas e protocolos locais têm custos, vant
 
 | Campo | Valor |
 |---|---|
-| **Commit SHA** | `58add80` |
+| **Commit SHA** | `8614d0b` |
 | **Suíte de Testes** | **1015** (`924` JS + `91` Python) |
-| **Service Worker** | `vox-pwa-v7.54-real-network-audio-video-upload` |
+| **Service Worker** | `vox-pwa-v7.55-real-network-audio-video-upload` |
 
 *Tabela regenerada por `npm run release-line` (roda a suíte e grava [docs/release-metadata.json](./docs/release-metadata.json)). Nenhum outro documento deve repetir esses números.*
 
@@ -161,6 +161,17 @@ Resumo do que entrou no cliente em nov/2026 (detalhes em [CHANGELOG.md](./CHANGE
 * **Nó leve por padrão, Apoiador por opção:** todo aparelho ajuda a malha com tetos baixos (50 MB/dia, 25 MB em disco); o botão **Seja um apoiador da rede** em `#/settings/network` sobe para 500 MB/dia e 250 MB, só no Wi-Fi.
 * **Privacidade e período eleitoral:** aviso de que outros aparelhos veem seu IP e opção **Esconder meu IP** (só via TURN; sem efeito enquanto não houver TURN configurado). De 16/08 a 31/10 de ano par, ou com `electoralMode` ligado, a linha "Sugestões cívicas" some (Res. TSE 23.755/2026).
 * **Resiliência:** leitura em 4 gateways com tempo limite de 8 s (3 deles indexam o Vox e servem de testemunha GraphQL; o `ar-io.dev` fica só para leitura do conteúdo); mensagens de erro que dizem o que houve (cota esgotada, 402, limite, sem conexão, gateways fora, DM sem relay); no máximo 20 posts por chave a cada 10 min no gossip.
+* **Denúncia que arquiva até a revisão (PM-69):** a denúncia assinada vai cifrada à moderação, e o aparelho de quem modera arquiva o post para todos ("⏳ Em revisão", 48 h) se quem denunciou passar nas salvaguardas (membro, poucas pendentes, sem histórico de rejeição).
+* **Caixa de saída das DMs (PM-78):** mensagem que não saiu fica guardada e é reenviada enquanto o app está aberto ("⏳ Aguardando"), por até 7 dias ("⚠ Não entregue"). Spec da próxima etapa, a mochila de DMs: [mochila-dm-v0](./docs/specs/mochila-dm-v0.md).
+* **Sincronização por inventário ao conectar (PM-80):** cada aparelho manda hashes do que tem e só pede o que falta (≈ 157 KB → ≈ 7 KB por sentido quando já sincronizados) ([spec](./docs/specs/sync-inventario-v0.md)).
+* **Canal (PM-81):** dono ou moderação transforma a comunidade em canal; só a moderação publica posts e todos comentam ([spec](./docs/specs/canal-comunidade-v0.md)).
+* **Convite com vínculo assinado (PM-82):** o link "Convide amigos" leva um token; quem entra aceita, e o app de quem convidou confirma sozinho. O vínculo tem as duas assinaturas e marca o padrinho, base do **moderador natural** (PM-83, a fazer; [spec](./docs/specs/moderador-natural-v0.md)).
+* **Correção: post guardado voltou a bater com a assinatura (#49):** desde o primeiro commit P2P, o post gravado no aparelho levava campos extras e quem o recebia de volta descartava. Só o que circulava ao vivo chegava a outros aparelhos; agora a sincronização e a memória central repassam a forma assinada.
+* **Defeitos abertos, achados na revisão de 10/11** ([THREAT-MODEL T16–T19](./docs/THREAT-MODEL.md)):
+  * a memória central grava o que recebe **sem conferir a assinatura** (PM-86);
+  * campos aninhados (`photoTags`, `mediaRef`) ficam **fora da assinatura** (PM-85);
+  * cartão de perfil pode **circular sem fim** entre abas e pares (PM-84).
+* **Peso do app guardado no aparelho:** o precache está a menos de 1 KB do teto do PM-02; a próxima adição ao shell precisa vir com corte.
 * **Infra:** Deno Deploy **pausado** (organização suspensa). A sinalização pública é **um** nó Render (`wss://vox-sentinel.onrender.com`) com **Nostr em paralelo** (ainda sem medição em campo) mais o nó local; ver riscos em [docs/INFRA-CUSTOS.md](./docs/INFRA-CUSTOS.md).
 
 ---
