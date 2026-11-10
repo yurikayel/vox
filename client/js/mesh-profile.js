@@ -3,11 +3,13 @@
 import * as localAccount from "./local-account.js";
 import * as profileCard from "./profile-card.js";
 import * as profileDirectory from "./profile-directory.js";
+import { markProfileCardSeen, seenStamp } from "./peers-gossip-profile.js";
 import * as profileNote from "./profile-note.js";
 import * as peers from "./peers.js";
 
 function applyLocalCardFromSigned(signed) {
   if (!signed?.routeId) return;
+  markProfileCardSeen(signed);
   if (!signed.discoverable) {
     profileDirectory.removeProfileCard(signed.routeId);
     return;
@@ -17,7 +19,7 @@ function applyLocalCardFromSigned(signed) {
     avatarUrl: signed.avatarUrl || "",
     bio: signed.bio || "",
     discoverable: true,
-    gossipCardId: signed.id,
+    ...seenStamp(signed),
   });
   if (signed.note) {
     profileNote.ingestRemoteNote(signed.routeId, signed.note, signed.noteAt || signed.editedAt);
