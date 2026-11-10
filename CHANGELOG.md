@@ -6,6 +6,11 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Revisão de estado, arquitetura e DevSecOps (10/11, sem mudança no app)
+- **[Revisão DevSecOps](./docs/audits/revisao-devsecops-2026-11-10.md):** a integridade do conteúdo na malha ficou sólida depois de #49 e PM-84…89, mas a custódia e a recuperação da identidade e a confiança no servidor de memória central têm **3 achados críticos e 3 altos**. Estão sob divulgação responsável e entram no ROADMAP como PM-90…PM-94; o PM-95 endurece o pipeline (CodeQL, Dependabot, actions por SHA, aprovação em arquivos de cripto).
+- **Promessas corrigidas:** `SECURITY.md`, `IDENTITY.md` e ADR-014 diziam que o cofre era de "conhecimento zero" e que as chaves nunca ficavam em claro. Agora dizem o que o código faz hoje.
+- THREAT-MODEL ganhou T20–T23.
+
 ### Correção: cartão de perfil não circula mais sem fim (PM-84, SW v7.60)
 - **O aparelho só repassa o cartão de perfil que é novo para ele.** Antes, todo `PROFILE_CARD` que chegava pelo gossip era reaplicado e repassado, porque o "já visto" só olhava o banco de posts. Com duas abas da mesma origem ligadas aos mesmos pares, o cartão circulava sem fim: medimos 358 cartões/s e cerca de 1.100 requisições/s à memória central.
 - **Como sabe que já viu:** guarda a versão de cada cartão (`editedAt` e assinatura), na memória da sessão e junto do cartão no diretório (`gossipCardAt`, `gossipCardSig`). Cartão de mesma versão ou mais velho não é reaplicado nem repassado. Mesma data com outra assinatura conta como outro cartão. O próprio cartão publicado já nasce marcado (`peers-gossip-profile.js`, `mesh-profile.js`).

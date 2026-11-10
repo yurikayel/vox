@@ -54,13 +54,14 @@ Ordem recomendada de entrega:
 
 - **Cofre multi-identidade** (`vox-accounts-vault-v1`): alternância entre contas locais no mesmo aparelho.
 - **Export `.voxid`:** credenciais em envelope cifrado com senha (PBKDF2 + AES-GCM-256).
-- **Recuperação zero-knowledge:** o cliente cifra a identidade e a ancora em Google (`sub`), Meta (`profile.id`) ou **Senha Soberana** (`#/backup`); a memória central (`/memory/vault/`) só vê texto cifrado. Detalhes: [ADR-014](./adr/014-zero-knowledge-vault-recuperacao-soberana.md).
-- **Sync entre aparelhos:** rota `#/sync?p=…` por QR Code.
+- **Recuperação por cofre:** o cliente cifra a identidade e a ancora em Google (`sub`), Meta (`profile.id`) ou **Senha Soberana** (`#/backup`); a memória central (`/memory/vault/`) guarda o texto cifrado. Detalhes: [ADR-014](./adr/014-zero-knowledge-vault-recuperacao-soberana.md).
+  - ⚠️ **Revisão de 10/11/2026:** o cofre **ainda não é de conhecimento zero** na prática. Há falhas sob divulgação responsável (PM-90…PM-94, [revisão DevSecOps](./audits/revisao-devsecops-2026-11-10.md)). Até a correção, não trate o cofre nem o link de sincronização como guarda segura da identidade.
+- **Sync entre aparelhos:** rota `#/sync` por QR Code (em revisão, PM-92).
 - **Wipe local:** `wipeLocalAccount()` em `client/js/local-account.js`.
 
 ## Boas práticas
 
-- Chaves privadas **nunca** saem do aparelho em claro; relays opcionais só recebem texto cifrado (cofre, DMs).
+- **Objetivo** (ainda não cumprido em todos os caminhos, ver PM-90…PM-93): chaves privadas nunca saem do aparelho em claro, e relays opcionais só recebem texto cifrado (cofre, DMs). Hoje elas ficam em claro no armazenamento do navegador.
 - Backup: frase ou export cifrado — responsabilidade do usuário.
 - Rotação: nova chave + transação de “sucessor” no perfil (Fase 2).
 
