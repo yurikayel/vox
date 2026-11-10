@@ -28,9 +28,9 @@
 | Dependência | Onde | Versão | Integridade | Situação |
 |---|---|---|---|---|
 | @jsquash/avif | `package.json` (dev), usado só por `tools/media-bench/` (PM-70) | 2.1.1 no lock (fixa) | `sha512` no `package-lock.json` | Só desenvolvimento; não vai para o navegador. Apache-2.0. A transitiva `wasm-feature-detect` 1.10.0 não carrega no Chrome 152 (`import.source`); a bancada usa direto o codificador de thread única. Se for para o app (PM-71), entra vendorizado com hash. |
-| eslint | `package.json` (dev) | 9.39.5 no lock | `sha512` no `package-lock.json` | Só desenvolvimento e CI; não vai para o navegador. |
-| globals | `package.json` (dev) | 16.5.0 no lock | `sha512` no `package-lock.json` | Idem. |
-| Transitivas do eslint (85 pacotes) | `package-lock.json` | fixas no lock | `sha512` no lock | `npm ci` respeita o lock; `npm audit --audit-level=high` roda em todo PR (`ci.yml`) e todo mês. |
+| eslint | `package.json` (dev) | 10.14.0 no lock | `sha512` no `package-lock.json` | Só desenvolvimento e CI; não vai para o navegador. |
+| globals | `package.json` (dev) | 17.14.0 no lock | `sha512` no `package-lock.json` | Idem. |
+| Transitivas do eslint (76 pacotes) | `package-lock.json` | fixas no lock | `sha512` no lock | `npm ci` respeita o lock; `npm audit --audit-level=high` roda em todo PR (`ci.yml`) e todo mês. |
 
 ## 3. Relay e sinalização (Python)
 
@@ -44,7 +44,7 @@
 
 | Dependência | Onde | Versão | Integridade | Situação |
 |---|---|---|---|---|
-| `python:3.12-alpine` | `relay/Dockerfile` | móvel, patch do 3.12 | sem digest | Recomendado fixar por digest (`@sha256:…`) antes do G3. |
+| `python:3.15-alpine` | `relay/Dockerfile` | móvel, patch do 3.15 (testado no CI: matriz do relay inclui 3.15) | sem digest | Recomendado fixar por digest (`@sha256:…`) antes do G3. |
 | `caddy:2-alpine` | `relay/deploy/docker-compose.yml` | móvel, Caddy 2.x | sem digest | Idem; kit de steward. |
 | `coturn/coturn:latest` | `relay/deploy/docker-compose.yml` | **móvel, `latest`** | sem digest | Trocar `latest` por uma versão fixa. O TURN é opcional no kit. |
 
@@ -54,17 +54,17 @@ Desde o PM-95 toda action é fixada pelo **SHA do commit**, com a versão em com
 
 | Dependência | Versão | Onde | Situação |
 |---|---|---|---|
-| `actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09` | v5.1.0 | todos os workflows | Oficial do GitHub. |
-| `actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444` | v5.0.0 | `ci.yml`, `deps-mensal.yml`, `nostr-smoke.yml` | Oficial do GitHub. |
-| `actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1` | v6.3.0 | `ci.yml`, `release-binarios.yml`, `windows-node-zero-smoke.yml` | Oficial do GitHub. |
-| `actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02` | v4.6.2 | `ci.yml`, `nostr-smoke.yml`, `release-binarios.yml` | Oficial do GitHub. |
-| `actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b` | v5.0.0 | `deploy-pages.yml` | Oficial do GitHub. |
-| `actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa` | v3.0.1 | `deploy-pages.yml` | Oficial do GitHub. |
-| `actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e` | v4.0.5 | `deploy-pages.yml` | Oficial do GitHub. |
-| `actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be` | v2.4.0 | `release-binarios.yml` | Oficial do GitHub. Gera a atestação de origem dos binários (PM-45). |
+| `actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1` | v7.0.1 | todos os workflows | Oficial do GitHub. |
+| `actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1` | v7.1.0 | `ci.yml`, `deps-mensal.yml`, `nostr-smoke.yml` | Oficial do GitHub. |
+| `actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0` | v7.1.0 | `ci.yml`, `release-binarios.yml`, `windows-node-zero-smoke.yml` | Oficial do GitHub. |
+| `actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9` | v7.0.2 | `ci.yml`, `nostr-smoke.yml`, `release-binarios.yml` | Oficial do GitHub. |
+| `actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d` | v6.0.0 | `deploy-pages.yml` | Oficial do GitHub. |
+| `actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9` | v5.0.0 | `deploy-pages.yml` | Oficial do GitHub. |
+| `actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346` | v5.0.1 | `deploy-pages.yml` | Oficial do GitHub. |
+| `actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8` | v4.2.2 | `release-binarios.yml` | Oficial do GitHub. Gera a atestação de origem dos binários (PM-45). |
 | `github/codeql-action/init@33d7b85da1a04171e211befe2c739303b9a4c066` | v4.39.3 | `codeql.yml` | Oficial do GitHub. SAST (PM-95). |
 | `github/codeql-action/analyze@33d7b85da1a04171e211befe2c739303b9a4c066` | v4.39.3 | `codeql.yml` | Oficial do GitHub. SAST (PM-95). |
-| `cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd` | v3.15.0 | `deploy-shell-b.yml` | **De terceiro** e com acesso ao token da Cloudflare: o SHA impede que uma tag movida troque o código. |
+| `cloudflare/wrangler-action@953926a2e2182532811c01a25e53647d93bf07c0` | v4.1.3 | `deploy-shell-b.yml` | **De terceiro** e com acesso ao token da Cloudflare: o SHA impede que uma tag movida troque o código. Desde a v4 instala o Wrangler v4 por padrão. |
 
 ## 6. Binários no repositório
 
