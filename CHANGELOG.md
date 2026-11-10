@@ -6,6 +6,11 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Uma denúncia arquiva até a revisão (PM-69, SW v7.46)
+- **Denúncia chega à moderação sozinha:** ao denunciar um post de comunidade, o app manda à moderação, por mensagem cifrada, a denúncia **assinada pela conta** de quem denunciou (a identidade não vai para a malha). Se não der para entregar, o app diz isso e oferece mandar pela conversa.
+- **O aparelho de quem modera arquiva para todos** ao receber, se quem denunciou é membro, tem menos de 3 denúncias pendentes e não teve as 3 últimas rejeitadas, e se o post não é de alguém da moderação. Senão, a denúncia fica para decisão manual, com o motivo. O arquivamento circula só na malha (não vai ao Arweave).
+- **Autor e moderação veem "⏳ Em revisão"** com o prazo de 48 h; os outros não veem o post, e o link direto mostra "Publicação arquivada". Quem modera decide no tópico: **Volta para todos** ou **Mantém arquivado**.
+
 ### Medição da mídia v2 (PM-70, sem mudança no app)
 - Bancada `tools/media-bench/` (só desenvolvimento) e [medição no desktop](./docs/research/medicao-midia-v2-pm70-2026-11.md) com 29 imagens e 2 vídeos reais: AVIF q66 coube em 86% (o resto em q60) e teve qualidade maior que o WebP 0,78 em todas; vídeo H.264 Q28 ≈1,3 Mbps em 720p; Opus 48 kbps = 355 KiB/min. Achados para o PM-71: codificador AVIF de 3,4 MB, CSP com `'wasm-unsafe-eval'` e `wasm-feature-detect` quebrado no Chrome 152. `@jsquash/avif` 2.1.1 entra só como dependência de desenvolvimento.
 
