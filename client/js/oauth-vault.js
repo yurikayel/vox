@@ -16,6 +16,7 @@ import {
   decryptLegacyRecord,
   decryptVaultRecord,
   deriveVaultAddress,
+  deriveVaultOwnerToken,
   encryptVaultV2,
   isRevokedRecord,
   isV2Record,
@@ -52,13 +53,14 @@ export async function fetchRemoteVaultRecord(lookupKey) {
   return null;
 }
 
-export function saveRemoteVaultRecord(lookupKey, record) {
+/** Grava o cofre nos servidores de memória escolhidos. Cofre v2 vai com a prova do dono (PM-94). */
+export function saveRemoteVaultRecord(lookupKey, record, ownerToken = null) {
   for (const baseUrl of getCentralMemoryUrls()) {
     try {
       void fetch(`${baseUrl}/memory/vault/${lookupKey}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lookupKey, record }),
+        body: JSON.stringify(ownerToken ? { lookupKey, record, ownerToken } : { lookupKey, record }),
       }).catch(() => {});
     } catch {
       /* ignore */
@@ -205,13 +207,13 @@ export async function restoreOrBindMetaIdentity({ sub, email, name, picture }) {
 /** PM-92: o cofre por senha fica guardado fora do aparelho; senha curta cai por tentativa. */
 export const VAULT_PASSPHRASE_MIN = 12;
 
-function persistVaultRecord(address, record) {
+function persistVaultRecord(address, record, ownerToken) {
   try {
     localStorage.setItem(VAULT_STORAGE_PREFIX + address, JSON.stringify(record));
   } catch {
     /* ignore */
   }
-  saveRemoteVaultRecord(address, record);
+  saveRemoteVaultRecord(address, record, ownerToken);
 }
 
 export async function savePassphraseVault(passphrase) {
@@ -221,9 +223,9 @@ export async function savePassphraseVault(passphrase) {
   }
   const opened = await openBundleForVault(clean);
   if (!opened.ok) return opened;
-  const address = await deriveVaultAddress(clean);
+  const [address, ownerToken] = await Promise.all([deriveVaultAddress(clean), deriveVaultOwnerToken(clean)]);
   const encrypted = await encryptVaultV2(opened.bundle, clean);
-  persistVaultRecord(address, encrypted);
+  persistVaultRecord(address, encrypted, ownerToken);
   clearLegacyRevokedNotice();
   return {
     ok: true,

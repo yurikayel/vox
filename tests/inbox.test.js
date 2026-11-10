@@ -56,9 +56,10 @@ test("inbox - pushSealed, pullMine e deleteSealed com mock de fetch", async () =
     assert.equal(pulled.length, 1);
     assert.equal(pulled[0].id, "dm_123");
 
-    const deleted = await inbox.deleteSealed("addr_bob", "dm_123");
+    const deleted = await inbox.deleteSealed("addr_bob", "dm_123", "ab".repeat(16));
     assert.equal(deleted, true);
     assert.equal(requests[2].options.method, "DELETE");
+    assert.equal(requests[2].options.headers["X-Vox-Delete-Token"], "ab".repeat(16), "PM-94: chave de apagar vai no cabeçalho");
   } finally {
     globalThis.fetch = originalFetch;
   }

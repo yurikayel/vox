@@ -86,18 +86,33 @@ export async function setDmKeypair(keypair) {
   return true;
 }
 
-async function deriveAesKey(privateKey, publicKey, usage) {
+async function deriveAesKey(privateKey, publicKey, usages) {
   return crypto.subtle.deriveKey(
     { name: "ECDH", public: publicKey },
     privateKey,
     { name: "AES-GCM", length: 256 },
     false,
-    [usage]
+    usages
   );
 }
 
 function buildAad(from, to) {
   return new TextEncoder().encode(`v1|${from || ""}|${to || ""}`);
+}
+
+const deleteAad = (msgId) => new TextEncoder().encode(`vox-dm-delete-v1|${msgId}`);
+const bytesToHex = (bytes) => Array.from(new Uint8Array(bytes), (b) => b.toString(16).padStart(2, "0")).join("");
+
+/**
+ * PM-94: chave de apagar do envelope no relay. Vai cifrada com a mesma chave da mensagem (IV próprio), então só
+ * quem abre a mensagem consegue apagá-la. O relay recebe só o SHA-256 (`del.hash`).
+ */
+async function sealDeleteToken(aesKey, msgId) {
+  const token = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = await crypto.subtle.encrypt({ name: "AES-GCM", iv, additionalData: deleteAad(msgId) }, aesKey, token);
+  const hash = bytesToHex(await crypto.subtle.digest("SHA-256", token));
+  return { iv: bytesToB64Url(iv), ct: bytesToB64Url(ct), hash };
 }
 
 function sanitizeEcPublicJwk(toPubInput) {
@@ -119,7 +134,7 @@ export async function seal(toPubInput, plaintext, { from = "", to = "" } = {}) {
   const recipientPubKey = await crypto.subtle.importKey("jwk", cleanJwk, ECDH_ALGO, false, []);
   const ephPair = await crypto.subtle.generateKey(ECDH_ALGO, true, ["deriveKey"]);
   const ephPub = await crypto.subtle.exportKey("jwk", ephPair.publicKey);
-  const aesKey = await deriveAesKey(ephPair.privateKey, recipientPubKey, "encrypt");
+  const aesKey = await deriveAesKey(ephPair.privateKey, recipientPubKey, ["encrypt"]);
 
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const encoded = new TextEncoder().encode(String(plaintext));
@@ -139,7 +154,14 @@ export async function seal(toPubInput, plaintext, { from = "", to = "" } = {}) {
     ephPub,
     iv: bytesToB64Url(iv),
     ct: bytesToB64Url(ctBuffer),
+    del: await sealDeleteToken(aesKey, msgId),
   };
+}
+
+async function recipientAesKey(envelope, privateJwkOverride) {
+  const privKey = await dmPrivateKey(privateJwkOverride || (await ensureDmKeys()).privateJwk);
+  const ephPubKey = await crypto.subtle.importKey("jwk", envelope.ephPub, ECDH_ALGO, false, []);
+  return deriveAesKey(privKey, ephPubKey, ["decrypt"]);
 }
 
 export async function open(envelope, privateJwkOverride = null) {
@@ -147,9 +169,7 @@ export async function open(envelope, privateJwkOverride = null) {
     throw new Error("Envelope DM inválido");
   }
 
-  const privKey = await dmPrivateKey(privateJwkOverride || (await ensureDmKeys()).privateJwk);
-  const ephPubKey = await crypto.subtle.importKey("jwk", envelope.ephPub, ECDH_ALGO, false, []);
-  const aesKey = await deriveAesKey(privKey, ephPubKey, "decrypt");
+  const aesKey = await recipientAesKey(envelope, privateJwkOverride);
 
   const iv = b64UrlToBytes(envelope.iv);
   const ct = b64UrlToBytes(envelope.ct);
@@ -160,4 +180,16 @@ export async function open(envelope, privateJwkOverride = null) {
   );
 
   return new TextDecoder().decode(ptBuffer);
+}
+
+/** PM-94: chave de apagar do envelope no relay (hex), ou null em envelope antigo, sem `del`. */
+export async function openDeleteToken(envelope, privateJwkOverride = null) {
+  if (!envelope?.del?.iv || !envelope.del.ct || !envelope.ephPub) return null;
+  const aesKey = await recipientAesKey(envelope, privateJwkOverride);
+  const token = await crypto.subtle.decrypt(
+    { name: "AES-GCM", iv: b64UrlToBytes(envelope.del.iv), additionalData: deleteAad(envelope.id) },
+    aesKey,
+    b64UrlToBytes(envelope.del.ct)
+  );
+  return bytesToHex(token);
 }

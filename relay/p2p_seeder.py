@@ -220,6 +220,21 @@ SEEDER_MANAGER = P2PSeederManager()
 PEER_DISCOVERY = PeerDiscovery()
 
 
+def register_seed_request(payload: Dict[str, Any], get_blob) -> Dict[str, Any]:
+    """Pedido de semear um blob. O que já está na memória central é autorizado na hora; o resto precisa de
+    autorização prévia (`authorize_hash`)."""
+    blob_hash = str(payload.get("hash") or "").strip().lower()
+    blob_data = get_blob(blob_hash)
+    if blob_data:
+        SEEDER_MANAGER.authorize_hash(blob_hash)
+        size_bytes = blob_data.get("sizeBytes") or len(blob_data.get("base64Data", ""))
+        mime_type = blob_data.get("mimeType", "application/octet-stream")
+        return SEEDER_MANAGER.register_blob_seed(blob_hash, size_bytes, mime_type)
+    size_bytes = int(payload.get("sizeBytes", 0))
+    mime_type = str(payload.get("mimeType", "application/octet-stream"))
+    return SEEDER_MANAGER.register_blob_seed(blob_hash, size_bytes, mime_type)
+
+
 def get_p2p_summary() -> Dict[str, Any]:
     """Retorna um resumo unificado de Seeder e Descoberta de Pares."""
     seeder_st = SEEDER_MANAGER.get_status()

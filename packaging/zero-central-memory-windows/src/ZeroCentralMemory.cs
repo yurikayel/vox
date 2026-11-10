@@ -25,7 +25,7 @@ using Microsoft.Win32;
 [assembly: AssemblyFileVersion("0.5.0.0")]
 
 namespace Vox.ZeroMemory {
-    public sealed class MemoryStore {
+    public sealed partial class MemoryStore {
         private static readonly Regex Hex64 = new Regex("^[0-9a-fA-F]{64}$", RegexOptions.Compiled);
         private static readonly Regex SafeId = new Regex("^[A-Za-z0-9._:-]{1,160}$", RegexOptions.Compiled);
         private static readonly Regex TxIdRegex = new Regex("^[A-Za-z0-9_-]{43}$", RegexOptions.Compiled);
@@ -539,40 +539,7 @@ namespace Vox.ZeroMemory {
             }
         }
 
-        public Dictionary<string, object> GetVaultRecord(string key) {
-            string clean = (key ?? "").Trim().ToLowerInvariant();
-            if (!Hex64.IsMatch(clean)) return null;
-            lock (syncLock) {
-                var record = ReadJsonFile(Path.Combine(vaultsDir, clean + ".json"));
-                return IsServableVault(record) ? record : null;
-            }
-        }
-
-        /// <summary>PM-90: só cofre v2 (sal e iterações no envelope) ou a marca de revogado entra e sai daqui.
-        /// Registros em formato antigo ficam no disco, mas não são servidos nem aceitos.</summary>
-        public static bool IsServableVault(Dictionary<string, object> record) {
-            if (record == null) return false;
-            object revoked;
-            if (record.TryGetValue("revoked", out revoked) && revoked is bool && (bool)revoked) return true;
-            object v, salt, iter;
-            if (!record.TryGetValue("v", out v) || !(v is int) || (int)v != 2) return false;
-            if (!record.TryGetValue("salt", out salt) || string.IsNullOrEmpty(salt as string)) return false;
-            if (!record.TryGetValue("iter", out iter) || !(iter is int)) return false;
-            int n = (int)iter;
-            return n >= 100000 && n <= 5000000;
-        }
-
-        public bool SaveVaultRecord(string key, Dictionary<string, object> payload) {
-            string clean = (key ?? "").Trim().ToLowerInvariant();
-            if (!Hex64.IsMatch(clean) || !IsServableVault(payload)) return false;
-            lock (syncLock) {
-                EnsureDirs();
-                Directory.CreateDirectory(vaultsDir);
-                string filePath = Path.Combine(vaultsDir, clean + ".json");
-                AtomicWriteBytes(filePath, Encoding.UTF8.GetBytes(CreateSerializer().Serialize(payload)));
-                return true;
-            }
-        }
+        // Cofres (GetVaultRecord, IsServableVault, SaveVaultRecord): VaultOwnerGuard.cs (PM-94).
 
         private bool ApplyEventInternal(Dictionary<string, object> payload) {
             if (payload == null) return false;
@@ -894,21 +861,27 @@ namespace Vox.ZeroMemory {
                     client.ReceiveTimeout = 4000;
                     client.SendTimeout = 4000;
                     var stream = client.GetStream();
-                    string method, path, tokenHeader;
-                    string body = ReadHttpRequest(stream, out method, out path, out tokenHeader);
+                    string method, path;
+                    var headers = new NodeRequestHeaders();
+                    string body = ReadHttpRequest(stream, out method, out path, headers);
                     if (string.IsNullOrEmpty(method)) return;
                     if (method == "OPTIONS") {
                         WriteHttpResponse(stream, 204, "No Content", "");
                         return;
                     }
-                    if (isControl) HandleControlRequest(stream, method, path, tokenHeader);
+                    int rejected = NodeRequestGuard.RejectStatus(method, headers);
+                    if (rejected != 0) {
+                        WriteHttpResponse(stream, rejected, "Rejected", "{\"error\":\"request_rejected\"}");
+                        return;
+                    }
+                    if (isControl) HandleControlRequest(stream, method, path, headers.Token);
                     else HandleRelayRequest(stream, method, path, body);
                 } catch { }
             }
         }
 
-        private static string ReadHttpRequest(NetworkStream stream, out string method, out string path, out string tokenHeader) {
-            method = ""; path = ""; tokenHeader = "";
+        private static string ReadHttpRequest(NetworkStream stream, out string method, out string path, NodeRequestHeaders headers) {
+            method = ""; path = "";
             var headerBytes = new List<byte>();
             int b;
             while ((b = stream.ReadByte()) != -1) {
@@ -929,7 +902,7 @@ namespace Vox.ZeroMemory {
             for (int i = 1; i < lines.Length; i++) {
                 string line = lines[i];
                 if (line.StartsWith("Content-Length:", StringComparison.OrdinalIgnoreCase)) int.TryParse(line.Substring(15).Trim(), out contentLength);
-                else if (line.StartsWith("X-Vox-Node-Token:", StringComparison.OrdinalIgnoreCase)) tokenHeader = line.Substring(17).Trim();
+                else headers.Read(line);
             }
             if (contentLength <= 0 || contentLength > 4 * 1024 * 1024) return "";
             byte[] bodyBuf = new byte[contentLength];
@@ -1161,8 +1134,10 @@ namespace Vox.ZeroMemory {
             if (path.StartsWith("/memory/vault/")) {
                 string key = path.Substring("/memory/vault/".Length).Trim();
                 var record = payload != null && payload.ContainsKey("record") ? MemoryStore.AsDict(payload["record"]) : payload;
-                bool ok = store.SaveVaultRecord(key, record);
-                WriteHttpResponse(stream, ok ? 200 : 400, "OK", ok ? "{\"status\":\"saved\"}" : "{\"error\":\"save_failed\"}");
+                string owner = payload != null && payload.ContainsKey("ownerToken") ? payload["ownerToken"] as string : null;
+                string status = store.SaveVaultRecord(key, record, owner);
+                int code = status == MemoryStore.VaultSaved ? 200 : (status == MemoryStore.VaultForbidden ? 403 : 400);
+                WriteHttpResponse(stream, code, code == 200 ? "OK" : "Rejected", "{\"status\":\"" + status + "\"}");
                 return;
             }
             WriteHttpResponse(stream, 404, "Not Found", "{\"error\":\"not_found\"}");

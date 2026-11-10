@@ -72,6 +72,15 @@ No PWA: wizard passo 4 → **Verificar Relay HTTP**, ou `#/settings/network` →
 
 **Coturn (largura de banda):** `max-bps` em [`turnserver.conf`](../../relay/deploy/turnserver.conf) — complementar à quota de disco, não substituto.
 
+## Quem pode escrever no relay (PM-94)
+
+O `server.py` confere cada pedido antes da rota ([ADR-027](../adr/027-autorizacao-no-relay-dono-e-origem.md), [referência](../specs/relay-api.md)):
+
+- **Relay em loopback atrás de túnel ou proxy** (cloudflared, Caddy no mesmo host): ponha o nome público em **`VOX_RELAY_ALLOWED_HOSTS`** (ex.: `VOX_RELAY_ALLOWED_HOSTS=signal.coletivo.org`). Sem isso, o relay responde `421`.
+- **Espelho do app em outro domínio:** ponha a origem em **`VOX_RELAY_ALLOWED_ORIGINS`**. As origens oficiais (GitHub Pages, Cloudflare Pages) e localhost já estão liberadas.
+- **Limite de escrita:** `VOX_RELAY_WRITE_LIMIT_PER_MIN` (padrão 120 por IP). Atrás de proxy, todo mundo chega com o IP do proxy; suba o limite se a comunidade for grande.
+- O nó Windows (`VoxPopuli-ZeroMemory.exe`) libera o próprio túnel sozinho.
+
 ---
 
 ## Deploy VPS (resumo)
