@@ -2,6 +2,7 @@
 
 import { escapeHtml } from "./util.js";
 import { renderInReviewPillHtml } from "./review-banner.js";
+import { renderChannelHeldPillHtml } from "./channel-bar.js";
 
 export const CIVIC_TAGS = ["[Pauta]", "[Bug]", "[Ideia]", "[Debate Geral]"];
 
@@ -23,9 +24,10 @@ export function resolveTopicBadgesHtml(topic) {
     ? `<span class="badge-pill community-newkey-pill" title="Chave nova sem prova de trabalho: recolhido para quem não modera">🆕 Chave nova</span> · `
     : "";
   const review = topic.inReview ? `${renderInReviewPillHtml()} · ` : "";
+  const channelHeld = topic.channelHeld ? `${renderChannelHeldPillHtml()} · ` : "";
   const tag = extractTopicCivicTag(topic);
   const tagHtml = tag
     ? `<span class="badge-pill community-civic-tag-pill" data-tag="${escapeHtml(tag)}">${escapeHtml(tag)}</span> · `
     : "";
-  return `${review}${pin}${lock}${newKey}${tagHtml}`;
+  return `${review}${channelHeld}${pin}${lock}${newKey}${tagHtml}`;
 }

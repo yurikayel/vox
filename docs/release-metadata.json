@@ -1,9 +1,9 @@
 {
-  "git_sha": "f29e24e",
-  "branch": "fix/post-guardado-assinatura",
-  "test_js": 912,
+  "git_sha": "c665a8b",
+  "branch": "feat/pm81-canal-comunidade",
+  "test_js": 919,
   "test_python": 91,
-  "test_total": 1003,
-  "cache_name": "vox-pwa-v7.51-real-network-audio-video-upload",
-  "generated_at": "2026-11-10T09:35:06Z"
+  "test_total": 1010,
+  "cache_name": "vox-pwa-v7.53-real-network-audio-video-upload",
+  "generated_at": "2026-11-10T10:03:24Z"
 }

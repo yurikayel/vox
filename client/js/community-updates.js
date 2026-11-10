@@ -1,5 +1,5 @@
 /**
- * PM-09 — quem pode mudar a foto, o título e a descrição de uma comunidade.
+ * PM-09 — quem pode mudar a foto, o título, a descrição e o modo de publicação (PM-81) de uma comunidade.
  *
  * Um `community_update` assinado só vale quando o autor é o dono da comunidade
  * ou está na lista de moderadores. A assinatura já prova quem é o autor
@@ -17,7 +17,7 @@
 import { parseModerators } from "./moderation.js";
 
 export const COMMUNITY_UPDATE_TYPE = "community_update";
-export const COMMUNITY_UPDATE_FIELDS = Object.freeze(["image", "avatar", "title", "description", "category"]);
+export const COMMUNITY_UPDATE_FIELDS = Object.freeze(["image", "avatar", "title", "description", "category", "postingMode", "postingModeSince"]);
 
 export function canonicalCommunityPostId(communityId) {
   return `c_${communityId}`;
