@@ -77,7 +77,7 @@ function renderGenesisNewIdentityHtml(currentName) {
             <span class="genesis-method-icon">${GENESIS_ICONS.fingerprint}</span>
             <div class="genesis-method-body">
               <h3 class="genesis-method-title">Gerar identidade cívica local</h3>
-              <p class="genesis-method-desc">Seu par de chaves Ed25519 nasce neste navegador. Sem e-mail, sem telefone, sem custódia central — escolha só como quer ser chamado.</p>
+              <p class="genesis-method-desc">Seu par de chaves nasce neste navegador. Sem e-mail, sem telefone, sem custódia central — escolha só como quer ser chamado.</p>
               <form id="form-oauth-custom-name" class="genesis-inline-form">
                 <input type="text" id="oauth-custom-name-input" class="agora-inscription genesis-input" maxlength="30" placeholder="Seu nome ou apelido…" value="${currentName}" aria-label="Nome ou apelido" />
                 <button type="submit" id="btn-oauth-save-name" class="agora-btn agora-btn--primary">Iniciar identidade <span aria-hidden="true">→</span></button>
