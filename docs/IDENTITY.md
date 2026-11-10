@@ -62,7 +62,7 @@ Ordem recomendada de entrega:
 
 ## Boas práticas
 
-- **Objetivo** (ainda não cumprido dentro do aparelho, ver PM-93): chaves privadas nunca saem do aparelho em claro, e relays opcionais só recebem texto cifrado (cofre, DMs). Fora do aparelho, isso vale desde o cofre v2 (PM-90). Dentro dele, as chaves ainda ficam em claro no armazenamento do navegador.
+- **Objetivo** (parcial dentro do aparelho, ver PM-93): chaves privadas nunca saem do aparelho em claro, e relays opcionais só recebem texto cifrado (cofre, DMs). Fora do aparelho, isso vale desde o cofre v2 (PM-90). Dentro dele, desde o SW v7.63 as chaves ficam cifradas por uma chave do aparelho não exportável e só abrem na hora de assinar, abrir DM ou exportar backup ([ADR-026](./adr/026-chaves-em-repouso-trava-depois-do-backup.md)). A trava depois do backup (etapa 2) ainda falta.
 - Backup: frase ou export cifrado — responsabilidade do usuário.
 - Rotação: nova chave + transação de “sucessor” no perfil (Fase 2).
 

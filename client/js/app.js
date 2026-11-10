@@ -22,7 +22,9 @@ import { startDmOutbox } from "./app/dm-wire.js";
 import { attachChannelHandlers } from "./app/community-channel-flow.js";
 import { startVoxLinks } from "./app/vox-link-flow.js";
 import { startVaultMigration } from "./oauth-vault.js";
+import { startKeysAtRest } from "./key-at-rest.js";
 
+void startKeysAtRest().catch(() => {});
 installDomDelegates(document);
 attachReportHandlers(document);
 attachChannelHandlers(document);

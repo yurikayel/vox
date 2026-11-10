@@ -39,12 +39,12 @@ test("wallet-encryption - fluxo de cifra, bloqueio e desbloqueio com passphrase"
   assert.equal(wallet.hasWallet(), true);
 });
 
-test("wallet-encryption - saveJwk armazena com compatibilidade plaintext", () => {
+test("wallet-encryption - saveJwk armazena com compatibilidade plaintext", async () => {
   localStorage.clear();
   wallet.__resetSessionForTests();
 
   const mockJwk = { kty: "RSA", n: "teste_n", e: "AQAB" };
-  wallet.saveJwk(mockJwk);
+  await wallet.saveJwk(mockJwk);
 
   assert.equal(wallet.isWalletEncrypted(), false);
   assert.deepEqual(wallet.getStoredJwk(), mockJwk);
