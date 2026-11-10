@@ -174,7 +174,7 @@ export function createPeerSync(deps) {
 }
 
 async function loadState() {
-  const [tombstones, posts] = await Promise.all([cacheNode.getAllTombstones(), cacheNode.getAllLocalPosts()]);
+  const [tombstones, posts] = await Promise.all([cacheNode.getAllTombstones(), cacheNode.getWirePosts()]);
   return { posts, tombstones, cards: profileDirectory.listDiscoverableProfileCards() };
 }
 
