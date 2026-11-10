@@ -3,7 +3,7 @@
 > Inventário do código de terceiros que o Vox carrega ou usa para construir e publicar, e dos binários que o repositório distribui.
 > **Fonte de verdade:** este arquivo. `tests/dependencias-inventory.test.js` quebra o CI quando o código passa a carregar algo que não está aqui.
 > **Rotina mensal:** [`deps-mensal.yml`](../.github/workflows/deps-mensal.yml), no dia 1 de cada mês.
-> Revisado em 2026-11-09 (seção 6, binários, acrescentada no mesmo dia).
+> Revisado em 2026-11-10 (PM-95: actions fixadas por SHA e Dependabot; seção 6, binários, desde 2026-11-09).
 
 ## Como ler
 
@@ -50,17 +50,21 @@
 
 ## 5. GitHub Actions (CI e deploy)
 
-| Dependência | Onde | Versão | Integridade | Situação |
-|---|---|---|---|---|
-| `actions/checkout@v5` | todos os workflows | móvel (major) | sem SHA | Oficial do GitHub. |
-| `actions/setup-node@v5` | `ci.yml`, `deps-mensal.yml` | móvel (major) | sem SHA | Oficial do GitHub. |
-| `actions/setup-python@v6` | `ci.yml` | móvel (major) | sem SHA | Oficial do GitHub. |
-| `actions/upload-artifact@v4` | `ci.yml` | móvel (major) | sem SHA | Oficial do GitHub. |
-| `actions/configure-pages@v5` | `deploy-pages.yml` | móvel (major) | sem SHA | Oficial do GitHub. |
-| `actions/upload-pages-artifact@v3` | `deploy-pages.yml` | móvel (major) | sem SHA | Oficial do GitHub. |
-| `actions/deploy-pages@v4` | `deploy-pages.yml` | móvel (major) | sem SHA | Oficial do GitHub. |
-| `actions/attest-build-provenance@v2` | `release-binarios.yml` | móvel (major) | sem SHA | Oficial do GitHub. Gera a atestação de origem dos binários (PM-45). |
-| `cloudflare/wrangler-action@v3` | `deploy-shell-b.yml` | móvel (major) | sem SHA | **De terceiro** e com acesso ao token da Cloudflare: fixar por SHA de commit antes do G3. |
+Desde o PM-95 toda action é fixada pelo **SHA do commit**, com a versão em comentário (`uses: dono/action@<sha> # vX.Y.Z`). Uma tag movida não troca o código que roda com os tokens do repositório. O teste de inventário quebra se aparecer action por tag. O Dependabot ([`dependabot.yml`](../.github/dependabot.yml)) abre o PR que troca o SHA e o comentário juntos.
+
+| Dependência | Versão | Onde | Situação |
+|---|---|---|---|
+| `actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09` | v5.1.0 | todos os workflows | Oficial do GitHub. |
+| `actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444` | v5.0.0 | `ci.yml`, `deps-mensal.yml`, `nostr-smoke.yml` | Oficial do GitHub. |
+| `actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1` | v6.3.0 | `ci.yml`, `release-binarios.yml`, `windows-node-zero-smoke.yml` | Oficial do GitHub. |
+| `actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02` | v4.6.2 | `ci.yml`, `nostr-smoke.yml`, `release-binarios.yml` | Oficial do GitHub. |
+| `actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b` | v5.0.0 | `deploy-pages.yml` | Oficial do GitHub. |
+| `actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa` | v3.0.1 | `deploy-pages.yml` | Oficial do GitHub. |
+| `actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e` | v4.0.5 | `deploy-pages.yml` | Oficial do GitHub. |
+| `actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be` | v2.4.0 | `release-binarios.yml` | Oficial do GitHub. Gera a atestação de origem dos binários (PM-45). |
+| `github/codeql-action/init@33d7b85da1a04171e211befe2c739303b9a4c066` | v4.39.3 | `codeql.yml` | Oficial do GitHub. SAST (PM-95). |
+| `github/codeql-action/analyze@33d7b85da1a04171e211befe2c739303b9a4c066` | v4.39.3 | `codeql.yml` | Oficial do GitHub. SAST (PM-95). |
+| `cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd` | v3.15.0 | `deploy-shell-b.yml` | **De terceiro** e com acesso ao token da Cloudflare: o SHA impede que uma tag movida troque o código. |
 
 ## 6. Binários no repositório
 
@@ -103,3 +107,4 @@ Quando o job falhar, quem revisa:
 1. Prefira **não** adicionar.
 2. Se for inevitável, prefira vendorizar em `client/vendor/` com o hash anotado aqui.
 3. Uma URL externa nova em `import()`, `loadScript()`, CSP, workflow (`uses:` ou `pip install`), contêiner ou um binário novo (ou recompilado) precisa de uma linha nesta página no mesmo PR, senão o teste quebra.
+4. Action nova entra fixada pelo SHA do commit da versão, com a versão em comentário (§5).

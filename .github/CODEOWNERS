@@ -1,0 +1,22 @@
+# PM-95 — quem precisa aprovar mudança em código de cripto, chaves, cofre e relay.
+# Só vale como bloqueio quando o ruleset do `main` exige revisão de code owner (ver docs/HARDENING.md).
+# Regra geral: o mantenedor revisa tudo; as linhas abaixo deixam explícito o que é sensível.
+
+*                                   @yurikayel
+
+/client/js/local-account.js         @yurikayel
+/client/js/account-backup.js        @yurikayel
+/client/js/oauth-vault.js           @yurikayel
+/client/js/vault-crypto.js          @yurikayel
+/client/js/vault-legacy.js          @yurikayel
+/client/js/crypto-dm.js             @yurikayel
+/client/js/keystore.js              @yurikayel
+/client/js/key-lock.js              @yurikayel
+/client/js/key-at-rest.js           @yurikayel
+/client/js/inbox.js                 @yurikayel
+/client/sw.js                       @yurikayel
+/client/_headers                    @yurikayel
+/relay/                             @yurikayel
+/packaging/zero-central-memory-windows/  @yurikayel
+/.github/                           @yurikayel
+/scripts/secrets-audit.mjs          @yurikayel
