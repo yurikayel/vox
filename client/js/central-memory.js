@@ -278,7 +278,7 @@ function syncLocalAccountsToProfileDirectory(allPosts) {
 
 async function buildLocalSyncBundle() {
   const [allPosts, allTombstones] = await Promise.all([
-    cacheNode.getAllLocalPosts(),
+    cacheNode.getWirePosts(),
     cacheNode.getAllTombstones(),
   ]);
   syncLocalAccountsToProfileDirectory(allPosts);

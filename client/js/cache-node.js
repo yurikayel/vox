@@ -1,5 +1,6 @@
 // Cache local persistente para transações e corpos do Vox (IndexedDB + LRU)
 import * as hashtags from "./hashtags.js";
+import { normalizeLocalPost, toStoredRecord, toWireForm } from "./post-wire.js";
 import * as mock from "./mock.js";
 import * as communityUpdates from "./community-updates.js";
 
@@ -305,17 +306,7 @@ export async function deleteDmThread(peerAddress) {
 
 export async function saveTombstone(tombstone) {
   if (!tombstone?.id) return false;
-  const record = {
-    id: tombstone.id,
-    type: "tombstone",
-    kind: "post-tombstone",
-    author: tombstone.author || "",
-    ts: tombstone.ts || Date.now(),
-    editedAt: tombstone.editedAt || Date.now(),
-    sig: tombstone.sig || "",
-    pubKey: tombstone.pubKey || null,
-    isLocalP2p: true,
-  };
+  const record = toStoredRecord({ type: "tombstone", kind: "post-tombstone", ...tombstone });
   try {
     const db = await openDB();
     await new Promise((resolve) => {
@@ -324,7 +315,7 @@ export async function saveTombstone(tombstone) {
       tx.oncomplete = () => resolve();
       tx.onerror = () => resolve();
     });
-    if (centralMemorySink) centralMemorySink({ type: "GOSSIP_DELETE", tombstone: record });
+    if (centralMemorySink) centralMemorySink({ type: "GOSSIP_DELETE", tombstone: toWireForm(record) });
     return true;
   } catch {
     return false;
@@ -342,7 +333,7 @@ export async function getTombstone(id) {
       req.onsuccess = () => {
         const res = req.result;
         if (res && (res.type === "tombstone" || res.kind === "post-tombstone")) {
-          resolve(res);
+          resolve(toWireForm(res));
         } else {
           resolve(null);
         }
@@ -362,7 +353,7 @@ export async function getAllTombstones() {
       const req = tx.objectStore(LOCAL_POSTS_STORE).getAll();
       req.onsuccess = () => {
         const list = req.result || [];
-        resolve(list.filter((p) => p && (p.type === "tombstone" || p.kind === "post-tombstone")));
+        resolve(list.filter((p) => p && (p.type === "tombstone" || p.kind === "post-tombstone")).map(toWireForm));
       };
       req.onerror = () => resolve([]);
     });
@@ -379,7 +370,7 @@ export async function getPostRecord(id) {
       const tx = db.transaction(LOCAL_POSTS_STORE, "readonly");
       const store = tx.objectStore(LOCAL_POSTS_STORE);
       const req = store.get(id);
-      req.onsuccess = () => resolve(req.result || null);
+      req.onsuccess = () => resolve(toWireForm(req.result) || null);
       req.onerror = () => resolve(null);
     });
   } catch {
@@ -400,70 +391,13 @@ export function invalidateReplyCountsCache() {
   cachedReplyActivityMap = null;
 }
 
-const LOCAL_POST_DEFAULTS = Object.freeze({
-  communityId: "",
-  replyTo: "",
-  proposalId: "",
-  postId: "",
-  frame: null,
-  frameKind: "",
-  buttonIndex: 0,
-  buttonLabel: "",
-  inputText: "",
-  title: "",
-  body: "",
-  diffText: "",
-  closesAt: 0,
-  minQuorum: 0,
-  state: "open",
-  choice: "",
-  joinedAt: 0,
-  category: "",
-  description: "",
-  authorDisplay: "",
-  authorAvatar: "",
-  authorHandle: "",
-  image: "",
-  imageAlt: "",
-  externalPain: "",
-  voxResolution: "now",
-  priceLabel: "",
-  locationLabel: "",
-  contactPix: "",
-  listingStatus: "available",
-  commercialEnabled: false,
-  likesCount: 0,
-  repliesCount: 0,
-  pubKey: null,
-  sig: "",
-  editedAt: 0,
-});
-
-function normalizeLocalPost(post) {
-  const combinedText = `${post.title || ""} ${post.body || ""} ${post.description || ""}`;
-  return {
-    ...LOCAL_POST_DEFAULTS,
-    ...post,
-    id: post.id,
-    type: post.type,
-    author: post.author || post.owner || "",
-    buttonIndex: Number(post.buttonIndex) || 0,
-    commercialEnabled: Boolean(post.commercialEnabled),
-    likesCount: Number(post.likesCount) || 0,
-    repliesCount: Number(post.repliesCount) || 0,
-    tags: hashtags.extractHashtags(combinedText),
-    ts: post.ts || post.createdAt || Date.now(),
-    isLocalP2p: true,
-  };
-}
-
 export async function saveLocalPost(post) {
   if (!post?.id || !post?.type) return false;
   const tombstone = await getTombstone(post.id);
   const postTime = post.editedAt || post.ts || 0;
   if (tombstone && (tombstone.editedAt || 0) >= postTime) return false;
 
-  const record = normalizeLocalPost(post);
+  const record = toStoredRecord(post);
   try {
     const db = await openDB();
     await new Promise((resolve) => {
@@ -475,7 +409,7 @@ export async function saveLocalPost(post) {
       };
       tx.onerror = () => resolve();
     });
-    if (centralMemorySink) centralMemorySink({ type: "GOSSIP", item: record });
+    if (centralMemorySink) centralMemorySink({ type: "GOSSIP", item: toWireForm(record) });
     return true;
   } catch {
     return false;
@@ -495,7 +429,7 @@ export async function getLocalPost(id) {
         if (!res || res.type === "tombstone" || res.kind === "post-tombstone") {
           resolve(null);
         } else {
-          resolve(res);
+          resolve(normalizeLocalPost(res));
         }
       };
       req.onerror = () => resolve(null);
@@ -533,7 +467,7 @@ export async function getLocalPosts({ type = null, communityId = null, replyTo =
       const store = tx.objectStore(LOCAL_POSTS_STORE);
       const req = store.getAll();
       req.onsuccess = () => {
-        let items = (req.result || []).filter((p) => p.type !== "tombstone" && p.kind !== "post-tombstone");
+        let items = (req.result || []).filter((p) => p.type !== "tombstone" && p.kind !== "post-tombstone").map(normalizeLocalPost);
         if (type) items = items.filter((p) => p.type === type);
         if (communityId) items = items.filter((p) => p.communityId === communityId);
         if (replyTo !== null) items = items.filter((p) => p.replyTo === replyTo);
@@ -556,6 +490,23 @@ export async function getLocalPosts({ type = null, communityId = null, replyTo =
 
 export async function getAllLocalPosts() {
   return getLocalPosts();
+}
+
+/** Posts na forma assinada, mais novos primeiro: o que a sincronização e a memória central repassam. */
+export async function getWirePosts() {
+  try {
+    const db = await openDB();
+    return await new Promise((resolve) => {
+      const req = db.transaction(LOCAL_POSTS_STORE, "readonly").objectStore(LOCAL_POSTS_STORE).getAll();
+      req.onsuccess = () => {
+        const posts = (req.result || []).filter((p) => p && p.type !== "tombstone" && p.kind !== "post-tombstone");
+        resolve(posts.sort((a, b) => (b.ts || 0) - (a.ts || 0)).map(toWireForm));
+      };
+      req.onerror = () => resolve([]);
+    });
+  } catch {
+    return [];
+  }
 }
 
 export async function getReplyCountsMap() {
