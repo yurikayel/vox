@@ -8,7 +8,9 @@
 import * as hashtags from "./hashtags.js";
 
 export const WIRE_MARK = "_wire";
-const LOCAL_ONLY_KEYS = new Set(["tags", "isLocalP2p", WIRE_MARK]);
+/** Mídia anexada no aparelho (vídeo, áudio ou imagem de um `mediaRef`): fica no registro, fora da assinatura. */
+export const MEDIA_FIELD = "_media";
+const LOCAL_ONLY_KEYS = new Set(["tags", "isLocalP2p", WIRE_MARK, MEDIA_FIELD]);
 
 export const LOCAL_POST_DEFAULTS = Object.freeze({
   communityId: "",
@@ -54,11 +56,12 @@ export const toStoredRecord = (post) => ({ ...post, [WIRE_MARK]: 1 });
 
 /** Forma de tela: padrões, hashtags e `isLocalP2p` (o que o app sempre leu). */
 export function normalizeLocalPost(record) {
-  const { [WIRE_MARK]: _mark, ...post } = record;
+  const { [WIRE_MARK]: _mark, [MEDIA_FIELD]: media, ...post } = record;
   const combinedText = `${post.title || ""} ${post.body || ""} ${post.description || ""}`;
   return {
     ...LOCAL_POST_DEFAULTS,
     ...post,
+    ...media,
     id: post.id,
     type: post.type,
     author: post.author || post.owner || "",
@@ -87,7 +90,7 @@ function stripLegacyFields(record) {
 export function toWireForm(record) {
   if (!record || typeof record !== "object") return record;
   if (record[WIRE_MARK]) {
-    const { [WIRE_MARK]: _mark, ...wire } = record;
+    const { [WIRE_MARK]: _mark, [MEDIA_FIELD]: _media, ...wire } = record;
     return wire;
   }
   return record.isLocalP2p ? stripLegacyFields(record) : record;

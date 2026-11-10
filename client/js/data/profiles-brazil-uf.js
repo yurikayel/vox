@@ -546,33 +546,6 @@ export function buildUfDemoTopics(now = Date.now()) {
   return topics;
 }
 
-export function buildUfDemoListings(now = Date.now()) {
-  return UF_STEREOTYPE_SEEDS.filter((s) => s.feira).map((seed, i) => {
-    const uf = seed.uf.toLowerCase();
-    const routeId = `vx_demo_${uf}`;
-    const f = seed.feira;
-    return {
-      id: `demo-listing-${uf}`,
-      type: "listing",
-      communityId: "demo-feira-local",
-      title: f.title,
-      priceLabel: f.price,
-      locationLabel: f.place,
-      body: f.body,
-      image: PORTRAIT(seed.gender, 50 + i),
-      imageAlt: `Oferta demo — ${seed.stateName}`,
-      author: routeId,
-      owner: routeId,
-      contactPix: pixFor(seed),
-      listingStatus: "available",
-      likesCount: 10 + i * 4,
-      repliesCount: 0,
-      isLocalP2p: true,
-      ts: now - (i + 1) * 20 * 60 * 1000,
-    };
-  });
-}
-
 const UF_DEMO_PAIR_COPY = {
   "CE-MA":
     "Davi cearense na área! 🌞 Seu bumba e reggae maranhense conversam bem com nosso forró de terreiro — aqui no Vox a gente troca cultura sem algoritmo empurrando briga. Quando rolar festa em São Luís, manda o convite que eu levo jerimum na mochila (e piada boa, claro).",
