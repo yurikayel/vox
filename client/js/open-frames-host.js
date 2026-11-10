@@ -5,12 +5,6 @@
 
 export const OF_HOST_MESSAGE_TYPES = new Set(["of:ready", "of:resize", "of:action"]);
 
-export function buildSandboxedFrameSrc(demoUrl) {
-  const u = String(demoUrl || "").trim();
-  if (!u || !/^https:\/\//i.test(u)) return "";
-  return u;
-}
-
 export function handleFrameMessage(event, { allowedOrigins = [] } = {}) {
   if (!event?.data || typeof event.data !== "object") return null;
   const type = String(event.data.type || "");

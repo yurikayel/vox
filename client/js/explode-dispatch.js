@@ -22,7 +22,6 @@ import { escapeHtml } from "./render/util.js";
 
 export const EXPLODE_SHEET_ID = "explode-dispatch-sheet";
 export const DEFAULT_EXPLODE_TAGS = ["#Democracia", "#VozDoPovo", "#Vox"];
-export const JANONES_DEFAULT_TAGS = DEFAULT_EXPLODE_TAGS;
 
 export function buildExplodeText({ title = "", body = "", url = "", hashtags = [] } = {}) {
   const cleanTitle = (title || "Mobilização no Vox").trim();

@@ -37,6 +37,8 @@ Os hashes ficam em memória (até 20 mil), para não refazer a cada conexão.
 
 **Forma assinada.** Os itens servidos saem de `cacheNode.getWirePosts()` e `getAllTombstones()`, na forma exata em que foram assinados. Até a correção de 10/11 (`post-wire.js`), o banco guardava o post com campos padrão misturados, e quem recebia descartava tudo o que vinha por esta sincronização.
 
+**Foto ao lado do post (PM-88).** O `GOSSIP` de um post com `mediaHash` leva o blob (`blob`), como a fofoca ao vivo (PM-87): o guardado em memória ou, depois de recarregar, o remontado da mídia do registro (`_media`). Quem recebe só guarda o blob cujo conteúdo bate com `mediaHash`. Teto: 128 KiB por blob (abaixo da mensagem que o canal WebRTC aceita sem fatiar) e 2 MiB de blob por conexão, gastos nos posts mais novos; passou do teto, o post vai sem blob e quem recebe mostra o marcador "Mídia P2P". Foto do composer sai com até 99 KiB (`media-lofi`), então cabe; aparelhos já sincronizados não trocam blob nenhum.
+
 ## Próximos passos
 
 - A mochila de DMs (PM-79) entra neste aperto de mão como uma quarta lista (envelopes cegos oferecidos), em vez de mensagens soltas.
