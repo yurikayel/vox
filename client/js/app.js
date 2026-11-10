@@ -18,6 +18,7 @@ import { attachQrUrlHandlers } from "./qr-url.js";
 import { attachPostOverlayActionMenuHandlers } from "./app/screens-home.js";
 import { attachQuarantineHandlers } from "./app/context.js";
 import { syncIdentity } from "./app/screens-network.js";
+import { startDmOutbox } from "./app/dm-wire.js";
 
 installDomDelegates(document);
 attachReportHandlers(document);
@@ -27,6 +28,7 @@ initSkyTheme();
 wireRoute();
 setupHashchangeListener();
 initDmListeners();
+startDmOutbox();
 initGossipListeners();
 initSocialInteractions();
 initPostMediaLightbox();

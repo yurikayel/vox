@@ -17,7 +17,7 @@ const MESSAGES = Object.freeze({
     "O servidor de conexão está fora do ar. Você continua lendo e escrevendo; a troca com outros aparelhos volta quando ele voltar.",
   signalingBack: "A conexão com outros aparelhos voltou.",
   dmNoRelay:
-    "Sem relay de mensagens: a mensagem fica neste aparelho e é entregue quando você e a outra pessoa estiverem online ao mesmo tempo.",
+    "Sem relay de mensagens agora: a mensagem fica na caixa de saída deste aparelho. Com o Vox aberto, ele tenta de novo sozinho por até 7 dias; ela chega quando você e a outra pessoa estiverem online ao mesmo tempo.",
 });
 
 export function honestMessage(kind) {
