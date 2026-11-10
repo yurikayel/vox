@@ -6,6 +6,10 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Correção: post guardado volta a bater com a assinatura (SW v7.51)
+- **Sincronização entre aparelhos destravada:** ao gravar um post, o app misturava cerca de 35 campos padrão no registro. O post guardado deixava de bater com a assinatura e quem recebia descartava. Na prática, só o que circulava ao vivo chegava a outro aparelho; o que vinha da sincronização ao conectar (PM-80), do envio completo e da memória central era jogado fora. O defeito existia desde o primeiro commit P2P.
+- Agora o aparelho guarda o post exatamente como foi assinado, e os padrões só entram na hora de mostrar. Posts gravados antes da correção são recuperados no melhor esforço. Remoções guardam todos os campos assinados.
+
 ### Sincronização por inventário ao conectar (PM-80, SW v7.48)
 - **Menos dados a cada conexão:** em vez de mandar às cegas até 128 posts, 64 remoções e 256 cartões de perfil, cada aparelho manda primeiro um inventário curto (hash do id e versão) e só pede o que falta. Com dois aparelhos já sincronizados, cai de ≈ 157 KB para ≈ 7 KB por sentido, o que poupa o teto de 5 MB do 4G. Aparelho com versão antiga do app recebe o envio completo depois de 8 s.
 - A sincronização saiu do `peers.js` para `peer-sync.js` ([spec](./docs/specs/sync-inventario-v0.md)); é ali que a mochila de DMs (PM-79) vai entrar.
