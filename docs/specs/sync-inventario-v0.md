@@ -35,6 +35,8 @@ Princípio: nesta rede, CPU sobra; o que falta é tempo online e bytes. Gastar u
 
 Os hashes ficam em memória (até 20 mil), para não refazer a cada conexão.
 
+**Forma assinada.** Os itens servidos saem de `cacheNode.getWirePosts()` e `getAllTombstones()`, na forma exata em que foram assinados. Até a correção de 10/11 (`post-wire.js`), o banco guardava o post com campos padrão misturados, e quem recebia descartava tudo o que vinha por esta sincronização.
+
 ## Próximos passos
 
 - A mochila de DMs (PM-79) entra neste aperto de mão como uma quarta lista (envelopes cegos oferecidos), em vez de mensagens soltas.
