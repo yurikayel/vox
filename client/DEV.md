@@ -753,7 +753,7 @@ Implementação dos quatro pilares essenciais do roadmap da rede Vox:
 ### 23.4 Blobs de Mídia P2P Content-Addressed (SHA-256)
 - **Módulo:** `client/js/media-blob.js`.
 - **Desacoplamento do Mesh:** Remove imagens pesadas em base64 do JSON transitado via gossip (`detachMedia`), substituindo-as por referências content-addressed `mediaRef` com hash SHA-256, tipo MIME e tamanho em bytes.
-- **Verificação de Integridade e Re-anexo:** `verifyMediaBlob` calcula o hash SHA-256 do payload e rejeita blobs corrompidos ou adulterados. `attachMedia` re-acopla a mídia sob demanda ao post correspondente.
+- **Verificação de Integridade e Re-anexo:** `verifyMediaBlob` calcula o hash SHA-256 do payload e rejeita blobs corrompidos ou adulterados. `mediaFields` devolve o campo de tela (`image`, `video` ou `audio`) do blob de um `mediaRef`; a memória central guarda esse campo em `_media`, fora da forma assinada (`post-wire.js`, PM-86).
 - **Armazenamento LRU:** `BlobStorage` com controle de capacidade máxima e descarte automático de entradas antigas.
 - **Suíte de testes:** `tests/media-blob.test.js`.
 ### 23.5 Integração de UI & UX dos Pilares

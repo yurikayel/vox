@@ -5,6 +5,7 @@ import { mockStores } from "../tests/setup.js";
 import * as cacheNode from "../client/js/cache-node.js";
 import * as centralMemory from "../client/js/central-memory.js";
 import * as profileDirectory from "../client/js/profile-directory.js";
+import { person } from "./signer.js";
 
 test("central-memory - getCentralMemoryUrls inclui endpoints locais 3920 e 3921", () => {
   localStorage.clear();
@@ -17,6 +18,16 @@ test("central-memory - syncWithCentralMemory envia estado local e reidrata posts
   localStorage.clear();
   profileDirectory.__resetProfileCardsForTests();
   mockStores.get("local-posts")?.map.clear();
+  const remote = await person();
+  const remotePost = await remote.sign({
+    id: "top_remote_hydrated",
+    type: "topic",
+    communityId: "c_1",
+    title: "Post Reidratado do Nó Zero-Central-Memory",
+    body: "Memória persistida em disco",
+    ts: 1700000002000,
+  });
+  const remoteTomb = await remote.sign({ id: "top_deleted_remote", type: "tombstone", ts: 1700000003000, editedAt: 1700000003000 });
 
   await cacheNode.saveLocalPost({
     id: "top_local_1",
@@ -42,25 +53,9 @@ test("central-memory - syncWithCentralMemory envia estado local e reidrata posts
           counts: { posts: 2, tombstones: 1, profiles: 1, manifests: 0, blobs: 0 },
           posts: [
             ...capturedBody.posts,
-            {
-              id: "top_remote_hydrated",
-              type: "topic",
-              author: "vx_remote",
-              communityId: "c_1",
-              title: "Post Reidratado do Nó Zero-Central-Memory",
-              body: "Memória persistida em disco",
-              ts: 1700000002000,
-            },
+            remotePost,
           ],
-          tombstones: [
-            {
-              id: "top_deleted_remote",
-              type: "tombstone",
-              author: "vx_remote",
-              ts: 1700000003000,
-              editedAt: 1700000003000,
-            },
-          ],
+          tombstones: [remoteTomb],
           profiles: [
             {
               routeId: "vx_remote",
