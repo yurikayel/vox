@@ -6,6 +6,10 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Correção: o texto dizia Ed25519, a conta usa P-256 (SW v7.67)
+- Três textos do app afirmavam que a chave da conta é **Ed25519**; a conta assina com **ECDSA P-256** (`key-lock.js`, `local-account.js`). Ed25519 só existe em `vox-identity.js`, ainda não plugado. O compositor e a criação de identidade deixam de citar algoritmo; a tela de status mostra "P-256 (ECDSA)".
+- Mesma correção nas páginas de download e da revolução e em dois docs ([POSITIONING](./docs/product/POSITIONING.md), [infra participativa](./docs/strategy/infra-participativa-blindagem-crescimento.md)). Teste novo (`tests/rotulos-algoritmo-assinatura.test.js`) impede a volta do texto errado.
+
 ### Docs: rascunhos para o piloto G1 (estratégia de 90 dias)
 - [Estratégia por ponto fraco](./docs/strategy/estrategia-5-pontos-fracos-90-dias-2026-11.md) registrada, com as decisões de 10/11: cunha do piloto é o modo assembleia para grupos de WhatsApp; segunda pessoa ainda não escolhida.
 - Rascunhos prontos, **nada enviado e nenhuma issue criada**: [briefing do parecer do G1](./docs/legal/briefing-parecer-g1.md) (5 perguntas fechadas, REV-12/LAN-01), [roteiro da conversa](./docs/pilot/piloto-g1-roteiro-conversa.md) e [convite](./docs/pilot/piloto-g1-convite.md) do piloto (PIL-01), [10 primeiras tarefas e guia](./docs/process/primeiras-tarefas-contribuidor.md) (PM-41) e [segunda pessoa em etapas](./docs/process/segunda-pessoa-acesso-gradual.md) (LAN-30).

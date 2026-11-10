@@ -1,9 +1,9 @@
 {
-  "git_sha": "f31898e",
-  "branch": "fix/pm85-assinatura-aninhada",
-  "test_js": 975,
+  "git_sha": "b966713",
+  "branch": "fix/rotulos-algoritmo-assinatura",
+  "test_js": 978,
   "test_python": 106,
-  "test_total": 1081,
-  "cache_name": "vox-pwa-v7.66-real-network-audio-video-upload",
-  "generated_at": "2026-11-10T19:43:28Z"
+  "test_total": 1084,
+  "cache_name": "vox-pwa-v7.67-real-network-audio-video-upload",
+  "generated_at": "2026-11-10T23:01:16Z"
 }

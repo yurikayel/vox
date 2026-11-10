@@ -46,7 +46,7 @@ function renderStatusTilesHtml(state, relayStatus, rtcStatus) {
       </div>
       <div class="agora-tile agora-tile--bronze">
         <span class="agora-tile-label">Criptografia local</span>
-        <span class="agora-tile-value">Ed25519</span>
+        <span class="agora-tile-value">P-256 (ECDSA)</span>
         <span class="agora-tile-hint">Assinatura no próprio aparelho</span>
       </div>
     </div>`;
