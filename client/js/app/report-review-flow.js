@@ -3,7 +3,7 @@
 import * as review from "../report-review.js";
 import * as share from "../share.js";
 
-/** "restored" publica `unhide` só na malha; "kept" publica `hide`, como o botão "Ocultar da rede". */
+/** "restored" publica `unhide` na malha (e memória central), sem Arweave; "kept" publica `hide`, como o botão "Ocultar da rede". */
 const DECISIONS = Object.freeze({
   restored: { action: "unhide", upload: false, toast: "A publicação voltou para todos." },
   kept: { action: "hide", upload: true, toast: "A publicação continua arquivada." },
