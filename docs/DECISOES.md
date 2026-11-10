@@ -1,0 +1,58 @@
+# Decisões do Vox — registro único
+
+> **Status:** canônico (registro) · **Owner:** mantenedor · **Revisado:** 2026-11-10
+> Uma linha por decisão em vigor, com a fonte que manda. **Institucional** (I) é o que o projeto promete às pessoas e como ele se governa. **Arquitetura** (A) é como o software cumpre isso. O detalhe mora no ADR ou no documento citado. Aqui fica só a decisão e o estado real.
+
+**Como usar.** Antes de propor uma mudança, procure aqui se ela contraria uma decisão. Se contrariar, escreva um ADR novo que **substitua** o antigo, nunca uma exceção silenciosa. Toda decisão nova entra nesta tabela no mesmo PR do ADR.
+
+Legenda de estado:
+- **em vigor**: implementado e valendo;
+- **parcial**: vale como regra, mas o código ainda não cobre tudo;
+- **em revisão**: a decisão está de pé, mas a implementação atual não cumpre a promessa;
+- **proposta**: ainda não aceita.
+
+## 1. Institucionais — o que o Vox promete e como se governa
+
+| ID | Decisão | Estado | Fonte |
+|---|---|---|---|
+| I-01 | O Vox é bem comum: licença AGPL-3.0-or-later. Quem roda uma versão modificada como serviço publica o código. | em vigor | [ADR-015](./adr/015-licenciamento-agplv3-e-governanca-de-bem-comum.md) |
+| I-02 | O Vox **nunca custodia dinheiro** e não é instituição de pagamento. Pix e apoio vão direto de pessoa a pessoa. | em vigor | [COMPLIANCE-BR](./legal/COMPLIANCE-BR.md) |
+| I-03 | Nada de CPF, documento ou dado civil para entrar. Selo gov.br, se vier, é opcional, emitido por parceiro público, e o CPF nunca chega ao Vox. | em vigor (selo: proposta) | [COMPLIANCE-BR §Anti-CPF](./legal/COMPLIANCE-BR.md) · [ADR-018](./adr/018-selo-govbr-via-parceiro-publico.md) |
+| I-04 | Sem telemetria que liga para casa. Contadores ficam no aparelho, e o diagnóstico só sai se a pessoa exportar. | em vigor | [ADR-004](./adr/004-gateway-honest-fallback.md) · [COMPLIANCE-BR](./legal/COMPLIANCE-BR.md) |
+| I-05 | **Esquecer por padrão.** O que vai para a memória permanente é escolha explícita, por três caminhos. | parcial (aceito, não implementado) | [ADR-019](./adr/019-esquecer-por-padrao-e-memoria-civica.md) |
+| I-06 | **Esconder não é apagar.** Moderação é pública e assinada, e quem quiser pode ver o que foi escondido. | em vigor | [GOVERNANCE](../GOVERNANCE.md) |
+| I-07 | Piloto G1: o mantenedor é o operador responsável. Voluntários fazem só trabalho de baixo risco. Só 18+. Uma denúncia arquiva o post até a revisão. | em vigor | [ADR-020](./adr/020-postura-de-operacao-do-piloto-g1.md) |
+| I-08 | Moderação em camadas: aparelho → moderador natural (padrinho, com peso assimétrico) → comunidade → operador. Quem denuncia não é revelado ao padrinho do denunciado. | parcial (vínculo assinado: em vigor; moderador natural: PM-83) | [ADR-023](./adr/023-moderacao-em-camadas-e-moderador-natural.md) |
+| I-09 | Um só plano vivo: o [ROADMAP](./ROADMAP.md). Ideia nova entra como brainstorm, sem caixa `[ ]`. | em vigor | [ADR-017](./adr/017-consolidacao-roadmap-unico.md) |
+| I-10 | Falha grave aberta não se detalha em público. Afirmação de segurança precisa de prova no código e no teste. O aviso ao usuário vem antes da correção. | em vigor | [ADR-024](./adr/024-divulgacao-responsavel-e-honestidade-de-seguranca.md) · [SECURITY](../SECURITY.md) |
+| I-11 | Texto honesto: a interface e os documentos não prometem o que o código não faz. Contribuição sob DCO. | em vigor | [CONTRIBUTORS](../CONTRIBUTORS.md) · [auditoria de copy](./audits/honest-copy-audit-2026-10-23.md) |
+| I-12 | Merge em `main` só por PR, com os checks obrigatórios verdes e dentro dos limites de complexidade v3.2. | em vigor (0 aprovações exigidas: ver [pontos fracos](./brainstorms/brainstorm-5-pontos-fracos-2026-11-10.md), ponto 5) | [HARDENING](./HARDENING.md) · [qualidade-e-evidencia](./process/qualidade-e-evidencia.md) |
+
+## 2. Arquitetura — como o software cumpre isso
+
+| ID | Decisão | Estado | Fonte |
+|---|---|---|---|
+| A-01 | **Local-first, sem servidor que diga o que é verdade.** O aparelho guarda e decide. O PWA é JavaScript puro, sem build. | em vigor | [ARCHITECTURE (cliente)](./ARCHITECTURE.md) · [ARCHITECTURE (protocolo)](../ARCHITECTURE.md) |
+| A-02 | Identidade = par de chaves ECDSA P-256 criado no aparelho. Todo post, cartão e ação vai assinado. A carteira Arweave (RSA) só assina o envio ao Arweave. | em vigor | [IDENTITY](./IDENTITY.md) · [ADR-006](./adr/006-p2p-profile-identity-gossip-hardening.md) |
+| A-03 | **Integridade na entrada.** O banco guarda a forma assinada. Tudo o que entra, por qualquer caminho, é conferido. Mídia fica fora da assinatura, presa por `mediaHash`. Só se repassa o que é novo. | em vigor | [ADR-021](./adr/021-integridade-na-entrada-forma-assinada.md) |
+| A-04 | A assinatura cobre só os campos de topo. Mudar isso exige versão (`sigv: 2`) e período de convivência. | em revisão (PM-85) | [ADR-021 §2.6](./adr/021-integridade-na-entrada-forma-assinada.md) · [ROADMAP](./ROADMAP.md) |
+| A-05 | **Memória central é cópia escolhida pela pessoa**, nunca fonte de verdade. Link e par só sugerem. Só `https`, exceto o próprio aparelho. | em vigor | [ADR-022](./adr/022-memoria-central-por-consentimento.md) |
+| A-06 | Recuperação da conta por cofre cifrado com senha ou login social. | **em revisão (PM-90)**: o formato atual não cumpre o que o ADR-014 promete | [ADR-014](./adr/014-zero-knowledge-vault-recuperacao-soberana.md) · [revisão DevSecOps](./audits/revisao-devsecops-2026-11-10.md) |
+| A-07 | Malha P2P por WebRTC com gossip assinado. A sinalização vem do nó local, do Render e de outros caminhos de reserva. Sincronização ao conectar por inventário. | em vigor | [ARCHITECTURE §3](../ARCHITECTURE.md) · [sync-inventario-v0](./specs/sync-inventario-v0.md) · [INFRA-CUSTOS](./INFRA-CUSTOS.md) |
+| A-08 | Permanência opcional no Arweave via Turbo, com itens de até 100 KiB no subsídio. Leitura pelos gateways públicos com reserva honesta, sem proxy central. | em vigor | [ADR-004](./adr/004-gateway-honest-fallback.md) · [ADR-009](./adr/009-multi-gateway-graphql-corroboration.md) (proposta) |
+| A-09 | DM com cifra de ponta a ponta (ECDH P-256 + AES-GCM), entregue pela malha. Caixa de saída no aparelho. No G1, só entre quem está online. | parcial (repasse cego: não implementado) | [ARCHITECTURE §4](../ARCHITECTURE.md) · [mochila-dm-v0](./specs/mochila-dm-v0.md) |
+| A-10 | Cartão de perfil na malha é opcional e assinado. A versão já vista não é repassada de novo. | em vigor | [ADR-003](./adr/003-profile-card-gossip.md) · [profile-card-gossip-v0](./specs/profile-card-gossip-v0.md) |
+| A-11 | Nó comunitário (Vox Populi) separado do cliente (Vox): o nó serve, o cliente decide. | em vigor | [ADR-008](./adr/008-vox-populi-community-node-architecture.md) · [ADR-011](./adr/011-taxonomia-tripartite-produtos-vox.md) |
+| A-12 | Extensões em cartuchos webxdc, atrás de uma "cintura fina" criptográfica. | parcial (runtime não plugado na UI) | [ADR-012](./adr/012-soberania-digital-cintura-fina-cartuchos-webxdc.md) |
+| A-13 | Código pequeno por regra: função de no máximo 30 LLOC, complexidade de no máximo 15, arquivo grande não cresce. | em vigor | [ADR-007](./adr/007-zero-complexity-monolith-decomposition.md) · [HARDENING](./HARDENING.md) |
+| A-14 | Design system Sovereign Agora e Voxels (conquistas verificáveis). | em vigor | [ADR-016](./adr/016-design-system-sovereign-agora-e-democracia-direta.md) · [ADR-013](./adr/013-sistema-voxels-e-conquistas-civicas.md) |
+
+## 3. Em aberto — decisões que ainda precisam ser tomadas
+
+| Tema | O que falta decidir | Onde |
+|---|---|---|
+| Custódia da chave | Formato novo do cofre e chaves privadas cifradas em repouso | PM-90, PM-93 ([ROADMAP](./ROADMAP.md)) |
+| Relay | Autenticação do dono e política de origem | PM-94 |
+| Cadeia de suprimentos | CodeQL, Dependabot, actions fixadas, revisão obrigatória | PM-95 · [DEPENDENCIAS](./DEPENDENCIAS.md) |
+| Formato de assinatura | `sigv: 2` e a janela de convivência | PM-85 |
+| Propostas antigas | Atestação (001), perfil coletivo (005), corroboração multi-gateway (009) e Contribution Engine (010): aceitar, adiar ou arquivar | [índice de ADRs](./adr/README.md) |

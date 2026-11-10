@@ -1,6 +1,6 @@
 # Vox — índice de documentação
 
-> **Status:** canônico (índice único) · **Owner:** voluntário doc (mutex: 1 PR por arquivo) · **Revisado:** 2026-11-08 (v2.2: pesquisa separada de brainstorm; runbook, plano em ondas e pesquisa de ancoragem indexados)
+> **Status:** canônico (índice único) · **Owner:** voluntário doc (mutex: 1 PR por arquivo) · **Revisado:** 2026-11-10 (v2.3: registro único de decisões, ADR-021…024, brainstorm dos 5 pontos fracos)
 > **Plano vivo e único checklist:** [ROADMAP.md](./ROADMAP.md) ([ADR-017](./adr/017-consolidacao-roadmap-unico.md)) · **Release (SHA, testes, SW):** [release-metadata.json](./release-metadata.json) e tabela do [README](../README.md)
 
 Entrada única para quem desenvolve, revisa ou opera. Todo `.md` novo em `docs/` entra aqui ([CONTRIBUTING-DOCS.md](./CONTRIBUTING-DOCS.md) §1).
@@ -13,6 +13,7 @@ Entrada única para quem desenvolve, revisa ou opera. Todo `.md` novo em `docs/`
 4. [ROADMAP.md](./ROADMAP.md): o que falta, por prioridade, com DoD.
 5. [INFRA-CUSTOS.md](./INFRA-CUSTOS.md): onde tudo roda, secrets, free tiers, SPOFs.
 6. [CHANGELOG.md](../CHANGELOG.md): o que mudou.
+7. [DECISOES.md](./DECISOES.md): as decisões institucionais e de arquitetura em vigor, numa página, com o estado real.
 
 ## Pastas de `docs/`
 
@@ -54,7 +55,8 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 | Mutex de agentes | [metodo-agentes-mutex-e-revisor.md](./process/metodo-agentes-mutex-e-revisor.md) |
 | Evidência de testes, falso verde e auditoria | [qualidade-e-evidencia.md](./process/qualidade-e-evidencia.md) |
 | Licença | [ADR-015](./adr/015-licenciamento-agplv3-e-governanca-de-bem-comum.md) · [licenca-e-contribuicoes.md](./legal/licenca-e-contribuicoes.md) |
-| Decisões de arquitetura | [adr/README.md](./adr/README.md) |
+| Decisões institucionais e de arquitetura (registro) | [DECISOES.md](./DECISOES.md) |
+| ADRs (detalhe de cada decisão) | [adr/README.md](./adr/README.md) |
 | Tese de tração e preceitos | [direcionamento-crescimento-rede-2026-11.md](./strategy/direcionamento-crescimento-rede-2026-11.md) |
 | Norma de documentação | [CONTRIBUTING-DOCS.md](./CONTRIBUTING-DOCS.md) |
 
@@ -78,7 +80,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 - [replicacao-por-grau-v0.md](./specs/replicacao-por-grau-v0.md): mídia no aparelho, replicação por grau de amizade com teto de 500 MB (não implementada)
 - [voluntariado-tres-trabalhos.md](./product/voluntariado-tres-trabalhos.md): os três trabalhos voluntários do piloto
 - [../client/DEV.md](../client/DEV.md): guia do desenvolvedor §0–§44 (histórico por sprint)
-- **ADRs:** [índice com status](./adr/README.md) (001–020) · **RFCs:** [rfc/README.md](./rfc/README.md) · [0001 — POSSE export](./rfc/0001-posse-export.md)
+- **ADRs:** [índice com status](./adr/README.md) (001–024) · [registro de decisões](./DECISOES.md) · **RFCs:** [rfc/README.md](./rfc/README.md) · [0001 — POSSE export](./rfc/0001-posse-export.md)
 
 ### Specs de protocolo (malha, cache, módulos)
 
@@ -124,6 +126,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 - [brainstorm-auto-escala-organica-2026-10.md](./brainstorms/brainstorm-auto-escala-organica-2026-10.md): flywheel, SLOs, moderação voluntária
 - [brainstorm-tracao-escalabilidade-incubacao.md](./brainstorms/brainstorm-tracao-escalabilidade-incubacao.md) · [incubacao-p2-backlog.md](./strategy/incubacao-p2-backlog.md)
 - [brainstorm-oauth-tradicional-descoberta-2026-10-24.md](./brainstorms/brainstorm-oauth-tradicional-descoberta-2026-10-24.md): OAuth e descoberta social
+- [brainstorm-5-pontos-fracos-2026-11-10.md](./brainstorms/brainstorm-5-pontos-fracos-2026-11-10.md): **os 5 pontos fracos do produto hoje** (identidade, falso verde, densidade da rede, exposição de quem participa, concentração), com ação e métrica para cada um
 - [brainstorm-10-pontos-fracos-metodo-implementacao-2026-11.md](./brainstorms/brainstorm-10-pontos-fracos-metodo-implementacao-2026-11.md): crítica ao método (motivou o ADR-017)
 
 ## 3. Operações: steward, espelhos, DR
