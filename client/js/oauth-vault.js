@@ -258,10 +258,13 @@ export function decodeVaultBundleFromUrl(encoded) {
   }
 }
 
+/** PM-92: o cofre por senha fica guardado fora do aparelho; senha curta cai por tentativa. */
+export const VAULT_PASSPHRASE_MIN = 12;
+
 export async function savePassphraseVault(passphrase) {
   const clean = String(passphrase || "").trim();
-  if (clean.length < 4) {
-    return { ok: false, reason: "A senha soberana deve ter pelo menos 4 caracteres." };
+  if (clean.length < VAULT_PASSPHRASE_MIN) {
+    return { ok: false, reason: `A Senha Soberana precisa de pelo menos ${VAULT_PASSPHRASE_MIN} caracteres. Uma frase de 4 palavras serve.` };
   }
   const lookupKey = await computeVaultLookupKey(clean, "passphrase");
   const encKey = await deriveVaultEncryptionKey(clean, "passphrase");

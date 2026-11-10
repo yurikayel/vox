@@ -56,9 +56,9 @@ export function renderNetworkWizard(main, settings = {}) {
 /** Senha Soberana: criar → confirmar → testar a memória → salvar o cofre. */
 export function renderBackupWizard(main) {
   const steps = [
-    { key: "create", title: "Crie sua Senha Soberana", required: ["bk-pass"], requiredMsg: "Use pelo menos 8 caracteres.", body: `
+    { key: "create", title: "Crie sua Senha Soberana", required: ["bk-pass"], requiredMsg: "Use pelo menos 12 caracteres (uma frase de 4 palavras serve).", body: `
       <p class="compose-step-lead">Com ela você recupera sua identidade em outro aparelho. Ninguém consegue recuperá-la por você — guarde num lugar seguro.</p>
-      <input type="password" id="bk-pass" class="form-control agora-inscription" minlength="8" required autocomplete="new-password" placeholder="Pelo menos 8 caracteres" aria-label="Senha Soberana" />` },
+      <input type="password" id="bk-pass" class="form-control agora-inscription" minlength="12" required autocomplete="new-password" placeholder="Pelo menos 12 caracteres" aria-label="Senha Soberana" />` },
     { key: "confirm", title: "Digite de novo", required: ["bk-pass2"], requiredMsg: "As senhas não conferem.", body: `
       <input type="password" id="bk-pass2" class="form-control agora-inscription" required autocomplete="new-password" placeholder="Repita a Senha Soberana" aria-label="Confirmar Senha Soberana" />` },
     { key: "test", title: "Teste: você lembra?", required: ["bk-pass3"], requiredMsg: "Não confere — anote a senha antes de continuar.", body: `
