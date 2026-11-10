@@ -4,8 +4,8 @@
 [![Identity](https://img.shields.io/badge/Identity-WebCrypto%20P--256-blueviolet.svg)](./client/js/local-account.js)
 [![Storage](https://img.shields.io/badge/Storage-Arweave%20Permaweb-black.svg)](https://arweave.org)
 [![License: AGPL v3](https://img.shields.io/badge/License-GNU%20AGPLv3-crimson.svg)](./LICENSE)
-[![Tests](https://img.shields.io/badge/tests-1019%20passing-success.svg)](./docs/TESTES.md)
-[![Service Worker](https://img.shields.io/badge/SW-v7.56--real--network--audio--video--upload-informational.svg)](./client/sw.js)
+[![Tests](https://img.shields.io/badge/tests-1021%20passing-success.svg)](./docs/TESTES.md)
+[![Service Worker](https://img.shields.io/badge/SW-v7.57--real--network--audio--video--upload-informational.svg)](./client/sw.js)
 
 O Vox é um projeto cívico em construção para ampliar a participação popular e a autonomia das comunidades na vida digital. Sua ambição é ser um bem comum aberto: o projeto deve permanecer transparente, copiável, modificável e maior que qualquer fundador, mantenedor, empresa ou plataforma.
 
@@ -77,9 +77,9 @@ Redes centralizadas, instâncias federadas e protocolos locais têm custos, vant
 
 | Campo | Valor |
 |---|---|
-| **Commit SHA** | `14eeece` |
-| **Suíte de Testes** | **1019** (`928` JS + `91` Python) |
-| **Service Worker** | `vox-pwa-v7.56-real-network-audio-video-upload` |
+| **Commit SHA** | `9de78a7` |
+| **Suíte de Testes** | **1021** (`930` JS + `91` Python) |
+| **Service Worker** | `vox-pwa-v7.57-real-network-audio-video-upload` |
 
 *Tabela regenerada por `npm run release-line` (roda a suíte e grava [docs/release-metadata.json](./docs/release-metadata.json)). Nenhum outro documento deve repetir esses números.*
 
@@ -168,8 +168,8 @@ Resumo do que entrou no cliente em nov/2026 (detalhes em [CHANGELOG.md](./CHANGE
 * **Convite com vínculo assinado (PM-82):** o link "Convide amigos" leva um token; quem entra aceita, e o app de quem convidou confirma sozinho. O vínculo tem as duas assinaturas e marca o padrinho, base do **moderador natural** (PM-83, a fazer; [spec](./docs/specs/moderador-natural-v0.md)).
 * **Correção: post guardado voltou a bater com a assinatura (#49):** desde o primeiro commit P2P, o post gravado no aparelho levava campos extras e quem o recebia de volta descartava. Só o que circulava ao vivo chegava a outros aparelhos; agora a sincronização e a memória central repassam a forma assinada.
 * **Correção: memória central confere o que recebe (PM-86):** post e remoção vindos do servidor só entram com assinatura válida do autor, pela regra do PM-09 e sem trocar post de outra pessoa; a mídia anexada fica fora da forma assinada.
+* **Correção: foto enviada ao vivo chega a quem recebe (PM-87):** o post com foto era assinado com a imagem e enviado sem ela, e quem recebia descartava. Agora a imagem sai antes da assinatura e viaja ao lado do post, conferida pelo hash assinado.
 * **Defeitos abertos, achados na revisão de 10/11** ([THREAT-MODEL T17–T19](./docs/THREAT-MODEL.md)):
-  * post com foto enviado ao vivo **não bate com a assinatura** e quem recebe descarta (PM-87);
   * campos aninhados (`photoTags`, `mediaRef`) ficam **fora da assinatura** (PM-85);
   * cartão de perfil pode **circular sem fim** entre abas e pares (PM-84).
 * **Peso do app guardado no aparelho:** o precache está a menos de 1 KB do teto do PM-02; a próxima adição ao shell precisa vir com corte.

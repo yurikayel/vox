@@ -6,6 +6,12 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Correção: foto enviada ao vivo chega a quem recebe (PM-87, SW v7.57)
+- **Post com foto volta a bater com a assinatura:** o composer assinava o post com a imagem e mandava ao vivo a versão sem ela (`image: null` + `mediaRef`); quem recebia descartava. Agora a imagem sai **antes** da assinatura: o post assinado leva `mediaRef` e `mediaHash`, e a imagem fica no aparelho em `_media`, fora da forma assinada.
+- **A imagem viaja ao lado do post:** a mensagem `GOSSIP` leva o blob junto (`blob`). Quem recebe só guarda, mostra e repassa o blob cujo conteúdo bate com `mediaHash`; sem blob, usa o que já tem guardado. `mediaHash` fica no primeiro nível porque a assinatura ainda não cobre chaves aninhadas (PM-85): trocar `mediaRef.hash` no caminho não troca a imagem.
+- **Ainda sem imagem:** a sincronização ao conectar (PM-80) manda o post sem o blob; quem recebe por ela vê o marcador "Mídia P2P" até a imagem chegar pela memória central ou ao vivo.
+- **Peso do precache:** pago com a remoção de código que nada chamava (`readComposerImageFromFile` e `measureDataUrlImage` em `composer-media.js`; `formatGatewayHealthPill` e `exportGatewayDiagnostic` em `gateway-telemetry.js`); o precache ficou 370 bytes menor.
+
 ### Correção: memória central confere o que recebe (PM-86, SW v7.56)
 - **O que volta da memória central passa pelas regras da malha** (`central-memory-hydrate.js`). Antes, posts e remoções do servidor eram gravados sem conferir nada; quem controlasse o servidor punha post em nome de outra pessoa, edição de comunidade, vínculo ou arquivamento falsos. Agora entra só o que tem assinatura válida de quem diz ser o autor e cujo autor não está bloqueado. Edição de comunidade segue a regra do PM-09. Post existente só é trocado pelo mesmo autor, e remoção só vale se for do autor do post.
 - **Mídia fora da assinatura:** a imagem, o vídeo ou o áudio de um `mediaRef` que chega com o post fica no registro, fora da forma assinada (`_media`). Antes, era colada no post, que deixava de bater com a assinatura ao ser repassado. Blob cujo conteúdo não bate com o hash é descartado.
