@@ -54,6 +54,8 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 | Resposta a incidentes | [runbook-incidentes.md](./operations/runbook-incidentes.md) |
 | Mutex de agentes | [metodo-agentes-mutex-e-revisor.md](./process/metodo-agentes-mutex-e-revisor.md) |
 | Evidência de testes, falso verde e auditoria | [qualidade-e-evidencia.md](./process/qualidade-e-evidencia.md) |
+| Primeiras tarefas para contribuir (PM-41, rascunho) | [primeiras-tarefas-contribuidor.md](./process/primeiras-tarefas-contribuidor.md) |
+| Segunda pessoa com acesso em etapas (LAN-30, rascunho) | [segunda-pessoa-acesso-gradual.md](./process/segunda-pessoa-acesso-gradual.md) |
 | Licença | [ADR-015](./adr/015-licenciamento-agplv3-e-governanca-de-bem-comum.md) · [licenca-e-contribuicoes.md](./legal/licenca-e-contribuicoes.md) |
 | Decisões institucionais e de arquitetura (registro) | [DECISOES.md](./DECISOES.md) |
 | ADRs (detalhe de cada decisão) | [adr/README.md](./adr/README.md) |
@@ -101,10 +103,11 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 - [direcionamento-crescimento-rede-2026-11.md](./strategy/direcionamento-crescimento-rede-2026-11.md): preceitos, escada de 4 camadas, moderação E1–E5
 - [rede-sustentada-participantes.md](./strategy/rede-sustentada-participantes.md) · [backlog-participacao-rede.md](./strategy/backlog-participacao-rede.md) (IDs V-P) · [infra-participativa-blindagem-crescimento.md](./strategy/infra-participativa-blindagem-crescimento.md) · [espacos-digitais-infra.md](./strategy/espacos-digitais-infra.md) (V-I01)
 - [campo-debate-aberto-ndp-2026-10.md](./strategy/campo-debate-aberto-ndp-2026-10.md): notas de campo, modelos A–D
+- [estrategia-5-pontos-fracos-90-dias-2026-11.md](./strategy/estrategia-5-pontos-fracos-90-dias-2026-11.md): **plano de 90 dias por ponto fraco**, com as decisões de 10/11 (cunha do piloto: modo assembleia)
 - [mapa-parceiras-e-concorrentes-2026-11.md](./strategy/mapa-parceiras-e-concorrentes-2026-11.md): **20 parceiras e 20 concorrentes para observar** (com fonte, confiança e pendências)
 - [tese-praca-civica-militancia-pro-democratica-2026-10.md](./strategy/tese-praca-civica-militancia-pro-democratica-2026-10.md): praça E+D, T01–T20
 - [antigravity-estrategia-mantenedor-revisor-2026.md](./strategy/antigravity-estrategia-mantenedor-revisor-2026.md): transição mantenedor → revisor
-- [POSITIONING.md](./product/POSITIONING.md) · [LESSONS.md](./process/LESSONS.md) · [../GOVERNANCE.md](../GOVERNANCE.md) · [COMPLIANCE-BR.md](./legal/COMPLIANCE-BR.md)
+- [POSITIONING.md](./product/POSITIONING.md) · [LESSONS.md](./process/LESSONS.md) · [../GOVERNANCE.md](../GOVERNANCE.md) · [COMPLIANCE-BR.md](./legal/COMPLIANCE-BR.md) · [briefing-parecer-g1.md](./legal/briefing-parecer-g1.md) (rascunho do pedido de parecer do G1, REV-12/LAN-01)
 
 ### Rede pública (portões G1–G3)
 
@@ -144,6 +147,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 
 ## 4. Piloto e teste aberto
 
+- [piloto-g1-roteiro-conversa.md](./pilot/piloto-g1-roteiro-conversa.md) · [piloto-g1-convite.md](./pilot/piloto-g1-convite.md): rascunhos da conversa com comunidades candidatas e do convite (PIL-01)
 - [piloto-comunidade-go-no-go.md](./pilot/piloto-comunidade-go-no-go.md): gate humano (V-P09) · [piloto-comunidade-retrospectiva-template.md](./pilot/piloto-comunidade-retrospectiva-template.md)
 - [teste-aberto-convite.md](./pilot/teste-aberto-convite.md) · [teste-aberto-canal-apoio.md](./pilot/teste-aberto-canal-apoio.md) · [teste-aberto-carta-moderacao-e2.md](./pilot/teste-aberto-carta-moderacao-e2.md) · [teste-aberto-demo.md](./pilot/teste-aberto-demo.md) (comunidade `demo-aprenda-vox`)
 - [vox-brasil-welcome-profile.md](./pilot/vox-brasil-welcome-profile.md): perfil de boas-vindas · [formulário de bug para testadores](../.github/ISSUE_TEMPLATE/bug-tester.yml)
