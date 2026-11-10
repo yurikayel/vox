@@ -1,73 +1,41 @@
 /**
  * @module oauth-vault
- * Zero-Knowledge Vault Backup & Recovery via OAuth Subject (Google).
- * Permite restaurar o mesmo perfil canônico (routeId + chaves P-256 + DMs)
- * em qualquer navegador, sessão anônima ou após desconectar,
- * sem que o servidor tenha acesso às chaves privadas (cifrado via PBKDF2 + AES-GCM).
+ * Cofre de recuperação da identidade (routeId + chave P-256 + nome, enriquecimento, Pix).
+ *
+ * PM-90 — formato v2 (`vault-crypto.js`): o cofre só abre com a Senha Soberana. Login com Google ou Meta
+ * não é chave de nada: ele só enriquece o perfil e reencontra contas que já estão neste aparelho.
+ * Cofres v1 são lidos uma última vez para não deixar ninguém sem a conta, cifrados de novo quando há
+ * senha, e revogados (`vault-legacy.js`).
  */
 
 import * as localAccount from "./local-account.js";
 import * as profileDirectory from "./profile-directory.js";
+import * as share from "./share.js";
 import { getCentralMemoryUrls } from "./central-memory.js";
+import {
+  decryptLegacyRecord,
+  decryptVaultRecord,
+  deriveVaultAddress,
+  encryptVaultV2,
+  isRevokedRecord,
+  isV2Record,
+  legacyLookupKey,
+} from "./vault-crypto.js";
+import {
+  LEGACY_VAULT_PREFIX,
+  clearLegacyRevokedNotice,
+  consumeLegacyRevokedNotice,
+  markLegacyRevokedNotice,
+  migrateLegacyVaults,
+  revokeLegacyVaults,
+} from "./vault-legacy.js";
 
-const VAULT_STORAGE_PREFIX = "vox-oauth-vault-v1:";
-const ITERATIONS = 50000;
+export { encodeVaultBundleForUrl, decodeVaultBundleFromUrl } from "./vault-crypto.js";
 
-function bufferToHex(buf) {
-  return Array.from(new Uint8Array(buf))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
-
-function hexToBytes(hex) {
-  const bytes = new Uint8Array(hex.length / 2);
-  for (let i = 0; i < bytes.length; i++) {
-    bytes[i] = parseInt(hex.substr(i * 2, 2), 16);
-  }
-  return bytes;
-}
-
-export async function computeVaultLookupKey(sub, provider = "google") {
-  const raw = new TextEncoder().encode(`vox-vault-v1:${provider}:${sub}`);
-  const digest = await crypto.subtle.digest("SHA-256", raw);
-  return bufferToHex(digest);
-}
-
-export async function deriveVaultEncryptionKey(sub, provider = "google") {
-  const enc = new TextEncoder().encode(sub);
-  const salt = new TextEncoder().encode(`vox-sovereign-vault:${provider}:${sub}`);
-  const baseKey = await crypto.subtle.importKey("raw", enc, "PBKDF2", false, ["deriveKey"]);
-  return crypto.subtle.deriveKey(
-    { name: "PBKDF2", salt, iterations: ITERATIONS, hash: "SHA-256" },
-    baseKey,
-    { name: "AES-GCM", length: 256 },
-    false,
-    ["encrypt", "decrypt"]
-  );
-}
-
-export async function encryptVaultBundle(bundle, encKey) {
-  const iv = crypto.getRandomValues(new Uint8Array(12));
-  const plaintext = new TextEncoder().encode(JSON.stringify(bundle));
-  const ciphertext = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, encKey, plaintext);
-  return {
-    iv: bufferToHex(iv),
-    ciphertext: bufferToHex(ciphertext),
-    updatedAt: Date.now(),
-  };
-}
-
-export async function decryptVaultBundle(record, encKey) {
-  if (!record?.iv || !record?.ciphertext) return null;
-  const iv = hexToBytes(record.iv);
-  const ciphertext = hexToBytes(record.ciphertext);
-  const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, encKey, ciphertext);
-  return JSON.parse(new TextDecoder().decode(decrypted));
-}
+const VAULT_STORAGE_PREFIX = "vox-vault-v2:";
 
 export async function fetchRemoteVaultRecord(lookupKey) {
-  const urls = getCentralMemoryUrls();
-  for (const baseUrl of urls) {
+  for (const baseUrl of getCentralMemoryUrls()) {
     try {
       const res = await fetch(`${baseUrl}/memory/vault/${lookupKey}`, {
         method: "GET",
@@ -85,8 +53,7 @@ export async function fetchRemoteVaultRecord(lookupKey) {
 }
 
 export function saveRemoteVaultRecord(lookupKey, record) {
-  const urls = getCentralMemoryUrls();
-  for (const baseUrl of urls) {
+  for (const baseUrl of getCentralMemoryUrls()) {
     try {
       void fetch(`${baseUrl}/memory/vault/${lookupKey}`, {
         method: "POST",
@@ -97,6 +64,24 @@ export function saveRemoteVaultRecord(lookupKey, record) {
       /* ignore */
     }
   }
+}
+
+/** Revoga os cofres v1 que este aparelho conhece. Roda na abertura do app. */
+export function runLegacyVaultMigration() {
+  return migrateLegacyVaults({
+    enrichment: localAccount.getProfileEnrichment(),
+    saveRemote: saveRemoteVaultRecord,
+    serverMarker: getCentralMemoryUrls().join(" "),
+  });
+}
+
+export const LEGACY_VAULT_NOTICE =
+  "Atualizamos a proteção do cofre de recuperação e o cofre antigo foi desativado. Para recuperar a conta em outro aparelho, crie a Senha Soberana de novo em Perfil → Backup.";
+
+/** Abertura do app: migra e avisa a pessoa uma vez, se um cofre antigo foi desativado. */
+export async function startVaultMigration(toast = share.showToast) {
+  await runLegacyVaultMigration();
+  if (consumeLegacyRevokedNotice()) toast(LEGACY_VAULT_NOTICE, "info");
 }
 
 function resolveCanonicalLocalBundle(matched) {
@@ -115,22 +100,15 @@ function resolveCanonicalLocalBundle(matched) {
   return null;
 }
 
-async function findEncryptedVaultRecord(lookupKey) {
+async function findEncryptedVaultRecord(lookupKey, prefix) {
   try {
-    const rawLocal = localStorage.getItem(VAULT_STORAGE_PREFIX + lookupKey);
+    const rawLocal = localStorage.getItem(prefix + lookupKey);
     if (rawLocal) return JSON.parse(rawLocal);
   } catch {
     /* ignore */
   }
   const remote = await fetchRemoteVaultRecord(lookupKey);
-  if (remote) {
-    try {
-      localStorage.setItem(VAULT_STORAGE_PREFIX + lookupKey, JSON.stringify(remote));
-    } catch {
-      /* ignore */
-    }
-  }
-  return remote;
+  return remote && !isRevokedRecord(remote) ? remote : null;
 }
 
 function cleanupSupersededIdentity(prevId, canonicalId, displayName, avatarUrl) {
@@ -152,40 +130,6 @@ function cleanupSupersededIdentity(prevId, canonicalId, displayName, avatarUrl) 
   }
 }
 
-async function tryRestoreFromEncryptedRecord(record, encKey, profile, provider = "google") {
-  if (!record) return null;
-  try {
-    const bundle = await decryptVaultBundle(record, encKey);
-    if (bundle?.routeId && bundle?.publicJwk && bundle?.privateJwk) {
-      const prevId = localAccount.getCachedRouteIdSync();
-      await localAccount.importLocalAccountBundle(bundle);
-      const name = profile.name || bundle.displayName;
-      const avatarUrl = profile.picture || bundle.avatarUrl;
-      if (provider !== "passphrase") {
-        localAccount.setProfileEnrichment({
-          displayName: name,
-          avatarUrl,
-          oauthProvider: provider,
-          oauthSub: profile.sub,
-          oauthEmail: profile.email,
-        });
-      }
-      cleanupSupersededIdentity(prevId, bundle.routeId, name, avatarUrl);
-      return { restored: true, routeId: bundle.routeId, displayName: name };
-    }
-  } catch (err) {
-    console.warn(`Falha ao decifrar cofre ${provider}:`, err);
-  }
-  return null;
-}
-
-function persistEncryptedVaultRecord(lookupKey, encrypted) {
-  try {
-    localStorage.setItem(VAULT_STORAGE_PREFIX + lookupKey, JSON.stringify(encrypted));
-  } catch {}
-  saveRemoteVaultRecord(lookupKey, encrypted);
-}
-
 function enrichAccountFromProfile(provider, { name, picture, sub, email }) {
   if (provider === "passphrase") return;
   localAccount.setProfileEnrichment({
@@ -197,7 +141,34 @@ function enrichAccountFromProfile(provider, { name, picture, sub, email }) {
   });
 }
 
-async function bindAndPersistNewVault(profile, lookupKey, encKey, provider = "google") {
+function isValidAccountBundle(bundle) {
+  return Boolean(bundle?.routeId && bundle?.publicJwk && bundle?.privateJwk);
+}
+
+/** Último uso de um cofre v1 de login social: abre, troca a conta e revoga o endereço antigo. */
+async function tryLegacyOAuthRestore(profile, provider) {
+  const lookupKey = await legacyLookupKey(profile.sub, provider);
+  const record = await findEncryptedVaultRecord(lookupKey, LEGACY_VAULT_PREFIX);
+  if (!record) return null;
+  let bundle = null;
+  try {
+    bundle = await decryptLegacyRecord(record, profile.sub, provider);
+  } catch (err) {
+    console.warn(`Falha ao abrir cofre antigo ${provider}:`, err);
+  }
+  if (!isValidAccountBundle(bundle)) return null;
+  const prevId = localAccount.getCachedRouteIdSync();
+  await localAccount.importLocalAccountBundle(bundle);
+  const name = profile.name || bundle.displayName;
+  enrichAccountFromProfile(provider, { ...profile, name, picture: profile.picture || bundle.avatarUrl });
+  cleanupSupersededIdentity(prevId, bundle.routeId, name, profile.picture || bundle.avatarUrl);
+  revokeLegacyVaults([lookupKey], { saveRemote: saveRemoteVaultRecord });
+  markLegacyRevokedNotice();
+  return { restored: true, routeId: bundle.routeId, displayName: name, legacyVault: true };
+}
+
+/** Login social sem cofre: vincula o login à conta deste aparelho (ou à conta já vinculada a ele aqui). */
+async function bindLocalAccountToLogin(profile, provider) {
   const { sub, email, name, picture } = profile;
   const matched = localAccount.findVaultAccountByOAuth({
     oauthProvider: provider,
@@ -207,29 +178,20 @@ async function bindAndPersistNewVault(profile, lookupKey, encKey, provider = "go
   });
   const localBundle = resolveCanonicalLocalBundle(matched);
   const prevId = localAccount.getCachedRouteIdSync();
-  const bundleToPersist = localBundle || (await localAccount.exportLocalAccountBundle());
-
   if (localBundle && localBundle.routeId !== prevId) {
     await localAccount.importLocalAccountBundle(localBundle);
   }
-
-  const encrypted = await encryptVaultBundle(bundleToPersist, encKey);
-  persistEncryptedVaultRecord(lookupKey, encrypted);
+  const routeId = localBundle?.routeId || (await localAccount.ensureLocalAccount()).routeId;
   enrichAccountFromProfile(provider, profile);
-  cleanupSupersededIdentity(prevId, bundleToPersist.routeId, name, picture);
-  return { restored: Boolean(localBundle), routeId: bundleToPersist.routeId, displayName: name };
+  cleanupSupersededIdentity(prevId, routeId, name, picture);
+  return { restored: Boolean(localBundle), routeId, displayName: name };
 }
 
 export async function restoreOrBindOAuthIdentity({ provider = "google", sub, email, name, picture }) {
   if (!sub) return { restored: false };
-  const lookupKey = await computeVaultLookupKey(sub, provider);
-  const encKey = await deriveVaultEncryptionKey(sub, provider);
-
-  const record = await findEncryptedVaultRecord(lookupKey);
-  const restored = await tryRestoreFromEncryptedRecord(record, encKey, { sub, email, name, picture }, provider);
-  if (restored) return restored;
-
-  return bindAndPersistNewVault({ sub, email, name, picture }, lookupKey, encKey, provider);
+  const profile = { sub, email, name, picture };
+  const legacy = await tryLegacyOAuthRestore(profile, provider);
+  return legacy || bindLocalAccountToLogin(profile, provider);
 }
 
 export async function restoreOrBindGoogleIdentity({ sub, email, name, picture }) {
@@ -240,54 +202,40 @@ export async function restoreOrBindMetaIdentity({ sub, email, name, picture }) {
   return restoreOrBindOAuthIdentity({ provider: "meta", sub, email, name, picture });
 }
 
-export function encodeVaultBundleForUrl(record) {
-  if (!record?.iv || !record?.ciphertext) return "";
-  const compact = `${record.iv}:${record.ciphertext}`;
-  return btoa(compact).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-}
-
-export function decodeVaultBundleFromUrl(encoded) {
-  if (!encoded) return null;
-  try {
-    const raw = atob(encoded.replace(/-/g, "+").replace(/_/g, "/"));
-    const [iv, ciphertext] = raw.split(":");
-    if (!iv || !ciphertext) return null;
-    return { iv, ciphertext, updatedAt: Date.now() };
-  } catch {
-    return null;
-  }
-}
-
 /** PM-92: o cofre por senha fica guardado fora do aparelho; senha curta cai por tentativa. */
 export const VAULT_PASSPHRASE_MIN = 12;
+
+function persistVaultRecord(address, record) {
+  try {
+    localStorage.setItem(VAULT_STORAGE_PREFIX + address, JSON.stringify(record));
+  } catch {
+    /* ignore */
+  }
+  saveRemoteVaultRecord(address, record);
+}
 
 export async function savePassphraseVault(passphrase) {
   const clean = String(passphrase || "").trim();
   if (clean.length < VAULT_PASSPHRASE_MIN) {
     return { ok: false, reason: `A Senha Soberana precisa de pelo menos ${VAULT_PASSPHRASE_MIN} caracteres. Uma frase de 4 palavras serve.` };
   }
-  const lookupKey = await computeVaultLookupKey(clean, "passphrase");
-  const encKey = await deriveVaultEncryptionKey(clean, "passphrase");
+  const address = await deriveVaultAddress(clean);
   const bundle = await localAccount.exportLocalAccountBundle();
-  const encrypted = await encryptVaultBundle(bundle, encKey);
-  persistEncryptedVaultRecord(lookupKey, encrypted);
+  const encrypted = await encryptVaultV2(bundle, clean);
+  persistVaultRecord(address, encrypted);
+  clearLegacyRevokedNotice();
   return {
     ok: true,
-    lookupKey,
+    lookupKey: address,
     routeId: bundle.routeId,
     displayName: bundle.displayName,
     bundle: encrypted,
   };
 }
 
-function isValidAccountBundle(bundle) {
-  return Boolean(bundle?.routeId && bundle?.publicJwk && bundle?.privateJwk);
-}
-
 async function tryDecryptPassphraseRecord(record, cleanPassphrase) {
-  const encKey = await deriveVaultEncryptionKey(cleanPassphrase, "passphrase");
   try {
-    const bundle = await decryptVaultBundle(record, encKey);
+    const bundle = await decryptVaultRecord(record, cleanPassphrase);
     return isValidAccountBundle(bundle)
       ? { ok: true, bundle }
       : { ok: false, reason: "Dados do cofre inválidos ou corrompidos." };
@@ -296,20 +244,38 @@ async function tryDecryptPassphraseRecord(record, cleanPassphrase) {
   }
 }
 
+/** Procura o cofre da senha: primeiro o v2; se não houver, um v1 antigo (que será migrado). */
+async function locatePassphraseRecord(clean, addressOverride) {
+  const address = addressOverride || (await deriveVaultAddress(clean));
+  const current = await findEncryptedVaultRecord(address, VAULT_STORAGE_PREFIX);
+  if (current) return { record: current, legacyKey: null };
+  const legacyKey = await legacyLookupKey(clean, "passphrase");
+  const legacy = await findEncryptedVaultRecord(legacyKey, LEGACY_VAULT_PREFIX);
+  return { record: legacy, legacyKey: legacy ? legacyKey : null };
+}
+
+/** Cofre aberto em formato antigo: cifra de novo em v2 (se a senha deixa) e revoga o endereço v1. */
+async function upgradeLegacyPassphraseVault(clean, legacyKey) {
+  if (legacyKey) revokeLegacyVaults([legacyKey], { saveRemote: saveRemoteVaultRecord });
+  const saved = await savePassphraseVault(clean);
+  if (!saved.ok) markLegacyRevokedNotice();
+  return saved.ok;
+}
+
 export async function restoreFromPassphraseVault(passphrase, lookupKeyOverride = null, directRecord = null) {
   const clean = String(passphrase || "").trim();
   if (!clean) return { ok: false, reason: "Senha soberana não informada." };
 
-  const lookupKey = lookupKeyOverride || (await computeVaultLookupKey(clean, "passphrase"));
-  const record = directRecord || (await findEncryptedVaultRecord(lookupKey));
-  if (!record) return { ok: false, reason: "Nenhum cofre encontrado para esta senha ou chave." };
+  const located = directRecord ? { record: directRecord, legacyKey: null } : await locatePassphraseRecord(clean, lookupKeyOverride);
+  if (!located.record) return { ok: false, reason: "Nenhum cofre encontrado para esta senha ou chave." };
 
-  const decryptResult = await tryDecryptPassphraseRecord(record, clean);
+  const decryptResult = await tryDecryptPassphraseRecord(located.record, clean);
   if (!decryptResult.ok) return decryptResult;
 
   const bundle = decryptResult.bundle;
   const prevId = localAccount.getCachedRouteIdSync();
   await localAccount.importLocalAccountBundle(bundle);
   cleanupSupersededIdentity(prevId, bundle.routeId, bundle.displayName, bundle.avatarUrl || bundle.enrichment?.avatarUrl);
-  return { ok: true, routeId: bundle.routeId, displayName: bundle.displayName || "" };
+  const upgraded = isV2Record(located.record) ? false : await upgradeLegacyPassphraseVault(clean, located.legacyKey);
+  return { ok: true, routeId: bundle.routeId, displayName: bundle.displayName || "", upgraded };
 }

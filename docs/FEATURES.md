@@ -56,7 +56,7 @@
 | Onboarding em etapas + pacto | 1º acesso | `app/onboarding.js`, `render/oauth-modals.js` | no ar | `onboarding-steps` |
 | Confirmação "tenho 18 anos ou mais" no pacto (piloto só 18+, ADR-020) | pacto | `age-gate.js`, `render/welcome-pact.js` | no ar (autodeclarada, só no aparelho) | `age-gate` |
 | Identidade local P-256 `vx_*` | — | `local-account.js` | no ar | `local-account` |
-| Cofre ZK, Senha Soberana, sync por QR | `#/backup`, `#/sync` | `oauth-vault.js`, `account-backup-wrap.js` | no ar (via Google/Meta, depende de config) | `account-backup`, `wallet-encryption` |
+| Cofre v2 por Senha Soberana, sync por link/QR (ADR-025) | `#/backup`, `#/sync` | `oauth-vault.js`, `vault-crypto.js`, `vault-legacy.js`, `account-backup-wrap.js` | no ar (precisa de servidor de memória escolhido; login Google/Meta só enriquece o perfil) | `account-backup`, `wallet-encryption` |
 | Identidade Ed25519/X25519 (cintura fina) | — | `vox-identity.js` | **escrito, não plugado** | `vox-identity` |
 | Credencial cívica / vínculo de identidade | — | `civic-credential.js`, `identity-link.js` | **escrito, não plugado** | `civic-credential`, `identity-link` |
 | Handles `@` | `#/h/:slug`, `#/u/@x` | `handles.js` | no ar | `handles` |
