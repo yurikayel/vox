@@ -20,6 +20,7 @@ import { attachQuarantineHandlers } from "./app/context.js";
 import { syncIdentity } from "./app/screens-network.js";
 import { startDmOutbox } from "./app/dm-wire.js";
 import { attachChannelHandlers } from "./app/community-channel-flow.js";
+import { startVoxLinks } from "./app/vox-link-flow.js";
 
 installDomDelegates(document);
 attachReportHandlers(document);
@@ -31,6 +32,7 @@ wireRoute();
 setupHashchangeListener();
 initDmListeners();
 startDmOutbox();
+void startVoxLinks().catch(() => {});
 initGossipListeners();
 initSocialInteractions();
 initPostMediaLightbox();

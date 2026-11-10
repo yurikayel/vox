@@ -85,7 +85,7 @@ function parseEntityRoute(parts, query) {
     return null;
   }
   const decoded = decodeURIComponent(param);
-  if (root === "connect") return { name: "connect", routeId: decoded };
+  if (root === "connect") return { name: "connect", routeId: decoded, invite: query.get("convite") || "" };
   if (root === "pix") return { name: "pix-lookup", query: decoded };
   if (root === "h") return { name: "handle-lookup", slug: decoded };
   if (root === "tag") return { name: "tag-feed", slug: decoded };
