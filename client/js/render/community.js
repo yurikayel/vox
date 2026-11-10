@@ -25,6 +25,8 @@ import {
   renderAvatarHtml,
   renderMarkdownLight,
 } from "./util.js";
+import { extractTopicCivicTag, resolveTopicBadgesHtml } from "./topic-badges.js";
+export { CIVIC_TAGS, extractTopicCivicTag } from "./topic-badges.js";
 
 export function renderCommunityAvatarHtml(meta = {}, communityId = "", sizeClass = "community-avatar-lg") {
   const image = meta.image || meta.avatar || meta.photo || "";
@@ -156,32 +158,6 @@ function resolveTopicAuthorMeta(topic) {
 }
 
 export const TOPICS_PAGE_SIZE = 20;
-
-export const CIVIC_TAGS = ["[Pauta]", "[Bug]", "[Ideia]", "[Debate Geral]"];
-
-export function extractTopicCivicTag(topic = {}) {
-  if (topic.civicTag) return String(topic.civicTag);
-  if (topic.tag) return String(topic.tag);
-  const match = String(topic.title || "").match(/^\[(Pauta|Bug|Ideia|Debate Geral)\]/i);
-  return match ? match[0] : "";
-}
-
-function resolveTopicBadgesHtml(topic) {
-  const pin = topic.isPinned
-    ? `<span class="badge-pill community-pinned-pill" title="Tópico fixado pela moderação">📌 Fixado</span> · `
-    : "";
-  const lock = topic.isLocked
-    ? `<span class="badge-pill community-locked-pill" title="Discussão encerrada para novas respostas">🔒 Encerrado</span> · `
-    : "";
-  const newKey = topic.newKeyHeld
-    ? `<span class="badge-pill community-newkey-pill" title="Chave nova sem prova de trabalho: recolhido para quem não modera">🆕 Chave nova</span> · `
-    : "";
-  const tag = extractTopicCivicTag(topic);
-  const tagHtml = tag
-    ? `<span class="badge-pill community-civic-tag-pill" data-tag="${escapeHtml(tag)}">${escapeHtml(tag)}</span> · `
-    : "";
-  return `${pin}${lock}${newKey}${tagHtml}`;
-}
 
 /** LAN-14: aviso de posts recolhidos pela quarentena de chave nova, com "ver mesmo assim". */
 export function renderNewKeyHeldNoticeHtml(count) {
