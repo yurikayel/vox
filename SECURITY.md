@@ -16,7 +16,7 @@ A segurança, privacidade e soberania criptográfica dos usuários do Vox são c
 
 ## 2. Diretrizes Criptográficas e Vetores Protegidos
 
-- **Identidade e Chaves Soberanas:** Chaves privadas (WebCrypto ECDSA P-256) são geradas localmente no aparelho do usuário. Desde o SW v7.63 ficam **cifradas por uma chave do aparelho não exportável** (PM-93 etapa 1, [ADR-026](./docs/adr/026-chaves-em-repouso-trava-depois-do-backup.md)); a trava depois do backup (etapa 2) ainda falta. O relay ainda não autentica o dono (PM-94). Os dois estão sob divulgação responsável (revisão de 10/11/2026).
+- **Identidade e Chaves Soberanas:** Chaves privadas (WebCrypto ECDSA P-256) são geradas localmente no aparelho do usuário. Desde o SW v7.63 ficam **cifradas por uma chave do aparelho não exportável**. Desde o SW v7.64, depois do backup com a Senha Soberana, a identidade e a DM viram **chaves não exportáveis** e só saem do aparelho pela cópia cifrada com a senha (PM-93, [ADR-026](./docs/adr/026-chaves-em-repouso-trava-depois-do-backup.md)). O relay ainda não autentica o dono (PM-94). Os dois estão sob divulgação responsável (revisão de 10/11/2026).
 - **Armazenamento Seguro:** o export `.voxid` e o cofre de recuperação v2 ([ADR-025](./docs/adr/025-cofre-v2-so-a-senha-abre.md), PM-90) usam PBKDF2-SHA256 com sal aleatório e AES-GCM-256. O cofre abre só com a Senha Soberana; login social não é chave.
 - **Sem Telemetria ou Rastreamento:** O Vox não utiliza SDKs de Analytics, trackers de terceiros ou identificadores persistentes centralizados.
 - **Criptografia de Ponto a Ponto (P2P / DMs):** Mensagens diretas entre nós utilizam envelopes cifrados assinados digitalmente.

@@ -51,7 +51,7 @@ Legenda de estado:
 
 | Tema | O que falta decidir | Onde |
 |---|---|---|
-| Custódia da chave | Etapa 1 em vigor (SW v7.63): chaves cifradas em repouso por chave do aparelho. Falta a trava depois do backup | PM-93, [ADR-026](./adr/026-chaves-em-repouso-trava-depois-do-backup.md) |
+| Custódia da chave | Em vigor (SW v7.64): chaves cifradas pelo aparelho; depois do backup com a Senha Soberana, identidade e DM só saem pela cópia cifrada com a senha | PM-93, [ADR-026](./adr/026-chaves-em-repouso-trava-depois-do-backup.md) |
 | Relay | Autenticação do dono e política de origem | PM-94 |
 | Cadeia de suprimentos | CodeQL, Dependabot, actions fixadas, revisão obrigatória | PM-95 · [DEPENDENCIAS](./DEPENDENCIAS.md) |
 | Formato de assinatura | `sigv: 2` e a janela de convivência | PM-85 |

@@ -5,8 +5,8 @@
  */
 
 import * as cryptoDm from "./crypto-dm.js";
-import { KIND_PLAIN, KIND_WRAPPED, wrapBackup, unwrapBackup } from "./account-backup-wrap.js";
-import { openSealed, sealJson } from "./keystore.js";
+import { isLocked, openSealed, sealJson } from "./keystore.js";
+import * as keyLock from "./key-lock.js";
 
 const ACCOUNT_STORAGE = "vox-local-account-v1";
 const DISPLAY_NAME_STORAGE = "vox-display-name";
@@ -55,6 +55,13 @@ function canonicalString(obj) {
 }
 
 let cachedAccount = null;
+
+/** Grava a conta ativa (chave privada já na forma guardada: cifrada ou travada). */
+export function storeActiveAccount(acc) {
+  cachedAccount = acc;
+  localStorage.setItem(ACCOUNT_STORAGE, JSON.stringify(acc));
+  return acc;
+}
 
 export async function computeRouteId(pubJwk) {
   if (!pubJwk?.x || !pubJwk?.y) return "";
@@ -134,10 +141,12 @@ export async function ensureLocalAccount() {
     return cachedAccount;
   }
 
-  cachedAccount = await generateNewAccountKeys();
+  const fresh = await generateNewAccountKeys();
   try {
-    localStorage.setItem(ACCOUNT_STORAGE, JSON.stringify(cachedAccount));
-  } catch {}
+    storeActiveAccount(fresh);
+  } catch {
+    cachedAccount = fresh;
+  }
   syncCurrentAccountMetadataToVault();
   return cachedAccount;
 }
@@ -221,14 +230,60 @@ export function clearProfileEnrichment() {
   }
 }
 
-export async function exportLocalAccountBundle() {
+async function openDmKeypair(dmAtRest) {
+  if (!dmAtRest) return null;
+  return { publicJwk: dmAtRest.publicJwk, privateJwk: await openSealed(dmAtRest.privateJwk) };
+}
+
+/**
+ * Chaves privadas abertas, só para backup. Conta travada (PM-93 etapa 2): abre a cópia cifrada pela Senha
+ * Soberana, e sem a senha certa lança `KeyLockedError`.
+ */
+export async function openAccountKeys(passphrase = "") {
   const acc = await ensureLocalAccount();
+  const dmAtRest = await cryptoDm.getDmKeypairAtRest();
+  const locked = isLocked(acc.privateJwk) || isLocked(dmAtRest?.privateJwk);
+  const copy = locked ? await keyLock.openLockedCopy(acc.routeId, passphrase) : null;
+  return {
+    acc,
+    privateJwk: copy ? copy.privateJwk : await openSealed(acc.privateJwk),
+    dmKeypair: copy ? copy.dmKeypair : await openDmKeypair(dmAtRest),
+  };
+}
+
+/**
+ * PM-93 etapa 2: depois de um backup com a Senha Soberana, assinatura e DM passam a usar chaves não exportáveis
+ * e a única cópia exportável é a cifrada pela senha. Devolve se a conta ficou (ou já estava) travada.
+ */
+export async function lockActiveAccount(passphrase) {
+  const current = await ensureLocalAccount();
+  if (isLocked(current.privateJwk)) return true;
+  const { acc, privateJwk, dmKeypair } = await openAccountKeys(passphrase);
+  const refs = await keyLock.lockKeys({ routeId: acc.routeId, publicJwk: acc.publicJwk, privateJwk, dmKeypair }, passphrase);
+  if (!refs || cachedAccount?.routeId !== acc.routeId) return false;
+  storeActiveAccount({ ...cachedAccount, privateJwk: refs.privateJwk });
+  if (refs.dmPrivateJwk) await cryptoDm.setDmKeypair({ publicJwk: dmKeypair.publicJwk, privateJwk: refs.dmPrivateJwk });
+  await syncActiveAccountToVault();
+  return true;
+}
+
+/** Tenta travar depois de um backup com senha; falha deixa a conta como estava (cifrada pelo aparelho). */
+export async function lockAfterPasswordBackup(passphrase) {
+  try {
+    return await lockActiveAccount(passphrase);
+  } catch {
+    return false;
+  }
+}
+
+export async function exportLocalAccountBundle(passphrase = "") {
+  const { acc, privateJwk } = await openAccountKeys(passphrase);
   return {
     type: "vox-local-account-bundle",
     schemaVersion: 1,
     routeId: acc.routeId,
     publicJwk: acc.publicJwk,
-    privateJwk: await openSealed(acc.privateJwk),
+    privateJwk,
     displayName: getDisplayName(),
     enrichment: getProfileEnrichment(),
     pix: getPixKey(),
@@ -238,13 +293,12 @@ export async function exportLocalAccountBundle() {
 
 export async function importLocalAccountBundle(bundle) {
   if (!bundle?.routeId || !bundle?.publicJwk || !bundle?.privateJwk) return false;
-  cachedAccount = {
+  storeActiveAccount({
     routeId: bundle.routeId,
     publicJwk: bundle.publicJwk,
     privateJwk: await sealJson(bundle.privateJwk),
     createdAt: bundle.createdAt || Date.now(),
-  };
-  localStorage.setItem(ACCOUNT_STORAGE, JSON.stringify(cachedAccount));
+  });
   if (bundle.displayName) setDisplayName(bundle.displayName);
   if (bundle.enrichment) localStorage.setItem(ENRICHMENT_STORAGE, JSON.stringify(bundle.enrichment));
   if (bundle.pix) localStorage.setItem(PIX_STORAGE, JSON.stringify(bundle.pix));
@@ -305,13 +359,7 @@ function buildEnrichedPayloadForSigning(payload, routeId) {
 
 export async function signPayload(payload) {
   const acc = await ensureLocalAccount();
-  const privateKey = await crypto.subtle.importKey(
-    "jwk",
-    await openSealed(acc.privateJwk),
-    { name: "ECDSA", namedCurve: "P-256" },
-    false,
-    ["sign"]
-  );
+  const privateKey = await keyLock.signingKey(acc.privateJwk);
 
   const enriched = buildEnrichedPayloadForSigning(payload, acc.routeId);
   const rawData = new TextEncoder().encode(canonicalString(enriched));
@@ -373,106 +421,6 @@ export function setMeshDiscoverable(on) {
   }
 }
 
-async function buildAccountBackup() {
-  const acc = await ensureLocalAccount();
-  return {
-    voxVersion: 1,
-    kind: KIND_PLAIN,
-    routeId: acc.routeId,
-    publicJwk: acc.publicJwk,
-    privateJwk: await openSealed(acc.privateJwk),
-    dmKeypair: await cryptoDm.getDmKeypair(),
-    displayName: getDisplayName(),
-    pixKey: getPixKey(),
-    meshDiscoverable: getMeshDiscoverable(),
-    exportedAt: Date.now(),
-  };
-}
-
-export async function exportAccountBundle(passphrase) {
-  const bundle = await buildAccountBackup();
-  const secret = String(passphrase || "").trim();
-  if (!secret) return JSON.stringify(bundle, null, 2);
-  return JSON.stringify(await wrapBackup(bundle, secret), null, 2);
-}
-
-function parseBackupRaw(rawBundle) {
-  if (typeof rawBundle === "string") {
-    try {
-      return JSON.parse(rawBundle);
-    } catch {
-      throw new Error("Formato de backup inválido (não é JSON)");
-    }
-  }
-  if (rawBundle && typeof rawBundle === "object") return rawBundle;
-  throw new Error("Formato de backup inválido (não é JSON)");
-}
-
-async function unwrapIfNeeded(parsed, passphrase) {
-  if (parsed?.kind === KIND_PLAIN) return parsed;
-  if (parsed?.kind === KIND_WRAPPED) return unwrapBackup(parsed, passphrase);
-  throw new Error("Backup incompatível ou corrompido");
-}
-
-async function assertBackupIdentity(parsed) {
-  if (!parsed?.routeId) throw new Error("Backup incompatível ou corrompido");
-  if (!parsed.publicJwk || !parsed.privateJwk) {
-    throw new Error("Chaves de assinatura ausentes no backup");
-  }
-  const expected = await computeRouteId(parsed.publicJwk);
-  if (!expected || expected !== parsed.routeId) {
-    throw new Error("Chave pública não corresponde ao routeId declarado");
-  }
-}
-
-async function importEcdsaKey(jwk, usages) {
-  return crypto.subtle.importKey(
-    "jwk",
-    jwk,
-    { name: "ECDSA", namedCurve: "P-256" },
-    false,
-    usages
-  );
-}
-
-async function challengeSigningPair(parsed) {
-  try {
-    const privKey = await importEcdsaKey(parsed.privateJwk, ["sign"]);
-    const pubKey = await importEcdsaKey(parsed.publicJwk, ["verify"]);
-    const nonce = new TextEncoder().encode(`vox-verify-${Date.now()}`);
-    const sig = await crypto.subtle.sign({ name: "ECDSA", hash: "SHA-256" }, privKey, nonce);
-    const valid = await crypto.subtle.verify({ name: "ECDSA", hash: "SHA-256" }, pubKey, sig, nonce);
-    if (!valid) throw new Error("Assinatura de teste falhou");
-  } catch (err) {
-    throw new Error(`Validação das chaves falhou: ${err.message}`);
-  }
-}
-
-async function persistAccountBackup(parsed) {
-  cachedAccount = {
-    routeId: parsed.routeId,
-    publicJwk: parsed.publicJwk,
-    privateJwk: await sealJson(parsed.privateJwk),
-    createdAt: parsed.createdAt || Date.now(),
-    importedAt: Date.now(),
-  };
-  localStorage.setItem(ACCOUNT_STORAGE, JSON.stringify(cachedAccount));
-  if (parsed.dmKeypair) await cryptoDm.setDmKeypair(parsed.dmKeypair);
-  if (parsed.displayName) setDisplayName(parsed.displayName);
-  if (parsed.pixKey) setPixKey(parsed.pixKey);
-  if (typeof parsed.meshDiscoverable === "boolean") {
-    setMeshDiscoverable(parsed.meshDiscoverable);
-  }
-  return cachedAccount;
-}
-
-export async function importAccountBundle(rawBundle, passphrase) {
-  const inner = await unwrapIfNeeded(parseBackupRaw(rawBundle), passphrase);
-  await assertBackupIdentity(inner);
-  await challengeSigningPair(inner);
-  return persistAccountBackup(inner);
-}
-
 function dropStoredKey(store, key) {
   try {
     store.removeItem(key);
@@ -492,10 +440,12 @@ export function confirmLocalWipe(ask = globalThis.confirm) {
   return Boolean(prompt(LOCAL_WIPE_NOTICE) && prompt(LOCAL_WIPE_NOTICE));
 }
 
+/** Limpa a conta deste navegador; a promessa termina quando as chaves travadas saem do IndexedDB. */
 export function wipeLocalAccount() {
   cachedAccount = null;
   for (const key of LOCAL_WIPE_KEYS) dropStoredKey(localStorage, key);
   dropSessionPassphrase();
+  return keyLock.forgetAllLockedAccounts().catch(() => {});
 }
 
 
@@ -667,13 +617,12 @@ export async function switchActiveAccount(targetRouteId) {
   const target = vault[targetRouteId];
   if (!target?.routeId || !target?.publicJwk || !target?.privateJwk) return false;
 
-  cachedAccount = {
+  storeActiveAccount({
     routeId: target.routeId,
     publicJwk: target.publicJwk,
     privateJwk: await sealJson(target.privateJwk),
     createdAt: target.createdAt || Date.now(),
-  };
-  localStorage.setItem(ACCOUNT_STORAGE, JSON.stringify(cachedAccount));
+  });
   await restoreTargetAccountSettings(target);
   target.lastUsedAt = Date.now();
   vault[targetRouteId] = target;
@@ -692,8 +641,7 @@ export async function createAdditionalAccount({ displayName = "" } = {}) {
   const privateJwk = await crypto.subtle.exportKey("jwk", pair.privateKey);
   const routeId = await computeRouteId(publicJwk);
 
-  cachedAccount = { routeId, publicJwk, privateJwk: await sealJson(privateJwk), createdAt: Date.now() };
-  localStorage.setItem(ACCOUNT_STORAGE, JSON.stringify(cachedAccount));
+  storeActiveAccount({ routeId, publicJwk, privateJwk: await sealJson(privateJwk), createdAt: Date.now() });
   await cryptoDm.setDmKeypair(await cryptoDm.generateDmKeypair());
   setDisplayName(displayName);
   localStorage.removeItem(ENRICHMENT_STORAGE);
@@ -710,5 +658,6 @@ export function removeVaultAccount(targetRouteId) {
   if (!vault[targetRouteId]) return false;
   delete vault[targetRouteId];
   writeVaultMap(vault);
+  void keyLock.forgetLockedAccount(targetRouteId).catch(() => {});
   return true;
 }

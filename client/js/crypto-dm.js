@@ -5,6 +5,7 @@
  */
 
 import { openSealed, sealJson } from "./keystore.js";
+import { dmPrivateKey } from "./key-lock.js";
 
 const DM_KEYPAIR_STORAGE = "vox-dm-keypair";
 const ECDH_ALGO = { name: "ECDH", namedCurve: "P-256" };
@@ -67,7 +68,7 @@ export async function getPublicJwk() {
   return publicJwk;
 }
 
-/** Par de DM aberto (chave privada em claro), para backup. */
+/** Par de DM aberto (chave privada em claro), para backup. Par travado (PM-93 etapa 2): `KeyLockedError`. */
 export async function getDmKeypair() {
   const stored = await ensureDmKeys();
   return { publicJwk: stored.publicJwk, privateJwk: await openSealed(stored.privateJwk) };
@@ -146,8 +147,7 @@ export async function open(envelope, privateJwkOverride = null) {
     throw new Error("Envelope DM inválido");
   }
 
-  const privJwk = await openSealed(privateJwkOverride || (await ensureDmKeys()).privateJwk);
-  const privKey = await crypto.subtle.importKey("jwk", privJwk, ECDH_ALGO, false, ["deriveKey"]);
+  const privKey = await dmPrivateKey(privateJwkOverride || (await ensureDmKeys()).privateJwk);
   const ephPubKey = await crypto.subtle.importKey("jwk", envelope.ephPub, ECDH_ALGO, false, []);
   const aesKey = await deriveAesKey(privKey, ephPubKey, "decrypt");
 

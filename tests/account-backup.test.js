@@ -2,6 +2,7 @@ import "../tests/setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import * as localAccount from "../client/js/local-account.js";
+import { exportAccountBundle, importAccountBundle } from "../client/js/account-backup.js";
 
 test("account-backup - roundtrip de export e import restaura identidade e chaves", async () => {
   localStorage.clear();
@@ -9,7 +10,7 @@ test("account-backup - roundtrip de export e import restaura identidade e chaves
   localAccount.setDisplayName("Líder Comunitário");
   localAccount.setPixKey({ normalized: "+5511999998888", type: "phone" });
 
-  const bundleStr = await localAccount.exportAccountBundle();
+  const bundleStr = await exportAccountBundle();
   assert.ok(bundleStr.includes("vox-account-backup"));
   assert.ok(bundleStr.includes(acc1.routeId));
   assert.ok(bundleStr.includes("Líder Comunitário"));
@@ -17,7 +18,7 @@ test("account-backup - roundtrip de export e import restaura identidade e chaves
   // Simula limpeza completa do aparelho (novo dispositivo)
   localStorage.clear();
 
-  const restored = await localAccount.importAccountBundle(bundleStr);
+  const restored = await importAccountBundle(bundleStr);
   assert.equal(restored.routeId, acc1.routeId);
   assert.equal(localAccount.getDisplayName(), "Líder Comunitário");
   assert.equal(localAccount.getPixKey()?.normalized, "+5511999998888");
@@ -32,7 +33,7 @@ test("account-backup - roundtrip de export e import restaura identidade e chaves
 test("account-backup - rejeita backup adulterado com routeId incompatível", async () => {
   localStorage.clear();
   await localAccount.ensureLocalAccount();
-  const bundleStr = await localAccount.exportAccountBundle();
+  const bundleStr = await exportAccountBundle();
   const bundle = JSON.parse(bundleStr);
 
   // Forja routeId
@@ -40,7 +41,7 @@ test("account-backup - rejeita backup adulterado com routeId incompatível", asy
 
   await assert.rejects(
     async () => {
-      await localAccount.importAccountBundle(bundle);
+      await importAccountBundle(bundle);
     },
     /Chave pública não corresponde ao routeId declarado/
   );
@@ -49,14 +50,14 @@ test("account-backup - rejeita backup adulterado com routeId incompatível", asy
 test("account-backup - rejeita string não-JSON ou chaves ausentes", async () => {
   await assert.rejects(
     async () => {
-      await localAccount.importAccountBundle("texto-corrompido-nao-json");
+      await importAccountBundle("texto-corrompido-nao-json");
     },
     /Formato de backup inválido/
   );
 
   await assert.rejects(
     async () => {
-      await localAccount.importAccountBundle({ kind: "vox-account-backup", routeId: "vx_123" });
+      await importAccountBundle({ kind: "vox-account-backup", routeId: "vx_123" });
     },
     /Chaves de assinatura ausentes no backup/
   );
@@ -68,14 +69,14 @@ test("account-backup - envelope com senha restaura identidade (roundtrip wrapped
   localAccount.setDisplayName("Líder Comunitário");
   const privD = acc1.privateJwk.d;
 
-  const wrappedStr = await localAccount.exportAccountBundle("frase-secreta-ok");
+  const wrappedStr = await exportAccountBundle("frase-secreta-ok");
   assert.ok(wrappedStr.includes("vox-account-backup-wrapped"));
   assert.ok(!wrappedStr.includes("vox-account-backup\""));
   assert.ok(!wrappedStr.includes("Líder Comunitário"));
   assert.ok(!wrappedStr.includes(privD));
 
   localStorage.clear();
-  const restored = await localAccount.importAccountBundle(wrappedStr, "frase-secreta-ok");
+  const restored = await importAccountBundle(wrappedStr, "frase-secreta-ok");
   assert.equal(restored.routeId, acc1.routeId);
   assert.equal(localAccount.getDisplayName(), "Líder Comunitário");
   const signed = await localAccount.signPayload({ title: "Post wrapped", body: "ok" });
@@ -85,15 +86,15 @@ test("account-backup - envelope com senha restaura identidade (roundtrip wrapped
 test("account-backup - senha errada rejeita envelope wrapped", async () => {
   localStorage.clear();
   await localAccount.ensureLocalAccount();
-  const wrappedStr = await localAccount.exportAccountBundle("frase-certa");
+  const wrappedStr = await exportAccountBundle("frase-certa");
 
   localStorage.clear();
   await assert.rejects(
-    () => localAccount.importAccountBundle(wrappedStr, "senha-errada"),
+    () => importAccountBundle(wrappedStr, "senha-errada"),
     /Senha incorreta/
   );
   await assert.rejects(
-    () => localAccount.importAccountBundle(wrappedStr),
+    () => importAccountBundle(wrappedStr),
     /informe a senha/
   );
 });
