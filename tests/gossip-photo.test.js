@@ -11,6 +11,7 @@ import * as mediaBlob from "../client/js/media-blob.js";
 import * as peers from "../client/js/peers.js";
 import { renderPostItem } from "../client/js/render/feed.js";
 import { broadcastAndPersistInlineTopic } from "../client/js/inline-composer.js";
+import * as peerSync from "../client/js/peer-sync.js";
 
 const PNG = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
 const OTHER = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
@@ -81,4 +82,32 @@ test("PM-87: blob trocado no caminho não entra nem segue adiante", async () => 
   assert.ok(!shown.image, "a imagem trocada não aparece");
   assert.equal(relay.seen[0]?.blob, null, "e não é repassada");
   assert.equal(mediaBlob.defaultBlobStorage.has(swapped.mediaBlob.hash), false);
+});
+
+/** Sincronização ao conectar (PM-80) do lado de quem tem o post: inventário, pedido do post, resposta. */
+async function syncPost(id) {
+  const sync = peerSync.createPeerSync(peerSync.defaultPeerSyncDeps("peer_a"));
+  const out = [];
+  let inv = null;
+  await sync.onConnect((m) => (inv = m));
+  const want = { type: peerSync.SYNC_WANT, v: 1, ackOf: inv.nonce, posts: [await peerSync.shortHash(id)], dels: [], cards: [] };
+  await sync.onWant(want, (m) => out.push(m));
+  return out.filter((m) => m.type === "GOSSIP");
+}
+
+test("PM-88: foto recebida pela sincronização ao conectar chega com o blob e aparece", async () => {
+  localStorage.clear();
+  await asFreshReceiver();
+  peers.initPeerChannel();
+  await publishPhoto("top_pm88_sync");
+  mediaBlob.defaultBlobStorage.clear(); // quem publicou recarregou: o blob sai da mídia do registro
+  const [msg] = await syncPost("top_pm88_sync");
+  assert.equal(msg?.blob?.hash, msg?.item?.mediaHash, "o GOSSIP da sincronização leva o blob do post");
+  assert.equal(msg.item.image, null, "o post continua na forma assinada");
+
+  await asFreshReceiver();
+  await peers.handleVoxMessage(msg, () => {}, "rtc");
+  const shown = await cacheNode.getLocalPost("top_pm88_sync");
+  assert.equal(shown.image, PNG);
+  assert.match(renderPostItem(shown), HERO_IMG, "quem sincronizou vê a foto, não o marcador Mídia P2P");
 });

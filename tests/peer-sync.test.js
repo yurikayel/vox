@@ -14,7 +14,7 @@ function fakeTimers() {
   return {
     setTimer: (fn, ms) => (timers.set(next, { fn, ms }), next++),
     clearTimer: (id) => timers.delete(id),
-    fire: () => [...timers.values()].forEach((t) => t.fn()),
+    fire: () => Promise.all([...timers.values()].map((t) => t.fn())),
     count: () => timers.size,
   };
 }
@@ -67,7 +67,7 @@ test("peer-sync - aparelhos já sincronizados trocam só o inventário, sem nenh
   assert.equal(ofType(log.aToB, "GOSSIP").length + ofType(log.bToA, "GOSSIP").length, 0);
   assert.equal(a.timers.count() + b.timers.count(), 0, "a resposta cancela o envio completo");
   const full = [];
-  sync.sendFullState((m) => full.push(m), sync.selectShared({ posts: state.posts, tombstones: state.dels, cards: state.cards }), "peer_a");
+  await sync.sendFullState((m) => full.push(m), sync.selectShared({ posts: state.posts, tombstones: state.dels, cards: state.cards }), "peer_a");
   assert.ok(bytes(log.aToB) * 10 < bytes(full), `inventário ${bytes(log.aToB)} B contra envio completo ${bytes(full)} B`);
 });
 
@@ -88,7 +88,7 @@ test("peer-sync - cliente antigo não responde: depois do prazo vai o envio comp
   await a.peer.onConnect((m) => sent.push(m));
   assert.deepEqual(sent.map((m) => m.type), [sync.SYNC_INV]);
   assert.equal(a.timers.count(), 1);
-  a.timers.fire();
+  await a.timers.fire();
   assert.deepEqual(sent.slice(1).map((m) => m.type), ["PROFILE_CARD", "GOSSIP", "GOSSIP"]);
 });
 
@@ -107,4 +107,25 @@ test("peer-sync - recusa inventário e pedido malformados, grandes demais ou de 
   const stranger = await sync.shortHash("p-que-nao-esta-no-recorte");
   assert.equal(await a.peer.onWant({ ackOf: "outro-nonce", posts: [stranger], dels: [], cards: [] }, (m) => out.push(m)), 0);
   assert.equal(a.timers.count(), 1, "pedido com nonce de outra conexão não cancela o prazo");
+});
+
+test("PM-88: post com foto leva o blob ao lado, dentro do teto por blob e por conexão", async () => {
+  const blobOf = (hash, kb) => ({ hash, mime: "image/png", byteLength: 1, data: "A".repeat(Math.ceil((kb * 1024) / 0.75)) });
+  const blobs = { h1: blobOf("h1", 100), h2: blobOf("h2", 200), h3: blobOf("outro", 10) };
+  const msgs = [
+    { type: "GOSSIP", item: post("p1", 3, { mediaHash: "h1" }) },
+    { type: "GOSSIP", item: post("p2", 2, { mediaHash: "h2" }) },
+    { type: "GOSSIP", item: post("p3", 1, { mediaHash: "h3" }) },
+    { type: "GOSSIP", item: post("p4", 0) },
+  ];
+  const out = await sync.attachBlobs(msgs, async (p) => blobs[p.mediaHash] || null);
+  assert.equal(out[0].blob, blobs.h1);
+  assert.equal("blob" in out[1], false, "blob acima do teto por blob vai sem (o tamanho é o de `data`, não o declarado)");
+  assert.equal("blob" in out[2], false, "blob de outro hash não vai");
+  assert.equal("blob" in out[3], false);
+  const many = Array.from({ length: 30 }, (_, i) => ({ type: "GOSSIP", item: post(`q${i}`, i, { mediaHash: `q${i}` }) }));
+  const sent = await sync.attachBlobs(many, async (p) => blobOf(p.mediaHash, 100));
+  const total = sent.reduce((n, m) => n + (m.blob ? m.blob.data.length * 0.75 : 0), 0);
+  assert.ok(sent[0].blob && !sent[29].blob, "o orçamento vai para os mais novos");
+  assert.ok(total <= sync.SYNC_BLOB_LIMITS.perConnection, `${total} bytes de blob numa conexão`);
 });
