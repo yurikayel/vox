@@ -1,9 +1,9 @@
 {
-  "git_sha": "6e2bb5a",
-  "branch": "feat/pm69-denuncia-arquiva",
-  "test_js": 897,
+  "git_sha": "1253094",
+  "branch": "feat/pm78-dm-caixa-de-saida",
+  "test_js": 903,
   "test_python": 91,
-  "test_total": 988,
-  "cache_name": "vox-pwa-v7.46-real-network-audio-video-upload",
-  "generated_at": "2026-11-10T03:07:39Z"
+  "test_total": 994,
+  "cache_name": "vox-pwa-v7.47-real-network-audio-video-upload",
+  "generated_at": "2026-11-10T08:15:00Z"
 }

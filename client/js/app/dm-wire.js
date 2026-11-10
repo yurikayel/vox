@@ -4,6 +4,7 @@ import * as cacheNode from "../cache-node.js";
 import * as peers from "../peers.js";
 import * as inbox from "../inbox.js";
 import * as dmMsg from "../dm-messenger.js";
+import * as outbox from "../dm-outbox.js";
 import { parseReportDm } from "../report-review.js";
 
 export async function applyBubbleReaction(peerAddress, actorAddress, targetId, emoji) {
@@ -70,6 +71,55 @@ export async function dispatchSealedEnvelope(peerAddress, envelope) {
     await inbox.pushSealed(peerAddress, envelope);
     return "queued-relay";
   } catch {
+    const { dropped } = outbox.enqueueEnvelope(peerAddress, envelope);
+    for (const e of dropped) markDmStatus(e.to, e.envelope.id, "failed").catch(() => {});
     return "pending-retry";
   }
+}
+
+/** PM-78: atualiza o status de uma mensagem do próprio fio (não rebaixa "Lido"). */
+async function markDmStatus(peerAddress, id, status) {
+  const msgs = await cacheNode.getDmMessages(peerAddress);
+  const msg = msgs.find((m) => m.id === id);
+  if (!msg || msg.status === "read") return false;
+  msg.status = status;
+  await cacheNode.saveDmMessage(msg);
+  return true;
+}
+
+function defaultOutboxDeps() {
+  return {
+    storage: globalThis.localStorage,
+    now: () => Date.now(),
+    isConnected: (addr) => peers.isAddressConnectedRtc(addr),
+    sendDirect: (addr, env) => peers.sendDirectMessageTransport(addr, env) === "rtc",
+    pushRelay: (addr, env) => inbox.pushSealed(addr, env),
+    markStatus: markDmStatus,
+  };
+}
+
+const OUTBOX_FLUSH_MS = 20 * 1000;
+let outboxTimer = null;
+let flushing = false;
+
+/** Uma passada pela caixa de saída; ignora chamadas enquanto outra está em curso. */
+export async function flushDmOutbox(deps = null) {
+  if (flushing) return null;
+  flushing = true;
+  try {
+    return await outbox.flushOutbox(deps || defaultOutboxDeps());
+  } catch {
+    return null;
+  } finally {
+    flushing = false;
+  }
+}
+
+/** Com o app aberto: repassa a caixa a cada 20 s, ao voltar a internet e agora. */
+export function startDmOutbox(win = globalThis) {
+  if (outboxTimer || typeof win?.setInterval !== "function") return false;
+  outboxTimer = win.setInterval(() => flushDmOutbox(), OUTBOX_FLUSH_MS);
+  win.addEventListener?.("online", () => flushDmOutbox());
+  flushDmOutbox();
+  return true;
 }

@@ -18,8 +18,10 @@ const sw = fs.readFileSync(path.join(root, "sw.js"), "utf8");
 /**
  * PM-02: teto do precache em bytes. Medido em 2026-11-09 depois do PM-04: 2.038.578 bytes em 182 arquivos, + ~2% de folga.
  * Meta do PM-01 (dieta do shell): baixar 20% disto. Subir o teto exige justificar no PR.
+ * 2026-11-10 (PM-78): 2.081.292 bytes em 193 arquivos; a folga acabou com os 6 módulos do PM-69 e a caixa de
+ * saída das DMs (+4,4 KB). Teto sobe só 0,2% acima do medido; a próxima adição precisa vir com corte (PM-01).
  */
-const SHELL_BUDGET_BYTES = 2_080_000;
+const SHELL_BUDGET_BYTES = 2_085_000;
 
 function listFrom(name) {
   const m = sw.match(new RegExp(`const ${name} = \\[([\\s\\S]*?)\\];`));
