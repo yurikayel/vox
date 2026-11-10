@@ -396,60 +396,10 @@ export const UF_DEMO_POST_COPY = {
     "Palmas ou interior — o que você defende quando falam mal do norte central? Voz firme, tom leve.",
 };
 
-const UF_POST_TITLE_OVERRIDE = {
-  al: [
-    "Sururu na panela, Maceió no peito 🌊",
-    "Forró de terreiro — invite na demo Vox",
-    "Júlia alagoana pergunta: qual trilha você salvaria offline?",
-  ],
-  ma: [
-    "Bumba na calçada, reggae no centro 🎭",
-    "São Luís: tambor de crioula na thread",
-    "Marcos maranhense — qual bloco popular te arrepia?",
-  ],
-};
-
-const UF_POST_BODY_EXTRA = {
-  al: [
-    "🌊 Saí do sururu e fui ouvir trio no quiosque: Alagoas tem risada alta e mar calmo no mesmo dia. Se você nunca provou, imagina só o cheiro — e me diz qual prato nordestino combina com forró de terreiro.",
-    "🎶 Abri esta thread porque forró alagoano não deveria competir com anúncio patrocinado. Coloca emoji de onda + uma memória de domingo no litoral — sem zombar de quem vem de interior.",
-  ],
-  ma: [
-    "🎭 Reggae maranhense na caixa de som do centro histórico: São Luís tem ritmo próprio que viraliza melhor quando a conversa é local. Conta se você já dançou bumba ou só ouviu de longe — respeito sempre.",
-    "🥁 Tambor de crioula na memória de quem cresceu ouvindo rua fechar pra festa. Maranhão não é palco vazio: é cultura que precisa de rede onde o post não some. Manda 👋 de outra UF com equivalente cultural.",
-  ],
-};
-
 export function ufDemoPostId(uf, slot) {
   const u = String(uf).toLowerCase();
   if (slot === 0) return `demo-post-${u}`;
   return `demo-post-${u}-${slot + 1}`;
-}
-
-function titleForUfPost(seed, slot) {
-  const custom = UF_POST_TITLE_OVERRIDE[seed.uf.toLowerCase()];
-  if (custom?.[slot]) return custom[slot];
-  const em = seed.stereotypeTitle.match(/\s([\p{Extended_Pictographic}\uFE0F]+)$/u)?.[1] || "";
-  const base = seed.stereotypeTitle.replace(/\s[\p{Extended_Pictographic}\uFE0F]+$/u, "");
-  if (slot === 0) return `${base} — ${seed.stateName}${em ? ` ${em}` : ""}`;
-  if (slot === 1) {
-    return `${seed.displayName} (${seed.uf}): panela, prosa & #${seed.hashtag}`;
-  }
-  return `${seed.displayName} (${seed.uf}) pergunta: qual clichê leve da sua região?`;
-}
-
-function bodyForUfPost(seed, slot) {
-  const uf = seed.uf.toLowerCase();
-  if (slot === 0) return UF_DEMO_POST_COPY[uf] || seed.vibe;
-  const extras = UF_POST_BODY_EXTRA[uf];
-  if (extras?.[slot - 1]) return extras[slot - 1];
-  const vibes = seed.vibe.split(".").map((s) => s.trim()).filter(Boolean);
-  const hook = vibes[slot % vibes.length] || seed.tagline;
-  const prompts = [
-    `${hook}. Abri este tópico pra testar se a voz de ${seed.stateName} cabe num post longo sem repetir rodapé de plataforma.`,
-    `${seed.displayName} (${seed.uf}) de volta: ${seed.tagline} Responde com emoji + uma história curta da sua região — troca respeitosa, zero treta.`,
-  ];
-  return prompts[(slot - 1) % prompts.length];
 }
 
 function readmeFor(seed) {
@@ -504,46 +454,6 @@ export function buildUfDemoProfilesMap() {
     map[`vx_demo_${seed.uf.toLowerCase()}`] = buildSingleUfDemoProfile(seed, i);
   });
   return map;
-}
-
-function buildTopicsForUfSeed(seed, i, replyTotals, now) {
-  const uf = seed.uf.toLowerCase();
-  const routeId = `vx_demo_${uf}`;
-  const mediaArr = postMediaByUf[uf] || postMediaByUf.ac;
-  const topics = [];
-  for (let slot = 0; slot < MOCK_DEMO_POSTS_PER_UF; slot++) {
-    const postId = ufDemoPostId(seed.uf, slot);
-    const media = mediaArr[slot] || mediaArr[0];
-    topics.push({
-      id: postId,
-      communityId: "demo-aprenda-vox",
-      title: titleForUfPost(seed, slot),
-      body: `${bodyForUfPost(seed, slot)} #${seed.hashtag} #perfildemo #brasil`,
-      image: media.postImageUrl,
-      imageAlt: media.postAlt,
-      author: routeId,
-      owner: routeId,
-      externalPain: "Redes centralizadas — alcance pago e extração de dados",
-      voxResolution: "now",
-      likesCount: 20 + (i * 7 + slot * 3) % 55,
-      repliesCount: replyTotals[postId] || 0,
-      isLocalP2p: true,
-      ts: now - (i * MOCK_DEMO_POSTS_PER_UF + slot + 1) * 45 * 60 * 1000,
-    });
-  }
-  return topics;
-}
-
-export function buildUfDemoTopics(now = Date.now()) {
-  const replyTotals = {};
-  for (const r of buildUfDemoReplies()) {
-    replyTotals[r.replyTo] = (replyTotals[r.replyTo] || 0) + 1;
-  }
-  const topics = [];
-  UF_STEREOTYPE_SEEDS.forEach((seed, i) => {
-    topics.push(...buildTopicsForUfSeed(seed, i, replyTotals, now));
-  });
-  return topics;
 }
 
 const UF_DEMO_PAIR_COPY = {

@@ -1,9 +1,9 @@
 {
-  "git_sha": "96f346f",
-  "branch": "feat/pm88-foto-no-sync",
-  "test_js": 932,
+  "git_sha": "54a1083",
+  "branch": "fix/pm88-midia-composer-arweave",
+  "test_js": 935,
   "test_python": 91,
-  "test_total": 1023,
-  "cache_name": "vox-pwa-v7.58-real-network-audio-video-upload",
-  "generated_at": "2026-11-10T13:21:27Z"
+  "test_total": 1026,
+  "cache_name": "vox-pwa-v7.59-real-network-audio-video-upload",
+  "generated_at": "2026-11-10T13:30:06Z"
 }
