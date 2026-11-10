@@ -1,9 +1,9 @@
 {
-  "git_sha": "6bdf2d3",
-  "branch": "fix/pm95-pipeline-seguranca",
-  "test_js": 971,
+  "git_sha": "f31898e",
+  "branch": "fix/pm85-assinatura-aninhada",
+  "test_js": 975,
   "test_python": 106,
-  "test_total": 1077,
-  "cache_name": "vox-pwa-v7.65-real-network-audio-video-upload",
-  "generated_at": "2026-11-10T19:28:56Z"
+  "test_total": 1081,
+  "cache_name": "vox-pwa-v7.66-real-network-audio-video-upload",
+  "generated_at": "2026-11-10T19:43:28Z"
 }

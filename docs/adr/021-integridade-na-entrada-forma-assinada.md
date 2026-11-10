@@ -1,6 +1,6 @@
 # ADR-021: Integridade na entrada — forma assinada guardada, tudo que entra é conferido
 
-**Status:** accepted (implementado) · **Revisado:** 2026-11-10 · **Relacionados:** PR yurikayel/vox#49, PM-80, PM-84, PM-86, PM-87, PM-88, PM-85 (aberto), [THREAT-MODEL T16–T18](../THREAT-MODEL.md), [ADR-022](./022-memoria-central-por-consentimento.md)
+**Status:** accepted (implementado) · **Revisado:** 2026-11-10 · **Relacionados:** PR yurikayel/vox#49, PM-80, PM-84, PM-86, PM-87, PM-88, PM-85, [THREAT-MODEL T16–T18](../THREAT-MODEL.md), [ADR-022](./022-memoria-central-por-consentimento.md)
 
 ## 1. Contexto
 
@@ -31,11 +31,15 @@ Hoje sete caminhos trazem dados para o aparelho:
    - o item não troca um post existente de outro autor e não é mais velho que a versão guardada.
 4. **Mídia viaja ao lado do post, presa por um hash assinado no topo (`mediaHash`)**, e o blob só entra se o conteúdo bate com o hash. O objeto `mediaRef` não serve de âncora por causa do PM-85.
 5. **Só segue adiante o que é novo para o aparelho** (PM-84): o repasse depende de o item ter sido aplicado agora, o que corta o eco.
-6. **Objeto aninhado não é coberto pela assinatura atual** (PM-85). Até existir a `sigv: 2`, um dado que precise de proteção vai como **texto** (como o `accept` do vínculo, PM-82) ou como **campo de topo** (como o `mediaHash`).
+6. **Objeto aninhado e a `sigv: 2`** (PM-85, SW v7.66, `client/js/sig-format.js`).
+   - **v1** (sem `sigv`): só as chaves de topo entram no texto assinado; as chaves internas de um objeto aninhado ficam de fora.
+   - **v2** (`sigv: 2`, dentro do que é assinado): todas as chaves, ordenadas, em qualquer profundidade. Tirar o `sigv` não transforma um post v2 em v1 válido, e versão desconhecida não verifica.
+   - **Convivência:** desde o SW v7.66 o aparelho confere as duas; passa a assinar v2 em 24/11/2026 (`SIGV2_FROM`), para quem ainda não atualizou não descartar os posts novos.
+   - **Post v1 continua sem proteção nos campos aninhados:** marca de foto de post alheio sem `sigv: 2` aparece como "não verificada". Dado que precise de proteção em post v1 continua indo como **texto** (o `accept` do vínculo, PM-82) ou **campo de topo** (o `mediaHash`).
 
 ## 3. Consequências
 
 - A sincronização entre aparelhos passou a funcionar de verdade, e a memória central deixou de ser uma porta para conteúdo forjado.
 - Registro antigo (sem `_wire`) recupera a forma assinada por melhor esforço (`stripLegacyFields`); o que não verificar, quem recebe descarta.
 - **Dívida aceita:** cada caminho de entrada ainda implementa a sua parte das regras. A meta é uma função única, `acceptIncoming(item, origem)`, com testes de tabela ([brainstorm de pontos fracos](../brainstorms/brainstorm-5-pontos-fracos-2026-11-10.md), ponto 2).
-- **Formato de assinatura (PM-85):** mudar exige versão (`sigv`) e período de convivência. Não se resolve com mais um contorno.
+- **Formato de assinatura (PM-85):** resolvido com versão (`sigv: 2`) e duas semanas de convivência. Falta decidir quando parar de aceitar v1.
