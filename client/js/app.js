@@ -19,9 +19,11 @@ import { attachPostOverlayActionMenuHandlers } from "./app/screens-home.js";
 import { attachQuarantineHandlers } from "./app/context.js";
 import { syncIdentity } from "./app/screens-network.js";
 import { startDmOutbox } from "./app/dm-wire.js";
+import { attachChannelHandlers } from "./app/community-channel-flow.js";
 
 installDomDelegates(document);
 attachReportHandlers(document);
+attachChannelHandlers(document);
 installEntryGuards();
 initColorMode(document, { onApply: () => applySkyTheme(document) });
 initSkyTheme();

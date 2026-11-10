@@ -6,6 +6,11 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Canal: comunidade em que só a moderação publica (PM-81, SW v7.49)
+- **Mural de avisos sem objeto novo:** dono ou moderação transforma a comunidade em **canal** com um botão na página dela. A partir daí, só a moderação publica posts e todo mundo continua comentando. "Abrir para todos publicarem" desfaz.
+- **A regra vale em cada aparelho:** post de quem não modera some da lista e o link direto mostra "Publicação fora do canal". O autor e a moderação ainda veem o post, com o selo "📣 Fora do canal". Quem não modera recebe um aviso ao tentar publicar, e o botão "Novo post" some. Não há exceção para posts antigos, porque a data é escrita por quem publica; voltar a "aberta" mostra tudo de novo ([spec](./docs/specs/canal-comunidade-v0.md)).
+- **Logo mais leve:** a marca do topo (exibida em 28 px) era um PNG de 256 px; agora tem 128 px, 17 KB a menos no precache.
+
 ### Sincronização por inventário ao conectar (PM-80, SW v7.48)
 - **Menos dados a cada conexão:** em vez de mandar às cegas até 128 posts, 64 remoções e 256 cartões de perfil, cada aparelho manda primeiro um inventário curto (hash do id e versão) e só pede o que falta. Com dois aparelhos já sincronizados, cai de ≈ 157 KB para ≈ 7 KB por sentido, o que poupa o teto de 5 MB do 4G. Aparelho com versão antiga do app recebe o envio completo depois de 8 s.
 - A sincronização saiu do `peers.js` para `peer-sync.js` ([spec](./docs/specs/sync-inventario-v0.md)); é ali que a mochila de DMs (PM-79) vai entrar.
