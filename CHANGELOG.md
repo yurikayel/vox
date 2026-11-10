@@ -6,6 +6,18 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Segurança: servidor de memória por escolha e sincronização sem senha no link (PM-91, PM-92, SW v7.61)
+- **O servidor de memória central só muda quando a pessoa aceita** (`memory-server-choice.js`).
+  - **O que mudou:** link com `?memory=`, aviso de um aparelho conectado e endereço de túnel informado pelo servidor viram **sugestão**. Ao abrir, o app pergunta mostrando o domínio e explicando o que vai para lá.
+  - **Recusa:** a sugestão recusada não volta.
+  - **Endereço antigo:** o que uma versão anterior gravou sem perguntar vira sugestão, e o relay das DMs gravado junto com ele sai.
+  - **Antes:** cada uma dessas fontes trocava o servidor sozinha, e tudo o que o aparelho gravava, inclusive o cofre, passava a ir para lá.
+- **O link e o QR de sincronização não levam mais a Senha Soberana.**
+  - **Na tela nova `#/sync`:** a senha é digitada no outro aparelho, e o cofre sai da barra de endereço e do histórico.
+  - **Link antigo:** quem abre um link da versão anterior recebe o aviso para criar uma senha nova.
+  - **Senha:** a Senha Soberana passa a exigir 12 caracteres.
+- **Peso:** `images/cantina-gate.jpg` foi recomprimida (JPEG q85 progressivo, PSNR 39,6 dB, 143 → 119 KB) e pagou os dois módulos novos sem subir o teto do PM-02.
+
 ### Revisão de estado, arquitetura e DevSecOps (10/11, sem mudança no app)
 - **[Revisão DevSecOps](./docs/audits/revisao-devsecops-2026-11-10.md):** a integridade do conteúdo na malha ficou sólida depois de #49 e PM-84…89, mas a custódia e a recuperação da identidade e a confiança no servidor de memória central têm **3 achados críticos e 3 altos**. Estão sob divulgação responsável e entram no ROADMAP como PM-90…PM-94; o PM-95 endurece o pipeline (CodeQL, Dependabot, actions por SHA, aprovação em arquivos de cripto).
 - **Promessas corrigidas:** `SECURITY.md`, `IDENTITY.md` e ADR-014 diziam que o cofre era de "conhecimento zero" e que as chaves nunca ficavam em claro. Agora dizem o que o código faz hoje.

@@ -303,10 +303,9 @@ function bindSovereigntyImport(activeTab) {
   });
 }
 
-function buildSyncUrl(passphrase, bundleRecord = null, encodeFn = null) {
-  const base = `${window.location.origin}${window.location.pathname}`;
-  const bParam = bundleRecord && encodeFn ? `&b=${encodeURIComponent(encodeFn(bundleRecord))}` : "";
-  return `${base}#/sync?p=${encodeURIComponent(passphrase)}${bParam}`;
+/** PM-92: o link leva só o cofre cifrado; a senha é digitada no outro aparelho. */
+function buildSyncUrl(bundleRecord, encodeFn) {
+  return `${window.location.origin}${window.location.pathname}#/sync?b=${encodeURIComponent(encodeFn(bundleRecord))}`;
 }
 
 function updateSovereigntySyncFeedback(message, isError = false) {
@@ -322,8 +321,8 @@ function bindSovereigntyCloudSync() {
   if (!btn) return;
   btn.addEventListener("click", async () => {
     const pass = readSovereigntyPassphrase().trim();
-    if (pass.length < 4) {
-      share.showToast("Digite uma senha com pelo menos 4 caracteres no campo acima.", "error");
+    if (!pass) {
+      share.showToast("Digite sua Senha Soberana no campo acima.", "error");
       return;
     }
     const { savePassphraseVault, encodeVaultBundleForUrl } = await import("../oauth-vault.js");
@@ -332,9 +331,9 @@ function bindSovereigntyCloudSync() {
       const res = await savePassphraseVault(pass);
       if (res.ok) {
         share.showToast("Cofre soberano sincronizado com sucesso!");
-        const syncUrl = buildSyncUrl(pass, res.bundle, encodeVaultBundleForUrl);
+        const syncUrl = buildSyncUrl(res.bundle, encodeVaultBundleForUrl);
         updateSovereigntySyncFeedback(
-          `✅ <strong>Pronto para outro aparelho!</strong> No outro celular ou navegador, acesse o Vox e entre com sua senha, ou use este link: <a href="${syncUrl}" target="_blank" style="color:var(--primary); word-break:break-all;">${syncUrl}</a>`
+          `✅ <strong>Pronto para outro aparelho!</strong> Abra este link no outro celular ou navegador e digite a sua senha lá. Mande o link e a senha por caminhos diferentes: <a href="${syncUrl}" target="_blank" style="color:var(--primary); word-break:break-all;">${syncUrl}</a>`
         );
       } else {
         share.showToast(res.reason || "Erro ao salvar cofre soberano.", "error");
@@ -352,7 +351,7 @@ function bindSovereigntyQrSync() {
   if (!btn) return;
   btn.addEventListener("click", async () => {
     const pass = readSovereigntyPassphrase().trim();
-    if (pass.length < 4) {
+    if (!pass) {
       share.showToast("Digite sua Senha Soberana no campo acima para gerar o QR Code.", "error");
       return;
     }
@@ -361,7 +360,7 @@ function bindSovereigntyQrSync() {
     try {
       const res = await savePassphraseVault(pass);
       if (res.ok) {
-        const syncUrl = buildSyncUrl(pass, res.bundle, encodeVaultBundleForUrl);
+        const syncUrl = buildSyncUrl(res.bundle, encodeVaultBundleForUrl);
         openQrUrlSheet(syncUrl);
       } else {
         share.showToast(res.reason || "Erro ao preparar cofre para QR.", "error");

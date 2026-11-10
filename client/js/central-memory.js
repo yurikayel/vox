@@ -11,11 +11,10 @@ import { getRelayHttpUrls } from "./inbox.js";
 import * as localAccount from "./local-account.js";
 import * as mediaBlob from "./media-blob.js";
 import * as manifestMesh from "./peers-cache-manifest.js";
+import * as serverChoice from "./memory-server-choice.js";
 import * as profileDirectory from "./profile-directory.js";
 
 const DEFAULT_MEMORY_URLS = ["http://127.0.0.1:3921", "http://127.0.0.1:3920"];
-const MEMORY_URL_STORAGE_KEY = "vox-central-memory-url";
-const BUDDY_RELAY_STORAGE_KEY = "vox-relay-buddy-http-url";
 const REQUEST_TIMEOUT_MS = 3000;
 
 let preferredUrl = null;
@@ -34,36 +33,15 @@ export function resetCentralMemoryCursor() {
   lastLocalSyncMs = 0;
 }
 
-export function registerDiscoveredMemoryUrl(rawUrl, { triggerSync = true } = {}) {
-  const raw = String(rawUrl || "").trim().replace(/\/+$/, "");
-  if (!raw || !/^https:\/\//i.test(raw)) return "";
-  let prev = "";
-  try {
-    prev = String(localStorage.getItem(MEMORY_URL_STORAGE_KEY) || "").trim();
-    localStorage.setItem(MEMORY_URL_STORAGE_KEY, raw);
-    localStorage.setItem(BUDDY_RELAY_STORAGE_KEY, raw);
-  } catch {
-    /* ignore */
-  }
-  if (prev !== raw) {
-    if (!preferredUrl || !preferredUrl.startsWith("http://127.0.0.1")) {
-      preferredUrl = raw;
-    }
-    if (triggerSync) {
-      resetCentralMemoryCursor();
-      void syncWithCentralMemory();
-    }
-  }
-  return raw;
+/** PM-91: servidor anunciado por um par (ou pelo próprio servidor) só vira sugestão; nada muda sem a pessoa. */
+export function registerDiscoveredMemoryUrl(rawUrl, source = "par") {
+  return serverChoice.suggestMemoryServer(rawUrl, source);
 }
 
+/** O servidor escolhido, se for público (é o que este aparelho anuncia aos pares). */
 export function getDiscoveredPublicMemoryUrl() {
-  try {
-    const stored = String(localStorage.getItem(MEMORY_URL_STORAGE_KEY) || "").trim();
-    return /^https:\/\//i.test(stored) ? stored.replace(/\/+$/, "") : "";
-  } catch {
-    return "";
-  }
+  const chosen = serverChoice.getChosenMemoryServer();
+  return /^https:\/\//i.test(chosen) ? chosen : "";
 }
 
 export function setCentralMemoryAutoPush(enabled) {
@@ -99,27 +77,13 @@ function extractMemoryParamFromLocation() {
   }
 }
 
+/** Link com `?memory=` (ou `?relay=`): vira sugestão, perguntada ao abrir o app (PM-91). */
 export function captureMemoryUrlFromLocation() {
-  const raw = extractMemoryParamFromLocation();
-  if (!raw || !/^https?:\/\//i.test(raw)) return "";
-  const clean = raw.replace(/\/+$/, "");
-  try {
-    localStorage.setItem(MEMORY_URL_STORAGE_KEY, clean);
-    localStorage.setItem(BUDDY_RELAY_STORAGE_KEY, clean);
-  } catch {
-    /* ignore */
-  }
-  return clean;
+  return serverChoice.suggestMemoryServer(extractMemoryParamFromLocation(), "link");
 }
 
 export function getCentralMemoryUrls() {
-  captureMemoryUrlFromLocation();
-  let storedMemoryUrl = "";
-  try {
-    storedMemoryUrl = String(localStorage.getItem(MEMORY_URL_STORAGE_KEY) || "").trim();
-  } catch {
-    storedMemoryUrl = "";
-  }
+  const storedMemoryUrl = serverChoice.getChosenMemoryServer();
   const configured = typeof getRelayHttpUrls === "function" ? getRelayHttpUrls() : [];
   const merged = [storedMemoryUrl, ...configured, ...DEFAULT_MEMORY_URLS]
     .map((u) => String(u || "").trim().replace(/\/+$/, ""))
@@ -346,7 +310,7 @@ async function applyRemoteBundle(remote) {
 
 function recordRemoteSyncWatermark(remote, syncStartedMs) {
   if (remote.tunnelUrl) {
-    registerDiscoveredMemoryUrl(remote.tunnelUrl, { triggerSync: false });
+    registerDiscoveredMemoryUrl(remote.tunnelUrl, "servidor");
   }
   lastServerRevision = Number(remote.revision || lastServerRevision);
   lastServerTimestamp = Number(remote.updatedAt || lastServerTimestamp);
@@ -378,6 +342,9 @@ export async function syncWithCentralMemory({ onHydrated } = {}) {
 export function startCentralMemoryLoop({ intervalMs = 15000, onHydrated } = {}) {
   if (typeof onHydrated === "function") lastHydratedCallback = onHydrated;
   setCentralMemoryAutoPush(true);
+  serverChoice.migrateLegacyMemoryServer();
+  captureMemoryUrlFromLocation();
+  if (serverChoice.askAboutMemorySuggestion()) resetCentralMemoryCursor();
   if (syncTimerId !== null) clearInterval(syncTimerId);
   void syncWithCentralMemory({ onHydrated });
   syncTimerId = setInterval(() => {
