@@ -6,6 +6,11 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Caixa de saída das DMs (PM-78, SW v7.47)
+- **Mensagem que não saiu não se perde mais:** sem conexão direta e sem relay, a DM (e a denúncia do PM-69) fica na caixa de saída do aparelho. Com o Vox aberto, o app tenta de novo sozinho: a cada 20 s, ao voltar a internet e ao abrir, e no relay com espera crescente (1 a 30 min). Antes, nada reenviava, embora o aviso dissesse que a mensagem seria entregue.
+- **No fio:** "⏳ Aguardando" enquanto espera; depois de 7 dias, ou se a caixa encher (100 mensagens ou 2 MB), "⚠ Não entregue". O aviso e a tela da denúncia dizem que o reenvio só acontece com o app aberto.
+- **Spec da mochila de DMs** ([mochila-dm-v0.md](./docs/specs/mochila-dm-v0.md)): o próximo passo (PM-79) é outros aparelhos conectados levarem envelopes cegos até quem não estava online.
+
 ### Uma denúncia arquiva até a revisão (PM-69, SW v7.46)
 - **Denúncia chega à moderação sozinha:** ao denunciar um post de comunidade, o app manda à moderação, por mensagem cifrada, a denúncia **assinada pela conta** de quem denunciou (a identidade não vai para a malha). Se não der para entregar, o app diz isso e oferece mandar pela conversa.
 - **O aparelho de quem modera arquiva para todos** ao receber, se quem denunciou é membro, tem menos de 3 denúncias pendentes e não teve as 3 últimas rejeitadas, e se o post não é de alguém da moderação. Senão, a denúncia fica para decisão manual, com o motivo. O arquivamento circula só na malha (não vai ao Arweave).

@@ -190,6 +190,8 @@ function formatBubbleStatusLabel(status) {
   if (status === "read") return "✓✓ Lido";
   if (status === "delivered") return "✓✓ Direta";
   if (status === "queued-relay") return "✓ Caixa postal";
+  if (status === "pending-retry") return "⏳ Aguardando";
+  if (status === "failed") return "⚠ Não entregue";
   return "✓";
 }
 
