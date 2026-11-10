@@ -24,6 +24,6 @@ export function renderComposeTypeSelector(activeKey, communityId = "") {
 export function renderComposeSignaturePanel() {
   return `
     <section class="agora-signature-panel" aria-label="Assinatura criptográfica">
-      <p class="agora-signature-body">Toda publicação é assinada neste aparelho com a sua chave Ed25519 e propagada pela malha de pares — sem intermediários.</p>
+      <p class="agora-signature-body">Toda publicação é assinada neste aparelho com a sua chave e propagada pela malha de pares — sem intermediários.</p>
     </section>`;
 }
