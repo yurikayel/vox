@@ -1,9 +1,9 @@
 {
-  "git_sha": "8614d0b",
-  "branch": "docs/revisao-pm78-82",
-  "test_js": 924,
+  "git_sha": "14eeece",
+  "branch": "fix/pm86-memoria-central-verifica",
+  "test_js": 928,
   "test_python": 91,
-  "test_total": 1015,
-  "cache_name": "vox-pwa-v7.55-real-network-audio-video-upload",
-  "generated_at": "2026-11-10T12:03:11Z"
+  "test_total": 1019,
+  "cache_name": "vox-pwa-v7.56-real-network-audio-video-upload",
+  "generated_at": "2026-11-10T12:17:20Z"
 }

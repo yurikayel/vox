@@ -75,11 +75,6 @@ export async function startVoxLinks(deps = null) {
   await confirmPendingInvites(d).catch(() => {});
 }
 
-/** Link de convite com o token do convite em uso. */
-export function myInviteToken(storage = globalThis.localStorage) {
-  return voxLink.currentInvite({ storage }).token;
-}
-
 async function inviteCardModel(inviter, d) {
   const account = await d.getAccount();
   const records = await d.loadRecords();

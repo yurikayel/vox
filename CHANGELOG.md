@@ -6,6 +6,12 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Correção: memória central confere o que recebe (PM-86, SW v7.56)
+- **O que volta da memória central passa pelas regras da malha** (`central-memory-hydrate.js`). Antes, posts e remoções do servidor eram gravados sem conferir nada; quem controlasse o servidor punha post em nome de outra pessoa, edição de comunidade, vínculo ou arquivamento falsos. Agora entra só o que tem assinatura válida de quem diz ser o autor e cujo autor não está bloqueado. Edição de comunidade segue a regra do PM-09. Post existente só é trocado pelo mesmo autor, e remoção só vale se for do autor do post.
+- **Mídia fora da assinatura:** a imagem, o vídeo ou o áudio de um `mediaRef` que chega com o post fica no registro, fora da forma assinada (`_media`). Antes, era colada no post, que deixava de bater com a assinatura ao ser repassado. Blob cujo conteúdo não bate com o hash é descartado.
+- **Peso do precache:** o módulo novo foi pago com a remoção de duas funções que nada chamava (`buildUfDemoListings` e `myInviteToken`) e com o corte de `attachMedia`, que ficou sem uso.
+- **Defeito novo registrado (PM-87):** o post com foto publicado pelo app é assinado com a imagem e enviado ao vivo sem ela (`detachMedia` troca `image` por `mediaRef`), então quem recebe ao vivo descarta. A sincronização ao conectar e a memória central levam a forma assinada, com a imagem.
+
 ### Revisão de 10/11 (SW v7.55)
 - **Aviso de privacidade corrigido:** o cartão do convite e a documentação diziam que o vínculo (PM-82) e o arquivamento por denúncia (PM-69) circulam "só na malha". Na verdade, todo item gravado no aparelho também vai à **memória central** (servidor de steward), embora nunca ao Arweave. O texto agora diz isso.
 - **Defeitos registrados, ainda abertos:** memória central sem conferência de assinatura (PM-86), campos aninhados fora da assinatura (PM-85) e eco de cartão de perfil (PM-84). Estão no ROADMAP e no [modelo de ameaças](./docs/THREAT-MODEL.md) (T16–T19).

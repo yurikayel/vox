@@ -6,6 +6,7 @@
  */
 
 import * as cacheNode from "./cache-node.js";
+import * as hydrate from "./central-memory-hydrate.js";
 import { getRelayHttpUrls } from "./inbox.js";
 import * as localAccount from "./local-account.js";
 import * as mediaBlob from "./media-blob.js";
@@ -201,7 +202,7 @@ async function collectLocalBlobs(posts) {
 
 function filterDeltaItems(items, watermarkMs) {
   if (watermarkMs <= 0) return items;
-  return items.filter((it) => itemTimestamp(it) >= watermarkMs);
+  return items.filter((it) => hydrate.itemTimestamp(it) >= watermarkMs);
 }
 
 function listKnownBlobHashes(posts) {
@@ -265,15 +266,14 @@ function syncVaultCards() {
   }
 }
 
+function upsertAuthorCard(post) {
+  if (post) upsertDirectoryCardIfNeeded(post.author || post.owner, post.authorDisplay, post.authorAvatar, "");
+}
+
 function syncLocalAccountsToProfileDirectory(allPosts) {
   syncActiveAccountCard();
   syncVaultCards();
-  const list = Array.isArray(allPosts) ? allPosts : [];
-  for (const post of list) {
-    if (!post) continue;
-    const author = post.author ? post.author : post.owner;
-    upsertDirectoryCardIfNeeded(author, post.authorDisplay, post.authorAvatar, "");
-  }
+  for (const post of Array.isArray(allPosts) ? allPosts : []) upsertAuthorCard(post);
 }
 
 async function buildLocalSyncBundle() {
@@ -300,65 +300,6 @@ async function buildLocalSyncBundle() {
   };
 }
 
-async function hydrateBlobs(blobs) {
-  if (!Array.isArray(blobs)) return new Map();
-  const byHash = new Map();
-  for (const blob of blobs) {
-    if (!blob?.hash || !blob?.data) continue;
-    byHash.set(blob.hash, blob);
-    if (!mediaBlob.defaultBlobStorage.has(blob.hash)) {
-      await mediaBlob.defaultBlobStorage.put(blob);
-    }
-  }
-  return byHash;
-}
-
-async function hydrateTombstones(tombstones) {
-  if (!Array.isArray(tombstones)) return 0;
-  let added = 0;
-  for (const tomb of tombstones) {
-    if (!tomb?.id) continue;
-    const existing = await cacheNode.getTombstone(tomb.id);
-    if (!existing) {
-      await cacheNode.saveTombstone(tomb);
-      added += 1;
-    }
-  }
-  return added;
-}
-
-function itemTimestamp(item) {
-  if (!item || typeof item !== "object") return 0;
-  return Number(item.updatedAt || item.editedAt || item.ts || item.timestamp || item.createdAt || 0);
-}
-
-function attachHydratedBlob(post, blobsByHash) {
-  const mediaHash = post.mediaRef && post.mediaRef.hash;
-  if (!mediaHash || !blobsByHash.has(mediaHash)) return post;
-  return mediaBlob.attachMedia(post, blobsByHash.get(mediaHash));
-}
-
-async function hydrateSinglePost(post, blobsByHash) {
-  if (!post || !post.id) return false;
-  const author = post.author || post.owner || "";
-  upsertDirectoryCardIfNeeded(author, post.authorDisplay, post.authorAvatar, "");
-  const current = await cacheNode.getLocalPost(post.id);
-  if (current && itemTimestamp(current) >= itemTimestamp(post)) return false;
-  const hydrated = attachHydratedBlob(post, blobsByHash);
-  return cacheNode.saveLocalPost(hydrated);
-}
-
-async function hydratePosts(posts, blobsByHash) {
-  if (!Array.isArray(posts)) return 0;
-  let added = 0;
-  for (const post of posts) {
-    if (await hydrateSinglePost(post, blobsByHash)) {
-      added += 1;
-    }
-  }
-  return added;
-}
-
 function shouldApplyIncomingProfile(existing, incoming) {
   if (!existing) return true;
   const inName = cleanStr(incoming?.name || incoming?.displayName);
@@ -367,7 +308,7 @@ function shouldApplyIncomingProfile(existing, incoming) {
   if (!hasCardChanges(existing, inName, inAvatar, inBio)) return false;
   if (inName && !existing.name) return true;
   if (inAvatar && !existing.avatarUrl) return true;
-  return itemTimestamp(incoming) > itemTimestamp(existing);
+  return hydrate.itemTimestamp(incoming) > hydrate.itemTimestamp(existing);
 }
 
 function hydrateProfiles(profiles) {
@@ -393,9 +334,9 @@ function hydrateProfiles(profiles) {
 async function applyRemoteBundle(remote) {
   hydratingDepth += 1;
   try {
-    const blobsByHash = await hydrateBlobs(remote.blobs);
-    const tombCount = await hydrateTombstones(remote.tombstones);
-    const postCount = await hydratePosts(remote.posts, blobsByHash);
+    const blobsByHash = await hydrate.hydrateBlobs(remote.blobs);
+    const tombCount = await hydrate.hydrateTombstones(remote.tombstones);
+    const postCount = await hydrate.hydratePosts(remote.posts, blobsByHash, upsertAuthorCard);
     const profCount = hydrateProfiles(remote.profiles);
     return tombCount + postCount + profCount;
   } finally {
