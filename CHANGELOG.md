@@ -6,6 +6,10 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Correção: cartão de perfil não circula mais sem fim (PM-84, SW v7.60)
+- **O aparelho só repassa o cartão de perfil que é novo para ele.** Antes, todo `PROFILE_CARD` que chegava pelo gossip era reaplicado e repassado, porque o "já visto" só olhava o banco de posts. Com duas abas da mesma origem ligadas aos mesmos pares, o cartão circulava sem fim: medimos 358 cartões/s e cerca de 1.100 requisições/s à memória central.
+- **Como sabe que já viu:** guarda a versão de cada cartão (`editedAt` e assinatura), na memória da sessão e junto do cartão no diretório (`gossipCardAt`, `gossipCardSig`). Cartão de mesma versão ou mais velho não é reaplicado nem repassado. Mesma data com outra assinatura conta como outro cartão. O próprio cartão publicado já nasce marcado (`peers-gossip-profile.js`, `mesh-profile.js`).
+
 ### Correção: foto do composer volta a ir ao Arweave (PM-89, SW v7.59)
 - **A mídia do post agora sobe:** com carteira conectada, o post com foto feito pelo composer ia ao Arweave sem a imagem e sem a tag `Media-Tx`. O código procurava a imagem num campo (`dataUrl`) que o blob separado do post não tem (ele usa `data`). O envio saiu do `inline-composer.js` para `topic-permaweb.js`, que lê o campo certo e tem teste.
 - **Tipo da mídia certo:** `buildTags` punha sempre `Content-Type: application/json` e, para a mídia, acrescentava `image/webp` como segunda tag. Agora um `Content-Type` passado substitui o padrão; a foto vai com uma só tag, a do arquivo.
