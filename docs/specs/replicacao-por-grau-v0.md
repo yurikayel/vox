@@ -26,7 +26,7 @@ Cada pessoa guarda a própria mídia no aparelho ("traga seu próprio armazename
 - Pedir ao navegador que não apague os dados (`navigator.storage.persist`, `storage-persistence.js`).
 - O teto substitui o limite de armazenamento do `supporter-mode.js` (25 MB leve / 250 MB apoiador); as cotas diárias de transferência continuam.
 
-Estimativa com ~50 a 60 KB por imagem: os 500 MB guardam ≈ 8 a 10 mil imagens; texto e miniaturas praticamente não pesam.
+Com a mídia v2 retrô medida (imagem com mediana de 43 KiB; vídeo de 10 s entre 0,5 e 1,0 MiB; áudio de 60 s ≈ 237 KiB): os 300 MB fora da subcota de vídeo guardam ≈ 7 mil imagens, e os 200 MB da subcota, ≈ 200 a 400 vídeos. Texto e miniaturas praticamente não pesam.
 
 ## Grau por salto (sem expor o grafo social)
 
