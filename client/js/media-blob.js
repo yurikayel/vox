@@ -109,22 +109,15 @@ export async function detachMedia(post) {
   return { detachedPost, mediaBlob };
 }
 
-export function attachMedia(post, mediaBlob) {
-  if (!post || typeof post !== "object") return post;
-  if (!mediaBlob || typeof mediaBlob !== "object") return post;
-  if (!post.mediaRef || post.mediaRef.hash !== mediaBlob.hash) return post;
-
+/** Campo de tela (`video`, `audio` ou `image`) com os dados do blob do `mediaRef`; null se o blob não é deste post. */
+export function mediaFields(post, mediaBlob) {
+  if (!post || typeof post !== "object") return null;
+  if (!mediaBlob || typeof mediaBlob !== "object") return null;
+  if (!post.mediaRef || post.mediaRef.hash !== mediaBlob.hash) return null;
   const mime = String(mediaBlob.mime || post.mediaRef.mime || "").toLowerCase();
-  if (mime.startsWith("video/")) {
-    return { ...post, video: mediaBlob.data };
-  }
-  if (mime.startsWith("audio/")) {
-    return { ...post, audio: mediaBlob.data };
-  }
-  return {
-    ...post,
-    image: mediaBlob.data,
-  };
+  if (mime.startsWith("video/")) return { video: mediaBlob.data };
+  if (mime.startsWith("audio/")) return { audio: mediaBlob.data };
+  return { image: mediaBlob.data };
 }
 
 export async function verifyMediaBlob(mediaBlob) {

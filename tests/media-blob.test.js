@@ -31,7 +31,7 @@ test("media-blob: cálculo de hash SHA-256 determinístico", async () => {
   assert.notEqual(stringHash, hash1);
 });
 
-test("media-blob: detachMedia e attachMedia preservam integridade", async () => {
+test("media-blob: detachMedia e mediaFields preservam integridade", async () => {
   const originalPost = {
     id: "tx-test-media-1",
     author: "vx1sampleauthor",
@@ -50,13 +50,11 @@ test("media-blob: detachMedia e attachMedia preservam integridade", async () => 
   assert.equal(blob.data, SAMPLE_TINY_PNG);
 
   // Re-anexo com blob correto
-  const restoredPost = mediaBlob.attachMedia(detachedPost, blob);
-  assert.equal(restoredPost.image, SAMPLE_TINY_PNG);
+  assert.deepEqual(mediaBlob.mediaFields(detachedPost, blob), { image: SAMPLE_TINY_PNG });
 
   // Tentativa de anexar blob com hash divergente não altera o post
   const fakeBlob = { hash: "0000000000000000000000000000000000000000000000000000000000000000", data: "fake" };
-  const rejectedPost = mediaBlob.attachMedia(detachedPost, fakeBlob);
-  assert.equal(rejectedPost.image, null);
+  assert.equal(mediaBlob.mediaFields(detachedPost, fakeBlob), null);
 });
 
 test("media-blob: verifyMediaBlob detecta adulteração de payload", async () => {
