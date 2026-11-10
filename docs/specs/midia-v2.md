@@ -53,6 +53,27 @@ Uma versão boa só, em vez de N versões. A rede tem **estética retrô**: reso
 | Áudio do vídeo | Opus 32 kbps se o iPhone tocar Opus em MP4; senão AAC (a testar) |
 | Fallback | Sem WebCodecs, o MediaRecorder recodifica tocando o vídeo (leva a duração do vídeo); sem nenhum dos dois, o vídeo é recusado com explicação |
 
+## Carrossel (até 4 itens do mesmo tipo)
+
+Um post pode ter **até 4 fotos, ou até 4 áudios, ou até 4 clipes de vídeo**. Não se misturam tipos no mesmo carrossel. Cada item segue as regras acima, com o próprio teto, e é cortado em pedaços de até 99.999 bytes.
+
+| Tipo | Máximo | Tamanho do post (medido por item) |
+|---|---|---|
+| Fotos | 4 × imagem 540p q70 | ≈ 170 KiB na mediana, até ≈ 360 KiB |
+| Áudios | 4 × 60 s = **4 min**, cada áudio com **uma imagem opcional** que ilustra | ≈ 950 KiB de áudio + até 4 imagens (≈ 170 KiB) |
+| Vídeo | 4 × 10 s = **40 s** | ≈ 2 a 4 MiB (Q28) |
+
+**Playback contínuo (áudio e vídeo):** o carrossel toca como uma peça só, sem pausa entre as partes.
+
+- **Áudio:** as partes são gravadas como **um fluxo Opus contínuo cortado em fronteiras de pacote**, e não como 4 arquivos independentes. Assim não há o atraso inicial do codificador (*pre-skip*) entre as partes, que geraria um clique ou um silêncio. A reprodução decodifica e agenda as partes uma atrás da outra na Web Audio API (`AudioBufferSourceNode.start(t)`), com precisão de amostra. A imagem de cada parte aparece enquanto ela toca.
+- **Vídeo:** os clipes são codificados com a **mesma configuração** (resolução, 24 fps, Q28), e **cada parte começa num quadro-chave**, então qualquer parte toca sozinha. Para tocar sem emenda, as partes são anexadas a um único `SourceBuffer` (Media Source Extensions; `ManagedMediaSource` no iPhone com iOS 17.1 ou mais). Isso exige empacotar em MP4 fragmentado, um muxer a escolher no PM-71. Sem MSE, o fallback são dois `<video>` alternados, com a próxima parte já carregada: fica quase sem emenda.
+- **Pausar, avançar e arrastar** valem para o conjunto: a barra de progresso mostra os 40 s (ou 4 min), com marcas nas divisões.
+
+**Replicação por grau (proposta):**
+- **amigos próximos e amigos:** o carrossel inteiro;
+- **amigos de amigos:** fotos inteiras; no áudio, as imagens e a **primeira parte**, para dar uma prévia; no vídeo, só a capa;
+- **3º grau:** texto e miniatura.
+
 ## Decisões que faltam para implementar (PM-71)
 
 1. **`'wasm-unsafe-eval'` na CSP do app**: libera só a compilação de WebAssembly (não `eval` de JS), mas é mudança de segurança e precisa de nota no modelo de ameaças.
