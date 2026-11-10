@@ -1,3 +1,5 @@
+import { currentInvite } from "./vox-link.js";
+
 /** Microcopy EXP-01 — POSSE não publica sozinho em redes fechadas (Meta). */
 export const SHARE_HONEST_LIMITS_SHORT =
   "Você escolhe onde ecoar: Web Share do aparelho, links (WhatsApp, X, Bluesky) ou JSON/CLI. Sem post automático no Facebook ou Instagram.";
@@ -65,6 +67,11 @@ export function connectShareUrl(routeId) {
   return `${formatShareBaseUrl()}#/connect/${encodeURIComponent(routeId)}`;
 }
 
+/** PM-82: o próprio link de conexão com o token do convite em uso (vínculo assinado). */
+export function inviteShareUrl(routeId) {
+  return `${connectShareUrl(routeId)}?convite=${currentInvite().token}`;
+}
+
 export function communityShareUrl(communityId) {
   return `${formatShareBaseUrl()}#/c/${encodeURIComponent(communityId)}`;
 }
@@ -97,10 +104,11 @@ export async function shareCommunity({ title, communityId }) {
   return shareOrCopy({ title: `${title} | Comunidade Vox`, text, url });
 }
 
-export async function shareConnect({ routeId, displayName = "" }) {
-  const url = connectShareUrl(routeId);
+/** `invite`: só no próprio link (quem compartilha convida e vira possível padrinho). */
+export async function shareConnect({ routeId, displayName = "", invite = false }) {
+  const url = invite ? inviteShareUrl(routeId) : connectShareUrl(routeId);
   const who = displayName || routeId.slice(0, 12);
-  const text = `Conecte com ${who} no Vox:`;
+  const text = invite ? `${who} te convida para o Vox:` : `Conecte com ${who} no Vox:`;
   return shareOrCopy({ title: `${who} | Vox`, text, url });
 }
 

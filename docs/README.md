@@ -72,6 +72,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 - [medicao-midia-v2-pm70-2026-11.md](./research/medicao-midia-v2-pm70-2026-11.md): medição da mídia v2 no desktop (AVIF q66, H.264, Opus) e o que muda na implementação
 - [midia-v2.md](./specs/midia-v2.md): mídia retrô: AVIF q70 em 540p, Opus 32 kbps e H.264 480p24, com pedaços abaixo de 100 KB (não implementada)
 - [canal-comunidade-v0.md](./specs/canal-comunidade-v0.md): canal, comunidade em que só a moderação publica posts (implementado)
+- [moderador-natural-v0.md](./specs/moderador-natural-v0.md): vínculo assinado (implementado) e moderador natural nas denúncias (a implementar)
 - [sync-inventario-v0.md](./specs/sync-inventario-v0.md): sincronização ao conectar por inventário, só o que falta (implementada)
 - [mochila-dm-v0.md](./specs/mochila-dm-v0.md): caixa de saída das DMs (implementada) e repasse cego por outros aparelhos (não implementado)
 - [replicacao-por-grau-v0.md](./specs/replicacao-por-grau-v0.md): mídia no aparelho, replicação por grau de amizade com teto de 500 MB (não implementada)

@@ -181,7 +181,7 @@ function renderCurrentWalletActionRow(address) {
       <a class="profile-grid-btn profile-grid-btn-outline" href="#/settings/linked-accounts">🔗 Redes</a>
       <button type="button" class="profile-grid-btn profile-grid-btn-outline" id="btn-copy-my-dm-link" data-route="${escapeHtml(address)}">Compartilhar</button>
       <button type="button" class="profile-grid-btn profile-grid-btn-outline" id="btn-copy-connect-link" data-route="${escapeHtml(address)}">Link connect</button>
-      <button type="button" class="profile-grid-btn profile-grid-btn-outline" id="btn-qr-connect-link" data-qr-share="connect" data-qr-id="${escapeHtml(address)}">QR deste link</button>
+      <button type="button" class="profile-grid-btn profile-grid-btn-outline" id="btn-qr-connect-link" data-qr-share="connect" data-qr-invite="1" data-qr-id="${escapeHtml(address)}">QR deste link</button>
     </div>`;
 }
 

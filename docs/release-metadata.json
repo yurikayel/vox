@@ -1,9 +1,9 @@
 {
-  "git_sha": "c665a8b",
-  "branch": "feat/pm81-canal-comunidade",
-  "test_js": 919,
+  "git_sha": "58add80",
+  "branch": "feat/pm82-vinculo-assinado",
+  "test_js": 924,
   "test_python": 91,
-  "test_total": 1010,
-  "cache_name": "vox-pwa-v7.53-real-network-audio-video-upload",
-  "generated_at": "2026-11-10T10:03:24Z"
+  "test_total": 1015,
+  "cache_name": "vox-pwa-v7.54-real-network-audio-video-upload",
+  "generated_at": "2026-11-10T10:04:19Z"
 }

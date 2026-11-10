@@ -292,12 +292,12 @@ async function finishPactAcceptance(modalContainer) {
   await ensureOnboardingSideEffects(user);
   share.showToast("Bem-vindo ao Vox! Rede ativa.");
   if (user) {
-    render.renderPostPactConnectModal(modalContainer, user);
+    render.renderPostPactConnectModal(modalContainer, user, share.inviteShareUrl(user));
     document.getElementById("btn-post-pact-connect-close")?.addEventListener("click", () => {
       render.closePostPactConnectModal(modalContainer);
     });
     document.getElementById("btn-post-pact-share-connect")?.addEventListener("click", () => {
-      void share.shareConnect({ routeId: user, displayName: localAccount.getDisplayName() });
+      void share.shareConnect({ routeId: user, displayName: localAccount.getDisplayName(), invite: true });
     });
   }
   const cur = parseRoute();

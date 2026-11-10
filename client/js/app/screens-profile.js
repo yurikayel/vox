@@ -533,7 +533,7 @@ function bindSharingAndClipboardButtons(address) {
   }
 
   document.getElementById("btn-copy-connect-link")?.addEventListener("click", () => {
-    void share.shareConnect({ routeId: address, displayName: localAccount.getDisplayName() });
+    void share.shareConnect({ routeId: address, displayName: localAccount.getDisplayName(), invite: true });
   });
 
   bindQrShareButtons(address);

@@ -307,9 +307,9 @@ function renderPostPactActionsHtml(routeId, link) {
   </details>`;
 }
 
-export function renderPostPactConnectModal(container, routeId) {
+export function renderPostPactConnectModal(container, routeId, inviteLink = "") {
   if (!container || !routeId) return;
-  const link = `${typeof location !== "undefined" ? location.origin + location.pathname : ""}#/connect/${encodeURIComponent(routeId)}`;
+  const link = inviteLink || `${typeof location !== "undefined" ? location.origin + location.pathname : ""}#/connect/${encodeURIComponent(routeId)}`;
   container.innerHTML = `
     <div class="modal-overlay modal-sheet modal-sheet--raised" id="post-pact-connect-overlay" role="dialog" aria-modal="true" aria-labelledby="post-pact-title">
       <div class="modal-dialog modal-card post-pact-connect-card">
