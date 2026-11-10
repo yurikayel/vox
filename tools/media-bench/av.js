@@ -1,8 +1,8 @@
 /**
- * PM-70 — parte de vídeo (H.264 720p24, WebCodecs, modo quantizador) e áudio (Opus 48 kbps) da bancada.
+ * PM-70 — parte de vídeo (H.264 480p24, WebCodecs, modo quantizador) e áudio (Opus 32 kbps) da bancada.
  * Ferramenta de desenvolvimento, não publicada.
  */
-import { fitBox, log, bench } from "./bench.js";
+import { fitBox, log, bench, SPEC } from "./bench.js";
 
 const FPS = 24;
 const KEYFRAME_EVERY = 48;
@@ -18,9 +18,9 @@ export async function probe() {
   const v = document.createElement("video");
   const res = {
     webCodecs: Boolean(vc && ac),
-    avcQuantizer: vc ? (await vc.isConfigSupported(avcConfig(1280, 720, { bitrateMode: "quantizer" }))).supported : false,
-    avcHardware: vc ? (await vc.isConfigSupported(avcConfig(1280, 720, { hardwareAcceleration: "prefer-hardware", bitrate: 1_500_000 }))).supported : false,
-    opus48k: ac ? (await ac.isConfigSupported({ codec: "opus", sampleRate: 48000, numberOfChannels: 1, bitrate: 48000 })).supported : false,
+    avcQuantizer: vc ? (await vc.isConfigSupported(avcConfig(854, 480, { bitrateMode: "quantizer" }))).supported : false,
+    avcHardware: vc ? (await vc.isConfigSupported(avcConfig(854, 480, { hardwareAcceleration: "prefer-hardware", bitrate: 600_000 }))).supported : false,
+    opusSpec: ac ? (await ac.isConfigSupported({ codec: "opus", sampleRate: 48000, numberOfChannels: 1, bitrate: SPEC.opusBps })).supported : false,
     recorderWebmOpus: MediaRecorder.isTypeSupported?.("audio/webm;codecs=opus") || false,
     recorderMp4AvcOpus: MediaRecorder.isTypeSupported?.("video/mp4;codecs=avc1.640028,opus") || false,
     recorderMp4AvcAac: MediaRecorder.isTypeSupported?.("video/mp4;codecs=avc1.640028,mp4a.40.2") || false,
@@ -79,7 +79,7 @@ function seekTo(video, t) {
  */
 export async function measureVideo(name, blob, quantizer, seconds = 10) {
   const video = await loadVideo(blob);
-  const { width, height } = fitBox(video.videoWidth, video.videoHeight);
+  const { width, height } = fitBox(video.videoWidth, video.videoHeight, SPEC.video);
   const canvas = new OffscreenCanvas(width, height);
   const ctx = canvas.getContext("2d");
   const stats = { bytes: 0, chunks: 0, frames: 0 };
@@ -107,12 +107,12 @@ function encodeFrame({ enc, ctx, canvas, video, stats, quantizer }) {
   stats.frames += 1;
 }
 
-/** Opus 48 kbps em 60 s de sinal sintético (tom + ruído, pior caso para o codificador de voz). */
+/** Opus na taxa da spec em 60 s de sinal sintético (tom + ruído, pior caso para o codificador de voz). */
 export async function measureOpus(seconds = 60) {
   let bytes = 0;
   let maxPacket = 0;
   const enc = new AudioEncoder({ output: (c) => { bytes += c.byteLength; maxPacket = Math.max(maxPacket, c.byteLength); }, error: (e) => log(e.message) });
-  enc.configure({ codec: "opus", sampleRate: 48000, numberOfChannels: 1, bitrate: 48000 });
+  enc.configure({ codec: "opus", sampleRate: 48000, numberOfChannels: 1, bitrate: SPEC.opusBps });
   const block = 960;
   for (let i = 0; i < (48000 * seconds) / block; i++) {
     const data = new Float32Array(block).map((_, k) => 0.3 * Math.sin((2 * Math.PI * 440 * (i * block + k)) / 48000) + 0.05 * (Math.random() - 0.5));
