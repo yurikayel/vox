@@ -93,6 +93,7 @@ export async function measureVideo(name, blob, quantizer, seconds = 10) {
   }
   await enc.flush();
   enc.close();
+  URL.revokeObjectURL(video.src);
   const row = { name, source: `${video.videoWidth}×${video.videoHeight}`, size: `${width}×${height}`, quantizer, seconds: span, frames: stats.frames, bytes: stats.bytes, kbps: Math.round((stats.bytes * 8) / span / 1000), wallMs: Math.round(performance.now() - t0) };
   bench.videos.push(row);
   log(`Vídeo ${JSON.stringify(row)}`);
