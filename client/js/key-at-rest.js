@@ -5,7 +5,7 @@
  * nesse meio-tempo; se mudou, fica para a próxima abertura. Nada é apagado.
  */
 
-import { getDeviceKey, isSealed, requestPersistentStorage, sealJson } from "./keystore.js";
+import { getDeviceKey, isLocked, isSealed, requestPersistentStorage, sealJson } from "./keystore.js";
 
 /** Onde há chave privada e como achá-la dentro do JSON guardado. */
 const TARGETS = [
@@ -16,7 +16,7 @@ const TARGETS = [
 ];
 
 async function sealPrivateField(record) {
-  if (!record?.privateJwk || isSealed(record.privateJwk)) return null;
+  if (!record?.privateJwk || isSealed(record.privateJwk) || isLocked(record.privateJwk)) return null;
   return { ...record, privateJwk: await sealJson(record.privateJwk) };
 }
 

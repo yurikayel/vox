@@ -219,18 +219,29 @@ export async function savePassphraseVault(passphrase) {
   if (clean.length < VAULT_PASSPHRASE_MIN) {
     return { ok: false, reason: `A Senha Soberana precisa de pelo menos ${VAULT_PASSPHRASE_MIN} caracteres. Uma frase de 4 palavras serve.` };
   }
+  const opened = await openBundleForVault(clean);
+  if (!opened.ok) return opened;
   const address = await deriveVaultAddress(clean);
-  const bundle = await localAccount.exportLocalAccountBundle();
-  const encrypted = await encryptVaultV2(bundle, clean);
+  const encrypted = await encryptVaultV2(opened.bundle, clean);
   persistVaultRecord(address, encrypted);
   clearLegacyRevokedNotice();
   return {
     ok: true,
     lookupKey: address,
-    routeId: bundle.routeId,
-    displayName: bundle.displayName,
+    routeId: opened.bundle.routeId,
+    displayName: opened.bundle.displayName,
     bundle: encrypted,
+    locked: await localAccount.lockAfterPasswordBackup(clean),
   };
+}
+
+/** Conta travada (PM-93 etapa 2) só abre com a mesma Senha Soberana. */
+async function openBundleForVault(clean) {
+  try {
+    return { ok: true, bundle: await localAccount.exportLocalAccountBundle(clean) };
+  } catch (err) {
+    return { ok: false, reason: err?.message || "Não foi possível abrir as chaves desta conta." };
+  }
 }
 
 async function tryDecryptPassphraseRecord(record, cleanPassphrase) {
@@ -276,6 +287,7 @@ export async function restoreFromPassphraseVault(passphrase, lookupKeyOverride =
   const prevId = localAccount.getCachedRouteIdSync();
   await localAccount.importLocalAccountBundle(bundle);
   cleanupSupersededIdentity(prevId, bundle.routeId, bundle.displayName, bundle.avatarUrl || bundle.enrichment?.avatarUrl);
+  await localAccount.lockAfterPasswordBackup(clean);
   const upgraded = isV2Record(located.record) ? false : await upgradeLegacyPassphraseVault(clean, located.legacyKey);
   return { ok: true, routeId: bundle.routeId, displayName: bundle.displayName || "", upgraded };
 }
