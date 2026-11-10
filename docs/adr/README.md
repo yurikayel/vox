@@ -18,7 +18,7 @@
 | [011](./011-taxonomia-tripartite-produtos-vox.md) | Taxonomia dual: Vox (cliente) e Vox Populi (nó) | accepted |
 | [012](./012-soberania-digital-cintura-fina-cartuchos-webxdc.md) | Cintura fina criptográfica e cartuchos Webxdc | accepted (runtime ainda não plugado na UI) |
 | [013](./013-sistema-voxels-e-conquistas-civicas.md) | Voxels e conquistas cívicas verificáveis | accepted |
-| [014](./014-zero-knowledge-vault-recuperacao-soberana.md) | Cofre cifrado e restauração cross-device | accepted · **em revisão (PM-90)**: o formato atual não cumpre "zero-knowledge" |
+| [014](./014-zero-knowledge-vault-recuperacao-soberana.md) | Cofre cifrado e restauração cross-device | superseded pelo 025 |
 | [015](./015-licenciamento-agplv3-e-governanca-de-bem-comum.md) | Licença AGPL-3.0-or-later e governança de bem comum | accepted |
 | [016](./016-design-system-sovereign-agora-e-democracia-direta.md) | Design system Sovereign Agora e democracia direta | accepted (rev. 2026-11-06) |
 | [017](./017-consolidacao-roadmap-unico.md) | Consolidação do planejamento — ROADMAP único | accepted |
@@ -29,6 +29,7 @@
 | [022](./022-memoria-central-por-consentimento.md) | Memória central: servidor escolhido pela pessoa, nunca fonte de verdade | accepted (implementado) |
 | [023](./023-moderacao-em-camadas-e-moderador-natural.md) | Moderação em camadas: moderador natural assimétrico e vínculo assinado | accepted (vínculo implementado; moderador natural em PM-83) |
 | [024](./024-divulgacao-responsavel-e-honestidade-de-seguranca.md) | Divulgação responsável e honestidade sobre segurança (institucional) | accepted |
+| [025](./025-cofre-v2-so-a-senha-abre.md) | Cofre de recuperação v2: só a Senha Soberana abre | accepted (implementado, SW v7.62) |
 
 **Registro de uma página** com as decisões institucionais e de arquitetura em vigor, o estado real de cada uma e o que ainda está em aberto: [DECISOES.md](../DECISOES.md).
 

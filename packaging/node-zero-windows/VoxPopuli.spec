@@ -18,6 +18,7 @@ a = Analysis(
         "relay.inbox",
         "relay.mirror_validate",
         "relay.server",
+        "relay.vault_store",
     ],
     hookspath=[],
     hooksconfig={},
