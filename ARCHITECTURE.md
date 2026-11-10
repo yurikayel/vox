@@ -21,7 +21,7 @@ Canal Unilateral                        Ecossistema Bidirecional
 Componentes centrais:
 1. **Client (PWA):** Todo o processamento de visualização, roteamento, validação e criptografia ocorre diretamente no navegador ou celular do usuário.
 2. **Camada de Leitura (GraphQL aberto):** Em vez de manter instâncias de PostgreSQL/Redis, o cliente consome consultas GraphQL distribuídas fornecidas pelos nós da rede Arweave/AR.IO.
-3. **Camada de Escrita (Bundler L2):** Upload de transações assinado via chave criptográfica local (Ed25519) e enviado via gateways Turbo para inclusão otimista e propagação permanente.
+3. **Camada de Escrita (Bundler L2):** Upload de transações (data items ANS-104) assinado pela carteira Arweave local (RSA-PSS, `ans104.js`; posts da malha são assinados à parte com ECDSA P-256) e enviado via gateways Turbo para inclusão otimista e propagação permanente.
 
 ---
 

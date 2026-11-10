@@ -188,7 +188,7 @@ O estado varia entre cliente, navegador e versão. A lista abaixo não é uma ce
 
 * **Fórum Cívico Oficial e Comunidades (Espírito Orkut):** A comunidade canônica `"vox"` atua como ágora central e fórum oficial de deliberação, issues abertas e governança transparente, inscrevendo novos participantes por padrão no onboarding mas garantindo o direito soberano de sair (`leave`) ou retornar (`join`) a qualquer momento.
 * **Moderação Comunitária & Bumping de Fórum:** Suporte fail-closed estrito para moderadores fixarem tópicos no topo (`📌 Fixado`), trancarem discussões encerradas (`🔒 Encerrado`), reordenação dinâmica por atividade recente (`max(topic.ts, lastReplyTs)`) e busca instantânea de tópicos.
-* **Recuperação Zero-Knowledge de Identidade & Sincronização Cross-Device ([ADR-014](./docs/adr/014-zero-knowledge-vault-recuperacao-soberana.md)):** Restauração canônica determinística do perfil (`routeId`, chave privada P-256 e chaves de DM) em qualquer navegador ou celular via cofre cifrado no cliente (PBKDF2 50k iters + AES-GCM-256) ancorado na **Senha Soberana** (sem Big Tech) ou, onde o deploy tem app OAuth registrado (*depende de config*), em Google (`sub`) ou Meta (`profile.id`). Sincronização instantânea entre computadores e celulares via rota segura `#/sync?p=...` e QR Code nativo sem digitação manual.
+* **Recuperação de identidade e sincronização entre aparelhos ([ADR-014](./docs/adr/014-zero-knowledge-vault-recuperacao-soberana.md), em revisão no PM-90):** o perfil (`routeId`, chave P-256 e chaves de DM) é restaurado em outro navegador ou celular a partir de um cofre cifrado no cliente, aberto pela **Senha Soberana** ou, onde o deploy tem app OAuth registrado (*depende de config*), por login Google ou Meta. O link e o QR `#/sync?b=…` levam só o cofre; a senha é digitada no aparelho novo (PM-92). **Aviso:** até o PM-90 entrar, não trate o cofre como guarda segura da conta; guarde também o arquivo de backup.
 * **Áudio e Vídeo Nativos Lo-Fi (Walkie-Talkie & Vídeo Curto):** Gravação direta pelo navegador em 1 toque (toggle iniciar/parar) ou anexo de arquivo para posts e comentários, com compressão WebM/Opus e MP4/WebM $\le 320\text{p}$ (`media-lofi.js`), deduplicação por hash SHA-256 (`media-blob.js`) e replicação P2P/memória central.
 * **Diretório Unificado de Pessoas (`#/people`) & Onboarding Direto:** Lista das contas que escolheram um nome, com filtro em tempo real (pares só com a chave `vx_…` saem da lista, mas a busca pela chave ainda os acha), entrada direta de nome/apelido no onboarding (sem obrigatoriedade de OAuth) e sincronização automática via `PROFILE_CARD` e `zero-central-memory`.
 * **Nó Local `zero-central-memory` Modo 3 (`VoxPopuli-ZeroMemory.exe` / `central_memory.py`):** Persistência local em disco com journal append-only (`< 0,2 ms`), snapshot atômico em lote a cada 2s, delta sync incremental (`clientRevision`/`since`), túnel HTTPS Cloudflare integrado e descoberta zero-config via *Signaling Beacon* (`vx_zero_memory_beacon`).
@@ -325,13 +325,19 @@ Na raiz ficam só os arquivos que o GitHub e as ferramentas esperam ali: `README
 * **[ADR-011](./docs/adr/011-taxonomia-tripartite-produtos-vox.md):** Taxonomia Canônica Dual — Vox (Cliente) e Vox Populi (Nó Dedicado).
 * **[ADR-012](./docs/adr/012-soberania-digital-cintura-fina-cartuchos-webxdc.md):** Soberania Digital na Vox — Cintura Fina Criptográfica e Cartuchos Cívicos Webxdc.
 * **[ADR-013](./docs/adr/013-sistema-voxels-e-conquistas-civicas.md):** Sistema de Voxels e Conquistas Cívicas.
-* **[ADR-014](./docs/adr/014-zero-knowledge-vault-recuperacao-soberana.md):** Zero-Knowledge Vault e Recuperação Soberana Multi-dispositivo.
+* **[ADR-014](./docs/adr/014-zero-knowledge-vault-recuperacao-soberana.md) (em revisão, PM-90):** Cofre cifrado e recuperação multi-dispositivo.
 * **[ADR-015](./docs/adr/015-licenciamento-agplv3-e-governanca-de-bem-comum.md):** Licenciamento AGPL-3.0-or-later e Governança de Bem Comum.
 * **[ADR-016](./docs/adr/016-design-system-sovereign-agora-e-democracia-direta.md):** Design System Sovereign Agora e Democracia Direta.
 * **[ADR-017](./docs/adr/017-consolidacao-roadmap-unico.md):** Consolidação do planejamento — ROADMAP único.
 * **[ADR-018](./docs/adr/018-selo-govbr-via-parceiro-publico.md) (proposto):** Selo gov.br opcional via parceiro público, desacoplado do login.
+* **[ADR-019](./docs/adr/019-esquecer-por-padrao-e-memoria-civica.md):** Esquecer por padrão; memória cívica por três caminhos.
+* **[ADR-020](./docs/adr/020-postura-de-operacao-do-piloto-g1.md):** Postura de operação do piloto G1.
+* **[ADR-021](./docs/adr/021-integridade-na-entrada-forma-assinada.md):** Integridade na entrada — forma assinada guardada, tudo que entra é conferido.
+* **[ADR-022](./docs/adr/022-memoria-central-por-consentimento.md):** Memória central escolhida pela pessoa, nunca fonte de verdade.
+* **[ADR-023](./docs/adr/023-moderacao-em-camadas-e-moderador-natural.md):** Moderação em camadas e moderador natural assimétrico.
+* **[ADR-024](./docs/adr/024-divulgacao-responsavel-e-honestidade-de-seguranca.md):** Divulgação responsável e honestidade sobre segurança.
 
-Índice com status: [docs/adr/README.md](./docs/adr/README.md).
+Índice com status: [docs/adr/README.md](./docs/adr/README.md). Todas as decisões institucionais e de arquitetura em vigor, numa página: [docs/DECISOES.md](./docs/DECISOES.md).
 
 ---
 
