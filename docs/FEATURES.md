@@ -38,7 +38,8 @@
 |---|---|---|---|---|
 | Comunidades estilo Orkut (fórum, tópicos) | `#/communities`, `#/c/:id`, `#/t/:id` | `app/screens-community.js`, `render/community.js`, `community-*.js` | no ar (sem rede: aviso "sem conexão", sem conteúdo de exemplo) | `community-*` |
 | Moderação: fixar, trancar, ocultar | comunidade | `moderation.js` | no ar | `moderation*` |
-| Denunciar publicação (motivos, canais oficiais para casos graves, DM cifrada ao moderador) | post ⋯ | `report.js`, `app/report-flow.js` | no ar (LAN-12); registro local, sem fila central | `report`, `report-flow` |
+| Denunciar publicação (motivos, canais oficiais para casos graves, DM cifrada ao moderador) | post ⋯ | `report.js`, `app/report-flow.js`, `app/report-dm.js`, `report-review.js` | no ar (LAN-12, PM-69): a denúncia assinada vai por DM à moderação, cujo aparelho arquiva até a revisão ("⏳ Em revisão", 48 h) se passar nas salvaguardas; sem fila central | `report`, `report-flow`, `report-review` |
+| Canal: só a moderação publica posts, todos comentam | faixa na página da comunidade | `community-channel.js`, `app/community-channel-flow.js`, `render/channel-bar.js` | no ar (PM-81): `community_update` com `postingMode`; a regra vale na leitura de cada aparelho ([spec](./specs/canal-comunidade-v0.md)) | `community-channel` |
 | Proposta com diff + voto assinado | `#/c/:id/proposal/:id`, `#/vote` | `governance.js`, `app/vote-confirm.js` | no ar | `governance`, `vote-stitch` |
 | Enquete cívica 2–6 opções | composer cívico | `civic-post.js` | no ar | `civic-post` |
 | Feira (classificados assinados) | `#/c/:id?tab=feira`, `#/compose/listing` | `listing.js`, `listing-ui.js` | no ar | `listing*` |
@@ -62,7 +63,8 @@
 | Diretório de pessoas | `#/people` | `people-index.js`, `profile-directory.js`, `contacts.js` | no ar; pares só com a chave `vx_…` (sem nome escolhido) ficam fora da lista, mas a busca pela chave os acha | `people-index`, `contacts` |
 | Perfil, Voxels, passaporte | `#/perfil`, `#/u/:addr` | `app/screens-profile.js`, `voxels.js` | no ar (Voxels só locais) | `voxels`, `profile-*` |
 | Importar nome/foto (Google, Meta, Bluesky, X, TikTok, GitHub) | onboarding | `social-login.js`, `oauth-profile.js`, `bsky-oauth.js` | depende de config (Kwai: "em breve") | `social-login`, `oauth-profile` |
-| DMs E2E | `#/dm`, `#/dm/:addr` | `crypto-dm.js`, `dm-messenger.js`, `inbox.js` | no ar; entrega offline **depende de relay** (inbox padrão `127.0.0.1:3920`) | `crypto-dm`, `dm-*`, `inbox` |
+| DMs E2E | `#/dm`, `#/dm/:addr` | `crypto-dm.js`, `dm-messenger.js`, `inbox.js`, `dm-outbox.js` | no ar; entrega offline **depende de relay** (inbox padrão `127.0.0.1:3920`). Caixa de saída (PM-78): o que não saiu é reenviado enquanto o app está aberto, por até 7 dias ("⏳ Aguardando" → "⚠ Não entregue") | `crypto-dm`, `dm-*`, `inbox`, `dm-outbox` |
+| Convite com vínculo assinado (padrinho) | `#/connect/:id?convite=` | `vox-link.js`, `app/vox-link-flow.js`, `render/vox-link.js` | no ar (PM-82): aceite assinado por quem entra e confirmação automática de quem convidou (10 aceites, 30 dias); passa pela malha e pela memória central. É a base do moderador natural (PM-83, a fazer; [spec](./specs/moderador-natural-v0.md)) | `vox-link` |
 | Pareamento por QR sem servidor | — | `airgap-webrtc.js` | **escrito, não plugado** | `airgap-webrtc` |
 | Carteira Arweave + assistente | `#/wallet`, `#/wallet/guia` | `wallet.js`, `app/screens-guided.js` | no ar | `wallet` |
 
@@ -85,7 +87,8 @@
 |---|---|---|---|---|
 | Leitura multi-gateway + pill "Leitura reserva" | — | `graphql.js`, `gateway-telemetry.js` | no ar: 4 gateways em `config/gateways.json` (3 testemunhas GraphQL: turbo, arweave.net, ardrive.net; o `ar-io.dev` só serve conteúdo `raw` porque não indexa o Vox — PM-50), tempo limite de 8 s cada; se todos falham, erro "gateways fora" (LAN-27) | `graphql`, `multi-gateway`, `gateway-telemetry` |
 | Cache local "Pacto Vox" (IndexedDB) | — | `cache-node.js`, `idb-store.js` | no ar | `cache-node`, `idb-store` |
-| Malha WebRTC + gossip (WANT/HAVE/BLOB, perfis, manifestos) | — | `peers*.js`, `webrtc-peer.js`, `profile-card.js`, `mesh-profile.js` | no ar; **depende da sinalização** (1 nó Render + Nostr em paralelo) | `peers*`, `webrtc`, `profile-card` |
+| Malha WebRTC + gossip (WANT/HAVE/BLOB, perfis, manifestos) | — | `peers*.js`, `webrtc-peer.js`, `profile-card.js`, `mesh-profile.js` | no ar; **depende da sinalização** (1 nó Render + Nostr em paralelo). **Defeito aberto (PM-84):** cartão de perfil sem "já visto" pode circular sem fim entre abas e pares | `peers*`, `webrtc`, `profile-card` |
+| Sincronização ao conectar por inventário | — | `peer-sync.js`, `post-wire.js`, `cache-node.js` | no ar (PM-80): manda hashes e só o que falta (≈ 157 KB → ≈ 7 KB por sentido). Os itens saem na forma assinada desde a correção #49; antes, quem recebia descartava tudo o que vinha por aqui. Troca entre dois aparelhos reais ainda não medida | `peer-sync`, `post-wire` |
 | Prioridade suave de blobs (V-I09) | — | `peers-blob-affinity.js` | no ar, flag padrão **desligada** | `peers-blob-soft-priority` |
 | Sinalização via Nostr (efêmero kind 25050, cifrada entre pares) | — | `nostr-transport.js`, `nostr-event.js` (BIP-340), `nostr-signaling.js` | **no ar em paralelo ao Render** (REV-09; desligável em `signaling.json` → `nostrSignaling.enabled`). Ida e volta validada em relays reais; conexão entre dois navegadores ainda não testada em campo. Relay que cai reconecta com espera crescente e, depois de 3 falhas, troca por outro do pool (PM-17) | `nostr-transport`, `nostr-event`, `nostr-signaling` |
 | Teste de fumaça dos relays Nostr | workflow semanal | `scripts/nostr-smoke.mjs`, `.github/workflows/nostr-smoke.yml` | no ar (REV-19) | `nostr-smoke` |
