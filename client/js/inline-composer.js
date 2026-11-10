@@ -19,11 +19,6 @@ let inlineComposerMedia = { type: "", dataUrl: "", byteLength: 0 };
 let inlineComposerAspectRatio = "original";
 let inlineComposerPhotoTags = [];
 
-export function isInlineComposerActive() {
-  const root = document.getElementById("feed-inline-composer");
-  return Boolean(root && !root.classList.contains("is-collapsed"));
-}
-
 export function syncInlineComposerUi() {
   const root = document.getElementById("feed-inline-composer");
   if (!root) return;
@@ -580,16 +575,17 @@ function createComposerControllerState() {
   return state;
 }
 
-async function broadcastAndPersistInlineTopic(payload, title, body, commSlug) {
+export async function broadcastAndPersistInlineTopic(payload, title, body, commSlug) {
   // LAN-14: comunidade com quarentena de chave nova recebe o post com PoW leve.
   const community = (await cacheNode.getLocalCommunities()).find((c) => c.id === commSlug);
   await attachPowIfWanted(payload, community, await localAccount.getRouteId());
-  const signed = await localAccount.signPayload(payload);
-  await cacheNode.saveLocalPost(signed);
-  if (payload.photoTags?.length) photoTags.setLocalTags(signed.id, payload.photoTags);
-  const { detachedPost, mediaBlob: blob } = await mediaBlob.detachMedia(signed);
+  // PM-87: a mídia sai antes da assinatura; o post assinado leva `mediaHash` e o blob viaja ao lado.
+  const { detachedPost, mediaBlob: blob } = await mediaBlob.detachMedia(payload);
+  const signed = await localAccount.signPayload(detachedPost);
   if (blob) await mediaBlob.defaultBlobStorage.put(blob);
-  peers.broadcastGossip(detachedPost);
+  await cacheNode.saveLocalPost(mediaBlob.withLocalMedia(signed, blob));
+  if (payload.photoTags?.length) photoTags.setLocalTags(signed.id, payload.photoTags);
+  peers.broadcastGossip(signed, blob);
   const permaResult = await uploadTopicToPermaweb({ topicId: payload.id, commSlug, title, body, blob, aspectRatio: inlineComposerAspectRatio });
   return { signed, permaResult };
 }

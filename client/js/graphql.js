@@ -205,44 +205,6 @@ const QUERIES = {
       }
     }
   }`,
-  identityLinkByAddress: `query GetIdentityLinkByAddress($address: String!) {
-    transactions(
-      first: 5
-      owners: [$address]
-      tags: [
-        { name: "App-Name", values: ["vox-brasil"] }
-        { name: "Type", values: ["identity-link"] }
-      ]
-      sort: HEIGHT_DESC
-    ) {
-      edges {
-        node {
-          id
-          owner { address }
-          tags { name value }
-        }
-      }
-    }
-  }`,
-  identityLinkByRoute: `query GetIdentityLinkByRoute($routeId: String!) {
-    transactions(
-      first: 5
-      tags: [
-        { name: "App-Name", values: ["vox-brasil"] }
-        { name: "Type", values: ["identity-link"] }
-        { name: "Route-Id", values: [$routeId] }
-      ]
-      sort: HEIGHT_DESC
-    ) {
-      edges {
-        node {
-          id
-          owner { address }
-          tags { name value }
-        }
-      }
-    }
-  }`,
   topicsByOwners: `query ListTopicsByOwners($owners: [String!]!, $after: String) {
     transactions(
       first: 30
@@ -801,22 +763,3 @@ export async function fetchProfileCardOnChain({ address, routeId } = {}) {
   }
 }
 
-export async function fetchIdentityLinkOnChain({ address, routeId } = {}) {
-  const targetAddr = String(address || "").trim();
-  const targetRoute = String(routeId || "").trim();
-  if (!targetAddr && !targetRoute) return null;
-
-  try {
-    const query = targetAddr ? QUERIES.identityLinkByAddress : QUERIES.identityLinkByRoute;
-    const variables = targetAddr ? { address: targetAddr } : { routeId: targetRoute };
-    const { data } = await withGateways((url) => queryOne(url, query, variables));
-    const edges = data.transactions?.edges || [];
-    if (!edges.length) return null;
-    const node = edges[0].node;
-    const rawData = await fetchTransactionData(node.id);
-    if (!rawData?.body) return null;
-    return typeof rawData.body === "string" ? JSON.parse(rawData.body) : rawData.body;
-  } catch {
-    return null;
-  }
-}
