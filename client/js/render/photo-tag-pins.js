@@ -17,11 +17,13 @@ export function renderPhotoTagPinsHtml(tags, { visible = true } = {}) {
   return `<div class="photo-tag-pins"${hide} aria-label="Pessoas marcadas">${pins}</div>`;
 }
 
-export function renderPhotoTagBarHtml(post, { isOwn: _isOwn = false } = {}) {
+/** PM-85: marca de post alheio sem `sigv: 2` não é coberta pela assinatura, então aparece como não verificada. */
+export function renderPhotoTagBarHtml(post, { isOwn = false } = {}) {
   const tags = photoTags.listTags(post);
   const n = tags.length;
   if (!n) return "";
-  return `<div class="photo-tag-bar"><button type="button" class="btn-photo-tag-vis" data-id="${escapeHtml(post.id)}" aria-pressed="true">Marcas (${n})</button></div>`;
+  const note = isOwn || post.sigv === 2 ? "" : " · não verificadas";
+  return `<div class="photo-tag-bar"><button type="button" class="btn-photo-tag-vis" data-id="${escapeHtml(post.id)}" aria-pressed="true">Marcas (${n})${note}</button></div>`;
 }
 
 export function renderPhotoTagLayerHtml(post, { isOwn = false } = {}) {

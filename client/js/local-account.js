@@ -7,6 +7,7 @@
 import * as cryptoDm from "./crypto-dm.js";
 import { isLocked, openSealed, sealJson } from "./keystore.js";
 import * as keyLock from "./key-lock.js";
+import { canonicalString, isKnownSigv, withSigv } from "./sig-format.js";
 
 const ACCOUNT_STORAGE = "vox-local-account-v1";
 const DISPLAY_NAME_STORAGE = "vox-display-name";
@@ -47,11 +48,6 @@ function b64UrlToBytes(b64url) {
     out[i] = bin.charCodeAt(i);
   }
   return out;
-}
-
-function canonicalString(obj) {
-  const { sig: _sig, pubKey: _pubKey, ...rest } = obj;
-  return JSON.stringify(rest, Object.keys(rest).sort());
 }
 
 let cachedAccount = null;
@@ -361,7 +357,7 @@ export async function signPayload(payload) {
   const acc = await ensureLocalAccount();
   const privateKey = await keyLock.signingKey(acc.privateJwk);
 
-  const enriched = buildEnrichedPayloadForSigning(payload, acc.routeId);
+  const enriched = withSigv(buildEnrichedPayloadForSigning(payload, acc.routeId));
   const rawData = new TextEncoder().encode(canonicalString(enriched));
   const sigBuffer = await crypto.subtle.sign(
     { name: "ECDSA", hash: "SHA-256" },
@@ -377,7 +373,7 @@ export async function signPayload(payload) {
 }
 
 export async function verifyPayload(signed) {
-  if (!signed?.sig || !signed?.pubKey || !signed?.author) return false;
+  if (!signed?.sig || !signed?.pubKey || !signed?.author || !isKnownSigv(signed)) return false;
   try {
     // 1. Valida que routeId é derivado da chave pública anexada
     const expectedRouteId = await computeRouteId(signed.pubKey);
