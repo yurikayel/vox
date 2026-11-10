@@ -22,6 +22,7 @@ import { renderPostBodyMarkdown } from "./markdown-body.js";
 import { renderNotaryBadgeHtml } from "../perma-notary.js";
 import { flattenReplyThread } from "../reply-thread.js";
 import { renderReviewBannerHtml, renderArchivedTopicShellHtml } from "./review-banner.js";
+import { renderChannelHiddenTopicShellHtml } from "./channel-bar.js";
 
 function shareTopicAria(topicId) {
   if (mod.canEchoPost(topicId)) return "Compartilhar post";
@@ -273,10 +274,11 @@ function extractTopicViewContext(topic, topicData, communityId) {
   return { commId, bodyText, author, labels, topicTs, notary };
 }
 
-/** Tópico apagado pelo autor (gossip) ou arquivado pela moderação: no lugar do conteúdo, só o aviso. */
+/** Tópico apagado pelo autor (gossip), arquivado pela moderação ou fora do canal (PM-81): no lugar do conteúdo, só o aviso. */
 function renderTopicUnavailableHtml(topic) {
   if (gossipRetract.shouldHideGossipDeletedPost(topic)) return gossipRetract.renderGossipDeletedTopicShellHtml();
   if (topic?.archived) return renderArchivedTopicShellHtml();
+  if (topic?.channelHidden) return renderChannelHiddenTopicShellHtml();
   return "";
 }
 

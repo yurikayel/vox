@@ -12,6 +12,7 @@ import { openPhotoTagPicker } from "./app/photo-tag-picker.js";
 import { escapeHtml } from "./render/util.js";
 import * as permanence from "./permanence-notice.js";
 import { attachPowIfWanted } from "./new-key-guard.js";
+import { assertCanPostTopic } from "./app/community-channel-flow.js";
 
 let inlineComposerImageDataUrl = "";
 let inlineComposerMedia = { type: "", dataUrl: "", byteLength: 0 };
@@ -638,6 +639,7 @@ async function executeInlinePublish(form, onPublished, state, shouldEcho = false
   const commSlug = document.getElementById("inline-topic-comm")?.value?.trim().toLowerCase() || "geral";
   const hasMedia = Boolean(inlineComposerImageDataUrl || inlineComposerMedia.dataUrl);
   if (!bodyRaw && !hasMedia) return;
+  if (!(await assertCanPostTopic(commSlug))) return;
 
   const { title, body } = postOwnership.deriveTopicTitleFromBody(bodyRaw || "");
   const payload = buildInlineTopicPayload({ title, body, commSlug });
@@ -657,16 +659,14 @@ async function executeInlinePublish(form, onPublished, state, shouldEcho = false
   }
 }
 
+const SUBMIT_BUTTON_LABELS = { "btn-inline-submit": "Postar", "btn-inline-echo": "🚀 Postar & Ecoar" };
+
 function updateSubmitButtonsState(isSubmitting) {
-  const btn = document.getElementById("btn-inline-submit");
-  const echoBtn = document.getElementById("btn-inline-echo");
-  if (btn) {
+  for (const [id, idleLabel] of Object.entries(SUBMIT_BUTTON_LABELS)) {
+    const btn = document.getElementById(id);
+    if (!btn) continue;
     btn.disabled = isSubmitting;
-    btn.textContent = isSubmitting ? "Publicando…" : "Postar";
-  }
-  if (echoBtn) {
-    echoBtn.disabled = isSubmitting;
-    echoBtn.textContent = isSubmitting ? "Publicando…" : "🚀 Postar & Ecoar";
+    btn.textContent = isSubmitting ? "Publicando…" : idleLabel;
   }
 }
 

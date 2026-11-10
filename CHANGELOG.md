@@ -6,10 +6,15 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
-### Vínculo assinado (PM-82, SW v7.52)
+### Vínculo assinado (PM-82, SW v7.54)
 - **Convite que vira vínculo:** o seu link "Convide amigos" (e o QR do seu perfil) leva um token. Quem abre vê "Fulano te convidou" e aceita. O app de quem convidou confirma sozinho ao receber o aceite, e o vínculo passa a ter a assinatura das duas pessoas. Para uma conta nova, quem convidou vira **padrinho**; é a base do moderador natural (PM-83, [spec](./docs/specs/moderador-natural-v0.md)).
 - Cada convite aceita até 10 pessoas em 30 dias; depois, o link troca sozinho. O vínculo circula só entre os aparelhos (não vai ao Arweave), e o aceite avisa isso antes do botão.
 - **Precache mais enxuto:** o `favicon.png` de 64 px saiu do que o app guarda no aparelho (a página só usa os de 16 e 32 px).
+
+### Canal: comunidade em que só a moderação publica (PM-81, SW v7.53)
+- **Mural de avisos sem objeto novo:** dono ou moderação transforma a comunidade em **canal** com um botão na página dela. A partir daí, só a moderação publica posts e todo mundo continua comentando. "Abrir para todos publicarem" desfaz.
+- **A regra vale em cada aparelho:** post de quem não modera some da lista e o link direto mostra "Publicação fora do canal". O autor e a moderação ainda veem o post, com o selo "📣 Fora do canal". Quem não modera recebe um aviso ao tentar publicar, e o botão "Novo post" some. Não há exceção para posts antigos, porque a data é escrita por quem publica; voltar a "aberta" mostra tudo de novo ([spec](./docs/specs/canal-comunidade-v0.md)).
+- **Logo mais leve:** a marca do topo (exibida em 28 px) era um PNG de 256 px; agora tem 128 px, 17 KB a menos no precache.
 
 ### Correção: post guardado volta a bater com a assinatura (SW v7.51)
 - **Sincronização entre aparelhos destravada:** ao gravar um post, o app misturava cerca de 35 campos padrão no registro. O post guardado deixava de bater com a assinatura e quem recebia descartava. Na prática, só o que circulava ao vivo chegava a outro aparelho; o que vinha da sincronização ao conectar (PM-80), do envio completo e da memória central era jogado fora. O defeito existia desde o primeiro commit P2P.
