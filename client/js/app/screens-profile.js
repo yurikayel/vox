@@ -889,7 +889,7 @@ function bindWalletImportAndDisconnect() {
       const input = document.getElementById("wallet-jwk-input")?.value.trim();
       try {
         const jwk = JSON.parse(input);
-        wallet.saveJwk(jwk);
+        await wallet.saveJwk(jwk);
         await syncIdentity();
         share.showToast("Carteira importada e salva localmente!");
         showWallet();

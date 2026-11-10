@@ -4,8 +4,8 @@
 [![Identity](https://img.shields.io/badge/Identity-WebCrypto%20P--256-blueviolet.svg)](./client/js/local-account.js)
 [![Storage](https://img.shields.io/badge/Storage-Arweave%20Permaweb-black.svg)](https://arweave.org)
 [![License: AGPL v3](https://img.shields.io/badge/License-GNU%20AGPLv3-crimson.svg)](./LICENSE)
-[![Tests](https://img.shields.io/badge/tests-1044%20passing-success.svg)](./docs/TESTES.md)
-[![Service Worker](https://img.shields.io/badge/SW-v7.62--real--network--audio--video--upload-informational.svg)](./client/sw.js)
+[![Tests](https://img.shields.io/badge/tests-1052%20passing-success.svg)](./docs/TESTES.md)
+[![Service Worker](https://img.shields.io/badge/SW-v7.63--real--network--audio--video--upload-informational.svg)](./client/sw.js)
 
 O Vox é um projeto cívico em construção para ampliar a participação popular e a autonomia das comunidades na vida digital. Sua ambição é ser um bem comum aberto: o projeto deve permanecer transparente, copiável, modificável e maior que qualquer fundador, mantenedor, empresa ou plataforma.
 
@@ -77,9 +77,9 @@ Redes centralizadas, instâncias federadas e protocolos locais têm custos, vant
 
 | Campo | Valor |
 |---|---|
-| **Commit SHA** | `0065462` |
-| **Suíte de Testes** | **1044** (`950` JS + `94` Python) |
-| **Service Worker** | `vox-pwa-v7.62-real-network-audio-video-upload` |
+| **Commit SHA** | `802ef72` |
+| **Suíte de Testes** | **1052** (`958` JS + `94` Python) |
+| **Service Worker** | `vox-pwa-v7.63-real-network-audio-video-upload` |
 
 *Tabela regenerada por `npm run release-line` (roda a suíte e grava [docs/release-metadata.json](./docs/release-metadata.json)). Nenhum outro documento deve repetir esses números.*
 
@@ -173,7 +173,7 @@ Resumo do que entrou no cliente em nov/2026 (detalhes em [CHANGELOG.md](./CHANGE
 * **Revisão de segurança (DevSecOps, 10/11)** ([relatório](./docs/audits/revisao-devsecops-2026-11-10.md)): o conteúdo que circula entre aparelhos agora é conferido por assinatura em todos os caminhos. Os pontos fracos estão na **guarda e na recuperação da identidade** e na **confiança no servidor de memória central**.
   * **Cofre v2 (PM-90, SW v7.62):** o cofre de recuperação só abre com a Senha Soberana. Login com Google ou Meta não é mais chave, e os cofres antigos são revogados na abertura ([ADR-025](./docs/adr/025-cofre-v2-so-a-senha-abre.md)).
 * **Defeitos abertos** ([THREAT-MODEL T17 e T19–T23](./docs/THREAT-MODEL.md)):
-  * chaves em claro no navegador e relay sem autorização do dono (PM-93, PM-94);
+  * trava das chaves depois do backup e relay sem autorização do dono (PM-93 etapa 2, PM-94);
   * campos aninhados (`photoTags`, `mediaRef`) **fora da assinatura** (PM-85);
   * pipeline sem SAST nem Dependabot (PM-95).
 * **Peso do app guardado no aparelho:** o precache tem ~1,2 KB de folga no teto do PM-02; a próxima adição ao shell precisa vir com corte.

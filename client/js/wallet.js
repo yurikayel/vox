@@ -1,5 +1,6 @@
 import * as ans104 from "./ans104.js";
 import { loadArweave } from "./arweave-lib.js";
+import { isSealed, openSealed, sealJson } from "./keystore.js";
 
 const STORAGE_KEY = "vox-wallet-jwk";
 export const WALLET_KIND_PLAIN = "vox-wallet-plain";
@@ -45,7 +46,7 @@ export function isWalletEncrypted() {
 }
 
 export async function encryptStoredWallet(passphrase) {
-  const current = getStoredJwk();
+  const current = await openStoredWallet();
   if (!current) throw new Error("Nenhuma carteira encontrada para cifrar");
   const salt = crypto.getRandomValues(new Uint8Array(16));
   const iv = crypto.getRandomValues(new Uint8Array(12));
@@ -73,7 +74,7 @@ export async function unlockWallet(passphrase) {
   if (!raw) throw new Error("Nenhuma carteira armazenada");
   const envelope = JSON.parse(raw);
   if (envelope?.kind !== WALLET_KIND_ENCRYPTED) {
-    sessionJwk = envelope;
+    sessionJwk = await openSealed(envelope);
     return sessionJwk;
   }
 
@@ -99,27 +100,39 @@ export function __resetSessionForTests() {
   sessionJwk = null;
 }
 
-export function getStoredJwk() {
-  if (sessionJwk) return sessionJwk;
+function readStoredWallet() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    if (parsed?.kind === WALLET_KIND_ENCRYPTED) {
-      return null;
-    }
-    return parsed;
+    return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
   }
 }
 
-export function saveJwk(jwk) {
+/** Carteira já aberta nesta sessão, ou guardada em claro (dado antigo). Cifrada: use `openStoredWallet`. */
+export function getStoredJwk() {
+  if (sessionJwk) return sessionJwk;
+  const parsed = readStoredWallet();
+  if (!parsed || parsed.kind === WALLET_KIND_ENCRYPTED || isSealed(parsed)) return null;
+  return parsed;
+}
+
+/** PM-93: abre a carteira cifrada pelo aparelho para esta sessão. Nunca gera outra por cima. */
+export async function openStoredWallet() {
+  if (sessionJwk) return sessionJwk;
+  const parsed = readStoredWallet();
+  if (!isSealed(parsed)) return getStoredJwk();
+  sessionJwk = await openSealed(parsed);
+  return sessionJwk;
+}
+
+/** Guarda a carteira cifrada pelo aparelho (em claro só se o navegador não guarda a chave do aparelho). */
+export async function saveJwk(jwk) {
   if (!jwk || typeof jwk !== "object") {
     throw new Error("JWK inválido");
   }
   sessionJwk = jwk;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(jwk));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(await sealJson(jwk)));
 }
 
 export function removeWallet() {
@@ -128,11 +141,11 @@ export function removeWallet() {
 }
 
 export function hasWallet() {
-  return Boolean(getStoredJwk());
+  return Boolean(getStoredJwk() || isSealed(readStoredWallet()));
 }
 
 export async function getAddress() {
-  const jwk = getStoredJwk();
+  const jwk = await openStoredWallet();
   if (!jwk) return null;
   return ans104.jwkToAddress(jwk);
 }
@@ -156,12 +169,12 @@ export async function generateNewWallet() {
   );
   const jwk = await crypto.subtle.exportKey("jwk", pair.privateKey);
   const address = await ans104.jwkToAddress(jwk);
-  saveJwk(jwk);
+  await saveJwk(jwk);
   return { jwk, address };
 }
 
 export async function ensureWallet() {
-  const existing = getStoredJwk();
+  const existing = await openStoredWallet();
   if (existing) return existing;
   const { jwk } = await generateNewWallet();
   return jwk;

@@ -8,7 +8,10 @@ test("crypto-dm - gera e persiste par ECDH P-256 local", async () => {
   const keys1 = await cryptoDm.ensureDmKeys();
   assert.equal(keys1.publicJwk.kty, "EC");
   assert.equal(keys1.publicJwk.crv, "P-256");
-  assert.ok(keys1.privateJwk.d);
+  const stored = JSON.parse(localStorage.getItem("vox-dm-keypair"));
+  assert.equal(stored.privateJwk.d, undefined, "PM-93: a chave privada não fica em claro no armazenamento");
+  const opened = await cryptoDm.getDmKeypair();
+  assert.ok(opened.privateJwk.d);
 
   const pub2 = await cryptoDm.getPublicJwk();
   assert.equal(pub2.x, keys1.publicJwk.x);
