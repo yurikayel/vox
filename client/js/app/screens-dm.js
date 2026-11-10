@@ -15,55 +15,11 @@ import * as dmMsg from "../dm-messenger.js";
 import { parseRoute } from "./route-parse.js";
 import { getActiveUser, makeShellProps } from "./context.js";
 import { ensureOnboardingSideEffects } from "./onboarding-side-effects.js";
+import { applyBubbleReaction, dispatchSealedEnvelope, ingestDecryptedEnvelope } from "./dm-wire.js";
 
 let activeReplyDraft = null;
 let pendingContextDraft = null;
 let activeMediaDraft = "";
-
-async function applyBubbleReaction(peerAddress, actorAddress, targetId, emoji) {
-  const msgs = await cacheNode.getDmMessages(peerAddress);
-  const target = msgs.find((m) => m.id === targetId);
-  if (!target) return false;
-  target.reactions = dmMsg.toggleReactionMap(target.reactions, emoji, actorAddress);
-  await cacheNode.saveDmMessage(target);
-  return true;
-}
-
-async function applyReadReceipt(peerAddress, upToTs) {
-  const msgs = await cacheNode.getDmMessages(peerAddress);
-  let updated = false;
-  for (const m of msgs) {
-    if (m.from !== peerAddress && m.status !== "read" && (Number(m.ts) || 0) <= upToTs) {
-      m.status = "read";
-      await cacheNode.saveDmMessage(m);
-      updated = true;
-    }
-  }
-  return updated;
-}
-
-async function ingestDecryptedEnvelope(env, rawText) {
-  const parsed = dmMsg.parseDmPayload(rawText);
-  if (parsed.kind === "react") {
-    return applyBubbleReaction(env.from, env.from, parsed.targetId, parsed.emoji);
-  }
-  if (parsed.kind === "read") {
-    return applyReadReceipt(env.from, parsed.upToTs);
-  }
-  await cacheNode.saveDmMessage({
-    id: env.id,
-    peerAddress: env.from,
-    from: env.from,
-    to: env.to,
-    text: parsed.text,
-    replyTo: parsed.replyTo,
-    contextCard: parsed.contextCard,
-    mediaDataUrl: parsed.mediaDataUrl,
-    ts: env.ts || Date.now(),
-    status: "received",
-  });
-  return true;
-}
 
 export async function pollInboxMessages(user) {
   if (!user) return 0;
@@ -81,18 +37,6 @@ export async function pollInboxMessages(user) {
     return count;
   } catch {
     return 0;
-  }
-}
-
-async function dispatchSealedEnvelope(peerAddress, envelope) {
-  if (peers.sendDirectMessageTransport(peerAddress, envelope) === "rtc") {
-    return "delivered";
-  }
-  try {
-    await inbox.pushSealed(peerAddress, envelope);
-    return "queued-relay";
-  } catch {
-    return "pending-retry";
   }
 }
 

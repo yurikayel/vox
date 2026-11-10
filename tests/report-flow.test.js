@@ -26,3 +26,13 @@ test("report-flow - resolveModeratorRoute usa a comunidade do post e o dono como
   const solto = await flow.resolveModeratorRoute("p2", "", { getPost: async () => ({ id: "p2" }) });
   assert.deepEqual(solto, { communityId: "", moderator: "" });
 });
+
+test("report-flow - PM-69: resultado diz se a denúncia chegou à moderação", () => {
+  const ok = flow.renderReportDoneHtml({ moderatorHash: "#/dm/vx_mod", sent: "queued-relay" });
+  assert.match(ok, /enviada à moderação/);
+  assert.match(ok, /Acrescentar detalhes na conversa/);
+  const fail = flow.renderReportDoneHtml({ moderatorHash: "#/dm/vx_mod", sent: "pending-retry" });
+  assert.match(fail, /Não deu para entregar/);
+  assert.match(fail, /Enviar aos moderadores/);
+  assert.ok(!flow.renderReportDoneHtml({}).includes("report-sent"));
+});

@@ -7,6 +7,8 @@ import * as cacheNode from "../cache-node.js";
 import { escapeHtml } from "../render/util.js";
 import { getActiveUser } from "./context.js";
 import { modalHost, clearModalHost } from "../render/modal-host.js";
+import { sendReportToModerator } from "./report-dm.js";
+import { attachReviewHandlers } from "./report-review-flow.js";
 
 const MODAL_ID = "report-modal-container";
 
@@ -46,15 +48,28 @@ function renderOfficialChannelsHtml() {
     </div>`;
 }
 
-export function renderReportDoneHtml({ grave = false, moderatorHash = "" } = {}) {
+const SENT_OK = new Set(["delivered", "queued-relay"]);
+
+/** PM-69: o que aconteceu com o envio automático à moderação. */
+function renderSentStatusHtml(sent) {
+  if (SENT_OK.has(sent)) {
+    return `<p class="desc report-sent-ok"><strong>A denúncia foi enviada à moderação</strong>, assinada e cifrada. Quando o aparelho de quem modera a receber, a publicação é <strong>arquivada para todos</strong> até a revisão (prazo de 48 h).</p>`;
+  }
+  if (!sent) return "";
+  return `<p class="desc report-sent-fail">Não deu para entregar a denúncia à moderação agora. Use o botão abaixo para mandar pela conversa.</p>`;
+}
+
+export function renderReportDoneHtml({ grave = false, moderatorHash = "", sent = "" } = {}) {
+  const modLabel = SENT_OK.has(sent) ? "Acrescentar detalhes na conversa" : "Enviar aos moderadores (mensagem cifrada)";
   const modBtn = moderatorHash
-    ? `<a class="btn btn-primary" href="${escapeHtml(moderatorHash)}" id="btn-report-to-mod">Enviar aos moderadores (mensagem cifrada)</a>`
+    ? `<a class="btn ${SENT_OK.has(sent) ? "btn-outline" : "btn-primary"}" href="${escapeHtml(moderatorHash)}" id="btn-report-to-mod">${modLabel}</a>`
     : `<p class="desc">Esta publicação não tem moderador conhecido no seu aparelho. Ela continua oculta para você.</p>`;
   return `
     <div class="modal-overlay modal-sheet" id="report-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="report-done-title">
       <div class="modal-dialog modal-card report-modal">
         <h2 id="report-done-title" style="margin-top:0;">Denúncia registrada</h2>
         <p class="desc">Ficou salva no seu aparelho e a publicação foi <strong>ocultada para você</strong> (e o seu app não a repassa na malha).</p>
+        ${renderSentStatusHtml(sent)}
         ${grave ? renderOfficialChannelsHtml() : ""}
         <div style="display:flex; flex-direction:column; gap:0.5rem; margin-top:0.5rem;">
           ${modBtn}
@@ -85,10 +100,13 @@ async function submitReport(ctx, form) {
   report.saveReport(rec);
   mod.quarantinePost(ctx.postId);
   const self = await getActiveUser().catch(() => "");
-  const selfReport = Boolean(moderator) && moderator === self;
+  const entered = (await import("./onboarding.js")).hasFullEntry();
+  const toModerator = entered && Boolean(moderator) && moderator !== self;
+  const sent = toModerator ? await sendReportToModerator(self, moderator, rec).catch(() => "pending-retry") : "";
   container().innerHTML = renderReportDoneHtml({
     grave: report.isGraveReason(reason),
-    moderatorHash: selfReport ? "" : report.buildModeratorDmHash(moderator, rec),
+    moderatorHash: toModerator ? report.buildModeratorDmHash(moderator, rec) : "",
+    sent,
   });
   document.getElementById("btn-report-close")?.addEventListener("click", closeReportModal);
   document.getElementById("btn-report-to-mod")?.addEventListener("click", closeReportModal);
@@ -115,6 +133,7 @@ let reportHandlersWired = false;
 export function attachReportHandlers(doc = globalThis.document) {
   if (reportHandlersWired || !doc?.addEventListener) return;
   reportHandlersWired = true;
+  attachReviewHandlers(doc);
   doc.addEventListener("click", (e) => {
     const btn = e.target?.closest?.(".btn-report-post");
     if (!btn) return;
