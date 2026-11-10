@@ -56,7 +56,9 @@ test("sovereign agora — compositor: tipos de registro mapeiam rotas existentes
   assert.ok(html.includes('href="#/compose/topic?c=pinheiros"'));
   assert.ok(html.includes('href="#/compose/community"'));
   assert.match(html, /agora-compose-type is-active"[^>]*aria-current="page"/);
-  assert.ok(renderComposeSignaturePanel().includes("Ed25519"));
+  const signature = renderComposeSignaturePanel();
+  assert.ok(signature.includes("assinada neste aparelho"));
+  assert.doesNotMatch(signature, /ed25519/i, "a conta assina com ECDSA P-256, não Ed25519");
 });
 
 test("sovereign agora — saúde do nó mostra pares reais e mantém IDs de hidratação", () => {

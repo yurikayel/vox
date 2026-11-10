@@ -36,7 +36,7 @@ Para aprofundamento das lições e armadilhas evitadas, consulte [LESSONS.md](..
 
 * **vs. Bluesky (AT Protocol):** Rejeitamos a dependência do AppView e das regras corporativas centralizadas da Bluesky PBC (EUA); no Vox, múltiplos gateways neutros indexam o protocolo livremente.
 * **vs. Mastodon (Fediverso):** Eliminamos a fricção de "escolher servidores" e a sobrecarga financeira de manter instâncias VPS; a descentralização do Vox é invisível para o usuário e tem custo zero para os devs.
-* **vs. Varanda (Holepunch P2P):** Herdamos o modelo de identidade Ed25519 local e diários assinados, mas cortamos radicalmente a exigência de semeadores (*seeders*) e os gargalos de conexão móvel/CGNAT.
+* **vs. Varanda (Holepunch P2P):** Herdamos o modelo de identidade local (no Vox, chave ECDSA P-256 no aparelho) e diários assinados, mas cortamos radicalmente a exigência de semeadores (*seeders*) e os gargalos de conexão móvel/CGNAT.
 * **vs. BemTeVi:** Não competimos em “bandeira no datacenter” ou promessa de hospedagem física nacional; competimos em **formato comunitário Orkut**, **portabilidade de chaves** e **estratégia de ponte (crossposting)** sem aprisionamento em ilhas isoladas.
 
 | Aspecto | Narrativa comum (ex. BemTeVi) | Vox |
