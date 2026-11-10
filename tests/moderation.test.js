@@ -122,3 +122,35 @@ test("moderation - parseModerators aceita Array de moderadores e applyFilters or
   assert.equal(out[0].isPinned, false);
 });
 
+
+test("moderation - review-hide (PM-69): some para todos, fica 'em revisão' para autor e moderação", () => {
+  const topics = [{ id: "p1", owner: "vx_autor" }, { id: "p2", owner: "vx_b" }];
+  const actions = [{ action: "review-hide", target: "p1", owner: "vx_dono", ts: 100 }];
+  assert.deepEqual(mod.applyFilters(topics, actions, "vx_dono", "").map((t) => t.id), ["p2"]);
+  assert.deepEqual(mod.applyFilters(topics, actions, "vx_dono", "", "vx_qualquer").map((t) => t.id), ["p2"]);
+  const forAuthor = mod.applyFilters(topics, actions, "vx_dono", "", "VX_AUTOR");
+  assert.equal(forAuthor[0].inReview, true);
+  assert.equal(forAuthor[0].reviewSince, 100);
+  assert.equal(mod.applyFilters(topics, actions, "vx_dono", "vx_mod", "vx_mod")[0].inReview, true);
+  const forged = [{ action: "review-hide", target: "p2", owner: "vx_estranho", ts: 1 }];
+  assert.equal(mod.applyFilters(topics, forged, "vx_dono", "").length, 2, "ação de quem não modera é ignorada");
+});
+
+test("moderation - review-hide seguido de unhide volta; seguido de hide some também para o autor", () => {
+  const topics = [{ id: "p1", owner: "vx_autor" }];
+  const review = { action: "review-hide", target: "p1", owner: "vx_dono", ts: 1 };
+  const back = mod.applyFilters(topics, [review, { action: "unhide", target: "p1", owner: "vx_dono", ts: 2 }], "vx_dono", "", "vx_x");
+  assert.equal(back.length, 1);
+  assert.equal(back[0].inReview, undefined);
+  const kept = [review, { action: "hide", target: "p1", owner: "vx_dono", ts: 2 }];
+  assert.equal(mod.applyFilters(topics, kept, "vx_dono", "", "vx_autor").length, 0);
+});
+
+test("moderation - filterTopicForViewer: link direto de post oculto mostra 'arquivado', menos para a moderação", () => {
+  const topic = { id: "p1", owner: "vx_autor", title: "t" };
+  const hide = [{ action: "hide", target: "p1", owner: "vx_dono", ts: 1 }];
+  assert.equal(mod.filterTopicForViewer(topic, hide, "vx_dono", "", "vx_leitor").archived, true);
+  assert.equal(mod.filterTopicForViewer(topic, hide, "vx_dono", "", "vx_dono").archived, undefined);
+  assert.equal(mod.filterTopicForViewer(topic, [], "vx_dono", "", "vx_leitor"), topic);
+  assert.equal(mod.filterTopicForViewer(null, hide, "vx_dono"), null);
+});
