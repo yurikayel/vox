@@ -3,6 +3,7 @@ import * as webrtcPeer from "./webrtc-peer.js";
 import { allowGossipFromAuthor } from "./rate-limit.js";
 import { noteKeySeen } from "./new-key-guard.js";
 import * as localAccount from "./local-account.js";
+import * as mediaBlob from "./media-blob.js";
 import * as manifestMesh from "./peers-cache-manifest.js";
 import * as blobAffinity from "./peers-blob-affinity.js";
 import * as moderation from "./moderation.js";
@@ -385,7 +386,7 @@ const VOX_MESSAGE_HANDLERS = {
   DM: (msg, _replyFn, _settings, source) => {
     if (msg.envelope) dispatchDirectMessage(msg.envelope, source);
   },
-  GOSSIP: (msg, _replyFn, _settings, source) => (msg.item ? handleGossipMessage(msg.item, source) : null),
+  GOSSIP: (msg, _replyFn, _settings, source) => (msg.item ? handleGossipMessage(msg.item, source, msg.blob) : null),
   GOSSIP_UPDATE: (msg, _replyFn, _settings, source) => (msg.item ? handleGossipUpdateMessage(msg.item, source) : null),
   GOSSIP_DELETE: (msg, _replyFn, _settings, source) => {
     const target = msg.tombstone || msg.item;
@@ -453,13 +454,12 @@ async function isRejectedCommunityUpdate(item) {
   return item.type === "community_update" && !(await cacheNode.isCommunityUpdateAcceptable(item));
 }
 
-async function handleGossipMessage(item, source = "rtc") {
+/** `sentBlob`: a mídia do `mediaHash`, que viaja ao lado do post (PM-87); só entra e segue adiante se bate com o hash. */
+async function handleGossipMessage(item, source = "rtc", sentBlob = null) {
   if (!item?.id || !item?.sig) return;
   if (moderation.shouldDropGossip(item.author)) return;
   if (await isGossipItemSuperseded(item)) return;
-
-  const valid = await localAccount.verifyPayload(item);
-  if (!valid) return;
+  if (!(await localAccount.verifyPayload(item))) return;
 
   if (item.type === profileCard.PROFILE_CARD_TYPE) {
     await gossipProfile.applyVerifiedProfileCardItem(item);
@@ -472,9 +472,10 @@ async function handleGossipMessage(item, source = "rtc") {
   noteKeySeen(item.author);
 
   syncProfileDirectoryFromGossip(item);
-  await cacheNode.saveLocalPost(item);
+  const blob = await mediaBlob.blobForPost(item, sentBlob);
+  await cacheNode.saveLocalPost(mediaBlob.withLocalMedia(item, blob));
   dispatchGossipPost(item, source);
-  relayToMesh({ type: "GOSSIP", item, fromPeer: myPeerId }, source);
+  relayToMesh({ type: "GOSSIP", item, blob, fromPeer: myPeerId }, source);
 }
 
 async function isGossipUpdateSuperseded(item) {
@@ -495,9 +496,7 @@ async function handleGossipUpdateMessage(item, source = "rtc") {
   if (moderation.shouldDropGossip(item.author)) return;
   if (!item.editedAt || item.editedAt <= 0) return;
   if (await isGossipUpdateSuperseded(item)) return;
-
-  const valid = await localAccount.verifyPayload(item);
-  if (!valid) return;
+  if (!(await localAccount.verifyPayload(item))) return;
 
   if (item.type === profileCard.PROFILE_CARD_TYPE) {
     await gossipProfile.applyVerifiedProfileCardItem(item);
@@ -553,9 +552,9 @@ async function handleGossipDeleteMessage(tombstone, source = "rtc") {
   relayToMesh({ type: "GOSSIP_DELETE", item: tombstone, tombstone, fromPeer: myPeerId }, source);
 }
 
-export function broadcastGossip(item) {
+export function broadcastGossip(item, blob = null) {
   if (!item?.id) return;
-  const payload = { type: "GOSSIP", item, fromPeer: myPeerId };
+  const payload = { type: "GOSSIP", item, blob, fromPeer: myPeerId };
   if (broadcastChannel) {
     try { broadcastChannel.postMessage(payload); } catch {}
   }
