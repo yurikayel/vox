@@ -233,7 +233,7 @@ function startReadFirst() {
 }
 
 /** Escrever exige ter passado pela entrada E concluído o pacto com 18+ (ADR-020). */
-function hasFullEntry() {
+export function hasFullEntry() {
   return hasPassedCantinaGate() && isPactComplete();
 }
 

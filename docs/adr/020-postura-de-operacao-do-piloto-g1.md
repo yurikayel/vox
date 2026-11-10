@@ -1,6 +1,6 @@
 # ADR-020: Postura de operação do piloto G1
 
-**Status:** accepted · **Revisado:** 2026-11-09 · **Relacionados:** REV-12 (parecer), LAN-04 (conteúdo grave), LAN-12 (denúncia), LAN-30 (bus factor), REV-23 (menores), [voluntariado](../product/voluntariado-tres-trabalhos.md)
+**Status:** accepted · **Revisado:** 2026-11-10 · **Relacionados:** REV-12 (parecer), LAN-04 (conteúdo grave), LAN-12 (denúncia), LAN-30 (bus factor), REV-23 (menores), [voluntariado](../product/voluntariado-tres-trabalhos.md)
 
 ## 1. Contexto
 
@@ -29,7 +29,13 @@ A regra (uma denúncia arquiva até a revisão) é decisão do mantenedor. As sa
 | Denúncia contra um moderador vai para outro moderador ou para o operador | Conflito de interesse |
 | Motivos graves (`intimo`, `crianca`, `violencia`) nunca vão para revisão comunitária | Exibir esse material a voluntários é, em si, distribuí-lo |
 
-Custo conhecido: no G1 sem relay completo, o arquivamento para todos acontece quando o aparelho do moderador fica online (minutos ou horas). **Implementação pendente** (item no ROADMAP).
+Custo conhecido: no G1 sem relay completo, o arquivamento para todos acontece quando o aparelho do moderador fica online (minutos ou horas). **Implementado no PM-69** (SW v7.46), com estes limites:
+
+- a denúncia vai **assinada pela conta local** de quem denuncia, dentro da DM cifrada, porque o envelope da DM não autentica o remetente; "ser membro" é conferido contra essa conta. Quem usa carteira e entrou na comunidade só com o endereço da carteira cai no caso manual (sem arquivar);
+- a ação `review-hide` circula só na malha (não vai ao Arweave, ADR-019); "Mantém arquivado" publica o `hide` de sempre;
+- denúncia contra moderador **não arquiva** e fica como caso manual: o encaminhamento automático a outro moderador ou ao operador ainda não existe;
+- a contestação do autor é pela conversa com a moderação, e o relatório de transparência das pendências vencidas ainda não existe;
+- a fila de casos fica no aparelho de quem recebeu a denúncia.
 
 ### 2.2 Depois do piloto (não decidido para o G1)
 
