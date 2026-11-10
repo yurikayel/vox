@@ -58,10 +58,3 @@ export function renderIgToolbar(t, authorDisplay) {
     <button class="action-btn btn-save ${saved ? "active" : ""}" data-id="${escapeHtml(t.id)}" aria-label="Salvar post">${iconBookmark(saved)}</button>
   </div>`;
 }
-
-export function renderIgLikesLine(t) {
-  const n = social.getLikesCount(t.id, Number(t.likesCount) || 0);
-  if (n <= 0) return "";
-  const label = n === 1 ? "1 curtida" : `${n} curtidas`;
-  return `<p class="post-ig-likes">${escapeHtml(label)}</p>`;
-}
