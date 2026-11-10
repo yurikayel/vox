@@ -69,12 +69,13 @@ test("LAN-20: origens do script-src da CSP estão no inventário", () => {
   assert.deepEqual(missing(origins), []);
 });
 
-test("LAN-20: actions dos workflows estão no inventário", () => {
+test("LAN-20 / PM-95: actions dos workflows estão no inventário e fixadas por SHA de commit", () => {
   const uses = [];
   for (const file of walk(".github/workflows", ".yml")) {
     for (const m of read(file).matchAll(/uses:\s*([^\s#]+)/g)) uses.push(m[1]);
   }
-  assert.ok(uses.includes("actions/checkout@v5"));
+  assert.ok(uses.some((u) => u.startsWith("actions/checkout@")));
+  assert.deepEqual(uses.filter((u) => !/@[0-9a-f]{40}$/.test(u)), [], "action por tag móvel: fixe pelo SHA do commit");
   assert.deepEqual(missing(uses), []);
 });
 

@@ -6,6 +6,14 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Segurança: pipeline (PM-95)
+- **CodeQL** (`.github/workflows/codeql.yml`): análise estática de actions, JS, Python e C# em todo PR, no `main` e toda segunda-feira (`security-extended`).
+- **Dependabot** (`.github/dependabot.yml`): npm, imagem Docker do relay e GitHub Actions. O relay usa só a stdlib, então não há pip.
+- **Actions fixadas por SHA de commit**, com a versão em comentário; o teste de inventário ([DEPENDENCIAS §5](./docs/DEPENDENCIAS.md)) quebra se aparecer action por tag.
+- **Token do CI só lê** (`permissions: contents: read` no `ci.yml`).
+- **Auditoria de segredos** (`scripts/secrets-audit.mjs`, com teste): pega chave PEM privada de qualquer tipo e JWK privada (o formato das chaves do Vox), em vez do grep de duas frases.
+- **`.github/CODEOWNERS`** e ruleset do `main` com branch atualizada antes do merge (`strict`). Aprovação obrigatória fica para quando houver segunda pessoa revisora.
+
 ### Segurança: autorização no relay e no nó local (PM-94, SW v7.65)
 - **Cofre com dono** ([ADR-027](./docs/adr/027-autorizacao-no-relay-dono-e-origem.md)): ao salvar, o aparelho manda uma prova derivada da Senha Soberana (`vault-crypto.deriveVaultOwnerToken`, outro sal, mesmo custo). O relay e o nó Windows guardam só o hash e passam a exigir a mesma prova para regravar ou revogar.
 - **Caixa de DMs:** cada envelope leva uma chave de apagar cifrada para o destinatário (`del`). O relay só remove o envelope com ela (`X-Vox-Delete-Token`). Envelope de cliente antigo segue apagável até expirar.
