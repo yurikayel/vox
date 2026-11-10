@@ -6,6 +6,8 @@
 
 ---
 
+> **Revisão de 10/11/2026:** a implementação não cumpre a propriedade de "conhecimento zero" descrita aqui. Os pontos estão sob divulgação responsável e entram como PM-90 a PM-92 no [ROADMAP](../ROADMAP.md). A decisão será substituída por um ADR novo quando o formato do cofre mudar. Ver [revisão DevSecOps](../audits/revisao-devsecops-2026-11-10.md).
+
 ## 1. Contexto e Problema
 
 No Vox, a identidade do cidadão é representada criptograficamente por uma `routeId` (`vx_*`), ancorada em um par de chaves assimétricas ECDSA P-256 para assinatura de mensagens e ECDH P-256 para troca de chaves em mensagens diretas (DMs).
