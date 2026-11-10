@@ -124,14 +124,16 @@ export async function pullMine(myAddress, baseUrl = null) {
   return [];
 }
 
-export async function deleteSealed(myAddress, messageId, baseUrl = null) {
+/** Apaga o envelope já lido. PM-94: envelope novo só sai com a chave de apagar (`cryptoDm.openDeleteToken`). */
+export async function deleteSealed(myAddress, messageId, deleteToken = null, baseUrl = null) {
   if (!myAddress || !messageId) return false;
   const targets = getRelayHttpUrls(baseUrl);
+  const headers = deleteToken ? { "X-Vox-Delete-Token": deleteToken } : {};
   let anyOk = false;
   for (const root of targets) {
     const url = `${root.replace(/\/+$/, "")}/inbox/${encodeURIComponent(myAddress)}/${encodeURIComponent(messageId)}`;
     try {
-      const res = await fetch(url, { method: "DELETE", signal: AbortSignal.timeout(3000) });
+      const res = await fetch(url, { method: "DELETE", headers, signal: AbortSignal.timeout(3000) });
       if (res.ok) anyOk = true;
     } catch {}
   }

@@ -21,9 +21,9 @@ function installMemoryServer() {
     const key = String(url).split("/memory/vault/")[1];
     if (!key) return { ok: false, status: 404, json: async () => ({}) };
     if (opts.method === "POST") {
-      const { record } = JSON.parse(opts.body);
+      const { record, ownerToken } = JSON.parse(opts.body);
       store.set(key, record);
-      posts.push({ key, record });
+      posts.push({ key, record, ownerToken });
       return { ok: true, json: async () => ({ status: "saved" }) };
     }
     const record = store.get(key);
@@ -189,6 +189,23 @@ test("PM-90 - salvar a Senha Soberana de novo apaga o aviso pendente", async () 
     assert.equal(saved.ok, true);
     assert.equal(saved.bundle.v, 2);
     assert.equal(vaultLegacy.consumeLegacyRevokedNotice(), false);
+  } finally {
+    server.restore();
+  }
+});
+
+test("PM-94 - o cofre v2 vai com a prova do dono, que sai da senha e não do endereço", async () => {
+  const server = installMemoryServer();
+  try {
+    freshDevice();
+    await localAccount.ensureLocalAccount();
+    assert.equal((await oauthVault.savePassphraseVault(PASS)).ok, true);
+    const address = await vaultCrypto.deriveVaultAddress(PASS);
+    const sent = server.posts.find((p) => p.key === address);
+    assert.match(sent.ownerToken, /^[0-9a-f]{64}$/);
+    assert.equal(sent.ownerToken, await vaultCrypto.deriveVaultOwnerToken(PASS), "a mesma senha dá a mesma prova");
+    assert.notEqual(sent.ownerToken, address);
+    assert.notEqual(await vaultCrypto.deriveVaultOwnerToken("outra senha bem longa"), sent.ownerToken);
   } finally {
     server.restore();
   }
