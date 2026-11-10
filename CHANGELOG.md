@@ -6,6 +6,10 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Docs: rascunhos para o piloto G1 (estratégia de 90 dias)
+- [Estratégia por ponto fraco](./docs/strategy/estrategia-5-pontos-fracos-90-dias-2026-11.md) registrada, com as decisões de 10/11: cunha do piloto é o modo assembleia para grupos de WhatsApp; segunda pessoa ainda não escolhida.
+- Rascunhos prontos, **nada enviado e nenhuma issue criada**: [briefing do parecer do G1](./docs/legal/briefing-parecer-g1.md) (5 perguntas fechadas, REV-12/LAN-01), [roteiro da conversa](./docs/pilot/piloto-g1-roteiro-conversa.md) e [convite](./docs/pilot/piloto-g1-convite.md) do piloto (PIL-01), [10 primeiras tarefas e guia](./docs/process/primeiras-tarefas-contribuidor.md) (PM-41) e [segunda pessoa em etapas](./docs/process/segunda-pessoa-acesso-gradual.md) (LAN-30).
+
 ### Segurança: assinatura cobre campos aninhados (PM-85, SW v7.66)
 - **Forma `sigv: 2`** (`client/js/sig-format.js`, [ADR-021 §2.6](./docs/adr/021-integridade-na-entrada-forma-assinada.md)): o texto assinado leva todas as chaves, ordenadas, em qualquer profundidade, então `photoTags` e `mediaRef` passam a ser cobertos. O `sigv` vai dentro do que é assinado; versão desconhecida não verifica.
 - **Convivência:** o aparelho confere v1 e v2 desde já e passa a assinar v2 em **24/11/2026**, para quem ainda não atualizou não descartar os posts novos.
