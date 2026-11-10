@@ -137,7 +137,7 @@ flowchart TD
 ### 2. LGPD e minimização por inexistência de custódia central (Privacy by Design)
 * **A Armadilha Comum:** Coletar e-mail, telefone, CPF, IP ou cookies exige nomear Encarregado de Dados (DPO), manter relatórios de impacto à privacidade (RIPD) e responder a incidentes na ANPD.
 * **Separação de camadas e desenho de produto:**
-  - **Zero Cadastro:** O login não pede e-mail, senha, telefone nem CPF. A identidade é um par criptográfico Ed25519 gerado em milissegundos na memória do dispositivo.
+  - **Zero Cadastro:** O login não pede e-mail, senha, telefone nem CPF. A identidade é um par de chaves ECDSA P-256 gerado em milissegundos na memória do dispositivo.
   - **Zero Telemetria:** O cliente não envia dados comportamentais para nenhum backend nosso (não há Google Analytics, Mixpanel ou trackers).
   - **DMs Fora da Chain com TTL de 72h:** Mensagens privadas nunca vão para a permaweb; trafegam cifradas ponta a ponta (ECDH P-256 + AES-GCM) por inboxes efêmeras que expiram e se autodestroem em 72 horas.
   - **Princípio:** *"A melhor forma de cumprir a LGPD é não possuir dado pessoal algum sob custódia."*
