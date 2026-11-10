@@ -21,6 +21,7 @@ import * as mod from "../moderation.js";
 import { renderPostBodyMarkdown } from "./markdown-body.js";
 import { renderNotaryBadgeHtml } from "../perma-notary.js";
 import { flattenReplyThread } from "../reply-thread.js";
+import { renderReviewBannerHtml, renderArchivedTopicShellHtml } from "./review-banner.js";
 
 function shareTopicAria(topicId) {
   if (mod.canEchoPost(topicId)) return "Compartilhar post";
@@ -272,13 +273,21 @@ function extractTopicViewContext(topic, topicData, communityId) {
   return { commId, bodyText, author, labels, topicTs, notary };
 }
 
+/** Tópico apagado pelo autor (gossip) ou arquivado pela moderação: no lugar do conteúdo, só o aviso. */
+function renderTopicUnavailableHtml(topic) {
+  if (gossipRetract.shouldHideGossipDeletedPost(topic)) return gossipRetract.renderGossipDeletedTopicShellHtml();
+  if (topic?.archived) return renderArchivedTopicShellHtml();
+  return "";
+}
+
 export function renderTopic(main, topicId, topic, replies, { topicData = null, isMod = false, communityId = "" } = {}) {
   const ctx = extractTopicViewContext(topic, topicData, communityId);
   const backLink = ctx.commId
     ? `<a class="back-link" href="#/c/${encodeURIComponent(ctx.commId)}">← Voltar à comunidade</a>`
     : `<a class="back-link" href="#/">← Voltar ao início</a>`;
-  if (gossipRetract.shouldHideGossipDeletedPost(topic)) {
-    main.innerHTML = `${backLink}${gossipRetract.renderGossipDeletedTopicShellHtml()}`;
+  const unavailable = renderTopicUnavailableHtml(topic);
+  if (unavailable) {
+    main.innerHTML = `${backLink}${unavailable}`;
     return;
   }
 
@@ -292,6 +301,7 @@ export function renderTopic(main, topicId, topic, replies, { topicData = null, i
   main.innerHTML = `
     ${backLink}
     <article class="topic-root insta-topic-root">
+      ${renderReviewBannerHtml(topic, { isMod, topicId, communityId: ctx.commId })}
       ${headerHtml}
       ${mediaHtml}
       ${detailHtml}

@@ -1,3 +1,5 @@
+import { REVIEW_HIDE_ACTION } from "./report-review.js";
+
 export async function fetchModActions(communityId) {
   let localActions = [];
   try {
@@ -56,56 +58,73 @@ function buildValidModeratorsSet(communityOwner = "", rawModerators = "") {
   return validModerators;
 }
 
+const MOD_ACTION_APPLY = Object.freeze({
+  hide: (s, t) => { s.hiddenTargets.add(t); s.reviewTargets.delete(t); },
+  [REVIEW_HIDE_ACTION]: (s, t, ts) => { s.hiddenTargets.add(t); s.reviewTargets.set(t, ts); },
+  unhide: (s, t) => { s.hiddenTargets.delete(t); s.reviewTargets.delete(t); },
+  ban: (s, t) => s.bannedOwners.add(t.toLowerCase()),
+  unban: (s, t) => s.bannedOwners.delete(t.toLowerCase()),
+  pin: (s, t) => s.pinState.set(t, true),
+  unpin: (s, t) => s.pinState.set(t, false),
+  lock: (s, t) => s.lockState.set(t, true),
+  unlock: (s, t) => s.lockState.set(t, false),
+});
+
 /** Fail-closed: sem dono/moderadores conhecidos, nenhuma ação de terceiros é aplicada. */
 function collectModerationState(actions, validModerators) {
-  const hiddenTargets = new Set();
-  const bannedOwners = new Set();
-  const pinState = new Map();
-  const lockState = new Map();
-
+  const state = { hiddenTargets: new Set(), reviewTargets: new Map(), bannedOwners: new Set(), pinState: new Map(), lockState: new Map() };
   const sortedActions = [...actions].sort((a, b) => (Number(a.ts) || 0) - (Number(b.ts) || 0));
   for (const act of sortedActions) {
     const actOwner = (act.owner || act.author || "").toLowerCase();
-    if (!actOwner || !validModerators.has(actOwner)) {
-      continue;
-    }
-    const action = act.action;
-    const target = act.target;
-    if (!target) continue;
-
-    if (action === "hide") hiddenTargets.add(target);
-    else if (action === "unhide") hiddenTargets.delete(target);
-    else if (action === "ban") bannedOwners.add(target.toLowerCase());
-    else if (action === "unban") bannedOwners.delete(target.toLowerCase());
-    else if (action === "pin") pinState.set(target, true);
-    else if (action === "unpin") pinState.set(target, false);
-    else if (action === "lock") lockState.set(target, true);
-    else if (action === "unlock") lockState.set(target, false);
+    const apply = Object.hasOwn(MOD_ACTION_APPLY, act.action) ? MOD_ACTION_APPLY[act.action] : null;
+    if (!actOwner || !validModerators.has(actOwner) || !act.target || !apply) continue;
+    apply(state, act.target, Number(act.ts) || 0);
   }
-  return { hiddenTargets, bannedOwners, pinState, lockState };
+  return state;
 }
 
-export function applyFilters(items, actions = [], communityOwner = "", rawModerators = "") {
+/** PM-69: item arquivado por denúncia continua visível, marcado "em revisão", para o autor e para a moderação. */
+function canSeeInReview(item, reviewTargets, viewerKey, viewerIsMod) {
+  if (!viewerKey || !reviewTargets.has(item.id)) return false;
+  return viewerIsMod || String(item.owner || item.author || "").toLowerCase() === viewerKey;
+}
+
+export function applyFilters(items, actions = [], communityOwner = "", rawModerators = "", viewer = "") {
   if (!Array.isArray(items) || !items.length) return [];
   if (!Array.isArray(actions) || !actions.length) return items;
 
   const validModerators = buildValidModeratorsSet(communityOwner, rawModerators);
-  const { hiddenTargets, bannedOwners, pinState, lockState } = collectModerationState(actions, validModerators);
+  const { hiddenTargets, reviewTargets, bannedOwners, pinState, lockState } = collectModerationState(actions, validModerators);
+  const viewerKey = String(viewer || "").toLowerCase();
+  const viewerIsMod = Boolean(viewerKey) && validModerators.has(viewerKey);
 
   return items
     .filter((item) => {
-      if (hiddenTargets.has(item.id)) return false;
+      if (hiddenTargets.has(item.id)) return canSeeInReview(item, reviewTargets, viewerKey, viewerIsMod);
       if (item.owner && bannedOwners.has(item.owner.toLowerCase())) return false;
       return true;
     })
     .map((item) => {
       const isPinned = pinState.has(item.id) ? pinState.get(item.id) : item.isPinned;
       const isLocked = lockState.has(item.id) ? lockState.get(item.id) : item.isLocked;
-      if (isPinned !== item.isPinned || isLocked !== item.isLocked) {
-        return { ...item, isPinned, isLocked };
+      const review = hiddenTargets.has(item.id) ? { inReview: true, reviewSince: reviewTargets.get(item.id) } : null;
+      if (review || isPinned !== item.isPinned || isLocked !== item.isLocked) {
+        return { ...item, isPinned, isLocked, ...review };
       }
       return item;
     });
+}
+
+/**
+ * Tópico aberto por link direto: quem não pode vê-lo recebe `archived: true` (a tela mostra "arquivado").
+ * A moderação continua abrindo tópicos ocultos, como antes.
+ */
+export function filterTopicForViewer(topic, actions = [], communityOwner = "", rawModerators = "", viewer = "") {
+  if (!topic) return topic;
+  const [visible] = applyFilters([topic], actions, communityOwner, rawModerators, viewer);
+  if (visible) return visible;
+  if (isModerator(viewer, communityOwner, rawModerators)) return topic;
+  return { ...topic, archived: true };
 }
 
 

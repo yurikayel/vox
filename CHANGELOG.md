@@ -6,6 +6,11 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Uma denúncia arquiva até a revisão (PM-69, SW v7.46)
+- **Denúncia chega à moderação sozinha:** ao denunciar um post de comunidade, o app manda à moderação, por mensagem cifrada, a denúncia **assinada pela conta** de quem denunciou (a identidade não vai para a malha). Se não der para entregar, o app diz isso e oferece mandar pela conversa.
+- **O aparelho de quem modera arquiva para todos** ao receber, se quem denunciou é membro, tem menos de 3 denúncias pendentes e não teve as 3 últimas rejeitadas, e se o post não é de alguém da moderação. Senão, a denúncia fica para decisão manual, com o motivo. O arquivamento circula só na malha (não vai ao Arweave).
+- **Autor e moderação veem "⏳ Em revisão"** com o prazo de 48 h; os outros não veem o post, e o link direto mostra "Publicação arquivada". Quem modera decide no tópico: **Volta para todos** ou **Mantém arquivado**.
+
 ### Mídia v2 retrô e medição (PM-70, sem mudança no app)
 - **Carrossel na spec:** até 4 fotos, 4 áudios (4 min, cada um com imagem opcional) ou 4 clipes de vídeo (40 s), do mesmo tipo, com playback sem emenda (PM-77).
 - **Spec revista para estética retrô** ([mídia v2](./docs/specs/midia-v2.md)): imagem AVIF **q70 em 960×540/540×960**, áudio **Opus 32 kbps**, vídeo **até 480p a 24 fps** (H.264 Q28), sempre em pedaços de até 99.999 bytes.
