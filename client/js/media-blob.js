@@ -117,10 +117,24 @@ export function mediaFields(post, mediaBlob) {
   if (!post || typeof post !== "object") return null;
   if (!mediaBlob || typeof mediaBlob !== "object") return null;
   if (!mediaBlob.hash || (post.mediaHash || post.mediaRef?.hash) !== mediaBlob.hash) return null;
-  const mime = String(mediaBlob.mime || post.mediaRef?.mime || "").toLowerCase();
-  if (mime.startsWith("video/")) return { video: mediaBlob.data };
-  if (mime.startsWith("audio/")) return { audio: mediaBlob.data };
-  return { image: mediaBlob.data };
+  return { [mediaKind(mediaBlob.mime || post.mediaRef?.mime)]: mediaBlob.data };
+}
+
+/** Campo de tela de um mime: `video`, `audio` ou, por omissão, `image`. */
+function mediaKind(mime) {
+  const m = String(mime || "").toLowerCase();
+  if (m.startsWith("video/")) return "video";
+  if (m.startsWith("audio/")) return "audio";
+  return "image";
+}
+
+/** PM-88: blob do `mediaHash` remontado do post de tela (com `MEDIA_FIELD` aplicado); null sem mídia local. */
+export function blobFromLocalPost(post) {
+  const hash = typeof post?.mediaHash === "string" ? post.mediaHash : "";
+  const data = hash ? post[mediaKind(post.mediaRef?.mime)] : null;
+  if (!isDataUrl(data)) return null;
+  const { mime, byteLength } = parseDataUrl(data);
+  return { hash, mime, byteLength, data };
 }
 
 /** Post com a mídia do blob em `MEDIA_FIELD`, fora da forma assinada; sem blob do post, o post como veio. */
