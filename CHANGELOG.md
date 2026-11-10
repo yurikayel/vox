@@ -7,6 +7,7 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 ## [Não lançado]
 
 ### Mídia v2 retrô e medição (PM-70, sem mudança no app)
+- **Carrossel na spec:** até 4 fotos, 4 áudios (4 min, cada um com imagem opcional) ou 4 clipes de vídeo (40 s), do mesmo tipo, com playback sem emenda (PM-77).
 - **Spec revista para estética retrô** ([mídia v2](./docs/specs/midia-v2.md)): imagem AVIF **q70 em 960×540/540×960**, áudio **Opus 32 kbps**, vídeo **até 480p a 24 fps** (H.264 Q28), sempre em pedaços de até 99.999 bytes.
 - Bancada `tools/media-bench/` (só desenvolvimento) e [medição no desktop](./docs/research/medicao-midia-v2-pm70-2026-11.md) com 29 imagens e 2 vídeos reais: AVIF 540p q70 coube em todas sem degrau (mediana de 43 KiB) e teve qualidade maior que o WebP 0,78 em todas; vídeo 480p de 10 s entre 0,5 e 1,0 MiB; Opus 32 kbps = 237 KiB/min. Achados para o PM-71: codificador AVIF de 3,4 MB, CSP com `'wasm-unsafe-eval'` e `wasm-feature-detect` quebrado no Chrome 152. `@jsquash/avif` 2.1.1 entra só como dependência de desenvolvimento.
 

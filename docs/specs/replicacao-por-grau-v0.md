@@ -14,7 +14,7 @@ Cada pessoa guarda a própria mídia no aparelho ("traga seu próprio armazename
 | **Seus posts** | Mídia v2 completa | **Fora do teto**; nunca sai para abrir espaço |
 | **Amigos próximos** (a pessoa marca; teto proposto de ~15, a decidir) | Mídia v2 completa, inclusive vídeo | A mais alta |
 | **Amigos** | Mídia v2 completa, inclusive vídeo | Alta |
-| **Amigos de amigos** | Texto + imagem AVIF; vídeo só a capa | Média |
+| **Amigos de amigos** | Texto + imagem AVIF (carrossel de fotos inteiro); áudio: imagens + 1ª parte; vídeo só a capa | Média |
 | **Amigos de amigos de amigos** | Texto + miniatura (já embutida no post) | Baixa |
 | Mais longe | Nada; só busca quando alguém abre | — |
 
