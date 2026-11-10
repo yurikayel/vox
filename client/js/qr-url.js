@@ -1,6 +1,6 @@
 /** QR of a canonical Vox page URL (not Pix EMV). Zero npm. */
 
-import { connectShareUrl, topicShareUrl, communityShareUrl } from "./share.js";
+import { connectShareUrl, inviteShareUrl, topicShareUrl, communityShareUrl } from "./share.js";
 import {
   VERSIONS,
   assertVoxShareUrl,
@@ -125,7 +125,7 @@ function urlFromButton(btn) {
   if (btn.dataset.qrUrl) return btn.dataset.qrUrl;
   const kind = btn.dataset.qrShare;
   const id = btn.dataset.qrId || "";
-  if (kind === "connect") return connectShareUrl(id);
+  if (kind === "connect") return btn.dataset.qrInvite === "1" ? inviteShareUrl(id) : connectShareUrl(id);
   if (kind === "topic") return topicShareUrl(id);
   if (kind === "community") return communityShareUrl(id);
   return "";

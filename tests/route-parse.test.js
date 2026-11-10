@@ -79,7 +79,10 @@ describe("route-parse", () => {
 
   it("connect and dm thread", () => {
     withLocation({ hash: "#/connect/vx_abc" }, () => {
-      assert.deepEqual(parseRoute(), { name: "connect", routeId: "vx_abc" });
+      assert.deepEqual(parseRoute(), { name: "connect", routeId: "vx_abc", invite: "" });
+    });
+    withLocation({ hash: "#/connect/vx_abc?convite=AAAAAAAAAAAAAAAAAAAAAA" }, () => {
+      assert.equal(parseRoute().invite, "AAAAAAAAAAAAAAAAAAAAAA", "PM-82: token do convite");
     });
     withLocation({ hash: "#/dm/vx_peer" }, () => {
       assert.deepEqual(parseRoute(), { name: "dm-thread", address: "vx_peer" });

@@ -6,6 +6,11 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Vínculo assinado (PM-82, SW v7.52)
+- **Convite que vira vínculo:** o seu link "Convide amigos" (e o QR do seu perfil) leva um token. Quem abre vê "Fulano te convidou" e aceita. O app de quem convidou confirma sozinho ao receber o aceite, e o vínculo passa a ter a assinatura das duas pessoas. Para uma conta nova, quem convidou vira **padrinho**; é a base do moderador natural (PM-83, [spec](./docs/specs/moderador-natural-v0.md)).
+- Cada convite aceita até 10 pessoas em 30 dias; depois, o link troca sozinho. O vínculo circula só entre os aparelhos (não vai ao Arweave), e o aceite avisa isso antes do botão.
+- **Precache mais enxuto:** o `favicon.png` de 64 px saiu do que o app guarda no aparelho (a página só usa os de 16 e 32 px).
+
 ### Correção: post guardado volta a bater com a assinatura (SW v7.51)
 - **Sincronização entre aparelhos destravada:** ao gravar um post, o app misturava cerca de 35 campos padrão no registro. O post guardado deixava de bater com a assinatura e quem recebia descartava. Na prática, só o que circulava ao vivo chegava a outro aparelho; o que vinha da sincronização ao conectar (PM-80), do envio completo e da memória central era jogado fora. O defeito existia desde o primeiro commit P2P.
 - Agora o aparelho guarda o post exatamente como foi assinado, e os padrões só entram na hora de mostrar. Posts gravados antes da correção são recuperados no melhor esforço. Remoções guardam todos os campos assinados.
