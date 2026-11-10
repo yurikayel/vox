@@ -31,7 +31,7 @@ function fakeDeps() {
 
 const tag = (tags, name) => tags.find((t) => t.name === name)?.value;
 
-test("PM-88: foto do composer sobe ao Arweave com os bytes e o MIME do blob de detachMedia", async () => {
+test("PM-89: foto do composer sobe ao Arweave com os bytes e o MIME do blob de detachMedia", async () => {
   const { mediaBlob: blob } = await mediaBlob.detachMedia({ id: "t1", image: PHOTO_DATA_URL });
   const { deps, calls } = fakeDeps();
 
@@ -51,14 +51,14 @@ test("PM-88: foto do composer sobe ao Arweave com os bytes e o MIME do blob de d
   assert.equal(calls.data[0].data.mediaTx, "media_tx_1");
 });
 
-test("PM-88: post só de texto não tenta subir mídia e não leva Media-Tx", async () => {
+test("PM-89: post só de texto não tenta subir mídia e não leva Media-Tx", async () => {
   const { deps, calls } = fakeDeps();
   await uploadTopicToPermaweb({ topicId: "t2", commSlug: "geral", title: "Texto", body: "oi", blob: null }, deps);
   assert.equal(calls.binary.length, 0);
   assert.equal(tag(calls.data[0].tags, "Media-Tx"), undefined);
 });
 
-test("PM-88: sem carteira, nada vai ao Arweave", async () => {
+test("PM-89: sem carteira, nada vai ao Arweave", async () => {
   const { deps, calls } = fakeDeps();
   deps.wallet = { hasWallet: () => false };
   const { mediaBlob: blob } = await mediaBlob.detachMedia({ id: "t3", image: PHOTO_DATA_URL });

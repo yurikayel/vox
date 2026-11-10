@@ -1,9 +1,9 @@
 {
-  "git_sha": "17aca59",
+  "git_sha": "110d9e2",
   "branch": "fix/pm88-midia-composer-arweave",
   "test_js": 931,
   "test_python": 91,
   "test_total": 1022,
-  "cache_name": "vox-pwa-v7.58-real-network-audio-video-upload",
-  "generated_at": "2026-11-10T13:22:25Z"
+  "cache_name": "vox-pwa-v7.59-real-network-audio-video-upload",
+  "generated_at": "2026-11-10T13:23:35Z"
 }
