@@ -54,15 +54,15 @@ Ordem recomendada de entrega:
 
 - **Cofre multi-identidade** (`vox-accounts-vault-v1`): alternância entre contas locais no mesmo aparelho.
 - **Export `.voxid`:** credenciais em envelope cifrado com senha (PBKDF2 + AES-GCM-256).
-- **Recuperação por cofre:** o cliente cifra a identidade e a ancora em Google (`sub`), Meta (`profile.id`) ou **Senha Soberana** (`#/backup`); a memória central (`/memory/vault/`) guarda o texto cifrado. Detalhes: [ADR-014](./adr/014-zero-knowledge-vault-recuperacao-soberana.md).
-  - ⚠️ **Revisão de 10/11/2026:** o cofre **ainda não é de conhecimento zero** na prática. Há falhas sob divulgação responsável (PM-90…PM-94, [revisão DevSecOps](./audits/revisao-devsecops-2026-11-10.md)). Até a correção, não trate o cofre nem o link de sincronização como guarda segura da identidade.
+- **Recuperação por cofre (v2, PM-90):** o cliente cifra a identidade com a **Senha Soberana** (`#/backup`): PBKDF2-SHA256 com 600 mil iterações, sal aleatório por cofre e AES-GCM-256. A memória central (`/memory/vault/`) guarda só o envelope cifrado. **Login com Google ou Meta não abre o cofre:** só enriquece o perfil. Cofres v1 são revogados na abertura do app. Detalhes: [ADR-025](./adr/025-cofre-v2-so-a-senha-abre.md), que substitui o [ADR-014](./adr/014-zero-knowledge-vault-recuperacao-soberana.md).
+  - **Limite:** quem opera o servidor de memória pode tentar adivinhar a senha, pagando 600 mil iterações por tentativa. Use uma frase de 4 ou mais palavras.
 - **Sync entre aparelhos:** rota `#/sync?b=…` por link ou QR Code. O link leva só o cofre cifrado; a Senha Soberana (12+ caracteres) é digitada no outro aparelho (PM-92).
 - **Servidor da memória central:** só muda por escolha da pessoa. Link, par ou servidor apenas sugerem, e o app pergunta mostrando o domínio (PM-91).
 - **Wipe local:** `wipeLocalAccount()` em `client/js/local-account.js`.
 
 ## Boas práticas
 
-- **Objetivo** (ainda não cumprido em todos os caminhos, ver PM-90…PM-93): chaves privadas nunca saem do aparelho em claro, e relays opcionais só recebem texto cifrado (cofre, DMs). Hoje elas ficam em claro no armazenamento do navegador.
+- **Objetivo** (ainda não cumprido dentro do aparelho, ver PM-93): chaves privadas nunca saem do aparelho em claro, e relays opcionais só recebem texto cifrado (cofre, DMs). Fora do aparelho, isso vale desde o cofre v2 (PM-90). Dentro dele, as chaves ainda ficam em claro no armazenamento do navegador.
 - Backup: frase ou export cifrado — responsabilidade do usuário.
 - Rotação: nova chave + transação de “sucessor” no perfil (Fase 2).
 

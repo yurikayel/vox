@@ -21,6 +21,7 @@ import { syncIdentity } from "./app/screens-network.js";
 import { startDmOutbox } from "./app/dm-wire.js";
 import { attachChannelHandlers } from "./app/community-channel-flow.js";
 import { startVoxLinks } from "./app/vox-link-flow.js";
+import { startVaultMigration } from "./oauth-vault.js";
 
 installDomDelegates(document);
 attachReportHandlers(document);
@@ -34,6 +35,7 @@ initDmListeners();
 startDmOutbox();
 void startVoxLinks().catch(() => {});
 initGossipListeners();
+void startVaultMigration().catch(() => {});
 initSocialInteractions();
 initPostMediaLightbox();
 attachPostMoreMenuHandlers();

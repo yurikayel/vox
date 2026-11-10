@@ -6,6 +6,16 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Segurança: cofre de recuperação v2 — só a Senha Soberana abre (PM-90, SW v7.62)
+- **Cofre novo** ([ADR-025](./docs/adr/025-cofre-v2-so-a-senha-abre.md), `vault-crypto.js`): a chave sai só da Senha Soberana, por PBKDF2-SHA256 com 600 mil iterações e um sal aleatório por cofre, guardado no envelope. O endereço no servidor também sai da senha, pelo mesmo custo.
+- **Login com Google ou Meta não abre mais o cofre.** Ele só enriquece o perfil e reencontra contas que já estão no aparelho. Em outro aparelho, a conta volta com a Senha Soberana, com o link ou QR de sincronização, ou com o arquivo de backup.
+- **Cofres antigos** (`vault-legacy.js`):
+  - **Na abertura:** o app revoga os cofres antigos que conhece e avisa uma vez para criar a Senha Soberana de novo.
+  - **Cofre antigo de senha:** é cifrado de novo no formato v2 assim que abre.
+  - **Servidores atualizados** (`relay/vault_store.py` e o nó Windows) só aceitam e servem o formato v2 ou a marca de revogado.
+- **Link de sincronização:** leva o sal e as iterações do cofre v2; iterações fora da faixa são recusadas.
+- **Relay:** o cofre saiu de `central_memory.py` para `relay/vault_store.py` (551 → 523 linhas).
+
 ### Segurança: servidor de memória por escolha e sincronização sem senha no link (PM-91, PM-92, SW v7.61)
 - **O servidor de memória central só muda quando a pessoa aceita** (`memory-server-choice.js`).
   - **O que mudou:** link com `?memory=`, aviso de um aparelho conectado e endereço de túnel informado pelo servidor viram **sugestão**. Ao abrir, o app pergunta mostrando o domínio e explicando o que vai para lá.

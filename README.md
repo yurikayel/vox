@@ -4,8 +4,8 @@
 [![Identity](https://img.shields.io/badge/Identity-WebCrypto%20P--256-blueviolet.svg)](./client/js/local-account.js)
 [![Storage](https://img.shields.io/badge/Storage-Arweave%20Permaweb-black.svg)](https://arweave.org)
 [![License: AGPL v3](https://img.shields.io/badge/License-GNU%20AGPLv3-crimson.svg)](./LICENSE)
-[![Tests](https://img.shields.io/badge/tests-1033%20passing-success.svg)](./docs/TESTES.md)
-[![Service Worker](https://img.shields.io/badge/SW-v7.61--real--network--audio--video--upload-informational.svg)](./client/sw.js)
+[![Tests](https://img.shields.io/badge/tests-1044%20passing-success.svg)](./docs/TESTES.md)
+[![Service Worker](https://img.shields.io/badge/SW-v7.62--real--network--audio--video--upload-informational.svg)](./client/sw.js)
 
 O Vox é um projeto cívico em construção para ampliar a participação popular e a autonomia das comunidades na vida digital. Sua ambição é ser um bem comum aberto: o projeto deve permanecer transparente, copiável, modificável e maior que qualquer fundador, mantenedor, empresa ou plataforma.
 
@@ -77,9 +77,9 @@ Redes centralizadas, instâncias federadas e protocolos locais têm custos, vant
 
 | Campo | Valor |
 |---|---|
-| **Commit SHA** | `3f86a74` |
-| **Suíte de Testes** | **1033** (`942` JS + `91` Python) |
-| **Service Worker** | `vox-pwa-v7.61-real-network-audio-video-upload` |
+| **Commit SHA** | `0065462` |
+| **Suíte de Testes** | **1044** (`950` JS + `94` Python) |
+| **Service Worker** | `vox-pwa-v7.62-real-network-audio-video-upload` |
 
 *Tabela regenerada por `npm run release-line` (roda a suíte e grava [docs/release-metadata.json](./docs/release-metadata.json)). Nenhum outro documento deve repetir esses números.*
 
@@ -171,9 +171,8 @@ Resumo do que entrou no cliente em nov/2026 (detalhes em [CHANGELOG.md](./CHANGE
 * **Correção: foto enviada ao vivo chega a quem recebe (PM-87):** o post com foto era assinado com a imagem e enviado sem ela, e quem recebia descartava. Agora a imagem sai antes da assinatura e viaja ao lado do post, conferida pelo hash assinado.
 * **Correção: cartão de perfil não circula mais sem fim (PM-84):** o aparelho só repassa a versão nova de cada cartão; antes, duas abas ligadas aos mesmos pares geravam ~1.100 requisições/s à memória central.
 * **Revisão de segurança (DevSecOps, 10/11)** ([relatório](./docs/audits/revisao-devsecops-2026-11-10.md)): o conteúdo que circula entre aparelhos agora é conferido por assinatura em todos os caminhos. Os pontos fracos estão na **guarda e na recuperação da identidade** e na **confiança no servidor de memória central**.
-  * ⚠️ **Até o PM-90 entrar, não use o cofre de recuperação como guarda segura da conta.** O link de sincronização não leva mais a senha (PM-92). Os detalhes estão sob divulgação responsável ([SECURITY.md](./SECURITY.md)).
+  * **Cofre v2 (PM-90, SW v7.62):** o cofre de recuperação só abre com a Senha Soberana. Login com Google ou Meta não é mais chave, e os cofres antigos são revogados na abertura ([ADR-025](./docs/adr/025-cofre-v2-so-a-senha-abre.md)).
 * **Defeitos abertos** ([THREAT-MODEL T17 e T19–T23](./docs/THREAT-MODEL.md)):
-  * cofre de recuperação por login e formato do cofre por senha (PM-90, crítico); link de sincronização e escolha do servidor fechados (PM-92, PM-91);
   * chaves em claro no navegador e relay sem autorização do dono (PM-93, PM-94);
   * campos aninhados (`photoTags`, `mediaRef`) **fora da assinatura** (PM-85);
   * pipeline sem SAST nem Dependabot (PM-95).
@@ -188,7 +187,7 @@ O estado varia entre cliente, navegador e versão. A lista abaixo não é uma ce
 
 * **Fórum Cívico Oficial e Comunidades (Espírito Orkut):** A comunidade canônica `"vox"` atua como ágora central e fórum oficial de deliberação, issues abertas e governança transparente, inscrevendo novos participantes por padrão no onboarding mas garantindo o direito soberano de sair (`leave`) ou retornar (`join`) a qualquer momento.
 * **Moderação Comunitária & Bumping de Fórum:** Suporte fail-closed estrito para moderadores fixarem tópicos no topo (`📌 Fixado`), trancarem discussões encerradas (`🔒 Encerrado`), reordenação dinâmica por atividade recente (`max(topic.ts, lastReplyTs)`) e busca instantânea de tópicos.
-* **Recuperação de identidade e sincronização entre aparelhos ([ADR-014](./docs/adr/014-zero-knowledge-vault-recuperacao-soberana.md), em revisão no PM-90):** o perfil (`routeId`, chave P-256 e chaves de DM) é restaurado em outro navegador ou celular a partir de um cofre cifrado no cliente, aberto pela **Senha Soberana** ou, onde o deploy tem app OAuth registrado (*depende de config*), por login Google ou Meta. O link e o QR `#/sync?b=…` levam só o cofre; a senha é digitada no aparelho novo (PM-92). **Aviso:** até o PM-90 entrar, não trate o cofre como guarda segura da conta; guarde também o arquivo de backup.
+* **Recuperação de identidade e sincronização entre aparelhos ([ADR-025](./docs/adr/025-cofre-v2-so-a-senha-abre.md), que substitui o ADR-014):** o perfil (`routeId` e chave P-256) é restaurado em outro navegador ou celular a partir de um cofre cifrado no cliente, que **só abre com a Senha Soberana** (PBKDF2 600 mil iterações, sal aleatório). Login Google ou Meta só enriquece o perfil. O link e o QR `#/sync?b=…` levam só o cofre; a senha é digitada no aparelho novo (PM-92). Use uma frase de 4 ou mais palavras e guarde também o arquivo de backup.
 * **Áudio e Vídeo Nativos Lo-Fi (Walkie-Talkie & Vídeo Curto):** Gravação direta pelo navegador em 1 toque (toggle iniciar/parar) ou anexo de arquivo para posts e comentários, com compressão WebM/Opus e MP4/WebM $\le 320\text{p}$ (`media-lofi.js`), deduplicação por hash SHA-256 (`media-blob.js`) e replicação P2P/memória central.
 * **Diretório Unificado de Pessoas (`#/people`) & Onboarding Direto:** Lista das contas que escolheram um nome, com filtro em tempo real (pares só com a chave `vx_…` saem da lista, mas a busca pela chave ainda os acha), entrada direta de nome/apelido no onboarding (sem obrigatoriedade de OAuth) e sincronização automática via `PROFILE_CARD` e `zero-central-memory`.
 * **Nó Local `zero-central-memory` Modo 3 (`VoxPopuli-ZeroMemory.exe` / `central_memory.py`):** Persistência local em disco com journal append-only (`< 0,2 ms`), snapshot atômico em lote a cada 2s, delta sync incremental (`clientRevision`/`since`), túnel HTTPS Cloudflare integrado e descoberta zero-config via *Signaling Beacon* (`vx_zero_memory_beacon`).
@@ -325,7 +324,7 @@ Na raiz ficam só os arquivos que o GitHub e as ferramentas esperam ali: `README
 * **[ADR-011](./docs/adr/011-taxonomia-tripartite-produtos-vox.md):** Taxonomia Canônica Dual — Vox (Cliente) e Vox Populi (Nó Dedicado).
 * **[ADR-012](./docs/adr/012-soberania-digital-cintura-fina-cartuchos-webxdc.md):** Soberania Digital na Vox — Cintura Fina Criptográfica e Cartuchos Cívicos Webxdc.
 * **[ADR-013](./docs/adr/013-sistema-voxels-e-conquistas-civicas.md):** Sistema de Voxels e Conquistas Cívicas.
-* **[ADR-014](./docs/adr/014-zero-knowledge-vault-recuperacao-soberana.md) (em revisão, PM-90):** Cofre cifrado e recuperação multi-dispositivo.
+* **[ADR-014](./docs/adr/014-zero-knowledge-vault-recuperacao-soberana.md) (substituído pelo 025):** Cofre cifrado e recuperação multi-dispositivo.
 * **[ADR-015](./docs/adr/015-licenciamento-agplv3-e-governanca-de-bem-comum.md):** Licenciamento AGPL-3.0-or-later e Governança de Bem Comum.
 * **[ADR-016](./docs/adr/016-design-system-sovereign-agora-e-democracia-direta.md):** Design System Sovereign Agora e Democracia Direta.
 * **[ADR-017](./docs/adr/017-consolidacao-roadmap-unico.md):** Consolidação do planejamento — ROADMAP único.
@@ -336,6 +335,7 @@ Na raiz ficam só os arquivos que o GitHub e as ferramentas esperam ali: `README
 * **[ADR-022](./docs/adr/022-memoria-central-por-consentimento.md):** Memória central escolhida pela pessoa, nunca fonte de verdade.
 * **[ADR-023](./docs/adr/023-moderacao-em-camadas-e-moderador-natural.md):** Moderação em camadas e moderador natural assimétrico.
 * **[ADR-024](./docs/adr/024-divulgacao-responsavel-e-honestidade-de-seguranca.md):** Divulgação responsável e honestidade sobre segurança.
+* **[ADR-025](./docs/adr/025-cofre-v2-so-a-senha-abre.md):** Cofre de recuperação v2 — só a Senha Soberana abre.
 
 Índice com status: [docs/adr/README.md](./docs/adr/README.md). Todas as decisões institucionais e de arquitetura em vigor, numa página: [docs/DECISOES.md](./docs/DECISOES.md).
 

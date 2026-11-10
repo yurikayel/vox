@@ -1,12 +1,12 @@
 # ADR 014: Cofre de Conhecimento Zero (Zero-Knowledge Vault) e Restauração Soberana de Identidade Cross-Device
 
 **Data:** 2026-11-05  
-**Status:** Aprovado e Implementado  
+**Status:** Substituído pelo [ADR-025](./025-cofre-v2-so-a-senha-abre.md) (2026-11-10)  
 **Escopo:** `client/js/oauth-vault.js`, `client/js/oauth-profile.js`, `client/js/local-account.js`, `client/js/people-index.js`, `relay/central_memory.py`, `ZeroCentralMemory.cs`  
 
 ---
 
-> **Revisão de 10/11/2026:** a implementação não cumpre a propriedade de "conhecimento zero" descrita aqui. Os pontos estão sob divulgação responsável e entram como PM-90 a PM-92 no [ROADMAP](../ROADMAP.md). A decisão será substituída por um ADR novo quando o formato do cofre mudar. Ver [revisão DevSecOps](../audits/revisao-devsecops-2026-11-10.md).
+> **Revisão de 10/11/2026:** a implementação não cumpre a propriedade de "conhecimento zero" descrita aqui. Os pontos estão sob divulgação responsável e entram como PM-90 a PM-92 no [ROADMAP](../ROADMAP.md). O formato mudou no PM-90: ver o [ADR-025](./025-cofre-v2-so-a-senha-abre.md), que substitui este. Ver [revisão DevSecOps](../audits/revisao-devsecops-2026-11-10.md).
 
 ## 1. Contexto e Problema
 

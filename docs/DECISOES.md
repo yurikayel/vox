@@ -37,7 +37,7 @@ Legenda de estado:
 | A-03 | **Integridade na entrada.** O banco guarda a forma assinada. Tudo o que entra, por qualquer caminho, é conferido. Mídia fica fora da assinatura, presa por `mediaHash`. Só se repassa o que é novo. | em vigor | [ADR-021](./adr/021-integridade-na-entrada-forma-assinada.md) |
 | A-04 | A assinatura cobre só os campos de topo. Mudar isso exige versão (`sigv: 2`) e período de convivência. | em revisão (PM-85) | [ADR-021 §2.6](./adr/021-integridade-na-entrada-forma-assinada.md) · [ROADMAP](./ROADMAP.md) |
 | A-05 | **Memória central é cópia escolhida pela pessoa**, nunca fonte de verdade. Link e par só sugerem. Só `https`, exceto o próprio aparelho. | em vigor | [ADR-022](./adr/022-memoria-central-por-consentimento.md) |
-| A-06 | Recuperação da conta por cofre cifrado com senha ou login social. | **em revisão (PM-90)**: o formato atual não cumpre o que o ADR-014 promete | [ADR-014](./adr/014-zero-knowledge-vault-recuperacao-soberana.md) · [revisão DevSecOps](./audits/revisao-devsecops-2026-11-10.md) |
+| A-06 | Recuperação da conta por cofre cifrado **só com a Senha Soberana** (PBKDF2 600 mil, sal aleatório). Login social não é chave. Cofres v1 revogados. | em vigor (SW v7.62) | [ADR-025](./adr/025-cofre-v2-so-a-senha-abre.md) (substitui o [ADR-014](./adr/014-zero-knowledge-vault-recuperacao-soberana.md)) |
 | A-07 | Malha P2P por WebRTC com gossip assinado. A sinalização vem do nó local, do Render e de outros caminhos de reserva. Sincronização ao conectar por inventário. | em vigor | [ARCHITECTURE §3](../ARCHITECTURE.md) · [sync-inventario-v0](./specs/sync-inventario-v0.md) · [INFRA-CUSTOS](./INFRA-CUSTOS.md) |
 | A-08 | Permanência opcional no Arweave via Turbo, com itens de até 100 KiB no subsídio. Leitura pelos gateways públicos com reserva honesta, sem proxy central. | em vigor | [ADR-004](./adr/004-gateway-honest-fallback.md) · [ADR-009](./adr/009-multi-gateway-graphql-corroboration.md) (proposta) |
 | A-09 | DM com cifra de ponta a ponta (ECDH P-256 + AES-GCM), entregue pela malha. Caixa de saída no aparelho. No G1, só entre quem está online. | parcial (repasse cego: não implementado) | [ARCHITECTURE §4](../ARCHITECTURE.md) · [mochila-dm-v0](./specs/mochila-dm-v0.md) |
@@ -51,7 +51,7 @@ Legenda de estado:
 
 | Tema | O que falta decidir | Onde |
 |---|---|---|
-| Custódia da chave | Formato novo do cofre e chaves privadas cifradas em repouso | PM-90, PM-93 ([ROADMAP](./ROADMAP.md)) |
+| Custódia da chave | Chaves privadas cifradas em repouso no aparelho | PM-93 ([ROADMAP](./ROADMAP.md)) |
 | Relay | Autenticação do dono e política de origem | PM-94 |
 | Cadeia de suprimentos | CodeQL, Dependabot, actions fixadas, revisão obrigatória | PM-95 · [DEPENDENCIAS](./DEPENDENCIAS.md) |
 | Formato de assinatura | `sigv: 2` e a janela de convivência | PM-85 |

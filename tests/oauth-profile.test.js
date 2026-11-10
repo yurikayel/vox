@@ -4,9 +4,6 @@ import "./setup.js";
 import * as oauth from "../client/js/oauth-profile.js";
 import * as localAccount from "../client/js/local-account.js";
 import {
-  restoreOrBindGoogleIdentity,
-  restoreOrBindMetaIdentity,
-  computeVaultLookupKey,
   savePassphraseVault,
   restoreFromPassphraseVault,
 } from "../client/js/oauth-vault.js";
@@ -122,126 +119,6 @@ test("oauth-profile - applyGoogleCredential switches to existing account if alre
     // A conta descartável acc2 foi removida do cofre para não deixar órfão
     const vault = localAccount.listVaultAccountsSync();
     assert.equal(vault.some((v) => v.routeId === acc2.routeId), false);
-  } finally {
-    globalThis.fetch = origFetch;
-  }
-});
-
-test("oauth-vault - restoreOrBindGoogleIdentity restores canonical routeId after localStorage wipe", async () => {
-  const origFetch = globalThis.fetch;
-  const mockVault = new Map();
-  globalThis.fetch = async (url, opts) => {
-    if (String(url).includes("/memory/vault/")) {
-      const key = String(url).split("/memory/vault/")[1];
-      if (opts?.method === "POST") {
-        const body = JSON.parse(opts.body);
-        mockVault.set(key, body.record);
-        return { ok: true, json: async () => ({ status: "saved" }) };
-      }
-      if (mockVault.has(key)) {
-        return { ok: true, json: async () => ({ status: "ok", record: mockVault.get(key) }) };
-      }
-      return { ok: false, status: 404, json: async () => ({ error: "not_found" }) };
-    }
-    return origFetch(url, opts);
-  };
-
-  try {
-    localAccount.wipeLocalAccount();
-    const acc1 = await localAccount.ensureLocalAccount();
-    const sub = "google_user_test_restore_42";
-
-    // 1. Primeiro vínculo
-    const res1 = await restoreOrBindGoogleIdentity({
-      sub,
-      email: "yuri@test.com",
-      name: "Yuri Kayel",
-      picture: "https://lh3.googleusercontent.com/a/ACg8oc_restore=s96-c",
-    });
-    assert.equal(res1.routeId, acc1.routeId);
-    assert.equal(res1.restored, false);
-
-    // Guarda o vault backup gerado
-    const lookupKey = await computeVaultLookupKey(sub, "google");
-    const vaultCipher = localStorage.getItem("vox-oauth-vault-v1:" + lookupKey);
-    assert.ok(vaultCipher);
-
-    // 2. Simula desconexão / wipe de chaves deste navegador
-    localAccount.wipeLocalAccount();
-    assert.equal(localStorage.getItem("vox-local-account-v1"), null);
-
-    // Mantém o backup cifrado (simulado no localStorage/remote)
-    localStorage.setItem("vox-oauth-vault-v1:" + lookupKey, vaultCipher);
-
-    // 3. Usuário conecta novamente com a mesma conta Google
-    const res2 = await restoreOrBindGoogleIdentity({
-      sub,
-      email: "yuri@test.com",
-      name: "Yuri Kayel",
-      picture: "https://lh3.googleusercontent.com/a/ACg8oc_restore=s96-c",
-    });
-
-    // RESTAUROU A MESMA IDENTIDADE ORIGINAL!
-    assert.equal(res2.restored, true);
-    assert.equal(res2.routeId, acc1.routeId);
-    assert.equal(localAccount.getCachedRouteIdSync(), acc1.routeId);
-  } finally {
-    globalThis.fetch = origFetch;
-  }
-});
-
-test("oauth-vault - restoreOrBindMetaIdentity restores canonical routeId after localStorage wipe", async () => {
-  const origFetch = globalThis.fetch;
-  const mockVault = new Map();
-  globalThis.fetch = async (url, opts) => {
-    if (String(url).includes("/memory/vault/")) {
-      const key = String(url).split("/memory/vault/")[1];
-      if (opts?.method === "POST") {
-        const body = JSON.parse(opts.body);
-        mockVault.set(key, body.record);
-        return { ok: true, json: async () => ({ status: "saved" }) };
-      }
-      if (mockVault.has(key)) {
-        return { ok: true, json: async () => ({ status: "ok", record: mockVault.get(key) }) };
-      }
-      return { ok: false, status: 404, json: async () => ({ error: "not_found" }) };
-    }
-    return origFetch(url, opts);
-  };
-
-  try {
-    localAccount.wipeLocalAccount();
-    const acc1 = await localAccount.ensureLocalAccount();
-    const sub = "meta_user_987654";
-
-    const res1 = await restoreOrBindMetaIdentity({
-      sub,
-      email: "alice@meta.com",
-      name: "Alice Meta",
-      picture: "https://graph.facebook.com/987654/picture",
-    });
-    assert.equal(res1.routeId, acc1.routeId);
-    assert.equal(res1.restored, false);
-
-    const lookupKey = await computeVaultLookupKey(sub, "meta");
-    const vaultCipher = localStorage.getItem("vox-oauth-vault-v1:" + lookupKey);
-    assert.ok(vaultCipher);
-
-    localAccount.wipeLocalAccount();
-    assert.equal(localStorage.getItem("vox-local-account-v1"), null);
-
-    localStorage.setItem("vox-oauth-vault-v1:" + lookupKey, vaultCipher);
-
-    const res2 = await restoreOrBindMetaIdentity({
-      sub,
-      email: "alice@meta.com",
-      name: "Alice Meta",
-      picture: "https://graph.facebook.com/987654/picture",
-    });
-
-    assert.equal(res2.restored, true);
-    assert.equal(res2.routeId, acc1.routeId);
-    assert.equal(localAccount.getCachedRouteIdSync(), acc1.routeId);
   } finally {
     globalThis.fetch = origFetch;
   }

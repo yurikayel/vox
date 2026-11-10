@@ -543,13 +543,28 @@ namespace Vox.ZeroMemory {
             string clean = (key ?? "").Trim().ToLowerInvariant();
             if (!Hex64.IsMatch(clean)) return null;
             lock (syncLock) {
-                return ReadJsonFile(Path.Combine(vaultsDir, clean + ".json"));
+                var record = ReadJsonFile(Path.Combine(vaultsDir, clean + ".json"));
+                return IsServableVault(record) ? record : null;
             }
+        }
+
+        /// <summary>PM-90: só cofre v2 (sal e iterações no envelope) ou a marca de revogado entra e sai daqui.
+        /// Registros em formato antigo ficam no disco, mas não são servidos nem aceitos.</summary>
+        public static bool IsServableVault(Dictionary<string, object> record) {
+            if (record == null) return false;
+            object revoked;
+            if (record.TryGetValue("revoked", out revoked) && revoked is bool && (bool)revoked) return true;
+            object v, salt, iter;
+            if (!record.TryGetValue("v", out v) || !(v is int) || (int)v != 2) return false;
+            if (!record.TryGetValue("salt", out salt) || string.IsNullOrEmpty(salt as string)) return false;
+            if (!record.TryGetValue("iter", out iter) || !(iter is int)) return false;
+            int n = (int)iter;
+            return n >= 100000 && n <= 5000000;
         }
 
         public bool SaveVaultRecord(string key, Dictionary<string, object> payload) {
             string clean = (key ?? "").Trim().ToLowerInvariant();
-            if (!Hex64.IsMatch(clean) || payload == null) return false;
+            if (!Hex64.IsMatch(clean) || !IsServableVault(payload)) return false;
             lock (syncLock) {
                 EnsureDirs();
                 Directory.CreateDirectory(vaultsDir);

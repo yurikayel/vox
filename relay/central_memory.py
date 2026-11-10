@@ -521,31 +521,3 @@ def get_status_summary() -> Dict[str, Any]:
             "backupOnDisk": bak_file.is_file(),
             "counts": _state_counts(state),
         }
-
-
-def get_vault(lookup_key: str) -> Optional[Dict[str, Any]]:
-    clean = str(lookup_key or "").strip().lower()
-    if not _is_valid_id(clean):
-        return None
-    vault_file = MEMORY_DIR / "vaults" / f"{clean}.json"
-    if not vault_file.is_file():
-        return None
-    try:
-        return json.loads(vault_file.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return None
-
-
-def save_vault(lookup_key: str, payload: Any) -> bool:
-    clean = str(lookup_key or "").strip().lower()
-    if not _is_valid_id(clean) or not payload:
-        return False
-    vaults_dir = MEMORY_DIR / "vaults"
-    try:
-        vaults_dir.mkdir(parents=True, exist_ok=True)
-        record = payload.get("record") if isinstance(payload, dict) and "record" in payload else payload
-        body = json.dumps(record, ensure_ascii=False)
-        _atomic_write_bytes(vaults_dir / f"{clean}.json", body.encode("utf-8"))
-        return True
-    except OSError:
-        return False
