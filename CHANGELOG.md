@@ -11,6 +11,17 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 - **Tipo da mídia certo:** `buildTags` punha sempre `Content-Type: application/json` e, para a mídia, acrescentava `image/webp` como segunda tag. Agora um `Content-Type` passado substitui o padrão; a foto vai com uma só tag, a do arquivo.
 - **Peso do precache:** o módulo novo foi pago com a remoção de `buildUfDemoTopics` e das funções e textos que só ele usava (nada o chamava).
 
+### Correção: foto chega também pela sincronização ao conectar (PM-88, SW v7.58)
+- **A sincronização ao conectar (PM-80) leva a foto ao lado do post**, como a fofoca ao vivo (PM-87). Antes, quem recebia um post com foto por ela via o marcador "Mídia P2P". O blob sai do que está em memória ou, depois de recarregar, da mídia guardada no registro (`_media`); quem recebe só aceita o blob cujo conteúdo bate com `mediaHash`.
+- **Teto de bytes:** até 128 KiB por foto e 2 MiB de fotos por conexão, gastos nos posts mais novos. Passou do teto, o post vai sem a foto (como antes). Aparelhos já sincronizados continuam trocando só o inventário.
+- **Peso do precache:** pago com a remoção de código que nada chamava (`fetchIdentityLinkOnChain` e suas 2 consultas em `graphql.js`, `isInlineComposerActive`, `stripSignatureFields`, `buildSandboxedFrameSrc`, `JANONES_DEFAULT_TAGS`); saldo de +120 bytes, dentro do teto.
+
+### Correção: foto enviada ao vivo chega a quem recebe (PM-87, SW v7.57)
+- **Post com foto volta a bater com a assinatura:** o composer assinava o post com a imagem e mandava ao vivo a versão sem ela (`image: null` + `mediaRef`); quem recebia descartava. Agora a imagem sai **antes** da assinatura: o post assinado leva `mediaRef` e `mediaHash`, e a imagem fica no aparelho em `_media`, fora da forma assinada.
+- **A imagem viaja ao lado do post:** a mensagem `GOSSIP` leva o blob junto (`blob`). Quem recebe só guarda, mostra e repassa o blob cujo conteúdo bate com `mediaHash`; sem blob, usa o que já tem guardado. `mediaHash` fica no primeiro nível porque a assinatura ainda não cobre chaves aninhadas (PM-85): trocar `mediaRef.hash` no caminho não troca a imagem.
+- **Ainda sem imagem:** a sincronização ao conectar (PM-80) manda o post sem o blob; quem recebe por ela vê o marcador "Mídia P2P" até a imagem chegar pela memória central ou ao vivo. Resolvido no PM-88.
+- **Peso do precache:** pago com a remoção de código que nada chamava (`readComposerImageFromFile` e `measureDataUrlImage` em `composer-media.js`; `formatGatewayHealthPill` e `exportGatewayDiagnostic` em `gateway-telemetry.js`); o precache ficou 370 bytes menor.
+
 ### Correção: memória central confere o que recebe (PM-86, SW v7.56)
 - **O que volta da memória central passa pelas regras da malha** (`central-memory-hydrate.js`). Antes, posts e remoções do servidor eram gravados sem conferir nada; quem controlasse o servidor punha post em nome de outra pessoa, edição de comunidade, vínculo ou arquivamento falsos. Agora entra só o que tem assinatura válida de quem diz ser o autor e cujo autor não está bloqueado. Edição de comunidade segue a regra do PM-09. Post existente só é trocado pelo mesmo autor, e remoção só vale se for do autor do post.
 - **Mídia fora da assinatura:** a imagem, o vídeo ou o áudio de um `mediaRef` que chega com o post fica no registro, fora da forma assinada (`_media`). Antes, era colada no post, que deixava de bater com a assinatura ao ser repassado. Blob cujo conteúdo não bate com o hash é descartado.

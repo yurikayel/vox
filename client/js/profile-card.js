@@ -12,12 +12,6 @@ export function canonicalProfileCardId(routeId) {
   return id ? `pc_${id}` : "";
 }
 
-export function stripSignatureFields(item) {
-  if (!item || typeof item !== "object") return {};
-  const { sig: _sig, pubKey: _pubKey, ...rest } = item;
-  return rest;
-}
-
 export function isProfileCardExpired(item) {
   const t = Number(item?.editedAt || item?.ts || 0);
   if (!t) return true;

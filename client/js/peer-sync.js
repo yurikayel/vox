@@ -5,12 +5,19 @@
  */
 
 import * as cacheNode from "./cache-node.js";
+import * as mediaBlob from "./media-blob.js";
 import * as profileDirectory from "./profile-directory.js";
 
 export const SYNC_INV = "SYNC_INV";
 export const SYNC_WANT = "SYNC_WANT";
 export const LEGACY_FALLBACK_MS = 8000;
 export const SYNC_LIMITS = Object.freeze({ posts: 128, dels: 64, cards: 256 });
+/**
+ * PM-88: a foto vai ao lado do post, como na fofoca ao vivo. Teto por blob abaixo da mensagem que o canal
+ * WebRTC aceita (~256 KiB, sem fatiar); teto por conexão para o inventário continuar poupando bytes.
+ * Passou do teto: o post vai sem blob, como antes (quem recebe mostra o marcador).
+ */
+export const SYNC_BLOB_LIMITS = Object.freeze({ perBlob: 128 * 1024, perConnection: 2 * 1024 * 1024 });
 
 const HASH_RE = /^[A-Za-z0-9_-]{11}$/;
 const NONCE_RE = /^[A-Za-z0-9_-]{8,32}$/;
@@ -117,11 +124,31 @@ export function messagesForWant(want, inv) {
   ];
 }
 
-/** Envio completo de antes, para cliente que não fala inventário. */
-export function sendFullState(sendFn, shared, fromPeer) {
+const noBlob = async () => null;
+/** Bytes do blob pelo que de fato viaja (`data`), não pelo `byteLength` declarado. */
+const blobBytes = (blob) => Math.ceil(String(blob?.data || "").length * 0.75);
+
+/** PM-88: põe o blob do `mediaHash` ao lado de cada GOSSIP, dentro de SYNC_BLOB_LIMITS (mais novos primeiro). */
+export async function attachBlobs(messages, loadBlob = noBlob) {
+  let budget = SYNC_BLOB_LIMITS.perConnection;
+  const out = [];
+  for (const m of messages) {
+    const hash = m.type === "GOSSIP" ? m.item?.mediaHash : "";
+    const blob = hash ? await loadBlob(m.item) : null;
+    const size = blobBytes(blob);
+    const fits = Boolean(blob) && blob.hash === hash && size <= SYNC_BLOB_LIMITS.perBlob && size <= budget;
+    if (fits) budget -= size;
+    out.push(fits ? { ...m, blob } : m);
+  }
+  return out;
+}
+
+/** Envio completo de antes, para cliente que não fala inventário; posts com foto levam o blob (PM-88). */
+export async function sendFullState(sendFn, shared, fromPeer, loadBlob = noBlob) {
   for (const card of shared.cards) sendFn({ type: "PROFILE_CARD", card, fromPeer });
   for (const t of shared.dels) sendFn({ type: "GOSSIP_DELETE", item: t, tombstone: t, fromPeer });
-  for (const post of shared.posts) sendFn({ type: "GOSSIP", item: post, fromPeer });
+  const posts = await attachBlobs(shared.posts.map((item) => ({ type: "GOSSIP", item })), loadBlob);
+  for (const m of posts) sendFn({ ...m, fromPeer });
 }
 
 const newNonce = () => toB64Url(crypto.getRandomValues(new Uint8Array(9)));
@@ -133,7 +160,7 @@ async function announce(sendFn, deps, pending) {
   const nonce = newNonce();
   const timer = deps.setTimer(() => {
     pending.delete(nonce);
-    sendFullState(sendFn, shared, deps.fromPeer);
+    return sendFullState(sendFn, shared, deps.fromPeer, deps.loadBlob).catch(() => {});
   }, LEGACY_FALLBACK_MS);
   pending.set(nonce, timer);
   sendFn(inventoryMessage(inv, nonce, deps.fromPeer));
@@ -155,14 +182,15 @@ async function serveWant(msg, replyFn, deps, pending) {
   if (!want) return 0;
   if (pending.has(want.ackOf)) deps.clearTimer(pending.get(want.ackOf));
   pending.delete(want.ackOf);
-  const out = messagesForWant(want, await buildInventory(await deps.loadShared()));
+  const out = await attachBlobs(messagesForWant(want, await buildInventory(await deps.loadShared())), deps.loadBlob);
   for (const m of out) replyFn({ ...m, fromPeer: deps.fromPeer });
   return out.length;
 }
 
 /**
- * `deps`: { fromPeer, loadShared(), loadAll(), setTimer(fn, ms), clearTimer(id) }.
- * `loadShared` devolve o recorte de selectShared; `loadAll`, tudo o que o aparelho tem (para decidir o que pedir).
+ * `deps`: { fromPeer, loadShared(), loadAll(), loadBlob(post)?, setTimer(fn, ms), clearTimer(id) }.
+ * `loadShared` devolve o recorte de selectShared; `loadAll`, tudo o que o aparelho tem (para decidir o que pedir);
+ * `loadBlob`, o blob do `mediaHash` do post (ou null).
  */
 export function createPeerSync(deps) {
   const pending = new Map();
@@ -178,9 +206,16 @@ async function loadState() {
   return { posts, tombstones, cards: profileDirectory.listDiscoverableProfileCards() };
 }
 
+/** Blob guardado em memória ou, depois de recarregar, remontado da mídia do registro (`MEDIA_FIELD`). */
+async function loadLocalBlob(post) {
+  const kept = mediaBlob.defaultBlobStorage.get(post.mediaHash);
+  return kept || mediaBlob.blobFromLocalPost(await cacheNode.getLocalPost(post.id));
+}
+
 export function defaultPeerSyncDeps(fromPeer) {
   return {
     fromPeer,
+    loadBlob: loadLocalBlob,
     loadShared: async () => selectShared(await loadState()),
     loadAll: async () => {
       const s = await loadState();
