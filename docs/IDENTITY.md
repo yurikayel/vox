@@ -56,7 +56,8 @@ Ordem recomendada de entrega:
 - **Export `.voxid`:** credenciais em envelope cifrado com senha (PBKDF2 + AES-GCM-256).
 - **Recuperação por cofre:** o cliente cifra a identidade e a ancora em Google (`sub`), Meta (`profile.id`) ou **Senha Soberana** (`#/backup`); a memória central (`/memory/vault/`) guarda o texto cifrado. Detalhes: [ADR-014](./adr/014-zero-knowledge-vault-recuperacao-soberana.md).
   - ⚠️ **Revisão de 10/11/2026:** o cofre **ainda não é de conhecimento zero** na prática. Há falhas sob divulgação responsável (PM-90…PM-94, [revisão DevSecOps](./audits/revisao-devsecops-2026-11-10.md)). Até a correção, não trate o cofre nem o link de sincronização como guarda segura da identidade.
-- **Sync entre aparelhos:** rota `#/sync` por QR Code (em revisão, PM-92).
+- **Sync entre aparelhos:** rota `#/sync?b=…` por link ou QR Code. O link leva só o cofre cifrado; a Senha Soberana (12+ caracteres) é digitada no outro aparelho (PM-92).
+- **Servidor da memória central:** só muda por escolha da pessoa. Link, par ou servidor apenas sugerem, e o app pergunta mostrando o domínio (PM-91).
 - **Wipe local:** `wipeLocalAccount()` em `client/js/local-account.js`.
 
 ## Boas práticas

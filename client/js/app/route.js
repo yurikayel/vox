@@ -13,6 +13,7 @@ import { showVoxpedia } from "./screens-voxpedia.js";
 import { showAjudaTeste } from "./screens-ajuda-teste.js";
 import { showStatus } from "./screens-status.js";
 import { showNetworkWizard, showBackupWizard, showWalletWizard } from "./screens-guided.js";
+import { showSyncScreen } from "./screens-sync.js";
 import { showLabsFrames, showLabsMofn } from "./screens-labs.js";
 import {
   showComposeCommunity,
@@ -57,33 +58,8 @@ const ROUTE_DISPATCH_TABLE = {
   "compose-proposal": (r) => showComposeProposal(r.communityId),
   "compose-topic": (r) => showComposeTopic(r.communityId),
   "compose-reply": (r) => showComposeReply(r.topicId, r.communityId, r.parentId),
-  sync: (r) => handleSyncRoute(r),
+  sync: (r) => showSyncScreen(r),
 };
-
-async function handleSyncRoute(r) {
-  const { restoreFromPassphraseVault, decodeVaultBundleFromUrl } = await import("../oauth-vault.js");
-  const { showToast } = await import("../share.js");
-  const pass = r.passphrase;
-  if (!pass) {
-    showToast("Link de sincronização incompleto.", "error");
-    window.location.hash = "#/";
-    return;
-  }
-  try {
-    const directRecord = r.bundle && typeof decodeVaultBundleFromUrl === "function"
-      ? decodeVaultBundleFromUrl(r.bundle)
-      : null;
-    const res = await restoreFromPassphraseVault(pass, r.lookupKey || null, directRecord);
-    if (res.ok) {
-      showToast(`Conta sincronizada com sucesso! Bem-vindo(a), ${res.displayName || "Cidadão"}!`);
-    } else {
-      showToast(`Falha na sincronização: ${res.reason}`, "error");
-    }
-  } catch (err) {
-    showToast(`Erro na sincronização: ${err?.message || "falha desconhecida"}`, "error");
-  }
-  window.location.hash = "#/";
-}
 
 export async function routeImpl() {
   closePostMoreMenu();
