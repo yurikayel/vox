@@ -77,7 +77,7 @@ Redes centralizadas, instâncias federadas e protocolos locais têm custos, vant
 
 | Campo | Valor |
 |---|---|
-| **Commit SHA** | `06ec1c6` |
+| **Commit SHA** | `be02f4d` |
 | **Suíte de Testes** | **1029** (`938` JS + `91` Python) |
 | **Service Worker** | `vox-pwa-v7.60-real-network-audio-video-upload` |
 
@@ -170,9 +170,14 @@ Resumo do que entrou no cliente em nov/2026 (detalhes em [CHANGELOG.md](./CHANGE
 * **Correção: memória central confere o que recebe (PM-86):** post e remoção vindos do servidor só entram com assinatura válida do autor, pela regra do PM-09 e sem trocar post de outra pessoa; a mídia anexada fica fora da forma assinada.
 * **Correção: foto enviada ao vivo chega a quem recebe (PM-87):** o post com foto era assinado com a imagem e enviado sem ela, e quem recebia descartava. Agora a imagem sai antes da assinatura e viaja ao lado do post, conferida pelo hash assinado.
 * **Correção: cartão de perfil não circula mais sem fim (PM-84):** o aparelho só repassa a versão nova de cada cartão; antes, duas abas ligadas aos mesmos pares geravam ~1.100 requisições/s à memória central.
-* **Defeitos abertos, achados na revisão de 10/11** ([THREAT-MODEL T17 e T19](./docs/THREAT-MODEL.md)):
-  * campos aninhados (`photoTags`, `mediaRef`) ficam **fora da assinatura** (PM-85).
-* **Peso do app guardado no aparelho:** o precache está a menos de 1 KB do teto do PM-02; a próxima adição ao shell precisa vir com corte.
+* **Revisão de segurança (DevSecOps, 10/11)** ([relatório](./docs/audits/revisao-devsecops-2026-11-10.md)): o conteúdo que circula entre aparelhos agora é conferido por assinatura em todos os caminhos. Os pontos fracos estão na **guarda e na recuperação da identidade** e na **confiança no servidor de memória central**.
+  * ⚠️ **Até o lote PM-90…PM-94 entrar, não use o cofre de recuperação nem o link de sincronização como guarda segura da conta.** Os detalhes estão sob divulgação responsável ([SECURITY.md](./SECURITY.md)).
+* **Defeitos abertos** ([THREAT-MODEL T17 e T19–T23](./docs/THREAT-MODEL.md)):
+  * cofre, sincronização e escolha do servidor de memória (PM-90–92, críticos);
+  * chaves em claro no navegador e relay sem autorização do dono (PM-93, PM-94);
+  * campos aninhados (`photoTags`, `mediaRef`) **fora da assinatura** (PM-85);
+  * pipeline sem SAST nem Dependabot (PM-95).
+* **Peso do app guardado no aparelho:** o precache tem ~1,2 KB de folga no teto do PM-02; a próxima adição ao shell precisa vir com corte.
 * **Infra:** Deno Deploy **pausado** (organização suspensa). A sinalização pública é **um** nó Render (`wss://vox-sentinel.onrender.com`) com **Nostr em paralelo** (ainda sem medição em campo) mais o nó local; ver riscos em [docs/INFRA-CUSTOS.md](./docs/INFRA-CUSTOS.md).
 
 ---
