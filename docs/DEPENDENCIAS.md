@@ -44,7 +44,7 @@
 
 | Dependência | Onde | Versão | Integridade | Situação |
 |---|---|---|---|---|
-| `python:3.12-alpine` | `relay/Dockerfile` | móvel, patch do 3.12 | sem digest | Recomendado fixar por digest (`@sha256:…`) antes do G3. |
+| `python:3.15-alpine` | `relay/Dockerfile` | móvel, patch do 3.15 (testado no CI: matriz do relay inclui 3.15) | sem digest | Recomendado fixar por digest (`@sha256:…`) antes do G3. |
 | `caddy:2-alpine` | `relay/deploy/docker-compose.yml` | móvel, Caddy 2.x | sem digest | Idem; kit de steward. |
 | `coturn/coturn:latest` | `relay/deploy/docker-compose.yml` | **móvel, `latest`** | sem digest | Trocar `latest` por uma versão fixa. O TURN é opcional no kit. |
 
