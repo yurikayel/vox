@@ -1,9 +1,9 @@
 {
-  "git_sha": "1253094",
-  "branch": "feat/pm78-dm-caixa-de-saida",
-  "test_js": 903,
+  "git_sha": "6c0cfea",
+  "branch": "feat/pm80-sync-inventario",
+  "test_js": 908,
   "test_python": 91,
-  "test_total": 994,
-  "cache_name": "vox-pwa-v7.47-real-network-audio-video-upload",
-  "generated_at": "2026-11-10T08:15:00Z"
+  "test_total": 999,
+  "cache_name": "vox-pwa-v7.48-real-network-audio-video-upload",
+  "generated_at": "2026-11-10T08:37:33Z"
 }
