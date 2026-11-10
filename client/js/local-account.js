@@ -6,6 +6,7 @@
 
 import * as cryptoDm from "./crypto-dm.js";
 import { KIND_PLAIN, KIND_WRAPPED, wrapBackup, unwrapBackup } from "./account-backup-wrap.js";
+import { openSealed, sealJson } from "./keystore.js";
 
 const ACCOUNT_STORAGE = "vox-local-account-v1";
 const DISPLAY_NAME_STORAGE = "vox-display-name";
@@ -88,7 +89,7 @@ async function generateNewAccountKeys() {
   return {
     routeId,
     publicJwk,
-    privateJwk,
+    privateJwk: await sealJson(privateJwk),
     createdAt: Date.now(),
   };
 }
@@ -227,7 +228,7 @@ export async function exportLocalAccountBundle() {
     schemaVersion: 1,
     routeId: acc.routeId,
     publicJwk: acc.publicJwk,
-    privateJwk: acc.privateJwk,
+    privateJwk: await openSealed(acc.privateJwk),
     displayName: getDisplayName(),
     enrichment: getProfileEnrichment(),
     pix: getPixKey(),
@@ -240,7 +241,7 @@ export async function importLocalAccountBundle(bundle) {
   cachedAccount = {
     routeId: bundle.routeId,
     publicJwk: bundle.publicJwk,
-    privateJwk: bundle.privateJwk,
+    privateJwk: await sealJson(bundle.privateJwk),
     createdAt: bundle.createdAt || Date.now(),
   };
   localStorage.setItem(ACCOUNT_STORAGE, JSON.stringify(cachedAccount));
@@ -306,7 +307,7 @@ export async function signPayload(payload) {
   const acc = await ensureLocalAccount();
   const privateKey = await crypto.subtle.importKey(
     "jwk",
-    acc.privateJwk,
+    await openSealed(acc.privateJwk),
     { name: "ECDSA", namedCurve: "P-256" },
     false,
     ["sign"]
@@ -379,7 +380,7 @@ async function buildAccountBackup() {
     kind: KIND_PLAIN,
     routeId: acc.routeId,
     publicJwk: acc.publicJwk,
-    privateJwk: acc.privateJwk,
+    privateJwk: await openSealed(acc.privateJwk),
     dmKeypair: await cryptoDm.getDmKeypair(),
     displayName: getDisplayName(),
     pixKey: getPixKey(),
@@ -447,16 +448,16 @@ async function challengeSigningPair(parsed) {
   }
 }
 
-function persistAccountBackup(parsed) {
+async function persistAccountBackup(parsed) {
   cachedAccount = {
     routeId: parsed.routeId,
     publicJwk: parsed.publicJwk,
-    privateJwk: parsed.privateJwk,
+    privateJwk: await sealJson(parsed.privateJwk),
     createdAt: parsed.createdAt || Date.now(),
     importedAt: Date.now(),
   };
   localStorage.setItem(ACCOUNT_STORAGE, JSON.stringify(cachedAccount));
-  if (parsed.dmKeypair) cryptoDm.setDmKeypair(parsed.dmKeypair);
+  if (parsed.dmKeypair) await cryptoDm.setDmKeypair(parsed.dmKeypair);
   if (parsed.displayName) setDisplayName(parsed.displayName);
   if (parsed.pixKey) setPixKey(parsed.pixKey);
   if (typeof parsed.meshDiscoverable === "boolean") {
@@ -521,7 +522,7 @@ export async function syncActiveAccountToVault() {
   if (!acc?.routeId) return null;
   const vault = readVaultMap();
   const existing = vault[acc.routeId] || {};
-  const dmKeys = await cryptoDm.getDmKeypair();
+  const dmKeys = await cryptoDm.getDmKeypairAtRest();
   vault[acc.routeId] = buildVaultAccountEntry(acc, existing, {
     dmKeypair: dmKeys || existing.dmKeypair || null,
     pixKey: getPixKey() || existing.pixKey || null,
@@ -641,7 +642,7 @@ export async function listVaultAccounts() {
 
 async function restoreTargetAccountSettings(target) {
   if (target.dmKeypair) {
-    cryptoDm.setDmKeypair(target.dmKeypair);
+    await cryptoDm.setDmKeypair(target.dmKeypair);
   } else {
     await cryptoDm.ensureDmKeys();
   }
@@ -669,7 +670,7 @@ export async function switchActiveAccount(targetRouteId) {
   cachedAccount = {
     routeId: target.routeId,
     publicJwk: target.publicJwk,
-    privateJwk: target.privateJwk,
+    privateJwk: await sealJson(target.privateJwk),
     createdAt: target.createdAt || Date.now(),
   };
   localStorage.setItem(ACCOUNT_STORAGE, JSON.stringify(cachedAccount));
@@ -691,18 +692,9 @@ export async function createAdditionalAccount({ displayName = "" } = {}) {
   const privateJwk = await crypto.subtle.exportKey("jwk", pair.privateKey);
   const routeId = await computeRouteId(publicJwk);
 
-  const dmPair = await crypto.subtle.generateKey(
-    { name: "ECDH", namedCurve: "P-256" },
-    true,
-    ["deriveKey", "deriveBits"]
-  );
-  const dmPublicJwk = await crypto.subtle.exportKey("jwk", dmPair.publicKey);
-  const dmPrivateJwk = await crypto.subtle.exportKey("jwk", dmPair.privateKey);
-  const dmKeypair = { publicJwk: dmPublicJwk, privateJwk: dmPrivateJwk };
-
-  cachedAccount = { routeId, publicJwk, privateJwk, createdAt: Date.now() };
+  cachedAccount = { routeId, publicJwk, privateJwk: await sealJson(privateJwk), createdAt: Date.now() };
   localStorage.setItem(ACCOUNT_STORAGE, JSON.stringify(cachedAccount));
-  cryptoDm.setDmKeypair(dmKeypair);
+  await cryptoDm.setDmKeypair(await cryptoDm.generateDmKeypair());
   setDisplayName(displayName);
   localStorage.removeItem(ENRICHMENT_STORAGE);
   localStorage.removeItem(PIX_STORAGE);
