@@ -11,6 +11,7 @@ import * as gossipProfile from "./peers-gossip-profile.js";
 import * as profileDirectory from "./profile-directory.js";
 import * as centralMemory from "./central-memory.js";
 import { getRelayHttpUrls } from "./inbox.js";
+import { createPeerSync, defaultPeerSyncDeps, SYNC_INV, SYNC_WANT } from "./peer-sync.js";
 
 export {
   collectPriorityPinTxIds,
@@ -36,6 +37,7 @@ const DAILY_USAGE_KEY = "vox-daily-usage";
 const CHANNEL_NAME = "vox-peer-v0";
 
 const myPeerId = "peer_" + Math.random().toString(36).substring(2, 9);
+const peerSync = createPeerSync(defaultPeerSyncDeps(myPeerId));
 let broadcastChannel = null;
 const pendingRequests = new Map(); // txId -> Array of resolver functions
 const dmListeners = new Set();
@@ -390,6 +392,8 @@ const VOX_MESSAGE_HANDLERS = {
     return target ? handleGossipDeleteMessage(target, source) : null;
   },
   CACHE_MANIFEST: (msg, _replyFn, _settings, source) => (msg.item ? handleCacheManifestMessage(msg.item, source) : null),
+  [SYNC_INV]: (msg, replyFn, _settings, source) => (source === "rtc" ? peerSync.onInventory(msg, replyFn) : null),
+  [SYNC_WANT]: (msg, replyFn, _settings, source) => (source === "rtc" ? peerSync.onWant(msg, replyFn) : null),
 };
 
 export async function handleVoxMessage(msg, replyFn, source = "broadcast") {
@@ -659,37 +663,12 @@ webrtcPeer.onPeerIdentity((address, dmPub) => {
   }
 });
 
-async function sendRecentStateOnPeerConnect(sendFn) {
-  const publicMemoryUrl = centralMemory.getDiscoveredPublicMemoryUrl();
-  if (publicMemoryUrl) {
-    sendFn({ type: "MEMORY_BEACON", memoryUrl: publicMemoryUrl, fromPeer: myPeerId });
-  }
-  for (const card of profileDirectory.listDiscoverableProfileCards().slice(0, 256)) {
-    if (card?.routeId) {
-      sendFn({ type: "PROFILE_CARD", card, fromPeer: myPeerId });
-    }
-  }
-  const [tombstones, posts] = await Promise.all([
-    cacheNode.getAllTombstones(),
-    cacheNode.getAllLocalPosts(),
-  ]);
-  for (const tombstone of tombstones.slice(0, 64)) {
-    if (tombstone?.sig && tombstone?.pubKey) {
-      sendFn({ type: "GOSSIP_DELETE", item: tombstone, tombstone, fromPeer: myPeerId });
-    }
-  }
-  for (const post of posts.slice(0, 128)) {
-    if (post?.sig && post?.pubKey) {
-      sendFn({ type: "GOSSIP", item: post, fromPeer: myPeerId });
-    }
-  }
-}
-
 webrtcPeer.onPeerConnect(async (remotePeerId, sendFn) => {
   try {
-    const card = await profileCard.buildSignedProfileCard();
-    sendFn({ type: "PROFILE_CARD_HELLO", card });
-    await sendRecentStateOnPeerConnect(sendFn);
+    sendFn({ type: "PROFILE_CARD_HELLO", card: await profileCard.buildSignedProfileCard() });
+    const memoryUrl = centralMemory.getDiscoveredPublicMemoryUrl();
+    if (memoryUrl) sendFn({ type: "MEMORY_BEACON", memoryUrl, fromPeer: myPeerId });
+    await peerSync.onConnect(sendFn);
   } catch {}
 });
 

@@ -6,6 +6,11 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Sincronização por inventário ao conectar (PM-80, SW v7.48)
+- **Menos dados a cada conexão:** em vez de mandar às cegas até 128 posts, 64 remoções e 256 cartões de perfil, cada aparelho manda primeiro um inventário curto (hash do id e versão) e só pede o que falta. Com dois aparelhos já sincronizados, cai de ≈ 157 KB para ≈ 7 KB por sentido, o que poupa o teto de 5 MB do 4G. Aparelho com versão antiga do app recebe o envio completo depois de 8 s.
+- A sincronização saiu do `peers.js` para `peer-sync.js` ([spec](./docs/specs/sync-inventario-v0.md)); é ali que a mochila de DMs (PM-79) vai entrar.
+- **Ícone mais leve:** o `icon.svg` embutia a mesma imagem duas vezes (`href` e `xlink:href`); ficou só a primeira, 18 KB a menos no que o app guarda no aparelho. O teto de peso do precache desceu junto.
+
 ### Caixa de saída das DMs (PM-78, SW v7.47)
 - **Mensagem que não saiu não se perde mais:** sem conexão direta e sem relay, a DM (e a denúncia do PM-69) fica na caixa de saída do aparelho. Com o Vox aberto, o app tenta de novo sozinho: a cada 20 s, ao voltar a internet e ao abrir, e no relay com espera crescente (1 a 30 min). Antes, nada reenviava, embora o aviso dissesse que a mensagem seria entregue.
 - **No fio:** "⏳ Aguardando" enquanto espera; depois de 7 dias, ou se a caixa encher (100 mensagens ou 2 MB), "⚠ Não entregue". O aviso e a tela da denúncia dizem que o reenvio só acontece com o app aberto.
