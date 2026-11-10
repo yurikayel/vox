@@ -348,37 +348,9 @@ function handleBlobMessage(msg) {
   pendingRequests.delete(msg.txId);
 }
 
-function shouldUpdateDirectoryCard(existing, inName, card) {
-  if (!existing) return true;
-  if (inName && !existing.name) return true;
-  return Number(card.updatedAt) > Number(existing.updatedAt);
-}
-
-function pickCardField(primary, fallback) {
-  return primary ? String(primary).trim() : String(fallback || "").trim();
-}
-
-function handleDirectoryProfileCard(card) {
-  if (!card || typeof card !== "object") return;
-  const routeId = pickCardField(card.routeId, card.author);
-  if (!routeId.startsWith("vx_") || moderation.shouldDropGossip(routeId)) return;
-  const existing = profileDirectory.getProfileCard(routeId);
-  const inName = pickCardField(card.name, card.displayName);
-  if (!shouldUpdateDirectoryCard(existing, inName, card)) return;
-  const ex = existing ? existing : {};
-  const inAvatar = pickCardField(card.avatarUrl, card.avatar);
-  profileDirectory.setProfileCard(routeId, {
-    name: pickCardField(inName, ex.name),
-    avatarUrl: pickCardField(inAvatar, ex.avatarUrl),
-    bio: pickCardField(card.bio, ex.bio),
-    handle: pickCardField(card.handle, ex.handle),
-    discoverable: card.discoverable !== false,
-  });
-}
-
 const VOX_MESSAGE_HANDLERS = {
   PROFILE_CARD_HELLO: (msg) => handleProfileCardHello(msg.card),
-  PROFILE_CARD: (msg) => handleDirectoryProfileCard(msg.card),
+  PROFILE_CARD: (msg) => gossipProfile.applyDirectoryProfileCard(msg.card),
   MEMORY_BEACON: (msg) =>
     msg.memoryUrl ? centralMemory.registerDiscoveredMemoryUrl(msg.memoryUrl) : null,
   WANT: (msg, replyFn, settings, source) => handleWantMessage(msg, replyFn, settings, source),
@@ -417,6 +389,11 @@ function relayToMesh(payload, source = "rtc") {
   if (source !== "rtc") {
     webrtcPeer.broadcastRtcMessage(payload);
   }
+}
+
+/** PM-84: só segue adiante o cartão de perfil novo; o repetido circulava sem fim. */
+async function applyAndRelayProfileCard(item, type, source) {
+  if (await gossipProfile.applyVerifiedProfileCardItem(item)) relayToMesh({ type, item, fromPeer: myPeerId }, source);
 }
 
 async function handleCacheManifestMessage(item, source = "rtc") {
@@ -462,8 +439,7 @@ async function handleGossipMessage(item, source = "rtc", sentBlob = null) {
   if (!(await localAccount.verifyPayload(item))) return;
 
   if (item.type === profileCard.PROFILE_CARD_TYPE) {
-    await gossipProfile.applyVerifiedProfileCardItem(item);
-    relayToMesh({ type: "GOSSIP", item, fromPeer: myPeerId }, source);
+    await applyAndRelayProfileCard(item, "GOSSIP", source);
     return;
   }
 
@@ -499,8 +475,7 @@ async function handleGossipUpdateMessage(item, source = "rtc") {
   if (!(await localAccount.verifyPayload(item))) return;
 
   if (item.type === profileCard.PROFILE_CARD_TYPE) {
-    await gossipProfile.applyVerifiedProfileCardItem(item);
-    relayToMesh({ type: "GOSSIP_UPDATE", item, fromPeer: myPeerId }, source);
+    await applyAndRelayProfileCard(item, "GOSSIP_UPDATE", source);
     return;
   }
   if (await isRejectedCommunityUpdate(item)) return;
@@ -653,7 +628,7 @@ webrtcPeer.onPeerIdentity((address, dmPub) => {
     centralMemory.registerDiscoveredMemoryUrl(dmPub.memoryUrl);
   }
   if (address && address.startsWith("vx_") && address !== "vx_zero_memory_beacon") {
-    handleDirectoryProfileCard({
+    gossipProfile.applyDirectoryProfileCard({
       routeId: address,
       name: dmPub?.displayName || dmPub?.name || "",
       avatarUrl: dmPub?.avatarUrl || "",
