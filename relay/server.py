@@ -22,6 +22,7 @@ from pathlib import Path
 from relay import blind_relay
 from relay import oauth_exchange
 from relay import central_memory
+from relay import vault_store
 from relay import inbox
 from relay import mirror_validate
 from relay import p2p_seeder
@@ -379,7 +380,7 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
             return
         if path.startswith("/memory/vault/"):
             key = path[len("/memory/vault/"):].split("/")[0]
-            rec = central_memory.get_vault(key)
+            rec = vault_store.get_vault(key)
             if rec is not None:
                 self._send_json({"status": "ok", "vaultKey": key, "record": rec})
             else:
@@ -545,7 +546,7 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
             payload = json.loads(self.rfile.read(content_length).decode("utf-8"))
             if path.startswith("/memory/vault/"):
                 key = path[len("/memory/vault/"):].split("/")[0]
-                ok = central_memory.save_vault(key, payload)
+                ok = vault_store.save_vault(key, payload)
                 self._send_json({"status": "saved" if ok else "error"}, 200 if ok else 400)
                 return
             if path == "/memory/ingest":

@@ -18,6 +18,12 @@ class MockLocalStorage {
   clear() {
     this.store.clear();
   }
+  get length() {
+    return this.store.size;
+  }
+  key(index) {
+    return [...this.store.keys()][index] ?? null;
+  }
 }
 
 class MockBroadcastChannel {
