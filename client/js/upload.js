@@ -15,17 +15,21 @@ function getArweave() {
   return loadArweave(30000);
 }
 
+const isFilledTag = (val) => val !== undefined && val !== null && String(val).trim() !== "";
+
+/** Tags do Vox. Um `Content-Type` em `fields` substitui o padrão JSON (mídia binária), em vez de virar uma segunda tag. */
 export function buildTags(type, fields = {}) {
+  const contentType = isFilledTag(fields["Content-Type"]) ? String(fields["Content-Type"]).trim() : "application/json; charset=utf-8";
   const tags = [
     { name: "App-Name", value: "vox-brasil" },
     { name: "Type", value: type },
     { name: "Unix-Time", value: String(Date.now()) },
     { name: "Client", value: "vox-web-fase2" },
-    { name: "Content-Type", value: "application/json; charset=utf-8" },
+    { name: "Content-Type", value: contentType },
   ];
 
   for (const [key, val] of Object.entries(fields)) {
-    if (val !== undefined && val !== null && String(val).trim() !== "") {
+    if (key !== "Content-Type" && isFilledTag(val)) {
       tags.push({ name: key, value: String(val).trim() });
     }
   }

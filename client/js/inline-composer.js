@@ -1,6 +1,6 @@
 import * as composerMedia from "./composer-media.js";
 import * as share from "./share.js";
-import * as upload from "./upload.js";
+import { uploadTopicToPermaweb } from "./topic-permaweb.js";
 import * as localAccount from "./local-account.js";
 import * as peers from "./peers.js";
 import * as cacheNode from "./cache-node.js";
@@ -114,46 +114,6 @@ function buildInlineTopicPayload({ title, body, commSlug }) {
   };
   attachComposerMediaToPayload(payload);
   return payload;
-}
-
-async function uploadTopicMediaToPermaweb(blob) {
-  if (!blob?.dataUrl || !mediaBlob.isDataUrl(blob.dataUrl)) return null;
-  const rawBytes = mediaBlob.dataUrlToUint8Array(blob.dataUrl);
-  if (rawBytes.length > upload.FREE_TIER_MAX_BYTES) return null;
-
-  const mediaTags = upload.buildTags("media", {
-    "Content-Type": blob.mime || "image/webp",
-    "Media-Type": blob.mime || "image/webp",
-    "Blob-Hash": blob.hash,
-    "Aspect-Ratio": inlineComposerAspectRatio || "original",
-  });
-  const mediaRes = await upload.postBinary(rawBytes, mediaTags);
-  return mediaRes?.success ? mediaRes.id : null;
-}
-
-async function uploadTopicToPermaweb({ topicId, commSlug, title, body, blob }) {
-  if (!wallet.hasWallet()) return null;
-  if (!(await permanence.confirmPermanentPublish())) return permanence.MESH_ONLY_RESULT;
-  try {
-    const mediaTxId = await uploadTopicMediaToPermaweb(blob);
-    const tags = upload.buildTags("topic", {
-      "Community-Id": commSlug,
-      "Topic-Title": title,
-      Title: title,
-      "Local-Origin-Id": topicId,
-      ...(mediaTxId ? { "Media-Tx": mediaTxId, "Media-Type": blob?.mime || "image/webp", "Aspect-Ratio": inlineComposerAspectRatio || "original" } : {}),
-    });
-    return await upload.postData({
-      title,
-      body,
-      communityId: commSlug,
-      mediaTx: mediaTxId,
-      aspectRatio: inlineComposerAspectRatio || "original",
-    }, tags);
-  } catch (err) {
-    console.warn("Falha no upload Permaweb:", err);
-    return null;
-  }
 }
 
 function showPublishToast(permawebResult) {
@@ -630,7 +590,7 @@ async function broadcastAndPersistInlineTopic(payload, title, body, commSlug) {
   const { detachedPost, mediaBlob: blob } = await mediaBlob.detachMedia(signed);
   if (blob) await mediaBlob.defaultBlobStorage.put(blob);
   peers.broadcastGossip(detachedPost);
-  const permaResult = await uploadTopicToPermaweb({ topicId: payload.id, commSlug, title, body, blob });
+  const permaResult = await uploadTopicToPermaweb({ topicId: payload.id, commSlug, title, body, blob, aspectRatio: inlineComposerAspectRatio });
   return { signed, permaResult };
 }
 
