@@ -155,6 +155,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 ## 6. Auditorias e snapshots
 
 - [honest-copy-audit-2026-10-23.md](./audits/honest-copy-audit-2026-10-23.md): copy honesta (re-auditoria = DOC-04 no ROADMAP)
+- [revisao-devsecops-2026-11-10.md](./audits/revisao-devsecops-2026-11-10.md) — estado, arquitetura, segurança e pipeline (10/11/2026)
 - [auditoria-permaweb-descoberta-seguranca-2026-10-29.md](./audits/auditoria-permaweb-descoberta-seguranca-2026-10-29.md)
 - [branding-audit-2026-11-01.md](./audits/branding-audit-2026-11-01.md)
 - [agent-reports/2026-11-05-auditoria-independente.md](./agent-reports/2026-11-05-auditoria-independente.md)

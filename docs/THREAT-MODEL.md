@@ -1,6 +1,6 @@
 # Modelo de ameaças — Vox
 
-> **Status:** rascunho para revisão (LAN-15) · **Owner:** revisor · **Revisado:** 2026-11-08
+> **Status:** rascunho para revisão (LAN-15) · **Owner:** revisor · **Revisado:** 2026-11-10 (T20–T23 da [revisão DevSecOps](./audits/revisao-devsecops-2026-11-10.md))
 > **Falta para fechar o LAN-15:** revisão por uma pessoa de segurança de fora do time (registrar nome/data aqui).
 > Relacionados: [SECURITY.md](../SECURITY.md) · [COMPLIANCE-BR](legal/COMPLIANCE-BR.md) · [backlog §4-E](./strategy/backlog-lancamento-publico-2026-11.md#e-segurança-e-privacidade) · [ADR-014 cofre](./adr/014-zero-knowledge-vault-recuperacao-soberana.md)
 
@@ -51,6 +51,10 @@
 | T17 | Quem repassa um post altera campos aninhados | assinatura ECDSA do post inteiro | **aberto (PM-85):** `canonicalString` só cobre as chaves de primeiro nível; dentro de objetos aninhados (`photoTags`, `mediaRef`) as chaves internas ficam fora da assinatura. Dá para trocar quem está marcado na foto. O hash da mídia de post novo também vai em `mediaHash`, no primeiro nível (PM-87), e é ele que decide qual blob entra; `mediaRef.hash` sozinho não vale. O vínculo (PM-82) embute o aceite como texto para escapar disso |
 | T18 | Inundação por eco na malha | limite de 20 posts por chave a cada 10 min no gossip; desde o PM-84, cartão de perfil só é repassado se for versão nova (`editedAt` + `sig`, guardada na sessão e no diretório) | cartões **novos e válidos** de muitas chaves ainda passam sem limite por chave (o limite de 20/10 min vale só para posts); a marca da sessão guarda até 2.000 cartões |
 | T19 | Padrinho abusa do afilhado, ou o grafo de convites expõe militantes | vínculo exige a assinatura das duas pessoas (PM-82); arquivamento é reversível pela moderação | quem convidou quem fica visível na malha e na memória central; o PM-83 (moderador natural) ainda não existe; ver a crítica em [moderador-natural-v0](./specs/moderador-natural-v0.md) |
+| T20 | Terceiro toma a conta pela recuperação ou pela sincronização | cofre cifrado (ADR-014); o export `.voxid` usa sal aleatório | **aberto, crítico (PM-90, PM-91, PM-92):** sob divulgação responsável; ver [revisão DevSecOps](./audits/revisao-devsecops-2026-11-10.md). Até a correção, cofre e login social ficam fora do G1 (PM-76) |
+| T21 | Chave privada lida do aparelho (XSS, extensão, aparelho destravado) | CSP sem script inline (T1) | **aberto (PM-93):** chaves de identidade, DM e carteira em claro no armazenamento do navegador |
+| T22 | Relay ou nó local exposto recebe escrita e remoção de qualquer origem | relay cego com TTL; nó local escuta só em loopback por padrão | **aberto (PM-94):** sem autenticação de dono para cofre e caixa; CORS `*` |
+| T23 | Regressão de segurança entra pelo pipeline | ruleset no `main` com 5 checks, secret scanning com push protection, proveniência dos binários | **aberto (PM-95):** sem SAST, Dependabot desligado, actions por tag, nenhuma aprovação exigida, auditoria de segredos não pega JWK |
 
 ## 4. Riscos aceitos (por enquanto)
 
