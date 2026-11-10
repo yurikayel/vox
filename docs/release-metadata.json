@@ -1,9 +1,9 @@
 {
-  "git_sha": "14eeece",
-  "branch": "fix/pm86-memoria-central-verifica",
-  "test_js": 928,
+  "git_sha": "9de78a7",
+  "branch": "fix/pm87-foto-ao-vivo",
+  "test_js": 930,
   "test_python": 91,
-  "test_total": 1019,
-  "cache_name": "vox-pwa-v7.56-real-network-audio-video-upload",
-  "generated_at": "2026-11-10T12:17:20Z"
+  "test_total": 1021,
+  "cache_name": "vox-pwa-v7.57-real-network-audio-video-upload",
+  "generated_at": "2026-11-10T13:09:45Z"
 }
