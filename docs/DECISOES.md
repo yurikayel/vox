@@ -46,13 +46,13 @@ Legenda de estado:
 | A-12 | Extensões em cartuchos webxdc, atrás de uma "cintura fina" criptográfica. | parcial (runtime não plugado na UI) | [ADR-012](./adr/012-soberania-digital-cintura-fina-cartuchos-webxdc.md) |
 | A-13 | Código pequeno por regra: função de no máximo 30 LLOC, complexidade de no máximo 15, arquivo grande não cresce. | em vigor | [ADR-007](./adr/007-zero-complexity-monolith-decomposition.md) · [HARDENING](./HARDENING.md) |
 | A-14 | Design system Sovereign Agora e Voxels (conquistas verificáveis). | em vigor | [ADR-016](./adr/016-design-system-sovereign-agora-e-democracia-direta.md) · [ADR-013](./adr/013-sistema-voxels-e-conquistas-civicas.md) |
+| A-15 | **Relay sem conta, com dono por prova.** Cofre regrava só com a prova derivada da Senha Soberana; envelope de DM sai só com a chave de apagar do destinatário. Escrita só das origens do app, `application/json`, `Host` conferido e limite por IP. | em vigor (SW v7.65) | [ADR-027](./adr/027-autorizacao-no-relay-dono-e-origem.md) |
 
 ## 3. Em aberto — decisões que ainda precisam ser tomadas
 
 | Tema | O que falta decidir | Onde |
 |---|---|---|
 | Custódia da chave | Em vigor (SW v7.64): chaves cifradas pelo aparelho; depois do backup com a Senha Soberana, identidade e DM só saem pela cópia cifrada com a senha | PM-93, [ADR-026](./adr/026-chaves-em-repouso-trava-depois-do-backup.md) |
-| Relay | Autenticação do dono e política de origem | PM-94 |
 | Cadeia de suprimentos | CodeQL, Dependabot, actions fixadas, revisão obrigatória | PM-95 · [DEPENDENCIAS](./DEPENDENCIAS.md) |
 | Formato de assinatura | `sigv: 2` e a janela de convivência | PM-85 |
 | Propostas antigas | Atestação (001), perfil coletivo (005), corroboração multi-gateway (009) e Contribution Engine (010): aceitar, adiar ou arquivar | [índice de ADRs](./adr/README.md) |

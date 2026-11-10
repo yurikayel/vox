@@ -31,6 +31,7 @@
 | [024](./024-divulgacao-responsavel-e-honestidade-de-seguranca.md) | Divulgação responsável e honestidade sobre segurança (institucional) | accepted |
 | [025](./025-cofre-v2-so-a-senha-abre.md) | Cofre de recuperação v2: só a Senha Soberana abre | accepted (implementado, SW v7.62) |
 | [026](./026-chaves-em-repouso-trava-depois-do-backup.md) | Chaves privadas em repouso: chave do aparelho e trava depois do backup | accepted (implementado: etapa 1 no SW v7.63, etapa 2 no SW v7.64) |
+| [027](./027-autorizacao-no-relay-dono-e-origem.md) | Autorização no relay: prova do dono, chave de apagar e política de origem | accepted (implementado, SW v7.65) |
 
 **Registro de uma página** com as decisões institucionais e de arquitetura em vigor, o estado real de cada uma e o que ainda está em aberto: [DECISOES.md](../DECISOES.md).
 

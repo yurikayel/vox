@@ -1,6 +1,6 @@
 # ADR-025: Cofre de recuperação v2 — só a Senha Soberana abre
 
-**Status:** accepted (implementado no SW v7.62) · **Revisado:** 2026-11-10 · **Substitui:** [ADR-014](./014-zero-knowledge-vault-recuperacao-soberana.md) · **Relacionados:** PM-90, PM-92, PM-93, [ADR-022](./022-memoria-central-por-consentimento.md), [ADR-024](./024-divulgacao-responsavel-e-honestidade-de-seguranca.md), [THREAT-MODEL T20](../THREAT-MODEL.md), [IDENTITY](../IDENTITY.md)
+**Status:** accepted (implementado no SW v7.62) · **Revisado:** 2026-11-10 · **Substitui:** [ADR-014](./014-zero-knowledge-vault-recuperacao-soberana.md) · **Relacionados:** PM-90, PM-92, PM-93, PM-94, [ADR-027](./027-autorizacao-no-relay-dono-e-origem.md), [ADR-022](./022-memoria-central-por-consentimento.md), [ADR-024](./024-divulgacao-responsavel-e-honestidade-de-seguranca.md), [THREAT-MODEL T20](../THREAT-MODEL.md), [IDENTITY](../IDENTITY.md)
 
 ## 1. Contexto
 
@@ -21,7 +21,8 @@ O ADR-014 criou o cofre de recuperação: a identidade (`routeId`, chave P-256, 
    - **Cofre v1 de login social:** abre uma última vez, só onde o servidor ainda o serve, e é revogado. Isso evita deixar sem conta quem perdeu o aparelho.
 6. **Servidores de memória atualizados** (`relay/vault_store.py` e o nó Windows `ZeroCentralMemory.cs`):
    - aceitam e servem **só** cofre v2 ou a marca de revogado, com iterações entre 100 mil e 5 milhões;
-   - registros v1 ficam no disco, mas não são mais servidos nem aceitos.
+   - registros v1 ficam no disco, mas não são mais servidos nem aceitos;
+   - desde o SW v7.65 (PM-94), só regravam um cofre com a prova do dono, derivada da mesma senha com outro sal ([ADR-027](./027-autorizacao-no-relay-dono-e-origem.md)).
 7. **Link e QR de sincronização:** passam a levar `2:iter:sal:iv:cifra` (só o cofre, PM-92). O link v1 ainda é lido. Iterações fora da faixa são recusadas, o que impede um link de travar o aparelho.
 
 ## 3. Consequências

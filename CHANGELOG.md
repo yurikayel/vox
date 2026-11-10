@@ -6,6 +6,13 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Segurança: autorização no relay e no nó local (PM-94, SW v7.65)
+- **Cofre com dono** ([ADR-027](./docs/adr/027-autorizacao-no-relay-dono-e-origem.md)): ao salvar, o aparelho manda uma prova derivada da Senha Soberana (`vault-crypto.deriveVaultOwnerToken`, outro sal, mesmo custo). O relay e o nó Windows guardam só o hash e passam a exigir a mesma prova para regravar ou revogar.
+- **Caixa de DMs:** cada envelope leva uma chave de apagar cifrada para o destinatário (`del`). O relay só remove o envelope com ela (`X-Vox-Delete-Token`). Envelope de cliente antigo segue apagável até expirar.
+- **Política de pedido** (`relay/request_guard.py`, `NodeRequestGuard` no nó Windows): `Host` de loopback (ou túnel liberado), escrita só das origens do app, `POST` só em `application/json` e limite de escritas por IP no relay Python. Novas variáveis: `VOX_RELAY_ALLOWED_HOSTS`, `VOX_RELAY_ALLOWED_ORIGINS`, `VOX_RELAY_WRITE_LIMIT_PER_MIN` ([kit do steward](./docs/operations/steward-relay-kit.md)).
+- **Peso:** `server.py` não cresceu (731 → 722 linhas): o registro de seed saiu para `p2p_seeder.register_seed_request`; os cofres do nó Windows saíram para `VaultOwnerGuard.cs`.
+- **Falta:** dono para memória central e relay cego (o conteúdo já é conferido por assinatura no aparelho).
+
 ### Segurança: trava das chaves depois do backup (PM-93 etapa 2, SW v7.64)
 - **Depois do backup com a Senha Soberana** (cofre ou `.voxid` cifrado, senha de 12+ caracteres), assinatura e DM usam chaves **não exportáveis** no IndexedDB (`key-lock.js`, [ADR-026](./docs/adr/026-chaves-em-repouso-trava-depois-do-backup.md)). A cópia cifrada pelo aparelho sai do `localStorage`; a única cópia exportável é a cifrada pela senha.
 - **Backup novo** pede a mesma senha. Restaurar pelo cofre ou pelo `.voxid` cifrado já volta travado.

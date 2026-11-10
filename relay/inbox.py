@@ -5,6 +5,8 @@ Armazena envelopes criptografados ponta-a-ponta (ECDH + AES-GCM) em disco com va
 Nunca armazena nem inspeciona o texto claro (plaintext).
 """
 
+import hashlib
+import hmac
 import json
 import time
 import os
@@ -12,6 +14,21 @@ from pathlib import Path
 
 DEFAULT_TTL_SECONDS = 72 * 3600  # 72 horas
 MAX_ENVELOPE_SIZE = 32 * 1024     # 32 KB por mensagem
+
+DELETED = "deleted"
+NOT_FOUND = "not_found"
+FORBIDDEN = "forbidden"
+
+
+def _delete_hash(envelope: dict):
+    """PM-94: hash da chave de apagar que vai cifrada para o destinatário (`del`). None em envelope antigo."""
+    sealed = envelope.get("del")
+    if sealed is None:
+        return None
+    digest = str(sealed.get("hash") or "").lower() if isinstance(sealed, dict) else ""
+    if len(digest) != 64 or not all(c in "0123456789abcdef" for c in digest) or not sealed.get("ct"):
+        raise ValueError("Campo del inválido: precisa de hash SHA-256 em hex e ct")
+    return digest
 
 
 def resolve_inbox_dir(env=None):
@@ -72,6 +89,9 @@ def store_envelope(to_address: str, envelope: dict, ttl_seconds: int = DEFAULT_T
         "expiresAt": int(expires_at),
         "envelope": envelope,
     }
+    delete_hash = _delete_hash(envelope)
+    if delete_hash:
+        record["delHash"] = delete_hash
 
     target_file = addr_dir / f"{clean_id}.json"
     target_file.write_text(json.dumps(record), encoding="utf-8")
@@ -109,16 +129,29 @@ def get_envelopes(to_address: str) -> list:
     return results
 
 
-def delete_envelope(to_address: str, message_id: str) -> bool:
-    if not to_address or not message_id:
+def _token_matches(token, expected_hash) -> bool:
+    try:
+        presented = hashlib.sha256(bytes.fromhex(str(token or ""))).hexdigest()
+    except ValueError:
         return False
-    clean_addr = sanitize_filename(to_address)
-    clean_id = sanitize_filename(message_id)
-    target_file = INBOX_DIR / clean_addr / f"{clean_id}.json"
-    if target_file.is_file():
-        target_file.unlink(missing_ok=True)
-        return True
-    return False
+    return bool(token) and hmac.compare_digest(presented, expected_hash)
+
+
+def delete_envelope(to_address: str, message_id: str, token: str = None) -> str:
+    """Apaga um envelope. Desde o PM-94, envelope com `delHash` só sai com a chave de apagar do destinatário."""
+    if not to_address or not message_id:
+        return NOT_FOUND
+    target_file = INBOX_DIR / sanitize_filename(to_address) / f"{sanitize_filename(message_id)}.json"
+    if not target_file.is_file():
+        return NOT_FOUND
+    try:
+        expected = json.loads(target_file.read_text(encoding="utf-8")).get("delHash")
+    except (OSError, ValueError):
+        expected = None
+    if expected and not _token_matches(token, expected):
+        return FORBIDDEN
+    target_file.unlink(missing_ok=True)
+    return DELETED
 
 
 def purge_all_expired():

@@ -44,17 +44,19 @@ Ao abrir o Vox no navegador (`http://127.0.0.1:8080`), o cliente consulta automa
 | `/tx/<txId>` | `GET` | Retorna o payload da transação (Cache HIT se local; busca em `arweave.net` se MISS). |
 | `/vox/index/<commId>.json` | `GET` | Retorna índice consolidado da comunidade armazenado localmente. |
 | `/vox/mirror` | `POST` | Salva espelho local de comunidade recebido pelo cliente. |
-| `/inbox/<address>` | `GET` / `POST` / `DELETE` | Inbox efêmero com TTL para envelopes E2E cifrados de DM (`inbox.py`). |
+| `/inbox/<address>` | `GET` / `POST` / `DELETE` | Inbox efêmero com TTL para envelopes E2E cifrados de DM (`inbox.py`). O `DELETE` de envelope com chave de apagar exige `X-Vox-Delete-Token` (PM-94). |
 | `/relay/envelope/<room>` | `GET` / `POST` | Relay cego (*Blind Relay* — `blind_relay.py`) para pacotes opacos sem inspeção de conteúdo. |
 | `/memory/status` | `GET` | Status e contadores da memória central (`posts`, `profiles`, `tombstones`, `manifests`, `blobs`, `tunnelUrl`). |
 | `/memory/state` | `GET` | Exportação completa do estado persistido localmente (`central_memory.py`). |
 | `/memory/ingest` | `POST` | Ingestão unitária (`GOSSIP`, `GOSSIP_UPDATE`, `GOSSIP_DELETE`, `PROFILE_CARD`, `MEDIA_BLOB`) com journal append-only. |
 | `/memory/sync` | `POST` | Sincronização bidirecional incremental (Delta Sync via `clientRevision`, `since` e `knownBlobs`). |
 | `/memory/blob/<hash>` | `GET` | Recuperação direta de blob multimídia deduplicado por SHA-256. |
-| `/memory/vault/<chave>` | `GET` / `POST` | Cofre cifrado no cliente para recuperação de identidade (ADR-014). |
+| `/memory/vault/<chave>` | `GET` / `POST` | Cofre v2 cifrado no cliente (ADR-025). Regravar exige a prova do dono `ownerToken` (PM-94, ADR-027). |
 | `/relay/snapshot/<canal>` | `GET` / `POST` | Último snapshot consolidado do relay cego. |
 | `/p2p/*`, `/peer/beacon` | vários | Seeder P2P e anúncio de pares. |
 | `/oauth/exchange` | `POST` | Troca código OAuth pelo `@usuário` (token descartado). |
+
+**Política de pedido (PM-94, `request_guard.py`):** `Host` de loopback (ou `VOX_RELAY_ALLOWED_HOSTS`), `POST`/`DELETE` só das origens do app (ou `VOX_RELAY_ALLOWED_ORIGINS`), `POST` só `application/json`, e no máximo `VOX_RELAY_WRITE_LIMIT_PER_MIN` escritas por minuto por IP.
 
 Referência completa (limites, TTLs, variáveis de ambiente, testes): **[docs/specs/relay-api.md](../docs/specs/relay-api.md)**.
 

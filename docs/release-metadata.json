@@ -1,9 +1,9 @@
 {
-  "git_sha": "e3997b0",
-  "branch": "fix/pm93-etapa2-trava-backup",
-  "test_js": 966,
-  "test_python": 94,
-  "test_total": 1060,
-  "cache_name": "vox-pwa-v7.64-real-network-audio-video-upload",
-  "generated_at": "2026-11-10T17:22:36Z"
+  "git_sha": "84959b4",
+  "branch": "fix/pm94-relay-auth",
+  "test_js": 968,
+  "test_python": 106,
+  "test_total": 1074,
+  "cache_name": "vox-pwa-v7.65-real-network-audio-video-upload",
+  "generated_at": "2026-11-10T18:09:16Z"
 }

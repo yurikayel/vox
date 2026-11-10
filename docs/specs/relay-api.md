@@ -12,6 +12,12 @@ O Vox tem **dois processos** no diretório `relay/`. Eles são independentes:
 
 Todas as respostas são JSON com CORS aberto (`OPTIONS` → `204`). Rota desconhecida → `404`.
 
+**Política de pedido (PM-94, [ADR-027](../adr/027-autorizacao-no-relay-dono-e-origem.md), `request_guard.py`)**, antes de qualquer rota do `server.py`:
+- com o servidor em loopback, `Host` precisa ser de loopback ou estar em `VOX_RELAY_ALLOWED_HOSTS` → `421`;
+- `POST`/`DELETE` com `Origin` fora das origens do app (GitHub Pages, Cloudflare Pages, localhost) e de `VOX_RELAY_ALLOWED_ORIGINS` → `403`; sem `Origin` passa;
+- `POST` sem `Content-Type: application/json` → `415`;
+- mais de `VOX_RELAY_WRITE_LIMIT_PER_MIN` escritas por minuto do mesmo IP → `429`.
+
 ## 1. Sinalização (`signaling.py`)
 
 | Rota | Tipo | Descrição |
@@ -42,8 +48,8 @@ Testes: `relay/test_signaling.py`.
 | Rota | Método | Descrição |
 |---|---|---|
 | `/inbox/<addr>` | GET | Lista envelopes E2E cifrados (ECDH P-256 + AES-GCM) para o endereço. |
-| `/inbox/<addr>` | POST | Deposita envelope. Máx. **32 KB**; TTL padrão **72 h**. |
-| `/inbox/<addr>/<msgId>` | DELETE | Remove envelope após leitura. |
+| `/inbox/<addr>` | POST | Deposita envelope. Máx. **32 KB**; TTL padrão **72 h**. Campo opcional `del: { iv, ct, hash }` (chave de apagar cifrada para o destinatário; `hash` = SHA-256 hex) → o relay guarda `delHash`; `del` mal formado → `400`. |
+| `/inbox/<addr>/<msgId>` | DELETE | Remove envelope após leitura. Envelope com `delHash` exige `X-Vox-Delete-Token: <hex>` que confira → senão `403`. `404` se não existe. |
 
 ### Relay cego (`blind_relay.py`)
 
@@ -62,7 +68,7 @@ Testes: `relay/test_signaling.py`.
 | `/memory/blob/<sha256>` | GET | Blob de mídia deduplicado. |
 | `/memory/ingest` | POST | Ingere um evento (`GOSSIP`, `GOSSIP_UPDATE`, `GOSSIP_DELETE`, `PROFILE_CARD`, `MEDIA_BLOB`) no journal. `201` se mudou, `200` se não. |
 | `/memory/sync` | POST | Sync bidirecional incremental (`clientRevision`, `since`, `knownBlobs`). |
-| `/memory/vault/<chave>` | GET / POST | Cofre cifrado no cliente para recuperação de identidade ([ADR-014](../adr/014-zero-knowledge-vault-recuperacao-soberana.md)). O relay guarda só texto cifrado. |
+| `/memory/vault/<chave>` | GET / POST | Cofre v2 cifrado no cliente ([ADR-025](../adr/025-cofre-v2-so-a-senha-abre.md)). `POST { record, ownerToken }`: `ownerToken` é a prova do dono (64 hex); o relay guarda só o SHA-256 (`ownerHash`, nunca devolvido no `GET`). Cofre com dono só regrava com a mesma prova; v2 novo sem prova → `403`; prova mal formada → `400`. |
 
 Payload máx. da memória: **2 × 2 MB** (`MAX_BLOB_BYTES` × 2) → acima disso, `413`.
 
@@ -95,12 +101,15 @@ Configuração por variáveis de ambiente `VOX_OAUTH_<PROVEDOR>_CLIENT_ID` e `VO
 | `VOX_RELAY_MAX_CACHE_MB` | server | Teto do cache em disco. |
 | `VOX_RELAY_INBOX_DIR`, `VOX_RELAY_BLIND_DIR`, `VOX_CENTRAL_MEMORY_DIR` | server | Diretórios específicos (senão, ficam sob o cache). |
 | `VOX_OAUTH_<P>_CLIENT_ID` / `_CLIENT_SECRET` | server | Habilita `/oauth/exchange` para o provedor `P`. |
+| `VOX_RELAY_ALLOWED_HOSTS` | server | Nomes extras aceitos no `Host` quando o relay escuta em loopback (ex.: o endereço do túnel), separados por vírgula. |
+| `VOX_RELAY_ALLOWED_ORIGINS` | server | Origens extras que podem fazer `POST`/`DELETE` (ex.: um espelho do app), separadas por vírgula. |
+| `VOX_RELAY_WRITE_LIMIT_PER_MIN` | server | Escritas (`POST`/`DELETE`) por minuto por IP (padrão 120). |
 
 ## 4. Testes
 
 `npm run test:relay` (ou `python -m unittest discover -s relay -p "test_*.py"`):
 `test_server.py` (rotas e cache), `test_signaling.py`, `test_blind_relay.py`, `test_mirror_validate.py`,
-`test_oauth_exchange.py`, `test_p2p_seeder.py`, `test_desktop_launchers.py`.
+`test_oauth_exchange.py`, `test_p2p_seeder.py`, `test_desktop_launchers.py`, `test_central_memory_vault.py`, `test_request_guard.py` (PM-94).
 
 ## 5. Exposição pública
 

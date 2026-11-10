@@ -12,6 +12,7 @@ export const VAULT_V2_ITERATIONS = 600_000;
 const MIN_ITERATIONS = 100_000;
 const MAX_ITERATIONS = 5_000_000;
 const ADDRESS_SALT = "vox-vault-v2:endereco";
+const OWNER_SALT = "vox-vault-v2:dono";
 const LEGACY_ITERATIONS = 50_000;
 
 export function bufferToHex(buf) {
@@ -43,14 +44,26 @@ async function deriveAesKey(secret, saltBytes, iterations) {
   );
 }
 
-/** Endereço do cofre v2 no servidor de memória: custa tanto quanto derivar a chave. */
-export async function deriveVaultAddress(passphrase) {
+async function deriveFromPassphrase(passphrase, salt) {
   const bits = await crypto.subtle.deriveBits(
-    { name: "PBKDF2", salt: utf8(ADDRESS_SALT), iterations: VAULT_V2_ITERATIONS, hash: "SHA-256" },
+    { name: "PBKDF2", salt: utf8(salt), iterations: VAULT_V2_ITERATIONS, hash: "SHA-256" },
     await pbkdf2Base(passphrase),
     256
   );
   return bufferToHex(bits);
+}
+
+/** Endereço do cofre v2 no servidor de memória: custa tanto quanto derivar a chave. */
+export function deriveVaultAddress(passphrase) {
+  return deriveFromPassphrase(passphrase, ADDRESS_SALT);
+}
+
+/**
+ * PM-94: prova do dono do cofre. O servidor guarda só o SHA-256 dela e passa a exigir a mesma prova para
+ * regravar. Sai da senha com outro sal, então não dá para tirá-la do endereço, que é público.
+ */
+export function deriveVaultOwnerToken(passphrase) {
+  return deriveFromPassphrase(passphrase, OWNER_SALT);
 }
 
 export async function encryptVaultV2(bundle, passphrase, iterations = VAULT_V2_ITERATIONS) {
