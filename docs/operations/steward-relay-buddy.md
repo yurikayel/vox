@@ -47,6 +47,7 @@ Preferir checklist **escrito** + rotação de segredos; evitar colar senhas no W
 
 - [ ] Inventário entregue: host VPS ou kit local, domínio (`signal.exemplo.org`), paths `relay/deploy/`, volume Docker `vox_relay_cache`.
 - [ ] Arquivo `.env` / segredos: `VOX_RELAY_MAX_CACHE_MB`, senha TURN, tokens — **rotacionar** o que vazou no chat após o handoff.
+- [ ] Relay atrás de túnel ou proxy: nome público em `VOX_RELAY_ALLOWED_HOSTS` ([kit §Quem pode escrever](./steward-relay-kit.md#quem-pode-escrever-no-relay-pm-94)).
 - [ ] **Compose + Caddy:** buddy consegue `docker compose ps`, renovar TLS, ler logs Caddy e `vox-relay`.
 - [ ] **WSS / relay HTTP:** mesma origem HTTPS no wizard (ver [steward-relay-kit.md](./steward-relay-kit.md) § Caddy).
 - [ ] Backup dos **`index_*.json`** / espelhos em disco (cópia do volume ou export documentado); teste de `GET /vox/index/<Community-Id>.json` após restore.

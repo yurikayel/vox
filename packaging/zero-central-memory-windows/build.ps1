@@ -13,6 +13,7 @@ if (-not (Test-Path $CSC)) {
 }
 
 $SRC = "$ScriptDir\src\ZeroCentralMemory.cs"
+$SRC_GUARD = "$ScriptDir\src\VaultOwnerGuard.cs"
 $ICO = "$Root\packaging\desktop-seeder-windows\vox.ico"
 $DIST = "$Root\dist"
 if (-not (Test-Path $DIST)) { New-Item -ItemType Directory -Force -Path $DIST | Out-Null }
@@ -30,7 +31,8 @@ $CSC_ARGS = @(
     "/r:System.dll,System.Core.dll,System.Web.Extensions.dll,System.Windows.Forms.dll,System.Drawing.dll",
     "/resource:$ICO,vox.ico",
     "/out:$OUT_EXE",
-    "$SRC"
+    "$SRC",
+    "$SRC_GUARD"
 )
 
 & $CSC $CSC_ARGS

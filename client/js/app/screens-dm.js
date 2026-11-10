@@ -30,7 +30,7 @@ export async function pollInboxMessages(user) {
       try {
         const rawText = await cryptoDm.open(env);
         await ingestDecryptedEnvelope(env, rawText);
-        await inbox.deleteSealed(user, env.id);
+        await inbox.deleteSealed(user, env.id, await cryptoDm.openDeleteToken(env).catch(() => null));
         count++;
       } catch {}
     }

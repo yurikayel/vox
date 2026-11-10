@@ -26,6 +26,7 @@ from relay import vault_store
 from relay import inbox
 from relay import mirror_validate
 from relay import p2p_seeder
+from relay import request_guard
 
 DEFAULT_PORT = 3920
 DEFAULT_HOST = "127.0.0.1"
@@ -307,8 +308,15 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
     def _set_cors_headers(self):
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, X-Vox-Delete-Token")
         self.send_header("Access-Control-Allow-Private-Network", "true")
+
+    def _rejected(self, method):
+        """PM-94: Host, Origin, Content-Type e limite por IP (`request_guard`)."""
+        reason = request_guard.reject_reason(method, self.headers, self.server.server_address[0], self.client_address[0])
+        if reason:
+            self._send_json({"error": reason[1]}, reason[0])
+        return bool(reason)
 
     def _get_content_length(self):
         try:
@@ -323,6 +331,8 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
+        if self._rejected("GET"):
+            return
         path = self.path.split("?")[0].rstrip("/")
         if path in ("/health", ""):
             self._handle_health()
@@ -501,6 +511,8 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
         self.wfile.write(message)
 
     def do_POST(self):
+        if self._rejected("POST"):
+            return
         path = self.path.split("?")[0].rstrip("/")
         if path == "/vox/mirror":
             self._handle_mirror_post()
@@ -546,8 +558,8 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
             payload = json.loads(self.rfile.read(content_length).decode("utf-8"))
             if path.startswith("/memory/vault/"):
                 key = path[len("/memory/vault/"):].split("/")[0]
-                ok = vault_store.save_vault(key, payload)
-                self._send_json({"status": "saved" if ok else "error"}, 200 if ok else 400)
+                status = vault_store.save_vault(key, payload)
+                self._send_json({"status": status}, {"saved": 200, "forbidden": 403}.get(status, 400))
                 return
             if path == "/memory/ingest":
                 result = central_memory.ingest_event(payload)
@@ -645,23 +657,8 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
             self._reply_not_found(b"Payload de seed invalido", 400)
             return
         try:
-            body = self.rfile.read(content_length)
-            payload = json.loads(body.decode("utf-8"))
-            blob_hash = str(payload.get("hash") or "").strip().lower()
-            # Se já presente na memória central, autoriza automaticamente
-            blob_data = central_memory.get_blob(blob_hash)
-            if blob_data:
-                p2p_seeder.SEEDER_MANAGER.authorize_hash(blob_hash)
-                size_bytes = blob_data.get("sizeBytes") or len(blob_data.get("base64Data", ""))
-                mime_type = blob_data.get("mimeType", "application/octet-stream")
-                record = p2p_seeder.SEEDER_MANAGER.register_blob_seed(blob_hash, size_bytes, mime_type)
-                self._send_json(record, 201)
-                return
-            # Se explicitamente autorizado
-            size_bytes = int(payload.get("sizeBytes", 0))
-            mime_type = str(payload.get("mimeType", "application/octet-stream"))
-            record = p2p_seeder.SEEDER_MANAGER.register_blob_seed(blob_hash, size_bytes, mime_type)
-            self._send_json(record, 201)
+            payload = json.loads(self.rfile.read(content_length).decode("utf-8"))
+            self._send_json(p2p_seeder.register_seed_request(payload, central_memory.get_blob), 201)
         except (ValueError, PermissionError) as err:
             self._send_json({"error": str(err)}, 400)
         except OverflowError as err:
@@ -670,6 +667,8 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
             self._send_json({"error": str(error)}, 500)
 
     def do_DELETE(self):
+        if self._rejected("DELETE"):
+            return
         path = self.path.split("?")[0].rstrip("/")
         if path.startswith("/p2p/seed/"):
             blob_hash = path[len("/p2p/seed/"):].split("/")[0]
@@ -682,17 +681,9 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
             parts = path[len("/inbox/"):].split("/")
             to_addr = parts[0] if len(parts) > 0 else ""
             msg_id = parts[1] if len(parts) > 1 else ""
-            if inbox.delete_envelope(to_addr, msg_id):
-                self.send_response(200)
-                self.send_header("Content-Type", "application/json; charset=utf-8")
-                self._set_cors_headers()
-                self.end_headers()
-                self.wfile.write(json.dumps({"status": "deleted", "id": msg_id}).encode("utf-8"))
-                return
-            self.send_response(404)
-            self._set_cors_headers()
-            self.end_headers()
-            self.wfile.write(json.dumps({"error": "Envelope nao encontrado"}).encode("utf-8"))
+            status = inbox.delete_envelope(to_addr, msg_id, self.headers.get("X-Vox-Delete-Token"))
+            replies = {inbox.DELETED: 200, inbox.FORBIDDEN: 403}
+            self._send_json({"status": status, "id": msg_id}, replies.get(status, 404))
             return
 
         self.send_response(404)
