@@ -6,6 +6,13 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Segurança: chaves privadas cifradas no aparelho (PM-93 etapa 1, SW v7.63)
+- **Chave do aparelho** ([ADR-026](./docs/adr/026-chaves-em-repouso-trava-depois-do-backup.md), `keystore.js`): uma chave AES-GCM-256 não exportável, guardada no IndexedDB, cifra as chaves privadas da conta, das contas extras, da DM e da carteira no `localStorage`. Elas só abrem na hora de assinar, abrir DM, publicar ou exportar backup.
+- **Migração na abertura** (`key-at-rest.js`): o que estava em claro é cifrado; se o armazenamento mudar no meio, o item fica para a próxima abertura.
+- **Sem troca de identidade:** se a chave do aparelho não abre, o app mostra erro em vez de gerar chave nova por cima. Navegador sem IndexedDB segue como antes.
+- **Armazenamento persistente:** o app pede ao navegador para não apagar os dados sob pressão.
+- **Falta (etapa 2):** assinatura com chave não exportável e trava depois do backup com a Senha Soberana.
+
 ### Segurança: cofre de recuperação v2 — só a Senha Soberana abre (PM-90, SW v7.62)
 - **Cofre novo** ([ADR-025](./docs/adr/025-cofre-v2-so-a-senha-abre.md), `vault-crypto.js`): a chave sai só da Senha Soberana, por PBKDF2-SHA256 com 600 mil iterações e um sal aleatório por cofre, guardado no envelope. O endereço no servidor também sai da senha, pelo mesmo custo.
 - **Login com Google ou Meta não abre mais o cofre.** Ele só enriquece o perfil e reencontra contas que já estão no aparelho. Em outro aparelho, a conta volta com a Senha Soberana, com o link ou QR de sincronização, ou com o arquivo de backup.

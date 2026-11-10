@@ -93,7 +93,7 @@ function syncWalletHints() {
 
 async function applyWalletChoice(mode) {
   if (mode === "gerar") await wallet.generateNewWallet();
-  if (mode === "importar") wallet.saveJwk(JSON.parse(document.getElementById("wg-jwk")?.value.trim() || ""));
+  if (mode === "importar") await wallet.saveJwk(JSON.parse(document.getElementById("wg-jwk")?.value.trim() || ""));
   if (mode !== "manter") await syncIdentity();
 }
 

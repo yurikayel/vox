@@ -4,6 +4,8 @@
  * Separado da chave JWK RSA Arweave de autoria pública.
  */
 
+import { openSealed, sealJson } from "./keystore.js";
+
 const DM_KEYPAIR_STORAGE = "vox-dm-keypair";
 const ECDH_ALGO = { name: "ECDH", namedCurve: "P-256" };
 
@@ -33,6 +35,19 @@ function parseJwkInput(jwkOrStr) {
   return jwkOrStr;
 }
 
+/** Par ECDH novo, em claro (só em memória). */
+export async function generateDmKeypair() {
+  const pair = await crypto.subtle.generateKey(ECDH_ALGO, true, ["deriveKey"]);
+  return {
+    publicJwk: await crypto.subtle.exportKey("jwk", pair.publicKey),
+    privateJwk: await crypto.subtle.exportKey("jwk", pair.privateKey),
+  };
+}
+
+/**
+ * Par de DM como está guardado: a chave privada vem cifrada pelo aparelho (PM-93) ou, em dado antigo, em claro.
+ * Existindo um par guardado, nunca gera outro por cima.
+ */
 export async function ensureDmKeys() {
   try {
     const raw = localStorage.getItem(DM_KEYPAIR_STORAGE);
@@ -41,11 +56,8 @@ export async function ensureDmKeys() {
       if (parsed?.publicJwk && parsed?.privateJwk) return parsed;
     }
   } catch {}
-
-  const pair = await crypto.subtle.generateKey(ECDH_ALGO, true, ["deriveKey"]);
-  const publicJwk = await crypto.subtle.exportKey("jwk", pair.publicKey);
-  const privateJwk = await crypto.subtle.exportKey("jwk", pair.privateKey);
-  const stored = { publicJwk, privateJwk };
+  const fresh = await generateDmKeypair();
+  const stored = { publicJwk: fresh.publicJwk, privateJwk: await sealJson(fresh.privateJwk) };
   localStorage.setItem(DM_KEYPAIR_STORAGE, JSON.stringify(stored));
   return stored;
 }
@@ -55,13 +67,21 @@ export async function getPublicJwk() {
   return publicJwk;
 }
 
+/** Par de DM aberto (chave privada em claro), para backup. */
 export async function getDmKeypair() {
-  return await ensureDmKeys();
+  const stored = await ensureDmKeys();
+  return { publicJwk: stored.publicJwk, privateJwk: await openSealed(stored.privateJwk) };
 }
 
-export function setDmKeypair(keypair) {
+/** Par de DM na forma guardada (cifrada), para copiar entre contas sem abrir. */
+export async function getDmKeypairAtRest() {
+  return ensureDmKeys();
+}
+
+export async function setDmKeypair(keypair) {
   if (!keypair?.publicJwk || !keypair?.privateJwk) return false;
-  localStorage.setItem(DM_KEYPAIR_STORAGE, JSON.stringify(keypair));
+  const stored = { publicJwk: keypair.publicJwk, privateJwk: await sealJson(keypair.privateJwk) };
+  localStorage.setItem(DM_KEYPAIR_STORAGE, JSON.stringify(stored));
   return true;
 }
 
@@ -126,7 +146,7 @@ export async function open(envelope, privateJwkOverride = null) {
     throw new Error("Envelope DM inválido");
   }
 
-  const privJwk = privateJwkOverride || (await ensureDmKeys()).privateJwk;
+  const privJwk = await openSealed(privateJwkOverride || (await ensureDmKeys()).privateJwk);
   const privKey = await crypto.subtle.importKey("jwk", privJwk, ECDH_ALGO, false, ["deriveKey"]);
   const ephPubKey = await crypto.subtle.importKey("jwk", envelope.ephPub, ECDH_ALGO, false, []);
   const aesKey = await deriveAesKey(privKey, ephPubKey, "decrypt");
