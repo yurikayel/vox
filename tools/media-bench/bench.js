@@ -1,8 +1,8 @@
 /**
  * PM-70 — bancada de medição da mídia v2 (docs/specs/midia-v2.md). Ferramenta de desenvolvimento, não publicada.
- * Imagem: AVIF q66 (jSquash/libavif, uma thread) na caixa 1280×720 / 720×1280, degraus até caber em 99.999 bytes,
- * WebP 0,78 nativo de comparação e miniatura de 160 px. Vídeo: H.264 720p24 por WebCodecs em modo quantizador.
- * Áudio: Opus 48 kbps por WebCodecs. Os resultados ficam em window.__bench para leitura automática.
+ * Imagem: AVIF q70 (jSquash/libavif, uma thread) na caixa 960×540 / 540×960, degraus até caber em 99.999 bytes,
+ * WebP 0,78 nativo de comparação e miniatura de 160 px. Vídeo: H.264 480p24 por WebCodecs em modo quantizador.
+ * Áudio: Opus 32 kbps por WebCodecs. Os resultados ficam em window.__bench para leitura automática.
  */
 // Direto no codificador de thread única: o encode.js do jSquash importa wasm-feature-detect 1.10.0, que usa
 // `import.source(...)` e não carrega no Chrome 152 (SyntaxError). Sem COOP/COEP não haveria threads de qualquer forma.
@@ -24,7 +24,13 @@ async function encodeAvif(imageData, options) {
 }
 
 export const CAP_BYTES = 99_999;
-export const AVIF_LADDER = [66, 60, 55, 50, 45, 40, 35, 30, 25, 20, 10];
+/** Parâmetros da spec (docs/specs/midia-v2.md): estética retrô, revisada em 09/11/2026. */
+export const SPEC = Object.freeze({
+  image: { long: 960, short: 540, quality: 70 },
+  video: { long: 854, short: 480 },
+  opusBps: 32000,
+});
+export const AVIF_LADDER = [70, 66, 60, 55, 50, 45, 40, 35, 30, 25, 20, 10];
 const out = document.getElementById("out");
 const logEl = document.getElementById("log");
 const bench = (globalThis.__bench = { images: [], videos: [], probe: null, avifInitMs: null });
@@ -33,9 +39,9 @@ function log(msg) {
   logEl.textContent += `${msg}\n`;
 }
 
-/** Caixa da spec: lado maior ≤ 1280, lado menor ≤ 720, nunca amplia. Dimensões pares (exigência do H.264). */
-export function fitBox(w, h) {
-  const scale = Math.min(1, 1280 / Math.max(w, h), 720 / Math.min(w, h));
+/** Caixa da spec (lado maior e lado menor), nunca amplia. Dimensões pares (exigência do H.264). */
+export function fitBox(w, h, box = SPEC.image) {
+  const scale = Math.min(1, box.long / Math.max(w, h), box.short / Math.min(w, h));
   const even = (n) => Math.max(2, Math.round((n * scale) / 2) * 2);
   return { width: even(w), height: even(h) };
 }
@@ -60,7 +66,7 @@ async function avifUnderCap(imageData, speed = 6) {
   return steps;
 }
 
-/** PSNR da luminância (dB) entre a imagem 720p sem compressão e a versão decodificada. Métrica objetiva simples. */
+/** PSNR da luminância (dB) entre a imagem reduzida sem compressão e a versão decodificada. Métrica objetiva simples. */
 export function psnrY(ref, test) {
   let sum = 0;
   const n = ref.width * ref.height;
@@ -94,7 +100,7 @@ async function thumbBytes(canvas) {
 
 async function measureFast(imageData) {
   const t0 = performance.now();
-  const buf = await encodeAvif(imageData, { quality: 66, speed: 8 });
+  const buf = await encodeAvif(imageData, { quality: SPEC.image.quality, speed: 8 });
   return { bytes: buf.byteLength, ms: Math.round(performance.now() - t0) };
 }
 
@@ -107,8 +113,8 @@ export async function measureImage(name, blob) {
   const fast = await measureFast(ref);
   return {
     name, source, size, inputBytes: blob.size,
-    q66Bytes: steps[0].bytes, avifQ: final.quality, avifBytes: final.bytes, steps: steps.length - 1,
-    avifMsQ66: steps[0].ms, avifMsTotal: steps.reduce((acc, x) => acc + x.ms, 0),
+    baseBytes: steps[0].bytes, avifQ: final.quality, avifBytes: final.bytes, steps: steps.length - 1,
+    avifMsBase: steps[0].ms, avifMsTotal: steps.reduce((acc, x) => acc + x.ms, 0),
     avifPsnr: await decodedPsnr(ref, new Blob([final.buf], { type: "image/avif" })),
     webpBytes: webp.size, webpPsnr: await decodedPsnr(ref, webp),
     fastBytes: fast.bytes, fastMs: fast.ms, thumbBytes: await thumbBytes(canvas),
@@ -118,8 +124,8 @@ export async function measureImage(name, blob) {
 function renderImageTable(rows) {
   const kb = (n) => (n / 1024).toFixed(1);
   const body = rows.map((r) => `<tr><td>${r.name}</td><td>${r.source}→${r.size}</td><td class="${r.steps ? "over" : ""}">${kb(r.avifBytes)} (q${r.avifQ})</td>
-    <td>${r.avifMsQ66}</td><td>${kb(r.webpBytes)}</td><td>${kb(r.thumbBytes)}</td></tr>`).join("");
-  out.innerHTML = `<table><tr><th>Imagem</th><th>Original→caixa</th><th>AVIF KiB</th><th>ms q66</th><th>WebP 0,78 KiB</th><th>Miniatura KiB</th></tr>${body}</table>`;
+    <td>${r.avifMsBase}</td><td>${kb(r.webpBytes)}</td><td>${kb(r.thumbBytes)}</td></tr>`).join("");
+  out.innerHTML = `<table><tr><th>Imagem</th><th>Original→caixa</th><th>AVIF KiB</th><th>ms q70</th><th>WebP 0,78 KiB</th><th>Miniatura KiB</th></tr>${body}</table>`;
 }
 
 async function ensureAvifReady() {
