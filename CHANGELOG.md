@@ -6,6 +6,14 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Segurança: trava das chaves depois do backup (PM-93 etapa 2, SW v7.64)
+- **Depois do backup com a Senha Soberana** (cofre ou `.voxid` cifrado, senha de 12+ caracteres), assinatura e DM usam chaves **não exportáveis** no IndexedDB (`key-lock.js`, [ADR-026](./docs/adr/026-chaves-em-repouso-trava-depois-do-backup.md)). A cópia cifrada pelo aparelho sai do `localStorage`; a única cópia exportável é a cifrada pela senha.
+- **Backup novo** pede a mesma senha. Restaurar pelo cofre ou pelo `.voxid` cifrado já volta travado.
+- **Ordem segura:** a chave só troca depois de gravada e testada no IndexedDB e da cópia por senha salva. Se a chave travada some do aparelho, o app avisa e a conta volta pelo cofre com a senha.
+- **Arquivo `.voxid`:** exportar e restaurar saíram de `local-account.js` (714 → 575 linhas) para `account-backup.js`.
+- **Precache:** os 2 módulos novos foram pagos com a remoção do texto, das fotos e das respostas de demonstração por UF que ninguém lia (−20,6 KB); o teto do PM-02 desceu para 2.068.300 bytes.
+- **Falta:** trocar a senha de uma conta travada; a carteira continua só cifrada pelo aparelho; sessão do Bluesky no PM-96.
+
 ### Segurança: chaves privadas cifradas no aparelho (PM-93 etapa 1, SW v7.63)
 - **Chave do aparelho** ([ADR-026](./docs/adr/026-chaves-em-repouso-trava-depois-do-backup.md), `keystore.js`): uma chave AES-GCM-256 não exportável, guardada no IndexedDB, cifra as chaves privadas da conta, das contas extras, da DM e da carteira no `localStorage`. Elas só abrem na hora de assinar, abrir DM, publicar ou exportar backup.
 - **Migração na abertura** (`key-at-rest.js`): o que estava em claro é cifrado; se o armazenamento mudar no meio, o item fica para a próxima abertura.

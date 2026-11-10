@@ -23,7 +23,7 @@ import { getCachedBskyPosts } from "../bsky-feed.js";
 import { openOAuthEnrichModal, wipeLocalDevice } from "./onboarding.js";
 import { getActiveUser, makeShellProps } from "./context.js";
 import { syncIdentity } from "./screens-network.js";
-import { KIND_WRAPPED, peekBackupKind } from "../account-backup-wrap.js";
+import { KIND_WRAPPED, exportAccountBundle, importAccountBundle, peekBackupKind } from "../account-backup.js";
 import * as voxels from "../voxels.js";
 
 function collectByIds(posts, ids) {
@@ -268,7 +268,7 @@ function bindSovereigntyExport() {
   if (!btn) return;
   btn.addEventListener("click", async () => {
     try {
-      const jsonStr = await localAccount.exportAccountBundle(readSovereigntyPassphrase());
+      const jsonStr = await exportAccountBundle(readSovereigntyPassphrase());
       downloadSovereigntyFile(jsonStr, JSON.parse(jsonStr).routeId);
       share.showToast("Arquivo de soberania exportado — guarde offline.");
     } catch (err) {
@@ -280,7 +280,7 @@ function bindSovereigntyExport() {
 async function restoreSovereigntyFile(file, activeTab) {
   const text = await file.text();
   const secret = await resolveImportPassphrase(text, readSovereigntyPassphrase());
-  const ok = await localAccount.importAccountBundle(text, secret);
+  const ok = await importAccountBundle(text, secret);
   if (!ok) {
     share.showToast("Falha ao validar chaves do backup.", "error");
     return;

@@ -74,7 +74,7 @@ export async function showBackupWizard() {
       if (out) {
         out.hidden = false;
         out.textContent = res.ok
-          ? "Cofre salvo. Em outro aparelho, escolha “Já tenho conta” e digite sua Senha Soberana."
+          ? `Cofre salvo. Em outro aparelho, escolha “Já tenho conta” e digite sua Senha Soberana.${res.locked ? " Neste aparelho, a chave agora só sai com essa senha." : ""}`
           : res.reason || "Não foi possível salvar o cofre.";
       }
       share.showToast(res.ok ? "Backup da identidade concluído." : "Falha no backup.", res.ok ? "info" : "error");

@@ -731,7 +731,7 @@ Não há trabalho pendente obrigatório do plano «Meta feed v6.3» em HOLD. O q
 Implementação dos quatro pilares essenciais do roadmap da rede Vox:
 
 ### 23.1 Autonomia de Identidade (Backup e Restauração Criptográfica)
-- **Módulo:** `client/js/local-account.js` e `client/js/crypto-dm.js`.
+- **Módulo:** `client/js/account-backup.js` (arquivo `.voxid`), `client/js/local-account.js` e `client/js/crypto-dm.js`. Exportar com a Senha Soberana trava as chaves do aparelho (PM-93, `key-lock.js`).
 - **Exportação:** `exportAccountBundle()` serializa identidade local (`routeId`, `name`, `bio`, `handle`), par de chaves ECDSA P-256 de assinatura e par de chaves ECDH P-256 de DMs privadas com timestamp e versão `vox-account-bundle-v1`.
 - **Importação e Verificação Estrita:** `importAccountBundle(bundle)` re-computa o `routeId` a partir da chave pública JWK, assina e verifica um *challenge nonce* efêmero com a chave privada importada antes de persistir no `localStorage`. Rejeita pacotes adulterados, chaves truncadas ou identificadores forjados.
 - **Suíte de testes:** `tests/account-backup.test.js`.
