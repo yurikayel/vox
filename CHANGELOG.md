@@ -6,6 +6,12 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Segurança: assinatura cobre campos aninhados (PM-85, SW v7.66)
+- **Forma `sigv: 2`** (`client/js/sig-format.js`, [ADR-021 §2.6](./docs/adr/021-integridade-na-entrada-forma-assinada.md)): o texto assinado leva todas as chaves, ordenadas, em qualquer profundidade, então `photoTags` e `mediaRef` passam a ser cobertos. O `sigv` vai dentro do que é assinado; versão desconhecida não verifica.
+- **Convivência:** o aparelho confere v1 e v2 desde já e passa a assinar v2 em **24/11/2026**, para quem ainda não atualizou não descartar os posts novos.
+- **Marca de foto em post alheio v1** aparece como "não verificada".
+- **Peso:** `sig-format.js` entrou no precache pago com a remoção de três funções que nada chamava (`renderPhotoTitleHtml`, `renderIgLikesLine`, `formatBlobSize`); o teto do PM-02 não mudou.
+
 ### Segurança: pipeline (PM-95)
 - **CodeQL** (`.github/workflows/codeql.yml`): análise estática de actions, JS, Python e C# em todo PR, no `main` e toda segunda-feira (`security-extended`).
 - **Dependabot** (`.github/dependabot.yml`): npm, imagem Docker do relay e GitHub Actions. O relay usa só a stdlib, então não há pip.
