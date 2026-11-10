@@ -29,10 +29,10 @@ jobs:
       attestations: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
 
       - name: Configure Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: "3.12"
 
@@ -75,12 +75,12 @@ jobs:
 
       - name: Atestação de origem
         if: github.event_name != 'pull_request'
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2.4.0
         with:
           subject-path: "out/*"
 
       - name: Guardar como artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: vox-binarios
           path: out/

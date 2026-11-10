@@ -53,6 +53,6 @@ Legenda de estado:
 | Tema | O que falta decidir | Onde |
 |---|---|---|
 | Custódia da chave | Em vigor (SW v7.64): chaves cifradas pelo aparelho; depois do backup com a Senha Soberana, identidade e DM só saem pela cópia cifrada com a senha | PM-93, [ADR-026](./adr/026-chaves-em-repouso-trava-depois-do-backup.md) |
-| Cadeia de suprimentos | CodeQL, Dependabot, actions fixadas, revisão obrigatória | PM-95 · [DEPENDENCIAS](./DEPENDENCIAS.md) |
+| Cadeia de suprimentos | Em vigor (PM-95): CodeQL, Dependabot, actions por SHA, ruleset `strict`. Falta decidir quando a revisão vira obrigatória (CODEOWNERS já existe) e se o CodeQL vira check obrigatório | PM-95 · [DEPENDENCIAS](./DEPENDENCIAS.md) |
 | Formato de assinatura | `sigv: 2` e a janela de convivência | PM-85 |
 | Propostas antigas | Atestação (001), perfil coletivo (005), corroboração multi-gateway (009) e Contribution Engine (010): aceitar, adiar ou arquivar | [índice de ADRs](./adr/README.md) |
