@@ -59,26 +59,32 @@ export async function runOAuthEnrichSignIn(btn, signInFn, { fallbackError }) {
   }
 }
 
+/**
+ * Diz se um id de cliente OAuth do `config/oauth.json` está preenchido de verdade.
+ * @param {unknown} id Valor lido do arquivo (pode faltar ou ser o texto de exemplo `YOUR_…`).
+ * @returns {boolean} `true` quando há um id real.
+ */
+function isOAuthClientConfigured(id) {
+  const value = String(id || "").trim();
+  return Boolean(value) && !value.includes("YOUR_");
+}
+
+/**
+ * Esconde os botões de Google e Meta quando o `config/oauth.json` não traz o id do cliente.
+ * Antes eles ficavam desativados e uma caixa vermelha de erro aparecia já no primeiro passo
+ * do onboarding, antes de a pessoa escolher importar nada. Falta de configuração não é erro
+ * de quem usa: o GitHub e o "Pular" continuam à mão.
+ * @returns {void}
+ */
 function applyOAuthProviderAvailability() {
   oauthProfile.loadOAuthConfig().then((cfg) => {
-    const googleId = String(cfg?.googleClientId || "").trim();
-    const metaId = String(cfg?.facebookAppId || "").trim();
-    const googleReady = googleId && !googleId.includes("YOUR_");
-    const metaReady = metaId && !metaId.includes("YOUR_");
-    const btnGoogle = document.getElementById("btn-oauth-google");
-    const btnMeta = document.getElementById("btn-oauth-meta");
-    if (btnGoogle) {
-      btnGoogle.disabled = !googleReady;
-      if (!googleReady) btnGoogle.title = "Google não configurado (oauth.json)";
-    }
-    if (btnMeta) {
-      btnMeta.disabled = !metaReady;
-      if (!metaReady) btnMeta.title = "Meta não configurado (oauth.json)";
-    }
-    if (!googleReady && !metaReady) {
-      setOAuthEnrichError(
-        "Google/Meta requerem oauth.json — você pode entrar com GitHub agora ou clicar em Pular.",
-      );
+    const ready = {
+      "btn-oauth-google": isOAuthClientConfigured(cfg?.googleClientId),
+      "btn-oauth-meta": isOAuthClientConfigured(cfg?.facebookAppId),
+    };
+    for (const [id, ok] of Object.entries(ready)) {
+      const btn = document.getElementById(id);
+      if (btn) btn.hidden = !ok;
     }
   });
 }
