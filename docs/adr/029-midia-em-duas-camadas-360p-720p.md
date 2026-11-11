@@ -1,6 +1,6 @@
 # ADR-029: Mídia em duas camadas (360p e 720p), sem teto de 100 KB por item
 
-**Status:** proposed · as decisões 1 a 3 foram dadas pelo mantenedor em 11/11/2026 · **Revisado:** 2026-11-11 · **Relacionados:** [mídia v2](../specs/midia-v2.md), [replicação por grau](../specs/replicacao-por-grau-v0.md), [ADR-019](./019-esquecer-por-padrao-e-memoria-civica.md), [ADR-004](./004-gateway-honest-fallback.md), [medição PM-70](../research/medicao-midia-v2-pm70-2026-11.md)
+**Status:** accepted (2026-11-11, pelo mantenedor; não implementado, com medição das camadas pendente) · **Revisado:** 2026-11-11 · **Relacionados:** [mídia v2](../specs/midia-v2.md), [replicação por grau](../specs/replicacao-por-grau-v0.md), [ADR-019](./019-esquecer-por-padrao-e-memoria-civica.md), [ADR-004](./004-gateway-honest-fallback.md), [medição PM-70](../research/medicao-midia-v2-pm70-2026-11.md)
 
 ## 1. Contexto
 

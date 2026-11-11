@@ -6,7 +6,7 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
-### ADR-029 (proposto): mídia em duas camadas, 360p e 720p
+### ADR-029 (aceito): mídia em duas camadas, 360p e 720p
 - Decisões do mantenedor (11/11/2026):
   - **sem teto de 100 KB por item**: os pedaços ficam só como unidade de transporte;
   - **duas camadas**: Half em 360p para a malha pública e Full em 720p para o autor e os amigos, que a guardam e a servem;
