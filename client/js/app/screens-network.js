@@ -45,7 +45,7 @@ function readNetworkFormValues() {
   const paused = getChecked("net-pause");
   return {
     enabled: !paused,
-    maxMb: getNumberValue("net-max-mb", 25),
+    maxMb: getNumberValue("net-max-mb", 38),
     dailyCapMb: getNumberValue("net-daily-cap", 50),
     wifiOnly: getChecked("net-wifi"),
     cellularCapMb: peers.clampCellularCapMb(getNumberValue("net-cellular-cap", 5)),

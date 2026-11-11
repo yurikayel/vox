@@ -8,7 +8,7 @@ const STORAGE_KEY = "vox-guardian-config";
 
 const DEFAULT_CONFIG = {
   enabled: false,
-  quotaMb: 100,
+  quotaMb: 150,
   onlyWifi: true,
   onlyCharging: true,
   minBatteryLevel: 0.5,
@@ -36,7 +36,7 @@ export function saveGuardianQuotaConfig(partial = {}) {
   const updated = {
     ...current,
     ...partial,
-    quotaMb: Math.max(10, Math.min(1000, Number(partial.quotaMb ?? current.quotaMb))),
+    quotaMb: Math.max(10, Math.min(1500, Number(partial.quotaMb ?? current.quotaMb))),
   };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
   return updated;

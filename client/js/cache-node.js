@@ -149,7 +149,7 @@ export async function clearCache() {
   } catch {}
 }
 
-export async function enforceMaxCacheSize(maxMb = 25) {
+export async function enforceMaxCacheSize(maxMb = 38) {
   try {
     const db = await openDB();
     const maxBytes = maxMb * 1024 * 1024;
