@@ -375,6 +375,7 @@ const SHELL_ASSETS = [
 const UNPLUGGED_MODULES = [
   "./js/airgap-webrtc.js",
   "./js/aviso.js",
+  "./js/aviso-replies.js",
   "./js/bridging-rank.js",
   "./js/chunked-transfer.js",
   "./js/civic-credential.js",
