@@ -6,6 +6,14 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Armazenamento por modo, banda proporcional e camadas de mídia só para economia
+- **Nó leve: 100 MB fixos** (era 25). **Apoiador: de 512 MB a 1 GB** (era 250 MB; começa em 1 GB). **Modo Guardião: 2 GB fixos** (era a escolha entre 50 e 500 MB). O campo de disco fica travado em 100 no nó leve e aceita de 512 a 1024 no apoiador.
+- **Banda proporcional ao disco**: até o dobro por dia. Nó leve de 50 para **200 MB/dia**, apoiador de 500 MB para **1 a 2 GB/dia**, Guardião até 4 GB/dia. A pessoa pode baixar o teto diário, nunca passar do dobro. O 4G segue com teto próprio (5 MB/dia). O assistente guiado oferece 50, 100, 150 ou 200 MB/dia.
+- Na spec da replicação por grau, o teto único de 750 MB vira a tabela por modo.
+- Os próprios posts **contam no teto**: a Full é o original publicado e o backup local. **Apagar aqui apaga para todo mundo**, pela retração assinada, e a tela avisa que não há volta.
+- ADR-029: Half e Full **só economizam banda e espaço**, não controlam acesso. Quem segue pede a Full, e ninguém confere; saiu o comprovante de seguir.
+- Testes que fixam os padrões e limites (`peers`, `seeder-guardian`, `supporter-mode`) atualizados para os valores novos; testes novos para o disco por modo e a banda proporcional. SW `v7.70`.
+
 ### ADR-030 (aceito): trazer do Bluesky (PESOS)
 - A pessoa continua postando no Bluesky e traz os próprios posts para o Vox: fila com confirmação ao abrir o app, sem servidor, assinados pela chave dela, com o original (`origin`) dentro da assinatura. Destino padrão no perfil; comunidade só por escolha em cada item.
 - Só posts de raiz da conta vinculada por login. Sem eco com a replicação Vox→Bluesky. Imagens pelo PDS da pessoa (o CDN do Bluesky não libera CORS); vídeo como link. Apagar no Bluesky segue a preferência da pessoa nas configurações: perguntar (padrão), apagar no Vox também ou manter.

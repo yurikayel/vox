@@ -9,10 +9,10 @@ test("peers - configurações default-on do Pacto Vox (Fase 3.1/3.2)", () => {
   const settings = peers.getPeerSettings();
 
   assert.equal(settings.enabled, true, "Nó deve ser ativo por padrão");
-  assert.equal(settings.dailyCapMb, 50, "Teto diário deve ser 50 MB");
+  assert.equal(settings.dailyCapMb, 200, "Teto diário deve ser 200 MB (2 × disco)");
   assert.equal(settings.wifiOnly, true, "Deve priorizar Wi-Fi");
   assert.equal(settings.webrtcEnabled, true, "WebRTC deve ser ativo por padrão");
-  assert.equal(settings.maxMb, 25, "Limite de cache padrão deve ser 25 MB");
+  assert.equal(settings.maxMb, 100, "Limite de cache padrão deve ser 100 MB");
 });
 
 test("peers - persistência de configurações customizadas e opt-out", () => {

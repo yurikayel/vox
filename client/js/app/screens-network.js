@@ -20,7 +20,7 @@ import * as contributionAttestation from "../contribution-attestation.js";
 import * as linkedAccounts from "../linked-accounts.js";
 import * as voxels from "../voxels.js";
 import * as webrtcPeer from "../webrtc-peer.js";
-import { applySupporterMode } from "../supporter-mode.js";
+import { applySupporterMode, normalizeStorageCommitment } from "../supporter-mode.js";
 import { escapeHtml } from "../render/util.js";
 import { openOAuthEnrichModal } from "./onboarding.js";
 import { getActiveUser, makeShellProps } from "./context.js";
@@ -45,8 +45,8 @@ function readNetworkFormValues() {
   const paused = getChecked("net-pause");
   return {
     enabled: !paused,
-    maxMb: getNumberValue("net-max-mb", 25),
-    dailyCapMb: getNumberValue("net-daily-cap", 50),
+    maxMb: getNumberValue("net-max-mb", 100),
+    dailyCapMb: getNumberValue("net-daily-cap", 200),
     wifiOnly: getChecked("net-wifi"),
     cellularCapMb: peers.clampCellularCapMb(getNumberValue("net-cellular-cap", 5)),
     commOnly: getChecked("net-comm-only"),
@@ -75,6 +75,23 @@ export function bindSupporterToggle() {
   });
 }
 
+/** Grava as preferências do nó com disco e banda ajustados ao modo (leve ou apoiador). */
+function savePeerFormValues(v) {
+  const saved = normalizeStorageCommitment({
+    ...peers.getPeerSettings(),
+    enabled: v.enabled,
+    maxMb: v.maxMb,
+    wifiOnly: v.wifiOnly,
+    cellularCapMb: v.cellularCapMb,
+    commOnly: v.commOnly,
+    backgroundRelay: v.backgroundRelay,
+    dailyCapMb: v.dailyCapMb,
+    webrtcEnabled: v.webrtcEnabled,
+  });
+  peers.savePeerSettings(saved);
+  return saved;
+}
+
 export function bindNetworkSettingsForm() {
   const form = document.getElementById("form-network-settings");
   if (!form) return;
@@ -86,21 +103,11 @@ export function bindNetworkSettingsForm() {
     inbox.saveRelayHttpUrl(v.customRelayHttpUrl);
     inbox.saveRelayBuddyHttpUrl(v.customRelayBuddyHttpUrl);
     peers.saveCustomTurnConfig({ urls: v.turnUrls, username: v.turnUser, credential: v.turnPass });
-    peers.savePeerSettings({
-      ...peers.getPeerSettings(),
-      enabled: v.enabled,
-      maxMb: v.maxMb,
-      wifiOnly: v.wifiOnly,
-      cellularCapMb: v.cellularCapMb,
-      commOnly: v.commOnly,
-      backgroundRelay: v.backgroundRelay,
-      dailyCapMb: v.dailyCapMb,
-      webrtcEnabled: v.webrtcEnabled,
-    });
+    const saved = savePeerFormValues(v);
     webrtcPeer.setTurnOnly(v.turnOnly);
     localAccount.setMeshDiscoverable(v.meshDiscoverable);
     void meshProfile.syncMeshProfileCard();
-    cacheNode.enforceMaxCacheSize(v.maxMb);
+    cacheNode.enforceMaxCacheSize(saved.maxMb);
     posseDispatch.savePosseWebhooks(posseDispatch.parseWebhookLines(v.webhookText));
     share.showToast(v.enabled ? "Preferências salvas: nó leve ativo!" : "Preferências salvas: nó pausado.");
     showNetworkSettings();

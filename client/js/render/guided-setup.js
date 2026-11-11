@@ -17,7 +17,7 @@ function wizardShell({ backHref, kicker, formId, stepsHtml }) {
     </div>`;
 }
 
-const CAP_OPTIONS = [25, 50, 150, 300];
+const CAP_OPTIONS = [50, 100, 150, 200];
 
 function capSelect(current) {
   const opts = CAP_OPTIONS.map((mb) => `<option value="${mb}"${Number(current) === mb ? " selected" : ""}>${mb} MB por dia</option>`).join("");
@@ -36,7 +36,7 @@ export function renderNetworkWizard(main, settings = {}) {
       </select>` },
     { key: "cap", title: "Quanto de dados por dia?", body: `
       <p class="compose-step-lead">Teto de dados que seu aparelho compartilha por dia. Dá para mudar quando quiser.</p>
-      ${capSelect(settings.dailyCapMb || 50)}` },
+      ${capSelect(settings.dailyCapMb || 200)}` },
     { key: "wifi", title: "Só no Wi-Fi?", body: `
       <label class="guided-check"><input type="checkbox" id="net-g-wifi"${settings.wifiOnly !== false ? " checked" : ""} /> Ajudar apenas quando estiver no Wi-Fi</label>
       <p class="compose-step-lead">Recomendado para não gastar seu plano de dados.</p>` },

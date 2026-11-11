@@ -199,7 +199,7 @@ function renderRede() {
     )}
     ${layer(
       "Camadas Passivo → Steward",
-      `<p>Passivo: pausado. Ativo: padrão. Apoiador: nó pesado opcional pelo botão “Seja um apoiador da rede” (até 500 MB/dia, só no Wi-Fi). Steward: relay desktop ou signaling customizado na LAN/VPS.</p>
+      `<p>Passivo: pausado. Ativo: padrão. Apoiador: nó pesado opcional pelo botão “Seja um apoiador da rede” (de 512 MB a 1 GB de disco e até o dobro por dia, só no Wi-Fi). Steward: relay desktop ou signaling customizado na LAN/VPS.</p>
       ${layer(
         "Relay desktop e signaling",
         `<p>O relay Python (<code>vox/relay/server.py</code>) faz proxy HTTP para gateways; o signaling WebSocket ajuda WebRTC atrás de NAT. Botões “Verificar Relay Desktop” e URLs customizadas ficam em Sua rede.</p>

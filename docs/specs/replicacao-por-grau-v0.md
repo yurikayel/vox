@@ -11,7 +11,7 @@ Cada pessoa guarda a própria mídia no aparelho ("traga seu próprio armazename
 
 | Grau | Guarda | Prioridade de permanência |
 |---|---|---|
-| **Seus posts** | Mídia v2 **Full (720p)** e Half | **Fora do teto**; nunca sai para abrir espaço |
+| **Seus posts** | Mídia v2 **Full (720p)** e Half: é o **original publicado e o backup local** | **Dentro do teto**, mas nunca sai sozinho para abrir espaço; se o teto encher só com os seus, o app avisa e pede para escolher |
 | **Amigos próximos** (a pessoa marca; teto proposto de ~15, a decidir) | Mídia v2 **Full (720p)**, inclusive vídeo, que servem a quem pedir | A mais alta |
 | **Amigos** | Mídia v2 **Full (720p)**, inclusive vídeo, que servem a quem pedir | Alta |
 | **Seguidores** (que não são amigos) | Mídia v2 **Full (720p)** dos perfis que seguem, que servem a outros seguidores; nas configurações, podem preferir a Half | Média-alta |
@@ -24,13 +24,21 @@ Cada pessoa guarda a própria mídia no aparelho ("traga seu próprio armazename
 > Com as duas camadas do [ADR-029](../adr/029-midia-em-duas-camadas-360p-720p.md), a Full pesa mais que a versão única medida abaixo: a conta de espaço precisa ser refeita depois da medição. Até lá, valem os tetos atuais.
 
 
-- **Teto padrão: 500 MB por aparelho**, além dos próprios posts. Se houver menos de 2 GB livres (`navigator.storage.estimate`), cai para 200 MB. A pessoa pode escolher 100 MB, 500 MB ou 1 GB.
-- **Subcota de vídeo (proposta, a decidir no piloto):** no máximo 40% do teto (200 MB), para os vídeos não expulsarem as fotos. Pode baixar para 25% se vídeo for raro no piloto.
+- **Teto por modo** (decisão do mantenedor, 11/11/2026), contando os próprios posts (o original publicado e o backup local). A banda é **proporcional ao disco**: até o dobro dele por dia. A pessoa pode baixar o teto diário, nunca passar do dobro. No 4G vale o teto próprio (padrão 5 MB/dia).
+
+  | Modo | Disco | Dados repassados por dia |
+  |---|---|---|
+  | **Nó leve** (padrão) | **100 MB, fixo** | até 200 MB |
+  | **Apoiador** (opt-in, só no Wi-Fi) | **de 512 MB a 1 GB**; começa em 1 GB | até 1 a 2 GB |
+  | **Guardião** (só no Wi-Fi e carregando) | **2 GB, fixo** | até 4 GB (o módulo ainda não está plugado no app) |
+
+  Planejado: com menos de 2 GB livres (`navigator.storage.estimate`), o apoiador fica no mínimo (512 MB).
+- **Subcota de vídeo (proposta, a decidir no piloto):** no máximo 40% do teto (40 MB no nó leve, até 410 MB no apoiador), para os vídeos não expulsarem as fotos. Pode baixar para 25% se vídeo for raro no piloto.
 - **Quando enche, sai primeiro** o grau mais distante e o mais antigo; o que a pessoa guardou ou fixou não sai.
 - Pedir ao navegador que não apague os dados (`navigator.storage.persist`, `storage-persistence.js`).
-- O teto substitui o limite de armazenamento do `supporter-mode.js` (25 MB leve / 250 MB apoiador); as cotas diárias de transferência continuam.
+- Os tetos ficam em `supporter-mode.js` (`LIGHT_LIMITS`, `SUPPORTER_LIMITS`, `GUARDIAN_LIMITS`, `BANDWIDTH_PER_DISK`).
 
-Com a mídia v2 retrô medida (imagem com mediana de 43 KiB; vídeo de 10 s entre 0,5 e 1,0 MiB; áudio de 60 s ≈ 237 KiB): os 300 MB fora da subcota de vídeo guardam ≈ 7 mil imagens, e os 200 MB da subcota, ≈ 200 a 400 vídeos. Texto e miniaturas praticamente não pesam.
+Com a mídia v2 retrô medida (imagem com mediana de 43 KiB; vídeo de 10 s entre 0,5 e 1,0 MiB; áudio de 60 s ≈ 237 KiB): no apoiador com 1 GB, os ≈ 614 MB fora da subcota de vídeo guardam ≈ 14 mil imagens, e os ≈ 410 MB da subcota, ≈ 400 a 800 vídeos; no nó leve, ≈ 1.400 imagens e 40 a 80 vídeos (conta com a versão única antiga; refazer com as camadas do ADR-029). Texto e miniaturas praticamente não pesam.
 
 ## Grau por salto (sem expor o grafo social)
 
@@ -45,7 +53,7 @@ O grau viaja com o post, não com a lista de amigos:
 
 1. **Visibilidade:** post "só amigos" nunca passa do grau 1; post de comunidade fechada só circula entre membros; só o post público segue a escada inteira.
 2. **Moderação:** post arquivado por denúncia para de circular em todos os graus e as cópias somem dos aparelhos (`canEchoPost`, quarentena).
-3. **Recolhimento pelo autor:** pedido a todos (gossip de retração), mas não garantido; a interface diz isso.
+3. **Apagar aqui apaga para todo mundo.** O que o autor guarda é o original e o backup: quando ele apaga um post no aparelho, o app manda a retração assinada (gossip de retração) e todos os aparelhos que guardam cópia, em qualquer camada, apagam. Quem está offline apaga ao reconectar. A garantia vale para o Vox sem alterações: um app modificado pode ignorar a retração, e a interface diz isso. Antes de apagar, a tela avisa que **não há volta**, porque o backup local também some.
 
 ## Banda
 
