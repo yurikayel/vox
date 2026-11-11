@@ -6,10 +6,10 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
-### ADR-029 (proposto): mídia em duas camadas, 360p e 720p
+### ADR-029 (aceito): mídia em duas camadas, 360p e 720p
 - Decisões do mantenedor (11/11/2026):
   - **sem teto de 100 KB por item**: os pedaços ficam só como unidade de transporte;
-  - **duas camadas**: Half em 360p para a malha pública e Full em 720p para o autor e os amigos, que a guardam e a servem;
+  - **duas camadas**: quem **segue** o autor recebe a Full (720p, q80, Opus 96 kbps) sem fazer nada, e a guarda e serve a outros seguidores; quem não segue recebe só a Half (360p, q60, 48 kbps); nas configurações, dá para preferir a Half;
   - **30 fps** em todo vídeo.
 - O Arweave fica como cartório (texto e hash).
 - A [spec da mídia v2](./docs/specs/midia-v2.md), a [replicação por grau](./docs/specs/replicacao-por-grau-v0.md) e o PM-71 foram atualizados. A ferramenta de medição passou a 30 fps.
