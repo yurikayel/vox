@@ -13,6 +13,24 @@ import {
 
 const SHEET_ID = "post-more-sheet";
 
+/** Itens do menu ⋯ da publicação, na ordem em que aparecem. */
+const SHEET_ITEMS_HTML = `
+  <button type="button" class="post-more-sheet-item post-more-sheet-item--destructive" data-action="report">Denunciar</button>
+  <button type="button" class="post-more-sheet-item" data-action="mediation">Pedir mediação</button>
+  <button type="button" class="post-more-sheet-item" data-action="not-interested">Não tenho interesse</button>
+  <button type="button" class="post-more-sheet-item" data-action="about-account">Sobre esta conta</button>
+  <button type="button" class="post-more-sheet-item" data-action="goto-post">Ir para a publicação</button>
+  <button type="button" class="post-more-sheet-item" data-action="repost">Republicar</button>
+  <button type="button" class="post-more-sheet-item" data-action="save">Salvar</button>
+  <button type="button" class="post-more-sheet-item" data-action="zap" hidden>Apoiar</button>
+  <button type="button" class="post-more-sheet-item" data-action="tag" hidden>Marcar pessoas</button>
+  <button type="button" class="post-more-sheet-item" data-action="share">Compartilhar…</button>
+  <button type="button" class="post-more-sheet-item" data-action="copy-link">Copiar link</button>
+  <button type="button" class="post-more-sheet-item" data-action="qr">QR deste link</button>
+  <button type="button" class="post-more-sheet-item" data-action="embed">Incorporar</button>
+  <button type="button" class="post-more-sheet-item post-more-sheet-cancel" data-action="cancel">Cancelar</button>
+`;
+
 function ensurePostMoreSheet() {
   let root = document.getElementById(SHEET_ID);
   if (root) return root;
@@ -24,22 +42,7 @@ function ensurePostMoreSheet() {
   root.setAttribute("role", "dialog");
   root.setAttribute("aria-modal", "true");
   root.setAttribute("aria-label", "Mais opções da publicação");
-  root.innerHTML = `
-    <div class="post-more-sheet-panel" role="document">
-      <button type="button" class="post-more-sheet-item post-more-sheet-item--destructive" data-action="report">Denunciar</button>
-      <button type="button" class="post-more-sheet-item" data-action="not-interested">Não tenho interesse</button>
-      <button type="button" class="post-more-sheet-item" data-action="about-account">Sobre esta conta</button>
-      <button type="button" class="post-more-sheet-item" data-action="goto-post">Ir para a publicação</button>
-      <button type="button" class="post-more-sheet-item" data-action="repost">Republicar</button>
-      <button type="button" class="post-more-sheet-item" data-action="save">Salvar</button>
-      <button type="button" class="post-more-sheet-item" data-action="zap" hidden>Apoiar</button>
-      <button type="button" class="post-more-sheet-item" data-action="tag" hidden>Marcar pessoas</button>
-      <button type="button" class="post-more-sheet-item" data-action="share">Compartilhar…</button>
-      <button type="button" class="post-more-sheet-item" data-action="copy-link">Copiar link</button>
-      <button type="button" class="post-more-sheet-item" data-action="qr">QR deste link</button>
-      <button type="button" class="post-more-sheet-item" data-action="embed">Incorporar</button>
-      <button type="button" class="post-more-sheet-item post-more-sheet-cancel" data-action="cancel">Cancelar</button>
-    </div>`;
+  root.innerHTML = `<div class="post-more-sheet-panel" role="document">${SHEET_ITEMS_HTML}</div>`;
   document.body.appendChild(root);
   return root;
 }
@@ -162,6 +165,20 @@ async function onNavigationOrShareAction(action, ctx) {
   return false;
 }
 
+/** Lote 3 — leva à conversa com a moderação da comunidade do post, com o cartão do post. */
+async function openMediation(ctx) {
+  const [{ resolveModeratorRoute }, { buildMediationDmHash }, { getActiveUser }] = await Promise.all([
+    import("../app/report-flow.js"), import("../report.js"), import("../app/context.js"),
+  ]);
+  const { communityId, moderator } = await resolveModeratorRoute(ctx.postId, ctx.communityId || "");
+  const self = await getActiveUser().catch(() => "");
+  if (!moderator || moderator === self) {
+    share.showToast(moderator ? "Você modera esta comunidade." : "Esta publicação não tem moderação conhecida no seu aparelho.");
+    return;
+  }
+  location.hash = buildMediationDmHash(moderator, { postId: ctx.postId, communityId });
+}
+
 async function onSheetAction(action) {
   const ctx = activeContext;
   closePostMoreMenu();
@@ -172,6 +189,10 @@ async function onSheetAction(action) {
   if (action === "report") {
     const { openReportFlow } = await import("../app/report-flow.js");
     openReportFlow(ctx);
+    return;
+  }
+  if (action === "mediation") {
+    await openMediation(ctx);
     return;
   }
   if (action === "not-interested") share.showToast("Mostraremos menos publicações como esta.");

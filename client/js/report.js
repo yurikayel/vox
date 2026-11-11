@@ -73,6 +73,17 @@ export function hasReported(postId) {
 }
 
 /** Hash da DM para o moderador, com cartão de contexto do post (sem dados de quem denuncia na URL). */
+/**
+ * Lote 3 — pedido de mediação: abre a conversa cifrada com a moderação já com o cartão da publicação.
+ * Diferente da denúncia, não oculta nem arquiva nada; congelar a discussão segue poder da moderação.
+ */
+export function buildMediationDmHash(moderatorRoute, { postId = "", communityId = "" } = {}) {
+  if (!moderatorRoute || !postId) return "";
+  const q = new URLSearchParams({ ctxType: "topic", ctxId: postId, ctxTitle: "Pedido de mediação" });
+  if (communityId) q.set("c", communityId);
+  return `#/dm/${encodeURIComponent(moderatorRoute)}?${q.toString()}`;
+}
+
 export function buildModeratorDmHash(moderatorRoute, report) {
   if (!moderatorRoute || !report) return "";
   const q = new URLSearchParams({
