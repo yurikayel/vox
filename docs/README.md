@@ -1,6 +1,6 @@
 # Vox — índice de documentação
 
-> **Status:** canônico (índice único) · **Owner:** voluntário doc (mutex: 1 PR por arquivo) · **Revisado:** 2026-11-10 (v2.5: registro único de decisões, ADR-021…024, brainstorms dos 5 pontos fracos, do terceiro lugar, do público, da captação, do refino e dos nichos)
+> **Status:** canônico (índice único) · **Owner:** voluntário doc (mutex: 1 PR por arquivo) · **Revisado:** 2026-11-10 (v2.5: registro único de decisões, ADR-021…024, brainstorms dos 5 pontos fracos, do terceiro lugar, do público, da captação, do refino e dos nichos, e a síntese deles)
 > **Plano vivo e único checklist:** [ROADMAP.md](./ROADMAP.md) ([ADR-017](./adr/017-consolidacao-roadmap-unico.md)) · **Release (SHA, testes, SW):** [release-metadata.json](./release-metadata.json) e tabela do [README](../README.md)
 
 Entrada única para quem desenvolve, revisa ou opera. Todo `.md` novo em `docs/` entra aqui ([CONTRIBUTING-DOCS.md](./CONTRIBUTING-DOCS.md) §1).
@@ -130,6 +130,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 - [brainstorm-auto-escala-organica-2026-10.md](./brainstorms/brainstorm-auto-escala-organica-2026-10.md): flywheel, SLOs, moderação voluntária
 - [brainstorm-tracao-escalabilidade-incubacao.md](./brainstorms/brainstorm-tracao-escalabilidade-incubacao.md) · [incubacao-p2-backlog.md](./strategy/incubacao-p2-backlog.md)
 - [brainstorm-oauth-tradicional-descoberta-2026-10-24.md](./brainstorms/brainstorm-oauth-tradicional-descoberta-2026-10-24.md): OAuth e descoberta social
+- [brainstorm-sintese-praca-de-colunas-2026-11-10.md](./brainstorms/brainstorm-sintese-praca-de-colunas-2026-11-10.md): **síntese dos seis brainstorms de 10/11 (comece por aqui)**: tese da praça de colunas, dois relógios (compromisso da organização e missão do membro), seis peças comuns com matriz de reuso, ordem de construção candidata, três frentes de captação, neutralidade pelo pacto, métricas e decisões pendentes
 - [brainstorm-5-pontos-fracos-2026-11-10.md](./brainstorms/brainstorm-5-pontos-fracos-2026-11-10.md): **os 5 pontos fracos do produto hoje** (identidade, falso verde, densidade da rede, exposição de quem participa, concentração), com ação e métrica para cada um
 - [brainstorm-terceiro-lugar-2026-11-10.md](./brainstorms/brainstorm-terceiro-lugar-2026-11-10.md): **o Vox como "terceiro lugar"**: raiz comum dos pontos fracos, ferramentas de quem organiza usadas a partir do WhatsApp, escada de esforço do membro, ata em sessão permanente (Lei 14.309/2022), distribuição de guerrilha
 - [brainstorm-publico-e-gestos-conhecidos-2026-11-10.md](./brainstorms/brainstorm-publico-e-gestos-conhecidos-2026-11-10.md): **para quem e com que gestos**: 10 perfis de usuários no Brasil, alvo (quem organiza 50+, membros só-celular, associações rurais), mapa de gestos conhecidos com o estado no código, identidade visual

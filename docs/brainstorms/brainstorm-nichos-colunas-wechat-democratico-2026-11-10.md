@@ -1,6 +1,7 @@
 # Brainstorm — nichos fiéis como colunas de um "WeChat democrático"
 
 > **Status:** brainstorm · **Owner:** mantenedor · **Revisado:** 2026-11-10 · **Não substitui o [ROADMAP](../ROADMAP.md)** ([ADR-017](../adr/017-consolidacao-roadmap-unico.md))
+> **Consolidado em:** [síntese — a praça de colunas](./brainstorm-sintese-praca-de-colunas-2026-11-10.md). Quando este texto divergir da síntese, vale a síntese.
 > **Origem:** conversa do mantenedor com o Claude em 10/11/2026. Pedido: "nichos que serão fiéis à plataforma, cada um como uma coluna que ajuda a erguer um WeChat brasileiro, democrático, Vox Populi, que integra com serviços do governo sem ser do governo". Pesquisa web feita no mesmo dia (PNAE, PDDE, Portal da Transparência). Estado do código conferido no mesmo dia.
 > **Vem de:** [dez estratégias de captação](./brainstorm-captacao-por-perfil-2026-11-10.md) e [refino: da praça-cartório à rede de ação](./brainstorm-refino-rede-de-acao-e-soberania-2026-11-10.md).
 

@@ -1,6 +1,7 @@
 # Brainstorm — refino: da praça-cartório à rede de ação
 
 > **Status:** brainstorm · **Owner:** mantenedor · **Revisado:** 2026-11-10 · **Não substitui o [ROADMAP](../ROADMAP.md)** ([ADR-017](../adr/017-consolidacao-roadmap-unico.md))
+> **Consolidado em:** [síntese — a praça de colunas](./brainstorm-sintese-praca-de-colunas-2026-11-10.md). Quando este texto divergir da síntese, vale a síntese.
 > **Origem:** conversa do mantenedor com o Claude em 10/11/2026. Pedido: achar os denominadores comuns das [dez estratégias de captação](./brainstorm-captacao-por-perfil-2026-11-10.md), ir além do uso da rede só como cartório ou palco de assembleia, mapear grupos engajados e ver como andam os movimentos anti big tech e pró-soberania. Pesquisa web feita em 10/11/2026.
 > **Continua em:** [nichos como colunas](./brainstorm-nichos-colunas-wechat-democratico-2026-11-10.md).
 

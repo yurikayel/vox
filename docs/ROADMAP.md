@@ -1,6 +1,6 @@
 # Roadmap — Vox
 
-> **Status:** canônico · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-09 (G1 em `main` até o PR #28; revisão de estado no PR #29; LAN-14 e LAN-21 fechados no PR #30; NET-01 verificado e brainstorm PM-01…46 no PR #31; PM-09 no PR #32; PM-45 no PR #33; adendo PM-47…64 no PR #34; PM-17 e PM-50 parcial no PR #35; PM-10 e ruleset PM-62 em 09/11; PM-69, PM-78, PM-80, PM-81 e PM-82 em 10/11; correção da forma assinada no PR #49; revisão e PM-84…86 abertos em 10/11; PM-84 e PM-86…89 fechados em 10/11; revisão DevSecOps com PM-90…95 em 10/11)
+> **Status:** canônico · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-09 (G1 em `main` até o PR #28; revisão de estado no PR #29; LAN-14 e LAN-21 fechados no PR #30; NET-01 verificado e brainstorm PM-01…46 no PR #31; PM-09 no PR #32; PM-45 no PR #33; adendo PM-47…64 no PR #34; PM-17 e PM-50 parcial no PR #35; PM-10 e ruleset PM-62 em 09/11; PM-69, PM-78, PM-80, PM-81 e PM-82 em 10/11; correção da forma assinada no PR #49; revisão e PM-84…86 abertos em 10/11; PM-84 e PM-86…89 fechados em 10/11; revisão DevSecOps com PM-90…95 em 10/11; candidatas da síntese da praça de colunas em 10/11)
 > **Único plano vivo e único lugar com caixas `[ ]`** ([ADR-017](./adr/017-consolidacao-roadmap-unico.md)). Substitui o checklist do [dossiê N=25 §3.6](./archive/dossie-geral-inventario-master-breakdown-2026-11.md#36-checklist-master-vivo-n25).
 > Estado do produto: [FEATURES.md](./FEATURES.md) · Infra e riscos: [INFRA-CUSTOS.md](./INFRA-CUSTOS.md) · Teses: [direcionamento-crescimento-rede-2026-11.md](./strategy/direcionamento-crescimento-rede-2026-11.md)
 
@@ -161,6 +161,7 @@ Também exige: REV-18 · DOC-04 · REV-02 · REV-04 (ou LAN-21 cobrindo DM offli
 
 ## Candidatas (sem caixa até ganharem DoD e responsável)
 
+Da [síntese de 10/11 — a praça de colunas](./brainstorms/brainstorm-sintese-praca-de-colunas-2026-11-10.md): seis peças comuns aos nichos, em ordem candidata — aviso assinado (Conferir, Ciente, Vou / Talvez), mural, ata com resumo falado, modelos de grupo (`kit-genesis.js`), missão, livro-caixa, círculo de confiança. Cada uma precisa de spec antes de virar caixa.
 Do [brainstorm de autossustento](./brainstorms/brainstorm-autossustento-10-features-2026-11.md). Pesquisar antes com os 3 prompts do mesmo doc.
 Mais 66 ideias (PM-01…PM-66: dieta do shell, segurança, hardening v3.2, pacote de destravamento jurídico, assembleia, Nostr, contribuidores), com a revisão de estado de 09/11: [brainstorm de próximas melhorias](./brainstorms/brainstorm-backlog-proximas-melhorias-2026-11.md).
 

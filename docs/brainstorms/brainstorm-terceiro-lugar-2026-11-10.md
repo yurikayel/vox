@@ -1,6 +1,7 @@
 # Brainstorm — o Vox como "terceiro lugar"
 
 > **Status:** brainstorm · **Owner:** mantenedor · **Revisado:** 2026-11-10 · **Não substitui o [ROADMAP](../ROADMAP.md)** ([ADR-017](../adr/017-consolidacao-roadmap-unico.md))
+> **Consolidado em:** [síntese — a praça de colunas](./brainstorm-sintese-praca-de-colunas-2026-11-10.md). Quando este texto divergir da síntese, vale a síntese.
 > **Origem:** três rodadas de conversa do mantenedor com o Claude em 10/11/2026, depois da [estratégia de 90 dias](../strategy/estrategia-5-pontos-fracos-90-dias-2026-11.md). Para quem o Vox serve e com que gestos está no doc irmão: [público e gestos conhecidos](./brainstorm-publico-e-gestos-conhecidos-2026-11-10.md).
 > Tudo aqui é **candidato**: só vira caixa no ROADMAP quando o mantenedor aceitar. Nada foi enviado a ninguém.
 

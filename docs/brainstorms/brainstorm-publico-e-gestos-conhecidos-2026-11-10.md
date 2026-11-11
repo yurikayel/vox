@@ -1,6 +1,7 @@
 # Brainstorm — para quem o Vox serve e com que gestos
 
 > **Status:** brainstorm · **Owner:** mantenedor · **Revisado:** 2026-11-10 · **Não substitui o [ROADMAP](../ROADMAP.md)** ([ADR-017](../adr/017-consolidacao-roadmap-unico.md))
+> **Consolidado em:** [síntese — a praça de colunas](./brainstorm-sintese-praca-de-colunas-2026-11-10.md). Quando este texto divergir da síntese, vale a síntese.
 > **Origem:** rodadas de conversa do mantenedor com o Claude em 10/11/2026, a partir de uma pesquisa sobre os 10 perfis de usuários de redes sociais no Brasil (2025–2026) e de duas ilustrações desses perfis, trazidas pelo mantenedor. A estratégia de produto está no doc irmão: [o Vox como "terceiro lugar"](./brainstorm-terceiro-lugar-2026-11-10.md).
 > Tudo aqui é **candidato**. Os números da pesquisa **não foram conferidos** (§6); as ilustrações **não estão no repositório** (§12).
 
