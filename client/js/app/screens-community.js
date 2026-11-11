@@ -339,7 +339,8 @@ function bindCommunityPhotoInput(communityId, meta) {
 async function submitCommunityJoin(communityId, user, btn) {
   btn.disabled = true; btn.textContent = "Gravando…";
   try {
-    const signed = await localAccount.signPayload({ id: `mem_${communityId}_${user}`, type: "membership", communityId, joinedAt: Date.now() });
+    const termoFields = await import("./community-termo-flow.js").then((m) => m.joinTermoFields(communityId)).catch(() => ({}));
+    const signed = await localAccount.signPayload({ id: `mem_${communityId}_${user}`, type: "membership", communityId, joinedAt: Date.now(), ...termoFields });
     await cacheNode.saveLocalPost(signed);
     peers.broadcastGossip(signed);
     if (wallet.hasWallet()) {
@@ -607,6 +608,7 @@ async function mountFullCommunityPage({ communityId, tab, user, base, specifics,
   attachPostShareHandlers();
   bindCommunityHeaderEvents({ main, communityId, meta, user, isMember, peerSettings, filteredTopics: base.filteredTopics });
   if (tab === "posts") void import("./aviso-flow.js").then((m) => m.mountCommunityAvisoBanner(main, communityId)).catch(() => {});
+  if (tab === "posts") void import("./community-termo-flow.js").then((m) => m.mountCommunityTermo(main, { communityId, meta, isMember, isMod: base.isUserMod })).catch(() => {});
 }
 
 function buildCommunityTabProps({ communityId, meta, base, specifics, recentPeople, isMember, memberCount }) {

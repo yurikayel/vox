@@ -6,6 +6,11 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Termo de convivência e pedido de mediação (lote 3)
+- A moderação pode publicar um **termo de convivência**; quem entra assina o hash do termo junto com a entrada. Se o termo mudar, quem já entrou é avisado e pode assinar de novo. Laboratório `vox.lab.aviso`.
+- **Pedir mediação** no menu ⋯ do post: abre a conversa cifrada com a moderação com o cartão do post, sem ocultar nem arquivar nada.
+- Precache: a imagem dentro do `icon.svg` passou a PNG com paleta (−12,7 KB, visualmente igual). SW `v7.73`.
+
 ### Competências só no aparelho (lote 2)
 - Na aba de avisos, **Minhas competências** fica só no aparelho (não vai para o perfil nem para a rede) e serve para sugerir um papel quando chega uma chamada de ação com vaga. Sem diretório público. Laboratório `vox.lab.aviso`. SW `v7.72`.
 
