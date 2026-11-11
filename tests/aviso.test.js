@@ -90,13 +90,16 @@ test("aviso — códigos estáveis e no alfabeto sem letras ambíguas", async ()
   assert.equal(await aviso.avisoCode({}), "");
 });
 
-test("aviso — texto do WhatsApp traz o aviso inteiro e o link por último", () => {
-  const textValue = aviso.buildAvisoShareText({ aviso: signed(), communityName: "Vila", code: "A7F3", link: "https://x/aviso.html#v=1" });
-  const lines = textValue.split("\n");
-  assert.ok(lines[0].includes("Vila"));
+test("aviso — texto do WhatsApp traz o aviso inteiro, sem link; o link vai à parte", () => {
+  const textValue = aviso.buildAvisoShareText({ aviso: signed(), communityName: "Vila", code: "A7F3" });
+  assert.ok(textValue.startsWith("📣 *Aviso — Vila*"));
   assert.ok(textValue.includes("Não vou"));
   assert.ok(textValue.includes("A7F3"));
-  assert.ok(lines.at(-1).includes("https://x/aviso.html#v=1"));
+  assert.ok(!textValue.includes("http"));
+  const second = aviso.buildAvisoLinkMessage({ code: "A7F3", link: "https://x/aviso.html#v=1" });
+  assert.equal(second, "🔒 Conferir se o aviso A7F3 veio da coordenação: https://x/aviso.html#v=1");
+  assert.equal(aviso.buildAvisoLinkMessage({ link: "L" }), "🔒 Conferir se o aviso veio da coordenação: L");
+  assert.throws(() => aviso.buildAvisoLinkMessage({ code: "A7F3" }), /vazio/);
   const informe = aviso.buildAvisoShareText({ aviso: { title: "Informe geral", body: "" } });
   assert.ok(!informe.includes("Vou"));
 });
