@@ -112,13 +112,13 @@ export const REVERSAL_LIMIT = 3;
 export const REVERSAL_WINDOW_MS = 90 * 24 * 60 * 60 * 1000;
 
 /**
- * Aviso de caso para um moderador natural. N1 (lado do denunciado) não sabe quem denunciou;
- * N2 (lado de quem denunciou) sabe, porque é o afilhado ou o próximo dele.
+ * Aviso de caso para um moderador natural. Nunca leva quem denunciou: N1 (lado do denunciado) não pode saber,
+ * e o aviso de N1 sai do aparelho da moderação, não de quem denunciou. N2 recebe o aviso de quem denunciou
+ * (o afilhado ou o próximo dele), então já sabe pela própria conversa.
  */
-export function buildCaseNotice({ caseId, postId, communityId = "", target, reason = "", side, reporter = "" }) {
+export function buildCaseNotice({ caseId, postId, communityId = "", target, reason = "", side }) {
   if (!caseId || !postId || !target || !["target", "reporter"].includes(side)) throw new Error("Caso incompleto.");
-  const base = { caseId, postId, communityId, target, reason: String(reason).slice(0, 40), side };
-  return side === "reporter" ? { ...base, reporter } : base;
+  return { caseId, postId, communityId, target, reason: String(reason).slice(0, 40), side };
 }
 
 export function serializeCaseDm(notice, text) {

@@ -95,13 +95,16 @@ export async function resolveModeratorRoute(postId, communityIdHint = "", { getP
   return { communityId, moderator: meta?.owner || "" };
 }
 
-/** PM-83 lote B: com a flag, a denúncia também vai aos moderadores naturais (motivo grave não vai). */
+/**
+ * PM-83 lote B: com a flag, quem denunciou avisa só N2 (o próprio padrinho ou próximo). N1 é avisado pelo
+ * aparelho da moderação, para não saber quem denunciou. Motivo grave não vai a moderador natural.
+ */
 async function notifyNaturalModerators(self, rec, target) {
   try {
     const { naturalModLabOn } = await import("./natural-mod-flow.js");
     if (!target || !naturalModLabOn()) return;
-    const { sendCaseNotices } = await import("./natural-case-flow.js");
-    await sendCaseNotices(self, rec, { target });
+    const { sendCaseNotice } = await import("./natural-case-flow.js");
+    await sendCaseNotice(self, rec, { side: "reporter", target, reporter: self });
   } catch {}
 }
 

@@ -117,7 +117,7 @@ function memStorage() {
   return { getItem: (k) => m.get(k) ?? null, setItem: (k, v) => m.set(k, String(v)) };
 }
 
-test("casos (lote B) — N1 não sabe quem denunciou; N2 sabe; motivo grave não vai", async () => {
+test("casos (lote B) — N1 é avisado pela moderação, N2 por quem denunciou; o aviso nunca leva quem denunciou", async () => {
   const sent = [];
   const deps = {
     loadLinks: graph,
@@ -127,29 +127,45 @@ test("casos (lote B) — N1 não sabe quem denunciou; N2 sabe; motivo grave não
     saveDm: async () => {},
   };
   const rec = { id: "rep1", postId: "p1", communityId: "c1", reason: "spam" };
-  const out = await cases.sendCaseNotices("vx_davi", rec, { target: "vx_eva" }, deps);
-  assert.deepEqual(out.map((r) => [r.to, r.side]), [["vx_ana", "target"]], "Ana é madrinha de Eva e a mais próxima de Davi: vai uma vez, como N1");
-  const n1 = natural.parseCaseDm(sent[0][1].text);
-  assert.equal(n1.side, "target");
-  assert.equal(n1.reporter, undefined, "N1 nunca recebe quem denunciou");
-  const n2 = natural.buildCaseNotice({ caseId: "x", postId: "p", target: "t", side: "reporter", reporter: "vx_davi" });
-  assert.equal(n2.reporter, "vx_davi");
-  assert.deepEqual(await cases.sendCaseNotices("vx_davi", { ...rec, reason: "crianca" }, { target: "vx_eva" }, deps), []);
+  const n1 = await cases.sendCaseNotice("vx_dono", rec, { side: "target", target: "vx_eva", reporter: "vx_caio" }, deps);
+  assert.deepEqual([n1.to, n1.side], ["vx_ana", "target"]);
+  assert.equal(sent[0][1].from, "vx_dono", "o aviso de N1 sai do aparelho da moderação, não de quem denunciou");
+  const notice = natural.parseCaseDm(sent[0][1].text);
+  assert.ok(!JSON.stringify(notice).includes("vx_caio"), "o aviso não leva quem denunciou");
+  const n2 = await cases.sendCaseNotice("vx_caio", rec, { side: "reporter", target: "vx_eva", reporter: "vx_caio" }, deps);
+  assert.equal(n2, null, "Caio só tem vínculo com Ana, que já é N1: não recebe o aviso que revelaria quem denunciou");
+  const n2ok = await cases.sendCaseNotice("vx_ana", rec, { side: "reporter", target: "vx_davi", reporter: "vx_ana" }, deps);
+  assert.deepEqual([n2ok.to, n2ok.side], ["vx_bia", "reporter"]);
+  assert.equal(await cases.sendCaseNotice("vx_dono", { ...rec, reason: "crianca" }, { side: "target", target: "vx_eva", reporter: "vx_caio" }, deps), null);
   assert.equal(natural.parseCaseDm('{"__vox_dm_v2":1,"kind":"moderacao-natural","natCase":{}}'), null);
+});
+
+test("casos (lote B) — a moderação avisa N1 ao receber a denúncia, com quem é o alvo", async () => {
+  const reportDm = await import("../client/js/app/report-dm.js");
+  const calls = [];
+  const storage = memStorage();
+  const signed = { type: "vox-report", reportId: "rep9", postId: "p9", communityId: "c1", reason: "spam", ts: Date.now(), author: "vx_caio", sig: "s" };
+  await reportDm.receiveReportDm({}, signed, {
+    verify: async () => true, getSelves: async () => ["vx_dono"], getCommunity: async () => ({ owner: "vx_dono" }),
+    getPost: async () => ({ id: "p9", owner: "vx_eva" }), checkMembership: async () => true,
+    dispatchModAction: async () => {}, notify: () => {}, storage, now: () => Date.now(),
+    notifyNatural: async (s, ctx) => calls.push([s.reportId, ctx]),
+  });
+  assert.deepEqual(calls, [["rep9", { self: "vx_dono", target: "vx_eva" }]]);
 });
 
 test("casos (lote B) — recebe sem repetir; tela oferece arquivar só com poder firme e sempre a recusa", () => {
   const storage = memStorage();
   const notice = natural.buildCaseNotice({ caseId: "rep1", postId: "p1", communityId: "c1", target: "vx_eva", reason: "spam", side: "target" });
-  assert.equal(cases.receiveCase(notice, { from: "vx_davi", storage }), true);
-  assert.equal(cases.receiveCase(notice, { from: "vx_davi", storage }), false);
+  assert.equal(cases.receiveCase({ ...notice, reporter: "vx_davi", from: "vx_davi" }, { storage }), true);
+  assert.equal(cases.receiveCase(notice, { storage }), false);
   const list = cases.listCases(storage);
   assert.equal(list[0].status, "aberto");
+  assert.ok(!JSON.stringify(list).includes("vx_davi"), "o caso guardado não tem quem denunciou nem quem mandou o aviso");
   const firm = cases.renderCasesHtml(list, () => true);
   assert.ok(firm.includes('data-case-action="arquivar"'));
   assert.ok(firm.includes('data-case-action="recusar"'));
   assert.ok(firm.includes("Spam, golpe ou fraude"));
-  assert.ok(!firm.includes("vx_davi"), "a tela de N1 não mostra quem denunciou");
   const soft = cases.renderCasesHtml(list, () => false);
   assert.ok(soft.includes('data-case-action="revisao"') && !soft.includes('data-case-action="arquivar"'));
 });
