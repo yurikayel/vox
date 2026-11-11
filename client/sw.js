@@ -198,6 +198,7 @@ const SHELL_ASSETS = [
   "./js/app/community-termo-flow.js",
   "./js/app/natural-mod-flow.js",
   "./js/app/mediation-dm.js",
+  "./js/app/natural-case-flow.js",
 
   "./js/account-backup-wrap.js",
 

@@ -108,3 +108,87 @@ test("mediação (lote E) — mensagem cifrada com o cartão do post; sem chave 
   const src = fs.readFileSync(new URL("../client/js/app/mediation-dm.js", import.meta.url), "utf8");
   assert.ok(!/quarantine|review-hide|dispatchModAction|broadcastGossip/.test(src), "mediação não arquiva e não vai para a malha");
 });
+
+const cases = await import("../client/js/app/natural-case-flow.js");
+const moderation = await import("../client/js/moderation.js");
+
+function memStorage() {
+  const m = new Map();
+  return { getItem: (k) => m.get(k) ?? null, setItem: (k, v) => m.set(k, String(v)) };
+}
+
+test("casos (lote B) — N1 não sabe quem denunciou; N2 sabe; motivo grave não vai", async () => {
+  const sent = [];
+  const deps = {
+    loadLinks: graph,
+    getDmPub: async () => "pub",
+    seal: async (pub, text, meta) => ({ id: `e${sent.length}`, ts: 1, text, ...meta }),
+    dispatch: async (addr, env) => { sent.push([addr, env]); return "delivered"; },
+    saveDm: async () => {},
+  };
+  const rec = { id: "rep1", postId: "p1", communityId: "c1", reason: "spam" };
+  const out = await cases.sendCaseNotices("vx_davi", rec, { target: "vx_eva" }, deps);
+  assert.deepEqual(out.map((r) => [r.to, r.side]), [["vx_ana", "target"]], "Ana é madrinha de Eva e a mais próxima de Davi: vai uma vez, como N1");
+  const n1 = natural.parseCaseDm(sent[0][1].text);
+  assert.equal(n1.side, "target");
+  assert.equal(n1.reporter, undefined, "N1 nunca recebe quem denunciou");
+  const n2 = natural.buildCaseNotice({ caseId: "x", postId: "p", target: "t", side: "reporter", reporter: "vx_davi" });
+  assert.equal(n2.reporter, "vx_davi");
+  assert.deepEqual(await cases.sendCaseNotices("vx_davi", { ...rec, reason: "crianca" }, { target: "vx_eva" }, deps), []);
+  assert.equal(natural.parseCaseDm('{"__vox_dm_v2":1,"kind":"moderacao-natural","natCase":{}}'), null);
+});
+
+test("casos (lote B) — recebe sem repetir; tela oferece arquivar só com poder firme e sempre a recusa", () => {
+  const storage = memStorage();
+  const notice = natural.buildCaseNotice({ caseId: "rep1", postId: "p1", communityId: "c1", target: "vx_eva", reason: "spam", side: "target" });
+  assert.equal(cases.receiveCase(notice, { from: "vx_davi", storage }), true);
+  assert.equal(cases.receiveCase(notice, { from: "vx_davi", storage }), false);
+  const list = cases.listCases(storage);
+  assert.equal(list[0].status, "aberto");
+  const firm = cases.renderCasesHtml(list, () => true);
+  assert.ok(firm.includes('data-case-action="arquivar"'));
+  assert.ok(firm.includes('data-case-action="recusar"'));
+  assert.ok(firm.includes("Spam, golpe ou fraude"));
+  assert.ok(!firm.includes("vx_davi"), "a tela de N1 não mostra quem denunciou");
+  const soft = cases.renderCasesHtml(list, () => false);
+  assert.ok(soft.includes('data-case-action="revisao"') && !soft.includes('data-case-action="arquivar"'));
+});
+
+async function hideBy(hider, target, proof, ts = 100) {
+  return { ...natural.buildNaturalHide({ communityId: "c1", postId: "p1", target, proofRecord: proof }, ts), author: hider, sig: "ok" };
+}
+
+test("arquivamento firme (lote C) — só o padrinho, com a prova do vínculo assinada", async () => {
+  const proof = link("vx_ana", "vx_eva", { sponsor: true, ts: 20 });
+  assert.ok(await natural.verifyNaturalHide(await hideBy("vx_ana", "vx_eva", proof), verify));
+  assert.equal(await natural.verifyNaturalHide(await hideBy("vx_bia", "vx_eva", proof), verify), null, "prova de outra pessoa");
+  assert.equal(await natural.verifyNaturalHide(await hideBy("vx_ana", "vx_davi", link("vx_ana", "vx_davi")), verify), null, "vínculo comum não arquiva de vez");
+  assert.equal(await natural.verifyNaturalHide({ ...(await hideBy("vx_ana", "vx_eva", proof)), sig: "x" }, verify), null);
+});
+
+test("arquivamento firme (lote D) — até 30 afilhados e menos de 3 reversões em 90 dias", async () => {
+  const many = await natural.collectLinks(Array.from({ length: 31 }, (_, i) => link("vx_madrinha", `vx_af${String(i).padStart(2, "0")}`, { sponsor: true, ts: i + 1 })), verify);
+  assert.equal(natural.hasFirmPower(many, "vx_madrinha", "vx_af29"), true);
+  assert.equal(natural.hasFirmPower(many, "vx_madrinha", "vx_af30"), false, "o 31º afilhado não");
+  assert.equal(natural.hasFirmPower(many, "vx_madrinha", "vx_af00", { reversals: 3 }), false);
+  const hides = [{ hider: "vx_m", postId: "a", ts: 10 }, { hider: "vx_m", postId: "b", ts: 10 }, { hider: "vx_m", postId: "c", ts: 10 }];
+  const DAY = 864e5;
+  const unhides = [{ target: "a", ts: 20 }, { target: "b", ts: 5 }, { target: "c", ts: 20 }, { target: "x", ts: 20 }];
+  assert.equal(natural.reversalsAgainst("vx_m", { hides, unhides, now: 30 }), 2, "unhide antes do arquivamento e de outro post não contam");
+  assert.equal(natural.reversalsAgainst("vx_m", { hides, unhides, now: 20 + 91 * DAY }), 0, "fora da janela de 90 dias");
+});
+
+test("arquivamento firme — esconde só o post do afilhado; unhide da moderação desfaz; de fora não se forja", () => {
+  const items = [{ id: "p1", owner: "vx_eva" }, { id: "p2", owner: "vx_bia" }];
+  const nat = (target, author, ts = 10) => ({ id: `n_${target}`, action: "natural-hide", target, targetAuthor: author, ts, naturalVerified: true });
+  assert.deepEqual(moderation.applyFilters(items, [nat("p1", "vx_eva")], "vx_dono").map((i) => i.id), ["p2"]);
+  assert.deepEqual(moderation.applyFilters(items, [nat("p2", "vx_eva")], "vx_dono").map((i) => i.id), ["p1", "p2"], "afilhado errado: não esconde");
+  const undo = { id: "u", action: "unhide", target: "p1", owner: "vx_dono", ts: 20 };
+  assert.equal(moderation.applyFilters(items, [nat("p1", "vx_eva"), undo], "vx_dono").length, 2);
+  const forged = { ...nat("p1", "vx_eva"), naturalVerified: "true" };
+  assert.equal(moderation.applyFilters(items, [forged], "vx_dono").length, 2, "só o aparelho constrói a ação conferida");
+  const authorView = moderation.applyFilters(items, [nat("p1", "vx_eva")], "vx_dono", "", "vx_eva");
+  assert.equal(authorView.find((i) => i.id === "p1")?.inReview, true, "o autor vê o próprio post em revisão");
+  const src = fs.readFileSync(new URL("../client/js/moderation.js", import.meta.url), "utf8");
+  assert.equal((src.match(/naturalVerified: false/g) || []).length, 2, "ação vinda de fora perde a marca de conferida");
+});

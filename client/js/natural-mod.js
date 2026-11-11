@@ -79,3 +79,81 @@ export function myLinksModel(links = [], me = "") {
   const common = links.filter((l) => !l.sponsor && (l.inviter === me || l.invitee === me)).map((l) => otherSide(l, me));
   return { sponsor, closest, godchildren: godchildrenOf(links, me), common: [...new Set(common)] };
 }
+
+/* ---- Lotes B a D: casos, arquivamento firme de N1, teto e perda do papel ---- */
+
+export const CASE_DM_KIND = "moderacao-natural";
+export const NATURAL_HIDE_TYPE = "natural-hide";
+export const FIRM_GODCHILD_MAX = 30;
+export const REVERSAL_LIMIT = 3;
+export const REVERSAL_WINDOW_MS = 90 * 24 * 60 * 60 * 1000;
+
+/**
+ * Aviso de caso para um moderador natural. N1 (lado do denunciado) não sabe quem denunciou;
+ * N2 (lado de quem denunciou) sabe, porque é o afilhado ou o próximo dele.
+ */
+export function buildCaseNotice({ caseId, postId, communityId = "", target, reason = "", side, reporter = "" }) {
+  if (!caseId || !postId || !target || !["target", "reporter"].includes(side)) throw new Error("Caso incompleto.");
+  const base = { caseId, postId, communityId, target, reason: String(reason).slice(0, 40), side };
+  return side === "reporter" ? { ...base, reporter } : base;
+}
+
+export function serializeCaseDm(notice, text) {
+  const card = { type: "topic", id: notice.postId, title: "Denúncia para você decidir" };
+  return JSON.stringify({ __vox_dm_v2: 1, kind: CASE_DM_KIND, text: String(text), contextCard: card, natCase: notice });
+}
+
+/** O aviso de caso contido na DM, ou null. */
+export function parseCaseDm(raw) {
+  const str = String(raw ?? "");
+  if (!str.startsWith('{"__vox_dm_v2":1')) return null;
+  try {
+    const parsed = JSON.parse(str);
+    const c = parsed?.kind === CASE_DM_KIND ? parsed.natCase : null;
+    return c?.caseId && c.postId && c.target && ["target", "reporter"].includes(c.side) ? c : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Corpo do arquivamento firme de N1: a prova é o vínculo de padrinho, como texto (assinatura v1). */
+export function buildNaturalHide({ communityId, postId, target, proofRecord }, now = Date.now()) {
+  if (!communityId || !postId || !target || !proofRecord) throw new Error("Arquivamento sem prova.");
+  return { type: NATURAL_HIDE_TYPE, communityId, postId, target, proof: JSON.stringify(proofRecord), ts: now };
+}
+
+function parseJson(text) {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Confere um arquivamento firme: assinatura de quem arquivou e prova de que ele é padrinho do autor do post
+ * (vínculo de padrinho com as duas assinaturas). Vínculo "só mediação" não dá esse poder. Devolve os dados ou null.
+ */
+export async function verifyNaturalHide(hide, verify) {
+  if (hide?.type !== NATURAL_HIDE_TYPE || !hide.author || typeof hide.proof !== "string") return null;
+  if (!(await Promise.resolve(verify(hide)).catch(() => false))) return null;
+  const link = await verifyLink(parseJson(hide.proof), verify).catch(() => null);
+  if (!link?.sponsor || link.mediationOnly || link.inviter !== hide.author || link.invitee !== hide.target) return null;
+  return { hider: hide.author, target: hide.target, postId: hide.postId, communityId: hide.communityId, ts: Number(hide.ts) || 0 };
+}
+
+/** Reversões contra quem arquivou, numa comunidade: `unhide` da moderação depois de um arquivamento dele, em 90 dias. */
+export function reversalsAgainst(hider, { hides = [], unhides = [], now = Date.now() } = {}) {
+  const mine = hides.filter((h) => h.hider === hider);
+  const since = now - REVERSAL_WINDOW_MS;
+  return unhides.filter((u) => Number(u.ts) >= since && mine.some((h) => h.postId === u.target && Number(u.ts) > h.ts)).length;
+}
+
+/**
+ * O padrinho tem poder firme sobre este afilhado? Só entre os 30 primeiros afilhados (pela data do vínculo)
+ * e com menos de 3 reversões em 90 dias nesta comunidade (emenda §4.2.3 e §4.2.4).
+ */
+export function hasFirmPower(links, hider, target, { reversals = 0 } = {}) {
+  const rank = godchildrenOf(links, hider).indexOf(target);
+  return rank >= 0 && rank < FIRM_GODCHILD_MAX && reversals < REVERSAL_LIMIT;
+}
