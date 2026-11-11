@@ -15,7 +15,7 @@ test("termo — texto de 20 a 2000 caracteres, limpo e no topo", () => {
   assert.equal(termo.validateTermoText("curto"), "curto");
   assert.equal(termo.validateTermoText("x".repeat(2001)), "longo");
   assert.equal(termo.validateTermoText(TEXT), "");
-  const body = termo.buildTermo("c1", `  ${TEXT.replace("\n", "\r\n")}  `, 5);
+  const body = termo.buildTermo("c1", `  ${TEXT.replaceAll("\n", "\r\n")}  `, 5);
   assert.deepEqual(body, { type: "community-termo", communityId: "c1", termoText: TEXT, ts: 5 });
   assert.throws(() => termo.buildTermo("c1", "curto"), /de 20 a 2000/);
 });
