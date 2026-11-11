@@ -28,12 +28,25 @@ async function publish(payload, d) {
   return signed;
 }
 
-/** Quem foi convidado assina o aceite. Padrinho só uma vez por aparelho. */
-export async function acceptInvite({ inviter, token, sponsor = false }, deps = null) {
+/** Padrinho de agora, pelos vínculos válidos (para a troca de padrinho). */
+async function currentSponsor(records, me, d) {
+  const natural = await import("../natural-mod.js");
+  return natural.sponsorOf(await natural.collectLinks(records, d.verify), me, d.now());
+}
+
+/**
+ * Quem foi convidado assina o aceite. Padrinho só uma vez por aparelho; trocar de padrinho, também uma vez
+ * (PM-83 lote F). `mediationOnly`: vínculo que nunca dá poder de arquivar.
+ */
+export async function acceptInvite({ inviter, token, sponsor = false, mediationOnly = false, switchSponsor = false }, deps = null) {
   const d = deps || (await defaultDeps());
   const { routeId: me } = await d.getAccount();
-  const claimed = voxLink.hasSponsorClaim(await d.loadRecords(), me);
-  return publish(voxLink.buildAccept({ me, inviter, token, sponsor: sponsor && !claimed, now: d.now() }), d);
+  const records = await d.loadRecords();
+  const claimed = voxLink.hasSponsorClaim(records, me);
+  const canSwitch = switchSponsor && claimed && !voxLink.hasSwitched(records, me);
+  const switchFrom = canSwitch ? await currentSponsor(records, me, d) : "";
+  const asSponsor = (sponsor && !claimed) || Boolean(switchFrom);
+  return publish(voxLink.buildAccept({ me, inviter, token, sponsor: asSponsor, mediationOnly, switchFrom, now: d.now() }), d);
 }
 
 async function confirmOne(accept, me, d) {
@@ -80,7 +93,9 @@ async function inviteCardModel(inviter, d) {
   const records = await d.loadRecords();
   const isNew = d.now() - (account.createdAt || 0) < voxLink.NEW_ACCOUNT_MS;
   const canSponsor = !voxLink.hasSponsorClaim(records, account.routeId);
-  return { state: voxLink.linkState(records, { me: account.routeId, inviter }), canSponsor, sponsorDefault: canSponsor && isNew, isSelf: account.routeId === inviter };
+  const canSwitch = !canSponsor && !voxLink.hasSwitched(records, account.routeId);
+  const options = (await import("./natural-mod-flow.js")).naturalModLabOn(d.storage);
+  return { options, state: voxLink.linkState(records, { me: account.routeId, inviter }), canSponsor, canSwitch, sponsorDefault: canSponsor && isNew, isSelf: account.routeId === inviter };
 }
 
 /** Na tela "Conectar" aberta por um link com `?convite=`: cartão para aceitar o vínculo. */
@@ -92,9 +107,9 @@ export async function mountInviteCard(main, { inviter, token, name = "" }, deps 
   main.insertAdjacentHTML("afterbegin", renderInviteCardHtml({ ...model, name: name || inviter }));
   main.querySelector("#btn-vox-link-accept")?.addEventListener("click", async (e) => {
     e.currentTarget.disabled = true;
-    const sponsor = Boolean(main.querySelector("#vox-link-sponsor")?.checked);
+    const checked = (id) => Boolean(main.querySelector(id)?.checked);
     try {
-      await acceptInvite({ inviter, token, sponsor }, d);
+      await acceptInvite({ inviter, token, sponsor: checked("#vox-link-sponsor"), mediationOnly: checked("#vox-link-mediation"), switchSponsor: checked("#vox-link-switch") }, d);
       share.showToast("Vínculo aceito. Ele fecha quando o aparelho de quem convidou receber.");
       const card = main.querySelector(".vox-link-card");
       if (card) card.outerHTML = renderInviteCardHtml({ ...model, state: "pending", name: name || inviter });

@@ -1,6 +1,6 @@
 # ADR-023: Moderação em camadas — comunidade, moderador natural assimétrico e vínculo assinado
 
-**Status:** accepted · vínculo assinado implementado (PM-82, SW v7.54); moderador natural a implementar (PM-83) · **Emenda 1 (§4): aceita em 11/11/2026** · **Revisado:** 2026-11-11 · **Relacionados:** [ADR-020](./020-postura-de-operacao-do-piloto-g1.md) (uma denúncia arquiva), PM-69, PM-81, [spec moderador-natural-v0](../specs/moderador-natural-v0.md), [GOVERNANCE](../../GOVERNANCE.md), [THREAT-MODEL T19](../THREAT-MODEL.md)
+**Status:** accepted · vínculo assinado implementado (PM-82, SW v7.54); moderador natural implementado em laboratório (PM-83, SW v7.74, flag `vox.lab.moderador`) · **Emenda 1 (§4): aceita em 11/11/2026** · **Revisado:** 2026-11-11 · **Relacionados:** [ADR-020](./020-postura-de-operacao-do-piloto-g1.md) (uma denúncia arquiva), PM-69, PM-81, [spec moderador-natural-v0](../specs/moderador-natural-v0.md), [GOVERNANCE](../../GOVERNANCE.md), [THREAT-MODEL T19](../THREAT-MODEL.md)
 
 ## 1. Contexto
 

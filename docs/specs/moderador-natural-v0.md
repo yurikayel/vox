@@ -104,7 +104,7 @@ Atrás da flag de laboratório `localStorage["vox.lab.moderador"] = "1"`. Lógic
 - `naturalModeratorOf(pessoa)`: o padrinho, se não for parte do caso. Senão, o mais próximo: vínculo comum em qualquer direção, membro da comunidade primeiro, depois o mais antigo. Nunca a própria pessoa nem a outra parte.
 - `caseModerators({ target, reporter })` dá N1 (lado do denunciado) e N2 (lado de quem denunciou).
 - **Meus vínculos**, no topo da tela Pessoas: padrinho (ou o mais próximo, ou "sem vínculos: vai para a moderação da comunidade"), afilhados e vínculos comuns.
-- **Peso:** `cantina-gate.jpg` virou `cantina-gate.webp` (119 para 79 KB, visualmente igual). A folga paga os lotes seguintes; a catraca do teto desce no último.
+- **Peso:** `cantina-gate.jpg` virou `cantina-gate.webp` (119 para 79 KB, visualmente igual). A folga pagou os lotes A a F; o teto desceu para 0,2% acima do medido (2.012.013 bytes).
 
 ### Lote E (11/11/2026): mediação pelos moderadores naturais
 
@@ -129,3 +129,13 @@ Atrás da flag de laboratório `localStorage["vox.lab.moderador"] = "1"`. Lógic
   - O poder firme vale para os **30 primeiros afilhados** pela data do vínculo.
   - O padrinho perde o poder com **3 reversões em 90 dias**: `unhide` da moderação daquela comunidade depois de um arquivamento dele, contadas até cada arquivamento.
   - **Limite:** um aparelho que não conhece todos os vínculos antigos de um padrinho pode contar a posição do afilhado para menos.
+
+### Lote F (11/11/2026): trocar de padrinho e vínculo só para mediação
+
+- **Vínculo só para mediação:** ao aceitar um convite, a pessoa pode marcar "Só para mediação". O aceite leva `scope: "mediacao"`, e só quem aceita assina isso, então aparelhos antigos continuam confirmando o vínculo.
+  - Esse vínculo serve para pedir mediação (lote E), mas nunca para denúncia, para arquivar ou para a lista de afilhados.
+- **Trocar de padrinho:** quem já tem padrinho pode aceitar o convite de outra pessoa marcando "Trocar meu padrinho". O aceite leva `sponsor: true` e `switchFrom: <padrinho de antes>`, e quem convidou confirma como sempre, de modo que as duas partes assinam.
+  - A troca vale **7 dias depois** da confirmação. Até lá, o padrinho de antes continua, e "Meus vínculos" mostra a data.
+  - **Uma vez só:** o aparelho não oferece segunda troca.
+  - Depois da troca, o padrinho de antes perde o afilhado (e o poder firme sobre ele).
+- As opções novas do cartão do convite só aparecem com a flag `vox.lab.moderador`.

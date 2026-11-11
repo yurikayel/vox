@@ -6,11 +6,12 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
-### Moderador natural, lote A (PM-83)
+### Moderador natural (PM-83, lotes A a F)
 - Lógica de quem responde por quem a partir dos vínculos assinados: padrinho, ou a pessoa mais próxima (vínculo comum mais antigo, membro da comunidade primeiro), nunca a outra parte. Tela **Meus vínculos** no topo de Pessoas. Laboratório `vox.lab.moderador`.
 - **Lote E:** "Pedir mediação" vai, por mensagem cifrada, ao moderador natural de cada parte, com o cartão do post e sem arquivar nada; sem vínculo, segue para a moderação da comunidade.
 - **Lotes B a D:** a denúncia também vai, por mensagem cifrada, ao moderador natural de cada lado (N1 não sabe quem denunciou; motivo grave não vai). Em Pessoas → Meus vínculos: arquivar para todos (só padrinho, com a prova do vínculo, até 30 afilhados e menos de 3 reversões em 90 dias), mandar para revisão ou não decidir. Os outros aparelhos conferem a prova antes de esconder; a moderação desfaz.
-- Precache: a arte da cantina passou a WebP (−40,5 KB, visualmente igual); a folga fica reservada para os próximos lotes do PM-83. Teste do HTML da cantina ajustado ao arquivo novo. SW `v7.74`.
+- **Lote F:** trocar de padrinho uma vez (vale 7 dias depois, com as duas assinaturas) e vínculo "só para mediação", que nunca dá poder de arquivar. As opções aparecem no cartão do convite com a flag.
+- Precache: a arte da cantina passou a WebP (−40,5 KB, visualmente igual) e pagou os 4 módulos novos; teto baixado para 0,2% acima do medido. Testes ajustados de propósito: o do HTML da cantina (arquivo novo) e o do `verifyLink` (devolve `mediationOnly` e `switchFrom`). SW `v7.74`.
 
 ### ADR-023, emenda 1 (aceita): moderador natural
 - Mediação vai para o padrinho (ou o mais próximo) das duas partes, sem arquivar nada. "Mais próximo" só por vínculo assinado, sem sinais de interação. Teto de 30 afilhados com poder firme; perda do papel por 3 reversões em 90 dias, por comunidade; recusar sem custo; "Meus vínculos"; trocar de padrinho uma vez; vínculo só para mediação. Ordem dos lotes do PM-83.

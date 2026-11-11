@@ -26,14 +26,31 @@ export async function collectLinks(records = [], verify) {
 const bySince = (a, b) => a.since - b.since;
 const otherSide = (link, person) => (link.inviter === person ? link.invitee : link.inviter);
 
-/** Padrinho da pessoa: o vínculo de padrinho mais antigo em que ela foi convidada. */
-export function sponsorOf(links = [], person = "") {
-  return links.filter((l) => l.sponsor && l.invitee === person).sort(bySince)[0]?.inviter || "";
+export const SWITCH_DELAY_MS = 7 * 24 * 60 * 60 * 1000;
+
+/** Só os vínculos que servem ao propósito: "denuncia" deixa de fora os vínculos "só mediação". */
+export const forPurpose = (links = [], purpose = "denuncia") => (purpose === "mediacao" ? links : links.filter((l) => !l.mediationOnly));
+
+/**
+ * Padrinho da pessoa: o vínculo de padrinho mais antigo em que ela foi convidada. Uma troca de padrinho
+ * (lote F) vale 7 dias depois de confirmada; antes disso, o padrinho de antes continua.
+ */
+export function sponsorOf(links = [], person = "", now = Date.now()) {
+  const mine = links.filter((l) => l.sponsor && l.invitee === person).sort(bySince);
+  const switched = mine.find((l) => l.switchFrom && now >= l.since + SWITCH_DELAY_MS);
+  return switched?.inviter || mine.find((l) => !l.switchFrom)?.inviter || "";
 }
 
-/** Afilhados: quem marcou a pessoa como padrinho, do mais antigo ao mais novo. */
-export function godchildrenOf(links = [], person = "") {
-  return links.filter((l) => l.sponsor && l.inviter === person).sort(bySince).map((l) => l.invitee);
+/** Troca de padrinho ainda em espera (confirmada há menos de 7 dias), ou null. */
+export function pendingSwitch(links = [], person = "", now = Date.now()) {
+  const l = links.filter((x) => x.sponsor && x.invitee === person && x.switchFrom).sort(bySince)[0];
+  return l && now < l.since + SWITCH_DELAY_MS ? { to: l.inviter, from: l.switchFrom, at: l.since + SWITCH_DELAY_MS } : null;
+}
+
+/** Afilhados: quem tem a pessoa como padrinho hoje (trocas já valendo contam), do mais antigo ao mais novo. */
+export function godchildrenOf(links = [], person = "", now = Date.now()) {
+  return links.filter((l) => l.sponsor && l.inviter === person && sponsorOf(links, l.invitee, now) === person)
+    .sort(bySince).map((l) => l.invitee);
 }
 
 /**
@@ -64,7 +81,8 @@ export function naturalModeratorOf(links = [], person = "", { exclude = [], memb
 }
 
 /** Os dois lados de um caso: N1 cuida de quem foi denunciado, N2 de quem denunciou (ADR-023 §2.3). */
-export function caseModerators(links = [], { target = "", reporter = "", members = null } = {}) {
+export function caseModerators(allLinks = [], { target = "", reporter = "", members = null, purpose = "denuncia" } = {}) {
+  const links = forPurpose(allLinks, purpose);
   const parties = [target, reporter].filter(Boolean);
   return {
     n1: target ? naturalModeratorOf(links, target, { exclude: parties, members }) : null,
@@ -73,11 +91,16 @@ export function caseModerators(links = [], { target = "", reporter = "", members
 }
 
 /** Modelo da tela "Meus vínculos": quem pode cuidar dos meus posts e de quem eu cuido. */
-export function myLinksModel(links = [], me = "") {
-  const sponsor = sponsorOf(links, me);
+export function myLinksModel(allLinks = [], me = "", now = Date.now()) {
+  const links = forPurpose(allLinks, "denuncia");
+  const sponsor = sponsorOf(links, me, now);
   const closest = closestOf(links, me, { exclude: sponsor ? [sponsor] : [] });
   const common = links.filter((l) => !l.sponsor && (l.inviter === me || l.invitee === me)).map((l) => otherSide(l, me));
-  return { sponsor, closest, godchildren: godchildrenOf(links, me), common: [...new Set(common)] };
+  const mediationOnly = allLinks.filter((l) => l.mediationOnly && (l.inviter === me || l.invitee === me)).map((l) => otherSide(l, me));
+  return {
+    sponsor, closest, godchildren: godchildrenOf(links, me, now), common: [...new Set(common)],
+    mediationOnly: [...new Set(mediationOnly)], switching: pendingSwitch(links, me, now),
+  };
 }
 
 /* ---- Lotes B a D: casos, arquivamento firme de N1, teto e perda do papel ---- */
@@ -153,7 +176,7 @@ export function reversalsAgainst(hider, { hides = [], unhides = [], now = Date.n
  * O padrinho tem poder firme sobre este afilhado? Só entre os 30 primeiros afilhados (pela data do vínculo)
  * e com menos de 3 reversões em 90 dias nesta comunidade (emenda §4.2.3 e §4.2.4).
  */
-export function hasFirmPower(links, hider, target, { reversals = 0 } = {}) {
-  const rank = godchildrenOf(links, hider).indexOf(target);
+export function hasFirmPower(links, hider, target, { reversals = 0, now = Date.now() } = {}) {
+  const rank = godchildrenOf(forPurpose(links, "denuncia"), hider, now).indexOf(target);
   return rank >= 0 && rank < FIRM_GODCHILD_MAX && reversals < REVERSAL_LIMIT;
 }
