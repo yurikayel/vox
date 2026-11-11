@@ -1,7 +1,7 @@
 # Mídia v2: AVIF, Opus e H.264 em duas camadas (360p e 720p)
 
 > **Status:** spec aceita, não implementada · **Owner:** mantenedor · **Revisado:** 2026-11-10 (revisão retrô de 09/11: 540p q70, Opus 32 kbps, vídeo até 480p; carrossel em 10/11)
-> **Em revisão pelo [ADR-029](../adr/029-midia-em-duas-camadas-360p-720p.md) (11/11/2026):** duas camadas (Half 360p e Full 720p), sem teto de 100 KB por item, vídeo a 30 fps. As medições abaixo são da versão única antiga (540p e 480p a 24 fps) e servem só de referência.
+> **Revista pelo [ADR-029](../adr/029-midia-em-duas-camadas-360p-720p.md) (11/11/2026):** duas camadas (Half 360p e Full 720p), sem teto de 100 KB por item, vídeo a 30 fps. As medições abaixo são da versão única antiga (540p e 480p a 24 fps) e servem só de referência.
 > Substitui os limites de `LOFI_LIMITS` em `client/js/media-lofi.js` quando implementada. Relacionados: [replicação por grau](./replicacao-por-grau-v0.md), [ADR-019](../adr/019-esquecer-por-padrao-e-memoria-civica.md), [medição (PM-70)](../research/medicao-midia-v2-pm70-2026-11.md).
 
 ## Princípio
