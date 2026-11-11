@@ -6,6 +6,13 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Aviso assinado: lote D (no app, atrás da flag de laboratório)
+- Aba `#/c/<id>/avisos` e compositor `#/compose/aviso?c=<id>` em três etapas (tipo, texto, quando e onde), só para dono e moderação. Cartão com selo, código, respostas assinadas (membros e de fora separados) e contagem colada.
+- Depois de publicar, a folha de envio mostra o texto do WhatsApp; o link de conferência só aparece quando a coordenação pede. "Colar respostas do WhatsApp" publica só os números; "Cancelar ou corrigir" publica um cancelamento assinado.
+- Com `localStorage["vox.lab.aviso"] = "1"`, a comunidade mostra o aviso ativo no topo e o caminho para a aba. Sem a flag, nada aparece.
+- Precache: os módulos do aviso (~31 KB) foram pagos tirando do precache o `icon-white-512.png` (41 KB), que dentro do app só aparecia em 48 px e agora usa o de 192 px, já cacheado. O arquivo de 512 px continua no ar para o manifesto do PWA e o OAuth. O teto desce pela catraca (2.062.350). SW `v7.69`. 6 testes.
+- Corrigido antes do merge: o link de conferência gerado no app agora leva a forma assinada do aviso (`getPostRecord`); o registro local normalizado tem campos a mais e abria como "Não confie".
+
 ### Aviso assinado: lote C (página leve de conferência)
 - `client/aviso.html` + `client/aviso/aviso-page.js`: abre o link de conferência sem conta e sem carregar o app, confere a assinatura no aparelho e mostra verde (chave já conhecida), amarelo (primeira vez: guarda a chave), vermelho (alterado) ou vermelho de chave nova para grupo **ou nome** já conhecido, com botão "A coordenação confirmou este código". Respostas prontas para colar no grupo (`wa.me`). CSP própria, sem rede (`connect-src 'none'`), fora do precache.
 - A conferência de assinatura saiu de `local-account.js` para `client/js/signed-verify.js` (sem mudar comportamento) e a lógica de link/códigos para `client/aviso/aviso-link.js`, sem dependências (a página é entrada à parte, como `embed/`: fora do app e do precache). SW `v7.68`. 6 testes.

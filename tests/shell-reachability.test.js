@@ -28,8 +28,10 @@ const sw = fs.readFileSync(path.join(root, "sw.js"), "utf8");
  * 2026-11-10 (PM-93 etapa 2): key-lock.js e account-backup.js pagos com a remoção do texto, das fotos e das
  * respostas de demonstração por UF que ninguém lia (profiles-brazil-uf.js, -20,6 KB); medido 2.064.135 bytes em
  * 212 arquivos. O teto desce para 0,2% acima do medido (catraca).
+ * 2026-11-11 (aviso, lote D): os 5 módulos do aviso (+31,7 KB) pagos tirando do precache o icon-white-512.png
+ * (-42,2 KB), que o app só mostrava em 48 px (agora usa o de 192 px); medido 2.058.234 bytes. Catraca: 0,2% acima.
  */
-const SHELL_BUDGET_BYTES = 2_068_300;
+const SHELL_BUDGET_BYTES = 2_062_350;
 
 function listFrom(name) {
   const m = sw.match(new RegExp(`const ${name} = \\[([\\s\\S]*?)\\];`));

@@ -47,6 +47,7 @@ function resolveCommunityTab(subPath, rawQueryTab) {
 
 function parseCommunityRoute(parts, query) {
   if (parts[0] !== "c" || !parts[1]) return null;
+  if (parts[2] === "avisos") return { name: "community-avisos", communityId: decodeURIComponent(parts[1]) };
   if (parts[2] === "proposal" && parts[3]) {
     return {
       name: "proposal",
@@ -66,6 +67,7 @@ function parseComposeRoute(parts, query) {
   if (parts[1] === "community") return { name: "compose-community" };
   if (parts[1] === "listing") return { name: "compose-listing", communityId: query.get("c") || "" };
   if (parts[1] === "proposal") return { name: "compose-proposal", communityId: query.get("c") || "" };
+  if (parts[1] === "aviso") return { name: "compose-aviso", communityId: query.get("c") || "" };
   if (parts[1] === "topic") return { name: "compose-topic", communityId: query.get("c") || "" };
   if (parts[1] === "reply") {
     return { name: "compose-reply", topicId: query.get("t") || "", communityId: query.get("c") || "", parentId: query.get("p") || "" };
