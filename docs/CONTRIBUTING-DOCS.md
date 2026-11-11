@@ -2,6 +2,7 @@
 
 > **Status:** canônico (norma curta) · **Owner:** mantenedor doc / revisor · **Revisado:** 2026-11  
 > **Índice único:** [README.md](./README.md) — esta página não abre trilha paralela.
+> **Documentação no código e o que atualizar a cada mudança:** [process/documentacao.md](./process/documentacao.md) (checada por `npm run audit:docs`).
 
 Regras enforçáveis para voluntários e agentes. Objetivo: um revisor novo entende **onde entrar**, **o que está vivo** e **como marcar pronto** em ~30 minutos.
 
