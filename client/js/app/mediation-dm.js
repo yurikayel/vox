@@ -30,7 +30,7 @@ const TEXT = {
 
 /** Destinatários: N1 (lado de quem publicou) e N2 (lado de quem pede), sem repetir e sem a própria pessoa. */
 export function mediationRecipients(links, { self, target, members = null }) {
-  const { n1, n2 } = caseModerators(links, { target, reporter: self, members });
+  const { n1, n2 } = caseModerators(links, { target, reporter: self, members, purpose: "mediacao" });
   const out = [];
   if (n1) out.push({ ...n1, side: "target" });
   if (n2 && n2.route !== n1?.route) out.push({ ...n2, side: "requester" });

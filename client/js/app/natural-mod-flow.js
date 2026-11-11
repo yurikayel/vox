@@ -43,8 +43,12 @@ export function renderMyLinksHtml(model) {
     ? `<p><strong>Você é padrinho de ${model.godchildren.length}:</strong> ${model.godchildren.map(person).join(", ")}.</p>`
     : "";
   const common = model.common.length ? `<p><strong>Vínculos comuns:</strong> ${model.common.map(person).join(", ")}.</p>` : "";
+  const onlyMediation = model.mediationOnly?.length
+    ? `<p><strong>Só para mediação:</strong> ${model.mediationOnly.map(person).join(", ")} (sem poder de arquivar).</p>` : "";
+  const when = model.switching ? new Date(model.switching.at).toLocaleDateString("pt-BR") : "";
+  const switching = model.switching ? `<p><strong>Troca de padrinho em andamento:</strong> ${person(model.switching.to)} passa a ser seu padrinho em ${when}.</p>` : "";
   return `<details class="card natural-mod-links"><summary>🤝 Meus vínculos</summary>
-    ${sponsorLine(model)}${kids}${common}
+    ${sponsorLine(model)}${switching}${kids}${common}${onlyMediation}
     <p class="hint">Moderador natural é quem conhece você: só age quando chega uma denúncia ou um pedido de mediação sobre alguém do vínculo dele. Vínculos circulam na malha, não no Arweave.</p>
   </details>`;
 }

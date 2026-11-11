@@ -33,10 +33,10 @@ const sw = fs.readFileSync(path.join(root, "sw.js"), "utf8");
  * 2026-11-11 (chamada de ação, lote 1): aviso-roles.js e app/aviso-roles-dm.js pagos tirando do precache o
  * profile-vox-official-512.png, cópia exata do icon-512.png (-59,9 KB); medido 2.018.977 bytes. Catraca: 0,2% acima.
  * 2026-11-11 (PM-83, lote A): cantina-gate.jpg virou WebP (119 → 79 KB, visualmente igual); medido 1.985.623 bytes
- * com natural-mod.js e app/natural-mod-flow.js. Teto mantido de propósito: a folga paga os lotes B–F do PM-83 e a
- * catraca desce para 0,2% acima do medido no último lote.
+ * com natural-mod.js e app/natural-mod-flow.js. A folga pagou os lotes B–F do PM-83 (mediation-dm.js,
+ * natural-case-flow.js e o resto); medido 2.012.013 bytes com tudo. Catraca: 0,2% acima.
  */
-const SHELL_BUDGET_BYTES = 2_023_015;
+const SHELL_BUDGET_BYTES = 2_016_037;
 
 function listFrom(name) {
   const m = sw.match(new RegExp(`const ${name} = \\[([\\s\\S]*?)\\];`));

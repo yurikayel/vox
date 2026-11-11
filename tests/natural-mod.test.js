@@ -56,7 +56,7 @@ test("moderador natural — nunca a outra parte; membro da comunidade tem prefer
 
 test("moderador natural — 'Meus vínculos' mostra padrinho, afilhados e vínculos comuns", async () => {
   const model = natural.myLinksModel(await graph(), "vx_ana");
-  assert.deepEqual(model, { sponsor: "vx_bia", closest: "vx_caio", godchildren: ["vx_eva", "vx_fabi"], common: ["vx_caio", "vx_davi"] });
+  assert.deepEqual(model, { sponsor: "vx_bia", closest: "vx_caio", godchildren: ["vx_eva", "vx_fabi"], common: ["vx_caio", "vx_davi"], mediationOnly: [], switching: null });
   const html = flow.renderMyLinksHtml(model);
   assert.ok(html.includes("Seu padrinho:"));
   assert.ok(html.includes("Você é padrinho de 2:"));
@@ -191,4 +191,43 @@ test("arquivamento firme — esconde só o post do afilhado; unhide da moderaç�
   assert.equal(authorView.find((i) => i.id === "p1")?.inReview, true, "o autor vê o próprio post em revisão");
   const src = fs.readFileSync(new URL("../client/js/moderation.js", import.meta.url), "utf8");
   assert.equal((src.match(/naturalVerified: false/g) || []).length, 2, "ação vinda de fora perde a marca de conferida");
+});
+
+const linkCard = await import("../client/js/render/vox-link.js");
+
+test("lote F — vínculo só para mediação não dá poder; serve para mediação", async () => {
+  const only = await natural.collectLinks([link("vx_ana", "vx_eva", { sponsor: true, ts: 1 })].map((r) => {
+    const accept = { ...JSON.parse(r.accept), scope: "mediacao" };
+    return { ...r, accept: JSON.stringify(accept) };
+  }), verify);
+  assert.equal(only[0].mediationOnly, true);
+  assert.equal(natural.caseModerators(only, { target: "vx_eva" }).n1, null, "denúncia ignora o vínculo só de mediação");
+  assert.deepEqual(natural.caseModerators(only, { target: "vx_eva", purpose: "mediacao" }).n1, { route: "vx_ana", via: "padrinho" });
+  assert.equal(natural.hasFirmPower(only, "vx_ana", "vx_eva"), false);
+  assert.deepEqual(natural.myLinksModel(only, "vx_eva").mediationOnly, ["vx_ana"]);
+  const accept = voxLink.buildAccept({ me: "vx_eva", inviter: "vx_ana", token: TOKEN, mediationOnly: true });
+  assert.equal(accept.scope, "mediacao");
+});
+
+test("lote F — troca de padrinho vale 7 dias depois; o padrinho antigo perde o afilhado", async () => {
+  const DAY = 864e5;
+  const swap = (() => {
+    const accept = { ...voxLink.buildAccept({ me: "vx_ana", inviter: "vx_caio", token: TOKEN, sponsor: true, switchFrom: "vx_bia", now: 50 }), author: "vx_ana", sig: "ok" };
+    return { ...voxLink.buildConfirm(accept, 50), author: "vx_caio", sig: "ok" };
+  })();
+  const links = await natural.collectLinks([link("vx_bia", "vx_ana", { sponsor: true, ts: 10 }), swap], verify);
+  assert.equal(natural.sponsorOf(links, "vx_ana", 50 + DAY), "vx_bia", "antes de 7 dias, continua o de antes");
+  assert.deepEqual(natural.pendingSwitch(links, "vx_ana", 50 + DAY), { to: "vx_caio", from: "vx_bia", at: 50 + 7 * DAY });
+  assert.equal(natural.sponsorOf(links, "vx_ana", 50 + 8 * DAY), "vx_caio");
+  assert.deepEqual(natural.godchildrenOf(links, "vx_bia", 50 + 8 * DAY), []);
+  assert.equal(voxLink.buildAccept({ me: "vx_a", inviter: "vx_b", token: TOKEN, switchFrom: "vx_c" }).switchFrom, undefined, "troca só com padrinho");
+  assert.ok(voxLink.hasSwitched([{ kind: "accept", author: "vx_ana", sponsor: true, switchFrom: "vx_bia" }], "vx_ana"));
+});
+
+test("lote F — o cartão do convite só mostra as opções novas com a flag", () => {
+  const base = { name: "Caio", state: "none", canSponsor: false, canSwitch: true };
+  assert.ok(!linkCard.renderInviteCardHtml(base).includes("vox-link-mediation"));
+  const on = linkCard.renderInviteCardHtml({ ...base, options: true });
+  assert.ok(on.includes('id="vox-link-mediation"') && on.includes('id="vox-link-switch"'));
+  assert.ok(!linkCard.renderInviteCardHtml({ ...base, canSponsor: true, options: true }).includes("vox-link-switch"), "sem padrinho ainda, não há o que trocar");
 });
