@@ -115,9 +115,11 @@ Atrás da flag de laboratório `localStorage["vox.lab.moderador"] = "1"`. Lógic
 
 ### Lotes B, C e D (11/11/2026): denúncia aos moderadores naturais, arquivamento firme, teto e reversões
 
-- **Aviso de caso (B):** ao denunciar com a flag ligada, além da moderação da comunidade (PM-69), o aparelho manda uma mensagem cifrada (`kind: "moderacao-natural"`) a N1 e N2. Se os dois forem a mesma pessoa, ela recebe uma vez.
-  - N1 recebe o post, o motivo e o autor do post, **nunca quem denunciou**.
-  - N2 recebe também quem denunciou: é o afilhado ou o próximo dele.
+- **Aviso de caso (B):** com a flag ligada, cada lado recebe uma mensagem cifrada (`kind: "moderacao-natural"`) com o post, o motivo e o autor do post. O aviso **nunca leva quem denunciou**.
+  - **N1** (lado de quem foi denunciado) é avisado pelo **aparelho da moderação da comunidade**, quando ele recebe a denúncia assinada (PM-69). Se o aviso saísse de quem denunciou, a conversa cifrada mostraria o remetente a N1.
+  - **N2** (lado de quem denunciou) é avisado por quem denunciou. N2 sabe quem é pela própria conversa, e é o afilhado ou o próximo dele.
+  - Se N1 e N2 forem a mesma pessoa, ela recebe só o aviso de N1, que não revela quem denunciou.
+  - **O caso guardado no aparelho do moderador natural** tem só o necessário para decidir (post, comunidade, autor do post, motivo e lado). Quem denunciou e quem mandou o aviso não ficam guardados.
   - **Motivo grave** (imagem íntima, abuso infantil, violência) **não vai** ao moderador natural. Segue pela moderação e pelos canais oficiais, sem expor o conteúdo a mais gente.
 - **Decidir (B e C):** os casos aparecem em Pessoas → Meus vínculos.
   - **Arquivar para todos:** só N1 com vínculo de padrinho e poder firme. Publica `natural-hide`, assinado, com a confirmação do vínculo de padrinho como texto (`proof`).

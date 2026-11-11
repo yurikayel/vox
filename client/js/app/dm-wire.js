@@ -57,7 +57,7 @@ async function handleNaturalCasePayload(env, rawText) {
   if (!notice) return;
   try {
     const [flow, cases] = await Promise.all([import("./natural-mod-flow.js"), import("./natural-case-flow.js")]);
-    if (flow.naturalModLabOn() && cases.receiveCase(notice, { from: env.from })) {
+    if (flow.naturalModLabOn() && cases.receiveCase(notice)) {
       (await import("../share.js")).showToast("Chegou uma denúncia para você decidir como moderador natural (Pessoas → Meus vínculos).");
     }
   } catch {}

@@ -1,6 +1,7 @@
 /**
  * @file PM-83 lotes B e C: a denúncia também vai, por mensagem cifrada, ao moderador natural de cada lado.
- * - N1 (lado do denunciado) vê o post e o motivo, nunca quem denunciou. Com vínculo de padrinho e poder firme
+ * - N1 (lado do denunciado) vê o post e o motivo, nunca quem denunciou: o aviso de N1 sai do aparelho da moderação
+ *   (que recebe a denúncia pelo PM-69), não de quem denunciou. Com vínculo de padrinho e poder firme
  *   (lote D: até 30 afilhados, menos de 3 reversões), arquiva para todos com a prova do vínculo.
  * - N2 (lado de quem denunciou), ou N1 sem poder firme, manda a concordância à moderação: o post fica em revisão.
  * - Qualquer um pode recusar sem custo: o caso segue com a moderação da comunidade na hora.
@@ -62,26 +63,38 @@ const NOTICE_TEXT = {
   reporter: "Alguém pelo qual você responde no Vox denunciou este post. Decida na tela Pessoas → Meus vínculos.",
 };
 
-/** Quem denunciou: avisa N1 e N2. `rec`: a denúncia (`report.js`); `target`: autor do post. */
-export async function sendCaseNotices(self, rec, { target, members = null }, deps = null) {
-  if (isGraveReason(rec.reason)) return [];
-  const d = deps || { ...(await dmDeps()), loadLinks: async () => (await import("./natural-mod-flow.js")).loadLinks() };
-  const { n1, n2 } = natural.caseModerators(await d.loadLinks(), { target, reporter: self, members });
-  const plan = [n1 && { to: n1.route, side: "target" }, n2 && n2.route !== n1?.route && { to: n2.route, side: "reporter" }].filter(Boolean);
-  const out = [];
-  for (const { to, side } of plan) {
-    const notice = natural.buildCaseNotice({ caseId: rec.id, postId: rec.postId, communityId: rec.communityId, target, reason: rec.reason, side, reporter: self });
-    const card = { type: "topic", id: rec.postId, title: "Denúncia para você decidir" };
-    out.push({ to, side, status: await sendDm(self, to, { payload: natural.serializeCaseDm(notice, NOTICE_TEXT[side]), text: NOTICE_TEXT[side], card }, d) });
-  }
-  return out;
+/**
+ * Quem recebe o aviso de um lado do caso. `side: "target"` (N1) é chamado pelo aparelho da moderação;
+ * `side: "reporter"` (N2) por quem denunciou. Se N1 e N2 forem a mesma pessoa, ela recebe só o aviso de N1,
+ * que não revela quem denunciou. Ninguém recebe aviso sobre a própria denúncia ou do próprio aparelho.
+ */
+export function casePlan(links, { side, target, reporter, sender, members = null }) {
+  const { n1, n2 } = natural.caseModerators(links, { target, reporter, members });
+  const pick = side === "target" ? n1 : n2 && n2.route !== n1?.route ? n2 : null;
+  return pick && pick.route !== sender ? { to: pick.route, side } : null;
 }
 
-/** Aparelho do moderador natural: guarda o caso (sem repetir). Devolve true se guardou. */
-export function receiveCase(notice, { from = "", now = Date.now(), storage } = {}) {
+/** Avisa o moderador natural de um lado. `rec`: `{ id, postId, communityId, reason }`; `sender`: este aparelho. Devolve `{ to, side, status }` ou null. */
+export async function sendCaseNotice(sender, rec, { side, target, reporter, members = null }, deps = null) {
+  if (isGraveReason(rec.reason)) return null;
+  const d = deps || { ...(await dmDeps()), loadLinks: async () => (await import("./natural-mod-flow.js")).loadLinks() };
+  const plan = casePlan(await d.loadLinks(), { side, target, reporter, sender, members });
+  if (!plan) return null;
+  const notice = natural.buildCaseNotice({ caseId: rec.id, postId: rec.postId, communityId: rec.communityId, target, reason: rec.reason, side });
+  const card = { type: "topic", id: rec.postId, title: "Denúncia para você decidir" };
+  const text = NOTICE_TEXT[side];
+  return { ...plan, status: await sendDm(sender, plan.to, { payload: natural.serializeCaseDm(notice, text), text, card }, d) };
+}
+
+/**
+ * Aparelho do moderador natural: guarda o caso (sem repetir). Guarda só o necessário para decidir: nem quem
+ * denunciou nem quem mandou o aviso ficam no caso (a conversa cifrada já tem o que precisar). Devolve true se guardou.
+ */
+export function receiveCase(notice, { now = Date.now(), storage } = {}) {
   const list = readCases(storage);
   if (list.some((c) => c.caseId === notice.caseId && c.side === notice.side)) return false;
-  writeCases([...list, { ...notice, from, receivedAt: now, status: "aberto" }], storage);
+  const { caseId, postId, communityId, target, reason, side } = notice;
+  writeCases([...list, { caseId, postId, communityId, target, reason, side, receivedAt: now, status: "aberto" }], storage);
   return true;
 }
 

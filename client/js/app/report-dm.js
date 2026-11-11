@@ -60,6 +60,7 @@ async function defaultReceiveDeps() {
     checkMembership: (id, who, meta) => community.checkCommunityMembership(id, who, meta),
     dispatchModAction: (id, action, target, opts) => community.dispatchCommunityModAction(id, action, target, opts),
     notify: (kase) => share.showToast(describeReceivedCase(kase)),
+    notifyNatural: (signed, ctx) => notifyNaturalTargetSide(signed, ctx),
     storage: globalThis.localStorage,
     now: () => Date.now(),
   };
@@ -77,13 +78,30 @@ export function describeReceivedCase(kase) {
 async function loadReportContext(signed, d) {
   const meta = await d.getCommunity(signed.communityId).catch(() => null);
   const selves = await d.getSelves().catch(() => []);
-  if (!meta || !selves.some((self) => isModerator(self, meta.owner, meta.moderators))) return null;
+  const self = selves.find((s) => isModerator(s, meta?.owner, meta?.moderators));
+  if (!meta || !self) return null;
   const post = await d.getPost(signed.postId).catch(() => null);
   const target = post?.owner || post?.author || "";
   return {
     isMember: Boolean(await d.checkMembership(signed.communityId, signed.author, meta).catch(() => false)),
     targetIsModerator: Boolean(target) && isModerator(target, meta.owner, meta.moderators),
+    self,
+    target,
   };
+}
+
+/**
+ * PM-83: o aviso a N1 (moderador natural de quem foi denunciado) sai deste aparelho, da moderação,
+ * para que N1 nunca saiba quem denunciou. Só com a flag de laboratório.
+ */
+async function notifyNaturalTargetSide(signed, { self, target }) {
+  try {
+    const { naturalModLabOn } = await import("./natural-mod-flow.js");
+    if (!target || !naturalModLabOn()) return;
+    const { sendCaseNotice } = await import("./natural-case-flow.js");
+    const rec = { id: signed.reportId, postId: signed.postId, communityId: signed.communityId, reason: signed.reason };
+    await sendCaseNotice(self, rec, { side: "target", target, reporter: signed.author });
+  } catch {}
 }
 
 /**
@@ -97,12 +115,14 @@ export async function receiveReportDm(env, signed, deps = null) {
   if (cases.some((c) => c.reportId === signed.reportId)) return null;
   const ctx = await loadReportContext(signed, d);
   if (!ctx) return null;
-  const decision = review.decideAutoArchive({ cases, reportId: signed.reportId, postId: signed.postId, reporter: signed.author, ...ctx });
+  const { self, target, ...safeguards } = ctx;
+  const decision = review.decideAutoArchive({ cases, reportId: signed.reportId, postId: signed.postId, reporter: signed.author, ...safeguards });
   const kase = review.buildCase(signed, decision, d.now());
   review.addCase(kase, d.storage);
   if (decision.archive) {
     await d.dispatchModAction(signed.communityId, review.REVIEW_HIDE_ACTION, signed.postId, { upload: false });
   }
   d.notify(kase);
+  if (d.notifyNatural) void d.notifyNatural(signed, { self, target });
   return kase;
 }
