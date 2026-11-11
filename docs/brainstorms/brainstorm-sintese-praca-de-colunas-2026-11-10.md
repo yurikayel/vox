@@ -146,7 +146,7 @@ Juntar o que estava espalhado: o **selo contra golpe** (terceiro lugar), o **"Vo
 | 6 | Livro-caixa | Precisa de um contador voluntário (perfil 4) para o modelo |
 | 7 | Círculo de confiança | Mexe com chave: depende da revisão externa de criptografia (LAN-18) |
 
-Cada peça precisa de spec curta antes do código (rota, formato assinado, teste, flag), no padrão do repo.
+Cada peça precisa de spec curta antes do código (rota, formato assinado, teste, flag), no padrão do repo. A primeira já existe: [aviso assinado v0](../specs/aviso-assinado-v0.md).
 
 ## 7. Captação consolidada: três frentes
 
@@ -214,7 +214,7 @@ O refino deixou pendente mapear a direita pró-democrática. O que a pesquisa de
 1. Aceitar ou mudar a ordem de construção do §6.
 2. Publicar as 10 primeiras issues.
 3. Escolher a primeira associação do piloto e a primeira oficina.
-4. Pedir a spec do aviso assinado (é a primeira peça).
+4. Revisar a [spec do aviso assinado](../specs/aviso-assinado-v0.md) (primeira peça; proposta de 11/11/2026).
 5. Mandar a nota técnica aos PLs, depois de conferir a tramitação.
 
 ## Referências (consultadas em 10/11/2026)
