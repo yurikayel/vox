@@ -13,6 +13,7 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
   - uma página leve, sem conta, confere a assinatura no celular de quem abre;
   - respostas assinadas no Vox e contagem das respostas coladas do WhatsApp, só com números.
 - Proposta, **não implementada**: nada de código neste PR.
+- As três perguntas abertas da spec respondidas: tipo desconhecido é guardado e repassado sem aparecer no feed; código de 4 caracteres basta; limite do link no WhatsApp fica para teste no piloto.
 
 ### Docs: a síntese troca a analogia "WeChat" pela ágora
 - A [síntese — a praça de colunas](./docs/brainstorms/brainstorm-sintese-praca-de-colunas-2026-11-10.md) ganha a seção "A imagem: a ágora": mapa entre os edifícios da ágora de Atenas e as peças do Vox, o **sorteio** como peça candidata depois das seis, e onde a palavra não entra (marca pública, tela, romantização). O [doc dos nichos](./docs/brainstorms/brainstorm-nichos-colunas-wechat-democratico-2026-11-10.md) aponta a troca.
