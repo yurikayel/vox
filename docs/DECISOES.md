@@ -48,6 +48,7 @@ Legenda de estado:
 | A-14 | Design system Sovereign Agora e Voxels (conquistas verificáveis). | em vigor | [ADR-016](./adr/016-design-system-sovereign-agora-e-democracia-direta.md) · [ADR-013](./adr/013-sistema-voxels-e-conquistas-civicas.md) |
 | A-15 | **Relay sem conta, com dono por prova.** Cofre regrava só com a prova derivada da Senha Soberana; envelope de DM sai só com a chave de apagar do destinatário. Escrita só das origens do app, `application/json`, `Host` conferido e limite por IP. | em vigor (SW v7.65) | [ADR-027](./adr/027-autorizacao-no-relay-dono-e-origem.md) |
 | A-16 | **Fediverso pela pessoa, sem servidor.** O Vox não roda ActivityPub; quem quiser ser seguido no Mastodon ou no Threads liga o Bridgy Fed na própria conta do Bluesky. Aviso de núcleo não atravessa automaticamente. | aceito (UI de orientação pendente) | [ADR-028](./adr/028-ponte-activitypub-via-bluesky.md) |
+| A-17 | **Mídia em duas camadas.** Quem **segue** o autor recebe a Full (720p, q80, Opus 96 kbps) sem fazer nada, e a guarda e serve a outros seguidores; quem não segue recebe só a Half (360p, q60, 48 kbps). Nas configurações, dá para preferir a Half. Vídeo a 30 fps, sem teto de 100 KB por item, Arweave só como cartório. Não é privacidade: qualquer um pode seguir. | aceito (não implementado; medição pendente) | [ADR-029](./adr/029-midia-em-duas-camadas-360p-720p.md) |
 
 ## 3. Em aberto — decisões que ainda precisam ser tomadas
 
@@ -56,5 +57,5 @@ Legenda de estado:
 | Custódia da chave | Em vigor (SW v7.64): chaves cifradas pelo aparelho; depois do backup com a Senha Soberana, identidade e DM só saem pela cópia cifrada com a senha | PM-93, [ADR-026](./adr/026-chaves-em-repouso-trava-depois-do-backup.md) |
 | Cadeia de suprimentos | Em vigor (PM-95): CodeQL, Dependabot, actions por SHA, ruleset `strict`. Falta decidir quando a revisão vira obrigatória (CODEOWNERS já existe) e se o CodeQL vira check obrigatório | PM-95 · [DEPENDENCIAS](./DEPENDENCIAS.md) |
 | Formato de assinatura | Quando parar de aceitar v1 (posts antigos assinados só nos campos de topo) | PM-85 · [ADR-021 §2.6](./adr/021-integridade-na-entrada-forma-assinada.md) |
-| Mídia em camadas | Aceitar o ADR-029 (Half 360p, Full 720p, 30 fps, sem teto de 100 KB). Em aberto: um amigo pode **repassar o acesso** ao Full a quem não é amigo do autor? Bitrates da Full a medir | [ADR-029](./adr/029-midia-em-duas-camadas-360p-720p.md) |
+| Comprovante de seguir | Formato do `follow` assinado que vai junto com o pedido da Full (não vai para o gossip) e o quantizador de vídeo equivalente a q60 e q80 | [ADR-029 §2.6 e §4](./adr/029-midia-em-duas-camadas-360p-720p.md#4-em-aberto) |
 | Propostas antigas | Atestação (001), perfil coletivo (005), corroboração multi-gateway (009) e Contribution Engine (010): aceitar, adiar ou arquivar | [índice de ADRs](./adr/README.md) |
