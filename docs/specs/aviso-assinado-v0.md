@@ -247,3 +247,12 @@ Extensão opcional da **convocação**: quem convoca lista papéis com vagas e u
 - Na aba de avisos, **Minhas competências** guarda até 12 nomes (as mesmas regras dos papéis) **só neste aparelho** (`localStorage["vox-competencias-v1"]`). Não entram no perfil, não são assinadas e não vão para a malha.
 - Servem só para sugerir: quando uma chamada tem um papel que bate com uma competência e ainda tem vaga, o cartão diz "Você marcou Jurídico: assumir uma vaga?" e destaca o botão. Quem já assumiu um papel não recebe sugestão.
 - **Fora desta versão:** busca ou diretório de competências por comunidade. Só depois de confirmar se a comunidade fechada cifra o conteúdo; sem cifra, um diretório expõe esse dado a quem guarda cópia.
+
+## Termo de convivência e mediação (lote 3, 11/11/2026)
+
+- **Termo:** dono ou moderação publica `community-termo` (`communityId`, `termoText` de 20 a 2000 caracteres, `ts`), assinado. Vale o mais recente da moderação. Quem entra assina, junto com a entrada (`membership`), o **SHA-256 do texto** (`termoHash`, no topo), no molde do pacto 18+.
+- O termo aparece no topo da comunidade. Visitante lê "Ao participar, você assina este termo". Se o texto mudar, quem já entrou vê "O termo mudou" e pode **assinar o termo atual**, que publica a entrada de novo com o hash novo. Ninguém é tirado da comunidade por não reassinar nesta versão.
+- **Pedir mediação**, no menu ⋯ do post: abre a conversa cifrada com o dono da comunidade, já com o cartão do post e o título "Pedido de mediação". Diferente da denúncia, **não oculta nem arquiva nada**. Congelar a discussão segue poder da moderação; o membro só pede.
+- **Fora desta versão:** o padrinho (moderador natural) como destinatário da mediação, que espera o PM-83.
+- **Peso:** os dois módulos novos foram pagos recomprimindo a imagem dentro do `icon.svg` (PNG com paleta de 256 cores; 18,5 KB para 5,8 KB; diferença média de 0,6 em 255 por canal).
+- Laboratório `vox.lab.aviso`.
