@@ -6,6 +6,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Docs: a síntese troca a analogia "WeChat" pela ágora
+- A [síntese — a praça de colunas](./docs/brainstorms/brainstorm-sintese-praca-de-colunas-2026-11-10.md) ganha a seção "A imagem: a ágora": mapa entre os edifícios da ágora de Atenas e as peças do Vox, o **sorteio** como peça candidata depois das seis, e onde a palavra não entra (marca pública, tela, romantização). O [doc dos nichos](./docs/brainstorms/brainstorm-nichos-colunas-wechat-democratico-2026-11-10.md) aponta a troca.
+
 ### Docs: brainstorms da captação, do refino e dos nichos, e a síntese dos seis
 - [Dez estratégias de captação](./docs/brainstorms/brainstorm-captacao-por-perfil-2026-11-10.md), [refino: da praça-cartório à rede de ação](./docs/brainstorms/brainstorm-refino-rede-de-acao-e-soberania-2026-11-10.md) e [nichos como colunas de um "WeChat democrático"](./docs/brainstorms/brainstorm-nichos-colunas-wechat-democratico-2026-11-10.md), ligados ao [índice](./docs/README.md) e à [estratégia de 90 dias](./docs/strategy/estrategia-5-pontos-fracos-90-dias-2026-11.md). Só ideias; nada de código.
 - [Síntese — a praça de colunas](./docs/brainstorms/brainstorm-sintese-praca-de-colunas-2026-11-10.md) consolida os seis brainstorms de 10/11 (vale a síntese quando divergirem), com pesquisa nova sobre o PL 5.746/2026 e o campo pró-democrático de centro e de direita. As seis peças comuns entram no ROADMAP como **candidatas**, sem caixa.
