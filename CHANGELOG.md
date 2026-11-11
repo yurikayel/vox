@@ -6,6 +6,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Aviso assinado: lote B (contar respostas coladas, ainda não plugado)
+- `client/js/aviso-replies.js`: lê os dois formatos de exportação do WhatsApp e linhas soltas, reconhece ciente, vou, talvez e não vou (palavras e emojis), fica com a última resposta de cada nome, ignora resposta com código de outro aviso e devolve só números. Em `UNPLUGGED_MODULES`: precache e `CACHE_NAME` sem mudança. 4 testes.
+
 ### Aviso assinado: lote A (lógica pura, ainda não plugada)
 - `client/js/aviso.js`: montar e validar o aviso (`cobranca` recusado), selo só de dono ou moderação, topo, vencimento e cancelamento, respostas e contagem colada, códigos, texto do WhatsApp e link de conferência ([spec](./docs/specs/aviso-assinado-v0.md)). Fica em `UNPLUGGED_MODULES`: precache e `CACHE_NAME` sem mudança. 9 testes em `tests/aviso.test.js`.
 
