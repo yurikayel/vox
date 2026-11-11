@@ -161,7 +161,7 @@ export function renderOAuthEnrich(container) {
       <div class="genesis-shell genesis-shell--steps oauth-enrich-dialog">
         <header class="genesis-hero">
           <div class="genesis-brand">
-            <img class="genesis-brand-mark" src="icons/icon-white-512.png" width="48" height="48" alt="" decoding="async" />
+            <img class="genesis-brand-mark" src="icons/icon-white-192.png" width="48" height="48" alt="" decoding="async" />
             <p class="genesis-brand-name">VOX · Rede cívica soberana</p>
           </div>
           <h1 class="genesis-title">Sua Voz. Seu Território.<br /><span>Sua Chave.</span></h1>

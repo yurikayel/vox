@@ -606,6 +606,7 @@ async function mountFullCommunityPage({ communityId, tab, user, base, specifics,
   attachCommunityListingHandlers(main);
   attachPostShareHandlers();
   bindCommunityHeaderEvents({ main, communityId, meta, user, isMember, peerSettings, filteredTopics: base.filteredTopics });
+  if (tab === "posts") void import("./aviso-flow.js").then((m) => m.mountCommunityAvisoBanner(main, communityId)).catch(() => {});
 }
 
 function buildCommunityTabProps({ communityId, meta, base, specifics, recentPeople, isMember, memberCount }) {

@@ -15,6 +15,7 @@ import { showStatus } from "./screens-status.js";
 import { showNetworkWizard, showBackupWizard, showWalletWizard } from "./screens-guided.js";
 import { showSyncScreen } from "./screens-sync.js";
 import { showLabsFrames, showLabsMofn } from "./screens-labs.js";
+import { showAvisos, showComposeAviso } from "./aviso-flow.js";
 import {
   showComposeCommunity,
   showComposeTopic,
@@ -46,6 +47,8 @@ const ROUTE_DISPATCH_TABLE = {
   "labs-frames": () => showLabsFrames(),
   "labs-mofn": () => showLabsMofn(),
   community: (r) => showCommunity(r.id, r.tab),
+  "community-avisos": (r) => showAvisos(r.communityId),
+  "compose-aviso": (r) => showComposeAviso(r.communityId),
   proposal: (r) => showProposal(r.communityId, r.proposalId),
   topic: (r) => showTopic(r.id, r.communityId),
   profile: (r) => showProfile(r.address, r.tab),
