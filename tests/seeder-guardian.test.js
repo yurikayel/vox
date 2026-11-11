@@ -8,7 +8,7 @@ test("seeder-guardian - getGuardianQuotaConfig retorna padrões seguros", () => 
   localStorage.clear();
   const cfg = guardian.getGuardianQuotaConfig();
   assert.equal(cfg.enabled, false);
-  assert.equal(cfg.quotaMb, 150);
+  assert.equal(cfg.quotaMb, 2048);
   assert.equal(cfg.onlyWifi, true);
   assert.equal(cfg.onlyCharging, true);
   assert.equal(cfg.minBatteryLevel, 0.5);
@@ -18,19 +18,19 @@ test("seeder-guardian - saveGuardianQuotaConfig persiste e limita valores dentro
   localStorage.clear();
   const saved = guardian.saveGuardianQuotaConfig({
     enabled: true,
-    quotaMb: 2000, // deve travar em 1024
+    quotaMb: 2000, // cota fixa: vira 2048
     onlyWifi: false,
   });
   assert.equal(saved.enabled, true);
-  assert.equal(saved.quotaMb, 1024);
+  assert.equal(saved.quotaMb, 2048);
   assert.equal(saved.onlyWifi, false);
 
   const reloaded = guardian.getGuardianQuotaConfig();
   assert.equal(reloaded.enabled, true);
-  assert.equal(reloaded.quotaMb, 1024);
+  assert.equal(reloaded.quotaMb, 2048);
 
   const clampedMin = guardian.saveGuardianQuotaConfig({ quotaMb: 2 });
-  assert.equal(clampedMin.quotaMb, 100);
+  assert.equal(clampedMin.quotaMb, 2048);
 });
 
 test("seeder-guardian - isSeedingPermitted respeita regras de bateria e rede", async () => {
@@ -62,7 +62,7 @@ test("seeder-guardian - renderGuardianSettingsCard gera HTML com badge e opçõe
     enabled: true,
     onlyWifi: true,
     onlyCharging: true,
-    quotaMb: 150,
+    quotaMb: 2048,
   };
   const status = { enabled: true, permitted: true, reason: "ready" };
   const html = renderGuardianSettingsCard(cfg, status);
@@ -70,6 +70,6 @@ test("seeder-guardian - renderGuardianSettingsCard gera HTML com badge e opçõe
   assert.ok(html.includes("Modo Guardião da Praça"));
   assert.ok(html.includes("Pronto para Semear 🟢"));
   assert.ok(html.includes('id="chk-guardian-enabled" checked'));
-  assert.ok(html.includes('id="select-guardian-quota"'));
-  assert.ok(html.includes("150 MB (Recomendado)"));
+  assert.ok(html.includes('id="guardian-quota"'));
+  assert.ok(html.includes("<strong>2 GB</strong> (fixa)"));
 });

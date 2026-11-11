@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { applySupporterMode, LIGHT_LIMITS, SUPPORTER_LIMITS } from "../client/js/supporter-mode.js";
+import { applySupporterMode, normalizeStorageCommitment, LIGHT_LIMITS, SUPPORTER_LIMITS } from "../client/js/supporter-mode.js";
 import { renderSupporterCardHtml } from "../client/js/render/network.js";
 
 test("apoiador: ligar sobe tetos, força Wi-Fi e reativa o nó", () => {
@@ -13,11 +13,24 @@ test("apoiador: ligar sobe tetos, força Wi-Fi e reativa o nó", () => {
   assert.equal(next.maxMb, SUPPORTER_LIMITS.maxMb);
 });
 
-test("apoiador: ligar não reduz teto ampliado à mão", () => {
+test("apoiador: ligar começa no disco máximo com banda proporcional", () => {
   const next = applySupporterMode({ dailyCapMb: 900, maxMb: 400 }, true);
-  assert.equal(next.dailyCapMb, 900);
-  // O disco do apoiador já é o máximo (1024 MB): um valor manual menor sobe até ele.
-  assert.equal(next.maxMb, SUPPORTER_LIMITS.maxMb);
+  assert.equal(next.maxMb, 1024);
+  assert.equal(next.dailyCapMb, 2048);
+});
+
+test("disco: nó leve fixo em 100 MB; apoiador entre 512 e 1024 MB", () => {
+  assert.equal(normalizeStorageCommitment({ maxMb: 900 }).maxMb, 100);
+  assert.equal(normalizeStorageCommitment({ supporter: true, maxMb: 200 }).maxMb, 512);
+  assert.equal(normalizeStorageCommitment({ supporter: true, maxMb: 5000 }).maxMb, 1024);
+  assert.equal(normalizeStorageCommitment({ supporter: true, maxMb: 700 }).maxMb, 700);
+});
+
+test("banda: até o dobro do disco; menos que isso é escolha da pessoa", () => {
+  assert.equal(normalizeStorageCommitment({}).dailyCapMb, 200);
+  assert.equal(normalizeStorageCommitment({ dailyCapMb: 900 }).dailyCapMb, 200);
+  assert.equal(normalizeStorageCommitment({ dailyCapMb: 50 }).dailyCapMb, 50);
+  assert.equal(normalizeStorageCommitment({ supporter: true, maxMb: 600, dailyCapMb: 5000 }).dailyCapMb, 1200);
 });
 
 test("apoiador: desligar volta aos tetos do nó leve", () => {

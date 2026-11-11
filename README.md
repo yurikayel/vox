@@ -4,7 +4,7 @@
 [![Identity](https://img.shields.io/badge/Identity-WebCrypto%20P--256-blueviolet.svg)](./client/js/local-account.js)
 [![Storage](https://img.shields.io/badge/Storage-Arweave%20Permaweb-black.svg)](https://arweave.org)
 [![License: AGPL v3](https://img.shields.io/badge/License-GNU%20AGPLv3-crimson.svg)](./LICENSE)
-[![Tests](https://img.shields.io/badge/tests-1109%20passing-success.svg)](./docs/TESTES.md)
+[![Tests](https://img.shields.io/badge/tests-1111%20passing-success.svg)](./docs/TESTES.md)
 [![Service Worker](https://img.shields.io/badge/SW-v7.70--real--network--audio--video--upload-informational.svg)](./client/sw.js)
 
 O Vox é um projeto cívico em construção para ampliar a participação popular e a autonomia das comunidades na vida digital. Sua ambição é ser um bem comum aberto: o projeto deve permanecer transparente, copiável, modificável e maior que qualquer fundador, mantenedor, empresa ou plataforma.
@@ -77,8 +77,8 @@ Redes centralizadas, instâncias federadas e protocolos locais têm custos, vant
 
 | Campo | Valor |
 |---|---|
-| **Commit SHA** | `fb4084a` |
-| **Suíte de Testes** | **1109** (`1003` JS + `106` Python) |
+| **Commit SHA** | `7b5d84b` |
+| **Suíte de Testes** | **1111** (`1005` JS + `106` Python) |
 | **Service Worker** | `vox-pwa-v7.70-real-network-audio-video-upload` |
 
 *Tabela regenerada por `npm run release-line` (roda a suíte e grava [docs/release-metadata.json](./docs/release-metadata.json)). Nenhum outro documento deve repetir esses números.*
@@ -158,7 +158,7 @@ Resumo do que entrou no cliente em nov/2026 (detalhes em [CHANGELOG.md](./CHANGE
 * **Contas vinculadas por login (`#/settings/linked-accounts`):** uma linha por rede e um botão *Conectar*. Bluesky por OAuth do AT Protocol 100% no navegador; Facebook só identidade; X, Threads, GitHub, TikTok e Instagram profissional via `/oauth/exchange` do relay quando o deploy está configurado ([docs/specs/login-social.md](./docs/specs/login-social.md)). Onboarding importa nome e foto (Kwai: "em breve", sem API pública).
 * **Mensagens:** contador de não lidas no menu e no topo.
 * **Rumo à rede pública (portão G1, PR #17):** kill-switch por configuração (`client/config/flags.json`), denúncia no app com canais oficiais, aviso antes de gravar no Arweave ("permanente" ou "só na malha"), perfis fictícios só no modo demonstração, aviso de que o nome civil aparece no Pix e CSP sem script inline.
-* **Nó leve por padrão, Apoiador por opção:** todo aparelho ajuda a malha com tetos baixos (50 MB/dia, 25 MB em disco); o botão **Seja um apoiador da rede** em `#/settings/network` sobe para 500 MB/dia e 250 MB, só no Wi-Fi.
+* **Nó leve por padrão, Apoiador por opção:** todo aparelho ajuda a malha com tetos baixos (100 MB em disco, fixo, e até 200 MB/dia); o botão **Seja um apoiador da rede** em `#/settings/network` sobe para 512 MB a 1 GB de disco e até o dobro por dia, só no Wi-Fi.
 * **Privacidade e período eleitoral:** aviso de que outros aparelhos veem seu IP e opção **Esconder meu IP** (só via TURN; sem efeito enquanto não houver TURN configurado). De 16/08 a 31/10 de ano par, ou com `electoralMode` ligado, a linha "Sugestões cívicas" some (Res. TSE 23.755/2026).
 * **Resiliência:** leitura em 4 gateways com tempo limite de 8 s (3 deles indexam o Vox e servem de testemunha GraphQL; o `ar-io.dev` fica só para leitura do conteúdo); mensagens de erro que dizem o que houve (cota esgotada, 402, limite, sem conexão, gateways fora, DM sem relay); no máximo 20 posts por chave a cada 10 min no gossip.
 * **Denúncia que arquiva até a revisão (PM-69):** a denúncia assinada vai cifrada à moderação, e o aparelho de quem modera arquiva o post para todos ("⏳ Em revisão", 48 h) se quem denunciou passar nas salvaguardas (membro, poucas pendentes, sem histórico de rejeição).

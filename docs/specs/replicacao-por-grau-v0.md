@@ -24,13 +24,21 @@ Cada pessoa guarda a própria mídia no aparelho ("traga seu próprio armazename
 > Com as duas camadas do [ADR-029](../adr/029-midia-em-duas-camadas-360p-720p.md), a Full pesa mais que a versão única medida abaixo: a conta de espaço precisa ser refeita depois da medição. Até lá, valem os tetos atuais.
 
 
-- **Teto padrão: 750 MB por aparelho**, contando os próprios posts (o original publicado e o backup local). **Mínimo de 100 MB e máximo de 1024 MB** (decisão do mantenedor, 11/11/2026). Se houver menos de 2 GB livres (`navigator.storage.estimate`), cai para 300 MB. A pessoa pode escolher 100 MB, 750 MB ou 1 GB (1024 MB).
-- **Subcota de vídeo (proposta, a decidir no piloto):** no máximo 40% do teto (300 MB), para os vídeos não expulsarem as fotos. Pode baixar para 25% se vídeo for raro no piloto.
+- **Teto por modo** (decisão do mantenedor, 11/11/2026), contando os próprios posts (o original publicado e o backup local). A banda é **proporcional ao disco**: até o dobro dele por dia. A pessoa pode baixar o teto diário, nunca passar do dobro. No 4G vale o teto próprio (padrão 5 MB/dia).
+
+  | Modo | Disco | Dados repassados por dia |
+  |---|---|---|
+  | **Nó leve** (padrão) | **100 MB, fixo** | até 200 MB |
+  | **Apoiador** (opt-in, só no Wi-Fi) | **de 512 MB a 1 GB**; começa em 1 GB | até 1 a 2 GB |
+  | **Guardião** (só no Wi-Fi e carregando) | **2 GB, fixo** | até 4 GB (o módulo ainda não está plugado no app) |
+
+  Planejado: com menos de 2 GB livres (`navigator.storage.estimate`), o apoiador fica no mínimo (512 MB).
+- **Subcota de vídeo (proposta, a decidir no piloto):** no máximo 40% do teto (40 MB no nó leve, até 410 MB no apoiador), para os vídeos não expulsarem as fotos. Pode baixar para 25% se vídeo for raro no piloto.
 - **Quando enche, sai primeiro** o grau mais distante e o mais antigo; o que a pessoa guardou ou fixou não sai.
 - Pedir ao navegador que não apague os dados (`navigator.storage.persist`, `storage-persistence.js`).
-- O teto substitui o limite de armazenamento do `supporter-mode.js` (hoje 100 MB no nó leve, o mínimo, e 1024 MB no apoiador, o máximo); as cotas diárias de transferência continuam.
+- Os tetos ficam em `supporter-mode.js` (`LIGHT_LIMITS`, `SUPPORTER_LIMITS`, `GUARDIAN_LIMITS`, `BANDWIDTH_PER_DISK`).
 
-Com a mídia v2 retrô medida (imagem com mediana de 43 KiB; vídeo de 10 s entre 0,5 e 1,0 MiB; áudio de 60 s ≈ 237 KiB): os 450 MB fora da subcota de vídeo guardam ≈ 10 mil imagens, e os 300 MB da subcota, ≈ 300 a 600 vídeos (conta com a versão única antiga; refazer com as camadas do ADR-029). Texto e miniaturas praticamente não pesam.
+Com a mídia v2 retrô medida (imagem com mediana de 43 KiB; vídeo de 10 s entre 0,5 e 1,0 MiB; áudio de 60 s ≈ 237 KiB): no apoiador com 1 GB, os ≈ 614 MB fora da subcota de vídeo guardam ≈ 14 mil imagens, e os ≈ 410 MB da subcota, ≈ 400 a 800 vídeos; no nó leve, ≈ 1.400 imagens e 40 a 80 vídeos (conta com a versão única antiga; refazer com as camadas do ADR-029). Texto e miniaturas praticamente não pesam.
 
 ## Grau por salto (sem expor o grafo social)
 
