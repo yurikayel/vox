@@ -11,7 +11,7 @@ import * as share from "../share.js";
 import * as render from "../render.js";
 import * as aviso from "../aviso.js";
 import * as roles from "../aviso-roles.js";
-import { myRoleFor, receivedClaims, sendRoleClaim } from "./aviso-roles-dm.js";
+import { myRoleFor, mySkills, receivedClaims, saveMySkills, sendRoleClaim } from "./aviso-roles-dm.js";
 import { countPastedReplies } from "../aviso-replies.js";
 import { isModerator } from "../moderation.js";
 import * as avisoView from "../render/aviso.js";
@@ -79,7 +79,9 @@ function callFields(ctx, a, now) {
   if (!call) return {};
   const mine = a.author === ctx.routeId;
   const received = mine ? [...roles.latestClaims(receivedClaims(a.id), a.id).values()] : null;
-  return { call, myRole: myRoleFor(a.id), received };
+  const myRole = myRoleFor(a.id);
+  const suggested = myRole ? [] : roles.suggestedRoles(mySkills(), call);
+  return { call, myRole, received, suggested };
 }
 
 const newId = (prefix) => `${prefix}_${Math.random().toString(36).slice(2, 10)}`;
@@ -103,8 +105,10 @@ export async function showAvisos(communityId) {
     items,
     isMod: ctx.isMod,
     canRespond: Boolean(ctx.routeId),
+    skills: mySkills(),
   });
   bindAvisoActions(main, ctx, items);
+  bindSkillsForm(main, communityId);
 }
 
 /** No topo da comunidade (só com a flag): o aviso ativo mais recente e o caminho para a aba. */
@@ -246,6 +250,21 @@ const ACTIONS = {
     await showAvisos(ctx.communityId);
   },
 };
+
+/** Competências: só neste aparelho, para sugerir papel quando chega uma chamada. */
+function bindSkillsForm(main, communityId) {
+  main.querySelector("#aviso-skills-form")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const skills = roles.parseSkillsInput(new FormData(e.target).get("skills"));
+    if (!skills) {
+      share.showToast(`Até ${roles.SKILL_MAX} competências, separadas por vírgula, cada uma com 2 a 24 letras.`, "error");
+      return;
+    }
+    saveMySkills(skills);
+    share.showToast("Competências guardadas só neste aparelho.");
+    await showAvisos(communityId);
+  });
+}
 
 function openRequestedShare(main, ctx, items) {
   const wanted = new URLSearchParams(location.hash.split("?")[1] || "").get("enviar");
