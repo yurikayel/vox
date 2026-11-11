@@ -6,6 +6,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### ADR-028 (proposto): ponte com o Fediverso via Bluesky
+- Sem servidor ActivityPub próprio. Quem quiser ser seguido no Mastodon ou no Threads liga o Bridgy Fed na própria conta do Bluesky, para onde o Vox já publica. Aviso de núcleo não atravessa automaticamente. Gatilho para rever registrado no [ADR](./docs/adr/028-ponte-activitypub-via-bluesky.md).
+
 ### Aviso assinado: lote D (no app, atrás da flag de laboratório)
 - Aba `#/c/<id>/avisos` e compositor `#/compose/aviso?c=<id>` em três etapas (tipo, texto, quando e onde), só para dono e moderação. Cartão com selo, código, respostas assinadas (membros e de fora separados) e contagem colada.
 - Depois de publicar, a folha de envio mostra o texto do WhatsApp; o link de conferência só aparece quando a coordenação pede. "Colar respostas do WhatsApp" publica só os números; "Cancelar ou corrigir" publica um cancelamento assinado.
