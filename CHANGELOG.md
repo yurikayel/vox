@@ -6,6 +6,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Docs: brainstorms do terceiro lugar e do público
+- [O Vox como "terceiro lugar"](./docs/brainstorms/brainstorm-terceiro-lugar-2026-11-10.md) e [para quem e com que gestos](./docs/brainstorms/brainstorm-publico-e-gestos-conhecidos-2026-11-10.md), ligados à [estratégia de 90 dias](./docs/strategy/estrategia-5-pontos-fracos-90-dias-2026-11.md) e ao índice. Ações candidatas; nada vira caixa no ROADMAP sem o mantenedor.
+
 ### Correção: o texto dizia Ed25519, a conta usa P-256 (SW v7.67)
 - Três textos do app afirmavam que a chave da conta é **Ed25519**; a conta assina com **ECDSA P-256** (`key-lock.js`, `local-account.js`). Ed25519 só existe em `vox-identity.js`, ainda não plugado. O compositor e a criação de identidade deixam de citar algoritmo; a tela de status mostra "P-256 (ECDSA)".
 - Mesma correção nas páginas de download e da revolução e em dois docs ([POSITIONING](./docs/product/POSITIONING.md), [infra participativa](./docs/strategy/infra-participativa-blindagem-crescimento.md)). Teste novo (`tests/rotulos-algoritmo-assinatura.test.js`) impede a volta do texto errado.
