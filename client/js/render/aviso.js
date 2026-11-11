@@ -1,5 +1,6 @@
 /** @file Telas do aviso assinado (lote D): aba de avisos, cartão, compositor em etapas e folha de envio. Spec: docs/specs/aviso-assinado-v0.md. */
 import { escapeHtml } from "./util.js";
+import { roleLabel } from "../aviso-roles.js";
 
 const KIND_LABEL = { convocacao: "📣 Convocação", informe: "ℹ️ Informe", alerta: "⚠️ Alerta" };
 const STATE_LABEL = { ativo: "", encerrado: "Encerrado", cancelado: "Cancelado" };
@@ -47,7 +48,54 @@ function renderModTools(item) {
   <div class="aviso-sheet" data-aviso-sheet="${id}" hidden></div>`;
 }
 
-/** Cartão de um aviso. `item`: `{ aviso, code, tally, count, myChoice }`. */
+const CALL_STATE = { aberta: "Aberta", quorum: "✅ Quórum atingido", "sem-quorum": "Sem quórum no prazo" };
+
+/** Vagas por papel e quórum, pela contagem que a coordenação publicou. */
+function callLines(call) {
+  if (!call) return "";
+  const roles = call.roles.map((r) => `${escapeHtml(roleLabel(r.role))} ${r.filled}/${r.slots}`).join(" · ");
+  const pending = call.counted ? "" : " · a coordenação ainda não publicou a contagem";
+  return `<p class="aviso-roles"><strong>Vagas:</strong> ${roles}</p>
+    <p class="aviso-quorum"><strong>Quórum:</strong> ${call.filled} de ${call.quorum} · ${CALL_STATE[call.state] || ""}${pending}</p>`;
+}
+
+function roleButton(item, role, text) {
+  const mine = item.myRole === role ? " is-active" : "";
+  return `<button type="button" class="btn btn-outline btn-sm${mine}" data-aviso-action="assumir" data-aviso-id="${escapeHtml(item.aviso.id)}" data-role="${escapeHtml(role)}">${text}</button>`;
+}
+
+/** Botões para assumir um papel; a resposta vai só para quem convocou. */
+function renderRoleButtons(item) {
+  const buttons = item.call.roles.map((r) => roleButton(item, r.role, `Assumir: ${escapeHtml(roleLabel(r.role))}`));
+  if (item.myRole) buttons.push(roleButton(item, "", "Desistir do papel"));
+  return `<div class="aviso-actions" role="group" aria-label="Assumir um papel">${buttons.join("")}</div>
+    <p class="hint">Sua resposta vai só para quem convocou, por mensagem cifrada. O grupo vê só os números.</p>`;
+}
+
+/** Só no aparelho de quem convocou: quem assumiu cada papel e o botão de publicar os números. */
+function renderCoordinationPanel(item) {
+  const byRole = new Map(item.call.roles.map((r) => [r.role, []]));
+  for (const c of item.received || []) byRole.get(c.role)?.push(c.authorDisplay || `${String(c.author).slice(0, 10)}…`);
+  const lines = [...byRole].map(([role, names]) =>
+    `<li><strong>${escapeHtml(roleLabel(role))}:</strong> ${names.length ? escapeHtml(names.join(", ")) : "ninguém ainda"}</li>`).join("");
+  return `<div class="aviso-coordination">
+    <p class="hint">Só você vê os nomes.</p><ul>${lines}</ul>
+    <button type="button" class="btn btn-outline btn-sm" data-aviso-action="publicar-papeis" data-aviso-id="${escapeHtml(item.aviso.id)}">Publicar contagem por papel</button>
+  </div>`;
+}
+
+/** O que quem vê o cartão pode fazer: responder, assumir papel, ver os nomes, gerir. */
+function cardActions(item, { isMod, canRespond, live }) {
+  const respond = live && canRespond;
+  return [
+    respond ? renderResponseButtons(item) : "",
+    respond && item.call ? renderRoleButtons(item) : "",
+    isMod && item.call && item.received ? renderCoordinationPanel(item) : "",
+    live && isMod ? renderModTools(item) : "",
+  ].join("");
+}
+
+/** Cartão de um aviso. `item`: `{ aviso, code, tally, count, myChoice, call?, myRole?, received? }`. */
 export function renderAvisoCard(item, { isMod = false, canRespond = false } = {}) {
   const { aviso } = item;
   const state = STATE_LABEL[aviso.avisoState] || "";
@@ -60,8 +108,8 @@ export function renderAvisoCard(item, { isMod = false, canRespond = false } = {}
     ${countsLine("No Vox", item.tally?.members)}
     ${countsLine("De fora do grupo", item.tally?.outsiders)}
     ${countsLine("Contado no WhatsApp", pastedCounts(item.count))}
-    ${live && canRespond ? renderResponseButtons(item) : ""}
-    ${live && isMod ? renderModTools(item) : ""}
+    ${callLines(item.call)}
+    ${cardActions(item, { isMod, canRespond, live })}
   </article>`;
 }
 
@@ -117,6 +165,11 @@ function whenStep() {
     <input id="aviso-event-at" name="eventAt" type="datetime-local" />
     <label for="aviso-place">Lugar</label>
     <input id="aviso-place" name="eventPlace" maxlength="80" />
+    <label for="aviso-roles">Papéis e vagas (opcional)</label>
+    <input id="aviso-roles" name="roleSlots" maxlength="200" placeholder="Ex.: jurídico 2, comunicação 3, apoio 5" />
+    <label for="aviso-quorum">Quórum mínimo de pessoas (opcional)</label>
+    <input id="aviso-quorum" name="quorumMin" type="number" min="1" max="999" />
+    <p class="hint">Quem assume um papel responde só para você, por mensagem cifrada. O grupo vê só os números que você publicar.</p>
     <p class="error" data-aviso-error hidden></p>
     <button type="button" class="btn btn-outline" data-step-prev>Voltar</button>
     <button type="submit" class="btn btn-primary" id="btn-publish-aviso">Assinar e publicar</button>

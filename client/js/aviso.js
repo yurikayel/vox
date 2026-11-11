@@ -6,6 +6,7 @@
 
 import { avisoExpiresAt, isAvisoTopic } from "../aviso/aviso-link.js";
 import { isModerator } from "./moderation.js";
+import { roleFields, validateRoleFields } from "./aviso-roles.js";
 
 export { AVISO_LINK_MAX, avisoCode, avisoExpiresAt, decodeAvisoFragment, encodeAvisoFragment, isAvisoTopic, personCode } from "../aviso/aviso-link.js";
 
@@ -34,7 +35,7 @@ export function validateAvisoDraft(draft = {}) {
   const hasEvent = Number(draft.eventAt) > 0;
   if (kind === "convocacao" && !hasEvent) problems.push("eventAt");
   if (kind !== "convocacao" && hasEvent) problems.push("eventAt");
-  return problems;
+  return [...problems, ...validateRoleFields(draft)];
 }
 
 function optionalFields(draft) {
@@ -43,7 +44,7 @@ function optionalFields(draft) {
   if (text(draft.eventPlace)) out.eventPlace = text(draft.eventPlace);
   if (Number(draft.expiresAt) > 0) out.expiresAt = Number(draft.expiresAt);
   if (text(draft.cancels)) out.cancels = text(draft.cancels);
-  return out;
+  return { ...out, ...roleFields(draft) };
 }
 
 /** Corpo do tópico-aviso, pronto para `signPayload`. Lança se o rascunho é inválido. */

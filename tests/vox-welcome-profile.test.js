@@ -10,7 +10,7 @@ test("vox-welcome-profile - route id and copy", () => {
   assert.equal(p.name, "Vox");
   assert.equal(p.handle, "vox");
   assert.equal(p.avatar, welcome.OFFICIAL_PROFILE_AVATAR);
-  assert.ok(p.avatar.includes("profile-vox-official-512.png"));
+  assert.ok(p.avatar.includes("icon-white-192.png"));
   assert.ok(p.isOfficialPlatform);
   assert.ok(welcome.getWelcomeDmText().includes("Voxpedia"));
   assert.ok(welcome.getWelcomeDmText().includes("👋"));
