@@ -225,3 +225,9 @@ Limites de código do projeto ([HARDENING](../HARDENING.md)): função ≤ 30 LL
 ## Nota do lote C (11/11/2026): memória de confiança também por nome
 
 O aviso não leva o nome da comunidade, e o golpe de clone copia o **nome de quem assina** num grupo novo (`communityId` novo). Por isso a página leve guarda as chaves vistas por `communityId` **e** pelo `authorDisplay` normalizado (sem acento, minúsculo, sem espaços nas pontas), em `localStorage` (`vox.aviso.trust`), só no aparelho. Chave nova para um grupo **ou** um nome já conhecido fica vermelha até a pessoa tocar em "A coordenação confirmou este código". Custo aceito: duas pessoas da coordenação com o mesmo nome caem no vermelho uma vez.
+
+## Nota do lote D (11/11/2026)
+
+- **Envio pelo WhatsApp depois de publicar:** o compositor termina em **Assinar e publicar**. A folha de envio aparece em seguida, com **Enviar pelo WhatsApp** e, sob demanda, o link de conferência. Os dois botões da spec viraram um só porque o navegador bloqueia abrir o WhatsApp depois da assinatura, que é assíncrona. Para "publicar só no Vox", basta não tocar em enviar.
+- **Peso:** foi a saída 1, pagar com corte. Os módulos do aviso entraram no precache; saiu o ícone de 512 px que o app só mostrava em 48 px.
+- **Flag:** `localStorage["vox.lab.aviso"] = "1"` mostra o aviso no topo da comunidade e o caminho para a aba. As rotas funcionam pelo endereço mesmo sem a flag, como nos outros laboratórios.
