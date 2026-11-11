@@ -1,9 +1,9 @@
 {
-  "git_sha": "b966713",
-  "branch": "fix/rotulos-algoritmo-assinatura",
-  "test_js": 978,
+  "git_sha": "121e50c",
+  "branch": "feat/aviso-lote-c",
+  "test_js": 997,
   "test_python": 106,
-  "test_total": 1084,
-  "cache_name": "vox-pwa-v7.67-real-network-audio-video-upload",
-  "generated_at": "2026-11-10T23:01:16Z"
+  "test_total": 1103,
+  "cache_name": "vox-pwa-v7.68-real-network-audio-video-upload",
+  "generated_at": "2026-11-11T15:14:19Z"
 }

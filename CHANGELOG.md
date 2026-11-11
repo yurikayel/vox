@@ -6,6 +6,10 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Aviso assinado: lote C (página leve de conferência)
+- `client/aviso.html` + `client/aviso/aviso-page.js`: abre o link de conferência sem conta e sem carregar o app, confere a assinatura no aparelho e mostra verde (chave já conhecida), amarelo (primeira vez: guarda a chave), vermelho (alterado) ou vermelho de chave nova para grupo **ou nome** já conhecido, com botão "A coordenação confirmou este código". Respostas prontas para colar no grupo (`wa.me`). CSP própria, sem rede (`connect-src 'none'`), fora do precache.
+- A conferência de assinatura saiu de `local-account.js` para `client/js/signed-verify.js` (sem mudar comportamento) e a lógica de link/códigos para `client/aviso/aviso-link.js`, sem dependências (a página é entrada à parte, como `embed/`: fora do app e do precache). SW `v7.68`. 6 testes.
+
 ### Aviso assinado: link de conferência sob demanda
 - O teste no WhatsApp mostrou que o link funciona, mas o paredão de texto é hostil. O aviso agora vai limpo; o link vai numa segunda mensagem, só quando a coordenação pede (`buildAvisoLinkMessage`). Dilemas e saídas futuras (link curto pelo Arweave, formato compacto) registrados na [spec](./docs/specs/aviso-assinado-v0.md#dilemas-registrados-em-11112026).
 
