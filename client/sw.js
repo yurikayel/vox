@@ -197,6 +197,7 @@ const SHELL_ASSETS = [
   "./js/app/aviso-roles-dm.js",
   "./js/app/community-termo-flow.js",
   "./js/app/natural-mod-flow.js",
+  "./js/app/mediation-dm.js",
 
   "./js/account-backup-wrap.js",
 
