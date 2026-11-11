@@ -374,6 +374,7 @@ const SHELL_ASSETS = [
 // eslint-disable-next-line no-unused-vars
 const UNPLUGGED_MODULES = [
   "./js/airgap-webrtc.js",
+  "./js/aviso.js",
   "./js/bridging-rank.js",
   "./js/chunked-transfer.js",
   "./js/civic-credential.js",

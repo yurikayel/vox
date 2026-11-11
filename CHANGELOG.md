@@ -6,6 +6,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Aviso assinado: lote A (lógica pura, ainda não plugada)
+- `client/js/aviso.js`: montar e validar o aviso (`cobranca` recusado), selo só de dono ou moderação, topo, vencimento e cancelamento, respostas e contagem colada, códigos, texto do WhatsApp e link de conferência ([spec](./docs/specs/aviso-assinado-v0.md)). Fica em `UNPLUGGED_MODULES`: precache e `CACHE_NAME` sem mudança. 9 testes em `tests/aviso.test.js`.
+
 ### Docs: spec do aviso assinado (proposta)
 - [Aviso assinado v0](./docs/specs/aviso-assinado-v0.md), primeira peça da [síntese](./docs/brainstorms/brainstorm-sintese-praca-de-colunas-2026-11-10.md):
   - o aviso é um tópico com campos de aviso, e só tem selo quando vem de dono ou moderação;
