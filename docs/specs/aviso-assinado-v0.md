@@ -73,12 +73,17 @@ Montado no aparelho e enviado por `shareOrCopy` (`share.js`). O Vox não manda n
 Pauta: reforma da quadra e contas do mês.
 Responda aqui: ✅ Ciente · 🙋 Vou · 🤔 Talvez · ❌ Não vou
 Código do aviso: A7F3
-🔒 Conferir se veio da coordenação: <link>
 ```
 
-A linha do link vem por último: quem tem pouco dado lê o aviso sem abrir nada.
+**O link de conferência não vai no aviso** (decisão de 11/11/2026, ver [Dilemas](#dilemas-registrados-em-11112026)). Quem coordena toca **Gerar link de conferência** quando quiser, e o link vai numa **segunda mensagem**, separada:
+
+```
+🔒 Conferir se o aviso A7F3 veio da coordenação: <link>
+```
 
 ## Página leve de conferência (`aviso.html`)
+
+> Usada só quando a coordenação gera o link, sob demanda (ver Dilemas).
 
 - **Endereço:** `aviso.html#v=1&a=<aviso assinado em base64url>`. O aviso vai depois do `#`, que o navegador não manda ao servidor. Sem servidor, sem conta, e funciona depois de carregada sem internet.
 - **Tamanho do link:** até 2.000 caracteres no `a=`. O composer avisa e bloqueia antes disso.
@@ -198,3 +203,21 @@ Limites de código do projeto ([HARDENING](../HARDENING.md)): função ≤ 30 LL
 1. **`type` desconhecido nas versões atuais: guarda e repassa.** Em `peers.js` (`handleGossipMessage`), o item entra se tem `id` e assinatura válida, o autor não está bloqueado, não é mais velho que a versão guardada e, se for `community_update`, passa no PM-09. Não há lista de tipos aceitos: `aviso-resposta` e `aviso-contagem` são guardados e repassados por quem ainda não atualizou. O feed só lista `topic` e `listing` (`cache-node.js`, `screens-home.js`), então eles não aparecem como post. Quem não atualizou ajuda a espalhar as respostas e não vê lixo na tela. O aviso, por ser `topic`, aparece como post comum.
 2. **O código de 4 caracteres basta.** São 32⁴ = 1.048.576 códigos. O código só precisa ser único entre os avisos **ativos** do mesmo grupo, que são poucos. Com 10 ativos, a chance de colisão é de ≈ 0,004%; com 50 num mês inteiro, ≈ 0,12%. Regra para o lote A: se dois avisos ativos do grupo tiverem o mesmo código, a resposta conta para o mais recente e a tela da coordenação avisa.
 3. **Limite de 2.000 caracteres no WhatsApp: BLOCKED**, só dá para responder testando em aparelho. Não há fonte oficial do WhatsApp sobre tamanho de link reconhecido. Teste no piloto, antes do lote C: mandar links de 500, 1.000, 1.500 e 2.000 caracteres num grupo de teste, em Android antigo, iPhone e WhatsApp Business, e ver se o link fica clicável inteiro. Se falhar, o plano B é comprimir o aviso (`CompressionStream`) ou baixar o limite do texto.
+
+## Dilemas registrados em 11/11/2026
+
+**O que o teste mostrou:** links de 787, 1.000, 1.259 e 2.040 caracteres chegaram inteiros e clicáveis no WhatsApp. Funciona, mas **o paredão de texto do link é hostil**, principalmente para quem tem 50+.
+
+**Por que o link é longo:** para conferir sem servidor, o link leva a chave pública e a assinatura (uns 170 caracteres que não comprimem, porque são bytes aleatórios) e o texto do aviso, porque a página só confere o que recebe. Nenhum aviso real passa de ~1.260 caracteres; o limite de 2.000 é folga.
+
+| Saída | Tamanho | Custo |
+|---|---|---|
+| Formato atual | 790 a 1.260 | Paredão |
+| Formato binário compacto + compressão | ~350 a ~650 (estimado) | Continua paredão, mais código |
+| Link curto pelo Arweave (`perma-notary.js`, grátis até 100 KiB) | ~90 | Aviso **público e permanente**; a página precisa de internet. Pede ADR de privacidade (hora e lugar de núcleo podem ser sensíveis) |
+| Link curto por relay do Vox | ~80 | Não há relay público ([INFRA-CUSTOS](../INFRA-CUSTOS.md)) |
+| Só o código da pessoa no texto, sem link | 0 | Não prova nada: texto se copia |
+
+**Decisão por agora (a mais simples):** o aviso vai **limpo**, sem link. O link de conferência é **sob demanda**, numa segunda mensagem, para quando houver dúvida (alerta, aviso estranho, pedido de quem recebeu). Conferir dentro do app, para quem tem conta, continua automático (selo). O lote C segue com o formato atual.
+
+**Fica para depois, com ADR:** link curto pelo Arweave como opção "aviso público", com o compositor perguntando "Este aviso pode ficar público e permanente?"; formato binário compacto se o link longo continuar necessário.

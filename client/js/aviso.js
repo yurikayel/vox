@@ -201,16 +201,22 @@ function formatWhen(eventAt) {
   return new Date(eventAt).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
 }
 
-/** Texto pronto para o WhatsApp; o link vem por último. */
-export function buildAvisoShareText({ aviso, communityName = "", code = "", link = "" }) {
+/** Texto pronto para o WhatsApp, sem link (o link de conferência vai à parte, sob demanda). */
+export function buildAvisoShareText({ aviso, communityName = "", code = "" }) {
   const lines = [`📣 *Aviso — ${communityName || "comunidade"}*`, `*${aviso.title}*`];
   if (aviso.body) lines.push(aviso.body);
   if (aviso.eventAt) lines.push(`Quando: ${formatWhen(aviso.eventAt)}${aviso.eventPlace ? ` · ${aviso.eventPlace}` : ""}`);
   const options = aviso.eventAt ? "✅ Ciente · 🙋 Vou · 🤔 Talvez · ❌ Não vou" : "✅ Ciente";
   lines.push(`Responda aqui: ${options}`);
   if (code) lines.push(`Código do aviso: ${code}`);
-  if (link) lines.push(`🔒 Conferir se veio da coordenação: ${link}`);
   return lines.join("\n");
+}
+
+/** Segunda mensagem, gerada só quando a coordenação pede: o link de conferência. */
+export function buildAvisoLinkMessage({ code = "", link }) {
+  if (!link) throw new Error("Link de conferência vazio.");
+  const which = code ? `o aviso ${code}` : "o aviso";
+  return `🔒 Conferir se ${which} veio da coordenação: ${link}`;
 }
 
 function toBase64Url(textValue) {

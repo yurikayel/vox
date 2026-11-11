@@ -6,6 +6,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Aviso assinado: link de conferência sob demanda
+- O teste no WhatsApp mostrou que o link funciona, mas o paredão de texto é hostil. O aviso agora vai limpo; o link vai numa segunda mensagem, só quando a coordenação pede (`buildAvisoLinkMessage`). Dilemas e saídas futuras (link curto pelo Arweave, formato compacto) registrados na [spec](./docs/specs/aviso-assinado-v0.md#dilemas-registrados-em-11112026).
+
 ### Aviso assinado: lote B (contar respostas coladas, ainda não plugado)
 - `client/js/aviso-replies.js`: lê os dois formatos de exportação do WhatsApp e linhas soltas, reconhece ciente, vou, talvez e não vou (palavras e emojis), fica com a última resposta de cada nome, ignora resposta com código de outro aviso e devolve só números. Em `UNPLUGGED_MODULES`: precache e `CACHE_NAME` sem mudança. 4 testes.
 
