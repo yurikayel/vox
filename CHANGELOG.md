@@ -6,7 +6,7 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
-### ADR-028 (proposto): ponte com o Fediverso via Bluesky
+### ADR-028 (aceito): ponte com o Fediverso via Bluesky
 - Sem servidor ActivityPub próprio. Quem quiser ser seguido no Mastodon ou no Threads liga o Bridgy Fed na própria conta do Bluesky, para onde o Vox já publica. Aviso de núcleo não atravessa automaticamente. Gatilho para rever registrado no [ADR](./docs/adr/028-ponte-activitypub-via-bluesky.md).
 
 ### Aviso assinado: lote D (no app, atrás da flag de laboratório)

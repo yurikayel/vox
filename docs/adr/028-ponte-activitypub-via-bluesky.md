@@ -1,6 +1,6 @@
 # ADR-028: Ponte com o Fediverso (ActivityPub) via Bluesky, sem servidor próprio
 
-**Status:** proposed · **Revisado:** 2026-11-11 · **Relacionados:** [POSITIONING](../product/POSITIONING.md), [INFRA-CUSTOS](../INFRA-CUSTOS.md), [ADR-022](./022-memoria-central-por-consentimento.md), [ADR-027](./027-autorizacao-no-relay-dono-e-origem.md), [RFC 0001 — POSSE export](../rfc/0001-posse-export.md), [spec do aviso assinado](../specs/aviso-assinado-v0.md)
+**Status:** accepted (2026-11-11, pelo mantenedor; UI de orientação ainda não implementada) · **Revisado:** 2026-11-11 · **Relacionados:** [POSITIONING](../product/POSITIONING.md), [INFRA-CUSTOS](../INFRA-CUSTOS.md), [ADR-022](./022-memoria-central-por-consentimento.md), [ADR-027](./027-autorizacao-no-relay-dono-e-origem.md), [RFC 0001 — POSSE export](../rfc/0001-posse-export.md), [spec do aviso assinado](../specs/aviso-assinado-v0.md)
 
 ## 1. Contexto
 
