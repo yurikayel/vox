@@ -4,7 +4,7 @@
  */
 import { fitBox, log, bench, SPEC } from "./bench.js";
 
-const FPS = 24;
+const FPS = 30;
 const KEYFRAME_EVERY = 48;
 
 function avcConfig(width, height, extra = {}) {
@@ -73,7 +73,7 @@ function seekTo(video, t) {
 }
 
 /**
- * Busca quadro a quadro (24 fps) e codifica os primeiros `seconds`, com o quantizador pedido.
+ * Busca quadro a quadro (30 fps) e codifica os primeiros `seconds`, com o quantizador pedido.
  * Por busca e não por reprodução: funciona com a aba em segundo plano. O tempo medido inclui a
  * decodificação das buscas, então serve para tamanho e taxa, não para velocidade do codificador.
  */

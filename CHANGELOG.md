@@ -6,6 +6,15 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### ADR-029 (proposto): mídia em duas camadas, 360p e 720p
+- Decisões do mantenedor (11/11/2026):
+  - **sem teto de 100 KB por item**: os pedaços ficam só como unidade de transporte;
+  - **duas camadas**: Half em 360p para a malha pública e Full em 720p para o autor e os amigos, que a guardam e a servem;
+  - **30 fps** em todo vídeo.
+- O Arweave fica como cartório (texto e hash).
+- A [spec da mídia v2](./docs/specs/midia-v2.md), a [replicação por grau](./docs/specs/replicacao-por-grau-v0.md) e o PM-71 foram atualizados. A ferramenta de medição passou a 30 fps.
+- Tamanhos das camadas novas ainda não medidos. Não há codificador no app ainda, então nada muda na tela.
+
 ### ADR-028 (proposto): ponte com o Fediverso via Bluesky
 - Sem servidor ActivityPub próprio. Quem quiser ser seguido no Mastodon ou no Threads liga o Bridgy Fed na própria conta do Bluesky, para onde o Vox já publica. Aviso de núcleo não atravessa automaticamente. Gatilho para rever registrado no [ADR](./docs/adr/028-ponte-activitypub-via-bluesky.md).
 
