@@ -1,13 +1,35 @@
 # Síntese — a praça de colunas
 
-> **Status:** brainstorm (síntese) · **Owner:** mantenedor · **Revisado:** 2026-11-10 · **Não substitui o [ROADMAP](../ROADMAP.md)** ([ADR-017](../adr/017-consolidacao-roadmap-unico.md))
+> **Status:** brainstorm (síntese) · **Owner:** mantenedor · **Revisado:** 2026-11-11 (analogia da ágora no lugar do WeChat) · **Não substitui o [ROADMAP](../ROADMAP.md)** ([ADR-017](../adr/017-consolidacao-roadmap-unico.md))
 > **Origem:** consolida os seis brainstorms de 10/11/2026 e acrescenta uma pesquisa feita no mesmo dia sobre o PL 5.746/2026 e o campo pró-democrático de centro e de direita (§9). **Quando um doc de origem divergir desta síntese, vale a síntese.** Os docs de origem guardam o detalhe:
 > [5 pontos fracos](./brainstorm-5-pontos-fracos-2026-11-10.md) → [terceiro lugar](./brainstorm-terceiro-lugar-2026-11-10.md) → [público e gestos](./brainstorm-publico-e-gestos-conhecidos-2026-11-10.md) → [captação por perfil](./brainstorm-captacao-por-perfil-2026-11-10.md) → [refino: rede de ação](./brainstorm-refino-rede-de-acao-e-soberania-2026-11-10.md) → [nichos como colunas](./brainstorm-nichos-colunas-wechat-democratico-2026-11-10.md).
 > Tudo aqui é **candidato**: nada vira caixa no ROADMAP sem DoD e responsável. Nada foi enviado a ninguém.
 
 ## A tese numa frase
 
-**O Vox começa como o caderno assinado dos grupos que já vivem no WhatsApp e cresce, coluna por coluna, até ser a praça onde o povo se organiza: um super-app democrático que conversa com o governo sem ser dele.**
+**O Vox começa como o caderno assinado dos grupos que já vivem no WhatsApp e cresce, coluna por coluna, até ser a praça onde o povo se organiza: uma ágora digital, que conversa com o governo sem ser dele.**
+
+## A imagem: a ágora
+
+A ágora de Atenas era uma praça comum cercada de *stoas*, galerias com colunata, cada uma com uma função. "Praça de colunas" é a descrição dela ao pé da letra. Por isso a analogia interna é a **ágora**, não o WeChat: tem origem democrática e pública, e já é o nome do design system ([ADR-016](../adr/016-design-system-sovereign-agora-e-democracia-direta.md), "Sovereign Agora"; o CSS usa o prefixo `agora-`).
+
+| Na ágora de Atenas | O que era | Peça do Vox |
+|---|---|---|
+| Monumento dos Heróis Epônimos | O quadro de avisos público: leis propostas, processos, convocações | **Aviso assinado** e **mural** |
+| Metrôon | O arquivo da cidade | **Ata** e registro ancorado |
+| Bouleutérion | Onde o conselho se reunia | Assembleia e decisão |
+| Pesos e medidas oficiais, fiscais do mercado | A confiança de que a conta é justa | **Livro-caixa** e, depois, a feira |
+| Stoas | Uma galeria para cada função, em volta da praça comum | **As colunas (nichos)** |
+| Kleroterion | Máquina de sorteio de jurados e magistrados | **Sorteio** (candidata, abaixo) |
+
+**Peça candidata que a ágora sugere: sorteio.** Atenas sorteava cargos para que os mesmos de sempre não os capturassem. No Vox, o sorteio escolheria quem confere a ata ou quem entra na comissão de contas. Para ninguém desconfiar do resultado, ele precisa ser conferível: cada participante registra antes um valor escondido e o revela depois. Fica para **depois das seis peças** (§5).
+
+**Onde a palavra não entra:**
+- **Marca pública.** "Ágora" esbarra em três nomes: a Ágora Investimentos (Bradesco), justo num produto que fala de caixa e Pix; o Movimento Agora!, que é político e faz parte do Pacto pela Democracia, o que fere a neutralidade (§9); e a Agora.io, empresa de vídeo em tempo real. A marca continua sendo Vox.
+- **Tela.** Quem organiza, com 50+, não conhece grego. Na tela, palavras simples: Aviso, Mural, Ata, Caixa. "Ágora" fica nos docs e no manifesto.
+- **Sem romantizar.** A ágora grega excluía mulheres, escravizados e estrangeiros. A do Vox é de qualquer pessoa adulta ([ADR-020](../adr/020-postura-de-operacao-do-piloto-g1.md)), e isso se diz sempre que a imagem aparecer.
+
+**Frase de manifesto:** "A ágora é agora." Serve para quem constrói e para o público da soberania digital. Para quem organiza, a mensagem continua sendo a dor (§8).
 
 ## Resumo
 
@@ -17,7 +39,7 @@
 | **Onde?** | Dentro do WhatsApp primeiro. O Vox é a camada de registro e de ação do grupo, não mais um lugar para ir. |
 | **Por que ficam?** | Dois relógios: o **compromisso que volta** prende a organização; a **missão da semana** prende o membro (§3). |
 | **O que se constrói?** | Seis peças comuns a todos os nichos: aviso assinado, mural, ata, livro-caixa, missão, círculo de confiança (§5). |
-| **Como cresce?** | Coluna por coluna. Uma peça só entra se servir a pelo menos dois nichos. É daí que vem o efeito "WeChat". |
+| **Como cresce?** | Coluna por coluna. Uma peça só entra se servir a pelo menos dois nichos. É o desenho da ágora: uma praça comum cercada de colunas. |
 | **Com quem?** | Pontes de confiança (oficina, técnico, centro acadêmico, rádio, coordenação local). Grupos de qualquer lado pró-democrático, pelo mesmo pacto. |
 | **Que onda?** | A da soberania digital no Estado, na regulação e na militância organizada. Não a da migração de usuários. |
 | **Como medir?** | Organizações com registro conferível no mês + membros com um gesto na semana (§10). |
@@ -37,7 +59,7 @@
 
 | Tensão | Como fica |
 |---|---|
-| "Não ser *o* lugar" (terceiro lugar) × "virar um WeChat" (nichos) | O WeChat é o destino; o terceiro lugar é a porta de entrada. O super-app é consequência de colunas de pé, não promessa. **"WeChat" é só analogia interna:** é marca de terceiro e lembra vigilância estatal, o contrário do que o Vox quer dizer. Na rua, a frase é "a praça do povo". |
+| "Não ser *o* lugar" (terceiro lugar) × "virar um WeChat" (nichos) | O destino é uma **ágora**, a praça comum cercada de colunas; o terceiro lugar é a porta de entrada. Reunir os serviços num só app é consequência de colunas de pé, não promessa. **A analogia interna é a ágora, não o WeChat**, que é marca de terceiro e lembra vigilância estatal. "Ágora" também não vira marca nem palavra de tela ([a imagem: a ágora](#a-imagem-a-ágora)). Na rua, a frase é "a praça do povo". |
 | Cartório (ata, caixa) × missão (hábito) | Não competem: são os **dois relógios** (§3). Uma coluna sem missão vira cartório; uma coluna sem compromisso vira fogo de palha. |
 | Ordem por perfil (5, 3, 6, 4) × ordem por coluna (1, 2, 3) | São a mesma ordem vista de dois lados: perfis são pessoas, colunas são organizações (tabela do §4). |
 | Militância engajada × neutralidade da praça | Núcleo local sim, canal nacional não. Oferta pública e igual para todos os lados. O critério é o pacto, não uma lista (§9). |
@@ -99,7 +121,7 @@ Juntar o que estava espalhado: o **selo contra golpe** (terceiro lugar), o **"Vo
 | Missão | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |  |
 | Círculo de confiança | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 
-**Depois das seis:** pauta legislativa a partir de dados abertos (F9 do ROADMAP), mini-apps em ambiente isolado (`webxdc-host.js`, sem nenhum cartucho pronto), vitrine com Pix (depois do parecer) e selo gov.br via parceiro público (ADR-018, em proposta).
+**Depois das seis:** pauta legislativa a partir de dados abertos (F9 do ROADMAP), mini-apps em ambiente isolado (`webxdc-host.js`, sem nenhum cartucho pronto), vitrine com Pix (depois do parecer) selo gov.br via parceiro público (ADR-018, em proposta) e sorteio conferível, inspirado no kleroterion ([a imagem: a ágora](#a-imagem-a-ágora)).
 
 ## 6. Ordem de construção (candidata)
 
@@ -176,7 +198,7 @@ O refino deixou pendente mapear a direita pró-democrática. O que a pesquisa de
 - Ligação com candidato ou partido; dinheiro de partido ou de governo; envio automático ou em massa.
 - Truques que prendem (rolagem infinita, contagem de curtidas, sequência que pune quem falta).
 - Custodiar dinheiro; pedir CPF ou credencial gov.br.
-- Usar "WeChat" na comunicação pública.
+- Usar "WeChat" como analogia; usar "Ágora" como marca ou como palavra na tela.
 - Correr atrás da migração de usuários.
 
 ## 12. Lacunas
