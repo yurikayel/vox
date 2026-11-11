@@ -133,6 +133,16 @@ function parseStaticRoute(parts, query) {
   return null;
 }
 
+/**
+ * Atalho `#/@arroba` para o perfil de um handle (o formato que as pessoas digitam).
+ * @param {string[]} parts Partes do caminho do hash.
+ * @returns {{name: string, slug: string} | null} Rota de busca por handle, ou `null`.
+ */
+function parseHandleShortcut(parts) {
+  if (parts.length !== 1 || !parts[0].startsWith("@") || parts[0].length < 2) return null;
+  return { name: "handle-lookup", slug: decodeURIComponent(parts[0].slice(1)) };
+}
+
 export function parseRoute() {
   const fromSearch = parseSearchHints();
   if (fromSearch) return fromSearch;
@@ -151,6 +161,7 @@ export function parseRoute() {
     parseCommunityRoute(parts, query) ||
     parseLabsHash(parts) ||
     parseComposeRoute(parts, query) ||
-    { name: "home" }
+    parseHandleShortcut(parts) ||
+    { name: "not-found" }
   );
 }

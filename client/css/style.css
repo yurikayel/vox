@@ -4643,9 +4643,9 @@ p.profile-grid-handle {
 }
 
 .community-civic-tag-pill {
-  background: color-mix(in srgb, var(--primary) 12%, transparent);
-  color: var(--primary);
-  border: 1px solid color-mix(in srgb, var(--primary) 28%, transparent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
   font-size: 0.72rem;
   padding: 1px 7px;
   border-radius: 999px;
@@ -4698,16 +4698,16 @@ p.profile-grid-handle {
 }
 
 .civic-tag-btn.active {
-  background: var(--primary);
-  color: #fff;
-  border-color: var(--primary);
+  background: var(--accent);
+  color: var(--on-accent);
+  border-color: var(--accent);
   font-weight: 600;
 }
 
 .community-sort-bar .btn-sort-topic.active {
-  background: var(--primary);
-  color: #fff;
-  border-color: var(--primary);
+  background: var(--accent);
+  color: var(--on-accent);
+  border-color: var(--accent);
   font-weight: 600;
 }
 
@@ -4980,7 +4980,7 @@ p.profile-grid-handle {
 .card .meta {
   font-size: 0.8rem;
   color: var(--muted);
-  word-break: break-all;
+  overflow-wrap: anywhere;
 }
 
 .card .desc {
@@ -5414,6 +5414,12 @@ p.profile-grid-handle {
   font-family: inherit;
   cursor: pointer;
   transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* `display: flex` acima venceria o `hidden` do navegador; o onboarding esconde provedor sem oauth.json. */
+.oauth-btn[hidden],
+.genesis-overlay .oauth-btn[hidden] {
+  display: none;
 }
 
 .oauth-btn:focus-visible {
@@ -5937,15 +5943,25 @@ p.profile-grid-handle {
 }
 
 /* Feira Comunitária e Classificados (Fase M1) */
+/* No celular as quatro abas não cabem em 360-412px: rolam de lado em vez de alargar a página inteira. */
 .community-tabs {
   display: flex;
   gap: 0.5rem;
   margin: 1rem 0 1.25rem;
   border-bottom: 1px solid var(--border);
   padding-bottom: 0.35rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.community-tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .community-tabs .tab-btn {
+  flex-shrink: 0;
+  white-space: nowrap;
   padding: 0.45rem 0.9rem;
   font-size: 0.92rem;
   font-weight: 600;
@@ -7050,7 +7066,7 @@ p.profile-grid-handle {
 .post-ig-header .btn-overlay-follow {
   font-size: 0.82rem;
   font-weight: 600;
-  color: var(--primary, #00b4d8);
+  color: var(--accent);
   background: transparent;
   border: none;
   padding: 3px 8px;
@@ -7062,7 +7078,7 @@ p.profile-grid-handle {
 }
 
 .post-ig-header .btn-overlay-follow:hover {
-  background: color-mix(in srgb, var(--primary, #00b4d8) 12%, transparent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
   text-decoration: none;
 }
 
@@ -9020,7 +9036,7 @@ blockquote.repost-cite {
   right: 15%;
   height: 3px;
   border-radius: 3px;
-  background: var(--primary, #38bdf8);
+  background: var(--accent);
 }
 
 .badge-post-external {
@@ -9898,7 +9914,7 @@ blockquote.repost-cite {
 .compose-pill-input {
   background: transparent;
   border: none;
-  color: var(--primary, #38bdf8);
+  color: var(--accent);
   font-weight: 700;
   font-size: 0.82rem;
   outline: none;

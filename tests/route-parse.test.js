@@ -88,4 +88,19 @@ describe("route-parse", () => {
       assert.deepEqual(parseRoute(), { name: "dm-thread", address: "vx_peer" });
     });
   });
+
+  it("rota desconhecida vira not-found em vez de cair na Home sem aviso", () => {
+    withLocation({ hash: "#/nao-existe/xyz" }, () => {
+      assert.deepEqual(parseRoute(), { name: "not-found" });
+    });
+  });
+
+  it("atalho #/@arroba abre a busca por handle", () => {
+    withLocation({ hash: "#/@helena" }, () => {
+      assert.deepEqual(parseRoute(), { name: "handle-lookup", slug: "helena" });
+    });
+    withLocation({ hash: "#/@" }, () => {
+      assert.deepEqual(parseRoute(), { name: "not-found" });
+    });
+  });
 });

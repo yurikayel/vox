@@ -116,7 +116,7 @@ function renderGenesisImportHtml() {
 const GENESIS_PICKS = [
   { key: "new", icon: "fingerprint", title: "Sou novo no Vox", desc: "Criar minha identidade neste aparelho." },
   { key: "restore", icon: "restore", title: "Já tenho conta", desc: "Restaurar com a minha Senha Soberana." },
-  { key: "import", icon: "import", title: "Importar nome e foto", desc: "Usar Google, Meta ou GitHub só para o perfil." },
+  { key: "import", icon: "import", title: "Importar nome e foto", desc: "Trazer só o nome e a foto de outra conta." },
 ];
 
 function genesisStep(key, bodyHtml, { back = "", hidden = true } = {}) {
