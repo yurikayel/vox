@@ -6,6 +6,10 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Moderador natural, lote A (PM-83)
+- Lógica de quem responde por quem a partir dos vínculos assinados: padrinho, ou a pessoa mais próxima (vínculo comum mais antigo, membro da comunidade primeiro), nunca a outra parte. Tela **Meus vínculos** no topo de Pessoas. Laboratório `vox.lab.moderador`.
+- Precache: a arte da cantina passou a WebP (−40,5 KB, visualmente igual); a folga fica reservada para os próximos lotes do PM-83. Teste do HTML da cantina ajustado ao arquivo novo. SW `v7.74`.
+
 ### ADR-023, emenda 1 (aceita): moderador natural
 - Mediação vai para o padrinho (ou o mais próximo) das duas partes, sem arquivar nada. "Mais próximo" só por vínculo assinado, sem sinais de interação. Teto de 30 afilhados com poder firme; perda do papel por 3 reversões em 90 dias, por comunidade; recusar sem custo; "Meus vínculos"; trocar de padrinho uma vez; vínculo só para mediação. Ordem dos lotes do PM-83.
 

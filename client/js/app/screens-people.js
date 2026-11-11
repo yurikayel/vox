@@ -26,6 +26,7 @@ export async function showPeople(initialQuery = "") {
   const sections = hasQ ? null : await peopleIndex.buildPeopleSections();
   const results = hasQ ? await peopleIndex.searchPeople(q) : [];
   render.renderPeopleSearch(main, { sections, results, query: q });
+  void import("./natural-mod-flow.js").then((m) => m.mountMyLinks(main)).catch(() => {});
 
   const searchInput = document.getElementById("people-search-input");
   searchInput?.addEventListener("input", () => {
