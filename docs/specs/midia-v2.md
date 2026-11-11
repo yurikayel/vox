@@ -74,10 +74,10 @@ Um post pode ter **até 4 fotos, ou até 4 áudios, ou até 4 clipes de vídeo**
 
 **Quem recebe cada camada** ([ADR-029 §2.4](../adr/029-midia-em-duas-camadas-360p-720p.md)):
 - **quem segue o autor** recebe a **Full**, sem fazer nada, guarda e serve a outros seguidores. Nas configurações, dá para escolher a Half (economia de dados);
-- **quem vê o post sem seguir** recebe só a **Half**. A Full nunca é entregue a quem não segue; ao seguir, os próximos pedidos já vêm em 720p;
+- **quem vê o post sem seguir** recebe a **Half**; ao seguir, os próximos pedidos já vêm em 720p;
 - **mais longe:** texto e miniatura.
 
-O comprovante assinado de seguir vai junto com o pedido da Full, nunca pelo gossip (ADR-029 §2.6). **Isso não é privacidade:** qualquer um pode seguir. Para restringir quem vê, vale a visibilidade do post.
+As camadas só economizam banda e armazenamento; não controlam acesso (ADR-029 §2.6). Para restringir quem vê, vale a visibilidade do post.
 
 ## Decisões que faltam para implementar (PM-71)
 

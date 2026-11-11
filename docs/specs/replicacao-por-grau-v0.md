@@ -24,13 +24,13 @@ Cada pessoa guarda a própria mídia no aparelho ("traga seu próprio armazename
 > Com as duas camadas do [ADR-029](../adr/029-midia-em-duas-camadas-360p-720p.md), a Full pesa mais que a versão única medida abaixo: a conta de espaço precisa ser refeita depois da medição. Até lá, valem os tetos atuais.
 
 
-- **Teto padrão: 500 MB por aparelho**, além dos próprios posts. Se houver menos de 2 GB livres (`navigator.storage.estimate`), cai para 200 MB. A pessoa pode escolher 100 MB, 500 MB ou 1 GB.
-- **Subcota de vídeo (proposta, a decidir no piloto):** no máximo 40% do teto (200 MB), para os vídeos não expulsarem as fotos. Pode baixar para 25% se vídeo for raro no piloto.
+- **Teto padrão: 750 MB por aparelho**, além dos próprios posts (era 500 MB; +50% em 11/11/2026). Se houver menos de 2 GB livres (`navigator.storage.estimate`), cai para 300 MB. A pessoa pode escolher 150 MB, 750 MB ou 1,5 GB.
+- **Subcota de vídeo (proposta, a decidir no piloto):** no máximo 40% do teto (300 MB), para os vídeos não expulsarem as fotos. Pode baixar para 25% se vídeo for raro no piloto.
 - **Quando enche, sai primeiro** o grau mais distante e o mais antigo; o que a pessoa guardou ou fixou não sai.
 - Pedir ao navegador que não apague os dados (`navigator.storage.persist`, `storage-persistence.js`).
-- O teto substitui o limite de armazenamento do `supporter-mode.js` (25 MB leve / 250 MB apoiador); as cotas diárias de transferência continuam.
+- O teto substitui o limite de armazenamento do `supporter-mode.js` (hoje 38 MB no nó leve e 375 MB no apoiador, depois do aumento de 50%); as cotas diárias de transferência continuam.
 
-Com a mídia v2 retrô medida (imagem com mediana de 43 KiB; vídeo de 10 s entre 0,5 e 1,0 MiB; áudio de 60 s ≈ 237 KiB): os 300 MB fora da subcota de vídeo guardam ≈ 7 mil imagens, e os 200 MB da subcota, ≈ 200 a 400 vídeos. Texto e miniaturas praticamente não pesam.
+Com a mídia v2 retrô medida (imagem com mediana de 43 KiB; vídeo de 10 s entre 0,5 e 1,0 MiB; áudio de 60 s ≈ 237 KiB): os 450 MB fora da subcota de vídeo guardam ≈ 10 mil imagens, e os 300 MB da subcota, ≈ 300 a 600 vídeos (conta com a versão única antiga; refazer com as camadas do ADR-029). Texto e miniaturas praticamente não pesam.
 
 ## Grau por salto (sem expor o grafo social)
 
