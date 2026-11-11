@@ -32,8 +32,10 @@ const sw = fs.readFileSync(path.join(root, "sw.js"), "utf8");
  * (-42,2 KB), que o app só mostrava em 48 px (agora usa o de 192 px); medido 2.058.234 bytes. Catraca: 0,2% acima.
  * 2026-11-11 (chamada de ação, lote 1): aviso-roles.js e app/aviso-roles-dm.js pagos tirando do precache o
  * profile-vox-official-512.png, cópia exata do icon-512.png (-59,9 KB); medido 2.018.977 bytes. Catraca: 0,2% acima.
+ * 2026-11-11 (sorteio cívico, lote 4): sorteio.js e app/sorteio-flow.js pagos passando logo-mark.png e
+ * icon-white-192.png a PNG com paleta (visualmente iguais); medido 2.016.953 bytes. Catraca: 0,2% acima.
  */
-const SHELL_BUDGET_BYTES = 2_023_015;
+const SHELL_BUDGET_BYTES = 2_020_987;
 
 function listFrom(name) {
   const m = sw.match(new RegExp(`const ${name} = \\[([\\s\\S]*?)\\];`));

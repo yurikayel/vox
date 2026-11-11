@@ -6,6 +6,10 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Sorteio cívico (lote 4)
+- Na aba de avisos, a moderação cria um sorteio com a lista de membros congelada. Testemunhas se comprometem com um segredo e revelam depois do fecho; a moderação apura e todo aparelho recalcula o mesmo resultado. Basta uma testemunha honesta; quem não revela fica apontado. Laboratório `vox.lab.aviso`.
+- Precache: `logo-mark.png` e `icon-white-192.png` com paleta (−20 KB, visualmente iguais); teto baixado. SW `v7.74`.
+
 ### Termo de convivência e pedido de mediação (lote 3)
 - A moderação pode publicar um **termo de convivência**; quem entra assina o hash do termo junto com a entrada. Se o termo mudar, quem já entrou é avisado e pode assinar de novo. Laboratório `vox.lab.aviso`.
 - **Pedir mediação** no menu ⋯ do post: abre a conversa cifrada com a moderação com o cartão do post, sem ocultar nem arquivar nada.
