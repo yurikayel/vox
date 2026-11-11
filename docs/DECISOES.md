@@ -56,4 +56,5 @@ Legenda de estado:
 | Cadeia de suprimentos | Em vigor (PM-95): CodeQL, Dependabot, actions por SHA, ruleset `strict`. Falta decidir quando a revisão vira obrigatória (CODEOWNERS já existe) e se o CodeQL vira check obrigatório | PM-95 · [DEPENDENCIAS](./DEPENDENCIAS.md) |
 | Formato de assinatura | Quando parar de aceitar v1 (posts antigos assinados só nos campos de topo) | PM-85 · [ADR-021 §2.6](./adr/021-integridade-na-entrada-forma-assinada.md) |
 | Ponte com o Fediverso | Aceitar ou não o ADR-028: sem servidor ActivityPub; quem quiser liga o Bridgy Fed na própria conta do Bluesky. Gatilho para servidor de steward registrado | [ADR-028](./adr/028-ponte-activitypub-via-bluesky.md) |
+| Mídia em camadas | Aceitar o ADR-029 (Half 360p, Full 720p, 30 fps, sem teto de 100 KB). Em aberto: um amigo pode **repassar o acesso** ao Full a quem não é amigo do autor? Bitrates da Full a medir | [ADR-029](./adr/029-midia-em-duas-camadas-360p-720p.md) |
 | Propostas antigas | Atestação (001), perfil coletivo (005), corroboração multi-gateway (009) e Contribution Engine (010): aceitar, adiar ou arquivar | [índice de ADRs](./adr/README.md) |
