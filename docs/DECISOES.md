@@ -58,4 +58,5 @@ Legenda de estado:
 | Cadeia de suprimentos | Em vigor (PM-95): CodeQL, Dependabot, actions por SHA, ruleset `strict`. Falta decidir quando a revisão vira obrigatória (CODEOWNERS já existe) e se o CodeQL vira check obrigatório | PM-95 · [DEPENDENCIAS](./DEPENDENCIAS.md) |
 | Formato de assinatura | Quando parar de aceitar v1 (posts antigos assinados só nos campos de topo) | PM-85 · [ADR-021 §2.6](./adr/021-integridade-na-entrada-forma-assinada.md) |
 | Comprovante de seguir | Formato do `follow` assinado que vai junto com o pedido da Full (não vai para o gossip) e o quantizador de vídeo equivalente a q60 e q80 | [ADR-029 §2.6 e §4](./adr/029-midia-em-duas-camadas-360p-720p.md#4-em-aberto) |
+| Trazer do Bluesky (PESOS) | Aceitar ou não o ADR-030: a pessoa traz os próprios posts do Bluesky para o Vox, por fila com confirmação, assinados, com destino padrão no perfil. Só Bluesky e só conta vinculada por login | [ADR-030](./adr/030-trazer-do-bluesky-pesos.md) |
 | Propostas antigas | Atestação (001), perfil coletivo (005), corroboração multi-gateway (009) e Contribution Engine (010): aceitar, adiar ou arquivar | [índice de ADRs](./adr/README.md) |
