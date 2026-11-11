@@ -6,6 +6,14 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Correções de tela achadas no tour Playwright (P0)
+- **Botões ativos sem texto:** `--primary` nunca foi definido no CSS, então a ordenação ativa da comunidade ("Atividade Recente"), a tag cívica ativa e a pílula de tag ficavam com texto branco em fundo transparente. Agora usam `--accent` / `--on-accent`, que acompanham o tema claro e escuro.
+- **Comunidade rolava de lado no celular:** as abas Posts / Membros / Classificados / Governança alargavam a página para 462px numa tela de 412px. Agora rolam dentro da própria barra.
+- **Palavras quebradas no meio** ("e/stimativa", "0.0 M/B"): `.card .meta` usava `word-break: break-all`; passou a `overflow-wrap: anywhere`, que só quebra o que não cabe (endereços longos).
+- **Erro vermelho no primeiro passo do onboarding** ("Google/Meta requerem oauth.json…"): sai o erro; os botões de Google e Meta só aparecem quando o `config/oauth.json` traz o id do cliente.
+- **Rota inexistente caía na Ágora sem aviso:** nova tela "Página não encontrada" com o endereço pedido e links de volta; `#/@arroba` passa a abrir o perfil do handle.
+- SW `v7.76`.
+
 ### ADR-023, emenda 1 (aceita): moderador natural
 - Mediação vai para o padrinho (ou o mais próximo) das duas partes, sem arquivar nada. "Mais próximo" só por vínculo assinado, sem sinais de interação. Teto de 30 afilhados com poder firme; perda do papel por 3 reversões em 90 dias, por comunidade; recusar sem custo; "Meus vínculos"; trocar de padrinho uma vez; vínculo só para mediação. Ordem dos lotes do PM-83.
 

@@ -15,6 +15,7 @@ import { showStatus } from "./screens-status.js";
 import { showNetworkWizard, showBackupWizard, showWalletWizard } from "./screens-guided.js";
 import { showSyncScreen } from "./screens-sync.js";
 import { showLabsFrames, showLabsMofn } from "./screens-labs.js";
+import { showNotFound } from "./screens-not-found.js";
 import { showAvisos, showComposeAviso } from "./aviso-flow.js";
 import {
   showComposeCommunity,
@@ -62,6 +63,7 @@ const ROUTE_DISPATCH_TABLE = {
   "compose-topic": (r) => showComposeTopic(r.communityId),
   "compose-reply": (r) => showComposeReply(r.topicId, r.communityId, r.parentId),
   sync: (r) => showSyncScreen(r),
+  "not-found": () => showNotFound(),
 };
 
 export async function routeImpl() {
