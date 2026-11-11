@@ -60,7 +60,15 @@ function pct(part, total) {
   return Math.round((part / total) * 1000) / 10;
 }
 
-function renderStat(label, value, hint, tone = "") {
+/**
+ * Monólito de número (rótulo, valor, dica) da Vote; também usado na página da comunidade.
+ * @param {string} label Rótulo curto em caixa alta.
+ * @param {string|number} value Valor exibido (já contado pelo aparelho).
+ * @param {string} hint Linha de contexto sob o valor.
+ * @param {string} [tone] Tom do valor (`emerald`, …); vazio usa a cor do texto.
+ * @returns {string} HTML do `.agora-stat`.
+ */
+export function renderStat(label, value, hint, tone = "") {
   const toneCls = tone ? ` agora-stat-value--${tone}` : "";
   return `
     <div class="agora-stat">
