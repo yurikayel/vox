@@ -93,3 +93,15 @@ No Vox, "apagar" um post de outra pessoa sempre significa escondê-lo na malha. 
 - Telas "quem eu convidei", "meus vínculos" e revogação de vínculo.
 - Selo "convidado por" no perfil.
 - Renovar o convite à mão, invalidando o token em circulação.
+
+## PM-83 em lotes (emenda 1 do ADR-023)
+
+Atrás da flag de laboratório `localStorage["vox.lab.moderador"] = "1"`. Lógica pura em `client/js/natural-mod.js`.
+
+### Lote A (11/11/2026): quem responde por quem e "Meus vínculos"
+
+- `collectLinks` aceita só vínculos com as duas assinaturas conferidas (`verifyLink`). Par repetido conta uma vez, pela data mais antiga.
+- `naturalModeratorOf(pessoa)`: o padrinho, se não for parte do caso. Senão, o mais próximo: vínculo comum em qualquer direção, membro da comunidade primeiro, depois o mais antigo. Nunca a própria pessoa nem a outra parte.
+- `caseModerators({ target, reporter })` dá N1 (lado do denunciado) e N2 (lado de quem denunciou).
+- **Meus vínculos**, no topo da tela Pessoas: padrinho (ou o mais próximo, ou "sem vínculos: vai para a moderação da comunidade"), afilhados e vínculos comuns.
+- **Peso:** `cantina-gate.jpg` virou `cantina-gate.webp` (119 para 79 KB, visualmente igual). A folga paga os lotes seguintes; a catraca do teto desce no último.
