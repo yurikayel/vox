@@ -1,6 +1,6 @@
 # Vox — índice de documentação
 
-> **Status:** canônico (índice único) · **Owner:** voluntário doc (mutex: 1 PR por arquivo) · **Revisado:** 2026-11-10 (v2.4: registro único de decisões, ADR-021…024, brainstorms dos 5 pontos fracos, do terceiro lugar e do público)
+> **Status:** canônico (índice único) · **Owner:** voluntário doc (mutex: 1 PR por arquivo) · **Revisado:** 2026-11-10 (v2.5: registro único de decisões, ADR-021…024, brainstorms dos 5 pontos fracos, do terceiro lugar, do público, da captação, do refino e dos nichos)
 > **Plano vivo e único checklist:** [ROADMAP.md](./ROADMAP.md) ([ADR-017](./adr/017-consolidacao-roadmap-unico.md)) · **Release (SHA, testes, SW):** [release-metadata.json](./release-metadata.json) e tabela do [README](../README.md)
 
 Entrada única para quem desenvolve, revisa ou opera. Todo `.md` novo em `docs/` entra aqui ([CONTRIBUTING-DOCS.md](./CONTRIBUTING-DOCS.md) §1).
@@ -133,6 +133,9 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 - [brainstorm-5-pontos-fracos-2026-11-10.md](./brainstorms/brainstorm-5-pontos-fracos-2026-11-10.md): **os 5 pontos fracos do produto hoje** (identidade, falso verde, densidade da rede, exposição de quem participa, concentração), com ação e métrica para cada um
 - [brainstorm-terceiro-lugar-2026-11-10.md](./brainstorms/brainstorm-terceiro-lugar-2026-11-10.md): **o Vox como "terceiro lugar"**: raiz comum dos pontos fracos, ferramentas de quem organiza usadas a partir do WhatsApp, escada de esforço do membro, ata em sessão permanente (Lei 14.309/2022), distribuição de guerrilha
 - [brainstorm-publico-e-gestos-conhecidos-2026-11-10.md](./brainstorms/brainstorm-publico-e-gestos-conhecidos-2026-11-10.md): **para quem e com que gestos**: 10 perfis de usuários no Brasil, alvo (quem organiza 50+, membros só-celular, associações rurais), mapa de gestos conhecidos com o estado no código, identidade visual
+- [brainstorm-captacao-por-perfil-2026-11-10.md](./brainstorms/brainstorm-captacao-por-perfil-2026-11-10.md): **dez estratégias de captação, uma por perfil**: papel de cada perfil (quem organiza, membro, quem constrói, quem ensina, parceiro, embaixador; Geração Alpha não é captada), gancho, canal, primeiro passo sem código, no máximo três frentes ao mesmo tempo
+- [brainstorm-refino-rede-de-acao-e-soberania-2026-11-10.md](./brainstorms/brainstorm-refino-rede-de-acao-e-soberania-2026-11-10.md): **da praça-cartório à rede de ação**: onda de soberania digital (Estado, regulação, militância organizada; não migração de usuários), oito verbos de uma rede viva com a missão no centro, fórmula dor → ponte → núcleo → missão → registro, grupos engajados e regras de neutralidade
+- [brainstorm-nichos-colunas-wechat-democratico-2026-11-10.md](./brainstorms/brainstorm-nichos-colunas-wechat-democratico-2026-11-10.md): **nichos fiéis como colunas de um "WeChat democrático"**: nove nichos com compromisso que volta (associações, agricultura familiar/PNAE, escola/PDDE, conselhos, movimentos…), teto comum de identidade, registro e mini-apps, seis regras para integrar com o governo sem ser do governo
 - [brainstorm-10-pontos-fracos-metodo-implementacao-2026-11.md](./brainstorms/brainstorm-10-pontos-fracos-metodo-implementacao-2026-11.md): crítica ao método (motivou o ADR-017)
 
 ## 3. Operações: steward, espelhos, DR

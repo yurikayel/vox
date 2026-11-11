@@ -6,6 +6,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Docs: brainstorms da captação, do refino e dos nichos
+- [Dez estratégias de captação](./docs/brainstorms/brainstorm-captacao-por-perfil-2026-11-10.md), [refino: da praça-cartório à rede de ação](./docs/brainstorms/brainstorm-refino-rede-de-acao-e-soberania-2026-11-10.md) e [nichos como colunas de um "WeChat democrático"](./docs/brainstorms/brainstorm-nichos-colunas-wechat-democratico-2026-11-10.md), ligados ao [índice](./docs/README.md) e à [estratégia de 90 dias](./docs/strategy/estrategia-5-pontos-fracos-90-dias-2026-11.md). Só ideias; nada de código.
+
 ### Docs: brainstorms do terceiro lugar e do público
 - [O Vox como "terceiro lugar"](./docs/brainstorms/brainstorm-terceiro-lugar-2026-11-10.md) e [para quem e com que gestos](./docs/brainstorms/brainstorm-publico-e-gestos-conhecidos-2026-11-10.md), ligados à [estratégia de 90 dias](./docs/strategy/estrategia-5-pontos-fracos-90-dias-2026-11.md) e ao índice. Ações candidatas; nada vira caixa no ROADMAP sem o mantenedor.
 
