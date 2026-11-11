@@ -14,7 +14,8 @@ Cada pessoa guarda a própria mídia no aparelho ("traga seu próprio armazename
 | **Seus posts** | Mídia v2 **Full (720p)** e Half | **Fora do teto**; nunca sai para abrir espaço |
 | **Amigos próximos** (a pessoa marca; teto proposto de ~15, a decidir) | Mídia v2 **Full (720p)**, inclusive vídeo, que servem a quem pedir | A mais alta |
 | **Amigos** | Mídia v2 **Full (720p)**, inclusive vídeo, que servem a quem pedir | Alta |
-| **Amigos de amigos** | Texto + mídia **Half (360p)**: carrossel de fotos inteiro; áudio: imagens + 1ª parte; vídeo só a capa. "Ver em alta" pede a Full | Média |
+| **Seguidores** (que não são amigos) | Mídia v2 **Full (720p)** dos perfis que seguem, que servem a outros seguidores; nas configurações, podem preferir a Half | Média-alta |
+| **Amigos de amigos** (que não seguem) | Texto + mídia **Half (360p)**: carrossel de fotos inteiro; áudio: imagens + 1ª parte; vídeo só a capa. A Full só ao seguir | Média |
 | **Amigos de amigos de amigos** | Texto + miniatura (já embutida no post) | Baixa |
 | Mais longe | Nada; só busca quando alguém abre | — |
 
