@@ -6,6 +6,14 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Docs: spec do aviso assinado (proposta)
+- [Aviso assinado v0](./docs/specs/aviso-assinado-v0.md), primeira peça da [síntese](./docs/brainstorms/brainstorm-sintese-praca-de-colunas-2026-11-10.md):
+  - o aviso é um tópico com campos de aviso, e só tem selo quando vem de dono ou moderação;
+  - o texto vai pronto para o WhatsApp;
+  - uma página leve, sem conta, confere a assinatura no celular de quem abre;
+  - respostas assinadas no Vox e contagem das respostas coladas do WhatsApp, só com números.
+- Proposta, **não implementada**: nada de código neste PR.
+
 ### Docs: a síntese troca a analogia "WeChat" pela ágora
 - A [síntese — a praça de colunas](./docs/brainstorms/brainstorm-sintese-praca-de-colunas-2026-11-10.md) ganha a seção "A imagem: a ágora": mapa entre os edifícios da ágora de Atenas e as peças do Vox, o **sorteio** como peça candidata depois das seis, e onde a palavra não entra (marca pública, tela, romantização). O [doc dos nichos](./docs/brainstorms/brainstorm-nichos-colunas-wechat-democratico-2026-11-10.md) aponta a troca.
 

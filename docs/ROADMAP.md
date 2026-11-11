@@ -161,7 +161,7 @@ Também exige: REV-18 · DOC-04 · REV-02 · REV-04 (ou LAN-21 cobrindo DM offli
 
 ## Candidatas (sem caixa até ganharem DoD e responsável)
 
-Da [síntese de 10/11 — a praça de colunas](./brainstorms/brainstorm-sintese-praca-de-colunas-2026-11-10.md): seis peças comuns aos nichos, em ordem candidata — aviso assinado (Conferir, Ciente, Vou / Talvez), mural, ata com resumo falado, modelos de grupo (`kit-genesis.js`), missão, livro-caixa, círculo de confiança. Cada uma precisa de spec antes de virar caixa.
+Da [síntese de 10/11 — a praça de colunas](./brainstorms/brainstorm-sintese-praca-de-colunas-2026-11-10.md): seis peças comuns aos nichos, em ordem candidata — aviso assinado (Conferir, Ciente, Vou / Talvez), mural, ata com resumo falado, modelos de grupo (`kit-genesis.js`), missão, livro-caixa, círculo de confiança. Cada uma precisa de spec antes de virar caixa; a do aviso assinado está proposta em [aviso-assinado-v0](./specs/aviso-assinado-v0.md).
 Do [brainstorm de autossustento](./brainstorms/brainstorm-autossustento-10-features-2026-11.md). Pesquisar antes com os 3 prompts do mesmo doc.
 Mais 66 ideias (PM-01…PM-66: dieta do shell, segurança, hardening v3.2, pacote de destravamento jurídico, assembleia, Nostr, contribuidores), com a revisão de estado de 09/11: [brainstorm de próximas melhorias](./brainstorms/brainstorm-backlog-proximas-melhorias-2026-11.md).
 
