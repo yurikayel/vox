@@ -105,3 +105,10 @@ Atrás da flag de laboratório `localStorage["vox.lab.moderador"] = "1"`. Lógic
 - `caseModerators({ target, reporter })` dá N1 (lado do denunciado) e N2 (lado de quem denunciou).
 - **Meus vínculos**, no topo da tela Pessoas: padrinho (ou o mais próximo, ou "sem vínculos: vai para a moderação da comunidade"), afilhados e vínculos comuns.
 - **Peso:** `cantina-gate.jpg` virou `cantina-gate.webp` (119 para 79 KB, visualmente igual). A folga paga os lotes seguintes; a catraca do teto desce no último.
+
+### Lote E (11/11/2026): mediação pelos moderadores naturais
+
+- Com a flag ligada, **Pedir mediação** (menu ⋯ do post) manda uma mensagem cifrada ao moderador natural de cada parte: N1 do lado de quem publicou e N2 do lado de quem pede. A mensagem leva o cartão do post e o texto "Ninguém arquivou nada". Quando os dois lados dão a mesma pessoa, ela recebe uma vez.
+- Diferente da denúncia, quem pede mediação **é identificado**: mediação é conversa.
+- É uma DM comum (`kind: "message"` com cartão), e qualquer aparelho já a mostra. Não passa pela malha e não arquiva nada.
+- Se ninguém tem vínculo, ou se nenhum destinatário tem chave de DM, cai no caminho do lote 3: a conversa com quem modera a comunidade.

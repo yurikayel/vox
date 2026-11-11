@@ -8,6 +8,7 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ### Moderador natural, lote A (PM-83)
 - Lógica de quem responde por quem a partir dos vínculos assinados: padrinho, ou a pessoa mais próxima (vínculo comum mais antigo, membro da comunidade primeiro), nunca a outra parte. Tela **Meus vínculos** no topo de Pessoas. Laboratório `vox.lab.moderador`.
+- **Lote E:** "Pedir mediação" vai, por mensagem cifrada, ao moderador natural de cada parte, com o cartão do post e sem arquivar nada; sem vínculo, segue para a moderação da comunidade.
 - Precache: a arte da cantina passou a WebP (−40,5 KB, visualmente igual); a folga fica reservada para os próximos lotes do PM-83. Teste do HTML da cantina ajustado ao arquivo novo. SW `v7.74`.
 
 ### ADR-023, emenda 1 (aceita): moderador natural

@@ -73,3 +73,38 @@ test("moderador natural — a tela só monta com a flag de laboratório", async 
   await flow.mountMyLinks(main, { ...deps, storage: { getItem: () => "1" } });
   assert.ok(main.html.includes("Meus vínculos"));
 });
+
+const mediation = await import("../client/js/app/mediation-dm.js");
+const fs = await import("node:fs");
+
+test("mediação (lote E) — vai ao moderador natural de cada parte, sem repetir e sem a própria pessoa", async () => {
+  const links = await graph();
+  assert.deepEqual(mediation.mediationRecipients(links, { self: "vx_davi", target: "vx_ana" }), [
+    { route: "vx_bia", via: "padrinho", side: "target" },
+  ], "Davi só tem vínculo com Ana, que é a outra parte");
+  const both = mediation.mediationRecipients(links, { self: "vx_eva", target: "vx_davi" });
+  assert.deepEqual(both.map((r) => [r.route, r.side]), [["vx_ana", "target"]], "mesmo moderador nos dois lados vai uma vez");
+  assert.deepEqual(mediation.mediationRecipients([], { self: "vx_x", target: "vx_y" }), []);
+});
+
+test("mediação (lote E) — mensagem cifrada com o cartão do post; sem chave fica marcado", async () => {
+  const sent = [];
+  const deps = {
+    loadLinks: graph,
+    getMembers: async () => null,
+    getDmPub: async (addr) => (addr === "vx_bia" ? "pub-bia" : null),
+    seal: async (pub, text, meta) => ({ id: "e1", ts: 1, pub, text, ...meta }),
+    dispatch: async (addr, env) => { sent.push([addr, env]); return "delivered"; },
+    saveDm: async () => {},
+  };
+  const out = await mediation.requestMediation("vx_caio", { postId: "p1", communityId: "c1", target: "vx_ana" }, deps);
+  assert.deepEqual(out.map((r) => [r.route, r.status]), [["vx_bia", "delivered"]], "Caio só tem vínculo com Ana (a outra parte)");
+  const noKey = await mediation.requestMediation("vx_eva", { postId: "p1", target: "vx_davi" }, deps);
+  assert.deepEqual(noKey.map((r) => [r.route, r.status]), [["vx_ana", "no-key"]]);
+  const payload = JSON.parse(sent[0][1].text);
+  assert.equal(payload.kind, "message");
+  assert.deepEqual([payload.contextCard.type, payload.contextCard.id, payload.contextCard.title], ["topic", "p1", "Pedido de mediação"]);
+  assert.match(payload.text, /Ninguém arquivou nada/);
+  const src = fs.readFileSync(new URL("../client/js/app/mediation-dm.js", import.meta.url), "utf8");
+  assert.ok(!/quarantine|review-hide|dispatchModAction|broadcastGossip/.test(src), "mediação não arquiva e não vai para a malha");
+});
