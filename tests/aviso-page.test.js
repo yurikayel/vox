@@ -84,3 +84,11 @@ test("aviso-page — textos e resposta pronta para o WhatsApp", () => {
   assert.equal(page.describeState({ state: "???" }).title, "Não confie");
   assert.equal(page.replyHref("🙋 Vou", "A7F3"), `https://wa.me/?text=${encodeURIComponent("🙋 Vou — A7F3")}`);
 });
+
+test("aviso-page — o link do app usa a forma assinada; o registro normalizado não confere", async () => {
+  const { normalizeLocalPost, toStoredRecord, toWireForm } = await import("../client/js/post-wire.js");
+  const aviso = await (await newSigner())();
+  const store = memoryStore();
+  assert.equal((await page.evaluateAviso(frag(normalizeLocalPost(aviso)), store, NOW)).state, "invalido");
+  assert.equal((await page.evaluateAviso(frag(toWireForm(toStoredRecord(aviso))), store, NOW)).state, "amarelo");
+});
