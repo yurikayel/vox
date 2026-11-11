@@ -7,7 +7,10 @@
 import * as cryptoDm from "./crypto-dm.js";
 import { isLocked, openSealed, sealJson } from "./keystore.js";
 import * as keyLock from "./key-lock.js";
-import { canonicalString, isKnownSigv, withSigv } from "./sig-format.js";
+import { canonicalString, withSigv } from "./sig-format.js";
+import { bytesToB64Url, computeRouteId, verifyPayload } from "./signed-verify.js";
+
+export { computeRouteId, verifyPayload };
 
 const ACCOUNT_STORAGE = "vox-local-account-v1";
 const DISPLAY_NAME_STORAGE = "vox-display-name";
@@ -31,25 +34,6 @@ const LOCAL_WIPE_KEYS = [
   VAULT_STORAGE,
 ];
 
-function bytesToB64Url(bytes) {
-  let bin = "";
-  const arr = new Uint8Array(bytes);
-  for (let i = 0; i < arr.length; i++) {
-    bin += String.fromCharCode(arr[i]);
-  }
-  return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-}
-
-function b64UrlToBytes(b64url) {
-  const padded = String(b64url).replace(/-/g, "+").replace(/_/g, "/");
-  const bin = atob(padded);
-  const out = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) {
-    out[i] = bin.charCodeAt(i);
-  }
-  return out;
-}
-
 let cachedAccount = null;
 
 /** Grava a conta ativa (chave privada já na forma guardada: cifrada ou travada). */
@@ -57,13 +41,6 @@ export function storeActiveAccount(acc) {
   cachedAccount = acc;
   localStorage.setItem(ACCOUNT_STORAGE, JSON.stringify(acc));
   return acc;
-}
-
-export async function computeRouteId(pubJwk) {
-  if (!pubJwk?.x || !pubJwk?.y) return "";
-  const raw = new TextEncoder().encode(`P-256:${pubJwk.x}:${pubJwk.y}`);
-  const hash = await crypto.subtle.digest("SHA-256", raw);
-  return "vx_" + bytesToB64Url(hash).slice(0, 20);
 }
 
 async function loadStoredLocalAccount() {
@@ -370,33 +347,6 @@ export async function signPayload(payload) {
     pubKey: acc.publicJwk,
     sig: bytesToB64Url(sigBuffer),
   };
-}
-
-export async function verifyPayload(signed) {
-  if (!signed?.sig || !signed?.pubKey || !signed?.author || !isKnownSigv(signed)) return false;
-  try {
-    // 1. Valida que routeId é derivado da chave pública anexada
-    const expectedRouteId = await computeRouteId(signed.pubKey);
-    if (signed.author !== expectedRouteId) return false;
-
-    // 2. Valida assinatura criptográfica
-    const imported = await crypto.subtle.importKey(
-      "jwk",
-      signed.pubKey,
-      { name: "ECDSA", namedCurve: "P-256" },
-      false,
-      ["verify"]
-    );
-    const verifyData = new TextEncoder().encode(canonicalString(signed));
-    return await crypto.subtle.verify(
-      { name: "ECDSA", hash: "SHA-256" },
-      imported,
-      b64UrlToBytes(signed.sig),
-      verifyData
-    );
-  } catch {
-    return false;
-  }
 }
 
 

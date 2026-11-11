@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'" />
+  <meta name="referrer" content="no-referrer" />
+  <meta name="robots" content="noindex" />
+  <title>Conferir aviso — Vox</title>
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+  <style>
+    :root { --bg: #f7f4ec; --text: #1c1c1c; --muted: #5a5a5a; --card: #ffffff; --line: #ddd6c6; --accent: #0f6b5c; }
+    @media (prefers-color-scheme: dark) { :root { --bg: #0e1116; --text: #eef1f5; --muted: #a3acb9; --card: #161b22; --line: #2a313c; --accent: #5fd3bd; } }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 18px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+    main { max-width: 34rem; margin: 0 auto; padding: 1rem; }
+    .aviso-status { background: var(--card); border: 2px solid var(--line); border-radius: 1rem; padding: 1rem; text-align: center; }
+    .aviso-status h1 { margin: .25rem 0; font-size: 1.5rem; }
+    .aviso-icon { font-size: 3rem; margin: 0; }
+    .aviso-verde { border-color: #2e9d57; }
+    .aviso-amarelo { border-color: #d6a400; }
+    .aviso-invalido, .aviso-chave-nova { border-color: #c62828; }
+    .aviso-title { margin: 1.25rem 0 .25rem; font-size: 1.25rem; }
+    .aviso-body, .aviso-when, .aviso-hint, .aviso-note { margin: .5rem 0; }
+    .aviso-note, .aviso-hint { color: var(--muted); font-size: .9rem; }
+    .aviso-replies { display: flex; flex-wrap: wrap; gap: .5rem; }
+    .aviso-reply, .aviso-confirm { display: inline-block; padding: .75rem 1rem; border-radius: .75rem; border: 2px solid var(--accent); color: var(--accent); background: transparent; font: inherit; text-decoration: none; cursor: pointer; }
+    .aviso-confirm { width: 100%; margin-top: 1rem; }
+  </style>
+</head>
+<body>
+  <main id="aviso-root">
+    <p>Conferindo o aviso…</p>
+    <noscript>Para conferir o aviso, ative o JavaScript.</noscript>
+  </main>
+  <script type="module" src="aviso/aviso-page.js"></script>
+</body>
+</html>

@@ -221,3 +221,7 @@ Limites de código do projeto ([HARDENING](../HARDENING.md)): função ≤ 30 LL
 **Decisão por agora (a mais simples):** o aviso vai **limpo**, sem link. O link de conferência é **sob demanda**, numa segunda mensagem, para quando houver dúvida (alerta, aviso estranho, pedido de quem recebeu). Conferir dentro do app, para quem tem conta, continua automático (selo). O lote C segue com o formato atual.
 
 **Fica para depois, com ADR:** link curto pelo Arweave como opção "aviso público", com o compositor perguntando "Este aviso pode ficar público e permanente?"; formato binário compacto se o link longo continuar necessário.
+
+## Nota do lote C (11/11/2026): memória de confiança também por nome
+
+O aviso não leva o nome da comunidade, e o golpe de clone copia o **nome de quem assina** num grupo novo (`communityId` novo). Por isso a página leve guarda as chaves vistas por `communityId` **e** pelo `authorDisplay` normalizado (sem acento, minúsculo, sem espaços nas pontas), em `localStorage` (`vox.aviso.trust`), só no aparelho. Chave nova para um grupo **ou** um nome já conhecido fica vermelha até a pessoa tocar em "A coordenação confirmou este código". Custo aceito: duas pessoas da coordenação com o mesmo nome caem no vermelho uma vez.
