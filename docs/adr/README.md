@@ -34,6 +34,7 @@
 | [027](./027-autorizacao-no-relay-dono-e-origem.md) | Autorização no relay: prova do dono, chave de apagar e política de origem | accepted (implementado, SW v7.65) |
 | [028](./028-ponte-activitypub-via-bluesky.md) | Ponte com o Fediverso (ActivityPub) via Bluesky, sem servidor próprio | accepted (UI de orientação pendente) |
 | [029](./029-midia-em-duas-camadas-360p-720p.md) | Mídia em duas camadas (360p e 720p), sem teto de 100 KB por item | accepted (não implementado; medição pendente) |
+| [030](./030-trazer-do-bluesky-pesos.md) | Trazer do Bluesky (PESOS): arquivo assinado da própria voz, sem servidor | accepted (não implementado) |
 
 **Registro de uma página** com as decisões institucionais e de arquitetura em vigor, o estado real de cada uma e o que ainda está em aberto: [DECISOES.md](../DECISOES.md).
 
