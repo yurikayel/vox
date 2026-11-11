@@ -5,6 +5,7 @@
 import * as natural from "../natural-mod.js";
 import { VOX_LINK_TYPE } from "../vox-link.js";
 import { escapeHtml } from "../render/util.js";
+import { isModerator } from "../moderation.js";
 
 export const NATURAL_MOD_LAB_KEY = "vox.lab.moderador";
 
@@ -48,11 +49,55 @@ export function renderMyLinksHtml(model) {
   </details>`;
 }
 
-/** No topo da tela Pessoas (só com a flag). */
+async function casesHtml(links, me, deps) {
+  if (deps?.skipCases) return "";
+  const cases = await import("./natural-case-flow.js");
+  return cases.renderCasesHtml(cases.listCases(), (target) => natural.hasFirmPower(links, me, target));
+}
+
+function bindCases(main, me, rerender) {
+  main.querySelector(".natural-mod-links")?.addEventListener("click", async (e) => {
+    const btn = e.target.closest("[data-case-action]");
+    if (!btn) return;
+    btn.disabled = true;
+    const [cases, share] = await Promise.all([import("./natural-case-flow.js"), import("../share.js")]);
+    const c = cases.listCases().find((x) => x.caseId === btn.dataset.caseId && x.side === btn.dataset.caseSide);
+    cases.decideCase(me, c, btn.dataset.caseAction)
+      .then((msg) => { share.showToast(msg); rerender(); })
+      .catch((err) => { share.showToast(`Erro: ${err.message}`, "error"); btn.disabled = false; });
+  });
+}
+
+/** No topo da tela Pessoas (só com a flag): meus vínculos e os casos para eu decidir. */
 export async function mountMyLinks(main, deps = null) {
   if (!main || !naturalModLabOn(deps?.storage)) return;
   const me = deps?.me || (await (await import("../local-account.js")).getRouteId());
-  const model = natural.myLinksModel(await loadLinks(deps), me);
+  const links = await loadLinks(deps);
+  const html = renderMyLinksHtml(natural.myLinksModel(links, me)).replace("</details>", `${await casesHtml(links, me, deps)}</details>`);
   main.querySelector(".natural-mod-links")?.remove();
-  main.insertAdjacentHTML("afterbegin", renderMyLinksHtml(model));
+  main.insertAdjacentHTML("afterbegin", html);
+  if (!deps?.skipCases) bindCases(main, me, () => mountMyLinks(main, deps));
+}
+
+/**
+ * Arquivamentos firmes conferidos desta comunidade, como ações que só este aparelho constrói (`naturalVerified`).
+ * Vale se: assinatura e prova de padrinho batem, o afilhado está entre os 30 primeiros e quem arquivou tinha
+ * menos de 3 reversões da moderação em 90 dias, contadas até aquele arquivamento.
+ */
+export async function loadNaturalHideActions(communityId, modActions = [], deps = null) {
+  const [cacheNode, localAccount, community] = await Promise.all([
+    import("../cache-node.js"), import("../local-account.js"), import("./screens-community.js"),
+  ]);
+  const raw = (await cacheNode.getWirePosts()).filter((p) => p.type === natural.NATURAL_HIDE_TYPE && p.communityId === communityId);
+  if (!raw.length) return [];
+  const verify = (signed) => localAccount.verifyPayload(signed);
+  const hides = (await Promise.all(raw.map((h) => natural.verifyNaturalHide(h, verify)))).filter(Boolean);
+  const meta = await community.resolveCommunityMetadata(communityId).catch(() => ({}));
+  const unhides = modActions.filter((a) => a.action === "unhide" && isModerator(String(a.owner || a.author || ""), meta.owner, meta.moderators));
+  const links = await loadLinks(deps);
+  return hides
+    .filter((h) => natural.hasFirmPower(links, h.hider, h.target, {
+      reversals: natural.reversalsAgainst(h.hider, { hides, unhides: unhides.filter((u) => Number(u.ts) < h.ts), now: h.ts }),
+    }))
+    .map((h) => ({ id: `nat_${h.postId}_${h.hider}`, action: "natural-hide", target: h.postId, targetAuthor: h.target, ts: h.ts, owner: "", naturalVerified: true }));
 }

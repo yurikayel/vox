@@ -112,3 +112,20 @@ Atrás da flag de laboratório `localStorage["vox.lab.moderador"] = "1"`. Lógic
 - Diferente da denúncia, quem pede mediação **é identificado**: mediação é conversa.
 - É uma DM comum (`kind: "message"` com cartão), e qualquer aparelho já a mostra. Não passa pela malha e não arquiva nada.
 - Se ninguém tem vínculo, ou se nenhum destinatário tem chave de DM, cai no caminho do lote 3: a conversa com quem modera a comunidade.
+
+### Lotes B, C e D (11/11/2026): denúncia aos moderadores naturais, arquivamento firme, teto e reversões
+
+- **Aviso de caso (B):** ao denunciar com a flag ligada, além da moderação da comunidade (PM-69), o aparelho manda uma mensagem cifrada (`kind: "moderacao-natural"`) a N1 e N2. Se os dois forem a mesma pessoa, ela recebe uma vez.
+  - N1 recebe o post, o motivo e o autor do post, **nunca quem denunciou**.
+  - N2 recebe também quem denunciou: é o afilhado ou o próximo dele.
+  - **Motivo grave** (imagem íntima, abuso infantil, violência) **não vai** ao moderador natural. Segue pela moderação e pelos canais oficiais, sem expor o conteúdo a mais gente.
+- **Decidir (B e C):** os casos aparecem em Pessoas → Meus vínculos.
+  - **Arquivar para todos:** só N1 com vínculo de padrinho e poder firme. Publica `natural-hide`, assinado, com a confirmação do vínculo de padrinho como texto (`proof`).
+  - **Concordo: mandar para revisão:** N2, ou N1 sem poder firme. Avisa quem modera a comunidade por mensagem cifrada; o post já está em revisão pelo PM-69.
+  - **Não quero decidir:** avisa a moderação na hora, sem esperar 48 h.
+- **Leitura conservadora da emenda:** só o vínculo de **padrinho** dá arquivamento firme. A "pessoa mais próxima" depende do grafo inteiro, e cada aparelho conhece só uma parte, então ninguém de fora consegue conferir essa escolha. Por isso a confirmação dela vai à moderação, como revisão.
+- **Como os outros aparelhos aceitam (C):** `fetchModActions` confere cada `natural-hide`: assinatura, prova do vínculo de padrinho e o padrinho ser quem arquivou. Daí constrói uma ação marcada `naturalVerified`, e ação vinda de fora perde essa marca. O post some como "em revisão": o autor e a moderação veem, e o `unhide` da moderação desfaz. Arquivamento sobre post de outra pessoa que não o afilhado não esconde nada.
+- **Teto e reversões (D):**
+  - O poder firme vale para os **30 primeiros afilhados** pela data do vínculo.
+  - O padrinho perde o poder com **3 reversões em 90 dias**: `unhide` da moderação daquela comunidade depois de um arquivamento dele, contadas até cada arquivamento.
+  - **Limite:** um aparelho que não conhece todos os vínculos antigos de um padrinho pode contar a posição do afilhado para menos.

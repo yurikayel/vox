@@ -7,6 +7,7 @@ import * as dmMsg from "../dm-messenger.js";
 import * as outbox from "../dm-outbox.js";
 import { parseReportDm } from "../report-review.js";
 import { parseRoleClaimDm } from "../aviso-roles.js";
+import { parseCaseDm } from "../natural-mod.js";
 
 export async function applyBubbleReaction(peerAddress, actorAddress, targetId, emoji) {
   const msgs = await cacheNode.getDmMessages(peerAddress);
@@ -50,6 +51,18 @@ async function handleRoleClaimPayload(rawText) {
   } catch {}
 }
 
+/** PM-83: aviso de caso para o moderador natural (só com a flag de laboratório). */
+async function handleNaturalCasePayload(env, rawText) {
+  const notice = parseCaseDm(rawText);
+  if (!notice) return;
+  try {
+    const [flow, cases] = await Promise.all([import("./natural-mod-flow.js"), import("./natural-case-flow.js")]);
+    if (flow.naturalModLabOn() && cases.receiveCase(notice, { from: env.from })) {
+      (await import("../share.js")).showToast("Chegou uma denúncia para você decidir como moderador natural (Pessoas → Meus vínculos).");
+    }
+  } catch {}
+}
+
 export async function ingestDecryptedEnvelope(env, rawText) {
   const parsed = dmMsg.parseDmPayload(rawText);
   if (parsed.kind === "react") {
@@ -72,6 +85,7 @@ export async function ingestDecryptedEnvelope(env, rawText) {
   });
   await handleReportPayload(env, rawText);
   await handleRoleClaimPayload(rawText);
+  await handleNaturalCasePayload(env, rawText);
   return true;
 }
 
