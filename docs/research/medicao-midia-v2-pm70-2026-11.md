@@ -5,7 +5,7 @@
 
 ## Rodada 2: parâmetros retrô (vigentes)
 
-Depois da rodada 1, a spec foi revista para uma estética retrô: imagem **AVIF q70 em 960×540/540×960**, áudio **Opus 32 kbps**, vídeo **até 480p a 24 fps**. Mesmas 29 imagens e mesmos vídeos, mesmo ambiente (abaixo).
+Depois da rodada 1, a spec foi revista para uma estética retrô: imagem **AVIF q70 em 960×540/540×960**, áudio **Opus 32 kbps**, vídeo **até 480p a 24 fps** (em 11/11/2026 o [ADR-029](../adr/029-midia-em-duas-camadas-360p-720p.md) trocou isso por duas camadas, 360p e 720p, com vídeo a 30 fps e sem teto de 99.999 bytes; os números abaixo são da versão antiga e precisam ser refeitos). Mesmas 29 imagens e mesmos vídeos, mesmo ambiente (abaixo).
 
 | Imagem AVIF 540p q70 | Todas (29) | Fotos (15) | Cards (8) | Prints (6) |
 |---|---|---|---|---|

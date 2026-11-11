@@ -11,14 +11,17 @@ Cada pessoa guarda a própria mídia no aparelho ("traga seu próprio armazename
 
 | Grau | Guarda | Prioridade de permanência |
 |---|---|---|
-| **Seus posts** | Mídia v2 completa | **Fora do teto**; nunca sai para abrir espaço |
-| **Amigos próximos** (a pessoa marca; teto proposto de ~15, a decidir) | Mídia v2 completa, inclusive vídeo | A mais alta |
-| **Amigos** | Mídia v2 completa, inclusive vídeo | Alta |
-| **Amigos de amigos** | Texto + imagem AVIF (carrossel de fotos inteiro); áudio: imagens + 1ª parte; vídeo só a capa | Média |
+| **Seus posts** | Mídia v2 **Full (720p)** e Half | **Fora do teto**; nunca sai para abrir espaço |
+| **Amigos próximos** (a pessoa marca; teto proposto de ~15, a decidir) | Mídia v2 **Full (720p)**, inclusive vídeo, que servem a quem pedir | A mais alta |
+| **Amigos** | Mídia v2 **Full (720p)**, inclusive vídeo, que servem a quem pedir | Alta |
+| **Amigos de amigos** | Texto + mídia **Half (360p)**: carrossel de fotos inteiro; áudio: imagens + 1ª parte; vídeo só a capa. "Ver em alta" pede a Full | Média |
 | **Amigos de amigos de amigos** | Texto + miniatura (já embutida no post) | Baixa |
 | Mais longe | Nada; só busca quando alguém abre | — |
 
 ## Espaço
+
+> Com as duas camadas do [ADR-029](../adr/029-midia-em-duas-camadas-360p-720p.md), a Full pesa mais que a versão única medida abaixo: a conta de espaço precisa ser refeita depois da medição. Até lá, valem os tetos atuais.
+
 
 - **Teto padrão: 500 MB por aparelho**, além dos próprios posts. Se houver menos de 2 GB livres (`navigator.storage.estimate`), cai para 200 MB. A pessoa pode escolher 100 MB, 500 MB ou 1 GB.
 - **Subcota de vídeo (proposta, a decidir no piloto):** no máximo 40% do teto (200 MB), para os vídeos não expulsarem as fotos. Pode baixar para 25% se vídeo for raro no piloto.
