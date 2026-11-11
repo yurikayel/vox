@@ -8,7 +8,7 @@
 
 **Duas camadas, geradas no aparelho de quem publica** ([ADR-029](../adr/029-midia-em-duas-camadas-360p-720p.md)):
 - a **Half (360p)** circula na malha pública e chega a quem está longe;
-- a **Full (720p)** fica com o autor e os amigos, que a guardam e a servem.
+- a **Full (720p)** vai para quem **segue** o autor, que a guarda e a serve a outros seguidores.
 
 A rede continua com **estética retrô**: resolução e qualidade fixas por camada, e nada é ampliado. O original fica na galeria do aparelho; o Vox não guarda o original.
 
@@ -20,7 +20,7 @@ A rede continua com **estética retrô**: resolução e qualidade fixas por cama
 |---|---|
 | Formato | AVIF; WebP nativo quando o aparelho não codifica AVIF |
 | Resolução | **Half:** caixa de **640×360** (paisagem) ou 360×640 (retrato). **Full:** caixa de **1280×720** ou 720×1280. Imagem quadrada vira 360×360 e 720×720. **Nunca amplia** imagem menor; a Full só existe se a imagem for maior que a Half |
-| Qualidade | **q70** fixo |
+| Qualidade | **Half: q60. Full: q80** ([ADR-029](../adr/029-midia-em-duas-camadas-360p-720p.md)). Referência antiga: q70 |
 | Metadados | EXIF removido (inclusive GPS) pela recodificação no canvas; aplicar a rotação da foto **antes** |
 | Redução | `createImageBitmap` com `resizeQuality: "high"` ou redução em etapas (o navegador não expõe Lanczos) |
 | Miniatura | WebP nativo de 160 px **embutido no próprio post** (medido: mediana de 4 KiB, máximo de 8 KiB): o que o 3º grau guarda, placeholder do feed e fallback de quem não lê AVIF (iOS < 16) |
@@ -34,7 +34,7 @@ A rede continua com **estética retrô**: resolução e qualidade fixas por cama
 | Item | Decisão |
 |---|---|
 | Codec | Opus (já usado em `inline-composer.js`) |
-| Qualidade | **Half: 32 kbps**, mono. **Full: 96 kbps** (proposto, a medir) |
+| Qualidade | **Half: 48 kbps. Full: 96 kbps** |
 | Duração máxima | **60 s** |
 | Pedaços | Cortados por tamanho (~100 KB, unidade de transporte), não por tempo, porque o Opus varia a taxa |
 | Tamanho (medido) | **≈ 237 KiB por minuto**, 3 pedaços |
@@ -51,7 +51,7 @@ A rede continua com **estética retrô**: resolução e qualidade fixas por cama
 | Tamanho | **A medir nas camadas novas.** Referência antiga (480p, 24 fps, 10 s): de 0,5 a 1,0 MiB (de 400 a 820 kbps, conforme o movimento) |
 | Pedaços | ~100 KB para o transporte, com hash no manifesto (`buildMediaChunkManifest`) |
 | Taxa | Quantizador fixo por camada. As taxas da Full ficam para depois da medição; referência proposta: ~0,4 Mbps na Half e ~1,5 Mbps na Full |
-| Capa | Um quadro passa pelo pipeline de imagem (AVIF q70) e gera a miniatura embutida |
+| Capa | Um quadro passa pelo pipeline de imagem (na camada do vídeo) e gera a miniatura embutida |
 | Metadados | A recodificação remove a localização que o celular grava no vídeo |
 | Áudio do vídeo | Opus 32 kbps se o iPhone tocar Opus em MP4; senão AAC (a testar) |
 | Fallback | Sem WebCodecs, o MediaRecorder recodifica tocando o vídeo (leva a duração do vídeo); sem nenhum dos dois, o vídeo é recusado com explicação |
@@ -63,7 +63,7 @@ Um post pode ter **até 4 fotos, ou até 4 áudios, ou até 4 clipes de vídeo**
 | Tipo | Máximo | Tamanho do post |
 |---|---|---|
 | Fotos | 4 imagens | A medir por camada (referência antiga, 540p: ≈ 170 KiB na mediana) |
-| Áudios | 4 × 60 s = **4 min**, cada áudio com **uma imagem opcional** que ilustra | Half: ≈ 950 KiB de áudio (32 kbps), mais as imagens |
+| Áudios | 4 × 60 s = **4 min**, cada áudio com **uma imagem opcional** que ilustra | Half (48 kbps): ≈ 1,4 MiB de áudio; Full (96 kbps): ≈ 2,8 MiB; mais as imagens |
 | Vídeo | 4 × 10 s = **40 s** | A medir por camada (referência antiga, 480p a 24 fps: de 2 a 4 MiB) |
 
 **Playback contínuo (áudio e vídeo):** o carrossel toca como uma peça só, sem pausa entre as partes.
@@ -72,10 +72,12 @@ Um post pode ter **até 4 fotos, ou até 4 áudios, ou até 4 clipes de vídeo**
 - **Vídeo:** os clipes são codificados com a **mesma configuração** (camada, 30 fps, quantizador da camada), e **cada parte começa num quadro-chave**, então qualquer parte toca sozinha. Para tocar sem emenda, as partes são anexadas a um único `SourceBuffer` (Media Source Extensions; `ManagedMediaSource` no iPhone com iOS 17.1 ou mais). Isso exige empacotar em MP4 fragmentado, um muxer a escolher no PM-71. Sem MSE, o fallback são dois `<video>` alternados, com a próxima parte já carregada: fica quase sem emenda.
 - **Pausar, avançar e arrastar** valem para o conjunto: a barra de progresso mostra os 40 s (ou 4 min), com marcas nas divisões.
 
-**Replicação por grau, com camadas** ([ADR-029 §2](../adr/029-midia-em-duas-camadas-360p-720p.md)):
-- **autor, amigos próximos e amigos:** guardam a **Full** do carrossel inteiro e a servem a quem pedir;
-- **amigos de amigos e feed público:** recebem a **Half**; quem quiser toca em "Ver em alta" e pede a Full ao autor ou aos amigos;
-- **3º grau:** texto e miniatura.
+**Quem recebe cada camada** ([ADR-029 §2.4](../adr/029-midia-em-duas-camadas-360p-720p.md)):
+- **quem segue o autor** recebe a **Full**, sem fazer nada, guarda e serve a outros seguidores. Nas configurações, dá para escolher a Half (economia de dados);
+- **quem vê o post sem seguir** recebe só a **Half**. A Full nunca é entregue a quem não segue; ao seguir, os próximos pedidos já vêm em 720p;
+- **mais longe:** texto e miniatura.
+
+O comprovante assinado de seguir vai junto com o pedido da Full, nunca pelo gossip (ADR-029 §2.6). **Isso não é privacidade:** qualquer um pode seguir. Para restringir quem vê, vale a visibilidade do post.
 
 ## Decisões que faltam para implementar (PM-71)
 
