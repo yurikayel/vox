@@ -1735,11 +1735,6 @@
   "jsdoc:renderProposalItem",
   "jsdoc:renderProposalStatusBadge",
   "jsdoc:renderListingItem",
-  "jsdoc:renderProposalDetail",
-  "jsdoc:renderProposalDiff",
-  "jsdoc:renderProposalTally",
-  "jsdoc:renderProposalVotingBox",
-  "jsdoc:renderProposalVotesList",
   "jsdoc:renderComposeProposal"
  ],
  "client/js/render/compose-chrome.js": [
