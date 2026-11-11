@@ -1,6 +1,7 @@
 # Brainstorm — os 5 pontos fracos do Vox hoje
 
 > **Status:** brainstorm · **Owner:** mantenedor · **Revisado:** 2026-11-10 · **Não substitui o [ROADMAP](../ROADMAP.md)** ([ADR-017](../adr/017-consolidacao-roadmap-unico.md))
+> **Consolidado em:** [síntese — a praça de colunas](./brainstorm-sintese-praca-de-colunas-2026-11-10.md). Quando este texto divergir da síntese, vale a síntese.
 > Este texto trata do **produto e do projeto**. A crítica ao **método** de implementação está em [brainstorm-10-pontos-fracos-metodo-implementacao-2026-11.md](./brainstorm-10-pontos-fracos-metodo-implementacao-2026-11.md). As ações abaixo são **candidatas**: só viram caixa no ROADMAP quando o mantenedor aceitar.
 > Base: [revisão DevSecOps de 10/11](../audits/revisao-devsecops-2026-11-10.md), [THREAT-MODEL](../THREAT-MODEL.md), [FEATURES §7](../FEATURES.md), o histórico de PRs de #49 a #58 e o `git log`. Falhas ainda abertas aparecem só pelo número e pela área ([ADR-024](../adr/024-divulgacao-responsavel-e-honestidade-de-seguranca.md)).
 

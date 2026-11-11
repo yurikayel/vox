@@ -23,8 +23,13 @@
 
 ## Desdobramentos (10/11/2026, brainstorms)
 
+**Comece pela [síntese — a praça de colunas](../brainstorms/brainstorm-sintese-praca-de-colunas-2026-11-10.md)**, que consolida os brainstorms abaixo e resolve as divergências entre eles.
+
 - [O Vox como "terceiro lugar"](../brainstorms/brainstorm-terceiro-lugar-2026-11-10.md): os cinco pontos têm a mesma raiz (o Vox quer ser *o lugar* da comunidade). Proposta: ferramentas de quem organiza, usadas a partir do WhatsApp, com membros sem conta. Se aceita, medir a rede (ponto 2) e emagrecer o app (ponto 4) deixam de bloquear o G1, e o ponto 3 vira recuperação pela comunidade.
 - [Para quem e com que gestos](../brainstorms/brainstorm-publico-e-gestos-conhecidos-2026-11-10.md): alvo do piloto (quem organiza com 50+, membros da periferia só-celular, associações rurais como segundo nicho) e gestos conhecidos de outros apps mapeados para o Vox.
+- [Dez estratégias de captação](../brainstorms/brainstorm-captacao-por-perfil-2026-11-10.md): um papel e um primeiro passo sem código para cada perfil; agora só os perfis 5 e 3 (o piloto), 6 (quem constrói) e 4 (o parecer).
+- [Refino: rede de ação e onda de soberania](../brainstorms/brainstorm-refino-rede-de-acao-e-soberania-2026-11-10.md): o hábito vem da missão, não da ata; a onda é de Estado e militância organizada; nenhum dinheiro de partido ou governo e nenhum envio automático.
+- [Nichos como colunas](../brainstorms/brainstorm-nichos-colunas-wechat-democratico-2026-11-10.md): fidelidade vem de compromisso que volta; colunas 1 e 2 (associações e agricultura familiar) primeiro, com a escola logo atrás; integrar com o governo só por interfaces públicas.
 
 Ordem de ataque: **5 → 1 → 2 → 3 → 4**.
 
