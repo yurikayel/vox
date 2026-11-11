@@ -241,3 +241,9 @@ Extensão opcional da **convocação**: quem convoca lista papéis com vagas e u
 - **O público vê só números:** quem convocou assina e publica `aviso-papeis` (`countRoles` = `"jurídico:1,comunicação:0"`, `countedAt`). Vale a contagem mais recente de dono ou moderação. O cartão mostra vagas por papel e o quórum: **aberta**, **quórum atingido** ou **sem quórum** (passou a hora do encontro sem chegar ao mínimo).
 - **Nomes só no aparelho da coordenação**, no painel "Só você vê os nomes". Custo aceito: a contagem pública depende de quem convocou publicar; se o aparelho dele sumir, as respostas somem junto.
 - **Peso:** os dois módulos novos foram pagos tirando do precache o `profile-vox-official-512.png`, cópia exata do `icon-512.png`; o avatar do perfil oficial passou a usar o `icon-white-192.png`.
+
+## Competências (lote 2, 11/11/2026)
+
+- Na aba de avisos, **Minhas competências** guarda até 12 nomes (as mesmas regras dos papéis) **só neste aparelho** (`localStorage["vox-competencias-v1"]`). Não entram no perfil, não são assinadas e não vão para a malha.
+- Servem só para sugerir: quando uma chamada tem um papel que bate com uma competência e ainda tem vaga, o cartão diz "Você marcou Jurídico: assumir uma vaga?" e destaca o botão. Quem já assumiu um papel não recebe sugestão.
+- **Fora desta versão:** busca ou diretório de competências por comunidade. Só depois de confirmar se a comunidade fechada cifra o conteúdo; sem cifra, um diretório expõe esse dado a quem guarda cópia.

@@ -6,6 +6,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Competências só no aparelho (lote 2)
+- Na aba de avisos, **Minhas competências** fica só no aparelho (não vai para o perfil nem para a rede) e serve para sugerir um papel quando chega uma chamada de ação com vaga. Sem diretório público. Laboratório `vox.lab.aviso`. SW `v7.72`.
+
 ### Chamada de ação no aviso (lote 1)
 - A convocação ganha **papéis com vagas e quórum mínimo** ("Jurídico 2, comunicação 3"). Quem assume um papel manda a resposta assinada **por DM cifrada a quem convocou**; o público vê só a contagem por papel que a coordenação publica, e o estado (aberta, quórum atingido, sem quórum). Nomes só no aparelho da coordenação. Laboratório `vox.lab.aviso`.
 - Precache: saiu o `profile-vox-official-512.png` (cópia exata do `icon-512.png`); o perfil oficial usa o `icon-white-192.png`. Teto do orçamento baixado para 0,2% acima do medido. Teste do avatar do perfil oficial ajustado ao arquivo novo. SW `v7.71`.
