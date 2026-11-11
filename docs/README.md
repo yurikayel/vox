@@ -54,6 +54,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 | Resposta a incidentes | [runbook-incidentes.md](./operations/runbook-incidentes.md) |
 | Mutex de agentes | [metodo-agentes-mutex-e-revisor.md](./process/metodo-agentes-mutex-e-revisor.md) |
 | Evidência de testes, falso verde e auditoria | [qualidade-e-evidencia.md](./process/qualidade-e-evidencia.md) |
+| Norma de documentação (código e docs técnicos, `npm run audit:docs`) | [documentacao.md](./process/documentacao.md) |
 | Primeiras tarefas para contribuir (PM-41, rascunho) | [primeiras-tarefas-contribuidor.md](./process/primeiras-tarefas-contribuidor.md) |
 | Segunda pessoa com acesso em etapas (LAN-30, rascunho) | [segunda-pessoa-acesso-gradual.md](./process/segunda-pessoa-acesso-gradual.md) |
 | Licença | [ADR-015](./adr/015-licenciamento-agplv3-e-governanca-de-bem-comum.md) · [licenca-e-contribuicoes.md](./legal/licenca-e-contribuicoes.md) |
@@ -162,8 +163,8 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 ## 5. Desenvolvimento, qualidade e governança do repo
 
 - [../CONTRIBUTING.md](../CONTRIBUTING.md) · [../CONTRIBUTORS.md](../CONTRIBUTORS.md) (DCO) · [../SECURITY.md](../SECURITY.md) · [../AUTHORS.md](../AUTHORS.md)
-- [TESTES.md](./TESTES.md) · [HARDENING.md](./HARDENING.md) · [DEPENDENCIAS.md](./DEPENDENCIAS.md) (inventário e rotina mensal, LAN-20) · métricas de complexidade: `metrics/baseline-AAAA-MM-DD.md`, geradas por `npm run audit:complexity` (a mais recente: [2026-11-09](./metrics/baseline-2026-11-09.md))
-- [CONTRIBUTING-DOCS.md](./CONTRIBUTING-DOCS.md) · [metodo-agentes-mutex-e-revisor.md](./process/metodo-agentes-mutex-e-revisor.md) · [licenca-e-contribuicoes.md](./legal/licenca-e-contribuicoes.md)
+- [TESTES.md](./TESTES.md) · [HARDENING.md](./HARDENING.md) · [DEPENDENCIAS.md](./DEPENDENCIAS.md) (inventário e rotina mensal, LAN-20) · métricas de complexidade: `metrics/baseline-AAAA-MM-DD.md`, geradas por `npm run audit:complexity` (a mais recente: [2026-11-10](./metrics/baseline-2026-11-10.md))
+- [CONTRIBUTING-DOCS.md](./CONTRIBUTING-DOCS.md) · [documentacao.md](./process/documentacao.md) (norma de documentação no código) · [metodo-agentes-mutex-e-revisor.md](./process/metodo-agentes-mutex-e-revisor.md) · [licenca-e-contribuicoes.md](./legal/licenca-e-contribuicoes.md)
 - Design: [ADR-016](./adr/016-design-system-sovereign-agora-e-democracia-direta.md) · [Sovereign Agora DESIGN.md](design/sovereign-agora.md) · [design/stitch-telas-faltantes.md](./design/stitch-telas-faltantes.md)
 - [proposta-vox.html](./product/proposta-vox.html): proposta em linguagem leiga
 
@@ -184,6 +185,6 @@ Mantidos para registro; cada um tem banner apontando o sucessor.
 - [brainstorm-proximas-10-tarefas-pos-v82-2026-11.md](./archive/brainstorm-proximas-10-tarefas-pos-v82-2026-11.md) e [brainstorm-dez-tarefas-estrategia-2026-10.md](./archive/brainstorm-dez-tarefas-estrategia-2026-10.md) → ROADMAP
 - [revisao-estado-2026-10-25.md](./archive/revisao-estado-2026-10-25.md): snapshot de 25/out
 - [gateway-honest-fallback-brainstorm.md](./archive/gateway-honest-fallback-brainstorm.md) → ADR-004 · [steward-wizard-brainstorm.md](./archive/steward-wizard-brainstorm.md) → steward-relay-kit
-- Métricas antigas: [10-24](./metrics/baseline-2026-10-24.md) · [10-30](./metrics/baseline-2026-10-30.md) · [10-31](./metrics/baseline-2026-10-31.md) · [11-01](./metrics/baseline-2026-11-01.md) · [11-04](./metrics/baseline-2026-11-04.md) · [11-05](./metrics/baseline-2026-11-05.md) · [11-06](./metrics/baseline-2026-11-06.md)
+- Métricas antigas: [10-24](./metrics/baseline-2026-10-24.md) · [10-30](./metrics/baseline-2026-10-30.md) · [10-31](./metrics/baseline-2026-10-31.md) · [11-01](./metrics/baseline-2026-11-01.md) · [11-04](./metrics/baseline-2026-11-04.md) · [11-05](./metrics/baseline-2026-11-05.md) · [11-06](./metrics/baseline-2026-11-06.md) · [11-08](./metrics/baseline-2026-11-08.md) · [11-09](./metrics/baseline-2026-11-09.md)
 
 **Versão:** 2.2 · 2026-11-08

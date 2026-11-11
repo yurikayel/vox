@@ -1,4 +1,15 @@
-/** @file DM v2 — entrada e saída de envelopes cifrados (reação, leitura, mensagem, denúncia e papel em aviso). */
+/**
+ * @file DM v2 — entrada e saída de envelopes cifrados: reação, leitura, mensagem, denúncia (PM-69) e papel em
+ * aviso (chamada de ação).
+ *
+ * Na entrada, o envelope já chega decifrado; aqui ele vira mensagem no fio e, conforme o conteúdo,
+ * dispara o tratamento especial. Na saída, tenta WebRTC, depois a caixa do relay e, por fim, a caixa de
+ * saída local com novas tentativas (PM-78).
+ *
+ * @module app/dm-wire
+ * @see client/js/crypto-dm.js
+ * @see client/js/dm-outbox.js
+ */
 
 import * as cacheNode from "../cache-node.js";
 import * as peers from "../peers.js";
@@ -8,6 +19,15 @@ import * as outbox from "../dm-outbox.js";
 import { parseReportDm } from "../report-review.js";
 import { parseRoleClaimDm } from "../aviso-roles.js";
 
+/**
+ * Liga ou desliga a reação de alguém numa mensagem do fio.
+ *
+ * @param {string} peerAddress Fio (rota da outra pessoa).
+ * @param {string} actorAddress Quem reagiu.
+ * @param {string} targetId Mensagem reagida.
+ * @param {string} emoji Reação.
+ * @returns {Promise<boolean>} `false` se a mensagem não está no fio.
+ */
 export async function applyBubbleReaction(peerAddress, actorAddress, targetId, emoji) {
   const msgs = await cacheNode.getDmMessages(peerAddress);
   const target = msgs.find((m) => m.id === targetId);
@@ -50,6 +70,16 @@ async function handleRoleClaimPayload(rawText) {
   } catch {}
 }
 
+/**
+ * Processa um envelope recebido e já decifrado.
+ *
+ * Reação e confirmação de leitura só atualizam o fio. Mensagem é guardada; se trouxer denúncia ou
+ * resposta de papel, o tratamento especial roda em seguida e nunca derruba a entrada.
+ *
+ * @param {{id: string, from: string, to: string, ts?: number}} env Envelope.
+ * @param {string} rawText Texto decifrado.
+ * @returns {Promise<boolean>} `false` só quando a reação ou a leitura não acham a mensagem.
+ */
 export async function ingestDecryptedEnvelope(env, rawText) {
   const parsed = dmMsg.parseDmPayload(rawText);
   if (parsed.kind === "react") {
@@ -75,6 +105,13 @@ export async function ingestDecryptedEnvelope(env, rawText) {
   return true;
 }
 
+/**
+ * Entrega um envelope cifrado pelo melhor caminho disponível.
+ *
+ * @param {string} peerAddress Destinatário.
+ * @param {object} envelope Envelope já selado (`crypto-dm.seal`).
+ * @returns {Promise<"delivered"|"queued-relay"|"pending-retry">} `pending-retry` quando ficou na caixa de saída local.
+ */
 export async function dispatchSealedEnvelope(peerAddress, envelope) {
   if (peers.sendDirectMessageTransport(peerAddress, envelope) === "rtc") {
     return "delivered";
@@ -114,7 +151,12 @@ const OUTBOX_FLUSH_MS = 20 * 1000;
 let outboxTimer = null;
 let flushing = false;
 
-/** Uma passada pela caixa de saída; ignora chamadas enquanto outra está em curso. */
+/**
+ * Faz uma passada pela caixa de saída; ignora a chamada enquanto outra passada está em curso.
+ *
+ * @param {object|null} [deps=null] Dependências injetáveis; `null` usa as reais.
+ * @returns {Promise<object|null>} Resumo da passada (`dm-outbox.flushOutbox`), ou `null` se outra passada estava em curso ou se falhou.
+ */
 export async function flushDmOutbox(deps = null) {
   if (flushing) return null;
   flushing = true;
@@ -127,7 +169,12 @@ export async function flushDmOutbox(deps = null) {
   }
 }
 
-/** Com o app aberto: repassa a caixa a cada 20 s, ao voltar a internet e agora. */
+/**
+ * Com o app aberto: repassa a caixa de saída a cada 20 s, ao voltar a internet e já na chamada.
+ *
+ * @param {Window|typeof globalThis} [win=globalThis] Janela (injetável nos testes).
+ * @returns {boolean} `false` se já estava ligado ou se não há `setInterval`.
+ */
 export function startDmOutbox(win = globalThis) {
   if (outboxTimer || typeof win?.setInterval !== "function") return false;
   outboxTimer = win.setInterval(() => flushDmOutbox(), OUTBOX_FLUSH_MS);

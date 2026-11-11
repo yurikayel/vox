@@ -1,4 +1,14 @@
-/** @file Telas do aviso assinado (lote D): aba de avisos, cartão, compositor em etapas e folha de envio. Spec: docs/specs/aviso-assinado-v0.md. */
+/**
+ * @file Telas do aviso assinado (lote D e chamada de ação): aba de avisos, cartão, compositor em etapas,
+ * folha de envio pelo WhatsApp e folha de contagem colada.
+ *
+ * Só gera HTML; todo texto vindo da rede passa por `escapeHtml`. Os eventos são ligados em
+ * `app/aviso-flow.js` pelos atributos `data-aviso-action` e `data-aviso-id`.
+ *
+ * @module render/aviso
+ * @see docs/specs/aviso-assinado-v0.md
+ * @see client/js/app/aviso-flow.js
+ */
 import { escapeHtml } from "./util.js";
 import { roleLabel } from "../aviso-roles.js";
 
@@ -6,6 +16,11 @@ const KIND_LABEL = { convocacao: "📣 Convocação", informe: "ℹ️ Informe",
 const STATE_LABEL = { ativo: "", encerrado: "Encerrado", cancelado: "Cancelado" };
 const CHOICES = [["ciente", "✅ Ciente"], ["vou", "🙋 Vou"], ["talvez", "🤔 Talvez"], ["nao-vou", "❌ Não vou"]];
 
+/**
+ * Lembrete mostrado no compositor: aviso circula fora do Vox, então não leva dado pessoal de ninguém.
+ *
+ * @type {string}
+ */
 export const AVISO_SAFETY_HINT = "Não ponha telefone, CPF ou endereço de ninguém no aviso.";
 
 const avisosHref = (communityId) => `#/c/${encodeURIComponent(communityId)}/avisos`;
@@ -98,7 +113,24 @@ function cardActions(item, { isMod, canRespond, live }) {
   ].join("");
 }
 
-/** Cartão de um aviso. `item`: `{ aviso, code, tally, count, myChoice, call?, myRole?, received? }`. */
+/**
+ * Monta o cartão de um aviso.
+ *
+ * @param {object} item Aviso e o que se sabe sobre ele.
+ * @param {object} item.aviso Aviso classificado (com `avisoState`).
+ * @param {string} item.code Código curto do aviso.
+ * @param {object} [item.tally] Contagem das respostas assinadas (`tallyAvisoResponses`).
+ * @param {object} [item.count] Contagem colada do WhatsApp que vale (`latestAvisoCount`).
+ * @param {string} [item.myChoice] Resposta de quem vê.
+ * @param {object} [item.call] Situação da chamada de ação (`actionCallState`).
+ * @param {string} [item.myRole] Papel que quem vê assumiu.
+ * @param {string[]} [item.suggested] Papéis sugeridos pelas competências do aparelho.
+ * @param {object[]} [item.received] Respostas de papel recebidas (só no aparelho de quem convocou).
+ * @param {object} [options={}]
+ * @param {boolean} [options.isMod=false] Quem vê é dono ou moderação.
+ * @param {boolean} [options.canRespond=false] Quem vê tem conta para responder.
+ * @returns {string} HTML do cartão (`<article>`).
+ */
 export function renderAvisoCard(item, { isMod = false, canRespond = false } = {}) {
   const { aviso } = item;
   const state = STATE_LABEL[aviso.avisoState] || "";
@@ -116,7 +148,13 @@ export function renderAvisoCard(item, { isMod = false, canRespond = false } = {}
   </article>`;
 }
 
-/** Aviso fixo no topo da comunidade, com o caminho para a aba. */
+/**
+ * Monta o aviso fixado no topo da comunidade, com o caminho para a aba de avisos.
+ *
+ * @param {object|null} item Item do aviso ativo mais recente (ver {@link renderAvisoCard}), ou `null`.
+ * @param {string} communityId Comunidade aberta.
+ * @returns {string} HTML da seção.
+ */
 export function renderPinnedAviso(item, communityId) {
   const card = item ? renderAvisoCard(item) : "";
   return `<section class="aviso-pinned">${card}<p><a class="btn btn-outline btn-sm" href="${avisosHref(communityId)}">📣 Avisos da comunidade</a></p></section>`;
@@ -134,7 +172,19 @@ function renderSkillsForm(skills = []) {
   </details>`;
 }
 
-/** Aba de avisos: lista com ativos, encerrados e cancelados. */
+/**
+ * Desenha a aba de avisos: competências do aparelho e a lista (ativos, encerrados e cancelados).
+ *
+ * @param {HTMLElement} main Contêiner da tela; o conteúdo é substituído.
+ * @param {object} model
+ * @param {string} model.communityId Comunidade.
+ * @param {string} model.title Nome da comunidade.
+ * @param {object[]} model.items Itens no formato de {@link renderAvisoCard}.
+ * @param {boolean} model.isMod Mostra o botão "Novo aviso" e as ferramentas da coordenação.
+ * @param {boolean} model.canRespond Mostra respostas e o formulário de competências.
+ * @param {string[]} [model.skills=[]] Competências já marcadas no aparelho.
+ * @returns {void}
+ */
 export function renderAvisosScreen(main, { communityId, title, items, isMod, canRespond, skills = [] }) {
   const compose = isMod
     ? `<a class="btn btn-primary" href="#/compose/aviso?c=${encodeURIComponent(communityId)}">Novo aviso</a>`
@@ -192,7 +242,15 @@ function whenStep() {
   </section>`;
 }
 
-/** Compositor em três etapas: tipo, texto, quando e onde. */
+/**
+ * Desenha o compositor em três etapas: tipo, texto e "quando e onde" (com papéis e quórum).
+ *
+ * A navegação entre etapas é ligada por `compose-stepper.js`.
+ *
+ * @param {HTMLElement} main Contêiner da tela; o conteúdo é substituído.
+ * @param {string} communityId Comunidade do aviso.
+ * @returns {void}
+ */
 export function renderAvisoComposer(main, communityId) {
   main.innerHTML = `<form id="form-compose-aviso" class="card agora-composer" novalidate>
     <p><a href="${avisosHref(communityId)}" class="btn btn-outline btn-sm">← Avisos</a></p>
@@ -200,7 +258,16 @@ export function renderAvisoComposer(main, communityId) {
   </form>`;
 }
 
-/** Folha de envio: texto do WhatsApp e, sob demanda, o link de conferência. */
+/**
+ * Preenche a folha de envio: o texto do WhatsApp e, sob demanda, o link de conferência.
+ *
+ * @param {HTMLElement} sheet Folha do cartão (`data-aviso-sheet`); fica visível.
+ * @param {object} options
+ * @param {string} options.avisoId Aviso enviado.
+ * @param {string} options.text Texto de `buildAvisoShareText`.
+ * @param {string} [options.linkMessage=""] Mensagem de `buildAvisoLinkMessage`; vazia mostra o botão para gerá-la.
+ * @returns {void}
+ */
 export function renderShareSheet(sheet, { avisoId, text, linkMessage = "" }) {
   const wa = `https://wa.me/?text=${encodeURIComponent(text)}`;
   const link = linkMessage
@@ -214,7 +281,15 @@ export function renderShareSheet(sheet, { avisoId, text, linkMessage = "" }) {
   sheet.hidden = false;
 }
 
-/** Folha para colar as respostas exportadas do WhatsApp. */
+/**
+ * Preenche a folha para colar as respostas exportadas do WhatsApp.
+ *
+ * O texto colado não sai do aparelho nem fica guardado; só os números são publicados.
+ *
+ * @param {HTMLElement} sheet Folha do cartão; fica visível.
+ * @param {string} avisoId Aviso contado.
+ * @returns {void}
+ */
 export function renderPasteSheet(sheet, avisoId) {
   sheet.innerHTML = `<label for="aviso-paste-${escapeHtml(avisoId)}">Cole aqui a conversa exportada ou as respostas</label>
     <textarea id="aviso-paste-${escapeHtml(avisoId)}" rows="6" data-aviso-paste></textarea>

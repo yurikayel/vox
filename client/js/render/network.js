@@ -439,6 +439,15 @@ function renderModerationSettingsSection(blockedUsers = [], mutedUsers = []) {
       </div>
     </div>`;
 }
+
+/**
+ * Desenha a tela de configurações de rede: cabeçalho de estado, números do nó, formulário (com disco e
+ * banda por modo), link de status, webhooks POSSE e listas de moderação local.
+ *
+ * @param {HTMLElement} main Contêiner da tela; o conteúdo é substituído.
+ * @param {object} [props={}] Estado lido em `app/screens-network.js` (configurações, métricas, relays, moderação).
+ * @returns {void}
+ */
 export function renderNetworkSettings(main, props = {}) {
   const isEnabled = Boolean(props.settings?.enabled);
   let html = renderNetworkHeader(isEnabled, props.relayStatus, props.rtcStatus, props.gatewayHealth);

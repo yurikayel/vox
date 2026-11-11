@@ -6,6 +6,13 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Norma de documentação e revisão das últimas 24 h (PM-98)
+- **Norma nova** em [docs/process/documentacao.md](./docs/process/documentacao.md): cabeçalho em todo módulo, JSDoc completo em todo export (`@param`, `@returns`, `@throws`, `@type` com unidade), o porquê nos comentários e a tabela do que atualizar em cada tipo de mudança (spec, FEATURES, ROADMAP, ADR, THREAT-MODEL, CHANGELOG).
+- **`npm run audit:docs`** ([scripts/docs-audit.mjs](./scripts/docs-audit.mjs)) lê a árvore sintática e reprova export sem JSDoc, parâmetro sem `@param`, retorno sem `@returns`, link relativo quebrado e doc fora do índice. Entra no `npm run validate` e no CI. A dívida antiga (2.296 itens, medida na `main`) fica em [scripts/docs-debt.json](./scripts/docs-debt.json) como catraca: só diminui.
+- **Código das últimas 24 h documentado por completo** (−252 itens de dívida): aviso assinado, página leve de conferência, chamada de ação, competências, termo de convivência, denúncia e mediação, assinatura (`signed-verify.js`), armazenamento por modo e Guardião, DM. Só comentários mudaram; os tokens do código foram comparados antes e depois.
+- Documentação técnica alinhada: a spec do aviso dizia "proposta, não implementada" e agora diz o que está no ar e em qual PR; o FEATURES ganhou as linhas do aviso, da chamada de ação, das competências, do termo e da mediação; o ROADMAP ganhou o **PM-97**. Um comentário solto em `report.js` voltou para a função certa e o cabeçalho de `screens-community.js` voltou para o topo.
+- Precache: os comentários vão para o celular (o app não tem build). Foram pagos trocando `cantina-gate.jpg` por WebP (−40,5 KB, visualmente igual; a mesma troca do PR #94). Teto do orçamento baixado para 0,2% acima do medido. SW `v7.75`.
+
 ### ADR-023, emenda 1 (aceita): moderador natural
 - Mediação vai para o padrinho (ou o mais próximo) das duas partes, sem arquivar nada. "Mais próximo" só por vínculo assinado, sem sinais de interação. Teto de 30 afilhados com poder firme; perda do papel por 3 reversões em 90 dias, por comunidade; recusar sem custo; "Meus vínculos"; trocar de padrinho uma vez; vínculo só para mediação. Ordem dos lotes do PM-83.
 

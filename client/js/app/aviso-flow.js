@@ -19,9 +19,21 @@ import { bindComposeStepper } from "./compose-stepper.js";
 import { getActiveUser, makeShellProps } from "./context.js";
 import { resolveCommunityMetadata } from "./screens-community.js";
 
+/**
+ * Chave em `localStorage` da flag de laboratório dos avisos (valor `"1"` liga).
+ *
+ * A mesma flag liga o termo de convivência e a chamada de ação.
+ *
+ * @type {string}
+ */
 export const AVISO_LAB_KEY = "vox.lab.aviso";
 
-/** Flag de laboratório: sem ela, a comunidade não mostra o caminho para os avisos. */
+/**
+ * Diz se a flag de laboratório dos avisos está ligada neste aparelho.
+ *
+ * @param {Storage} [storage=globalThis.localStorage] Armazenamento lido (injetável nos testes).
+ * @returns {boolean} `false` também quando o armazenamento está bloqueado.
+ */
 export function avisoLabOn(storage = globalThis.localStorage) {
   try {
     return storage?.getItem(AVISO_LAB_KEY) === "1";
@@ -33,7 +45,14 @@ export function avisoLabOn(storage = globalThis.localStorage) {
 const lastTs = (items, author, field) =>
   Math.max(0, ...items.filter((m) => (m.author || m.owner) === author).map((m) => Number(m[field] || m.ts || 0)));
 
-/** Quem está no grupo: entrou depois da última saída. O dono conta sempre. */
+/**
+ * Calcula quem está no grupo: quem entrou depois da última saída. O dono conta sempre.
+ *
+ * @param {object[]} [joins=[]] Entradas (`membership`) já verificadas.
+ * @param {object[]} [leaves=[]] Saídas (`membership_leave`) já verificadas.
+ * @param {string} [owner=""] Rota do dono da comunidade.
+ * @returns {Set<string>} Rotas dos membros.
+ */
 export function memberSet(joins = [], leaves = [], owner = "") {
   const members = new Set(owner ? [owner] : []);
   for (const author of new Set(joins.map((m) => m.author || m.owner).filter(Boolean))) {
@@ -93,7 +112,12 @@ async function signAndPublish(payload) {
   return signed;
 }
 
-/** Aba `#/c/<id>/avisos`. */
+/**
+ * Abre a aba `#/c/<id>/avisos`: carrega avisos, respostas e contagens, desenha e liga as ações.
+ *
+ * @param {string} communityId Comunidade.
+ * @returns {Promise<void>}
+ */
 export async function showAvisos(communityId) {
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "communities", "Avisos"));
@@ -111,7 +135,13 @@ export async function showAvisos(communityId) {
   bindSkillsForm(main, communityId);
 }
 
-/** No topo da comunidade (só com a flag): o aviso ativo mais recente e o caminho para a aba. */
+/**
+ * Fixa no topo da comunidade o aviso ativo mais recente e o caminho para a aba. Só com a flag.
+ *
+ * @param {HTMLElement} main Contêiner da tela da comunidade.
+ * @param {string} communityId Comunidade aberta.
+ * @returns {Promise<void>}
+ */
 export async function mountCommunityAvisoBanner(main, communityId) {
   if (!main || !avisoLabOn()) return;
   const ctx = await loadContext(communityId);
@@ -172,7 +202,12 @@ async function handleComposeSubmit(e, communityId, meta) {
   location.hash = `#/c/${encodeURIComponent(meta.id || communityId)}/avisos?enviar=${encodeURIComponent(signed.id)}`;
 }
 
-/** Compositor `#/compose/aviso?c=<id>` (só dono e moderação). */
+/**
+ * Abre o compositor `#/compose/aviso?c=<id>`. Só dono e moderação conseguem publicar.
+ *
+ * @param {string} communityId Comunidade do aviso.
+ * @returns {Promise<void>}
+ */
 export async function showComposeAviso(communityId) {
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "compose", "Novo aviso"));

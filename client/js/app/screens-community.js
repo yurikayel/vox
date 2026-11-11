@@ -1,6 +1,13 @@
+/**
+ * @file Telas de comunidade: página da comunidade (posts, avisos e termo de convivência), tópico, anúncios,
+ * propostas e votação. A entrada na comunidade assina o termo vigente (`joinTermoFields`).
+ *
+ * @module app/screens-community
+ * @see client/js/app/community-termo-flow.js
+ * @see client/js/app/aviso-flow.js
+ */
 import * as welcomeProfile from "../vox-welcome-profile.js";
 import { confirmGovernanceVote } from "./vote-confirm.js";
-/** @file Community, topic, listings, proposals. */
 
 import * as gql from "../graphql.js";
 import * as render from "../render.js";
