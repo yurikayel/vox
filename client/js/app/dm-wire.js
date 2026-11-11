@@ -1,4 +1,4 @@
-/** @file DM v2 — entrada e saída de envelopes cifrados (reação, leitura, mensagem e denúncia). */
+/** @file DM v2 — entrada e saída de envelopes cifrados (reação, leitura, mensagem, denúncia e papel em aviso). */
 
 import * as cacheNode from "../cache-node.js";
 import * as peers from "../peers.js";
@@ -6,6 +6,7 @@ import * as inbox from "../inbox.js";
 import * as dmMsg from "../dm-messenger.js";
 import * as outbox from "../dm-outbox.js";
 import { parseReportDm } from "../report-review.js";
+import { parseRoleClaimDm } from "../aviso-roles.js";
 
 export async function applyBubbleReaction(peerAddress, actorAddress, targetId, emoji) {
   const msgs = await cacheNode.getDmMessages(peerAddress);
@@ -39,6 +40,16 @@ async function handleReportPayload(env, rawText) {
   } catch {}
 }
 
+/** Chamada de ação: a resposta com papel chega só ao aparelho de quem convocou. */
+async function handleRoleClaimPayload(rawText) {
+  const claim = parseRoleClaimDm(rawText);
+  if (!claim) return;
+  try {
+    const { receiveRoleClaimDm } = await import("./aviso-roles-dm.js");
+    await receiveRoleClaimDm(claim);
+  } catch {}
+}
+
 export async function ingestDecryptedEnvelope(env, rawText) {
   const parsed = dmMsg.parseDmPayload(rawText);
   if (parsed.kind === "react") {
@@ -60,6 +71,7 @@ export async function ingestDecryptedEnvelope(env, rawText) {
     status: "received",
   });
   await handleReportPayload(env, rawText);
+  await handleRoleClaimPayload(rawText);
   return true;
 }
 

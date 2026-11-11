@@ -6,6 +6,10 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Chamada de ação no aviso (lote 1)
+- A convocação ganha **papéis com vagas e quórum mínimo** ("Jurídico 2, comunicação 3"). Quem assume um papel manda a resposta assinada **por DM cifrada a quem convocou**; o público vê só a contagem por papel que a coordenação publica, e o estado (aberta, quórum atingido, sem quórum). Nomes só no aparelho da coordenação. Laboratório `vox.lab.aviso`.
+- Precache: saiu o `profile-vox-official-512.png` (cópia exata do `icon-512.png`); o perfil oficial usa o `icon-white-192.png`. Teto do orçamento baixado para 0,2% acima do medido. Teste do avatar do perfil oficial ajustado ao arquivo novo. SW `v7.71`.
+
 ### Armazenamento por modo, banda proporcional e camadas de mídia só para economia
 - **Nó leve: 100 MB fixos** (era 25). **Apoiador: de 512 MB a 1 GB** (era 250 MB; começa em 1 GB). **Modo Guardião: 2 GB fixos** (era a escolha entre 50 e 500 MB). O campo de disco fica travado em 100 no nó leve e aceita de 512 a 1024 no apoiador.
 - **Banda proporcional ao disco**: até o dobro por dia. Nó leve de 50 para **200 MB/dia**, apoiador de 500 MB para **1 a 2 GB/dia**, Guardião até 4 GB/dia. A pessoa pode baixar o teto diário, nunca passar do dobro. O 4G segue com teto próprio (5 MB/dia). O assistente guiado oferece 50, 100, 150 ou 200 MB/dia.
