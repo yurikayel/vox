@@ -14,6 +14,12 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 - ADR-029: Half e Full **só economizam banda e espaço**, não controlam acesso. Quem segue pede a Full, e ninguém confere; saiu o comprovante de seguir.
 - Testes que fixam os padrões e limites (`peers`, `seeder-guardian`, `supporter-mode`) atualizados para os valores novos; testes novos para o disco por modo e a banda proporcional. SW `v7.70`.
 
+### ADR-030 (aceito): trazer do Bluesky (PESOS)
+- A pessoa continua postando no Bluesky e traz os próprios posts para o Vox: fila com confirmação ao abrir o app, sem servidor, assinados pela chave dela, com o original (`origin`) dentro da assinatura. Destino padrão no perfil; comunidade só por escolha em cada item.
+- Só posts de raiz da conta vinculada por login. Sem eco com a replicação Vox→Bluesky. Imagens pelo PDS da pessoa (o CDN do Bluesky não libera CORS); vídeo como link. Apagar no Bluesky segue a preferência da pessoa nas configurações: perguntar (padrão), apagar no Vox também ou manter.
+- A preservação vem das cópias de quem segue (replicação e backup orgânico, idealmente em caixa preta, sem manuseio); o Arweave segue só como cartório.
+- Recusados: nó assinando sem o aparelho, extensão que captura texto no X ou no Threads, webhook, e X/Threads/Instagram como fonte. Detalhes no [ADR](./docs/adr/030-trazer-do-bluesky-pesos.md).
+
 ### ADR-029 (aceito): mídia em duas camadas, 360p e 720p
 - Decisões do mantenedor (11/11/2026):
   - **sem teto de 100 KB por item**: os pedaços ficam só como unidade de transporte;
