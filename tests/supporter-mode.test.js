@@ -16,7 +16,8 @@ test("apoiador: ligar sobe tetos, força Wi-Fi e reativa o nó", () => {
 test("apoiador: ligar não reduz teto ampliado à mão", () => {
   const next = applySupporterMode({ dailyCapMb: 900, maxMb: 400 }, true);
   assert.equal(next.dailyCapMb, 900);
-  assert.equal(next.maxMb, 400);
+  // O disco do apoiador já é o máximo (1024 MB): um valor manual menor sobe até ele.
+  assert.equal(next.maxMb, SUPPORTER_LIMITS.maxMb);
 });
 
 test("apoiador: desligar volta aos tetos do nó leve", () => {

@@ -18,19 +18,19 @@ test("seeder-guardian - saveGuardianQuotaConfig persiste e limita valores dentro
   localStorage.clear();
   const saved = guardian.saveGuardianQuotaConfig({
     enabled: true,
-    quotaMb: 2000, // deve travar em 1500
+    quotaMb: 2000, // deve travar em 1024
     onlyWifi: false,
   });
   assert.equal(saved.enabled, true);
-  assert.equal(saved.quotaMb, 1500);
+  assert.equal(saved.quotaMb, 1024);
   assert.equal(saved.onlyWifi, false);
 
   const reloaded = guardian.getGuardianQuotaConfig();
   assert.equal(reloaded.enabled, true);
-  assert.equal(reloaded.quotaMb, 1500);
+  assert.equal(reloaded.quotaMb, 1024);
 
   const clampedMin = guardian.saveGuardianQuotaConfig({ quotaMb: 2 });
-  assert.equal(clampedMin.quotaMb, 10);
+  assert.equal(clampedMin.quotaMb, 100);
 });
 
 test("seeder-guardian - isSeedingPermitted respeita regras de bateria e rede", async () => {

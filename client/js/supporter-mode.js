@@ -1,10 +1,10 @@
 /** @file Modo Apoiador (nó pesado): opt-in por botão sobre o nó leve padrão. */
 
 /** Tetos do nó leve (padrão do Pacto). */
-export const LIGHT_LIMITS = Object.freeze({ dailyCapMb: 50, maxMb: 38 });
+export const LIGHT_LIMITS = Object.freeze({ dailyCapMb: 50, maxMb: 100 });
 
 /** Tetos do nó pesado (Apoiador). Só no Wi-Fi para não pesar no plano de dados. */
-export const SUPPORTER_LIMITS = Object.freeze({ dailyCapMb: 500, maxMb: 375 });
+export const SUPPORTER_LIMITS = Object.freeze({ dailyCapMb: 500, maxMb: 1024 });
 
 /**
  * Liga ou desliga o modo Apoiador sem perder as demais preferências.
