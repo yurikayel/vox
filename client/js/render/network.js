@@ -18,7 +18,7 @@ const PARTICIPATION_LAYERS = [
   {
     id: "supporter",
     title: "Apoiador",
-    desc: "Nó pesado: guarda e repassa mais conteúdo (até 500 MB/dia e 1 GB de disco), só no Wi-Fi. Ajuda comunidades com poucos aparelhos online.",
+    desc: "Nó pesado: guarda e repassa mais conteúdo (de 512 MB a 1 GB de disco e até o dobro disso em dados por dia), só no Wi-Fi. Ajuda comunidades com poucos aparelhos online.",
     control: '<a class="participation-link" href="#net-supporter">Seja um apoiador da rede</a>',
   },
   {
@@ -139,7 +139,7 @@ function renderContributionAttestationCardHtml() {
 }
 
 function renderNetworkStats(metrics, cacheStats, dailyUsage, settings) {
-  const capMb = settings?.dailyCapMb || 50;
+  const capMb = settings?.dailyCapMb || 200;
   const servedTodayMb = ((dailyUsage?.bytesServedToday || 0) / (1024 * 1024)).toFixed(1);
   const cellularTodayMb = ((dailyUsage?.bytesCellularToday || 0) / (1024 * 1024)).toFixed(1);
   const pct = Math.min(100, Math.round((servedTodayMb / capMb) * 100));
@@ -223,15 +223,26 @@ function renderPauseAndDiscoverableHtml(isEnabled, meshDiscoverable) {
     </div>`;
 }
 
+/** Disco: fixo em 100 MB no nó leve; de 512 a 1024 MB no apoiador. */
+function renderDiskFieldHtml(settings) {
+  if (!settings?.supporter) {
+    return `
+      <label for="net-max-mb">Espaço em disco: 100 MB (fixo no nó leve)</label>
+      <input type="number" id="net-max-mb" class="form-control" value="100" disabled />`;
+  }
+  return `
+      <label for="net-max-mb">Espaço em disco (MB, de 512 a 1024):</label>
+      <input type="number" id="net-max-mb" class="form-control" min="512" max="1024" value="${settings.maxMb || 1024}" />`;
+}
+
 function renderQuotaAndLimitFieldsHtml(settings) {
+  const diskMb = settings?.supporter ? settings.maxMb || 1024 : 100;
   return `
     <div class="form-group">
-      <label for="net-daily-cap">Teto diário de dados compartilhados (MB):</label>
-      <input type="number" id="net-daily-cap" class="form-control" min="5" max="1000" value="${settings?.dailyCapMb || 50}" />
+      <label for="net-daily-cap">Teto diário de dados compartilhados (MB, até o dobro do disco):</label>
+      <input type="number" id="net-daily-cap" class="form-control" min="5" max="${diskMb * 2}" value="${settings?.dailyCapMb || diskMb * 2}" />
     </div>
-    <div class="form-group">
-      <label for="net-max-mb">Limite de espaço em disco (MB):</label>
-      <input type="number" id="net-max-mb" class="form-control" min="100" max="1024" value="${settings?.maxMb || 100}" />
+    <div class="form-group">${renderDiskFieldHtml(settings)}
     </div>
     <div class="form-group" style="display:flex; align-items:center; gap:0.6rem;">
       <input type="checkbox" id="net-wifi" ${settings?.wifiOnly ? "checked" : ""} style="width:1rem; height:1rem;" />
@@ -253,7 +264,7 @@ export function renderSupporterCardHtml(settings = {}) {
   const on = Boolean(settings.supporter);
   const text = on
     ? "Você é apoiador: este aparelho guarda e repassa mais conteúdo da rede, só no Wi-Fi."
-    : "Seu aparelho já ajuda como nó leve (até 50 MB/dia). Com Wi-Fi e espaço sobrando, vire apoiador: até 500 MB/dia e 1 GB de disco para manter as comunidades no ar.";
+    : "Seu aparelho já ajuda como nó leve (100 MB de disco, até 200 MB/dia). Com Wi-Fi e espaço sobrando, vire apoiador: de 512 MB a 1 GB de disco e até o dobro disso por dia para manter as comunidades no ar.";
   const btn = on
     ? '<button type="button" id="btn-supporter-toggle" class="btn btn-sm btn-outline" data-on="1">Voltar ao nó leve</button>'
     : '<button type="button" id="btn-supporter-toggle" class="btn btn-sm btn-primary" data-on="0">Seja um apoiador da rede</button>';

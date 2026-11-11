@@ -10,6 +10,7 @@ import * as moderation from "./moderation.js";
 import * as profileCard from "./profile-card.js";
 import * as gossipProfile from "./peers-gossip-profile.js";
 import * as profileDirectory from "./profile-directory.js";
+import { normalizeStorageCommitment } from "./supporter-mode.js";
 import * as centralMemory from "./central-memory.js";
 import { getRelayHttpUrls } from "./inbox.js";
 import { createPeerSync, defaultPeerSyncDeps, SYNC_INV, SYNC_WANT } from "./peer-sync.js";
@@ -99,7 +100,8 @@ const DEFAULT_PEER_SETTINGS = Object.freeze({
   commOnly: false,
   supporter: false,
   backgroundRelay: false,
-  dailyCapMb: 50,
+  /** Proporcional ao disco: 2 × 100 MB (supporter-mode.js). */
+  dailyCapMb: 200,
   /** PM-52: no 4G o teto é próprio e baixo (quem tem o plano mais barato paga mais pela ajuda). */
   cellularCapMb: 5,
   webrtcEnabled: true,
@@ -120,7 +122,7 @@ export function getPeerSettings() {
     const raw = localStorage.getItem(PEER_SETTINGS_KEY);
     if (!raw) return { ...DEFAULT_PEER_SETTINGS };
     const p = JSON.parse(raw);
-    return {
+    return normalizeStorageCommitment({
       enabled: p.enabled !== undefined ? p.enabled : DEFAULT_PEER_SETTINGS.enabled,
       maxMb: p.maxMb || DEFAULT_PEER_SETTINGS.maxMb,
       wifiOnly: p.wifiOnly !== undefined ? p.wifiOnly : DEFAULT_PEER_SETTINGS.wifiOnly,
@@ -130,7 +132,7 @@ export function getPeerSettings() {
       dailyCapMb: p.dailyCapMb || DEFAULT_PEER_SETTINGS.dailyCapMb,
       cellularCapMb: clampCellularCapMb(p.cellularCapMb ?? DEFAULT_PEER_SETTINGS.cellularCapMb),
       webrtcEnabled: p.webrtcEnabled !== undefined ? p.webrtcEnabled : DEFAULT_PEER_SETTINGS.webrtcEnabled,
-    };
+    });
   } catch {
     return { ...DEFAULT_PEER_SETTINGS };
   }
@@ -203,7 +205,7 @@ export function recordBytesServed(bytes, onCellular = !isWifiOrUnlimited()) {
  * desligou o "só Wi-Fi", e até o teto do 4G (padrão 5 MB/dia).
  */
 export function canServeNow(settings = getPeerSettings(), onWifi = isWifiOrUnlimited(), usage = getDailyUsage()) {
-  if (usage.bytesServedToday >= (settings.dailyCapMb || 50) * 1024 * 1024) return false;
+  if (usage.bytesServedToday >= (settings.dailyCapMb || DEFAULT_PEER_SETTINGS.dailyCapMb) * 1024 * 1024) return false;
   if (onWifi) return true;
   if (settings.wifiOnly) return false;
   return (usage.bytesCellularToday || 0) < clampCellularCapMb(settings.cellularCapMb) * 1024 * 1024;
@@ -212,7 +214,7 @@ export function canServeNow(settings = getPeerSettings(), onWifi = isWifiOrUnlim
 export function isDailyCapReached() {
   const settings = getPeerSettings();
   const usage = getDailyUsage();
-  const capBytes = (settings.dailyCapMb || 50) * 1024 * 1024;
+  const capBytes = (settings.dailyCapMb || DEFAULT_PEER_SETTINGS.dailyCapMb) * 1024 * 1024;
   return usage.bytesServedToday >= capBytes;
 }
 

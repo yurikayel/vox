@@ -6,11 +6,13 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
-### Armazenamento de 100 MB a 1 GB e camadas de mídia só para economia
-- Disco com **mínimo de 100 MB e máximo de 1024 MB**: nó leve de 25 para **100 MB**, apoiador de 250 para **1 GB**, Modo Guardião em 150 MB (opções de 100, 150 e 300 MB e 1 GB, travado entre 100 e 1024), campo de cache entre 100 e 1024 MB. A banda diária não mudou. Na spec da replicação por grau, o teto planejado passa de 500 para **750 MB**, dentro da mesma faixa.
+### Armazenamento por modo, banda proporcional e camadas de mídia só para economia
+- **Nó leve: 100 MB fixos** (era 25). **Apoiador: de 512 MB a 1 GB** (era 250 MB; começa em 1 GB). **Modo Guardião: 2 GB fixos** (era a escolha entre 50 e 500 MB). O campo de disco fica travado em 100 no nó leve e aceita de 512 a 1024 no apoiador.
+- **Banda proporcional ao disco**: até o dobro por dia. Nó leve de 50 para **200 MB/dia**, apoiador de 500 MB para **1 a 2 GB/dia**, Guardião até 4 GB/dia. A pessoa pode baixar o teto diário, nunca passar do dobro. O 4G segue com teto próprio (5 MB/dia). O assistente guiado oferece 50, 100, 150 ou 200 MB/dia.
+- Na spec da replicação por grau, o teto único de 750 MB vira a tabela por modo.
 - Os próprios posts **contam no teto**: a Full é o original publicado e o backup local. **Apagar aqui apaga para todo mundo**, pela retração assinada, e a tela avisa que não há volta.
 - ADR-029: Half e Full **só economizam banda e espaço**, não controlam acesso. Quem segue pede a Full, e ninguém confere; saiu o comprovante de seguir.
-- Testes que fixam os padrões e limites (`peers`, `seeder-guardian`, `supporter-mode`) atualizados para os valores novos. SW `v7.70`.
+- Testes que fixam os padrões e limites (`peers`, `seeder-guardian`, `supporter-mode`) atualizados para os valores novos; testes novos para o disco por modo e a banda proporcional. SW `v7.70`.
 
 ### ADR-029 (aceito): mídia em duas camadas, 360p e 720p
 - Decisões do mantenedor (11/11/2026):
