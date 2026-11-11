@@ -231,3 +231,13 @@ O aviso não leva o nome da comunidade, e o golpe de clone copia o **nome de que
 - **Envio pelo WhatsApp depois de publicar:** o compositor termina em **Assinar e publicar**. A folha de envio aparece em seguida, com **Enviar pelo WhatsApp** e, sob demanda, o link de conferência. Os dois botões da spec viraram um só porque o navegador bloqueia abrir o WhatsApp depois da assinatura, que é assíncrona. Para "publicar só no Vox", basta não tocar em enviar.
 - **Peso:** foi a saída 1, pagar com corte. Os módulos do aviso entraram no precache; saiu o ícone de 512 px que o app só mostrava em 48 px.
 - **Flag:** `localStorage["vox.lab.aviso"] = "1"` mostra o aviso no topo da comunidade e o caminho para a aba. As rotas funcionam pelo endereço mesmo sem a flag, como nos outros laboratórios.
+
+## Chamada de ação (lote 1, 11/11/2026)
+
+Extensão opcional da **convocação**: quem convoca lista papéis com vagas e um quórum mínimo.
+
+- **Campos no topo do aviso** (texto, porque na assinatura v1 as chaves de objetos aninhados ficam fora do que é assinado): `roleSlots` = `"jurídico:2,comunicação:3"` (até 6 papéis, nomes de 2 a 24 letras, de 1 a 99 vagas cada) e `quorumMin` (de 1 ao total de vagas; o padrão é o total). Outros tipos de aviso não levam papéis.
+- **Assumir um papel:** a resposta assinada (`aviso-papel`: `communityId`, `avisoId`, `role`, `authorDisplay`, `ts`) vai **por DM cifrada a quem convocou**, nunca pelo gossip. `role` vazio = desistir. Vale a última resposta de cada pessoa. O aparelho de quem convocou confere a assinatura, o aviso, a comunidade e o papel antes de guardar.
+- **O público vê só números:** quem convocou assina e publica `aviso-papeis` (`countRoles` = `"jurídico:1,comunicação:0"`, `countedAt`). Vale a contagem mais recente de dono ou moderação. O cartão mostra vagas por papel e o quórum: **aberta**, **quórum atingido** ou **sem quórum** (passou a hora do encontro sem chegar ao mínimo).
+- **Nomes só no aparelho da coordenação**, no painel "Só você vê os nomes". Custo aceito: a contagem pública depende de quem convocou publicar; se o aparelho dele sumir, as respostas somem junto.
+- **Peso:** os dois módulos novos foram pagos tirando do precache o `profile-vox-official-512.png`, cópia exata do `icon-512.png`; o avatar do perfil oficial passou a usar o `icon-white-192.png`.

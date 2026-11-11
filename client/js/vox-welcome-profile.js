@@ -6,7 +6,8 @@ import * as social from "./social.js";
 export const WELCOME_ROUTE_ID = "vx_voxbrasil_welcome";
 
 /** Avatar institucional: logo branco em tile opaco, squircle (light/dark). */
-export const OFFICIAL_PROFILE_AVATAR = "./icons/profile-vox-official-512.png";
+/** Mesma marca, já no precache: o arquivo de 512 px era cópia exata do icon-512.png e só aparecia como avatar. */
+export const OFFICIAL_PROFILE_AVATAR = "./icons/icon-white-192.png";
 
 /** @deprecated Card removido — migrado para intro via DM. */
 export const WELCOME_CARD_SEEN_KEY = "vox-welcome-card-seen";

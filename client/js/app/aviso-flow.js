@@ -1,6 +1,7 @@
 /**
  * @file Fluxo do aviso assinado no app (lote D): aba de avisos, compositor, respostas, envio pelo WhatsApp,
- * link de conferência sob demanda, contagem colada e cancelamento. Atrás da flag de laboratório `vox.lab.aviso`.
+ * link de conferência sob demanda, contagem colada, cancelamento e chamada de ação (papéis e quórum).
+ * Atrás da flag de laboratório `vox.lab.aviso`.
  * Spec: docs/specs/aviso-assinado-v0.md.
  */
 import * as cacheNode from "../cache-node.js";
@@ -9,6 +10,8 @@ import * as localAccount from "../local-account.js";
 import * as share from "../share.js";
 import * as render from "../render.js";
 import * as aviso from "../aviso.js";
+import * as roles from "../aviso-roles.js";
+import { myRoleFor, receivedClaims, sendRoleClaim } from "./aviso-roles-dm.js";
 import { countPastedReplies } from "../aviso-replies.js";
 import { isModerator } from "../moderation.js";
 import * as avisoView from "../render/aviso.js";
@@ -43,13 +46,13 @@ const localOf = (type, communityId) => cacheNode.getLocalPosts({ type, community
 
 async function loadContext(communityId) {
   const meta = await resolveCommunityMetadata(communityId);
-  const [topics, responses, counts, joins, leaves] = await Promise.all(
-    ["topic", "aviso-resposta", "aviso-contagem", "membership", "membership_leave"].map((t) => localOf(t, communityId)),
+  const [topics, responses, counts, roleCounts, joins, leaves] = await Promise.all(
+    ["topic", "aviso-resposta", "aviso-contagem", roles.ROLE_COUNT_TYPE, "membership", "membership_leave"].map((t) => localOf(t, communityId)),
   );
   const routeId = await localAccount.getRouteId();
   const members = memberSet(joins, leaves, meta.owner);
   const isMod = isModerator(routeId, meta.owner, meta.moderators);
-  return { communityId, meta, topics, responses, counts, members, routeId, isMod };
+  return { communityId, meta, topics, responses, counts, roleCounts, members, routeId, isMod };
 }
 
 function myChoice(responses, avisoId, routeId) {
@@ -66,7 +69,17 @@ async function buildItems(ctx, now = Date.now()) {
     tally: aviso.tallyAvisoResponses(ctx.responses, a.id, ctx.members),
     count: aviso.latestAvisoCount(ctx.counts, a.id, ctx.meta),
     myChoice: myChoice(ctx.responses, a.id, ctx.routeId),
+    ...callFields(ctx, a, now),
   })));
+}
+
+/** Chamada de ação: vagas e quórum para todos; os nomes, só no aparelho de quem convocou. */
+function callFields(ctx, a, now) {
+  const call = roles.actionCallState(a, roles.latestRoleCount(ctx.roleCounts, a.id, ctx.meta), now);
+  if (!call) return {};
+  const mine = a.author === ctx.routeId;
+  const received = mine ? [...roles.latestClaims(receivedClaims(a.id), a.id).values()] : null;
+  return { call, myRole: myRoleFor(a.id), received };
 }
 
 const newId = (prefix) => `${prefix}_${Math.random().toString(36).slice(2, 10)}`;
@@ -113,6 +126,8 @@ function readDraft(form, communityId) {
     body: data.get("body"),
     eventAt,
     eventPlace: kind === "convocacao" ? data.get("eventPlace") : "",
+    roleSlots: kind === "convocacao" ? data.get("roleSlots") : "",
+    quorumMin: kind === "convocacao" ? data.get("quorumMin") : "",
   };
 }
 
@@ -121,6 +136,15 @@ const DRAFT_ERRORS = {
   body: "O texto passa de 280 letras.",
   eventAt: "Convocação precisa de data e hora.",
   eventPlace: "O lugar passa de 80 letras.",
+  roleSlots: "Papéis: nome e vagas separados por vírgula (ex.: jurídico 2, apoio 5), até 6 papéis e 99 vagas cada.",
+  quorumMin: "O quórum vai de 1 até o total de vagas.",
+};
+
+const ROLE_SENT = {
+  delivered: "Resposta enviada a quem convocou.",
+  "queued-relay": "Resposta na fila: chega quando quem convocou ficar online.",
+  "pending-retry": "Resposta guardada: o app tenta enviar de novo.",
+  "no-key": "Não achei a chave de mensagem de quem convocou. Tente mais tarde.",
 };
 
 async function handleComposeSubmit(e, communityId, meta) {
@@ -200,6 +224,18 @@ const ACTIONS = {
     pasted.value = "";
     await signAndPublish({ ...aviso.buildAvisoCount(item.aviso, counts), id: newId("avc") });
     share.showToast(`${counted} respostas contadas, ${ignored} linhas ignoradas.`);
+    await showAvisos(ctx.communityId);
+  },
+  async assumir(ctx, item, button) {
+    const user = await getActiveUser();
+    const opts = { role: button.dataset.role || "", display: localAccount.getDisplayName() || "", code: item.code };
+    share.showToast(ROLE_SENT[await sendRoleClaim(user, item.aviso, opts)] || "Resposta enviada.");
+    await showAvisos(ctx.communityId);
+  },
+  async "publicar-papeis"(ctx, item) {
+    const counts = roles.tallyRoles(receivedClaims(item.aviso.id), item.aviso.id);
+    await signAndPublish({ ...roles.buildRoleCount(item.aviso, counts), id: newId("avp") });
+    share.showToast("Contagem por papel assinada e publicada. Os nomes ficaram só com você.");
     await showAvisos(ctx.communityId);
   },
   async cancelar(ctx, item) {
