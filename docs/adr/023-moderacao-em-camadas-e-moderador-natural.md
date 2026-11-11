@@ -51,7 +51,7 @@ O mantenedor decidiu, em 10/11/2026, os três pontos que mudam o desenho:
   - age só quando chega uma denúncia ou um pedido de mediação.
 - Quatro pontos ficaram em aberto no texto original e precisam de regra antes do código.
 
-### 4.2 Decisões propostas
+### 4.2 Decisões
 
 1. **Mediação antes de punição.** "Pedir mediação" (lote 3 do kit cívico, hoje dirigido a quem modera a comunidade) passa a ir para o **moderador natural das duas partes**: o padrinho, ou o mais próximo, de cada lado.
    - Nesse caminho ninguém arquiva nada.
