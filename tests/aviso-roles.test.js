@@ -138,3 +138,38 @@ test("chamada — tela: vagas e quórum para todos; nomes só no painel de quem 
   assert.ok(coord.includes("<strong>Comunicação:</strong> ninguém ainda"));
   assert.ok(coord.includes('data-aviso-action="publicar-papeis"'));
 });
+
+test("competências — só no aparelho: lista curta, nomes válidos, sem repetir", () => {
+  assert.deepEqual(roles.parseSkillsInput(" Jurídico, comunicação ,jurídico"), ["jurídico", "comunicação"]);
+  assert.deepEqual(roles.parseSkillsInput(""), []);
+  assert.equal(roles.parseSkillsInput("a"), null);
+  assert.equal(roles.parseSkillsInput(Array.from({ length: 13 }, (_, i) => `papel ${i}`).join(",")), null);
+  const storage = memoryStorage();
+  assert.deepEqual(rolesDm.mySkills(storage), []);
+  rolesDm.saveMySkills(["jurídico"], storage);
+  assert.deepEqual(rolesDm.mySkills(storage), ["jurídico"]);
+  const flow = fs.readFileSync(new URL("../client/js/app/aviso-flow.js", import.meta.url), "utf8");
+  assert.ok(!/signAndPublish\([^)]*[Ss]kill/.test(flow), "competência nunca é assinada nem publicada");
+});
+
+test("competências — sugerem só papéis da chamada que ainda têm vaga", () => {
+  const state = roles.actionCallState(call(), { countRoles: "jurídico:2,comunicação:1" }, NOW);
+  assert.deepEqual(roles.suggestedRoles(["jurídico", "comunicação", "saúde"], state), ["comunicação"]);
+  assert.deepEqual(roles.suggestedRoles(["saúde"], state), []);
+  assert.deepEqual(roles.suggestedRoles(["jurídico"], null), []);
+});
+
+test("competências — tela: convite para a vaga, botão em destaque e formulário que avisa onde fica", () => {
+  const state = roles.actionCallState(call(), null, NOW);
+  const item = { aviso: { ...call(), avisoState: "ativo" }, code: "A7F3", tally: null, count: null, myChoice: "", call: state, myRole: "", suggested: ["comunicação"] };
+  const card = view.renderAvisoCard(item, { canRespond: true });
+  assert.ok(card.includes("Você marcou Comunicação: assumir uma vaga?"));
+  assert.match(card, /btn btn-primary btn-sm" data-aviso-action="assumir" data-aviso-id="a1" data-role="comunicação"/);
+  assert.match(card, /btn btn-outline btn-sm" data-aviso-action="assumir" data-aviso-id="a1" data-role="jurídico"/);
+  const main = { innerHTML: "" };
+  view.renderAvisosScreen(main, { communityId: "c1", title: "C", items: [], isMod: false, canRespond: true, skills: ["jurídico", "<x>"] });
+  assert.ok(main.innerHTML.includes('value="jurídico, &lt;x&gt;"'));
+  assert.ok(main.innerHTML.includes("Fica só neste aparelho"));
+  view.renderAvisosScreen(main, { communityId: "c1", title: "C", items: [], isMod: false, canRespond: false });
+  assert.ok(!main.innerHTML.includes("aviso-skills-form"));
+});

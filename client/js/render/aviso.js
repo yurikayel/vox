@@ -61,14 +61,17 @@ function callLines(call) {
 
 function roleButton(item, role, text) {
   const mine = item.myRole === role ? " is-active" : "";
-  return `<button type="button" class="btn btn-outline btn-sm${mine}" data-aviso-action="assumir" data-aviso-id="${escapeHtml(item.aviso.id)}" data-role="${escapeHtml(role)}">${text}</button>`;
+  const look = item.suggested?.includes(role) ? "btn-primary" : "btn-outline";
+  return `<button type="button" class="btn ${look} btn-sm${mine}" data-aviso-action="assumir" data-aviso-id="${escapeHtml(item.aviso.id)}" data-role="${escapeHtml(role)}">${text}</button>`;
 }
 
 /** Botões para assumir um papel; a resposta vai só para quem convocou. */
 function renderRoleButtons(item) {
   const buttons = item.call.roles.map((r) => roleButton(item, r.role, `Assumir: ${escapeHtml(roleLabel(r.role))}`));
   if (item.myRole) buttons.push(roleButton(item, "", "Desistir do papel"));
-  return `<div class="aviso-actions" role="group" aria-label="Assumir um papel">${buttons.join("")}</div>
+  const names = (item.suggested || []).map((r) => escapeHtml(roleLabel(r))).join(", ");
+  const nudge = names ? `<p class="aviso-suggest">Você marcou ${names}: assumir uma vaga?</p>` : "";
+  return `${nudge}<div class="aviso-actions" role="group" aria-label="Assumir um papel">${buttons.join("")}</div>
     <p class="hint">Sua resposta vai só para quem convocou, por mensagem cifrada. O grupo vê só os números.</p>`;
 }
 
@@ -119,8 +122,20 @@ export function renderPinnedAviso(item, communityId) {
   return `<section class="aviso-pinned">${card}<p><a class="btn btn-outline btn-sm" href="${avisosHref(communityId)}">📣 Avisos da comunidade</a></p></section>`;
 }
 
+/** Competências marcadas neste aparelho; servem só para sugerir papel numa chamada de ação. */
+function renderSkillsForm(skills = []) {
+  return `<details class="card aviso-skills"><summary>Minhas competências</summary>
+    <form id="aviso-skills-form">
+      <label for="aviso-skills">O que você sabe fazer (separe por vírgula)</label>
+      <input id="aviso-skills" name="skills" type="text" maxlength="300" placeholder="Jurídico, comunicação, primeiros socorros" value="${escapeHtml(skills.join(", "))}" />
+      <p class="hint">Fica só neste aparelho. Não aparece no perfil nem vai para a rede; serve para sugerir um papel quando chegar uma chamada.</p>
+      <button type="submit" class="btn btn-outline btn-sm">Guardar</button>
+    </form>
+  </details>`;
+}
+
 /** Aba de avisos: lista com ativos, encerrados e cancelados. */
-export function renderAvisosScreen(main, { communityId, title, items, isMod, canRespond }) {
+export function renderAvisosScreen(main, { communityId, title, items, isMod, canRespond, skills = [] }) {
   const compose = isMod
     ? `<a class="btn btn-primary" href="#/compose/aviso?c=${encodeURIComponent(communityId)}">Novo aviso</a>`
     : "";
@@ -129,6 +144,7 @@ export function renderAvisosScreen(main, { communityId, title, items, isMod, can
     : `<div class="empty card"><p>Nenhum aviso da coordenação ainda.</p></div>`;
   main.innerHTML = `<div class="aviso-screen">
     <p><a href="#/c/${encodeURIComponent(communityId)}" class="btn btn-outline btn-sm">← ${escapeHtml(title)}</a> ${compose}</p>
+    ${canRespond ? renderSkillsForm(skills) : ""}
     ${list}
   </div>`;
 }

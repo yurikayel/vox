@@ -178,3 +178,18 @@ export function roleLabel(role) {
   const s = String(role ?? "");
   return s ? s[0].toLocaleUpperCase("pt-BR") + s.slice(1) : "";
 }
+
+export const SKILL_MAX = 12;
+
+/** Competências (lote 2): "Jurídico, comunicação" → ["jurídico", "comunicação"]; vazio → []; inválido → null. */
+export function parseSkillsInput(input) {
+  const names = String(input ?? "").split(",").map(normalizeName).filter(Boolean);
+  if (names.length > SKILL_MAX || !names.every(validName)) return null;
+  return [...new Set(names)];
+}
+
+/** Papéis da chamada que batem com as competências marcadas no aparelho e ainda têm vaga. */
+export function suggestedRoles(skills = [], call = null) {
+  const mine = new Set(skills);
+  return (call?.roles || []).filter((r) => mine.has(r.role) && r.filled < r.slots).map((r) => r.role);
+}
