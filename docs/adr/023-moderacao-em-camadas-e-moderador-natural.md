@@ -1,6 +1,6 @@
 # ADR-023: Moderação em camadas — comunidade, moderador natural assimétrico e vínculo assinado
 
-**Status:** accepted · vínculo assinado implementado (PM-82, SW v7.54); moderador natural a implementar (PM-83) · **Emenda 1 (§4): proposta** · **Revisado:** 2026-11-11 · **Relacionados:** [ADR-020](./020-postura-de-operacao-do-piloto-g1.md) (uma denúncia arquiva), PM-69, PM-81, [spec moderador-natural-v0](../specs/moderador-natural-v0.md), [GOVERNANCE](../../GOVERNANCE.md), [THREAT-MODEL T19](../THREAT-MODEL.md)
+**Status:** accepted · vínculo assinado implementado (PM-82, SW v7.54); moderador natural a implementar (PM-83) · **Emenda 1 (§4): aceita em 11/11/2026** · **Revisado:** 2026-11-11 · **Relacionados:** [ADR-020](./020-postura-de-operacao-do-piloto-g1.md) (uma denúncia arquiva), PM-69, PM-81, [spec moderador-natural-v0](../specs/moderador-natural-v0.md), [GOVERNANCE](../../GOVERNANCE.md), [THREAT-MODEL T19](../THREAT-MODEL.md)
 
 ## 1. Contexto
 
@@ -39,9 +39,9 @@ O mantenedor decidiu, em 10/11/2026, os três pontos que mudam o desenho:
 - **Abuso de padrinho:** um padrinho que abusa perde o papel após 3 reversões (a implementar no PM-83).
 - **Ordem de implementação:** o PM-83 depende de assinatura confiável. Convém fechar o PM-85 antes.
 
-## 4. Emenda 1 (11/11/2026): proposta
+## 4. Emenda 1 (11/11/2026): aceita
 
-**Status:** proposta. Os valores marcados como *recomendado* valem até o mantenedor decidir. Esta emenda não muda as seções 1 a 3; ela as completa antes do PM-83.
+**Status:** aceita pelo mantenedor em 11/11/2026, com os valores recomendados. Esta emenda não muda as seções 1 a 3; ela as completa antes do PM-83.
 
 ### 4.1 Contexto
 
@@ -58,10 +58,10 @@ O mantenedor decidiu, em 10/11/2026, os três pontos que mudam o desenho:
    - Sem moderador natural de nenhum lado, o pedido segue para a moderação da comunidade, como hoje.
 2. **Pessoa mais próxima, só por vínculo assinado.** A ordem é a do §2.4: membro da mesma comunidade, depois o vínculo mais antigo, nunca a outra parte.
    - **Ficam de fora** sinais de interação (curtidas, mensagens, frequência). São vigilância, fáceis de fabricar, e nenhum outro aparelho consegue conferir.
-3. **Teto de afilhados com poder firme.** O arquivamento firme (N1) vale para os **primeiros 30 afilhados** de um padrinho, contados pela data do vínculo. *Recomendado: 30.*
+3. **Teto de afilhados com poder firme.** O arquivamento firme (N1) vale para os **primeiros 30 afilhados** de um padrinho, contados pela data do vínculo.
    - Acima disso, a confirmação do padrinho vira "em revisão", como N2.
    - Assim, quem mais divulga o Vox não vira moderador de muita gente.
-4. **Perda do papel, por comunidade.** O padrinho perde o papel de N1 numa comunidade depois de **3 reversões em 90 dias**, assinadas pela moderação dessa comunidade. *Recomendado: por comunidade.*
+4. **Perda do papel, por comunidade.** O padrinho perde o papel de N1 numa comunidade depois de **3 reversões em 90 dias**, assinadas pela moderação dessa comunidade.
    - Nas outras comunidades, ele segue padrinho.
    - Qualquer aparelho confere a contagem pelas reversões publicadas.
 5. **Recusar sem custo.** O moderador natural pode responder "não quero decidir isso". O caso segue na hora para a próxima camada, sem esperar as 48 h.
@@ -69,7 +69,7 @@ O mantenedor decidiu, em 10/11/2026, os três pontos que mudam o desenho:
 7. **Trocar de padrinho**, uma vez:
    - exige o aceite das duas partes, no mesmo formato do vínculo;
    - vale 7 dias depois, para não servir de fuga no meio de um caso.
-8. **Vínculo só para mediação** (opcional, por privacidade). Ao aceitar o vínculo, a pessoa pode marcá-lo como "só mediação". *Recomendado: oferecer.*
+8. **Vínculo só para mediação** (opcional, por privacidade). Ao aceitar o vínculo, a pessoa pode marcá-lo como "só mediação".
    - Esse vínculo conta para mediação, mas nunca dá poder de arquivar.
    - Continua visível na malha, como todo vínculo (T19).
 
@@ -91,8 +91,8 @@ O mantenedor decidiu, em 10/11/2026, os três pontos que mudam o desenho:
 | D | Teto de 30 afilhados e perda do papel por reversões |
 | F | Trocar de padrinho e vínculo só para mediação |
 
-### 4.5 Em aberto para o mantenedor
+### 4.5 Decidido em 11/11/2026
 
-- **Teto:** 30, outro número, ou nenhum?
-- **Contagem de reversões:** por comunidade, ou global?
-- **Vínculo só para mediação:** oferecer ou não?
+- **Teto:** 30 afilhados com poder firme.
+- **Reversões:** contadas por comunidade.
+- **Vínculo só para mediação:** oferecido.
