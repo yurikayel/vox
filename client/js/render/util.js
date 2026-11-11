@@ -6,6 +6,19 @@ import { isWelcomeRouteId } from "../vox-welcome-profile.js";
 
 export const root = () => document.getElementById("app-root");
 
+/**
+ * Trilha de navegação no padrão Stitch ("Comunidades / Vila Teste / Tópico").
+ * @param {Array<{label: string, href?: string}>} items Do mais geral ao atual; item sem `href` é a página atual.
+ * @returns {string} HTML do `<nav class="agora-breadcrumb">` com os rótulos escapados.
+ */
+export function renderAgoraBreadcrumbHtml(items) {
+  const sep = `<span class="agora-breadcrumb-sep" aria-hidden="true">/</span>`;
+  const parts = items.map((it) => (it.href
+    ? `<a href="${escapeHtml(it.href)}">${escapeHtml(it.label)}</a>`
+    : `<span aria-current="page">${escapeHtml(it.label)}</span>`));
+  return `<nav class="agora-breadcrumb" aria-label="Você está em">${parts.join(sep)}</nav>`;
+}
+
 export function escapeHtml(s) {
   return String(s || "")
     .replace(/&/g, "&amp;")
