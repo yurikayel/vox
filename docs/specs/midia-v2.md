@@ -10,7 +10,7 @@
 - a **Half (360p)** circula na malha pública e chega a quem está longe;
 - a **Full (720p)** vai para quem **segue** o autor, que a guarda e a serve a outros seguidores.
 
-A rede continua com **estética retrô**: resolução e qualidade fixas por camada, e nada é ampliado. O original fica na galeria do aparelho; o Vox não guarda o original.
+A rede continua com **estética retrô**: resolução e qualidade fixas por camada, e nada é ampliado. A **Full do autor é o original publicado e o backup local** no Vox: fica no aparelho dentro do teto de armazenamento e, se o autor apagar, a retração apaga as cópias de todo mundo ([replicação por grau](./replicacao-por-grau-v0.md)). A foto ou o vídeo da câmera continuam na galeria; o Vox não guarda o arquivo da câmera.
 
 **Sem teto de bytes por item.** O tamanho é controlado pela camada. Os **pedaços** (até ~100 KB, com hash no manifesto) continuam só como unidade de transporte entre aparelhos, para retomar e conferir; não limitam a mídia. A mídia não vai ao Arweave por padrão: lá ficam o texto e o hash ([ADR-019](../adr/019-esquecer-por-padrao-e-memoria-civica.md)).
 

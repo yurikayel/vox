@@ -6,10 +6,11 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
-### Armazenamento +50% e camadas de mídia só para economia
-- Tetos de disco 50% maiores: nó leve de 25 para **38 MB**, apoiador de 250 para **375 MB**, Modo Guardião de 100 para **150 MB** (opções 75, 150, 300 e 750 MB; máximo de 1.000 para 1.500 MB) e campo de cache até 750 MB. A banda diária não mudou. Na spec da replicação por grau, o teto planejado passa de 500 para **750 MB** (300 MB com pouco espaço livre; opções de 150 MB, 750 MB e 1,5 GB).
+### Armazenamento de 100 MB a 1 GB e camadas de mídia só para economia
+- Disco com **mínimo de 100 MB e máximo de 1024 MB**: nó leve de 25 para **100 MB**, apoiador de 250 para **1 GB**, Modo Guardião em 150 MB (opções de 100, 150 e 300 MB e 1 GB, travado entre 100 e 1024), campo de cache entre 100 e 1024 MB. A banda diária não mudou. Na spec da replicação por grau, o teto planejado passa de 500 para **750 MB**, dentro da mesma faixa.
+- Os próprios posts **contam no teto**: a Full é o original publicado e o backup local. **Apagar aqui apaga para todo mundo**, pela retração assinada, e a tela avisa que não há volta.
 - ADR-029: Half e Full **só economizam banda e espaço**, não controlam acesso. Quem segue pede a Full, e ninguém confere; saiu o comprovante de seguir.
-- Testes que fixam os padrões (`peers`, `seeder-guardian`) atualizados para os valores novos. SW `v7.70`.
+- Testes que fixam os padrões e limites (`peers`, `seeder-guardian`, `supporter-mode`) atualizados para os valores novos. SW `v7.70`.
 
 ### ADR-029 (aceito): mídia em duas camadas, 360p e 720p
 - Decisões do mantenedor (11/11/2026):

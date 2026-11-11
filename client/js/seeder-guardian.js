@@ -36,7 +36,7 @@ export function saveGuardianQuotaConfig(partial = {}) {
   const updated = {
     ...current,
     ...partial,
-    quotaMb: Math.max(10, Math.min(1500, Number(partial.quotaMb ?? current.quotaMb))),
+    quotaMb: Math.max(100, Math.min(1024, Number(partial.quotaMb ?? current.quotaMb))),
   };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
   return updated;

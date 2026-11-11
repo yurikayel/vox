@@ -94,7 +94,7 @@ export function getMyPeerId() {
 
 const DEFAULT_PEER_SETTINGS = Object.freeze({
   enabled: true,
-  maxMb: 38,
+  maxMb: 100,
   wifiOnly: true,
   commOnly: false,
   supporter: false,

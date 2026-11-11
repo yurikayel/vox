@@ -18,7 +18,7 @@ const PARTICIPATION_LAYERS = [
   {
     id: "supporter",
     title: "Apoiador",
-    desc: "Nó pesado: guarda e repassa mais conteúdo (até 500 MB/dia e 375 MB de disco), só no Wi-Fi. Ajuda comunidades com poucos aparelhos online.",
+    desc: "Nó pesado: guarda e repassa mais conteúdo (até 500 MB/dia e 1 GB de disco), só no Wi-Fi. Ajuda comunidades com poucos aparelhos online.",
     control: '<a class="participation-link" href="#net-supporter">Seja um apoiador da rede</a>',
   },
   {
@@ -231,7 +231,7 @@ function renderQuotaAndLimitFieldsHtml(settings) {
     </div>
     <div class="form-group">
       <label for="net-max-mb">Limite de espaço em disco (MB):</label>
-      <input type="number" id="net-max-mb" class="form-control" min="5" max="750" value="${settings?.maxMb || 38}" />
+      <input type="number" id="net-max-mb" class="form-control" min="100" max="1024" value="${settings?.maxMb || 100}" />
     </div>
     <div class="form-group" style="display:flex; align-items:center; gap:0.6rem;">
       <input type="checkbox" id="net-wifi" ${settings?.wifiOnly ? "checked" : ""} style="width:1rem; height:1rem;" />
@@ -253,7 +253,7 @@ export function renderSupporterCardHtml(settings = {}) {
   const on = Boolean(settings.supporter);
   const text = on
     ? "Você é apoiador: este aparelho guarda e repassa mais conteúdo da rede, só no Wi-Fi."
-    : "Seu aparelho já ajuda como nó leve (até 50 MB/dia). Com Wi-Fi e espaço sobrando, vire apoiador: até 500 MB/dia e 375 MB de disco para manter as comunidades no ar.";
+    : "Seu aparelho já ajuda como nó leve (até 50 MB/dia). Com Wi-Fi e espaço sobrando, vire apoiador: até 500 MB/dia e 1 GB de disco para manter as comunidades no ar.";
   const btn = on
     ? '<button type="button" id="btn-supporter-toggle" class="btn btn-sm btn-outline" data-on="1">Voltar ao nó leve</button>'
     : '<button type="button" id="btn-supporter-toggle" class="btn btn-sm btn-primary" data-on="0">Seja um apoiador da rede</button>';

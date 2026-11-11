@@ -39,10 +39,10 @@ function renderGuardianOptions(config) {
       <div style="display:flex; align-items:center; gap:0.5rem; margin-top:0.25rem;">
         <span>Cota de cache dedicada:</span>
         <select id="select-guardian-quota" style="padding:2px 6px; border-radius:var(--radius-sm); border:1px solid var(--border);">
-          <option value="75" ${config.quotaMb === 75 ? "selected" : ""}>75 MB</option>
+          <option value="100" ${config.quotaMb === 100 ? "selected" : ""}>100 MB</option>
           <option value="150" ${config.quotaMb === 150 ? "selected" : ""}>150 MB (Recomendado)</option>
           <option value="300" ${config.quotaMb === 300 ? "selected" : ""}>300 MB</option>
-          <option value="750" ${config.quotaMb === 750 ? "selected" : ""}>750 MB (Sentinela)</option>
+          <option value="1024" ${config.quotaMb === 1024 ? "selected" : ""}>1 GB (Sentinela)</option>
         </select>
       </div>
     </div>`;
