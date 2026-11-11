@@ -8,6 +8,8 @@ import * as roles from "../aviso-roles.js";
 
 export const MY_ROLE_KEY = "vox-aviso-meu-papel-v1";
 export const RECEIVED_KEY = "vox-aviso-papeis-v1";
+/** Competências ficam só neste aparelho (lote 2): nunca vão para o perfil nem para a malha. */
+export const SKILLS_KEY = "vox-competencias-v1";
 const RECEIVED_MAX = 500;
 
 function readJson(storage, key, fallback) {
@@ -103,4 +105,15 @@ export async function receiveRoleClaimDm(claim, deps = null) {
   if (all.some((c) => c.author === claim.author && c.avisoId === claim.avisoId && c.ts === claim.ts)) return false;
   writeJson(d.storage, RECEIVED_KEY, [...all, claim].slice(-RECEIVED_MAX));
   return true;
+}
+
+/** Competências marcadas neste aparelho. */
+export function mySkills(storage = globalThis.localStorage) {
+  const list = readJson(storage, SKILLS_KEY, []);
+  return Array.isArray(list) ? list.map(String) : [];
+}
+
+/** Guarda as competências só neste aparelho. */
+export function saveMySkills(list, storage = globalThis.localStorage) {
+  writeJson(storage, SKILLS_KEY, [...list]);
 }
