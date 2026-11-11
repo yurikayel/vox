@@ -32,6 +32,10 @@ const sw = fs.readFileSync(path.join(root, "sw.js"), "utf8");
  * (-42,2 KB), que o app só mostrava em 48 px (agora usa o de 192 px); medido 2.058.234 bytes. Catraca: 0,2% acima.
  * 2026-11-11 (chamada de ação, lote 1): aviso-roles.js e app/aviso-roles-dm.js pagos tirando do precache o
  * profile-vox-official-512.png, cópia exata do icon-512.png (-59,9 KB); medido 2.018.977 bytes. Catraca: 0,2% acima.
+ * 2026-11-11 (telas 6–8 do Stitch: tópico, comunidade e pauta, +13,5 KB): pagas removendo de style.css e agora.css
+ * 163 regras cujas classes nenhum JS/HTML do cliente gera mais (-18,9 KB; estilo computado idêntico em todas as
+ * rotas, antes e depois). A tela da pauta virou módulo próprio (render/proposal.js, com JSDoc). Medido 2.019.269
+ * bytes; 0,2% acima passaria do teto atual, então o teto fica onde estava (catraca não sobe).
  */
 const SHELL_BUDGET_BYTES = 2_023_015;
 

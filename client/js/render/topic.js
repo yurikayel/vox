@@ -12,6 +12,7 @@ import {
   formatTimeAgo,
   postTimeParts,
   renderReportMenuItem,
+  renderAgoraBreadcrumbHtml,
 } from "./util.js";
 import { renderPostOwnerMenu, renderQuarantineAction, quarantineShareAttrs } from "./feed.js";
 import { renderPhotoTagLayerHtml } from "./photo-tag-pins.js";
@@ -33,13 +34,11 @@ export function renderTopicDetailText(topicId, title, bodyText, notaryRecord = n
   const disp = postOwnership.formatPostDisplay({ title, body: bodyText });
   if (disp.mode === "empty") return "";
   const displayTitle = disp.mode === "title-body" ? disp.title : (disp.title || (disp.body ? "" : disp.text));
-  const titleHtml = displayTitle
-    ? `<h1 class="topic-detail-title" style="margin:0 0 0.75rem; font-size:1.35rem; line-height:1.3;">${escapeHtml(displayTitle)}</h1>`
-    : "";
+  const titleHtml = displayTitle ? `<h1 class="topic-detail-title">${escapeHtml(displayTitle)}</h1>` : "";
   const fullText = disp.mode === "title-body" ? (disp.body || "") : (disp.body || (displayTitle ? "" : disp.text) || "");
   const notaryHtml = notaryRecord ? renderNotaryBadgeHtml(notaryRecord) : "";
   const bodyHtml = fullText ? renderPostBodyMarkdown(fullText) : "";
-  return `<div class="post-body post-body-md post-topic-detail" style="font-size:0.98rem; line-height:1.5; margin:0.75rem 0 0;">${titleHtml}${bodyHtml}${notaryHtml}</div>`;
+  return `<div class="post-body post-body-md post-topic-detail">${titleHtml}${bodyHtml}${notaryHtml}</div>`;
 }
 
 function renderTopicVideoHtml(v) {
@@ -221,10 +220,11 @@ function renderTopicReplyRow(r, isMod, { depth = 0, topicId = "", commId = "", i
   const modBtn = isMod ? `<button class="btn btn-sm btn-danger btn-mod-hide" data-id="${escapeHtml(r.id)}" data-type="reply">🛡️</button>` : "";
   const replyHref = `#/compose/reply?t=${encodeURIComponent(topicId)}&c=${encodeURIComponent(commId)}&p=${encodeURIComponent(r.id)}`;
   const replyBtn = (topicId && !isLocked) ? `<a class="post-comment-action btn-reply-to-reply" href="${replyHref}" aria-label="Responder a ${escapeHtml(rLabels.authorDisplay)}">Responder</a>` : "";
-  const indent = depth > 0 ? ` style="margin-left:${Math.min(depth * 14, 48)}px; border-left:2px solid var(--border, #ddd);"` : "";
+  // Até 4 níveis de recuo, cada um com a sua linha-guia (Stitch tela 6); daí para baixo fica no 4º.
+  const level = Math.min(depth, 4);
 
   return `
-    <div class="reply-item reply" id="reply-${escapeHtml(r.id)}" data-depth="${depth}"${indent}>
+    <div class="reply-item reply" id="reply-${escapeHtml(r.id)}" data-depth="${depth}" style="--reply-depth:${level};">
       <a class="avatar-link" href="#/u/${encodeURIComponent(rAuthor)}">${renderAvatarHtml(rAuthor, rLabels.authorDisplay, "", r.authorAvatar)}</a>
       <div class="post-content">
         <div class="reply-header" style="display:flex; justify-content:space-between; align-items:center;">
@@ -246,8 +246,8 @@ function renderTopicRepliesBlock(topicId, commId, replies, isMod, isLocked = fal
     ? `<span class="badge-pill community-locked-pill" title="Discussão encerrada">🔒 Encerrado</span>`
     : `<a class="btn btn-sm btn-primary" href="#/compose/reply?t=${encodeURIComponent(topicId)}&c=${encodeURIComponent(commId)}">💬 Responder</a>`;
   const actionBar = `
-    <div class="actions-bar">
-      <span class="section-title">Respostas (${replies.length})</span>
+    <div class="actions-bar agora-thread-bar">
+      <h2 class="section-title agora-thread-divider">Respostas (${replies.length})</h2>
       ${replyAction}
     </div>`;
   const lockNotice = isLocked
@@ -260,6 +260,39 @@ function renderTopicRepliesBlock(topicId, commId, replies, isMod, isLocked = fal
     .map(({ reply, depth }) => renderTopicReplyRow(reply, isMod, { depth, topicId, commId, isLocked }))
     .join("");
   return `${actionBar}${lockNotice}<div class="thread-replies">${rows}</div>`;
+}
+
+/**
+ * Trilha de navegação do tópico: Comunidades › nome da comunidade › Tópico.
+ * Sem comunidade (post solto), volta para a Ágora.
+ * @param {string} commId Id da comunidade do tópico (vazio para post solto).
+ * @param {string} commTitle Nome da comunidade, quando o aparelho conhece.
+ * @returns {string} HTML do `<nav>` com a trilha.
+ */
+function renderTopicBreadcrumbHtml(commId, commTitle) {
+  if (!commId) return renderAgoraBreadcrumbHtml([{ label: "← Voltar ao início", href: "#/" }]);
+  return renderAgoraBreadcrumbHtml([
+    { label: "Comunidades", href: "#/communities" },
+    { label: commTitle || commId, href: `#/c/${encodeURIComponent(commId)}` },
+    { label: "Tópico" },
+  ]);
+}
+
+/**
+ * Doca "Escreva sua resposta…" no pé do tópico (no celular fica presa acima da barra de abas).
+ * Abre o compositor de resposta; some quando o tópico está encerrado.
+ * @param {string} topicId Id do tópico.
+ * @param {string} commId Id da comunidade.
+ * @param {boolean} isLocked Se a moderação encerrou a discussão.
+ * @returns {string} HTML do link-doca, ou vazio.
+ */
+function renderTopicReplyDockHtml(topicId, commId, isLocked) {
+  if (!topicId || isLocked) return "";
+  const href = `#/compose/reply?t=${encodeURIComponent(topicId)}&c=${encodeURIComponent(commId)}`;
+  return `<a class="agora-reply-dock" href="${href}" aria-label="Escrever uma resposta">
+      <span class="agora-reply-dock-field">Escreva sua resposta…</span>
+      <span class="agora-reply-dock-btn">Responder</span>
+    </a>`;
 }
 
 function extractTopicViewContext(topic, topicData, communityId) {
@@ -282,11 +315,9 @@ function renderTopicUnavailableHtml(topic) {
   return "";
 }
 
-export function renderTopic(main, topicId, topic, replies, { topicData = null, isMod = false, communityId = "" } = {}) {
+export function renderTopic(main, topicId, topic, replies, { topicData = null, isMod = false, communityId = "", communityTitle = "" } = {}) {
   const ctx = extractTopicViewContext(topic, topicData, communityId);
-  const backLink = ctx.commId
-    ? `<a class="back-link" href="#/c/${encodeURIComponent(ctx.commId)}">← Voltar à comunidade</a>`
-    : `<a class="back-link" href="#/">← Voltar ao início</a>`;
+  const backLink = renderTopicBreadcrumbHtml(ctx.commId, communityTitle);
   const unavailable = renderTopicUnavailableHtml(topic);
   if (unavailable) {
     main.innerHTML = `${backLink}${unavailable}`;
@@ -298,11 +329,12 @@ export function renderTopic(main, topicId, topic, replies, { topicData = null, i
   const citeHtml = renderRepostCiteHtml(topic || {});
   const detailHtml = renderTopicDetailText(topicId, topic?.title || "", ctx.bodyText, ctx.notary);
   const toolbarHtml = renderTopicToolbar({ topicId, topic, author: ctx.author, authorDisplay: ctx.labels.authorDisplay, authorHandle: ctx.labels.authorHandle, bodyText: ctx.bodyText, commId: ctx.commId, isMod });
-  const repliesHtml = renderTopicRepliesBlock(topicId, ctx.commId, replies, isMod, Boolean(topic?.isLocked));
+  const isLocked = Boolean(topic?.isLocked);
+  const repliesHtml = renderTopicRepliesBlock(topicId, ctx.commId, replies, isMod, isLocked);
 
   main.innerHTML = `
     ${backLink}
-    <article class="topic-root insta-topic-root">
+    <article class="topic-root insta-topic-root agora-stele agora-thread-root">
       ${renderReviewBannerHtml(topic, { isMod, topicId, communityId: ctx.commId })}
       ${headerHtml}
       ${mediaHtml}
@@ -310,5 +342,6 @@ export function renderTopic(main, topicId, topic, replies, { topicData = null, i
       ${toolbarHtml}
       ${citeHtml}
     </article>
-    ${repliesHtml}`;
+    ${repliesHtml}
+    ${renderTopicReplyDockHtml(topicId, ctx.commId, isLocked)}`;
 }
