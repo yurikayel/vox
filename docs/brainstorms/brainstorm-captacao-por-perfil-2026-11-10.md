@@ -1,6 +1,7 @@
 # Brainstorm — dez estratégias de captação, uma por perfil
 
 > **Status:** brainstorm · **Owner:** mantenedor · **Revisado:** 2026-11-10 · **Não substitui o [ROADMAP](../ROADMAP.md)** ([ADR-017](../adr/017-consolidacao-roadmap-unico.md))
+> **Consolidado em:** [síntese — a praça de colunas](./brainstorm-sintese-praca-de-colunas-2026-11-10.md). Quando este texto divergir da síntese, vale a síntese.
 > **Origem:** conversa do mantenedor com o Claude em 10/11/2026, logo depois do [brainstorm do público](./brainstorm-publico-e-gestos-conhecidos-2026-11-10.md). Os perfis e os números vêm da pesquisa trazida pelo mantenedor e **não foram conferidos** ([§6 do brainstorm do público](./brainstorm-publico-e-gestos-conhecidos-2026-11-10.md#6-os-10-perfis-resumo-da-pesquisa-trazida)).
 > **Continua em:** [refino: da praça-cartório à rede de ação](./brainstorm-refino-rede-de-acao-e-soberania-2026-11-10.md) e [nichos como colunas](./brainstorm-nichos-colunas-wechat-democratico-2026-11-10.md).
 
