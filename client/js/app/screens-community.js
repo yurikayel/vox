@@ -909,6 +909,7 @@ async function resolveTopicModeration(communityId, user, replies, topic = null) 
     filteredReplies,
     filteredTopic,
     isUserMod: mod.isModerator(user, meta.owner, meta.moderators),
+    communityTitle: meta.title || "",
   };
 }
 
@@ -922,14 +923,14 @@ export async function showTopic(topicId, commIdParam = "") {
   const { merged: mergedReplies, hasLocal: hasLocalReplies } = await mergeTopicReplies(topicId, rawReplies);
 
   const finalCommId = topic.communityId || commIdParam;
-  const { filteredReplies, filteredTopic, isUserMod } = await resolveTopicModeration(finalCommId, user, mergedReplies, topic);
+  const { filteredReplies, filteredTopic, isUserMod, communityTitle } = await resolveTopicModeration(finalCommId, user, mergedReplies, topic);
   const currentTopic = filteredTopic || topic;
 
   main.innerHTML = "";
   if (demo && !isLocal && !hasLocalReplies) render.renderDemoBanner(main);
   else if (gateway) render.renderGatewayBanner(main, gateway);
 
-  render.renderTopic(main, topicId, currentTopic, filteredReplies, { topicData, isMod: isUserMod, communityId: finalCommId });
+  render.renderTopic(main, topicId, currentTopic, filteredReplies, { topicData, isMod: isUserMod, communityId: finalCommId, communityTitle });
   hydrateMissingReplyBodies(filteredReplies, finalCommId);
   bindLiveProfileSync(currentTopic.author || currentTopic.owner, filteredReplies);
   bindTopicScreenEvents(topicId, currentTopic, finalCommId);
@@ -947,11 +948,12 @@ export async function showProposal(communityId, proposalId) {
   }
 
   const { proposal, tally, userVote, isEligible, isMember } = data;
+  const meta = await resolveCommunityMetadata(communityId).catch(() => ({}));
   main.innerHTML = "";
   render.renderProposalDetail(main, proposal, tally, {
     userVote,
     isEligible,
-    community: { id: communityId, title: communityId },
+    community: { id: communityId, title: meta.title || communityId },
     isMember,
     userAddress: user,
   });

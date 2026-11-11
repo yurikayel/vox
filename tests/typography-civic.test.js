@@ -18,10 +18,10 @@ test("typography civic — CSS tokens and display pairing", () => {
   assert.match(agoraCss, /--font-telemetry:\s*"Work Sans",\s*"Inter"/);
   assert.match(css, /--font-weight-nav:\s*600/);
   assert.ok(css.includes("font-family: var(--font-sans)"));
-  assert.ok(css.includes(".brand-word") && css.includes("var(--font-display)"));
-  assert.ok(css.includes(".brand-letter-v") && css.includes("var(--brand-green)"));
-  assert.ok(css.includes(".brand-letter-o") && css.includes("var(--brand-yellow)"));
-  assert.ok(css.includes(".brand-letter-x") && css.includes("var(--brand-blue)"));
+  // O wordmark V/O/X tricolor (.brand-word/.brand-letter-*) saiu do shell no rework Stitch; o CSS morto foi
+  // removido em 2026-11-11. O wordmark atual é o .agora-wordmark, coberto pelos testes do shell; a fonte de
+  // títulos é aplicada pela camada agora.css (--font-epigraphic, que é o --font-display).
+  assert.ok(agoraCss.includes("var(--font-epigraphic)"));
 });
 
 test("typography civic — ADR-016: shell sem Google Fonts (LGPD/soberania) e com camada agora.css", () => {

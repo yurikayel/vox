@@ -63,7 +63,7 @@ test("post overlay - index.html exposes lightbox shell", () => {
 test("photo chrome - CSS compacto", () => {
   const css = fs.readFileSync(path.join(root, "css/style.css"), "utf8");
   assert.ok(css.includes(".post-ig-toolbar"));
-  assert.ok(css.includes(".post-photo-title"));
+  // .post-photo-title saiu em 2026-11-11: nenhuma tela gera mais título em post de foto (CSS morto removido).
   assert.ok(css.includes(".post-ig-header"));
   assert.ok(css.includes(".post-lightbox"));
   assert.ok(css.includes("#post-more-sheet") || css.includes(".post-more-sheet"));
@@ -72,7 +72,6 @@ test("photo chrome - CSS compacto", () => {
 test("photo chrome - header/media and title/body sit tight", () => {
   const css = fs.readFileSync(path.join(root, "css/style.css"), "utf8");
   const igHead = css.match(/\.post-ig-header\.post-media-header\s*\{[^}]+\}/)?.[0] || "";
-  const title = css.match(/\.post-photo-title\s*\{[^}]+\}/)?.[0] || "";
   const message = css.match(/\.post-photo-message\s*\{[^}]+\}/)?.[0] || "";
   const comments = css.match(
     /\.post-layout-photo\.post-photo-bleed \.post-comments,\s*\.post-layout-photo\.post-photo-bleed \.post-comments-surface\s*\{[^}]+\}/
@@ -83,7 +82,6 @@ test("photo chrome - header/media and title/body sit tight", () => {
   assert.match(igTool, /bottom:\s*0/);
   assert.match(igHead, /linear-gradient/);
   assert.match(igHead, /min-height:\s*0/);
-  assert.match(title, /padding:\s*2px 12px 0/);
   assert.match(message, /padding:\s*4px 12px 8px/);
   assert.match(comments, /padding:\s*0/);
   assert.match(comments, /margin:\s*0/);
