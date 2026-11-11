@@ -37,13 +37,7 @@ function renderGuardianOptions(config) {
         Semear apenas enquanto a bateria estiver carregando na tomada
       </label>
       <div style="display:flex; align-items:center; gap:0.5rem; margin-top:0.25rem;">
-        <span>Cota de cache dedicada:</span>
-        <select id="select-guardian-quota" style="padding:2px 6px; border-radius:var(--radius-sm); border:1px solid var(--border);">
-          <option value="50" ${config.quotaMb === 50 ? "selected" : ""}>50 MB</option>
-          <option value="100" ${config.quotaMb === 100 ? "selected" : ""}>100 MB (Recomendado)</option>
-          <option value="200" ${config.quotaMb === 200 ? "selected" : ""}>200 MB</option>
-          <option value="500" ${config.quotaMb === 500 ? "selected" : ""}>500 MB (Sentinela)</option>
-        </select>
+        <span id="guardian-quota">Cota de cache: <strong>2 GB</strong> (fixa), até 4 GB/dia repassados, só no Wi-Fi e carregando.</span>
       </div>
     </div>`;
 }

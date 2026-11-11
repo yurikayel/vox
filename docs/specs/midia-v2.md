@@ -10,7 +10,7 @@
 - a **Half (360p)** circula na malha pública e chega a quem está longe;
 - a **Full (720p)** vai para quem **segue** o autor, que a guarda e a serve a outros seguidores.
 
-A rede continua com **estética retrô**: resolução e qualidade fixas por camada, e nada é ampliado. O original fica na galeria do aparelho; o Vox não guarda o original.
+A rede continua com **estética retrô**: resolução e qualidade fixas por camada, e nada é ampliado. A **Full do autor é o original publicado e o backup local** no Vox: fica no aparelho dentro do teto de armazenamento e, se o autor apagar, a retração apaga as cópias de todo mundo ([replicação por grau](./replicacao-por-grau-v0.md)). A foto ou o vídeo da câmera continuam na galeria; o Vox não guarda o arquivo da câmera.
 
 **Sem teto de bytes por item.** O tamanho é controlado pela camada. Os **pedaços** (até ~100 KB, com hash no manifesto) continuam só como unidade de transporte entre aparelhos, para retomar e conferir; não limitam a mídia. A mídia não vai ao Arweave por padrão: lá ficam o texto e o hash ([ADR-019](../adr/019-esquecer-por-padrao-e-memoria-civica.md)).
 
@@ -74,10 +74,10 @@ Um post pode ter **até 4 fotos, ou até 4 áudios, ou até 4 clipes de vídeo**
 
 **Quem recebe cada camada** ([ADR-029 §2.4](../adr/029-midia-em-duas-camadas-360p-720p.md)):
 - **quem segue o autor** recebe a **Full**, sem fazer nada, guarda e serve a outros seguidores. Nas configurações, dá para escolher a Half (economia de dados);
-- **quem vê o post sem seguir** recebe só a **Half**. A Full nunca é entregue a quem não segue; ao seguir, os próximos pedidos já vêm em 720p;
+- **quem vê o post sem seguir** recebe a **Half**; ao seguir, os próximos pedidos já vêm em 720p;
 - **mais longe:** texto e miniatura.
 
-O comprovante assinado de seguir vai junto com o pedido da Full, nunca pelo gossip (ADR-029 §2.6). **Isso não é privacidade:** qualquer um pode seguir. Para restringir quem vê, vale a visibilidade do post.
+As camadas só economizam banda e armazenamento; não controlam acesso (ADR-029 §2.6). Para restringir quem vê, vale a visibilidade do post.
 
 ## Decisões que faltam para implementar (PM-71)
 

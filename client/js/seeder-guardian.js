@@ -4,11 +4,14 @@
  * cívica P2P com política de preservação de bateria e dados móveis.
  */
 
+import { GUARDIAN_LIMITS } from "./supporter-mode.js";
+
 const STORAGE_KEY = "vox-guardian-config";
 
 const DEFAULT_CONFIG = {
   enabled: false,
-  quotaMb: 100,
+  /** Cota fixa de 2 GB (supporter-mode.js). */
+  quotaMb: GUARDIAN_LIMITS.quotaMb,
   onlyWifi: true,
   onlyCharging: true,
   minBatteryLevel: 0.5,
@@ -21,7 +24,7 @@ export function getGuardianQuotaConfig() {
     const parsed = JSON.parse(raw);
     return {
       enabled: Boolean(parsed.enabled),
-      quotaMb: Number(parsed.quotaMb) || DEFAULT_CONFIG.quotaMb,
+      quotaMb: GUARDIAN_LIMITS.quotaMb,
       onlyWifi: parsed.onlyWifi !== false,
       onlyCharging: parsed.onlyCharging !== false,
       minBatteryLevel: Number(parsed.minBatteryLevel) || DEFAULT_CONFIG.minBatteryLevel,
@@ -36,7 +39,7 @@ export function saveGuardianQuotaConfig(partial = {}) {
   const updated = {
     ...current,
     ...partial,
-    quotaMb: Math.max(10, Math.min(1000, Number(partial.quotaMb ?? current.quotaMb))),
+    quotaMb: GUARDIAN_LIMITS.quotaMb,
   };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
   return updated;
