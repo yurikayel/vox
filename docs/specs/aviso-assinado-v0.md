@@ -193,8 +193,8 @@ Limites de código do projeto ([HARDENING](../HARDENING.md)): função ≤ 30 LL
 - A página leve usar os dados da comunidade quando o app está instalado no mesmo celular.
 - Aviso em áudio, lembrete automático, notificação push, ler o `.zip` da exportação do WhatsApp.
 
-## Perguntas abertas
+## Perguntas abertas (respondidas em 11/11/2026)
 
-1. Como a versão atual trata um `type` desconhecido (`aviso-resposta`, `aviso-contagem`): guarda e repassa, ou descarta? A resposta muda a convivência entre versões, mas não o aviso, que é tópico.
-2. O código de 4 caracteres basta para não colidir dentro de um mesmo grupo? Com poucas dezenas de avisos por mês, sim; confirmar no teste.
-3. Os 2.000 caracteres do link cabem em todos os WhatsApp do piloto (Android antigo, WhatsApp Business)? Testar antes de fechar o limite.
+1. **`type` desconhecido nas versões atuais: guarda e repassa.** Em `peers.js` (`handleGossipMessage`), o item entra se tem `id` e assinatura válida, o autor não está bloqueado, não é mais velho que a versão guardada e, se for `community_update`, passa no PM-09. Não há lista de tipos aceitos: `aviso-resposta` e `aviso-contagem` são guardados e repassados por quem ainda não atualizou. O feed só lista `topic` e `listing` (`cache-node.js`, `screens-home.js`), então eles não aparecem como post. Quem não atualizou ajuda a espalhar as respostas e não vê lixo na tela. O aviso, por ser `topic`, aparece como post comum.
+2. **O código de 4 caracteres basta.** São 32⁴ = 1.048.576 códigos. O código só precisa ser único entre os avisos **ativos** do mesmo grupo, que são poucos. Com 10 ativos, a chance de colisão é de ≈ 0,004%; com 50 num mês inteiro, ≈ 0,12%. Regra para o lote A: se dois avisos ativos do grupo tiverem o mesmo código, a resposta conta para o mais recente e a tela da coordenação avisa.
+3. **Limite de 2.000 caracteres no WhatsApp: BLOCKED**, só dá para responder testando em aparelho. Não há fonte oficial do WhatsApp sobre tamanho de link reconhecido. Teste no piloto, antes do lote C: mandar links de 500, 1.000, 1.500 e 2.000 caracteres num grupo de teste, em Android antigo, iPhone e WhatsApp Business, e ver se o link fica clicável inteiro. Se falhar, o plano B é comprimir o aviso (`CompressionStream`) ou baixar o limite do texto.
