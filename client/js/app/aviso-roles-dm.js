@@ -1,14 +1,42 @@
 /**
- * @file Chamada de ação (lote 1): quem assume um papel manda a resposta assinada por DM cifrada
- * a quem convocou; o aparelho da coordenação confere e guarda. Nada disso vai para o gossip.
- * Lógica pura em `aviso-roles.js`; molde da denúncia por DM (`report-dm.js`).
+ * @file Chamada de ação (civic lote 1) e competências (civic lote 2) no aparelho.
+ *
+ * Quem assume um papel manda a resposta assinada por DM cifrada a quem convocou; o aparelho da
+ * coordenação confere a assinatura e o aviso e guarda a resposta. Nada disso vai para o gossip.
+ * As competências ficam só neste aparelho.
+ *
+ * Lógica pura em `aviso-roles.js`; molde da denúncia por DM (`report-dm.js`). As dependências de rede
+ * são injetáveis (`deps`) para os testes.
+ *
+ * @module app/aviso-roles-dm
+ * @see client/js/aviso-roles.js
  */
 
 import * as roles from "../aviso-roles.js";
 
+/**
+ * Chave em `localStorage`: papel que eu assumi em cada aviso (`{ [avisoId]: role }`).
+ *
+ * @type {string}
+ */
 export const MY_ROLE_KEY = "vox-aviso-meu-papel-v1";
+
+/**
+ * Chave em `localStorage`: respostas de papel recebidas (só no aparelho de quem convocou).
+ *
+ * Guarda no máximo 500, as mais recentes.
+ *
+ * @type {string}
+ */
 export const RECEIVED_KEY = "vox-aviso-papeis-v1";
-/** Competências ficam só neste aparelho (lote 2): nunca vão para o perfil nem para a malha. */
+
+/**
+ * Chave em `localStorage`: competências marcadas neste aparelho.
+ *
+ * Nunca vão para o perfil nem para a malha; servem só para sugerir papel.
+ *
+ * @type {string}
+ */
 export const SKILLS_KEY = "vox-competencias-v1";
 const RECEIVED_MAX = 500;
 
@@ -27,7 +55,13 @@ function writeJson(storage, key, value) {
   } catch {}
 }
 
-/** Papel que eu assumi neste aviso, como ficou guardado ao enviar ("" = nenhum). */
+/**
+ * Papel que eu assumi num aviso, como ficou guardado ao enviar.
+ *
+ * @param {string} avisoId Aviso.
+ * @param {Storage} [storage=globalThis.localStorage] Armazenamento.
+ * @returns {string} Nome do papel, ou `""` se nenhum.
+ */
 export function myRoleFor(avisoId, storage = globalThis.localStorage) {
   return String(readJson(storage, MY_ROLE_KEY, {})[avisoId] || "");
 }
@@ -38,7 +72,13 @@ function rememberMyRole(avisoId, role, storage) {
   writeJson(storage, MY_ROLE_KEY, all);
 }
 
-/** Respostas recebidas para um aviso (só existem no aparelho de quem convocou). */
+/**
+ * Respostas de papel recebidas para um aviso. Só existem no aparelho de quem convocou.
+ *
+ * @param {string} avisoId Aviso.
+ * @param {Storage} [storage=globalThis.localStorage] Armazenamento.
+ * @returns {object[]} Respostas assinadas, na ordem de chegada.
+ */
 export function receivedClaims(avisoId, storage = globalThis.localStorage) {
   return readJson(storage, RECEIVED_KEY, []).filter((c) => c?.avisoId === avisoId);
 }
@@ -64,8 +104,17 @@ function claimText(role, code) {
 }
 
 /**
- * Manda a resposta assinada a quem convocou e guarda a mensagem no fio.
- * `opts`: `{ role, display, code }`. Devolve "delivered", "queued-relay", "pending-retry" ou "no-key".
+ * Manda a resposta assinada a quem convocou e guarda a mensagem no fio da conversa.
+ *
+ * @param {string} user Rota de quem responde.
+ * @param {object} aviso Aviso da chamada (o autor é quem convocou).
+ * @param {object} [opts={}]
+ * @param {string} [opts.role] Papel assumido; vazio para desistir.
+ * @param {string} [opts.display] Nome mostrado à coordenação.
+ * @param {string} [opts.code] Código curto do aviso, para o texto da mensagem.
+ * @param {object|null} [deps=null] Dependências injetáveis; `null` usa as reais.
+ * @returns {Promise<"delivered"|"queued-relay"|"pending-retry"|"no-key">} `no-key` quando quem convocou não tem chave de DM conhecida.
+ * @throws {Error} Se o papel não existe no aviso (ver `buildRoleClaim`).
  */
 export async function sendRoleClaim(user, aviso, opts = {}, deps = null) {
   const d = deps || (await defaultSendDeps());
@@ -93,7 +142,16 @@ async function defaultReceiveDeps() {
   };
 }
 
-/** Aparelho de quem convocou: confere a assinatura e o aviso, e guarda a resposta. Devolve true se guardou. */
+/**
+ * No aparelho de quem convocou: confere e guarda uma resposta de papel recebida por DM.
+ *
+ * Recusa se a assinatura não confere, se o aviso não é deste aparelho, se o papel não existe no
+ * aviso ou se a resposta é repetida.
+ *
+ * @param {object} claim Resposta extraída da DM (`parseRoleClaimDm`).
+ * @param {object|null} [deps=null] Dependências injetáveis; `null` usa as reais.
+ * @returns {Promise<boolean>} `true` se guardou.
+ */
 export async function receiveRoleClaimDm(claim, deps = null) {
   const d = deps || (await defaultReceiveDeps());
   if (!(await Promise.resolve(d.verify(claim)).catch(() => false))) return false;
@@ -107,13 +165,24 @@ export async function receiveRoleClaimDm(claim, deps = null) {
   return true;
 }
 
-/** Competências marcadas neste aparelho. */
+/**
+ * Competências marcadas neste aparelho.
+ *
+ * @param {Storage} [storage=globalThis.localStorage] Armazenamento.
+ * @returns {string[]} Lista normalizada (pode ser vazia).
+ */
 export function mySkills(storage = globalThis.localStorage) {
   const list = readJson(storage, SKILLS_KEY, []);
   return Array.isArray(list) ? list.map(String) : [];
 }
 
-/** Guarda as competências só neste aparelho. */
+/**
+ * Guarda as competências só neste aparelho.
+ *
+ * @param {Iterable<string>} list Competências já validadas (`parseSkillsInput`).
+ * @param {Storage} [storage=globalThis.localStorage] Armazenamento.
+ * @returns {void}
+ */
 export function saveMySkills(list, storage = globalThis.localStorage) {
   writeJson(storage, SKILLS_KEY, [...list]);
 }

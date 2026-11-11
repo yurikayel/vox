@@ -431,7 +431,7 @@ test("render - renderCantinaGate e closeCantinaGate", () => {
   assert.ok(!html.includes("<h2"));
   assert.ok(!html.includes("Seus bots vão ter que esperar do lado de fora"));
   assert.ok(html.includes("cantina-art-img"));
-  assert.ok(html.includes("cantina-gate.jpg"));
+  assert.ok(html.includes("cantina-gate.webp"));
   assert.ok(html.includes("Ilustração anime"));
   assert.ok(html.includes("bartender de túnica bege"));
   assert.ok(html.includes("dois balões pintados"));

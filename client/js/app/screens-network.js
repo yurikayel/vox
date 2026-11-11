@@ -64,6 +64,12 @@ function readNetworkFormValues() {
   };
 }
 
+/**
+ * Liga o botão do modo Apoiador: alterna o modo, ajusta disco e banda (`applySupporterMode`), corta o
+ * cache ao novo disco e redesenha a tela.
+ *
+ * @returns {void}
+ */
 export function bindSupporterToggle() {
   document.getElementById("btn-supporter-toggle")?.addEventListener("click", (e) => {
     const turnOn = e.currentTarget.dataset.on !== "1";
@@ -92,6 +98,12 @@ function savePeerFormValues(v) {
   return saved;
 }
 
+/**
+ * Liga o formulário de rede: grava sinalização, relays, TURN, preferências do nó (com disco e banda
+ * ajustados ao modo por `normalizeStorageCommitment`), visibilidade na malha e webhooks POSSE.
+ *
+ * @returns {void}
+ */
 export function bindNetworkSettingsForm() {
   const form = document.getElementById("form-network-settings");
   if (!form) return;
