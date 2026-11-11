@@ -6,6 +6,12 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Telas 6–8 do Stitch: tópico, página da comunidade e pauta
+- **Tópico:** trilha "Comunidades / comunidade / Tópico", post original como estela com friso, título serifado, divisor "◆ Respostas (N)" em bronze, linhas-guia por nível de resposta (até 4) e doca "Escreva sua resposta…" presa acima da barra inferior no celular (some em tópico encerrado).
+- **Página da comunidade:** números reais (membros conhecidos, tópicos carregados, pautas em votação), pauta aberta em destaque na aba Posts e coluna lateral com "Sustentada por vizinhos" e a semeadura em telas largas (≥1100px). A coluna lateral volta de propósito (antes tinha sido tirada); o teste de render que proibia a coluna foi ajustado.
+- **Pauta:** trilha até "Governança / Pauta", proponente em destaque, apuração por opção com porcentagem e, em telas largas, apuração e cédula numa coluna ao lado. Botões da cédula com `aria-pressed`.
+- Precache: a camada nova foi paga tirando 18,9 KB de regras CSS que nenhuma tela usa mais (barra de apuração antiga, cartões e abas antigos de comunidade e feed, restos da camada anterior); conferido com estilo computado idêntico em todas as rotas, antes e depois da poda. A tela da pauta saiu de `render/community.js` para `render/proposal.js`. Teto do orçamento mantido (o medido ficou abaixo dele). Dois testes que exigiam o CSS do título de post de foto e do wordmark V/O/X antigo (que nenhuma tela desenha mais) foram ajustados. SW `v7.77`.
+
 ### Correções de tela achadas no tour Playwright (P0)
 - **Botões ativos sem texto:** `--primary` nunca foi definido no CSS, então a ordenação ativa da comunidade ("Atividade Recente"), a tag cívica ativa e a pílula de tag ficavam com texto branco em fundo transparente. Agora usam `--accent` / `--on-accent`, que acompanham o tema claro e escuro.
 - **Comunidade rolava de lado no celular:** as abas Posts / Membros / Classificados / Governança alargavam a página para 462px numa tela de 412px. Agora rolam dentro da própria barra.

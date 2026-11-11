@@ -59,11 +59,6 @@ export {
   renderProposalItem,
   renderProposalStatusBadge,
   renderListingItem,
-  renderProposalDetail,
-  renderProposalDiff,
-  renderProposalTally,
-  renderProposalVotingBox,
-  renderProposalVotesList,
   renderComposeProposal,
   computeCommunityNeighborStats,
   renderCommunitySeedChecklist,
@@ -75,6 +70,13 @@ export {
   extractTopicCivicTag,
   renderNewKeyHeldNoticeHtml,
 } from "./render/community.js";
+export {
+  renderProposalDetail,
+  renderProposalDiff,
+  renderProposalTally,
+  renderProposalVotingBox,
+  renderProposalVotesList,
+} from "./render/proposal.js";
 
 export {
   renderProfile,

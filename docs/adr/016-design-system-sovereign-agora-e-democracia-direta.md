@@ -109,3 +109,9 @@ Em conformidade com a arquitetura Local-First, o módulo `client/js/render/vote.
 
 ### 5.3. Fora do escopo / pendente de layout Stitch
 Ver `docs/design/stitch-telas-faltantes.md`.
+
+### 5.4. Revisão 2026-11-11 — telas 6–8 do segundo pacote Stitch
+- **Tópico (`#/t/:id`):** trilha "Comunidades / nome / Tópico", post original como estela com friso teal→bronze, título serifado, divisor "◆ Respostas (N) ◆" em bronze, recuo das respostas por `--reply-depth` (até 4 níveis, cada um com sua linha-guia) e doca "Escreva sua resposta…" presa acima da barra inferior no celular. A doca abre o mesmo compositor de resposta e some em tópico encerrado.
+- **Página da comunidade (`#/c/:id`):** linha de números reais (membros, tópicos, pautas em votação) com os componentes da Vote, pauta aberta em destaque na aba Posts e coluna lateral (painel "Sustentada por vizinhos" e checklist de semeadura) só em telas ≥1100px. Isto reverte a decisão anterior de tirar a coluna lateral (o teste de render foi ajustado de propósito); membros continuam na aba Membros.
+- **Pauta (`#/c/:id/proposal/:id`):** trilha até "Governança / Pauta", estela da proposta (estado, "Pauta de governança", contagem regressiva, proponente, corpo, diff) e, em ≥1100px, coluna com a apuração por opção (Sim/Não/Abstenção com porcentagem sobre o total apurado e descartados pós-corte) e a cédula com `aria-pressed`. Sem quórum ou números que o aparelho não conhece.
+- **Peso:** a camada nova foi paga removendo regras CSS cujas classes não aparecem em nenhum JS/HTML do cliente (barra de apuração antiga, cartões de comunidade antigos, dicas de feed e restos da camada anterior).
