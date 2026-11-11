@@ -1,6 +1,6 @@
 # Mapa de parceiras e concorrentes — 20 + 20 para observar e aprender
 
-> **Status:** brainstorm / pesquisa · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-10
+> **Status:** brainstorm / pesquisa · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-11
 > **Não substitui o [ROADMAP.md](../ROADMAP.md)** ([ADR-017](../adr/017-consolidacao-roadmap-unico.md)). É uma lista de observação: ninguém aqui é "inimigo" nem "aliado" por decreto. Parceira e concorrente descrevem **relação e função**, não caráter.
 > **Aviso de método:** pesquisa web de 2026-11-10, com **fontes secundárias** na maior parte. Cada número traz tipo e data. Onde a busca não achou fonte, a linha diz **"não verificado"**. Nenhuma linha deve ser publicada fora do repositório sem checar a fonte primária.
 
@@ -38,6 +38,14 @@ Inclui projetos pedidos pelo mantenedor (Varanda, Etnias, Tramitado, Sua Voz). A
 | 18 | **Matrix / Element** | Sem número confiável achado | N | Protocolo aberto de mensagem descentralizada | Estudar interoperabilidade de comunidades |
 | 19 | **Lemmy, PeerTube, Pixelfed** | Parte do Fediverso, ~12 mi de cadastros e ~2 mi de ativos no conjunto [9] | C | Comunidade (fórum), vídeo e foto federados | Referência de comunidades e de vídeo sem central |
 | 20 | **Loomio** | Sem número achado | N | Ferramenta de decisão coletiva | Referência para o modo assembleia (PM-23) |
+
+### 2.1 Parceiros a observar (fora das 20, sem contato e sem compromisso)
+
+Projetos de afinidade de causa, novos ou com governança pouco clara. Só observação pública; **nenhuma abordagem** sem decisão do mantenedor.
+
+| Parceiro | Tamanho ou adoção | Conf. | O que observar e aprender | Onde poderíamos cooperar | Para sair de "observar" |
+|---|---|---|---|---|---|
+| **OccupySaaS** | Org no GitHub com ~1 mil seguidores; ZeroAuthy (alternativa ao Auth0, Go) 475 estrelas e SalesCompel (alternativa ao Salesforce, TypeScript) 422, em 11/11/2026; Apache-2.0 [18] | B | Como uma tese simples e uma marca de protesto atraem contribuidores em semanas; política de *clean room* por projeto (`CLEAN_ROOM.md`); porta de entrada para contribuir (issues e Discord) | Troca de lições de comunidade open source; ZeroAuthy como opção de login para quem hospeda o próprio serviço (encaixe fraco: a Vox já tem identidade local) | Saber **quem são os mantenedores**, a forma jurídica (o site fala em movimento, o GitHub em "empresa de SaaS") e a governança. O número de "1 milhão" de engenheiros demitidos não tem fonte |
 
 ## 3. Vinte concorrentes
 
@@ -108,3 +116,4 @@ Truth Social, Rumble e Gettr **não entraram**: a busca não achou dados e a sit
 15. [Reddit, comunicado do 3º tri/2026](https://s203.q4cdn.com/380862485/files/content_files/Q3-26-Earnings-Press-Release.pdf)
 16. [Caixin — Kwai no Brasil](https://www.caixinglobal.com/2025-12-11/kuaishous-kwai-conquers-brazil-by-ditching-the-time-machine-strategy-102392161.html)
 17. [Mobile Time — Poosting](https://www.mobiletime.com.br/noticias/06/02/2026/poosting-rede-social-br/) · [Fast Company Brasil](https://fastcompanybrasil.com/tech/poosting-conheca-a-rede-social-sem-algoritmos-criada-pelo-zuckerberg-cearense/) · [Spalhe na App Store](https://apps.apple.com/au/app/id6444139282)
+18. [OccupySaaS](https://occupysaas.com/) · [github.com/occupysaas](https://github.com/occupysaas) (consultados em 2026-11-11)
