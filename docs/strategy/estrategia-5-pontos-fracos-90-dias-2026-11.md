@@ -21,6 +21,11 @@
 - **Pipeline e relay endurecidos** (PM-94, PM-95): CODEOWNERS pronto para a revisão obrigatória quando houver segunda pessoa.
 - **O modo assembleia (PM-23) não existe:** a conversa com as comunidades é de descoberta, não demonstração.
 
+## Desdobramentos (10/11/2026, brainstorms)
+
+- [O Vox como "terceiro lugar"](../brainstorms/brainstorm-terceiro-lugar-2026-11-10.md): os cinco pontos têm a mesma raiz (o Vox quer ser *o lugar* da comunidade). Proposta: ferramentas de quem organiza, usadas a partir do WhatsApp, com membros sem conta. Se aceita, medir a rede (ponto 2) e emagrecer o app (ponto 4) deixam de bloquear o G1, e o ponto 3 vira recuperação pela comunidade.
+- [Para quem e com que gestos](../brainstorms/brainstorm-publico-e-gestos-conhecidos-2026-11-10.md): alvo do piloto (quem organiza com 50+, membros da periferia só-celular, associações rurais como segundo nicho) e gestos conhecidos de outros apps mapeados para o Vox.
+
 Ordem de ataque: **5 → 1 → 2 → 3 → 4**.
 
 ## 5. Exposição jurídica: comprar certeza barata
