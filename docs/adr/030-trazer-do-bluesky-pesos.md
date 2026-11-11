@@ -1,6 +1,6 @@
 # ADR-030: Trazer do Bluesky (PESOS): arquivo assinado da própria voz, sem servidor
 
-**Status:** proposed · **Revisado:** 2026-11-11 · **Relacionados:** [ADR-028](./028-ponte-activitypub-via-bluesky.md), [ADR-026](./026-chaves-em-repouso-trava-depois-do-backup.md), [ADR-021](./021-integridade-na-entrada-forma-assinada.md), [ADR-019](./019-esquecer-por-padrao-e-memoria-civica.md), [ADR-029](./029-midia-em-duas-camadas-360p-720p.md), [THREAT-MODEL T10](../THREAT-MODEL.md)
+**Status:** accepted (2026-11-11, pelo mantenedor; não implementado) · **Revisado:** 2026-11-11 · **Relacionados:** [ADR-028](./028-ponte-activitypub-via-bluesky.md), [ADR-026](./026-chaves-em-repouso-trava-depois-do-backup.md), [ADR-021](./021-integridade-na-entrada-forma-assinada.md), [ADR-019](./019-esquecer-por-padrao-e-memoria-civica.md), [ADR-029](./029-midia-em-duas-camadas-360p-720p.md), [THREAT-MODEL T10](../THREAT-MODEL.md)
 
 ## 1. Contexto
 

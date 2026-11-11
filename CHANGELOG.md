@@ -6,7 +6,7 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
-### ADR-030 (proposto): trazer do Bluesky (PESOS)
+### ADR-030 (aceito): trazer do Bluesky (PESOS)
 - A pessoa continua postando no Bluesky e traz os próprios posts para o Vox: fila com confirmação ao abrir o app, sem servidor, assinados pela chave dela, com o original (`origin`) dentro da assinatura. Destino padrão no perfil; comunidade só por escolha em cada item.
 - Só posts de raiz da conta vinculada por login. Sem eco com a replicação Vox→Bluesky. Imagens pelo PDS da pessoa (o CDN do Bluesky não libera CORS); vídeo como link. Apagar no Bluesky segue a preferência da pessoa nas configurações: perguntar (padrão), apagar no Vox também ou manter.
 - A preservação vem das cópias de quem segue (replicação e backup orgânico, idealmente em caixa preta, sem manuseio); o Arweave segue só como cartório.
