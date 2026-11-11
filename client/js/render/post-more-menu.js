@@ -1,4 +1,13 @@
-/** @file Menu ⋯ (sheet) para publicações com foto no feed (#post-more-sheet). */
+/**
+ * @file Menu ⋯ das publicações (`#post-more-sheet`): compartilhar, QR, salvar, republicar, apoiar, denunciar
+ * e pedir mediação (civic lote 3; com a flag do moderador natural, a mediação vai também aos padrinhos).
+ *
+ * Uma única folha por página, criada sob demanda e reaproveitada; o contexto da publicação aberta fica
+ * em memória até o menu fechar.
+ *
+ * @module render/post-more-menu
+ * @see client/js/report.js
+ */
 
 import * as share from "../share.js";
 import { openQrUrlSheet } from "../qr-url.js";
@@ -75,6 +84,11 @@ function postPermalink(topicId) {
   return `${origin}${path}#/t/${encodeURIComponent(topicId)}`;
 }
 
+/**
+ * Fecha o menu, esquece a publicação aberta e devolve o foco a quem abriu. Sem efeito se já está fechado.
+ *
+ * @returns {void}
+ */
 export function closePostMoreMenu() {
   const sheet = document.getElementById(SHEET_ID);
   if (!sheet?.classList.contains("is-open")) return;
@@ -85,6 +99,13 @@ export function closePostMoreMenu() {
   opener?.focus?.();
 }
 
+/**
+ * Abre o menu para uma publicação e põe o foco no primeiro item.
+ *
+ * @param {{postId: string, communityId?: string, authorRoute?: string, title?: string}} ctx Publicação e contexto; sem `postId`, nada acontece.
+ * @param {HTMLElement|null} [openerEl] Botão que abriu, para devolver o foco ao fechar.
+ * @returns {void}
+ */
 export function openPostMoreMenu(ctx, openerEl) {
   if (!ctx?.postId) return;
   const sheet = ensurePostMoreSheet();

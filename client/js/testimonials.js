@@ -90,7 +90,7 @@ export function renderCommunityBadgesHtml(communities = []) {
   const items = communities.map((c) => {
     const name = escapeHtml(c.name || c.title || "Comunidade");
     const id = encodeURIComponent(c.id || "");
-    const avatar = c.avatar || "images/cantina-gate.jpg";
+    const avatar = c.avatar || "images/cantina-gate.webp";
     return `
       <a class="vox-badge-item" href="#/c/${id}" title="${name}">
         <img class="vox-badge-avatar" src="${escapeHtml(avatar)}" alt="${name}" loading="lazy" />
