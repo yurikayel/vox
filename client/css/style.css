@@ -4697,14 +4697,6 @@ p.profile-grid-handle {
   padding: 1px 6px;
 }
 
-.gossip-edited-pill {
-  background: var(--accent-soft);
-  color: var(--accent-hover);
-  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
-  font-size: 0.72rem;
-  padding: 1px 6px;
-}
-
 .post-gossip-deleted {
   opacity: 0.85;
   border-style: dashed;

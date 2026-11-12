@@ -17,13 +17,6 @@ export const LOFI_LIMITS = Object.freeze({
   VIDEO_MAX_WIDTH: 360,
 });
 
-export const LOFI_FILTERS = Object.freeze([
-  { id: "normal", label: "Padrão", desc: "WebP 1080p ultra-otimizado" },
-  { id: "xerox", label: "📰 Xerox", desc: "Zine popular dither preto e branco" },
-  { id: "vhs", label: "📼 VHS 90s", desc: "Analógico quente estilo camcorder" },
-  { id: "risograph", label: "🎨 Risógrafo", desc: "Duotone cívico de alto contraste" },
-]);
-
 export function calculateConstrainedDimensions(srcW, srcH, maxDim = LOFI_LIMITS.PHOTO_MAX_DIMENSION) {
   const w = Number(srcW) || 1;
   const h = Number(srcH) || 1;
