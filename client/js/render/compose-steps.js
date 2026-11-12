@@ -59,6 +59,43 @@ export function renderReviewList(rows) {
         </dl>`;
 }
 
+/**
+ * Tela de compositor que não pode abrir (sem permissão, recurso desligado): diz o porquê e
+ * oferece a saída — nunca um erro solto sem caminho de volta.
+ * @param {{title:string, body:string, actions?:Array<{href:string, label:string, primary?:boolean}>}} opts
+ *   `title` e `body` em texto puro; `actions` vira a fileira de botões (o primeiro `primary` em destaque).
+ * @returns {string} HTML do bloco `.agora-empty`.
+ */
+export function renderComposeBlocked({ title, body, actions = [] }) {
+  const buttons = actions.map((a) => {
+    const kind = a.primary ? "agora-btn--primary" : "agora-btn--secondary";
+    return `<a class="agora-btn ${kind}" href="${escapeHtml(a.href)}">${escapeHtml(a.label)}</a>`;
+  }).join("");
+  return `<div class="agora-empty compose-blocked" role="status">
+      <h2>${escapeHtml(title)}</h2>
+      <p>${escapeHtml(body)}</p>
+      ${buttons ? `<div class="compose-blocked-actions">${buttons}</div>` : ""}
+    </div>`;
+}
+
+/**
+ * Bloco "feira desligada" (aba Feira e compositor de oferta): explica que a abertura passa por
+ * proposta de governança e leva direto ao compositor de proposta da comunidade.
+ * @param {string} communityId Id da comunidade.
+ * @returns {string} HTML do bloco.
+ */
+export function renderFeiraDisabled(communityId) {
+  const c = encodeURIComponent(communityId);
+  return renderComposeBlocked({
+    title: "Feira comunitária não ativada",
+    body: "A feira (classificados) começa desligada em toda comunidade. Para abrir, é preciso uma proposta comunitária de governança aprovada no voto.",
+    actions: [
+      { href: `#/compose/proposal?c=${c}`, label: "Propor a abertura da feira", primary: true },
+      { href: `#/c/${c}`, label: "← Voltar à comunidade" },
+    ],
+  });
+}
+
 /** Monta todas as etapas de um formulário a partir de uma lista `[{key,title,required?,body}]`. */
 export function renderSteps(steps, navOpts) {
   return steps.map((st, i) => renderStep(i, st.body, navOpts, steps)).join("");

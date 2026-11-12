@@ -21,6 +21,7 @@ import { attachPowIfWanted } from "../new-key-guard.js";
 import { parseChatTranscriptToMarkdown } from "../chat-bridge.js";
 import { createCivicNotaryRecord } from "../perma-notary.js";
 import { bindComposeStepper, goToComposeStep } from "./compose-stepper.js";
+import { renderFeiraDisabled } from "../render/compose-steps.js";
 import { attachInlineComposerHandlers, expandInlineComposer } from "../inline-composer.js";
 import { appendPollOptionsToBody } from "../civic-post.js";
 import { getActiveUser, makeShellProps } from "./context.js";
@@ -413,7 +414,7 @@ export async function showComposeListing(communityId) {
   } catch {}
 
   if (!listing.isCommercialEnabled(meta)) {
-    main.innerHTML = `<div class="card"><div class="error">Esta comunidade não possui feira comunitária ativada por governança.</div><p style="margin-top:1rem;"><a href="#/c/${encodeURIComponent(targetComm)}" class="btn btn-outline btn-sm">← Voltar à comunidade</a></p></div>`;
+    main.innerHTML = renderFeiraDisabled(targetComm);
     return;
   }
 
