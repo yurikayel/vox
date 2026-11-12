@@ -188,4 +188,4 @@ Mantidos para registro; cada um tem banner apontando o sucessor.
 - [gateway-honest-fallback-brainstorm.md](./archive/gateway-honest-fallback-brainstorm.md) → ADR-004 · [steward-wizard-brainstorm.md](./archive/steward-wizard-brainstorm.md) → steward-relay-kit
 - Métricas antigas: [10-24](./metrics/baseline-2026-10-24.md) · [10-30](./metrics/baseline-2026-10-30.md) · [10-31](./metrics/baseline-2026-10-31.md) · [11-01](./metrics/baseline-2026-11-01.md) · [11-04](./metrics/baseline-2026-11-04.md) · [11-05](./metrics/baseline-2026-11-05.md) · [11-06](./metrics/baseline-2026-11-06.md) · [11-08](./metrics/baseline-2026-11-08.md) · [11-09](./metrics/baseline-2026-11-09.md)
 
-**Versão:** 2.5 · 2026-11-10 (a mesma do cabeçalho)
+**Versão:** 2.6 · 2026-11-12 (a mesma do cabeçalho)
