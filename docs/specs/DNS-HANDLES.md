@@ -1,5 +1,7 @@
 # Identidade Amigável & DNS Comunitário — Vox (Fase 5)
 
+> **Status:** implementada (handles `@` no ar, conforme o FEATURES; a parte de DNS comunitário não foi conferida) · **Owner:** mantenedor · **Revisado:** 2026-10-22
+
 Este documento descreve o funcionamento do sistema de **handles amigáveis (`@handle`)**, as opções de **CNAME/DNS comunitário** e o posicionamento técnico e regulatório do projeto Vox.
 
 ---

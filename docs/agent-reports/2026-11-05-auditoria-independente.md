@@ -1,5 +1,7 @@
 # Relatório de Entrega de Agente — Auditoria Técnica Independente
 
+> **Status:** auditoria (relatório de agente de 2026-11-05) · **Owner:** mantenedor · **Revisado:** 2026-11-05
+
 **Agente:** `antigravity-auditor` (com integração pelo Senior)  
 **Data/Hora:** `2026-11-05 20:10`  
 **Branch de Trabalho:** `main`  

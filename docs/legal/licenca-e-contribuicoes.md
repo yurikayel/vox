@@ -1,5 +1,7 @@
 # Política de Licenciamento e Proteção do Bem Comum Digital (GOV-02)
 
+> **Status:** canônico (política; decisão no ADR-015) · **Owner:** mantenedor · **Revisado:** 2026-11-07
+
 ## 1. Decisão Canônica de Licença: GNU Affero General Public License v3.0 (AGPL-3.0-or-later)
 
 > Registro formal da decisão: [ADR-015](../adr/015-licenciamento-agplv3-e-governanca-de-bem-comum.md). DCO e como contribuir: [CONTRIBUTORS.md](../../CONTRIBUTORS.md). Este arquivo detalha a política.
