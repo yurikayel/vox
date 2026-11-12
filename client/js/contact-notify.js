@@ -149,3 +149,28 @@ export function dismissIncomingContactNotice(routeId, storage = globalThis.local
   writeStoredList(storage, list);
   return true;
 }
+
+const ALERTS_KEY = "vox-added-by-alerts-v1";
+const ALERTS_PER_HOUR = 3;
+const HOUR_MS = 60 * 60 * 1000;
+
+/**
+ * Reserva um alerta (toast e notificação do sistema) se ainda couber no limite de 3 por hora.
+ * Chave nova não custa nada, então sem o limite qualquer um encheria a tela de alertas; o aviso
+ * continua na lista de "Quem adicionou você" mesmo sem alerta.
+ *
+ * @param {Storage} [storage=globalThis.localStorage] Armazenamento.
+ * @param {number} [now=Date.now()] Agora, em ms.
+ * @returns {boolean} `true` se pode alertar agora.
+ */
+export function takeContactAlertSlot(storage = globalThis.localStorage, now = Date.now()) {
+  let recent = [];
+  try {
+    recent = JSON.parse(storage?.getItem(ALERTS_KEY) || "[]").filter((t) => now - Number(t) < HOUR_MS);
+  } catch {}
+  if (recent.length >= ALERTS_PER_HOUR) return false;
+  try {
+    storage?.setItem(ALERTS_KEY, JSON.stringify([...recent, now]));
+  } catch {}
+  return true;
+}
