@@ -1,7 +1,7 @@
 /**
  * @file Contas descartáveis criadas nos testes antes da rede viva (gênese de 2026-11-11).
- * São contas sem nome escolhido, a Ana Lúcia de teste e cinco contas "Yuri Kayel" de teste do mantenedor;
- * nenhuma é pessoa real usando a rede. O mantenedor pediu que saíssem: a rede começa só com o perfil Vox.
+ * São contas sem nome escolhido, a Ana Lúcia de teste e as seis contas "Yuri Kayel" do mantenedor (inclusive a
+ * que ele usava): nenhuma é pessoa real usando a rede. A pedido dele, a rede começa só com o perfil Vox.
  * O aparelho apaga o cartão, o contato e os posts delas e recusa cartão novo vindo da malha
  * ou da memória central, para não voltarem por outro aparelho.
  */
@@ -72,6 +72,7 @@ export const TEST_ROUTE_IDS = Object.freeze([
   "vx_Vwh6zrrlZUeu0PyZLb44",
   "vx_WAqxgW1JLEg7GtkA-lP-",
   "vx_WXB-qqM2CwHuoupVijmx",
+  "vx_WuSxKR0W901YTLOJe7Oa",
   "vx_XSXhK8J9Gl08fF-kiKbw",
   "vx_XYY5jFEapg3qu8ZSWvLU",
   "vx_XZLjq7fN2mbv8d_dJFO4",

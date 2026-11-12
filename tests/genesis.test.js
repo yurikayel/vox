@@ -38,13 +38,13 @@ test("gênese: itens locais em ms; sem data ficam", () => {
   assert.equal(g.isBeforeGenesisMs(0), false);
 });
 
-test("gênese: contas de teste da lista saem; Vox oficial e o perfil do mantenedor ficam", async () => {
+test("gênese: contas de teste da lista saem (inclusive as do mantenedor); só o Vox oficial fica", async () => {
   const { TEST_ROUTE_IDS } = await import("../client/js/data/test-route-ids.js");
   assert.equal(TEST_ROUTE_IDS.length, new Set(TEST_ROUTE_IDS).size, "sem repetição");
   assert.ok(TEST_ROUTE_IDS.every((id) => /^vx_[\w-]+$/.test(id)));
   assert.equal(g.isTestRouteId("vx_WAqxgW1JLEg7GtkA-lP-"), true);
   assert.equal(g.isTestRouteId(` ${TEST_ROUTE_IDS[0]} `), true);
   assert.equal(g.isTestRouteId("vx_voxbrasil_welcome"), false);
-  assert.equal(g.isTestRouteId("vx_WuSxKR0W901YTLOJe7Oa"), false);
+  assert.equal(g.isTestRouteId("vx_WuSxKR0W901YTLOJe7Oa"), true);
   assert.equal(g.isTestRouteId(""), false);
 });
