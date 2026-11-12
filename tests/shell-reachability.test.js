@@ -3,7 +3,10 @@
  * - Todo módulo do precache (SHELL_ASSETS) tem de ser alcançável a partir de um ponto de entrada
  *   (os <script src> das páginas do cliente), seguindo os imports estáticos e dinâmicos.
  * - Todo módulo inalcançável tem de estar em UNPLUGGED_MODULES (fora do precache).
- * - O tamanho total do precache tem teto: peso só cresce de propósito.
+ * - O tamanho total do precache é vigiado para crescer o mínimo necessário e evitar desperdício real
+ *   (assets duplicados, código morto). Ele não é um limite duro: quando uma mudança enxuta e coerente
+ *   passar do valor abaixo, atualize `SHELL_BUDGET_BYTES` para o valor medido com uma linha de motivo,
+ *   sem caçar cortes improdutivos.
  */
 import "./setup.js";
 import test from "node:test";
@@ -16,8 +19,14 @@ const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "clie
 const sw = fs.readFileSync(path.join(root, "sw.js"), "utf8");
 
 /**
- * PM-02: teto do precache em bytes. Medido em 2026-11-09 depois do PM-04: 2.038.578 bytes em 182 arquivos, + ~2% de folga.
- * Meta do PM-01 (dieta do shell): baixar 20% disto. Subir o teto exige justificar no PR.
+ * PM-02: referência do precache em bytes (regra atual em `docs/HARDENING.md`).
+ * Orientação do mantenedor (2026-11-12): focar no que afeta performance de verdade e manter a
+ * disciplina de crescer o mínimo. Se uma mudança já estiver enxuta, concisa e funcionando e passar
+ * deste valor, atualize `SHELL_BUDGET_BYTES` para o total medido com uma linha no histórico abaixo,
+ * sem esforço improdutivo para bater a métrica (ex.: não cortar comentário/JSDoc nem código útil).
+ *
+ * Histórico de medições:
+ * Medido em 2026-11-09 depois do PM-04: 2.038.578 bytes em 182 arquivos, + ~2% de folga. Meta do PM-01 (dieta do shell): baixar 20% disto.
  * 2026-11-10 (PM-78): 2.081.292 bytes em 193 arquivos; a folga acabou com os 6 módulos do PM-69 e a caixa de
  * saída das DMs (+4,4 KB). Teto sobe só 0,2% acima do medido; a próxima adição precisa vir com corte (PM-01).
  * 2026-11-10 (PM-80): corte de 18,4 KB (o icon.svg embutia o mesmo PNG duas vezes, em href e xlink:href) pagou o
@@ -65,6 +74,7 @@ const sw = fs.readFileSync(path.join(root, "sw.js"), "utf8");
  * sem folga: a próxima adição volta a precisar de corte.
  * 2026-11-12 (correções da revisão do #108, +1,3 KB): pagas trocando 5 cópias do download por share.downloadBlob e
  * removendo 9 exportações sem uso (governance, wallet, mock); medido 2.004.619 bytes; teto mantido.
+ * 2026-11-12 (diretório e prévia de conexão com foto carregada, +66 B): teto atualizado para o medido (2.004.685 bytes).
  * 2026-11-12 (aviso E2E de novo contato + seção "Quem adicionou você" em Pessoas): entra `contact-notify.js`,
  * `app/contact-notify-flow.js` e a seção no diretório; medido 2.019.348 bytes (teto ajustado ao medido).
  */
