@@ -1064,9 +1064,9 @@ OAuth e compartilhamento nativo citam provedores apenas onde exigido por integra
 
 **Escopo:** cockpit **Ecoe para…** após publicar (compose + inline); link canônico `#/t/:id`; intents WhatsApp / X / Bluesky; Web Share; copiar bloco; export JSON CLI.
 
-**Código:** `client/js/posse-dispatch.js` · testes `tests/posse-dispatch.test.js` · preferência “não mostrar de novo” (`vox-posse-sheet-skip`).
+**Código:** `client/js/posse-dispatch.js` · testes `tests/posse-dispatch.test.js`. A folha antiga pós-publicação (`vox-posse-sheet-skip`) saiu em 2026-11-12: nada a abria desde o cockpit Ecoe (2168dae).
 
-**Webhooks (Tier B):** `#/settings/network` → textarea **Ecoe POSSE — Webhooks** (`vox-posse-webhooks`); POST JSON ao usar **Exportar JSON** no sheet.
+**Webhooks (Tier B):** `#/settings/network` → textarea **Ecoe POSSE — Webhooks** (`vox-posse-webhooks`); POST JSON ao usar **Exportar JSON** no cockpit Ecoe.
 
 **Markdown:** blocos fenced ` ```lang ` em corpo de post → `render/markdown-body.js` (feed, overlay, `#/t/:id`); sem HTML bruto; hashtags fora de fences.
 
