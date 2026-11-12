@@ -192,6 +192,7 @@ namespace Vox.ZeroMemory {
                     }
                 }
             }
+            if (PruneGenesis(norm) > 0) norm["revision"] = ToLong(norm["revision"], 0L) + 1;
             return norm;
         }
 
@@ -391,6 +392,7 @@ namespace Vox.ZeroMemory {
             if (type == "tombstone" || type == "post-tombstone" || kind == "post-tombstone") return ApplyTombstone(item);
             if (type == "profile-card") return ApplyProfile(item);
             if (type == "cache-manifest") return ApplyManifest(item);
+            if (RefusesPost(item)) return false;
 
             var posts = (Dictionary<string, object>)state["posts"];
             var tombs = (Dictionary<string, object>)state["tombstones"];
@@ -450,7 +452,7 @@ namespace Vox.ZeroMemory {
             string routeId = GetStr(card, "routeId");
             if (string.IsNullOrEmpty(routeId)) routeId = GetStr(card, "author");
             if (string.IsNullOrEmpty(routeId)) routeId = GetStr(card, "id");
-            if (!SafeId.IsMatch(routeId)) return false;
+            if (!SafeId.IsMatch(routeId) || RefusesProfile(routeId)) return false;
 
             var profiles = (Dictionary<string, object>)state["profiles"];
             long inTs = ItemTimestamp(card);
