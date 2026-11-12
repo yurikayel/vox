@@ -3840,7 +3840,6 @@ body,
 .compose-step-seg { height: 4px; border-radius: 2px; background: var(--sa-surface-highest); }
 .compose-step-seg.is-done { background: var(--sa-primary); }
 .compose-step-title { margin: 0; font-family: var(--font-epigraphic); font-size: clamp(1.6rem, 1.2rem + 1.5vw, 2.25rem); font-weight: 500; color: var(--sa-on-surface); }
-.compose-step-body { min-height: 180px; }
 .compose-step-lead { margin: 0 0 1rem; font-size: 0.9375rem; color: var(--sa-on-surface-variant); }
 .compose-step-error { margin: 0.5rem 0 0; font-size: 0.8125rem; color: var(--sa-error); }
 .compose-step-nav { margin-top: 1.75rem; }
@@ -4133,3 +4132,9 @@ body,
 .agora-ui .guided-choice-card .compose-sphere-name { font-size: 1.1rem; }
 .agora-ui .guided-choice-card:has(input:checked) { border-color: var(--sa-primary); background: var(--sa-surface-highest); }
 .agora-ui .guided-choice-card:has(input:focus-visible) { outline: 2px solid var(--sa-primary); outline-offset: 2px; }
+
+/* ── 38. Lote UI 2 (compositores e entrada): compositor bloqueado e aviso do passo "pular" ── */
+.compose-blocked { margin-top: 1.5rem; }
+.compose-blocked-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center; }
+@media (max-width: 520px) { .compose-blocked-actions { flex-direction: column; align-items: stretch; } }
+.genesis-overlay .genesis-skip-note { margin: 0.5rem 0 0; text-align: center; font-size: 0.8125rem; line-height: 1.45; color: var(--sa-on-surface-variant); }
