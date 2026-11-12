@@ -5,14 +5,15 @@ import { PIX_PAYER_CHECK_NOTICE_PT } from "../pix-key.js";
 import * as i18n from "../i18n-pt-br.js";
 import * as postOwnership from "../post-ownership.js";
 import * as localAccount from "../local-account.js";
-import { escapeHtml, shortId, renderAvatarHtml } from "./util.js";
+import { hasChosenName } from "../people-index.js";
+import { escapeHtml, shortId, renderAvatarHtml, formatTimeAgo } from "./util.js";
 import { renderPageHead } from "./shell.js";
 
 const CANTINA_ART_ALT =
   "Ilustração anime de uma cantina: o bartender de túnica bege aponta para a câmera; dois balões pintados na arte dizem 'Seus bots tem que esperar lá fora!' e 'Aqui não servimos esse tipo.'";
 
 const CANTINA_ART =
-  `<img class="cantina-art-img" src="./images/cantina-gate.jpg" alt="${CANTINA_ART_ALT}" width="1024" height="575" />`;
+  `<img class="cantina-art-img" src="./images/cantina-gate.webp" alt="${CANTINA_ART_ALT}" width="1024" height="575" />`;
 
 /** Ícones inline (GIS / Meta brand — sem asset extra no SW). */
 const OAUTH_SVG_GOOGLE = `<svg class="oauth-btn__icon" width="20" height="20" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>`;
@@ -116,7 +117,7 @@ function renderGenesisImportHtml() {
 const GENESIS_PICKS = [
   { key: "new", icon: "fingerprint", title: "Sou novo no Vox", desc: "Criar minha identidade neste aparelho." },
   { key: "restore", icon: "restore", title: "Já tenho conta", desc: "Restaurar com a minha Senha Soberana." },
-  { key: "import", icon: "import", title: "Importar nome e foto", desc: "Usar Google, Meta ou GitHub só para o perfil." },
+  { key: "import", icon: "import", title: "Importar nome e foto", desc: "Trazer só o nome e a foto de outra conta." },
 ];
 
 function genesisStep(key, bodyHtml, { back = "", hidden = true } = {}) {
@@ -134,7 +135,8 @@ function renderGenesisPickHtml() {
   return `
           <h2 id="oauth-enrich-title" class="genesis-panel-title">Como quer entrar?</h2>
           <div class="genesis-picks">${cards}</div>
-          <button type="button" id="btn-oauth-skip" class="oauth-btn oauth-btn--skip genesis-skip">Pular — continuar só com vx_</button>`;
+          <button type="button" id="btn-oauth-skip" class="oauth-btn oauth-btn--skip genesis-skip">Pular por agora — escolho o nome depois</button>
+          <p class="genesis-skip-note">Sem nome, você não aparece no diretório de pessoas. Dá para escolher a qualquer hora em Perfil.</p>`;
 }
 
 /** Onboarding em etapas: boas-vindas → como entrar → um único método por vez. */
@@ -196,26 +198,33 @@ function resolvePersonStampsHtml(p, isSelf) {
   return stamps.join("");
 }
 
-/** Linha do Diretório de Cidadãos (Stitch tela 10): avatar, nome epigráfico, selos, chave e ações. */
+/**
+ * Linha do Diretório de Cidadãos (Stitch tela 10): avatar, nome, @ e selos, mais as ações.
+ * A chave `vx_…` não aparece aqui (não diz nada a quem lê); ela fica no perfil, como dado complementar.
+ */
 function renderPeopleResultRow(p) {
-  const name = escapeHtml(p.name || p.routeId.slice(0, 14));
-  const handle = p.handle ? `@${escapeHtml(p.handle)}` : "";
-  const av = renderAvatarHtml(p.routeId, name);
   const myId = localAccount.getCachedRouteIdSync();
   const isSelf = Boolean(myId && p.routeId === myId);
+  // A própria conta ainda sem nome aparece como "Você", com o convite para escolher um, nunca como `vx_…`.
+  const selfUnnamed = isSelf && !hasChosenName(p);
+  const name = escapeHtml(selfUnnamed ? "Você" : p.name || p.routeId.slice(0, 14));
+  const handle = p.handle ? `@${escapeHtml(p.handle)}` : "";
+  const av = renderAvatarHtml(p.routeId, name, "", p.avatarUrl);
   const rid = encodeURIComponent(p.routeId);
+  const selfAction = selfUnnamed
+    ? `<a class="agora-btn agora-btn--solid" href="#/perfil">Escolher nome</a>`
+    : `<a class="agora-btn agora-btn--secondary" href="#/u/${rid}">Meu perfil</a>`;
   const actionsHtml = isSelf
-    ? `<a class="agora-btn agora-btn--secondary" href="#/u/${rid}">Meu perfil</a>`
+    ? selfAction
     : `
         <a class="agora-btn agora-btn--secondary" href="#/connect/${rid}">Conectar</a>
-        <a class="agora-btn agora-btn--solid" href="#/dm/${rid}">Mensagem P2P</a>`;
+        <a class="agora-btn agora-btn--solid" href="#/dm/${rid}" aria-label="Mensagem direta e cifrada">Mensagem</a>`;
   return `
     <article class="card people-result agora-citizen">
       <div class="agora-citizen-avatar">${av}</div>
       <div class="agora-citizen-body">
         <h3 class="agora-citizen-name"><a href="#/u/${rid}">${name}</a>${handle ? `<span class="agora-citizen-handle">${handle}</span>` : ""}</h3>
         <div class="agora-citizen-stamps">${resolvePersonStampsHtml(p, isSelf)}</div>
-        <p class="agora-citizen-meta">Chave: <code class="agora-hash">${escapeHtml(shortId(p.routeId))}</code></p>
       </div>
       <div class="agora-citizen-actions">${actionsHtml}
       </div>
@@ -261,9 +270,44 @@ export function resolvePeopleSearchBody(sections, results, query) {
   return results.map((p) => renderPeopleResultRow(p)).join("");
 }
 
-export function renderPeopleSearch(main, { sections = null, results = [], query = "" } = {}) {
+function renderAddedYouRow(n) {
+  const label = n.name || shortId(n.routeId);
+  const av = renderAvatarHtml(n.routeId, label, "", n.avatarUrl || "");
+  const rid = encodeURIComponent(n.routeId);
+  const when = formatTimeAgo(n.ts);
+  return `
+    <article class="card people-result agora-citizen">
+      <div class="agora-citizen-avatar">${av}</div>
+      <div class="agora-citizen-body">
+        <h3 class="agora-citizen-name"><a href="#/u/${rid}">${escapeHtml(label)}</a></h3>
+        <div class="agora-citizen-stamps"><span class="agora-stamp agora-stamp--teal">Adicionou você · ${escapeHtml(when)}</span></div>
+      </div>
+      <div class="agora-citizen-actions">
+        <button type="button" class="agora-btn agora-btn--solid btn-added-you-back" data-route="${escapeHtml(n.routeId)}" data-label="${escapeHtml(label)}">Adicionar de volta</button>
+        <button type="button" class="agora-btn agora-btn--secondary btn-added-you-dismiss" data-route="${escapeHtml(n.routeId)}">Dispensar</button>
+      </div>
+    </article>`;
+}
+
+/**
+ * Seção "Quem adicionou você" no topo do diretório de pessoas.
+ *
+ * @param {Array<{routeId: string, name?: string, avatarUrl?: string, ts?: number}>} [notices=[]] Avisos pendentes.
+ * @returns {string} HTML da seção, ou `""` se não houver avisos.
+ */
+export function renderAddedYouSection(notices = []) {
+  if (!notices?.length) return "";
+  return `
+    <section class="people-section agora-citizen-section" id="people-added-you-section">
+      <h3 class="agora-section-label">Quem adicionou você<span class="agora-citizen-count">${notices.length}</span></h3>
+      ${notices.map(renderAddedYouRow).join("")}
+    </section>`;
+}
+
+export function renderPeopleSearch(main, { sections = null, results = [], query = "", addedBy = [] } = {}) {
   const q = escapeHtml(query);
   const body = resolvePeopleSearchBody(sections, results, query);
+  const addedHtml = query.trim() ? "" : renderAddedYouSection(addedBy);
   const head = renderPageHead({
     title: "Diretório de Cidadãos",
     subtitle: "Pessoas com identidade criptográfica verificada no aparelho de quem publicou. Sem servidor central decidindo quem existe.",
@@ -278,6 +322,7 @@ export function renderPeopleSearch(main, { sections = null, results = [], query 
         <input type="search" id="people-search-input" class="form-control" placeholder="Buscar por nome, @arroba cívica, chave vx_ ou link de convite…" value="${q}" aria-label="Buscar pessoas" />
         <button type="submit" class="agora-btn agora-btn--solid">Buscar</button>
       </form>
+      <div id="people-added-you-container">${addedHtml}</div>
       <div class="people-results agora-citizen-list" id="people-results-container">${body}</div>
     </div>`;
 }
@@ -337,7 +382,7 @@ export function closePostPactConnectModal(container) {
 export function renderConnectPreview(main, profile, routeId, { isContact = false } = {}) {
   const name = escapeHtml(profile?.name || routeId);
   const bio = profile?.bio ? `<p class="desc">${escapeHtml(profile.bio)}</p>` : "";
-  const av = renderAvatarHtml(routeId, name);
+  const av = renderAvatarHtml(routeId, name, "", profile?.avatarUrl || profile?.avatar || "");
   main.innerHTML = `
     <div class="card">
       <h2 style="margin:0 0 0.5rem;">Conectar</h2>

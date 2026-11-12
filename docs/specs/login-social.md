@@ -1,5 +1,7 @@
 # Login social em Redes Vinculadas
 
+> **Status:** implementada (cada rede depende de configuração de deploy) · **Owner:** mantenedor · **Revisado:** 2026-11-07
+
 "Conectar com login" deixa a pessoa conectar uma rede sem digitar @usuário. Cada rede funciona de um jeito:
 
 | Rede | Como conecta | O que o operador precisa fazer |

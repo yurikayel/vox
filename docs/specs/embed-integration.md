@@ -1,5 +1,7 @@
 # Widget “Comente com Vox”
 
+> **Status:** implementada (demo em `client/embed/demo.html`) · **Owner:** mantenedor · **Revisado:** 2026-10-25
+
 Script estático: [`client/embed/vox-embed.js`](../../client/embed/vox-embed.js)
 
 ```html

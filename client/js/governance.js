@@ -4,10 +4,6 @@
  * regra canônica de marco de corte anti-brigading (Eligibility-Cutoff) e apuração no cliente.
  */
 
-export const VOTE_CHOICES = ["yes", "no", "abstain"];
-
-export const PROPOSAL_STATES = ["open", "merged", "rejected", "expired"];
-
 /**
  * Valida os dados de entrada de uma proposta.
  */

@@ -7,6 +7,7 @@
 
 import * as cacheNode from "./cache-node.js";
 import * as hydrate from "./central-memory-hydrate.js";
+import { isBeforeGenesisMs, isTestRouteId } from "./genesis.js";
 import { getRelayHttpUrls } from "./inbox.js";
 import * as localAccount from "./local-account.js";
 import * as mediaBlob from "./media-blob.js";
@@ -214,19 +215,15 @@ function upsertDirectoryCardIfNeeded(routeId, name, avatarUrl = "", bio = "") {
   });
 }
 
+// Só a conta ativa, com nome e visível na malha. As outras contas do cofre não saem daqui: publicá-las
+// juntas contaria a quem lê que são da mesma pessoa.
 function syncActiveAccountCard() {
   const myId = localAccount.getCachedRouteIdSync();
-  if (!myId) return;
-  const enrich = localAccount.getProfileEnrichment();
-  const enrichObj = enrich ? enrich : {};
+  if (!myId || !localAccount.getMeshDiscoverable()) return;
+  const enrichObj = localAccount.getProfileEnrichment() || {};
   const myName = localAccount.getDisplayName() || enrichObj.displayName;
-  upsertDirectoryCardIfNeeded(myId, myName, enrichObj.avatarUrl, enrichObj.bio);
-}
-
-function syncVaultCards() {
-  if (typeof localAccount.listVaultAccountsSync !== "function") return;
-  for (const v of localAccount.listVaultAccountsSync()) {
-    if (v) upsertDirectoryCardIfNeeded(v.routeId, v.displayName, v.avatarUrl, v.bio);
+  if (profileDirectory.hasChosenCardName({ name: myName, routeId: myId })) {
+    upsertDirectoryCardIfNeeded(myId, myName, enrichObj.avatarUrl, enrichObj.bio);
   }
 }
 
@@ -236,7 +233,6 @@ function upsertAuthorCard(post) {
 
 function syncLocalAccountsToProfileDirectory(allPosts) {
   syncActiveAccountCard();
-  syncVaultCards();
   for (const post of Array.isArray(allPosts) ? allPosts : []) upsertAuthorCard(post);
 }
 
@@ -248,7 +244,7 @@ async function buildLocalSyncBundle() {
   syncLocalAccountsToProfileDirectory(allPosts);
   const posts = filterDeltaItems(allPosts, lastLocalSyncMs);
   const tombstones = filterDeltaItems(allTombstones, lastLocalSyncMs);
-  const profiles = profileDirectory.listDiscoverableProfileCards();
+  const profiles = profileDirectory.listShareableProfileCards();
   const manifests = filterDeltaItems(manifestMesh.listKnownManifests(), lastLocalSyncMs);
   const blobs = await collectLocalBlobs(posts);
   return {
@@ -280,7 +276,7 @@ function hydrateProfiles(profiles) {
   let added = 0;
   for (const card of profiles) {
     const routeId = String(card?.routeId || card?.author || "").trim();
-    if (!routeId) continue;
+    if (!routeId || !profileDirectory.hasChosenCardName({ name: card.name || card.displayName, routeId })) continue;
     const existing = profileDirectory.getProfileCard(routeId);
     if (shouldApplyIncomingProfile(existing, card)) {
       const normalized = {
@@ -295,13 +291,21 @@ function hydrateProfiles(profiles) {
   return added;
 }
 
+/** Testes anteriores à data de corte ficam fora, mesmo que a memória central ainda os tenha. */
+function afterGenesis(items) {
+  if (!Array.isArray(items)) return items;
+  return items.filter(
+    (it) => !isBeforeGenesisMs(hydrate.itemTimestamp(it)) && !isTestRouteId(it?.routeId || it?.author || it?.owner),
+  );
+}
+
 async function applyRemoteBundle(remote) {
   hydratingDepth += 1;
   try {
     const blobsByHash = await hydrate.hydrateBlobs(remote.blobs);
     const tombCount = await hydrate.hydrateTombstones(remote.tombstones);
-    const postCount = await hydrate.hydratePosts(remote.posts, blobsByHash, upsertAuthorCard);
-    const profCount = hydrateProfiles(remote.profiles);
+    const postCount = await hydrate.hydratePosts(afterGenesis(remote.posts), blobsByHash, upsertAuthorCard);
+    const profCount = hydrateProfiles(afterGenesis(remote.profiles));
     return tombCount + postCount + profCount;
   } finally {
     hydratingDepth = Math.max(0, hydratingDepth - 1);

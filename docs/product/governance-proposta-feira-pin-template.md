@@ -1,5 +1,7 @@
 # Modelo de proposta — Feira comunitária + recomendação de espelho leve (V-I07)
 
+> **Status:** canônico (modelo para copiar) · **Owner:** community-doc · **Revisado:** 2026-10-23
+
 **Uso:** copiar/adaptar no composer `#/compose/proposal?c=<Community-Id>`.  
 **Norma:** [GOVERNANCE.md](../../GOVERNANCE.md) (Feira M, Deliberação G).  
 **Contexto infra:** backlog `V-I01`–`V-I05` (espelho relay, manifesto de pin — rascunho).  

@@ -1,5 +1,7 @@
 # Dependências e cadeia de suprimentos (LAN-20)
 
+> **Status:** canônico (inventário; fonte de verdade das dependências) · **Owner:** mantenedor · **Revisado:** 2026-11-10
+
 > Inventário do código de terceiros que o Vox carrega ou usa para construir e publicar, e dos binários que o repositório distribui.
 > **Fonte de verdade:** este arquivo. `tests/dependencias-inventory.test.js` quebra o CI quando o código passa a carregar algo que não está aqui.
 > **Rotina mensal:** [`deps-mensal.yml`](../.github/workflows/deps-mensal.yml), no dia 1 de cada mês.

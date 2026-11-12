@@ -3,26 +3,25 @@ import * as mock from "../mock.js";
 import * as localAccount from "../local-account.js";
 import * as profileDirectory from "../profile-directory.js";
 import { isWelcomeRouteId } from "../vox-welcome-profile.js";
+import { escapeHtml } from "../shared/html.js";
+import { shortId } from "../short-id.js";
+
+// Reexportados para a UI. O domínio importa da origem, nunca daqui (docs/ARCHITECTURE.md, "Camadas").
+export { escapeHtml, shortId };
 
 export const root = () => document.getElementById("app-root");
 
-export function escapeHtml(s) {
-  return String(s || "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-
-export function shortId(id) {
-  if (!id) return "—";
-  if (isWelcomeRouteId(id)) return "vox";
-  if (id.startsWith("vx_")) return id.length <= 10 ? id : id.slice(0, 9);
-  if (id.startsWith("0x")) return id.length <= 10 ? id : id.slice(0, 8);
-  if (id.startsWith("did:")) return id.slice(0, 12);
-  if (id.length > 14) return id.slice(0, 10) + "…";
-  return id;
+/**
+ * Trilha de navegação no padrão Stitch ("Comunidades / Vila Teste / Tópico").
+ * @param {Array<{label: string, href?: string}>} items Do mais geral ao atual; item sem `href` é a página atual.
+ * @returns {string} HTML do `<nav class="agora-breadcrumb">` com os rótulos escapados.
+ */
+export function renderAgoraBreadcrumbHtml(items) {
+  const sep = `<span class="agora-breadcrumb-sep" aria-hidden="true">/</span>`;
+  const parts = items.map((it) => (it.href
+    ? `<a href="${escapeHtml(it.href)}">${escapeHtml(it.label)}</a>`
+    : `<span aria-current="page">${escapeHtml(it.label)}</span>`));
+  return `<nav class="agora-breadcrumb" aria-label="Você está em">${parts.join(sep)}</nav>`;
 }
 
 function normAuthorToken(s) {

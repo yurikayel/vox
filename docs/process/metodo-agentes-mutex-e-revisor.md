@@ -1,5 +1,7 @@
 # Método — mutex de agentes e modo revisor
 
+> **Status:** canônico (fonte única do mutex) · **Owner:** mantenedor / revisor · **Revisado:** 2026-10-25
+
 Operacional (repo `vox`). Tese longa: [antigravity-estrategia-mantenedor-revisor-2026.md](../strategy/antigravity-estrategia-mantenedor-revisor-2026.md).
 
 ## Mutex (markdown canônico)

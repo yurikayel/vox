@@ -2,16 +2,14 @@
 import * as mock from "../mock.js";
 import * as communityUpdates from "../community-updates.js";
 import * as listing from "../listing.js";
-import * as gov from "../governance.js";
 import * as hashtags from "../hashtags.js";
 import * as listingUi from "../listing-ui.js";
 import * as gossipRetract from "../gossip-retract-ui.js";
 import * as profileDirectory from "../profile-directory.js";
 import { renderCommunityCatchupBanner } from "../community-unread.js";
-import { renderUnifiedDiffHtml } from "./diff-html.js";
 import { renderPageHead } from "./shell.js";
 import { renderComposeSignaturePanel } from "./compose-chrome.js";
-import { renderSteps, renderReviewList } from "./compose-steps.js";
+import { renderSteps, renderReviewList, renderFeiraDisabled } from "./compose-steps.js";
 import { buildListingDmHref } from "../dm-messenger.js";
 import { getReadOriginAggregate } from "../gateway-telemetry.js";
 import {
@@ -23,8 +21,8 @@ import {
   formatAbsoluteDate,
   postTimeParts,
   renderAvatarHtml,
-  renderMarkdownLight,
 } from "./util.js";
+import { renderStat, formatCountdown } from "./vote.js";
 import { extractTopicCivicTag, resolveTopicBadgesHtml } from "./topic-badges.js";
 import { renderCommunityHeaderToolbar } from "./community-toolbar.js";
 import { renderChannelBarHtml, showsComposeButton } from "./channel-bar.js";
@@ -596,6 +594,60 @@ function renderCommunityNavTabs(communityId, activeTab, proposalCount = 0) {
     </nav>`;
 }
 
+/**
+ * Monólitos da comunidade com o que o aparelho sabe de verdade (Stitch tela 7, sem tesouro nem ZK).
+ * @param {number|null} memberCount Membros conhecidos (ou `null` quando ainda não há contagem).
+ * @param {object[]} topics Tópicos carregados nesta tela.
+ * @param {object[]} proposals Pautas da comunidade conhecidas pelo aparelho.
+ * @returns {string} HTML da `.agora-stat-row`.
+ */
+function renderCommunityStatRowHtml(memberCount, topics, proposals) {
+  const open = (proposals || []).filter((p) => (p.state || "open") === "open").length;
+  const members = memberCount == null ? "—" : formatCommunityMembers(memberCount);
+  return `<div class="agora-stat-row community-vox-stats">
+      ${renderStat("Membros", members, "conhecidos neste aparelho")}
+      ${renderStat("Tópicos", (topics || []).length, "carregados aqui")}
+      ${renderStat("Pautas em votação", open, open ? "abertas agora" : "nenhuma aberta", open ? "emerald" : "")}
+    </div>`;
+}
+
+/**
+ * Pauta aberta em destaque no topo dos posts (a "assembleia aberta" do Stitch), com prazo real.
+ * @param {string} communityId Id da comunidade.
+ * @param {object[]} proposals Pautas conhecidas; usa a primeira em votação.
+ * @returns {string} HTML do cartão `.agora-deliberation`, ou vazio se nenhuma pauta estiver aberta.
+ */
+function renderCommunityFeaturedProposalHtml(communityId, proposals) {
+  const open = (proposals || []).find((p) => (p.state || "open") === "open");
+  if (!open) return "";
+  const href = `#/c/${encodeURIComponent(communityId)}/proposal/${encodeURIComponent(open.id)}`;
+  const countdown = formatCountdown(open.closesAt);
+  const body = String(open.body || "");
+  return `<article class="agora-deliberation community-vox-featured" data-state="open">
+      <div class="agora-deliberation-meta"><span class="agora-pill agora-pill--emerald">Pauta em votação</span>${countdown ? `<span class="agora-countdown">${escapeHtml(countdown)}</span>` : ""}</div>
+      <h2 class="agora-deliberation-title"><a href="${href}">${escapeHtml(open.title || "Pauta sem título")}</a></h2>
+      ${body ? `<p class="agora-deliberation-body">${escapeHtml(body.slice(0, 220))}${body.length > 220 ? "…" : ""}</p>` : ""}
+      <div class="agora-vote-actions"><a class="agora-btn agora-btn--solid" href="${href}">Ver pauta e votar</a></div>
+    </article>`;
+}
+
+/**
+ * Monta a página em duas faixas: conteúdo (abas e posts) e lateral (vizinhos, primeiros passos).
+ * No celular a lateral desce para depois do conteúdo; em telas largas fica ao lado (CSS).
+ * @param {{communityId: string, accent: string, top: string, main: string, aside: string}} parts Pedaços já renderizados.
+ * @returns {string} HTML da `.community-vox-page`.
+ */
+function renderCommunityPageHtml({ communityId, accent, top, main, aside }) {
+  return `
+    <div class="community-vox-page agora-wide" data-community-id="${escapeHtml(communityId)}" style="--community-accent:${accent};">
+      ${top}
+      <div class="community-vox-layout">
+        <div class="community-vox-main">${main}</div>
+        ${aside ? `<aside class="community-vox-aside" aria-label="Rede e primeiros passos">${aside}</aside>` : ""}
+      </div>
+    </div>`;
+}
+
 export function renderCommunity(main, communityId, topics, meta = {}, opts = {}) {
   const activeTab = opts.activeTab || "posts";
   const accent = getCommunityColor(communityId);
@@ -604,6 +656,8 @@ export function renderCommunity(main, communityId, topics, meta = {}, opts = {})
   const seedHtml = opts.seedChecklist ? renderCommunitySeedChecklist(communityId, opts.seedChecklist.state, opts.seedChecklist.ctx) : "";
   const recadoHtml = activeTab === "posts" && meta.welcomeRecado ? renderCommunityWelcomeRecado(meta.welcomeRecado) : "";
   const navHtml = renderCommunityNavTabs(communityId, activeTab, opts.proposals?.length);
+  const memberCount = resolveCommunityMemberCount(meta, communityId);
+  const featuredHtml = activeTab === "posts" ? renderCommunityFeaturedProposalHtml(communityId, opts.proposals) : "";
   const slotHtml = renderCommunityTabContent(activeTab, {
     communityId,
     commTitle: meta.title || communityId,
@@ -613,14 +667,17 @@ export function renderCommunity(main, communityId, topics, meta = {}, opts = {})
     proposals: opts.proposals,
     recentPeople: opts.recentPeople,
     isMember: opts.isMember, isMod: opts.isMod,
-    memberCount: resolveCommunityMemberCount(meta, communityId),
+    memberCount,
   });
 
-  main.innerHTML += `
-    <div class="community-vox-page" data-community-id="${escapeHtml(communityId)}" style="--community-accent:${accent};">
-      ${headerHtml}${renderChannelBarHtml(meta, { communityId, isMod: opts.isMod })}${neighborHtml}${seedHtml}${renderCommunityForkBanner(meta)}${recadoHtml}${navHtml}
-      <div class="community-tab-content-slot" id="community-tab-content">${slotHtml}</div>
-    </div>`;
+  main.innerHTML += renderCommunityPageHtml({
+    communityId,
+    accent,
+    top: `${headerHtml}${renderCommunityStatRowHtml(memberCount, topics, opts.proposals)}`,
+    main: `${renderChannelBarHtml(meta, { communityId, isMod: opts.isMod })}${renderCommunityForkBanner(meta)}${recadoHtml}${featuredHtml}${navHtml}
+      <div class="community-tab-content-slot" id="community-tab-content">${slotHtml}</div>`,
+    aside: `${neighborHtml}${seedHtml}`,
+  });
 }
 
 const TAB_RENDERERS = {
@@ -688,16 +745,7 @@ export function renderCommunityPostsTab(communityId, commTitle, topics, { sortMo
 }
 
 function renderCommercialDisabledView(communityId) {
-  return `
-    <div class="community-vox-panel">
-      <div class="empty feira-disabled" style="padding: 1.5rem; text-align: center;">
-        <h3 style="margin-top:0;">🏛️ Feira comunitária não ativada</h3>
-        <p class="desc" style="max-width: 480px; margin: 0.5rem auto 1rem;">
-          Esta comunidade ainda não abriu classificados (modo comercial desligado por padrão). Uma proposta comunitária de governança pode deliberar e aprovar a abertura da feira local.
-        </p>
-        <a href="#/c/${encodeURIComponent(communityId)}" class="btn btn-outline btn-sm">← Ver posts da comunidade</a>
-      </div>
-    </div>`;
+  return `<div class="community-vox-panel">${renderFeiraDisabled(communityId)}</div>`;
 }
 
 function renderCommunityListingsTab(communityId, commTitle, meta, listings) {
@@ -882,163 +930,6 @@ export function renderListingItem(item, { communityTitle = "" } = {}) {
       ${renderListingContent(item, price)}
       ${renderListingActions({ item, author, authorDisplay: labels.authorDisplay, price, pixKey, commId })}
     </article>`;
-}
-
-function renderProposalArticle(proposal, labels, timeLabel, state, diffHtml) {
-  const author = proposal.author || proposal.owner || "";
-  return `
-    <article class="card" style="padding: 1.5rem; margin-bottom: 1.25rem;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem; flex-wrap:wrap; gap:0.5rem;">
-        <div class="post-header-author">
-          <a class="avatar-link" href="#/u/${encodeURIComponent(author)}">${renderAvatarHtml(author, labels.authorDisplay)}</a>
-          <a class="post-author" href="#/u/${encodeURIComponent(author)}">${escapeHtml(labels.authorDisplay)}</a>
-          <span class="post-handle">@${escapeHtml(labels.authorHandle)}</span>
-          <span class="post-dot">·</span>
-          <span class="post-meta">${escapeHtml(timeLabel)}</span>
-        </div>
-        <div>${renderProposalStatusBadge(state)}</div>
-      </div>
-      <h1 style="font-size: 1.4rem; margin: 0.5rem 0 1rem;">${escapeHtml(proposal.title)}</h1>
-      <div class="post-text" style="font-size: 1rem; line-height: 1.6;">${renderMarkdownLight(proposal.body)}</div>
-      ${diffHtml}
-      <div class="proposal-bridge-bar" style="margin-top:1rem; padding-top:0.75rem; border-top:1px solid var(--border); display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
-        <span class="meta" style="font-size:0.78rem;">📣 Ecoar no QG:</span>
-        <button type="button" id="btn-proposal-copy-discord" class="btn btn-sm btn-outline">📋 Copiar resumo (Discord / Slack)</button>
-        <button type="button" id="btn-proposal-webhook-echo" class="btn btn-sm btn-outline">🔔 Disparar Webhook</button>
-      </div>
-    </article>`;
-}
-
-export function renderProposalDetail(main, proposal, tally, opts = {}) {
-  const commId = proposal.communityId;
-  const commTitle = opts.community?.title || commId;
-  const author = proposal.author || proposal.owner || "";
-  const labels = resolvePostAuthorLabels(author, {
-    authorDisplay: proposal.authorDisplay,
-    isOwnLocalPost: proposal.isOwnLocalPost,
-  });
-  const timeLabel = formatTimeAgo(proposal.createdAt || proposal.ts);
-  const state = tally.state || proposal.state || "open";
-  const diffHtml = proposal.diffText ? renderProposalDiff(proposal.diffText) : "";
-
-  main.innerHTML = `
-    <div class="proposal-detail">
-      <div style="margin-bottom: 1rem;">
-        <a href="#/c/${encodeURIComponent(commId)}?tab=governance" class="back-link">← Voltar para Governança de ${escapeHtml(commTitle)}</a>
-      </div>
-      ${renderProposalArticle(proposal, labels, timeLabel, state, diffHtml)}
-      ${renderProposalTally(tally, proposal)}
-      ${renderProposalVotingBox(proposal, tally, opts)}
-      ${renderProposalVotesList(tally)}
-    </div>`;
-}
-
-export function renderProposalDiff(diffText) {
-  if (!diffText) return "";
-  return `
-    <div style="margin-top: 1.5rem;">
-      <h4 style="margin: 0 0 0.5rem; display:flex; align-items:center; gap:6px;">
-        <span>📝</span> Patch proposto (Diff unificado)
-      </h4>
-      ${renderUnifiedDiffHtml(diffText)}
-    </div>`;
-}
-
-export function renderProposalTally(tally, _proposal) {
-  const total = tally.totalEligible || 0;
-  const pctYes = total > 0 ? Math.round((tally.yes / total) * 100) : 0;
-  const pctNo = total > 0 ? Math.round((tally.no / total) * 100) : 0;
-  const pctAbstain = total > 0 ? Math.round((tally.abstain / total) * 100) : 0;
-
-  return `
-    <div class="tally-container card">
-      <h3 style="margin: 0 0 0.5rem;">📊 Apuração de Votos (1 membro = 1 voto)</h3>
-      <div class="tally-bar">
-        <div class="tally-segment tally-yes" style="width: ${pctYes}%" title="Sim: ${pctYes}%"></div>
-        <div class="tally-segment tally-no" style="width: ${pctNo}%" title="Não: ${pctNo}%"></div>
-        <div class="tally-segment tally-abstain" style="width: ${pctAbstain}%" title="Abstenção: ${pctAbstain}%"></div>
-      </div>
-      <div class="tally-stats-row">
-        <span>🟢 <strong>Sim:</strong> ${tally.yes} (${pctYes}%)</span>
-        <span>🔴 <strong>Não:</strong> ${tally.no} (${pctNo}%)</span>
-        <span>⚪ <strong>Abstenção:</strong> ${tally.abstain} (${pctAbstain}%)</span>
-        <span>👥 <strong>Total apurado:</strong> ${total}</span>
-        ${tally.ineligibleCount > 0 ? `<span>⚠️ <strong>Descartados pós-corte:</strong> ${tally.ineligibleCount}</span>` : ""}
-      </div>
-    </div>`;
-}
-
-function renderProposalVoterWarning(isMember, isEligible) {
-  if (!isMember) {
-    return `<div class="banner-warning">⚠️ Você ainda não é membro desta comunidade. Membresia obtida após a abertura não confere voto nesta proposta (marco de corte anti-brigading).</div>`;
-  }
-  if (!isEligible) {
-    return `<div class="banner-warning">⚠️ <strong>Atenção ao marco de corte:</strong> Você aderiu à comunidade após a abertura desta proposta. Seu voto será gravado e visível publicamente, mas <strong>não será computado</strong> no resultado oficial (regra canônica anti-brigading).</div>`;
-  }
-  return "";
-}
-
-export function renderProposalVotingBox(proposal, tally, { userVote, isEligible, isMember, userAddress }) {
-  const state = tally.state || proposal.state || "open";
-  if (state !== "open") {
-    return `<div class="card" style="padding: 1.25rem; text-align: center; margin-bottom: 1.25rem;"><p class="desc" style="margin:0;">🔒 Esta votação está encerrada (${renderProposalStatusBadge(state)}).</p></div>`;
-  }
-  if (!userAddress) {
-    return `<div class="banner-info">ℹ️ Para votar nesta proposta, você precisa estar conectado à sua conta Vox local.</div>`;
-  }
-  const currentChoice = userVote ? gov.normalizeVoteChoice(userVote.choice) : "";
-  const choiceHint = currentChoice ? `<br><strong>Seu voto atual:</strong> ${currentChoice.toUpperCase()} (você pode alterar até o encerramento).` : "";
-  return `
-    <div class="card" style="padding: 1.25rem; margin-bottom: 1.25rem;">
-      <h3 style="margin-top: 0;">🗳️ Registrar seu voto</h3>
-      ${renderProposalVoterWarning(isMember, isEligible)}
-      <p class="desc" style="font-size: 0.85rem; margin-bottom: 1rem;">
-        🛡️ Cada membro tem peso idêntico (1×). Seu voto será assinado localmente com sua chave ECDSA e propagado para os pares.
-        ${choiceHint}
-      </p>
-      <div class="vote-action-buttons">
-        <button class="vote-btn vote-btn-yes ${currentChoice === "yes" ? "selected" : ""}" data-choice="yes">✓ Sim (Aprovar)</button>
-        <button class="vote-btn vote-btn-no ${currentChoice === "no" ? "selected" : ""}" data-choice="no">✗ Não (Rejeitar)</button>
-        <button class="vote-btn vote-btn-abstain ${currentChoice === "abstain" ? "selected" : ""}" data-choice="abstain">○ Abstenção</button>
-      </div>
-    </div>`;
-}
-
-function renderVoteRow(v) {
-  const labels = resolvePostAuthorLabels(v.author, {
-    authorDisplay: v.authorDisplay,
-    isOwnLocalPost: v.isOwnLocalPost,
-  });
-  const choiceLabels = { yes: "Sim", no: "Não", abstain: "Abstenção" };
-  const choiceColors = { yes: "#10b981", no: "#ef4444", abstain: "#9ca3af" };
-  const choiceText = choiceLabels[v.choice] || v.choice;
-  const choiceColor = choiceColors[v.choice] || "var(--text)";
-  const choiceBadge = `<span class="pill" style="color:${choiceColor}; border-color:${choiceColor};">${escapeHtml(choiceText)}</span>`;
-  const statusCol = v.eligible
-    ? `<span style="color:#10b981;">✓ Computado</span>`
-    : `<span style="color:#f59e0b;" title="${escapeHtml(v.reason)}">⚠️ Não computado (${escapeHtml(v.reason)})</span>`;
-
-  return `
-    <tr>
-      <td><a href="#/u/${encodeURIComponent(v.author)}">${escapeHtml(labels.authorDisplay)}</a></td>
-      <td>${choiceBadge}</td>
-      <td>${statusCol}</td>
-      <td style="color:var(--muted);">${escapeHtml(formatTimeAgo(v.ts))}</td>
-    </tr>`;
-}
-
-export function renderProposalVotesList(tally) {
-  const votes = tally.votesDetail || [];
-  if (!votes.length) return "";
-  const rows = votes.map(renderVoteRow).join("");
-  return `
-    <div class="card" style="padding: 1.25rem;">
-      <h4 style="margin: 0 0 0.75rem;">📋 Transparência de Votos (${votes.length})</h4>
-      <table class="votes-table">
-        <thead><tr><th>Eleitor</th><th>Voto</th><th>Status</th><th>Quando</th></tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>`;
 }
 
 

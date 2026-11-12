@@ -24,6 +24,7 @@ import { applySupporterMode, normalizeStorageCommitment } from "../supporter-mod
 import { escapeHtml } from "../render/util.js";
 import { openOAuthEnrichModal } from "./onboarding.js";
 import { getActiveUser, makeShellProps } from "./context.js";
+import { bindInboxBackupSection, renderInboxBackupSection } from "./inbox-backup-ui.js";
 
 function getChecked(id, defaultValue = false) {
   const el = document.getElementById(id);
@@ -64,6 +65,12 @@ function readNetworkFormValues() {
   };
 }
 
+/**
+ * Liga o botão do modo Apoiador: alterna o modo, ajusta disco e banda (`applySupporterMode`), corta o
+ * cache ao novo disco e redesenha a tela.
+ *
+ * @returns {void}
+ */
 export function bindSupporterToggle() {
   document.getElementById("btn-supporter-toggle")?.addEventListener("click", (e) => {
     const turnOn = e.currentTarget.dataset.on !== "1";
@@ -92,6 +99,12 @@ function savePeerFormValues(v) {
   return saved;
 }
 
+/**
+ * Liga o formulário de rede: grava sinalização, relays, TURN, preferências do nó (com disco e banda
+ * ajustados ao modo por `normalizeStorageCommitment`), visibilidade na malha e webhooks POSSE.
+ *
+ * @returns {void}
+ */
 export function bindNetworkSettingsForm() {
   const form = document.getElementById("form-network-settings");
   if (!form) return;
@@ -142,12 +155,7 @@ function bindModerationExportImport() {
   document.getElementById("btn-export-moderation")?.addEventListener("click", () => {
     const bundle = mod.exportModerationBundle();
     const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "vox-moderacao.json";
-    a.click();
-    URL.revokeObjectURL(url);
+    share.downloadBlob(blob, "vox-moderacao.json");
     share.showToast("Regras de moderação exportadas!");
   });
 
@@ -178,12 +186,7 @@ function bindContributionAttestationButton() {
       }
       const signed = out.signed;
       const blob = new Blob([JSON.stringify(signed, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = contributionAttestation.attestationDownloadFilename(signed.author, signed.ts);
-      a.click();
-      URL.revokeObjectURL(url);
+      share.downloadBlob(blob, contributionAttestation.attestationDownloadFilename(signed.author, signed.ts));
       share.showToast("Comprovante baixado — guarde offline; nada foi enviado à rede.");
     } catch (err) {
       share.showToast(`Erro ao gerar comprovante: ${err.message}`, "error");
@@ -270,6 +273,8 @@ export async function showNetworkSettings() {
     posseWebhooks: posseDispatch.loadPosseWebhooks(),
     demoMode: mock.isDemoMode(),
   });
+  main.querySelector(".network-card")?.insertAdjacentHTML("afterend", renderInboxBackupSection());
+  bindInboxBackupSection(() => void showNetworkSettings());
 
   bindNetworkSettingsForm();
   bindSupporterToggle();

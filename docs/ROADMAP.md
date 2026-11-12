@@ -1,6 +1,6 @@
 # Roadmap — Vox
 
-> **Status:** canônico · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-09 (G1 em `main` até o PR #28; revisão de estado no PR #29; LAN-14 e LAN-21 fechados no PR #30; NET-01 verificado e brainstorm PM-01…46 no PR #31; PM-09 no PR #32; PM-45 no PR #33; adendo PM-47…64 no PR #34; PM-17 e PM-50 parcial no PR #35; PM-10 e ruleset PM-62 em 09/11; PM-69, PM-78, PM-80, PM-81 e PM-82 em 10/11; correção da forma assinada no PR #49; revisão e PM-84…86 abertos em 10/11; PM-84 e PM-86…89 fechados em 10/11; revisão DevSecOps com PM-90…95 em 10/11; candidatas da síntese da praça de colunas em 10/11)
+> **Status:** canônico · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-12 (G1 em `main` até o PR #28; revisão de estado no PR #29; LAN-14 e LAN-21 fechados no PR #30; NET-01 verificado e brainstorm PM-01…46 no PR #31; PM-09 no PR #32; PM-45 no PR #33; adendo PM-47…64 no PR #34; PM-17 e PM-50 parcial no PR #35; PM-10 e ruleset PM-62 em 09/11; PM-69, PM-78, PM-80, PM-81 e PM-82 em 10/11; correção da forma assinada no PR #49; revisão e PM-84…86 abertos em 10/11; PM-84 e PM-86…89 fechados em 10/11; revisão DevSecOps com PM-90…95 em 10/11; candidatas da síntese da praça de colunas em 10/11; calendário 2027, PM-99…109 abertos e PM-01, PM-13, PM-18 e PM-23 promovidos em 12/11)
 > **Único plano vivo e único lugar com caixas `[ ]`** ([ADR-017](./adr/017-consolidacao-roadmap-unico.md)). Substitui o checklist do [dossiê N=25 §3.6](./archive/dossie-geral-inventario-master-breakdown-2026-11.md#36-checklist-master-vivo-n25).
 > Estado do produto: [FEATURES.md](./FEATURES.md) · Infra e riscos: [INFRA-CUSTOS.md](./INFRA-CUSTOS.md) · Teses: [direcionamento-crescimento-rede-2026-11.md](./strategy/direcionamento-crescimento-rede-2026-11.md)
 
@@ -16,6 +16,35 @@ O cliente está maduro: feed Social/Cívico, comunidades, governança, Feira, Pi
 - o piloto humano (V-P09) não começou;
 - para abrir ao público faltam o parecer jurídico, a resposta a conteúdo grave e bus factor ≥2 — ver [Rumo à rede pública](#rumo-à-rede-pública-lan).
 
+## Calendário 2027
+
+Ideias, triagem e o porquê da ordem: [brainstorm do ano de 2027](./brainstorms/brainstorm-roadmap-2027.md). As datas dependem de gente (parecer, piloto, segunda pessoa, stewards), não de código. Por isso cada trimestre tem uma **data de desistência**, que troca o plano em vez de empurrar a data. O calendário só cita IDs; as caixas continuam nas tabelas abaixo.
+
+**Norte de dezembro de 2027 (piso):**
+- 1 coluna de pé;
+- sinalização em 2 caminhos que não dependem só do mantenedor;
+- bus factor 2;
+- parecer em mãos e G2 aberto;
+- custo publicado em todo relatório trimestral.
+
+A meta e a forma de medir estão no [brainstorm §1](./brainstorms/brainstorm-roadmap-2027.md#1-o-norte-de-dezembro-de-2027).
+
+**Regras do ano:**
+- no máximo duas frentes de código ao mesmo tempo, com mutex de arquivos;
+- tela nova paga os próprios bytes, e nada grande entra antes do PM-01;
+- código congelado nas 4 primeiras semanas de cada onda.
+
+| Quando | Tema | Marco | Itens | Data de desistência |
+|---|---|---|---|---|
+| **Dez/2026** | Fechar e semear | NLnet submetido até 02/01 | PRs #92, #94 (PM-83) e #101 · LAN-36 · LAN-01 (briefing enviado) · REV-01 · REV-07 · REV-22 · LAN-28 · PM-99 · PM-100 · PM-01 começa · convites do PIL-01 e do LAN-30 | — |
+| **T1 · jan–mar** | Piloto na temporada de assembleias | **G1** e 4 semanas de piloto | PM-23 · PM-18 · LAN-17 · LAN-30 (parte do G1) · PM-76 · PIL-01…04 · PM-73 · CODE-02 · REV-05 · DOC-04 · PM-108 · spec do PM-101 | **31/01:** sem associação ou sem segunda pessoa, o piloto espera e o T1 adianta REV-10, NET-02 e PM-01. **28/02:** sem parecer contratado (LAN-01), o G2 vai para o T3 |
+| **T2 · abr–jun** | Do piloto ao beta | **G2** | REV-12 → LAN-02, LAN-03, REV-20, LAN-04, LAN-13, REV-23 · LAN-15 · LAN-24 · REV-10 · NET-02 · LAN-07 · REV-21 · REV-14 · REV-11 · REV-09 · REV-18 · PIL-05 · PM-13 · PM-101 · PM-102 · PM-104 · PM-105 · PM-96 · PM-70 · EXP-05 · PM-103 (1º relatório) | **30/04:** Nostr fraco no PM-18, o keepalive do Render fica e o REV-01 vira o caminho principal. **30/06:** sem 2 pessoas no plantão (LAN-04), o G2 não abre |
+| **T3 · jul–set** | Beta por convite | 5–10 comunidades, até ~300 pessoas | PM-97 para todos · PM-71 · PM-72 · PM-74 · PM-75 · PM-79 · REV-15 · REV-04 · NET-04 · LAN-09 · LAN-18 (com NLnet ou parceiro) · LAN-19 · LAN-22 · LAN-23 · LAN-25 · LAN-26 · REV-02 · REV-16 · PM-106 · PM-107 | **30/09:** sem steward de fora (NET-04), o beta não passa da onda 1 |
+| **T4 · out–dez** | Decidir o público e preparar 2028 | **LAN-29 → G3**, com go ou no-go escrito | LAN-30 completo · LAN-31 · LAN-32 · LAN-05 · LAN-06 · LAN-33 · LAN-34 · LAN-35 · PM-77 · NET-05 · EXP-03 · EXP-04 · PM-109 · PM-103 (retrospectiva anual e plano 2028) | **15/11:** se o go sair depois disso, a onda 2 começa em fev/2028 |
+
+- **PM-79 e PM-96** estão na tabela do G1, mas aqui aparecem no T3 e no T2. Pelo PM-76, o piloto roda com DM só online e sem login social. A troca depende do mantenedor ([brainstorm §8](./brainstorms/brainstorm-roadmap-2027.md#8-decisões-que-dependem-do-mantenedor)).
+- **Fora de 2027:** EXP-02, REV-08 (a menos que apareça um parceiro público), F7 e F8 (não haverá enquete cívica pública com peso), PM-39, PM-47, PM-49 e PM-56. Motivos no [brainstorm §7](./brainstorms/brainstorm-roadmap-2027.md#7-fora-de-2027-corte-deliberado).
+
 ## Agora (P0)
 
 | | ID | Tipo | Item | Evidência / nota |
@@ -30,6 +59,10 @@ O cliente está maduro: feed Social/Cívico, comunidades, governança, Feira, Pi
 | [ ] | **PIL-03** | ops-humano | Retrospectiva preenchida | idem |
 | [ ] | **REV-07** | doc | ✅ cota confirmada (vitalícia, por carteira e por sub-rede — [pesquisa V1](./research/pesquisa-deep-research-2026-11.md)); falta a decisão de política, que é o **REV-11**. **Confirmar o modelo de cota do Turbo** (`https://upload.ardrive.io/info` em 2026-11-07: `maxItemBytes` 107520 (105 KiB), `lifetimeBytes` 10485760 e `ipBytes` 10485760 (≈10 MiB)) e decidir a política: o que vai para o permaweb, o que fica só na malha, e quem paga o crédito | [INFRA-CUSTOS §4](./INFRA-CUSTOS.md#4-pontos-únicos-de-falha-ordem-de-gravidade), Prompt 2 do brainstorm |
 | [ ] | **DOC-04** | doc | Re-auditoria de copy honesta, incluindo "Capacidades" do README × [FEATURES.md](./FEATURES.md) (Webxdc já corrigido para "laboratório") | [honest-copy-audit](./audits/honest-copy-audit-2026-10-23.md) · 🚧 **parcial (PR #39, 09/11):** README do vox alinhado com o FEATURES (Capacidades e arquitetura). **Falta:** a copy da interface (`client/js/render/*`, Voxpedia, onboarding) contra o FEATURES |
+| [ ] | **PM-99** | code | **Teste de dois navegadores no CI:** dois Chromium sem tela se conectam pela malha, uma rodada por Nostr e outra por WebSocket, e trocam um post assinado; se não conectarem, o CI quebra. Transforma "a malha funciona" em evidência a cada PR | 📅 dez/2026 · prova o REV-09 antes do G1 · [brainstorm 2027 §3 C](./brainstorms/brainstorm-roadmap-2027.md#c-rede-sem-dono) |
+| [ ] | **PM-23** | code | **Modo assembleia** (cunha do piloto, decisão de 10/11): pauta, lista de presença assinada, votação com prazo (a governança já existe) e ata assinada exportável | 📅 T1/2027, antes do PIL-02 · spec antes do código · [plano de 90 dias](./strategy/estrategia-5-pontos-fracos-90-dias-2026-11.md) · [brainstorm de melhorias](./brainstorms/brainstorm-backlog-proximas-melhorias-2026-11.md) |
+| [ ] | **PM-18** | code | **Medição de campo da sinalização:** contadores locais em `#/status` (tentativas e sucessos por caminho, WebSocket ou Nostr, e tempo até conectar), exportáveis para a retrospectiva, sem telemetria central | 📅 T1/2027, pronto para o piloto · decide se o keepalive do REV-09 se aposenta (desistência em 30/04) |
+| [ ] | **PM-01** | code | **Dieta do shell:** o SW guarda na instalação só o núcleo (feed, comunidade, compor, rede, DM); telas raras carregam sob demanda. DoD: o teto de `tests/shell-reachability.test.js` baixa com o que saiu e o núcleo abre offline | 📅 começa em dez/2026 · pré-condição de qualquer feature grande de 2027 · NLnet M7 (meta de −20% do shell) |
 
 ## Próximo (P1)
 
@@ -55,6 +88,14 @@ O cliente está maduro: feed Social/Cívico, comunidades, governança, Feira, Pi
 | [ ] | **PM-73** | code | **"Testar no seu celular"** (trabalho voluntário 1): roteiro guiado de 5 min com relatório automático (passos, modelo, navegador) | [voluntariado](./product/voluntariado-tres-trabalhos.md) · REV-14 |
 | [ ] | **PM-74** | code | **Replicação por grau v0:** teto de 500 MB, subcota de vídeo, grau por salto sem expor o grafo, visibilidade e moderação acima do grau | [replicação por grau](./specs/replicacao-por-grau-v0.md) · depende do PM-71 e PM-72 |
 | [ ] | **PM-75** | code | **Métrica de disponibilidade:** % de posts acessíveis com o autor offline em 1 h, 6 h e 24 h | [replicação por grau](./specs/replicacao-por-grau-v0.md) · NLnet M2 |
+| [ ] | **PM-100** | code | **Modo ensaio:** conta de teste que não sai do aparelho (fora do gossip, da memória central, do Arweave e do POSSE), com faixa "Ensaio" sempre visível e botão para apagar tudo. Evita a sujeira que a gênese teve de purgar (PRs #98 e #102) | 📅 dez/2026 · DoD: teste em que o post de ensaio não aparece em nenhuma saída de rede · [brainstorm 2027 §3 F](./brainstorms/brainstorm-roadmap-2027.md#f-identidade-e-chaves) |
+| [ ] | **PM-13** | code | **Revogar e trocar a chave:** uma chave de recuperação, impressa no cartão QR do REV-14, assina "esta chave foi substituída" | 📅 T2/2027 · base do PM-101 e da recuperação pela comunidade · revisão no LAN-18 |
+| [ ] | **PM-101** | doc+code | **Lápide de conta:** o dono assina "esta conta foi encerrada", e aparelhos, memória central e relay escondem o perfil e os posts e param de repassar. Com o cartão do PM-13 vale também para chave perdida; sem chave e sem cartão não há como, e o PM-104 diz isso | 📅 spec no T1, código no T2 · hoje só existe lápide de post · [brainstorm 2027 §3 F](./brainstorms/brainstorm-roadmap-2027.md#f-identidade-e-chaves) |
+| [ ] | **PM-102** | code | **Fechar a convivência v1:** item criado depois de `SIGV2_FROM` só vale assinado em v2, e o v1 fica para o legado. Regra e margem na spec do formato ([ADR-021 §2.6](./adr/021-integridade-na-entrada-forma-assinada.md)) | 📅 T2/2027, antes do LAN-18 · DoD: teste em que item novo em v1 é recusado |
+| [ ] | **PM-103** | doc | **Relatório trimestral "Estado da praça":** custo do mês em R$, incidentes, decisões de moderação agregadas, disponibilidade, o que travou e as datas de desistência do [calendário](#calendário-2027). A edição de dezembro é a retrospectiva anual e o plano de 2028 | 📅 1º em abr/2027 (cobre o T1), depois jul, out e dez · base do REV-20 · revisa o calendário no mesmo PR |
+| [ ] | **PM-104** | doc | **Garantia da praça:** página curta (Voxpedia e repositório) que diz o que ninguém pode fazer com a sua conta, nem o projeto (apagar de fora, ler DM), e o que cada um pode fazer (ocultar no aparelho, na comunidade e no PWA oficial pela lista do LAN-13) | 📅 T2/2027, depois do REV-12 · [brainstorm 2027 §3 B](./brainstorms/brainstorm-roadmap-2027.md#b-jurídico-e-confiança-pública) |
+| [ ] | **PM-105** | code | **Caminho de volta do POSSE:** o link levado ao WhatsApp, ao X ou ao Bluesky abre no Vox o original, com assinatura conferida e a conversa, sem pedir conta | 📅 T2/2027 · junta o PM-54 (🚧) e o PM-55 · paga os próprios bytes · [brainstorm 2027 §3 E](./brainstorms/brainstorm-roadmap-2027.md#e-circulação-honesta-da-conversa-sobre-memes) |
+| [ ] | **PM-108** | doc | **Editais brasileiros:** tabela de editais de tecnologia social, extensão e inovação cívica (prazo, valor, elegibilidade sem CNPJ) e a decisão de onde se candidatar | 📅 T1/2027 · plano B do LAN-36 · alimenta o LAN-32 |
 
 ## Depois (P2)
 
@@ -69,6 +110,9 @@ O cliente está maduro: feed Social/Cívico, comunidades, governança, Feira, Pi
 | [ ] | **REV-15** | code | **F6 redesenhada:** guardião na tomada (app aberto, Wake Lock, só no Wi-Fi); `periodicSync` só como complemento no Chromium | [pesquisa V7/V8](./research/pesquisa-deep-research-2026-11.md) |
 | [ ] | **REV-23** | code | **Fora do G1: piloto só 18+ ([ADR-020](./adr/020-postura-de-operacao-do-piloto-g1.md), PM-67); volta antes do G3.** **Padrões seguros por idade sem coletar dado (B6):** faixa etária autodeclarada só no aparelho; abaixo de 18 sem DM de desconhecidos, Pix Zap e Feira geolocalizada; **abaixo de 16, conta vinculada a um responsável** (exigência do ECA Digital) por aval de chave via QR. Depois do REV-12 | [complementar B6](./research/pesquisa-complementar-2026-11.md#4-brainstorm-b1b10-a-partir-dos-achados) |
 | [ ] | **REV-16** | doc | Rodar de novo o Prompt 3 **com os arquivos anexados** (o Gemini não abriu os links do repo) e só então escrever as specs F1–F10 | [pesquisa — Como ler](./research/pesquisa-deep-research-2026-11.md#como-ler) |
+| [ ] | **PM-106** | doc | **Árvore do repasse (spec):** mostrar quem criou o post e por quem ele passou até você, só com os saltos que você já vê, sem expor o grafo; análise de privacidade antes de qualquer código | 📅 spec no T3/2027; o código vira outra linha se a spec for aceita · base: `client/js/render/repost-cite.js` |
+| [ ] | **PM-107** | ops-humano | **Turma de extensão (coluna 8):** um professor parceiro, um pacote de issues e um nó por turma | 📅 semestre 2027.2 · DoD: ≥3 PRs de fora em `main` e 1 nó rodando · [primeiras tarefas](./process/primeiras-tarefas-contribuidor.md) |
+| [ ] | **PM-109** | doc | **Preparar 2028:** o que o modo eleitoral (REV-24) já cobre numa eleição municipal, o que falta e a revisão marcada para depois de 05/03/2028 (instruções do TSE) | 📅 T4/2027 · período eleitoral a partir de 16/08/2028 |
 
 ## Rumo à rede pública (LAN)
 
@@ -107,6 +151,8 @@ Também exige: REV-13 · REV-19 + (REV-01 ou REV-09) · NET-01 ou waiver · PIL-
 | [x] | **PM-94** | code | **Autorização no relay e no nó local:** escrita de cofre e remoção na caixa autorizadas pelo dono; conferir `Origin`/`Host` e exigir `application/json` | ✅ SW v7.65 ([ADR-027](./adr/027-autorizacao-no-relay-dono-e-origem.md)): cofre com prova do dono derivada da Senha Soberana (`ownerHash` no servidor); DM com chave de apagar cifrada para o destinatário (`X-Vox-Delete-Token`); `relay/request_guard.py` e `NodeRequestGuard` (Host, Origin, `application/json`, limite por IP no relay Python) · `relay/test_request_guard.py`. Ficam de fora: dono para memória central e relay cego (conteúdo já conferido por assinatura) |
 | [x] | **PM-95** | code | **Pipeline de segurança:** CodeQL (JS e Python), Dependabot (npm, pip, actions), actions fixadas por SHA, `permissions: contents: read` no `ci.yml`, padrão de JWK privada na auditoria de segredos, checks `strict`, CODEOWNERS com aprovação em `local-account.js`, `oauth-vault.js`, `crypto-dm.js` e `relay/` | ✅ `codeql.yml` (actions, JS, Python, C#; PR, `main` e semanal), `dependabot.yml` (npm, Docker, actions; o relay não tem pip), actions por SHA com teste que quebra com tag ([DEPENDENCIAS §5](./DEPENDENCIAS.md)), `permissions: contents: read` no `ci.yml`, `scripts/secrets-audit.mjs` (PEM e JWK privada), ruleset `strict`, `.github/CODEOWNERS`. **Fica para quando houver segunda pessoa revisora:** aprovação obrigatória e revisão de code owner (o mantenedor não aprova o próprio PR) |
 | [ ] | **PM-96** | code | **Sessão do Bluesky cifrada no aparelho:** a chave DPoP e os tokens da sessão OAuth (`bsky-oauth.js`) passam pela mesma chave do aparelho do PM-93. Médio | [ADR-026](./adr/026-chaves-em-repouso-trava-depois-do-backup.md) |
+| [ ] | **PM-97** | code | **Praça de colunas — aviso assinado e lotes cívicos** atrás da flag `vox.lab.aviso`: ✅ lotes A–D (PRs #77, #78, #80, #81), ✅ chamada de ação (#89), ✅ competências só no aparelho (#90), ✅ termo de convivência e pedido de mediação (#91); 🚧 sorteio cívico (#92, aberto); lotes 5–10 a especificar. Ligar para todos só depois do piloto G1 (critério de abandono na spec) | [aviso-assinado-v0](./specs/aviso-assinado-v0.md) |
+| [x] | **PM-98** | doc | **Norma de documentação com checagem no CI:** cabeçalho e JSDoc completo em todo export, documentação técnica atrelada a cada mudança, links e órfãos; dívida antiga em catraca (`npm run audit:docs`) | [documentacao.md](./process/documentacao.md) |
 | [ ] | **PM-76** | ops-humano | **Confirmar G1 sem relay completo público** (DM só online; cofre e login social desligados no piloto) | [ADR-020](./adr/020-postura-de-operacao-do-piloto-g1.md) item 5 |
 
 ### G2 — beta por convite
@@ -161,7 +207,8 @@ Também exige: REV-18 · DOC-04 · REV-02 · REV-04 (ou LAN-21 cobrindo DM offli
 
 ## Candidatas (sem caixa até ganharem DoD e responsável)
 
-Da [síntese de 10/11 — a praça de colunas](./brainstorms/brainstorm-sintese-praca-de-colunas-2026-11-10.md): seis peças comuns aos nichos, em ordem candidata — aviso assinado (Conferir, Ciente, Vou / Talvez), mural, ata com resumo falado, modelos de grupo (`kit-genesis.js`), missão, livro-caixa, círculo de confiança. Cada uma precisa de spec antes de virar caixa; a do aviso assinado está proposta em [aviso-assinado-v0](./specs/aviso-assinado-v0.md).
+Da [síntese de 10/11 — a praça de colunas](./brainstorms/brainstorm-sintese-praca-de-colunas-2026-11-10.md): seis peças comuns aos nichos, em ordem candidata — aviso assinado (Conferir, Ciente, Vou / Talvez), mural, ata com resumo falado, modelos de grupo (`kit-genesis.js`), missão, livro-caixa, círculo de confiança. Cada uma precisa de spec antes de virar caixa; a do aviso assinado virou o **PM-97** ([aviso-assinado-v0](./specs/aviso-assinado-v0.md)).
+Do [brainstorm do ano de 2027](./brainstorms/brainstorm-roadmap-2027.md#4-triagem-das-ideias-novas): estúdio de cartões no compositor (só se o PM-01 abrir espaço), pauta municipal pelo SAPL (pesquisa no T4/2027) e recuperação pela comunidade (spec depois do LAN-18).
 Do [brainstorm de autossustento](./brainstorms/brainstorm-autossustento-10-features-2026-11.md). Pesquisar antes com os 3 prompts do mesmo doc.
 Mais 66 ideias (PM-01…PM-66: dieta do shell, segurança, hardening v3.2, pacote de destravamento jurídico, assembleia, Nostr, contribuidores), com a revisão de estado de 09/11: [brainstorm de próximas melhorias](./brainstorms/brainstorm-backlog-proximas-melhorias-2026-11.md).
 
@@ -213,3 +260,4 @@ Itens fechados de Agora, Próximo e Depois. Nas tabelas dos portões (LAN), a li
 2. Ao fechar: marque `[x]` **com** a evidência (PR, URL, ata). Em Agora, Próximo e Depois, mova a linha para *Concluído*; nos portões LAN, deixe-a no portão. Parcial = `[ ]` com 🚧 e o que falta.
 3. Ideia nova vai para um brainstorm ou para *Candidatas*; só ganha caixa quando tiver DoD.
 4. Mudou prioridade? Mova a linha entre Agora, Próximo e Depois no mesmo PR que justifica a mudança.
+5. Calendário: a cada relatório trimestral (PM-103), revise o [Calendário 2027](#calendário-2027) no mesmo PR. Diga o que andou, o que escorregou e qual data de desistência disparou. Linha com prazo leva 📅 com o trimestre.

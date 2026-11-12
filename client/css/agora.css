@@ -34,11 +34,12 @@
   --sa-on-primary-fixed: #00201e;
   --sa-secondary: #e7c26b;
   --sa-secondary-container: #6e5301;
+  --sa-secondary-fixed-dim: #e7c26b;
   --sa-on-secondary: #3e2e00;
   --sa-tertiary: #69dba9;
   --sa-tertiary-container: #39b081;
   --sa-on-tertiary: #003825;
-  --sa-error: var(--sa-error);
+  --sa-error: #ffb4ab;
   --sa-error-container: #93000a;
   --sa-terracotta: #e8907e;
   --sa-gradient-sovereign: linear-gradient(90deg, #39b081 0%, #4baca5 55%, #78d6cf 100%);
@@ -256,11 +257,7 @@ body,
 .agora-ui h2,
 .agora-ui h3,
 .agora-ui .topic-title,
-.agora-ui .post-title,
-.agora-ui .profile-grid-name,
-.agora-ui .community-title,
-.agora-ui .vote-header-title,
-.agora-ui .deliberation-title {
+.agora-ui .profile-grid-name {
   font-family: var(--font-epigraphic);
   color: var(--travertine-linen);
   letter-spacing: -0.01em;
@@ -268,8 +265,7 @@ body,
 
 .agora-mono,
 .agora-ui code,
-.agora-ui .post-handle,
-.agora-ui .meta .route-id {
+.agora-ui .post-handle {
   font-family: var(--font-mono);
   font-feature-settings: "tnum" 1, "zero" 1;
 }
@@ -368,10 +364,6 @@ body,
 
   .agora-ui .tab-item.active .tab-svg {
     color: currentColor;
-  }
-
-  .agora-ui .tab-item.active .tab-brand-mark {
-    filter: none;
   }
 
   .agora-ui .tab-item--secondary {
@@ -546,10 +538,6 @@ body,
   outline: none;
   border-color: var(--entablature-active);
   box-shadow: inset 0 -2px 0 var(--emerald-consensus);
-}
-
-.agora-topbar-vote {
-  margin-left: auto;
 }
 
 .agora-btn {
@@ -985,9 +973,20 @@ body,
   }
 }
 
+/* Nome de usuário (post, resposta, foto, perfil, comunidade) no amarelo da Ágora Soberana. */
+.agora-ui .post-author,
 .agora-ui .post-header-user strong,
-.agora-ui .post-author-name {
-  color: var(--travertine-linen);
+.agora-ui .post-author-name,
+.agora-ui .post-photo-caption-author,
+.agora-ui .profile-grid-name,
+.agora-ui .community-orkut-owner-name,
+.agora-ui .community-orkut-member-name {
+  color: var(--sa-secondary);
+}
+
+/* Sobre a foto o fundo é a imagem, não o tema: o amarelo claro vale nos dois modos. */
+.agora-ui .post-media-header-username {
+  color: var(--sa-secondary-fixed-dim);
 }
 
 .agora-ui .post-handle,
@@ -1015,20 +1014,12 @@ body,
   box-shadow: none;
 }
 
-.agora-ui .welcome-feed-hint {
-  background: rgba(231, 194, 107, 0.08);
-  border: 1px solid rgba(231, 194, 107, 0.3);
-  border-radius: var(--radius);
-}
-
 .agora-ui .story-ring {
   border-radius: var(--radius-lg);
 }
 
 /* Cards legados → monólitos planares */
 .agora-ui .card,
-.agora-ui .community-card,
-.agora-ui .dm-header-card,
 .agora-ui .people-result {
   background: var(--slate-deep);
   border: 1px solid var(--entablature-hairline);
@@ -1588,7 +1579,6 @@ body,
   font-weight: 500;
 }
 
-.agora-ui .profile-grid-stats .stat-num,
 .agora-ui .profile-grid-stats strong {
   font-family: var(--font-epigraphic);
   color: var(--travertine-linen);
@@ -1612,18 +1602,6 @@ body,
 
 .agora-ui .civic-highlight-item.is-locked:hover {
   opacity: 0.75;
-}
-
-.agora-ui .profile-civic-highlights-empty {
-  margin: 0;
-  font-size: 0.8125rem;
-  color: var(--muted);
-}
-
-.agora-ui .profile-tabs a.active,
-.agora-ui .profile-tab.active {
-  color: var(--emerald-bright);
-  box-shadow: inset 0 -2px 0 var(--emerald-consensus);
 }
 
 /* ── 10. Mensagens ── */
@@ -1768,20 +1746,6 @@ body,
   color: var(--travertine-muted);
 }
 
-.agora-ui .dm-list-item,
-.agora-ui .dm-conversation-item {
-  border-radius: 0;
-  border: none;
-  border-bottom: 1px solid var(--entablature-hairline);
-  background: transparent;
-}
-
-.agora-ui .dm-list-item:hover,
-.agora-ui .dm-conversation-item:hover {
-  background: var(--slate-deep);
-  box-shadow: inset 2px 0 0 var(--emerald-consensus);
-}
-
 /* Tablet: menu mais estreito e busca recolhida para não espremer a topbar */
 @media (min-width: 768px) and (max-width: 1099px) {
   :root {
@@ -1792,9 +1756,6 @@ body,
     display: none;
   }
 
-  .agora-topbar-vote {
-    margin-left: auto;
-  }
 }
 
 /* ── 11. Mobile (< 768px): topbar compacta + barra inferior com 5 primários + FAB Postar ── */
@@ -1816,7 +1777,6 @@ body,
   }
 
   .agora-search,
-  .agora-topbar-vote,
   .agora-identity-text {
     display: none;
   }
@@ -2022,22 +1982,8 @@ body,
 }
 
 .agora-pylon--teal { background: var(--sa-primary); }
-.agora-pylon--bronze { background: var(--sa-secondary); }
-.agora-pylon--muted { background: var(--sa-outline); }
-.agora-pylon--danger { background: var(--sa-terracotta); }
-
-.agora-presence-dot.is-idle {
-  background: var(--sa-outline);
-  box-shadow: none;
-}
 
 /* Selos de pedra (chips/badges) */
-.agora-stamps {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  margin: 0 0 0.75rem;
-}
 
 .agora-stamp,
 .agora-ui .agora-pill {
@@ -2075,11 +2021,6 @@ body,
   background: rgba(105, 219, 169, 0.1);
 }
 
-.agora-stamp--danger {
-  color: var(--sa-terracotta);
-  background: rgba(232, 144, 126, 0.12);
-}
-
 /* Topbar: chip de malha + ícones (escudo → saúde do nó, engrenagem → rede) */
 .agora-topbar {
   background: color-mix(in srgb, var(--sa-surface-low) 92%, transparent);
@@ -2098,7 +2039,6 @@ body,
   gap: 0.45rem;
   height: 30px;
   padding: 0 0.65rem;
-  margin-right: 0.35rem;
   border-radius: var(--radius-sm);
   background: rgba(105, 219, 169, 0.1);
   color: var(--sa-tertiary);
@@ -2291,12 +2231,6 @@ body,
   transition: background 0.15s ease, box-shadow 0.15s ease;
 }
 
-.agora-tablet--interactive:hover {
-  background: var(--sa-surface-high);
-  box-shadow: inset 2px 0 0 var(--sa-secondary);
-}
-
-.agora-tablet--accent { border-top: 2px solid var(--sa-primary-container); }
 .agora-tablet--bronze { border-top: 2px solid var(--sa-secondary); }
 
 .agora-tablet + .agora-tablet { margin-top: 1rem; }
@@ -2323,7 +2257,6 @@ body,
 }
 
 .agora-section-label--teal { color: var(--sa-primary); }
-.agora-section-label--muted { color: var(--sa-on-surface-variant); }
 
 .agora-section-title {
   margin: 0;
@@ -2340,28 +2273,6 @@ body,
 }
 
 /* Friso de entablamento (substitui <hr>) */
-.agora-frieze {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin: 1.75rem 0;
-  color: var(--sa-secondary);
-}
-
-.agora-frieze::before,
-.agora-frieze::after {
-  content: "";
-  flex: 1;
-  height: 3px;
-  border-top: 1px solid var(--sa-hairline);
-  border-bottom: 1px solid var(--sa-hairline);
-}
-
-.agora-frieze-glyph {
-  font-size: 0.625rem;
-  letter-spacing: 0.3em;
-  opacity: 0.85;
-}
 
 /* Grade de chave-valor (parâmetros, condições de consenso) */
 .agora-kv {
@@ -2454,13 +2365,9 @@ body,
 .agora-bar > span { display: block; height: 100%; background: var(--sa-tertiary); }
 .agora-bar > span.is-teal { background: var(--sa-primary); }
 .agora-bar > span.is-bronze { background: var(--sa-secondary); }
-.agora-bar > span.is-danger { background: var(--sa-terracotta); }
-.agora-bar > span.is-muted { background: var(--sa-outline); }
 
 /* Inscrições (inputs): linha de base em bronze, foco teal */
 .agora-ui .agora-inscription,
-.agora-ui .compose-form input[type="text"],
-.agora-ui .compose-form textarea,
 .agora-ui .compose-card input[type="text"],
 .agora-ui .compose-card textarea {
   background: var(--sa-surface-high);
@@ -2471,8 +2378,6 @@ body,
 }
 
 .agora-ui .agora-inscription:focus,
-.agora-ui .compose-form input[type="text"]:focus,
-.agora-ui .compose-form textarea:focus,
 .agora-ui .compose-card input[type="text"]:focus,
 .agora-ui .compose-card textarea:focus {
   outline: none;
@@ -2564,13 +2469,6 @@ body,
   .agora-topbar-tools { gap: 0; }
   .agora-topbar-icon--mobile { display: inline-flex; }
   .agora-topbar-tools .agora-topbar-icon[href="#/settings/network"] { display: none; }
-
-  .agora-mesh-chip {
-    height: 26px;
-    padding: 0 0.5rem;
-    font-size: 0.625rem;
-    margin-right: 0;
-  }
 
   .agora-circles { display: none !important; }
 
@@ -2691,11 +2589,6 @@ body,
   text-transform: uppercase;
 }
 
-.genesis-hero .agora-frieze {
-  max-width: 520px;
-  margin: 1.25rem auto 1.5rem;
-}
-
 .genesis-title {
   margin: 0;
   font-family: var(--font-epigraphic);
@@ -2707,25 +2600,6 @@ body,
 }
 
 .genesis-title span { color: var(--sa-primary); }
-
-.genesis-lead {
-  margin: 1.25rem auto 0;
-  max-width: 56ch;
-  font-size: 1.0625rem;
-  line-height: 1.7;
-  color: var(--sa-on-surface-variant);
-}
-
-.genesis-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 2rem;
-  align-items: start;
-}
-
-@media (min-width: 960px) {
-  .genesis-grid { grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); }
-}
 
 .genesis-panel {
   padding: 1.75rem;
@@ -2972,8 +2846,7 @@ body,
 
 .modal-dialog h2,
 .modal-dialog h3,
-.modal-card-title,
-.modal-card-heading {
+.modal-card-title {
   font-family: var(--font-epigraphic);
   font-weight: 600;
   color: var(--sa-on-surface);
@@ -3090,16 +2963,18 @@ body,
   font-weight: 600;
 }
 
+/* Linhas separadas por fio, não cartões (prompt 5 do Stitch). */
 .agora-ui .card.people-result.agora-citizen {
   display: grid;
   grid-template-columns: 64px minmax(0, 1fr) auto;
   gap: 1.25rem;
   align-items: center;
-  padding: 1.25rem 1.5rem;
-  margin: 0 0 0.75rem;
-  background: var(--sa-surface-container);
-  border: 1px solid var(--sa-hairline);
-  border-radius: var(--radius);
+  padding: 0.9rem 0.25rem;
+  margin: 0;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--sa-hairline);
+  border-radius: 0;
   transition: background 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -3124,9 +2999,9 @@ body,
   flex-wrap: wrap;
   align-items: baseline;
   gap: 0.25rem 0.5rem;
-  margin: 0 0 0.45rem;
+  margin: 0 0 0.25rem;
   font-family: var(--font-epigraphic);
-  font-size: 1.3rem;
+  font-size: 1.15rem;
   font-weight: 600;
 }
 
@@ -3144,13 +3019,6 @@ body,
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
-  margin-bottom: 0.5rem;
-}
-
-.agora-citizen-meta {
-  margin: 0;
-  font-size: 0.8125rem;
-  color: var(--sa-on-surface-variant);
 }
 
 .agora-citizen-actions {
@@ -3162,9 +3030,9 @@ body,
 
 @media (max-width: 767px) {
   .agora-ui .card.people-result.agora-citizen {
-    grid-template-columns: 48px minmax(0, 1fr);
-    padding: 1rem;
-    gap: 0.85rem;
+    grid-template-columns: 48px minmax(0, 1fr) auto;
+    padding: 0.75rem 0;
+    gap: 0.75rem;
   }
 
   .agora-citizen-avatar .avatar,
@@ -3175,12 +3043,8 @@ body,
     min-width: 48px;
   }
 
-  .agora-citizen-actions {
-    grid-column: 1 / -1;
-    justify-content: stretch;
-  }
-
-  .agora-citizen-actions .agora-btn { flex: 1; }
+  .agora-citizen-actions { flex-direction: column; align-items: stretch; gap: 0.35rem; }
+  .agora-citizen-actions .agora-btn { min-height: 36px; padding: 0.35rem 0.75rem; font-size: 0.6875rem; }
   .agora-ui .agora-directory-search { margin: 0 0 1rem; }
 }
 
@@ -3601,31 +3465,12 @@ body,
 
 .agora-ui .agora-composer .compose-textarea-seamless { min-height: 200px; resize: vertical; }
 
-.agora-ui .agora-composer label:not(.agora-field-label):not(.btn) {
+.agora-ui .agora-composer label:not(.agora-field-label):not(.btn):not(.guided-choice-card) {
   font-size: 0.75rem !important;
   font-weight: 700 !important;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--sa-on-surface-variant) !important;
-}
-
-.agora-ui .agora-composer .compose-advanced-drawer {
-  margin: 0 0 1.25rem;
-  padding: 0.85rem 1rem;
-  background: var(--sa-surface-high);
-  border-left: 2px solid var(--sa-outline-variant);
-  border-radius: var(--radius-sm);
-}
-
-.agora-ui .agora-composer .compose-advanced-drawer[open] { border-left-color: var(--sa-secondary); }
-
-.agora-ui .agora-composer .compose-advanced-summary {
-  cursor: pointer;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--sa-secondary);
 }
 
 .agora-ui .agora-composer .civic-tag-btn {
@@ -3647,14 +3492,6 @@ body,
   background: var(--sa-surface-lowest);
   border: 1px solid var(--sa-hairline);
   border-radius: var(--radius-sm);
-}
-
-.agora-signature-head {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
 }
 
 .agora-signature-body { margin: 0; font-size: 0.8125rem; line-height: 1.6; color: var(--sa-on-surface-variant); }
@@ -3993,7 +3830,6 @@ body,
 .compose-step-seg { height: 4px; border-radius: 2px; background: var(--sa-surface-highest); }
 .compose-step-seg.is-done { background: var(--sa-primary); }
 .compose-step-title { margin: 0; font-family: var(--font-epigraphic); font-size: clamp(1.6rem, 1.2rem + 1.5vw, 2.25rem); font-weight: 500; color: var(--sa-on-surface); }
-.compose-step-body { min-height: 180px; }
 .compose-step-lead { margin: 0 0 1rem; font-size: 0.9375rem; color: var(--sa-on-surface-variant); }
 .compose-step-error { margin: 0.5rem 0 0; font-size: 0.8125rem; color: var(--sa-error); }
 .compose-step-nav { margin-top: 1.75rem; }
@@ -4132,10 +3968,10 @@ body,
 :root {
   --sa-squircle: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 0C10 0 0 10 0 50s10 50 50 50 50-10 50-50S90 0 50 0z'/%3E%3C/svg%3E");
 }
-.avatar, .avatar-img, .avatar-wrap, .avatar-sm, .avatar-squircle, .story-avatar, .skeleton-avatar,
+.avatar, .avatar-img, .avatar-wrap, .avatar-sm, .story-avatar, .skeleton-avatar,
 .agora-citizen-avatar, .agora-community-avatar, .post-media-header-avatar,
-.profile-avatar-img, .profile-avatar-wrap, .profile-grid-avatar-wrap, .profile-grid-avatar-img, .profile-grid-avatar-fallback,
-.community-avatar-img, .community-avatar-fallback, .community-avatar-sm, .community-avatar-md, .community-avatar-lg,
+.profile-grid-avatar-wrap, .profile-grid-avatar-img, .profile-grid-avatar-fallback,
+.community-avatar-img, .community-avatar-fallback, .community-avatar-md, .community-avatar-lg,
 .community-vox-card-avatar-wrap, .community-vox-avatar-wrap, .welcome-avatars > * {
   border-radius: 0 !important;
   /* Borda e sombra viram um contorno quebrado nos cantos quando a máscara corta: fora. */
@@ -4147,6 +3983,154 @@ body,
 }
 
 /* Foto de perfil preenche o squircle inteiro (sem miolo menor dentro de um fundo). */
-.avatar-wrap > .avatar-img, .avatar-img, .profile-avatar-img, .profile-grid-avatar-img, .community-avatar-img {
+.avatar-wrap > .avatar-img, .avatar-img, .profile-grid-avatar-img, .community-avatar-img {
   object-fit: cover;
 }
+
+/* ── 34. Tópico (Stitch tela 6): trilha, estela, divisor ◆ da árvore, guias de nível e doca de resposta ── */
+.agora-breadcrumb {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem 0.5rem;
+  margin: 0 auto 1rem; max-width: var(--feed-max, 640px);
+  font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--sa-on-surface-variant);
+}
+.agora-wide .agora-breadcrumb { max-width: none; }
+.agora-breadcrumb a { color: var(--sa-on-surface-variant); text-decoration: none; }
+.agora-breadcrumb a:hover { color: var(--sa-primary); }
+.agora-breadcrumb-sep { color: var(--sa-outline); }
+.agora-breadcrumb [aria-current="page"] { color: var(--sa-secondary); }
+.agora-breadcrumb a, .agora-breadcrumb [aria-current="page"] { display: inline-flex; align-items: center; min-height: 32px; }
+
+.agora-stele {
+  position: relative; padding: 1.5rem;
+  background: var(--sa-surface-container); border: 1px solid var(--sa-hairline); border-radius: var(--radius);
+}
+.agora-stele::before {
+  content: ""; position: absolute; inset: 0 0 auto; height: 2px;
+  background: var(--sa-gradient-entablature); border-radius: var(--radius) var(--radius) 0 0; opacity: 0.85;
+}
+.topic-root.agora-thread-root { padding: 1.5rem; margin-bottom: 1.5rem; border: 1px solid var(--sa-hairline); }
+.topic-detail-title {
+  margin: 0 0 0.75rem; font-family: var(--font-epigraphic); font-weight: 500;
+  font-size: clamp(1.4rem, 1.1rem + 1.2vw, 2rem); line-height: 1.25; color: var(--sa-on-surface);
+}
+.post-topic-detail { margin: 0.75rem 0 0; font-size: 1rem; line-height: 1.6; }
+
+.agora-thread-bar { max-width: var(--feed-max, 640px); margin: 1.5rem auto 0.75rem; gap: 1rem; }
+.agora-ui .agora-thread-bar .agora-thread-divider {
+  display: flex; align-items: center; gap: 0.75rem; flex: 1; margin: 0;
+  font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em; color: var(--sa-secondary);
+}
+/* A doca já é o "Responder"; o botão da barra só fica quando não há doca (tópico encerrado mostra o selo). */
+.agora-ui main:has(.agora-reply-dock) .agora-thread-bar .btn-primary { display: none; }
+.agora-thread-divider::before, .agora-thread-divider::after { content: "◆"; font-size: 0.55rem; }
+.agora-thread-divider::after {
+  flex: 1; height: 1px; font-size: 0; background: linear-gradient(90deg, var(--sa-secondary), transparent);
+}
+
+.agora-ui .reply-item {
+  margin-left: calc(var(--reply-depth, 0) * min(1.25rem, 4vw));
+  background: transparent;
+}
+.agora-ui .reply-item[data-depth]:not([data-depth="0"])::before {
+  content: ""; position: absolute; top: 0; bottom: 0; left: -0.6rem; width: 1px; background: var(--sa-hairline);
+}
+.agora-ui .reply-item[data-depth]:not([data-depth="0"]):hover::before { background: var(--sa-secondary); }
+
+.agora-reply-dock {
+  position: sticky; bottom: 1rem; z-index: 5;
+  display: flex; align-items: center; gap: 0.75rem;
+  max-width: var(--feed-max, 640px); margin: 1.5rem auto 0; padding: 0.5rem 0.5rem 0.5rem 1rem;
+  background: color-mix(in srgb, var(--sa-surface-high) 94%, transparent);
+  border: 1px solid var(--sa-hairline); border-radius: var(--radius);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35); text-decoration: none; backdrop-filter: blur(8px);
+}
+.agora-reply-dock:hover { border-color: var(--sa-secondary); }
+.agora-reply-dock-field { flex: 1; color: var(--sa-on-surface-variant); font-size: 0.9375rem; }
+.agora-reply-dock-btn {
+  padding: 0.5rem 1rem; border-radius: var(--radius-sm);
+  background: var(--sa-primary-container); color: var(--on-gradient);
+  font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+}
+@media (max-width: 767px) {
+  /* Acima da barra inferior e do botão Postar, que sobe alguns pixels além dela. */
+  .agora-reply-dock { bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
+}
+
+/* ── 35. Página da comunidade (Stitch tela 7): números, pauta em destaque e coluna lateral ≥1100px ── */
+.community-vox-stats { margin: 0; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 640px) {
+  .community-vox-stats { gap: 0.5rem; }
+  .community-vox-stats .agora-stat { padding: 0.75rem; }
+  .community-vox-stats .agora-stat-value { font-size: 1.4rem; }
+  .community-vox-stats .agora-stat-hint { display: none; }
+}
+.community-vox-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.25rem; }
+.community-vox-main { display: flex; flex-direction: column; gap: 0.85rem; min-width: 0; }
+.community-vox-aside { display: none; }
+.community-vox-featured { margin: 0; }
+@media (min-width: 1100px) {
+  .community-vox-layout { grid-template-columns: minmax(0, 1fr) 300px; align-items: start; }
+  .community-vox-aside { display: flex; flex-direction: column; gap: 0.85rem; position: sticky; top: 1rem; }
+}
+
+/* ── 36. Pauta de governança (Stitch tela 8): estela da proposta + coluna de apuração e voto ── */
+.agora-proposal-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.25rem; }
+.agora-proposal-main, .agora-proposal-aside { display: flex; flex-direction: column; gap: 1rem; min-width: 0; }
+@media (min-width: 1100px) {
+  .agora-proposal-grid { grid-template-columns: minmax(0, 1fr) 340px; align-items: start; }
+  .agora-proposal-aside { position: sticky; top: 1rem; }
+}
+.agora-proposal-head .agora-deliberation-meta { margin-bottom: 0.25rem; }
+.agora-proposal-title {
+  margin: 1rem 0; font-family: var(--font-epigraphic); font-weight: 500;
+  font-size: clamp(1.5rem, 1.1rem + 1.4vw, 2.25rem); line-height: 1.2; color: var(--sa-on-surface);
+}
+.agora-proposal-author {
+  display: flex; flex-direction: column; gap: 0.35rem;
+  padding: 0.85rem 0; margin-bottom: 1rem; border-block: 1px solid var(--sa-hairline);
+}
+.agora-proposal-body { font-size: 1rem; line-height: 1.7; color: var(--sa-on-surface); }
+.proposal-bridge-bar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;
+  margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--sa-hairline);
+}
+.agora-proposal-side-title {
+  margin: 0 0 1rem; font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--sa-secondary);
+}
+.agora-proposal-tally .agora-tally { display: flex; flex-direction: column; gap: 0.85rem; margin-bottom: 1rem; }
+.agora-proposal-tally .agora-tally-bar { margin: 0.4rem 0 0; }
+.agora-proposal-tally-pct { font-weight: 700; color: var(--sa-on-surface); }
+.agora-ballot .vote-action-buttons { flex-direction: column; gap: 0.5rem; margin: 1rem 0 0; }
+.agora-ui .agora-ballot .vote-btn {
+  min-width: 0; padding: 0.75rem 1rem; text-align: left; border-radius: var(--radius-sm);
+  background: var(--sa-surface-low); font-size: 0.8125rem; letter-spacing: 0.06em; text-transform: uppercase;
+}
+.agora-ui .agora-ballot .vote-btn-yes.selected { background: var(--sa-tertiary-container); color: var(--on-gradient); outline: none; }
+.agora-ui .agora-ballot .vote-btn-no.selected { background: var(--sa-terracotta); color: #1a1c1f; outline: none; }
+.agora-ui .agora-ballot .vote-btn-abstain.selected { background: var(--sa-surface-highest); color: var(--sa-on-surface); outline: none; }
+
+/* ── 37. Lote UI 1 (telas sem layout do Stitch): título da Voxpedia e guias com cartões de opção ── */
+/* Voxpedia: o título abre a página em toda a largura; índice e conteúdo vêm depois. */
+.agora-ui .agora-codex > .agora-codex-hero { grid-column: 1 / -1; }
+/* Guias (rede, carteira): escolha em cartões de rádio, uma opção por linha, marcada com a borda esmeralda. */
+.agora-ui .guided-choice { display: grid; gap: 0.75rem; margin: 0; padding: 0; border: 0; min-width: 0; }
+.guided-choice-legend { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.agora-ui .guided-choice-card { position: relative; padding: 1rem 1.25rem 1rem 3rem; }
+.agora-ui .guided-choice-card input { position: absolute; left: 1.1rem; top: 1.25rem; width: 1.1rem; height: 1.1rem; margin: 0; accent-color: var(--sa-primary); }
+.agora-ui .guided-choice-card .compose-sphere-name { font-size: 1.1rem; }
+.agora-ui .guided-choice-card:has(input:checked) { border-color: var(--sa-primary); background: var(--sa-surface-highest); }
+.agora-ui .guided-choice-card:has(input:focus-visible) { outline: 2px solid var(--sa-primary); outline-offset: 2px; }
+
+/* ── 38. Lote UI 2 (compositores e entrada): compositor bloqueado e aviso do passo "pular" ── */
+.compose-blocked { margin-top: 1.5rem; }
+.compose-blocked-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center; }
+@media (max-width: 520px) { .compose-blocked-actions { flex-direction: column; align-items: stretch; } }
+.genesis-overlay .genesis-skip-note { margin: 0.5rem 0 0; text-align: center; font-size: 0.8125rem; line-height: 1.45; color: var(--sa-on-surface-variant); }
+
+/* ── 39. Backup no seu e-mail: seção em Sua rede e aviso de backup vencido ── */
+.inbox-backup-settings label { display: block; margin: 0.35rem 0; }
+.inbox-backup-settings .form-control { margin-bottom: 0.5rem; }
+.inbox-backup-due { position: fixed; left: 1rem; right: 1rem; bottom: calc(5rem + env(safe-area-inset-bottom)); z-index: 60; max-width: 28rem; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+.inbox-backup-due p { flex-basis: 100%; margin: 0; }

@@ -55,6 +55,9 @@ jobs:
           path: docs/metrics/baseline-*.json
           if-no-files-found: ignore
 
+      - name: Auditoria de documentação (JSDoc nos exports, links e órfãos; catraca)
+        run: npm run audit:docs
+
       - name: ESLint client (limites de função e complexidade bloqueiam)
         run: npm run lint
 

@@ -296,7 +296,9 @@ test("render - renderCommunity header compacto, Entrar e layout", (t) => {
   assert.ok(html.includes("community-vox-feed"));
   assert.ok(html.includes("?tab=members"));
   assert.ok(html.includes("Membros</a>"));
-  assert.ok(!html.includes("community-vox-aside"));
+  // Stitch tela 7: a lateral voltou (só ao lado em telas ≥ 1100px), com vizinhos e primeiros passos;
+  // os membros online continuam na aba Membros (decisão de ce34833).
+  assert.ok(html.includes('class="community-vox-aside"'));
   assert.ok(!html.includes("Membros online"));
 
   const mainMembers = createContainer();
@@ -429,7 +431,7 @@ test("render - renderCantinaGate e closeCantinaGate", () => {
   assert.ok(!html.includes("<h2"));
   assert.ok(!html.includes("Seus bots vão ter que esperar do lado de fora"));
   assert.ok(html.includes("cantina-art-img"));
-  assert.ok(html.includes("cantina-gate.jpg"));
+  assert.ok(html.includes("cantina-gate.webp"));
   assert.ok(html.includes("Ilustração anime"));
   assert.ok(html.includes("bartender de túnica bege"));
   assert.ok(html.includes("dois balões pintados"));

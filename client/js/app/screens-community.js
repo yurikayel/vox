@@ -1,6 +1,14 @@
+/**
+ * @file Telas de comunidade: página da comunidade (posts, avisos e termo de convivência), tópico, anúncios,
+ * propostas e votação. A entrada na comunidade assina o termo vigente (`joinTermoFields`).
+ *
+ * @module app/screens-community
+ * @see client/js/app/community-termo-flow.js
+ * @see client/js/app/aviso-flow.js
+ */
 import * as welcomeProfile from "../vox-welcome-profile.js";
 import { confirmGovernanceVote } from "./vote-confirm.js";
-/** @file Community, topic, listings, proposals. */
+import { addContactAndNotify } from "./contact-notify-flow.js";
 
 import * as gql from "../graphql.js";
 import * as render from "../render.js";
@@ -25,7 +33,6 @@ import { filterChannelTopics, filterChannelTopic } from "../community-channel.js
 import * as newKeyGuard from "../new-key-guard.js";
 import * as communityUpdates from "../community-updates.js";
 import { markCommunitySeen } from "../community-unread.js";
-import * as contacts from "../contacts.js";
 import * as peopleIndex from "../people-index.js";
 import * as profileDirectory from "../profile-directory.js";
 import { buildProposalPossePayload, firePosseWebhooks, loadPosseWebhooks } from "../posse-dispatch.js";
@@ -262,12 +269,7 @@ function bindGenesisExport(communityId, meta, filteredTopics) {
   btn.addEventListener("click", () => {
     const data = buildCommunityGenesisPayload(communityId, meta, filteredTopics);
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `comunidade-${communityId}-genesis.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+    share.downloadBlob(blob, `comunidade-${communityId}-genesis.json`);
     share.showToast("Gênesis da comunidade exportado com sucesso!");
   });
 }
@@ -551,7 +553,7 @@ function bindCommunityHeaderEvents({ main, communityId, meta, user, isMember, pe
     btn.addEventListener("click", () => {
       const id = btn.dataset.route;
       if (!id) return;
-      contacts.addContact(id, btn.dataset.label || "");
+      addContactAndNotify(id, btn.dataset.label || "");
       share.showToast("Contato adicionado.");
       btn.disabled = true; btn.textContent = "✓";
     });
@@ -902,6 +904,7 @@ async function resolveTopicModeration(communityId, user, replies, topic = null) 
     filteredReplies,
     filteredTopic,
     isUserMod: mod.isModerator(user, meta.owner, meta.moderators),
+    communityTitle: meta.title || "",
   };
 }
 
@@ -915,14 +918,14 @@ export async function showTopic(topicId, commIdParam = "") {
   const { merged: mergedReplies, hasLocal: hasLocalReplies } = await mergeTopicReplies(topicId, rawReplies);
 
   const finalCommId = topic.communityId || commIdParam;
-  const { filteredReplies, filteredTopic, isUserMod } = await resolveTopicModeration(finalCommId, user, mergedReplies, topic);
+  const { filteredReplies, filteredTopic, isUserMod, communityTitle } = await resolveTopicModeration(finalCommId, user, mergedReplies, topic);
   const currentTopic = filteredTopic || topic;
 
   main.innerHTML = "";
   if (demo && !isLocal && !hasLocalReplies) render.renderDemoBanner(main);
   else if (gateway) render.renderGatewayBanner(main, gateway);
 
-  render.renderTopic(main, topicId, currentTopic, filteredReplies, { topicData, isMod: isUserMod, communityId: finalCommId });
+  render.renderTopic(main, topicId, currentTopic, filteredReplies, { topicData, isMod: isUserMod, communityId: finalCommId, communityTitle });
   hydrateMissingReplyBodies(filteredReplies, finalCommId);
   bindLiveProfileSync(currentTopic.author || currentTopic.owner, filteredReplies);
   bindTopicScreenEvents(topicId, currentTopic, finalCommId);
@@ -940,11 +943,12 @@ export async function showProposal(communityId, proposalId) {
   }
 
   const { proposal, tally, userVote, isEligible, isMember } = data;
+  const meta = await resolveCommunityMetadata(communityId).catch(() => ({}));
   main.innerHTML = "";
   render.renderProposalDetail(main, proposal, tally, {
     userVote,
     isEligible,
-    community: { id: communityId, title: communityId },
+    community: { id: communityId, title: meta.title || communityId },
     isMember,
     userAddress: user,
   });

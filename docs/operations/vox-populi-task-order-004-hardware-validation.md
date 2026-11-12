@@ -1,5 +1,7 @@
 # Vox Populi — Task Order 004: validação em hardware físico
 
+> **Status:** rascunho (procedimento preparado; validação L2 em hardware ainda bloqueada, ver "Estado" abaixo) · **Owner:** mantenedor · **Revisado:** 2026-11-01
+
 **Estado:** L2 bloqueado neste ambiente; procedimento reproduzível preparado<br>
 **Escopo:** Raspberry Pi 4/5 ou mini-PC Linux dedicado<br>
 

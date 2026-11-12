@@ -4,7 +4,7 @@
  * de forma imutável, auditável e verificável em 1 clique (anti-fraude e anti-apagamento).
  */
 import { computeBlobHash } from "./media-blob.js";
-import { escapeHtml } from "./render/util.js";
+import { escapeHtml } from "./shared/html.js";
 
 export const NOTARY_PROTOCOL = "vox-notary-v1";
 

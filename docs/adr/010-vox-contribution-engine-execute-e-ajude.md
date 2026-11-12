@@ -1,6 +1,6 @@
 # ADR-010: Vox Contribution Engine — Arquitetura "Execute e Ajude"
 
-**Status:** Proposed · **Estratégia de Sustentação Perene** · **Cold Readiness**
+**Status:** proposed · **Estratégia de Sustentação Perene** · **Cold Readiness**
 
 > **Limite de estado:** este ADR descreve uma arquitetura proposta, não capacidades já entregues. Em 1º de novembro de 2026, Windows e Linux oferecem relay/cache HTTP local; WebTorrent seeding e descoberta de nós via LAN não estão implementados. O APK Android é um wrapper com WebView e serviço em primeiro plano; esse serviço não implementa seeding nem descoberta LAN.
 

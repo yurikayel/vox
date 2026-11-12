@@ -50,7 +50,7 @@ test("roadmap-ui: renderProfile exibe backup de identidade para conta própria",
   assert.ok(html.includes("Arquivo de soberania") || html.includes("profile-sovereignty-export"));
   assert.ok(html.includes("btn-export-account"));
   assert.ok(html.includes("file-import-account"));
-  assert.ok(html.includes("accept=\".json,.voxid,application/json\""));
+  assert.ok(html.includes("accept=\".json,.voxid,.txt,application/json,text/plain\" multiple"));
   assert.ok(html.includes("deste aparelho"));
   assert.ok(html.includes("IndexedDB"));
   assert.ok(html.includes("seguidores"));
