@@ -359,7 +359,4 @@ export function initDmListeners() {
       }
     } catch {}
   });
-  if (typeof document !== "undefined") {
-    void getActiveUser().then((u) => u && pollInboxMessages(u)).catch(() => {});
-  }
 }
