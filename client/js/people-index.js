@@ -9,6 +9,7 @@ import * as profileDirectory from "./profile-directory.js";
 import * as localAccount from "./local-account.js";
 import * as webrtcPeer from "./webrtc-peer.js";
 import { shortId } from "./render/util.js";
+import { isTestRouteId } from "./genesis.js";
 
 const DEFAULT_PREFER_SOURCES = ["system", "self", "contact", "vault", "mesh-card", "mesh-author", "route-direct"];
 export const PEOPLE_SEARCH_OK_METRIC = "vox-metric-people-search-ok";
@@ -228,7 +229,7 @@ export async function buildPeopleIndex() {
   await indexMeshAuthors(map);
   indexMeshCards(map);
 
-  return Array.from(map.values()).sort(comparePeopleEntries);
+  return Array.from(map.values()).filter((p) => !isTestRouteId(p.routeId)).sort(comparePeopleEntries);
 }
 
 /**

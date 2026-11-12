@@ -707,11 +707,6 @@
   "jsdoc:UF_ROUTE_IDS",
   "jsdoc:buildUfDemoProfilesMap"
  ],
- "client/js/demo-seed.js": [
-  "jsdoc:purgeMockDemoSeed",
-  "jsdoc:ensureDemoSeed",
-  "jsdoc:resetDemoSeed"
- ],
  "client/js/dm-messenger.js": [
   "jsdoc:DM_READ_STORAGE_KEY",
   "jsdoc:DM_PINS_STORAGE_KEY",
