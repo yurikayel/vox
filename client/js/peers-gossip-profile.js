@@ -67,6 +67,8 @@ function applyProfileCard(item) {
     profileDirectory.removeProfileCard(item.routeId);
     return true;
   }
+  // Cartão sem nome (de app antigo) não é guardado nem repassado.
+  if (!profileDirectory.hasChosenCardName({ name: item.displayName, routeId: item.routeId })) return false;
   profileDirectory.setProfileCard(item.routeId, {
     name: item.displayName || "",
     avatarUrl: item.avatarUrl || "",

@@ -203,7 +203,7 @@ export function createPeerSync(deps) {
 
 async function loadState() {
   const [tombstones, posts] = await Promise.all([cacheNode.getAllTombstones(), cacheNode.getWirePosts()]);
-  return { posts, tombstones, cards: profileDirectory.listDiscoverableProfileCards() };
+  return { posts, tombstones, cards: profileDirectory.listShareableProfileCards() };
 }
 
 /** Blob guardado em memória ou, depois de recarregar, remontado da mídia do registro (`MEDIA_FIELD`). */

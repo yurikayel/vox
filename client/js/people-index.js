@@ -237,9 +237,7 @@ export async function buildPeopleIndex() {
  * temporárias: não entram na lista do diretório. Continuam achados pela busca por chave.
  */
 export function hasChosenName(p) {
-  const name = String(p?.name || "").trim();
-  const id = String(p?.routeId || "");
-  return Boolean(name) && !id.startsWith(name) && !/^vx_/i.test(name);
+  return profileDirectory.hasChosenCardName(p);
 }
 
 /**
