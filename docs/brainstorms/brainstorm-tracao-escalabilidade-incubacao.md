@@ -1,6 +1,6 @@
 # 🇧🇷 Vox — Dossiê Estratégico: Tração, Vetores de Atração & Escalabilidade Open Source
 
-> **Status:** Documento Estratégico & Brainstorm de Arquitetura  
+> **Status:** brainstorm (documento estratégico e de arquitetura)  
 > **Data:** 25 de Outubro de 2026  
 > **Escopo:** Fase de Desenvolvimento, Incubação e Expansão Orgânica do Ecossistema Vox  
 

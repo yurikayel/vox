@@ -1,8 +1,13 @@
 # Arquitetura Técnica — Vox
 
+> **Status:** canônico (protocolo e dados) · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-12
+> Este arquivo cobre o **protocolo e os dados**. Camadas do cliente: [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md). Decisões em vigor: [docs/DECISOES.md](./docs/DECISOES.md).
+
 ## 1. Visão Geral e Linhagem Channel-01
 
-O Vox é projetado como uma aplicação **Client-First / Serverless Soberana**, herdando a fundação de arquitetura demonstrada pelo **Channel-01 (`arboard`)**:
+O Vox é **local-first**: não existe servidor que diga o que é verdade ([DECISOES A-01](./docs/DECISOES.md)). Um post vale porque o autor o assinou (ECDSA P-256), e cada aparelho confere sozinho tudo o que recebe, por qualquer caminho ([ADR-021](./docs/adr/021-integridade-na-entrada-forma-assinada.md)). O aparelho guarda os dados, troca com outros aparelhos pela malha e, **só quando a pessoa escolhe**, grava uma cópia permanente no Arweave (aviso em `permanence-notice.js`; [DECISOES A-08](./docs/DECISOES.md)). O Arweave é permanência opcional, não fonte de verdade.
+
+A parte de permaweb herda a fundação demonstrada pelo **Channel-01 (`arboard`)**:
 
 * **Linhagem Channel-01:** O `channel-01` provou que uma interface estática de poucos kilobytes consegue carregar mídias, textos e feeds em tempo real sem servidor intermediário, consultando diretamente nós públicos de gateway Arweave/AR.IO (`turbo-gateway.com/graphql`, `arweave.net/graphql`, etc.).
 * **A Extensão do Vox (De Unilateral para Bidirecional):** Enquanto o Channel-01 opera como um canal de transmissão unidirecional (um único emissor para vários leitores), o Vox transforma essa infraestrutura em um **ecossistema social comunitário bidirecional**, introduzindo esquemas de tags para criação de comunidades, tópicos encadeados, respostas públicas, filiação de membros e moderação distribuída.
@@ -19,9 +24,11 @@ Canal Unilateral                        Ecossistema Bidirecional
 ```
 
 Componentes centrais:
-1. **Client (PWA):** Todo o processamento de visualização, roteamento, validação e criptografia ocorre diretamente no navegador ou celular do usuário.
-2. **Camada de Leitura (GraphQL aberto):** Em vez de manter instâncias de PostgreSQL/Redis, o cliente consome consultas GraphQL distribuídas fornecidas pelos nós da rede Arweave/AR.IO.
-3. **Camada de Escrita (Bundler L2):** Upload de transações (data items ANS-104) assinado pela carteira Arweave local (RSA-PSS, `ans104.js`; posts da malha são assinados à parte com ECDSA P-256) e enviado via gateways Turbo para inclusão otimista e propagação permanente.
+1. **Client (PWA):** Todo o processamento de visualização, roteamento, validação e criptografia ocorre diretamente no navegador ou celular do usuário. JavaScript puro, sem etapa de build.
+2. **Armazenamento local e malha:** Posts, cartões de perfil e ações ficam no IndexedDB do aparelho, na forma assinada (`cache-node.js`, `post-wire.js`), e circulam entre aparelhos por gossip e por sincronização por inventário ao conectar (`peers.js`, `peer-sync.js`; [sync-inventario-v0](./docs/specs/sync-inventario-v0.md)). Um item da malha pode nunca ir ao Arweave.
+3. **Memória central (opcional):** Cópia num servidor escolhido pela pessoa, que nunca é fonte de verdade: o que volta dela é conferido como qualquer outra entrada ([ADR-022](./docs/adr/022-memoria-central-por-consentimento.md)).
+4. **Leitura do permaweb (GraphQL aberto):** Para o que foi gravado no Arweave, em vez de manter instâncias de PostgreSQL/Redis, o cliente consome consultas GraphQL distribuídas fornecidas pelos nós da rede Arweave/AR.IO (seção 2; gateways em `client/config/gateways.json`), sem proxy central.
+5. **Escrita no permaweb (opcional, Bundler L2):** Upload de transações (data items ANS-104) assinado pela carteira Arweave local (RSA-PSS, `ans104.js`; posts da malha são assinados à parte com ECDSA P-256) e enviado via gateways Turbo para inclusão otimista e propagação permanente.
 
 ---
 
@@ -173,12 +180,12 @@ query GetHandleBySlug($slug: String!) {
 
 ## 3. Nós Participativos e Rede de Leitura Distribuída (Fases 3, 3.1 e 3.2)
 
-O Vox adota uma arquitetura em camadas para leitura de transações, reduzindo a dependência de gateways centrais e garantindo navegação rápida mesmo com conectividade intermitente:
+O Vox adota uma arquitetura em camadas para leitura de transações, reduzindo a dependência de gateways centrais e garantindo navegação rápida mesmo com conectividade intermitente. Esta seção trata do que está no Arweave; os itens que vivem só na malha não passam por gateway (seção 1, item 2):
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                    Permaweb (Arweave)                       │
-│                     Fonte Canônica                          │
+│        Permanência opcional (o que foi gravado lá)          │
 └──────────────────────────────┬──────────────────────────────┘
                                ▼
 ┌─────────────────────────────────────────────────────────────┐
@@ -211,7 +218,8 @@ Entre abas e dispositivos, clientes trocam mensagens JSON simples sob o protocol
 1. **Local (Mesmo Navegador):** `BroadcastChannel` nativo do navegador, sem tráfego de rede.
 2. **Remota (Dispositivos Distintos):** `RTCDataChannel` ("vox-peer-v0") estabelecido ponto a ponto após sinalização.
 3. **Servidor de Sinalização (`relay/signaling.py`):** WebSocket autohospedado em Python (stdlib, porta 3921) que apenas encaminha ofertas SDP e candidatos ICE sem inspecionar ou persistir mensagens.
-4. **Resolução ICE / STUN / TURN:** O cliente utiliza servidores STUN públicos (ex: `stun:stun.l.google.com:19302`) configurados em `config/signaling.json` para travessia de NAT. Em redes com NAT simétrico corporativo restritivo, operadores podem apontar relays TURN próprios.
+4. **Resolução ICE / STUN / TURN:** O cliente utiliza servidores STUN públicos (ex: `stun:stun.l.google.com:19302`) configurados em `config/signaling.json` para travessia de NAT. Em redes com NAT simétrico corporativo restritivo, operadores podem apontar relays TURN próprios; a lista `turn` vem vazia, então hoje não há TURN.
+5. **Sinalização por Nostr (em paralelo ao WebSocket):** A sinalização também trafega como eventos efêmeros (kind 25050) cifrados entre pares, por relays Nostr públicos listados em `nostrRelays` (`nostr-transport.js`, `nostr-event.js`, `nostr-signaling.js`); desligável em `nostrSignaling.enabled`. Estado real em [docs/FEATURES.md](./docs/FEATURES.md) §5.
 
 ### 3.2 Ordem de Resolução Hierárquica (`fetchTransactionData`):
 1. **Cache de Memória:** Resolução em 0 ms para itens já abertos na sessão ativa.

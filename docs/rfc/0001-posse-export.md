@@ -1,6 +1,6 @@
 # RFC 0001 — Export POSSE (`vox-posse-export`)
 
-**Status:** Exemplo aceito (documentação)  
+**Status:** accepted (exemplo de documentação)  
 **Data:** 2026-10-25
 
 ## Contexto

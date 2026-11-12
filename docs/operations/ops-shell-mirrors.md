@@ -1,5 +1,7 @@
 # Espelhos read-only do shell PWA
 
+> **Status:** canônico (runbook) · **Owner:** mantenedor / steward ops · **Revisado:** 2026-11-09
+
 **Objetivo:** ≥2 hosts estáticos servindo o mesmo `client/` (`vox-brasil`), sem canal 1→N.
 
 | Mirror | Papel |
