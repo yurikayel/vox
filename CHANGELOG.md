@@ -6,6 +6,11 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Selo "Malha ativa" nas configurações
+- O selo **Malha ativa / Offline / Só leitura** saiu da barra do topo (pedido do mantenedor) e passou para o cabeçalho da tela **Sua rede** (`#/settings`), antes dos outros estados. Continua levando à Saúde do nó, com o detalhe (ex.: "2 aparelhos") ao passar o mouse. O estado da rede segue também no rodapé da barra lateral e na gaveta de identidade, como antes.
+- `render/shell.js` era do Lote A do Antigravity, mas não havia trabalho dele em aberto no arquivo; a mudança foi feita a pedido direto do mantenedor e registrada no `lobby.md`.
+- SW `v7.83`.
+
 ### Lote UI 2 das telas sem layout do Stitch: compositores e entrada
 - **Compositor que não pode abrir agora explica e dá saída.** Aviso para quem não é da moderação: "Avisos são da moderação", com "Abrir um tópico" e "← Voltar à comunidade" (antes era uma frase solta). Oferta em comunidade sem feira: "Feira comunitária não ativada", com "Propor a abertura da feira" (abre o compositor de proposta da comunidade) e volta (antes era uma caixa vermelha de erro). A aba Feira da comunidade usa o mesmo bloco e ganhou o atalho para propor.
 - **Etapas do compositor sem vão:** saiu a altura mínima de 180px do corpo da etapa, que deixava um buraco entre o campo e os botões Voltar/Continuar nas etapas curtas.

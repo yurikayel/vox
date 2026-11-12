@@ -2036,7 +2036,6 @@ body,
   gap: 0.45rem;
   height: 30px;
   padding: 0 0.65rem;
-  margin-right: 0.35rem;
   border-radius: var(--radius-sm);
   background: rgba(105, 219, 169, 0.1);
   color: var(--sa-tertiary);
@@ -2471,13 +2470,6 @@ body,
   .agora-topbar-tools { gap: 0; }
   .agora-topbar-icon--mobile { display: inline-flex; }
   .agora-topbar-tools .agora-topbar-icon[href="#/settings/network"] { display: none; }
-
-  .agora-mesh-chip {
-    height: 26px;
-    padding: 0 0.5rem;
-    font-size: 0.625rem;
-    margin-right: 0;
-  }
 
   .agora-circles { display: none !important; }
 
