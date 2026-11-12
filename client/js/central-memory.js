@@ -215,19 +215,15 @@ function upsertDirectoryCardIfNeeded(routeId, name, avatarUrl = "", bio = "") {
   });
 }
 
+// Só a conta ativa, com nome e visível na malha. As outras contas do cofre não saem daqui: publicá-las
+// juntas contaria a quem lê que são da mesma pessoa.
 function syncActiveAccountCard() {
   const myId = localAccount.getCachedRouteIdSync();
-  if (!myId) return;
-  const enrich = localAccount.getProfileEnrichment();
-  const enrichObj = enrich ? enrich : {};
+  if (!myId || !localAccount.getMeshDiscoverable()) return;
+  const enrichObj = localAccount.getProfileEnrichment() || {};
   const myName = localAccount.getDisplayName() || enrichObj.displayName;
-  upsertDirectoryCardIfNeeded(myId, myName, enrichObj.avatarUrl, enrichObj.bio);
-}
-
-function syncVaultCards() {
-  if (typeof localAccount.listVaultAccountsSync !== "function") return;
-  for (const v of localAccount.listVaultAccountsSync()) {
-    if (v) upsertDirectoryCardIfNeeded(v.routeId, v.displayName, v.avatarUrl, v.bio);
+  if (profileDirectory.hasChosenCardName({ name: myName, routeId: myId })) {
+    upsertDirectoryCardIfNeeded(myId, myName, enrichObj.avatarUrl, enrichObj.bio);
   }
 }
 
@@ -237,7 +233,6 @@ function upsertAuthorCard(post) {
 
 function syncLocalAccountsToProfileDirectory(allPosts) {
   syncActiveAccountCard();
-  syncVaultCards();
   for (const post of Array.isArray(allPosts) ? allPosts : []) upsertAuthorCard(post);
 }
 
@@ -249,7 +244,7 @@ async function buildLocalSyncBundle() {
   syncLocalAccountsToProfileDirectory(allPosts);
   const posts = filterDeltaItems(allPosts, lastLocalSyncMs);
   const tombstones = filterDeltaItems(allTombstones, lastLocalSyncMs);
-  const profiles = profileDirectory.listDiscoverableProfileCards();
+  const profiles = profileDirectory.listShareableProfileCards();
   const manifests = filterDeltaItems(manifestMesh.listKnownManifests(), lastLocalSyncMs);
   const blobs = await collectLocalBlobs(posts);
   return {
@@ -281,7 +276,7 @@ function hydrateProfiles(profiles) {
   let added = 0;
   for (const card of profiles) {
     const routeId = String(card?.routeId || card?.author || "").trim();
-    if (!routeId) continue;
+    if (!routeId || !profileDirectory.hasChosenCardName({ name: card.name || card.displayName, routeId })) continue;
     const existing = profileDirectory.getProfileCard(routeId);
     if (shouldApplyIncomingProfile(existing, card)) {
       const normalized = {

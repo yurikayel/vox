@@ -133,8 +133,7 @@
   "jsdoc:checkPactModal"
  ],
  "client/js/app/photo-tag-persist.js": [
-  "jsdoc:persistPhotoTags",
-  "jsdoc:tagsForPost"
+  "jsdoc:persistPhotoTags"
  ],
  "client/js/app/photo-tag-picker.js": [
   "jsdoc:openPhotoTagPicker",
@@ -380,7 +379,6 @@
   "jsdoc:BSKY_POST_CACHE_KEY",
   "jsdoc:BSKY_PUBLIC_ENDPOINT",
   "jsdoc:BSKY_DEFAULT_SEEDS",
-  "jsdoc:BSKY_CIVIC_SUGGESTIONS",
   "jsdoc:loadBskySubscriptions",
   "jsdoc:saveBskySubscriptions",
   "jsdoc:addBskySubscription",
@@ -842,7 +840,6 @@
  ],
  "client/js/gossip-retract-ui.js": [
   "jsdoc:isGossipRetractUiEnabled",
-  "jsdoc:renderGossipEditedBadgeHtml",
   "jsdoc:renderGossipDeletedTopicShellHtml"
  ],
  "client/js/governance.js": [
@@ -912,7 +909,6 @@
   "returns:createSignalingHealth"
  ],
  "client/js/i18n-pt-br.js": [
-  "jsdoc:appMetaDescription",
   "jsdoc:appShellFooterTagline",
   "jsdoc:localMutateEditDeleteTooltip",
   "jsdoc:localMutateEditDeleteHint",
@@ -928,13 +924,7 @@
   "jsdoc:listingVerifiedBadgeTitle",
   "jsdoc:meshDiscoverableLabel",
   "jsdoc:meshDiscoverableHint",
-  "jsdoc:meshDiscoverableLegal",
-  "jsdoc:peopleSectionContacts",
-  "jsdoc:peopleSectionMesh",
-  "jsdoc:peopleSectionTour",
-  "jsdoc:peoplePasteConnectHint",
-  "jsdoc:postPactConnectTitle",
-  "jsdoc:postPactConnectBody"
+  "jsdoc:peopleSectionMesh"
  ],
  "client/js/idb-store.js": [
   "jsdoc:DB_NAME",
@@ -1191,7 +1181,6 @@
  ],
  "client/js/media-lofi.js": [
   "jsdoc:LOFI_LIMITS",
-  "jsdoc:LOFI_FILTERS",
   "jsdoc:calculateConstrainedDimensions",
   "jsdoc:parseAspectRatio",
   "jsdoc:calculateCropAndBounds",
@@ -1452,7 +1441,6 @@
   "jsdoc:onDirectMessage",
   "jsdoc:onGossipPost",
   "jsdoc:onGossipTombstone",
-  "jsdoc:getMyPeerId",
   "jsdoc:CELLULAR_CAP_MAX_MB",
   "jsdoc:clampCellularCapMb",
   "jsdoc:getPeerSettings",
