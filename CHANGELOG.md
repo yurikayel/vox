@@ -6,6 +6,14 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Corte da gênese nos servidores e na malha P2P; gênese em 12/11 00:00
+- **Gênese passa para 2026-11-12 00:00 (Brasília)** (era 11/11 20:55), a pedido do mantenedor: "nada anterior a hoje". As contas e os posts criados entre 20:55 e a meia-noite também ficam de fora.
+- **Memória central recusa o que o cliente já recusa** (relay Python em [`relay/genesis_guard.py`](./relay/genesis_guard.py), nó em C# em `packaging/zero-central-memory-windows/src/GenesisGuard.cs`): cartão de conta de teste, post de autor de teste e post criado antes da gênese não entram. O que já está no disco sai ao carregar o estado. Motivo: um aparelho ainda na versão antiga reenviava tudo na primeira sincronização, e o NodeZero, limpo à mão duas vezes, voltava a ter 134 perfis de teste segundos depois.
+- **Malha P2P:** quem recebe um GOSSIP (ou GOSSIP_UPDATE) de conta de teste ou de post anterior à gênese não guarda nem repassa (`client/js/peers.js`). Antes só a purga da abertura seguinte limpava.
+- **Fonte única:** a lista e a data continuam em `client/js`; `node scripts/gen-genesis-guard.mjs` gera `relay/genesis_data.py` e `GenesisData.cs`, e `tests/genesis-guard-sync.test.js` falha se divergirem. O CI do Windows compila o nó e roda `GenesisGuardCheck.cs`.
+- Testes: `tests/gossip-retract.test.js` usava datas de 1970 (`ts: 1000`), que agora são anteriores à gênese; as datas passaram a ser relativas a `GENESIS_MS`, com os mesmos intervalos.
+- O NodeZero só passa a recusar depois de recompilado e reinstalado (`packaging/zero-central-memory-windows/build.ps1`). SW `v7.84` (v7.83 está no #101).
+
 ### Lote UI 2 das telas sem layout do Stitch: compositores e entrada
 - **Compositor que não pode abrir agora explica e dá saída.** Aviso para quem não é da moderação: "Avisos são da moderação", com "Abrir um tópico" e "← Voltar à comunidade" (antes era uma frase solta). Oferta em comunidade sem feira: "Feira comunitária não ativada", com "Propor a abertura da feira" (abre o compositor de proposta da comunidade) e volta (antes era uma caixa vermelha de erro). A aba Feira da comunidade usa o mesmo bloco e ganhou o atalho para propor.
 - **Etapas do compositor sem vão:** saiu a altura mínima de 180px do corpo da etapa, que deixava um buraco entre o campo e os botões Voltar/Continuar nas etapas curtas.

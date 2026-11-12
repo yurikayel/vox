@@ -11,7 +11,7 @@ const TEST_ROUTE_ID_SET = new Set(TEST_ROUTE_IDS);
  * Timestamp da data de corte (gênese) em milissegundos UTC.
  * @type {number}
  */
-export const GENESIS_MS = Date.UTC(2026, 10, 11, 23, 55, 0); // 2026-11-11 20:55 (Brasília)
+export const GENESIS_MS = Date.UTC(2026, 10, 12, 3, 0, 0); // 2026-11-12 00:00 (Brasília); era 2026-11-11 20:55
 
 const GENESIS_SEC = Math.floor(GENESIS_MS / 1000);
 
