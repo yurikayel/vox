@@ -1,5 +1,7 @@
 # Piloto comunidade — go / no-go (V-P09)
 
+> **Status:** canônico (gate humano V-P09) · **Owner:** mantenedor · **Revisado:** 2026-11-08
+
 Gate humano antes de abrir as 4 semanas do piloto. Preencher **todos** os papéis nomeados; até lá, status **`blocked-human`**.
 
 > **Critério de elegibilidade do círculo:** Candidato a círculo piloto deve ser um coletivo que **já se reúne e possui laços reais** (ex.: NDP, Debate Aberto, sindicato, associação comunitária) — **não** uma chamada genérica para "usuários da internet". Os campos de nomes abaixo continuam vazios até confirmação humana formal.

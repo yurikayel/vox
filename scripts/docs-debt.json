@@ -843,8 +843,6 @@
   "jsdoc:renderGossipDeletedTopicShellHtml"
  ],
  "client/js/governance.js": [
-  "jsdoc:VOTE_CHOICES",
-  "jsdoc:PROPOSAL_STATES",
   "param:validateProposalInput:#1",
   "returns:validateProposalInput",
   "param:normalizeVoteChoice:raw",
@@ -1546,8 +1544,6 @@
   "jsdoc:computePolisReport"
  ],
  "client/js/posse-dispatch.js": [
-  "jsdoc:POSSE_SKIP_STORAGE_KEY",
-  "jsdoc:POSSE_SHEET_LEAD",
   "jsdoc:POSSE_WEBHOOKS_STORAGE_KEY",
   "jsdoc:buildCanonicalTopicUrl",
   "jsdoc:buildCanonicalProposalUrl",
@@ -1560,10 +1556,7 @@
   "jsdoc:loadPosseWebhooks",
   "jsdoc:savePosseWebhooks",
   "jsdoc:parseWebhookLines",
-  "jsdoc:firePosseWebhooks",
-  "jsdoc:closePosseSheet",
-  "jsdoc:openPosseSheetAfterPublish",
-  "jsdoc:attachPosseSheetHandlers"
+  "jsdoc:firePosseWebhooks"
  ],
  "client/js/post-ownership.js": [
   "param:deriveTopicTitleFromBody:bodyRaw",
@@ -2338,7 +2331,6 @@
  ],
  "client/js/wallet.js": [
   "header",
-  "jsdoc:WALLET_KIND_PLAIN",
   "jsdoc:WALLET_KIND_ENCRYPTED",
   "jsdoc:isWalletEncrypted",
   "jsdoc:encryptStoredWallet",

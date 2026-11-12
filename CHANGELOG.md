@@ -10,8 +10,17 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 - Nada muda na tela. `escapeHtml` saiu de `client/js/render/util.js` para `client/js/shared/html.js` (módulo sem imports) e `shortId` para `client/js/short-id.js` (domínio, porque conhece a conta oficial). `render/util.js` reexporta os dois, então os módulos da UI seguem importando de lá.
 - Seis módulos do domínio (`civic-credential.js`, `community-unread.js`, `explode-dispatch.js`, `inline-composer.js`, `perma-notary.js`, `people-index.js`) passam a importar da origem. Nenhum módulo de domínio importa mais `render/util.js`; sobra o `render.js`, que é o barril da própria UI.
 - As duas funções ganharam JSDoc (eram dívida) e saíram de `scripts/docs-debt.json` pelo `--prune`.
-- Peso: +1.454 B de cabeçalho e JSDoc, sem código novo, pagos em parte tirando de `style.css` e `agora.css` 33 seletores de 23 classes que nenhum JS/HTML do cliente gera mais (-970 B). Nenhuma regra inteira saiu: só o seletor órfão dentro da lista, então o estilo de quem aparece na tela não muda. Precache medido em 2.001.511 bytes; teto mantido.
-- SW `v7.90` (o `v7.89` é do #108, ainda aberto).
+- Peso: +1.454 B de cabeçalho e JSDoc, sem código novo, pagos em parte tirando de `style.css` e `agora.css` 33 seletores de 23 classes que nenhum JS/HTML do cliente gera mais (-970 B). Nenhuma regra inteira saiu: só o seletor órfão dentro da lista, então o estilo de quem aparece na tela não muda. Teto ajustado para o medido pós-merge da main.
+- SW `v7.92`.
+
+### Backup semanal e mensal no seu e-mail
+- Nova seção **Backup no seu e-mail** em Sua rede (`#/settings`): liga com a Senha Soberana uma vez; semanal e mensal podem ser desligados. Ao abrir o app com um backup vencido, um aviso oferece **Enviar para meu e-mail**: o app prepara um `.txt` cifrado e abre o compartilhar do sistema (Gmail, Outlook, Mail); onde o navegador não compartilha arquivo, baixa.
+- Sem servidor: o Vox não guarda nem conhece o endereço. O arquivo leva as chaves (com a de DM), perfil, Pix, contatos, texto das DMs e os próprios posts do período; só a Senha abre. O mensal repete de propósito o conteúdo das semanas.
+- **Restaurar Backup** (Perfil) aceita vários arquivos `.txt` de uma vez e aplica do mais antigo ao mais novo.
+- Depois da revisão: chaves e par de backup num só envelope de 600 mil iterações (antes as chaves iam no `.voxid`, de 210 mil); post editado ou apagado no período entra no backup; o arquivo é montado antes do toque, para o compartilhar não recusar por demora; misturar `.voxid` com backups dá erro claro em vez de ignorar arquivos; o download só libera o endereço temporário depois (`share.downloadBlob`, usado também pelo `.voxid`); as DMs são lidas numa leitura só (`cache-node.getAllDmMessages`).
+- Peso: os dois módulos novos e a ligação nas telas (+13,4 KB). Pagos em parte removendo a folha POSSE pós-publicação, que nada abria desde o cockpit Ecoe (2168dae; -9,5 KB com o CSS; decisão do mantenedor; 4 testes que liam o código da folha saíram ou foram ajustados), e recomprimindo `icons/icon-mark-black-128.png` em paleta exata (pixels idênticos, -517 B). O resto, 2.717 B, sobe o teto do precache para 2.004.623 bytes.
+- Testes novos em `tests/inbox-backup.test.js`; documentação em [IDENTITY.md](./docs/IDENTITY.md#backup-no-seu-e-mail-clientjsinbox-backupjs-clientjsappinbox-backup-uijs).
+- SW `v7.89`.
 
 ### Contas sem nome não sujam mais a rede
 - Uma conta que nunca escolheu nome (a chave criada na primeira visita, numa aba anônima ou num navegador novo) não manda mais cartão de perfil para a memória central, para a malha nem para o Arweave. Era a origem das centenas de perfis vazios no NodeZero. Assim que a pessoa escolhe um nome, o cartão passa a sair como antes.

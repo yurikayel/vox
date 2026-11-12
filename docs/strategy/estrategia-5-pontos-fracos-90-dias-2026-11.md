@@ -1,6 +1,6 @@
 # Estratégia por ponto fraco — plano de 90 dias
 
-> **Status:** estratégia (proposta) · **Owner:** mantenedor · **Revisado:** 2026-11-10
+> **Status:** rascunho (estratégia proposta) · **Owner:** mantenedor · **Revisado:** 2026-11-10
 > **Não substitui o [ROADMAP.md](../ROADMAP.md)** ([ADR-017](../adr/017-consolidacao-roadmap-unico.md)). Prazos são sugestões, não compromissos. Parte do [brainstorm dos 5 pontos fracos](../brainstorms/brainstorm-5-pontos-fracos-2026-11-10.md).
 
 ## Decisões do mantenedor (10/11/2026)

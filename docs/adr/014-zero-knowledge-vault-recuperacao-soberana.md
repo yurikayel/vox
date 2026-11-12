@@ -1,7 +1,7 @@
 # ADR 014: Cofre de Conhecimento Zero (Zero-Knowledge Vault) e Restauração Soberana de Identidade Cross-Device
 
 **Data:** 2026-11-05  
-**Status:** Substituído pelo [ADR-025](./025-cofre-v2-so-a-senha-abre.md) (2026-11-10)  
+**Status:** superseded pelo [ADR-025](./025-cofre-v2-so-a-senha-abre.md) (2026-11-10)  
 **Escopo:** `client/js/oauth-vault.js`, `client/js/oauth-profile.js`, `client/js/local-account.js`, `client/js/people-index.js`, `relay/central_memory.py`, `ZeroCentralMemory.cs`  
 
 ---

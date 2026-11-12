@@ -1,6 +1,6 @@
 # Norma de documentação (código e documentação técnica)
 
-> **Status:** canônico (norma) · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-11
+> **Status:** canônico (norma) · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-12
 > **Enforcement:** `npm run audit:docs` (no `npm run validate` e no CI) · **Complementa:** [CONTRIBUTING-DOCS.md](../CONTRIBUTING-DOCS.md) (navegação, banners e DoD de docs) e [HARDENING.md](../HARDENING.md) (limites de código).
 
 Documentação faz parte da entrega, não é etapa posterior. Um PR que muda comportamento e não atualiza a documentação está **incompleto**, do mesmo jeito que um PR sem teste. Esta norma segue as práticas de mercado para projetos de código aberto: *docs-as-code* (a documentação mora no repositório, é revisada no PR e checada no CI), JSDoc na API pública dos módulos, ADR para decisões, Keep a Changelog para mudanças e uma fonte única para cada fato.
@@ -67,7 +67,7 @@ Docstring de módulo e de toda função pública (sem `_` na frente), no estilo 
 | Rota, tela ou flag de laboratório | [client/DEV.md](../../client/DEV.md) e a coluna de status em FEATURES |
 | Endpoint do relay | tabela de endpoints em [relay/README.md](../../relay/README.md) |
 | Shell do PWA | bump de `CACHE_NAME` e [release-metadata.json](../release-metadata.json) (`python scripts/release_line.py`) |
-| Doc novo | link no índice [docs/README.md](../README.md) (o `audit:docs` reprova doc órfão) |
+| Doc novo | link no índice [docs/README.md](../README.md) e banner de status no topo (o `audit:docs` reprova doc órfão, sem banner ou com status fora do vocabulário) |
 
 ## 4. O que a máquina confere e o que fica com quem revisa
 
@@ -81,6 +81,8 @@ Docstring de módulo e de toda função pública (sem `_` na frente), no estilo 
 | `returns:<função>` | função que devolve valor sem `@returns` |
 | `link:<alvo>` | link relativo em Markdown para arquivo que não existe |
 | `orphan` | doc em `docs/` que o índice não alcança |
+| `status` | doc em `docs/` sem o banner `**Status:**` no topo (fora `metrics/`, que é gerado) |
+| `status:<palavra>` | banner com palavra fora do vocabulário fechado do tipo do doc ([CONTRIBUTING-DOCS.md §2.1](../CONTRIBUTING-DOCS.md)) |
 
 Fica com quem revisa (checklist do [modelo de PR](../../.github/PULL_REQUEST_TEMPLATE.md)): se o texto está certo, se o porquê está dito e se a tabela da seção 3 foi cumprida.
 

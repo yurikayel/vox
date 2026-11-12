@@ -1,6 +1,6 @@
 # Vox — Estratégia mantenedor → revisor/aprovador (Q4-2026 → Q3-2027)
 
-> **Status:** Dossiê canônico (out/2026)  
+> **Status:** canônico (dossiê, out/2026)  
 > **Task Antigravity:** `bc87c940` (retry doc-only)  
 > **Horizonte:** 2026-Q4 → 2027-Q3  
 > **Tese:** O repositório publica cliente estático e **governa código**; a malha social escala **sem loop do mantenedor** (relay, mod, T&S, suporte 24/7).
