@@ -1,6 +1,6 @@
 # Mochila de DMs (v0): caixa de saída e repasse cego entre aparelhos
 
-> **Status:** spec aceita; passo 0 implementado no PM-78, passos 1 e 2 não implementados (PM-79) · **Owner:** mantenedor · **Revisado:** 2026-11-10
+> **Status:** parcial (spec aceita; passo 0 implementado no PM-78, passos 1 e 2 não implementados, PM-79) · **Owner:** mantenedor · **Revisado:** 2026-11-10
 > Relacionados: [ADR-020 §2.1](../adr/020-postura-de-operacao-do-piloto-g1.md) (denúncia por DM), [replicação por grau](./replicacao-por-grau-v0.md), [relay-api.md](./relay-api.md) (inbox), `client/js/app/dm-wire.js`, `client/js/crypto-dm.js`.
 
 ## Problema

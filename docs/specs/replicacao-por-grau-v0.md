@@ -1,6 +1,6 @@
 # Replicação por grau de amizade (v0)
 
-> **Status:** spec aceita, não implementada · **Owner:** mantenedor · **Revisado:** 2026-11-09
+> **Status:** aceita (não implementada) · **Owner:** mantenedor · **Revisado:** 2026-11-09
 > Relacionados: [mídia v2](./midia-v2.md), [ADR-019](../adr/019-esquecer-por-padrao-e-memoria-civica.md), REV-15 (guardião na tomada), `client/js/supporter-mode.js`, `client/js/moderation.js`.
 
 ## Ideia

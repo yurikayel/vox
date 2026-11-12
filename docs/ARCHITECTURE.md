@@ -1,5 +1,7 @@
 # Arquitetura — cliente Vox PWA
 
+> **Status:** canônico (camadas do cliente) · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-12
+
 Cliente estático (ES modules) + relay Python opcional. Identidade local `vx_*`; gossip P2P; permaweb via gateways.
 
 > Este arquivo cobre as **camadas do cliente**. Protocolo, tags e dados: [../ARCHITECTURE.md](../ARCHITECTURE.md). API do relay: [relay-api.md](./specs/relay-api.md). Decisões: [adr/README.md](./adr/README.md).
@@ -88,7 +90,7 @@ A lista não é repetida aqui para não envelhecer: [índice com o status de cad
 - `relay/test_*.py` — unittest Python do relay (servidor, sinalização, relay cego, memória central, validação de espelho, troca OAuth, guarda de requisições, seeder) e dos lançadores desktop (contagem em [release-metadata.json](./release-metadata.json)).
 - `scripts/lint_relay.py` — roda o Ruff em `relay/`, `scripts/` e `packaging/` (regras em `ruff.toml`) e uma checagem de sintaxe por AST no relay.
 - `scripts/complexity-audit.mjs` — roda as regras do ESLint em `client/js` e grava o baseline do dia em `docs/metrics/`; não quebra o build. Mede complexidade ciclomática, aninhamento e linhas por função; a **complexidade cognitiva não é medida** ([HARDENING.md](./HARDENING.md)).
-- `scripts/docs-audit.mjs` — `npm run audit:docs`: JSDoc nos exports, links relativos e docs fora do índice, em catraca ([process/documentacao.md](./process/documentacao.md)).
+- `scripts/docs-audit.mjs` — `npm run audit:docs`: JSDoc nos exports, links relativos, docs fora do índice e banner de status, em catraca ([process/documentacao.md](./process/documentacao.md)).
 
 ## Offline
 
