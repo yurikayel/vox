@@ -59,8 +59,10 @@ const sw = fs.readFileSync(path.join(root, "sw.js"), "utf8");
  * 2.001.762 bytes; teto mantido (sobram 144 B).
  * 2026-11-12 (P1: cartão sem nome e contas do cofre não saem do aparelho, +1,5 KB): pago removendo 13 exportações
  * que nada usava e a regra .gossip-edited-pill (-1,9 KB). Medido 2.001.027 bytes; teto mantido.
+ * 2026-11-12 (aviso E2E de novo contato + seção "Quem adicionou você" em Pessoas): entra `contact-notify.js`,
+ * `app/contact-notify-flow.js` e a seção no diretório; medido 2.015.756 bytes (teto ajustado ao medido).
  */
-const SHELL_BUDGET_BYTES = 2_001_906;
+const SHELL_BUDGET_BYTES = 2_015_756;
 
 function listFrom(name) {
   const m = sw.match(new RegExp(`const ${name} = \\[([\\s\\S]*?)\\];`));

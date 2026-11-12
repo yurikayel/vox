@@ -1,9 +1,9 @@
 {
-  "git_sha": "def365b",
-  "branch": "fix/limpeza-cartoes-perfil",
-  "test_js": 1052,
+  "git_sha": "90c7991",
+  "branch": "feat/notificacao-contato",
+  "test_js": 1057,
   "test_python": 111,
-  "test_total": 1163,
-  "cache_name": "vox-pwa-v7.88-real-network-audio-video-upload",
-  "generated_at": "2026-11-12T15:32:01Z"
+  "test_total": 1168,
+  "cache_name": "vox-pwa-v7.91-real-network-audio-video-upload",
+  "generated_at": "2026-11-12T22:11:04Z"
 }
