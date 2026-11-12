@@ -4,6 +4,8 @@
  */
 
 import * as cacheNode from "./cache-node.js";
+import * as contacts from "./contacts.js";
+import * as profileDirectory from "./profile-directory.js";
 import { UF_ROUTE_IDS } from "./data/profiles-brazil-uf.js";
 import { isBeforeGenesisMs, isTestRouteId } from "./genesis.js";
 
@@ -29,36 +31,23 @@ function isOldOrMockPost(p) {
   return isBeforeGenesisMs(ts);
 }
 
-function purgeOldProfileCards() {
-  try {
-    const raw = window.localStorage.getItem("vox-profile-cards-v1");
-    if (!raw) return;
-    const cards = JSON.parse(raw);
-    let changed = false;
-    for (const [id, c] of Object.entries(cards)) {
-      const ts = c?.updatedAt || c?.timestamp || c?.ts || 0;
-      if (id === "vx_WAqxgW" || isTestRouteId(id) || isBeforeGenesisMs(ts)) {
-        delete cards[id];
-        changed = true;
-      }
-    }
-    if (changed) {
-      window.localStorage.setItem("vox-profile-cards-v1", JSON.stringify(cards));
-    }
-  } catch {}
+function isTestAccount(routeId) {
+  return routeId === "vx_WAqxgW" || isTestRouteId(routeId);
 }
 
+/** Cartões de conta de teste ou anteriores à gênese; o diretório é quem grava a chave dele. */
+function purgeOldProfileCards() {
+  profileDirectory.removeProfileCardsWhere((c, id) => {
+    const ts = c?.updatedAt || c?.timestamp || c?.ts || 0;
+    return isTestAccount(id) || isBeforeGenesisMs(ts);
+  });
+}
+
+/** Contas de teste na agenda; a agenda é quem grava a chave dela. */
 function purgeTestContacts() {
-  try {
-    const raw = window.localStorage.getItem("vox-contacts-v1");
-    if (!raw) return;
-    const list = JSON.parse(raw);
-    if (!Array.isArray(list)) return;
-    const filtered = list.filter((c) => c?.routeId !== "vx_WAqxgW" && !isTestRouteId(c?.routeId));
-    if (filtered.length !== list.length) {
-      window.localStorage.setItem("vox-contacts-v1", JSON.stringify(filtered));
-    }
-  } catch {}
+  for (const c of contacts.listContacts()) {
+    if (isTestAccount(c?.routeId)) contacts.removeContact(c.routeId);
+  }
 }
 
 async function purgeMockPosts() {

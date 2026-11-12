@@ -42,8 +42,8 @@ const sw = fs.readFileSync(path.join(root, "sw.js"), "utf8");
  * 2026-11-11 (norma de documentação + telas 6–8 juntas, merge da main): medido 2.010.383 bytes; o teto da norma
  * (2.014.194) já está abaixo de 0,2% acima do medido, então fica.
  * 2026-11-11 (gênese e purga das contas de teste): entram genesis.js e data/test-route-ids.js (as 128 chaves das
- * contas de teste, +4,3 KB); medido 2.005.556 bytes. O teto desce para 0,2% acima de 2.005.256 (medido antes das
- * seis contas "Yuri Kayel" do mantenedor, +300 B, que cabem nele).
+ * contas de teste, +4,3 KB); medido 2.005.949 bytes. O teto desce para 0,2% acima de 2.005.256 (medido antes das
+ * seis contas "Yuri Kayel" do mantenedor e da purga passar pelas APIs do diretório e da agenda, +693 B, que cabem nele).
  */
 const SHELL_BUDGET_BYTES = 2_009_266;
 
