@@ -75,4 +75,13 @@ Exceções temporárias — exigem justificativa técnica, responsável e data d
 
 ## Peso do precache (PM-02)
 
-A verificação de bytes em [`tests/shell-reachability.test.js`](../tests/shell-reachability.test.js) (`SHELL_BUDGET_BYTES`) acompanha o tamanho do shell offline para evitar desperdício real (imagens não otimizadas, cópias duplicadas, código morto) e manter a disciplina de crescer o mínimo. **Não é limite duro:** se uma mudança já está enxuta, concisa, coerente e funcionando e ultrapassar o valor medido, atualize `SHELL_BUDGET_BYTES` para o novo total medido com uma linha de justificativa no comentário do teste, sem esforço improdutivo para cortar código útil ou documentação. Esta flexibilização vale só para o teto de bytes do precache; os limites de função, aninhamento, complexidade, parâmetros e a norma de JSDoc continuam rígidos.
+**O precache não tem teto de bytes** (decisão do mantenedor em 2026-11-12). O teste [`tests/shell-reachability.test.js`](../tests/shell-reachability.test.js) soma o shell offline e imprime o total, mas nenhum número reprova o CI, e ninguém precisa "pagar" bytes com cortes para uma mudança entrar.
+
+O que continua valendo é a disciplina de manter o precache enxuto dentro do razoável, cobrada na revisão do PR:
+
+- nada de imagem sem otimizar, cópia duplicada de asset ou código morto no `SHELL_ASSETS`;
+- módulo que nenhuma tela alcança fica fora do precache (o teste PM-04 do mesmo arquivo continua reprovando);
+- salto grande de peso (dezenas de KB) é dito no texto do PR, com o motivo;
+- não se corta comentário, JSDoc nem código útil para economizar bytes.
+
+O fim do teto vale só para o peso do precache; os limites de função, aninhamento, complexidade, parâmetros e a norma de JSDoc continuam rígidos.

@@ -226,6 +226,18 @@ test("people-index - deduplica avatares Google Workspace / ogw e CDN Meta", () =
   assert.equal(peopleIndex.isSameGoogleIdentity(m1, m2), true);
 });
 
+test("people-index - domínio de avatar vem do host da URL, não de trecho no caminho ou na query", () => {
+  const same = (a, b) => peopleIndex.isSameGoogleIdentity(
+    { routeId: "vx_1", name: "Ana", avatarUrl: a }, { routeId: "vx_2", name: "Bia", avatarUrl: b },
+  );
+  // URLs diferentes só se unem pela regra do Google (mesma foto, tamanho diferente depois do "=").
+  assert.equal(same("https://atacante.example/?x=googleusercontent.com/foto=s96", "https://atacante.example/?x=googleusercontent.com/foto=s120"), false);
+  assert.equal(same("https://googleusercontent.com.atacante.example/foto=s96", "https://googleusercontent.com.atacante.example/foto=s120"), false);
+  assert.equal(same("https://falsogoogleusercontent.com/foto=s96", "https://falsogoogleusercontent.com/foto=s120"), false);
+  assert.equal(same("http://lh3.googleusercontent.com/a/foto=s96", "http://lh3.googleusercontent.com/a/foto=s120"), false);
+  assert.equal(same("https://lh3.googleusercontent.com/a/foto=s96", "https://lh3.googleusercontent.com/a/foto=s120"), true);
+});
+
 test("people-index - homônimo de outra chave na malha aparece ao lado de você (não vira \"Você\")", async () => {
   localStorage.clear();
   contacts.__resetContactsForTests();

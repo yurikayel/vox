@@ -6,6 +6,15 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Precache sem teto de bytes (PM-02)
+- Decisão do mantenedor (2026-11-12): o precache deixa de ter teto. O teste `tests/shell-reachability.test.js` continua somando o shell e imprime o total, mas nenhum número reprova o CI; saíram a constante `SHELL_BUDGET_BYTES` e o histórico de medições.
+- A disciplina de manter o precache enxuto dentro do razoável passa a ser cobrada na revisão (regra em [docs/HARDENING.md](./docs/HARDENING.md), seção "Peso do precache"). O teste PM-04 (módulo inalcançável fora do precache) não mudou.
+
+### Diretório: domínio do avatar do Google conferido pelo host da URL
+- `client/js/people-index.js` decidia se um avatar era do Google ou da Meta procurando o domínio em qualquer parte da URL (alertas do CodeQL). A regra do Google agora lê o host com `new URL`, exige `https:` e aceita só `googleusercontent.com` e subdomínios. A regra da Meta saiu: só valia para URLs idênticas, caso que a comparação anterior já resolve.
+- `client/js/app/contact-notify-flow.js` importa `shortId` de `short-id.js`, não mais de `render/util.js`.
+- Teste novo em `tests/people-index.test.js`. SW `v7.93`.
+
 ### Domínio não importa mais a camada de UI para escapar texto
 - Nada muda na tela. `escapeHtml` saiu de `client/js/render/util.js` para `client/js/shared/html.js` (módulo sem imports) e `shortId` para `client/js/short-id.js` (domínio, porque conhece a conta oficial). `render/util.js` reexporta os dois, então os módulos da UI seguem importando de lá.
 - Seis módulos do domínio (`civic-credential.js`, `community-unread.js`, `explode-dispatch.js`, `inline-composer.js`, `perma-notary.js`, `people-index.js`) passam a importar da origem. Nenhum módulo de domínio importa mais `render/util.js`; sobra o `render.js`, que é o barril da própria UI.

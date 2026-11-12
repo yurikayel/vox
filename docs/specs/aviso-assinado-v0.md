@@ -138,7 +138,7 @@ Na tela, a contagem aparece separada das respostas assinadas: "Contado pela coor
 ## Peso e cache
 
 - **Estimativa:** de 10 a 15 KB de módulos novos no app: lógica pura, tela e fluxo. A página leve fica fora disso.
-- **O teto do precache não sobe** (PM-02, folga de ~0,5 KB). O PR de implementação escolhe uma de duas saídas e diz qual no texto:
+- **Peso no precache** (o teto de bytes do PM-02 acabou em 2026-11-12; quando esta spec foi escrita ele existia e o texto abaixo era obrigação; hoje é só orientação, ver [HARDENING](../HARDENING.md)). O PR de implementação escolhia uma de duas saídas e dizia qual no texto:
   1. **pagar com corte** de peso igual ou maior no precache (PM-01, dieta do shell);
   2. **carregar sob demanda:** import dinâmico, fora do `SHELL_ASSETS`, guardado pelo Service Worker no primeiro uso. O preço é não abrir sem internet antes do primeiro uso.
 - **`aviso.html` e `aviso-page.js` ficam fora do precache:** a página é aberta a partir de um link, com internet.
@@ -163,7 +163,7 @@ Na tela, a contagem aparece separada das respostas assinadas: "Contado pela coor
 | `tests/aviso-ui.test.js` | Cartão, aba, compositor e folhas (lote D) |
 | `tests/aviso-roles.test.js` | Papéis e vagas, quórum, resposta por DM, contagem por papel, competências (lotes 1 e 2) |
 | `tests/community-termo.test.js` | Termo: montar, termo que vale, hash, situação de quem vê; rota da mediação (lote 3) |
-| Já existentes | `shell-reachability` (PM-04 e PM-02) e a suíte inteira verdes, sem subir teto |
+| Já existentes | `shell-reachability` (PM-04 e PM-02) e a suíte inteira verdes |
 
 Limites de código do projeto ([HARDENING](../HARDENING.md)): função ≤ 30 LLOC, complexidade ≤ 15, aninhamento ≤ 4, ≤ 5 parâmetros.
 

@@ -79,7 +79,7 @@ function defaultAlertUser(_entry, label) {
 
 async function defaultReceiveDeps() {
   const [localAccount, profileDirectory, context, util] = await Promise.all([
-    import("../local-account.js"), import("../profile-directory.js"), import("./context.js"), import("../render/util.js"),
+    import("../local-account.js"), import("../profile-directory.js"), import("./context.js"), import("../short-id.js"),
   ]);
   return {
     verify: (signed) => localAccount.verifyPayload(signed),

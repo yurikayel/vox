@@ -26,16 +26,18 @@ function chooseBestName(existingName, incomingName, routeId) {
   return existingName || incomingName || String(routeId || "").slice(0, 14);
 }
 
-function isSameGoogleAvatar(avA, avB) {
-  const isGoogleA = avA.includes("googleusercontent.com/");
-  const isGoogleB = avB.includes("googleusercontent.com/");
-  return Boolean(isGoogleA && isGoogleB && avA.split("=")[0] === avB.split("=")[0]);
+// O host vem do parser de URL, nunca de busca por trecho: "https://x.example/?a=googleusercontent.com/" não é Google.
+function isGoogleAvatar(avatarUrl) {
+  try {
+    const url = new URL(avatarUrl);
+    return url.protocol === "https:" && `.${url.hostname}`.endsWith(".googleusercontent.com");
+  } catch {
+    return false;
+  }
 }
 
-function isSameMetaAvatar(avA, avB) {
-  const isMetaA = avA.includes("facebook.com") || avA.includes("fbsbx.com") || avA.includes("fbcdn.net");
-  const isMetaB = avB.includes("facebook.com") || avB.includes("fbsbx.com") || avB.includes("fbcdn.net");
-  return Boolean(isMetaA && isMetaB && avA === avB);
+function isSameGoogleAvatar(avA, avB) {
+  return isGoogleAvatar(avA) && isGoogleAvatar(avB) && avA.split("=")[0] === avB.split("=")[0];
 }
 
 // Nome igual só une contas que moram neste aparelho (a sua e as do seu cofre). Uma chave de fora
@@ -53,7 +55,6 @@ function isSameSocialIdentity(entryA, entryB) {
   const avB = entryB.avatarUrl || profileDirectory.getAuthorAvatarSync(entryB.routeId) || "";
   if (avA && avB && avA === avB) return true;
   if (isSameGoogleAvatar(avA, avB)) return true;
-  if (isSameMetaAvatar(avA, avB)) return true;
   return isSameNamedLocalIdentity(entryA, entryB, entryA.name, entryB.name);
 }
 
