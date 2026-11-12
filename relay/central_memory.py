@@ -19,6 +19,8 @@ import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from relay import genesis_guard
+
 HASH_HEX_REGEX = re.compile(r"^[0-9a-fA-F]{64}$")
 SAFE_ID_REGEX = re.compile(r"^[A-Za-z0-9._:-]{1,160}$")
 MAX_ITEM_BYTES = 512 * 1024
@@ -130,6 +132,8 @@ def _normalize_loaded_state(raw: Optional[Dict[str, Any]]) -> Dict[str, Any]:
                         seen_google.add(av)
         for r_id in to_del:
             del profiles[r_id]
+    if genesis_guard.prune_state(state) > 0:
+        state["revision"] += 1
     return state
 
 
@@ -229,6 +233,8 @@ def _apply_post(state: Dict[str, Any], item: Dict[str, Any]) -> bool:
         return _apply_profile(state, item)
     if item.get("type") == "cache-manifest":
         return _apply_manifest(state, item)
+    if genesis_guard.refuses_post(item):
+        return False
 
     incoming_ts = _item_timestamp(item)
     tomb = state["tombstones"].get(item_id)
@@ -282,7 +288,7 @@ def _apply_profile(state: Dict[str, Any], card: Dict[str, Any]) -> bool:
     if not isinstance(card, dict):
         return False
     route_id = str(card.get("author") or card.get("routeId") or card.get("id") or "").strip()
-    if not _is_valid_id(route_id):
+    if not _is_valid_id(route_id) or genesis_guard.refuses_profile(route_id):
         return False
     incoming_ts = _item_timestamp(card)
     existing = state["profiles"].get(route_id)

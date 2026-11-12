@@ -34,6 +34,7 @@
   --sa-on-primary-fixed: #00201e;
   --sa-secondary: #e7c26b;
   --sa-secondary-container: #6e5301;
+  --sa-secondary-fixed-dim: #e7c26b;
   --sa-on-secondary: #3e2e00;
   --sa-tertiary: #69dba9;
   --sa-tertiary-container: #39b081;
@@ -977,9 +978,20 @@ body,
   }
 }
 
+/* Nome de usuário (post, resposta, foto, perfil, comunidade) no amarelo da Ágora Soberana. */
+.agora-ui .post-author,
 .agora-ui .post-header-user strong,
-.agora-ui .post-author-name {
-  color: var(--travertine-linen);
+.agora-ui .post-author-name,
+.agora-ui .post-photo-caption-author,
+.agora-ui .profile-grid-name,
+.agora-ui .community-orkut-owner-name,
+.agora-ui .community-orkut-member-name {
+  color: var(--sa-secondary);
+}
+
+/* Sobre a foto o fundo é a imagem, não o tema: o amarelo claro vale nos dois modos. */
+.agora-ui .post-media-header-username {
+  color: var(--sa-secondary-fixed-dim);
 }
 
 .agora-ui .post-handle,

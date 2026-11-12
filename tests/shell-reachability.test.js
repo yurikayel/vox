@@ -50,7 +50,10 @@ const sw = fs.readFileSync(path.join(root, "sw.js"), "utf8");
  * 2026-11-11 (merge da main com a gênese, #98): medido junto 1.997.911 bytes. Catraca: 0,2% acima.
  * 2026-11-11 (lote UI 2 do Stitch: compositor bloqueado, nota do "pular" no onboarding, +2,0 KB, já descontados os
  * estilos inline que saíram): medido 1.999.994 bytes, abaixo do teto; 0,2% acima passaria dele, então o teto fica.
- * 2026-11-11 (selo "Malha ativa" da barra do topo para a tela Sua rede, +441 B de JSDoc): medido 2.000.435 bytes;
+ * 2026-11-12 (malha P2P recusa conta de teste e post anterior à gênese, em peers.js, +757 B): medido 2.000.751 bytes,
+ * abaixo do teto; 0,2% acima passaria dele, então o teto fica.
+ * 2026-11-12 (selo "Malha ativa" da barra do topo para a tela Sua rede, +441 B de JSDoc, junto com a guarda da
+ * malha): medido 2.001.666 bytes;
  * teto mantido.
  */
 const SHELL_BUDGET_BYTES = 2_001_906;

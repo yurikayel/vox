@@ -9,7 +9,25 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 ### Selo "Malha ativa" nas configurações
 - O selo **Malha ativa / Offline / Só leitura** saiu da barra do topo (pedido do mantenedor) e passou para o cabeçalho da tela **Sua rede** (`#/settings`), antes dos outros estados. Continua levando à Saúde do nó, com o detalhe (ex.: "2 aparelhos") ao passar o mouse. O estado da rede segue também no rodapé da barra lateral e na gaveta de identidade, como antes.
 - `render/shell.js` era do Lote A do Antigravity, mas não havia trabalho dele em aberto no arquivo; a mudança foi feita a pedido direto do mantenedor e registrada no `lobby.md`.
-- SW `v7.83`.
+- SW `v7.86` (era v7.83; a main chegou a v7.85 com o #102 e o #104).
+
+### Nomes de usuário no amarelo da Ágora Soberana
+- O nome de quem publica aparece no amarelo do design system (`--sa-secondary`, o mesmo da faixa "Bem-vindo ao Vox"), em post, resposta, legenda de foto, cabeçalho do perfil e lista de membros da comunidade. Antes era o branco do texto. No modo claro o token já troca para o ocre escuro, que mantém contraste AA sobre o fundo claro.
+- Sobre a foto, o nome usa o amarelo claro fixo (`--sa-secondary-fixed-dim`, novo token em `client/css/agora.css`) nos dois modos, porque ali o fundo é a imagem, não o tema.
+- SW `v7.85`.
+
+### Roadmap e backlog de 2027 (documentação)
+- **Calendário 2027 no [ROADMAP](./docs/ROADMAP.md#calendário-2027):** dezembro e os quatro trimestres, com tema, marco (G1, G2, G3), itens por ID e uma data de desistência em cada trimestre. Todo ID aberto ganhou um trimestre ou entrou na lista "fora de 2027".
+- **Brainstorm do ano** em [docs/brainstorms/brainstorm-roadmap-2027.md](./docs/brainstorms/brainstorm-roadmap-2027.md): norte de dez/2027 com piso e meta, datas fixas (NLnet, assinatura v2, assembleias, semestres, eleição municipal de 2028), ideias por eixo, triagem, riscos e decisões pendentes do mantenedor.
+- **Backlog:** 11 linhas novas (PM-99…PM-109: teste de dois navegadores no CI, modo ensaio, lápide de conta, fim da convivência v1, relatório trimestral, garantia da praça, caminho de volta do POSSE, árvore do repasse, turma de extensão, editais brasileiros, preparo de 2028) e 4 promovidas do brainstorm de melhorias (PM-01, PM-13, PM-18, PM-23). Sem mudança de código nem de SW.
+
+### Corte da gênese nos servidores e na malha P2P; gênese em 12/11 00:00
+- **Gênese passa para 2026-11-12 00:00 (Brasília)** (era 11/11 20:55), a pedido do mantenedor: "nada anterior a hoje". As contas e os posts criados entre 20:55 e a meia-noite também ficam de fora.
+- **Memória central recusa o que o cliente já recusa** (relay Python em [`relay/genesis_guard.py`](./relay/genesis_guard.py), nó em C# em `packaging/zero-central-memory-windows/src/GenesisGuard.cs`): cartão de conta de teste, post de autor de teste e post criado antes da gênese não entram. O que já está no disco sai ao carregar o estado. Motivo: um aparelho ainda na versão antiga reenviava tudo na primeira sincronização, e o NodeZero, limpo à mão duas vezes, voltava a ter 134 perfis de teste segundos depois.
+- **Malha P2P:** quem recebe um GOSSIP (ou GOSSIP_UPDATE) de conta de teste ou de post anterior à gênese não guarda nem repassa (`client/js/peers.js`). Antes só a purga da abertura seguinte limpava.
+- **Fonte única:** a lista e a data continuam em `client/js`; `node scripts/gen-genesis-guard.mjs` gera `relay/genesis_data.py` e `GenesisData.cs`, e `tests/genesis-guard-sync.test.js` falha se divergirem. O CI do Windows compila o nó e roda `GenesisGuardCheck.cs`.
+- Testes: `tests/gossip-retract.test.js` usava datas de 1970 (`ts: 1000`), que agora são anteriores à gênese; as datas passaram a ser relativas a `GENESIS_MS`, com os mesmos intervalos.
+- O NodeZero só passa a recusar depois de recompilado e reinstalado (`packaging/zero-central-memory-windows/build.ps1`). SW `v7.84` (v7.83 está no #101).
 
 ### Lote UI 2 das telas sem layout do Stitch: compositores e entrada
 - **Compositor que não pode abrir agora explica e dá saída.** Aviso para quem não é da moderação: "Avisos são da moderação", com "Abrir um tópico" e "← Voltar à comunidade" (antes era uma frase solta). Oferta em comunidade sem feira: "Feira comunitária não ativada", com "Propor a abertura da feira" (abre o compositor de proposta da comunidade) e volta (antes era uma caixa vermelha de erro). A aba Feira da comunidade usa o mesmo bloco e ganhou o atalho para propor.

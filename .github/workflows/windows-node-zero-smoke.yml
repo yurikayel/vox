@@ -38,3 +38,7 @@ jobs:
       - name: Verify safe port-collision preflight
         shell: pwsh
         run: .\packaging\node-zero-windows\test-smoke-preflight.ps1
+
+      - name: Genesis cutoff in the C# node (ZeroCentralMemory)
+        shell: pwsh
+        run: .\packaging\zero-central-memory-windows\tests\test-genesis-guard.ps1

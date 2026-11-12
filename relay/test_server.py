@@ -18,6 +18,10 @@ from pathlib import Path
 from unittest.mock import patch
 
 from relay import server
+from relay.genesis_data import GENESIS_MS
+
+# Memória central: datas depois da gênese (o servidor recusa post criado antes dela).
+T0 = GENESIS_MS
 from relay import inbox
 from relay import blind_relay
 
@@ -858,8 +862,8 @@ class TestVoxRelayServer(unittest.TestCase):
             "communityId": "c_geral",
             "title": "Persistência Real Zero Central Memory",
             "body": "Estado salvo localmente no disco.",
-            "ts": 1700001000000,
-            "editedAt": 1700001000000,
+            "ts": T0,
+            "editedAt": T0,
         }
         req = urllib.request.Request(
             self._url("/memory/ingest"),
@@ -883,10 +887,10 @@ class TestVoxRelayServer(unittest.TestCase):
                     "replyTo": "top_persist_001",
                     "author": "vx_bob456",
                     "body": "Resposta persistida",
-                    "ts": 1700001005000,
+                    "ts": T0 + 5000,
                 }
             ],
-            "profiles": [{"routeId": "vx_alice123", "name": "Alice", "updatedAt": 1700001001000}],
+            "profiles": [{"routeId": "vx_alice123", "name": "Alice", "updatedAt": T0 + 1000}],
             "blobs": [{"hash": blob_hash, "mime": "image/png", "byteLength": 12, "data": "data:image/png;base64,AAAA"}],
         }
         sync_req = urllib.request.Request(
