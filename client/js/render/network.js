@@ -1,6 +1,7 @@
 /** @file Network settings, participation layers, steward wizard. */
 import { escapeHtml, shortId } from "./util.js";
 import { honestMessage } from "../honest-errors.js";
+import { renderNetworkChip, renderMeshStatusChip } from "./shell.js";
 
 const PARTICIPATION_LAYERS = [
   {
@@ -94,7 +95,9 @@ function renderPeerBadge(rtcStatus) {
   return `<span class="badge-pill">Conectando a aparelhos próximos…</span>`;
 }
 
-function renderNetworkHeader(isEnabled, relayStatus, rtcStatus, gatewayHealth) {
+function renderNetworkHeader({ settings, metrics, rtcStatus, gatewayHealth }) {
+  const isEnabled = Boolean(settings?.enabled);
+  const meshChip = renderMeshStatusChip(renderNetworkChip(metrics, rtcStatus, settings));
   const statusBadge = isEnabled
     ? `<span class="pill" style="background:var(--success); color:#fff;">🟢 Ajudando a rede</span>`
     : `<span class="pill" style="background:var(--danger); color:#fff;">⏸️ Ajuda pausada</span>`;
@@ -114,6 +117,7 @@ function renderNetworkHeader(isEnabled, relayStatus, rtcStatus, gatewayHealth) {
       <a class="agora-btn agora-btn--primary network-guided-btn" href="#/settings/network/guia">Configuração guiada</a>
       
       <div class="network-status" style="margin-top:0.75rem; display:flex; flex-wrap:wrap; gap:0.4rem;">
+        ${meshChip}
         ${statusBadge}
         ${peerBadge}
         ${reservePill}
@@ -449,8 +453,7 @@ function renderModerationSettingsSection(blockedUsers = [], mutedUsers = []) {
  * @returns {void}
  */
 export function renderNetworkSettings(main, props = {}) {
-  const isEnabled = Boolean(props.settings?.enabled);
-  let html = renderNetworkHeader(isEnabled, props.relayStatus, props.rtcStatus, props.gatewayHealth);
+  let html = renderNetworkHeader(props);
   html += renderNetworkStats(props.metrics, props.cacheStats, props.dailyUsage, props.settings);
   html += renderNetworkForm(props);
   html += renderStatusLinkBlock();
