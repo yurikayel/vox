@@ -23,6 +23,7 @@ import { attachChannelHandlers } from "./app/community-channel-flow.js";
 import { startVoxLinks } from "./app/vox-link-flow.js";
 import { startVaultMigration } from "./oauth-vault.js";
 import { startKeysAtRest } from "./key-at-rest.js";
+import { showDueInboxBackup } from "./app/inbox-backup-ui.js";
 
 void startKeysAtRest().catch(() => {});
 installDomDelegates(document);
@@ -49,4 +50,7 @@ attachQrUrlHandlers();
 attachPostOverlayActionMenuHandlers();
 attachQuarantineHandlers();
 syncIdentity();
-Promise.allSettled([loadRemoteFlags(), demoSeed.purgeMockDemoSeed()]).finally(() => route());
+Promise.allSettled([loadRemoteFlags(), demoSeed.purgeMockDemoSeed()]).finally(() => {
+  route();
+  setTimeout(showDueInboxBackup, 3000);
+});
