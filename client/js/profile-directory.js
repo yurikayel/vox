@@ -127,6 +127,25 @@ export function removeProfileCard(routeId) {
   }
 }
 
+/**
+ * Apaga deste aparelho os cartões de perfil que a condição apontar (usado pela purga da gênese).
+ * @param {(card: object, routeId: string) => boolean} shouldDrop Recebe o cartão e a chave; true apaga.
+ * @returns {number} Quantos cartões foram apagados.
+ */
+export function removeProfileCardsWhere(shouldDrop) {
+  const cards = loadCards();
+  const kept = Object.entries(cards).filter(([id, c]) => !shouldDrop(c, id));
+  const removed = Object.keys(cards).length - kept.length;
+  if (removed > 0) {
+    try {
+      localStorage.setItem(CARDS_KEY, JSON.stringify(Object.fromEntries(kept)));
+    } catch {
+      /* ignore */
+    }
+  }
+  return removed;
+}
+
 export function listDiscoverableProfileCards() {
   const cards = loadCards();
   const all = Object.values(cards).filter((c) => {
