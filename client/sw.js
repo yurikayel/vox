@@ -227,6 +227,7 @@ const SHELL_ASSETS = [
 
   "./js/gateway-telemetry.js",
 
+  "./js/genesis.js",
   "./js/graphql.js",
 
   "./js/data/profiles-brazil-uf.js",
