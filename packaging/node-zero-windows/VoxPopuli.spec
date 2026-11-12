@@ -15,6 +15,8 @@ a = Analysis(
         "windows_host",
         "relay.blind_relay",
         "relay.central_memory",
+        "relay.genesis_data",
+        "relay.genesis_guard",
         "relay.inbox",
         "relay.mirror_validate",
         "relay.server",
