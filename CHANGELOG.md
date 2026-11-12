@@ -6,6 +6,11 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Diretório e prévia de conexão usam a foto já carregada
+- A linha do diretório de cidadãos (`renderPeopleResultRow`) e a prévia de conexão (`renderConnectPreview`) agora passam `p.avatarUrl` / `profile.avatar` para `renderAvatarHtml`, em vez de depender só do cartão sincronizado em `profileDirectory`.
+- Testes novos em `tests/people-chosen-name.test.js`.
+- SW `v7.90`.
+
 ### Contas sem nome não sujam mais a rede
 - Uma conta que nunca escolheu nome (a chave criada na primeira visita, numa aba anônima ou num navegador novo) não manda mais cartão de perfil para a memória central, para a malha nem para o Arweave. Era a origem das centenas de perfis vazios no NodeZero. Assim que a pessoa escolhe um nome, o cartão passa a sair como antes.
 - O aparelho para de publicar juntas todas as contas do cofre: só a conta ativa publica o próprio cartão. Publicar todas de uma vez contava a quem lesse que eram da mesma pessoa.
