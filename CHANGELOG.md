@@ -6,6 +6,11 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Roadmap e backlog de 2027 (documentação)
+- **Calendário 2027 no [ROADMAP](./docs/ROADMAP.md#calendário-2027):** dezembro e os quatro trimestres, com tema, marco (G1, G2, G3), itens por ID e uma data de desistência em cada trimestre. Todo ID aberto ganhou um trimestre ou entrou na lista "fora de 2027".
+- **Brainstorm do ano** em [docs/brainstorms/brainstorm-roadmap-2027.md](./docs/brainstorms/brainstorm-roadmap-2027.md): norte de dez/2027 com piso e meta, datas fixas (NLnet, assinatura v2, assembleias, semestres, eleição municipal de 2028), ideias por eixo, triagem, riscos e decisões pendentes do mantenedor.
+- **Backlog:** 11 linhas novas (PM-99…PM-109: teste de dois navegadores no CI, modo ensaio, lápide de conta, fim da convivência v1, relatório trimestral, garantia da praça, caminho de volta do POSSE, árvore do repasse, turma de extensão, editais brasileiros, preparo de 2028) e 4 promovidas do brainstorm de melhorias (PM-01, PM-13, PM-18, PM-23). Sem mudança de código nem de SW.
+
 ### Corte da gênese nos servidores e na malha P2P; gênese em 12/11 00:00
 - **Gênese passa para 2026-11-12 00:00 (Brasília)** (era 11/11 20:55), a pedido do mantenedor: "nada anterior a hoje". As contas e os posts criados entre 20:55 e a meia-noite também ficam de fora.
 - **Memória central recusa o que o cliente já recusa** (relay Python em [`relay/genesis_guard.py`](./relay/genesis_guard.py), nó em C# em `packaging/zero-central-memory-windows/src/GenesisGuard.cs`): cartão de conta de teste, post de autor de teste e post criado antes da gênese não entram. O que já está no disco sai ao carregar o estado. Motivo: um aparelho ainda na versão antiga reenviava tudo na primeira sincronização, e o NodeZero, limpo à mão duas vezes, voltava a ter 134 perfis de teste segundos depois.
