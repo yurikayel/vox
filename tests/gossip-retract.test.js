@@ -6,6 +6,10 @@ import * as localAccount from "../client/js/local-account.js";
 import * as peers from "../client/js/peers.js";
 import * as postOwnership from "../client/js/post-ownership.js";
 import * as listing from "../client/js/listing.js";
+import { GENESIS_MS } from "../client/js/genesis.js";
+
+/** Datas depois da gênese: a malha não aceita post anterior a ela (tudo antes era teste). */
+const T0 = GENESIS_MS;
 
 test("gossip-retract T1: UPDATE com editedAt maior substitui corpo", async () => {
   await cacheNode.clearLocalPosts();
@@ -16,7 +20,7 @@ test("gossip-retract T1: UPDATE com editedAt maior substitui corpo", async () =>
     type: "topic",
     title: "Versão 1",
     body: "Corpo original",
-    ts: 1000,
+    ts: T0 + 1000,
   });
 
   await cacheNode.saveLocalPost(original);
@@ -26,7 +30,7 @@ test("gossip-retract T1: UPDATE com editedAt maior substitui corpo", async () =>
     ...original,
     title: "Versão 2",
     body: "Corpo atualizado",
-    editedAt: 2000,
+    editedAt: T0 + 2000,
   });
 
   await peers.handleVoxMessage({ type: "GOSSIP_UPDATE", item: update, fromPeer: "peer_remote" }, () => {}, "rtc");
@@ -35,7 +39,7 @@ test("gossip-retract T1: UPDATE com editedAt maior substitui corpo", async () =>
   assert.ok(post);
   assert.equal(post.title, "Versão 2");
   assert.equal(post.body, "Corpo atualizado");
-  assert.equal(post.editedAt, 2000);
+  assert.equal(post.editedAt, T0 + 2000);
 });
 
 test("gossip-retract T2: UPDATE com editedAt menor ou igual é no-op", async () => {
@@ -47,8 +51,8 @@ test("gossip-retract T2: UPDATE com editedAt menor ou igual é no-op", async () 
     type: "topic",
     title: "Versão Atual",
     body: "Corpo novo",
-    ts: 1000,
-    editedAt: 3000,
+    ts: T0 + 1000,
+    editedAt: T0 + 3000,
   });
   await cacheNode.saveLocalPost(current);
 
@@ -56,14 +60,14 @@ test("gossip-retract T2: UPDATE com editedAt menor ou igual é no-op", async () 
     ...current,
     title: "Versão Antiga Descartada",
     body: "Não deve aplicar",
-    editedAt: 2000,
+    editedAt: T0 + 2000,
   });
 
   await peers.handleVoxMessage({ type: "GOSSIP_UPDATE", item: olderUpdate, fromPeer: "peer_remote" }, () => {}, "rtc");
 
   const post = await cacheNode.getLocalPost("p_retract_2");
   assert.equal(post?.title, "Versão Atual");
-  assert.equal(post?.editedAt, 3000);
+  assert.equal(post?.editedAt, T0 + 3000);
 });
 
 test("gossip-retract T3: UPDATE de autor diferente é rejeitado", async () => {
@@ -75,7 +79,7 @@ test("gossip-retract T3: UPDATE de autor diferente é rejeitado", async () => {
     type: "topic",
     title: "Post de Alice",
     body: "Conteúdo Alice",
-    ts: 1000,
+    ts: T0 + 1000,
   });
   await cacheNode.saveLocalPost(original);
 
@@ -83,7 +87,7 @@ test("gossip-retract T3: UPDATE de autor diferente é rejeitado", async () => {
     ...original,
     title: "Invasão de Bob",
     author: "vx_outro_autor_999",
-    editedAt: 5000,
+    editedAt: T0 + 5000,
   };
 
   await peers.handleVoxMessage({ type: "GOSSIP_UPDATE", item: forgedUpdate, fromPeer: "peer_remote" }, () => {}, "rtc");
@@ -101,14 +105,14 @@ test("gossip-retract T4: UPDATE com assinatura inválida é rejeitado", async ()
     type: "topic",
     title: "Post Intacto",
     body: "Texto",
-    ts: 1000,
+    ts: T0 + 1000,
   });
   await cacheNode.saveLocalPost(original);
 
   const badSigUpdate = await localAccount.signPayload({
     ...original,
     title: "Adulterado",
-    editedAt: 6000,
+    editedAt: T0 + 6000,
   });
   badSigUpdate.sig = "sig_totalmente_falsa_e_invalida";
 
@@ -127,7 +131,7 @@ test("gossip-retract T5: DELETE tombstone válido remove e oculta post de querie
     type: "topic",
     title: "Post a ser apagado",
     body: "Tchau post",
-    ts: 1000,
+    ts: T0 + 1000,
   });
   await cacheNode.saveLocalPost(post);
 
@@ -166,8 +170,8 @@ test("gossip-retract T6: DELETE com editedAt menor que update local é no-op", a
     type: "topic",
     title: "Post Recente",
     body: "Atualizado recentemente",
-    ts: 1000,
-    editedAt: 5000,
+    ts: T0 + 1000,
+    editedAt: T0 + 5000,
   });
   await cacheNode.saveLocalPost(post);
 
@@ -176,8 +180,8 @@ test("gossip-retract T6: DELETE com editedAt menor que update local é no-op", a
     type: "tombstone",
     id: post.id,
     author: post.author,
-    ts: 1000,
-    editedAt: 4000, // Menor que o post local
+    ts: T0 + 1000,
+    editedAt: T0 + 4000, // Menor que o post local
   });
 
   await peers.handleVoxMessage({ type: "GOSSIP_DELETE", item: staleTombstone, fromPeer: "peer_remote" }, () => {}, "rtc");
@@ -196,7 +200,7 @@ test("gossip-retract T7: GOSSIP create atrasado após tombstone é ignorado", as
     type: "topic",
     title: "Post Criado no Passado",
     body: "Fantasma",
-    ts: 1000,
+    ts: T0 + 1000,
   });
 
   const tombstone = await localAccount.signPayload({
@@ -204,8 +208,8 @@ test("gossip-retract T7: GOSSIP create atrasado após tombstone é ignorado", as
     type: "tombstone",
     id: "p_retract_7",
     author: originalPost.author,
-    ts: 1000,
-    editedAt: 3000,
+    ts: T0 + 1000,
+    editedAt: T0 + 3000,
   });
 
   await cacheNode.saveTombstone(tombstone);
@@ -225,14 +229,14 @@ test("gossip-retract T8: handleVoxMessage roteia GOSSIP_UPDATE e GOSSIP_DELETE",
     type: "topic",
     title: "Roteamento Inicial",
     body: "Corpo",
-    ts: 1000,
+    ts: T0 + 1000,
   });
   await cacheNode.saveLocalPost(post);
 
   const update = await localAccount.signPayload({
     ...post,
     title: "Roteamento Atualizado",
-    editedAt: 2000,
+    editedAt: T0 + 2000,
   });
   await peers.handleVoxMessage({ type: "GOSSIP_UPDATE", item: update }, () => {}, "broadcast");
   assert.equal((await cacheNode.getLocalPost("p_retract_8"))?.title, "Roteamento Atualizado");
@@ -251,8 +255,8 @@ test("gossip-retract T9: dedupe de update repetido não causa churn", async () =
     type: "topic",
     title: "Unico",
     body: "Corpo",
-    ts: 1000,
-    editedAt: 2000,
+    ts: T0 + 1000,
+    editedAt: T0 + 2000,
   });
   await cacheNode.saveLocalPost(post);
 
