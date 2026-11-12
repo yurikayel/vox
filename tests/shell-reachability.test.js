@@ -41,8 +41,9 @@ const sw = fs.readFileSync(path.join(root, "sw.js"), "utf8");
  * bytes; 0,2% acima passaria do teto atual, então o teto fica onde estava (catraca não sobe).
  * 2026-11-11 (norma de documentação + telas 6–8 juntas, merge da main): medido 2.010.383 bytes; o teto da norma
  * (2.014.194) já está abaixo de 0,2% acima do medido, então fica.
- * 2026-11-11 (gênese e purga das contas de teste): entram genesis.js e data/test-route-ids.js (as 122 chaves das
- * contas de teste, +3,8 KB); medido 2.005.256 bytes, abaixo do teto. Catraca: o teto desce para 0,2% acima.
+ * 2026-11-11 (gênese e purga das contas de teste): entram genesis.js e data/test-route-ids.js (as 127 chaves das
+ * contas de teste, +4,3 KB); medido 2.005.524 bytes. O teto desce para 0,2% acima de 2.005.256 (medido antes das
+ * cinco contas "Yuri Kayel" de teste, +268 B, que cabem nele).
  */
 const SHELL_BUDGET_BYTES = 2_009_266;
 
