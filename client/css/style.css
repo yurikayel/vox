@@ -387,7 +387,6 @@ a:hover {
 }
 
 /* Sidebar brand: squircle branco + X azul em todos os temas ? ver shell.js. */
-.brand-logo.brand-mark,
 .brand-mark {
   width: 32px;
   height: 32px;
@@ -834,7 +833,6 @@ a:hover {
 @media (max-width: 767px) {
   .sidebar-feed-label,
   .tab-label,
-  .brand-word,
   .sidebar-sync-hint.is-active,
   .sidebar-footer .network-chip span:not(.chip-dot),
   .wallet-badge-label,
@@ -864,7 +862,6 @@ a:hover {
 
   .app-layout.sidebar-drawer-open .sidebar-feed-label,
   .app-layout.sidebar-drawer-open .tab-label,
-  .app-layout.sidebar-drawer-open .brand-word,
   .app-layout.sidebar-drawer-open .sidebar-sync-hint.is-active,
   .app-layout.sidebar-drawer-open .sidebar-footer .network-chip span:not(.chip-dot),
   .app-layout.sidebar-drawer-open .wallet-badge-label,
@@ -935,7 +932,6 @@ a:hover {
   }
 
   .app-layout.sidebar-collapsed .tab-label,
-  .app-layout.sidebar-collapsed .brand-word,
   .app-layout.sidebar-collapsed .sidebar-feed-label,
   .app-layout.sidebar-collapsed .sidebar-sync-hint.is-active,
   .app-layout.sidebar-collapsed .sidebar-footer .network-chip span:not(.chip-dot),
@@ -2070,8 +2066,7 @@ main#app-main,
   pointer-events: none;
 }
 
-.post-media-header-left,
-.post-media-header-right {
+.post-media-header-left {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -2396,8 +2391,7 @@ body.post-more-sheet-open {
   justify-content: center;
 }
 
-.post-actions-overlay .post-overlay-actions-more > summary,
-.post-actions-overlay .btn-toolbar-more.btn-post-actions-more {
+.post-actions-overlay .post-overlay-actions-more > summary {
   flex-direction: row;
   align-items: center;
   justify-content: center;
@@ -5265,7 +5259,6 @@ p.profile-grid-handle {
   }
 }
 
-.pact-feature,
 .modal-feature {
   display: flex;
   gap: 0.75rem;
@@ -5277,7 +5270,6 @@ p.profile-grid-handle {
   border: 1px solid var(--outline);
 }
 
-.pact-feature-icon,
 .modal-feature-icon {
   font-size: 1.35rem;
   line-height: 1;
@@ -6815,7 +6807,6 @@ body.photo-tagging .post-media-hero.photo-tag-mode {
   /* Rótulos de texto ocultos na bottom bar para visual minimalista e espaçado */
   .tab-label,
   .sidebar-feed-label,
-  .brand-word,
   .sidebar-sync-hint,
   .wallet-badge-label,
   .theme-mode-label {
@@ -6873,10 +6864,8 @@ body.photo-tagging .post-media-hero.photo-tag-mode {
   /* Na tela de Feed / Stream contínuo no mobile, sangra de ponta a ponta sem sarjetas laterais */
   .app-layout:has(.feed-container) main#app-main,
   .app-layout:has(.feed-chrome) main#app-main,
-  .app-layout:has(.feed-stream) main#app-main,
   main#app-main:has(.feed-container),
-  main#app-main:has(.feed-chrome),
-  main#app-main:has(.feed-stream) {
+  main#app-main:has(.feed-chrome) {
     padding-left: 0;
     padding-right: 0;
   }
@@ -7231,7 +7220,6 @@ body.photo-tagging .post-media-hero.photo-tag-mode {
     scroll-behavior: auto !important;
   }
 
-  .community-card:hover,
   .post:hover {
     transform: none !important;
   }
@@ -7647,8 +7635,7 @@ blockquote.repost-cite {
   margin-left: auto;
 }
 
-.btn-dm-reply-msg,
-.dm-react-trigger {
+.btn-dm-reply-msg {
   background: transparent;
   border: none;
   color: var(--muted);
@@ -7663,8 +7650,7 @@ blockquote.repost-cite {
   display: none;
 }
 
-.btn-dm-reply-msg:hover,
-.dm-react-trigger:hover {
+.btn-dm-reply-msg:hover {
   color: var(--text);
   background: rgba(0, 0, 0, 0.06);
 }
