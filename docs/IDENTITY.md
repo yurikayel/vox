@@ -1,5 +1,7 @@
 # Identidade e criptografia
 
+> **Status:** canônico · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-10
+
 Uma história única em fases — evita misturar promessas do README com o que o PWA Fase 1 entrega.
 
 > **Estado atual (nov/2026):** identidade local `vx_*` (ECDSA P-256) criada no aparelho no onboarding; recuperação por cofre cifrado (ver *Cofre e recuperação* abaixo). As fases abaixo são o histórico de como isso chegou aqui.

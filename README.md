@@ -337,6 +337,11 @@ Na raiz ficam só os arquivos que o GitHub e as ferramentas esperam ali: `README
 * **[ADR-023](./docs/adr/023-moderacao-em-camadas-e-moderador-natural.md):** Moderação em camadas e moderador natural assimétrico.
 * **[ADR-024](./docs/adr/024-divulgacao-responsavel-e-honestidade-de-seguranca.md):** Divulgação responsável e honestidade sobre segurança.
 * **[ADR-025](./docs/adr/025-cofre-v2-so-a-senha-abre.md):** Cofre de recuperação v2 — só a Senha Soberana abre.
+* **[ADR-026](./docs/adr/026-chaves-em-repouso-trava-depois-do-backup.md):** Chaves privadas em repouso — chave do aparelho e trava depois do backup.
+* **[ADR-027](./docs/adr/027-autorizacao-no-relay-dono-e-origem.md):** Autorização no relay — prova do dono, chave de apagar e política de origem.
+* **[ADR-028](./docs/adr/028-ponte-activitypub-via-bluesky.md):** Ponte com o Fediverso (ActivityPub) via Bluesky, sem servidor próprio.
+* **[ADR-029](./docs/adr/029-midia-em-duas-camadas-360p-720p.md) (não implementado):** Mídia em duas camadas (360p e 720p), sem teto de 100 KB por item.
+* **[ADR-030](./docs/adr/030-trazer-do-bluesky-pesos.md) (não implementado):** Trazer do Bluesky (PESOS) — arquivo assinado da própria voz, sem servidor.
 
 Índice com status: [docs/adr/README.md](./docs/adr/README.md). Todas as decisões institucionais e de arquitetura em vigor, numa página: [docs/DECISOES.md](./docs/DECISOES.md).
 

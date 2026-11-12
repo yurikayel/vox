@@ -1,5 +1,7 @@
 # Auditoria de branding — VoxPopuli Node Zero
 
+> **Status:** auditoria (retrato de 2026-11-01) · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-01
+
 **Data:** 2026-11-01
 
 **Escopo:** textos visíveis, tray, build PyInstaller, ícones, dados de versão, instalação e alegações de capacidade.

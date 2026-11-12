@@ -1,5 +1,7 @@
 ﻿# Espaços digitais e infra comunitária — spec canônica (V-I01)
 
+> **Status:** canônico (norma curta, V-I01; não é parecer jurídico) · **Owner:** mantenedor · **Revisado:** 2026-10-25
+
 Documento normativo curto. **Não é parecer jurídico.** Implementação segue backlog `V-I02`–`V-I10`; copy de UI em `V-I06`.
 
 ## Tese

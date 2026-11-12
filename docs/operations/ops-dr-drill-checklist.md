@@ -1,5 +1,7 @@
 # Drill DR — espelho shell (NET-02)
 
+> **Status:** canônico (checklist) · **Owner:** mantenedor / steward ops · **Revisado:** 2026-10-25
+
 **Objetivo:** uma execução humana documentada — simular queda de **A** (Pages), operar via **B**, avisar comunidade, restaurar **A** com paridade SHA/`CACHE_NAME`.
 
 **Refs:** [`ops-shell-mirrors.md`](./ops-shell-mirrors.md) (tabela T2) · [`ops-pages-rollback.md`](./ops-pages-rollback.md)

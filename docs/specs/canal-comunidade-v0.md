@@ -1,6 +1,6 @@
 # Canal: comunidade em que só a moderação publica (v0)
 
-> **Status:** implementado no PM-81 · **Owner:** mantenedor · **Revisado:** 2026-11-10
+> **Status:** implementada no PM-81 · **Owner:** mantenedor · **Revisado:** 2026-11-10
 > Relacionados: [moderação e `community_update` (PM-09)](../ROADMAP.md), `client/js/community-channel.js`, `client/js/app/community-channel-flow.js`, `client/js/render/channel-bar.js`.
 
 ## Problema
