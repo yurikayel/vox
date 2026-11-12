@@ -59,8 +59,12 @@ const sw = fs.readFileSync(path.join(root, "sw.js"), "utf8");
  * 2.001.762 bytes; teto mantido (sobram 144 B).
  * 2026-11-12 (P1: cartão sem nome e contas do cofre não saem do aparelho, +1,5 KB): pago removendo 13 exportações
  * que nada usava e a regra .gossip-edited-pill (-1,9 KB). Medido 2.001.027 bytes; teto mantido.
+ * 2026-11-12 (escapeHtml e shortId saem de render/util.js para shared/html.js e short-id.js, para o domínio não
+ * importar a UI): nenhum código novo; os +1.454 B são os dois cabeçalhos de módulo e o JSDoc que a norma de
+ * documentação exige de símbolo que muda de arquivo (os dois eram dívida sem JSDoc). Não havia corte à mão sem mudar
+ * comportamento. O teto SOBE 575 B, para o medido (2.002.481 bytes), sem folga: a próxima adição precisa de corte.
  */
-const SHELL_BUDGET_BYTES = 2_001_906;
+const SHELL_BUDGET_BYTES = 2_002_481;
 
 function listFrom(name) {
   const m = sw.match(new RegExp(`const ${name} = \\[([\\s\\S]*?)\\];`));
