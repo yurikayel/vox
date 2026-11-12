@@ -14,6 +14,8 @@ if (-not (Test-Path $CSC)) {
 
 $SRC = "$ScriptDir\src\ZeroCentralMemory.cs"
 $SRC_GUARD = "$ScriptDir\src\VaultOwnerGuard.cs"
+$SRC_GENESIS = "$ScriptDir\src\GenesisGuard.cs"
+$SRC_GENESIS_DATA = "$ScriptDir\src\GenesisData.cs"
 $ICO = "$Root\packaging\desktop-seeder-windows\vox.ico"
 $DIST = "$Root\dist"
 if (-not (Test-Path $DIST)) { New-Item -ItemType Directory -Force -Path $DIST | Out-Null }
@@ -32,7 +34,9 @@ $CSC_ARGS = @(
     "/resource:$ICO,vox.ico",
     "/out:$OUT_EXE",
     "$SRC",
-    "$SRC_GUARD"
+    "$SRC_GUARD",
+    "$SRC_GENESIS",
+    "$SRC_GENESIS_DATA"
 )
 
 & $CSC $CSC_ARGS
