@@ -2,7 +2,7 @@
 
 Stewards são **voluntários da comunidade**, não o mantenedor do repositório Vox. Este kit fecha o pacote mínimo para a camada **Steward** em [`espacos-digitais-infra.md`](../strategy/espacos-digitais-infra.md): qualquer coletivo sobe relay + sinalização **sem** depender do mantenedor.
 
-**Status:** fechado em `main` — compose + Caddy (`/health`, `/vox/*`), quota via env, wizard `#/settings/network/steward`, kits 1-clique Windows/Linux.
+**Status:** canônico (V-I08 fechado em `main`) — compose + Caddy (`/health`, `/vox/*`), quota via env, wizard `#/settings/network/steward`, kits 1-clique Windows/Linux.
 
 ---
 

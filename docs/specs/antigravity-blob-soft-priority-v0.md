@@ -1,5 +1,7 @@
 # Blob soft priority v0 — spec / ADR (Antigravity)
 
+> **Status:** implementada (no ar com a flag desligada por padrão, conforme o FEATURES) · **Owner:** mantenedor · **Revisado:** 2026-10-23
+
 **Tarefa V-I09** · spike ADR (implementação em branch separada)  
 **Branch de implementação prevista:** `feat/blob-soft-priority-v0`  
 **Baseline:** `main` · SW `vox-pwa-v6.18-cache-manifest-wire` · **194** testes  

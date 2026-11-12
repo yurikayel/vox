@@ -61,7 +61,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 | Decisões institucionais e de arquitetura (registro) | [DECISOES.md](./DECISOES.md) |
 | ADRs (detalhe de cada decisão) | [adr/README.md](./adr/README.md) |
 | Tese de tração e preceitos | [direcionamento-crescimento-rede-2026-11.md](./strategy/direcionamento-crescimento-rede-2026-11.md) |
-| Norma de documentação | [CONTRIBUTING-DOCS.md](./CONTRIBUTING-DOCS.md) |
+| Navegação, banners de status e DoD dos docs | [CONTRIBUTING-DOCS.md](./CONTRIBUTING-DOCS.md) |
 
 > [!IMPORTANT]
 > **Regra anti-inflação:** é proibido criar outro plano mestre ("N=…", "T1–T10", checklist paralelo) sem um ADR que revogue o atual — hoje o [ADR-017](./adr/017-consolidacao-roadmap-unico.md). Ideias novas entram como brainstorm (banner + "Não substitui o ROADMAP").
@@ -78,7 +78,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 - [midia-v2.md](./specs/midia-v2.md): mídia retrô: AVIF q70 em 540p, Opus 32 kbps e H.264 480p24, com pedaços abaixo de 100 KB (não implementada)
 - [canal-comunidade-v0.md](./specs/canal-comunidade-v0.md): canal, comunidade em que só a moderação publica posts (implementado)
 - [moderador-natural-v0.md](./specs/moderador-natural-v0.md): vínculo assinado (implementado) e moderador natural nas denúncias (a implementar)
-- [aviso-assinado-v0.md](./specs/aviso-assinado-v0.md): **aviso assinado** (proposta, não implementada): tópico com campos de aviso, texto pronto para o WhatsApp, página leve de conferência sem conta (verde, amarelo, vermelho), respostas assinadas e contagem das respostas coladas do WhatsApp
+- [aviso-assinado-v0.md](./specs/aviso-assinado-v0.md): **aviso assinado** (implementado em laboratório, atrás da flag `vox.lab.aviso`): tópico com campos de aviso, texto pronto para o WhatsApp, página leve de conferência sem conta (verde, amarelo, vermelho), respostas assinadas e contagem das respostas coladas do WhatsApp
 - [sync-inventario-v0.md](./specs/sync-inventario-v0.md): sincronização ao conectar por inventário, só o que falta (implementada)
 - [mochila-dm-v0.md](./specs/mochila-dm-v0.md): caixa de saída das DMs (implementada) e repasse cego por outros aparelhos (não implementado)
 - [replicacao-por-grau-v0.md](./specs/replicacao-por-grau-v0.md): mídia no aparelho, replicação por grau de amizade com teto de 500 MB (não implementada)
@@ -188,4 +188,4 @@ Mantidos para registro; cada um tem banner apontando o sucessor.
 - [gateway-honest-fallback-brainstorm.md](./archive/gateway-honest-fallback-brainstorm.md) → ADR-004 · [steward-wizard-brainstorm.md](./archive/steward-wizard-brainstorm.md) → steward-relay-kit
 - Métricas antigas: [10-24](./metrics/baseline-2026-10-24.md) · [10-30](./metrics/baseline-2026-10-30.md) · [10-31](./metrics/baseline-2026-10-31.md) · [11-01](./metrics/baseline-2026-11-01.md) · [11-04](./metrics/baseline-2026-11-04.md) · [11-05](./metrics/baseline-2026-11-05.md) · [11-06](./metrics/baseline-2026-11-06.md) · [11-08](./metrics/baseline-2026-11-08.md) · [11-09](./metrics/baseline-2026-11-09.md)
 
-**Versão:** 2.2 · 2026-11-08
+**Versão:** 2.6 · 2026-11-12 (a mesma do cabeçalho)

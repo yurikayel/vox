@@ -1,5 +1,7 @@
 # Perfil institucional — Vox (primeiro contato)
 
+> **Status:** canônico · **Owner:** mantenedor · **Revisado:** 2026-10-27
+
 **RouteId fixo:** `vx_voxbrasil_welcome` (sistema; não assinatura P2P de usuário).
 
 ## Papel

@@ -1,5 +1,7 @@
 # Auditoria — Permaweb: descoberta, retenção e segurança (29/10/2026)
 
+> **Status:** auditoria (retrato de 2026-10-29) · **Owner:** mantenedor / revisor · **Revisado:** 2026-10-29
+
 > Passagem de higiene sobre a resposta de chat "postar aqui, irmão vê lá, sem servidor central, via Arweave".
 > Objetivo: separar **o que o código faz hoje** do que foi descrito como intenção. Sem mudanças de código nesta passagem.
 

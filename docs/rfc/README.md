@@ -1,5 +1,7 @@
 # RFCs Vox (P3)
 
+> **Status:** rascunho (processo proposto) · **Owner:** mantenedor · **Revisado:** 2026-10-25
+
 Processo proposto:
 
 1. Abrir issue no GitHub com label `rfc`.
