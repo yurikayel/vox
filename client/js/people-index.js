@@ -40,14 +40,14 @@ function isSameMetaAvatar(avA, avB, nameA, nameB) {
   return avA === avB || Boolean(nameA && nameA === nameB);
 }
 
+// Nome igual só une contas que moram neste aparelho (a sua e as do seu cofre). Uma chave de fora
+// com o mesmo nome é outra pessoa (homônimo) e tem de aparecer no diretório, não sumir dentro de "Você".
 function isSameNamedLocalIdentity(entryA, entryB, nameA, nameB) {
   const isNamedA = !isFallbackRouteName(nameA, entryA.routeId);
   const isNamedB = !isFallbackRouteName(nameB, entryB.routeId);
   if (!isNamedA || !isNamedB || nameA !== nameB) return false;
-  const isLocalA = entryA.source === "self" || entryA.source === "vault";
-  const isLocalB = entryB.source === "self" || entryB.source === "vault";
-  if (isLocalA && isLocalB) return true;
-  return Boolean(isLocalA || isLocalB);
+  const isLocal = (e) => e.source === "self" || e.source === "vault";
+  return isLocal(entryA) && isLocal(entryB);
 }
 
 function isSameSocialIdentity(entryA, entryB) {
