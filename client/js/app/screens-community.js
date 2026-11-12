@@ -8,6 +8,7 @@
  */
 import * as welcomeProfile from "../vox-welcome-profile.js";
 import { confirmGovernanceVote } from "./vote-confirm.js";
+import { addContactAndNotify } from "./contact-notify-flow.js";
 
 import * as gql from "../graphql.js";
 import * as render from "../render.js";
@@ -32,7 +33,6 @@ import { filterChannelTopics, filterChannelTopic } from "../community-channel.js
 import * as newKeyGuard from "../new-key-guard.js";
 import * as communityUpdates from "../community-updates.js";
 import { markCommunitySeen } from "../community-unread.js";
-import * as contacts from "../contacts.js";
 import * as peopleIndex from "../people-index.js";
 import * as profileDirectory from "../profile-directory.js";
 import { buildProposalPossePayload, firePosseWebhooks, loadPosseWebhooks } from "../posse-dispatch.js";
@@ -558,7 +558,7 @@ function bindCommunityHeaderEvents({ main, communityId, meta, user, isMember, pe
     btn.addEventListener("click", () => {
       const id = btn.dataset.route;
       if (!id) return;
-      contacts.addContact(id, btn.dataset.label || "");
+      addContactAndNotify(id, btn.dataset.label || "");
       share.showToast("Contato adicionado.");
       btn.disabled = true; btn.textContent = "✓";
     });

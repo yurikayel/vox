@@ -6,6 +6,12 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Aviso cifrado quando alguém adiciona você aos contatos
+- Ao adicionar alguém aos contatos (em **Conectar** ou na lista de membros da comunidade), o aparelho envia um aviso assinado e cifrado E2E pelo canal direto (`kind: "contact_added"`, sem criar mensagem falsa na conversa de DM).
+- Quem recebe vê o aviso na seção **Quem adicionou você** no topo de **Pessoas** (`#/people`), com botão **Adicionar de volta** e **Dispensar**, além de toast no app e notificação do sistema se autorizada.
+- Seguir autor continua silencioso para preservar o anonimato de leitura.
+- Módulos `client/js/contact-notify.js` e `client/js/app/contact-notify-flow.js`; testes em `tests/contact-notify.test.js`; SW `v7.91`.
+
 ### Contas sem nome não sujam mais a rede
 - Uma conta que nunca escolheu nome (a chave criada na primeira visita, numa aba anônima ou num navegador novo) não manda mais cartão de perfil para a memória central, para a malha nem para o Arweave. Era a origem das centenas de perfis vazios no NodeZero. Assim que a pessoa escolhe um nome, o cartão passa a sair como antes.
 - O aparelho para de publicar juntas todas as contas do cofre: só a conta ativa publica o próprio cartão. Publicar todas de uma vez contava a quem lesse que eram da mesma pessoa.
