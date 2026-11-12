@@ -1,5 +1,7 @@
 # Piloto comunidade — retrospectiva (V-P09)
 
+> **Status:** canônico (modelo a preencher) · **Owner:** mantenedor · **Revisado:** 2026-10-25
+
 Preencher após 7–14 dias de piloto real (10–30 pessoas + WhatsApp).
 
 ## Identificação

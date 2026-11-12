@@ -1,5 +1,7 @@
 # Brainstorm — login tradicional (Google/Meta) e perfis encontráveis
 
+> **Status:** brainstorm · **Owner:** mantenedor · **Revisado:** 2026-10-24 · **Não substitui o [ROADMAP](../ROADMAP.md)** ([ADR-017](../adr/017-consolidacao-roadmap-unico.md))
+
 **Data:** 2026-10-24 · **Revisão:** Composer 2.5 · **Contexto:** V-DIS em `main` (`1dd1d25`) — OAuth client-only pós-Cantina, `#/people`, `#/connect`, contatos locais, `vx_*` canônico.
 
 ## Estado hoje (resumo)

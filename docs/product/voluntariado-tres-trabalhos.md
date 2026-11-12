@@ -1,6 +1,6 @@
 # Voluntariado no piloto: três trabalhos
 
-> **Status:** decisão do mantenedor · **Owner:** mantenedor · **Revisado:** 2026-11-09
+> **Status:** canônico (decisão do mantenedor) · **Owner:** mantenedor · **Revisado:** 2026-11-09
 > Relacionados: [ADR-020](../adr/020-postura-de-operacao-do-piloto-g1.md) (voluntários só em baixo risco), [replicação por grau](../specs/replicacao-por-grau-v0.md).
 
 Para começar, três trabalhos que qualquer pessoa entende em uma frase, faz sem treino, pode repetir muitas vezes e que **não precisam passar pelo mantenedor para valer**.
