@@ -96,6 +96,7 @@ export {
   showGenesisStep,
   closeOAuthEnrich,
   resolvePeopleSearchBody,
+  renderAddedYouSection,
   renderPeopleSearch,
   renderPostPactConnectModal,
   closePostPactConnectModal,

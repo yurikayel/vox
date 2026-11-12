@@ -75,8 +75,10 @@ const sw = fs.readFileSync(path.join(root, "sw.js"), "utf8");
  * 2026-11-12 (correções da revisão do #108, +1,3 KB): pagas trocando 5 cópias do download por share.downloadBlob e
  * removendo 9 exportações sem uso (governance, wallet, mock); medido 2.004.619 bytes; teto mantido.
  * 2026-11-12 (diretório e prévia de conexão com foto carregada, +66 B): teto atualizado para o medido (2.004.685 bytes).
+ * 2026-11-12 (aviso E2E de novo contato + seção "Quem adicionou você" em Pessoas): entra `contact-notify.js`,
+ * `app/contact-notify-flow.js` e a seção no diretório; medido 2.019.348 bytes (teto ajustado ao medido).
  */
-const SHELL_BUDGET_BYTES = 2_004_685;
+const SHELL_BUDGET_BYTES = 2_019_348;
 
 function listFrom(name) {
   const m = sw.match(new RegExp(`const ${name} = \\[([\\s\\S]*?)\\];`));

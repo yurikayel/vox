@@ -18,6 +18,8 @@ import * as dmMsg from "../dm-messenger.js";
 import * as outbox from "../dm-outbox.js";
 import { parseReportDm } from "../report-review.js";
 import { parseRoleClaimDm } from "../aviso-roles.js";
+import { parseContactAddedDm } from "../contact-notify.js";
+import { receiveContactAddedDm } from "./contact-notify-flow.js";
 
 /**
  * Liga ou desliga a reação de alguém numa mensagem do fio.
@@ -73,14 +75,18 @@ async function handleRoleClaimPayload(rawText) {
 /**
  * Processa um envelope recebido e já decifrado.
  *
- * Reação e confirmação de leitura só atualizam o fio. Mensagem é guardada; se trouxer denúncia ou
- * resposta de papel, o tratamento especial roda em seguida e nunca derruba a entrada.
+ * Reação, confirmação de leitura e aviso de contato só atualizam o estado local sem abrir conversa.
+ * Mensagem é guardada; se trouxer denúncia ou resposta de papel, o tratamento especial roda em seguida.
  *
  * @param {{id: string, from: string, to: string, ts?: number}} env Envelope.
  * @param {string} rawText Texto decifrado.
- * @returns {Promise<boolean>} `false` só quando a reação ou a leitura não acham a mensagem.
+ * @returns {Promise<boolean|string>} `false` quando reação/leitura não acham mensagem; `"contact_added"` para aviso de contato.
  */
 export async function ingestDecryptedEnvelope(env, rawText) {
+  if (parseContactAddedDm(rawText)) {
+    await receiveContactAddedDm(env, rawText);
+    return "contact_added";
+  }
   const parsed = dmMsg.parseDmPayload(rawText);
   if (parsed.kind === "react") {
     return applyBubbleReaction(env.from, env.from, parsed.targetId, parsed.emoji);
