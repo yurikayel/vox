@@ -30,8 +30,11 @@ export async function syncMeshProfileCard() {
   if (localAccount.getMeshDiscoverable()) {
     const signed = await profileCard.buildSignedProfileCard();
     applyLocalCardFromSigned(signed);
-    peers.broadcastProfileCard(signed);
-    void profileCard.publishProfileCardOnChain(signed);
+    // Sem nome escolhido o cartão fica só aqui: não vai para a malha nem para o Arweave.
+    if (profileDirectory.hasChosenCardName({ name: signed.displayName, routeId: signed.routeId })) {
+      peers.broadcastProfileCard(signed);
+      void profileCard.publishProfileCardOnChain(signed);
+    }
     return signed;
   }
   const revoke = await profileCard.buildRevokeProfileCard();

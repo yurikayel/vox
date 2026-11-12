@@ -106,7 +106,7 @@ export function setProfileCard(routeId, partial) {
   } catch {
     /* ignore */
   }
-  if (profileMemorySink) profileMemorySink({ type: "PROFILE_CARD", card: nextCard });
+  if (profileMemorySink && isShareableCard(nextCard)) profileMemorySink({ type: "PROFILE_CARD", card: nextCard });
 }
 
 export function getProfileCard(routeId) {
@@ -144,6 +144,32 @@ export function removeProfileCardsWhere(shouldDrop) {
     }
   }
   return removed;
+}
+
+/**
+ * Nome escolhido pela pessoa: não vazio e diferente da própria chave (`vx_…`).
+ * @param {{name?: string, routeId?: string}} card Cartão ou entrada do diretório.
+ * @returns {boolean} True se o nome foi escolhido.
+ */
+export function hasChosenCardName(card) {
+  const name = String(card?.name || "").trim();
+  const id = String(card?.routeId || "");
+  return Boolean(name) && !id.startsWith(name) && !/^vx_/i.test(name);
+}
+
+// Só sai do aparelho cartão com nome escolhido: conta só com a chave é a descartável que suja a rede.
+// O próprio cartão também não sai quando a pessoa desligou "aparecer na malha".
+function isShareableCard(card) {
+  if (!hasChosenCardName(card)) return false;
+  return card.routeId !== localAccount.getCachedRouteIdSync() || localAccount.getMeshDiscoverable();
+}
+
+/**
+ * Cartões que este aparelho manda para a memória central e para a malha.
+ * @returns {Array<object>} Cartões descobríveis que podem sair do aparelho.
+ */
+export function listShareableProfileCards() {
+  return listDiscoverableProfileCards().filter(isShareableCard);
 }
 
 export function listDiscoverableProfileCards() {

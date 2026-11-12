@@ -5,14 +5,6 @@ export const BSKY_POST_CACHE_KEY = "vox-bsky-cached-posts-v1";
 export const BSKY_PUBLIC_ENDPOINT = "https://public.api.bsky.app/xrpc";
 export const BSKY_DEFAULT_SEEDS = ["lula.com.br", "brasildefato.com.br", "theintercept.com"];
 
-export const BSKY_CIVIC_SUGGESTIONS = Object.freeze([
-  { handle: "lula.com.br", label: "Lula" },
-  { handle: "brasildefato.com.br", label: "Brasil de Fato" },
-  { handle: "theintercept.com", label: "The Intercept" },
-  { handle: "apublica.org", label: "Agência Pública" },
-  { handle: "cartacapital.com.br", label: "CartaCapital" },
-]);
-
 export function loadBskySubscriptions() {
   if (typeof localStorage === "undefined") return [...BSKY_DEFAULT_SEEDS];
   try {
