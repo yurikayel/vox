@@ -3,6 +3,7 @@ import * as cacheNode from "./cache-node.js";
 import * as peers from "./peers.js";
 import * as handles from "./handles.js";
 import { recordGatewayAttempt, recordReadOrigin } from "./gateway-telemetry.js";
+import { filterGraphqlData } from "./genesis.js";
 
 const QUERIES = {
   communities: `query ListCommunities($after: String) {
@@ -22,6 +23,7 @@ const QUERIES = {
           id
           owner { address }
           tags { name value }
+          block { timestamp }
         }
       }
     }
@@ -44,6 +46,7 @@ const QUERIES = {
           id
           owner { address }
           tags { name value }
+          block { timestamp }
         }
       }
     }
@@ -63,6 +66,7 @@ const QUERIES = {
           id
           owner { address }
           tags { name value }
+          block { timestamp }
         }
       }
     }
@@ -72,6 +76,7 @@ const QUERIES = {
       id
       owner { address }
       tags { name value }
+      block { timestamp }
     }
   }`,
   memberships: `query ListMemberships($address: String!) {
@@ -88,6 +93,7 @@ const QUERIES = {
         node {
           id
           tags { name value }
+          block { timestamp }
         }
       }
     }
@@ -107,6 +113,7 @@ const QUERIES = {
           id
           owner { address }
           tags { name value }
+          block { timestamp }
         }
       }
     }
@@ -125,6 +132,7 @@ const QUERIES = {
         node {
           id
           tags { name value }
+          block { timestamp }
         }
       }
     }
@@ -144,6 +152,7 @@ const QUERIES = {
           id
           owner { address }
           tags { name value }
+          block { timestamp }
         }
       }
     }
@@ -162,6 +171,7 @@ const QUERIES = {
         node {
           id
           tags { name value }
+          block { timestamp }
         }
       }
     }
@@ -182,6 +192,7 @@ const QUERIES = {
           id
           owner { address }
           tags { name value }
+          block { timestamp }
         }
       }
     }
@@ -201,6 +212,7 @@ const QUERIES = {
           id
           owner { address }
           tags { name value }
+          block { timestamp }
         }
       }
     }
@@ -223,6 +235,7 @@ const QUERIES = {
           id
           owner { address }
           tags { name value }
+          block { timestamp }
         }
       }
     }
@@ -244,6 +257,7 @@ const QUERIES = {
           id
           owner { address }
           tags { name value }
+          block { timestamp }
         }
       }
     }
@@ -334,7 +348,7 @@ async function queryOne(gqlUrl, query, variables) {
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const json = await res.json();
   if (json.errors?.length) throw new Error(json.errors[0].message);
-  return json.data;
+  return filterGraphqlData(json.data);
 }
 
 async function withGateways(fn) {

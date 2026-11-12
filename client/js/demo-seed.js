@@ -5,6 +5,7 @@
 
 import * as cacheNode from "./cache-node.js";
 import { UF_ROUTE_IDS } from "./data/profiles-brazil-uf.js";
+import { isBeforeGenesisMs } from "./genesis.js";
 
 const SEED_KEY = "vox-demo-seeded-v12-uf27-common-names";
 const PURGE_KEY = "vox-mock-purged-v1";
@@ -16,14 +17,48 @@ function markDemoPurgedInStorage() {
   } catch {}
 }
 
-function isMockPost(p) {
+function isOldOrMockPost(p) {
   if (!p) return false;
   const id = String(p.id || "");
   const communityId = String(p.communityId || "");
   const author = String(p.author || "");
   if (id.startsWith("demo-") || communityId.startsWith("demo-")) return true;
   if (author.startsWith("vx_demo_")) return true;
-  return Array.isArray(UF_ROUTE_IDS) && UF_ROUTE_IDS.includes(author);
+  if (Array.isArray(UF_ROUTE_IDS) && UF_ROUTE_IDS.includes(author)) return true;
+  const ts = p.ts || p.timestamp || 0;
+  return isBeforeGenesisMs(ts);
+}
+
+function purgeOldProfileCards() {
+  try {
+    const raw = window.localStorage.getItem("vox-profile-cards-v1");
+    if (!raw) return;
+    const cards = JSON.parse(raw);
+    let changed = false;
+    for (const [id, c] of Object.entries(cards)) {
+      const ts = c?.updatedAt || c?.timestamp || c?.ts || 0;
+      if (id === "vx_WAqxgW" || isBeforeGenesisMs(ts)) {
+        delete cards[id];
+        changed = true;
+      }
+    }
+    if (changed) {
+      window.localStorage.setItem("vox-profile-cards-v1", JSON.stringify(cards));
+    }
+  } catch {}
+}
+
+function purgeTestContacts() {
+  try {
+    const raw = window.localStorage.getItem("vox-contacts-v1");
+    if (!raw) return;
+    const list = JSON.parse(raw);
+    if (!Array.isArray(list)) return;
+    const filtered = list.filter((c) => c?.routeId !== "vx_WAqxgW");
+    if (filtered.length !== list.length) {
+      window.localStorage.setItem("vox-contacts-v1", JSON.stringify(filtered));
+    }
+  } catch {}
 }
 
 async function purgeMockPosts() {
@@ -31,7 +66,7 @@ async function purgeMockPosts() {
   try {
     const allPosts = await cacheNode.getLocalPosts({});
     for (const p of allPosts) {
-      if (isMockPost(p)) {
+      if (isOldOrMockPost(p)) {
         await cacheNode.deleteLocalPost(p.id);
         count++;
       }
@@ -54,18 +89,32 @@ async function purgeMockCommunities() {
   return count;
 }
 
+/**
+ * Purgador geral de dados legados, posts de teste e perfis anteriores à gênese.
+ * @returns {Promise<number>} Quantidade de itens removidos.
+ */
 export async function purgeMockDemoSeed() {
   if (typeof window === "undefined" || !window.localStorage) return 0;
   markDemoPurgedInStorage();
+  purgeOldProfileCards();
+  purgeTestContacts();
   const removedPosts = await purgeMockPosts();
   const removedCommunities = await purgeMockCommunities();
   return removedPosts + removedCommunities;
 }
 
+/**
+ * Purgador idempotente de seed de demonstração.
+ * @returns {Promise<number>} Quantidade de itens removidos.
+ */
 export async function ensureDemoSeed() {
   return purgeMockDemoSeed();
 }
 
+/**
+ * Reinicialização do purgador de seed de demonstração.
+ * @returns {Promise<number>} Quantidade de itens removidos.
+ */
 export async function resetDemoSeed() {
   return purgeMockDemoSeed();
 }

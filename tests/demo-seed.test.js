@@ -31,3 +31,30 @@ test("demo-seed - ensureDemoSeed atua como purga idempotente", async () => {
   const posts = await cacheNode.getLocalPosts({ communityId: "demo-aprenda-vox" });
   assert.equal(posts.length, 0, "nenhum post mock deve ser inserido");
 });
+
+test("demo-seed - purgeMockDemoSeed purga dados pre-genese e cards de teste", async () => {
+  await cacheNode.saveLocalPost({ id: "pre-genesis-post", type: "topic", title: "Velho", ts: 1000 });
+  await cacheNode.saveLocalPost({ id: "post-rede-viva", type: "topic", title: "Novo", ts: Date.now() + 10000 });
+
+  const cards = {
+    vx_WAqxgW: { routeId: "vx_WAqxgW", name: "Ana Lúcia", updatedAt: Date.now() + 10000 },
+    vx_antigo: { routeId: "vx_antigo", name: "Teste Antigo", updatedAt: 1000 },
+    vx_novo: { routeId: "vx_novo", name: "Cidadão Novo", updatedAt: Date.now() + 10000 },
+  };
+  localStorage.setItem("vox-profile-cards-v1", JSON.stringify(cards));
+  localStorage.setItem("vox-contacts-v1", JSON.stringify([{ routeId: "vx_WAqxgW" }, { routeId: "vx_ok" }]));
+
+  await demoSeed.purgeMockDemoSeed();
+
+  assert.equal(await cacheNode.getLocalPost("pre-genesis-post"), null, "post anterior ao corte deve ser removido");
+  assert.ok(await cacheNode.getLocalPost("post-rede-viva"), "post da rede viva deve ser preservado");
+
+  const cardsAfter = JSON.parse(localStorage.getItem("vox-profile-cards-v1") || "{}");
+  assert.equal(cardsAfter.vx_WAqxgW, undefined);
+  assert.equal(cardsAfter.vx_antigo, undefined);
+  assert.ok(cardsAfter.vx_novo);
+
+  const contactsAfter = JSON.parse(localStorage.getItem("vox-contacts-v1") || "[]");
+  assert.equal(contactsAfter.find((c) => c.routeId === "vx_WAqxgW"), undefined);
+  assert.equal(contactsAfter.find((c) => c.routeId === "vx_ok")?.routeId, "vx_ok");
+});

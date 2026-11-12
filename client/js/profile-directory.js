@@ -3,6 +3,7 @@
 import * as mock from "./mock.js";
 import * as localAccount from "./local-account.js";
 import { getWelcomeProfile, isWelcomeRouteId } from "./vox-welcome-profile.js";
+import { isBeforeGenesisMs } from "./genesis.js";
 
 const CARDS_KEY = "vox-profile-cards-v1";
 let profileMemorySink = null;
@@ -128,7 +129,11 @@ export function removeProfileCard(routeId) {
 
 export function listDiscoverableProfileCards() {
   const cards = loadCards();
-  const all = Object.values(cards).filter((c) => c && c.discoverable !== false && c.routeId);
+  const all = Object.values(cards).filter((c) => {
+    if (!c || c.discoverable === false || !c.routeId) return false;
+    const ts = c.updatedAt || c.timestamp || c.ts || 0;
+    return !isBeforeGenesisMs(ts) && c.routeId !== "vx_WAqxgW";
+  });
   const deduped = [];
   for (const card of all) {
     const existingIdx = deduped.findIndex((ex) => isSameCardIdentity(ex, card));
