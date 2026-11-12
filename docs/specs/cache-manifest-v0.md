@@ -1,5 +1,7 @@
 # Cache manifest v0 — spec kickoff (Antigravity)
 
+> **Status:** implementada (manifestos na malha no ar, conforme o FEATURES) · **Owner:** mantenedor · **Revisado:** 2026-10-23
+
 **Tarefa Vox V-I05** · rascunho de protocolo (sem cliente mirror completo neste PR)  
 **Branch de spec:** `feat/cache-manifest-spec`  
 **Implementação prevista:** `V-I03` (gerar índice + `POST /vox/mirror`) + validação no relay  

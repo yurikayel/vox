@@ -8,7 +8,9 @@
  *  3. `param`    — toda função exportada documenta cada parâmetro com `@param`;
  *  4. `returns`  — toda função exportada que devolve valor tem `@returns`;
  *  5. `link`     — todo link relativo em Markdown aponta para um arquivo que existe;
- *  6. `orphan`   — todo doc em docs/ é alcançável a partir do índice docs/README.md.
+ *  6. `orphan`   — todo doc em docs/ é alcançável a partir do índice docs/README.md;
+ *  7. `status`   — todo doc em docs/ (menos os gerados em docs/metrics/) abre com o banner `**Status:**`,
+ *                  e a primeira palavra dele está no vocabulário fechado de docs/CONTRIBUTING-DOCS.md §2.1.
  *
  * A dívida antiga fica em scripts/docs-debt.json e funciona como catraca: pode diminuir, nunca crescer.
  * Achado novo (fora da dívida) reprova. Dívida paga que continua no arquivo também reprova, para o
@@ -32,6 +34,16 @@ const MD_SKIP = new Set(["node_modules", ".git", ".claude", "dist", "build"]);
 const JS_ROOTS = ["client/js", "client/aviso"];
 /** Dados de demonstração, não código a documentar. */
 const JS_SKIP = new Set(["client/js/mock.js"]);
+/** Vocabulário fechado do banner de status (docs/CONTRIBUTING-DOCS.md §2.1): vale para qualquer doc. */
+const STATUS_GENERAL = ["canônico", "rascunho", "brainstorm", "pesquisa", "auditoria", "histórico", "superseded"];
+/** Decisão numerada (ADR, RFC): só o ciclo de vida da decisão. */
+const STATUS_DECISION = ["proposed", "accepted", "superseded"];
+/** Spec: o vocabulário geral mais o estado de implementação. */
+const STATUS_SPEC = [...STATUS_GENERAL, "aceita", "parcial", "implementada"];
+/** Arquivos gerados por `npm run audit:complexity`, sem banner. */
+const STATUS_SKIP = "docs/metrics/";
+/** Quantas linhas do topo (depois do front matter) podem conter o banner. */
+const STATUS_HEAD_LINES = 12;
 
 const rel = (abs) => path.relative(ROOT, abs).replaceAll("\\", "/");
 
@@ -199,6 +211,33 @@ function orphanFindings(graph) {
   return Object.fromEntries(docs.filter((f) => !seen.has(f)).map((f) => [rel(f), ["orphan"]]));
 }
 
+/** Palavras de status aceitas para o doc: decisão numerada (ADR, RFC), spec ou o vocabulário geral. */
+function statusVocabulary(name) {
+  if (/^docs\/(adr|rfc)\/\d/.test(name)) return STATUS_DECISION;
+  return name.startsWith("docs/specs/") ? STATUS_SPEC : STATUS_GENERAL;
+}
+
+/** Primeira palavra do banner `**Status:**` no topo do doc (depois do front matter YAML), em minúsculas; `null` sem banner. */
+function bannerStatus(src) {
+  const body = src.normalize("NFC").replace(/^﻿?---\r?\n[\s\S]*?\r?\n---\r?\n/, "");
+  const head = body.split(/\r?\n/).slice(0, STATUS_HEAD_LINES).join("\n");
+  const match = head.match(/\*\*Status:\*\*\s*`?(\p{L}+)/u);
+  return match ? match[1].toLowerCase() : null;
+}
+
+/** Achados `status` (doc de docs/ sem banner) e `status:<palavra>` (palavra fora do vocabulário do tipo). */
+function statusFindings(files) {
+  const found = {};
+  for (const file of files) {
+    const name = rel(file);
+    if (!name.startsWith("docs/") || name.startsWith(STATUS_SKIP)) continue;
+    const status = bannerStatus(fs.readFileSync(file, "utf8"));
+    if (status === null) found[name] = ["status"];
+    else if (!statusVocabulary(name).includes(status)) found[name] = [`status:${status}`];
+  }
+  return found;
+}
+
 // ---------------------------------------------------------------- catraca
 
 /** Achados atuais de todo o projeto: `{ arquivo: [chave, …] }`. */
@@ -209,8 +248,9 @@ function collectFindings() {
     const keys = jsFindings(file);
     if (keys.length) found[rel(file)] = keys;
   }
-  const md = markdownFindings(markdownFiles());
-  for (const group of [md.found, orphanFindings(md.graph)]) {
+  const files = markdownFiles();
+  const md = markdownFindings(files);
+  for (const group of [md.found, orphanFindings(md.graph), statusFindings(files)]) {
     for (const [file, keys] of Object.entries(group)) found[file] = [...(found[file] || []), ...keys];
   }
   return found;

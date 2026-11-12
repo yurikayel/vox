@@ -1,6 +1,6 @@
 # ADR 015: Licenciamento AGPL-3.0-or-later e Governança de Bem Comum
 
-- **Status:** Aceito
+- **Status:** accepted
 - **Data:** 2026-11-05
 - **Decisores:** Yuri Kayel e mantenedores do ecossistema Vox
 - **Contexto de Governança:** GOV-01, GOV-02 (Dossiê Master N=25 §3.6)
