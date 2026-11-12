@@ -6,6 +6,15 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Lote UI 1 das telas sem layout do Stitch
+- **Diretório de Cidadãos:** só aparece quem escolheu um nome (mais você e o perfil Vox). Contas só com a chave `vx_…` — da malha, do cofre deste aparelho ou dos contatos — saem da lista; continuam achadas pela chave completa na busca. A linha mostra nome e @, sem a chave (que fica no perfil). Sua própria conta ainda sem nome aparece como "Você", com o botão "Escolher nome". Linhas separadas por fio, ações compactas; "Mensagem P2P" virou "Mensagem".
+- **`#/compose`** abre o compositor (antes caía em "Página não encontrada").
+- **Saúde do nó:** a leitura do Arweave aparece como Normal / Instável / Leitura reserva, não o código interno (`all_ok`).
+- **Voxpedia:** o título abre a página; antes, no celular, ela começava pelo índice.
+- **Guias da rede e da carteira:** a escolha da primeira etapa virou cartões de opção (como o "O que você vai publicar?"), com a explicação de cada opção à vista.
+- Precache: +4,8 KB pagos recomprimindo `icons/icon-white-192.png` em paleta (pixels idênticos, −10,1 KB); teto baixado para 0,2% acima do medido.
+- SW `v7.81` (v7.79 reservado ao #94, v7.80 ao #98).
+
 ### Data de corte da rede viva (gênese) e purga dos dados de teste
 - **Gênese em 2026-11-11 20:55 (Brasília):** o que foi publicado antes é tratado como teste. A leitura do Arweave (GraphQL) e a memória central deixam esses itens de fora.
 - **Purga no aparelho, a cada abertura do app (decisão do mantenedor):** apaga do aparelho, sem volta, posts e cartões de perfil anteriores à gênese, as comunidades `demo-*` e a conta de teste `vx_WAqxgW` dos contatos. Isso inclui posts antigos da própria pessoa. Nada é apagado no Arweave; só a cópia local.

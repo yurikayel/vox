@@ -44,8 +44,12 @@ const sw = fs.readFileSync(path.join(root, "sw.js"), "utf8");
  * 2026-11-11 (gênese e purga das contas de teste): entram genesis.js e data/test-route-ids.js (as 128 chaves das
  * contas de teste, +4,3 KB); medido 2.005.949 bytes. O teto desce para 0,2% acima de 2.005.256 (medido antes das
  * seis contas "Yuri Kayel" do mantenedor e da purga passar pelas APIs do diretório e da agenda, +693 B, que cabem nele).
+ * 2026-11-11 (lote UI 1 do Stitch: diretório, guias com cartões de opção, Voxpedia, Saúde do nó, +4,8 KB): pago
+ * recomprimindo icons/icon-white-192.png em paleta (≤256 cores; pixels RGBA idênticos, -10,1 KB). Medido
+ * 2.005.109 bytes. Catraca: 0,2% acima.
+ * 2026-11-11 (merge da main com a gênese, #98): medido junto 1.997.911 bytes. Catraca: 0,2% acima.
  */
-const SHELL_BUDGET_BYTES = 2_009_266;
+const SHELL_BUDGET_BYTES = 2_001_906;
 
 function listFrom(name) {
   const m = sw.match(new RegExp(`const ${name} = \\[([\\s\\S]*?)\\];`));
