@@ -16,6 +16,7 @@ import { countPastedReplies } from "../aviso-replies.js";
 import { isModerator } from "../moderation.js";
 import * as avisoView from "../render/aviso.js";
 import { bindComposeStepper } from "./compose-stepper.js";
+import { renderComposeBlocked } from "../render/compose-steps.js";
 import { getActiveUser, makeShellProps } from "./context.js";
 import { resolveCommunityMetadata } from "./screens-community.js";
 
@@ -213,7 +214,15 @@ export async function showComposeAviso(communityId) {
   const main = render.renderShell(makeShellProps(user, "compose", "Novo aviso"));
   const ctx = await loadContext(communityId);
   if (!ctx.isMod) {
-    main.innerHTML = `<div class="empty card"><p>Só o dono e a moderação da comunidade publicam avisos.</p></div>`;
+    const c = encodeURIComponent(communityId);
+    main.innerHTML = renderComposeBlocked({
+      title: "Avisos são da moderação",
+      body: "Só o dono e a moderação desta comunidade publicam avisos. Para levar um assunto à comunidade, abra um tópico.",
+      actions: [
+        { href: `#/compose/topic?c=${c}`, label: "Abrir um tópico", primary: true },
+        { href: `#/c/${c}`, label: "← Voltar à comunidade" },
+      ],
+    });
     return;
   }
   avisoView.renderAvisoComposer(main, communityId);

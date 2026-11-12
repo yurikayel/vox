@@ -135,7 +135,8 @@ function renderGenesisPickHtml() {
   return `
           <h2 id="oauth-enrich-title" class="genesis-panel-title">Como quer entrar?</h2>
           <div class="genesis-picks">${cards}</div>
-          <button type="button" id="btn-oauth-skip" class="oauth-btn oauth-btn--skip genesis-skip">Pular — continuar só com vx_</button>`;
+          <button type="button" id="btn-oauth-skip" class="oauth-btn oauth-btn--skip genesis-skip">Pular por agora — escolho o nome depois</button>
+          <p class="genesis-skip-note">Sem nome, você não aparece no diretório de pessoas. Dá para escolher a qualquer hora em Perfil.</p>`;
 }
 
 /** Onboarding em etapas: boas-vindas → como entrar → um único método por vez. */

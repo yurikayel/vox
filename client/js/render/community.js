@@ -9,7 +9,7 @@ import * as profileDirectory from "../profile-directory.js";
 import { renderCommunityCatchupBanner } from "../community-unread.js";
 import { renderPageHead } from "./shell.js";
 import { renderComposeSignaturePanel } from "./compose-chrome.js";
-import { renderSteps, renderReviewList } from "./compose-steps.js";
+import { renderSteps, renderReviewList, renderFeiraDisabled } from "./compose-steps.js";
 import { buildListingDmHref } from "../dm-messenger.js";
 import { getReadOriginAggregate } from "../gateway-telemetry.js";
 import {
@@ -745,16 +745,7 @@ export function renderCommunityPostsTab(communityId, commTitle, topics, { sortMo
 }
 
 function renderCommercialDisabledView(communityId) {
-  return `
-    <div class="community-vox-panel">
-      <div class="empty feira-disabled" style="padding: 1.5rem; text-align: center;">
-        <h3 style="margin-top:0;">🏛️ Feira comunitária não ativada</h3>
-        <p class="desc" style="max-width: 480px; margin: 0.5rem auto 1rem;">
-          Esta comunidade ainda não abriu classificados (modo comercial desligado por padrão). Uma proposta comunitária de governança pode deliberar e aprovar a abertura da feira local.
-        </p>
-        <a href="#/c/${encodeURIComponent(communityId)}" class="btn btn-outline btn-sm">← Ver posts da comunidade</a>
-      </div>
-    </div>`;
+  return `<div class="community-vox-panel">${renderFeiraDisabled(communityId)}</div>`;
 }
 
 function renderCommunityListingsTab(communityId, commTitle, meta, listings) {
