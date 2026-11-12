@@ -1,5 +1,7 @@
 # Code hardening — Vox (Perfil Canônico v3.2)
 
+> **Status:** canônico (fonte única dos limites de código) · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-12
+
 **Fonte única** dos limites de complexidade e integridade do Vox ([AGENTS.md](../AGENTS.md), [CLAUDE.md](../CLAUDE.md), CONTRIBUTING e DEV apontam para cá). Evidência de testes e auditoria: [process/qualidade-e-evidencia.md](./process/qualidade-e-evidencia.md). Auditoria de complexidade: `npm run audit:complexity` ([ADR-007](./adr/007-zero-complexity-monolith-decomposition.md)).
 
 > **Princípio Supremo:** Métricas são instrumentos de proteção da arquitetura, não objetivos a serem manipulados para satisfazer linters. Nenhum agente pode melhorar artificialmente uma métrica, um teste ou um relatório à custa da integridade do software.
@@ -40,7 +42,7 @@ npm run audit:complexity   # JSON + Markdown em docs/metrics/
 npm run lint               # ESLint do client (é o que o CI exige)
 npm run lint:all           # + scripts, tools e tests (avisos de dívida)
 npm run lint:relay         # Ruff em relay, scripts e packaging (ruff.toml)
-npm run audit:docs         # JSDoc nos exports, links e docs fora do índice (catraca; quebra o CI)
+npm run audit:docs         # JSDoc nos exports, links, docs fora do índice e banner de status (catraca; quebra o CI)
 npm run validate           # lint + lint:relay + audit:complexity + audit:docs + npm test
 # Versões: Node ≥ 22 (.nvmrc, engines; CI testa 22 e 24) · Python 3.12 (.python-version; CI testa 3.11, 3.12 e 3.15)
 npm test                   # Regressão obrigatória (Node:test + Python unittest)

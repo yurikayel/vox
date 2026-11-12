@@ -1,5 +1,7 @@
 # PROFILE_CARD gossip v0
 
+> **Status:** implementada (ver ADR-003) · **Owner:** mantenedor · **Revisado:** 2026-10-24
+
 **Tipo:** `profile-card` · **Id:** `pc_${routeId}` · **TTL:** 30 dias desde `editedAt` ou `ts`
 
 ## Schema (campos assinados)

@@ -1,5 +1,7 @@
 # Seed comunitário — checklist 15 min
 
+> **Status:** canônico (checklist) · **Owner:** mantenedor / steward ops · **Revisado:** 2026-10-25
+
 Objetivo: uma comunidade real com **leitura** via gateway **ou** relay voluntário, sem depender do mantenedor do repo.
 
 **Baseline:** PWA em [GitHub Pages](https://yurikayel.github.io/vox/) ou espelho estático equivalente.
