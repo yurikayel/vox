@@ -411,7 +411,7 @@ function renderSovereigntyCard() {
           <button type="button" id="btn-export-account-alt" class="btn btn-sm btn-outline" hidden aria-hidden="true">💾 Exportar Identidade (.json)</button>
           <label class="btn btn-sm btn-outline" style="margin:0; cursor:pointer;">
             📥 Restaurar Backup
-            <input type="file" id="file-import-account" accept=".json,.voxid,application/json" style="display:none;" />
+            <input type="file" id="file-import-account" accept=".json,.voxid,.txt,application/json,text/plain" multiple style="display:none;" />
           </label>
         </div>
         <div id="sovereignty-sync-feedback" class="meta" style="margin-top:0.5rem;" hidden></div>

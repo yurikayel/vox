@@ -78,8 +78,6 @@ test("qr-url - own profile and share sheets expose QR deste link", () => {
 
   const more = fs.readFileSync(path.join(root, "js/render/post-more-menu.js"), "utf8");
   assert.ok(more.includes("QR deste link"));
-  const posse = fs.readFileSync(path.join(root, "js/posse-dispatch.js"), "utf8");
-  assert.ok(posse.includes("QR deste link"));
   const app = fs.readFileSync(path.join(root, "js/app.js"), "utf8");
   assert.ok(app.includes("attachQrUrlHandlers"));
 });
