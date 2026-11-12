@@ -269,12 +269,7 @@ function bindGenesisExport(communityId, meta, filteredTopics) {
   btn.addEventListener("click", () => {
     const data = buildCommunityGenesisPayload(communityId, meta, filteredTopics);
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `comunidade-${communityId}-genesis.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+    share.downloadBlob(blob, `comunidade-${communityId}-genesis.json`);
     share.showToast("Gênesis da comunidade exportado com sucesso!");
   });
 }

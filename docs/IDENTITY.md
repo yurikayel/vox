@@ -60,7 +60,17 @@ Ordem recomendada de entrega:
   - **Limite:** quem opera o servidor de memória pode tentar adivinhar a senha, pagando 600 mil iterações por tentativa. Use uma frase de 4 ou mais palavras.
 - **Sync entre aparelhos:** rota `#/sync?b=…` por link ou QR Code. O link leva só o cofre cifrado; a Senha Soberana (12+ caracteres) é digitada no outro aparelho (PM-92).
 - **Servidor da memória central:** só muda por escolha da pessoa. Link, par ou servidor apenas sugerem, e o app pergunta mostrando o domínio (PM-91).
+- **Backup no seu e-mail (2026-11-12):** semanal e mensal, ligados em **Sua rede** (`#/settings`) com a Senha Soberana uma única vez. O app prepara um arquivo `.txt` cifrado e a pessoa o manda para o próprio e-mail pelo compartilhar do sistema (ou baixa, onde o navegador não compartilha arquivo). Não há servidor: o Vox não guarda nem conhece o endereço, e e-mail não é chave nem login. Detalhes abaixo.
 - **Wipe local:** `wipeLocalAccount()` em `client/js/local-account.js`.
+
+### Backup no seu e-mail (`client/js/inbox-backup.js`, `client/js/app/inbox-backup-ui.js`)
+
+- **Ligar:** a Senha cifra num só envelope do cofre v2 (600 mil iterações) as chaves da conta (com a de DM) e a metade secreta de um par ECDH P-256 de backup. Como todo backup com senha, isso trava as chaves do aparelho (PM-93), e por isso a Senha dos backups não muda depois: com as chaves travadas, só ela as exporta.
+- **Cada arquivo** (`type: "vox-inbox-backup"`) leva esse envelope e o conteúdo do período cifrado para a metade pública do par (mesmo envelope das DMs, `crypto-dm.seal`). Enviar não pede a Senha; abrir pede.
+- **Conteúdo:** perfil (nome, enriquecimento, Pix), contatos inteiros, texto das DMs e os próprios posts assinados do período, contando a última mudança: post editado no período entra com a versão atual, e post apagado entra como lápide. Mídia não vai: fotos de DM ficam de fora e a mídia dos posts segue pela referência do Arweave.
+- **Quando:** o semanal vence 7 dias depois do último envio e leva o que mudou desde ele; o mensal vence no primeiro uso de um mês novo e leva o mês inteiro, repetindo de propósito as semanas. Ao abrir o app, o backup vencido é montado antes e só então o aviso aparece: o compartilhar do sistema só aceita a chamada logo depois do toque, e montar um histórico longo passaria desse tempo. Um envio por toque. "Enviar backup completo agora" leva tudo desde o começo. Cada um pode ser desligado em Sua rede.
+- **Voltar:** Perfil → Restaurar Backup aceita vários arquivos de uma vez; são aplicados do mais antigo ao mais novo, com a Senha pedida uma vez. Os backups seguem ligados no aparelho novo.
+- **Limites:** sem servidor, o lembrete só aparece quando o app é aberto. O envio conta como feito quando a pessoa escolhe o app de e-mail; se ela descartar o rascunho, aquela semana fica só no mensal, que a repete de propósito. Quem entra no seu e-mail pode tentar adivinhar a Senha fora do app (600 mil iterações por tentativa): use uma frase de 4 ou mais palavras. Revisão externa de cripto antes de divulgar ao público (LAN-18).
 
 ## Boas práticas
 
