@@ -1,6 +1,6 @@
 /** @file Gestão de leitura e novidades por comunidade (anti-abandono do Orkut, sem ansiedade algorítmica). */
 import { resolveTopicLastActivityTs } from "./community-topic-order.js";
-import { escapeHtml } from "./render/util.js";
+import { escapeHtml } from "./shared/html.js";
 
 export const LAST_SEEN_STORAGE_KEY = "vox-community-last-seen-v1";
 

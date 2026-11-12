@@ -1930,8 +1930,6 @@
  ],
  "client/js/render/util.js": [
   "jsdoc:root",
-  "jsdoc:escapeHtml",
-  "jsdoc:shortId",
   "param:resolvePostAuthorLabels:author",
   "param:resolvePostAuthorLabels:#2",
   "returns:resolvePostAuthorLabels",

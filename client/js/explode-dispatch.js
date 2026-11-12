@@ -18,7 +18,7 @@ import {
 } from "./linked-accounts.js";
 import { copyStoryCardToClipboard } from "./story-card.js";
 import { recordExplosion } from "./social.js";
-import { escapeHtml } from "./render/util.js";
+import { escapeHtml } from "./shared/html.js";
 
 export const EXPLODE_SHEET_ID = "explode-dispatch-sheet";
 export const DEFAULT_EXPLODE_TAGS = ["#Democracia", "#VozDoPovo", "#Vox"];
