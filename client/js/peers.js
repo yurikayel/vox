@@ -90,10 +90,6 @@ function dispatchGossipTombstone(tombstone, source = "rtc") {
   }
 }
 
-export function getMyPeerId() {
-  return myPeerId;
-}
-
 const DEFAULT_PEER_SETTINGS = Object.freeze({
   enabled: true,
   maxMb: 100,

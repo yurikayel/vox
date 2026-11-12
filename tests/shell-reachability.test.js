@@ -55,6 +55,10 @@ const sw = fs.readFileSync(path.join(root, "sw.js"), "utf8");
  * 2026-11-12 (selo "Malha ativa" da barra do topo para a tela Sua rede, +441 B de JSDoc, junto com a guarda da
  * malha): medido 2.001.666 bytes;
  * teto mantido.
+ * 2026-11-12 (diretório: homônimo de outra chave não some dentro de "Você", +96 B de comentário): medido
+ * 2.001.762 bytes; teto mantido (sobram 144 B).
+ * 2026-11-12 (P1: cartão sem nome e contas do cofre não saem do aparelho, +1,5 KB): pago removendo 13 exportações
+ * que nada usava e a regra .gossip-edited-pill (-1,9 KB). Medido 2.001.027 bytes; teto mantido.
  */
 const SHELL_BUDGET_BYTES = 2_001_906;
 

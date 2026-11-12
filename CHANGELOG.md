@@ -6,6 +6,21 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Contas sem nome não sujam mais a rede
+- Uma conta que nunca escolheu nome (a chave criada na primeira visita, numa aba anônima ou num navegador novo) não manda mais cartão de perfil para a memória central, para a malha nem para o Arweave. Era a origem das centenas de perfis vazios no NodeZero. Assim que a pessoa escolhe um nome, o cartão passa a sair como antes.
+- O aparelho para de publicar juntas todas as contas do cofre: só a conta ativa publica o próprio cartão. Publicar todas de uma vez contava a quem lesse que eram da mesma pessoa.
+- Quem desligou "aparecer na malha" não tem mais o próprio cartão reenviado pela sincronização com a memória central.
+- Cartão sem nome que chega de um app antigo ou da memória central não é guardado nem repassado.
+- Peso pago removendo 13 exportações que nada usava (textos e listas soltas em `i18n-pt-br.js`, `bsky-feed.js`, `media-lofi.js`, `gossip-retract-ui.js`, `peers.js`, `app/photo-tag-persist.js`) e a regra CSS `.gossip-edited-pill`, que nada gerava.
+- Teste novo em `tests/profile-card-share.test.js`; emenda no [ADR-003](./docs/adr/003-profile-card-gossip.md).
+- SW `v7.88`.
+
+### Diretório: homônimo de outra chave não some mais dentro de "Você"
+- Quando outra conta tinha exatamente o seu nome, o diretório a tratava como você e a escondia dentro da linha "Você". Duas pessoas reais com o mesmo nome (duas "Maria Silva") não se viam. Achado com duas contas "Yuri Kayel" do mantenedor, uma em cada navegador: cada uma só via a si mesma.
+- Agora o nome igual só une contas que moram no mesmo aparelho (a sua e as do seu cofre), como antes. Uma chave de fora com o mesmo nome aparece como outra pessoa. A união por foto (mesma foto do Google ou da Meta) não mudou.
+- Teste novo em `tests/people-index.test.js`; o teste que une as contas do cofre com o mesmo nome segue igual.
+- SW `v7.87`.
+
 ### Selo "Malha ativa" nas configurações
 - O selo **Malha ativa / Offline / Só leitura** saiu da barra do topo (pedido do mantenedor) e passou para o cabeçalho da tela **Sua rede** (`#/settings`), antes dos outros estados. Continua levando à Saúde do nó, com o detalhe (ex.: "2 aparelhos") ao passar o mouse. O estado da rede segue também no rodapé da barra lateral e na gaveta de identidade, como antes.
 - `render/shell.js` era do Lote A do Antigravity, mas não havia trabalho dele em aberto no arquivo; a mudança foi feita a pedido direto do mantenedor e registrada no `lobby.md`.

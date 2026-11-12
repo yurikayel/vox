@@ -225,3 +225,22 @@ test("people-index - deduplica avatares Google Workspace / ogw e CDN Meta", () =
   const m2 = { routeId: "vx_2", name: "Yuri", avatarUrl: "https://platform-lookaside.fbsbx.com/platform/profilepic/?psid=123" };
   assert.equal(peopleIndex.isSameGoogleIdentity(m1, m2), true);
 });
+
+test("people-index - homônimo de outra chave na malha aparece ao lado de você (não vira \"Você\")", async () => {
+  localStorage.clear();
+  contacts.__resetContactsForTests();
+  profileDirectory.__resetProfileCardsForTests();
+
+  const me = await localAccount.ensureLocalAccount();
+  localAccount.setDisplayName("Maria Silva");
+  // Outra pessoa, outra chave, outra foto: só o nome coincide.
+  profileDirectory.setProfileCard("vx_homonimo00000001", {
+    name: "Maria Silva",
+    avatarUrl: "https://example.org/outra-maria.png",
+    discoverable: true,
+  });
+
+  const listed = (await peopleIndex.buildPeopleIndex()).filter((p) => p.name === "Maria Silva" && peopleIndex.isListedPerson(p));
+  assert.deepEqual(listed.map((p) => p.routeId).sort(), [me.routeId, "vx_homonimo00000001"].sort());
+  assert.equal(listed.find((p) => p.routeId === me.routeId).source, "self");
+});

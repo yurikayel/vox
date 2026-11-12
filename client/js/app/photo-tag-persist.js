@@ -20,8 +20,3 @@ export async function persistPhotoTags(postId, tags) {
   await cacheNode.saveLocalPost(signed);
   return clean;
 }
-
-export function tagsForPost(postId, post) {
-  if (post) return photoTags.listTags(post);
-  return photoTags.getLocalTags(postId);
-}
