@@ -1,5 +1,7 @@
 # Sustentação Perene da Vox a Custo $0: Celulares, Permaweb e Matriz de Redundância
 
+> **Status:** brainstorm · **Owner:** mantenedor · **Revisado:** 2026-11-07 · **Não substitui o [ROADMAP](../ROADMAP.md)** ([ADR-017](../adr/017-consolidacao-roadmap-unico.md))
+
 > **Diretiva Estratégica:** A Vox deve ser auto-sustentada, imparável e perpétua, operando sem exigir nenhum servidor alugado, cartão de crédito, domínio pessoal ou intervenção do mantenedor.
 
 ---
