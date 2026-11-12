@@ -1,9 +1,9 @@
 {
-  "git_sha": "94e75e1",
+  "git_sha": "bd665fa",
   "branch": "refactor/utilitarios-puros-fora-da-ui",
-  "test_js": 1056,
+  "test_js": 1064,
   "test_python": 111,
-  "test_total": 1167,
+  "test_total": 1175,
   "cache_name": "vox-pwa-v7.92-real-network-audio-video-upload",
-  "generated_at": "2026-11-12T22:23:33Z"
+  "generated_at": "2026-11-12T22:46:25Z"
 }

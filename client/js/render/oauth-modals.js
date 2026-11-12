@@ -6,7 +6,7 @@ import * as i18n from "../i18n-pt-br.js";
 import * as postOwnership from "../post-ownership.js";
 import * as localAccount from "../local-account.js";
 import { hasChosenName } from "../people-index.js";
-import { escapeHtml, shortId, renderAvatarHtml } from "./util.js";
+import { escapeHtml, shortId, renderAvatarHtml, formatTimeAgo } from "./util.js";
 import { renderPageHead } from "./shell.js";
 
 const CANTINA_ART_ALT =
@@ -209,7 +209,7 @@ function renderPeopleResultRow(p) {
   const selfUnnamed = isSelf && !hasChosenName(p);
   const name = escapeHtml(selfUnnamed ? "Você" : p.name || p.routeId.slice(0, 14));
   const handle = p.handle ? `@${escapeHtml(p.handle)}` : "";
-  const av = renderAvatarHtml(p.routeId, name);
+  const av = renderAvatarHtml(p.routeId, name, "", p.avatarUrl);
   const rid = encodeURIComponent(p.routeId);
   const selfAction = selfUnnamed
     ? `<a class="agora-btn agora-btn--solid" href="#/perfil">Escolher nome</a>`
@@ -270,9 +270,44 @@ export function resolvePeopleSearchBody(sections, results, query) {
   return results.map((p) => renderPeopleResultRow(p)).join("");
 }
 
-export function renderPeopleSearch(main, { sections = null, results = [], query = "" } = {}) {
+function renderAddedYouRow(n) {
+  const label = n.name || shortId(n.routeId);
+  const av = renderAvatarHtml(n.routeId, label, "", n.avatarUrl || "");
+  const rid = encodeURIComponent(n.routeId);
+  const when = formatTimeAgo(n.ts);
+  return `
+    <article class="card people-result agora-citizen">
+      <div class="agora-citizen-avatar">${av}</div>
+      <div class="agora-citizen-body">
+        <h3 class="agora-citizen-name"><a href="#/u/${rid}">${escapeHtml(label)}</a></h3>
+        <div class="agora-citizen-stamps"><span class="agora-stamp agora-stamp--teal">Adicionou você · ${escapeHtml(when)}</span></div>
+      </div>
+      <div class="agora-citizen-actions">
+        <button type="button" class="agora-btn agora-btn--solid btn-added-you-back" data-route="${escapeHtml(n.routeId)}" data-label="${escapeHtml(label)}">Adicionar de volta</button>
+        <button type="button" class="agora-btn agora-btn--secondary btn-added-you-dismiss" data-route="${escapeHtml(n.routeId)}">Dispensar</button>
+      </div>
+    </article>`;
+}
+
+/**
+ * Seção "Quem adicionou você" no topo do diretório de pessoas.
+ *
+ * @param {Array<{routeId: string, name?: string, avatarUrl?: string, ts?: number}>} [notices=[]] Avisos pendentes.
+ * @returns {string} HTML da seção, ou `""` se não houver avisos.
+ */
+export function renderAddedYouSection(notices = []) {
+  if (!notices?.length) return "";
+  return `
+    <section class="people-section agora-citizen-section" id="people-added-you-section">
+      <h3 class="agora-section-label">Quem adicionou você<span class="agora-citizen-count">${notices.length}</span></h3>
+      ${notices.map(renderAddedYouRow).join("")}
+    </section>`;
+}
+
+export function renderPeopleSearch(main, { sections = null, results = [], query = "", addedBy = [] } = {}) {
   const q = escapeHtml(query);
   const body = resolvePeopleSearchBody(sections, results, query);
+  const addedHtml = query.trim() ? "" : renderAddedYouSection(addedBy);
   const head = renderPageHead({
     title: "Diretório de Cidadãos",
     subtitle: "Pessoas com identidade criptográfica verificada no aparelho de quem publicou. Sem servidor central decidindo quem existe.",
@@ -287,6 +322,7 @@ export function renderPeopleSearch(main, { sections = null, results = [], query 
         <input type="search" id="people-search-input" class="form-control" placeholder="Buscar por nome, @arroba cívica, chave vx_ ou link de convite…" value="${q}" aria-label="Buscar pessoas" />
         <button type="submit" class="agora-btn agora-btn--solid">Buscar</button>
       </form>
+      <div id="people-added-you-container">${addedHtml}</div>
       <div class="people-results agora-citizen-list" id="people-results-container">${body}</div>
     </div>`;
 }
@@ -346,7 +382,7 @@ export function closePostPactConnectModal(container) {
 export function renderConnectPreview(main, profile, routeId, { isContact = false } = {}) {
   const name = escapeHtml(profile?.name || routeId);
   const bio = profile?.bio ? `<p class="desc">${escapeHtml(profile.bio)}</p>` : "";
-  const av = renderAvatarHtml(routeId, name);
+  const av = renderAvatarHtml(routeId, name, "", profile?.avatarUrl || profile?.avatar || "");
   main.innerHTML = `
     <div class="card">
       <h2 style="margin:0 0 0.5rem;">Conectar</h2>

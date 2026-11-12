@@ -26,18 +26,16 @@ function chooseBestName(existingName, incomingName, routeId) {
   return existingName || incomingName || String(routeId || "").slice(0, 14);
 }
 
-function isSameGoogleAvatar(avA, avB, nameA, nameB) {
+function isSameGoogleAvatar(avA, avB) {
   const isGoogleA = avA.includes("googleusercontent.com/");
   const isGoogleB = avB.includes("googleusercontent.com/");
-  if (!isGoogleA || !isGoogleB) return false;
-  return avA.split("=")[0] === avB.split("=")[0] || Boolean(nameA && nameA === nameB);
+  return Boolean(isGoogleA && isGoogleB && avA.split("=")[0] === avB.split("=")[0]);
 }
 
-function isSameMetaAvatar(avA, avB, nameA, nameB) {
+function isSameMetaAvatar(avA, avB) {
   const isMetaA = avA.includes("facebook.com") || avA.includes("fbsbx.com") || avA.includes("fbcdn.net");
   const isMetaB = avB.includes("facebook.com") || avB.includes("fbsbx.com") || avB.includes("fbcdn.net");
-  if (!isMetaA || !isMetaB) return false;
-  return avA === avB || Boolean(nameA && nameA === nameB);
+  return Boolean(isMetaA && isMetaB && avA === avB);
 }
 
 // Nome igual só une contas que moram neste aparelho (a sua e as do seu cofre). Uma chave de fora
@@ -54,8 +52,8 @@ function isSameSocialIdentity(entryA, entryB) {
   const avA = entryA.avatarUrl || profileDirectory.getAuthorAvatarSync(entryA.routeId) || "";
   const avB = entryB.avatarUrl || profileDirectory.getAuthorAvatarSync(entryB.routeId) || "";
   if (avA && avB && avA === avB) return true;
-  if (isSameGoogleAvatar(avA, avB, entryA.name, entryB.name)) return true;
-  if (isSameMetaAvatar(avA, avB, entryA.name, entryB.name)) return true;
+  if (isSameGoogleAvatar(avA, avB)) return true;
+  if (isSameMetaAvatar(avA, avB)) return true;
   return isSameNamedLocalIdentity(entryA, entryB, entryA.name, entryB.name);
 }
 
