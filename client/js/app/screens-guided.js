@@ -30,7 +30,7 @@ export async function showNetworkWizard() {
   form?.addEventListener("submit", (e) => {
     e.preventDefault();
     const next = applyNetworkWizardChoices(peers.getPeerSettings(), {
-      enabled: document.getElementById("net-g-enabled")?.value,
+      enabled: choiceValue("net-g-enabled"),
       cap: document.getElementById("net-g-cap")?.value,
       wifiOnly: document.getElementById("net-g-wifi")?.checked,
       backgroundRelay: document.getElementById("net-g-bg")?.checked,
@@ -39,6 +39,11 @@ export async function showNetworkWizard() {
     share.showToast("Configuração da rede salva.");
     location.hash = "#/settings/network";
   });
+}
+
+/** Valor do rádio marcado num grupo de cartões de opção (`renderChoiceCards`). */
+function choiceValue(id) {
+  return document.querySelector(`#${id} input[type="radio"]:checked`)?.value || "";
 }
 
 function escapeRegex(s) {
@@ -87,7 +92,7 @@ export async function showBackupWizard() {
 }
 
 function syncWalletHints() {
-  const mode = document.getElementById("wg-mode")?.value || "gerar";
+  const mode = choiceValue("wg-mode") || "gerar";
   document.querySelectorAll("[data-wg-hint]").forEach((el) => { el.hidden = el.dataset.wgHint !== mode; });
 }
 
@@ -121,7 +126,7 @@ export async function showWalletWizard() {
     e.preventDefault();
     if (!applyPix()) return;
     try {
-      await applyWalletChoice(document.getElementById("wg-mode")?.value || "manter");
+      await applyWalletChoice(choiceValue("wg-mode") || "manter");
       share.showToast("Carteira configurada.");
       location.hash = "#/wallet";
     } catch (err) {

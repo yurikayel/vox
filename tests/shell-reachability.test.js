@@ -41,8 +41,11 @@ const sw = fs.readFileSync(path.join(root, "sw.js"), "utf8");
  * bytes; 0,2% acima passaria do teto atual, então o teto fica onde estava (catraca não sobe).
  * 2026-11-11 (norma de documentação + telas 6–8 juntas, merge da main): medido 2.010.383 bytes; o teto da norma
  * (2.014.194) já está abaixo de 0,2% acima do medido, então fica.
+ * 2026-11-11 (lote UI 1 do Stitch: diretório, guias com cartões de opção, Voxpedia, Saúde do nó, +4,8 KB): pago
+ * recomprimindo icons/icon-white-192.png em paleta (≤256 cores; pixels RGBA idênticos, -10,1 KB). Medido
+ * 2.005.109 bytes. Catraca: 0,2% acima.
  */
-const SHELL_BUDGET_BYTES = 2_014_194;
+const SHELL_BUDGET_BYTES = 2_009_119;
 
 function listFrom(name) {
   const m = sw.match(new RegExp(`const ${name} = \\[([\\s\\S]*?)\\];`));

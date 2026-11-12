@@ -5,6 +5,7 @@ import { PIX_PAYER_CHECK_NOTICE_PT } from "../pix-key.js";
 import * as i18n from "../i18n-pt-br.js";
 import * as postOwnership from "../post-ownership.js";
 import * as localAccount from "../local-account.js";
+import { hasChosenName } from "../people-index.js";
 import { escapeHtml, shortId, renderAvatarHtml } from "./util.js";
 import { renderPageHead } from "./shell.js";
 
@@ -196,26 +197,33 @@ function resolvePersonStampsHtml(p, isSelf) {
   return stamps.join("");
 }
 
-/** Linha do Diretório de Cidadãos (Stitch tela 10): avatar, nome epigráfico, selos, chave e ações. */
+/**
+ * Linha do Diretório de Cidadãos (Stitch tela 10): avatar, nome, @ e selos, mais as ações.
+ * A chave `vx_…` não aparece aqui (não diz nada a quem lê); ela fica no perfil, como dado complementar.
+ */
 function renderPeopleResultRow(p) {
-  const name = escapeHtml(p.name || p.routeId.slice(0, 14));
-  const handle = p.handle ? `@${escapeHtml(p.handle)}` : "";
-  const av = renderAvatarHtml(p.routeId, name);
   const myId = localAccount.getCachedRouteIdSync();
   const isSelf = Boolean(myId && p.routeId === myId);
+  // A própria conta ainda sem nome aparece como "Você", com o convite para escolher um, nunca como `vx_…`.
+  const selfUnnamed = isSelf && !hasChosenName(p);
+  const name = escapeHtml(selfUnnamed ? "Você" : p.name || p.routeId.slice(0, 14));
+  const handle = p.handle ? `@${escapeHtml(p.handle)}` : "";
+  const av = renderAvatarHtml(p.routeId, name);
   const rid = encodeURIComponent(p.routeId);
+  const selfAction = selfUnnamed
+    ? `<a class="agora-btn agora-btn--solid" href="#/perfil">Escolher nome</a>`
+    : `<a class="agora-btn agora-btn--secondary" href="#/u/${rid}">Meu perfil</a>`;
   const actionsHtml = isSelf
-    ? `<a class="agora-btn agora-btn--secondary" href="#/u/${rid}">Meu perfil</a>`
+    ? selfAction
     : `
         <a class="agora-btn agora-btn--secondary" href="#/connect/${rid}">Conectar</a>
-        <a class="agora-btn agora-btn--solid" href="#/dm/${rid}">Mensagem P2P</a>`;
+        <a class="agora-btn agora-btn--solid" href="#/dm/${rid}" aria-label="Mensagem direta e cifrada">Mensagem</a>`;
   return `
     <article class="card people-result agora-citizen">
       <div class="agora-citizen-avatar">${av}</div>
       <div class="agora-citizen-body">
         <h3 class="agora-citizen-name"><a href="#/u/${rid}">${name}</a>${handle ? `<span class="agora-citizen-handle">${handle}</span>` : ""}</h3>
         <div class="agora-citizen-stamps">${resolvePersonStampsHtml(p, isSelf)}</div>
-        <p class="agora-citizen-meta">Chave: <code class="agora-hash">${escapeHtml(shortId(p.routeId))}</code></p>
       </div>
       <div class="agora-citizen-actions">${actionsHtml}
       </div>

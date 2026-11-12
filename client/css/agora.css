@@ -2973,16 +2973,18 @@ body,
   font-weight: 600;
 }
 
+/* Linhas separadas por fio, não cartões (prompt 5 do Stitch). */
 .agora-ui .card.people-result.agora-citizen {
   display: grid;
   grid-template-columns: 64px minmax(0, 1fr) auto;
   gap: 1.25rem;
   align-items: center;
-  padding: 1.25rem 1.5rem;
-  margin: 0 0 0.75rem;
-  background: var(--sa-surface-container);
-  border: 1px solid var(--sa-hairline);
-  border-radius: var(--radius);
+  padding: 0.9rem 0.25rem;
+  margin: 0;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--sa-hairline);
+  border-radius: 0;
   transition: background 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -3007,9 +3009,9 @@ body,
   flex-wrap: wrap;
   align-items: baseline;
   gap: 0.25rem 0.5rem;
-  margin: 0 0 0.45rem;
+  margin: 0 0 0.25rem;
   font-family: var(--font-epigraphic);
-  font-size: 1.3rem;
+  font-size: 1.15rem;
   font-weight: 600;
 }
 
@@ -3027,13 +3029,6 @@ body,
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
-  margin-bottom: 0.5rem;
-}
-
-.agora-citizen-meta {
-  margin: 0;
-  font-size: 0.8125rem;
-  color: var(--sa-on-surface-variant);
 }
 
 .agora-citizen-actions {
@@ -3045,9 +3040,9 @@ body,
 
 @media (max-width: 767px) {
   .agora-ui .card.people-result.agora-citizen {
-    grid-template-columns: 48px minmax(0, 1fr);
-    padding: 1rem;
-    gap: 0.85rem;
+    grid-template-columns: 48px minmax(0, 1fr) auto;
+    padding: 0.75rem 0;
+    gap: 0.75rem;
   }
 
   .agora-citizen-avatar .avatar,
@@ -3058,12 +3053,8 @@ body,
     min-width: 48px;
   }
 
-  .agora-citizen-actions {
-    grid-column: 1 / -1;
-    justify-content: stretch;
-  }
-
-  .agora-citizen-actions .agora-btn { flex: 1; }
+  .agora-citizen-actions { flex-direction: column; align-items: stretch; gap: 0.35rem; }
+  .agora-citizen-actions .agora-btn { min-height: 36px; padding: 0.35rem 0.75rem; font-size: 0.6875rem; }
   .agora-ui .agora-directory-search { margin: 0 0 1rem; }
 }
 
@@ -3484,7 +3475,7 @@ body,
 
 .agora-ui .agora-composer .compose-textarea-seamless { min-height: 200px; resize: vertical; }
 
-.agora-ui .agora-composer label:not(.agora-field-label):not(.btn) {
+.agora-ui .agora-composer label:not(.agora-field-label):not(.btn):not(.guided-choice-card) {
   font-size: 0.75rem !important;
   font-weight: 700 !important;
   letter-spacing: 0.12em;
@@ -4130,3 +4121,15 @@ body,
 .agora-ui .agora-ballot .vote-btn-yes.selected { background: var(--sa-tertiary-container); color: var(--on-gradient); outline: none; }
 .agora-ui .agora-ballot .vote-btn-no.selected { background: var(--sa-terracotta); color: #1a1c1f; outline: none; }
 .agora-ui .agora-ballot .vote-btn-abstain.selected { background: var(--sa-surface-highest); color: var(--sa-on-surface); outline: none; }
+
+/* ── 37. Lote UI 1 (telas sem layout do Stitch): título da Voxpedia e guias com cartões de opção ── */
+/* Voxpedia: o título abre a página em toda a largura; índice e conteúdo vêm depois. */
+.agora-ui .agora-codex > .agora-codex-hero { grid-column: 1 / -1; }
+/* Guias (rede, carteira): escolha em cartões de rádio, uma opção por linha, marcada com a borda esmeralda. */
+.agora-ui .guided-choice { display: grid; gap: 0.75rem; margin: 0; padding: 0; border: 0; min-width: 0; }
+.guided-choice-legend { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.agora-ui .guided-choice-card { position: relative; padding: 1rem 1.25rem 1rem 3rem; }
+.agora-ui .guided-choice-card input { position: absolute; left: 1.1rem; top: 1.25rem; width: 1.1rem; height: 1.1rem; margin: 0; accent-color: var(--sa-primary); }
+.agora-ui .guided-choice-card .compose-sphere-name { font-size: 1.1rem; }
+.agora-ui .guided-choice-card:has(input:checked) { border-color: var(--sa-primary); background: var(--sa-surface-highest); }
+.agora-ui .guided-choice-card:has(input:focus-visible) { outline: 2px solid var(--sa-primary); outline-offset: 2px; }
