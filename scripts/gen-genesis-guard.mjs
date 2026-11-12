@@ -58,6 +58,16 @@ ${lines}
 `;
 }
 
+/** Conteúdo atual da saída com fim de linha LF, ou null se ela ainda não existe (sem checar antes: lê e trata). */
+function readOutput(file) {
+  try {
+    return fs.readFileSync(file, "utf8").replace(/\r\n/g, "\n");
+  } catch (err) {
+    if (err.code === "ENOENT") return null;
+    throw err;
+  }
+}
+
 /**
  * Gera (ou confere) as duas cópias da regra.
  * @param {{ check?: boolean }} [options] `check: true` só compara, sem gravar.
@@ -68,8 +78,7 @@ export async function syncGenesisGuard({ check = false } = {}) {
   const outputs = [[PY_OUT, renderPython(source)], [CS_OUT, renderCSharp(source)]];
   const stale = [];
   for (const [file, text] of outputs) {
-    const current = fs.existsSync(file) ? fs.readFileSync(file, "utf8").replace(/\r\n/g, "\n") : null;
-    if (current === text) continue;
+    if (readOutput(file) === text) continue;
     stale.push(path.relative(ROOT, file));
     if (!check) fs.writeFileSync(file, text);
   }
