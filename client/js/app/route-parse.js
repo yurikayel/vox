@@ -62,17 +62,27 @@ function parseCommunityRoute(parts, query) {
   };
 }
 
+/**
+ * Compositores que recebem a comunidade em `?c=`. A chave vazia é `#/compose` sozinho, o endereço que a
+ * pessoa adivinha: abre o mesmo compositor do botão central.
+ */
+const COMPOSE_WITH_COMMUNITY = {
+  "": "compose-topic",
+  topic: "compose-topic",
+  listing: "compose-listing",
+  proposal: "compose-proposal",
+  aviso: "compose-aviso",
+};
+
 function parseComposeRoute(parts, query) {
   if (parts[0] !== "compose") return null;
-  if (parts[1] === "community") return { name: "compose-community" };
-  if (parts[1] === "listing") return { name: "compose-listing", communityId: query.get("c") || "" };
-  if (parts[1] === "proposal") return { name: "compose-proposal", communityId: query.get("c") || "" };
-  if (parts[1] === "aviso") return { name: "compose-aviso", communityId: query.get("c") || "" };
-  if (parts[1] === "topic") return { name: "compose-topic", communityId: query.get("c") || "" };
-  if (parts[1] === "reply") {
+  const sub = parts[1] || "";
+  if (sub === "community") return { name: "compose-community" };
+  if (sub === "reply") {
     return { name: "compose-reply", topicId: query.get("t") || "", communityId: query.get("c") || "", parentId: query.get("p") || "" };
   }
-  return null;
+  if (!Object.hasOwn(COMPOSE_WITH_COMMUNITY, sub)) return null;
+  return { name: COMPOSE_WITH_COMMUNITY[sub], communityId: query.get("c") || "" };
 }
 
 function parseUserProfileRoute(rawParam, query) {

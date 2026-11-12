@@ -242,18 +242,27 @@ export function hasChosenName(p) {
   return Boolean(name) && !id.startsWith(name) && !/^vx_/i.test(name);
 }
 
+/**
+ * Entra na lista do diretório: o perfil oficial, a própria pessoa e quem escolheu um nome.
+ * Conta só com a chave (`vx_…`), venha da malha, do cofre deste aparelho ou dos contatos, não diz nada
+ * a quem lê; continua achável pela chave completa na busca e a chave aparece no perfil.
+ * @param {{source?: string, name?: string, routeId?: string}} p Entrada do índice.
+ * @returns {boolean} True se a entrada aparece na lista.
+ */
+export function isListedPerson(p) {
+  return p?.source === "self" || p?.source === "system" || hasChosenName(p);
+}
+
 export async function buildPeopleSections() {
   const all = await buildPeopleIndex();
   const contactsList = all.filter(
-    (p) => p.source === "contact" || p.source === "system" || p.source === "self" || p.source === "vault",
+    (p) => (p.source === "contact" || p.source === "system" || p.source === "self" || p.source === "vault") && isListedPerson(p),
   );
   const mesh = all.filter(
     (p) => (p.source === "mesh-author" || p.source === "mesh-card" || p.source === "route-direct") && hasChosenName(p),
   );
   const tour = all.filter((p) => p.source === "demo");
-  const isMesh = (p) => p.source === "mesh-author" || p.source === "mesh-card" || p.source === "route-direct";
-  const listed = all.filter((p) => !isMesh(p) || hasChosenName(p));
-  return { contacts: contactsList, mesh, tour, all: listed };
+  return { contacts: contactsList, mesh, tour, all: all.filter(isListedPerson) };
 }
 
 export function recordPeopleSearchOk() {
@@ -327,7 +336,8 @@ export async function searchPeople(query) {
 
   const ql = q.toLowerCase();
   const cleanQl = cleanQ.toLowerCase();
-  const results = all.filter((p) => matchesPerson(p, ql, cleanQl, handleRoute));
+  const isExactKey = (p) => String(p.routeId || "").toLowerCase() === cleanQl;
+  const results = all.filter((p) => matchesPerson(p, ql, cleanQl, handleRoute) && (isListedPerson(p) || isExactKey(p)));
 
   if (results.length > 0) recordPeopleSearchOk();
   return results;

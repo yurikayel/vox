@@ -57,7 +57,10 @@ test("assistentes — rede, Senha Soberana e carteira em etapas com rotas própr
   assert.equal(steps(m.innerHTML), 4);
   assert.ok(m.innerHTML.includes('data-step-required="bk-pass3"'));
   renderWalletWizard(m, { hasWallet: true, pix: "x@y.org" });
-  assert.ok(m.innerHTML.includes('value="manter" selected') && m.innerHTML.includes("x@y.org"));
+  assert.ok(m.innerHTML.includes('value="manter" checked') && m.innerHTML.includes("x@y.org"));
+  assert.ok(m.innerHTML.includes('<fieldset class="guided-choice" id="wg-mode">'), "escolha em cartões, não em <select>");
+  renderWalletWizard(m, { hasWallet: false });
+  assert.ok(!m.innerHTML.includes('value="manter"') && m.innerHTML.includes('value="gerar" checked'));
   assert.deepEqual(routeFor("#/settings/network/guia"), { name: "network-wizard" });
   assert.deepEqual(routeFor("#/backup"), { name: "backup-wizard" });
   assert.deepEqual(routeFor("#/wallet/guia"), { name: "wallet-wizard" });
