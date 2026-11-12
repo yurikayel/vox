@@ -480,7 +480,7 @@ function matchesSocialAvatar(enrichAv, targetAv, isGoogleAv) {
   if (!enrichAv || !targetAv) return false;
   if (isGoogleAv && enrichAv.split("=")[0] === targetAv.split("=")[0]) return true;
   const isMetaAv = targetAv.includes("facebook.com") || targetAv.includes("fbsbx.com") || targetAv.includes("fbcdn.net");
-  return Boolean(isMetaAv && (enrichAv === targetAv || enrichAv.includes("fbcdn.net") || enrichAv.includes("fbsbx.com")));
+  return Boolean(isMetaAv && enrichAv === targetAv);
 }
 
 function matchesOAuthEnrichment({ enrich, cleanSub, cleanEmail, isGoogleAv, cleanAv, provider = "" }) {

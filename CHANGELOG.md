@@ -12,6 +12,15 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 - Seguir autor continua silencioso para preservar o anonimato de leitura.
 - Módulos `client/js/contact-notify.js` e `client/js/app/contact-notify-flow.js`; testes em `tests/contact-notify.test.js`; SW `v7.91`.
 
+### Diretório e prévia de conexão usam a foto carregada e não escondem outras contas Google/Meta
+- A linha do diretório de cidadãos (`renderPeopleResultRow`) e a prévia de conexão (`renderConnectPreview`) passam `p.avatarUrl` / `profile.avatar` para `renderAvatarHtml`, em vez de depender só do cartão sincronizado em `profileDirectory`.
+- Corrigida a deduplicação social em `profile-directory.js` (`hasSameSocialAvatar` considerava iguais quaisquer duas URLs de Google/Meta distintas, apagando o outro cartão em `localStorage`, e `normalizeSocialAvatarBase` perdia `?psid=/asid=` do Facebook) e em `people-index.js` / `local-account.js` (mesmo nome + domínios Google/Meta diferentes deixam de colidir). Duas contas Google/Meta distintas com o mesmo nome agora aparecem separadas no diretório com suas fotos.
+- Testes novos em `tests/people-chosen-name.test.js` e `tests/people-index.test.js`.
+- SW `v7.90`.
+
+### Política do teto de bytes do precache (PM-02)
+- Atualizadas a nota em `tests/shell-reachability.test.js` e a seção **Peso do precache (PM-02)** em [docs/HARDENING.md](./docs/HARDENING.md): o orçamento do precache segue como disciplina para crescer o mínimo e evitar desperdício real, mas deixa de ser limite duro que exija cortes improdutivos quando uma mudança já está enxuta. Limites de código e JSDoc seguem inalterados.
+
 ### Backup semanal e mensal no seu e-mail
 - Nova seção **Backup no seu e-mail** em Sua rede (`#/settings`): liga com a Senha Soberana uma vez; semanal e mensal podem ser desligados. Ao abrir o app com um backup vencido, um aviso oferece **Enviar para meu e-mail**: o app prepara um `.txt` cifrado e abre o compartilhar do sistema (Gmail, Outlook, Mail); onde o navegador não compartilha arquivo, baixa.
 - Sem servidor: o Vox não guarda nem conhece o endereço. O arquivo leva as chaves (com a de DM), perfil, Pix, contatos, texto das DMs e os próprios posts do período; só a Senha abre. O mensal repete de propósito o conteúdo das semanas.
