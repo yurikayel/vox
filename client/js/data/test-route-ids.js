@@ -1,6 +1,7 @@
 /**
  * @file Contas descartáveis criadas nos testes antes da rede viva (gênese de 2026-11-11).
- * Nenhuma tem nome escolhido nem é pessoa real; o mantenedor pediu que saíssem do diretório.
+ * São contas sem nome escolhido, a Ana Lúcia de teste e cinco contas "Yuri Kayel" de teste do mantenedor;
+ * nenhuma é pessoa real usando a rede. O mantenedor pediu que saíssem: a rede começa só com o perfil Vox.
  * O aparelho apaga o cartão, o contato e os posts delas e recusa cartão novo vindo da malha
  * ou da memória central, para não voltarem por outro aparelho.
  */
@@ -14,7 +15,9 @@ export const TEST_ROUTE_IDS = Object.freeze([
   "vx_1sEvwicdBT-Cglp5gkx3",
   "vx_20MWj_pRu25h34tZlw3p",
   "vx_2Cd63tj7xrBWI6WiVMUI",
+  "vx_2jHuRFCnItGstRLO632M",
   "vx_3DVXdALrvovJkfxb9HgF",
+  "vx_3bRCcRWYDiquLheipaMG",
   "vx_3x9Rnln_p6TAvG1QEZ4M",
   "vx_44E7QG6eZpHyMvoUzJRt",
   "vx_4VGkeuyYJK1t8D4vtPZ1",
@@ -79,9 +82,11 @@ export const TEST_ROUTE_IDS = Object.freeze([
   "vx_ZXYyBlOT-PDszMBLmqYG",
   "vx_ZvBCzRAciCYJ4VSpxCvX",
   "vx__-_UVoZyyvTeEMlHbBoV",
+  "vx__cuBK7dFqVf9Ols_ONb2",
   "vx_ana",
   "vx_avNrAgqwMz5F6qgiXUMu",
   "vx_bbf9s1DcSoMOXvwP_6IZ",
+  "vx_bq4XJIdS1WSkVBlyjxzT",
   "vx_c2LBoRj4vSIMikw2M34s",
   "vx_cFD3s8S0CTRGC4NXTvIl",
   "vx_cenEV8s47-U1S2yyNzkI",
@@ -113,6 +118,7 @@ export const TEST_ROUTE_IDS = Object.freeze([
   "vx_o1NzHwXYRGTTUYUAtgWO",
   "vx_opfV25wPvLMr6dJPx6my",
   "vx_qeg1u2quM12o_CVd7LHq",
+  "vx_qqXGPjl6X-b0hGk6AU6R",
   "vx_qsoEJGfh5_McPl-qLMLv",
   "vx_r_xTB3OzUIwRDZeSOyYS",
   "vx_rvn9KdDfEEU7roUJ3btB",
