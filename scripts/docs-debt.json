@@ -843,8 +843,6 @@
   "jsdoc:renderGossipDeletedTopicShellHtml"
  ],
  "client/js/governance.js": [
-  "jsdoc:VOTE_CHOICES",
-  "jsdoc:PROPOSAL_STATES",
   "param:validateProposalInput:#1",
   "returns:validateProposalInput",
   "param:normalizeVoteChoice:raw",
@@ -2335,7 +2333,6 @@
  ],
  "client/js/wallet.js": [
   "header",
-  "jsdoc:WALLET_KIND_PLAIN",
   "jsdoc:WALLET_KIND_ENCRYPTED",
   "jsdoc:isWalletEncrypted",
   "jsdoc:encryptStoredWallet",

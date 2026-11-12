@@ -155,12 +155,7 @@ function bindModerationExportImport() {
   document.getElementById("btn-export-moderation")?.addEventListener("click", () => {
     const bundle = mod.exportModerationBundle();
     const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "vox-moderacao.json";
-    a.click();
-    URL.revokeObjectURL(url);
+    share.downloadBlob(blob, "vox-moderacao.json");
     share.showToast("Regras de moderação exportadas!");
   });
 
@@ -191,12 +186,7 @@ function bindContributionAttestationButton() {
       }
       const signed = out.signed;
       const blob = new Blob([JSON.stringify(signed, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = contributionAttestation.attestationDownloadFilename(signed.author, signed.ts);
-      a.click();
-      URL.revokeObjectURL(url);
+      share.downloadBlob(blob, contributionAttestation.attestationDownloadFilename(signed.author, signed.ts));
       share.showToast("Comprovante baixado — guarde offline; nada foi enviado à rede.");
     } catch (err) {
       share.showToast(`Erro ao gerar comprovante: ${err.message}`, "error");

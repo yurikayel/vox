@@ -75,3 +75,26 @@ test("backup no e-mail - o semanal leva só o que é do período", async () => {
   assert.equal((await cacheNode.getDmMessages("vx_contatodaana001")).length, 0, "a mensagem é de antes de ligar");
   assert.equal(contacts.hasContact("vx_contatodaana001"), true, "contatos vão inteiros em todo backup");
 });
+
+test("backup no e-mail - chaves vão num só envelope de 600 mil iterações", async () => {
+  await newAccountWithContent();
+  await backup.enableInboxBackup(SENHA);
+  const file = JSON.parse((await backup.buildInboxBackup("completo")).text);
+  assert.equal(file.secrets.iter, 600_000);
+  assert.equal("account" in file, false, "nada de .voxid de 210 mil iterações no arquivo");
+  assert.equal(JSON.stringify(file).includes("privateJwk"), false);
+});
+
+test("backup no e-mail - post editado e post apagado no período entram no semanal", async () => {
+  const acc = await newAccountWithContent();
+  await backup.enableInboxBackup(SENHA);
+  const later = Date.now() + 1000;
+  await cacheNode.saveLocalPost({ id: "t_backup_1", type: "topic", author: acc.routeId, title: "Editado", ts: Date.now() - DAY, editedAt: later });
+  await cacheNode.saveLocalPost({ id: "t_backup_2", type: "topic", author: acc.routeId, title: "Vai sumir", ts: Date.now() - DAY });
+  await cacheNode.saveTombstone({ id: "t_backup_2", author: acc.routeId, ts: later, deleted: true });
+  const built = await backup.buildInboxBackup("semana", later + 1000);
+  wipeDevice();
+  await backup.restoreInboxBackup(built.text, SENHA);
+  assert.equal((await cacheNode.getLocalPost("t_backup_1")).title, "Editado");
+  assert.ok(await cacheNode.getTombstone("t_backup_2"), "a lápide volta junto");
+});
