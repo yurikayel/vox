@@ -24,6 +24,7 @@ import { openOAuthEnrichModal, wipeLocalDevice } from "./onboarding.js";
 import { getActiveUser, makeShellProps } from "./context.js";
 import { syncIdentity } from "./screens-network.js";
 import { KIND_WRAPPED, exportAccountBundle, importAccountBundle, peekBackupKind } from "../account-backup.js";
+import { isInboxBackupText, restoreInboxBackup } from "../inbox-backup.js";
 import * as voxels from "../voxels.js";
 
 function collectByIds(posts, ids) {
@@ -277,6 +278,17 @@ function bindSovereigntyExport() {
   });
 }
 
+// Backups do e-mail: vários de uma vez, do mais antigo ao mais novo, com a Senha pedida uma vez.
+async function restoreBackupFiles(files, activeTab) {
+  const texts = await Promise.all(files.map((f) => f.text()));
+  if (!texts.every(isInboxBackupText)) return restoreSovereigntyFile(files[0], activeTab);
+  const secret = readSovereigntyPassphrase() || window.prompt("Senha Soberana dos backups:") || "";
+  const ordered = texts.sort((a, b) => JSON.parse(a).to - JSON.parse(b).to);
+  for (const text of ordered) await restoreInboxBackup(text, secret);
+  share.showToast(`Conta restaurada de ${ordered.length} backup(s) do e-mail.`);
+  showProfile(null, activeTab);
+}
+
 async function restoreSovereigntyFile(file, activeTab) {
   const text = await file.text();
   const secret = await resolveImportPassphrase(text, readSovereigntyPassphrase());
@@ -293,10 +305,10 @@ function bindSovereigntyImport(activeTab) {
   const input = document.getElementById("file-import-account");
   if (!input) return;
   input.addEventListener("change", async () => {
-    const file = input.files?.[0];
-    if (!file) return;
+    const files = [...(input.files || [])];
+    if (!files.length) return;
     try {
-      await restoreSovereigntyFile(file, activeTab);
+      await restoreBackupFiles(files, activeTab);
     } catch (err) {
       share.showToast(`Erro ao importar: ${err.message}`, "error");
     }

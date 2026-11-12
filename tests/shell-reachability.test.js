@@ -59,8 +59,11 @@ const sw = fs.readFileSync(path.join(root, "sw.js"), "utf8");
  * 2.001.762 bytes; teto mantido (sobram 144 B).
  * 2026-11-12 (P1: cartão sem nome e contas do cofre não saem do aparelho, +1,5 KB): pago removendo 13 exportações
  * que nada usava e a regra .gossip-edited-pill (-1,9 KB). Medido 2.001.027 bytes; teto mantido.
+ * 2026-11-12 (backup semanal e mensal no e-mail, pedido do mantenedor, +13,4 KB): só o icon-mark-black-128.png em
+ * paleta exata (pixels idênticos, -517 B) pagou parte. O teto SOBE 12.190 B, para o medido (2.014.096 bytes), sem folga:
+ * a funcionalidade nova é o motivo, e a próxima adição volta a precisar de corte.
  */
-const SHELL_BUDGET_BYTES = 2_001_906;
+const SHELL_BUDGET_BYTES = 2_014_096;
 
 function listFrom(name) {
   const m = sw.match(new RegExp(`const ${name} = \\[([\\s\\S]*?)\\];`));

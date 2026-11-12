@@ -6,6 +6,14 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Backup semanal e mensal no seu e-mail
+- Nova seção **Backup no seu e-mail** em Sua rede (`#/settings`): liga com a Senha Soberana uma vez; semanal e mensal podem ser desligados. Ao abrir o app com um backup vencido, um aviso oferece **Enviar para meu e-mail**: o app prepara um `.txt` cifrado e abre o compartilhar do sistema (Gmail, Outlook, Mail); onde o navegador não compartilha arquivo, baixa.
+- Sem servidor: o Vox não guarda nem conhece o endereço. O arquivo leva as chaves (com a de DM), perfil, Pix, contatos, texto das DMs e os próprios posts do período; só a Senha abre. O mensal repete de propósito o conteúdo das semanas.
+- **Restaurar Backup** (Perfil) aceita vários arquivos `.txt` de uma vez e aplica do mais antigo ao mais novo.
+- Peso: os dois módulos novos e a ligação nas telas (+13,4 KB). Pago só em parte, recomprimindo `icons/icon-mark-black-128.png` em paleta exata (pixels idênticos, -517 B); o resto, 12.190 B, **sobe o teto do precache** para 2.014.096 bytes, a decidir pelo mantenedor no PR (ver `tests/shell-reachability.test.js`).
+- Testes novos em `tests/inbox-backup.test.js`; documentação em [IDENTITY.md](./docs/IDENTITY.md#backup-no-seu-e-mail-clientjsinbox-backupjs-clientjsappinbox-backup-uijs).
+- SW `v7.89`.
+
 ### Contas sem nome não sujam mais a rede
 - Uma conta que nunca escolheu nome (a chave criada na primeira visita, numa aba anônima ou num navegador novo) não manda mais cartão de perfil para a memória central, para a malha nem para o Arweave. Era a origem das centenas de perfis vazios no NodeZero. Assim que a pessoa escolhe um nome, o cartão passa a sair como antes.
 - O aparelho para de publicar juntas todas as contas do cofre: só a conta ativa publica o próprio cartão. Publicar todas de uma vez contava a quem lesse que eram da mesma pessoa.
