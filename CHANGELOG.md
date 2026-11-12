@@ -6,6 +6,11 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Nomes de usuário no amarelo da Ágora Soberana
+- O nome de quem publica aparece no amarelo do design system (`--sa-secondary`, o mesmo da faixa "Bem-vindo ao Vox"), em post, resposta, legenda de foto, cabeçalho do perfil e lista de membros da comunidade. Antes era o branco do texto. No modo claro o token já troca para o ocre escuro, que mantém contraste AA sobre o fundo claro.
+- Sobre a foto, o nome usa o amarelo claro fixo (`--sa-secondary-fixed-dim`, novo token em `client/css/agora.css`) nos dois modos, porque ali o fundo é a imagem, não o tema.
+- SW `v7.85`.
+
 ### Corte da gênese nos servidores e na malha P2P; gênese em 12/11 00:00
 - **Gênese passa para 2026-11-12 00:00 (Brasília)** (era 11/11 20:55), a pedido do mantenedor: "nada anterior a hoje". As contas e os posts criados entre 20:55 e a meia-noite também ficam de fora.
 - **Memória central recusa o que o cliente já recusa** (relay Python em [`relay/genesis_guard.py`](./relay/genesis_guard.py), nó em C# em `packaging/zero-central-memory-windows/src/GenesisGuard.cs`): cartão de conta de teste, post de autor de teste e post criado antes da gênese não entram. O que já está no disco sai ao carregar o estado. Motivo: um aparelho ainda na versão antiga reenviava tudo na primeira sincronização, e o NodeZero, limpo à mão duas vezes, voltava a ter 134 perfis de teste segundos depois.
