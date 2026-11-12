@@ -1,6 +1,6 @@
 # ADR-009: Corroboração Multi-Gateway GraphQL e Resiliência sem Quorum Bloqueante
 
-**Status:** Proposed · **P1 / Task Order 001** · **Cold Readiness**
+**Status:** proposed · **P1 / Task Order 001** · **Cold Readiness**
 
 ---
 

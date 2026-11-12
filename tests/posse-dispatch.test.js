@@ -55,13 +55,6 @@ test("posse - webhook lines parser", () => {
   assert.deepEqual(urls, ["https://a.com", "https://b.com/x"]);
 });
 
-test("posse - sheet offers QR deste link", () => {
-  const src = fs.readFileSync(new URL("../client/js/posse-dispatch.js", import.meta.url), "utf8");
-  assert.ok(src.includes("QR deste link"));
-  assert.ok(src.includes('data-posse="qr"'));
-});
-
-test("posse - re-exports honest limits microcopy for sheet UI", () => {
+test("posse - re-exports honest limits microcopy", () => {
   assert.match(posse.SHARE_HONEST_LIMITS_SHORT, /Sem post automático/i);
-  assert.match(posse.POSSE_SHEET_LEAD, /manualmente/i);
 });

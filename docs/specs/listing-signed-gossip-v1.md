@@ -1,5 +1,7 @@
 # Feira — listing assinado + UI gossip v1
 
+> **Status:** implementada (Feira no ar, conforme o FEATURES) · **Owner:** mantenedor · **Revisado:** 2026-10-23
+
 **Compose:** assinado em `main` (`listing.js` + `app.js`).  
 **UI:** integrado em **`main`** (`listing-ui.js`, `153ad27`).
 
