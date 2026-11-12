@@ -21,28 +21,20 @@ function loadCards() {
   }
 }
 
+function normalizeMetaAvatarBase(clean) {
+  // Links do Facebook identificam a conta por query (?psid=/asid=); sem isso todos colidiriam.
+  if (clean.includes("psid=") || clean.includes("asid=")) return clean.split("#")[0];
+  return clean.split("?")[0];
+}
+
 function normalizeSocialAvatarBase(av) {
   if (!av) return "";
   const clean = String(av).trim();
   if (clean.includes("googleusercontent.com/")) return clean.split("=")[0];
   if (clean.includes("fbsbx.com") || clean.includes("fbcdn.net") || clean.includes("facebook.com")) {
-    return clean.split("?")[0];
+    return normalizeMetaAvatarBase(clean);
   }
   return clean;
-}
-
-function hasSameSocialAvatar(avA, avB) {
-  if (!avA || !avB) return false;
-  if (avA === avB) return true;
-  const isSocialA = avA.includes("googleusercontent.com") || avA.includes("fbcdn") || avA.includes("fbsbx");
-  const isSocialB = avB.includes("googleusercontent.com") || avB.includes("fbcdn") || avB.includes("fbsbx");
-  return isSocialA && isSocialB;
-}
-
-function hasMatchingNamedIdentity(nameA, nameB, avA, avB) {
-  if (!nameA || nameA.startsWith("vx_") || nameA !== nameB) return false;
-  if (hasSameSocialAvatar(avA, avB)) return true;
-  return Boolean(avA && avB && avA === avB);
 }
 
 export function isSameCardIdentity(cardA, cardB) {
@@ -52,11 +44,7 @@ export function isSameCardIdentity(cardA, cardB) {
 
   const avA = normalizeSocialAvatarBase(cardA.avatarUrl || cardA.avatar || "");
   const avB = normalizeSocialAvatarBase(cardB.avatarUrl || cardB.avatar || "");
-  if (hasSameSocialAvatar(avA, avB)) return true;
-
-  const nameA = String(cardA.name || cardA.displayName || "").trim();
-  const nameB = String(cardB.name || cardB.displayName || "").trim();
-  return hasMatchingNamedIdentity(nameA, nameB, avA, avB);
+  return Boolean(avA && avB && avA === avB);
 }
 
 export function pruneCardsMatchingSocialIdentity({ canonicalRouteId, displayName, avatarUrl } = {}) {
