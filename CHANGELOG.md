@@ -6,6 +6,12 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Aviso cifrado quando alguém adiciona você aos contatos
+- Ao adicionar alguém aos contatos (em **Conectar** ou na lista de membros da comunidade), o aparelho envia um aviso assinado e cifrado E2E pelo canal direto (`kind: "contact_added"`, sem criar mensagem falsa na conversa de DM).
+- Quem recebe vê o aviso na seção **Quem adicionou você** no topo de **Pessoas** (`#/people`), com botão **Adicionar de volta** e **Dispensar**, além de toast no app e notificação do sistema se autorizada.
+- Seguir autor continua silencioso para preservar o anonimato de leitura.
+- Módulos `client/js/contact-notify.js` e `client/js/app/contact-notify-flow.js`; testes em `tests/contact-notify.test.js`; SW `v7.91`.
+
 ### Diretório e prévia de conexão usam a foto carregada e não escondem outras contas Google/Meta
 - A linha do diretório de cidadãos (`renderPeopleResultRow`) e a prévia de conexão (`renderConnectPreview`) passam `p.avatarUrl` / `profile.avatar` para `renderAvatarHtml`, em vez de depender só do cartão sincronizado em `profileDirectory`.
 - Corrigida a deduplicação social em `profile-directory.js` (`hasSameSocialAvatar` considerava iguais quaisquer duas URLs de Google/Meta distintas, apagando o outro cartão em `localStorage`, e `normalizeSocialAvatarBase` perdia `?psid=/asid=` do Facebook) e em `people-index.js` / `local-account.js` (mesmo nome + domínios Google/Meta diferentes deixam de colidir). Duas contas Google/Meta distintas com o mesmo nome agora aparecem separadas no diretório com suas fotos.
