@@ -32,21 +32,17 @@ async function sendFile({ name, text }) {
     await navigator.share({ files: [file], title: "Backup do Vox", text: "Guarde este e-mail. Só a sua Senha Soberana abre o arquivo." });
     return;
   }
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(file);
-  a.download = name;
-  a.click();
-  URL.revokeObjectURL(a.href);
+  share.downloadBlob(file, name);
 }
 
 /**
- * Prepara e envia o backup de um período; só marca como enviado se a pessoa não cancelou.
+ * Envia um backup já montado antes do toque (o compartilhar só aceita a chamada logo depois do gesto).
  * @param {"semana"|"mes"|"completo"} period Período.
+ * @param {{name: string, text: string, to: number}} built Arquivo de `buildInboxBackup`.
  * @returns {Promise<boolean>} True se saiu.
  */
-export async function sendInboxBackup(period) {
+export async function sendInboxBackup(period, built) {
   try {
-    const built = await backup.buildInboxBackup(period);
     await sendFile(built);
     backup.markInboxBackupSent(period, built.to);
     share.showToast(`Backup ${LABEL[period]} pronto. Confira se chegou no seu e-mail.`);
@@ -74,13 +70,21 @@ export function bindInboxBackupSection(rerender) {
   for (const [id, key] of [["inbox-backup-weekly", "weekly"], ["inbox-backup-monthly", "monthly"]]) {
     document.getElementById(id)?.addEventListener("change", (e) => backup.setInboxBackupCadence({ [key]: e.target.checked }));
   }
-  document.querySelector("[data-inbox-send]")?.addEventListener("click", () => void sendInboxBackup("completo"));
+  const btn = document.querySelector("[data-inbox-send]");
+  if (!btn) return;
+  btn.disabled = true;
+  void backup.buildInboxBackup("completo").then((built) => {
+    btn.disabled = false;
+    btn.addEventListener("click", () => void sendInboxBackup("completo", built));
+  });
 }
 
-/** Mostra, ao abrir o app, o aviso do backup vencido (o mensal antes do semanal), um por toque. */
-export function showDueInboxBackup() {
+/** Mostra, ao abrir o app, o aviso do backup vencido (o mensal antes do semanal), já montado, um por toque. */
+export async function showDueInboxBackup() {
   const period = backup.dueInboxBackups()[0];
   if (!period || document.querySelector(".inbox-backup-due")) return;
+  const built = await backup.buildInboxBackup(period).catch(() => null);
+  if (!built || document.querySelector(".inbox-backup-due")) return;
   const bar = document.createElement("div");
   bar.className = "card inbox-backup-due";
   bar.setAttribute("role", "status");
@@ -91,7 +95,7 @@ export function showDueInboxBackup() {
     const act = e.target.closest("[data-act]")?.dataset.act;
     if (!act) return;
     bar.remove();
-    if (act === "send" && (await sendInboxBackup(period))) showDueInboxBackup();
+    if (act === "send" && (await sendInboxBackup(period, built))) void showDueInboxBackup();
   });
   document.body.appendChild(bar);
 }

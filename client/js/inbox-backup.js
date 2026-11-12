@@ -1,13 +1,13 @@
 /**
- * @file Backup semanal e mensal na caixa de e-mail da própria pessoa, sem servidor (decisão de 2026-11-12).
- * Ao ligar, a Senha Soberana cifra as chaves da conta (`.voxid`) e a metade secreta de um par de backup (cofre v2);
- * cada arquivo leva as duas e o conteúdo do período cifrado para a metade pública. Enviar não pede a Senha; abrir pede.
+ * @file Backup semanal e mensal no e-mail da própria pessoa, sem servidor. A Senha cifra num envelope do cofre v2
+ * as chaves e a metade secreta de um par de backup; o conteúdo vai cifrado para a metade pública. Ver IDENTITY.md.
  */
 
 import * as cacheNode from "./cache-node.js";
 import * as contacts from "./contacts.js";
 import * as cryptoDm from "./crypto-dm.js";
 import { exportAccountBundle, importAccountBundle } from "./account-backup.js";
+import { unwrapBackup } from "./account-backup-wrap.js";
 import * as localAccount from "./local-account.js";
 import { decryptVaultRecord, encryptVaultV2 } from "./vault-crypto.js";
 
@@ -69,11 +69,11 @@ export function setInboxBackupCadence({ weekly, monthly } = {}) {
 export async function enableInboxBackup(passphrase) {
   const secret = String(passphrase || "").trim();
   if (secret.length < 12) throw new Error("A Senha Soberana precisa ter 12 caracteres ou mais.");
-  const account = JSON.parse(await exportAccountBundle(secret));
+  const account = await unwrapBackup(JSON.parse(await exportAccountBundle(secret)), secret);
   const pair = await cryptoDm.generateDmKeypair();
-  const backupKey = await encryptVaultV2({ privateJwk: pair.privateJwk }, secret);
+  const secrets = await encryptVaultV2({ account, privateJwk: pair.privateJwk }, secret);
   const now = Date.now();
-  writeState({ account, backupKey, backupPub: pair.publicJwk, lastWeekly: now, lastMonthly: now });
+  writeState({ ...readState(), secrets, backupPub: pair.publicJwk, lastWeekly: now, lastMonthly: now });
 }
 
 /**
@@ -92,21 +92,18 @@ export function dueInboxBackups(now = Date.now()) {
 
 async function collectContent(from, to) {
   const me = localAccount.getCachedRouteIdSync();
-  const inRange = (ts) => (ts || 0) >= from && (ts || 0) <= to;
-  const posts = (await cacheNode.getAllLocalPosts())
-    .filter((p) => p.author === me && inRange(p.ts))
-    .map(({ mediaBlob: _blob, ...post }) => post);
-  const dms = [];
-  for (const c of await cacheNode.getDmConversations()) {
-    const msgs = await cacheNode.getDmMessages(c.peerAddress);
-    dms.push(...msgs.filter((m) => inRange(m.ts)).map((m) => ({ ...m, mediaDataUrl: "" })));
-  }
+  // Post editado ou apagado no período entra (versão atual ou lápide).
+  const inRange = (r) => Math.max(r.ts || 0, r.editedAt || 0) >= from && (r.ts || 0) <= to;
+  const mine = (r) => (r.author || r.owner) === me && inRange(r);
+  const posts = (await cacheNode.getAllLocalPosts()).filter(mine).map(({ mediaBlob: _blob, ...post }) => post);
+  const tombstones = (await cacheNode.getAllTombstones()).filter(mine);
+  const dms = (await cacheNode.getAllDmMessages()).filter(inRange).map((m) => ({ ...m, mediaDataUrl: "" }));
   const profile = {
     displayName: localAccount.getDisplayName(),
     enrichment: localAccount.getProfileEnrichment(),
     pix: localAccount.getPixKey(),
   };
-  return { profile, contacts: contacts.listContacts(), posts, dms };
+  return { profile, contacts: contacts.listContacts(), posts, tombstones, dms };
 }
 
 /**
@@ -121,7 +118,7 @@ export async function buildInboxBackup(period, now = Date.now()) {
   const from = { semana: s.lastWeekly, mes: s.lastMonthly }[period] || 0;
   const content = await collectContent(from, now);
   const sealed = await cryptoDm.seal(s.backupPub, JSON.stringify(content));
-  const file = { type: INBOX_BACKUP_TYPE, v: 1, period, from, to: now, account: s.account, backupKey: s.backupKey, sealed };
+  const file = { type: INBOX_BACKUP_TYPE, v: 1, period, from, to: now, secrets: s.secrets, sealed };
   const day = new Date(now).toISOString().slice(0, 10);
   return { name: `vox-backup-${period}-${day}.txt`, text: JSON.stringify(file), to: now };
 }
@@ -146,6 +143,7 @@ async function applyContent(c) {
   for (const x of c.contacts || []) contacts.addContact(x.routeId, x.label);
   for (const m of c.dms || []) await cacheNode.saveDmMessage(m);
   for (const p of c.posts || []) await cacheNode.saveLocalPost(p);
+  for (const t of c.tombstones || []) await cacheNode.saveTombstone(t);
 }
 
 /**
@@ -166,12 +164,13 @@ export function isInboxBackupText(text) {
 export async function restoreInboxBackup(text, passphrase) {
   const file = JSON.parse(text);
   if (file?.type !== INBOX_BACKUP_TYPE) throw new Error("Este arquivo não é um backup do Vox.");
-  const keys = await decryptVaultRecord(file.backupKey, passphrase).catch(() => null);
+  const keys = await decryptVaultRecord(file.secrets, passphrase).catch(() => null);
   if (!keys?.privateJwk) throw new Error("Senha Soberana incorreta.");
-  const acc = await importAccountBundle(file.account, passphrase);
+  const acc = await importAccountBundle(keys.account, passphrase);
+  await localAccount.lockAfterPasswordBackup(passphrase);
   await applyContent(JSON.parse(await cryptoDm.open(file.sealed, keys.privateJwk)));
   const { kty, crv, x, y } = keys.privateJwk;
   const now = Date.now();
-  writeState({ account: file.account, backupKey: file.backupKey, backupPub: { kty, crv, x, y }, lastWeekly: now, lastMonthly: now });
+  writeState({ ...readState(), secrets: file.secrets, backupPub: { kty, crv, x, y }, lastWeekly: now, lastMonthly: now });
   return acc;
 }

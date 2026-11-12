@@ -50,5 +50,5 @@ attachQuarantineHandlers();
 syncIdentity();
 Promise.allSettled([loadRemoteFlags(), demoSeed.purgeMockDemoSeed()]).finally(() => {
   route();
-  setTimeout(showDueInboxBackup, 3000);
+  setTimeout(() => void showDueInboxBackup(), 3000);
 });
