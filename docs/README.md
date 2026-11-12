@@ -1,6 +1,6 @@
 # Vox — índice de documentação
 
-> **Status:** canônico (índice único) · **Owner:** voluntário doc (mutex: 1 PR por arquivo) · **Revisado:** 2026-11-10 (v2.5: registro único de decisões, ADR-021…024, brainstorms dos 5 pontos fracos, do terceiro lugar, do público, da captação, do refino e dos nichos, e a síntese deles)
+> **Status:** canônico (índice único) · **Owner:** voluntário doc (mutex: 1 PR por arquivo) · **Revisado:** 2026-11-12 (v2.6: brainstorm do ano de 2027 e calendário no ROADMAP; v2.5: registro único de decisões, ADR-021…024, brainstorms dos 5 pontos fracos, do terceiro lugar, do público, da captação, do refino e dos nichos, e a síntese deles)
 > **Plano vivo e único checklist:** [ROADMAP.md](./ROADMAP.md) ([ADR-017](./adr/017-consolidacao-roadmap-unico.md)) · **Release (SHA, testes, SW):** [release-metadata.json](./release-metadata.json) e tabela do [README](../README.md)
 
 Entrada única para quem desenvolve, revisa ou opera. Todo `.md` novo em `docs/` entra aqui ([CONTRIBUTING-DOCS.md](./CONTRIBUTING-DOCS.md) §1).
@@ -125,6 +125,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 
 ### Brainstorms (ideias; não são plano)
 
+- [brainstorm-roadmap-2027.md](./brainstorms/brainstorm-roadmap-2027.md): **o ano de 2027**: norte com piso e meta, datas fixas, ideias por eixo, triagem (PM-99…PM-109), ordem dos trimestres e datas de desistência. O calendário mora no [ROADMAP](./ROADMAP.md#calendário-2027)
 - [brainstorm-backlog-proximas-melhorias-2026-11.md](./brainstorms/brainstorm-backlog-proximas-melhorias-2026-11.md): **revisão de estado de 09/11 + backlog PM-01…PM-64** (peso, segurança, rede, assembleia, Nostr, contribuidores; adendo com a pesquisa de churn, ler antes de entrar, voto secreto, ofício) e ordem sugerida
 - [brainstorm-autossustento-10-features-2026-11.md](./brainstorms/brainstorm-autossustento-10-features-2026-11.md): **10 features de autossustento a custo ~zero + 3 prompts de pesquisa**
 - [brainstorm-sustentacao-perene-celulares-nos-base.md](./brainstorms/brainstorm-sustentacao-perene-celulares-nos-base.md): infra $0, celulares como nós
