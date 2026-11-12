@@ -69,3 +69,7 @@ Exceções temporárias — exigem justificativa técnica, responsável e data d
 - `audit:complexity` gera o artefato de baseline em `docs/metrics/` e não quebra o build.
 - **Promoção `WARN → ERROR`:** quando a dívida de uma regra chega a 0 no `main`, a regra muda para `error` no mesmo PR que a zerou.
 - Não afrouxe limite nem teste para ficar verde: quebre a função com semântica própria (extract method) ou registre waiver acima com motivo, responsável e data.
+
+## Peso do precache (PM-02)
+
+A verificação de bytes em [`tests/shell-reachability.test.js`](../tests/shell-reachability.test.js) (`SHELL_BUDGET_BYTES`) acompanha o tamanho do shell offline para evitar desperdício real (imagens não otimizadas, cópias duplicadas, código morto) e manter a disciplina de crescer o mínimo. **Não é limite duro:** se uma mudança já está enxuta, concisa, coerente e funcionando e ultrapassar o valor medido, atualize `SHELL_BUDGET_BYTES` para o novo total medido com uma linha de justificativa no comentário do teste, sem esforço improdutivo para cortar código útil ou documentação. Esta flexibilização vale só para o teto de bytes do precache; os limites de função, aninhamento, complexidade, parâmetros e a norma de JSDoc continuam rígidos.

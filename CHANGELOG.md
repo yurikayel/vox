@@ -6,6 +6,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Política do teto de bytes do precache (PM-02)
+- Atualizadas a nota em `tests/shell-reachability.test.js` e a seção **Peso do precache (PM-02)** em [docs/HARDENING.md](./docs/HARDENING.md): o orçamento do precache segue como disciplina para crescer o mínimo e evitar desperdício real, mas deixa de ser limite duro que exija cortes improdutivos quando uma mudança já está enxuta. Limites de código e JSDoc seguem inalterados.
+
 ### Contas sem nome não sujam mais a rede
 - Uma conta que nunca escolheu nome (a chave criada na primeira visita, numa aba anônima ou num navegador novo) não manda mais cartão de perfil para a memória central, para a malha nem para o Arweave. Era a origem das centenas de perfis vazios no NodeZero. Assim que a pessoa escolhe um nome, o cartão passa a sair como antes.
 - O aparelho para de publicar juntas todas as contas do cofre: só a conta ativa publica o próprio cartão. Publicar todas de uma vez contava a quem lesse que eram da mesma pessoa.
