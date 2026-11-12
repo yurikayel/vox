@@ -206,6 +206,8 @@ const SHELL_ASSETS = [
   "./js/voxels.js",
 
   "./js/contacts.js",
+  "./js/contact-notify.js",
+  "./js/app/contact-notify-flow.js",
 
   "./js/oauth-profile.js",
 

@@ -244,3 +244,27 @@ test("people-index - homônimo de outra chave na malha aparece ao lado de você 
   assert.deepEqual(listed.map((p) => p.routeId).sort(), [me.routeId, "vx_homonimo00000001"].sort());
   assert.equal(listed.find((p) => p.routeId === me.routeId).source, "self");
 });
+
+test("people-index - duas contas Google ou Meta distintas com o mesmo nome não se escondem", async () => {
+  localStorage.clear();
+  contacts.__resetContactsForTests();
+  profileDirectory.__resetProfileCardsForTests();
+
+  const me = await localAccount.ensureLocalAccount();
+  const av1 = "https://lh3.googleusercontent.com/a/ACg8ocJ0M8bek1QZ5cqpBxLshqEBN8hx-vUegj1uOWfbTCwgQTwqjuWj=s96-c";
+  const av2 = "https://lh3.googleusercontent.com/a/ACg8ocLFNrwptrJG1AKEV1wMDVmUbqIFntlEpQxRzbAh2I1mseOEJADg=s96-c";
+  const meta1 = "https://platform-lookaside.fbsbx.com/platform/profilepic/?psid=111";
+  const meta2 = "https://platform-lookaside.fbsbx.com/platform/profilepic/?psid=222";
+
+  localAccount.setProfileEnrichment({ displayName: "Yuri Kayel", avatarUrl: av1, oauthProvider: "google" });
+  profileDirectory.setProfileCard(me.routeId, { name: "Yuri Kayel", avatarUrl: av1, discoverable: true });
+  profileDirectory.setProfileCard("vx_outro_google01", { name: "Yuri Kayel", avatarUrl: av2, discoverable: true });
+  profileDirectory.setProfileCard("vx_meta_conta0001", { name: "Ana", avatarUrl: meta1, discoverable: true });
+  profileDirectory.setProfileCard("vx_meta_conta0002", { name: "Ana", avatarUrl: meta2, discoverable: true });
+
+  const all = await peopleIndex.buildPeopleIndex();
+  const yuriIds = all.filter((p) => p.name === "Yuri Kayel").map((p) => p.routeId).sort();
+  assert.deepEqual(yuriIds, [me.routeId, "vx_outro_google01"].sort());
+  assert.equal(all.find((p) => p.routeId === "vx_outro_google01").avatarUrl, av2);
+  assert.equal(all.filter((p) => p.name === "Ana").length, 2);
+});
