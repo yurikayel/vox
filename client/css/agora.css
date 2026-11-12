@@ -38,7 +38,7 @@
   --sa-tertiary: #69dba9;
   --sa-tertiary-container: #39b081;
   --sa-on-tertiary: #003825;
-  --sa-error: var(--sa-error);
+  --sa-error: #ffb4ab;
   --sa-error-container: #93000a;
   --sa-terracotta: #e8907e;
   --sa-gradient-sovereign: linear-gradient(90deg, #39b081 0%, #4baca5 55%, #78d6cf 100%);

@@ -15,6 +15,13 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 - Precache: +4,8 KB pagos recomprimindo `icons/icon-white-192.png` em paleta (pixels idênticos, −10,1 KB); teto baixado para 0,2% acima do medido.
 - SW `v7.81` (v7.79 reservado ao #94, v7.80 ao #98).
 
+### Data de corte da rede viva (gênese) e purga dos dados de teste
+- **Gênese em 2026-11-11 20:55 (Brasília):** o que foi publicado antes é tratado como teste. A leitura do Arweave (GraphQL) e a memória central deixam esses itens de fora.
+- **Purga no aparelho, a cada abertura do app (decisão do mantenedor):** apaga do aparelho, sem volta, posts e cartões de perfil anteriores à gênese, as comunidades `demo-*` e a conta de teste `vx_WAqxgW` dos contatos. Isso inclui posts antigos da própria pessoa. Nada é apagado no Arweave; só a cópia local.
+- **Contas de teste fora do diretório (pedido do mantenedor):** as 128 contas criadas nos testes (sem nome escolhido, a Ana Lúcia de teste e as seis contas "Yuri Kayel" do mantenedor, inclusive a que ele usava) estão em [`client/js/data/test-route-ids.js`](./client/js/data/test-route-ids.js). O aparelho apaga cartão, contato e posts delas e recusa cartão novo delas vindo da malha ou da memória central: cada aparelho regravava o cartão com a data do recebimento, então o corte por data sozinho não as tirava. Fica só o perfil oficial Vox; nos aparelhos do mantenedor, a chave da conta antiga sai pelo botão "Apagar conta local" do perfil.
+- Corrige a definição circular de `--sa-error` (o vermelho de erro do tema escuro ficava indefinido).
+- SW `v7.80` (v7.79 está reservado ao #94).
+
 ### Norma de documentação e revisão das últimas 24 h (PM-98)
 - **Norma nova** em [docs/process/documentacao.md](./docs/process/documentacao.md): cabeçalho em todo módulo, JSDoc completo em todo export (`@param`, `@returns`, `@throws`, `@type` com unidade), o porquê nos comentários e a tabela do que atualizar em cada tipo de mudança (spec, FEATURES, ROADMAP, ADR, THREAT-MODEL, CHANGELOG).
 - **`npm run audit:docs`** ([scripts/docs-audit.mjs](./scripts/docs-audit.mjs)) lê a árvore sintática e reprova export sem JSDoc, parâmetro sem `@param`, retorno sem `@returns`, link relativo quebrado e doc fora do índice. Entra no `npm run validate` e no CI. A dívida antiga (2.296 itens, medida na `main`) fica em [scripts/docs-debt.json](./scripts/docs-debt.json) como catraca: só diminui.
