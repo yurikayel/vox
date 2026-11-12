@@ -10,7 +10,7 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 - Nova seção **Backup no seu e-mail** em Sua rede (`#/settings`): liga com a Senha Soberana uma vez; semanal e mensal podem ser desligados. Ao abrir o app com um backup vencido, um aviso oferece **Enviar para meu e-mail**: o app prepara um `.txt` cifrado e abre o compartilhar do sistema (Gmail, Outlook, Mail); onde o navegador não compartilha arquivo, baixa.
 - Sem servidor: o Vox não guarda nem conhece o endereço. O arquivo leva as chaves (com a de DM), perfil, Pix, contatos, texto das DMs e os próprios posts do período; só a Senha abre. O mensal repete de propósito o conteúdo das semanas.
 - **Restaurar Backup** (Perfil) aceita vários arquivos `.txt` de uma vez e aplica do mais antigo ao mais novo.
-- Peso: os dois módulos novos e a ligação nas telas (+13,4 KB). Pago só em parte, recomprimindo `icons/icon-mark-black-128.png` em paleta exata (pixels idênticos, -517 B); o resto, 12.190 B, **sobe o teto do precache** para 2.014.096 bytes, a decidir pelo mantenedor no PR (ver `tests/shell-reachability.test.js`).
+- Peso: os dois módulos novos e a ligação nas telas (+13,4 KB). Pagos em parte removendo a folha POSSE pós-publicação, que nada abria desde o cockpit Ecoe (2168dae; -9,5 KB com o CSS; decisão do mantenedor; 4 testes que liam o código da folha saíram ou foram ajustados), e recomprimindo `icons/icon-mark-black-128.png` em paleta exata (pixels idênticos, -517 B). O resto, 2.717 B, sobe o teto do precache para 2.004.623 bytes.
 - Testes novos em `tests/inbox-backup.test.js`; documentação em [IDENTITY.md](./docs/IDENTITY.md#backup-no-seu-e-mail-clientjsinbox-backupjs-clientjsappinbox-backup-uijs).
 - SW `v7.89`.
 
