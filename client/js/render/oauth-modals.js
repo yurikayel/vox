@@ -209,7 +209,7 @@ function renderPeopleResultRow(p) {
   const selfUnnamed = isSelf && !hasChosenName(p);
   const name = escapeHtml(selfUnnamed ? "Você" : p.name || p.routeId.slice(0, 14));
   const handle = p.handle ? `@${escapeHtml(p.handle)}` : "";
-  const av = renderAvatarHtml(p.routeId, name);
+  const av = renderAvatarHtml(p.routeId, name, "", p.avatarUrl);
   const rid = encodeURIComponent(p.routeId);
   const selfAction = selfUnnamed
     ? `<a class="agora-btn agora-btn--solid" href="#/perfil">Escolher nome</a>`
@@ -346,7 +346,7 @@ export function closePostPactConnectModal(container) {
 export function renderConnectPreview(main, profile, routeId, { isContact = false } = {}) {
   const name = escapeHtml(profile?.name || routeId);
   const bio = profile?.bio ? `<p class="desc">${escapeHtml(profile.bio)}</p>` : "";
-  const av = renderAvatarHtml(routeId, name);
+  const av = renderAvatarHtml(routeId, name, "", profile?.avatarUrl || profile?.avatar || "");
   main.innerHTML = `
     <div class="card">
       <h2 style="margin:0 0 0.5rem;">Conectar</h2>
