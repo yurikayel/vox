@@ -402,7 +402,7 @@ function renderPosseWebhooksSection(webhooks = []) {
   return `
     <div class="card" style="margin-top:1rem;">
       <h3>Ecoe POSSE — Webhooks</h3>
-      <p class="desc" style="font-size:0.85rem;">URLs que você cadastrar (Discord, Telegram, n8n…) recebem POST JSON só quando você tocar em <strong>Exportar JSON</strong> no sheet POSSE — sem post automático no Facebook/Instagram. Máx. 8 linhas.</p>
+      <p class="desc" style="font-size:0.85rem;">URLs que você cadastrar (Discord, Telegram, n8n…) recebem POST JSON só quando você tocar em <strong>Exportar JSON</strong> no cockpit Ecoe — sem post automático no Facebook/Instagram. Máx. 8 linhas.</p>
       <div class="form-group">
         <label for="net-posse-webhooks">URLs de webhook (uma por linha)</label>
         <textarea id="net-posse-webhooks" class="form-control" rows="3" placeholder="https://discord.com/api/webhooks/…">${lines}</textarea>
