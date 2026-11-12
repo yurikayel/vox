@@ -257,11 +257,7 @@ body,
 .agora-ui h2,
 .agora-ui h3,
 .agora-ui .topic-title,
-.agora-ui .post-title,
-.agora-ui .profile-grid-name,
-.agora-ui .community-title,
-.agora-ui .vote-header-title,
-.agora-ui .deliberation-title {
+.agora-ui .profile-grid-name {
   font-family: var(--font-epigraphic);
   color: var(--travertine-linen);
   letter-spacing: -0.01em;
@@ -269,8 +265,7 @@ body,
 
 .agora-mono,
 .agora-ui code,
-.agora-ui .post-handle,
-.agora-ui .meta .route-id {
+.agora-ui .post-handle {
   font-family: var(--font-mono);
   font-feature-settings: "tnum" 1, "zero" 1;
 }
@@ -1025,8 +1020,6 @@ body,
 
 /* Cards legados → monólitos planares */
 .agora-ui .card,
-.agora-ui .community-card,
-.agora-ui .dm-header-card,
 .agora-ui .people-result {
   background: var(--slate-deep);
   border: 1px solid var(--entablature-hairline);
@@ -1586,7 +1579,6 @@ body,
   font-weight: 500;
 }
 
-.agora-ui .profile-grid-stats .stat-num,
 .agora-ui .profile-grid-stats strong {
   font-family: var(--font-epigraphic);
   color: var(--travertine-linen);
@@ -1785,7 +1777,6 @@ body,
   }
 
   .agora-search,
-  .agora-topbar-vote,
   .agora-identity-text {
     display: none;
   }
@@ -2377,8 +2368,6 @@ body,
 
 /* Inscrições (inputs): linha de base em bronze, foco teal */
 .agora-ui .agora-inscription,
-.agora-ui .compose-form input[type="text"],
-.agora-ui .compose-form textarea,
 .agora-ui .compose-card input[type="text"],
 .agora-ui .compose-card textarea {
   background: var(--sa-surface-high);
@@ -2389,8 +2378,6 @@ body,
 }
 
 .agora-ui .agora-inscription:focus,
-.agora-ui .compose-form input[type="text"]:focus,
-.agora-ui .compose-form textarea:focus,
 .agora-ui .compose-card input[type="text"]:focus,
 .agora-ui .compose-card textarea:focus {
   outline: none;
@@ -2859,8 +2846,7 @@ body,
 
 .modal-dialog h2,
 .modal-dialog h3,
-.modal-card-title,
-.modal-card-heading {
+.modal-card-title {
   font-family: var(--font-epigraphic);
   font-weight: 600;
   color: var(--sa-on-surface);
@@ -3982,10 +3968,10 @@ body,
 :root {
   --sa-squircle: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 0C10 0 0 10 0 50s10 50 50 50 50-10 50-50S90 0 50 0z'/%3E%3C/svg%3E");
 }
-.avatar, .avatar-img, .avatar-wrap, .avatar-sm, .avatar-squircle, .story-avatar, .skeleton-avatar,
+.avatar, .avatar-img, .avatar-wrap, .avatar-sm, .story-avatar, .skeleton-avatar,
 .agora-citizen-avatar, .agora-community-avatar, .post-media-header-avatar,
-.profile-avatar-img, .profile-avatar-wrap, .profile-grid-avatar-wrap, .profile-grid-avatar-img, .profile-grid-avatar-fallback,
-.community-avatar-img, .community-avatar-fallback, .community-avatar-sm, .community-avatar-md, .community-avatar-lg,
+.profile-grid-avatar-wrap, .profile-grid-avatar-img, .profile-grid-avatar-fallback,
+.community-avatar-img, .community-avatar-fallback, .community-avatar-md, .community-avatar-lg,
 .community-vox-card-avatar-wrap, .community-vox-avatar-wrap, .welcome-avatars > * {
   border-radius: 0 !important;
   /* Borda e sombra viram um contorno quebrado nos cantos quando a máscara corta: fora. */
@@ -3997,7 +3983,7 @@ body,
 }
 
 /* Foto de perfil preenche o squircle inteiro (sem miolo menor dentro de um fundo). */
-.avatar-wrap > .avatar-img, .avatar-img, .profile-avatar-img, .profile-grid-avatar-img, .community-avatar-img {
+.avatar-wrap > .avatar-img, .avatar-img, .profile-grid-avatar-img, .community-avatar-img {
   object-fit: cover;
 }
 
