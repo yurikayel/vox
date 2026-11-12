@@ -6,6 +6,11 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Aviso de contato: limite de alertas e sem consulta extra ao abrir
+- No máximo 3 alertas (toast e notificação do sistema) por hora para "adicionou você". Como chave nova não custa nada, alguém poderia encher a tela de alertas; os avisos além do limite entram só na seção **Quem adicionou você**.
+- O app não consulta mais a caixa de mensagens do relay ao abrir, em qualquer tela. A consulta segue ao entrar em **Pessoas** e em **Mensagens**.
+- Teste novo em `tests/contact-notify.test.js`; SW `v7.94`.
+
 ### Precache sem teto de bytes (PM-02)
 - Decisão do mantenedor (2026-11-12): o precache deixa de ter teto. O teste `tests/shell-reachability.test.js` continua somando o shell e imprime o total, mas nenhum número reprova o CI; saíram a constante `SHELL_BUDGET_BYTES` e o histórico de medições.
 - A disciplina de manter o precache enxuto dentro do razoável passa a ser cobrada na revisão (regra em [docs/HARDENING.md](./docs/HARDENING.md), seção "Peso do precache"). O teste PM-04 (módulo inalcançável fora do precache) não mudou.
