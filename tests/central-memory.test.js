@@ -25,9 +25,9 @@ test("central-memory - syncWithCentralMemory envia estado local e reidrata posts
     communityId: "c_1",
     title: "Post Reidratado do Nó Zero-Central-Memory",
     body: "Memória persistida em disco",
-    ts: 1700000002000,
+    ts: 1795000002000,
   });
-  const remoteTomb = await remote.sign({ id: "top_deleted_remote", type: "tombstone", ts: 1700000003000, editedAt: 1700000003000 });
+  const remoteTomb = await remote.sign({ id: "top_deleted_remote", type: "tombstone", ts: 1795000003000, editedAt: 1795000003000 });
 
   await cacheNode.saveLocalPost({
     id: "top_local_1",
@@ -36,7 +36,7 @@ test("central-memory - syncWithCentralMemory envia estado local e reidrata posts
     communityId: "c_1",
     title: "Post Local",
     body: "Conteúdo local",
-    ts: 1700000001000,
+    ts: 1795000001000,
   });
 
   const originalFetch = globalThis.fetch;
@@ -128,7 +128,7 @@ test("central-memory - autoPush copia novos posts automaticamente para /memory/i
       author: "vx_auto",
       title: "Auto Push",
       body: "Copiado na hora",
-      ts: 1700000010000,
+      ts: 1795000010000,
     });
     assert.equal(ingested.length, 1);
     assert.equal(ingested[0].type, "GOSSIP");

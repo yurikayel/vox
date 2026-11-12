@@ -3,7 +3,9 @@
  * - Todo módulo do precache (SHELL_ASSETS) tem de ser alcançável a partir de um ponto de entrada
  *   (os <script src> das páginas do cliente), seguindo os imports estáticos e dinâmicos.
  * - Todo módulo inalcançável tem de estar em UNPLUGGED_MODULES (fora do precache).
- * - O tamanho total do precache tem teto: peso só cresce de propósito.
+ * - O tamanho total do precache é medido e impresso, sem teto (decisão do mantenedor em 2026-11-12):
+ *   nenhum número reprova o teste. A disciplina continua na revisão: não pôr no precache asset duplicado,
+ *   imagem sem otimizar nem código morto (regra em `docs/HARDENING.md`, seção "Peso do precache").
  */
 import "./setup.js";
 import test from "node:test";
@@ -14,28 +16,6 @@ import { fileURLToPath } from "node:url";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "client");
 const sw = fs.readFileSync(path.join(root, "sw.js"), "utf8");
-
-/**
- * PM-02: teto do precache em bytes. Medido em 2026-11-09 depois do PM-04: 2.038.578 bytes em 182 arquivos, + ~2% de folga.
- * Meta do PM-01 (dieta do shell): baixar 20% disto. Subir o teto exige justificar no PR.
- * 2026-11-10 (PM-78): 2.081.292 bytes em 193 arquivos; a folga acabou com os 6 módulos do PM-69 e a caixa de
- * saída das DMs (+4,4 KB). Teto sobe só 0,2% acima do medido; a próxima adição precisa vir com corte (PM-01).
- * 2026-11-10 (PM-80): corte de 18,4 KB (o icon.svg embutia o mesmo PNG duas vezes, em href e xlink:href) pagou o
- * peer-sync.js; medido 2.070.279 bytes em 194 arquivos. O teto desce para 0,2% acima do medido (catraca).
- * 2026-11-10 (PM-87): blob ao lado do GOSSIP pago com a remoção de 4 funções sem uso; medido 2.074.618 bytes em 203 arquivos.
- * 2026-11-10 (PM-88): blob na sincronização ao conectar (+2,4 KB) pago com a remoção de fetchIdentityLinkOnChain e
- * suas 2 consultas, mais 4 exportações sem uso; medido 2.074.738 bytes em 203 arquivos (+120 B). Teto mantido.
- * 2026-11-10 (PM-93 etapa 2): key-lock.js e account-backup.js pagos com a remoção do texto, das fotos e das
- * respostas de demonstração por UF que ninguém lia (profiles-brazil-uf.js, -20,6 KB); medido 2.064.135 bytes em
- * 212 arquivos. O teto desce para 0,2% acima do medido (catraca).
- * 2026-11-11 (aviso, lote D): os 5 módulos do aviso (+31,7 KB) pagos tirando do precache o icon-white-512.png
- * (-42,2 KB), que o app só mostrava em 48 px (agora usa o de 192 px); medido 2.058.234 bytes. Catraca: 0,2% acima.
- * 2026-11-11 (chamada de ação, lote 1): aviso-roles.js e app/aviso-roles-dm.js pagos tirando do precache o
- * profile-vox-official-512.png, cópia exata do icon-512.png (-59,9 KB); medido 2.018.977 bytes. Catraca: 0,2% acima.
- * 2026-11-11 (sorteio cívico, lote 4): sorteio.js e app/sorteio-flow.js pagos passando logo-mark.png e
- * icon-white-192.png a PNG com paleta (visualmente iguais); medido 2.016.953 bytes. Catraca: 0,2% acima.
- */
-const SHELL_BUDGET_BYTES = 2_020_987;
 
 function listFrom(name) {
   const m = sw.match(new RegExp(`const ${name} = \\[([\\s\\S]*?)\\];`));
@@ -89,11 +69,10 @@ test("PM-04: todo módulo do precache é alcançável; todo inalcançável está
   assert.deepEqual(pluggedButListed, [], "módulo já plugado: tire de UNPLUGGED_MODULES e ponha no SHELL_ASSETS");
 });
 
-test("PM-02: o precache cabe no orçamento de peso", () => {
+test("PM-02: o peso do precache é medido e informado, sem teto", (t) => {
+  const assets = listFrom("SHELL_ASSETS").filter((asset) => asset !== "./");
   let total = 0;
-  for (const asset of listFrom("SHELL_ASSETS")) {
-    if (asset === "./") continue;
-    total += fs.statSync(path.join(root, asset)).size;
-  }
-  assert.ok(total <= SHELL_BUDGET_BYTES, `precache com ${total} bytes passou do teto de ${SHELL_BUDGET_BYTES} (PM-02)`);
+  for (const asset of assets) total += fs.statSync(path.join(root, asset)).size;
+  t.diagnostic(`precache: ${total} bytes em ${assets.length} arquivos`);
+  assert.ok(total > 0, "todo arquivo do SHELL_ASSETS existe e foi somado");
 });

@@ -225,3 +225,58 @@ test("people-index - deduplica avatares Google Workspace / ogw e CDN Meta", () =
   const m2 = { routeId: "vx_2", name: "Yuri", avatarUrl: "https://platform-lookaside.fbsbx.com/platform/profilepic/?psid=123" };
   assert.equal(peopleIndex.isSameGoogleIdentity(m1, m2), true);
 });
+
+test("people-index - domínio de avatar vem do host da URL, não de trecho no caminho ou na query", () => {
+  const same = (a, b) => peopleIndex.isSameGoogleIdentity(
+    { routeId: "vx_1", name: "Ana", avatarUrl: a }, { routeId: "vx_2", name: "Bia", avatarUrl: b },
+  );
+  // URLs diferentes só se unem pela regra do Google (mesma foto, tamanho diferente depois do "=").
+  assert.equal(same("https://atacante.example/?x=googleusercontent.com/foto=s96", "https://atacante.example/?x=googleusercontent.com/foto=s120"), false);
+  assert.equal(same("https://googleusercontent.com.atacante.example/foto=s96", "https://googleusercontent.com.atacante.example/foto=s120"), false);
+  assert.equal(same("https://falsogoogleusercontent.com/foto=s96", "https://falsogoogleusercontent.com/foto=s120"), false);
+  assert.equal(same("http://lh3.googleusercontent.com/a/foto=s96", "http://lh3.googleusercontent.com/a/foto=s120"), false);
+  assert.equal(same("https://lh3.googleusercontent.com/a/foto=s96", "https://lh3.googleusercontent.com/a/foto=s120"), true);
+});
+
+test("people-index - homônimo de outra chave na malha aparece ao lado de você (não vira \"Você\")", async () => {
+  localStorage.clear();
+  contacts.__resetContactsForTests();
+  profileDirectory.__resetProfileCardsForTests();
+
+  const me = await localAccount.ensureLocalAccount();
+  localAccount.setDisplayName("Maria Silva");
+  // Outra pessoa, outra chave, outra foto: só o nome coincide.
+  profileDirectory.setProfileCard("vx_homonimo00000001", {
+    name: "Maria Silva",
+    avatarUrl: "https://example.org/outra-maria.png",
+    discoverable: true,
+  });
+
+  const listed = (await peopleIndex.buildPeopleIndex()).filter((p) => p.name === "Maria Silva" && peopleIndex.isListedPerson(p));
+  assert.deepEqual(listed.map((p) => p.routeId).sort(), [me.routeId, "vx_homonimo00000001"].sort());
+  assert.equal(listed.find((p) => p.routeId === me.routeId).source, "self");
+});
+
+test("people-index - duas contas Google ou Meta distintas com o mesmo nome não se escondem", async () => {
+  localStorage.clear();
+  contacts.__resetContactsForTests();
+  profileDirectory.__resetProfileCardsForTests();
+
+  const me = await localAccount.ensureLocalAccount();
+  const av1 = "https://lh3.googleusercontent.com/a/ACg8ocJ0M8bek1QZ5cqpBxLshqEBN8hx-vUegj1uOWfbTCwgQTwqjuWj=s96-c";
+  const av2 = "https://lh3.googleusercontent.com/a/ACg8ocLFNrwptrJG1AKEV1wMDVmUbqIFntlEpQxRzbAh2I1mseOEJADg=s96-c";
+  const meta1 = "https://platform-lookaside.fbsbx.com/platform/profilepic/?psid=111";
+  const meta2 = "https://platform-lookaside.fbsbx.com/platform/profilepic/?psid=222";
+
+  localAccount.setProfileEnrichment({ displayName: "Yuri Kayel", avatarUrl: av1, oauthProvider: "google" });
+  profileDirectory.setProfileCard(me.routeId, { name: "Yuri Kayel", avatarUrl: av1, discoverable: true });
+  profileDirectory.setProfileCard("vx_outro_google01", { name: "Yuri Kayel", avatarUrl: av2, discoverable: true });
+  profileDirectory.setProfileCard("vx_meta_conta0001", { name: "Ana", avatarUrl: meta1, discoverable: true });
+  profileDirectory.setProfileCard("vx_meta_conta0002", { name: "Ana", avatarUrl: meta2, discoverable: true });
+
+  const all = await peopleIndex.buildPeopleIndex();
+  const yuriIds = all.filter((p) => p.name === "Yuri Kayel").map((p) => p.routeId).sort();
+  assert.deepEqual(yuriIds, [me.routeId, "vx_outro_google01"].sort());
+  assert.equal(all.find((p) => p.routeId === "vx_outro_google01").avatarUrl, av2);
+  assert.equal(all.filter((p) => p.name === "Ana").length, 2);
+});

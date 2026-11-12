@@ -1,5 +1,7 @@
 # Contrato operacional — Antigravity × Cursor (Vox)
 
+> **Status:** canônico (contrato operacional; o baseline e a contagem de testes abaixo são de 2026-10-23) · **Owner:** mantenedor · **Revisado:** 2026-10-23
+
 **Repositório:** [github.com/yurikayel/vox](https://github.com/yurikayel/vox)  
 **Baseline registrado:** `main` @ **`62221c9`** (`V-I04` relay HTTP configurável)  
 **Suíte:** **186** testes (**172** Node.js + **14** Python relay/signaling)  

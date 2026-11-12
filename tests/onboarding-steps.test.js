@@ -28,3 +28,12 @@ test("onboarding em etapas — showGenesisStep mostra só a etapa pedida", () =>
   assert.deepEqual(steps.map((s) => s.hidden), [true, true, false]);
   assert.equal(render.showGenesisStep(root, "nope"), false);
 });
+
+test("onboarding em etapas — pular deixa claro que sem nome a conta não aparece no diretório", () => {
+  const c = { innerHTML: "" };
+  render.renderOAuthEnrich(c);
+  const html = c.innerHTML;
+  assert.ok(!html.includes("só com vx_"), "não oferece a chave crua como identidade");
+  assert.ok(html.includes("escolho o nome depois"));
+  assert.ok(html.includes("não aparece no diretório"));
+});

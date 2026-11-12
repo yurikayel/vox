@@ -1,6 +1,11 @@
 /**
- * @file settings-guardian.js
- * Renderizador de UI para o Modo Guardião / Seeder Mobile (Fase 3.3).
+ * @file Cartão do Modo Guardião nas configurações de rede (Fase 3.3).
+ *
+ * Mostra o estado (inativo, pronto ou esperando Wi-Fi e carregador), as opções e a cota fixa de 2 GB
+ * definida em `supporter-mode.js`. Só gera HTML; os eventos são ligados em `app/screens-network.js`.
+ *
+ * @module render/settings-guardian
+ * @see client/js/seeder-guardian.js
  */
 import { escapeHtml } from "./util.js";
 
@@ -42,6 +47,13 @@ function renderGuardianOptions(config) {
     </div>`;
 }
 
+/**
+ * Monta o cartão do Modo Guardião.
+ *
+ * @param {object} config Configuração de `getGuardianQuotaConfig`.
+ * @param {{enabled: boolean, permitted: boolean, reason: string}|null} status Resultado de `isSeedingPermitted`, ou `null` enquanto não se sabe.
+ * @returns {string} HTML do cartão.
+ */
 export function renderGuardianSettingsCard(config, status) {
   const badge = renderGuardianStatusBadge(status);
   const options = renderGuardianOptions(config);

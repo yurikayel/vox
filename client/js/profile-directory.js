@@ -3,6 +3,7 @@
 import * as mock from "./mock.js";
 import * as localAccount from "./local-account.js";
 import { getWelcomeProfile, isWelcomeRouteId } from "./vox-welcome-profile.js";
+import { isBeforeGenesisMs, isTestRouteId } from "./genesis.js";
 
 const CARDS_KEY = "vox-profile-cards-v1";
 let profileMemorySink = null;
@@ -20,28 +21,20 @@ function loadCards() {
   }
 }
 
+function normalizeMetaAvatarBase(clean) {
+  // Links do Facebook identificam a conta por query (?psid=/asid=); sem isso todos colidiriam.
+  if (clean.includes("psid=") || clean.includes("asid=")) return clean.split("#")[0];
+  return clean.split("?")[0];
+}
+
 function normalizeSocialAvatarBase(av) {
   if (!av) return "";
   const clean = String(av).trim();
   if (clean.includes("googleusercontent.com/")) return clean.split("=")[0];
   if (clean.includes("fbsbx.com") || clean.includes("fbcdn.net") || clean.includes("facebook.com")) {
-    return clean.split("?")[0];
+    return normalizeMetaAvatarBase(clean);
   }
   return clean;
-}
-
-function hasSameSocialAvatar(avA, avB) {
-  if (!avA || !avB) return false;
-  if (avA === avB) return true;
-  const isSocialA = avA.includes("googleusercontent.com") || avA.includes("fbcdn") || avA.includes("fbsbx");
-  const isSocialB = avB.includes("googleusercontent.com") || avB.includes("fbcdn") || avB.includes("fbsbx");
-  return isSocialA && isSocialB;
-}
-
-function hasMatchingNamedIdentity(nameA, nameB, avA, avB) {
-  if (!nameA || nameA.startsWith("vx_") || nameA !== nameB) return false;
-  if (hasSameSocialAvatar(avA, avB)) return true;
-  return Boolean(avA && avB && avA === avB);
 }
 
 export function isSameCardIdentity(cardA, cardB) {
@@ -51,11 +44,7 @@ export function isSameCardIdentity(cardA, cardB) {
 
   const avA = normalizeSocialAvatarBase(cardA.avatarUrl || cardA.avatar || "");
   const avB = normalizeSocialAvatarBase(cardB.avatarUrl || cardB.avatar || "");
-  if (hasSameSocialAvatar(avA, avB)) return true;
-
-  const nameA = String(cardA.name || cardA.displayName || "").trim();
-  const nameB = String(cardB.name || cardB.displayName || "").trim();
-  return hasMatchingNamedIdentity(nameA, nameB, avA, avB);
+  return Boolean(avA && avB && avA === avB);
 }
 
 export function pruneCardsMatchingSocialIdentity({ canonicalRouteId, displayName, avatarUrl } = {}) {
@@ -93,7 +82,7 @@ function pruneConflictingIdentityCards(cards, id, nextCard) {
 
 export function setProfileCard(routeId, partial) {
   const id = String(routeId || "").trim();
-  if (!id) return;
+  if (!id || isTestRouteId(id)) return;
   const cards = loadCards();
   const nextCard = { ...cards[id], ...partial, routeId: id, updatedAt: Date.now() };
 
@@ -105,7 +94,7 @@ export function setProfileCard(routeId, partial) {
   } catch {
     /* ignore */
   }
-  if (profileMemorySink) profileMemorySink({ type: "PROFILE_CARD", card: nextCard });
+  if (profileMemorySink && isShareableCard(nextCard)) profileMemorySink({ type: "PROFILE_CARD", card: nextCard });
 }
 
 export function getProfileCard(routeId) {
@@ -126,9 +115,58 @@ export function removeProfileCard(routeId) {
   }
 }
 
+/**
+ * Apaga deste aparelho os cartões de perfil que a condição apontar (usado pela purga da gênese).
+ * @param {(card: object, routeId: string) => boolean} shouldDrop Recebe o cartão e a chave; true apaga.
+ * @returns {number} Quantos cartões foram apagados.
+ */
+export function removeProfileCardsWhere(shouldDrop) {
+  const cards = loadCards();
+  const kept = Object.entries(cards).filter(([id, c]) => !shouldDrop(c, id));
+  const removed = Object.keys(cards).length - kept.length;
+  if (removed > 0) {
+    try {
+      localStorage.setItem(CARDS_KEY, JSON.stringify(Object.fromEntries(kept)));
+    } catch {
+      /* ignore */
+    }
+  }
+  return removed;
+}
+
+/**
+ * Nome escolhido pela pessoa: não vazio e diferente da própria chave (`vx_…`).
+ * @param {{name?: string, routeId?: string}} card Cartão ou entrada do diretório.
+ * @returns {boolean} True se o nome foi escolhido.
+ */
+export function hasChosenCardName(card) {
+  const name = String(card?.name || "").trim();
+  const id = String(card?.routeId || "");
+  return Boolean(name) && !id.startsWith(name) && !/^vx_/i.test(name);
+}
+
+// Só sai do aparelho cartão com nome escolhido: conta só com a chave é a descartável que suja a rede.
+// O próprio cartão também não sai quando a pessoa desligou "aparecer na malha".
+function isShareableCard(card) {
+  if (!hasChosenCardName(card)) return false;
+  return card.routeId !== localAccount.getCachedRouteIdSync() || localAccount.getMeshDiscoverable();
+}
+
+/**
+ * Cartões que este aparelho manda para a memória central e para a malha.
+ * @returns {Array<object>} Cartões descobríveis que podem sair do aparelho.
+ */
+export function listShareableProfileCards() {
+  return listDiscoverableProfileCards().filter(isShareableCard);
+}
+
 export function listDiscoverableProfileCards() {
   const cards = loadCards();
-  const all = Object.values(cards).filter((c) => c && c.discoverable !== false && c.routeId);
+  const all = Object.values(cards).filter((c) => {
+    if (!c || c.discoverable === false || !c.routeId) return false;
+    const ts = c.updatedAt || c.timestamp || c.ts || 0;
+    return !isBeforeGenesisMs(ts) && c.routeId !== "vx_WAqxgW" && !isTestRouteId(c.routeId);
+  });
   const deduped = [];
   for (const card of all) {
     const existingIdx = deduped.findIndex((ex) => isSameCardIdentity(ex, card));

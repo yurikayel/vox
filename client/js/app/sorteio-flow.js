@@ -8,9 +8,10 @@ import * as peers from "../peers.js";
 import * as localAccount from "../local-account.js";
 import * as share from "../share.js";
 import * as sorteio from "../sorteio.js";
-import { escapeHtml } from "../render/util.js";
+import { escapeHtml } from "../shared/html.js";
 import { isModerator } from "../moderation.js";
 
+/** @type {string} Chave em `localStorage` para segredos temporários de sorteios. */
 export const SECRETS_KEY = "vox-sorteio-segredos-v1";
 
 const localOf = (type, communityId) => cacheNode.getLocalPosts({ type, communityId }).catch(() => []);
@@ -93,7 +94,13 @@ function actionsHtml(item, { isMod: mod, routeId, secrets }) {
   return out.join("");
 }
 
-/** Cartão de um sorteio. */
+/**
+ * Renderiza o cartão HTML de um sorteio cívico.
+ *
+ * @param {object} item Item retornado por `loadSorteios` (`draw`, `close`, `state`, `commits`, `reveals`).
+ * @param {object} viewer Contexto de visualização (`isMod`, `routeId`, `secrets`).
+ * @returns {string} HTML do cartão do sorteio.
+ */
 export function renderSorteioCard(item, viewer) {
   const { draw, state } = item;
   const total = sorteio.decodeRoster(draw.roster).length;
@@ -122,7 +129,13 @@ function formHtml() {
   </details>`;
 }
 
-/** Seção de sorteios da aba de avisos. */
+/**
+ * Renderiza a seção de sorteios da aba de avisos.
+ *
+ * @param {object[]} items Lista de sorteios carregados.
+ * @param {object} viewer Contexto de visualização (`isMod`, `routeId`, `secrets`).
+ * @returns {string} HTML da seção de sorteios, ou `""` quando vazia para membros.
+ */
 export function renderSorteiosHtml(items, viewer) {
   const cards = items.map((it) => renderSorteioCard(it, viewer)).join("");
   if (!cards && !viewer.isMod) return "";
@@ -177,7 +190,13 @@ function bindSorteios(section, ctx, items, rerender) {
   });
 }
 
-/** Monta a seção na aba de avisos. `ctx`: `{ communityId, meta, members, routeId, isMod }`. */
+/**
+ * Monta e vincula a seção de sorteios na aba de avisos.
+ *
+ * @param {HTMLElement|null} host Elemento hospedeiro da aba.
+ * @param {object} ctx Contexto da comunidade (`communityId`, `meta`, `members`, `routeId`, `isMod`).
+ * @returns {Promise<void>} Conclusão da montagem da seção.
+ */
 export async function mountSorteios(host, ctx) {
   if (!host) return;
   const items = await loadSorteios(ctx);

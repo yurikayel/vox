@@ -349,7 +349,8 @@ export function initDmListeners() {
     if (!user || envelope.to !== user) return;
     try {
       const rawText = await cryptoDm.open(envelope);
-      await ingestDecryptedEnvelope(envelope, rawText);
+      const handled = await ingestDecryptedEnvelope(envelope, rawText);
+      if (handled === "contact_added") return;
       const cur = parseRoute();
       if (cur.name === "dm-thread" && cur.address === envelope.from) {
         showDmThread(envelope.from);

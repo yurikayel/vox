@@ -1,16 +1,38 @@
 /**
- * @file Aviso assinado v0 — códigos e link de conferência, sem dependências: a página leve (`aviso.html`)
- * importa só isto. O `aviso.js` reexporta. Spec: docs/specs/aviso-assinado-v0.md.
+ * @file Aviso assinado v0 (lote C) — códigos curtos e link de conferência, sem dependências.
+ *
+ * A página leve (`aviso.html`) importa só isto e `signed-verify.js`; o `aviso.js` reexporta para o app.
+ * O link leva o aviso assinado inteiro no fragmento (`#v=1&a=…`), que não vai ao servidor.
+ *
+ * @module aviso/aviso-link
+ * @see docs/specs/aviso-assinado-v0.md
+ * @see client/aviso/aviso-page.js
  */
 
+/**
+ * Tamanho máximo do aviso codificado no link, em caracteres (cabe em uma mensagem do WhatsApp).
+ *
+ * @type {number}
+ */
 export const AVISO_LINK_MAX = 2000;
 const BASE32 = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+/**
+ * Diz se o objeto é um tópico-aviso (tem `avisoKind`). Não confere assinatura nem selo.
+ *
+ * @param {object} post Objeto qualquer.
+ * @returns {boolean}
+ */
 export const isAvisoTopic = (post) => post?.type === "topic" && Boolean(post.avisoKind);
 
-/** Vencimento: `expiresAt`, senão encontro + 1 dia, senão publicação + 7 dias. */
+/**
+ * Vencimento do aviso: `expiresAt`; senão, o encontro mais 1 dia; senão, a publicação mais 7 dias.
+ *
+ * @param {{expiresAt?: number, eventAt?: number, ts?: number}} post Aviso.
+ * @returns {number} Instante do vencimento, em ms.
+ */
 export function avisoExpiresAt(post) {
   if (Number(post?.expiresAt) > 0) return Number(post.expiresAt);
   if (Number(post?.eventAt) > 0) return Number(post.eventAt) + DAY_MS;
@@ -37,13 +59,27 @@ async function sha256(textValue) {
   return new Uint8Array(await crypto.subtle.digest("SHA-256", data));
 }
 
-/** Código do aviso: 4 caracteres do SHA-256 da assinatura. */
+/**
+ * Código curto do aviso: 4 caracteres base32 (Crockford) do SHA-256 da assinatura.
+ *
+ * Serve para a resposta no WhatsApp apontar o aviso certo; sozinho, não prova nada.
+ *
+ * @param {{sig: string}} signedAviso Aviso assinado.
+ * @returns {Promise<string>} Código, ou `""` sem assinatura.
+ */
 export async function avisoCode(signedAviso) {
   if (!signedAviso?.sig) return "";
   return base32(await sha256(signedAviso.sig), 4);
 }
 
-/** Código de conferência de quem assina: 6 caracteres do SHA-256 do routeId, em dois grupos. */
+/**
+ * Código de conferência de quem assina: 6 caracteres base32 do SHA-256 da rota, em dois grupos.
+ *
+ * É o que a pessoa confere uma vez com a coordenação, de viva voz.
+ *
+ * @param {string} routeId Rota de quem assina.
+ * @returns {Promise<string>} Código como `"7KQ-2MX"`, ou `""` sem rota.
+ */
 export async function personCode(routeId) {
   if (!routeId) return "";
   const code = base32(await sha256(routeId), 6);
@@ -63,14 +99,25 @@ function fromBase64Url(value) {
   return new TextDecoder().decode(Uint8Array.from(bin, (c) => c.charCodeAt(0)));
 }
 
-/** Fragmento do link de conferência (`v=1&a=…`). Lança acima do limite. */
+/**
+ * Monta o fragmento do link de conferência (`v=1&a=<base64url do JSON>`).
+ *
+ * @param {object} signedAviso Aviso assinado.
+ * @returns {string} Fragmento sem `#`.
+ * @throws {Error} Se o aviso codificado passa de {@link AVISO_LINK_MAX}.
+ */
 export function encodeAvisoFragment(signedAviso) {
   const encoded = toBase64Url(JSON.stringify(signedAviso));
   if (encoded.length > AVISO_LINK_MAX) throw new Error("Aviso grande demais para o link de conferência.");
   return `v=1&a=${encoded}`;
 }
 
-/** Lê o fragmento; devolve o aviso assinado ou `null` (sem verificar a assinatura). */
+/**
+ * Lê o fragmento do link de conferência. Não confere a assinatura.
+ *
+ * @param {string} [fragment=""] Fragmento, com ou sem `#`.
+ * @returns {object|null} O aviso, ou `null` se a versão, o tamanho ou o conteúdo não servem.
+ */
 export function decodeAvisoFragment(fragment = "") {
   const params = new URLSearchParams(String(fragment).replace(/^#/, ""));
   const encoded = params.get("a") || "";

@@ -1,25 +1,63 @@
 /**
- * @file Termo de convivência da comunidade (lote 3): a moderação publica o texto assinado e quem entra
- * assina o hash do termo junto com a entrada (`membership.termoHash`), no molde do pacto 18+.
- * Lógica pura, sem DOM. Spec: docs/specs/aviso-assinado-v0.md ("Termo de convivência e mediação").
+ * @file Termo de convivência da comunidade (civic lote 3).
+ *
+ * A moderação publica o texto assinado; quem entra assina o hash do termo junto com a entrada
+ * (`membership.termoHash`), no molde do pacto 18+. Quando o termo muda, o hash antigo deixa de bater e a
+ * pessoa vê que pode assinar de novo — ninguém é expulso por isso.
+ *
+ * Lógica pura, sem DOM.
+ *
+ * @module community-termo
+ * @see docs/specs/aviso-assinado-v0.md (seção "Termo de convivência e mediação")
+ * @see client/js/app/community-termo-flow.js (tela)
  */
 
 import { isModerator } from "./moderation.js";
 
+/**
+ * Tipo do corpo assinado do termo.
+ *
+ * @type {string}
+ */
 export const TERMO_TYPE = "community-termo";
+
+/**
+ * Tamanho máximo do texto do termo, em caracteres.
+ *
+ * @type {number}
+ */
 export const TERMO_MAX = 2000;
+
+/**
+ * Tamanho mínimo do texto do termo, em caracteres.
+ *
+ * @type {number}
+ */
 export const TERMO_MIN = 20;
 
 const cleanText = (text) => String(text ?? "").replace(/\r\n?/g, "\n").trim();
 
-/** Problema do texto do termo, ou "" se válido. */
+/**
+ * Valida o texto do termo (quebras de linha normalizadas e sem espaços nas pontas).
+ *
+ * @param {string} text Texto digitado pela moderação.
+ * @returns {""|"curto"|"longo"} `""` quando válido.
+ */
 export function validateTermoText(text) {
   const t = cleanText(text);
   if (t.length < TERMO_MIN) return "curto";
   return t.length > TERMO_MAX ? "longo" : "";
 }
 
-/** Corpo do termo que a moderação assina e publica. */
+/**
+ * Monta o corpo do termo que a moderação assina e publica.
+ *
+ * @param {string} communityId Comunidade do termo.
+ * @param {string} text Texto do termo ({@link TERMO_MIN}–{@link TERMO_MAX} caracteres).
+ * @param {number} [now=Date.now()] Instante da publicação, em ms.
+ * @returns {{type: string, communityId: string, termoText: string, ts: number}} Corpo pronto para `signPayload`.
+ * @throws {Error} Se falta a comunidade ou o texto tem tamanho fora do limite.
+ */
 export function buildTermo(communityId, text, now = Date.now()) {
   if (!communityId) throw new Error("Termo sem comunidade.");
   if (validateTermoText(text)) throw new Error(`O termo precisa ter de ${TERMO_MIN} a ${TERMO_MAX} caracteres.`);
@@ -31,7 +69,14 @@ function isTermoByModeration(t, communityId, meta) {
   return isModerator(String(t.author || t.owner || ""), meta?.owner, meta?.moderators);
 }
 
-/** Termo que vale: o mais recente publicado por dono ou moderação da comunidade. */
+/**
+ * Escolhe o termo que vale: o mais recente publicado por dono ou moderação da comunidade.
+ *
+ * @param {object[]} [items=[]] Termos já verificados.
+ * @param {string} [communityId=""] Comunidade.
+ * @param {object} [meta={}] Metadados da comunidade (dono e moderação).
+ * @returns {object|null} O termo vigente, ou `null`.
+ */
 export function latestTermo(items = [], communityId = "", meta = {}) {
   let best = null;
   for (const t of items) {
@@ -41,19 +86,35 @@ export function latestTermo(items = [], communityId = "", meta = {}) {
   return best;
 }
 
-/** SHA-256 do texto do termo, em hex: é o que a entrada assina. */
+/**
+ * Calcula o SHA-256 do texto do termo; é o que a entrada na comunidade assina.
+ *
+ * @param {{termoText: string}|null} termo Termo vigente.
+ * @returns {Promise<string>} Hash em hexadecimal minúsculo (64 caracteres).
+ */
 export async function termoHash(termo) {
   const bytes = new TextEncoder().encode(cleanText(termo?.termoText));
   const digest = await globalThis.crypto.subtle.digest("SHA-256", bytes);
   return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-/** Campos extras da entrada: o hash do termo vigente, se houver. */
+/**
+ * Campos extras da entrada na comunidade: o hash do termo vigente, se houver.
+ *
+ * @param {object|null} termo Termo vigente.
+ * @returns {Promise<{termoHash?: string}>} Objeto vazio quando não há termo.
+ */
 export async function membershipTermoFields(termo) {
   return termo ? { termoHash: await termoHash(termo) } : {};
 }
 
-/** Situação de quem vê: sem termo, assinou o atual, assinou um antigo (o termo mudou) ou não assinou. */
+/**
+ * Situação de quem vê o termo.
+ *
+ * @param {object|null} termo Termo vigente.
+ * @param {{termoHash?: string}|null} membership Entrada mais recente da pessoa, ou `null` se não é membro.
+ * @returns {Promise<"sem-termo"|"nao-assinou"|"assinou"|"mudou">} `mudou` quando a pessoa assinou uma versão anterior.
+ */
 export async function termoStatus(termo, membership) {
   if (!termo) return "sem-termo";
   if (!membership?.termoHash) return "nao-assinou";

@@ -35,6 +35,12 @@ describe("route-parse", () => {
     });
   });
 
+  it("#/compose sozinho abre o compositor (não cai na página não encontrada)", () => {
+    withLocation({ hash: "#/compose" }, () => {
+      assert.deepEqual(parseRoute(), { name: "compose-topic", communityId: "" });
+    });
+  });
+
   it("handle via query h=", () => {
     withLocation({ hash: "#/", search: "?h=helena" }, () => {
       assert.deepEqual(parseRoute(), { name: "handle-lookup", slug: "helena" });
@@ -86,6 +92,21 @@ describe("route-parse", () => {
     });
     withLocation({ hash: "#/dm/vx_peer" }, () => {
       assert.deepEqual(parseRoute(), { name: "dm-thread", address: "vx_peer" });
+    });
+  });
+
+  it("rota desconhecida vira not-found em vez de cair na Home sem aviso", () => {
+    withLocation({ hash: "#/nao-existe/xyz" }, () => {
+      assert.deepEqual(parseRoute(), { name: "not-found" });
+    });
+  });
+
+  it("atalho #/@arroba abre a busca por handle", () => {
+    withLocation({ hash: "#/@helena" }, () => {
+      assert.deepEqual(parseRoute(), { name: "handle-lookup", slug: "helena" });
+    });
+    withLocation({ hash: "#/@" }, () => {
+      assert.deepEqual(parseRoute(), { name: "not-found" });
     });
   });
 });

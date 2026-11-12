@@ -444,7 +444,7 @@ Para blindar o Vox contra fazendas de automação sem recorrer a captchas corpor
 
 1. **Porta da Cantina (`vox-cantina-v1`):**
    - Paródia cultural e acolhedora inspirada na clássica cena de cantina espacial: o bartender de túnica bege aponta para a frente, e o gag se resolve nos dois balões (Wuher: droids/bots esperam do lado de fora).
-   - Arte autoral em JPG (`cantina-gate.jpg`, `object-fit: cover` / `object-position: 76% 16%`). Os dois balões do gag já vêm pintados na arte (*"Seus bots tem que esperar lá fora!"* e *"Aqui não servimos esse tipo."*) — sem overlay HTML/CSS.
+   - Arte autoral em WebP (`cantina-gate.webp`, `object-fit: cover` / `object-position: 76% 16%`). Os dois balões do gag já vêm pintados na arte (*"Seus bots tem que esperar lá fora!"* e *"Aqui não servimos esse tipo."*) — sem overlay HTML/CSS.
    - Overlay sem H2 "Porta da Cantina", sem quote duplicada e sem subtítulo itálico. O diálogo usa `aria-label="Porta da Cantina"`; o `alt` da imagem descreve os dois balões pintados.
    - Acionamento em primeiro acesso armazenado em `localStorage` (`vox-cantina-v1`).
    - Botão de ação único: `Entrar — sou humano`, com esclarecimento expansível sobre a minimização de dados do Vox.
@@ -1064,9 +1064,9 @@ OAuth e compartilhamento nativo citam provedores apenas onde exigido por integra
 
 **Escopo:** cockpit **Ecoe para…** após publicar (compose + inline); link canônico `#/t/:id`; intents WhatsApp / X / Bluesky; Web Share; copiar bloco; export JSON CLI.
 
-**Código:** `client/js/posse-dispatch.js` · testes `tests/posse-dispatch.test.js` · preferência “não mostrar de novo” (`vox-posse-sheet-skip`).
+**Código:** `client/js/posse-dispatch.js` · testes `tests/posse-dispatch.test.js`. A folha antiga pós-publicação (`vox-posse-sheet-skip`) saiu em 2026-11-12: nada a abria desde o cockpit Ecoe (2168dae).
 
-**Webhooks (Tier B):** `#/settings/network` → textarea **Ecoe POSSE — Webhooks** (`vox-posse-webhooks`); POST JSON ao usar **Exportar JSON** no sheet.
+**Webhooks (Tier B):** `#/settings/network` → textarea **Ecoe POSSE — Webhooks** (`vox-posse-webhooks`); POST JSON ao usar **Exportar JSON** no cockpit Ecoe.
 
 **Markdown:** blocos fenced ` ```lang ` em corpo de post → `render/markdown-body.js` (feed, overlay, `#/t/:id`); sem HTML bruto; hashtags fora de fences.
 

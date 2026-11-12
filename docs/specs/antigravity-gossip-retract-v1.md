@@ -1,5 +1,7 @@
 # Gossip retratação v1 — spec kickoff (Antigravity)
 
+> **Status:** implementada · **Owner:** mantenedor · **Revisado:** 2026-10-23
+
 **Tarefa Vox #4** · spec apenas (sem implementação completa neste PR)  
 **Branch de spec:** `feat/gossip-retract-spec`  
 **Branch de implementação prevista:** `feat/gossip-retract-v1`  

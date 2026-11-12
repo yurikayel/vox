@@ -72,6 +72,8 @@ Testes: `relay/test_signaling.py`.
 
 Payload máx. da memória: **2 × 2 MB** (`MAX_BLOB_BYTES` × 2) → acima disso, `413`.
 
+**Corte da gênese** ([`genesis_guard.py`](../../relay/genesis_guard.py); o nó em C# repete a regra em `GenesisGuard.cs`): `ingest` e `sync` ignoram, sem erro (`200`, `ingestedCount` não conta), cartão de perfil de conta de teste, post de autor de teste e post com `ts`/`timestamp`/`createdAt` anterior à gênese. Ao carregar o estado do disco, o que a regra recusa sai e a revisão sobe. Lista e data vêm de `client/js` via `node scripts/gen-genesis-guard.mjs`.
+
 ### Seeder P2P e descoberta (`p2p_seeder.py`)
 
 | Rota | Método | Descrição |

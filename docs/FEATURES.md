@@ -1,6 +1,6 @@
 # Catálogo de funcionalidades — Vox
 
-> **Status:** canônico · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-08
+> **Status:** canônico · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-11
 > Fonte: rotas de `client/js/app/route-parse.js`, imports reais em `client/js/**` e `tests/*.test.js`. Ao plugar ou remover um módulo, atualize a linha correspondente aqui.
 
 **Legenda de status**
@@ -37,6 +37,12 @@
 | Funcionalidade | Rota | Módulos | Status | Testes |
 |---|---|---|---|---|
 | Comunidades estilo Orkut (fórum, tópicos) | `#/communities`, `#/c/:id`, `#/t/:id` | `app/screens-community.js`, `render/community.js`, `community-*.js` | no ar (sem rede: aviso "sem conexão", sem conteúdo de exemplo) | `community-*` |
+| Aviso assinado da coordenação (selo, Ciente / Vou / Talvez, contagem colada do WhatsApp, cancelamento) | `#/c/:id/avisos`, `#/compose/aviso?c=:id` | `aviso.js`, `aviso-replies.js`, `render/aviso.js`, `app/aviso-flow.js` | **lab** (`vox.lab.aviso`) | `aviso`, `aviso-replies`, `aviso-ui` |
+| Página leve de conferência do aviso (sem conta, sem o app) | `aviso.html#v=1&a=…` | `client/aviso/aviso-page.js`, `client/aviso/aviso-link.js`, `signed-verify.js` | **no ar** (só abre com link gerado no lab) | `aviso-page`, `signed-verify` |
+| Chamada de ação: papéis com vagas e quórum; resposta por DM cifrada | cartão do aviso | `aviso-roles.js`, `app/aviso-roles-dm.js` | **lab** (`vox.lab.aviso`) | `aviso-roles` |
+| Competências só no aparelho (sugerem papel) | aba de avisos | `aviso-roles.js`, `app/aviso-roles-dm.js` | **lab** (`vox.lab.aviso`) | `aviso-roles` |
+| Termo de convivência assinado na entrada | topo de `#/c/:id` | `community-termo.js`, `app/community-termo-flow.js` | **lab** (`vox.lab.aviso`) | `community-termo` |
+| Pedir mediação (conversa cifrada com a moderação, sem ocultar nada) | menu ⋯ do post | `report.js` (`buildMediationDmHash`), `render/post-more-menu.js` | **no ar** | `community-termo` |
 | Moderação: fixar, trancar, ocultar | comunidade | `moderation.js` | no ar | `moderation*` |
 | Denunciar publicação (motivos, canais oficiais para casos graves, DM cifrada ao moderador) | post ⋯ | `report.js`, `app/report-flow.js`, `app/report-dm.js`, `report-review.js` | no ar (LAN-12, PM-69): a denúncia assinada vai por DM à moderação, cujo aparelho arquiva até a revisão ("⏳ Em revisão", 48 h) se passar nas salvaguardas; sem fila central | `report`, `report-flow`, `report-review` |
 | Canal: só a moderação publica posts, todos comentam | faixa na página da comunidade | `community-channel.js`, `app/community-channel-flow.js`, `render/channel-bar.js` | no ar (PM-81): `community_update` com `postingMode`; a regra vale na leitura de cada aparelho ([spec](./specs/canal-comunidade-v0.md)) | `community-channel` |
@@ -99,7 +105,7 @@
 | Quarentena de chave nova + PoW leve | criar comunidade ("Quarentena para chave nova"); aviso "Ver mesmo assim" no feed da comunidade | `new-key-guard.js` (usado em `screens-community.js`, `inline-composer.js`, `screens-compose.js`, `peers.js`) | no ar (LAN-14): na comunidade que pediu, post de chave vista há menos de 24 h fica recolhido, salvo PoW de 14 bits (~1 s ao publicar); moderação vê tudo, com selo "Chave nova". A opção só existe na criação | `new-key-guard` |
 | Mensagens de erro honestas | upload, leitura, DM | `honest-errors.js` | no ar (LAN-21): cota, 402, 429, offline, timeout, gateways fora, DM sem relay e sinalização caída (WebSocket e Nostr fora por mais de 5 s: aviso e selo em `#/settings/network`, e aviso de volta) | `honest-errors`, `nostr-transport`, `render` |
 | Trackers WebTorrent | — | `client/config/signaling.json` | **stub** (configurados, não usados) | — |
-| Modo guardião (aparelho como nó) | — | `seeder-guardian.js` | **escrito, não plugado** | `seeder-guardian` |
+| Modo guardião (aparelho como nó) | — | `seeder-guardian.js`, `render/settings-guardian.js` | **escrito, não plugado** (cota fixa de 2 GB e banda proporcional já valem no módulo, mas nenhuma tela monta o cartão) | `seeder-guardian` |
 | Persistência de storage (anti-evicção) | — | `storage-persistence.js` | **escrito, não plugado** | `storage-persistence` |
 | Transferência em blocos | — | `chunked-transfer.js` | **escrito, não plugado** | `chunked-transfer` |
 | Configurações de rede, assistente, steward | `#/settings/network[/guia\|/steward]` | `app/screens-network.js`, `steward-wizard.js` | no ar | `steward-wizard`, `status-render` |

@@ -325,16 +325,20 @@ function renderVoxpediaToc() {
   </nav>`;
 }
 
-/** @returns {string} HTML da página Voxpedia (Stitch tela 13: códex com índice lateral). */
+/**
+ * HTML da página Voxpedia (Stitch tela 13: códex com índice lateral). O título vem antes do índice:
+ * no celular a coluna lateral fica em cima, e a página abria pelo índice, sem dizer onde a pessoa estava.
+ * @returns {string} HTML da página.
+ */
 export function renderVoxpedia() {
   return `
     <article class="voxpedia-page agora-codex">
+      ${renderVoxpediaHero()}
       <aside class="agora-codex-aside">
         ${renderVoxpediaToc()}
         ${renderGithubDocsAside()}
       </aside>
       <div class="agora-codex-main">
-        ${renderVoxpediaHero()}
         ${renderComecar()}
         ${renderMensagens()}
         ${renderComunidades()}
