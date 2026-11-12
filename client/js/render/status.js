@@ -17,6 +17,13 @@ function renderMirrorExportLineHtml(mirrorExport) {
   return `<p class="meta"><strong>Espelho relay:</strong> sem falha registrada neste aparelho.</p>`;
 }
 
+/** Estado da leitura do Arweave em palavras de gente (a tela não mostra o código interno). */
+const READ_STATE_LABELS = { all_ok: "Normal", degraded: "Instável", critical: "Leitura reserva" };
+
+function readStateLabel(state) {
+  return READ_STATE_LABELS[state] || "Desconhecido";
+}
+
 function renderLeituraReservaNoteHtml(state) {
   if (state !== "all_ok") {
     return `<p class="desc status-leigo-note">Quando aparece <strong>leitura reserva</strong>, os gateways Arweave falharam ou demoraram aqui — o app usa cache local ou relay comunitário. Isso é plano B de leitura, não significa que você quebrou a rede.</p>`;
@@ -31,7 +38,7 @@ function renderStatusTilesHtml(state, relayStatus, rtcStatus) {
     <div class="agora-tiles">
       <div class="agora-tile${readOk ? "" : " agora-tile--bronze"}">
         <span class="agora-tile-label">Leitura Arweave</span>
-        <span class="agora-tile-value">${escapeHtml(state)}</span>
+        <span class="agora-tile-value">${escapeHtml(readStateLabel(state))}</span>
         <span class="agora-tile-hint">${readOk ? "Gateways respondendo" : "Leitura reserva ativa"}</span>
       </div>
       <div class="agora-tile${relayStatus?.online ? "" : " agora-tile--bronze"}">
@@ -104,7 +111,7 @@ function renderMeshTabletHtml({ state, relayStatus, relayLabel, relayHost, mirro
         </div>
         ${renderLeituraReservaNoteHtml(state)}
         <dl class="agora-kv">
-          <div class="agora-kv-row"><dt>Leitura Arweave</dt><dd>${escapeHtml(state)}</dd></div>
+          <div class="agora-kv-row"><dt>Leitura Arweave</dt><dd>${escapeHtml(readStateLabel(state))}</dd></div>
           <div class="agora-kv-row"><dt>Relay HTTP</dt><dd class="${relayStatus?.online ? "" : "is-bronze"}">${relayLabel} · ${relayHost}</dd></div>
           <div class="agora-kv-row"><dt>Versão do cache (Service Worker)</dt><dd class="is-hash"><code id="status-sw-cache">…</code></dd></div>
         </dl>

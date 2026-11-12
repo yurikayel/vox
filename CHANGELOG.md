@@ -6,6 +6,15 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Lote UI 1 das telas sem layout do Stitch
+- **Diretório de Cidadãos:** só aparece quem escolheu um nome (mais você e o perfil Vox). Contas só com a chave `vx_…` — da malha, do cofre deste aparelho ou dos contatos — saem da lista; continuam achadas pela chave completa na busca. A linha mostra nome e @, sem a chave (que fica no perfil). Sua própria conta ainda sem nome aparece como "Você", com o botão "Escolher nome". Linhas separadas por fio, ações compactas; "Mensagem P2P" virou "Mensagem".
+- **`#/compose`** abre o compositor (antes caía em "Página não encontrada").
+- **Saúde do nó:** a leitura do Arweave aparece como Normal / Instável / Leitura reserva, não o código interno (`all_ok`).
+- **Voxpedia:** o título abre a página; antes, no celular, ela começava pelo índice.
+- **Guias da rede e da carteira:** a escolha da primeira etapa virou cartões de opção (como o "O que você vai publicar?"), com a explicação de cada opção à vista.
+- Precache: +4,8 KB pagos recomprimindo `icons/icon-white-192.png` em paleta (pixels idênticos, −10,1 KB); teto baixado para 0,2% acima do medido.
+- SW `v7.81` (v7.79 reservado ao #94, v7.80 ao #98).
+
 ### Norma de documentação e revisão das últimas 24 h (PM-98)
 - **Norma nova** em [docs/process/documentacao.md](./docs/process/documentacao.md): cabeçalho em todo módulo, JSDoc completo em todo export (`@param`, `@returns`, `@throws`, `@type` com unidade), o porquê nos comentários e a tabela do que atualizar em cada tipo de mudança (spec, FEATURES, ROADMAP, ADR, THREAT-MODEL, CHANGELOG).
 - **`npm run audit:docs`** ([scripts/docs-audit.mjs](./scripts/docs-audit.mjs)) lê a árvore sintática e reprova export sem JSDoc, parâmetro sem `@param`, retorno sem `@returns`, link relativo quebrado e doc fora do índice. Entra no `npm run validate` e no CI. A dívida antiga (2.296 itens, medida na `main`) fica em [scripts/docs-debt.json](./scripts/docs-debt.json) como catraca: só diminui.

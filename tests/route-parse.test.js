@@ -35,6 +35,12 @@ describe("route-parse", () => {
     });
   });
 
+  it("#/compose sozinho abre o compositor (não cai na página não encontrada)", () => {
+    withLocation({ hash: "#/compose" }, () => {
+      assert.deepEqual(parseRoute(), { name: "compose-topic", communityId: "" });
+    });
+  });
+
   it("handle via query h=", () => {
     withLocation({ hash: "#/", search: "?h=helena" }, () => {
       assert.deepEqual(parseRoute(), { name: "handle-lookup", slug: "helena" });

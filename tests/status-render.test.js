@@ -22,7 +22,8 @@ test("renderStatusPage - shows gateway state and relay", () => {
     relayStatus: { online: false },
     relayHttpUrl: "http://127.0.0.1:8787",
   });
-  assert.ok(main.innerHTML.includes("degraded"));
+  assert.ok(main.innerHTML.includes("Instável"), "estado da leitura em palavras, não o código interno");
+  assert.ok(!main.innerHTML.includes(">degraded<"));
   assert.ok(main.innerHTML.includes("arweave_net"));
   assert.ok(main.innerHTML.includes("Offline"));
   assert.ok(main.innerHTML.includes("Espelho relay"));
