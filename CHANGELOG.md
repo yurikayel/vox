@@ -6,9 +6,10 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
-### Diretório e prévia de conexão usam a foto já carregada
-- A linha do diretório de cidadãos (`renderPeopleResultRow`) e a prévia de conexão (`renderConnectPreview`) agora passam `p.avatarUrl` / `profile.avatar` para `renderAvatarHtml`, em vez de depender só do cartão sincronizado em `profileDirectory`.
-- Testes novos em `tests/people-chosen-name.test.js`.
+### Diretório e prévia de conexão usam a foto carregada e não escondem outras contas Google/Meta
+- A linha do diretório de cidadãos (`renderPeopleResultRow`) e a prévia de conexão (`renderConnectPreview`) passam `p.avatarUrl` / `profile.avatar` para `renderAvatarHtml`, em vez de depender só do cartão sincronizado em `profileDirectory`.
+- Corrigida a deduplicação social em `profile-directory.js` (`hasSameSocialAvatar` considerava iguais quaisquer duas URLs de Google/Meta distintas, apagando o outro cartão em `localStorage`, e `normalizeSocialAvatarBase` perdia `?psid=/asid=` do Facebook) e em `people-index.js` / `local-account.js` (mesmo nome + domínios Google/Meta diferentes deixam de colidir). Duas contas Google/Meta distintas com o mesmo nome agora aparecem separadas no diretório com suas fotos.
+- Testes novos em `tests/people-chosen-name.test.js` e `tests/people-index.test.js`.
 - SW `v7.90`.
 
 ### Backup semanal e mensal no seu e-mail
