@@ -6,6 +6,12 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Diretório: homônimo de outra chave não some mais dentro de "Você"
+- Quando outra conta tinha exatamente o seu nome, o diretório a tratava como você e a escondia dentro da linha "Você". Duas pessoas reais com o mesmo nome (duas "Maria Silva") não se viam. Achado com duas contas "Yuri Kayel" do mantenedor, uma em cada navegador: cada uma só via a si mesma.
+- Agora o nome igual só une contas que moram no mesmo aparelho (a sua e as do seu cofre), como antes. Uma chave de fora com o mesmo nome aparece como outra pessoa. A união por foto (mesma foto do Google ou da Meta) não mudou.
+- Teste novo em `tests/people-index.test.js`; o teste que une as contas do cofre com o mesmo nome segue igual.
+- SW `v7.87`.
+
 ### Selo "Malha ativa" nas configurações
 - O selo **Malha ativa / Offline / Só leitura** saiu da barra do topo (pedido do mantenedor) e passou para o cabeçalho da tela **Sua rede** (`#/settings`), antes dos outros estados. Continua levando à Saúde do nó, com o detalhe (ex.: "2 aparelhos") ao passar o mouse. O estado da rede segue também no rodapé da barra lateral e na gaveta de identidade, como antes.
 - `render/shell.js` era do Lote A do Antigravity, mas não havia trabalho dele em aberto no arquivo; a mudança foi feita a pedido direto do mantenedor e registrada no `lobby.md`.

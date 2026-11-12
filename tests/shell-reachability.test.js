@@ -55,6 +55,8 @@ const sw = fs.readFileSync(path.join(root, "sw.js"), "utf8");
  * 2026-11-12 (selo "Malha ativa" da barra do topo para a tela Sua rede, +441 B de JSDoc, junto com a guarda da
  * malha): medido 2.001.666 bytes;
  * teto mantido.
+ * 2026-11-12 (diretório: homônimo de outra chave não some dentro de "Você", +96 B de comentário): medido
+ * 2.001.762 bytes; teto mantido (sobram 144 B).
  */
 const SHELL_BUDGET_BYTES = 2_001_906;
 
