@@ -6,6 +6,11 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Nomes de usuário no amarelo da Ágora Soberana
+- O nome de quem publica aparece no amarelo do design system (`--sa-secondary`, o mesmo da faixa "Bem-vindo ao Vox"), em post, resposta, legenda de foto, cabeçalho do perfil e lista de membros da comunidade. Antes era o branco do texto. No modo claro o token já troca para o ocre escuro, que mantém contraste AA sobre o fundo claro.
+- Sobre a foto, o nome usa o amarelo claro fixo (`--sa-secondary-fixed-dim`, novo token em `client/css/agora.css`) nos dois modos, porque ali o fundo é a imagem, não o tema.
+- SW `v7.85`.
+
 ### Roadmap e backlog de 2027 (documentação)
 - **Calendário 2027 no [ROADMAP](./docs/ROADMAP.md#calendário-2027):** dezembro e os quatro trimestres, com tema, marco (G1, G2, G3), itens por ID e uma data de desistência em cada trimestre. Todo ID aberto ganhou um trimestre ou entrou na lista "fora de 2027".
 - **Brainstorm do ano** em [docs/brainstorms/brainstorm-roadmap-2027.md](./docs/brainstorms/brainstorm-roadmap-2027.md): norte de dez/2027 com piso e meta, datas fixas (NLnet, assinatura v2, assembleias, semestres, eleição municipal de 2028), ideias por eixo, triagem, riscos e decisões pendentes do mantenedor.
