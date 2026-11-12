@@ -7,6 +7,7 @@
 
 import * as cacheNode from "./cache-node.js";
 import * as hydrate from "./central-memory-hydrate.js";
+import { isBeforeGenesisMs, isTestRouteId } from "./genesis.js";
 import { getRelayHttpUrls } from "./inbox.js";
 import * as localAccount from "./local-account.js";
 import * as mediaBlob from "./media-blob.js";
@@ -295,13 +296,21 @@ function hydrateProfiles(profiles) {
   return added;
 }
 
+/** Testes anteriores à data de corte ficam fora, mesmo que a memória central ainda os tenha. */
+function afterGenesis(items) {
+  if (!Array.isArray(items)) return items;
+  return items.filter(
+    (it) => !isBeforeGenesisMs(hydrate.itemTimestamp(it)) && !isTestRouteId(it?.routeId || it?.author || it?.owner),
+  );
+}
+
 async function applyRemoteBundle(remote) {
   hydratingDepth += 1;
   try {
     const blobsByHash = await hydrate.hydrateBlobs(remote.blobs);
     const tombCount = await hydrate.hydrateTombstones(remote.tombstones);
-    const postCount = await hydrate.hydratePosts(remote.posts, blobsByHash, upsertAuthorCard);
-    const profCount = hydrateProfiles(remote.profiles);
+    const postCount = await hydrate.hydratePosts(afterGenesis(remote.posts), blobsByHash, upsertAuthorCard);
+    const profCount = hydrateProfiles(afterGenesis(remote.profiles));
     return tombCount + postCount + profCount;
   } finally {
     hydratingDepth = Math.max(0, hydratingDepth - 1);

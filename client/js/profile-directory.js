@@ -3,6 +3,7 @@
 import * as mock from "./mock.js";
 import * as localAccount from "./local-account.js";
 import { getWelcomeProfile, isWelcomeRouteId } from "./vox-welcome-profile.js";
+import { isBeforeGenesisMs, isTestRouteId } from "./genesis.js";
 
 const CARDS_KEY = "vox-profile-cards-v1";
 let profileMemorySink = null;
@@ -93,7 +94,7 @@ function pruneConflictingIdentityCards(cards, id, nextCard) {
 
 export function setProfileCard(routeId, partial) {
   const id = String(routeId || "").trim();
-  if (!id) return;
+  if (!id || isTestRouteId(id)) return;
   const cards = loadCards();
   const nextCard = { ...cards[id], ...partial, routeId: id, updatedAt: Date.now() };
 
@@ -126,9 +127,32 @@ export function removeProfileCard(routeId) {
   }
 }
 
+/**
+ * Apaga deste aparelho os cartões de perfil que a condição apontar (usado pela purga da gênese).
+ * @param {(card: object, routeId: string) => boolean} shouldDrop Recebe o cartão e a chave; true apaga.
+ * @returns {number} Quantos cartões foram apagados.
+ */
+export function removeProfileCardsWhere(shouldDrop) {
+  const cards = loadCards();
+  const kept = Object.entries(cards).filter(([id, c]) => !shouldDrop(c, id));
+  const removed = Object.keys(cards).length - kept.length;
+  if (removed > 0) {
+    try {
+      localStorage.setItem(CARDS_KEY, JSON.stringify(Object.fromEntries(kept)));
+    } catch {
+      /* ignore */
+    }
+  }
+  return removed;
+}
+
 export function listDiscoverableProfileCards() {
   const cards = loadCards();
-  const all = Object.values(cards).filter((c) => c && c.discoverable !== false && c.routeId);
+  const all = Object.values(cards).filter((c) => {
+    if (!c || c.discoverable === false || !c.routeId) return false;
+    const ts = c.updatedAt || c.timestamp || c.ts || 0;
+    return !isBeforeGenesisMs(ts) && c.routeId !== "vx_WAqxgW" && !isTestRouteId(c.routeId);
+  });
   const deduped = [];
   for (const card of all) {
     const existingIdx = deduped.findIndex((ex) => isSameCardIdentity(ex, card));
