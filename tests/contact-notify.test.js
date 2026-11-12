@@ -120,3 +120,23 @@ test("renderAddedYouSection e renderPeopleSearch exibem quem adicionou você com
   renderPeopleSearch(main, { sections: { all: [] }, query: "", addedBy: [{ routeId: "vx_alice123456", name: "Alice", ts: Date.now() }] });
   assert.ok(main.innerHTML.includes("Quem adicionou você"));
 });
+
+test("contact-notify - no máximo 3 alertas por hora; os demais avisos só entram na lista", async () => {
+  const storage = memStorage();
+  const alerts = [];
+  const deps = {
+    verify: async () => true,
+    getSelves: async () => ["vx_eu"],
+    resolveLabel: (e) => e.name,
+    alertUser: (entry) => alerts.push(entry.routeId),
+    storage,
+    now: () => 1_000_000,
+  };
+  for (let i = 0; i < 5; i++) {
+    const signed = { type: contactNotify.CONTACT_ADDED_TYPE, to: "vx_eu", author: `vx_spam${i}`, sig: "s", pubKey: {}, ts: 10 + i, displayName: `S${i}` };
+    await flow.receiveContactAddedDm({ from: signed.author }, contactNotify.serializeContactAddedDm(signed), deps);
+  }
+  assert.equal(alerts.length, 3, "só 3 alertas na hora");
+  assert.equal(contactNotify.listIncomingContactNotices(storage).length, 5, "todos ficam na lista");
+  assert.equal(contactNotify.takeContactAlertSlot(storage, 1_000_000 + 60 * 60 * 1000), true, "depois de uma hora volta a alertar");
+});

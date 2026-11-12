@@ -72,6 +72,10 @@ function defaultAlertUser(_entry, label) {
       new Notification("Vox", { body: `${label} adicionou você aos contatos.` });
     } catch {}
   }
+  notifyListChanged();
+}
+
+function notifyListChanged() {
   if (typeof document !== "undefined" && typeof CustomEvent === "function") {
     document.dispatchEvent(new CustomEvent("vox:contact-added-received"));
   }
@@ -107,7 +111,9 @@ export async function receiveContactAddedDm(env, rawText, deps = null) {
   if (!selves.includes(signed.to) || signed.author === signed.to) return true;
   if (!(await Promise.resolve(d.verify(signed)).catch(() => false))) return true;
   const { added, entry } = contactNotify.recordIncomingContactNotice(signed, d.storage);
-  if (added && entry) d.alertUser(entry, d.resolveLabel(entry));
+  if (!added || !entry) return true;
+  if (contactNotify.takeContactAlertSlot(d.storage, d.now?.() ?? Date.now())) d.alertUser(entry, d.resolveLabel(entry));
+  else notifyListChanged();
   return true;
 }
 
