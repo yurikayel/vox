@@ -6,6 +6,13 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Domínio não importa mais a camada de UI para escapar texto
+- Nada muda na tela. `escapeHtml` saiu de `client/js/render/util.js` para `client/js/shared/html.js` (módulo sem imports) e `shortId` para `client/js/short-id.js` (domínio, porque conhece a conta oficial). `render/util.js` reexporta os dois, então os módulos da UI seguem importando de lá.
+- Seis módulos do domínio (`civic-credential.js`, `community-unread.js`, `explode-dispatch.js`, `inline-composer.js`, `perma-notary.js`, `people-index.js`) passam a importar da origem. Nenhum módulo de domínio importa mais `render/util.js`; sobra o `render.js`, que é o barril da própria UI.
+- As duas funções ganharam JSDoc (eram dívida) e saíram de `scripts/docs-debt.json` pelo `--prune`.
+- Peso: +1.454 B de cabeçalho e JSDoc, sem código novo, pagos em parte tirando de `style.css` e `agora.css` 33 seletores de 23 classes que nenhum JS/HTML do cliente gera mais (-970 B). Nenhuma regra inteira saiu: só o seletor órfão dentro da lista, então o estilo de quem aparece na tela não muda. Medido em 2.019.122 bytes após o merge da `main` (teto de 2.019.348 bytes mantido).
+- SW `v7.92`.
+
 ### Aviso cifrado quando alguém adiciona você aos contatos
 - Ao adicionar alguém aos contatos (em **Conectar** ou na lista de membros da comunidade), o aparelho envia um aviso assinado e cifrado E2E pelo canal direto (`kind: "contact_added"`, sem criar mensagem falsa na conversa de DM).
 - Quem recebe vê o aviso na seção **Quem adicionou você** no topo de **Pessoas** (`#/people`), com botão **Adicionar de volta** e **Dispensar**, além de toast no app e notificação do sistema se autorizada.

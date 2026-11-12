@@ -8,7 +8,7 @@ import { getWelcomeProfile, WELCOME_ROUTE_ID } from "./vox-welcome-profile.js";
 import * as profileDirectory from "./profile-directory.js";
 import * as localAccount from "./local-account.js";
 import * as webrtcPeer from "./webrtc-peer.js";
-import { shortId } from "./render/util.js";
+import { shortId } from "./short-id.js";
 import { isTestRouteId } from "./genesis.js";
 
 const DEFAULT_PREFER_SOURCES = ["system", "self", "contact", "vault", "mesh-card", "mesh-author", "route-direct"];

@@ -9,7 +9,7 @@ import * as postOwnership from "./post-ownership.js";
 import * as mediaBlob from "./media-blob.js";
 import * as photoTags from "./photo-tags.js";
 import { openPhotoTagPicker } from "./app/photo-tag-picker.js";
-import { escapeHtml } from "./render/util.js";
+import { escapeHtml } from "./shared/html.js";
 import * as permanence from "./permanence-notice.js";
 import { attachPowIfWanted } from "./new-key-guard.js";
 import { assertCanPostTopic } from "./app/community-channel-flow.js";

@@ -77,6 +77,9 @@ const sw = fs.readFileSync(path.join(root, "sw.js"), "utf8");
  * 2026-11-12 (diretório e prévia de conexão com foto carregada, +66 B): teto atualizado para o medido (2.004.685 bytes).
  * 2026-11-12 (aviso E2E de novo contato + seção "Quem adicionou você" em Pessoas): entra `contact-notify.js`,
  * `app/contact-notify-flow.js` e a seção no diretório; medido 2.019.348 bytes (teto ajustado ao medido).
+ * 2026-11-12 (escapeHtml e shortId saem de render/util.js para shared/html.js e short-id.js, para o domínio não
+ * importar a UI, +1.454 B de cabeçalho de módulo e JSDoc, sem código novo): pago em parte tirando de style.css e
+ * agora.css 33 seletores de 23 classes que nenhum JS/HTML do cliente gera (-970 B); medido 2.019.122 bytes; teto de 2.019.348 mantido.
  */
 const SHELL_BUDGET_BYTES = 2_019_348;
 
