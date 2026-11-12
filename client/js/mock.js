@@ -97,12 +97,8 @@ export const MOCK_DEMO_COMMUNITY_FORK = {
 
 export const MOCK_DEMO_PROFILES = {};
 export const MOCK_DEMO_TOPICS = [];
-export const MOCK_DEMO_LISTINGS = [];
-export const MOCK_DEMO_REPLIES = [];
 export const MOCK_DEMO_PROPOSALS = [];
 export const MOCK_DEMO_VOTES = {};
-export const MOCK_COMMUNITIES = [];
-export const MOCK_TOPICS = {};
 export const MOCK_REPLIES = {};
 
 export function getMockProfile(authorId) {
@@ -180,9 +176,6 @@ export function mockProposals(communityId) {
   return { items: [], demo: false };
 }
 
-export function mockVotes(proposalId) {
-  return [];
-}
 
 export function getAuthorPixKey(author) {
   const prof = getMockProfile(author);

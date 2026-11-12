@@ -1,5 +1,18 @@
 import { currentInvite } from "./vox-link.js";
 
+/**
+ * Baixa um arquivo; o endereço temporário só sai depois (liberar no clique cancela o download em alguns navegadores).
+ * @param {Blob} blob Conteúdo.
+ * @param {string} name Nome do arquivo.
+ */
+export function downloadBlob(blob, name) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 60_000);
+}
+
 /** Microcopy EXP-01 — POSSE não publica sozinho em redes fechadas (Meta). */
 export const SHARE_HONEST_LIMITS_SHORT =
   "Você escolhe onde ecoar: Web Share do aparelho, links (WhatsApp, X, Bluesky) ou JSON/CLI. Sem post automático no Facebook ou Instagram.";

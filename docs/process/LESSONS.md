@@ -1,5 +1,7 @@
 # Lições Estratégicas e Posicionamento Competitivo — Vox
 
+> **Status:** canônico (diagnóstico comparativo) · **Owner:** mantenedor · **Revisado:** 2026-10-23
+
 Este documento consolida o diagnóstico comparativo realizado sobre iniciativas de redes sociais alternativas, protocolos abertos e infraestruturas descentralizadas (**Varanda, Bluesky, Mastodon, Channel-01/Arboard e Pix**). Ele formaliza os erros a evitar, os acertos a incorporar e o *sweet spot* estratégico do Vox.
 
 ---

@@ -11,6 +11,15 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 - Testes novos em `tests/people-chosen-name.test.js`.
 - SW `v7.90`.
 
+### Backup semanal e mensal no seu e-mail
+- Nova seção **Backup no seu e-mail** em Sua rede (`#/settings`): liga com a Senha Soberana uma vez; semanal e mensal podem ser desligados. Ao abrir o app com um backup vencido, um aviso oferece **Enviar para meu e-mail**: o app prepara um `.txt` cifrado e abre o compartilhar do sistema (Gmail, Outlook, Mail); onde o navegador não compartilha arquivo, baixa.
+- Sem servidor: o Vox não guarda nem conhece o endereço. O arquivo leva as chaves (com a de DM), perfil, Pix, contatos, texto das DMs e os próprios posts do período; só a Senha abre. O mensal repete de propósito o conteúdo das semanas.
+- **Restaurar Backup** (Perfil) aceita vários arquivos `.txt` de uma vez e aplica do mais antigo ao mais novo.
+- Depois da revisão: chaves e par de backup num só envelope de 600 mil iterações (antes as chaves iam no `.voxid`, de 210 mil); post editado ou apagado no período entra no backup; o arquivo é montado antes do toque, para o compartilhar não recusar por demora; misturar `.voxid` com backups dá erro claro em vez de ignorar arquivos; o download só libera o endereço temporário depois (`share.downloadBlob`, usado também pelo `.voxid`); as DMs são lidas numa leitura só (`cache-node.getAllDmMessages`).
+- Peso: os dois módulos novos e a ligação nas telas (+13,4 KB). Pagos em parte removendo a folha POSSE pós-publicação, que nada abria desde o cockpit Ecoe (2168dae; -9,5 KB com o CSS; decisão do mantenedor; 4 testes que liam o código da folha saíram ou foram ajustados), e recomprimindo `icons/icon-mark-black-128.png` em paleta exata (pixels idênticos, -517 B). O resto, 2.717 B, sobe o teto do precache para 2.004.623 bytes.
+- Testes novos em `tests/inbox-backup.test.js`; documentação em [IDENTITY.md](./docs/IDENTITY.md#backup-no-seu-e-mail-clientjsinbox-backupjs-clientjsappinbox-backup-uijs).
+- SW `v7.89`.
+
 ### Contas sem nome não sujam mais a rede
 - Uma conta que nunca escolheu nome (a chave criada na primeira visita, numa aba anônima ou num navegador novo) não manda mais cartão de perfil para a memória central, para a malha nem para o Arweave. Era a origem das centenas de perfis vazios no NodeZero. Assim que a pessoa escolhe um nome, o cartão passa a sair como antes.
 - O aparelho para de publicar juntas todas as contas do cofre: só a conta ativa publica o próprio cartão. Publicar todas de uma vez contava a quem lesse que eram da mesma pessoa.

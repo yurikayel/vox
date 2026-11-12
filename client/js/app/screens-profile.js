@@ -24,6 +24,7 @@ import { openOAuthEnrichModal, wipeLocalDevice } from "./onboarding.js";
 import { getActiveUser, makeShellProps } from "./context.js";
 import { syncIdentity } from "./screens-network.js";
 import { KIND_WRAPPED, exportAccountBundle, importAccountBundle, peekBackupKind } from "../account-backup.js";
+import { isInboxBackupText, restoreInboxBackup } from "../inbox-backup.js";
 import * as voxels from "../voxels.js";
 
 function collectByIds(posts, ids) {
@@ -248,13 +249,7 @@ function readSovereigntyPassphrase() {
 }
 
 function downloadSovereigntyFile(jsonStr, routeId) {
-  const blob = new Blob([jsonStr], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `vox-soberania-${routeId || "identity"}.voxid`;
-  a.click();
-  URL.revokeObjectURL(url);
+  share.downloadBlob(new Blob([jsonStr], { type: "application/json" }), `vox-soberania-${routeId || "identity"}.voxid`);
 }
 
 async function resolveImportPassphrase(text, fieldValue) {
@@ -277,6 +272,19 @@ function bindSovereigntyExport() {
   });
 }
 
+// Backups do e-mail: vários de uma vez, do mais antigo ao mais novo, com a Senha pedida uma vez.
+async function restoreBackupFiles(files, activeTab) {
+  const texts = await Promise.all(files.map((f) => f.text()));
+  const backups = texts.filter(isInboxBackupText).length;
+  if (backups === 0 && files.length === 1) return restoreSovereigntyFile(files[0], activeTab);
+  if (backups !== files.length) throw new Error("Escolha um .voxid sozinho ou só backups do e-mail (.txt).");
+  const secret = readSovereigntyPassphrase() || window.prompt("Senha Soberana dos backups:") || "";
+  const ordered = texts.sort((a, b) => JSON.parse(a).to - JSON.parse(b).to);
+  for (const text of ordered) await restoreInboxBackup(text, secret);
+  share.showToast(`Conta restaurada de ${ordered.length} backup(s) do e-mail.`);
+  showProfile(null, activeTab);
+}
+
 async function restoreSovereigntyFile(file, activeTab) {
   const text = await file.text();
   const secret = await resolveImportPassphrase(text, readSovereigntyPassphrase());
@@ -293,10 +301,10 @@ function bindSovereigntyImport(activeTab) {
   const input = document.getElementById("file-import-account");
   if (!input) return;
   input.addEventListener("change", async () => {
-    const file = input.files?.[0];
-    if (!file) return;
+    const files = [...(input.files || [])];
+    if (!files.length) return;
     try {
-      await restoreSovereigntyFile(file, activeTab);
+      await restoreBackupFiles(files, activeTab);
     } catch (err) {
       share.showToast(`Erro ao importar: ${err.message}`, "error");
     }
@@ -794,12 +802,7 @@ function bindVoxelButtons(address, activeTab, isSelf) {
       const receipts = voxels.loadVoxelReceipts(address);
       const out = await voxels.exportSignedVoxelPassport(address, receipts, [], localAccount.signPayload);
       const blob = new Blob([JSON.stringify(out.signedPassport, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = out.filename;
-      a.click();
-      URL.revokeObjectURL(url);
+      share.downloadBlob(blob, out.filename);
       share.showToast("Passaporte Cívico exportado com sucesso! Guarde seu arquivo.");
     } catch (err) {
       share.showToast(`Erro ao exportar passaporte: ${err.message}`, "error");

@@ -141,6 +141,8 @@ spacing:
   space-2xl: 4rem
 ---
 
+> **Status:** canônico (design system; decisão no ADR-016) · **Owner:** mantenedor · **Revisado:** 2026-11-07
+
 > **Origem:** especificação do pacote Stitch *Sovereign Agora* (antes em `stitch_vox_civic_network_interface/sovereign_agora/DESIGN.md`, removido em 2026-11). Implementação: `client/css/agora.css`. Decisão: [ADR-016](../adr/016-design-system-sovereign-agora-e-democracia-direta.md).
 
 

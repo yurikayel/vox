@@ -1,5 +1,7 @@
 # Open Frames 2.0 — SDK mínimo (Vox)
 
+> **Status:** parcial (Open Frames declarativo no ar; host em iframe só em laboratório, conforme o FEATURES) · **Owner:** mantenedor · **Revisado:** 2026-10-25
+
 ## Objetivo
 
 Permitir mini-apps embarcados (enquetes, contadores) com **iframe sandbox** e contrato **postMessage** — complemento ao Open Frames declarativo em `client/js/frames.js` (sem script remoto no feed).

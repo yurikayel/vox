@@ -1,5 +1,7 @@
 # Conformidade — Visão Geral Brasil
 
+> **Status:** canônico (informativo; não é parecer jurídico) · **Owner:** mantenedor · **Revisado:** 2026-11-09
+
 Documento informativo de alto nível. **Não é parecer jurídico.** Produtores de conteúdo e operadores de espelhos devem consultar advogados locais.
 
 ## LGPD (Lei 13.709/2018)
