@@ -61,7 +61,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 | Decisões institucionais e de arquitetura (registro) | [DECISOES.md](./DECISOES.md) |
 | ADRs (detalhe de cada decisão) | [adr/README.md](./adr/README.md) |
 | Tese de tração e preceitos | [direcionamento-crescimento-rede-2026-11.md](./strategy/direcionamento-crescimento-rede-2026-11.md) |
-| Norma de documentação | [CONTRIBUTING-DOCS.md](./CONTRIBUTING-DOCS.md) |
+| Navegação, banners de status e DoD dos docs | [CONTRIBUTING-DOCS.md](./CONTRIBUTING-DOCS.md) |
 
 > [!IMPORTANT]
 > **Regra anti-inflação:** é proibido criar outro plano mestre ("N=…", "T1–T10", checklist paralelo) sem um ADR que revogue o atual — hoje o [ADR-017](./adr/017-consolidacao-roadmap-unico.md). Ideias novas entram como brainstorm (banner + "Não substitui o ROADMAP").
@@ -188,4 +188,4 @@ Mantidos para registro; cada um tem banner apontando o sucessor.
 - [gateway-honest-fallback-brainstorm.md](./archive/gateway-honest-fallback-brainstorm.md) → ADR-004 · [steward-wizard-brainstorm.md](./archive/steward-wizard-brainstorm.md) → steward-relay-kit
 - Métricas antigas: [10-24](./metrics/baseline-2026-10-24.md) · [10-30](./metrics/baseline-2026-10-30.md) · [10-31](./metrics/baseline-2026-10-31.md) · [11-01](./metrics/baseline-2026-11-01.md) · [11-04](./metrics/baseline-2026-11-04.md) · [11-05](./metrics/baseline-2026-11-05.md) · [11-06](./metrics/baseline-2026-11-06.md) · [11-08](./metrics/baseline-2026-11-08.md) · [11-09](./metrics/baseline-2026-11-09.md)
 
-**Versão:** 2.2 · 2026-11-08
+**Versão:** 2.5 · 2026-11-10 (a mesma do cabeçalho)
