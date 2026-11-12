@@ -6,6 +6,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Política do teto de bytes do precache (PM-02)
+- Atualizadas a nota em `tests/shell-reachability.test.js` e a seção **Peso do precache (PM-02)** em [docs/HARDENING.md](./docs/HARDENING.md): o orçamento do precache segue como disciplina para crescer o mínimo e evitar desperdício real, mas deixa de ser limite duro que exija cortes improdutivos quando uma mudança já está enxuta. Limites de código e JSDoc seguem inalterados.
+
 ### Backup semanal e mensal no seu e-mail
 - Nova seção **Backup no seu e-mail** em Sua rede (`#/settings`): liga com a Senha Soberana uma vez; semanal e mensal podem ser desligados. Ao abrir o app com um backup vencido, um aviso oferece **Enviar para meu e-mail**: o app prepara um `.txt` cifrado e abre o compartilhar do sistema (Gmail, Outlook, Mail); onde o navegador não compartilha arquivo, baixa.
 - Sem servidor: o Vox não guarda nem conhece o endereço. O arquivo leva as chaves (com a de DM), perfil, Pix, contatos, texto das DMs e os próprios posts do período; só a Senha abre. O mensal repete de propósito o conteúdo das semanas.
