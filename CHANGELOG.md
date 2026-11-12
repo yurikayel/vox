@@ -6,6 +6,11 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Selo "Malha ativa" nas configurações
+- O selo **Malha ativa / Offline / Só leitura** saiu da barra do topo (pedido do mantenedor) e passou para o cabeçalho da tela **Sua rede** (`#/settings`), antes dos outros estados. Continua levando à Saúde do nó, com o detalhe (ex.: "2 aparelhos") ao passar o mouse. O estado da rede segue também no rodapé da barra lateral e na gaveta de identidade, como antes.
+- `render/shell.js` era do Lote A do Antigravity, mas não havia trabalho dele em aberto no arquivo; a mudança foi feita a pedido direto do mantenedor e registrada no `lobby.md`.
+- SW `v7.86` (era v7.83; a main chegou a v7.85 com o #102 e o #104).
+
 ### Nomes de usuário no amarelo da Ágora Soberana
 - O nome de quem publica aparece no amarelo do design system (`--sa-secondary`, o mesmo da faixa "Bem-vindo ao Vox"), em post, resposta, legenda de foto, cabeçalho do perfil e lista de membros da comunidade. Antes era o branco do texto. No modo claro o token já troca para o ocre escuro, que mantém contraste AA sobre o fundo claro.
 - Sobre a foto, o nome usa o amarelo claro fixo (`--sa-secondary-fixed-dim`, novo token em `client/css/agora.css`) nos dois modos, porque ali o fundo é a imagem, não o tema.
