@@ -1,6 +1,6 @@
 # Medição da mídia v2 (PM-70)
 
-> **Status:** medição · **Owner:** mantenedor · **Revisado:** 2026-11-09
+> **Status:** pesquisa (medição) · **Owner:** mantenedor · **Revisado:** 2026-11-09
 > Spec medida: [mídia v2](../specs/midia-v2.md). Ferramenta: [`tools/media-bench/`](../../tools/media-bench/) (só desenvolvimento, não publicada). Não substitui o [ROADMAP](../ROADMAP.md).
 
 ## Rodada 2: parâmetros retrô (vigentes)

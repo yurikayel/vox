@@ -1,6 +1,6 @@
 # Sincronização ao conectar por inventário (v0)
 
-> **Status:** implementado no PM-80 · **Owner:** mantenedor · **Revisado:** 2026-11-10
+> **Status:** implementada no PM-80 · **Owner:** mantenedor · **Revisado:** 2026-11-10
 > Relacionados: [mochila de DMs](./mochila-dm-v0.md) (PM-79 usa o mesmo aperto de mão), [replicação por grau](./replicacao-por-grau-v0.md), `client/js/peer-sync.js`, `client/js/peers.js`.
 
 ## Problema

@@ -1,5 +1,7 @@
 # Community module manifest v0 (Horizonte C — kickoff)
 
+> **Status:** rascunho (kickoff do Horizonte C; sem código no cliente) · **Owner:** mantenedor · **Revisado:** 2026-10-23
+
 **Type:** `community-module-manifest` · **`App-Name: vox-brasil`**
 
 Complementa **`cache-manifest`** (pins TX) com **módulos de conectividade** (index mirror, TURN, `ar-pool`, signaling, relay-http).
