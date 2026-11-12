@@ -5,7 +5,7 @@
 
 import * as cacheNode from "./cache-node.js";
 import { UF_ROUTE_IDS } from "./data/profiles-brazil-uf.js";
-import { isBeforeGenesisMs } from "./genesis.js";
+import { isBeforeGenesisMs, isTestRouteId } from "./genesis.js";
 
 const SEED_KEY = "vox-demo-seeded-v12-uf27-common-names";
 const PURGE_KEY = "vox-mock-purged-v1";
@@ -23,7 +23,7 @@ function isOldOrMockPost(p) {
   const communityId = String(p.communityId || "");
   const author = String(p.author || "");
   if (id.startsWith("demo-") || communityId.startsWith("demo-")) return true;
-  if (author.startsWith("vx_demo_")) return true;
+  if (author.startsWith("vx_demo_") || isTestRouteId(author)) return true;
   if (Array.isArray(UF_ROUTE_IDS) && UF_ROUTE_IDS.includes(author)) return true;
   const ts = p.ts || p.timestamp || 0;
   return isBeforeGenesisMs(ts);
@@ -37,7 +37,7 @@ function purgeOldProfileCards() {
     let changed = false;
     for (const [id, c] of Object.entries(cards)) {
       const ts = c?.updatedAt || c?.timestamp || c?.ts || 0;
-      if (id === "vx_WAqxgW" || isBeforeGenesisMs(ts)) {
+      if (id === "vx_WAqxgW" || isTestRouteId(id) || isBeforeGenesisMs(ts)) {
         delete cards[id];
         changed = true;
       }
@@ -54,7 +54,7 @@ function purgeTestContacts() {
     if (!raw) return;
     const list = JSON.parse(raw);
     if (!Array.isArray(list)) return;
-    const filtered = list.filter((c) => c?.routeId !== "vx_WAqxgW");
+    const filtered = list.filter((c) => c?.routeId !== "vx_WAqxgW" && !isTestRouteId(c?.routeId));
     if (filtered.length !== list.length) {
       window.localStorage.setItem("vox-contacts-v1", JSON.stringify(filtered));
     }

@@ -3,6 +3,10 @@
  * O Arweave é permanente; o corte é só de leitura e cada aparelho o aplica sozinho.
  */
 
+import { TEST_ROUTE_IDS } from "./data/test-route-ids.js";
+
+const TEST_ROUTE_ID_SET = new Set(TEST_ROUTE_IDS);
+
 /**
  * Timestamp da data de corte (gênese) em milissegundos UTC.
  * @type {number}
@@ -39,6 +43,16 @@ export function isBeforeGenesisNode(node) {
 export function isBeforeGenesisMs(ms) {
   const n = Number(ms || 0);
   return n > 0 && n < GENESIS_MS;
+}
+
+/**
+ * Conta descartável dos testes anteriores à gênese (lista em `data/test-route-ids.js`)?
+ * O cartão dela chega de outros aparelhos com data nova, por isso o corte por data não basta.
+ * @param {string} routeId Chave `vx_…` da conta.
+ * @returns {boolean} True se a conta é de teste e não deve aparecer nem ser guardada.
+ */
+export function isTestRouteId(routeId) {
+  return TEST_ROUTE_ID_SET.has(String(routeId || "").trim());
 }
 
 /**

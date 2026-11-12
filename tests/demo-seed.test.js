@@ -58,3 +58,34 @@ test("demo-seed - purgeMockDemoSeed purga dados pre-genese e cards de teste", as
   assert.equal(contactsAfter.find((c) => c.routeId === "vx_WAqxgW"), undefined);
   assert.equal(contactsAfter.find((c) => c.routeId === "vx_ok")?.routeId, "vx_ok");
 });
+
+test("demo-seed - contas de teste somem mesmo com data nova (cartão regravado por outro aparelho)", async () => {
+  const { TEST_ROUTE_IDS } = await import("../client/js/data/test-route-ids.js");
+  const testId = TEST_ROUTE_IDS[0];
+  const fresh = Date.now() + 10000;
+  localStorage.setItem("vox-profile-cards-v1", JSON.stringify({
+    [testId]: { routeId: testId, name: "", updatedAt: fresh },
+    vx_novo: { routeId: "vx_novo", name: "Cidadão Novo", updatedAt: fresh },
+  }));
+  localStorage.setItem("vox-contacts-v1", JSON.stringify([{ routeId: testId }, { routeId: "vx_ok" }]));
+  await cacheNode.saveLocalPost({ id: "post-de-teste", type: "topic", title: "Teste", author: testId, ts: fresh });
+
+  await demoSeed.purgeMockDemoSeed();
+
+  const cardsAfter = JSON.parse(localStorage.getItem("vox-profile-cards-v1") || "{}");
+  assert.equal(cardsAfter[testId], undefined);
+  assert.ok(cardsAfter.vx_novo);
+  const contactsAfter = JSON.parse(localStorage.getItem("vox-contacts-v1") || "[]");
+  assert.deepEqual(contactsAfter.map((c) => c.routeId), ["vx_ok"]);
+  assert.equal(await cacheNode.getLocalPost("post-de-teste"), null);
+});
+
+test("demo-seed - cartão de conta de teste vindo da malha não é guardado de novo", async () => {
+  const { TEST_ROUTE_IDS } = await import("../client/js/data/test-route-ids.js");
+  const directory = await import("../client/js/profile-directory.js");
+  directory.__resetProfileCardsForTests();
+  directory.setProfileCard(TEST_ROUTE_IDS[1], { name: "", discoverable: true });
+  directory.setProfileCard("vx_novo", { name: "Cidadão Novo", discoverable: true });
+  assert.equal(directory.getProfileCard(TEST_ROUTE_IDS[1]), null);
+  assert.deepEqual(directory.listDiscoverableProfileCards().map((c) => c.routeId), ["vx_novo"]);
+});

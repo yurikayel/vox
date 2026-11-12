@@ -7,7 +7,7 @@
 
 import * as cacheNode from "./cache-node.js";
 import * as hydrate from "./central-memory-hydrate.js";
-import { isBeforeGenesisMs } from "./genesis.js";
+import { isBeforeGenesisMs, isTestRouteId } from "./genesis.js";
 import { getRelayHttpUrls } from "./inbox.js";
 import * as localAccount from "./local-account.js";
 import * as mediaBlob from "./media-blob.js";
@@ -299,7 +299,9 @@ function hydrateProfiles(profiles) {
 /** Testes anteriores à data de corte ficam fora, mesmo que a memória central ainda os tenha. */
 function afterGenesis(items) {
   if (!Array.isArray(items)) return items;
-  return items.filter((it) => !isBeforeGenesisMs(hydrate.itemTimestamp(it)));
+  return items.filter(
+    (it) => !isBeforeGenesisMs(hydrate.itemTimestamp(it)) && !isTestRouteId(it?.routeId || it?.author || it?.owner),
+  );
 }
 
 async function applyRemoteBundle(remote) {
