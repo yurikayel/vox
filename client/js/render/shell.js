@@ -299,8 +299,18 @@ function meshChipState(chipHtml) {
   return { cls: "is-active", label: "Malha ativa" };
 }
 
-function renderTopBar(identity, chipText, chipHtml) {
+/**
+ * Selo "Malha ativa / Offline / Só leitura" da tela de configurações da rede. Saiu da barra do topo
+ * (pedido do mantenedor): o estado da malha é assunto de configuração, não de toda tela.
+ * @param {string} chipHtml Saída de {@link renderNetworkChip}; o selo segue o mesmo estado.
+ * @returns {string} HTML do link para `#/status` (Saúde do nó), com o detalhe (ex.: "2 aparelhos") no `title`.
+ */
+export function renderMeshStatusChip(chipHtml) {
   const mesh = meshChipState(chipHtml);
+  return `<a href="#/status" class="agora-mesh-chip ${mesh.cls}" title="${escapeHtml(networkChipText(chipHtml))}"><span class="agora-presence-dot" aria-hidden="true"></span><span>${escapeHtml(mesh.label)}</span></a>`;
+}
+
+function renderTopBar(identity, chipText) {
   return `
     <header class="agora-topbar" role="banner">
       <div class="agora-topbar-brand">${renderAgoraWordmark()}</div>
@@ -309,7 +319,6 @@ function renderTopBar(identity, chipText, chipHtml) {
         <input type="search" name="q" id="agora-search-input" placeholder="Buscar cidadãos, @arrobas ou chaves cívicas…" aria-label="Buscar pessoas" autocomplete="off" />
       </form>
       <div class="agora-topbar-tools">
-        <a href="#/status" class="agora-mesh-chip ${mesh.cls}" title="${escapeHtml(chipText)}"><span class="agora-presence-dot" aria-hidden="true"></span><span>${escapeHtml(mesh.label)}</span></a>
         <a href="#/dm" class="agora-topbar-icon agora-topbar-icon--mobile" aria-label="Mensagens">${ICONS.dmTop}${DM_BADGE_HTML}</a>
         <a href="#/status" class="agora-topbar-icon" aria-label="Saúde do nó">${ICONS.shield}</a>
         <a href="#/settings/network" class="agora-topbar-icon" aria-label="Configurações da rede">${ICONS.gear}</a>
@@ -485,7 +494,7 @@ function renderShellMarkup({ activeTab, sidebarHtml, identity, chipHtml }) {
     <div class="app-layout agora-ui" data-active-tab="${escapeHtml(activeTab)}">
       ${sidebarHtml}
       <div class="main-column">
-        ${renderTopBar(identity, networkChipText(chipHtml), chipHtml)}
+        ${renderTopBar(identity, networkChipText(chipHtml))}
         <main id="app-main"></main>
         <footer class="app-footer">Vox · ${escapeHtml(appShellFooterTagline)} · <a href="#/ajuda/teste">Teste aberto</a> · <a href="./proposta-vox.html" target="_blank">Proposta</a> · <button type="button" class="app-footer-feedback" data-app-feedback>Algo errado aqui?</button></footer>
       </div>

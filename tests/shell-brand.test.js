@@ -60,10 +60,11 @@ test("shell sidebar — IA estável (nav, postar, feed slot, footer)", () => {
   assert.ok(shellSrc.includes("classList.add(\"is-active\")"));
 });
 
-test("shell layout — Sovereign Agora: topbar com busca, chip de malha, escudo/engrenagem e identidade", () => {
+test("shell layout — Sovereign Agora: topbar com busca, escudo/engrenagem e identidade (malha fica nas configurações)", () => {
   assert.ok(shellSrc.includes('<header class="agora-topbar"'));
   assert.ok(shellSrc.includes('id="agora-search-form"'));
-  assert.ok(shellSrc.includes('class="agora-mesh-chip'));
+  const topBar = shellSrc.slice(shellSrc.indexOf("function renderTopBar"), shellSrc.indexOf("function renderDrawerKeyRow"));
+  assert.ok(topBar.length > 0 && !topBar.includes("agora-mesh-chip"), "selo de malha saiu da barra do topo");
   assert.ok(shellSrc.includes('href="#/status" class="agora-topbar-icon" aria-label="Saúde do nó"'));
   assert.ok(shellSrc.includes('href="#/settings/network" class="agora-topbar-icon"'));
   assert.ok(!shellSrc.includes("agora-protocol-strip"), "sem faixa decorativa de protocolo");
