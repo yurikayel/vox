@@ -4,8 +4,8 @@
 [![Identity](https://img.shields.io/badge/Identity-WebCrypto%20P--256-blueviolet.svg)](./client/js/local-account.js)
 [![Storage](https://img.shields.io/badge/Storage-Arweave%20Permaweb-black.svg)](https://arweave.org)
 [![License: AGPL v3](https://img.shields.io/badge/License-GNU%20AGPLv3-crimson.svg)](./LICENSE)
-[![Tests](https://img.shields.io/badge/tests-1144%20passing-success.svg)](./docs/TESTES.md)
-[![Service Worker](https://img.shields.io/badge/SW-v7.81--real--network--audio--video--upload-informational.svg)](./client/sw.js)
+[![Tests](https://img.shields.io/badge/tests-1147%20passing-success.svg)](./docs/TESTES.md)
+[![Service Worker](https://img.shields.io/badge/SW-v7.82--real--network--audio--video--upload-informational.svg)](./client/sw.js)
 
 O Vox é um projeto cívico em construção para ampliar a participação popular e a autonomia das comunidades na vida digital. Sua ambição é ser um bem comum aberto: o projeto deve permanecer transparente, copiável, modificável e maior que qualquer fundador, mantenedor, empresa ou plataforma.
 
@@ -77,9 +77,9 @@ Redes centralizadas, instâncias federadas e protocolos locais têm custos, vant
 
 | Campo | Valor |
 |---|---|
-| **Commit SHA** | `6e14c31` |
-| **Suíte de Testes** | **1144** (`1038` JS + `106` Python) |
-| **Service Worker** | `vox-pwa-v7.81-real-network-audio-video-upload` |
+| **Commit SHA** | `b52253f` |
+| **Suíte de Testes** | **1147** (`1041` JS + `106` Python) |
+| **Service Worker** | `vox-pwa-v7.82-real-network-audio-video-upload` |
 
 *Tabela regenerada por `npm run release-line` (roda a suíte e grava [docs/release-metadata.json](./docs/release-metadata.json)). Nenhum outro documento deve repetir esses números.*
 

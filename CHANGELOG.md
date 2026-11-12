@@ -6,6 +6,12 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Lote UI 2 das telas sem layout do Stitch: compositores e entrada
+- **Compositor que não pode abrir agora explica e dá saída.** Aviso para quem não é da moderação: "Avisos são da moderação", com "Abrir um tópico" e "← Voltar à comunidade" (antes era uma frase solta). Oferta em comunidade sem feira: "Feira comunitária não ativada", com "Propor a abertura da feira" (abre o compositor de proposta da comunidade) e volta (antes era uma caixa vermelha de erro). A aba Feira da comunidade usa o mesmo bloco e ganhou o atalho para propor.
+- **Etapas do compositor sem vão:** saiu a altura mínima de 180px do corpo da etapa, que deixava um buraco entre o campo e os botões Voltar/Continuar nas etapas curtas.
+- **Onboarding, "pular":** o botão dizia "Pular — continuar só com vx_" (a chave crua como identidade). Agora diz "Pular por agora — escolho o nome depois", com a nota de que sem nome a conta não aparece no diretório de pessoas e que dá para escolher em Perfil.
+- SW `v7.82`.
+
 ### Lote UI 1 das telas sem layout do Stitch
 - **Diretório de Cidadãos:** só aparece quem escolheu um nome (mais você e o perfil Vox). Contas só com a chave `vx_…` — da malha, do cofre deste aparelho ou dos contatos — saem da lista; continuam achadas pela chave completa na busca. A linha mostra nome e @, sem a chave (que fica no perfil). Sua própria conta ainda sem nome aparece como "Você", com o botão "Escolher nome". Linhas separadas por fio, ações compactas; "Mensagem P2P" virou "Mensagem".
 - **`#/compose`** abre o compositor (antes caía em "Página não encontrada").
