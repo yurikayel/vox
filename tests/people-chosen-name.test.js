@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import "./setup.js";
 import { hasChosenName, isListedPerson } from "../client/js/people-index.js";
-import { resolvePeopleSearchBody } from "../client/js/render/oauth-modals.js";
+import { renderConnectPreview, resolvePeopleSearchBody } from "../client/js/render/oauth-modals.js";
 
 test("diretório: par da malha só com a chave não entra na lista", () => {
   assert.equal(hasChosenName({ routeId: "vx_6ir2sF_M-JEabc", name: "vx_6ir2sF_M-JE" }), false);
@@ -34,4 +34,17 @@ test("diretório: a própria conta sem nome aparece como Você, com convite para
   const html = resolvePeopleSearchBody({ all: [{ routeId: me, name: me.slice(0, 14), source: "self" }] }, [], "");
   assert.ok(html.includes(">Você</a>") && html.includes("Escolher nome"));
   assert.ok(!html.includes(`>${me.slice(0, 14)}<`), "sem a chave como nome visível");
+});
+
+test("diretório: a linha usa a foto que o índice já trouxe, sem esperar o cartão chegar", () => {
+  const avatarUrl = "https://avatars.githubusercontent.com/u/1?v=4";
+  const html = resolvePeopleSearchBody({ all: [{ routeId: "vx_semcartao00001", name: "Yuri", avatarUrl, source: "self" }] }, [], "");
+  assert.ok(html.includes(`src="${avatarUrl}"`), "foto em vez da inicial");
+});
+
+test("conectar: prévia usa avatar do perfil resolvido", () => {
+  const avatar = "https://avatars.githubusercontent.com/u/2?v=4";
+  const main = { innerHTML: "" };
+  renderConnectPreview(main, { name: "Yuri", avatar }, "vx_semcartao00002");
+  assert.ok(main.innerHTML.includes(`src="${avatar}"`), "foto na prévia de conexão");
 });

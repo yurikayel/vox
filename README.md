@@ -4,8 +4,8 @@
 [![Identity](https://img.shields.io/badge/Identity-WebCrypto%20P--256-blueviolet.svg)](./client/js/local-account.js)
 [![Storage](https://img.shields.io/badge/Storage-Arweave%20Permaweb-black.svg)](https://arweave.org)
 [![License: AGPL v3](https://img.shields.io/badge/License-GNU%20AGPLv3-crimson.svg)](./LICENSE)
-[![Tests](https://img.shields.io/badge/tests-1167%20passing-success.svg)](./docs/TESTES.md)
-[![Service Worker](https://img.shields.io/badge/SW-v7.89--real--network--audio--video--upload-informational.svg)](./client/sw.js)
+[![Tests](https://img.shields.io/badge/tests-1170%20passing-success.svg)](./docs/TESTES.md)
+[![Service Worker](https://img.shields.io/badge/SW-v7.90--real--network--audio--video--upload-informational.svg)](./client/sw.js)
 
 O Vox é um projeto cívico em construção para ampliar a participação popular e a autonomia das comunidades na vida digital. Sua ambição é ser um bem comum aberto: o projeto deve permanecer transparente, copiável, modificável e maior que qualquer fundador, mantenedor, empresa ou plataforma.
 
@@ -77,9 +77,9 @@ Redes centralizadas, instâncias federadas e protocolos locais têm custos, vant
 
 | Campo | Valor |
 |---|---|
-| **Commit SHA** | `e3cbea8` |
-| **Suíte de Testes** | **1167** (`1056` JS + `111` Python) |
-| **Service Worker** | `vox-pwa-v7.89-real-network-audio-video-upload` |
+| **Commit SHA** | `c644862` |
+| **Suíte de Testes** | **1170** (`1059` JS + `111` Python) |
+| **Service Worker** | `vox-pwa-v7.90-real-network-audio-video-upload` |
 
 *Tabela regenerada por `npm run release-line` (roda a suíte e grava [docs/release-metadata.json](./docs/release-metadata.json)). Nenhum outro documento deve repetir esses números.*
 
@@ -337,11 +337,6 @@ Na raiz ficam só os arquivos que o GitHub e as ferramentas esperam ali: `README
 * **[ADR-023](./docs/adr/023-moderacao-em-camadas-e-moderador-natural.md):** Moderação em camadas e moderador natural assimétrico.
 * **[ADR-024](./docs/adr/024-divulgacao-responsavel-e-honestidade-de-seguranca.md):** Divulgação responsável e honestidade sobre segurança.
 * **[ADR-025](./docs/adr/025-cofre-v2-so-a-senha-abre.md):** Cofre de recuperação v2 — só a Senha Soberana abre.
-* **[ADR-026](./docs/adr/026-chaves-em-repouso-trava-depois-do-backup.md):** Chaves privadas em repouso — chave do aparelho e trava depois do backup.
-* **[ADR-027](./docs/adr/027-autorizacao-no-relay-dono-e-origem.md):** Autorização no relay — prova do dono, chave de apagar e política de origem.
-* **[ADR-028](./docs/adr/028-ponte-activitypub-via-bluesky.md):** Ponte com o Fediverso (ActivityPub) via Bluesky, sem servidor próprio.
-* **[ADR-029](./docs/adr/029-midia-em-duas-camadas-360p-720p.md) (não implementado):** Mídia em duas camadas (360p e 720p), sem teto de 100 KB por item.
-* **[ADR-030](./docs/adr/030-trazer-do-bluesky-pesos.md) (não implementado):** Trazer do Bluesky (PESOS) — arquivo assinado da própria voz, sem servidor.
 
 Índice com status: [docs/adr/README.md](./docs/adr/README.md). Todas as decisões institucionais e de arquitetura em vigor, numa página: [docs/DECISOES.md](./docs/DECISOES.md).
 
