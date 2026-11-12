@@ -1,5 +1,7 @@
 # Vox Bridge — spike técnico (P2, não ship P0/P1)
 
+> **Status:** pesquisa (spike técnico P2; não é entrega) · **Owner:** mantenedor · **Revisado:** 2026-10-25
+
 ## Objetivo
 
 Extensão WebExtension **MV3** em repositório separado `vox-bridge/` para autopost em redes que não expõem intents estáveis (Instagram, Threads). **Fora do PWA** até governança e ToS revisados.

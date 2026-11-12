@@ -1,5 +1,7 @@
 # Auditoria copy honestidade (pós-gossip retract)
 
+> **Status:** auditoria (retrato de 2026-10-23, revisto em 2026-10-26) · **Owner:** mantenedor / revisor · **Revisado:** 2026-10-26
+
 **Fonte:** spike Cursor 23/10 · **Revisão:** 26/10/2026 (grep mutex client)
 
 ## Escopo grep (client i18n/copy — arquivos obrigatórios)
