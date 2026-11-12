@@ -3,7 +3,7 @@
 import * as mock from "./mock.js";
 import * as localAccount from "./local-account.js";
 import { getWelcomeProfile, isWelcomeRouteId } from "./vox-welcome-profile.js";
-import { isBeforeGenesisMs } from "./genesis.js";
+import { isBeforeGenesisMs, isTestRouteId } from "./genesis.js";
 
 const CARDS_KEY = "vox-profile-cards-v1";
 let profileMemorySink = null;
@@ -94,7 +94,7 @@ function pruneConflictingIdentityCards(cards, id, nextCard) {
 
 export function setProfileCard(routeId, partial) {
   const id = String(routeId || "").trim();
-  if (!id) return;
+  if (!id || isTestRouteId(id)) return;
   const cards = loadCards();
   const nextCard = { ...cards[id], ...partial, routeId: id, updatedAt: Date.now() };
 
@@ -132,7 +132,7 @@ export function listDiscoverableProfileCards() {
   const all = Object.values(cards).filter((c) => {
     if (!c || c.discoverable === false || !c.routeId) return false;
     const ts = c.updatedAt || c.timestamp || c.ts || 0;
-    return !isBeforeGenesisMs(ts) && c.routeId !== "vx_WAqxgW";
+    return !isBeforeGenesisMs(ts) && c.routeId !== "vx_WAqxgW" && !isTestRouteId(c.routeId);
   });
   const deduped = [];
   for (const card of all) {

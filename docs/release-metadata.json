@@ -1,9 +1,9 @@
 {
-  "git_sha": "e0ef30d",
-  "branch": "docs/padrao-documentacao",
-  "test_js": 1025,
+  "git_sha": "92bd1c6",
+  "branch": "feat/genese-purga",
+  "test_js": 1031,
   "test_python": 106,
-  "test_total": 1131,
-  "cache_name": "vox-pwa-v7.78-real-network-audio-video-upload",
-  "generated_at": "2026-11-11T23:24:20Z"
+  "test_total": 1137,
+  "cache_name": "vox-pwa-v7.80-real-network-audio-video-upload",
+  "generated_at": "2026-11-12T00:39:43Z"
 }
