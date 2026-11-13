@@ -127,6 +127,21 @@ function bindCustomNameForm(modalContainer, onComplete) {
   });
 }
 
+/**
+ * Entra pelos backups que a pessoa mandou para o próprio e-mail, do mais antigo ao mais novo.
+ * @param {File[]} files Arquivos `.txt` escolhidos.
+ * @param {string} pass Senha Soberana.
+ * @returns {Promise<{ok: boolean, reason?: string, routeId?: string, displayName?: string}>} Resultado.
+ */
+async function restoreFromInboxBackups(files, pass) {
+  const backup = await import("../inbox-backup.js");
+  const texts = await Promise.all(files.map((f) => f.text()));
+  if (!texts.every(backup.isInboxBackupText)) return { ok: false, reason: "Escolha só os backups do Vox que chegaram no seu e-mail (.txt)." };
+  let acc = null;
+  for (const text of texts.sort((a, b) => JSON.parse(a).to - JSON.parse(b).to)) acc = await backup.restoreInboxBackup(text, pass);
+  return { ok: true, routeId: acc?.routeId, displayName: localAccount.getDisplayName() };
+}
+
 function bindSovereignPassphraseForm(modalContainer, onComplete) {
   const form = document.getElementById("form-oauth-restore-passphrase");
   if (!form) return;
@@ -138,7 +153,8 @@ function bindSovereignPassphraseForm(modalContainer, onComplete) {
     setOAuthButtonBusy(btn, true);
     setOAuthEnrichError("");
     try {
-      const res = await oauthVault.restoreFromPassphraseVault(pass);
+      const files = [...(document.getElementById("oauth-restore-files")?.files || [])];
+      const res = files.length ? await restoreFromInboxBackups(files, pass) : await oauthVault.restoreFromPassphraseVault(pass);
       if (res.ok) {
         oauthProfile.skipOAuthEnrichment();
         share.showToast(`Identidade restaurada com sucesso! Bem-vindo(a), ${res.displayName || "Cidadão"}!`);
