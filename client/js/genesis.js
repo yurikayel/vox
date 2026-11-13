@@ -55,8 +55,19 @@ export function isTestRouteId(routeId) {
   return TEST_ROUTE_ID_SET.has(String(routeId || "").trim());
 }
 
+const ROUTE_TAG_NAMES = new Set(["Route-Id", "Author", "Author-Address", "Owner"]);
+
+function hasTestRouteTag(node) {
+  if (!Array.isArray(node?.tags)) return false;
+  return node.tags.some((t) => ROUTE_TAG_NAMES.has(t?.name) && isTestRouteId(t?.value));
+}
+
+function isHiddenGraphqlNode(node) {
+  return isBeforeGenesisNode(node) || hasTestRouteTag(node);
+}
+
 /**
- * Remove das respostas GraphQL as transações anteriores à gênese.
+ * Remove das respostas GraphQL as transações anteriores à gênese ou de contas expurgadas.
  * @param {object} data Objeto data retornado pelo endpoint GraphQL.
  * @returns {object} Objeto filtrado.
  */
@@ -66,10 +77,10 @@ export function filterGraphqlData(data) {
   if (out.transactions?.edges) {
     out.transactions = {
       ...out.transactions,
-      edges: out.transactions.edges.filter((e) => !isBeforeGenesisNode(e?.node)),
+      edges: out.transactions.edges.filter((e) => !isHiddenGraphqlNode(e?.node)),
     };
   }
-  if (out.transaction && isBeforeGenesisNode(out.transaction)) {
+  if (out.transaction && isHiddenGraphqlNode(out.transaction)) {
     out.transaction = null;
   }
   return out;

@@ -25,7 +25,8 @@ function isOldOrMockPost(p) {
   const communityId = String(p.communityId || "");
   const author = String(p.author || "");
   if (id.startsWith("demo-") || communityId.startsWith("demo-")) return true;
-  if (author.startsWith("vx_demo_") || isTestRouteId(author)) return true;
+  if (author.startsWith("vx_demo_") || isTestAccount(author)) return true;
+  if (isTestAccount(p.owner) || isTestAccount(p.routeId)) return true;
   if (Array.isArray(UF_ROUTE_IDS) && UF_ROUTE_IDS.includes(author)) return true;
   const ts = p.ts || p.timestamp || 0;
   return isBeforeGenesisMs(ts);

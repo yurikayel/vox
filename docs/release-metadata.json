@@ -1,9 +1,9 @@
 {
-  "git_sha": "cb77cd5",
-  "branch": "feat/rev10-turn",
+  "git_sha": "63d79e2",
+  "branch": "feat/expurgo-perfis-yuri-kayel",
   "test_js": 1123,
   "test_python": 111,
   "test_total": 1234,
-  "cache_name": "vox-pwa-v7.106-real-network-audio-video-upload",
-  "generated_at": "2026-11-13T13:45:00Z"
+  "cache_name": "vox-pwa-v7.107-real-network-audio-video-upload",
+  "generated_at": "2026-11-13T14:41:58Z"
 }

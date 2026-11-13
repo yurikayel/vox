@@ -23,12 +23,14 @@ test("gênese: a hora do bloco vale mais que a tag (tag forjada não traz teste 
   assert.equal(g.isBeforeGenesisNode(node), true);
 });
 
-test("gênese: filtra edges e transaction das respostas GraphQL", () => {
+test("gênese: filtra edges e transaction das respostas GraphQL (data e conta expurgada)", () => {
   const old = { node: { id: "a", block: { timestamp: SEC - 1 } } };
   const neu = { node: { id: "b", block: { timestamp: SEC + 1 } } };
-  const out = g.filterGraphqlData({ transactions: { pageInfo: {}, edges: [old, neu] } });
+  const purged = { node: { id: "c", block: { timestamp: SEC + 10 }, tags: [{ name: "Route-Id", value: "vx_kdkteNeutXHoRgB8KwB8" }] } };
+  const out = g.filterGraphqlData({ transactions: { pageInfo: {}, edges: [old, neu, purged] } });
   assert.deepEqual(out.transactions.edges.map((e) => e.node.id), ["b"]);
   assert.equal(g.filterGraphqlData({ transaction: old.node }).transaction, null);
+  assert.equal(g.filterGraphqlData({ transaction: purged.node }).transaction, null);
   assert.equal(g.filterGraphqlData(null), null);
 });
 
@@ -38,7 +40,7 @@ test("gênese: itens locais em ms; sem data ficam", () => {
   assert.equal(g.isBeforeGenesisMs(0), false);
 });
 
-test("gênese: contas de teste da lista saem (inclusive as do mantenedor); só o Vox oficial fica", async () => {
+test("gênese: contas de teste e perfis Yuri Kayel excedentes saem; só o Vox oficial fica", async () => {
   const { TEST_ROUTE_IDS } = await import("../client/js/data/test-route-ids.js");
   assert.equal(TEST_ROUTE_IDS.length, new Set(TEST_ROUTE_IDS).size, "sem repetição");
   assert.ok(TEST_ROUTE_IDS.every((id) => /^vx_[\w-]+$/.test(id)));
@@ -46,5 +48,7 @@ test("gênese: contas de teste da lista saem (inclusive as do mantenedor); só o
   assert.equal(g.isTestRouteId(` ${TEST_ROUTE_IDS[0]} `), true);
   assert.equal(g.isTestRouteId("vx_voxbrasil_welcome"), false);
   assert.equal(g.isTestRouteId("vx_WuSxKR0W901YTLOJe7Oa"), true);
+  assert.equal(g.isTestRouteId("vx_kdkteNeutXHoRgB8KwB8"), true);
+  assert.equal(g.isTestRouteId("vx_h_Ha71T7YrSLvc5Oqxgh"), true);
   assert.equal(g.isTestRouteId(""), false);
 });
