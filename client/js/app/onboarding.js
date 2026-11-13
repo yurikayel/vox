@@ -254,17 +254,12 @@ export function hasFullEntry() {
   return hasPassedCantinaGate() && isPactComplete();
 }
 
-function openNextEntryStep() {
-  if (!hasPassedCantinaGate()) openEntry();
-  else checkOAuthEnrichStep();
-}
-
 /** Guardas de escrita desde o boot: valem antes de a 1ª rota rodar e para quem ainda não confirmou 18+. */
 export function installEntryGuards() {
-  readFirst.installReadFirstGuards({ doc: document, hasEntered: hasFullEntry, openEntry: openNextEntryStep });
+  readFirst.installReadFirstGuards({ doc: document, hasEntered: hasFullEntry, openEntry });
 }
 
-/** Abre a entrada (nome e 18+) direto, sem a tela de portão que vinha antes. */
+/** Abre a entrada (nome e 18+) direto, sem a tela de portão que vinha antes. Idempotente: quem já entrou cai no passo que falta (pacto). */
 function openEntry() {
   localStorage.setItem(CANTINA_STORAGE_KEY, "true");
   readFirst.removeReadFirstBanner();
