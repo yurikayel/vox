@@ -185,8 +185,6 @@ async function completeOnboarding(page, displayName) {
   await page.locator("#pact-age-18").waitFor({ state: "visible", timeout: 15000 });
   await page.locator("#pact-age-18").check();
   await page.locator("#btn-pact-accept").click();
-  const closeConnect = page.locator("#btn-post-pact-connect-close");
-  await closeConnect.waitFor({ state: "visible", timeout: 5000 }).then(() => closeConnect.click()).catch(() => {});
   await page.locator("#feed-inline-composer").waitFor({ state: "visible", timeout: 15000 });
 }
 
