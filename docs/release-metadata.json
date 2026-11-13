@@ -1,9 +1,9 @@
 {
-  "git_sha": "f75222d",
-  "branch": "feat/adr032-passo1-saida",
+  "git_sha": "2d4c3aa",
+  "branch": "feat/adr032-frase-nucleo",
   "test_js": 1132,
   "test_python": 111,
   "test_total": 1243,
-  "cache_name": "vox-pwa-v7.113-real-network-audio-video-upload",
-  "generated_at": "2026-11-13T18:58:46Z"
+  "cache_name": "vox-pwa-v7.114-real-network-audio-video-upload",
+  "generated_at": "2026-11-13T19:12:26Z"
 }
