@@ -315,7 +315,7 @@ export const VOX_LOGO_SRC = "./icons/icon-mark-black-128.png";
 
 function renderExplodeGridButton(btn, linked) {
   const badge = btn.linkId && linked[btn.linkId]?.enabled && linked[btn.linkId]?.handle
-    ? `<span class="explode-grid-connected" title="🔗✅ @${escapeHtml(linked[btn.linkId].handle)}">✓</span>`
+    ? `<span class="explode-grid-connected" title="🔗🟢 @${escapeHtml(linked[btn.linkId].handle)}">✓</span>`
     : "";
   return `<button type="button" class="explode-grid-btn ${btn.css}" data-explode-action="${btn.action}">
       <span class="explode-grid-icon">${APP_ICONS[btn.iconKey]}</span>
