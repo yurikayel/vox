@@ -6,7 +6,7 @@ import { loadRemoteFlags } from "./feature-flags.js";
 import { installDomDelegates } from "./dom-delegates.js";
 import { attachReportHandlers } from "./app/report-flow.js";
 import { wireRoute, setupHashchangeListener, routeImpl as route } from "./app/route.js";
-import { installEntryGuards } from "./app/onboarding.js";
+import { installEntryGuards, hasFullEntry } from "./app/onboarding.js";
 import { initDmListeners, initGossipListeners, initSocialInteractions } from "./app/init.js";
 import { initPostMediaLightbox } from "./app/post-media-lightbox.js";
 import { attachPostMoreMenuHandlers } from "./render/post-more-menu.js";
@@ -23,6 +23,7 @@ import { startVoxLinks } from "./app/vox-link-flow.js";
 import { startVaultMigration } from "./oauth-vault.js";
 import { startKeysAtRest } from "./key-at-rest.js";
 import { showDueInboxBackup } from "./app/inbox-backup-ui.js";
+import { startStorageDurability } from "./app/storage-durability-flow.js";
 
 void startKeysAtRest().catch(() => {});
 installDomDelegates(document);
@@ -51,4 +52,5 @@ syncIdentity();
 Promise.allSettled([loadRemoteFlags(), demoSeed.purgeMockDemoSeed()]).finally(() => {
   route();
   setTimeout(() => void showDueInboxBackup(), 3000);
+  void startStorageDurability({ hasAccount: hasFullEntry }).catch(() => {});
 });

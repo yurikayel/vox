@@ -11,6 +11,8 @@ import { getActiveUser, makeShellProps } from "./context.js";
 import { addContactAndNotify, listPendingAddedYouNotices } from "./contact-notify-flow.js";
 import { pollInboxMessages } from "./screens-dm.js";
 import { mountInviteCard } from "./vox-link-flow.js";
+import { rememberInviteArrival } from "../invite-arrival.js";
+import { hasPassedCantinaGate } from "./cantina-gate.js";
 
 function refreshAddedYouSection(rawQuery = "") {
   const box = document.getElementById("people-added-you-container");
@@ -89,6 +91,8 @@ export async function showConnect(routeId, invite = "") {
   const main = render.renderShell(makeShellProps(user, "people", "Conectar"));
   const profile = await profileDirectory.resolveProfile(routeId);
   render.renderConnectPreview(main, profile, routeId, { isContact: contacts.hasContact(routeId) });
+  // Quem ainda não entrou: a entrada diz quem chamou e, no fim, traz de volta a esta tela.
+  if (invite && !hasPassedCantinaGate()) rememberInviteArrival({ inviter: routeId, token: invite, name: profile?.name });
   if (invite) await mountInviteCard(main, { inviter: routeId, token: invite, name: profile.name });
 
   document.getElementById("btn-connect-add")?.addEventListener("click", (e) => {
