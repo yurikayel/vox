@@ -127,9 +127,12 @@ Atrás da flag de laboratório `localStorage["vox.lab.moderador"] = "1"`. Lógic
   - **Não quero decidir:** avisa a moderação na hora, sem esperar 48 h.
 - **Leitura conservadora da emenda:** só o vínculo de **padrinho** dá arquivamento firme. A "pessoa mais próxima" depende do grafo inteiro, e cada aparelho conhece só uma parte, então ninguém de fora consegue conferir essa escolha. Por isso a confirmação dela vai à moderação, como revisão.
 - **Como os outros aparelhos aceitam (C):** `fetchModActions` confere cada `natural-hide`: assinatura, prova do vínculo de padrinho e o padrinho ser quem arquivou. Daí constrói uma ação marcada `naturalVerified`, e ação vinda de fora perde essa marca. O post some como "em revisão": o autor e a moderação veem, e o `unhide` da moderação desfaz. Arquivamento sobre post de outra pessoa que não o afilhado não esconde nada.
+  - **A moderação prevalece:** se a moderação já escondeu o post (`hide` ou `review-hide`), o arquivamento natural não substitui nem desfaz essa decisão, venha antes ou depois dela.
+  - **Data do arquivamento:** o `ts` é assinado pelo padrinho, então não é confiável sozinho. Só vale se ficar entre a data do post (assinada pelo autor) e o relógio do aparelho, com 5 minutos de folga (`isPlausibleHideTime`). Data no futuro impediria o `unhide` de desfazer; data antes do post escaparia da contagem de reversões. Sem o post no aparelho, o arquivamento fica de fora até ele chegar.
 - **Teto e reversões (D):**
   - O poder firme vale para os **30 primeiros afilhados** pela data do vínculo.
   - O padrinho perde o poder com **3 reversões em 90 dias**: `unhide` da moderação daquela comunidade depois de um arquivamento dele, contadas até cada arquivamento.
+  - **Limite conhecido da data:** sobre um post **antigo** (anterior às reversões), o padrinho ainda consegue datar o arquivamento para antes delas. Fechar isso exige uma data que não seja a dele, o que o aparelho não guarda hoje.
   - **Limite:** um aparelho que não conhece todos os vínculos antigos de um padrinho pode contar a posição do afilhado para menos.
 
 ### Lote F (11/11/2026): trocar de padrinho e vínculo só para mediação
