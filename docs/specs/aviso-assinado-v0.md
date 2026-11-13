@@ -264,3 +264,22 @@ Extensão opcional da **convocação**: quem convoca lista papéis com vagas e u
 - **Fora desta versão:** o padrinho (moderador natural) como destinatário da mediação, que espera o PM-83.
 - **Peso:** os dois módulos novos foram pagos recomprimindo a imagem dentro do `icon.svg` (PNG com paleta de 256 cores; 18,5 KB para 5,8 KB; diferença média de 0,6 em 255 por canal).
 - Laboratório `vox.lab.aviso`.
+
+## Sorteio cívico (lote 4, 11/11/2026)
+
+Escolhe N pessoas de uma lista congelada sem que ninguém controle o resultado, offline-first e sem Arweave. Fica na aba de avisos.
+
+1. **Sorteio** (`sorteio`, moderação): `title`, `cycle`, `seats`, `roster` (membros de agora, como texto ordenado), `rosterHash` (SHA-256 da lista), `commitUntil`.
+2. **Compromisso** (`sorteio-compromisso`, qualquer pessoa): o SHA-256 de um segredo de 32 bytes. O segredo fica só no aparelho (`vox-sorteio-segredos-v1`).
+3. **Fecho** (`sorteio-fecho`, moderação): a lista `autor:hash` dos compromissos aceitos. Vale o **primeiro** fecho da moderação. Ninguém revela antes dele.
+4. **Revelação** (`sorteio-revela`): o segredo. Só conta se bater com o hash do fecho.
+5. **Apuração** (`sorteio-apuracao`, moderação): quem revelou e entra na conta. Vale a primeira. Fixa o conjunto, para que aparelhos que viram revelações em ordens diferentes não discordem.
+6. **Resultado:** `semente = SHA-256(autor:segredo ordenados ‖ comunidade ‖ ciclo ‖ hash da lista)`. Para cada vaga `i`, `SHA-256(semente:i)` mod o que resta da lista escolhe um nome. Todo aparelho recalcula. Mínimo de 2 revelações.
+
+**Garantias e custos:**
+- Basta uma testemunha honesta, que revela só depois do fecho, para ninguém prever o resultado.
+- Quem não revela fica apontado. Ainda assim, quem fica por último pode escolher entre revelar ou não: um viés de 1 bit, visível na tela.
+- Se a apuração deixar de fora uma revelação válida, todo aparelho que tem essa revelação mostra "a apuração deixou de fora…".
+- Nomes aparecem como endereço abreviado nesta versão.
+
+**Peso:** os 2 módulos novos foram pagos passando `logo-mark.png` e `icon-white-192.png` a PNG com paleta, visualmente iguais. O teto do precache desceu.

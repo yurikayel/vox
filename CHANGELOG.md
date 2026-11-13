@@ -6,6 +6,10 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Sorteio cívico (lote 4)
+- Na aba de avisos, a moderação cria um sorteio com a lista de membros congelada. Testemunhas se comprometem com um segredo e revelam depois do fecho; a moderação apura e todo aparelho recalcula o mesmo resultado. Basta uma testemunha honesta; quem não revela fica apontado. Laboratório `vox.lab.aviso`.
+- Precache: `logo-mark.png` e `icon-white-192.png` com paleta (−20 KB, visualmente iguais). SW `v7.95`.
+
 ### Aviso de contato: limite de alertas e sem consulta extra ao abrir
 - No máximo 3 alertas (toast e notificação do sistema) por hora para "adicionou você". Como chave nova não custa nada, alguém poderia encher a tela de alertas; os avisos além do limite entram só na seção **Quem adicionou você**.
 - O app não consulta mais a caixa de mensagens do relay ao abrir, em qualquer tela. A consulta segue ao entrar em **Pessoas** e em **Mensagens**.
