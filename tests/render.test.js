@@ -1212,7 +1212,8 @@ test("render - renderPeopleSearch seções e paste connect", () => {
     query: "",
   });
   assert.ok(main.innerHTML.includes("Contatos"));
-  assert.ok(main.innerHTML.includes("Na malha"));
+  assert.ok(main.innerHTML.includes("Conectados"));
+  assert.ok(main.innerHTML.includes(">Conectado</span>"));
   assert.ok(main.innerHTML.includes("people-search-input"));
   assert.ok(!main.innerHTML.includes("form-people-paste-link"), "formulário redundante de colar link deve ser removido");
 });
@@ -1237,15 +1238,17 @@ test("render - renderNetworkSettings inclui toggle malha", () => {
   assert.ok(main.innerHTML.includes("busca da malha"));
 });
 
-test("render - modal pós-pacto connect", () => {
-  const container = createContainer();
-  render.renderPostPactConnectModal(container, "vx_testroute123456");
-  assert.ok(container.innerHTML.includes("post-pact-connect-overlay"));
-  assert.ok(container.innerHTML.includes("#/connect/"));
-  assert.ok(container.innerHTML.includes("modal-card"));
-  assert.ok(!container.innerHTML.includes('class="modal-dialog card"'));
-  render.closePostPactConnectModal(container);
-  assert.equal(container.innerHTML, "");
+test("render - elementos de convite recolocados em Pessoas e Configurações sem modal pós-pacto", () => {
+  assert.equal(render.renderPostPactConnectModal, undefined);
+  assert.equal(render.closePostPactConnectModal, undefined);
+  const peopleEl = createContainer();
+  render.renderPeopleSearch(peopleEl, { routeId: "vx_testroute123456" });
+  assert.ok(peopleEl.innerHTML.includes("btn-people-share-connect"));
+  assert.ok(peopleEl.innerHTML.includes("#/connect/"));
+  const netEl = createContainer();
+  render.renderNetworkSettings(netEl, { routeId: "vx_testroute123456", settings: { enabled: true }, metrics: {} });
+  assert.ok(netEl.innerHTML.includes("btn-network-share-connect"));
+  assert.ok(netEl.innerHTML.includes("#/connect/"));
 });
 
 

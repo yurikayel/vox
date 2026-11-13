@@ -37,9 +37,9 @@ test("dm list — formulário técnico só em avançado", () => {
   assert.ok(!hero.includes("form-new-dm"), "form de colar código não fica no hero");
 });
 
-test("post-pact — link técnico dentro de details", () => {
+test("convite — link técnico dentro de details em Pessoas e Redes", () => {
   const container = createContainer();
-  render.renderPostPactConnectModal(container, "vx_testroute123456");
+  render.renderPeopleSearch(container, { routeId: "vx_testroute123456" });
   const html = container.innerHTML;
   assert.ok(html.includes("Convide amigos"));
   assert.ok(html.includes("Ver link técnico"));

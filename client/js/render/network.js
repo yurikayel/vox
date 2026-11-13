@@ -1,5 +1,5 @@
 /** @file Network settings, participation layers, steward wizard. */
-import { escapeHtml, shortId } from "./util.js";
+import { escapeHtml, shortId, renderInviteFriendsCard } from "./util.js";
 import { honestMessage } from "../honest-errors.js";
 import { renderNetworkChip, renderMeshStatusChip } from "./shell.js";
 
@@ -456,6 +456,15 @@ export function renderNetworkSettings(main, props = {}) {
   let html = renderNetworkHeader(props);
   html += renderNetworkStats(props.metrics, props.cacheStats, props.dailyUsage, props.settings);
   html += renderNetworkForm(props);
+  if (props.routeId) {
+    html += renderInviteFriendsCard({
+      routeId: props.routeId,
+      inviteLink: props.inviteLink || "",
+      buttonId: "btn-network-share-connect",
+      codeId: "network-invite-connect-url",
+      className: "card network-invite-card",
+    });
+  }
   html += renderStatusLinkBlock();
   html += renderPosseWebhooksSection(props.posseWebhooks || []);
   html += renderModerationSettingsSection(props.blockedUsers || [], props.mutedUsers || []);

@@ -6,6 +6,12 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Remover modal pós-pacto e usar "Conectado" em Pessoas
+- **Sem modal pós-pacto**: removidos `renderPostPactConnectModal` e `closePostPactConnectModal` (`client/js/app/onboarding.js`, `client/js/render/oauth-modals.js`, `client/js/render.js`) e o CSS exclusivo `.post-pact-*` (`client/css/style.css`); ao aceitar o pacto, o usuário segue direto para o feed ou tela de convite.
+- **Convide amigos recolocado**: botão **Compartilhar** + chave cidadã + `<details>Ver link técnico</details>` passaram para a tela **Pessoas** (`#/people`) e **Sua rede** (`#/settings/network`) via `renderInviteFriendsCard` (`client/js/render/util.js`).
+- **Terminologia**: selo e seção `"Na malha"` renomeados para `"Conectado"` / `"Conectados"` (`client/js/render/oauth-modals.js`, `client/js/i18n-pt-br.js`).
+- **Service Worker**: `CACHE_NAME` incrementado para `vox-pwa-v7.110-real-network-audio-video-upload` e metadados de release atualizados.
+
 ### Seus posts num arquivo e restauração conferida (PM-72, parte 2)
 - **Novo card em Sua rede** (`client/js/app/own-posts-ui.js`): "Baixar meus posts" gera `vox-meus-posts-AAAA-MM-DD.json` com os próprios posts na forma assinada e a mídia de cada um; "Restaurar de um arquivo" traz de volta. Sem senha: o que a pessoa publicou já é público na rede.
 - **Volta conferida** (`client/js/own-posts.js`): só entra post desta conta, com assinatura que confere, que não foi superado por edição ou apagamento guardado, e mídia só se bate com o hash assinado. Arquivo de outra conta é recusado com mensagem.
