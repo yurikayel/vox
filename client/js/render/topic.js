@@ -6,6 +6,7 @@ import * as postOwnership from "../post-ownership.js";
 import * as gossipRetract from "../gossip-retract-ui.js";
 import {
   escapeHtml,
+  normalizePostAspect,
   resolvePostAuthorLabels,
   renderPostAuthorMetaLines,
   renderAvatarHtml,
@@ -51,7 +52,7 @@ function renderTopicAudioHtml(a) {
 
 function renderTopicImageHtml(img, topic, topicData) {
   const imgAlt = topic?.imageAlt || topicData?.imageAlt || topic?.title || "Foto da publicação";
-  const aspect = topic?.aspectRatio || "original";
+  const aspect = normalizePostAspect(topic?.aspectRatio);
   const aspectClass = `post-aspect-${aspect.replace(":", "-")}`;
   const pinsHtml = renderPhotoTagLayerHtml(topic || topicData || {}, { isOwn: Boolean(topic?.isOwnLocalPost) });
   return `<div class="post-media-container post-media-hero ${aspectClass}" data-aspect="${escapeHtml(aspect)}"><button type="button" class="post-media-lightbox-trigger" aria-label="Ver imagem em tela cheia" data-media-src="${escapeHtml(img)}" data-media-alt="${escapeHtml(imgAlt)}"><img class="post-media post-media-hero-img" src="${escapeHtml(img)}" alt="${escapeHtml(imgAlt)}" /></button>${pinsHtml}</div>`;
