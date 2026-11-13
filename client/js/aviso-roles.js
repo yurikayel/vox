@@ -1,20 +1,62 @@
 /**
- * @file Chamada de ação (lote 1): a convocação ganha papéis com vagas e quórum mínimo.
- * Lógica pura, sem DOM. Spec: docs/specs/aviso-assinado-v0.md ("Chamada de ação").
+ * @file Chamada de ação (civic lote 1) e competências (civic lote 2): a convocação ganha papéis com vagas
+ * e quórum mínimo, e cada pessoa pode marcar no próprio aparelho o que sabe fazer.
  *
- * - Papéis e contagens viajam como **texto no topo** (`"jurídico:2,apoio:5"`): na assinatura v1,
- *   as chaves de dentro de um objeto aninhado ficam fora do que é assinado (`sig-format.js`).
+ * - Papéis e contagens viajam como **texto no primeiro nível** (`"jurídico:2,apoio:5"`): na assinatura v1,
+ *   as chaves de dentro de um objeto aninhado ficam fora do que é assinado (`sig-format.js`, PM-85).
  * - Quem assume um papel manda a resposta **por DM cifrada à coordenação**, nunca pelo gossip.
  *   O público vê só a contagem por papel que a coordenação assina (`aviso-papeis`).
+ * - Competências nunca saem do aparelho; servem só para sugerir papéis.
+ *
+ * Lógica pura, sem DOM.
+ *
+ * @module aviso-roles
+ * @see docs/specs/aviso-assinado-v0.md (seção "Chamada de ação")
+ * @see client/js/app/aviso-roles-dm.js (envio e recebimento por DM)
  */
 
 import { isModerator } from "./moderation.js";
 
+/**
+ * Número máximo de papéis numa chamada.
+ *
+ * @type {number}
+ */
 export const ROLE_MAX = 6;
+
+/**
+ * Nome de papel: máximo de caracteres (mínimo 2; letras, números, espaço e hífen).
+ *
+ * @type {number}
+ */
 export const ROLE_NAME_MAX = 24;
+
+/**
+ * Vagas máximas por papel (dois dígitos no texto do formulário).
+ *
+ * @type {number}
+ */
 export const ROLE_SLOTS_MAX = 99;
+
+/**
+ * Quórum máximo aceito. Na prática o quórum também não passa da soma das vagas.
+ *
+ * @type {number}
+ */
 export const QUORUM_MAX = 999;
+
+/**
+ * Tipo do corpo assinado de quem assume um papel. Só viaja por DM.
+ *
+ * @type {string}
+ */
 export const ROLE_CLAIM_TYPE = "aviso-papel";
+
+/**
+ * Tipo do corpo assinado da contagem por papel, publicado pela coordenação.
+ *
+ * @type {string}
+ */
 export const ROLE_COUNT_TYPE = "aviso-papeis";
 
 const NAME_RE = /^[\p{L}\p{N}][\p{L}\p{N} -]*$/u;
@@ -24,7 +66,12 @@ const normalizeName = (name) => String(name ?? "").trim().toLowerCase().replace(
 const validName = (name) => name.length >= 2 && name.length <= ROLE_NAME_MAX && NAME_RE.test(name);
 const validSlots = (n) => Number.isInteger(n) && n >= 1 && n <= ROLE_SLOTS_MAX;
 
-/** "Jurídico 2, comunicação 3" → "jurídico:2,comunicação:3"; vazio → ""; inválido → null. */
+/**
+ * Converte o texto do formulário na lista de papéis que vai no corpo do aviso.
+ *
+ * @param {string} input Texto como `"Jurídico 2, comunicação 3"`.
+ * @returns {string|null} `"jurídico:2,comunicação:3"`; `""` se vazio; `null` se inválido (nome ruim, vagas fora de 1–99, papel repetido ou mais de {@link ROLE_MAX}).
+ */
 export function parseRoleInput(input) {
   const raw = String(input ?? "").trim();
   if (!raw) return "";
@@ -43,7 +90,12 @@ export function parseRoleInput(input) {
   return out.join(",");
 }
 
-/** Texto do topo → `[{ role, n }]`. Itens malformados ficam de fora. */
+/**
+ * Lê a lista de papéis do corpo do aviso.
+ *
+ * @param {string} encoded Texto como `"jurídico:2,apoio:5"`.
+ * @returns {Array<{role: string, n: number}>} Papéis com o número de vagas; itens malformados ficam de fora.
+ */
 export function decodeRoleList(encoded) {
   return String(encoded ?? "")
     .split(",")
@@ -54,7 +106,15 @@ export function decodeRoleList(encoded) {
 
 const totalSlots = (encoded) => decodeRoleList(encoded).reduce((sum, r) => sum + r.n, 0);
 
-/** Problemas dos campos de papel de um rascunho (vazia = válido). Só convocação leva papéis. */
+/**
+ * Valida os campos de papel de um rascunho. Só convocação leva papéis.
+ *
+ * @param {object} [draft={}] Rascunho do aviso.
+ * @param {string} [draft.roleSlots] Texto do formulário (ver {@link parseRoleInput}).
+ * @param {number|string} [draft.quorumMin] Quórum mínimo; não pode passar da soma das vagas.
+ * @param {string} [draft.avisoKind] Tipo do aviso.
+ * @returns {string[]} Campos com problema (`roleSlots`, `quorumMin`); vazia quando válido.
+ */
 export function validateRoleFields(draft = {}) {
   const roles = parseRoleInput(draft.roleSlots);
   const quorum = Number(draft.quorumMin || 0);
@@ -65,7 +125,14 @@ export function validateRoleFields(draft = {}) {
   return problems;
 }
 
-/** Campos de papel prontos para o corpo do aviso (só os que existem). */
+/**
+ * Campos de papel prontos para o corpo do aviso; só os que existem.
+ *
+ * Sem quórum informado, o quórum é a soma das vagas.
+ *
+ * @param {object} [draft={}] Rascunho já validado.
+ * @returns {{roleSlots?: string, quorumMin?: number}} Objeto vazio quando não há papéis.
+ */
 export function roleFields(draft = {}) {
   const roleSlots = parseRoleInput(draft.roleSlots);
   if (!roleSlots) return {};
@@ -73,7 +140,19 @@ export function roleFields(draft = {}) {
   return { roleSlots, quorumMin: quorum > 0 ? quorum : totalSlots(roleSlots) };
 }
 
-/** Corpo assinado de quem assume um papel (ou desiste, com `role` vazio). Vai só por DM. */
+/**
+ * Monta o corpo assinado de quem assume um papel, ou desiste dele (`role` vazio).
+ *
+ * Vai só por DM cifrada à coordenação.
+ *
+ * @param {{id: string, communityId: string, roleSlots: string}} aviso Aviso da chamada.
+ * @param {string} role Papel escolhido; vazio para desistir.
+ * @param {object} [options={}]
+ * @param {string} [options.display=""] Nome mostrado à coordenação (até 60 caracteres).
+ * @param {number} [now=Date.now()] Instante, em ms.
+ * @returns {object} Corpo `type: "aviso-papel"`, pronto para `signPayload`.
+ * @throws {Error} Se o aviso não tem id ou comunidade, ou se o papel não existe nele.
+ */
 export function buildRoleClaim(aviso, role, { display = "" } = {}, now = Date.now()) {
   if (!aviso?.id || !aviso.communityId) throw new Error("Aviso sem id ou comunidade.");
   const wanted = normalizeName(role);
@@ -90,7 +169,15 @@ export function buildRoleClaim(aviso, role, { display = "" } = {}, now = Date.no
   };
 }
 
-/** Carga da DM: `__vox_dm_v2` primeiro, para o leitor antigo mostrar só o texto. */
+/**
+ * Monta a carga da DM que leva a resposta assinada.
+ *
+ * `__vox_dm_v2` vem primeiro para o leitor antigo reconhecer o formato e mostrar só o texto.
+ *
+ * @param {object} signedClaim Resposta já assinada.
+ * @param {string} [text=""] Texto legível que acompanha.
+ * @returns {string} JSON da carga.
+ */
 export function serializeRoleClaimDm(signedClaim, text = "") {
   return JSON.stringify({ __vox_dm_v2: 1, kind: ROLE_CLAIM_TYPE, text: String(text), contextCard: null, claim: signedClaim });
 }
@@ -101,7 +188,12 @@ function isWellFormedClaim(c) {
   return c.role === "" || validName(String(c.role ?? ""));
 }
 
-/** A resposta assinada contida na DM, ou null. */
+/**
+ * Extrai a resposta assinada de uma DM recebida.
+ *
+ * @param {string} raw Texto decifrado da DM.
+ * @returns {object|null} A resposta, se a carga é deste tipo e está bem formada; senão `null`. A assinatura é conferida por quem chama.
+ */
 export function parseRoleClaimDm(raw) {
   const str = String(raw ?? "");
   if (!str.startsWith('{"__vox_dm_v2":1')) return null;
@@ -113,7 +205,13 @@ export function parseRoleClaimDm(raw) {
   }
 }
 
-/** Última resposta de cada pessoa para o aviso (quem desistiu fica com `role` vazio). */
+/**
+ * Última resposta de cada pessoa para um aviso. Quem desistiu fica com `role` vazio.
+ *
+ * @param {object[]} [claims=[]] Respostas recebidas.
+ * @param {string} [avisoId=""] Aviso da chamada.
+ * @returns {Map<string, object>} Rota da pessoa → resposta mais recente.
+ */
 export function latestClaims(claims = [], avisoId = "") {
   const latest = new Map();
   for (const c of claims) {
@@ -124,7 +222,13 @@ export function latestClaims(claims = [], avisoId = "") {
   return latest;
 }
 
-/** Quantas pessoas em cada papel (só no aparelho da coordenação). */
+/**
+ * Conta quantas pessoas estão em cada papel. Roda só no aparelho da coordenação.
+ *
+ * @param {object[]} [claims=[]] Respostas recebidas por DM.
+ * @param {string} [avisoId=""] Aviso da chamada.
+ * @returns {Object<string, number>} Papel → número de pessoas.
+ */
 export function tallyRoles(claims = [], avisoId = "") {
   const counts = {};
   for (const c of latestClaims(claims, avisoId).values()) {
@@ -133,7 +237,15 @@ export function tallyRoles(claims = [], avisoId = "") {
   return counts;
 }
 
-/** Corpo da contagem por papel que a coordenação assina e publica: só números. */
+/**
+ * Monta o corpo da contagem por papel que a coordenação assina e publica. Só números.
+ *
+ * @param {{id: string, communityId: string, roleSlots: string}} aviso Aviso da chamada.
+ * @param {Object<string, number>} [counts={}] Papel → número de pessoas ({@link tallyRoles}).
+ * @param {number} [now=Date.now()] Instante da contagem, em ms.
+ * @returns {object} Corpo `type: "aviso-papeis"` com `countRoles` em texto.
+ * @throws {Error} Se o aviso não tem id ou comunidade.
+ */
 export function buildRoleCount(aviso, counts = {}, now = Date.now()) {
   if (!aviso?.id || !aviso.communityId) throw new Error("Aviso sem id ou comunidade.");
   const countRoles = decodeRoleList(aviso.roleSlots)
@@ -147,7 +259,14 @@ function isCountByModeration(c, avisoId, meta) {
   return isModerator(String(c.author || c.owner || ""), meta?.owner, meta?.moderators);
 }
 
-/** Contagem por papel que vale: a mais recente de dono ou moderação. */
+/**
+ * Escolhe a contagem por papel que vale: a mais recente de dono ou moderação.
+ *
+ * @param {object[]} [items=[]] Contagens já verificadas.
+ * @param {string} [avisoId=""] Aviso da chamada.
+ * @param {object} [meta={}] Metadados da comunidade (dono e moderação).
+ * @returns {object|null} A contagem que vale, ou `null`.
+ */
 export function latestRoleCount(items = [], avisoId = "", meta = {}) {
   let best = null;
   for (const c of items) {
@@ -162,7 +281,17 @@ function stateOf(filled, quorum, eventAt, now) {
   return Number(eventAt) > 0 && now >= Number(eventAt) ? "sem-quorum" : "aberta";
 }
 
-/** Situação da chamada: vagas preenchidas por papel, total e estado (`aberta`, `quorum`, `sem-quorum`). */
+/**
+ * Situação de uma chamada de ação.
+ *
+ * Vagas preenchidas além do número pedido não contam para o quórum. Depois da data do evento, uma
+ * chamada sem quórum fica `sem-quorum`.
+ *
+ * @param {object} aviso Aviso com `roleSlots`, `quorumMin` e `eventAt`.
+ * @param {object|null} [roleCount=null] Contagem que vale ({@link latestRoleCount}).
+ * @param {number} [now=Date.now()] Instante de referência, em ms.
+ * @returns {{roles: Array<{role: string, slots: number, filled: number}>, filled: number, quorum: number, counted: boolean, state: "aberta"|"quorum"|"sem-quorum"}|null} `null` quando o aviso não tem papéis.
+ */
 export function actionCallState(aviso, roleCount = null, now = Date.now()) {
   const slots = decodeRoleList(aviso?.roleSlots);
   if (!slots.length) return null;
@@ -173,22 +302,43 @@ export function actionCallState(aviso, roleCount = null, now = Date.now()) {
   return { roles, filled, quorum, counted: Boolean(roleCount), state: stateOf(filled, quorum, aviso.eventAt, now) };
 }
 
-/** "jurídico" → "Jurídico". */
+/**
+ * Nome do papel para mostrar: primeira letra maiúscula.
+ *
+ * @param {string} role Nome normalizado (`"jurídico"`).
+ * @returns {string} `"Jurídico"`.
+ */
 export function roleLabel(role) {
   const s = String(role ?? "");
   return s ? s[0].toLocaleUpperCase("pt-BR") + s.slice(1) : "";
 }
 
+/**
+ * Número máximo de competências marcadas no aparelho.
+ *
+ * @type {number}
+ */
 export const SKILL_MAX = 12;
 
-/** Competências (lote 2): "Jurídico, comunicação" → ["jurídico", "comunicação"]; vazio → []; inválido → null. */
+/**
+ * Converte o texto de competências do formulário em lista normalizada.
+ *
+ * @param {string} input Texto como `"Jurídico, comunicação"`.
+ * @returns {string[]|null} `["jurídico", "comunicação"]` sem repetição; `[]` se vazio; `null` se algum nome é inválido ou passa de {@link SKILL_MAX}.
+ */
 export function parseSkillsInput(input) {
   const names = String(input ?? "").split(",").map(normalizeName).filter(Boolean);
   if (names.length > SKILL_MAX || !names.every(validName)) return null;
   return [...new Set(names)];
 }
 
-/** Papéis da chamada que batem com as competências marcadas no aparelho e ainda têm vaga. */
+/**
+ * Papéis da chamada que batem com as competências do aparelho e ainda têm vaga.
+ *
+ * @param {string[]} [skills=[]] Competências marcadas no aparelho.
+ * @param {{roles: Array<{role: string, slots: number, filled: number}>}|null} [call=null] Resultado de {@link actionCallState}.
+ * @returns {string[]} Papéis sugeridos, na ordem da chamada.
+ */
 export function suggestedRoles(skills = [], call = null) {
   const mine = new Set(skills);
   return (call?.roles || []).filter((r) => mine.has(r.role) && r.filled < r.slots).map((r) => r.role);

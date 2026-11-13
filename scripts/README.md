@@ -6,6 +6,7 @@ Scripts de **manutenção do repositório** (desenvolvimento, CI e release). Nad
 |---|---|---|
 | `release_line.py` | Gera `docs/release-metadata.json` (SHA, testes, `CACHE_NAME`) e atualiza a tabela do README | `npm run release-line` · `npm run release-metadata` |
 | `complexity-audit.mjs` | Mede LLOC, aninhamento e complexidade cognitiva; grava `docs/metrics/baseline-AAAA-MM-DD.*` | `npm run audit:complexity` |
+| `docs-audit.mjs` | Confere a documentação: cabeçalho e JSDoc nos exports, `@param`/`@returns`, links relativos e docs órfãos; dívida antiga em `docs-debt.json` (catraca). Norma: `docs/process/documentacao.md` | `npm run audit:docs` · `npm run audit:docs -- --prune` |
 | `lint_relay.py` | Lint do relay Python | `npm run lint:relay` |
 | `nostr-smoke.mjs` | Teste de fumaça dos relays Nostr e da sinalização (REV-19/REV-09) | `node scripts/nostr-smoke.mjs --signaling` · workflow `nostr-smoke.yml` |
 | `write-oauth-deploy-config.mjs` | Gera `client/config/oauth.json` no deploy a partir de secrets | workflows `deploy-pages.yml` e `deploy-shell-b.yml` |

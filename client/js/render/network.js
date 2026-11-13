@@ -1,6 +1,7 @@
 /** @file Network settings, participation layers, steward wizard. */
 import { escapeHtml, shortId } from "./util.js";
 import { honestMessage } from "../honest-errors.js";
+import { renderNetworkChip, renderMeshStatusChip } from "./shell.js";
 
 const PARTICIPATION_LAYERS = [
   {
@@ -94,7 +95,9 @@ function renderPeerBadge(rtcStatus) {
   return `<span class="badge-pill">Conectando a aparelhos próximos…</span>`;
 }
 
-function renderNetworkHeader(isEnabled, relayStatus, rtcStatus, gatewayHealth) {
+function renderNetworkHeader({ settings, metrics, rtcStatus, gatewayHealth }) {
+  const isEnabled = Boolean(settings?.enabled);
+  const meshChip = renderMeshStatusChip(renderNetworkChip(metrics, rtcStatus, settings));
   const statusBadge = isEnabled
     ? `<span class="pill" style="background:var(--success); color:#fff;">🟢 Ajudando a rede</span>`
     : `<span class="pill" style="background:var(--danger); color:#fff;">⏸️ Ajuda pausada</span>`;
@@ -114,6 +117,7 @@ function renderNetworkHeader(isEnabled, relayStatus, rtcStatus, gatewayHealth) {
       <a class="agora-btn agora-btn--primary network-guided-btn" href="#/settings/network/guia">Configuração guiada</a>
       
       <div class="network-status" style="margin-top:0.75rem; display:flex; flex-wrap:wrap; gap:0.4rem;">
+        ${meshChip}
         ${statusBadge}
         ${peerBadge}
         ${reservePill}
@@ -398,7 +402,7 @@ function renderPosseWebhooksSection(webhooks = []) {
   return `
     <div class="card" style="margin-top:1rem;">
       <h3>Ecoe POSSE — Webhooks</h3>
-      <p class="desc" style="font-size:0.85rem;">URLs que você cadastrar (Discord, Telegram, n8n…) recebem POST JSON só quando você tocar em <strong>Exportar JSON</strong> no sheet POSSE — sem post automático no Facebook/Instagram. Máx. 8 linhas.</p>
+      <p class="desc" style="font-size:0.85rem;">URLs que você cadastrar (Discord, Telegram, n8n…) recebem POST JSON só quando você tocar em <strong>Exportar JSON</strong> no cockpit Ecoe — sem post automático no Facebook/Instagram. Máx. 8 linhas.</p>
       <div class="form-group">
         <label for="net-posse-webhooks">URLs de webhook (uma por linha)</label>
         <textarea id="net-posse-webhooks" class="form-control" rows="3" placeholder="https://discord.com/api/webhooks/…">${lines}</textarea>
@@ -439,9 +443,17 @@ function renderModerationSettingsSection(blockedUsers = [], mutedUsers = []) {
       </div>
     </div>`;
 }
+
+/**
+ * Desenha a tela de configurações de rede: cabeçalho de estado, números do nó, formulário (com disco e
+ * banda por modo), link de status, webhooks POSSE e listas de moderação local.
+ *
+ * @param {HTMLElement} main Contêiner da tela; o conteúdo é substituído.
+ * @param {object} [props={}] Estado lido em `app/screens-network.js` (configurações, métricas, relays, moderação).
+ * @returns {void}
+ */
 export function renderNetworkSettings(main, props = {}) {
-  const isEnabled = Boolean(props.settings?.enabled);
-  let html = renderNetworkHeader(isEnabled, props.relayStatus, props.rtcStatus, props.gatewayHealth);
+  let html = renderNetworkHeader(props);
   html += renderNetworkStats(props.metrics, props.cacheStats, props.dailyUsage, props.settings);
   html += renderNetworkForm(props);
   html += renderStatusLinkBlock();

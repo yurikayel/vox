@@ -12,6 +12,7 @@ import * as gossipProfile from "./peers-gossip-profile.js";
 import * as profileDirectory from "./profile-directory.js";
 import { normalizeStorageCommitment } from "./supporter-mode.js";
 import * as centralMemory from "./central-memory.js";
+import { isBeforeGenesisMs, isTestRouteId } from "./genesis.js";
 import { getRelayHttpUrls } from "./inbox.js";
 import { createPeerSync, defaultPeerSyncDeps, SYNC_INV, SYNC_WANT } from "./peer-sync.js";
 
@@ -87,10 +88,6 @@ function dispatchGossipTombstone(tombstone, source = "rtc") {
       fn(tombstone, source);
     } catch {}
   }
-}
-
-export function getMyPeerId() {
-  return myPeerId;
 }
 
 const DEFAULT_PEER_SETTINGS = Object.freeze({
@@ -433,10 +430,19 @@ async function isRejectedCommunityUpdate(item) {
   return item.type === "community_update" && !(await cacheNode.isCommunityUpdateAcceptable(item));
 }
 
+/**
+ * Fora da rede viva: conta de teste (cartão ou post) ou post criado antes da gênese. Aparelho em versão antiga
+ * ainda manda esses itens; aqui eles não são guardados nem repassados.
+ */
+function isOutsideLiveNetwork(item) {
+  if (isTestRouteId(item.author || item.routeId)) return true;
+  return item.type !== profileCard.PROFILE_CARD_TYPE && isBeforeGenesisMs(item.ts || item.timestamp || 0);
+}
+
 /** `sentBlob`: a mídia do `mediaHash`, que viaja ao lado do post (PM-87); só entra e segue adiante se bate com o hash. */
 async function handleGossipMessage(item, source = "rtc", sentBlob = null) {
   if (!item?.id || !item?.sig) return;
-  if (moderation.shouldDropGossip(item.author)) return;
+  if (moderation.shouldDropGossip(item.author) || isOutsideLiveNetwork(item)) return;
   if (await isGossipItemSuperseded(item)) return;
   if (!(await localAccount.verifyPayload(item))) return;
 
@@ -469,10 +475,15 @@ async function isGossipUpdateSuperseded(item) {
   return false;
 }
 
+/** Edição que nem chega à assinatura: sem campos, de autor bloqueado, fora da rede viva ou sem data de edição. */
+function isMalformedOrBlockedUpdate(item) {
+  if (!item?.id || !item?.sig || !item?.author) return true;
+  if (moderation.shouldDropGossip(item.author) || isOutsideLiveNetwork(item)) return true;
+  return !(item.editedAt > 0);
+}
+
 async function handleGossipUpdateMessage(item, source = "rtc") {
-  if (!item?.id || !item?.sig || !item?.author) return;
-  if (moderation.shouldDropGossip(item.author)) return;
-  if (!item.editedAt || item.editedAt <= 0) return;
+  if (isMalformedOrBlockedUpdate(item)) return;
   if (await isGossipUpdateSuperseded(item)) return;
   if (!(await localAccount.verifyPayload(item))) return;
 

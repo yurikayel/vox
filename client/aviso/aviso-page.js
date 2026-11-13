@@ -1,16 +1,32 @@
 /**
- * @file Página leve de conferência do aviso (`aviso.html`), sem conta e sem o app. Spec: docs/specs/aviso-assinado-v0.md.
- * Confere a assinatura no aparelho e guarda, no próprio celular, as chaves já vistas para cada grupo e para cada nome.
- * Chave nova para um grupo ou nome já conhecido nunca fica verde sozinha.
+ * @file Página leve de conferência do aviso (`aviso.html`, lote C), sem conta e sem o app.
+ *
+ * Confere a assinatura no aparelho e guarda, no próprio celular, as chaves já vistas para cada grupo e
+ * para cada nome (confiança no primeiro uso). Uma chave nova para um grupo ou nome já conhecido nunca
+ * fica verde sozinha: só depois que a pessoa diz que a coordenação confirmou o código.
+ *
+ * @module aviso/aviso-page
+ * @see docs/specs/aviso-assinado-v0.md
+ * @see docs/THREAT-MODEL.md
  */
 import { avisoCode, avisoExpiresAt, decodeAvisoFragment, personCode } from "./aviso-link.js";
 import { verifyPayload } from "../js/signed-verify.js";
 
+/**
+ * Chave em `localStorage` da memória de confiança (`{ groups, names }` → rotas já vistas).
+ *
+ * @type {string}
+ */
 export const TRUST_KEY = "vox.aviso.trust";
 
 const plainName = (s) => String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
 
-/** Memória de confiança sobre um `Storage`; leitura e escrita nunca derrubam a página. */
+/**
+ * Cria a memória de confiança sobre um `Storage`. Ler e escrever nunca derruba a página.
+ *
+ * @param {Storage|null} storage Armazenamento; bloqueado ou ausente vira memória vazia.
+ * @returns {{read: function(): {groups: Object<string, string[]>, names: Object<string, string[]>}, write: function(object): void}} Leitura e escrita da memória.
+ */
 export function trustStore(storage) {
   const read = () => {
     try {
@@ -35,7 +51,13 @@ const addTo = (map, key, value) => {
   map[key] = [...new Set([...(map[key] || []), value])];
 };
 
-/** Guarda a chave para o grupo e para o nome de quem assinou. */
+/**
+ * Guarda a chave do autor para o grupo e para o nome (sem acento, minúsculo) do aviso.
+ *
+ * @param {{read: Function, write: Function}} store Memória de confiança ({@link trustStore}).
+ * @param {{communityId: string, author: string, authorDisplay?: string}} aviso Aviso já conferido.
+ * @returns {void}
+ */
 export function rememberKey(store, aviso) {
   const data = store.read();
   addTo(data.groups, aviso.communityId, aviso.author);
@@ -51,8 +73,14 @@ function trustOf(store, aviso) {
 }
 
 /**
- * Estado da conferência: `invalido`, `encerrado`, `verde`, `amarelo` ou `chave-nova`.
- * No primeiro contato (amarelo) a chave é guardada.
+ * Confere o aviso do link e decide o estado mostrado.
+ *
+ * No primeiro contato com o grupo e o nome, o estado é `amarelo` e a chave fica guardada.
+ *
+ * @param {string} fragment Fragmento do link.
+ * @param {{read: Function, write: Function}} store Memória de confiança ({@link trustStore}).
+ * @param {number} [now=Date.now()] Instante de referência, em ms.
+ * @returns {Promise<{state: "invalido"|"encerrado"|"verde"|"amarelo"|"chave-nova", aviso?: object, code?: string, person?: string}>} Estado e, quando o aviso é legível, os códigos.
  */
 export async function evaluateAviso(fragment, store, now = Date.now()) {
   const aviso = decodeAvisoFragment(fragment);
@@ -73,14 +101,25 @@ const MESSAGES = {
   "chave-nova": ["🔴", "Chave nova", "Chave nova para um grupo ou nome que você já conhece. Pode ser outra pessoa da coordenação, pode ser golpe. Só confie se a coordenação confirmar o código {pessoa}."],
 };
 
-/** Título e texto do estado, já com nome e código. */
+/**
+ * Ícone, título e texto do estado, já com o nome e o código de quem assinou.
+ *
+ * @param {{state: string, aviso?: object, person?: string}} result Resultado de {@link evaluateAviso}.
+ * @returns {{icon: string, title: string, text: string}} Estado desconhecido cai em `invalido`.
+ */
 export function describeState(result) {
   const [icon, title, template] = MESSAGES[result.state] || MESSAGES.invalido;
   const text = template.replace("{nome}", result.aviso?.authorDisplay || "a coordenação").replace("{pessoa}", result.person || "");
   return { icon, title, text };
 }
 
-/** Link do WhatsApp com a resposta pronta, para colar no grupo. */
+/**
+ * Link do WhatsApp com a resposta pronta para colar no grupo, com o código do aviso.
+ *
+ * @param {string} label Resposta mostrada (ex.: `"🙋 Vou"`).
+ * @param {string} code Código curto do aviso.
+ * @returns {string} URL `https://wa.me/?text=…`.
+ */
 export function replyHref(label, code) {
   return `https://wa.me/?text=${encodeURIComponent(`${label} — ${code}`)}`;
 }
@@ -123,7 +162,15 @@ function renderConfirm(doc, root, result, store) {
   root.append(button);
 }
 
-/** Desenha o resultado na página. */
+/**
+ * Desenha o resultado da conferência na página (só `textContent`, nunca HTML vindo do link).
+ *
+ * @param {Document} doc Documento.
+ * @param {HTMLElement} root Contêiner; o conteúdo é substituído.
+ * @param {object} result Resultado de {@link evaluateAviso}.
+ * @param {{read: Function, write: Function}} store Memória de confiança (para o botão de confirmação).
+ * @returns {void}
+ */
 export function paint(doc, root, result, store) {
   root.replaceChildren();
   const { icon, title, text } = describeState(result);

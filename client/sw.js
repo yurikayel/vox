@@ -4,7 +4,7 @@
 
 // O Service Worker atua no cache offline do shell e notificações de status, sem abrir WebRTC.
 
-const CACHE_NAME = "vox-pwa-v7.74-real-network-audio-video-upload";
+const CACHE_NAME = "vox-pwa-v7.96-real-network-audio-video-upload";
 
 const SHELL_ASSETS = [
 
@@ -51,6 +51,7 @@ const SHELL_ASSETS = [
 
   "./js/app/context.js",
 
+  "./js/app/inbox-backup-ui.js",
   "./js/app/init.js",
 
   "./js/app/post-media-lightbox.js",
@@ -80,6 +81,7 @@ const SHELL_ASSETS = [
   "./js/app/screens-profile.js",
 
   "./js/app/screens-voxpedia.js",
+  "./js/app/screens-not-found.js",
 
   "./js/app/screens-ajuda-teste.js",
 
@@ -178,6 +180,7 @@ const SHELL_ASSETS = [
   "./embed/vox-embed.js",
 
   "./js/inbox.js",
+  "./js/inbox-backup.js",
 
   "./js/listing.js",
 
@@ -189,6 +192,7 @@ const SHELL_ASSETS = [
   "./js/aviso.js",
   "./js/aviso-roles.js",
   "./js/community-termo.js",
+  "./js/sorteio.js",
   "./js/natural-mod.js",
   "./js/aviso-replies.js",
   "./aviso/aviso-link.js",
@@ -196,6 +200,7 @@ const SHELL_ASSETS = [
   "./js/app/aviso-flow.js",
   "./js/app/aviso-roles-dm.js",
   "./js/app/community-termo-flow.js",
+  "./js/app/sorteio-flow.js",
   "./js/app/natural-mod-flow.js",
   "./js/app/mediation-dm.js",
   "./js/app/natural-case-flow.js",
@@ -207,6 +212,8 @@ const SHELL_ASSETS = [
   "./js/voxels.js",
 
   "./js/contacts.js",
+  "./js/contact-notify.js",
+  "./js/app/contact-notify-flow.js",
 
   "./js/oauth-profile.js",
 
@@ -230,9 +237,11 @@ const SHELL_ASSETS = [
 
   "./js/gateway-telemetry.js",
 
+  "./js/genesis.js",
   "./js/graphql.js",
 
   "./js/data/profiles-brazil-uf.js",
+  "./js/data/test-route-ids.js",
 
   "./js/mock.js",
 
@@ -280,6 +289,8 @@ const SHELL_ASSETS = [
   "./js/render.js",
 
   "./js/render/util.js",
+  "./js/shared/html.js",
+  "./js/short-id.js",
 
   "./js/render/shell.js",
 
@@ -324,6 +335,7 @@ const SHELL_ASSETS = [
   "./js/render/topic.js",
 
   "./js/render/community.js",
+  "./js/render/proposal.js",
   "./js/render/compose-chrome.js",
   "./js/render/compose-steps.js",
   "./js/app/compose-stepper.js",

@@ -1,14 +1,43 @@
 /**
- * LAN-12 — denúncia de publicação (lógica pura, sem DOM).
- * A denúncia fica registrada no aparelho, o post é ocultado para quem denunciou e,
- * quando há comunidade com moderador conhecido, a pessoa pode enviar a denúncia por DM cifrada.
- * A identidade de quem denuncia NUNCA vai para o gossip público (risco de retaliação).
+ * @file Denúncia de publicação (LAN-12) e pedido de mediação (civic lote 3) — lógica pura, sem DOM.
+ *
+ * A denúncia fica registrada no aparelho e o post é ocultado para quem denunciou. Quando a comunidade
+ * tem moderação conhecida, a pessoa pode mandar a denúncia por DM cifrada (`app/report-dm.js`).
+ * A identidade de quem denuncia NUNCA vai para o gossip público, por risco de retaliação.
+ * Motivos graves levam aos canais oficiais e não seguem o fluxo de moderação comunitária.
+ *
+ * @module report
+ * @see docs/THREAT-MODEL.md
+ * @see docs/adr/023-moderacao-em-camadas-e-moderador-natural.md
  */
 
+/**
+ * Chave em `localStorage` das denúncias feitas neste aparelho.
+ *
+ * @type {string}
+ */
 export const REPORTS_STORAGE_KEY = "vox-reports-v1";
+
+/**
+ * Quantas denúncias o aparelho guarda; as mais antigas saem primeiro.
+ *
+ * @type {number}
+ */
 export const MAX_REPORTS = 200;
+
+/**
+ * Tamanho máximo do detalhe escrito por quem denuncia, em caracteres.
+ *
+ * @type {number}
+ */
 export const MAX_DETAIL_LEN = 500;
 
+/**
+ * Motivos de denúncia. `grave: true` mostra os canais oficiais ({@link OFFICIAL_CHANNELS_PT}) e fica
+ * fora da moderação comunitária e do moderador natural.
+ *
+ * @type {ReadonlyArray<{id: string, label: string, grave: boolean}>}
+ */
 export const REPORT_REASONS = Object.freeze([
   { id: "spam", label: "Spam, golpe ou fraude", grave: false },
   { id: "assedio", label: "Assédio ou ameaça a uma pessoa", grave: false },
@@ -20,7 +49,11 @@ export const REPORT_REASONS = Object.freeze([
   { id: "outro", label: "Outro motivo", grave: false },
 ]);
 
-/** Canais oficiais para casos graves (o Vox não substitui as autoridades). */
+/**
+ * Canais oficiais para casos graves; o Vox não substitui as autoridades.
+ *
+ * @type {ReadonlyArray<{label: string, href: string}>}
+ */
 export const OFFICIAL_CHANNELS_PT = Object.freeze([
   { label: "SaferNet Brasil — denúncia anônima de crimes na internet", href: "https://new.safernet.org.br/denuncie" },
   { label: "Disque 100 — Direitos Humanos (crianças, adolescentes e outras violações)", href: "tel:100" },
@@ -28,15 +61,39 @@ export const OFFICIAL_CHANNELS_PT = Object.freeze([
   { label: "190 — Polícia Militar, em emergência", href: "tel:190" },
 ]);
 
+/**
+ * Procura um motivo pelo id.
+ *
+ * @param {string} reasonId Id do motivo (ex.: `"spam"`).
+ * @returns {{id: string, label: string, grave: boolean}|null} O motivo, ou `null` se não existe.
+ */
 export function findReason(reasonId) {
   return REPORT_REASONS.find((r) => r.id === reasonId) || null;
 }
 
+/**
+ * Diz se o motivo é grave (vai aos canais oficiais, não à moderação comunitária).
+ *
+ * @param {string} reasonId Id do motivo.
+ * @returns {boolean} `false` também para motivo desconhecido.
+ */
 export function isGraveReason(reasonId) {
   return Boolean(findReason(reasonId)?.grave);
 }
 
-/** Valida e normaliza; lança Error com mensagem em português. */
+/**
+ * Valida e normaliza uma denúncia.
+ *
+ * @param {object} [fields={}]
+ * @param {string} fields.postId Publicação denunciada.
+ * @param {string} [fields.authorRoute=""] Autor da publicação.
+ * @param {string} [fields.communityId=""] Comunidade, se houver.
+ * @param {string} fields.reason Id de um motivo de {@link REPORT_REASONS}.
+ * @param {string} [fields.detail=""] Texto livre (cortado em {@link MAX_DETAIL_LEN}).
+ * @param {number} [now=Date.now()] Instante, em ms.
+ * @returns {{id: string, postId: string, authorRoute: string, communityId: string, reason: string, detail: string, ts: number}} Denúncia pronta para guardar.
+ * @throws {Error} Sem publicação ou com motivo desconhecido; mensagem em português para mostrar.
+ */
 export function buildReport({ postId, authorRoute = "", communityId = "", reason, detail = "" } = {}, now = Date.now()) {
   if (!postId) throw new Error("Publicação não identificada.");
   if (!findReason(reason)) throw new Error("Escolha um motivo para a denúncia.");
@@ -51,6 +108,11 @@ export function buildReport({ postId, authorRoute = "", communityId = "", reason
   };
 }
 
+/**
+ * Denúncias feitas neste aparelho, da mais nova à mais antiga.
+ *
+ * @returns {object[]} Lista vazia se o armazenamento está vazio, corrompido ou bloqueado.
+ */
 export function listReports() {
   try {
     const raw = JSON.parse(globalThis.localStorage?.getItem(REPORTS_STORAGE_KEY) || "[]");
@@ -60,6 +122,12 @@ export function listReports() {
   }
 }
 
+/**
+ * Guarda uma denúncia (substitui a de mesmo id) e corta a lista em {@link MAX_REPORTS}.
+ *
+ * @param {object} report Denúncia de {@link buildReport}.
+ * @returns {object[]} A lista como ficou.
+ */
 export function saveReport(report) {
   const next = [report, ...listReports().filter((r) => r.id !== report.id)].slice(0, MAX_REPORTS);
   try {
@@ -68,14 +136,27 @@ export function saveReport(report) {
   return next;
 }
 
+/**
+ * Diz se este aparelho já denunciou a publicação.
+ *
+ * @param {string} postId Publicação.
+ * @returns {boolean}
+ */
 export function hasReported(postId) {
   return listReports().some((r) => r.postId === postId);
 }
 
-/** Hash da DM para o moderador, com cartão de contexto do post (sem dados de quem denuncia na URL). */
 /**
- * Lote 3 — pedido de mediação: abre a conversa cifrada com a moderação já com o cartão da publicação.
- * Diferente da denúncia, não oculta nem arquiva nada; congelar a discussão segue poder da moderação.
+ * Rota da conversa cifrada com a moderação para pedir mediação, já com o cartão da publicação.
+ *
+ * Diferente da denúncia, não oculta nem arquiva nada; congelar a discussão continua poder da moderação.
+ * Nada de quem pede vai na URL.
+ *
+ * @param {string} moderatorRoute Rota de quem modera.
+ * @param {object} [context={}]
+ * @param {string} [context.postId=""] Publicação em discussão.
+ * @param {string} [context.communityId=""] Comunidade.
+ * @returns {string} Hash `#/dm/<rota>?…`, ou `""` sem moderação ou sem publicação.
  */
 export function buildMediationDmHash(moderatorRoute, { postId = "", communityId = "" } = {}) {
   if (!moderatorRoute || !postId) return "";
@@ -84,6 +165,15 @@ export function buildMediationDmHash(moderatorRoute, { postId = "", communityId 
   return `#/dm/${encodeURIComponent(moderatorRoute)}?${q.toString()}`;
 }
 
+/**
+ * Rota da conversa cifrada com a moderação para mandar a denúncia, com o cartão da publicação.
+ *
+ * Nada de quem denuncia vai na URL.
+ *
+ * @param {string} moderatorRoute Rota de quem modera.
+ * @param {{postId: string, reason: string, communityId?: string}} report Denúncia.
+ * @returns {string} Hash `#/dm/<rota>?…`, ou `""` sem moderação ou sem denúncia.
+ */
 export function buildModeratorDmHash(moderatorRoute, report) {
   if (!moderatorRoute || !report) return "";
   const q = new URLSearchParams({

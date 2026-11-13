@@ -11,7 +11,136 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 - **Lote E:** "Pedir mediação" vai, por mensagem cifrada, ao moderador natural de cada parte, com o cartão do post e sem arquivar nada; sem vínculo, segue para a moderação da comunidade.
 - **Lotes B a D:** a denúncia também vai, por mensagem cifrada, ao moderador natural de cada lado. O aviso a N1 sai do aparelho da moderação, para N1 não saber quem denunciou; o caso guardado não tem quem denunciou; motivo grave não vai. Em Pessoas → Meus vínculos: arquivar para todos (só padrinho, com a prova do vínculo, até 30 afilhados e menos de 3 reversões em 90 dias), mandar para revisão ou não decidir. Os outros aparelhos conferem a prova antes de esconder; a moderação desfaz.
 - **Lote F:** trocar de padrinho uma vez (vale 7 dias depois, com as duas assinaturas) e vínculo "só para mediação", que nunca dá poder de arquivar. As opções aparecem no cartão do convite com a flag.
-- Precache: a arte da cantina passou a WebP (−40,5 KB, visualmente igual) e pagou os 4 módulos novos; teto baixado para 0,2% acima do medido. Testes ajustados de propósito: o do HTML da cantina (arquivo novo) e o do `verifyLink` (devolve `mediationOnly` e `switchFrom`). SW `v7.74`.
+- Precache: os 4 módulos novos entram no `SHELL_ASSETS`; testes de `verifyLink` ajustados para devolver `mediationOnly` e `switchFrom`. SW `v7.96`.
+
+### Sorteio cívico (lote 4)
+- Na aba de avisos, a moderação cria um sorteio com a lista de membros congelada. Testemunhas se comprometem com um segredo e revelam depois do fecho; a moderação apura e todo aparelho recalcula o mesmo resultado. Basta uma testemunha honesta; quem não revela fica apontado. Laboratório `vox.lab.aviso`.
+- Precache: `logo-mark.png` e `icon-white-192.png` com paleta (−20 KB, visualmente iguais). SW `v7.95`.
+
+### Aviso de contato: limite de alertas e sem consulta extra ao abrir
+- No máximo 3 alertas (toast e notificação do sistema) por hora para "adicionou você". Como chave nova não custa nada, alguém poderia encher a tela de alertas; os avisos além do limite entram só na seção **Quem adicionou você**.
+- O app não consulta mais a caixa de mensagens do relay ao abrir, em qualquer tela. A consulta segue ao entrar em **Pessoas** e em **Mensagens**.
+- Teste novo em `tests/contact-notify.test.js`; SW `v7.94`.
+
+### Precache sem teto de bytes (PM-02)
+- Decisão do mantenedor (2026-11-12): o precache deixa de ter teto. O teste `tests/shell-reachability.test.js` continua somando o shell e imprime o total, mas nenhum número reprova o CI; saíram a constante `SHELL_BUDGET_BYTES` e o histórico de medições.
+- A disciplina de manter o precache enxuto dentro do razoável passa a ser cobrada na revisão (regra em [docs/HARDENING.md](./docs/HARDENING.md), seção "Peso do precache"). O teste PM-04 (módulo inalcançável fora do precache) não mudou.
+
+### Diretório: domínio do avatar do Google conferido pelo host da URL
+- `client/js/people-index.js` decidia se um avatar era do Google ou da Meta procurando o domínio em qualquer parte da URL (alertas do CodeQL). A regra do Google agora lê o host com `new URL`, exige `https:` e aceita só `googleusercontent.com` e subdomínios. A regra da Meta saiu: só valia para URLs idênticas, caso que a comparação anterior já resolve.
+- `client/js/app/contact-notify-flow.js` importa `shortId` de `short-id.js`, não mais de `render/util.js`.
+- Teste novo em `tests/people-index.test.js`. SW `v7.93`.
+
+### Domínio não importa mais a camada de UI para escapar texto
+- Nada muda na tela. `escapeHtml` saiu de `client/js/render/util.js` para `client/js/shared/html.js` (módulo sem imports) e `shortId` para `client/js/short-id.js` (domínio, porque conhece a conta oficial). `render/util.js` reexporta os dois, então os módulos da UI seguem importando de lá.
+- Seis módulos do domínio (`civic-credential.js`, `community-unread.js`, `explode-dispatch.js`, `inline-composer.js`, `perma-notary.js`, `people-index.js`) passam a importar da origem. Nenhum módulo de domínio importa mais `render/util.js`; sobra o `render.js`, que é o barril da própria UI.
+- As duas funções ganharam JSDoc (eram dívida) e saíram de `scripts/docs-debt.json` pelo `--prune`.
+- Peso: +1.454 B de cabeçalho e JSDoc, sem código novo, pagos em parte tirando de `style.css` e `agora.css` 33 seletores de 23 classes que nenhum JS/HTML do cliente gera mais (-970 B). Nenhuma regra inteira saiu: só o seletor órfão dentro da lista, então o estilo de quem aparece na tela não muda. Medido em 2.019.122 bytes após o merge da `main` (teto de 2.019.348 bytes mantido).
+- SW `v7.92`.
+
+### Aviso cifrado quando alguém adiciona você aos contatos
+- Ao adicionar alguém aos contatos (em **Conectar** ou na lista de membros da comunidade), o aparelho envia um aviso assinado e cifrado E2E pelo canal direto (`kind: "contact_added"`, sem criar mensagem falsa na conversa de DM).
+- Quem recebe vê o aviso na seção **Quem adicionou você** no topo de **Pessoas** (`#/people`), com botão **Adicionar de volta** e **Dispensar**, além de toast no app e notificação do sistema se autorizada.
+- Seguir autor continua silencioso para preservar o anonimato de leitura.
+- Módulos `client/js/contact-notify.js` e `client/js/app/contact-notify-flow.js`; testes em `tests/contact-notify.test.js`; SW `v7.91`.
+
+### Diretório e prévia de conexão usam a foto carregada e não escondem outras contas Google/Meta
+- A linha do diretório de cidadãos (`renderPeopleResultRow`) e a prévia de conexão (`renderConnectPreview`) passam `p.avatarUrl` / `profile.avatar` para `renderAvatarHtml`, em vez de depender só do cartão sincronizado em `profileDirectory`.
+- Corrigida a deduplicação social em `profile-directory.js` (`hasSameSocialAvatar` considerava iguais quaisquer duas URLs de Google/Meta distintas, apagando o outro cartão em `localStorage`, e `normalizeSocialAvatarBase` perdia `?psid=/asid=` do Facebook) e em `people-index.js` / `local-account.js` (mesmo nome + domínios Google/Meta diferentes deixam de colidir). Duas contas Google/Meta distintas com o mesmo nome agora aparecem separadas no diretório com suas fotos.
+- Testes novos em `tests/people-chosen-name.test.js` e `tests/people-index.test.js`.
+- SW `v7.90`.
+
+### Política do teto de bytes do precache (PM-02)
+- Atualizadas a nota em `tests/shell-reachability.test.js` e a seção **Peso do precache (PM-02)** em [docs/HARDENING.md](./docs/HARDENING.md): o orçamento do precache segue como disciplina para crescer o mínimo e evitar desperdício real, mas deixa de ser limite duro que exija cortes improdutivos quando uma mudança já está enxuta. Limites de código e JSDoc seguem inalterados.
+
+### Backup semanal e mensal no seu e-mail
+- Nova seção **Backup no seu e-mail** em Sua rede (`#/settings`): liga com a Senha Soberana uma vez; semanal e mensal podem ser desligados. Ao abrir o app com um backup vencido, um aviso oferece **Enviar para meu e-mail**: o app prepara um `.txt` cifrado e abre o compartilhar do sistema (Gmail, Outlook, Mail); onde o navegador não compartilha arquivo, baixa.
+- Sem servidor: o Vox não guarda nem conhece o endereço. O arquivo leva as chaves (com a de DM), perfil, Pix, contatos, texto das DMs e os próprios posts do período; só a Senha abre. O mensal repete de propósito o conteúdo das semanas.
+- **Restaurar Backup** (Perfil) aceita vários arquivos `.txt` de uma vez e aplica do mais antigo ao mais novo.
+- Depois da revisão: chaves e par de backup num só envelope de 600 mil iterações (antes as chaves iam no `.voxid`, de 210 mil); post editado ou apagado no período entra no backup; o arquivo é montado antes do toque, para o compartilhar não recusar por demora; misturar `.voxid` com backups dá erro claro em vez de ignorar arquivos; o download só libera o endereço temporário depois (`share.downloadBlob`, usado também pelo `.voxid`); as DMs são lidas numa leitura só (`cache-node.getAllDmMessages`).
+- Peso: os dois módulos novos e a ligação nas telas (+13,4 KB). Pagos em parte removendo a folha POSSE pós-publicação, que nada abria desde o cockpit Ecoe (2168dae; -9,5 KB com o CSS; decisão do mantenedor; 4 testes que liam o código da folha saíram ou foram ajustados), e recomprimindo `icons/icon-mark-black-128.png` em paleta exata (pixels idênticos, -517 B). O resto, 2.717 B, sobe o teto do precache para 2.004.623 bytes.
+- Testes novos em `tests/inbox-backup.test.js`; documentação em [IDENTITY.md](./docs/IDENTITY.md#backup-no-seu-e-mail-clientjsinbox-backupjs-clientjsappinbox-backup-uijs).
+- SW `v7.89`.
+
+### Contas sem nome não sujam mais a rede
+- Uma conta que nunca escolheu nome (a chave criada na primeira visita, numa aba anônima ou num navegador novo) não manda mais cartão de perfil para a memória central, para a malha nem para o Arweave. Era a origem das centenas de perfis vazios no NodeZero. Assim que a pessoa escolhe um nome, o cartão passa a sair como antes.
+- O aparelho para de publicar juntas todas as contas do cofre: só a conta ativa publica o próprio cartão. Publicar todas de uma vez contava a quem lesse que eram da mesma pessoa.
+- Quem desligou "aparecer na malha" não tem mais o próprio cartão reenviado pela sincronização com a memória central.
+- Cartão sem nome que chega de um app antigo ou da memória central não é guardado nem repassado.
+- Peso pago removendo 13 exportações que nada usava (textos e listas soltas em `i18n-pt-br.js`, `bsky-feed.js`, `media-lofi.js`, `gossip-retract-ui.js`, `peers.js`, `app/photo-tag-persist.js`) e a regra CSS `.gossip-edited-pill`, que nada gerava.
+- Teste novo em `tests/profile-card-share.test.js`; emenda no [ADR-003](./docs/adr/003-profile-card-gossip.md).
+- SW `v7.88`.
+
+### Diretório: homônimo de outra chave não some mais dentro de "Você"
+- Quando outra conta tinha exatamente o seu nome, o diretório a tratava como você e a escondia dentro da linha "Você". Duas pessoas reais com o mesmo nome (duas "Maria Silva") não se viam. Achado com duas contas "Yuri Kayel" do mantenedor, uma em cada navegador: cada uma só via a si mesma.
+- Agora o nome igual só une contas que moram no mesmo aparelho (a sua e as do seu cofre), como antes. Uma chave de fora com o mesmo nome aparece como outra pessoa. A união por foto (mesma foto do Google ou da Meta) não mudou.
+- Teste novo em `tests/people-index.test.js`; o teste que une as contas do cofre com o mesmo nome segue igual.
+- SW `v7.87`.
+
+### Selo "Malha ativa" nas configurações
+- O selo **Malha ativa / Offline / Só leitura** saiu da barra do topo (pedido do mantenedor) e passou para o cabeçalho da tela **Sua rede** (`#/settings`), antes dos outros estados. Continua levando à Saúde do nó, com o detalhe (ex.: "2 aparelhos") ao passar o mouse. O estado da rede segue também no rodapé da barra lateral e na gaveta de identidade, como antes.
+- `render/shell.js` era do Lote A do Antigravity, mas não havia trabalho dele em aberto no arquivo; a mudança foi feita a pedido direto do mantenedor e registrada no `lobby.md`.
+- SW `v7.86` (era v7.83; a main chegou a v7.85 com o #102 e o #104).
+
+### Nomes de usuário no amarelo da Ágora Soberana
+- O nome de quem publica aparece no amarelo do design system (`--sa-secondary`, o mesmo da faixa "Bem-vindo ao Vox"), em post, resposta, legenda de foto, cabeçalho do perfil e lista de membros da comunidade. Antes era o branco do texto. No modo claro o token já troca para o ocre escuro, que mantém contraste AA sobre o fundo claro.
+- Sobre a foto, o nome usa o amarelo claro fixo (`--sa-secondary-fixed-dim`, novo token em `client/css/agora.css`) nos dois modos, porque ali o fundo é a imagem, não o tema.
+- SW `v7.85`.
+
+### Roadmap e backlog de 2027 (documentação)
+- **Calendário 2027 no [ROADMAP](./docs/ROADMAP.md#calendário-2027):** dezembro e os quatro trimestres, com tema, marco (G1, G2, G3), itens por ID e uma data de desistência em cada trimestre. Todo ID aberto ganhou um trimestre ou entrou na lista "fora de 2027".
+- **Brainstorm do ano** em [docs/brainstorms/brainstorm-roadmap-2027.md](./docs/brainstorms/brainstorm-roadmap-2027.md): norte de dez/2027 com piso e meta, datas fixas (NLnet, assinatura v2, assembleias, semestres, eleição municipal de 2028), ideias por eixo, triagem, riscos e decisões pendentes do mantenedor.
+- **Backlog:** 11 linhas novas (PM-99…PM-109: teste de dois navegadores no CI, modo ensaio, lápide de conta, fim da convivência v1, relatório trimestral, garantia da praça, caminho de volta do POSSE, árvore do repasse, turma de extensão, editais brasileiros, preparo de 2028) e 4 promovidas do brainstorm de melhorias (PM-01, PM-13, PM-18, PM-23). Sem mudança de código nem de SW.
+
+### Corte da gênese nos servidores e na malha P2P; gênese em 12/11 00:00
+- **Gênese passa para 2026-11-12 00:00 (Brasília)** (era 11/11 20:55), a pedido do mantenedor: "nada anterior a hoje". As contas e os posts criados entre 20:55 e a meia-noite também ficam de fora.
+- **Memória central recusa o que o cliente já recusa** (relay Python em [`relay/genesis_guard.py`](./relay/genesis_guard.py), nó em C# em `packaging/zero-central-memory-windows/src/GenesisGuard.cs`): cartão de conta de teste, post de autor de teste e post criado antes da gênese não entram. O que já está no disco sai ao carregar o estado. Motivo: um aparelho ainda na versão antiga reenviava tudo na primeira sincronização, e o NodeZero, limpo à mão duas vezes, voltava a ter 134 perfis de teste segundos depois.
+- **Malha P2P:** quem recebe um GOSSIP (ou GOSSIP_UPDATE) de conta de teste ou de post anterior à gênese não guarda nem repassa (`client/js/peers.js`). Antes só a purga da abertura seguinte limpava.
+- **Fonte única:** a lista e a data continuam em `client/js`; `node scripts/gen-genesis-guard.mjs` gera `relay/genesis_data.py` e `GenesisData.cs`, e `tests/genesis-guard-sync.test.js` falha se divergirem. O CI do Windows compila o nó e roda `GenesisGuardCheck.cs`.
+- Testes: `tests/gossip-retract.test.js` usava datas de 1970 (`ts: 1000`), que agora são anteriores à gênese; as datas passaram a ser relativas a `GENESIS_MS`, com os mesmos intervalos.
+- O NodeZero só passa a recusar depois de recompilado e reinstalado (`packaging/zero-central-memory-windows/build.ps1`). SW `v7.84` (v7.83 está no #101).
+
+### Lote UI 2 das telas sem layout do Stitch: compositores e entrada
+- **Compositor que não pode abrir agora explica e dá saída.** Aviso para quem não é da moderação: "Avisos são da moderação", com "Abrir um tópico" e "← Voltar à comunidade" (antes era uma frase solta). Oferta em comunidade sem feira: "Feira comunitária não ativada", com "Propor a abertura da feira" (abre o compositor de proposta da comunidade) e volta (antes era uma caixa vermelha de erro). A aba Feira da comunidade usa o mesmo bloco e ganhou o atalho para propor.
+- **Etapas do compositor sem vão:** saiu a altura mínima de 180px do corpo da etapa, que deixava um buraco entre o campo e os botões Voltar/Continuar nas etapas curtas.
+- **Onboarding, "pular":** o botão dizia "Pular — continuar só com vx_" (a chave crua como identidade). Agora diz "Pular por agora — escolho o nome depois", com a nota de que sem nome a conta não aparece no diretório de pessoas e que dá para escolher em Perfil.
+- SW `v7.82`.
+
+### Lote UI 1 das telas sem layout do Stitch
+- **Diretório de Cidadãos:** só aparece quem escolheu um nome (mais você e o perfil Vox). Contas só com a chave `vx_…` — da malha, do cofre deste aparelho ou dos contatos — saem da lista; continuam achadas pela chave completa na busca. A linha mostra nome e @, sem a chave (que fica no perfil). Sua própria conta ainda sem nome aparece como "Você", com o botão "Escolher nome". Linhas separadas por fio, ações compactas; "Mensagem P2P" virou "Mensagem".
+- **`#/compose`** abre o compositor (antes caía em "Página não encontrada").
+- **Saúde do nó:** a leitura do Arweave aparece como Normal / Instável / Leitura reserva, não o código interno (`all_ok`).
+- **Voxpedia:** o título abre a página; antes, no celular, ela começava pelo índice.
+- **Guias da rede e da carteira:** a escolha da primeira etapa virou cartões de opção (como o "O que você vai publicar?"), com a explicação de cada opção à vista.
+- Precache: +4,8 KB pagos recomprimindo `icons/icon-white-192.png` em paleta (pixels idênticos, −10,1 KB); teto baixado para 0,2% acima do medido.
+- SW `v7.81` (v7.79 reservado ao #94, v7.80 ao #98).
+
+### Data de corte da rede viva (gênese) e purga dos dados de teste
+- **Gênese em 2026-11-11 20:55 (Brasília):** o que foi publicado antes é tratado como teste. A leitura do Arweave (GraphQL) e a memória central deixam esses itens de fora.
+- **Purga no aparelho, a cada abertura do app (decisão do mantenedor):** apaga do aparelho, sem volta, posts e cartões de perfil anteriores à gênese, as comunidades `demo-*` e a conta de teste `vx_WAqxgW` dos contatos. Isso inclui posts antigos da própria pessoa. Nada é apagado no Arweave; só a cópia local.
+- **Contas de teste fora do diretório (pedido do mantenedor):** as 128 contas criadas nos testes (sem nome escolhido, a Ana Lúcia de teste e as seis contas "Yuri Kayel" do mantenedor, inclusive a que ele usava) estão em [`client/js/data/test-route-ids.js`](./client/js/data/test-route-ids.js). O aparelho apaga cartão, contato e posts delas e recusa cartão novo delas vindo da malha ou da memória central: cada aparelho regravava o cartão com a data do recebimento, então o corte por data sozinho não as tirava. Fica só o perfil oficial Vox; nos aparelhos do mantenedor, a chave da conta antiga sai pelo botão "Apagar conta local" do perfil.
+- Corrige a definição circular de `--sa-error` (o vermelho de erro do tema escuro ficava indefinido).
+- SW `v7.80` (v7.79 está reservado ao #94).
+
+### Norma de documentação e revisão das últimas 24 h (PM-98)
+- **Norma nova** em [docs/process/documentacao.md](./docs/process/documentacao.md): cabeçalho em todo módulo, JSDoc completo em todo export (`@param`, `@returns`, `@throws`, `@type` com unidade), o porquê nos comentários e a tabela do que atualizar em cada tipo de mudança (spec, FEATURES, ROADMAP, ADR, THREAT-MODEL, CHANGELOG).
+- **`npm run audit:docs`** ([scripts/docs-audit.mjs](./scripts/docs-audit.mjs)) lê a árvore sintática e reprova export sem JSDoc, parâmetro sem `@param`, retorno sem `@returns`, link relativo quebrado e doc fora do índice. Entra no `npm run validate` e no CI. A dívida antiga (2.296 itens, medida na `main`) fica em [scripts/docs-debt.json](./scripts/docs-debt.json) como catraca: só diminui.
+- **Código das últimas 24 h documentado por completo** (−252 itens de dívida): aviso assinado, página leve de conferência, chamada de ação, competências, termo de convivência, denúncia e mediação, assinatura (`signed-verify.js`), armazenamento por modo e Guardião, DM. Só comentários mudaram; os tokens do código foram comparados antes e depois.
+- Documentação técnica alinhada: a spec do aviso dizia "proposta, não implementada" e agora diz o que está no ar e em qual PR; o FEATURES ganhou as linhas do aviso, da chamada de ação, das competências, do termo e da mediação; o ROADMAP ganhou o **PM-97**. Um comentário solto em `report.js` voltou para a função certa e o cabeçalho de `screens-community.js` voltou para o topo.
+- Precache: os comentários vão para o celular (o app não tem build). Foram pagos trocando `cantina-gate.jpg` por WebP (−40,5 KB, visualmente igual; a mesma troca do PR #94). Teto do orçamento baixado para 0,2% acima do medido. SW `v7.78` (era v7.75; subiu no merge com a main, que já estava em v7.77).
+### Telas 6–8 do Stitch: tópico, página da comunidade e pauta
+- **Tópico:** trilha "Comunidades / comunidade / Tópico", post original como estela com friso, título serifado, divisor "◆ Respostas (N)" em bronze, linhas-guia por nível de resposta (até 4) e doca "Escreva sua resposta…" presa acima da barra inferior no celular (some em tópico encerrado).
+- **Página da comunidade:** números reais (membros conhecidos, tópicos carregados, pautas em votação), pauta aberta em destaque na aba Posts e coluna lateral com "Sustentada por vizinhos" e a semeadura em telas largas (≥1100px). A coluna lateral volta de propósito (antes tinha sido tirada); o teste de render que proibia a coluna foi ajustado.
+- **Pauta:** trilha até "Governança / Pauta", proponente em destaque, apuração por opção com porcentagem e, em telas largas, apuração e cédula numa coluna ao lado. Botões da cédula com `aria-pressed`.
+- Precache: a camada nova foi paga tirando 18,9 KB de regras CSS que nenhuma tela usa mais (barra de apuração antiga, cartões e abas antigos de comunidade e feed, restos da camada anterior); conferido com estilo computado idêntico em todas as rotas, antes e depois da poda. A tela da pauta saiu de `render/community.js` para `render/proposal.js`. Teto do orçamento mantido (o medido ficou abaixo dele). Dois testes que exigiam o CSS do título de post de foto e do wordmark V/O/X antigo (que nenhuma tela desenha mais) foram ajustados. SW `v7.77`.
+
+### Correções de tela achadas no tour Playwright (P0)
+- **Botões ativos sem texto:** `--primary` nunca foi definido no CSS, então a ordenação ativa da comunidade ("Atividade Recente"), a tag cívica ativa e a pílula de tag ficavam com texto branco em fundo transparente. Agora usam `--accent` / `--on-accent`, que acompanham o tema claro e escuro.
+- **Comunidade rolava de lado no celular:** as abas Posts / Membros / Classificados / Governança alargavam a página para 462px numa tela de 412px. Agora rolam dentro da própria barra.
+- **Palavras quebradas no meio** ("e/stimativa", "0.0 M/B"): `.card .meta` usava `word-break: break-all`; passou a `overflow-wrap: anywhere`, que só quebra o que não cabe (endereços longos).
+- **Erro vermelho no primeiro passo do onboarding** ("Google/Meta requerem oauth.json…"): sai o erro; os botões de Google e Meta só aparecem quando o `config/oauth.json` traz o id do cliente.
+- **Rota inexistente caía na Ágora sem aviso:** nova tela "Página não encontrada" com o endereço pedido e links de volta; `#/@arroba` passa a abrir o perfil do handle.
+- SW `v7.76`.
 
 ### ADR-023, emenda 1 (aceita): moderador natural
 - Mediação vai para o padrinho (ou o mais próximo) das duas partes, sem arquivar nada. "Mais próximo" só por vínculo assinado, sem sinais de interação. Teto de 30 afilhados com poder firme; perda do papel por 3 reversões em 90 dias, por comunidade; recusar sem custo; "Meus vínculos"; trocar de padrinho uma vez; vínculo só para mediação. Ordem dos lotes do PM-83.

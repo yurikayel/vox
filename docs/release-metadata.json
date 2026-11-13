@@ -1,9 +1,9 @@
 {
-  "git_sha": "bea95a4",
+  "git_sha": "815b3a0",
   "branch": "feat/moderador-natural",
-  "test_js": 1038,
-  "test_python": 106,
-  "test_total": 1144,
-  "cache_name": "vox-pwa-v7.74-real-network-audio-video-upload",
-  "generated_at": "2026-11-11T20:22:14Z"
+  "test_js": 1088,
+  "test_python": 111,
+  "test_total": 1199,
+  "cache_name": "vox-pwa-v7.96-real-network-audio-video-upload",
+  "generated_at": "2026-11-13T00:09:03Z"
 }

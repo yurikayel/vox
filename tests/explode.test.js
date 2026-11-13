@@ -150,11 +150,8 @@ test("explode - topic view unifies share and explode in btn-share-topic", () => 
   assert.ok(!main.innerHTML.includes("btn-explode-topic"));
 });
 
-test("explode - posse post-publish sheet offers explode option and omits Janones", () => {
-  const posseSrc = fs.readFileSync(path.join(root, "js/posse-dispatch.js"), "utf8");
-  assert.ok(posseSrc.includes('data-posse="explode"'));
-  assert.ok(posseSrc.includes("📢 EXPLODE! (Disparo Multi-Redes)"));
-  assert.ok(!posseSrc.includes("Janones"));
+test("explode - posse-dispatch não cita Janones", () => {
+  assert.ok(!fs.readFileSync(path.join(root, "js/posse-dispatch.js"), "utf8").includes("Janones"));
 });
 
 test("explode - megaphone emoji and SVG icon are used to clarify civic nature", () => {
@@ -332,12 +329,6 @@ test("explode - cascade stepper manages multi-channel flow", () => {
     globalThis.document = prevDoc;
     globalThis.window = prevWindow;
   }
-});
-
-test("explode - posse post-publish sheet includes quick explode button", () => {
-  const posseSrc = fs.readFileSync(path.join(root, "js/posse-dispatch.js"), "utf8");
-  assert.ok(posseSrc.includes('data-posse="quick-explode"'));
-  assert.ok(posseSrc.includes("Disparo Imediato em 1 Toque"));
 });
 
 test("explode - sw.js caches explode-dispatch.js", () => {

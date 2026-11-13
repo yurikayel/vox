@@ -1,5 +1,7 @@
 # Rollback — GitHub Pages e Service Worker (`CACHE_NAME`)
 
+> **Status:** canônico (runbook) · **Owner:** mantenedor / steward ops · **Revisado:** 2026-10-25
+
 **Escopo:** espelho **A** (Pages). Espelho **B** segue a mesma regra de paridade de `CACHE_NAME`; chaveamento de tráfego: [`ops-shell-mirrors.md`](./ops-shell-mirrors.md) + [`ops-dr-drill-checklist.md`](./ops-dr-drill-checklist.md).
 
 ---

@@ -9,9 +9,10 @@
  *   e pelos canais oficiais, sem expor o conteúdo a mais gente.
  */
 import * as natural from "../natural-mod.js";
-import { escapeHtml } from "../render/util.js";
+import { escapeHtml } from "../shared/html.js";
 import { REPORT_REASONS, isGraveReason } from "../report.js";
 
+/** @type {string} Chave de armazenamento local dos casos naturais. */
 export const CASES_KEY = "vox-casos-naturais-v1";
 const CASES_MAX = 200;
 
@@ -30,6 +31,11 @@ function writeCases(list, storage = globalThis.localStorage) {
   } catch {}
 }
 
+/**
+ * Lista os casos de moderação natural guardados neste aparelho.
+ * @param {Storage} [storage] Armazenamento local opcional.
+ * @returns {object[]} Casos armazenados.
+ */
 export const listCases = (storage) => readCases(storage);
 
 function updateCase(caseId, side, patch, storage) {
@@ -48,7 +54,14 @@ async function dmDeps() {
   };
 }
 
-/** Manda uma DM cifrada e guarda no fio. Devolve o estado da entrega ou "no-key". */
+/**
+ * Manda uma DM cifrada e guarda no fio. Devolve o estado da entrega ou "no-key".
+ * @param {string} self Rota deste aparelho.
+ * @param {string} to Rota de destino.
+ * @param {object} msg Conteúdo (`payload`, `text`, `card`).
+ * @param {object} d Dependências de DM cifrada.
+ * @returns {Promise<string>} Estado de entrega ou `"no-key"`.
+ */
 export async function sendDm(self, to, { payload, text, card = null }, d) {
   const pub = await d.getDmPub(to).catch(() => null);
   if (!pub) return "no-key";
@@ -67,6 +80,9 @@ const NOTICE_TEXT = {
  * Quem recebe o aviso de um lado do caso. `side: "target"` (N1) é chamado pelo aparelho da moderação;
  * `side: "reporter"` (N2) por quem denunciou. Se N1 e N2 forem a mesma pessoa, ela recebe só o aviso de N1,
  * que não revela quem denunciou. Ninguém recebe aviso sobre a própria denúncia ou do próprio aparelho.
+ * @param {object[]} links Vínculos assinados válidos.
+ * @param {object} opts Dados do caso (`side`, `target`, `reporter`, `sender`, `members`).
+ * @returns {object|null} Plano `{ to, side }` ou `null`.
  */
 export function casePlan(links, { side, target, reporter, sender, members = null }) {
   const { n1, n2 } = natural.caseModerators(links, { target, reporter, members });
@@ -74,7 +90,14 @@ export function casePlan(links, { side, target, reporter, sender, members = null
   return pick && pick.route !== sender ? { to: pick.route, side } : null;
 }
 
-/** Avisa o moderador natural de um lado. `rec`: `{ id, postId, communityId, reason }`; `sender`: este aparelho. Devolve `{ to, side, status }` ou null. */
+/**
+ * Avisa o moderador natural de um lado. `rec`: `{ id, postId, communityId, reason }`; `sender`: este aparelho. Devolve `{ to, side, status }` ou null.
+ * @param {string} sender Rota deste aparelho.
+ * @param {object} rec Registro da denúncia (`id`, `postId`, `communityId`, `reason`).
+ * @param {object} opts Participantes (`side`, `target`, `reporter`, `members`).
+ * @param {object|null} [deps=null] Dependências opcionais para testes.
+ * @returns {Promise<object|null>} Plano com `status` de entrega ou `null`.
+ */
 export async function sendCaseNotice(sender, rec, { side, target, reporter, members = null }, deps = null) {
   if (isGraveReason(rec.reason)) return null;
   const d = deps || { ...(await dmDeps()), loadLinks: async () => (await import("./natural-mod-flow.js")).loadLinks() };
@@ -89,6 +112,9 @@ export async function sendCaseNotice(sender, rec, { side, target, reporter, memb
 /**
  * Aparelho do moderador natural: guarda o caso (sem repetir). Guarda só o necessário para decidir: nem quem
  * denunciou nem quem mandou o aviso ficam no caso (a conversa cifrada já tem o que precisar). Devolve true se guardou.
+ * @param {object} notice Aviso de caso extraído da DM.
+ * @param {object} [opts={}] Opções (`now`, `storage`).
+ * @returns {boolean} Verdadeiro se um novo caso foi salvo.
  */
 export function receiveCase(notice, { now = Date.now(), storage } = {}) {
   const list = readCases(storage);
@@ -109,7 +135,12 @@ function caseButtons(c, firm) {
   return `<div class="aviso-actions">${agree}${btn("recusar", "Não quero decidir")}</div>`;
 }
 
-/** Lista de casos para quem é moderador natural. `firmFor(target)`: tenho poder firme sobre esta pessoa? */
+/**
+ * Lista de casos para quem é moderador natural. `firmFor(target)`: tenho poder firme sobre esta pessoa?
+ * @param {object[]} [cases=[]] Casos recebidos neste aparelho.
+ * @param {function(string): boolean} [firmFor] Predicado de poder firme por alvo.
+ * @returns {string} HTML da lista de casos ou string vazia.
+ */
 export function renderCasesHtml(cases = [], firmFor = () => false) {
   if (!cases.length) return "";
   const items = cases.map((c) => {
@@ -148,7 +179,14 @@ async function archiveFirm(self, c) {
   peers.broadcastGossip(signed);
 }
 
-/** Decide um caso: "arquivar" (N1 com poder firme), "revisao" ou "recusar". */
+/**
+ * Decide um caso: "arquivar" (N1 com poder firme), "revisao" ou "recusar".
+ * @param {string} self Rota deste aparelho.
+ * @param {object} c Caso natural selecionado.
+ * @param {string} action Ação (`"arquivar"`, `"revisao"` ou `"recusar"`).
+ * @param {object|null} [deps=null] Dependências opcionais para testes.
+ * @returns {Promise<string>} Mensagem de retorno para a interface.
+ */
 export async function decideCase(self, c, action, deps = null) {
   if (action === "arquivar") {
     await archiveFirm(self, c);

@@ -1,6 +1,7 @@
 # Aviso assinado (v0)
 
-> **Status:** proposta, não implementada · **Owner:** mantenedor · **Revisado:** 2026-11-11
+> **Status:** implementada atrás da flag de laboratório `vox.lab.aviso` (lotes A–D, chamada de ação, competências, termo e mediação); ligar para todos depende do piloto G1 · **Owner:** mantenedor · **Revisado:** 2026-11-11
+> **Código:** `client/js/aviso.js`, `aviso-replies.js`, `aviso-roles.js`, `community-termo.js`, `render/aviso.js`, `app/aviso-flow.js`, `app/aviso-roles-dm.js`, `app/community-termo-flow.js`; página leve `client/aviso.html` + `client/aviso/`. Acompanhamento: **PM-97** no [ROADMAP](../ROADMAP.md).
 > Primeira peça da [síntese — a praça de colunas](../brainstorms/brainstorm-sintese-praca-de-colunas-2026-11-10.md) (§5 e §6). Junta numa peça o selo contra golpe, o "Ciente", o "Vou / Talvez" e o "Fixar no mural".
 > Relacionados: [canal da comunidade (PM-81)](./canal-comunidade-v0.md), dono e moderação (PM-09, `moderation.js`), [integridade na entrada (ADR-021)](../adr/021-integridade-na-entrada-forma-assinada.md), forma assinada `sigv` (PM-85, `sig-format.js`), modo assembleia (PM-23), teste com 5 leigos (LAN-25).
 
@@ -137,7 +138,7 @@ Na tela, a contagem aparece separada das respostas assinadas: "Contado pela coor
 ## Peso e cache
 
 - **Estimativa:** de 10 a 15 KB de módulos novos no app: lógica pura, tela e fluxo. A página leve fica fora disso.
-- **O teto do precache não sobe** (PM-02, folga de ~0,5 KB). O PR de implementação escolhe uma de duas saídas e diz qual no texto:
+- **Peso no precache** (o teto de bytes do PM-02 acabou em 2026-11-12; quando esta spec foi escrita ele existia e o texto abaixo era obrigação; hoje é só orientação, ver [HARDENING](../HARDENING.md)). O PR de implementação escolhia uma de duas saídas e dizia qual no texto:
   1. **pagar com corte** de peso igual ou maior no precache (PM-01, dieta do shell);
   2. **carregar sob demanda:** import dinâmico, fora do `SHELL_ASSETS`, guardado pelo Service Worker no primeiro uso. O preço é não abrir sem internet antes do primeiro uso.
 - **`aviso.html` e `aviso-page.js` ficam fora do precache:** a página é aberta a partir de um link, com internet.
@@ -151,7 +152,7 @@ Na tela, a contagem aparece separada das respostas assinadas: "Contado pela coor
 - **Sem ranking:** o aviso é cronológico e não entra em nenhuma recomendação. O modo eleitoral (REV-24) continua valendo.
 - **Só 18+**, como o resto do piloto ([ADR-020](../adr/020-postura-de-operacao-do-piloto-g1.md)).
 
-## Testes (a escrever com o código)
+## Testes
 
 | Arquivo | Casos |
 |---|---|
@@ -159,18 +160,25 @@ Na tela, a contagem aparece separada das respostas assinadas: "Contado pela coor
 | `tests/aviso-replies.test.js` | Os dois formatos de exportação e linhas soltas; cada palavra e emoji; última resposta por nome; filtro pelo código do aviso; linhas ignoradas contadas; nenhum nome no resultado |
 | `tests/aviso-page.test.js` | Decodificar o link; verde, amarelo, vermelho (texto alterado; chave nova com o mesmo `communityId`; mesmo nome com outro `communityId` e outra chave) e encerrado; a confirmação manual passa a chave nova para verde; link acima do limite recusado. Usa o WebCrypto do Node |
 | `tests/signed-verify.test.js` | O módulo extraído dá o mesmo resultado que `verifyPayload` hoje, nas formas v1 e v2 |
-| Já existentes | `shell-reachability` (PM-04 e PM-02) e a suíte inteira verdes, sem subir teto |
+| `tests/aviso-ui.test.js` | Cartão, aba, compositor e folhas (lote D) |
+| `tests/aviso-roles.test.js` | Papéis e vagas, quórum, resposta por DM, contagem por papel, competências (lotes 1 e 2) |
+| `tests/community-termo.test.js` | Termo: montar, termo que vale, hash, situação de quem vê; rota da mediação (lote 3) |
+| Já existentes | `shell-reachability` (PM-04 e PM-02) e a suíte inteira verdes |
 
 Limites de código do projeto ([HARDENING](../HARDENING.md)): função ≤ 30 LLOC, complexidade ≤ 15, aninhamento ≤ 4, ≤ 5 parâmetros.
 
 ## Ordem de construção (lotes sem arquivo em comum)
 
-| Lote | Arquivos | Depende de |
-|---|---|---|
-| A | `client/js/aviso.js` (puro: montar, validar, selo, topo, contagem assinada, códigos, texto do WhatsApp, link) + teste | — |
-| B | `client/js/aviso-replies.js` (puro: contar o texto colado) + teste | — |
-| C | `client/js/signed-verify.js` (extraído de `local-account.js`), `client/aviso.html`, `client/js/aviso-page.js` + testes | — |
-| D | `client/js/render/aviso.js`, `client/js/app/aviso-flow.js`, rota da aba, `sw.js` (bump e cache) | A, B, C |
+| Lote | Arquivos | Depende de | Entrega |
+|---|---|---|---|
+| A | `client/js/aviso.js` (puro: montar, validar, selo, topo, contagem assinada, códigos, texto do WhatsApp, link) + teste | — | PR #77 |
+| B | `client/js/aviso-replies.js` (puro: contar o texto colado) + teste | — | PR #78 |
+| C | `client/js/signed-verify.js` (extraído de `local-account.js`), `client/aviso.html`, `client/aviso/aviso-page.js` e `client/aviso/aviso-link.js` + testes | — | PR #80 |
+| D | `client/js/render/aviso.js`, `client/js/app/aviso-flow.js`, rota da aba, `sw.js` (bump e cache) | A, B, C | PR #81 |
+| 1 | Chamada de ação: `aviso-roles.js`, `app/aviso-roles-dm.js` | D | PR #89 |
+| 2 | Competências só no aparelho | 1 | PR #90 |
+| 3 | Termo de convivência e pedido de mediação: `community-termo.js`, `app/community-termo-flow.js` | D | PR #91 |
+| 4 | Sorteio cívico com testemunhas | 1 | PR #92 (aberto) |
 
 ## Ligar, medir e desligar
 
@@ -256,3 +264,22 @@ Extensão opcional da **convocação**: quem convoca lista papéis com vagas e u
 - **Fora desta versão:** o padrinho (moderador natural) como destinatário da mediação, que espera o PM-83.
 - **Peso:** os dois módulos novos foram pagos recomprimindo a imagem dentro do `icon.svg` (PNG com paleta de 256 cores; 18,5 KB para 5,8 KB; diferença média de 0,6 em 255 por canal).
 - Laboratório `vox.lab.aviso`.
+
+## Sorteio cívico (lote 4, 11/11/2026)
+
+Escolhe N pessoas de uma lista congelada sem que ninguém controle o resultado, offline-first e sem Arweave. Fica na aba de avisos.
+
+1. **Sorteio** (`sorteio`, moderação): `title`, `cycle`, `seats`, `roster` (membros de agora, como texto ordenado), `rosterHash` (SHA-256 da lista), `commitUntil`.
+2. **Compromisso** (`sorteio-compromisso`, qualquer pessoa): o SHA-256 de um segredo de 32 bytes. O segredo fica só no aparelho (`vox-sorteio-segredos-v1`).
+3. **Fecho** (`sorteio-fecho`, moderação): a lista `autor:hash` dos compromissos aceitos. Vale o **primeiro** fecho da moderação. Ninguém revela antes dele.
+4. **Revelação** (`sorteio-revela`): o segredo. Só conta se bater com o hash do fecho.
+5. **Apuração** (`sorteio-apuracao`, moderação): quem revelou e entra na conta. Vale a primeira. Fixa o conjunto, para que aparelhos que viram revelações em ordens diferentes não discordem.
+6. **Resultado:** `semente = SHA-256(autor:segredo ordenados ‖ comunidade ‖ ciclo ‖ hash da lista)`. Para cada vaga `i`, `SHA-256(semente:i)` mod o que resta da lista escolhe um nome. Todo aparelho recalcula. Mínimo de 2 revelações.
+
+**Garantias e custos:**
+- Basta uma testemunha honesta, que revela só depois do fecho, para ninguém prever o resultado.
+- Quem não revela fica apontado. Ainda assim, quem fica por último pode escolher entre revelar ou não: um viés de 1 bit, visível na tela.
+- Se a apuração deixar de fora uma revelação válida, todo aparelho que tem essa revelação mostra "a apuração deixou de fora…".
+- Nomes aparecem como endereço abreviado nesta versão.
+
+**Peso:** os 2 módulos novos foram pagos passando `logo-mark.png` e `icon-white-192.png` a PNG com paleta, visualmente iguais. O teto do precache desceu.

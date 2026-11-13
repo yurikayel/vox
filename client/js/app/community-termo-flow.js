@@ -1,7 +1,12 @@
 /**
- * @file Termo de convivência na tela da comunidade (lote 3): mostrar o termo, assinar na entrada,
- * reassinar quando muda e, para a moderação, publicar o texto. Atrás da flag `vox.lab.aviso`.
- * Lógica pura em `community-termo.js`.
+ * @file Termo de convivência na tela da comunidade (civic lote 3).
+ *
+ * Mostra o termo, assina na entrada, oferece reassinar quando o termo muda e, para a moderação, publica o
+ * texto. Atrás da flag de laboratório `vox.lab.aviso`. A lógica pura fica em `community-termo.js`.
+ *
+ * @module app/community-termo-flow
+ * @see client/js/community-termo.js
+ * @see docs/specs/aviso-assinado-v0.md
  */
 import * as cacheNode from "../cache-node.js";
 import * as peers from "../peers.js";
@@ -16,7 +21,14 @@ async function loadTermo(communityId, meta) {
   return termo.latestTermo(await localOf(termo.TERMO_TYPE, communityId), communityId, meta);
 }
 
-/** Campos do termo para a entrada na comunidade (vazio se não houver termo). */
+/**
+ * Campos do termo a acrescentar na entrada da comunidade.
+ *
+ * Chamado por `screens-community.js` ao montar a `membership`.
+ *
+ * @param {string} communityId Comunidade em que a pessoa entra.
+ * @returns {Promise<{termoHash?: string}>} Objeto vazio se não houver termo ou metadados.
+ */
 export async function joinTermoFields(communityId) {
   const { resolveCommunityMetadata } = await import("./screens-community.js");
   const meta = await resolveCommunityMetadata(communityId).catch(() => null);
@@ -34,7 +46,18 @@ const STATUS_NOTE = {
   mudou: "O termo mudou desde que você entrou.",
 };
 
-/** Cartão do termo: texto, situação de quem vê e, para a moderação, o editor. */
+/**
+ * Monta o cartão do termo: texto, situação de quem vê e, para a moderação, o editor.
+ *
+ * O texto do termo é escapado; quebras de linha viram `<br>`.
+ *
+ * @param {object|null} current Termo vigente.
+ * @param {string} status Resultado de `termoStatus`.
+ * @param {object} [options={}]
+ * @param {boolean} [options.isMember=false] Quem vê é membro (pode reassinar).
+ * @param {boolean} [options.isMod=false] Quem vê é moderação (vê o editor).
+ * @returns {string} HTML do cartão; `""` quando não há termo nem editor a mostrar.
+ */
 export function renderTermoHtml(current, status, { isMember = false, isMod = false } = {}) {
   const resign = isMember && status === "mudou"
     ? `<button type="button" class="btn btn-primary btn-sm" id="btn-termo-assinar">Assinar o termo atual</button>` : "";
@@ -77,7 +100,17 @@ function bindTermo(main, ctx, rerender) {
   });
 }
 
-/** No topo da comunidade (só com a flag): o termo e as ações de quem vê. */
+/**
+ * Monta o cartão do termo no topo da tela da comunidade e liga os botões. Só com a flag.
+ *
+ * @param {HTMLElement} main Contêiner da tela.
+ * @param {object} ctx
+ * @param {string} ctx.communityId Comunidade aberta.
+ * @param {object} ctx.meta Metadados da comunidade.
+ * @param {boolean} ctx.isMember Quem vê é membro.
+ * @param {boolean} ctx.isMod Quem vê é moderação.
+ * @returns {Promise<void>}
+ */
 export async function mountCommunityTermo(main, { communityId, meta, isMember, isMod }) {
   const { avisoLabOn } = await import("./aviso-flow.js");
   if (!main || !avisoLabOn()) return;

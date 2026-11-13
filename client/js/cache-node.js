@@ -210,26 +210,26 @@ export function notifyDmChanged() {
   } catch {}
 }
 
-export async function getDmMessages(peerAddress) {
-  if (!peerAddress) return [];
+/**
+ * Todas as DMs deste aparelho, numa leitura só.
+ * @returns {Promise<Array<object>>} Mensagens, sem ordem.
+ */
+export async function getAllDmMessages() {
   try {
     const db = await openDB();
     return await new Promise((resolve) => {
-      const tx = db.transaction(DM_STORE_NAME, "readonly");
-      const store = tx.objectStore(DM_STORE_NAME);
-      const req = store.getAll();
-      req.onsuccess = () => {
-        const all = req.result || [];
-        const filtered = all
-          .filter((m) => m.peerAddress === peerAddress)
-          .sort((a, b) => (a.ts || 0) - (b.ts || 0));
-        resolve(filtered);
-      };
+      const req = db.transaction(DM_STORE_NAME, "readonly").objectStore(DM_STORE_NAME).getAll();
+      req.onsuccess = () => resolve(req.result || []);
       req.onerror = () => resolve([]);
     });
   } catch {
     return [];
   }
+}
+
+export async function getDmMessages(peerAddress) {
+  if (!peerAddress) return [];
+  return (await getAllDmMessages()).filter((m) => m.peerAddress === peerAddress).sort((a, b) => (a.ts || 0) - (b.ts || 0));
 }
 
 function readDmReadTimestamps() {
