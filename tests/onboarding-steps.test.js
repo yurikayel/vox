@@ -4,27 +4,27 @@ import assert from "node:assert/strict";
 
 const render = await import("../client/js/render.js");
 
-test("onboarding em etapas — boas-vindas visível, demais etapas ocultas, IDs preservados", () => {
+test("onboarding curto — entrada visível, depois só o pacto; \"Já tenho conta\" é desvio", () => {
   const c = { innerHTML: "" };
   render.renderOAuthEnrich(c);
   const html = c.innerHTML;
-  for (const k of ["welcome", "pick", "new", "restore", "import", "pact"]) {
-    assert.ok(html.includes(`data-genesis-step="${k}"`), `falta etapa ${k}`);
-  }
-  assert.ok(html.includes('data-genesis-step="welcome">'), "boas-vindas começa visível");
-  assert.equal((html.match(/data-genesis-step="[a-z]+" hidden/g) || []).length, 5);
+  const steps = [...html.matchAll(/data-genesis-step="([a-z]+)"/g)].map((m) => m[1]);
+  assert.deepEqual(steps, ["entry", "have", "pact"], "quem é novo vê duas telas: entrada e pacto");
+  assert.ok(html.includes('data-genesis-step="entry">'), "a entrada começa visível");
+  assert.equal((html.match(/data-genesis-step="[a-z]+" hidden/g) || []).length, 2);
   assert.ok(html.includes('id="btn-pact-accept"') && html.includes('id="btn-pact-settings"'), "pacto é a etapa final");
-  for (const id of ["form-oauth-custom-name", "form-oauth-restore-passphrase", "btn-oauth-google", "btn-oauth-skip", "oauth-enrich-error"]) {
+  for (const id of ["form-oauth-custom-name", "form-oauth-restore-passphrase", "oauth-restore-files", "btn-oauth-google", "btn-oauth-meta", "btn-oauth-skip", "oauth-enrich-error"]) {
     assert.ok(html.includes(`id="${id}"`), `falta #${id}`);
   }
-  assert.equal((html.match(/class="genesis-pick"/g) || []).length, 3);
+  assert.ok(html.includes("QR para outro aparelho"), "\"Já tenho conta\" aponta o QR do outro aparelho");
+  assert.ok(!html.includes("genesis-pick") && !html.includes("Fundamentos da Polis"), "sem menu de escolha nem cartões de princípios");
 });
 
 test("onboarding em etapas — showGenesisStep mostra só a etapa pedida", () => {
   const mk = (k) => ({ dataset: { genesisStep: k }, hidden: false, querySelector: () => null });
-  const steps = ["welcome", "pick", "new"].map(mk);
+  const steps = ["entry", "have", "pact"].map(mk);
   const root = { querySelectorAll: () => steps };
-  assert.equal(render.showGenesisStep(root, "new"), true);
+  assert.equal(render.showGenesisStep(root, "pact"), true);
   assert.deepEqual(steps.map((s) => s.hidden), [true, true, false]);
   assert.equal(render.showGenesisStep(root, "nope"), false);
 });
