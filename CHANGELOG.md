@@ -8,7 +8,15 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ### Configurações de rede: campos de TURN escapados (alerta 112 do CodeQL)
 - `client/js/render/network.js` punha o endereço, o usuário e a credencial do servidor TURN direto no atributo `value`, sem escapar. O que a pessoa digitava (ou colava) nesses campos podia virar marcação ao reabrir a tela. Os três campos e o host do relay no rótulo de estado agora passam por `escapeHtml`.
-- Teste em `tests/render.test.js`. SW `v7.99`.
+- Teste em `tests/render.test.js`. SW `v7.100`.
+
+### Onboarding só na primeira ação que escreve, em duas telas, e "Já tenho conta" com o QR do outro aparelho
+- Quem abre o Vox lê na hora: **Início**, **Pessoas**, link de convite (**Conectar**) e link de sincronização entraram na leitura antes de entrar (PM-54). A entrada aparece na primeira curtida, resposta, post ou voto, ou no botão **Entrar no Vox**. A faixa de baixo ficou com uma frase só.
+- Saiu a tela de portão "Entrar — sou humano" (e a arte da cantina saiu do precache, -79 KB). Quem chega por uma tela de escrita (compor, mensagem, carteira, votar) vai direto para a entrada.
+- Os botões de login dizem o que fazem: **Nome e foto do Google / da Meta / do GitHub**. Eles não levam a conta para outro aparelho.
+- Quem é novo vê duas telas em vez de quatro: **Entrar no Vox** (Google, Meta ou GitHub trazem nome e foto, ou a pessoa escreve o nome) e o pacto (18+). Saíram a tela de boas-vindas com os três cartões de princípios e o menu "Como quer entrar?"; o pacto no onboarding ficou só com a confirmação de 18+ e as ações.
+- **Já tenho conta** explica o caminho com o outro aparelho (Perfil → QR para outro aparelho) e, sem ele, entra pelos backups do e-mail (`.txt`, vários de uma vez) com a Senha Soberana, ou só pela Senha. Login com Google ou Meta continua sem levar a conta para outro aparelho (PM-90): o ID do login não é segredo.
+- Removidas de `agora.css` as regras das telas que saíram (3,6 KB). Testes de propósito alterados: `tests/onboarding-steps.test.js` (etapas `entry`, `have` e `pact`), `tests/sovereign-agora.test.js` (sem o título antigo e os cartões de princípios), `tests/cantina-gate.test.js` e `tests/read-first.test.js` (Início e Pessoas abrem para leitura; saíram os testes do clique por baixo do portão) e `tests/render.test.js` (saiu o teste do portão). SW `v7.99`.
 
 ### Valores de fora escapados antes de entrar na tela
 - O formato da foto de um post (`aspectRatio`) vem de quem publicou; agora só valores conhecidos (`original`, `1:1`, `4:5`, `3:4`, `4:3`, `16:9`, `9:16`) entram no HTML, pelo novo `normalizePostAspect` em `render/util.js`. Vale no feed e no tópico.

@@ -1,4 +1,4 @@
-/** @file OAuth, cantina gate, pact/zap/edit modals, people search. */
+/** @file OAuth, pact/zap/edit modals, people search. */
 import { renderPactModalHtml, renderPactStepHtml } from "./welcome-pact.js";
 import * as brcode from "../brcode.js";
 import { PIX_PAYER_CHECK_NOTICE_PT } from "../pix-key.js";
@@ -8,12 +8,6 @@ import * as localAccount from "../local-account.js";
 import { hasChosenName } from "../people-index.js";
 import { escapeHtml, shortId, renderAvatarHtml, formatTimeAgo } from "./util.js";
 import { renderPageHead } from "./shell.js";
-
-const CANTINA_ART_ALT =
-  "Ilustração anime de uma cantina: o bartender de túnica bege aponta para a câmera; dois balões pintados na arte dizem 'Seus bots tem que esperar lá fora!' e 'Aqui não servimos esse tipo.'";
-
-const CANTINA_ART =
-  `<img class="cantina-art-img" src="./images/cantina-gate.webp" alt="${CANTINA_ART_ALT}" width="1024" height="575" />`;
 
 /** Ícones inline (GIS / Meta brand — sem asset extra no SW). */
 const OAUTH_SVG_GOOGLE = `<svg class="oauth-btn__icon" width="20" height="20" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>`;
@@ -26,131 +20,63 @@ function renderOAuthProviderButtonsHtml() {
   return `<div class="oauth-enrich-actions">
     <button type="button" id="btn-oauth-google" class="oauth-btn oauth-btn--google" aria-label="Entrar com Google para importar nome e foto">
       ${OAUTH_SVG_GOOGLE}
-      <span class="oauth-btn__label">Continuar com Google</span>
+      <span class="oauth-btn__label">Nome e foto do Google</span>
     </button>
     <button type="button" id="btn-oauth-meta" class="oauth-btn oauth-btn--meta" aria-label="Entrar com Meta para importar nome e foto">
       ${OAUTH_SVG_META}
-      <span class="oauth-btn__label">Continuar com Meta</span>
+      <span class="oauth-btn__label">Nome e foto da Meta</span>
     </button>
     <button type="button" id="btn-oauth-github" class="oauth-btn oauth-btn--github" aria-label="Entrar com GitHub para importar nome e foto">
       ${OAUTH_SVG_GITHUB}
-      <span class="oauth-btn__label">Continuar com GitHub</span>
+      <span class="oauth-btn__label">Nome e foto do GitHub</span>
     </button>
   </div>`;
 }
-
-const GENESIS_ICONS = {
-  fingerprint: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4"/><path d="M14 13.12c0 2.38 0 6.38-1 8.88"/><path d="M17.29 21.02c.12-.6.43-2.3.5-3.02"/><path d="M2 12a10 10 0 0 1 18-6"/><path d="M2 16h.01"/><path d="M21.8 16c.2-2 .131-5.354 0-6"/><path d="M5 19.5C5.5 18 6 15 6 12a6 6 0 0 1 .34-2"/><path d="M8.65 22c.21-.66.45-1.32.57-2"/><path d="M9 6.8a6 6 0 0 1 9 5.2v2"/></svg>`,
-  restore: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>`,
-  import: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 12 0v1"/><path d="M19 8v6M16 11h6"/></svg>`,
-  lock: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>`,
-  columns: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M3 21h18M4 10h16M12 3 3 8h18z"/><path d="M6 10v8M10 10v8M14 10v8M18 10v8"/></svg>`,
-  radio: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49M7.76 16.24a6 6 0 0 1 0-8.49M19.07 4.93a10 10 0 0 1 0 14.14M4.93 19.07a10 10 0 0 1 0-14.14"/></svg>`,
-};
-
-const POLIS_FOUNDATIONS = [
-  { n: "01", tag: "Constituição", title: "Privacidade por design", body: "Seus dados ficam no seu aparelho — sem nuvem corporativa, sem silo analítico, sem CPF.", icon: "lock", tone: "teal" },
-  { n: "02", tag: "Deliberação", title: "Democracia direta", body: "Propostas e votos assinados com a sua chave, apurados de forma verificável pela comunidade.", icon: "columns", tone: "bronze" },
-  { n: "03", tag: "Soberania", title: "Resiliência offline", body: "A rede continua funcionando entre aparelhos próximos, mesmo sem servidor central.", icon: "radio", tone: "teal" },
-];
-
-function renderPolisFoundationsHtml() {
-  const cards = POLIS_FOUNDATIONS.map((f) => `
-        <article class="genesis-foundation genesis-foundation--${f.tone}">
-          <span class="genesis-foundation-icon">${GENESIS_ICONS[f.icon]}</span>
-          <div>
-            <p class="genesis-foundation-tag">${f.n} // ${escapeHtml(f.tag)}</p>
-            <h3 class="genesis-foundation-title">${escapeHtml(f.title)}</h3>
-            <p class="genesis-foundation-body">${escapeHtml(f.body)}</p>
-          </div>
-        </article>`).join("");
-  return `
-      <aside class="genesis-polis" aria-label="Fundamentos da Polis">
-        <h2 class="genesis-polis-title">Fundamentos da Polis</h2>
-        <p class="genesis-polis-sub">A arquitetura da autonomia cívica.</p>
-        ${cards}
-      </aside>`;
-}
-
-function renderGenesisNewIdentityHtml(currentName) {
-  return `
-          <div class="genesis-method genesis-method--active">
-            <span class="genesis-method-icon">${GENESIS_ICONS.fingerprint}</span>
-            <div class="genesis-method-body">
-              <h3 class="genesis-method-title">Gerar identidade cívica local</h3>
-              <p class="genesis-method-desc">Seu par de chaves nasce neste navegador. Sem e-mail, sem telefone, sem custódia central — escolha só como quer ser chamado.</p>
-              <form id="form-oauth-custom-name" class="genesis-inline-form">
-                <input type="text" id="oauth-custom-name-input" class="agora-inscription genesis-input" maxlength="30" placeholder="Seu nome ou apelido…" value="${currentName}" aria-label="Nome ou apelido" />
-                <button type="submit" id="btn-oauth-save-name" class="agora-btn agora-btn--primary">Iniciar identidade <span aria-hidden="true">→</span></button>
-              </form>
-            </div>
-          </div>`;
-}
-
-function renderGenesisRestoreHtml() {
-  return `
-          <div class="genesis-method">
-            <span class="genesis-method-icon genesis-method-icon--bronze">${GENESIS_ICONS.restore}</span>
-            <div class="genesis-method-body">
-              <h3 class="genesis-method-title">Restaurar com Senha Soberana</h3>
-              <p class="genesis-method-desc">Já tem conta em outro aparelho? Recupere sua identidade a partir da frase secreta do seu cofre.</p>
-              <form id="form-oauth-restore-passphrase" class="genesis-inline-form">
-                <input type="password" id="oauth-sovereign-passphrase-input" class="agora-inscription genesis-input" placeholder="Senha Soberana / frase secreta…" autocomplete="current-password" aria-label="Senha Soberana" />
-                <button type="submit" id="btn-oauth-restore-passphrase" class="agora-btn agora-btn--bronze">Restaurar</button>
-              </form>
-            </div>
-          </div>`;
-}
-
-function renderGenesisImportHtml() {
-  return `
-          <div class="genesis-method">
-            <span class="genesis-method-icon">${GENESIS_ICONS.import}</span>
-            <div class="genesis-method-body">
-              <h3 class="genesis-method-title">Importar nome e foto</h3>
-              <p class="genesis-method-desc">Opcional: traga só o nome público e a foto. Tokens OAuth não são armazenados.</p>
-              ${renderOAuthProviderButtonsHtml()}
-            </div>
-          </div>`;
-}
-
-const GENESIS_PICKS = [
-  { key: "new", icon: "fingerprint", title: "Sou novo no Vox", desc: "Criar minha identidade neste aparelho." },
-  { key: "restore", icon: "restore", title: "Já tenho conta", desc: "Restaurar com a minha Senha Soberana." },
-  { key: "import", icon: "import", title: "Importar nome e foto", desc: "Trazer só o nome e a foto de outra conta." },
-];
 
 function genesisStep(key, bodyHtml, { back = "", hidden = true } = {}) {
   const backBtn = back ? `<button type="button" class="genesis-back" data-genesis-go="${back}">← Voltar</button>` : "";
   return `<section class="genesis-step" data-genesis-step="${key}"${hidden ? " hidden" : ""}>${backBtn}${bodyHtml}</section>`;
 }
 
-function renderGenesisPickHtml() {
-  const cards = GENESIS_PICKS.map((p) => `
-            <button type="button" class="genesis-pick" data-genesis-go="${p.key}">
-              <span class="genesis-method-icon">${GENESIS_ICONS[p.icon]}</span>
-              <span class="genesis-pick-text"><strong>${escapeHtml(p.title)}</strong><span>${escapeHtml(p.desc)}</span></span>
-              <span class="genesis-pick-arrow" aria-hidden="true">→</span>
-            </button>`).join("");
+/** Tela única de entrada: Google, Meta ou GitHub trazem nome e foto; ou a pessoa escreve o nome. */
+function renderGenesisEntryHtml(currentName) {
   return `
-          <h2 id="oauth-enrich-title" class="genesis-panel-title">Como quer entrar?</h2>
-          <div class="genesis-picks">${cards}</div>
-          <button type="button" id="btn-oauth-skip" class="oauth-btn oauth-btn--skip genesis-skip">Pular por agora — escolho o nome depois</button>
-          <p class="genesis-skip-note">Sem nome, você não aparece no diretório de pessoas. Dá para escolher a qualquer hora em Perfil.</p>`;
+          <h2 id="oauth-enrich-title" class="genesis-panel-title">Entrar no Vox</h2>
+          <p class="genesis-lead">Sua conta nasce neste aparelho. Google e Meta só trazem nome e foto.</p>
+          ${renderOAuthProviderButtonsHtml()}
+          <form id="form-oauth-custom-name" class="genesis-inline-form">
+            <input type="text" id="oauth-custom-name-input" class="agora-inscription genesis-input" maxlength="30" placeholder="Ou escreva seu nome" value="${currentName}" aria-label="Nome ou apelido" />
+            <button type="submit" id="btn-oauth-save-name" class="agora-btn agora-btn--primary">Continuar</button>
+          </form>
+          <div class="genesis-links">
+            <button type="button" class="genesis-link" data-genesis-go="have">Já tenho conta</button>
+            <button type="button" id="btn-oauth-skip" class="genesis-link">Pular, escolho o nome depois</button>
+          </div>
+          <p class="genesis-skip-note">Sem nome, você não aparece no diretório.</p>`;
 }
 
-/** Onboarding em etapas: boas-vindas → como entrar → um único método por vez. */
+/** Conta que já existe: pelo QR do outro aparelho, ou pelo backup do e-mail e a Senha Soberana. */
+function renderGenesisHaveHtml() {
+  return `
+          <h2 class="genesis-panel-title">Já tenho conta</h2>
+          <p class="genesis-lead"><strong>Com o outro aparelho:</strong> nele, abra Perfil → QR para outro aparelho e aponte a câmera deste.</p>
+          <p class="genesis-lead"><strong>Sem ele:</strong> escolha os backups do seu e-mail, se tiver, e digite a Senha Soberana.</p>
+          <form id="form-oauth-restore-passphrase" class="genesis-inline-form genesis-inline-form--stack">
+            <input type="file" id="oauth-restore-files" class="genesis-input" accept=".txt,text/plain" multiple aria-label="Backups do e-mail (opcional)" />
+            <input type="password" id="oauth-sovereign-passphrase-input" class="agora-inscription genesis-input" placeholder="Senha Soberana" autocomplete="current-password" aria-label="Senha Soberana" />
+            <button type="submit" id="btn-oauth-restore-passphrase" class="agora-btn agora-btn--primary">Entrar</button>
+          </form>`;
+}
+
+/** Onboarding em duas telas para quem é novo: entrada e pacto (18+). "Já tenho conta" é o desvio. */
 function renderGenesisStepsHtml(currentName) {
   return `
         <section class="genesis-panel genesis-panel--steps">
           <div id="oauth-enrich-error" class="oauth-enrich-error" role="alert" aria-live="polite" hidden></div>
-          ${genesisStep("welcome", `${renderPolisFoundationsHtml()}<button type="button" class="agora-btn agora-btn--primary agora-btn--block" data-genesis-go="pick">Começar</button>`, { hidden: false })}
-          ${genesisStep("pick", renderGenesisPickHtml(), { back: "welcome" })}
-          ${genesisStep("new", renderGenesisNewIdentityHtml(currentName), { back: "pick" })}
-          ${genesisStep("restore", renderGenesisRestoreHtml(), { back: "pick" })}
-          ${genesisStep("import", renderGenesisImportHtml(), { back: "pick" })}
+          ${genesisStep("entry", renderGenesisEntryHtml(currentName), { hidden: false })}
+          ${genesisStep("have", renderGenesisHaveHtml(), { back: "entry" })}
           ${genesisStep("pact", renderPactStepHtml())}
-          <p class="meta oauth-enrich-legal">Só claims públicos de perfil; tokens OAuth não são armazenados (LGPD — ver COMPLIANCE-BR.md).</p>
+          <p class="meta oauth-enrich-legal">Tokens do Google e da Meta não são guardados (LGPD).</p>
         </section>`;
 }
 
@@ -166,7 +92,7 @@ export function renderOAuthEnrich(container) {
             <img class="genesis-brand-mark" src="icons/icon-white-192.png" width="48" height="48" alt="" decoding="async" />
             <p class="genesis-brand-name">VOX · Rede cívica soberana</p>
           </div>
-          <h1 class="genesis-title">Sua Voz. Seu Território.<br /><span>Sua Chave.</span></h1>
+          <h1 class="genesis-title">Sua voz. <span>Sua chave.</span></h1>
         </header>
         ${renderGenesisStepsHtml(currentName)}
       </div>
@@ -403,30 +329,6 @@ export function renderConnectPreview(main, profile, routeId, { isContact = false
         <button type="button" id="btn-connect-share" class="btn btn-outline" data-route="${escapeHtml(routeId)}">Compartilhar link</button>
       </div>
     </div>`;
-}
-
-export function renderCantinaGate(container) {
-  if (!container) return;
-  container.innerHTML = `
-    <div class="modal-overlay modal-sheet cantina-overlay" id="cantina-modal-overlay" role="dialog" aria-modal="true" aria-label="Porta da Cantina">
-      <div class="modal-dialog modal-card cantina-dialog">
-        <div class="cantina-art-wrap">
-          ${CANTINA_ART}
-        </div>
-        <div class="cantina-actions modal-actions modal-actions--stack">
-          <button id="btn-cantina-enter" class="btn btn-primary btn-cantina-enter btn-cantina-enter-lg">Entrar — sou humano</button>
-          <details class="cantina-details">
-            <summary class="cantina-details-summary">O que isso significa?</summary>
-            <p class="desc cantina-details-body">No Vox você não precisa de CPF nem de cadastro sob vigilância. Protegemos o espaço recusando fazendas de automação para que pessoas reais conversem em paz sob o Pacto Vox.</p>
-          </details>
-        </div>
-      </div>
-    </div>
-  `;
-}
-
-export function closeCantinaGate(container) {
-  if (container) container.innerHTML = "";
 }
 
 export function renderPactModal(container) {

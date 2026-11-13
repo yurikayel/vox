@@ -56,10 +56,7 @@
  "client/js/app/cantina-gate.js": [
   "jsdoc:CANTINA_STORAGE_KEY",
   "returns:hasPassedCantinaGate",
-  "returns:shouldShowCantinaGate",
-  "returns:hrefTargetsAjudaTeste",
-  "returns:hashFromAjudaTesteHref",
-  "jsdoc:wireCantinaOverlayPassthrough"
+  "returns:shouldShowCantinaGate"
  ],
  "client/js/app/civic-actions.js": [
   "returns:loadCivicVotes",
@@ -1817,8 +1814,6 @@
   "jsdoc:renderPostPactConnectModal",
   "jsdoc:closePostPactConnectModal",
   "jsdoc:renderConnectPreview",
-  "jsdoc:renderCantinaGate",
-  "jsdoc:closeCantinaGate",
   "jsdoc:renderPactModal",
   "jsdoc:closePactModal",
   "jsdoc:renderZapModal",

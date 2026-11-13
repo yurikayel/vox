@@ -1,9 +1,9 @@
 {
-  "git_sha": "8a09404",
+  "git_sha": "06943b6",
   "branch": "fix/network-settings-escape",
-  "test_js": 1093,
+  "test_js": 1090,
   "test_python": 111,
-  "test_total": 1204,
-  "cache_name": "vox-pwa-v7.99-real-network-audio-video-upload",
-  "generated_at": "2026-11-13T08:03:46Z"
+  "test_total": 1201,
+  "cache_name": "vox-pwa-v7.100-real-network-audio-video-upload",
+  "generated_at": "2026-11-13T08:06:45Z"
 }
