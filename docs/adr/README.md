@@ -36,6 +36,7 @@
 | [029](./029-midia-em-duas-camadas-360p-720p.md) | Mídia em duas camadas (360p e 720p), sem teto de 100 KB por item | accepted (não implementado; medição pendente) |
 | [030](./030-trazer-do-bluesky-pesos.md) | Trazer do Bluesky (PESOS): arquivo assinado da própria voz, sem servidor | accepted (não implementado) |
 | [031](./031-passkey-abre-a-mesma-conta.md) | Passkey abre a mesma conta em outro aparelho (WebAuthn PRF), sem servidor de login | accepted (não implementado; spike de suporte ao PRF antes de liberar) |
+| [032](./032-login-perene-a-conta-nasce-com-saida.md) | Login perene: a conta nasce com saída (frase, guardiões, Senha); Google e Meta saem da entrada | proposed
 
 **Registro de uma página** com as decisões institucionais e de arquitetura em vigor, o estado real de cada uma e o que ainda está em aberto: [DECISOES.md](../DECISOES.md).
 

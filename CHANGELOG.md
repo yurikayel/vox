@@ -6,6 +6,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### ADR-032 proposto: login perene, a conta nasce com saída
+- `docs/adr/032-login-perene-a-conta-nasce-com-saida.md`: Google e Meta saem da entrada (limpar o navegador e entrar com Google hoje cria uma conta nova); a conta fica "provisória neste navegador" até ter uma saída soberana — frase de recuperação/cartão no papel, guardiões (Shamir pela malha) ou Senha Soberana; passkey (ADR-031) e segundo aparelho viram atalhos. Índices de ADR, `DECISOES.md` e REV-14 no `ROADMAP.md` apontam para ele. Só documentação.
+
 ### Remover modal pós-pacto e usar "Conectado" em Pessoas
 - **Sem modal pós-pacto**: removidos `renderPostPactConnectModal` e `closePostPactConnectModal` (`client/js/app/onboarding.js`, `client/js/render/oauth-modals.js`, `client/js/render.js`) e o CSS exclusivo `.post-pact-*` (`client/css/style.css`); ao aceitar o pacto, o usuário segue direto para o feed ou tela de convite.
 - **Convide amigos recolocado**: botão **Compartilhar** + chave cidadã + `<details>Ver link técnico</details>` passaram para a tela **Pessoas** (`#/people`) e **Sua rede** (`#/settings/network`) via `renderInviteFriendsCard` (`client/js/render/util.js`).

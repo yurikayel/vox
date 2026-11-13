@@ -58,6 +58,7 @@ Legenda de estado:
 |---|---|---|
 | Custódia da chave | Em vigor (SW v7.64): chaves cifradas pelo aparelho; depois do backup com a Senha Soberana, identidade e DM só saem pela cópia cifrada com a senha | PM-93, [ADR-026](./adr/026-chaves-em-repouso-trava-depois-do-backup.md) |
 | Cadeia de suprimentos | Em vigor (PM-95): CodeQL, Dependabot, actions por SHA, ruleset `strict`. Falta decidir quando a revisão vira obrigatória (CODEOWNERS já existe) e se o CodeQL vira check obrigatório | PM-95 · [DEPENDENCIAS](./DEPENDENCIAS.md) |
+| Login perene | ADR-032 proposto: tirar Google e Meta da entrada, conta provisória até ter saída soberana (frase no papel, guardiões ou Senha); passkey vira atalho | [ADR-032](./adr/032-login-perene-a-conta-nasce-com-saida.md) |
 | Mesma conta sem senha | Aceito no ADR-031; falta o spike de suporte ao PRF nos aparelhos do piloto e o domínio definitivo | [ADR-031](./adr/031-passkey-abre-a-mesma-conta.md) |
 | Formato de assinatura | Quando parar de aceitar v1 (posts antigos assinados só nos campos de topo) | PM-85 · [ADR-021 §2.6](./adr/021-integridade-na-entrada-forma-assinada.md) |
 | Quantizador do vídeo | Quantizador H.264 equivalente a q60 (Half) e q80 (Full); medir | [ADR-029 §4](./adr/029-midia-em-duas-camadas-360p-720p.md#4-em-aberto) |
