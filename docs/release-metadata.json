@@ -1,9 +1,9 @@
 {
-  "git_sha": "9455703",
-  "branch": "feat/pm18-signaling-telemetry",
-  "test_js": 1105,
+  "git_sha": "ff579d4",
+  "branch": "feat/pm99-two-browser-e2e",
+  "test_js": 1110,
   "test_python": 111,
-  "test_total": 1216,
-  "cache_name": "vox-pwa-v7.104-real-network-audio-video-upload",
-  "generated_at": "2026-11-13T09:56:55Z"
+  "test_total": 1221,
+  "cache_name": "vox-pwa-v7.105-real-network-audio-video-upload",
+  "generated_at": "2026-11-13T10:24:02Z"
 }

@@ -411,7 +411,11 @@ function unregisterPeerAddress(remotePeerId) {
   }
 }
 
-async function handleSignalingMessage(msg) {
+/**
+ * Despacha mensagem de sinalização recebida pelo WebSocket ou pelo relay Nostr.
+ * @param {object} msg Mensagem de sinalização decodificada.
+ */
+export async function handleSignalingMessage(msg) {
   const mtype = msg.type;
   if (mtype === "registered") {
     if (msg.addressMap && typeof msg.addressMap === "object") {
@@ -426,11 +430,11 @@ async function handleSignalingMessage(msg) {
     }
     handlePeerJoined(msg.peerId);
   } else if (mtype === "offer") {
-    handleIncomingOffer(msg.from, msg.sdp);
+    await handleIncomingOffer(msg.from, msg.sdp);
   } else if (mtype === "answer") {
-    handleIncomingAnswer(msg.from, msg.sdp);
+    await handleIncomingAnswer(msg.from, msg.sdp);
   } else if (mtype === "ice") {
-    handleIncomingIce(msg.from, msg.candidate);
+    await handleIncomingIce(msg.from, msg.candidate);
   } else if (mtype === "peer-left") {
     unregisterPeerAddress(msg.peerId);
     closePeerConnection(msg.peerId);
@@ -505,10 +509,20 @@ export function onPeerConnect(handler) {
   peerConnectHandler = handler;
 }
 
-function startNegotiationTimer(remotePeerId) {
+function isActivePc(remotePeerId, pc) {
+  return peerConnections.get(remotePeerId)?.pc === pc;
+}
+
+function closeIfSameConnection(remotePeerId, pc, skipFailureRecord = false) {
+  if (isActivePc(remotePeerId, pc)) {
+    closePeerConnection(remotePeerId, skipFailureRecord);
+  }
+}
+
+function startNegotiationTimer(remotePeerId, pc) {
   return setTimeout(() => {
     const entry = peerConnections.get(remotePeerId);
-    if (!entry) return;
+    if (!entry || entry.pc !== pc) return;
     const isReady = Boolean(entry.dc && entry.dc.readyState === "open");
     if (!isReady) {
       closePeerConnection(remotePeerId);
@@ -533,15 +547,16 @@ function markPeerConnected(remotePeerId) {
   }
 }
 
-function setupDataChannelEvents(dc, remotePeerId) {
+function setupDataChannelEvents(dc, remotePeerId, pc) {
   dc.onopen = () => {
+    if (peerConnections.get(remotePeerId)?.pc !== pc) return;
     markPeerConnected(remotePeerId);
     if (typeof peerConnectHandler === "function") {
       peerConnectHandler(remotePeerId, (obj) => sendVoxMessage(remotePeerId, obj));
     }
   };
   dc.onmessage = (event) => {
-    if (!messageHandler) return;
+    if (!messageHandler || peerConnections.get(remotePeerId)?.pc !== pc) return;
     try {
       const parsed = JSON.parse(event.data);
       messageHandler(parsed, (replyObj) => {
@@ -550,13 +565,13 @@ function setupDataChannelEvents(dc, remotePeerId) {
     } catch {}
   };
 
-  dc.onclose = () => closePeerConnection(remotePeerId);
-  dc.onerror = () => closePeerConnection(remotePeerId);
+  dc.onclose = () => closeIfSameConnection(remotePeerId, pc);
+  dc.onerror = () => closeIfSameConnection(remotePeerId, pc);
 }
 
-function setupDmChannelEvents(dmDc, remotePeerId) {
+function setupDmChannelEvents(dmDc, remotePeerId, pc) {
   dmDc.onmessage = (event) => {
-    if (!dmMessageHandler) return;
+    if (!dmMessageHandler || peerConnections.get(remotePeerId)?.pc !== pc) return;
     try {
       const parsed = JSON.parse(event.data);
       if (parsed?.type === "DM" && parsed.envelope) {
@@ -568,33 +583,40 @@ function setupDmChannelEvents(dmDc, remotePeerId) {
 
 function initInitiatorChannels(pc, remotePeerId) {
   const dc = pc.createDataChannel("vox-peer-v0");
-  setupDataChannelEvents(dc, remotePeerId);
+  setupDataChannelEvents(dc, remotePeerId, pc);
   const dmDc = pc.createDataChannel("vox-dm-v0");
-  setupDmChannelEvents(dmDc, remotePeerId);
+  setupDmChannelEvents(dmDc, remotePeerId, pc);
   return { dc, dmDc };
 }
 
 function bindPeerDataChannelListener(pc, remotePeerId) {
   pc.ondatachannel = (event) => {
-    const ch = event.channel;
     const entry = peerConnections.get(remotePeerId);
+    if (!entry || entry.pc !== pc) return;
+    const ch = event.channel;
     if (ch.label === "vox-dm-v0") {
-      setupDmChannelEvents(ch, remotePeerId);
-      if (entry) entry.dmDc = ch;
+      setupDmChannelEvents(ch, remotePeerId, pc);
+      entry.dmDc = ch;
     } else {
-      setupDataChannelEvents(ch, remotePeerId);
-      if (entry) entry.dc = ch;
+      setupDataChannelEvents(ch, remotePeerId, pc);
+      entry.dc = ch;
     }
   };
 }
 
-async function negotiateInitiatorOffer(pc, remotePeerId) {
+async function negotiateInitiatorOffer(entry) {
+  const { pc, remotePeerId } = entry;
+  entry.makingOffer = true;
   try {
     const offer = await pc.createOffer();
+    if (peerConnections.get(remotePeerId)?.pc !== pc) return;
     await pc.setLocalDescription(offer);
+    if (peerConnections.get(remotePeerId)?.pc !== pc) return;
     sendSignaling({ type: "offer", to: remotePeerId, sdp: pc.localDescription });
   } catch {
-    closePeerConnection(remotePeerId);
+    closeIfSameConnection(remotePeerId, pc);
+  } finally {
+    entry.makingOffer = false;
   }
 }
 
@@ -602,11 +624,11 @@ function attachPeerConnectionEvents(pc, remotePeerId) {
   pc.onconnectionstatechange = () => {
     const state = pc.connectionState;
     if (state === "failed" || state === "closed" || state === "disconnected") {
-      closePeerConnection(remotePeerId);
+      closeIfSameConnection(remotePeerId, pc);
     }
   };
   pc.onicecandidate = (event) => {
-    if (event.candidate) {
+    if (event.candidate && peerConnections.get(remotePeerId)?.pc === pc) {
       sendSignaling({ type: "ice", to: remotePeerId, candidate: event.candidate });
     }
   };
@@ -622,37 +644,69 @@ async function createPeerConnection(remotePeerId, isInitiator) {
     ? initInitiatorChannels(pc, remotePeerId)
     : (bindPeerDataChannelListener(pc, remotePeerId), { dc: null, dmDc: null });
 
-  const timeoutId = startNegotiationTimer(remotePeerId);
-  peerConnections.set(remotePeerId, {
+  const entry = {
+    remotePeerId,
     pc,
     dc,
     dmDc,
-    timeoutId,
+    timeoutId: startNegotiationTimer(remotePeerId, pc),
     startedAt: Date.now(),
     transport: peerTransport.get(remotePeerId) || "ws",
     outcomeRecorded: false,
-  });
+    makingOffer: false,
+    pendingIceCandidates: [],
+  };
+  peerConnections.set(remotePeerId, entry);
 
   if (isInitiator) {
-    await negotiateInitiatorOffer(pc, remotePeerId);
+    await negotiateInitiatorOffer(entry);
   }
-  return { pc, dc, dmDc };
+  return entry;
+}
+
+async function flushPendingIceCandidates(entry) {
+  const pending = entry.pendingIceCandidates;
+  if (!pending?.length) return;
+  entry.pendingIceCandidates = [];
+  for (const candidate of pending) {
+    if (!isActivePc(entry.remotePeerId, entry.pc)) return;
+    try { await entry.pc.addIceCandidate(new RTCIceCandidate(candidate)); } catch {}
+  }
+}
+
+async function applyRemoteDescription(entry, remotePeerId, sdp) {
+  await entry.pc.setRemoteDescription(new RTCSessionDescription(sdp));
+  if (!isActivePc(remotePeerId, entry.pc)) return false;
+  await flushPendingIceCandidates(entry);
+  return isActivePc(remotePeerId, entry.pc);
+}
+
+async function respondWithAnswer(entry, fromPeer, sdp) {
+  const { pc } = entry;
+  const ready = await applyRemoteDescription(entry, fromPeer, sdp);
+  if (!ready) return;
+  const answer = await pc.createAnswer();
+  if (!isActivePc(fromPeer, pc)) return;
+  await pc.setLocalDescription(answer);
+  if (!isActivePc(fromPeer, pc)) return;
+  sendSignaling({ type: "answer", to: fromPeer, sdp: pc.localDescription });
+}
+
+function hasOfferCollision(existing) {
+  return Boolean(existing?.pc && (existing.makingOffer || existing.pc.signalingState !== "stable"));
 }
 
 async function handleIncomingOffer(fromPeer, sdp) {
+  if (!fromPeer || fromPeer === currentPeerId) return;
   const existing = peerConnections.get(fromPeer);
-  if (existing && existing.pc && existing.pc.signalingState !== "stable") {
-    if (currentPeerId < fromPeer) return;
-    closePeerConnection(fromPeer);
-  }
-  const { pc } = await createPeerConnection(fromPeer, false);
+  if (hasOfferCollision(existing) && currentPeerId < fromPeer) return;
+  if (existing) closePeerConnection(fromPeer, true);
+
+  const entry = await createPeerConnection(fromPeer, false);
   try {
-    await pc.setRemoteDescription(new RTCSessionDescription(sdp));
-    const answer = await pc.createAnswer();
-    await pc.setLocalDescription(answer);
-    sendSignaling({ type: "answer", to: fromPeer, sdp: pc.localDescription });
+    await respondWithAnswer(entry, fromPeer, sdp);
   } catch {
-    closePeerConnection(fromPeer);
+    closeIfSameConnection(fromPeer, entry.pc);
   }
 }
 
@@ -660,15 +714,19 @@ async function handleIncomingAnswer(fromPeer, sdp) {
   const entry = peerConnections.get(fromPeer);
   if (!entry) return;
   try {
-    await entry.pc.setRemoteDescription(new RTCSessionDescription(sdp));
+    await applyRemoteDescription(entry, fromPeer, sdp);
   } catch {
-    closePeerConnection(fromPeer);
+    closeIfSameConnection(fromPeer, entry.pc);
   }
 }
 
 async function handleIncomingIce(fromPeer, candidate) {
   const entry = peerConnections.get(fromPeer);
   if (!entry || !candidate) return;
+  if (!entry.pc.remoteDescription) {
+    entry.pendingIceCandidates.push(candidate);
+    return;
+  }
   try {
     await entry.pc.addIceCandidate(new RTCIceCandidate(candidate));
   } catch {}
