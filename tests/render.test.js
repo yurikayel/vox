@@ -106,6 +106,7 @@ test("render - renderNetworkSettings gera painel completo com WebRTC", () => {
   assert.ok(html.includes("#net-relay-steward"));
   assert.ok(html.includes("btn-export-contribution-attestation"));
   assert.ok(html.includes("Baixar Comprovante de Contribuição"));
+  assert.ok(html.includes("🔗✅ (192.168.1.100:3920)"));
 });
 
 test("render - inferParticipationLayer mapeia commOnly e relay", () => {
@@ -1213,8 +1214,8 @@ test("render - renderPeopleSearch seções e paste connect", () => {
     query: "",
   });
   assert.ok(main.innerHTML.includes("Contatos"));
-  assert.ok(main.innerHTML.includes("Conectados"));
-  assert.ok(main.innerHTML.includes(">Conectado</span>"));
+  assert.ok(main.innerHTML.includes("🔗✅"));
+  assert.ok(main.innerHTML.includes(">🔗✅</span>"));
   assert.ok(main.innerHTML.includes("people-search-input"));
   assert.ok(!main.innerHTML.includes("form-people-paste-link"), "formulário redundante de colar link deve ser removido");
 });
@@ -1237,6 +1238,7 @@ test("render - renderNetworkSettings inclui toggle malha", () => {
   });
   assert.ok(main.innerHTML.includes("net-mesh-discoverable"));
   assert.ok(main.innerHTML.includes("busca da malha"));
+  assert.ok(main.innerHTML.includes("🔗❌"));
 });
 
 test("render - elementos de convite recolocados em Pessoas e Configurações sem modal pós-pacto", () => {

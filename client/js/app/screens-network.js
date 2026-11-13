@@ -405,7 +405,7 @@ async function finishSocialLogin(run) {
     const r = await run();
     if (!r) return;
     saveLoginResult(r);
-    share.showToast(`Conectado: ${r.handle ? `@${r.handle}` : r.name || r.netId} ✅`);
+    share.showToast(`🔗✅ ${r.handle ? `@${r.handle}` : r.name || r.netId}`);
     showLinkedAccounts();
   } catch (err) {
     share.showToast(err?.message || "Não foi possível conectar.", "error");
