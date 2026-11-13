@@ -38,13 +38,15 @@ function renderGenesisEntryHtml(currentName, invite = null) {
           <p class="genesis-skip-note">Sem nome, você não aparece no diretório.</p>`;
 }
 
-/** Conta que já existe: pelo QR do outro aparelho, ou pelo backup do e-mail e a Senha Soberana. */
+/** Conta que já existe: pela frase (ADR-032), pelo QR do outro aparelho, ou pelo backup do e-mail e a Senha Soberana. */
 function renderGenesisHaveHtml() {
   return `
           <h2 class="genesis-panel-title">Já tenho conta</h2>
+          <p class="genesis-lead"><strong>Com a frase:</strong> digite as 12 (ou 24) palavras na ordem. Não precisa de internet.</p>
           <p class="genesis-lead"><strong>Com o outro aparelho:</strong> nele, abra Perfil → QR para outro aparelho e aponte a câmera deste.</p>
-          <p class="genesis-lead"><strong>Sem ele:</strong> escolha os backups do seu e-mail, se tiver, e digite a Senha Soberana.</p>
+          <p class="genesis-lead"><strong>Sem eles:</strong> escolha os backups do seu e-mail, se tiver, e digite a Senha Soberana.</p>
           <form id="form-oauth-restore-passphrase" class="genesis-inline-form genesis-inline-form--stack">
+            <textarea id="oauth-restore-phrase" class="genesis-input" rows="3" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Frase de recuperação (ou deixe em branco)" aria-label="Frase de recuperação"></textarea>
             <input type="file" id="oauth-restore-files" class="genesis-input" accept=".txt,text/plain" multiple aria-label="Backups do e-mail (opcional)" />
             <input type="password" id="oauth-sovereign-passphrase-input" class="agora-inscription genesis-input" placeholder="Senha Soberana" autocomplete="current-password" aria-label="Senha Soberana" />
             <button type="submit" id="btn-oauth-restore-passphrase" class="agora-btn agora-btn--primary">Entrar</button>
