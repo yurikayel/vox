@@ -20,6 +20,9 @@ import { ensureOnboardingSideEffects } from "./onboarding-side-effects.js";
 import { showHome } from "./screens-home.js";
 import * as readFirst from "./read-first.js";
 import { startStorageDurability } from "./storage-durability-flow.js";
+import * as inviteArrival from "../invite-arrival.js";
+import { addContactAndNotify } from "./contact-notify-flow.js";
+import { showConnect } from "./screens-people.js";
 
 export { ensureOnboardingSideEffects } from "./onboarding-side-effects.js";
 
@@ -193,7 +196,7 @@ export function openOAuthEnrichModal({ onComplete, withPact = false } = {}) {
   if (!modalContainer) return;
   genesisWithPact = withPact;
 
-  render.renderOAuthEnrich(modalContainer);
+  render.renderOAuthEnrich(modalContainer, { invite: inviteArrival.peekInviteArrival() });
   modalContainer.querySelector(".genesis-panel--steps")?.addEventListener("click", (e) => {
     const go = e.target.closest("[data-genesis-go]");
     if (!go) return;
@@ -299,6 +302,7 @@ async function finishPactAcceptance(modalContainer) {
   const user = await localAccount.getRouteId().catch(() => "");
   await ensureOnboardingSideEffects(user);
   share.showToast("Bem-vindo ao Vox! Rede ativa.");
+  if (landOnInviter(user)) return;
   if (user) {
     render.renderPostPactConnectModal(modalContainer, user, share.inviteShareUrl(user));
     document.getElementById("btn-post-pact-connect-close")?.addEventListener("click", () => {
@@ -310,6 +314,18 @@ async function finishPactAcceptance(modalContainer) {
   }
   const cur = parseRoute();
   if (cur.name === "home") showHome(cur.feed);
+}
+
+/** Chegou por convite: quem chamou vira contato e a pessoa cai na tela dele, com o cartão do vínculo. */
+function landOnInviter(user) {
+  const arrival = inviteArrival.peekInviteArrival();
+  if (!arrival || !user || arrival.inviter === user) return false;
+  inviteArrival.clearInviteArrival();
+  addContactAndNotify(arrival.inviter, arrival.name);
+  const target = inviteArrival.inviteArrivalHash(arrival);
+  if (location.hash === target) void showConnect(arrival.inviter, arrival.token);
+  else location.hash = target;
+  return true;
 }
 
 export function checkPactModal() {
