@@ -6,18 +6,34 @@ import { getWelcomeProfile, isWelcomeRouteId } from "./vox-welcome-profile.js";
 import { isBeforeGenesisMs, isTestRouteId } from "./genesis.js";
 
 const CARDS_KEY = "vox-profile-cards-v1";
+const FORBIDDEN_CARD_KEYS = new Set(["__proto__", "constructor", "prototype"]);
 let profileMemorySink = null;
+
+function isSafeCardKey(id) {
+  return Boolean(id) && !FORBIDDEN_CARD_KEYS.has(id);
+}
 
 export function registerProfileMemorySink(fn) {
   profileMemorySink = typeof fn === "function" ? fn : null;
 }
 
-function loadCards() {
+function loadCardsMap() {
   try {
     const raw = localStorage.getItem(CARDS_KEY);
-    return raw ? JSON.parse(raw) : {};
+    if (!raw) return new Map();
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return new Map();
+    return new Map(Object.entries(parsed).filter(([k]) => isSafeCardKey(k)));
   } catch {
-    return {};
+    return new Map();
+  }
+}
+
+function saveCardsMap(cardsMap) {
+  try {
+    localStorage.setItem(CARDS_KEY, JSON.stringify(Object.fromEntries(cardsMap)));
+  } catch {
+    /* ignore */
   }
 }
 
@@ -48,20 +64,16 @@ export function isSameCardIdentity(cardA, cardB) {
 }
 
 export function pruneCardsMatchingSocialIdentity({ canonicalRouteId, displayName, avatarUrl } = {}) {
-  const cards = loadCards();
+  const cards = loadCardsMap();
   const target = { name: displayName, avatarUrl };
   let changed = false;
-  for (const [id, c] of Object.entries(cards)) {
+  for (const [id, c] of cards.entries()) {
     if (id !== canonicalRouteId && isSameCardIdentity(c, target)) {
-      delete cards[id];
+      cards.delete(id);
       changed = true;
     }
   }
-  if (changed) {
-    try {
-      localStorage.setItem(CARDS_KEY, JSON.stringify(cards));
-    } catch {}
-  }
+  if (changed) saveCardsMap(cards);
 }
 
 function isAliasProfileCard(c, id, nextCard) {
@@ -72,47 +84,39 @@ function isAliasProfileCard(c, id, nextCard) {
 }
 
 function pruneConflictingIdentityCards(cards, id, nextCard) {
-  for (const [otherId, c] of Object.entries(cards)) {
+  for (const [otherId, c] of Array.from(cards.entries())) {
     if (otherId === id) continue;
     if (!isAliasProfileCard(c, id, nextCard) && isSameCardIdentity(c, nextCard)) {
-      delete cards[otherId];
+      cards.delete(otherId);
     }
   }
 }
 
 export function setProfileCard(routeId, partial) {
   const id = String(routeId || "").trim();
-  if (!id || isTestRouteId(id)) return;
-  const cards = loadCards();
-  const nextCard = { ...cards[id], ...partial, routeId: id, updatedAt: Date.now() };
+  if (!isSafeCardKey(id) || isTestRouteId(id)) return;
+  const cards = loadCardsMap();
+  const prev = cards.get(id) || {};
+  const nextCard = { ...prev, ...partial, routeId: id, updatedAt: Date.now() };
 
   pruneConflictingIdentityCards(cards, id, nextCard);
 
-  cards[id] = nextCard;
-  try {
-    localStorage.setItem(CARDS_KEY, JSON.stringify(cards));
-  } catch {
-    /* ignore */
-  }
+  cards.set(id, nextCard);
+  saveCardsMap(cards);
   if (profileMemorySink && isShareableCard(nextCard)) profileMemorySink({ type: "PROFILE_CARD", card: nextCard });
 }
 
 export function getProfileCard(routeId) {
   const id = String(routeId || "").trim();
-  if (!id) return null;
-  return loadCards()[id] || null;
+  if (!isSafeCardKey(id)) return null;
+  return loadCardsMap().get(id) || null;
 }
 
 export function removeProfileCard(routeId) {
   const id = String(routeId || "").trim();
-  if (!id) return;
-  const cards = loadCards();
-  delete cards[id];
-  try {
-    localStorage.setItem(CARDS_KEY, JSON.stringify(cards));
-  } catch {
-    /* ignore */
-  }
+  if (!isSafeCardKey(id)) return;
+  const cards = loadCardsMap();
+  if (cards.delete(id)) saveCardsMap(cards);
 }
 
 /**
@@ -121,16 +125,13 @@ export function removeProfileCard(routeId) {
  * @returns {number} Quantos cartões foram apagados.
  */
 export function removeProfileCardsWhere(shouldDrop) {
-  const cards = loadCards();
-  const kept = Object.entries(cards).filter(([id, c]) => !shouldDrop(c, id));
-  const removed = Object.keys(cards).length - kept.length;
-  if (removed > 0) {
-    try {
-      localStorage.setItem(CARDS_KEY, JSON.stringify(Object.fromEntries(kept)));
-    } catch {
-      /* ignore */
-    }
+  const cards = loadCardsMap();
+  const before = cards.size;
+  for (const [id, c] of Array.from(cards.entries())) {
+    if (shouldDrop(c, id)) cards.delete(id);
   }
+  const removed = before - cards.size;
+  if (removed > 0) saveCardsMap(cards);
   return removed;
 }
 
@@ -161,8 +162,8 @@ export function listShareableProfileCards() {
 }
 
 export function listDiscoverableProfileCards() {
-  const cards = loadCards();
-  const all = Object.values(cards).filter((c) => {
+  const cards = loadCardsMap();
+  const all = Array.from(cards.values()).filter((c) => {
     if (!c || c.discoverable === false || !c.routeId) return false;
     const ts = c.updatedAt || c.timestamp || c.ts || 0;
     return !isBeforeGenesisMs(ts) && c.routeId !== "vx_WAqxgW" && !isTestRouteId(c.routeId);

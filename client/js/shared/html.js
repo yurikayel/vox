@@ -20,3 +20,24 @@ export function escapeHtml(s) {
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
 }
+
+const SAFE_DATA_IMAGE_RE = /^data:image\/(?:png|jpeg|jpg|webp|gif|avif);base64,[A-Za-z0-9+/=]+$/i;
+
+/**
+ * Aceita apenas URL segura para imagem de avatar (`https:`, `http:`, `./` relativo ou `data:image/*` raster em base64).
+ * Rejeita `javascript:`, `data:text/html`, `data:image/svg+xml` e caminhos protocol-relative (`//`).
+ * @param {*} raw URL recebida de cartão ou rede.
+ * @returns {string} URL normalizada ou vazio quando inválida.
+ */
+export function sanitizeMediaUrl(raw) {
+  const s = String(raw || "").trim();
+  if (!s || s.startsWith("//")) return "";
+  if (SAFE_DATA_IMAGE_RE.test(s)) return s;
+  if (s.startsWith("./")) return s;
+  try {
+    const u = new URL(s);
+    return u.protocol === "https:" || u.protocol === "http:" ? u.href : "";
+  } catch {
+    return "";
+  }
+}
