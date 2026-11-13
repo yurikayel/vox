@@ -95,6 +95,19 @@ export async function resolveModeratorRoute(postId, communityIdHint = "", { getP
   return { communityId, moderator: meta?.owner || "" };
 }
 
+/**
+ * PM-83 lote B: com a flag, quem denunciou avisa só N2 (o próprio padrinho ou próximo). N1 é avisado pelo
+ * aparelho da moderação, para não saber quem denunciou. Motivo grave não vai a moderador natural.
+ */
+async function notifyNaturalModerators(self, rec, target) {
+  try {
+    const { naturalModLabOn } = await import("./natural-mod-flow.js");
+    if (!target || !naturalModLabOn()) return;
+    const { sendCaseNotice } = await import("./natural-case-flow.js");
+    await sendCaseNotice(self, rec, { side: "reporter", target, reporter: self });
+  } catch {}
+}
+
 async function submitReport(ctx, form) {
   const reason = form.querySelector('input[name="report-reason"]:checked')?.value || "";
   const detail = form.querySelector("#report-detail")?.value || "";
@@ -106,6 +119,7 @@ async function submitReport(ctx, form) {
   const entered = (await import("./onboarding.js")).hasFullEntry();
   const toModerator = entered && Boolean(moderator) && moderator !== self;
   const sent = toModerator ? await sendReportToModerator(self, moderator, rec).catch(() => "pending-retry") : "";
+  if (entered && self) void notifyNaturalModerators(self, rec, ctx.authorRoute);
   container().innerHTML = renderReportDoneHtml({
     grave: report.isGraveReason(reason),
     moderatorHash: toModerator ? report.buildModeratorDmHash(moderator, rec) : "",

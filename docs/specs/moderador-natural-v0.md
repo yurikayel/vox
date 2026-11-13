@@ -93,3 +93,51 @@ No Vox, "apagar" um post de outra pessoa sempre significa escondê-lo na malha. 
 - Telas "quem eu convidei", "meus vínculos" e revogação de vínculo.
 - Selo "convidado por" no perfil.
 - Renovar o convite à mão, invalidando o token em circulação.
+
+## PM-83 em lotes (emenda 1 do ADR-023)
+
+Atrás da flag de laboratório `localStorage["vox.lab.moderador"] = "1"`. Lógica pura em `client/js/natural-mod.js`.
+
+### Lote A (11/11/2026): quem responde por quem e "Meus vínculos"
+
+- `collectLinks` aceita só vínculos com as duas assinaturas conferidas (`verifyLink`). Par repetido conta uma vez, pela data mais antiga.
+- `naturalModeratorOf(pessoa)`: o padrinho, se não for parte do caso. Senão, o mais próximo: vínculo comum em qualquer direção, membro da comunidade primeiro, depois o mais antigo. Nunca a própria pessoa nem a outra parte.
+- `caseModerators({ target, reporter })` dá N1 (lado do denunciado) e N2 (lado de quem denunciou).
+- **Meus vínculos**, no topo da tela Pessoas: padrinho (ou o mais próximo, ou "sem vínculos: vai para a moderação da comunidade"), afilhados e vínculos comuns.
+- **Peso:** `cantina-gate.jpg` virou `cantina-gate.webp` (119 para 79 KB, visualmente igual). A folga pagou os lotes A a F; o teto desceu para 0,2% acima do medido (2.012.013 bytes).
+
+### Lote E (11/11/2026): mediação pelos moderadores naturais
+
+- Com a flag ligada, **Pedir mediação** (menu ⋯ do post) manda uma mensagem cifrada ao moderador natural de cada parte: N1 do lado de quem publicou e N2 do lado de quem pede. A mensagem leva o cartão do post e o texto "Ninguém arquivou nada". Quando os dois lados dão a mesma pessoa, ela recebe uma vez.
+- Diferente da denúncia, quem pede mediação **é identificado**: mediação é conversa.
+- É uma DM comum (`kind: "message"` com cartão), e qualquer aparelho já a mostra. Não passa pela malha e não arquiva nada.
+- Se ninguém tem vínculo, ou se nenhum destinatário tem chave de DM, cai no caminho do lote 3: a conversa com quem modera a comunidade.
+
+### Lotes B, C e D (11/11/2026): denúncia aos moderadores naturais, arquivamento firme, teto e reversões
+
+- **Aviso de caso (B):** com a flag ligada, cada lado recebe uma mensagem cifrada (`kind: "moderacao-natural"`) com o post, o motivo e o autor do post. O aviso **nunca leva quem denunciou**.
+  - **N1** (lado de quem foi denunciado) é avisado pelo **aparelho da moderação da comunidade**, quando ele recebe a denúncia assinada (PM-69). Se o aviso saísse de quem denunciou, a conversa cifrada mostraria o remetente a N1.
+  - **N2** (lado de quem denunciou) é avisado por quem denunciou. N2 sabe quem é pela própria conversa, e é o afilhado ou o próximo dele.
+  - Se N1 e N2 forem a mesma pessoa, ela recebe só o aviso de N1, que não revela quem denunciou.
+  - **O caso guardado no aparelho do moderador natural** tem só o necessário para decidir (post, comunidade, autor do post, motivo e lado). Quem denunciou e quem mandou o aviso não ficam guardados.
+  - **Motivo grave** (imagem íntima, abuso infantil, violência) **não vai** ao moderador natural. Segue pela moderação e pelos canais oficiais, sem expor o conteúdo a mais gente.
+- **Decidir (B e C):** os casos aparecem em Pessoas → Meus vínculos.
+  - **Arquivar para todos:** só N1 com vínculo de padrinho e poder firme. Publica `natural-hide`, assinado, com a confirmação do vínculo de padrinho como texto (`proof`).
+  - **Concordo: mandar para revisão:** N2, ou N1 sem poder firme. Avisa quem modera a comunidade por mensagem cifrada; o post já está em revisão pelo PM-69.
+  - **Não quero decidir:** avisa a moderação na hora, sem esperar 48 h.
+- **Leitura conservadora da emenda:** só o vínculo de **padrinho** dá arquivamento firme. A "pessoa mais próxima" depende do grafo inteiro, e cada aparelho conhece só uma parte, então ninguém de fora consegue conferir essa escolha. Por isso a confirmação dela vai à moderação, como revisão.
+- **Como os outros aparelhos aceitam (C):** `fetchModActions` confere cada `natural-hide`: assinatura, prova do vínculo de padrinho e o padrinho ser quem arquivou. Daí constrói uma ação marcada `naturalVerified`, e ação vinda de fora perde essa marca. O post some como "em revisão": o autor e a moderação veem, e o `unhide` da moderação desfaz. Arquivamento sobre post de outra pessoa que não o afilhado não esconde nada.
+- **Teto e reversões (D):**
+  - O poder firme vale para os **30 primeiros afilhados** pela data do vínculo.
+  - O padrinho perde o poder com **3 reversões em 90 dias**: `unhide` da moderação daquela comunidade depois de um arquivamento dele, contadas até cada arquivamento.
+  - **Limite:** um aparelho que não conhece todos os vínculos antigos de um padrinho pode contar a posição do afilhado para menos.
+
+### Lote F (11/11/2026): trocar de padrinho e vínculo só para mediação
+
+- **Vínculo só para mediação:** ao aceitar um convite, a pessoa pode marcar "Só para mediação". O aceite leva `scope: "mediacao"`, e só quem aceita assina isso, então aparelhos antigos continuam confirmando o vínculo.
+  - Esse vínculo serve para pedir mediação (lote E), mas nunca para denúncia, para arquivar ou para a lista de afilhados.
+- **Trocar de padrinho:** quem já tem padrinho pode aceitar o convite de outra pessoa marcando "Trocar meu padrinho". O aceite leva `sponsor: true` e `switchFrom: <padrinho de antes>`, e quem convidou confirma como sempre, de modo que as duas partes assinam.
+  - A troca vale **7 dias depois** da confirmação. Até lá, o padrinho de antes continua, e "Meus vínculos" mostra a data.
+  - **Uma vez só:** o aparelho não oferece segunda troca.
+  - Depois da troca, o padrinho de antes perde o afilhado (e o poder firme sobre ele).
+- As opções novas do cartão do convite só aparecem com a flag `vox.lab.moderador`.

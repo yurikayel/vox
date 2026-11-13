@@ -46,7 +46,7 @@ test("vínculo - aceite de B e confirmação de A fecham o vínculo com as duas 
   await flow.acceptInvite({ inviter: ana.routeId, token, sponsor: true }, deviceDeps(bia, mesh));
   const [confirm] = await flow.confirmPendingInvites(anaDeps);
   const link = await voxLink.verifyLink(confirm, verifyPayload);
-  assert.deepEqual(link, { inviter: ana.routeId, invitee: bia.routeId, sponsor: true, since: 1000 });
+  assert.deepEqual(link, { inviter: ana.routeId, invitee: bia.routeId, sponsor: true, since: 1000, mediationOnly: false, switchFrom: "" });
   assert.deepEqual(await flow.confirmPendingInvites(anaDeps), [], "não confirma duas vezes");
   assert.equal(voxLink.linkState([...mesh.values()], { me: bia.routeId, inviter: ana.routeId }), "confirmed");
 });

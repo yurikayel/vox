@@ -17,15 +17,25 @@ export async function fetchModActions(communityId) {
   const merged = [];
   for (const a of localActions) {
     seen.add(a.id);
-    merged.push({ ...a, owner: a.author || a.owner });
+    merged.push({ ...a, owner: a.author || a.owner, naturalVerified: false });
   }
   for (const a of remoteActions) {
     if (!seen.has(a.id)) {
       seen.add(a.id);
-      merged.push(a);
+      merged.push({ ...a, naturalVerified: false });
     }
   }
-  return merged;
+  return [...merged, ...(await naturalHideActions(communityId, merged))];
+}
+
+/** PM-83: arquivamentos firmes de moderadores naturais, já conferidos (só com a flag de laboratório). */
+async function naturalHideActions(communityId, modActions) {
+  try {
+    const flow = await import("./app/natural-mod-flow.js");
+    return flow.naturalModLabOn() ? await flow.loadNaturalHideActions(communityId, modActions) : [];
+  } catch {
+    return [];
+  }
 }
 
 export function parseModerators(rawModerators = "") {
@@ -58,10 +68,17 @@ function buildValidModeratorsSet(communityOwner = "", rawModerators = "") {
   return validModerators;
 }
 
+/** Arquivamento natural: escondido como "em revisão"; vale só para posts do afilhado. Construído no aparelho. */
+function applyNaturalHide(state, act) {
+  state.hiddenTargets.add(act.target);
+  state.reviewTargets.set(act.target, Number(act.ts) || 0);
+  state.naturalAuthors.set(act.target, String(act.targetAuthor || "").toLowerCase());
+}
+
 const MOD_ACTION_APPLY = Object.freeze({
   hide: (s, t) => { s.hiddenTargets.add(t); s.reviewTargets.delete(t); },
   [REVIEW_HIDE_ACTION]: (s, t, ts) => { s.hiddenTargets.add(t); s.reviewTargets.set(t, ts); },
-  unhide: (s, t) => { s.hiddenTargets.delete(t); s.reviewTargets.delete(t); },
+  unhide: (s, t) => { s.hiddenTargets.delete(t); s.reviewTargets.delete(t); s.naturalAuthors.delete(t); },
   ban: (s, t) => s.bannedOwners.add(t.toLowerCase()),
   unban: (s, t) => s.bannedOwners.delete(t.toLowerCase()),
   pin: (s, t) => s.pinState.set(t, true),
@@ -72,9 +89,13 @@ const MOD_ACTION_APPLY = Object.freeze({
 
 /** Fail-closed: sem dono/moderadores conhecidos, nenhuma ação de terceiros é aplicada. */
 function collectModerationState(actions, validModerators) {
-  const state = { hiddenTargets: new Set(), reviewTargets: new Map(), bannedOwners: new Set(), pinState: new Map(), lockState: new Map() };
+  const state = { hiddenTargets: new Set(), reviewTargets: new Map(), bannedOwners: new Set(), pinState: new Map(), lockState: new Map(), naturalAuthors: new Map() };
   const sortedActions = [...actions].sort((a, b) => (Number(a.ts) || 0) - (Number(b.ts) || 0));
   for (const act of sortedActions) {
+    if (act.naturalVerified === true && act.action === "natural-hide" && act.target) {
+      applyNaturalHide(state, act);
+      continue;
+    }
     const actOwner = (act.owner || act.author || "").toLowerCase();
     const apply = Object.hasOwn(MOD_ACTION_APPLY, act.action) ? MOD_ACTION_APPLY[act.action] : null;
     if (!actOwner || !validModerators.has(actOwner) || !act.target || !apply) continue;
@@ -89,12 +110,22 @@ function canSeeInReview(item, reviewTargets, viewerKey, viewerIsMod) {
   return viewerIsMod || String(item.owner || item.author || "").toLowerCase() === viewerKey;
 }
 
+/** Arquivamento natural só vale sobre post do afilhado: sobre post de outra pessoa, não esconde nada. */
+function keepNaturalHidesOnTheirAuthor(items, state) {
+  for (const [postId, author] of state.naturalAuthors) {
+    const item = items.find((i) => i.id === postId);
+    if (item && String(item.owner || item.author || "").toLowerCase() !== author) state.hiddenTargets.delete(postId);
+  }
+}
+
 export function applyFilters(items, actions = [], communityOwner = "", rawModerators = "", viewer = "") {
   if (!Array.isArray(items) || !items.length) return [];
   if (!Array.isArray(actions) || !actions.length) return items;
 
   const validModerators = buildValidModeratorsSet(communityOwner, rawModerators);
-  const { hiddenTargets, reviewTargets, bannedOwners, pinState, lockState } = collectModerationState(actions, validModerators);
+  const state = collectModerationState(actions, validModerators);
+  keepNaturalHidesOnTheirAuthor(items, state);
+  const { hiddenTargets, reviewTargets, bannedOwners, pinState, lockState } = state;
   const viewerKey = String(viewer || "").toLowerCase();
   const viewerIsMod = Boolean(viewerKey) && validModerators.has(viewerKey);
 

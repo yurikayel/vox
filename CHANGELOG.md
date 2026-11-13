@@ -6,6 +6,13 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Moderador natural (PM-83, lotes A a F)
+- Lógica de quem responde por quem a partir dos vínculos assinados: padrinho, ou a pessoa mais próxima (vínculo comum mais antigo, membro da comunidade primeiro), nunca a outra parte. Tela **Meus vínculos** no topo de Pessoas. Laboratório `vox.lab.moderador`.
+- **Lote E:** "Pedir mediação" vai, por mensagem cifrada, ao moderador natural de cada parte, com o cartão do post e sem arquivar nada; sem vínculo, segue para a moderação da comunidade.
+- **Lotes B a D:** a denúncia também vai, por mensagem cifrada, ao moderador natural de cada lado. O aviso a N1 sai do aparelho da moderação, para N1 não saber quem denunciou; o caso guardado não tem quem denunciou; motivo grave não vai. Em Pessoas → Meus vínculos: arquivar para todos (só padrinho, com a prova do vínculo, até 30 afilhados e menos de 3 reversões em 90 dias), mandar para revisão ou não decidir. Os outros aparelhos conferem a prova antes de esconder; a moderação desfaz.
+- **Lote F:** trocar de padrinho uma vez (vale 7 dias depois, com as duas assinaturas) e vínculo "só para mediação", que nunca dá poder de arquivar. As opções aparecem no cartão do convite com a flag.
+- Precache: os 4 módulos novos entram no `SHELL_ASSETS`; testes de `verifyLink` ajustados para devolver `mediationOnly` e `switchFrom`. SW `v7.96`.
+
 ### Sorteio cívico (lote 4)
 - Na aba de avisos, a moderação cria um sorteio com a lista de membros congelada. Testemunhas se comprometem com um segredo e revelam depois do fecho; a moderação apura e todo aparelho recalcula o mesmo resultado. Basta uma testemunha honesta; quem não revela fica apontado. Laboratório `vox.lab.aviso`.
 - Precache: `logo-mark.png` e `icon-white-192.png` com paleta (−20 KB, visualmente iguais). SW `v7.95`.

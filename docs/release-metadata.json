@@ -1,9 +1,9 @@
 {
-  "git_sha": "1516080",
-  "branch": "feat/sorteio-civico",
-  "test_js": 1072,
+  "git_sha": "815b3a0",
+  "branch": "feat/moderador-natural",
+  "test_js": 1088,
   "test_python": 111,
-  "test_total": 1183,
-  "cache_name": "vox-pwa-v7.95-real-network-audio-video-upload",
-  "generated_at": "2026-11-12T23:53:44Z"
+  "test_total": 1199,
+  "cache_name": "vox-pwa-v7.96-real-network-audio-video-upload",
+  "generated_at": "2026-11-13T00:09:03Z"
 }

@@ -54,11 +54,18 @@ export function recordConfirmed(invitee, storage = globalThis.localStorage) {
   return writeInvite({ ...invite, confirmed: [...invite.confirmed, invitee] }, storage);
 }
 
-/** Corpo do aceite que quem foi convidado assina. */
-export function buildAccept({ me, inviter, token, sponsor = false, now = Date.now() }) {
+/**
+ * Corpo do aceite que quem foi convidado assina.
+ * PM-83 lote F: `mediationOnly` marca o vínculo como "só mediação" (não dá poder de arquivar);
+ * `switchFrom` troca o padrinho (uma vez, vale 7 dias depois). Os dois ficam no aceite, que só quem aceita assina.
+ */
+export function buildAccept({ me, inviter, token, sponsor = false, mediationOnly = false, switchFrom = "", now = Date.now() }) {
   if (!me || !inviter || me === inviter) throw new Error("Vínculo precisa de duas pessoas diferentes.");
   if (!isInviteToken(token)) throw new Error("Convite inválido.");
-  return { id: `vlk_acc_${me}_${inviter}`, type: VOX_LINK_TYPE, kind: "accept", to: inviter, token, sponsor: sponsor === true, ts: now };
+  const body = { id: `vlk_acc_${me}_${inviter}`, type: VOX_LINK_TYPE, kind: "accept", to: inviter, token, sponsor: sponsor === true, ts: now };
+  if (mediationOnly) body.scope = "mediacao";
+  if (sponsor === true && switchFrom && switchFrom !== inviter) body.switchFrom = String(switchFrom);
+  return body;
 }
 
 /** Quem convidou confirma este aceite? Só um convite seu, aberto, de quem ainda não confirmou. */
@@ -107,7 +114,10 @@ export async function verifyLink(record, verify) {
   const accept = parseAccept(record.accept);
   if (!halvesMatch(record, accept)) return null;
   if (!(await verify(record)) || !(await verify(accept))) return null;
-  return { inviter: record.author, invitee: accept.author, sponsor: record.sponsor === true, since: Number(record.ts) || 0 };
+  return {
+    inviter: record.author, invitee: accept.author, sponsor: record.sponsor === true, since: Number(record.ts) || 0,
+    mediationOnly: accept.scope === "mediacao", switchFrom: typeof accept.switchFrom === "string" ? accept.switchFrom : "",
+  };
 }
 
 /** Situação do vínculo entre mim e quem convidou, pelos registros que o aparelho tem. */
@@ -117,5 +127,13 @@ export function linkState(records, { me, inviter }) {
   return records.some((r) => r.kind === "accept" && r.author === me && r.to === inviter) ? "pending" : "none";
 }
 
-/** Já assinei um aceite de padrinho? O aparelho só assina um. */
+/** Já assinei um aceite de padrinho? O aparelho só assina um (fora a troca, uma vez). */
 export const hasSponsorClaim = (records, me) => records.some((r) => r.kind === "accept" && r.author === me && r.sponsor === true);
+
+/**
+ * Verifica se o autor já utilizou a troca única de padrinho.
+ * @param {object[]} records Registros de vínculo verificados.
+ * @param {string} me Identificador do autor.
+ * @returns {boolean} Verdadeiro se já houve troca aceita.
+ */
+export const hasSwitched = (records, me) => records.some((r) => r.kind === "accept" && r.author === me && r.sponsor === true && r.switchFrom);
