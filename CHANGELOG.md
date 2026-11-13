@@ -6,7 +6,7 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
-### ADR-032 proposto: login perene, a conta nasce com saída
+### ADR-032 aceito: login perene, a conta nasce com saída
 - `docs/adr/032-login-perene-a-conta-nasce-com-saida.md`: Google e Meta saem da entrada (limpar o navegador e entrar com Google hoje cria uma conta nova); a conta fica "provisória neste navegador" até ter uma saída soberana — frase de recuperação/cartão no papel, guardiões (Shamir pela malha) ou Senha Soberana; passkey (ADR-031) e segundo aparelho viram atalhos. Índices de ADR, `DECISOES.md` e REV-14 no `ROADMAP.md` apontam para ele. Só documentação.
 
 ### Remover modal pós-pacto e usar "Conectado" em Pessoas
