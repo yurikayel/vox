@@ -6,6 +6,10 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Configurações de rede: campos de TURN escapados (alerta 112 do CodeQL)
+- `client/js/render/network.js` punha o endereço, o usuário e a credencial do servidor TURN direto no atributo `value`, sem escapar. O que a pessoa digitava (ou colava) nesses campos podia virar marcação ao reabrir as configurações. Os três campos e o host do relay no rótulo de estado agora passam por `escapeHtml`.
+- Teste em `tests/render.test.js`. SW `v7.102`.
+
 ### Armazenamento durável plugado ao ter conta e ajuste de backlog para fundamentais
 - `storage-persistence.js` saiu da lista de módulos não plugados e passou a rodar por `client/js/app/storage-durability-flow.js` no boot (`app.js`) e ao aceitar o pacto (`app/onboarding.js`): quem já tem conta pede persistência (`navigator.storage.persist()`) e, em aba comum do Safari/WebKit, vê uma vez a faixa orientando adicionar o Vox à Tela de Início contra a limpeza automática de 7 dias.
 - Quem só está lendo não recebe o pedido nem a faixa até concluir a entrada. Testes novos em `tests/storage-durability-flow.test.js`. SW `v7.101`.

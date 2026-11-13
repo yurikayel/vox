@@ -162,6 +162,12 @@ test("render - LAN-21: rede mostra sinalização caída em vez de conectando par
   render.renderNetworkSettings(main, { ...props, rtcStatus: { remotePeersConnected: 0 } });
   assert.ok(main.innerHTML.includes("Conectando a aparelhos próximos"));
   assert.ok(!main.innerHTML.includes("network-signaling-down"));
+
+  // CodeQL js/xss-through-dom: o que a pessoa digitou nos campos de TURN volta para a tela escapado.
+  const hostile = '"><img src=x onerror=alert(1)>';
+  render.renderNetworkSettings(main, { ...props, customTurn: { urls: hostile, username: hostile, credential: hostile } });
+  assert.ok(!main.innerHTML.includes("<img src=x"), "campo de TURN não pode virar marcação");
+  assert.equal(main.innerHTML.split("&quot;&gt;&lt;img src=x onerror=alert(1)&gt;").length - 1, 3, "os três campos saem escapados");
 });
 
 test("render - LAN-14: aviso de quarentena e selo de chave nova", () => {
