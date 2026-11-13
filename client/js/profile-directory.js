@@ -4,6 +4,7 @@ import * as mock from "./mock.js";
 import * as localAccount from "./local-account.js";
 import { getWelcomeProfile, isWelcomeRouteId } from "./vox-welcome-profile.js";
 import { isBeforeGenesisMs, isTestRouteId } from "./genesis.js";
+import { getLocalIdentityMeta, hasAnyIdentityMeta, pickIdentityMeta } from "./profile-identity-meta.js";
 
 const CARDS_KEY = "vox-profile-cards-v1";
 const FORBIDDEN_CARD_KEYS = new Set(["__proto__", "constructor", "prototype"]);
@@ -230,21 +231,21 @@ function resolveReadme({ id, mockProf }) {
   return mock.getAuthorReadme(id) || "";
 }
 
+function resolveIdentityMeta({ id, card, mockProf, myId }) {
+  if (myId && myId === id) {
+    const local = getLocalIdentityMeta(id);
+    if (hasAnyIdentityMeta(local)) return local;
+  }
+  return pickIdentityMeta(card, mockProf);
+}
+
 export async function resolveProfile(routeId) {
   const id = String(routeId || "").trim();
-  if (!id) return { routeId: "", name: "", handle: "", avatar: "", bio: "" };
+  if (!id) return { routeId: "", name: "", handle: "", avatar: "", bio: "", pronouns: "", gender: "", orientation: "" };
 
   if (isWelcomeRouteId(id)) {
     const w = getWelcomeProfile();
-    return {
-      routeId: w.routeId,
-      name: w.name,
-      handle: w.handle,
-      avatar: w.avatar,
-      bio: w.bio,
-      readme: w.readme,
-      isSystem: true,
-    };
+    return { routeId: w.routeId, name: w.name, handle: w.handle, avatar: w.avatar, bio: w.bio, readme: w.readme, ...pickIdentityMeta(), isSystem: true };
   }
 
   const card = getProfileCard(id);
@@ -260,6 +261,7 @@ export async function resolveProfile(routeId) {
     avatar: resolveAvatar(ctx),
     bio: resolveBio(ctx),
     readme: resolveReadme(ctx),
+    ...resolveIdentityMeta(ctx),
   };
 }
 
@@ -313,6 +315,7 @@ export async function fetchAndCacheOnChainProfile(target) {
     name: onChain.displayName || onChain.name || "",
     bio: onChain.bio || "",
     avatarUrl: onChain.avatarUrl || "",
+    ...pickIdentityMeta(onChain),
     arweaveAddress: onChain.owner || "",
     onChainTxId: onChain.txId || "",
     discoverable: onChain.discoverable,
