@@ -156,7 +156,7 @@ function renderProfilePixBadge(pixKeyMasked, pixKeyRaw) {
 }
 
 function renderProfileGridAvatarInner(address, displayName, handle) {
-  const initial = (displayName || handle || address || "U").slice(0, 1).toUpperCase();
+  const initial = escapeHtml((displayName || handle || address || "U").slice(0, 1).toUpperCase());
   const avatarUrl = profileDirectory.getAuthorAvatarSync(address) || mock.getAuthorAvatar(address);
   const squircle = "";
   if (avatarUrl) {
@@ -478,7 +478,7 @@ function renderProfileAdvancedSettingsDetails(handle, hasWallet, balance) {
         <form id="form-claim-handle" style="margin-top:0.75rem;">
           <label style="font-size:0.85rem; font-weight:600;">Reivindicar @handle on-chain:</label>
           <div style="display:flex; gap:0.5rem; margin-top:0.25rem;">
-            <input type="text" id="input-handle-slug" class="form-control" placeholder="ex: maria" value="${handle || ""}" />
+            <input type="text" id="input-handle-slug" class="form-control" placeholder="ex: maria" value="${escapeHtml(handle || "")}" />
             <button type="submit" id="btn-submit-handle" class="btn btn-sm btn-primary" style="white-space:nowrap;">Salvar @handle</button>
           </div>
         </form>

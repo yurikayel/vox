@@ -313,16 +313,16 @@ function renderRelayUrlInputsHtml(opts) {
   return `
     <div class="form-group">
       <label for="net-signaling-url">Servidor de conexão (opcional):</label>
-      <input type="text" id="net-signaling-url" class="form-control" placeholder="wss://signal.comunidade.org" value="${opts.customSignalingUrl || ""}" />
+      <input type="text" id="net-signaling-url" class="form-control" placeholder="wss://signal.comunidade.org" value="${escapeHtml(opts.customSignalingUrl || "")}" />
     </div>
     <div class="form-group">
       <label for="net-relay-http-url">Relay HTTP (cache e inbox, opcional):</label>
-      <input type="text" id="net-relay-http-url" class="form-control" placeholder="https://relay.comunidade.org ou 192.168.0.10:3920" value="${opts.customRelayHttpUrl || ""}" />
+      <input type="text" id="net-relay-http-url" class="form-control" placeholder="https://relay.comunidade.org ou 192.168.0.10:3920" value="${escapeHtml(opts.customRelayHttpUrl || "")}" />
       <p class="desc" style="font-size:0.75rem; margin:0.35rem 0 0;">Usado para buscar posts e mensagens efêmeras. Vazio = derivado do servidor de conexão ou localhost.</p>
     </div>
     <div class="form-group">
       <label for="net-relay-buddy-http-url">Relay Buddy (reserva/espelho B, opcional):</label>
-      <input type="text" id="net-relay-buddy-http-url" class="form-control" placeholder="https://buddy.comunidade.org ou https://usuario-space.hf.space" value="${opts.customRelayBuddyHttpUrl || ""}" />
+      <input type="text" id="net-relay-buddy-http-url" class="form-control" placeholder="https://buddy.comunidade.org ou https://usuario-space.hf.space" value="${escapeHtml(opts.customRelayBuddyHttpUrl || "")}" />
       <p class="desc" style="font-size:0.75rem; margin:0.35rem 0 0;">Segundo nó para failover automático se o relay principal cair durante o piloto.</p>
     </div>`;
 }

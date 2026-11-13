@@ -15,6 +15,7 @@ import {
 } from "../vox-welcome-profile.js";
 import {
   escapeHtml,
+  normalizePostAspect,
   resolvePostAuthorLabels,
   renderPostAuthorMetaLines,
   renderAvatarHtml,
@@ -499,7 +500,7 @@ function renderAudioHero(audioSrc, overlayHeaderHtml, overlayFooterHtml) {
 function renderImageHero(t, layer, overlayHeaderHtml, overlayFooterHtml) {
   const alt = escapeHtml(t.imageAlt || t.title || "");
   const src = escapeHtml(t.image);
-  const aspect = t?.aspectRatio || "original";
+  const aspect = normalizePostAspect(t?.aspectRatio);
   const aspectClass = `post-aspect-${aspect.replace(":", "-")}`;
   return `
     <div class="post-media-container post-media-hero ${aspectClass}" data-aspect="${escapeHtml(aspect)}">
