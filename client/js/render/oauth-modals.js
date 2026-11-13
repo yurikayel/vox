@@ -39,9 +39,17 @@ function genesisStep(key, bodyHtml, { back = "", hidden = true } = {}) {
 }
 
 /** Tela única de entrada: Google, Meta ou GitHub trazem nome e foto; ou a pessoa escreve o nome. */
-function renderGenesisEntryHtml(currentName) {
+/** Chegou por convite: diz quem chamou e que essa pessoa entra nos contatos. `invite.name` vazio: sem nome. */
+function renderInviteLeadHtml(invite) {
+  if (!invite) return "";
+  const who = invite.name ? `<strong>${escapeHtml(invite.name)}</strong>` : "Alguém";
+  return `<p class="genesis-lead genesis-lead--invite">${who} te chamou para o Vox. Ao entrar, essa pessoa já fica nos seus contatos.</p>`;
+}
+
+function renderGenesisEntryHtml(currentName, invite = null) {
   return `
           <h2 id="oauth-enrich-title" class="genesis-panel-title">Entrar no Vox</h2>
+          ${renderInviteLeadHtml(invite)}
           <p class="genesis-lead">Sua conta nasce neste aparelho. Google e Meta só trazem nome e foto.</p>
           ${renderOAuthProviderButtonsHtml()}
           <form id="form-oauth-custom-name" class="genesis-inline-form">
@@ -69,19 +77,23 @@ function renderGenesisHaveHtml() {
 }
 
 /** Onboarding em duas telas para quem é novo: entrada e pacto (18+). "Já tenho conta" é o desvio. */
-function renderGenesisStepsHtml(currentName) {
+function renderGenesisStepsHtml(currentName, invite = null) {
   return `
         <section class="genesis-panel genesis-panel--steps">
           <div id="oauth-enrich-error" class="oauth-enrich-error" role="alert" aria-live="polite" hidden></div>
-          ${genesisStep("entry", renderGenesisEntryHtml(currentName), { hidden: false })}
+          ${genesisStep("entry", renderGenesisEntryHtml(currentName, invite), { hidden: false })}
           ${genesisStep("have", renderGenesisHaveHtml(), { back: "entry" })}
           ${genesisStep("pact", renderPactStepHtml())}
           <p class="meta oauth-enrich-legal">Tokens do Google e da Meta não são guardados (LGPD).</p>
         </section>`;
 }
 
-/** Onboarding — Stitch tela 12, em etapas (uma decisão por tela). */
-export function renderOAuthEnrich(container) {
+/**
+ * Onboarding — Stitch tela 12, em etapas (uma decisão por tela).
+ * @param {HTMLElement} container
+ * @param {{ invite?: { name: string } | null }} [opts] chegada por convite: a entrada diz quem chamou
+ */
+export function renderOAuthEnrich(container, { invite = null } = {}) {
   if (!container) return;
   const currentName = escapeHtml(localAccount.getDisplayName() || "");
   container.innerHTML = `
@@ -94,7 +106,7 @@ export function renderOAuthEnrich(container) {
           </div>
           <h1 class="genesis-title">Sua voz. <span>Sua chave.</span></h1>
         </header>
-        ${renderGenesisStepsHtml(currentName)}
+        ${renderGenesisStepsHtml(currentName, invite)}
       </div>
     </div>`;
 }
