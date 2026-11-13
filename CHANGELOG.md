@@ -6,6 +6,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Documentação: zero gravação no Arweave por enquanto e preservação pela rede de seguidores
+- Atualizados `README.md`, `ARCHITECTURE.md`, `docs/ARCHITECTURE.md`, `docs/DECISOES.md` (`I-05`, `A-02`, `A-08`), `docs/adr/019-esquecer-por-padrao-e-memoria-civica.md`, `docs/FEATURES.md`, `docs/ROADMAP.md` (`REV-07`, `REV-11`), `docs/INFRA-CUSTOS.md`, `docs/IDENTITY.md`, `docs/product/POSITIONING.md`, `docs/legal/COMPLIANCE-BR.md`, `docs/legal/briefing-parecer-g1.md`, `docs/pilot/piloto-g1-convite.md`, `docs/pilot/piloto-comunidade-go-no-go.md` e `docs/README.md`: formalizada a diretriz de que **por enquanto nada deve ser salvo usando Arweave** (reservado para alguns recursos futuros e leitura pública), operando a circulação e a preservação pela **rede de seguidores** (replicação de quem se segue na malha), com transparência sobre a pendência de desligamento de `arweaveUpload` em `client/config/flags.json` e do `PM-74`.
+
 ### Expurgo dos perfis e contas de teste excedentes (`Yuri Kayel`)
 - **Identidades de teste (`client/js/data/test-route-ids.js`)**: incluídos os 17 `routeId`s excedentes/pré-gênese de `"Yuri Kayel"` (`128 -> 145` entradas ordenadas), regenerando os guardas de servidor em `relay/genesis_data.py` e `packaging/zero-central-memory-windows/src/GenesisData.cs`.
 - **Filtro GraphQL pós-gênese (`client/js/genesis.js`)**: `filterGraphqlData` agora descarta transações cujas tags `Route-Id`, `Author`, `Author-Address` ou `Owner` pertencem a `TEST_ROUTE_IDS`.

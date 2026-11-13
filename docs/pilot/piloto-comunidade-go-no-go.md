@@ -1,6 +1,6 @@
 # Piloto comunidade — go / no-go (V-P09)
 
-> **Status:** canônico (gate humano V-P09) · **Owner:** mantenedor · **Revisado:** 2026-11-08
+> **Status:** canônico (gate humano V-P09) · **Owner:** mantenedor · **Revisado:** 2026-11-13
 
 Gate humano antes de abrir as 4 semanas do piloto. Preencher **todos** os papéis nomeados; até lá, status **`blocked-human`**.
 
@@ -50,7 +50,7 @@ Escrito **antes** do piloto, para o resultado não ser interpretado de forma con
 | Steward externo | ≥ 1 pessoa que **não** é o mantenedor opera relay ou espelho por ≥ 7 dias | URL + print do `#/status` (NET-04) |
 | Incidentes graves | 0 denúncia grave sem resposta em **24 h** | registro de denúncias (LAN-12) + ata do plantão (LAN-04) |
 | Conexão P2P | ≥ 70% das sessões conectam a pelo menos 1 par | `#/settings/network`: aparelhos conectados, anotado pelo facilitador |
-| Cota do Turbo | nenhuma pessoa barrada de postar por cota esgotada sem entender o porquê | relato na retrospectiva + estados de erro (LAN-21) |
+| Disponibilidade sem Arweave | nenhuma gravação acidental no Arweave (pausado por diretriz; tudo pela rede de seguidores) e replicação verificada | conferência de configuração (`arweaveUpload: false`) + relato na retrospectiva |
 | Perda de conta | 0 pessoa que perdeu a identidade sem conseguir recuperar | relato na retrospectiva |
 | Satisfação | ≥ 70% "recomendaria para outro grupo" | pergunta única na retrospectiva |
 

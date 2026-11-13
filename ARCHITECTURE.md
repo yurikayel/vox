@@ -1,11 +1,11 @@
 # Arquitetura Técnica — Vox
 
-> **Status:** canônico (protocolo e dados) · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-12
+> **Status:** canônico (protocolo e dados) · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-13
 > Este arquivo cobre o **protocolo e os dados**. Camadas do cliente: [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md). Decisões em vigor: [docs/DECISOES.md](./docs/DECISOES.md).
 
 ## 1. Visão Geral e Linhagem Channel-01
 
-O Vox é **local-first**: não existe servidor que diga o que é verdade ([DECISOES A-01](./docs/DECISOES.md)). Um post vale porque o autor o assinou (ECDSA P-256), e cada aparelho confere sozinho tudo o que recebe, por qualquer caminho ([ADR-021](./docs/adr/021-integridade-na-entrada-forma-assinada.md)). O aparelho guarda os dados, troca com outros aparelhos pela malha e, **só quando a pessoa escolhe**, grava uma cópia permanente no Arweave (aviso em `permanence-notice.js`; [DECISOES A-08](./docs/DECISOES.md)). O Arweave é permanência opcional, não fonte de verdade.
+O Vox é **local-first**: não existe servidor que diga o que é verdade ([DECISOES A-01](./docs/DECISOES.md)). Um post vale porque o autor o assinou (ECDSA P-256), e cada aparelho confere sozinho tudo o que recebe, por qualquer caminho ([ADR-021](./docs/adr/021-integridade-na-entrada-forma-assinada.md)). O aparelho guarda os dados e troca com outros aparelhos pela **rede de seguidores** (gossip WebRTC, sincronização por inventário e replicação do conteúdo de quem você segue, nos termos do [ADR-019](./docs/adr/019-esquecer-por-padrao-e-memoria-civica.md), [ADR-029](./docs/adr/029-midia-em-duas-camadas-360p-720p.md) e [replicacao-por-grau-v0](./docs/specs/replicacao-por-grau-v0.md)). **Diretriz atual (nov/2026): por enquanto nada deve ser salvo usando Arweave.** O Arweave continua previsto apenas para leitura de registros públicos existentes e recursos específicos futuros (como cartório cívico e memória cívica por consenso), nunca como fonte de verdade nem como destino padrão de escrita (`arweaveUpload` em `client/config/flags.json` ainda aguarda desligamento em config/código).
 
 A parte de permaweb herda a fundação demonstrada pelo **Channel-01 (`arboard`)**:
 
@@ -25,10 +25,10 @@ Canal Unilateral                        Ecossistema Bidirecional
 
 Componentes centrais:
 1. **Client (PWA):** Todo o processamento de visualização, roteamento, validação e criptografia ocorre diretamente no navegador ou celular do usuário. JavaScript puro, sem etapa de build.
-2. **Armazenamento local e malha:** Posts, cartões de perfil e ações ficam no IndexedDB do aparelho, na forma assinada (`cache-node.js`, `post-wire.js`), e circulam entre aparelhos por gossip e por sincronização por inventário ao conectar (`peers.js`, `peer-sync.js`; [sync-inventario-v0](./docs/specs/sync-inventario-v0.md)). Um item da malha pode nunca ir ao Arweave.
+2. **Armazenamento local e rede de seguidores:** Posts, cartões de perfil, mídia e ações ficam no IndexedDB do aparelho, na forma assinada (`cache-node.js`, `post-wire.js`), e circulam entre aparelhos por gossip e por sincronização por inventário ao conectar (`peers.js`, `peer-sync.js`; [sync-inventario-v0](./docs/specs/sync-inventario-v0.md)). A preservação segue o modelo de **rede de seguidores** (você replica e serve o conteúdo de quem segue; especificação de graus em [replicacao-por-grau-v0](./docs/specs/replicacao-por-grau-v0.md), `PM-74` pendente).
 3. **Memória central (opcional):** Cópia num servidor escolhido pela pessoa, que nunca é fonte de verdade: o que volta dela é conferido como qualquer outra entrada ([ADR-022](./docs/adr/022-memoria-central-por-consentimento.md)).
-4. **Leitura do permaweb (GraphQL aberto):** Para o que foi gravado no Arweave, em vez de manter instâncias de PostgreSQL/Redis, o cliente consome consultas GraphQL distribuídas fornecidas pelos nós da rede Arweave/AR.IO (seção 2; gateways em `client/config/gateways.json`), sem proxy central.
-5. **Escrita no permaweb (opcional, Bundler L2):** Upload de transações (data items ANS-104) assinado pela carteira Arweave local (RSA-PSS, `ans104.js`; posts da malha são assinados à parte com ECDSA P-256) e enviado via gateways Turbo para inclusão otimista e propagação permanente.
+4. **Leitura de gateways Arweave (legado e reserva):** Para registros já existentes no Arweave e futuros recursos específicos, em vez de manter PostgreSQL/Redis centrais, o cliente pode consultar GraphQL distribuído nos nós Arweave/AR.IO (seção 2; `client/config/gateways.json`), sem proxy central.
+5. **Escrita no permaweb (suspensa pela diretriz atual; reservada para recursos específicos futuros):** O cliente mantém o módulo ANS-104/Turbo (`ans104.js`, `upload.js`, assinatura RSA-PSS), porém a diretriz vigente em nov/2026 determina que **por enquanto nada seja salvo usando Arweave** (aguardando desligamento da flag `arweaveUpload` em `client/config/flags.json`).
 
 ---
 

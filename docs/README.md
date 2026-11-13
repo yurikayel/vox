@@ -1,6 +1,6 @@
 # Vox — índice de documentação
 
-> **Status:** canônico (índice único) · **Owner:** voluntário doc (mutex: 1 PR por arquivo) · **Revisado:** 2026-11-12 (v2.6: brainstorm do ano de 2027 e calendário no ROADMAP; v2.5: registro único de decisões, ADR-021…024, brainstorms dos 5 pontos fracos, do terceiro lugar, do público, da captação, do refino e dos nichos, e a síntese deles)
+> **Status:** canônico (índice único) · **Owner:** voluntário doc (mutex: 1 PR por arquivo) · **Revisado:** 2026-11-13 (diretriz de zero escrita no Arweave por enquanto, tudo via rede de seguidores; v2.6: brainstorm do ano de 2027 e calendário no ROADMAP; v2.5: registro único de decisões, ADR-021…024, brainstorms dos 5 pontos fracos, do terceiro lugar, do público, da captação, do refino e dos nichos, e a síntese deles)
 > **Plano vivo e único checklist:** [ROADMAP.md](./ROADMAP.md) ([ADR-017](./adr/017-consolidacao-roadmap-unico.md)) · **Release (SHA, testes, SW):** [release-metadata.json](./release-metadata.json) e tabela do [README](../README.md)
 
 Entrada única para quem desenvolve, revisa ou opera. Todo `.md` novo em `docs/` entra aqui ([CONTRIBUTING-DOCS.md](./CONTRIBUTING-DOCS.md) §1).
@@ -81,7 +81,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 - [aviso-assinado-v0.md](./specs/aviso-assinado-v0.md): **aviso assinado** (implementado em laboratório, atrás da flag `vox.lab.aviso`): tópico com campos de aviso, texto pronto para o WhatsApp, página leve de conferência sem conta (verde, amarelo, vermelho), respostas assinadas e contagem das respostas coladas do WhatsApp
 - [sync-inventario-v0.md](./specs/sync-inventario-v0.md): sincronização ao conectar por inventário, só o que falta (implementada)
 - [mochila-dm-v0.md](./specs/mochila-dm-v0.md): caixa de saída das DMs (implementada) e repasse cego por outros aparelhos (não implementado)
-- [replicacao-por-grau-v0.md](./specs/replicacao-por-grau-v0.md): mídia no aparelho, replicação por grau de amizade com teto de 500 MB (não implementada)
+- [replicacao-por-grau-v0.md](./specs/replicacao-por-grau-v0.md): mídia no aparelho e replicação via **rede de seguidores** (diretriz base sem gravação no Arweave por enquanto; teto e regras por grau pendentes no PM-74)
 - [voluntariado-tres-trabalhos.md](./product/voluntariado-tres-trabalhos.md): os três trabalhos voluntários do piloto
 - [../client/DEV.md](../client/DEV.md): guia do desenvolvedor §0–§44 (histórico por sprint)
 - **ADRs:** [índice com status](./adr/README.md) (001–031) · [registro de decisões](./DECISOES.md) · **RFCs:** [rfc/README.md](./rfc/README.md) · [0001 — POSSE export](./rfc/0001-posse-export.md)
