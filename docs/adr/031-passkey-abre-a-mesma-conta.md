@@ -1,6 +1,6 @@
 # ADR-031: Passkey abre a mesma conta em outro aparelho (WebAuthn PRF), sem servidor de login
 
-**Status:** proposed (2026-11-13; depende do spike do §5) · **Revisado:** 2026-11-13 · **Relacionados:** PM-90, PM-92, [ADR-025](./025-cofre-v2-so-a-senha-abre.md), [ADR-026](./026-chaves-em-repouso-trava-depois-do-backup.md), [ADR-027](./027-autorizacao-no-relay-dono-e-origem.md), [ADR-022](./022-memoria-central-por-consentimento.md), [ADR-018](./018-selo-govbr-via-parceiro-publico.md), [THREAT-MODEL T20](../THREAT-MODEL.md), [IDENTITY](../IDENTITY.md)
+**Status:** accepted (2026-11-13, pelo mantenedor; não implementado; a flag só sai do laboratório depois do spike do §5) · **Revisado:** 2026-11-13 · **Relacionados:** PM-90, PM-92, [ADR-025](./025-cofre-v2-so-a-senha-abre.md), [ADR-026](./026-chaves-em-repouso-trava-depois-do-backup.md), [ADR-027](./027-autorizacao-no-relay-dono-e-origem.md), [ADR-022](./022-memoria-central-por-consentimento.md), [ADR-018](./018-selo-govbr-via-parceiro-publico.md), [THREAT-MODEL T20](../THREAT-MODEL.md), [IDENTITY](../IDENTITY.md)
 
 ## 1. Contexto
 
@@ -20,7 +20,7 @@ A passkey (WebAuthn) resolve o "mesma conta em outro aparelho" sem senha: o gere
 3. **Passkey só como autenticação num servidor do Vox.** Exige servidor de contas que guarde chaves públicas e emita sessões. O Vox não tem conta no servidor ([ADR-027](./027-autorizacao-no-relay-dono-e-origem.md)).
 4. **Passkey com PRF abrindo um segundo envelope do mesmo cofre**, tudo no aparelho. O servidor de memória só guarda mais um envelope cifrado. **Escolhida.**
 
-## 3. Decisão (proposta)
+## 3. Decisão
 
 1. **A passkey é mais uma chave do mesmo cofre, não uma conta nova.** A identidade (chave P-256, `routeId`, nome, Pix) continua a mesma. O cofre passa a poder ter dois envelopes: o da Senha ([ADR-025](./025-cofre-v2-so-a-senha-abre.md), sem mudança) e o da passkey.
 2. **Nada de WebAuthn no servidor.** O desafio é sorteado no próprio aparelho. Não há verificação de assinatura nem de atestação em servidor nenhum: só interessa o resultado do PRF, avaliado com um sal fixo do app (`vox-vault-prf-v1`).
@@ -60,7 +60,7 @@ A passkey (WebAuthn) resolve o "mesma conta em outro aparelho" sem senha: o gere
   - aceitação do `kdf` novo nos dois servidores de memória;
   - testes de derivação com vetores fixos e testes do servidor recusando envelope sem prova.
 
-## 5. Em aberto (spike antes de aceitar)
+## 5. Em aberto (spike antes de liberar a flag)
 
 - **Suporte real ao PRF**, medido nos aparelhos do piloto:
   - Chrome Android com o Gerenciador de Senhas do Google;
@@ -69,7 +69,7 @@ A passkey (WebAuthn) resolve o "mesma conta em outro aparelho" sem senha: o gere
   - Samsung Internet;
   - Firefox.
 
-  Saída: uma tabela de "funciona / não funciona" com versão e data. Se o PRF não existir na maioria dos aparelhos do piloto, o ADR volta para revisão.
+  Saída: uma tabela de "funciona / não funciona" com versão e data. Se o PRF não existir na maioria dos aparelhos do piloto, a flag fica no laboratório e o ADR volta para revisão.
 - **Detecção:** como saber, antes de oferecer o botão, que o PRF vai funcionar (`getClientCapabilities`, ou tentar e cair no fluxo atual).
 - **Domínio definitivo** e uso de *Related Origin Requests* (`/.well-known/webauthn`) para o espelho, onde houver suporte.
 - **Ordem na entrada:** passkey antes ou depois do nome e foto. Medir no piloto qual reduz desistência.
