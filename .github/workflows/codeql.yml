@@ -46,6 +46,9 @@ jobs:
               - client/vendor
               - node_modules
               - docs
+              # Os testes não vão para o aparelho de ninguém. O localStorage falso deles ligava, para o CodeQL,
+              # qualquer gravação a qualquer leitura, e todo dado salvo parecia vir de um par da malha.
+              - tests
 
       - name: Analisar
         uses: github/codeql-action/analyze@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
