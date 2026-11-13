@@ -40,5 +40,5 @@ export const meshDiscoverableLabel = "Aparecer na busca da malha";
 export const meshDiscoverableHint =
   "Publica um cartão assinado (nome, foto, bio) para pares conectados — opt-in, sem diretório central.";
 
-export const peopleSectionMesh = "🔗✅";
+export const peopleSectionMesh = "🔗🟢";
 
