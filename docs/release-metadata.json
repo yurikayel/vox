@@ -1,9 +1,9 @@
 {
-  "git_sha": "63d79e2",
-  "branch": "feat/expurgo-perfis-yuri-kayel",
-  "test_js": 1123,
+  "git_sha": "7364f45",
+  "branch": "fix/desligar-arweave-upload",
+  "test_js": 1125,
   "test_python": 111,
-  "test_total": 1234,
-  "cache_name": "vox-pwa-v7.107-real-network-audio-video-upload",
-  "generated_at": "2026-11-13T14:41:58Z"
+  "test_total": 1236,
+  "cache_name": "vox-pwa-v7.108-real-network-audio-video-upload",
+  "generated_at": "2026-11-13T15:56:02Z"
 }

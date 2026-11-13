@@ -6,6 +6,7 @@ import * as profileDirectory from "./profile-directory.js";
 import { markProfileCardSeen, seenStamp } from "./peers-gossip-profile.js";
 import * as profileNote from "./profile-note.js";
 import * as peers from "./peers.js";
+import * as featureFlags from "./feature-flags.js";
 
 function applyLocalCardFromSigned(signed) {
   if (!signed?.routeId) return;
@@ -33,7 +34,9 @@ export async function syncMeshProfileCard() {
     // Sem nome escolhido o cartão fica só aqui: não vai para a malha nem para o Arweave.
     if (profileDirectory.hasChosenCardName({ name: signed.displayName, routeId: signed.routeId })) {
       peers.broadcastProfileCard(signed);
-      void profileCard.publishProfileCardOnChain(signed);
+      if (featureFlags.isFeatureEnabled("arweaveUpload")) {
+        void profileCard.publishProfileCardOnChain(signed);
+      }
     }
     return signed;
   }

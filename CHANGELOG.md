@@ -6,6 +6,11 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Pausar gravação ativa no Arweave no cliente (`arweaveUpload: false`, REV-07)
+- **Kill-switch desligado por padrão**: `"arweaveUpload": false` em `client/config/flags.json` e `FLAG_DEFAULTS.arweaveUpload: false` em `client/js/feature-flags.js` (com mensagem atualizada preservando o estado pausado).
+- **Guardas nos fluxos de escrita**: `client/js/topic-permaweb.js`, `client/js/inline-composer.js`, `client/js/app/screens-compose.js`, `client/js/mesh-profile.js`, `client/js/app/screens-community.js` e `client/js/app/screens-profile.js` agora respeitam `featureFlags.isFeatureEnabled("arweaveUpload")` antes de abrir o aviso de permanência, tentar enviar ao Turbo/Arweave ou acusar Permaweb indisponível — mantendo toda circulação na rede de seguidores.
+- **Testes e documentação**: `tests/feature-flags.test.js`, `tests/upload.test.js` e `tests/topic-permaweb.test.js` atualizados para o padrão desligado; docs (`DECISOES.md`, `ROADMAP.md`, `FEATURES.md`, `INFRA-CUSTOS.md`, `README.md`, `ARCHITECTURE.md`, `ADR-019`, `briefing-parecer-g1.md` e `piloto-g1-convite.md`) alinhados; `CACHE_NAME` incrementado para `vox-pwa-v7.108-real-network-audio-video-upload`.
+
 ### Documentação: zero gravação no Arweave por enquanto e preservação pela rede de seguidores
 - Atualizados `README.md`, `ARCHITECTURE.md`, `docs/ARCHITECTURE.md`, `docs/DECISOES.md` (`I-05`, `A-02`, `A-08`), `docs/adr/019-esquecer-por-padrao-e-memoria-civica.md`, `docs/FEATURES.md`, `docs/ROADMAP.md` (`REV-07`, `REV-11`), `docs/INFRA-CUSTOS.md`, `docs/IDENTITY.md`, `docs/product/POSITIONING.md`, `docs/legal/COMPLIANCE-BR.md`, `docs/legal/briefing-parecer-g1.md`, `docs/pilot/piloto-g1-convite.md`, `docs/pilot/piloto-comunidade-go-no-go.md` e `docs/README.md`: formalizada a diretriz de que **por enquanto nada deve ser salvo usando Arweave** (reservado para alguns recursos futuros e leitura pública), operando a circulação e a preservação pela **rede de seguidores** (replicação de quem se segue na malha), com transparência sobre a pendência de desligamento de `arweaveUpload` em `client/config/flags.json` e do `PM-74`.
 

@@ -26,7 +26,8 @@ function fakeDeps() {
   };
   const wallet = { hasWallet: () => true };
   const permanence = { confirmPermanentPublish: async () => true, MESH_ONLY_RESULT: { success: false } };
-  return { deps: { upload, wallet, permanence }, calls };
+  const featureFlags = { isFeatureEnabled: () => true };
+  return { deps: { upload, wallet, permanence, featureFlags }, calls };
 }
 
 const tag = (tags, name) => tags.find((t) => t.name === name)?.value;
@@ -64,5 +65,17 @@ test("PM-89: sem carteira, nada vai ao Arweave", async () => {
   const { mediaBlob: blob } = await mediaBlob.detachMedia({ id: "t3", image: PHOTO_DATA_URL });
   const res = await uploadTopicToPermaweb({ topicId: "t3", commSlug: "geral", title: "x", body: "", blob }, deps);
   assert.equal(res, null);
+  assert.equal(calls.binary.length + calls.data.length, 0);
+});
+
+test("arweaveUpload desligado ignora aviso de permanência e upload", async () => {
+  const { deps, calls } = fakeDeps();
+  let prompted = false;
+  deps.permanence = { confirmPermanentPublish: async () => { prompted = true; return true; }, MESH_ONLY_RESULT: { success: false } };
+  deps.featureFlags = { isFeatureEnabled: () => false };
+  const { mediaBlob: blob } = await mediaBlob.detachMedia({ id: "t4", image: PHOTO_DATA_URL });
+  const res = await uploadTopicToPermaweb({ topicId: "t4", commSlug: "geral", title: "x", body: "", blob }, deps);
+  assert.deepEqual(res, { success: false, skipped: "arweave-disabled" });
+  assert.equal(prompted, false);
   assert.equal(calls.binary.length + calls.data.length, 0);
 });

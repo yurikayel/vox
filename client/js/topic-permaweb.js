@@ -1,10 +1,11 @@
 import * as defaultUpload from "./upload.js";
 import * as defaultWallet from "./wallet.js";
 import * as defaultPermanence from "./permanence-notice.js";
+import * as defaultFeatureFlags from "./feature-flags.js";
 import * as mediaBlob from "./media-blob.js";
 
 /** Dependências trocáveis em teste: módulos ES não aceitam stub por atribuição. */
-const DEFAULT_DEPS = Object.freeze({ upload: defaultUpload, wallet: defaultWallet, permanence: defaultPermanence });
+const DEFAULT_DEPS = Object.freeze({ upload: defaultUpload, wallet: defaultWallet, permanence: defaultPermanence, featureFlags: defaultFeatureFlags });
 
 /**
  * Sobe ao Arweave a mídia de um post, a partir do blob de `mediaBlob.detachMedia`
@@ -27,7 +28,8 @@ export async function uploadTopicMediaToPermaweb(blob, aspectRatio, upload = def
 
 /** Publica o tópico no Arweave (mídia primeiro, ligada pela tag `Media-Tx`). Sem carteira, não faz nada. */
 export async function uploadTopicToPermaweb({ topicId, commSlug, title, body, blob, aspectRatio }, deps = DEFAULT_DEPS) {
-  const { upload, wallet, permanence } = deps;
+  const { upload, wallet, permanence, featureFlags = defaultFeatureFlags } = deps;
+  if (!featureFlags.isFeatureEnabled("arweaveUpload")) return { success: false, skipped: "arweave-disabled" };
   if (!wallet.hasWallet()) return null;
   if (!(await permanence.confirmPermanentPublish())) return permanence.MESH_ONLY_RESULT;
   const ratio = aspectRatio || "original";
