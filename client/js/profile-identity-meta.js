@@ -6,9 +6,12 @@
 const META_KEY = "vox-profile-identity-meta-v1";
 const FORBIDDEN_KEYS = new Set(["__proto__", "constructor", "prototype"]);
 
+/** Tamanho máximo (em caracteres) para pronomes no perfil. */
 export const PRONOUN_MAX = 40;
+/** Tamanho máximo (em caracteres) para gênero e orientação sexual opcionais. */
 export const IDENTITY_FIELD_MAX = 48;
 
+/** Lista de atalhos rápidos para pronomes (inclui `Jacaré 🐊` como humor), sem impedir texto livre. */
 export const PRONOUN_PRESETS = Object.freeze([
   { value: "ele/dele", label: "ele/dele" },
   { value: "ela/dela", label: "ela/dela" },
@@ -20,6 +23,7 @@ export const PRONOUN_PRESETS = Object.freeze([
   { value: "Jacaré 🐊", label: "Jacaré 🐊", fun: true },
 ]);
 
+/** Sugestões opcionais para o campo livre de gênero (`<datalist>`). */
 export const GENDER_SUGGESTIONS = Object.freeze([
   "Mulher cis",
   "Homem cis",
@@ -32,6 +36,7 @@ export const GENDER_SUGGESTIONS = Object.freeze([
   "Prefiro não dizer",
 ]);
 
+/** Sugestões opcionais para o campo livre de orientação sexual (`<datalist>`). */
 export const ORIENTATION_SUGGESTIONS = Object.freeze([
   "Heterossexual",
   "Gay",
