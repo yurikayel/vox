@@ -1,6 +1,6 @@
+import "./setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
-import "./helpers/dom-env.js";
 import * as localAccount from "../client/js/local-account.js";
 import * as profileCard from "../client/js/profile-card.js";
 import * as profileDirectory from "../client/js/profile-directory.js";
@@ -12,7 +12,6 @@ import { renderIdentityMetaPills } from "../client/js/render/profile-identity-me
 
 function resetEnv() {
   localStorage.clear();
-  localAccount.__resetForTests?.();
   profileDirectory.__resetProfileCardsForTests();
 }
 
@@ -70,7 +69,7 @@ test("renderProfile - exibe formulário opcional na aba Sobre e pílulas no cabe
     gender: "Gênero fluido",
     orientation: "",
   });
-  const main = document.createElement("div");
+  const main = { innerHTML: "" };
   renderProfile.renderProfile(main, "vx_self_id", [], true, {
     displayName: "Alex",
     activeTab: "about",
@@ -104,24 +103,26 @@ test("profile-card & Pessoas - propaga pronomes na malha mantendo hover Conectad
   assert.equal(tags.find((t) => t.name === "Gender")?.value, "Mulher cis");
   assert.equal(tags.find((t) => t.name === "Orientation")?.value, "Lésbica");
 
-  localAccount.__resetForTests();
-  profileDirectory.__resetProfileCardsForTests();
-  await localAccount.ensureLocalAccount();
+  resetEnv();
   const applied = await peersGossipProfile.applyVerifiedProfileCardItem(card);
   assert.equal(applied, true);
+
+  const stored = profileDirectory.getProfileCard(me.routeId);
+  assert.equal(stored.pronouns, "ela/dela");
+  assert.equal(stored.gender, "Mulher cis");
+  assert.equal(stored.orientation, "Lésbica");
 
   const resolved = await profileDirectory.resolveProfile(me.routeId);
   assert.equal(resolved.pronouns, "ela/dela");
   assert.equal(resolved.gender, "Mulher cis");
   assert.equal(resolved.orientation, "Lésbica");
 
-  const main = document.createElement("div");
-  main.innerHTML = renderModals.resolvePeopleSearchBody(
+  const html = renderModals.resolvePeopleSearchBody(
     { contacts: [], mesh: [{ routeId: me.routeId, name: "Marina", pronouns: "ela/dela", source: "mesh-card" }], tour: [] },
     [],
     ""
   );
-  assert.ok(main.innerHTML.includes('title="Conectado"'));
-  assert.ok(main.innerHTML.includes("🔗🟢"));
-  assert.ok(main.innerHTML.includes('title="Pronomes">ela/dela</span>'));
+  assert.ok(html.includes('title="Conectado"'));
+  assert.ok(html.includes("🔗🟢"));
+  assert.ok(html.includes('title="Pronomes">ela/dela</span>'));
 });
