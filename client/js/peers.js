@@ -13,6 +13,7 @@ import * as profileDirectory from "./profile-directory.js";
 import { normalizeStorageCommitment } from "./supporter-mode.js";
 import * as centralMemory from "./central-memory.js";
 import { isBeforeGenesisMs, isTestRouteId } from "./genesis.js";
+import { isSupersededLocally } from "./post-supersede.js";
 import { getRelayHttpUrls } from "./inbox.js";
 import { createPeerSync, defaultPeerSyncDeps, SYNC_INV, SYNC_WANT } from "./peer-sync.js";
 
@@ -401,20 +402,6 @@ async function handleCacheManifestMessage(item, source = "rtc") {
   relayToMesh({ type: "CACHE_MANIFEST", item, fromPeer: myPeerId }, source);
 }
 
-async function isGossipItemSuperseded(item) {
-  const incomingTime = item.editedAt || item.ts || 0;
-  const tombstone = await cacheNode.getTombstone(item.id);
-  if (tombstone && (tombstone.editedAt || 0) >= incomingTime) return true;
-
-  const existing = await cacheNode.getLocalPost(item.id);
-  if (existing) {
-    const existingTime = existing.editedAt || existing.ts || 0;
-    if (existingTime >= incomingTime) return true;
-    if (existing.author && item.author && existing.author !== item.author) return true;
-  }
-  return false;
-}
-
 function syncProfileDirectoryFromGossip(item) {
   if (item.author && (item.authorDisplay || item.authorAvatar || item.authorHandle)) {
     profileDirectory.setProfileCard(item.author, {
@@ -443,7 +430,7 @@ function isOutsideLiveNetwork(item) {
 async function handleGossipMessage(item, source = "rtc", sentBlob = null) {
   if (!item?.id || !item?.sig) return;
   if (moderation.shouldDropGossip(item.author) || isOutsideLiveNetwork(item)) return;
-  if (await isGossipItemSuperseded(item)) return;
+  if (await isSupersededLocally(item)) return;
   if (!(await localAccount.verifyPayload(item))) return;
 
   if (item.type === profileCard.PROFILE_CARD_TYPE) {

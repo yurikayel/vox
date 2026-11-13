@@ -62,6 +62,7 @@
 | Onboarding em etapas + pacto | 1º acesso | `app/onboarding.js`, `render/oauth-modals.js` | no ar | `onboarding-steps` |
 | Confirmação "tenho 18 anos ou mais" no pacto (piloto só 18+, ADR-020) | pacto | `age-gate.js`, `render/welcome-pact.js` | no ar (autodeclarada, só no aparelho) | `age-gate` |
 | Identidade local P-256 `vx_*` | — | `local-account.js` | no ar | `local-account` |
+| Seus posts num arquivo (PM-72) | `#/settings/network` | `own-posts.js`, `post-supersede.js`, `app/own-posts-ui.js` | no ar (baixa `.json` com os próprios posts assinados e a mídia; restaurar confere autor, assinatura, versão e hash; sem servidor) | `own-posts`, `inbox-backup` |
 | Cofre v2 por Senha Soberana, sync por link/QR e backup no e-mail (ADR-025) | `#/backup`, `#/sync`, `#/settings/network` | `oauth-vault.js`, `vault-crypto.js`, `inbox-backup.js` | no ar (sync remoto precisa de servidor de memória; backup `.txt` semanal/mensal sem servidor) | `account-backup`, `wallet-encryption`, `inbox-backup` |
 | Identidade Ed25519/X25519 (cintura fina) | — | `vox-identity.js` | **escrito, não plugado** | `vox-identity` |
 | Credencial cívica / vínculo de identidade | — | `civic-credential.js`, `identity-link.js` | **escrito, não plugado** | `civic-credential`, `identity-link` |
