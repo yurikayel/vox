@@ -6,6 +6,11 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Valores de fora escapados antes de entrar na tela
+- O formato da foto de um post (`aspectRatio`) vem de quem publicou; agora só valores conhecidos (`original`, `1:1`, `4:5`, `3:4`, `4:3`, `16:9`, `9:16`) entram no HTML, pelo novo `normalizePostAspect` em `render/util.js`. Vale no feed e no tópico.
+- Escapados também: os endereços de relay nas configurações de rede, o @handle no formulário de reivindicação, a inicial do avatar no perfil e o nome da comunidade no texto alternativo da foto.
+- Achados na triagem dos alertas do CodeQL na `main`. Teste novo em `tests/escape-valores-rede.test.js`; SW `v7.98`.
+
 ### Moderador natural: a moderação prevalece e a data do arquivamento é conferida (revisão do #94)
 - Atrás da flag `vox.lab.moderador`. Um arquivamento natural sobre o post de outra pessoa tornava visível de novo um post que a moderação tinha escondido; agora o que a moderação escondeu não é substituído nem desfeito pelo arquivamento natural (`client/js/moderation.js`).
 - O `ts` do arquivamento, assinado pelo padrinho, só vale entre a data do post e o relógio do aparelho, com 5 minutos de folga (`isPlausibleHideTime` em `client/js/natural-mod.js`). Data no futuro impedia o `unhide` da moderação de desfazer; data retroativa zerava a contagem de reversões.
