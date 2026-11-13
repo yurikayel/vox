@@ -25,6 +25,7 @@ import { escapeHtml } from "../render/util.js";
 import { openOAuthEnrichModal } from "./onboarding.js";
 import { getActiveUser, makeShellProps } from "./context.js";
 import { bindInboxBackupSection, renderInboxBackupSection } from "./inbox-backup-ui.js";
+import { bindOwnPostsSection, renderOwnPostsSection } from "./own-posts-ui.js";
 
 function getChecked(id, defaultValue = false) {
   const el = document.getElementById(id);
@@ -273,8 +274,9 @@ export async function showNetworkSettings() {
     posseWebhooks: posseDispatch.loadPosseWebhooks(),
     demoMode: mock.isDemoMode(),
   });
-  main.querySelector(".network-card")?.insertAdjacentHTML("afterend", renderInboxBackupSection());
+  main.querySelector(".network-card")?.insertAdjacentHTML("afterend", renderInboxBackupSection() + renderOwnPostsSection());
   bindInboxBackupSection(() => void showNetworkSettings());
+  bindOwnPostsSection();
 
   bindNetworkSettingsForm();
   bindSupporterToggle();
