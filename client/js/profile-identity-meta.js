@@ -127,7 +127,7 @@ export function pickIdentityMeta(primary, fallback) {
  * @returns {boolean} True quando corresponde a Jacaré.
  */
 export function isJokePronoun(pronouns) {
-  return /\bjacar[eé]\b/i.test(String(pronouns || ""));
+  return /(?:^|[^\p{L}])jacar[eé](?:$|[^\p{L}])/iu.test(String(pronouns || ""));
 }
 
 /**
