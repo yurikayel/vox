@@ -34,8 +34,10 @@ test("convite: token inválido, sem quem chamou ou vencido não vale", () => {
   assert.equal(arrival.peekInviteArrival(s, T0), null);
 });
 
-test("convite: nome igual à chave não vira nome; esquecer apaga", () => {
+test("convite: o nome não vai para o armazenamento; nome igual à chave não vira nome; esquecer apaga", () => {
   const s = new Store();
+  arrival.rememberInviteArrival({ inviter: "vx_bia", token: TOKEN, name: "Bia" }, s, T0);
+  assert.ok(!s.getItem(arrival.INVITE_ARRIVAL_KEY).includes("Bia"), "só chave e token são gravados");
   arrival.rememberInviteArrival({ inviter: "vx_ana", token: TOKEN, name: "vx_ana" }, s, T0);
   assert.equal(arrival.peekInviteArrival(s, T0).name, "");
   arrival.clearInviteArrival(s);
