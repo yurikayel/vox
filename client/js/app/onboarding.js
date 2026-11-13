@@ -19,6 +19,7 @@ import {
 import { ensureOnboardingSideEffects } from "./onboarding-side-effects.js";
 import { showHome } from "./screens-home.js";
 import * as readFirst from "./read-first.js";
+import { startStorageDurability } from "./storage-durability-flow.js";
 
 export { ensureOnboardingSideEffects } from "./onboarding-side-effects.js";
 
@@ -293,6 +294,7 @@ async function finishPactAcceptance(modalContainer) {
   const returning = localStorage.getItem("vox-pact-accepted") === "true";
   if (!acceptPact()) return;
   render.closePactModal(modalContainer);
+  void startStorageDurability({ hasAccount: hasFullEntry }).catch(() => {});
   if (returning) return; // só faltava confirmar os 18+: sem boas-vindas nem convite de novo
   const user = await localAccount.getRouteId().catch(() => "");
   await ensureOnboardingSideEffects(user);
@@ -334,6 +336,7 @@ function bindPactActions(modalContainer) {
   settings?.addEventListener("click", () => {
     if (!confirmed() || !acceptPact()) return;
     render.closePactModal(modalContainer);
+    void startStorageDurability({ hasAccount: hasFullEntry }).catch(() => {});
     void localAccount.getRouteId().then((u) => ensureOnboardingSideEffects(u));
     location.hash = "#/settings/network";
   });

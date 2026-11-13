@@ -9080,6 +9080,36 @@ blockquote.repost-cite {
   font-size: 0.85rem;
 }
 
+/* PM-72 — faixa do Safari em aba comum: pôr o Vox na Tela de Início protege a chave da limpeza de 7 dias */
+.safari-home-banner {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  z-index: 61;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: calc(0.6rem + env(safe-area-inset-top, 0px)) 1rem 0.6rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-soft);
+  color: var(--text);
+  font-size: 0.85rem;
+}
+.safari-home-banner .banner-text { margin: 0.2rem 0 0; }
+.safari-home-banner .banner-badge { font-weight: 700; color: var(--accent); }
+.safari-home-banner .banner-dismiss {
+  flex: none;
+  margin-left: auto;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
 /* PM-54 — faixa "ler antes de entrar" (link direto abre o conteúdo; entrar fica a um toque) */
 .read-first-banner {
   position: fixed;

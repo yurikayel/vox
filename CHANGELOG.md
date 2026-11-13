@@ -6,6 +6,11 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Armazenamento durável plugado ao ter conta e ajuste de backlog para fundamentais
+- `storage-persistence.js` saiu da lista de módulos não plugados e passou a rodar por `client/js/app/storage-durability-flow.js` no boot (`app.js`) e ao aceitar o pacto (`app/onboarding.js`): quem já tem conta pede persistência (`navigator.storage.persist()`) e, em aba comum do Safari/WebKit, vê uma vez a faixa orientando adicionar o Vox à Tela de Início contra a limpeza automática de 7 dias.
+- Quem só está lendo não recebe o pedido nem a faixa até concluir a entrada. Testes novos em `tests/storage-durability-flow.test.js`. SW `v7.100`.
+- `docs/ROADMAP.md` e `docs/FEATURES.md` atualizados para refletir entregas recentes (`#92`, `#94`+`#115`, `#101`, `#108`, `#118`) e promover os fundamentos (`REV-14`, `PM-72`, `REV-10`) para `Agora (P0)`.
+
 ### Onboarding só na primeira ação que escreve, em duas telas, e "Já tenho conta" com o QR do outro aparelho
 - Quem abre o Vox lê na hora: **Início**, **Pessoas**, link de convite (**Conectar**) e link de sincronização entraram na leitura antes de entrar (PM-54). A entrada aparece na primeira curtida, resposta, post ou voto, ou no botão **Entrar no Vox**. A faixa de baixo ficou com uma frase só.
 - Saiu a tela de portão "Entrar — sou humano" (e a arte da cantina saiu do precache, -79 KB). Quem chega por uma tela de escrita (compor, mensagem, carteira, votar) vai direto para a entrada.
