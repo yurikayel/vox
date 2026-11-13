@@ -134,6 +134,8 @@ export async function showAvisos(communityId) {
   });
   bindAvisoActions(main, ctx, items);
   bindSkillsForm(main, communityId);
+  const { mountSorteios } = await import("./sorteio-flow.js");
+  await mountSorteios(main.querySelector(".aviso-screen"), ctx);
 }
 
 /**
