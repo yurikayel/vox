@@ -51,3 +51,34 @@ test("renderStatusPage - mirror_last_error exportável", () => {
   });
   assert.ok(main.innerHTML.includes("mirror.community_id_invalid"));
 });
+
+test("renderStatusPage - exibe tabela WebSocket vs Nostr e tempo até conectar (PM-18)", () => {
+  const main = createContainer();
+  Object.defineProperty(main, "innerHTML", {
+    set(v) {
+      this._html = v;
+    },
+    get() {
+      return this._html || "";
+    },
+  });
+  render.renderStatusPage(main, {
+    gatewayHealth: { state: "all_ok", gateways: {} },
+    relayStatus: { online: false },
+    signalingStats: {
+      channels: {
+        ws: { attempts: 3, ok: 2, fail: 1, avgConnectMs: 110 },
+        nostr: { attempts: 4, ok: 4, fail: 0, avgConnectMs: 240 },
+      },
+      peers: {
+        ws: { attempts: 1, ok: 1, fail: 0, avgConnectMs: 310 },
+        nostr: { attempts: 2, ok: 1, fail: 1, avgConnectMs: 450 },
+      },
+      firstPeer: { count: 2, lastMs: 450, avgMs: 380, medianMs: 380 },
+    },
+  });
+  assert.ok(main.innerHTML.includes("Canal WebSocket"));
+  assert.ok(main.innerHTML.includes("Canal Nostr"));
+  assert.ok(main.innerHTML.includes("450 ms"));
+  assert.ok(main.innerHTML.includes("status-copy-signaling-btn"));
+});
