@@ -209,6 +209,48 @@ test("arquivamento firme — esconde só o post do afilhado; unhide da moderaç�
   assert.equal((src.match(/naturalVerified: false/g) || []).length, 2, "ação vinda de fora perde a marca de conferida");
 });
 
+test("arquivamento natural não desfaz nem substitui o que a moderação escondeu", () => {
+  const items = [{ id: "p1", owner: "vx_vitima" }];
+  const shown = (actions) => moderation.applyFilters(items, actions, "vx_dono", "", "vx_leitor").length === 1;
+  const modHide = { id: "h", action: "hide", target: "p1", owner: "vx_dono", ts: 1000 };
+  const nat = (ts, author) => ({ id: "n", action: "natural-hide", target: "p1", targetAuthor: author, ts, naturalVerified: true });
+  assert.equal(shown([modHide]), false, "controle: a moderação escondeu");
+  assert.equal(shown([modHide, nat(2000, "vx_laranja")]), false, "padrinho de outra pessoa, depois do hide");
+  assert.equal(shown([nat(500, "vx_laranja"), modHide]), false, "padrinho de outra pessoa, antes do hide");
+  assert.equal(shown([modHide, nat(2000, "vx_vitima")]), false, "padrinho de verdade: segue escondido");
+  const review = { id: "r", action: "review-hide", target: "p1", owner: "vx_dono", ts: 1000 };
+  assert.equal(shown([review, nat(2000, "vx_laranja")]), false, "o mesmo vale para o arquivamento em revisão");
+  const undo = { id: "u", action: "unhide", target: "p1", owner: "vx_dono", ts: 3000 };
+  assert.equal(shown([modHide, nat(2000, "vx_vitima"), undo]), true, "o unhide da moderação continua desfazendo tudo");
+});
+
+test("arquivamento natural — data no futuro ou antes do post não vale", async () => {
+  const MIN = 60 * 1000;
+  const now = 1_000_000_000;
+  const ok = (ts, postTs = now - 60 * MIN) => natural.isPlausibleHideTime({ ts }, { postTs, now });
+  assert.equal(ok(now), true);
+  assert.equal(ok(now + 4 * MIN), true, "folga de relógio");
+  assert.equal(ok(now + 6 * MIN), false, "futuro: a moderação nunca desfaria");
+  assert.equal(ok(now - 61 * MIN - 5 * MIN), false, "antes do post: escaparia da contagem de reversões");
+  assert.equal(ok(0), false, "sem data");
+  const hides = [{ postId: "p1", ts: now }, { postId: "p1", ts: now + 365 * 24 * 60 * MIN }, { postId: "p2", ts: now - 10 * MIN }, { postId: "sumiu", ts: now }];
+  const posts = { p1: { ts: now - 60 * MIN }, p2: { ts: now - MIN } };
+  const kept = await flow.withPlausibleTime(hides, async (id) => posts[id] || null, now);
+  assert.deepEqual(kept, [hides[0]], "fica só o datado entre o post e agora; sem o post, fica de fora");
+});
+
+test("reversões — com a data presa ao post, datar para trás não devolve o poder sobre post novo", () => {
+  const DAY = 864e5;
+  const now = 200 * DAY;
+  const past = [1, 2, 3].map((i) => ({ hider: "vx_m", postId: `p${i}`, ts: now - 10 * DAY }));
+  const unhides = [1, 2, 3].map((i) => ({ target: `p${i}`, ts: now - 5 * DAY }));
+  const count = (ts) => natural.reversalsAgainst("vx_m", { hides: past, unhides: unhides.filter((u) => u.ts < ts), now: ts });
+  const backdated = { ts: now - 6 * DAY };
+  assert.equal(count(backdated.ts), 0, "a contagem sozinha seria enganada pela data retroativa");
+  assert.equal(natural.isPlausibleHideTime(backdated, { postTs: now - DAY, now }), false, "mas o post é de ontem: a data retroativa é recusada");
+  assert.equal(count(now), 3, "com a data honesta, as 3 reversões contam e o poder caiu");
+});
+
 const linkCard = await import("../client/js/render/vox-link.js");
 
 test("lote F — vínculo só para mediação não dá poder; serve para mediação", async () => {

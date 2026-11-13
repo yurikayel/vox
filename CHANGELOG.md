@@ -6,6 +6,12 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Moderador natural: a moderação prevalece e a data do arquivamento é conferida (revisão do #94)
+- Atrás da flag `vox.lab.moderador`. Um arquivamento natural sobre o post de outra pessoa tornava visível de novo um post que a moderação tinha escondido; agora o que a moderação escondeu não é substituído nem desfeito pelo arquivamento natural (`client/js/moderation.js`).
+- O `ts` do arquivamento, assinado pelo padrinho, só vale entre a data do post e o relógio do aparelho, com 5 minutos de folga (`isPlausibleHideTime` em `client/js/natural-mod.js`). Data no futuro impedia o `unhide` da moderação de desfazer; data retroativa zerava a contagem de reversões.
+- Limite que continua: sobre post antigo, anterior às reversões, a data retroativa ainda passa (descrito em `docs/specs/moderador-natural-v0.md`).
+- 3 testes novos em `tests/natural-mod.test.js`. SW `v7.97`.
+
 ### Moderador natural (PM-83, lotes A a F)
 - Lógica de quem responde por quem a partir dos vínculos assinados: padrinho, ou a pessoa mais próxima (vínculo comum mais antigo, membro da comunidade primeiro), nunca a outra parte. Tela **Meus vínculos** no topo de Pessoas. Laboratório `vox.lab.moderador`.
 - **Lote E:** "Pedir mediação" vai, por mensagem cifrada, ao moderador natural de cada parte, com o cartão do post e sem arquivar nada; sem vínculo, segue para a moderação da comunidade.
