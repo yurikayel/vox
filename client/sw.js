@@ -4,7 +4,7 @@
 
 // O Service Worker atua no cache offline do shell e notificações de status, sem abrir WebRTC.
 
-const CACHE_NAME = "vox-pwa-v7.110-real-network-audio-video-upload";
+const CACHE_NAME = "vox-pwa-v7.111-real-network-audio-video-upload";
 
 const SHELL_ASSETS = [
 
@@ -62,6 +62,7 @@ const SHELL_ASSETS = [
   "./js/app/onboarding-side-effects.js",
 
   "./js/app/onboarding.js",
+  "./js/app/account-exit-banner.js",
 
   "./js/app/route-parse.js",
 
@@ -226,6 +227,7 @@ const SHELL_ASSETS = [
   "./js/key-at-rest.js",
   "./js/key-lock.js",
   "./js/account-backup.js",
+  "./js/account-exit.js",
   "./js/vault-crypto.js",
   "./js/vault-legacy.js",
 
@@ -362,6 +364,7 @@ const SHELL_ASSETS = [
   "./js/render/profile-voxels.js",
 
   "./js/render/oauth-modals.js",
+  "./js/render/oauth-import.js",
 
   "./js/render/network.js",
 

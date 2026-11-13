@@ -264,7 +264,7 @@ function bindSovereigntyExport() {
   if (!btn) return;
   btn.addEventListener("click", async () => {
     try {
-      const jsonStr = await exportAccountBundle(readSovereigntyPassphrase());
+      const jsonStr = await exportAccountBundle(readSovereigntyPassphrase(), { asFile: true });
       downloadSovereigntyFile(jsonStr, JSON.parse(jsonStr).routeId);
       share.showToast("Arquivo de soberania exportado — guarde offline.");
     } catch (err) {
@@ -289,7 +289,7 @@ async function restoreBackupFiles(files, activeTab) {
 async function restoreSovereigntyFile(file, activeTab) {
   const text = await file.text();
   const secret = await resolveImportPassphrase(text, readSovereigntyPassphrase());
-  const ok = await importAccountBundle(text, secret);
+  const ok = await importAccountBundle(text, secret, { asFile: true });
   if (!ok) {
     share.showToast("Falha ao validar chaves do backup.", "error");
     return;
@@ -576,7 +576,7 @@ function bindDisplayNameAndOAuthButtons(address, activeTab) {
     });
   });
   document.getElementById("btn-open-oauth-modal")?.addEventListener("click", () => {
-    openOAuthEnrichModal({
+    openOAuthEnrichModal({ mode: "import",
       onComplete: () => {
         broadcastActiveIdentityChanges();
         showProfile(address, activeTab);

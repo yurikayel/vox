@@ -24,6 +24,7 @@ import { startVaultMigration } from "./oauth-vault.js";
 import { startKeysAtRest } from "./key-at-rest.js";
 import { showDueInboxBackup } from "./app/inbox-backup-ui.js";
 import { startStorageDurability } from "./app/storage-durability-flow.js";
+import { startAccountExitBanner } from "./app/account-exit-banner.js";
 
 void startKeysAtRest().catch(() => {});
 installDomDelegates(document);
@@ -53,4 +54,5 @@ Promise.allSettled([loadRemoteFlags(), demoSeed.purgeMockDemoSeed()]).finally(()
   route();
   setTimeout(() => void showDueInboxBackup(), 3000);
   void startStorageDurability({ hasAccount: hasFullEntry }).catch(() => {});
+  void startAccountExitBanner({ hasAccount: hasFullEntry }).catch(() => {});
 });
