@@ -312,7 +312,7 @@ async function finishPactAcceptance(modalContainer) {
   if (returning) return; // só faltava confirmar os 18+: sem boas-vindas nem convite de novo
   const user = await localAccount.getRouteId().catch(() => "");
   await ensureOnboardingSideEffects(user);
-  share.showToast("Bem-vindo ao Vox! 🔗✅");
+  share.showToast("Bem-vindo ao Vox! 🔗🟢");
   if (landOnInviter(user)) return;
   const cur = parseRoute();
   if (cur.name === "home") showHome(cur.feed);

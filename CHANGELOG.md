@@ -11,7 +11,10 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 - **Faixa "Esta conta só existe neste navegador"** (`app/account-exit-banner.js`) para quem tem conta e ainda não tem saída soberana, com "Criar minha saída" (`#/backup`) e "Agora não" (volta em 7 dias ou 10 posts). Não bloqueia nada.
 - **Registro local das saídas** (`account-exit.js`): conta só o que está fora do navegador — cofre aceito por um servidor de memória (`saveRemoteVaultRecord` agora diz quantos aceitaram), `.voxid` com senha baixado ou importado, backup no e-mail mandado ou restaurado. Conta já travada por senha antes do registro conta uma vez como backup anterior.
 - **Assistente de backup honesto** (`app/screens-guided.js`): se nenhum servidor guardou o cofre, diz isso e oferece baixar o arquivo cifrado, em vez de "Cofre salvo".
-- Testes: `tests/account-exit.test.js`, `tests/account-exit-banner.test.js`; `tests/onboarding-steps.test.js` passa a exigir a entrada **sem** os botões dos provedores. SW `v7.112`.
+- Testes: `tests/account-exit.test.js`, `tests/account-exit-banner.test.js`; `tests/onboarding-steps.test.js` passa a exigir a entrada **sem** os botões dos provedores. SW `v7.113`.
+
+### Ajuste de ícone de conexão para `🔗🟢` / `🔗❌`
+- **Terminologia simplificada**: ícone de conectado atualizado de `🔗✅` para `🔗🟢` (mantendo `🔗❌` para desconectado/offline) nos selos/seções de Pessoas, status do relay, toasts e badge de conta vinculada; `CACHE_NAME` incrementado para `vox-pwa-v7.112-real-network-audio-video-upload`.
 
 ### Texto conciso, espaçamentos em Sua rede e emojis `🔗✅` / `🔗❌`
 - **Terminologia simplificada**: selo e seção em **Pessoas** (`#/people`) e status do relay/conexões (`client/js/render/oauth-modals.js`, `client/js/i18n-pt-br.js`, `client/js/render/network.js`, `client/js/app/onboarding.js`, `client/js/app/screens-network.js`, `client/js/explode-dispatch.js`) passaram de `"Na malha"` / `"Conectado"` / `"Offline"` para os emojis `🔗✅` (conectado) e `🔗❌` (não conectado).
