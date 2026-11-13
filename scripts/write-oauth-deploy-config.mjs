@@ -67,6 +67,7 @@ if (process.argv[1] && process.argv[1].endsWith("write-oauth-deploy-config.mjs")
   } else {
     console.warn("::warning:: OAuth Bluesky: VOX_SITE_URL/GITHUB_REPOSITORY ausentes — login do Bluesky desativado neste deploy.");
   }
+  // Só "configurado": a URL do relay já vai no oauth.json publicado e não precisa repetir no log (CodeQL 238).
   const logins = Object.entries(ids).filter(([, v]) => isSet(v)).map(([k]) => k);
-  console.log(`OAuth Pages: IDs configurados: ${logins.join(", ") || "nenhum"}; relay: ${payload.oauthRelayUrl || "não configurado"}`);
+  console.log(`OAuth Pages: IDs configurados: ${logins.join(", ") || "nenhum"}; relay: ${payload.oauthRelayUrl ? "configurado" : "não configurado"}`);
 }
