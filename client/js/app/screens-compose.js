@@ -78,7 +78,7 @@ function bindCommunityPhotoInputs(state) {
 }
 
 async function uploadCommunityToPermaweb(communityRecord) {
-  if (!wallet.hasWallet()) return;
+  if (!featureFlags.isFeatureEnabled("arweaveUpload") || !wallet.hasWallet()) return;
   try {
     const { id, title, category, description, image } = communityRecord;
     const tags = upload.buildTags("community", {
@@ -214,6 +214,7 @@ function applyQuotePrefillToTopicComposer() {
 }
 
 async function tryUploadTopicToPermaweb(topicId, finalComm, title, body) {
+  if (!featureFlags.isFeatureEnabled("arweaveUpload")) return { success: false, skipped: "arweave-disabled" };
   if (!wallet.hasWallet()) return null;
   if (!(await permanence.confirmPermanentPublish())) return permanence.MESH_ONLY_RESULT;
   try {
@@ -278,6 +279,8 @@ function showTopicPublishToast(permawebResult) {
     share.showToast(`Post publicado no P2P e gravado na Permaweb (${badge})!`);
   } else if (permawebResult?.skipped === permanence.CHOICE_MESH) {
     share.showToast("Post publicado só na malha P2P (não permanente).");
+  } else if (permawebResult?.skipped === "arweave-disabled") {
+    share.showToast("Post publicado na rede de seguidores!");
   } else if (wallet.hasWallet()) {
     share.showToast("Post publicado no P2P local (Permaweb indisponível).", "warning");
   } else {
@@ -635,7 +638,7 @@ export async function showComposeReply(topicId, communityId, parentId = "") {
 }
 
 async function tryUploadReplyToPermaweb(topicId, communityId, body, replyId, authorDisplay) {
-  if (!wallet.hasWallet()) return;
+  if (!featureFlags.isFeatureEnabled("arweaveUpload") || !wallet.hasWallet()) return;
   if (!(await permanence.confirmPermanentPublish())) return;
   try {
     const tags = upload.buildTags("reply", {

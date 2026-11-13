@@ -31,7 +31,7 @@ Escrito antes do teste, para ninguém ser pego de surpresa.
 
 **Bom saber**
 - O app gasta dados: ele ajuda a rede repassando posts do grupo, com teto diário. No 4G isso só liga se você quiser (`#/settings/network`).
-- **Por enquanto nada vai para a blockchain permanente (Arweave):** seus posts e mídias circulam só entre os aparelhos participantes pela rede de seguidores. Mesmo assim, qualquer cópia em outro celular pode ser salva ou fotografada; não publique endereço, documento ou dados de outras pessoas. *(Pendente no app: desligar a flag `arweaveUpload` antes de abrir o piloto.)*
+- **Por enquanto nada vai para a blockchain permanente (Arweave):** seus posts e mídias circulam só entre os aparelhos participantes pela rede de seguidores (`arweaveUpload: false` no app). Mesmo assim, qualquer cópia em outro celular pode ser salva ou fotografada; não publique endereço, documento ou dados de outras pessoas.
 - O teste é para adultos e tem fim: depois de 4 semanas, o grupo decide se continua.
 
 ## 3. Como dar retorno
