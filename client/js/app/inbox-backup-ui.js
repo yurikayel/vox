@@ -13,17 +13,15 @@ const fmt = (ms) => (ms ? new Date(ms).toLocaleDateString("pt-BR") : "nunca");
  */
 export function renderInboxBackupSection() {
   const s = backup.getInboxBackupSettings();
-  const intro = `<p class="desc">Toda semana e todo mês o Vox prepara um backup cifrado das suas chaves, contatos, mensagens e
-    posts. Você manda para o seu próprio e-mail; o Vox não guarda nem vê o endereço. Para voltar em outro aparelho:
-    Perfil → Restaurar Backup e a sua Senha Soberana.</p>`;
+  const intro = `<p class="desc">Envia backups cifrados para seu próprio e-mail (sem servidor). Restaure em Perfil → Restaurar Backup.</p>`;
   const body = s.ready
     ? `<label><input type="checkbox" id="inbox-backup-weekly" ${s.weekly ? "checked" : ""} /> Semanal: o que mudou na semana</label>
-      <label><input type="checkbox" id="inbox-backup-monthly" ${s.monthly ? "checked" : ""} /> Mensal: o mês inteiro, repetido de propósito</label>
+      <label><input type="checkbox" id="inbox-backup-monthly" ${s.monthly ? "checked" : ""} /> Mensal: o mês inteiro, repetido por segurança</label>
       <p class="meta">Último semanal: ${escapeHtml(fmt(s.lastWeekly))} · último mensal: ${escapeHtml(fmt(s.lastMonthly))}</p>
       <button type="button" class="agora-btn agora-btn--secondary" data-inbox-send="completo">Enviar backup completo agora</button>`
     : `<input type="password" id="inbox-backup-pass" class="form-control" autocomplete="current-password" placeholder="Senha Soberana (12 ou mais caracteres)" />
       <button type="button" class="agora-btn agora-btn--primary" id="btn-inbox-backup-enable">Ligar backups</button>`;
-  return `<div class="card inbox-backup-settings" style="margin-top:1rem;"><h3>Backup no seu e-mail</h3>${intro}${body}</div>`;
+  return `<div class="card inbox-backup-settings" style="margin-top:1.25rem;"><h3>Backup no seu e-mail</h3>${intro}${body}</div>`;
 }
 
 async function sendFile({ name, text }) {

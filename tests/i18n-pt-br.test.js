@@ -18,7 +18,7 @@ test("i18n-pt-br - microcopy pós-gossip de retratação na malha", () => {
 test("i18n-pt-br - descoberta na malha (V-MESH)", () => {
   assert.match(i18n.meshDiscoverableLabel, /busca da malha/i);
   assert.match(i18n.meshDiscoverableHint, /cartão assinado|opt-in/i);
-  assert.match(i18n.peopleSectionMesh, /conectad/i);
+  assert.equal(i18n.peopleSectionMesh, "🔗✅");
 });
 
 test("i18n-pt-br - microcopy feira gossip (status / retratação)", () => {
