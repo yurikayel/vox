@@ -57,6 +57,7 @@ Legenda de estado:
 |---|---|---|
 | Custódia da chave | Em vigor (SW v7.64): chaves cifradas pelo aparelho; depois do backup com a Senha Soberana, identidade e DM só saem pela cópia cifrada com a senha | PM-93, [ADR-026](./adr/026-chaves-em-repouso-trava-depois-do-backup.md) |
 | Cadeia de suprimentos | Em vigor (PM-95): CodeQL, Dependabot, actions por SHA, ruleset `strict`. Falta decidir quando a revisão vira obrigatória (CODEOWNERS já existe) e se o CodeQL vira check obrigatório | PM-95 · [DEPENDENCIAS](./DEPENDENCIAS.md) |
+| Mesma conta sem senha | Passkey com PRF como segundo envelope do cofre (a Senha continua sendo a chave universal); falta o spike de suporte ao PRF nos aparelhos do piloto e o domínio definitivo | [ADR-031](./adr/031-passkey-abre-a-mesma-conta.md) |
 | Formato de assinatura | Quando parar de aceitar v1 (posts antigos assinados só nos campos de topo) | PM-85 · [ADR-021 §2.6](./adr/021-integridade-na-entrada-forma-assinada.md) |
 | Quantizador do vídeo | Quantizador H.264 equivalente a q60 (Half) e q80 (Full); medir | [ADR-029 §4](./adr/029-midia-em-duas-camadas-360p-720p.md#4-em-aberto) |
 | Propostas antigas | Atestação (001), perfil coletivo (005), corroboração multi-gateway (009) e Contribution Engine (010): aceitar, adiar ou arquivar | [índice de ADRs](./adr/README.md) |
