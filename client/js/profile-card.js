@@ -2,6 +2,7 @@
 
 import * as localAccount from "./local-account.js";
 import * as profileNote from "./profile-note.js";
+import { getLocalIdentityMeta, pickIdentityMeta } from "./profile-identity-meta.js";
 import * as upload from "./upload.js";
 
 export const PROFILE_CARD_TYPE = "profile-card";
@@ -50,13 +51,18 @@ function resolveCardBio(bio, enrich) {
   return (enrich && enrich.bio) ? enrich.bio : "";
 }
 
-export async function buildSignedProfileCard({ displayName = "", avatarUrl = "", bio = "" } = {}) {
+function resolveCardIdentityMeta(metaOverride, routeId) {
+  return pickIdentityMeta(metaOverride, getLocalIdentityMeta(routeId));
+}
+
+export async function buildSignedProfileCard({ displayName = "", avatarUrl = "", bio = "", pronouns = "", gender = "", orientation = "" } = {}) {
   const routeId = await localAccount.getRouteId();
   const enrich = localAccount.getProfileEnrichment();
   const note = profileNote.getNote(routeId);
   const name = resolveCardDisplayName(displayName, enrich);
   const avatar = resolveCardAvatar(avatarUrl, enrich);
   const resolvedBio = resolveCardBio(bio, enrich);
+  const meta = resolveCardIdentityMeta({ pronouns, gender, orientation }, routeId);
 
   const payload = {
     id: canonicalProfileCardId(routeId),
@@ -65,6 +71,9 @@ export async function buildSignedProfileCard({ displayName = "", avatarUrl = "",
     displayName: String(name).slice(0, 80),
     avatarUrl: String(avatar).slice(0, 512),
     bio: String(resolvedBio).slice(0, 280),
+    ...(meta.pronouns ? { pronouns: meta.pronouns } : {}),
+    ...(meta.gender ? { gender: meta.gender } : {}),
+    ...(meta.orientation ? { orientation: meta.orientation } : {}),
     note: (note && note.text) ? note.text : "",
     noteAt: (note && note.updatedAt) ? note.updatedAt : 0,
     discoverable: true,
@@ -97,7 +106,7 @@ export function buildProfileCardArweaveTags(card) {
   const c = card || {};
   const name = c.displayName || c.name || "";
   const ts = c.editedAt || c.ts || Date.now();
-  return [
+  const tags = [
     { name: "App-Name", value: "vox-brasil" },
     { name: "Type", value: PROFILE_CARD_TYPE },
     { name: "Route-Id", value: getCardTagValue(c.routeId) },
@@ -108,6 +117,10 @@ export function buildProfileCardArweaveTags(card) {
     { name: "Timestamp", value: String(ts) },
     { name: "Content-Type", value: "application/json" },
   ];
+  if (c.pronouns) tags.push({ name: "Pronouns", value: getCardTagValue(c.pronouns, 40) });
+  if (c.gender) tags.push({ name: "Gender", value: getCardTagValue(c.gender, 48) });
+  if (c.orientation) tags.push({ name: "Orientation", value: getCardTagValue(c.orientation, 48) });
+  return tags;
 }
 
 export async function publishProfileCardOnChain(card, { uploadFn = upload.postData } = {}) {

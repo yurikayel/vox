@@ -6,6 +6,11 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Pronomes, gênero e orientação sexual opcionais nos perfis
+- **Qualquer pronome + opções opcionais** (`client/js/profile-identity-meta.js`, `client/js/render/profile-identity-meta.js`, `client/js/app/profile-identity-meta-ui.js`): perfis agora têm campos opcionais para **pronomes** (texto livre para suportar todos os pronomes + atalhos rápidos incluindo `Jacaré 🐊` como humor), **gênero** e **orientação sexual**.
+- **Cabeçalho, Pessoas, P2P e Backup**: pílulas discretas com tooltip no hover no cabeçalho do perfil (`client/js/render/profile.js`, `client/css/style.css`), selo de pronome em **Pessoas** (`client/js/people-index.js`, `client/js/render/oauth-modals.js`), propagação no cartão P2P assinado (`profile-card.js`, `mesh-profile.js`, `peers-gossip-profile.js`, `profile-directory.js`) e preservação no `.voxid` e backup por e-mail (`account-backup.js`, `inbox-backup.js`).
+- **Service Worker**: novos módulos incluídos em `SHELL_ASSETS` e `CACHE_NAME` incrementado para `vox-pwa-v7.114-real-network-audio-video-upload`.
+
 ### Conta provisória até ter saída; Google e Meta fora da entrada (ADR-032, passo 1)
 - **Entrada sem Google, Meta e GitHub** (`render/oauth-modals.js`): a entrada pede só o nome. Importar nome e foto vai para Perfil (`render/oauth-import.js`, `openOAuthEnrichModal({ mode: "import" })`), com o aviso "Não guarda sua conta".
 - **Faixa "Esta conta só existe neste navegador"** (`app/account-exit-banner.js`) para quem tem conta e ainda não tem saída soberana, com "Criar minha saída" (`#/backup`) e "Agora não" (volta em 7 dias ou 10 posts). Não bloqueia nada.
