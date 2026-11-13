@@ -161,3 +161,65 @@ test("webrtc - modo só TURN tira STUN e força iceTransportPolicy relay (LAN-19
   webrtcPeer.setTurnOnly(false);
   assert.equal(webrtcPeer.createRtcConfig(baseCfg).iceTransportPolicy, undefined);
 });
+
+function createFakeRtcEnv({ failFirstOfferAfterClose = false } = {}) {
+  const pcs = [];
+  class FakeRtcPeerConnection {
+    constructor() {
+      this.signalingState = "stable";
+      this.connectionState = "new";
+      this.remoteDescription = null;
+      this.localDescription = null;
+      this.addedIce = [];
+      this.closed = false;
+      this.offerCount = 0;
+      pcs.push(this);
+    }
+    createDataChannel(label) { return { label, readyState: "connecting", close() {} }; }
+    createOffer() {
+      this.offerCount++;
+      if (!failFirstOfferAfterClose || pcs.length > 1) return Promise.resolve({ type: "offer", sdp: "o1" });
+      return new Promise((_, reject) => setTimeout(() => reject(new Error("aborted")), 20));
+    }
+    async createAnswer() { return { type: "answer", sdp: "a1" }; }
+    async setLocalDescription(desc) { this.localDescription = desc; this.signalingState = desc.type === "offer" ? "have-local-offer" : "stable"; }
+    async setRemoteDescription(desc) { this.remoteDescription = desc; this.signalingState = desc.type === "offer" ? "have-remote-offer" : "stable"; }
+    async addIceCandidate(c) {
+      if (!this.remoteDescription) throw new Error("InvalidStateError");
+      this.addedIce.push(c);
+    }
+    close() { this.closed = true; this.connectionState = "closed"; }
+  }
+  return { pcs, FakeRtcPeerConnection };
+}
+
+test("webrtc - fila candidatos ICE antes de remoteDescription e protege glare durante createOffer", async (t) => {
+  const origPc = globalThis.RTCPeerConnection;
+  const origDesc = globalThis.RTCSessionDescription;
+  const origIce = globalThis.RTCIceCandidate;
+  t.after(() => {
+    webrtcPeer.disconnectWebRtc();
+    globalThis.RTCPeerConnection = origPc;
+    globalThis.RTCSessionDescription = origDesc;
+    globalThis.RTCIceCandidate = origIce;
+  });
+
+  const { pcs, FakeRtcPeerConnection } = createFakeRtcEnv({ failFirstOfferAfterClose: true });
+  globalThis.RTCPeerConnection = FakeRtcPeerConnection;
+  globalThis.RTCSessionDescription = function (d) { return d; };
+  globalThis.RTCIceCandidate = function (c) { return c; };
+
+  await webrtcPeer.initWebRtc("peer_z_polite");
+  await Promise.all([
+    webrtcPeer.handleSignalingMessage({ type: "registered", peers: ["peer_a_impolite"] }),
+    webrtcPeer.handleSignalingMessage({ type: "offer", from: "peer_a_impolite", sdp: { type: "offer", sdp: "oA" } }),
+    webrtcPeer.handleSignalingMessage({ type: "ice", from: "peer_a_impolite", candidate: { candidate: "cand1" } }),
+  ]);
+  await new Promise((r) => setTimeout(r, 35));
+
+  assert.equal(pcs.length, 2);
+  assert.equal(pcs[0].closed, true);
+  assert.equal(pcs[1].closed, false);
+  assert.equal(pcs[1].localDescription?.type, "answer");
+  assert.deepEqual(pcs[1].addedIce, [{ candidate: "cand1" }]);
+});
