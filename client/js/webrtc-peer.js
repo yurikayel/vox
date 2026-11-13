@@ -11,6 +11,7 @@ import {
   recordPeerPathOutcome,
   recordFirstPeerLatency,
 } from "./signaling-telemetry.js";
+import { createTurnFallback } from "./turn-credentials.js";
 
 let signalingWs = null;
 let currentPeerId = null;
@@ -27,6 +28,13 @@ let configCache = null;
 /** REV-09: transporte Nostr paralelo e de onde cada par veio ("nostr" | "ws"). */
 let nostrTransport = null;
 const peerTransport = new Map();
+/** REV-10: TURN do Worker só depois de uma falha direta (quem inicia reconecta) ou no modo "só TURN". */
+const turn = createTurnFallback({
+  getUrl: () => configCache?.turnCredentialsUrl,
+  reconnect: (id) => {
+    if (isWebRtcEnabled && !peerConnections.has(id) && currentPeerId < id) void createPeerConnection(id, true);
+  },
+});
 let sessionStartedAt = 0;
 let recordedFirstPeer = false;
 /** LAN-21: "sinalização caída" só quando WebSocket e Nostr falham juntos por mais que a carência. */
@@ -276,6 +284,8 @@ export async function initWebRtc(peerId, customUrl = null) {
   }
   connectSignaling();
   void startNostrSignaling();
+  // Modo "só TURN": sem credencial nenhuma conexão acontece, então pede logo ao abrir.
+  if (isTurnOnly()) void loadSignalingConfig().then(() => turn.prefetch());
   return true;
 }
 
@@ -486,6 +496,7 @@ function collectIceServers(config) {
     if (customTurn.credential) entry.credential = customTurn.credential;
     iceServers.push(entry);
   }
+  iceServers.push(...turn.iceServers());
   return iceServers;
 }
 
@@ -624,7 +635,9 @@ function attachPeerConnectionEvents(pc, remotePeerId) {
   pc.onconnectionstatechange = () => {
     const state = pc.connectionState;
     if (state === "failed" || state === "closed" || state === "disconnected") {
+      const hadTurn = Boolean(peerConnections.get(remotePeerId)?.withTurn);
       closeIfSameConnection(remotePeerId, pc);
+      if (state === "failed") void turn.onFailed(remotePeerId, hadTurn);
     }
   };
   pc.onicecandidate = (event) => {
@@ -637,7 +650,8 @@ function attachPeerConnectionEvents(pc, remotePeerId) {
 async function createPeerConnection(remotePeerId, isInitiator) {
   if (peerConnections.has(remotePeerId)) return peerConnections.get(remotePeerId);
 
-  const pc = new RTCPeerConnection(createRtcConfig());
+  const rtcConfig = createRtcConfig();
+  const pc = new RTCPeerConnection(rtcConfig);
   attachPeerConnectionEvents(pc, remotePeerId);
 
   const { dc, dmDc } = isInitiator
@@ -655,6 +669,7 @@ async function createPeerConnection(remotePeerId, isInitiator) {
     outcomeRecorded: false,
     makingOffer: false,
     pendingIceCandidates: [],
+    withTurn: rtcConfig.iceServers.some((s) => [].concat(s.urls).some(isTurnUrl)),
   };
   peerConnections.set(remotePeerId, entry);
 
