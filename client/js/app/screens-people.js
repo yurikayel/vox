@@ -64,6 +64,7 @@ export async function showPeople(initialQuery = "") {
   const results = hasQ ? await peopleIndex.searchPeople(q) : [];
   const addedBy = hasQ ? [] : listPendingAddedYouNotices();
   render.renderPeopleSearch(main, { sections, results, query: q, addedBy });
+  void import("./natural-mod-flow.js").then((m) => m.mountMyLinks(main)).catch(() => {});
 
   bindPeopleAddedYouActions();
   ensureContactAddedLiveListener();

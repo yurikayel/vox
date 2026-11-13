@@ -18,6 +18,7 @@ import * as dmMsg from "../dm-messenger.js";
 import * as outbox from "../dm-outbox.js";
 import { parseReportDm } from "../report-review.js";
 import { parseRoleClaimDm } from "../aviso-roles.js";
+import { parseCaseDm } from "../natural-mod.js";
 import { parseContactAddedDm } from "../contact-notify.js";
 import { receiveContactAddedDm } from "./contact-notify-flow.js";
 
@@ -72,6 +73,18 @@ async function handleRoleClaimPayload(rawText) {
   } catch {}
 }
 
+/** PM-83: aviso de caso para o moderador natural (só com a flag de laboratório). */
+async function handleNaturalCasePayload(env, rawText) {
+  const notice = parseCaseDm(rawText);
+  if (!notice) return;
+  try {
+    const [flow, cases] = await Promise.all([import("./natural-mod-flow.js"), import("./natural-case-flow.js")]);
+    if (flow.naturalModLabOn() && cases.receiveCase(notice)) {
+      (await import("../share.js")).showToast("Chegou uma denúncia para você decidir como moderador natural (Pessoas → Meus vínculos).");
+    }
+  } catch {}
+}
+
 /**
  * Processa um envelope recebido e já decifrado.
  *
@@ -108,6 +121,7 @@ export async function ingestDecryptedEnvelope(env, rawText) {
   });
   await handleReportPayload(env, rawText);
   await handleRoleClaimPayload(rawText);
+  await handleNaturalCasePayload(env, rawText);
   return true;
 }
 

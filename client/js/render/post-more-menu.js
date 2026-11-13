@@ -186,6 +186,19 @@ async function onNavigationOrShareAction(action, ctx) {
   return false;
 }
 
+const SENT = new Set(["delivered", "queued-relay", "pending-retry"]);
+
+/** PM-83 lote E — com a flag, o pedido vai ao moderador natural de cada parte. Devolve true se mandou. */
+async function mediateByNaturalModerators(self, request) {
+  const { naturalModLabOn } = await import("../app/natural-mod-flow.js");
+  if (!self || !naturalModLabOn()) return false;
+  const { requestMediation } = await import("../app/mediation-dm.js");
+  const sent = (await requestMediation(self, request).catch(() => [])).filter((r) => SENT.has(r.status));
+  if (!sent.length) return false;
+  share.showToast(`Pedido de mediação enviado a ${sent.length === 1 ? "1 moderador natural" : `${sent.length} moderadores naturais`}, por mensagem cifrada. Nada foi arquivado.`);
+  return true;
+}
+
 /** Lote 3 — leva à conversa com a moderação da comunidade do post, com o cartão do post. */
 async function openMediation(ctx) {
   const [{ resolveModeratorRoute }, { buildMediationDmHash }, { getActiveUser }] = await Promise.all([
@@ -193,6 +206,7 @@ async function openMediation(ctx) {
   ]);
   const { communityId, moderator } = await resolveModeratorRoute(ctx.postId, ctx.communityId || "");
   const self = await getActiveUser().catch(() => "");
+  if (await mediateByNaturalModerators(self, { postId: ctx.postId, communityId, target: ctx.authorRoute || "" })) return;
   if (!moderator || moderator === self) {
     share.showToast(moderator ? "Você modera esta comunidade." : "Esta publicação não tem moderação conhecida no seu aparelho.");
     return;
