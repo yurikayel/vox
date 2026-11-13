@@ -58,7 +58,7 @@ export function submitNeedsEntry(form) {
 export function renderReadFirstBannerHtml() {
   return `
     <div class="read-first-banner" id="${READ_FIRST_BANNER_ID}" role="region" aria-label="Você está lendo o Vox">
-      <span>${escapeHtml("Para curtir ou responder, entre. Não pede CPF nem e-mail.")}</span>
+      <span>${escapeHtml("Para curtir ou responder, entre: não pede CPF nem e-mail.")}</span>
       <button type="button" class="btn btn-primary btn-sm" id="btn-read-first-enter">Entrar no Vox</button>
     </div>`;
 }
