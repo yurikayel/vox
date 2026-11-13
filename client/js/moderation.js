@@ -68,16 +68,20 @@ function buildValidModeratorsSet(communityOwner = "", rawModerators = "") {
   return validModerators;
 }
 
-/** Arquivamento natural: escondido como "em revisão"; vale só para posts do afilhado. Construído no aparelho. */
+/**
+ * Arquivamento natural: escondido como "em revisão"; vale só para posts do afilhado. Construído no aparelho.
+ * Se a moderação já escondeu o post, a decisão dela fica como está: o arquivamento natural não a substitui.
+ */
 function applyNaturalHide(state, act) {
+  if (state.hiddenTargets.has(act.target) && !state.naturalAuthors.has(act.target)) return;
   state.hiddenTargets.add(act.target);
   state.reviewTargets.set(act.target, Number(act.ts) || 0);
   state.naturalAuthors.set(act.target, String(act.targetAuthor || "").toLowerCase());
 }
 
 const MOD_ACTION_APPLY = Object.freeze({
-  hide: (s, t) => { s.hiddenTargets.add(t); s.reviewTargets.delete(t); },
-  [REVIEW_HIDE_ACTION]: (s, t, ts) => { s.hiddenTargets.add(t); s.reviewTargets.set(t, ts); },
+  hide: (s, t) => { s.hiddenTargets.add(t); s.reviewTargets.delete(t); s.naturalAuthors.delete(t); },
+  [REVIEW_HIDE_ACTION]: (s, t, ts) => { s.hiddenTargets.add(t); s.reviewTargets.set(t, ts); s.naturalAuthors.delete(t); },
   unhide: (s, t) => { s.hiddenTargets.delete(t); s.reviewTargets.delete(t); s.naturalAuthors.delete(t); },
   ban: (s, t) => s.bannedOwners.add(t.toLowerCase()),
   unban: (s, t) => s.bannedOwners.delete(t.toLowerCase()),
@@ -110,7 +114,10 @@ function canSeeInReview(item, reviewTargets, viewerKey, viewerIsMod) {
   return viewerIsMod || String(item.owner || item.author || "").toLowerCase() === viewerKey;
 }
 
-/** Arquivamento natural só vale sobre post do afilhado: sobre post de outra pessoa, não esconde nada. */
+/**
+ * Arquivamento natural só vale sobre post do afilhado: sobre post de outra pessoa, não esconde nada.
+ * `naturalAuthors` só tem posts escondidos apenas pelo arquivamento natural; o que a moderação escondeu não passa por aqui.
+ */
 function keepNaturalHidesOnTheirAuthor(items, state) {
   for (const [postId, author] of state.naturalAuthors) {
     const item = items.find((i) => i.id === postId);

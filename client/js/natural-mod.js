@@ -236,6 +236,23 @@ export async function verifyNaturalHide(hide, verify) {
   return { hider: hide.author, target: hide.target, postId: hide.postId, communityId: hide.communityId, ts: Number(hide.ts) || 0 };
 }
 
+/** @type {number} Folga de relógio aceita na data de um arquivamento (5 minutos em ms). */
+export const HIDE_CLOCK_TOLERANCE_MS = 5 * 60 * 1000;
+
+/**
+ * A data que o padrinho declarou no arquivamento é plausível? Ela é assinada por ele, então pode mentir:
+ * - no futuro, ficaria sempre depois do `unhide` da moderação, que nunca conseguiria desfazer;
+ * - antes do post, escaparia da contagem de reversões (que só olha o que veio antes do arquivamento).
+ * A data do post é assinada pelo autor, não pelo padrinho, e serve de piso.
+ * @param {object} hide Arquivamento conferido (`ts`).
+ * @param {object} [opts={}] Referências (`postTs`: data do post; `now`: relógio deste aparelho).
+ * @returns {boolean} Verdadeiro se a data cabe entre a do post e agora, com a folga de relógio.
+ */
+export function isPlausibleHideTime(hide, { postTs = 0, now = Date.now() } = {}) {
+  const ts = Number(hide?.ts) || 0;
+  return ts > 0 && ts >= Number(postTs) - HIDE_CLOCK_TOLERANCE_MS && ts <= now + HIDE_CLOCK_TOLERANCE_MS;
+}
+
 /**
  * Reversões contra quem arquivou, numa comunidade: `unhide` da moderação depois de um arquivamento dele, em 90 dias.
  * @param {string} hider Rota de quem arquivou.
