@@ -30,7 +30,6 @@ const SHELL_ASSETS = [
 
   "./icons/icon-mark-black-128.png",
 
-  "./images/cantina-gate.webp",
 
   "./config/gateways.json",
 

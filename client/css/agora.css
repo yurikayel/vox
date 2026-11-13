@@ -2671,18 +2671,16 @@ body,
   .genesis-brand-name { font-size: 0.95rem; letter-spacing: 0.08em; }
   .genesis-panel { padding: 1.1rem; }
 
-  
 }
 
-/* ── 14. Modais, botões legados e cantina (fora de .agora-ui: #modal-container é irmão do app) ── */
+/* ── 14. Modais e botões legados (fora de .agora-ui: #modal-container é irmão do app) ── */
 .btn {
   border-radius: var(--radius-sm);
   font-family: var(--font-telemetry);
   letter-spacing: 0.02em;
 }
 
-.btn-primary,
-.modal-sheet .btn-primary.btn-cantina-enter {
+.btn-primary {
   background: var(--sa-gradient-sovereign);
   color: var(--on-gradient);
   border-color: transparent;
@@ -2690,8 +2688,7 @@ body,
   font-weight: 700;
 }
 
-.btn-primary:hover,
-.modal-sheet .btn-primary.btn-cantina-enter:hover {
+.btn-primary:hover {
   background: var(--sa-gradient-sovereign);
   color: var(--on-gradient);
   filter: none;
@@ -2707,12 +2704,6 @@ body,
 .btn-outline:hover {
   border-color: var(--entablature-active);
   color: var(--sa-on-surface);
-}
-
-.btn-cantina-enter-lg {
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  font-size: 0.875rem;
 }
 
 .modal-overlay,
@@ -2756,8 +2747,6 @@ body,
   border-bottom-color: var(--sa-primary);
   box-shadow: none;
 }
-
-.cantina-dialog { border-top-color: var(--sa-primary-container); }
 
 /* Toasts */
 .toast,
