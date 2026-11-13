@@ -6,6 +6,12 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Frase de recuperação: contas novas nascem de uma semente (ADR-032, passo 2 — núcleo)
+- **Conta nova nasce de uma semente de 128 bits** (`identity-seed.js`, `local-account.js`): assinatura e DM saem da mesma semente por HKDF-SHA256 (`recovery-phrase.js`), e a semente vira **12 palavras** da lista BIP-39 em português (`data/bip39-pt.js`, MIT). Contas antigas têm a frase de **24 palavras** tirada da própria chave (sem as chaves de DM).
+- **P-256 em JS** (`p256.js`) só para calcular o ponto público a partir do escalar (FIPS 186-5 A.2.1), conferido contra chaves do WebCrypto.
+- **Semente protegida como a chave:** cifrada pelo aparelho; quando a conta trava (ADR-026), vai para a cópia da Senha Soberana (`key-lock.js`) e sai do aparelho. Limpeza local e remoção de conta levam a semente junto.
+- A tela para ver, confirmar e imprimir a frase vem no próximo PR. Decisões no ADR-032 §5.1–5.2. Testes: `tests/recovery-phrase.test.js`. SW `v7.114`.
+
 ### Conta provisória até ter saída; Google e Meta fora da entrada (ADR-032, passo 1)
 - **Entrada sem Google, Meta e GitHub** (`render/oauth-modals.js`): a entrada pede só o nome. Importar nome e foto vai para Perfil (`render/oauth-import.js`, `openOAuthEnrichModal({ mode: "import" })`), com o aviso "Não guarda sua conta".
 - **Faixa "Esta conta só existe neste navegador"** (`app/account-exit-banner.js`) para quem tem conta e ainda não tem saída soberana, com "Criar minha saída" (`#/backup`) e "Agora não" (volta em 7 dias ou 10 posts). Não bloqueia nada.
