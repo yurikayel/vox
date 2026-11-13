@@ -106,6 +106,30 @@ jobs:
       - name: Verificar ausência de chaves privadas (PEM) e JWK privadas commitadas
         run: node scripts/secrets-audit.mjs
 
+  e2e-mesh:
+    name: Malha P2P — 2 navegadores (PM-99)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Configurar Node.js 22
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "22"
+
+      - name: Configurar Python 3.12
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+
+      - name: Instalar Chromium para E2E (sem alterar package.json)
+        run: npm install --no-save playwright-core && npx playwright-core install chromium --with-deps
+
+      - name: Dois Chromium trocam post assinado por WebSocket e Nostr
+        run: node scripts/mesh-e2e.mjs
+
   pilot-freeze:
     name: Piloto V-P09 — freeze client/js (opt-in)
     if: github.event_name == 'pull_request'

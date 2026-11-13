@@ -6,6 +6,11 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Teste E2E de dois navegadores na malha P2P no CI (PM-99)
+- Novos scripts `scripts/mesh-e2e.mjs` e `scripts/nostr-ephemeral-relay.mjs` (zero dependências externas além de `playwright-core` + Chromium): sobem o app estático, o servidor WebSocket (`relay/signaling.py`) e um relay Nostr efêmero (`kind 25050`), abrem dois contextos Chromium isolados, completam a entrada, conectam WebRTC `vox-peer-v0` em duas rodadas separadas (`ws` e `nostr`) e verificam a chegada do post assinado no feed do segundo navegador.
+- Correção de corrida WebRTC detectada pelo novo E2E em `client/js/webrtc-peer.js`: rastreamento de `makingOffer` durante `createOffer()` (evita glare enquanto `signalingState` ainda está `"stable"`), fila `pendingIceCandidates` para candidatos que chegam antes de `setRemoteDescription` e guarda de identidade `RTCPeerConnection` após `await` para não fechar a conexão substituta.
+- Novo job `e2e-mesh` em `.github/workflows/ci.yml` e testes unitários em `tests/nostr-ephemeral-relay.test.js` e `tests/webrtc.test.js`. SW `v7.105`.
+
 ### Medição local de sinalização (WebSocket vs Nostr) em `#/status` (PM-18)
 - Novo módulo `client/js/signaling-telemetry.js` ligado a `webrtc-peer.js` e `nostr-transport.js`: conta tentativas, sucessos, falhas e tempo médio de conexão por caminho (`ws` vs `nostr`), além do tempo até o primeiro par abrir `vox-peer-v0` em cada sessão (últimas 30 sessões). Tudo fica apenas no `localStorage` do aparelho, sem envio automático e sem IDs de pares.
 - `#/status` (`render/status.js` + `app/screens-status.js`) passa a exibir a tabela comparativa WebSocket × Nostr, última/média/mediana do primeiro par e botões **Copiar relatório** (para a retrospectiva do piloto) e **Zerar**. Testes em `tests/signaling-telemetry.test.js` e `tests/status-render.test.js`. SW `v7.104`.
