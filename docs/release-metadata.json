@@ -1,9 +1,9 @@
 {
-  "git_sha": "da81ab6",
-  "branch": "feat/onboarding-curto",
-  "test_js": 1090,
+  "git_sha": "84f4112",
+  "branch": "feat/armazenamento-duravel",
+  "test_js": 1094,
   "test_python": 111,
-  "test_total": 1201,
-  "cache_name": "vox-pwa-v7.99-real-network-audio-video-upload",
-  "generated_at": "2026-11-13T07:49:22Z"
+  "test_total": 1205,
+  "cache_name": "vox-pwa-v7.100-real-network-audio-video-upload",
+  "generated_at": "2026-11-13T08:38:47Z"
 }
