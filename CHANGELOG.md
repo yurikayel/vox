@@ -6,6 +6,13 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Conta provisória até ter saída; Google e Meta fora da entrada (ADR-032, passo 1)
+- **Entrada sem Google, Meta e GitHub** (`render/oauth-modals.js`): a entrada pede só o nome. Importar nome e foto vai para Perfil (`render/oauth-import.js`, `openOAuthEnrichModal({ mode: "import" })`), com o aviso "Não guarda sua conta".
+- **Faixa "Esta conta só existe neste navegador"** (`app/account-exit-banner.js`) para quem tem conta e ainda não tem saída soberana, com "Criar minha saída" (`#/backup`) e "Agora não" (volta em 7 dias ou 10 posts). Não bloqueia nada.
+- **Registro local das saídas** (`account-exit.js`): conta só o que está fora do navegador — cofre aceito por um servidor de memória (`saveRemoteVaultRecord` agora diz quantos aceitaram), `.voxid` com senha baixado ou importado, backup no e-mail mandado ou restaurado. Conta já travada por senha antes do registro conta uma vez como backup anterior.
+- **Assistente de backup honesto** (`app/screens-guided.js`): se nenhum servidor guardou o cofre, diz isso e oferece baixar o arquivo cifrado, em vez de "Cofre salvo".
+- Testes: `tests/account-exit.test.js`, `tests/account-exit-banner.test.js`; `tests/onboarding-steps.test.js` passa a exigir a entrada **sem** os botões dos provedores. SW `v7.111`.
+
 ### ADR-032 aceito: login perene, a conta nasce com saída
 - `docs/adr/032-login-perene-a-conta-nasce-com-saida.md`: Google e Meta saem da entrada (limpar o navegador e entrar com Google hoje cria uma conta nova); a conta fica "provisória neste navegador" até ter uma saída soberana — frase de recuperação/cartão no papel, guardiões (Shamir pela malha) ou Senha Soberana; passkey (ADR-031) e segundo aparelho viram atalhos. Índices de ADR, `DECISOES.md` e REV-14 no `ROADMAP.md` apontam para ele. Só documentação.
 

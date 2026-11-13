@@ -77,9 +77,10 @@ test("sovereign agora — onboarding Stitch preserva fluxos e IDs", () => {
   const container = { innerHTML: "" };
   render.renderOAuthEnrich(container);
   const html = container.innerHTML;
-  for (const id of ["form-oauth-custom-name", "oauth-custom-name-input", "form-oauth-restore-passphrase", "btn-oauth-skip", "btn-oauth-github"]) {
+  for (const id of ["form-oauth-custom-name", "oauth-custom-name-input", "form-oauth-restore-passphrase", "btn-oauth-skip"]) {
     assert.ok(html.includes(`id="${id}"`), `falta #${id}`);
   }
+  assert.ok(!html.includes('id="btn-oauth-github"'), "ADR-032: GitHub importa nome e foto pelo Perfil, não na entrada");
   assert.ok(html.includes("Sua chave."));
   assert.ok(!html.includes("Fundamentos da Polis"), "os cartões de princípios saíram do onboarding curto");
 });

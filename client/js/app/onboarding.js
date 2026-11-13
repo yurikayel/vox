@@ -1,4 +1,4 @@
-/** @file Cantina gate, OAuth enrich (Google / Meta / GitHub), pact modals. */
+/** @file Entrada (nome e 18+), importação de nome e foto do Perfil (Google / Meta / GitHub, ADR-032) e pacto. */
 
 import * as render from "../render.js";
 import * as share from "../share.js";
@@ -20,6 +20,7 @@ import { ensureOnboardingSideEffects } from "./onboarding-side-effects.js";
 import { showHome } from "./screens-home.js";
 import * as readFirst from "./read-first.js";
 import { startStorageDurability } from "./storage-durability-flow.js";
+import { startAccountExitBanner } from "./account-exit-banner.js";
 import * as inviteArrival from "../invite-arrival.js";
 import { addContactAndNotify } from "./contact-notify-flow.js";
 import { showConnect } from "./screens-people.js";
@@ -191,12 +192,16 @@ function endGenesis(modalContainer, onComplete, res) {
   if (onComplete) onComplete(res);
 }
 
-export function openOAuthEnrichModal({ onComplete, withPact = false } = {}) {
+/**
+ * Abre a entrada (primeiro acesso) ou, com `mode: "import"`, só a importação de nome e foto do Perfil (ADR-032).
+ * @param {{ onComplete?: Function, withPact?: boolean, mode?: "entry" | "import" }} [opts]
+ */
+export function openOAuthEnrichModal({ onComplete, withPact = false, mode = "entry" } = {}) {
   const modalContainer = document.getElementById("modal-container");
   if (!modalContainer) return;
   genesisWithPact = withPact;
 
-  render.renderOAuthEnrich(modalContainer, { invite: inviteArrival.peekInviteArrival() });
+  render.renderOAuthEnrich(modalContainer, { invite: inviteArrival.peekInviteArrival(), mode });
   modalContainer.querySelector(".genesis-panel--steps")?.addEventListener("click", (e) => {
     const go = e.target.closest("[data-genesis-go]");
     if (!go) return;
@@ -293,11 +298,17 @@ export function wipeLocalDevice() {
   for (const key of ["vox-pact-accepted", ageGate.AGE_STORAGE_KEY, FEEDBACK_STORAGE_KEY]) localStorage.removeItem(key);
 }
 
+/** Conta acabou de nascer: pede ao navegador para não apagar e avisa que ela ainda não tem saída (ADR-032). */
+function protectNewAccount() {
+  void startStorageDurability({ hasAccount: hasFullEntry }).catch(() => {});
+  void startAccountExitBanner({ hasAccount: hasFullEntry }).catch(() => {});
+}
+
 async function finishPactAcceptance(modalContainer) {
   const returning = localStorage.getItem("vox-pact-accepted") === "true";
   if (!acceptPact()) return;
   render.closePactModal(modalContainer);
-  void startStorageDurability({ hasAccount: hasFullEntry }).catch(() => {});
+  protectNewAccount();
   if (returning) return; // só faltava confirmar os 18+: sem boas-vindas nem convite de novo
   const user = await localAccount.getRouteId().catch(() => "");
   await ensureOnboardingSideEffects(user);
@@ -343,7 +354,7 @@ function bindPactActions(modalContainer) {
   settings?.addEventListener("click", () => {
     if (!confirmed() || !acceptPact()) return;
     render.closePactModal(modalContainer);
-    void startStorageDurability({ hasAccount: hasFullEntry }).catch(() => {});
+    protectNewAccount();
     void localAccount.getRouteId().then((u) => ensureOnboardingSideEffects(u));
     location.hash = "#/settings/network";
   });
