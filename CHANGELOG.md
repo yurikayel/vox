@@ -6,6 +6,11 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Link de convite já preenche a entrada
+- Quem abre `#/connect/<id>?convite=` sem ter entrado ainda: o aparelho guarda quem chamou (7 dias, só local, `client/js/invite-arrival.js`). A tela de entrada diz "Ana te chamou para o Vox" e avisa que Ana fica nos contatos.
+- Depois do pacto (18+), quem chamou vira contato (com o aviso "adicionou você") e a pessoa cai na tela de quem chamou, com o cartão do vínculo para aceitar. O convite de compartilhar o próprio link fica para depois, em vez de mais uma tela.
+- O vínculo assinado continua sendo aceito à mão, no cartão. Teste novo em `tests/invite-arrival.test.js`; SW `v7.100`.
+
 ### Onboarding só na primeira ação que escreve, em duas telas, e "Já tenho conta" com o QR do outro aparelho
 - Quem abre o Vox lê na hora: **Início**, **Pessoas**, link de convite (**Conectar**) e link de sincronização entraram na leitura antes de entrar (PM-54). A entrada aparece na primeira curtida, resposta, post ou voto, ou no botão **Entrar no Vox**. A faixa de baixo ficou com uma frase só.
 - Saiu a tela de portão "Entrar — sou humano" (e a arte da cantina saiu do precache, -79 KB). Quem chega por uma tela de escrita (compor, mensagem, carteira, votar) vai direto para a entrada.
