@@ -4,7 +4,34 @@ import * as peers from "../peers.js";
 import * as inbox from "../inbox.js";
 import * as gatewayTelemetry from "../gateway-telemetry.js";
 import * as communityMirror from "../community-mirror.js";
+import * as signalingTelemetry from "../signaling-telemetry.js";
 import { getActiveUser, makeShellProps } from "./context.js";
+
+function bindSignalingReportActions(swVersionProvider) {
+  const copyBtn = document.getElementById("status-copy-signaling-btn");
+  const resetBtn = document.getElementById("status-reset-signaling-btn");
+  const feedback = document.getElementById("status-signaling-feedback");
+  if (copyBtn) {
+    copyBtn.onclick = async () => {
+      const report = signalingTelemetry.formatSignalingReport(
+        signalingTelemetry.getSignalingTelemetrySummary(),
+        { swVersion: swVersionProvider() },
+      );
+      try {
+        await navigator.clipboard.writeText(report);
+        if (feedback) feedback.textContent = "Relatório local copiado para a área de transferência.";
+      } catch {
+        if (feedback) feedback.textContent = "Não foi possível copiar automaticamente neste navegador.";
+      }
+    };
+  }
+  if (resetBtn) {
+    resetBtn.onclick = () => {
+      signalingTelemetry.resetSignalingTelemetry();
+      void showStatus();
+    };
+  }
+}
 
 export async function showStatus() {
   const user = await getActiveUser();
@@ -17,6 +44,7 @@ export async function showStatus() {
     relayHttpUrl: inbox.getRelayHttpUrl(),
     mirrorExport: communityMirror.getMirrorLastErrorExport(),
     rtcStatus: peers.getRtcStatus(),
+    signalingStats: signalingTelemetry.getSignalingTelemetrySummary(),
   });
 
   if (typeof navigator !== "undefined" && navigator.storage?.estimate) {
@@ -26,6 +54,7 @@ export async function showStatus() {
   }
 
   const cacheEl = document.getElementById("status-sw-cache");
+  bindSignalingReportActions(() => cacheEl?.textContent || "");
   if (cacheEl && typeof caches !== "undefined") {
     try {
       const keys = await caches.keys();
