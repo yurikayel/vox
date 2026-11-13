@@ -6,6 +6,11 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Armazenamento durável plugado ao ter conta e ajuste de backlog para fundamentais
+- `storage-persistence.js` saiu da lista de módulos não plugados e passou a rodar por `client/js/app/storage-durability-flow.js` no boot (`app.js`) e ao aceitar o pacto (`app/onboarding.js`): quem já tem conta pede persistência (`navigator.storage.persist()`) e, em aba comum do Safari/WebKit, vê uma vez a faixa orientando adicionar o Vox à Tela de Início contra a limpeza automática de 7 dias.
+- Quem só está lendo não recebe o pedido nem a faixa até concluir a entrada. Testes novos em `tests/storage-durability-flow.test.js`. SW `v7.101`.
+- `docs/ROADMAP.md` e `docs/FEATURES.md` atualizados para refletir entregas recentes (`#92`, `#94`+`#115`, `#101`, `#108`, `#118`) e promover os fundamentos (`REV-14`, `PM-72`, `REV-10`) para `Agora (P0)`.
+
 ### Link de convite já preenche a entrada
 - Quem abre `#/connect/<id>?convite=` sem ter entrado ainda: o aparelho guarda quem chamou (7 dias, só local, `client/js/invite-arrival.js`). A tela de entrada diz "Ana te chamou para o Vox" e avisa que Ana fica nos contatos.
 - Depois do pacto (18+), quem chamou vira contato (com o aviso "adicionou você") e a pessoa cai na tela de quem chamou, com o cartão do vínculo para aceitar. O convite de compartilhar o próprio link fica para depois, em vez de mais uma tela.
