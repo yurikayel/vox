@@ -57,7 +57,8 @@ test("read-first - envio de formulário: resposta pede entrada; busca e denúnci
 
 test("read-first - rotas de leitura e faixa", () => {
   assert.equal(rf.isReadFirstRoute("topic"), true);
-  assert.equal(rf.isReadFirstRoute("home"), false);
+  assert.equal(rf.isReadFirstRoute("home"), true, "a home abre para leitura: a entrada vem na primeira ação que escreve");
+  assert.equal(rf.isReadFirstRoute("dm-thread"), false);
   const html = rf.renderReadFirstBannerHtml();
   assert.ok(html.includes("btn-read-first-enter"));
   assert.ok(html.includes("não pede CPF"));
