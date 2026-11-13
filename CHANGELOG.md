@@ -6,6 +6,10 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Configurações de rede: campos de TURN escapados (alerta 112 do CodeQL)
+- `client/js/render/network.js` punha o endereço, o usuário e a credencial do servidor TURN direto no atributo `value`, sem escapar. O que a pessoa digitava (ou colava) nesses campos podia virar marcação ao reabrir a tela. Os três campos e o host do relay no rótulo de estado agora passam por `escapeHtml`.
+- Teste em `tests/render.test.js`. SW `v7.99`.
+
 ### Valores de fora escapados antes de entrar na tela
 - O formato da foto de um post (`aspectRatio`) vem de quem publicou; agora só valores conhecidos (`original`, `1:1`, `4:5`, `3:4`, `4:3`, `16:9`, `9:16`) entram no HTML, pelo novo `normalizePostAspect` em `render/util.js`. Vale no feed e no tópico.
 - Escapados também: os endereços de relay nas configurações de rede, o @handle no formulário de reivindicação, a inicial do avatar no perfil e o nome da comunidade no texto alternativo da foto.
