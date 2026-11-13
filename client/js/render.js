@@ -98,8 +98,6 @@ export {
   resolvePeopleSearchBody,
   renderAddedYouSection,
   renderPeopleSearch,
-  renderPostPactConnectModal,
-  closePostPactConnectModal,
   renderConnectPreview,
   renderPactModal,
   closePactModal,

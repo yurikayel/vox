@@ -8258,98 +8258,29 @@ blockquote.repost-cite {
   color: var(--accent);
 }
 
-/* Card pós-pacto amigável e acolhedor (V-P09 / Onboarding) */
-.post-pact-connect-card {
-  max-width: 480px;
-  width: 100%;
-  padding: 1.5rem;
-  border-radius: var(--radius-lg, 16px);
-  border: 1px solid rgba(245, 158, 11, 0.35);
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
-  background: var(--surface-1, #131823);
-  text-align: left;
+/* Cartão inline "Convide amigos" (#/people e #/settings/network) */
+.people-invite-card,
+.network-invite-card {
+  margin: 0.75rem 0 1rem;
+  padding: 0.9rem 1rem;
 }
 
-.post-pact-badge-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: rgba(16, 185, 129, 0.12);
-  color: #10b981;
-  border: 1px solid rgba(16, 185, 129, 0.28);
-  font-size: 0.78rem;
-  font-weight: 600;
-  margin-bottom: 0.85rem;
-}
-
-.post-pact-badge-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #10b981;
-  box-shadow: 0 0 8px #10b981;
-}
-
-.post-pact-header {
+.invite-friends-head {
   display: flex;
   align-items: center;
-  gap: 0.85rem;
-  margin-bottom: 1rem;
-}
-
-.post-pact-icon {
-  font-size: 2.2rem;
-  line-height: 1;
-}
-
-.post-pact-identity-preview {
-  display: flex;
-  align-items: center;
+  justify-content: space-between;
   gap: 0.75rem;
-  padding: 0.75rem 1rem;
-  background: var(--surface-soft, rgba(255, 255, 255, 0.04));
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md, 10px);
-  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
 }
 
-.post-pact-identity-meta strong {
+.invite-friends-title {
   display: block;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
 }
 
-.post-pact-identity-meta .meta {
-  margin: 2px 0 0;
-  font-size: 0.8rem;
-}
-
-.post-pact-actions {
-  display: flex;
-  gap: 0.65rem;
-  margin-bottom: 0.85rem;
-}
-
-.btn-post-pact-share {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  background: #10b981 !important;
-  border-color: #10b981 !important;
-  color: #ffffff !important;
-  font-weight: 600;
-}
-
-.btn-post-pact-share:hover {
-  background: #059669 !important;
-  border-color: #059669 !important;
-}
-
-.btn-post-pact-close {
-  flex: 1;
+.invite-friends-lead {
+  font-size: 0.82rem;
+  margin: 0.2rem 0 0;
 }
 
 /* Post Pinned Ribbon e Destaque Oficial (Sem card, fundo preto puro, estilo Instagram/Twitter) */

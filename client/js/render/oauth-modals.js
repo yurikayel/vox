@@ -6,7 +6,7 @@ import * as i18n from "../i18n-pt-br.js";
 import * as postOwnership from "../post-ownership.js";
 import * as localAccount from "../local-account.js";
 import { hasChosenName } from "../people-index.js";
-import { escapeHtml, shortId, renderAvatarHtml, formatTimeAgo } from "./util.js";
+import { escapeHtml, shortId, renderAvatarHtml, formatTimeAgo, renderInviteFriendsCard } from "./util.js";
 import { renderPageHead } from "./shell.js";
 
 /** Ícones inline (GIS / Meta brand — sem asset extra no SW). */
@@ -132,7 +132,7 @@ function resolvePersonStampsHtml(p, isSelf) {
   const stamps = [];
   if (isSelf) stamps.push(`<span class="agora-stamp agora-stamp--bronze">Você</span>`);
   else if (p.source === "contact") stamps.push(`<span class="agora-stamp agora-stamp--teal"><span class="agora-pylon agora-pylon--teal" aria-hidden="true"></span>Contato</span>`);
-  else if (p.source === "mesh-card" || p.source === "mesh") stamps.push(`<span class="agora-stamp agora-stamp--consensus"><span class="agora-pylon" aria-hidden="true"></span>Na malha</span>`);
+  else if (p.source === "mesh-card" || p.source === "mesh") stamps.push(`<span class="agora-stamp agora-stamp--consensus"><span class="agora-pylon" aria-hidden="true"></span>Conectado</span>`);
   return stamps.join("");
 }
 
@@ -201,7 +201,7 @@ export function resolvePeopleSearchBody(sections, results, query) {
     if (!total) return `<div class="empty"><p>Ninguém indexado ainda.</p></div>`;
     return (
       renderPeopleSection("Contatos", sections.contacts) +
-      renderPeopleSection("Na malha", sections.mesh) +
+      renderPeopleSection(i18n.peopleSectionMesh, sections.mesh) +
       renderPeopleSection("Tour (demonstração)", sections.tour)
     );
   }
@@ -242,10 +242,22 @@ export function renderAddedYouSection(notices = []) {
     </section>`;
 }
 
-export function renderPeopleSearch(main, { sections = null, results = [], query = "", addedBy = [] } = {}) {
+function renderPeopleInviteSection(query, routeId, inviteLink) {
+  if (query.trim() || !routeId) return "";
+  return renderInviteFriendsCard({
+    routeId,
+    inviteLink,
+    buttonId: "btn-people-share-connect",
+    codeId: "people-invite-connect-url",
+    className: "card people-invite-card",
+  });
+}
+
+export function renderPeopleSearch(main, { sections = null, results = [], query = "", addedBy = [], routeId = "", inviteLink = "" } = {}) {
   const q = escapeHtml(query);
   const body = resolvePeopleSearchBody(sections, results, query);
   const addedHtml = query.trim() ? "" : renderAddedYouSection(addedBy);
+  const inviteHtml = renderPeopleInviteSection(query, routeId, inviteLink);
   const head = renderPageHead({
     title: "Diretório de Cidadãos",
     subtitle: "Pessoas com identidade criptográfica verificada no aparelho de quem publicou. Sem servidor central decidindo quem existe.",
@@ -260,61 +272,10 @@ export function renderPeopleSearch(main, { sections = null, results = [], query 
         <input type="search" id="people-search-input" class="form-control" placeholder="Buscar por nome, @arroba cívica, chave vx_ ou link de convite…" value="${q}" aria-label="Buscar pessoas" />
         <button type="submit" class="agora-btn agora-btn--solid">Buscar</button>
       </form>
+      ${inviteHtml}
       <div id="people-added-you-container">${addedHtml}</div>
       <div class="people-results agora-citizen-list" id="people-results-container">${body}</div>
     </div>`;
-}
-
-function renderPostPactIdentityHtml(routeId) {
-  return `<div class="post-pact-identity-preview">
-    ${renderAvatarHtml(routeId, shortId(routeId))}
-    <div class="post-pact-identity-meta">
-      <strong>Sua Chave Cidadã</strong>
-      <p class="meta"><code>${escapeHtml(shortId(routeId))}</code> · Soberana e sem dono</p>
-    </div>
-  </div>`;
-}
-
-function renderPostPactActionsHtml(routeId, link) {
-  return `<div class="modal-actions modal-actions--row post-pact-actions">
-    <button type="button" id="btn-post-pact-share-connect" class="btn btn-primary btn-post-pact-share" data-route="${escapeHtml(routeId)}">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-      Compartilhar
-    </button>
-    <button type="button" id="btn-post-pact-connect-close" class="btn btn-outline btn-post-pact-close">Continuar</button>
-  </div>
-  <details class="dm-advanced post-pact-advanced">
-    <summary class="dm-advanced-summary">Ver link técnico</summary>
-    <p class="meta">Só se precisar copiar manualmente:</p>
-    <p class="meta modal-connect-url"><code id="post-pact-connect-url">${escapeHtml(link)}</code></p>
-  </details>`;
-}
-
-export function renderPostPactConnectModal(container, routeId, inviteLink = "") {
-  if (!container || !routeId) return;
-  const link = inviteLink || `${typeof location !== "undefined" ? location.origin + location.pathname : ""}#/connect/${encodeURIComponent(routeId)}`;
-  container.innerHTML = `
-    <div class="modal-overlay modal-sheet modal-sheet--raised" id="post-pact-connect-overlay" role="dialog" aria-modal="true" aria-labelledby="post-pact-title">
-      <div class="modal-dialog modal-card post-pact-connect-card">
-        <div class="post-pact-badge-pill">
-          <span class="post-pact-badge-dot"></span>
-          <span>Nó Conectado à Malha Cívica</span>
-        </div>
-        <div class="post-pact-header">
-          <div class="post-pact-icon" aria-hidden="true">🎉</div>
-          <div>
-            <h3 class="modal-card-title" id="post-pact-title">Convide amigos</h3>
-            <p class="desc modal-card-lead">Toque em Compartilhar para mandar seu convite do Vox.</p>
-          </div>
-        </div>
-        ${renderPostPactIdentityHtml(routeId)}
-        ${renderPostPactActionsHtml(routeId, link)}
-      </div>
-    </div>`;
-}
-
-export function closePostPactConnectModal(container) {
-  if (container) container.innerHTML = "";
 }
 
 export function renderConnectPreview(main, profile, routeId, { isContact = false } = {}) {

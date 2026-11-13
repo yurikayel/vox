@@ -1810,8 +1810,6 @@
   "jsdoc:closeOAuthEnrich",
   "jsdoc:resolvePeopleSearchBody",
   "jsdoc:renderPeopleSearch",
-  "jsdoc:renderPostPactConnectModal",
-  "jsdoc:closePostPactConnectModal",
   "jsdoc:renderConnectPreview",
   "jsdoc:renderPactModal",
   "jsdoc:closePactModal",

@@ -248,13 +248,17 @@ export function bindNetworkSettingsButtons() {
   bindModerationListButtons();
   bindModerationExportImport();
   bindContributionAttestationButton();
+  document.getElementById("btn-network-share-connect")?.addEventListener("click", (e) => {
+    const id = e.currentTarget.dataset.route || "";
+    if (!id) return;
+    void share.shareConnect({ routeId: id, displayName: localAccount.getDisplayName(), invite: true });
+  });
 }
 
-export async function showNetworkSettings() {
-  const user = await getActiveUser();
-  const main = render.renderShell(makeShellProps(user, "network", "Sua rede"));
-
-  render.renderNetworkSettings(main, {
+async function buildNetworkSettingsProps(user) {
+  return {
+    routeId: user,
+    inviteLink: user ? share.inviteShareUrl(user) : "",
     settings: { ...peers.getPeerSettings(), turnOnly: webrtcPeer.isTurnOnly() },
     metrics: peers.getPeerMetrics(),
     cacheStats: await cacheNode.getCacheStats(),
@@ -273,7 +277,14 @@ export async function showNetworkSettings() {
     meshDiscoverable: localAccount.getMeshDiscoverable(),
     posseWebhooks: posseDispatch.loadPosseWebhooks(),
     demoMode: mock.isDemoMode(),
-  });
+  };
+}
+
+export async function showNetworkSettings() {
+  const user = await getActiveUser();
+  const main = render.renderShell(makeShellProps(user, "network", "Sua rede"));
+
+  render.renderNetworkSettings(main, await buildNetworkSettingsProps(user));
   main.querySelector(".network-card")?.insertAdjacentHTML("afterend", renderInboxBackupSection() + renderOwnPostsSection());
   bindInboxBackupSection(() => void showNetworkSettings());
   bindOwnPostsSection();
