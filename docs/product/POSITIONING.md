@@ -1,6 +1,6 @@
 # Posicionamento — Vox
 
-> **Status:** canônico · **Owner:** mantenedor · **Revisado:** 2026-11-10
+> **Status:** canônico · **Owner:** mantenedor · **Revisado:** 2026-11-13
 
 > Diagnóstico comparativo detalhado e matriz 5×5 → [LESSONS.md](../process/LESSONS.md)
 
@@ -8,9 +8,9 @@
 
 O **Pix** não significa “tudo acontece só no Brasil”. Significa **padrão aberto**, **sem dono único de infraestrutura** e **qualquer participante pode implementar** o mesmo protocolo. O Vox usa a mesma honestidade:
 
-- **Permaweb (Arweave)** é uma camada global de armazenamento e indexação; gateways (Turbo, AR.IO, `arweave.net`) operam em várias regiões.
+- **Permaweb (Arweave)** é uma camada global prevista apenas para leitura pública de registros existentes e **recursos específicos futuros** (como cartório cívico / memória consensual); **por enquanto nada deve ser salvo usando Arweave**, e toda preservação e circulação acontece pela **rede de seguidores** (você replica quem segue nos aparelhos). Gateways (Turbo, AR.IO, `arweave.net`) operam em várias regiões.
 - **App-Name `vox-brasil`** e convenções de tags são o “arranjo” brasileiro — comunidades, moderação e UX pensados para cultura de fórum e Orkut — não uma promessa de que bytes ficam fisicamente só em território nacional.
-- **Soberania** aqui é: *você assina, você publica, ninguém apaga sua transação na chain* — não “100% hospedado no Brasil” como slogan de marketing.
+- **Soberania** aqui é: *você assina no aparelho, seus seguidores replicam o conteúdo e ninguém apaga ou sequestra sua chave* — não “100% hospedado no Brasil” como slogan de marketing.
 - **Chave Pix no Perfil (Fase A):** Enquanto atributo social opcional, a chave Pix no perfil serve para apoios voluntários e diretos entre participantes (sem intermediação de plataforma), reafirmando que o valor circula diretamente entre as pontas, exatamente como a mensagem e o post. O Vox não é banco nem arranjo de pagamento fechado.
 
 ## Três lógicas: fazenda, pensão, movimento
@@ -29,7 +29,7 @@ Diante do debate recorrente sobre redes sociais brasileiras e soberania (ver [do
 
 - **Não somos o clone soberano (Modelo A):** Criar um “Twitter/Instagram nacional” em servidor central no Brasil não resolve a opacidade algorítmica nem a custódia das contas. Continua sendo um silo vulnerável com ponto único de falha.
 - **Não somos instância Mastodon (Modelo B):** Voluntário e movimento social não devem ser sobrecarregados pagando e operando VPS para a comunidade existir.
-- **Somos o Modelo C (Malha Local-first + PWA + POSSE):** Rede cívica cronológica, chaves no aparelho, leitura de backup via gateways públicos e distribuição ativa para onde a massa já conversa (WhatsApp, Instagram, X), sem prender o original.
+- **Somos o Modelo C (Malha Local-first + Rede de seguidores + PWA + POSSE):** Rede cívica cronológica, chaves no aparelho, replicação entre quem segue, leitura de reserva via gateways/relays e distribuição ativa para onde a massa já conversa (WhatsApp, Instagram, X), sem prender o original e sem depender de gravação no Arweave no fluxo normal.
 - **Modelo D (Participação governamental / Orçamento Participativo):** Integrações institucionais com dados públicos e consultas do Estado não entram no P0; pontes cívicas só serão avaliadas após a validação do piloto humano (V-P09).
 
 ## Vox vs Iniciativas Arquetípicas
@@ -43,8 +43,8 @@ Para aprofundamento das lições e armadilhas evitadas, consulte [LESSONS.md](..
 
 | Aspecto | Narrativa comum (ex. BemTeVi) | Vox |
 |--------|-------------------------------|-----|
-| Infra | “Rede brasileira”, servidores/nós no país | Permaweb global + relay/cache local opcional, operado pelo usuário; sem seeding WebTorrent ativo |
-| Dados | Dependem de operadores nacionais | Transações públicas indexadas via GraphQL em gateways abertos |
+| Infra | “Rede brasileira”, servidores/nós no país | Rede de seguidores nos aparelhos + relay/cache local opcional; Arweave só para leitura/recursos específicos futuros (nada salvo lá por enquanto) |
+| Dados | Dependem de operadores nacionais | Itens assinados replicados na rede de seguidores e indexados por gateways abertos para registros existentes no Arweave |
 | Moderação | Central ou institucional | Client-side + `mod-action` assinado por moderadores da comunidade |
 | Conexão com outras redes | Rede isolada | Ponte ativa: publica no Vox e despacha para WhatsApp, Insta, X e TikTok |
 | Fase atual | Varia por produto | PWA e relay/cache local disponíveis; WebTorrent seeding e descoberta de nós na LAN não implementados; piloto humano pendente |

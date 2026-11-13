@@ -20,8 +20,8 @@
 |---|---|---|---|---|
 | Feed Social / Cívico | `#/`, `#/?feed=civic` | `app/screens-home.js`, `render/feed.js`, `civic-post.js` | no ar | `civic-post`, `render`, `feed-*` |
 | Postar (Social ou Cívico, em etapas) | botão Postar | `app/compose-stepper.js`, `render/compose-steps.js`, `inline-composer.js`, `composer-media.js` | no ar | `compose-steps`, `stepped-flows`, `composer-*` |
-| Aviso de permanência ("gravar no Arweave" × "só na malha") | 1º post com carteira | `permanence-notice.js` | no ar (LAN-11) | `permanence-notice` |
-| Foto, áudio e vídeo lo-fi | composer | `media-lofi.js`, `media-blob.js`, `upload.js`, `ans104.js` | no ar (itens ≤105 KiB grátis **até a cota do Turbo**, ~10 MiB por carteira/IP; acima disso, crédito ou L1 pago) | `media-*`, `upload`, `verify-data-item` |
+| Aviso de permanência ("gravar no Arweave" × "só na malha") | 1º post com carteira | `permanence-notice.js` | no ar (LAN-11); **política atual (13/11): nada deve ser salvo no Arweave por enquanto** (tudo via rede de seguidores; flag `arweaveUpload` ainda `true` em `flags.json`) | `permanence-notice` |
+| Foto, áudio e vídeo lo-fi | composer | `media-lofi.js`, `media-blob.js`, `upload.js`, `ans104.js` | no ar na malha/P2P e memória local; código ainda contém uploader Arweave/Turbo (≤105 KiB até ~10 MiB/carteira com `arweaveUpload: true`), **suspenso pela diretriz atual** de não gravar no Arweave | `media-*`, `upload`, `verify-data-item` |
 | Republicar com citação | post ⋯ | `repost.js`, `repost-draft.js`, `render/repost-cite.js` | no ar | `repost` |
 | Marcação manual em fotos | foto | `photo-tags.js`, `app/photo-tag-*.js`, `render/photo-tag-pins.js` | no ar | `photo-tags`, `photo-aspect-lightbox-tagging` |
 | Notas de perfil 24h | perfil | `profile-note.js` | no ar | `profile-note` |
@@ -50,7 +50,7 @@
 | Enquete cívica 2–6 opções | composer cívico | `civic-post.js` | no ar | `civic-post` |
 | Feira (classificados assinados) | `#/c/:id?tab=feira`, `#/compose/listing` | `listing.js`, `listing-ui.js` | no ar | `listing*` |
 | Pix Zaps (BR Code offline) | post/perfil, `#/pix/:key` | `brcode.js`, `pix-key.js`, `app/zap-modal.js` | no ar (só Pix; sem Lightning). Avisa que o nome civil do DICT aparece com qualquer chave (REV-13) | `brcode`, `pix-key` |
-| Cartório cívico (hash de atas no Arweave) | composer/tópico | `perma-notary.js` | no ar | `perma-notary` |
+| Cartório cívico (hash de atas no Arweave — uso futuro específico) | composer/tópico | `perma-notary.js` | módulo no ar (`createCivicNotaryRecord`), **sem salvar no Arweave por enquanto** pela diretriz vigente (aguarda desligamento de `arweaveUpload` e fluxo consensual) | `perma-notary` |
 | Kits de comunidade (associação, sindicato…) | — | `kit-genesis.js` | **escrito, não plugado** | `kit-genesis` |
 | Ranking por ponte (bridging) | — | `bridging-rank.js` | **escrito, não plugado** | `bridging-rank` |
 | Perfil coletivo M-de-N | `#/labs/mofn` | `labs/collective-mofn.js`, `labs/mofn-lab.js` | lab | `collective-mofn` |
@@ -131,7 +131,7 @@
 1. Sinalização pública: Render + **Nostr em paralelo** (REV-09). Trackers WebTorrent continuam stub. Falta um 2º nó sem sleep (REV-01) e medir em campo.
 2. **Sem relay completo público**: entrega offline de DM, cofre remoto e OAuth de várias redes dependem de stewards.
 3. **Sem TURN**: pares atrás de CGNAT podem não conectar, e o "Esconder meu IP" não tem por onde passar (REV-10).
-4. O upload grátis do Turbo tem **cota** (~10 MiB por carteira/IP, segundo `upload.ardrive.io/info`); depois dela, e para itens acima de 105 KiB, publicar custa.
+4. **Gravação no Arweave suspensa por diretriz (13/11/2026):** por enquanto **nada deve ser salvo usando Arweave** (fica reservado para alguns recursos futuros e leitura de registros públicos). Toda circulação e preservação deve ocorrer pela **rede de seguidores** (malha WebRTC + sync por inventário no ar; replicação por grau completa em `PM-74` pendente). Em código, `arweaveUpload` em `client/config/flags.json` ainda está `true` e o uploader Turbo (~10 MiB por carteira/IP, `upload.ardrive.io/info`) continua plugado até ser pausado.
 5. **21 módulos** não são carregados por nenhuma tela (lista em `UNPLUGGED_MODULES` no `sw.js`: os marcados acima, mais `polis`, `idb-store` e a cadeia `node-health-*`). Desde o PM-04 eles ficam fora do precache (~116 KB a menos na instalação). Plugar é o caminho mais barato para várias das [10 features de autossustento](./brainstorms/brainstorm-autossustento-10-features-2026-11.md).
 
 Detalhes de custo e risco: [INFRA-CUSTOS.md](./INFRA-CUSTOS.md). Prioridades: [ROADMAP.md](./ROADMAP.md).
