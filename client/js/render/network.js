@@ -178,16 +178,16 @@ function renderTurnFields(customTurn) {
       <label style="font-weight:600; font-size:0.85rem; display:block; margin-bottom:0.35rem;">Servidor auxiliar para conexões móveis (TURN)</label>
       <div class="form-group">
         <label for="net-turn-url">Endereço do servidor:</label>
-        <input type="text" id="net-turn-url" class="form-control" placeholder="turn:turn.comunidade.org:3478" value="${customTurn?.urls || ""}" />
+        <input type="text" id="net-turn-url" class="form-control" placeholder="turn:turn.comunidade.org:3478" value="${escapeHtml(customTurn?.urls || "")}" />
       </div>
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
         <div class="form-group">
           <label for="net-turn-user">Usuário:</label>
-          <input type="text" id="net-turn-user" class="form-control" placeholder="vox" value="${customTurn?.username || ""}" />
+          <input type="text" id="net-turn-user" class="form-control" placeholder="vox" value="${escapeHtml(customTurn?.username || "")}" />
         </div>
         <div class="form-group">
           <label for="net-turn-pass">Credencial:</label>
-          <input type="password" id="net-turn-pass" class="form-control" placeholder="••••••" value="${customTurn?.credential || ""}" />
+          <input type="password" id="net-turn-pass" class="form-control" placeholder="••••••" value="${escapeHtml(customTurn?.credential || "")}" />
         </div>
       </div>
     </div>`;
@@ -196,9 +196,9 @@ function renderTurnFields(customTurn) {
 function relayHealthLabel(relayStatus, relayHttpUrl) {
   const host = relayHttpUrl ? new URL(relayHttpUrl).host : "";
   if (relayStatus?.online) {
-    return host ? `🟢 Conectado (${host})` : "🟢 Conectado";
+    return host ? `🟢 Conectado (${escapeHtml(host)})` : "🟢 Conectado";
   }
-  return host ? `⚪ Offline (${host})` : "⚪ Offline";
+  return host ? `⚪ Offline (${escapeHtml(host)})` : "⚪ Offline";
 }
 
 function renderLinkedAccountsBannerHtml() {

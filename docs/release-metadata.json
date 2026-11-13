@@ -1,9 +1,9 @@
 {
-  "git_sha": "dd817c9",
-  "branch": "feat/armazenamento-duravel",
+  "git_sha": "168c381",
+  "branch": "fix/network-settings-escape",
   "test_js": 1098,
   "test_python": 111,
   "test_total": 1209,
-  "cache_name": "vox-pwa-v7.101-real-network-audio-video-upload",
-  "generated_at": "2026-11-13T09:30:59Z"
+  "cache_name": "vox-pwa-v7.102-real-network-audio-video-upload",
+  "generated_at": "2026-11-13T09:39:00Z"
 }
