@@ -70,16 +70,16 @@ function renderParticipationLayers(settings, customSignalingUrl) {
 function renderGatewayHealthBlock(gatewayHealth) {
   const state = gatewayHealth?.state || "all_ok";
   if (state === "all_ok") {
-    return `<p class="desc" style="font-size:0.8rem; margin:0.5rem 0 0;">Leitura Arweave: gateways respondendo normalmente neste aparelho.</p>`;
+    return `<p class="desc" style="font-size:0.8rem; margin:0.85rem 0 0;">Leitura pública: normal neste aparelho.</p>`;
   }
   const label =
     state === "critical"
-      ? "Leitura reserva — gateways falharam recentemente; conteúdo pode vir só do cache local ou relay comunitário."
-      : "Leitura reserva ocasional — um ou mais gateways falharam; a malha ou relay comunitário ajudam.";
+      ? "Leitura reserva — gateways falharam recentemente; conteúdo vem do cache local ou relay."
+      : "Leitura reserva ocasional — gateways falharam; a rede ou relay ajudam.";
   return `
-    <div class="card" style="margin-top:0.65rem; padding:0.65rem 0.75rem; border-color:var(--warning-border, #fde68a); background:var(--warning-soft, #fef3c7);">
+    <div class="card" style="margin-top:0.85rem; padding:0.75rem 0.9rem; border-color:var(--warning-border, #fde68a); background:var(--warning-soft, #fef3c7);">
       <strong style="font-size:0.85rem;">📡 ${escapeHtml(label)}</strong>
-      <p class="desc" style="font-size:0.75rem; margin:0.35rem 0 0;">Sem envio de dados externos — só histórico local. <a href="#/settings/network">Ajustar rede</a></p>
+      <p class="desc" style="font-size:0.78rem; margin:0.4rem 0 0;">Só histórico local. <a href="#/settings/network">Ajustar rede</a></p>
     </div>`;
 }
 
@@ -113,10 +113,10 @@ function renderNetworkHeader({ settings, metrics, rtcStatus, gatewayHealth }) {
   return `
     <div class="card network-card">
       <h2>Sua rede</h2>
-      <p class="desc">Você ajuda a manter o Vox funcionando para todo mundo, direto do seu aparelho.</p>
+      <p class="desc">Seu aparelho ajuda a manter o Vox no ar.</p>
       <a class="agora-btn agora-btn--primary network-guided-btn" href="#/settings/network/guia">Configuração guiada</a>
       
-      <div class="network-status" style="margin-top:0.75rem; display:flex; flex-wrap:wrap; gap:0.4rem;">
+      <div class="network-status" style="margin-top:1rem; display:flex; flex-wrap:wrap; gap:0.5rem;">
         ${meshChip}
         ${statusBadge}
         ${peerBadge}
@@ -129,15 +129,15 @@ function renderNetworkHeader({ settings, metrics, rtcStatus, gatewayHealth }) {
 
 function renderContributionAttestationCardHtml() {
   return `
-    <div class="card" style="margin-bottom:1rem; padding:0.75rem;">
-      <p class="desc" style="font-size:0.82rem; margin:0 0 0.5rem;">
-        Exporte um JSON assinado neste aparelho com o snapshot das métricas acima (opt-in). O arquivo fica só com você — <strong>não</strong> há envio para ranking público nem gossip automático.
+    <div class="card network-attestation-card" style="margin-bottom:1.25rem; padding:1.05rem 1.15rem;">
+      <p class="desc" style="font-size:0.84rem; margin:0 0 0.75rem; line-height:1.5;">
+        Salva um comprovante local (<code>.json</code>) destas métricas — sem enviar para a rede.
       </p>
       <button type="button" id="btn-export-contribution-attestation" class="btn btn-outline btn-sm">
         Baixar Comprovante de Contribuição
       </button>
-      <p class="meta" style="font-size:0.72rem; margin:0.45rem 0 0;">
-        Auto-atestado: métricas em localStorage podem ser alteradas antes da assinatura. Limite de uma exportação por minuto. Pix e doações seguem fluxo manual (COMPLIANCE-BR).
+      <p class="meta" style="font-size:0.75rem; margin:0.7rem 0 0; line-height:1.45;">
+        Uso individual (1 exportação/min). Métricas locais podem ser editadas antes de assinar.
       </p>
     </div>`;
 }
@@ -149,22 +149,22 @@ function renderNetworkStats(metrics, cacheStats, dailyUsage, settings) {
   const pct = Math.min(100, Math.round((servedTodayMb / capMb) * 100));
 
   return `
-    <div class="actions-bar"><span class="section-title">Estatísticas de Ajuda</span></div>
-    <div class="stats-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:0.5rem; margin-bottom:1rem;">
-      <div class="card" style="text-align:center; padding:0.65rem;">
+    <div class="actions-bar" style="margin:1.25rem 0 0.75rem;"><span class="section-title">Estatísticas de Ajuda</span></div>
+    <div class="stats-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:0.75rem; margin-bottom:1.1rem;">
+      <div class="card" style="text-align:center; padding:0.85rem 0.65rem;">
         <div style="font-size:1.25rem; font-weight:700; color:var(--accent);">${metrics?.blobsServed || 0}</div>
         <div class="meta">Conteúdos entregues</div>
       </div>
-      <div class="card" style="text-align:center; padding:0.65rem;">
+      <div class="card" style="text-align:center; padding:0.85rem 0.65rem;">
         <div style="font-size:1.25rem; font-weight:700; color:var(--accent);">${((metrics?.bytesServed || 0) / 1024).toFixed(1)} KB</div>
         <div class="meta">Dados compartilhados</div>
       </div>
-      <div class="card" style="text-align:center; padding:0.65rem;">
+      <div class="card" style="text-align:center; padding:0.85rem 0.65rem;">
         <div style="font-size:1.1rem; font-weight:700; color:var(--text);">${servedTodayMb} / ${capMb} MB</div>
         <div class="usage-meter"><div class="usage-fill" style="width:${pct}%;"></div></div>
-        <div class="meta" style="margin-top:0.25rem;">Uso hoje (${pct}%) · no 4G: ${cellularTodayMb} MB</div>
+        <div class="meta" style="margin-top:0.3rem;">Uso hoje (${pct}%) · 4G: ${cellularTodayMb} MB</div>
       </div>
-      <div class="card" style="text-align:center; padding:0.65rem;">
+      <div class="card" style="text-align:center; padding:0.85rem 0.65rem;">
         <div style="font-size:1.1rem; font-weight:700; color:var(--text);">${cacheStats?.count || 0}</div>
         <div class="meta">Em cache (${cacheStats?.sizeKb || "0"} KB)</div>
       </div>
@@ -196,17 +196,17 @@ function renderTurnFields(customTurn) {
 function relayHealthLabel(relayStatus, relayHttpUrl) {
   const host = relayHttpUrl ? new URL(relayHttpUrl).host : "";
   if (relayStatus?.online) {
-    return host ? `🟢 Conectado (${escapeHtml(host)})` : "🟢 Conectado";
+    return host ? `🔗✅ (${escapeHtml(host)})` : "🔗✅";
   }
-  return host ? `⚪ Offline (${escapeHtml(host)})` : "⚪ Offline";
+  return host ? `🔗❌ (${escapeHtml(host)})` : "🔗❌";
 }
 
 function renderLinkedAccountsBannerHtml() {
   return `
-    <div class="card" style="margin-bottom:1rem; padding:0.85rem 1rem; background:var(--surface-soft); border:1px solid var(--outline); border-radius:var(--radius-sm); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+    <div class="card" style="margin-bottom:1.25rem; padding:1rem 1.2rem; background:var(--surface-soft); border:1px solid var(--outline); border-radius:var(--radius-sm); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.85rem;">
       <div>
-        <strong style="font-size:0.92rem; display:block;">🔗 Redes Vinculadas & Auto-Replicação</strong>
-        <span class="meta" style="font-size:0.8rem;">Conecte Twitter/X, Bluesky, Threads, Instagram, Facebook e TikTok.</span>
+        <strong style="font-size:0.95rem; display:block; margin-bottom:0.2rem;">🔗 Redes vinculadas</strong>
+        <span class="meta" style="font-size:0.82rem;">X, Bluesky, Threads, Instagram, Facebook e TikTok.</span>
       </div>
       <a href="#/settings/linked-accounts" class="btn btn-sm btn-primary">Gerenciar Redes</a>
     </div>`;
@@ -390,9 +390,9 @@ function renderNetworkForm(opts) {
 
 function renderStatusLinkBlock() {
   return `
-    <div class="card" style="margin-top:1rem;">
+    <div class="card" style="margin-top:1.25rem;">
       <h3>Telemetria honesta</h3>
-      <p class="desc" style="font-size:0.85rem;">Gateways e relay vistos só neste aparelho — sem phone-home. Pacto Vox: pause contribuição acima ou veja <a href="#/ajuda/teste">teste aberto</a>.</p>
+      <p class="desc" style="font-size:0.85rem;">Dados locais de conexão, sem envio externo. Veja também <a href="#/ajuda/teste">teste aberto</a>.</p>
       <a class="btn btn-sm btn-outline" href="#/status">Abrir #/status</a>
     </div>`;
 }
@@ -400,9 +400,9 @@ function renderStatusLinkBlock() {
 function renderPosseWebhooksSection(webhooks = []) {
   const lines = escapeHtml((webhooks || []).join("\n"));
   return `
-    <div class="card" style="margin-top:1rem;">
+    <div class="card" style="margin-top:1.25rem;">
       <h3>Ecoe POSSE — Webhooks</h3>
-      <p class="desc" style="font-size:0.85rem;">URLs que você cadastrar (Discord, Telegram, n8n…) recebem POST JSON só quando você tocar em <strong>Exportar JSON</strong> no cockpit Ecoe — sem post automático no Facebook/Instagram. Máx. 8 linhas.</p>
+      <p class="desc" style="font-size:0.85rem;">Recebem JSON apenas ao tocar em <strong>Exportar JSON</strong> no Ecoe (máx. 8 URLs).</p>
       <div class="form-group">
         <label for="net-posse-webhooks">URLs de webhook (uma por linha)</label>
         <textarea id="net-posse-webhooks" class="form-control" rows="3" placeholder="https://discord.com/api/webhooks/…">${lines}</textarea>
