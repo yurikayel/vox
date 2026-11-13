@@ -7,6 +7,7 @@
  * @see client/js/app/aviso-flow.js
  */
 import * as welcomeProfile from "../vox-welcome-profile.js";
+import { sanitizeMediaUrl } from "../shared/html.js";
 import { confirmGovernanceVote } from "./vote-confirm.js";
 import { addContactAndNotify } from "./contact-notify-flow.js";
 
@@ -820,9 +821,10 @@ function bindLiveProfileSync(topicAuthor, filteredReplies) {
     });
 
     const avatarLinks = document.querySelectorAll(`a.avatar-link[href="#/u/${encodeURIComponent(item.author)}"]`);
+    const safeAvatar = sanitizeMediaUrl(card.avatarUrl);
     avatarLinks.forEach((alink) => {
       const img = alink.querySelector("img.avatar-img");
-      if (card.avatarUrl && img) img.src = card.avatarUrl;
+      if (safeAvatar && img) img.src = safeAvatar;
     });
   });
 }
