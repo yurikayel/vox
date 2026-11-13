@@ -8,11 +8,10 @@ import * as share from "../share.js";
  * @returns {string} HTML da seção.
  */
 export function renderOwnPostsSection() {
-  return `<div class="card own-posts-settings" style="margin-top:1rem;">
+  return `<div class="card own-posts-settings" style="margin-top:1.25rem;">
     <h3>Seus posts num arquivo</h3>
-    <p class="desc">Seus posts, assinados e com fotos, áudios e vídeos, num arquivo que é seu. Não precisa de senha:
-      o que você publicou já é público na rede. Para trazer de volta, entre na mesma conta e escolha o arquivo.</p>
-    <div style="display:flex; flex-wrap:wrap; gap:0.5rem; align-items:center;">
+    <p class="desc">Exporte seus posts e mídias em arquivo aberto (sem senha) para restaurar nesta conta.</p>
+    <div style="display:flex; flex-wrap:wrap; gap:0.75rem; align-items:center; margin-top:0.25rem;">
       <button type="button" class="agora-btn agora-btn--secondary" id="btn-own-posts-export">Baixar meus posts</button>
       <label class="agora-btn agora-btn--secondary" for="own-posts-import">Restaurar de um arquivo</label>
       <input type="file" id="own-posts-import" accept=".json,application/json" hidden />
