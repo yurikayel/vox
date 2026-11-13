@@ -1,27 +1,31 @@
 /**
- * @file Contas descartáveis criadas nos testes antes da rede viva (gênese de 2026-11-11).
- * São contas sem nome escolhido, a Ana Lúcia de teste e as seis contas "Yuri Kayel" do mantenedor (inclusive a
- * que ele usava): nenhuma é pessoa real usando a rede. A pedido dele, a rede começa só com o perfil Vox.
- * O aparelho apaga o cartão, o contato e os posts delas e recusa cartão novo vindo da malha
+ * @file Contas descartáveis criadas nos testes e perfis "Yuri Kayel" excedentes (incluindo os gerados pelo botão Google Sign-In).
+ * Nenhuma é usuário final da rede: a pedido do mantenedor, a rede permanece limpa só com o perfil Vox.
+ * O aparelho apaga o cartão, o contato e os posts delas, filtra do GraphQL e recusa cartão novo vindo da malha
  * ou da memória central, para não voltarem por outro aparelho.
  */
 
 /**
- * Chaves (`vx_…`) das contas de teste, exatamente como apareciam no diretório.
+ * Chaves (`vx_…`) das contas expurgadas, exatamente como apareciam no diretório/Arweave.
  * @type {readonly string[]}
  */
 export const TEST_ROUTE_IDS = Object.freeze([
+  "vx_0b6fSzm9Fsnvm6yVKpc2",
+  "vx_1H0QwRN_wW0yI3cV7JOA",
   "vx_1UALWGHwt8tSM3ZQas5V",
   "vx_1sEvwicdBT-Cglp5gkx3",
   "vx_20MWj_pRu25h34tZlw3p",
   "vx_2Cd63tj7xrBWI6WiVMUI",
   "vx_2jHuRFCnItGstRLO632M",
+  "vx_2jffb7fatsz6KK3VDi5q",
+  "vx_3ARyghaizSuGmcKwjBpx",
   "vx_3DVXdALrvovJkfxb9HgF",
   "vx_3bRCcRWYDiquLheipaMG",
   "vx_3x9Rnln_p6TAvG1QEZ4M",
   "vx_44E7QG6eZpHyMvoUzJRt",
   "vx_4VGkeuyYJK1t8D4vtPZ1",
   "vx_6ir2sF_M-JE6kuuaPBK7",
+  "vx_6quKfpixNsTSHS9moU2f",
   "vx_7MJjRmuRIKnh0GtQRY1f",
   "vx_7fGqgaHzh-zXjA0UakdZ",
   "vx_7nFqDiq0iNEyXER4VSV1",
@@ -36,12 +40,15 @@ export const TEST_ROUTE_IDS = Object.freeze([
   "vx_DZM07SP0ZNIIfH3oZIxF",
   "vx_Drj9KLaoE5FLqF8zToDI",
   "vx_EdVkZRH5XoRlMv1WyemE",
+  "vx_EqiB9chTZil95Lnb3H05",
   "vx_FCinByOJj9XcMj-WTw5K",
   "vx_FbbXG7YBYJriKLgaCrLA",
   "vx_FqpgAbW2yqvbkMStR3rB",
   "vx_Ftidt2dwyBXiV5_RYJQD",
   "vx_GAvaoFKmo2_GaJ0qlbzs",
   "vx_GCKEqfRzReXY2JdVpG_7",
+  "vx_GRmkOW8evyEWDWbc6l0k",
+  "vx_GUjZHXdR-Od5SZKuM3sM",
   "vx_GciwHuVTubzx5jvqUI3q",
   "vx_GgCcOAkizDmfJ3Ss0LH8",
   "vx_HcJUAIZg2rUvG4UN71D5",
@@ -53,6 +60,9 @@ export const TEST_ROUTE_IDS = Object.freeze([
   "vx_Lm21K0RFNtoHfnzXcLit",
   "vx_LqGyslk6ANF-HgDCg_VK",
   "vx_MN6B7Y0eHNaU9V_I9vDb",
+  "vx_Mr2HywEwMQynj06ruImz",
+  "vx_NNjDR9FFQPhC16Tss_la",
+  "vx_NcoyFZmRHRHIjWW7Irg-",
   "vx_ODXFYsNC08JBU59Fdrlc",
   "vx_P4WwW4qMRGrN20EhS33v",
   "vx_PNvwo0yT-1Gifxm7W_m4",
@@ -71,6 +81,7 @@ export const TEST_ROUTE_IDS = Object.freeze([
   "vx_U_gQ3drWnUlKFa3CIekb",
   "vx_Vwh6zrrlZUeu0PyZLb44",
   "vx_WAqxgW1JLEg7GtkA-lP-",
+  "vx_WN9ewJpX-RB4DtG0MmhC",
   "vx_WXB-qqM2CwHuoupVijmx",
   "vx_WuSxKR0W901YTLOJe7Oa",
   "vx_XSXhK8J9Gl08fF-kiKbw",
@@ -94,6 +105,7 @@ export const TEST_ROUTE_IDS = Object.freeze([
   "vx_d52I7rTmyAHH6oBx4EU4",
   "vx_dOeMrgzSVnBIpxWFm8PL",
   "vx_dPmkqNFT8THq87nbM-Pa",
+  "vx_doMuXx25loVO0hab_lZP",
   "vx_dw0WEY5sMOp4-msWVpU-",
   "vx_ed6BNYaaVroPADBw-HDD",
   "vx_el6p_J_MNTawtWOfGR24",
@@ -106,10 +118,13 @@ export const TEST_ROUTE_IDS = Object.freeze([
   "vx_gMOCkR-rfnf3YEmBAXlE",
   "vx_gsw2iLWLRPw5Sz8omiJ3",
   "vx_h0IxDOHNjj0Pjb5coC2B",
+  "vx_h_Ha71T7YrSLvc5Oqxgh",
   "vx_hfuQV88lBXr_XWCLsYM7",
   "vx_i7B5kzdi-ta7GZkn22ZP",
   "vx_jf9oZIS7Ba8i6KJ1Cfi8",
   "vx_k4GrYufSuSHqcnTRuzXy",
+  "vx_kdkteNeutXHoRgB8KwB8",
+  "vx_kpKchcbT9B3d87Q6020t",
   "vx_lA8YcTGPh_M91KEZpsyB",
   "vx_mDE8O66upIGyq-gH1av8",
   "vx_mX15KL3o_pc_jUCw48w7",
@@ -133,6 +148,7 @@ export const TEST_ROUTE_IDS = Object.freeze([
   "vx_v4ffRdobExTzWkby_U1_",
   "vx_viXsGqs-7ZTXO9y9987L",
   "vx_wegfJKJ_CmMraVCwuPws",
+  "vx_wpWV7MeWXa_1wkldwcEA",
   "vx_xep-BY3FDUQG2prtvenK",
   "vx_xjUoHILAZmcl9bpD8-gk",
   "vx_yt1uzM_23eFfneiC8QbB",

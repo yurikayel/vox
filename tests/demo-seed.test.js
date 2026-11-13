@@ -69,6 +69,7 @@ test("demo-seed - contas de teste somem mesmo com data nova (cartão regravado p
   }));
   localStorage.setItem("vox-contacts-v1", JSON.stringify([{ routeId: testId }, { routeId: "vx_ok" }]));
   await cacheNode.saveLocalPost({ id: "post-de-teste", type: "topic", title: "Teste", author: testId, ts: fresh });
+  await cacheNode.saveLocalPost({ id: "post-owner-teste", type: "membership", author: "vx_ok", owner: testId, ts: fresh });
 
   await demoSeed.purgeMockDemoSeed();
 
@@ -78,6 +79,7 @@ test("demo-seed - contas de teste somem mesmo com data nova (cartão regravado p
   const contactsAfter = JSON.parse(localStorage.getItem("vox-contacts-v1") || "[]");
   assert.deepEqual(contactsAfter.map((c) => c.routeId), ["vx_ok"]);
   assert.equal(await cacheNode.getLocalPost("post-de-teste"), null);
+  assert.equal(await cacheNode.getLocalPost("post-owner-teste"), null);
 });
 
 test("demo-seed - cartão de conta de teste vindo da malha não é guardado de novo", async () => {
