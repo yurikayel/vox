@@ -6,6 +6,10 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Segurança: diretório de perfis sem poluição de protótipo e URL de avatar validada (CodeQL 199/200/201/166)
+- `client/js/profile-directory.js` passou a manipular os cartões em `Map` e recusar chaves reservadas (`__proto__`, `constructor`, `prototype`).
+- `client/js/shared/html.js` exporta `sanitizeMediaUrl`, aplicada em `client/js/app/screens-community.js` antes de atualizar `img.src` ao vivo pela malha. Testes em `tests/escape-valores-rede.test.js`. SW `v7.103`.
+
 ### Configurações de rede: campos de TURN escapados (alerta 112 do CodeQL)
 - `client/js/render/network.js` punha o endereço, o usuário e a credencial do servidor TURN direto no atributo `value`, sem escapar. O que a pessoa digitava (ou colava) nesses campos podia virar marcação ao reabrir as configurações. Os três campos e o host do relay no rótulo de estado agora passam por `escapeHtml`.
 - Teste em `tests/render.test.js`. SW `v7.102`.
