@@ -84,7 +84,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 - [replicacao-por-grau-v0.md](./specs/replicacao-por-grau-v0.md): mídia no aparelho e replicação via **rede de seguidores** (diretriz base sem gravação no Arweave por enquanto; teto e regras por grau pendentes no PM-74)
 - [voluntariado-tres-trabalhos.md](./product/voluntariado-tres-trabalhos.md): os três trabalhos voluntários do piloto
 - [../client/DEV.md](../client/DEV.md): guia do desenvolvedor §0–§44 (histórico por sprint)
-- **ADRs:** [índice com status](./adr/README.md) (001–031) · [registro de decisões](./DECISOES.md) · **RFCs:** [rfc/README.md](./rfc/README.md) · [0001 — POSSE export](./rfc/0001-posse-export.md)
+- **ADRs:** [índice com status](./adr/README.md) (001–032) · [registro de decisões](./DECISOES.md) · **RFCs:** [rfc/README.md](./rfc/README.md) · [0001 — POSSE export](./rfc/0001-posse-export.md)
 
 ### Specs de protocolo (malha, cache, módulos)
 
