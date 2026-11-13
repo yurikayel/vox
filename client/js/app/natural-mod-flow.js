@@ -103,6 +103,19 @@ export async function mountMyLinks(main, deps = null) {
 }
 
 /**
+ * Só os arquivamentos com data plausível: nem no futuro, nem antes do post arquivado. Sem o post neste
+ * aparelho não há como conferir (nem o que esconder), e o arquivamento fica de fora até o post chegar.
+ * @param {object[]} hides Arquivamentos já conferidos (assinatura e prova).
+ * @param {function(string): Promise<object|null>} getPost Lê o post pelo id.
+ * @param {number} now Relógio deste aparelho, em ms.
+ * @returns {Promise<object[]>} Arquivamentos com data aceita.
+ */
+export async function withPlausibleTime(hides, getPost, now) {
+  const posts = await Promise.all(hides.map((h) => Promise.resolve(getPost(h.postId)).catch(() => null)));
+  return hides.filter((h, i) => posts[i] && natural.isPlausibleHideTime(h, { postTs: Number(posts[i].ts) || 0, now }));
+}
+
+/**
  * Arquivamentos firmes conferidos desta comunidade, como ações que só este aparelho constrói (`naturalVerified`).
  * Vale se: assinatura e prova de padrinho batem, o afilhado está entre os 30 primeiros e quem arquivou tinha
  * menos de 3 reversões da moderação em 90 dias, contadas até aquele arquivamento.
@@ -118,7 +131,8 @@ export async function loadNaturalHideActions(communityId, modActions = [], deps 
   const raw = (await cacheNode.getWirePosts()).filter((p) => p.type === natural.NATURAL_HIDE_TYPE && p.communityId === communityId);
   if (!raw.length) return [];
   const verify = (signed) => localAccount.verifyPayload(signed);
-  const hides = (await Promise.all(raw.map((h) => natural.verifyNaturalHide(h, verify)))).filter(Boolean);
+  const verified = (await Promise.all(raw.map((h) => natural.verifyNaturalHide(h, verify)))).filter(Boolean);
+  const hides = await withPlausibleTime(verified, (id) => cacheNode.getLocalPost(id), deps?.now?.() ?? Date.now());
   const meta = await community.resolveCommunityMetadata(communityId).catch(() => ({}));
   const unhides = modActions.filter((a) => a.action === "unhide" && isModerator(String(a.owner || a.author || ""), meta.owner, meta.moderators));
   const links = await loadLinks(deps);
