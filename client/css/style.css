@@ -9047,6 +9047,48 @@ blockquote.repost-cite {
   cursor: pointer;
 }
 
+/* ADR-032 — faixa "esta conta só existe neste navegador" até haver uma saída soberana (não bloqueia nada) */
+.account-exit-banner {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 60;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  padding: 0.6rem 1rem calc(0.6rem + env(safe-area-inset-bottom, 0px));
+  border-top: 2px solid var(--danger);
+  background: var(--surface-soft);
+  color: var(--text);
+  font-size: 0.85rem;
+}
+.account-exit-banner .banner-text { flex: 1 1 16rem; margin: 0; }
+.account-exit-banner .banner-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+.account-exit-banner .banner-dismiss {
+  padding: 0.35rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+/* Desktop: começa onde a barra lateral termina (aberta ou recolhida). */
+@media (min-width: 768px) {
+  .account-exit-banner { left: var(--sidebar-width); }
+  body:has(.app-layout.sidebar-collapsed) .account-exit-banner { left: var(--sidebar-width-collapsed); }
+}
+/* No celular a navegação fica embaixo (54px + área segura): a faixa sobe e fica acima dela. */
+@media (max-width: 767px) {
+  .account-exit-banner {
+    left: 0;
+    bottom: calc(58px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: 0.6rem;
+  }
+}
+
 /* PM-54 — faixa "ler antes de entrar" (link direto abre o conteúdo; entrar fica a um toque) */
 .read-first-banner {
   position: fixed;

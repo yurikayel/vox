@@ -7,12 +7,6 @@
   "jsdoc:unwrapBackup",
   "jsdoc:peekBackupKind"
  ],
- "client/js/account-backup.js": [
-  "jsdoc:exportAccountBundle",
-  "param:importAccountBundle:rawBundle",
-  "param:importAccountBundle:passphrase",
-  "returns:importAccountBundle"
- ],
  "client/js/age-gate.js": [
   "jsdoc:AGE_STORAGE_KEY",
   "jsdoc:AGE_CHECKBOX_ID",
@@ -123,7 +117,6 @@
   "jsdoc:setOAuthButtonBusy",
   "jsdoc:reportOAuthEnrichFailure",
   "jsdoc:runOAuthEnrichSignIn",
-  "jsdoc:openOAuthEnrichModal",
   "jsdoc:checkOAuthEnrichStep",
   "jsdoc:checkCantinaGate",
   "returns:hasFullEntry",

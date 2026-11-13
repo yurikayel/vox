@@ -21,6 +21,7 @@ import {
   storeActiveAccount,
 } from "./local-account.js";
 import { sealJson } from "./keystore.js";
+import { markAccountExit } from "./account-exit.js";
 
 export { KIND_WRAPPED, peekBackupKind } from "./account-backup-wrap.js";
 
@@ -40,12 +41,19 @@ async function buildAccountBackup(passphrase) {
   };
 }
 
-export async function exportAccountBundle(passphrase) {
+/**
+ * Gera o `.voxid`. Com senha, sai cifrado e trava as chaves (PM-93).
+ * @param {string} passphrase Senha Soberana (vazia: arquivo em claro).
+ * @param {{ asFile?: boolean }} [opts] `asFile`: o arquivo sai do aparelho e, cifrado, conta como saída (ADR-032).
+ * @returns {Promise<string>} JSON do arquivo.
+ */
+export async function exportAccountBundle(passphrase, { asFile = false } = {}) {
   const secret = String(passphrase || "").trim();
   const bundle = await buildAccountBackup(secret);
   if (!secret) return JSON.stringify(bundle, null, 2);
   const wrapped = JSON.stringify(await wrapBackup(bundle, secret), null, 2);
   await lockAfterPasswordBackup(secret);
+  if (asFile) markAccountExit("arquivo", bundle.routeId);
   return wrapped;
 }
 
@@ -118,13 +126,20 @@ async function persistAccountBackup(parsed) {
   return acc;
 }
 
-/** Restaura um `.voxid`. Arquivo cifrado com a Senha Soberana já é um backup: a conta volta travada. */
-export async function importAccountBundle(rawBundle, passphrase) {
+/**
+ * Restaura um `.voxid`. Arquivo cifrado com a Senha Soberana já é um backup: a conta volta travada.
+ * @param {string|object} rawBundle Conteúdo do arquivo.
+ * @param {string} [passphrase] Senha Soberana, se cifrado.
+ * @param {{ asFile?: boolean }} [opts] `asFile`: veio de um arquivo da pessoa, que segue sendo saída (ADR-032).
+ * @returns {Promise<object>} A conta restaurada.
+ */
+export async function importAccountBundle(rawBundle, passphrase, { asFile = false } = {}) {
   const parsed = parseBackupRaw(rawBundle);
   const inner = await unwrapIfNeeded(parsed, passphrase);
   await assertBackupIdentity(inner);
   await challengeSigningPair(inner);
   const acc = await persistAccountBackup(inner);
   if (parsed.kind === KIND_WRAPPED) await lockAfterPasswordBackup(passphrase);
+  if (asFile && parsed.kind === KIND_WRAPPED) markAccountExit("arquivo", acc.routeId);
   return acc;
 }

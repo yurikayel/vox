@@ -11,6 +11,7 @@ import { unwrapBackup } from "./account-backup-wrap.js";
 import * as localAccount from "./local-account.js";
 import { decryptVaultRecord, encryptVaultV2 } from "./vault-crypto.js";
 import * as ownPosts from "./own-posts.js";
+import * as accountExit from "./account-exit.js";
 
 /** Marca do arquivo de backup do e-mail. */
 export const INBOX_BACKUP_TYPE = "vox-inbox-backup";
@@ -136,6 +137,7 @@ export function markInboxBackupSent(period, to) {
   if (period === "semana") s.lastWeekly = to;
   if (period === "mes") s.lastMonthly = to;
   writeState(s);
+  accountExit.markAccountExit("email");
 }
 
 function applyProfile(profile) {
@@ -176,6 +178,7 @@ export async function restoreInboxBackup(text, passphrase) {
   const keys = await decryptVaultRecord(file.secrets, passphrase).catch(() => null);
   if (!keys?.privateJwk) throw new Error("Senha Soberana incorreta.");
   const acc = await importAccountBundle(keys.account, passphrase);
+  accountExit.markAccountExit("email", acc.routeId);
   await localAccount.lockAfterPasswordBackup(passphrase);
   await applyContent(JSON.parse(await cryptoDm.open(file.sealed, keys.privateJwk)), acc.routeId);
   const { kty, crv, x, y } = keys.privateJwk;
