@@ -7,6 +7,7 @@ import * as contactNotify from "../contact-notify.js";
 import * as centralMemory from "../central-memory.js";
 import * as peopleIndex from "../people-index.js";
 import * as profileDirectory from "../profile-directory.js";
+import * as localAccount from "../local-account.js";
 import { getActiveUser, makeShellProps } from "./context.js";
 import { addContactAndNotify, listPendingAddedYouNotices } from "./contact-notify-flow.js";
 import { pollInboxMessages } from "./screens-dm.js";
@@ -65,10 +66,15 @@ export async function showPeople(initialQuery = "") {
   const sections = hasQ ? null : await peopleIndex.buildPeopleSections();
   const results = hasQ ? await peopleIndex.searchPeople(q) : [];
   const addedBy = hasQ ? [] : listPendingAddedYouNotices();
-  render.renderPeopleSearch(main, { sections, results, query: q, addedBy });
+  const inviteLink = user ? share.inviteShareUrl(user) : "";
+  render.renderPeopleSearch(main, { sections, results, query: q, addedBy, routeId: user, inviteLink });
   void import("./natural-mod-flow.js").then((m) => m.mountMyLinks(main)).catch(() => {});
 
   bindPeopleAddedYouActions();
+  document.getElementById("btn-people-share-connect")?.addEventListener("click", () => {
+    if (!user) return;
+    void share.shareConnect({ routeId: user, displayName: localAccount.getDisplayName(), invite: true });
+  });
   ensureContactAddedLiveListener();
   const searchInput = document.getElementById("people-search-input");
   searchInput?.addEventListener("input", () => void updatePeopleResultsContainer(searchInput.value));

@@ -296,3 +296,40 @@ export function renderReportMenuItem(postId, author = "", communityId = "") {
     <span class="toolbar-overflow-label">Denunciar</span>
   </button>`;
 }
+
+/**
+ * Cartão compacto "Convide amigos" com chave cidadã, botão de compartilhar e link técnico recolhido em `<details>`.
+ *
+ * @param {object} [opts={}] Opções de renderização.
+ * @param {string} [opts.routeId=""] `routeId` do usuário autenticado.
+ * @param {string} [opts.inviteLink=""] Link completo de convite; quando vazio, deriva `#/connect/<routeId>`.
+ * @param {string} [opts.buttonId="btn-share-connect"] ID do botão de compartilhar.
+ * @param {string} [opts.codeId="invite-connect-url"] ID do `<code>` com o link técnico.
+ * @param {string} [opts.className="card people-invite-card"] Classes CSS do contêiner.
+ * @returns {string} HTML do cartão (vazio quando `routeId` não é informado).
+ */
+export function renderInviteFriendsCard({
+  routeId = "",
+  inviteLink = "",
+  buttonId = "btn-share-connect",
+  codeId = "invite-connect-url",
+  className = "card people-invite-card",
+} = {}) {
+  if (!routeId) return "";
+  const basePath = typeof location !== "undefined" ? location.origin + location.pathname : "";
+  const link = inviteLink || `${basePath}#/connect/${encodeURIComponent(routeId)}`;
+  return `<section class="${escapeHtml(className)}" aria-label="Convide amigos">
+    <div class="invite-friends-head">
+      <div>
+        <strong class="invite-friends-title">Convide amigos</strong>
+        <p class="desc invite-friends-lead">Toque em Compartilhar para mandar seu convite do Vox. Sua chave: <code>${escapeHtml(shortId(routeId))}</code> · Soberana e sem dono.</p>
+      </div>
+      <button type="button" id="${escapeHtml(buttonId)}" class="btn btn-primary btn-sm" data-route="${escapeHtml(routeId)}">Compartilhar</button>
+    </div>
+    <details class="dm-advanced">
+      <summary class="dm-advanced-summary">Ver link técnico</summary>
+      <p class="meta">Só se precisar copiar manualmente:</p>
+      <p class="meta modal-connect-url"><code id="${escapeHtml(codeId)}">${escapeHtml(link)}</code></p>
+    </details>
+  </section>`;
+}

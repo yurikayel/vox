@@ -301,17 +301,8 @@ async function finishPactAcceptance(modalContainer) {
   if (returning) return; // só faltava confirmar os 18+: sem boas-vindas nem convite de novo
   const user = await localAccount.getRouteId().catch(() => "");
   await ensureOnboardingSideEffects(user);
-  share.showToast("Bem-vindo ao Vox! Rede ativa.");
+  share.showToast("Bem-vindo ao Vox! Você já está conectado.");
   if (landOnInviter(user)) return;
-  if (user) {
-    render.renderPostPactConnectModal(modalContainer, user, share.inviteShareUrl(user));
-    document.getElementById("btn-post-pact-connect-close")?.addEventListener("click", () => {
-      render.closePostPactConnectModal(modalContainer);
-    });
-    document.getElementById("btn-post-pact-share-connect")?.addEventListener("click", () => {
-      void share.shareConnect({ routeId: user, displayName: localAccount.getDisplayName(), invite: true });
-    });
-  }
   const cur = parseRoute();
   if (cur.name === "home") showHome(cur.feed);
 }
