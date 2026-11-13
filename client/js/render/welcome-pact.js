@@ -59,13 +59,11 @@ function renderPillar(p) {
     </li>`;
 }
 
-/** Corpo do pacto (prova social + pilares + ações) — reaproveitado como etapa final do onboarding. */
+/** Etapa final do onboarding: só a confirmação de 18+ (ADR-020) e as ações; os pilares ficam no modal do pacto. */
 export function renderPactStepHtml() {
   return `
-    <h2 class="genesis-panel-title">Último passo: o pacto</h2>
-    <p class="genesis-polis-sub">Sua turma, sua família e seu bairro conversando direto de aparelho pra aparelho.</p>
+    <h2 class="genesis-panel-title">Último passo</h2>
     ${renderAvatarStack()}
-    <ul class="welcome-pillars">${PILLARS.map(renderPillar).join("")}</ul>
     ${renderAdultCheckHtml()}
     <div class="modal-actions modal-actions--stack">
       <button id="btn-pact-accept" class="agora-btn agora-btn--primary agora-btn--block btn-pact-continue">Entrar na roda</button>

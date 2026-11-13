@@ -8,6 +8,10 @@ import { escapeHtml } from "../render/util.js";
 
 /** Rotas de leitura que um link compartilhado costuma abrir. */
 export const READ_FIRST_ROUTES = new Set([
+  "home",
+  "people",
+  "connect",
+  "sync",
   "topic",
   "community",
   "communities",
@@ -54,7 +58,7 @@ export function submitNeedsEntry(form) {
 export function renderReadFirstBannerHtml() {
   return `
     <div class="read-first-banner" id="${READ_FIRST_BANNER_ID}" role="region" aria-label="Você está lendo o Vox">
-      <span>${escapeHtml("Você está lendo o Vox. Para curtir, responder ou entrar na comunidade, entre — leva um minuto e não pede CPF nem e-mail.")}</span>
+      <span>${escapeHtml("Para curtir ou responder, entre: não pede CPF nem e-mail.")}</span>
       <button type="button" class="btn btn-primary btn-sm" id="btn-read-first-enter">Entrar no Vox</button>
     </div>`;
 }

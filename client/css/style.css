@@ -5031,8 +5031,7 @@ p.profile-grid-handle {
 }
 
 .modal-card .btn-primary,
-.modal-sheet .btn-primary.btn-pact-continue,
-.modal-sheet .btn-primary.btn-cantina-enter {
+.modal-sheet .btn-primary.btn-pact-continue {
   background: var(--brand-green);
   color: var(--on-accent);
   border-color: transparent;
@@ -5040,8 +5039,7 @@ p.profile-grid-handle {
 }
 
 .modal-card .btn-primary:hover,
-.modal-sheet .btn-primary.btn-pact-continue:hover,
-.modal-sheet .btn-primary.btn-cantina-enter:hover {
+.modal-sheet .btn-primary.btn-pact-continue:hover {
   background: #19924c;
   filter: none;
   color: var(--on-accent);
@@ -5055,34 +5053,6 @@ p.profile-grid-handle {
 .btn-pact-settings {
   padding: 0.5rem;
   font-size: 0.85rem;
-}
-
-.btn-cantina-enter-lg {
-  padding: 0.75rem;
-  font-weight: 700;
-  font-size: 1rem;
-}
-
-.cantina-details {
-  font-size: 0.82rem;
-  margin-top: 0.35rem;
-  cursor: pointer;
-}
-
-.cantina-details-summary {
-  color: var(--muted);
-  text-align: center;
-  list-style: none;
-}
-
-.cantina-details-body {
-  margin: 0.4rem 0 0;
-  text-align: left;
-  font-size: 0.8rem;
-  background: var(--surface-1);
-  padding: 8px 10px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--outline);
 }
 
 .modal-dialog-solid {
@@ -5162,59 +5132,10 @@ p.profile-grid-handle {
   }
 }
 
-/* Porta da Cantina (Gate Cultural Anti-Bot) */
-.cantina-dialog {
-  max-width: 520px;
-  padding: 0 1.25rem 1.25rem;
-  text-align: center;
-  overflow: hidden;
-  border-color: var(--outline);
-  box-shadow: var(--elevation-3);
-}
-
 .zap-modal-dialog {
   max-width: 440px;
   width: 100%;
   padding: 1.5rem;
-}
-
-.cantina-art-wrap {
-  position: relative;
-  display: block;
-  width: calc(100% + 2.5rem);
-  max-width: none;
-  margin: 0 -1.25rem 1rem;
-  background: #1c1612;
-  overflow: hidden;
-  aspect-ratio: 1024 / 575;
-  max-height: min(52vh, 380px);
-}
-
-.cantina-art-img {
-  position: absolute;
-  inset: 0;
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: 76% 16%;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .cantina-art-img {
-    animation: cantinaArtIn 0.45s ease;
-  }
-}
-
-@keyframes cantinaArtIn {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
 }
 
 .modal-feature {

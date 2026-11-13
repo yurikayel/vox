@@ -15,7 +15,6 @@ import {
   CANTINA_STORAGE_KEY,
   hasPassedCantinaGate,
   shouldShowCantinaGate,
-  wireCantinaOverlayPassthrough,
 } from "./cantina-gate.js";
 import { ensureOnboardingSideEffects } from "./onboarding-side-effects.js";
 import { showHome } from "./screens-home.js";
@@ -127,6 +126,21 @@ function bindCustomNameForm(modalContainer, onComplete) {
   });
 }
 
+/**
+ * Entra pelos backups que a pessoa mandou para o próprio e-mail, do mais antigo ao mais novo.
+ * @param {File[]} files Arquivos `.txt` escolhidos.
+ * @param {string} pass Senha Soberana.
+ * @returns {Promise<{ok: boolean, reason?: string, routeId?: string, displayName?: string}>} Resultado.
+ */
+async function restoreFromInboxBackups(files, pass) {
+  const backup = await import("../inbox-backup.js");
+  const texts = await Promise.all(files.map((f) => f.text()));
+  if (!texts.every(backup.isInboxBackupText)) return { ok: false, reason: "Escolha só os backups do Vox que chegaram no seu e-mail (.txt)." };
+  let acc = null;
+  for (const text of texts.sort((a, b) => JSON.parse(a).to - JSON.parse(b).to)) acc = await backup.restoreInboxBackup(text, pass);
+  return { ok: true, routeId: acc?.routeId, displayName: localAccount.getDisplayName() };
+}
+
 function bindSovereignPassphraseForm(modalContainer, onComplete) {
   const form = document.getElementById("form-oauth-restore-passphrase");
   if (!form) return;
@@ -138,7 +152,8 @@ function bindSovereignPassphraseForm(modalContainer, onComplete) {
     setOAuthButtonBusy(btn, true);
     setOAuthEnrichError("");
     try {
-      const res = await oauthVault.restoreFromPassphraseVault(pass);
+      const files = [...(document.getElementById("oauth-restore-files")?.files || [])];
+      const res = files.length ? await restoreFromInboxBackups(files, pass) : await oauthVault.restoreFromPassphraseVault(pass);
       if (res.ok) {
         oauthProfile.skipOAuthEnrichment();
         share.showToast(`Identidade restaurada com sucesso! Bem-vindo(a), ${res.displayName || "Cidadão"}!`);
@@ -214,13 +229,9 @@ export function checkOAuthEnrichStep() {
 }
 
 export function checkCantinaGate() {
-  const modalContainer = document.getElementById("modal-container");
   const route = parseRoute();
 
   if (!shouldShowCantinaGate(route.name)) {
-    if (modalContainer && route.name === "ajuda-teste") {
-      render.closeCantinaGate(modalContainer);
-    }
     if (hasPassedCantinaGate()) {
       readFirst.removeReadFirstBanner();
       checkOAuthEnrichStep();
@@ -229,13 +240,13 @@ export function checkCantinaGate() {
     }
     return;
   }
-  openCantinaGate(modalContainer);
+  openEntry();
 }
 
 /** PM-54: leitura liberada, faixa "Entrar no Vox" e portão na primeira ação que escreve. */
 function startReadFirst() {
   installEntryGuards();
-  readFirst.mountReadFirstBanner(document, () => openCantinaGate(document.getElementById("modal-container")));
+  readFirst.mountReadFirstBanner(document, openEntry);
 }
 
 /** Escrever exige ter passado pela entrada E concluído o pacto com 18+ (ADR-020). */
@@ -243,27 +254,16 @@ export function hasFullEntry() {
   return hasPassedCantinaGate() && isPactComplete();
 }
 
-function openNextEntryStep() {
-  if (!hasPassedCantinaGate()) openCantinaGate(document.getElementById("modal-container"));
-  else checkOAuthEnrichStep();
-}
-
 /** Guardas de escrita desde o boot: valem antes de a 1ª rota rodar e para quem ainda não confirmou 18+. */
 export function installEntryGuards() {
-  readFirst.installReadFirstGuards({ doc: document, hasEntered: hasFullEntry, openEntry: openNextEntryStep });
+  readFirst.installReadFirstGuards({ doc: document, hasEntered: hasFullEntry, openEntry });
 }
 
-function openCantinaGate(modalContainer) {
-  if (!modalContainer) return;
-  wireCantinaOverlayPassthrough();
-  render.renderCantinaGate(modalContainer);
-
-  document.getElementById("btn-cantina-enter")?.addEventListener("click", () => {
-    localStorage.setItem(CANTINA_STORAGE_KEY, "true");
-    render.closeCantinaGate(modalContainer);
-    readFirst.removeReadFirstBanner();
-    checkOAuthEnrichStep();
-  });
+/** Abre a entrada (nome e 18+) direto, sem a tela de portão que vinha antes. Idempotente: quem já entrou cai no passo que falta (pacto). */
+function openEntry() {
+  localStorage.setItem(CANTINA_STORAGE_KEY, "true");
+  readFirst.removeReadFirstBanner();
+  checkOAuthEnrichStep();
 }
 
 /** Pacto aceito E maioridade confirmada (ADR-020). Quem aceitou antes do aviso de 18+ vê o pacto uma vez mais. */

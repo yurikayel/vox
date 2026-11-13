@@ -101,8 +101,6 @@ export {
   renderPostPactConnectModal,
   closePostPactConnectModal,
   renderConnectPreview,
-  renderCantinaGate,
-  closeCantinaGate,
   renderPactModal,
   closePactModal,
   renderZapModal,
