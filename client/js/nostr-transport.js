@@ -118,6 +118,7 @@ function openRelay(ctx, slot) {
   try {
     ws = new ctx.WS(slot.url);
   } catch {
+    ctx.onRelayAttempt?.({ ok: false, durationMs: 0 });
     scheduleReconnect(ctx, slot, false);
     return;
   }
@@ -173,19 +174,24 @@ function scheduleReconnect(ctx, slot, wasOpen) {
 /** LAN-21: conta o relay como "abrindo" até abrir ou fechar; cada socket conta uma vez. */
 function trackRelayStatus(ctx, ws, onOpen, onClosed) {
   let phase = "pending";
+  const startedAt = Date.now();
   ctx.pending += 1;
   notifyStatus(ctx);
   ws.onopen = () => {
     phase = "open";
     ctx.pending -= 1;
     ctx.open += 1;
+    ctx.onRelayAttempt?.({ ok: true, durationMs: Date.now() - startedAt });
     notifyStatus(ctx);
     onOpen();
   };
   ws.onclose = () => {
     const wasOpen = phase === "open";
     if (wasOpen) ctx.open -= 1;
-    else if (phase === "pending") ctx.pending -= 1;
+    else if (phase === "pending") {
+      ctx.pending -= 1;
+      ctx.onRelayAttempt?.({ ok: false, durationMs: Date.now() - startedAt });
+    }
     phase = "closed";
     notifyStatus(ctx);
     onClosed?.(wasOpen);
@@ -239,6 +245,7 @@ function createContext(opts) {
     WS: opts.WebSocketImpl || globalThis.WebSocket,
     onMessage: opts.onMessage,
     onStatus: opts.onStatus,
+    onRelayAttempt: opts.onRelayAttempt,
     open: 0,
     pending: 0,
     identity: () => (typeof opts.getIdentity === "function" ? opts.getIdentity() || {} : {}),

@@ -6,6 +6,11 @@
 import { buildNostrSignalingCandidates } from "./nostr-signaling.js";
 import { createNostrTransport, DEFAULT_ROOM } from "./nostr-transport.js";
 import { createSignalingHealth } from "./honest-errors.js";
+import {
+  recordSignalingDial,
+  recordPeerPathOutcome,
+  recordFirstPeerLatency,
+} from "./signaling-telemetry.js";
 
 let signalingWs = null;
 let currentPeerId = null;
@@ -22,6 +27,8 @@ let configCache = null;
 /** REV-09: transporte Nostr paralelo e de onde cada par veio ("nostr" | "ws"). */
 let nostrTransport = null;
 const peerTransport = new Map();
+let sessionStartedAt = 0;
+let recordedFirstPeer = false;
 /** LAN-21: "sinalização caída" só quando WebSocket e Nostr falham juntos por mais que a carência. */
 let signalingHealthHandler = null;
 const signalingHealth = createSignalingHealth({ onChange: (down) => signalingHealthHandler?.(down) });
@@ -261,6 +268,8 @@ export async function initWebRtc(peerId, customUrl = null) {
   currentPeerId = peerId;
   customSignalingUrl = customUrl;
   isWebRtcEnabled = true;
+  sessionStartedAt = Date.now();
+  recordedFirstPeer = false;
 
   if (typeof RTCPeerConnection === "undefined") {
     return false;
@@ -294,6 +303,7 @@ async function startNostrSignaling() {
     getIdentity: () => ({ address: currentAddress, dmPub: currentDmPub }),
     onMessage: onNostrSignalingMessage,
     onStatus: ({ open, pending }) => signalingHealth.update({ nostrOpen: open, nostrPending: pending }),
+    onRelayAttempt: (ev) => recordSignalingDial("nostr", ev),
   });
   nostrTransport.start();
 }
@@ -315,7 +325,7 @@ export function disconnectWebRtc() {
   peerTransport.clear();
   signalingHealth.reset();
   for (const remoteId of Array.from(peerConnections.keys())) {
-    closePeerConnection(remoteId);
+    closePeerConnection(remoteId, true);
   }
   resetSignalingIndex();
 }
@@ -326,10 +336,12 @@ async function connectSignaling() {
   const config = await loadSignalingConfig();
   const url = getSignalingUrl(config);
 
+  const startedAt = Date.now();
   try {
     signalingWs = new WebSocket(url);
-    bindSignalingSocket(signalingWs, config);
+    bindSignalingSocket(signalingWs, config, startedAt);
   } catch {
+    recordSignalingDial("ws", { ok: false, durationMs: Date.now() - startedAt });
     signalingHealth.update({ wsOpen: false, wsGaveUp: true });
     rotateSignalingUrl(config);
     scheduleReconnect(true);
@@ -338,6 +350,7 @@ async function connectSignaling() {
 
 function handleSignalingSocketClose(config, wasOpened) {
   signalingWs = null;
+  if (!wasOpened) recordSignalingDial("ws", { ok: false });
   const candidates = getSignalingCandidates(config);
   if (!wasOpened && candidates.length > 1) {
     const prevIndex = activeSignalingIndex;
@@ -352,37 +365,30 @@ function handleSignalingSocketClose(config, wasOpened) {
   }
 }
 
-function bindSignalingSocket(ws, config) {
+function handleWsSignalingPayload(raw) {
+  try {
+    const msg = JSON.parse(raw);
+    const remote = msg.from || msg.peerId;
+    if (remote && !peerTransport.has(remote)) peerTransport.set(remote, "ws");
+    handleSignalingMessage(msg);
+  } catch {}
+}
+
+function bindSignalingSocket(ws, config, startedAt = Date.now()) {
   let wasOpened = false;
   ws.onopen = () => {
     wasOpened = true;
     reconnectAttempts = 0;
+    recordSignalingDial("ws", { ok: true, durationMs: Date.now() - startedAt });
     signalingHealth.update({ wsOpen: true, wsGaveUp: false });
-    ws.send(
-      JSON.stringify({
-        type: "register",
-        peerId: currentPeerId,
-        address: currentAddress,
-        dmPub: currentDmPub,
-      })
-    );
+    ws.send(JSON.stringify({ type: "register", peerId: currentPeerId, address: currentAddress, dmPub: currentDmPub }));
   };
-
-  ws.onmessage = (event) => {
-    try {
-      const msg = JSON.parse(event.data);
-      const remote = msg.from || msg.peerId;
-      if (remote && !peerTransport.has(remote)) peerTransport.set(remote, "ws");
-      handleSignalingMessage(msg);
-    } catch {}
-  };
-
+  ws.onmessage = (event) => handleWsSignalingPayload(event.data);
   ws.onerror = () => {
     try {
       ws.close();
     } catch {}
   };
-
   ws.onclose = () => handleSignalingSocketClose(config, wasOpened);
 }
 
@@ -510,13 +516,26 @@ function startNegotiationTimer(remotePeerId) {
   }, NEGOTIATION_TIMEOUT_MS);
 }
 
+function markPeerConnected(remotePeerId) {
+  const entry = peerConnections.get(remotePeerId);
+  if (!entry) return;
+  if (entry.timeoutId) {
+    clearTimeout(entry.timeoutId);
+    entry.timeoutId = null;
+  }
+  if (entry.outcomeRecorded) return;
+  entry.outcomeRecorded = true;
+  const now = Date.now();
+  recordPeerPathOutcome(entry.transport, { ok: true, durationMs: now - entry.startedAt }, undefined, now);
+  if (!recordedFirstPeer && sessionStartedAt > 0) {
+    recordedFirstPeer = true;
+    recordFirstPeerLatency(now - sessionStartedAt, undefined, now);
+  }
+}
+
 function setupDataChannelEvents(dc, remotePeerId) {
   dc.onopen = () => {
-    const entry = peerConnections.get(remotePeerId);
-    if (entry?.timeoutId) {
-      clearTimeout(entry.timeoutId);
-      entry.timeoutId = null;
-    }
+    markPeerConnected(remotePeerId);
     if (typeof peerConnectHandler === "function") {
       peerConnectHandler(remotePeerId, (obj) => sendVoxMessage(remotePeerId, obj));
     }
@@ -579,10 +598,7 @@ async function negotiateInitiatorOffer(pc, remotePeerId) {
   }
 }
 
-async function createPeerConnection(remotePeerId, isInitiator) {
-  if (peerConnections.has(remotePeerId)) return peerConnections.get(remotePeerId);
-
-  const pc = new RTCPeerConnection(createRtcConfig());
+function attachPeerConnectionEvents(pc, remotePeerId) {
   pc.onconnectionstatechange = () => {
     const state = pc.connectionState;
     if (state === "failed" || state === "closed" || state === "disconnected") {
@@ -594,13 +610,28 @@ async function createPeerConnection(remotePeerId, isInitiator) {
       sendSignaling({ type: "ice", to: remotePeerId, candidate: event.candidate });
     }
   };
+}
+
+async function createPeerConnection(remotePeerId, isInitiator) {
+  if (peerConnections.has(remotePeerId)) return peerConnections.get(remotePeerId);
+
+  const pc = new RTCPeerConnection(createRtcConfig());
+  attachPeerConnectionEvents(pc, remotePeerId);
 
   const { dc, dmDc } = isInitiator
     ? initInitiatorChannels(pc, remotePeerId)
     : (bindPeerDataChannelListener(pc, remotePeerId), { dc: null, dmDc: null });
 
   const timeoutId = startNegotiationTimer(remotePeerId);
-  peerConnections.set(remotePeerId, { pc, dc, dmDc, timeoutId });
+  peerConnections.set(remotePeerId, {
+    pc,
+    dc,
+    dmDc,
+    timeoutId,
+    startedAt: Date.now(),
+    transport: peerTransport.get(remotePeerId) || "ws",
+    outcomeRecorded: false,
+  });
 
   if (isInitiator) {
     await negotiateInitiatorOffer(pc, remotePeerId);
@@ -663,9 +694,13 @@ function disposePeerChannels(entry) {
   }
 }
 
-export function closePeerConnection(remotePeerId) {
+export function closePeerConnection(remotePeerId, skipFailureRecord = false) {
   const entry = peerConnections.get(remotePeerId);
   if (!entry) return;
+  if (!skipFailureRecord && !entry.outcomeRecorded) {
+    entry.outcomeRecorded = true;
+    recordPeerPathOutcome(entry.transport, { ok: false, durationMs: Date.now() - entry.startedAt });
+  }
   if (entry.timeoutId) {
     clearTimeout(entry.timeoutId);
     entry.timeoutId = null;
