@@ -6,6 +6,11 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Onboarding em duas telas e "Já tenho conta" com o QR do outro aparelho
+- Quem é novo vê duas telas em vez de quatro: **Entrar no Vox** (Google, Meta ou GitHub trazem nome e foto, ou a pessoa escreve o nome) e o pacto (18+). Saíram a tela de boas-vindas com os três cartões de princípios e o menu "Como quer entrar?"; o pacto no onboarding ficou só com a confirmação de 18+ e as ações.
+- **Já tenho conta** explica o caminho com o outro aparelho (Perfil → QR para outro aparelho) e, sem ele, entra pelos backups do e-mail (`.txt`, vários de uma vez) com a Senha Soberana, ou só pela Senha. Login com Google ou Meta continua sem levar a conta para outro aparelho (PM-90): o ID do login não é segredo.
+- Removidas de `agora.css` as regras das telas que saíram (3,6 KB). Testes de propósito alterados: `tests/onboarding-steps.test.js` passa a esperar as etapas `entry`, `have` e `pact`; `tests/sovereign-agora.test.js` deixa de exigir o título antigo e os cartões de princípios. SW `v7.99`.
+
 ### Moderador natural: a moderação prevalece e a data do arquivamento é conferida (revisão do #94)
 - Atrás da flag `vox.lab.moderador`. Um arquivamento natural sobre o post de outra pessoa tornava visível de novo um post que a moderação tinha escondido; agora o que a moderação escondeu não é substituído nem desfeito pelo arquivamento natural (`client/js/moderation.js`).
 - O `ts` do arquivamento, assinado pelo padrinho, só vale entre a data do post e o relógio do aparelho, com 5 minutos de folga (`isPlausibleHideTime` em `client/js/natural-mod.js`). Data no futuro impedia o `unhide` da moderação de desfazer; data retroativa zerava a contagem de reversões.

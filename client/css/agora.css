@@ -2615,49 +2615,6 @@ body,
   font-weight: 600;
 }
 
-.genesis-method {
-  display: grid;
-  grid-template-columns: 44px minmax(0, 1fr);
-  gap: 1rem;
-  padding: 1.1rem 1.1rem 1.1rem 1rem;
-  margin-bottom: 0.75rem;
-  background: var(--sa-surface-high);
-  border-left: 3px solid var(--sa-outline-variant);
-  border-radius: var(--radius-sm);
-}
-
-.genesis-method--active { border-left-color: var(--sa-primary); }
-
-.genesis-method-icon {
-  width: 44px;
-  height: 44px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-sm);
-  background: rgba(120, 214, 207, 0.12);
-  color: var(--sa-primary);
-}
-
-.genesis-method-icon--bronze {
-  background: rgba(231, 194, 107, 0.12);
-  color: var(--sa-secondary);
-}
-
-.genesis-method-title {
-  margin: 0 0 0.3rem;
-  font-family: var(--font-epigraphic);
-  font-size: 1.15rem;
-  font-weight: 600;
-}
-
-.genesis-method-desc {
-  margin: 0 0 0.85rem;
-  font-size: 0.875rem;
-  line-height: 1.55;
-  color: var(--sa-on-surface-variant);
-}
-
 .genesis-inline-form {
   display: flex;
   flex-wrap: wrap;
@@ -2701,15 +2658,6 @@ body,
   font-size: 0.8125rem;
 }
 
-.genesis-overlay .genesis-skip {
-  width: 100%;
-  background: transparent;
-  border: 1px solid var(--sa-hairline);
-  color: var(--sa-on-surface-variant);
-}
-
-.genesis-overlay .genesis-skip:hover { border-color: var(--entablature-active); color: var(--sa-on-surface); }
-
 .genesis-overlay .oauth-enrich-legal {
   margin: 0.75rem 0 0;
   text-align: center;
@@ -2717,75 +2665,13 @@ body,
   color: var(--sa-outline);
 }
 
-.genesis-polis-title {
-  margin: 0;
-  font-family: var(--font-epigraphic);
-  font-size: 1.4rem;
-  font-weight: 600;
-}
-
-.genesis-polis-sub {
-  margin: 0.25rem 0 1.25rem;
-  font-size: 0.875rem;
-  color: var(--sa-on-surface-variant);
-}
-
-.genesis-foundation {
-  display: grid;
-  grid-template-columns: 44px minmax(0, 1fr);
-  gap: 1rem;
-  padding: 1.25rem;
-  margin-bottom: 1rem;
-  background: var(--sa-surface-container);
-  border-top: 2px solid var(--sa-primary-container);
-  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
-}
-
-.genesis-foundation--bronze { border-top-color: var(--sa-secondary); }
-
-.genesis-foundation-icon {
-  width: 44px;
-  height: 44px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-sm);
-  background: var(--sa-surface-high);
-  color: var(--sa-on-surface-variant);
-}
-
-.genesis-foundation--bronze .genesis-foundation-icon { color: var(--sa-secondary); }
-
-.genesis-foundation-tag {
-  margin: 0;
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--sa-secondary);
-}
-
-.genesis-foundation-title {
-  margin: 0.2rem 0 0.4rem;
-  font-family: var(--font-epigraphic);
-  font-size: 1.2rem;
-  font-weight: 600;
-}
-
-.genesis-foundation-body {
-  margin: 0;
-  font-size: 0.875rem;
-  line-height: 1.6;
-  color: var(--sa-on-surface-variant);
-}
-
 @media (max-width: 640px) {
   .genesis-shell { padding: 1.5rem 16px 2.5rem; }
 
   .genesis-brand-name { font-size: 0.95rem; letter-spacing: 0.08em; }
   .genesis-panel { padding: 1.1rem; }
-  .genesis-method { grid-template-columns: minmax(0, 1fr); }
-  .genesis-method-icon { width: 36px; height: 36px; }
+
+  
 }
 
 /* ── 14. Modais, botões legados e cantina (fora de .agora-ui: #modal-container é irmão do app) ── */
@@ -3844,17 +3730,9 @@ body,
 .genesis-shell--steps .genesis-hero { margin-bottom: 1.5rem; }
 .genesis-shell--steps .genesis-title { font-size: clamp(1.9rem, 1.3rem + 2.5vw, 2.75rem); margin-top: 1rem; }
 .genesis-step[hidden] { display: none; }
-.genesis-step .genesis-polis-title { margin-bottom: 0.25rem; }
-.genesis-step .genesis-method { margin-bottom: 0; }
+
 .genesis-back { margin: 0 0 1rem; padding: 0; background: none; border: none; color: var(--sa-on-surface-variant); font: inherit; font-size: 0.875rem; cursor: pointer; }
 .genesis-back:hover { color: var(--sa-primary); }
-.genesis-picks { display: grid; gap: 0.6rem; margin-bottom: 1rem; }
-.genesis-pick { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 1rem; align-items: center; padding: 1rem; background: var(--sa-surface-high); border: 1px solid transparent; border-left: 3px solid var(--sa-outline-variant); border-radius: var(--radius-sm); color: var(--sa-on-surface); font: inherit; text-align: left; cursor: pointer; }
-.genesis-pick:hover, .genesis-pick:focus-visible { border-left-color: var(--sa-primary); border-color: var(--entablature-active); }
-.genesis-pick-text { display: flex; flex-direction: column; gap: 0.2rem; }
-.genesis-pick-text strong { font-family: var(--font-epigraphic); font-size: 1.1rem; font-weight: 600; }
-.genesis-pick-text span { font-size: 0.875rem; color: var(--sa-on-surface-variant); }
-.genesis-pick-arrow { color: var(--sa-secondary); font-size: 1.2rem; }
 
 /* ── 26. Construtor de enquete cívica ── */
 .civic-poll-builder { margin-top: 1rem; padding: 1rem; background: var(--sa-surface-high); border-left: 2px solid var(--sa-secondary); border-radius: var(--radius-sm); }
@@ -4128,6 +4006,12 @@ body,
 .compose-blocked-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center; }
 @media (max-width: 520px) { .compose-blocked-actions { flex-direction: column; align-items: stretch; } }
 .genesis-overlay .genesis-skip-note { margin: 0.5rem 0 0; text-align: center; font-size: 0.8125rem; line-height: 1.45; color: var(--sa-on-surface-variant); }
+.genesis-overlay .genesis-lead { margin: 0 0 1rem; font-size: 0.9375rem; line-height: 1.5; color: var(--sa-on-surface-variant); }
+.genesis-overlay .genesis-links { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.5rem; margin-top: 1rem; }
+.genesis-overlay .genesis-link { min-height: 44px; padding: 0 0.25rem; background: none; border: none; color: var(--sa-primary); font: inherit; font-size: 0.9375rem; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.genesis-overlay .genesis-inline-form { margin-top: 1rem; }
+.genesis-overlay .genesis-inline-form--stack { flex-direction: column; }
+.genesis-overlay .genesis-inline-form--stack .genesis-input { flex: 0 0 auto; }
 
 /* ── 39. Backup no seu e-mail: seção em Sua rede e aviso de backup vencido ── */
 .inbox-backup-settings label { display: block; margin: 0.35rem 0; }

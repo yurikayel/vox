@@ -80,8 +80,8 @@ test("sovereign agora — onboarding Stitch preserva fluxos e IDs", () => {
   for (const id of ["form-oauth-custom-name", "oauth-custom-name-input", "form-oauth-restore-passphrase", "btn-oauth-skip", "btn-oauth-github"]) {
     assert.ok(html.includes(`id="${id}"`), `falta #${id}`);
   }
-  assert.ok(html.includes("Sua Chave."));
-  assert.ok(html.includes("Fundamentos da Polis"));
+  assert.ok(html.includes("Sua chave."));
+  assert.ok(!html.includes("Fundamentos da Polis"), "os cartões de princípios saíram do onboarding curto");
 });
 
 test("sovereign agora — diretório de cidadãos usa tábuas com chave e ações P2P", () => {

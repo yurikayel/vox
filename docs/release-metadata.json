@@ -1,9 +1,9 @@
 {
-  "git_sha": "da96318",
-  "branch": "fix/moderador-natural-datas-e-hide",
+  "git_sha": "ef75401",
+  "branch": "feat/onboarding-curto",
   "test_js": 1091,
   "test_python": 111,
   "test_total": 1202,
-  "cache_name": "vox-pwa-v7.97-real-network-audio-video-upload",
-  "generated_at": "2026-11-13T07:11:20Z"
+  "cache_name": "vox-pwa-v7.99-real-network-audio-video-upload",
+  "generated_at": "2026-11-13T07:34:51Z"
 }
