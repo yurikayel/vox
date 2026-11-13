@@ -61,6 +61,36 @@ function bindPassphraseMatch() {
   sync();
 }
 
+/** ADR-032: só vale como saída o que está fora deste navegador. Sem servidor que guardou, oferece o arquivo cifrado. */
+function reportVaultResult(out, res, pass) {
+  if (!out) return;
+  out.hidden = false;
+  if (!res.ok) {
+    out.textContent = res.reason || "Não foi possível salvar o cofre.";
+    return;
+  }
+  const locked = res.locked ? " Neste aparelho, a chave agora só sai com essa senha." : "";
+  if (res.remote > 0) {
+    out.textContent = `Cofre guardado em ${res.remote} servidor(es) de memória. Em outro aparelho, escolha “Já tenho conta” e digite sua Senha Soberana.${locked}`;
+    return;
+  }
+  out.innerHTML = `<p>Nenhum servidor de memória guardou o cofre: por enquanto ele só está neste navegador.${locked}</p>
+    <p>Baixe o arquivo cifrado e guarde fora do aparelho (pen drive, nuvem, e-mail para você mesmo). Só abre com a sua senha.</p>
+    <button type="button" class="agora-btn agora-btn--primary" id="btn-backup-wizard-file">Baixar arquivo cifrado</button>`;
+  document.getElementById("btn-backup-wizard-file")?.addEventListener("click", () => void downloadWrappedFile(pass));
+}
+
+async function downloadWrappedFile(pass) {
+  try {
+    const { exportAccountBundle } = await import("../account-backup.js");
+    const jsonStr = await exportAccountBundle(pass, { asFile: true });
+    share.downloadBlob(new Blob([jsonStr], { type: "application/json" }), `vox-soberania-${JSON.parse(jsonStr).routeId}.voxid`);
+    share.showToast("Arquivo cifrado baixado. Guarde fora deste aparelho.");
+  } catch (err) {
+    share.showToast(`Não deu para gerar o arquivo: ${err?.message || err}`, "error");
+  }
+}
+
 export async function showBackupWizard() {
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "profile", "Backup da identidade"));
@@ -75,14 +105,11 @@ export async function showBackupWizard() {
     if (btn) btn.disabled = true;
     try {
       const { savePassphraseVault } = await import("../oauth-vault.js");
-      const res = await savePassphraseVault(document.getElementById("bk-pass")?.value || "");
-      if (out) {
-        out.hidden = false;
-        out.textContent = res.ok
-          ? `Cofre salvo. Em outro aparelho, escolha “Já tenho conta” e digite sua Senha Soberana.${res.locked ? " Neste aparelho, a chave agora só sai com essa senha." : ""}`
-          : res.reason || "Não foi possível salvar o cofre.";
-      }
-      share.showToast(res.ok ? "Backup da identidade concluído." : "Falha no backup.", res.ok ? "info" : "error");
+      const pass = document.getElementById("bk-pass")?.value || "";
+      const res = await savePassphraseVault(pass);
+      reportVaultResult(out, res, pass);
+      const toast = !res.ok ? "Falha no backup." : res.remote > 0 ? "Backup da identidade concluído." : "Cofre só neste navegador: baixe o arquivo cifrado.";
+      share.showToast(toast, res.ok ? "info" : "error");
     } catch (err) {
       share.showToast(`Erro no backup: ${err?.message || err}`, "error");
     } finally {

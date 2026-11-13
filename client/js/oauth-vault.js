@@ -11,6 +11,7 @@
 import * as localAccount from "./local-account.js";
 import * as profileDirectory from "./profile-directory.js";
 import * as share from "./share.js";
+import * as accountExit from "./account-exit.js";
 import { getCentralMemoryUrls } from "./central-memory.js";
 import {
   decryptLegacyRecord,
@@ -53,19 +54,30 @@ export async function fetchRemoteVaultRecord(lookupKey) {
   return null;
 }
 
-/** Grava o cofre nos servidores de memória escolhidos. Cofre v2 vai com a prova do dono (PM-94). */
-export function saveRemoteVaultRecord(lookupKey, record, ownerToken = null) {
-  for (const baseUrl of getCentralMemoryUrls()) {
-    try {
-      void fetch(`${baseUrl}/memory/vault/${lookupKey}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(ownerToken ? { lookupKey, record, ownerToken } : { lookupKey, record }),
-      }).catch(() => {});
-    } catch {
-      /* ignore */
-    }
+const REMOTE_SAVE_TIMEOUT_MS = 4000;
+
+async function postVaultRecord(baseUrl, lookupKey, body) {
+  try {
+    const res = await fetch(`${baseUrl}/memory/vault/${lookupKey}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body,
+      signal: AbortSignal.timeout?.(REMOTE_SAVE_TIMEOUT_MS),
+    });
+    return Boolean(res?.ok);
+  } catch {
+    return false;
   }
+}
+
+/**
+ * Grava o cofre nos servidores de memória escolhidos. Cofre v2 vai com a prova do dono (PM-94).
+ * @returns {Promise<number>} quantos servidores aceitaram (ADR-032: só assim o cofre conta como saída)
+ */
+export async function saveRemoteVaultRecord(lookupKey, record, ownerToken = null) {
+  const body = JSON.stringify(ownerToken ? { lookupKey, record, ownerToken } : { lookupKey, record });
+  const results = await Promise.all(getCentralMemoryUrls().map((url) => postVaultRecord(url, lookupKey, body)));
+  return results.filter(Boolean).length;
 }
 
 /** Revoga os cofres v1 que este aparelho conhece. Roda na abertura do app. */
@@ -213,7 +225,7 @@ function persistVaultRecord(address, record, ownerToken) {
   } catch {
     /* ignore */
   }
-  saveRemoteVaultRecord(address, record, ownerToken);
+  return saveRemoteVaultRecord(address, record, ownerToken);
 }
 
 export async function savePassphraseVault(passphrase) {
@@ -225,10 +237,12 @@ export async function savePassphraseVault(passphrase) {
   if (!opened.ok) return opened;
   const [address, ownerToken] = await Promise.all([deriveVaultAddress(clean), deriveVaultOwnerToken(clean)]);
   const encrypted = await encryptVaultV2(opened.bundle, clean);
-  persistVaultRecord(address, encrypted, ownerToken);
+  const remote = await persistVaultRecord(address, encrypted, ownerToken);
+  if (remote > 0) accountExit.markAccountExit("cofre", opened.bundle.routeId);
   clearLegacyRevokedNotice();
   return {
     ok: true,
+    remote,
     lookupKey: address,
     routeId: opened.bundle.routeId,
     displayName: opened.bundle.displayName,

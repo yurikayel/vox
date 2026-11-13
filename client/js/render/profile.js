@@ -379,12 +379,12 @@ function renderOAuthEnrichmentBlock(oauthProvider = "") {
   const label = oauthProvider === "google" ? "Google" : oauthProvider === "facebook" ? "Meta" : oauthProvider === "github" ? "GitHub" : oauthProvider;
   const statusLine = oauthProvider
     ? `<p class="desc" style="margin:0 0 0.45rem;">Nome e foto importados via <strong>${escapeHtml(label)}</strong> (opcional). Tokens OAuth não são guardados neste aparelho.</p>`
-    : `<p class="desc" style="margin:0 0 0.45rem;">Importe seu nome e foto via <strong>Google, Meta ou GitHub</strong> sem abrir mão da sua chave soberana <code>vx_*</code>.</p>`;
+    : `<p class="desc" style="margin:0 0 0.45rem;">Importe seu nome e foto via <strong>Google, Meta ou GitHub</strong>. Isso não guarda sua conta: a saída fica em <a href="#/backup">Backup</a>.</p>`;
   return `
     <div class="oauth-enrich-notice" style="margin-top:0.65rem; padding:0.55rem 0.65rem; background:var(--surface-soft); border-radius:var(--radius-sm); font-size:0.82rem;">
       ${statusLine}
       <div style="display:flex; flex-wrap:wrap; gap:0.4rem;">
-        <button type="button" id="btn-open-oauth-modal" class="btn btn-sm btn-outline">🔐 Entrar com Google / Meta / GitHub</button>
+        <button type="button" id="btn-open-oauth-modal" class="btn btn-sm btn-outline">Importar nome e foto (Google, Meta ou GitHub)</button>
         <a href="#/settings/linked-accounts" class="btn btn-sm btn-outline">🔗 Redes Vinculadas & Auto-Replicação</a>
         ${oauthProvider ? `<button type="button" id="btn-clear-oauth-enrich" class="btn btn-sm btn-outline">Remover nome/foto importados</button>` : ""}
       </div>

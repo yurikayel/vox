@@ -612,7 +612,7 @@ export function bindLinkedAccountsUi(onRefresh) {
   }
 
   document.getElementById("btn-open-oauth-from-linked")?.addEventListener("click", () => {
-    openOAuthEnrichModal({ onComplete: () => onRefresh && onRefresh() });
+    openOAuthEnrichModal({ mode: "import", onComplete: () => onRefresh && onRefresh() });
   });
 
   bindLinkedAccountFormsAndButtons(onRefresh);

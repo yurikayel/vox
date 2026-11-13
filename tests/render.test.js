@@ -23,9 +23,10 @@ globalThis.document = {
 const render = await import("../client/js/render.js");
 const mock = await import("../client/js/mock.js");
 
-test("render - renderOAuthEnrich usa botoes de marca Google/Meta", () => {
+test("render - importar nome e foto (Perfil) usa botoes de marca Google/Meta", () => {
   const container = createContainer();
-  render.renderOAuthEnrich(container);
+  // ADR-032: os botões de marca saíram da entrada; ficam só no modo importar.
+  render.renderOAuthEnrich(container, { mode: "import" });
   const html = container.innerHTML;
   assert.ok(html.includes("oauth-btn--google"));
   assert.ok(html.includes("oauth-btn--meta"));

@@ -62,6 +62,7 @@
 | Onboarding em etapas + pacto | 1º acesso | `app/onboarding.js`, `render/oauth-modals.js` | no ar | `onboarding-steps` |
 | Confirmação "tenho 18 anos ou mais" no pacto (piloto só 18+, ADR-020) | pacto | `age-gate.js`, `render/welcome-pact.js` | no ar (autodeclarada, só no aparelho) | `age-gate` |
 | Identidade local P-256 `vx_*` | — | `local-account.js` | no ar | `local-account` |
+| Saída da conta e faixa de conta provisória (ADR-032 passo 1) | todas as telas, `#/backup` | `account-exit.js`, `app/account-exit-banner.js`, `render/oauth-import.js` | no ar (faixa até haver saída soberana: cofre aceito por servidor, `.voxid` com senha baixado ou backup no e-mail mandado; frase e guardiões nos passos seguintes) | `account-exit`, `account-exit-banner`, `onboarding-steps` |
 | Seus posts num arquivo (PM-72) | `#/settings/network` | `own-posts.js`, `post-supersede.js`, `app/own-posts-ui.js` | no ar (baixa `.json` com os próprios posts assinados e a mídia; restaurar confere autor, assinatura, versão e hash; sem servidor) | `own-posts`, `inbox-backup` |
 | Cofre v2 por Senha Soberana, sync por link/QR e backup no e-mail (ADR-025) | `#/backup`, `#/sync`, `#/settings/network` | `oauth-vault.js`, `vault-crypto.js`, `inbox-backup.js` | no ar (sync remoto precisa de servidor de memória; backup `.txt` semanal/mensal sem servidor) | `account-backup`, `wallet-encryption`, `inbox-backup` |
 | Identidade Ed25519/X25519 (cintura fina) | — | `vox-identity.js` | **escrito, não plugado** | `vox-identity` |
@@ -69,7 +70,7 @@
 | Handles `@` | `#/h/:slug`, `#/u/@x` | `handles.js` | no ar | `handles` |
 | Diretório de pessoas | `#/people` | `people-index.js`, `profile-directory.js`, `contacts.js` | no ar; pares só com a chave `vx_…` (sem nome escolhido) ficam fora da lista, mas a busca pela chave os acha | `people-index`, `contacts` |
 | Perfil, Voxels, passaporte | `#/perfil`, `#/u/:addr` | `app/screens-profile.js`, `voxels.js` | no ar (Voxels só locais) | `voxels`, `profile-*` |
-| Importar nome/foto (Google, Meta, Bluesky, X, TikTok, GitHub) | onboarding | `social-login.js`, `oauth-profile.js`, `bsky-oauth.js` | depende de config (Kwai: "em breve") | `social-login`, `oauth-profile` |
+| Importar nome/foto (Google, Meta, Bluesky, X, TikTok, GitHub) | Perfil (fora da entrada desde o ADR-032) | `social-login.js`, `oauth-profile.js`, `bsky-oauth.js` | depende de config (Kwai: "em breve") | `social-login`, `oauth-profile` |
 | DMs E2E | `#/dm`, `#/dm/:addr` | `crypto-dm.js`, `dm-messenger.js`, `inbox.js`, `dm-outbox.js` | no ar; entrega offline **depende de relay** (inbox padrão `127.0.0.1:3920`). Caixa de saída (PM-78): o que não saiu é reenviado enquanto o app está aberto, por até 7 dias ("⏳ Aguardando" → "⚠ Não entregue") | `crypto-dm`, `dm-*`, `inbox`, `dm-outbox` |
 | Convite com vínculo assinado (padrinho) | `#/connect/:id?convite=` | `vox-link.js`, `app/vox-link-flow.js`, `render/vox-link.js` | no ar (PM-82): aceite assinado por quem entra e confirmação automática de quem convidou (10 aceites, 30 dias); passa pela malha e pela memória central. Base do moderador natural (PM-83, em **lab** `vox.lab.moderador`; [spec](./specs/moderador-natural-v0.md)) | `vox-link` |
 | Pareamento por QR sem servidor | — | `airgap-webrtc.js` | **escrito, não plugado** | `airgap-webrtc` |
