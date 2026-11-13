@@ -60,23 +60,23 @@ function cleanField(val, maxLen) {
 }
 
 function readMetaStore() {
-  if (typeof window === "undefined" || !window.localStorage) return {};
+  if (typeof window === "undefined" || !window.localStorage) return new Map();
   try {
     const raw = window.localStorage.getItem(META_KEY);
-    if (!raw) return {};
+    if (!raw) return new Map();
     const parsed = JSON.parse(raw);
-    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return new Map();
+    return new Map(Object.entries(parsed).filter(([k]) => !FORBIDDEN_KEYS.has(k)));
   } catch {
-    return {};
+    return new Map();
   }
 }
 
 function writeMetaStore(map) {
   if (typeof window === "undefined" || !window.localStorage) return false;
   try {
-    const keys = Object.keys(map);
-    if (!keys.length) window.localStorage.removeItem(META_KEY);
-    else window.localStorage.setItem(META_KEY, JSON.stringify(map));
+    if (!map.size) window.localStorage.removeItem(META_KEY);
+    else window.localStorage.setItem(META_KEY, JSON.stringify(Object.fromEntries(map)));
     return true;
   } catch {
     return false;
@@ -137,7 +137,7 @@ export function isJokePronoun(pronouns) {
  */
 export function getLocalIdentityMeta(routeId) {
   if (!isSafeRouteKey(routeId)) return normalizeIdentityMeta();
-  const entry = readMetaStore()[String(routeId).trim()];
+  const entry = readMetaStore().get(String(routeId).trim());
   return normalizeIdentityMeta(entry);
 }
 
@@ -152,8 +152,8 @@ export function setLocalIdentityMeta(routeId, meta) {
   if (!isSafeRouteKey(routeId)) return clean;
   const id = String(routeId).trim();
   const store = readMetaStore();
-  if (!hasAnyIdentityMeta(clean)) delete store[id];
-  else store[id] = clean;
+  if (!hasAnyIdentityMeta(clean)) store.delete(id);
+  else store.set(id, clean);
   writeMetaStore(store);
   return clean;
 }
