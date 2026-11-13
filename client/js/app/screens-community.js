@@ -317,7 +317,7 @@ async function uploadCommunityPhoto(file, communityId, meta) {
   if (img) { img.src = dataUrl; img.style.display = "block"; }
   else {
     const box = document.querySelector(".community-avatar-box");
-    if (box) box.innerHTML = `<img class="community-avatar-img" src="${dataUrl}" alt="${meta.title || communityId}" />`;
+    if (box) box.innerHTML = `<img class="community-avatar-img" src="${escapeHtml(dataUrl)}" alt="${escapeHtml(meta.title || communityId)}" />`;
   }
   const fb = document.querySelector(".community-avatar-fallback");
   if (fb) fb.style.display = "none";

@@ -9,6 +9,18 @@ import { shortId } from "../short-id.js";
 // Reexportados para a UI. O domínio importa da origem, nunca daqui (docs/ARCHITECTURE.md, "Camadas").
 export { escapeHtml, shortId };
 
+const POST_ASPECTS = new Set(["original", "1:1", "4:5", "3:4", "4:3", "16:9", "9:16"]);
+
+/**
+ * Formato da foto do post como valor conhecido. O formato vem de quem publicou (malha ou Arweave), então
+ * qualquer outro valor vira "original" antes de entrar em classe ou atributo do HTML.
+ * @param {unknown} aspect Formato declarado no post.
+ * @returns {string} Um dos formatos conhecidos.
+ */
+export function normalizePostAspect(aspect) {
+  return POST_ASPECTS.has(aspect) ? aspect : "original";
+}
+
 export const root = () => document.getElementById("app-root");
 
 /**
