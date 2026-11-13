@@ -3,6 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import * as upload from "../client/js/upload.js";
 import * as ans from "../client/js/ans104.js";
+import * as ff from "../client/js/feature-flags.js";
 
 test("upload - buildTags gera tags mandatárias do Vox", () => {
   const tags = upload.buildTags("community", {
@@ -36,12 +37,25 @@ test("upload - buildTags ignora campos vazios e nulos", () => {
   assert.equal(tags.find((t) => t.name === "Topic-Title")?.value, "Titulo Valido");
 });
 
+test("upload - postData bloqueia quando arweaveUpload está desligado por padrão", async () => {
+  ff.applyFlags({});
+  await assert.rejects(
+    () => upload.postData({ test: 123 }, []),
+    ff.FeatureDisabledError
+  );
+});
+
 test("upload - postData exige carteira conectada quando autoCreate é false", async () => {
   localStorage.clear();
-  await assert.rejects(
-    () => upload.postData({ test: 123 }, [], { autoCreate: false }),
-    /Nenhuma carteira encontrada/
-  );
+  ff.applyFlags({ flags: { arweaveUpload: true } });
+  try {
+    await assert.rejects(
+      () => upload.postData({ test: 123 }, [], { autoCreate: false }),
+      /Nenhuma carteira encontrada/
+    );
+  } finally {
+    ff.applyFlags({});
+  }
 });
 
 test("ans104 - serializeTags gera Avro válido com terminação 0x00", () => {
@@ -127,6 +141,7 @@ test("upload - postData com mock de fetch roteia itens <= 100 KiB para o Turbo (
     };
   };
 
+  ff.applyFlags({ flags: { arweaveUpload: true } });
   try {
     const res = await upload.postData({ title: "Título", body: "Texto" }, [{ name: "Type", value: "topic" }], { jwk });
     assert.equal(res.success, true);
@@ -136,6 +151,7 @@ test("upload - postData com mock de fetch roteia itens <= 100 KiB para o Turbo (
     assert.ok(interceptedBodyLength > 1000);
   } finally {
     globalThis.fetch = originalFetch;
+    ff.applyFlags({});
   }
 });
 
@@ -155,6 +171,7 @@ test("upload - postBinary envia bytes diretamente para o Turbo", async () => {
     json: async () => ({ id: "mock_bin_123" }),
   });
 
+  ff.applyFlags({ flags: { arweaveUpload: true } });
   try {
     const rawPhoto = new Uint8Array([1, 2, 3, 4, 5]);
     const res = await upload.postBinary(rawPhoto, [{ name: "Type", value: "photo" }], { jwk });
@@ -163,5 +180,6 @@ test("upload - postBinary envia bytes diretamente para o Turbo", async () => {
     assert.ok(res.id);
   } finally {
     globalThis.fetch = originalFetch;
+    ff.applyFlags({});
   }
 });

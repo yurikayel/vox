@@ -11,14 +11,14 @@ const STORAGE_KEY = "vox-remote-flags-v1";
 const MAX_NOTICE_LEN = 280;
 
 export const FLAG_DEFAULTS = Object.freeze({
-  arweaveUpload: true,
+  arweaveUpload: false,
   feira: true,
   pixZaps: true,
   communityCreate: true,
 });
 
 const DISABLED_MESSAGES_PT = Object.freeze({
-  arweaveUpload: "Publicar no Arweave está pausado pela equipe do Vox por segurança. Tente de novo mais tarde.",
+  arweaveUpload: "Gravar no Arweave está pausado por enquanto — tudo circula pela rede de seguidores.",
   feira: "A Feira está pausada pela equipe do Vox por segurança. Tente de novo mais tarde.",
   pixZaps: "Os Pix Zaps estão pausados pela equipe do Vox por segurança.",
   communityCreate: "Criar comunidades está pausado pela equipe do Vox por segurança.",

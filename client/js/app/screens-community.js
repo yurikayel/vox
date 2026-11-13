@@ -23,6 +23,7 @@ import * as peers from "../peers.js";
 import * as localAccount from "../local-account.js";
 import * as listingUi from "../listing-ui.js";
 import * as i18n from "../i18n-pt-br.js";
+import * as featureFlags from "../feature-flags.js";
 import * as gov from "../governance.js";
 import * as postOwnership from "../post-ownership.js";
 import * as communityMirror from "../community-mirror.js";
@@ -346,7 +347,7 @@ async function submitCommunityJoin(communityId, user, btn) {
     const signed = await localAccount.signPayload({ id: `mem_${communityId}_${user}`, type: "membership", communityId, joinedAt: Date.now(), ...termoFields });
     await cacheNode.saveLocalPost(signed);
     peers.broadcastGossip(signed);
-    if (wallet.hasWallet()) {
+    if (featureFlags.isFeatureEnabled("arweaveUpload") && wallet.hasWallet()) {
       try { await upload.postData(new Uint8Array(), upload.buildTags("membership", { "Community-Id": communityId })); } catch {}
     }
     share.showToast(i18n.joinedToast);
@@ -363,7 +364,7 @@ async function submitCommunityLeave(communityId, user, btn) {
     const signed = await localAccount.signPayload({ id: `mem_leave_${communityId}_${user}`, type: "membership_leave", communityId, leftAt: Date.now() });
     await cacheNode.saveLocalPost(signed);
     peers.broadcastGossip(signed);
-    if (wallet.hasWallet()) {
+    if (featureFlags.isFeatureEnabled("arweaveUpload") && wallet.hasWallet()) {
       try { await upload.postData(new Uint8Array(), upload.buildTags("membership_leave", { "Community-Id": communityId })); } catch {}
     }
     share.showToast(i18n.leftToast);
@@ -401,7 +402,7 @@ export async function dispatchCommunityModAction(communityId, action, targetId, 
   } catch {
     await cacheNode.saveLocalPost(modActionPost).catch(() => {});
   }
-  if (toArweave && wallet.hasWallet()) {
+  if (toArweave && featureFlags.isFeatureEnabled("arweaveUpload") && wallet.hasWallet()) {
     try {
       const tags = upload.buildTags("mod-action", {
         "Community-Id": communityId,

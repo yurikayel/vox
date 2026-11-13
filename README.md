@@ -4,8 +4,8 @@
 [![Identity](https://img.shields.io/badge/Identity-WebCrypto%20P--256-blueviolet.svg)](./client/js/local-account.js)
 [![Storage](https://img.shields.io/badge/Storage-Arweave%20Permaweb-black.svg)](https://arweave.org)
 [![License: AGPL v3](https://img.shields.io/badge/License-GNU%20AGPLv3-crimson.svg)](./LICENSE)
-[![Tests](https://img.shields.io/badge/tests-1234%20passing-success.svg)](./docs/TESTES.md)
-[![Service Worker](https://img.shields.io/badge/SW-v7.107--real--network--audio--video--upload-informational.svg)](./client/sw.js)
+[![Tests](https://img.shields.io/badge/tests-1236%20passing-success.svg)](./docs/TESTES.md)
+[![Service Worker](https://img.shields.io/badge/SW-v7.108--real--network--audio--video--upload-informational.svg)](./client/sw.js)
 
 O Vox é um projeto cívico em construção para ampliar a participação popular e a autonomia das comunidades na vida digital. Sua ambição é ser um bem comum aberto: o projeto deve permanecer transparente, copiável, modificável e maior que qualquer fundador, mantenedor, empresa ou plataforma.
 
@@ -77,9 +77,9 @@ Redes centralizadas, instâncias federadas e protocolos locais têm custos, vant
 
 | Campo | Valor |
 |---|---|
-| **Commit SHA** | `63d79e2` |
-| **Suíte de Testes** | **1234** (`1123` JS + `111` Python) |
-| **Service Worker** | `vox-pwa-v7.107-real-network-audio-video-upload` |
+| **Commit SHA** | `7364f45` |
+| **Suíte de Testes** | **1236** (`1125` JS + `111` Python) |
+| **Service Worker** | `vox-pwa-v7.108-real-network-audio-video-upload` |
 
 *Tabela regenerada por `npm run release-line` (roda a suíte e grava [docs/release-metadata.json](./docs/release-metadata.json)). Nenhum outro documento deve repetir esses números.*
 
@@ -119,7 +119,7 @@ Este diagrama resume caminhos existentes do cliente, não garante descoberta glo
 
 **O que o diagrama não desenha** (estado real em [docs/FEATURES.md](./docs/FEATURES.md)):
 
-* **Sem gravação no Arweave por enquanto:** pela diretriz atual (**nov/2026**), nada deve ser salvo usando Arweave neste momento — tudo circula e se preserva na **rede de seguidores** ([ADR-019](./docs/adr/019-esquecer-por-padrao-e-memoria-civica.md), [replicacao-por-grau-v0](./docs/specs/replicacao-por-grau-v0.md)), reservando o Arweave só para recursos específicos futuros e leitura de registros públicos existentes. *(Nota de código: o módulo `permanence-notice.js` e a flag `arweaveUpload: true` em `client/config/flags.json` ainda existem no código até serem desligados.)*
+* **Sem gravação no Arweave por enquanto:** pela diretriz atual (**nov/2026**), nada deve ser salvo usando Arweave neste momento — tudo circula e se preserva na **rede de seguidores** ([ADR-019](./docs/adr/019-esquecer-por-padrao-e-memoria-civica.md), [replicacao-por-grau-v0](./docs/specs/replicacao-por-grau-v0.md)), reservando o Arweave só para recursos específicos futuros e leitura de registros públicos existentes. *(No cliente, `arweaveUpload` vem desligado por padrão — `false` em `client/config/flags.json` e `client/js/feature-flags.js` — e os fluxos de publicação vão direto para a rede de seguidores.)*
 * **Malha WebRTC com gossip** (`WANT`/`HAVE`/`BLOB`, perfis e manifestos): os pares se encontram por sinalização em **dois caminhos paralelos**, o WebSocket do nó Render e o **Nostr efêmero cifrado** (kind `25050`, reconexão automática; REV-09, PM-17). O Nostr ainda **não foi medido em campo** entre dois navegadores. Não há TURN configurado.
 * **Leitura com corroboração:** 4 gateways com tempo limite de 8 s; 3 deles indexam o Vox e servem de testemunha GraphQL ([ADR-009](./docs/adr/009-multi-gateway-graphql-corroboration.md)).
 

@@ -117,6 +117,8 @@ function showPublishToast(permawebResult) {
     share.showToast(`Post publicado no P2P e gravado na Permaweb (${badge})!`);
   } else if (permawebResult?.skipped === permanence.CHOICE_MESH) {
     share.showToast("Post publicado só na malha P2P (não permanente).");
+  } else if (permawebResult?.skipped === "arweave-disabled") {
+    share.showToast("Post publicado na rede de seguidores!");
   } else if (wallet.hasWallet()) {
     share.showToast("Post publicado no P2P local (Permaweb indisponível).", "warning");
   } else {

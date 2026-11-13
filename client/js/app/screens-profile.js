@@ -13,6 +13,7 @@ import * as cryptoDm from "../crypto-dm.js";
 import * as handles from "../handles.js";
 import * as localAccount from "../local-account.js";
 import * as social from "../social.js";
+import * as featureFlags from "../feature-flags.js";
 import * as pixKeyHelper from "../pix-key.js";
 import * as postOwnership from "../post-ownership.js";
 import * as profileDirectory from "../profile-directory.js";
@@ -700,14 +701,23 @@ function bindWalletAndDmButtons(address, isSelf, dmPub, user) {
   bindClaimHandleButton(isSelf, user);
 }
 
+function requireArweaveUpload(missingWalletMsg) {
+  if (!featureFlags.isFeatureEnabled("arweaveUpload")) {
+    share.showToast(featureFlags.disabledMessage("arweaveUpload"), "error");
+    return false;
+  }
+  if (!wallet.hasWallet()) {
+    share.showToast(missingWalletMsg, "error");
+    return false;
+  }
+  return true;
+}
+
 function bindPublishDmPubButton(isSelf, dmPub) {
   const btnPub = document.getElementById("btn-publish-dmpub");
   if (!btnPub || !isSelf || !dmPub) return;
   btnPub.addEventListener("click", async () => {
-    if (!wallet.hasWallet()) {
-      share.showToast("Conecte uma carteira Arweave para anunciar on-chain.", "error");
-      return;
-    }
+    if (!requireArweaveUpload("Conecte uma carteira Arweave para anunciar on-chain.")) return;
     btnPub.disabled = true;
     btnPub.textContent = "Anunciando on-chain…";
     try {
@@ -737,10 +747,7 @@ function bindClaimHandleButton(isSelf, user) {
   if (!formClaim || !isSelf) return;
   formClaim.addEventListener("submit", async (e) => {
     e.preventDefault();
-    if (!wallet.hasWallet()) {
-      share.showToast("Conecte uma carteira Arweave para reivindicar handle on-chain.", "error");
-      return;
-    }
+    if (!requireArweaveUpload("Conecte uma carteira Arweave para reivindicar handle on-chain.")) return;
     const raw = document.getElementById("input-handle-slug")?.value.trim();
     const check = handles.validateSlug(raw);
     if (!check.valid) {

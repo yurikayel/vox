@@ -6,9 +6,10 @@ import * as ff from "../client/js/feature-flags.js";
 
 const okJson = (body) => async () => ({ ok: true, json: async () => body });
 
-test("feature-flags - padrão: tudo ligado", () => {
+test("feature-flags - padrão: arweaveUpload desligado e demais recursos ligados", () => {
   ff.applyFlags({});
-  for (const k of Object.keys(ff.FLAG_DEFAULTS)) assert.equal(ff.isFeatureEnabled(k), true);
+  assert.equal(ff.isFeatureEnabled("arweaveUpload"), false);
+  for (const k of ["feira", "pixZaps", "communityCreate"]) assert.equal(ff.isFeatureEnabled(k), true, k);
 });
 
 test("feature-flags - sanitizeFlags ignora chaves desconhecidas e valores não booleanos", () => {
@@ -43,9 +44,10 @@ test("feature-flags - upload.postData respeita o kill-switch antes de tocar na c
   ff.applyFlags({});
 });
 
-test("feature-flags - config/flags.json publicado está todo ligado e o SW não o guarda em cache", () => {
+test("feature-flags - config/flags.json publicado bate com os defaults e o SW não o guarda em cache", () => {
   const cfg = JSON.parse(readFileSync(new URL("../client/config/flags.json", import.meta.url), "utf8"));
-  for (const k of Object.keys(ff.FLAG_DEFAULTS)) assert.equal(cfg.flags[k], true, k);
+  for (const k of Object.keys(ff.FLAG_DEFAULTS)) assert.equal(cfg.flags[k], ff.FLAG_DEFAULTS[k], k);
+  assert.equal(cfg.flags.arweaveUpload, false);
   const sw = readFileSync(new URL("../client/sw.js", import.meta.url), "utf8");
   assert.ok(sw.includes('endsWith("/config/flags.json")'));
 });
