@@ -10,6 +10,7 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 - Quem é novo vê duas telas em vez de quatro: **Entrar no Vox** (Google, Meta ou GitHub trazem nome e foto, ou a pessoa escreve o nome) e o pacto (18+). Saíram a tela de boas-vindas com os três cartões de princípios e o menu "Como quer entrar?"; o pacto no onboarding ficou só com a confirmação de 18+ e as ações.
 - **Já tenho conta** explica o caminho com o outro aparelho (Perfil → QR para outro aparelho) e, sem ele, entra pelos backups do e-mail (`.txt`, vários de uma vez) com a Senha Soberana, ou só pela Senha. Login com Google ou Meta continua sem levar a conta para outro aparelho (PM-90): o ID do login não é segredo.
 - Removidas de `agora.css` as regras das telas que saíram (3,6 KB). Testes de propósito alterados: `tests/onboarding-steps.test.js` passa a esperar as etapas `entry`, `have` e `pact`; `tests/sovereign-agora.test.js` deixa de exigir o título antigo e os cartões de princípios. SW `v7.99`.
+
 ### Valores de fora escapados antes de entrar na tela
 - O formato da foto de um post (`aspectRatio`) vem de quem publicou; agora só valores conhecidos (`original`, `1:1`, `4:5`, `3:4`, `4:3`, `16:9`, `9:16`) entram no HTML, pelo novo `normalizePostAspect` em `render/util.js`. Vale no feed e no tópico.
 - Escapados também: os endereços de relay nas configurações de rede, o @handle no formulário de reivindicação, a inicial do avatar no perfil e o nome da comunidade no texto alternativo da foto.
