@@ -11,6 +11,11 @@ import * as keyLock from "../client/js/key-lock.js";
 const SENHA = "senha soberana de teste 2026";
 const DAY = 24 * 60 * 60 * 1000;
 
+/** PM-72: o backup leva e devolve só posts assinados; o teste publica como o app publica. */
+async function publishSigned(post) {
+  await cacheNode.saveLocalPost(await localAccount.signPayload({ type: "topic", ...post }));
+}
+
 function wipeDevice() {
   localStorage.clear();
   for (const store of mockStores.values()) store.map?.clear();
@@ -23,7 +28,7 @@ async function newAccountWithContent() {
   localAccount.setDisplayName("Ana do Backup");
   contacts.addContact("vx_contatodaana001", "Bia");
   await cacheNode.saveDmMessage({ id: "dm_1", peerAddress: "vx_contatodaana001", from: acc.routeId, text: "oi Bia", ts: Date.now() });
-  await cacheNode.saveLocalPost({ id: "t_backup_1", type: "topic", author: acc.routeId, title: "Meu post", ts: Date.now() });
+  await publishSigned({ id: "t_backup_1", title: "Meu post", ts: Date.now() });
   return acc;
 }
 
@@ -89,12 +94,23 @@ test("backup no e-mail - post editado e post apagado no período entram no seman
   const acc = await newAccountWithContent();
   await backup.enableInboxBackup(SENHA);
   const later = Date.now() + 1000;
-  await cacheNode.saveLocalPost({ id: "t_backup_1", type: "topic", author: acc.routeId, title: "Editado", ts: Date.now() - DAY, editedAt: later });
-  await cacheNode.saveLocalPost({ id: "t_backup_2", type: "topic", author: acc.routeId, title: "Vai sumir", ts: Date.now() - DAY });
+  await publishSigned({ id: "t_backup_1", title: "Editado", ts: Date.now() - DAY, editedAt: later });
+  await publishSigned({ id: "t_backup_2", title: "Vai sumir", ts: Date.now() - DAY });
   await cacheNode.saveTombstone({ id: "t_backup_2", author: acc.routeId, ts: later, deleted: true });
   const built = await backup.buildInboxBackup("semana", later + 1000);
   wipeDevice();
   await backup.restoreInboxBackup(built.text, SENHA);
   assert.equal((await cacheNode.getLocalPost("t_backup_1")).title, "Editado");
   assert.ok(await cacheNode.getTombstone("t_backup_2"), "a lápide volta junto");
+});
+
+test("backup no e-mail - post sem assinatura não volta (PM-72)", async () => {
+  const acc = await newAccountWithContent();
+  await cacheNode.saveLocalPost({ id: "t_backup_sem_sig", type: "topic", author: acc.routeId, title: "Sem assinatura", ts: Date.now() });
+  await backup.enableInboxBackup(SENHA);
+  const built = await backup.buildInboxBackup("completo");
+  wipeDevice();
+  await backup.restoreInboxBackup(built.text, SENHA);
+  assert.ok(await cacheNode.getLocalPost("t_backup_1"), "o assinado volta");
+  assert.equal(await cacheNode.getLocalPost("t_backup_sem_sig"), null, "o que não confere fica de fora");
 });

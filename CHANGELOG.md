@@ -6,6 +6,13 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Seus posts num arquivo e restauração conferida (PM-72, parte 2)
+- **Novo card em Sua rede** (`client/js/app/own-posts-ui.js`): "Baixar meus posts" gera `vox-meus-posts-AAAA-MM-DD.json` com os próprios posts na forma assinada e a mídia de cada um; "Restaurar de um arquivo" traz de volta. Sem senha: o que a pessoa publicou já é público na rede.
+- **Volta conferida** (`client/js/own-posts.js`): só entra post desta conta, com assinatura que confere, que não foi superado por edição ou apagamento guardado, e mídia só se bate com o hash assinado. Arquivo de outra conta é recusado com mensagem.
+- **Backup no e-mail** (`client/js/inbox-backup.js`): passou a levar os posts na forma assinada (`postEntries`) e a restaurar pelo mesmo caminho. Antes restaurava a forma de tela sem conferir nada. Backups antigos (`posts`) continuam voltando como antes.
+- **Regra de "já superado" num só lugar** (`client/js/post-supersede.js`): a malha (`peers.js`) e o arquivo usam a mesma.
+- `idb-store.js` não foi plugado: os posts já vivem no IndexedDB e a fila dele grava no Arweave, pausado (REV-07). Testes em `tests/own-posts.test.js`; `tests/inbox-backup.test.js` passa a publicar posts assinados. SW `v7.109`.
+
 ### Pausar gravação ativa no Arweave no cliente (`arweaveUpload: false`, REV-07)
 - **Kill-switch desligado por padrão**: `"arweaveUpload": false` em `client/config/flags.json` e `FLAG_DEFAULTS.arweaveUpload: false` em `client/js/feature-flags.js` (com mensagem atualizada preservando o estado pausado).
 - **Guardas nos fluxos de escrita**: `client/js/topic-permaweb.js`, `client/js/inline-composer.js`, `client/js/app/screens-compose.js`, `client/js/mesh-profile.js`, `client/js/app/screens-community.js` e `client/js/app/screens-profile.js` agora respeitam `featureFlags.isFeatureEnabled("arweaveUpload")` antes de abrir o aviso de permanência, tentar enviar ao Turbo/Arweave ou acusar Permaweb indisponível — mantendo toda circulação na rede de seguidores.

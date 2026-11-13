@@ -10,6 +10,7 @@ import { exportAccountBundle, importAccountBundle } from "./account-backup.js";
 import { unwrapBackup } from "./account-backup-wrap.js";
 import * as localAccount from "./local-account.js";
 import { decryptVaultRecord, encryptVaultV2 } from "./vault-crypto.js";
+import * as ownPosts from "./own-posts.js";
 
 /** Marca do arquivo de backup do e-mail. */
 export const INBOX_BACKUP_TYPE = "vox-inbox-backup";
@@ -95,7 +96,8 @@ async function collectContent(from, to) {
   // Post editado ou apagado no período entra (versão atual ou lápide).
   const inRange = (r) => Math.max(r.ts || 0, r.editedAt || 0) >= from && (r.ts || 0) <= to;
   const mine = (r) => (r.author || r.owner) === me && inRange(r);
-  const posts = (await cacheNode.getAllLocalPosts()).filter(mine).map(({ mediaBlob: _blob, ...post }) => post);
+  // PM-72: forma assinada e mídia à parte, para o post voltar conferido e seguir valendo na rede.
+  const postEntries = await ownPosts.collectOwnPostEntries(me, { filter: inRange });
   const tombstones = (await cacheNode.getAllTombstones()).filter(mine);
   const dms = (await cacheNode.getAllDmMessages()).filter(inRange).map((m) => ({ ...m, mediaDataUrl: "" }));
   const profile = {
@@ -103,7 +105,7 @@ async function collectContent(from, to) {
     enrichment: localAccount.getProfileEnrichment(),
     pix: localAccount.getPixKey(),
   };
-  return { profile, contacts: contacts.listContacts(), posts, tombstones, dms };
+  return { profile, contacts: contacts.listContacts(), postEntries, tombstones, dms };
 }
 
 /**
@@ -136,12 +138,19 @@ export function markInboxBackupSent(period, to) {
   writeState(s);
 }
 
-async function applyContent(c) {
-  if (c.profile?.displayName) localAccount.setDisplayName(c.profile.displayName);
-  if (c.profile?.enrichment) localAccount.setProfileEnrichment(c.profile.enrichment);
-  if (c.profile?.pix) localAccount.setPixKey(c.profile.pix);
+function applyProfile(profile) {
+  if (profile?.displayName) localAccount.setDisplayName(profile.displayName);
+  if (profile?.enrichment) localAccount.setProfileEnrichment(profile.enrichment);
+  if (profile?.pix) localAccount.setPixKey(profile.pix);
+}
+
+async function applyContent(c, me) {
+  applyProfile(c.profile);
   for (const x of c.contacts || []) contacts.addContact(x.routeId, x.label);
   for (const m of c.dms || []) await cacheNode.saveDmMessage(m);
+  // PM-72: só volta o post que confere (autor, assinatura, versão, hash da mídia); sem `postEntries`, nada.
+  await ownPosts.restoreOwnPostEntries(c.postEntries, me);
+  // Backup de antes do PM-72 (posts na forma de tela): volta como voltava.
   for (const p of c.posts || []) await cacheNode.saveLocalPost(p);
   for (const t of c.tombstones || []) await cacheNode.saveTombstone(t);
 }
@@ -168,7 +177,7 @@ export async function restoreInboxBackup(text, passphrase) {
   if (!keys?.privateJwk) throw new Error("Senha Soberana incorreta.");
   const acc = await importAccountBundle(keys.account, passphrase);
   await localAccount.lockAfterPasswordBackup(passphrase);
-  await applyContent(JSON.parse(await cryptoDm.open(file.sealed, keys.privateJwk)));
+  await applyContent(JSON.parse(await cryptoDm.open(file.sealed, keys.privateJwk)), acc.routeId);
   const { kty, crv, x, y } = keys.privateJwk;
   const now = Date.now();
   writeState({ ...readState(), secrets: file.secrets, backupPub: { kty, crv, x, y }, lastWeekly: now, lastMonthly: now });
