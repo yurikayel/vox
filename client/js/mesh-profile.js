@@ -19,6 +19,9 @@ function applyLocalCardFromSigned(signed) {
     name: signed.displayName || "",
     avatarUrl: signed.avatarUrl || "",
     bio: signed.bio || "",
+    pronouns: signed.pronouns || "",
+    gender: signed.gender || "",
+    orientation: signed.orientation || "",
     discoverable: true,
     ...seenStamp(signed),
   });

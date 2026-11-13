@@ -3187,6 +3187,82 @@ p.profile-grid-handle {
   margin-top: 0.5rem;
 }
 
+.profile-identity-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.35rem;
+}
+
+.profile-identity-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.14rem 0.52rem;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 500;
+  color: var(--muted);
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  line-height: 1.35;
+}
+
+.profile-identity-pill--pronouns {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.identity-meta-section {
+  margin-top: 0.85rem;
+  border-top: 1px solid var(--border-subtle, var(--border));
+  padding-top: 0.8rem;
+}
+
+.identity-meta-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin-top: 0.5rem;
+}
+
+.identity-meta-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
+  margin-top: 0.2rem;
+}
+
+.pronoun-chips-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.pronoun-chip {
+  padding: 0.22rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-soft);
+  color: var(--text);
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  line-height: 1.3;
+}
+
+.pronoun-chip.is-active {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  font-weight: 700;
+}
+
+.identity-meta-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+}
+
 .profile-grid-actions {
   display: flex;
   flex-wrap: nowrap;
