@@ -196,7 +196,7 @@ function renderTurnFields(customTurn) {
 function relayHealthLabel(relayStatus, relayHttpUrl) {
   const host = relayHttpUrl ? new URL(relayHttpUrl).host : "";
   if (relayStatus?.online) {
-    return host ? `🔗✅ (${escapeHtml(host)})` : "🔗✅";
+    return host ? `🔗🟢 (${escapeHtml(host)})` : "🔗🟢";
   }
   return host ? `🔗❌ (${escapeHtml(host)})` : "🔗❌";
 }

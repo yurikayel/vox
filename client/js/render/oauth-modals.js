@@ -132,7 +132,7 @@ function resolvePersonStampsHtml(p, isSelf) {
   const stamps = [];
   if (isSelf) stamps.push(`<span class="agora-stamp agora-stamp--bronze">Você</span>`);
   else if (p.source === "contact") stamps.push(`<span class="agora-stamp agora-stamp--teal"><span class="agora-pylon agora-pylon--teal" aria-hidden="true"></span>Contato</span>`);
-  else if (p.source === "mesh-card" || p.source === "mesh") stamps.push(`<span class="agora-stamp agora-stamp--consensus" title="Conectado" aria-label="Conectado">🔗✅</span>`);
+  else if (p.source === "mesh-card" || p.source === "mesh") stamps.push(`<span class="agora-stamp agora-stamp--consensus" title="Conectado" aria-label="Conectado">🔗🟢</span>`);
   return stamps.join("");
 }
 

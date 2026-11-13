@@ -6,6 +6,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Ajuste de ícone de conexão para `🔗🟢` / `🔗❌`
+- **Terminologia simplificada**: ícone de conectado atualizado de `🔗✅` para `🔗🟢` (mantendo `🔗❌` para desconectado/offline) nos selos/seções de Pessoas, status do relay, toasts e badge de conta vinculada; `CACHE_NAME` incrementado para `vox-pwa-v7.112-real-network-audio-video-upload`.
+
 ### Texto conciso, espaçamentos em Sua rede e emojis `🔗✅` / `🔗❌`
 - **Terminologia simplificada**: selo e seção em **Pessoas** (`#/people`) e status do relay/conexões (`client/js/render/oauth-modals.js`, `client/js/i18n-pt-br.js`, `client/js/render/network.js`, `client/js/app/onboarding.js`, `client/js/app/screens-network.js`, `client/js/explode-dispatch.js`) passaram de `"Na malha"` / `"Conectado"` / `"Offline"` para os emojis `🔗✅` (conectado) e `🔗❌` (não conectado).
 - **Menos carga cognitiva em `#/settings/network`**: textos encurtados e espaçamento ampliado nos cartões **Sua rede**, **Backup no seu e-mail**, **Seus posts num arquivo**, **Estatísticas / Comprovante**, **Convide amigos** e blocos abaixo (`client/js/render/network.js`, `client/js/app/inbox-backup-ui.js`, `client/js/app/own-posts-ui.js`, `client/js/render/util.js`, `client/css/agora.css`, `client/css/style.css`).
