@@ -11,7 +11,7 @@ O Vox é um projeto cívico em construção para ampliar a participação popula
 
 Essa é uma direção e um compromisso, não uma descrição de governança já concluída. O desenvolvimento começou com uma pessoa; hoje o controle administrativo do repositório ainda está concentrado. O próprio Vox precisa construir formas públicas de contribuição, revisão, sucessão e custódia compartilhada para que ninguém tenha poder permanente e unilateral sobre o projeto.
 
-O cliente é um PWA local-first. Identidade e chaves são criadas no aparelho; publicações públicas podem ser ancoradas no Arweave e lidas por gateways. Durante as fases Alpha e Beta, a rede também conta com suporte opcional ao nó de persistência local **`zero-central-memory`** (`VoxPopuli-ZeroMemory.exe` / `relay/central_memory.py`) para preservar histórico, perfis e blobs multimídia entre reinicializações. O projeto documenta capacidades reais e limitações conhecidas; propostas não são anunciadas como funcionalidades prontas.
+O cliente é um PWA local-first. Identidade e chaves são criadas no aparelho; **pela diretriz atual (nov/2026), nada deve ser salvo usando Arweave por enquanto** — publicações e mídias circulam e são preservadas pela **rede de seguidores** (você replica o conteúdo de quem segue via malha P2P e armazenamento local), ficando o Arweave apenas para leitura de registros existentes e recursos específicos futuros (como cartório cívico e memória consensual). Durante as fases Alpha e Beta, a rede também conta com suporte opcional ao nó de persistência local **`zero-central-memory`** (`VoxPopuli-ZeroMemory.exe` / `relay/central_memory.py`) para preservar histórico, perfis e blobs multimídia entre reinicializações. O projeto documenta capacidades reais e limitações conhecidas; propostas não são anunciadas como funcionalidades prontas.
 
 > 📥 **Central de Downloads (Multiplataforma):** [https://yurikayel.github.io/vox/download](https://yurikayel.github.io/vox/download)  
 > 🌐 **Aplicação Web (PWA Oficial):** [https://yurikayel.github.io/vox/](https://yurikayel.github.io/vox/)  
@@ -100,26 +100,26 @@ O Service Worker pode manter uma versão anterior do cliente em cache. Depois de
            [Leitura]                         [Autoria]
                     │                                │
                     ▼                                ▼
-       Cascata de Leitura Híbrida:              Assinatura Criptográfica:
+       Cascata de Leitura Híbrida:              Assinatura e Replicação:
      1. Memória RAM / IndexedDB              • Identidade: ECDSA P-256 (vx_…)
-     2. Cache local / peers quando disponíveis • Permaweb: Carteira Arweave JWK
-     3. Relay HTTP local opcional              • Mensagens Privadas: ECDH P-256
-     4. Gateways públicos Arweave                      │
-                    │                                ▼
-                    ▼                    Bundler Arweave / Turbo
-            Gateways públicos e independentes         │
-          (AR.IO / Turbo GraphQL)                    │
+     2. Cache local / rede de seguidores     • Rede de seguidores: você replica
+     3. Relay HTTP local opcional              quem segue via malha P2P / sync
+     4. Gateways públicos Arweave (legado)   • Mensagens Privadas: ECDH P-256
                     │                                │
+                    ▼                                ▼
+            Gateways públicos                Malha WebRTC / Sync / Relays
+          (AR.IO / Turbo — leitura)         (Arweave p/ escrita: suspenso p/
+                    │                        enquanto; futuro p/ cartório)
                     └────────────────┬───────────────┘
                                      ▼
-                  Arweave (dados públicos permanentes)
+            Aparelhos dos seguidores + Arweave (só legado/futuro)
 ```
 
 Este diagrama resume caminhos existentes do cliente, não garante descoberta global ou conexão entre quaisquer dois usuários. O Nó Zero atual escuta apenas em loopback; acesso LAN, descoberta automática e WebTorrent seeding não estão disponíveis.
 
 **O que o diagrama não desenha** (estado real em [docs/FEATURES.md](./docs/FEATURES.md)):
 
-* **Permanente ou só na malha:** antes do 1º post com carteira, o cliente pergunta se grava no Arweave ou só na malha, sem permanência (`permanence-notice.js`, LAN-11). Só o que vai ao Arweave segue o caminho "Autoria" acima.
+* **Sem gravação no Arweave por enquanto:** pela diretriz atual (**nov/2026**), nada deve ser salvo usando Arweave neste momento — tudo circula e se preserva na **rede de seguidores** ([ADR-019](./docs/adr/019-esquecer-por-padrao-e-memoria-civica.md), [replicacao-por-grau-v0](./docs/specs/replicacao-por-grau-v0.md)), reservando o Arweave só para recursos específicos futuros e leitura de registros públicos existentes. *(Nota de código: o módulo `permanence-notice.js` e a flag `arweaveUpload: true` em `client/config/flags.json` ainda existem no código até serem desligados.)*
 * **Malha WebRTC com gossip** (`WANT`/`HAVE`/`BLOB`, perfis e manifestos): os pares se encontram por sinalização em **dois caminhos paralelos**, o WebSocket do nó Render e o **Nostr efêmero cifrado** (kind `25050`, reconexão automática; REV-09, PM-17). O Nostr ainda **não foi medido em campo** entre dois navegadores. Não há TURN configurado.
 * **Leitura com corroboração:** 4 gateways com tempo limite de 8 s; 3 deles indexam o Vox e servem de testemunha GraphQL ([ADR-009](./docs/adr/009-multi-gateway-graphql-corroboration.md)).
 
@@ -198,7 +198,7 @@ O estado varia entre cliente, navegador e versão. A lista abaixo não é uma ce
 * **Classificados / Feira Comunitária:** Ofertas locais assinadas com gossip de manifesto de cache (`CACHE_MANIFEST`), prioridade `WANT` e suporte a retratação na malha.
 * **Mensagens Diretas E2E (WebRTC + Inbox TTL):** Criptografia ponta-a-ponta no navegador (`ECDH P-256` + `AES-GCM-256`). Mensagens privadas trafegam fora do permaweb; quando o par está offline, podem passar pelo relay transitório, que usa TTL padrão de 72 horas. **Hoje não existe relay completo público**: o inbox padrão é `127.0.0.1:3920`, então a entrega offline entre pessoas remotas exige um relay de steward configurado ([FEATURES §7](./docs/FEATURES.md)).
 * **Pix Zaps (BR Code offline):** gera o Pix a partir da chave, sem custódia e sem Lightning (`brcode.js`, `pix-key.js`). O app avisa que o **nome civil do recebedor aparece para quem paga** (DICT, com qualquer chave; REV-13).
-* **Cartório Cívico (`perma-notary.js`):** registra no Arweave o hash de atas, sem publicar o texto.
+* **Cartório Cívico (`perma-notary.js`):** módulo preparado para registrar no Arweave apenas o hash de atas, sem publicar o texto (sem gravação no Arweave por enquanto pela diretriz vigente; reservado para uso futuro específico).
 * **Hashtags e Pol.is-lite (`#/tag/:slug`):** feed por tag e agrupamento de opiniões (`hashtags.js`, `polis.js`). **Voxels e passaporte cívico** são só locais (`voxels.js`, [ADR-013](./docs/adr/013-sistema-voxels-e-conquistas-civicas.md)).
 * **Chave nova em quarentena (LAN-14):** comunidades podem recolher posts de chave vista há menos de 24 h, a menos que traga prova de trabalho de 14 bits (`new-key-guard.js`). Mudanças de foto, título e descrição só valem do dono ou moderador (PM-09, `community-updates.js`).
 * **Cofre Multi-Identidade & Exportação (`.voxid`):** Alternância rápida entre múltiplas contas locais (`vox-accounts-vault-v1`) e export/import de credenciais com suporte a envelope criptografado com senha mestra (`.voxid` via PBKDF2 + AES-GCM-256).

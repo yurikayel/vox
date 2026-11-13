@@ -1,31 +1,31 @@
 # Conformidade — Visão Geral Brasil
 
-> **Status:** canônico (informativo; não é parecer jurídico) · **Owner:** mantenedor · **Revisado:** 2026-11-09
+> **Status:** canônico (informativo; não é parecer jurídico) · **Owner:** mantenedor · **Revisado:** 2026-11-13
 
 Documento informativo de alto nível. **Não é parecer jurídico.** Produtores de conteúdo e operadores de espelhos devem consultar advogados locais.
 
 ## LGPD (Lei 13.709/2018)
 
-**Como o Vox Fase 1 funciona:**
+**Como o Vox funciona (diretriz de nov/2026):**
 
 - Cliente estático: sem cadastro, sem cookies obrigatórios, sem backend Vox coletando dados.
-- Consultas GraphQL vão a **terceiros** (gateways Arweave/Turbo); IPs e logs ficam sob política desses operadores.
-- Conteúdo publicado on-chain é **público e persistente** — titular que publica dados pessoais de terceiros pode incorrer em responsabilidade civil/regulatória.
+- **Nada é salvo no Arweave por enquanto:** publicações, mídias e ações circulam exclusivamente pela **rede de seguidores** (aparelhos replicando quem seguem). O Arweave fica reservado para leitura pública de registros existentes e eventuais recursos específicos futuros.
+- Consultas GraphQL de leitura vão a **terceiros** (gateways Arweave/Turbo); IPs e logs ficam sob política desses operadores.
+- Conteúdo eventualmente gravado on-chain no passado ou em recursos futuros específicos é **público e persistente** — titular que publica dados pessoais de terceiros pode incorrer em responsabilidade civil/regulatória.
 
 **Orientações práticas:**
 
-- Minimize dados pessoais em tags e corpo de transações.
-- Direitos do titular (acesso, eliminação): na permaweb, **eliminação técnica plena** pode ser impossível; mitigação = não publicar + filtros client-side + não replicar em espelhos.
+- Minimize dados pessoais mesmo na rede de seguidores; quando o Arweave voltar a ser usado em recursos específicos no futuro, **eliminação técnica plena** na permaweb continuará impossível (mitigação = consentimento expresso + filtros client-side + retração/não replicação nos aparelhos e espelhos).
 - Encarregado/DPO: inexistente no projeto open-source sem operador comercial central — quem rodar espelho comercial assume papéis conforme seu modelo de negócio.
 
 ## O Pacto Vox: Recursos Compartilhados e LGPD (Fase 3.1)
 
 Na **Fase 3.1**, o Vox adota o modelo contratual transparente **Pacto Vox**:
-* **Inversão da lógica extrativista:** Em redes sociais corporativas tradicionais, a infraestrutura é centralizada mas o "preço" é a extração e venda de dados pessoais, metadados comportamentais e direcionamento algorítmico opaco. No Vox, a identidade e os conteúdos pertencem 100% ao usuário (assinados com JWK local na chain Arweave).
+* **Inversão da lógica extrativista:** Em redes sociais corporativas tradicionais, a infraestrutura é centralizada mas o "preço" é a extração e venda de dados pessoais, metadados comportamentais e direcionamento algorítmico opaco. No Vox, a identidade e os conteúdos pertencem 100% ao usuário (assinados localmente com chave do aparelho P-256 na malha/rede de seguidores; Arweave reservado para recursos específicos futuros).
 * **Infraestrutura cooperativa ativa por padrão:** Como contrapartida da soberania, o app opera por padrão como um nó leve de leitura e cache local enquanto aberto, servindo fragmentos públicos a outros clientes na rede sem depender de datacenters corporativos custosos.
 * **Bases Legais e Transparência:**
   1. **Ciência Prévia no Onboarding:** Na primeira abertura do app, um modal claro apresenta os termos do pacto antes da navegação continuada.
-  2. **Salvaguarda Técnica de Dados:** O nó leve trafega e armazena **estritamente dados públicos e imutáveis** já gravados no permaweb (tópicos e respostas comunitárias). Chaves privadas, dados sensíveis ou históricos pessoais de navegação nunca são compartilhados.
+  2. **Salvaguarda Técnica de Dados:** O nó leve trafega e armazena **estritamente dados públicos** assinados da malha/rede de seguidores (tópicos e respostas comunitárias, ou eventuais registros legados do permaweb). Chaves privadas, dados sensíveis ou históricos pessoais de navegação nunca são compartilhados.
   3. **Direito de Opt-Out Preservado:** O usuário mantém a prerrogativa soberana de pausar a contribuição a qualquer momento através de `#/settings/network` ("Pausar contribuição"), convertendo o cliente para modo passivo.
   4. **Proteção Patrimonial (Banda e Bateria):** Padrão configurado com teto diário de banda (50 MB/dia no Wi-Fi; **no 4G só por opção da pessoa, com teto próprio de 5 MB/dia** — PM-52), limite de armazenamento local (25 MB) e prioridade em conexões Wi-Fi para impedir consumo de dados tarifados 4G/5G.
   5. **Operação em Segundo Plano:** Se habilitada, a atuação via Service Worker exige permissão de notificação explícita do sistema operacional e desativa-se automaticamente fora de redes Wi-Fi ou caso o teto diário seja atingido.

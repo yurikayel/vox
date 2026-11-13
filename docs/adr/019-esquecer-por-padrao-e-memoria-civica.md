@@ -1,6 +1,6 @@
 # ADR-019: Esquecer por padrão; memória cívica por três caminhos
 
-**Status:** accepted · **Revisado:** 2026-11-09 · **Relacionados:** REV-11 (efêmero por padrão), [ADR-020](./020-postura-de-operacao-do-piloto-g1.md), [replicação por grau](../specs/replicacao-por-grau-v0.md), [mídia v2](../specs/midia-v2.md)
+**Status:** accepted · **Revisado:** 2026-11-13 · **Relacionados:** REV-11 (efêmero por padrão), [ADR-020](./020-postura-de-operacao-do-piloto-g1.md), [ADR-029](./029-midia-em-duas-camadas-360p-720p.md), [replicação por grau](../specs/replicacao-por-grau-v0.md), [mídia v2](../specs/midia-v2.md)
 
 ## 1. Contexto
 
@@ -50,4 +50,4 @@ O caminho automático usa quase sempre âncora ou texto.
 - **Custo:** o Arweave deixa de ser o destino padrão; a cota grátis de uma carteira da comunidade dura muito (≈ 7 mil âncoras).
 - **Produto:** o feed valoriza o que está vivo agora, não o acúmulo.
 - **Risco:** a pessoa pode perder os próprios posts se perder o aparelho (sobram as cópias dos amigos). Por isso o backup dos próprios posts (EXP-04, depois o Drive) ganha prioridade.
-- **Não implementado ainda:** os três caminhos ficam para depois do piloto; no G1 vale o REV-11 (efêmero por padrão, permanente por consenso) com o fluxo atual.
+- **Não implementado ainda (regra vigente em nov/2026):** **por enquanto nada deve ser salvo usando Arweave.** Toda circulação, cópia e preservação do dia a dia passa exclusivamente pela **rede de seguidores** (você guarda e replica o conteúdo de quem segue, nos limites do aparelho e da [replicação por grau](../specs/replicacao-por-grau-v0.md)). O Arweave continua previsto apenas para recursos específicos futuros (leitura de registros antigos, cartório cívico e os três caminhos consensuais acima após o piloto). *(Nota de estado do código: `arweaveUpload` em `client/config/flags.json` ainda está `true` e precisa ser desligado em configuração/código para impedir qualquer escrita acidental.)*

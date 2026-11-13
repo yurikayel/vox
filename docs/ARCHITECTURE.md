@@ -1,8 +1,8 @@
 # Arquitetura — cliente Vox PWA
 
-> **Status:** canônico (camadas do cliente) · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-12
+> **Status:** canônico (camadas do cliente) · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-13
 
-Cliente estático (ES modules) + relay Python opcional. Identidade local `vx_*`; gossip P2P; permaweb via gateways.
+Cliente estático (ES modules) + relay Python opcional. Identidade local `vx_*`; gossip e replicação via rede de seguidores P2P; gateways Arweave para leitura e recursos específicos futuros (sem salvar no Arweave por enquanto).
 
 > Este arquivo cobre as **camadas do cliente**. Protocolo, tags e dados: [../ARCHITECTURE.md](../ARCHITECTURE.md). API do relay: [relay-api.md](./specs/relay-api.md). Decisões: [adr/README.md](./adr/README.md).
 

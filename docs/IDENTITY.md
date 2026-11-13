@@ -1,10 +1,10 @@
 # Identidade e criptografia
 
-> **Status:** canônico · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-10
+> **Status:** canônico · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-13
 
 Uma história única em fases — evita misturar promessas do README com o que o PWA Fase 1 entrega.
 
-> **Estado atual (nov/2026):** identidade local `vx_*` (ECDSA P-256) criada no aparelho no onboarding; recuperação por cofre cifrado (ver *Cofre e recuperação* abaixo). As fases abaixo são o histórico de como isso chegou aqui.
+> **Estado atual (nov/2026):** identidade local `vx_*` (ECDSA P-256) criada no aparelho no onboarding; **por enquanto nada deve ser salvo usando Arweave** (todo conteúdo novo é assinado pela chave `vx_*` e replicado na rede de seguidores, ficando a carteira Arweave restrita a eventuais recursos futuros específicos); recuperação por cofre cifrado (ver *Cofre e recuperação* abaixo). As fases abaixo são o histórico de como isso chegou aqui.
 
 ## Fase 1 (histórico): leitura anônima
 
@@ -12,9 +12,11 @@ Uma história única em fases — evita misturar promessas do README com o que o
 - Endereços exibidos são `owner.address` das transações Arweave (identificador público on-chain).
 - Stub reservado em `client/js/app.js` para autoria na Fase 2.
 
-## Fase 2 (entregue): autoria de posts (Wallet Arweave JWK + WebCrypto)
+## Fase 2 (histórica / reservada para recursos específicos no Arweave): autoria com Wallet Arweave JWK
 
-**Canônico para assinar transações Vox (tópico, resposta, comunidade, mod-action):**
+> **Nota (13/11/2026):** pela diretriz vigente, **por enquanto nada deve ser salvo usando Arweave** — a autoria ativa do dia a dia usa a identidade local P-256 (`vx_*`) na rede de seguidores. Esta seção documenta o suporte JWK/RSA reservado para leitura e eventuais recursos específicos futuros no Arweave.
+
+**Canônico quando houver transação no Arweave (tópico, resposta, comunidade, mod-action, cartório):**
 
 - **Autoria on-chain canônica:** Wallet Arweave (formato RSA/JWK nativo do ecossistema), gerenciada localmente em `localStorage` via `wallet.js` e assinada diretamente pelo cliente.
 - O endereço Arweave público (`owner.address`) identifica o autor de tópicos, respostas e comunidades.
