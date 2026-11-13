@@ -7,6 +7,7 @@
     "stun:global.stun.twilio.com:3478"
   ],
   "turn": [],
+  "turnCredentialsUrl": "",
   "signalingUrls": [
     "wss://vox-sentinel.onrender.com",
     "ws://127.0.0.1:3921"
