@@ -8,7 +8,8 @@ import { getWelcomeProfile, WELCOME_ROUTE_ID } from "./vox-welcome-profile.js";
 import * as profileDirectory from "./profile-directory.js";
 import * as localAccount from "./local-account.js";
 import * as webrtcPeer from "./webrtc-peer.js";
-import { shortId } from "./render/util.js";
+import { shortId } from "./short-id.js";
+import { isTestRouteId } from "./genesis.js";
 
 const DEFAULT_PREFER_SOURCES = ["system", "self", "contact", "vault", "mesh-card", "mesh-author", "route-direct"];
 export const PEOPLE_SEARCH_OK_METRIC = "vox-metric-people-search-ok";
@@ -25,36 +26,35 @@ function chooseBestName(existingName, incomingName, routeId) {
   return existingName || incomingName || String(routeId || "").slice(0, 14);
 }
 
-function isSameGoogleAvatar(avA, avB, nameA, nameB) {
-  const isGoogleA = avA.includes("googleusercontent.com/");
-  const isGoogleB = avB.includes("googleusercontent.com/");
-  if (!isGoogleA || !isGoogleB) return false;
-  return avA.split("=")[0] === avB.split("=")[0] || Boolean(nameA && nameA === nameB);
+// O host vem do parser de URL, nunca de busca por trecho: "https://x.example/?a=googleusercontent.com/" não é Google.
+function isGoogleAvatar(avatarUrl) {
+  try {
+    const url = new URL(avatarUrl);
+    return url.protocol === "https:" && `.${url.hostname}`.endsWith(".googleusercontent.com");
+  } catch {
+    return false;
+  }
 }
 
-function isSameMetaAvatar(avA, avB, nameA, nameB) {
-  const isMetaA = avA.includes("facebook.com") || avA.includes("fbsbx.com") || avA.includes("fbcdn.net");
-  const isMetaB = avB.includes("facebook.com") || avB.includes("fbsbx.com") || avB.includes("fbcdn.net");
-  if (!isMetaA || !isMetaB) return false;
-  return avA === avB || Boolean(nameA && nameA === nameB);
+function isSameGoogleAvatar(avA, avB) {
+  return isGoogleAvatar(avA) && isGoogleAvatar(avB) && avA.split("=")[0] === avB.split("=")[0];
 }
 
+// Nome igual só une contas que moram neste aparelho (a sua e as do seu cofre). Uma chave de fora
+// com o mesmo nome é outra pessoa (homônimo) e tem de aparecer no diretório, não sumir dentro de "Você".
 function isSameNamedLocalIdentity(entryA, entryB, nameA, nameB) {
   const isNamedA = !isFallbackRouteName(nameA, entryA.routeId);
   const isNamedB = !isFallbackRouteName(nameB, entryB.routeId);
   if (!isNamedA || !isNamedB || nameA !== nameB) return false;
-  const isLocalA = entryA.source === "self" || entryA.source === "vault";
-  const isLocalB = entryB.source === "self" || entryB.source === "vault";
-  if (isLocalA && isLocalB) return true;
-  return Boolean(isLocalA || isLocalB);
+  const isLocal = (e) => e.source === "self" || e.source === "vault";
+  return isLocal(entryA) && isLocal(entryB);
 }
 
 function isSameSocialIdentity(entryA, entryB) {
   const avA = entryA.avatarUrl || profileDirectory.getAuthorAvatarSync(entryA.routeId) || "";
   const avB = entryB.avatarUrl || profileDirectory.getAuthorAvatarSync(entryB.routeId) || "";
   if (avA && avB && avA === avB) return true;
-  if (isSameGoogleAvatar(avA, avB, entryA.name, entryB.name)) return true;
-  if (isSameMetaAvatar(avA, avB, entryA.name, entryB.name)) return true;
+  if (isSameGoogleAvatar(avA, avB)) return true;
   return isSameNamedLocalIdentity(entryA, entryB, entryA.name, entryB.name);
 }
 
@@ -228,7 +228,7 @@ export async function buildPeopleIndex() {
   await indexMeshAuthors(map);
   indexMeshCards(map);
 
-  return Array.from(map.values()).sort(comparePeopleEntries);
+  return Array.from(map.values()).filter((p) => !isTestRouteId(p.routeId)).sort(comparePeopleEntries);
 }
 
 /**
@@ -236,23 +236,30 @@ export async function buildPeopleIndex() {
  * temporárias: não entram na lista do diretório. Continuam achados pela busca por chave.
  */
 export function hasChosenName(p) {
-  const name = String(p?.name || "").trim();
-  const id = String(p?.routeId || "");
-  return Boolean(name) && !id.startsWith(name) && !/^vx_/i.test(name);
+  return profileDirectory.hasChosenCardName(p);
+}
+
+/**
+ * Entra na lista do diretório: o perfil oficial, a própria pessoa e quem escolheu um nome.
+ * Conta só com a chave (`vx_…`), venha da malha, do cofre deste aparelho ou dos contatos, não diz nada
+ * a quem lê; continua achável pela chave completa na busca e a chave aparece no perfil.
+ * @param {{source?: string, name?: string, routeId?: string}} p Entrada do índice.
+ * @returns {boolean} True se a entrada aparece na lista.
+ */
+export function isListedPerson(p) {
+  return p?.source === "self" || p?.source === "system" || hasChosenName(p);
 }
 
 export async function buildPeopleSections() {
   const all = await buildPeopleIndex();
   const contactsList = all.filter(
-    (p) => p.source === "contact" || p.source === "system" || p.source === "self" || p.source === "vault",
+    (p) => (p.source === "contact" || p.source === "system" || p.source === "self" || p.source === "vault") && isListedPerson(p),
   );
   const mesh = all.filter(
     (p) => (p.source === "mesh-author" || p.source === "mesh-card" || p.source === "route-direct") && hasChosenName(p),
   );
   const tour = all.filter((p) => p.source === "demo");
-  const isMesh = (p) => p.source === "mesh-author" || p.source === "mesh-card" || p.source === "route-direct";
-  const listed = all.filter((p) => !isMesh(p) || hasChosenName(p));
-  return { contacts: contactsList, mesh, tour, all: listed };
+  return { contacts: contactsList, mesh, tour, all: all.filter(isListedPerson) };
 }
 
 export function recordPeopleSearchOk() {
@@ -326,7 +333,8 @@ export async function searchPeople(query) {
 
   const ql = q.toLowerCase();
   const cleanQl = cleanQ.toLowerCase();
-  const results = all.filter((p) => matchesPerson(p, ql, cleanQl, handleRoute));
+  const isExactKey = (p) => String(p.routeId || "").toLowerCase() === cleanQl;
+  const results = all.filter((p) => matchesPerson(p, ql, cleanQl, handleRoute) && (isListedPerson(p) || isExactKey(p)));
 
   if (results.length > 0) recordPeopleSearchOk();
   return results;

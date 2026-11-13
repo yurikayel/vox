@@ -1,5 +1,7 @@
 # Incubação — backlog P2 explícito
 
+> **Status:** brainstorm (backlog P2; não substitui o ROADMAP) · **Owner:** mantenedor · **Revisado:** 2026-10-25
+
 Itens reservados após P0 (POSSE) e P1 (Steward desktop, Frames, embed). Ordem alinhada a `docs/brainstorms/brainstorm-tracao-escalabilidade-incubacao.md` §4.
 
 | Item | Descrição | Notas |

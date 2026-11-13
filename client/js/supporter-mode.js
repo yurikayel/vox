@@ -1,4 +1,13 @@
-/** @file Modo Apoiador (nó pesado): opt-in por botão sobre o nó leve padrão. */
+/**
+ * @file Compromisso de armazenamento do nó: nó leve (padrão), Apoiador (nó pesado, opt-in) e Guardião.
+ *
+ * O disco é fixo por modo e a banda diária repassada é proporcional ao disco ({@link BANDWIDTH_PER_DISK}).
+ * A pessoa pode repassar menos que o proporcional, nunca mais.
+ *
+ * @module supporter-mode
+ * @see docs/specs/replicacao-por-grau-v0.md
+ * @see client/js/seeder-guardian.js
+ */
 
 /** Compromisso de banda proporcional ao disco: cada MB guardado rende até 2 MB/dia repassados. */
 export const BANDWIDTH_PER_DISK = 2;
@@ -12,12 +21,22 @@ export const SUPPORTER_LIMITS = Object.freeze({ minMb: 512, maxMb: 1024, dailyCa
 /** Modo Guardião: cota fixa de 2 GB, só no Wi-Fi e carregando. */
 export const GUARDIAN_LIMITS = Object.freeze({ quotaMb: 2048, dailyCapMb: 2048 * BANDWIDTH_PER_DISK });
 
-/** Teto diário de banda para um disco: proporcional (2×). */
+/**
+ * Teto diário de banda para um disco: proporcional ({@link BANDWIDTH_PER_DISK}×).
+ *
+ * @param {number} maxMb Disco, em MB.
+ * @returns {number} Banda diária máxima, em MB.
+ */
 export function dailyCapForDisk(maxMb) {
   return maxMb * BANDWIDTH_PER_DISK;
 }
 
-/** Disco válido para o modo: nó leve fixo em 100 MB; apoiador entre 512 e 1024 MB. */
+/**
+ * Disco válido para o modo: o nó leve fica fixo em 100 MB; o Apoiador fica entre 512 e 1024 MB.
+ *
+ * @param {{supporter?: boolean, maxMb?: number}} [settings={}] Configurações de peers.
+ * @returns {number} Disco, em MB.
+ */
 export function clampDiskMb(settings = {}) {
   if (!settings.supporter) return LIGHT_LIMITS.maxMb;
   const mb = Number(settings.maxMb) || SUPPORTER_LIMITS.maxMb;
@@ -25,8 +44,13 @@ export function clampDiskMb(settings = {}) {
 }
 
 /**
- * Ajusta disco e banda ao modo. O teto diário pode ficar abaixo do proporcional
- * (a pessoa escolhe repassar menos), nunca acima; sem valor, vale o proporcional.
+ * Ajusta disco e banda ao modo.
+ *
+ * O teto diário pode ficar abaixo do proporcional (a pessoa escolhe repassar menos), nunca acima;
+ * sem valor, vale o proporcional. O mínimo é 1 MB.
+ *
+ * @param {{supporter?: boolean, maxMb?: number, dailyCapMb?: number}} [settings={}] Configurações de peers.
+ * @returns {object} Cópia das configurações com `maxMb` e `dailyCapMb` válidos.
  */
 export function normalizeStorageCommitment(settings = {}) {
   const maxMb = clampDiskMb(settings);
@@ -37,9 +61,13 @@ export function normalizeStorageCommitment(settings = {}) {
 
 /**
  * Liga ou desliga o modo Apoiador sem perder as demais preferências.
- * Ligar começa no disco máximo do apoiador (a pessoa pode baixar até 512 MB) com banda proporcional.
- * @param {object} current configurações atuais de peers
- * @param {boolean} on
+ *
+ * Ligar começa no disco máximo do Apoiador (a pessoa pode baixar até 512 MB), com banda proporcional e
+ * só no Wi-Fi. Desligar volta aos limites do nó leve.
+ *
+ * @param {object} [current={}] Configurações atuais de peers.
+ * @param {boolean} [on=true] `true` liga; `false` desliga.
+ * @returns {object} Novas configurações (cópia).
  */
 export function applySupporterMode(current = {}, on = true) {
   if (!on) {

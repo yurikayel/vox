@@ -4,8 +4,8 @@
 [![Identity](https://img.shields.io/badge/Identity-WebCrypto%20P--256-blueviolet.svg)](./client/js/local-account.js)
 [![Storage](https://img.shields.io/badge/Storage-Arweave%20Permaweb-black.svg)](https://arweave.org)
 [![License: AGPL v3](https://img.shields.io/badge/License-GNU%20AGPLv3-crimson.svg)](./LICENSE)
-[![Tests](https://img.shields.io/badge/tests-1144%20passing-success.svg)](./docs/TESTES.md)
-[![Service Worker](https://img.shields.io/badge/SW-v7.74--real--network--audio--video--upload-informational.svg)](./client/sw.js)
+[![Tests](https://img.shields.io/badge/tests-1199%20passing-success.svg)](./docs/TESTES.md)
+[![Service Worker](https://img.shields.io/badge/SW-v7.96--real--network--audio--video--upload-informational.svg)](./client/sw.js)
 
 O Vox é um projeto cívico em construção para ampliar a participação popular e a autonomia das comunidades na vida digital. Sua ambição é ser um bem comum aberto: o projeto deve permanecer transparente, copiável, modificável e maior que qualquer fundador, mantenedor, empresa ou plataforma.
 
@@ -77,9 +77,9 @@ Redes centralizadas, instâncias federadas e protocolos locais têm custos, vant
 
 | Campo | Valor |
 |---|---|
-| **Commit SHA** | `bea95a4` |
-| **Suíte de Testes** | **1144** (`1038` JS + `106` Python) |
-| **Service Worker** | `vox-pwa-v7.74-real-network-audio-video-upload` |
+| **Commit SHA** | `815b3a0` |
+| **Suíte de Testes** | **1199** (`1088` JS + `111` Python) |
+| **Service Worker** | `vox-pwa-v7.96-real-network-audio-video-upload` |
 
 *Tabela regenerada por `npm run release-line` (roda a suíte e grava [docs/release-metadata.json](./docs/release-metadata.json)). Nenhum outro documento deve repetir esses números.*
 
@@ -177,7 +177,7 @@ Resumo do que entrou no cliente em nov/2026 (detalhes em [CHANGELOG.md](./CHANGE
   * **Relay com dono (PM-94, SW v7.65):** o cofre só é regravado com a prova derivada da Senha Soberana, e a mensagem da caixa de DMs só é apagada por quem a recebeu. Relay e nó Windows conferem `Host` e `Origin` e só aceitam escrita em JSON ([ADR-027](./docs/adr/027-autorizacao-no-relay-dono-e-origem.md)).
   * **Assinatura v2 (PM-85, SW v7.66):** a assinatura passa a cobrir os campos aninhados (`photoTags`, `mediaRef`). O aparelho já confere a nova forma e assina com ela a partir de 24/11/2026; marca de foto em post antigo aparece como não verificada.
 * **Defeito aberto:** quem convidou quem fica visível na malha ([THREAT-MODEL T19](./docs/THREAT-MODEL.md), PM-83).
-* **Peso do app guardado no aparelho:** o precache tem ~0,5 KB de folga no teto do PM-02 (catraca); a próxima adição ao shell precisa vir com corte.
+* **Peso do app guardado no aparelho:** o precache é medido a cada teste, sem teto de bytes; a regra é mantê-lo enxuto dentro do razoável ([docs/HARDENING.md](./docs/HARDENING.md), "Peso do precache").
 * **Infra:** Deno Deploy **pausado** (organização suspensa). A sinalização pública é **um** nó Render (`wss://vox-sentinel.onrender.com`) com **Nostr em paralelo** (ainda sem medição em campo) mais o nó local; ver riscos em [docs/INFRA-CUSTOS.md](./docs/INFRA-CUSTOS.md).
 
 ---

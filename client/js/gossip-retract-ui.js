@@ -33,17 +33,6 @@ export function isGossipTombstone(post) {
  * @param {object|null|undefined} post
  * @returns {boolean}
  */
-export function isGossipEdited(post) {
-  if (!post) return false;
-  if (post.gossipEditedAt > 0) return true;
-  const upd = post.gossipUpdate;
-  return Boolean(upd && typeof upd === "object" && upd.appliedAt > 0);
-}
-
-/**
- * @param {object|null|undefined} post
- * @returns {boolean}
- */
 export function shouldHideGossipDeletedPost(post) {
   return isGossipRetractUiEnabled() && isGossipTombstone(post);
 }
@@ -55,10 +44,6 @@ export function shouldHideGossipDeletedPost(post) {
 export function filterFeedTopicsForGossipRetract(topics = []) {
   if (!isGossipRetractUiEnabled()) return topics;
   return topics.filter((t) => !shouldHideGossipDeletedPost(t));
-}
-
-export function renderGossipEditedBadgeHtml() {
-  return `<span class="badge-pill gossip-edited-pill" title="Editado na rede">Editado</span>`;
 }
 
 export function renderGossipDeletedTopicShellHtml() {

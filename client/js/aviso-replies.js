@@ -1,6 +1,12 @@
 /**
- * @file Aviso assinado v0 — lote B: contar as respostas coladas do WhatsApp. Spec: docs/specs/aviso-assinado-v0.md.
- * Puro e só em memória: os nomes servem para ficar com a última resposta de cada pessoa e não saem daqui.
+ * @file Aviso assinado v0 — lote B: contar as respostas coladas do WhatsApp.
+ *
+ * A coordenação cola a conversa exportada (ou copiada) do grupo; daqui saem só números. Os nomes servem
+ * apenas para ficar com a última resposta de cada pessoa e nunca saem desta função nem são guardados.
+ * Reconhece os dois formatos de linha do WhatsApp (`[dd/mm/aa hh:mm] Nome: …` e `dd/mm/aa hh:mm - Nome: …`).
+ *
+ * @module aviso-replies
+ * @see docs/specs/aviso-assinado-v0.md
  */
 
 import { AVISO_CHOICES } from "./aviso.js";
@@ -19,13 +25,25 @@ const RULES = [
 
 const plain = (s) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 
-/** Separa remetente e mensagem; linha solta não tem remetente. */
+/**
+ * Separa remetente e mensagem de uma linha colada do WhatsApp.
+ *
+ * @param {string} line Uma linha, já sem espaços nas pontas.
+ * @returns {{sender: string, message: string}} `sender` vazio quando a linha não tem cabeçalho (texto solto).
+ */
 export function splitReplyLine(line) {
   const m = BRACKET_LINE.exec(line) || DASH_LINE.exec(line);
   return m ? { sender: m[1].trim(), message: m[2] } : { sender: "", message: line };
 }
 
-/** Escolha reconhecida na mensagem, ou "". */
+/**
+ * Reconhece a resposta numa mensagem (palavra ou emoji), ignorando acento e caixa.
+ *
+ * A ordem das regras importa: "não vou" é testado antes de "vou".
+ *
+ * @param {string} message Texto da mensagem.
+ * @returns {string} Uma de `AVISO_CHOICES`, ou `""` se nada foi reconhecido.
+ */
 export function replyChoice(message) {
   const text = plain(String(message || ""));
   const rule = RULES.find(([, re]) => re.test(text));
@@ -54,8 +72,17 @@ function collectReplies(lines, code) {
 }
 
 /**
- * Conta o texto colado. Devolve só números: `{ counts, counted, ignored }`.
- * Vale a última resposta de cada nome; linha solta conta sozinha.
+ * Conta as respostas de um texto colado.
+ *
+ * Vale a última resposta de cada nome; uma linha sem remetente conta sozinha. Linhas que citam o
+ * código de outro aviso são ignoradas.
+ *
+ * @param {string} [text=""] Conversa colada, uma mensagem por linha.
+ * @param {string} [code=""] Código curto do aviso contado (4 caracteres); vazio aceita qualquer linha.
+ * @returns {{counts: Object<string, number>, counted: number, ignored: number}} Contagem por resposta, quantas pessoas contaram e quantas linhas ficaram de fora.
+ * @example
+ * countPastedReplies("[10/11/26 09:00] Ana: vou\n[10/11/26 09:05] Ana: não vou");
+ * // → { counts: { ciente: 0, vou: 0, talvez: 0, "nao-vou": 1 }, counted: 1, ignored: 0 }
  */
 export function countPastedReplies(text = "", code = "") {
   const lines = String(text).split(/\r?\n/).map((l) => l.trim()).filter(Boolean);

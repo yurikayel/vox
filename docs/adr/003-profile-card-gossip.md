@@ -25,3 +25,18 @@ Dois usuários novos não se encontram em `#/people` sem colar `#/connect` ou se
 
 - Módulos: `profile-card.js`, extensões em `peers.js`, `profile-directory.js`, `people-index.js`.
 - Testes T1–T6 na spec de protocolo.
+
+## Emenda 2026-11-12 — só sai do aparelho o cartão com nome escolhido
+
+Contas que nunca escolheram nome (a chave criada na primeira visita, numa aba anônima ou num navegador novo) publicavam
+cartão na memória central e na malha, e o NodeZero juntava centenas desses cartões vazios. Além disso, a memória
+central recebia de uma vez os cartões de todas as contas do cofre do aparelho, o que contava a quem lesse que eram da
+mesma pessoa.
+
+- Só sai do aparelho cartão com nome escolhido (`hasChosenCardName`: não vazio e diferente da chave `vx_…`), pela
+  memória central (`listShareableProfileCards`, gravação automática) e pela malha (`peer-sync.js`, `mesh-profile.js`).
+  Sem nome, o cartão também não vai para o Arweave.
+- O próprio cartão não sai quando a pessoa desligou "aparecer na malha".
+- Só a conta ativa publica o próprio cartão. As outras contas do cofre publicam quando forem a ativa.
+- Cartão sem nome que chega (de app antigo ou da memória central) não é guardado nem repassado.
+- Testes: `tests/profile-card-share.test.js`.

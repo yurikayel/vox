@@ -4,11 +4,17 @@
  */
 import * as natural from "../natural-mod.js";
 import { VOX_LINK_TYPE } from "../vox-link.js";
-import { escapeHtml } from "../render/util.js";
+import { escapeHtml } from "../shared/html.js";
 import { isModerator } from "../moderation.js";
 
+/** @type {string} Flag de laboratório do moderador natural. */
 export const NATURAL_MOD_LAB_KEY = "vox.lab.moderador";
 
+/**
+ * Indica se o experimento de moderador natural está ativo neste aparelho.
+ * @param {Storage} [storage] Armazenamento local a consultar.
+ * @returns {boolean} Verdadeiro se a flag estiver ligada.
+ */
 export function naturalModLabOn(storage = globalThis.localStorage) {
   try {
     return storage?.getItem(NATURAL_MOD_LAB_KEY) === "1";
@@ -17,7 +23,11 @@ export function naturalModLabOn(storage = globalThis.localStorage) {
   }
 }
 
-/** Vínculos válidos que este aparelho conhece (forma assinada, as duas assinaturas conferidas). */
+/**
+ * Vínculos válidos que este aparelho conhece (forma assinada, as duas assinaturas conferidas).
+ * @param {object|null} [deps=null] Dependências opcionais (`getRecords`, `verify`).
+ * @returns {Promise<object[]>} Vínculos válidos deduplicados.
+ */
 export async function loadLinks(deps = null) {
   const [cacheNode, localAccount] = deps ? [null, null] : await Promise.all([import("../cache-node.js"), import("../local-account.js")]);
   const getRecords = deps?.getRecords || (async () => (await cacheNode.getWirePosts()).filter((p) => p.type === VOX_LINK_TYPE));
@@ -37,7 +47,11 @@ function sponsorLine({ sponsor, closest }) {
   return `<p><strong>Sem vínculos.</strong> Denúncias sobre você vão direto para a moderação da comunidade.</p>`;
 }
 
-/** Tela "Meus vínculos": quem pode cuidar dos meus posts e de quem eu cuido. */
+/**
+ * Tela "Meus vínculos": quem pode cuidar dos meus posts e de quem eu cuido.
+ * @param {object} model Modelo retornado por `myLinksModel`.
+ * @returns {string} HTML do bloco de vínculos.
+ */
 export function renderMyLinksHtml(model) {
   const kids = model.godchildren.length
     ? `<p><strong>Você é padrinho de ${model.godchildren.length}:</strong> ${model.godchildren.map(person).join(", ")}.</p>`
@@ -72,7 +86,12 @@ function bindCases(main, me, rerender) {
   });
 }
 
-/** No topo da tela Pessoas (só com a flag): meus vínculos e os casos para eu decidir. */
+/**
+ * No topo da tela Pessoas (só com a flag): meus vínculos e os casos para eu decidir.
+ * @param {HTMLElement} main Contêiner principal da tela.
+ * @param {object|null} [deps=null] Dependências opcionais para testes.
+ * @returns {Promise<void>} Conclusão da montagem no DOM.
+ */
 export async function mountMyLinks(main, deps = null) {
   if (!main || !naturalModLabOn(deps?.storage)) return;
   const me = deps?.me || (await (await import("../local-account.js")).getRouteId());
@@ -87,6 +106,10 @@ export async function mountMyLinks(main, deps = null) {
  * Arquivamentos firmes conferidos desta comunidade, como ações que só este aparelho constrói (`naturalVerified`).
  * Vale se: assinatura e prova de padrinho batem, o afilhado está entre os 30 primeiros e quem arquivou tinha
  * menos de 3 reversões da moderação em 90 dias, contadas até aquele arquivamento.
+ * @param {string} communityId Identificador da comunidade.
+ * @param {object[]} [modActions=[]] Ações de moderação já resolvidas na comunidade.
+ * @param {object|null} [deps=null] Dependências opcionais para carregar vínculos.
+ * @returns {Promise<object[]>} Ações `natural-hide` validadas.
  */
 export async function loadNaturalHideActions(communityId, modActions = [], deps = null) {
   const [cacheNode, localAccount, community] = await Promise.all([

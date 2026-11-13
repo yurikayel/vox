@@ -28,7 +28,12 @@ const TEXT = {
   requester: "Pedido de mediação: alguém do seu vínculo no Vox quer conversar sobre este post. Ninguém arquivou nada.",
 };
 
-/** Destinatários: N1 (lado de quem publicou) e N2 (lado de quem pede), sem repetir e sem a própria pessoa. */
+/**
+ * Destinatários: N1 (lado de quem publicou) e N2 (lado de quem pede), sem repetir e sem a própria pessoa.
+ * @param {object[]} links Vínculos assinados válidos.
+ * @param {object} opts Dados da mediação (`self`, `target`, `members`).
+ * @returns {object[]} Lista de destinatários com `route`, `via` e `side`.
+ */
 export function mediationRecipients(links, { self, target, members = null }) {
   const { n1, n2 } = caseModerators(links, { target, reporter: self, members, purpose: "mediacao" });
   const out = [];
@@ -50,6 +55,10 @@ async function sendOne(self, recipient, card, d) {
 /**
  * Manda o pedido aos moderadores naturais das duas partes. Devolve `[{ route, via, side, status }]`
  * (vazio = ninguém com vínculo: quem chama usa a moderação da comunidade).
+ * @param {string} self Rota deste aparelho.
+ * @param {object} opts Dados do pedido (`postId`, `communityId`, `target`).
+ * @param {object|null} [deps=null] Dependências opcionais para testes.
+ * @returns {Promise<object[]>} Resultados de envio por destinatário.
  */
 export async function requestMediation(self, { postId, communityId = "", target = "" }, deps = null) {
   const d = deps || (await defaultDeps());

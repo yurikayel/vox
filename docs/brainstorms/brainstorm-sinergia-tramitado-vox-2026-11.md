@@ -3,7 +3,7 @@
 
 > **Documento Estratégico & Arquitetural**  
 > **Data:** Novembro / 2026  
-> **Status:** Proposta de Ecossistema & Brainstorm de Integração (Ivan / Tramitado × Yuri / Vox)  
+> **Status:** brainstorm · proposta de ecossistema e de integração (Ivan / Tramitado × Yuri / Vox)  
 > **Classificação:** Visão de Produto, Protocolo Aberto, Salvaguardas e Roadmap em 5 Fases (H0→H4)  
 
 ---

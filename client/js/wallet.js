@@ -3,7 +3,6 @@ import { loadArweave } from "./arweave-lib.js";
 import { isSealed, openSealed, sealJson } from "./keystore.js";
 
 const STORAGE_KEY = "vox-wallet-jwk";
-export const WALLET_KIND_PLAIN = "vox-wallet-plain";
 export const WALLET_KIND_ENCRYPTED = "vox-wallet-encrypted";
 const KDF_ITERATIONS = 100000;
 

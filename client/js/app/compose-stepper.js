@@ -52,8 +52,17 @@ function stepIsValid(step) {
   return ok;
 }
 
+/** Nome do cartão de opção marcado (`renderChoiceCards`), ou o valor do rádio se o cartão não tiver nome. */
+function choiceLabel(fieldset) {
+  const picked = fieldset.querySelector("input:checked");
+  if (!picked) return "";
+  const name = picked.closest("label")?.querySelector(".compose-sphere-name");
+  return name ? name.textContent.trim() : picked.value;
+}
+
 function displayValue(el) {
   if (!el) return "";
+  if (el.tagName === "FIELDSET") return choiceLabel(el);
   if (el.tagName === "SELECT") return el.selectedOptions?.[0]?.textContent?.trim() || el.value;
   if (el.type === "checkbox") return el.checked ? "Sim" : "Não";
   if (el.type === "file") return el.files?.[0]?.name || "";

@@ -1,5 +1,7 @@
 # Posicionamento — Vox
 
+> **Status:** canônico · **Owner:** mantenedor · **Revisado:** 2026-11-10
+
 > Diagnóstico comparativo detalhado e matriz 5×5 → [LESSONS.md](../process/LESSONS.md)
 
 ## Metáfora Pix: interoperabilidade, não jurisdição

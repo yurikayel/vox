@@ -130,5 +130,10 @@ export function linkState(records, { me, inviter }) {
 /** Já assinei um aceite de padrinho? O aparelho só assina um (fora a troca, uma vez). */
 export const hasSponsorClaim = (records, me) => records.some((r) => r.kind === "accept" && r.author === me && r.sponsor === true);
 
-/** Já troquei de padrinho? A troca vale uma vez só. */
+/**
+ * Verifica se o autor já utilizou a troca única de padrinho.
+ * @param {object[]} records Registros de vínculo verificados.
+ * @param {string} me Identificador do autor.
+ * @returns {boolean} Verdadeiro se já houve troca aceita.
+ */
 export const hasSwitched = (records, me) => records.some((r) => r.kind === "accept" && r.author === me && r.sponsor === true && r.switchFrom);

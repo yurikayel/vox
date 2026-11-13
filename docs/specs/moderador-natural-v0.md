@@ -1,6 +1,6 @@
 # Moderador natural e vínculo assinado (v0)
 
-> **Status:** vínculo assinado implementado no PM-82; moderador natural (PM-83) com spec aceita, ainda não implementado · **Owner:** mantenedor · **Revisado:** 2026-11-10
+> **Status:** parcial (vínculo assinado implementado no PM-82; moderador natural, PM-83, com spec aceita e ainda não implementado) · **Owner:** mantenedor · **Revisado:** 2026-11-10
 > Relacionados: [denúncia que arquiva até a revisão (PM-69)](../ROADMAP.md), [canal (PM-81)](./canal-comunidade-v0.md), `client/js/vox-link.js`, `client/js/app/vox-link-flow.js`, `client/js/report-review.js`.
 
 ## Problema
