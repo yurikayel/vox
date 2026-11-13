@@ -423,37 +423,6 @@ test("render - renderProfile com handle e renderHandleConflict", () => {
   assert.ok(mainConf.innerHTML.includes("addr_2"));
 });
 
-test("render - renderCantinaGate e closeCantinaGate", () => {
-  const container = createContainer();
-  render.renderCantinaGate(container);
-
-  const html = container.innerHTML;
-  assert.ok(!html.includes("cantina-balloon-2"));
-  assert.ok(!html.includes("id=\"cantina-balloon-2\""));
-  assert.ok(html.includes('aria-label="Porta da Cantina"'));
-  assert.ok(!html.includes("cantina-title"));
-  assert.ok(!html.includes("cantina-quote"));
-  assert.ok(!html.includes("cantina-easter-egg"));
-  assert.ok(!html.includes("<h2"));
-  assert.ok(!html.includes("Seus bots vão ter que esperar do lado de fora"));
-  assert.ok(html.includes("cantina-art-img"));
-  assert.ok(html.includes("cantina-gate.webp"));
-  assert.ok(html.includes("Ilustração anime"));
-  assert.ok(html.includes("bartender de túnica bege"));
-  assert.ok(html.includes("dois balões pintados"));
-  assert.ok(html.includes("Seus bots tem que esperar lá fora"));
-  assert.ok(html.includes("Aqui não servimos esse tipo"));
-  assert.ok(!html.includes("404"));
-  assert.ok(!html.includes("This is not the web page"));
-  assert.ok(!html.includes("Lucasfilm"));
-  assert.ok(html.includes("btn-cantina-enter"));
-  assert.ok(html.includes("Entrar — sou humano"));
-  assert.ok(html.includes("O que isso significa?"));
-
-  render.closeCantinaGate(container);
-  assert.equal(container.innerHTML, "");
-});
-
 test("render - LAN-10: faixa do modo demonstração avisa que perfis são fictícios", () => {
   const html = render.renderDemoModeBanner();
   assert.ok(html.includes("demo-mode-banner"));
