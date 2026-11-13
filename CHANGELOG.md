@@ -6,6 +6,12 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Expurgo dos perfis e contas de teste excedentes (`Yuri Kayel`)
+- **Identidades de teste (`client/js/data/test-route-ids.js`)**: incluídos os 17 `routeId`s excedentes/pré-gênese de `"Yuri Kayel"` (`128 -> 145` entradas ordenadas), regenerando os guardas de servidor em `relay/genesis_data.py` e `packaging/zero-central-memory-windows/src/GenesisData.cs`.
+- **Filtro GraphQL pós-gênese (`client/js/genesis.js`)**: `filterGraphqlData` agora descarta transações cujas tags `Route-Id`, `Author`, `Author-Address` ou `Owner` pertencem a `TEST_ROUTE_IDS`.
+- **Limpeza local de posts (`client/js/demo-seed.js`)**: `isOldOrMockPost` também verifica `p.owner` e `p.routeId` (além de `p.author`) durante `purgeMockDemoSeed`.
+- **Cache do Service Worker (`client/sw.js`)**: `CACHE_NAME` incrementado para `vox-pwa-v7.107-real-network-audio-video-upload` e metadados de release atualizados.
+
 ### TURN para redes móveis: Worker de credenciais e nova tentativa depois de falha (REV-10)
 - **Worker novo** em `workers/turn/`: entrega credenciais temporárias (4 h) do Cloudflare Realtime TURN só às origens do app. Para de entregar no teto do mês (`BUDGET_GB`, padrão 800 GB, lido da API de análise do Cloudflare) ou com o uso desconhecido, e limita 30 credenciais por IP por hora (guarda só hash do IP). Deploy manual pelo mantenedor ([README](./workers/turn/README.md)).
 - **No app** (`client/js/turn-credentials.js`): quando uma conexão direta falha sem TURN, pede credencial e quem inicia tenta esse par de novo, uma vez por sessão. Conexões novas passam a levar o TURN, mas o ICE continua preferindo o caminho direto. No modo "só TURN", pede ao abrir. As credenciais ficam só em memória e, depois de erro ou recusa, o app espera (`Retry-After`, até 1 h).
