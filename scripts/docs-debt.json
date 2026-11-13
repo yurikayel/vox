@@ -1804,7 +1804,6 @@
   "jsdoc:renderNodeHealthListHtml"
  ],
  "client/js/render/oauth-modals.js": [
-  "param:renderOAuthEnrich:container",
   "param:showGenesisStep:root",
   "param:showGenesisStep:key",
   "returns:showGenesisStep",
