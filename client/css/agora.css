@@ -4002,8 +4002,19 @@ body,
 .genesis-overlay .genesis-inline-form--stack { flex-direction: column; }
 .genesis-overlay .genesis-inline-form--stack .genesis-input { flex: 0 0 auto; }
 
-/* ── 39. Backup no seu e-mail: seção em Sua rede e aviso de backup vencido ── */
-.inbox-backup-settings label { display: block; margin: 0.35rem 0; }
-.inbox-backup-settings .form-control { margin-bottom: 0.5rem; }
+/* ── 39. Backup no seu e-mail e espaçamento das configurações de rede ── */
+.network-card,
+.inbox-backup-settings,
+.own-posts-settings { padding: 1.2rem 1.3rem; margin-bottom: 1.25rem; }
+.network-card h2,
+.inbox-backup-settings h3,
+.own-posts-settings h3 { margin: 0 0 0.5rem; }
+.network-card .desc,
+.inbox-backup-settings .desc,
+.own-posts-settings .desc { margin: 0 0 0.9rem; line-height: 1.5; }
+.network-guided-btn { margin-top: 0.15rem; }
+.inbox-backup-settings label { display: block; margin: 0.5rem 0; }
+.inbox-backup-settings .form-control { margin: 0 0 0.85rem; }
+.inbox-backup-settings .meta { margin: 0.65rem 0 0.9rem; }
 .inbox-backup-due { position: fixed; left: 1rem; right: 1rem; bottom: calc(5rem + env(safe-area-inset-bottom)); z-index: 60; max-width: 28rem; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
 .inbox-backup-due p { flex-basis: 100%; margin: 0; }

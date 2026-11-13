@@ -322,7 +322,7 @@ export function renderInviteFriendsCard({
     <div class="invite-friends-head">
       <div>
         <strong class="invite-friends-title">Convide amigos</strong>
-        <p class="desc invite-friends-lead">Toque em Compartilhar para mandar seu convite do Vox. Sua chave: <code>${escapeHtml(shortId(routeId))}</code> · Soberana e sem dono.</p>
+        <p class="desc invite-friends-lead">Chave <code>${escapeHtml(shortId(routeId))}</code> · Mande seu convite do Vox.</p>
       </div>
       <button type="button" id="${escapeHtml(buttonId)}" class="btn btn-primary btn-sm" data-route="${escapeHtml(routeId)}">Compartilhar</button>
     </div>
