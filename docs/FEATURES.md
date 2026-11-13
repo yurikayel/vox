@@ -1,6 +1,6 @@
 # Catálogo de funcionalidades — Vox
 
-> **Status:** canônico · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-11
+> **Status:** canônico · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-13
 > Fonte: rotas de `client/js/app/route-parse.js`, imports reais em `client/js/**` e `tests/*.test.js`. Ao plugar ou remover um módulo, atualize a linha correspondente aqui.
 
 **Legenda de status**
@@ -62,7 +62,7 @@
 | Onboarding em etapas + pacto | 1º acesso | `app/onboarding.js`, `render/oauth-modals.js` | no ar | `onboarding-steps` |
 | Confirmação "tenho 18 anos ou mais" no pacto (piloto só 18+, ADR-020) | pacto | `age-gate.js`, `render/welcome-pact.js` | no ar (autodeclarada, só no aparelho) | `age-gate` |
 | Identidade local P-256 `vx_*` | — | `local-account.js` | no ar | `local-account` |
-| Cofre v2 por Senha Soberana, sync por link/QR (ADR-025) | `#/backup`, `#/sync` | `oauth-vault.js`, `vault-crypto.js`, `vault-legacy.js`, `account-backup-wrap.js` | no ar (precisa de servidor de memória escolhido; login Google/Meta só enriquece o perfil) | `account-backup`, `wallet-encryption` |
+| Cofre v2 por Senha Soberana, sync por link/QR e backup no e-mail (ADR-025) | `#/backup`, `#/sync`, `#/settings/network` | `oauth-vault.js`, `vault-crypto.js`, `inbox-backup.js` | no ar (sync remoto precisa de servidor de memória; backup `.txt` semanal/mensal sem servidor) | `account-backup`, `wallet-encryption`, `inbox-backup` |
 | Identidade Ed25519/X25519 (cintura fina) | — | `vox-identity.js` | **escrito, não plugado** | `vox-identity` |
 | Credencial cívica / vínculo de identidade | — | `civic-credential.js`, `identity-link.js` | **escrito, não plugado** | `civic-credential`, `identity-link` |
 | Handles `@` | `#/h/:slug`, `#/u/@x` | `handles.js` | no ar | `handles` |
@@ -70,7 +70,7 @@
 | Perfil, Voxels, passaporte | `#/perfil`, `#/u/:addr` | `app/screens-profile.js`, `voxels.js` | no ar (Voxels só locais) | `voxels`, `profile-*` |
 | Importar nome/foto (Google, Meta, Bluesky, X, TikTok, GitHub) | onboarding | `social-login.js`, `oauth-profile.js`, `bsky-oauth.js` | depende de config (Kwai: "em breve") | `social-login`, `oauth-profile` |
 | DMs E2E | `#/dm`, `#/dm/:addr` | `crypto-dm.js`, `dm-messenger.js`, `inbox.js`, `dm-outbox.js` | no ar; entrega offline **depende de relay** (inbox padrão `127.0.0.1:3920`). Caixa de saída (PM-78): o que não saiu é reenviado enquanto o app está aberto, por até 7 dias ("⏳ Aguardando" → "⚠ Não entregue") | `crypto-dm`, `dm-*`, `inbox`, `dm-outbox` |
-| Convite com vínculo assinado (padrinho) | `#/connect/:id?convite=` | `vox-link.js`, `app/vox-link-flow.js`, `render/vox-link.js` | no ar (PM-82): aceite assinado por quem entra e confirmação automática de quem convidou (10 aceites, 30 dias); passa pela malha e pela memória central. É a base do moderador natural (PM-83, a fazer; [spec](./specs/moderador-natural-v0.md)) | `vox-link` |
+| Convite com vínculo assinado (padrinho) | `#/connect/:id?convite=` | `vox-link.js`, `app/vox-link-flow.js`, `render/vox-link.js` | no ar (PM-82): aceite assinado por quem entra e confirmação automática de quem convidou (10 aceites, 30 dias); passa pela malha e pela memória central. Base do moderador natural (PM-83, em **lab** `vox.lab.moderador`; [spec](./specs/moderador-natural-v0.md)) | `vox-link` |
 | Pareamento por QR sem servidor | — | `airgap-webrtc.js` | **escrito, não plugado** | `airgap-webrtc` |
 | Carteira Arweave + assistente | `#/wallet`, `#/wallet/guia` | `wallet.js`, `app/screens-guided.js` | no ar | `wallet` |
 
@@ -93,7 +93,7 @@
 |---|---|---|---|---|
 | Leitura multi-gateway + pill "Leitura reserva" | — | `graphql.js`, `gateway-telemetry.js` | no ar: 4 gateways em `config/gateways.json` (3 testemunhas GraphQL: turbo, arweave.net, ardrive.net; o `ar-io.dev` só serve conteúdo `raw` porque não indexa o Vox — PM-50), tempo limite de 8 s cada; se todos falham, erro "gateways fora" (LAN-27) | `graphql`, `multi-gateway`, `gateway-telemetry` |
 | Cache local "Pacto Vox" (IndexedDB) | — | `cache-node.js`, `idb-store.js` | no ar | `cache-node`, `idb-store` |
-| Malha WebRTC + gossip (WANT/HAVE/BLOB, perfis, manifestos) | — | `peers*.js`, `webrtc-peer.js`, `profile-card.js`, `mesh-profile.js` | no ar; **depende da sinalização** (1 nó Render + Nostr em paralelo). **Defeito aberto (PM-84):** cartão de perfil sem "já visto" pode circular sem fim entre abas e pares | `peers*`, `webrtc`, `profile-card` |
+| Malha WebRTC + gossip (WANT/HAVE/BLOB, perfis, manifestos) | — | `peers*.js`, `webrtc-peer.js`, `profile-card.js`, `mesh-profile.js` | no ar; **depende da sinalização** (1 nó Render + Nostr em paralelo); eco de cartão de perfil corrigido no PM-84 | `peers*`, `webrtc`, `profile-card` |
 | Sincronização ao conectar por inventário | — | `peer-sync.js`, `post-wire.js`, `cache-node.js` | no ar (PM-80): manda hashes e só o que falta (≈ 157 KB → ≈ 7 KB por sentido). Os itens saem na forma assinada desde a correção #49; antes, quem recebia descartava tudo o que vinha por aqui. Troca entre dois aparelhos reais ainda não medida | `peer-sync`, `post-wire` |
 | Prioridade suave de blobs (V-I09) | — | `peers-blob-affinity.js` | no ar, flag padrão **desligada** | `peers-blob-soft-priority` |
 | Sinalização via Nostr (efêmero kind 25050, cifrada entre pares) | — | `nostr-transport.js`, `nostr-event.js` (BIP-340), `nostr-signaling.js` | **no ar em paralelo ao Render** (REV-09; desligável em `signaling.json` → `nostrSignaling.enabled`). Ida e volta validada em relays reais; conexão entre dois navegadores ainda não testada em campo. Relay que cai reconecta com espera crescente e, depois de 3 falhas, troca por outro do pool (PM-17) | `nostr-transport`, `nostr-event`, `nostr-signaling` |
@@ -106,7 +106,7 @@
 | Mensagens de erro honestas | upload, leitura, DM | `honest-errors.js` | no ar (LAN-21): cota, 402, 429, offline, timeout, gateways fora, DM sem relay e sinalização caída (WebSocket e Nostr fora por mais de 5 s: aviso e selo em `#/settings/network`, e aviso de volta) | `honest-errors`, `nostr-transport`, `render` |
 | Trackers WebTorrent | — | `client/config/signaling.json` | **stub** (configurados, não usados) | — |
 | Modo guardião (aparelho como nó) | — | `seeder-guardian.js`, `render/settings-guardian.js` | **escrito, não plugado** (cota fixa de 2 GB e banda proporcional já valem no módulo, mas nenhuma tela monta o cartão) | `seeder-guardian` |
-| Persistência de storage (anti-evicção) | — | `storage-persistence.js` | **escrito, não plugado** | `storage-persistence` |
+| Persistência de storage (anti-evicção) | — | `storage-persistence.js`, `app/storage-durability-flow.js` | no ar (PM-72 / REV-14 parte 1: pede `navigator.storage.persist()` ao ter conta e exibe faixa iOS Safari para Tela de Início) | `storage-persistence`, `storage-durability-flow` |
 | Transferência em blocos | — | `chunked-transfer.js` | **escrito, não plugado** | `chunked-transfer` |
 | Configurações de rede, assistente, steward | `#/settings/network[/guia\|/steward]` | `app/screens-network.js`, `steward-wizard.js` | no ar | `steward-wizard`, `status-render` |
 | Espelho de comunidade no relay | comunidade | `community-mirror.js` | no ar, depende de relay | `community-mirror` |
@@ -132,6 +132,6 @@
 2. **Sem relay completo público**: entrega offline de DM, cofre remoto e OAuth de várias redes dependem de stewards.
 3. **Sem TURN**: pares atrás de CGNAT podem não conectar, e o "Esconder meu IP" não tem por onde passar (REV-10).
 4. O upload grátis do Turbo tem **cota** (~10 MiB por carteira/IP, segundo `upload.ardrive.io/info`); depois dela, e para itens acima de 105 KiB, publicar custa.
-5. **22 módulos** não são carregados por nenhuma tela (lista em `UNPLUGGED_MODULES` no `sw.js`: os marcados acima, mais `polis`, `idb-store` e a cadeia `node-health-*`). Desde o PM-04 eles ficam fora do precache (~116 KB a menos na instalação). Plugar é o caminho mais barato para várias das [10 features de autossustento](./brainstorms/brainstorm-autossustento-10-features-2026-11.md).
+5. **21 módulos** não são carregados por nenhuma tela (lista em `UNPLUGGED_MODULES` no `sw.js`: os marcados acima, mais `polis`, `idb-store` e a cadeia `node-health-*`). Desde o PM-04 eles ficam fora do precache (~116 KB a menos na instalação). Plugar é o caminho mais barato para várias das [10 features de autossustento](./brainstorms/brainstorm-autossustento-10-features-2026-11.md).
 
 Detalhes de custo e risco: [INFRA-CUSTOS.md](./INFRA-CUSTOS.md). Prioridades: [ROADMAP.md](./ROADMAP.md).
