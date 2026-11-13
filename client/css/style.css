@@ -9089,6 +9089,29 @@ blockquote.repost-cite {
   }
 }
 
+/* ADR-032 §3.3 — tela da frase de recuperação (#/frase) e cartão para imprimir */
+.phrase-screen { max-width: 36rem; margin: 0 auto; padding: 1rem; display: grid; gap: 0.75rem; }
+.phrase-warning { margin: 0; padding: 0.6rem 0.8rem; border-left: 3px solid var(--danger); background: var(--surface-soft); }
+.phrase-words {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+  gap: 0.4rem 1rem;
+  margin: 0;
+  padding-left: 2rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+.phrase-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.phrase-confirm-field { display: grid; gap: 0.25rem; }
+.phrase-note, .phrase-alt { font-size: 0.85rem; color: var(--text-muted); }
+.phrase-print-card { display: none; }
+@media print {
+  body.printing-phrase { background: #fff; }
+  body.printing-phrase > :not(#phrase-print-root) { display: none !important; }
+  body.printing-phrase > #phrase-print-root { display: block; padding: 1.5cm; color: #000; background: #fff; }
+  body.printing-phrase > #phrase-print-root .phrase-words { grid-template-columns: repeat(3, 1fr); font-size: 14pt; padding-left: 1.5cm; }
+}
+
 /* PM-54 — faixa "ler antes de entrar" (link direto abre o conteúdo; entrar fica a um toque) */
 .read-first-banner {
   position: fixed;

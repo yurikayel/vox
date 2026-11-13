@@ -6,6 +6,12 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Tela da frase de recuperação e entrar pela frase (ADR-032, passo 2 — tela)
+- **`#/frase`** (`app/screens-phrase.js`, `render/recovery-phrase.js`): mostra as 12 palavras (ou 24, em conta antiga, com o aviso de que DMs antigas não voltam por elas), pede a Senha Soberana se a conta estiver travada, imprime um cartão de uma página e pede 3 palavras sorteadas de volta. Só aí a frase conta como saída e a faixa de conta provisória some.
+- **"Criar minha saída"** na faixa agora leva para a frase; "Prefiro senha e cofre" continua levando ao assistente do cofre (`#/backup`).
+- **Já tenho conta → frase** (`account-phrase.js`, `app/onboarding.js`): digitar as palavras traz a mesma conta (mesmo `routeId`; DM e semente também, se forem 12 palavras), sem rede. Aceita acento, maiúscula e só as 4 primeiras letras.
+- Ainda sem QR no cartão (o leitor de QR do app só lê links do Vox, e pôr a frase num link a vazaria). Testes: `tests/account-phrase.test.js`. SW `v7.115`.
+
 ### Frase de recuperação: contas novas nascem de uma semente (ADR-032, passo 2 — núcleo)
 - **Conta nova nasce de uma semente de 128 bits** (`identity-seed.js`, `local-account.js`): assinatura e DM saem da mesma semente por HKDF-SHA256 (`recovery-phrase.js`), e a semente vira **12 palavras** da lista BIP-39 em português (`data/bip39-pt.js`, MIT). Contas antigas têm a frase de **24 palavras** tirada da própria chave (sem as chaves de DM).
 - **P-256 em JS** (`p256.js`) só para calcular o ponto público a partir do escalar (FIPS 186-5 A.2.1), conferido contra chaves do WebCrypto.

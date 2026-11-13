@@ -146,19 +146,26 @@ async function restoreFromInboxBackups(files, pass) {
   return { ok: true, routeId: acc?.routeId, displayName: localAccount.getDisplayName() };
 }
 
+/** Frase (ADR-032) tem precedência; sem ela, backups do e-mail ou cofre pela Senha Soberana. */
+async function restoreExistingAccount(phraseText, pass) {
+  if (phraseText) return (await import("../account-phrase.js")).restoreFromPhrase(phraseText);
+  const files = [...(document.getElementById("oauth-restore-files")?.files || [])];
+  return files.length ? restoreFromInboxBackups(files, pass) : oauthVault.restoreFromPassphraseVault(pass);
+}
+
 function bindSovereignPassphraseForm(modalContainer, onComplete) {
   const form = document.getElementById("form-oauth-restore-passphrase");
   if (!form) return;
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const pass = document.getElementById("oauth-sovereign-passphrase-input")?.value.trim() || "";
-    if (!pass) return setOAuthEnrichError("Digite sua Senha Soberana para restaurar.");
+    const phraseText = document.getElementById("oauth-restore-phrase")?.value.trim() || "";
+    if (!pass && !phraseText) return setOAuthEnrichError("Digite a frase de recuperação ou a Senha Soberana.");
     const btn = document.getElementById("btn-oauth-restore-passphrase");
     setOAuthButtonBusy(btn, true);
     setOAuthEnrichError("");
     try {
-      const files = [...(document.getElementById("oauth-restore-files")?.files || [])];
-      const res = files.length ? await restoreFromInboxBackups(files, pass) : await oauthVault.restoreFromPassphraseVault(pass);
+      const res = await restoreExistingAccount(phraseText, pass);
       if (res.ok) {
         oauthProfile.skipOAuthEnrichment();
         share.showToast(`Identidade restaurada com sucesso! Bem-vindo(a), ${res.displayName || "Cidadão"}!`);
