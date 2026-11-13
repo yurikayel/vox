@@ -6,6 +6,11 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### TURN para redes móveis: Worker de credenciais e nova tentativa depois de falha (REV-10)
+- **Worker novo** em `workers/turn/`: entrega credenciais temporárias (4 h) do Cloudflare Realtime TURN só às origens do app. Para de entregar no teto do mês (`BUDGET_GB`, padrão 800 GB, lido da API de análise do Cloudflare) ou com o uso desconhecido, e limita 30 credenciais por IP por hora (guarda só hash do IP). Deploy manual pelo mantenedor ([README](./workers/turn/README.md)).
+- **No app** (`client/js/turn-credentials.js`): quando uma conexão direta falha sem TURN, pede credencial e quem inicia tenta esse par de novo, uma vez por sessão. Conexões novas passam a levar o TURN, mas o ICE continua preferindo o caminho direto. No modo "só TURN", pede ao abrir. As credenciais ficam só em memória e, depois de erro ou recusa, o app espera (`Retry-After`, até 1 h).
+- **Desligado até o deploy:** `turnCredentialsUrl` vazio em `signaling.json` mantém o comportamento de antes. O lint passa a cobrir `workers/`. Testes novos em `tests/turn-worker.test.js` e `tests/turn-credentials.test.js`; SW `v7.106`.
+
 ### Teste E2E de dois navegadores na malha P2P no CI (PM-99)
 - Novos scripts `scripts/mesh-e2e.mjs` e `scripts/nostr-ephemeral-relay.mjs` (zero dependências externas além de `playwright-core` + Chromium): sobem o app estático, o servidor WebSocket (`relay/signaling.py`) e um relay Nostr efêmero (`kind 25050`), abrem dois contextos Chromium isolados, completam a entrada, conectam WebRTC `vox-peer-v0` em duas rodadas separadas (`ws` e `nostr`) e verificam a chegada do post assinado no feed do segundo navegador.
 - Correção de corrida WebRTC detectada pelo novo E2E em `client/js/webrtc-peer.js`: rastreamento de `makingOffer` durante `createOffer()` (evita glare enquanto `signalingState` ainda está `"stable"`), fila `pendingIceCandidates` para candidatos que chegam antes de `setRemoteDescription` e guarda de identidade `RTCPeerConnection` após `await` para não fechar a conexão substituta.

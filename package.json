@@ -12,7 +12,7 @@
     "test:py": "npm run test:relay",
     "test:all": "npm test",
     "test": "node --test tests/*.test.js && python -m unittest discover -s relay -p \"test_*.py\"",
-    "lint": "eslint \"client/js/**/*.js\" client/sw.js",
+    "lint": "eslint \"client/js/**/*.js\" client/sw.js \"workers/**/*.js\"",
     "lint:all": "eslint \"client/js/**/*.js\" client/sw.js \"scripts/**/*.mjs\" \"tools/**/*.mjs\" \"tools/media-bench/**/*.js\" \"tests/**/*.js\"",
     "validate": "npm run lint && npm run lint:relay && npm run audit:complexity && npm run audit:docs && npm test",
     "lint:fix": "eslint \"client/js/**/*.js\" client/sw.js --fix",
