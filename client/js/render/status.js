@@ -62,7 +62,7 @@ function renderStatusTilesHtml(state, relayStatus, rtcStatus) {
 /** Saúde do nó (Stitch tela 11): ladrilhos de estado, armazenamento e gateways — só dados locais. */
 export function renderStatusPage(
   main,
-  { gatewayHealth = {}, relayStatus = {}, relayHttpUrl = "", mirrorExport = null, rtcStatus = {} } = {},
+  { gatewayHealth = {}, relayStatus = {}, relayHttpUrl = "", mirrorExport = null, rtcStatus = {}, signalingStats = null } = {},
 ) {
   const state = gatewayHealth.state || "all_ok";
   const relayLabel = relayStatus?.online ? "Online" : "Offline";
@@ -73,6 +73,7 @@ export function renderStatusPage(
       ${renderNodeHealthHeadHtml()}
       ${renderStatusTilesHtml(state, relayStatus, rtcStatus)}
       ${renderStorageTabletHtml()}
+      ${renderSignalingTelemetryTabletHtml(signalingStats)}
       ${renderMeshTabletHtml({ state, relayStatus, relayLabel, relayHost, mirrorExport, gatewayHealth })}
     </div>`;
 }
@@ -120,6 +121,48 @@ function renderMeshTabletHtml({ state, relayStatus, relayLabel, relayHost, mirro
           <thead><tr><th>Gateway</th><th>OK</th><th>Falhas</th></tr></thead>
           <tbody>${renderGatewayTableRowsHtml(gatewayHealth)}</tbody>
         </table>
+      </section>`;
+}
+
+function formatDurationCell(ms) {
+  return ms === null || ms === undefined ? "—" : `${Number(ms) || 0} ms`;
+}
+
+function renderSignalingRowHtml(label, bucket) {
+  const b = bucket && typeof bucket === "object" ? bucket : {};
+  return `<tr><td>${escapeHtml(label)}</td><td>${Number(b.attempts) || 0}</td><td>${Number(b.ok) || 0}</td><td>${Number(b.fail) || 0}</td><td>${formatDurationCell(b.avgConnectMs)}</td></tr>`;
+}
+
+function renderFirstPeerLineHtml(firstPeer) {
+  const fp = firstPeer && typeof firstPeer === "object" ? firstPeer : {};
+  if (!Number(fp.count)) return "Sem pareamento medido neste aparelho ainda.";
+  return `Último: <strong>${Number(fp.lastMs) || 0} ms</strong> · Média: <strong>${Number(fp.avgMs) || 0} ms</strong> · Mediana: <strong>${Number(fp.medianMs) || 0} ms</strong> (${Number(fp.count)} ${Number(fp.count) === 1 ? "sessão" : "sessões"})`;
+}
+
+function renderSignalingTelemetryTabletHtml(signalingStats) {
+  const ch = signalingStats?.channels || {};
+  const peers = signalingStats?.peers || {};
+  return `
+      <section class="agora-tablet card" id="status-signaling-card">
+        <div class="agora-tablet-head">
+          <h2 class="agora-section-title">Sinalização por caminho (neste aparelho)</h2>
+          <div class="agora-page-actions">
+            <button type="button" class="agora-btn agora-btn--secondary" id="status-copy-signaling-btn">Copiar relatório</button>
+            <button type="button" class="agora-btn agora-btn--secondary" id="status-reset-signaling-btn">Zerar</button>
+          </div>
+        </div>
+        <p class="desc">Contadores locais de WebSocket vs Nostr para a retrospectiva (PM-18) — nada é enviado daqui.</p>
+        <p class="desc"><strong>Tempo até o 1º par:</strong> ${renderFirstPeerLineHtml(signalingStats?.firstPeer)}</p>
+        <table class="status-gw-table agora-table">
+          <thead><tr><th>Caminho</th><th>Tentativas</th><th>Sucessos</th><th>Falhas</th><th>Tempo médio</th></tr></thead>
+          <tbody>
+            ${renderSignalingRowHtml("Canal WebSocket", ch.ws)}
+            ${renderSignalingRowHtml("Canal Nostr", ch.nostr)}
+            ${renderSignalingRowHtml("Pares via WebSocket", peers.ws)}
+            ${renderSignalingRowHtml("Pares via Nostr", peers.nostr)}
+          </tbody>
+        </table>
+        <p class="desc" id="status-signaling-feedback" aria-live="polite"></p>
       </section>`;
 }
 
