@@ -28,7 +28,7 @@ const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const DEBT_FILE = path.join(ROOT, "scripts", "docs-debt.json");
 const DOCS_INDEX = "docs/README.md";
 /** Pastas com Markdown do projeto. Fora: dependências, worktrees e saídas geradas. */
-const MD_ROOTS = [".", "docs", "client", "relay", "scripts", "tools", "android", "packaging", ".github", ".agents"];
+const MD_ROOTS = [".", "docs", "client", "relay", "workers", "scripts", "tools", "android", "packaging", ".github", ".agents"];
 const MD_SKIP = new Set(["node_modules", ".git", ".claude", "dist", "build"]);
 /** Código de produção do cliente: o app (`client/js`) e a página leve do aviso (`client/aviso`). */
 const JS_ROOTS = ["client/js", "client/aviso"];

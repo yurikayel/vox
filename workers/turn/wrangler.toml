@@ -1,0 +1,20 @@
+# REV-10 — Worker de credenciais TURN do Vox. Deploy manual: ver README.md desta pasta.
+name = "vox-turn"
+main = "src/index.js"
+compatibility_date = "2025-06-01"
+
+[vars]
+# Teto do mês em GB (a franquia grátis é de 1.000 GB, dividida com o SFU).
+BUDGET_GB = "800"
+# Origens extras além do GitHub Pages, do espelho Cloudflare e de localhost (separadas por vírgula).
+ALLOWED_ORIGINS = ""
+# CF_ACCOUNT_ID não é segredo, mas fica fora do repositório: wrangler secret put CF_ACCOUNT_ID
+
+[[durable_objects.bindings]]
+name = "TURN_BUDGET"
+class_name = "TurnBudget"
+
+# SQLite: o tipo de Durable Object disponível no plano grátis de Workers.
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["TurnBudget"]
