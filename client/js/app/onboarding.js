@@ -15,7 +15,6 @@ import {
   CANTINA_STORAGE_KEY,
   hasPassedCantinaGate,
   shouldShowCantinaGate,
-  wireCantinaOverlayPassthrough,
 } from "./cantina-gate.js";
 import { ensureOnboardingSideEffects } from "./onboarding-side-effects.js";
 import { showHome } from "./screens-home.js";
@@ -230,13 +229,9 @@ export function checkOAuthEnrichStep() {
 }
 
 export function checkCantinaGate() {
-  const modalContainer = document.getElementById("modal-container");
   const route = parseRoute();
 
   if (!shouldShowCantinaGate(route.name)) {
-    if (modalContainer && route.name === "ajuda-teste") {
-      render.closeCantinaGate(modalContainer);
-    }
     if (hasPassedCantinaGate()) {
       readFirst.removeReadFirstBanner();
       checkOAuthEnrichStep();
@@ -245,13 +240,13 @@ export function checkCantinaGate() {
     }
     return;
   }
-  openCantinaGate(modalContainer);
+  openEntry();
 }
 
 /** PM-54: leitura liberada, faixa "Entrar no Vox" e portão na primeira ação que escreve. */
 function startReadFirst() {
   installEntryGuards();
-  readFirst.mountReadFirstBanner(document, () => openCantinaGate(document.getElementById("modal-container")));
+  readFirst.mountReadFirstBanner(document, openEntry);
 }
 
 /** Escrever exige ter passado pela entrada E concluído o pacto com 18+ (ADR-020). */
@@ -260,7 +255,7 @@ export function hasFullEntry() {
 }
 
 function openNextEntryStep() {
-  if (!hasPassedCantinaGate()) openCantinaGate(document.getElementById("modal-container"));
+  if (!hasPassedCantinaGate()) openEntry();
   else checkOAuthEnrichStep();
 }
 
@@ -269,17 +264,11 @@ export function installEntryGuards() {
   readFirst.installReadFirstGuards({ doc: document, hasEntered: hasFullEntry, openEntry: openNextEntryStep });
 }
 
-function openCantinaGate(modalContainer) {
-  if (!modalContainer) return;
-  wireCantinaOverlayPassthrough();
-  render.renderCantinaGate(modalContainer);
-
-  document.getElementById("btn-cantina-enter")?.addEventListener("click", () => {
-    localStorage.setItem(CANTINA_STORAGE_KEY, "true");
-    render.closeCantinaGate(modalContainer);
-    readFirst.removeReadFirstBanner();
-    checkOAuthEnrichStep();
-  });
+/** Abre a entrada (nome e 18+) direto, sem a tela de portão que vinha antes. */
+function openEntry() {
+  localStorage.setItem(CANTINA_STORAGE_KEY, "true");
+  readFirst.removeReadFirstBanner();
+  checkOAuthEnrichStep();
 }
 
 /** Pacto aceito E maioridade confirmada (ADR-020). Quem aceitou antes do aviso de 18+ vê o pacto uma vez mais. */

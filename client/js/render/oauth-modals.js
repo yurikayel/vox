@@ -1,4 +1,4 @@
-/** @file OAuth, cantina gate, pact/zap/edit modals, people search. */
+/** @file OAuth, pact/zap/edit modals, people search. */
 import { renderPactModalHtml, renderPactStepHtml } from "./welcome-pact.js";
 import * as brcode from "../brcode.js";
 import { PIX_PAYER_CHECK_NOTICE_PT } from "../pix-key.js";
@@ -8,12 +8,6 @@ import * as localAccount from "../local-account.js";
 import { hasChosenName } from "../people-index.js";
 import { escapeHtml, shortId, renderAvatarHtml, formatTimeAgo } from "./util.js";
 import { renderPageHead } from "./shell.js";
-
-const CANTINA_ART_ALT =
-  "Ilustração anime de uma cantina: o bartender de túnica bege aponta para a câmera; dois balões pintados na arte dizem 'Seus bots tem que esperar lá fora!' e 'Aqui não servimos esse tipo.'";
-
-const CANTINA_ART =
-  `<img class="cantina-art-img" src="./images/cantina-gate.webp" alt="${CANTINA_ART_ALT}" width="1024" height="575" />`;
 
 /** Ícones inline (GIS / Meta brand — sem asset extra no SW). */
 const OAUTH_SVG_GOOGLE = `<svg class="oauth-btn__icon" width="20" height="20" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>`;
@@ -26,15 +20,15 @@ function renderOAuthProviderButtonsHtml() {
   return `<div class="oauth-enrich-actions">
     <button type="button" id="btn-oauth-google" class="oauth-btn oauth-btn--google" aria-label="Entrar com Google para importar nome e foto">
       ${OAUTH_SVG_GOOGLE}
-      <span class="oauth-btn__label">Continuar com Google</span>
+      <span class="oauth-btn__label">Nome e foto do Google</span>
     </button>
     <button type="button" id="btn-oauth-meta" class="oauth-btn oauth-btn--meta" aria-label="Entrar com Meta para importar nome e foto">
       ${OAUTH_SVG_META}
-      <span class="oauth-btn__label">Continuar com Meta</span>
+      <span class="oauth-btn__label">Nome e foto da Meta</span>
     </button>
     <button type="button" id="btn-oauth-github" class="oauth-btn oauth-btn--github" aria-label="Entrar com GitHub para importar nome e foto">
       ${OAUTH_SVG_GITHUB}
-      <span class="oauth-btn__label">Continuar com GitHub</span>
+      <span class="oauth-btn__label">Nome e foto do GitHub</span>
     </button>
   </div>`;
 }
@@ -335,30 +329,6 @@ export function renderConnectPreview(main, profile, routeId, { isContact = false
         <button type="button" id="btn-connect-share" class="btn btn-outline" data-route="${escapeHtml(routeId)}">Compartilhar link</button>
       </div>
     </div>`;
-}
-
-export function renderCantinaGate(container) {
-  if (!container) return;
-  container.innerHTML = `
-    <div class="modal-overlay modal-sheet cantina-overlay" id="cantina-modal-overlay" role="dialog" aria-modal="true" aria-label="Porta da Cantina">
-      <div class="modal-dialog modal-card cantina-dialog">
-        <div class="cantina-art-wrap">
-          ${CANTINA_ART}
-        </div>
-        <div class="cantina-actions modal-actions modal-actions--stack">
-          <button id="btn-cantina-enter" class="btn btn-primary btn-cantina-enter btn-cantina-enter-lg">Entrar — sou humano</button>
-          <details class="cantina-details">
-            <summary class="cantina-details-summary">O que isso significa?</summary>
-            <p class="desc cantina-details-body">No Vox você não precisa de CPF nem de cadastro sob vigilância. Protegemos o espaço recusando fazendas de automação para que pessoas reais conversem em paz sob o Pacto Vox.</p>
-          </details>
-        </div>
-      </div>
-    </div>
-  `;
-}
-
-export function closeCantinaGate(container) {
-  if (container) container.innerHTML = "";
 }
 
 export function renderPactModal(container) {
