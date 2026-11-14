@@ -1,6 +1,6 @@
 # ADR-032: Login perene — a conta nasce com saída, sem depender de empresa nem de servidor
 
-**Status:** accepted (2026-11-13, pelo mantenedor; passo 1 — §3.1 e §3.5 — implementado no SW v7.113; passo 2 — frase, §3.3 e §5.1–5.2 — no SW v7.115/v7.116, cartão ainda sem QR) · **Revisado:** 2026-11-13 · **Relacionados:** [ADR-025](./025-cofre-v2-so-a-senha-abre.md), [ADR-031](./031-passkey-abre-a-mesma-conta.md), [ADR-026](./026-chaves-em-repouso-trava-depois-do-backup.md), [ADR-022](./022-memoria-central-por-consentimento.md), [ADR-030](./030-trazer-do-bluesky-pesos.md), [ADR-002](./002-oauth-profile-enrich-client.md), [THREAT-MODEL T20](../THREAT-MODEL.md), [IDENTITY](../IDENTITY.md), [ROADMAP](../ROADMAP.md) (REV-14, PM-13, PM-101)
+**Status:** accepted (2026-11-13, pelo mantenedor; passo 1 — §3.1 e §3.5 — no SW v7.113; passo 2 — frase, §3.3 e §5.1–5.2 — no SW v7.115/v7.116; passo 3 — guardiões spec, 3a Shamir, 3b escolha/entrega e T24/T25 — no SW v7.116/v7.117; **emenda 1 (§6), entrada com e-mail e senha e kit no e-mail, aceita em 2026-11-14, não implementada**) · **Revisado:** 2026-11-14 · **Relacionados:** [ADR-025](./025-cofre-v2-so-a-senha-abre.md), [ADR-031](./031-passkey-abre-a-mesma-conta.md), [ADR-026](./026-chaves-em-repouso-trava-depois-do-backup.md), [ADR-022](./022-memoria-central-por-consentimento.md), [ADR-030](./030-trazer-do-bluesky-pesos.md), [ADR-002](./002-oauth-profile-enrich-client.md), [THREAT-MODEL T20](../THREAT-MODEL.md), [IDENTITY](../IDENTITY.md), [ROADMAP](../ROADMAP.md) (REV-14, PM-13, PM-101)
 
 ## 1. Contexto
 
@@ -123,3 +123,83 @@ Isso muda a forma assinada e o `routeId`, então pede um ADR e uma RFC próprios
    4. ADR-031: passkey como atalho, depois do domínio definitivo.
    5. §3.6: raiz mais subchaves (PM-13).
 4. **Lápide de conta (PM-101):** passa a poder ser assinada também por quem recuperou pela frase ou pelos guardiões.
+
+## 6. Emenda 1 (2026-11-14): entrada com nome, e-mail e senha; o kit de volta vai para o e-mail da própria pessoa
+
+> **Situação:** aceita pelo mantenedor em 2026-11-14; passa a valer com o merge do PR que a traz. **Não implementada.**
+> Muda o §3.5 (a conta deixa de nascer provisória no caminho comum) e a tela "Já tenho conta". O resto do ADR continua valendo.
+
+### 6.1 Por quê
+- O §3.5 deixa a saída para depois: a conta nasce sem nenhuma e uma faixa pede para criar. Quem ignora a faixa perde a conta ao limpar o navegador.
+- "Já tenho conta" pede frase, arquivos `.txt` ou uma "Senha Soberana" solta. Quase todo mundo espera **e-mail e senha**.
+- Login por e-mail guardado em servidor continua recusado (§2, opção 2). Esta emenda **não cria lista de e-mails**: o e-mail nunca sai do aparelho em claro.
+
+### 6.2 Entrada em uma etapa (mínima fricção)
+1. A tela de entrada pede **nome ou apelido, e-mail e senha**, num `<form>` comum:
+   - e-mail: `type="email"`, `autocomplete="username"`;
+   - senha: `type="password"`, `autocomplete="new-password"` (na volta, `current-password`), com botão de mostrar em vez de campo de confirmação.
+2. Ao clicar em **Criar conta**, sem etapa bloqueante intermediária, o aparelho gera a semente (§3.3), entra na conta, grava o cofre (§6.3) e dispara imediatamente o `mailto:` com o kit de volta (§6.4).
+3. A tela diz, ao lado do campo: "Seu e-mail não sai deste aparelho. Ele serve para você achar sua conta de volta."
+4. **Sem parada extra antes do `mailto:`:** como o `mailto:` apenas abre o rascunho no aplicativo de e-mail da pessoa (não envia nada pela rede sozinho), a conferência acontece no próprio rascunho e no cartão de confirmação do §6.5, que mostra `Para: <e-mail>` com opção de **Corrigir e-mail** e reabrir o rascunho.
+5. **Quem não quer informar e-mail** continua podendo entrar só com o nome: a conta nasce provisória e vale o §3.5, com a faixa.
+6. Ler continua livre, sem conta.
+
+### 6.3 Cofre endereçado por e-mail e senha (com semente preservada)
+1. O endereço do cofre, a prova de dono (PM-94) e a chave que o cifra passam a sair de `e-mail normalizado + ":" + senha`, com o mesmo PBKDF2-SHA256 de 600 mil iterações (`client/js/vault-crypto.js`). Hoje saem só da senha.
+2. **Normalização do e-mail:** tirar espaços das pontas e pôr em minúsculas (`trim().toLowerCase()`). Nada de regra por provedor (pontos do Gmail, `+etiqueta`): regra assim muda com o tempo e faria o mesmo e-mail dar endereços diferentes entre versões.
+3. **Semente dentro do cofre:** hoje `exportLocalAccountBundle` (`client/js/local-account.js`) exporta apenas os JWKs de assinatura e não leva a semente nem a chave de DM (`client/js/identity-seed.js`). Quando a conta tiver semente (§3.3), o pacote cifrado passa a incluir a semente (16 bytes em base64url); ao restaurar, `importLocalAccountBundle` reconstrói da semente tanto a chave de assinatura P-256 quanto a **chave de DM** (`identityFromSeed`) e mantém a frase de 12 palavras.
+4. **A senha continua com o mínimo de 12 caracteres** (`VAULT_PASSPHRASE_MIN`). Quem opera o servidor de memória guarda o cofre cifrado; conhecendo o e-mail do alvo, o que protege a chave é só a senha.
+5. O servidor vê um identificador de 64 caracteres hexadecimais. Não recebe o e-mail, nem um hash só do e-mail: sem a senha não dá para perguntar "esta pessoa tem conta?".
+6. **Cofres que já existem** (endereçados só pela senha) continuam abrindo: "Já tenho conta" tenta o endereço novo (`e-mail + ":" + senha`) e depois o antigo (só `senha`). Na primeira gravação com e-mail, o cofre vai para o endereço novo e o antigo recebe a marca de revogado.
+7. **Trocar e-mail ou senha** grava o cofre no endereço novo e revoga o anterior.
+8. **Na volta ("Já tenho conta"):**
+   - **Pelo link do próprio e-mail (`#/sync?b=…`):** abre `client/js/app/screens-sync.js` já com o cofre carregado do fragmento `#` (sem depender de servidor) e pede só a senha.
+   - **Digitando e-mail e senha direto no app:** o aparelho calcula o endereço e busca o cofre no armazenamento local e nos servidores de memória configurados (`client/js/central-memory.js`). Se nenhum servidor responder ou tiver o cofre, a mesma tela — mantendo a senha já preenchida — pede para tocar no link do e-mail auto-enviado ou colar ali mesmo o link/código `VOX1:…` (ou o texto inteiro do e-mail). Frase, QR do outro aparelho, guardiões e arquivo `.txt`/`.voxid` continuam ao lado.
+
+### 6.4 Kit de volta no e-mail da própria pessoa
+Ao criar a conta, o app abre `mailto:` para o e-mail informado, **da pessoa para ela mesma**. O Vox não envia nada.
+
+O corpo leva:
+1. **Link de volta (1 clique):** `#/sync?b=<cofre cifrado>`. O que vem depois do `#` não vai para servidor nenhum. Abriu o link, digitou a senha, entrou.
+2. **Código cifrado (`VOX1:…`) / colagem direta:** para contas com semente (cofre curto), o código `VOX1:…` vai destacado logo abaixo; em qualquer conta, colar o próprio link `#/sync?b=…`, o código `VOX1:…` ou o corpo inteiro do e-mail em "Já tenho conta" extrai o cofre automaticamente, mesmo que o domínio do site mude no futuro.
+3. Data, nome e `vx_…`, para a pessoa achar o e-mail depois.
+
+**A senha nunca vai no e-mail.**
+
+**A frase de recuperação é opcional e vem desmarcada.** Uma caixa "Incluir a frase de 12 palavras neste e-mail" fica ao lado do botão, com o aviso: "Com a frase no e-mail, quem ler sua caixa de entrada entra como você, mesmo sem a senha. Só marque se você confia mais no seu e-mail do que na sua memória."
+- Desmarcada (padrão): o e-mail sozinho não abre a conta; precisa da senha. Vale o §3.3.6.
+- Marcada: o e-mail passa a ser a conta, e a segurança dela é a do provedor de e-mail. É escolha da pessoa, registrada em Perfil → Segurança ("frase enviada por e-mail em <data>").
+- Para quem esquece a senha e não marcou a caixa, os caminhos são os do §3.2: frase no papel e guardiões.
+
+### 6.5 Quando o `mailto:` não abre (ou o e-mail foi digitado errado)
+Depois de "Criar conta", sem bloquear a navegação, um cartão "Confirme o envio do seu e-mail de segurança" mostra `Para: <e-mail>` (com ação **Corrigir e-mail**) e oferece:
+- **Abrir app de e-mail** (dispara o `mailto:` de novo);
+- **Copiar e-mail pronto** (assunto e corpo, para colar no webmail no computador);
+- **Baixar cópia (.txt)**.
+
+A conta conta como **com saída** (§3.5.3) quando a pessoa confirma que enviou ou guardou. Sem confirmar, vale a faixa do §3.5.
+
+### 6.6 O que é saída e o que é atalho
+| Caminho | Tipo | Por quê |
+|---|---|---|
+| Kit no e-mail (link `#/sync?b=…` ou código `VOX1:…`) mais a senha | **Saída soberana** | é a "Senha Soberana com backup no e-mail" do §3.2, agora criada junto com a conta e com a semente preservada |
+| Cofre no servidor de memória, por e-mail e senha | **Saída soberana**, enquanto houver servidor | depende de haver servidor de memória configurado e no ar (REV-04) |
+| E-mail e senha salvos no gerenciador do navegador | Atalho | mora na conta Google ou Apple; acelera o dia a dia |
+| Frase dentro do e-mail (caixa marcada) | **Saída, com a segurança rebaixada** | funciona sem senha, mas quem lê o e-mail entra |
+
+### 6.7 Riscos e limites verificados no código
+- **Quem lê a caixa de e-mail pode tentar senhas à vontade** sobre o link ou o código, sem limite de tentativas. O backup por e-mail que já existe tem a mesma exposição. Por isso o mínimo de 12 caracteres não cai.
+- **E-mail digitado errado** abre o rascunho para outro endereço no app de e-mail da pessoa. Sem a caixa da frase, mesmo que ela envie por engano, o destinatário recebe algo que não abre sem a senha; com a caixa marcada, recebe a conta. É o motivo de a caixa vir desmarcada e de o cartão do §6.5 permitir corrigir o endereço na hora.
+- **Servidor de memória padrão (`client/js/central-memory.js`):** verificado no código que `DEFAULT_MEMORY_URLS` aponta apenas para `http://127.0.0.1:3921` e `http://127.0.0.1:3920` até que a pessoa escolha um servidor remoto (`client/js/memory-server-choice.js`, [ADR-022](./022-memoria-central-por-consentimento.md)). Sem servidor remoto configurado, digitar só e-mail e senha em aparelho limpo não acha o cofre pela rede — por isso o fluxo de volta (§6.3.8) já aceita na mesma tela o clique no link do e-mail ou a colagem do texto recebido.
+- **Tamanho do `mailto:` (`client/js/vault-crypto.js` e `client/js/local-account.js`):**
+  - **Conta com semente (§3.3):** cifrando `{ seed, displayName, pix }` no cofre v2, o payload codificado em base64url fica em ~350–550 caracteres; o URI `mailto:` completo (assunto + texto + link `#/sync?b=…` + código `VOX1:…`) fica abaixo de **1.200 caracteres**, dentro do piso de 2.000 caracteres dos clientes de e-mail e do Windows.
+  - **Conta antiga sem semente:** o bundle com os JWKs P-256 completos gera ~1.650–1.850 caracteres em `encodeVaultBundleForUrl`. Para não duplicar esse bloco no `mailto:` e estourar 2.000 caracteres, em contas sem semente o `mailto:` leva apenas uma cópia do bloco (no link `#/sync?b=…`, que também funciona se colado em "Já tenho conta"), enquanto **Copiar e-mail pronto** e **Baixar cópia (.txt)** não têm limite de URL.
+- **Pedir e-mail na primeira tela tem custo de percepção** numa rede política, mesmo sem guardar. O texto do §6.2.3 e o caminho sem e-mail (§6.2.5) existem por isso.
+- **A decisão de 12/11 ("e-mail é cofre, não identidade") continua valendo na letra:** nenhum servidor conhece o e-mail. O que muda é que a pessoa passa a usá-lo localmente para endereçar o cofre e mandar o kit para si mesma.
+- Entra no [THREAT-MODEL](../THREAT-MODEL.md) como ameaça nova (kit no e-mail e frase opcional) no PR que implementar.
+
+### 6.8 Ordem de entrega
+1. `client/js/local-account.js`, `client/js/vault-crypto.js` e `client/js/oauth-vault.js`: incluir a semente no bundle exportado (restaurando chave de assinatura + DM + semente em `importLocalAccountBundle`); derivar endereço, prova de dono e chave por `e-mail normalizado + ":" + senha`, com fallback de leitura e migração/revogação do endereço antigo (só senha). Testes: mesma senha com e-mails diferentes dá endereços diferentes; conta com semente restaura a mesma chave de DM e frase de 12 palavras; cofre antigo ainda abre; trocar e-mail ou senha revoga o endereço anterior.
+2. Kit de volta: montar o assunto/corpo do `mailto:` (respeitando o teto de 2.000 caracteres), o cartão do §6.5 (abrir app, copiar, baixar `.txt` e corrigir e-mail) e a caixa opcional da frase (com registro local em Perfil → Segurança). Teste: o corpo nunca contém a senha; a frase só aparece com a caixa marcada.
+3. Tela de entrada e "Já tenho conta" (`client/js/render/oauth-modals.js` e `client/js/app/onboarding.js`) com o formulário `Nome + E-mail + Senha`, caminho sem e-mail (§6.2.5) e colagem direta do link/código/texto do e-mail quando não houver servidor de memória com o cofre.
+4. Linha no [THREAT-MODEL](../THREAT-MODEL.md), [FEATURES](../FEATURES.md) e Voxpedia.
