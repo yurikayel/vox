@@ -103,3 +103,9 @@ test("shamir - parâmetros: M ≥ 2, N ≤ 7, M ≤ N, segredo em bytes", () => 
   assert.throws(() => splitSecret("segredo", { m: 2, n: 3 }), TypeError);
   assert.throws(() => splitSecret(new Uint8Array(0), { m: 2, n: 3 }), TypeError);
 });
+
+test("shamir - quem chama pode dar o identificador da divisão", () => {
+  const out = splitSecret(new Uint8Array(16).fill(1), { m: 2, n: 3, splitId: "id_dado" });
+  assert.equal(out.splitId, "id_dado");
+  assert.ok(out.shares.every((s) => s.splitId === "id_dado"));
+});

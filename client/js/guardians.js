@@ -8,8 +8,8 @@
  *   exportar ("caixa preta"). No máximo 20 donas; uma divisão nova da mesma dona substitui a anterior.
  */
 
-import { openSealed, sealJson } from "./keystore.js";
-import { MAX_N, MIN_M, splitSecret } from "./shamir-gf256.js";
+import { openSealed, sealJsonStrict } from "./keystore.js";
+import { MAX_N, MIN_M, SPLIT_ID_BYTES, splitSecret } from "./shamir-gf256.js";
 
 /** Pedaço da dona para o guardião. */
 export const SHARE_TYPE = "vox-guardiao-pedaco";
@@ -48,21 +48,25 @@ function writeJson(key, value) {
  * Divide o segredo e monta um corpo (a assinar) por guardião.
  * @param {{ secret: Uint8Array, kind: "semente"|"chave", ownerName?: string, guardians: string[], m: number,
  *   now?: number, random?: (buf: Uint8Array) => Uint8Array }} opts
- * @returns {{ splitId: string, m: number, n: number, bodies: { to: string, x: number, body: object }[] }}
+ * @returns {{ splitId: string, m: number, n: number, guardians: string[], bodies: { to: string, x: number, body: object }[] }}
+ *   `splitId`, `m`, `n` e `guardians` são da escolha da dona, não saem do segredo; o pedaço `i` vai para `guardians[i]`
+ *   com `x = i + 1`.
  */
 export function buildShareBodies({ secret, kind, ownerName = "", guardians, m, now = Date.now(), random }) {
   const unique = [...new Set(guardians)];
   if (unique.length !== guardians.length) throw new RangeError("Guardião repetido.");
-  const split = splitSecret(secret, { m, n: unique.length, ...(random ? { random } : {}) });
-  const bodies = split.shares.map((share, i) => ({
+  const draw = random || ((buf) => crypto.getRandomValues(buf));
+  const splitId = toB64url(draw(new Uint8Array(SPLIT_ID_BYTES)));
+  const { shares } = splitSecret(secret, { m, n: unique.length, splitId, random: draw });
+  const bodies = shares.map((share, i) => ({
     to: unique[i],
-    x: share.x,
+    x: i + 1,
     body: {
-      type: SHARE_TYPE, v: 0, to: unique[i], ownerName: clip(ownerName, 80), splitId: split.splitId,
-      m, n: split.n, x: share.x, kind, y: toB64url(share.y), createdAt: now,
+      type: SHARE_TYPE, v: 0, to: unique[i], ownerName: clip(ownerName, 80), splitId,
+      m, n: unique.length, x: i + 1, kind, y: toB64url(share.y), createdAt: now,
     },
   }));
-  return { splitId: split.splitId, m, n: split.n, bodies };
+  return { splitId, m, n: unique.length, guardians: unique, bodies };
 }
 
 /**
@@ -149,14 +153,14 @@ export function getOwnerSplit(owner) {
 }
 
 /**
- * Grava a divisão nova (substitui a anterior).
+ * Grava a divisão nova (substitui a anterior). Só o que a dona escolheu: quem guarda cada `x`, nunca os pedaços.
  * @param {string} owner
- * @param {{ splitId: string, m: number, n: number, bodies: { to: string, x: number }[] }} split
+ * @param {{ splitId: string, m: number, guardians: string[] }} choice o guardião `i` recebeu `x = i + 1`
  * @param {number} [now]
  */
-export function recordOwnerSplit(owner, split, now = Date.now()) {
-  const guardians = split.bodies.map((b) => ({ routeId: b.to, x: b.x, sentAt: now, heldAt: null }));
-  writeJson(ownerMapKey(owner), { splitId: split.splitId, m: split.m, n: split.n, guardians });
+export function recordOwnerSplit(owner, { splitId, m, guardians: chosen }, now = Date.now()) {
+  const guardians = chosen.map((routeId, i) => ({ routeId, x: i + 1, sentAt: now, heldAt: null }));
+  writeJson(ownerMapKey(owner), { splitId, m, n: chosen.length, guardians });
 }
 
 /**
@@ -203,7 +207,8 @@ export function listHeld() {
 }
 
 /**
- * Guarda um pedaço já verificado. Recusa o da própria conta e passar de 20 donas.
+ * Guarda um pedaço já verificado, sempre cifrado pelo aparelho. Recusa o da própria conta, passar de 20 donas e
+ * aparelho sem chave do aparelho (o pedaço é de outra pessoa e não fica em claro).
  * @param {object} share corpo assinado de `SHARE_TYPE`
  * @param {string} me conta deste aparelho
  * @param {number} [now]
@@ -212,9 +217,10 @@ export function listHeld() {
 export async function storeHeldShare(share, me, now = Date.now()) {
   const held = readHeld();
   if (share.author === me || (!held[share.author] && Object.keys(held).length >= MAX_HELD)) return false;
+  const sealed = await sealJsonStrict(share).catch(() => null);
+  if (!sealed) return false;
   held[share.author] = {
-    owner: share.author, ownerName: clip(share.ownerName, 80), splitId: share.splitId, x: share.x, heldAt: now,
-    sealed: await sealJson(share),
+    owner: share.author, ownerName: clip(share.ownerName, 80), splitId: share.splitId, x: share.x, heldAt: now, sealed,
   };
   writeJson(HELD_STORAGE, held);
   return true;
