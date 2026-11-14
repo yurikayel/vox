@@ -73,6 +73,9 @@ function applyProfileCard(item) {
     name: item.displayName || "",
     avatarUrl: item.avatarUrl || "",
     bio: item.bio || "",
+    pronouns: item.pronouns || "",
+    gender: item.gender || "",
+    orientation: item.orientation || "",
     discoverable: true,
     ...seenStamp(item),
   });
@@ -105,6 +108,9 @@ export function applyDirectoryProfileCard(card) {
     avatarUrl: pickCardField(inAvatar, ex.avatarUrl),
     bio: pickCardField(card.bio, ex.bio),
     handle: pickCardField(card.handle, ex.handle),
+    pronouns: pickCardField(card.pronouns, ex.pronouns),
+    gender: pickCardField(card.gender, ex.gender),
+    orientation: pickCardField(card.orientation, ex.orientation),
     discoverable: card.discoverable !== false,
   });
 }

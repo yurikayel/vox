@@ -12,6 +12,7 @@ import * as localAccount from "./local-account.js";
 import { decryptVaultRecord, encryptVaultV2 } from "./vault-crypto.js";
 import * as ownPosts from "./own-posts.js";
 import * as accountExit from "./account-exit.js";
+import { getLocalIdentityMeta, setLocalIdentityMeta } from "./profile-identity-meta.js";
 
 /** Marca do arquivo de backup do e-mail. */
 export const INBOX_BACKUP_TYPE = "vox-inbox-backup";
@@ -105,6 +106,7 @@ async function collectContent(from, to) {
     displayName: localAccount.getDisplayName(),
     enrichment: localAccount.getProfileEnrichment(),
     pix: localAccount.getPixKey(),
+    identityMeta: getLocalIdentityMeta(me),
   };
   return { profile, contacts: contacts.listContacts(), postEntries, tombstones, dms };
 }
@@ -140,14 +142,15 @@ export function markInboxBackupSent(period, to) {
   accountExit.markAccountExit("email");
 }
 
-function applyProfile(profile) {
+function applyProfile(profile, me) {
   if (profile?.displayName) localAccount.setDisplayName(profile.displayName);
   if (profile?.enrichment) localAccount.setProfileEnrichment(profile.enrichment);
   if (profile?.pix) localAccount.setPixKey(profile.pix);
+  if (profile?.identityMeta && me) setLocalIdentityMeta(me, profile.identityMeta);
 }
 
 async function applyContent(c, me) {
-  applyProfile(c.profile);
+  applyProfile(c.profile, me);
   for (const x of c.contacts || []) contacts.addContact(x.routeId, x.label);
   for (const m of c.dms || []) await cacheNode.saveDmMessage(m);
   // PM-72: só volta o post que confere (autor, assinatura, versão, hash da mídia); sem `postEntries`, nada.
