@@ -23,17 +23,19 @@ import {
 import { sealJson } from "./keystore.js";
 import { markAccountExit } from "./account-exit.js";
 import { getLocalIdentityMeta, setLocalIdentityMeta } from "./profile-identity-meta.js";
+import * as identitySeed from "./identity-seed.js";
 
 export { KIND_WRAPPED, peekBackupKind } from "./account-backup-wrap.js";
 
 async function buildAccountBackup(passphrase) {
-  const { acc, privateJwk, dmKeypair } = await openAccountKeys(passphrase);
+  const { acc, privateJwk, dmKeypair, seed } = await openAccountKeys(passphrase);
   return {
     voxVersion: 1,
     kind: KIND_PLAIN,
     routeId: acc.routeId,
     publicJwk: acc.publicJwk,
     privateJwk,
+    ...(seed ? { seed } : {}),
     dmKeypair,
     displayName: getDisplayName(),
     pixKey: getPixKey(),
@@ -119,6 +121,7 @@ async function persistAccountBackup(parsed) {
     createdAt: parsed.createdAt || Date.now(),
     importedAt: Date.now(),
   });
+  if (typeof parsed.seed === "string") await identitySeed.restoreAccountFromSeedB64(parsed.seed, parsed.routeId);
   if (parsed.dmKeypair) await cryptoDm.setDmKeypair(parsed.dmKeypair);
   if (parsed.displayName) setDisplayName(parsed.displayName);
   if (parsed.pixKey) setPixKey(parsed.pixKey);

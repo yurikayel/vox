@@ -16,32 +16,42 @@ function scrubSyncHash() {
   }
 }
 
+/**
+ * Monta o formulário da rota `#/sync` com e-mail opcional e Senha Soberana.
+ * @param {{ legacyPassphrase?: boolean, hasBundle?: boolean }} [opts]
+ * @returns {string} HTML da tela de sincronização.
+ */
 export function renderSyncFormHtml({ legacyPassphrase = false, hasBundle = true } = {}) {
   const legacy = legacyPassphrase
     ? `<p class="compose-step-lead" role="alert">⚠️ Este link é de uma versão antiga e levava a sua senha junto. Depois de entrar, crie uma Senha Soberana nova e não reaproveite esta.</p>`
     : "";
   const lead = hasBundle
     ? "Digite a Senha Soberana que você criou no outro aparelho."
-    : "Digite a Senha Soberana para buscar o seu cofre.";
+    : "Digite o e-mail (se usou) e a Senha Soberana para buscar o seu cofre.";
   return `
     <section class="card guided-card">
       <h2>Entrar com o cofre</h2>
       ${legacy}
       <p class="compose-step-lead">${lead} Ela não vai no link: quem tiver só o link não abre a sua conta.</p>
       <form id="form-sync-vault">
+        <input type="email" id="sync-email" class="form-control agora-inscription" autocomplete="username" placeholder="E-mail da conta (opcional)" aria-label="E-mail da conta" />
         <input type="password" id="sync-pass" class="form-control agora-inscription" required autocomplete="current-password" placeholder="Senha Soberana" aria-label="Senha Soberana" />
         <button type="submit" class="btn btn-primary" id="btn-sync-vault">Entrar</button>
       </form>
     </section>`;
 }
 
-async function restoreWith(pass, bundle) {
+async function restoreWith(pass, bundle, email = "") {
   const { restoreFromPassphraseVault, decodeVaultBundleFromUrl } = await import("../oauth-vault.js");
   const directRecord = bundle ? decodeVaultBundleFromUrl(bundle) : null;
-  return restoreFromPassphraseVault(pass, null, directRecord);
+  return restoreFromPassphraseVault(pass, null, directRecord, email);
 }
 
-/** Rota `#/sync?b=<cofre>`. O parâmetro `p` de links antigos é ignorado e só gera o aviso. */
+/**
+ * Rota `#/sync?b=<cofre>`. O parâmetro `p` de links antigos é ignorado e só gera o aviso.
+ * @param {{ bundle?: string, legacyPassphrase?: boolean }} [opts]
+ * @returns {Promise<void>}
+ */
 export async function showSyncScreen({ bundle = "", legacyPassphrase = false } = {}) {
   scrubSyncHash();
   const main = render.renderShell(makeShellProps(await getActiveUser(), "profile", "Entrar com o cofre"));
@@ -51,7 +61,8 @@ export async function showSyncScreen({ bundle = "", legacyPassphrase = false } =
     const btn = main.querySelector("#btn-sync-vault");
     if (btn) btn.disabled = true;
     try {
-      const res = await restoreWith(main.querySelector("#sync-pass")?.value || "", bundle);
+      const email = main.querySelector("#sync-email")?.value || "";
+      const res = await restoreWith(main.querySelector("#sync-pass")?.value || "", bundle, email);
       if (!res.ok) throw new Error(res.reason);
       share.showToast(`Conta sincronizada. Bem-vindo(a), ${res.displayName || "Cidadão"}!`);
       window.location.hash = "#/";

@@ -202,29 +202,37 @@ async function openDmKeypair(dmAtRest) {
 /**
  * Chaves privadas abertas, só para backup. Conta travada (PM-93 etapa 2): abre a cópia cifrada pela Senha
  * Soberana, e sem a senha certa lança `KeyLockedError`.
+ * @param {string} [passphrase]
+ * @returns {Promise<{ acc: object, privateJwk: JsonWebKey, dmKeypair: object, seed: string|null }>}
  */
 export async function openAccountKeys(passphrase = "") {
   const acc = await ensureLocalAccount();
   const dmAtRest = await cryptoDm.getDmKeypairAtRest();
   const locked = isLocked(acc.privateJwk) || isLocked(dmAtRest?.privateJwk);
   const copy = locked ? await keyLock.openLockedCopy(acc.routeId, passphrase) : null;
+  const seed = copy ? (copy.seed || null) : await identitySeed.seedForLock(acc.routeId);
   return {
     acc,
     privateJwk: copy ? copy.privateJwk : await openSealed(acc.privateJwk),
     dmKeypair: copy ? copy.dmKeypair : await openDmKeypair(dmAtRest),
+    seed,
   };
 }
 
 /**
  * PM-93 etapa 2: depois de um backup com a Senha Soberana, assinatura e DM passam a usar chaves não exportáveis
  * e a única cópia exportável é a cifrada pela senha. Devolve se a conta ficou (ou já estava) travada.
+ * @param {string} passphrase
+ * @param {string} [prevPassphrase] Senha anterior, quando a Senha Soberana está sendo trocada.
+ * @returns {Promise<boolean>}
  */
-export async function lockActiveAccount(passphrase) {
+export async function lockActiveAccount(passphrase, prevPassphrase = "") {
   const current = await ensureLocalAccount();
-  if (isLocked(current.privateJwk)) return true;
-  const { acc, privateJwk, dmKeypair } = await openAccountKeys(passphrase);
-  const seed = await identitySeed.seedForLock(acc.routeId);
-  const refs = await keyLock.lockKeys({ routeId: acc.routeId, publicJwk: acc.publicJwk, privateJwk, dmKeypair, seed }, passphrase);
+  const changingPass = Boolean(prevPassphrase && prevPassphrase !== passphrase);
+  if (isLocked(current.privateJwk) && !changingPass) return true;
+  const { acc, privateJwk, dmKeypair, seed } = await openAccountKeys(prevPassphrase || passphrase);
+  const finalSeed = seed || (await identitySeed.seedForLock(acc.routeId));
+  const refs = await keyLock.lockKeys({ routeId: acc.routeId, publicJwk: acc.publicJwk, privateJwk, dmKeypair, seed: finalSeed }, passphrase);
   if (!refs || cachedAccount?.routeId !== acc.routeId) return false;
   storeActiveAccount({ ...cachedAccount, privateJwk: refs.privateJwk });
   identitySeed.markSeedLocked(acc.routeId);
@@ -233,23 +241,34 @@ export async function lockActiveAccount(passphrase) {
   return true;
 }
 
-/** Tenta travar depois de um backup com senha; falha deixa a conta como estava (cifrada pelo aparelho). */
-export async function lockAfterPasswordBackup(passphrase) {
+/**
+ * Tenta travar depois de um backup com senha; falha deixa a conta como estava (cifrada pelo aparelho).
+ * @param {string} passphrase
+ * @param {string} [prevPassphrase]
+ * @returns {Promise<boolean>}
+ */
+export async function lockAfterPasswordBackup(passphrase, prevPassphrase = "") {
   try {
-    return await lockActiveAccount(passphrase);
+    return await lockActiveAccount(passphrase, prevPassphrase);
   } catch {
     return false;
   }
 }
 
+/**
+ * Exporta o pacote da conta local para cofre ou arquivo, preservando a semente quando existir.
+ * @param {string} [passphrase]
+ * @returns {Promise<object>}
+ */
 export async function exportLocalAccountBundle(passphrase = "") {
-  const { acc, privateJwk } = await openAccountKeys(passphrase);
+  const { acc, privateJwk, seed } = await openAccountKeys(passphrase);
   return {
     type: "vox-local-account-bundle",
     schemaVersion: 1,
     routeId: acc.routeId,
     publicJwk: acc.publicJwk,
     privateJwk,
+    ...(seed ? { seed } : {}),
     displayName: getDisplayName(),
     enrichment: getProfileEnrichment(),
     pix: getPixKey(),
@@ -257,18 +276,34 @@ export async function exportLocalAccountBundle(passphrase = "") {
   };
 }
 
+async function adoptImportedIdentity(bundle) {
+  if (typeof bundle?.seed === "string") {
+    const seeded = await identitySeed.restoreAccountFromSeedB64(bundle.seed, bundle.routeId);
+    return seeded ? { routeId: seeded.routeId, publicJwk: seeded.publicJwk, privateJwk: seeded.privateJwk, dmKeypair: seeded.dmKeypair } : null;
+  }
+  if (!bundle?.routeId || !bundle?.publicJwk || !bundle?.privateJwk) return null;
+  return { routeId: bundle.routeId, publicJwk: bundle.publicJwk, privateJwk: bundle.privateJwk, dmKeypair: null };
+}
+
+/**
+ * Importa um pacote de conta (com ou sem semente) para este aparelho.
+ * @param {object} bundle
+ * @returns {Promise<boolean>}
+ */
 export async function importLocalAccountBundle(bundle) {
-  if (!bundle?.routeId || !bundle?.publicJwk || !bundle?.privateJwk) return false;
+  const identity = await adoptImportedIdentity(bundle);
+  if (!identity) return false;
   storeActiveAccount({
-    routeId: bundle.routeId,
-    publicJwk: bundle.publicJwk,
-    privateJwk: await sealJson(bundle.privateJwk),
+    routeId: identity.routeId,
+    publicJwk: identity.publicJwk,
+    privateJwk: await sealJson(identity.privateJwk),
     createdAt: bundle.createdAt || Date.now(),
   });
   if (bundle.displayName) setDisplayName(bundle.displayName);
   if (bundle.enrichment) localStorage.setItem(ENRICHMENT_STORAGE, JSON.stringify(bundle.enrichment));
   if (bundle.pix) localStorage.setItem(PIX_STORAGE, JSON.stringify(bundle.pix));
-  await cryptoDm.ensureDmKeys();
+  if (identity.dmKeypair) await cryptoDm.setDmKeypair(identity.dmKeypair);
+  else await cryptoDm.ensureDmKeys();
   return true;
 }
 
