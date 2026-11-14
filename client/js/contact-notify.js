@@ -106,6 +106,17 @@ export function listIncomingContactNotices(storage = globalThis.localStorage) {
 }
 
 /**
+ * Se esta pessoa já avisou (assinado) que adicionou você aos contatos, mesmo que o aviso tenha sido dispensado.
+ * Metade do laço mútuo que os guardiões pedem (spec dos guardiões §12.2).
+ * @param {string} routeId Rota da pessoa.
+ * @param {Storage} [storage=globalThis.localStorage] Armazenamento.
+ * @returns {boolean}
+ */
+export function hasAddedYou(routeId, storage = globalThis.localStorage) {
+  return Boolean(routeId) && readStoredList(storage).some((item) => item?.routeId === routeId);
+}
+
+/**
  * Registra um aviso verificado de quem adicionou você; ignora cópia repetida ou mais antiga.
  *
  * @param {object} signed Payload assinado já verificado.

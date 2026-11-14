@@ -133,8 +133,17 @@ export function newSeed() {
  * @returns {Promise<string[]>}
  */
 export async function phraseFromPrivateJwk(privateJwk) {
+  return entropyToWords(privateKeyBytes(privateJwk));
+}
+
+/**
+ * Os 32 bytes da chave privada de assinatura (o segredo de uma conta de antes da semente).
+ * @param {{ d: string }} privateJwk
+ * @returns {Uint8Array}
+ */
+export function privateKeyBytes(privateJwk) {
   if (!privateJwk?.d) throw new Error("Sem a chave privada aberta não há frase.");
-  return entropyToWords(fromB64url(privateJwk.d));
+  return fromB64url(privateJwk.d);
 }
 
 /**

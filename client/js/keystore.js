@@ -122,6 +122,20 @@ export async function sealJson(value) {
   return { sealed: SEALED_TAG, iv: toB64(iv), ct: toB64(ct) };
 }
 
+/**
+ * Como `sealJson`, mas nunca devolve em claro: sem chave do aparelho, lança `KeystoreUnavailableError`.
+ * Para o que é de outra pessoa (pedaço de guardião), que não pode ficar em claro nem como último recurso.
+ * @param {unknown} value
+ * @returns {Promise<{ sealed: string, iv: string, ct: string }>}
+ */
+export async function sealJsonStrict(value) {
+  const key = await getDeviceKey();
+  if (!key) throw new KeystoreUnavailableError();
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, new TextEncoder().encode(JSON.stringify(value)));
+  return { sealed: SEALED_TAG, iv: toB64(iv), ct: toB64(ct) };
+}
+
 /** Abre um valor cifrado pelo aparelho; valor em claro passa direto; chave travada não abre aqui. */
 export async function openSealed(value) {
   if (isLocked(value)) throw new KeyLockedError();
