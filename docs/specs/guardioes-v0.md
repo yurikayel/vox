@@ -85,7 +85,7 @@ Regras de recebimento (em `dm-wire.js`, antes de `saveDmMessage`, como já é fe
 - Pedaços de divisões diferentes não se juntam (§3), então um guardião antigo que ignore o `revoga` não ajuda ninguém a juntar com os novos.
 - Remover todos os guardiões manda `revoga` e tira a saída `guardioes` do registro.
 
-## 9. Ameaças (entram no THREAT-MODEL como T25 junto com o código)
+## 9. Ameaças (no THREAT-MODEL como [T25](../THREAT-MODEL.md#3-ameaças--mitigações-o-que-existe-hoje), escrito antes da 3c)
 
 | Ameaça | O que segura | O que sobra |
 |---|---|---|
