@@ -57,7 +57,8 @@ Regras de recebimento (em `dm-wire.js`, antes de `saveDmMessage`, como já é fe
 
 ## 6. Guardar (aparelho do guardião)
 
-- O pedaço fica em `vox-guardian-shares-v1` (mapa `owner → registro`), **cifrado pela chave do aparelho** (`sealJson`), como as chaves. Entra na limpeza local.
+- O pedaço fica em `vox-guardian-shares-v1` (mapa `owner → registro`), **cifrado pela chave do aparelho** (`sealJsonStrict`), como as chaves. Diferente das chaves da própria conta, **não há volta em claro**: aparelho sem chave do aparelho (sem IndexedDB) recusa o pedaço, e a dona vê esse guardião sem recibo. Entra na limpeza local.
+- O mapa da dona (`vox-guardians-v1:<routeId>`) guarda só a escolha dela: `splitId`, M, N e quem recebeu cada `x`. Nunca os pedaços.
 - **Caixa preta** (ADR-030, ADR-032 §3.4.3): não há tela para ver, exportar nem usar o pedaço. O app mostra só "Você guarda a volta de Ana" e o botão "Parar de guardar" (que manda um aviso para a dona e apaga o pedaço). No navegador, caixa preta é ausência de manuseio, não segredo contra quem tem o aparelho destravado; o texto diz isso.
 - **Limites:** até 20 donas por guardião; um pedaço por dona (uma divisão nova substitui a anterior). Ninguém guarda pedaço da própria conta.
 - **Recibo** automático ao guardar, e de novo quando a dona pergunta (v1, ver §10).

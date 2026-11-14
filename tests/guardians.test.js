@@ -10,6 +10,7 @@ import * as guardians from "../client/js/guardians.js";
 import * as flow from "../client/js/app/guardians-flow.js";
 import * as localAccount from "../client/js/local-account.js";
 import * as keyLock from "../client/js/key-lock.js";
+import * as keystore from "../client/js/keystore.js";
 import { getAccountExits } from "../client/js/account-exit.js";
 import { openRecoverySecret } from "../client/js/account-phrase.js";
 import { combineShares } from "../client/js/shamir-gf256.js";
@@ -191,6 +192,30 @@ test("guardiões - limites da guarda: nunca a própria conta, no máximo 20 dona
   assert.equal(guardians.listHeld().length, guardians.MAX_HELD);
   await localAccount.wipeLocalAccount();
   assert.equal(localStorage.getItem(guardians.HELD_STORAGE), null);
+});
+
+test("guardiões - sem chave do aparelho o pedaço é recusado, nunca fica em claro; o mapa da dona não leva pedaço", async () => {
+  await localAccount.wipeLocalAccount();
+  localStorage.clear();
+  const share = { type: guardians.SHARE_TYPE, author: "vx_dona", ownerName: "Dona", splitId: "s_1", x: 1, y: "SEGREDO" };
+  const saved = globalThis.indexedDB;
+  globalThis.indexedDB = undefined;
+  keystore.__resetKeystoreForTests();
+  try {
+    assert.equal(await guardians.storeHeldShare(share, "vx_eu"), false);
+    assert.equal(localStorage.getItem(guardians.HELD_STORAGE), null);
+  } finally {
+    globalThis.indexedDB = saved;
+    keystore.__resetKeystoreForTests();
+  }
+  assert.equal(await guardians.storeHeldShare(share, "vx_eu"), true);
+  assert.equal(localStorage.getItem(guardians.HELD_STORAGE).includes("SEGREDO"), false, "guardado cifrado");
+  const split = guardians.buildShareBodies({ secret: new Uint8Array(32).fill(7), kind: "chave", guardians: ["vx_a", "vx_b", "vx_c"], m: 2 });
+  assert.deepEqual(split.bodies.map((b) => [b.to, b.x, b.body.splitId]), [["vx_a", 1, split.splitId], ["vx_b", 2, split.splitId], ["vx_c", 3, split.splitId]]);
+  guardians.recordOwnerSplit("vx_dona", split);
+  const map = guardians.getOwnerSplit("vx_dona");
+  assert.deepEqual([map.splitId, map.m, map.n, map.guardians.map((g) => [g.routeId, g.x])], [split.splitId, 2, 3, [["vx_a", 1], ["vx_b", 2], ["vx_c", 3]]]);
+  assert.equal(JSON.stringify(map).includes(split.bodies[0].body.y), false, "mapa sem pedaço");
 });
 
 test("tela dos guardiões - rota, candidatos, efeito de M e N, estado e lista de quem guarda", () => {

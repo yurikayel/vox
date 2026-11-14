@@ -73,13 +73,14 @@ function assertParams(m, n) {
 /**
  * Divide um segredo em N pedaços; quaisquer M juntos o devolvem, M−1 não dizem nada sobre ele.
  * @param {Uint8Array} secret
- * @param {{ m: number, n: number, random?: (buf: Uint8Array) => Uint8Array }} opts `random`: só para testes
+ * @param {{ m: number, n: number, splitId?: string, random?: (buf: Uint8Array) => Uint8Array }} opts `splitId`: quem chama
+ *   pode dar o identificador (não é segredo); `random`: só para testes
  * @returns {{ splitId: string, m: number, n: number, shares: { splitId: string, x: number, y: Uint8Array }[] }}
  */
-export function splitSecret(secret, { m, n, random = (buf) => crypto.getRandomValues(buf) }) {
+export function splitSecret(secret, { m, n, splitId: givenId = "", random = (buf) => crypto.getRandomValues(buf) }) {
   assertParams(m, n);
   if (!(secret instanceof Uint8Array) || secret.length === 0) throw new TypeError("O segredo são bytes.");
-  const splitId = toB64url(random(new Uint8Array(SPLIT_ID_BYTES)));
+  const splitId = givenId || toB64url(random(new Uint8Array(SPLIT_ID_BYTES)));
   const ys = Array.from({ length: n }, () => new Uint8Array(secret.length));
   const coeffs = new Uint8Array(m);
   for (let k = 0; k < secret.length; k++) {
