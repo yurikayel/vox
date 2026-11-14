@@ -1,6 +1,6 @@
 # Decisões do Vox — registro único
 
-> **Status:** canônico (registro) · **Owner:** mantenedor · **Revisado:** 2026-11-13
+> **Status:** canônico (registro) · **Owner:** mantenedor · **Revisado:** 2026-11-14
 > Uma linha por decisão em vigor, com a fonte que manda. **Institucional** (I) é o que o projeto promete às pessoas e como ele se governa. **Arquitetura** (A) é como o software cumpre isso. O detalhe mora no ADR ou no documento citado. Aqui fica só a decisão e o estado real.
 
 **Como usar.** Antes de propor uma mudança, procure aqui se ela contraria uma decisão. Se contrariar, escreva um ADR novo que **substitua** o antigo, nunca uma exceção silenciosa. Toda decisão nova entra nesta tabela no mesmo PR do ADR.
@@ -51,7 +51,7 @@ Legenda de estado:
 | A-17 | **Mídia em duas camadas.** Quem **segue** o autor recebe a Full (720p, q80, Opus 96 kbps) sem fazer nada, e a guarda e serve a outros seguidores; quem não segue recebe só a Half (360p, q60, 48 kbps). Nas configurações, dá para preferir a Half. Vídeo a 30 fps, sem teto de 100 KB por item, Arweave só como cartório. A camada só economiza banda e espaço: não é controle de acesso. | aceito (não implementado; medição pendente) | [ADR-029](./adr/029-midia-em-duas-camadas-360p-720p.md) |
 | A-18 | **Trazer do Bluesky, pela pessoa.** Ela traz os próprios posts de raiz do Bluesky (conta vinculada por login) por uma fila com confirmação, assinados pela chave dela e com o original dentro da assinatura. Destino padrão no perfil; comunidade só por escolha. Apagar na origem segue a preferência nas configurações. A preservação vem das cópias de quem segue; Arweave só cartório. | aceito (não implementado) | [ADR-030](./adr/030-trazer-do-bluesky-pesos.md) |
 | A-19 | **Passkey abre a mesma conta.** Passkey com PRF vira um segundo envelope do cofre, tudo no aparelho e sem servidor de login. A Senha Soberana continua sendo a chave universal (link e QR, troca de ecossistema). Não prova pessoa única; presa ao domínio. | aceito (não implementado; spike do PRF antes de liberar) | [ADR-031](./adr/031-passkey-abre-a-mesma-conta.md) |
-| A-20 | **Login perene: a conta nasce com saída.** Google e Meta saem da entrada (só importam nome e foto em Perfil). A conta fica provisória até ter uma saída soberana: frase de recuperação ou cartão no papel, guardiões (Shamir pela malha) ou Senha Soberana. Passkey e segundo aparelho são atalhos, não saída. | parcial (passo 1: entrada sem Google/Meta e faixa de conta provisória; frase e guardiões a fazer) | [ADR-032](./adr/032-login-perene-a-conta-nasce-com-saida.md) |
+| A-20 | **Login perene: a conta nasce com saída.** Google e Meta saem da entrada (só importam nome e foto em Perfil). A conta fica provisória até ter uma saída soberana: frase de recuperação ou cartão no papel, guardiões (Shamir pela malha) ou Senha Soberana. Passkey e segundo aparelho são atalhos, não saída. **Emenda 1 (14/11):** a entrada pede nome, e-mail e senha; o cofre é endereçado por e-mail e senha (o e-mail não sai do aparelho) e o kit de volta vai por `mailto:` para a própria pessoa, com a frase opcional e desmarcada. | parcial (passo 1: entrada sem Google/Meta e faixa de conta provisória; frase e guardiões a fazer; emenda 1 não implementada) | [ADR-032](./adr/032-login-perene-a-conta-nasce-com-saida.md) |
 
 ## 3. Em aberto — decisões que ainda precisam ser tomadas
 
