@@ -1,6 +1,6 @@
 # ADR-032: Login perene — a conta nasce com saída, sem depender de empresa nem de servidor
 
-**Status:** accepted (2026-11-13, pelo mantenedor; passo 1 — §3.1 e §3.5 — implementado no SW v7.113) · **Revisado:** 2026-11-13 · **Relacionados:** [ADR-025](./025-cofre-v2-so-a-senha-abre.md), [ADR-031](./031-passkey-abre-a-mesma-conta.md), [ADR-026](./026-chaves-em-repouso-trava-depois-do-backup.md), [ADR-022](./022-memoria-central-por-consentimento.md), [ADR-030](./030-trazer-do-bluesky-pesos.md), [ADR-002](./002-oauth-profile-enrich-client.md), [THREAT-MODEL T20](../THREAT-MODEL.md), [IDENTITY](../IDENTITY.md), [ROADMAP](../ROADMAP.md) (REV-14, PM-13, PM-101)
+**Status:** accepted (2026-11-13, pelo mantenedor; passo 1 — §3.1 e §3.5 — implementado no SW v7.113; passo 2, núcleo da frase — §3.3 e §5.1–5.2 — no SW v7.115) · **Revisado:** 2026-11-13 · **Relacionados:** [ADR-025](./025-cofre-v2-so-a-senha-abre.md), [ADR-031](./031-passkey-abre-a-mesma-conta.md), [ADR-026](./026-chaves-em-repouso-trava-depois-do-backup.md), [ADR-022](./022-memoria-central-por-consentimento.md), [ADR-030](./030-trazer-do-bluesky-pesos.md), [ADR-002](./002-oauth-profile-enrich-client.md), [THREAT-MODEL T20](../THREAT-MODEL.md), [IDENTITY](../IDENTITY.md), [ROADMAP](../ROADMAP.md) (REV-14, PM-13, PM-101)
 
 ## 1. Contexto
 
@@ -110,8 +110,9 @@ Isso muda a forma assinada e o `routeId`, então pede um ADR e uma RFC próprios
 
 ## 5. Em aberto
 
-1. **Lista de palavras:** BIP-39 em português (2048 palavras, sem acentos ambíguos?) ou uma lista própria mais fácil de ditar. Medir com pessoas do piloto.
-2. **Derivação P-256 a partir da semente:** HKDF para um escalar com redução mod n, ou repetir a derivação até cair em [1, n-1]. Escolher, documentar e testar com vetores fixos.
+1. **Lista de palavras — decidido (2026-11-13, passo 2):** a lista oficial **BIP-39 em português** (licença MIT, `client/js/data/bip39-pt.js`, SHA-256 do arquivo conferido nos testes). Por quê: 2048 palavras só em letras ASCII (sem acento para errar), no máximo 8 letras, e as **4 primeiras letras nunca se repetem** — dá para digitar só o começo de cada palavra. Codificação padrão da BIP-39 (bits + verificador SHA-256): 16 bytes viram 12 palavras, 32 bytes viram 24. Uma lista própria fica para depois, se o piloto mostrar dificuldade para ditar.
+2. **Derivação P-256 — decidido (2026-11-13, passo 2):** `HKDF-SHA256(semente, salt "vox-semente-v1", info "vox-assinatura-p256" | "vox-dm-p256")` com 384 bits de saída, reduzidos como no **FIPS 186-5 A.2.1** (`d = (c mod (n−1)) + 1`): sempre em [1, n−1], sem repetição e sem viés mensurável. O ponto público é calculado em JS (`client/js/p256.js`), porque o WebCrypto só importa a chave privada junto com `x`/`y`; a chave importada é exportada de novo para ficar na forma canônica. Só a codificação em palavras segue a BIP-39; a derivação é do Vox (não é carteira BIP-32). Vetores fixos em `tests/recovery-phrase.test.js`.
+   - **Onde a semente fica:** cifrada pela chave do aparelho (`client/js/identity-seed.js`). Quando a conta trava (ADR-026), a semente entra na cópia cifrada pela Senha Soberana e no aparelho fica só a marca de travada — continua valendo que a única cópia exportável é a da senha. Restaurar por cofre ou `.voxid` não traz a semente; essa conta usa a frase de 24 palavras, que dá o mesmo `routeId`.
 3. **Ordem de entrega:** proposta abaixo.
    1. §3.1 e §3.5: tirar Google e Meta da entrada e criar a faixa de conta provisória. É pequeno.
    2. §3.3: frase e cartão (REV-14 parte 2 reorientado).

@@ -5,6 +5,7 @@
  */
 
 import * as cryptoDm from "./crypto-dm.js";
+import * as identitySeed from "./identity-seed.js";
 import { isLocked, openSealed, sealJson } from "./keystore.js";
 import * as keyLock from "./key-lock.js";
 import { canonicalString, withSigv } from "./sig-format.js";
@@ -32,6 +33,7 @@ const LOCAL_WIPE_KEYS = [
   ENRICHMENT_STORAGE,
   DISCOVERABLE_STORAGE,
   VAULT_STORAGE,
+  identitySeed.SEED_STORAGE,
 ];
 
 let cachedAccount = null;
@@ -56,22 +58,11 @@ async function loadStoredLocalAccount() {
   return null;
 }
 
+/** ADR-032 §3.3: conta nova nasce de uma semente (assinatura e DM), que vira a frase de 12 palavras. */
 async function generateNewAccountKeys() {
-  const pair = await crypto.subtle.generateKey(
-    { name: "ECDSA", namedCurve: "P-256" },
-    true,
-    ["sign", "verify"]
-  );
-  const publicJwk = await crypto.subtle.exportKey("jwk", pair.publicKey);
-  const privateJwk = await crypto.subtle.exportKey("jwk", pair.privateKey);
-  const routeId = await computeRouteId(publicJwk);
-  await cryptoDm.ensureDmKeys();
-  return {
-    routeId,
-    publicJwk,
-    privateJwk: await sealJson(privateJwk),
-    createdAt: Date.now(),
-  };
+  const born = await identitySeed.createSeededAccount();
+  await cryptoDm.setDmKeypair(born.dmKeypair);
+  return { routeId: born.routeId, publicJwk: born.publicJwk, privateJwk: await sealJson(born.privateJwk), createdAt: Date.now() };
 }
 
 function resolveVaultDisplayName(enrich, existing) {
@@ -232,9 +223,11 @@ export async function lockActiveAccount(passphrase) {
   const current = await ensureLocalAccount();
   if (isLocked(current.privateJwk)) return true;
   const { acc, privateJwk, dmKeypair } = await openAccountKeys(passphrase);
-  const refs = await keyLock.lockKeys({ routeId: acc.routeId, publicJwk: acc.publicJwk, privateJwk, dmKeypair }, passphrase);
+  const seed = await identitySeed.seedForLock(acc.routeId);
+  const refs = await keyLock.lockKeys({ routeId: acc.routeId, publicJwk: acc.publicJwk, privateJwk, dmKeypair, seed }, passphrase);
   if (!refs || cachedAccount?.routeId !== acc.routeId) return false;
   storeActiveAccount({ ...cachedAccount, privateJwk: refs.privateJwk });
+  identitySeed.markSeedLocked(acc.routeId);
   if (refs.dmPrivateJwk) await cryptoDm.setDmKeypair({ publicJwk: dmKeypair.publicJwk, privateJwk: refs.dmPrivateJwk });
   await syncActiveAccountToVault();
   return true;
@@ -578,17 +571,7 @@ export async function switchActiveAccount(targetRouteId) {
 
 export async function createAdditionalAccount({ displayName = "" } = {}) {
   await syncActiveAccountToVault();
-  const pair = await crypto.subtle.generateKey(
-    { name: "ECDSA", namedCurve: "P-256" },
-    true,
-    ["sign", "verify"]
-  );
-  const publicJwk = await crypto.subtle.exportKey("jwk", pair.publicKey);
-  const privateJwk = await crypto.subtle.exportKey("jwk", pair.privateKey);
-  const routeId = await computeRouteId(publicJwk);
-
-  storeActiveAccount({ routeId, publicJwk, privateJwk: await sealJson(privateJwk), createdAt: Date.now() });
-  await cryptoDm.setDmKeypair(await cryptoDm.generateDmKeypair());
+  storeActiveAccount(await generateNewAccountKeys());
   setDisplayName(displayName);
   localStorage.removeItem(ENRICHMENT_STORAGE);
   localStorage.removeItem(PIX_STORAGE);
@@ -605,5 +588,6 @@ export function removeVaultAccount(targetRouteId) {
   delete vault[targetRouteId];
   writeVaultMap(vault);
   void keyLock.forgetLockedAccount(targetRouteId).catch(() => {});
+  identitySeed.forgetSeed(targetRouteId);
   return true;
 }
