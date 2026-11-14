@@ -1,6 +1,6 @@
 # Guardiões (v0): a comunidade devolve a conta
 
-> **Status:** rascunho para revisão (spec antes do código, [ADR-032](../adr/032-login-perene-a-conta-nasce-com-saida.md) passo 3) · **Owner:** mantenedor · **Revisado:** 2026-11-13
+> **Status:** aceita (2026-11-14, pelo mantenedor; as 3 decisões do §12 ficam para antes da parte 3b; spec antes do código, [ADR-032](../adr/032-login-perene-a-conta-nasce-com-saida.md) passo 3) · **Owner:** mantenedor · **Revisado:** 2026-11-13
 > Relacionados: [ADR-032 §3.4](../adr/032-login-perene-a-conta-nasce-com-saida.md#34-guardiões-recuperação-pela-comunidade) (a decisão), [ADR-026](../adr/026-chaves-em-repouso-trava-depois-do-backup.md) (conta travada), [mochila de DMs](./mochila-dm-v0.md) (entrega quando a pessoa está offline), [THREAT-MODEL](../THREAT-MODEL.md) (T25), `client/js/recovery-phrase.js`, `client/js/identity-seed.js`, `client/js/crypto-dm.js`, `client/js/app/dm-wire.js`.
 
 ## 1. Problema
