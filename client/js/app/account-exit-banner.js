@@ -10,7 +10,9 @@ import * as localAccount from "../local-account.js";
 /** Id da faixa, para não montar duas vezes. */
 export const EXIT_BANNER_ID = "accountExitBanner";
 /** Para onde "Criar minha saída" leva. */
-export const EXIT_ROUTE = "#/backup";
+export const EXIT_ROUTE = "#/frase";
+/** Telas que já criam uma saída: nelas a faixa só repetiria a tela. */
+const EXIT_SCREENS = [EXIT_ROUTE, "#/backup"];
 
 /**
  * HTML da faixa.
@@ -50,8 +52,8 @@ function mountBanner(doc, state) {
  */
 export async function refreshAccountExitBanner({ doc = globalThis.document, hasAccount }) {
   const existing = doc?.getElementById(EXIT_BANNER_ID);
-  // Na própria tela de backup a faixa só repete o que a tela já faz.
-  const onExitScreen = String(globalThis.location?.hash || "").startsWith(EXIT_ROUTE);
+  const hash = String(globalThis.location?.hash || "");
+  const onExitScreen = EXIT_SCREENS.some((route) => hash.startsWith(route));
   if (!doc?.body || !hasAccount() || onExitScreen) {
     existing?.remove();
     return false;
