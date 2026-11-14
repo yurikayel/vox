@@ -27,7 +27,7 @@ O que **não** muda: a conta continua sendo a mesma chave. Os guardiões devolve
 - **Juntar:** interpolação de Lagrange em `z = 0` com exatamente M pedaços de **x distintos** e **mesmo `splitId`**. Pedaços de divisões diferentes são recusados antes de calcular (misturar dá lixo, não erro).
 - **Conferir sem guardar nada a mais:** o segredo juntado vira identidade (`identityFromPhrase` / `identityFromSeed`), e o `routeId` dela **tem que ser** o da dona. Não há hash do segredo dentro do pedaço: o próprio `routeId` é a conferência.
 - **Limites:** `2 ≤ M ≤ N ≤ 7`; padrão **3 de 5**; menor permitido **2 de 3**. M = 1 seria entregar a conta a qualquer um dos guardiões e é recusado.
-- **Módulo:** `client/js/shamir-gf256.js`, puro (sem DOM, sem rede), com vetores fixos nos testes.
+- **Módulo:** `client/js/shamir-gf256.js`, puro (sem DOM, sem rede), com vetores fixos nos testes — **implementado na parte 3a** (fora do precache até a 3b ligá-lo).
 
 ## 4. Mensagens
 

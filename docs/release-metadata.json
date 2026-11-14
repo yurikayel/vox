@@ -1,9 +1,9 @@
 {
-  "git_sha": "e6aa916",
-  "branch": "feat/adr032-frase-tela",
+  "git_sha": "5ccf64f",
+  "branch": "feat/adr032-shamir",
   "test_js": 1148,
   "test_python": 111,
   "test_total": 1259,
   "cache_name": "vox-pwa-v7.116-real-network-audio-video-upload",
-  "generated_at": "2026-11-14T00:38:53Z"
+  "generated_at": "2026-11-14T02:03:55Z"
 }
