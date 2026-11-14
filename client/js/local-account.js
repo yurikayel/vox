@@ -6,12 +6,15 @@
 
 import * as cryptoDm from "./crypto-dm.js";
 import * as identitySeed from "./identity-seed.js";
+import { HELD_STORAGE as GUARDIAN_SHARES_STORAGE } from "./guardians.js";
 import { isLocked, openSealed, sealJson } from "./keystore.js";
+import { dropSessionPassphrase, dropStorageKeys } from "./local-wipe.js";
 import * as keyLock from "./key-lock.js";
 import { canonicalString, withSigv } from "./sig-format.js";
 import { bytesToB64Url, computeRouteId, verifyPayload } from "./signed-verify.js";
 
 export { computeRouteId, verifyPayload };
+export { LOCAL_WIPE_NOTICE, confirmLocalWipe } from "./local-wipe.js";
 
 const ACCOUNT_STORAGE = "vox-local-account-v1";
 const DISPLAY_NAME_STORAGE = "vox-display-name";
@@ -20,10 +23,6 @@ const ENRICHMENT_STORAGE = "vox-profile-enrichment-v1";
 const DISCOVERABLE_STORAGE = "vox-discoverable-mesh-v1";
 const DM_KEYPAIR_STORAGE = "vox-dm-keypair";
 const VAULT_STORAGE = "vox-accounts-vault-v1";
-const SESSION_PASSPHRASE_KEYS = ["vox-sovereignty-passphrase", "vox-backup-passphrase"];
-
-export const LOCAL_WIPE_NOTICE =
-  "Apaga chaves JWK DESTE navegador. Posts no permaweb, relay/inbox e arquivo .json/.voxid em disco NÃO são apagados.";
 
 const LOCAL_WIPE_KEYS = [
   ACCOUNT_STORAGE,
@@ -34,6 +33,7 @@ const LOCAL_WIPE_KEYS = [
   DISCOVERABLE_STORAGE,
   VAULT_STORAGE,
   identitySeed.SEED_STORAGE,
+  GUARDIAN_SHARES_STORAGE,
 ];
 
 let cachedAccount = null;
@@ -360,29 +360,10 @@ export function setMeshDiscoverable(on) {
   }
 }
 
-function dropStoredKey(store, key) {
-  try {
-    store.removeItem(key);
-  } catch {}
-}
-
-function dropSessionPassphrase() {
-  try {
-    const ss = globalThis.sessionStorage;
-    if (!ss) return;
-    for (const key of SESSION_PASSPHRASE_KEYS) dropStoredKey(ss, key);
-  } catch {}
-}
-
-export function confirmLocalWipe(ask = globalThis.confirm) {
-  const prompt = typeof ask === "function" ? ask : () => false;
-  return Boolean(prompt(LOCAL_WIPE_NOTICE) && prompt(LOCAL_WIPE_NOTICE));
-}
-
 /** Limpa a conta deste navegador; a promessa termina quando as chaves travadas saem do IndexedDB. */
 export function wipeLocalAccount() {
   cachedAccount = null;
-  for (const key of LOCAL_WIPE_KEYS) dropStoredKey(localStorage, key);
+  dropStorageKeys(localStorage, LOCAL_WIPE_KEYS);
   dropSessionPassphrase();
   return keyLock.forgetAllLockedAccounts().catch(() => {});
 }

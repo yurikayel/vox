@@ -116,6 +116,7 @@ const STATIC_ROUTES = {
   wallet: (parts) => (parts[1] === "guia" ? { name: "wallet-wizard" } : { name: "wallet" }),
   backup: () => ({ name: "backup-wizard" }),
   frase: () => ({ name: "recovery-phrase" }),
+  guardioes: () => ({ name: "guardians" }),
   voxpedia: () => ({ name: "voxpedia" }),
   download: () => ({ name: "download" }),
   downloads: () => ({ name: "download" }),
