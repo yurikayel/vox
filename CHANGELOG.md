@@ -6,6 +6,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Modelo de ameaças: T24 (frase) e T25 (guardiões) (ADR-032, antes da parte 3c)
+- `docs/THREAT-MODEL.md` ganha as duas linhas prometidas no ADR-032: o que segura e o que sobra na frase de recuperação e nos guardiões, incluindo as condições que a parte 3c (pedir de volta) tem que cumprir para entrar. Só documentação; sem SW novo.
+
 ### Guardiões, parte 3b: escolher, dividir, guardar e confirmar (ADR-032 passo 3)
 - **Tela `#/guardioes`** (`app/screens-guardians.js`, `render/guardians.js`): escolhe de 3 a 7 pessoas entre os **laços mútuos** (você segue ou tem nos contatos, e a pessoa avisou que adicionou você), o mínimo que devolve a conta (padrão **3 de 5**, explicado em palavras), pede a Senha Soberana se a conta estiver travada, e mostra quantos confirmaram. Também lista de quem você guarda a volta, com "Parar de guardar". Link "Prefiro guardiões" na tela da frase.
 - **Mensagens assinadas por DM cifrada** (`guardians.js`, `app/guardians-flow.js`, ligado em `app/dm-wire.js`): pedaço, recibo e revogação. O pedaço só é guardado se veio da própria dona, com assinatura válida, e se o guardião a segue; fica cifrado pelo aparelho e nunca em claro (aparelho sem chave do aparelho recusa o pedaço; `sealJsonStrict` em `keystore.js`), sem tela para abrir (no máximo 20 donas, nunca a própria conta, entra na limpeza local).
