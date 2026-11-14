@@ -6,6 +6,12 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Guardiões, parte 3b: escolher, dividir, guardar e confirmar (ADR-032 passo 3)
+- **Tela `#/guardioes`** (`app/screens-guardians.js`, `render/guardians.js`): escolhe de 3 a 7 pessoas entre os **laços mútuos** (você segue ou tem nos contatos, e a pessoa avisou que adicionou você), o mínimo que devolve a conta (padrão **3 de 5**, explicado em palavras), pede a Senha Soberana se a conta estiver travada, e mostra quantos confirmaram. Também lista de quem você guarda a volta, com "Parar de guardar". Link "Prefiro guardiões" na tela da frase.
+- **Mensagens assinadas por DM cifrada** (`guardians.js`, `app/guardians-flow.js`, ligado em `app/dm-wire.js`): pedaço, recibo e revogação. O pedaço só é guardado se veio da própria dona, com assinatura válida, e se o guardião a segue; fica cifrado pelo aparelho e nunca em claro (aparelho sem chave do aparelho recusa o pedaço; `sealJsonStrict` em `keystore.js`), sem tela para abrir (no máximo 20 donas, nunca a própria conta, entra na limpeza local).
+- **A saída "guardiões" vale com o mínimo de recibos** e cai se alguém parar de guardar e o total ficar abaixo dele. Divisão nova revoga a antiga; recibo da divisão antiga não conta mais (`clearAccountExit` em `account-exit.js`).
+- Devolver a conta (pedido com chave temporária) é a parte 3c. Testes: `tests/guardians.test.js` (dona e três guardiões reais no mesmo navegador). SW `v7.117`.
+
 ### Guardiões, parte 3a: Shamir em GF(256) (ADR-032 passo 3)
 - `client/js/shamir-gf256.js`: divide a semente (ou a chave, em conta antiga) em N pedaços, de 2 a 7, e junta M deles de volta (Lagrange em zero, corpo do AES). Recusa pedaços de divisões diferentes, repetidos, de tamanhos diferentes e M menor que 2. Puro: sem tela, sem rede, ainda não ligado a nada. Spec: `docs/specs/guardioes-v0.md` §3. Testes: `tests/shamir-gf256.test.js` (exemplos do FIPS-197, vetor fixo 3 de 5, todos os subconjuntos de 2 de 2 a 7 de 7). Fica em `UNPLUGGED_MODULES` (fora do precache) até a parte 3b ligá-lo; sem SW novo.
 

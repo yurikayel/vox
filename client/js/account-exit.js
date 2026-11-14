@@ -54,6 +54,20 @@ export function markAccountExit(kind, routeId = currentRouteId(), now = Date.now
 }
 
 /**
+ * Tira uma saída que deixou de valer (por exemplo, guardiões abaixo do mínimo depois de uma divisão nova).
+ * @param {string} kind um de `EXIT_KINDS`
+ * @param {string} [routeId] conta (padrão: a ativa)
+ * @returns {boolean} se havia e tirou
+ */
+export function clearAccountExit(kind, routeId = currentRouteId()) {
+  const exits = routeId ? readJson(exitsKey(routeId)) : null;
+  if (!exits || !(kind in exits)) return false;
+  delete exits[kind];
+  writeJson(exitsKey(routeId), exits);
+  return true;
+}
+
+/**
  * Saídas registradas desta conta, com a data de cada uma.
  * @param {string} [routeId]
  * @returns {Record<string, number>}

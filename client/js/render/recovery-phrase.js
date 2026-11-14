@@ -27,7 +27,7 @@ export function renderPhraseIntroHtml({ needsPassphrase }) {
         <button type="submit" class="agora-btn agora-btn--primary" id="btn-phrase-show">Mostrar minha frase</button>
       </form>
       <p id="phrase-error" class="oauth-enrich-error" role="alert" hidden></p>
-      <p class="phrase-alt"><a href="#/backup">Prefiro senha e cofre</a></p>
+      <p class="phrase-alt"><a href="#/guardioes">Prefiro guardiões</a> · <a href="#/backup">Prefiro senha e cofre</a></p>
     </section>`;
 }
 
