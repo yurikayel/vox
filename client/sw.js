@@ -435,6 +435,7 @@ const UNPLUGGED_MODULES = [
   "./js/render/node-health-badge.js",
   "./js/render/settings-guardian.js",
   "./js/seeder-guardian.js",
+  "./js/shamir-gf256.js",
   "./js/testimonials.js",
   "./js/vox-identity.js",
   "./js/webxdc-crdt.js",

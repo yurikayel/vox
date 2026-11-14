@@ -6,6 +6,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Guardiões, parte 3a: Shamir em GF(256) (ADR-032 passo 3)
+- `client/js/shamir-gf256.js`: divide a semente (ou a chave, em conta antiga) em N pedaços, de 2 a 7, e junta M deles de volta (Lagrange em zero, corpo do AES). Recusa pedaços de divisões diferentes, repetidos, de tamanhos diferentes e M menor que 2. Puro: sem tela, sem rede, ainda não ligado a nada. Spec: `docs/specs/guardioes-v0.md` §3. Testes: `tests/shamir-gf256.test.js` (exemplos do FIPS-197, vetor fixo 3 de 5, todos os subconjuntos de 2 de 2 a 7 de 7). Fica em `UNPLUGGED_MODULES` (fora do precache) até a parte 3b ligá-lo; sem SW novo.
+
 ### Spec dos guardiões aceita (ADR-032, passo 3 — antes do código)
 - `docs/specs/guardioes-v0.md`: Shamir em GF(256) sobre a semente (ou a chave, em conta antiga), pedaços assinados pela dona e entregues cifrados por DM, caixa preta no guardião, saída só com M recibos, pedido de volta com chave temporária e conferência por voz ou pessoalmente, troca de guardiões por divisão nova, ameaças (T25) e entrega em 4 partes. Três pontos em aberto para decidir antes do código. Só documentação.
 
