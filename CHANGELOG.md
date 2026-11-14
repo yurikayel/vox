@@ -10,7 +10,11 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 - **Conta nova nasce de uma semente de 128 bits** (`identity-seed.js`, `local-account.js`): assinatura e DM saem da mesma semente por HKDF-SHA256 (`recovery-phrase.js`), e a semente vira **12 palavras** da lista BIP-39 em português (`data/bip39-pt.js`, MIT). Contas antigas têm a frase de **24 palavras** tirada da própria chave (sem as chaves de DM).
 - **P-256 em JS** (`p256.js`) só para calcular o ponto público a partir do escalar (FIPS 186-5 A.2.1), conferido contra chaves do WebCrypto.
 - **Semente protegida como a chave:** cifrada pelo aparelho; quando a conta trava (ADR-026), vai para a cópia da Senha Soberana (`key-lock.js`) e sai do aparelho. Limpeza local e remoção de conta levam a semente junto.
-- A tela para ver, confirmar e imprimir a frase vem no próximo PR. Decisões no ADR-032 §5.1–5.2. Testes: `tests/recovery-phrase.test.js`. SW `v7.114`.
+- A tela para ver, confirmar e imprimir a frase vem no próximo PR. Decisões no ADR-032 §5.1–5.2. Testes: `tests/recovery-phrase.test.js`. SW `v7.115`.
+### Pronomes, gênero e orientação sexual opcionais nos perfis
+- **Qualquer pronome + opções opcionais** (`client/js/profile-identity-meta.js`, `client/js/render/profile-identity-meta.js`, `client/js/app/profile-identity-meta-ui.js`): perfis agora têm campos opcionais para **pronomes** (texto livre para suportar todos os pronomes + atalhos rápidos incluindo `Jacaré 🐊` como humor), **gênero** e **orientação sexual**.
+- **Cabeçalho, Pessoas, P2P e Backup**: pílulas discretas com tooltip no hover no cabeçalho do perfil (`client/js/render/profile.js`, `client/css/style.css`), selo de pronome em **Pessoas** (`client/js/people-index.js`, `client/js/render/oauth-modals.js`), propagação no cartão P2P assinado (`profile-card.js`, `mesh-profile.js`, `peers-gossip-profile.js`, `profile-directory.js`) e preservação no `.voxid` e backup por e-mail (`account-backup.js`, `inbox-backup.js`).
+- **Service Worker**: novos módulos incluídos em `SHELL_ASSETS` e `CACHE_NAME` incrementado para `vox-pwa-v7.114-real-network-audio-video-upload`.
 
 ### Conta provisória até ter saída; Google e Meta fora da entrada (ADR-032, passo 1)
 - **Entrada sem Google, Meta e GitHub** (`render/oauth-modals.js`): a entrada pede só o nome. Importar nome e foto vai para Perfil (`render/oauth-import.js`, `openOAuthEnrichModal({ mode: "import" })`), com o aviso "Não guarda sua conta".
