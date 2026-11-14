@@ -1106,7 +1106,6 @@
   "jsdoc:validateListingInput"
  ],
  "client/js/local-account.js": [
-  "jsdoc:LOCAL_WIPE_NOTICE",
   "param:storeActiveAccount:acc",
   "returns:storeActiveAccount",
   "jsdoc:ensureLocalAccount",
@@ -1131,7 +1130,6 @@
   "jsdoc:signPayload",
   "jsdoc:getMeshDiscoverable",
   "jsdoc:setMeshDiscoverable",
-  "jsdoc:confirmLocalWipe",
   "returns:wipeLocalAccount",
   "jsdoc:syncActiveAccountToVault",
   "jsdoc:deduplicateVaultAccounts",

@@ -12,7 +12,7 @@ import * as cryptoDm from "./crypto-dm.js";
 import * as identitySeed from "./identity-seed.js";
 import { isLocked } from "./keystore.js";
 import * as localAccount from "./local-account.js";
-import { entropyToWords, identityFromPhrase, normalizeWords, phraseFromPrivateJwk } from "./recovery-phrase.js";
+import { entropyToWords, identityFromPhrase, normalizeWords, privateKeyBytes } from "./recovery-phrase.js";
 
 /** Quantas palavras a pessoa digita de volta para a frase valer como saída. */
 export const CONFIRM_COUNT = 3;
@@ -32,11 +32,21 @@ export async function phraseNeedsPassphrase() {
  * @returns {Promise<{ kind: "semente"|"chave", words: string[] }>}
  */
 export async function getAccountPhrase(passphrase = "") {
+  const { kind, secret } = await openRecoverySecret(passphrase);
+  return { kind, words: await entropyToWords(secret) };
+}
+
+/**
+ * O segredo que a frase codifica (e que os guardiões dividem): a semente, ou a chave em conta antiga.
+ * @param {string} [passphrase] Senha Soberana, se a conta estiver travada.
+ * @returns {Promise<{ kind: "semente"|"chave", secret: Uint8Array }>}
+ */
+export async function openRecoverySecret(passphrase = "") {
   const acc = await localAccount.ensureLocalAccount();
   const seed = await identitySeed.openSeed(acc.routeId, passphrase);
-  if (seed) return { kind: "semente", words: await entropyToWords(seed) };
+  if (seed) return { kind: "semente", secret: seed };
   const { privateJwk } = await localAccount.openAccountKeys(passphrase);
-  return { kind: "chave", words: await phraseFromPrivateJwk(privateJwk) };
+  return { kind: "chave", secret: privateKeyBytes(privateJwk) };
 }
 
 /**

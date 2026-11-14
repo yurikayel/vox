@@ -27,7 +27,7 @@ O que **não** muda: a conta continua sendo a mesma chave. Os guardiões devolve
 - **Juntar:** interpolação de Lagrange em `z = 0` com exatamente M pedaços de **x distintos** e **mesmo `splitId`**. Pedaços de divisões diferentes são recusados antes de calcular (misturar dá lixo, não erro).
 - **Conferir sem guardar nada a mais:** o segredo juntado vira identidade (`identityFromPhrase` / `identityFromSeed`), e o `routeId` dela **tem que ser** o da dona. Não há hash do segredo dentro do pedaço: o próprio `routeId` é a conferência.
 - **Limites:** `2 ≤ M ≤ N ≤ 7`; padrão **3 de 5**; menor permitido **2 de 3**. M = 1 seria entregar a conta a qualquer um dos guardiões e é recusado.
-- **Módulo:** `client/js/shamir-gf256.js`, puro (sem DOM, sem rede), com vetores fixos nos testes — **implementado na parte 3a** (fora do precache até a 3b ligá-lo).
+- **Módulo:** `client/js/shamir-gf256.js`, puro (sem DOM, sem rede), com vetores fixos nos testes — **implementado na parte 3a** (no precache desde a 3b).
 
 ## 4. Mensagens
 
@@ -36,13 +36,13 @@ Todas são JSON **assinado pela conta de quem manda** (`signPayload`, formato `s
 | `t` | De → para | Campos (além de `t`, `v: 0`, assinatura) |
 |---|---|---|
 | `vox-guardiao-pedaco` | dona → guardião | `owner` (routeId), `ownerName`, `splitId`, `m`, `n`, `x`, `kind` (`semente`\|`chave`), `y` (b64url), `createdAt` |
-| `vox-guardiao-recibo` | guardião → dona | `owner`, `splitId`, `x`, `heldAt` |
+| `vox-guardiao-recibo` | guardião → dona | `owner`, `splitId`, `x`, `heldAt`, `released` (true quando o guardião para de guardar) |
 | `vox-guardiao-revoga` | dona → guardião | `owner`, `splitId` |
 | `vox-guardiao-pedido` | aparelho novo → guardião | `owner`, `tempPub` (JWK pública), `createdAt`, `nonce` (16 bytes) — **não é assinado** (o aparelho novo ainda não tem a conta) |
 | `vox-guardiao-resposta` | guardião → aparelho novo | o `vox-guardiao-pedaco` original, intacto e assinado pela dona, mais `nonce` do pedido; selado para `tempPub` |
 
 Regras de recebimento (em `dm-wire.js`, antes de `saveDmMessage`, como já é feito com denúncia e papel):
-- `pedaco` só é aceito se a assinatura é da `owner` **e** o envelope veio da `owner`. Não aparece no fio de conversa: vira o cartão "Ana escolheu você como guardiã".
+- `pedaco` só é aceito se a assinatura é da `owner`, o envelope veio da `owner` **e** o guardião segue a dona ou a tem nos contatos (metade do laço mútuo do §12.2, do lado de quem guarda). Não aparece no fio de conversa: vira um aviso curto para o guardião.
 - `revoga` só vale assinado pela `owner`; apaga o pedaço daquela `splitId`.
 - `recibo` só conta se o guardião é um dos que receberam aquele `x` daquela `splitId`.
 - `resposta` é aberta só pelo aparelho que tem a chave temporária; o pedaço dentro dela tem que ter assinatura válida da `owner` pedida.
@@ -113,8 +113,10 @@ Regras de recebimento (em `dm-wire.js`, antes de `saveDmMessage`, como já é fe
 
 Cada parte é um PR, com SW novo quando tocar o cliente, e a 3c só entra depois do THREAT-MODEL T25 revisado.
 
-## 12. Em aberto (decidir antes da 3b)
+**Andamento:** 3a em main (`shamir-gf256.js`); **3b no SW v7.117** — `guardians.js` (mensagens, mapa da dona, guarda), `app/guardians-flow.js` (envio, recebimento, parar de guardar) e a tela `#/guardioes`. Na implementação, o laço mútuo é: a dona segue ou tem a pessoa nos contatos **e** recebeu dela o aviso assinado "adicionou você aos contatos".
 
-1. **Volta sem relay público:** no piloto sem relay, a `resposta` só chega com os dois aparelhos juntos (WebRTC) ou pela mochila de DMs (que ainda não carrega para endereço temporário). Aceitar "guardiões só devolvem pessoalmente" no G1?
-2. **Quem pode ser guardião:** só quem segue a dona de volta (laço mútuo), ou qualquer contato com chave de DM?
-3. **Padrão 3 de 5** para o piloto presencial, ou **2 de 3**, mais simples de explicar ("a associação te devolve a conta")?
+## 12. Decisões do mantenedor (2026-11-14, antes da 3b)
+
+1. **Volta para o aparelho novo: pessoalmente ou pela caixa postal.** A `resposta` vai por WebRTC direto quando os dois aparelhos estão juntos **e**, quando há um relay, pela caixa postal cega no endereço temporário `vxtmp_` (§7.4). No piloto sem relay público, na prática só a volta pessoal funciona; a tela diz isso em vez de prometer.
+2. **Guardião só com laço mútuo:** a lista de escolha mostra só quem **segue a dona e é seguido por ela**, e tem chave de DM conhecida. Laço de mão única (ou conta recém-criada que só segue) não aparece.
+3. **Padrão 3 de 5** no piloto. A tela aceita de 2 de 3 a 7 de 7 (§3), mas abre em 3 de 5.

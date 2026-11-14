@@ -15,6 +15,7 @@ import { showStatus } from "./screens-status.js";
 import { showNetworkWizard, showBackupWizard, showWalletWizard } from "./screens-guided.js";
 import { showSyncScreen } from "./screens-sync.js";
 import { showRecoveryPhrase } from "./screens-phrase.js";
+import { showGuardians } from "./screens-guardians.js";
 import { showLabsFrames, showLabsMofn } from "./screens-labs.js";
 import { showNotFound } from "./screens-not-found.js";
 import { showAvisos, showComposeAviso } from "./aviso-flow.js";
@@ -59,6 +60,7 @@ const ROUTE_DISPATCH_TABLE = {
   "network-wizard": () => showNetworkWizard(),
   "backup-wizard": () => showBackupWizard(),
   "recovery-phrase": () => showRecoveryPhrase(),
+  guardians: () => showGuardians(),
   "compose-community": () => showComposeCommunity(),
   "compose-listing": (r) => showComposeListing(r.communityId),
   "compose-proposal": (r) => showComposeProposal(r.communityId),

@@ -9188,6 +9188,16 @@ blockquote.repost-cite {
   body.printing-phrase > #phrase-print-root .phrase-words { grid-template-columns: repeat(3, 1fr); font-size: 14pt; padding-left: 1.5cm; }
 }
 
+/* ADR-032 §3.4 — tela dos guardiões (#/guardioes) */
+.guardians-screen { max-width: 36rem; margin: 0 auto; padding: 1rem; display: grid; gap: 0.75rem; }
+.guardian-list { display: grid; gap: 0.4rem; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.6rem 0.8rem; }
+.guardian-candidate { display: flex; gap: 0.5rem; align-items: center; }
+.guardian-minimum { display: grid; gap: 0.25rem; }
+.guardian-hint, .guardian-note, .guardian-empty, .guardian-names { font-size: 0.85rem; color: var(--text-muted); }
+.guardian-status { padding: 0.6rem 0.8rem; border-left: 3px solid var(--danger); background: var(--surface-soft); }
+.guardian-status.is-done { border-left-color: var(--success, var(--accent)); }
+.guardian-held { margin: 0; padding-left: 1.2rem; display: grid; gap: 0.4rem; }
+
 /* PM-54 — faixa "ler antes de entrar" (link direto abre o conteúdo; entrar fica a um toque) */
 .read-first-banner {
   position: fixed;
