@@ -6,7 +6,7 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
-### Spec dos guardiões (ADR-032, passo 3 — antes do código)
+### Spec dos guardiões aceita (ADR-032, passo 3 — antes do código)
 - `docs/specs/guardioes-v0.md`: Shamir em GF(256) sobre a semente (ou a chave, em conta antiga), pedaços assinados pela dona e entregues cifrados por DM, caixa preta no guardião, saída só com M recibos, pedido de volta com chave temporária e conferência por voz ou pessoalmente, troca de guardiões por divisão nova, ameaças (T25) e entrega em 4 partes. Três pontos em aberto para decidir antes do código. Só documentação.
 
 ### Tela da frase de recuperação e entrar pela frase (ADR-032, passo 2 — tela)

@@ -65,7 +65,7 @@ Um atalho deixa o caso comum rápido, mas **não conta como saída**: ele quebra
 
 ### 3.4 Guardiões (recuperação pela comunidade)
 
-> Como funciona em detalhe (mensagens, Shamir, pedido de volta, ameaças e entrega em partes): [spec dos guardiões v0](../specs/guardioes-v0.md), em revisão.
+> Como funciona em detalhe (mensagens, Shamir, pedido de volta, ameaças e entrega em partes): [spec dos guardiões v0](../specs/guardioes-v0.md), aceita em 2026-11-14.
 
 1. A dona escolhe de **3 a 7 contatos** e um mínimo **M** (padrão 3 de 5; mínimo 2 de 3).
 2. A semente (ou a chave, em contas antigas) é dividida por **Shamir em GF(256)**. Cada pedaço vai **cifrado para a chave de DM do guardião** (`cryptoDm.seal`), assinado pela dona, e é entregue pela malha.
