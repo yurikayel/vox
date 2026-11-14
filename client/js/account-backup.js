@@ -22,6 +22,7 @@ import {
 } from "./local-account.js";
 import { sealJson } from "./keystore.js";
 import { markAccountExit } from "./account-exit.js";
+import { getLocalIdentityMeta, setLocalIdentityMeta } from "./profile-identity-meta.js";
 
 export { KIND_WRAPPED, peekBackupKind } from "./account-backup-wrap.js";
 
@@ -37,6 +38,7 @@ async function buildAccountBackup(passphrase) {
     displayName: getDisplayName(),
     pixKey: getPixKey(),
     meshDiscoverable: getMeshDiscoverable(),
+    identityMeta: getLocalIdentityMeta(acc.routeId),
     exportedAt: Date.now(),
   };
 }
@@ -120,6 +122,7 @@ async function persistAccountBackup(parsed) {
   if (parsed.dmKeypair) await cryptoDm.setDmKeypair(parsed.dmKeypair);
   if (parsed.displayName) setDisplayName(parsed.displayName);
   if (parsed.pixKey) setPixKey(parsed.pixKey);
+  if (parsed.identityMeta) setLocalIdentityMeta(parsed.routeId, parsed.identityMeta);
   if (typeof parsed.meshDiscoverable === "boolean") {
     setMeshDiscoverable(parsed.meshDiscoverable);
   }
