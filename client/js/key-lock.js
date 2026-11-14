@@ -79,16 +79,16 @@ async function storeDmKey(routeId, dmKeypair) {
 }
 
 /**
- * Trava as chaves de uma conta. Recebe as chaves abertas e a Senha Soberana; devolve as referências que
- * substituem as chaves guardadas, ou null se este aparelho não consegue travar (sem IndexedDB, senha curta).
+ * Trava as chaves de uma conta. Recebe as chaves abertas (e a semente, se houver: ADR-032) e a Senha Soberana;
+ * devolve as referências que substituem as chaves guardadas, ou null se este aparelho não consegue travar.
  */
-export async function lockKeys({ routeId, publicJwk, privateJwk, dmKeypair }, passphrase) {
+export async function lockKeys({ routeId, publicJwk, privateJwk, dmKeypair, seed = null }, passphrase) {
   const secret = String(passphrase || "").trim();
   if (!routeId || !privateJwk || secret.length < LOCK_MIN_PASSPHRASE) return null;
   const signId = await storeSigningKey(routeId, publicJwk, privateJwk).catch(() => null);
   if (!signId) return null;
   const dmId = await storeDmKey(routeId, dmKeypair).catch(() => null);
-  const copy = await encryptVaultV2({ routeId, privateJwk, dmKeypair: dmId ? dmKeypair : null }, secret);
+  const copy = await encryptVaultV2({ routeId, privateJwk, dmKeypair: dmId ? dmKeypair : null, seed }, secret);
   writeCopies({ ...readCopies(), [routeId]: copy });
   sessionKeys.delete(signId);
   if (dmId) sessionKeys.delete(dmId);
