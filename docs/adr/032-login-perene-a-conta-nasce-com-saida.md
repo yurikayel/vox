@@ -64,6 +64,9 @@ Um atalho deixa o caso comum rápido, mas **não conta como saída**: ele quebra
 6. A frase **é** a conta. O texto diz isso sem rodeio: "Quem tiver estas palavras entra como você. Guarde longe do celular e não fotografe."
 
 ### 3.4 Guardiões (recuperação pela comunidade)
+
+> Como funciona em detalhe (mensagens, Shamir, pedido de volta, ameaças e entrega em partes): [spec dos guardiões v0](../specs/guardioes-v0.md), em revisão.
+
 1. A dona escolhe de **3 a 7 contatos** e um mínimo **M** (padrão 3 de 5; mínimo 2 de 3).
 2. A semente (ou a chave, em contas antigas) é dividida por **Shamir em GF(256)**. Cada pedaço vai **cifrado para a chave de DM do guardião** (`cryptoDm.seal`), assinado pela dona, e é entregue pela malha.
 3. O guardião guarda o pedaço na **caixa preta**, como as cópias de posts de quem segue: não há tela para ver, exportar nem usar o pedaço. O app só mostra "Você guarda a volta de Ana".

@@ -74,6 +74,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 - [IDENTITY.md](./IDENTITY.md): chaves, cofre e recuperação · [DNS-HANDLES.md](./specs/DNS-HANDLES.md): handles `@`
 - [login-social.md](./specs/login-social.md): login social, contas vinculadas e configuração de deploy do OAuth
 - [relay-api.md](./specs/relay-api.md): endpoints de `server.py` e `signaling.py`
+- [guardioes-v0.md](./specs/guardioes-v0.md): guardiões, a comunidade devolve a conta (ADR-032 passo 3; spec em revisão)
 - [medicao-midia-v2-pm70-2026-11.md](./research/medicao-midia-v2-pm70-2026-11.md): medição da mídia v2 no desktop (AVIF q66, H.264, Opus) e o que muda na implementação
 - [midia-v2.md](./specs/midia-v2.md): mídia retrô: AVIF q70 em 540p, Opus 32 kbps e H.264 480p24, com pedaços abaixo de 100 KB (não implementada)
 - [canal-comunidade-v0.md](./specs/canal-comunidade-v0.md): canal, comunidade em que só a moderação publica posts (implementado)
