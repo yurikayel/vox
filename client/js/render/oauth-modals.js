@@ -110,6 +110,7 @@ function resolvePersonStampsHtml(p, isSelf) {
   if (isSelf) stamps.push(`<span class="agora-stamp agora-stamp--bronze">Você</span>`);
   else if (p.source === "contact") stamps.push(`<span class="agora-stamp agora-stamp--teal"><span class="agora-pylon agora-pylon--teal" aria-hidden="true"></span>Contato</span>`);
   else if (p.source === "mesh-card" || p.source === "mesh") stamps.push(`<span class="agora-stamp agora-stamp--consensus" title="Conectado" aria-label="Conectado">🔗🟢</span>`);
+  if (p.pronouns) stamps.push(`<span class="agora-stamp" title="Pronomes">${escapeHtml(p.pronouns)}</span>`);
   return stamps.join("");
 }
 

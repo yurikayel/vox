@@ -27,6 +27,8 @@ import { syncIdentity } from "./screens-network.js";
 import { KIND_WRAPPED, exportAccountBundle, importAccountBundle, peekBackupKind } from "../account-backup.js";
 import { isInboxBackupText, restoreInboxBackup } from "../inbox-backup.js";
 import * as voxels from "../voxels.js";
+import { bindIdentityMetaForm } from "./profile-identity-meta-ui.js";
+import { getLocalIdentityMeta, pickIdentityMeta } from "../profile-identity-meta.js";
 
 function collectByIds(posts, ids) {
   const set = new Set(ids);
@@ -125,7 +127,7 @@ async function loadProfileIdentity(targetAddress, isSelf) {
   const handle = handleOverride || fetchedHandle;
   const pixKey = isSelf ? (localAccount.getPixKey() || "") : (mockProf?.pixKey || "");
   const pixKeyMasked = pixKey ? pixKeyHelper.maskForDisplay(pixKey) : "";
-  return { handle, conflictInfo, mockProf, displayName, profileBio, pixKey, pixKeyMasked };
+  return { handle, conflictInfo, mockProf, resolved, displayName, profileBio, pixKey, pixKeyMasked };
 }
 
 async function loadProfilePosts(targetAddress, isSelf, user, mockProf) {
@@ -141,7 +143,7 @@ async function loadProfilePosts(targetAddress, isSelf, user, mockProf) {
   return { authorPosts, allAvailable, starredPosts, savedPosts };
 }
 
-function resolveProfileSocialFields(isSelf, targetAddress, mockProf) {
+function resolveProfileSocialFields(isSelf, targetAddress, mockProf, resolved) {
   if (isSelf) {
     const readme = social.getLocalReadme();
     const enrich = localAccount.getProfileEnrichment();
@@ -151,6 +153,7 @@ function resolveProfileSocialFields(isSelf, targetAddress, mockProf) {
       finalReadme: readme,
       pinnedPostId: social.getPinnedPostId(targetAddress),
       oauthProvider: enrich ? enrich.oauthProvider || "" : "",
+      identityMeta: getLocalIdentityMeta(targetAddress),
     };
   }
   const readme = mockProf ? mockProf.readme || "" : "";
@@ -160,13 +163,14 @@ function resolveProfileSocialFields(isSelf, targetAddress, mockProf) {
     finalReadme: readme,
     pinnedPostId: mockProf ? mockProf.pinnedPostId || "" : "",
     oauthProvider: "",
+    identityMeta: pickIdentityMeta(resolved, mockProf),
   };
 }
 
 function buildProfileDataObject({
   targetAddress, isSelf, ident, postsData, balance, memberships, dmPub, activeTab,
 }) {
-  const soc = resolveProfileSocialFields(isSelf, targetAddress, ident.mockProf);
+  const soc = resolveProfileSocialFields(isSelf, targetAddress, ident.mockProf, ident.resolved);
   return {
     address: targetAddress,
     isCurrentWallet: isSelf,
@@ -825,6 +829,16 @@ export function bindProfileButtons(user, address, isSelf, dmPub, activeTab = "po
   bindReadmeButtons(address, activeTab, isSelf);
   bindSharingAndClipboardButtons(address);
   bindDisplayNameAndOAuthButtons(address, activeTab);
+  bindIdentityMetaForm({
+    address,
+    activeTab,
+    isSelf,
+    onAfterSave: (addr, tab) => {
+      invalidateProfileCache();
+      broadcastActiveIdentityChanges();
+      showProfile(addr, tab);
+    },
+  });
   bindVaultAccountButtons(address, isSelf);
   bindWalletAndDmButtons(address, isSelf, dmPub, user);
   bindSovereigntyBackup(isSelf, activeTab);

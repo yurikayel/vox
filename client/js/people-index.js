@@ -7,6 +7,7 @@ import * as mock from "./mock.js";
 import { getWelcomeProfile, WELCOME_ROUTE_ID } from "./vox-welcome-profile.js";
 import * as profileDirectory from "./profile-directory.js";
 import * as localAccount from "./local-account.js";
+import { getLocalIdentityMeta } from "./profile-identity-meta.js";
 import * as webrtcPeer from "./webrtc-peer.js";
 import { shortId } from "./short-id.js";
 import { isTestRouteId } from "./genesis.js";
@@ -150,6 +151,7 @@ function indexMeshCards(map) {
       name: card.name || card.displayName || profileDirectory.getAuthorDisplaySync(routeId) || routeId.slice(0, 14),
       handle: card.handle || handles.getCachedAddressHandle(routeId) || mock.getAuthorHandle(routeId) || "",
       avatarUrl: card.avatarUrl || card.avatar || "",
+      pronouns: card.pronouns || "",
       source: "mesh-card",
     });
   }
@@ -162,11 +164,13 @@ function indexSelfAccount(map) {
     || localAccount.getProfileEnrichment()?.displayName
     || profileDirectory.getAuthorDisplaySync(myId)
     || "";
+  const selfMeta = getLocalIdentityMeta(myId);
   upsert(map, {
     routeId: myId,
     name: myName || myId.slice(0, 14),
     handle: handles.getCachedAddressHandle(myId) || "",
     avatarUrl: localAccount.getProfileEnrichment()?.avatarUrl || profileDirectory.getAuthorAvatarSync(myId) || "",
+    pronouns: selfMeta.pronouns || "",
     source: "self",
   });
 }
