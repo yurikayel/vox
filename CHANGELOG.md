@@ -6,6 +6,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Spec dos guardiões (ADR-032, passo 3 — antes do código)
+- `docs/specs/guardioes-v0.md`: Shamir em GF(256) sobre a semente (ou a chave, em conta antiga), pedaços assinados pela dona e entregues cifrados por DM, caixa preta no guardião, saída só com M recibos, pedido de volta com chave temporária e conferência por voz ou pessoalmente, troca de guardiões por divisão nova, ameaças (T25) e entrega em 4 partes. Três pontos em aberto para decidir antes do código. Só documentação.
+
 ### Tela da frase de recuperação e entrar pela frase (ADR-032, passo 2 — tela)
 - **`#/frase`** (`app/screens-phrase.js`, `render/recovery-phrase.js`): mostra as 12 palavras (ou 24, em conta antiga, com o aviso de que DMs antigas não voltam por elas), pede a Senha Soberana se a conta estiver travada, imprime um cartão de uma página e pede 3 palavras sorteadas de volta. Só aí a frase conta como saída e a faixa de conta provisória some.
 - **"Criar minha saída"** na faixa agora leva para a frase; "Prefiro senha e cofre" continua levando ao assistente do cofre (`#/backup`).
