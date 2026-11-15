@@ -4,7 +4,8 @@ import * as render from "../render.js";
 import * as share from "../share.js";
 import * as localAccount from "../local-account.js";
 import * as oauthProfile from "../oauth-profile.js";
-import * as oauthVault from "../oauth-vault.js";
+import * as emailKit from "../email-kit.js";
+import { normalizeVaultEmail } from "../vault-crypto.js";
 import * as meshProfile from "../mesh-profile.js";
 import * as centralMemory from "../central-memory.js";
 import { syncIdentity } from "./screens-network.js";
@@ -99,58 +100,123 @@ function syncIdentityAndDirectoryAfterOnboarding() {
   void centralMemory.syncWithCentralMemory();
 }
 
+function completeEntryOnboarding(modalContainer, onComplete, result, toastMsg = "") {
+  oauthProfile.skipOAuthEnrichment();
+  if (toastMsg) share.showToast(toastMsg);
+  syncIdentityAndDirectoryAfterOnboarding();
+  endGenesis(modalContainer, onComplete, result);
+}
+
 function bindOAuthProviderButton({ btnId, signInFn, fallbackError, labelFn, modalContainer, onDone }) {
   document.getElementById(btnId)?.addEventListener("click", async () => {
-    const btn = document.getElementById(btnId);
-    const res = await runOAuthEnrichSignIn(btn, signInFn, { fallbackError });
-    if (res.ok) {
-      oauthProfile.skipOAuthEnrichment();
-      share.showToast(labelFn(res));
-      syncIdentityAndDirectoryAfterOnboarding();
-      endGenesis(modalContainer, onDone, res);
-    }
+    const res = await runOAuthEnrichSignIn(document.getElementById(btnId), signInFn, { fallbackError });
+    if (res.ok) completeEntryOnboarding(modalContainer, onDone, res, labelFn(res));
   });
+}
+
+function bindEntryPasswordToggle() {
+  const input = document.getElementById("oauth-entry-pass-input");
+  const toggle = document.getElementById("btn-oauth-toggle-pass");
+  if (!input || !toggle) return;
+  toggle.addEventListener("click", () => {
+    const show = input.type === "password";
+    input.type = show ? "text" : "password";
+    toggle.textContent = show ? "Ocultar senha" : "Mostrar senha";
+    toggle.setAttribute("aria-pressed", String(show));
+  });
+}
+
+function readEntryFormValues() {
+  return {
+    rawName: document.getElementById("oauth-custom-name-input")?.value.trim() || "",
+    email: normalizeVaultEmail(document.getElementById("oauth-entry-email-input")?.value || ""),
+    pass: document.getElementById("oauth-entry-pass-input")?.value.trim() || "",
+    includePhrase: Boolean(document.getElementById("oauth-entry-include-phrase")?.checked),
+  };
+}
+
+function finishNameOnlyEntry(rawName, modalContainer, onComplete) {
+  if (!rawName) return setOAuthEnrichError("Digite um nome ou apelido para continuar.");
+  setOAuthEnrichError("");
+  localAccount.setDisplayName(rawName);
+  completeEntryOnboarding(modalContainer, onComplete, { ok: true, customName: rawName }, `Bem-vindo, ${rawName}!`);
+}
+
+function showEmailKitCard({ kit, routeId, email, form, modalContainer, onComplete }) {
+  const slot = document.getElementById("oauth-email-kit-slot");
+  const links = form.parentElement?.querySelector(".genesis-links");
+  if (!slot) return completeEntryOnboarding(modalContainer, onComplete, { ok: true, routeId, email });
+  form.hidden = true;
+  if (links) links.hidden = true;
+  slot.innerHTML = render.renderEmailKitCardHtml({ email: kit.to, mailtoUrl: kit.mailtoUrl });
+  slot.hidden = false;
+  document.getElementById("btn-email-kit-fix-email")?.addEventListener("click", () => {
+    slot.hidden = true;
+    form.hidden = false;
+    if (links) links.hidden = false;
+    document.getElementById("oauth-entry-email-input")?.focus();
+  });
+  document.getElementById("btn-email-kit-copy")?.addEventListener("click", () => void emailKit.copyEmailKit(kit));
+  document.getElementById("btn-email-kit-download")?.addEventListener("click", () => emailKit.downloadEmailKitFile(kit, routeId));
+  const done = (confirmExit) => {
+    if (confirmExit) emailKit.confirmEmailKitSent(routeId);
+    completeEntryOnboarding(modalContainer, onComplete, { ok: true, routeId, email }, `Bem-vindo(a), ${localAccount.getDisplayName()}!`);
+  };
+  document.getElementById("btn-email-kit-confirm")?.addEventListener("click", () => done(true));
+  document.getElementById("btn-email-kit-later")?.addEventListener("click", () => done(false));
+}
+
+async function handleEntryFormSubmit({ draftState, form, modalContainer, onComplete }) {
+  const v = readEntryFormValues();
+  const err = emailKit.validateEmailEntry(v);
+  if (err) return setOAuthEnrichError(err);
+  setOAuthEnrichError("");
+  if (!v.email && !v.pass) return finishNameOnlyEntry(v.rawName, modalContainer, onComplete);
+  const btn = document.getElementById("btn-oauth-save-name");
+  setOAuthButtonBusy(btn, true);
+  try {
+    const out = await emailKit.createEmailAccountKit({ ...v, draftState });
+    if (!out.ok) return setOAuthEnrichError(out.reason);
+    emailKit.triggerMailtoDraft(out.kit.mailtoUrl);
+    showEmailKitCard({ kit: out.kit, routeId: out.routeId, email: v.email, form, modalContainer, onComplete });
+  } catch (errCreate) {
+    setOAuthEnrichError(errCreate?.message || "Erro ao criar conta.");
+  } finally {
+    setOAuthButtonBusy(btn, false);
+  }
 }
 
 function bindCustomNameForm(modalContainer, onComplete) {
   const form = document.getElementById("form-oauth-custom-name");
   if (!form) return;
+  const draftState = { email: "", pass: "" };
+  bindEntryPasswordToggle();
+  document.getElementById("btn-oauth-name-only")?.addEventListener("click", () => {
+    finishNameOnlyEntry(readEntryFormValues().rawName, modalContainer, onComplete);
+  });
   form.addEventListener("submit", (e) => {
     e.preventDefault();
-    const rawName = document.getElementById("oauth-custom-name-input")?.value.trim() || "";
-    if (!rawName) {
-      setOAuthEnrichError("Digite um nome ou apelido para continuar.");
-      return;
-    }
-    setOAuthEnrichError("");
-    localAccount.setDisplayName(rawName);
-    oauthProfile.skipOAuthEnrichment();
-    share.showToast(`Bem-vindo, ${rawName}!`);
-    syncIdentityAndDirectoryAfterOnboarding();
-    endGenesis(modalContainer, onComplete, { ok: true, customName: rawName });
+    void handleEntryFormSubmit({ draftState, form, modalContainer, onComplete });
   });
 }
 
-/**
- * Entra pelos backups que a pessoa mandou para o próprio e-mail, do mais antigo ao mais novo.
- * @param {File[]} files Arquivos `.txt` escolhidos.
- * @param {string} pass Senha Soberana.
- * @returns {Promise<{ok: boolean, reason?: string, routeId?: string, displayName?: string}>} Resultado.
- */
-async function restoreFromInboxBackups(files, pass) {
-  const backup = await import("../inbox-backup.js");
-  const texts = await Promise.all(files.map((f) => f.text()));
-  if (!texts.every(backup.isInboxBackupText)) return { ok: false, reason: "Escolha só os backups do Vox que chegaram no seu e-mail (.txt)." };
-  let acc = null;
-  for (const text of texts.sort((a, b) => JSON.parse(a).to - JSON.parse(b).to)) acc = await backup.restoreInboxBackup(text, pass);
-  return { ok: true, routeId: acc?.routeId, displayName: localAccount.getDisplayName() };
+function readRestoreInputs() {
+  return {
+    email: document.getElementById("oauth-restore-email-input")?.value.trim() || "",
+    pass: document.getElementById("oauth-sovereign-passphrase-input")?.value.trim() || "",
+    kitText: document.getElementById("oauth-restore-kit-text")?.value.trim() || "",
+    phraseText: document.getElementById("oauth-restore-phrase")?.value.trim() || "",
+    files: [...(document.getElementById("oauth-restore-files")?.files || [])],
+  };
 }
 
-/** Frase (ADR-032) tem precedência; sem ela, backups do e-mail ou cofre pela Senha Soberana. */
-async function restoreExistingAccount(phraseText, pass) {
-  if (phraseText) return (await import("../account-phrase.js")).restoreFromPhrase(phraseText);
-  const files = [...(document.getElementById("oauth-restore-files")?.files || [])];
-  return files.length ? restoreFromInboxBackups(files, pass) : oauthVault.restoreFromPassphraseVault(pass);
+function handleRestoreFailure(res) {
+  if (res?.noServer) {
+    setOAuthEnrichError("Nenhum servidor respondeu aqui. Toque no link do seu e-mail ou cole o link (#/sync?b=…) / código VOX1:… acima, mantendo sua senha.");
+    document.getElementById("oauth-restore-kit-text")?.focus();
+    return;
+  }
+  setOAuthEnrichError(res?.reason || "Senha incorreta ou cofre não encontrado.");
 }
 
 function bindSovereignPassphraseForm(modalContainer, onComplete) {
@@ -158,22 +224,13 @@ function bindSovereignPassphraseForm(modalContainer, onComplete) {
   if (!form) return;
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const pass = document.getElementById("oauth-sovereign-passphrase-input")?.value.trim() || "";
-    const phraseText = document.getElementById("oauth-restore-phrase")?.value.trim() || "";
-    if (!pass && !phraseText) return setOAuthEnrichError("Digite a frase de recuperação ou a Senha Soberana.");
     const btn = document.getElementById("btn-oauth-restore-passphrase");
     setOAuthButtonBusy(btn, true);
     setOAuthEnrichError("");
     try {
-      const res = await restoreExistingAccount(phraseText, pass);
-      if (res.ok) {
-        oauthProfile.skipOAuthEnrichment();
-        share.showToast(`Identidade restaurada com sucesso! Bem-vindo(a), ${res.displayName || "Cidadão"}!`);
-        syncIdentityAndDirectoryAfterOnboarding();
-        endGenesis(modalContainer, onComplete, { ok: true, restored: true, routeId: res.routeId });
-      } else {
-        setOAuthEnrichError(res.reason || "Senha incorreta ou cofre não encontrado.");
-      }
+      const res = await emailKit.restoreAccountFromInputs(readRestoreInputs());
+      if (res.ok) completeEntryOnboarding(modalContainer, onComplete, { ok: true, restored: true, routeId: res.routeId }, `Identidade restaurada com sucesso! Bem-vindo(a), ${res.displayName || "Cidadão"}!`);
+      else handleRestoreFailure(res);
     } catch (err) {
       setOAuthEnrichError(err?.message || "Erro ao decifrar cofre soberano.");
     } finally {

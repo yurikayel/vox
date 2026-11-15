@@ -4001,6 +4001,13 @@ body,
 .genesis-overlay .genesis-inline-form { margin-top: 1rem; }
 .genesis-overlay .genesis-inline-form--stack { flex-direction: column; }
 .genesis-overlay .genesis-inline-form--stack .genesis-input { flex: 0 0 auto; }
+.genesis-overlay .genesis-note-left { text-align: left; margin: 0; }
+.genesis-overlay .genesis-pass-row { display: flex; gap: 0.5rem; align-items: stretch; }
+.genesis-overlay .genesis-pass-row .genesis-input { flex: 1 1 auto; }
+.genesis-overlay .genesis-phrase-check { display: flex; align-items: flex-start; gap: 0.5rem; font-size: 0.875rem; cursor: pointer; }
+.genesis-overlay .oauth-email-kit-slot { margin-top: 1rem; }
+.genesis-overlay .oauth-email-kit-card { padding: 1rem; }
+.genesis-overlay .oauth-email-kit-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
 
 /* ── 39. Backup no seu e-mail e espaçamento das configurações de rede ── */
 .network-card,
