@@ -5,6 +5,10 @@
  */
 import * as render from "../render.js";
 import * as share from "../share.js";
+import * as accountExit from "../account-exit.js";
+import * as oauthProfile from "../oauth-profile.js";
+import { CANTINA_STORAGE_KEY } from "./cantina-gate.js";
+import { removeReadFirstBanner } from "./read-first.js";
 import { getActiveUser, makeShellProps } from "./context.js";
 
 /** Tira o cofre (e a senha de links antigos) da barra de endereço e do histórico. */
@@ -44,7 +48,14 @@ export function renderSyncFormHtml({ legacyPassphrase = false, hasBundle = true 
 async function restoreWith(pass, bundle, email = "") {
   const { restoreFromPassphraseVault, decodeVaultBundleFromUrl } = await import("../oauth-vault.js");
   const directRecord = bundle ? decodeVaultBundleFromUrl(bundle) : null;
-  return restoreFromPassphraseVault(pass, null, directRecord, email);
+  const res = await restoreFromPassphraseVault(pass, null, directRecord, email);
+  if (res.ok) {
+    try { localStorage.setItem(CANTINA_STORAGE_KEY, "true"); } catch { /* ignore */ }
+    oauthProfile.skipOAuthEnrichment();
+    removeReadFirstBanner();
+    accountExit.markAccountExit(bundle ? "email" : "cofre", res.routeId);
+  }
+  return res;
 }
 
 /**

@@ -10,6 +10,7 @@ import * as vaultCrypto from "../client/js/vault-crypto.js";
 import * as accountExit from "../client/js/account-exit.js";
 import * as emailKit from "../client/js/email-kit.js";
 import { renderProfileTabContent } from "../client/js/render/profile.js";
+import { renderPhraseIntroHtml } from "../client/js/render/recovery-phrase.js";
 
 const PASS = "minha senha soberana 12";
 const PHRASE_12 = "abacate acender acordo adepto adiar afago agora aguia ainda ajudar aluno amigo";
@@ -60,9 +61,11 @@ test("email-kit: cria cofre por e-mail/senha, corrige e-mail revogando o anterio
     const draftState = { email: "", pass: "" };
     const first = await emailKit.createEmailAccountKit({ rawName: "Bia", email: "errado@exemplo.com", pass: PASS, includePhrase: true, draftState });
     assert.equal(first.ok, true);
+    assert.equal(await accountExit.hasSovereignExit(first.routeId), false, "sem servidor e antes de confirmar envio, ainda não conta como saída (§6.5)");
     assert.ok(emailKit.formatPhraseSentInEmailNotice(first.routeId).includes("Frase enviada por e-mail"));
     const aboutWithNotice = renderProfileTabContent("about", { address: first.routeId, isCurrentWallet: true });
     assert.ok(aboutWithNotice.includes("phrase-in-email-notice"));
+    assert.ok(renderPhraseIntroHtml({ needsPassphrase: true }).includes("phrase-in-email-notice"));
 
     const wrongAddr = await vaultCrypto.deriveVaultAddress(PASS, "errado@exemplo.com");
     const fixed = await emailKit.createEmailAccountKit({ rawName: "Bia", email: "certo@exemplo.com", pass: PASS, includePhrase: false, draftState });
@@ -70,6 +73,8 @@ test("email-kit: cria cofre por e-mail/senha, corrige e-mail revogando o anterio
     assert.equal(fixed.routeId, first.routeId);
     assert.equal(localStorage.getItem(`vox-vault-v2:${wrongAddr}`), null, "endereço anterior removido localmente");
     assert.equal(emailKit.formatPhraseSentInEmailNotice(fixed.routeId), "", "aviso limpo ao desmarcar a frase");
+    emailKit.confirmEmailKitSent(fixed.routeId);
+    assert.equal(await accountExit.hasSovereignExit(fixed.routeId), true, "após confirmar envio, conta como saída soberana");
   } finally {
     restoreFetch();
   }
@@ -82,16 +87,28 @@ test("email-kit: extrai e restaura conta a partir de link #/sync?b=…, VOX1:…
   try {
     const draftState = { email: "", pass: "" };
     const created = await emailKit.createEmailAccountKit({ rawName: "Caio", email: "caio@exemplo.com", pass: PASS, includePhrase: false, draftState });
-    const { syncUrl, kitCode, body } = created.kit;
+    const { syncUrl, kitCode, body, copyText } = created.kit;
 
     for (const pasted of [syncUrl, kitCode, body]) {
       localStorage.clear();
       localAccount.wipeLocalAccount();
-      const res = await emailKit.restoreAccountFromInputs({ email: "caio@exemplo.com", pass: PASS, kitText: pasted });
-      assert.equal(res.ok, true, `falhou ao restaurar com trecho colado: ${pasted.slice(0, 24)}`);
-      assert.equal(res.routeId, created.routeId);
+      const resOnlyPass = await emailKit.restoreAccountFromInputs({ email: "", pass: PASS, kitText: pasted });
+      assert.equal(resOnlyPass.ok, true, `deve abrir só com a senha (§6.3.8/§6.4.1): ${pasted.slice(0, 24)}`);
+      assert.equal(resOnlyPass.routeId, created.routeId);
+
+      localStorage.clear();
+      localAccount.wipeLocalAccount();
+      const resWithEmail = await emailKit.restoreAccountFromInputs({ email: "caio@exemplo.com", pass: PASS, kitText: pasted });
+      assert.equal(resWithEmail.ok, true, `deve abrir com e-mail + senha: ${pasted.slice(0, 24)}`);
+      assert.equal(resWithEmail.routeId, created.routeId);
       assert.ok(accountExit.getAccountExits(created.routeId).email, "marca saída por e-mail após restaurar");
     }
+
+    localStorage.clear();
+    localAccount.wipeLocalAccount();
+    const fromTxtFile = await emailKit.restoreAccountFromInputs({ pass: PASS, files: [{ text: async () => copyText }] });
+    assert.equal(fromTxtFile.ok, true, "deve abrir arquivo .txt baixado do cartão §6.5");
+    assert.equal(fromTxtFile.routeId, created.routeId);
 
     const badKit = await emailKit.restoreAccountFromInputs({ email: "caio@exemplo.com", pass: PASS, kitText: "texto qualquer sem código" });
     assert.equal(badKit.ok, false);

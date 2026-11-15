@@ -25,7 +25,7 @@ import { markAccountExit } from "./account-exit.js";
 import { getLocalIdentityMeta, setLocalIdentityMeta } from "./profile-identity-meta.js";
 import * as identitySeed from "./identity-seed.js";
 
-export { KIND_WRAPPED, peekBackupKind } from "./account-backup-wrap.js";
+export { KIND_PLAIN, KIND_WRAPPED, peekBackupKind } from "./account-backup-wrap.js";
 
 async function buildAccountBackup(passphrase) {
   const { acc, privateJwk, dmKeypair, seed } = await openAccountKeys(passphrase);

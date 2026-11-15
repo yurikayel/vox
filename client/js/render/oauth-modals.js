@@ -83,7 +83,7 @@ function renderGenesisHaveHtml() {
             <input type="password" id="oauth-sovereign-passphrase-input" class="agora-inscription genesis-input" placeholder="Senha Soberana" autocomplete="current-password" aria-label="Senha Soberana" />
             <textarea id="oauth-restore-kit-text" class="genesis-input" rows="2" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Link #/sync?b=…, código VOX1:… ou texto do e-mail (se precisar)" aria-label="Link ou código do e-mail"></textarea>
             <textarea id="oauth-restore-phrase" class="genesis-input" rows="2" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Ou frase de recuperação: 12 ou 24 palavras" aria-label="Frase de recuperação"></textarea>
-            <input type="file" id="oauth-restore-files" class="genesis-input" accept=".txt,text/plain" multiple aria-label="Backups do e-mail (opcional)" />
+            <input type="file" id="oauth-restore-files" class="genesis-input" accept=".txt,.voxid,.json,text/plain,application/json" multiple aria-label="Arquivo de acesso ou backups (.txt / .voxid)" />
             <button type="submit" id="btn-oauth-restore-passphrase" class="agora-btn agora-btn--primary">Entrar</button>
           </form>`;
 }
