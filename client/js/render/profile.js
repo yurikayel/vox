@@ -20,6 +20,7 @@ import { renderComposeSignaturePanel } from "./compose-chrome.js";
 import { renderStep, renderSteps, renderReviewList } from "./compose-steps.js";
 import { renderProfileVoxelsTab } from "./profile-voxels.js";
 import { ACHIEVEMENT_CATALOG, evaluateAchievements, loadVoxelReceipts } from "../voxels.js";
+import { formatPhraseSentInEmailNotice } from "../email-kit.js";
 
 function renderProfileGithubBadge(githubHandle) {
   if (!githubHandle) return "";
@@ -395,10 +396,18 @@ function renderOAuthEnrichmentBlock(oauthProvider = "") {
     </div>`;
 }
 
-function renderSovereigntyCard() {
+function renderPhraseInEmailNoticeHtml(address) {
+  const emailNotice = formatPhraseSentInEmailNotice(address);
+  return emailNotice
+    ? `<p class="desc phrase-in-email-notice" role="note" style="margin-bottom:0.5rem;">⚠️ ${escapeHtml(emailNotice)}</p>`
+    : "";
+}
+
+function renderSovereigntyCard(address = "") {
   return `
       <div class="card profile-sovereignty-export" style="margin-top:0.75rem;">
         <h3>Soberania & Sincronização entre Aparelhos</h3>
+        ${renderPhraseInEmailNoticeHtml(address)}
         <p class="desc" style="font-size:0.85rem; margin-bottom:0.5rem;">
           Chaves P-256 de assinatura e chaves de DM <strong>deste aparelho</strong>.
           Não inclui o IndexedDB completo nem a lista de seguidores.
@@ -505,7 +514,7 @@ function renderProfileActions({ address, isCurrentWallet, handle, displayName, h
     ${renderMultiAccountCard(address)}
     ${renderProfileIdentitySettingsCard({ displayName, oauthProvider, currentPixKey, currentGithub, identityMeta })}
     ${renderProfileMeshDiscoverableCard(meshDiscoverable)}
-    ${renderSovereigntyCard()}
+    ${renderSovereigntyCard(address)}
     ${renderLocalWipeCard()}
     ${renderProfileAdvancedSettingsDetails(handle, hasWallet, balance)}`;
 }
