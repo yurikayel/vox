@@ -69,5 +69,6 @@ test("read-first - fluxo de entrada (#modal-container) e apontamento não pedem 
   const outside = (id) => ({ id, closest: () => null });
   assert.equal(rf.submitNeedsEntry(inside("form-oauth-custom-name")), false, "onboarding não pode travar a si mesmo");
   assert.equal(rf.submitNeedsEntry(outside("form-feedback")), false);
+  assert.equal(rf.submitNeedsEntry(outside("form-sync-vault")), false, "#/sync em aparelho novo deve permitir envio da senha");
   assert.equal(rf.submitNeedsEntry(outside("form-compose-topic")), true);
 });

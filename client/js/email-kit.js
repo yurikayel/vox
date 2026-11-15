@@ -263,7 +263,8 @@ export function downloadEmailKitFile(kit, routeId = localAccount.getCachedRouteI
  */
 export async function createEmailAccountKit({ rawName, email, pass, includePhrase = false, draftState = { email: "", pass: "" } }) {
   localAccount.setDisplayName(rawName);
-  await localAccount.ensureLocalAccount();
+  const acc = await localAccount.ensureLocalAccount();
+  await accountExit.hasSovereignExit(acc.routeId);
   let phrase = "";
   if (includePhrase) {
     const { getAccountPhrase } = await import("./account-phrase.js");
@@ -281,7 +282,7 @@ export async function createEmailAccountKit({ rawName, email, pass, includePhras
     email,
     displayName: rawName,
     routeId: saved.routeId,
-    encodedVault: encodeVaultBundleForUrl(saved.bundle),
+    encodedVault: encodeVaultBundleForUrl(saved.syncBundle || saved.bundle),
     phrase,
     includePhrase,
   });
@@ -306,7 +307,7 @@ export function validateEmailEntry({ rawName = "", email = "", pass = "", includ
 
 /**
  * Tenta restaurar uma conta existente a partir de link/código do kit, frase (ADR-032),
- * arquivos `.txt` do backup semanal/mensal ou busca de cofre por e-mail/senha (§6.3.8).
+ * arquivos `.txt`/`.voxid` ou busca de cofre por e-mail/senha (§6.3.8).
  * @param {{ email?: string, pass?: string, kitText?: string, phraseText?: string, files?: File[] }} opts Dados informados na volta.
  * @returns {Promise<{ ok: boolean, reason?: string, routeId?: string, displayName?: string, noServer?: boolean }>} Resultado.
  */
@@ -320,16 +321,36 @@ export async function restoreAccountFromInputs({ email = "", pass = "", kitText 
   }
   if (kitText) return { ok: false, reason: "Não achei um link #/sync?b=… ou código VOX1:… válido nesse texto." };
   if (phraseText) return (await import("./account-phrase.js")).restoreFromPhrase(phraseText);
-  if (files.length) return restoreFromInboxFiles(files, pass);
+  if (files.length) return restoreFromInboxFiles(files, pass, email);
   if (!pass) return { ok: false, reason: "Digite seu e-mail e senha, a frase de recuperação ou cole o código do e-mail." };
   return oauthVault.restoreFromPassphraseVault(pass, { email });
 }
 
-async function restoreFromInboxFiles(files, pass) {
+async function restoreSingleBackupFile(text, pass, email) {
+  const kitRecord = extractVaultRecordFromEmailKit(text);
+  if (kitRecord) {
+    if (!pass) return { ok: false, reason: "Digite a Senha Soberana para abrir o arquivo de acesso." };
+    const res = await oauthVault.restoreFromPassphraseVault(pass, { email, directRecord: kitRecord });
+    if (res.ok) confirmEmailKitSent(res.routeId);
+    return res;
+  }
+  const { KIND_PLAIN, KIND_WRAPPED, peekBackupKind, importAccountBundle } = await import("./account-backup.js");
+  const kind = peekBackupKind(text);
+  if (kind !== KIND_PLAIN && kind !== KIND_WRAPPED) return null;
+  if (kind === KIND_WRAPPED && !pass) return { ok: false, reason: "Digite a Senha Soberana para abrir o arquivo .voxid." };
+  const acc = await importAccountBundle(text, pass, { asFile: true });
+  return { ok: true, routeId: acc?.routeId, displayName: localAccount.getDisplayName() };
+}
+
+async function restoreFromInboxFiles(files, pass, email = "") {
+  const texts = await Promise.all(files.map((f) => f.text()));
+  if (texts.length === 1) {
+    const single = await restoreSingleBackupFile(texts[0], pass, email);
+    if (single) return single;
+  }
   if (!pass) return { ok: false, reason: "Digite a Senha Soberana para abrir os backups." };
   const backup = await import("./inbox-backup.js");
-  const texts = await Promise.all(files.map((f) => f.text()));
-  if (!texts.every(backup.isInboxBackupText)) return { ok: false, reason: "Escolha só os backups do Vox que chegaram no seu e-mail (.txt)." };
+  if (!texts.every(backup.isInboxBackupText)) return { ok: false, reason: "Escolha o arquivo de acesso (.txt/.voxid) ou os backups do e-mail (.txt)." };
   let acc = null;
   for (const text of texts.sort((a, b) => JSON.parse(a).to - JSON.parse(b).to)) acc = await backup.restoreInboxBackup(text, pass);
   return { ok: true, routeId: acc?.routeId, displayName: localAccount.getDisplayName() };

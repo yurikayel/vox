@@ -278,22 +278,15 @@ function parseSaveVaultOpts(emailOrOpts) {
   return { email, hasPrev, prevEmail, prevPassphrase };
 }
 
-async function revokeVaultAddress(address, ownerToken) {
-  try {
-    localStorage.removeItem(VAULT_STORAGE_PREFIX + address);
-  } catch {
-    /* ignore */
-  }
-  await saveRemoteVaultRecord(address, { v: 2, revoked: true, updatedAt: Date.now() }, ownerToken);
+function revokeVaultAddress(address, ownerToken) {
+  try { localStorage.removeItem(VAULT_STORAGE_PREFIX + address); } catch { /* ignore */ }
+  return saveRemoteVaultRecord(address, { v: 2, revoked: true, updatedAt: Date.now() }, ownerToken);
 }
 
 async function maybeRevokePreviousVault(opts, cleanPass, newAddress) {
   if (!opts.hasPrev) return;
   const prevPass = opts.prevPassphrase || cleanPass;
-  const [oldAddress, oldToken] = await Promise.all([
-    deriveVaultAddress(prevPass, opts.prevEmail),
-    deriveVaultOwnerToken(prevPass, opts.prevEmail),
-  ]);
+  const [oldAddress, oldToken] = await Promise.all([deriveVaultAddress(prevPass, opts.prevEmail), deriveVaultOwnerToken(prevPass, opts.prevEmail)]);
   if (oldAddress !== newAddress) await revokeVaultAddress(oldAddress, oldToken);
 }
 
@@ -312,7 +305,9 @@ export async function savePassphraseVault(passphrase, emailOrOpts = "") {
   const opened = await openBundleForVault(opts.prevPassphrase || clean);
   if (!opened.ok) return opened;
   const [address, ownerToken] = await Promise.all([deriveVaultAddress(clean, opts.email), deriveVaultOwnerToken(clean, opts.email)]);
-  const encrypted = await encryptVaultV2(buildCompactVaultBundle(opened.bundle), clean, undefined, opts.email);
+  const compact = buildCompactVaultBundle(opened.bundle);
+  const encrypted = await encryptVaultV2(compact, clean, undefined, opts.email);
+  const syncBundle = opts.email ? await encryptVaultV2(compact, clean) : encrypted;
   const remote = await persistVaultRecord(address, encrypted, ownerToken);
   await maybeRevokePreviousVault(opts, clean, address);
   if (remote > 0) accountExit.markAccountExit("cofre", opened.bundle.routeId);
@@ -324,6 +319,7 @@ export async function savePassphraseVault(passphrase, emailOrOpts = "") {
     routeId: opened.bundle.routeId,
     displayName: opened.bundle.displayName,
     bundle: encrypted,
+    syncBundle,
     locked: await localAccount.lockAfterPasswordBackup(clean, opts.prevPassphrase),
   };
 }
