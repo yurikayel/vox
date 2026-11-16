@@ -14,13 +14,14 @@ import { renderSovereigntyCard } from "../client/js/render/profile-sovereignty.j
 const PASS = "minha senha inicial ok";
 const NEW_PASS = "nova senha soberana ok";
 
-/** Servidor de memória falso: guarda o último POST por endereço. */
-function installMemoryServer() {
+/** Servidor de memória falso: guarda o último POST por endereço; `rejectAddress` recusa a gravação nesse endereço. */
+function installMemoryServer({ rejectAddress = "" } = {}) {
   const origFetch = globalThis.fetch;
   const store = new Map();
   globalThis.fetch = async (url, opts = {}) => {
     const key = String(url).split("/memory/vault/")[1];
     if (!key) return { ok: false, status: 404, json: async () => ({}) };
+    if (opts.method === "POST" && key === rejectAddress) return { ok: false, status: 429, json: async () => ({}) };
     if (opts.method === "POST") {
       store.set(key, JSON.parse(opts.body).record);
       return { ok: true, json: async () => ({ status: "saved" }) };
@@ -87,6 +88,39 @@ test("Perfil - gravar com e-mail sem cofre só-senha anterior não marca endere�
     assert.equal((await oauthVault.savePassphraseVault(PASS, "ana@exemplo.br")).ok, true);
     assert.equal(server.store.has(await vaultCrypto.deriveVaultAddress(PASS, "")), false);
     assert.equal([...server.store.values()].filter((r) => r.revoked).length, 0);
+  } finally {
+    server.restore();
+  }
+});
+
+test("Perfil - servidor que recusa o cofre novo não fica sem cofre: o antigo segue lá fora e sai só deste aparelho", async () => {
+  const server = installMemoryServer({ rejectAddress: await vaultCrypto.deriveVaultAddress(PASS, "ana@exemplo.br") });
+  try {
+    freshDevice();
+    await localAccount.ensureLocalAccount();
+    assert.equal((await oauthVault.savePassphraseVault(PASS, "")).ok, true);
+    const passOnly = await vaultCrypto.deriveVaultAddress(PASS, "");
+    const res = await oauthVault.savePassphraseVault(PASS, "ana@exemplo.br");
+    assert.equal(res.remote, 0);
+    assert.equal(server.store.get(passOnly).revoked, undefined, "o único cofre lá fora não pode ser revogado");
+    assert.equal(localStorage.getItem(`vox-vault-v2:${passOnly}`), null);
+  } finally {
+    server.restore();
+  }
+});
+
+test("Perfil - trocar a senha e pôr e-mail juntos tira do ar o cofre só-senha da senha antiga", async () => {
+  const server = installMemoryServer();
+  try {
+    freshDevice();
+    const acc = await localAccount.ensureLocalAccount();
+    assert.equal((await oauthVault.savePassphraseVault(PASS, "")).ok, true);
+    assert.equal((await oauthVault.savePassphraseVault(NEW_PASS, profileVaultOptions("ana@exemplo.br", PASS))).ok, true);
+    assert.equal(server.store.get(await vaultCrypto.deriveVaultAddress(PASS, "")).revoked, true);
+    freshDevice();
+    assert.equal((await oauthVault.restoreFromPassphraseVault(PASS)).ok, false, "a senha antiga não abre mais");
+    const res = await oauthVault.restoreFromPassphraseVault(NEW_PASS, { email: "ana@exemplo.br" });
+    assert.equal(res.routeId, acc.routeId);
   } finally {
     server.restore();
   }
