@@ -5,6 +5,7 @@ import * as localAccount from "./local-account.js";
 import { getWelcomeProfile, isWelcomeRouteId } from "./vox-welcome-profile.js";
 import { isBeforeGenesisMs, isTestRouteId } from "./genesis.js";
 import { getLocalIdentityMeta, hasAnyIdentityMeta, pickIdentityMeta } from "./profile-identity-meta.js";
+import { detectSocialAvatarType } from "./account-social-match.js";
 
 const CARDS_KEY = "vox-profile-cards-v1";
 const FORBIDDEN_CARD_KEYS = new Set(["__proto__", "constructor", "prototype"]);
@@ -38,19 +39,18 @@ function saveCardsMap(cardsMap) {
   }
 }
 
-function normalizeMetaAvatarBase(clean) {
+function normalizeMetaAvatarBase(url) {
   // Links do Facebook identificam a conta por query (?psid=/asid=); sem isso todos colidiriam.
-  if (clean.includes("psid=") || clean.includes("asid=")) return clean.split("#")[0];
-  return clean.split("?")[0];
+  const base = `${url.origin}${url.pathname}`;
+  return url.searchParams.has("psid") || url.searchParams.has("asid") ? `${base}${url.search}` : base;
 }
 
+// Provedor pelo host da URL (detectSocialAvatarType), nunca por trecho: "https://x.example/?a=fbcdn.net" fica inteira.
 function normalizeSocialAvatarBase(av) {
-  if (!av) return "";
-  const clean = String(av).trim();
-  if (clean.includes("googleusercontent.com/")) return clean.split("=")[0];
-  if (clean.includes("fbsbx.com") || clean.includes("fbcdn.net") || clean.includes("facebook.com")) {
-    return normalizeMetaAvatarBase(clean);
-  }
+  const clean = String(av || "").trim();
+  const type = detectSocialAvatarType(clean);
+  if (type === "google") return clean.split("=")[0];
+  if (type === "meta") return normalizeMetaAvatarBase(new URL(clean));
   return clean;
 }
 
