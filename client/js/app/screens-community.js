@@ -7,11 +7,12 @@
  * @see client/js/app/aviso-flow.js
  */
 import * as welcomeProfile from "../vox-welcome-profile.js";
-import { sanitizeMediaUrl } from "../shared/html.js";
+import { escapeHtml, sanitizeMediaUrl } from "../shared/html.js";
 import { confirmGovernanceVote } from "./vote-confirm.js";
 import { addContactAndNotify } from "./contact-notify-flow.js";
 
 import * as gql from "../graphql.js";
+import * as brcode from "../brcode.js";
 import * as render from "../render.js";
 import * as mock from "../mock.js";
 import * as wallet from "../wallet.js";
@@ -21,6 +22,7 @@ import * as mod from "../moderation.js";
 import * as cacheNode from "../cache-node.js";
 import * as peers from "../peers.js";
 import * as localAccount from "../local-account.js";
+import * as listing from "../listing.js";
 import * as listingUi from "../listing-ui.js";
 import * as i18n from "../i18n-pt-br.js";
 import * as featureFlags from "../feature-flags.js";
