@@ -12,7 +12,7 @@ import { dropSessionPassphrase, dropStorageKeys } from "./local-wipe.js";
 import * as keyLock from "./key-lock.js";
 import { canonicalString, withSigv } from "./sig-format.js";
 import { bytesToB64Url, computeRouteId, verifyPayload } from "./signed-verify.js";
-import { computeAccountSocialKey, matchesOAuthEnrichment } from "./account-social-match.js";
+import { computeAccountSocialKey, detectSocialAvatarType, matchesOAuthEnrichment } from "./account-social-match.js";
 
 export { computeRouteId, verifyPayload };
 export { LOCAL_WIPE_NOTICE, confirmLocalWipe } from "./local-wipe.js";
@@ -467,7 +467,7 @@ export function findVaultAccountByOAuth({ oauthProvider = "", oauthSub, oauthEma
   const cleanSub = String(oauthSub || "").trim();
   const cleanEmail = String(oauthEmail || "").trim().toLowerCase();
   const cleanAv = String(avatarUrl || "").trim();
-  const isGoogleAv = cleanAv.includes("googleusercontent.com/");
+  const isGoogleAv = detectSocialAvatarType(cleanAv) === "google";
 
   for (const item of Object.values(vault)) {
     if (matchesOAuthEnrichment({ enrich: item.enrichment || {}, cleanSub, cleanEmail, isGoogleAv, cleanAv, provider: oauthProvider })) {

@@ -4,11 +4,25 @@
  * Funções puras sobre as entradas do cofre local; quem lê e grava o cofre é `local-account.js`.
  */
 
-function detectSocialAvatarType(av) {
-  if (!av) return null;
-  if (av.includes("googleusercontent.com/")) return "google";
-  if (av.includes("facebook.com") || av.includes("fbsbx.com") || av.includes("fbcdn.net")) return "meta";
-  return null;
+const META_AVATAR_HOSTS = ["facebook.com", "fbsbx.com", "fbcdn.net"];
+
+/**
+ * De que login social é a foto, pelo host da URL (nunca por trecho do texto):
+ * "https://x.example/?a=googleusercontent.com/" não é Google. Só https.
+ * @param {string} avatarUrl
+ * @returns {"google"|"meta"|null}
+ */
+export function detectSocialAvatarType(avatarUrl) {
+  let url;
+  try {
+    url = new URL(avatarUrl);
+  } catch {
+    return null;
+  }
+  if (url.protocol !== "https:") return null;
+  const host = `.${url.hostname}`;
+  if (host.endsWith(".googleusercontent.com")) return "google";
+  return META_AVATAR_HOSTS.some((h) => host.endsWith(`.${h}`)) ? "meta" : null;
 }
 
 /**
@@ -37,8 +51,7 @@ function isSameProvider(expected, current) {
 function matchesSocialAvatar(enrichAv, targetAv, isGoogleAv) {
   if (!enrichAv || !targetAv) return false;
   if (isGoogleAv && enrichAv.split("=")[0] === targetAv.split("=")[0]) return true;
-  const isMetaAv = targetAv.includes("facebook.com") || targetAv.includes("fbsbx.com") || targetAv.includes("fbcdn.net");
-  return Boolean(isMetaAv && enrichAv === targetAv);
+  return detectSocialAvatarType(targetAv) === "meta" && enrichAv === targetAv;
 }
 
 /**
