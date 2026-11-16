@@ -91,7 +91,7 @@ Um atalho deixa o caso comum rápido, mas **não conta como saída**: ele quebra
 - cada aparelho recebe uma subchave delegada;
 - perder o celular passa a ser revogar uma subchave, não perder a conta.
 
-Isso muda a forma assinada e o `routeId`, então pede um ADR e uma RFC próprios. **A semente do §3.3 já é a raiz desse desenho:** contas criadas depois deste ADR migram sem pedir nada à pessoa.
+Isso muda a forma assinada, então pede um ADR e uma RFC próprios: o ADR é o [ADR-034](./034-raiz-e-subchaves-por-aparelho.md) (proposto), que mantém o `routeId` fazendo da chave de hoje a raiz. **A semente do §3.3 já é a raiz desse desenho:** contas criadas depois deste ADR migram sem pedir nada à pessoa.
 
 ## 4. Consequências
 
