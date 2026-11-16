@@ -1,9 +1,9 @@
 {
-  "git_sha": "0eb5416",
-  "branch": "feat/adr032-vault-email-senha",
+  "git_sha": "5575d32",
+  "branch": "feat/guardiao-pedido-qr",
   "test_js": 1148,
   "test_python": 111,
   "test_total": 1259,
-  "cache_name": "vox-pwa-v7.120-real-network-audio-video-upload",
-  "generated_at": "2026-11-16T17:18:28Z"
+  "cache_name": "vox-pwa-v7.121-real-network-audio-video-upload",
+  "generated_at": "2026-11-16T18:12:26Z"
 }

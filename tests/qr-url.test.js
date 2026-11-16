@@ -7,6 +7,9 @@ import { fileURLToPath } from "node:url";
 import * as qr from "../client/js/qr-url.js";
 import * as share from "../client/js/share.js";
 import * as render from "../client/js/render.js";
+import { versionBits } from "../client/js/qr-url-layout.js";
+import * as guardianReturn from "../client/js/guardian-return.js";
+import * as renderGuardianReturn from "../client/js/render/guardian-return.js";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "client");
 
@@ -67,6 +70,45 @@ test("qr-url - rejects Pix payload and non-share hashes", () => {
   assert.equal(qr.isVoxShareUrl("00020126br.gov.bcb.pix"), false);
   assert.throws(() => qr.encodeVoxUrl("00020126br.gov.bcb.pix"));
   assert.throws(() => qr.encodeVoxUrl("https://yurikayel.github.io/vox/#/wallet"));
+});
+
+test("qr-url - versions 2–9 roundtrip, 6–9 with two interleaved blocks", () => {
+  const base = "https://yurikayel.github.io/vox/#/t/";
+  const seen = new Set();
+  for (const len of [40, 60, 90, 120, 140, 160, 200, 230]) {
+    const url = base.padEnd(len, "x");
+    const encoded = qr.encodeVoxUrl(url);
+    seen.add(encoded.version);
+    assert.equal(encoded.size, 17 + 4 * encoded.version);
+    assert.equal(qr.decodeQrModules(encoded.modules), url, `len ${len}`);
+  }
+  assert.deepEqual([...seen].sort(), [3, 4, 5, 6, 7, 8, 9]);
+  assert.throws(() => qr.encodeVoxUrl(base.padEnd(231, "x")), /max 230 bytes/);
+});
+
+test("qr-url - version 7+ carries the 18-bit version information (ISO/IEC 18004 Annex D)", () => {
+  assert.equal(versionBits(7), 0x07c94);
+  assert.equal(versionBits(8), 0x085bc);
+  assert.equal(versionBits(9), 0x09a99);
+  const { modules, size } = qr.encodeVoxUrl("https://yurikayel.github.io/vox/#/t/".padEnd(150, "x"));
+  const bits = versionBits(7);
+  for (let i = 0; i < 18; i++) {
+    const want = ((bits >>> i) & 1) === 1;
+    assert.equal(modules[Math.floor(i / 3)][size - 11 + (i % 3)], want, `top-right bit ${i}`);
+    assert.equal(modules[size - 11 + (i % 3)][Math.floor(i / 3)], want, `bottom-left bit ${i}`);
+  }
+});
+
+test("qr-url - guardian request link (#/guardiao) fits and round-trips", async () => {
+  const kp = await crypto.subtle.generateKey({ name: "ECDH", namedCurve: "P-256" }, true, ["deriveBits"]);
+  const req = guardianReturn.buildRequest({ owner: "vx_5Tq0igD1yrQW3FnSearO", publicJwk: await crypto.subtle.exportKey("jwk", kp.publicKey) });
+  for (const base of ["https://yurikayel.github.io/vox/", "https://vox.exemplo-comunidade.org.br/app/"]) {
+    const link = guardianReturn.requestLink(req, base);
+    assert.ok(qr.isVoxShareUrl(link));
+    assert.equal(qr.decodeQrModules(qr.encodeVoxUrl(link).modules), link);
+  }
+  const html = renderGuardianReturn.renderRecoverPendingHtml({ link: "https://x.example/#/guardiao?o=vx_a&k=b&t=1&n=c", code: ["um"], received: 0 });
+  assert.match(html, /id="btn-guardian-recover-qr" data-qr-url="https:\/\/x\.example\/#\/guardiao\?o=vx_a&amp;k=b&amp;t=1&amp;n=c"/);
 });
 
 test("qr-url - own profile and share sheets expose QR deste link", () => {
