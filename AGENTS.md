@@ -15,4 +15,4 @@ Operação curta: [docs/process/metodo-agentes-mutex-e-revisor.md](docs/process/
 
 ## Testes e Qualidade
 
-Antes de merge em `main`: `npm run validate` na raiz de `vox/` (lint, lint do Python, auditoria de complexidade, auditoria de documentação e testes). O `main` é protegido: merge só por PR com o CI verde.
+PRs de feature vão para `develop`; `develop` vai para `main` por PR quando o lote está pronto. Antes de pedir merge: `npm run validate` na raiz de `vox/` (lint, lint do Python, auditoria de complexidade, auditoria de documentação e testes). `develop` e `main` são protegidos: merge só por PR com o CI verde.

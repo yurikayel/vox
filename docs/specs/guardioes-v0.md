@@ -114,10 +114,22 @@ Regras de recebimento (em `dm-wire.js`, antes de `saveDmMessage`, como já é fe
 
 Cada parte é um PR, com SW novo quando tocar o cliente, e a 3c só entra depois do THREAT-MODEL T25 revisado.
 
-**Andamento:** 3a em main (`shamir-gf256.js`); **3b no SW v7.117** — `guardians.js` (mensagens, mapa da dona, guarda), `app/guardians-flow.js` (envio, recebimento, parar de guardar) e a tela `#/guardioes`. Na implementação, o laço mútuo é: a dona segue ou tem a pessoa nos contatos **e** recebeu dela o aviso assinado "adicionou você aos contatos".
+**Andamento:** 3a em main (`shamir-gf256.js`); **3c no SW v7.119** — `guardian-return.js` (pedido, código, caixa, resposta, juntar), `app/guardian-return-flow.js` e as telas `#/guardiao?…` e `#/voltar` (ver §13); falta o QR do pedido. **3b no SW v7.117** — `guardians.js` (mensagens, mapa da dona, guarda), `app/guardians-flow.js` (envio, recebimento, parar de guardar) e a tela `#/guardioes`. Na implementação, o laço mútuo é: a dona segue ou tem a pessoa nos contatos **e** recebeu dela o aviso assinado "adicionou você aos contatos".
 
 ## 12. Decisões do mantenedor (2026-11-14, antes da 3b)
 
 1. **Volta para o aparelho novo: pessoalmente ou pela caixa postal.** A `resposta` vai por WebRTC direto quando os dois aparelhos estão juntos **e**, quando há um relay, pela caixa postal cega no endereço temporário `vxtmp_` (§7.4). No piloto sem relay público, na prática só a volta pessoal funciona; a tela diz isso em vez de prometer.
 2. **Guardião só com laço mútuo:** a lista de escolha mostra só quem **segue a dona e é seguido por ela**, e tem chave de DM conhecida. Laço de mão única (ou conta recém-criada que só segue) não aparece.
 3. **Padrão 3 de 5** no piloto. A tela aceita de 2 de 3 a 7 de 7 (§3), mas abre em 3 de 5.
+
+## 13. Como a 3c ficou (2026-11-14)
+
+O que mudou em relação ao §7, e por quê:
+
+1. **Dizer quem é (§7.1):** o aparelho novo aceita o link do perfil ou o código `vx_…`. O `@handle` ainda não: num aparelho novo não há diretório para achar a conta pelo nome, e o pedido tem que ser exato.
+2. **Chave temporária (§7.2):** fica na aba, como dito, mas a parte privada vai **cifrada pela chave do aparelho** (`sealJsonStrict`), nunca em claro. Navegador sem chave do aparelho (aba anônima sem IndexedDB) não cria pedido.
+3. **Volta pessoal (§7.4):** em vez de WebRTC direto (o aparelho novo não tem endereço na sinalização), o guardião manda a **resposta selada como texto** (`vox-volta:…`) pelo canal que quiser, e o aparelho novo cola. Só a chave temporária abre o texto, então o canal não importa. Com relay, a resposta vai também para a caixa `vxtmp_`.
+4. **Nome e foto (§7.3):** vêm dos contatos e do diretório do guardião; sem eles, do nome que a dona assinou no pedaço. Nunca do pedido, que não leva nome.
+5. **Juntar (§7.5):** cada pedaço só conta com a assinatura da dona; a conta juntada tem que ser a pedida, conferido **antes** de trocar qualquer chave.
+6. **QR do pedido:** o link tem uns 150 caracteres, mais do que o codificador atual guarda. Fica para um PR seguinte.
+

@@ -3,10 +3,13 @@
  * a partir do escalar. O WebCrypto só importa chave privada EC junto com o ponto público (`x`, `y`), e nem todo
  * navegador aceita PKCS#8 sem ele; por isso o ponto é calculado aqui. Roda só no aparelho da pessoa, ao criar
  * a conta ou ao entrar pela frase. Conferido contra chaves geradas pelo próprio WebCrypto nos testes.
+ * Também comprime e descomprime o ponto público (SEC 1 §2.3.3–2.3.4), para a chave temporária caber no link de
+ * pedido dos guardiões.
  */
 
 const P = 0xffffffff00000001000000000000000000000000ffffffffffffffffffffffffn;
 const A = P - 3n;
+const B = 0x5ac635d8aa3a93e7b3ebbd55769886bc651d06b0cc53b0f63bce3c3e27d2604bn;
 /** Ordem do grupo da P-256. */
 export const N = 0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551n;
 const G = {
@@ -111,4 +114,34 @@ export function publicPoint(d) {
   const zInv = inverse(acc.z);
   const zInv2 = mod(zInv * zInv);
   return { x: mod(acc.x * zInv2), y: mod(acc.y * zInv2 * zInv) };
+}
+
+/**
+ * Ponto comprimido: 1 byte de paridade de `y` (2 ou 3) e os 32 bytes de `x`.
+ * @param {{ x: bigint, y: bigint }} point
+ * @returns {Uint8Array} 33 bytes
+ */
+export function compressPoint({ x, y }) {
+  const out = new Uint8Array(33);
+  out[0] = y & 1n ? 3 : 2;
+  out.set(bigIntTo32Bytes(x), 1);
+  return out;
+}
+
+/**
+ * Ponto a partir da forma comprimida; recusa o que não está na curva.
+ * @param {Uint8Array} bytes 33 bytes
+ * @returns {{ x: bigint, y: bigint }}
+ */
+export function decompressPoint(bytes) {
+  if (!(bytes instanceof Uint8Array) || bytes.length !== 33 || (bytes[0] !== 2 && bytes[0] !== 3)) {
+    throw new Error("Ponto comprimido inválido.");
+  }
+  const x = bytesToBigInt(bytes.subarray(1));
+  if (x >= P) throw new Error("Ponto comprimido inválido.");
+  const rhs = mod(x * x * x + A * x + B);
+  const root = modPow(rhs, (P + 1n) / 4n, P);
+  if (mod(root * root) !== rhs) throw new Error("Ponto fora da curva.");
+  const y = (root & 1n) === BigInt(bytes[0] & 1) ? root : mod(-root);
+  return { x, y };
 }

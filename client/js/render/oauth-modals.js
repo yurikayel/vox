@@ -71,12 +71,12 @@ export function renderEmailKitCardHtml({ email = "", mailtoUrl = "" } = {}) {
           </div>`;
 }
 
-/** Conta que já existe: e-mail e senha, link/código do e-mail, frase (ADR-032), QR do outro aparelho ou arquivos .txt. */
+/** Conta que já existe: e-mail e senha, link/código do e-mail, frase (ADR-032), guardiões, QR do outro aparelho ou arquivos .txt. */
 function renderGenesisHaveHtml() {
   return `
           <h2 class="genesis-panel-title">Já tenho conta</h2>
           <p class="genesis-lead"><strong>Com e-mail e senha:</strong> digite os dois para buscar seu cofre. Sem servidor conectado, cole o link <code>#/sync?b=…</code>, código <code>VOX1:…</code> ou o texto do e-mail.</p>
-          <p class="genesis-lead"><strong>Com a frase:</strong> digite as 12 (ou 24) palavras na ordem. Não precisa de internet.</p>
+          <p class="genesis-lead"><strong>Com a frase:</strong> digite as 12 (ou 24) palavras na ordem. Não precisa de internet. Sem a frase, <a href="#/voltar">peça a volta aos seus guardiões</a>.</p>
           <p class="genesis-lead"><strong>Com o outro aparelho:</strong> nele, abra Perfil → QR para outro aparelho e aponte a câmera deste.</p>
           <form id="form-oauth-restore-passphrase" class="genesis-inline-form genesis-inline-form--stack">
             <input type="email" id="oauth-restore-email-input" class="agora-inscription genesis-input" autocomplete="username" placeholder="Seu e-mail (se cadastrou)" aria-label="Seu e-mail" />
