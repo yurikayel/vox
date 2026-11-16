@@ -12,7 +12,7 @@ export const EXIT_BANNER_ID = "accountExitBanner";
 /** Para onde "Criar minha saída" leva. */
 export const EXIT_ROUTE = "#/frase";
 /** Telas que já criam uma saída: nelas a faixa só repetiria a tela. */
-const EXIT_SCREENS = [EXIT_ROUTE, "#/backup", "#/guardioes"];
+const EXIT_SCREENS = [EXIT_ROUTE, "#/backup", "#/guardioes", "#/guardiao", "#/voltar"];
 
 /**
  * HTML da faixa.
