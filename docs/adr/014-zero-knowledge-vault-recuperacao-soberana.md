@@ -82,6 +82,7 @@ Implementar uma arquitetura de **Cofre de Conhecimento Zero (Zero-Knowledge Vaul
 - O link é codificado diretamente em QR Code nativo offline via `qr-url.js` (`VOX_SHARE_HASH` estendido para aceitar `sync`).
 - **Fluxo do Usuário:**
   1. No computador, em `#/profile`, o usuário clica em `📲 QR Code para Celular`.
+     *(Nota 2026-11-16: o link não leva mais a senha, só o cofre cifrado (`#/sync?b=`, PM-92), e a senha é digitada no celular. O QR leva um cofre mínimo, com conta, semente e nome, para caber no QR versão 11.)*
   2. Aponta a câmera do celular para a tela: o navegador móvel abre a rota `#/sync`.
   3. O cliente obtém o cofre na Memória Central, deriva a chave, decifra o bundle e importa a conta instantaneamente, sem digitação manual.
 
