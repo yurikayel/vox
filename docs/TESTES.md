@@ -13,6 +13,7 @@ npm run test:relay       # python -m unittest discover -s relay -p "test_*.py"
 node --test tests/civic-post.test.js                   # um arquivo
 node --test --test-name-pattern="dm badge" tests/       # por nome
 python -m unittest relay.test_server                   # um módulo do relay (na raiz)
+npm run test:e2e         # Chromium real, rede de fora bloqueada (fora do CI; ver §3.1)
 ```
 
 Requisitos: Node 22+ (o CI roda 22 e 24) e Python 3.11+ (o CI roda 3.11 e 3.12). Não há dependência de runtime para testar; `npm install` só traz o ESLint.
@@ -39,7 +40,15 @@ test("meu-modulo — caso feliz", () => {
 
 ## 3. Relay (`relay/test_*.py`, `unittest`)
 
-Stdlib pura. `test_server.py` sobe o handler HTTP em memória e exercita as rotas descritas em [relay-api.md](./specs/relay-api.md). Os testes usam diretórios temporários via `VOX_RELAY_*_DIR`, nunca o `.cache/` real.
+Stdlib pura. `test_server.py` sobe o handler HTTP em memória e exercita as rotas descritas em [relay-api.md](./specs/relay-api.md). Os testes usam diretórios temporários via `VOX_RELAY_*_DIR`, nunca o `.cache/` real. `test_relay_limites_e_rotas.py` (limites de tamanho, entradas ruins, quadros WebSocket) troca as quatro pastas do relay por um diretório temporário em `setUpModule` e devolve as originais no fim; todo teste novo que mexa em pasta do relay faz o mesmo.
+
+### 3.1 E2E no navegador (`e2e/test_*.py`)
+
+`npm run test:e2e` abre Chromium real (Playwright para Python: `pip install playwright` e `python -m playwright install chromium`), com o cliente servido localmente e **toda rede de fora bloqueada**. Cobre entrada e recarga com IndexedDB, as rotas principais, os assistentes em etapas e dois navegadores na malha. Não roda no CI; a malha de dois navegadores do CI é `scripts/mesh-e2e.mjs`.
+
+### 3.2 Cobertura não é meta
+
+Não há gate de cobertura. Teste novo entra porque confere um comportamento (com o nome do comportamento), não para tocar linhas. A varredura de cobertura de 2026-11-16 (99 arquivos `coverage-*`) foi triada: os defeitos reais que ela achou viraram correções com teste próprio (`tests/achados-cobertura.test.js`), e os arquivos de varredura não entraram.
 
 ## 4. O que o CI checa (`.github/workflows/ci.yml`)
 
