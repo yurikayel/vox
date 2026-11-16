@@ -13,6 +13,7 @@ const ALIGNMENT_CENTERS = {
   7: [6, 22, 38],
   8: [6, 24, 42],
   9: [6, 26, 46],
+  11: [6, 30, 54],
 };
 
 export function cloneModules(modules) {

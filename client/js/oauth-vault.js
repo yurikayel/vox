@@ -30,7 +30,7 @@ import {
 
 export { encodeVaultBundleForUrl, decodeVaultBundleFromUrl } from "./vault-crypto.js";
 export { fetchRemoteVaultRecord, saveRemoteVaultRecord } from "./vault-store.js";
-export { VAULT_PASSPHRASE_MIN, restoreFromPassphraseVault, savePassphraseVault } from "./passphrase-vault.js";
+export { VAULT_PASSPHRASE_MIN, buildQrSyncRecord, restoreFromPassphraseVault, savePassphraseVault } from "./passphrase-vault.js";
 
 /** Revoga os cofres v1 que este aparelho conhece. Roda na abertura do app. */
 export function runLegacyVaultMigration() {
