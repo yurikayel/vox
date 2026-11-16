@@ -5,7 +5,7 @@ import * as render from "../render.js";
 import * as cacheNode from "../cache-node.js";
 import * as social from "../social.js";
 import * as postOwnership from "../post-ownership.js";
-import * as frames from "../open-frames-host.js";
+import * as frames from "../frames.js";
 import * as i18n from "../i18n-pt-br.js";
 import { honestMessage } from "../honest-errors.js";
 import { parseRoute } from "./route-parse.js";
@@ -161,23 +161,22 @@ export async function executeFrameAction(frame, postId, index, label) {
   });
   const signed = await localAccount.signPayload(payload);
   await cacheNode.saveLocalPost(signed);
+  frames.saveUserFrameAction(postId, signed);
   peers.broadcastGossipUpdate(signed);
 
-  const container = document.getElementById(`post-frame-container-${postId}`);
-  if (container) {
-    const updatedPost = await resolvePostForFrame(postId);
-    const updatedFrame = frames.applyFrameActionToPost(updatedPost, signed);
-    if (updatedFrame) {
-      container.innerHTML = render.renderFrameCardHtml(updatedFrame, postId, { previewOnly: false });
-    }
+  const container = document.getElementById(`frame-content-${postId}`);
+  const parsed = frames.parseFrame(frame);
+  if (container && parsed.valid) {
+    const actions = await cacheNode.getLocalPosts({ type: "frame-action", postId }).catch(() => []);
+    container.innerHTML = render.renderFrameContentHtml(parsed.frame, frames.getFrameState(parsed.frame, actions, signed));
   }
   share.showToast(i18n.frameActionRecordedToast || "Ação registrada no mini-app!");
 }
 
 export async function handleFrameActionClick(btn) {
   const postId = btn.dataset.postId;
-  const index = parseInt(btn.dataset.btnIndex, 10);
-  const label = btn.dataset.btnLabel;
+  const index = parseInt(btn.dataset.index ?? btn.dataset.btnIndex, 10);
+  const label = btn.dataset.label ?? btn.dataset.btnLabel;
   if (!postId || isNaN(index)) return;
 
   const post = await resolvePostForFrame(postId);
@@ -197,8 +196,7 @@ export async function handleFrameActionClick(btn) {
 }
 
 function closePostEditModalUi() {
-  const container = document.getElementById("post-edit-modal-container");
-  if (container) container.innerHTML = "";
+  render.closePostEditModal(document.getElementById("modal-container"));
 }
 
 function createEditedPayload(existing, title, body, removeImage) {
@@ -243,16 +241,20 @@ export async function openPostEditModal(postId) {
     share.showToast("Só é possível editar posts seus criados neste navegador.", "error");
     return;
   }
-  const container = document.getElementById("post-edit-modal-container");
+  const container = document.getElementById("modal-container");
   if (!container) return;
 
-  container.innerHTML = render.renderPostEditModalHtml(existing);
-  container.querySelector(".modal-backdrop")?.addEventListener("click", closePostEditModalUi);
-  container.querySelector(".btn-modal-close")?.addEventListener("click", closePostEditModalUi);
-  container.querySelector("#btn-post-edit-cancel")?.addEventListener("click", closePostEditModalUi);
-  container.addEventListener("keydown", (ev) => {
-    if (ev.key === "Escape") closePostEditModalUi();
+  render.renderPostEditModal(container, {
+    id: postId,
+    title: existing.title,
+    body: existing.body,
+    hasImage: Boolean(existing.image),
   });
+  const overlay = container.querySelector(".modal-overlay");
+  overlay?.addEventListener("click", (ev) => { if (ev.target === overlay) closePostEditModalUi(); });
+  overlay?.addEventListener("keydown", (ev) => { if (ev.key === "Escape") closePostEditModalUi(); });
+  container.querySelector(".btn-close-post-edit")?.addEventListener("click", closePostEditModalUi);
+  container.querySelector(".btn-cancel-post-edit")?.addEventListener("click", closePostEditModalUi);
   container.querySelector("#form-post-edit")?.addEventListener("submit", (ev) => {
     ev.preventDefault();
     submitPostEdit(existing, document.getElementById("btn-post-edit-save"));
