@@ -8,6 +8,7 @@ import * as qr from "../client/js/qr-url.js";
 import * as share from "../client/js/share.js";
 import * as render from "../client/js/render.js";
 import { versionBits } from "../client/js/qr-url-layout.js";
+import { QR_MAX_BYTES, countBits } from "../client/js/qr-url-codec.js";
 import * as guardianReturn from "../client/js/guardian-return.js";
 import * as renderGuardianReturn from "../client/js/render/guardian-return.js";
 
@@ -83,7 +84,23 @@ test("qr-url - versions 2–9 roundtrip, 6–9 with two interleaved blocks", () 
     assert.equal(qr.decodeQrModules(encoded.modules), url, `len ${len}`);
   }
   assert.deepEqual([...seen].sort(), [3, 4, 5, 6, 7, 8, 9]);
-  assert.throws(() => qr.encodeVoxUrl(base.padEnd(231, "x")), /max 230 bytes/);
+});
+
+// Mudança intencional: antes 231 bytes estourava (máx. 230); agora vai para a versão 11 (máx. 321).
+test("qr-url - past version 9 goes to version 11 (4 blocks, 16-bit count); past 321 bytes throws", () => {
+  const base = "https://yurikayel.github.io/vox/#/sync?b=";
+  for (const len of [231, 256, 300, 321]) {
+    const url = base.padEnd(len, "x");
+    const encoded = qr.encodeVoxUrl(url);
+    assert.equal(encoded.version, 11, `len ${len}`);
+    assert.equal(encoded.size, 61);
+    assert.equal(qr.decodeQrModules(encoded.modules), url, `len ${len}`);
+  }
+  assert.equal(versionBits(11), 0x0bbf6);
+  assert.equal(countBits(9), 8);
+  assert.equal(countBits(11), 16);
+  assert.equal(QR_MAX_BYTES, 321);
+  assert.throws(() => qr.encodeVoxUrl(base.padEnd(322, "x")), /max 321 bytes/);
 });
 
 test("qr-url - version 7+ carries the 18-bit version information (ISO/IEC 18004 Annex D)", () => {

@@ -6,6 +6,11 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Correção: o QR do Perfil para outro aparelho volta a funcionar
+- **"📲 QR Code para Celular" sempre falhava:** o link do cofre tinha uns 251 bytes no endereço oficial, e o codificador de QR ia só até a versão 9 (230 bytes). Agora o QR leva um cofre mínimo: a conta, a semente da frase de 12 palavras e o nome, se couber, cifrados só pela senha (`buildQrSyncRecord`). O cofre completo continua gravado e o link continua levando tudo; Pix e o resto chegam por eles. Conta de antes da frase não tem semente e recebe o motivo em vez de um QR que não abre.
+- **Codificador de QR:** ganha a versão 11 (321 bytes, ECC L, 4 blocos, contagem de 16 bits). A versão 10 fica de fora, porque em ECC L ela mistura blocos de dois tamanhos.
+- Testes: `tests/qr-sync-record.test.js` (novo) e a versão 11 em `tests/qr-url.test.js`. O teste antigo que esperava erro com 231 bytes mudou de propósito: 231 bytes agora vai para a versão 11, e o erro passa a ser acima de 321. SW `v7.126`.
+
 ### Correção: entrar em outra conta não herda nada da anterior; cofre do Perfil com o e-mail da conta
 - **Frase, guardiões, arquivo `.voxid` e cofre** passam todos por `importLocalAccountBundle`. Quando a conta que entra é outra, a que estava ativa vai inteira para o cofre local (nome, Pix, enriquecimento, chave de DM), e a que entra fica com o que é dela: do pacote ou, se já esteve neste aparelho, do cofre local. Antes, entrar pela frase ou por um `.voxid` sem nome e sem Pix deixava o nome, a chave Pix e os dados de login da conta anterior na nova, e um `.voxid` sem chave de DM ficava com a chave de DM da anterior.
 - **Trocar de conta sem chave de DM guardada** gera uma chave nova em vez de manter a da conta que estava ativa.
