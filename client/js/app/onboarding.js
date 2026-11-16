@@ -4,7 +4,8 @@ import * as render from "../render.js";
 import * as share from "../share.js";
 import * as localAccount from "../local-account.js";
 import * as oauthProfile from "../oauth-profile.js";
-import * as oauthVault from "../oauth-vault.js";
+import * as emailKit from "../email-kit.js";
+import { bindEmailEntryForm, handleRestoreFailure, readRestoreInputs } from "./onboarding-email.js";
 import * as meshProfile from "../mesh-profile.js";
 import * as centralMemory from "../central-memory.js";
 import { syncIdentity } from "./screens-network.js";
@@ -99,58 +100,34 @@ function syncIdentityAndDirectoryAfterOnboarding() {
   void centralMemory.syncWithCentralMemory();
 }
 
+function completeEntryOnboarding(modalContainer, onComplete, result, toastMsg = "") {
+  oauthProfile.skipOAuthEnrichment();
+  if (toastMsg) share.showToast(toastMsg);
+  syncIdentityAndDirectoryAfterOnboarding();
+  endGenesis(modalContainer, onComplete, result);
+}
+
 function bindOAuthProviderButton({ btnId, signInFn, fallbackError, labelFn, modalContainer, onDone }) {
   document.getElementById(btnId)?.addEventListener("click", async () => {
-    const btn = document.getElementById(btnId);
-    const res = await runOAuthEnrichSignIn(btn, signInFn, { fallbackError });
-    if (res.ok) {
-      oauthProfile.skipOAuthEnrichment();
-      share.showToast(labelFn(res));
-      syncIdentityAndDirectoryAfterOnboarding();
-      endGenesis(modalContainer, onDone, res);
-    }
+    const res = await runOAuthEnrichSignIn(document.getElementById(btnId), signInFn, { fallbackError });
+    if (res.ok) completeEntryOnboarding(modalContainer, onDone, res, labelFn(res));
   });
+}
+
+function finishNameOnlyEntry(rawName, modalContainer, onComplete) {
+  if (!rawName) return setOAuthEnrichError("Digite um nome ou apelido para continuar.");
+  setOAuthEnrichError("");
+  localAccount.setDisplayName(rawName);
+  completeEntryOnboarding(modalContainer, onComplete, { ok: true, customName: rawName }, `Bem-vindo, ${rawName}!`);
 }
 
 function bindCustomNameForm(modalContainer, onComplete) {
   const form = document.getElementById("form-oauth-custom-name");
   if (!form) return;
-  form.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const rawName = document.getElementById("oauth-custom-name-input")?.value.trim() || "";
-    if (!rawName) {
-      setOAuthEnrichError("Digite um nome ou apelido para continuar.");
-      return;
-    }
-    setOAuthEnrichError("");
-    localAccount.setDisplayName(rawName);
-    oauthProfile.skipOAuthEnrichment();
-    share.showToast(`Bem-vindo, ${rawName}!`);
-    syncIdentityAndDirectoryAfterOnboarding();
-    endGenesis(modalContainer, onComplete, { ok: true, customName: rawName });
+  bindEmailEntryForm(form, {
+    finish: (result, toastMsg) => completeEntryOnboarding(modalContainer, onComplete, result, toastMsg),
+    finishNameOnly: (rawName) => finishNameOnlyEntry(rawName, modalContainer, onComplete),
   });
-}
-
-/**
- * Entra pelos backups que a pessoa mandou para o próprio e-mail, do mais antigo ao mais novo.
- * @param {File[]} files Arquivos `.txt` escolhidos.
- * @param {string} pass Senha Soberana.
- * @returns {Promise<{ok: boolean, reason?: string, routeId?: string, displayName?: string}>} Resultado.
- */
-async function restoreFromInboxBackups(files, pass) {
-  const backup = await import("../inbox-backup.js");
-  const texts = await Promise.all(files.map((f) => f.text()));
-  if (!texts.every(backup.isInboxBackupText)) return { ok: false, reason: "Escolha só os backups do Vox que chegaram no seu e-mail (.txt)." };
-  let acc = null;
-  for (const text of texts.sort((a, b) => JSON.parse(a).to - JSON.parse(b).to)) acc = await backup.restoreInboxBackup(text, pass);
-  return { ok: true, routeId: acc?.routeId, displayName: localAccount.getDisplayName() };
-}
-
-/** Frase (ADR-032) tem precedência; sem ela, backups do e-mail ou cofre pela Senha Soberana. */
-async function restoreExistingAccount(phraseText, pass) {
-  if (phraseText) return (await import("../account-phrase.js")).restoreFromPhrase(phraseText);
-  const files = [...(document.getElementById("oauth-restore-files")?.files || [])];
-  return files.length ? restoreFromInboxBackups(files, pass) : oauthVault.restoreFromPassphraseVault(pass);
 }
 
 function bindSovereignPassphraseForm(modalContainer, onComplete) {
@@ -158,22 +135,13 @@ function bindSovereignPassphraseForm(modalContainer, onComplete) {
   if (!form) return;
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const pass = document.getElementById("oauth-sovereign-passphrase-input")?.value.trim() || "";
-    const phraseText = document.getElementById("oauth-restore-phrase")?.value.trim() || "";
-    if (!pass && !phraseText) return setOAuthEnrichError("Digite a frase de recuperação ou a Senha Soberana.");
     const btn = document.getElementById("btn-oauth-restore-passphrase");
     setOAuthButtonBusy(btn, true);
     setOAuthEnrichError("");
     try {
-      const res = await restoreExistingAccount(phraseText, pass);
-      if (res.ok) {
-        oauthProfile.skipOAuthEnrichment();
-        share.showToast(`Identidade restaurada com sucesso! Bem-vindo(a), ${res.displayName || "Cidadão"}!`);
-        syncIdentityAndDirectoryAfterOnboarding();
-        endGenesis(modalContainer, onComplete, { ok: true, restored: true, routeId: res.routeId });
-      } else {
-        setOAuthEnrichError(res.reason || "Senha incorreta ou cofre não encontrado.");
-      }
+      const res = await emailKit.restoreAccountFromInputs(readRestoreInputs());
+      if (res.ok) completeEntryOnboarding(modalContainer, onComplete, { ok: true, restored: true, routeId: res.routeId }, `Identidade restaurada com sucesso! Bem-vindo(a), ${res.displayName || "Cidadão"}!`);
+      else handleRestoreFailure(res);
     } catch (err) {
       setOAuthEnrichError(err?.message || "Erro ao decifrar cofre soberano.");
     } finally {

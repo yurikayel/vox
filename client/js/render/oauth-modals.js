@@ -1,5 +1,5 @@
 /** @file OAuth, pact/zap/edit modals, people search. */
-import { renderPactModalHtml, renderPactStepHtml } from "./welcome-pact.js";
+import { renderPactModalHtml } from "./welcome-pact.js";
 import * as brcode from "../brcode.js";
 import { PIX_PAYER_CHECK_NOTICE_PT } from "../pix-key.js";
 import * as i18n from "../i18n-pt-br.js";
@@ -8,102 +8,8 @@ import * as localAccount from "../local-account.js";
 import { hasChosenName } from "../people-index.js";
 import { escapeHtml, shortId, renderAvatarHtml, formatTimeAgo, renderInviteFriendsCard } from "./util.js";
 import { renderPageHead } from "./shell.js";
-import { renderImportPanelHtml } from "./oauth-import.js";
 
-function genesisStep(key, bodyHtml, { back = "", hidden = true } = {}) {
-  const backBtn = back ? `<button type="button" class="genesis-back" data-genesis-go="${back}">← Voltar</button>` : "";
-  return `<section class="genesis-step" data-genesis-step="${key}"${hidden ? " hidden" : ""}>${backBtn}${bodyHtml}</section>`;
-}
-
-/** Chegou por convite: diz quem chamou e que essa pessoa entra nos contatos. `invite.name` vazio: sem nome. */
-function renderInviteLeadHtml(invite) {
-  if (!invite) return "";
-  const who = invite.name ? `<strong>${escapeHtml(invite.name)}</strong>` : "Alguém";
-  return `<p class="genesis-lead genesis-lead--invite">${who} te chamou para o Vox. Ao entrar, essa pessoa já fica nos seus contatos.</p>`;
-}
-
-function renderGenesisEntryHtml(currentName, invite = null) {
-  return `
-          <h2 id="oauth-enrich-title" class="genesis-panel-title">Entrar no Vox</h2>
-          ${renderInviteLeadHtml(invite)}
-          <p class="genesis-lead">Sua conta é uma chave que nasce neste aparelho. Depois de entrar, crie a sua saída para não perdê-la.</p>
-          <form id="form-oauth-custom-name" class="genesis-inline-form">
-            <input type="text" id="oauth-custom-name-input" class="agora-inscription genesis-input" maxlength="30" placeholder="Seu nome ou apelido" value="${currentName}" aria-label="Nome ou apelido" />
-            <button type="submit" id="btn-oauth-save-name" class="agora-btn agora-btn--primary">Continuar</button>
-          </form>
-          <div class="genesis-links">
-            <button type="button" class="genesis-link" data-genesis-go="have">Já tenho conta</button>
-            <button type="button" id="btn-oauth-skip" class="genesis-link">Pular, escolho o nome depois</button>
-          </div>
-          <p class="genesis-skip-note">Sem nome, você não aparece no diretório.</p>`;
-}
-
-/** Conta que já existe: pela frase (ADR-032), pelos guardiões, pelo QR do outro aparelho, ou pelo backup do e-mail e a Senha Soberana. */
-function renderGenesisHaveHtml() {
-  return `
-          <h2 class="genesis-panel-title">Já tenho conta</h2>
-          <p class="genesis-lead"><strong>Com a frase:</strong> digite as 12 (ou 24) palavras na ordem. Não precisa de internet. Sem a frase, <a href="#/voltar">peça a volta aos seus guardiões</a>.</p>
-          <p class="genesis-lead"><strong>Com o outro aparelho:</strong> nele, abra Perfil → QR para outro aparelho e aponte a câmera deste.</p>
-          <p class="genesis-lead"><strong>Sem eles:</strong> escolha os backups do seu e-mail, se tiver, e digite a Senha Soberana.</p>
-          <form id="form-oauth-restore-passphrase" class="genesis-inline-form genesis-inline-form--stack">
-            <textarea id="oauth-restore-phrase" class="genesis-input" rows="3" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Frase de recuperação (ou deixe em branco)" aria-label="Frase de recuperação"></textarea>
-            <input type="file" id="oauth-restore-files" class="genesis-input" accept=".txt,text/plain" multiple aria-label="Backups do e-mail (opcional)" />
-            <input type="password" id="oauth-sovereign-passphrase-input" class="agora-inscription genesis-input" placeholder="Senha Soberana" autocomplete="current-password" aria-label="Senha Soberana" />
-            <button type="submit" id="btn-oauth-restore-passphrase" class="agora-btn agora-btn--primary">Entrar</button>
-          </form>`;
-}
-
-/** Onboarding em duas telas para quem é novo: entrada e pacto (18+). "Já tenho conta" é o desvio. */
-function renderGenesisStepsHtml(currentName, invite = null) {
-  return `
-        <section class="genesis-panel genesis-panel--steps">
-          <div id="oauth-enrich-error" class="oauth-enrich-error" role="alert" aria-live="polite" hidden></div>
-          ${genesisStep("entry", renderGenesisEntryHtml(currentName, invite), { hidden: false })}
-          ${genesisStep("have", renderGenesisHaveHtml(), { back: "entry" })}
-          ${genesisStep("pact", renderPactStepHtml())}
-        </section>`;
-}
-
-/**
- * Onboarding — Stitch tela 12, em etapas (uma decisão por tela).
- * @param {HTMLElement} container
- * @param {{ invite?: { name: string } | null, mode?: "entry" | "import" }} [opts] `invite`: a entrada diz quem chamou;
- *   `mode: "import"`: só importar nome e foto (Perfil), sem a entrada
- */
-export function renderOAuthEnrich(container, { invite = null, mode = "entry" } = {}) {
-  if (!container) return;
-  const currentName = escapeHtml(localAccount.getDisplayName() || "");
-  container.innerHTML = `
-    <div class="modal-overlay oauth-enrich-overlay genesis-overlay" id="oauth-enrich-overlay" role="dialog" aria-modal="true" aria-label="Entrar no Vox">
-      <div class="genesis-shell genesis-shell--steps oauth-enrich-dialog">
-        <header class="genesis-hero">
-          <div class="genesis-brand">
-            <img class="genesis-brand-mark" src="icons/icon-white-192.png" width="48" height="48" alt="" decoding="async" />
-            <p class="genesis-brand-name">VOX · Rede cívica soberana</p>
-          </div>
-          <h1 class="genesis-title">Sua voz. <span>Sua chave.</span></h1>
-        </header>
-        ${mode === "import" ? renderImportPanelHtml() : renderGenesisStepsHtml(currentName, invite)}
-      </div>
-    </div>`;
-}
-
-/** Mostra só a etapa `key` do onboarding e foca o primeiro campo dela. */
-export function showGenesisStep(root, key) {
-  const steps = root?.querySelectorAll?.("[data-genesis-step]") || [];
-  let target = null;
-  steps.forEach((s) => {
-    const on = s.dataset.genesisStep === key;
-    s.hidden = !on;
-    if (on) target = s;
-  });
-  target?.querySelector("input, button:not(.genesis-back)")?.focus({ preventScroll: true });
-  return Boolean(target);
-}
-
-export function closeOAuthEnrich(container) {
-  if (container) container.innerHTML = "";
-}
+export { renderOAuthEnrich, renderEmailKitCardHtml, showGenesisStep, closeOAuthEnrich } from "./genesis-entry.js";
 
 function resolvePersonStampsHtml(p, isSelf) {
   const stamps = [];

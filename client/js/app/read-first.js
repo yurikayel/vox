@@ -40,10 +40,10 @@ export const WRITE_CLICK_SELECTOR = [
 ].join(", ");
 
 /**
- * Formulários que só leem (busca) ou ficam no aparelho (denúncia, apontamento, pedido de volta aos guardiões, que
- * fica nesta aba) não pedem entrada.
+ * Formulários que só leem (busca), ficam no aparelho (denúncia, apontamento, pedido de volta aos guardiões, que
+ * fica nesta aba) ou restauram conta (#/sync) não pedem entrada.
  */
-const SUBMIT_ALLOWED = new Set(["agora-search-form", "form-people-search", "form-report", "form-feedback", "form-guardian-recover"]);
+const SUBMIT_ALLOWED = new Set(["agora-search-form", "form-people-search", "form-report", "form-feedback", "form-sync-vault", "form-guardian-recover"]);
 
 /** Os formulários do próprio fluxo de entrada (onboarding e pacto) ficam no #modal-container. */
 const ENTRY_FLOW_CONTAINER = "#modal-container";
