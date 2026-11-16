@@ -6,6 +6,10 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Correção: diretório de perfis reconhece foto de login social pelo host
+- `profile-directory.js` decidia se dois cartões eram a mesma pessoa procurando "googleusercontent.com/", "fbcdn.net" e afins em qualquer parte da URL da foto, e cortava o resto. Duas fotos diferentes de um mesmo site, com esse trecho na query, viravam "a mesma pessoa", e a deduplicação ou a poda apagava um cartão. Agora usa `detectSocialAvatarType` (host da URL, só https), a mesma regra de `account-social-match.js` (#150) e de `people-index.js`; na Meta, `psid`/`asid` são lidos como parâmetros da query, não por trecho.
+- Testes: `tests/profile-directory-avatar.test.js` (novo; 2 dos 4 falham no código anterior). SW `v7.124`.
+
 ### Guardiões, parte 3d: trocar e tirar guardiões (ADR-032 passo 3)
 - **Trocar (`#/guardioes`):** com guardiões escolhidos, a tela mostra o estado, explica a troca e o botão vira "Trocar: dividir de novo e enviar", aberto no mínimo atual. A divisão nova revoga a anterior para quem a tinha; quem saiu apaga o pedaço, quem ficou guarda o novo, e os pedaços antigos não se juntam com os novos.
 - **Tirar todos os guardiões:** com confirmação. Esquece a divisão e tira a saída `guardioes` antes de mandar a revogação assinada a cada guardião, então guardião offline não deixa a conta marcada como protegida. Recibo atrasado não devolve a saída.

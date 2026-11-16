@@ -1,9 +1,9 @@
 {
-  "git_sha": "45e86b7",
-  "branch": "feat/guardioes-3d-trocar",
+  "git_sha": "3e1bdd6",
+  "branch": "fix/foto-por-host",
   "test_js": 1148,
   "test_python": 111,
   "test_total": 1259,
-  "cache_name": "vox-pwa-v7.123-real-network-audio-video-upload",
-  "generated_at": "2026-11-16T20:22:18Z"
+  "cache_name": "vox-pwa-v7.124-real-network-audio-video-upload",
+  "generated_at": "2026-11-16T20:35:43Z"
 }
