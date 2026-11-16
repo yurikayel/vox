@@ -13,6 +13,19 @@ function renderPhraseInEmailNoticeHtml(address) {
     : "";
 }
 
+// Senha e e-mail do cofre (o e-mail só para quem criou a conta com e-mail, ADR-032 Emenda 1).
+function renderVaultFieldsHtml() {
+  return `
+        <label for="input-sovereignty-passphrase" class="desc" style="display:block; font-size:0.82rem; margin-bottom:0.25rem;">
+          Senha Soberana (usada para sincronizar aparelhos e cifrar backup offline)
+        </label>
+        <input type="password" id="input-sovereignty-passphrase" class="form-control" autocomplete="new-password" placeholder="Digite uma senha forte para sua conta…" style="margin-bottom:0.5rem;" />
+        <label for="input-sovereignty-email" class="desc" style="display:block; font-size:0.82rem; margin-bottom:0.25rem;">
+          E-mail da conta, se você criou a conta com e-mail (não é enviado: só entra no cálculo do endereço e da chave do cofre)
+        </label>
+        <input type="email" id="input-sovereignty-email" class="form-control" autocomplete="username" placeholder="voce@exemplo.com (opcional)" style="margin-bottom:0.5rem;" />`;
+}
+
 /**
  * Cartão "Soberania & Sincronização" do Perfil: Senha Soberana, cofre, QR, arquivo .voxid e restauração.
  * Se a frase de recuperação foi junto no e-mail (ADR-032 Emenda 1), avisa no topo.
@@ -29,10 +42,7 @@ export function renderSovereigntyCard(address = "") {
           Não inclui o IndexedDB completo nem a lista de seguidores.
           Defina uma <strong>Senha Soberana</strong> para habilitar acesso em outros navegadores ou celulares com criptografia de ponta a ponta (AES-GCM-256).
         </p>
-        <label for="input-sovereignty-passphrase" class="desc" style="display:block; font-size:0.82rem; margin-bottom:0.25rem;">
-          Senha Soberana (usada para sincronizar aparelhos e cifrar backup offline)
-        </label>
-        <input type="password" id="input-sovereignty-passphrase" class="form-control" autocomplete="new-password" placeholder="Digite uma senha forte para sua conta…" style="margin-bottom:0.5rem;" />
+        ${renderVaultFieldsHtml()}
         <div style="display:flex; flex-wrap:wrap; gap:0.5rem;">
           <button type="button" id="btn-save-sovereign-vault" class="btn btn-sm btn-primary">☁️ Sincronizar em Outro Aparelho</button>
           <button type="button" id="btn-sync-qr-device" class="btn btn-sm btn-outline">📲 QR Code para Celular</button>

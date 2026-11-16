@@ -182,6 +182,18 @@ export async function decryptLegacyRecord(record, secret, provider) {
 
 const toBase64Url = (text) => btoa(text).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 
+// `v2.` + base64url de [versão 1][iter 4][len 1][sal 16][len 1][iv 12][cifra + etiqueta GCM 16].
+const COMPACT_V2_OVERHEAD = 1 + 4 + 1 + 16 + 1 + 12 + 16;
+
+/**
+ * Quantos bytes de texto (JSON em UTF-8) cabem num cofre v2 compacto de até `maxEncodedChars` caracteres.
+ * @param {number} maxEncodedChars
+ * @returns {number}
+ */
+export function compactV2PlainBudget(maxEncodedChars) {
+  return Math.floor(((maxEncodedChars - 3) * 3) / 4) - COMPACT_V2_OVERHEAD;
+}
+
 function packCompactV2(record) {
   const salt = hexToBytes(record.salt);
   const iv = hexToBytes(record.iv);

@@ -7,6 +7,7 @@ import * as wallet from "../wallet.js";
 import * as upload from "../upload.js";
 import * as share from "../share.js";
 import { openQrUrlSheet } from "../qr-url.js";
+import { bindProfileVaultSync } from "./profile-vault-sync.js";
 import * as mod from "../moderation.js";
 import * as cacheNode from "../cache-node.js";
 import * as cryptoDm from "../crypto-dm.js";
@@ -316,82 +317,11 @@ function bindSovereigntyImport(activeTab) {
   });
 }
 
-/** PM-92: o link leva só o cofre cifrado; a senha é digitada no outro aparelho. */
-function buildSyncUrl(bundleRecord, encodeFn) {
-  return `${window.location.origin}${window.location.pathname}#/sync?b=${encodeURIComponent(encodeFn(bundleRecord))}`;
-}
-
-function updateSovereigntySyncFeedback(message, isError = false) {
-  const el = document.getElementById("sovereignty-sync-feedback");
-  if (!el) return;
-  el.hidden = false;
-  el.style.color = isError ? "var(--danger)" : "var(--accent)";
-  el.innerHTML = message;
-}
-
-function bindSovereigntyCloudSync() {
-  const btn = document.getElementById("btn-save-sovereign-vault");
-  if (!btn) return;
-  btn.addEventListener("click", async () => {
-    const pass = readSovereigntyPassphrase().trim();
-    if (!pass) {
-      share.showToast("Digite sua Senha Soberana no campo acima.", "error");
-      return;
-    }
-    const { savePassphraseVault, encodeVaultBundleForUrl } = await import("../oauth-vault.js");
-    btn.disabled = true;
-    try {
-      const res = await savePassphraseVault(pass);
-      if (res.ok) {
-        share.showToast("Cofre soberano sincronizado com sucesso!");
-        const syncUrl = buildSyncUrl(res.bundle, encodeVaultBundleForUrl);
-        updateSovereigntySyncFeedback(
-          `✅ <strong>Pronto para outro aparelho!</strong> Abra este link no outro celular ou navegador e digite a sua senha lá. Mande o link e a senha por caminhos diferentes: <a href="${syncUrl}" target="_blank" style="color:var(--primary); word-break:break-all;">${syncUrl}</a>`
-        );
-      } else {
-        share.showToast(res.reason || "Erro ao salvar cofre soberano.", "error");
-      }
-    } catch (err) {
-      share.showToast(`Erro ao sincronizar cofre: ${err.message}`, "error");
-    } finally {
-      btn.disabled = false;
-    }
-  });
-}
-
-function bindSovereigntyQrSync() {
-  const btn = document.getElementById("btn-sync-qr-device");
-  if (!btn) return;
-  btn.addEventListener("click", async () => {
-    const pass = readSovereigntyPassphrase().trim();
-    if (!pass) {
-      share.showToast("Digite sua Senha Soberana no campo acima para gerar o QR Code.", "error");
-      return;
-    }
-    const { savePassphraseVault, encodeVaultBundleForUrl } = await import("../oauth-vault.js");
-    btn.disabled = true;
-    try {
-      const res = await savePassphraseVault(pass);
-      if (res.ok) {
-        const syncUrl = buildSyncUrl(res.bundle, encodeVaultBundleForUrl);
-        openQrUrlSheet(syncUrl);
-      } else {
-        share.showToast(res.reason || "Erro ao preparar cofre para QR.", "error");
-      }
-    } catch (err) {
-      share.showToast(`Erro ao gerar QR de sincronização: ${err.message}`, "error");
-    } finally {
-      btn.disabled = false;
-    }
-  });
-}
-
 function bindSovereigntyBackup(isSelf, activeTab) {
   if (!isSelf) return;
   bindSovereigntyExport();
   bindSovereigntyImport(activeTab);
-  bindSovereigntyCloudSync();
-  bindSovereigntyQrSync();
+  bindProfileVaultSync();
 }
 
 function clearPassphraseField() {
