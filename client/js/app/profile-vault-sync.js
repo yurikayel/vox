@@ -65,7 +65,11 @@ async function saveVault(missingPassText) {
   if (needsNoEmailConfirm(email) && !confirm(NO_EMAIL_CONFIRM)) return { cancelled: true };
   const vault = await import("../oauth-vault.js");
   const res = await vault.savePassphraseVault(pass, profileVaultOptions(email, readField("input-sovereignty-prev-passphrase")));
-  return res.ok ? { pass, res, vault } : { error: res.reason || "Não deu para gravar o cofre." };
+  if (!res.ok) return { error: res.reason || "Não deu para gravar o cofre." };
+  // Trocada a senha, a antiga não abre mais a conta: o campo não pode seguir para o próximo clique.
+  const prevField = document.getElementById("input-sovereignty-prev-passphrase");
+  if (prevField) prevField.value = "";
+  return { pass, res, vault };
 }
 
 async function linkUrl(missingPassText) {
