@@ -68,7 +68,7 @@ Regras de recebimento (em `dm-wire.js`, antes de `saveDmMessage`, como já é fe
 1. "Já tenho conta" → "Pelos meus guardiões". A pessoa digita **o próprio `@handle` ou cola o link do próprio perfil** para dizer quem é (o `owner`). Sem isso, o guardião não sabe de quem é o pedido.
 2. O aparelho gera a **chave temporária** (guardada só nesta aba, em `sessionStorage`, por 24 h) e mostra um **link de pedido** `#/guardiao?o=<routeId>&k=<tempPub comprimida>&t=<createdAt>&n=<nonce>`, com botão de compartilhar e um código curto de conferência (4 palavras derivadas do hash do pedido).
    - O link **não carrega segredo**: só a chave pública temporária. Qualquer um pode fazer um link desses, e é por isso que o passo 3 existe.
-   - **QR:** o codificador de QR do app guarda até 106 bytes e o link passa disso. O QR do pedido entra quando o codificador ganhar versões maiores (passo 3c); até lá o link é compartilhado por texto, ou mostrado na tela para o guardião digitar o código curto e abrir pelo próprio app.
+   - **QR:** o codificador de QR do app vai até a versão 9 (230 bytes, ECC L, dois blocos intercalados da versão 6 em diante). O link do pedido (uns 146 bytes no endereço oficial) sai em versão 7. A tela do pedido tem "Mostrar QR para quem está do seu lado": é o caminho para o guardião que está junto, que confere o código pessoalmente.
 3. **O guardião abre o link** no app dele. A tela mostra:
    - nome e foto da dona **tirados dos contatos do próprio guardião**, não do pedido;
    - há quanto tempo o pedido foi criado (pedido com mais de 24 h é recusado);
@@ -114,7 +114,7 @@ Regras de recebimento (em `dm-wire.js`, antes de `saveDmMessage`, como já é fe
 
 Cada parte é um PR, com SW novo quando tocar o cliente, e a 3c só entra depois do THREAT-MODEL T25 revisado.
 
-**Andamento:** 3a em main (`shamir-gf256.js`); **3c no SW v7.119** — `guardian-return.js` (pedido, código, caixa, resposta, juntar), `app/guardian-return-flow.js` e as telas `#/guardiao?…` e `#/voltar` (ver §13); falta o QR do pedido. **3b no SW v7.117** — `guardians.js` (mensagens, mapa da dona, guarda), `app/guardians-flow.js` (envio, recebimento, parar de guardar) e a tela `#/guardioes`. Na implementação, o laço mútuo é: a dona segue ou tem a pessoa nos contatos **e** recebeu dela o aviso assinado "adicionou você aos contatos".
+**Andamento:** 3a em main (`shamir-gf256.js`); **3c no SW v7.119** — `guardian-return.js` (pedido, código, caixa, resposta, juntar), `app/guardian-return-flow.js` e as telas `#/guardiao?…` e `#/voltar` (ver §13); QR do pedido no SW v7.121. **3b no SW v7.117** — `guardians.js` (mensagens, mapa da dona, guarda), `app/guardians-flow.js` (envio, recebimento, parar de guardar) e a tela `#/guardioes`. Na implementação, o laço mútuo é: a dona segue ou tem a pessoa nos contatos **e** recebeu dela o aviso assinado "adicionou você aos contatos".
 
 ## 12. Decisões do mantenedor (2026-11-14, antes da 3b)
 
@@ -131,5 +131,5 @@ O que mudou em relação ao §7, e por quê:
 3. **Volta pessoal (§7.4):** em vez de WebRTC direto (o aparelho novo não tem endereço na sinalização), o guardião manda a **resposta selada como texto** (`vox-volta:…`) pelo canal que quiser, e o aparelho novo cola. Só a chave temporária abre o texto, então o canal não importa. Com relay, a resposta vai também para a caixa `vxtmp_`.
 4. **Nome e foto (§7.3):** vêm dos contatos e do diretório do guardião; sem eles, do nome que a dona assinou no pedaço. Nunca do pedido, que não leva nome.
 5. **Juntar (§7.5):** cada pedaço só conta com a assinatura da dona; a conta juntada tem que ser a pedida, conferido **antes** de trocar qualquer chave.
-6. **QR do pedido:** o link tem uns 150 caracteres, mais do que o codificador atual guarda. Fica para um PR seguinte.
+6. **QR do pedido:** o link tem uns 146 caracteres, mais do que o codificador guardava (106). Feito no SW v7.121: o codificador ganhou as versões 6–9 (blocos intercalados, padrões de alinhamento e informação de versão) e a tela do pedido mostra o QR.
 

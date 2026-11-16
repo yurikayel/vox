@@ -1,13 +1,28 @@
-/** Byte-mode payload for QR versions 2–5, ECC L (single RS block). */
+/**
+ * @module qr-url-codec
+ * Byte-mode payload for QR versions 2–9, ECC L. Versions 6–9 split the data into 2 Reed–Solomon
+ * blocks that are interleaved codeword by codeword (ISO/IEC 18004 §7.6). Up to version 9 the byte
+ * count fits in 8 bits; version 10+ would need 16.
+ */
 
+/**
+ * ECC L per version: `data` = total data codewords, `ec` = EC codewords per block, `blocks` = equal blocks.
+ * @type {Record<number, { data: number, ec: number, blocks: number, maxBytes: number }>}
+ */
 export const VERSIONS = {
-  2: { data: 34, ec: 10, maxBytes: 32 },
-  3: { data: 55, ec: 15, maxBytes: 53 },
-  4: { data: 80, ec: 20, maxBytes: 78 },
-  5: { data: 108, ec: 26, maxBytes: 106 },
+  2: { data: 34, ec: 10, blocks: 1, maxBytes: 32 },
+  3: { data: 55, ec: 15, blocks: 1, maxBytes: 53 },
+  4: { data: 80, ec: 20, blocks: 1, maxBytes: 78 },
+  5: { data: 108, ec: 26, blocks: 1, maxBytes: 106 },
+  6: { data: 136, ec: 18, blocks: 2, maxBytes: 134 },
+  7: { data: 156, ec: 20, blocks: 2, maxBytes: 154 },
+  8: { data: 194, ec: 24, blocks: 2, maxBytes: 192 },
+  9: { data: 232, ec: 30, blocks: 2, maxBytes: 230 },
 };
 
-export const VOX_SHARE_HASH = /#\/(t|connect|c|sync)(\/|\?|$)/;
+const MAX_VERSION = 9;
+
+export const VOX_SHARE_HASH = /#\/(t|connect|c|sync|guardiao)(\/|\?|$)/;
 
 export function isVoxShareUrl(url) {
   return VOX_SHARE_HASH.test(String(url || ""));
@@ -16,7 +31,7 @@ export function isVoxShareUrl(url) {
 export function assertVoxShareUrl(url) {
   const text = String(url || "").trim();
   if (!isVoxShareUrl(text)) {
-    throw new Error("QR: expected Vox share URL (#/t/, #/connect/, #/c/, or #/sync)");
+    throw new Error("QR: expected Vox share URL (#/t/, #/connect/, #/c/, #/sync or #/guardiao)");
   }
   return text;
 }
@@ -32,10 +47,10 @@ export function urlToBytes(url) {
 }
 
 export function chooseVersion(byteLen) {
-  for (const v of [2, 3, 4, 5]) {
+  for (let v = 2; v <= MAX_VERSION; v++) {
     if (byteLen <= VERSIONS[v].maxBytes) return v;
   }
-  throw new Error("QR: URL too long for versions 2–5 (max 106 bytes)");
+  throw new Error(`QR: URL too long for versions 2–${MAX_VERSION} (max ${VERSIONS[MAX_VERSION].maxBytes} bytes)`);
 }
 
 export function pushBits(bits, value, n) {
@@ -75,14 +90,56 @@ export function encodeBytePayload(bytes, dataCodewords) {
   return bitsToCodewords(bits, dataCodewords);
 }
 
-export function codewordsToBits(data, ecc) {
+/**
+ * Splits the data codewords into the version's equal RS blocks.
+ * @param {Uint8Array} data
+ * @param {number} blocks
+ * @returns {Uint8Array[]}
+ */
+export function splitDataBlocks(data, blocks) {
+  const len = data.length / blocks;
+  return Array.from({ length: blocks }, (_, b) => data.subarray(b * len, (b + 1) * len));
+}
+
+function interleave(blocks) {
+  const out = [];
+  const len = Math.max(...blocks.map((b) => b.length));
+  for (let i = 0; i < len; i++) {
+    for (const block of blocks) if (i < block.length) out.push(block[i]);
+  }
+  return out;
+}
+
+/**
+ * Final bit stream: data codewords interleaved across blocks, then EC codewords interleaved.
+ * @param {Uint8Array[]} dataBlocks
+ * @param {Uint8Array[]} eccBlocks
+ * @returns {number[]}
+ */
+export function blocksToBits(dataBlocks, eccBlocks) {
   const bits = [];
-  for (const block of [data, ecc]) {
-    for (const cw of block) {
-      for (let i = 7; i >= 0; i--) bits.push((cw >> i) & 1);
-    }
+  for (const cw of [...interleave(dataBlocks), ...interleave(eccBlocks)]) {
+    for (let i = 7; i >= 0; i--) bits.push((cw >> i) & 1);
   }
   return bits;
+}
+
+/**
+ * Inverse of the data interleave: the payload bits in block order, read from the module stream.
+ * @param {number[]} bits stream as read from the grid
+ * @param {{ data: number, blocks: number }} spec
+ * @returns {number[]}
+ */
+export function deinterleaveDataBits(bits, spec) {
+  const len = spec.data / spec.blocks;
+  const out = [];
+  for (let b = 0; b < spec.blocks; b++) {
+    for (let i = 0; i < len; i++) {
+      const at = (i * spec.blocks + b) * 8;
+      for (let j = 0; j < 8; j++) out.push(bits[at + j] || 0);
+    }
+  }
+  return out;
 }
 
 export function parseBytePayload(bits) {
