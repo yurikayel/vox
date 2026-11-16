@@ -68,7 +68,7 @@ Regras de recebimento (em `dm-wire.js`, antes de `saveDmMessage`, como já é fe
 1. "Já tenho conta" → "Pelos meus guardiões". A pessoa digita **o próprio `@handle` ou cola o link do próprio perfil** para dizer quem é (o `owner`). Sem isso, o guardião não sabe de quem é o pedido.
 2. O aparelho gera a **chave temporária** (guardada só nesta aba, em `sessionStorage`, por 24 h) e mostra um **link de pedido** `#/guardiao?o=<routeId>&k=<tempPub comprimida>&t=<createdAt>&n=<nonce>`, com botão de compartilhar e um código curto de conferência (4 palavras derivadas do hash do pedido).
    - O link **não carrega segredo**: só a chave pública temporária. Qualquer um pode fazer um link desses, e é por isso que o passo 3 existe.
-   - **QR:** o codificador de QR do app vai até a versão 9 (230 bytes, ECC L, dois blocos intercalados da versão 6 em diante). O link do pedido (uns 146 bytes no endereço oficial) sai em versão 7. A tela do pedido tem "Mostrar QR para quem está do seu lado": é o caminho para o guardião que está junto, que confere o código pessoalmente.
+   - **QR:** o codificador de QR do app vai até a versão 11 (321 bytes, ECC L; blocos intercalados da versão 6 em diante; a versão 10 é pulada). O link do pedido (uns 146 bytes no endereço oficial) sai em versão 7. A tela do pedido tem "Mostrar QR para quem está do seu lado": é o caminho para o guardião que está junto, que confere o código pessoalmente.
 3. **O guardião abre o link** no app dele. A tela mostra:
    - nome e foto da dona **tirados dos contatos do próprio guardião**, não do pedido;
    - há quanto tempo o pedido foi criado (pedido com mais de 24 h é recusado);
