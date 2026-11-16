@@ -1,6 +1,6 @@
 # ADR-032: Login perene — a conta nasce com saída, sem depender de empresa nem de servidor
 
-**Status:** accepted (2026-11-13, pelo mantenedor; passo 1 — §3.1 e §3.5 — no SW v7.113; passo 2 — frase, §3.3 e §5.1–5.2 — no SW v7.115/v7.116; passo 3 — guardiões spec, 3a Shamir, 3b escolha/entrega e T24/T25 — no SW v7.116/v7.117; **emenda 1 (§6), entrada com e-mail/senha, semente no cofre, kit `mailto:` e T26 — implementada no SW v7.119**) · **Revisado:** 2026-11-15 · **Relacionados:** [ADR-025](./025-cofre-v2-so-a-senha-abre.md), [ADR-031](./031-passkey-abre-a-mesma-conta.md), [ADR-026](./026-chaves-em-repouso-trava-depois-do-backup.md), [ADR-022](./022-memoria-central-por-consentimento.md), [ADR-030](./030-trazer-do-bluesky-pesos.md), [ADR-002](./002-oauth-profile-enrich-client.md), [THREAT-MODEL T20/T26](../THREAT-MODEL.md), [IDENTITY](../IDENTITY.md), [ROADMAP](../ROADMAP.md) (REV-14, PM-13, PM-101)
+**Status:** accepted (2026-11-13, pelo mantenedor; passo 1 — §3.1 e §3.5 — no SW v7.113; passo 2 — frase, §3.3 e §5.1–5.2 — no SW v7.115/v7.116; passo 3 — guardiões spec, 3a Shamir, 3b escolha/entrega e T24/T25 — no SW v7.116/v7.117; **emenda 1 (§6), entrada com e-mail/senha, semente no cofre, kit `mailto:` e T26 — implementada no SW v7.120**) · **Revisado:** 2026-11-15 · **Relacionados:** [ADR-025](./025-cofre-v2-so-a-senha-abre.md), [ADR-031](./031-passkey-abre-a-mesma-conta.md), [ADR-026](./026-chaves-em-repouso-trava-depois-do-backup.md), [ADR-022](./022-memoria-central-por-consentimento.md), [ADR-030](./030-trazer-do-bluesky-pesos.md), [ADR-002](./002-oauth-profile-enrich-client.md), [THREAT-MODEL T20/T26](../THREAT-MODEL.md), [IDENTITY](../IDENTITY.md), [ROADMAP](../ROADMAP.md) (REV-14, PM-13, PM-101)
 
 ## 1. Contexto
 
@@ -126,7 +126,7 @@ Isso muda a forma assinada e o `routeId`, então pede um ADR e uma RFC próprios
 
 ## 6. Emenda 1 (2026-11-14): entrada com nome, e-mail e senha; o kit de volta vai para o e-mail da própria pessoa
 
-> **Situação:** aceita pelo mantenedor em 2026-11-14; **implementada no SW v7.119.** (`vault-crypto.js`, `oauth-vault.js`, `email-kit.js`, `render/oauth-modals.js`, `app/onboarding.js`, `render/profile.js`, [THREAT-MODEL T26](../THREAT-MODEL.md)).
+> **Situação:** aceita pelo mantenedor em 2026-11-14; **implementada no SW v7.120.** (`vault-crypto.js`, `oauth-vault.js`, `email-kit.js`, `render/oauth-modals.js`, `app/onboarding.js`, `render/profile.js`, [THREAT-MODEL T26](../THREAT-MODEL.md)).
 > Muda o §3.5 (a conta deixa de nascer provisória no caminho comum) e a tela "Já tenho conta". O resto do ADR continua valendo.
 
 ### 6.1 Por quê
