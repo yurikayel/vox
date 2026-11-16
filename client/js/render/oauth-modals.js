@@ -38,11 +38,11 @@ function renderGenesisEntryHtml(currentName, invite = null) {
           <p class="genesis-skip-note">Sem nome, você não aparece no diretório.</p>`;
 }
 
-/** Conta que já existe: pela frase (ADR-032), pelo QR do outro aparelho, ou pelo backup do e-mail e a Senha Soberana. */
+/** Conta que já existe: pela frase (ADR-032), pelos guardiões, pelo QR do outro aparelho, ou pelo backup do e-mail e a Senha Soberana. */
 function renderGenesisHaveHtml() {
   return `
           <h2 class="genesis-panel-title">Já tenho conta</h2>
-          <p class="genesis-lead"><strong>Com a frase:</strong> digite as 12 (ou 24) palavras na ordem. Não precisa de internet.</p>
+          <p class="genesis-lead"><strong>Com a frase:</strong> digite as 12 (ou 24) palavras na ordem. Não precisa de internet. Sem a frase, <a href="#/voltar">peça a volta aos seus guardiões</a>.</p>
           <p class="genesis-lead"><strong>Com o outro aparelho:</strong> nele, abra Perfil → QR para outro aparelho e aponte a câmera deste.</p>
           <p class="genesis-lead"><strong>Sem eles:</strong> escolha os backups do seu e-mail, se tiver, e digite a Senha Soberana.</p>
           <form id="form-oauth-restore-passphrase" class="genesis-inline-form genesis-inline-form--stack">

@@ -16,6 +16,7 @@ import { showNetworkWizard, showBackupWizard, showWalletWizard } from "./screens
 import { showSyncScreen } from "./screens-sync.js";
 import { showRecoveryPhrase } from "./screens-phrase.js";
 import { showGuardians } from "./screens-guardians.js";
+import { showGuardianRecover, showGuardianReturn } from "./screens-guardian-return.js";
 import { showLabsFrames, showLabsMofn } from "./screens-labs.js";
 import { showNotFound } from "./screens-not-found.js";
 import { showAvisos, showComposeAviso } from "./aviso-flow.js";
@@ -61,6 +62,8 @@ const ROUTE_DISPATCH_TABLE = {
   "backup-wizard": () => showBackupWizard(),
   "recovery-phrase": () => showRecoveryPhrase(),
   guardians: () => showGuardians(),
+  "guardian-return": (r) => showGuardianReturn(r.query),
+  "guardian-recover": () => showGuardianRecover(),
   "compose-community": () => showComposeCommunity(),
   "compose-listing": (r) => showComposeListing(r.communityId),
   "compose-proposal": (r) => showComposeProposal(r.communityId),

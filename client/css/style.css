@@ -9197,6 +9197,15 @@ blockquote.repost-cite {
 .guardian-status { padding: 0.6rem 0.8rem; border-left: 3px solid var(--danger); background: var(--surface-soft); }
 .guardian-status.is-done { border-left-color: var(--success, var(--accent)); }
 .guardian-held { margin: 0; padding-left: 1.2rem; display: grid; gap: 0.4rem; }
+.guardian-return, .guardian-recover { max-width: 36rem; margin: 0 auto; padding: 1rem; display: grid; gap: 0.75rem; }
+.guardian-owner { display: flex; gap: 0.6rem; align-items: center; font-size: 1.1rem; }
+.guardian-owner-avatar { width: 2.5rem; height: 2.5rem; border-radius: 50%; object-fit: cover; }
+.guardian-code { font-size: 1.25rem; font-weight: 700; letter-spacing: 0.02em; padding: 0.6rem 0.8rem; border: 1px dashed var(--border); border-radius: var(--radius-sm); text-align: center; overflow-wrap: anywhere; }
+.guardian-confirm { display: flex; gap: 0.5rem; align-items: flex-start; }
+.guardian-age, .guardian-received { font-size: 0.85rem; color: var(--text-muted); }
+.guardian-steps { margin: 0; padding-left: 1.2rem; display: grid; gap: 0.75rem; }
+.guardian-steps li { display: grid; gap: 0.4rem; }
+.guardian-paste { font-family: ui-monospace, monospace; font-size: 0.75rem; word-break: break-all; }
 
 /* PM-54 — faixa "ler antes de entrar" (link direto abre o conteúdo; entrar fica a um toque) */
 .read-first-banner {

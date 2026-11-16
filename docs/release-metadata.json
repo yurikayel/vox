@@ -1,9 +1,9 @@
 {
-  "git_sha": "1fc0ccc",
-  "branch": "fix/achados-da-cobertura",
+  "git_sha": "08ce581",
+  "branch": "feat/adr032-guardioes-3c",
   "test_js": 1148,
   "test_python": 111,
   "test_total": 1259,
-  "cache_name": "vox-pwa-v7.118-real-network-audio-video-upload",
-  "generated_at": "2026-11-16T15:09:14Z"
+  "cache_name": "vox-pwa-v7.119-real-network-audio-video-upload",
+  "generated_at": "2026-11-16T17:05:15Z"
 }
