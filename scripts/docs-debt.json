@@ -1586,7 +1586,6 @@
   "jsdoc:__resetNotesForTests"
  ],
  "client/js/qr-url-codec.js": [
-  "jsdoc:VERSIONS",
   "jsdoc:VOX_SHARE_HASH",
   "jsdoc:isVoxShareUrl",
   "jsdoc:assertVoxShareUrl",
@@ -1594,7 +1593,6 @@
   "jsdoc:chooseVersion",
   "jsdoc:pushBits",
   "jsdoc:encodeBytePayload",
-  "jsdoc:codewordsToBits",
   "jsdoc:parseBytePayload"
  ],
  "client/js/qr-url-gf.js": [

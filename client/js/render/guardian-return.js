@@ -106,7 +106,8 @@ export function renderRecoverPendingHtml({ link, code, received }) {
       <ol class="guardian-steps">
         <li>Mande este link para cada guardião:
           <input type="text" class="genesis-input" id="guardian-recover-link" value="${escapeHtml(link)}" readonly aria-label="Link do pedido" />
-          <button type="button" class="agora-btn" id="btn-guardian-recover-share">Copiar ou compartilhar</button></li>
+          <button type="button" class="agora-btn" id="btn-guardian-recover-share">Copiar ou compartilhar</button>
+          <button type="button" class="agora-btn" id="btn-guardian-recover-qr" data-qr-url="${escapeHtml(link)}">Mostrar QR para quem está do seu lado</button></li>
         <li>Ligue ou fale pessoalmente com cada um e leia este código:${codeHtml(code)}</li>
         <li>Cole aqui a resposta de quem estiver com você, ou busque na caixa temporária:
           <textarea class="genesis-input guardian-paste" id="guardian-recover-paste" rows="3" placeholder="vox-volta:…" aria-label="Resposta de um guardião"></textarea>
