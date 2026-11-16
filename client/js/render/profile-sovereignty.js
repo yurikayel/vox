@@ -20,6 +20,10 @@ function renderVaultFieldsHtml() {
           Senha Soberana (usada para sincronizar aparelhos e cifrar backup offline)
         </label>
         <input type="password" id="input-sovereignty-passphrase" class="form-control" autocomplete="new-password" placeholder="Digite uma senha forte para sua conta…" style="margin-bottom:0.5rem;" />
+        <label for="input-sovereignty-prev-passphrase" class="desc" style="display:block; font-size:0.82rem; margin-bottom:0.25rem;">
+          Senha atual, só para trocar a Senha Soberana
+        </label>
+        <input type="password" id="input-sovereignty-prev-passphrase" class="form-control" autocomplete="current-password" placeholder="Deixe vazio se não for trocar" style="margin-bottom:0.5rem;" />
         <label for="input-sovereignty-email" class="desc" style="display:block; font-size:0.82rem; margin-bottom:0.25rem;">
           E-mail da conta, se você criou a conta com e-mail (não é enviado: só entra no cálculo do endereço e da chave do cofre)
         </label>

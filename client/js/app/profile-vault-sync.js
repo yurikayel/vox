@@ -3,7 +3,9 @@
  *
  * - **E-mail (ADR-032 Emenda 1):** quem criou a conta com e-mail grava o cofre com o mesmo e-mail, que entra na
  *   derivação do endereço e da chave. Sem ele, o cofre ia para um endereço que sai só da senha. Conta com saída
- *   por e-mail e campo vazio pede confirmação antes.
+ *   por e-mail e campo vazio pede confirmação antes. Gravar com e-mail tira do ar o cofre só-senha anterior.
+ * - **Trocar a senha:** conta travada só abre com a senha antiga, que vai no campo "Senha atual"; o endereço antigo
+ *   é revogado.
  * - **Link (PM-92):** leva o cofre cifrado só pela senha (`syncBundle`, que não sai do aparelho); a senha é
  *   digitada no outro aparelho.
  * - **QR:** leva um cofre mínimo (conta, semente e o nome, se couber), também só pela senha, para caber no QR
@@ -46,13 +48,23 @@ export function buildSyncUrl(record, encodeFn, loc = window.location) {
   return `${loc.origin}${loc.pathname}#/sync?b=${encodeURIComponent(encodeFn(record))}`;
 }
 
+/**
+ * Opções de `savePassphraseVault` a partir do cartão: só o e-mail, ou e-mail e senha atual quando é troca de senha.
+ * @param {string} email
+ * @param {string} prevPassphrase senha atual (vazia quando não é troca)
+ * @returns {string|{ email: string, prevPassphrase: string }}
+ */
+export function profileVaultOptions(email, prevPassphrase) {
+  return prevPassphrase ? { email, prevPassphrase } : email;
+}
+
 async function saveVault(missingPassText) {
   const pass = readField("input-sovereignty-passphrase");
   const email = readField("input-sovereignty-email");
   if (!pass) return { error: missingPassText };
   if (needsNoEmailConfirm(email) && !confirm(NO_EMAIL_CONFIRM)) return { cancelled: true };
   const vault = await import("../oauth-vault.js");
-  const res = await vault.savePassphraseVault(pass, email);
+  const res = await vault.savePassphraseVault(pass, profileVaultOptions(email, readField("input-sovereignty-prev-passphrase")));
   return res.ok ? { pass, res, vault } : { error: res.reason || "Não deu para gravar o cofre." };
 }
 

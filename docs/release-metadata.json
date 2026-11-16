@@ -1,9 +1,9 @@
 {
-  "git_sha": "a518fee",
-  "branch": "fix/qr-do-cofre",
+  "git_sha": "ee045e9",
+  "branch": "fix/perfil-trocar-senha-e-email",
   "test_js": 1148,
   "test_python": 111,
   "test_total": 1259,
-  "cache_name": "vox-pwa-v7.126-real-network-audio-video-upload",
-  "generated_at": "2026-11-16T21:16:45Z"
+  "cache_name": "vox-pwa-v7.127-real-network-audio-video-upload",
+  "generated_at": "2026-11-16T21:40:33Z"
 }
