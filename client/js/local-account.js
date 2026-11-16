@@ -283,26 +283,34 @@ async function adoptImportedIdentity(bundle) {
     return seeded ? { routeId: seeded.routeId, publicJwk: seeded.publicJwk, privateJwk: seeded.privateJwk, dmKeypair: seeded.dmKeypair } : null;
   }
   if (!bundle?.routeId || !bundle?.publicJwk || !bundle?.privateJwk) return null;
-  return { routeId: bundle.routeId, publicJwk: bundle.publicJwk, privateJwk: bundle.privateJwk, dmKeypair: null };
+  return { routeId: bundle.routeId, publicJwk: bundle.publicJwk, privateJwk: bundle.privateJwk, dmKeypair: bundle.dmKeypair || null };
+}
+
+function importedSettings(bundle, identity) {
+  const known = readVaultMap()[identity.routeId] || {};
+  const picked = { displayName: bundle.displayName, enrichment: bundle.enrichment, pixKey: bundle.pix, dmKeypair: identity.dmKeypair };
+  return { ...known, ...Object.fromEntries(Object.entries(picked).filter(([, v]) => v)) };
 }
 
 /**
- * Importa um pacote de conta (com ou sem semente) para este aparelho.
+ * Importa um pacote de conta (com ou sem semente) para este aparelho. Se é outra conta, a atual vai antes para o
+ * cofre local, e nome, enriquecimento, Pix e chave de DM passam a ser os da importada (do pacote ou, se ela já
+ * esteve aqui, do cofre local), nunca os da anterior.
  * @param {object} bundle
  * @returns {Promise<boolean>}
  */
 export async function importLocalAccountBundle(bundle) {
   const identity = await adoptImportedIdentity(bundle);
   if (!identity) return false;
-  storeActiveAccount({
-    routeId: identity.routeId,
-    publicJwk: identity.publicJwk,
-    privateJwk: await sealJson(identity.privateJwk),
-    createdAt: bundle.createdAt || Date.now(),
-  });
+  const previous = getCachedRouteIdSync();
+  if (previous && previous !== identity.routeId) await syncActiveAccountToVault();
+  const settings = importedSettings(bundle, identity);
+  const privateJwk = await sealJson(identity.privateJwk);
+  storeActiveAccount({ routeId: identity.routeId, publicJwk: identity.publicJwk, privateJwk, createdAt: bundle.createdAt || Date.now() });
+  if (previous !== identity.routeId) return restoreTargetAccountSettings(settings).then(() => true);
   if (bundle.displayName) setDisplayName(bundle.displayName);
-  if (bundle.enrichment) localStorage.setItem(ENRICHMENT_STORAGE, JSON.stringify(bundle.enrichment));
-  if (bundle.pix) localStorage.setItem(PIX_STORAGE, JSON.stringify(bundle.pix));
+  writeOrRemove(ENRICHMENT_STORAGE, settings.enrichment);
+  writeOrRemove(PIX_STORAGE, settings.pixKey);
   if (identity.dmKeypair) await cryptoDm.setDmKeypair(identity.dmKeypair);
   else await cryptoDm.ensureDmKeys();
   return true;
@@ -508,23 +516,17 @@ export async function listVaultAccounts() {
   return listVaultAccountsSync();
 }
 
+function writeOrRemove(key, value) {
+  if (value) localStorage.setItem(key, JSON.stringify(value));
+  else localStorage.removeItem(key);
+}
+
+// Sem chave de DM guardada, gera uma nova: a da conta que estava ativa nunca passa para outra.
 async function restoreTargetAccountSettings(target) {
-  if (target.dmKeypair) {
-    await cryptoDm.setDmKeypair(target.dmKeypair);
-  } else {
-    await cryptoDm.ensureDmKeys();
-  }
+  await cryptoDm.setDmKeypair(target.dmKeypair || (await cryptoDm.generateDmKeypair()));
   setDisplayName(target.displayName || target.enrichment?.displayName || "");
-  if (target.enrichment) {
-    localStorage.setItem(ENRICHMENT_STORAGE, JSON.stringify(target.enrichment));
-  } else {
-    localStorage.removeItem(ENRICHMENT_STORAGE);
-  }
-  if (target.pixKey) {
-    localStorage.setItem(PIX_STORAGE, JSON.stringify(target.pixKey));
-  } else {
-    localStorage.removeItem(PIX_STORAGE);
-  }
+  writeOrRemove(ENRICHMENT_STORAGE, target.enrichment);
+  writeOrRemove(PIX_STORAGE, target.pixKey);
   setMeshDiscoverable(target.meshDiscoverable !== false);
 }
 
