@@ -8,7 +8,14 @@
 import * as localAccount from "./local-account.js";
 import * as profileDirectory from "./profile-directory.js";
 import * as accountExit from "./account-exit.js";
-import { locatePassphraseRecord, persistVaultRecord, revokeVaultAddress, saveRemoteVaultRecord } from "./vault-store.js";
+import {
+  VAULT_STORAGE_PREFIX,
+  findVaultRecordWithStatus,
+  locatePassphraseRecord,
+  persistVaultRecord,
+  revokeVaultAddress,
+  saveRemoteVaultRecord,
+} from "./vault-store.js";
 import {
   compactV2PlainBudget,
   decryptVaultRecord,
@@ -107,8 +114,19 @@ function parseSaveVaultOpts(emailOrOpts) {
   return { email, hasPrev, prevEmail, prevPassphrase };
 }
 
+// Cofre só-senha com a mesma senha, de antes do e-mail: ao gravar com e-mail ele sai do ar (ADR-032 §6.3).
+// Só revoga o que existe, para não deixar marca de revogado num endereço que nunca teve cofre.
+async function revokePassOnlyVault(cleanPass) {
+  const address = await deriveVaultAddress(cleanPass, "");
+  const found = await findVaultRecordWithStatus(address, VAULT_STORAGE_PREFIX);
+  if (found.record) await revokeVaultAddress(address, await deriveVaultOwnerToken(cleanPass, ""));
+}
+
 async function maybeRevokePreviousVault(opts, cleanPass, newAddress) {
-  if (!opts.hasPrev) return;
+  if (!opts.hasPrev) {
+    if (opts.email) await revokePassOnlyVault(cleanPass);
+    return;
+  }
   const prevPass = opts.prevPassphrase || cleanPass;
   const [oldAddress, oldToken] = await Promise.all([deriveVaultAddress(prevPass, opts.prevEmail), deriveVaultOwnerToken(prevPass, opts.prevEmail)]);
   if (oldAddress !== newAddress) await revokeVaultAddress(oldAddress, oldToken);
@@ -176,11 +194,9 @@ async function upgradeLegacyPassphraseVault(clean, legacyKey, normEmail = "") {
   return saved.ok;
 }
 
-async function upgradePassphraseOnlyVault(clean, normEmail, legacyV2) {
-  const saved = await savePassphraseVault(clean, normEmail);
-  if (!saved.ok) return false;
-  await revokeVaultAddress(legacyV2.address, await deriveVaultOwnerToken(clean, ""));
-  return true;
+// Gravar com e-mail já revoga o cofre só-senha encontrado (`revokePassOnlyVault`).
+async function upgradePassphraseOnlyVault(clean, normEmail) {
+  return (await savePassphraseVault(clean, normEmail)).ok;
 }
 
 function parseRestoreArgs(lookupKeyOverride, directRecord, email) {
@@ -196,7 +212,7 @@ function parseRestoreArgs(lookupKeyOverride, directRecord, email) {
 
 async function finalizeVaultUpgrade(clean, located, normEmail) {
   if (!isV2Record(located.record)) return upgradeLegacyPassphraseVault(clean, located.legacyKey, normEmail);
-  if (located.legacyV2 && normEmail) return upgradePassphraseOnlyVault(clean, normEmail, located.legacyV2);
+  if (located.legacyV2 && normEmail) return upgradePassphraseOnlyVault(clean, normEmail);
   return false;
 }
 

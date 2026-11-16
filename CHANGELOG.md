@@ -6,6 +6,11 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Correção: trocar a Senha Soberana pelo Perfil; pôr e-mail tira do ar o cofre só-senha
+- **Senha atual:** o cartão "Soberania & Sincronização" ganha o campo "Senha atual, só para trocar a Senha Soberana". Antes, depois do primeiro cofre a conta ficava travada pela senha, e uma senha nova dava "Senha incorreta" sem ter onde informar a antiga. Com a senha atual, a conta é aberta, gravada com a nova e o endereço antigo é revogado.
+- **E-mail:** gravar o cofre com e-mail (Perfil ou assistente de backup) revoga o cofre só-senha anterior da mesma senha, como a restauração já fazia (ADR-032 §6.3). Antes, ele ficava no ar e abria só com a senha. Só é revogado o que existe; endereço sem cofre não ganha marca.
+- Testes: `tests/profile-vault-change.test.js` (novo; o de revogação falha com o `passphrase-vault.js` anterior, o do campo com o Perfil anterior). SW `v7.127`.
+
 ### Correção: o QR do Perfil para outro aparelho volta a funcionar
 - **"📲 QR Code para Celular" sempre falhava:** o link do cofre tinha uns 251 bytes no endereço oficial, e o codificador de QR ia só até a versão 9 (230 bytes). Agora o QR leva um cofre mínimo: a conta, a semente da frase de 12 palavras e o nome, se couber, cifrados só pela senha (`buildQrSyncRecord`). O cofre completo continua gravado e o link continua levando tudo; Pix e o resto chegam por eles. Conta de antes da frase não tem semente e recebe o motivo em vez de um QR que não abre.
 - **Codificador de QR:** ganha a versão 11 (321 bytes, ECC L, 4 blocos, contagem de 16 bits). A versão 10 fica de fora, porque em ECC L ela mistura blocos de dois tamanhos.
