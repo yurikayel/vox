@@ -6,6 +6,12 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Correção: entrar em outra conta não herda nada da anterior; cofre do Perfil com o e-mail da conta
+- **Frase, guardiões, arquivo `.voxid` e cofre** passam todos por `importLocalAccountBundle`. Quando a conta que entra é outra, a que estava ativa vai inteira para o cofre local (nome, Pix, enriquecimento, chave de DM), e a que entra fica com o que é dela: do pacote ou, se já esteve neste aparelho, do cofre local. Antes, entrar pela frase ou por um `.voxid` sem nome e sem Pix deixava o nome, a chave Pix e os dados de login da conta anterior na nova, e um `.voxid` sem chave de DM ficava com a chave de DM da anterior.
+- **Trocar de conta sem chave de DM guardada** gera uma chave nova em vez de manter a da conta que estava ativa.
+- **Cartão "Soberania & Sincronização" do Perfil:** campo de e-mail (opcional) para quem criou a conta com e-mail; o cofre é gravado com ele, como na entrada (ADR-032 Emenda 1). Conta com saída por e-mail e campo vazio pede confirmação, porque sem o e-mail o endereço do cofre sai só da senha. O link e o QR levam o cofre cifrado só pela senha (`syncBundle`), que não sai do aparelho. Os dois botões saíram de `screens-profile.js` para `app/profile-vault-sync.js`; o link é montado com `textContent`, não com `innerHTML`.
+- Testes: `tests/restore-account-switch.test.js` (novo; 3 dos 4 falham no código anterior). SW `v7.125`.
+
 ### Correção: diretório de perfis reconhece foto de login social pelo host
 - `profile-directory.js` decidia se dois cartões eram a mesma pessoa procurando "googleusercontent.com/", "fbcdn.net" e afins em qualquer parte da URL da foto, e cortava o resto. Duas fotos diferentes de um mesmo site, com esse trecho na query, viravam "a mesma pessoa", e a deduplicação ou a poda apagava um cartão. Agora usa `detectSocialAvatarType` (host da URL, só https), a mesma regra de `account-social-match.js` (#150) e de `people-index.js`; na Meta, `psid`/`asid` são lidos como parâmetros da query, não por trecho.
 - Testes: `tests/profile-directory-avatar.test.js` (novo; 2 dos 4 falham no código anterior). SW `v7.124`.
