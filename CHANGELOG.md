@@ -6,6 +6,11 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Triagem da varredura de cobertura (2026-11-16)
+- Dos 99 arquivos `tests/coverage-*` do Antigravity, nenhum entra. 73 clicavam telas num DOM falso sem conferir quase nada, e 14 são do dungeon (vão no PR dele). Os 12 de funções puras misturavam checagens reais, já cobertas pelos testes existentes, com tautologias. Os defeitos reais que eles acharam já estão corrigidos e testados (`tests/achados-cobertura.test.js`).
+- **Relay:** entra `relay/test_relay_limites_e_rotas.py` (11 testes), com rotas, limites de tamanho (413), entradas ruins (400), validação de manifesto e quadros WebSocket. A versão original escrevia na pasta `.cache/central_memory` real do relay; agora todas as pastas do relay ficam num diretório temporário. Os três testes com nome de meta de cobertura ganharam nome de comportamento, e as chamadas sem checagem saíram.
+- **E2E:** entra `e2e/test_vox_e2e.py` (`npm run test:e2e`, fora do CI): Chromium real com a rede de fora bloqueada, cobrindo entrada e recarga, as rotas principais, os assistentes e dois navegadores na malha. Os testes do dungeon voltam com o PR dele. Documentado em `docs/TESTES.md` §3.1–3.2.
+
 ### Correções achadas pela varredura de cobertura (2026-11-16)
 - **Comunidade:** a busca vazia, a foto de reserva do autor, o Pix/zap da Feira e o status do anúncio quebravam com `ReferenceError`, porque `escapeHtml`, `brcode` e `listing` eram usados em `app/screens-community.js` sem import. O ESLint do cliente agora reprova nome sem import (`no-undef`).
 - **Editar post:** o modal não abria, porque `init.js` chamava uma função e um contêiner que não existem. Agora abre em `#modal-container` com `renderPostEditModal`, e Esc e o clique fora fecham só ele.
