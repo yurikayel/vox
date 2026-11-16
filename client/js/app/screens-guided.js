@@ -91,6 +91,30 @@ async function downloadWrappedFile(pass) {
   }
 }
 
+function readBackupVaultOptions() {
+  const email = document.getElementById("bk-email")?.value || "";
+  const prevPassphrase = document.getElementById("bk-prev-pass")?.value || "";
+  return prevPassphrase ? { email, prevPassphrase } : email;
+}
+
+async function submitBackupWizard() {
+  const btn = document.getElementById("btn-backup-wizard-save");
+  const out = document.getElementById("bk-result");
+  if (btn) btn.disabled = true;
+  try {
+    const { savePassphraseVault } = await import("../oauth-vault.js");
+    const pass = document.getElementById("bk-pass")?.value || "";
+    const res = await savePassphraseVault(pass, readBackupVaultOptions());
+    reportVaultResult(out, res, pass);
+    const toast = !res.ok ? "Falha no backup." : res.remote > 0 ? "Backup da identidade concluído." : "Cofre só neste navegador: baixe o arquivo cifrado.";
+    share.showToast(toast, res.ok ? "info" : "error");
+  } catch (err) {
+    share.showToast(`Erro no backup: ${err?.message || err}`, "error");
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
 export async function showBackupWizard() {
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "profile", "Backup da identidade"));
@@ -98,23 +122,9 @@ export async function showBackupWizard() {
   bindPassphraseMatch();
   const form = document.getElementById("form-backup-wizard");
   bindComposeStepper(form);
-  form?.addEventListener("submit", async (e) => {
+  form?.addEventListener("submit", (e) => {
     e.preventDefault();
-    const btn = document.getElementById("btn-backup-wizard-save");
-    const out = document.getElementById("bk-result");
-    if (btn) btn.disabled = true;
-    try {
-      const { savePassphraseVault } = await import("../oauth-vault.js");
-      const pass = document.getElementById("bk-pass")?.value || "";
-      const res = await savePassphraseVault(pass);
-      reportVaultResult(out, res, pass);
-      const toast = !res.ok ? "Falha no backup." : res.remote > 0 ? "Backup da identidade concluído." : "Cofre só neste navegador: baixe o arquivo cifrado.";
-      share.showToast(toast, res.ok ? "info" : "error");
-    } catch (err) {
-      share.showToast(`Erro no backup: ${err?.message || err}`, "error");
-    } finally {
-      if (btn) btn.disabled = false;
-    }
+    void submitBackupWizard();
   });
 }
 

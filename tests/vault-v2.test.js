@@ -9,6 +9,8 @@ import * as localAccount from "../client/js/local-account.js";
 import * as oauthVault from "../client/js/oauth-vault.js";
 import * as vaultCrypto from "../client/js/vault-crypto.js";
 import * as vaultLegacy from "../client/js/vault-legacy.js";
+import * as identitySeed from "../client/js/identity-seed.js";
+import * as cryptoDm from "../client/js/crypto-dm.js";
 
 const PASS = "frase longa de teste soberana";
 
@@ -208,5 +210,118 @@ test("PM-94 - o cofre v2 vai com a prova do dono, que sai da senha e não do end
     assert.notEqual(await vaultCrypto.deriveVaultOwnerToken("outra senha bem longa"), sent.ownerToken);
   } finally {
     server.restore();
+  }
+});
+
+test("ADR-032 §6.3 - e-mail normalizado gera endereço, prova de dono e chave distintos por e-mail", async () => {
+  assert.equal(vaultCrypto.normalizeVaultEmail("  ANA@Exemplo.BR "), "ana@exemplo.br");
+  const addr1 = await vaultCrypto.deriveVaultAddress(PASS, "  ANA@Exemplo.BR ");
+  const addr2 = await vaultCrypto.deriveVaultAddress(PASS, "ana@exemplo.br");
+  const addr3 = await vaultCrypto.deriveVaultAddress(PASS, "outro@exemplo.br");
+  const addrNoEmail = await vaultCrypto.deriveVaultAddress(PASS);
+  assert.equal(addr1, addr2);
+  assert.notEqual(addr1, addr3);
+  assert.notEqual(addr1, addrNoEmail);
+  assert.notEqual(
+    await vaultCrypto.deriveVaultOwnerToken(PASS, "ana@exemplo.br"),
+    await vaultCrypto.deriveVaultOwnerToken(PASS, "outro@exemplo.br"),
+  );
+  const rec = await vaultCrypto.encryptVaultV2({ routeId: "vx_email", publicJwk: {}, privateJwk: {} }, PASS, undefined, "ana@exemplo.br");
+  await assert.rejects(() => vaultCrypto.decryptVaultRecord(rec, PASS));
+  await assert.rejects(() => vaultCrypto.decryptVaultRecord(rec, PASS, "outro@exemplo.br"));
+  assert.equal((await vaultCrypto.decryptVaultRecord(rec, PASS, "  ANA@Exemplo.BR ")).routeId, "vx_email");
+});
+
+test("ADR-032 §6.3 - cofre v2 antigo só-senha abre ao informar e-mail, migra e revoga endereço antigo", async () => {
+  const server = installMemoryServer();
+  try {
+    freshDevice();
+    const acc = await localAccount.ensureLocalAccount();
+    assert.equal((await oauthVault.savePassphraseVault(PASS)).ok, true);
+    const oldAddr = await vaultCrypto.deriveVaultAddress(PASS);
+    const newAddr = await vaultCrypto.deriveVaultAddress(PASS, "ana@exemplo.br");
+    freshDevice();
+    const res = await oauthVault.restoreFromPassphraseVault(PASS, { email: "ana@exemplo.br" });
+    assert.equal(res.ok, true);
+    assert.equal(res.upgraded, true);
+    assert.equal(res.routeId, acc.routeId);
+    assert.equal(server.store.get(oldAddr)?.revoked, true);
+    assert.equal(server.store.get(newAddr)?.v, 2);
+    assert.notEqual(server.store.get(newAddr)?.revoked, true);
+  } finally {
+    server.restore();
+  }
+});
+
+test("ADR-032 §6.3 - troca de e-mail ou senha revoga endereço anterior e atualiza o cofre", async () => {
+  const server = installMemoryServer();
+  const NOVA_SENHA = "nova frase bem mais forte";
+  try {
+    freshDevice();
+    const acc = await localAccount.ensureLocalAccount();
+    assert.equal((await oauthVault.savePassphraseVault(PASS, "ana@exemplo.br")).ok, true);
+    const oldAddr = await vaultCrypto.deriveVaultAddress(PASS, "ana@exemplo.br");
+    const saved = await oauthVault.savePassphraseVault(NOVA_SENHA, { email: "novo@exemplo.br", prevEmail: "ana@exemplo.br", prevPassphrase: PASS });
+    assert.equal(saved.ok, true);
+    assert.equal(server.store.get(oldAddr)?.revoked, true);
+    assert.equal(await vaultCrypto.deriveVaultAddress(NOVA_SENHA, "novo@exemplo.br"), saved.lookupKey);
+    freshDevice();
+    assert.equal((await oauthVault.restoreFromPassphraseVault(PASS, { email: "ana@exemplo.br" })).ok, false);
+    const res = await oauthVault.restoreFromPassphraseVault(NOVA_SENHA, { email: "novo@exemplo.br" });
+    assert.equal(res.ok, true);
+    assert.equal(res.routeId, acc.routeId);
+  } finally {
+    server.restore();
+  }
+});
+
+test("ADR-032 §6.4 - cofre com e-mail preserva semente, chave DM e cabe em link curto (< 350 chars)", async () => {
+  const server = installMemoryServer();
+  try {
+    freshDevice();
+    const acc = await localAccount.ensureLocalAccount();
+    localAccount.setDisplayName("Ana Silva");
+    assert.equal(identitySeed.hasSeed(acc.routeId), true);
+    const dmBefore = (await cryptoDm.getDmKeypairAtRest()).publicJwk;
+    const saved = await oauthVault.savePassphraseVault(PASS, "ana@exemplo.br");
+    assert.equal(saved.ok, true);
+    const urlEncoded = vaultCrypto.encodeVaultBundleForUrl(saved.bundle);
+    assert.ok(urlEncoded.length < 350, `esperado < 350 chars, veio ${urlEncoded.length}`);
+    freshDevice();
+    const res = await oauthVault.restoreFromPassphraseVault(PASS, { email: "ana@exemplo.br" });
+    assert.equal(res.ok, true);
+    assert.equal(res.routeId, acc.routeId);
+    assert.equal(identitySeed.hasSeed(acc.routeId), true);
+    assert.equal((await identitySeed.openSeed(acc.routeId, PASS))?.length, 16);
+    assert.deepEqual((await cryptoDm.getDmKeypairAtRest()).publicJwk, dmBefore);
+  } finally {
+    server.restore();
+  }
+});
+
+test("ADR-032 §6.3 - quorum anti-rollback recusa cofre se qualquer servidor marcou revogado e indica noServer quando offline", async () => {
+  const origFetch = globalThis.fetch;
+  try {
+    freshDevice();
+    const acc = await localAccount.ensureLocalAccount();
+    const saved = await oauthVault.savePassphraseVault(PASS, "ana@exemplo.br");
+    freshDevice();
+    globalThis.fetch = async (url) => {
+      const record = String(url).includes(":3921") ? saved.bundle : { v: 2, revoked: true, updatedAt: Date.now() + 1000 };
+      return { ok: true, json: async () => ({ status: "ok", record }) };
+    };
+    const revokedRes = await oauthVault.restoreFromPassphraseVault(PASS, { email: "ana@exemplo.br" });
+    assert.equal(revokedRes.ok, false);
+    assert.equal(revokedRes.noServer, false);
+    assert.equal(await oauthVault.fetchRemoteVaultRecord(saved.lookupKey), null);
+    globalThis.fetch = async () => {
+      throw new Error("offline");
+    };
+    const offlineRes = await oauthVault.restoreFromPassphraseVault(PASS, { email: "ana@exemplo.br" });
+    assert.equal(offlineRes.ok, false);
+    assert.equal(offlineRes.noServer, true);
+    assert.ok(acc.routeId.startsWith("vx_"));
+  } finally {
+    globalThis.fetch = origFetch;
   }
 });

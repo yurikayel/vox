@@ -288,10 +288,6 @@
  "client/js/app/screens-status.js": [
   "jsdoc:showStatus"
  ],
- "client/js/app/screens-sync.js": [
-  "jsdoc:renderSyncFormHtml",
-  "param:showSyncScreen:#1"
- ],
  "client/js/app/screens-voxpedia.js": [
   "jsdoc:showVoxpedia"
  ],
@@ -1116,14 +1112,6 @@
   "jsdoc:getProfileEnrichment",
   "jsdoc:setProfileEnrichment",
   "jsdoc:clearProfileEnrichment",
-  "param:openAccountKeys:passphrase",
-  "returns:openAccountKeys",
-  "param:lockActiveAccount:passphrase",
-  "returns:lockActiveAccount",
-  "param:lockAfterPasswordBackup:passphrase",
-  "returns:lockAfterPasswordBackup",
-  "jsdoc:exportLocalAccountBundle",
-  "jsdoc:importLocalAccountBundle",
   "jsdoc:getPixKey",
   "jsdoc:setPixKey",
   "jsdoc:clearPixKey",
@@ -1345,18 +1333,12 @@
   "jsdoc:hasCompletedOAuthStep"
  ],
  "client/js/oauth-vault.js": [
-  "jsdoc:fetchRemoteVaultRecord",
-  "param:saveRemoteVaultRecord:lookupKey",
-  "param:saveRemoteVaultRecord:record",
-  "param:saveRemoteVaultRecord:ownerToken",
   "returns:runLegacyVaultMigration",
   "jsdoc:LEGACY_VAULT_NOTICE",
   "param:startVaultMigration:toast",
   "jsdoc:restoreOrBindOAuthIdentity",
   "jsdoc:restoreOrBindGoogleIdentity",
-  "jsdoc:restoreOrBindMetaIdentity",
-  "jsdoc:savePassphraseVault",
-  "jsdoc:restoreFromPassphraseVault"
+  "jsdoc:restoreOrBindMetaIdentity"
  ],
  "client/js/open-frames-host.js": [
   "jsdoc:OF_HOST_MESSAGE_TYPES",
@@ -1795,10 +1777,6 @@
   "jsdoc:renderNodeHealthListHtml"
  ],
  "client/js/render/oauth-modals.js": [
-  "param:showGenesisStep:root",
-  "param:showGenesisStep:key",
-  "returns:showGenesisStep",
-  "jsdoc:closeOAuthEnrich",
   "jsdoc:resolvePeopleSearchBody",
   "jsdoc:renderPeopleSearch",
   "jsdoc:renderConnectPreview",
@@ -2169,22 +2147,12 @@
   "jsdoc:VAULT_V2_ITERATIONS",
   "jsdoc:bufferToHex",
   "jsdoc:hexToBytes",
-  "param:deriveVaultAddress:passphrase",
-  "returns:deriveVaultAddress",
-  "param:deriveVaultOwnerToken:passphrase",
-  "returns:deriveVaultOwnerToken",
-  "jsdoc:encryptVaultV2",
   "jsdoc:isV2Record",
   "param:isRevokedRecord:record",
   "returns:isRevokedRecord",
-  "param:decryptVaultRecord:record",
-  "param:decryptVaultRecord:passphrase",
-  "returns:decryptVaultRecord",
   "jsdoc:legacyLookupKey",
   "jsdoc:deriveLegacyKey",
-  "jsdoc:decryptLegacyRecord",
-  "jsdoc:encodeVaultBundleForUrl",
-  "jsdoc:decodeVaultBundleFromUrl"
+  "jsdoc:decryptLegacyRecord"
  ],
  "client/js/vault-legacy.js": [
   "jsdoc:LEGACY_VAULT_PREFIX",

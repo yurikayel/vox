@@ -78,6 +78,8 @@ export function renderBackupWizard(main) {
   const steps = [
     { key: "create", title: "Crie sua Senha Soberana", required: ["bk-pass"], requiredMsg: "Use pelo menos 12 caracteres (uma frase de 4 palavras serve).", body: `
       <p class="compose-step-lead">Com ela você recupera sua identidade em outro aparelho. Ninguém consegue recuperá-la por você — guarde num lugar seguro.</p>
+      <input type="email" id="bk-email" class="form-control agora-inscription" autocomplete="username" placeholder="Seu e-mail (opcional — para endereçar o cofre)" aria-label="Seu e-mail" />
+      <input type="password" id="bk-prev-pass" class="form-control agora-inscription" autocomplete="current-password" placeholder="Senha atual (só se já tiver e quiser trocar)" aria-label="Senha Soberana atual" />
       <input type="password" id="bk-pass" class="form-control agora-inscription" minlength="12" required autocomplete="new-password" placeholder="Pelo menos 12 caracteres" aria-label="Senha Soberana" />` },
     { key: "confirm", title: "Digite de novo", required: ["bk-pass2"], requiredMsg: "As senhas não conferem.", body: `
       <input type="password" id="bk-pass2" class="form-control agora-inscription" required autocomplete="new-password" placeholder="Repita a Senha Soberana" aria-label="Confirmar Senha Soberana" />` },

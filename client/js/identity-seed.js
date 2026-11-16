@@ -102,3 +102,25 @@ export async function openSeed(routeId, passphrase = "") {
 export function forgetSeed(routeId) {
   if (hasSeed(routeId)) writeSeed(routeId, null);
 }
+
+/**
+ * Reconstrói assinatura e chaves DM a partir da semente em base64url e guarda a semente no aparelho.
+ * @param {string} seedB64
+ * @param {string} [expectedRouteId]
+ * @returns {Promise<{ routeId: string, publicJwk: JsonWebKey, privateJwk: JsonWebKey, dmKeypair: { publicJwk: JsonWebKey, privateJwk: JsonWebKey } } | null>}
+ */
+export async function restoreAccountFromSeedB64(seedB64, expectedRouteId = "") {
+  if (typeof seedB64 !== "string" || !seedB64) return null;
+  let seed;
+  try {
+    seed = fromB64url(seedB64);
+  } catch {
+    return null;
+  }
+  if (seed.length !== 16) return null;
+  const { signing, dm } = await identityFromSeed(seed);
+  const routeId = await computeRouteId(signing.publicJwk);
+  if (expectedRouteId && routeId !== expectedRouteId) return null;
+  await storeSeed(routeId, seed);
+  return { routeId, publicJwk: signing.publicJwk, privateJwk: signing.privateJwk, dmKeypair: dm };
+}

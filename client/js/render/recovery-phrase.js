@@ -4,6 +4,7 @@
  */
 
 import { escapeHtml } from "../shared/html.js";
+import { formatPhraseSentInEmailNotice } from "../email-kit.js";
 
 const WARNING =
   "Quem tiver estas palavras entra como você. Escreva no papel, guarde longe do celular e não fotografe.";
@@ -17,11 +18,16 @@ export function renderPhraseIntroHtml({ needsPassphrase }) {
   const pass = needsPassphrase
     ? `<input type="password" id="phrase-pass" class="agora-inscription genesis-input" placeholder="Senha Soberana" autocomplete="current-password" aria-label="Senha Soberana" required />`
     : "";
+  const emailNotice = formatPhraseSentInEmailNotice();
+  const noticeHtml = emailNotice
+    ? `<p class="phrase-warning phrase-in-email-notice" role="note">⚠️ ${escapeHtml(emailNotice)}</p>`
+    : "";
   return `
     <section class="phrase-screen" id="phrase-screen">
       <h2>Frase de recuperação</h2>
       <p>São palavras que trazem esta conta de volta em qualquer aparelho, sem servidor, sem e-mail e sem empresa.</p>
       <p class="phrase-warning" role="note">${WARNING}</p>
+      ${noticeHtml}
       <form id="form-phrase-show" class="genesis-inline-form genesis-inline-form--stack">
         ${pass}
         <button type="submit" class="agora-btn agora-btn--primary" id="btn-phrase-show">Mostrar minha frase</button>

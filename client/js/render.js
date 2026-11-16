@@ -93,6 +93,7 @@ export {
 
 export {
   renderOAuthEnrich,
+  renderEmailKitCardHtml,
   showGenesisStep,
   closeOAuthEnrich,
   resolvePeopleSearchBody,

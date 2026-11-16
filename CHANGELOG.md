@@ -6,6 +6,14 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Entrada com nome, e-mail e senha e kit de volta no e-mail da própria pessoa (ADR-032 Emenda 1)
+- **Entrada em uma etapa:** nome ou apelido, e-mail e senha (mínimo de 12 caracteres). "Criar conta" gera a semente, entra, grava o cofre e abre um rascunho `mailto:` da pessoa para ela mesma. Sem e-mail, a conta nasce só com o nome, como antes, com a faixa de conta provisória.
+- **O e-mail não sai do aparelho para nenhum servidor do Vox.** O endereço do cofre, a prova de dono e a chave saem de `e-mail:senha` (PBKDF2-SHA256, 600 mil iterações, `vault-crypto.js`). O servidor de memória só vê um identificador de 64 caracteres.
+- **O cofre leva a semente:** a volta refaz a chave de assinatura e a de DM e mantém a frase de 12 palavras. A semente só é aceita se der o mesmo `vx_…`. Cofres antigos, só de senha, continuam abrindo e migram para o endereço novo; o antigo é revogado. Trocar e-mail ou senha também revoga o endereço anterior.
+- **Kit no e-mail** (`email-kit.js`): link `#/sync?b=…` (o cofre vai no fragmento, que não chega a servidor nenhum), código `VOX1:…`, data, nome e `vx_…`. **A senha nunca vai.** A frase de 12 palavras só vai se a pessoa marcar a caixa, que vem desmarcada, e o Perfil registra a data. Se o rascunho não abrir: copiar o e-mail pronto ou baixar um `.txt`.
+- **"Já tenho conta":** e-mail e senha (busca o cofre no aparelho e nos servidores de memória), ou colar o link, o código ou o texto inteiro do e-mail. Continuam valendo a frase, os guardiões, o QR do outro aparelho e os arquivos.
+- THREAT-MODEL T26. Testes: `tests/vault-v2.test.js`, `tests/email-kit.test.js`, `tests/onboarding-steps.test.js`. SW `v7.120`.
+
 ### Guardiões, parte 3c: devolver a conta (ADR-032 passo 3)
 - **Aparelho novo, `#/voltar`** (também em "Já tenho conta" → "Com os guardiões"): diz qual é a conta (link do perfil ou `vx_…`), gera uma chave temporária (só nesta aba, 24 h, cifrada pelo aparelho) e mostra o link do pedido e um código de 4 palavras. Junta as respostas coladas ou da caixa temporária e entra quando tiver o mínimo: a mesma conta, a mesma DM e a mesma semente.
 - **Guardião, `#/guardiao?…`**: mostra o nome e a foto que ele mesmo conhece, há quanto tempo o pedido foi criado e o código. Só devolve depois de marcar que conferiu o código por voz ou pessoalmente. Recusa pedido de mais de 24 h, adiantado, da própria conta ou de conta que não guarda.
