@@ -6,6 +6,11 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### QR do pedido de volta aos guardiões (ADR-032 passo 3c)
+- **Tela do pedido (`#/voltar`):** botão "Mostrar QR para quem está do seu lado". O guardião aponta a câmera, abre o pedido e confere o código ali mesmo.
+- **Codificador de QR** (`qr-url-codec.js`, `qr-url-layout.js`): ia até a versão 5 (106 bytes); agora vai até a 9 (230 bytes), com os dados em dois blocos intercalados a partir da versão 6, mais padrões de alinhamento e o bloco de informação de versão a partir da 7. O link do pedido, uns 146 bytes, sai em versão 7. `#/guardiao` passa a ser um link aceito pelo QR.
+- Testes: `tests/qr-url.test.js` (versões 2–9 ida e volta, bits de versão conferidos com a tabela da norma, link do pedido). Conferido também com o leitor de QR do OpenCV, fora do app. SW `v7.121`.
+
 ### Entrada com nome, e-mail e senha e kit de volta no e-mail da própria pessoa (ADR-032 Emenda 1)
 - **Entrada em uma etapa:** nome ou apelido, e-mail e senha (mínimo de 12 caracteres). "Criar conta" gera a semente, entra, grava o cofre e abre um rascunho `mailto:` da pessoa para ela mesma. Sem e-mail, a conta nasce só com o nome, como antes, com a faixa de conta provisória.
 - **O e-mail não sai do aparelho para nenhum servidor do Vox.** O endereço do cofre, a prova de dono e a chave saem de `e-mail:senha` (PBKDF2-SHA256, 600 mil iterações, `vault-crypto.js`). O servidor de memória só vê um identificador de 64 caracteres.

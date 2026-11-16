@@ -8,7 +8,9 @@ import {
   urlToBytes,
   chooseVersion,
   encodeBytePayload,
-  codewordsToBits,
+  blocksToBits,
+  deinterleaveDataBits,
+  splitDataBlocks,
   parseBytePayload,
 } from "./qr-url-codec.js";
 import { rsDivisor, rsRemainder } from "./qr-url-gf.js";
@@ -33,9 +35,10 @@ function encodeCodewords(url) {
   const bytes = urlToBytes(text);
   const version = chooseVersion(bytes.length);
   const spec = VERSIONS[version];
-  const data = encodeBytePayload(bytes, spec.data);
-  const ecc = rsRemainder(data, rsDivisor(spec.ec));
-  return { text, version, bits: codewordsToBits(data, ecc) };
+  const dataBlocks = splitDataBlocks(encodeBytePayload(bytes, spec.data), spec.blocks);
+  const divisor = rsDivisor(spec.ec);
+  const eccBlocks = dataBlocks.map((block) => rsRemainder(block, divisor));
+  return { text, version, bits: blocksToBits(dataBlocks, eccBlocks) };
 }
 
 export function encodeVoxUrl(url) {
@@ -54,7 +57,7 @@ export function decodeQrModules(modules) {
   applyMask(grid, mask);
   const bits = [];
   walkData(grid, (x, y) => bits.push(grid.modules[y][x] ? 1 : 0));
-  return parseBytePayload(bits.slice(0, VERSIONS[version].data * 8));
+  return parseBytePayload(deinterleaveDataBits(bits, VERSIONS[version]));
 }
 
 export function modulesToSvg(modules) {
