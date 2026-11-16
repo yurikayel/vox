@@ -6,6 +6,12 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Guardiões, parte 3c: devolver a conta (ADR-032 passo 3)
+- **Aparelho novo, `#/voltar`** (também em "Já tenho conta" → "Com os guardiões"): diz qual é a conta (link do perfil ou `vx_…`), gera uma chave temporária (só nesta aba, 24 h, cifrada pelo aparelho) e mostra o link do pedido e um código de 4 palavras. Junta as respostas coladas ou da caixa temporária e entra quando tiver o mínimo: a mesma conta, a mesma DM e a mesma semente.
+- **Guardião, `#/guardiao?…`**: mostra o nome e a foto que ele mesmo conhece, há quanto tempo o pedido foi criado e o código. Só devolve depois de marcar que conferiu o código por voz ou pessoalmente. Recusa pedido de mais de 24 h, adiantado, da própria conta ou de conta que não guarda.
+- A resposta vai selada para a chave temporária: pela caixa `vxtmp_` (sem o `routeId` da dona), quando há relay, e sempre como texto para colar. Pedaço sem a assinatura da dona não conta, e conta juntada diferente da pedida é recusada antes de trocar chave.
+- `guardian-return.js`, `app/guardian-return-flow.js`, `render/guardian-return.js`, `app/screens-guardian-return.js`; `p256.js` comprime o ponto; `account-phrase.js` ganha `restoreFromSecret`. Spec §13 registra o que mudou do §7. Testes: `tests/guardian-return.test.js`. SW `v7.119`.
+
 ### Triagem da varredura de cobertura (2026-11-16)
 - Dos 99 arquivos `tests/coverage-*` do Antigravity, nenhum entra. 73 clicavam telas num DOM falso sem conferir quase nada, e 14 são do dungeon (vão no PR dele). Os 12 de funções puras misturavam checagens reais, já cobertas pelos testes existentes, com tautologias. Os defeitos reais que eles acharam já estão corrigidos e testados (`tests/achados-cobertura.test.js`).
 - **Relay:** entra `relay/test_relay_limites_e_rotas.py` (11 testes), com rotas, limites de tamanho (413), entradas ruins (400), validação de manifesto e quadros WebSocket. A versão original escrevia na pasta `.cache/central_memory` real do relay; agora todas as pastas do relay ficam num diretório temporário. Os três testes com nome de meta de cobertura ganharam nome de comportamento, e as chamadas sem checagem saíram.
