@@ -412,11 +412,11 @@ function renderPosseWebhooksSection(webhooks = []) {
 
 function renderModerationSettingsSection(blockedUsers = [], mutedUsers = []) {
   const blockedList = blockedUsers.length
-    ? blockedUsers.map((u) => `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;"><code>${escapeHtml(shortId(u))}</code><button type="button" class="btn btn-sm btn-outline btn-unblock-item" data-route="${escapeHtml(u)}">Desbloquear</button></div>`).join("")
+    ? blockedUsers.map((b) => b?.routeId ?? b).map((u) => `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;"><code>${escapeHtml(shortId(u))}</code><button type="button" class="btn btn-sm btn-outline btn-unblock-item" data-route="${escapeHtml(u)}">Desbloquear</button></div>`).join("")
     : `<p class="meta" style="margin:0;">Nenhum autor bloqueado.</p>`;
 
   const mutedList = mutedUsers.length
-    ? mutedUsers.map((u) => `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;"><code>${escapeHtml(shortId(u))}</code><button type="button" class="btn btn-sm btn-outline btn-unmute-item" data-route="${escapeHtml(u)}">Desilenciar</button></div>`).join("")
+    ? mutedUsers.map((m) => m?.routeId ?? m).map((u) => `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;"><code>${escapeHtml(shortId(u))}</code><button type="button" class="btn btn-sm btn-outline btn-unmute-item" data-route="${escapeHtml(u)}">Desilenciar</button></div>`).join("")
     : `<p class="meta" style="margin:0;">Nenhum autor silenciado.</p>`;
 
   return `

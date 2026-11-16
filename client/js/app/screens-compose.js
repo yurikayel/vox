@@ -421,7 +421,7 @@ export async function showComposeListing(communityId) {
     return;
   }
 
-  const defaultPix = (await localAccount.getPixKey()) || "";
+  const defaultPix = pixKeyHelper.storedPixValue(localAccount.getPixKey());
   render.renderComposeListing(main, targetComm, meta.title, { defaultPix });
 
   bindComposeStepper(document.getElementById("form-compose-listing"));
