@@ -62,6 +62,8 @@ export default [
       "max-lines": ["warn", { max: 350, skipComments: true, skipBlankLines: true }],
       eqeqeq: ["error", "always", { null: "ignore" }],
       "no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
+      // Nome sem import quebra só quando o caminho roda (escapeHtml, brcode e listing em screens-community, 2026-11-16).
+      "no-undef": "error",
     },
   },
   {

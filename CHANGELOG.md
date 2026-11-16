@@ -6,6 +6,14 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Correções achadas pela varredura de cobertura (2026-11-16)
+- **Comunidade:** a busca vazia, a foto de reserva do autor, o Pix/zap da Feira e o status do anúncio quebravam com `ReferenceError`, porque `escapeHtml`, `brcode` e `listing` eram usados em `app/screens-community.js` sem import. O ESLint do cliente agora reprova nome sem import (`no-undef`).
+- **Editar post:** o modal não abria, porque `init.js` chamava uma função e um contêiner que não existem. Agora abre em `#modal-container` com `renderPostEditModal`, e Esc e o clique fora fecham só ele.
+- **Mini-apps (Open Frames):** o voto não era gravado. Os botões são desenhados com `data-index`, mas o clique lia `data-btn-index` e chamava funções que não existem. Agora o clique grava o voto assinado e redesenha a apuração.
+- **Pix:** `getPixKey()` devolve o registro guardado, e a consulta Pix, o perfil e o anúncio da Feira o tratavam como texto (`toLowerCase` quebrava; o campo mostrava `[object Object]`). O texto agora sai de `storedPixValue` (`pix-key.js`).
+- **Moderação local:** a lista de bloqueados e silenciados mostrava `[object Object]`, e Desbloquear não fazia nada; agora usa o `routeId` do registro.
+- Testes: `tests/achados-cobertura.test.js`. Os quatro falham sem a correção. SW `v7.118`.
+
 ### Fluxo de branches: PR para `develop`, depois `main`
 - PRs de feature passam a mirar `develop`; `develop` vai para `main` por PR quando o lote fecha. `develop` foi alinhada com `main` (`1fc0ccc`) e ganhou as mesmas regras de proteção (PR obrigatório, 5 checks, sem force push, sem apagar). CI e CodeQL rodam também em `develop` (`ci.yml`, `codeql.yml`). CONTRIBUTING, CONTRIBUTORS, AGENTS, CLAUDE e DEV §0 dizem isso.
 

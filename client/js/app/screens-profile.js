@@ -125,7 +125,7 @@ async function loadProfileIdentity(targetAddress, isSelf) {
   const resolved = await profileDirectory.resolveProfile(targetAddress);
   const { displayName, handleOverride, profileBio } = resolveIdentityFields(targetAddress, isSelf, resolved, mockProf);
   const handle = handleOverride || fetchedHandle;
-  const pixKey = isSelf ? (localAccount.getPixKey() || "") : (mockProf?.pixKey || "");
+  const pixKey = isSelf ? pixKeyHelper.storedPixValue(localAccount.getPixKey()) : (mockProf?.pixKey || "");
   const pixKeyMasked = pixKey ? pixKeyHelper.maskForDisplay(pixKey) : "";
   return { handle, conflictInfo, mockProf, resolved, displayName, profileBio, pixKey, pixKeyMasked };
 }
@@ -982,7 +982,7 @@ export async function showPixLookup(query) {
   render.renderLoading(main);
 
   const cleanQuery = String(query || "").trim();
-  const myPix = localAccount.getPixKey();
+  const myPix = pixKeyHelper.storedPixValue(localAccount.getPixKey());
   const myRouteId = await localAccount.getRouteId();
   const foundProfile = resolveProfileByPixKey(cleanQuery, myPix, myRouteId);
 
