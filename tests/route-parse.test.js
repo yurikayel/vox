@@ -65,6 +65,15 @@ describe("route-parse", () => {
     });
   });
 
+  it("labs ai social dungeon flag and hash", () => {
+    withLocation({ hash: "#/labs/dungeon" }, () => {
+      assert.deepEqual(parseRoute(), { name: "labs-dungeon" });
+    });
+    withLocation({ hash: "#/", search: "?labs=dungeon" }, () => {
+      assert.deepEqual(parseRoute(), { name: "labs-dungeon" });
+    });
+  });
+
   it("network steward wizard route", () => {
     withLocation({ hash: "#/settings/network/steward" }, () => {
       assert.deepEqual(parseRoute(), { name: "steward-wizard" });
@@ -108,5 +117,62 @@ describe("route-parse", () => {
     withLocation({ hash: "#/@" }, () => {
       assert.deepEqual(parseRoute(), { name: "not-found" });
     });
+  });
+});
+
+describe("route-parse ai-social-dungeon", () => {
+  it("rotas segregadas AI Social Dungeon (#/dungeon*)", () => {
+    withLocation({ hash: "#/dungeon" }, () => {
+      assert.deepEqual(parseRoute(), { name: "dungeon", screen: "acampamento" });
+    });
+    withLocation({ hash: "#/dungeon/mesa/vila-nova" }, () => {
+      assert.deepEqual(parseRoute(), { name: "dungeon", screen: "mesa", tableId: "vila-nova" });
+    });
+    withLocation({ hash: "#/dungeon/ficha/lyra" }, () => {
+      assert.deepEqual(parseRoute(), { name: "dungeon", screen: "ficha", charId: "lyra" });
+    });
+    withLocation({ hash: "#/dungeon/mestre/vila-nova" }, () => {
+      assert.deepEqual(parseRoute(), { name: "dungeon", screen: "mestre", tableId: "vila-nova" });
+    });
+  });
+});
+
+describe("route-parse cobertura extra", () => {
+  it("rotas cívicas, comunidades, entidades e settings", () => {
+    const cases = [
+      ["#/c/vila/avisos", "community-avisos"],
+      ["#/c/vila/proposal/p1", "proposal"],
+      ["#/c/vila/feira?tab=governance", "community"],
+      ["#/c/vila/membros", "community"],
+      ["#/c/vila/invalida", "community"],
+      ["#/compose/community", "compose-community"],
+      ["#/compose/listing", "compose-listing"],
+      ["#/compose/proposal", "compose-proposal"],
+      ["#/compose/aviso", "compose-aviso"],
+      ["#/compose/reply?t=t1&c=c1&p=p1", "compose-reply"],
+      ["#/u/@ana", "handle-lookup"],
+      ["#/u/addr1?tab=bio", "profile"],
+      ["#/dm", "dm-list"],
+      ["#/t/t1?c=v", "topic"],
+      ["#/h/bob", "handle-lookup"],
+      ["#/tag/rpg", "tag-feed"],
+      ["#/pix/chave", "pix-lookup"],
+      ["#/pessoas?q=lu", "people"],
+      ["#/sync?p=old&b=z", "sync"],
+      ["#/ajuda/voxpedia", "voxpedia"],
+      ["#/ajuda/teste", "ajuda-teste"],
+      ["#/settings/network", "network-settings"],
+      ["#/settings/linked-accounts", "linked-accounts"],
+      ["#/settings/network/guia", "network-wizard"],
+      ["#/guardioes", "guardians"],
+      ["#/voxpedia", "voxpedia"],
+      ["#/downloads", "download"],
+      ["#/t", "not-found"],
+      ["#/labs/desconhecido", "not-found"],
+    ];
+    for (const [hash, expectedName] of cases) {
+      withLocation({ hash }, () => assert.equal(parseRoute().name, expectedName));
+    }
+    withLocation({ hash: "#/", search: "?outro=1" }, () => assert.equal(parseRoute().name, "home"));
   });
 });

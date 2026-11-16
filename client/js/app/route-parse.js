@@ -9,6 +9,7 @@ function parseSearchHints() {
   const paramHandle = q.get("h");
   if (paramHandle) return { name: "handle-lookup", slug: paramHandle };
   if (q.get("labs") === "mofn") return { name: "labs-mofn" };
+  if (q.get("labs") === "dungeon") return { name: "labs-dungeon" };
   return null;
 }
 
@@ -16,7 +17,18 @@ function parseLabsHash(parts) {
   if (parts[0] !== "labs") return null;
   if (parts[1] === "mofn") return { name: "labs-mofn" };
   if (parts[1] === "frames") return { name: "labs-frames" };
+  if (parts[1] === "dungeon") return { name: "labs-dungeon" };
   return null;
+}
+
+function parseDungeonRoute(parts) {
+  if (parts[0] !== "dungeon") return null;
+  const sub = (parts[1] || "").toLowerCase();
+  const target = parts[2] ? decodeURIComponent(parts[2]) : "";
+  if (sub === "mesa") return { name: "dungeon", screen: "mesa", tableId: target || "vila-nova" };
+  if (sub === "ficha") return { name: "dungeon", screen: "ficha", charId: target || "lyra" };
+  if (sub === "mestre") return { name: "dungeon", screen: "mestre", tableId: target || "vila-nova" };
+  return { name: "dungeon", screen: "acampamento" };
 }
 
 function parseSettingsRoute(parts) {
@@ -170,6 +182,7 @@ export function parseRoute() {
 
   return (
     parseStaticRoute(parts, query) ||
+    parseDungeonRoute(parts) ||
     parseSettingsRoute(parts) ||
     parseEntityRoute(parts, query) ||
     parseCommunityRoute(parts, query) ||

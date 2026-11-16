@@ -54,6 +54,7 @@
 | Kits de comunidade (associação, sindicato…) | — | `kit-genesis.js` | **escrito, não plugado** | `kit-genesis` |
 | Ranking por ponte (bridging) | — | `bridging-rank.js` | **escrito, não plugado** | `bridging-rank` |
 | Perfil coletivo M-de-N | `#/labs/mofn` | `labs/collective-mofn.js`, `labs/mofn-lab.js` | lab | `collective-mofn` |
+| AI Social Dungeon — **demonstração de laboratório** (4 telas; narração por roteiro fixo, sem IA e sem rede; jogadores e guardiões de exemplo). De verdade: d20 sem viés, ficha CRDT e cofre de Shamir com as partes neste aparelho. Módulos puros testados e ainda não usados em mesa real: W-DRF, Commit-Reveal², lore `@tag`, roteador Maritaca (sem chamada de rede) — ADR-033 | `#/dungeon`, `#/labs/dungeon` | `community-pillar-pool.js`, `rpg-sheet-and-lore.js`, `rpg-crypto-table.js`, `rpg-maritaca-router.js`, `dungeon/*`, `labs/ai-social-dungeon-lab.js` | demo-mock (lab) | `ai-social-dungeon` |
 
 ## 3. Pessoas, identidade e mensagens
 
