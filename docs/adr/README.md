@@ -37,6 +37,7 @@
 | [030](./030-trazer-do-bluesky-pesos.md) | Trazer do Bluesky (PESOS): arquivo assinado da própria voz, sem servidor | accepted (não implementado) |
 | [031](./031-passkey-abre-a-mesma-conta.md) | Passkey abre a mesma conta em outro aparelho (WebAuthn PRF), sem servidor de login | accepted (não implementado; spike de suporte ao PRF antes de liberar) |
 | [032](./032-login-perene-a-conta-nasce-com-saida.md) | Login perene: a conta nasce com saída (frase, guardiões, Senha); Google e Meta saem da entrada | accepted (passos 1 e 2, guardiões 3a/3b e emenda 1 — entrada com e-mail, senha e kit no e-mail — implementados)
+| [033](./033-ia-so-no-rpg-local-primeiro.md) | IA só no RPG, primeiro no próprio aparelho; serviço externo só com a chave da mesa e o consentimento de todos | accepted (nenhuma IA implementada; o AI Social Dungeon é demonstração sem IA) |
 
 **Registro de uma página** com as decisões institucionais e de arquitetura em vigor, o estado real de cada uma e o que ainda está em aberto: [DECISOES.md](../DECISOES.md).
 

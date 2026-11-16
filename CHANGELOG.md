@@ -6,6 +6,14 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### AI Social Dungeon como demonstração de laboratório, sem IA (ADR-033)
+- **Laboratório `#/dungeon` / `#/labs/dungeon`:** 4 telas de mesa de RPG (acampamento, mesa, ficha, escudo do mestre), isoladas do feed cívico. Cada tela diz que é demonstração: a narração é um roteiro fixo (o selo é "Roteiro"), os outros jogadores e guardiões são de exemplo e nada sai da aba.
+- **De verdade:** o d20 é sorteado no aparelho (`crypto.getRandomValues`, sem viés de módulo), e o cofre de Shamir do mestre abre só com o gatilho do jogo (posição [3, 1] e d20 ≥ 15) e 3 das 5 partes (`sealLoreVaultSecret` / `unlockLoreVaultSecret`). Na demonstração, as 5 partes ficam neste aparelho.
+- **Saiu o que não era verdade:** selos "IA Local" e "Sabiá-3 BR", o seletor de "Cérebro de IA" com a Maritaca, o hash inventado do dado, "guardiões online", "0 servidores centrais via WebRTC", "Zaps de Apoio" e a reserva de disco que não acontecia.
+- **Sem prioridade por chave paga:** o bônus de +10000 para o aparelho com chave da Maritaca saiu de `community-pillar-pool.js`, e o narrador passa a ser o aparelho mais capaz.
+- **ADR-033:** IA só no RPG e primeiro no próprio aparelho. Serviço externo só com a chave da própria mesa e o consentimento de todos os jogadores.
+- Módulos puros (`community-pillar-pool.js`, `rpg-sheet-and-lore.js`, `rpg-crypto-table.js`, `rpg-maritaca-router.js`, este sem chamada de rede) e a spec `ai-social-dungeon-v0.md` §0 com o que existe e o que é desenho. Testes: `tests/ai-social-dungeon.test.js`, `tests/ai-social-dungeon-coverage.test.js`, `tests/route-parse.test.js`. SW `v7.122`.
+
 ### QR do pedido de volta aos guardiões (ADR-032 passo 3c)
 - **Tela do pedido (`#/voltar`):** botão "Mostrar QR para quem está do seu lado". O guardião aponta a câmera, abre o pedido e confere o código ali mesmo.
 - **Codificador de QR** (`qr-url-codec.js`, `qr-url-layout.js`): ia até a versão 5 (106 bytes); agora vai até a 9 (230 bytes), com os dados em dois blocos intercalados a partir da versão 6, mais padrões de alinhamento e o bloco de informação de versão a partir da 7. O link do pedido, uns 146 bytes, sai em versão 7. `#/guardiao` passa a ser um link aceito pelo QR.

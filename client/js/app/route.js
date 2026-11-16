@@ -17,7 +17,7 @@ import { showSyncScreen } from "./screens-sync.js";
 import { showRecoveryPhrase } from "./screens-phrase.js";
 import { showGuardians } from "./screens-guardians.js";
 import { showGuardianRecover, showGuardianReturn } from "./screens-guardian-return.js";
-import { showLabsFrames, showLabsMofn } from "./screens-labs.js";
+import { showLabsFrames, showLabsMofn, showLabsDungeon, showDungeonScreen } from "./screens-labs.js";
 import { showNotFound } from "./screens-not-found.js";
 import { showAvisos, showComposeAviso } from "./aviso-flow.js";
 import {
@@ -50,6 +50,8 @@ const ROUTE_DISPATCH_TABLE = {
   status: () => showStatus(),
   "labs-frames": () => showLabsFrames(),
   "labs-mofn": () => showLabsMofn(),
+  "labs-dungeon": () => showLabsDungeon(),
+  dungeon: (r) => showDungeonScreen(r),
   community: (r) => showCommunity(r.id, r.tab),
   "community-avisos": (r) => showAvisos(r.communityId),
   "compose-aviso": (r) => showComposeAviso(r.communityId),

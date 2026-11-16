@@ -15,6 +15,7 @@ import socketserver
 import subprocess
 import sys
 import threading
+import re
 import time
 import unittest
 import urllib.request
@@ -206,6 +207,86 @@ class VoxPlaywrightE2ETests(unittest.TestCase):
             for route_hash, sel in routes:
                 page.goto(f"{self.base_url}/{route_hash}", wait_until="domcontentloaded")
                 page.locator(sel).first.wait_for(state="visible", timeout=10000)
+            self.assertEqual(errors, [])
+        finally:
+            _close_ctx(ctx)
+
+    def _roll_until_at_least(self, page, minimum, tries=80):
+        for _ in range(tries):
+            page.locator("button[data-dungeon='roll-d20']").click()
+            text = page.locator(".dungeon-dice-tray").inner_text()
+            match = re.search(r"d20 = (\d+)", text)
+            if match and int(match.group(1)) >= minimum:
+                return int(match.group(1))
+        self.fail(f"d20 não chegou a {minimum} em {tries} rolagens")
+
+    def _run_dungeon_camp_and_table(self, page):
+        page.locator("#voxpedia-tecnico summary", has_text="Testes e release").click()
+        page.locator("#voxpedia-tecnico summary", has_text="Docs no repositório").click()
+        page.locator("a[href='#/dungeon']").click()
+        page.locator(".dungeon-sanctum").wait_for(state="visible", timeout=10000)
+        self.assertEqual(page.locator("#app-sidebar").count(), 0)
+        self.assertIn("DEMONSTRAÇÃO", page.locator(".dungeon-fiction-badge").inner_text())
+        self.assertIn("esta mesa é uma demonstração", page.locator(".dungeon-demo-note").inner_text())
+        page.locator("#dungeon-fav-slider").fill("80")
+        page.locator("#dungeon-fav-slider").dispatch_event("input")
+        self.assertIn("80%", page.locator(".dungeon-slider-labels").inner_text())
+        page.locator("button[data-dungeon='failover']").click()
+        self.assertIn("Falha simulada", page.locator(".dungeon-inline-status").inner_text())
+        page.locator(".dungeon-topnav a[href^='#/dungeon/mesa/']").click()
+        page.locator("button[data-dungeon='chip']").first.click()
+        page.locator("button[data-dungeon='submit-action']").click()
+        chronicle = page.locator(".dungeon-chronicle-list").inner_text()
+        self.assertIn("Roteiro", chronicle)
+        self.assertNotIn("IA Local", chronicle)
+        self.assertNotIn("Sabiá", chronicle)
+        self._roll_until_at_least(page, 15)
+        page.locator("button[data-dungeon='grid-cell'][data-x='3'][data-y='1']").click()
+        page.locator(".dungeon-unlocked-banner").wait_for(state="visible", timeout=10000)
+        self.assertIn("Aberto com 3 de 5 partes", page.locator(".dungeon-unlocked-banner").inner_text())
+
+    def test_03_ai_social_dungeon_honest_demo_screens_and_exit(self):
+        ctx, page, errors, external = _new_isolated_page(self.browser, self.base_url)
+        try:
+            page.goto(f"{self.base_url}/#/", wait_until="domcontentloaded")
+            _complete_onboarding(page, "Lyra E2E", errors)
+            page.goto(f"{self.base_url}/#/voxpedia", wait_until="domcontentloaded")
+            self._run_dungeon_camp_and_table(page)
+            external.clear()
+            page.goto(f"{self.base_url}/#/dungeon/mesa/floresta-de-vidro", wait_until="domcontentloaded")
+            self.assertIn("Floresta de Vidro", page.locator(".dungeon-scene-caption h1").inner_text())
+            page.locator(".dungeon-topnav a[href^='#/dungeon/ficha/']").click()
+            page.locator("button[data-dungeon='spend-10']").click()
+            page.locator("button[data-dungeon='test-overdraft']").click()
+            self.assertIn("Saldo Negativo", page.locator(".dungeon-alert-warn").inner_text())
+            page.locator("button[data-dungeon='confirm-lore']").first.click()
+            self.assertIn("Fato Confirmado", page.locator(".dungeon-lore-grid").inner_text())
+            page.locator(".dungeon-topnav a[href^='#/dungeon/mestre/']").click()
+            page.locator(".dungeon-sanctum[data-dungeon-screen='mestre']").wait_for(state="visible", timeout=10000)
+            dm = page.locator(".dungeon-main").inner_text()
+            self.assertIn("Roteiro fixo, sem IA", dm)
+            self.assertEqual(page.locator("button[data-dungeon='brain-maritaca']").count(), 0)
+            page.locator("button[data-dungeon='inspect-role'][data-role='STAGE1_LORE_RAG']").click()
+            self.assertTrue(page.locator("button[data-dungeon='unlock-vault']").is_disabled())
+            self.assertEqual(external, [])
+            page.locator("a.dungeon-exit-link").click()
+            page.locator("#app-sidebar").wait_for(state="visible", timeout=10000)
+            self.assertEqual(errors, [])
+        finally:
+            _close_ctx(ctx)
+
+    def test_04_mobile_viewport_dungeon_dock_and_overflow(self):
+        ctx, page, errors, _ = _new_isolated_page(
+            self.browser, self.base_url, viewport={"width": 390, "height": 844}
+        )
+        try:
+            page.goto(f"{self.base_url}/#/", wait_until="domcontentloaded")
+            _complete_onboarding(page, "Mobile E2E")
+            page.goto(f"{self.base_url}/#/dungeon", wait_until="domcontentloaded")
+            page.locator(".dungeon-mobile-dock").wait_for(state="visible", timeout=10000)
+            self.assertFalse(page.locator(".dungeon-topnav").is_visible())
+            overflow = page.evaluate("document.documentElement.scrollWidth - window.innerWidth")
+            self.assertLessEqual(overflow, 1)
             self.assertEqual(errors, [])
         finally:
             _close_ctx(ctx)
