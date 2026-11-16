@@ -6,6 +6,12 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Guardiões, parte 3d: trocar e tirar guardiões (ADR-032 passo 3)
+- **Trocar (`#/guardioes`):** com guardiões escolhidos, a tela mostra o estado, explica a troca e o botão vira "Trocar: dividir de novo e enviar", aberto no mínimo atual. A divisão nova revoga a anterior para quem a tinha; quem saiu apaga o pedaço, quem ficou guarda o novo, e os pedaços antigos não se juntam com os novos.
+- **Tirar todos os guardiões:** com confirmação. Esquece a divisão e tira a saída `guardioes` antes de mandar a revogação assinada a cada guardião, então guardião offline não deixa a conta marcada como protegida. Recibo atrasado não devolve a saída.
+- **Botões de texto da tela** ("Tirar todos", "Parar de guardar") ganham o estilo de link; antes apareciam como botão cru do navegador.
+- `removeAllGuardians` (`app/guardians-flow.js`), `clearOwnerSplit` (`guardians.js`). Testes: `tests/guardians-trocar.test.js` (novo) e o arnês comum `tests/guardians-harness.js`, que saiu de `tests/guardians.test.js` sem mudar os testes da 3b. SW `v7.123`.
+
 ### AI Social Dungeon como demonstração de laboratório, sem IA (ADR-033)
 - **Laboratório `#/dungeon` / `#/labs/dungeon`:** 4 telas de mesa de RPG (acampamento, mesa, ficha, escudo do mestre), isoladas do feed cívico. Cada tela diz que é demonstração: a narração é um roteiro fixo (o selo é "Roteiro"), os outros jogadores e guardiões são de exemplo e nada sai da aba.
 - **De verdade:** o d20 é sorteado no aparelho (`crypto.getRandomValues`, sem viés de módulo), e o cofre de Shamir do mestre abre só com o gatilho do jogo (posição [3, 1] e d20 ≥ 15) e 3 das 5 partes (`sealLoreVaultSecret` / `unlockLoreVaultSecret`). Na demonstração, as 5 partes ficam neste aparelho.
