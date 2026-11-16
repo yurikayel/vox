@@ -16,6 +16,7 @@ const read = (rel) => fs.readFileSync(path.join(client, rel), "utf8");
 const USER_FACING = [
   "js/render/compose-chrome.js",
   "js/render/oauth-modals.js",
+  "js/render/genesis-entry.js",
   "js/render/status.js",
   "download.html",
   "download/index.html",

@@ -62,6 +62,7 @@ const SHELL_ASSETS = [
   "./js/app/onboarding-side-effects.js",
 
   "./js/app/onboarding.js",
+  "./js/app/onboarding-email.js",
   "./js/app/account-exit-banner.js",
 
   "./js/app/route-parse.js",
@@ -194,6 +195,7 @@ const SHELL_ASSETS = [
   "./js/listing-ui.js",
 
   "./js/local-account.js",
+  "./js/account-social-match.js",
   "./js/sig-format.js",
   "./js/signed-verify.js",
   "./js/aviso.js",
@@ -225,6 +227,8 @@ const SHELL_ASSETS = [
   "./js/oauth-profile.js",
 
   "./js/oauth-vault.js",
+  "./js/passphrase-vault.js",
+  "./js/vault-store.js",
   "./js/keystore.js",
   "./js/key-at-rest.js",
   "./js/key-lock.js",
@@ -385,10 +389,12 @@ const SHELL_ASSETS = [
   "./js/render/vote.js",
 
   "./js/render/profile.js",
+  "./js/render/profile-sovereignty.js",
 
   "./js/render/profile-voxels.js",
 
   "./js/render/oauth-modals.js",
+  "./js/render/genesis-entry.js",
   "./js/render/oauth-import.js",
 
   "./js/render/network.js",
