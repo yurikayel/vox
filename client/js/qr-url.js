@@ -35,7 +35,7 @@ function encodeCodewords(url) {
   const bytes = urlToBytes(text);
   const version = chooseVersion(bytes.length);
   const spec = VERSIONS[version];
-  const dataBlocks = splitDataBlocks(encodeBytePayload(bytes, spec.data), spec.blocks);
+  const dataBlocks = splitDataBlocks(encodeBytePayload(bytes, spec.data, version), spec.blocks);
   const divisor = rsDivisor(spec.ec);
   const eccBlocks = dataBlocks.map((block) => rsRemainder(block, divisor));
   return { text, version, bits: blocksToBits(dataBlocks, eccBlocks) };
@@ -57,7 +57,7 @@ export function decodeQrModules(modules) {
   applyMask(grid, mask);
   const bits = [];
   walkData(grid, (x, y) => bits.push(grid.modules[y][x] ? 1 : 0));
-  return parseBytePayload(deinterleaveDataBits(bits, VERSIONS[version]));
+  return parseBytePayload(deinterleaveDataBits(bits, VERSIONS[version]), version);
 }
 
 export function modulesToSvg(modules) {

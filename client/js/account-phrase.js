@@ -82,11 +82,10 @@ export function confirmPhraseWords(words, typed) {
   return ok;
 }
 
+// Conta antiga (24 palavras) não traz chave de DM: `importLocalAccountBundle` usa a do cofre local ou gera outra.
 async function adoptKeysFromPhrase(id, routeId) {
-  const previous = localAccount.getCachedRouteIdSync();
   await localAccount.importLocalAccountBundle({ routeId, publicJwk: id.signing.publicJwk, privateJwk: id.signing.privateJwk });
   if (id.dm) await cryptoDm.setDmKeypair(id.dm);
-  else if (previous && previous !== routeId) await cryptoDm.setDmKeypair(await cryptoDm.generateDmKeypair());
   if (id.seed) await identitySeed.storeSeed(routeId, id.seed);
 }
 

@@ -10,6 +10,7 @@ import * as profileDirectory from "./profile-directory.js";
 import * as accountExit from "./account-exit.js";
 import { locatePassphraseRecord, persistVaultRecord, revokeVaultAddress, saveRemoteVaultRecord } from "./vault-store.js";
 import {
+  compactV2PlainBudget,
   decryptVaultRecord,
   deriveVaultAddress,
   deriveVaultOwnerToken,
@@ -53,6 +54,32 @@ export function cleanupSupersededIdentity(prevId, canonicalId, displayName, avat
 export function isValidAccountBundle(bundle) {
   const hasSeed = typeof bundle?.seed === "string" && bundle.seed.length > 0;
   return Boolean(bundle?.routeId && (hasSeed || (bundle?.publicJwk && bundle?.privateJwk)));
+}
+
+const QR_NEEDS_SEED = "Esta conta é de antes da frase de 12 palavras e não cabe num QR. Use \"Sincronizar em outro aparelho\" e mande o link.";
+
+function pickQrPlain(bundle, budget) {
+  const base = { routeId: bundle.routeId, seed: bundle.seed };
+  const fits = (obj) => new TextEncoder().encode(JSON.stringify(obj)).length <= budget;
+  if (bundle.displayName && fits({ ...base, displayName: bundle.displayName })) return { ...base, displayName: bundle.displayName };
+  return fits(base) ? base : null;
+}
+
+/**
+ * Cofre mínimo para o QR: a conta e a semente, mais o nome se couber em `maxEncodedChars`. O resto (Pix,
+ * enriquecimento) vem pelo link ou pelo cofre guardado; conta sem semente não cabe num QR.
+ * @param {string} passphrase Senha Soberana
+ * @param {number} maxEncodedChars espaço do cofre codificado no link do QR
+ * @returns {Promise<{ ok: true, record: object, withName: boolean }|{ ok: false, reason: string }>}
+ */
+export async function buildQrSyncRecord(passphrase, maxEncodedChars) {
+  const clean = String(passphrase || "").trim();
+  const opened = await openBundleForVault(clean);
+  if (!opened.ok) return opened;
+  if (typeof opened.bundle.seed !== "string") return { ok: false, reason: QR_NEEDS_SEED };
+  const plain = pickQrPlain(opened.bundle, compactV2PlainBudget(maxEncodedChars));
+  if (!plain) return { ok: false, reason: "O endereço deste app é longo demais para o QR. Use o link." };
+  return { ok: true, record: await encryptVaultV2(plain, clean), withName: Boolean(plain.displayName) };
 }
 
 /** PM-92: o cofre por senha fica guardado fora do aparelho; senha curta cai por tentativa. */

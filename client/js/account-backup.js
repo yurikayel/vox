@@ -6,24 +6,20 @@
  * depois disso, exportar sem a senha certa lança `KeyLockedError`.
  */
 
-import * as cryptoDm from "./crypto-dm.js";
 import { KIND_PLAIN, KIND_WRAPPED, wrapBackup, unwrapBackup } from "./account-backup-wrap.js";
 import {
   computeRouteId,
+  ensureLocalAccount,
   getDisplayName,
   getMeshDiscoverable,
   getPixKey,
+  importLocalAccountBundle,
   lockAfterPasswordBackup,
   openAccountKeys,
-  setDisplayName,
   setMeshDiscoverable,
-  setPixKey,
-  storeActiveAccount,
 } from "./local-account.js";
-import { sealJson } from "./keystore.js";
 import { markAccountExit } from "./account-exit.js";
 import { getLocalIdentityMeta, setLocalIdentityMeta } from "./profile-identity-meta.js";
-import * as identitySeed from "./identity-seed.js";
 
 export { KIND_PLAIN, KIND_WRAPPED, peekBackupKind } from "./account-backup-wrap.js";
 
@@ -113,18 +109,11 @@ async function challengeSigningPair(parsed) {
   }
 }
 
+// Pelo mesmo caminho da frase e do cofre: a conta que estava ativa vai para o cofre local e não deixa nome, Pix,
+// enriquecimento nem chave de DM na restaurada.
 async function persistAccountBackup(parsed) {
-  const acc = storeActiveAccount({
-    routeId: parsed.routeId,
-    publicJwk: parsed.publicJwk,
-    privateJwk: await sealJson(parsed.privateJwk),
-    createdAt: parsed.createdAt || Date.now(),
-    importedAt: Date.now(),
-  });
-  if (typeof parsed.seed === "string") await identitySeed.restoreAccountFromSeedB64(parsed.seed, parsed.routeId);
-  if (parsed.dmKeypair) await cryptoDm.setDmKeypair(parsed.dmKeypair);
-  if (parsed.displayName) setDisplayName(parsed.displayName);
-  if (parsed.pixKey) setPixKey(parsed.pixKey);
+  if (!(await importLocalAccountBundle({ ...parsed, pix: parsed.pixKey }))) throw new Error("Backup sem chaves válidas");
+  const acc = await ensureLocalAccount();
   if (parsed.identityMeta) setLocalIdentityMeta(parsed.routeId, parsed.identityMeta);
   if (typeof parsed.meshDiscoverable === "boolean") {
     setMeshDiscoverable(parsed.meshDiscoverable);
