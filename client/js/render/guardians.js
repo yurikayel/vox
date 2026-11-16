@@ -1,5 +1,5 @@
 /**
- * @file Guardiões, parte 3b — HTML da tela `#/guardioes`: escolher guardiões (só laço mútuo), M de N, estado dos
+ * @file Guardiões, partes 3b e 3d — HTML da tela `#/guardioes`: escolher guardiões (só laço mútuo), M de N, estado dos
  * recibos e a lista de quem este aparelho guarda. Funções puras; quem liga os botões é `app/screens-guardians.js`.
  */
 
@@ -8,6 +8,8 @@ import { MAX_N, MIN_M } from "../shamir-gf256.js";
 
 const HOW =
   "Cada pessoa recebe um pedaço cifrado da volta da sua conta. Sozinho, um pedaço não abre nada; o mínimo que você escolher, juntos, devolve a conta se você perder o celular.";
+const SWAP_NOTE =
+  "Para trocar alguém ou mudar o mínimo, escolha de novo abaixo. A divisão anterior é revogada, e os pedaços antigos não se juntam com os novos.";
 const RETURN_NOTE =
   "Para devolver, cada guardião confere com você por voz ou pessoalmente. Sem servidor da comunidade, a devolução é com os aparelhos juntos.";
 
@@ -26,10 +28,11 @@ function minimumOptions(selected) {
 
 /**
  * Formulário de escolha. Sem candidatos, explica como formar o laço mútuo.
- * @param {{ candidates: { routeId: string, name: string }[], m: number, needsPassphrase: boolean }} opts
+ * Com divisão ativa (`hasSplit`), o mesmo formulário troca os guardiões: divisão nova, a anterior revogada.
+ * @param {{ candidates: { routeId: string, name: string }[], m: number, needsPassphrase: boolean, hasSplit?: boolean }} opts
  * @returns {string}
  */
-export function renderGuardianChooserHtml({ candidates, m, needsPassphrase }) {
+export function renderGuardianChooserHtml({ candidates, m, needsPassphrase, hasSplit = false }) {
   if (!candidates.length) {
     return `<p class="guardian-empty">Ainda não há quem possa ser guardião. Só aparecem pessoas que você segue (ou tem nos contatos) e que também adicionaram você aos contatos: peça a quem você confia que faça isso.</p>`;
   }
@@ -46,7 +49,7 @@ export function renderGuardianChooserHtml({ candidates, m, needsPassphrase }) {
       </label>
       <p class="guardian-hint" id="guardian-hint" aria-live="polite"></p>
       ${pass}
-      <button type="submit" class="agora-btn agora-btn--primary" id="btn-guardians-send">Dividir e enviar</button>
+      <button type="submit" class="agora-btn agora-btn--primary" id="btn-guardians-send">${hasSplit ? "Trocar: dividir de novo e enviar" : "Dividir e enviar"}</button>
     </form>`;
 }
 
@@ -77,6 +80,8 @@ export function renderGuardianStatusHtml(status) {
   return `<div class="guardian-status${done ? " is-done" : ""}" role="status">
       <p>${text}</p>
       <p class="guardian-names">${status.names.map(escapeHtml).join(" · ")}</p>
+      <p class="guardian-note">${SWAP_NOTE}</p>
+      <button type="button" class="genesis-link" id="btn-guardians-remove">Tirar todos os guardiões</button>
     </div>`;
 }
 

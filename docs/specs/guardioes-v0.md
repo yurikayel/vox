@@ -1,6 +1,6 @@
 # Guardiões (v0): a comunidade devolve a conta
 
-> **Status:** aceita (2026-11-14, pelo mantenedor; as 3 decisões do §12 ficam para antes da parte 3b; spec antes do código, [ADR-032](../adr/032-login-perene-a-conta-nasce-com-saida.md) passo 3) · **Owner:** mantenedor · **Revisado:** 2026-11-13
+> **Status:** implementada (3a–3d no SW v7.123; aceita em 2026-11-14, pelo mantenedor; as 3 decisões do §12 ficam para antes da parte 3b; spec antes do código, [ADR-032](../adr/032-login-perene-a-conta-nasce-com-saida.md) passo 3) · **Owner:** mantenedor · **Revisado:** 2026-11-16
 > Relacionados: [ADR-032 §3.4](../adr/032-login-perene-a-conta-nasce-com-saida.md#34-guardiões-recuperação-pela-comunidade) (a decisão), [ADR-026](../adr/026-chaves-em-repouso-trava-depois-do-backup.md) (conta travada), [mochila de DMs](./mochila-dm-v0.md) (entrega quando a pessoa está offline), [THREAT-MODEL](../THREAT-MODEL.md) (T25), `client/js/recovery-phrase.js`, `client/js/identity-seed.js`, `client/js/crypto-dm.js`, `client/js/app/dm-wire.js`.
 
 ## 1. Problema
@@ -84,6 +84,7 @@ Regras de recebimento (em `dm-wire.js`, antes de `saveDmMessage`, como já é fe
 - Trocar um guardião, mudar M ou N = **divisão nova** (novo `splitId`, polinômios novos) para todos, mais um `revoga` assinado da divisão anterior para quem a tinha.
 - Pedaços de divisões diferentes não se juntam (§3), então um guardião antigo que ignore o `revoga` não ajuda ninguém a juntar com os novos.
 - Remover todos os guardiões manda `revoga` e tira a saída `guardioes` do registro.
+- **Como ficou (3d, SW v7.123):** com divisão ativa, a tela `#/guardioes` mostra o estado, a nota de troca e "Tirar todos os guardiões" (com confirmação). O formulário de escolha vira "Trocar: dividir de novo e enviar" e abre no mínimo atual. Tirar todos esquece o mapa e a saída **antes** de mandar as revogações, para que guardião offline ou sem chave de DM não mantenha a conta marcada como protegida. A revogação só apaga o pedaço daquela `splitId`, então, se ela chegar depois do pedaço novo (ou antes), o novo fica.
 
 ## 9. Ameaças (no THREAT-MODEL como [T25](../THREAT-MODEL.md#3-ameaças--mitigações-o-que-existe-hoje), escrito antes da 3c)
 
@@ -114,7 +115,7 @@ Regras de recebimento (em `dm-wire.js`, antes de `saveDmMessage`, como já é fe
 
 Cada parte é um PR, com SW novo quando tocar o cliente, e a 3c só entra depois do THREAT-MODEL T25 revisado.
 
-**Andamento:** 3a em main (`shamir-gf256.js`); **3c no SW v7.119** — `guardian-return.js` (pedido, código, caixa, resposta, juntar), `app/guardian-return-flow.js` e as telas `#/guardiao?…` e `#/voltar` (ver §13); QR do pedido no SW v7.121. **3b no SW v7.117** — `guardians.js` (mensagens, mapa da dona, guarda), `app/guardians-flow.js` (envio, recebimento, parar de guardar) e a tela `#/guardioes`. Na implementação, o laço mútuo é: a dona segue ou tem a pessoa nos contatos **e** recebeu dela o aviso assinado "adicionou você aos contatos".
+**Andamento:** **3d no SW v7.123** — `removeAllGuardians` em `app/guardians-flow.js`, `clearOwnerSplit` em `guardians.js` e a tela (trocar e tirar todos); testes em `tests/guardians-trocar.test.js`. 3a em main (`shamir-gf256.js`); **3c no SW v7.119** — `guardian-return.js` (pedido, código, caixa, resposta, juntar), `app/guardian-return-flow.js` e as telas `#/guardiao?…` e `#/voltar` (ver §13); QR do pedido no SW v7.121. **3b no SW v7.117** — `guardians.js` (mensagens, mapa da dona, guarda), `app/guardians-flow.js` (envio, recebimento, parar de guardar) e a tela `#/guardioes`. Na implementação, o laço mútuo é: a dona segue ou tem a pessoa nos contatos **e** recebeu dela o aviso assinado "adicionou você aos contatos".
 
 ## 12. Decisões do mantenedor (2026-11-14, antes da 3b)
 
