@@ -6,6 +6,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Fluxo de branches: PR para `develop`, depois `main`
+- PRs de feature passam a mirar `develop`; `develop` vai para `main` por PR quando o lote fecha. `develop` foi alinhada com `main` (`1fc0ccc`) e ganhou as mesmas regras de proteção (PR obrigatório, 5 checks, sem force push, sem apagar). CI e CodeQL rodam também em `develop` (`ci.yml`, `codeql.yml`). CONTRIBUTING, CONTRIBUTORS, AGENTS, CLAUDE e DEV §0 dizem isso.
+
 ### Modelo de ameaças: T24 (frase) e T25 (guardiões) (ADR-032, antes da parte 3c)
 - `docs/THREAT-MODEL.md` ganha as duas linhas prometidas no ADR-032: o que segura e o que sobra na frase de recuperação e nos guardiões, incluindo as condições que a parte 3c (pedir de volta) tem que cumprir para entrar. Só documentação; sem SW novo.
 
