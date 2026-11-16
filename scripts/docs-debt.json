@@ -1333,9 +1333,6 @@
   "jsdoc:hasCompletedOAuthStep"
  ],
  "client/js/oauth-vault.js": [
-  "param:saveRemoteVaultRecord:lookupKey",
-  "param:saveRemoteVaultRecord:record",
-  "param:saveRemoteVaultRecord:ownerToken",
   "returns:runLegacyVaultMigration",
   "jsdoc:LEGACY_VAULT_NOTICE",
   "param:startVaultMigration:toast",
@@ -1780,10 +1777,6 @@
   "jsdoc:renderNodeHealthListHtml"
  ],
  "client/js/render/oauth-modals.js": [
-  "param:showGenesisStep:root",
-  "param:showGenesisStep:key",
-  "returns:showGenesisStep",
-  "jsdoc:closeOAuthEnrich",
   "jsdoc:resolvePeopleSearchBody",
   "jsdoc:renderPeopleSearch",
   "jsdoc:renderConnectPreview",

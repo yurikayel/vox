@@ -12,6 +12,7 @@ import { dropSessionPassphrase, dropStorageKeys } from "./local-wipe.js";
 import * as keyLock from "./key-lock.js";
 import { canonicalString, withSigv } from "./sig-format.js";
 import { bytesToB64Url, computeRouteId, verifyPayload } from "./signed-verify.js";
+import { computeAccountSocialKey, matchesOAuthEnrichment } from "./account-social-match.js";
 
 export { computeRouteId, verifyPayload };
 export { LOCAL_WIPE_NOTICE, confirmLocalWipe } from "./local-wipe.js";
@@ -438,25 +439,6 @@ export async function syncActiveAccountToVault() {
   return vault[acc.routeId];
 }
 
-function detectSocialAvatarType(av) {
-  if (!av) return null;
-  if (av.includes("googleusercontent.com/")) return "google";
-  if (av.includes("facebook.com") || av.includes("fbsbx.com") || av.includes("fbcdn.net")) return "meta";
-  return null;
-}
-
-function computeAccountSocialKey(acc) {
-  const enrich = acc?.enrichment || {};
-  const av = enrich.avatarUrl || "";
-  const avatarType = detectSocialAvatarType(av);
-  const prov = enrich.oauthProvider || avatarType || "oauth";
-  if (enrich.oauthSub) return `${prov}:${enrich.oauthSub}`;
-  if (enrich.oauthEmail) return `${prov}:${enrich.oauthEmail.toLowerCase()}`;
-  if (avatarType) return av.split("=")[0];
-  const cleanName = (acc?.displayName && !acc.displayName.startsWith("vx_")) ? acc.displayName.trim() : null;
-  return (cleanName && av) ? `name-av:${cleanName}:${av}` : null;
-}
-
 export function deduplicateVaultAccounts() {
   const vault = readVaultMap();
   const seenSocial = new Map();
@@ -478,25 +460,6 @@ export function deduplicateVaultAccounts() {
     }
   }
   if (changed) writeVaultMap(vault);
-}
-
-function isSameProvider(expected, current) {
-  if (!expected || !current || expected === current) return true;
-  return expected === "meta" && current === "facebook";
-}
-
-function matchesSocialAvatar(enrichAv, targetAv, isGoogleAv) {
-  if (!enrichAv || !targetAv) return false;
-  if (isGoogleAv && enrichAv.split("=")[0] === targetAv.split("=")[0]) return true;
-  const isMetaAv = targetAv.includes("facebook.com") || targetAv.includes("fbsbx.com") || targetAv.includes("fbcdn.net");
-  return Boolean(isMetaAv && enrichAv === targetAv);
-}
-
-function matchesOAuthEnrichment({ enrich, cleanSub, cleanEmail, isGoogleAv, cleanAv, provider = "" }) {
-  if (!isSameProvider(provider, enrich.oauthProvider)) return false;
-  if (cleanSub && enrich.oauthSub === cleanSub) return true;
-  if (cleanEmail && enrich.oauthEmail && enrich.oauthEmail.toLowerCase() === cleanEmail) return true;
-  return matchesSocialAvatar(enrich.avatarUrl, cleanAv, isGoogleAv);
 }
 
 export function findVaultAccountByOAuth({ oauthProvider = "", oauthSub, oauthEmail, avatarUrl } = {}) {
