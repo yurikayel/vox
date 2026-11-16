@@ -24,7 +24,7 @@ O Vox é um bem comum digital sob licença **GNU Affero General Public License v
    npm test
    npm run lint
    ```
-3. **Submissão:** Submeta Pull Requests apontando para a branch `main` (fluxo em [CONTRIBUTING.md](./CONTRIBUTING.md)). Garanta que todos os testes passem (`npm test` e `npm run lint`) antes de solicitar revisão.
+3. **Submissão:** Submeta Pull Requests apontando para a branch `develop`, que depois vai para `main` (fluxo em [CONTRIBUTING.md](./CONTRIBUTING.md)). Garanta que todos os testes passem (`npm test` e `npm run lint`) antes de solicitar revisão.
 
 ---
 
