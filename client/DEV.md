@@ -14,7 +14,7 @@ Este documento descreve como testar o fluxo de leitura, autoria (upload de trans
 |-------|---------|
 | **`main` deployável** | Pages e CD disparam em push em `main`; mantenha-a estável. |
 | **Trabalho novo** | `git pull origin main` → `git checkout -b feat/...` (ou `fix/...`). |
-| **Entrega** | Push da branch → PR ou merge; **não** commitar features direto em `main` (agentes incluídos). |
+| **Entrega** | Push da branch → PR para `develop`; `develop` → `main` por PR no fechamento do lote. **Não** commitar direto em `develop` nem em `main` (agentes incluídos). |
 
 Ver também [CONTRIBUTING.md](../CONTRIBUTING.md) e [README — Código aberto, participação e governança](../README.md#-código-aberto-participação-e-governança-do-projeto).
 
