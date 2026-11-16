@@ -38,6 +38,7 @@
 | [031](./031-passkey-abre-a-mesma-conta.md) | Passkey abre a mesma conta em outro aparelho (WebAuthn PRF), sem servidor de login | accepted (não implementado; spike de suporte ao PRF antes de liberar) |
 | [032](./032-login-perene-a-conta-nasce-com-saida.md) | Login perene: a conta nasce com saída (frase, guardiões, Senha); Google e Meta saem da entrada | accepted (passos 1 e 2, guardiões 3a/3b e emenda 1 — entrada com e-mail, senha e kit no e-mail — implementados)
 | [033](./033-ia-so-no-rpg-local-primeiro.md) | IA só no RPG, primeiro no próprio aparelho; serviço externo só com a chave da mesa e o consentimento de todos | accepted (nenhuma IA implementada; o AI Social Dungeon é demonstração sem IA) |
+| [034](./034-raiz-e-subchaves-por-aparelho.md) | Raiz e subchaves por aparelho: a chave de hoje vira a raiz (o `vx_…` não muda); perder o celular é revogar uma subchave | proposed (espera o aceite; RFC 0002 antes do código) |
 
 **Registro de uma página** com as decisões institucionais e de arquitetura em vigor, o estado real de cada uma e o que ainda está em aberto: [DECISOES.md](../DECISOES.md).
 

@@ -6,6 +6,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### ADR-034 proposto: raiz e subchaves por aparelho
+- Desenho para perder o celular sem perder a conta: a chave de assinatura de hoje vira a raiz (o `vx_…` não muda), cada aparelho assina com uma subchave delegada, e a raiz publica um registro de chaves com as revogadas. Nada de código; a forma assinada nova pede a RFC 0002 e a revisão externa de cripto (LAN-18). Atualizados ADR-032 §3.6, DECISOES (A-22), ROADMAP (PM-13) e o índice de ADRs.
+
 ### Correção: diretório de perfis reconhece foto de login social pelo host
 - `profile-directory.js` decidia se dois cartões eram a mesma pessoa procurando "googleusercontent.com/", "fbcdn.net" e afins em qualquer parte da URL da foto, e cortava o resto. Duas fotos diferentes de um mesmo site, com esse trecho na query, viravam "a mesma pessoa", e a deduplicação ou a poda apagava um cartão. Agora usa `detectSocialAvatarType` (host da URL, só https), a mesma regra de `account-social-match.js` (#150) e de `people-index.js`; na Meta, `psid`/`asid` são lidos como parâmetros da query, não por trecho.
 - Testes: `tests/profile-directory-avatar.test.js` (novo; 2 dos 4 falham no código anterior). SW `v7.124`.
