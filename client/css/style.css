@@ -9197,6 +9197,7 @@ blockquote.repost-cite {
 .guardian-status { padding: 0.6rem 0.8rem; border-left: 3px solid var(--danger); background: var(--surface-soft); }
 .guardian-status.is-done { border-left-color: var(--success, var(--accent)); }
 .guardian-held { margin: 0; padding-left: 1.2rem; display: grid; gap: 0.4rem; }
+.guardians-screen .genesis-link { min-height: 44px; padding: 0 0.25rem; background: none; border: none; color: var(--accent); font: inherit; font-size: 0.9rem; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .guardian-return, .guardian-recover { max-width: 36rem; margin: 0 auto; padding: 1rem; display: grid; gap: 0.75rem; }
 .guardian-owner { display: flex; gap: 0.6rem; align-items: center; font-size: 1.1rem; }
 .guardian-owner-avatar { width: 2.5rem; height: 2.5rem; border-radius: 50%; object-fit: cover; }

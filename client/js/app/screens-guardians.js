@@ -1,6 +1,6 @@
 /**
- * @file Guardiões, parte 3b — tela `#/guardioes`: escolher guardiões entre os laços mútuos, dividir e enviar,
- * ver quantos confirmaram, e parar de guardar a volta de alguém. Spec: `docs/specs/guardioes-v0.md` §5–§6.
+ * @file Guardiões, partes 3b e 3d — tela `#/guardioes`: escolher guardiões entre os laços mútuos, dividir e
+ * enviar, ver quantos confirmaram, trocar ou tirar todos, e parar de guardar a volta de alguém. Spec: `docs/specs/guardioes-v0.md` §5–§6.
  */
 
 import * as render from "../render.js";
@@ -19,7 +19,7 @@ import {
   renderGuardiansScreenHtml,
   renderHeldListHtml,
 } from "../render/guardians.js";
-import { filterMutualTies, sendGuardianShares, stopGuarding } from "./guardians-flow.js";
+import { filterMutualTies, removeAllGuardians, sendGuardianShares, stopGuarding } from "./guardians-flow.js";
 import { getActiveUser, makeShellProps } from "./context.js";
 
 function labelFor(routeId, fallback = "") {
@@ -78,6 +78,16 @@ async function submitGuardians() {
   }
 }
 
+const REMOVE_CONFIRM =
+  "Tirar todos os guardiões? Cada um recebe a revogação e apaga o pedaço. A conta fica sem esta saída até você escolher de novo ou ter a frase no papel.";
+
+async function removeAll() {
+  if (!confirm(REMOVE_CONFIRM)) return;
+  await removeAllGuardians();
+  share.showToast("Guardiões tirados. A revogação vai para cada um.");
+  await showGuardians();
+}
+
 function bindScreen() {
   const form = document.getElementById("form-guardians");
   form?.addEventListener("change", syncHint);
@@ -85,6 +95,7 @@ function bindScreen() {
     e.preventDefault();
     void submitGuardians();
   });
+  document.getElementById("btn-guardians-remove")?.addEventListener("click", () => void removeAll());
   document.querySelectorAll("[data-stop-guarding]").forEach((btn) =>
     btn.addEventListener("click", async () => {
       await stopGuarding(btn.dataset.stopGuarding);
@@ -101,9 +112,10 @@ export async function showGuardians() {
   const me = await localAccount.getRouteId();
   const main = render.renderShell(makeShellProps(user, "profile", "Guardiões"));
   const [candidates, needsPassphrase] = await Promise.all([loadCandidates(), phraseNeedsPassphrase()]);
+  const status = ownerStatus(me);
   main.innerHTML = renderGuardiansScreenHtml({
-    statusHtml: renderGuardianStatusHtml(ownerStatus(me)),
-    chooserHtml: renderGuardianChooserHtml({ candidates, m: guardians.DEFAULT_M, needsPassphrase }),
+    statusHtml: renderGuardianStatusHtml(status),
+    chooserHtml: renderGuardianChooserHtml({ candidates, m: status?.m || guardians.DEFAULT_M, needsPassphrase, hasSplit: Boolean(status) }),
     heldHtml: renderHeldListHtml(guardians.listHeld().map((h) => ({ owner: h.owner, name: labelFor(h.owner, h.ownerName) }))),
   });
   bindScreen();

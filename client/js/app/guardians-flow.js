@@ -1,7 +1,7 @@
 /**
- * @file Guardiões, parte 3b — transporte: dividir e mandar os pedaços, receber pedaço, recibo e revogação, e parar
- * de guardar. Tudo vai assinado e dentro de envelope de DM, pelo caminho da DM (WebRTC → caixa postal → caixa de
- * saída). Spec: `docs/specs/guardioes-v0.md` §4–§6 e §12.
+ * @file Guardiões, partes 3b e 3d — transporte: dividir e mandar os pedaços, receber pedaço, recibo e revogação,
+ * parar de guardar, trocar (divisão nova revoga a anterior) e tirar todos os guardiões. Tudo vai assinado e dentro de envelope de DM, pelo caminho da DM (WebRTC → caixa postal → caixa de
+ * saída). Spec: `docs/specs/guardioes-v0.md` §4–§6, §8 e §12.
  *
  * @module app/guardians-flow
  * @see client/js/guardians.js
@@ -81,6 +81,23 @@ export async function sendGuardianShares({ guardians: chosen, m, passphrase = ""
   clearAccountExit("guardioes", me);
   await revokePrevious(d, me, previous);
   return { ok: true, splitId: split.splitId, results };
+}
+
+/**
+ * Tira todos os guardiões (spec §8): esquece a divisão, tira a saída `guardioes` e manda a revogação assinada para
+ * cada guardião. A saída cai antes do envio, então guardião offline não mantém a conta marcada como protegida.
+ * @param {object|null} [deps]
+ * @returns {Promise<boolean>} se havia divisão
+ */
+export async function removeAllGuardians(deps = null) {
+  const d = deps || (await defaultDeps());
+  const me = await d.getMe();
+  const current = guardians.getOwnerSplit(me);
+  if (!current) return false;
+  guardians.clearOwnerSplit(me);
+  clearAccountExit("guardioes", me);
+  await revokePrevious(d, me, current);
+  return true;
 }
 
 async function onShare(d, me, p) {
