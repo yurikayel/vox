@@ -39,7 +39,7 @@ Mapa de pastas: seção "Estrutura do repositório" do [README](./README.md). Re
    - `npm run lint` e `npm run audit:complexity` sem violações novas — limites em [docs/HARDENING.md](./docs/HARDENING.md);
    - mudou o shell do PWA (arquivo novo, CSS, JS em precache)? **bump de `CACHE_NAME`** em `client/sw.js`;
    - mudou comportamento visível? linha em [CHANGELOG.md](./CHANGELOG.md) → *Não lançado*, e atualize o doc afetado.
-4. PR para **`main`** usando o template. `main` é deployável: o push dispara GitHub Pages.
+4. PR para **`develop`** usando o template. `develop` junta as features; o mantenedor leva `develop` para **`main`** por PR quando o lote está pronto. `main` é deployável: o push dispara GitHub Pages. As duas branches são protegidas (merge só por PR com o CI verde).
 5. Release line (só mantenedor, ao fechar um lote): `npm run release-line` atualiza [docs/release-metadata.json](./docs/release-metadata.json) e a tabela do README. Nenhum outro doc repete esses números.
 
 ## 4. Regras do projeto
