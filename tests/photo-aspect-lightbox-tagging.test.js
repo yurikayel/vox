@@ -13,7 +13,7 @@ import * as mediaLofi from "../client/js/media-lofi.js";
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "client");
 const css = fs.readFileSync(path.join(root, "css/style.css"), "utf8");
 const feedJs = fs.readFileSync(path.join(root, "js/render/feed.js"), "utf8");
-const composerJs = fs.readFileSync(path.join(root, "js/inline-composer.js"), "utf8");
+const composerJs = fs.readFileSync(path.join(root, "js/app/inline-composer.js"), "utf8");
 const lightboxJs = fs.readFileSync(path.join(root, "js/app/post-media-lightbox.js"), "utf8");
 const tagUiJs = fs.readFileSync(path.join(root, "js/app/photo-tag-ui.js"), "utf8");
 

@@ -3,7 +3,7 @@ import { initColorMode } from "./color-mode.js";
 import { applySkyTheme, initSkyTheme } from "./sky-theme.js";
 import * as demoSeed from "./demo-seed.js";
 import { loadRemoteFlags } from "./feature-flags.js";
-import { installDomDelegates } from "./dom-delegates.js";
+import { installDomDelegates } from "./app/dom-delegates.js";
 import { attachReportHandlers } from "./app/report-flow.js";
 import { wireRoute, setupHashchangeListener, routeImpl as route } from "./app/route.js";
 import { installEntryGuards, hasFullEntry } from "./app/onboarding.js";
