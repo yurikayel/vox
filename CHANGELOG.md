@@ -6,6 +6,10 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Testes: "Corrigir e-mail" revoga o endereço errado (LT-03)
+- `tests/email-kit-correct.test.js`: com criptografia real e só rede/storage falsos, o e-mail errado deixa de abrir (revogado com a prova de dono), o certo com a mesma senha abre o mesmo `routeId`, a senha não vai ao `mailto:`/storage/rede, e corrigir para o mesmo e-mail não estraga nada.
+- Correção: `createEmailAccountKit` recusa e-mail sem `@` antes de gravar; antes gravava o cofre novo e revogava o anterior para só então falhar ao montar o kit (a tela já barrava, a função não).
+
 ### Documentação: emenda da revisão do ADR-038
 - `about` do manifesto é só o texto longo (apresentação, regras, links); título, descrição curta, foto, categoria e modo de publicação continuam só no `community_update`, para não haver duas fontes.
 - O `community_update` passa a seguir o mesmo cálculo de versão do manifesto quando o v1 for implementado (futuro limitado a 10 minutos, sem volta): hoje uma atualização datada no futuro distante trava título e descrição. Testes esperados acrescentados na spec v1 §9.
