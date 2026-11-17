@@ -15,7 +15,7 @@
   "param:bindAdultCheck:buttons",
   "returns:bindAdultCheck"
  ],
- "client/js/airgap-webrtc.js": [
+ "client/js/labs/parado/airgap-webrtc.js": [
   "jsdoc:AIRGAP_CHANNEL_NAME",
   "jsdoc:cleanSdp",
   "jsdoc:encodeSdpEnvelope",
@@ -343,7 +343,7 @@
   "param:calculateCrc16:str",
   "returns:calculateCrc16"
  ],
- "client/js/bridging-rank.js": [
+ "client/js/labs/parado/bridging-rank.js": [
   "jsdoc:MIN_VOTERS_FOR_BRIDGING",
   "jsdoc:calculateClusterAgreeRate",
   "jsdoc:computeBridgingScore",
@@ -481,7 +481,7 @@
   "jsdoc:buildChatSummaryCopy",
   "jsdoc:parseChatTranscriptToMarkdown"
  ],
- "client/js/chunked-transfer.js": [
+ "client/js/labs/parado/chunked-transfer.js": [
   "jsdoc:DEFAULT_CHUNK_SIZE",
   "jsdoc:MAX_BUFFERED_AMOUNT",
   "jsdoc:computeChecksum",
@@ -489,7 +489,7 @@
   "jsdoc:ChunkReassembler",
   "jsdoc:sendChunksWithBackpressure"
  ],
- "client/js/civic-credential.js": [
+ "client/js/labs/parado/civic-credential.js": [
   "jsdoc:CREDENTIAL_SCHEMA_VERSION",
   "jsdoc:issueCivicCredential",
   "jsdoc:verifyCivicCredential",
@@ -902,7 +902,7 @@
   "jsdoc:meshDiscoverableHint",
   "jsdoc:peopleSectionMesh"
  ],
- "client/js/idb-store.js": [
+ "client/js/labs/parado/idb-store.js": [
   "jsdoc:DB_NAME",
   "jsdoc:DB_VERSION",
   "jsdoc:STORES",
@@ -920,7 +920,7 @@
   "jsdoc:getKeyValue",
   "jsdoc:clearStore"
  ],
- "client/js/identity-link.js": [
+ "client/js/labs/parado/identity-link.js": [
   "jsdoc:IDENTITY_LINK_TYPE",
   "jsdoc:__resetIdentityLinksForTests",
   "jsdoc:saveVerifiedIdentityLink",
@@ -957,7 +957,7 @@
   "jsdoc:broadcastAndPersistInlineTopic",
   "jsdoc:attachInlineComposerHandlers"
  ],
- "client/js/kit-genesis.js": [
+ "client/js/labs/parado/kit-genesis.js": [
   "jsdoc:deepFreeze",
   "jsdoc:KIT_BAIRRO",
   "jsdoc:KIT_SINDICATO",
@@ -1181,28 +1181,28 @@
   "param:attachPowIfWanted:author",
   "returns:attachPowIfWanted"
  ],
- "client/js/node-health-api.js": [
+ "client/js/labs/parado/node-health-api.js": [
   "jsdoc:pingNodeEndpoint",
   "jsdoc:pingNodeList"
  ],
- "client/js/node-health-evaluator.js": [
+ "client/js/labs/parado/node-health-evaluator.js": [
   "jsdoc:LATENCY_THRESHOLDS",
   "jsdoc:classifyNodeStatus",
   "jsdoc:selectBestHealthyNode"
  ],
- "client/js/node-health-model.js": [
+ "client/js/labs/parado/node-health-model.js": [
   "jsdoc:NODE_STATUS",
   "jsdoc:createNodeHealthRecord",
   "jsdoc:validateNodeHealthRecord"
  ],
- "client/js/node-health-state.js": [
+ "client/js/labs/parado/node-health-state.js": [
   "jsdoc:getNodeHealthState",
   "jsdoc:updateNodeHealthRecord",
   "jsdoc:updateBatchNodeHealth",
   "jsdoc:subscribeNodeHealth",
   "jsdoc:clearNodeHealthState"
  ],
- "client/js/node-health-ux.js": [
+ "client/js/labs/parado/node-health-ux.js": [
   "jsdoc:getNodeHealthLabelPtBr",
   "jsdoc:getNodeHealthAriaLabel",
   "jsdoc:formatLatency"
@@ -1413,7 +1413,7 @@
   "jsdoc:maskForDisplay",
   "jsdoc:PIX_PAYER_CHECK_NOTICE_PT"
  ],
- "client/js/polis.js": [
+ "client/js/labs/parado/polis.js": [
   "jsdoc:VOTE_AGREE",
   "jsdoc:VOTE_DISAGREE",
   "jsdoc:VOTE_PASS",
@@ -1681,7 +1681,7 @@
   "returns:renderTurnOnlyHtml",
   "jsdoc:renderStewardWizard"
  ],
- "client/js/render/node-health-badge.js": [
+ "client/js/labs/parado/node-health-badge.js": [
   "jsdoc:renderNodeHealthBadgeHtml",
   "jsdoc:renderNodeHealthListHtml"
  ],
@@ -2017,7 +2017,7 @@
   "jsdoc:downloadStoryCardPng",
   "jsdoc:copyStoryCardToClipboard"
  ],
- "client/js/testimonials.js": [
+ "client/js/labs/parado/testimonials.js": [
   "jsdoc:TESTIMONIAL_TYPE",
   "jsdoc:TESTIMONIAL_APPROVAL_TYPE",
   "jsdoc:TESTIMONIAL_STATUS",
@@ -2050,7 +2050,7 @@
   "jsdoc:postData",
   "jsdoc:postBinary"
  ],
- "client/js/vox-identity.js": [
+ "client/js/labs/parado/vox-identity.js": [
   "jsdoc:HEADER_SIZE",
   "jsdoc:SENDER_OFFSET",
   "jsdoc:AUDIENCE_OFFSET",
@@ -2216,7 +2216,7 @@
   "jsdoc:sendVoxMessage",
   "jsdoc:broadcastRtcMessage"
  ],
- "client/js/webxdc-crdt.js": [
+ "client/js/labs/parado/webxdc-crdt.js": [
   "jsdoc:EPOCH_COMPACT_THRESHOLD",
   "jsdoc:MAX_SNAPSHOT_BYTES",
   "jsdoc:MAX_CLOCK_DRIFT_MS",
@@ -2229,14 +2229,14 @@
   "jsdoc:createEpochCompactor",
   "jsdoc:coldBootFetch"
  ],
- "client/js/webxdc-host.js": [
+ "client/js/labs/parado/webxdc-host.js": [
   "jsdoc:MAX_INFO_LEN",
   "jsdoc:MAX_SUMMARY_LEN",
   "jsdoc:validateWebxdcUpdate",
   "jsdoc:createSandboxedIframe",
   "jsdoc:createWebxdcHost"
  ],
- "client/js/webxdc-loader.js": [
+ "client/js/labs/parado/webxdc-loader.js": [
   "jsdoc:PRELUDE_SCRIPT",
   "jsdoc:CSP_META_TAG",
   "jsdoc:MIME_TYPES",

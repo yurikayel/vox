@@ -12,7 +12,7 @@ test("depurple paper - service worker cache id", () => {
   assert.match(sw, /vox-pwa-v7\.\d+-real-network-audio-video-upload/);
   assert.ok(sw.includes('"./js/media-lofi.js"'));
   assert.ok(sw.includes('"./js/perma-notary.js"'));
-  assert.ok(sw.includes('"./js/civic-credential.js"'));
+  assert.ok(sw.includes('"./js/labs/parado/civic-credential.js"'));
   assert.ok(sw.includes('"./js/dm-messenger.js"'));
   assert.ok(sw.includes('"./js/chat-bridge.js"'));
   assert.ok(sw.includes('"./js/qr-url.js"'));

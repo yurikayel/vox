@@ -1,8 +1,8 @@
 import "../tests/setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
-import * as webxdcLoader from "../client/js/webxdc-loader.js";
-import * as webxdcHost from "../client/js/webxdc-host.js";
+import * as webxdcLoader from "../client/js/labs/parado/webxdc-loader.js";
+import * as webxdcHost from "../client/js/labs/parado/webxdc-host.js";
 
 test("webxdc-loader - detecta mime types e gera data URLs de ativos", () => {
   assert.equal(webxdcLoader.detectMimeType("icon.png"), "image/png");

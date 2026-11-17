@@ -1,7 +1,7 @@
 import "../tests/setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
-import * as airgap from "../client/js/airgap-webrtc.js";
+import * as airgap from "../client/js/labs/parado/airgap-webrtc.js";
 
 class MockDataChannel {
   constructor(name) {

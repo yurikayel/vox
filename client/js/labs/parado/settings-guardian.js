@@ -7,7 +7,7 @@
  * @module render/settings-guardian
  * @see client/js/seeder-guardian.js
  */
-import { escapeHtml } from "./util.js";
+import { escapeHtml } from "../../shared/html.js";
 
 function renderGuardianStatusBadge(status) {
   if (!status || !status.enabled) {
