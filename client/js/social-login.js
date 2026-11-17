@@ -134,18 +134,19 @@ function readPendingFlow(key) {
  * @returns {Promise<{ netId: string, handle: string, did?: string, id?: string, name?: string }>}
  */
 export async function completeSocialLogin(cb) {
-  const bskyFlow = readPendingFlow(BSKY_FLOW_KEY);
-  const flow = readPendingFlow(FLOW_KEY);
+  const pending = [readPendingFlow(BSKY_FLOW_KEY), readPendingFlow(FLOW_KEY)];
   if (cb.error) {
     clearPendingFlows();
     throw new Error(cb.error === "access_denied" ? "Login cancelado." : `A rede recusou o login (${cb.error}).`);
   }
-  if (cb.state && bskyFlow?.state === cb.state) {
+  // A rede vem do fluxo guardado (o que esta aba iniciou), nunca do callback; o `state` só diz qual dos dois é.
+  const flow = pending.find((f) => typeof f?.state === "string" && f.state === cb.state) || null;
+  if (flow?.provider === "bsky") {
     sessionStorage.removeItem(FLOW_KEY);
     const r = await completeBskyLogin(cb);
     return { netId: "bsky", handle: r.handle, did: r.did };
   }
   clearPendingFlows();
-  if (!cb.state || flow?.state !== cb.state) throw new Error("Login expirou ou não confere. Tente de novo.");
+  if (!flow) throw new Error("Login expirou ou não confere. Tente de novo.");
   return exchangeViaRelay(flow, cb.code);
 }
