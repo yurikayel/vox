@@ -11,6 +11,7 @@ import { loadOAuthConfig } from "./oauth-profile.js";
 import { appBaseUrl, b64url, startBskyLogin, completeBskyLogin } from "./bsky-oauth.js";
 
 const FLOW_KEY = "vox-social-oauth-flow";
+const BSKY_FLOW_KEY = "vox-bsky-oauth-flow";
 export const CALLBACK_KEY = "vox-oauth-callback";
 
 /** Provedores OAuth 2.0 + PKCE (troca de código no relay). */
@@ -77,6 +78,7 @@ async function connectFacebook() {
  * pelo callback; Facebook resolve aqui mesmo com { handle:"", name, id }.
  */
 export async function startSocialLogin(netId) {
+  clearPendingFlows();
   if (netId === "bsky" && location.hostname === "localhost") {
     // Loopback do AT Protocol volta para 127.0.0.1: começa lá para o sessionStorage ser o mesmo.
     location.assign(location.href.replace("//localhost", "//127.0.0.1"));
@@ -111,20 +113,40 @@ export function takePendingCallback() {
   }
 }
 
-/** Conclui um login que voltou pelo callback → { netId, handle, did?, id?, name? }. */
+function clearPendingFlows() {
+  sessionStorage.removeItem(BSKY_FLOW_KEY);
+  sessionStorage.removeItem(FLOW_KEY);
+}
+
+function readPendingFlow(key) {
+  try {
+    return JSON.parse(sessionStorage.getItem(key) || "null");
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Conclui um login que voltou pelo callback. O fluxo é escolhido pelo `state` do callback, não por qual fluxo ficou
+ * guardado: um login do Bluesky abandonado não pode capturar o callback de outra rede. Qualquer callback encerra os
+ * fluxos pendentes desta aba.
+ * @param {{ code?: string, state?: string, iss?: string, error?: string }} cb parâmetros guardados por `oauth-callback.html`
+ * @returns {Promise<{ netId: string, handle: string, did?: string, id?: string, name?: string }>}
+ */
 export async function completeSocialLogin(cb) {
+  const pending = [readPendingFlow(BSKY_FLOW_KEY), readPendingFlow(FLOW_KEY)];
   if (cb.error) {
-    sessionStorage.removeItem("vox-bsky-oauth-flow");
-    sessionStorage.removeItem(FLOW_KEY);
+    clearPendingFlows();
     throw new Error(cb.error === "access_denied" ? "Login cancelado." : `A rede recusou o login (${cb.error}).`);
   }
-  if (sessionStorage.getItem("vox-bsky-oauth-flow")) {
+  // A rede vem do fluxo guardado (o que esta aba iniciou), nunca do callback; o `state` só diz qual dos dois é.
+  const flow = pending.find((f) => typeof f?.state === "string" && f.state === cb.state) || null;
+  if (flow?.provider === "bsky") {
+    sessionStorage.removeItem(FLOW_KEY);
     const r = await completeBskyLogin(cb);
     return { netId: "bsky", handle: r.handle, did: r.did };
   }
-  let flow = null;
-  try { flow = JSON.parse(sessionStorage.getItem(FLOW_KEY) || "null"); } catch {}
-  sessionStorage.removeItem(FLOW_KEY);
-  if (!flow || flow.state !== cb.state) throw new Error("Login expirou ou não confere. Tente de novo.");
+  clearPendingFlows();
+  if (!flow) throw new Error("Login expirou ou não confere. Tente de novo.");
   return exchangeViaRelay(flow, cb.code);
 }

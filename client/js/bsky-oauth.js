@@ -131,7 +131,8 @@ export async function startBskyLogin({ loginHint = "" } = {}) {
   const res = await dpopFetch(keys, meta.pushed_authorization_request_endpoint, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: form }, dpop);
   const par = await res.json().catch(() => ({}));
   if (!res.ok || !par.request_uri) throw new Error(par.error_description || par.error || "O Bluesky recusou o pedido de login.");
-  sessionStorage.setItem(FLOW_KEY, JSON.stringify({ provider: "bsky", state, verifier, keys, nonce: dpop.nonce || "", issuer: meta.issuer, tokenEndpoint: meta.token_endpoint, clientId, redirectUri }));
+  const issRequired = meta.authorization_response_iss_parameter_supported === true;
+  sessionStorage.setItem(FLOW_KEY, JSON.stringify({ provider: "bsky", state, verifier, keys, nonce: dpop.nonce || "", issuer: meta.issuer, issRequired, tokenEndpoint: meta.token_endpoint, clientId, redirectUri }));
   location.assign(`${meta.authorization_endpoint}?client_id=${encodeURIComponent(clientId)}&request_uri=${encodeURIComponent(par.request_uri)}`);
 }
 
@@ -150,14 +151,15 @@ async function exchangeCode(flow, code) {
 }
 
 /**
- * Conclui o login com os parâmetros do callback (?code&state&iss). Verifica state e emissor,
+ * Conclui o login com os parâmetros do callback (?code&state&iss). Verifica state e emissor (RFC 9207: se o servidor
+ * anuncia `authorization_response_iss_parameter_supported`, callback sem `iss` é recusado),
  * resolve DID → handle/PDS e guarda a sessão. Retorna { handle, did, pds }.
  */
 export async function completeBskyLogin({ code, state, iss }) {
   const flow = readFlow();
   sessionStorage.removeItem(FLOW_KEY);
   if (!flow || flow.provider !== "bsky" || flow.state !== state) throw new Error("Login do Bluesky expirou ou não confere. Tente de novo.");
-  if (iss && iss !== flow.issuer) throw new Error("Emissor do login não confere.");
+  if ((iss || flow.issRequired) && iss !== flow.issuer) throw new Error("Emissor do login não confere.");
   const { tok, nonce } = await exchangeCode(flow, code);
   const who = await resolveDid(tok.sub);
   await assertIssuerForDid(who.pds, flow.issuer);

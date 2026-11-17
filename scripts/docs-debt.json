@@ -1964,9 +1964,7 @@
   "returns:buildAuthorizeUrl",
   "param:startSocialLogin:netId",
   "returns:startSocialLogin",
-  "returns:takePendingCallback",
-  "param:completeSocialLogin:cb",
-  "returns:completeSocialLogin"
+  "returns:takePendingCallback"
  ],
  "client/js/social.js": [
   "jsdoc:isLiked",
