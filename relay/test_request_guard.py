@@ -13,7 +13,7 @@ from http.server import HTTPServer
 from pathlib import Path
 from unittest.mock import patch
 
-from relay import central_memory, inbox, request_guard, server
+from relay import central_memory, inbox, rate_limit, request_guard, server
 
 TOKEN = "0f" * 16
 OWNER = "a1" * 32
@@ -52,27 +52,15 @@ class TestGuardRules(unittest.TestCase):
         self.assertFalse(request_guard.is_json_content_type("text/plain"))
         self.assertFalse(request_guard.is_json_content_type(None))
 
-    def test_write_rate_limit_window(self):
-        now = [0.0]
-        limiter = request_guard.WriteRateLimiter(limit_per_min=2, clock=lambda: now[0])
-        self.assertTrue(limiter.allow("1.2.3.4"))
-        self.assertTrue(limiter.allow("1.2.3.4"))
-        self.assertFalse(limiter.allow("1.2.3.4"))
-        self.assertTrue(limiter.allow("5.6.7.8"), "outro IP tem sua própria cota")
-        now[0] = 60.0
-        self.assertTrue(limiter.allow("1.2.3.4"), "a janela anda")
-
     def test_reject_reason_order(self):
-        limiter = request_guard.WriteRateLimiter(limit_per_min=1)
         json_headers = {"Host": "127.0.0.1:1", "Content-Type": "application/json"}
-        self.assertEqual(request_guard.reject_reason("GET", {"Host": "x.example"}, "127.0.0.1", "ip", limiter)[0], 421)
-        self.assertIsNone(request_guard.reject_reason("GET", {"Host": "127.0.0.1:1"}, "127.0.0.1", "ip", limiter))
+        self.assertEqual(request_guard.reject_reason("GET", {"Host": "x.example"}, "127.0.0.1")[0], 421)
+        self.assertIsNone(request_guard.reject_reason("GET", {"Host": "127.0.0.1:1"}, "127.0.0.1"))
         bad_origin = dict(json_headers, Origin="https://x.example")
-        self.assertEqual(request_guard.reject_reason("POST", bad_origin, "127.0.0.1", "ip", limiter)[0], 403)
+        self.assertEqual(request_guard.reject_reason("POST", bad_origin, "127.0.0.1")[0], 403)
         text = {"Host": "127.0.0.1:1", "Content-Type": "text/plain"}
-        self.assertEqual(request_guard.reject_reason("POST", text, "127.0.0.1", "ip", limiter)[0], 415)
-        self.assertIsNone(request_guard.reject_reason("POST", json_headers, "127.0.0.1", "ip", limiter))
-        self.assertEqual(request_guard.reject_reason("DELETE", json_headers, "127.0.0.1", "ip", limiter)[0], 429)
+        self.assertEqual(request_guard.reject_reason("POST", text, "127.0.0.1")[0], 415)
+        self.assertIsNone(request_guard.reject_reason("POST", json_headers, "127.0.0.1"))
 
 
 class TestRelayWritesOverHttp(unittest.TestCase):
@@ -82,7 +70,7 @@ class TestRelayWritesOverHttp(unittest.TestCase):
         cls.previous = (inbox.INBOX_DIR, central_memory.MEMORY_DIR)
         inbox.INBOX_DIR = Path(cls.tmp) / "inbox"
         central_memory.set_memory_dir(Path(cls.tmp) / "mem")
-        cls.limiter = patch.object(request_guard, "WRITE_LIMITER", request_guard.WriteRateLimiter(limit_per_min=1000))
+        cls.limiter = patch.object(rate_limit, "LIMITER", rate_limit.RateLimiter({name: rate_limit.Policy(1000, 1000) for name in rate_limit.DEFAULT_POLICIES}))
         cls.limiter.start()
         cls.httpd = HTTPServer(("127.0.0.1", 0), server.VoxRelayHandler)
         threading.Thread(target=cls.httpd.serve_forever, daemon=True).start()
