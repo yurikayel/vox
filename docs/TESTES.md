@@ -1,6 +1,6 @@
 # Testes — como rodar, escrever e o que o CI checa
 
-> **Status:** canônico · **Owner:** mantenedor / qualidade · **Revisado:** 2026-11-08
+> **Status:** canônico · **Owner:** mantenedor / qualidade · **Revisado:** 2026-11-17 (§3.3 Tier A pelo CODEOWNERS; §4 conferida com o `ci.yml`)
 > Contagem atual de testes: **só** em [release-metadata.json](./release-metadata.json) (`test_js`, `test_python`).
 > **Como relatar e o que é proibido** (PASS / FAIL / NOT RUN / BLOCKED, falso verde, determinismo, auditoria): [process/qualidade-e-evidencia.md](./process/qualidade-e-evidencia.md). Verificação completa antes do merge: `npm run validate`.
 
@@ -50,14 +50,20 @@ Stdlib pura. `test_server.py` sobe o handler HTTP em memória e exercita as rota
 
 Não há gate de cobertura. Teste novo entra porque confere um comportamento (com o nome do comportamento), não para tocar linhas. A varredura de cobertura de 2026-11-16 (99 arquivos `coverage-*`) foi triada: os defeitos reais que ela achou viraram correções com teste próprio (`tests/achados-cobertura.test.js`), e os arquivos de varredura não entraram.
 
+### 3.3 Tier A: o que exige mais prova
+
+O Tier A dos testes são as linhas de `client/js/` do [`.github/CODEOWNERS`](../.github/CODEOWNERS): identidade (`identity/`), cofre (`vault/`), formato de assinatura (`sig-format.js`), DM cifrada (`crypto-dm.js`) e caixa de entrada (`inbox.js`). Não há outro mapa de risco. `tests/codeowners-paths.test.js` reprova linha que aponta para caminho que não existe mais, para a marca de sensível não sumir quando um arquivo muda de pasta. A identidade está congelada desde 17/11/2026: nessas pastas, só correção de bug ou mudança de lugar sem mudança de comportamento.
+
 ## 4. O que o CI checa (`.github/workflows/ci.yml`)
 
 | Job | O que faz | Bloqueia merge? |
 |---|---|---|
-| `test-client` (Node 22, 24) | `npm audit --audit-level=high` (LAN-20) · `node --check` em todo `client/js` e no `sw.js` · `npm run audit:complexity` (grava `docs/metrics/baseline-*.json` como artefato) · ESLint · `npm run test:client` | Sim, exceto ESLint (só aviso) |
-| `test-relay` (Python 3.11, 3.12) | `py_compile` · `npm run test:relay` · ruff + `lint:relay` | Sim, exceto ruff (só aviso) |
+| `test-client` (Node 22, 24) | `npm audit --audit-level=high` (LAN-20) · `node --check` em todo `client/js` e no `sw.js` · `npm run audit:complexity` (grava `docs/metrics/baseline-*.json` como artefato) · `npm run audit:docs` e `npm run audit:layers` (catracas) · `npm run lint` (ESLint em `client/js`, `sw.js` e `workers/`; **não** cobre `tests/`) · `npm run test:client` | Sim |
+| `test-relay` (Python 3.11, 3.12, 3.15) | `py_compile` · `npm run test:relay` · `lint:relay` (ruff: pyflakes e complexidade acima de 15) · ruff de estilo e tamanho de função | Sim, exceto o ruff de estilo (só informa) |
+| `e2e-mesh` (PM-99) | Dois Chromium sem tela (`playwright-core` instalado sem `package.json`) trocam um post assinado por WebSocket e por Nostr (`scripts/mesh-e2e.mjs`); limite de 10 min | Sim |
 | `security-audit` | Grep por chaves privadas (`BEGIN … PRIVATE KEY`) | Sim |
 | `pilot-freeze` (só PR) | Com `PILOT_FREEZE=1` ou `.github/pilot-freeze.flag`, falha PRs que tocam `client/js/**`, salvo label `pilot-hotfix` | Sim, quando ativo |
+| `codeql.yml` (PR e push em `main`/`develop`, e semanal) | Análise estática do GitHub CodeQL | Conforme o ruleset do repositório |
 | `windows-node-zero-smoke.yml` | PyInstaller + smoke do Node Zero no Windows | Sim |
 | `nostr-smoke.yml` (semanal) | Publica e lê um evento efêmero em cada relay Nostr do pool (REV-19) | Não (agenda) |
 | `deps-mensal.yml` (dia 1 de cada mês) | `npm audit` · teste de inventário · hash de CDN contra [DEPENDENCIAS.md](./DEPENDENCIAS.md) (`scripts/deps-check-cdn.mjs`) · `npm outdated` no resumo (LAN-20) | Não (agenda) |

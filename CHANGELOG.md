@@ -6,6 +6,11 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Testes: base do plano para código feito por IA (PM-110)
+- **CODEOWNERS sem caminho morto:** 8 linhas apontavam para arquivos que mudaram para `client/js/identity/` e `client/js/vault/` e não marcavam mais nada como sensível. Agora marcam as duas pastas, mais `sig-format.js`; `tests/codeowners-paths.test.js` reprova caminho que não existe.
+- **[TESTES.md](./docs/TESTES.md):** nova §3.3 (o Tier A dos testes são as linhas de `client/js/` do CODEOWNERS) e a §4 conferida com o `ci.yml` (job `e2e-mesh`, Python 3.15, CodeQL, e o ESLint do CI não cobre `tests/`).
+- **ROADMAP:** PM-111…PM-115 abertos (vermelho na base, mutação no diff do Tier A, smokes no `e2e-mesh`, contratos, higiene dos testes). Sem mudança no cliente nem no SW.
+
 ### Segurança: cartão de perfil só entra assinado
 - **Cartões vindos da sincronização** (memória central e malha ao conectar) passam a valer só com o cartão assinado pelo dono (`signedCard`), conferido pela chave da própria conta e pelo `routeId`; campos soltos de nome, foto e bio que chegam junto não são mais confiados. O cartão de cada conta é guardado no diretório com a forma assinada, que é o que viaja na sincronização ([ADR-021](./docs/adr/021-integridade-na-entrada-forma-assinada.md)).
 - O nome que chegava junto da identidade do par ao conectar não é mais aplicado; nome e foto chegam no cartão assinado.
