@@ -6,6 +6,11 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### ADR-035 proposto: camadas e contextos no cliente, com catraca no CI
+- **Regra de camadas:** `app` importa qualquer camada; `render` só `render` e `base`; `base` só `base`; `labs`/`dungeon` só `labs` e `base`, e só `app` carrega o laboratório. `npm run audit:layers` lê os imports pela árvore sintática (espree), entra no `validate` e no CI e reprova import proibido novo. Os 11 imports que já sobem de camada (6 arquivos) ficam em `scripts/layers-debt.json`, numa lista que só diminui.
+- **Direção:** uma pasta por assunto com porta de entrada (`index.js`), um assunto por PR, começando por `vault/`; caminho único para operações de conta; armazenamento local com dono; os módulos não plugados (já fora do precache, PM-04) saem da raiz para `labs/` ou do repositório.
+- Testes: `tests/layers-audit.test.js` (novo). Atualizados DECISOES (A-23), HARDENING, índice de ADRs e `scripts/README.md`. Sem mudança no app.
+
 ### Correção: trocar a Senha Soberana pelo Perfil; pôr e-mail tira do ar o cofre só-senha
 - **Senha atual:** o cartão "Soberania & Sincronização" ganha o campo "Senha atual, só para trocar a Senha Soberana". Antes, depois do primeiro cofre a conta ficava travada pela senha, e uma senha nova dava "Senha incorreta" sem ter onde informar a antiga. Com a senha atual, a conta é aberta, gravada com a nova e o endereço antigo é revogado.
 - **E-mail:** gravar o cofre com e-mail (Perfil ou assistente de backup) revoga o cofre só-senha anterior da mesma senha, como a restauração já fazia (ADR-032 §6.3). Antes, ele ficava no ar e abria só com a senha. Só é revogado o que existe; endereço sem cofre não ganha marca.
