@@ -11,6 +11,7 @@
 | **depende de config** | Código no ar, mas só funciona com app registrado, relay ou secret configurado. |
 | **lab** | Rota experimental (`#/labs/*`) — não é produção. |
 | **escrito, não plugado** | Módulo e testes existem; **nenhum ponto de entrada carrega**. Desde o PM-04 fica em `UNPLUGGED_MODULES` no `sw.js`, **fora do precache**; o teste `shell-reachability` mantém a lista honesta. |
+| **planejado** | Decisão (ADR) e spec escritas; nenhum código. |
 | **stub** | Esqueleto ou lista de configuração, sem a lógica principal. |
 | **demo** | Perfis fictícios de `mock.js` que só aparecem com o **modo demonstração** ligado em `#/settings/network`, sempre com a faixa "Modo demonstração" (LAN-10). Fora dele, falha de rede mostra "sem conexão", nunca conteúdo de exemplo. |
 
@@ -46,6 +47,7 @@
 | Moderação: fixar, trancar, ocultar | comunidade | `moderation.js` | no ar | `moderation*` |
 | Denunciar publicação (motivos, canais oficiais para casos graves, DM cifrada ao moderador) | post ⋯ | `report.js`, `app/report-flow.js`, `app/report-dm.js`, `report-review.js` | no ar (LAN-12, PM-69): a denúncia assinada vai por DM à moderação, cujo aparelho arquiva até a revisão ("⏳ Em revisão", 48 h) se passar nas salvaguardas; sem fila central | `report`, `report-flow`, `report-review` |
 | Canal: só a moderação publica posts, todos comentam | faixa na página da comunidade | `community-channel.js`, `app/community-channel-flow.js`, `render/channel-bar.js` | no ar (PM-81): `community_update` com `postingMode`; a regra vale na leitura de cada aparelho ([spec](./specs/canal-comunidade-v0.md)) | `community-channel` |
+| Manifesto de comunidade v1 (subrede: texto longo, tema de lista fechada, sugestões de relay que cada pessoa liga) | página da comunidade, Ajustes → Rede | — | **planejado** ([ADR-038](./adr/038-subrede-malha-e-manifesto.md) proposto, [spec v1](./specs/community-manifest-v1.md)) | — |
 | Proposta com diff + voto assinado | `#/c/:id/proposal/:id`, `#/vote` | `governance.js`, `app/vote-confirm.js` | no ar | `governance`, `vote-stitch` |
 | Enquete cívica 2–6 opções | composer cívico | `civic-post.js` | no ar | `civic-post` |
 | Feira (classificados assinados) | `#/c/:id?tab=feira`, `#/compose/listing` | `listing.js`, `listing-ui.js` | no ar | `listing*` |
