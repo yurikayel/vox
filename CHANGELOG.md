@@ -9,6 +9,7 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 ### Documentação: ADR-038, subrede e manifesto de comunidade v1 (proposto)
 - [ADR-038](./docs/adr/038-subrede-malha-e-manifesto.md) (**proposed**): a comunidade é um território assinado na malha mais um manifesto que só sugere. Mesma regra de permissão do PM-09; `issuedAt` só cresce; tema por lista fechada com contraste; módulos aceitos pela pessoa, um por um; extensões só na v2; fork é `communityId` novo.
 - Spec [community-manifest-v1](./docs/specs/community-manifest-v1.md) substitui o rascunho v0. Ameaça T28 no [THREAT-MODEL](./docs/THREAT-MODEL.md), decisão A-26 e EXP-03 no ROADMAP apontando para o ADR. Sem código e sem bump de SW.
+
 ### Novidade: cofre na malha e tela única de volta (ADR-037)
 - Quem entra com e-mail e senha passa a ter o cofre cifrado (o mesmo v2) copiado para até 7 laços mútuos, guardiões primeiro, que o guardam como caixa preta. Num aparelho novo, se o cofre não está em lugar nenhum, o Vox pede o cofre à malha por uma caixa cega do relay: quem guarda avisa a dona ("Foi você?") e libera depois de 24 h, ou já com "Fui eu"; "Não fui eu" veta aquele pedido. Pedido vale 72 h. Sem servidor de contas e sem criptografia nova (`client/js/vault/mesh-vault.js`, `client/js/app/mesh-vault-flow.js`, `client/js/app/mesh-vault-ui.js`).
 - "Já tenho conta" vira um caminho só: e-mail, senha e Entrar; kit, frase, guardiões, QR e arquivos ficam em "Outras formas de voltar".
