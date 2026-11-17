@@ -1,6 +1,6 @@
 # ADR-038: Subrede — a comunidade é um território assinado na malha mais um manifesto que só sugere
 
-**Status:** proposed (2026-11-17; só documentação, nada implementado) · **Revisado:** 2026-11-17 · **Relacionados:** [spec do manifesto v1](../specs/community-manifest-v1.md) (substitui o [rascunho v0](../specs/community-module-manifest-v0.md)), [ADR-012](./012-soberania-digital-cintura-fina-cartuchos-webxdc.md) (cartuchos Webxdc em sandbox), [ADR-013](./013-sistema-voxels-e-conquistas-civicas.md) (voxels e conquistas), [ADR-027](./027-autorizacao-no-relay-dono-e-origem.md) (autorização no relay), [ADR-028](./028-ponte-activitypub-via-bluesky.md) (Fediverso só na borda), [ADR-036](./036-agilidade-criptografica-pos-quantica.md) (todo formato diz o seu algoritmo), [THREAT-MODEL](../THREAT-MODEL.md) (T1, T15, T22, T28), [ROADMAP](../ROADMAP.md) (PM-09, EXP-03)
+**Status:** proposed (2026-11-17; só documentação, nada implementado) · **Revisado:** 2026-11-17 (emenda da revisão: `about` × descrição, `community_update` no mesmo cálculo de versão) · **Relacionados:** [spec do manifesto v1](../specs/community-manifest-v1.md) (substitui o [rascunho v0](../specs/community-module-manifest-v0.md)), [ADR-012](./012-soberania-digital-cintura-fina-cartuchos-webxdc.md) (cartuchos Webxdc em sandbox), [ADR-013](./013-sistema-voxels-e-conquistas-civicas.md) (voxels e conquistas), [ADR-027](./027-autorizacao-no-relay-dono-e-origem.md) (autorização no relay), [ADR-028](./028-ponte-activitypub-via-bluesky.md) (Fediverso só na borda), [ADR-036](./036-agilidade-criptografica-pos-quantica.md) (todo formato diz o seu algoritmo), [THREAT-MODEL](../THREAT-MODEL.md) (T1, T15, T22, T28), [ROADMAP](../ROADMAP.md) (PM-09, EXP-03)
 
 ## 1. Contexto
 
@@ -43,10 +43,12 @@ Por cima dessa regra, cada campo tem um dono:
 
 | Campo | Dono pode mudar | Moderador pode mudar | Por quê |
 |---|:---:|:---:|---|
-| `about` (texto de apresentação, regras da casa, links) | sim | sim | é o mesmo tipo de coisa que a moderação já muda hoje (título e descrição) |
+| `about` (texto longo: apresentação, regras da casa, links) | sim | sim | é o mesmo tipo de coisa que a moderação já muda hoje (título e descrição) |
 | `theme` | sim | sim | só sugere cores de uma lista fechada (§3.4); não executa nada |
 | `modules[]` | sim | **não** | aponta para infraestrutura que vai ver metadados de quem aceitar (§3.5) |
 | `extensions[]` (v2) | sim | **não** | é código (§3.6) |
+
+**`about` não repete o `community_update`.** Título, descrição curta, foto, categoria e modo de publicação continuam só no `community_update`; o manifesto não tem esses campos. `about` é o texto longo que hoje não tem lugar (apresentação, regras da casa, links). Assim cada informação tem uma fonte só.
 
 Um manifesto de moderador que traga `modules` ou `extensions` é **recusado inteiro** (não só o campo), para que o erro apareça em vez de sumir em silêncio. Os campos são resolvidos por grupo (§3.3), então um moderador mudar o texto nunca desfaz o que o dono pôs em `modules`.
 
@@ -59,6 +61,7 @@ A autoridade é conferida contra o registro atual da comunidade, como o `applyCo
 - **Sem volta (rollback):** o efetivo de um grupo nunca anda para um `issuedAt` menor que o já visto. Reenviar um manifesto antigo e válido não muda nada, porque ele perde na comparação.
 - **Futuro limitado:** manifesto com `issuedAt` mais de 10 minutos à frente do relógio do aparelho fica guardado mas não vale até o relógio chegar lá. Sem isso, um moderador poderia emitir com o ano 9999 e travar a comunidade para sempre.
 - **Dois moderadores ao mesmo tempo:** o maior `issuedAt` vence o grupo do texto inteiro; no empate exato, vence o maior hash do manifesto (comparação de bytes). Todos os aparelhos que virem o mesmo conjunto chegam ao mesmo resultado, em qualquer ordem de chegada. A mudança de quem perdeu não se mistura: some do efetivo e continua no histórico, com `prev` mostrando que as duas partiram da mesma versão. Mesclar campo a campo dentro do texto foi descartado: produz um texto que ninguém escreveu.
+- **O `community_update` entra no mesmo cálculo.** Hoje a atualização com a data maior vence, sem limite para o futuro: uma atualização datada no ano 9999 ganharia de todas as seguintes e travaria título e descrição. O v1 aplica ao `community_update` as mesmas duas regras (futuro limitado a 10 minutos, sem volta), com o desempate pelo hash. Sem isso, o manifesto ficaria mais protegido que o título da comunidade.
 - **Troca de dono:** hoje ela não existe. O dono vem só do post canônico `c_<communityId>`, que não muda (PM-09, T15). Este ADR não cria a troca. Quem quiser outro dono faz um fork (§3.7). Se um ADR futuro criar a passagem de dono, a regra fica fixada aqui: manifestos do dono antigo com `issuedAt` posterior à passagem deixam de valer, e o dono novo só herda o grupo do dono emitindo um manifesto próprio com `issuedAt` maior que o da passagem.
 
 ### 3.4 `theme`: lista fechada de tokens, contraste conferido, nada que imite o app
@@ -112,6 +115,6 @@ Cotas e capacidades por comunidade, cobrança, nota pública de comunidade, impo
 ## 5. Próximos passos
 
 1. Revisão e aceite deste ADR e da spec v1 pelo mantenedor.
-2. Código do v1 (cliente): tipo `community_manifest`, portão no gossip junto do PM-09, cálculo do efetivo por grupo, tela de sugestões em Ajustes → Rede, tema só nas telas da comunidade. Cada passo com teste de cada regra (§3.2 a §3.5) antes do código, como no PM-09.
+2. Código do v1 (cliente): tipo `community_manifest`, portão no gossip junto do PM-09, cálculo do efetivo por grupo (o mesmo cálculo de versão passa a valer para o `community_update`, §3.3), tela de sugestões em Ajustes → Rede, tema só nas telas da comunidade. Cada passo com teste de cada regra (§3.2 a §3.5) antes do código, como no PM-09.
 3. Spec de fork (EXP-03) a partir do §3.7, se o v1 for aceito.
 4. v2 (`extensions[]`) só depois de ameaça própria e da revisão do sandbox do ADR-012.
