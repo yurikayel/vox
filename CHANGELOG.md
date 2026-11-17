@@ -6,6 +6,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Segurança: eslint 10.15.0 (minimatch 11)
+- Dependência só de desenvolvimento: `eslint` ^10.14.0 → ^10.15.0, que traz `minimatch` 11.0.9 no lugar de 10.2.6 (alerta Dependabot moderado GHSA-g3hv-75wg-m249, negação de serviço por expansão de padrões). Nada vai para o navegador; sem bump de SW. `npm audit`: 0 vulnerabilidades. Inventário em `docs/DEPENDENCIAS.md`.
+
 ### Correção: Service Worker só intercepta GET
 - **`client/sw.js`:** o listener de `fetch` passava todo pedido do mesmo domínio pelo caminho do cache, inclusive POST/PUT/DELETE (por exemplo, para um relay servido no mesmo domínio). O Cache API não guarda nem casa esses métodos, e o corpo do pedido atravessava o SW à toa; em `config/signaling.json`, um POST tentaria `cache.put` e geraria uma rejeição não tratada. Agora só GET passa pelo SW; o resto vai direto à rede pelo navegador.
 - Testes: `tests/sw-fetch-methods.test.js` (novo, 2 casos; roda o `sw.js` real numa sandbox `node:vm` e falha no código de antes). SW `v7.134`.
