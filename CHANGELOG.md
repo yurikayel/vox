@@ -6,6 +6,13 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Segurança: cartão de perfil só entra assinado
+- **Cartões vindos da sincronização** (memória central e malha ao conectar) passam a valer só com o cartão assinado pelo dono (`signedCard`), conferido pela chave da própria conta e pelo `routeId`; campos soltos de nome, foto e bio que chegam junto não são mais confiados. O cartão de cada conta é guardado no diretório com a forma assinada, que é o que viaja na sincronização ([ADR-021](./docs/adr/021-integridade-na-entrada-forma-assinada.md)).
+- O nome que chegava junto da identidade do par ao conectar não é mais aplicado; nome e foto chegam no cartão assinado.
+- Um cartão vencido só remove o cartão de quem o assinou (a validação vem antes do vencimento) (`peers-gossip-profile.js`, `peers.js`, `central-memory.js`).
+- Efeito visível: um nome conhecido só por outro caminho sem assinatura não chega mais pela sincronização; os nomes continuam vindo dos posts assinados e dos cartões assinados.
+- Testes: `tests/profile-card-assinatura.test.js` (novo, 7 casos; os 7 falham no código de antes). Dois testes mudaram de propósito para mandar cartões assinados (`central-memory.test.js`, `profile-card-share.test.js`), pois o comportamento antigo era aceitar cartão sem assinatura. SW `v7.136`.
+
 ### Correção: lab do AI Social Dungeon (revisão de 16/11)
 - **CD do co-mestre:** a tela do mestre lia `dc`, mas o roteador de regras entrega `suggestedDc`; a sugestão mostrava sempre CD 14. Agora mostra a da regra (Persuasão 13, Investigação 15…) (`screen-dm.js`).
 - **Slider de comunidades:** com 0% a comunidade aparecia com 614/410 MB (`||` trocava 0 pelo valor padrão); agora mostra 0 MB. O arrasto redesenhava a tela inteira a cada passo, trocando o próprio slider na mão da pessoa; agora só os rótulos e o chip "Próximo turno" mudam (`screen-camp.js`, `dungeon-controller.js`).

@@ -1313,8 +1313,7 @@
   "returns:isProfileCardSeen",
   "jsdoc:markProfileCardSeen",
   "param:seenStamp:item",
-  "returns:seenStamp",
-  "param:applyDirectoryProfileCard:card"
+  "returns:seenStamp"
  ],
  "client/js/peers.js": [
   "header",

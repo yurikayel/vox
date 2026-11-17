@@ -12,6 +12,7 @@ import { getRelayHttpUrls } from "./inbox.js";
 import * as localAccount from "./identity/index.js";
 import * as mediaBlob from "./media-blob.js";
 import * as manifestMesh from "./peers-cache-manifest.js";
+import * as gossipProfile from "./peers-gossip-profile.js";
 import * as serverChoice from "./memory-server-choice.js";
 import * as profileDirectory from "./profile-directory.js";
 
@@ -260,33 +261,12 @@ async function buildLocalSyncBundle() {
   };
 }
 
-function shouldApplyIncomingProfile(existing, incoming) {
-  if (!existing) return true;
-  const inName = cleanStr(incoming?.name || incoming?.displayName);
-  const inAvatar = cleanStr(incoming?.avatarUrl || incoming?.avatar);
-  const inBio = cleanStr(incoming?.bio);
-  if (!hasCardChanges(existing, inName, inAvatar, inBio)) return false;
-  if (inName && !existing.name) return true;
-  if (inAvatar && !existing.avatarUrl) return true;
-  return hydrate.itemTimestamp(incoming) > hydrate.itemTimestamp(existing);
-}
-
-function hydrateProfiles(profiles) {
+/** Cartões da memória central passam pela mesma regra da malha: só entra o cartão assinado pelo dono. */
+async function hydrateProfiles(profiles) {
   if (!Array.isArray(profiles)) return 0;
   let added = 0;
   for (const card of profiles) {
-    const routeId = String(card?.routeId || card?.author || "").trim();
-    if (!routeId || !profileDirectory.hasChosenCardName({ name: card.name || card.displayName, routeId })) continue;
-    const existing = profileDirectory.getProfileCard(routeId);
-    if (shouldApplyIncomingProfile(existing, card)) {
-      const normalized = {
-        ...card,
-        name: card.name || card.displayName || existing?.name || "",
-        discoverable: card.discoverable !== false,
-      };
-      profileDirectory.setProfileCard(routeId, normalized);
-      added += 1;
-    }
+    if (await gossipProfile.applyDirectoryProfileCard(card)) added += 1;
   }
   return added;
 }
@@ -305,7 +285,7 @@ async function applyRemoteBundle(remote) {
     const blobsByHash = await hydrate.hydrateBlobs(remote.blobs);
     const tombCount = await hydrate.hydrateTombstones(remote.tombstones);
     const postCount = await hydrate.hydratePosts(afterGenesis(remote.posts), blobsByHash, upsertAuthorCard);
-    const profCount = hydrateProfiles(afterGenesis(remote.profiles));
+    const profCount = await hydrateProfiles(afterGenesis(remote.profiles));
     return tombCount + postCount + profCount;
   } finally {
     hydratingDepth = Math.max(0, hydratingDepth - 1);
