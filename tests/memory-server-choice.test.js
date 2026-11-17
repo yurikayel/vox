@@ -3,7 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import * as choice from "../client/js/memory-server-choice.js";
 import * as centralMemory from "../client/js/central-memory.js";
-import * as oauthVault from "../client/js/oauth-vault.js";
+import * as oauthVault from "../client/js/vault/index.js";
 import { renderSyncFormHtml } from "../client/js/app/screens-sync.js";
 
 const EVIL = "https://memoria.exemplo.org";

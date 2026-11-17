@@ -8,8 +8,9 @@
  * v1 (legado, só leitura): mantido para abrir links e cofres antigos uma última vez e migrar.
  */
 
-import { b64UrlToBytes, bytesToB64Url } from "./signed-verify.js";
+import { b64UrlToBytes, bytesToB64Url } from "../signed-verify.js";
 
+/** Iterações do PBKDF2-SHA256 que derivam a chave do cofre v2 (PM-90). */
 export const VAULT_V2_ITERATIONS = 600_000;
 const MIN_ITERATIONS = 100_000;
 const MAX_ITERATIONS = 5_000_000;
@@ -38,12 +39,22 @@ export function buildVaultSecret(passphrase, email = "") {
   return normEmail ? `${normEmail}:${cleanPass}` : cleanPass;
 }
 
+/**
+ * Bytes em hexadecimal minúsculo.
+ * @param {ArrayBuffer|Uint8Array} buf
+ * @returns {string}
+ */
 export function bufferToHex(buf) {
   return Array.from(new Uint8Array(buf))
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
 }
 
+/**
+ * Hexadecimal em bytes.
+ * @param {string} hex
+ * @returns {Uint8Array}
+ */
 export function hexToBytes(hex) {
   const clean = String(hex || "");
   const bytes = new Uint8Array(clean.length / 2);
@@ -126,12 +137,21 @@ async function decryptWithKey(record, key) {
   return JSON.parse(new TextDecoder().decode(plain));
 }
 
+/**
+ * Registro no formato v2: tem sal e iterações dentro da faixa aceita (fora dela, recusa).
+ * @param {object} record registro do cofre
+ * @returns {boolean}
+ */
 export function isV2Record(record) {
   const iter = Number(record?.iter);
   return record?.v === 2 && Boolean(record.salt) && iter >= MIN_ITERATIONS && iter <= MAX_ITERATIONS;
 }
 
-/** Cofre que o dono revogou (marca gravada por cima do registro antigo). */
+/**
+ * Cofre que o dono revogou (marca gravada por cima do registro antigo).
+ * @param {object} record registro do cofre
+ * @returns {boolean}
+ */
 export function isRevokedRecord(record) {
   return Boolean(record?.revoked);
 }
@@ -165,14 +185,33 @@ export async function decryptVaultRecord(record, passphrase, email = "") {
 
 // ---- v1 (legado): endereço e chave saíam do próprio segredo. Só leitura e revogação. ----
 
+/**
+ * Endereço de um cofre v1: SHA-256 do próprio segredo (por isso o v1 é só lido e revogado).
+ * @param {string} secret senha ou `sub` do login social
+ * @param {string} provider "passphrase", "google" ou "meta"
+ * @returns {Promise<string>} endereço em hexadecimal
+ */
 export async function legacyLookupKey(secret, provider) {
   return bufferToHex(await crypto.subtle.digest("SHA-256", utf8(`vox-vault-v1:${provider}:${secret}`)));
 }
 
+/**
+ * Chave AES de um cofre v1, derivada do próprio segredo.
+ * @param {string} secret senha ou `sub` do login social
+ * @param {string} provider "passphrase", "google" ou "meta"
+ * @returns {Promise<CryptoKey>}
+ */
 export async function deriveLegacyKey(secret, provider) {
   return deriveAesKey(secret, utf8(`vox-sovereign-vault:${provider}:${secret}`), LEGACY_ITERATIONS);
 }
 
+/**
+ * Abre um cofre v1 uma última vez (para migrar); revogado ou v2 devolve null.
+ * @param {object} record registro v1
+ * @param {string} secret senha ou `sub` do login social
+ * @param {string} provider "passphrase", "google" ou "meta"
+ * @returns {Promise<object|null>} conteúdo aberto
+ */
 export async function decryptLegacyRecord(record, secret, provider) {
   if (!record?.iv || !record?.ciphertext || isRevokedRecord(record) || record.v === 2) return null;
   return decryptWithKey(record, await deriveLegacyKey(secret, provider));

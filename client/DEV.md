@@ -1132,7 +1132,7 @@ OAuth e compartilhamento nativo citam provedores apenas onde exigido por integra
 **Data:** 2026-11-05 · **SW:** `vox-pwa-v7.20-real-network-audio-video-upload` · **Testes:** 751 testes verdes.
 
 - **Docs:** `docs/adr/014-zero-knowledge-vault-recuperacao-soberana.md`.
-- **Módulos:** `client/js/oauth-vault.js`, `client/js/oauth-profile.js`, `client/js/local-account.js`, `client/js/people-index.js`, `client/js/qr-url-codec.js`.
+- **Módulos:** `client/js/vault/` (porta `vault/index.js`; ADR-035), `client/js/oauth-profile.js`, `client/js/local-account.js`, `client/js/people-index.js`, `client/js/qr-url-codec.js`.
 - **Cofre de Conhecimento Zero:**
   - Derivação PBKDF2 (50.000 iterações) e cifra AES-GCM-256 no cliente a partir de identificadores perenes: Google (`sub`), Meta (`profile.id`) ou **Senha Soberana** (sem Big Tech).
   - O servidor/relay (`zero-central-memory` / `relay/central_memory.py`) armazena apenas hash SHA-256 e ciphertext — servidores nunca têm custódia nem acesso a chaves privadas.

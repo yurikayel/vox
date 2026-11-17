@@ -102,7 +102,7 @@ async function submitBackupWizard() {
   const out = document.getElementById("bk-result");
   if (btn) btn.disabled = true;
   try {
-    const { savePassphraseVault } = await import("../oauth-vault.js");
+    const { savePassphraseVault } = await import("../vault/index.js");
     const pass = document.getElementById("bk-pass")?.value || "";
     const res = await savePassphraseVault(pass, readBackupVaultOptions());
     reportVaultResult(out, res, pass);

@@ -9,7 +9,7 @@ import * as cryptoDm from "./crypto-dm.js";
 import { exportAccountBundle, importAccountBundle } from "./account-backup.js";
 import { unwrapBackup } from "./account-backup-wrap.js";
 import * as localAccount from "./local-account.js";
-import { decryptVaultRecord, encryptVaultV2 } from "./vault-crypto.js";
+import { decryptVaultRecord, encryptVaultV2 } from "./vault/envelope.js";
 import * as ownPosts from "./own-posts.js";
 import * as accountExit from "./account-exit.js";
 import { getLocalIdentityMeta, setLocalIdentityMeta } from "./profile-identity-meta.js";

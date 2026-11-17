@@ -1,16 +1,16 @@
 /**
- * @module oauth-vault
+ * @module vault/oauth-vault
  * Cofre de recuperação da identidade (routeId + chave P-256 + nome, enriquecimento, Pix).
  *
  * PM-90 — formato v2 (`vault-crypto.js`): o cofre só abre com a Senha Soberana. Login com Google ou Meta
  * não é chave de nada: ele só enriquece o perfil e reencontra contas que já estão neste aparelho.
- * Cofres v1 são lidos uma última vez para não deixar ninguém sem a conta, cifrados de novo quando há
+ * A API pública do cofre sai por `vault/index.js`. Cofres v1 são lidos uma última vez para não deixar ninguém sem a conta, cifrados de novo quando há
  * senha, e revogados (`vault-legacy.js`).
  */
 
-import * as localAccount from "./local-account.js";
-import * as share from "./share.js";
-import { getCentralMemoryUrls } from "./central-memory.js";
+import * as localAccount from "../local-account.js";
+import * as share from "../share.js";
+import { getCentralMemoryUrls } from "../central-memory.js";
 import { cleanupSupersededIdentity, isValidAccountBundle } from "./passphrase-vault.js";
 import {
   findEncryptedVaultRecord,
@@ -28,11 +28,11 @@ import {
   revokeLegacyVaults,
 } from "./vault-legacy.js";
 
-export { encodeVaultBundleForUrl, decodeVaultBundleFromUrl } from "./vault-crypto.js";
-export { fetchRemoteVaultRecord, saveRemoteVaultRecord } from "./vault-store.js";
-export { VAULT_PASSPHRASE_MIN, buildQrSyncRecord, restoreFromPassphraseVault, savePassphraseVault } from "./passphrase-vault.js";
 
-/** Revoga os cofres v1 que este aparelho conhece. Roda na abertura do app. */
+/**
+ * Revoga os cofres v1 que este aparelho conhece. Roda na abertura do app.
+ * @returns {Promise<number>} quantos cofres v1 locais foram revogados
+ */
 export function runLegacyVaultMigration() {
   return migrateLegacyVaults({
     enrichment: localAccount.getProfileEnrichment(),
@@ -41,10 +41,15 @@ export function runLegacyVaultMigration() {
   });
 }
 
+/** Aviso mostrado uma vez depois que um cofre v1 foi desativado. */
 export const LEGACY_VAULT_NOTICE =
   "Atualizamos a proteção do cofre de recuperação e o cofre antigo foi desativado. Para recuperar a conta em outro aparelho, crie a Senha Soberana de novo em Perfil → Backup.";
 
-/** Abertura do app: migra e avisa a pessoa uma vez, se um cofre antigo foi desativado. */
+/**
+ * Abertura do app: migra e avisa a pessoa uma vez, se um cofre antigo foi desativado.
+ * @param {(text: string, kind?: string) => void} [toast] como avisar (padrão: toast do app)
+ * @returns {Promise<void>}
+ */
 export async function startVaultMigration(toast = share.showToast) {
   await runLegacyVaultMigration();
   if (consumeLegacyRevokedNotice()) toast(LEGACY_VAULT_NOTICE, "info");
@@ -119,6 +124,12 @@ async function bindLocalAccountToLogin(profile, provider) {
   return { restored: Boolean(localBundle), routeId, displayName: name };
 }
 
+/**
+ * Login social: abre o cofre v1 desse login, se ainda houver (uma última vez, e revoga); se não, vincula o login à
+ * conta deste aparelho. Login não é chave de nada (PM-90): só reencontra e enriquece.
+ * @param {{ provider?: "google"|"meta", sub: string, email?: string, name?: string, picture?: string }} profile perfil do login
+ * @returns {Promise<{ restored: boolean, routeId?: string, displayName?: string, legacyVault?: boolean }>}
+ */
 export async function restoreOrBindOAuthIdentity({ provider = "google", sub, email, name, picture }) {
   if (!sub) return { restored: false };
   const profile = { sub, email, name, picture };
@@ -126,10 +137,20 @@ export async function restoreOrBindOAuthIdentity({ provider = "google", sub, ema
   return legacy || bindLocalAccountToLogin(profile, provider);
 }
 
+/**
+ * `restoreOrBindOAuthIdentity` para o Google.
+ * @param {{ sub: string, email?: string, name?: string, picture?: string }} profile perfil do login
+ * @returns {Promise<{ restored: boolean, routeId?: string, displayName?: string, legacyVault?: boolean }>}
+ */
 export async function restoreOrBindGoogleIdentity({ sub, email, name, picture }) {
   return restoreOrBindOAuthIdentity({ provider: "google", sub, email, name, picture });
 }
 
+/**
+ * `restoreOrBindOAuthIdentity` para a Meta.
+ * @param {{ sub: string, email?: string, name?: string, picture?: string }} profile perfil do login
+ * @returns {Promise<{ restored: boolean, routeId?: string, displayName?: string, legacyVault?: boolean }>}
+ */
 export async function restoreOrBindMetaIdentity({ sub, email, name, picture }) {
   return restoreOrBindOAuthIdentity({ provider: "meta", sub, email, name, picture });
 }
