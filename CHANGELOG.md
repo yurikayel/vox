@@ -6,6 +6,12 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Dívida: camadas zeradas (ADR-035)
+- `post-more-menu.js` e `post-more-actions.js` (menu ⋯ das publicações) abrem a folha, ligam os cliques e disparam fluxos: são controle, não montagem de HTML. Foram de `render/` para `app/` sem mudar a lógica (só caminhos de import).
+- `moderation.js` não importa mais `app/natural-mod-flow.js`: ganha `setNaturalHideLoader(fn)`, e o `app.js` liga o carregador do moderador natural na partida, ainda sob demanda e atrás da flag de laboratório. Sem carregador, não há arquivamento natural (como sem a flag).
+- `scripts/layers-debt.json` fica vazio: 8 → 0 imports proibidos; daqui em diante qualquer import que suba de camada reprova o CI.
+- Testes: `tests/moderation-natural-loader.test.js` (novo, 3 casos). 3 testes mudaram só o caminho do arquivo lido. SW `v7.138`.
+
 ### Dívida: dois módulos de tela voltam para `app/` (ADR-035)
 - `inline-composer.js` e `dom-delegates.js` só eram usados pela camada `app` e importavam fluxos dela; foram movidos para `client/js/app/` sem mudar código (só os caminhos de import). A dívida de camadas cai de 11 para 8 imports proibidos (`scripts/layers-debt.json`, `--prune`).
 - Caminhos atualizados no precache do SW, `permaweb-manifest.json`, testes, `docs-debt.json` e links de docs. SW `v7.137`.
