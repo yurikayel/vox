@@ -16,7 +16,7 @@ import * as localAccount from "../identity/index.js";
 import { loadCivicVotes, attachCivicVoteHandlers } from "./civic-actions.js";
 import * as welcomeProfile from "../vox-welcome-profile.js";
 import { getActiveUser, makeShellProps, attachPostShareHandlers } from "./context.js";
-import { attachPostMoreMenuHandlers } from "../render/post-more-menu.js";
+import { attachPostMoreMenuHandlers } from "./post-more-menu.js";
 import { ensureOnboardingSideEffects } from "./onboarding-side-effects.js";
 import { getCommunityLastSeenTs, computeCommunityUnreadCount } from "../community-unread.js";
 import { resolveCommunityMetadata, checkCommunityMembership } from "./screens-community.js";
