@@ -69,6 +69,12 @@ class _MemorySocket:
     def sendall(self, data: bytes) -> None:
         self.sent.extend(data)
 
+    def settimeout(self, value) -> None:
+        self.timeout = value
+
+    def gettimeout(self):
+        return getattr(self, "timeout", None)
+
 
 def _masked_frame(payload: bytes, opcode: int = 1) -> bytes:
     mask = b"\x11\x22\x33\x44"
