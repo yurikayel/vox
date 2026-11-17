@@ -52,7 +52,7 @@ flowchart TB
 ## Malha (gossip) e Sinalização Multi-Nó
 
 - [peers.js](../client/js/peers.js) — BroadcastChannel + WebRTC; GOSSIP / UPDATE / DELETE / WANT / BLOB / PROFILE_CARD_HELLO.
-- [peers-gossip-profile.js](../client/js/peers-gossip-profile.js) — PROFILE_CARD (sem feed, integrado ao diretório).
+- [peers-gossip-profile.js](../client/js/peers-gossip-profile.js) — PROFILE_CARD (sem feed, integrado ao diretório); da sincronização (malha e memória central) só entra o cartão assinado pelo dono (`signedCard`), conferido antes de aplicar.
 - [peers-cache-manifest.js](../client/js/peers-cache-manifest.js) — manifestos de cache assinados.
 - [webrtc-peer.js](../client/js/webrtc-peer.js) — gerenciamento de ciclo de vida RTCDataChannel, rotação automática entre nós sentinela e timeout de negociação de 15s.
 - **Sinalização (lista real em [`client/config/signaling.json`](../client/config/signaling.json)):** fallback automático entre as URLs configuradas:

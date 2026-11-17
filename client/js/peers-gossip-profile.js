@@ -3,6 +3,7 @@
  * Ingest PROFILE_CARD via gossip — persiste em profile-directory, **sem** dispatchGossipPost (feed).
  */
 
+import * as localAccount from "./identity/index.js";
 import * as moderation from "./moderation.js";
 import * as profileCard from "./profile-card.js";
 import * as profileDirectory from "./profile-directory.js";
@@ -42,8 +43,11 @@ export function markProfileCardSeen(item) {
   seenCards.set(item.id, { at: cardTime(item), sig: item.sig });
 }
 
-/** Marca de versão guardada junto do cartão no diretório. */
-export const seenStamp = (item) => ({ gossipCardId: item.id, gossipCardAt: cardTime(item), gossipCardSig: item.sig || "" });
+/**
+ * Marca de versão guardada junto do cartão no diretório, com o próprio cartão assinado (`signedCard`):
+ * é ele que viaja na sincronização (malha e memória central) e é a única coisa que quem recebe aceita.
+ */
+export const seenStamp = (item) => ({ gossipCardId: item.id, gossipCardAt: cardTime(item), gossipCardSig: item.sig || "", signedCard: item });
 
 /**
  * @param {object} item — payload assinado já verificado por verifyPayload
@@ -57,11 +61,12 @@ export async function applyVerifiedProfileCardItem(item) {
 }
 
 function applyProfileCard(item) {
-  if (profileCard.isProfileCardExpired(item)) {
-    if (item?.routeId) profileDirectory.removeProfileCard(item.routeId);
+  // Validar antes de olhar a validade: um cartão vencido só apaga o cartão de quem o assinou.
+  const check = profileCard.validateProfileCardItem(item);
+  if (check.reason === "expired") {
+    profileDirectory.removeProfileCard(item.routeId);
     return true;
   }
-  const check = profileCard.validateProfileCardItem(item);
   if (!check.ok) return false;
   if (!item.discoverable) {
     profileDirectory.removeProfileCard(item.routeId);
@@ -83,34 +88,19 @@ function applyProfileCard(item) {
   return true;
 }
 
-function shouldUpdateDirectoryCard(existing, inName, card) {
-  if (!existing) return true;
-  if (inName && !existing.name) return true;
-  return Number(card.updatedAt) > Number(existing.updatedAt);
-}
-
-function pickCardField(primary, fallback) {
-  return primary ? String(primary).trim() : String(fallback || "").trim();
-}
-
-/** Cartão de diretório sem assinatura (sincronização ao conectar, identidade do par WebRTC). */
-export function applyDirectoryProfileCard(card) {
-  if (!card || typeof card !== "object") return;
-  const routeId = pickCardField(card.routeId, card.author);
-  if (!routeId.startsWith("vx_") || moderation.shouldDropGossip(routeId)) return;
-  const existing = profileDirectory.getProfileCard(routeId);
-  const inName = pickCardField(card.name, card.displayName);
-  if (!shouldUpdateDirectoryCard(existing, inName, card)) return;
-  const ex = existing ? existing : {};
-  const inAvatar = pickCardField(card.avatarUrl, card.avatar);
-  profileDirectory.setProfileCard(routeId, {
-    name: pickCardField(inName, ex.name),
-    avatarUrl: pickCardField(inAvatar, ex.avatarUrl),
-    bio: pickCardField(card.bio, ex.bio),
-    handle: pickCardField(card.handle, ex.handle),
-    pronouns: pickCardField(card.pronouns, ex.pronouns),
-    gender: pickCardField(card.gender, ex.gender),
-    orientation: pickCardField(card.orientation, ex.orientation),
-    discoverable: card.discoverable !== false,
-  });
+/**
+ * Cartão de diretório que chega da sincronização (malha ao conectar ou memória central). Só vale o cartão
+ * assinado que ele carrega (`signedCard`), conferido pela chave do próprio dono; os campos soltos do diretório
+ * (nome, foto, bio) não são confiados, porque qualquer par ou servidor poderia escrevê-los para outra conta.
+ *
+ * @param {object} card Entrada de diretório recebida (`routeId` + `signedCard`).
+ * @returns {Promise<boolean>} true se o cartão assinado era novo e foi aplicado.
+ */
+export async function applyDirectoryProfileCard(card) {
+  const signed = card?.signedCard;
+  if (!signed || typeof signed !== "object") return false;
+  const routeId = String(card.routeId || card.author || "").trim();
+  if (!routeId || signed.routeId !== routeId || moderation.shouldDropGossip(routeId)) return false;
+  if (!(await localAccount.verifyPayload(signed))) return false;
+  return applyVerifiedProfileCardItem(signed);
 }
