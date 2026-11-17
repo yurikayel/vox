@@ -1,6 +1,6 @@
 # ADR-035: Camadas e contextos no cliente — importar só para baixo, uma porta de entrada por assunto
 
-**Status:** proposed (2026-11-17; a regra de camadas já roda no CI como catraca) · **Revisado:** 2026-11-17 · **Relacionados:** [ADR-007](./007-zero-complexity-monolith-decomposition.md), [HARDENING](../HARDENING.md), [documentação](../process/documentacao.md)
+**Status:** proposed (2026-11-17; a regra de camadas já roda no CI como catraca) · **Revisado:** 2026-11-17 (`vault/` movido; segunda porta) · **Relacionados:** [ADR-007](./007-zero-complexity-monolith-decomposition.md), [HARDENING](../HARDENING.md), [documentação](../process/documentacao.md)
 
 ## 1. Contexto
 
@@ -59,7 +59,13 @@ Assim a lista só pode diminuir. Quando chegar a zero, o arquivo fica vazio e a 
    4. `net/` (malha, WebRTC, sinalização);
    5. `qr/`.
 
-   Cada mudança move os arquivos com `git mv`, atualiza imports e `SHELL_ASSETS` e acrescenta a regra "só pela porta" à auditoria daquela pasta.
+   Cada mudança move os arquivos com `git mv`, atualiza imports e `SHELL_ASSETS` e acrescenta a regra "só pela porta" à auditoria daquela pasta (`CONTEXT_DOORS` em `scripts/layers-lib.mjs`).
+
+   **Mais de uma porta, só com motivo escrito.** Uma pasta pode ter uma segunda porta quando ela expõe uma primitiva de nível mais baixo e passar pelo `index.js` criaria um ciclo de imports. Cada porta fica listada em `CONTEXT_DOORS` e explica, no cabeçalho, por que existe.
+
+   **`vault/` (feito):** `vault-crypto`, `vault-store`, `vault-legacy`, `passphrase-vault` e `oauth-vault` estão em `client/js/vault/`. Portas:
+   - `vault/index.js`: migração dos cofres v1, login social, Senha Soberana, cofre no link e servidores de memória;
+   - `vault/envelope.js`: só cifrar e abrir um registro (`encryptVaultV2`, `decryptVaultRecord`). Existe porque `key-lock.js` e `inbox-backup.js` (conta) usam a cifra, e importá-la pelo `index.js` fecharia o ciclo `vault/index → passphrase-vault → local-account → key-lock → vault/index`.
 3. **Caminhos únicos.** Uma operação que mexe em estado de conta tem uma função dona, e os outros módulos passam por ela:
    - trocar de conta: `importLocalAccountBundle`;
    - gravar e aposentar o cofre: `savePassphraseVault` e `supersededVaults`;

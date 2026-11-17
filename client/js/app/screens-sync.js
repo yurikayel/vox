@@ -46,7 +46,7 @@ export function renderSyncFormHtml({ legacyPassphrase = false, hasBundle = true 
 }
 
 async function restoreWith(pass, bundle, email = "") {
-  const { restoreFromPassphraseVault, decodeVaultBundleFromUrl } = await import("../oauth-vault.js");
+  const { restoreFromPassphraseVault, decodeVaultBundleFromUrl } = await import("../vault/index.js");
   const directRecord = bundle ? decodeVaultBundleFromUrl(bundle) : null;
   const res = await restoreFromPassphraseVault(pass, null, directRecord, email);
   if (res.ok) {

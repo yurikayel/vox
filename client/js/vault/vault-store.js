@@ -6,7 +6,7 @@
  * quem decide o que gravar é `oauth-vault.js` (ADR-032 §6.3).
  */
 
-import { getCentralMemoryUrls } from "./central-memory.js";
+import { getCentralMemoryUrls } from "../central-memory.js";
 import { deriveVaultAddress, isRevokedRecord, legacyLookupKey } from "./vault-crypto.js";
 import { LEGACY_VAULT_PREFIX } from "./vault-legacy.js";
 

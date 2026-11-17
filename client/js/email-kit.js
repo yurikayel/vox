@@ -8,9 +8,9 @@
 
 import * as accountExit from "./account-exit.js";
 import * as localAccount from "./local-account.js";
-import * as oauthVault from "./oauth-vault.js";
+import * as oauthVault from "./vault/index.js";
 import * as share from "./share.js";
-import { decodeVaultBundleFromUrl, encodeVaultBundleForUrl, normalizeVaultEmail } from "./vault-crypto.js";
+import { decodeVaultBundleFromUrl, encodeVaultBundleForUrl, normalizeVaultEmail } from "./vault/index.js";
 
 /** Prefixo do código cifrado colável em "Já tenho conta". */
 export const VOX_KIT_PREFIX = "VOX1:";
