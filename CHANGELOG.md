@@ -6,6 +6,11 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Testes: base do plano para código feito por IA (PM-110)
+- **CODEOWNERS sem caminho morto:** 8 linhas apontavam para arquivos que mudaram para `client/js/identity/` e `client/js/vault/` e não marcavam mais nada como sensível. Agora marcam as duas pastas, mais `sig-format.js`; `tests/codeowners-paths.test.js` reprova caminho que não existe.
+- **[TESTES.md](./docs/TESTES.md):** nova §3.3 (o Tier A dos testes são as linhas de `client/js/` do CODEOWNERS) e a §4 conferida com o `ci.yml` (job `e2e-mesh`, Python 3.15, CodeQL, e o ESLint do CI não cobre `tests/`).
+- **ROADMAP:** PM-111…PM-115 abertos (vermelho na base, mutação no diff do Tier A, smokes no `e2e-mesh`, contratos, higiene dos testes). Sem mudança no cliente nem no SW.
+
 ### Dívida: camadas zeradas (ADR-035)
 - `post-more-menu.js` e `post-more-actions.js` (menu ⋯ das publicações) abrem a folha, ligam os cliques e disparam fluxos: são controle, não montagem de HTML. Foram de `render/` para `app/` sem mudar a lógica (só caminhos de import).
 - `moderation.js` não importa mais `app/natural-mod-flow.js`: ganha `setNaturalHideLoader(fn)`, e o `app.js` liga o carregador do moderador natural na partida, ainda sob demanda e atrás da flag de laboratório. Sem carregador, não há arquivamento natural (como sem a flag).

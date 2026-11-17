@@ -1,18 +1,15 @@
 # PM-95 — quem precisa aprovar mudança em código de cripto, chaves, cofre e relay.
 # Só vale como bloqueio quando o ruleset do `main` exige revisão de code owner (ver docs/HARDENING.md).
 # Regra geral: o mantenedor revisa tudo; as linhas abaixo deixam explícito o que é sensível.
+# As linhas de client/js/ definem também o Tier A dos testes (docs/TESTES.md §3.3). Todo caminho precisa existir:
+# tests/codeowners-paths.test.js reprova caminho morto (ex.: arquivo movido para identity/ ou vault/).
 
 *                                   @yurikayel
 
-/client/js/local-account.js         @yurikayel
-/client/js/account-backup.js        @yurikayel
-/client/js/oauth-vault.js           @yurikayel
-/client/js/vault-crypto.js          @yurikayel
-/client/js/vault-legacy.js          @yurikayel
+/client/js/identity/                @yurikayel
+/client/js/vault/                   @yurikayel
 /client/js/crypto-dm.js             @yurikayel
-/client/js/keystore.js              @yurikayel
-/client/js/key-lock.js              @yurikayel
-/client/js/key-at-rest.js           @yurikayel
+/client/js/sig-format.js            @yurikayel
 /client/js/inbox.js                 @yurikayel
 /client/sw.js                       @yurikayel
 /client/_headers                    @yurikayel
