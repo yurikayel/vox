@@ -279,6 +279,21 @@ test("quem guarda estava fora: o pedido espera na caixa e é visto quando o app 
   assert.equal((await collect(w, device)).ok, true);
 });
 
+test("relógio de quem guarda volta no tempo depois de ver o pedido: não entrega antes de 24 h de verdade nem quebra (LT-05)", async () => {
+  const { w, owner, holders } = await ownerWithHolders(1);
+  const device = await newDevice(w);
+  assert.equal(await tickAll(w, holders), 0, "viu o pedido e avisou");
+  const firstSeen = w.now;
+  w.now -= 3 * HOUR; // relógio do aparelho de quem guarda acertado para trás
+  assert.equal(await tickAll(w, holders), 0, "com o relógio atrás do firstSeen, só espera");
+  w.now = firstSeen + 24 * HOUR - 3 * HOUR - 1; // 24 h de verdade menos 1 ms; o relógio marca 3 h a menos
+  assert.equal(await tickAll(w, holders), 0, "pelo relógio dele ainda não fez 24 h");
+  assert.equal(w.dms.filter((d) => d.to === owner).length, 1, "o pedido já visto não gera aviso de novo");
+  w.now = firstSeen + 24 * HOUR;
+  assert.equal(await tickAll(w, holders), 1, "completa 24 h no relógio de quem guarda e entrega");
+  assert.equal((await collect(w, device)).ok, true);
+});
+
 test("a resposta só abre com a chave temporária do aparelho que pediu", async () => {
   const { w, holders } = await ownerWithHolders(1);
   await newDevice(w);
