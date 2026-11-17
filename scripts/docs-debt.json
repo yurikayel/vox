@@ -1,12 +1,5 @@
 {
  "_leia": "Dívida de documentação medida em 2026-11-11 por scripts/docs-audit.mjs (catraca: só diminui). Cada chave é um arquivo; cada item, um achado: header, jsdoc:<export>, param:<função>:<parâmetro>, returns:<função>, link:<alvo>, orphan. Para pagar: documente e rode `npm run audit:docs -- --prune`. Nunca acrescente item à mão para fazer um achado novo passar: a norma é docs/process/documentacao.md.",
- "client/js/account-backup-wrap.js": [
-  "jsdoc:KIND_PLAIN",
-  "jsdoc:KIND_WRAPPED",
-  "jsdoc:wrapBackup",
-  "jsdoc:unwrapBackup",
-  "jsdoc:peekBackupKind"
- ],
  "client/js/age-gate.js": [
   "jsdoc:AGE_STORAGE_KEY",
   "jsdoc:AGE_CHECKBOX_ID",
@@ -965,45 +958,6 @@
   "jsdoc:broadcastAndPersistInlineTopic",
   "jsdoc:attachInlineComposerHandlers"
  ],
- "client/js/key-at-rest.js": [
-  "param:sealKeysAtRest:storage",
-  "returns:sealKeysAtRest",
-  "returns:startKeysAtRest"
- ],
- "client/js/key-lock.js": [
-  "param:signingKey:atRest",
-  "returns:signingKey",
-  "param:dmPrivateKey:atRest",
-  "returns:dmPrivateKey",
-  "param:lockKeys:#1",
-  "param:lockKeys:passphrase",
-  "returns:lockKeys",
-  "param:openLockedCopy:routeId",
-  "param:openLockedCopy:passphrase",
-  "returns:openLockedCopy",
-  "param:forgetLockedAccount:routeId",
-  "jsdoc:__resetKeyLockForTests"
- ],
- "client/js/keystore.js": [
-  "jsdoc:SEALED_TAG",
-  "jsdoc:LOCKED_TAG",
-  "jsdoc:KeystoreUnavailableError",
-  "param:loadKey:id",
-  "returns:loadKey",
-  "param:storeKey:id",
-  "param:storeKey:key",
-  "returns:storeKey",
-  "jsdoc:removeKey",
-  "returns:getDeviceKey",
-  "jsdoc:isSealed",
-  "jsdoc:isLocked",
-  "param:sealJson:value",
-  "returns:sealJson",
-  "param:openSealed:value",
-  "returns:openSealed",
-  "returns:requestPersistentStorage",
-  "jsdoc:__resetKeystoreForTests"
- ],
  "client/js/kit-genesis.js": [
   "jsdoc:deepFreeze",
   "jsdoc:KIT_BAIRRO",
@@ -1100,34 +1054,6 @@
   "jsdoc:normalizeListingStatus",
   "jsdoc:formatListingStatus",
   "jsdoc:validateListingInput"
- ],
- "client/js/local-account.js": [
-  "param:storeActiveAccount:acc",
-  "returns:storeActiveAccount",
-  "jsdoc:ensureLocalAccount",
-  "jsdoc:getRouteId",
-  "jsdoc:getCachedRouteIdSync",
-  "jsdoc:getDisplayName",
-  "jsdoc:setDisplayName",
-  "jsdoc:getProfileEnrichment",
-  "jsdoc:setProfileEnrichment",
-  "jsdoc:clearProfileEnrichment",
-  "jsdoc:getPixKey",
-  "jsdoc:setPixKey",
-  "jsdoc:clearPixKey",
-  "jsdoc:signPayload",
-  "jsdoc:getMeshDiscoverable",
-  "jsdoc:setMeshDiscoverable",
-  "returns:wipeLocalAccount",
-  "jsdoc:syncActiveAccountToVault",
-  "jsdoc:deduplicateVaultAccounts",
-  "jsdoc:findVaultAccountByOAuth",
-  "jsdoc:isAccountDisposable",
-  "jsdoc:listVaultAccountsSync",
-  "jsdoc:listVaultAccounts",
-  "jsdoc:switchActiveAccount",
-  "jsdoc:createAdditionalAccount",
-  "jsdoc:removeVaultAccount"
  ],
  "client/js/media-blob.js": [
   "header",

@@ -5,9 +5,9 @@
  * de novo e o endereço antigo é revogado. `oauth-vault.js` reexporta a API pública deste módulo.
  */
 
-import * as localAccount from "../local-account.js";
+import * as localAccount from "../identity/index.js";
 import * as profileDirectory from "../profile-directory.js";
-import * as accountExit from "../account-exit.js";
+import * as accountExit from "../identity/index.js";
 import {
   VAULT_STORAGE_PREFIX,
   findVaultRecordWithStatus,

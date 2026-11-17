@@ -12,12 +12,12 @@
  * @see client/js/guardian-return.js
  */
 
-import * as ret from "../guardian-return.js";
+import * as ret from "../identity/index.js";
 
 async function defaultDeps() {
   const [cryptoDm, inbox, keystore, guardians, localAccount, phrase] = await Promise.all([
-    import("../crypto-dm.js"), import("../inbox.js"), import("../keystore.js"), import("../guardians.js"),
-    import("../local-account.js"), import("../account-phrase.js"),
+    import("../crypto-dm.js"), import("../inbox.js"), import("../identity/index.js"), import("../identity/index.js"),
+    import("../identity/index.js"), import("../identity/index.js"),
   ]);
   return {
     getMe: () => localAccount.getRouteId(),

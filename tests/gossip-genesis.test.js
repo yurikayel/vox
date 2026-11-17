@@ -6,7 +6,7 @@ import "../tests/setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import * as cacheNode from "../client/js/cache-node.js";
-import * as localAccount from "../client/js/local-account.js";
+import * as localAccount from "../client/js/identity/local-account.js";
 import * as peers from "../client/js/peers.js";
 import { GENESIS_MS } from "../client/js/genesis.js";
 import { TEST_ROUTE_IDS } from "../client/js/data/test-route-ids.js";

@@ -10,7 +10,7 @@
  * Vetores fixos em `tests/recovery-phrase.test.js`.
  */
 
-import { BIP39_PT } from "./data/bip39-pt.js";
+import { BIP39_PT } from "../data/bip39-pt.js";
 import { bigIntTo32Bytes, bytesToBigInt, N, publicPoint, scalarFromBytes } from "./p256.js";
 
 /** Tamanho da semente das contas novas, em bytes. */

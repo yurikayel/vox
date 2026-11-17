@@ -2,7 +2,7 @@
 
 import * as photoTags from "../photo-tags.js";
 import * as cacheNode from "../cache-node.js";
-import * as localAccount from "../local-account.js";
+import * as localAccount from "../identity/index.js";
 import * as postOwnership from "../post-ownership.js";
 
 export async function persistPhotoTags(postId, tags) {

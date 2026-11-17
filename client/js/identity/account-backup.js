@@ -19,7 +19,7 @@ import {
   setMeshDiscoverable,
 } from "./local-account.js";
 import { markAccountExit } from "./account-exit.js";
-import { getLocalIdentityMeta, setLocalIdentityMeta } from "./profile-identity-meta.js";
+import { getLocalIdentityMeta, setLocalIdentityMeta } from "../profile-identity-meta.js";
 
 export { KIND_PLAIN, KIND_WRAPPED, peekBackupKind } from "./account-backup-wrap.js";
 

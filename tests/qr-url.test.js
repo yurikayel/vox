@@ -9,7 +9,7 @@ import * as share from "../client/js/share.js";
 import * as render from "../client/js/render.js";
 import { versionBits } from "../client/js/qr-url-layout.js";
 import { QR_MAX_BYTES, countBits } from "../client/js/qr-url-codec.js";
-import * as guardianReturn from "../client/js/guardian-return.js";
+import * as guardianReturn from "../client/js/identity/guardian-return.js";
 import * as renderGuardianReturn from "../client/js/render/guardian-return.js";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "client");

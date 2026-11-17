@@ -2,7 +2,7 @@
 
 import * as render from "../render.js";
 import * as share from "../share.js";
-import * as localAccount from "../local-account.js";
+import * as localAccount from "../identity/index.js";
 import * as oauthProfile from "../oauth-profile.js";
 import * as emailKit from "../email-kit.js";
 import { bindEmailEntryForm, handleRestoreFailure, readRestoreInputs } from "./onboarding-email.js";

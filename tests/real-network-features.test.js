@@ -12,7 +12,7 @@ globalThis.document = {
   createElement: (tag) => ({ tagName: tag, innerHTML: "" }),
 };
 
-const localAccount = await import("../client/js/local-account.js");
+const localAccount = await import("../client/js/identity/local-account.js");
 const profileDirectory = await import("../client/js/profile-directory.js");
 const inlineComposer = await import("../client/js/inline-composer.js");
 const renderFeed = await import("../client/js/render/feed.js");

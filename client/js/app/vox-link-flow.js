@@ -6,7 +6,7 @@ import { renderInviteCardHtml } from "../render/vox-link.js";
 
 async function defaultDeps() {
   const [localAccount, cacheNode, peers] = await Promise.all([
-    import("../local-account.js"), import("../cache-node.js"), import("../peers.js"),
+    import("../identity/index.js"), import("../cache-node.js"), import("../peers.js"),
   ]);
   return {
     getAccount: () => localAccount.ensureLocalAccount(),

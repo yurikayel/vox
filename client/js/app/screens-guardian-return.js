@@ -6,7 +6,7 @@
 import * as render from "../render.js";
 import * as share from "../share.js";
 import * as contacts from "../contacts.js";
-import * as guardians from "../guardians.js";
+import * as guardians from "../identity/index.js";
 import { skipOAuthEnrichment } from "../oauth-profile.js";
 import { getAuthorAvatarSync, getAuthorDisplaySync } from "../profile-directory.js";
 import { shortId } from "../short-id.js";

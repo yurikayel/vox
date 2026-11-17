@@ -1,5 +1,5 @@
 /** Pessoa de teste com chave própria, assinando como o `signPayload` do app. */
-import { computeRouteId } from "../client/js/local-account.js";
+import { computeRouteId } from "../client/js/identity/local-account.js";
 
 const b64url = (buf) => Buffer.from(buf).toString("base64url");
 const canonical = ({ sig: _s, pubKey: _p, ...rest }) => JSON.stringify(rest, Object.keys(rest).sort());

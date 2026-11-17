@@ -3,7 +3,9 @@
  * Plaintext permanece kind vox-account-backup; cifrado usa vox-account-backup-wrapped.
  */
 
+/** `kind` do arquivo de soberania em claro. */
 export const KIND_PLAIN = "vox-account-backup";
+/** `kind` do arquivo de soberania cifrado por senha. */
 export const KIND_WRAPPED = "vox-account-backup-wrapped";
 const WRAP_ITER = 210000;
 
@@ -57,6 +59,12 @@ async function deriveWrapKey(passphrase, salt, usages, iterations) {
   );
 }
 
+/**
+ * Cifra o arquivo de soberania com uma senha (PBKDF2-SHA256 + AES-GCM-256).
+ * @param {object} plainObj arquivo em claro (`kind: KIND_PLAIN`)
+ * @param {string} passphrase senha escolhida pela pessoa
+ * @returns {Promise<object>} envelope `kind: KIND_WRAPPED`
+ */
 export async function wrapBackup(plainObj, passphrase) {
   const secret = requireSecret(passphrase, "Informe uma senha para cifrar o arquivo");
   const salt = crypto.getRandomValues(new Uint8Array(16));
@@ -115,12 +123,24 @@ function parseInnerPlain(bytes) {
   return inner;
 }
 
+/**
+ * Abre um arquivo de soberania cifrado por senha.
+ * @param {object} env envelope `kind: KIND_WRAPPED`
+ * @param {string} passphrase senha usada ao cifrar
+ * @returns {Promise<object>} arquivo em claro
+ * @throws {Error} formato inválido ou senha incorreta
+ */
 export async function unwrapBackup(env, passphrase) {
   assertWrappedShape(env);
   const pt = await decryptWrappedBytes(env, passphrase);
   return parseInnerPlain(pt);
 }
 
+/**
+ * Lê o `kind` de um arquivo de soberania sem abri-lo.
+ * @param {string|object} raw texto do arquivo ou objeto já lido
+ * @returns {string} o `kind`, ou "" se não for JSON
+ */
 export function peekBackupKind(raw) {
   if (raw && typeof raw === "object") return raw.kind || "";
   try {

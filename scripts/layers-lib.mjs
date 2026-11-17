@@ -36,10 +36,13 @@ const ALLOWED = {
 
 /**
  * Contextos com porta de entrada (ADR-035 §3.2): fora da pasta, só se importa pelas portas listadas.
- * `vault/envelope.js` é a cifra pura, para quem está abaixo do cofre (identidade) não criar ciclo com `vault/index.js`.
+ * Segunda porta só com motivo escrito no cabeçalho dela:
+ * - `vault/envelope.js` é a cifra pura, para quem está abaixo do cofre (identidade) não criar ciclo com `vault/index.js`;
+ * - `identity/keys.js` é a chave do aparelho e a de DM, para `crypto-dm.js` e `wallet.js` não carregarem a conta inteira.
  */
 export const CONTEXT_DOORS = {
   "vault/": ["vault/index.js", "vault/envelope.js"],
+  "identity/": ["identity/index.js", "identity/keys.js"],
 };
 
 /**

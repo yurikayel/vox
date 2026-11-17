@@ -29,7 +29,7 @@ export function naturalModLabOn(storage = globalThis.localStorage) {
  * @returns {Promise<object[]>} Vínculos válidos deduplicados.
  */
 export async function loadLinks(deps = null) {
-  const [cacheNode, localAccount] = deps ? [null, null] : await Promise.all([import("../cache-node.js"), import("../local-account.js")]);
+  const [cacheNode, localAccount] = deps ? [null, null] : await Promise.all([import("../cache-node.js"), import("../identity/index.js")]);
   const getRecords = deps?.getRecords || (async () => (await cacheNode.getWirePosts()).filter((p) => p.type === VOX_LINK_TYPE));
   const verify = deps?.verify || ((signed) => localAccount.verifyPayload(signed));
   return natural.collectLinks(await getRecords(), verify);
@@ -94,7 +94,7 @@ function bindCases(main, me, rerender) {
  */
 export async function mountMyLinks(main, deps = null) {
   if (!main || !naturalModLabOn(deps?.storage)) return;
-  const me = deps?.me || (await (await import("../local-account.js")).getRouteId());
+  const me = deps?.me || (await (await import("../identity/index.js")).getRouteId());
   const links = await loadLinks(deps);
   const html = renderMyLinksHtml(natural.myLinksModel(links, me)).replace("</details>", `${await casesHtml(links, me, deps)}</details>`);
   main.querySelector(".natural-mod-links")?.remove();
@@ -126,7 +126,7 @@ export async function withPlausibleTime(hides, getPost, now) {
  */
 export async function loadNaturalHideActions(communityId, modActions = [], deps = null) {
   const [cacheNode, localAccount, community] = await Promise.all([
-    import("../cache-node.js"), import("../local-account.js"), import("./screens-community.js"),
+    import("../cache-node.js"), import("../identity/index.js"), import("./screens-community.js"),
   ]);
   const raw = (await cacheNode.getWirePosts()).filter((p) => p.type === natural.NATURAL_HIDE_TYPE && p.communityId === communityId);
   if (!raw.length) return [];

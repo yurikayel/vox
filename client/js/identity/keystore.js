@@ -17,9 +17,12 @@
 const DB_NAME = "vox-keystore";
 const STORE = "vox-keystore";
 const DEVICE_KEY_ID = "device-key-v1";
+/** Marca de valor cifrado pela chave do aparelho (`{ sealed, iv, ct }`). */
 export const SEALED_TAG = "vox-device-v1";
+/** Marca de chave travada pela Senha Soberana (`{ locked, kid }`): só abre pela cópia cifrada. */
 export const LOCKED_TAG = "vox-locked-v1";
 
+/** O navegador não conseguiu abrir as chaves guardadas (IndexedDB indisponível ou chave perdida). */
 export class KeystoreUnavailableError extends Error {
   constructor() {
     super("Não foi possível abrir as chaves guardadas neste aparelho. Recarregue a página e tente de novo.");
@@ -62,7 +65,11 @@ function storeOf(db, mode) {
   return db.transaction(STORE, mode).objectStore(STORE);
 }
 
-/** `CryptoKey` guardada no IndexedDB, ou null. */
+/**
+ * `CryptoKey` guardada no IndexedDB, ou null.
+ * @param {string} id identificador da chave
+ * @returns {Promise<CryptoKey|null>}
+ */
 export async function loadKey(id) {
   const db = await openDb();
   if (!db) return null;
@@ -70,7 +77,12 @@ export async function loadKey(id) {
   return entry?.key || null;
 }
 
-/** Guarda uma `CryptoKey` e devolve a que foi relida (null se não ficou gravada). */
+/**
+ * Guarda uma `CryptoKey` e devolve a que foi relida (null se não ficou gravada).
+ * @param {string} id identificador da chave
+ * @param {CryptoKey} key chave (pode ser não exportável)
+ * @returns {Promise<CryptoKey|null>}
+ */
 export async function storeKey(id, key) {
   const db = await openDb();
   if (!db) return null;
@@ -78,6 +90,11 @@ export async function storeKey(id, key) {
   return loadKey(id);
 }
 
+/**
+ * Apaga uma chave do IndexedDB (sem erro se não existir ou se o banco não abrir).
+ * @param {string} id identificador da chave
+ * @returns {Promise<void>}
+ */
 export async function removeKey(id) {
   const db = await openDb();
   if (db) await requestToPromise(storeOf(db, "readwrite").delete(id));
@@ -90,7 +107,10 @@ async function loadOrCreateDeviceKey() {
   return storeKey(DEVICE_KEY_ID, key);
 }
 
-/** Chave do aparelho, ou null se este navegador não consegue guardá-la. Falha não fica em cache. */
+/**
+ * Chave do aparelho, ou null se este navegador não consegue guardá-la. Falha não fica em cache.
+ * @returns {Promise<CryptoKey|null>}
+ */
 export function getDeviceKey() {
   if (!devicePromise) {
     devicePromise = loadOrCreateDeviceKey()
@@ -103,15 +123,29 @@ export function getDeviceKey() {
   return devicePromise;
 }
 
+/**
+ * Valor cifrado pela chave do aparelho?
+ * @param {unknown} value valor guardado
+ * @returns {boolean}
+ */
 export function isSealed(value) {
   return Boolean(value && typeof value === "object" && value.sealed === SEALED_TAG && value.iv && value.ct);
 }
 
+/**
+ * Referência de chave travada pela Senha Soberana?
+ * @param {unknown} value valor guardado
+ * @returns {boolean}
+ */
 export function isLocked(value) {
   return Boolean(value && typeof value === "object" && value.locked === LOCKED_TAG && value.kid);
 }
 
-/** Cifra um valor JSON com a chave do aparelho. Sem chave disponível, devolve o valor como está. */
+/**
+ * Cifra um valor JSON com a chave do aparelho. Sem chave disponível, devolve o valor como está.
+ * @param {unknown} value valor serializável em JSON
+ * @returns {Promise<unknown>} envelope `{ sealed, iv, ct }` ou o próprio valor
+ */
 export async function sealJson(value) {
   if (value == null || isSealed(value) || isLocked(value)) return value;
   const key = await getDeviceKey();
@@ -136,7 +170,11 @@ export async function sealJsonStrict(value) {
   return { sealed: SEALED_TAG, iv: toB64(iv), ct: toB64(ct) };
 }
 
-/** Abre um valor cifrado pelo aparelho; valor em claro passa direto; chave travada não abre aqui. */
+/**
+ * Abre um valor cifrado pelo aparelho; valor em claro passa direto; chave travada não abre aqui.
+ * @param {unknown} value valor guardado (envelope ou em claro)
+ * @returns {Promise<unknown>} valor aberto
+ */
 export async function openSealed(value) {
   if (isLocked(value)) throw new KeyLockedError();
   if (!isSealed(value)) return value;
@@ -150,7 +188,10 @@ export async function openSealed(value) {
   }
 }
 
-/** Pede ao navegador para não apagar os dados deste site sob pressão de espaço. */
+/**
+ * Pede ao navegador para não apagar os dados deste site sob pressão de espaço.
+ * @returns {Promise<boolean>} se o armazenamento ficou persistente
+ */
 export async function requestPersistentStorage() {
   try {
     if (await globalThis.navigator?.storage?.persisted?.()) return true;
@@ -160,6 +201,7 @@ export async function requestPersistentStorage() {
   }
 }
 
+/** Só para testes: esquece a chave do aparelho em memória. */
 export function __resetKeystoreForTests() {
   devicePromise = null;
 }

@@ -3,7 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import * as listingUi from "../client/js/listing-ui.js";
 import * as listing from "../client/js/listing.js";
-import * as localAccount from "../client/js/local-account.js";
+import * as localAccount from "../client/js/identity/local-account.js";
 import * as gossipRetract from "../client/js/gossip-retract-ui.js";
 import * as render from "../client/js/render.js";
 

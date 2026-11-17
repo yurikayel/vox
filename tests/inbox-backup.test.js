@@ -2,11 +2,11 @@ import "./setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { mockStores } from "./setup.js";
-import * as backup from "../client/js/inbox-backup.js";
+import * as backup from "../client/js/identity/inbox-backup.js";
 import * as cacheNode from "../client/js/cache-node.js";
 import * as contacts from "../client/js/contacts.js";
-import * as localAccount from "../client/js/local-account.js";
-import * as keyLock from "../client/js/key-lock.js";
+import * as localAccount from "../client/js/identity/local-account.js";
+import * as keyLock from "../client/js/identity/key-lock.js";
 
 const SENHA = "senha soberana de teste 2026";
 const DAY = 24 * 60 * 60 * 1000;
