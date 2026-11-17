@@ -6,6 +6,11 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Correção: login do Bluesky abandonado não captura o login seguinte; `iss` conferido
+- **Callback escolhido pelo `state`:** um login do Bluesky iniciado e não concluído deixava o fluxo guardado na aba, e o callback seguinte de outra rede (GitHub, X, Threads…) ia para o Bluesky e falhava uma vez. Agora o callback vai para o fluxo cujo `state` confere; qualquer callback, e qualquer novo início de login, encerra os fluxos pendentes da aba (`social-login.js`).
+- **`iss` (RFC 9207):** quando o servidor do Bluesky anuncia `authorization_response_iss_parameter_supported`, callback sem `iss` é recusado; antes, a ausência passava (`bsky-oauth.js`). `iss` diferente do emissor continua recusado.
+- Testes: `tests/social-login-callback.test.js` (novo, 5 casos, `fetch` falso). SW `v7.131`.
+
 ### Correção: a cópia impressa da frase não fica na página
 - **Imprimir cartão** (`#/frase`) põe uma cópia do cartão com as 12 palavras no `body` só para a impressão. Antes, ela só saía no `afterprint`; em navegador que não dispara esse evento, a cópia ficava na página depois de sair da tela, contra a regra de que a frase vive só na tela. Agora sai também ao trocar de rota, ao sair da página e ao seguir para a conferência; imprimir de novo não empilha cópias; sem `print()` no navegador, nem entra.
 - Lógica em `client/js/app/phrase-print.js` (novo, no precache); testes em `tests/phrase-print.test.js`. SW `v7.130`.
