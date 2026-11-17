@@ -13,6 +13,7 @@ import {
   renderPhraseWordsHtml,
 } from "../render/recovery-phrase.js";
 import { getActiveUser, makeShellProps } from "./context.js";
+import { discardPhrasePrintCopy, printPhraseCard } from "./phrase-print.js";
 
 function showError(text) {
   const el = document.getElementById("phrase-error");
@@ -25,24 +26,9 @@ function screenEl() {
   return document.getElementById("phrase-screen");
 }
 
-/** Imprime só o cartão: uma cópia vai direto no `body`, o resto da página some na impressão e a cópia sai depois. */
-function printCard() {
-  const card = document.getElementById("phrase-print-card")?.cloneNode(true);
-  if (!card) return;
-  card.id = "phrase-print-root";
-  document.body.append(card);
-  document.body.classList.add("printing-phrase");
-  const done = () => {
-    document.body.classList.remove("printing-phrase");
-    card.remove();
-  };
-  globalThis.addEventListener?.("afterprint", done, { once: true });
-  globalThis.print?.();
-}
-
 function showWords(phrase) {
   screenEl().innerHTML = renderPhraseWordsHtml(phrase);
-  document.getElementById("btn-phrase-print")?.addEventListener("click", printCard);
+  document.getElementById("btn-phrase-print")?.addEventListener("click", () => printPhraseCard());
   document.getElementById("btn-phrase-written")?.addEventListener("click", () => showConfirm(phrase));
 }
 
@@ -55,6 +41,7 @@ function readTyped() {
 }
 
 function showConfirm(phrase) {
+  discardPhrasePrintCopy();
   screenEl().innerHTML = renderPhraseConfirmHtml(pickConfirmPositions(phrase.words.length));
   document.getElementById("btn-phrase-back")?.addEventListener("click", () => showWords(phrase));
   document.getElementById("form-phrase-confirm")?.addEventListener("submit", (e) => {

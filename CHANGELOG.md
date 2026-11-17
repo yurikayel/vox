@@ -6,6 +6,10 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Correção: a cópia impressa da frase não fica na página
+- **Imprimir cartão** (`#/frase`) põe uma cópia do cartão com as 12 palavras no `body` só para a impressão. Antes, ela só saía no `afterprint`; em navegador que não dispara esse evento, a cópia ficava na página depois de sair da tela, contra a regra de que a frase vive só na tela. Agora sai também ao trocar de rota, ao sair da página e ao seguir para a conferência; imprimir de novo não empilha cópias; sem `print()` no navegador, nem entra.
+- Lógica em `client/js/app/phrase-print.js` (novo, no precache); testes em `tests/phrase-print.test.js`. SW `v7.130`.
+
 ### Conta numa pasta só, com portas de entrada (ADR-035 §3.2, segundo contexto)
 - **`client/js/identity/`:** 15 módulos da conta (conta local, travamento e chaves em repouso, semente, frase de recuperação, arquivo de soberania, saídas soberanas, limpeza local, guardiões e backup no e-mail) mudaram para a pasta, com `git mv`. Nenhuma regra mudou; a identidade está congelada para tudo que não seja correção.
 - **Portas:** fora da pasta, importa-se por `identity/index.js` ou, para quem só precisa da chave do aparelho e da chave de DM (`crypto-dm.js`, `wallet.js`), por `identity/keys.js`, que evita o ciclo `crypto-dm → identity/index → local-account → crypto-dm`. `npm run audit:layers` reprova import de fora que pule as portas.
