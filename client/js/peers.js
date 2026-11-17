@@ -1,3 +1,10 @@
+/**
+ * @file Malha de pares do aparelho: troca de mensagens com outras abas (BroadcastChannel `vox-peer-v0`) e com outros
+ * aparelhos (WebRTC, via `webrtc-peer.js`). Recebe e repassa gossip assinado (posts, edições, remoções, cartões de
+ * perfil, manifestos de cache), serve e pede transações do cache local (WANT/BLOB) dentro dos tetos de banda, entrega
+ * DMs e guarda as preferências e métricas de quem ajuda a rede. Nada que chega é aceito sem conferir a assinatura.
+ */
+
 import * as cacheNode from "./cache-node.js";
 import * as webrtcPeer from "./webrtc-peer.js";
 import { allowGossipFromAuthor } from "./rate-limit.js";
@@ -47,6 +54,11 @@ const pendingRequests = new Map(); // txId -> Array of resolver functions
 const dmListeners = new Set();
 const gossipListeners = new Set();
 
+/**
+ * Inscreve um ouvinte de DMs que chegam pela malha (WebRTC ou outra aba).
+ * @param {(envelope: object, source: string) => void} listener Recebe o envelope cifrado e a origem (`"rtc"` ou `"broadcast"`).
+ * @returns {() => boolean} Função que cancela a inscrição.
+ */
 export function onDirectMessage(listener) {
   dmListeners.add(listener);
   return () => dmListeners.delete(listener);
@@ -63,6 +75,11 @@ function dispatchDirectMessage(envelope, source = "rtc") {
 
 const gossipTombstoneListeners = new Set();
 
+/**
+ * Inscreve um ouvinte de posts e edições aceitos do gossip (já conferidos e gravados no cache local).
+ * @param {(item: object, source: string) => void} listener Recebe o item assinado e a origem (`"rtc"` ou `"broadcast"`).
+ * @returns {() => boolean} Função que cancela a inscrição.
+ */
 export function onGossipPost(listener) {
   gossipListeners.add(listener);
   return () => gossipListeners.delete(listener);
@@ -77,6 +94,11 @@ function dispatchGossipPost(item, source = "rtc") {
   }
 }
 
+/**
+ * Inscreve um ouvinte de remoções aceitas do gossip (lápides conferidas e gravadas no cache local).
+ * @param {(tombstone: object, source: string) => void} listener Recebe a lápide assinada e a origem.
+ * @returns {() => boolean} Função que cancela a inscrição.
+ */
 export function onGossipTombstone(listener) {
   gossipTombstoneListeners.add(listener);
   return () => gossipTombstoneListeners.delete(listener);
@@ -107,14 +129,26 @@ const DEFAULT_PEER_SETTINGS = Object.freeze({
 
 /** PM-52: limites aceitos para o teto no 4G (MB/dia). */
 export const CELLULAR_CAP_MIN_MB = 1;
+/** PM-52: teto máximo aceito para o 4G (MB/dia). */
 export const CELLULAR_CAP_MAX_MB = 50;
 
+/**
+ * PM-52: ajusta o teto do 4G ao intervalo aceito, arredondado em MB.
+ * @param {unknown} value Valor escolhido pela pessoa.
+ * @returns {number} Entre `CELLULAR_CAP_MIN_MB` e `CELLULAR_CAP_MAX_MB`; valor inválido, zero ou negativo vira o padrão (5).
+ */
 export function clampCellularCapMb(value) {
   const n = Number(value);
   if (!Number.isFinite(n) || n <= 0) return DEFAULT_PEER_SETTINGS.cellularCapMb;
   return Math.min(CELLULAR_CAP_MAX_MB, Math.max(CELLULAR_CAP_MIN_MB, Math.round(n)));
 }
 
+/**
+ * Preferências de ajuda à rede guardadas neste aparelho, com os padrões no que faltar e disco e teto diário
+ * normalizados (`normalizeStorageCommitment`).
+ * @returns {{enabled: boolean, maxMb: number, wifiOnly: boolean, commOnly: boolean, supporter: boolean, backgroundRelay: boolean, dailyCapMb: number, cellularCapMb: number, webrtcEnabled: boolean}}
+ *   Preferências; os padrões se não houver nada guardado ou a leitura falhar.
+ */
 export function getPeerSettings() {
   try {
     const raw = localStorage.getItem(PEER_SETTINGS_KEY);
@@ -136,12 +170,21 @@ export function getPeerSettings() {
   }
 }
 
+/**
+ * Grava as preferências, religa ou desliga os canais da malha conforme elas e avisa o service worker.
+ * @param {object} settings Preferências completas (formato de `getPeerSettings`).
+ */
 export function savePeerSettings(settings) {
   localStorage.setItem(PEER_SETTINGS_KEY, JSON.stringify(settings));
   initPeerChannel();
   updateServiceWorkerRelay(settings);
 }
 
+/**
+ * Contadores acumulados de ajuda à rede deste aparelho.
+ * @returns {{blobsServed: number, bytesServed: number, blobsReceived: number, bytesReceived: number, blobsServedRtc: number}}
+ *   Contadores; zerados se não houver nada guardado ou a leitura falhar.
+ */
 export function getPeerMetrics() {
   try {
     const raw = localStorage.getItem(PEER_METRICS_KEY);
@@ -179,6 +222,10 @@ function updateMetrics(field, amount = 1) {
   localStorage.setItem(PEER_METRICS_KEY, JSON.stringify(metrics));
 }
 
+/**
+ * Uso de banda servida hoje (data UTC). Registro de outro dia não conta: o dia começa zerado.
+ * @returns {{date: string, bytesServedToday: number, bytesCellularToday: number}} Uso do dia.
+ */
 export function getDailyUsage() {
   const today = new Date().toISOString().slice(0, 10);
   try {
@@ -191,6 +238,11 @@ export function getDailyUsage() {
   return { date: today, bytesServedToday: 0, bytesCellularToday: 0 };
 }
 
+/**
+ * Soma bytes servidos ao uso do dia (e ao uso no 4G, se for o caso).
+ * @param {number} bytes Quantidade servida.
+ * @param {boolean} [onCellular] Se foi no 4G (padrão: a conexão atual não é Wi-Fi nem ilimitada).
+ */
 export function recordBytesServed(bytes, onCellular = !isWifiOrUnlimited()) {
   const usage = getDailyUsage();
   usage.bytesServedToday += bytes;
@@ -201,6 +253,10 @@ export function recordBytesServed(bytes, onCellular = !isWifiOrUnlimited()) {
 /**
  * PM-52: pode servir dados agora? No Wi-Fi vale o teto diário; no 4G, só se a pessoa
  * desligou o "só Wi-Fi", e até o teto do 4G (padrão 5 MB/dia).
+ * @param {object} [settings] Preferências (padrão: `getPeerSettings()`).
+ * @param {boolean} [onWifi] Se a conexão é Wi-Fi ou ilimitada (padrão: `isWifiOrUnlimited()`).
+ * @param {{bytesServedToday: number, bytesCellularToday?: number}} [usage] Uso do dia (padrão: `getDailyUsage()`).
+ * @returns {boolean} Verdadeiro se ainda pode servir.
  */
 export function canServeNow(settings = getPeerSettings(), onWifi = isWifiOrUnlimited(), usage = getDailyUsage()) {
   if (usage.bytesServedToday >= (settings.dailyCapMb || DEFAULT_PEER_SETTINGS.dailyCapMb) * 1024 * 1024) return false;
@@ -209,6 +265,10 @@ export function canServeNow(settings = getPeerSettings(), onWifi = isWifiOrUnlim
   return (usage.bytesCellularToday || 0) < clampCellularCapMb(settings.cellularCapMb) * 1024 * 1024;
 }
 
+/**
+ * Indica se o teto diário de banda servida já foi atingido.
+ * @returns {boolean} Verdadeiro se o uso de hoje alcançou `dailyCapMb`.
+ */
 export function isDailyCapReached() {
   const settings = getPeerSettings();
   const usage = getDailyUsage();
@@ -216,6 +276,11 @@ export function isDailyCapReached() {
   return usage.bytesServedToday >= capBytes;
 }
 
+/**
+ * Palpite da conexão pela Network Information API: sem a API, conta como Wi-Fi; economia de dados ou tipo
+ * `cellular` contam como 4G.
+ * @returns {boolean} Verdadeiro para Wi-Fi ou conexão sem limite conhecido.
+ */
 export function isWifiOrUnlimited() {
   const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
   if (!conn) return true;
@@ -224,6 +289,10 @@ export function isWifiOrUnlimited() {
   return true;
 }
 
+/**
+ * Pede permissão de notificação só se ainda não houve resposta.
+ * @returns {Promise<NotificationPermission>} `"granted"`, `"denied"` ou `"default"`; `"denied"` onde não há a API.
+ */
 export async function requestNotificationPermission() {
   if (typeof window !== "undefined" && "Notification" in window) {
     if (Notification.permission === "default") {
@@ -243,7 +312,10 @@ function updateServiceWorkerRelay(settings) {
   }
 }
 
-/** Comunidades onde o usuário local é membro ou dono (escopo commOnly). */
+/**
+ * Comunidades onde o usuário local é membro ou dono (escopo commOnly).
+ * @returns {Promise<Set<string>>} Ids das comunidades; vazio sem conta local.
+ */
 export async function collectUserCommunityIds() {
   const account = await localAccount.ensureLocalAccount();
   const routeId = account?.routeId || "";
@@ -276,6 +348,13 @@ async function resolveTxCommunityId(txId, cachedData) {
   return null;
 }
 
+/**
+ * Indica se a transação é de uma comunidade da pessoa (escopo do "só minhas comunidades"). A comunidade sai do dado
+ * em cache, do post local ou do post a que ele responde.
+ * @param {string} txId Id da transação.
+ * @param {object} [cachedData] Dado em cache da transação, se já carregado.
+ * @returns {Promise<boolean>} Falso sem comunidades, ou se a comunidade da transação não puder ser descoberta.
+ */
 export async function isTxInUserCommunityScope(txId, cachedData) {
   const scope = await collectUserCommunityIds();
   if (scope.size === 0) return false;
@@ -369,6 +448,14 @@ const VOX_MESSAGE_HANDLERS = {
   [SYNC_WANT]: (msg, replyFn, _settings, source) => (source === "rtc" ? peerSync.onWant(msg, replyFn) : null),
 };
 
+/**
+ * Despacha uma mensagem da malha para o tratador do seu `type` (WANT, BLOB, DM, GOSSIP, SYNC_INV etc.). Com a ajuda
+ * à rede desligada, ou tipo desconhecido, nada acontece.
+ * @param {object} msg Mensagem recebida.
+ * @param {(reply: object) => void} replyFn Responde a quem mandou.
+ * @param {string} [source="broadcast"] Origem: `"broadcast"` (outra aba) ou `"rtc"` (outro aparelho).
+ * @returns {Promise<void>} Resolve depois do tratador.
+ */
 export async function handleVoxMessage(msg, replyFn, source = "broadcast") {
   if (!msg || typeof msg !== "object") return;
   const settings = getPeerSettings();
@@ -527,6 +614,11 @@ async function handleGossipDeleteMessage(tombstone, source = "rtc") {
   relayToMesh({ type: "GOSSIP_DELETE", item: tombstone, tombstone, fromPeer: myPeerId }, source);
 }
 
+/**
+ * Anuncia um item assinado novo (post, cartão) às outras abas e aos pares WebRTC.
+ * @param {object} item Item assinado; sem `id`, nada é enviado.
+ * @param {object|null} [blob=null] Mídia do `mediaHash`, que viaja ao lado do post (PM-87).
+ */
 export function broadcastGossip(item, blob = null) {
   if (!item?.id) return;
   const payload = { type: "GOSSIP", item, blob, fromPeer: myPeerId };
@@ -536,6 +628,10 @@ export function broadcastGossip(item, blob = null) {
   webrtcPeer.broadcastRtcMessage(payload);
 }
 
+/**
+ * Anuncia a edição de um item assinado às outras abas e aos pares WebRTC.
+ * @param {object} item Item editado e assinado; sem `id`, nada é enviado.
+ */
 export function broadcastGossipUpdate(item) {
   if (!item?.id) return;
   const payload = { type: "GOSSIP_UPDATE", item, fromPeer: myPeerId };
@@ -545,6 +641,10 @@ export function broadcastGossipUpdate(item) {
   webrtcPeer.broadcastRtcMessage(payload);
 }
 
+/**
+ * Anuncia uma remoção (lápide assinada) às outras abas e aos pares WebRTC.
+ * @param {object} tombstone Lápide assinada; sem `id`, nada é enviado.
+ */
 export function broadcastGossipDelete(tombstone) {
   if (!tombstone?.id) return;
   const payload = { type: "GOSSIP_DELETE", item: tombstone, tombstone, fromPeer: myPeerId };
@@ -554,16 +654,28 @@ export function broadcastGossipDelete(tombstone) {
   webrtcPeer.broadcastRtcMessage(payload);
 }
 
+/**
+ * Anuncia o cartão de perfil assinado como gossip novo.
+ * @param {object} item Cartão de perfil; outro tipo é ignorado.
+ */
 export function broadcastProfileCard(item) {
   if (item?.type !== profileCard.PROFILE_CARD_TYPE) return;
   broadcastGossip(item);
 }
 
+/**
+ * Anuncia a edição do cartão de perfil assinado.
+ * @param {object} item Cartão de perfil; outro tipo é ignorado.
+ */
 export function broadcastProfileCardUpdate(item) {
   if (item?.type !== profileCard.PROFILE_CARD_TYPE) return;
   broadcastGossipUpdate(item);
 }
 
+/**
+ * Anuncia um manifesto de cache assinado às outras abas e aos pares WebRTC.
+ * @param {object} item Item `cache-manifest` assinado; outro tipo, ou sem `id`, é ignorado.
+ */
 export function broadcastCacheManifest(item) {
   if (!item?.id || item.type !== "cache-manifest") return;
   const payload = { type: "CACHE_MANIFEST", item, fromPeer: myPeerId };
@@ -575,6 +687,11 @@ export function broadcastCacheManifest(item) {
   webrtcPeer.broadcastRtcMessage(payload);
 }
 
+/**
+ * Assina um manifesto de cache com a conta deste aparelho, guarda localmente e anuncia na malha.
+ * @param {object} manifestBody Manifesto da comunidade (com `communityId`).
+ * @returns {Promise<object>} O item assinado que foi anunciado.
+ */
 export async function publishSignedCacheManifest(manifestBody) {
   const draft = manifestMesh.buildCacheManifestGossipDraft({
     communityId: manifestBody?.communityId,
@@ -586,6 +703,10 @@ export async function publishSignedCacheManifest(manifestBody) {
   return signed;
 }
 
+/**
+ * Liga ou desliga os canais da malha conforme as preferências: o BroadcastChannel entre abas e o WebRTC entre
+ * aparelhos. Roda ao carregar o módulo e a cada `savePeerSettings`.
+ */
 export function initPeerChannel() {
   const settings = getPeerSettings();
 
@@ -639,6 +760,12 @@ webrtcPeer.onPeerConnect(async (remotePeerId, sendFn) => {
   } catch {}
 });
 
+/**
+ * Entrega um envelope de DM pelo melhor caminho: canal de DM WebRTC com a conta, senão outra aba.
+ * @param {string} toAddress Conta de destino.
+ * @param {object} envelope Envelope cifrado.
+ * @returns {"rtc"|"broadcast"|null} Caminho usado, ou null se nenhum estava disponível.
+ */
 export function sendDirectMessageTransport(toAddress, envelope) {
   if (webrtcPeer.sendDmRtc(toAddress, envelope)) {
     return "rtc";
@@ -652,8 +779,11 @@ export function sendDirectMessageTransport(toAddress, envelope) {
   return null;
 }
 
+/** Anuncia conta e chave de DM deste aparelho à sinalização (ver `webrtc-peer.js`). */
 export const announceIdentity = webrtcPeer.announceIdentity;
+/** Indica se há canal de DM WebRTC aberto com a conta (ver `webrtc-peer.js`). */
 export const isAddressConnectedRtc = webrtcPeer.isAddressConnectedRtc;
+/** Chave pública de DM que o par da conta anunciou (ver `webrtc-peer.js`). */
 export const getPeerDmPub = webrtcPeer.getPeerDmPub;
 
 function requestWithTransport(txId, sendFn, timeoutMs) {
@@ -731,6 +861,13 @@ async function requestFromMeshRtc(txId, priority, hasRtc) {
   return requestFromRtc(txId, priority ? 2500 : 2000);
 }
 
+/**
+ * Pede uma transação aos pares e devolve a primeira resposta. Ordem: pares com afinidade (se ligado), WebRTC antes
+ * das outras abas para itens prioritários (pedido ou manifesto), e as outras abas antes do WebRTC para os demais.
+ * @param {string} txId Id da transação.
+ * @param {{priority?: boolean}} [opts] `priority` força a ordem de item prioritário.
+ * @returns {Promise<object|null>} O dado da transação, ou null se ninguém respondeu no prazo ou a malha está desligada.
+ */
 export async function requestTxFromPeers(txId, opts = {}) {
   const settings = getPeerSettings();
   if (!settings.enabled) return null;
@@ -759,6 +896,10 @@ export async function requestTxFromPeers(txId, opts = {}) {
   return null;
 }
 
+/**
+ * Situação do WebRTC para a tela de rede.
+ * @returns {{remotePeersConnected: number, myPeerId: string, signalingDown: boolean}} Pares abertos, id deste aparelho e se a sinalização caiu.
+ */
 export function getRtcStatus() {
   return {
     remotePeersConnected: webrtcPeer.getConnectedRtcPeersCount(),
@@ -770,9 +911,16 @@ export function getRtcStatus() {
 /** LAN-21: avisa quando a sinalização cai (WebSocket e Nostr juntos) e quando volta. */
 export const onSignalingHealth = webrtcPeer.onSignalingHealth;
 
+/** TURN próprio configurado pela pessoa (ver `webrtc-peer.js`). */
 export const getCustomTurnConfig = webrtcPeer.getCustomTurnConfig;
+/** Grava o TURN próprio da pessoa (ver `webrtc-peer.js`). */
 export const saveCustomTurnConfig = webrtcPeer.saveCustomTurnConfig;
 
+/**
+ * Procura um relay de desktop no ar pelo `/health` (450 ms por endereço).
+ * @param {string|null} [url=null] Endereço a testar; sem ele, os relays configurados, em ordem.
+ * @returns {Promise<{online: boolean, data?: object, activeUrl?: string}>} O primeiro que respondeu, ou `{online: false}`.
+ */
 export async function checkDesktopRelay(url = null) {
   const targets = url ? [url] : getRelayHttpUrls();
   for (const root of targets) {
@@ -787,6 +935,12 @@ export async function checkDesktopRelay(url = null) {
   return { online: false };
 }
 
+/**
+ * Busca uma transação no relay de desktop (`/tx/<id>`, 800 ms por endereço).
+ * @param {string} txId Id da transação.
+ * @param {string|null} [url=null] Endereço do relay; sem ele, os relays configurados, em ordem.
+ * @returns {Promise<{body: string, raw: string, title?: string}|null>} Corpo (e título, se veio JSON), ou null se nenhum respondeu.
+ */
 export async function fetchFromDesktopRelay(txId, url = null) {
   const targets = url ? [url] : getRelayHttpUrls();
   for (const root of targets) {
