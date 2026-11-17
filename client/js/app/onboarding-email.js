@@ -105,11 +105,73 @@ export function readRestoreInputs() {
   };
 }
 
+const MESH_POLL_MS = 15 * 1000;
+const MESH_WAITING = "Pedimos seu cofre à sua rede. Chega em até 24 h, ou na hora se você aprovar num aparelho seu. Pode deixar esta tela aberta.";
+
+function setMeshStatus(text) {
+  const el = document.getElementById("oauth-mesh-status");
+  if (!el) return;
+  el.textContent = text;
+  el.hidden = !text;
+}
+
 /**
- * Mostra por que a volta falhou; sem servidor, aponta para o link ou código do e-mail.
- * @param {{ noServer?: boolean, reason?: string }|null} res
+ * Uma tentativa de juntar a resposta da malha e abrir o cofre com a senha (ADR-037 §3.2).
+ * @param {{ email: string, pass: string }} creds
+ * @param {{ collect: Function, restore: Function, cancel: Function }} ops
+ * @returns {Promise<{ ok: true, routeId: string, displayName?: string }|{ ok: false, reason: string }>}
  */
-export function handleRestoreFailure(res) {
+export async function tryMeshRestoreOnce({ email, pass }, { collect, restore, cancel }) {
+  const got = await collect();
+  if (!got.ok) return got;
+  const res = await restore(pass, { email, directRecord: got.record });
+  if (res.ok) cancel();
+  return res.ok ? res : { ok: false, reason: res.reason || "O cofre chegou, mas a senha não abriu." };
+}
+
+async function meshOps() {
+  const [flow, vault] = await Promise.all([import("./mesh-vault-flow.js"), import("../vault/index.js")]);
+  return { flow, vault, ops: { collect: () => flow.collectMeshReply(), restore: vault.restoreFromPassphraseVault, cancel: flow.cancelMeshRequest } };
+}
+
+/**
+ * Cofre não achado aqui nem nos servidores: pede à malha (ou retoma o pedido do mesmo endereço) e fica olhando a
+ * resposta enquanto o formulário estiver na tela.
+ * @param {{ email: string, pass: string }} creds
+ * @param {(res: object) => void} onRestored chamado quando a conta abriu
+ * @returns {Promise<void>}
+ */
+export async function startMeshRestore({ email, pass }, onRestored) {
+  const { flow, vault, ops } = await meshOps();
+  const address = await vault.meshVaultAddress(pass, email);
+  if (vault.loadMeshPending()?.address !== address) {
+    const out = await flow.requestFromMesh(email, pass);
+    if (!out.ok) return setOAuthEnrichError("Este navegador não consegue guardar o pedido com segurança. Use o link do e-mail ou a frase.");
+  }
+  setOAuthEnrichError("");
+  setMeshStatus(MESH_WAITING);
+  const poll = async () => {
+    if (!document.getElementById("oauth-mesh-status")) return;
+    const res = await tryMeshRestoreOnce({ email, pass }, ops).catch(() => ({ ok: false, reason: "waiting" }));
+    if (res.ok) return onRestored(res);
+    if (res.reason !== "waiting") return setOAuthEnrichError(res.reason);
+    setTimeout(() => void poll(), MESH_POLL_MS);
+  };
+  void poll();
+}
+
+/**
+ * Mostra por que a volta falhou. Cofre não achado com e-mail e senha: pede à malha (ADR-037); sem servidor e sem como
+ * pedir, aponta para o link ou código do e-mail.
+ * @param {{ noServer?: boolean, notFound?: boolean, reason?: string }|null} res
+ * @param {{ email?: string, pass?: string }|null} [inputs] o que a pessoa digitou
+ * @param {((res: object) => void)|null} [onRestored] chamado se a malha devolver o cofre
+ */
+export function handleRestoreFailure(res, inputs = null, onRestored = null) {
+  if (res?.notFound && inputs?.email && inputs?.pass && onRestored) {
+    void startMeshRestore({ email: inputs.email, pass: inputs.pass }, onRestored).catch(() => handleRestoreFailure({ ...res, notFound: false }));
+    return;
+  }
   if (res?.noServer) {
     setOAuthEnrichError("Nenhum servidor respondeu aqui. Toque no link do seu e-mail ou cole o link (#/sync?b=…) / código VOX1:… acima, mantendo sua senha.");
     document.getElementById("oauth-restore-kit-text")?.focus();
