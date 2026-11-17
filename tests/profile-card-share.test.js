@@ -6,6 +6,7 @@ import * as profileCard from "../client/js/profile-card.js";
 import * as profileDirectory from "../client/js/profile-directory.js";
 import * as gossipProfile from "../client/js/peers-gossip-profile.js";
 import * as localAccount from "../client/js/identity/local-account.js";
+import { person } from "./signer.js";
 
 const fresh = () => {
   localStorage.clear();
@@ -72,7 +73,16 @@ test("P1 - cartão sem nome vindo da malha ou da memória central não é guarda
   const unnamed = await profileCard.buildSignedProfileCard();
   assert.equal(await gossipProfile.applyVerifiedProfileCardItem(unnamed), false, "não guarda nem repassa");
   assert.equal(profileDirectory.getProfileCard(unnamed.routeId), null);
-  await sentProfiles({ profiles: [{ routeId: "vx_remotosemnome01", name: "" }, { routeId: "vx_remotocomnome1", name: "Bia" }] });
-  assert.equal(profileDirectory.getProfileCard("vx_remotosemnome01"), null);
-  assert.equal(profileDirectory.getProfileCard("vx_remotocomnome1").name, "Bia");
+  // Desde 17/11 a memória central só entrega cartão assinado pelo dono (`signedCard`).
+  const card = async (who, displayName) =>
+    who.sign({ id: `pc_${who.routeId}`, type: "profile-card", routeId: who.routeId, displayName, avatarUrl: "", bio: "", discoverable: true, editedAt: Date.now() });
+  const [semNome, comNome] = [await person(), await person()];
+  await sentProfiles({
+    profiles: [
+      { routeId: semNome.routeId, name: "", signedCard: await card(semNome, "") },
+      { routeId: comNome.routeId, name: "Bia", signedCard: await card(comNome, "Bia") },
+    ],
+  });
+  assert.equal(profileDirectory.getProfileCard(semNome.routeId), null);
+  assert.equal(profileDirectory.getProfileCard(comNome.routeId).name, "Bia");
 });

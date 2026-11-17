@@ -627,14 +627,7 @@ webrtcPeer.onPeerIdentity((address, dmPub) => {
   if (dmPub && typeof dmPub === "object" && dmPub.memoryUrl) {
     centralMemory.registerDiscoveredMemoryUrl(dmPub.memoryUrl);
   }
-  if (address && address.startsWith("vx_") && address !== "vx_zero_memory_beacon") {
-    gossipProfile.applyDirectoryProfileCard({
-      routeId: address,
-      name: dmPub?.displayName || dmPub?.name || "",
-      avatarUrl: dmPub?.avatarUrl || "",
-      discoverable: true,
-    });
-  }
+  // Nome e foto do par não vêm daqui (não são assinados): chegam no PROFILE_CARD_HELLO, conferido pela chave dele.
 });
 
 webrtcPeer.onPeerConnect(async (remotePeerId, sendFn) => {
