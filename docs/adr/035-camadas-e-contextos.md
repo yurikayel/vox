@@ -1,6 +1,6 @@
 # ADR-035: Camadas e contextos no cliente — importar só para baixo, uma porta de entrada por assunto
 
-**Status:** proposed (2026-11-17; a regra de camadas já roda no CI como catraca) · **Revisado:** 2026-11-17 (`vault/` e `identity/` movidos; segunda porta; contagens atualizadas) · **Relacionados:** [ADR-007](./007-zero-complexity-monolith-decomposition.md), [HARDENING](../HARDENING.md), [documentação](../process/documentacao.md)
+**Status:** accepted (2026-11-17, pelo mantenedor; `audit:layers` no CI; contextos `vault/` e `identity/` feitos; ordem restante em §3.2) · **Revisado:** 2026-11-17 (`vault/` e `identity/` movidos; segunda porta; contagens atualizadas) · **Relacionados:** [ADR-007](./007-zero-complexity-monolith-decomposition.md), [HARDENING](../HARDENING.md), [documentação](../process/documentacao.md)
 
 ## 1. Contexto
 
