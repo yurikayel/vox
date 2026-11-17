@@ -9,6 +9,7 @@ import { wireRoute, setupHashchangeListener, routeImpl as route } from "./app/ro
 import { installEntryGuards, hasFullEntry } from "./app/onboarding.js";
 import { initDmListeners, initGossipListeners, initSocialInteractions } from "./app/init.js";
 import { initPostMediaLightbox } from "./app/post-media-lightbox.js";
+import { watchFrameCards } from "./app/frame-ui.js";
 import { attachPostMoreMenuHandlers } from "./render/post-more-menu.js";
 import { attachProfileNoteHandlers } from "./app/profile-note-ui.js";
 import { attachPhotoTagUi } from "./app/photo-tag-ui.js";
@@ -39,6 +40,7 @@ initDmListeners();
 startDmOutbox();
 void startVoxLinks().catch(() => {});
 initGossipListeners();
+watchFrameCards(document);
 void startVaultMigration().catch(() => {});
 initSocialInteractions();
 initPostMediaLightbox();

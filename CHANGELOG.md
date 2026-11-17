@@ -6,6 +6,12 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Correção: Open Frames no feed contam as ações de todos e o botão não trava
+- **Apuração:** o cartão de enquete ou abaixo-assinado era desenhado só com a ação deste aparelho; votos e assinaturas de outras pessoas (recebidos por gossip e guardados) só apareciam depois de votar de novo. Agora, quando o cartão entra na página, a apuração é completada com todas as ações guardadas (`client/js/app/frame-ui.js`, novo, no precache).
+- **Botão:** depois de um voto bem-sucedido o botão ficava desabilitado em "Gravando…"; agora volta ao normal e a escolha fica marcada.
+- **Voto mudado:** a enquete contava, para quem mudou de voto, o voto mais antigo (as ações chegam da mais nova para a mais velha); agora vale o de maior `ts` (`frames.js`).
+- Testes: `tests/frame-ui.test.js` (novo, 5 casos). SW `v7.132`.
+
 ### Correção: login do Bluesky abandonado não captura o login seguinte; `iss` conferido
 - **Callback escolhido pelo `state`:** um login do Bluesky iniciado e não concluído deixava o fluxo guardado na aba, e o callback seguinte de outra rede (GitHub, X, Threads…) ia para o Bluesky e falhava uma vez. Agora o callback vai para o fluxo cujo `state` confere; qualquer callback, e qualquer novo início de login, encerra os fluxos pendentes da aba (`social-login.js`).
 - **`iss` (RFC 9207):** quando o servidor do Bluesky anuncia `authorization_response_iss_parameter_supported`, callback sem `iss` é recusado; antes, a ausência passava (`bsky-oauth.js`). `iss` diferente do emissor continua recusado.
