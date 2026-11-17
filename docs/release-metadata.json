@@ -1,9 +1,9 @@
 {
-  "git_sha": "4c247b4",
-  "branch": "fix/perfil-trocar-senha-e-email",
+  "git_sha": "cd8f24b",
+  "branch": "refactor/vault-contexto",
   "test_js": 1148,
   "test_python": 111,
   "test_total": 1259,
-  "cache_name": "vox-pwa-v7.127-real-network-audio-video-upload",
-  "generated_at": "2026-11-16T21:57:45Z"
+  "cache_name": "vox-pwa-v7.128-real-network-audio-video-upload",
+  "generated_at": "2026-11-17T09:12:03Z"
 }

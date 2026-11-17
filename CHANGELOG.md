@@ -10,6 +10,17 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 - **Inventário** de onde cada algoritmo é usado no cliente (assinatura e DM em curva elíptica; cofre, semente e chaves em repouso simétricos; Arweave, Nostr e Bluesky definidos pelos protocolos deles).
 - **Regra:** todo formato novo diz o seu algoritmo dentro do que é assinado; o leitor recusa algoritmo desconhecido.
 - **Direção:** DM v2 híbrida (ECDH + ML-KEM-768) primeiro, por causa do "guarda agora, abre depois"; assinatura com pré-compromisso ML-DSA junto da RFC 0002 (ADR-034); a frase de 12 palavras restaura também as chaves novas. Nada de código; atualizados DECISOES (A-24) e o índice de ADRs.
+### Cofre numa pasta só, com porta de entrada (ADR-035 §3.2, primeiro contexto)
+- **`client/js/vault/`:** `vault-crypto`, `vault-store`, `vault-legacy`, `passphrase-vault` e `oauth-vault` mudaram para a pasta, com `git mv` (o histórico segue o arquivo). Nenhuma regra mudou.
+- **Portas:** fora da pasta, importa-se por `vault/index.js` (o que é público: migração v1, login social, Senha Soberana, cofre no link, servidores de memória) ou por `vault/envelope.js` (só cifrar e abrir um registro, usado por `key-lock.js` e `inbox-backup.js` para não fechar um ciclo de imports). O `oauth-vault.js` deixou de reexportar peças dos outros módulos; isso agora é papel da porta.
+- **Conferência:** `npm run audit:layers` reprova import de fora da pasta que pule a porta (`CONTEXT_DOORS` em `scripts/layers-lib.mjs`). Hoje não há nenhum.
+- **Documentação:** os exports do cofre ganharam JSDoc completo; as 26 entradas de dívida do `audit:docs` desses arquivos foram pagas, não renomeadas.
+- Testes: os testes passam a importar os caminhos novos (`vault/index.js` no lugar de `oauth-vault.js`), sem mudar asserções; caso novo em `tests/layers-audit.test.js` para a regra da porta. SW `v7.128`.
+
+### ADR-035 proposto: camadas e contextos no cliente, com catraca no CI
+- **Regra de camadas:** `app` importa qualquer camada; `render` só `render` e `base`; `base` só `base`; `labs`/`dungeon` só `labs` e `base`, e só `app` carrega o laboratório. `npm run audit:layers` lê os imports pela árvore sintática (espree), entra no `validate` e no CI e reprova import proibido novo. Os 11 imports que já sobem de camada (6 arquivos) ficam em `scripts/layers-debt.json`, numa lista que só diminui.
+- **Direção:** uma pasta por assunto com porta de entrada (`index.js`), um assunto por PR, começando por `vault/`; caminho único para operações de conta; armazenamento local com dono; os módulos não plugados (já fora do precache, PM-04) saem da raiz para `labs/` ou do repositório.
+- Testes: `tests/layers-audit.test.js` (novo). Atualizados DECISOES (A-23), HARDENING, índice de ADRs e `scripts/README.md`. Sem mudança no app.
 
 ### Correção: trocar a Senha Soberana pelo Perfil; pôr e-mail tira do ar o cofre só-senha
 - **Senha atual:** o cartão "Soberania & Sincronização" ganha o campo "Senha atual, só para trocar a Senha Soberana". Antes, depois do primeiro cofre a conta ficava travada pela senha, e uma senha nova dava "Senha incorreta" sem ter onde informar a antiga. Com a senha atual, a conta é aberta, gravada com a nova e o endereço antigo é revogado.

@@ -21,6 +21,7 @@ A coluna **Enforcement hoje** diz o que a ferramenta faz de fato; a coluna **Alv
 | Linhas por arquivo | ≤ 250 | **350** | ESLint `max-lines` | WARN | 25 arquivos (12/11; eram 27 em 09/11) | ERROR novo |
 | Comandos por função Python | — | **30** | Ruff `PLR0915` | só informa no CI (`--exit-zero`) | 7 funções (12/11) | ERROR |
 | Erros de pyflakes (nome indefinido, import/variável sem uso) | 0 | **0** | Ruff `F` | **ERROR** no CI | 0 | ERROR |
+| Imports que sobem de camada (ADR-035) | 0 | **0 novos** | `npm run audit:layers` (árvore sintática, espree) | **ERROR** no CI para import novo | 11 imports em 6 arquivos (17/11), em `scripts/layers-debt.json` | catraca |
 | Acoplamento CBO / coesão LCOM | por camada | por camada | **não medidos** | — | — | Ratchet |
 | Herança DIT | composição | exceção justificada | revisão | arquitetural | — | — |
 
@@ -67,7 +68,7 @@ Exceções temporárias — exigem justificativa técnica, responsável e data d
 
 ## CI
 
-- **Bloqueia** (`ci.yml`): `npm run audit:docs` ([process/documentacao.md](./process/documentacao.md)); ESLint do `client/` (linhas por função, aninhamento, complexidade, parâmetros, `===`, variável sem uso) e Ruff `F` + `C901` em `relay/`, `scripts/` e `packaging/` (versão fixa 0.17.4).
+- **Bloqueia** (`ci.yml`): `npm run audit:docs` ([process/documentacao.md](./process/documentacao.md)); `npm run audit:layers` ([ADR-035](./adr/035-camadas-e-contextos.md)); ESLint do `client/` (linhas por função, aninhamento, complexidade, parâmetros, `===`, variável sem uso) e Ruff `F` + `C901` em `relay/`, `scripts/` e `packaging/` (versão fixa 0.17.4).
 - **Só informa:** `max-lines` no `client/`; avisos de `scripts/`, `tools/` e `tests/` (`npm run lint:all`); Ruff `E`, `I` e `PLR0915` (`--exit-zero`).
 - `audit:complexity` gera o artefato de baseline em `docs/metrics/` e não quebra o build.
 - **Promoção `WARN → ERROR`:** quando a dívida de uma regra chega a 0 no `main`, a regra muda para `error` no mesmo PR que a zerou.

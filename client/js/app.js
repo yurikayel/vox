@@ -20,7 +20,7 @@ import { syncIdentity } from "./app/screens-network.js";
 import { startDmOutbox } from "./app/dm-wire.js";
 import { attachChannelHandlers } from "./app/community-channel-flow.js";
 import { startVoxLinks } from "./app/vox-link-flow.js";
-import { startVaultMigration } from "./oauth-vault.js";
+import { startVaultMigration } from "./vault/index.js";
 import { startKeysAtRest } from "./key-at-rest.js";
 import { showDueInboxBackup } from "./app/inbox-backup-ui.js";
 import { startStorageDurability } from "./app/storage-durability-flow.js";
