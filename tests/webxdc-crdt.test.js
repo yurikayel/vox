@@ -10,7 +10,7 @@ import {
   validateTimestamp,
   MAX_CLOCK_DRIFT_MS,
   MAX_SNAPSHOT_BYTES,
-} from "../client/js/webxdc-crdt.js";
+} from "../client/js/labs/parado/webxdc-crdt.js";
 
 test("webxdc-crdt - isNewer implementa desempate determinístico (tie-breaking)", () => {
   // Maior timestamp sempre ganha

@@ -6,6 +6,10 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Dívida: módulos não plugados vão para `labs/parado/` (ADR-035)
+- Os 21 módulos que nenhuma tela carrega (`UNPLUGGED_MODULES` no `sw.js`) saíram da raiz de `client/js` (e de `render/`) para `client/js/labs/parado/`, com um README que diz o que são e como plugar. Pela regra de camadas, só `app` e o laboratório podem importá-los. Sem mudança de lógica: só caminhos de import; `settings-guardian` e `node-health-badge` passam a importar `escapeHtml` de `shared/html.js` (base), já que `labs` não importa `render`.
+- Caminhos atualizados em `UNPLUGGED_MODULES`, `permaweb-manifest.json`, testes, `docs-debt.json` e docs. SW `v7.139`.
+
 ### Testes: base do plano para código feito por IA (PM-110)
 - **CODEOWNERS sem caminho morto:** 8 linhas apontavam para arquivos que mudaram para `client/js/identity/` e `client/js/vault/` e não marcavam mais nada como sensível. Agora marcam as duas pastas, mais `sig-format.js`; `tests/codeowners-paths.test.js` reprova caminho que não existe.
 - **[TESTES.md](./docs/TESTES.md):** nova §3.3 (o Tier A dos testes são as linhas de `client/js/` do CODEOWNERS) e a §4 conferida com o `ci.yml` (job `e2e-mesh`, Python 3.15, CodeQL, e o ESLint do CI não cobre `tests/`).

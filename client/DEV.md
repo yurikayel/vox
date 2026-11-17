@@ -746,7 +746,7 @@ Implementação dos quatro pilares essenciais do roadmap da rede Vox:
 - **Suíte de testes:** `tests/moderation-local.test.js`.
 
 ### 23.3 Deliberação Coletiva (Pol.is-lite / Consenso Determinístico)
-- **Módulo:** `client/js/polis.js`.
+- **Módulo:** `client/js/labs/parado/polis.js`.
 - **Métricas e Apuração:** Normalização de votos (`concordo: +1`, `discordo: -1`, `passo/neutro: 0`), apuração por afirmação com cálculo de porcentagens e variância de opinião.
 - **Detecção de Pontes de Consenso:** Algoritmo determinístico de particionamento de votantes em clusters de divergência e identificação de afirmações ponte (*consensus bridges* — afirmações com alta aprovação em ambos os polos) vs afirmações divisivas (*divisive statements*).
 - **Sem Dependências Externas:** Implementado em JavaScript puro para execução instantânea no navegador e em nós do relay.

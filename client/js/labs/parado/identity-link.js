@@ -5,10 +5,10 @@
  * Prova matematicamente que o titular do vx_* e o titular da carteira on-chain são a mesma entidade.
  */
 
-import * as localAccount from "./identity/index.js";
-import * as wallet from "./wallet.js";
-import * as ans104 from "./ans104.js";
-import * as upload from "./upload.js";
+import * as localAccount from "../../identity/index.js";
+import * as wallet from "../../wallet.js";
+import * as ans104 from "../../ans104.js";
+import * as upload from "../../upload.js";
 
 export const IDENTITY_LINK_TYPE = "identity-link";
 const IDENTITY_STORAGE_KEY = "vox-identity-links-v1";

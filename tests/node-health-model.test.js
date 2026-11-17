@@ -1,11 +1,11 @@
 import "../tests/setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createNodeHealthRecord, validateNodeHealthRecord, NODE_STATUS } from "../client/js/node-health-model.js";
-import { classifyNodeStatus, selectBestHealthyNode, LATENCY_THRESHOLDS } from "../client/js/node-health-evaluator.js";
-import { getNodeHealthLabelPtBr, getNodeHealthAriaLabel, formatLatency } from "../client/js/node-health-ux.js";
-import { renderNodeHealthBadgeHtml, renderNodeHealthListHtml } from "../client/js/render/node-health-badge.js";
-import { getNodeHealthState, updateNodeHealthRecord, updateBatchNodeHealth, subscribeNodeHealth, clearNodeHealthState } from "../client/js/node-health-state.js";
+import { createNodeHealthRecord, validateNodeHealthRecord, NODE_STATUS } from "../client/js/labs/parado/node-health-model.js";
+import { classifyNodeStatus, selectBestHealthyNode, LATENCY_THRESHOLDS } from "../client/js/labs/parado/node-health-evaluator.js";
+import { getNodeHealthLabelPtBr, getNodeHealthAriaLabel, formatLatency } from "../client/js/labs/parado/node-health-ux.js";
+import { renderNodeHealthBadgeHtml, renderNodeHealthListHtml } from "../client/js/labs/parado/node-health-badge.js";
+import { getNodeHealthState, updateNodeHealthRecord, updateBatchNodeHealth, subscribeNodeHealth, clearNodeHealthState } from "../client/js/labs/parado/node-health-state.js";
 
 test("node-health-model - createNodeHealthRecord gera modelo válido e sanitizado", () => {
   const rec = createNodeHealthRecord({

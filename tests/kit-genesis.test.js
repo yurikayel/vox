@@ -9,7 +9,7 @@ import {
   getKitManifest,
   validateKitManifest,
   instantiateCommunityFromKit,
-} from "../client/js/kit-genesis.js";
+} from "../client/js/labs/parado/kit-genesis.js";
 
 test("kit-genesis - lista os 3 arquétipos oficiais de comunidade soberana", () => {
   const kits = listAvailableKits();

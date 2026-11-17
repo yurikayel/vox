@@ -1,7 +1,7 @@
 import "../tests/setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
-import * as bridging from "../client/js/bridging-rank.js";
+import * as bridging from "../client/js/labs/parado/bridging-rank.js";
 
 test("bridging-rank - computeBridgingScore premia consenso cruzado e penaliza polarização", () => {
   // Caso 1: Consenso bilateral alto (80% em A e 80% em B)

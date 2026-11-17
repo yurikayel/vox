@@ -354,7 +354,7 @@ descarte ou adapte as features marcadas como inviáveis.
 - F10: story-card.js, share.js
 - Componente de etapas: app/compose-stepper.js, render/compose-steps.js
 - Rotas: app/route-parse.js
-(Exemplo de URL completa: https://raw.githubusercontent.com/yurikayel/vox/main/client/js/airgap-webrtc.js)
+(Exemplo de URL completa: https://raw.githubusercontent.com/yurikayel/vox/main/client/js/labs/parado/airgap-webrtc.js)
 
 ## Para cada feature F1–F10, entregue
 1. Objetivo em 1 frase e o problema de sustentabilidade que resolve.

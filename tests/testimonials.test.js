@@ -1,7 +1,7 @@
 import "../tests/setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
-import * as testimonials from "../client/js/testimonials.js";
+import * as testimonials from "../client/js/labs/parado/testimonials.js";
 
 test("testimonials - validação de entrada rejeita texto vazio ou auto-depoimento", () => {
   assert.equal(

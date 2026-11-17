@@ -4,7 +4,7 @@
 
 // O Service Worker atua no cache offline do shell e notificações de status, sem abrir WebRTC.
 
-const CACHE_NAME = "vox-pwa-v7.138-real-network-audio-video-upload";
+const CACHE_NAME = "vox-pwa-v7.139-real-network-audio-video-upload";
 
 const SHELL_ASSETS = [
 
@@ -458,27 +458,27 @@ const SHELL_ASSETS = [
  */
 // eslint-disable-next-line no-unused-vars
 const UNPLUGGED_MODULES = [
-  "./js/airgap-webrtc.js",
-  "./js/bridging-rank.js",
-  "./js/chunked-transfer.js",
-  "./js/civic-credential.js",
-  "./js/idb-store.js",
-  "./js/identity-link.js",
-  "./js/kit-genesis.js",
-  "./js/node-health-api.js",
-  "./js/node-health-evaluator.js",
-  "./js/node-health-model.js",
-  "./js/node-health-state.js",
-  "./js/node-health-ux.js",
-  "./js/polis.js",
-  "./js/render/node-health-badge.js",
-  "./js/render/settings-guardian.js",
-  "./js/seeder-guardian.js",
-  "./js/testimonials.js",
-  "./js/vox-identity.js",
-  "./js/webxdc-crdt.js",
-  "./js/webxdc-host.js",
-  "./js/webxdc-loader.js",
+  "./js/labs/parado/airgap-webrtc.js",
+  "./js/labs/parado/bridging-rank.js",
+  "./js/labs/parado/chunked-transfer.js",
+  "./js/labs/parado/civic-credential.js",
+  "./js/labs/parado/idb-store.js",
+  "./js/labs/parado/identity-link.js",
+  "./js/labs/parado/kit-genesis.js",
+  "./js/labs/parado/node-health-api.js",
+  "./js/labs/parado/node-health-evaluator.js",
+  "./js/labs/parado/node-health-model.js",
+  "./js/labs/parado/node-health-state.js",
+  "./js/labs/parado/node-health-ux.js",
+  "./js/labs/parado/polis.js",
+  "./js/labs/parado/node-health-badge.js",
+  "./js/labs/parado/settings-guardian.js",
+  "./js/labs/parado/seeder-guardian.js",
+  "./js/labs/parado/testimonials.js",
+  "./js/labs/parado/vox-identity.js",
+  "./js/labs/parado/webxdc-crdt.js",
+  "./js/labs/parado/webxdc-host.js",
+  "./js/labs/parado/webxdc-loader.js",
 ];
 
 self.addEventListener("install", (event) => {
