@@ -6,6 +6,10 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Correção: replicação no Bluesky por login leva o link do post
+- Com a conta do Bluesky ligada por login (OAuth), a replicação automática montava o texto com um campo `url` que a carga não tem, e o link canônico do post sumia. Agora os dois caminhos (login e App Password) usam o mesmo texto: título, corpo e link, até 295 caracteres (`linked-accounts.js`).
+- Testes: `tests/bsky-oauth-replication-link.test.js` (novo, 2 casos; os 2 falham no código de antes). SW `v7.140`.
+
 ### Documentação: JSDoc do lote 2 (malha, WebRTC, contas vinculadas e cache)
 - JSDoc completo (descrição, `@param`, `@returns`) em todos os exports de `peers.js`, `webrtc-peer.js`, `linked-accounts.js` e `cache-node.js`, mais o cabeçalho `@file` de `peers.js` e de `cache-node.js` (que tinha só um comentário de linha). Só comentários mudaram: os tokens de código dos quatro arquivos são idênticos aos de antes. A dívida de `audit:docs` cai de 1.736 para 1.602 achados (`scripts/docs-debt.json`, `--prune`). Sem bump de SW (comportamento igual).
 
