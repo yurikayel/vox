@@ -26,6 +26,7 @@ import { startKeysAtRest } from "./identity/index.js";
 import { showDueInboxBackup } from "./app/inbox-backup-ui.js";
 import { startStorageDurability } from "./app/storage-durability-flow.js";
 import { startAccountExitBanner } from "./app/account-exit-banner.js";
+import { startMeshVault } from "./app/mesh-vault-ui.js";
 import { setNaturalHideLoader } from "./moderation.js";
 
 void startKeysAtRest().catch(() => {});
@@ -63,4 +64,5 @@ Promise.allSettled([loadRemoteFlags(), demoSeed.purgeMockDemoSeed()]).finally(()
   setTimeout(() => void showDueInboxBackup(), 3000);
   void startStorageDurability({ hasAccount: hasFullEntry }).catch(() => {});
   void startAccountExitBanner({ hasAccount: hasFullEntry }).catch(() => {});
+  startMeshVault({ hasAccount: hasFullEntry });
 });

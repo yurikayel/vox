@@ -25,6 +25,7 @@ import { startAccountExitBanner } from "./account-exit-banner.js";
 import * as inviteArrival from "../invite-arrival.js";
 import { addContactAndNotify } from "./contact-notify-flow.js";
 import { showConnect } from "./screens-people.js";
+import { forgetAllMesh } from "../vault/index.js";
 
 export { ensureOnboardingSideEffects } from "./onboarding-side-effects.js";
 
@@ -168,9 +169,11 @@ function bindSovereignPassphraseForm(modalContainer, onComplete) {
     setOAuthButtonBusy(btn, true);
     setOAuthEnrichError("");
     try {
-      const res = await emailKit.restoreAccountFromInputs(readRestoreInputs());
-      if (res.ok) completeEntryOnboarding(modalContainer, onComplete, { ok: true, restored: true, routeId: res.routeId }, `Identidade restaurada com sucesso! Bem-vindo(a), ${res.displayName || "Cidadão"}!`);
-      else handleRestoreFailure(res);
+      const inputs = readRestoreInputs();
+      const res = await emailKit.restoreAccountFromInputs(inputs);
+      const done = (ok) => completeEntryOnboarding(modalContainer, onComplete, { ok: true, restored: true, routeId: ok.routeId }, `Identidade restaurada com sucesso! Bem-vindo(a), ${ok.displayName || "Cidadão"}!`);
+      if (res.ok) done(res);
+      else handleRestoreFailure(res, inputs, done);
     } catch (err) {
       setOAuthEnrichError(err?.message || "Erro ao decifrar cofre soberano.");
     } finally {
@@ -313,6 +316,7 @@ function acceptPact() {
 /** "Apagar conta local": as chaves e também o que a entrada grava (pacto, 18+ e apontamentos). */
 export function wipeLocalDevice() {
   localAccount.wipeLocalAccount();
+  forgetAllMesh();
   for (const key of ["vox-pact-accepted", ageGate.AGE_STORAGE_KEY, FEEDBACK_STORAGE_KEY]) localStorage.removeItem(key);
 }
 
