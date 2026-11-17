@@ -6,6 +6,11 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Documentação: emenda da revisão do ADR-038
+- `about` do manifesto é só o texto longo (apresentação, regras, links); título, descrição curta, foto, categoria e modo de publicação continuam só no `community_update`, para não haver duas fontes.
+- O `community_update` passa a seguir o mesmo cálculo de versão do manifesto quando o v1 for implementado (futuro limitado a 10 minutos, sem volta): hoje uma atualização datada no futuro distante trava título e descrição. Testes esperados acrescentados na spec v1 §9.
+- Linha "manifesto de comunidade v1 — planejado" em [FEATURES.md](./docs/FEATURES.md). Sem código, sem bump de SW.
+
 ### Documentação: ADR-038, subrede e manifesto de comunidade v1 (proposto)
 - [ADR-038](./docs/adr/038-subrede-malha-e-manifesto.md) (**proposed**): a comunidade é um território assinado na malha mais um manifesto que só sugere. Mesma regra de permissão do PM-09; `issuedAt` só cresce; tema por lista fechada com contraste; módulos aceitos pela pessoa, um por um; extensões só na v2; fork é `communityId` novo.
 - Spec [community-manifest-v1](./docs/specs/community-manifest-v1.md) substitui o rascunho v0. Ameaça T28 no [THREAT-MODEL](./docs/THREAT-MODEL.md), decisão A-26 e EXP-03 no ROADMAP apontando para o ADR. Sem código e sem bump de SW.
