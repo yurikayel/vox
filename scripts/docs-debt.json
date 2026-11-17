@@ -1257,11 +1257,6 @@
   "jsdoc:hasSkippedOAuth",
   "jsdoc:hasCompletedOAuthStep"
  ],
- "client/js/open-frames-host.js": [
-  "jsdoc:OF_HOST_MESSAGE_TYPES",
-  "jsdoc:handleFrameMessage",
-  "jsdoc:attachOpenFrameHost"
- ],
  "client/js/peer-sync.js": [
   "jsdoc:SYNC_INV",
   "jsdoc:SYNC_WANT",
