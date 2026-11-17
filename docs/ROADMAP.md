@@ -108,7 +108,7 @@ A meta e a forma de medir estão no [brainstorm §1](./brainstorms/brainstorm-ro
 |---|---|---|---|---|
 | [ ] | **NET-05** | doc | Registro de espelhos de comunidade | [COMPLIANCE-BR](legal/COMPLIANCE-BR.md) |
 | [ ] | **EXP-02** | code | Widget embed | [embed-integration.md](./specs/embed-integration.md) |
-| [ ] | **EXP-03** | doc | Spec de fork de comunidade | [pós-v82 T9](./archive/brainstorm-proximas-10-tarefas-pos-v82-2026-11.md) |
+| [ ] | **EXP-03** | doc | Spec de fork de comunidade | [pós-v82 T9](./archive/brainstorm-proximas-10-tarefas-pos-v82-2026-11.md) · 17/11: decisão no [ADR-038 §3.7](./adr/038-subrede-malha-e-manifesto.md#37-fork-exp-03-communityid-novo-manifesto-derivado) (proposed) e formato no [manifesto v1 §7](./specs/community-manifest-v1.md#7-fork-exp-03); falta a spec própria depois do aceite |
 | [ ] | **EXP-04** | code | Backup em HTML standalone | — |
 | [ ] | **EXP-05** | doc | Decisão sobre o Bridge MV3 depois do piloto | [vox-bridge-spike.md](./product/vox-bridge-spike.md) |
 | [ ] | **REV-08** | ops-humano | **Selo gov.br opcional via parceiro público** ([ADR-018](./adr/018-selo-govbr-via-parceiro-publico.md), proposed): achar parceiro com domínio oficial (`*.edu.br`, `*.leg.br`), confirmar o uso permitido do Login Único, obter parecer LGPD e escrever RFC do atestado | Parceiro nomeado + resposta do Serviço de Integração + parecer citados aqui |
