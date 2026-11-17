@@ -57,10 +57,11 @@ test("red-on-base: veredito exige vermelho por asserção só em fix", () => {
   assert.equal(verdict("skip", [], 0).ok, true);
 });
 
-test("red-on-base: resumo escapa a barra da tabela", () => {
-  const md = summaryMarkdown({ ok: false, headline: "h" }, [{ file: "tests/a.test.js", name: "n", outcome: "other", message: "a|b" }]);
+test("red-on-base: resumo escapa barra, contrabarra e quebra de linha da tabela", () => {
+  const md = summaryMarkdown({ ok: false, headline: "h" }, [{ file: "tests/a.test.js", name: "n|m", outcome: "other", message: "a\\|b\nc" }]);
   assert.match(md, /FALHOU/);
-  assert.match(md, /a\\\|b/);
+  assert.ok(md.includes("| n\\|m |"), md);
+  assert.ok(md.includes("| a\\\\\\|b c |"), md);
 });
 
 function sh(cwd, ...args) {

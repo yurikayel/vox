@@ -106,7 +106,8 @@ export function verdict(kind, results, testCount) {
  */
 export function summaryMarkdown(result, results) {
   const label = { assert: "vermelho (asserção)", other: "inconclusivo", pass: "verde" };
-  const rows = results.map((r) => `| \`${r.file}\` | ${r.name} | ${label[r.outcome]} | ${r.message.replace(/\|/g, "\\|")} |`);
+  const cell = (text) => String(text).replace(/\\/g, "\\\\").replace(/\|/g, "\\|").replace(/[\r\n]+/g, " ");
+  const rows = results.map((r) => `| \`${cell(r.file)}\` | ${cell(r.name)} | ${label[r.outcome]} | ${cell(r.message)} |`);
   const table = rows.length ? ["", "| Arquivo | Teste | Na base | Mensagem |", "|---|---|---|---|", ...rows] : [];
   return [`## Vermelho na base (PM-111): ${result.ok ? "OK" : "FALHOU"}`, "", result.headline, ...table, ""].join("\n");
 }
