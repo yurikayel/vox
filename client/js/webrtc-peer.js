@@ -46,6 +46,11 @@ const peerConnections = new Map();
 const addressToPeer = new Map();
 const dmPubByAddress = new Map();
 
+/**
+ * Configuração de sinalização e ICE (`config/signaling.json`), lida uma vez e guardada em memória. Se o arquivo
+ * falhar, usa a configuração embutida (STUN público, sinalização local, trackers WebTorrent e relays Nostr).
+ * @returns {Promise<object>} Configuração com `stun`, `turn`, `signalingUrls`, `webtorrentTrackers`, `nostrRelays` e `maxRtcPeers`.
+ */
 export async function loadSignalingConfig() {
   if (configCache) return configCache;
   try {
@@ -79,7 +84,10 @@ const NEGOTIATION_TIMEOUT_MS = 15000;
 
 const TURN_ONLY_KEY = "vox-turn-only";
 
-/** LAN-19: modo "só TURN" — pares não veem o IP real; tráfego passa pelo servidor TURN. */
+/**
+ * LAN-19: modo "só TURN" — pares não veem o IP real; tráfego passa pelo servidor TURN.
+ * @returns {boolean} Verdadeiro se ligado; falso também sem armazenamento.
+ */
 export function isTurnOnly() {
   try {
     return localStorage.getItem(TURN_ONLY_KEY) === "1";
@@ -88,6 +96,10 @@ export function isTurnOnly() {
   }
 }
 
+/**
+ * LAN-19: liga ou desliga o modo "só TURN" (vale para as próximas conexões). Sem armazenamento, fica desligado.
+ * @param {boolean} on Ligar ou desligar.
+ */
 export function setTurnOnly(on) {
   try {
     if (on) localStorage.setItem(TURN_ONLY_KEY, "1");
@@ -97,6 +109,10 @@ export function setTurnOnly(on) {
   }
 }
 
+/**
+ * TURN próprio configurado pela pessoa.
+ * @returns {{urls: string, username: string, credential: string}} Campos aparados; vazios se não houver ou falhar a leitura.
+ */
 export function getCustomTurnConfig() {
   try {
     const raw = localStorage.getItem(CUSTOM_TURN_KEY);
@@ -112,6 +128,10 @@ export function getCustomTurnConfig() {
   }
 }
 
+/**
+ * Grava o TURN próprio da pessoa (endereço e usuário aparados; a credencial como veio).
+ * @param {{urls?: string, username?: string, credential?: string}} [config] Servidor TURN, usuário e credencial.
+ */
 export function saveCustomTurnConfig({ urls = "", username = "", credential = "" } = {}) {
   const clean = {
     urls: String(urls || "").trim(),
@@ -121,27 +141,51 @@ export function saveCustomTurnConfig({ urls = "", username = "", credential = ""
   localStorage.setItem(CUSTOM_TURN_KEY, JSON.stringify(clean));
 }
 
+/**
+ * Define quem trata as mensagens do canal de dados `vox-peer-v0` (substitui o anterior).
+ * @param {(msg: object, replyFn: (reply: object) => void, source: "rtc") => void} handler Recebe a mensagem, a resposta ao par e a origem.
+ */
 export function onVoxMessage(handler) {
   messageHandler = handler;
 }
 
+/**
+ * Define quem trata os envelopes que chegam pelo canal de DM (substitui o anterior).
+ * @param {(envelope: object, remotePeerId: string) => void} handler Recebe o envelope cifrado e o par que mandou.
+ */
 export function onDmMessage(handler) {
   dmMessageHandler = handler;
 }
 
-/** `handler(down)` na virada: true quando a sinalização cai, false quando volta. */
+/**
+ * `handler(down)` na virada: true quando a sinalização cai, false quando volta.
+ * @param {(down: boolean) => void} handler Ouvinte (substitui o anterior).
+ */
 export function onSignalingHealth(handler) {
   signalingHealthHandler = handler;
 }
 
+/**
+ * LAN-21: indica se a sinalização está caída (WebSocket e Nostr juntos, além da carência).
+ * @returns {boolean} Verdadeiro enquanto caída.
+ */
 export function isSignalingDown() {
   return signalingHealth.isDown();
 }
 
+/**
+ * Define quem recebe a chave de DM anunciada por um par na sinalização (substitui o anterior).
+ * @param {(address: string, dmPub: object) => void} handler Recebe a conta e a chave pública de DM.
+ */
 export function onPeerIdentity(handler) {
   identityHandler = handler;
 }
 
+/**
+ * Guarda a conta e a chave de DM deste aparelho e, com a sinalização aberta, se registra nela com elas.
+ * @param {string} address Conta deste aparelho.
+ * @param {object|null} [dmPub=null] Chave pública de DM (sem ela, mantém a anterior).
+ */
 export function announceIdentity(address, dmPub = null) {
   currentAddress = address || "";
   if (dmPub) currentDmPub = dmPub;
@@ -162,6 +206,13 @@ function isBeaconIdentity(address, peerId) {
   );
 }
 
+/**
+ * Associa a conta de um par ao seu id na malha (e guarda a chave de DM, se veio). O farol de memória pública só
+ * entrega a chave ao ouvinte de identidade e não entra no mapa.
+ * @param {string} address Conta do par.
+ * @param {string} peerId Id do par na malha.
+ * @param {object|null} [dmPub=null] Chave pública de DM anunciada.
+ */
 export function registerAddressMapping(address, peerId, dmPub = null) {
   if (!address || !peerId) return;
   if (dmPub && identityHandler) {
@@ -174,16 +225,30 @@ export function registerAddressMapping(address, peerId, dmPub = null) {
   }
 }
 
+/**
+ * Contas `vx_` de pares conhecidos pela sinalização (sem o farol de memória).
+ * @returns {string[]} Contas.
+ */
 export function listKnownPeerAddresses() {
   return Array.from(addressToPeer.keys()).filter(
     (a) => String(a || "").startsWith("vx_") && a !== "vx_zero_memory_beacon",
   );
 }
 
+/**
+ * Chave pública de DM que o par da conta anunciou.
+ * @param {string} address Conta do par.
+ * @returns {object|null} A chave, ou null se não for conhecida.
+ */
 export function getPeerDmPub(address) {
   return dmPubByAddress.get(address) || null;
 }
 
+/**
+ * Indica se há canal de DM WebRTC aberto com a conta.
+ * @param {string} address Conta do par.
+ * @returns {boolean} Verdadeiro com o canal de DM aberto.
+ */
 export function isAddressConnectedRtc(address) {
   const pid = addressToPeer.get(address);
   if (!pid) return false;
@@ -191,6 +256,10 @@ export function isAddressConnectedRtc(address) {
   return Boolean(entry?.dmDc && entry.dmDc.readyState === "open");
 }
 
+/**
+ * Quantos pares têm o canal de dados aberto.
+ * @returns {number} Pares conectados.
+ */
 export function getConnectedRtcPeersCount() {
   let count = 0;
   for (const entry of peerConnections.values()) {
@@ -201,6 +270,10 @@ export function getConnectedRtcPeersCount() {
   return count;
 }
 
+/**
+ * Ids dos pares com o canal de dados aberto.
+ * @returns {string[]} Ids na malha.
+ */
 export function listOpenRtcPeerIds() {
   const openPeers = [];
   for (const [peerId, entry] of peerConnections.entries()) {
@@ -213,6 +286,12 @@ export function listOpenRtcPeerIds() {
 
 let activeSignalingIndex = 0;
 
+/**
+ * Endereços de sinalização WebSocket a tentar. O endereço passado a `initWebRtc` ou guardado pela pessoa
+ * (`vox-custom-signaling-url`) vence a lista da configuração.
+ * @param {object} config Configuração de `loadSignalingConfig`.
+ * @returns {string[]} Endereços; sem nenhum, a sinalização local `ws://127.0.0.1:3921`.
+ */
 export function getSignalingCandidates(config) {
   if (customSignalingUrl) return [customSignalingUrl];
   const stored = (localStorage.getItem("vox-custom-signaling-url") || "").trim();
@@ -223,14 +302,24 @@ export function getSignalingCandidates(config) {
   return urls.length > 0 ? urls : ["ws://127.0.0.1:3921"];
 }
 
+/**
+ * Posição do endereço de sinalização em uso na lista de candidatos.
+ * @returns {number} Índice atual.
+ */
 export function getActiveSignalingIndex() {
   return activeSignalingIndex;
 }
 
+/** Volta ao primeiro endereço de sinalização. */
 export function resetSignalingIndex() {
   activeSignalingIndex = 0;
 }
 
+/**
+ * Trackers WebTorrent da configuração.
+ * @param {object} config Configuração de `loadSignalingConfig`.
+ * @returns {string[]} Endereços aparados; sem nenhum, dois trackers públicos.
+ */
 export function getWebTorrentTrackers(config) {
   const trackers = Array.isArray(config?.webtorrentTrackers)
     ? config.webtorrentTrackers.map((t) => String(t || "").trim()).filter(Boolean)
@@ -240,6 +329,11 @@ export function getWebTorrentTrackers(config) {
     : ["wss://tracker.openwebtorrent.com", "wss://tracker.btorrent.xyz"];
 }
 
+/**
+ * Relays Nostr da configuração.
+ * @param {object} config Configuração de `loadSignalingConfig`.
+ * @returns {string[]} Endereços aparados; sem nenhum, dois relays públicos.
+ */
 export function getNostrRelays(config) {
   const relays = Array.isArray(config?.nostrRelays)
     ? config.nostrRelays.map((r) => String(r || "").trim()).filter(Boolean)
@@ -249,6 +343,13 @@ export function getNostrRelays(config) {
     : ["wss://relay.damus.io", "wss://nos.lol"];
 }
 
+/**
+ * Todos os caminhos de sinalização conhecidos, para a tela de rede.
+ * @param {object} config Configuração de `loadSignalingConfig`.
+ * @returns {{baseUrls: string[], webtorrentTrackers: string[], nostrRelays: string[], totalEndpoints: number}}
+ *   Sinalização WebSocket, trackers, relays Nostr (os da configuração mais os padrões, sem repetir) e o total de
+ *   endereços (contando os relays de `getNostrRelays`).
+ */
 export function getDecentralizedSignalingMesh(config) {
   const baseUrls = getSignalingCandidates(config);
   const trackers = getWebTorrentTrackers(config);
@@ -261,17 +362,33 @@ export function getDecentralizedSignalingMesh(config) {
   };
 }
 
+/**
+ * Endereço de sinalização em uso.
+ * @param {object} config Configuração de `loadSignalingConfig`.
+ * @returns {string} O candidato da posição atual (em rodízio).
+ */
 export function getSignalingUrl(config) {
   const candidates = getSignalingCandidates(config);
   return candidates[activeSignalingIndex % candidates.length];
 }
 
+/**
+ * Passa ao próximo endereço de sinalização (em rodízio).
+ * @param {object} config Configuração de `loadSignalingConfig`.
+ * @returns {string} O novo endereço em uso.
+ */
 export function rotateSignalingUrl(config) {
   const candidates = getSignalingCandidates(config);
   activeSignalingIndex = (activeSignalingIndex + 1) % candidates.length;
   return candidates[activeSignalingIndex];
 }
 
+/**
+ * Liga o WebRTC: conecta à sinalização WebSocket e à Nostr em paralelo e, no modo "só TURN", já pede credencial.
+ * @param {string} peerId Id deste aparelho na malha.
+ * @param {string|null} [customUrl=null] Sinalização a usar no lugar da configuração.
+ * @returns {Promise<boolean>} Falso se o navegador não tem `RTCPeerConnection`.
+ */
 export async function initWebRtc(peerId, customUrl = null) {
   currentPeerId = peerId;
   customSignalingUrl = customUrl;
@@ -318,6 +435,7 @@ async function startNostrSignaling() {
   nostrTransport.start();
 }
 
+/** Desliga o WebRTC: fecha a sinalização (WebSocket e Nostr), todas as conexões com pares e zera o rodízio. */
 export function disconnectWebRtc() {
   isWebRtcEnabled = false;
   if (reconnectTimer) {
@@ -502,6 +620,13 @@ function collectIceServers(config) {
 
 const isTurnUrl = (u) => /^turns?:/i.test(String(u));
 
+/**
+ * Configuração da `RTCPeerConnection`: STUN, TURN da configuração, TURN próprio e TURN do Worker. No modo
+ * "só TURN", só servidores TURN e política `relay`, para o navegador nunca expor o IP real.
+ * @param {object} [config] Configuração de `loadSignalingConfig` (padrão: a já carregada).
+ * @param {{turnOnly?: boolean}} [options] `turnOnly` (padrão: `isTurnOnly()`).
+ * @returns {RTCConfiguration} `{iceServers}`, mais `iceTransportPolicy: "relay"` no modo "só TURN".
+ */
 export function createRtcConfig(config = configCache, { turnOnly = isTurnOnly() } = {}) {
   const iceServers = collectIceServers(config);
   if (turnOnly) {
@@ -516,6 +641,10 @@ export function createRtcConfig(config = configCache, { turnOnly = isTurnOnly() 
 
 let peerConnectHandler = null;
 
+/**
+ * Define quem é chamado quando o canal de dados com um par abre (substitui o anterior).
+ * @param {(remotePeerId: string, sendFn: (obj: object) => boolean) => void} handler Recebe o par e a função que manda a ele.
+ */
 export function onPeerConnect(handler) {
   peerConnectHandler = handler;
 }
@@ -767,6 +896,11 @@ function disposePeerChannels(entry) {
   }
 }
 
+/**
+ * Fecha a conexão com o par e seus canais. Conta como falha na telemetria se nunca chegou a abrir.
+ * @param {string} remotePeerId Id do par.
+ * @param {boolean} [skipFailureRecord=false] Não registrar falha (desligamento pedido).
+ */
 export function closePeerConnection(remotePeerId, skipFailureRecord = false) {
   const entry = peerConnections.get(remotePeerId);
   if (!entry) return;
@@ -784,6 +918,12 @@ export function closePeerConnection(remotePeerId, skipFailureRecord = false) {
   peerConnections.delete(remotePeerId);
 }
 
+/**
+ * Manda um envelope de DM pelo canal de DM aberto com a conta.
+ * @param {string} toAddress Conta de destino.
+ * @param {object} envelope Envelope cifrado.
+ * @returns {boolean} Verdadeiro se foi enviado; falso sem par conhecido, sem canal aberto ou com erro.
+ */
 export function sendDmRtc(toAddress, envelope) {
   const pid = addressToPeer.get(toAddress);
   if (!pid) return false;
@@ -797,6 +937,12 @@ export function sendDmRtc(toAddress, envelope) {
   }
 }
 
+/**
+ * Manda uma mensagem a um par pelo canal de dados.
+ * @param {string} remotePeerId Id do par.
+ * @param {object} obj Mensagem (vai em JSON).
+ * @returns {boolean} Verdadeiro se foi enviada.
+ */
 export function sendVoxMessage(remotePeerId, obj) {
   const entry = peerConnections.get(remotePeerId);
   if (entry && entry.dc && entry.dc.readyState === "open") {
@@ -808,6 +954,11 @@ export function sendVoxMessage(remotePeerId, obj) {
   return false;
 }
 
+/**
+ * Manda a mesma mensagem a todos os pares com o canal de dados aberto.
+ * @param {object} obj Mensagem (vai em JSON).
+ * @returns {number} Para quantos pares foi enviada.
+ */
 export function broadcastRtcMessage(obj) {
   const payload = JSON.stringify(obj);
   let sentCount = 0;

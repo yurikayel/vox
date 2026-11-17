@@ -6,6 +6,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Documentação: JSDoc do lote 2 (malha, WebRTC, contas vinculadas e cache)
+- JSDoc completo (descrição, `@param`, `@returns`) em todos os exports de `peers.js`, `webrtc-peer.js`, `linked-accounts.js` e `cache-node.js`, mais o cabeçalho `@file` de `peers.js` e de `cache-node.js` (que tinha só um comentário de linha). Só comentários mudaram: os tokens de código dos quatro arquivos são idênticos aos de antes. A dívida de `audit:docs` cai de 1.736 para 1.602 achados (`scripts/docs-debt.json`, `--prune`). Sem bump de SW (comportamento igual).
+
 ### Documentação: JSDoc do lote 1 (moderação e sincronização)
 - JSDoc completo (descrição, `@param`, `@returns`) em todos os exports de `moderation.js`, `peer-sync.js`, `report-review.js` e `vox-link.js`, mais o cabeçalho de `moderation.js`. Só comentários mudaram; nenhuma linha de código. A dívida de `audit:docs` cai de 1.870 para 1.736 achados (`scripts/docs-debt.json`, `--prune`). Sem bump de SW (comportamento igual).
 
