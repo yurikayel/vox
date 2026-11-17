@@ -91,7 +91,6 @@
  ],
  "client/js/app/init.js": [
   "jsdoc:initGossipListeners",
-  "jsdoc:resolvePostForFrame",
   "jsdoc:executeFrameAction",
   "jsdoc:handleFrameActionClick",
   "jsdoc:openPostEditModal",

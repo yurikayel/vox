@@ -1,6 +1,5 @@
 /** @file App initialization, social interactions, and gossip routing. */
 import * as share from "../share.js";
-import * as mock from "../mock.js";
 import * as render from "../render.js";
 import * as cacheNode from "../cache-node.js";
 import * as social from "../social.js";
@@ -35,6 +34,7 @@ import {
   onNestedCommentReplySubmit,
 } from "./screens-compose.js";
 import { handleRepostClick } from "./repost-ui.js";
+import { markFrameChoice, refreshFrameContent, resolvePostForFrame } from "./frame-ui.js";
 
 function handleGossipReply(item, cur) {
   const topicArticle = document.querySelector(`article[data-id="${item.replyTo}"]`);
@@ -141,15 +141,6 @@ export function initGossipListeners() {
   });
 }
 
-export async function resolvePostForFrame(postId) {
-  let post = await cacheNode.getLocalPost(postId);
-  if (!post?.frame) {
-    const tour = mock.mockRecentTopics()?.items || [];
-    post = tour.find((p) => p.id === postId) || null;
-  }
-  return post;
-}
-
 export async function executeFrameAction(frame, postId, index, label) {
   const user = await getActiveUser();
   const payload = frames.buildFrameActionPayload({
@@ -163,13 +154,7 @@ export async function executeFrameAction(frame, postId, index, label) {
   await cacheNode.saveLocalPost(signed);
   frames.saveUserFrameAction(postId, signed);
   peers.broadcastGossipUpdate(signed);
-
-  const container = document.getElementById(`frame-content-${postId}`);
-  const parsed = frames.parseFrame(frame);
-  if (container && parsed.valid) {
-    const actions = await cacheNode.getLocalPosts({ type: "frame-action", postId }).catch(() => []);
-    container.innerHTML = render.renderFrameContentHtml(parsed.frame, frames.getFrameState(parsed.frame, actions, signed));
-  }
+  await refreshFrameContent(document, postId, frame, signed);
   share.showToast(i18n.frameActionRecordedToast || "Ação registrada no mini-app!");
 }
 
@@ -187,9 +172,11 @@ export async function handleFrameActionClick(btn) {
   btn.textContent = "Gravando…";
   try {
     await executeFrameAction(post.frame, postId, index, label);
+    markFrameChoice(btn, index);
   } catch (err) {
     console.warn("Frame action failed", err);
     share.showToast("Falha ao executar ação no frame", "error");
+  } finally {
     btn.disabled = false;
     btn.textContent = origText;
   }
