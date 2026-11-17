@@ -152,7 +152,19 @@ export function privateKeyBytes(privateJwk) {
  * @returns {Promise<{ kind: "semente"|"chave", seed: Uint8Array|null, signing: object, dm: object|null }>}
  */
 export async function identityFromPhrase(input) {
-  const entropy = await wordsToEntropy(input);
+  return identityFromEntropy(await wordsToEntropy(input));
+}
+
+/**
+ * As mesmas chaves da frase a partir do segredo em bytes (o que os guardiões devolvem): 16 bytes são a semente,
+ * 32 são a chave de assinatura de conta antiga.
+ * @param {Uint8Array} entropy
+ * @returns {Promise<{ kind: "semente"|"chave", seed: Uint8Array|null, signing: object, dm: object|null }>}
+ */
+export async function identityFromEntropy(entropy) {
+  if (!(entropy instanceof Uint8Array) || (entropy.length !== SEED_BYTES && entropy.length !== 32)) {
+    throw new Error("O segredo tem 16 ou 32 bytes.");
+  }
   if (entropy.length === SEED_BYTES) return { kind: "semente", seed: entropy, ...(await identityFromSeed(entropy)) };
   const d = bytesToBigInt(entropy);
   if (d < 1n || d >= N) throw new Error("Estas palavras não formam uma chave válida.");

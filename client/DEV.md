@@ -14,7 +14,7 @@ Este documento descreve como testar o fluxo de leitura, autoria (upload de trans
 |-------|---------|
 | **`main` deployável** | Pages e CD disparam em push em `main`; mantenha-a estável. |
 | **Trabalho novo** | `git pull origin main` → `git checkout -b feat/...` (ou `fix/...`). |
-| **Entrega** | Push da branch → PR ou merge; **não** commitar features direto em `main` (agentes incluídos). |
+| **Entrega** | Push da branch → PR para `develop`; `develop` → `main` por PR no fechamento do lote. **Não** commitar direto em `develop` nem em `main` (agentes incluídos). |
 
 Ver também [CONTRIBUTING.md](../CONTRIBUTING.md) e [README — Código aberto, participação e governança](../README.md#-código-aberto-participação-e-governança-do-projeto).
 
@@ -1137,8 +1137,8 @@ OAuth e compartilhamento nativo citam provedores apenas onde exigido por integra
   - Derivação PBKDF2 (50.000 iterações) e cifra AES-GCM-256 no cliente a partir de identificadores perenes: Google (`sub`), Meta (`profile.id`) ou **Senha Soberana** (sem Big Tech).
   - O servidor/relay (`zero-central-memory` / `relay/central_memory.py`) armazena apenas hash SHA-256 e ciphertext — servidores nunca têm custódia nem acesso a chaves privadas.
 - **Sincronização Cross-Device (QR Code & Rota `#/sync`):**
-  - Rota `#/sync?p=...` decodifica a senha e importa a identidade instantaneamente.
-  - No perfil (`#/profile`), botão `📲 QR Code para Celular` renderiza QR code nativo; ao apontar a câmera do celular, a conta é transferida com zero digitação manual.
+  - Rota `#/sync?b=...` leva só o cofre cifrado; a Senha Soberana é digitada no outro aparelho (PM-92). Links antigos `#/sync?p=` ainda abrem, com aviso.
+  - No perfil, `📲 QR Code para Celular` grava o cofre e mostra um QR com um cofre mínimo (conta, semente da frase de 12 palavras e o nome, se couber), cifrado só pela senha, para caber no QR versão 11 (321 bytes; `buildQrSyncRecord` em `passphrase-vault.js`). Pix e o resto vêm pelo link ou pelo cofre guardado. Conta de antes da frase não tem semente e recebe o motivo em vez de um QR.
   - No onboarding (`renderOAuthEnrich`), formulário direto para restauração de conta soberana via senha.
 - **Deduplicação de Pessoas:**
   - `people-index.js` e `local-account.js` higienizam e colapsam contas clonadas com o mesmo vínculo social, garantindo um único cartão no diretório de Pessoas.

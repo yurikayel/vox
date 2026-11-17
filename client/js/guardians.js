@@ -190,6 +190,14 @@ export function applyReceipt(owner, receipt) {
   return true;
 }
 
+/**
+ * Esquece a divisão ativa da dona (parte 3d, tirar todos os guardiões). Quem chama manda as revogações.
+ * @param {string} owner
+ */
+export function clearOwnerSplit(owner) {
+  localStorage.removeItem(ownerMapKey(owner));
+}
+
 // ---- Guarda do guardião: caixa preta. ----
 
 function readHeld() {

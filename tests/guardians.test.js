@@ -9,79 +9,16 @@ import "./setup.js";
 import * as guardians from "../client/js/guardians.js";
 import * as flow from "../client/js/app/guardians-flow.js";
 import * as localAccount from "../client/js/local-account.js";
-import * as keyLock from "../client/js/key-lock.js";
 import * as keystore from "../client/js/keystore.js";
 import { getAccountExits } from "../client/js/account-exit.js";
 import { openRecoverySecret } from "../client/js/account-phrase.js";
+import { deliverToGuardians, deliverToOwner, makeDeps, onDevice, setup } from "./guardians-harness.js";
 import { combineShares } from "../client/js/shamir-gf256.js";
 import { identityFromSeed } from "../client/js/recovery-phrase.js";
 import { parseRoute } from "../client/js/app/route-parse.js";
 import * as screen from "../client/js/render/guardians.js";
 
 const fromB64url = (s) => Uint8Array.from(Buffer.from(s, "base64url"));
-const heldByDevice = new Map();
-
-/** Troca a guarda de pedaços para a do aparelho `who` enquanto `fn` roda. */
-async function onDevice(who, fn) {
-  const saved = localStorage.getItem(guardians.HELD_STORAGE);
-  if (heldByDevice.has(who)) localStorage.setItem(guardians.HELD_STORAGE, heldByDevice.get(who));
-  else localStorage.removeItem(guardians.HELD_STORAGE);
-  try {
-    return await fn();
-  } finally {
-    heldByDevice.set(who, localStorage.getItem(guardians.HELD_STORAGE) || "{}");
-    if (saved == null) localStorage.removeItem(guardians.HELD_STORAGE);
-    else localStorage.setItem(guardians.HELD_STORAGE, saved);
-  }
-}
-
-function makeDeps(me, outbox, overrides = {}) {
-  return {
-    getMe: () => me,
-    getOwnerName: () => "Ana",
-    getDmPub: async () => ({ kty: "EC" }),
-    sign: (body) => localAccount.signPayload(body),
-    verify: (signed) => localAccount.verifyPayload(signed),
-    seal: async (_pub, text, meta) => ({ ...meta, text }),
-    dispatch: async (to, env) => {
-      outbox.push(env);
-      return "delivered";
-    },
-    openSecret: (pass) => openRecoverySecret(pass),
-    follows: () => true,
-    addedMe: () => true,
-    alert: () => {},
-    ...overrides,
-  };
-}
-
-async function setup(count = 3) {
-  await localAccount.wipeLocalAccount();
-  localStorage.clear();
-  heldByDevice.clear();
-  keyLock.__resetKeyLockForTests();
-  const owner = (await localAccount.ensureLocalAccount()).routeId;
-  const ids = [];
-  for (let i = 0; i < count; i++) ids.push((await localAccount.createAdditionalAccount({ displayName: `G${i}` })).routeId);
-  await localAccount.switchActiveAccount(owner);
-  return { owner, ids };
-}
-
-/** Entrega no aparelho de cada guardião as mensagens para ele; devolve o que eles mandaram de volta. */
-async function deliverToGuardians(owner, messages, overrides = {}) {
-  const replies = [];
-  for (const env of messages) {
-    await localAccount.switchActiveAccount(env.to);
-    await onDevice(env.to, () => flow.receiveGuardianDm({ from: env.from }, env.text, makeDeps(env.to, replies, overrides)));
-  }
-  await localAccount.switchActiveAccount(owner);
-  return replies;
-}
-
-async function deliverToOwner(owner, replies) {
-  for (const env of replies) await flow.receiveGuardianDm({ from: env.from }, env.text, makeDeps(owner, []));
-}
-
 test("guardiões - corpo, envelope e forma do pedaço", () => {
   const secret = crypto.getRandomValues(new Uint8Array(16));
   const split = guardians.buildShareBodies({ secret, kind: "semente", guardians: ["vx_a", "vx_b", "vx_c"], m: 2 });

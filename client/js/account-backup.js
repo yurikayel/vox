@@ -6,34 +6,32 @@
  * depois disso, exportar sem a senha certa lança `KeyLockedError`.
  */
 
-import * as cryptoDm from "./crypto-dm.js";
 import { KIND_PLAIN, KIND_WRAPPED, wrapBackup, unwrapBackup } from "./account-backup-wrap.js";
 import {
   computeRouteId,
+  ensureLocalAccount,
   getDisplayName,
   getMeshDiscoverable,
   getPixKey,
+  importLocalAccountBundle,
   lockAfterPasswordBackup,
   openAccountKeys,
-  setDisplayName,
   setMeshDiscoverable,
-  setPixKey,
-  storeActiveAccount,
 } from "./local-account.js";
-import { sealJson } from "./keystore.js";
 import { markAccountExit } from "./account-exit.js";
 import { getLocalIdentityMeta, setLocalIdentityMeta } from "./profile-identity-meta.js";
 
-export { KIND_WRAPPED, peekBackupKind } from "./account-backup-wrap.js";
+export { KIND_PLAIN, KIND_WRAPPED, peekBackupKind } from "./account-backup-wrap.js";
 
 async function buildAccountBackup(passphrase) {
-  const { acc, privateJwk, dmKeypair } = await openAccountKeys(passphrase);
+  const { acc, privateJwk, dmKeypair, seed } = await openAccountKeys(passphrase);
   return {
     voxVersion: 1,
     kind: KIND_PLAIN,
     routeId: acc.routeId,
     publicJwk: acc.publicJwk,
     privateJwk,
+    ...(seed ? { seed } : {}),
     dmKeypair,
     displayName: getDisplayName(),
     pixKey: getPixKey(),
@@ -111,17 +109,11 @@ async function challengeSigningPair(parsed) {
   }
 }
 
+// Pelo mesmo caminho da frase e do cofre: a conta que estava ativa vai para o cofre local e não deixa nome, Pix,
+// enriquecimento nem chave de DM na restaurada.
 async function persistAccountBackup(parsed) {
-  const acc = storeActiveAccount({
-    routeId: parsed.routeId,
-    publicJwk: parsed.publicJwk,
-    privateJwk: await sealJson(parsed.privateJwk),
-    createdAt: parsed.createdAt || Date.now(),
-    importedAt: Date.now(),
-  });
-  if (parsed.dmKeypair) await cryptoDm.setDmKeypair(parsed.dmKeypair);
-  if (parsed.displayName) setDisplayName(parsed.displayName);
-  if (parsed.pixKey) setPixKey(parsed.pixKey);
+  if (!(await importLocalAccountBundle({ ...parsed, pix: parsed.pixKey }))) throw new Error("Backup sem chaves válidas");
+  const acc = await ensureLocalAccount();
   if (parsed.identityMeta) setLocalIdentityMeta(parsed.routeId, parsed.identityMeta);
   if (typeof parsed.meshDiscoverable === "boolean") {
     setMeshDiscoverable(parsed.meshDiscoverable);

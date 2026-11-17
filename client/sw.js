@@ -4,7 +4,7 @@
 
 // O Service Worker atua no cache offline do shell e notificações de status, sem abrir WebRTC.
 
-const CACHE_NAME = "vox-pwa-v7.117-real-network-audio-video-upload";
+const CACHE_NAME = "vox-pwa-v7.127-real-network-audio-video-upload";
 
 const SHELL_ASSETS = [
 
@@ -62,6 +62,7 @@ const SHELL_ASSETS = [
   "./js/app/onboarding-side-effects.js",
 
   "./js/app/onboarding.js",
+  "./js/app/onboarding-email.js",
   "./js/app/account-exit-banner.js",
 
   "./js/app/route-parse.js",
@@ -84,6 +85,7 @@ const SHELL_ASSETS = [
   "./js/app/screens-people.js",
 
   "./js/app/screens-profile.js",
+  "./js/app/profile-vault-sync.js",
 
   "./js/app/screens-voxpedia.js",
   "./js/app/screens-not-found.js",
@@ -97,6 +99,19 @@ const SHELL_ASSETS = [
   "./js/labs/collective-mofn.js",
 
   "./js/labs/mofn-lab.js",
+  "./js/labs/ai-social-dungeon-lab.js",
+  "./js/community-pillar-pool.js",
+  "./js/rpg-sheet-and-lore.js",
+  "./js/rpg-crypto-table.js",
+  "./js/rpg-maritaca-router.js",
+  "./js/dungeon/dungeon-chrome.js",
+  "./js/dungeon/dungeon-controller.js",
+  "./js/dungeon/dungeon-state.js",
+  "./js/dungeon/rpg-illustrations.js",
+  "./js/dungeon/screen-camp.js",
+  "./js/dungeon/screen-dm.js",
+  "./js/dungeon/screen-sheet.js",
+  "./js/dungeon/screen-table.js",
 
   "./js/render/status.js",
 
@@ -131,6 +146,8 @@ const SHELL_ASSETS = [
   "./js/chat-bridge.js",
 
   "./js/demo-seed.js",
+
+  "./js/email-kit.js",
 
   "./js/frames.js",
   "./js/feature-flags.js",
@@ -192,6 +209,7 @@ const SHELL_ASSETS = [
   "./js/listing-ui.js",
 
   "./js/local-account.js",
+  "./js/account-social-match.js",
   "./js/sig-format.js",
   "./js/signed-verify.js",
   "./js/aviso.js",
@@ -223,6 +241,8 @@ const SHELL_ASSETS = [
   "./js/oauth-profile.js",
 
   "./js/oauth-vault.js",
+  "./js/passphrase-vault.js",
+  "./js/vault-store.js",
   "./js/keystore.js",
   "./js/key-at-rest.js",
   "./js/key-lock.js",
@@ -237,6 +257,10 @@ const SHELL_ASSETS = [
   "./js/app/guardians-flow.js",
   "./js/render/guardians.js",
   "./js/app/screens-guardians.js",
+  "./js/guardian-return.js",
+  "./js/app/guardian-return-flow.js",
+  "./js/render/guardian-return.js",
+  "./js/app/screens-guardian-return.js",
   "./js/render/recovery-phrase.js",
   "./js/app/screens-phrase.js",
   "./js/p256.js",
@@ -379,10 +403,12 @@ const SHELL_ASSETS = [
   "./js/render/vote.js",
 
   "./js/render/profile.js",
+  "./js/render/profile-sovereignty.js",
 
   "./js/render/profile-voxels.js",
 
   "./js/render/oauth-modals.js",
+  "./js/render/genesis-entry.js",
   "./js/render/oauth-import.js",
 
   "./js/render/network.js",
