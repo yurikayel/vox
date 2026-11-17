@@ -28,11 +28,24 @@ export async function fetchModActions(communityId) {
   return [...merged, ...(await naturalHideActions(communityId, merged))];
 }
 
+/** PM-83: quem constrói os arquivamentos firmes conferidos; a camada `app` liga na partida (ADR-035). */
+let naturalHideLoader = null;
+
+/**
+ * Liga o carregador de arquivamentos de moderadores naturais (PM-83). A camada `app` chama na partida, para que
+ * esta camada de base não importe fluxos de `app/` (ADR-035).
+ * @param {((communityId: string, modActions: object[]) => Promise<object[]>)|null} fn Carregador, ou `null` para desligar.
+ * @returns {void}
+ */
+export function setNaturalHideLoader(fn) {
+  naturalHideLoader = typeof fn === "function" ? fn : null;
+}
+
 /** PM-83: arquivamentos firmes de moderadores naturais, já conferidos (só com a flag de laboratório). */
 async function naturalHideActions(communityId, modActions) {
+  if (!naturalHideLoader) return [];
   try {
-    const flow = await import("./app/natural-mod-flow.js");
-    return flow.naturalModLabOn() ? await flow.loadNaturalHideActions(communityId, modActions) : [];
+    return await naturalHideLoader(communityId, modActions);
   } catch {
     return [];
   }

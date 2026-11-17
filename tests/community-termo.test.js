@@ -60,7 +60,7 @@ test("mediação — conversa com a moderação e cartão do post; não oculta n
   const hash = report.buildMediationDmHash("vx_dono", { postId: "p1", communityId: "c1" });
   assert.equal(hash, "#/dm/vx_dono?ctxType=topic&ctxId=p1&ctxTitle=Pedido+de+media%C3%A7%C3%A3o&c=c1");
   assert.equal(report.buildMediationDmHash("", { postId: "p1" }), "");
-  const menu = fs.readFileSync(new URL("../client/js/render/post-more-menu.js", import.meta.url), "utf8");
+  const menu = fs.readFileSync(new URL("../client/js/app/post-more-menu.js", import.meta.url), "utf8");
   assert.ok(menu.includes('data-action="mediation">Pedir mediação</button>'));
   const body = menu.slice(menu.indexOf("async function openMediation"), menu.indexOf("async function onSheetAction"));
   assert.ok(!/quarantine|saveReport|archive/i.test(body), "mediação não arquiva nem oculta");

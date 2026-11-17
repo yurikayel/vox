@@ -1707,7 +1707,7 @@
   "returns:renderPhotoTagBarHtml",
   "jsdoc:renderPhotoTagLayerHtml"
  ],
- "client/js/render/post-more-actions.js": [
+ "client/js/app/post-more-actions.js": [
   "jsdoc:refreshSaveLabel",
   "jsdoc:refreshSheetExtras",
   "jsdoc:toggleSaveFromMenu",

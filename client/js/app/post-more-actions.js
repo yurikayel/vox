@@ -3,9 +3,9 @@
 import * as social from "../social.js";
 import * as share from "../share.js";
 import * as repost from "../repost.js";
-import { beginTagMode } from "../app/photo-tag-ui.js";
-import { openZapModal } from "../app/zap-modal.js";
-import { toastRepostResult } from "../app/repost-ui.js";
+import { beginTagMode } from "./photo-tag-ui.js";
+import { openZapModal } from "./zap-modal.js";
+import { toastRepostResult } from "./repost-ui.js";
 
 export function refreshSaveLabel(sheet, postId) {
   const btn = sheet?.querySelector('[data-action="save"]');
