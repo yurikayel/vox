@@ -10,7 +10,7 @@ Usuários pedem foto/nome rápidos; identidade Vox permanece `vx_*` local com ch
 
 - Google Identity Services / Meta SDK **no browser** importam apenas claims públicos: `displayName`, `avatarUrl`, `bio` (quando disponível).
 - **Não** persistir access tokens, refresh tokens ou IDs OAuth como chave primária.
-- `routeId` e par ECDSA/ECDH **inalterados**; OAuth grava em `vox-profile-enrichment-v1` via [`local-account.js`](../../client/js/local-account.js).
+- `routeId` e par ECDSA/ECDH **inalterados**; OAuth grava em `vox-profile-enrichment-v1` via [`local-account.js`](../../client/js/identity/local-account.js).
 - Opcional: usuário **Pula** e edita perfil manualmente.
 
 ## LGPD

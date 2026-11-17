@@ -5,10 +5,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import "./setup.js";
-import * as localAccount from "../client/js/local-account.js";
+import * as localAccount from "../client/js/identity/local-account.js";
 import * as oauthVault from "../client/js/vault/index.js";
 import * as vaultCrypto from "../client/js/vault/vault-crypto.js";
-import * as identitySeed from "../client/js/identity-seed.js";
+import * as identitySeed from "../client/js/identity/identity-seed.js";
 import * as qr from "../client/js/qr-url.js";
 import { QR_MAX_BYTES } from "../client/js/qr-url-codec.js";
 import { buildSyncUrl } from "../client/js/app/profile-vault-sync.js";

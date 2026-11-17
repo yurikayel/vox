@@ -7,8 +7,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { mockStores } from "./setup.js";
 import * as banner from "../client/js/app/account-exit-banner.js";
-import * as accountExit from "../client/js/account-exit.js";
-import * as localAccount from "../client/js/local-account.js";
+import * as accountExit from "../client/js/identity/account-exit.js";
+import * as localAccount from "../client/js/identity/local-account.js";
 
 /** Documento mínimo: guarda os elementos anexados ao body e acha por id. */
 function fakeDoc() {

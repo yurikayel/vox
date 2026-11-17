@@ -5,9 +5,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import "./setup.js";
-import * as localAccount from "../client/js/local-account.js";
+import * as localAccount from "../client/js/identity/local-account.js";
 import * as vaultCrypto from "../client/js/vault/vault-crypto.js";
-import * as accountExit from "../client/js/account-exit.js";
+import * as accountExit from "../client/js/identity/account-exit.js";
 import * as emailKit from "../client/js/email-kit.js";
 import { renderProfileTabContent } from "../client/js/render/profile.js";
 import { renderPhraseIntroHtml } from "../client/js/render/recovery-phrase.js";

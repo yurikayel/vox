@@ -2,7 +2,7 @@ import * as cacheNode from "./cache-node.js";
 import * as webrtcPeer from "./webrtc-peer.js";
 import { allowGossipFromAuthor } from "./rate-limit.js";
 import { noteKeySeen } from "./new-key-guard.js";
-import * as localAccount from "./local-account.js";
+import * as localAccount from "./identity/index.js";
 import * as mediaBlob from "./media-blob.js";
 import * as manifestMesh from "./peers-cache-manifest.js";
 import * as blobAffinity from "./peers-blob-affinity.js";

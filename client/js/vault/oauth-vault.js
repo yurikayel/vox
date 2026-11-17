@@ -8,7 +8,7 @@
  * senha, e revogados (`vault-legacy.js`).
  */
 
-import * as localAccount from "../local-account.js";
+import * as localAccount from "../identity/index.js";
 import * as share from "../share.js";
 import { getCentralMemoryUrls } from "../central-memory.js";
 import { cleanupSupersededIdentity, isValidAccountBundle } from "./passphrase-vault.js";

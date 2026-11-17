@@ -64,7 +64,7 @@ flowchart TB
 
 ## Identidade e perfil
 
-- [local-account.js](../client/js/local-account.js) — ECDSA P-256, signPayload / verifyPayload.
+- [local-account.js](../client/js/identity/local-account.js) — ECDSA P-256, signPayload / verifyPayload.
 - [oauth-profile.js](../client/js/oauth-profile.js) — GIS/Meta client-only (ADR-002).
 - [profile-card.js](../client/js/profile-card.js) + [mesh-profile.js](../client/js/mesh-profile.js) — descoberta opt-in (ADR-003).
 - [profile-directory.js](../client/js/profile-directory.js) — cache persistente de cartões de perfil P2P conhecidos.

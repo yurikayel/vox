@@ -5,7 +5,7 @@
 
 ## Contexto
 
-Militância pede **contas de organização** (sindicato, diretório, conselho) com mais de uma pessoa no controle. Hoje o PWA é **uma chave ECDSA P-256 por aparelho**: `ensureLocalAccount` em [`local-account.js`](../../client/js/local-account.js) gera um par, persiste JWK em `localStorage` e deriva `routeId` `vx_…` (SHA-256 de `P-256:x:y`). Não há cofre compartilhado, nem threshold, nem perfil “da entidade” distinto da pessoa no telefone.
+Militância pede **contas de organização** (sindicato, diretório, conselho) com mais de uma pessoa no controle. Hoje o PWA é **uma chave ECDSA P-256 por aparelho**: `ensureLocalAccount` em [`local-account.js`](../../client/js/identity/local-account.js) gera um par, persiste JWK em `localStorage` e deriva `routeId` `vx_…` (SHA-256 de `P-256:x:y`). Não há cofre compartilhado, nem threshold, nem perfil “da entidade” distinto da pessoa no telefone.
 
 Este ADR fixa a tese e um spike reproduzível. **Não** substitui T01 (backup `.voxid`), **não** migra a curva, **não** marca T02 como `já existe`.
 

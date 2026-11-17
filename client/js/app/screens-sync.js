@@ -5,7 +5,7 @@
  */
 import * as render from "../render.js";
 import * as share from "../share.js";
-import * as accountExit from "../account-exit.js";
+import * as accountExit from "../identity/index.js";
 import * as oauthProfile from "../oauth-profile.js";
 import { CANTINA_STORAGE_KEY } from "./cantina-gate.js";
 import { removeReadFirstBanner } from "./read-first.js";

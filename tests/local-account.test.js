@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import "./setup.js";
-import * as localAccount from "../client/js/local-account.js";
+import * as localAccount from "../client/js/identity/local-account.js";
 import * as cacheNode from "../client/js/cache-node.js";
 
 test("local-account - gera e persiste par ECDSA P-256 e routeId unico", async () => {

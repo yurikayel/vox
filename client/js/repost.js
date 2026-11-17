@@ -1,6 +1,6 @@
 /** Persistência de republicação (local + gossip). */
 
-import * as localAccount from "./local-account.js";
+import * as localAccount from "./identity/index.js";
 import * as cacheNode from "./cache-node.js";
 import * as peers from "./peers.js";
 import { buildRepostDraft, findOwnCite } from "./repost-draft.js";

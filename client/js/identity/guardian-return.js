@@ -10,11 +10,11 @@
  *   fim, se a conta juntada é a pedida.
  */
 
-import { BIP39_PT } from "./data/bip39-pt.js";
+import { BIP39_PT } from "../data/bip39-pt.js";
 import { isWellFormedShare, SHARE_TYPE } from "./guardians.js";
 import { bigIntTo32Bytes, bytesToBigInt, compressPoint, decompressPoint } from "./p256.js";
-import { combineShares } from "./shamir-gf256.js";
-import { b64UrlToBytes, bytesToB64Url } from "./signed-verify.js";
+import { combineShares } from "../shamir-gf256.js";
+import { b64UrlToBytes, bytesToB64Url } from "../signed-verify.js";
 
 /** Resposta do guardião, dentro do envelope selado para a chave temporária. */
 export const REPLY_TYPE = "vox-guardiao-volta";

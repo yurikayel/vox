@@ -11,7 +11,7 @@ import {
 } from "../color-mode.js";
 import { applySkyTheme } from "../sky-theme.js";
 import { appShellFooterTagline } from "../i18n-pt-br.js";
-import * as localAccount from "../local-account.js";
+import * as localAccount from "../identity/index.js";
 import { escapeHtml, root, renderAvatarHtml } from "./util.js";
 
 /** Squircle branco + X azul — mesmo asset em claro/escuro (sem tile navy na shell). */

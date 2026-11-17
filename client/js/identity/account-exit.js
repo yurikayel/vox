@@ -6,7 +6,7 @@
  */
 
 import * as localAccount from "./local-account.js";
-import * as cacheNode from "./cache-node.js";
+import * as cacheNode from "../cache-node.js";
 import { isLocked } from "./keystore.js";
 
 /**

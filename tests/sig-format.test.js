@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import "./setup.js";
-import * as localAccount from "../client/js/local-account.js";
+import * as localAccount from "../client/js/identity/local-account.js";
 import { SIGV2_FROM, canonicalString, signingVersion, withSigv } from "../client/js/sig-format.js";
 import { renderPhotoTagBarHtml } from "../client/js/render/photo-tag-pins.js";
 

@@ -9,7 +9,7 @@ import * as cacheNode from "./cache-node.js";
 import * as hydrate from "./central-memory-hydrate.js";
 import { isBeforeGenesisMs, isTestRouteId } from "./genesis.js";
 import { getRelayHttpUrls } from "./inbox.js";
-import * as localAccount from "./local-account.js";
+import * as localAccount from "./identity/index.js";
 import * as mediaBlob from "./media-blob.js";
 import * as manifestMesh from "./peers-cache-manifest.js";
 import * as serverChoice from "./memory-server-choice.js";

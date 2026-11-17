@@ -3,7 +3,7 @@ import * as render from "../render.js";
 import * as peers from "../peers.js";
 import * as share from "../share.js";
 import * as wallet from "../wallet.js";
-import * as localAccount from "../local-account.js";
+import * as localAccount from "../identity/index.js";
 import * as pixKeyHelper from "../pix-key.js";
 import { renderNetworkWizard, renderBackupWizard, renderWalletWizard } from "../render/guided-setup.js";
 import { bindComposeStepper } from "./compose-stepper.js";
@@ -82,7 +82,7 @@ function reportVaultResult(out, res, pass) {
 
 async function downloadWrappedFile(pass) {
   try {
-    const { exportAccountBundle } = await import("../account-backup.js");
+    const { exportAccountBundle } = await import("../identity/index.js");
     const jsonStr = await exportAccountBundle(pass, { asFile: true });
     share.downloadBlob(new Blob([jsonStr], { type: "application/json" }), `vox-soberania-${JSON.parse(jsonStr).routeId}.voxid`);
     share.showToast("Arquivo cifrado baixado. Guarde fora deste aparelho.");

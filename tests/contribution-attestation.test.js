@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import "./setup.js";
-import * as localAccount from "../client/js/local-account.js";
+import * as localAccount from "../client/js/identity/local-account.js";
 import * as peers from "../client/js/peers.js";
 import * as attestation from "../client/js/contribution-attestation.js";
 

@@ -1,7 +1,7 @@
 import "./setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
-import * as localAccount from "../client/js/local-account.js";
+import * as localAccount from "../client/js/identity/local-account.js";
 import * as profileCard from "../client/js/profile-card.js";
 
 test("profile-card - canonical id and signed card", async () => {

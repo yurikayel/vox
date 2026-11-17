@@ -5,12 +5,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import "./setup.js";
-import * as guardians from "../client/js/guardians.js";
+import * as guardians from "../client/js/identity/guardians.js";
 import * as flow from "../client/js/app/guardians-flow.js";
-import * as localAccount from "../client/js/local-account.js";
-import { getAccountExits } from "../client/js/account-exit.js";
+import * as localAccount from "../client/js/identity/local-account.js";
+import { getAccountExits } from "../client/js/identity/account-exit.js";
 import { combineShares } from "../client/js/shamir-gf256.js";
-import { identityFromSeed } from "../client/js/recovery-phrase.js";
+import { identityFromSeed } from "../client/js/identity/recovery-phrase.js";
 import * as screen from "../client/js/render/guardians.js";
 import { deliverToGuardians, deliverToOwner, makeDeps, onDevice, setup } from "./guardians-harness.js";
 

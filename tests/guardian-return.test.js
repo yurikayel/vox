@@ -6,19 +6,19 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import "./setup.js";
-import * as guardians from "../client/js/guardians.js";
+import * as guardians from "../client/js/identity/guardians.js";
 import * as sendFlow from "../client/js/app/guardians-flow.js";
-import * as ret from "../client/js/guardian-return.js";
+import * as ret from "../client/js/identity/guardian-return.js";
 import * as flow from "../client/js/app/guardian-return-flow.js";
-import * as localAccount from "../client/js/local-account.js";
-import * as keyLock from "../client/js/key-lock.js";
-import * as keystore from "../client/js/keystore.js";
+import * as localAccount from "../client/js/identity/local-account.js";
+import * as keyLock from "../client/js/identity/key-lock.js";
+import * as keystore from "../client/js/identity/keystore.js";
 import * as cryptoDm from "../client/js/crypto-dm.js";
-import * as identitySeed from "../client/js/identity-seed.js";
-import { getAccountExits } from "../client/js/account-exit.js";
-import { openRecoverySecret, restoreFromSecret } from "../client/js/account-phrase.js";
+import * as identitySeed from "../client/js/identity/identity-seed.js";
+import { getAccountExits } from "../client/js/identity/account-exit.js";
+import { openRecoverySecret, restoreFromSecret } from "../client/js/identity/account-phrase.js";
 import { renderOAuthEnrich } from "../client/js/render/oauth-modals.js";
-import { compressPoint, decompressPoint, bytesToBigInt } from "../client/js/p256.js";
+import { compressPoint, decompressPoint, bytesToBigInt } from "../client/js/identity/p256.js";
 import { parseRoute } from "../client/js/app/route-parse.js";
 import { BIP39_PT } from "../client/js/data/bip39-pt.js";
 import * as screen from "../client/js/render/guardian-return.js";
@@ -137,7 +137,7 @@ test("volta - 2 de 3: uma resposta não basta; duas devolvem a mesma conta, a me
 
 /** Dependências reais do aparelho novo, com `pull` trocável. */
 async function flowDeps() {
-  const [inbox, phrase] = [await import("../client/js/inbox.js"), await import("../client/js/account-phrase.js")];
+  const [inbox, phrase] = [await import("../client/js/inbox.js"), await import("../client/js/identity/account-phrase.js")];
   return {
     getMe: () => localAccount.getRouteId(), openHeld: (o) => guardians.openHeldShare(o),
     newKeypair: () => cryptoDm.generateDmKeypair(), seal: (p, t, m) => cryptoDm.seal(p, t, m), open: (e, k) => cryptoDm.open(e, k),

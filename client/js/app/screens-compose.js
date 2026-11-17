@@ -10,7 +10,7 @@ import * as permanence from "../permanence-notice.js";
 import * as share from "../share.js";
 import * as cacheNode from "../cache-node.js";
 import * as peers from "../peers.js";
-import * as localAccount from "../local-account.js";
+import * as localAccount from "../identity/index.js";
 import * as pixKeyHelper from "../pix-key.js";
 import * as listing from "../listing.js";
 import * as i18n from "../i18n-pt-br.js";

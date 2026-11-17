@@ -3,16 +3,16 @@
  * as chaves e a metade secreta de um par de backup; o conteúdo vai cifrado para a metade pública. Ver IDENTITY.md.
  */
 
-import * as cacheNode from "./cache-node.js";
-import * as contacts from "./contacts.js";
-import * as cryptoDm from "./crypto-dm.js";
+import * as cacheNode from "../cache-node.js";
+import * as contacts from "../contacts.js";
+import * as cryptoDm from "../crypto-dm.js";
 import { exportAccountBundle, importAccountBundle } from "./account-backup.js";
 import { unwrapBackup } from "./account-backup-wrap.js";
 import * as localAccount from "./local-account.js";
-import { decryptVaultRecord, encryptVaultV2 } from "./vault/envelope.js";
-import * as ownPosts from "./own-posts.js";
+import { decryptVaultRecord, encryptVaultV2 } from "../vault/envelope.js";
+import * as ownPosts from "../own-posts.js";
 import * as accountExit from "./account-exit.js";
-import { getLocalIdentityMeta, setLocalIdentityMeta } from "./profile-identity-meta.js";
+import { getLocalIdentityMeta, setLocalIdentityMeta } from "../profile-identity-meta.js";
 
 /** Marca do arquivo de backup do e-mail. */
 export const INBOX_BACKUP_TYPE = "vox-inbox-backup";

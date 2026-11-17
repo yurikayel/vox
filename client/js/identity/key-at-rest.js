@@ -59,7 +59,11 @@ async function migrateTarget(storage, { key, seal }) {
   return true;
 }
 
-/** Cifra o que ainda está em claro. Devolve quantos itens mudaram, ou -1 se o aparelho não guarda a chave. */
+/**
+ * Cifra o que ainda está em claro.
+ * @param {Storage} [storage] armazenamento (padrão: `localStorage`)
+ * @returns {Promise<number>} quantos itens mudaram, ou -1 se o aparelho não guarda a chave
+ */
 export async function sealKeysAtRest(storage = globalThis.localStorage) {
   if (!(await getDeviceKey())) return -1;
   let changed = 0;
@@ -69,7 +73,10 @@ export async function sealKeysAtRest(storage = globalThis.localStorage) {
   return changed;
 }
 
-/** Abertura do app: cifra o que estiver em claro e pede armazenamento persistente. */
+/**
+ * Abertura do app: cifra o que estiver em claro e pede armazenamento persistente.
+ * @returns {Promise<number>} o mesmo que `sealKeysAtRest`
+ */
 export async function startKeysAtRest() {
   const changed = await sealKeysAtRest();
   await requestPersistentStorage();

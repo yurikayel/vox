@@ -10,7 +10,7 @@ import { normalizeContextCard } from "../dm-messenger.js";
 async function defaultSendDeps() {
   const [gql, peers, cryptoDm, cacheNode, localAccount, wire] = await Promise.all([
     import("../graphql.js"), import("../peers.js"), import("../crypto-dm.js"),
-    import("../cache-node.js"), import("../local-account.js"), import("./dm-wire.js"),
+    import("../cache-node.js"), import("../identity/index.js"), import("./dm-wire.js"),
   ]);
   return {
     getDmPub: async (addr) => gql.getCachedUserDmPub(addr) || peers.getPeerDmPub(addr) || (await gql.fetchUserDmPub(addr)),
@@ -48,7 +48,7 @@ export async function sendReportToModerator(user, moderator, rec, deps = null) {
 
 async function defaultReceiveDeps() {
   const [community, cacheNode, localAccount, context, share] = await Promise.all([
-    import("./screens-community.js"), import("../cache-node.js"), import("../local-account.js"),
+    import("./screens-community.js"), import("../cache-node.js"), import("../identity/index.js"),
     import("./context.js"), import("../share.js"),
   ]);
   return {

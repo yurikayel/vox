@@ -6,12 +6,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import "./setup.js";
-import * as localAccount from "../client/js/local-account.js";
+import * as localAccount from "../client/js/identity/local-account.js";
 import * as cryptoDm from "../client/js/crypto-dm.js";
-import * as keyLock from "../client/js/key-lock.js";
-import { openRecoverySecret, restoreFromPhrase } from "../client/js/account-phrase.js";
-import { exportAccountBundle, importAccountBundle } from "../client/js/account-backup.js";
-import { entropyToWords, newSeed } from "../client/js/recovery-phrase.js";
+import * as keyLock from "../client/js/identity/key-lock.js";
+import { openRecoverySecret, restoreFromPhrase } from "../client/js/identity/account-phrase.js";
+import { exportAccountBundle, importAccountBundle } from "../client/js/identity/account-backup.js";
+import { entropyToWords, newSeed } from "../client/js/identity/recovery-phrase.js";
 import { buildSyncUrl, needsNoEmailConfirm } from "../client/js/app/profile-vault-sync.js";
 
 const PIX = { normalized: "11999990000", type: "phone", masked: "(11) 9****-0000" };

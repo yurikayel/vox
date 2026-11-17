@@ -21,7 +21,7 @@ import * as share from "../share.js";
 import * as mod from "../moderation.js";
 import * as cacheNode from "../cache-node.js";
 import * as peers from "../peers.js";
-import * as localAccount from "../local-account.js";
+import * as localAccount from "../identity/index.js";
 import * as listing from "../listing.js";
 import * as listingUi from "../listing-ui.js";
 import * as i18n from "../i18n-pt-br.js";

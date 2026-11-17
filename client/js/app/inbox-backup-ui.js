@@ -1,6 +1,6 @@
 /** @file Seção "Backup no seu e-mail" em Sua rede e aviso de backup vencido; cada envio sai de um toque. */
 
-import * as backup from "../inbox-backup.js";
+import * as backup from "../identity/index.js";
 import * as share from "../share.js";
 import { escapeHtml } from "../render/util.js";
 
