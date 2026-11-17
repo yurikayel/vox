@@ -5,6 +5,11 @@ import * as share from "../share.js";
 import * as brcode from "../brcode.js";
 import * as featureFlags from "../feature-flags.js";
 
+/**
+ * Garante o contêiner raiz do modal Pix no `document.body`.
+ *
+ * @returns {HTMLElement}
+ */
 export function getOrCreateZapModalContainer() {
   let container = document.getElementById("zap-modal-container");
   if (!container) {
@@ -15,6 +20,16 @@ export function getOrCreateZapModalContainer() {
   return container;
 }
 
+/**
+ * Abre o modal de zap Pix quando a feature está ligada.
+ *
+ * @param {object} [options={}]
+ * @param {string} options.pixKey Chave Pix do autor.
+ * @param {string} [options.authorName="Autor"] Nome exibido.
+ * @param {string} [options.title=""] Título do post.
+ * @param {number} [options.defaultAmount=5] Valor sugerido em reais.
+ * @returns {void}
+ */
 export function openZapModal({ pixKey, authorName = "Autor", title = "", defaultAmount = 5 } = {}) {
   if (!pixKey) return;
   if (!featureFlags.isFeatureEnabled("pixZaps")) {
@@ -76,6 +91,15 @@ function bindZapCopyAndClose(container, area, pixKey) {
   }
 }
 
+/**
+ * Liga botões de valor, copiar e fechar do modal Pix.
+ *
+ * @param {HTMLElement} container Nó montado por {@link render.renderZapModal}.
+ * @param {object} opts
+ * @param {string} opts.pixKey Chave Pix.
+ * @param {string} opts.authorName Nome do autor.
+ * @returns {void}
+ */
 export function bindZapModalEvents(container, { pixKey, authorName }) {
   const area = container.querySelector("#zap-payload-area");
   const customContainer = container.querySelector(".zap-custom-container");

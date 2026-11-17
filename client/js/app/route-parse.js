@@ -169,6 +169,11 @@ function parseHandleShortcut(parts) {
   return { name: "handle-lookup", slug: decodeURIComponent(parts[0].slice(1)) };
 }
 
+/**
+ * Interpreta `location.hash` e query `?h=` / `?labs=` em objeto de rota nomeado.
+ *
+ * @returns {object} Descritor com `name` e campos específicos da rota.
+ */
 export function parseRoute() {
   const fromSearch = parseSearchHints();
   if (fromSearch) return fromSearch;

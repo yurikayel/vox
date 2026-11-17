@@ -1,4 +1,6 @@
-/** @file Shared shell helpers for app screens. */
+/**
+ * @file Helpers compartilhados do shell das telas: identidade ativa, props do layout e ações de post.
+ */
 
 import * as wallet from "../wallet.js";
 import * as peers from "../peers.js";
@@ -6,6 +8,11 @@ import * as localAccount from "../identity/index.js";
 import * as share from "../share.js";
 import * as mod from "../moderation.js";
 
+/**
+ * Identidade ativa no aparelho: carteira conectada ou rota da conta local.
+ *
+ * @returns {Promise<string>} Endereço ou rota; string vazia se indisponível.
+ */
 export async function getActiveUser() {
   try {
     const w = await wallet.getAddress();
@@ -14,6 +21,16 @@ export async function getActiveUser() {
   return await localAccount.getRouteId();
 }
 
+/**
+ * Monta as props padrão passadas a {@link render.renderShell}.
+ *
+ * @param {string} user Identidade ativa.
+ * @param {string} activeTab Id da aba destacada no shell.
+ * @param {string} [title=""] Título da tela.
+ * @param {string} [subtitle=""] Subtítulo.
+ * @param {object|null} [breadcrumb=null] Trilha de navegação opcional.
+ * @returns {object} Props do shell (métricas, RTC, configurações de peer).
+ */
 export function makeShellProps(user, activeTab, title = "", subtitle = "", breadcrumb = null) {
   const settings = peers.getPeerSettings();
   const metrics = peers.getPeerMetrics();
@@ -30,6 +47,12 @@ export function makeShellProps(user, activeTab, title = "", subtitle = "", bread
   };
 }
 
+/**
+ * Abre o sheet de compartilhar externo quando o post não está em quarentena local.
+ *
+ * @param {object} [opts={}] Metadados do post (`topicId`, título, autor, corpo, comunidade).
+ * @returns {boolean} `false` quando o post está em quarentena (toast já mostrado).
+ */
 export function shareTopicUnlessQuarantined(opts = {}) {
   if (!mod.canEchoPost(opts.topicId)) {
     share.showToast(mod.QUARANTINE_HINT);
@@ -68,6 +91,12 @@ function syncQuarantineButton(btn, on) {
   if (span) span.textContent = label;
 }
 
+/**
+ * Alterna quarentena local do post ao clicar no botão da barra de ferramentas.
+ *
+ * @param {HTMLElement} btn Botão `.btn-quarantine-post` com `data-id`.
+ * @returns {void}
+ */
 export function onQuarantinePostClick(btn) {
   const id = btn?.dataset?.id;
   if (!id) return;
@@ -82,6 +111,11 @@ export function onQuarantinePostClick(btn) {
 
 let quarantineWired = false;
 
+/**
+ * Liga delegação de clique para quarentena de posts (uma vez por sessão).
+ *
+ * @returns {void}
+ */
 export function attachQuarantineHandlers() {
   if (quarantineWired) return;
   quarantineWired = true;
@@ -93,6 +127,11 @@ export function attachQuarantineHandlers() {
   });
 }
 
+/**
+ * Liga botões `.btn-share-post` já presentes no DOM ao fluxo de compartilhar externo.
+ *
+ * @returns {void}
+ */
 export function attachPostShareHandlers() {
   document.querySelectorAll(".btn-share-post").forEach((btn) => {
     btn.addEventListener("click", () => {

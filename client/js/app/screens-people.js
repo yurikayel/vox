@@ -58,6 +58,12 @@ function bindPeopleAddedYouActions() {
   });
 }
 
+/**
+ * Monta busca e listagem de pessoas (`#/people`).
+ *
+ * @param {string} [initialQuery=""] Consulta inicial da URL.
+ * @returns {Promise<void>}
+ */
 export async function showPeople(initialQuery = "") {
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "people", "Pessoas"));
@@ -92,6 +98,13 @@ export async function showPeople(initialQuery = "") {
   });
 }
 
+/**
+ * Pré-visualização de conexão com uma rota ou convite (`#/connect/...`).
+ *
+ * @param {string} routeId Rota ou alvo de conexão.
+ * @param {string} [invite=""] Token de convite quando presente na URL.
+ * @returns {Promise<void>}
+ */
 export async function showConnect(routeId, invite = "") {
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "people", "Conectar"));

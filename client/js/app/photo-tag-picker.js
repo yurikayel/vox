@@ -1,4 +1,6 @@
-/** Sheet para escolher contato ou colar vx_/handle. */
+/**
+ * @file Sheet para escolher contato ou colar vx_/handle ao marcar pessoa em foto.
+ */
 
 import * as contacts from "../contacts.js";
 import * as peopleIndex from "../people-index.js";
@@ -51,6 +53,15 @@ function setOpen(sheet, open) {
   sheet.classList.toggle("is-open", open);
 }
 
+/**
+ * Abre o sheet de escolha de pessoa para uma marca em coordenadas percentuais da foto.
+ *
+ * @param {string} postId Id do post.
+ * @param {number} x Posição horizontal em % (0–100).
+ * @param {number} y Posição vertical em % (0–100).
+ * @param {(ctx: object) => void} onPick Callback quando o usuário confirma a marca.
+ * @returns {void}
+ */
 export function openPhotoTagPicker(postId, x, y, onPick) {
   pending = { postId, x, y, onPick };
   const sheet = ensureSheet();
@@ -83,6 +94,11 @@ function emitPick(targetId, label) {
   ctx.onPick?.({ ...ctx, targetId, label });
 }
 
+/**
+ * Liga eventos do sheet de marcação em foto (uma vez por sessão).
+ *
+ * @returns {void}
+ */
 export function attachPhotoTagPicker() {
   if (wired) return;
   wired = true;

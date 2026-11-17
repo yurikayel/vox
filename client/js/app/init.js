@@ -112,6 +112,11 @@ function refreshAfterCentralMemorySync() {
   }
 }
 
+/**
+ * Registra listeners de gossip, signaling e recompensa de voxel local (boot social).
+ *
+ * @returns {void}
+ */
 export function initGossipListeners() {
   peers.onGossipPost((item) => {
     const cur = parseRoute();
@@ -141,6 +146,15 @@ export function initGossipListeners() {
   });
 }
 
+/**
+ * Assina e propaga ação de botão de Open Frame no post.
+ *
+ * @param {object} frame Metadados do frame no post.
+ * @param {string} postId Id do post.
+ * @param {number} index Índice do botão.
+ * @param {string} label Rótulo do botão.
+ * @returns {Promise<void>}
+ */
 export async function executeFrameAction(frame, postId, index, label) {
   const user = await getActiveUser();
   const payload = frames.buildFrameActionPayload({
@@ -158,6 +172,12 @@ export async function executeFrameAction(frame, postId, index, label) {
   share.showToast(i18n.frameActionRecordedToast || "Ação registrada no mini-app!");
 }
 
+/**
+ * Handler de clique em botão de frame: valida, executa e atualiza UI.
+ *
+ * @param {HTMLElement} btn Botão com datasets do frame.
+ * @returns {Promise<void>}
+ */
 export async function handleFrameActionClick(btn) {
   const postId = btn.dataset.postId;
   const index = parseInt(btn.dataset.index ?? btn.dataset.btnIndex, 10);
@@ -221,6 +241,12 @@ async function submitPostEdit(existing, btn) {
   }
 }
 
+/**
+ * Abre modal de edição para post local mutável pelo autor.
+ *
+ * @param {string} postId Id do post.
+ * @returns {Promise<void>}
+ */
 export async function openPostEditModal(postId) {
   const user = await getActiveUser();
   const existing = await cacheNode.getLocalPost(postId);
@@ -248,6 +274,12 @@ export async function openPostEditModal(postId) {
   });
 }
 
+/**
+ * Apaga post local do autor após confirmação e propaga tombstone.
+ *
+ * @param {string} postId Id do post.
+ * @returns {Promise<void>}
+ */
 export async function handleDeletePost(postId) {
   const user = await getActiveUser();
   const existing = await cacheNode.getLocalPost(postId);
@@ -421,6 +453,11 @@ function dispatchSocialFeedbackClicks(e) {
   return false;
 }
 
+/**
+ * Liga cliques sociais globais (curtir, compartilhar, comentários inline, etc.).
+ *
+ * @returns {void}
+ */
 export function initSocialInteractions() {
   document.addEventListener("click", (e) => {
     if (dispatchPostActionClicks(e)) return;

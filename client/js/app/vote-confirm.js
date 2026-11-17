@@ -6,6 +6,12 @@ import { escapeHtml } from "../render/util.js";
 
 const CHOICE_LABELS = { yes: "Sim (aprovar)", no: "Não (rejeitar)", abstain: "Abstenção" };
 
+/**
+ * Rótulo legível de uma opção de voto de governança.
+ *
+ * @param {string} choice Identificador (`yes`, `no`, `abstain`, etc.).
+ * @returns {string} Texto para exibição.
+ */
 export function voteChoiceLabel(choice) {
   return CHOICE_LABELS[choice] || String(choice || "");
 }
@@ -15,7 +21,13 @@ function excerpt(text, max = 420) {
   return t.length > max ? `${t.slice(0, max)}…` : t;
 }
 
-/** Marcação das duas etapas da confirmação (pura, testável). */
+/**
+ * Marcação das duas etapas da confirmação de voto (pura, testável).
+ *
+ * @param {object} [proposal={}] Pauta com `title` e `body`.
+ * @param {string} [choice=""] Opção escolhida.
+ * @returns {string} HTML do overlay de confirmação.
+ */
 export function renderVoteConfirmHtml(proposal = {}, choice = "") {
   const title = escapeHtml(proposal.title || "Pauta sem título");
   const body = escapeHtml(excerpt(proposal.body)) || "<em>Sem descrição.</em>";
@@ -48,6 +60,9 @@ export function renderVoteConfirmHtml(proposal = {}, choice = "") {
 
 /**
  * Abre a confirmação e resolve `true` só quando a pessoa confirma na 2ª etapa.
+ *
+ * @param {object} proposal Pauta votada.
+ * @param {string} choice Opção escolhida.
  * @returns {Promise<boolean>}
  */
 export function confirmGovernanceVote(proposal, choice) {

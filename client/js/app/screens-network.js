@@ -225,6 +225,11 @@ function bindRelayAndNotifButtons() {
   });
 }
 
+/**
+ * Liga botões da tela de rede.
+ *
+ * @returns {void}
+ */
 export function bindNetworkSettingsButtons() {
   document.getElementById("btn-clear-cache")?.addEventListener("click", async () => {
     if (confirm("Limpar todo o cache local de transações no navegador?")) {
@@ -280,6 +285,11 @@ async function buildNetworkSettingsProps(user) {
   };
 }
 
+/**
+ * Monta configurações de rede.
+ *
+ * @returns {void}
+ */
 export async function showNetworkSettings() {
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "network", "Sua rede"));
@@ -313,6 +323,11 @@ function bindStewardTestButtons() {
   });
 }
 
+/**
+ * Liga formulário do assistente steward.
+ *
+ * @returns {void}
+ */
 export function bindStewardWizardForm() {
   const form = document.getElementById("form-steward-wizard");
   if (!form) return;
@@ -344,6 +359,11 @@ export function bindStewardWizardForm() {
   });
 }
 
+/**
+ * Monta assistente steward.
+ *
+ * @returns {void}
+ */
 export async function showStewardWizard() {
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "network", "Assistente steward"));
@@ -356,6 +376,11 @@ export async function showStewardWizard() {
   bindStewardWizardForm();
 }
 
+/**
+ * Sincroniza identidade com relays e diretório.
+ *
+ * @returns {void}
+ */
 export async function syncIdentity() {
   const user = await getActiveUser();
   if (user) {
@@ -367,6 +392,11 @@ export async function syncIdentity() {
   }
 }
 
+/**
+ * Monta contas vinculadas OAuth.
+ *
+ * @returns {void}
+ */
 export async function showLinkedAccounts() {
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "network", "Redes Vinculadas"));
@@ -591,6 +621,12 @@ function bindLinkedAccountTestButtons() {
   });
 }
 
+/**
+ * Liga ações das contas vinculadas.
+ *
+ * @param {Function} onRefresh
+ * @returns {void}
+ */
 export function bindLinkedAccountsUi(onRefresh) {
   const chkMaster = document.getElementById("chk-auto-replicate-master");
   if (chkMaster && !chkMaster.dataset.wired) {

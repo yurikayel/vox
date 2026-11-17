@@ -12,6 +12,11 @@ import { attachReviewHandlers } from "./report-review-flow.js";
 
 const MODAL_ID = "report-modal-container";
 
+/**
+ * HTML da etapa 1 do fluxo de denúncia (motivo e detalhes).
+ *
+ * @returns {string}
+ */
 export function renderReportFormHtml() {
   const options = report.REPORT_REASONS.map(
     (r) => `
@@ -62,6 +67,15 @@ function renderSentStatusHtml(sent) {
   return `<p class="desc report-sent-fail">Não deu para entregar a denúncia à moderação agora. Use o botão abaixo para mandar pela conversa.</p>`;
 }
 
+/**
+ * HTML da etapa 2 após registrar denúncia local.
+ *
+ * @param {object} [options={}]
+ * @param {boolean} [options.grave=false] Se o motivo exige canais oficiais.
+ * @param {string} [options.moderatorHash=""] Link para DM com moderador.
+ * @param {string} [options.sent=""] Status do envio automático.
+ * @returns {string}
+ */
 export function renderReportDoneHtml({ grave = false, moderatorHash = "", sent = "" } = {}) {
   const modLabel = SENT_OK.has(sent) ? "Acrescentar detalhes na conversa" : "Enviar aos moderadores (mensagem cifrada)";
   const modBtn = moderatorHash
@@ -85,7 +99,16 @@ export function renderReportDoneHtml({ grave = false, moderatorHash = "", sent =
 const container = () => modalHost(MODAL_ID);
 const closeReportModal = () => clearModalHost(MODAL_ID);
 
-/** Dono da comunidade (moderador conhecido) do post, se houver. */
+/**
+ * Dono da comunidade (moderador conhecido) do post, se houver.
+ *
+ * @param {string} postId Id da publicação denunciada.
+ * @param {string} [communityIdHint=""] Dica de comunidade quando o post não tem o campo.
+ * @param {object} [options={}]
+ * @param {Function} [options.getPost] Leitor de post local.
+ * @param {Function} [options.getCommunity] Resolvedor de metadados.
+ * @returns {Promise<{communityId: string, moderator: string}>}
+ */
 export async function resolveModeratorRoute(postId, communityIdHint = "", { getPost = cacheNode.getLocalPost, getCommunity } = {}) {
   const post = await getPost(postId).catch(() => null);
   const communityId = post?.communityId || communityIdHint;
@@ -129,6 +152,12 @@ async function submitReport(ctx, form) {
   document.getElementById("btn-report-to-mod")?.addEventListener("click", closeReportModal);
 }
 
+/**
+ * Abre o modal de denúncia para um post do menu ⋯.
+ *
+ * @param {object} [ctx={}] `postId`, `authorRoute`, `communityId`.
+ * @returns {void}
+ */
 export function openReportFlow(ctx = {}) {
   if (!ctx.postId) return;
   const el = container();
@@ -146,7 +175,12 @@ export function openReportFlow(ctx = {}) {
 
 let reportHandlersWired = false;
 
-/** Liga os itens "Denunciar" dos menus ⋯ de texto/tópico (.btn-report-post) ao fluxo. */
+/**
+ * Liga os itens "Denunciar" dos menus ⋯ de texto/tópico (`.btn-report-post`) ao fluxo.
+ *
+ * @param {Document} [doc=globalThis.document] Documento que recebe o listener.
+ * @returns {void}
+ */
 export function attachReportHandlers(doc = globalThis.document) {
   if (reportHandlersWired || !doc?.addEventListener) return;
   reportHandlersWired = true;
