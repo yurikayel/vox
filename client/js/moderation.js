@@ -1,5 +1,18 @@
+/**
+ * @file Moderação no aparelho: ações de moderação da comunidade (ocultar, banir, fixar, travar, arquivar por denúncia
+ * ou pelo moderador natural) aplicadas ao feed, e as listas pessoais deste aparelho (bloqueados, silenciados e posts
+ * em quarentena local). Nada aqui apaga conteúdo da malha ou do permaweb: só decide o que este aparelho mostra e ecoa.
+ */
+
 import { REVIEW_HIDE_ACTION } from "./report-review.js";
 
+/**
+ * Junta as ações de moderação de uma comunidade: as gravadas neste aparelho e as do índice remoto (GraphQL), sem
+ * repetir id, mais os arquivamentos do moderador natural quando o carregador estiver ligado. Toda ação que vem de
+ * fora perde a marca `naturalVerified`; só o carregador do aparelho a constrói.
+ * @param {string} communityId Identificador da comunidade.
+ * @returns {Promise<object[]>} Ações de moderação; falha de leitura local ou remota vira lista vazia daquela fonte.
+ */
 export async function fetchModActions(communityId) {
   let localActions = [];
   try {
@@ -51,6 +64,11 @@ async function naturalHideActions(communityId, modActions) {
   }
 }
 
+/**
+ * Lista de moderadores a partir do campo da comunidade (texto separado por vírgula ou lista).
+ * @param {string|string[]} [rawModerators=""] Moderadores como vieram dos metadados.
+ * @returns {string[]} Identificadores aparados, sem vazios; tipo desconhecido vira lista vazia.
+ */
 export function parseModerators(rawModerators = "") {
   if (!rawModerators) return [];
   if (Array.isArray(rawModerators)) {
@@ -63,6 +81,13 @@ export function parseModerators(rawModerators = "") {
     .filter(Boolean);
 }
 
+/**
+ * Indica se a conta é dona ou moderadora da comunidade (comparação sem diferenciar maiúsculas).
+ * @param {string} userAddress Conta a conferir.
+ * @param {string} communityOwner Dono da comunidade.
+ * @param {string|string[]} [rawModerators=""] Moderadores como vieram dos metadados.
+ * @returns {boolean} Verdadeiro para o dono ou um moderador listado; falso sem conta.
+ */
 export function isModerator(userAddress, communityOwner, rawModerators = "") {
   if (!userAddress) return false;
   if (communityOwner && userAddress.toLowerCase() === communityOwner.toLowerCase()) {
@@ -138,6 +163,17 @@ function keepNaturalHidesOnTheirAuthor(items, state) {
   }
 }
 
+/**
+ * Aplica ao feed as ações de moderação válidas, em ordem de data. Só valem ações do dono ou de um moderador (sem
+ * nenhum conhecido, nenhuma ação de terceiros vale) e arquivamentos naturais construídos no aparelho. Post oculto
+ * some, salvo o arquivado "em revisão", que o autor e a moderação continuam vendo marcado (`inReview`).
+ * @param {object[]} items Posts do feed.
+ * @param {object[]} [actions=[]] Ações de moderação (ver `fetchModActions`).
+ * @param {string} [communityOwner=""] Dono da comunidade.
+ * @param {string|string[]} [rawModerators=""] Moderadores da comunidade.
+ * @param {string} [viewer=""] Conta de quem está vendo.
+ * @returns {object[]} Posts visíveis, com `isPinned`, `isLocked` e a marca de revisão aplicados.
+ */
 export function applyFilters(items, actions = [], communityOwner = "", rawModerators = "", viewer = "") {
   if (!Array.isArray(items) || !items.length) return [];
   if (!Array.isArray(actions) || !actions.length) return items;
@@ -169,6 +205,12 @@ export function applyFilters(items, actions = [], communityOwner = "", rawModera
 /**
  * Tópico aberto por link direto: quem não pode vê-lo recebe `archived: true` (a tela mostra "arquivado").
  * A moderação continua abrindo tópicos ocultos, como antes.
+ * @param {object} topic Tópico aberto.
+ * @param {object[]} [actions=[]] Ações de moderação da comunidade.
+ * @param {string} [communityOwner=""] Dono da comunidade.
+ * @param {string|string[]} [rawModerators=""] Moderadores da comunidade.
+ * @param {string} [viewer=""] Conta de quem está vendo.
+ * @returns {object} O tópico com os filtros aplicados, ou uma cópia com `archived: true` para quem não pode vê-lo.
  */
 export function filterTopicForViewer(topic, actions = [], communityOwner = "", rawModerators = "", viewer = "") {
   if (!topic) return topic;
@@ -181,8 +223,11 @@ export function filterTopicForViewer(topic, actions = [], communityOwner = "", r
 
 const BLOCKED_STORAGE = "vox-moderation-blocked-v1";
 const MUTED_STORAGE = "vox-moderation-muted-v1";
+/** Chave do `localStorage` com os ids de posts em quarentena local. */
 export const QUARANTINE_STORAGE_KEY = "vox-quarantine-posts-v1";
+/** Rótulo da ação de quarentena local no menu do post. */
 export const QUARANTINE_ACTION_LABEL = "Quarentena local / não ecoar";
+/** Explicação curta do que a quarentena local faz (e do que não faz). */
 export const QUARANTINE_HINT =
   "Só neste aparelho. Não apaga o permaweb nem é ban da plataforma.";
 
@@ -201,16 +246,32 @@ function saveStorage(key, list) {
   } catch {}
 }
 
+/**
+ * Contas bloqueadas neste aparelho.
+ * @returns {{routeId: string, reason: string, blockedAt: number}[]} Lista guardada; vazia se não houver ou falhar a leitura.
+ */
 export function getBlockedUsers() {
   return loadStorage(BLOCKED_STORAGE);
 }
 
+/**
+ * Indica se a conta está bloqueada neste aparelho.
+ * @param {string} routeId Conta a conferir.
+ * @returns {boolean} Verdadeiro se estiver na lista de bloqueados.
+ */
 export function isUserBlocked(routeId) {
   if (!routeId) return false;
   const list = getBlockedUsers();
   return list.some((b) => b.routeId === routeId);
 }
 
+/**
+ * Bloqueia a conta neste aparelho (substitui um bloqueio anterior da mesma conta). O que ela assina deixa de ser
+ * mostrado e repassado por aqui.
+ * @param {string} routeId Conta a bloquear.
+ * @param {string} [reason=""] Motivo, guardado com até 100 caracteres.
+ * @returns {boolean} Falso só sem conta.
+ */
 export function blockUser(routeId, reason = "") {
   if (!routeId) return false;
   const list = getBlockedUsers().filter((b) => b.routeId !== routeId);
@@ -219,6 +280,11 @@ export function blockUser(routeId, reason = "") {
   return true;
 }
 
+/**
+ * Tira a conta da lista de bloqueados deste aparelho.
+ * @param {string} routeId Conta a desbloquear.
+ * @returns {boolean} Falso só sem conta.
+ */
 export function unblockUser(routeId) {
   if (!routeId) return false;
   const list = getBlockedUsers().filter((b) => b.routeId !== routeId);
@@ -226,16 +292,30 @@ export function unblockUser(routeId) {
   return true;
 }
 
+/**
+ * Contas silenciadas neste aparelho: somem do feed, mas o que assinam continua sendo repassado na malha.
+ * @returns {{routeId: string, mutedAt: number}[]} Lista guardada; vazia se não houver ou falhar a leitura.
+ */
 export function getMutedUsers() {
   return loadStorage(MUTED_STORAGE);
 }
 
+/**
+ * Indica se a conta está silenciada neste aparelho.
+ * @param {string} routeId Conta a conferir.
+ * @returns {boolean} Verdadeiro se estiver na lista de silenciados.
+ */
 export function isUserMuted(routeId) {
   if (!routeId) return false;
   const list = getMutedUsers();
   return list.some((m) => m.routeId === routeId);
 }
 
+/**
+ * Silencia a conta neste aparelho.
+ * @param {string} routeId Conta a silenciar.
+ * @returns {boolean} Falso só sem conta.
+ */
 export function muteUser(routeId) {
   if (!routeId) return false;
   const list = getMutedUsers().filter((m) => m.routeId !== routeId);
@@ -244,6 +324,11 @@ export function muteUser(routeId) {
   return true;
 }
 
+/**
+ * Tira a conta da lista de silenciados deste aparelho.
+ * @param {string} routeId Conta a reativar.
+ * @returns {boolean} Falso só sem conta.
+ */
 export function unmuteUser(routeId) {
   if (!routeId) return false;
   const list = getMutedUsers().filter((m) => m.routeId !== routeId);
@@ -251,6 +336,11 @@ export function unmuteUser(routeId) {
   return true;
 }
 
+/**
+ * Indica se o que chega da malha assinado por esta conta deve ser descartado (conta bloqueada aqui).
+ * @param {string} authorRouteId Autor do item recebido.
+ * @returns {boolean} Verdadeiro para autor bloqueado.
+ */
 export function shouldDropGossip(authorRouteId) {
   if (!authorRouteId) return false;
   return isUserBlocked(authorRouteId);
@@ -266,19 +356,38 @@ function asPostIdList(raw) {
   return ids;
 }
 
+/**
+ * Ids dos posts em quarentena local (aceita também o formato antigo, com objetos `{id}`).
+ * @returns {string[]} Ids guardados neste aparelho.
+ */
 export function getQuarantinedPostIds() {
   return asPostIdList(loadStorage(QUARANTINE_STORAGE_KEY));
 }
 
+/**
+ * Indica se o post está em quarentena local.
+ * @param {string} postId Id do post.
+ * @returns {boolean} Verdadeiro se estiver na quarentena.
+ */
 export function isPostQuarantined(postId) {
   if (!postId) return false;
   return getQuarantinedPostIds().includes(postId);
 }
 
+/**
+ * Indica se este aparelho pode repassar o post na malha (tem id e não está em quarentena local).
+ * @param {string} postId Id do post.
+ * @returns {boolean} Verdadeiro se pode ecoar.
+ */
 export function canEchoPost(postId) {
   return Boolean(postId) && !isPostQuarantined(postId);
 }
 
+/**
+ * Põe o post em quarentena local: some do feed e não é repassado por este aparelho. Não apaga nada em outro lugar.
+ * @param {string} postId Id do post.
+ * @returns {boolean} Falso só sem id.
+ */
 export function quarantinePost(postId) {
   if (!postId) return false;
   const ids = getQuarantinedPostIds().filter((id) => id !== postId);
@@ -287,6 +396,11 @@ export function quarantinePost(postId) {
   return true;
 }
 
+/**
+ * Tira o post da quarentena local.
+ * @param {string} postId Id do post.
+ * @returns {boolean} Falso só sem id.
+ */
 export function unquarantinePost(postId) {
   if (!postId) return false;
   const ids = getQuarantinedPostIds().filter((id) => id !== postId);
@@ -306,6 +420,11 @@ function isFeedPostVisible(post, hiddenAuthors, hiddenIds) {
   return !author || !hiddenAuthors.has(author);
 }
 
+/**
+ * Tira do feed os posts de contas bloqueadas ou silenciadas e os posts em quarentena local.
+ * @param {object[]} posts Posts do feed.
+ * @returns {object[]} Posts visíveis neste aparelho; entrada que não é lista vira lista vazia.
+ */
 export function filterFeedPosts(posts) {
   if (!Array.isArray(posts)) return [];
   const hiddenAuthors = hiddenAuthorSet();
@@ -313,6 +432,10 @@ export function filterFeedPosts(posts) {
   return posts.filter((post) => isFeedPostVisible(post, hiddenAuthors, hiddenIds));
 }
 
+/**
+ * Exporta as listas de bloqueados e silenciados deste aparelho, para levar a outro aparelho ou compartilhar.
+ * @returns {string} JSON `vox-moderation-list` (versão 1) com `blocked`, `muted` e `exportedAt`.
+ */
 export function exportModerationBundle() {
   return JSON.stringify({
     voxVersion: 1,
@@ -323,6 +446,11 @@ export function exportModerationBundle() {
   }, null, 2);
 }
 
+/**
+ * Junta às listas deste aparelho as de um pacote exportado; a entrada do pacote substitui a da mesma conta.
+ * @param {string|object} bundleInput Pacote `vox-moderation-list`, em texto JSON ou objeto.
+ * @returns {boolean} Falso se o pacote não puder ser lido ou não for desse tipo.
+ */
 export function importModerationBundle(bundleInput) {
   let parsed = null;
   if (typeof bundleInput === "string") {
