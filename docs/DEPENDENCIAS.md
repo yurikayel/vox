@@ -30,9 +30,9 @@
 | Dependência | Onde | Versão | Integridade | Situação |
 |---|---|---|---|---|
 | @jsquash/avif | `package.json` (dev), usado só por `tools/media-bench/` (PM-70) | 2.1.1 no lock (fixa) | `sha512` no `package-lock.json` | Só desenvolvimento; não vai para o navegador. Apache-2.0. A transitiva `wasm-feature-detect` 1.10.0 não carrega no Chrome 152 (`import.source`); a bancada usa direto o codificador de thread única. Se for para o app (PM-71), entra vendorizado com hash. |
-| eslint | `package.json` (dev) | 10.14.0 no lock | `sha512` no `package-lock.json` | Só desenvolvimento e CI; não vai para o navegador. |
+| eslint | `package.json` (dev) | 10.15.0 no lock | `sha512` no `package-lock.json` | Só desenvolvimento e CI; não vai para o navegador. |
 | globals | `package.json` (dev) | 17.14.0 no lock | `sha512` no `package-lock.json` | Idem. |
-| Transitivas do eslint (76 pacotes) | `package-lock.json` | fixas no lock | `sha512` no lock | `npm ci` respeita o lock; `npm audit --audit-level=high` roda em todo PR (`ci.yml`) e todo mês. |
+| Transitivas do eslint (77 pacotes) | `package-lock.json` | fixas no lock | `sha512` no lock | `npm ci` respeita o lock; `npm audit --audit-level=high` roda em todo PR (`ci.yml`) e todo mês. `minimatch` 11.0.9 desde 2026-11-17 (eslint 10.15.0; corrige o alerta Dependabot GHSA-g3hv-75wg-m249, moderado, só dev). |
 
 ## 3. Relay e sinalização (Python)
 
