@@ -8,7 +8,15 @@
 import * as localAccount from "./local-account.js";
 import * as profileDirectory from "./profile-directory.js";
 import * as accountExit from "./account-exit.js";
-import { locatePassphraseRecord, persistVaultRecord, revokeVaultAddress, saveRemoteVaultRecord } from "./vault-store.js";
+import {
+  VAULT_STORAGE_PREFIX,
+  findVaultRecordWithStatus,
+  forgetLocalVaultRecord,
+  locatePassphraseRecord,
+  persistVaultRecord,
+  revokeVaultAddress,
+  saveRemoteVaultRecord,
+} from "./vault-store.js";
 import {
   compactV2PlainBudget,
   decryptVaultRecord,
@@ -107,11 +115,30 @@ function parseSaveVaultOpts(emailOrOpts) {
   return { email, hasPrev, prevEmail, prevPassphrase };
 }
 
-async function maybeRevokePreviousVault(opts, cleanPass, newAddress) {
-  if (!opts.hasPrev) return;
+async function vaultKeys(pass, email) {
+  const [address, token] = await Promise.all([deriveVaultAddress(pass, email), deriveVaultOwnerToken(pass, email)]);
+  return { address, token };
+}
+
+// Cofres que esta gravação substitui: o anterior informado e, quando o novo leva e-mail, o só-senha da senha
+// anterior (ADR-032 §6.3). O só-senha entra só se existe, para não marcar endereço que nunca teve cofre.
+async function supersededVaults(opts, cleanPass, newAddress) {
   const prevPass = opts.prevPassphrase || cleanPass;
-  const [oldAddress, oldToken] = await Promise.all([deriveVaultAddress(prevPass, opts.prevEmail), deriveVaultOwnerToken(prevPass, opts.prevEmail)]);
-  if (oldAddress !== newAddress) await revokeVaultAddress(oldAddress, oldToken);
+  const out = opts.hasPrev ? [await vaultKeys(prevPass, opts.prevEmail)] : [];
+  if (opts.email) {
+    const passOnly = await vaultKeys(prevPass, "");
+    const known = out.some((v) => v.address === passOnly.address);
+    if (!known && (await findVaultRecordWithStatus(passOnly.address, VAULT_STORAGE_PREFIX)).record) out.push(passOnly);
+  }
+  return out.filter((v) => v.address !== newAddress);
+}
+
+// Sem servidor que aceitou o cofre novo, o antigo lá fora continua sendo o único: sai só a cópia deste aparelho.
+async function retireSupersededVaults(opts, cleanPass, newAddress, remote) {
+  for (const old of await supersededVaults(opts, cleanPass, newAddress)) {
+    if (remote > 0) await revokeVaultAddress(old.address, old.token);
+    else forgetLocalVaultRecord(old.address);
+  }
 }
 
 /**
@@ -133,7 +160,7 @@ export async function savePassphraseVault(passphrase, emailOrOpts = "") {
   const encrypted = await encryptVaultV2(compact, clean, undefined, opts.email);
   const syncBundle = opts.email ? await encryptVaultV2(compact, clean) : encrypted;
   const remote = await persistVaultRecord(address, encrypted, ownerToken);
-  await maybeRevokePreviousVault(opts, clean, address);
+  await retireSupersededVaults(opts, clean, address, remote);
   if (remote > 0) accountExit.markAccountExit("cofre", opened.bundle.routeId);
   clearLegacyRevokedNotice();
   return {
@@ -176,11 +203,9 @@ async function upgradeLegacyPassphraseVault(clean, legacyKey, normEmail = "") {
   return saved.ok;
 }
 
-async function upgradePassphraseOnlyVault(clean, normEmail, legacyV2) {
-  const saved = await savePassphraseVault(clean, normEmail);
-  if (!saved.ok) return false;
-  await revokeVaultAddress(legacyV2.address, await deriveVaultOwnerToken(clean, ""));
-  return true;
+// Gravar com e-mail já revoga o cofre só-senha encontrado (`supersededVaults`).
+async function upgradePassphraseOnlyVault(clean, normEmail) {
+  return (await savePassphraseVault(clean, normEmail)).ok;
 }
 
 function parseRestoreArgs(lookupKeyOverride, directRecord, email) {
@@ -196,7 +221,7 @@ function parseRestoreArgs(lookupKeyOverride, directRecord, email) {
 
 async function finalizeVaultUpgrade(clean, located, normEmail) {
   if (!isV2Record(located.record)) return upgradeLegacyPassphraseVault(clean, located.legacyKey, normEmail);
-  if (located.legacyV2 && normEmail) return upgradePassphraseOnlyVault(clean, normEmail, located.legacyV2);
+  if (located.legacyV2 && normEmail) return upgradePassphraseOnlyVault(clean, normEmail);
   return false;
 }
 
