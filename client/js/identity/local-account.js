@@ -4,15 +4,15 @@
  * sem dependência obrigatória de carteira Arweave ou custos financeiros.
  */
 
-import * as cryptoDm from "./crypto-dm.js";
+import * as cryptoDm from "../crypto-dm.js";
 import * as identitySeed from "./identity-seed.js";
 import { HELD_STORAGE as GUARDIAN_SHARES_STORAGE } from "./guardians.js";
 import { isLocked, openSealed, sealJson } from "./keystore.js";
 import { dropSessionPassphrase, dropStorageKeys } from "./local-wipe.js";
 import * as keyLock from "./key-lock.js";
-import { canonicalString, withSigv } from "./sig-format.js";
-import { bytesToB64Url, computeRouteId, verifyPayload } from "./signed-verify.js";
-import { computeAccountSocialKey, detectSocialAvatarType, matchesOAuthEnrichment } from "./account-social-match.js";
+import { canonicalString, withSigv } from "../sig-format.js";
+import { bytesToB64Url, computeRouteId, verifyPayload } from "../signed-verify.js";
+import { computeAccountSocialKey, detectSocialAvatarType, matchesOAuthEnrichment } from "../account-social-match.js";
 
 export { computeRouteId, verifyPayload };
 export { LOCAL_WIPE_NOTICE, confirmLocalWipe } from "./local-wipe.js";
@@ -39,7 +39,11 @@ const LOCAL_WIPE_KEYS = [
 
 let cachedAccount = null;
 
-/** Grava a conta ativa (chave privada já na forma guardada: cifrada ou travada). */
+/**
+ * Grava a conta ativa (chave privada já na forma guardada: cifrada ou travada).
+ * @param {{ routeId: string, publicJwk: object, privateJwk: object, createdAt?: number }} acc conta
+ * @returns {object} a mesma conta
+ */
 export function storeActiveAccount(acc) {
   cachedAccount = acc;
   localStorage.setItem(ACCOUNT_STORAGE, JSON.stringify(acc));
@@ -98,6 +102,10 @@ function syncCurrentAccountMetadataToVault() {
   } catch {}
 }
 
+/**
+ * Conta ativa deste navegador; cria uma nova (chaves P-256) se ainda não houver.
+ * @returns {Promise<{ routeId: string, publicJwk: object, privateJwk: object, createdAt: number }>}
+ */
 export async function ensureLocalAccount() {
   const existing = await loadStoredLocalAccount();
   if (existing) {
@@ -116,11 +124,19 @@ export async function ensureLocalAccount() {
   return cachedAccount;
 }
 
+/**
+ * Identificador público da conta ativa (`vx_…`), criando a conta se preciso.
+ * @returns {Promise<string>}
+ */
 export async function getRouteId() {
   const acc = await ensureLocalAccount();
   return acc?.routeId || "";
 }
 
+/**
+ * Identificador da conta ativa sem esperar nada: memória ou `localStorage`.
+ * @returns {string} `vx_…`, ou "" se ainda não há conta
+ */
 export function getCachedRouteIdSync() {
   if (cachedAccount?.routeId) return cachedAccount.routeId;
   try {
@@ -136,6 +152,10 @@ export function getCachedRouteIdSync() {
   return "";
 }
 
+/**
+ * Nome de exibição escolhido pela pessoa.
+ * @returns {string}
+ */
 export function getDisplayName() {
   try {
     return localStorage.getItem(DISPLAY_NAME_STORAGE) || "";
@@ -144,6 +164,11 @@ export function getDisplayName() {
   }
 }
 
+/**
+ * Grava o nome de exibição (até 30 caracteres) e copia para a conta guardada.
+ * @param {string} name nome escolhido
+ * @returns {string} o nome gravado, ou "" se não gravou
+ */
 export function setDisplayName(name) {
   try {
     const clean = String(name || "").trim().slice(0, 30);
@@ -155,6 +180,10 @@ export function setDisplayName(name) {
   }
 }
 
+/**
+ * Perfil trazido de um login vinculado (nome, bio, foto, provedor).
+ * @returns {object|null}
+ */
 export function getProfileEnrichment() {
   try {
     const raw = localStorage.getItem(ENRICHMENT_STORAGE);
@@ -164,6 +193,11 @@ export function getProfileEnrichment() {
   }
 }
 
+/**
+ * Mescla campos no perfil vinculado; campos ausentes ficam como estavam.
+ * @param {{ displayName?: string, bio?: string, avatarUrl?: string, oauthProvider?: string, oauthSub?: string, oauthEmail?: string }} [fields] campos novos
+ * @returns {object|null} perfil gravado, ou null se não gravou
+ */
 export function setProfileEnrichment({ displayName, bio, avatarUrl, oauthProvider, oauthSub, oauthEmail } = {}) {
   try {
     const prev = getProfileEnrichment() || {};
@@ -186,6 +220,10 @@ export function setProfileEnrichment({ displayName, bio, avatarUrl, oauthProvide
   }
 }
 
+/**
+ * Apaga o perfil vinculado deste navegador.
+ * @returns {boolean} se apagou
+ */
 export function clearProfileEnrichment() {
   try {
     localStorage.removeItem(ENRICHMENT_STORAGE);
@@ -316,6 +354,10 @@ export async function importLocalAccountBundle(bundle) {
   return true;
 }
 
+/**
+ * Chave Pix da conta ativa (normalizada, tipo e versão mascarada).
+ * @returns {{ normalized: string, type: string, masked: string, updatedAt: number }|null}
+ */
 export function getPixKey() {
   try {
     const raw = localStorage.getItem(PIX_STORAGE);
@@ -325,6 +367,11 @@ export function getPixKey() {
   }
 }
 
+/**
+ * Grava a chave Pix da conta ativa.
+ * @param {{ normalized: string, type: string, masked?: string }} pix chave já validada
+ * @returns {{ normalized: string, type: string, masked: string, updatedAt: number }|null} o que foi gravado, ou null
+ */
 export function setPixKey({ normalized, type, masked = "" }) {
   try {
     const data = {
@@ -340,6 +387,10 @@ export function setPixKey({ normalized, type, masked = "" }) {
   }
 }
 
+/**
+ * Apaga a chave Pix da conta ativa.
+ * @returns {boolean} se apagou
+ */
 export function clearPixKey() {
   try {
     localStorage.removeItem(PIX_STORAGE);
@@ -367,6 +418,11 @@ function buildEnrichedPayloadForSigning(payload, routeId) {
   };
 }
 
+/**
+ * Assina um payload com a chave da conta ativa (ECDSA P-256 / SHA-256, sobre o JSON canônico).
+ * @param {object} payload conteúdo a assinar
+ * @returns {Promise<object>} payload com `routeId`, `sigv`, `pubKey` e `sig`
+ */
 export async function signPayload(payload) {
   const acc = await ensureLocalAccount();
   const privateKey = await keyLock.signingKey(acc.privateJwk);
@@ -387,6 +443,10 @@ export async function signPayload(payload) {
 }
 
 
+/**
+ * A conta aparece para quem está na mesma rede local? (padrão: sim)
+ * @returns {boolean}
+ */
 export function getMeshDiscoverable() {
   try {
     return localStorage.getItem(DISCOVERABLE_STORAGE) !== "0";
@@ -395,6 +455,11 @@ export function getMeshDiscoverable() {
   }
 }
 
+/**
+ * Liga ou desliga a descoberta na rede local.
+ * @param {boolean} on aparecer ou não
+ * @returns {boolean} se gravou
+ */
 export function setMeshDiscoverable(on) {
   try {
     localStorage.setItem(DISCOVERABLE_STORAGE, on ? "1" : "0");
@@ -404,7 +469,10 @@ export function setMeshDiscoverable(on) {
   }
 }
 
-/** Limpa a conta deste navegador; a promessa termina quando as chaves travadas saem do IndexedDB. */
+/**
+ * Limpa a conta deste navegador; a promessa termina quando as chaves travadas saem do IndexedDB.
+ * @returns {Promise<void>}
+ */
 export function wipeLocalAccount() {
   cachedAccount = null;
   dropStorageKeys(localStorage, LOCAL_WIPE_KEYS);
@@ -431,6 +499,10 @@ function writeVaultMap(map) {
   }
 }
 
+/**
+ * Copia a conta ativa (chaves, nome, Pix, perfil) para a lista de contas deste aparelho.
+ * @returns {Promise<object|null>} a entrada gravada, ou null sem conta
+ */
 export async function syncActiveAccountToVault() {
   const acc = await ensureLocalAccount();
   if (!acc?.routeId) return null;
@@ -447,6 +519,10 @@ export async function syncActiveAccountToVault() {
   return vault[acc.routeId];
 }
 
+/**
+ * Remove da lista de contas as duplicadas pelo mesmo login social, mantendo a ativa.
+ * @returns {void}
+ */
 export function deduplicateVaultAccounts() {
   const vault = readVaultMap();
   const seenSocial = new Map();
@@ -470,6 +546,11 @@ export function deduplicateVaultAccounts() {
   if (changed) writeVaultMap(vault);
 }
 
+/**
+ * Conta guardada que já foi vinculada a este login (por `sub`, e-mail ou foto do Google).
+ * @param {{ oauthProvider?: string, oauthSub?: string, oauthEmail?: string, avatarUrl?: string }} [login] dados do login
+ * @returns {object|null} a entrada da lista, ou null
+ */
 export function findVaultAccountByOAuth({ oauthProvider = "", oauthSub, oauthEmail, avatarUrl } = {}) {
   const vault = readVaultMap();
   const cleanSub = String(oauthSub || "").trim();
@@ -485,6 +566,11 @@ export function findVaultAccountByOAuth({ oauthProvider = "", oauthSub, oauthEma
   return null;
 }
 
+/**
+ * Conta descartável: sem nome escolhido, sem Pix e sem perfil vinculado.
+ * @param {string} routeId conta (`vx_…`)
+ * @returns {boolean}
+ */
 export function isAccountDisposable(routeId) {
   if (!routeId) return false;
   const vault = readVaultMap();
@@ -496,6 +582,10 @@ export function isAccountDisposable(routeId) {
   return !isNamed && !hasPix && !hasEnrich;
 }
 
+/**
+ * Contas guardadas neste aparelho, a mais usada primeiro, sem sincronizar a ativa antes.
+ * @returns {Array<object>} resumo de cada conta (`routeId`, nome, foto, se é a ativa…)
+ */
 export function listVaultAccountsSync() {
   deduplicateVaultAccounts();
   const vault = readVaultMap();
@@ -511,6 +601,10 @@ export function listVaultAccountsSync() {
   })).sort((a, b) => (b.lastUsedAt || 0) - (a.lastUsedAt || 0));
 }
 
+/**
+ * Contas guardadas neste aparelho, depois de copiar a ativa para a lista.
+ * @returns {Promise<Array<object>>}
+ */
 export async function listVaultAccounts() {
   await syncActiveAccountToVault();
   return listVaultAccountsSync();
@@ -530,6 +624,11 @@ async function restoreTargetAccountSettings(target) {
   setMeshDiscoverable(target.meshDiscoverable !== false);
 }
 
+/**
+ * Troca a conta ativa por outra guardada neste aparelho.
+ * @param {string} targetRouteId conta de destino (`vx_…`)
+ * @returns {Promise<boolean>} se trocou
+ */
 export async function switchActiveAccount(targetRouteId) {
   if (!targetRouteId) return false;
   await syncActiveAccountToVault();
@@ -550,6 +649,11 @@ export async function switchActiveAccount(targetRouteId) {
   return true;
 }
 
+/**
+ * Cria mais uma conta neste aparelho e a torna ativa (a anterior fica na lista).
+ * @param {{ displayName?: string }} [opts] nome inicial
+ * @returns {Promise<{ routeId: string, publicJwk: object, privateJwk: object, createdAt: number }>}
+ */
 export async function createAdditionalAccount({ displayName = "" } = {}) {
   await syncActiveAccountToVault();
   storeActiveAccount(await generateNewAccountKeys());
@@ -561,6 +665,11 @@ export async function createAdditionalAccount({ displayName = "" } = {}) {
   return cachedAccount;
 }
 
+/**
+ * Tira uma conta (que não seja a ativa) deste aparelho, com chaves travadas e semente.
+ * @param {string} targetRouteId conta (`vx_…`)
+ * @returns {boolean} se removeu
+ */
 export function removeVaultAccount(targetRouteId) {
   const currentId = getCachedRouteIdSync();
   if (!targetRouteId || targetRouteId === currentId) return false;

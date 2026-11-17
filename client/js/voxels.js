@@ -3,7 +3,7 @@
  * ADR-013: Incentivo à infraestrutura e colaboração cívica sem alcances comprados nem plutocracia.
  */
 import { computeBlobHash } from "./media-blob.js";
-import * as localAccount from "./local-account.js";
+import * as localAccount from "./identity/index.js";
 
 export const SCHEMA_VOXEL_RECEIPT = "vox-voxel-receipt-v1";
 export const SCHEMA_VOXEL_PASSPORT = "vox-voxel-passport-v1";

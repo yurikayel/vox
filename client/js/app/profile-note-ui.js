@@ -1,7 +1,7 @@
 /** Editor da nota própria (sheet). */
 
 import * as profileNote from "../profile-note.js";
-import * as localAccount from "../local-account.js";
+import * as localAccount from "../identity/index.js";
 import * as meshProfile from "../mesh-profile.js";
 import * as share from "../share.js";
 import { noteEditorSheetMarkup } from "../render/profile-note-bubble.js";

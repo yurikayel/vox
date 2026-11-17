@@ -4,7 +4,7 @@
  * e-mail (ADR-032 Emenda 1), volta para quem já tem conta e o passo do pacto. `oauth-modals.js` reexporta.
  */
 import { renderPactStepHtml } from "./welcome-pact.js";
-import * as localAccount from "../local-account.js";
+import * as localAccount from "../identity/index.js";
 import { escapeHtml } from "./util.js";
 import { renderImportPanelHtml } from "./oauth-import.js";
 

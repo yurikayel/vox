@@ -11,7 +11,7 @@
 import { LOCKED_TAG, isLocked, openSealed, sealJson } from "./keystore.js";
 import * as keyLock from "./key-lock.js";
 import { identityFromSeed, newSeed } from "./recovery-phrase.js";
-import { bytesToB64Url, computeRouteId } from "./signed-verify.js";
+import { bytesToB64Url, computeRouteId } from "../signed-verify.js";
 
 /** Chave do `localStorage` com as sementes deste aparelho (entra na limpeza local). */
 export const SEED_STORAGE = "vox-identity-seed-v1";

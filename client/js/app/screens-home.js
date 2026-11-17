@@ -12,7 +12,7 @@ import * as hashtags from "../hashtags.js";
 import * as postOwnership from "../post-ownership.js";
 import { attachInlineComposerHandlers } from "../inline-composer.js";
 import { splitFeedBySphere } from "../civic-post.js";
-import * as localAccount from "../local-account.js";
+import * as localAccount from "../identity/index.js";
 import { loadCivicVotes, attachCivicVoteHandlers } from "./civic-actions.js";
 import * as welcomeProfile from "../vox-welcome-profile.js";
 import { getActiveUser, makeShellProps, attachPostShareHandlers } from "./context.js";

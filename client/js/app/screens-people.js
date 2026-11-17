@@ -7,7 +7,7 @@ import * as contactNotify from "../contact-notify.js";
 import * as centralMemory from "../central-memory.js";
 import * as peopleIndex from "../people-index.js";
 import * as profileDirectory from "../profile-directory.js";
-import * as localAccount from "../local-account.js";
+import * as localAccount from "../identity/index.js";
 import { getActiveUser, makeShellProps } from "./context.js";
 import { addContactAndNotify, listPendingAddedYouNotices } from "./contact-notify-flow.js";
 import { pollInboxMessages } from "./screens-dm.js";

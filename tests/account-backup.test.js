@@ -1,8 +1,8 @@
 import "../tests/setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
-import * as localAccount from "../client/js/local-account.js";
-import { exportAccountBundle, importAccountBundle } from "../client/js/account-backup.js";
+import * as localAccount from "../client/js/identity/local-account.js";
+import { exportAccountBundle, importAccountBundle } from "../client/js/identity/account-backup.js";
 
 test("account-backup - roundtrip de export e import restaura identidade e chaves", async () => {
   localStorage.clear();

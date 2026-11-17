@@ -4,8 +4,8 @@
  * ela confere de novo e some quando a saída existe. Quem só está lendo não vê: ainda não há chave.
  * @module app/account-exit-banner
  */
-import * as accountExit from "../account-exit.js";
-import * as localAccount from "../local-account.js";
+import * as accountExit from "../identity/index.js";
+import * as localAccount from "../identity/index.js";
 
 /** Id da faixa, para não montar duas vezes. */
 export const EXIT_BANNER_ID = "accountExitBanner";

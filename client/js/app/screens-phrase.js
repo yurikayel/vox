@@ -5,7 +5,7 @@
 
 import * as render from "../render.js";
 import * as share from "../share.js";
-import { confirmPhraseWords, getAccountPhrase, phraseNeedsPassphrase, pickConfirmPositions } from "../account-phrase.js";
+import { confirmPhraseWords, getAccountPhrase, phraseNeedsPassphrase, pickConfirmPositions } from "../identity/index.js";
 import {
   renderPhraseConfirmHtml,
   renderPhraseDoneHtml,

@@ -16,7 +16,7 @@ test("depurple paper - service worker cache id", () => {
   assert.ok(sw.includes('"./js/dm-messenger.js"'));
   assert.ok(sw.includes('"./js/chat-bridge.js"'));
   assert.ok(sw.includes('"./js/qr-url.js"'));
-  assert.ok(sw.includes('"./js/account-backup-wrap.js"'));
+  assert.ok(sw.includes('"./js/identity/account-backup-wrap.js"'));
   assert.ok(sw.includes('"./js/app/cantina-gate.js"'));
   assert.ok(sw.includes('"./js/community-mirror.js"'));
   assert.ok(sw.includes('"./js/community-seed-checklist.js"'));

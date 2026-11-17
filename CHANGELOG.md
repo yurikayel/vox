@@ -6,6 +6,14 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Conta numa pasta só, com portas de entrada (ADR-035 §3.2, segundo contexto)
+- **`client/js/identity/`:** 15 módulos da conta (conta local, travamento e chaves em repouso, semente, frase de recuperação, arquivo de soberania, saídas soberanas, limpeza local, guardiões e backup no e-mail) mudaram para a pasta, com `git mv`. Nenhuma regra mudou; a identidade está congelada para tudo que não seja correção.
+- **Portas:** fora da pasta, importa-se por `identity/index.js` ou, para quem só precisa da chave do aparelho e da chave de DM (`crypto-dm.js`, `wallet.js`), por `identity/keys.js`, que evita o ciclo `crypto-dm → identity/index → local-account → crypto-dm`. `npm run audit:layers` reprova import de fora que pule as portas.
+- **Ficaram na raiz:** `shamir-gf256` (também do RPG), `signed-verify`, `sig-format` e os módulos de contas sociais.
+- **Documentação:** os exports movidos ganharam JSDoc completo; as 64 entradas de dívida do `audit:docs` desses arquivos foram pagas, não renomeadas. Links em README, ARCHITECTURE, IDENTITY e ADRs apontam para o caminho novo.
+- **Ciclos:** o componente com ciclo do grafo de imports foi de 113 para 120 módulos (a porta e 6 módulos que só usavam `local-account`); registrado no ADR-035.
+- Testes: imports e caminhos lidos nos testes apontam para `client/js/identity/`, sem mudar asserções; caso novo em `tests/layers-audit.test.js` para as portas da conta. SW `v7.129`.
+
 ### ADR-036 proposto: agilidade criptográfica e transição pós-quântica
 - **Inventário** de onde cada algoritmo é usado no cliente (assinatura e DM em curva elíptica; cofre, semente e chaves em repouso simétricos; Arweave, Nostr e Bluesky definidos pelos protocolos deles).
 - **Regra:** todo formato novo diz o seu algoritmo dentro do que é assinado; o leitor recusa algoritmo desconhecido.

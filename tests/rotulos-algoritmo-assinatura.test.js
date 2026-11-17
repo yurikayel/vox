@@ -26,7 +26,7 @@ const USER_FACING = [
 ];
 
 test("a conta assina com ECDSA P-256", () => {
-  assert.match(read("js/key-lock.js"), /name: "ECDSA", namedCurve: "P-256"/);
+  assert.match(read("js/identity/key-lock.js"), /name: "ECDSA", namedCurve: "P-256"/);
 });
 
 test("nenhum texto para o usuário diz que a chave da conta é Ed25519", () => {

@@ -6,7 +6,7 @@ import * as handles from "./handles.js";
 import * as mock from "./mock.js";
 import { getWelcomeProfile, WELCOME_ROUTE_ID } from "./vox-welcome-profile.js";
 import * as profileDirectory from "./profile-directory.js";
-import * as localAccount from "./local-account.js";
+import * as localAccount from "./identity/index.js";
 import { getLocalIdentityMeta } from "./profile-identity-meta.js";
 import * as webrtcPeer from "./webrtc-peer.js";
 import { shortId } from "./short-id.js";

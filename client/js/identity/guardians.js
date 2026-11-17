@@ -9,7 +9,7 @@
  */
 
 import { openSealed, sealJsonStrict } from "./keystore.js";
-import { MAX_N, MIN_M, SPLIT_ID_BYTES, splitSecret } from "./shamir-gf256.js";
+import { MAX_N, MIN_M, SPLIT_ID_BYTES, splitSecret } from "../shamir-gf256.js";
 
 /** Pedaço da dona para o guardião. */
 export const SHARE_TYPE = "vox-guardiao-pedaco";

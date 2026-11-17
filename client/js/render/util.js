@@ -1,6 +1,6 @@
 /** @file Shared HTML/time/author helpers for Vox render layer. */
 import * as mock from "../mock.js";
-import * as localAccount from "../local-account.js";
+import * as localAccount from "../identity/index.js";
 import * as profileDirectory from "../profile-directory.js";
 import { isWelcomeRouteId } from "../vox-welcome-profile.js";
 import { escapeHtml } from "../shared/html.js";

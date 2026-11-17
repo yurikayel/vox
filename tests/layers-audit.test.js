@@ -58,9 +58,19 @@ test("camadas - um import que sobe de camada, inclusive por import(), aparece co
 
 test("contexto vault/ - fora da pasta só pelas portas index.js e envelope.js; dentro, livre", () => {
   assert.equal(bypassesDoor("email-kit.js", "vault/index.js"), false);
-  assert.equal(bypassesDoor("key-lock.js", "vault/envelope.js"), false);
+  assert.equal(bypassesDoor("identity/key-lock.js", "vault/envelope.js"), false);
   assert.equal(bypassesDoor("vault/passphrase-vault.js", "vault/vault-store.js"), false);
   assert.equal(bypassesDoor("email-kit.js", "vault/vault-crypto.js"), true);
   assert.equal(bypassesDoor("app/screens-sync.js", "vault/passphrase-vault.js"), true);
   assert.deepEqual(layerViolations("email-kit.js", `import { x } from "./vault/vault-store.js";`), ["email-kit.js → vault/vault-store.js"]);
+});
+
+test("contexto identity/ - fora da pasta só pelas portas index.js e keys.js; dentro, livre; cofre entra pela porta", () => {
+  assert.equal(bypassesDoor("app/screens-phrase.js", "identity/index.js"), false);
+  assert.equal(bypassesDoor("crypto-dm.js", "identity/keys.js"), false);
+  assert.equal(bypassesDoor("vault/passphrase-vault.js", "identity/index.js"), false);
+  assert.equal(bypassesDoor("identity/account-phrase.js", "identity/recovery-phrase.js"), false);
+  assert.equal(bypassesDoor("crypto-dm.js", "identity/key-lock.js"), true);
+  assert.equal(bypassesDoor("vault/passphrase-vault.js", "identity/account-exit.js"), true);
+  assert.deepEqual(layerViolations("contacts.js", `import * as a from "./identity/local-account.js";`), ["contacts.js → identity/local-account.js"]);
 });

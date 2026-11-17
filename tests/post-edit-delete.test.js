@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { mockStores } from "../tests/setup.js";
 import * as cacheNode from "../client/js/cache-node.js";
 import * as postOwnership from "../client/js/post-ownership.js";
-import * as localAccount from "../client/js/local-account.js";
+import * as localAccount from "../client/js/identity/local-account.js";
 import * as render from "../client/js/render.js";
 
 function createContainer() {

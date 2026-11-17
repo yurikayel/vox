@@ -29,7 +29,7 @@ test("diretório: a linha mostra nome e @, não a chave vx_", () => {
 });
 
 test("diretório: a própria conta sem nome aparece como Você, com convite para escolher nome", async () => {
-  const localAccount = await import("../client/js/local-account.js");
+  const localAccount = await import("../client/js/identity/local-account.js");
   const me = await localAccount.getRouteId();
   const html = resolvePeopleSearchBody({ all: [{ routeId: me, name: me.slice(0, 14), source: "self" }] }, [], "");
   assert.ok(html.includes(">Você</a>") && html.includes("Escolher nome"));
