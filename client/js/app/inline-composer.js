@@ -1,18 +1,18 @@
-import * as composerMedia from "./composer-media.js";
-import * as share from "./share.js";
-import { uploadTopicToPermaweb } from "./topic-permaweb.js";
-import * as localAccount from "./identity/index.js";
-import * as peers from "./peers.js";
-import * as cacheNode from "./cache-node.js";
-import * as wallet from "./wallet.js";
-import * as postOwnership from "./post-ownership.js";
-import * as mediaBlob from "./media-blob.js";
-import * as photoTags from "./photo-tags.js";
-import { openPhotoTagPicker } from "./app/photo-tag-picker.js";
-import { escapeHtml } from "./shared/html.js";
-import * as permanence from "./permanence-notice.js";
-import { attachPowIfWanted } from "./new-key-guard.js";
-import { assertCanPostTopic } from "./app/community-channel-flow.js";
+import * as composerMedia from "../composer-media.js";
+import * as share from "../share.js";
+import { uploadTopicToPermaweb } from "../topic-permaweb.js";
+import * as localAccount from "../identity/index.js";
+import * as peers from "../peers.js";
+import * as cacheNode from "../cache-node.js";
+import * as wallet from "../wallet.js";
+import * as postOwnership from "../post-ownership.js";
+import * as mediaBlob from "../media-blob.js";
+import * as photoTags from "../photo-tags.js";
+import { openPhotoTagPicker } from "./photo-tag-picker.js";
+import { escapeHtml } from "../shared/html.js";
+import * as permanence from "../permanence-notice.js";
+import { attachPowIfWanted } from "../new-key-guard.js";
+import { assertCanPostTopic } from "./community-channel-flow.js";
 
 let inlineComposerImageDataUrl = "";
 let inlineComposerMedia = { type: "", dataUrl: "", byteLength: 0 };
@@ -612,7 +612,7 @@ async function executeInlinePublish(form, onPublished, state, shouldEcho = false
   else location.reload();
 
   if (shouldEcho) {
-    const { openExplodeSheet } = await import("./explode-dispatch.js");
+    const { openExplodeSheet } = await import("../explode-dispatch.js");
     openExplodeSheet(signed);
   }
 }

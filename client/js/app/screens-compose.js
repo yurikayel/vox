@@ -22,7 +22,7 @@ import { parseChatTranscriptToMarkdown } from "../chat-bridge.js";
 import { createCivicNotaryRecord } from "../perma-notary.js";
 import { bindComposeStepper, goToComposeStep } from "./compose-stepper.js";
 import { renderFeiraDisabled } from "../render/compose-steps.js";
-import { attachInlineComposerHandlers, expandInlineComposer } from "../inline-composer.js";
+import { attachInlineComposerHandlers, expandInlineComposer } from "./inline-composer.js";
 import { appendPollOptionsToBody } from "../civic-post.js";
 import { getActiveUser, makeShellProps } from "./context.js";
 import { bindPollBuilder, readPollOptions } from "./compose-poll.js";
