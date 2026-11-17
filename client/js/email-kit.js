@@ -262,6 +262,9 @@ export function downloadEmailKitFile(kit, routeId = localAccount.getCachedRouteI
  * @returns {Promise<{ ok: boolean, reason?: string, routeId?: string, kit?: object }>} Resultado com `kit` pronto.
  */
 export async function createEmailAccountKit({ rawName, email, pass, includePhrase = false, draftState = { email: "", pass: "" } }) {
+  // Antes de gravar: e-mail inválido não pode revogar o cofre anterior para só então falhar em `buildEmailKit`.
+  const normalizedEmail = normalizeVaultEmail(email || "");
+  if (!normalizedEmail.includes("@")) return { ok: false, reason: "Informe um e-mail válido." };
   localAccount.setDisplayName(rawName);
   const acc = await localAccount.ensureLocalAccount();
   await accountExit.hasSovereignExit(acc.routeId);
