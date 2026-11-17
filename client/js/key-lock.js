@@ -12,7 +12,7 @@
  */
 
 import { KeyLockedError, KeystoreUnavailableError, LOCKED_TAG, isLocked, loadKey, openSealed, removeKey, storeKey } from "./keystore.js";
-import { decryptVaultRecord, encryptVaultV2 } from "./vault-crypto.js";
+import { decryptVaultRecord, encryptVaultV2 } from "./vault/envelope.js";
 
 const LOCKED_COPIES = "vox-locked-keys-v1";
 /** Mesmo mínimo do cofre (`VAULT_PASSPHRASE_MIN`): senha curta não trava nada. */

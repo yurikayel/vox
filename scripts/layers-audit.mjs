@@ -4,7 +4,8 @@
  *
  * Lê os imports de cada módulo de `client/js` pela árvore sintática (espree), estáticos e `import()` com texto
  * literal, e reprova o import que sobe de camada: `base` não importa `render`, `app` nem `labs`; `render` não importa
- * `app` nem `labs`; `labs` não importa `app` nem `render`; só `app` e o próprio laboratório importam `labs`.
+ * `app` nem `labs`; `labs` não importa `app` nem `render`; só `app` e o próprio laboratório importam `labs`. Num
+ * contexto com porta de entrada (`vault/`), quem está fora importa só pela porta (`CONTEXT_DOORS` em layers-lib).
  *
  * Os imports proibidos que já existiam ficam em scripts/layers-debt.json, como catraca: a lista pode diminuir, nunca
  * crescer. Import proibido novo reprova. Dívida paga que continua no arquivo também reprova, para não esconder uma

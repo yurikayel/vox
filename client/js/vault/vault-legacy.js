@@ -9,12 +9,18 @@
 
 import { legacyLookupKey } from "./vault-crypto.js";
 
+/** Prefixo das cópias locais de cofres v1 no `localStorage` (o resto da chave é o endereço v1). */
 export const LEGACY_VAULT_PREFIX = "vox-oauth-vault-v1:";
 const NOTICE_KEY = "vox-vault-v1-revoked-notice";
 const DONE_KEY = "vox-vault-v1-migrated-for";
 
 const revokedMarker = () => ({ v: 1, revoked: true, updatedAt: Date.now() });
 
+/**
+ * Endereços dos cofres v1 que este aparelho guarda.
+ * @param {Storage} [storage] armazenamento a varrer (padrão: `localStorage`)
+ * @returns {string[]} endereços v1, sem o prefixo
+ */
 export function listLegacyLookupKeys(storage = globalThis.localStorage) {
   const keys = [];
   try {
@@ -28,7 +34,12 @@ export function listLegacyLookupKeys(storage = globalThis.localStorage) {
   return keys;
 }
 
-/** Revoga os endereços v1 dados: apaga a cópia local e grava a marca no servidor. Devolve quantos. */
+/**
+ * Revoga os endereços v1 dados: apaga a cópia local e grava a marca `revoked` no servidor.
+ * @param {string[]} lookupKeys endereços v1 (repetidos e vazios são ignorados)
+ * @param {{ saveRemote?: (key: string, record: object) => unknown, storage?: Storage }} [opts] gravação remota e armazenamento local
+ * @returns {number} quantos endereços distintos foram revogados
+ */
 export function revokeLegacyVaults(lookupKeys, { saveRemote, storage = globalThis.localStorage } = {}) {
   const unique = [...new Set(lookupKeys.filter(Boolean))];
   for (const key of unique) {
@@ -61,6 +72,9 @@ function readDoneMarker(storage) {
  * Migração da abertura: revoga os v1 guardados no aparelho e o v1 do login social vinculado (a cópia
  * local pode faltar). `serverMarker` identifica os servidores de memória escolhidos: se mudarem, a
  * revogação roda de novo, para chegar também ao servidor novo.
+ * @param {{ enrichment?: object, saveRemote?: (key: string, record: object) => unknown, serverMarker?: string, storage?: Storage }} [opts]
+ *   enriquecimento do perfil (login vinculado), gravação remota, marca dos servidores escolhidos e armazenamento
+ * @returns {Promise<number>} quantos cofres v1 locais foram revogados (0 quando não havia nada a fazer)
  */
 export async function migrateLegacyVaults({ enrichment, saveRemote, serverMarker = "", storage = globalThis.localStorage } = {}) {
   const localKeys = listLegacyLookupKeys(storage);
@@ -76,6 +90,11 @@ export async function migrateLegacyVaults({ enrichment, saveRemote, serverMarker
   return localKeys.length;
 }
 
+/**
+ * Marca que a pessoa precisa ser avisada da revogação do v1.
+ * @param {Storage} [storage] armazenamento (padrão: `localStorage`)
+ * @returns {void}
+ */
 export function markLegacyRevokedNotice(storage = globalThis.localStorage) {
   try {
     storage.setItem(NOTICE_KEY, "1");
@@ -84,7 +103,11 @@ export function markLegacyRevokedNotice(storage = globalThis.localStorage) {
   }
 }
 
-/** Devolve true uma vez depois da revogação, para o app avisar a pessoa. */
+/**
+ * Lê e apaga o aviso pendente: devolve true uma vez depois da revogação, para o app avisar a pessoa.
+ * @param {Storage} [storage] armazenamento (padrão: `localStorage`)
+ * @returns {boolean}
+ */
 export function consumeLegacyRevokedNotice(storage = globalThis.localStorage) {
   try {
     if (storage.getItem(NOTICE_KEY) !== "1") return false;
@@ -95,6 +118,11 @@ export function consumeLegacyRevokedNotice(storage = globalThis.localStorage) {
   }
 }
 
+/**
+ * Apaga o aviso pendente sem mostrar (a pessoa já criou a Senha Soberana de novo).
+ * @param {Storage} [storage] armazenamento (padrão: `localStorage`)
+ * @returns {void}
+ */
 export function clearLegacyRevokedNotice(storage = globalThis.localStorage) {
   try {
     storage.removeItem(NOTICE_KEY);

@@ -10,7 +10,7 @@ import * as keyLock from "../client/js/key-lock.js";
 import * as localAccount from "../client/js/local-account.js";
 import * as cryptoDm from "../client/js/crypto-dm.js";
 import { exportAccountBundle, importAccountBundle } from "../client/js/account-backup.js";
-import { restoreFromPassphraseVault, savePassphraseVault } from "../client/js/oauth-vault.js";
+import { restoreFromPassphraseVault, savePassphraseVault } from "../client/js/vault/index.js";
 import { sealKeysAtRest } from "../client/js/key-at-rest.js";
 
 const PASS = "quatro palavras de teste soberano";

@@ -1,6 +1,7 @@
 /**
  * @file Regras de camada do cliente (ADR-035), sem E/S: classificar um módulo de `client/js`, ler os imports de um
- * código-fonte pela árvore sintática (espree) e dizer se um import atravessa camadas no sentido proibido.
+ * código-fonte pela árvore sintática (espree) e dizer se um import atravessa camadas no sentido proibido ou entra
+ * num contexto (`vault/`…) sem passar pela porta de entrada.
  * Usado por `scripts/layers-audit.mjs` e pelos testes.
  */
 
@@ -32,6 +33,26 @@ const ALLOWED = {
   base: new Set(["base"]),
   labs: new Set(["labs", "base"]),
 };
+
+/**
+ * Contextos com porta de entrada (ADR-035 §3.2): fora da pasta, só se importa pelas portas listadas.
+ * `vault/envelope.js` é a cifra pura, para quem está abaixo do cofre (identidade) não criar ciclo com `vault/index.js`.
+ */
+export const CONTEXT_DOORS = {
+  "vault/": ["vault/index.js", "vault/envelope.js"],
+};
+
+/**
+ * O import entra num contexto por fora da porta? (dentro da própria pasta, vale tudo)
+ * @param {string} fromRel módulo que importa
+ * @param {string} toRel módulo importado
+ * @returns {boolean}
+ */
+export function bypassesDoor(fromRel, toRel) {
+  return Object.entries(CONTEXT_DOORS).some(
+    ([dir, doors]) => toRel.startsWith(dir) && !fromRel.startsWith(dir) && !doors.includes(toRel),
+  );
+}
 
 /**
  * Este import é permitido pelas camadas? (`app` → qualquer; `render` → render/base; `base` → base;
@@ -93,7 +114,7 @@ export function resolveSpecifier(fromRel, spec) {
 }
 
 /**
- * Imports proibidos de um módulo, como chaves "de → para".
+ * Imports proibidos de um módulo (camada errada ou contexto sem a porta), como chaves "de → para".
  * @param {string} fromRel módulo, relativo a `client/js`
  * @param {string} code código-fonte
  * @returns {string[]}
@@ -101,7 +122,7 @@ export function resolveSpecifier(fromRel, spec) {
 export function layerViolations(fromRel, code) {
   return importSpecifiers(code)
     .map((spec) => resolveSpecifier(fromRel, spec))
-    .filter((toRel) => toRel && !isAllowedImport(fromRel, toRel))
+    .filter((toRel) => toRel && (!isAllowedImport(fromRel, toRel) || bypassesDoor(fromRel, toRel)))
     .map((toRel) => `${fromRel} → ${toRel}`)
     .sort();
 }

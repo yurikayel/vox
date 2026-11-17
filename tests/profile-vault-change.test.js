@@ -6,8 +6,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import "./setup.js";
 import * as localAccount from "../client/js/local-account.js";
-import * as oauthVault from "../client/js/oauth-vault.js";
-import * as vaultCrypto from "../client/js/vault-crypto.js";
+import * as oauthVault from "../client/js/vault/index.js";
+import * as vaultCrypto from "../client/js/vault/vault-crypto.js";
 import { profileVaultOptions } from "../client/js/app/profile-vault-sync.js";
 import { renderSovereigntyCard } from "../client/js/render/profile-sovereignty.js";
 
