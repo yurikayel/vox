@@ -1,8 +1,8 @@
 import "../tests/setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
-import * as voxIdentity from "../client/js/vox-identity.js";
-import * as idbStore from "../client/js/idb-store.js";
+import * as voxIdentity from "../client/js/labs/parado/vox-identity.js";
+import * as idbStore from "../client/js/labs/parado/idb-store.js";
 
 test("vox-identity - constrói e decodifica cabeçalho binário canônico de exatamente 152 bytes", async () => {
   const sender = new Uint8Array(32).fill(0x01);

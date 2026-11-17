@@ -1,8 +1,8 @@
 import "../tests/setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
-import { pingNodeEndpoint, pingNodeList } from "../client/js/node-health-api.js";
-import { NODE_STATUS } from "../client/js/node-health-model.js";
+import { pingNodeEndpoint, pingNodeList } from "../client/js/labs/parado/node-health-api.js";
+import { NODE_STATUS } from "../client/js/labs/parado/node-health-model.js";
 
 test("node-health-api - pingNodeEndpoint com resposta rápida classifica como healthy", async () => {
   const mockFetch = async () => ({ ok: true, status: 200 });

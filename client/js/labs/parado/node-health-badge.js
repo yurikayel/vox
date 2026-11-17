@@ -3,9 +3,9 @@
  * Renderiza selos semafóricos e listas táteis de telemetria de nós.
  */
 
-import { escapeHtml } from "./util.js";
-import { getNodeHealthLabelPtBr, getNodeHealthAriaLabel, formatLatency } from "../node-health-ux.js";
-import { NODE_STATUS } from "../node-health-model.js";
+import { escapeHtml } from "../../shared/html.js";
+import { getNodeHealthLabelPtBr, getNodeHealthAriaLabel, formatLatency } from "./node-health-ux.js";
+import { NODE_STATUS } from "./node-health-model.js";
 
 export function renderNodeHealthBadgeHtml(record) {
   if (!record || !record.url) {

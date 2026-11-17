@@ -3,8 +3,8 @@
  * Permite emissão e validação descentralizada de certificados para cursos, mutirões
  * e capacitações de movimentos populares (letramento digital, arquitetura aberta).
  */
-import { computeBlobHash } from "./media-blob.js";
-import { escapeHtml } from "./shared/html.js";
+import { computeBlobHash } from "../../media-blob.js";
+import { escapeHtml } from "../../shared/html.js";
 
 export const CREDENTIAL_SCHEMA_VERSION = "vox-civic-cred-v1";
 

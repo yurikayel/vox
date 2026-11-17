@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import * as localAccount from "../client/js/identity/local-account.js";
 import * as wallet from "../client/js/wallet.js";
 import * as ans104 from "../client/js/ans104.js";
-import * as identityLink from "../client/js/identity-link.js";
+import * as identityLink from "../client/js/labs/parado/identity-link.js";
 import * as gql from "../client/js/graphql.js";
 
 test("ans104 - jwkToAddress deriva endereço de 43 caracteres", async () => {

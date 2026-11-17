@@ -8,7 +8,7 @@
  * @see client/js/supporter-mode.js
  */
 
-import { GUARDIAN_LIMITS } from "./supporter-mode.js";
+import { GUARDIAN_LIMITS } from "../../supporter-mode.js";
 
 const STORAGE_KEY = "vox-guardian-config";
 

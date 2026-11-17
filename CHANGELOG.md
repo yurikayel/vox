@@ -6,6 +6,10 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Dívida: módulos não plugados vão para `labs/parado/` (ADR-035)
+- Os 21 módulos que nenhuma tela carrega (`UNPLUGGED_MODULES` no `sw.js`) saíram da raiz de `client/js` (e de `render/`) para `client/js/labs/parado/`, com um README que diz o que são e como plugar. Pela regra de camadas, só `app` e o laboratório podem importá-los. Sem mudança de lógica: só caminhos de import; `settings-guardian` e `node-health-badge` passam a importar `escapeHtml` de `shared/html.js` (base), já que `labs` não importa `render`.
+- Caminhos atualizados em `UNPLUGGED_MODULES`, `permaweb-manifest.json`, testes, `docs-debt.json` e docs. SW `v7.139`.
+
 ### Testes: vermelho na base (PM-111)
 - **Job `red-on-base` no CI (só PR):** roda os testes novos ou alterados contra o código da base (`scripts/red-on-base.mjs` e `scripts/red-on-base-reporter.mjs`). Em PR `fix:` ao menos um precisa falhar por asserção; falha por import ou função ausente é inconclusiva. Nos outros PRs só informa. Rótulo `red-on-base:skip` para `fix:` de CI ou documentação. Regra em [TESTES.md §3.4](./docs/TESTES.md#34-vermelho-na-base-o-teste-prova-o-defeito-pm-111).
 - Testes: `tests/red-on-base.test.js` (novo, 9 casos), com um repositório git de mentira.

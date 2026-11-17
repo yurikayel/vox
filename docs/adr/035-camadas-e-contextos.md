@@ -11,6 +11,7 @@ O cliente é JavaScript sem passo de build: 291 módulos em `client/js` (develop
 - **167 módulos soltos na raiz** de `client/js`, sem agrupamento por assunto. `local-account.js` é importado por 56 módulos.
 - **Estado espalhado:** 54 arquivos usam `localStorage` ou `sessionStorage` diretamente.
 - **21 módulos não são carregados por nenhuma página.** Eles já ficam fora do precache, em `UNPLUGGED_MODULES` no `sw.js`, e o teste `tests/shell-reachability.test.js` (PM-04) reprova quem os puser de volta. Mas continuam no repositório, e as revisões e varreduras passam por eles como se fossem código do app.
+  - **Atualização 17/11/2026:** os 21 foram para `client/js/labs/parado/` (decisão do mantenedor: guardar, não plugar agora). Lá a regra de camadas os isola do app; plugar um deles é um PR próprio.
 
 Os bugs das últimas semanas vieram desse desenho:
 
