@@ -15,7 +15,7 @@ import { bytesToB64Url, computeRouteId, verifyPayload } from "../signed-verify.j
 import { computeAccountSocialKey, detectSocialAvatarType, matchesOAuthEnrichment } from "../account-social-match.js";
 
 export { computeRouteId, verifyPayload };
-export { LOCAL_WIPE_NOTICE, confirmLocalWipe } from "./local-wipe.js";
+export { LOCAL_WIPE_NOTICE, confirmLocalWipe, dropAllPersonalStorage, dropDatabases } from "./local-wipe.js";
 
 const ACCOUNT_STORAGE = "vox-local-account-v1";
 const DISPLAY_NAME_STORAGE = "vox-display-name";
