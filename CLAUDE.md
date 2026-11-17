@@ -6,4 +6,4 @@ Leia e siga, nesta ordem:
 3. [docs/process/qualidade-e-evidencia.md](./docs/process/qualidade-e-evidencia.md) — evidência de testes (PASS / FAIL / NOT RUN / BLOCKED), proibição de falso verde, papéis e auditoria só-leitura.
 4. [docs/process/documentacao.md](./docs/process/documentacao.md) — documentação no código (cabeçalho e JSDoc em todo export) e documentação técnica atrelada a cada mudança; `npm run audit:docs` reprova o que faltar.
 
-Antes de pedir merge em `main`: `npm run validate`.
+PRs vão para `develop`, que vai para `main` por PR no fechamento do lote. Antes de pedir merge: `npm run validate`.

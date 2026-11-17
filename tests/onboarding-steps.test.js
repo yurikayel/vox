@@ -52,3 +52,30 @@ test("ADR-032: importar nome e foto (Perfil) traz os provedores e diz que não g
   assert.ok(html.includes("Não guarda sua conta"));
   assert.ok(!html.includes('data-genesis-step="pact"') && !html.includes("form-oauth-custom-name"), "importar não é a entrada");
 });
+
+test("ADR-032 §6: entrada 1-etapa com e-mail, senha sem confirmação, frase opcional desmarcada e cartão §6.5", () => {
+  const c = { innerHTML: "" };
+  render.renderOAuthEnrich(c);
+  const html = c.innerHTML;
+  for (const id of [
+    "oauth-entry-email-input",
+    "oauth-entry-pass-input",
+    "btn-oauth-toggle-pass",
+    "oauth-entry-include-phrase",
+    "btn-oauth-name-only",
+    "oauth-restore-email-input",
+    "oauth-restore-kit-text",
+  ]) {
+    assert.ok(html.includes(`id="${id}"`), `falta #${id}`);
+  }
+  assert.ok(html.includes('autocomplete="username"') && html.includes('autocomplete="new-password"'));
+  assert.ok(html.includes('autocomplete="current-password"'));
+  assert.ok(html.includes("Seu e-mail não sai deste aparelho"));
+  assert.match(html, /id="oauth-entry-include-phrase"[^>]*>/);
+  assert.doesNotMatch(html, /id="oauth-entry-include-phrase"[^>]*checked/);
+
+  const card = render.renderEmailKitCardHtml({ email: "ana@exemplo.com", mailtoUrl: "mailto:ana%40exemplo.com?subject=ok" });
+  for (const id of ["btn-email-kit-fix-email", "btn-email-kit-open-app", "btn-email-kit-copy", "btn-email-kit-download", "btn-email-kit-confirm", "btn-email-kit-later"]) {
+    assert.ok(card.includes(`id="${id}"`), `falta #${id} no cartão §6.5`);
+  }
+});

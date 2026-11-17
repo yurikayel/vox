@@ -6,6 +6,81 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Correção: trocar a Senha Soberana pelo Perfil; pôr e-mail tira do ar o cofre só-senha
+- **Senha atual:** o cartão "Soberania & Sincronização" ganha o campo "Senha atual, só para trocar a Senha Soberana". Antes, depois do primeiro cofre a conta ficava travada pela senha, e uma senha nova dava "Senha incorreta" sem ter onde informar a antiga. Com a senha atual, a conta é aberta, gravada com a nova e o endereço antigo é revogado.
+- **E-mail:** gravar o cofre com e-mail (Perfil ou assistente de backup) revoga o cofre só-senha anterior da mesma senha, como a restauração já fazia (ADR-032 §6.3). Antes, ele ficava no ar e abria só com a senha. Só é revogado o que existe; endereço sem cofre não ganha marca.
+- **Revogação só quando o cofre novo chegou lá fora:** se nenhum servidor aceitou o cofre novo, o antigo continua nos servidores (é o único) e só a cópia deste aparelho sai. Antes, um servidor que recusava o novo e aceitava a revogação deixava a conta sem cofre remoto. Vale também para a troca de senha e o kit de e-mail.
+- **Trocar a senha e pôr e-mail de uma vez** também tira do ar o cofre só-senha da senha antiga; antes a senha antiga continuava abrindo a conta.
+- O campo "Senha atual" é limpo depois de gravar; antes, o clique seguinte (ex.: o QR) dava "Senha incorreta".
+- Testes: `tests/profile-vault-change.test.js` (novo; 6 casos, os de revogação falham com o código anterior). SW `v7.127`.
+
+### ADR-034 proposto: raiz e subchaves por aparelho
+- Desenho para perder o celular sem perder a conta: a chave de assinatura de hoje vira a raiz (o `vx_…` não muda), cada aparelho assina com uma subchave delegada, e a raiz publica um registro de chaves com as revogadas. Nada de código; a forma assinada nova pede a RFC 0002 e a revisão externa de cripto (LAN-18). Atualizados ADR-032 §3.6, DECISOES (A-22), ROADMAP (PM-13) e o índice de ADRs.
+
+### Correção: o QR do Perfil para outro aparelho volta a funcionar
+- **"📲 QR Code para Celular" sempre falhava:** o link do cofre tinha uns 251 bytes no endereço oficial, e o codificador de QR ia só até a versão 9 (230 bytes). Agora o QR leva um cofre mínimo: a conta, a semente da frase de 12 palavras e o nome, se couber, cifrados só pela senha (`buildQrSyncRecord`). O cofre completo continua gravado e o link continua levando tudo; Pix e o resto chegam por eles. Conta de antes da frase não tem semente e recebe o motivo em vez de um QR que não abre.
+- **Codificador de QR:** ganha a versão 11 (321 bytes, ECC L, 4 blocos, contagem de 16 bits). A versão 10 fica de fora, porque em ECC L ela mistura blocos de dois tamanhos.
+- Testes: `tests/qr-sync-record.test.js` (novo) e a versão 11 em `tests/qr-url.test.js`. O teste antigo que esperava erro com 231 bytes mudou de propósito: 231 bytes agora vai para a versão 11, e o erro passa a ser acima de 321. SW `v7.126`.
+
+### Correção: entrar em outra conta não herda nada da anterior; cofre do Perfil com o e-mail da conta
+- **Frase, guardiões, arquivo `.voxid` e cofre** passam todos por `importLocalAccountBundle`. Quando a conta que entra é outra, a que estava ativa vai inteira para o cofre local (nome, Pix, enriquecimento, chave de DM), e a que entra fica com o que é dela: do pacote ou, se já esteve neste aparelho, do cofre local. Antes, entrar pela frase ou por um `.voxid` sem nome e sem Pix deixava o nome, a chave Pix e os dados de login da conta anterior na nova, e um `.voxid` sem chave de DM ficava com a chave de DM da anterior.
+- **Trocar de conta sem chave de DM guardada** gera uma chave nova em vez de manter a da conta que estava ativa.
+- **Cartão "Soberania & Sincronização" do Perfil:** campo de e-mail (opcional) para quem criou a conta com e-mail; o cofre é gravado com ele, como na entrada (ADR-032 Emenda 1). Conta com saída por e-mail e campo vazio pede confirmação, porque sem o e-mail o endereço do cofre sai só da senha. O link e o QR levam o cofre cifrado só pela senha (`syncBundle`), que não sai do aparelho. Os dois botões saíram de `screens-profile.js` para `app/profile-vault-sync.js`; o link é montado com `textContent`, não com `innerHTML`.
+- Testes: `tests/restore-account-switch.test.js` (novo; 3 dos 4 falham no código anterior). SW `v7.125`.
+
+### Correção: diretório de perfis reconhece foto de login social pelo host
+- `profile-directory.js` decidia se dois cartões eram a mesma pessoa procurando "googleusercontent.com/", "fbcdn.net" e afins em qualquer parte da URL da foto, e cortava o resto. Duas fotos diferentes de um mesmo site, com esse trecho na query, viravam "a mesma pessoa", e a deduplicação ou a poda apagava um cartão. Agora usa `detectSocialAvatarType` (host da URL, só https), a mesma regra de `account-social-match.js` (#150) e de `people-index.js`; na Meta, `psid`/`asid` são lidos como parâmetros da query, não por trecho.
+- Testes: `tests/profile-directory-avatar.test.js` (novo; 2 dos 4 falham no código anterior). SW `v7.124`.
+
+### Guardiões, parte 3d: trocar e tirar guardiões (ADR-032 passo 3)
+- **Trocar (`#/guardioes`):** com guardiões escolhidos, a tela mostra o estado, explica a troca e o botão vira "Trocar: dividir de novo e enviar", aberto no mínimo atual. A divisão nova revoga a anterior para quem a tinha; quem saiu apaga o pedaço, quem ficou guarda o novo, e os pedaços antigos não se juntam com os novos.
+- **Tirar todos os guardiões:** com confirmação. Esquece a divisão e tira a saída `guardioes` antes de mandar a revogação assinada a cada guardião, então guardião offline não deixa a conta marcada como protegida. Recibo atrasado não devolve a saída.
+- **Botões de texto da tela** ("Tirar todos", "Parar de guardar") ganham o estilo de link; antes apareciam como botão cru do navegador.
+- `removeAllGuardians` (`app/guardians-flow.js`), `clearOwnerSplit` (`guardians.js`). Testes: `tests/guardians-trocar.test.js` (novo) e o arnês comum `tests/guardians-harness.js`, que saiu de `tests/guardians.test.js` sem mudar os testes da 3b. SW `v7.123`.
+
+### AI Social Dungeon como demonstração de laboratório, sem IA (ADR-033)
+- **Laboratório `#/dungeon` / `#/labs/dungeon`:** 4 telas de mesa de RPG (acampamento, mesa, ficha, escudo do mestre), isoladas do feed cívico. Cada tela diz que é demonstração: a narração é um roteiro fixo (o selo é "Roteiro"), os outros jogadores e guardiões são de exemplo e nada sai da aba.
+- **De verdade:** o d20 é sorteado no aparelho (`crypto.getRandomValues`, sem viés de módulo), e o cofre de Shamir do mestre abre só com o gatilho do jogo (posição [3, 1] e d20 ≥ 15) e 3 das 5 partes (`sealLoreVaultSecret` / `unlockLoreVaultSecret`). Na demonstração, as 5 partes ficam neste aparelho.
+- **Saiu o que não era verdade:** selos "IA Local" e "Sabiá-3 BR", o seletor de "Cérebro de IA" com a Maritaca, o hash inventado do dado, "guardiões online", "0 servidores centrais via WebRTC", "Zaps de Apoio" e a reserva de disco que não acontecia.
+- **Sem prioridade por chave paga:** o bônus de +10000 para o aparelho com chave da Maritaca saiu de `community-pillar-pool.js`, e o narrador passa a ser o aparelho mais capaz.
+- **ADR-033:** IA só no RPG e primeiro no próprio aparelho. Serviço externo só com a chave da própria mesa e o consentimento de todos os jogadores.
+- Módulos puros (`community-pillar-pool.js`, `rpg-sheet-and-lore.js`, `rpg-crypto-table.js`, `rpg-maritaca-router.js`, este sem chamada de rede) e a spec `ai-social-dungeon-v0.md` §0 com o que existe e o que é desenho. Testes: `tests/ai-social-dungeon.test.js`, `tests/ai-social-dungeon-coverage.test.js`, `tests/route-parse.test.js`. SW `v7.122`.
+
+### QR do pedido de volta aos guardiões (ADR-032 passo 3c)
+- **Tela do pedido (`#/voltar`):** botão "Mostrar QR para quem está do seu lado". O guardião aponta a câmera, abre o pedido e confere o código ali mesmo.
+- **Codificador de QR** (`qr-url-codec.js`, `qr-url-layout.js`): ia até a versão 5 (106 bytes); agora vai até a 9 (230 bytes), com os dados em dois blocos intercalados a partir da versão 6, mais padrões de alinhamento e o bloco de informação de versão a partir da 7. O link do pedido, uns 146 bytes, sai em versão 7. `#/guardiao` passa a ser um link aceito pelo QR.
+- Testes: `tests/qr-url.test.js` (versões 2–9 ida e volta, bits de versão conferidos com a tabela da norma, link do pedido). Conferido também com o leitor de QR do OpenCV, fora do app. SW `v7.121`.
+
+### Entrada com nome, e-mail e senha e kit de volta no e-mail da própria pessoa (ADR-032 Emenda 1)
+- **Entrada em uma etapa:** nome ou apelido, e-mail e senha (mínimo de 12 caracteres). "Criar conta" gera a semente, entra, grava o cofre e abre um rascunho `mailto:` da pessoa para ela mesma. Sem e-mail, a conta nasce só com o nome, como antes, com a faixa de conta provisória.
+- **O e-mail não sai do aparelho para nenhum servidor do Vox.** O endereço do cofre, a prova de dono e a chave saem de `e-mail:senha` (PBKDF2-SHA256, 600 mil iterações, `vault-crypto.js`). O servidor de memória só vê um identificador de 64 caracteres.
+- **O cofre leva a semente:** a volta refaz a chave de assinatura e a de DM e mantém a frase de 12 palavras. A semente só é aceita se der o mesmo `vx_…`. Cofres antigos, só de senha, continuam abrindo e migram para o endereço novo; o antigo é revogado. Trocar e-mail ou senha também revoga o endereço anterior.
+- **Kit no e-mail** (`email-kit.js`): link `#/sync?b=…` (o cofre vai no fragmento, que não chega a servidor nenhum), código `VOX1:…`, data, nome e `vx_…`. **A senha nunca vai.** A frase de 12 palavras só vai se a pessoa marcar a caixa, que vem desmarcada, e o Perfil registra a data. Se o rascunho não abrir: copiar o e-mail pronto ou baixar um `.txt`.
+- **"Já tenho conta":** e-mail e senha (busca o cofre no aparelho e nos servidores de memória), ou colar o link, o código ou o texto inteiro do e-mail. Continuam valendo a frase, os guardiões, o QR do outro aparelho e os arquivos.
+- THREAT-MODEL T26. Testes: `tests/vault-v2.test.js`, `tests/email-kit.test.js`, `tests/onboarding-steps.test.js`. SW `v7.120`.
+
+### Guardiões, parte 3c: devolver a conta (ADR-032 passo 3)
+- **Aparelho novo, `#/voltar`** (também em "Já tenho conta" → "Com os guardiões"): diz qual é a conta (link do perfil ou `vx_…`), gera uma chave temporária (só nesta aba, 24 h, cifrada pelo aparelho) e mostra o link do pedido e um código de 4 palavras. Junta as respostas coladas ou da caixa temporária e entra quando tiver o mínimo: a mesma conta, a mesma DM e a mesma semente.
+- **Guardião, `#/guardiao?…`**: mostra o nome e a foto que ele mesmo conhece, há quanto tempo o pedido foi criado e o código. Só devolve depois de marcar que conferiu o código por voz ou pessoalmente. Recusa pedido de mais de 24 h, adiantado, da própria conta ou de conta que não guarda.
+- A resposta vai selada para a chave temporária: pela caixa `vxtmp_` (sem o `routeId` da dona), quando há relay, e sempre como texto para colar. Pedaço sem a assinatura da dona não conta, e conta juntada diferente da pedida é recusada antes de trocar chave.
+- `guardian-return.js`, `app/guardian-return-flow.js`, `render/guardian-return.js`, `app/screens-guardian-return.js`; `p256.js` comprime o ponto; `account-phrase.js` ganha `restoreFromSecret`. Spec §13 registra o que mudou do §7. Testes: `tests/guardian-return.test.js`. SW `v7.119`.
+
+### Triagem da varredura de cobertura (2026-11-16)
+- Dos 99 arquivos `tests/coverage-*` do Antigravity, nenhum entra. 73 clicavam telas num DOM falso sem conferir quase nada, e 14 são do dungeon (vão no PR dele). Os 12 de funções puras misturavam checagens reais, já cobertas pelos testes existentes, com tautologias. Os defeitos reais que eles acharam já estão corrigidos e testados (`tests/achados-cobertura.test.js`).
+- **Relay:** entra `relay/test_relay_limites_e_rotas.py` (11 testes), com rotas, limites de tamanho (413), entradas ruins (400), validação de manifesto e quadros WebSocket. A versão original escrevia na pasta `.cache/central_memory` real do relay; agora todas as pastas do relay ficam num diretório temporário. Os três testes com nome de meta de cobertura ganharam nome de comportamento, e as chamadas sem checagem saíram.
+- **E2E:** entra `e2e/test_vox_e2e.py` (`npm run test:e2e`, fora do CI): Chromium real com a rede de fora bloqueada, cobrindo entrada e recarga, as rotas principais, os assistentes e dois navegadores na malha. Os testes do dungeon voltam com o PR dele. Documentado em `docs/TESTES.md` §3.1–3.2.
+
+### Correções achadas pela varredura de cobertura (2026-11-16)
+- **Comunidade:** a busca vazia, a foto de reserva do autor, o Pix/zap da Feira e o status do anúncio quebravam com `ReferenceError`, porque `escapeHtml`, `brcode` e `listing` eram usados em `app/screens-community.js` sem import. O ESLint do cliente agora reprova nome sem import (`no-undef`).
+- **Editar post:** o modal não abria, porque `init.js` chamava uma função e um contêiner que não existem. Agora abre em `#modal-container` com `renderPostEditModal`, e Esc e o clique fora fecham só ele.
+- **Mini-apps (Open Frames):** o voto não era gravado. Os botões são desenhados com `data-index`, mas o clique lia `data-btn-index` e chamava funções que não existem. Agora o clique grava o voto assinado e redesenha a apuração.
+- **Pix:** `getPixKey()` devolve o registro guardado, e a consulta Pix, o perfil e o anúncio da Feira o tratavam como texto (`toLowerCase` quebrava; o campo mostrava `[object Object]`). O texto agora sai de `storedPixValue` (`pix-key.js`).
+- **Moderação local:** a lista de bloqueados e silenciados mostrava `[object Object]`, e Desbloquear não fazia nada; agora usa o `routeId` do registro.
+- Testes: `tests/achados-cobertura.test.js`. Os quatro falham sem a correção. SW `v7.118`.
+
+### Fluxo de branches: PR para `develop`, depois `main`
+- PRs de feature passam a mirar `develop`; `develop` vai para `main` por PR quando o lote fecha. `develop` foi alinhada com `main` (`1fc0ccc`) e ganhou as mesmas regras de proteção (PR obrigatório, 5 checks, sem force push, sem apagar). CI e CodeQL rodam também em `develop` (`ci.yml`, `codeql.yml`). CONTRIBUTING, CONTRIBUTORS, AGENTS, CLAUDE e DEV §0 dizem isso.
+
 ### Modelo de ameaças: T24 (frase) e T25 (guardiões) (ADR-032, antes da parte 3c)
 - `docs/THREAT-MODEL.md` ganha as duas linhas prometidas no ADR-032: o que segura e o que sobra na frase de recuperação e nos guardiões, incluindo as condições que a parte 3c (pedir de volta) tem que cumprir para entrar. Só documentação; sem SW novo.
 

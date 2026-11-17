@@ -146,3 +146,14 @@ export const PIX_RECEIVER_NAME_NOTICE_PT =
 
 export const PIX_PAYER_CHECK_NOTICE_PT =
   "Antes de confirmar, o seu banco mostra o nome de quem vai receber. Confira se é quem você espera — o Vox não verifica a titularidade da chave.";
+
+/**
+ * A chave Pix como texto, a partir do que `localAccount.getPixKey()` devolve: o registro guardado
+ * `{ normalized, type, masked }` (formato atual) ou um texto solto (dado antigo). Sem chave, "".
+ * @param {{ normalized?: string }|string|null|undefined} stored
+ * @returns {string}
+ */
+export function storedPixValue(stored) {
+  if (typeof stored === "string") return stored;
+  return typeof stored?.normalized === "string" ? stored.normalized : "";
+}

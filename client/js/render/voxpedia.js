@@ -77,15 +77,9 @@ function layerPrCivico() {
 function layerContaCarteira() {
   return layer(
     "Conta, carteira e identidade",
-    `<p>Sem login corporativo: sua conta local usa um identificador <code>vx_…</code> no aparelho. Para publicar na rede Arweave, configure uma carteira em <a href="#/wallet">Carteira</a> (gerar ou importar JWK — fica só no navegador).</p>
-    ${layer(
-      "Handles @nome",
-      `<p>Handles legíveis (ex.: <code>@helena</code>) são atributos locais e links <code>#/h/nome</code> ou <code>?h=nome</code>. A resolução depende do que você e seus contatos já viram ou indexaram — não há um “registro central” tipo DNS de rede social fechada.</p>`
-    )}
-    ${layer(
-      "Perfil e Pix",
-      `<p>Em <a href="#/perfil">Perfil</a> você edita nome, bio e pode opcionalmente exibir chave Pix para apoio direto entre pessoas — o Vox não processa pagamentos.</p>`
-    )}`
+    `<p>Sem login corporativo: sua conta local usa um identificador <code>vx_…</code> nascido de uma semente no aparelho. Com e-mail e Senha Soberana, o cofre é endereçado por <code>e-mail:senha</code> (o e-mail não sai em claro) e o kit de volta (<code>#/sync?b=…</code> / <code>VOX1:…</code>) vai por <code>mailto:</code> para você mesmo; <a href="#/frase">frase de 12 palavras</a> e <a href="#/guardioes">guardiões</a> completam as saídas. Para publicar na Arweave, configure <a href="#/wallet">Carteira</a>.</p>
+    ${layer("Handles @nome", `<p>Handles legíveis (ex.: <code>@helena</code>) são atributos locais e links <code>#/h/nome</code> ou <code>?h=nome</code>. A resolução depende do que você e seus contatos já viram ou indexaram — não há um “registro central” tipo DNS de rede social fechada.</p>`)}
+    ${layer("Perfil e Pix", `<p>Em <a href="#/perfil">Perfil</a> você edita nome, bio e pode opcionalmente exibir chave Pix para apoio direto entre pessoas — o Vox não processa pagamentos.</p>`)}`
   );
 }
 
@@ -93,18 +87,9 @@ function layerFeeds() {
   return layer(
     "Feeds Para você e Seguindo",
     `<p>No menu lateral (quando você está no Início), alterne <strong>Para você</strong> e <strong>Seguindo</strong>. Seguindo mostra autores que você marcou; Para você mistura descoberta e conteúdo recente do índice.</p>
-    ${layer(
-      "Transparência do feed (sem ranking, sem boost)",
-      `<p>O feed é transparente: sem ranking algorítmico de retenção e sem boost pago. A listagem segue o horário de assinatura; a aba Para você pode misturar descoberta recente, sem leilão de ads.</p>`
-    )}
-    ${layer(
-      "POSSE: O Zap continua existindo",
-      `<p>Para combater o efeito de “cidade fantasma”, você não precisa esperar todo mundo migrar: publique no Vox como fonte soberana (chaves no aparelho) e compartilhe o link ou resumo nos seus grupos de WhatsApp e redes sociais (estratégia POSSE). O Vox guarda o original; o Zap continua sendo seu canal de conversa. POSSE <strong>não</strong> publica sozinho no Facebook ou Instagram — você escolhe onde ecoar.</p>`
-    )}
-    ${layer(
-      "Modo demonstração",
-      `<p>O Vox <strong>nunca</strong> mostra conteúdo inventado quando a rede falha: sem gateway, cache ou par, a tela diz que está sem conexão. Para conhecer o app sem rede, ligue o <strong>modo demonstração</strong> em <em>Sua rede</em>: ele mostra <strong>27 perfis fictícios</strong> (um por UF), sempre com uma faixa "Modo demonstração" no topo.</p>`
-    )}`
+    ${layer("Transparência do feed (sem ranking, sem boost)", `<p>O feed é transparente: sem ranking algorítmico de retenção e sem boost pago. A listagem segue o horário de assinatura; a aba Para você pode misturar descoberta recente, sem leilão de ads.</p>`)}
+    ${layer("POSSE: O Zap continua existindo", `<p>Para combater o efeito de “cidade fantasma”, você não precisa esperar todo mundo migrar: publique no Vox como fonte soberana (chaves no aparelho) e compartilhe o link ou resumo nos seus grupos de WhatsApp e redes sociais (estratégia POSSE). O Vox guarda o original; o Zap continua sendo seu canal de conversa. POSSE <strong>não</strong> publica sozinho no Facebook ou Instagram — você escolhe onde ecoar.</p>`)}
+    ${layer("Modo demonstração", `<p>O Vox <strong>nunca</strong> mostra conteúdo inventado quando a rede falha: sem gateway, cache ou par, a tela diz que está sem conexão. Para conhecer o app sem rede, ligue o <strong>modo demonstração</strong> em <em>Sua rede</em>: ele mostra <strong>27 perfis fictícios</strong> (um por UF), sempre com uma faixa "Modo demonstração" no topo.</p>`)}`
   );
 }
 
@@ -113,7 +98,7 @@ function renderComecar() {
     "Primeiros passos no app",
     `<ol class="voxpedia-steps">
       <li>Abra o Vox no navegador (funciona como app instalável — PWA).</li>
-      <li>Na <strong>Porta da Cantina</strong>, aceite entrar; opcionalmente enriqueça o perfil com Google/Meta ou pule.</li>
+      <li>Na entrada, informe <strong>nome, e-mail e senha</strong> para já enviar seu kit de volta ao próprio e-mail (sem a senha), ou entre só com o nome.</li>
       <li>Leia o <strong>Pacto Vox</strong>: por padrão você ajuda levemente a malha; pode pausar em <a href="#/settings/network">Sua rede</a>.</li>
       <li>Use <strong>Início</strong> para ver posts; <strong>Postar</strong> para publicar um tópico.</li>
     </ol>`
@@ -268,7 +253,7 @@ function layerTestesRelease() {
       "Docs no repositório",
       `<ul class="voxpedia-steps">
         <li><a href="${VOX_GITHUB_DOCS.devGuide}" target="_blank" rel="noopener noreferrer">client/DEV.md</a> — fluxos de teste manual</li>
-        <li><a href="#/labs/frames">Open Frames (lab)</a> · <a href="#/status">Status da malha</a></li>
+        <li><a href="#/labs/frames">Open Frames (lab)</a> · <a href="#/dungeon">AI Social Dungeon (lab, demonstração sem IA)</a> · <a href="#/status">Status da malha</a></li>
         <li><a href="${VOX_GITHUB_DOCS.docsReadme}" target="_blank" rel="noopener noreferrer">docs/README.md</a> — índice das trilhas</li>
         <li><a href="${VOX_GITHUB_DOCS.repo}" target="_blank" rel="noopener noreferrer">Repositório yurikayel/vox</a></li>
       </ul>

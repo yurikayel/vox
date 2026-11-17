@@ -12,7 +12,7 @@ import * as cryptoDm from "./crypto-dm.js";
 import * as identitySeed from "./identity-seed.js";
 import { isLocked } from "./keystore.js";
 import * as localAccount from "./local-account.js";
-import { entropyToWords, identityFromPhrase, normalizeWords, privateKeyBytes } from "./recovery-phrase.js";
+import { entropyToWords, identityFromEntropy, identityFromPhrase, normalizeWords, privateKeyBytes } from "./recovery-phrase.js";
 
 /** Quantas palavras a pessoa digita de volta para a frase valer como saída. */
 export const CONFIRM_COUNT = 3;
@@ -82,11 +82,10 @@ export function confirmPhraseWords(words, typed) {
   return ok;
 }
 
+// Conta antiga (24 palavras) não traz chave de DM: `importLocalAccountBundle` usa a do cofre local ou gera outra.
 async function adoptKeysFromPhrase(id, routeId) {
-  const previous = localAccount.getCachedRouteIdSync();
   await localAccount.importLocalAccountBundle({ routeId, publicJwk: id.signing.publicJwk, privateJwk: id.signing.privateJwk });
   if (id.dm) await cryptoDm.setDmKeypair(id.dm);
-  else if (previous && previous !== routeId) await cryptoDm.setDmKeypair(await cryptoDm.generateDmKeypair());
   if (id.seed) await identitySeed.storeSeed(routeId, id.seed);
 }
 
@@ -100,5 +99,21 @@ export async function restoreFromPhrase(text) {
   const routeId = await localAccount.computeRouteId(id.signing.publicJwk);
   if (localAccount.getCachedRouteIdSync() !== routeId) await adoptKeysFromPhrase(id, routeId);
   markAccountExit("frase", routeId);
+  return { ok: true, routeId, kind: id.kind, displayName: localAccount.getDisplayName() };
+}
+
+/**
+ * Entra com o segredo que os guardiões devolveram (parte 3c). Recusa antes de mexer em qualquer chave se a conta
+ * juntada não é a pedida.
+ * @param {{ kind: "semente"|"chave", secret: Uint8Array }} joined
+ * @param {string} expectedRouteId a conta do pedido
+ * @returns {Promise<{ ok: true, routeId: string, kind: string, displayName: string }|{ ok: false, reason: "wrong-account" }>}
+ */
+export async function restoreFromSecret({ secret }, expectedRouteId) {
+  const id = await identityFromEntropy(secret);
+  const routeId = await localAccount.computeRouteId(id.signing.publicJwk);
+  if (routeId !== expectedRouteId) return { ok: false, reason: "wrong-account" };
+  if (localAccount.getCachedRouteIdSync() !== routeId) await adoptKeysFromPhrase(id, routeId);
+  markAccountExit("guardioes", routeId);
   return { ok: true, routeId, kind: id.kind, displayName: localAccount.getDisplayName() };
 }

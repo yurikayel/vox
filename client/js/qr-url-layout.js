@@ -1,4 +1,20 @@
-/** Function patterns, zigzag fill, mask, and format bits (ECC L). */
+/**
+ * @module qr-url-layout
+ * Function patterns, zigzag fill, mask, format bits (ECC L) and, from version 7, version bits.
+ */
+
+/** Alignment pattern centres per version (ISO/IEC 18004 Annex E). */
+const ALIGNMENT_CENTERS = {
+  2: [6, 18],
+  3: [6, 22],
+  4: [6, 26],
+  5: [6, 30],
+  6: [6, 34],
+  7: [6, 22, 38],
+  8: [6, 24, 42],
+  9: [6, 26, 46],
+  11: [6, 30, 54],
+};
 
 export function cloneModules(modules) {
   return modules.map((row) => row.slice());
@@ -32,6 +48,46 @@ function placeAlignment(grid, cx, cy) {
   }
 }
 
+function overlapsFinder(cx, cy, size) {
+  const near = (v) => v === 6;
+  const far = (v) => v === size - 7;
+  return (near(cx) && near(cy)) || (far(cx) && near(cy)) || (near(cx) && far(cy));
+}
+
+function placeAlignments(grid) {
+  const centers = ALIGNMENT_CENTERS[grid.version] || [];
+  for (const cy of centers) {
+    for (const cx of centers) {
+      if (!overlapsFinder(cx, cy, grid.size)) placeAlignment(grid, cx, cy);
+    }
+  }
+}
+
+/**
+ * 18-bit version information (versions 7+): 6 version bits + BCH(18,6) remainder, generator 0x1f25.
+ * @param {number} version
+ * @returns {number}
+ */
+export function versionBits(version) {
+  let rem = version;
+  for (let i = 0; i < 12; i++) rem = (rem << 1) ^ ((rem >>> 11) * 0x1f25);
+  return (version << 12) | rem;
+}
+
+function placeVersionInfo(grid) {
+  if (grid.version < 7) return;
+  const bits = versionBits(grid.version);
+  for (let i = 0; i < 18; i++) {
+    const on = ((bits >>> i) & 1) === 1;
+    const a = grid.size - 11 + (i % 3);
+    const b = Math.floor(i / 3);
+    grid.modules[b][a] = on;
+    grid.modules[a][b] = on;
+    grid.func[b][a] = true;
+    grid.func[a][b] = true;
+  }
+}
+
 function placeTiming(grid) {
   for (let i = 8; i < grid.size - 8; i++) {
     grid.modules[6][i] = i % 2 === 0;
@@ -62,7 +118,8 @@ export function buildFunctionGrid(version) {
   placeFinder(grid, size - 7, 0);
   placeFinder(grid, 0, size - 7);
   placeTiming(grid);
-  placeAlignment(grid, size - 7, size - 7);
+  placeAlignments(grid);
+  placeVersionInfo(grid);
   grid.modules[size - 8][8] = true;
   grid.func[size - 8][8] = true;
   reserveFormat(grid);
