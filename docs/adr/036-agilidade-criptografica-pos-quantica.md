@@ -1,6 +1,6 @@
 # ADR-036: Agilidade criptográfica e transição pós-quântica — todo formato diz o seu algoritmo; DM híbrida primeiro
 
-**Status:** proposed (2026-11-17; espera o aceite do mantenedor; nada implementado; cada passo de código pede RFC e a revisão externa de cripto, LAN-18) · **Revisado:** 2026-11-17 · **Relacionados:** [ADR-025](./025-cofre-v2-so-a-senha-abre.md) (cofre v2), [ADR-026](./026-chaves-em-repouso-trava-depois-do-backup.md) (chaves em repouso), [ADR-032](./032-login-perene-a-conta-nasce-com-saida.md) (semente e frase), [ADR-034](./034-raiz-e-subchaves-por-aparelho.md) (raiz e subchaves), [THREAT-MODEL](../THREAT-MODEL.md), [DEPENDENCIAS](../DEPENDENCIAS.md), [ROADMAP](../ROADMAP.md) (LAN-18)
+**Status:** proposed (2026-11-17; espera o aceite do mantenedor; nada implementado; cada passo de código pede RFC e a revisão externa de cripto, LAN-18; a assinatura da conta depende também da RFC 0002, que ainda não existe) · **Revisado:** 2026-11-17 (caminhos do inventário após `identity/` e `labs/parado/`) · **Relacionados:** [ADR-025](./025-cofre-v2-so-a-senha-abre.md) (cofre v2), [ADR-026](./026-chaves-em-repouso-trava-depois-do-backup.md) (chaves em repouso), [ADR-032](./032-login-perene-a-conta-nasce-com-saida.md) (semente e frase), [ADR-034](./034-raiz-e-subchaves-por-aparelho.md) (raiz e subchaves), [THREAT-MODEL](../THREAT-MODEL.md), [DEPENDENCIAS](../DEPENDENCIAS.md), [ROADMAP](../ROADMAP.md) (LAN-18)
 
 ## 1. Contexto
 
@@ -14,15 +14,15 @@ Levantado por busca de texto (`git grep`) nos nomes de algoritmo do WebCrypto e 
 
 | Uso | Algoritmo | Módulos | Formato diz o algoritmo? | Com computador quântico |
 |---|---|---|---|---|
-| Assinatura da conta (`vx_…`) | ECDSA P-256 + SHA-256 | `local-account.js`, `signed-verify.js`, `account-backup.js`, `key-lock.js`, `recovery-phrase.js` | em parte: `sigv` diz a forma canônica; a curva só aparece no JWK (`crv`) e no `computeRouteId` (`P-256:x:y`) | **quebra** (forjar posts e delegações) |
+| Assinatura da conta (`vx_…`) | ECDSA P-256 + SHA-256 | `identity/local-account.js`, `signed-verify.js`, `identity/account-backup.js`, `identity/key-lock.js`, `identity/recovery-phrase.js` | em parte: `sigv` diz a forma canônica; a curva só aparece no JWK (`crv`) e no `computeRouteId` (`P-256:x:y`) | **quebra** (forjar posts e delegações) |
 | DM | ECDH P-256 efêmero + AES-GCM-256 | `crypto-dm.js` (envelope `v: 1`, `ephPub`) | em parte: `v: 1` e o `crv` do JWK | **quebra**, e **já** (guarda agora, abre depois) |
-| Semente → chaves | HKDF-SHA256 | `recovery-phrase.js` | rótulos fixos no código | aguenta |
-| Cofre | PBKDF2-SHA256 (600 mil) + AES-GCM-256 | `vault/vault-crypto.js`, `account-backup-wrap.js` | sim (`v: 2`, `kdf`, `iter`) | aguenta (o limite continua sendo a força da senha) |
-| Chaves em repouso | AES-GCM-256 não exportável | `keystore.js` | — (só local) | aguenta |
+| Semente → chaves | HKDF-SHA256 | `identity/recovery-phrase.js` | rótulos fixos no código | aguenta |
+| Cofre | PBKDF2-SHA256 (600 mil) + AES-GCM-256 | `vault/vault-crypto.js`, `identity/account-backup-wrap.js` | sim (`v: 2`, `kdf`, `iter`) | aguenta (o limite continua sendo a força da senha) |
+| Chaves em repouso | AES-GCM-256 não exportável | `identity/keystore.js` | — (só local) | aguenta |
 | Carteira e itens do Arweave | RSA-PSS 4096 | `wallet.js`, `ans104.js` | definido pelo Arweave | quebra; depende do Arweave |
 | Ponte Nostr | Schnorr secp256k1 (BIP-340, código próprio) | `nostr-event.js`, `nostr-transport.js` | definido pelo Nostr | quebra; depende do Nostr |
 | Ponte Bluesky (DPoP) | ECDSA P-256 | `bsky-oauth.js` | definido pelo atproto | quebra; depende do Bluesky |
-| Laboratório | Ed25519, X25519, ECDSA | `vox-identity.js`, `identity-link.js` (não plugados, PM-04), `labs/collective-mofn.js` | — | fora do app |
+| Laboratório | Ed25519, X25519, ECDSA | `labs/parado/vox-identity.js`, `labs/parado/identity-link.js` (não plugados, PM-04), `labs/collective-mofn.js` | — | fora do app |
 
 ### 1.2 O que o Vox já tem a favor
 

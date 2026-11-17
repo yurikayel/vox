@@ -1,6 +1,6 @@
 # ADR-035: Camadas e contextos no cliente — importar só para baixo, uma porta de entrada por assunto
 
-**Status:** proposed (2026-11-17; a regra de camadas já roda no CI como catraca) · **Revisado:** 2026-11-17 (`vault/` e `identity/` movidos; segunda porta) · **Relacionados:** [ADR-007](./007-zero-complexity-monolith-decomposition.md), [HARDENING](../HARDENING.md), [documentação](../process/documentacao.md)
+**Status:** proposed (2026-11-17; a regra de camadas já roda no CI como catraca) · **Revisado:** 2026-11-17 (`vault/` e `identity/` movidos; segunda porta; contagens atualizadas) · **Relacionados:** [ADR-007](./007-zero-complexity-monolith-decomposition.md), [HARDENING](../HARDENING.md), [documentação](../process/documentacao.md)
 
 ## 1. Contexto
 
@@ -9,6 +9,7 @@ O cliente é JavaScript sem passo de build: 291 módulos em `client/js` (develop
 - **11 imports sobem de camada, em 6 arquivos.** `render/post-more-actions.js` e `render/post-more-menu.js` importam fluxos de `app/`; `moderation.js`, `inline-composer.js` e `dom-delegates.js`, que estão na base, também importam de `app/`.
   - **Atualização 17/11/2026:** dívida zerada (#173 e o PR seguinte): os quatro módulos de controle foram para `app/`, e `moderation.js` recebe o fluxo do moderador natural por `setNaturalHideLoader`. `scripts/layers-debt.json` está vazio.
 - **167 módulos soltos na raiz** de `client/js`, sem agrupamento por assunto. `local-account.js` é importado por 56 módulos.
+  - **Atualização 17/11/2026 (develop `7a0f0c0`):** 297 módulos em `client/js`, 126 na raiz, depois de `vault/`, `identity/` (#161, #163) e `labs/parado/` (#177).
 - **Estado espalhado:** 54 arquivos usam `localStorage` ou `sessionStorage` diretamente.
 - **21 módulos não são carregados por nenhuma página.** Eles já ficam fora do precache, em `UNPLUGGED_MODULES` no `sw.js`, e o teste `tests/shell-reachability.test.js` (PM-04) reprova quem os puser de volta. Mas continuam no repositório, e as revisões e varreduras passam por eles como se fossem código do app.
   - **Atualização 17/11/2026:** os 21 foram para `client/js/labs/parado/` (decisão do mantenedor: guardar, não plugar agora). Lá a regra de camadas os isola do app; plugar um deles é um PR próprio.
@@ -67,7 +68,7 @@ Assim a lista só pode diminuir. Quando chegar a zero, o arquivo fica vazio e a 
 
    **`vault/` (feito):** `vault-crypto`, `vault-store`, `vault-legacy`, `passphrase-vault` e `oauth-vault` estão em `client/js/vault/`. Portas:
    - `vault/index.js`: migração dos cofres v1, login social, Senha Soberana, cofre no link e servidores de memória;
-   - `vault/envelope.js`: só cifrar e abrir um registro (`encryptVaultV2`, `decryptVaultRecord`). Existe porque `key-lock.js` e `inbox-backup.js` (conta) usam a cifra, e importá-la pelo `index.js` fecharia o ciclo `vault/index → passphrase-vault → local-account → key-lock → vault/index`.
+   - `vault/envelope.js`: só cifrar e abrir um registro (`encryptVaultV2`, `decryptVaultRecord`). Existe porque `identity/key-lock.js` e `identity/inbox-backup.js` usam a cifra, e importá-la pelo `index.js` fecharia o ciclo `vault/index → passphrase-vault → identity/local-account → identity/key-lock → vault/index`.
 
    **`identity/` (feito):** `local-account`, `key-lock`, `keystore`, `key-at-rest`, `identity-seed`, `recovery-phrase`, `p256`, `account-phrase`, `account-backup`, `account-backup-wrap`, `account-exit`, `local-wipe`, `guardians`, `guardian-return` e `inbox-backup` estão em `client/js/identity/`. Ficaram na raiz, por não serem só da conta: `shamir-gf256` (também usado pela mesa do RPG), `signed-verify` e `sig-format` (formato de assinatura do protocolo) e os módulos de contas sociais (vão para `social/`). Portas:
    - `identity/index.js`: reexporta os módulos públicos inteiros, porque a maior parte do app usa a conta como espaço de nomes (`import * as localAccount`);
