@@ -26,13 +26,25 @@ function formatWhen(ts) {
  */
 export function renderNoticeBannerHtml(notice) {
   const when = formatWhen(notice.firstSeen);
-  return `<div class="account-exit-banner mesh-vault-notice" id="${NOTICE_BANNER_ID}" role="alertdialog" aria-label="Pedido para abrir sua conta" data-request="${notice.requestId}">
+  return `<div class="account-exit-banner mesh-vault-notice" id="${NOTICE_BANNER_ID}" role="alert" aria-label="Pedido para abrir sua conta" data-request="${notice.requestId}">
     <p class="banner-text"><strong>Alguém está abrindo sua conta em outro aparelho${when ? ` (pedido de ${when})` : ""}. Foi você?</strong> Se não foi, troque sua senha em Perfil → Soberania.</p>
     <div class="banner-actions">
       <button type="button" class="agora-btn agora-btn--primary" id="btnMeshVaultYes">Fui eu</button>
       <button type="button" class="agora-btn" id="btnMeshVaultNo">Não fui eu</button>
     </div>
   </div>`;
+}
+
+/**
+ * Tira o foco do botão que sumiu e o põe num lugar estável (WCAG 2.4.3): `#main`, ou o body com tabindex temporário.
+ * @param {Document} doc
+ */
+function focusStable(doc) {
+  const el = doc?.getElementById?.("main") || doc?.body;
+  if (!el?.focus) return;
+  el.setAttribute?.("tabindex", "-1");
+  el.addEventListener?.("blur", () => el.removeAttribute?.("tabindex"), { once: true });
+  el.focus();
 }
 
 /**
@@ -49,7 +61,10 @@ export function refreshNoticeBanner({ doc = globalThis.document, decide = decide
   doc.body.appendChild(holder.firstElementChild);
   const answer = (decision) => {
     doc.getElementById(NOTICE_BANNER_ID)?.remove();
-    void Promise.resolve(decide(next.requestId, decision)).finally(() => refreshNoticeBanner({ doc, decide, notices }));
+    focusStable(doc);
+    void Promise.resolve(decide(next.requestId, decision)).finally(() => {
+      if (refreshNoticeBanner({ doc, decide, notices })) doc.getElementById("btnMeshVaultYes")?.focus?.();
+    });
   };
   doc.getElementById("btnMeshVaultYes")?.addEventListener("click", () => answer("sim"));
   doc.getElementById("btnMeshVaultNo")?.addEventListener("click", () => answer("nao"));

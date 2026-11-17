@@ -112,7 +112,6 @@ function setMeshStatus(text) {
   const el = document.getElementById("oauth-mesh-status");
   if (!el) return;
   el.textContent = text;
-  el.hidden = !text;
 }
 
 /**
