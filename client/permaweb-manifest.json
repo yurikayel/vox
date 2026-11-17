@@ -131,8 +131,8 @@
     "js/render/network.js": {
       "id": "tx_js/render/network.js"
     },
-    "js/inline-composer.js": {
-      "id": "tx_js/inline-composer.js"
+    "js/app/inline-composer.js": {
+      "id": "tx_js/app/inline-composer.js"
     },
     "images/avatars/fernanda.jpg": {
       "id": "tx_images/avatars/fernanda.jpg"
