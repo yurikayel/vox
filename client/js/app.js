@@ -10,7 +10,7 @@ import { installEntryGuards, hasFullEntry } from "./app/onboarding.js";
 import { initDmListeners, initGossipListeners, initSocialInteractions } from "./app/init.js";
 import { initPostMediaLightbox } from "./app/post-media-lightbox.js";
 import { watchFrameCards } from "./app/frame-ui.js";
-import { attachPostMoreMenuHandlers } from "./render/post-more-menu.js";
+import { attachPostMoreMenuHandlers } from "./app/post-more-menu.js";
 import { attachProfileNoteHandlers } from "./app/profile-note-ui.js";
 import { attachPhotoTagUi } from "./app/photo-tag-ui.js";
 import { attachExplodeHandlers } from "./explode-dispatch.js";
@@ -26,9 +26,15 @@ import { startKeysAtRest } from "./identity/index.js";
 import { showDueInboxBackup } from "./app/inbox-backup-ui.js";
 import { startStorageDurability } from "./app/storage-durability-flow.js";
 import { startAccountExitBanner } from "./app/account-exit-banner.js";
+import { setNaturalHideLoader } from "./moderation.js";
 
 void startKeysAtRest().catch(() => {});
 installDomDelegates(document);
+// PM-83: a base (moderation.js) não importa app/; o fluxo do moderador natural entra por aqui, sob demanda.
+setNaturalHideLoader(async (communityId, modActions) => {
+  const flow = await import("./app/natural-mod-flow.js");
+  return flow.naturalModLabOn() ? flow.loadNaturalHideActions(communityId, modActions) : [];
+});
 attachReportHandlers(document);
 attachChannelHandlers(document);
 installEntryGuards();

@@ -5,7 +5,7 @@
  * Uma única folha por página, criada sob demanda e reaproveitada; o contexto da publicação aberta fica
  * em memória até o menu fechar.
  *
- * @module render/post-more-menu
+ * @module app/post-more-menu
  * @see client/js/report.js
  */
 
@@ -190,9 +190,9 @@ const SENT = new Set(["delivered", "queued-relay", "pending-retry"]);
 
 /** PM-83 lote E — com a flag, o pedido vai ao moderador natural de cada parte. Devolve true se mandou. */
 async function mediateByNaturalModerators(self, request) {
-  const { naturalModLabOn } = await import("../app/natural-mod-flow.js");
+  const { naturalModLabOn } = await import("./natural-mod-flow.js");
   if (!self || !naturalModLabOn()) return false;
-  const { requestMediation } = await import("../app/mediation-dm.js");
+  const { requestMediation } = await import("./mediation-dm.js");
   const sent = (await requestMediation(self, request).catch(() => [])).filter((r) => SENT.has(r.status));
   if (!sent.length) return false;
   share.showToast(`Pedido de mediação enviado a ${sent.length === 1 ? "1 moderador natural" : `${sent.length} moderadores naturais`}, por mensagem cifrada. Nada foi arquivado.`);
@@ -202,7 +202,7 @@ async function mediateByNaturalModerators(self, request) {
 /** Lote 3 — leva à conversa com a moderação da comunidade do post, com o cartão do post. */
 async function openMediation(ctx) {
   const [{ resolveModeratorRoute }, { buildMediationDmHash }, { getActiveUser }] = await Promise.all([
-    import("../app/report-flow.js"), import("../report.js"), import("../app/context.js"),
+    import("./report-flow.js"), import("../report.js"), import("./context.js"),
   ]);
   const { communityId, moderator } = await resolveModeratorRoute(ctx.postId, ctx.communityId || "");
   const self = await getActiveUser().catch(() => "");
@@ -222,7 +222,7 @@ async function onSheetAction(action) {
   if (await onNavigationOrShareAction(action, ctx)) return;
 
   if (action === "report") {
-    const { openReportFlow } = await import("../app/report-flow.js");
+    const { openReportFlow } = await import("./report-flow.js");
     openReportFlow(ctx);
     return;
   }

@@ -266,8 +266,8 @@
     "js/people-index.js": {
       "id": "tx_js/people-index.js"
     },
-    "js/render/post-more-menu.js": {
-      "id": "tx_js/render/post-more-menu.js"
+    "js/app/post-more-menu.js": {
+      "id": "tx_js/app/post-more-menu.js"
     },
     "js/composer-media.js": {
       "id": "tx_js/composer-media.js"
@@ -527,8 +527,8 @@
     "js/contribution-attestation.js": {
       "id": "tx_js/contribution-attestation.js"
     },
-    "js/render/post-more-actions.js": {
-      "id": "tx_js/render/post-more-actions.js"
+    "js/app/post-more-actions.js": {
+      "id": "tx_js/app/post-more-actions.js"
     },
     "js/app/screens-labs.js": {
       "id": "tx_js/app/screens-labs.js"
