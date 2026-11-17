@@ -1,0 +1,15 @@
+{
+ "violations": [
+  "dom-delegates.js → app/feedback-flow.js",
+  "inline-composer.js → app/community-channel-flow.js",
+  "inline-composer.js → app/photo-tag-picker.js",
+  "moderation.js → app/natural-mod-flow.js",
+  "render/post-more-actions.js → app/photo-tag-ui.js",
+  "render/post-more-actions.js → app/repost-ui.js",
+  "render/post-more-actions.js → app/zap-modal.js",
+  "render/post-more-menu.js → app/context.js",
+  "render/post-more-menu.js → app/mediation-dm.js",
+  "render/post-more-menu.js → app/natural-mod-flow.js",
+  "render/post-more-menu.js → app/report-flow.js"
+ ]
+}
