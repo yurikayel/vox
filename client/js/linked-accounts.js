@@ -280,11 +280,16 @@ export async function postToBlueskyAtProto(handle, appPassword, post, pdsUrl = B
   }
 }
 
-async function createBskyPostRecord(pdsUrl, session, post) {
+/** Texto do post no Bluesky (título, corpo e link canônico, até 295 caracteres): o mesmo por App Password e por OAuth. */
+function bskyPostText(post) {
   const title = String(post?.title || "").trim();
   const body = String(post?.body || "").trim();
   const url = String(post?.canonicalUrl || "").trim();
-  const rawText = [title, body !== title ? body : "", url].filter(Boolean).join("\n\n").slice(0, 295);
+  return [title, body !== title ? body : "", url].filter(Boolean).join("\n\n").slice(0, 295);
+}
+
+async function createBskyPostRecord(pdsUrl, session, post) {
+  const rawText = bskyPostText(post);
 
   const recRes = await fetch(`${pdsUrl}/xrpc/com.atproto.repo.createRecord`, {
     method: "POST",
@@ -382,7 +387,7 @@ export function hasDirectReplicationTargets(accounts = loadLinkedAccounts()) {
 function bskyReplicationTask(acc, payload) {
   if (!acc?.enabled) return null;
   if (acc.via === "oauth" && loadBskySession()) {
-    return () => postWithBskySession([payload.title, payload.body, payload.url].filter(Boolean).join("\n\n"));
+    return () => postWithBskySession(bskyPostText(payload));
   }
   if (acc.handle && acc.appPassword) return () => postToBlueskyAtProto(acc.handle, acc.appPassword, payload);
   return null;
