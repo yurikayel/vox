@@ -6,6 +6,10 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Dívida: dois módulos de tela voltam para `app/` (ADR-035)
+- `inline-composer.js` e `dom-delegates.js` só eram usados pela camada `app` e importavam fluxos dela; foram movidos para `client/js/app/` sem mudar código (só os caminhos de import). A dívida de camadas cai de 11 para 8 imports proibidos (`scripts/layers-debt.json`, `--prune`).
+- Caminhos atualizados no precache do SW, `permaweb-manifest.json`, testes, `docs-debt.json` e links de docs. SW `v7.137`.
+
 ### Segurança: cartão de perfil só entra assinado
 - **Cartões vindos da sincronização** (memória central e malha ao conectar) passam a valer só com o cartão assinado pelo dono (`signedCard`), conferido pela chave da própria conta e pelo `routeId`; campos soltos de nome, foto e bio que chegam junto não são mais confiados. O cartão de cada conta é guardado no diretório com a forma assinada, que é o que viaja na sincronização ([ADR-021](./docs/adr/021-integridade-na-entrada-forma-assinada.md)).
 - O nome que chegava junto da identidade do par ao conectar não é mais aplicado; nome e foto chegam no cartão assinado.
