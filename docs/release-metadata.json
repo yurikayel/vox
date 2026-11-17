@@ -1,9 +1,9 @@
 {
-  "git_sha": "7885817",
-  "branch": "fix/frase-impressao",
+  "git_sha": "622591a",
+  "branch": "fix/bluesky-oauth-pendente",
   "test_js": 1148,
   "test_python": 111,
   "test_total": 1259,
-  "cache_name": "vox-pwa-v7.130-real-network-audio-video-upload",
-  "generated_at": "2026-11-17T10:51:47Z"
+  "cache_name": "vox-pwa-v7.131-real-network-audio-video-upload",
+  "generated_at": "2026-11-17T11:29:56Z"
 }
