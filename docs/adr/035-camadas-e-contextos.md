@@ -7,6 +7,7 @@
 O cliente é JavaScript sem passo de build: 291 módulos em `client/js` (develop `46f4570`, 17/11/2026). As pastas sugerem camadas: `app/` liga tela, rota e eventos; `render/` monta HTML; o resto é domínio, rede, cripto e armazenamento. Até aqui nada conferia isso, e a medição pelo grafo de imports mostrou:
 
 - **11 imports sobem de camada, em 6 arquivos.** `render/post-more-actions.js` e `render/post-more-menu.js` importam fluxos de `app/`; `moderation.js`, `inline-composer.js` e `dom-delegates.js`, que estão na base, também importam de `app/`.
+  - **Atualização 17/11/2026:** dívida zerada (#173 e o PR seguinte): os quatro módulos de controle foram para `app/`, e `moderation.js` recebe o fluxo do moderador natural por `setNaturalHideLoader`. `scripts/layers-debt.json` está vazio.
 - **167 módulos soltos na raiz** de `client/js`, sem agrupamento por assunto. `local-account.js` é importado por 56 módulos.
 - **Estado espalhado:** 54 arquivos usam `localStorage` ou `sessionStorage` diretamente.
 - **21 módulos não são carregados por nenhuma página.** Eles já ficam fora do precache, em `UNPLUGGED_MODULES` no `sw.js`, e o teste `tests/shell-reachability.test.js` (PM-04) reprova quem os puser de volta. Mas continuam no repositório, e as revisões e varreduras passam por eles como se fossem código do app.

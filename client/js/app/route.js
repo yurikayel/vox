@@ -1,5 +1,5 @@
 /** @file Hash router — dispatches to screen modules. */
-import { closePostMoreMenu } from "../render/post-more-menu.js";
+import { closePostMoreMenu } from "./post-more-menu.js";
 import { parseRoute } from "./route-parse.js";
 import { setRoute } from "./navigation.js";
 import { checkCantinaGate } from "./onboarding.js";
