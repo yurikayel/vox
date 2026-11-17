@@ -8,7 +8,7 @@
  * - [data-app-feedback]: abre "Algo errado aqui?", carregando o modal só no clique (fora do boot).
  */
 
-import { showToast } from "./share.js";
+import { showToast } from "../share.js";
 
 export function handleImageFallback(img) {
   if (!img?.matches?.("img[data-fallback-next]")) return false;
@@ -32,7 +32,7 @@ export function handleDelegatedClick(target, doc = globalThis.document, loc = gl
 }
 
 /** "Algo errado aqui?": o modal só é importado no clique, para não pesar na abertura do app. */
-export function openFeedbackOnClick(target, load = () => import("./app/feedback-flow.js")) {
+export function openFeedbackOnClick(target, load = () => import("./feedback-flow.js")) {
   if (!target?.closest?.("[data-app-feedback]")) return false;
   load()
     .then((m) => m.openFeedbackFlow())

@@ -728,7 +728,7 @@
   "param:flushOutbox:d",
   "returns:flushOutbox"
  ],
- "client/js/dom-delegates.js": [
+ "client/js/app/dom-delegates.js": [
   "jsdoc:handleImageFallback",
   "jsdoc:handleDelegatedClick",
   "param:openFeedbackOnClick:target",
@@ -948,7 +948,7 @@
   "param:deleteSealed:baseUrl",
   "returns:deleteSealed"
  ],
- "client/js/inline-composer.js": [
+ "client/js/app/inline-composer.js": [
   "header",
   "jsdoc:syncInlineComposerUi",
   "jsdoc:collapseInlineComposer",
