@@ -6,6 +6,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Correção: acessibilidade do login (cofre na malha e "Já tenho conta")
+- Faixa "Foi você?" é anunciada quando aparece (`role="alert"`, em vez de `alertdialog`); depois de responder, o foco vai para a próxima faixa ou para um lugar estável, e não cai no `body` (WCAG 4.1.3 e 2.4.3). Região de status da malha fica sempre no DOM, vazia até ter texto; erro de "Já tenho conta" sem `aria-live` duplicado; seta do "← Voltar" escondida do leitor. SW `v7.142`. Testes: `tests/mesh-vault-ui.test.js`.
+
 ### Documentação: emenda da revisão do ADR-038
 - `about` do manifesto é só o texto longo (apresentação, regras, links); título, descrição curta, foto, categoria e modo de publicação continuam só no `community_update`, para não haver duas fontes.
 - O `community_update` passa a seguir o mesmo cálculo de versão do manifesto quando o v1 for implementado (futuro limitado a 10 minutos, sem volta): hoje uma atualização datada no futuro distante trava título e descrição. Testes esperados acrescentados na spec v1 §9.

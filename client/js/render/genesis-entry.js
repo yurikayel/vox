@@ -9,7 +9,7 @@ import { escapeHtml } from "./util.js";
 import { renderImportPanelHtml } from "./oauth-import.js";
 
 function genesisStep(key, bodyHtml, { back = "", hidden = true } = {}) {
-  const backBtn = back ? `<button type="button" class="genesis-back" data-genesis-go="${back}">← Voltar</button>` : "";
+  const backBtn = back ? `<button type="button" class="genesis-back" data-genesis-go="${back}"><span aria-hidden="true">←</span> Voltar</button>` : "";
   return `<section class="genesis-step" data-genesis-step="${key}"${hidden ? " hidden" : ""}>${backBtn}${bodyHtml}</section>`;
 }
 
@@ -81,7 +81,7 @@ function renderGenesisHaveHtml() {
             <input type="email" id="oauth-restore-email-input" class="agora-inscription genesis-input" autocomplete="username" placeholder="Seu e-mail" aria-label="Seu e-mail" />
             <input type="password" id="oauth-sovereign-passphrase-input" class="agora-inscription genesis-input" placeholder="Sua senha" autocomplete="current-password" aria-label="Sua senha" />
             <button type="submit" id="btn-oauth-restore-passphrase" class="agora-btn agora-btn--primary">Entrar</button>
-            <p id="oauth-mesh-status" class="genesis-lead" role="status" aria-live="polite" hidden></p>
+            <p id="oauth-mesh-status" class="genesis-lead" role="status" aria-live="polite"></p>
             <details class="genesis-other-ways" id="genesis-other-ways">
               <summary>Outras formas de voltar</summary>
               <p class="genesis-lead"><strong>Link ou código do e-mail:</strong> cole abaixo (com a senha acima). É o caminho mais rápido.</p>
@@ -100,7 +100,7 @@ function renderGenesisHaveHtml() {
 function renderGenesisStepsHtml(currentName, invite = null) {
   return `
         <section class="genesis-panel genesis-panel--steps">
-          <div id="oauth-enrich-error" class="oauth-enrich-error" role="alert" aria-live="polite" hidden></div>
+          <div id="oauth-enrich-error" class="oauth-enrich-error" role="alert" hidden></div>
           ${genesisStep("entry", renderGenesisEntryHtml(currentName, invite), { hidden: false })}
           ${genesisStep("have", renderGenesisHaveHtml(), { back: "entry" })}
           ${genesisStep("pact", renderPactStepHtml())}
