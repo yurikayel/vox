@@ -6,7 +6,7 @@
  */
 
 import * as cacheNode from "./cache-node.js";
-import * as localAccount from "./local-account.js";
+import * as localAccount from "./identity/index.js";
 import * as mediaBlob from "./media-blob.js";
 import { isBeforeGenesisMs } from "./genesis.js";
 import { isSupersededLocally } from "./post-supersede.js";

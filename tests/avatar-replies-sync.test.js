@@ -2,7 +2,7 @@ import "../tests/setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 
-const localAccount = await import("../client/js/local-account.js");
+const localAccount = await import("../client/js/identity/local-account.js");
 const cacheNode = await import("../client/js/cache-node.js");
 const util = await import("../client/js/render/util.js");
 const feed = await import("../client/js/render/feed.js");

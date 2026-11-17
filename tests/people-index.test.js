@@ -6,7 +6,7 @@ import * as contacts from "../client/js/contacts.js";
 import * as cacheNode from "../client/js/cache-node.js";
 import * as profileDirectory from "../client/js/profile-directory.js";
 import * as handles from "../client/js/handles.js";
-import * as localAccount from "../client/js/local-account.js";
+import * as localAccount from "../client/js/identity/local-account.js";
 import { WELCOME_ROUTE_ID } from "../client/js/vox-welcome-profile.js";
 
 test("people-index - includes welcome and search", async () => {

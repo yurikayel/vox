@@ -15,7 +15,12 @@ function textOf(id) {
   return (document.getElementById(id)?.value || "").trim();
 }
 
-/** Preenche a tela de revisão com o que foi escrito nas etapas anteriores. */
+/**
+ * Preenche a tela de revisão com o que foi escrito nas etapas anteriores.
+ *
+ * @param {HTMLFormElement} form Formulário do compositor em etapas.
+ * @returns {void}
+ */
 export function fillComposeReview(form) {
   const set = (k, v) => {
     const el = form.querySelector(`[data-review="${k}"]`);
@@ -83,6 +88,13 @@ function focusStep(step) {
   step.closest(".agora-composer")?.scrollIntoView({ block: "start", behavior: "smooth" });
 }
 
+/**
+ * Mostra a etapa do compositor pelo índice e atualiza a revisão quando necessário.
+ *
+ * @param {HTMLFormElement} form Formulário do compositor.
+ * @param {number} index Índice da etapa (0-based).
+ * @returns {void}
+ */
 export function goToComposeStep(form, index) {
   const steps = stepEls(form);
   const target = Math.max(0, Math.min(index, steps.length - 1));
@@ -97,6 +109,9 @@ export function goToComposeStep(form, index) {
 /**
  * Liga Voltar/Continuar. Registrar ANTES do handler de publicação: um submit fora da última
  * etapa (ex.: Enter num campo) vira "Continuar" e não publica.
+ *
+ * @param {HTMLFormElement} form Formulário do compositor em etapas.
+ * @returns {void}
  */
 export function bindComposeStepper(form) {
   if (!form || form.dataset.stepperBound === "1") return;

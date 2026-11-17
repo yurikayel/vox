@@ -4,8 +4,8 @@
  * Separado da chave JWK RSA Arweave de autoria pública.
  */
 
-import { openSealed, sealJson } from "./keystore.js";
-import { dmPrivateKey } from "./key-lock.js";
+import { openSealed, sealJson } from "./identity/keys.js";
+import { dmPrivateKey } from "./identity/keys.js";
 
 const DM_KEYPAIR_STORAGE = "vox-dm-keypair";
 const ECDH_ALGO = { name: "ECDH", namedCurve: "P-256" };

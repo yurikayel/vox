@@ -5,12 +5,12 @@ import "./setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { mockStores } from "./setup.js";
-import * as accountExit from "../client/js/account-exit.js";
-import * as localAccount from "../client/js/local-account.js";
-import * as keyLock from "../client/js/key-lock.js";
-import { exportAccountBundle } from "../client/js/account-backup.js";
-import * as inboxBackup from "../client/js/inbox-backup.js";
-import * as oauthVault from "../client/js/oauth-vault.js";
+import * as accountExit from "../client/js/identity/account-exit.js";
+import * as localAccount from "../client/js/identity/local-account.js";
+import * as keyLock from "../client/js/identity/key-lock.js";
+import { exportAccountBundle } from "../client/js/identity/account-backup.js";
+import * as inboxBackup from "../client/js/identity/inbox-backup.js";
+import * as oauthVault from "../client/js/vault/index.js";
 
 const SENHA = "senha soberana de teste 2026";
 const DAY = 24 * 60 * 60 * 1000;

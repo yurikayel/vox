@@ -6,11 +6,11 @@
  * A senha nunca vai no e-mail. A frase de recuperação é opcional e vem desmarcada por padrão.
  */
 
-import * as accountExit from "./account-exit.js";
-import * as localAccount from "./local-account.js";
-import * as oauthVault from "./oauth-vault.js";
+import * as accountExit from "./identity/index.js";
+import * as localAccount from "./identity/index.js";
+import * as oauthVault from "./vault/index.js";
 import * as share from "./share.js";
-import { decodeVaultBundleFromUrl, encodeVaultBundleForUrl, normalizeVaultEmail } from "./vault-crypto.js";
+import { decodeVaultBundleFromUrl, encodeVaultBundleForUrl, normalizeVaultEmail } from "./vault/index.js";
 
 /** Prefixo do código cifrado colável em "Já tenho conta". */
 export const VOX_KIT_PREFIX = "VOX1:";
@@ -267,7 +267,7 @@ export async function createEmailAccountKit({ rawName, email, pass, includePhras
   await accountExit.hasSovereignExit(acc.routeId);
   let phrase = "";
   if (includePhrase) {
-    const { getAccountPhrase } = await import("./account-phrase.js");
+    const { getAccountPhrase } = await import("./identity/index.js");
     phrase = (await getAccountPhrase(draftState.pass)).words.join(" ");
   }
   const vaultOpts = draftState.pass ? { email, prevEmail: draftState.email, prevPassphrase: draftState.pass } : email;
@@ -320,7 +320,7 @@ export async function restoreAccountFromInputs({ email = "", pass = "", kitText 
     return result;
   }
   if (kitText) return { ok: false, reason: "Não achei um link #/sync?b=… ou código VOX1:… válido nesse texto." };
-  if (phraseText) return (await import("./account-phrase.js")).restoreFromPhrase(phraseText);
+  if (phraseText) return (await import("./identity/index.js")).restoreFromPhrase(phraseText);
   if (files.length) return restoreFromInboxFiles(files, pass, email);
   if (!pass) return { ok: false, reason: "Digite seu e-mail e senha, a frase de recuperação ou cole o código do e-mail." };
   return oauthVault.restoreFromPassphraseVault(pass, { email });
@@ -334,7 +334,7 @@ async function restoreSingleBackupFile(text, pass, email) {
     if (res.ok) confirmEmailKitSent(res.routeId);
     return res;
   }
-  const { KIND_PLAIN, KIND_WRAPPED, peekBackupKind, importAccountBundle } = await import("./account-backup.js");
+  const { KIND_PLAIN, KIND_WRAPPED, peekBackupKind, importAccountBundle } = await import("./identity/index.js");
   const kind = peekBackupKind(text);
   if (kind !== KIND_PLAIN && kind !== KIND_WRAPPED) return null;
   if (kind === KIND_WRAPPED && !pass) return { ok: false, reason: "Digite a Senha Soberana para abrir o arquivo .voxid." };
@@ -349,7 +349,7 @@ async function restoreFromInboxFiles(files, pass, email = "") {
     if (single) return single;
   }
   if (!pass) return { ok: false, reason: "Digite a Senha Soberana para abrir os backups." };
-  const backup = await import("./inbox-backup.js");
+  const backup = await import("./identity/index.js");
   if (!texts.every(backup.isInboxBackupText)) return { ok: false, reason: "Escolha o arquivo de acesso (.txt/.voxid) ou os backups do e-mail (.txt)." };
   let acc = null;
   for (const text of texts.sort((a, b) => JSON.parse(a).to - JSON.parse(b).to)) acc = await backup.restoreInboxBackup(text, pass);

@@ -1,7 +1,7 @@
 import "../tests/setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
-import * as cred from "../client/js/civic-credential.js";
+import * as cred from "../client/js/labs/parado/civic-credential.js";
 
 test("civic-credential: issueCivicCredential emite credencial padronizada", async () => {
   const c = await cred.issueCivicCredential({

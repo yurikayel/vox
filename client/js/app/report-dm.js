@@ -10,7 +10,7 @@ import { normalizeContextCard } from "../dm-messenger.js";
 async function defaultSendDeps() {
   const [gql, peers, cryptoDm, cacheNode, localAccount, wire] = await Promise.all([
     import("../graphql.js"), import("../peers.js"), import("../crypto-dm.js"),
-    import("../cache-node.js"), import("../local-account.js"), import("./dm-wire.js"),
+    import("../cache-node.js"), import("../identity/index.js"), import("./dm-wire.js"),
   ]);
   return {
     getDmPub: async (addr) => gql.getCachedUserDmPub(addr) || peers.getPeerDmPub(addr) || (await gql.fetchUserDmPub(addr)),
@@ -23,7 +23,12 @@ async function defaultSendDeps() {
 
 /**
  * Manda a denúncia assinada à moderação e guarda a mensagem no fio de quem denunciou.
- * Devolve o estado da entrega: "delivered", "queued-relay", "pending-retry" ou "no-key".
+ *
+ * @param {string} user Rota de quem denuncia.
+ * @param {string} moderator Rota do moderador destinatário.
+ * @param {object} rec Registro da denúncia (`buildReport`).
+ * @param {object|null} [deps=null] Dependências injetáveis; `null` usa as reais.
+ * @returns {Promise<string>} Estado da entrega: `delivered`, `queued-relay`, `pending-retry` ou `no-key`.
  */
 export async function sendReportToModerator(user, moderator, rec, deps = null) {
   const d = deps || (await defaultSendDeps());
@@ -48,7 +53,7 @@ export async function sendReportToModerator(user, moderator, rec, deps = null) {
 
 async function defaultReceiveDeps() {
   const [community, cacheNode, localAccount, context, share] = await Promise.all([
-    import("./screens-community.js"), import("../cache-node.js"), import("../local-account.js"),
+    import("./screens-community.js"), import("../cache-node.js"), import("../identity/index.js"),
     import("./context.js"), import("../share.js"),
   ]);
   return {
@@ -66,7 +71,12 @@ async function defaultReceiveDeps() {
   };
 }
 
-/** Texto curto para quem modera, ao receber. */
+/**
+ * Texto curto para quem modera, ao receber uma denúncia.
+ *
+ * @param {object} kase Caso de revisão com `status` e `why`.
+ * @returns {string} Mensagem para toast.
+ */
 export function describeReceivedCase(kase) {
   if (kase.status === "pending" && kase.why === "ok") {
     return `Denúncia recebida: a publicação foi arquivada para todos até você revisar (${review.describeDeadline(kase.receivedAt, kase.receivedAt)}).`;
@@ -106,7 +116,12 @@ async function notifyNaturalTargetSide(signed, { self, target }) {
 
 /**
  * Aparelho de quem modera: confere assinatura, salvaguardas e, se passar, publica `review-hide`
- * na malha (gossip) e na memória central, sem gravar no Arweave (ADR-019). Devolve o caso criado, ou null.
+ * na malha (gossip) e na memória central, sem gravar no Arweave (ADR-019).
+ *
+ * @param {object} env Metadados da DM recebida.
+ * @param {object} signed Corpo assinado da denúncia.
+ * @param {object|null} [deps=null] Dependências injetáveis; `null` usa as reais.
+ * @returns {Promise<object|null>} Caso criado ou `null` quando ignorado.
  */
 export async function receiveReportDm(env, signed, deps = null) {
   const d = deps || (await defaultReceiveDeps());

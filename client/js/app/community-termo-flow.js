@@ -10,7 +10,7 @@
  */
 import * as cacheNode from "../cache-node.js";
 import * as peers from "../peers.js";
-import * as localAccount from "../local-account.js";
+import * as localAccount from "../identity/index.js";
 import * as share from "../share.js";
 import * as termo from "../community-termo.js";
 import { escapeHtml } from "../render/util.js";

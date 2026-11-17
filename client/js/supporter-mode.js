@@ -6,7 +6,7 @@
  *
  * @module supporter-mode
  * @see docs/specs/replicacao-por-grau-v0.md
- * @see client/js/seeder-guardian.js
+ * @see client/js/labs/parado/seeder-guardian.js
  */
 
 /** Compromisso de banda proporcional ao disco: cada MB guardado rende até 2 MB/dia repassados. */

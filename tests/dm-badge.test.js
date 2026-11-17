@@ -43,7 +43,7 @@ test("feed — sem cabeçalho da Ágora e sem aviso 'te mandou uma mensagem'", (
 });
 
 test("composer — prévia do anexo alterna atributo hidden junto com a classe", () => {
-  const src = read("client/js/inline-composer.js");
+  const src = read("client/js/app/inline-composer.js");
   assert.ok(src.includes("function setPreviewVisible(el, visible)"));
   assert.ok(src.includes("el.hidden = !visible;"));
   assert.ok(!/preview(Wrap|Img|AudioWrap|VideoWrap)\??\.classList\.(add|remove)\("hidden"\)/.test(src),

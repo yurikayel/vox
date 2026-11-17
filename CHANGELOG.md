@@ -6,6 +6,117 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Documentação: aceite dos ADR-034, ADR-035 e ADR-036
+- **ADR-035** passa a **accepted** (camadas e contextos; catraca `audit:layers` no CI; `vault/` e `identity/` feitos).
+- **ADR-034** e **ADR-036** passam a **aceito como direção** (direção aceita pelo mantenedor; nada implementado sem RFC 0002 e LAN-18 onde couber). Atualiza [DECISOES.md](./docs/DECISOES.md) A-22–A-24. Sem bump de SW.
+
+### Documentação: JSDoc do lote 3 (`client/js/app/`)
+- JSDoc completo (cabeçalho `@file`, `@param`, `@returns`) em todos os exports dos módulos de `client/js/app/` listados na dívida de documentação. Só comentários mudaram. `npm run audit:docs -- --prune` reduz a dívida de 1.602 para 1.392 achados. Sem bump de SW (comportamento igual).
+
+### Correção: replicação no Bluesky por login leva o link do post
+- Com a conta do Bluesky ligada por login (OAuth), a replicação automática montava o texto com um campo `url` que a carga não tem, e o link canônico do post sumia. Agora os dois caminhos (login e App Password) usam o mesmo texto: título, corpo e link, até 295 caracteres (`linked-accounts.js`).
+- Testes: `tests/bsky-oauth-replication-link.test.js` (novo, 2 casos; os 2 falham no código de antes). SW `v7.140`.
+
+### Documentação: JSDoc do lote 2 (malha, WebRTC, contas vinculadas e cache)
+- JSDoc completo (descrição, `@param`, `@returns`) em todos os exports de `peers.js`, `webrtc-peer.js`, `linked-accounts.js` e `cache-node.js`, mais o cabeçalho `@file` de `peers.js` e de `cache-node.js` (que tinha só um comentário de linha). Só comentários mudaram: os tokens de código dos quatro arquivos são idênticos aos de antes. A dívida de `audit:docs` cai de 1.736 para 1.602 achados (`scripts/docs-debt.json`, `--prune`). Sem bump de SW (comportamento igual).
+
+### Documentação: JSDoc do lote 1 (moderação e sincronização)
+- JSDoc completo (descrição, `@param`, `@returns`) em todos os exports de `moderation.js`, `peer-sync.js`, `report-review.js` e `vox-link.js`, mais o cabeçalho de `moderation.js`. Só comentários mudaram; nenhuma linha de código. A dívida de `audit:docs` cai de 1.870 para 1.736 achados (`scripts/docs-debt.json`, `--prune`). Sem bump de SW (comportamento igual).
+
+### Dívida: módulos não plugados vão para `labs/parado/` (ADR-035)
+- Os 21 módulos que nenhuma tela carrega (`UNPLUGGED_MODULES` no `sw.js`) saíram da raiz de `client/js` (e de `render/`) para `client/js/labs/parado/`, com um README que diz o que são e como plugar. Pela regra de camadas, só `app` e o laboratório podem importá-los. Sem mudança de lógica: só caminhos de import; `settings-guardian` e `node-health-badge` passam a importar `escapeHtml` de `shared/html.js` (base), já que `labs` não importa `render`.
+- Caminhos atualizados em `UNPLUGGED_MODULES`, `permaweb-manifest.json`, testes, `docs-debt.json` e docs. SW `v7.139`.
+
+### Testes: vermelho na base (PM-111)
+- **Job `red-on-base` no CI (só PR):** roda os testes novos ou alterados contra o código da base (`scripts/red-on-base.mjs` e `scripts/red-on-base-reporter.mjs`). Em PR `fix:` ao menos um precisa falhar por asserção; falha por import ou função ausente é inconclusiva. Nos outros PRs só informa. Rótulo `red-on-base:skip` para `fix:` de CI ou documentação. Regra em [TESTES.md §3.4](./docs/TESTES.md#34-vermelho-na-base-o-teste-prova-o-defeito-pm-111).
+- Testes: `tests/red-on-base.test.js` (novo, 9 casos), com um repositório git de mentira.
+
+### Testes: base do plano para código feito por IA (PM-110)
+- **CODEOWNERS sem caminho morto:** 8 linhas apontavam para arquivos que mudaram para `client/js/identity/` e `client/js/vault/` e não marcavam mais nada como sensível. Agora marcam as duas pastas, mais `sig-format.js`; `tests/codeowners-paths.test.js` reprova caminho que não existe.
+- **[TESTES.md](./docs/TESTES.md):** nova §3.3 (o Tier A dos testes são as linhas de `client/js/` do CODEOWNERS) e a §4 conferida com o `ci.yml` (job `e2e-mesh`, Python 3.15, CodeQL, e o ESLint do CI não cobre `tests/`).
+- **ROADMAP:** PM-111…PM-115 abertos (vermelho na base, mutação no diff do Tier A, smokes no `e2e-mesh`, contratos, higiene dos testes). Sem mudança no cliente nem no SW.
+
+### Dívida: camadas zeradas (ADR-035)
+- `post-more-menu.js` e `post-more-actions.js` (menu ⋯ das publicações) abrem a folha, ligam os cliques e disparam fluxos: são controle, não montagem de HTML. Foram de `render/` para `app/` sem mudar a lógica (só caminhos de import).
+- `moderation.js` não importa mais `app/natural-mod-flow.js`: ganha `setNaturalHideLoader(fn)`, e o `app.js` liga o carregador do moderador natural na partida, ainda sob demanda e atrás da flag de laboratório. Sem carregador, não há arquivamento natural (como sem a flag).
+- `scripts/layers-debt.json` fica vazio: 8 → 0 imports proibidos; daqui em diante qualquer import que suba de camada reprova o CI.
+- Testes: `tests/moderation-natural-loader.test.js` (novo, 3 casos). 3 testes mudaram só o caminho do arquivo lido. SW `v7.138`.
+
+### Dívida: dois módulos de tela voltam para `app/` (ADR-035)
+- `inline-composer.js` e `dom-delegates.js` só eram usados pela camada `app` e importavam fluxos dela; foram movidos para `client/js/app/` sem mudar código (só os caminhos de import). A dívida de camadas cai de 11 para 8 imports proibidos (`scripts/layers-debt.json`, `--prune`).
+- Caminhos atualizados no precache do SW, `permaweb-manifest.json`, testes, `docs-debt.json` e links de docs. SW `v7.137`.
+
+### Segurança: cartão de perfil só entra assinado
+- **Cartões vindos da sincronização** (memória central e malha ao conectar) passam a valer só com o cartão assinado pelo dono (`signedCard`), conferido pela chave da própria conta e pelo `routeId`; campos soltos de nome, foto e bio que chegam junto não são mais confiados. O cartão de cada conta é guardado no diretório com a forma assinada, que é o que viaja na sincronização ([ADR-021](./docs/adr/021-integridade-na-entrada-forma-assinada.md)).
+- O nome que chegava junto da identidade do par ao conectar não é mais aplicado; nome e foto chegam no cartão assinado.
+- Um cartão vencido só remove o cartão de quem o assinou (a validação vem antes do vencimento) (`peers-gossip-profile.js`, `peers.js`, `central-memory.js`).
+- Efeito visível: um nome conhecido só por outro caminho sem assinatura não chega mais pela sincronização; os nomes continuam vindo dos posts assinados e dos cartões assinados.
+- Testes: `tests/profile-card-assinatura.test.js` (novo, 7 casos; os 7 falham no código de antes). Dois testes mudaram de propósito para mandar cartões assinados (`central-memory.test.js`, `profile-card-share.test.js`), pois o comportamento antigo era aceitar cartão sem assinatura. SW `v7.136`.
+
+### Correção: lab do AI Social Dungeon (revisão de 16/11)
+- **CD do co-mestre:** a tela do mestre lia `dc`, mas o roteador de regras entrega `suggestedDc`; a sugestão mostrava sempre CD 14. Agora mostra a da regra (Persuasão 13, Investigação 15…) (`screen-dm.js`).
+- **Slider de comunidades:** com 0% a comunidade aparecia com 614/410 MB (`||` trocava 0 pelo valor padrão); agora mostra 0 MB. O arrasto redesenhava a tela inteira a cada passo, trocando o próprio slider na mão da pessoa; agora só os rótulos e o chip "Próximo turno" mudam (`screen-camp.js`, `dungeon-controller.js`).
+- **Atestação de lore:** confirmar o mesmo card duas vezes somava testemunha; agora é uma atestação por pessoa, e contestar troca a anterior (`dungeon-state.js`).
+- **`op_id` sem colisão:** ids vinham da hora + tamanho do ledger (`dungeon-state.js`) ou só do tamanho do ledger (`applyTurnResolutionToSheet` em `rpg-sheet-and-lore.js`); dois jogadores geravam o mesmo id e juntar os ledgers perdia uma jogada. Agora são aleatórios (`crypto.randomUUID()`). Spec atualizada.
+- Testes: `tests/dungeon-revisao.test.js` (novo, 5 casos; os 5 falham no código de antes). SW `v7.135`.
+
+### Segurança: eslint 10.15.0 (minimatch 11)
+- Dependência só de desenvolvimento: `eslint` ^10.14.0 → ^10.15.0, que traz `minimatch` 11.0.9 no lugar de 10.2.6 (alerta Dependabot moderado GHSA-g3hv-75wg-m249, negação de serviço por expansão de padrões). Nada vai para o navegador; sem bump de SW. `npm audit`: 0 vulnerabilidades. Inventário em `docs/DEPENDENCIAS.md`.
+
+### Correção: Service Worker só intercepta GET
+- **`client/sw.js`:** o listener de `fetch` passava todo pedido do mesmo domínio pelo caminho do cache, inclusive POST/PUT/DELETE (por exemplo, para um relay servido no mesmo domínio). O Cache API não guarda nem casa esses métodos, e o corpo do pedido atravessava o SW à toa; em `config/signaling.json`, um POST tentaria `cache.put` e geraria uma rejeição não tratada. Agora só GET passa pelo SW; o resto vai direto à rede pelo navegador.
+- Testes: `tests/sw-fetch-methods.test.js` (novo, 2 casos; roda o `sw.js` real numa sandbox `node:vm` e falha no código de antes). SW `v7.134`.
+
+### Correção: sinalização com prazos e mensagens fragmentadas
+- **`relay/signaling.py`:** o handshake HTTP passa a ter prazo total, e o resto de um quadro precisa chegar num prazo depois do cabeçalho; antes, uma conexão que não terminava segurava a thread dela sem limite. Pares registrados e quietos continuam conectados.
+- **Fragmentos:** mensagens em vários quadros (FIN=0 + continuação) são remontadas, com teto para a soma; antes, o primeiro pedaço era lido como mensagem inteira e o resto era ignorado. Erros de protocolo encerram a conexão.
+- Testes: `relay/test_signaling_robustez.py` (novo, 8 casos; os 5 de servidor falham no código de antes). Só o servidor de sinalização mudou; o cliente não muda (sem bump de SW).
+
+### Correção: lab de Open Frames em iframe volta a responder
+- **`#/labs/frames`:** o demo roda em iframe `sandbox` sem `allow-same-origin` (origem opaca), e o navegador entrega as mensagens dele com origem `"null"`; o host só aceitava a origem do app e recusava tudo, então o iframe não redimensionava e as ações não chegavam. Agora, para iframe opaco, o host aceita `"null"` só quando a mensagem vem da janela do próprio iframe (`open-frames-host.js`); mensagens de outras janelas são recusadas mesmo com a origem na lista. O lab mostra a última ação recebida.
+- **Script do demo fora do HTML:** a CSP publicada (`_headers`, `script-src 'self'` sem `'unsafe-inline'`) bloquearia o script inline de `client/embed/frame-demo.html`; ele foi para `client/embed/frame-demo.js` (no precache).
+- `allow-same-origin` continua proibido junto de `allow-scripts` (o frame sairia do sandbox). Spec atualizada (`docs/specs/open-frames-v2.md`).
+- Testes: 4 casos novos em `tests/open-frames-host.test.js`. SW `v7.133`.
+
+### Correção: Open Frames no feed contam as ações de todos e o botão não trava
+- **Apuração:** o cartão de enquete ou abaixo-assinado era desenhado só com a ação deste aparelho; votos e assinaturas de outras pessoas (recebidos por gossip e guardados) só apareciam depois de votar de novo. Agora, quando o cartão entra na página, a apuração é completada com todas as ações guardadas (`client/js/app/frame-ui.js`, novo, no precache).
+- **Botão:** depois de um voto bem-sucedido o botão ficava desabilitado em "Gravando…"; agora volta ao normal e a escolha fica marcada.
+- **Voto mudado:** a enquete contava, para quem mudou de voto, o voto mais antigo (as ações chegam da mais nova para a mais velha); agora vale o de maior `ts` (`frames.js`).
+- Testes: `tests/frame-ui.test.js` (novo, 5 casos). SW `v7.132`.
+
+### Correção: login do Bluesky abandonado não captura o login seguinte; `iss` conferido
+- **Callback escolhido pelo `state`:** um login do Bluesky iniciado e não concluído deixava o fluxo guardado na aba, e o callback seguinte de outra rede (GitHub, X, Threads…) ia para o Bluesky e falhava uma vez. Agora o callback vai para o fluxo cujo `state` confere; qualquer callback, e qualquer novo início de login, encerra os fluxos pendentes da aba (`social-login.js`).
+- **`iss` (RFC 9207):** quando o servidor do Bluesky anuncia `authorization_response_iss_parameter_supported`, callback sem `iss` é recusado; antes, a ausência passava (`bsky-oauth.js`). `iss` diferente do emissor continua recusado.
+- Testes: `tests/social-login-callback.test.js` (novo, 5 casos, `fetch` falso). SW `v7.131`.
+
+### Correção: a cópia impressa da frase não fica na página
+- **Imprimir cartão** (`#/frase`) põe uma cópia do cartão com as 12 palavras no `body` só para a impressão. Antes, ela só saía no `afterprint`; em navegador que não dispara esse evento, a cópia ficava na página depois de sair da tela, contra a regra de que a frase vive só na tela. Agora sai também ao trocar de rota, ao sair da página e ao seguir para a conferência; imprimir de novo não empilha cópias; sem `print()` no navegador, nem entra.
+- Lógica em `client/js/app/phrase-print.js` (novo, no precache); testes em `tests/phrase-print.test.js`. SW `v7.130`.
+
+### Conta numa pasta só, com portas de entrada (ADR-035 §3.2, segundo contexto)
+- **`client/js/identity/`:** 15 módulos da conta (conta local, travamento e chaves em repouso, semente, frase de recuperação, arquivo de soberania, saídas soberanas, limpeza local, guardiões e backup no e-mail) mudaram para a pasta, com `git mv`. Nenhuma regra mudou; a identidade está congelada para tudo que não seja correção.
+- **Portas:** fora da pasta, importa-se por `identity/index.js` ou, para quem só precisa da chave do aparelho e da chave de DM (`crypto-dm.js`, `wallet.js`), por `identity/keys.js`, que evita o ciclo `crypto-dm → identity/index → local-account → crypto-dm`. `npm run audit:layers` reprova import de fora que pule as portas.
+- **Ficaram na raiz:** `shamir-gf256` (também do RPG), `signed-verify`, `sig-format` e os módulos de contas sociais.
+- **Documentação:** os exports movidos ganharam JSDoc completo; as 64 entradas de dívida do `audit:docs` desses arquivos foram pagas, não renomeadas. Links em README, ARCHITECTURE, IDENTITY e ADRs apontam para o caminho novo.
+- **Ciclos:** o componente com ciclo do grafo de imports foi de 113 para 120 módulos (a porta e 6 módulos que só usavam `local-account`); registrado no ADR-035.
+- Testes: imports e caminhos lidos nos testes apontam para `client/js/identity/`, sem mudar asserções; caso novo em `tests/layers-audit.test.js` para as portas da conta. SW `v7.129`.
+
+### ADR-036 proposto: agilidade criptográfica e transição pós-quântica
+- **Inventário** de onde cada algoritmo é usado no cliente (assinatura e DM em curva elíptica; cofre, semente e chaves em repouso simétricos; Arweave, Nostr e Bluesky definidos pelos protocolos deles).
+- **Regra:** todo formato novo diz o seu algoritmo dentro do que é assinado; o leitor recusa algoritmo desconhecido.
+- **Direção:** DM v2 híbrida (ECDH + ML-KEM-768) primeiro, por causa do "guarda agora, abre depois"; assinatura com pré-compromisso ML-DSA junto da RFC 0002 (ADR-034); a frase de 12 palavras restaura também as chaves novas. Nada de código; atualizados DECISOES (A-24) e o índice de ADRs.
+### Cofre numa pasta só, com porta de entrada (ADR-035 §3.2, primeiro contexto)
+- **`client/js/vault/`:** `vault-crypto`, `vault-store`, `vault-legacy`, `passphrase-vault` e `oauth-vault` mudaram para a pasta, com `git mv` (o histórico segue o arquivo). Nenhuma regra mudou.
+- **Portas:** fora da pasta, importa-se por `vault/index.js` (o que é público: migração v1, login social, Senha Soberana, cofre no link, servidores de memória) ou por `vault/envelope.js` (só cifrar e abrir um registro, usado por `key-lock.js` e `inbox-backup.js` para não fechar um ciclo de imports). O `oauth-vault.js` deixou de reexportar peças dos outros módulos; isso agora é papel da porta.
+- **Conferência:** `npm run audit:layers` reprova import de fora da pasta que pule a porta (`CONTEXT_DOORS` em `scripts/layers-lib.mjs`). Hoje não há nenhum.
+- **Documentação:** os exports do cofre ganharam JSDoc completo; as 26 entradas de dívida do `audit:docs` desses arquivos foram pagas, não renomeadas.
+- Testes: os testes passam a importar os caminhos novos (`vault/index.js` no lugar de `oauth-vault.js`), sem mudar asserções; caso novo em `tests/layers-audit.test.js` para a regra da porta. SW `v7.128`.
+
+### ADR-035 proposto: camadas e contextos no cliente, com catraca no CI
+- **Regra de camadas:** `app` importa qualquer camada; `render` só `render` e `base`; `base` só `base`; `labs`/`dungeon` só `labs` e `base`, e só `app` carrega o laboratório. `npm run audit:layers` lê os imports pela árvore sintática (espree), entra no `validate` e no CI e reprova import proibido novo. Os 11 imports que já sobem de camada (6 arquivos) ficam em `scripts/layers-debt.json`, numa lista que só diminui.
+- **Direção:** uma pasta por assunto com porta de entrada (`index.js`), um assunto por PR, começando por `vault/`; caminho único para operações de conta; armazenamento local com dono; os módulos não plugados (já fora do precache, PM-04) saem da raiz para `labs/` ou do repositório.
+- Testes: `tests/layers-audit.test.js` (novo). Atualizados DECISOES (A-23), HARDENING, índice de ADRs e `scripts/README.md`. Sem mudança no app.
+
 ### Correção: trocar a Senha Soberana pelo Perfil; pôr e-mail tira do ar o cofre só-senha
 - **Senha atual:** o cartão "Soberania & Sincronização" ganha o campo "Senha atual, só para trocar a Senha Soberana". Antes, depois do primeiro cofre a conta ficava travada pela senha, e uma senha nova dava "Senha incorreta" sem ter onde informar a antiga. Com a senha atual, a conta é aberta, gravada com a nova e o endereço antigo é revogado.
 - **E-mail:** gravar o cofre com e-mail (Perfil ou assistente de backup) revoga o cofre só-senha anterior da mesma senha, como a restauração já fazia (ADR-032 §6.3). Antes, ele ficava no ar e abria só com a senha. Só é revogado o que existe; endereço sem cofre não ganha marca.

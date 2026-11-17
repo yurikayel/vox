@@ -12,7 +12,7 @@ import * as mod from "../moderation.js";
 import * as cacheNode from "../cache-node.js";
 import * as cryptoDm from "../crypto-dm.js";
 import * as handles from "../handles.js";
-import * as localAccount from "../local-account.js";
+import * as localAccount from "../identity/index.js";
 import * as social from "../social.js";
 import * as featureFlags from "../feature-flags.js";
 import * as pixKeyHelper from "../pix-key.js";
@@ -25,8 +25,8 @@ import { getCachedBskyPosts } from "../bsky-feed.js";
 import { openOAuthEnrichModal, wipeLocalDevice } from "./onboarding.js";
 import { getActiveUser, makeShellProps } from "./context.js";
 import { syncIdentity } from "./screens-network.js";
-import { KIND_WRAPPED, exportAccountBundle, importAccountBundle, peekBackupKind } from "../account-backup.js";
-import { isInboxBackupText, restoreInboxBackup } from "../inbox-backup.js";
+import { KIND_WRAPPED, exportAccountBundle, importAccountBundle, peekBackupKind } from "../identity/index.js";
+import { isInboxBackupText, restoreInboxBackup } from "../identity/index.js";
 import * as voxels from "../voxels.js";
 import { bindIdentityMetaForm } from "./profile-identity-meta-ui.js";
 import { getLocalIdentityMeta, pickIdentityMeta } from "../profile-identity-meta.js";
@@ -45,6 +45,11 @@ function collectByIds(posts, ids) {
 
 let activeProfileCache = null;
 
+/**
+ * Invalida cache de perfil no aparelho.
+ *
+ * @returns {void}
+ */
 export function invalidateProfileCache() {
   activeProfileCache = null;
 }
@@ -223,6 +228,13 @@ async function loadProfileData(targetAddress, isSelf, user, activeTab = "posts")
   return data;
 }
 
+/**
+ * Monta página de perfil.
+ *
+ * @param {string} address
+ * @param {string} activeTab [optional]
+ * @returns {void}
+ */
 export async function showProfile(address, activeTab = "posts") {
   const user = await getActiveUser();
   const targetAddress = address || user;
@@ -753,6 +765,16 @@ function bindVoxelButtons(address, activeTab, isSelf) {
   });
 }
 
+/**
+ * Liga botões da página de perfil.
+ *
+ * @param {string} user
+ * @param {string} address
+ * @param {unknown} isSelf
+ * @param {unknown} dmPub
+ * @param {string} activeTab [optional]
+ * @returns {void}
+ */
 export function bindProfileButtons(user, address, isSelf, dmPub, activeTab = "posts") {
   bindPixButtons(address, activeTab, isSelf);
   bindGithubButtons(address, activeTab, isSelf);
@@ -799,6 +821,12 @@ function renderHandleLookupResult(main, slug, result) {
   location.hash = `#/u/${encodeURIComponent(result.primaryOwner)}`;
 }
 
+/**
+ * Busca perfil por handle.
+ *
+ * @param {unknown} rawSlug
+ * @returns {void}
+ */
 export async function showHandleLookup(rawSlug) {
   const user = await getActiveUser();
   const slug = handles.normalizeSlug(rawSlug);
@@ -865,6 +893,11 @@ function bindWalletImportAndDisconnect() {
   }
 }
 
+/**
+ * Monta tela da carteira.
+ *
+ * @returns {void}
+ */
 export async function showWallet() {
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "profile", "Carteira"));
@@ -906,6 +939,12 @@ function resolveProfileByPixKey(cleanQuery, myPix, myRouteId) {
   return null;
 }
 
+/**
+ * Consulta chave Pix no perfil.
+ *
+ * @param {unknown} query
+ * @returns {void}
+ */
 export async function showPixLookup(query) {
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "profile", "Consulta Pix"));

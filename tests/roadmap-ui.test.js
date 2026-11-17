@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import * as render from "../client/js/render.js";
-import * as polis from "../client/js/polis.js";
+import * as polis from "../client/js/labs/parado/polis.js";
 
 function createContainer() {
   return { innerHTML: "" };

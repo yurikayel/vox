@@ -1,4 +1,6 @@
-/** @file PM-81 — canal: aviso no compor para quem não modera e troca de modo assinada pela moderação. */
+/**
+ * @file PM-81 — canal: aviso no compor para quem não modera e troca de modo assinada pela moderação.
+ */
 
 import * as share from "../share.js";
 import * as channel from "../community-channel.js";
@@ -21,13 +23,17 @@ async function resolveComposeMeta(communityId) {
 
 /** As duas identidades do aparelho: a ativa (carteira, se houver) e a conta local que assina. */
 async function deviceSelves() {
-  const [context, localAccount] = await Promise.all([import("./context.js"), import("../local-account.js")]);
+  const [context, localAccount] = await Promise.all([import("./context.js"), import("../identity/index.js")]);
   return [await context.getActiveUser().catch(() => ""), await localAccount.getRouteId().catch(() => "")];
 }
 
 /**
  * No compor: barra e avisa quem não modera um canal. É só conveniência; a regra de verdade
  * vale na leitura de cada aparelho (`filterChannelTopics`).
+ *
+ * @param {string} communityId Id da comunidade.
+ * @param {object|null} [deps=null] Dependências injetáveis; `null` usa as reais.
+ * @returns {Promise<boolean>} `true` quando pode publicar ou não é canal.
  */
 export async function assertCanPostTopic(communityId, deps = null) {
   if (!communityId) return true;
@@ -40,7 +46,7 @@ export async function assertCanPostTopic(communityId, deps = null) {
 
 async function defaultModeDeps() {
   const [localAccount, cacheNode, peers] = await Promise.all([
-    import("../local-account.js"), import("../cache-node.js"), import("../peers.js"),
+    import("../identity/index.js"), import("../cache-node.js"), import("../peers.js"),
   ]);
   return {
     getMeta: resolveMeta,
@@ -52,7 +58,14 @@ async function defaultModeDeps() {
   };
 }
 
-/** Publica o `community_update` assinado que troca o modo. Só dono ou moderador (PM-09). */
+/**
+ * Publica o `community_update` assinado que troca o modo. Só dono ou moderador (PM-09).
+ *
+ * @param {string} communityId Id da comunidade.
+ * @param {string} mode Novo modo (`open` ou `mods`).
+ * @param {object|null} [deps=null] Dependências injetáveis; `null` usa as reais.
+ * @returns {Promise<object>} Post assinado salvo e propagado.
+ */
 export async function setPostingMode(communityId, mode, deps = null) {
   const d = deps || (await defaultModeDeps());
   const meta = await d.getMeta(communityId);
@@ -79,6 +92,13 @@ const DONE_TEXT = {
  * Com a página da comunidade montada, `showCommunity` só troca o conteúdo da aba e mantém o cabeçalho,
  * onde está a faixa do canal. Tirar a página força a montagem completa, com a faixa no modo novo.
  */
+/**
+ * Remove a página de comunidade montada no DOM para forçar remontagem com a faixa do canal atualizada.
+ *
+ * @param {string} communityId Id da comunidade.
+ * @param {Document} [doc=globalThis.document] Documento onde buscar `.community-vox-page`.
+ * @returns {boolean} `true` se removeu um nó.
+ */
 export function dropMountedCommunityPage(communityId, doc = globalThis.document) {
   const page = [...(doc?.querySelectorAll?.(".community-vox-page") || [])].find((el) => el.dataset?.communityId === communityId);
   page?.remove();
@@ -103,7 +123,12 @@ async function onModeClick(btn) {
 
 let channelHandlersWired = false;
 
-/** Liga os botões `.btn-channel-mode` da faixa do canal (delegação no documento). */
+/**
+ * Liga os botões `.btn-channel-mode` da faixa do canal (delegação no documento).
+ *
+ * @param {Document} [doc=globalThis.document] Documento que recebe o listener.
+ * @returns {void}
+ */
 export function attachChannelHandlers(doc = globalThis.document) {
   if (channelHandlersWired || !doc?.addEventListener) return;
   channelHandlersWired = true;

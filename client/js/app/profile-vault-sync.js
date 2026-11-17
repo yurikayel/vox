@@ -17,8 +17,8 @@
 import * as share from "../share.js";
 import { openQrUrlSheet } from "../qr-url.js";
 import { QR_MAX_BYTES } from "../qr-url-codec.js";
-import { getAccountExits } from "../account-exit.js";
-import { getCachedRouteIdSync } from "../local-account.js";
+import { getAccountExits } from "../identity/index.js";
+import { getCachedRouteIdSync } from "../identity/index.js";
 
 const NO_EMAIL_CONFIRM =
   "Esta conta tem saída por e-mail. Sem o e-mail, o cofre fica num endereço que sai só da senha, mais fácil de adivinhar. Gravar mesmo assim?";
@@ -63,7 +63,7 @@ async function saveVault(missingPassText) {
   const email = readField("input-sovereignty-email");
   if (!pass) return { error: missingPassText };
   if (needsNoEmailConfirm(email) && !confirm(NO_EMAIL_CONFIRM)) return { cancelled: true };
-  const vault = await import("../oauth-vault.js");
+  const vault = await import("../vault/index.js");
   const res = await vault.savePassphraseVault(pass, profileVaultOptions(email, readField("input-sovereignty-prev-passphrase")));
   if (!res.ok) return { error: res.reason || "Não deu para gravar o cofre." };
   // Trocada a senha, a antiga não abre mais a conta: o campo não pode seguir para o próximo clique.

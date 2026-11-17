@@ -10,7 +10,7 @@ import { renderInlineComposer } from "../client/js/render/feed.js";
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "client");
 const css = fs.readFileSync(path.join(root, "css/style.css"), "utf8");
 const feedJs = fs.readFileSync(path.join(root, "js/render/feed.js"), "utf8");
-const composerJs = fs.readFileSync(path.join(root, "js/inline-composer.js"), "utf8");
+const composerJs = fs.readFileSync(path.join(root, "js/app/inline-composer.js"), "utf8");
 
 test("voice record toggle - renderiza botão toggle integrado e sem barra antiga volumosa", () => {
   const html = renderInlineComposer({ userRouteId: "vx_test_user" });

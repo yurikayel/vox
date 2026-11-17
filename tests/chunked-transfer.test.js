@@ -1,7 +1,7 @@
 import "../tests/setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
-import * as chunkedTransfer from "../client/js/chunked-transfer.js";
+import * as chunkedTransfer from "../client/js/labs/parado/chunked-transfer.js";
 
 test("chunked-transfer - fatiamento de payload pequeno resulta em chunk único", () => {
   const payload = "Pequena mensagem cívica";

@@ -131,8 +131,8 @@
     "js/render/network.js": {
       "id": "tx_js/render/network.js"
     },
-    "js/inline-composer.js": {
-      "id": "tx_js/inline-composer.js"
+    "js/app/inline-composer.js": {
+      "id": "tx_js/app/inline-composer.js"
     },
     "images/avatars/fernanda.jpg": {
       "id": "tx_images/avatars/fernanda.jpg"
@@ -266,8 +266,8 @@
     "js/people-index.js": {
       "id": "tx_js/people-index.js"
     },
-    "js/render/post-more-menu.js": {
-      "id": "tx_js/render/post-more-menu.js"
+    "js/app/post-more-menu.js": {
+      "id": "tx_js/app/post-more-menu.js"
     },
     "js/composer-media.js": {
       "id": "tx_js/composer-media.js"
@@ -287,8 +287,8 @@
     "js/profile-directory.js": {
       "id": "tx_js/profile-directory.js"
     },
-    "js/idb-store.js": {
-      "id": "tx_js/idb-store.js"
+    "js/labs/parado/idb-store.js": {
+      "id": "tx_js/labs/parado/idb-store.js"
     },
     "privacy.html": {
       "id": "tx_privacy.html"
@@ -305,17 +305,17 @@
     "js/share.js": {
       "id": "tx_js/share.js"
     },
-    "js/polis.js": {
-      "id": "tx_js/polis.js"
+    "js/labs/parado/polis.js": {
+      "id": "tx_js/labs/parado/polis.js"
     },
-    "js/identity-link.js": {
-      "id": "tx_js/identity-link.js"
+    "js/labs/parado/identity-link.js": {
+      "id": "tx_js/labs/parado/identity-link.js"
     },
     "js/oauth-profile.js": {
       "id": "tx_js/oauth-profile.js"
     },
-    "js/civic-credential.js": {
-      "id": "tx_js/civic-credential.js"
+    "js/labs/parado/civic-credential.js": {
+      "id": "tx_js/labs/parado/civic-credential.js"
     },
     "js/render/ig-toolbar.js": {
       "id": "tx_js/render/ig-toolbar.js"
@@ -371,20 +371,20 @@
     "images/cantina-gate.svg": {
       "id": "tx_images/cantina-gate.svg"
     },
-    "js/chunked-transfer.js": {
-      "id": "tx_js/chunked-transfer.js"
+    "js/labs/parado/chunked-transfer.js": {
+      "id": "tx_js/labs/parado/chunked-transfer.js"
     },
     "js/inbox.js": {
       "id": "tx_js/inbox.js"
     },
-    "js/airgap-webrtc.js": {
-      "id": "tx_js/airgap-webrtc.js"
+    "js/labs/parado/airgap-webrtc.js": {
+      "id": "tx_js/labs/parado/airgap-webrtc.js"
     },
     "js/mock.js": {
       "id": "tx_js/mock.js"
     },
-    "js/testimonials.js": {
-      "id": "tx_js/testimonials.js"
+    "js/labs/parado/testimonials.js": {
+      "id": "tx_js/labs/parado/testimonials.js"
     },
     "js/listing.js": {
       "id": "tx_js/listing.js"
@@ -407,8 +407,8 @@
     "js/sky-theme.js": {
       "id": "tx_js/sky-theme.js"
     },
-    "js/render/settings-guardian.js": {
-      "id": "tx_js/render/settings-guardian.js"
+    "js/labs/parado/settings-guardian.js": {
+      "id": "tx_js/labs/parado/settings-guardian.js"
     },
     "js/community-seed-checklist.js": {
       "id": "tx_js/community-seed-checklist.js"
@@ -416,8 +416,8 @@
     "js/peers-blob-affinity.js": {
       "id": "tx_js/peers-blob-affinity.js"
     },
-    "js/bridging-rank.js": {
-      "id": "tx_js/bridging-rank.js"
+    "js/labs/parado/bridging-rank.js": {
+      "id": "tx_js/labs/parado/bridging-rank.js"
     },
     "js/render/welcome-pact.js": {
       "id": "tx_js/render/welcome-pact.js"
@@ -434,8 +434,8 @@
     "js/peers-cache-manifest.js": {
       "id": "tx_js/peers-cache-manifest.js"
     },
-    "js/seeder-guardian.js": {
-      "id": "tx_js/seeder-guardian.js"
+    "js/labs/parado/seeder-guardian.js": {
+      "id": "tx_js/labs/parado/seeder-guardian.js"
     },
     "js/handles.js": {
       "id": "tx_js/handles.js"
@@ -527,8 +527,8 @@
     "js/contribution-attestation.js": {
       "id": "tx_js/contribution-attestation.js"
     },
-    "js/render/post-more-actions.js": {
-      "id": "tx_js/render/post-more-actions.js"
+    "js/app/post-more-actions.js": {
+      "id": "tx_js/app/post-more-actions.js"
     },
     "js/app/screens-labs.js": {
       "id": "tx_js/app/screens-labs.js"

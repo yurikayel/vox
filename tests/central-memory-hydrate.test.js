@@ -6,7 +6,7 @@ import { person } from "./signer.js";
 const cacheNode = await import("../client/js/cache-node.js");
 const hydrate = await import("../client/js/central-memory-hydrate.js");
 const mediaBlob = await import("../client/js/media-blob.js");
-const { verifyPayload } = await import("../client/js/local-account.js");
+const { verifyPayload } = await import("../client/js/identity/local-account.js");
 
 const PNG = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
 const wireOf = async (id) => (await cacheNode.getWirePosts()).find((p) => p.id === id);

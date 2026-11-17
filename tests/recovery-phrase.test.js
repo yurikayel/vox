@@ -7,12 +7,12 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import "./setup.js";
 import { BIP39_PT } from "../client/js/data/bip39-pt.js";
-import * as phrase from "../client/js/recovery-phrase.js";
-import { N, publicPoint, scalarFromBytes } from "../client/js/p256.js";
-import * as identitySeed from "../client/js/identity-seed.js";
-import * as keyLock from "../client/js/key-lock.js";
-import * as keystore from "../client/js/keystore.js";
-import * as localAccount from "../client/js/local-account.js";
+import * as phrase from "../client/js/identity/recovery-phrase.js";
+import { N, publicPoint, scalarFromBytes } from "../client/js/identity/p256.js";
+import * as identitySeed from "../client/js/identity/identity-seed.js";
+import * as keyLock from "../client/js/identity/key-lock.js";
+import * as keystore from "../client/js/identity/keystore.js";
+import * as localAccount from "../client/js/identity/local-account.js";
 import * as cryptoDm from "../client/js/crypto-dm.js";
 import { computeRouteId } from "../client/js/signed-verify.js";
 

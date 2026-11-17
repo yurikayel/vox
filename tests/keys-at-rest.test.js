@@ -5,9 +5,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import "./setup.js";
-import * as keystore from "../client/js/keystore.js";
-import { sealKeysAtRest } from "../client/js/key-at-rest.js";
-import * as localAccount from "../client/js/local-account.js";
+import * as keystore from "../client/js/identity/keystore.js";
+import { sealKeysAtRest } from "../client/js/identity/key-at-rest.js";
+import * as localAccount from "../client/js/identity/local-account.js";
 import * as cryptoDm from "../client/js/crypto-dm.js";
 import * as wallet from "../client/js/wallet.js";
 

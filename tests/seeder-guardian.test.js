@@ -1,8 +1,8 @@
 import "../tests/setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
-import * as guardian from "../client/js/seeder-guardian.js";
-import { renderGuardianSettingsCard } from "../client/js/render/settings-guardian.js";
+import * as guardian from "../client/js/labs/parado/seeder-guardian.js";
+import { renderGuardianSettingsCard } from "../client/js/labs/parado/settings-guardian.js";
 
 test("seeder-guardian - getGuardianQuotaConfig retorna padrões seguros", () => {
   localStorage.clear();

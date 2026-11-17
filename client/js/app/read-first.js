@@ -1,5 +1,5 @@
 /**
- * PM-54 — "ler antes de entrar".
+ * @file PM-54 — "ler antes de entrar".
  * Quem chega por um link direto (post, comunidade, perfil, tag, proposta) lê o conteúdo na hora.
  * O portão de boas-vindas e o pacto só aparecem na primeira ação que ESCREVE
  * (curtir, responder, postar, votar, entrar na comunidade) ou num botão "Entrar no Vox".
@@ -48,17 +48,39 @@ const SUBMIT_ALLOWED = new Set(["agora-search-form", "form-people-search", "form
 /** Os formulários do próprio fluxo de entrada (onboarding e pacto) ficam no #modal-container. */
 const ENTRY_FLOW_CONTAINER = "#modal-container";
 
+/**
+ * Id do elemento da faixa fixa "ler antes de entrar".
+ *
+ * @type {string}
+ */
 export const READ_FIRST_BANNER_ID = "read-first-banner";
 
+/**
+ * Diz se a rota permite leitura sem passar pelo portão de entrada.
+ *
+ * @param {string} routeName Nome lógico da rota.
+ * @returns {boolean}
+ */
 export function isReadFirstRoute(routeName) {
   return READ_FIRST_ROUTES.has(routeName);
 }
 
+/**
+ * Diz se o envio do formulário exige entrada completa (fora das exceções de leitura).
+ *
+ * @param {HTMLFormElement} form Formulário submetido.
+ * @returns {boolean}
+ */
 export function submitNeedsEntry(form) {
   if (form?.closest?.(ENTRY_FLOW_CONTAINER)) return false;
   return !SUBMIT_ALLOWED.has(form?.id || "");
 }
 
+/**
+ * HTML da faixa que convida a entrar no Vox após leitura por link.
+ *
+ * @returns {string}
+ */
 export function renderReadFirstBannerHtml() {
   return `
     <div class="read-first-banner" id="${READ_FIRST_BANNER_ID}" role="region" aria-label="Você está lendo o Vox">
@@ -67,6 +89,13 @@ export function renderReadFirstBannerHtml() {
     </div>`;
 }
 
+/**
+ * Insere a faixa read-first no `body` e liga o botão de entrada.
+ *
+ * @param {Document} doc Documento alvo.
+ * @param {() => void} onEnter Callback do botão "Entrar no Vox".
+ * @returns {void}
+ */
 export function mountReadFirstBanner(doc, onEnter) {
   if (!doc?.body || doc.getElementById(READ_FIRST_BANNER_ID)) return;
   const holder = doc.createElement("div");
@@ -76,6 +105,12 @@ export function mountReadFirstBanner(doc, onEnter) {
   doc.getElementById("btn-read-first-enter")?.addEventListener("click", onEnter);
 }
 
+/**
+ * Remove a faixa read-first se estiver montada.
+ *
+ * @param {Document} [doc=globalThis.document] Documento alvo.
+ * @returns {void}
+ */
 export function removeReadFirstBanner(doc = globalThis.document) {
   doc?.getElementById?.(READ_FIRST_BANNER_ID)?.remove();
 }
@@ -110,6 +145,11 @@ export function installReadFirstGuards({ doc = globalThis.document, hasEntered, 
   );
 }
 
+/**
+ * Zera o flag de guards instalados (somente testes).
+ *
+ * @returns {void}
+ */
 export function __resetReadFirstGuardsForTests() {
   guardsInstalled = false;
 }

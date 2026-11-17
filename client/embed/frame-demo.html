@@ -12,17 +12,6 @@
   <p><strong>Demo:</strong> petição fictícia</p>
   <p>Assinaturas: <span id="n">0</span></p>
   <button type="button" id="sign">Assinar</button>
-  <script>
-    let n = 0;
-    const post = (type, payload) => parent.postMessage({ type, payload }, "*");
-    post("of:ready", { frameId: "demo-petition" });
-    document.getElementById("sign").onclick = () => {
-      n += 1;
-      document.getElementById("n").textContent = String(n);
-      post("of:action", { action: "sign", value: n });
-      post("of:resize", { height: document.body.scrollHeight + 8 });
-    };
-    post("of:resize", { height: document.body.scrollHeight + 8 });
-  </script>
+  <script src="./frame-demo.js"></script>
 </body>
 </html>

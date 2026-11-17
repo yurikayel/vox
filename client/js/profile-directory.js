@@ -1,7 +1,7 @@
 /** Resolve display/avatar/bio: mock, welcome, cards locais, self (V-DIS-06). */
 
 import * as mock from "./mock.js";
-import * as localAccount from "./local-account.js";
+import * as localAccount from "./identity/index.js";
 import { getWelcomeProfile, isWelcomeRouteId } from "./vox-welcome-profile.js";
 import { isBeforeGenesisMs, isTestRouteId } from "./genesis.js";
 import { getLocalIdentityMeta, hasAnyIdentityMeta, pickIdentityMeta } from "./profile-identity-meta.js";

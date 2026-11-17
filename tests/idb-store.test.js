@@ -1,7 +1,7 @@
 import "../tests/setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
-import * as idbStore from "../client/js/idb-store.js";
+import * as idbStore from "../client/js/labs/parado/idb-store.js";
 
 test("idb-store - enfileira e lista itens no outbox com status pending", async () => {
   await idbStore.clearStore(idbStore.STORES.OUTBOX);

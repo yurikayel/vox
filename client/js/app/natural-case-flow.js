@@ -171,7 +171,7 @@ async function tellModerator(self, c, kind, d) {
 }
 
 async function archiveFirm(self, c) {
-  const [cacheNode, localAccount, peers] = await Promise.all([import("../cache-node.js"), import("../local-account.js"), import("../peers.js")]);
+  const [cacheNode, localAccount, peers] = await Promise.all([import("../cache-node.js"), import("../identity/index.js"), import("../peers.js")]);
   const proof = (await cacheNode.getWirePosts()).find((r) => r.type === "vox-link" && r.kind === "confirm" && r.author === self && r.to === c.target && r.sponsor === true);
   if (!proof) throw new Error("Não achei o vínculo de padrinho neste aparelho.");
   const signed = await localAccount.signPayload({ ...natural.buildNaturalHide({ communityId: c.communityId, postId: c.postId, target: c.target, proofRecord: proof }), id: `nat_${c.caseId}` });

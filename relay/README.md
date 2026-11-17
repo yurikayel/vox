@@ -86,6 +86,7 @@ python signaling.py --port 3921
 * **Porta padrão:** `3921` (`ws://127.0.0.1:3921`).
 * **Função estrita:** Apenas troca de ofertas/respostas SDP e candidatos ICE entre pares. O servidor **não armazena conteúdo**, não analisa mensagens e não faz persistência.
 * **Rede descentralizada:** Comunidades, coletivos ou usuários avançados podem rodar seu próprio servidor de sinalização em LAN ou VPS (`wss://seu-dominio/`), configurando a URL customizada diretamente no PWA em `#/settings/network`.
+* **Prazos e mensagens fragmentadas:** o handshake HTTP tem prazo total (`HANDSHAKE_TIMEOUT`, 10 s); depois que o cabeçalho de um quadro chega, o resto precisa chegar em `FRAME_TIMEOUT` (30 s). Esperar o próximo quadro não tem prazo: um par registrado pode ficar quieto. Mensagens fragmentadas (RFC 6455 §5.4) são remontadas por `MessageAssembler`, com teto `MAX_WS_MESSAGE_SIZE` para a soma dos fragmentos; quadro de controle fragmentado, opcode desconhecido ou continuação fora de ordem encerram a conexão. Testes em `relay/test_signaling_robustez.py`.
 
 ---
 

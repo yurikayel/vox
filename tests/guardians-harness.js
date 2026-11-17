@@ -3,11 +3,11 @@
  * guardião tem a própria guarda de pedaços (`onDevice`). As dependências de rede de `app/guardians-flow.js` viram
  * uma caixa de saída em memória.
  */
-import * as guardians from "../client/js/guardians.js";
+import * as guardians from "../client/js/identity/guardians.js";
 import * as flow from "../client/js/app/guardians-flow.js";
-import * as localAccount from "../client/js/local-account.js";
-import * as keyLock from "../client/js/key-lock.js";
-import { openRecoverySecret } from "../client/js/account-phrase.js";
+import * as localAccount from "../client/js/identity/local-account.js";
+import * as keyLock from "../client/js/identity/key-lock.js";
+import { openRecoverySecret } from "../client/js/identity/account-phrase.js";
 
 const heldByDevice = new Map();
 

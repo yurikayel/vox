@@ -1,12 +1,5 @@
 {
  "_leia": "Dívida de documentação medida em 2026-11-11 por scripts/docs-audit.mjs (catraca: só diminui). Cada chave é um arquivo; cada item, um achado: header, jsdoc:<export>, param:<função>:<parâmetro>, returns:<função>, link:<alvo>, orphan. Para pagar: documente e rode `npm run audit:docs -- --prune`. Nunca acrescente item à mão para fazer um achado novo passar: a norma é docs/process/documentacao.md.",
- "client/js/account-backup-wrap.js": [
-  "jsdoc:KIND_PLAIN",
-  "jsdoc:KIND_WRAPPED",
-  "jsdoc:wrapBackup",
-  "jsdoc:unwrapBackup",
-  "jsdoc:peekBackupKind"
- ],
  "client/js/age-gate.js": [
   "jsdoc:AGE_STORAGE_KEY",
   "jsdoc:AGE_CHECKBOX_ID",
@@ -22,7 +15,7 @@
   "param:bindAdultCheck:buttons",
   "returns:bindAdultCheck"
  ],
- "client/js/airgap-webrtc.js": [
+ "client/js/labs/parado/airgap-webrtc.js": [
   "jsdoc:AIRGAP_CHANNEL_NAME",
   "jsdoc:cleanSdp",
   "jsdoc:encodeSdpEnvelope",
@@ -46,274 +39,6 @@
   "returns:verifyParsedDataItem",
   "param:parseAndVerifyDataItem:bytes",
   "returns:parseAndVerifyDataItem"
- ],
- "client/js/app/cantina-gate.js": [
-  "jsdoc:CANTINA_STORAGE_KEY",
-  "returns:hasPassedCantinaGate",
-  "returns:shouldShowCantinaGate"
- ],
- "client/js/app/civic-actions.js": [
-  "returns:loadCivicVotes",
-  "param:castCivicVote:post",
-  "param:castCivicVote:user",
-  "param:castCivicVote:choice",
-  "returns:castCivicVote"
- ],
- "client/js/app/community-channel-flow.js": [
-  "param:assertCanPostTopic:communityId",
-  "param:assertCanPostTopic:deps",
-  "returns:assertCanPostTopic",
-  "param:setPostingMode:communityId",
-  "param:setPostingMode:mode",
-  "param:setPostingMode:deps",
-  "returns:setPostingMode",
-  "param:dropMountedCommunityPage:communityId",
-  "param:dropMountedCommunityPage:doc",
-  "returns:dropMountedCommunityPage",
-  "param:attachChannelHandlers:doc"
- ],
- "client/js/app/compose-poll.js": [
-  "jsdoc:readPollOptions"
- ],
- "client/js/app/compose-stepper.js": [
-  "param:fillComposeReview:form",
-  "jsdoc:goToComposeStep",
-  "param:bindComposeStepper:form"
- ],
- "client/js/app/context.js": [
-  "jsdoc:getActiveUser",
-  "jsdoc:makeShellProps",
-  "jsdoc:shareTopicUnlessQuarantined",
-  "jsdoc:onQuarantinePostClick",
-  "jsdoc:attachQuarantineHandlers",
-  "jsdoc:attachPostShareHandlers"
- ],
- "client/js/app/feedback-flow.js": [
-  "jsdoc:renderFeedbackFormHtml",
-  "jsdoc:renderFeedbackDoneHtml",
-  "param:currentAppVersion:cacheApi",
-  "returns:currentAppVersion",
-  "jsdoc:shareFeedbackList",
-  "jsdoc:openFeedbackFlow"
- ],
- "client/js/app/init.js": [
-  "jsdoc:initGossipListeners",
-  "jsdoc:resolvePostForFrame",
-  "jsdoc:executeFrameAction",
-  "jsdoc:handleFrameActionClick",
-  "jsdoc:openPostEditModal",
-  "jsdoc:handleDeletePost",
-  "jsdoc:initSocialInteractions"
- ],
- "client/js/app/navigation.js": [
-  "jsdoc:setRoute",
-  "jsdoc:route"
- ],
- "client/js/app/onboarding-side-effects.js": [
-  "jsdoc:ensureOnboardingSideEffects"
- ],
- "client/js/app/onboarding.js": [
-  "jsdoc:setOAuthEnrichError",
-  "jsdoc:setOAuthButtonBusy",
-  "jsdoc:reportOAuthEnrichFailure",
-  "jsdoc:runOAuthEnrichSignIn",
-  "jsdoc:checkOAuthEnrichStep",
-  "jsdoc:checkCantinaGate",
-  "returns:hasFullEntry",
-  "jsdoc:checkPactModal"
- ],
- "client/js/app/photo-tag-persist.js": [
-  "jsdoc:persistPhotoTags"
- ],
- "client/js/app/photo-tag-picker.js": [
-  "jsdoc:openPhotoTagPicker",
-  "jsdoc:attachPhotoTagPicker"
- ],
- "client/js/app/photo-tag-ui.js": [
-  "jsdoc:beginTagMode",
-  "jsdoc:togglePins",
-  "jsdoc:attachPhotoTagUi"
- ],
- "client/js/app/post-media-lightbox.js": [
-  "jsdoc:openPostMediaLightbox",
-  "jsdoc:initPostMediaLightbox"
- ],
- "client/js/app/profile-note-ui.js": [
-  "jsdoc:attachProfileNoteHandlers"
- ],
- "client/js/app/read-first.js": [
-  "jsdoc:READ_FIRST_BANNER_ID",
-  "jsdoc:isReadFirstRoute",
-  "jsdoc:submitNeedsEntry",
-  "jsdoc:renderReadFirstBannerHtml",
-  "jsdoc:mountReadFirstBanner",
-  "jsdoc:removeReadFirstBanner",
-  "jsdoc:__resetReadFirstGuardsForTests"
- ],
- "client/js/app/report-dm.js": [
-  "param:sendReportToModerator:user",
-  "param:sendReportToModerator:moderator",
-  "param:sendReportToModerator:rec",
-  "param:sendReportToModerator:deps",
-  "returns:sendReportToModerator",
-  "param:describeReceivedCase:kase",
-  "returns:describeReceivedCase",
-  "param:receiveReportDm:env",
-  "param:receiveReportDm:signed",
-  "param:receiveReportDm:deps",
-  "returns:receiveReportDm"
- ],
- "client/js/app/report-flow.js": [
-  "jsdoc:renderReportFormHtml",
-  "jsdoc:renderReportDoneHtml",
-  "param:resolveModeratorRoute:postId",
-  "param:resolveModeratorRoute:communityIdHint",
-  "param:resolveModeratorRoute:#3",
-  "returns:resolveModeratorRoute",
-  "jsdoc:openReportFlow",
-  "param:attachReportHandlers:doc"
- ],
- "client/js/app/report-review-flow.js": [
-  "jsdoc:decideReview",
-  "jsdoc:attachReviewHandlers"
- ],
- "client/js/app/repost-ui.js": [
-  "jsdoc:toastRepostResult",
-  "jsdoc:handleRepostClick"
- ],
- "client/js/app/route-parse.js": [
-  "jsdoc:parseRoute"
- ],
- "client/js/app/route.js": [
-  "jsdoc:routeImpl",
-  "jsdoc:wireRoute",
-  "jsdoc:setupHashchangeListener"
- ],
- "client/js/app/screens-ajuda-teste.js": [
-  "jsdoc:showAjudaTeste"
- ],
- "client/js/app/screens-community.js": [
-  "jsdoc:resolveCommunityMetadata",
-  "jsdoc:checkCommunityMembership",
-  "jsdoc:buildCommunityRecentPeople",
-  "jsdoc:dispatchCommunityModAction",
-  "jsdoc:showCommunity",
-  "jsdoc:attachCommunityListingHandlers",
-  "jsdoc:handleListingStatusUpdate",
-  "jsdoc:handleListingRetract",
-  "jsdoc:resolveTopicContent",
-  "jsdoc:showTopic",
-  "jsdoc:showProposal",
-  "jsdoc:fetchProposalData",
-  "jsdoc:loadProposalVotes",
-  "param:castGovernanceVote:proposal",
-  "param:castGovernanceVote:user",
-  "param:castGovernanceVote:choice",
-  "jsdoc:attachProposalVotingHandlers",
-  "param:loadVoteItems:user",
-  "returns:loadVoteItems",
-  "jsdoc:showVote"
- ],
- "client/js/app/screens-compose.js": [
-  "jsdoc:showComposeCommunity",
-  "jsdoc:showComposeTopic",
-  "jsdoc:showComposeListing",
-  "jsdoc:handleComposeListingSubmit",
-  "jsdoc:showComposeProposal",
-  "jsdoc:attachComposeProposalHandlers",
-  "jsdoc:publishProposal",
-  "jsdoc:showComposeReply",
-  "jsdoc:persistLocalReply",
-  "jsdoc:loadInlineReplies",
-  "jsdoc:setCommentOpen",
-  "jsdoc:closeOtherCommentPanels",
-  "jsdoc:fillCommentFeed",
-  "jsdoc:togglePostComments",
-  "jsdoc:appendInlineReply",
-  "jsdoc:appendNestedInlineReply",
-  "jsdoc:toggleCommentReplyComposer",
-  "jsdoc:onNestedCommentReplySubmit",
-  "jsdoc:bumpReplyCount",
-  "jsdoc:onInlineReplySubmit"
- ],
- "client/js/app/screens-dm.js": [
-  "jsdoc:pollInboxMessages",
-  "jsdoc:showDmList",
-  "jsdoc:handleSendDmSubmit",
-  "jsdoc:showDmThread",
-  "jsdoc:initDmListeners"
- ],
- "client/js/app/screens-guided.js": [
-  "param:applyNetworkWizardChoices:current",
-  "param:applyNetworkWizardChoices:#2",
-  "returns:applyNetworkWizardChoices",
-  "jsdoc:showNetworkWizard",
-  "jsdoc:showBackupWizard",
-  "jsdoc:showWalletWizard"
- ],
- "client/js/app/screens-home.js": [
-  "jsdoc:attachQuoteExternalHandlers",
-  "jsdoc:attachPostOverlayActionMenuHandlers",
-  "jsdoc:filterClosedCommunityTopics",
-  "jsdoc:showHome",
-  "jsdoc:attachBskyManagerHandlers",
-  "jsdoc:showCommunities",
-  "jsdoc:showTagFeed"
- ],
- "client/js/app/screens-labs.js": [
-  "jsdoc:showLabsFrames",
-  "jsdoc:showLabsMofn"
- ],
- "client/js/app/screens-network.js": [
-  "jsdoc:bindNetworkSettingsButtons",
-  "jsdoc:showNetworkSettings",
-  "jsdoc:bindStewardWizardForm",
-  "jsdoc:showStewardWizard",
-  "jsdoc:syncIdentity",
-  "jsdoc:showLinkedAccounts",
-  "jsdoc:bindLinkedAccountsUi"
- ],
- "client/js/app/screens-people.js": [
-  "jsdoc:showPeople",
-  "jsdoc:showConnect"
- ],
- "client/js/app/screens-profile.js": [
-  "jsdoc:invalidateProfileCache",
-  "jsdoc:showProfile",
-  "jsdoc:bindProfileButtons",
-  "jsdoc:showHandleLookup",
-  "jsdoc:showWallet",
-  "jsdoc:showPixLookup"
- ],
- "client/js/app/screens-status.js": [
-  "jsdoc:showStatus"
- ],
- "client/js/app/screens-voxpedia.js": [
-  "jsdoc:showVoxpedia"
- ],
- "client/js/app/vote-confirm.js": [
-  "jsdoc:voteChoiceLabel",
-  "param:renderVoteConfirmHtml:proposal",
-  "param:renderVoteConfirmHtml:choice",
-  "returns:renderVoteConfirmHtml",
-  "param:confirmGovernanceVote:proposal",
-  "param:confirmGovernanceVote:choice"
- ],
- "client/js/app/vox-link-flow.js": [
-  "param:acceptInvite:#1",
-  "param:acceptInvite:deps",
-  "returns:acceptInvite",
-  "param:confirmPendingInvites:deps",
-  "returns:confirmPendingInvites",
-  "param:startVoxLinks:deps",
-  "param:mountInviteCard:main",
-  "param:mountInviteCard:#2",
-  "param:mountInviteCard:deps"
- ],
- "client/js/app/zap-modal.js": [
-  "jsdoc:getOrCreateZapModalContainer",
-  "jsdoc:openZapModal",
-  "jsdoc:bindZapModalEvents"
  ],
  "client/js/app-feedback.js": [
   "jsdoc:FEEDBACK_STORAGE_KEY",
@@ -351,7 +76,7 @@
   "param:calculateCrc16:str",
   "returns:calculateCrc16"
  ],
- "client/js/bridging-rank.js": [
+ "client/js/labs/parado/bridging-rank.js": [
   "jsdoc:MIN_VOTERS_FOR_BRIDGING",
   "jsdoc:calculateClusterAgreeRate",
   "jsdoc:computeBridgingScore",
@@ -425,37 +150,6 @@
   "jsdoc:buildCacheManifestTags",
   "jsdoc:extractCacheManifestMeta"
  ],
- "client/js/cache-node.js": [
-  "header",
-  "jsdoc:getCachedTx",
-  "jsdoc:setCachedTx",
-  "jsdoc:getCacheStats",
-  "jsdoc:clearCache",
-  "jsdoc:enforceMaxCacheSize",
-  "jsdoc:saveDmMessage",
-  "jsdoc:getDmMessages",
-  "jsdoc:getDmConversations",
-  "jsdoc:deleteDmThread",
-  "jsdoc:saveTombstone",
-  "jsdoc:getTombstone",
-  "jsdoc:getAllTombstones",
-  "jsdoc:getPostRecord",
-  "jsdoc:registerCentralMemorySink",
-  "jsdoc:invalidateReplyCountsCache",
-  "jsdoc:saveLocalPost",
-  "jsdoc:getLocalPost",
-  "jsdoc:deleteLocalPost",
-  "jsdoc:getLocalPosts",
-  "jsdoc:getAllLocalPosts",
-  "returns:getWirePosts",
-  "jsdoc:getReplyCountsMap",
-  "returns:getReplyActivityMap",
-  "jsdoc:getLocalCommunities",
-  "param:isCommunityUpdateAcceptable:update",
-  "returns:isCommunityUpdateAcceptable",
-  "jsdoc:clearLocalPosts",
-  "jsdoc:getPostsByTag"
- ],
  "client/js/central-memory-hydrate.js": [
   "jsdoc:itemTimestamp",
   "param:hydrateBlobs:blobs",
@@ -489,7 +183,7 @@
   "jsdoc:buildChatSummaryCopy",
   "jsdoc:parseChatTranscriptToMarkdown"
  ],
- "client/js/chunked-transfer.js": [
+ "client/js/labs/parado/chunked-transfer.js": [
   "jsdoc:DEFAULT_CHUNK_SIZE",
   "jsdoc:MAX_BUFFERED_AMOUNT",
   "jsdoc:computeChecksum",
@@ -497,7 +191,7 @@
   "jsdoc:ChunkReassembler",
   "jsdoc:sendChunksWithBackpressure"
  ],
- "client/js/civic-credential.js": [
+ "client/js/labs/parado/civic-credential.js": [
   "jsdoc:CREDENTIAL_SCHEMA_VERSION",
   "jsdoc:issueCivicCredential",
   "jsdoc:verifyCivicCredential",
@@ -736,14 +430,6 @@
   "param:flushOutbox:d",
   "returns:flushOutbox"
  ],
- "client/js/dom-delegates.js": [
-  "jsdoc:handleImageFallback",
-  "jsdoc:handleDelegatedClick",
-  "param:openFeedbackOnClick:target",
-  "param:openFeedbackOnClick:load",
-  "returns:openFeedbackOnClick",
-  "jsdoc:installDomDelegates"
- ],
  "client/js/electoral-period.js": [
   "jsdoc:isInElectoralWindow",
   "jsdoc:isElectoralModeActive"
@@ -910,7 +596,7 @@
   "jsdoc:meshDiscoverableHint",
   "jsdoc:peopleSectionMesh"
  ],
- "client/js/idb-store.js": [
+ "client/js/labs/parado/idb-store.js": [
   "jsdoc:DB_NAME",
   "jsdoc:DB_VERSION",
   "jsdoc:STORES",
@@ -928,7 +614,7 @@
   "jsdoc:getKeyValue",
   "jsdoc:clearStore"
  ],
- "client/js/identity-link.js": [
+ "client/js/labs/parado/identity-link.js": [
   "jsdoc:IDENTITY_LINK_TYPE",
   "jsdoc:__resetIdentityLinksForTests",
   "jsdoc:saveVerifiedIdentityLink",
@@ -956,55 +642,7 @@
   "param:deleteSealed:baseUrl",
   "returns:deleteSealed"
  ],
- "client/js/inline-composer.js": [
-  "header",
-  "jsdoc:syncInlineComposerUi",
-  "jsdoc:collapseInlineComposer",
-  "jsdoc:populateCommunityDatalist",
-  "jsdoc:expandInlineComposer",
-  "jsdoc:broadcastAndPersistInlineTopic",
-  "jsdoc:attachInlineComposerHandlers"
- ],
- "client/js/key-at-rest.js": [
-  "param:sealKeysAtRest:storage",
-  "returns:sealKeysAtRest",
-  "returns:startKeysAtRest"
- ],
- "client/js/key-lock.js": [
-  "param:signingKey:atRest",
-  "returns:signingKey",
-  "param:dmPrivateKey:atRest",
-  "returns:dmPrivateKey",
-  "param:lockKeys:#1",
-  "param:lockKeys:passphrase",
-  "returns:lockKeys",
-  "param:openLockedCopy:routeId",
-  "param:openLockedCopy:passphrase",
-  "returns:openLockedCopy",
-  "param:forgetLockedAccount:routeId",
-  "jsdoc:__resetKeyLockForTests"
- ],
- "client/js/keystore.js": [
-  "jsdoc:SEALED_TAG",
-  "jsdoc:LOCKED_TAG",
-  "jsdoc:KeystoreUnavailableError",
-  "param:loadKey:id",
-  "returns:loadKey",
-  "param:storeKey:id",
-  "param:storeKey:key",
-  "returns:storeKey",
-  "jsdoc:removeKey",
-  "returns:getDeviceKey",
-  "jsdoc:isSealed",
-  "jsdoc:isLocked",
-  "param:sealJson:value",
-  "returns:sealJson",
-  "param:openSealed:value",
-  "returns:openSealed",
-  "returns:requestPersistentStorage",
-  "jsdoc:__resetKeystoreForTests"
- ],
- "client/js/kit-genesis.js": [
+ "client/js/labs/parado/kit-genesis.js": [
   "jsdoc:deepFreeze",
   "jsdoc:KIT_BAIRRO",
   "jsdoc:KIT_SINDICATO",
@@ -1037,41 +675,6 @@
   "jsdoc:renderMofnLab",
   "jsdoc:wireMofnLab"
  ],
- "client/js/linked-accounts.js": [
-  "jsdoc:LINKED_ACCOUNTS_KEY",
-  "jsdoc:AUTO_REPLICATE_KEY",
-  "jsdoc:GENERAL_WEBHOOK_KEY",
-  "jsdoc:BSKY_DEFAULT_PDS",
-  "jsdoc:SUPPORTED_NETWORKS",
-  "jsdoc:normalizeHandle",
-  "param:validateHandle:netId",
-  "param:validateHandle:raw",
-  "param:sanitizeLinkedAccounts:accounts",
-  "returns:sanitizeLinkedAccounts",
-  "jsdoc:loadLinkedAccounts",
-  "jsdoc:saveLinkedAccount",
-  "jsdoc:removeLinkedAccount",
-  "jsdoc:isAutoReplicationEnabled",
-  "jsdoc:setAutoReplicationEnabled",
-  "jsdoc:getGeneralWebhookUrl",
-  "jsdoc:setGeneralWebhookUrl",
-  "jsdoc:buildReplicationPayload",
-  "jsdoc:postToBlueskyAtProto",
-  "jsdoc:INTENT_NETWORK_META",
-  "jsdoc:getConnectedIntentTargets",
-  "jsdoc:hasDirectReplicationTargets",
-  "jsdoc:dispatchAutoReplication",
-  "jsdoc:resolveNetworkProfileUrl",
-  "jsdoc:testLinkedAccount",
-  "param:confirmLinkedAccount:netId",
-  "returns:confirmLinkedAccount",
-  "jsdoc:getNetworkAuthUrl",
-  "param:getSuggestedHandle:netId",
-  "returns:getSuggestedHandle",
-  "param:connectWithOneClick:netId",
-  "param:connectWithOneClick:inputHandle",
-  "returns:connectWithOneClick"
- ],
  "client/js/listing-ui.js": [
   "jsdoc:filterListingsForGossipRetract",
   "param:prepareListingsForTab:listings",
@@ -1100,34 +703,6 @@
   "jsdoc:normalizeListingStatus",
   "jsdoc:formatListingStatus",
   "jsdoc:validateListingInput"
- ],
- "client/js/local-account.js": [
-  "param:storeActiveAccount:acc",
-  "returns:storeActiveAccount",
-  "jsdoc:ensureLocalAccount",
-  "jsdoc:getRouteId",
-  "jsdoc:getCachedRouteIdSync",
-  "jsdoc:getDisplayName",
-  "jsdoc:setDisplayName",
-  "jsdoc:getProfileEnrichment",
-  "jsdoc:setProfileEnrichment",
-  "jsdoc:clearProfileEnrichment",
-  "jsdoc:getPixKey",
-  "jsdoc:setPixKey",
-  "jsdoc:clearPixKey",
-  "jsdoc:signPayload",
-  "jsdoc:getMeshDiscoverable",
-  "jsdoc:setMeshDiscoverable",
-  "returns:wipeLocalAccount",
-  "jsdoc:syncActiveAccountToVault",
-  "jsdoc:deduplicateVaultAccounts",
-  "jsdoc:findVaultAccountByOAuth",
-  "jsdoc:isAccountDisposable",
-  "jsdoc:listVaultAccountsSync",
-  "jsdoc:listVaultAccounts",
-  "jsdoc:switchActiveAccount",
-  "jsdoc:createAdditionalAccount",
-  "jsdoc:removeVaultAccount"
  ],
  "client/js/media-blob.js": [
   "header",
@@ -1197,39 +772,6 @@
  "client/js/mesh-profile.js": [
   "jsdoc:syncMeshProfileCard"
  ],
- "client/js/moderation.js": [
-  "header",
-  "jsdoc:fetchModActions",
-  "jsdoc:parseModerators",
-  "jsdoc:isModerator",
-  "jsdoc:applyFilters",
-  "param:filterTopicForViewer:topic",
-  "param:filterTopicForViewer:actions",
-  "param:filterTopicForViewer:communityOwner",
-  "param:filterTopicForViewer:rawModerators",
-  "param:filterTopicForViewer:viewer",
-  "returns:filterTopicForViewer",
-  "jsdoc:QUARANTINE_STORAGE_KEY",
-  "jsdoc:QUARANTINE_ACTION_LABEL",
-  "jsdoc:QUARANTINE_HINT",
-  "jsdoc:getBlockedUsers",
-  "jsdoc:isUserBlocked",
-  "jsdoc:blockUser",
-  "jsdoc:unblockUser",
-  "jsdoc:getMutedUsers",
-  "jsdoc:isUserMuted",
-  "jsdoc:muteUser",
-  "jsdoc:unmuteUser",
-  "jsdoc:shouldDropGossip",
-  "jsdoc:getQuarantinedPostIds",
-  "jsdoc:isPostQuarantined",
-  "jsdoc:canEchoPost",
-  "jsdoc:quarantinePost",
-  "jsdoc:unquarantinePost",
-  "jsdoc:filterFeedPosts",
-  "jsdoc:exportModerationBundle",
-  "jsdoc:importModerationBundle"
- ],
  "client/js/new-key-guard.js": [
   "jsdoc:NEW_KEY_AGE_MS",
   "jsdoc:POW_BITS",
@@ -1256,28 +798,28 @@
   "param:attachPowIfWanted:author",
   "returns:attachPowIfWanted"
  ],
- "client/js/node-health-api.js": [
+ "client/js/labs/parado/node-health-api.js": [
   "jsdoc:pingNodeEndpoint",
   "jsdoc:pingNodeList"
  ],
- "client/js/node-health-evaluator.js": [
+ "client/js/labs/parado/node-health-evaluator.js": [
   "jsdoc:LATENCY_THRESHOLDS",
   "jsdoc:classifyNodeStatus",
   "jsdoc:selectBestHealthyNode"
  ],
- "client/js/node-health-model.js": [
+ "client/js/labs/parado/node-health-model.js": [
   "jsdoc:NODE_STATUS",
   "jsdoc:createNodeHealthRecord",
   "jsdoc:validateNodeHealthRecord"
  ],
- "client/js/node-health-state.js": [
+ "client/js/labs/parado/node-health-state.js": [
   "jsdoc:getNodeHealthState",
   "jsdoc:updateNodeHealthRecord",
   "jsdoc:updateBatchNodeHealth",
   "jsdoc:subscribeNodeHealth",
   "jsdoc:clearNodeHealthState"
  ],
- "client/js/node-health-ux.js": [
+ "client/js/labs/parado/node-health-ux.js": [
   "jsdoc:getNodeHealthLabelPtBr",
   "jsdoc:getNodeHealthAriaLabel",
   "jsdoc:formatLatency"
@@ -1332,51 +874,6 @@
   "jsdoc:hasSkippedOAuth",
   "jsdoc:hasCompletedOAuthStep"
  ],
- "client/js/oauth-vault.js": [
-  "returns:runLegacyVaultMigration",
-  "jsdoc:LEGACY_VAULT_NOTICE",
-  "param:startVaultMigration:toast",
-  "jsdoc:restoreOrBindOAuthIdentity",
-  "jsdoc:restoreOrBindGoogleIdentity",
-  "jsdoc:restoreOrBindMetaIdentity"
- ],
- "client/js/open-frames-host.js": [
-  "jsdoc:OF_HOST_MESSAGE_TYPES",
-  "jsdoc:handleFrameMessage",
-  "jsdoc:attachOpenFrameHost"
- ],
- "client/js/peer-sync.js": [
-  "jsdoc:SYNC_INV",
-  "jsdoc:SYNC_WANT",
-  "jsdoc:LEGACY_FALLBACK_MS",
-  "jsdoc:SYNC_LIMITS",
-  "param:shortHash:text",
-  "returns:shortHash",
-  "param:selectShared:#1",
-  "returns:selectShared",
-  "param:buildInventory:#1",
-  "returns:buildInventory",
-  "jsdoc:inventoryMessage",
-  "param:parseInventory:msg",
-  "returns:parseInventory",
-  "param:computeWants:remote",
-  "param:computeWants:local",
-  "returns:computeWants",
-  "jsdoc:parseWant",
-  "param:messagesForWant:want",
-  "param:messagesForWant:inv",
-  "returns:messagesForWant",
-  "param:attachBlobs:messages",
-  "param:attachBlobs:loadBlob",
-  "returns:attachBlobs",
-  "param:sendFullState:sendFn",
-  "param:sendFullState:shared",
-  "param:sendFullState:fromPeer",
-  "param:sendFullState:loadBlob",
-  "param:createPeerSync:deps",
-  "returns:createPeerSync",
-  "jsdoc:defaultPeerSyncDeps"
- ],
  "client/js/peers-blob-affinity.js": [
   "header",
   "jsdoc:isBlobPeerSoftPriorityEnabled",
@@ -1401,49 +898,7 @@
   "returns:isProfileCardSeen",
   "jsdoc:markProfileCardSeen",
   "param:seenStamp:item",
-  "returns:seenStamp",
-  "param:applyDirectoryProfileCard:card"
- ],
- "client/js/peers.js": [
-  "header",
-  "jsdoc:onDirectMessage",
-  "jsdoc:onGossipPost",
-  "jsdoc:onGossipTombstone",
-  "jsdoc:CELLULAR_CAP_MAX_MB",
-  "jsdoc:clampCellularCapMb",
-  "jsdoc:getPeerSettings",
-  "jsdoc:savePeerSettings",
-  "jsdoc:getPeerMetrics",
-  "jsdoc:getDailyUsage",
-  "jsdoc:recordBytesServed",
-  "param:canServeNow:settings",
-  "param:canServeNow:onWifi",
-  "param:canServeNow:usage",
-  "returns:canServeNow",
-  "jsdoc:isDailyCapReached",
-  "jsdoc:isWifiOrUnlimited",
-  "jsdoc:requestNotificationPermission",
-  "returns:collectUserCommunityIds",
-  "jsdoc:isTxInUserCommunityScope",
-  "jsdoc:handleVoxMessage",
-  "jsdoc:broadcastGossip",
-  "jsdoc:broadcastGossipUpdate",
-  "jsdoc:broadcastGossipDelete",
-  "jsdoc:broadcastProfileCard",
-  "jsdoc:broadcastProfileCardUpdate",
-  "jsdoc:broadcastCacheManifest",
-  "jsdoc:publishSignedCacheManifest",
-  "jsdoc:initPeerChannel",
-  "jsdoc:sendDirectMessageTransport",
-  "jsdoc:announceIdentity",
-  "jsdoc:isAddressConnectedRtc",
-  "jsdoc:getPeerDmPub",
-  "jsdoc:requestTxFromPeers",
-  "jsdoc:getRtcStatus",
-  "jsdoc:getCustomTurnConfig",
-  "jsdoc:saveCustomTurnConfig",
-  "jsdoc:checkDesktopRelay",
-  "jsdoc:fetchFromDesktopRelay"
+  "returns:seenStamp"
  ],
  "client/js/people-index.js": [
   "jsdoc:PEOPLE_SEARCH_OK_METRIC",
@@ -1502,7 +957,7 @@
   "jsdoc:maskForDisplay",
   "jsdoc:PIX_PAYER_CHECK_NOTICE_PT"
  ],
- "client/js/polis.js": [
+ "client/js/labs/parado/polis.js": [
   "jsdoc:VOTE_AGREE",
   "jsdoc:VOTE_DISAGREE",
   "jsdoc:VOTE_PASS",
@@ -1770,7 +1225,7 @@
   "returns:renderTurnOnlyHtml",
   "jsdoc:renderStewardWizard"
  ],
- "client/js/render/node-health-badge.js": [
+ "client/js/labs/parado/node-health-badge.js": [
   "jsdoc:renderNodeHealthBadgeHtml",
   "jsdoc:renderNodeHealthListHtml"
  ],
@@ -1795,14 +1250,6 @@
   "param:renderPhotoTagBarHtml:#2",
   "returns:renderPhotoTagBarHtml",
   "jsdoc:renderPhotoTagLayerHtml"
- ],
- "client/js/render/post-more-actions.js": [
-  "jsdoc:refreshSaveLabel",
-  "jsdoc:refreshSheetExtras",
-  "jsdoc:toggleSaveFromMenu",
-  "jsdoc:republicarFromMenu",
-  "jsdoc:apoiarFromMenu",
-  "jsdoc:marcarFromMenu"
  ],
  "client/js/render/profile-note-bubble.js": [
   "jsdoc:renderProfileNoteBubbleHtml",
@@ -1923,51 +1370,6 @@
   "param:flattenReplyThread:maxDepth",
   "returns:flattenReplyThread"
  ],
- "client/js/report-review.js": [
-  "jsdoc:REVIEW_HIDE_ACTION",
-  "jsdoc:REVIEW_QUEUE_KEY",
-  "jsdoc:REVIEW_DEADLINE_MS",
-  "jsdoc:MAX_PENDING_PER_REPORTER",
-  "jsdoc:REJECTED_STREAK_LIMIT",
-  "jsdoc:REPORT_MAX_AGE_MS",
-  "jsdoc:SIGNED_REPORT_TYPE",
-  "param:buildSignedReportBody:report",
-  "returns:buildSignedReportBody",
-  "param:buildReportDmMessage:report",
-  "returns:buildReportDmMessage",
-  "param:serializeReportDm:signedReport",
-  "param:serializeReportDm:#2",
-  "returns:serializeReportDm",
-  "param:parseReportDm:raw",
-  "returns:parseReportDm",
-  "param:verifySignedReport:signed",
-  "param:verifySignedReport:#2",
-  "returns:verifySignedReport",
-  "jsdoc:listCases",
-  "jsdoc:saveCases",
-  "jsdoc:pendingCountFor",
-  "param:rejectedStreak:cases",
-  "param:rejectedStreak:reporter",
-  "returns:rejectedStreak",
-  "param:decideAutoArchive:#1",
-  "returns:decideAutoArchive",
-  "param:describeSkip:why",
-  "returns:describeSkip",
-  "param:buildCase:signed",
-  "param:buildCase:decision",
-  "param:buildCase:now",
-  "returns:buildCase",
-  "jsdoc:addCase",
-  "param:resolveCasesForPost:postId",
-  "param:resolveCasesForPost:outcome",
-  "param:resolveCasesForPost:#3",
-  "returns:resolveCasesForPost",
-  "jsdoc:openCasesForPost",
-  "jsdoc:openCasesForCommunity",
-  "param:describeDeadline:sinceTs",
-  "param:describeDeadline:now",
-  "returns:describeDeadline"
- ],
  "client/js/repost-draft.js": [
   "jsdoc:REPOST_LABEL",
   "jsdoc:REPOST_HINT",
@@ -2046,9 +1448,7 @@
   "returns:buildAuthorizeUrl",
   "param:startSocialLogin:netId",
   "returns:startSocialLogin",
-  "returns:takePendingCallback",
-  "param:completeSocialLogin:cb",
-  "returns:completeSocialLogin"
+  "returns:takePendingCallback"
  ],
  "client/js/social.js": [
   "jsdoc:isLiked",
@@ -2108,7 +1508,7 @@
   "jsdoc:downloadStoryCardPng",
   "jsdoc:copyStoryCardToClipboard"
  ],
- "client/js/testimonials.js": [
+ "client/js/labs/parado/testimonials.js": [
   "jsdoc:TESTIMONIAL_TYPE",
   "jsdoc:TESTIMONIAL_APPROVAL_TYPE",
   "jsdoc:TESTIMONIAL_STATUS",
@@ -2141,31 +1541,7 @@
   "jsdoc:postData",
   "jsdoc:postBinary"
  ],
- "client/js/vault-crypto.js": [
-  "jsdoc:VAULT_V2_ITERATIONS",
-  "jsdoc:bufferToHex",
-  "jsdoc:hexToBytes",
-  "jsdoc:isV2Record",
-  "param:isRevokedRecord:record",
-  "returns:isRevokedRecord",
-  "jsdoc:legacyLookupKey",
-  "jsdoc:deriveLegacyKey",
-  "jsdoc:decryptLegacyRecord"
- ],
- "client/js/vault-legacy.js": [
-  "jsdoc:LEGACY_VAULT_PREFIX",
-  "jsdoc:listLegacyLookupKeys",
-  "param:revokeLegacyVaults:lookupKeys",
-  "param:revokeLegacyVaults:#2",
-  "returns:revokeLegacyVaults",
-  "param:migrateLegacyVaults:#1",
-  "returns:migrateLegacyVaults",
-  "jsdoc:markLegacyRevokedNotice",
-  "param:consumeLegacyRevokedNotice:storage",
-  "returns:consumeLegacyRevokedNotice",
-  "jsdoc:clearLegacyRevokedNotice"
- ],
- "client/js/vox-identity.js": [
+ "client/js/labs/parado/vox-identity.js": [
   "jsdoc:HEADER_SIZE",
   "jsdoc:SENDER_OFFSET",
   "jsdoc:AUDIENCE_OFFSET",
@@ -2198,38 +1574,6 @@
   "jsdoc:requestStoragePersistence",
   "jsdoc:getCachedIdentity",
   "jsdoc:resetIdentityCacheForTesting"
- ],
- "client/js/vox-link.js": [
-  "jsdoc:VOX_LINK_TYPE",
-  "jsdoc:INVITE_STORAGE_KEY",
-  "jsdoc:INVITE_MAX_USES",
-  "jsdoc:INVITE_TTL_MS",
-  "jsdoc:NEW_ACCOUNT_MS",
-  "jsdoc:isInviteToken",
-  "param:inviteOpen:invite",
-  "param:inviteOpen:now",
-  "returns:inviteOpen",
-  "param:currentInvite:#1",
-  "returns:currentInvite",
-  "jsdoc:peekInvite",
-  "jsdoc:recordConfirmed",
-  "param:buildAccept:#1",
-  "returns:buildAccept",
-  "param:shouldConfirm:accept",
-  "param:shouldConfirm:#2",
-  "returns:shouldConfirm",
-  "param:buildConfirm:accept",
-  "param:buildConfirm:now",
-  "returns:buildConfirm",
-  "param:verifyLink:record",
-  "param:verifyLink:verify",
-  "returns:verifyLink",
-  "param:linkState:records",
-  "param:linkState:#2",
-  "returns:linkState",
-  "param:hasSponsorClaim:records",
-  "param:hasSponsorClaim:me",
-  "returns:hasSponsorClaim"
  ],
  "client/js/vox-welcome-profile.js": [
   "jsdoc:WELCOME_ROUTE_ID",
@@ -2296,42 +1640,7 @@
   "jsdoc:generateNewWallet",
   "jsdoc:ensureWallet"
  ],
- "client/js/webrtc-peer.js": [
-  "jsdoc:loadSignalingConfig",
-  "returns:isTurnOnly",
-  "jsdoc:setTurnOnly",
-  "jsdoc:getCustomTurnConfig",
-  "jsdoc:saveCustomTurnConfig",
-  "jsdoc:onVoxMessage",
-  "jsdoc:onDmMessage",
-  "param:onSignalingHealth:handler",
-  "jsdoc:isSignalingDown",
-  "jsdoc:onPeerIdentity",
-  "jsdoc:announceIdentity",
-  "jsdoc:registerAddressMapping",
-  "jsdoc:listKnownPeerAddresses",
-  "jsdoc:getPeerDmPub",
-  "jsdoc:isAddressConnectedRtc",
-  "jsdoc:getConnectedRtcPeersCount",
-  "jsdoc:listOpenRtcPeerIds",
-  "jsdoc:getSignalingCandidates",
-  "jsdoc:getActiveSignalingIndex",
-  "jsdoc:resetSignalingIndex",
-  "jsdoc:getWebTorrentTrackers",
-  "jsdoc:getNostrRelays",
-  "jsdoc:getDecentralizedSignalingMesh",
-  "jsdoc:getSignalingUrl",
-  "jsdoc:rotateSignalingUrl",
-  "jsdoc:initWebRtc",
-  "jsdoc:disconnectWebRtc",
-  "jsdoc:createRtcConfig",
-  "jsdoc:onPeerConnect",
-  "jsdoc:closePeerConnection",
-  "jsdoc:sendDmRtc",
-  "jsdoc:sendVoxMessage",
-  "jsdoc:broadcastRtcMessage"
- ],
- "client/js/webxdc-crdt.js": [
+ "client/js/labs/parado/webxdc-crdt.js": [
   "jsdoc:EPOCH_COMPACT_THRESHOLD",
   "jsdoc:MAX_SNAPSHOT_BYTES",
   "jsdoc:MAX_CLOCK_DRIFT_MS",
@@ -2344,14 +1653,14 @@
   "jsdoc:createEpochCompactor",
   "jsdoc:coldBootFetch"
  ],
- "client/js/webxdc-host.js": [
+ "client/js/labs/parado/webxdc-host.js": [
   "jsdoc:MAX_INFO_LEN",
   "jsdoc:MAX_SUMMARY_LEN",
   "jsdoc:validateWebxdcUpdate",
   "jsdoc:createSandboxedIframe",
   "jsdoc:createWebxdcHost"
  ],
- "client/js/webxdc-loader.js": [
+ "client/js/labs/parado/webxdc-loader.js": [
   "jsdoc:PRELUDE_SCRIPT",
   "jsdoc:CSP_META_TAG",
   "jsdoc:MIME_TYPES",
