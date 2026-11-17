@@ -4,7 +4,7 @@
 
 // O Service Worker atua no cache offline do shell e notificações de status, sem abrir WebRTC.
 
-const CACHE_NAME = "vox-pwa-v7.133-real-network-audio-video-upload";
+const CACHE_NAME = "vox-pwa-v7.134-real-network-audio-video-upload";
 
 const SHELL_ASSETS = [
 
@@ -564,6 +564,8 @@ function handleAppShellFetch(event) {
 }
 
 self.addEventListener("fetch", (event) => {
+  // Só GET passa pelo cache: POST/PUT/DELETE vão direto à rede (o Cache API não guarda nem casa outros métodos).
+  if (event.request.method !== "GET") return;
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
 
