@@ -1,6 +1,6 @@
 # ADR-034: Raiz e subchaves por aparelho — perder o celular é revogar uma subchave, não perder a conta
 
-**Status:** accepted as direction (2026-11-17, pelo mantenedor; nada implementado; RFC 0002 e revisão externa de cripto, LAN-18, antes de qualquer código; identidade congelada desde 17/11) · **Revisado:** 2026-11-17 (portões explícitos) · **Relacionados:** [ADR-032 §3.6](./032-login-perene-a-conta-nasce-com-saida.md#36-fora-desta-decisão-próximo-adr) (de onde este ADR vem), [ADR-026](./026-chaves-em-repouso-trava-depois-do-backup.md) (conta travada), [spec dos guardiões](../specs/guardioes-v0.md) §10, [THREAT-MODEL](../THREAT-MODEL.md) (T24, T25), [ROADMAP](../ROADMAP.md) (PM-13, PM-101, REV-14, LAN-18), [brainstorm 2027 §3 F](../brainstorms/brainstorm-roadmap-2027.md#f-identidade-e-chaves)
+**Status:** aceito como direção (2026-11-17, pelo mantenedor; nada implementado; RFC 0002 e revisão externa de cripto, LAN-18, antes de qualquer código; identidade congelada desde 17/11) · **Revisado:** 2026-11-17 (portões explícitos) · **Relacionados:** [ADR-032 §3.6](./032-login-perene-a-conta-nasce-com-saida.md#36-fora-desta-decisão-próximo-adr) (de onde este ADR vem), [ADR-026](./026-chaves-em-repouso-trava-depois-do-backup.md) (conta travada), [spec dos guardiões](../specs/guardioes-v0.md) §10, [THREAT-MODEL](../THREAT-MODEL.md) (T24, T25), [ROADMAP](../ROADMAP.md) (PM-13, PM-101, REV-14, LAN-18), [brainstorm 2027 §3 F](../brainstorms/brainstorm-roadmap-2027.md#f-identidade-e-chaves)
 
 ## 1. Contexto
 
