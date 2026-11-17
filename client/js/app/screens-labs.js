@@ -15,13 +15,15 @@ export async function showLabsFrames() {
     <a class="back-link" href="#/voxpedia">← Voxpedia</a>
     <div class="card">
       <h2>Open Frames (lab)</h2>
-      <p class="desc">Iframe sandbox same-origin — postMessage whitelist (<code>of:ready</code>, <code>of:resize</code>, <code>of:action</code>).</p>
+      <p class="desc">Iframe sandbox em origem opaca (sem <code>allow-same-origin</code>): o host só aceita mensagens da janela do próprio iframe, em lista fechada (<code>of:ready</code>, <code>of:resize</code>, <code>of:action</code>).</p>
       <div id="labs-frame-host" style="margin-top:0.75rem;"></div>
+      <p class="meta" id="labs-frame-log" aria-live="polite">Nenhuma ação recebida ainda.</p>
     </div>`;
   const host = main.querySelector("#labs-frame-host");
   const iframe = document.createElement("iframe");
   iframe.title = "Open Frame demo";
   iframe.sandbox = "allow-scripts allow-forms";
+  iframe.referrerPolicy = "no-referrer";
   iframe.src = "./embed/frame-demo.html";
   iframe.style.width = "100%";
   iframe.style.border = "1px solid var(--border)";
@@ -31,7 +33,8 @@ export async function showLabsFrames() {
   openFramesHost.attachOpenFrameHost(host, iframe, {
     allowedOrigins: origin ? [origin] : [],
     onAction: (payload) => {
-      console.info("[open-frame-action]", payload);
+      const log = main.querySelector("#labs-frame-log");
+      if (log) log.textContent = `Ação recebida do frame: ${String(payload?.action || "?")} (${String(payload?.value ?? "")})`;
     },
   });
 }
