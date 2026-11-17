@@ -6,6 +6,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### ADR-034 proposto: raiz e subchaves por aparelho
+- Desenho para perder o celular sem perder a conta: a chave de assinatura de hoje vira a raiz (o `vx_…` não muda), cada aparelho assina com uma subchave delegada, e a raiz publica um registro de chaves com as revogadas. Nada de código; a forma assinada nova pede a RFC 0002 e a revisão externa de cripto (LAN-18). Atualizados ADR-032 §3.6, DECISOES (A-22), ROADMAP (PM-13) e o índice de ADRs.
+
 ### Correção: o QR do Perfil para outro aparelho volta a funcionar
 - **"📲 QR Code para Celular" sempre falhava:** o link do cofre tinha uns 251 bytes no endereço oficial, e o codificador de QR ia só até a versão 9 (230 bytes). Agora o QR leva um cofre mínimo: a conta, a semente da frase de 12 palavras e o nome, se couber, cifrados só pela senha (`buildQrSyncRecord`). O cofre completo continua gravado e o link continua levando tudo; Pix e o resto chegam por eles. Conta de antes da frase não tem semente e recebe o motivo em vez de um QR que não abre.
 - **Codificador de QR:** ganha a versão 11 (321 bytes, ECC L, 4 blocos, contagem de 16 bits). A versão 10 fica de fora, porque em ECC L ela mistura blocos de dois tamanhos.
