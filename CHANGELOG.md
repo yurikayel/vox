@@ -6,6 +6,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Documentação: ADR-039, Rust por fases (proposto)
+- [ADR-039](./docs/adr/039-rust-por-fases.md) (**proposed**): mais Rust com o tempo, onde ganha em segurança, em 6 fases (fundação de CI, `vox-core` de referência, Argon2id do cofre, troca da cripto própria e ML-KEM, relay, nó nativo). A chave privada P-256 do navegador continua no WebCrypto não exportável; WebAssembly só para o que o WebCrypto não tem. Decisão A-27 em [DECISOES.md](./docs/DECISOES.md). Sem código e sem bump de SW.
+
 ### Documentação: emenda da revisão do ADR-038
 - `about` do manifesto é só o texto longo (apresentação, regras, links); título, descrição curta, foto, categoria e modo de publicação continuam só no `community_update`, para não haver duas fontes.
 - O `community_update` passa a seguir o mesmo cálculo de versão do manifesto quando o v1 for implementado (futuro limitado a 10 minutos, sem volta): hoje uma atualização datada no futuro distante trava título e descrição. Testes esperados acrescentados na spec v1 §9.
