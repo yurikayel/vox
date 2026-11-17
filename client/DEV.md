@@ -409,7 +409,7 @@ O PWA traz engajamento visual com layouts distintos por tipo de publicação:
   - **💬 Comentar:** O botão expande um dropdown `.post-comments` **no próprio card** (`aria-expanded` / `aria-controls`); a thread `#/t/:id` permanece só como atalho "Abrir thread".
   - **↗ Compartilhar:** Disparo do `navigator.share` nativo ou cópia direta do link com toast de confirmação.
   - **🔖 Salvar:** Marcação de posts favoritos com feedback em toast.
-- **Cache Offline Completo:** Fotos do tour e da porta da cantina entram no shell do Service Worker (cache vigente `vox-pwa-v6.1-cantina-baked-balloons`). Copy dos 10 posts em 1ª pessoa falada; fotos de pessoas em contexto (não stock genérico).
+- **Cache Offline Completo:** Fotos do tour e da porta da cantina entram no shell do Service Worker (versão do cache em [release-metadata.json](../docs/release-metadata.json)). Copy dos 10 posts em 1ª pessoa falada; fotos de pessoas em contexto (não stock genérico).
 
 ---
 
@@ -449,7 +449,7 @@ Para blindar o Vox contra fazendas de automação sem recorrer a captchas corpor
    - Overlay sem H2 "Porta da Cantina", sem quote duplicada e sem subtítulo itálico. O diálogo usa `aria-label="Porta da Cantina"`; o `alt` da imagem descreve os dois balões pintados.
    - Acionamento em primeiro acesso armazenado em `localStorage` (`vox-cantina-v1`).
    - Botão de ação único: `Entrar — sou humano`, com esclarecimento expansível sobre a minimização de dados do Vox.
-   - Cache do Service Worker: `vox-pwa-v6.1-cantina-baked-balloons` (`./js/hashtags.js` permanece no shell).
+   - Cache do Service Worker: ver `cache_name` em [release-metadata.json](../docs/release-metadata.json) (`./js/hashtags.js` permanece no shell).
 2. **Pacto Vox (`vox-pact-accepted`):**
    - Apresentado imediatamente após a passagem pela Porta da Cantina.
    - Apresenta os três pilares cooperativos: *Seus dados são seus*, *Rede cooperativa* e *Controle total*.
