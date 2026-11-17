@@ -86,7 +86,7 @@ export function receivedClaims(avisoId, storage = globalThis.localStorage) {
 async function defaultSendDeps() {
   const [gql, peers, cryptoDm, cacheNode, localAccount, wire] = await Promise.all([
     import("../graphql.js"), import("../peers.js"), import("../crypto-dm.js"),
-    import("../cache-node.js"), import("../local-account.js"), import("./dm-wire.js"),
+    import("../cache-node.js"), import("../identity/index.js"), import("./dm-wire.js"),
   ]);
   return {
     getDmPub: async (addr) => gql.getCachedUserDmPub(addr) || peers.getPeerDmPub(addr) || (await gql.fetchUserDmPub(addr)),
@@ -132,7 +132,7 @@ export async function sendRoleClaim(user, aviso, opts = {}, deps = null) {
 
 async function defaultReceiveDeps() {
   const [cacheNode, localAccount, context] = await Promise.all([
-    import("../cache-node.js"), import("../local-account.js"), import("./context.js"),
+    import("../cache-node.js"), import("../identity/index.js"), import("./context.js"),
   ]);
   return {
     verify: (signed) => localAccount.verifyPayload(signed),

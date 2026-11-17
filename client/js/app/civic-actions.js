@@ -1,11 +1,15 @@
 /** @file Interações cívicas no feed: posicionamento e enquete assinados (`civic-vote`). */
 import * as cacheNode from "../cache-node.js";
-import * as localAccount from "../local-account.js";
+import * as localAccount from "../identity/index.js";
 import * as peers from "../peers.js";
 import * as share from "../share.js";
 import { classifyCivicPost, isValidCivicChoice } from "../civic-post.js";
 
-/** Votos cívicos guardados neste aparelho (próprios e recebidos por gossip). */
+/**
+ * Votos cívicos guardados neste aparelho (próprios e recebidos por gossip).
+ *
+ * @returns {Promise<object[]>} Posts locais do tipo `civic-vote`.
+ */
 export async function loadCivicVotes() {
   return cacheNode.getLocalPosts({ type: "civic-vote" }).catch(() => []);
 }
@@ -13,6 +17,11 @@ export async function loadCivicVotes() {
 /**
  * Assina e propaga um voto cívico. O id é determinístico por (post, autor): votar de novo
  * substitui o voto anterior (gossip update com `editedAt`), então vale 1 voto por pessoa.
+ *
+ * @param {object} post Post cívico alvo.
+ * @param {string} user Identidade ativa no aparelho.
+ * @param {string} choice Rótulo da opção escolhida.
+ * @returns {Promise<object>} Post `civic-vote` assinado e salvo localmente.
  */
 export async function castCivicVote(post, user, choice) {
   const classification = classifyCivicPost(post);

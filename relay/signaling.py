@@ -12,6 +12,7 @@ import base64
 import hashlib
 import struct
 import threading
+import time
 import socketserver
 
 WS_GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
@@ -19,6 +20,12 @@ DEFAULT_HOST = "0.0.0.0"
 DEFAULT_PORT = 3921
 MAX_WS_FRAME_SIZE = 1024 * 1024  # 1 MB max frame size
 MAX_HEADER_SIZE = 64 * 1024  # 64 KB max handshake headers
+MAX_WS_MESSAGE_SIZE = MAX_WS_FRAME_SIZE  # teto da mensagem remontada (todos os fragmentos juntos)
+HANDSHAKE_TIMEOUT = 10.0  # segundos para o handshake HTTP chegar inteiro
+FRAME_TIMEOUT = 30.0  # segundos para o resto de um quadro depois do cabeçalho
+CONTROL_OPCODES = frozenset({0x8, 0x9, 0xA})
+DATA_OPCODES = frozenset({0x0, 0x1, 0x2})  # continuação, texto, binário
+MAX_CONTROL_PAYLOAD = 125
 
 
 def compute_accept_key(sec_key: str) -> str:
@@ -67,32 +74,80 @@ def parse_frame_length(sock, second_byte: int):
     return length
 
 
-def read_ws_frame(sock):
-    header = read_exact(sock, 2)
-    if not header:
-        return None, None
-    first_byte, second_byte = header[0], header[1]
-    opcode = first_byte & 0x0F
-    is_masked = bool(second_byte & 0x80)
-
+def read_frame_body(sock, second_byte: int):
+    """Lê comprimento, máscara e carga de um quadro cujo cabeçalho de 2 bytes já chegou; None se a conexão cair."""
     length = parse_frame_length(sock, second_byte)
     if length is None:
-        return None, None
-
+        return None
+    is_masked = bool(second_byte & 0x80)
     mask_key = read_exact(sock, 4) if is_masked else None
     if is_masked and not mask_key:
-        return None, None
-
+        return None
     raw_payload = read_exact(sock, length) if length > 0 else b""
-    if raw_payload is None:
-        return None, None
+    if raw_payload is None or not is_masked:
+        return raw_payload
+    return bytes([b ^ mask_key[i % 4] for i, b in enumerate(raw_payload)])
 
-    if is_masked:
-        payload = bytes([b ^ mask_key[i % 4] for i, b in enumerate(raw_payload)])
-    else:
-        payload = raw_payload
 
+def read_ws_frame_parts(sock, frame_timeout=None):
+    """Lê um quadro e devolve `(fin, opcode, payload)`, ou `(None, None, None)` se a conexão cair.
+
+    Esperar o próximo quadro não tem prazo (um par registrado pode ficar quieto); com `frame_timeout`, depois que o
+    cabeçalho chega o resto do quadro precisa chegar nesse prazo, senão `socket.timeout` sobe para quem chamou.
+    """
+    header = read_exact(sock, 2)
+    if not header:
+        return None, None, None
+    previous = sock.gettimeout() if frame_timeout is not None else None
+    if frame_timeout is not None:
+        sock.settimeout(frame_timeout)
+    try:
+        payload = read_frame_body(sock, header[1])
+    finally:
+        if frame_timeout is not None:
+            sock.settimeout(previous)
+    if payload is None:
+        return None, None, None
+    return bool(header[0] & 0x80), header[0] & 0x0F, payload
+
+
+def read_ws_frame(sock):
+    """Lê um quadro e devolve `(opcode, payload)`, sem olhar o bit FIN; `(None, None)` se a conexão cair."""
+    _fin, opcode, payload = read_ws_frame_parts(sock)
     return opcode, payload
+
+
+class MessageAssembler:
+    """Remonta mensagens fragmentadas (RFC 6455 §5.4): um quadro de texto ou binário com FIN=0 abre a mensagem,
+    quadros de continuação (opcode 0x0) a completam e o FIN=1 a fecha. Quadros de controle não passam por aqui.
+    Erro de protocolo ou mensagem acima do teto levanta `ValueError` (quem chama fecha a conexão).
+    """
+
+    def __init__(self, max_size: int = MAX_WS_MESSAGE_SIZE):
+        self.max_size = max_size
+        self.opcode = None
+        self.parts = bytearray()
+
+    def _open(self, opcode: int) -> None:
+        if opcode == 0x0 and self.opcode is None:
+            raise ValueError("continuação sem mensagem aberta")
+        if opcode != 0x0 and self.opcode is not None:
+            raise ValueError("mensagem nova antes de terminar a anterior")
+        if opcode != 0x0:
+            self.opcode = opcode
+
+    def feed(self, fin: bool, opcode: int, payload: bytes):
+        """Acrescenta um quadro de dados; devolve `(opcode, payload)` quando a mensagem fecha, senão None."""
+        self._open(opcode)
+        if len(self.parts) + len(payload) > self.max_size:
+            raise ValueError("mensagem acima do teto")
+        self.parts.extend(payload)
+        if not fin:
+            return None
+        done = (self.opcode, bytes(self.parts))
+        self.opcode = None
+        self.parts = bytearray()
+        return done
 
 
 def resolve_port(cli_port=None, default: int = DEFAULT_PORT) -> int:
@@ -220,8 +275,12 @@ class WebSocketHandler(socketserver.BaseRequestHandler):
         self.closed = False
 
     def handle(self):
-        if not self.perform_handshake():
+        try:
+            if not self.perform_handshake():
+                return
+        except OSError:  # inclui socket.timeout: handshake lento ou conexão caída
             return
+        self.request.settimeout(None)
         self.receive_loop()
 
     def _parse_headers(self, lines: list) -> dict:
@@ -232,15 +291,25 @@ class WebSocketHandler(socketserver.BaseRequestHandler):
                 headers[k.strip().lower()] = v.strip()
         return headers
 
-    def perform_handshake(self) -> bool:
+    def read_handshake_request(self):
+        """Lê o pedido HTTP até a linha em branco, com prazo total `HANDSHAKE_TIMEOUT` (não por leitura)."""
+        deadline = time.monotonic() + HANDSHAKE_TIMEOUT
         request_data = bytearray()
         while b"\r\n\r\n" not in request_data:
-            if len(request_data) > MAX_HEADER_SIZE:
-                return False
+            remaining = deadline - time.monotonic()
+            if len(request_data) > MAX_HEADER_SIZE or remaining <= 0:
+                return None
+            self.request.settimeout(remaining)
             chunk = self.request.recv(1024)
             if not chunk:
-                return False
+                return None
             request_data.extend(chunk)
+        return request_data
+
+    def perform_handshake(self) -> bool:
+        request_data = self.read_handshake_request()
+        if request_data is None:
+            return False
 
         header_lines = request_data.split(b"\r\n\r\n")[0].decode("utf-8", "ignore").split("\r\n")
         headers = self._parse_headers(header_lines[1:])
@@ -265,20 +334,33 @@ class WebSocketHandler(socketserver.BaseRequestHandler):
         return True
 
     def receive_loop(self):
+        assembler = MessageAssembler()
         try:
             while not self.closed:
-                opcode, payload = read_ws_frame(self.request)
+                fin, opcode, payload = read_ws_frame_parts(self.request, FRAME_TIMEOUT)
                 if opcode is None or opcode == 0x8:  # Close
                     break
-                if opcode == 0x9:  # Ping
-                    self.send_frame(make_ws_frame(payload, opcode=0xA))
-                    continue
-                if opcode == 0x1:  # Text
-                    self.handle_text_payload(payload)
+                if not self.handle_frame(assembler, fin, opcode, payload):
+                    break
         except Exception:
             pass
         finally:
             self.cleanup()
+
+    def handle_frame(self, assembler: MessageAssembler, fin: bool, opcode: int, payload: bytes) -> bool:
+        """Trata um quadro; False encerra a conexão (erro de protocolo). Mensagem inválida levanta `ValueError`."""
+        if opcode in CONTROL_OPCODES:
+            if not fin or len(payload) > MAX_CONTROL_PAYLOAD:
+                return False
+            if opcode == 0x9:  # Ping
+                self.send_frame(make_ws_frame(payload, opcode=0xA))
+            return True
+        if opcode not in DATA_OPCODES:
+            return False
+        message = assembler.feed(fin, opcode, payload)
+        if message and message[0] == 0x1:  # Text
+            self.handle_text_payload(message[1])
+        return True
 
     def handle_text_payload(self, payload: bytes):
         try:

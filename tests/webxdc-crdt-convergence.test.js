@@ -1,7 +1,7 @@
 import "../tests/setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createIdLookupStore } from "../client/js/webxdc-crdt.js";
+import { createIdLookupStore } from "../client/js/labs/parado/webxdc-crdt.js";
 
 // PRNG determinístico linear congruente (LCG) para reprodutibilidade estrita
 function createSeededRandom(seed = 123456789) {

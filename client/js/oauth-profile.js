@@ -1,7 +1,7 @@
 /** OAuth client-only — enriquece perfil local (V-DIS-08/10) com Google, Meta ou GitHub. */
 
-import * as localAccount from "./local-account.js";
-import { restoreOrBindGoogleIdentity, restoreOrBindMetaIdentity } from "./oauth-vault.js";
+import * as localAccount from "./identity/index.js";
+import { restoreOrBindGoogleIdentity, restoreOrBindMetaIdentity } from "./vault/index.js";
 
 let configCache = null;
 

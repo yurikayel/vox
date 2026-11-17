@@ -1,7 +1,9 @@
-/** Editor da nota própria (sheet). */
+/**
+ * @file Editor da nota curta no próprio perfil (sheet modal).
+ */
 
 import * as profileNote from "../profile-note.js";
-import * as localAccount from "../local-account.js";
+import * as localAccount from "../identity/index.js";
 import * as meshProfile from "../mesh-profile.js";
 import * as share from "../share.js";
 import { noteEditorSheetMarkup } from "../render/profile-note-bubble.js";
@@ -65,6 +67,11 @@ async function onAction(action, routeId) {
   if (action === "save") await persistAndClose(routeId, input?.value || "");
 }
 
+/**
+ * Liga clique na bolha da nota própria e ações do sheet de edição.
+ *
+ * @returns {void}
+ */
 export function attachProfileNoteHandlers() {
   if (wired) return;
   wired = true;

@@ -1,6 +1,5 @@
 /** @file App initialization, social interactions, and gossip routing. */
 import * as share from "../share.js";
-import * as mock from "../mock.js";
 import * as render from "../render.js";
 import * as cacheNode from "../cache-node.js";
 import * as social from "../social.js";
@@ -14,7 +13,7 @@ import { getActiveUser } from "./context.js";
 import { openZapModal } from "./zap-modal.js";
 import * as centralMemory from "../central-memory.js";
 import * as peers from "../peers.js";
-import * as localAccount from "../local-account.js";
+import * as localAccount from "../identity/index.js";
 import * as voxels from "../voxels.js";
 import {
   showHome,
@@ -35,6 +34,7 @@ import {
   onNestedCommentReplySubmit,
 } from "./screens-compose.js";
 import { handleRepostClick } from "./repost-ui.js";
+import { markFrameChoice, refreshFrameContent, resolvePostForFrame } from "./frame-ui.js";
 
 function handleGossipReply(item, cur) {
   const topicArticle = document.querySelector(`article[data-id="${item.replyTo}"]`);
@@ -112,6 +112,11 @@ function refreshAfterCentralMemorySync() {
   }
 }
 
+/**
+ * Registra listeners de gossip, signaling e recompensa de voxel local (boot social).
+ *
+ * @returns {void}
+ */
 export function initGossipListeners() {
   peers.onGossipPost((item) => {
     const cur = parseRoute();
@@ -141,15 +146,15 @@ export function initGossipListeners() {
   });
 }
 
-export async function resolvePostForFrame(postId) {
-  let post = await cacheNode.getLocalPost(postId);
-  if (!post?.frame) {
-    const tour = mock.mockRecentTopics()?.items || [];
-    post = tour.find((p) => p.id === postId) || null;
-  }
-  return post;
-}
-
+/**
+ * Assina e propaga ação de botão de Open Frame no post.
+ *
+ * @param {object} frame Metadados do frame no post.
+ * @param {string} postId Id do post.
+ * @param {number} index Índice do botão.
+ * @param {string} label Rótulo do botão.
+ * @returns {Promise<void>}
+ */
 export async function executeFrameAction(frame, postId, index, label) {
   const user = await getActiveUser();
   const payload = frames.buildFrameActionPayload({
@@ -163,16 +168,16 @@ export async function executeFrameAction(frame, postId, index, label) {
   await cacheNode.saveLocalPost(signed);
   frames.saveUserFrameAction(postId, signed);
   peers.broadcastGossipUpdate(signed);
-
-  const container = document.getElementById(`frame-content-${postId}`);
-  const parsed = frames.parseFrame(frame);
-  if (container && parsed.valid) {
-    const actions = await cacheNode.getLocalPosts({ type: "frame-action", postId }).catch(() => []);
-    container.innerHTML = render.renderFrameContentHtml(parsed.frame, frames.getFrameState(parsed.frame, actions, signed));
-  }
+  await refreshFrameContent(document, postId, frame, signed);
   share.showToast(i18n.frameActionRecordedToast || "Ação registrada no mini-app!");
 }
 
+/**
+ * Handler de clique em botão de frame: valida, executa e atualiza UI.
+ *
+ * @param {HTMLElement} btn Botão com datasets do frame.
+ * @returns {Promise<void>}
+ */
 export async function handleFrameActionClick(btn) {
   const postId = btn.dataset.postId;
   const index = parseInt(btn.dataset.index ?? btn.dataset.btnIndex, 10);
@@ -187,9 +192,11 @@ export async function handleFrameActionClick(btn) {
   btn.textContent = "Gravando…";
   try {
     await executeFrameAction(post.frame, postId, index, label);
+    markFrameChoice(btn, index);
   } catch (err) {
     console.warn("Frame action failed", err);
     share.showToast("Falha ao executar ação no frame", "error");
+  } finally {
     btn.disabled = false;
     btn.textContent = origText;
   }
@@ -234,6 +241,12 @@ async function submitPostEdit(existing, btn) {
   }
 }
 
+/**
+ * Abre modal de edição para post local mutável pelo autor.
+ *
+ * @param {string} postId Id do post.
+ * @returns {Promise<void>}
+ */
 export async function openPostEditModal(postId) {
   const user = await getActiveUser();
   const existing = await cacheNode.getLocalPost(postId);
@@ -261,6 +274,12 @@ export async function openPostEditModal(postId) {
   });
 }
 
+/**
+ * Apaga post local do autor após confirmação e propaga tombstone.
+ *
+ * @param {string} postId Id do post.
+ * @returns {Promise<void>}
+ */
 export async function handleDeletePost(postId) {
   const user = await getActiveUser();
   const existing = await cacheNode.getLocalPost(postId);
@@ -434,6 +453,11 @@ function dispatchSocialFeedbackClicks(e) {
   return false;
 }
 
+/**
+ * Liga cliques sociais globais (curtir, compartilhar, comentários inline, etc.).
+ *
+ * @returns {void}
+ */
 export function initSocialInteractions() {
   document.addEventListener("click", (e) => {
     if (dispatchPostActionClicks(e)) return;

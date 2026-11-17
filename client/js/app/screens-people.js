@@ -7,7 +7,7 @@ import * as contactNotify from "../contact-notify.js";
 import * as centralMemory from "../central-memory.js";
 import * as peopleIndex from "../people-index.js";
 import * as profileDirectory from "../profile-directory.js";
-import * as localAccount from "../local-account.js";
+import * as localAccount from "../identity/index.js";
 import { getActiveUser, makeShellProps } from "./context.js";
 import { addContactAndNotify, listPendingAddedYouNotices } from "./contact-notify-flow.js";
 import { pollInboxMessages } from "./screens-dm.js";
@@ -58,6 +58,12 @@ function bindPeopleAddedYouActions() {
   });
 }
 
+/**
+ * Monta busca e listagem de pessoas (`#/people`).
+ *
+ * @param {string} [initialQuery=""] Consulta inicial da URL.
+ * @returns {Promise<void>}
+ */
 export async function showPeople(initialQuery = "") {
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "people", "Pessoas"));
@@ -92,6 +98,13 @@ export async function showPeople(initialQuery = "") {
   });
 }
 
+/**
+ * Pré-visualização de conexão com uma rota ou convite (`#/connect/...`).
+ *
+ * @param {string} routeId Rota ou alvo de conexão.
+ * @param {string} [invite=""] Token de convite quando presente na URL.
+ * @returns {Promise<void>}
+ */
 export async function showConnect(routeId, invite = "") {
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "people", "Conectar"));

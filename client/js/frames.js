@@ -114,12 +114,16 @@ export function buildFrameActionPayload({ postId, frameKind, buttonIndex, button
   };
 }
 
+/** Último voto de cada pessoa (maior `ts`), seja qual for a ordem em que as ações chegam. */
 function applyActionsToLatestMap(actions) {
-  const latest = new Map();
+  const newest = new Map();
   for (const a of actions) {
-    if (a.author && a.buttonIndex) latest.set(a.author, a.buttonIndex);
+    if (!a.author || !a.buttonIndex) continue;
+    const ts = Number(a.ts) || 0;
+    const prev = newest.get(a.author);
+    if (!prev || ts >= prev.ts) newest.set(a.author, { ts, index: a.buttonIndex });
   }
-  return latest;
+  return new Map([...newest].map(([author, v]) => [author, v.index]));
 }
 
 function tallyVotes(frame, actions = [], localAction = null) {

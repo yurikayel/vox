@@ -1,7 +1,7 @@
 import "../tests/setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
-import { handleImageFallback, handleDelegatedClick } from "../client/js/dom-delegates.js";
+import { handleImageFallback, handleDelegatedClick } from "../client/js/app/dom-delegates.js";
 
 test("dom-delegates - imagem com data-fallback-next some e mostra as iniciais", () => {
   const sibling = { style: { display: "none" } };
@@ -29,7 +29,7 @@ test("dom-delegates - data-click-target clica no alvo; data-focus-target foca ou
 });
 
 test("dom-delegates - [data-app-feedback] carrega o modal sob demanda; outros cliques não", async () => {
-  const { openFeedbackOnClick } = await import("../client/js/dom-delegates.js");
+  const { openFeedbackOnClick } = await import("../client/js/app/dom-delegates.js");
   let opened = 0;
   const load = async () => ({ openFeedbackFlow: () => opened++ });
   const target = { closest: (sel) => (sel === "[data-app-feedback]" ? {} : null) };

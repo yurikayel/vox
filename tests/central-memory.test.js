@@ -28,6 +28,17 @@ test("central-memory - syncWithCentralMemory envia estado local e reidrata posts
     ts: 1795000002000,
   });
   const remoteTomb = await remote.sign({ id: "top_deleted_remote", type: "tombstone", ts: 1795000003000, editedAt: 1795000003000 });
+  // Desde 17/11 o cartão de perfil só entra assinado pelo dono (`signedCard`); o cartão solto não é confiado.
+  const remoteCard = await remote.sign({
+    id: `pc_${remote.routeId}`,
+    type: "profile-card",
+    routeId: remote.routeId,
+    displayName: "Peer Persistido",
+    avatarUrl: "",
+    bio: "Bio reidratada",
+    discoverable: true,
+    editedAt: Date.now(),
+  });
 
   await cacheNode.saveLocalPost({
     id: "top_local_1",
@@ -57,11 +68,7 @@ test("central-memory - syncWithCentralMemory envia estado local e reidrata posts
           ],
           tombstones: [remoteTomb],
           profiles: [
-            {
-              routeId: "vx_remote",
-              name: "Peer Persistido",
-              bio: "Bio reidratada",
-            },
+            { routeId: remote.routeId, name: "Peer Persistido", bio: "Bio reidratada", signedCard: remoteCard },
           ],
           manifests: [],
           blobs: [],
@@ -94,7 +101,7 @@ test("central-memory - syncWithCentralMemory envia estado local e reidrata posts
     const hydratedTomb = await cacheNode.getTombstone("top_deleted_remote");
     assert.ok(hydratedTomb);
 
-    const hydratedProfile = profileDirectory.getProfileCard("vx_remote");
+    const hydratedProfile = profileDirectory.getProfileCard(remote.routeId);
     assert.ok(hydratedProfile);
     assert.equal(hydratedProfile.name, "Peer Persistido");
   } finally {

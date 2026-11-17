@@ -27,11 +27,45 @@ function renderGuardianCard(lease, peerAliases) {
     </article>`;
 }
 
+function nextTurnName(state) {
+  const [first, second] = state.favorites;
+  return state.drf?.nextCommunityId === second.id ? second.name : first.name;
+}
+
+/**
+ * Rótulos do slider de comunidades (nome, % e MB de cada uma). Usado no desenho da tela e, durante o arrasto,
+ * para atualizar só esses rótulos sem trocar o `<input type="range">` que a pessoa está segurando.
+ *
+ * @param {object} state Estado da sessão (`favorites`, `allocations`).
+ * @returns {string} HTML interno de `.dungeon-slider-labels`.
+ */
+export function renderFavoriteSliderLabels(state) {
+  const [first, second] = state.favorites;
+  // `??`, não `||`: com 0% a comunidade recebe 0 MB, e isso tem de aparecer como 0.
+  const firstMb = Math.round(state.allocations?.[0]?.allocatedDiskMb ?? 614);
+  const secondMb = Math.round(state.allocations?.[1]?.allocatedDiskMb ?? 410);
+  return `
+          <span><strong>${escapeHtml(first.name)}</strong> · ${first.sliderWeight}% (${firstMb} MB)</span>
+          <span><strong>${escapeHtml(second.name)}</strong> · ${second.sliderWeight}% (${secondMb} MB)</span>`;
+}
+
+/**
+ * Atualiza, no lugar, os rótulos do slider e o chip "Próximo turno" depois de um passo do arrasto.
+ *
+ * @param {ParentNode} root Contêiner da tela do acampamento.
+ * @param {object} state Estado da sessão já atualizado por `updateFavoriteSlider`.
+ * @returns {void}
+ */
+export function refreshFavoriteSlider(root, state) {
+  const labels = root.querySelector(".dungeon-slider-labels");
+  if (labels) labels.innerHTML = renderFavoriteSliderLabels(state);
+  const chip = root.querySelector("[data-dungeon-next-turn]");
+  if (chip) chip.textContent = `Próximo turno: ${nextTurnName(state)}`;
+}
+
 function renderFavoriteSliderSection(state) {
   const [first, second] = state.favorites;
-  const firstMb = Math.round(state.allocations?.[0]?.allocatedDiskMb || 614);
-  const secondMb = Math.round(state.allocations?.[1]?.allocatedDiskMb || 410);
-  const nextName = state.drf?.nextCommunityId === second.id ? second.name : first.name;
+  const nextName = nextTurnName(state);
   return `
     <section class="dungeon-panel dungeon-solidarity">
       <div class="dungeon-section-head">
@@ -39,13 +73,11 @@ function renderFavoriteSliderSection(state) {
           <span class="dungeon-eyebrow">Solidariedade Automática</span>
           <h2>Apoiar Comunidades Enquanto Descansa</h2>
         </div>
-        <span class="dungeon-chip">Próximo turno: ${escapeHtml(nextName)}</span>
+        <span class="dungeon-chip" data-dungeon-next-turn>Próximo turno: ${escapeHtml(nextName)}</span>
       </div>
       <p class="dungeon-muted">Simule como dividiria energia ociosa e cache entre suas <strong>2 comunidades favoritas</strong>. Nesta demonstração nada é dividido de verdade.</p>
       <div class="dungeon-slider-card">
-        <div class="dungeon-slider-labels">
-          <span><strong>${escapeHtml(first.name)}</strong> · ${first.sliderWeight}% (${firstMb} MB)</span>
-          <span><strong>${escapeHtml(second.name)}</strong> · ${second.sliderWeight}% (${secondMb} MB)</span>
+        <div class="dungeon-slider-labels">${renderFavoriteSliderLabels(state)}
         </div>
         <label class="sr-only" for="dungeon-fav-slider">Divisão de energia entre 2 comunidades favoritas</label>
         <input id="dungeon-fav-slider" class="dungeon-range" type="range" min="0" max="100" step="5" value="${first.sliderWeight}" data-dungeon="slider-fav" />

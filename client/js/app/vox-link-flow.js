@@ -6,7 +6,7 @@ import { renderInviteCardHtml } from "../render/vox-link.js";
 
 async function defaultDeps() {
   const [localAccount, cacheNode, peers] = await Promise.all([
-    import("../local-account.js"), import("../cache-node.js"), import("../peers.js"),
+    import("../identity/index.js"), import("../cache-node.js"), import("../peers.js"),
   ]);
   return {
     getAccount: () => localAccount.ensureLocalAccount(),
@@ -37,6 +37,10 @@ async function currentSponsor(records, me, d) {
 /**
  * Quem foi convidado assina o aceite. Padrinho só uma vez por aparelho; trocar de padrinho, também uma vez
  * (PM-83 lote F). `mediationOnly`: vínculo que nunca dá poder de arquivar.
+ *
+ * @param {object} invite Dados do convite (`inviter`, `token`, flags de padrinho).
+ * @param {object|null} [deps=null] Dependências injetáveis; `null` usa as reais.
+ * @returns {Promise<object>} Post assinado propagado.
  */
 export async function acceptInvite({ inviter, token, sponsor = false, mediationOnly = false, switchSponsor = false }, deps = null) {
   const d = deps || (await defaultDeps());
@@ -58,7 +62,12 @@ async function confirmOne(accept, me, d) {
   return signed;
 }
 
-/** Confirma os aceites dos meus convites que chegaram e ainda não têm confirmação. */
+/**
+ * Confirma os aceites dos meus convites que chegaram e ainda não têm confirmação.
+ *
+ * @param {object|null} [deps=null] Dependências injetáveis; `null` usa as reais.
+ * @returns {Promise<object[]>} Confirmações publicadas.
+ */
 export async function confirmPendingInvites(deps = null) {
   const d = deps || (await defaultDeps());
   const { routeId: me } = await d.getAccount();
@@ -77,7 +86,12 @@ export async function confirmPendingInvites(deps = null) {
 
 let started = false;
 
-/** Ao abrir o app e a cada aceite que chega pela malha. */
+/**
+ * Inicia confirmação de vínculos ao abrir o app e a cada aceite recebido por gossip.
+ *
+ * @param {object|null} [deps=null] Dependências injetáveis; `null` usa as reais.
+ * @returns {Promise<void>}
+ */
 export async function startVoxLinks(deps = null) {
   if (started) return;
   started = true;
@@ -98,7 +112,14 @@ async function inviteCardModel(inviter, d) {
   return { options, state: voxLink.linkState(records, { me: account.routeId, inviter }), canSponsor, canSwitch, sponsorDefault: canSponsor && isNew, isSelf: account.routeId === inviter };
 }
 
-/** Na tela "Conectar" aberta por um link com `?convite=`: cartão para aceitar o vínculo. */
+/**
+ * Na tela "Conectar" aberta por um link com `?convite=`: cartão para aceitar o vínculo.
+ *
+ * @param {HTMLElement} main Container da tela.
+ * @param {object} invite `inviter`, `token`, `name`.
+ * @param {object|null} [deps=null] Dependências injetáveis; `null` usa as reais.
+ * @returns {Promise<void>}
+ */
 export async function mountInviteCard(main, { inviter, token, name = "" }, deps = null) {
   if (!main || !voxLink.isInviteToken(token)) return;
   const d = deps || (await defaultDeps());

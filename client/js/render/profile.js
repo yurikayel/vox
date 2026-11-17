@@ -11,8 +11,8 @@ import {
 import { renderPostItem, renderInlineComposer } from "./feed.js";
 import { isWelcomeRouteId } from "../vox-welcome-profile.js";
 import { PIX_RECEIVER_NAME_NOTICE_PT } from "../pix-key.js";
-import * as localAccount from "../local-account.js";
-import { LOCAL_WIPE_NOTICE } from "../local-account.js";
+import * as localAccount from "../identity/index.js";
+import { LOCAL_WIPE_NOTICE } from "../identity/index.js";
 import { renderProfileNoteBubbleHtml } from "./profile-note-bubble.js";
 import { renderIdentityMetaForm, renderIdentityMetaPills } from "./profile-identity-meta.js";
 import { getLocalIdentityMeta } from "../profile-identity-meta.js";

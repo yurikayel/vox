@@ -5,7 +5,7 @@ import * as profileCard from "../client/js/profile-card.js";
 import * as profileDirectory from "../client/js/profile-directory.js";
 import * as gossipProfile from "../client/js/peers-gossip-profile.js";
 import * as meshProfile from "../client/js/mesh-profile.js";
-import * as localAccount from "../client/js/local-account.js";
+import * as localAccount from "../client/js/identity/local-account.js";
 
 const fresh = () => {
   localStorage.clear();

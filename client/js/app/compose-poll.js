@@ -36,6 +36,11 @@ export function bindPollBuilder() {
   renumberPollRows(list);
 }
 
+/**
+ * Lê as opções não vazias do construtor de enquete no DOM.
+ *
+ * @returns {string[]} Textos das opções, na ordem do formulário.
+ */
 export function readPollOptions() {
   return [...document.querySelectorAll("#civic-poll-options .civic-poll-input")].map((i) => i.value.trim()).filter(Boolean);
 }

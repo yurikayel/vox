@@ -2,7 +2,7 @@ import "../tests/setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 
-const localAccount = await import("../client/js/local-account.js");
+const localAccount = await import("../client/js/identity/local-account.js");
 const cacheNode = await import("../client/js/cache-node.js");
 const postWire = await import("../client/js/post-wire.js");
 const peerSync = await import("../client/js/peer-sync.js");

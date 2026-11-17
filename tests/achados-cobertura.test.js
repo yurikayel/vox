@@ -11,7 +11,7 @@ const pix = await import("../client/js/pix-key.js");
 const render = await import("../client/js/render.js");
 const frames = await import("../client/js/frames.js");
 const cacheNode = await import("../client/js/cache-node.js");
-const localAccount = await import("../client/js/local-account.js");
+const localAccount = await import("../client/js/identity/local-account.js");
 const init = await import("../client/js/app/init.js");
 
 /** Troca `document` por um com só os elementos dados (por id); devolve a função que desfaz. */

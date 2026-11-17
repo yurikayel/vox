@@ -1,4 +1,6 @@
-/** Modo marcar + long-press + tap-to-show pins. */
+/**
+ * @file Modo marcar em foto: long-press, pins e integração com o picker de contato.
+ */
 
 import * as share from "../share.js";
 import * as photoTags from "../photo-tags.js";
@@ -14,6 +16,12 @@ function frameOf(postId) {
   return document.querySelector(`.post[data-id="${CSS.escape(postId)}"] .post-media-hero`);
 }
 
+/**
+ * Entra ou sai do modo de marcar pessoas na foto de um post.
+ *
+ * @param {string} postId Id do post; vazio desliga o modo.
+ * @returns {void}
+ */
 export function beginTagMode(postId) {
   taggingId = String(postId || "");
   document.body.classList.toggle("photo-tagging", Boolean(taggingId));
@@ -36,6 +44,12 @@ function pctFromClick(e, frame) {
   };
 }
 
+/**
+ * Alterna visibilidade dos pins de marca na mídia do post.
+ *
+ * @param {string} postId Id do post.
+ * @returns {boolean} `false` quando não há camada de pins.
+ */
 export function togglePins(postId) {
   const pins = frameOf(postId)?.querySelector(".photo-tag-pins");
   if (!pins) return false;
@@ -119,6 +133,11 @@ function onHeroClick(e) {
   return false;
 }
 
+/**
+ * Liga modo marcar, long-press e botões de foto (uma vez por sessão).
+ *
+ * @returns {void}
+ */
 export function attachPhotoTagUi() {
   if (wired) return;
   wired = true;

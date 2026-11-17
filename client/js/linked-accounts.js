@@ -3,11 +3,19 @@
 import { addBskySubscription } from "./bsky-feed.js";
 import { loadBskySession, clearBskySession, postWithBskySession } from "./bsky-oauth.js";
 
+/** Chave do `localStorage` com as contas vinculadas, por rede. */
 export const LINKED_ACCOUNTS_KEY = "vox-linked-accounts-v1";
+/** Chave do `localStorage` da replicação automática (`"true"` ligada). */
 export const AUTO_REPLICATE_KEY = "vox-auto-replicate-enabled";
+/** Chave do `localStorage` do webhook geral, que recebe toda replicação. */
 export const GENERAL_WEBHOOK_KEY = "vox-replication-webhook";
+/** Servidor de dados (PDS) do Bluesky usado quando a conta não indica outro. */
 export const BSKY_DEFAULT_PDS = "https://bsky.social";
 
+/**
+ * Redes que podem ser vinculadas, com nome, ícone, cor e o que cada uma aceita: webhook automático, postagem direta
+ * pelo AT Protocol e leitura do feed.
+ */
 export const SUPPORTED_NETWORKS = Object.freeze([
   { id: "bsky", name: "Bluesky", icon: "🦋", color: "#0085ff", canAutoWebhook: true, supportsAtProto: true, hasFeed: true },
   { id: "twitter", name: "Twitter / X", icon: "🐦", color: "#1d9bf0", canAutoWebhook: true, supportsAtProto: false, hasFeed: false },
@@ -40,13 +48,21 @@ const OFFICIAL_HANDLES = {
   github: ["github"],
 };
 
+/**
+ * Limpa o @usuário digitado: tira espaços, `@` iniciais, o começo de um link de perfil colado e barras no fim.
+ * @param {unknown} raw Texto digitado.
+ * @returns {string} O usuário limpo (pode ficar vazio).
+ */
 export function normalizeHandle(raw) {
   return String(raw || "").trim().replace(/^@+/, "").replace(/^https?:\/\/\S*?\/(?:@)?/i, "").replace(/\/+$/, "");
 }
 
 /**
  * Valida o @usuário digitado. Nada é inventado: sem handle válido, não há vínculo.
- * @returns {{ ok: boolean, handle: string, error?: string }}
+ * @param {string} netId Rede.
+ * @param {unknown} raw Texto digitado (passa por `normalizeHandle`).
+ * @returns {{ ok: boolean, handle: string, error?: string }} O usuário limpo e, se recusado (vazio, fora do formato da
+ *   rede ou perfil oficial da própria rede), o texto do erro.
  */
 export function validateHandle(netId, raw) {
   const handle = normalizeHandle(raw);
@@ -61,7 +77,12 @@ export function validateHandle(netId, raw) {
   return { ok: true, handle };
 }
 
-/** Remove vínculos salvos com handle inválido ou de perfil oficial (ex.: @instagram inventado). */
+/**
+ * Remove vínculos salvos com handle inválido ou de perfil oficial (ex.: @instagram inventado). Vínculo feito por
+ * login, sem @usuário, fica.
+ * @param {Object<string, object>} accounts Contas vinculadas, por rede.
+ * @returns {Object<string, object>} Só os vínculos válidos.
+ */
 export function sanitizeLinkedAccounts(accounts) {
   const out = {};
   for (const [netId, acc] of Object.entries(accounts || {})) {
@@ -71,6 +92,10 @@ export function sanitizeLinkedAccounts(accounts) {
   return out;
 }
 
+/**
+ * Contas vinculadas guardadas, já sem vínculos inválidos (e regrava a lista limpa se algo saiu).
+ * @returns {Object<string, object>} Conta por rede; vazio sem `localStorage` ou se a leitura falhar.
+ */
 export function loadLinkedAccounts() {
   if (typeof localStorage === "undefined") return {};
   try {
@@ -105,6 +130,14 @@ function identityFields(opts, prev, cleanHandle) {
   };
 }
 
+/**
+ * Grava ou atualiza o vínculo de uma rede. Webhook e App Password não informados mantêm os anteriores; verificado,
+ * via, DID, id e nome não informados só são herdados se o @usuário não mudou. No Bluesky, também segue o perfil no feed.
+ * @param {string} netId Rede (`bsky`, `twitter` etc.).
+ * @param {{handle?: string, webhook?: string, appPassword?: string, enabled?: boolean, verified?: boolean, via?: string, did?: string, accountId?: string, displayName?: string}} options
+ *   Dados do vínculo.
+ * @returns {Object<string, object>} Todas as contas vinculadas depois da gravação.
+ */
 export function saveLinkedAccount(netId, options) {
   if (typeof localStorage === "undefined") return {};
   const current = loadLinkedAccounts();
@@ -129,6 +162,11 @@ export function saveLinkedAccount(netId, options) {
   return current;
 }
 
+/**
+ * Remove o vínculo de uma rede (no Bluesky, também apaga a sessão OAuth).
+ * @param {string} netId Rede.
+ * @returns {Object<string, object>} As contas vinculadas que sobraram.
+ */
 export function removeLinkedAccount(netId) {
   if (typeof localStorage === "undefined") return {};
   const current = loadLinkedAccounts();
@@ -139,21 +177,37 @@ export function removeLinkedAccount(netId) {
   return current;
 }
 
+/**
+ * Indica se a replicação automática dos posts está ligada.
+ * @returns {boolean} Verdadeiro se ligada; falso sem `localStorage`.
+ */
 export function isAutoReplicationEnabled() {
   if (typeof localStorage === "undefined") return false;
   return localStorage.getItem(AUTO_REPLICATE_KEY) === "true";
 }
 
+/**
+ * Liga ou desliga a replicação automática dos posts.
+ * @param {boolean} enabled Ligar ou desligar.
+ */
 export function setAutoReplicationEnabled(enabled) {
   if (typeof localStorage === "undefined") return;
   localStorage.setItem(AUTO_REPLICATE_KEY, enabled ? "true" : "false");
 }
 
+/**
+ * Webhook geral, que recebe toda replicação.
+ * @returns {string} O endereço, ou vazio se não houver.
+ */
 export function getGeneralWebhookUrl() {
   if (typeof localStorage === "undefined") return "";
   return localStorage.getItem(GENERAL_WEBHOOK_KEY) || "";
 }
 
+/**
+ * Grava o webhook geral; vazio apaga.
+ * @param {string} url Endereço do webhook.
+ */
 export function setGeneralWebhookUrl(url) {
   if (typeof localStorage === "undefined") return;
   const clean = String(url || "").trim();
@@ -161,6 +215,12 @@ export function setGeneralWebhookUrl(url) {
   else localStorage.removeItem(GENERAL_WEBHOOK_KEY);
 }
 
+/**
+ * Carga `vox.post.replicate` enviada aos webhooks e usada na postagem no Bluesky.
+ * @param {{id?: string, title?: string, body?: string, canonicalUrl?: string, image?: string}} post Post publicado.
+ * @returns {object} Carga com título, texto, link canônico (padrão: a página atual), imagem, data, as redes
+ *   vinculadas ativas e a chamada curta para os disparos.
+ */
 export function buildReplicationPayload(post) {
   const accounts = loadLinkedAccounts();
   const activeNetworks = Object.entries(accounts)
@@ -191,6 +251,16 @@ export function buildReplicationPayload(post) {
   };
 }
 
+/**
+ * Posta no Bluesky com App Password: abre sessão no PDS e cria o registro `app.bsky.feed.post` (texto cortado em 295
+ * caracteres: título, corpo e link).
+ * @param {string} handle Usuário no Bluesky.
+ * @param {string} appPassword App Password da conta.
+ * @param {{title?: string, body?: string, canonicalUrl?: string}} post Post a replicar.
+ * @param {string} [pdsUrl=BSKY_DEFAULT_PDS] Servidor de dados da conta.
+ * @returns {Promise<{ok: boolean, uri?: string, reason?: string}>} `uri` do registro criado, ou o motivo da falha
+ *   (`missing_credentials`, `auth_failed` ou erro de rede).
+ */
 export async function postToBlueskyAtProto(handle, appPassword, post, pdsUrl = BSKY_DEFAULT_PDS) {
   const identifier = String(handle || "").trim().replace(/^@/, "");
   const password = String(appPassword || "").trim();
@@ -210,11 +280,16 @@ export async function postToBlueskyAtProto(handle, appPassword, post, pdsUrl = B
   }
 }
 
-async function createBskyPostRecord(pdsUrl, session, post) {
+/** Texto do post no Bluesky (título, corpo e link canônico, até 295 caracteres): o mesmo por App Password e por OAuth. */
+function bskyPostText(post) {
   const title = String(post?.title || "").trim();
   const body = String(post?.body || "").trim();
   const url = String(post?.canonicalUrl || "").trim();
-  const rawText = [title, body !== title ? body : "", url].filter(Boolean).join("\n\n").slice(0, 295);
+  return [title, body !== title ? body : "", url].filter(Boolean).join("\n\n").slice(0, 295);
+}
+
+async function createBskyPostRecord(pdsUrl, session, post) {
+  const rawText = bskyPostText(post);
 
   const recRes = await fetch(`${pdsUrl}/xrpc/com.atproto.repo.createRecord`, {
     method: "POST",
@@ -257,6 +332,7 @@ function collectWebhookTargets(accounts) {
   return targets;
 }
 
+/** Redes que aceitam replicar abrindo o app ou o site com o texto pronto (intent), com rótulo e ícone. */
 export const INTENT_NETWORK_META = Object.freeze({
   twitter: { id: "twitter", label: "X (Twitter)", icon: "🐦" },
   threads: { id: "threads", label: "Threads", icon: "🧵" },
@@ -273,6 +349,12 @@ function isAccountNeedingIntent(netId, acc) {
   return true;
 }
 
+/**
+ * Contas vinculadas que só replicam por intent: ativas, com @usuário, sem webhook e, no Bluesky, sem App Password
+ * nem login.
+ * @param {Object<string, object>} [accounts] Contas vinculadas (padrão: `loadLinkedAccounts()`).
+ * @returns {{id: string, netId: string, handle: string, label: string, icon: string}[]} Alvos para os botões de compartilhar.
+ */
 export function getConnectedIntentTargets(accounts = loadLinkedAccounts()) {
   const list = [];
   for (const [netId, meta] of Object.entries(INTENT_NETWORK_META)) {
@@ -289,6 +371,11 @@ export function getConnectedIntentTargets(accounts = loadLinkedAccounts()) {
   return list;
 }
 
+/**
+ * Indica se há para onde replicar sem a pessoa tocar: algum webhook ou Bluesky com App Password ou login.
+ * @param {Object<string, object>} [accounts] Contas vinculadas (padrão: `loadLinkedAccounts()`).
+ * @returns {boolean} Verdadeiro se há ao menos um alvo direto.
+ */
 export function hasDirectReplicationTargets(accounts = loadLinkedAccounts()) {
   const targets = collectWebhookTargets(accounts);
   const bskyAcc = accounts?.bsky;
@@ -300,12 +387,20 @@ export function hasDirectReplicationTargets(accounts = loadLinkedAccounts()) {
 function bskyReplicationTask(acc, payload) {
   if (!acc?.enabled) return null;
   if (acc.via === "oauth" && loadBskySession()) {
-    return () => postWithBskySession([payload.title, payload.body, payload.url].filter(Boolean).join("\n\n"));
+    return () => postWithBskySession(bskyPostText(payload));
   }
   if (acc.handle && acc.appPassword) return () => postToBlueskyAtProto(acc.handle, acc.appPassword, payload);
   return null;
 }
 
+/**
+ * Replica o post nos alvos diretos: webhooks (geral e de cada conta, sem repetir) e Bluesky (sessão OAuth ou
+ * App Password). Falha de um alvo não impede os outros.
+ * @param {object} post Post publicado (ver `buildReplicationPayload`).
+ * @param {{force?: boolean}} [options] `force` replica mesmo com a replicação automática desligada.
+ * @returns {Promise<{dispatched: boolean, count: number, total?: number, reason?: string}>} Quantos alvos deram certo
+ *   de quantos, ou o motivo de não ter disparado (`auto_replication_disabled`, `no_webhooks_configured`).
+ */
 export async function dispatchAutoReplication(post, { force = false } = {}) {
   if (!force && !isAutoReplicationEnabled()) {
     return { dispatched: false, reason: "auto_replication_disabled", count: 0 };
@@ -328,6 +423,12 @@ export async function dispatchAutoReplication(post, { force = false } = {}) {
   return { dispatched: true, count: successful, total: tasks.length };
 }
 
+/**
+ * Endereço do perfil público da conta na rede.
+ * @param {string} netId Rede.
+ * @param {string} handle Usuário (com ou sem `@`).
+ * @returns {string} O link, ou vazio sem usuário ou para rede desconhecida.
+ */
 export function resolveNetworkProfileUrl(netId, handle) {
   const h = String(handle || "").trim().replace(/^@/, "");
   if (!h) return "";
@@ -388,6 +489,14 @@ async function testPublicApiConnection(netId, data) {
   return { ...res, state: res.ok ? "verified" : "error", profileUrl: resolveNetworkProfileUrl(netId, data.handle) };
 }
 
+/**
+ * Testa o vínculo pelo melhor caminho disponível: conta ligada por login vale como verificada; com webhook, manda um
+ * evento de teste; Bluesky e GitHub são conferidos na API pública (e marcados verificados se der certo). Nas outras
+ * redes não há como verificar sem login: a pessoa confere o perfil e confirma.
+ * @param {string} netId Rede.
+ * @returns {Promise<{ok: boolean, message: string, state?: "verified"|"unverified"|"error", profileUrl?: string}>}
+ *   Resultado e o texto para a tela.
+ */
 export async function testLinkedAccount(netId) {
   const accounts = loadLinkedAccounts();
   const data = accounts[netId];
@@ -407,7 +516,11 @@ export async function testLinkedAccount(netId) {
   };
 }
 
-/** Marca o vínculo como confirmado pelo próprio usuário (após conferir o perfil). */
+/**
+ * Marca o vínculo como confirmado pelo próprio usuário (após conferir o perfil).
+ * @param {string} netId Rede.
+ * @returns {boolean} Falso se não houver vínculo com @usuário nessa rede.
+ */
 export function confirmLinkedAccount(netId) {
   const acc = loadLinkedAccounts()[netId];
   if (!acc?.handle) return false;
@@ -425,6 +538,13 @@ const NETWORK_AUTH_TEMPLATES = {
   github: { withHandle: (h) => `https://github.com/${encodeURIComponent(h)}`, fallback: "https://github.com/login" },
 };
 
+/**
+ * Página da rede a abrir para a pessoa conferir a conta: o perfil, se houver usuário e a rede aceitar, senão a
+ * página inicial (ou de login) da rede.
+ * @param {string} netId Rede.
+ * @param {string} [handle=""] Usuário (com ou sem `@`).
+ * @returns {string} O link; rede desconhecida cai em `https://google.com`.
+ */
 export function getNetworkAuthUrl(netId, handle = "") {
   const h = String(handle || "").trim().replace(/^@/, "");
   const tmpl = NETWORK_AUTH_TEMPLATES[netId];
@@ -436,6 +556,8 @@ export function getNetworkAuthUrl(netId, handle = "") {
 /**
  * Handle já informado pelo próprio usuário para esta rede (nunca um palpite a partir do nome,
  * do ID local ou de contas seguidas — isso gerava vínculos com perfis de outras pessoas).
+ * @param {string} [netId=""] Rede.
+ * @returns {string} O usuário guardado em `vox-profile-<rede>`, se for válido; senão vazio.
  */
 export function getSuggestedHandle(netId = "") {
   if (typeof localStorage === "undefined") return "";
@@ -447,6 +569,10 @@ export function getSuggestedHandle(netId = "") {
 /**
  * Vincula a conta com o @usuário digitado e abre o perfil público para a pessoa conferir.
  * Não faz login na rede: o vínculo fica "não verificado" até o teste ou a confirmação.
+ * @param {string} netId Rede.
+ * @param {string} [inputHandle=""] Usuário digitado.
+ * @returns {{ok: boolean, netId: string, handle?: string, authUrl?: string, error?: string}} O vínculo gravado e o
+ *   perfil aberto, ou o erro de validação.
  */
 export function connectWithOneClick(netId, inputHandle = "") {
   const cleanId = String(netId || "").trim().toLowerCase();

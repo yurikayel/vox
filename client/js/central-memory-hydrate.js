@@ -3,7 +3,7 @@
  * e autor do post. A mídia do `mediaRef` fica no registro, fora da forma assinada (`MEDIA_FIELD`).
  */
 import * as cacheNode from "./cache-node.js";
-import * as localAccount from "./local-account.js";
+import * as localAccount from "./identity/index.js";
 import * as mediaBlob from "./media-blob.js";
 import * as moderation from "./moderation.js";
 import { MEDIA_FIELD, WIRE_MARK } from "./post-wire.js";

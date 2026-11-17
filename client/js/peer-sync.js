@@ -8,9 +8,13 @@ import * as cacheNode from "./cache-node.js";
 import * as mediaBlob from "./media-blob.js";
 import * as profileDirectory from "./profile-directory.js";
 
+/** Tipo da mensagem de inventário (passo 1: o que este aparelho tem para compartilhar). */
 export const SYNC_INV = "SYNC_INV";
+/** Tipo da mensagem de pedido (passo 2: o que falta a quem recebeu o inventário). */
 export const SYNC_WANT = "SYNC_WANT";
+/** Prazo, em ms, para o outro lado responder ao inventário antes de cair no envio completo de cliente antigo. */
 export const LEGACY_FALLBACK_MS = 8000;
+/** Tetos de itens por conexão (posts, remoções, cartões), iguais ao recorte do envio completo. */
 export const SYNC_LIMITS = Object.freeze({ posts: 128, dels: 64, cards: 256 });
 /**
  * PM-88: a foto vai ao lado do post, como na fofoca ao vivo. Teto por blob abaixo da mensagem que o canal
@@ -32,7 +36,11 @@ function toB64Url(bytes) {
   return btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
-/** 64 bits do SHA-256, em base64url (11 caracteres). Guarda em memória para não refazer a cada conexão. */
+/**
+ * 64 bits do SHA-256, em base64url (11 caracteres). Guarda em memória para não refazer a cada conexão.
+ * @param {string} text Texto a resumir (id do post, routeId ou conteúdo do cartão).
+ * @returns {Promise<string>} Hash curto.
+ */
 export async function shortHash(text) {
   const key = String(text);
   const cached = hashCache.get(key);
@@ -44,7 +52,12 @@ export async function shortHash(text) {
   return hash;
 }
 
-/** O mesmo recorte que o envio completo sempre mandou: 128 posts, 64 remoções, 256 cartões. */
+/**
+ * O mesmo recorte que o envio completo sempre mandou: 128 posts, 64 remoções, 256 cartões. Posts e remoções sem
+ * assinatura ficam de fora; cartões sem `routeId` também.
+ * @param {{posts?: object[], tombstones?: object[], cards?: object[]}} state Estado do aparelho.
+ * @returns {{posts: object[], dels: object[], cards: object[]}} O que pode ser compartilhado nesta conexão.
+ */
 export function selectShared({ posts = [], tombstones = [], cards = [] }) {
   return {
     posts: posts.slice(0, SYNC_LIMITS.posts).filter(isSigned),
@@ -61,7 +74,11 @@ async function indexBy(items, keyOf, versionOf) {
   return index;
 }
 
-/** Índice hash → { item, ver }. Posts e remoções usam o id (mesma chave); cartões, o routeId e o conteúdo. */
+/**
+ * Índice hash → { item, ver }. Posts e remoções usam o id (mesma chave); cartões, o routeId e o conteúdo.
+ * @param {{posts?: object[], dels?: object[], cards?: object[]}} shared Itens a indexar.
+ * @returns {Promise<{posts: Map, dels: Map, cards: Map}>} Índices por tipo; a versão de post e remoção é `editedAt`/`ts`, a de cartão é o hash do conteúdo.
+ */
 export async function buildInventory({ posts = [], dels = [], cards = [] }) {
   return {
     posts: await indexBy(posts, (p) => p.id, itemVersion),
@@ -72,6 +89,13 @@ export async function buildInventory({ posts = [], dels = [], cards = [] }) {
 
 const entries = (index) => [...index].map(([hash, { ver }]) => [hash, ver]);
 
+/**
+ * Mensagem `SYNC_INV` com os pares `[hash, versão]` do inventário.
+ * @param {{posts: Map, dels: Map, cards: Map}} inv Inventário de `buildInventory`.
+ * @param {string} nonce Identificador desta conexão, que o pedido devolve em `ackOf`.
+ * @param {string} fromPeer Id de quem manda.
+ * @returns {object} Mensagem pronta para enviar.
+ */
 export function inventoryMessage(inv, nonce, fromPeer) {
   return { type: SYNC_INV, v: 1, nonce, posts: entries(inv.posts), dels: entries(inv.dels), cards: entries(inv.cards), fromPeer };
 }
@@ -84,7 +108,11 @@ function parseEntries(list, max) {
   return ok ? list : null;
 }
 
-/** Inventário recebido, validado; null se malformado ou grande demais. */
+/**
+ * Inventário recebido, validado; null se malformado ou grande demais.
+ * @param {object} msg Mensagem `SYNC_INV` recebida.
+ * @returns {{nonce: string, posts: Array, dels: Array, cards: Array}|null} Pares `[hash, versão]` por tipo, ou null.
+ */
 export function parseInventory(msg) {
   if (msg?.v !== 1 || !NONCE_RE.test(String(msg.nonce || ""))) return null;
   const posts = parseEntries(msg.posts, SYNC_LIMITS.posts);
@@ -93,7 +121,12 @@ export function parseInventory(msg) {
   return posts && dels && cards ? { nonce: msg.nonce, posts, dels, cards } : null;
 }
 
-/** O que pedir: post que não tenho (nem versão igual ou mais nova, nem remoção mais nova), remoção nova, cartão diferente. */
+/**
+ * O que pedir: post que não tenho (nem versão igual ou mais nova, nem remoção mais nova), remoção nova, cartão diferente.
+ * @param {{posts: Array, dels: Array, cards: Array}} remote Inventário recebido (`parseInventory`).
+ * @param {{posts: Map, dels: Map, cards: Map}} local Inventário de tudo o que este aparelho tem.
+ * @returns {{posts: string[], dels: string[], cards: string[]}} Hashes a pedir, por tipo.
+ */
 export function computeWants(remote, local) {
   const lacks = (index, hash, ver) => !(Number(index.get(hash)?.ver) >= ver);
   return {
@@ -107,6 +140,11 @@ function parseHashes(list, max) {
   return Array.isArray(list) && list.length <= max && list.every((h) => HASH_RE.test(h)) ? list : null;
 }
 
+/**
+ * Pedido `SYNC_WANT` recebido, validado: listas de hashes de 11 caracteres dentro de `SYNC_LIMITS`.
+ * @param {object} msg Mensagem recebida.
+ * @returns {{ackOf: string, posts: string[], dels: string[], cards: string[]}|null} Pedido, ou null se malformado ou grande demais.
+ */
 export function parseWant(msg) {
   const posts = parseHashes(msg?.posts, SYNC_LIMITS.posts);
   const dels = parseHashes(msg?.dels, SYNC_LIMITS.dels);
@@ -114,7 +152,12 @@ export function parseWant(msg) {
   return posts && dels && cards ? { ackOf: String(msg.ackOf || ""), posts, dels, cards } : null;
 }
 
-/** Só serve o que está no próprio recorte compartilhado (a mesma exposição do envio completo). */
+/**
+ * Só serve o que está no próprio recorte compartilhado (a mesma exposição do envio completo).
+ * @param {{posts: string[], dels: string[], cards: string[]}} want Pedido validado (`parseWant`).
+ * @param {{posts: Map, dels: Map, cards: Map}} inv Inventário do recorte compartilhado.
+ * @returns {object[]} Mensagens `GOSSIP_DELETE`, `GOSSIP` e `PROFILE_CARD`, remoções primeiro.
+ */
 export function messagesForWant(want, inv) {
   const pick = (index, hashes) => hashes.map((h) => index.get(h)?.item).filter(Boolean);
   return [
@@ -128,7 +171,13 @@ const noBlob = async () => null;
 /** Bytes do blob pelo que de fato viaja (`data`), não pelo `byteLength` declarado. */
 const blobBytes = (blob) => Math.ceil(String(blob?.data || "").length * 0.75);
 
-/** PM-88: põe o blob do `mediaHash` ao lado de cada GOSSIP, dentro de SYNC_BLOB_LIMITS (mais novos primeiro). */
+/**
+ * PM-88: põe o blob do `mediaHash` ao lado de cada GOSSIP, dentro de SYNC_BLOB_LIMITS (mais novos primeiro).
+ * Blob que não bate com o hash, passa do teto por blob ou estoura o teto da conexão não vai; o post segue sem ele.
+ * @param {object[]} messages Mensagens a enviar.
+ * @param {(post: object) => Promise<object|null>} [loadBlob] Carrega o blob do post (padrão: nenhum).
+ * @returns {Promise<object[]>} As mesmas mensagens, com `blob` nas que couberem.
+ */
 export async function attachBlobs(messages, loadBlob = noBlob) {
   let budget = SYNC_BLOB_LIMITS.perConnection;
   const out = [];
@@ -143,7 +192,14 @@ export async function attachBlobs(messages, loadBlob = noBlob) {
   return out;
 }
 
-/** Envio completo de antes, para cliente que não fala inventário; posts com foto levam o blob (PM-88). */
+/**
+ * Envio completo de antes, para cliente que não fala inventário; posts com foto levam o blob (PM-88).
+ * @param {(msg: object) => void} sendFn Envia uma mensagem ao par.
+ * @param {{posts: object[], dels: object[], cards: object[]}} shared Recorte de `selectShared`.
+ * @param {string} fromPeer Id de quem manda.
+ * @param {(post: object) => Promise<object|null>} [loadBlob] Carrega o blob do post (padrão: nenhum).
+ * @returns {Promise<void>} Resolve depois de mandar cartões, remoções e posts.
+ */
 export async function sendFullState(sendFn, shared, fromPeer, loadBlob = noBlob) {
   for (const card of shared.cards) sendFn({ type: "PROFILE_CARD", card, fromPeer });
   for (const t of shared.dels) sendFn({ type: "GOSSIP_DELETE", item: t, tombstone: t, fromPeer });
@@ -191,6 +247,8 @@ async function serveWant(msg, replyFn, deps, pending) {
  * `deps`: { fromPeer, loadShared(), loadAll(), loadBlob(post)?, setTimer(fn, ms), clearTimer(id) }.
  * `loadShared` devolve o recorte de selectShared; `loadAll`, tudo o que o aparelho tem (para decidir o que pedir);
  * `loadBlob`, o blob do `mediaHash` do post (ou null).
+ * @param {object} deps Dependências (ver acima; `defaultPeerSyncDeps` monta as reais).
+ * @returns {{onConnect: Function, onInventory: Function, onWant: Function}} Os três passos da sincronização de uma conexão.
  */
 export function createPeerSync(deps) {
   const pending = new Map();
@@ -212,6 +270,12 @@ async function loadLocalBlob(post) {
   return kept || mediaBlob.blobFromLocalPost(await cacheNode.getLocalPost(post.id));
 }
 
+/**
+ * Dependências reais de `createPeerSync`: estado do cache local, cartões compartilháveis do diretório, blobs de
+ * mídia e os temporizadores do navegador.
+ * @param {string} fromPeer Id deste aparelho na malha.
+ * @returns {object} Objeto `deps` para `createPeerSync`.
+ */
 export function defaultPeerSyncDeps(fromPeer) {
   return {
     fromPeer,

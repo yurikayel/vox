@@ -1,6 +1,6 @@
 /** PROFILE_CARD gossip v0 — validate, TTL, assinatura (V-MESH). */
 
-import * as localAccount from "./local-account.js";
+import * as localAccount from "./identity/index.js";
 import * as profileNote from "./profile-note.js";
 import { getLocalIdentityMeta, pickIdentityMeta } from "./profile-identity-meta.js";
 import * as upload from "./upload.js";

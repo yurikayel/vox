@@ -19,7 +19,7 @@
 | Funcionalidade | Rota | Módulos principais | Status | Testes |
 |---|---|---|---|---|
 | Feed Social / Cívico | `#/`, `#/?feed=civic` | `app/screens-home.js`, `render/feed.js`, `civic-post.js` | no ar | `civic-post`, `render`, `feed-*` |
-| Postar (Social ou Cívico, em etapas) | botão Postar | `app/compose-stepper.js`, `render/compose-steps.js`, `inline-composer.js`, `composer-media.js` | no ar | `compose-steps`, `stepped-flows`, `composer-*` |
+| Postar (Social ou Cívico, em etapas) | botão Postar | `app/compose-stepper.js`, `render/compose-steps.js`, `app/inline-composer.js`, `composer-media.js` | no ar | `compose-steps`, `stepped-flows`, `composer-*` |
 | Aviso de permanência ("gravar no Arweave" × "só na malha") | 1º post com carteira | `permanence-notice.js` | pausado quando `arweaveUpload: false` (**política atual:** tudo via rede de seguidores; guardas em `topic-permaweb.js` e `screens-compose.js`) | `permanence-notice`, `topic-permaweb` |
 | Foto, áudio e vídeo lo-fi | composer | `media-lofi.js`, `media-blob.js`, `upload.js`, `ans104.js` | no ar na malha/P2P e memória local; uploader Arweave/Turbo (`upload.js`) **bloqueado por padrão** (`arweaveUpload: false`) | `media-*`, `upload`, `verify-data-item` |
 | Republicar com citação | post ⋯ | `repost.js`, `repost-draft.js`, `render/repost-cite.js` | no ar | `repost` |
@@ -137,6 +137,6 @@
 2. **Sem relay completo público**: entrega offline de DM, cofre remoto e OAuth de várias redes dependem de stewards.
 3. **Sem TURN**: pares atrás de CGNAT podem não conectar, e o "Esconder meu IP" não tem por onde passar (REV-10).
 4. **Gravação no Arweave pausada (`arweaveUpload: false`, 13/11/2026):** por enquanto **nada é salvo usando Arweave** (fica reservado para alguns recursos futuros e leitura de registros públicos). Toda circulação e preservação ocorre pela **rede de seguidores** (malha WebRTC + sync por inventário no ar; replicação por grau completa em `PM-74` pendente). Em código, `arweaveUpload` vem desligado por padrão em `client/config/flags.json` e em `client/js/feature-flags.js`, com bloqueio em `upload.js` e guardas nos fluxos de publicação/perfil/comunidade.
-5. **21 módulos** não são carregados por nenhuma tela (lista em `UNPLUGGED_MODULES` no `sw.js`: os marcados acima, mais `polis`, `idb-store` e a cadeia `node-health-*`). Desde o PM-04 eles ficam fora do precache (~116 KB a menos na instalação). Plugar é o caminho mais barato para várias das [10 features de autossustento](./brainstorms/brainstorm-autossustento-10-features-2026-11.md).
+5. **21 módulos** não são carregados por nenhuma tela; desde 17/11 ficam em [`client/js/labs/parado/`](../client/js/labs/parado/README.md) (lista em `UNPLUGGED_MODULES` no `sw.js`: os marcados acima, mais `polis`, `idb-store` e a cadeia `node-health-*`). Desde o PM-04 eles ficam fora do precache (~116 KB a menos na instalação). Plugar é o caminho mais barato para várias das [10 features de autossustento](./brainstorms/brainstorm-autossustento-10-features-2026-11.md).
 
 Detalhes de custo e risco: [INFRA-CUSTOS.md](./INFRA-CUSTOS.md). Prioridades: [ROADMAP.md](./ROADMAP.md).

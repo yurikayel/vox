@@ -60,6 +60,13 @@ function navigateLightbox(direction) {
   }
 }
 
+/**
+ * Abre a imagem do post em lightbox tela cheia com navegação por setas.
+ *
+ * @param {string} src URL da mídia.
+ * @param {string} [alt=""] Texto alternativo.
+ * @returns {void}
+ */
 export function openPostMediaLightbox(src, alt = "") {
   const lb = getLightbox();
   if (!lb || !src) return;
@@ -110,6 +117,11 @@ function shouldIgnoreLightboxClick(target) {
   return Boolean(target.closest(IGNORED_LIGHTBOX_SELECTORS));
 }
 
+/**
+ * Liga cliques na mídia e teclas ao lightbox (chamar uma vez na inicialização).
+ *
+ * @returns {void}
+ */
 export function initPostMediaLightbox() {
   document.addEventListener("click", (e) => {
     const closeBtn = e.target.closest(".post-lightbox-close");

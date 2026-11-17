@@ -1,6 +1,6 @@
 import * as ans104 from "./ans104.js";
 import { loadArweave } from "./arweave-lib.js";
-import { isSealed, openSealed, sealJson } from "./keystore.js";
+import { isSealed, openSealed, sealJson } from "./identity/keys.js";
 
 const STORAGE_KEY = "vox-wallet-jwk";
 export const WALLET_KIND_ENCRYPTED = "vox-wallet-encrypted";

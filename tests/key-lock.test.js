@@ -5,13 +5,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import "./setup.js";
-import * as keystore from "../client/js/keystore.js";
-import * as keyLock from "../client/js/key-lock.js";
-import * as localAccount from "../client/js/local-account.js";
+import * as keystore from "../client/js/identity/keystore.js";
+import * as keyLock from "../client/js/identity/key-lock.js";
+import * as localAccount from "../client/js/identity/local-account.js";
 import * as cryptoDm from "../client/js/crypto-dm.js";
-import { exportAccountBundle, importAccountBundle } from "../client/js/account-backup.js";
-import { restoreFromPassphraseVault, savePassphraseVault } from "../client/js/oauth-vault.js";
-import { sealKeysAtRest } from "../client/js/key-at-rest.js";
+import { exportAccountBundle, importAccountBundle } from "../client/js/identity/account-backup.js";
+import { restoreFromPassphraseVault, savePassphraseVault } from "../client/js/vault/index.js";
+import { sealKeysAtRest } from "../client/js/identity/key-at-rest.js";
 
 const PASS = "quatro palavras de teste soberano";
 const read = (key) => JSON.parse(localStorage.getItem(key));

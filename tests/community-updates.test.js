@@ -8,7 +8,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import * as cu from "../client/js/community-updates.js";
 import * as cacheNode from "../client/js/cache-node.js";
-import * as localAccount from "../client/js/local-account.js";
+import * as localAccount from "../client/js/identity/local-account.js";
 import * as peers from "../client/js/peers.js";
 import * as render from "../client/js/render.js";
 

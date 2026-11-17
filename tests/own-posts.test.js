@@ -5,7 +5,7 @@ import "./setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import * as cacheNode from "../client/js/cache-node.js";
-import * as localAccount from "../client/js/local-account.js";
+import * as localAccount from "../client/js/identity/local-account.js";
 import * as mediaBlob from "../client/js/media-blob.js";
 import * as ownPosts from "../client/js/own-posts.js";
 import { person } from "./signer.js";

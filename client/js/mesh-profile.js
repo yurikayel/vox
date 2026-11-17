@@ -1,6 +1,6 @@
 /** Republicar PROFILE_CARD local quando opt-in (V-MESH). */
 
-import * as localAccount from "./local-account.js";
+import * as localAccount from "./identity/index.js";
 import * as profileCard from "./profile-card.js";
 import * as profileDirectory from "./profile-directory.js";
 import { markProfileCardSeen, seenStamp } from "./peers-gossip-profile.js";

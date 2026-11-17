@@ -191,6 +191,7 @@ Spec: [`docs/specs/mirror-validate-v1.md`](../docs/specs/mirror-validate-v1.md).
 1. Abra as Ferramentas do Desenvolvedor (F12) -> aba **Application** -> **Service Workers**:
    * O arquivo `sw.js` deve estar com status **Activated and running** com escopo `./`.
 2. Na aba **Cache Storage**, certifique-se de que o cache vigente (`CACHE_NAME` em `sw.js`) contém os arquivos estáticos pré-cacheados (`index.html`, `style.css`, módulos `.js`, incl. `inline-composer.js` e `composer-media.js`).
+   * O SW só intercepta **GET do mesmo domínio**: POST/PUT/DELETE/HEAD e pedidos a outros domínios vão direto à rede, e `config/flags.json` nunca sai do cache (LAN-08). `config/signaling.json` é rede primeiro; o resto do shell é cache primeiro com atualização em segundo plano. Teste: `tests/sw-fetch-methods.test.js`.
 3. Em `#/settings/network`, ative a opção **"Atuar em segundo plano via Service Worker"** e clique em **"Ativar Notificações de Status"**:
    * Ao autorizar permissão no navegador, o Service Worker sincroniza a configuração via mensagem `VOX_SETTINGS_UPDATED`.
 
@@ -653,9 +654,10 @@ A sprint v6.2 implementa a cooptagem da especificação **Open Frames** (`of:*` 
 - **Gossip P2P & Persistência Local:** A ação é salva no `IndexedDB` local (`cacheNode.saveLocalPost`) e propagada aos pares conectados na malha WebRTC (`peers.broadcastGossip`).
 - **Cache Rápido em LocalStorage:** Ações locais recentes são mantidas em `vox-frame-actions` para renderização imediata sem flicker visual na timeline.
 - **Feedback Interativo em Tempo Real:** Atualização dinâmica no DOM (`#frame-content-:postId`) com barras de porcentagem para enquetes, confirmação de assinatura para abaixo-assinados e resultados de cálculo instantâneos.
+- **Apuração com as ações de todos (`app/frame-ui.js`, 2026-11-17):** o feed desenha o cartão de forma síncrona só com o voto deste aparelho; `watchFrameCards` (ligado em `app.js`) observa a página e, quando um cartão `.vox-frame` entra (feed, comunidade, perfil, tópico ou redesenho por gossip), completa a apuração com todas as ações `frame-action` guardadas. Depois do voto, o botão volta ao normal (sai de "Gravando…") e a escolha fica marcada (`active`). Na enquete, quem muda o voto conta pelo voto de maior `ts`, independentemente da ordem em que as ações chegam.
 
 ### 20.3 Cache e PWA
-- Ativo `./js/frames.js` no app shell.
+- Ativos `./js/frames.js` e `./js/app/frame-ui.js` no app shell.
 
 ---
 
@@ -731,7 +733,7 @@ Não há trabalho pendente obrigatório do plano «Meta feed v6.3» em HOLD. O q
 Implementação dos quatro pilares essenciais do roadmap da rede Vox:
 
 ### 23.1 Autonomia de Identidade (Backup e Restauração Criptográfica)
-- **Módulo:** `client/js/account-backup.js` (arquivo `.voxid`), `client/js/local-account.js` e `client/js/crypto-dm.js`. Exportar com a Senha Soberana trava as chaves do aparelho (PM-93, `key-lock.js`).
+- **Módulo:** `client/js/identity/account-backup.js` (arquivo `.voxid`), `client/js/identity/local-account.js` e `client/js/crypto-dm.js`. Exportar com a Senha Soberana trava as chaves do aparelho (PM-93, `identity/key-lock.js`). Fora de `identity/`, importa-se pela porta `identity/index.js` (ADR-035).
 - **Exportação:** `exportAccountBundle()` serializa identidade local (`routeId`, `name`, `bio`, `handle`), par de chaves ECDSA P-256 de assinatura e par de chaves ECDH P-256 de DMs privadas com timestamp e versão `vox-account-bundle-v1`.
 - **Importação e Verificação Estrita:** `importAccountBundle(bundle)` re-computa o `routeId` a partir da chave pública JWK, assina e verifica um *challenge nonce* efêmero com a chave privada importada antes de persistir no `localStorage`. Rejeita pacotes adulterados, chaves truncadas ou identificadores forjados.
 - **Suíte de testes:** `tests/account-backup.test.js`.
@@ -744,7 +746,7 @@ Implementação dos quatro pilares essenciais do roadmap da rede Vox:
 - **Suíte de testes:** `tests/moderation-local.test.js`.
 
 ### 23.3 Deliberação Coletiva (Pol.is-lite / Consenso Determinístico)
-- **Módulo:** `client/js/polis.js`.
+- **Módulo:** `client/js/labs/parado/polis.js`.
 - **Métricas e Apuração:** Normalização de votos (`concordo: +1`, `discordo: -1`, `passo/neutro: 0`), apuração por afirmação com cálculo de porcentagens e variância de opinião.
 - **Detecção de Pontes de Consenso:** Algoritmo determinístico de particionamento de votantes em clusters de divergência e identificação de afirmações ponte (*consensus bridges* — afirmações com alta aprovação em ambos os polos) vs afirmações divisivas (*divisive statements*).
 - **Sem Dependências Externas:** Implementado em JavaScript puro para execução instantânea no navegador e em nós do relay.
@@ -1132,7 +1134,7 @@ OAuth e compartilhamento nativo citam provedores apenas onde exigido por integra
 **Data:** 2026-11-05 · **SW:** `vox-pwa-v7.20-real-network-audio-video-upload` · **Testes:** 751 testes verdes.
 
 - **Docs:** `docs/adr/014-zero-knowledge-vault-recuperacao-soberana.md`.
-- **Módulos:** `client/js/oauth-vault.js`, `client/js/oauth-profile.js`, `client/js/local-account.js`, `client/js/people-index.js`, `client/js/qr-url-codec.js`.
+- **Módulos:** `client/js/vault/` (porta `vault/index.js`; ADR-035), `client/js/oauth-profile.js`, `client/js/identity/` (porta `identity/index.js`), `client/js/people-index.js`, `client/js/qr-url-codec.js`.
 - **Cofre de Conhecimento Zero:**
   - Derivação PBKDF2 (50.000 iterações) e cifra AES-GCM-256 no cliente a partir de identificadores perenes: Google (`sub`), Meta (`profile.id`) ou **Senha Soberana** (sem Big Tech).
   - O servidor/relay (`zero-central-memory` / `relay/central_memory.py`) armazena apenas hash SHA-256 e ciphertext — servidores nunca têm custódia nem acesso a chaves privadas.

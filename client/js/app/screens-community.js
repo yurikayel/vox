@@ -21,7 +21,7 @@ import * as share from "../share.js";
 import * as mod from "../moderation.js";
 import * as cacheNode from "../cache-node.js";
 import * as peers from "../peers.js";
-import * as localAccount from "../local-account.js";
+import * as localAccount from "../identity/index.js";
 import * as listing from "../listing.js";
 import * as listingUi from "../listing-ui.js";
 import * as i18n from "../i18n-pt-br.js";
@@ -66,6 +66,12 @@ async function fetchRawCommunityTopics(communityId) {
   }
 }
 
+/**
+ * Resolve metadados da comunidade (cache local e remoto).
+ *
+ * @param {string} communityId
+ * @returns {Promise<unknown>}
+ */
 export async function resolveCommunityMetadata(communityId) {
   let meta = { id: communityId, title: communityId, owner: "" };
   try {
@@ -171,6 +177,14 @@ async function loadCommunityTabSpecifics(communityId, tab, user, demo) {
   return { listings, proposals };
 }
 
+/**
+ * Verifica se a rota é membro da comunidade.
+ *
+ * @param {string} communityId
+ * @param {string} user
+ * @param {unknown} meta [optional]
+ * @returns {Promise<unknown>}
+ */
 export async function checkCommunityMembership(communityId, user, meta = null) {
   if (!user) return false;
   if (meta?.owner && meta.owner.toLowerCase() === user.toLowerCase()) {
@@ -220,6 +234,12 @@ async function appendVoxDirectoryMembers(recentPeople, peopleSet) {
   } catch {}
 }
 
+/**
+ * Monta lista de pessoas recentes na comunidade.
+ *
+ * @param {unknown} arg0
+ * @returns {Promise<unknown>}
+ */
 export async function buildCommunityRecentPeople({ filteredTopics, meta, user, isMember, tab, communityId = "" }) {
   const isRelevantTab = tab === "posts" || tab === "members";
   const recentPeople = isRelevantTab ? peopleIndex.extractRecentAuthors(filteredTopics, 32) : [];
@@ -388,6 +408,15 @@ function bindCommunityMembershipToggle(communityId, user, isMember) {
   }
 }
 
+/**
+ * Executa ação moderativa assinada na comunidade.
+ *
+ * @param {string} communityId
+ * @param {unknown} action
+ * @param {string} targetId
+ * @param {unknown} arg3 [optional]
+ * @returns {Promise<unknown>}
+ */
 export async function dispatchCommunityModAction(communityId, action, targetId, { upload: toArweave = true } = {}) {
   const modActionPost = {
     id: `mod_${action}_${targetId}_${Date.now()}`,
@@ -624,6 +653,13 @@ function buildCommunityTabProps({ communityId, meta, base, specifics, recentPeop
   };
 }
 
+/**
+ * Monta página da comunidade e abas.
+ *
+ * @param {string} communityId
+ * @param {unknown} tab [optional]
+ * @returns {void}
+ */
 export async function showCommunity(communityId, tab = "posts") {
   markCommunitySeen(communityId);
   const user = await getActiveUser();
@@ -672,6 +708,12 @@ async function handleListingPixClick(btn) {
   }
 }
 
+/**
+ * Liga ações da listagem de classificados na comunidade.
+ *
+ * @param {unknown} main
+ * @returns {void}
+ */
 export function attachCommunityListingHandlers(main) {
   main.querySelectorAll(".btn-copy-pix").forEach((btn) => {
     btn.addEventListener("click", (e) => { e.preventDefault(); void handleListingPixClick(btn); });
@@ -697,6 +739,13 @@ export function attachCommunityListingHandlers(main) {
   });
 }
 
+/**
+ * Atualiza status de anúncio na comunidade.
+ *
+ * @param {string} listingId
+ * @param {unknown} newStatus
+ * @returns {void}
+ */
 export async function handleListingStatusUpdate(listingId, newStatus) {
   const user = await getActiveUser();
   const existing = await cacheNode.getLocalPost(listingId);
@@ -721,6 +770,12 @@ export async function handleListingStatusUpdate(listingId, newStatus) {
   }
 }
 
+/**
+ * Retira anúncio da listagem.
+ *
+ * @param {string} listingId
+ * @returns {void}
+ */
 export async function handleListingRetract(listingId) {
   const user = await getActiveUser();
   const existing = await cacheNode.getLocalPost(listingId);
@@ -754,6 +809,14 @@ async function fetchRemoteTopicFallback(topicId, commIdParam) {
   return { topic: topic || { title: "Tópico", owner: "", communityId: commIdParam }, topicData };
 }
 
+/**
+ * Carrega conteúdo do tópico para exibição.
+ *
+ * @param {string} topicId
+ * @param {string} commIdParam
+ * @param {string} user
+ * @returns {Promise<unknown>}
+ */
 export async function resolveTopicContent(topicId, commIdParam, user) {
   const isOfficial = topicId === welcomeProfile.OFFICIAL_WELCOME_TOPIC_ID || topicId === "vox-official-manifesto-welcome";
   if (isOfficial) {
@@ -913,6 +976,13 @@ async function resolveTopicModeration(communityId, user, replies, topic = null) 
   };
 }
 
+/**
+ * Monta tela de um tópico.
+ *
+ * @param {string} topicId
+ * @param {string} commIdParam [optional]
+ * @returns {void}
+ */
 export async function showTopic(topicId, commIdParam = "") {
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "home", "Tópico"));
@@ -936,6 +1006,13 @@ export async function showTopic(topicId, commIdParam = "") {
   bindTopicScreenEvents(topicId, currentTopic, finalCommId);
 }
 
+/**
+ * Monta tela de proposta de governança.
+ *
+ * @param {string} communityId
+ * @param {string} proposalId
+ * @returns {void}
+ */
 export async function showProposal(communityId, proposalId) {
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "communities", "Proposta de Governança"));
@@ -962,6 +1039,14 @@ export async function showProposal(communityId, proposalId) {
   attachProposalBridgeHandlers(proposal, tally);
 }
 
+/**
+ * Busca dados da proposta no cache.
+ *
+ * @param {string} communityId
+ * @param {string} proposalId
+ * @param {string} user
+ * @returns {Promise<unknown>}
+ */
 export async function fetchProposalData(communityId, proposalId, user) {
   let proposal = await cacheNode.getLocalPost(proposalId);
   if (!proposal) {
@@ -985,6 +1070,12 @@ export async function fetchProposalData(communityId, proposalId, user) {
   return { proposal, votes, tally, userVote, isEligible, isMember };
 }
 
+/**
+ * Carrega votos já registrados na proposta.
+ *
+ * @param {string} proposalId
+ * @returns {Promise<unknown>}
+ */
 export async function loadProposalVotes(proposalId) {
   const localVotes = await cacheNode.getLocalPosts({ type: "governance-vote", proposalId });
   const mockVotesList = mock.MOCK_DEMO_VOTES[proposalId] || [];
@@ -1031,7 +1122,11 @@ function attachProposalBridgeHandlers(proposal, tally) {
 
 /**
  * Assina e propaga um voto de governança (mesmo formato usado pelo detalhe da pauta).
- * @returns {Promise<object>} voto assinado
+ *
+ * @param {object} proposal Pauta com `id` e `communityId`.
+ * @param {string} user Rota do votante.
+ * @param {string} choice Opção escolhida.
+ * @returns {Promise<object>} Voto assinado.
  */
 export async function castGovernanceVote(proposal, user, choice) {
   const normalized = gov.normalizeVoteChoice(choice);
@@ -1051,6 +1146,13 @@ export async function castGovernanceVote(proposal, user, choice) {
   return signedVote;
 }
 
+/**
+ * Liga botões de voto na proposta.
+ *
+ * @param {object} proposal
+ * @param {string} user
+ * @returns {void}
+ */
 export function attachProposalVotingHandlers(proposal, user) {
   const buttons = document.querySelectorAll(".vote-btn");
   buttons.forEach((btn) => {
@@ -1079,7 +1181,12 @@ async function buildVoteCommunityTitles() {
   return titles;
 }
 
-/** Carrega todas as pautas de governança conhecidas por este aparelho, com apuração real. */
+/**
+ * Carrega todas as pautas de governança conhecidas por este aparelho, com apuração real.
+ *
+ * @param {string} user Rota ativa para elegibilidade.
+ * @returns {Promise<object[]>} Itens normalizados para a tela de votos.
+ */
 export async function loadVoteItems(user) {
   const proposals = await cacheNode.getLocalPosts({ type: "governance-proposal" }).catch(() => []);
   const titles = await buildVoteCommunityTitles();
@@ -1137,6 +1244,12 @@ function bindVoteChoiceButtons(main, items, user, rerender) {
   });
 }
 
+/**
+ * Monta tela global de votos.
+ *
+ * @param {unknown} arg0 [optional]
+ * @returns {void}
+ */
 export async function showVote({ filter = "all" } = {}) {
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "vote", "Democracia Direta"));

@@ -2,7 +2,7 @@ import "../tests/setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import * as listing from "../client/js/listing.js";
-import * as localAccount from "../client/js/local-account.js";
+import * as localAccount from "../client/js/identity/local-account.js";
 
 test("listing - isCommercialEnabled reconhece flag booleana e tags", () => {
   assert.equal(listing.isCommercialEnabled(null), false);

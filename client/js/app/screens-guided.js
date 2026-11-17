@@ -3,14 +3,20 @@ import * as render from "../render.js";
 import * as peers from "../peers.js";
 import * as share from "../share.js";
 import * as wallet from "../wallet.js";
-import * as localAccount from "../local-account.js";
+import * as localAccount from "../identity/index.js";
 import * as pixKeyHelper from "../pix-key.js";
 import { renderNetworkWizard, renderBackupWizard, renderWalletWizard } from "../render/guided-setup.js";
 import { bindComposeStepper } from "./compose-stepper.js";
 import { getActiveUser, makeShellProps } from "./context.js";
 import { syncIdentity } from "./screens-network.js";
 
-/** Pura: aplica as escolhas do assistente sobre as configurações atuais. */
+/**
+ * Pura: aplica as escolhas do assistente sobre as configurações atuais.
+ *
+ * @param {object} current Configurações de peer atuais.
+ * @param {object} choices Valores do formulário (`enabled`, `cap`, `wifiOnly`, `backgroundRelay`).
+ * @returns {object} Novas configurações mescladas.
+ */
 export function applyNetworkWizardChoices(current, { enabled, cap, wifiOnly, backgroundRelay }) {
   return {
     ...current,
@@ -21,6 +27,11 @@ export function applyNetworkWizardChoices(current, { enabled, cap, wifiOnly, bac
   };
 }
 
+/**
+ * Monta assistente de configuração de rede.
+ *
+ * @returns {void}
+ */
 export async function showNetworkWizard() {
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "network", "Configuração guiada"));
@@ -82,7 +93,7 @@ function reportVaultResult(out, res, pass) {
 
 async function downloadWrappedFile(pass) {
   try {
-    const { exportAccountBundle } = await import("../account-backup.js");
+    const { exportAccountBundle } = await import("../identity/index.js");
     const jsonStr = await exportAccountBundle(pass, { asFile: true });
     share.downloadBlob(new Blob([jsonStr], { type: "application/json" }), `vox-soberania-${JSON.parse(jsonStr).routeId}.voxid`);
     share.showToast("Arquivo cifrado baixado. Guarde fora deste aparelho.");
@@ -102,7 +113,7 @@ async function submitBackupWizard() {
   const out = document.getElementById("bk-result");
   if (btn) btn.disabled = true;
   try {
-    const { savePassphraseVault } = await import("../oauth-vault.js");
+    const { savePassphraseVault } = await import("../vault/index.js");
     const pass = document.getElementById("bk-pass")?.value || "";
     const res = await savePassphraseVault(pass, readBackupVaultOptions());
     reportVaultResult(out, res, pass);
@@ -115,6 +126,11 @@ async function submitBackupWizard() {
   }
 }
 
+/**
+ * Monta assistente de backup.
+ *
+ * @returns {void}
+ */
 export async function showBackupWizard() {
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "profile", "Backup da identidade"));
@@ -151,6 +167,11 @@ function applyPix() {
   return true;
 }
 
+/**
+ * Monta assistente de carteira.
+ *
+ * @returns {void}
+ */
 export async function showWalletWizard() {
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "profile", "Configuração guiada"));

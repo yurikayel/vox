@@ -1,7 +1,7 @@
 import "../tests/setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
-import * as polis from "../client/js/polis.js";
+import * as polis from "../client/js/labs/parado/polis.js";
 
 test("polis - normalização de votos", () => {
   assert.equal(polis.normalizePolisVote("agree"), polis.VOTE_AGREE);

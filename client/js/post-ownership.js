@@ -1,5 +1,5 @@
 /** Regras de edição/exclusão — só posts locais assinados pelo autor ativo (vx_…). */
-import * as localAccount from "./local-account.js";
+import * as localAccount from "./identity/index.js";
 
 /** Título Nostr/metadata a partir do texto único do compositor. */
 export function deriveTopicTitleFromBody(bodyRaw) {

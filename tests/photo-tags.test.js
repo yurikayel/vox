@@ -3,7 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import * as photoTags from "../client/js/photo-tags.js";
 import { persistPhotoTags } from "../client/js/app/photo-tag-persist.js";
-import * as localAccount from "../client/js/local-account.js";
+import * as localAccount from "../client/js/identity/local-account.js";
 import * as cacheNode from "../client/js/cache-node.js";
 
 test("photo-tags - normaliza coordenadas e alvo", () => {

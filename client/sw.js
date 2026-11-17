@@ -4,7 +4,7 @@
 
 // O Service Worker atua no cache offline do shell e notificações de status, sem abrir WebRTC.
 
-const CACHE_NAME = "vox-pwa-v7.127-real-network-audio-video-upload";
+const CACHE_NAME = "vox-pwa-v7.140-real-network-audio-video-upload";
 
 const SHELL_ASSETS = [
 
@@ -54,6 +54,7 @@ const SHELL_ASSETS = [
 
   "./js/app/inbox-backup-ui.js",
   "./js/app/init.js",
+  "./js/app/frame-ui.js",
 
   "./js/app/post-media-lightbox.js",
 
@@ -118,6 +119,7 @@ const SHELL_ASSETS = [
   "./js/render/diff-html.js",
 
   "./embed/frame-demo.html",
+  "./embed/frame-demo.js",
 
   "./embed/demo.html",
 
@@ -156,7 +158,7 @@ const SHELL_ASSETS = [
   "./js/boot-color-mode.js",
   "./js/boot-short-url.js",
   "./js/boot-sw.js",
-  "./js/dom-delegates.js",
+  "./js/app/dom-delegates.js",
   "./js/nostr-event.js",
   "./js/new-key-guard.js",
   "./js/community-updates.js",
@@ -172,7 +174,7 @@ const SHELL_ASSETS = [
 
   "./js/i18n-pt-br.js",
 
-  "./js/inline-composer.js",
+  "./js/app/inline-composer.js",
   "./js/permanence-notice.js",
   "./js/topic-permaweb.js",
   "./js/report.js",
@@ -202,13 +204,15 @@ const SHELL_ASSETS = [
   "./embed/vox-embed.js",
 
   "./js/inbox.js",
-  "./js/inbox-backup.js",
+  "./js/identity/inbox-backup.js",
 
   "./js/listing.js",
 
   "./js/listing-ui.js",
 
-  "./js/local-account.js",
+  "./js/identity/index.js",
+  "./js/identity/keys.js",
+  "./js/identity/local-account.js",
   "./js/account-social-match.js",
   "./js/sig-format.js",
   "./js/signed-verify.js",
@@ -228,7 +232,7 @@ const SHELL_ASSETS = [
   "./js/app/mediation-dm.js",
   "./js/app/natural-case-flow.js",
 
-  "./js/account-backup-wrap.js",
+  "./js/identity/account-backup-wrap.js",
 
   "./js/contribution-attestation.js",
 
@@ -240,33 +244,36 @@ const SHELL_ASSETS = [
 
   "./js/oauth-profile.js",
 
-  "./js/oauth-vault.js",
-  "./js/passphrase-vault.js",
-  "./js/vault-store.js",
-  "./js/keystore.js",
-  "./js/key-at-rest.js",
-  "./js/key-lock.js",
-  "./js/account-backup.js",
-  "./js/account-exit.js",
-  "./js/recovery-phrase.js",
-  "./js/identity-seed.js",
-  "./js/account-phrase.js",
+  "./js/vault/index.js",
+  "./js/vault/envelope.js",
+  "./js/vault/oauth-vault.js",
+  "./js/vault/passphrase-vault.js",
+  "./js/vault/vault-store.js",
+  "./js/identity/keystore.js",
+  "./js/identity/key-at-rest.js",
+  "./js/identity/key-lock.js",
+  "./js/identity/account-backup.js",
+  "./js/identity/account-exit.js",
+  "./js/identity/recovery-phrase.js",
+  "./js/identity/identity-seed.js",
+  "./js/identity/account-phrase.js",
   "./js/shamir-gf256.js",
-  "./js/guardians.js",
-  "./js/local-wipe.js",
+  "./js/identity/guardians.js",
+  "./js/identity/local-wipe.js",
   "./js/app/guardians-flow.js",
   "./js/render/guardians.js",
   "./js/app/screens-guardians.js",
-  "./js/guardian-return.js",
+  "./js/identity/guardian-return.js",
   "./js/app/guardian-return-flow.js",
   "./js/render/guardian-return.js",
   "./js/app/screens-guardian-return.js",
   "./js/render/recovery-phrase.js",
   "./js/app/screens-phrase.js",
-  "./js/p256.js",
+  "./js/app/phrase-print.js",
+  "./js/identity/p256.js",
   "./js/data/bip39-pt.js",
-  "./js/vault-crypto.js",
-  "./js/vault-legacy.js",
+  "./js/vault/vault-crypto.js",
+  "./js/vault/vault-legacy.js",
 
   "./js/people-index.js",
 
@@ -343,9 +350,9 @@ const SHELL_ASSETS = [
 
   "./js/render/feed.js",
 
-  "./js/render/post-more-menu.js",
+  "./js/app/post-more-menu.js",
 
-  "./js/render/post-more-actions.js",
+  "./js/app/post-more-actions.js",
 
   "./js/render/ig-toolbar.js",
 
@@ -451,27 +458,27 @@ const SHELL_ASSETS = [
  */
 // eslint-disable-next-line no-unused-vars
 const UNPLUGGED_MODULES = [
-  "./js/airgap-webrtc.js",
-  "./js/bridging-rank.js",
-  "./js/chunked-transfer.js",
-  "./js/civic-credential.js",
-  "./js/idb-store.js",
-  "./js/identity-link.js",
-  "./js/kit-genesis.js",
-  "./js/node-health-api.js",
-  "./js/node-health-evaluator.js",
-  "./js/node-health-model.js",
-  "./js/node-health-state.js",
-  "./js/node-health-ux.js",
-  "./js/polis.js",
-  "./js/render/node-health-badge.js",
-  "./js/render/settings-guardian.js",
-  "./js/seeder-guardian.js",
-  "./js/testimonials.js",
-  "./js/vox-identity.js",
-  "./js/webxdc-crdt.js",
-  "./js/webxdc-host.js",
-  "./js/webxdc-loader.js",
+  "./js/labs/parado/airgap-webrtc.js",
+  "./js/labs/parado/bridging-rank.js",
+  "./js/labs/parado/chunked-transfer.js",
+  "./js/labs/parado/civic-credential.js",
+  "./js/labs/parado/idb-store.js",
+  "./js/labs/parado/identity-link.js",
+  "./js/labs/parado/kit-genesis.js",
+  "./js/labs/parado/node-health-api.js",
+  "./js/labs/parado/node-health-evaluator.js",
+  "./js/labs/parado/node-health-model.js",
+  "./js/labs/parado/node-health-state.js",
+  "./js/labs/parado/node-health-ux.js",
+  "./js/labs/parado/polis.js",
+  "./js/labs/parado/node-health-badge.js",
+  "./js/labs/parado/settings-guardian.js",
+  "./js/labs/parado/seeder-guardian.js",
+  "./js/labs/parado/testimonials.js",
+  "./js/labs/parado/vox-identity.js",
+  "./js/labs/parado/webxdc-crdt.js",
+  "./js/labs/parado/webxdc-host.js",
+  "./js/labs/parado/webxdc-loader.js",
 ];
 
 self.addEventListener("install", (event) => {
@@ -557,6 +564,8 @@ function handleAppShellFetch(event) {
 }
 
 self.addEventListener("fetch", (event) => {
+  // Só GET passa pelo cache: POST/PUT/DELETE vão direto à rede (o Cache API não guarda nem casa outros métodos).
+  if (event.request.method !== "GET") return;
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
 
