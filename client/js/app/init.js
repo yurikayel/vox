@@ -14,7 +14,7 @@ import { getActiveUser } from "./context.js";
 import { openZapModal } from "./zap-modal.js";
 import * as centralMemory from "../central-memory.js";
 import * as peers from "../peers.js";
-import * as localAccount from "../local-account.js";
+import * as localAccount from "../identity/index.js";
 import * as voxels from "../voxels.js";
 import {
   showHome,

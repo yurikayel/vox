@@ -1,6 +1,6 @@
 /** ADR-001: export opt-in de métricas locais assinadas — sem gossip nem upload. */
 
-import * as localAccount from "./local-account.js";
+import * as localAccount from "./identity/index.js";
 import * as peers from "./peers.js";
 
 export const ATTESTATION_TYPE = "contribution-attestation";

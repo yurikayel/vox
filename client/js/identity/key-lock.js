@@ -12,7 +12,7 @@
  */
 
 import { KeyLockedError, KeystoreUnavailableError, LOCKED_TAG, isLocked, loadKey, openSealed, removeKey, storeKey } from "./keystore.js";
-import { decryptVaultRecord, encryptVaultV2 } from "./vault/envelope.js";
+import { decryptVaultRecord, encryptVaultV2 } from "../vault/envelope.js";
 
 const LOCKED_COPIES = "vox-locked-keys-v1";
 /** Mesmo mínimo do cofre (`VAULT_PASSPHRASE_MIN`): senha curta não trava nada. */
@@ -49,12 +49,20 @@ async function keyFor(atRest, algo, usages) {
   return sessionKeys.get(atRest.kid);
 }
 
-/** Chave de assinatura para uso, a partir do que está guardado (cifrado, em claro ou travado). */
+/**
+ * Chave de assinatura para uso, a partir do que está guardado (cifrado, em claro ou travado).
+ * @param {object} atRest JWK privado guardado, envelope do aparelho ou referência travada
+ * @returns {Promise<CryptoKey>}
+ */
 export function signingKey(atRest) {
   return keyFor(atRest, ECDSA, ["sign"]);
 }
 
-/** Chave privada de DM para uso, a partir do que está guardado. */
+/**
+ * Chave privada de DM para uso, a partir do que está guardado.
+ * @param {object} atRest JWK privado guardado, envelope do aparelho ou referência travada
+ * @returns {Promise<CryptoKey>}
+ */
 export function dmPrivateKey(atRest) {
   return keyFor(atRest, ECDH, ["deriveKey"]);
 }
@@ -81,6 +89,9 @@ async function storeDmKey(routeId, dmKeypair) {
 /**
  * Trava as chaves de uma conta. Recebe as chaves abertas (e a semente, se houver: ADR-032) e a Senha Soberana;
  * devolve as referências que substituem as chaves guardadas, ou null se este aparelho não consegue travar.
+ * @param {{ routeId: string, publicJwk: object, privateJwk: object, dmKeypair?: object, seed?: string|null }} account chaves abertas da conta
+ * @param {string} passphrase Senha Soberana (mínimo `LOCK_MIN_PASSPHRASE`)
+ * @returns {Promise<{ privateJwk: object, dmPrivateJwk: object|null }|null>}
  */
 export async function lockKeys({ routeId, publicJwk, privateJwk, dmKeypair, seed = null }, passphrase) {
   const secret = String(passphrase || "").trim();
@@ -95,7 +106,13 @@ export async function lockKeys({ routeId, publicJwk, privateJwk, dmKeypair, seed
   return { privateJwk: lockedRef(signId), dmPrivateJwk: dmId ? lockedRef(dmId) : null };
 }
 
-/** Abre a cópia exportável de uma conta travada. Só a Senha Soberana que travou abre. */
+/**
+ * Abre a cópia exportável de uma conta travada. Só a Senha Soberana que travou abre.
+ * @param {string} routeId conta (`vx_…`)
+ * @param {string} passphrase Senha Soberana
+ * @returns {Promise<object>} chaves e semente abertas
+ * @throws {KeyLockedError} sem cópia neste aparelho ou senha incorreta
+ */
 export async function openLockedCopy(routeId, passphrase) {
   const secret = String(passphrase || "").trim();
   if (!secret) throw new KeyLockedError();
@@ -110,7 +127,11 @@ export async function openLockedCopy(routeId, passphrase) {
   }
 }
 
-/** Apaga a cópia por senha e as chaves não exportáveis de uma conta. */
+/**
+ * Apaga a cópia por senha e as chaves não exportáveis de uma conta.
+ * @param {string} routeId conta (`vx_…`)
+ * @returns {Promise<void>}
+ */
 export async function forgetLockedAccount(routeId) {
   const copies = readCopies();
   if (copies[routeId]) {
@@ -134,6 +155,7 @@ export async function forgetAllLockedAccounts() {
   await Promise.all(ids.map((id) => forgetLockedAccount(id)));
 }
 
+/** Só para testes: esquece as chaves abertas nesta sessão. */
 export function __resetKeyLockForTests() {
   sessionKeys.clear();
 }

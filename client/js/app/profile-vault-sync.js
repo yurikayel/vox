@@ -17,8 +17,8 @@
 import * as share from "../share.js";
 import { openQrUrlSheet } from "../qr-url.js";
 import { QR_MAX_BYTES } from "../qr-url-codec.js";
-import { getAccountExits } from "../account-exit.js";
-import { getCachedRouteIdSync } from "../local-account.js";
+import { getAccountExits } from "../identity/index.js";
+import { getCachedRouteIdSync } from "../identity/index.js";
 
 const NO_EMAIL_CONFIRM =
   "Esta conta tem saída por e-mail. Sem o e-mail, o cofre fica num endereço que sai só da senha, mais fácil de adivinhar. Gravar mesmo assim?";

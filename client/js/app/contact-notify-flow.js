@@ -12,7 +12,7 @@ import { isWelcomeRouteId } from "../vox-welcome-profile.js";
 async function defaultSendDeps() {
   const [gql, peers, cryptoDm, localAccount, wire] = await Promise.all([
     import("../graphql.js"), import("../peers.js"), import("../crypto-dm.js"),
-    import("../local-account.js"), import("./dm-wire.js"),
+    import("../identity/index.js"), import("./dm-wire.js"),
   ]);
   return {
     getMe: () => localAccount.getRouteId(),
@@ -83,7 +83,7 @@ function notifyListChanged() {
 
 async function defaultReceiveDeps() {
   const [localAccount, profileDirectory, context, util] = await Promise.all([
-    import("../local-account.js"), import("../profile-directory.js"), import("./context.js"), import("../short-id.js"),
+    import("../identity/index.js"), import("../profile-directory.js"), import("./context.js"), import("../short-id.js"),
   ]);
   return {
     verify: (signed) => localAccount.verifyPayload(signed),

@@ -13,7 +13,7 @@
 | C2 | Indexação em 2–5 s | Vale para bundles Turbo. Tx L1 aparece como *pending* e confirma em blocos de ~2 min; indexação GraphQL varia por gateway. | idem |
 | C3 | Foto vai para a Permaweb | **Não.** O composer grava on-chain só `{ title, body, communityId }`. Mídia segue por gossip P2P + blob local (`mediaBlob.detachMedia`). Irmão offline do mesh não vê a foto. | [`inline-composer.js`](../../client/js/inline-composer.js#L493-L509) |
 | C4 | Perfil (bio/avatar) descoberto via Arweave | **Não.** `profile-card` é gossip P2P assinado (vx_, TTL 30 d) + `localStorage`. On-chain existem só `handle`, `profile-key`, `membership`. | [`profile-card.js`](../../client/js/profile-card.js), [`profile-directory.js`](../../client/js/profile-directory.js) |
-| C5 | Identidade Ed25519 | Identidade viva = **ECDSA P-256** (`vx_…`, `local-account.js`) + **carteira RSA/JWK Arweave** separada. Ed25519 é só tag reservada. | [`local-account.js`](../../client/js/local-account.js#L58-L63), [`docs/IDENTITY.md`](../IDENTITY.md) |
+| C5 | Identidade Ed25519 | Identidade viva = **ECDSA P-256** (`vx_…`, `local-account.js`) + **carteira RSA/JWK Arweave** separada. Ed25519 é só tag reservada. | [`local-account.js`](../../client/js/identity/local-account.js#L58-L63), [`docs/IDENTITY.md`](../IDENTITY.md) |
 | C6 | Irmão valida a assinatura do post | Leitor confia no `owner.address` devolvido pelo gateway; **não há verificação local** (`transactions.verify`) da tx. | [`graphql.js`](../../client/js/graphql.js) |
 
 ## 2. Riscos de segurança verificados

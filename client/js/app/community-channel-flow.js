@@ -21,7 +21,7 @@ async function resolveComposeMeta(communityId) {
 
 /** As duas identidades do aparelho: a ativa (carteira, se houver) e a conta local que assina. */
 async function deviceSelves() {
-  const [context, localAccount] = await Promise.all([import("./context.js"), import("../local-account.js")]);
+  const [context, localAccount] = await Promise.all([import("./context.js"), import("../identity/index.js")]);
   return [await context.getActiveUser().catch(() => ""), await localAccount.getRouteId().catch(() => "")];
 }
 
@@ -40,7 +40,7 @@ export async function assertCanPostTopic(communityId, deps = null) {
 
 async function defaultModeDeps() {
   const [localAccount, cacheNode, peers] = await Promise.all([
-    import("../local-account.js"), import("../cache-node.js"), import("../peers.js"),
+    import("../identity/index.js"), import("../cache-node.js"), import("../peers.js"),
   ]);
   return {
     getMeta: resolveMeta,

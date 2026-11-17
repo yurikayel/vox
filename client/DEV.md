@@ -731,7 +731,7 @@ Não há trabalho pendente obrigatório do plano «Meta feed v6.3» em HOLD. O q
 Implementação dos quatro pilares essenciais do roadmap da rede Vox:
 
 ### 23.1 Autonomia de Identidade (Backup e Restauração Criptográfica)
-- **Módulo:** `client/js/account-backup.js` (arquivo `.voxid`), `client/js/local-account.js` e `client/js/crypto-dm.js`. Exportar com a Senha Soberana trava as chaves do aparelho (PM-93, `key-lock.js`).
+- **Módulo:** `client/js/identity/account-backup.js` (arquivo `.voxid`), `client/js/identity/local-account.js` e `client/js/crypto-dm.js`. Exportar com a Senha Soberana trava as chaves do aparelho (PM-93, `identity/key-lock.js`). Fora de `identity/`, importa-se pela porta `identity/index.js` (ADR-035).
 - **Exportação:** `exportAccountBundle()` serializa identidade local (`routeId`, `name`, `bio`, `handle`), par de chaves ECDSA P-256 de assinatura e par de chaves ECDH P-256 de DMs privadas com timestamp e versão `vox-account-bundle-v1`.
 - **Importação e Verificação Estrita:** `importAccountBundle(bundle)` re-computa o `routeId` a partir da chave pública JWK, assina e verifica um *challenge nonce* efêmero com a chave privada importada antes de persistir no `localStorage`. Rejeita pacotes adulterados, chaves truncadas ou identificadores forjados.
 - **Suíte de testes:** `tests/account-backup.test.js`.
@@ -1132,7 +1132,7 @@ OAuth e compartilhamento nativo citam provedores apenas onde exigido por integra
 **Data:** 2026-11-05 · **SW:** `vox-pwa-v7.20-real-network-audio-video-upload` · **Testes:** 751 testes verdes.
 
 - **Docs:** `docs/adr/014-zero-knowledge-vault-recuperacao-soberana.md`.
-- **Módulos:** `client/js/vault/` (porta `vault/index.js`; ADR-035), `client/js/oauth-profile.js`, `client/js/local-account.js`, `client/js/people-index.js`, `client/js/qr-url-codec.js`.
+- **Módulos:** `client/js/vault/` (porta `vault/index.js`; ADR-035), `client/js/oauth-profile.js`, `client/js/identity/` (porta `identity/index.js`), `client/js/people-index.js`, `client/js/qr-url-codec.js`.
 - **Cofre de Conhecimento Zero:**
   - Derivação PBKDF2 (50.000 iterações) e cifra AES-GCM-256 no cliente a partir de identificadores perenes: Google (`sub`), Meta (`profile.id`) ou **Senha Soberana** (sem Big Tech).
   - O servidor/relay (`zero-central-memory` / `relay/central_memory.py`) armazena apenas hash SHA-256 e ciphertext — servidores nunca têm custódia nem acesso a chaves privadas.

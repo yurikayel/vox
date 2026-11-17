@@ -9,7 +9,7 @@ Dois usuários novos não se encontram em `#/people` sem colar `#/connect` ou se
 ## Decisão
 
 - Payload `type: "profile-card"`, id estável `pc_${routeId}`, campos públicos: `displayName`, `avatarUrl`, `bio`, `discoverable`, `editedAt`.
-- Assinatura ECDSA P-256 via `signPayload` / `verifyPayload` ([`local-account.js`](../../client/js/local-account.js)); `author` e `routeId` devem coincidir.
+- Assinatura ECDSA P-256 via `signPayload` / `verifyPayload` ([`local-account.js`](../../client/js/identity/local-account.js)); `author` e `routeId` devem coincidir.
 - **Opt-in explícito:** flag local `vox-discoverable-mesh-v1`; desligar envia revogação (`discoverable: false` via `GOSSIP_UPDATE`).
 - Cartões **não** entram no feed (`handleGossipMessage` persiste só em `profile-directory`, sem `dispatchGossipPost`).
 - Sem diretório central, ranking ou relay de descoberta global (P3/P4 fora de escopo).

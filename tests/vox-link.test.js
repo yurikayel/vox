@@ -6,7 +6,7 @@ const voxLink = await import("../client/js/vox-link.js");
 const flow = await import("../client/js/app/vox-link-flow.js");
 const card = await import("../client/js/render/vox-link.js");
 const share = await import("../client/js/share.js");
-const { verifyPayload } = await import("../client/js/local-account.js");
+const { verifyPayload } = await import("../client/js/identity/local-account.js");
 const { person } = await import("./signer.js");
 
 class Store {

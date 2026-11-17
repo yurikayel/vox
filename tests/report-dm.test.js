@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 const reportDm = await import("../client/js/app/report-dm.js");
 const review = await import("../client/js/report-review.js");
 const reviewFlow = await import("../client/js/app/report-review-flow.js");
-const localAccount = await import("../client/js/local-account.js");
+const localAccount = await import("../client/js/identity/local-account.js");
 
 const NOW = 1_800_000_000_000;
 

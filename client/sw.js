@@ -4,7 +4,7 @@
 
 // O Service Worker atua no cache offline do shell e notificações de status, sem abrir WebRTC.
 
-const CACHE_NAME = "vox-pwa-v7.128-real-network-audio-video-upload";
+const CACHE_NAME = "vox-pwa-v7.129-real-network-audio-video-upload";
 
 const SHELL_ASSETS = [
 
@@ -202,13 +202,15 @@ const SHELL_ASSETS = [
   "./embed/vox-embed.js",
 
   "./js/inbox.js",
-  "./js/inbox-backup.js",
+  "./js/identity/inbox-backup.js",
 
   "./js/listing.js",
 
   "./js/listing-ui.js",
 
-  "./js/local-account.js",
+  "./js/identity/index.js",
+  "./js/identity/keys.js",
+  "./js/identity/local-account.js",
   "./js/account-social-match.js",
   "./js/sig-format.js",
   "./js/signed-verify.js",
@@ -228,7 +230,7 @@ const SHELL_ASSETS = [
   "./js/app/mediation-dm.js",
   "./js/app/natural-case-flow.js",
 
-  "./js/account-backup-wrap.js",
+  "./js/identity/account-backup-wrap.js",
 
   "./js/contribution-attestation.js",
 
@@ -245,27 +247,27 @@ const SHELL_ASSETS = [
   "./js/vault/oauth-vault.js",
   "./js/vault/passphrase-vault.js",
   "./js/vault/vault-store.js",
-  "./js/keystore.js",
-  "./js/key-at-rest.js",
-  "./js/key-lock.js",
-  "./js/account-backup.js",
-  "./js/account-exit.js",
-  "./js/recovery-phrase.js",
-  "./js/identity-seed.js",
-  "./js/account-phrase.js",
+  "./js/identity/keystore.js",
+  "./js/identity/key-at-rest.js",
+  "./js/identity/key-lock.js",
+  "./js/identity/account-backup.js",
+  "./js/identity/account-exit.js",
+  "./js/identity/recovery-phrase.js",
+  "./js/identity/identity-seed.js",
+  "./js/identity/account-phrase.js",
   "./js/shamir-gf256.js",
-  "./js/guardians.js",
-  "./js/local-wipe.js",
+  "./js/identity/guardians.js",
+  "./js/identity/local-wipe.js",
   "./js/app/guardians-flow.js",
   "./js/render/guardians.js",
   "./js/app/screens-guardians.js",
-  "./js/guardian-return.js",
+  "./js/identity/guardian-return.js",
   "./js/app/guardian-return-flow.js",
   "./js/render/guardian-return.js",
   "./js/app/screens-guardian-return.js",
   "./js/render/recovery-phrase.js",
   "./js/app/screens-phrase.js",
-  "./js/p256.js",
+  "./js/identity/p256.js",
   "./js/data/bip39-pt.js",
   "./js/vault/vault-crypto.js",
   "./js/vault/vault-legacy.js",

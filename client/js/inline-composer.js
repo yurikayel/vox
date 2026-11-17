@@ -1,7 +1,7 @@
 import * as composerMedia from "./composer-media.js";
 import * as share from "./share.js";
 import { uploadTopicToPermaweb } from "./topic-permaweb.js";
-import * as localAccount from "./local-account.js";
+import * as localAccount from "./identity/index.js";
 import * as peers from "./peers.js";
 import * as cacheNode from "./cache-node.js";
 import * as wallet from "./wallet.js";

@@ -8,7 +8,7 @@ import * as cacheNode from "../cache-node.js";
 import * as peers from "../peers.js";
 import * as cryptoDm from "../crypto-dm.js";
 import * as inbox from "../inbox.js";
-import * as localAccount from "../local-account.js";
+import * as localAccount from "../identity/index.js";
 import * as demoSeed from "../demo-seed.js";
 import * as mock from "../mock.js";
 import * as communityMirror from "../community-mirror.js";

@@ -3,7 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import * as contacts from "../client/js/contacts.js";
 import * as cacheNode from "../client/js/cache-node.js";
-import * as localAccount from "../client/js/local-account.js";
+import * as localAccount from "../client/js/identity/local-account.js";
 import * as contactNotify from "../client/js/contact-notify.js";
 import * as flow from "../client/js/app/contact-notify-flow.js";
 import { ingestDecryptedEnvelope } from "../client/js/app/dm-wire.js";

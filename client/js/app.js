@@ -21,7 +21,7 @@ import { startDmOutbox } from "./app/dm-wire.js";
 import { attachChannelHandlers } from "./app/community-channel-flow.js";
 import { startVoxLinks } from "./app/vox-link-flow.js";
 import { startVaultMigration } from "./vault/index.js";
-import { startKeysAtRest } from "./key-at-rest.js";
+import { startKeysAtRest } from "./identity/index.js";
 import { showDueInboxBackup } from "./app/inbox-backup-ui.js";
 import { startStorageDurability } from "./app/storage-durability-flow.js";
 import { startAccountExitBanner } from "./app/account-exit-banner.js";

@@ -4,7 +4,7 @@ import * as brcode from "../brcode.js";
 import { PIX_PAYER_CHECK_NOTICE_PT } from "../pix-key.js";
 import * as i18n from "../i18n-pt-br.js";
 import * as postOwnership from "../post-ownership.js";
-import * as localAccount from "../local-account.js";
+import * as localAccount from "../identity/index.js";
 import { hasChosenName } from "../people-index.js";
 import { escapeHtml, shortId, renderAvatarHtml, formatTimeAgo, renderInviteFriendsCard } from "./util.js";
 import { renderPageHead } from "./shell.js";

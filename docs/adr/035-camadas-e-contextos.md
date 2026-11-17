@@ -1,6 +1,6 @@
 # ADR-035: Camadas e contextos no cliente — importar só para baixo, uma porta de entrada por assunto
 
-**Status:** proposed (2026-11-17; a regra de camadas já roda no CI como catraca) · **Revisado:** 2026-11-17 (`vault/` movido; segunda porta) · **Relacionados:** [ADR-007](./007-zero-complexity-monolith-decomposition.md), [HARDENING](../HARDENING.md), [documentação](../process/documentacao.md)
+**Status:** proposed (2026-11-17; a regra de camadas já roda no CI como catraca) · **Revisado:** 2026-11-17 (`vault/` e `identity/` movidos; segunda porta) · **Relacionados:** [ADR-007](./007-zero-complexity-monolith-decomposition.md), [HARDENING](../HARDENING.md), [documentação](../process/documentacao.md)
 
 ## 1. Contexto
 
@@ -66,6 +66,12 @@ Assim a lista só pode diminuir. Quando chegar a zero, o arquivo fica vazio e a 
    **`vault/` (feito):** `vault-crypto`, `vault-store`, `vault-legacy`, `passphrase-vault` e `oauth-vault` estão em `client/js/vault/`. Portas:
    - `vault/index.js`: migração dos cofres v1, login social, Senha Soberana, cofre no link e servidores de memória;
    - `vault/envelope.js`: só cifrar e abrir um registro (`encryptVaultV2`, `decryptVaultRecord`). Existe porque `key-lock.js` e `inbox-backup.js` (conta) usam a cifra, e importá-la pelo `index.js` fecharia o ciclo `vault/index → passphrase-vault → local-account → key-lock → vault/index`.
+
+   **`identity/` (feito):** `local-account`, `key-lock`, `keystore`, `key-at-rest`, `identity-seed`, `recovery-phrase`, `p256`, `account-phrase`, `account-backup`, `account-backup-wrap`, `account-exit`, `local-wipe`, `guardians`, `guardian-return` e `inbox-backup` estão em `client/js/identity/`. Ficaram na raiz, por não serem só da conta: `shamir-gf256` (também usado pela mesa do RPG), `signed-verify` e `sig-format` (formato de assinatura do protocolo) e os módulos de contas sociais (vão para `social/`). Portas:
+   - `identity/index.js`: reexporta os módulos públicos inteiros, porque a maior parte do app usa a conta como espaço de nomes (`import * as localAccount`);
+   - `identity/keys.js`: só a chave do aparelho (`isSealed`, `openSealed`, `sealJson`) e a chave privada de DM (`dmPrivateKey`). Existe porque `crypto-dm.js` e `wallet.js` usam essas primitivas, e `local-account.js` importa `crypto-dm.js`: pelo `index.js` fecharia o ciclo `crypto-dm → identity/index → local-account → crypto-dm`.
+
+   **Custo medido da porta:** o grafo de imports estáticos já tinha um único componente com ciclo, de 113 módulos, antes da mudança. Depois dela, são 120: a própria porta e 6 módulos (`community-topic-order`, `community-unread`, `listing-ui`, `post-ownership`, `profile-card`, `voxels`) que só usavam `local-account` e agora, pela porta, alcançam também módulos da conta que voltam a eles. O app e os testes carregam igual; reduzir esse componente é trabalho da regra de camadas (§3.1), não desta pasta.
 3. **Caminhos únicos.** Uma operação que mexe em estado de conta tem uma função dona, e os outros módulos passam por ela:
    - trocar de conta: `importLocalAccountBundle`;
    - gravar e aposentar o cofre: `savePassphraseVault` e `supersededVaults`;

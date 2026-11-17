@@ -8,7 +8,7 @@
  */
 
 import { markAccountExit } from "./account-exit.js";
-import * as cryptoDm from "./crypto-dm.js";
+import * as cryptoDm from "../crypto-dm.js";
 import * as identitySeed from "./identity-seed.js";
 import { isLocked } from "./keystore.js";
 import * as localAccount from "./local-account.js";

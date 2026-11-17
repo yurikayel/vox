@@ -1,7 +1,7 @@
 import "../tests/setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
-import * as localAccount from "../client/js/local-account.js";
+import * as localAccount from "../client/js/identity/local-account.js";
 import * as manifest from "../client/js/cache-manifest.js";
 import * as mesh from "../client/js/peers-cache-manifest.js";
 import * as peers from "../client/js/peers.js";

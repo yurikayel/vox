@@ -39,7 +39,7 @@ globalThis.document = {
   querySelectorAll: () => [],
 };
 
-const localAccount = await import("../client/js/local-account.js");
+const localAccount = await import("../client/js/identity/local-account.js");
 const screensCompose = await import("../client/js/app/screens-compose.js");
 const screensCommunity = await import("../client/js/app/screens-community.js");
 const screensHome = await import("../client/js/app/screens-home.js");

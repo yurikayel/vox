@@ -7,13 +7,13 @@
  * @see client/js/guardians.js
  */
 
-import * as guardians from "../guardians.js";
-import { clearAccountExit, markAccountExit } from "../account-exit.js";
+import * as guardians from "../identity/index.js";
+import { clearAccountExit, markAccountExit } from "../identity/index.js";
 
 async function defaultDeps() {
   const [gql, peers, cryptoDm, localAccount, wire, phrase, contacts, social, notice, share] = await Promise.all([
-    import("../graphql.js"), import("../peers.js"), import("../crypto-dm.js"), import("../local-account.js"),
-    import("./dm-wire.js"), import("../account-phrase.js"), import("../contacts.js"), import("../social.js"),
+    import("../graphql.js"), import("../peers.js"), import("../crypto-dm.js"), import("../identity/index.js"),
+    import("./dm-wire.js"), import("../identity/index.js"), import("../contacts.js"), import("../social.js"),
     import("../contact-notify.js"), import("../share.js"),
   ]);
   return {

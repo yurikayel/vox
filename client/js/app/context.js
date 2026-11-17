@@ -2,7 +2,7 @@
 
 import * as wallet from "../wallet.js";
 import * as peers from "../peers.js";
-import * as localAccount from "../local-account.js";
+import * as localAccount from "../identity/index.js";
 import * as share from "../share.js";
 import * as mod from "../moderation.js";
 

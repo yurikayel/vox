@@ -5,12 +5,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import "./setup.js";
-import * as accountPhrase from "../client/js/account-phrase.js";
-import { getAccountExits } from "../client/js/account-exit.js";
+import * as accountPhrase from "../client/js/identity/account-phrase.js";
+import { getAccountExits } from "../client/js/identity/account-exit.js";
 import * as cryptoDm from "../client/js/crypto-dm.js";
-import * as identitySeed from "../client/js/identity-seed.js";
-import * as keyLock from "../client/js/key-lock.js";
-import * as localAccount from "../client/js/local-account.js";
+import * as identitySeed from "../client/js/identity/identity-seed.js";
+import * as keyLock from "../client/js/identity/key-lock.js";
+import * as localAccount from "../client/js/identity/local-account.js";
 import { parseRoute } from "../client/js/app/route-parse.js";
 import * as screen from "../client/js/render/recovery-phrase.js";
 

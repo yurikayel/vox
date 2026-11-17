@@ -1,6 +1,6 @@
 /** @file Interações cívicas no feed: posicionamento e enquete assinados (`civic-vote`). */
 import * as cacheNode from "../cache-node.js";
-import * as localAccount from "../local-account.js";
+import * as localAccount from "../identity/index.js";
 import * as peers from "../peers.js";
 import * as share from "../share.js";
 import { classifyCivicPost, isValidCivicChoice } from "../civic-post.js";
