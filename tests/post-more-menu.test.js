@@ -22,7 +22,7 @@ test("post more menu - hero exposes trigger with post id", () => {
 });
 
 test("post more menu - module defines sheet id and closed-by-default", () => {
-  const src = fs.readFileSync(path.join(root, "js/render/post-more-menu.js"), "utf8");
+  const src = fs.readFileSync(path.join(root, "js/app/post-more-menu.js"), "utf8");
   assert.ok(src.includes("post-more-sheet"));
   assert.ok(src.includes("Denunciar"));
   assert.ok(src.includes("Incorporar"));
@@ -51,7 +51,7 @@ test("post more menu - sheet keeps Apoiar, photo toolbar has no zap", () => {
   });
   assert.ok(html.includes("post-ig-toolbar"));
   assert.ok(!html.includes("btn-zap-post"));
-  const src = fs.readFileSync(path.join(root, "js/render/post-more-menu.js"), "utf8");
+  const src = fs.readFileSync(path.join(root, "js/app/post-more-menu.js"), "utf8");
   assert.ok(src.includes('data-action="zap"'));
   assert.ok(src.includes("Apoiar"));
   assert.ok(src.includes('data-action="repost"'));
