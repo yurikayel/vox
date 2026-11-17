@@ -653,9 +653,10 @@ A sprint v6.2 implementa a cooptagem da especificação **Open Frames** (`of:*` 
 - **Gossip P2P & Persistência Local:** A ação é salva no `IndexedDB` local (`cacheNode.saveLocalPost`) e propagada aos pares conectados na malha WebRTC (`peers.broadcastGossip`).
 - **Cache Rápido em LocalStorage:** Ações locais recentes são mantidas em `vox-frame-actions` para renderização imediata sem flicker visual na timeline.
 - **Feedback Interativo em Tempo Real:** Atualização dinâmica no DOM (`#frame-content-:postId`) com barras de porcentagem para enquetes, confirmação de assinatura para abaixo-assinados e resultados de cálculo instantâneos.
+- **Apuração com as ações de todos (`app/frame-ui.js`, 2026-11-17):** o feed desenha o cartão de forma síncrona só com o voto deste aparelho; `watchFrameCards` (ligado em `app.js`) observa a página e, quando um cartão `.vox-frame` entra (feed, comunidade, perfil, tópico ou redesenho por gossip), completa a apuração com todas as ações `frame-action` guardadas. Depois do voto, o botão volta ao normal (sai de "Gravando…") e a escolha fica marcada (`active`). Na enquete, quem muda o voto conta pelo voto de maior `ts`, independentemente da ordem em que as ações chegam.
 
 ### 20.3 Cache e PWA
-- Ativo `./js/frames.js` no app shell.
+- Ativos `./js/frames.js` e `./js/app/frame-ui.js` no app shell.
 
 ---
 

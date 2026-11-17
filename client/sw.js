@@ -4,7 +4,7 @@
 
 // O Service Worker atua no cache offline do shell e notificações de status, sem abrir WebRTC.
 
-const CACHE_NAME = "vox-pwa-v7.131-real-network-audio-video-upload";
+const CACHE_NAME = "vox-pwa-v7.132-real-network-audio-video-upload";
 
 const SHELL_ASSETS = [
 
@@ -54,6 +54,7 @@ const SHELL_ASSETS = [
 
   "./js/app/inbox-backup-ui.js",
   "./js/app/init.js",
+  "./js/app/frame-ui.js",
 
   "./js/app/post-media-lightbox.js",
 
