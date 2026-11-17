@@ -55,6 +55,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 | Mutex de agentes | [metodo-agentes-mutex-e-revisor.md](./process/metodo-agentes-mutex-e-revisor.md) |
 | Evidência de testes, falso verde e auditoria | [qualidade-e-evidencia.md](./process/qualidade-e-evidencia.md) |
 | Norma de documentação (código e docs técnicos, `npm run audit:docs`) | [documentacao.md](./process/documentacao.md) |
+| Plano de testes do login (invariantes, matriz por caminho, lacunas LT-01–LT-10) | [plano-testes-login.md](./process/plano-testes-login.md) |
 | Primeiras tarefas para contribuir (PM-41, rascunho) | [primeiras-tarefas-contribuidor.md](./process/primeiras-tarefas-contribuidor.md) |
 | Segunda pessoa com acesso em etapas (LAN-30, rascunho) | [segunda-pessoa-acesso-gradual.md](./process/segunda-pessoa-acesso-gradual.md) |
 | Licença | [ADR-015](./adr/015-licenciamento-agplv3-e-governanca-de-bem-comum.md) · [licenca-e-contribuicoes.md](./legal/licenca-e-contribuicoes.md) |

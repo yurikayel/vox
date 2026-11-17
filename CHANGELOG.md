@@ -6,6 +6,13 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Novidade: cofre na malha e tela única de volta (ADR-037)
+- Quem entra com e-mail e senha passa a ter o cofre cifrado (o mesmo v2) copiado para até 7 laços mútuos, guardiões primeiro, que o guardam como caixa preta. Num aparelho novo, se o cofre não está em lugar nenhum, o Vox pede o cofre à malha por uma caixa cega do relay: quem guarda avisa a dona ("Foi você?") e libera depois de 24 h, ou já com "Fui eu"; "Não fui eu" veta aquele pedido. Pedido vale 72 h. Sem servidor de contas e sem criptografia nova (`client/js/vault/mesh-vault.js`, `client/js/app/mesh-vault-flow.js`, `client/js/app/mesh-vault-ui.js`).
+- "Já tenho conta" vira um caminho só: e-mail, senha e Entrar; kit, frase, guardiões, QR e arquivos ficam em "Outras formas de voltar".
+- Correção encontrada pelo plano de testes: "Apagar conta local" agora apaga também as cópias guardadas para outros, o pedido de volta e os avisos.
+- Ameaça T27 no [THREAT-MODEL](./docs/THREAT-MODEL.md), decisão A-25 e [plano de testes do login](./docs/process/plano-testes-login.md) (invariantes, matriz por caminho e lacunas LT-01–LT-10).
+- Testes: `tests/mesh-vault.test.js` (21), `tests/mesh-vault-flow.test.js` (20, vários aparelhos com relay falso e criptografia real), `tests/mesh-vault-ui.test.js` (9). SW `v7.141`.
+
 ### Documentação: aceite dos ADR-034, ADR-035 e ADR-036
 - **ADR-035** passa a **accepted** (camadas e contextos; catraca `audit:layers` no CI; `vault/` e `identity/` feitos).
 - **ADR-034** e **ADR-036** passam a **aceito como direção** (direção aceita pelo mantenedor; nada implementado sem RFC 0002 e LAN-18 onde couber). Atualiza [DECISOES.md](./docs/DECISOES.md) A-22–A-24. Sem bump de SW.

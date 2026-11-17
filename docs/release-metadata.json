@@ -1,9 +1,9 @@
 {
-  "git_sha": "7a0f0c0",
-  "branch": "fix/bsky-oauth-link",
-  "test_js": 1148,
-  "test_python": 111,
-  "test_total": 1259,
-  "cache_name": "vox-pwa-v7.140-real-network-audio-video-upload",
-  "generated_at": "2026-11-17T17:01:07Z"
+  "git_sha": "1bfe0ed",
+  "branch": "feat/adr037-cofre-na-malha",
+  "test_js": 1371,
+  "test_python": 130,
+  "test_total": 1501,
+  "cache_name": "vox-pwa-v7.141-real-network-audio-video-upload",
+  "generated_at": "2026-11-17T17:56:29Z"
 }
