@@ -1,6 +1,6 @@
 # ADR-036: Agilidade criptográfica e transição pós-quântica — todo formato diz o seu algoritmo; DM híbrida primeiro
 
-**Status:** proposed (2026-11-17; espera o aceite do mantenedor; nada implementado; cada passo de código pede RFC e a revisão externa de cripto, LAN-18; a assinatura da conta depende também da RFC 0002, que ainda não existe) · **Revisado:** 2026-11-17 (caminhos do inventário após `identity/` e `labs/parado/`) · **Relacionados:** [ADR-025](./025-cofre-v2-so-a-senha-abre.md) (cofre v2), [ADR-026](./026-chaves-em-repouso-trava-depois-do-backup.md) (chaves em repouso), [ADR-032](./032-login-perene-a-conta-nasce-com-saida.md) (semente e frase), [ADR-034](./034-raiz-e-subchaves-por-aparelho.md) (raiz e subchaves), [THREAT-MODEL](../THREAT-MODEL.md), [DEPENDENCIAS](../DEPENDENCIAS.md), [ROADMAP](../ROADMAP.md) (LAN-18)
+**Status:** accepted (2026-11-17, aceito como direção pelo mantenedor; nada implementado; cada passo de código pede RFC, LAN-18 e, para assinatura da conta, a RFC 0002 do ADR-034) · **Revisado:** 2026-11-17 (caminhos do inventário após `identity/` e `labs/parado/`) · **Relacionados:** [ADR-025](./025-cofre-v2-so-a-senha-abre.md) (cofre v2), [ADR-026](./026-chaves-em-repouso-trava-depois-do-backup.md) (chaves em repouso), [ADR-032](./032-login-perene-a-conta-nasce-com-saida.md) (semente e frase), [ADR-034](./034-raiz-e-subchaves-por-aparelho.md) (raiz e subchaves), [THREAT-MODEL](../THREAT-MODEL.md), [DEPENDENCIAS](../DEPENDENCIAS.md), [ROADMAP](../ROADMAP.md) (LAN-18)
 
 ## 1. Contexto
 
