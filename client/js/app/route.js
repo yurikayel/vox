@@ -75,6 +75,11 @@ const ROUTE_DISPATCH_TABLE = {
   "not-found": () => showNotFound(),
 };
 
+/**
+ * Aplica a rota atual: fecha menus, checa portão e despacha para a tela.
+ *
+ * @returns {Promise<void>}
+ */
 export async function routeImpl() {
   closePostMoreMenu();
   checkCantinaGate();
@@ -83,10 +88,20 @@ export async function routeImpl() {
   return await handler(r);
 }
 
+/**
+ * Registra {@link routeImpl} no desvio de {@link navigation.route}.
+ *
+ * @returns {void}
+ */
 export function wireRoute() {
   setRoute(routeImpl);
 }
 
+/**
+ * Re-rota quando o hash da URL muda.
+ *
+ * @returns {void}
+ */
 export function setupHashchangeListener() {
   window.addEventListener("hashchange", () => routeImpl());
 }

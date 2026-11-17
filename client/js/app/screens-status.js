@@ -33,6 +33,11 @@ function bindSignalingReportActions(swVersionProvider) {
   }
 }
 
+/**
+ * Monta o painel de status (peers, inbox, telemetria de signaling).
+ *
+ * @returns {Promise<void>}
+ */
 export async function showStatus() {
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "network", "Status"));

@@ -8,6 +8,12 @@ import { modalHost, clearModalHost } from "../render/modal-host.js";
 
 const MODAL_ID = "feedback-modal-container";
 
+/**
+ * HTML do modal "Algo errado aqui?" na tela atual.
+ *
+ * @param {string} [screen=""] Nome lógico da rota para o texto de contexto.
+ * @returns {string} Marcação do formulário.
+ */
 export function renderFeedbackFormHtml(screen = "") {
   const options = feedback.FEEDBACK_KINDS.map(
     (k) => `
@@ -33,6 +39,12 @@ export function renderFeedbackFormHtml(screen = "") {
     </div>`;
 }
 
+/**
+ * HTML da etapa de confirmação após salvar apontamento local.
+ *
+ * @param {number} [total=1] Quantidade total de apontamentos neste aparelho.
+ * @returns {string} Marcação do modal de obrigado.
+ */
 export function renderFeedbackDoneHtml(total = 1) {
   return `
     <div class="modal-overlay modal-sheet" id="feedback-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="feedback-done-title">
@@ -50,7 +62,12 @@ export function renderFeedbackDoneHtml(total = 1) {
 const container = () => modalHost(MODAL_ID);
 const closeFeedbackModal = () => clearModalHost(MODAL_ID);
 
-/** Nome do cache do Service Worker em uso (ex.: vox-pwa-v7.44-…), ou "". */
+/**
+ * Nome do cache do Service Worker em uso (ex.: `vox-pwa-v7.44-…`), ou string vazia.
+ *
+ * @param {CacheStorage} [cacheApi=globalThis.caches] API de caches do navegador.
+ * @returns {Promise<string>} Último cache `vox-pwa-*` conhecido.
+ */
 export async function currentAppVersion(cacheApi = globalThis.caches) {
   try {
     const keys = (await cacheApi?.keys?.()) || [];
@@ -61,6 +78,12 @@ export async function currentAppVersion(cacheApi = globalThis.caches) {
   }
 }
 
+/**
+ * Compartilha ou copia a lista de apontamentos para a equipe do piloto.
+ *
+ * @param {object[]} [list=feedback.listFeedback()] Registros salvos localmente.
+ * @returns {Promise<void>|void} Resultado de {@link share.shareOrCopy}.
+ */
 export function shareFeedbackList(list = feedback.listFeedback()) {
   return share.shareOrCopy({
     title: "Apontamentos do Vox",
@@ -80,6 +103,12 @@ async function submitFeedback(screen, form) {
   document.getElementById("btn-feedback-share")?.addEventListener("click", () => void shareFeedbackList());
 }
 
+/**
+ * Abre o fluxo de apontamento sobre o app na tela indicada.
+ *
+ * @param {string} [screen=parseRoute().name] Nome da rota para contextualizar o formulário.
+ * @returns {void}
+ */
 export function openFeedbackFlow(screen = parseRoute().name) {
   container().innerHTML = renderFeedbackFormHtml(screen);
   document.getElementById("btn-feedback-cancel")?.addEventListener("click", closeFeedbackModal);

@@ -41,6 +41,11 @@ function insertQuoteIntoComposer(quoteText) {
   return true;
 }
 
+/**
+ * Liga compartilhar citação externa.
+ *
+ * @returns {void}
+ */
 export function attachQuoteExternalHandlers() {
   if (quoteExternalBound) return;
   quoteExternalBound = true;
@@ -60,6 +65,11 @@ export function attachQuoteExternalHandlers() {
   });
 }
 
+/**
+ * Liga menu de ações no overlay do post.
+ *
+ * @returns {void}
+ */
 export function attachPostOverlayActionMenuHandlers() {
   if (postOverlayMenuHandlersBound) return;
   postOverlayMenuHandlersBound = true;
@@ -208,6 +218,13 @@ async function isCommunityTopicPermitted(cId, user, commClosedCache, membershipC
   return Boolean(isMember);
 }
 
+/**
+ * Filtra tópicos de comunidades fechadas.
+ *
+ * @param {unknown} topics
+ * @param {string} user
+ * @returns {Promise<unknown>}
+ */
 export async function filterClosedCommunityTopics(topics, user) {
   const commClosedCache = new Map();
   const membershipCache = new Map();
@@ -236,6 +253,12 @@ async function assembleHomeFeedTopics(remoteItems, commMap, user, activeFeed) {
   return mod.filterFeedPosts(withWelcome);
 }
 
+/**
+ * Monta feed principal.
+ *
+ * @param {string} feed [optional]
+ * @returns {void}
+ */
 export async function showHome(feed = "for-you") {
   const validFeeds = ["for-you", "civic", "following", "external", "all"];
   const activeFeed = validFeeds.includes(feed) ? feed : "for-you";
@@ -313,6 +336,12 @@ function bindBskyChipActions(onRefresh) {
   });
 }
 
+/**
+ * Liga gestão de conta Bluesky no feed.
+ *
+ * @param {Function} onRefresh
+ * @returns {void}
+ */
 export function attachBskyManagerHandlers(onRefresh) {
   const form = document.getElementById("form-add-bsky");
   if (form && !form.dataset.wired) {
@@ -347,6 +376,11 @@ async function enrichCommunitiesWithUnread(communities = []) {
   return { enriched, totalUnread };
 }
 
+/**
+ * Monta listagem de comunidades.
+ *
+ * @returns {void}
+ */
 export async function showCommunities() {
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "communities", "Comunidades"));
@@ -377,6 +411,12 @@ export async function showCommunities() {
   }
 }
 
+/**
+ * Monta feed por tag.
+ *
+ * @param {string} slug
+ * @returns {void}
+ */
 export async function showTagFeed(slug) {
   const cleanSlug = hashtags.slugifyTag(slug) || slug;
   const user = await getActiveUser();

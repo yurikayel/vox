@@ -5,18 +5,29 @@
 
 import { isReadFirstRoute } from "./read-first.js";
 
+/**
+ * Chave em `localStorage` que marca que o aparelho já passou pelo portão de entrada (nome e 18+).
+ *
+ * @type {string}
+ */
 export const CANTINA_STORAGE_KEY = "vox-cantina-v1";
 
 /**
- * @param {Storage | null | undefined} [storage]
+ * Diz se este aparelho já concluiu o portão de entrada (nome e 18+).
+ *
+ * @param {Storage | null | undefined} [storage=globalThis.localStorage] Armazenamento lido.
+ * @returns {boolean}
  */
 export function hasPassedCantinaGate(storage = globalThis.localStorage) {
   return storage?.getItem(CANTINA_STORAGE_KEY) === "true";
 }
 
 /**
- * @param {string} routeName
- * @param {Storage | null | undefined} [storage]
+ * Diz se a rota atual deve exibir o portão de entrada antes de ações que escrevem.
+ *
+ * @param {string} routeName Nome lógico da rota ativa.
+ * @param {Storage | null | undefined} [storage=globalThis.localStorage] Armazenamento lido.
+ * @returns {boolean} `false` em ajuda-teste, rotas read-first e após o portão já passado.
  */
 export function shouldShowCantinaGate(routeName, storage = globalThis.localStorage) {
   if (hasPassedCantinaGate(storage)) return false;

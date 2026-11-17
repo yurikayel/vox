@@ -1,5 +1,5 @@
 /**
- * LAN-16 — comportamentos que antes eram atributos inline (onerror=, onclick=).
+ * @file LAN-16 — comportamentos que antes eram atributos inline (onerror=, onclick=).
  * A CSP proíbe handlers inline; estes listeners delegados fazem o mesmo trabalho.
  *
  * - <img data-fallback-next>: se a imagem falhar, esconde-a e mostra o irmão seguinte (iniciais).
@@ -10,6 +10,12 @@
 
 import { showToast } from "../share.js";
 
+/**
+ * Fallback de avatar: esconde a imagem que falhou e mostra iniciais no irmão seguinte.
+ *
+ * @param {HTMLElement} img Elemento `img[data-fallback-next]`.
+ * @returns {boolean} `true` quando tratou o erro.
+ */
 export function handleImageFallback(img) {
   if (!img?.matches?.("img[data-fallback-next]")) return false;
   img.style.display = "none";
@@ -17,6 +23,14 @@ export function handleImageFallback(img) {
   return true;
 }
 
+/**
+ * Delega cliques `[data-click-target]` e foco `[data-focus-target]` sem handlers inline.
+ *
+ * @param {EventTarget} target Alvo do evento de clique.
+ * @param {Document} [doc=globalThis.document] Documento para `querySelector`.
+ * @param {Location} [loc=globalThis.location] Localização para fallback de hash.
+ * @returns {boolean} `true` quando consumiu o clique.
+ */
 export function handleDelegatedClick(target, doc = globalThis.document, loc = globalThis.location) {
   const clicker = target?.closest?.("[data-click-target]");
   if (clicker) {
@@ -31,7 +45,13 @@ export function handleDelegatedClick(target, doc = globalThis.document, loc = gl
   return true;
 }
 
-/** "Algo errado aqui?": o modal só é importado no clique, para não pesar na abertura do app. */
+/**
+ * "Algo errado aqui?": o modal só é importado no clique, para não pesar na abertura do app.
+ *
+ * @param {EventTarget} target Alvo do clique.
+ * @param {() => Promise<object>} [load] Import dinâmico do fluxo de feedback.
+ * @returns {boolean} `true` quando abriu o fluxo.
+ */
 export function openFeedbackOnClick(target, load = () => import("./feedback-flow.js")) {
   if (!target?.closest?.("[data-app-feedback]")) return false;
   load()
@@ -42,6 +62,12 @@ export function openFeedbackOnClick(target, load = () => import("./feedback-flow
 
 let installed = false;
 
+/**
+ * Instala delegação global de imagem, clique e feedback (uma vez por sessão).
+ *
+ * @param {Document} [doc=globalThis.document] Documento que recebe os listeners.
+ * @returns {void}
+ */
 export function installDomDelegates(doc = globalThis.document) {
   if (installed || !doc?.addEventListener) return;
   installed = true;
