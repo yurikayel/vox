@@ -6,6 +6,11 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Correção: sinalização com prazos e mensagens fragmentadas
+- **`relay/signaling.py`:** o handshake HTTP passa a ter prazo total, e o resto de um quadro precisa chegar num prazo depois do cabeçalho; antes, uma conexão que não terminava segurava a thread dela sem limite. Pares registrados e quietos continuam conectados.
+- **Fragmentos:** mensagens em vários quadros (FIN=0 + continuação) são remontadas, com teto para a soma; antes, o primeiro pedaço era lido como mensagem inteira e o resto era ignorado. Erros de protocolo encerram a conexão.
+- Testes: `relay/test_signaling_robustez.py` (novo, 8 casos; os 5 de servidor falham no código de antes). Só o servidor de sinalização mudou; o cliente não muda (sem bump de SW).
+
 ### Correção: lab de Open Frames em iframe volta a responder
 - **`#/labs/frames`:** o demo roda em iframe `sandbox` sem `allow-same-origin` (origem opaca), e o navegador entrega as mensagens dele com origem `"null"`; o host só aceitava a origem do app e recusava tudo, então o iframe não redimensionava e as ações não chegavam. Agora, para iframe opaco, o host aceita `"null"` só quando a mensagem vem da janela do próprio iframe (`open-frames-host.js`); mensagens de outras janelas são recusadas mesmo com a origem na lista. O lab mostra a última ação recebida.
 - **Script do demo fora do HTML:** a CSP publicada (`_headers`, `script-src 'self'` sem `'unsafe-inline'`) bloquearia o script inline de `client/embed/frame-demo.html`; ele foi para `client/embed/frame-demo.js` (no precache).
