@@ -11,7 +11,6 @@ import * as centralMemory from "../central-memory.js";
 import { syncIdentity } from "./screens-network.js";
 import { parseRoute } from "./route-parse.js";
 import * as ageGate from "../age-gate.js";
-import { FEEDBACK_STORAGE_KEY } from "../app-feedback.js";
 import {
   CANTINA_STORAGE_KEY,
   hasPassedCantinaGate,
@@ -313,11 +312,16 @@ function acceptPact() {
   }
 }
 
-/** "Apagar conta local": as chaves e também o que a entrada grava (pacto, 18+ e apontamentos). */
+/**
+ * "Apagar conta local": as chaves da conta, o cofre na malha e todo dado pessoal do aparelho (lista em `local-wipe.js`).
+ * O localStorage e o sessionStorage saem na hora; a promessa termina quando os bancos IndexedDB também saíram.
+ * @returns {Promise<void>}
+ */
 export function wipeLocalDevice() {
-  localAccount.wipeLocalAccount();
+  const accountGone = localAccount.wipeLocalAccount();
   forgetAllMesh();
-  for (const key of ["vox-pact-accepted", ageGate.AGE_STORAGE_KEY, FEEDBACK_STORAGE_KEY]) localStorage.removeItem(key);
+  localAccount.dropAllPersonalStorage();
+  return Promise.resolve(accountGone).then(() => localAccount.dropDatabases());
 }
 
 /** Conta acabou de nascer: pede ao navegador para não apagar e avisa que ela ainda não tem saída (ADR-032). */

@@ -59,7 +59,15 @@ function openDB() {
     }
     const req = window.indexedDB.open(DB_NAME, DB_VERSION);
     req.onupgradeneeded = (e) => upgradeDatabaseSchema(e.target.result);
-    req.onsuccess = (e) => resolve(e.target.result);
+    req.onsuccess = (e) => {
+      const db = e.target.result;
+      // "Apagar conta local" remove o banco: solta a conexão para a remoção não ficar presa.
+      db.onversionchange = () => {
+        db.close();
+        dbPromise = null;
+      };
+      resolve(db);
+    };
     req.onerror = () => reject(req.error);
   });
   return dbPromise;
