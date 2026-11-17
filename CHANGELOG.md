@@ -6,6 +6,10 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Documentação: ADR-038, subrede e manifesto de comunidade v1 (proposto)
+- [ADR-038](./docs/adr/038-subrede-malha-e-manifesto.md) (**proposed**): a comunidade é um território assinado na malha mais um manifesto que só sugere. Mesma regra de permissão do PM-09; `issuedAt` só cresce; tema por lista fechada com contraste; módulos aceitos pela pessoa, um por um; extensões só na v2; fork é `communityId` novo.
+- Spec [community-manifest-v1](./docs/specs/community-manifest-v1.md) substitui o rascunho v0. Ameaça T28 no [THREAT-MODEL](./docs/THREAT-MODEL.md), decisão A-26 e EXP-03 no ROADMAP apontando para o ADR. Sem código e sem bump de SW.
+
 ### Documentação: aceite dos ADR-034, ADR-035 e ADR-036
 - **ADR-035** passa a **accepted** (camadas e contextos; catraca `audit:layers` no CI; `vault/` e `identity/` feitos).
 - **ADR-034** e **ADR-036** passam a **aceito como direção** (direção aceita pelo mantenedor; nada implementado sem RFC 0002 e LAN-18 onde couber). Atualiza [DECISOES.md](./docs/DECISOES.md) A-22–A-24. Sem bump de SW.
