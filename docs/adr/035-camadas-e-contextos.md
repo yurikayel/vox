@@ -9,7 +9,7 @@ O cliente é JavaScript sem passo de build: 291 módulos em `client/js` (develop
 - **11 imports sobem de camada, em 6 arquivos.** `render/post-more-actions.js` e `render/post-more-menu.js` importam fluxos de `app/`; `moderation.js`, `inline-composer.js` e `dom-delegates.js`, que estão na base, também importam de `app/`.
 - **167 módulos soltos na raiz** de `client/js`, sem agrupamento por assunto. `local-account.js` é importado por 56 módulos.
 - **Estado espalhado:** 54 arquivos usam `localStorage` ou `sessionStorage` diretamente.
-- **24 módulos não são alcançados a partir de `app.js`.** Três (`boot-*`) entram pelo `index.html`; os outros vão no precache sem uso.
+- **21 módulos não são carregados por nenhuma página.** Eles já ficam fora do precache, em `UNPLUGGED_MODULES` no `sw.js`, e o teste `tests/shell-reachability.test.js` (PM-04) reprova quem os puser de volta. Mas continuam no repositório, e as revisões e varreduras passam por eles como se fossem código do app.
 
 Os bugs das últimas semanas vieram desse desenho:
 
@@ -66,7 +66,7 @@ Assim a lista só pode diminuir. Quando chegar a zero, o arquivo fica vazio e a 
    - fluxo de OAuth pendente;
    - revogação.
 4. **Armazenamento local com dono:** cada chave de `localStorage`/`sessionStorage` pertence a um módulo e, quando é por conta, leva o escopo da conta no nome. Vira ADR próprio, com catraca na contagem de arquivos que acessam o armazenamento direto.
-5. **Precache derivado do grafo:** `SHELL_ASSETS` passa a sair do que `app.js` e `index.html` alcançam, e módulo não alcançado sai do precache ou vai para `labs/` com carregamento sob demanda. É o próximo PR depois deste.
+5. **Módulos não plugados:** o precache já é conferido pelo grafo (PM-04). O passo seguinte é tirar esses módulos da raiz: vão para `labs/`, com plano de quando entram, ou saem do repositório. Assim a revisão deixa de tratá-los como código do app.
 
 ### 3.3 O que não se faz
 

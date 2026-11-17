@@ -8,7 +8,7 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ### ADR-035 proposto: camadas e contextos no cliente, com catraca no CI
 - **Regra de camadas:** `app` importa qualquer camada; `render` só `render` e `base`; `base` só `base`; `labs`/`dungeon` só `labs` e `base`, e só `app` carrega o laboratório. `npm run audit:layers` lê os imports pela árvore sintática (espree), entra no `validate` e no CI e reprova import proibido novo. Os 11 imports que já sobem de camada (6 arquivos) ficam em `scripts/layers-debt.json`, numa lista que só diminui.
-- **Direção:** uma pasta por assunto com porta de entrada (`index.js`), um assunto por PR, começando por `vault/`; caminho único para operações de conta; armazenamento local com dono; precache derivado do grafo (próximo PR).
+- **Direção:** uma pasta por assunto com porta de entrada (`index.js`), um assunto por PR, começando por `vault/`; caminho único para operações de conta; armazenamento local com dono; os módulos não plugados (já fora do precache, PM-04) saem da raiz para `labs/` ou do repositório.
 - Testes: `tests/layers-audit.test.js` (novo). Atualizados DECISOES (A-23), HARDENING, índice de ADRs e `scripts/README.md`. Sem mudança no app.
 
 ### Correção: trocar a Senha Soberana pelo Perfil; pôr e-mail tira do ar o cofre só-senha
