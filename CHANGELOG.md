@@ -6,6 +6,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Documentação: JSDoc do lote 1 (moderação e sincronização)
+- JSDoc completo (descrição, `@param`, `@returns`) em todos os exports de `moderation.js`, `peer-sync.js`, `report-review.js` e `vox-link.js`, mais o cabeçalho de `moderation.js`. Só comentários mudaram; nenhuma linha de código. A dívida de `audit:docs` cai de 1.870 para 1.736 achados (`scripts/docs-debt.json`, `--prune`). Sem bump de SW (comportamento igual).
+
 ### Dívida: módulos não plugados vão para `labs/parado/` (ADR-035)
 - Os 21 módulos que nenhuma tela carrega (`UNPLUGGED_MODULES` no `sw.js`) saíram da raiz de `client/js` (e de `render/`) para `client/js/labs/parado/`, com um README que diz o que são e como plugar. Pela regra de camadas, só `app` e o laboratório podem importá-los. Sem mudança de lógica: só caminhos de import; `settings-guardian` e `node-health-badge` passam a importar `escapeHtml` de `shared/html.js` (base), já que `labs` não importa `render`.
 - Caminhos atualizados em `UNPLUGGED_MODULES`, `permaweb-manifest.json`, testes, `docs-debt.json` e docs. SW `v7.139`.
