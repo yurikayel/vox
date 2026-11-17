@@ -33,7 +33,7 @@ O manifesto é um item da malha como os posts, com `type: "community_manifest"`,
 | `author` | sim | quem assina; o portão confere dono ou moderador (§2) |
 | `issuedAt` | sim | inteiro em milissegundos; regras no §3 |
 | `prev` | sim | `"sha256:<hex>"` do manifesto em que se baseou, ou `null` no primeiro |
-| `about` | não | grupo do texto (§2) |
+| `about` | não | grupo do texto (§2). Texto longo (`text`, `rules`, `links`); **não** traz título, descrição curta, foto, categoria nem modo de publicação, que continuam só no `community_update` |
 | `theme` | não | grupo do texto; formato no §4 |
 | `modules` | não | grupo do dono; formato no §5 |
 | `forkOf` | não | só no primeiro manifesto de uma comunidade derivada (§7) |
@@ -64,6 +64,8 @@ O aparelho guarda os manifestos válidos de cada comunidade (até 32; quando pas
 4. O resultado nunca volta para um `issuedAt` menor que o efetivo anterior do grupo (sem rollback). Manifesto antigo reenviado perde no passo 3 e não muda nada.
 
 O cálculo é determinístico: o mesmo conjunto dá o mesmo efetivo em qualquer aparelho e em qualquer ordem de chegada. A mudança que perdeu fica no histórico; a tela de histórico pode mostrar duas versões com o mesmo `prev` como "editadas ao mesmo tempo".
+
+**`community_update` no mesmo cálculo:** as regras 2 a 4 acima (futuro limitado a 10 minutos, maior data com desempate pelo hash, sem volta) valem também para o `community_update`, usando a data dele (`updatedAt` ou `ts`). Hoje ele só ordena pela data, sem limite para o futuro (ADR-038 §3.3).
 
 **Troca de dono:** não existe hoje (o dono vem só do post canônico). A regra para quando existir está no ADR-038 §3.3.
 
@@ -116,4 +118,4 @@ Cotas e capacidades por comunidade, cobrança, nota pública, imposição de rel
 
 ## 9. Testes esperados no código (antes da implementação)
 
-Um teste por regra: manifesto de outra chave não é gravado nem repassado; moderador com `modules` é recusado; `extensions` no v1 é recusado; token fora da lista e contraste baixo não aplicam tema; `issuedAt` no futuro distante não vale; reenvio de manifesto antigo não muda o efetivo; dois manifestos com o mesmo `issuedAt` dão o mesmo efetivo em qualquer ordem; manifesto de moderador mais novo não desfaz `modules` do dono; manifesto novo sem um módulo não desliga o módulo aceito; tema não alcança a interface global.
+Um teste por regra: manifesto de outra chave não é gravado nem repassado; moderador com `modules` é recusado; `extensions` no v1 é recusado; token fora da lista e contraste baixo não aplicam tema; `issuedAt` no futuro distante não vale; reenvio de manifesto antigo não muda o efetivo; dois manifestos com o mesmo `issuedAt` dão o mesmo efetivo em qualquer ordem; manifesto de moderador mais novo não desfaz `modules` do dono; manifesto novo sem um módulo não desliga o módulo aceito; tema não alcança a interface global; `community_update` datado mais de 10 minutos no futuro não muda título nem descrição; `community_update` antigo reenviado não desfaz o mais novo.
