@@ -6,6 +6,10 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### ADR-036 proposto: agilidade criptográfica e transição pós-quântica
+- **Inventário** de onde cada algoritmo é usado no cliente (assinatura e DM em curva elíptica; cofre, semente e chaves em repouso simétricos; Arweave, Nostr e Bluesky definidos pelos protocolos deles).
+- **Regra:** todo formato novo diz o seu algoritmo dentro do que é assinado; o leitor recusa algoritmo desconhecido.
+- **Direção:** DM v2 híbrida (ECDH + ML-KEM-768) primeiro, por causa do "guarda agora, abre depois"; assinatura com pré-compromisso ML-DSA junto da RFC 0002 (ADR-034); a frase de 12 palavras restaura também as chaves novas. Nada de código; atualizados DECISOES (A-24) e o índice de ADRs.
 ### Cofre numa pasta só, com porta de entrada (ADR-035 §3.2, primeiro contexto)
 - **`client/js/vault/`:** `vault-crypto`, `vault-store`, `vault-legacy`, `passphrase-vault` e `oauth-vault` mudaram para a pasta, com `git mv` (o histórico segue o arquivo). Nenhuma regra mudou.
 - **Portas:** fora da pasta, importa-se por `vault/index.js` (o que é público: migração v1, login social, Senha Soberana, cofre no link, servidores de memória) ou por `vault/envelope.js` (só cifrar e abrir um registro, usado por `key-lock.js` e `inbox-backup.js` para não fechar um ciclo de imports). O `oauth-vault.js` deixou de reexportar peças dos outros módulos; isso agora é papel da porta.
