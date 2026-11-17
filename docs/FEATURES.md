@@ -19,7 +19,7 @@
 | Funcionalidade | Rota | Módulos principais | Status | Testes |
 |---|---|---|---|---|
 | Feed Social / Cívico | `#/`, `#/?feed=civic` | `app/screens-home.js`, `render/feed.js`, `civic-post.js` | no ar | `civic-post`, `render`, `feed-*` |
-| Postar (Social ou Cívico, em etapas) | botão Postar | `app/compose-stepper.js`, `render/compose-steps.js`, `inline-composer.js`, `composer-media.js` | no ar | `compose-steps`, `stepped-flows`, `composer-*` |
+| Postar (Social ou Cívico, em etapas) | botão Postar | `app/compose-stepper.js`, `render/compose-steps.js`, `app/inline-composer.js`, `composer-media.js` | no ar | `compose-steps`, `stepped-flows`, `composer-*` |
 | Aviso de permanência ("gravar no Arweave" × "só na malha") | 1º post com carteira | `permanence-notice.js` | pausado quando `arweaveUpload: false` (**política atual:** tudo via rede de seguidores; guardas em `topic-permaweb.js` e `screens-compose.js`) | `permanence-notice`, `topic-permaweb` |
 | Foto, áudio e vídeo lo-fi | composer | `media-lofi.js`, `media-blob.js`, `upload.js`, `ans104.js` | no ar na malha/P2P e memória local; uploader Arweave/Turbo (`upload.js`) **bloqueado por padrão** (`arweaveUpload: false`) | `media-*`, `upload`, `verify-data-item` |
 | Republicar com citação | post ⋯ | `repost.js`, `repost-draft.js`, `render/repost-cite.js` | no ar | `repost` |

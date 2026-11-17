@@ -10,7 +10,7 @@ import * as localAccount from "../client/js/identity/local-account.js";
 import * as mediaBlob from "../client/js/media-blob.js";
 import * as peers from "../client/js/peers.js";
 import { renderPostItem } from "../client/js/render/feed.js";
-import { broadcastAndPersistInlineTopic } from "../client/js/inline-composer.js";
+import { broadcastAndPersistInlineTopic } from "../client/js/app/inline-composer.js";
 import * as peerSync from "../client/js/peer-sync.js";
 
 const PNG = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
