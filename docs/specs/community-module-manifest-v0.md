@@ -1,6 +1,6 @@
 # Community module manifest v0 (Horizonte C — kickoff)
 
-> **Status:** rascunho (kickoff do Horizonte C; sem código no cliente) · **Owner:** mantenedor · **Revisado:** 2026-10-23
+> **Status:** SUPERSEDED (por [community-manifest-v1.md](./community-manifest-v1.md) e [ADR-038](../adr/038-subrede-malha-e-manifesto.md), 2026-11-17; nunca teve código) · **Owner:** mantenedor · **Revisado:** 2026-11-17
 
 **Type:** `community-module-manifest` · **`App-Name: vox-brasil`**
 

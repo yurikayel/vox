@@ -97,7 +97,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 - [profile-card-gossip-v0.md](./specs/profile-card-gossip-v0.md): cartão de perfil na malha (ver ADR-003)
 - [listing-signed-gossip-v1.md](./specs/listing-signed-gossip-v1.md): ofertas da Feira assinadas
 - [mirror-validate-v1.md](./specs/mirror-validate-v1.md): validação de espelho no relay
-- [community-module-manifest-v0.md](./specs/community-module-manifest-v0.md): manifesto de módulos de comunidade (backlog)
+- [community-manifest-v1.md](./specs/community-manifest-v1.md): manifesto de comunidade (subrede): tema por lista fechada, módulos só sugeridos, fork; rascunho do [ADR-038](./adr/038-subrede-malha-e-manifesto.md), sem código. Substitui o [v0](./specs/community-module-manifest-v0.md)
 - [open-frames-v2.md](./specs/open-frames-v2.md): Open Frames no feed
 - [embed-integration.md](./specs/embed-integration.md): widget embed · [vox-bridge-spike.md](./product/vox-bridge-spike.md): extensão MV3
 - [governance-proposta-feira-pin-template.md](./product/governance-proposta-feira-pin-template.md): template de proposta Feira ↔ pin
