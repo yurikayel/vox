@@ -7,7 +7,7 @@
 import * as render from "../render.js";
 import * as localAccount from "../local-account.js";
 import * as emailKit from "../email-kit.js";
-import { normalizeVaultEmail } from "../vault-crypto.js";
+import { normalizeVaultEmail } from "../vault/index.js";
 import { setOAuthButtonBusy, setOAuthEnrichError } from "./onboarding.js";
 
 function bindEntryPasswordToggle() {
