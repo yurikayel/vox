@@ -6,6 +6,10 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Testes: vermelho na base (PM-111)
+- **Job `red-on-base` no CI (só PR):** roda os testes novos ou alterados contra o código da base (`scripts/red-on-base.mjs` e `scripts/red-on-base-reporter.mjs`). Em PR `fix:` ao menos um precisa falhar por asserção; falha por import ou função ausente é inconclusiva. Nos outros PRs só informa. Rótulo `red-on-base:skip` para `fix:` de CI ou documentação. Regra em [TESTES.md §3.4](./docs/TESTES.md#34-vermelho-na-base-o-teste-prova-o-defeito-pm-111).
+- Testes: `tests/red-on-base.test.js` (novo, 9 casos), com um repositório git de mentira.
+
 ### Testes: base do plano para código feito por IA (PM-110)
 - **CODEOWNERS sem caminho morto:** 8 linhas apontavam para arquivos que mudaram para `client/js/identity/` e `client/js/vault/` e não marcavam mais nada como sensível. Agora marcam as duas pastas, mais `sig-format.js`; `tests/codeowners-paths.test.js` reprova caminho que não existe.
 - **[TESTES.md](./docs/TESTES.md):** nova §3.3 (o Tier A dos testes são as linhas de `client/js/` do CODEOWNERS) e a §4 conferida com o `ci.yml` (job `e2e-mesh`, Python 3.15, CodeQL, e o ESLint do CI não cobre `tests/`).
