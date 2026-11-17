@@ -14,7 +14,7 @@ import {
   inspectPeerPromptForRole,
 } from "./dungeon-state.js";
 import { renderDungeonChrome } from "./dungeon-chrome.js";
-import { renderCampScreen } from "./screen-camp.js";
+import { renderCampScreen, refreshFavoriteSlider } from "./screen-camp.js";
 import { renderTableScreen } from "./screen-table.js";
 import { renderSheetScreen } from "./screen-sheet.js";
 import { renderDmScreen } from "./screen-dm.js";
@@ -118,8 +118,10 @@ export function wireDungeonView(container, opts = {}) {
   container.addEventListener("input", (ev) => {
     const target = ev.target;
     if (target?.dataset?.dungeon !== "slider-fav") return;
-    updateFavoriteSlider(viewOpts.state || getDungeonSession(), target.value);
-    redrawContainer(container, viewOpts);
+    const state = viewOpts.state || getDungeonSession();
+    updateFavoriteSlider(state, target.value);
+    // Só os rótulos mudam: redesenhar a tela trocaria o slider no meio do arrasto (perde o toque e o foco).
+    refreshFavoriteSlider(container, state);
   });
 
   container.addEventListener("submit", (ev) => handleDungeonSubmit(container, viewOpts, ev));

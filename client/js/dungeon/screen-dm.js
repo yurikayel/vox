@@ -32,7 +32,7 @@ function renderCoDmSection(state) {
       <span class="dungeon-eyebrow">Dicas por regras (sem IA)</span>
       <h2>Sussurros Silenciosos do Co-Mestre</h2>
       <div class="dungeon-whisper-box">
-        <strong>Sugestão Imediata: ${escapeHtml(w.silentToolCall?.skill || "Investigação")} (CD ${w.silentToolCall?.dc || 14})</strong>
+        <strong>Sugestão Imediata: ${escapeHtml(w.silentToolCall?.skill || "Investigação")} (CD ${w.silentToolCall?.suggestedDc ?? 14})</strong>
         <p class="dungeon-muted">${escapeHtml(w.pacingHintPtBr || "Ofereça pistas antes de rolagens punitivas.")}</p>
         <ul class="dungeon-clean-list">${sensory}</ul>
         ${rumorBadge}
