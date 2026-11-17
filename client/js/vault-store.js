@@ -127,13 +127,22 @@ export function persistVaultRecord(address, record, ownerToken) {
 }
 
 /**
+ * Apaga só a cópia deste aparelho de um cofre; os servidores não são tocados.
+ * @param {string} address endereço do cofre
+ * @returns {void}
+ */
+export function forgetLocalVaultRecord(address) {
+  try { localStorage.removeItem(VAULT_STORAGE_PREFIX + address); } catch { /* ignore */ }
+}
+
+/**
  * Revoga um endereço de cofre: apaga a cópia local e grava a marca de revogado nos servidores.
  * @param {string} address endereço a revogar
  * @param {string} ownerToken prova de dono desse endereço
  * @returns {Promise<number>} quantos servidores aceitaram
  */
 export function revokeVaultAddress(address, ownerToken) {
-  try { localStorage.removeItem(VAULT_STORAGE_PREFIX + address); } catch { /* ignore */ }
+  forgetLocalVaultRecord(address);
   return saveRemoteVaultRecord(address, { v: 2, revoked: true, updatedAt: Date.now() }, ownerToken);
 }
 

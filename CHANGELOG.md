@@ -11,6 +11,17 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 - **Direção:** uma pasta por assunto com porta de entrada (`index.js`), um assunto por PR, começando por `vault/`; caminho único para operações de conta; armazenamento local com dono; precache derivado do grafo (próximo PR).
 - Testes: `tests/layers-audit.test.js` (novo). Atualizados DECISOES (A-23), HARDENING, índice de ADRs e `scripts/README.md`. Sem mudança no app.
 
+### Correção: trocar a Senha Soberana pelo Perfil; pôr e-mail tira do ar o cofre só-senha
+- **Senha atual:** o cartão "Soberania & Sincronização" ganha o campo "Senha atual, só para trocar a Senha Soberana". Antes, depois do primeiro cofre a conta ficava travada pela senha, e uma senha nova dava "Senha incorreta" sem ter onde informar a antiga. Com a senha atual, a conta é aberta, gravada com a nova e o endereço antigo é revogado.
+- **E-mail:** gravar o cofre com e-mail (Perfil ou assistente de backup) revoga o cofre só-senha anterior da mesma senha, como a restauração já fazia (ADR-032 §6.3). Antes, ele ficava no ar e abria só com a senha. Só é revogado o que existe; endereço sem cofre não ganha marca.
+- **Revogação só quando o cofre novo chegou lá fora:** se nenhum servidor aceitou o cofre novo, o antigo continua nos servidores (é o único) e só a cópia deste aparelho sai. Antes, um servidor que recusava o novo e aceitava a revogação deixava a conta sem cofre remoto. Vale também para a troca de senha e o kit de e-mail.
+- **Trocar a senha e pôr e-mail de uma vez** também tira do ar o cofre só-senha da senha antiga; antes a senha antiga continuava abrindo a conta.
+- O campo "Senha atual" é limpo depois de gravar; antes, o clique seguinte (ex.: o QR) dava "Senha incorreta".
+- Testes: `tests/profile-vault-change.test.js` (novo; 6 casos, os de revogação falham com o código anterior). SW `v7.127`.
+
+### ADR-034 proposto: raiz e subchaves por aparelho
+- Desenho para perder o celular sem perder a conta: a chave de assinatura de hoje vira a raiz (o `vx_…` não muda), cada aparelho assina com uma subchave delegada, e a raiz publica um registro de chaves com as revogadas. Nada de código; a forma assinada nova pede a RFC 0002 e a revisão externa de cripto (LAN-18). Atualizados ADR-032 §3.6, DECISOES (A-22), ROADMAP (PM-13) e o índice de ADRs.
+
 ### Correção: o QR do Perfil para outro aparelho volta a funcionar
 - **"📲 QR Code para Celular" sempre falhava:** o link do cofre tinha uns 251 bytes no endereço oficial, e o codificador de QR ia só até a versão 9 (230 bytes). Agora o QR leva um cofre mínimo: a conta, a semente da frase de 12 palavras e o nome, se couber, cifrados só pela senha (`buildQrSyncRecord`). O cofre completo continua gravado e o link continua levando tudo; Pix e o resto chegam por eles. Conta de antes da frase não tem semente e recebe o motivo em vez de um QR que não abre.
 - **Codificador de QR:** ganha a versão 11 (321 bytes, ECC L, 4 blocos, contagem de 16 bits). A versão 10 fica de fora, porque em ECC L ela mistura blocos de dois tamanhos.
