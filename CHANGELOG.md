@@ -6,6 +6,10 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Correção: Service Worker só intercepta GET
+- **`client/sw.js`:** o listener de `fetch` passava todo pedido do mesmo domínio pelo caminho do cache, inclusive POST/PUT/DELETE (por exemplo, para um relay servido no mesmo domínio). O Cache API não guarda nem casa esses métodos, e o corpo do pedido atravessava o SW à toa; em `config/signaling.json`, um POST tentaria `cache.put` e geraria uma rejeição não tratada. Agora só GET passa pelo SW; o resto vai direto à rede pelo navegador.
+- Testes: `tests/sw-fetch-methods.test.js` (novo, 2 casos; roda o `sw.js` real numa sandbox `node:vm` e falha no código de antes). SW `v7.134`.
+
 ### Correção: sinalização com prazos e mensagens fragmentadas
 - **`relay/signaling.py`:** o handshake HTTP passa a ter prazo total, e o resto de um quadro precisa chegar num prazo depois do cabeçalho; antes, uma conexão que não terminava segurava a thread dela sem limite. Pares registrados e quietos continuam conectados.
 - **Fragmentos:** mensagens em vários quadros (FIN=0 + continuação) são remontadas, com teto para a soma; antes, o primeiro pedaço era lido como mensagem inteira e o resto era ignorado. Erros de protocolo encerram a conexão.
