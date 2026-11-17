@@ -4,7 +4,7 @@
  */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { importSpecifiers, isAllowedImport, layerOf, layerViolations, resolveSpecifier } from "../scripts/layers-lib.mjs";
+import { bypassesDoor, importSpecifiers, isAllowedImport, layerOf, layerViolations, resolveSpecifier } from "../scripts/layers-lib.mjs";
 
 test("camadas - app.js e app/ são app; render.js e render/ são render; labs/ e dungeon/ são labs; o resto é base", () => {
   assert.equal(layerOf("app.js"), "app");
@@ -54,4 +54,13 @@ test("camadas - um import que sobe de camada, inclusive por import(), aparece co
   const code = `import { ctx } from "../app/context.js"; import { esc } from "./util.js"; const f = () => import("../app/zap.js");`;
   assert.deepEqual(layerViolations("render/menu.js", code), ["render/menu.js → app/context.js", "render/menu.js → app/zap.js"]);
   assert.deepEqual(layerViolations("app/screen.js", code), []);
+});
+
+test("contexto vault/ - fora da pasta só pelas portas index.js e envelope.js; dentro, livre", () => {
+  assert.equal(bypassesDoor("email-kit.js", "vault/index.js"), false);
+  assert.equal(bypassesDoor("key-lock.js", "vault/envelope.js"), false);
+  assert.equal(bypassesDoor("vault/passphrase-vault.js", "vault/vault-store.js"), false);
+  assert.equal(bypassesDoor("email-kit.js", "vault/vault-crypto.js"), true);
+  assert.equal(bypassesDoor("app/screens-sync.js", "vault/passphrase-vault.js"), true);
+  assert.deepEqual(layerViolations("email-kit.js", `import { x } from "./vault/vault-store.js";`), ["email-kit.js → vault/vault-store.js"]);
 });

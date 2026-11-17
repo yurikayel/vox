@@ -1332,14 +1332,6 @@
   "jsdoc:hasSkippedOAuth",
   "jsdoc:hasCompletedOAuthStep"
  ],
- "client/js/oauth-vault.js": [
-  "returns:runLegacyVaultMigration",
-  "jsdoc:LEGACY_VAULT_NOTICE",
-  "param:startVaultMigration:toast",
-  "jsdoc:restoreOrBindOAuthIdentity",
-  "jsdoc:restoreOrBindGoogleIdentity",
-  "jsdoc:restoreOrBindMetaIdentity"
- ],
  "client/js/open-frames-host.js": [
   "jsdoc:OF_HOST_MESSAGE_TYPES",
   "jsdoc:handleFrameMessage",
@@ -2140,30 +2132,6 @@
   "jsdoc:uploadToTurbo",
   "jsdoc:postData",
   "jsdoc:postBinary"
- ],
- "client/js/vault-crypto.js": [
-  "jsdoc:VAULT_V2_ITERATIONS",
-  "jsdoc:bufferToHex",
-  "jsdoc:hexToBytes",
-  "jsdoc:isV2Record",
-  "param:isRevokedRecord:record",
-  "returns:isRevokedRecord",
-  "jsdoc:legacyLookupKey",
-  "jsdoc:deriveLegacyKey",
-  "jsdoc:decryptLegacyRecord"
- ],
- "client/js/vault-legacy.js": [
-  "jsdoc:LEGACY_VAULT_PREFIX",
-  "jsdoc:listLegacyLookupKeys",
-  "param:revokeLegacyVaults:lookupKeys",
-  "param:revokeLegacyVaults:#2",
-  "returns:revokeLegacyVaults",
-  "param:migrateLegacyVaults:#1",
-  "returns:migrateLegacyVaults",
-  "jsdoc:markLegacyRevokedNotice",
-  "param:consumeLegacyRevokedNotice:storage",
-  "returns:consumeLegacyRevokedNotice",
-  "jsdoc:clearLegacyRevokedNotice"
  ],
  "client/js/vox-identity.js": [
   "jsdoc:HEADER_SIZE",

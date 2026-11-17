@@ -6,8 +6,8 @@ import * as localAccount from "../client/js/local-account.js";
 import {
   savePassphraseVault,
   restoreFromPassphraseVault,
-} from "../client/js/oauth-vault.js";
-import * as oauthVault from "../client/js/oauth-vault.js";
+} from "../client/js/vault/index.js";
+import * as oauthVault from "../client/js/vault/index.js";
 import * as profileDirectory from "../client/js/profile-directory.js";
 import * as peopleIndex from "../client/js/people-index.js";
 import { encodeVoxUrl } from "../client/js/qr-url.js";
