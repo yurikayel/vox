@@ -27,6 +27,7 @@ import {
   normalizeVaultEmail,
 } from "./vault-crypto.js";
 import { clearLegacyRevokedNotice, markLegacyRevokedNotice, revokeLegacyVaults } from "./vault-legacy.js";
+import { rememberMine } from "./mesh-vault.js";
 
 /**
  * Depois de trocar de conta: apaga a conta descartável anterior e deixa um só cartão de perfil para a conta aberta.
@@ -161,6 +162,7 @@ export async function savePassphraseVault(passphrase, emailOrOpts = "") {
   const syncBundle = opts.email ? await encryptVaultV2(compact, clean) : encrypted;
   const remote = await persistVaultRecord(address, encrypted, ownerToken);
   await retireSupersededVaults(opts, clean, address, remote);
+  if (opts.email) rememberMine({ routeId: opened.bundle.routeId, address, record: encrypted });
   if (remote > 0) accountExit.markAccountExit("cofre", opened.bundle.routeId);
   clearLegacyRevokedNotice();
   return {
@@ -240,7 +242,7 @@ export async function restoreFromPassphraseVault(passphrase, lookupKeyOverride =
   const located = args.directRecord
     ? { record: args.directRecord, legacyKey: null, legacyV2: null, reachable: 1 }
     : await locatePassphraseRecord(clean, args.lookupKey, args.email);
-  if (!located.record) return { ok: false, noServer: located.reachable === 0, reason: "Nenhum cofre encontrado para esta senha ou chave." };
+  if (!located.record) return { ok: false, notFound: true, noServer: located.reachable === 0, reason: "Nenhum cofre encontrado para esta senha ou chave." };
   const decryptResult = await tryDecryptPassphraseRecord(located.record, clean, args.email);
   if (!decryptResult.ok) return decryptResult;
   const bundle = decryptResult.bundle;

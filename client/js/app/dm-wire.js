@@ -22,6 +22,7 @@ import { parseCaseDm } from "../natural-mod.js";
 import { parseContactAddedDm } from "../contact-notify.js";
 import { receiveContactAddedDm } from "./contact-notify-flow.js";
 import { receiveGuardianDm } from "./guardians-flow.js";
+import { receiveMeshDm } from "./mesh-vault-flow.js";
 
 /**
  * Liga ou desliga a reação de alguém numa mensagem do fio.
@@ -97,7 +98,7 @@ async function handleNaturalCasePayload(env, rawText) {
  * @returns {Promise<boolean|string>} `false` quando reação/leitura não acham mensagem; `"contact_added"` para aviso de contato; `"guardian"` para mensagem de guardião (não vai para o fio).
  */
 export async function ingestDecryptedEnvelope(env, rawText) {
-  if (await receiveGuardianDm(env, rawText)) return "guardian";
+  if ((await receiveGuardianDm(env, rawText)) || (await receiveMeshDm(env, rawText))) return "guardian";
   if (parseContactAddedDm(rawText)) {
     await receiveContactAddedDm(env, rawText);
     return "contact_added";
