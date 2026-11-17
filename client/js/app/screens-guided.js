@@ -10,7 +10,13 @@ import { bindComposeStepper } from "./compose-stepper.js";
 import { getActiveUser, makeShellProps } from "./context.js";
 import { syncIdentity } from "./screens-network.js";
 
-/** Pura: aplica as escolhas do assistente sobre as configurações atuais. */
+/**
+ * Pura: aplica as escolhas do assistente sobre as configurações atuais.
+ *
+ * @param {object} current Configurações de peer atuais.
+ * @param {object} choices Valores do formulário (`enabled`, `cap`, `wifiOnly`, `backgroundRelay`).
+ * @returns {object} Novas configurações mescladas.
+ */
 export function applyNetworkWizardChoices(current, { enabled, cap, wifiOnly, backgroundRelay }) {
   return {
     ...current,
@@ -21,6 +27,11 @@ export function applyNetworkWizardChoices(current, { enabled, cap, wifiOnly, bac
   };
 }
 
+/**
+ * Monta assistente de configuração de rede.
+ *
+ * @returns {void}
+ */
 export async function showNetworkWizard() {
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "network", "Configuração guiada"));
@@ -115,6 +126,11 @@ async function submitBackupWizard() {
   }
 }
 
+/**
+ * Monta assistente de backup.
+ *
+ * @returns {void}
+ */
 export async function showBackupWizard() {
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "profile", "Backup da identidade"));
@@ -151,6 +167,11 @@ function applyPix() {
   return true;
 }
 
+/**
+ * Monta assistente de carteira.
+ *
+ * @returns {void}
+ */
 export async function showWalletWizard() {
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "profile", "Configuração guiada"));

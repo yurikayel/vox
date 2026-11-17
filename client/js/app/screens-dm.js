@@ -21,6 +21,12 @@ let activeReplyDraft = null;
 let pendingContextDraft = null;
 let activeMediaDraft = "";
 
+/**
+ * Conta mensagens novas na caixa de entrada.
+ *
+ * @param {string} user
+ * @returns {Promise<unknown>}
+ */
 export async function pollInboxMessages(user) {
   if (!user) return 0;
   try {
@@ -98,6 +104,11 @@ function bindDmListSearchAndPins(main, convs, user) {
   });
 }
 
+/**
+ * Monta lista de conversas DM.
+ *
+ * @returns {void}
+ */
 export async function showDmList() {
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "dm", "Mensagens"));
@@ -135,6 +146,14 @@ async function sealAndPersistOutgoingDm(user, peerAddress, peerDmPub, text) {
   return status;
 }
 
+/**
+ * Envia mensagem DM cifrada.
+ *
+ * @param {string} user
+ * @param {unknown} peerAddress
+ * @param {unknown} peerDmPub
+ * @returns {void}
+ */
 export async function handleSendDmSubmit(user, peerAddress, peerDmPub) {
   const input = document.getElementById("dm-message-input");
   const rawText = input?.value.trim() || "";
@@ -311,6 +330,12 @@ async function mountDmSplitIfWide(main, user, peerAddress) {
   return main.querySelector("#dm-thread-pane");
 }
 
+/**
+ * Monta fio de conversa com um peer.
+ *
+ * @param {unknown} peerAddress
+ * @returns {void}
+ */
 export async function showDmThread(peerAddress) {
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "dm", "Conversa"));
@@ -343,6 +368,11 @@ export async function showDmThread(peerAddress) {
   bindDmThreadFormEvents(main, user, peerAddress, peerDmPub);
 }
 
+/**
+ * Liga listeners globais de DM.
+ *
+ * @returns {void}
+ */
 export function initDmListeners() {
   peers.onDirectMessage(async (envelope) => {
     const user = await getActiveUser();
