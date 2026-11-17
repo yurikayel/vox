@@ -1,4 +1,8 @@
-// Cache local persistente para transações e corpos do Vox (IndexedDB + LRU)
+/**
+ * @file Cache local persistente do Vox (IndexedDB `vox-cache-db`): dados de transações com limpeza LRU, posts e
+ * lápides deste aparelho, DMs e as contagens de respostas. Os posts e lápides gravados podem ser repassados à memória
+ * central (`registerCentralMemorySink`).
+ */
 import * as hashtags from "./hashtags.js";
 import { normalizeLocalPost, toStoredRecord, toWireForm } from "./post-wire.js";
 import * as mock from "./mock.js";
@@ -61,6 +65,11 @@ function openDB() {
   return dbPromise;
 }
 
+/**
+ * Dado de uma transação no cache local; marca o acesso para a política LRU.
+ * @param {string} txId Id da transação.
+ * @returns {Promise<object|null>} O dado guardado, ou null se não houver ou a leitura falhar.
+ */
 export async function getCachedTx(txId) {
   if (!txId) return null;
   try {
@@ -87,6 +96,12 @@ export async function getCachedTx(txId) {
   }
 }
 
+/**
+ * Guarda o dado de uma transação no cache local, com tamanho e horários para a LRU. Quota cheia falha em silêncio.
+ * @param {string} txId Id da transação.
+ * @param {object} data Dado a guardar; vazio não grava.
+ * @returns {Promise<void>} Resolve depois da gravação (ou da falha).
+ */
 export async function setCachedTx(txId, data) {
   if (!txId || !data) return;
   try {
@@ -111,6 +126,10 @@ export async function setCachedTx(txId, data) {
   }
 }
 
+/**
+ * Tamanho do cache de transações, para a tela de rede.
+ * @returns {Promise<{count: number, sizeBytes: number, sizeKb: string, sizeMb: string}>} Itens e tamanho; zerado se a leitura falhar.
+ */
 export async function getCacheStats() {
   try {
     const db = await openDB();
@@ -136,6 +155,10 @@ export async function getCacheStats() {
   }
 }
 
+/**
+ * Apaga todo o cache de transações (não toca nos posts locais nem nas DMs).
+ * @returns {Promise<void>} Resolve depois de apagar (ou da falha).
+ */
 export async function clearCache() {
   try {
     const db = await openDB();
@@ -149,6 +172,11 @@ export async function clearCache() {
   } catch {}
 }
 
+/**
+ * Apaga as transações acessadas há mais tempo até o cache caber no teto. Dispara a limpeza e não espera ela terminar.
+ * @param {number} [maxMb=100] Teto em MB.
+ * @returns {Promise<void>} Resolve ao disparar a limpeza.
+ */
 export async function enforceMaxCacheSize(maxMb = 100) {
   try {
     const db = await openDB();
@@ -174,6 +202,12 @@ export async function enforceMaxCacheSize(maxMb = 100) {
   } catch {}
 }
 
+/**
+ * Guarda (ou substitui) uma mensagem de DM e avisa a shell que as conversas mudaram.
+ * @param {{id: string, peerAddress: string, from?: string, to?: string, text?: string, ts?: number, status?: string, replyTo?: string, contextCard?: object, reactions?: object, mediaDataUrl?: string}} msg
+ *   Mensagem; sem `id` ou `peerAddress`, nada é gravado.
+ * @returns {Promise<void>} Resolve depois da gravação (ou da falha).
+ */
 export async function saveDmMessage(msg) {
   if (!msg?.id || !msg?.peerAddress) return;
   try {
@@ -227,6 +261,11 @@ export async function getAllDmMessages() {
   }
 }
 
+/**
+ * Mensagens de uma conversa, da mais antiga para a mais nova.
+ * @param {string} peerAddress Conta do outro lado.
+ * @returns {Promise<object[]>} Mensagens; vazio sem conta.
+ */
 export async function getDmMessages(peerAddress) {
   if (!peerAddress) return [];
   return (await getAllDmMessages()).filter((m) => m.peerAddress === peerAddress).sort((a, b) => (a.ts || 0) - (b.ts || 0));
@@ -273,6 +312,11 @@ function aggregateDmConversations(all) {
   return Array.from(map.values()).sort((a, b) => b.lastTs - a.lastTs);
 }
 
+/**
+ * Lista de conversas: a última mensagem de cada uma e quantas recebidas ainda não foram lidas.
+ * @returns {Promise<{peerAddress: string, lastText: string, lastTs: number, lastStatus: string, unreadCount: number}[]>}
+ *   Conversas, mais recentes primeiro; vazio se a leitura falhar.
+ */
 export async function getDmConversations() {
   try {
     const db = await openDB();
@@ -287,6 +331,11 @@ export async function getDmConversations() {
   }
 }
 
+/**
+ * Apaga todas as mensagens de uma conversa deste aparelho.
+ * @param {string} peerAddress Conta do outro lado.
+ * @returns {Promise<void>} Resolve depois de apagar (ou da falha).
+ */
 export async function deleteDmThread(peerAddress) {
   if (!peerAddress) return;
   try {
@@ -304,6 +353,11 @@ export async function deleteDmThread(peerAddress) {
   } catch {}
 }
 
+/**
+ * Guarda a lápide de um post removido (no lugar do post) e repassa à memória central, se houver.
+ * @param {object} tombstone Lápide assinada.
+ * @returns {Promise<boolean>} Falso sem `id` ou se a gravação falhar.
+ */
 export async function saveTombstone(tombstone) {
   if (!tombstone?.id) return false;
   const record = toStoredRecord({ type: "tombstone", kind: "post-tombstone", ...tombstone });
@@ -322,6 +376,11 @@ export async function saveTombstone(tombstone) {
   }
 }
 
+/**
+ * Lápide guardada com este id.
+ * @param {string} id Id do post.
+ * @returns {Promise<object|null>} A lápide na forma assinada, ou null se o registro não for uma lápide.
+ */
 export async function getTombstone(id) {
   if (!id) return null;
   try {
@@ -345,6 +404,10 @@ export async function getTombstone(id) {
   }
 }
 
+/**
+ * Todas as lápides guardadas.
+ * @returns {Promise<object[]>} Lápides na forma assinada; vazio se a leitura falhar.
+ */
 export async function getAllTombstones() {
   try {
     const db = await openDB();
@@ -362,6 +425,11 @@ export async function getAllTombstones() {
   }
 }
 
+/**
+ * Registro guardado com este id, seja post ou lápide.
+ * @param {string} id Id do registro.
+ * @returns {Promise<object|null>} O registro na forma assinada, ou null.
+ */
 export async function getPostRecord(id) {
   if (!id) return null;
   try {
@@ -382,15 +450,26 @@ let cachedReplyCountsMap = null;
 let cachedReplyActivityMap = null;
 let centralMemorySink = null;
 
+/**
+ * Define quem recebe cada post e lápide gravados, para repassar à memória central (substitui o anterior).
+ * @param {((msg: {type: "GOSSIP"|"GOSSIP_DELETE", item?: object, tombstone?: object}) => void)|null} fn Receptor; outro valor desliga.
+ */
 export function registerCentralMemorySink(fn) {
   centralMemorySink = typeof fn === "function" ? fn : null;
 }
 
+/** Descarta as contagens de respostas guardadas em memória (refeitas na próxima leitura). */
 export function invalidateReplyCountsCache() {
   cachedReplyCountsMap = null;
   cachedReplyActivityMap = null;
 }
 
+/**
+ * Guarda (ou substitui) um post local e repassa à memória central, se houver. Post com lápide igual ou mais nova
+ * não volta.
+ * @param {object} post Post com `id` e `type`.
+ * @returns {Promise<boolean>} Falso sem `id`/`type`, se uma lápide vence ou se a gravação falhar.
+ */
 export async function saveLocalPost(post) {
   if (!post?.id || !post?.type) return false;
   const tombstone = await getTombstone(post.id);
@@ -416,6 +495,11 @@ export async function saveLocalPost(post) {
   }
 }
 
+/**
+ * Post local com este id.
+ * @param {string} id Id do post.
+ * @returns {Promise<object|null>} O post normalizado, ou null se não houver ou for uma lápide.
+ */
 export async function getLocalPost(id) {
   if (!id) return null;
   try {
@@ -439,6 +523,11 @@ export async function getLocalPost(id) {
   }
 }
 
+/**
+ * Apaga o registro deste aparelho, sem lápide (não avisa a malha).
+ * @param {string} id Id do post.
+ * @returns {Promise<boolean>} Falso sem id ou se a remoção falhar.
+ */
 export async function deleteLocalPost(id) {
   if (!id) return false;
   try {
@@ -459,6 +548,13 @@ export async function deleteLocalPost(id) {
   }
 }
 
+/**
+ * Posts locais (sem lápides), com filtros opcionais. Respostas vêm da mais antiga para a mais nova; o resto, da mais
+ * nova para a mais antiga.
+ * @param {{type?: string|null, communityId?: string|null, replyTo?: string|null, proposalId?: string|null, postId?: string|null}} [filters]
+ *   Tipo, comunidade, post respondido, proposta e post de referência.
+ * @returns {Promise<object[]>} Posts normalizados; vazio se a leitura falhar.
+ */
 export async function getLocalPosts({ type = null, communityId = null, replyTo = null, proposalId = null, postId = null } = {}) {
   try {
     const db = await openDB();
@@ -488,11 +584,18 @@ export async function getLocalPosts({ type = null, communityId = null, replyTo =
   }
 }
 
+/**
+ * Todos os posts locais, sem filtro (ver `getLocalPosts`).
+ * @returns {Promise<object[]>} Posts normalizados.
+ */
 export async function getAllLocalPosts() {
   return getLocalPosts();
 }
 
-/** Posts na forma assinada, mais novos primeiro: o que a sincronização e a memória central repassam. */
+/**
+ * Posts na forma assinada, mais novos primeiro: o que a sincronização e a memória central repassam.
+ * @returns {Promise<object[]>} Posts (sem lápides); vazio se a leitura falhar.
+ */
 export async function getWirePosts() {
   try {
     const db = await openDB();
@@ -509,6 +612,10 @@ export async function getWirePosts() {
   }
 }
 
+/**
+ * Quantas respostas cada post tem, contadas nos posts locais e guardadas em memória até a próxima gravação.
+ * @returns {Promise<Object<string, number>>} Contagem por id do post respondido (cópia).
+ */
 export async function getReplyCountsMap() {
   if (cachedReplyCountsMap) {
     return { ...cachedReplyCountsMap };
@@ -524,7 +631,10 @@ export async function getReplyCountsMap() {
   return { ...counts };
 }
 
-/** Retorna mapa de { [topicId]: { count: number, lastTs: number } } para bumping determinístico. */
+/**
+ * Retorna mapa de { [topicId]: { count: number, lastTs: number } } para bumping determinístico.
+ * @returns {Promise<Object<string, {count: number, lastTs: number}>>} Respostas e a hora da última, por tópico (cópia).
+ */
 export async function getReplyActivityMap() {
   if (cachedReplyActivityMap) {
     return { ...cachedReplyActivityMap };
@@ -565,6 +675,10 @@ function buildLocalCommunityRecord(c) {
   };
 }
 
+/**
+ * Comunidades criadas neste aparelho ou recebidas da malha, com as atualizações aceitas já aplicadas.
+ * @returns {Promise<object[]>} Registros de comunidade (só os posts canônicos de criação).
+ */
 export async function getLocalCommunities() {
   const posts = await getLocalPosts({ type: "community" });
   const updates = await getLocalPosts({ type: communityUpdates.COMMUNITY_UPDATE_TYPE });
@@ -580,6 +694,8 @@ export async function getLocalCommunities() {
  * PM-09: um `community_update` de quem não é dono nem moderador de uma comunidade
  * conhecida aqui não é gravado nem repassado. Comunidade desconhecida: aceita, e o
  * filtro de `applyCommunityUpdates` decide na hora de mostrar.
+ * @param {object} update Item `community_update` recebido.
+ * @returns {Promise<boolean>} Falso sem `communityId` ou se o autor não pode atualizar a comunidade conhecida.
  */
 export async function isCommunityUpdateAcceptable(update) {
   if (!update?.communityId) return false;
@@ -588,6 +704,10 @@ export async function isCommunityUpdateAcceptable(update) {
   return communityUpdates.canUpdateCommunity(buildLocalCommunityRecord(post), update.author);
 }
 
+/**
+ * Apaga todos os posts e lápides deste aparelho.
+ * @returns {Promise<void>} Resolve depois de apagar (ou da falha).
+ */
 export async function clearLocalPosts() {
   try {
     const db = await openDB();
@@ -622,6 +742,12 @@ function collectMatchingItems(items, targetSlug, seenIds, results, typeFilter = 
   }
 }
 
+/**
+ * Tópicos e anúncios com a hashtag, dos posts locais e dos dados de demonstração, sem repetir id. Usa as `tags` do
+ * item ou, sem elas, as hashtags do título, corpo e descrição.
+ * @param {string} slug Hashtag (com ou sem `#`).
+ * @returns {Promise<object[]>} Itens, mais novos primeiro; vazio para hashtag vazia.
+ */
 export async function getPostsByTag(slug) {
   if (!slug) return [];
   const targetSlug = hashtags.slugifyTag(slug);
