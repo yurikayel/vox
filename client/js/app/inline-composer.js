@@ -1,3 +1,6 @@
+/**
+ * @file Compositor inline do feed: expandir, mídia, comunidade e publicação assinada.
+ */
 import * as composerMedia from "../composer-media.js";
 import * as share from "../share.js";
 import { uploadTopicToPermaweb } from "../topic-permaweb.js";
@@ -19,6 +22,11 @@ let inlineComposerMedia = { type: "", dataUrl: "", byteLength: 0 };
 let inlineComposerAspectRatio = "original";
 let inlineComposerPhotoTags = [];
 
+/**
+ * Atualiza contadores e estado do botão publicar do compositor inline.
+ *
+ * @returns {void}
+ */
 export function syncInlineComposerUi() {
   const root = document.getElementById("feed-inline-composer");
   if (!root) return;
@@ -34,6 +42,11 @@ export function syncInlineComposerUi() {
   if (echoBtn) echoBtn.disabled = !hasContent;
 }
 
+/**
+ * Recolhe o compositor inline e limpa mídia temporária.
+ *
+ * @returns {void}
+ */
 export function collapseInlineComposer() {
   const root = document.getElementById("feed-inline-composer");
   if (!root) return;
@@ -45,6 +58,11 @@ export function collapseInlineComposer() {
   collapsed?.setAttribute("aria-expanded", "false");
 }
 
+/**
+ * Preenche o datalist de comunidades do compositor inline com ids locais conhecidos.
+ *
+ * @returns {Promise<void>}
+ */
 export async function populateCommunityDatalist() {
   const datalist = document.getElementById("inline-comm-list");
   if (!datalist) return;
@@ -60,6 +78,11 @@ export async function populateCommunityDatalist() {
     .join("");
 }
 
+/**
+ * Expande o compositor inline e foca o campo de texto.
+ *
+ * @returns {void}
+ */
 export function expandInlineComposer() {
   const root = document.getElementById("feed-inline-composer");
   if (!root) return;
@@ -577,6 +600,15 @@ function createComposerControllerState() {
   return state;
 }
 
+/**
+ * Assina, persiste e propaga um tópico criado pelo compositor inline.
+ *
+ * @param {object} payload Campos base do post.
+ * @param {string} title Título derivado.
+ * @param {string} body Corpo do texto.
+ * @param {string} commSlug Slug/id da comunidade.
+ * @returns {Promise<object>} Post assinado salvo.
+ */
 export async function broadcastAndPersistInlineTopic(payload, title, body, commSlug) {
   // LAN-14: comunidade com quarentena de chave nova recebe o post com PoW leve.
   const community = (await cacheNode.getLocalCommunities()).find((c) => c.id === commSlug);
@@ -669,6 +701,12 @@ function bindEditPanels(root) {
   });
 }
 
+/**
+ * Liga formulário, mídia e publicação do compositor inline no feed.
+ *
+ * @param {() => void} [onPublished] Callback após publicar com sucesso.
+ * @returns {void}
+ */
 export function attachInlineComposerHandlers(onPublished) {
   const root = document.getElementById("feed-inline-composer");
   if (!root) return;

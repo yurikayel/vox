@@ -28,6 +28,12 @@ import { showConnect } from "./screens-people.js";
 
 export { ensureOnboardingSideEffects } from "./onboarding-side-effects.js";
 
+/**
+ * Mostra ou limpa mensagem de erro na etapa de enriquecimento OAuth.
+ *
+ * @param {string} message Texto de erro; vazio esconde o bloco.
+ * @returns {void}
+ */
 export function setOAuthEnrichError(message) {
   const el = document.getElementById("oauth-enrich-error");
   if (!el) return;
@@ -35,6 +41,13 @@ export function setOAuthEnrichError(message) {
   el.hidden = !message;
 }
 
+/**
+ * Marca botão OAuth como ocupado para evitar duplo clique.
+ *
+ * @param {HTMLButtonElement|null} btn Botão alvo.
+ * @param {boolean} busy Estado de carregamento.
+ * @returns {void}
+ */
 export function setOAuthButtonBusy(btn, busy) {
   if (!btn) return;
   btn.disabled = busy;
@@ -42,12 +55,28 @@ export function setOAuthButtonBusy(btn, busy) {
   else btn.removeAttribute("aria-busy");
 }
 
+/**
+ * Propaga falha de OAuth para o bloco de erro e toast.
+ *
+ * @param {string} message Motivo retornado pelo provedor.
+ * @param {string} fallbackLabel Texto padrão quando `message` está vazio.
+ * @returns {void}
+ */
 export function reportOAuthEnrichFailure(message, fallbackLabel) {
   const text = message || fallbackLabel;
   setOAuthEnrichError(text);
   share.showToast(text, "error");
 }
 
+/**
+ * Executa login OAuth com feedback de UI (busy, erro, toast).
+ *
+ * @param {HTMLButtonElement|null} btn Botão clicado.
+ * @param {() => Promise<object>} signInFn Provedor (Google/Meta/GitHub).
+ * @param {object} opts
+ * @param {string} opts.fallbackError Mensagem padrão de falha.
+ * @returns {Promise<object>} Resultado do provedor.
+ */
 export async function runOAuthEnrichSignIn(btn, signInFn, { fallbackError }) {
   setOAuthEnrichError("");
   setOAuthButtonBusy(btn, true);
@@ -199,6 +228,11 @@ export function openOAuthEnrichModal({ onComplete, withPact = false, mode = "ent
   bindOAuthProviderButton({ btnId: "btn-oauth-github", signInFn: () => oauthProfile.signInWithGithub(), fallbackError: "GitHub indisponível", labelFn: (res) => `Perfil enriquecido com GitHub (@${res.profile?.handle || ""}).`, modalContainer, onDone: onComplete });
 }
 
+/**
+ * Avança para pacto ou reabre modal de entrada conforme estado local.
+ *
+ * @returns {void}
+ */
 export function checkOAuthEnrichStep() {
   if (oauthProfile.hasCompletedOAuthStep()) {
     checkPactModal();
@@ -212,6 +246,11 @@ export function checkOAuthEnrichStep() {
   openOAuthEnrichModal({ onComplete: () => checkPactModal(), withPact: true });
 }
 
+/**
+ * Orquestra portão de entrada, read-first e enriquecimento OAuth na troca de rota.
+ *
+ * @returns {void}
+ */
 export function checkCantinaGate() {
   const route = parseRoute();
 
@@ -233,7 +272,11 @@ function startReadFirst() {
   readFirst.mountReadFirstBanner(document, openEntry);
 }
 
-/** Escrever exige ter passado pela entrada E concluído o pacto com 18+ (ADR-020). */
+/**
+ * Escrever exige ter passado pela entrada E concluído o pacto com 18+ (ADR-020).
+ *
+ * @returns {boolean}
+ */
 export function hasFullEntry() {
   return hasPassedCantinaGate() && isPactComplete();
 }
@@ -305,6 +348,11 @@ function landOnInviter(user) {
   return true;
 }
 
+/**
+ * Abre o modal de pacto quando ainda falta aceite ou confirmação de maioridade.
+ *
+ * @returns {void}
+ */
 export function checkPactModal() {
   // Já aberto: não redesenhar a cada troca de rota (desmarcaria a caixa de 18+).
   if (isPactComplete() || document.getElementById("pact-modal-overlay")) return;

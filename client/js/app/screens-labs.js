@@ -8,6 +8,11 @@ import { getActiveUser, makeShellProps } from "./context.js";
 import { renderMofnLab, wireMofnLab } from "../labs/mofn-lab.js";
 import { renderDungeonLab, wireDungeonLab } from "../labs/ai-social-dungeon-lab.js";
 
+/**
+ * Monta o lab Open Frames com iframe sandbox e log de ações.
+ *
+ * @returns {Promise<void>}
+ */
 export async function showLabsFrames() {
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "home", "Open Frames"));
@@ -39,6 +44,11 @@ export async function showLabsFrames() {
   });
 }
 
+/**
+ * Monta o lab M-de-N (coleta M de N assinaturas).
+ *
+ * @returns {Promise<void>}
+ */
 export async function showLabsMofn() {
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "home", "Lab M-de-N"));

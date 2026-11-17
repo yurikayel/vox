@@ -149,6 +149,11 @@ function renderIfPaused(main, flag) {
   return true;
 }
 
+/**
+ * Formulário de nova comunidade.
+ *
+ * @returns {void}
+ */
 export async function showComposeCommunity() {
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "compose", "Nova Comunidade"));
@@ -349,6 +354,12 @@ function bindCivicTagSelector() {
   bindPollBuilder();
 }
 
+/**
+ * Formulário de novo tópico.
+ *
+ * @param {string} communityId
+ * @returns {void}
+ */
 export async function showComposeTopic(communityId) {
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "compose", "Novo Post"));
@@ -397,6 +408,12 @@ function bindSphereChoice(communityId) {
   });
 }
 
+/**
+ * Formulário de classificado na comunidade.
+ *
+ * @param {string} communityId
+ * @returns {void}
+ */
 export async function showComposeListing(communityId) {
   const targetComm = communityId || mock.MOCK_DEMO_COMMUNITY_FEIRA.id;
   const user = await getActiveUser();
@@ -471,6 +488,13 @@ async function executeListingPublish(form, pixNormalized, user, communityId) {
   location.hash = `#/c/${encodeURIComponent(communityId)}?tab=listings`;
 }
 
+/**
+ * Envia classificado da comunidade.
+ *
+ * @param {string} user
+ * @param {string} communityId
+ * @returns {Promise<unknown>}
+ */
 export async function handleComposeListingSubmit(user, communityId) {
   const form = readListingFormValues();
   const val = listing.validateListingInput(form);
@@ -496,6 +520,12 @@ export async function handleComposeListingSubmit(user, communityId) {
   }
 }
 
+/**
+ * Formulário de nova proposta.
+ *
+ * @param {string} communityId
+ * @returns {void}
+ */
 export async function showComposeProposal(communityId) {
   const targetComm = communityId || mock.MOCK_DEMO_COMMUNITY.id;
   const user = await getActiveUser();
@@ -512,6 +542,13 @@ export async function showComposeProposal(communityId) {
   attachComposeProposalHandlers(targetComm, user);
 }
 
+/**
+ * Liga envio de proposta no compor.
+ *
+ * @param {string} communityId
+ * @param {string} user
+ * @returns {void}
+ */
 export function attachComposeProposalHandlers(communityId, user) {
   const form = document.getElementById("form-compose-proposal");
   bindComposeStepper(form);
@@ -534,6 +571,12 @@ export function attachComposeProposalHandlers(communityId, user) {
   });
 }
 
+/**
+ * Publica proposta assinada.
+ *
+ * @param {unknown} arg0
+ * @returns {void}
+ */
 export async function publishProposal({ communityId, title, body, diffText, user, btn }) {
   try {
     const now = Date.now();
@@ -602,6 +645,14 @@ function renderLockedTopicNotice(main, topicId, communityId) {
     </div>`;
 }
 
+/**
+ * Compositor de resposta a tópico.
+ *
+ * @param {string} topicId
+ * @param {string} communityId
+ * @param {string} parentId [optional]
+ * @returns {void}
+ */
 export async function showComposeReply(topicId, communityId, parentId = "") {
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "home", "Responder"));
@@ -650,6 +701,15 @@ async function tryUploadReplyToPermaweb(topicId, communityId, body, replyId, aut
   } catch {}
 }
 
+/**
+ * Salva resposta local assinada.
+ *
+ * @param {string} topicId
+ * @param {string} communityId
+ * @param {unknown} body
+ * @param {unknown} arg3 [optional]
+ * @returns {Promise<unknown>}
+ */
 export async function persistLocalReply(topicId, communityId, body, { parentId = "" } = {}) {
   const isLocked = await resolveTopicLockState(topicId, communityId, null);
   if (isLocked) {
@@ -675,6 +735,12 @@ export async function persistLocalReply(topicId, communityId, body, { parentId =
   return signed;
 }
 
+/**
+ * Carrega respostas inline de um post.
+ *
+ * @param {string} topicId
+ * @returns {Promise<unknown>}
+ */
 export async function loadInlineReplies(topicId) {
   let local = [];
   try {
@@ -704,6 +770,14 @@ export async function loadInlineReplies(topicId) {
   return out;
 }
 
+/**
+ * Abre painel de comentários de um post.
+ *
+ * @param {unknown} btn
+ * @param {unknown} panel
+ * @param {unknown} open
+ * @returns {void}
+ */
 export function setCommentOpen(btn, panel, open) {
   panel.hidden = !open;
   panel.classList.toggle("is-open", open);
@@ -711,6 +785,12 @@ export function setCommentOpen(btn, panel, open) {
   btn.classList.toggle("active", open);
 }
 
+/**
+ * Fecha outros painéis de comentário abertos.
+ *
+ * @param {unknown} keep
+ * @returns {void}
+ */
 export function closeOtherCommentPanels(keep) {
   document.querySelectorAll(".post-comments.is-open").forEach((panel) => {
     if (panel === keep) return;
@@ -720,6 +800,13 @@ export function closeOtherCommentPanels(keep) {
   });
 }
 
+/**
+ * Preenche feed de comentários no painel.
+ *
+ * @param {unknown} panel
+ * @param {unknown} replies
+ * @returns {void}
+ */
 export function fillCommentFeed(panel, replies) {
   const slot = panel.querySelector(".post-comments-feed");
   if (slot) {
@@ -731,6 +818,12 @@ export function fillCommentFeed(panel, replies) {
   panel.dataset.loaded = "1";
 }
 
+/**
+ * Alterna painel de comentários.
+ *
+ * @param {unknown} btn
+ * @returns {void}
+ */
 export async function togglePostComments(btn) {
   const article = btn.closest("article");
   const panel = article?.querySelector(".post-comments");
@@ -764,6 +857,13 @@ function commentListContext(panel) {
   };
 }
 
+/**
+ * Insere resposta inline no DOM.
+ *
+ * @param {unknown} panel
+ * @param {unknown} reply
+ * @returns {void}
+ */
 export function appendInlineReply(panel, reply) {
   const parentId = reply.parentId || "";
   if (parentId) {
@@ -785,6 +885,14 @@ export function appendInlineReply(panel, reply) {
   }
 }
 
+/**
+ * Insere resposta aninhada no DOM.
+ *
+ * @param {unknown} panel
+ * @param {string} parentId
+ * @param {unknown} reply
+ * @returns {void}
+ */
 export function appendNestedInlineReply(panel, parentId, reply) {
   const parentItem = panel?.querySelector(`[data-comment-id="${parentId}"]`);
   if (!parentItem) {
@@ -806,6 +914,13 @@ export function appendNestedInlineReply(panel, parentId, reply) {
   }
 }
 
+/**
+ * Alterna compositor de resposta aninhada.
+ *
+ * @param {unknown} item
+ * @param {unknown} open
+ * @returns {void}
+ */
 export function toggleCommentReplyComposer(item, open) {
   const form = item?.querySelector(".post-comment-nested-reply");
   if (!form) return;
@@ -834,6 +949,12 @@ function updateFormAfterReplySent(form, signed) {
   if (panel) panel.dataset.loaded = "1";
 }
 
+/**
+ * Envia resposta aninhada inline.
+ *
+ * @param {unknown} form
+ * @returns {void}
+ */
 export async function onNestedCommentReplySubmit(form) {
   const body = form.querySelector(".post-comment-nested-input")?.value.trim();
   if (!body) return;
@@ -857,6 +978,12 @@ export async function onNestedCommentReplySubmit(form) {
   }
 }
 
+/**
+ * Atualiza contador de respostas na UI.
+ *
+ * @param {unknown} article
+ * @returns {void}
+ */
 export function bumpReplyCount(article) {
   if (!article) return;
   const countEls = article.querySelectorAll(".count-replies");
@@ -871,6 +998,12 @@ export function bumpReplyCount(article) {
   }
 }
 
+/**
+ * Envia resposta inline no feed.
+ *
+ * @param {unknown} form
+ * @returns {void}
+ */
 export async function onInlineReplySubmit(form) {
   const body = form.querySelector(".post-comment-input")?.value.trim();
   if (!body) return;

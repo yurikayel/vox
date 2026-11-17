@@ -10,6 +10,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 - **ADR-035** passa a **accepted** (camadas e contextos; catraca `audit:layers` no CI; `vault/` e `identity/` feitos).
 - **ADR-034** e **ADR-036** passam a **aceito como direção** (direção aceita pelo mantenedor; nada implementado sem RFC 0002 e LAN-18 onde couber). Atualiza [DECISOES.md](./docs/DECISOES.md) A-22–A-24. Sem bump de SW.
 
+### Documentação: JSDoc do lote 3 (`client/js/app/`)
+- JSDoc completo (cabeçalho `@file`, `@param`, `@returns`) em todos os exports dos módulos de `client/js/app/` listados na dívida de documentação. Só comentários mudaram. `npm run audit:docs -- --prune` reduz a dívida de 1.602 para 1.392 achados. Sem bump de SW (comportamento igual).
+
 ### Correção: replicação no Bluesky por login leva o link do post
 - Com a conta do Bluesky ligada por login (OAuth), a replicação automática montava o texto com um campo `url` que a carga não tem, e o link canônico do post sumia. Agora os dois caminhos (login e App Password) usam o mesmo texto: título, corpo e link, até 295 caracteres (`linked-accounts.js`).
 - Testes: `tests/bsky-oauth-replication-link.test.js` (novo, 2 casos; os 2 falham no código de antes). SW `v7.140`.

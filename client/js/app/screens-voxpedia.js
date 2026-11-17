@@ -3,6 +3,11 @@
 import * as render from "../render.js";
 import { getActiveUser, makeShellProps } from "./context.js";
 
+/**
+ * Monta a tela Voxpedia (ajuda do app).
+ *
+ * @returns {Promise<void>}
+ */
 export async function showVoxpedia() {
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "voxpedia", "Voxpedia"));
