@@ -6,6 +6,11 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### ADR-036 proposto: agilidade criptográfica e transição pós-quântica
+- **Inventário** de onde cada algoritmo é usado no cliente (assinatura e DM em curva elíptica; cofre, semente e chaves em repouso simétricos; Arweave, Nostr e Bluesky definidos pelos protocolos deles).
+- **Regra:** todo formato novo diz o seu algoritmo dentro do que é assinado; o leitor recusa algoritmo desconhecido.
+- **Direção:** DM v2 híbrida (ECDH + ML-KEM-768) primeiro, por causa do "guarda agora, abre depois"; assinatura com pré-compromisso ML-DSA junto da RFC 0002 (ADR-034); a frase de 12 palavras restaura também as chaves novas. Nada de código; atualizados DECISOES (A-24) e o índice de ADRs.
+
 ### Correção: trocar a Senha Soberana pelo Perfil; pôr e-mail tira do ar o cofre só-senha
 - **Senha atual:** o cartão "Soberania & Sincronização" ganha o campo "Senha atual, só para trocar a Senha Soberana". Antes, depois do primeiro cofre a conta ficava travada pela senha, e uma senha nova dava "Senha incorreta" sem ter onde informar a antiga. Com a senha atual, a conta é aberta, gravada com a nova e o endereço antigo é revogado.
 - **E-mail:** gravar o cofre com e-mail (Perfil ou assistente de backup) revoga o cofre só-senha anterior da mesma senha, como a restauração já fazia (ADR-032 §6.3). Antes, ele ficava no ar e abria só com a senha. Só é revogado o que existe; endereço sem cofre não ganha marca.
