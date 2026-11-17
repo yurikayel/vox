@@ -371,11 +371,12 @@ function syncConditionsList(currentList, added = [], removed = []) {
   return [...next];
 }
 
-function applySingleTurnMutation(doc, mut, idx, actorPubkey) {
+function applySingleTurnMutation(doc, mut, actorPubkey) {
   if (!mut || (mut.character_id && mut.character_id !== doc.character_id)) return doc;
   let next = doc;
   if (mut.target_pool && mut.delta !== undefined) {
-    const opId = String(mut.op_id || `turn_${doc.delta_ledger.length + idx + 1}_${mut.target_pool}`);
+    // Id aleatório: derivado do tamanho do histórico, dois jogadores geravam o mesmo e o merge perdia um.
+    const opId = String(mut.op_id || `turn_${crypto.randomUUID()}_${mut.target_pool}`);
     next = appendPoolDeltaOp(next, { ...mut, op_id: opId, actor_pubkey: mut.actor_pubkey || actorPubkey });
   }
   if (mut.conditions_added || mut.conditions_removed) {
@@ -396,8 +397,8 @@ function applySingleTurnMutation(doc, mut, idx, actorPubkey) {
 export function applyTurnResolutionToSheet(sheetDoc, turnResolution = {}, actorPubkey = "") {
   let next = sheetDoc && typeof sheetDoc === "object" ? sheetDoc : createCharacterSheetDoc();
   const mutations = Array.isArray(turnResolution?.state_mutations) ? turnResolution.state_mutations : [];
-  mutations.forEach((mut, idx) => {
-    next = applySingleTurnMutation(next, mut, idx, actorPubkey);
+  mutations.forEach((mut) => {
+    next = applySingleTurnMutation(next, mut, actorPubkey);
   });
   const spatialUpdates = Array.isArray(turnResolution?.spatial_updates) ? turnResolution.spatial_updates : [];
   const matching = spatialUpdates.find((u) => u && (!u.character_id || u.character_id === next.character_id));

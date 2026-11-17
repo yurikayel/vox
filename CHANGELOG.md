@@ -6,6 +6,13 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Correção: lab do AI Social Dungeon (revisão de 16/11)
+- **CD do co-mestre:** a tela do mestre lia `dc`, mas o roteador de regras entrega `suggestedDc`; a sugestão mostrava sempre CD 14. Agora mostra a da regra (Persuasão 13, Investigação 15…) (`screen-dm.js`).
+- **Slider de comunidades:** com 0% a comunidade aparecia com 614/410 MB (`||` trocava 0 pelo valor padrão); agora mostra 0 MB. O arrasto redesenhava a tela inteira a cada passo, trocando o próprio slider na mão da pessoa; agora só os rótulos e o chip "Próximo turno" mudam (`screen-camp.js`, `dungeon-controller.js`).
+- **Atestação de lore:** confirmar o mesmo card duas vezes somava testemunha; agora é uma atestação por pessoa, e contestar troca a anterior (`dungeon-state.js`).
+- **`op_id` sem colisão:** ids vinham da hora + tamanho do ledger (`dungeon-state.js`) ou só do tamanho do ledger (`applyTurnResolutionToSheet` em `rpg-sheet-and-lore.js`); dois jogadores geravam o mesmo id e juntar os ledgers perdia uma jogada. Agora são aleatórios (`crypto.randomUUID()`). Spec atualizada.
+- Testes: `tests/dungeon-revisao.test.js` (novo, 5 casos; os 5 falham no código de antes). SW `v7.135`.
+
 ### Segurança: eslint 10.15.0 (minimatch 11)
 - Dependência só de desenvolvimento: `eslint` ^10.14.0 → ^10.15.0, que traz `minimatch` 11.0.9 no lugar de 10.2.6 (alerta Dependabot moderado GHSA-g3hv-75wg-m249, negação de serviço por expansão de padrões). Nada vai para o navegador; sem bump de SW. `npm audit`: 0 vulnerabilidades. Inventário em `docs/DEPENDENCIAS.md`.
 
