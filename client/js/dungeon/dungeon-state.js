@@ -316,7 +316,9 @@ export function applySheetResourceDelta(state, poolKey, delta, reason) {
   const targetPool = poolKey === "coins" ? "currency_gp" : poolKey;
   const ledgerLen = state.sheet.delta_ledger?.length || 0;
   const updated = appendPoolDeltaOp(state.sheet, {
-    op_id: `op_${Date.now()}_${ledgerLen + 1}`,
+    // Aleatório, não hora + tamanho do histórico: dois jogadores no mesmo milissegundo geravam o mesmo id, e o
+    // CRDT descarta o segundo como repetido.
+    op_id: `op_${crypto.randomUUID()}`,
     lamport_clock: ledgerLen + 1,
     actor_pubkey: "pk-lyra",
     target_pool: targetPool,
@@ -342,7 +344,9 @@ export function attestLoreNodeInState(state, loreId, verdict) {
   const decision = verdict === "CONFIRM" ? "ACCEPT_CANON" : "DISPUTE_CLAIM";
   const updated = applyLoreEdgeAttestation(current, { target_char_id: current.targetCharId, signer_pubkey: "pk-lyra", decision });
   const status = updated.cross_character_edges?.[0]?.trust_status || "PENDING_BILATERAL";
-  const nextAttest = [...current.attestations, { actorPubkey: "pk-lyra", verdict, reason: decision }];
+  // Uma atestação por pessoa: confirmar de novo (ou mudar para contestar) troca a anterior, não soma testemunha.
+  const others = current.attestations.filter((a) => a.actorPubkey !== "pk-lyra");
+  const nextAttest = [...others, { actorPubkey: "pk-lyra", verdict, reason: decision }];
   state.loreNodes[idx] = { ...current, ...updated, attestations: nextAttest, verified: status === "BILATERAL_CANON" || status === "DM_NOTARIZED", disputed: status === "DISPUTED_LORE" };
   return state;
 }

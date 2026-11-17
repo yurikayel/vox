@@ -55,6 +55,8 @@ $$S_c = \frac{\max(u_{\text{gpu}, c},\; u_{\text{io}, c})}{w_c / 100}$$
 
 $$V_{\text{effective}}(t) = \text{clamp}\Big(V_{\text{base}} + \sum_{k=1}^{t} \Delta_k,\; B_{\text{min}},\; B_{\text{max}}\Big)$$
 
+- O `op_id` gerado é aleatório (`crypto.randomUUID()`), nunca derivado do tamanho do ledger ou da hora: dois jogadores no mesmo instante geravam o mesmo id e a junção dos ledgers descartava uma jogada como repetida. A idempotência vale para a **mesma** operação reenviada.
+- Na demonstração, cada pessoa tem uma atestação por card de lore: confirmar de novo ou passar a contestar troca a anterior, sem somar testemunha.
 - Se mutações concorrentes offline levarem a soma não truncada abaixo de $B_{\text{min}}$, as operações permanecem auditáveis no ledger e `overdraftConflicts` sinaliza `INVARIANT_CONFLICT_OVERDRAFT`.
 - Menções `@char_id` em diários criam arestas inicialmente em `PENDING_BILATERAL`, transitando por atestação assinada para `BILATERAL_CANON` (`ACCEPT_CANON`), `DM_NOTARIZED` (`DM_NOTARIZE`) ou `DISPUTED_LORE` (`DISPUTE_CLAIM` com `dispute_fork_event_id`).
 - **Ponte `TurnResolution → Sheet` e Empacotador 4-Tiers:** `applyTurnResolutionToSheet` grava mutações de `state_mutations` no `delta_ledger`, sincroniza condições e aplica `spatial_updates`; `packFourTierTurnContext` empacota o orçamento de 3.000 tokens combinando filtro Zero-Spoiler (Tier 1), memória espacial `(map_id, grid_x, grid_y)` (Tier 2), projeção `clamp()` da ficha (Tier 3) e fatos canônicos vs boatos `DISPUTED_LORE` (Tier 4).
