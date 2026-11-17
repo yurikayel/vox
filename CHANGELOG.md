@@ -6,6 +6,12 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Correção: lab de Open Frames em iframe volta a responder
+- **`#/labs/frames`:** o demo roda em iframe `sandbox` sem `allow-same-origin` (origem opaca), e o navegador entrega as mensagens dele com origem `"null"`; o host só aceitava a origem do app e recusava tudo, então o iframe não redimensionava e as ações não chegavam. Agora, para iframe opaco, o host aceita `"null"` só quando a mensagem vem da janela do próprio iframe (`open-frames-host.js`); mensagens de outras janelas são recusadas mesmo com a origem na lista. O lab mostra a última ação recebida.
+- **Script do demo fora do HTML:** a CSP publicada (`_headers`, `script-src 'self'` sem `'unsafe-inline'`) bloquearia o script inline de `client/embed/frame-demo.html`; ele foi para `client/embed/frame-demo.js` (no precache).
+- `allow-same-origin` continua proibido junto de `allow-scripts` (o frame sairia do sandbox). Spec atualizada (`docs/specs/open-frames-v2.md`).
+- Testes: 4 casos novos em `tests/open-frames-host.test.js`. SW `v7.133`.
+
 ### Correção: Open Frames no feed contam as ações de todos e o botão não trava
 - **Apuração:** o cartão de enquete ou abaixo-assinado era desenhado só com a ação deste aparelho; votos e assinaturas de outras pessoas (recebidos por gossip e guardados) só apareciam depois de votar de novo. Agora, quando o cartão entra na página, a apuração é completada com todas as ações guardadas (`client/js/app/frame-ui.js`, novo, no precache).
 - **Botão:** depois de um voto bem-sucedido o botão ficava desabilitado em "Gravando…"; agora volta ao normal e a escolha fica marcada.
