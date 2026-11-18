@@ -21,6 +21,8 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 - Mantidos de propósito: `script-src` com `accounts.google.com` e `connect.facebook.net` (`signInWithGoogle`/`signInWithMeta*` ainda carregam esses scripts quando o operador configura `oauth.json`); `connect-src https: wss:` (relay, gateway, PDS Bluesky e Turbo digitados pela pessoa); `img-src`/`media-src https:` (avatar e mídia de posts vêm de URL remota arbitrária).
 - `tests/csp.test.js`: 2 testes novos (`frame-src` sem `https:` solto; `script-src` só com hosts que o código ainda usa).
 
+### Documentação: RFC 0002 propõe autenticar o snapshot do relay cego (lacuna 12 do `relay-api.md`)
+- `docs/rfc/0002-snapshot-autenticado-do-relay-cego.md`: prova de dono por cabeçalho no padrão do ADR-027, teto de salto de `coveredSerial` e `epoch`, idempotência, modos `compat`/`enforce`, ataques e testes que fecham os `skip`. **Só proposta, sem código** (`relay/*.py` intocado); decisões D1–D7 pendentes do dono. `docs/specs/relay-api.md` marca a lacuna 12 como proposta. Sem bump de SW.
 ### Correção: `Access-Control-Allow-Origin` sai de constante, não do cabeçalho `Origin` (CodeQL 283, py/http-response-splitting)
 - `request_guard.cors_allow_origin` devolve a entrada correspondente de `APP_ORIGINS` / `VOX_RELAY_ALLOWED_ORIGINS` (ou a origem de loopback reconstruída de esquema e nome fixos e porta numérica) em vez de ecoar o texto recebido, e recusa origem com CR, LF, tab, espaço, NUL ou outro caractere de controle antes de comparar. Origem de loopback com caminho, usuário ou porta inválida deixa de receber CORS. Testes: `relay/test_cors_origens.py` (13). Sem bump de SW.
 ### CI: `red-on-base` só roda contra a base em PR `fix:`; teste de importar posts não depende de turnos do loop
