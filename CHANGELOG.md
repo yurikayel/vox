@@ -40,6 +40,8 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 - [GLOSSARIO.md](./docs/GLOSSARIO.md): linguagem leiga para termos da UI (conta, cofre, malha, par, guardiões, steward, mensagens, comunidades). Entrada no [índice docs/](./docs/README.md). Sem código e sem bump de SW.
 ### Documentação: ROADMAP alinhado ao `develop` (login, DM, timeout, render)
 - `docs/ROADMAP.md`: cabeçalho **Revisado** em 18/11/2026; *Onde estamos* e **REV-09** com prazos no `relay/signaling.py`; **REV-14** com passo 4 (ADR-037); lacunas **LT-02,06,07,09** e **LT-01,03,04,05,08,10** em *Concluído*; **DOC-04** e **PM-115** com evidência de testes de render/DM. Sem código e sem bump de SW.
+### Correção: datas em pt-BR centralizadas e sem "Invalid Date"
+- `client/js/shared/date-format.js` concentra `parseInstant` e formatação pt-BR (curta, por extenso e só data). Call sites em `render/util.js`, `aviso.js`, `render/aviso.js`, `app/sorteio-flow.js`, `app/natural-mod-flow.js` e `email-kit.js` deixam de chamar `toLocaleString`/`toLocaleDateString` soltos; instantâneo inválido vira texto vazio. Testes: `tests/date-format.test.js`. Sem bump de SW.
 
 ### Correção: relay cego não perde deltas no cold boot; memória central confere item e blob
 - **Snapshot apaga por serial, não por timestamp:** só somem os envelopes com `0 < serial <= coveredSerial`; antes, um delta com relógio atrasado e serial acima da cobertura era apagado em silêncio. Snapshot que recua `coveredSerial` agora dá `400` (abriria um buraco). Sem `coveredSerial` nada é apagado (vale o TTL de 7 dias).

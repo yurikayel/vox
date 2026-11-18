@@ -8,6 +8,7 @@ import * as peers from "../peers.js";
 import * as localAccount from "../identity/index.js";
 import * as share from "../share.js";
 import * as sorteio from "../sorteio.js";
+import { formatPtBrDateTimeShort } from "../shared/date-format.js";
 import { escapeHtml, randomBase36 } from "../shared/html.js";
 import { isModerator } from "../moderation.js";
 
@@ -104,7 +105,7 @@ function actionsHtml(item, { isMod: mod, routeId, secrets }) {
 export function renderSorteioCard(item, viewer) {
   const { draw, state } = item;
   const total = sorteio.decodeRoster(draw.roster).length;
-  const prazo = new Date(draw.commitUntil).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
+  const prazo = formatPtBrDateTimeShort(draw.commitUntil);
   return `<article class="card sorteio-card" data-sorteio-card="${escapeHtml(draw.id)}">
     <p class="aviso-seal">🎲 Sorteio cívico · ${draw.seats} de ${total} membros · lista <code>${escapeHtml(draw.rosterHash.slice(0, 8))}</code></p>
     <h3>${escapeHtml(draw.title)}</h3>

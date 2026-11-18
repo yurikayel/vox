@@ -10,6 +10,7 @@
  * @see client/js/app/aviso-flow.js
  */
 import { escapeHtml } from "./util.js";
+import { formatPtBrDateTimeFull, parseInstant } from "../shared/date-format.js";
 import { roleLabel } from "../aviso-roles.js";
 
 const KIND_LABEL = { convocacao: "📣 Convocação", informe: "ℹ️ Informe", alerta: "⚠️ Alerta" };
@@ -26,8 +27,8 @@ export const AVISO_SAFETY_HINT = "Não ponha telefone, CPF ou endereço de ningu
 const avisosHref = (communityId) => `#/c/${encodeURIComponent(communityId)}/avisos`;
 
 function whenLine(aviso) {
-  if (!aviso.eventAt) return "";
-  const when = new Date(aviso.eventAt).toLocaleString("pt-BR", { dateStyle: "full", timeStyle: "short" });
+  if (parseInstant(aviso.eventAt) == null) return "";
+  const when = formatPtBrDateTimeFull(aviso.eventAt);
   const place = aviso.eventPlace ? ` · ${escapeHtml(aviso.eventPlace)}` : "";
   return `<p class="aviso-when">Quando: ${escapeHtml(when)}${place}</p>`;
 }
