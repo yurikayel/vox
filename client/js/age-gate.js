@@ -4,10 +4,16 @@
  * ou idade é coletada nem enviada. Sem ela, o pacto de entrada não pode ser aceito.
  */
 
+/** Chave no `localStorage` da confirmação de maioridade (só neste aparelho). @type {string} */
 export const AGE_STORAGE_KEY = "vox-age-18-v1";
+/** Id do checkbox de 18+ no HTML do pacto de entrada. @type {string} */
 export const AGE_CHECKBOX_ID = "pact-age-18";
 
-/** true se este aparelho já confirmou "tenho 18 anos ou mais". */
+/**
+ * Indica se este aparelho já confirmou maioridade.
+ * @param {Storage|null} [storage=globalThis.localStorage] Armazenamento local.
+ * @returns {boolean}
+ */
 export function hasConfirmedAdult(storage = globalThis.localStorage) {
   try {
     const saved = JSON.parse(storage?.getItem(AGE_STORAGE_KEY) || "null");
@@ -17,11 +23,20 @@ export function hasConfirmedAdult(storage = globalThis.localStorage) {
   }
 }
 
-/** Grava a confirmação (só o fato e a data, nada mais). */
+/**
+ * Grava a confirmação de maioridade (só o fato e o instante; sem dados pessoais).
+ * @param {number} [now=Date.now()] Instantâneo da confirmação, em ms.
+ * @param {Storage|null} [storage=globalThis.localStorage] Armazenamento local.
+ * @returns {void}
+ */
 export function confirmAdult(now = Date.now(), storage = globalThis.localStorage) {
   storage?.setItem(AGE_STORAGE_KEY, JSON.stringify({ adult: true, confirmedAt: now, v: 1 }));
 }
 
+/**
+ * HTML do checkbox obrigatório de 18+ para inserir no pacto de entrada.
+ * @returns {string}
+ */
 export function renderAdultCheckHtml() {
   return `
     <label class="pact-age-check" for="${AGE_CHECKBOX_ID}">
@@ -31,8 +46,10 @@ export function renderAdultCheckHtml() {
 }
 
 /**
- * Devolve a caixa de 18+; se o HTML do pacto veio sem ela (ex.: cache misturando versões),
- * insere antes dos botões. Sem isso, os botões ficariam desativados para sempre.
+ * Garante o checkbox de 18+ no DOM do pacto (insere antes dos botões se faltar).
+ * @param {Document|null} doc Documento da página.
+ * @param {Element|null} anchor Âncora próxima aos botões do pacto.
+ * @returns {HTMLInputElement|null}
  */
 export function ensureAdultCheck(doc, anchor) {
   const existing = doc?.getElementById?.(AGE_CHECKBOX_ID) || null;
@@ -42,7 +59,12 @@ export function ensureAdultCheck(doc, anchor) {
   return doc.getElementById(AGE_CHECKBOX_ID) || null;
 }
 
-/** Os botões do pacto só ficam ativos com a caixa marcada. Devolve a caixa (ou null). */
+/**
+ * Liga o checkbox de 18+ à habilitação dos botões do pacto.
+ * @param {Document|null} doc Documento da página.
+ * @param {Array<HTMLButtonElement|null>} [buttons=[]] Botões a habilitar somente com a caixa marcada.
+ * @returns {HTMLInputElement|null}
+ */
 export function bindAdultCheck(doc, buttons = []) {
   const box = ensureAdultCheck(doc, buttons.find(Boolean));
   const sync = () => {
