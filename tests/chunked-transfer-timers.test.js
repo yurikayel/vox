@@ -1,13 +1,10 @@
 import "../tests/setup.js";
 import { test, mock } from "node:test";
 import assert from "node:assert/strict";
-import {
-  waitForBackpressure,
-  sendChunksWithBackpressure,
-  BACKPRESSURE_POLL_MS,
-  ChunkReassembler,
-  slicePayloadIntoChunks,
-} from "../client/js/labs/parado/chunked-transfer.js";
+
+async function chunkedTransfer() {
+  return import("../client/js/labs/parado/chunked-transfer.js");
+}
 
 function trackIntervals() {
   const active = new Set();
@@ -50,7 +47,13 @@ function stuckChannel(extra = {}) {
   };
 }
 
+test("chunked-transfer: BACKPRESSURE_POLL_MS (RED na base)", async () => {
+  const { BACKPRESSURE_POLL_MS } = await chunkedTransfer();
+  assert.equal(BACKPRESSURE_POLL_MS, 20);
+});
+
 test("chunked-transfer timers - abort limpa setInterval pendente", async () => {
+  const { waitForBackpressure, BACKPRESSURE_POLL_MS } = await chunkedTransfer();
   mock.timers.enable({ apis: ["setInterval"] });
   const intervals = trackIntervals();
   const ac = new AbortController();
@@ -70,6 +73,7 @@ test("chunked-transfer timers - abort limpa setInterval pendente", async () => {
 });
 
 test("chunked-transfer timers - fecha o poll ao fechar o canal", async () => {
+  const { waitForBackpressure } = await chunkedTransfer();
   mock.timers.enable({ apis: ["setInterval"] });
   const intervals = trackIntervals();
   try {
@@ -86,6 +90,7 @@ test("chunked-transfer timers - fecha o poll ao fechar o canal", async () => {
 });
 
 test("chunked-transfer timers - poll resolve e remove listener bufferedamountlow", async () => {
+  const { waitForBackpressure, BACKPRESSURE_POLL_MS } = await chunkedTransfer();
   mock.timers.enable({ apis: ["setInterval"] });
   const intervals = trackIntervals();
   try {
@@ -111,6 +116,7 @@ test("chunked-transfer timers - poll resolve e remove listener bufferedamountlow
 });
 
 test("chunked-transfer timers - sendChunksWithBackpressure aborta entre chunks", async () => {
+  const { sendChunksWithBackpressure, slicePayloadIntoChunks } = await chunkedTransfer();
   mock.timers.enable({ apis: ["setInterval"] });
   const sent = [];
   const channel = stuckChannel({ bufferedAmount: 0 });
@@ -131,7 +137,8 @@ test("chunked-transfer timers - sendChunksWithBackpressure aborta entre chunks",
   mock.timers.reset();
 });
 
-test("chunked-transfer timers - ChunkReassembler dispose libera estado", () => {
+test("chunked-transfer timers - ChunkReassembler dispose libera estado", async () => {
+  const { ChunkReassembler, slicePayloadIntoChunks } = await chunkedTransfer();
   const reassembler = new ChunkReassembler();
   const chunks = slicePayloadIntoChunks("A".repeat(25000), 10000, "xfer_dispose");
   reassembler.addChunk(chunks[0]);
