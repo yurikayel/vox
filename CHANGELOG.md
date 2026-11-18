@@ -40,6 +40,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 ### Docs: relay-api §6 alinhado ao rate limit real e `VOX_RELAY_TRUST_PROXY_HOPS` por deploy
 - Referências de linha atualizadas, `signal_msg` descarta sem resposta e por IP, riscos de hops baixo (balde único, caso do nó Render hoje com 0) e alto (spoofing de `X-Forwarded-For`) e valor por host. `client/sw.js` intocado.
 
+### Correção: `fetch` sem prazo ganha timeout (`fetch-timeout.js`)
+- Helper `fetchWithTimeout` (AbortController + prazo padrão 8 s, aceita `signal` externo, rejeita mesmo se o `fetch` ignorar o signal). Migrados `central-memory`, `graphql` (inclui `gateways.json`), `upload` e `turn-credentials` (rede muda cai na espera padrão). `central-memory-hydrate` e `memory-server-choice` não fazem `fetch` direto. Teste: `tests/fetch-timeout.test.js`. Release: se o módulo novo entrar no precache, incluir `fetch-timeout.js` em `client/sw.js` (não tocado aqui).
+
 ### Correção: avisa no passo de criação quando a conta não grava no aparelho
 - `ensureLocalAccount` registra falha de quota/bloqueio e o onboarding mostra aviso em `#oauth-enrich-error` sem travar o fluxo. Testes: `tests/local-account-storage-full.test.js`, `tests/onboarding-steps.test.js`.
 

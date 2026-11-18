@@ -1,3 +1,4 @@
+import { fetchWithTimeout } from "./fetch-timeout.js";
 import { getStoredJwk, ensureWallet } from "./wallet.js";
 import { loadArweave } from "./arweave-lib.js";
 import { createSignedDataItem } from "./ans104.js";
@@ -41,12 +42,11 @@ export async function uploadToTurbo(itemBytes) {
   let lastErr = null;
   for (const url of TURBO_ENDPOINTS) {
     try {
-      const res = await fetch(url, {
+      const res = await fetchWithTimeout(url, {
         method: "POST",
         headers: { "Content-Type": "application/octet-stream" },
         body: itemBytes,
-        signal: AbortSignal.timeout(15000),
-      });
+      }, { timeoutMs: 15000 });
       if (res.ok) {
         const body = await res.json().catch(() => ({}));
         return { ok: true, status: res.status, body };
