@@ -38,6 +38,35 @@ class TestCorsUnit(unittest.TestCase):
             self.assertIsNone(request_guard.cors_allow_origin("https://evil.example"))
 
 
+class TestCorsNeverEchoesTheRequest(unittest.TestCase):
+    """CodeQL py/http-response-splitting: o cabeçalho sai de constante, nunca do texto do pedido."""
+
+    def test_control_characters_are_refused_before_comparing(self):
+        official = OFFICIAL[0]
+        hostile = (
+            official + "\r\n",
+            official + "\r\nX-Evil: 1",
+            official + "\nSet-Cookie: a=b",
+            official + "\x00",
+            official + "\t",
+            " " + official,
+            "http://localhost:80\r\n",
+            "http://localhost:80\r\nX-Evil: 1",
+        )
+        for origin in hostile:
+            self.assertIsNone(request_guard.cors_allow_origin(origin, {}), repr(origin))
+
+    def test_returns_the_configured_entry_not_the_received_text(self):
+        self.assertEqual(request_guard.cors_allow_origin("HTTPS://YuriKayel.GitHub.io/", {}), OFFICIAL[0])
+        env = {"VOX_RELAY_ALLOWED_ORIGINS": "https://espelho.example"}
+        self.assertEqual(request_guard.cors_allow_origin("HTTPS://ESPELHO.example", env), "https://espelho.example")
+        self.assertEqual(request_guard.cors_allow_origin("HTTP://LOCALHOST:5173", {}), "http://localhost:5173")
+
+    def test_loopback_with_path_user_or_bad_port_is_refused(self):
+        for origin in ("http://localhost/x", "http://localhost@evil.example", "http://localhost:abc", "http://localhost:99999", "ftp://localhost"):
+            self.assertIsNone(request_guard.cors_allow_origin(origin, {}), origin)
+
+
 class TestCorsOverHttp(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -80,6 +109,10 @@ class TestCorsOverHttp(unittest.TestCase):
             self.assertEqual(status, 200, origin)
             self.assertEqual(headers.get("Access-Control-Allow-Origin"), origin)
             self.assertEqual(headers.get("Vary"), "Origin")
+
+    def test_header_is_the_configured_origin_even_if_the_request_differs_in_case(self):
+        _, headers = self.call("GET", origin="HTTPS://YURIKAYEL.GITHUB.IO")
+        self.assertEqual(headers.get("Access-Control-Allow-Origin"), OFFICIAL[0])
 
     def test_request_without_origin_gets_no_allow_origin(self):
         status, headers = self.call("GET")
