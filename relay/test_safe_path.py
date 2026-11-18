@@ -1,13 +1,13 @@
 """Testes de relay/safe_path.py: nome externo só vira caminho dentro da raiz."""
 
 import os
-import re
 import tempfile
 import time
 import unittest
 from pathlib import Path
 
-from relay.safe_path import MAX_NAME_LENGTH, SAFE_NAME, child_of
+from relay import blind_relay, inbox, server
+from relay.safe_path import MAX_NAME_LENGTH, SAFE_CHARS, child_of, is_safe_id, only_chars
 
 
 class ChildOfTest(unittest.TestCase):
@@ -41,45 +41,46 @@ class ChildOfTest(unittest.TestCase):
             with self.subTest(name=repr(bad)), self.assertRaises(ValueError):
                 child_of(self.root, bad)
 
-    def test_huge_text_is_refused_fast_without_reaching_the_pattern(self):
-        class Spy:
-            calls = 0
+    def test_huge_text_is_refused_fast_without_reaching_the_validator(self):
+        calls = []
 
-            def fullmatch(self, text):
-                Spy.calls += 1
-                return re.compile(r"[\w-]+").fullmatch(text)
+        def spy(text):
+            calls.append(text)
+            return True
 
-        huge = "a" * 5_000_000
         started = time.monotonic()
         with self.assertRaises(ValueError):
-            child_of(self.root, huge, Spy())
+            child_of(self.root, "a" * 5_000_000, spy)
         self.assertLess(time.monotonic() - started, 0.5)
-        self.assertEqual(Spy.calls, 0)
+        self.assertEqual(calls, [])
 
     def test_name_at_the_length_cap_is_accepted(self):
+        def lowercase(text):
+            return only_chars(text, frozenset("a"), 1, MAX_NAME_LENGTH + 1)
+
         name = "a" * MAX_NAME_LENGTH
-        self.assertEqual(child_of(self.root, name, re.compile(r"[a-z]+")).name, name)
+        self.assertEqual(child_of(self.root, name, lowercase).name, name)
         with self.assertRaises(ValueError):
-            child_of(self.root, name + "a", re.compile(r"[a-z]+"))
+            child_of(self.root, name + "a", lowercase)
 
-    def test_custom_pattern_is_the_first_gate(self):
-        pattern = re.compile(r"env_[0-9]{1,5}\.json")
-        self.assertEqual(child_of(self.root, "env_12.json", pattern).name, "env_12.json")
-        with self.assertRaises(ValueError):
-            child_of(self.root, "env_12.json\n", pattern)
-        with self.assertRaises(ValueError):
-            child_of(self.root, "latest.json", pattern)
+    def test_custom_validator_is_the_first_gate(self):
+        def env_name(text):
+            return text.startswith("env_") and only_chars(text[4:], frozenset("0123456789"), 1, 5)
 
-    def test_pattern_that_allows_dots_still_blocks_escape_by_realpath(self):
-        loose = re.compile(r"[./A-Za-z]+")
-        with self.assertRaises(ValueError):
-            child_of(self.root, "../fora", loose)
-        with self.assertRaises(ValueError):
-            child_of(self.root, "..", loose)
+        self.assertEqual(child_of(self.root, "env_12", env_name).name, "env_12")
+        for bad in ("env_12\n", "latest", "env_", "env_123456"):
+            with self.subTest(name=repr(bad)), self.assertRaises(ValueError):
+                child_of(self.root, bad, env_name)
+
+    def test_validator_that_allows_dots_still_blocks_escape_by_realpath(self):
+        loose = frozenset("./Aa")
+        for bad in ("../fora", "..", "../../a"):
+            with self.subTest(name=bad), self.assertRaises(ValueError):
+                child_of(self.root, bad, lambda text: only_chars(text, loose))
 
     def test_root_itself_is_not_a_child(self):
         with self.assertRaises(ValueError):
-            child_of(self.root, ".", re.compile(r"\."))
+            child_of(self.root, ".", lambda text: text == ".")
 
     def test_symlink_pointing_outside_is_refused(self):
         outside = Path(self._tmp.name) / "fora"
@@ -102,9 +103,51 @@ class ChildOfTest(unittest.TestCase):
             self.skipTest(f"symlinks indisponíveis neste ambiente: {error}")
         self.assertEqual(child_of(self.root, "interno"), Path(os.path.realpath(real)))
 
-    def test_default_pattern_is_the_short_id(self):
-        self.assertIsNotNone(SAFE_NAME.fullmatch("abc_DEF-123"))
-        self.assertIsNone(SAFE_NAME.fullmatch("abc.def"))
+    def test_default_validator_is_the_short_id(self):
+        self.assertTrue(is_safe_id("abc_DEF-123"))
+        for bad in ("abc.def", "", "a" * 129, "çã", "abc\n"):
+            with self.subTest(name=repr(bad)):
+                self.assertFalse(is_safe_id(bad))
+        self.assertIn("_", SAFE_CHARS)
+
+
+class CallerValidatorsTest(unittest.TestCase):
+    def test_stored_name_accepts_only_our_files(self):
+        good = ("latest_snapshot.json", "env_1_" + "a" * 20 + ".json", "env_" + "9" * 19 + "_" + "0f" * 10 + ".json")
+        bad = ("env_1_" + "A" * 20 + ".json", "env__" + "a" * 20 + ".json", "env_" + "1" * 20 + "_" + "a" * 20 + ".json",
+               "env_1_" + "a" * 19 + ".json", "env_1_" + "a" * 20 + ".json\n", "env_1_" + "a" * 20 + ".jsonx",
+               "env_1.json", "latest_snapshot.json.bak", "env_1_" + "a" * 20, "..", "")
+        for name in good:
+            with self.subTest(name=name):
+                self.assertTrue(blind_relay._is_stored_name(name))
+        for name in bad:
+            with self.subTest(name=name):
+                self.assertFalse(blind_relay._is_stored_name(name))
+
+    def test_tx_id_is_exactly_43_safe_chars(self):
+        self.assertTrue(server.is_tx_id("A" * 43))
+        self.assertTrue(server.is_tx_id("a-_" * 14 + "a"))
+        for bad in ("A" * 42, "A" * 44, "A" * 43 + "\n", "A" * 42 + ".", "A" * 42 + "ç", ""):
+            with self.subTest(name=repr(bad)):
+                self.assertFalse(server.is_tx_id(bad))
+
+    def test_index_name_has_prefix_suffix_and_a_safe_slug(self):
+        for good in ("index_abc.json", "index_a.b-c_D.json", "index_...json", "index_" + "a" * 128 + ".json"):
+            with self.subTest(name=good):
+                self.assertTrue(server.is_index_name(good))
+        for bad in ("index_.json", "index_json", "index_a/b.json", "index_a.json\n", "index_" + "a" * 129 + ".json",
+                    "x_index_a.json", "index_a.jsonx"):
+            with self.subTest(name=bad):
+                self.assertFalse(server.is_index_name(bad))
+
+    def test_inbox_names_are_sanitized_words(self):
+        self.assertTrue(inbox._is_word_name("addr_01-é"))
+        self.assertFalse(inbox._is_word_name(""))
+        self.assertFalse(inbox._is_word_name("a/b"))
+        self.assertTrue(inbox._is_message_name(".json"))
+        self.assertTrue(inbox._is_message_name("dm_1.json"))
+        self.assertFalse(inbox._is_message_name("dm_1.json\n"))
+        self.assertFalse(inbox._is_message_name("../x.json"))
 
 
 if __name__ == "__main__":
