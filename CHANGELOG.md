@@ -16,6 +16,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 - `client/boot-frame-guard.js` (script estático fora de `client/js/` para não exigir entrada no precache do SW): no boot, se a página não é a janela de topo, esconde o shell e mostra aviso com link `target="_top"`. Testes: `tests/boot-frame-guard.test.js`.
 ### Correção: toasts anunciam por aria-live sem roubar foco
 - `showToast` atualiza regiões `vox-toast-status` (`polite`) e `vox-toast-alert` (`assertive` em erros); o balão visual fica com `aria-hidden`. O shell injeta as regiões no markup. Testes: `tests/toast-live-region.test.js`. Sem bump de SW.
+### Correção: integridade e timeout do carregador arweave (S27)
+- `client/js/arweave-lib.js` exporta o sha384 do inventário, valida o timeout HTTP (1–120 000 ms) e confere o bundle vendorizado antes do `import()`, alinhado a `docs/DEPENDENCIAS.md`. Testes: `tests/arweave-integridade.test.js`. Sem bump de SW (comportamento só em caminhos Arweave já raros com `arweaveUpload` desligado).
+
 ### Correção: relay cego não perde deltas no cold boot; memória central confere item e blob
 - **Snapshot apaga por serial, não por timestamp:** só somem os envelopes com `0 < serial <= coveredSerial`; antes, um delta com relógio atrasado e serial acima da cobertura era apagado em silêncio. Snapshot que recua `coveredSerial` agora dá `400` (abriria um buraco). Sem `coveredSerial` nada é apagado (vale o TTL de 7 dias).
 - **Listagem:** com `since_serial` a ordem é por serial, então a página cortada em 100 é contígua e o cliente pagina sem pular itens. Arquivo ruim no disco (serial/timestamp fora do formato) não derruba mais a listagem do canal; `serial`/`timestamp` inválidos na entrada dão `400`.
