@@ -8,7 +8,7 @@ import * as peers from "../peers.js";
 import * as localAccount from "../identity/index.js";
 import * as share from "../share.js";
 import * as sorteio from "../sorteio.js";
-import { escapeHtml } from "../shared/html.js";
+import { escapeHtml, randomBase36 } from "../shared/html.js";
 import { isModerator } from "../moderation.js";
 
 /** @type {string} Chave em `localStorage` para segredos temporários de sorteios. */
@@ -38,7 +38,7 @@ async function publish(payload) {
   return signed;
 }
 
-const newId = () => `srt_${Math.random().toString(36).slice(2, 10)}`;
+const newId = () => `srt_${randomBase36(8)}`;
 
 async function loadSorteios(ctx) {
   const types = [sorteio.SORTEIO_TYPE, sorteio.COMMIT_TYPE, sorteio.CLOSE_TYPE, sorteio.REVEAL_TYPE, sorteio.TALLY_TYPE];

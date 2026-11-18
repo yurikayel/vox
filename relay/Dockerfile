@@ -3,7 +3,7 @@ FROM python:3.15-alpine
 WORKDIR /app
 
 # Servidores stdlib puros do Vox (zero dependências pip)
-COPY signaling.py server.py inbox.py mirror_validate.py ./
+COPY signaling.py rate_limit.py server.py inbox.py mirror_validate.py ./
 
 # Porta padrão para instâncias gratuitas em nuvem (7860 para HF Spaces; Koyeb e Render injetam $PORT)
 ENV PORT=7860
