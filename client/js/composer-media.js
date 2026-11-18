@@ -6,6 +6,34 @@ import * as mediaLofi from "./media-lofi.js";
 import { isDataUrl } from "./media-blob.js";
 /** Limites de mídia do compositor inline (client-side, antes do data URL). */
 
+/** Prévia do compositor é decorativa: controles vizinhos descrevem o anexo. */
+export const COMPOSER_PREVIEW_IMAGE_ALT = "";
+
+/**
+ * Atributo `alt` da imagem de prévia do compositor inline.
+ *
+ * @returns {string} Fragmento HTML `alt=""`.
+ */
+export function composerPreviewImageAltAttr() {
+  return 'alt=""';
+}
+
+/**
+ * Sugestão de `imageAlt` ao publicar com foto (título/corpo ou rótulo curto).
+ *
+ * @param {{ title?: string, body?: string, imageAlt?: string }} [fields]
+ * @returns {string}
+ */
+export function resolveComposerPublishImageAlt({ title, body, imageAlt } = {}) {
+  if (typeof imageAlt === "string" && imageAlt.trim()) return imageAlt.trim();
+  if (imageAlt === "") return "";
+  const titleTrim = String(title || "").trim();
+  if (titleTrim) return titleTrim;
+  const bodyTrim = String(body || "").trim();
+  if (bodyTrim) return bodyTrim.slice(0, 120);
+  return "Foto";
+}
+
 /** Limite numérico do módulo. @type {*} */
 export const COMPOSER_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
 /** Constante de configuração exportada. @type {*} */
