@@ -63,6 +63,8 @@ export async function filterMutualTies(routeIds, deps = null) {
  * @param {{ guardians: string[], m: number, passphrase?: string }} opts
  * @param {object|null} [deps]
  * @returns {Promise<{ ok: boolean, reason?: string, missing?: string[], splitId?: string, results?: string[] }>}
+ *   `reason: "storage-full"`: os pedaços já saíram, mas o navegador não tem espaço para anotar a divisão; a anterior
+ *   não é revogada nem a saída muda, e escolher de novo (com espaço livre) refaz a divisão.
  */
 export async function sendGuardianShares({ guardians: chosen, m, passphrase = "" }, deps = null) {
   const d = deps || (await defaultDeps());
@@ -77,7 +79,7 @@ export async function sendGuardianShares({ guardians: chosen, m, passphrase = ""
   const previous = guardians.getOwnerSplit(me);
   const results = [];
   for (const [i, item] of split.bodies.entries()) results.push(await sendSigned(d, me, item.to, item.body, pubs[i]));
-  guardians.recordOwnerSplit(me, split);
+  if (!guardians.recordOwnerSplit(me, split)) return { ok: false, reason: "storage-full", splitId: split.splitId };
   clearAccountExit("guardioes", me);
   await revokePrevious(d, me, previous);
   return { ok: true, splitId: split.splitId, results };

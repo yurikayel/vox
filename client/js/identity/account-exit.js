@@ -7,7 +7,7 @@
 
 import * as localAccount from "./local-account.js";
 import * as cacheNode from "../cache-node.js";
-import { isLocked } from "./keystore.js";
+import { isLocked, readStoredRecord } from "./keystore.js";
 
 /**
  * Tipos de saída soberana (ADR-032 §3.2). `frase` e `guardioes` chegam nos passos seguintes; `anterior` é o
@@ -24,12 +24,7 @@ const snoozeKey = (routeId) => `vox-account-exit-snooze-v1:${routeId}`;
 const currentRouteId = () => localAccount.getCachedRouteIdSync() || "";
 
 function readJson(key) {
-  try {
-    const value = JSON.parse(localStorage.getItem(key) || "null");
-    return value && typeof value === "object" ? value : null;
-  } catch {
-    return null;
-  }
+  return readStoredRecord(key, null);
 }
 
 function writeJson(key, value) {
