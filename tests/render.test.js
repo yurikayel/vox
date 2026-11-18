@@ -1193,7 +1193,7 @@ test("render - renderTopic agrupa ações secundárias no menu overflow sem vaza
 test("render - compositor inline inclui microcopy honesta de edit/apagar local", () => {
   const html = render.renderInlineComposer({ userRouteId: "vx_me", displayName: "Eu" });
   assert.ok(html.includes("inline-composer-local-hint"));
-  assert.ok(html.includes("gossip"));
+  assert.match(html, /malha|aparelhos online/i);
 });
 
 test("render - compositor inline inclui hatch civic wallet (T-15)", () => {
