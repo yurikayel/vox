@@ -8,6 +8,15 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ### Correção: apagar conta no meio da criação não traz a conta de volta
 - `wipeLocalAccount` passa a incrementar uma época e soltar a criação em voo de `ensureLocalAccount`; a criação confere a época antes de gravar conta, chave de DM e entrada no cofre local e, se o wipe rodou no meio, desfaz a semente e a chave de DM que já tinha gravado. Quem esperava recebe a conta nova, nunca a apagada; chamada feita depois do wipe não entra mais na criação antiga. Duas abas (conta que ressuscita na outra aba) continua fora. `client/sw.js` e `CACHE_NAME` não mudaram. Testes: `tests/local-account-wipe-race.test.js`.
+### Correção: vazamentos de WebSocket de sinalização e de listener no lab Open Frames
+- `connectSignaling` reaproveita o socket vivo da mesma URL (ou solta e fecha o antigo) em vez de abrir um novo a cada `savePeerSettings`/`initWebRtc`, inclusive em chamadas concorrentes. O lab Open Frames remove o listener `message` ao remontar e ao sair da rota (`hashchange`). `client/sw.js` intocado (CACHE_NAME só no release). Testes: `tests/vazamentos-ws-labs.test.js`.
+### Documentação: modelo de ameaças com cinco ameaças abertas (T30–T34)
+- [THREAT-MODEL.md](./docs/THREAT-MODEL.md): slowloris no relay, 413 sem drenar o corpo, CORS `*` em GETs sem auth, GitHub Pages sem cabeçalhos de segurança e endereço do cofre v1 sem sal; cada uma com arquivo:linha e mitigação proposta. Só docs; sem bump de SW.
+### Documentação: sub-itens abertos de LT-06 e LT-07 no plano de testes do login
+- `docs/process/plano-testes-login.md` §5.1 lista, com arquivo:linha, os achados abertos de duas abas e de recarga/teclado. Só documentação; sem correção prometida.
+
+### Docs: relay-api §6 alinhado ao rate limit real e `VOX_RELAY_TRUST_PROXY_HOPS` por deploy
+- Referências de linha atualizadas, `signal_msg` descarta sem resposta e por IP, riscos de hops baixo (balde único, caso do nó Render hoje com 0) e alto (spoofing de `X-Forwarded-For`) e valor por host. `client/sw.js` intocado.
 
 ### Correção: avisa no passo de criação quando a conta não grava no aparelho
 - `ensureLocalAccount` registra falha de quota/bloqueio e o onboarding mostra aviso em `#oauth-enrich-error` sem travar o fluxo. Testes: `tests/local-account-storage-full.test.js`, `tests/onboarding-steps.test.js`.
