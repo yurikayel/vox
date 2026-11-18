@@ -39,6 +39,8 @@ const LOCAL_WIPE_KEYS = [
 
 let cachedAccount = null;
 let ensureLocalAccountInflight = null;
+/** @type {{ reason: string } | null} falha ao gravar `vox-local-account-v1` (quota, bloqueio…) */
+let accountPersistIssue = null;
 
 /**
  * Grava a conta ativa (chave privada já na forma guardada: cifrada ou travada).
@@ -47,8 +49,36 @@ let ensureLocalAccountInflight = null;
  */
 export function storeActiveAccount(acc) {
   cachedAccount = acc;
-  localStorage.setItem(ACCOUNT_STORAGE, JSON.stringify(acc));
+  try {
+    localStorage.setItem(ACCOUNT_STORAGE, JSON.stringify(acc));
+    accountPersistIssue = null;
+  } catch (err) {
+    accountPersistIssue = { reason: err?.name || "storage_blocked" };
+  }
   return acc;
+}
+
+/**
+ * Última falha ao persistir a conta ativa neste aparelho, ou `null` se a gravação está ok.
+ * @returns {{ reason: string } | null}
+ */
+export function getAccountStorageIssue() {
+  return accountPersistIssue;
+}
+
+/**
+ * A conta ativa está no `localStorage` (não só na memória da aba)?
+ * @returns {boolean}
+ */
+export function isActiveAccountPersisted() {
+  if (accountPersistIssue) return false;
+  if (!cachedAccount?.routeId) return true;
+  try {
+    const raw = localStorage.getItem(ACCOUNT_STORAGE);
+    return Boolean(raw && JSON.parse(raw)?.routeId === cachedAccount.routeId);
+  } catch {
+    return false;
+  }
 }
 
 async function loadStoredLocalAccount() {
@@ -113,7 +143,7 @@ export async function ensureLocalAccount() {
       return cachedAccount;
     }
     const fresh = await generateNewAccountKeys();
-    try { storeActiveAccount(fresh); } catch { cachedAccount = fresh; }
+    storeActiveAccount(fresh);
     syncCurrentAccountMetadataToVault();
     return cachedAccount;
   })();
@@ -475,6 +505,7 @@ export function setMeshDiscoverable(on) {
  */
 export function wipeLocalAccount() {
   cachedAccount = null;
+  accountPersistIssue = null;
   dropStorageKeys(localStorage, LOCAL_WIPE_KEYS);
   dropSessionPassphrase();
   return keyLock.forgetAllLockedAccounts().catch(() => {});

@@ -6,6 +6,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Correção: avisa no passo de criação quando a conta não grava no aparelho
+- `ensureLocalAccount` registra falha de quota/bloqueio e o onboarding mostra aviso em `#oauth-enrich-error` sem travar o fluxo. Testes: `tests/local-account-storage-full.test.js`, `tests/onboarding-steps.test.js`.
+
 ### Correção: foco no campo certo após erro na entrada (LT-07)
 - `setOAuthEnrichError` aceita `focusId` opcional; `validateEmailEntryIssue` aponta nome, e-mail ou senha conforme a falha. Testes: `tests/onboarding-steps.test.js`.
 

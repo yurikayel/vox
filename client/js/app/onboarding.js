@@ -43,6 +43,18 @@ export function setOAuthEnrichError(message, focusId) {
   if (message && focusId) document.getElementById(focusId)?.focus();
 }
 
+/** Aviso no passo de criação quando a conta ficou só na memória (armazenamento cheio ou bloqueado). */
+export const ACCOUNT_NOT_PERSISTED_WARN =
+  "Não deu para salvar a conta neste aparelho (armazenamento cheio ou bloqueado). Ela some se você fechar o app: libere espaço ou salve o arquivo de acesso antes de sair.";
+
+/**
+ * Mostra em `#oauth-enrich-error` se a conta ativa não foi gravada no aparelho; não bloqueia o fluxo.
+ * @returns {void}
+ */
+export function warnIfAccountNotPersisted() {
+  if (localAccount.getAccountStorageIssue()) setOAuthEnrichError(ACCOUNT_NOT_PERSISTED_WARN);
+}
+
 /**
  * Marca botão OAuth como ocupado para evitar duplo clique.
  *
@@ -145,9 +157,11 @@ function bindOAuthProviderButton({ btnId, signInFn, fallbackError, labelFn, moda
   });
 }
 
-function finishNameOnlyEntry(rawName, modalContainer, onComplete) {
+async function finishNameOnlyEntry(rawName, modalContainer, onComplete) {
   if (!rawName) return setOAuthEnrichError("Digite um nome ou apelido para continuar.");
   setOAuthEnrichError("");
+  await localAccount.ensureLocalAccount();
+  warnIfAccountNotPersisted();
   localAccount.setDisplayName(rawName);
   completeEntryOnboarding(modalContainer, onComplete, { ok: true, customName: rawName }, `Bem-vindo, ${rawName}!`);
 }
@@ -157,7 +171,7 @@ function bindCustomNameForm(modalContainer, onComplete) {
   if (!form) return;
   bindEmailEntryForm(form, {
     finish: (result, toastMsg) => completeEntryOnboarding(modalContainer, onComplete, result, toastMsg),
-    finishNameOnly: (rawName) => finishNameOnlyEntry(rawName, modalContainer, onComplete),
+    finishNameOnly: (rawName) => void finishNameOnlyEntry(rawName, modalContainer, onComplete),
   });
 }
 
