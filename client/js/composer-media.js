@@ -1,15 +1,22 @@
+/**
+ * @file Validação e processamento lo-fi de mídia no compositor.
+ */
+
 import * as mediaLofi from "./media-lofi.js";
 import { isDataUrl } from "./media-blob.js";
 /** Limites de mídia do compositor inline (client-side, antes do data URL). */
 
+/** Limite numérico do módulo. @type {*} */
 export const COMPOSER_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
+/** Constante de configuração exportada. @type {*} */
 export const COMPOSER_IMAGE_ALLOWED_MIMES = Object.freeze([
   "image/jpeg",
   "image/png",
   "image/webp",
   "image/gif",
 ]);
-/** 0 desliga o teto de pixels; padrão 4096 no lado maior. */
+/** 0 desliga o teto de pixels; padrão 4096 no lado maior. 
+ * @type {number}*/
 export const COMPOSER_IMAGE_MAX_DIMENSION = 4096;
 
 const MIME_LABEL = "JPEG, PNG, WebP ou GIF";
@@ -19,6 +26,10 @@ function maxBytesLabel() {
   return mb >= 1 ? `${mb} MB` : `${Math.round(COMPOSER_IMAGE_MAX_BYTES / 1024)} KB`;
 }
 
+/** Valida entrada de ComposerImageFile.
+ * @param {*} [file] Arquivo `File` do compositor.
+ * @returns {*} Resultado da operação.
+ */
 export function validateComposerImageFile(file) {
   if (!file) return { ok: false, message: "Nenhum arquivo selecionado." };
   const mime = String(file.type || "").toLowerCase();
@@ -41,6 +52,11 @@ export function validateComposerImageFile(file) {
   return { ok: true };
 }
 
+/** Valida entrada de ComposerImageDimensions.
+ * @param {*} [width] Largura em pixels.
+ * @param {*} [height] Altura em pixels.
+ * @returns {*} Resultado da operação.
+ */
 export function validateComposerImageDimensions(width, height) {
   const max = COMPOSER_IMAGE_MAX_DIMENSION;
   if (!max || max <= 0) return { ok: true };
@@ -119,6 +135,11 @@ function processLofiImageElement(dataUrl, filter, aspect) {
   });
 }
 
+/** Operação `processComposerLofiImage` do módulo.
+ * @param {*} [fileOrDataUrl] Parâmetro `fileOrDataUrl`.
+ * @param {object} [options={}] Opções de processamento.
+ * @returns {*} Resultado da operação.
+ */
 export async function processComposerLofiImage(fileOrDataUrl, { filter = "normal", aspect = "original" } = {}) {
   const dataUrl = await resolveLofiImageDataUrl(fileOrDataUrl);
   if (!dataUrl) return { ok: false, message: "Arquivo inválido para processamento Lo-Fi." };
@@ -129,7 +150,9 @@ export async function processComposerLofiImage(fileOrDataUrl, { filter = "normal
   return processLofiImageElement(dataUrl, filter, aspect);
 }
 
+/** Limite numérico do módulo. @type {*} */
 export const COMPOSER_AUDIO_MAX_BYTES = 10 * 1024 * 1024;
+/** Constante de configuração exportada. @type {*} */
 export const COMPOSER_AUDIO_ALLOWED_MIMES = Object.freeze([
   "audio/mpeg",
   "audio/mp3",
@@ -141,6 +164,10 @@ export const COMPOSER_AUDIO_ALLOWED_MIMES = Object.freeze([
   "audio/mp4",
 ]);
 
+/** Valida entrada de ComposerAudioFile.
+ * @param {*} [file] Arquivo `File` do compositor.
+ * @returns {*} Resultado da operação.
+ */
 export function validateComposerAudioFile(file) {
   if (!file) return { ok: false, message: "Nenhum arquivo de áudio selecionado." };
   const mime = String(file.type || "").toLowerCase();
@@ -156,7 +183,9 @@ export function validateComposerAudioFile(file) {
   return { ok: true };
 }
 
+/** Limite numérico do módulo. @type {*} */
 export const COMPOSER_VIDEO_MAX_BYTES = 25 * 1024 * 1024;
+/** Constante de configuração exportada. @type {*} */
 export const COMPOSER_VIDEO_ALLOWED_MIMES = Object.freeze([
   "video/mp4",
   "video/webm",
@@ -164,6 +193,10 @@ export const COMPOSER_VIDEO_ALLOWED_MIMES = Object.freeze([
   "video/quicktime",
 ]);
 
+/** Valida entrada de ComposerVideoFile.
+ * @param {*} [file] Arquivo `File` do compositor.
+ * @returns {*} Resultado da operação.
+ */
 export function validateComposerVideoFile(file) {
   if (!file) return { ok: false, message: "Nenhum arquivo de vídeo selecionado." };
   const mime = String(file.type || "").toLowerCase();
@@ -179,6 +212,10 @@ export function validateComposerVideoFile(file) {
   return { ok: true };
 }
 
+/** Operação `readComposerMediaFile` do módulo.
+ * @param {*} [file] Arquivo `File` do compositor.
+ * @returns {*} Resultado da operação.
+ */
 export async function readComposerMediaFile(file) {
   return readFileAsDataUrl(file);
 }

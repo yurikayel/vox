@@ -1,17 +1,17 @@
 # Contrato operacional — Antigravity × Cursor (Vox)
 
-> **Status:** canônico (contrato operacional; o baseline e a contagem de testes abaixo são de 2026-10-23) · **Owner:** mantenedor · **Revisado:** 2026-10-23
+> **Status:** canônico (contrato operacional; baseline e fluxo de PR abaixo atualizados em 2026-11-17) · **Owner:** mantenedor · **Revisado:** 2026-11-17
 
 **Repositório:** [github.com/yurikayel/vox](https://github.com/yurikayel/vox)  
-**Baseline registrado:** `main` @ **`62221c9`** (`V-I04` relay HTTP configurável)  
+**Baseline registrado:** `main` @ **`d23f54b`** · `develop` @ **`c661aa0`**  
 **Suíte:** **186** testes (**172** Node.js + **14** Python relay/signaling)  
-**Última atualização deste doc:** 2026-10-23
+**Última atualização deste doc:** 2026-11-17
 
 ---
 
 ## English summary (coordinator signal)
 
-Antigravity implements **network/protocol** work on **`feat/*` branches only**; it **never merges or pushes to `main`**. Cursor owns integration: rebase, conflict resolution, SW cache bump, `client/DEV.md`, green `npm test`, merge, and `origin/main` deploy. Scope is **P2P mesh** (`peers.js`, `cache-node.js`), **WebRTC signaling**, **HTTP relay**, **signed payloads**, **gossip retractions** (`GOSSIP_UPDATE` / `GOSSIP_DELETE` + tombstones). **Gossip retract v1 is merged on `main`.** Next Antigravity missions start from **`62221c9`**: wire **cache-manifest v0** on the mesh (`feat/cache-manifest-v0`), gossip **v1.1 hardening**, and **signed listings** protocol. Specs: [antigravity-gossip-retract-v1.md](../specs/antigravity-gossip-retract-v1.md), [cache-manifest-v0.md](../specs/cache-manifest-v0.md).
+Antigravity implements **network/protocol** work on **`feat/*` branches only**; it **never merges or pushes to `develop` or `main`**. Cursor owns integration: rebase, conflict resolution, SW cache bump, `client/DEV.md`, green **`npm run validate`**, PRs, and **`origin/main` deploy only with explicit maintainer OK**. Scope is **P2P mesh** (`peers.js`, `cache-node.js`), **WebRTC signaling**, **HTTP relay**, **signed payloads**, **gossip retractions** (`GOSSIP_UPDATE` / `GOSSIP_DELETE` + tombstones). **Gossip retract v1** and **cache-manifest v0 mesh wire (V-I05)** are on `develop`/`main` (`client/js/peers-cache-manifest.js` imported by `client/js/peers.js`). **Flow:** feature PRs → **`develop`**; **`develop` → `main`** by PR at end of batch. **`develop` and `main` are protected** (branch up to date + five required checks: Cliente PWA Node 22/24, Relay & Signaling Python 3.11/3.12, Auditoria de Segurança). Next Antigravity missions kick off from **`git rev-parse --short origin/develop`** on the day (not a fixed SHA): gossip **v1.1 hardening**, **signed listings** protocol. Specs: [antigravity-gossip-retract-v1.md](../specs/antigravity-gossip-retract-v1.md), [cache-manifest-v0.md](../specs/cache-manifest-v0.md).
 
 ---
 
@@ -19,21 +19,21 @@ Antigravity implements **network/protocol** work on **`feat/*` branches only**; 
 
 | Papel | Antigravity | Cursor |
 |-------|-------------|--------|
-| **Git** | Branch `feat/<missão>` a partir de `origin/main` atualizado | `main` blindada; merge, cherry-pick, push `origin/main` |
+| **Git** | Branch `feat/<missão>` a partir de `origin/develop` atualizado | `develop` e `main` blindadas; PR feature → `develop`; PR lote `develop` → `main` **somente com OK explícito do mantenedor** |
 | **Escopo** | Protocolo malha, relay, signaling, payloads assinados, specs | UI, integração, docs drift, CI, conflitos multi-branch |
-| **Entrega** | Push da branch + SHA + contagem de testes na branch | PR/merge + verificação pós-merge em `main` |
+| **Entrega** | Push da branch + SHA + contagem de testes na branch | PR/merge em `develop`; verificação pós-merge; publicação `main` no fechamento do lote |
 | **Deploy** | Não dispara Pages | Push em `main` → GitHub Pages |
 
-**Regra dura:** Antigravity **não** faz `git merge main`, **não** faz push em `main`, **não** resolve conflitos de integração entre features paralelas.
+**Regra dura:** Antigravity **não** faz merge em `develop`/`main`, **não** faz push em `main`, **não** resolve conflitos de integração entre features paralelas.
 
 ---
 
 ## 2. Git e qualidade de diff
 
-1. **`main` blindada** — estável, deployável; ver [DEV §0](../../client/DEV.md) e [README — Como Contribuir](../../README.md).
-2. **Somente `feat/*` ou `fix/*`** — uma missão por branch; nome alinhado ao doc kickoff (ex.: `feat/cache-manifest-v0`).
+1. **`develop` e `main` blindadas** — estável/deployável em `main`; integração contínua em `develop`; ruleset exige branch atualizada e **cinco checks** obrigatórios (Cliente PWA Node 22 e 24, Relay & Signaling Python 3.11 e 3.12, Auditoria de Segurança); ver [DEV §0](../../client/DEV.md) e [README — Como Contribuir](../../README.md).
+2. **Somente `feat/*` ou `fix/*`** — uma missão por branch; nome alinhado ao doc kickoff (ex.: `feat/gossip-v1_1-hardening`).
 3. **Edits limpos** — finais de linha **LF**; sem scripts de patch em massa; sem reformatação oportunista fora dos touchpoints da missão.
-4. **Baseline** — antes de codar: `git fetch origin && git checkout -b feat/... origin/main`; registrar SHA base no PR/descrição da branch.
+4. **Baseline** — antes de codar: `git fetch origin && git checkout -b feat/... origin/develop`; registrar SHA base (`git rev-parse --short origin/develop`) no PR/descrição da branch.
 
 ---
 
@@ -48,7 +48,7 @@ Trabalho Antigravity concentra-se em:
 | **Relay HTTP** | `inbox.js`, `fetchFromDesktopRelay`, espelho `POST /vox/mirror`, índices `/vox/index/` |
 | **Signaling WebRTC** | `webrtc.js`, STUN/TURN, BroadcastChannel `vox-peer-v0` |
 | **Payloads assinados** | ECDSA P-256 via `local-account.js` / `verifyPayload` |
-| **Manifesto cache (v0)** | `Type: cache-manifest`, helpers `cache-manifest.js`, futura propagação em `peers.js` |
+| **Manifesto cache (v0)** | `Type: cache-manifest`, helpers `cache-manifest.js`, wire malha `peers-cache-manifest.js` em `peers.js` |
 
 **Fora do escopo Antigravity (salvo spec explícita):** chrome UI (`render.js`), i18n de produto, seed demo, política de moderação visual, refactors amplos de `app.js`.
 
@@ -60,13 +60,13 @@ Antes de sinalizar “pronto para merge”:
 
 | Check | Ação |
 |-------|------|
-| **`npm test`** | **100% verde** na branch (mesma matriz que `main`: JS + Python relay) |
+| **`npm run validate`** | **Verde** na branch (lint, testes JS + Python relay, auditorias doc/complexidade) |
 | **`client/sw.js`** | Bump `CACHE_NAME` quando **qualquer** asset em `SHELL_ASSETS` ou módulo cacheado mudar |
 | **`client/DEV.md`** | Entrada curta da missão (wire, flags, testes novos) |
 | **Spec linkada** | Kickoff em `docs/` referenciado no topo do PR mental da branch |
 | **Sem segredos** | Nada de chaves, `.env`, URLs privadas hardcoded |
 
-Cursor repete `npm test` em `main` após merge antes do push final.
+Cursor repete `npm run validate` após merge em `develop`/`main` antes de pedir merge do PR.
 
 ---
 
@@ -75,34 +75,33 @@ Cursor repete `npm test` em `main` após merge antes do push final.
 | Etapa | Antigravity | Cursor |
 |-------|-------------|--------|
 | 1 | Branch `feat/...` pushed | — |
-| 2 | Informa **SHA da branch** + **N testes** + doc/spec tocada | Confere diff vs `origin/main` |
+| 2 | Informa **SHA da branch** + **N testes** + doc/spec tocada | Confere diff vs `origin/develop` |
 | 3 | — | Rebase/merge em worktree limpo se necessário |
 | 4 | — | Resolve conflitos (SW, `render.js`, etc.) |
-| 5 | — | `npm test` verde → merge → push **`origin/main`** |
+| 5 | — | `npm run validate` verde → PR/merge em **`develop`**; no fechamento do lote, PR **`develop` → `main`** com OK do mantenedor |
 | 6 | — | Log uma linha em `politica/lobby.md` + SHA final |
 
-**Antigravity entrega branch; Cursor integra e publica `main`.**
+**Antigravity entrega branch; Cursor integra via `develop` e publica `main` no lote.**
 
 ---
 
-## 6. Status atual (`main` @ `62221c9`)
+## 6. Status atual (`main` @ `d23f54b` · `develop` @ `c661aa0`)
 
 | Item | Estado |
 |------|--------|
-| **Gossip retratação v1** | **Integrado em `main`** — `GOSSIP_UPDATE` / `GOSSIP_DELETE`, testes T1–T10, UI prep (`GOSSIP_RETRACT_UI=true`). Spec: [antigravity-gossip-retract-v1.md](../specs/antigravity-gossip-retract-v1.md). |
-| **Cache manifest v0 (helpers + spec)** | **Integrado** — `cache-manifest.js`, testes M1–M4, doc [cache-manifest-v0.md](../specs/cache-manifest-v0.md). **Malha (`peers.js`) ainda sem fan-out de manifesto** — próxima missão. |
+| **Gossip retratação v1** | **Integrado** — `GOSSIP_UPDATE` / `GOSSIP_DELETE`, testes T1–T10, UI prep (`GOSSIP_RETRACT_UI=true`). Spec: [antigravity-gossip-retract-v1.md](../specs/antigravity-gossip-retract-v1.md). |
+| **Cache manifest v0 (helpers + spec)** | **Integrado** — `cache-manifest.js`, testes M1–M4, doc [cache-manifest-v0.md](../specs/cache-manifest-v0.md). |
+| **V-I05 wire malha cache-manifest** | **Integrado em `develop`/`main`** — `client/js/peers-cache-manifest.js` importado por `client/js/peers.js` (fan-out / handling `cache-manifest` na malha). |
 | **Relay HTTP configurável (V-I04)** | **Integrado** — SW `vox-pwa-v6.13-configurable-relay-http`. |
-| **V-I05 implementação malha** | **Go a partir de `62221c9`** — branch alvo sugerida: `feat/cache-manifest-v0` (wire gossip/relay conforme spec §3–4). |
 
 ---
 
 ## 7. Próximas missões Antigravity (ordem sugerida)
 
-1. **`feat/cache-manifest-v0`** — Propagar/atualizar manifesto assinado na malha e encaixe com espelho relay; touchpoints `peers.js`, possivelmente hook pós-`mirrorCommunityToRelay`; testes de wire dedicados; spec [cache-manifest-v0.md](../specs/cache-manifest-v0.md).
-2. **Gossip v1.1 hardening** — Dedupe, fan-out e edge cases pós-integração UI; regressão T1–T10 + novos casos; ADR curto se mudar semântica LWW.
-3. **Listing signed** — Protocolo de oferta/classificado assinado na malha (shape TX + gossip); spec kickoff em `docs/` antes da impl.
+1. **Gossip v1.1 hardening** — Dedupe, fan-out e edge cases pós-integração UI; regressão T1–T10 + novos casos; ADR curto se mudar semântica LWW.
+2. **Listing signed** — Protocolo de oferta/classificado assinado na malha (shape TX + gossip); spec kickoff em `docs/` antes da impl.
 
-Cada missão: branch própria, baseline = **`git rev-parse origin/main`** no dia do kickoff (coordinator publica SHA após cada merge Cursor).
+Cada missão: branch própria, baseline = **`git rev-parse --short origin/develop`** no dia do kickoff (coordinator publica SHA após cada merge em `develop`).
 
 ---
 
@@ -111,7 +110,7 @@ Cada missão: branch própria, baseline = **`git rev-parse origin/main`** no dia
 | Documento | Uso |
 |-----------|-----|
 | [antigravity-gossip-retract-v1.md](../specs/antigravity-gossip-retract-v1.md) | Spec gossip UPDATE/DELETE (v1 merged) |
-| [cache-manifest-v0.md](../specs/cache-manifest-v0.md) | Spec manifesto Arweave + helpers (wire pendente) |
+| [cache-manifest-v0.md](../specs/cache-manifest-v0.md) | Spec manifesto Arweave + helpers + wire malha (V-I05) |
 | [espacos-digitais-infra.md](../strategy/espacos-digitais-infra.md) | Mapa infra / steward / mirror |
 | [client/DEV.md](../../client/DEV.md) | Fluxo git, contagem de testes, flags de rede |
 

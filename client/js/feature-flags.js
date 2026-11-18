@@ -1,15 +1,16 @@
 /**
- * LAN-08 — kill-switch por configuração, sem servidor.
- * `client/config/flags.json` é servido pelo Pages e lido a cada abertura do app (sem cache do SW).
- * Num incidente, o operador muda o JSON e faz deploy: na próxima recarga o cliente obedece.
- * Offline, vale o último estado lido (localStorage); sem nada lido, valem os padrões (tudo ligado).
- * Runbook: docs/strategy/backlog-lancamento-publico-2026-11.md (LAN-08, LAN-24).
+ * @file Kill-switch de recursos por `client/config/flags.json` (LAN-08).
+ *
+ * Lê flags remotas a cada abertura; offline usa cache em `localStorage` ou padrões.
+ * @see docs/strategy/backlog-lancamento-publico-2026-11.md (LAN-08, LAN-24)
  */
 
+/** URL relativa do JSON de flags servido pelo Pages. @type {string} */
 export const FLAGS_URL = "./config/flags.json";
 const STORAGE_KEY = "vox-remote-flags-v1";
 const MAX_NOTICE_LEN = 280;
 
+/** Valores padrão quando não há config remota nem cache. @type {Readonly<object>} */
 export const FLAG_DEFAULTS = Object.freeze({
   arweaveUpload: false,
   feira: true,
@@ -26,6 +27,9 @@ const DISABLED_MESSAGES_PT = Object.freeze({
 
 let current = { flags: { ...FLAG_DEFAULTS }, notice: "", electoralMode: false };
 
+/**
+ * Erro lançado ao usar recurso desligado pelo kill-switch.
+ */
 export class FeatureDisabledError extends Error {
   constructor(name) {
     super(disabledMessage(name));
@@ -34,7 +38,11 @@ export class FeatureDisabledError extends Error {
   }
 }
 
-/** Aceita só chaves conhecidas com valor booleano e um aviso curto em texto. */
+/**
+ * Sanitiza payload remoto: só chaves conhecidas, aviso curto e flag eleitoral.
+ * @param {object|null} raw JSON bruto ou envelope `{ flags }`.
+ * @returns {{ flags: object, notice: string, electoralMode: boolean }}
+ */
 export function sanitizeFlags(raw) {
   const flags = { ...FLAG_DEFAULTS };
   const src = raw && typeof raw === "object" ? raw.flags || raw : {};
@@ -47,28 +55,56 @@ export function sanitizeFlags(raw) {
   return { flags, notice, electoralMode };
 }
 
+/**
+ * Aplica flags sanitizadas ao estado em memória.
+ * @param {object|null} raw Payload remoto ou cache.
+ * @returns {{ flags: object, notice: string }}
+ */
 export function applyFlags(raw) {
   current = sanitizeFlags(raw);
   return getFlags();
 }
 
+/**
+ * Snapshot atual das flags e aviso operacional.
+ * @returns {{ flags: object, notice: string }}
+ */
 export function getFlags() {
   return { flags: { ...current.flags }, notice: current.notice };
 }
 
-/** REV-24: o operador forçou o modo eleitoral em client/config/flags.json. */
+/**
+ * Indica modo eleitoral forçado via config (REV-24).
+ * @returns {boolean}
+ */
 export function isElectoralModeForced() {
   return current.electoralMode === true;
 }
 
+/**
+ * Verifica se a flag nomeada está habilitada.
+ * @param {string} name Chave em {@link FLAG_DEFAULTS}.
+ * @returns {boolean}
+ */
 export function isFeatureEnabled(name) {
   return current.flags[name] !== false;
 }
 
+/**
+ * Mensagem em português para recurso pausado.
+ * @param {string} name Chave da flag.
+ * @returns {string}
+ */
 export function disabledMessage(name) {
   return DISABLED_MESSAGES_PT[name] || "Este recurso está pausado pela equipe do Vox.";
 }
 
+/**
+ * Lança {@link FeatureDisabledError} se a flag estiver desligada.
+ * @param {string} name Chave da flag.
+ * @returns {void}
+ * @throws {FeatureDisabledError}
+ */
 export function assertFeatureEnabled(name) {
   if (!isFeatureEnabled(name)) throw new FeatureDisabledError(name);
 }
@@ -88,7 +124,13 @@ function writeCached(state) {
   } catch {}
 }
 
-/** Carrega flags remotas; falha de rede mantém o último estado conhecido. */
+/**
+ * Busca flags remotas; falha de rede mantém o último estado conhecido.
+ * @param {object} [options={}]
+ * @param {typeof fetch} [options.fetchFn=globalThis.fetch] Função HTTP.
+ * @param {number} [options.timeoutMs=2500] Tempo máximo da requisição em ms.
+ * @returns {Promise<{ flags: object, notice: string }>}
+ */
 export async function loadRemoteFlags({ fetchFn = globalThis.fetch, timeoutMs = 2500 } = {}) {
   const cached = readCached();
   if (cached) applyFlags(cached);

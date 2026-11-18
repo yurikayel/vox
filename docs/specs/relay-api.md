@@ -12,11 +12,11 @@ O Vox tem **dois processos** no diretório `relay/`. Eles são independentes:
 
 Todas as respostas são JSON com CORS aberto (`OPTIONS` → `204`). Rota desconhecida → `404`.
 
-**Política de pedido (PM-94, [ADR-027](../adr/027-autorizacao-no-relay-dono-e-origem.md), `request_guard.py`)**, antes de qualquer rota do `server.py`:
-- com o servidor em loopback, `Host` precisa ser de loopback ou estar em `VOX_RELAY_ALLOWED_HOSTS` → `421`;
-- `POST`/`DELETE` com `Origin` fora das origens do app (GitHub Pages, Cloudflare Pages, localhost) e de `VOX_RELAY_ALLOWED_ORIGINS` → `403`; sem `Origin` passa;
-- `POST` sem `Content-Type: application/json` → `415`;
-- mais de `VOX_RELAY_WRITE_LIMIT_PER_MIN` escritas por minuto do mesmo IP → `429`.
+**Política de pedido (PM-94, [ADR-027](../adr/027-autorizacao-no-relay-dono-e-origem.md), `request_guard.py` + `rate_limit.py`)**, antes de qualquer rota do `server.py`:
+- com o servidor em loopback, `Host` precisa ser de loopback ou estar em `VOX_RELAY_ALLOWED_HOSTS` → `421` (`request_guard.py:45-48,67-68`);
+- `POST`/`DELETE` com `Origin` fora das origens do app (GitHub Pages, Cloudflare Pages, localhost) e de `VOX_RELAY_ALLOWED_ORIGINS` → `403`; sem `Origin` passa (`request_guard.py:52-58,71-72`);
+- `POST` sem `Content-Type: application/json` → `415` (`request_guard.py:73-74`);
+- token bucket por classe de escrita no mesmo IP → `429` com `Retry-After` (`rate_limit.py:135-141`, `server.py:321-326`).
 
 ## 1. Sinalização (`signaling.py`)
 
@@ -105,7 +105,10 @@ Configuração por variáveis de ambiente `VOX_OAUTH_<PROVEDOR>_CLIENT_ID` e `VO
 | `VOX_OAUTH_<P>_CLIENT_ID` / `_CLIENT_SECRET` | server | Habilita `/oauth/exchange` para o provedor `P`. |
 | `VOX_RELAY_ALLOWED_HOSTS` | server | Nomes extras aceitos no `Host` quando o relay escuta em loopback (ex.: o endereço do túnel), separados por vírgula. |
 | `VOX_RELAY_ALLOWED_ORIGINS` | server | Origens extras que podem fazer `POST`/`DELETE` (ex.: um espelho do app), separadas por vírgula. |
-| `VOX_RELAY_WRITE_LIMIT_PER_MIN` | server | Escritas (`POST`/`DELETE`) por minuto por IP (padrão 120). |
+| `VOX_RELAY_WRITE_LIMIT_PER_MIN` | server | Define o `per_min` das três classes HTTP de escrita (`mailbox`, `beacon`, `write`) quando não há override por classe (`rate_limit.py:58-62`; padrão efetivo 120/60/30 conforme a classe). |
+| `VOX_RELAY_RATE_<CLASSE>_PER_MIN` | server | Fichas por minuto do token bucket da classe (`MAILBOX`, `BEACON`, `WRITE`, `SIGNAL`, `SIGNAL_MSG`; padrões em `rate_limit.py:34-39`). |
+| `VOX_RELAY_RATE_<CLASSE>_BURST` | server | Rajada máxima da classe (padrão em `rate_limit.py:34-39`; se inválido, `min(burst padrão, per_min)` — `rate_limit.py:62`). |
+| `VOX_RELAY_TRUST_PROXY_HOPS` | server + signaling | Número de proxies confiáveis à frente; com N ≥ 1 o IP vem da N-ésima entrada da direita em `X-Forwarded-For` (`rate_limit.py:144-147,165-173`). |
 
 ## 4. Testes
 
@@ -119,9 +122,23 @@ Hoje **não existe** relay completo público: só a sinalização roda na nuvem.
 
 ## 6. Limites e retenção
 
-Estado **medido no código em `origin/develop` (2116595), 2026-11-17**; só descreve, não propõe mudança. Caminhos relativos a `relay/`. "Nenhum (lacuna)" = o código não impõe o limite.
+Estado **medido no código em `origin/develop` (c661aa0), 2026-11-17**; só descreve, não propõe mudança. Caminhos relativos a `relay/`. "Nenhum (lacuna)" = o código não impõe o limite.
 
-**Vale para todas as rotas do `server.py`:** rate limit por IP só em `POST`/`DELETE`, 120/min por padrão, janela deslizante de 60 s, estado em memória (`request_guard.py:22,68-87,103`); `GET` não tem limite. CORS: `Access-Control-Allow-Origin: *` em toda resposta (`server.py:309`), mas `POST`/`DELETE` com `Origin` fora da lista do app dão `403` (`request_guard.py:55-61,99`). Os campos abaixo só repetem o que difere da regra.
+**Rate limit (`rate_limit.py`):** token bucket em memória, um mapa por (classe, IP). Cada classe tem `per_min` fichas por minuto e rajada `burst` (`rate_limit.py:34-39,70-71`). Bucket cheio volta a encher e sai do mapa (`rate_limit.py:81-87`); por classe há no máximo `MAX_ENTRIES` = 20 000 IPs, descartando o menos recente (`rate_limit.py:42,98-99`). IPv6 conta por rede /64 (`rate_limit.py:160-161`). Resposta `429` com corpo JSON e cabeçalho `Retry-After` em segundos (`rate_limit.py:140-141`, `server.py:322-326,315`).
+
+| Classe | O que limita | Padrão (por min / rajada) |
+|---|---|---|
+| `mailbox` | `POST`/`DELETE` em rotas que começam com `/inbox`, `/memory/` ou `/relay/` | 120 / 60 (`rate_limit.py:35,43-44,125-132`) |
+| `beacon` | `POST`/`DELETE` em `/peer/beacon` ou `/p2p/seed` (prefixo) | 60 / 30 (`rate_limit.py:36,44-45,130-131`) |
+| `write` | demais `POST`/`DELETE` do `server.py` (espelho, OAuth, 404 de escrita, etc.) | 60 / 30 (`rate_limit.py:37,125-132`) |
+| `signal` | cada nova conexão WebSocket na sinalização | 30 / 15 (`rate_limit.py:38`, `signaling.py:356-362`) |
+| `signal_msg` | cada mensagem de texto em conexão já aberta | 600 / 200 (`rate_limit.py:39`, `signaling.py:399-401`) |
+
+`GET`/`HEAD`/`OPTIONS` não gastam ficha (`rate_limit.py:127-128`). O guarda de `Host` do PM-94 vale também para `GET` (`request_guard.py:67-68`, `server.py:348-350`). No `server.py`, `GET /status` e `GET /ping` caem na rota desconhecida → `404` (`server.py:387-388`); esses caminhos existem só na sinalização (`signaling.py:205-215`).
+
+Variáveis: `VOX_RELAY_RATE_<CLASSE>_PER_MIN` e `_BURST` por classe; `VOX_RELAY_WRITE_LIMIT_PER_MIN` sobrescreve o `per_min` de `mailbox`, `beacon` e `write` quando a variável da classe não está definida (`rate_limit.py:54-64`). IP atrás de proxy: `VOX_RELAY_TRUST_PROXY_HOPS` (`rate_limit.py:17-19,144-147`).
+
+CORS: `Access-Control-Allow-Origin: *` em toda resposta (`server.py:311`), com `Access-Control-Expose-Headers: Retry-After` (`server.py:315`); `POST`/`DELETE` com `Origin` fora da lista do app dão `403` (`request_guard.py:71-72`). Os campos abaixo só repetem o que difere da regra.
 
 | Endpoint / mailbox | Teto do corpo | Teto de quantidade | TTL / limpeza | Onde guarda |
 |---|---|---|---|---|
@@ -139,22 +156,22 @@ Estado **medido no código em `origin/develop` (2116595), 2026-11-17**; só desc
 | `/p2p/seed` POST | `16 KB` (`server.py:655-657`) | `64` seeds simultâneos (`p2p_seeder.py:26`), `512 MB` somados (`p2p_seeder.py:25,89-91`) | sem TTL; remoção só por `DELETE /p2p/seed/<hash>` | **memória** (`active_seeds`, `p2p_seeder.py:39`); some ao reiniciar |
 | `/peer/beacon` POST | `16 KB` (`server.py:640-642`) | nenhum (lacuna): um `nodeId` novo por pedido (`p2p_seeder.py:149-186`) | TTL `60 s` (`p2p_seeder.py:27`); a varredura roda no próprio `POST`/`GET` (`p2p_seeder.py:186,202`) | **memória** (`known_peers`) |
 | `/oauth/exchange` POST | `8 KB` (`server.py:539`) | n/a | nada é guardado | n/a |
-| Sinalização (`signaling.py`) | quadro WebSocket `1 MB`, mensagem remontada `1 MB`, cabeçalho `64 KB` (`signaling.py:21-23`); handshake `10 s`, resto do quadro `30 s` (`signaling.py:24-25`) | nenhum de pares conectados nem de mensagens por segundo (lacuna) (`signaling.py:215-232`); sem rate limit (o `request_guard` não vale aqui) | conexão aberta não tem prazo de ociosidade (`signaling.py:92-96`) | **memória** (`PeerRegistry`) |
+| Sinalização (`signaling.py`) | quadro WebSocket `1 MB`, mensagem remontada `1 MB`, cabeçalho `64 KB` (`signaling.py:26-28`); handshake `10 s`, resto do quadro `30 s` (`signaling.py:29-30`) | por IP: token bucket `signal` 30/15 por minuto/rajada em novas conexões (`signaling.py:356-362`, `rate_limit.py:38`); `signal_msg` 600/200 por mensagem de texto (`signaling.py:399-401`, `rate_limit.py:39`); sem teto de pares conectados (lacuna) (`signaling.py:224-273`) | conexão aberta não tem prazo de ociosidade (`signaling.py:292-293`) | **memória** (`PeerRegistry`) |
 
 CORS da sinalização: `Access-Control-Allow-Origin: *` só nas respostas HTTP de saúde (`signaling.py:175`); o WebSocket não checa `Origin` (nenhuma verificação encontrada).
 
 ### Lacunas conhecidas
 
-1. **`GET` sem rate limit.** O limite de 120/min vale só para `POST`/`DELETE` (`request_guard.py:97`). Leituras de `/inbox`, `/memory/state` e `/tx` ficam abertas. (O briefing desta tarefa dizia "nenhum endpoint tem rate limit": no `develop` atual a escrita já tem; a lacuna é a leitura e a sinalização.)
-2. **Limite por IP em memória e por `client_address`.** O dicionário de IPs nunca é esvaziado (`request_guard.py:75,81`), e atrás de proxy ou túnel todos os pedidos aparecem com o mesmo IP.
-3. **Sinalização sem rate limit, sem teto de pares e sem prazo de ociosidade.**
+1. **`GET` sem rate limit.** Só `POST`/`DELETE` passam pelo token bucket (`rate_limit.py:127-128`). Leituras de `/inbox`, `/memory/state` e `/tx` ficam abertas (o guarda de `Host` ainda vale — `request_guard.py:67-68`).
+2. **IP agregado atrás de proxy sem `VOX_RELAY_TRUST_PROXY_HOPS`.** Sem essa variável, o bucket usa só o IP do socket (`rate_limit.py:167-173`); atrás de um único NAT ou túnel muitos clientes compartilham o mesmo limite.
+3. **Sinalização:** sem teto de pares conectados e sem prazo de ociosidade na conexão WebSocket aberta (`signaling.py:224-273,292-293`).
 4. **Mailboxes sem teto de quantidade:** inbox por endereço, envelopes por canal cego, número de canais, cofres, posts/perfis/blobs da memória central.
 5. **Limpeza só preguiçosa:** inbox e canal cego só descartam o expirado quando alguém lê aquele endereço ou canal; `purge_all_expired` não é chamada pelo relay. Endereço que ninguém lê mais fica no disco para sempre.
 6. **Memória central e cofre sem TTL** e sem teto total; `MAX_ITEM_BYTES` declarada e não aplicada.
 7. **`/tx/<id>` lê a resposta do gateway inteira em memória**, sem teto de bytes, e só limita o disco se `VOX_RELAY_MAX_CACHE_MB` existir (sem ela, cache ilimitado).
 8. **`/vox/mirror` lê `Content-Length` sem teto antes de validar** (`server.py:606`); o teto de 256 KB só vale depois da leitura. Há outros pontos do mesmo padrão (corpo lido pelo `Content-Length` informado em `inbox` e `blind_relay`, mas com teto antes da leitura).
 9. **CORS `*`** em todas as respostas do `server.py` e da sinalização; a defesa é o filtro de `Origin` nas escritas, que não cobre `GET` (`GET` de qualquer página lê inbox, estado e índices se alcançar o relay).
-10. **Beacon sem teto:** cada `nodeId` novo cria um registro, sem limite de quantidade dentro da janela de 60 s.
+10. **Beacon sem teto de quantidade de `nodeId`:** cada `nodeId` novo cria um registro na janela de TTL (`p2p_seeder.py:149-186`); o rate limit só limita `POST`/`DELETE` por IP (`rate_limit.py:130-131`), não o número de pares distintos.
 11. **Servidor `HTTPServer` de uma thread só** (`server.py:696`): uma conexão lenta bloqueia as demais; não há `timeout` de socket no `server.py`.
 
-Testes de referência: `test_request_guard.py`, `test_relay_limites_e_rotas.py`, `test_blind_relay.py`, `test_p2p_seeder.py`, `test_signaling_robustez.py`.
+Testes de referência: `test_request_guard.py`, `test_rate_limit.py`, `test_relay_limites_e_rotas.py`, `test_blind_relay.py`, `test_p2p_seeder.py`, `test_signaling_robustez.py`.

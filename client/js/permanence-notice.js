@@ -1,13 +1,17 @@
 /**
- * LAN-11 — aviso de permanência antes de gravar no Arweave.
- * O post sempre vai para a malha P2P. Gravar no Arweave é permanente e público: não dá para apagar.
- * Na 1ª vez (ou sempre, se a pessoa não pedir para lembrar) o app pergunta; "só na malha" não sobe nada.
+ * @file Aviso de permanência (LAN-11) antes de gravar no Arweave.
+ *
+ * Publicação na malha é sempre local/temporária; Arweave é permanente e exige consentimento explícito.
  */
 
+/** Chave no `localStorage` da escolha lembrada (`permanent` ou `mesh`). @type {string} */
 export const PERMANENCE_CHOICE_KEY = "vox-permanence-choice-v1";
+/** Valor da escolha permanente. @type {string} */
 export const CHOICE_PERMANENT = "permanent";
+/** Valor da escolha só na malha. @type {string} */
 export const CHOICE_MESH = "mesh";
 
+/** Textos do modal de permanência em português. @type {Readonly<object>} */
 export const PERMANENCE_NOTICE_PT = Object.freeze({
   title: "Gravar para sempre?",
   body:
@@ -19,6 +23,10 @@ export const PERMANENCE_NOTICE_PT = Object.freeze({
   remember: "Lembrar minha escolha",
 });
 
+/**
+ * Escolha de permanência lembrada neste aparelho, ou string vazia.
+ * @returns {string}
+ */
 export function getPermanenceChoice() {
   try {
     const v = globalThis.localStorage?.getItem(PERMANENCE_CHOICE_KEY);
@@ -28,6 +36,11 @@ export function getPermanenceChoice() {
   }
 }
 
+/**
+ * Grava ou apaga a escolha lembrada de permanência.
+ * @param {string} choice `permanent`, `mesh` ou outro valor para limpar.
+ * @returns {void}
+ */
 export function setPermanenceChoice(choice) {
   try {
     if (choice === CHOICE_PERMANENT || choice === CHOICE_MESH) globalThis.localStorage?.setItem(PERMANENCE_CHOICE_KEY, choice);
@@ -35,6 +48,10 @@ export function setPermanenceChoice(choice) {
   } catch {}
 }
 
+/**
+ * HTML do modal de escolha Arweave vs só malha.
+ * @returns {string}
+ */
 export function renderPermanenceModalHtml() {
   const t = PERMANENCE_NOTICE_PT;
   return `
@@ -53,7 +70,11 @@ export function renderPermanenceModalHtml() {
     </div>`;
 }
 
-/** Abre o modal e resolve com "permanent" ou "mesh". Sem DOM, resolve "mesh" (nunca grava sem consentimento). */
+/**
+ * Abre o modal e resolve com `permanent` ou `mesh`; sem DOM devolve malha (nunca grava sem UI).
+ * @param {Document|null} [doc=globalThis.document] Documento da página.
+ * @returns {Promise<{ choice: string, remember: boolean }>}
+ */
 export function askPermanenceChoice(doc = globalThis.document) {
   if (!doc?.createElement || !doc.body) return Promise.resolve({ choice: CHOICE_MESH, remember: false });
   return new Promise((resolve) => {
@@ -70,7 +91,12 @@ export function askPermanenceChoice(doc = globalThis.document) {
   });
 }
 
-/** true = pode gravar no Arweave. Usa a escolha lembrada; senão pergunta. */
+/**
+ * Indica se pode publicar no Arweave (escolha lembrada ou modal).
+ * @param {object} [options={}]
+ * @param {typeof askPermanenceChoice} [options.ask=askPermanenceChoice] Função de pergunta injetável.
+ * @returns {Promise<boolean>}
+ */
 export async function confirmPermanentPublish({ ask = askPermanenceChoice } = {}) {
   const remembered = getPermanenceChoice();
   if (remembered) return remembered === CHOICE_PERMANENT;
