@@ -333,14 +333,32 @@ def _evict_cache_entries(files, current_bytes, incoming_bytes, max_bytes, protec
         except OSError:
             pass
 
+class _CountingReader:
+    """Envolve `rfile` e conta os bytes do corpo lidos com `read` (o que sobrar é drenado ao fechar)."""
+
+    def __init__(self, raw):
+        self._raw = raw
+        self.consumed = 0
+
+    def read(self, size=-1):
+        data = self._raw.read(size)
+        self.consumed += len(data)
+        return data
+
+    def __getattr__(self, name):
+        return getattr(self._raw, name)
+
+
 class VoxRelayHandler(BaseHTTPRequestHandler):
     # Prazo de cada leitura/escrita no socket: cliente que para de falar perde a conexão em vez de prendê-la.
     timeout = resolve_socket_timeout()
-    _body_consumed = 0
     _response_started = False
 
+    def setup(self):
+        super().setup()
+        self.rfile = _CountingReader(self.rfile)
+
     def handle_one_request(self):
-        self._body_consumed = 0
         self._response_started = False
         super().handle_one_request()
         self._drain_unread_body()
@@ -354,12 +372,6 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
         self.send_header("Connection", "close")
         super().end_headers()
 
-    def _read_body(self, size):
-        """Lê `size` bytes do corpo e conta quantos já foram consumidos (o que sobrar é drenado ao fechar)."""
-        data = self.rfile.read(size)
-        self._body_consumed += len(data)
-        return data
-
     def _drain_unread_body(self):
         """Depois de uma resposta antecipada, lê (até o teto e o prazo) o corpo que o cliente ainda manda.
 
@@ -368,7 +380,7 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
         headers = getattr(self, "headers", None)
         if not self._response_started or headers is None:
             return
-        pending = min(self._get_content_length() - self._body_consumed, REJECTED_BODY_DRAIN_MAX)
+        pending = min(self._get_content_length() - self.rfile.consumed, REJECTED_BODY_DRAIN_MAX)
         deadline = time.monotonic() + REJECTED_BODY_DRAIN_SECONDS
         try:
             while pending > 0 and time.monotonic() < deadline:
@@ -625,7 +637,7 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
             self._send_json({"error": "Payload inválido"}, 400)
             return
         try:
-            payload = json.loads(self._read_body(content_length).decode("utf-8"))
+            payload = json.loads(self.rfile.read(content_length).decode("utf-8"))
             self._send_json(oauth_exchange.exchange(payload), 200)
         except oauth_exchange.OAuthError as err:
             self._send_json({"error": str(err)}, err.status)
@@ -640,7 +652,7 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
             self._reply_not_found(b"Payload invalido ou excede limite da memoria central", status)
             return
         try:
-            payload = json.loads(self._read_body(content_length).decode("utf-8"))
+            payload = json.loads(self.rfile.read(content_length).decode("utf-8"))
             if path.startswith("/memory/vault/"):
                 key = path[len("/memory/vault/"):].split("/")[0]
                 status = vault_store.save_vault(key, payload)
@@ -662,7 +674,7 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
             self._reply_not_found(b"Envelope excede limite maximo de 64 KB", 413)
             return
         try:
-            body = self._read_body(content_length)
+            body = self.rfile.read(content_length)
             envelope = json.loads(body.decode("utf-8"))
             record = blind_relay.store_envelope(channel_id, envelope)
             self._send_json(record, 201)
@@ -677,7 +689,7 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
             self._reply_not_found(b"Snapshot excede limite maximo de 512 KB", 413)
             return
         try:
-            body = self._read_body(content_length)
+            body = self.rfile.read(content_length)
             snap_data = json.loads(body.decode("utf-8"))
             record = blind_relay.store_snapshot(channel_id, snap_data, prune_older=True)
             self._send_json(record, 201)
@@ -693,7 +705,7 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
             self._send_json(err, 413)
             return
         try:
-            body = self._read_body(content_length)
+            body = self.rfile.read(content_length)
         except Exception as error:
             self._send_json({"error": str(error)}, 500)
             return
@@ -720,7 +732,7 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
             self._reply_not_found(b"Envelope excede limite maximo de 32 KB", 413)
             return
         try:
-            body = self._read_body(content_length)
+            body = self.rfile.read(content_length)
             envelope = json.loads(body.decode("utf-8"))
             self._send_json(inbox.store_envelope(to_addr, envelope))
         except Exception as error:
@@ -732,7 +744,7 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
             self._reply_not_found(b"Payload do beacon invalido", 400)
             return
         try:
-            body = self._read_body(content_length)
+            body = self.rfile.read(content_length)
             payload = json.loads(body.decode("utf-8"))
             record = p2p_seeder.PEER_DISCOVERY.register_peer(payload)
             self._send_json(record, 201)
@@ -747,7 +759,7 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
             self._reply_not_found(b"Payload de seed invalido", 400)
             return
         try:
-            payload = json.loads(self._read_body(content_length).decode("utf-8"))
+            payload = json.loads(self.rfile.read(content_length).decode("utf-8"))
             self._send_json(p2p_seeder.register_seed_request(payload, central_memory.get_blob), 201)
         except (ValueError, PermissionError) as err:
             self._send_json({"error": str(err)}, 400)

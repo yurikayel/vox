@@ -215,5 +215,17 @@ class SharedStateUnderThreadsTest(unittest.TestCase):
         self.assertEqual(inbox.get_envelopes("alice"), [envelope])
 
 
+class BlindRelayNonceTest(unittest.TestCase):
+    def test_nonce_with_path_separators_stays_inside_the_channel_directory(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.addCleanup(blind_relay.set_relay_dir, blind_relay.RELAY_DIR)
+            blind_relay.set_relay_dir(pathlib.Path(tmp))
+            envelope = {"sender": "a" * 64, "sig": "s" * 128, "timestamp": 1000, "nonce": "../../x\..\y"}
+            record = blind_relay.store_envelope("canal", envelope)
+            channel_files = [path.name for path in (pathlib.Path(tmp) / "canal").iterdir()]
+            self.assertEqual(channel_files, [record["id"] + ".json"])
+            self.assertNotRegex(record["id"], r"[/\.]")
+
+
 if __name__ == "__main__":
     unittest.main()
