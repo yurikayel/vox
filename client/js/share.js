@@ -29,17 +29,45 @@ export const SHARE_CLIPBOARD_SUCCESS_TOAST = "Link copiado — cole onde quiser 
 /** Microcopy exibida na interface. @type {string} */
 export const SHARE_CLIPBOARD_RICH_TOAST = "Texto formatado copiado — cole no Zap ou onde quiser.";
 
-/** Operação `showToast` do módulo.
- * @param {*} [message] Mensagem a assinar ou verificar.
- * @param {*} [type] Parâmetro `type`.
+const TOAST_REGION_STYLE =
+  "position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0";
+
+/**
+ * Devolve a região viva do toast, criada uma única vez e mantida no DOM
+ * (leitor de tela só anuncia mudança de texto em região que já existia).
+ * @param {boolean} isError true para a região assertiva (erros).
+ * @returns {HTMLElement} Região `role="status"` ou `role="alert"`.
+ */
+function getToastRegion(isError) {
+  const id = isError ? "vox-toast-alert" : "vox-toast-status";
+  let region = document.getElementById?.(id);
+  if (region) return region;
+  region = document.createElement("div");
+  region.id = id;
+  region.setAttribute("role", isError ? "alert" : "status");
+  region.setAttribute("aria-live", isError ? "assertive" : "polite");
+  region.setAttribute("aria-atomic", "true");
+  region.style.cssText = TOAST_REGION_STYLE;
+  document.body.appendChild(region);
+  return region;
+}
+
+/** Mostra um aviso visual e o anuncia em região viva estável.
+ * @param {string} [message] Texto do aviso.
+ * @param {string} [type] "info" ou "error" (erro é anunciado de forma assertiva).
  */
 export function showToast(message, type = "info") {
   if (typeof process !== "undefined" && process.env?.NODE_ENV === "test") return;
   const existing = document.querySelector(".vox-toast");
   if (existing) existing.remove();
 
+  const region = getToastRegion(type === "error");
+  region.textContent = "";
+  setTimeout(() => { region.textContent = message; }, 50);
+
   const toast = document.createElement("div");
   toast.className = `vox-toast ${type}`;
+  toast.setAttribute("aria-hidden", "true");
   toast.textContent = message;
   document.body.appendChild(toast);
 

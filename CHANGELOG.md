@@ -6,6 +6,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Correção: toasts e avisos anunciados por leitor de tela
+- `showToast` passa a escrever em regiões vivas estáveis (`role="status"`/`aria-live="polite"`; erro em `role="alert"`/`assertive`), criadas uma vez; o toast visual fica `aria-hidden`. Testes: `tests/toast-live-region.test.js`.
+
 ### Correção: avisa no passo de criação quando a conta não grava no aparelho
 - `ensureLocalAccount` registra falha de quota/bloqueio e o onboarding mostra aviso em `#oauth-enrich-error` sem travar o fluxo. Testes: `tests/local-account-storage-full.test.js`, `tests/onboarding-steps.test.js`.
 
