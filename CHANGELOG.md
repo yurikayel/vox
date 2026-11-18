@@ -63,6 +63,10 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 - `tests/peers-cache-manifest-guard.test.js`: ingestão rejeita formato, assinatura e `communityId` divergente; manifesto antigo não sobrescreve o mais novo; pins de várias comunidades viram prioridade WANT. Sem bump de SW.
 ### Testes: feed, revisão e canal (`render/`)
 - `tests/render-feed-review-channel.test.js`: painel de comentários e composer aninhado escapam ids hostis; quarentena local desabilita compartilhar com `data-id` seguro; pílula "em revisão" e shells do canal. Complementa PR #232 (dm, pauta, tag-polis). Sem bump de SW.
+### Testes: cofre no armazenamento e limpeza local (S19)
+- `tests/vault-store-adversarial.test.js`: cópia local revogada não expõe registro; JSON corrompido no aparelho cede ao cofre remoto mais novo; gravação local/remota e revogação com marca `revoked`.
+- `tests/account-backup-wrap-adversarial.test.js`: `peekBackupKind`, senha vazia, adulteração do envelope e iteração fora da faixa no wrap do arquivo de soberania.
+- `tests/local-wipe-adversarial.test.js`: confirmação dupla, política de chaves pessoais vs neutras e tolerância à ausência de `indexedDB`. Sem bump de SW.
 
 ### Correção: relay cego não perde deltas no cold boot; memória central confere item e blob
 - **Snapshot apaga por serial, não por timestamp:** só somem os envelopes com `0 < serial <= coveredSerial`; antes, um delta com relógio atrasado e serial acima da cobertura era apagado em silêncio. Snapshot que recua `coveredSerial` agora dá `400` (abriria um buraco). Sem `coveredSerial` nada é apagado (vale o TTL de 7 dias).
