@@ -1,6 +1,6 @@
 # Método — mutex de agentes e modo revisor
 
-> **Status:** canônico (fonte única do mutex) · **Owner:** mantenedor / revisor · **Revisado:** 2026-10-25
+> **Status:** canônico (fonte única do mutex) · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-17
 
 Operacional (repo `vox`). Tese longa: [antigravity-estrategia-mantenedor-revisor-2026.md](../strategy/antigravity-estrategia-mantenedor-revisor-2026.md).
 
@@ -9,6 +9,28 @@ Operacional (repo `vox`). Tese longa: [antigravity-estrategia-mantenedor-revisor
 - **Um agente por arquivo** — ou **por §N** em arquivos com **>200 linhas**.
 - **Handoff** ao encerrar o turno: listar paths tocados + o que **não** mexer neste lote.
 - **Proibido:** duas sessões editando o **mesmo** markdown canônico em paralelo (PRs concorrentes no mesmo doc = rebase + dono único).
+
+## Escolha de modelo e esforço
+
+O mantenedor delega cada tarefa a uma sessão com modelo e esforço escolhidos pelo tipo de trabalho:
+
+| Tipo de tarefa | Modelo e esforço | Exemplo real |
+| :--- | :--- | :--- |
+| Só ler, auditar ou contar | Haiku Low | Auditoria de licenças das dependências |
+| Diagnosticar sem escrever código | Haiku High | Diagnóstico do `deps-mensal` (cron ainda sem disparo, sem defeito no arquivo) |
+| Doc que exige conferir o código | Sonnet Low | [PR #192](https://github.com/yurikayel/vox/pull/192): contradições em specs |
+| Bug ou correção espalhada por vários módulos | Sonnet High | [PR #197](https://github.com/yurikayel/vox/pull/197): apagar conta local apaga tudo |
+| Teste de fluxo crítico, caçando bug | Sonnet Extra | [PR #198](https://github.com/yurikayel/vox/pull/198): E2E do login (LT-08) |
+| Cripto, identidade ou ADR | Opus High ou Extra | ADR-037, cofre na malha |
+
+### Regras de corte
+
+1. Se a tarefa escreve código, não use Haiku com esforço acima de Medium.
+2. Antes de trocar para um modelo maior, tente o mesmo modelo com esforço mais alto.
+
+### Título de sessão
+
+No máximo 3 palavras (ex.: `testes-relay`, `apagar-tudo-local`).
 
 ## Mantenedor → revisor (o que muda na prática)
 
