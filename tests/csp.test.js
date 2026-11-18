@@ -63,3 +63,17 @@ test("csp - _headers do Cloudflare Pages repete a CSP e acrescenta frame-ancesto
   assert.ok(headers.includes("X-Content-Type-Options: nosniff"));
   assert.ok(headers.includes("Referrer-Policy: strict-origin-when-cross-origin"));
 });
+
+test("csp - frame-src é lista explícita (sem https: solto) e só cobre os SDKs de login ainda carregados", () => {
+  const frameSrc = directive(metaCsp(), "frame-src").split(/\s+/).slice(1);
+  assert.ok(!frameSrc.includes("https:"), "frame-src não pode abrir https: para qualquer host");
+  const allowedHosts = ["https://accounts.google.com", "https://www.facebook.com", "https://web.facebook.com", "https://staticxx.facebook.com"];
+  for (const h of frameSrc.filter((s) => s.startsWith("https://"))) assert.ok(allowedHosts.includes(h), h);
+});
+
+test("csp - script-src só lista hosts que oauth-profile.js ainda carrega (Google GIS, SDK Meta)", () => {
+  const hosts = directive(metaCsp(), "script-src").split(/\s+/).filter((s) => s.startsWith("https://"));
+  assert.deepEqual(hosts.sort(), ["https://accounts.google.com", "https://connect.facebook.net"]);
+  const oauth = fs.readFileSync(path.join(root, "js", "oauth-profile.js"), "utf8");
+  for (const h of hosts) assert.ok(oauth.includes(h), `${h} sem uso em oauth-profile.js`);
+});

@@ -94,7 +94,7 @@
 Relato e prazos: [SECURITY.md](../../SECURITY.md). O mantenedor tem o relatório completo.
 
 ### Endurecimento de média e baixa prioridade (público)
-- **CSP larga demais para saída.** `connect-src https: wss:`, `img-src https:` e `frame-src https:` deixam um eventual XSS levar dados para qualquer host. Restringir `connect-src` à lista real (sinalização, relays, gateways, Turbo) e servir imagens remotas por `blob:` depois do download.
+- **CSP larga demais para saída.** `connect-src https: wss:`, `img-src https:` e `frame-src https:` deixam um eventual XSS levar dados para qualquer host. Restringir `connect-src` à lista real (sinalização, relays, gateways, Turbo) e servir imagens remotas por `blob:` depois do download. **Atualização R7:** `frame-src` já é lista explícita; `connect-src`/`img-src`/`media-src` seguem em `https:` porque relay, gateway e PDS são digitados pela pessoa e as imagens de post vêm de URL arbitrária; só serviria à frente de proxy/`blob:`.
 - **GitHub Pages não manda cabeçalhos.** O `_headers` só vale na Cloudflare. No Pages, a `<meta>` CSP não suporta `frame-ancestors`, então o app pode ser embutido em iframe (clickjacking). Preferir a Cloudflare como origem canônica ou pôr um *frame-buster* em JS.
 - **`style-src 'unsafe-inline'`** permite injeção de CSS (exfiltração por seletor é teórica, mas existe).
 - **DM sem sigilo futuro** (T4) e **cartões de diretório sem assinatura** (`hydrateProfiles`, ponto aberto do T16).
