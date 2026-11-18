@@ -6,6 +6,8 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Correção: `Access-Control-Allow-Origin` sai de constante, não do cabeçalho `Origin` (CodeQL 283, py/http-response-splitting)
+- `request_guard.cors_allow_origin` devolve a entrada correspondente de `APP_ORIGINS` / `VOX_RELAY_ALLOWED_ORIGINS` (ou a origem de loopback reconstruída de esquema e nome fixos e porta numérica) em vez de ecoar o texto recebido, e recusa origem com CR, LF, tab, espaço, NUL ou outro caractere de controle antes de comparar. Origem de loopback com caminho, usuário ou porta inválida deixa de receber CORS. Testes: `relay/test_cors_origens.py` (13). Sem bump de SW.
 ### CI: `red-on-base` só roda contra a base em PR `fix:`; teste de importar posts não depende de turnos do loop
 - `scripts/red-on-base.mjs`: PR que não é `fix:` (inclusive `release:` para `main`) não executa os testes novos contra a base; antes o job estourava 10 min com testes que travam na base. O veredito `info` agora diz que não rodou.
 - `tests/app-own-posts-ui.test.js`: `importar: arquivo da própria conta…` espera a condição (`waitFor`) em vez de 20 `setImmediate`, que falhava no Node 24 do CI.
