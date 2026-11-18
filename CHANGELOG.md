@@ -6,6 +6,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Acessibilidade: título e foco por rota; botões só com ícone rotulados
+- O roteador (`routeImpl`) passa a definir `document.title` como "Tela · Vox" e mover o foco para o h1 da tela (`tabindex=-1`) (`routeTitle` em `route-parse.js`, `announceRoute` em `route.js`). Botão de ocultar resposta (🛡️) e de remover conta do cofre (✕) ganham `aria-label`. Testes: `tests/a11y-rotas-botoes.test.js`. Sem mudança em `sw.js` (CACHE_NAME fica para o release).
+
 ### Correção: avisa no passo de criação quando a conta não grava no aparelho
 - `ensureLocalAccount` registra falha de quota/bloqueio e o onboarding mostra aviso em `#oauth-enrich-error` sem travar o fluxo. Testes: `tests/local-account-storage-full.test.js`, `tests/onboarding-steps.test.js`.
 
