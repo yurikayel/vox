@@ -18,13 +18,13 @@ import { renderComposeSignaturePanel } from "./compose-chrome.js";
 import { renderSteps, renderReviewList, renderFeiraDisabled } from "./compose-steps.js";
 import { buildListingDmHref } from "../dm-messenger.js";
 import { getReadOriginAggregate } from "../gateway-telemetry.js";
+import { formatAbsoluteDate } from "../shared/date-format.js";
 import {
   escapeHtml,
   shortId,
   resolvePostAuthorLabels,
   getCommunityColor,
   formatTimeAgo,
-  formatAbsoluteDate,
   postTimeParts,
   renderAvatarHtml,
 } from "./util.js";
