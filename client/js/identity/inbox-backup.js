@@ -11,7 +11,6 @@ import { exportAccountBundle, importAccountBundle } from "./account-backup.js";
 import { unwrapBackup } from "./account-backup-wrap.js";
 import * as localAccount from "./local-account.js";
 import { decryptVaultRecord, encryptVaultV2 } from "../vault/envelope.js";
-import * as ownPosts from "../own-posts.js";
 import * as accountExit from "./account-exit.js";
 import { getLocalIdentityMeta, setLocalIdentityMeta } from "../profile-identity-meta.js";
 
@@ -94,13 +93,21 @@ export function dueInboxBackups(now = Date.now()) {
   return due;
 }
 
+/**
+ * `own-posts.js` importa `identity/index.js`, que importa este módulo: carga adiada quebra o ciclo estático.
+ * @returns {Promise<typeof import("../own-posts.js")>}
+ */
+function loadOwnPosts() {
+  return import("../own-posts.js");
+}
+
 async function collectContent(from, to) {
   const me = localAccount.getCachedRouteIdSync();
   // Post editado ou apagado no período entra (versão atual ou lápide).
   const inRange = (r) => Math.max(r.ts || 0, r.editedAt || 0) >= from && (r.ts || 0) <= to;
   const mine = (r) => (r.author || r.owner) === me && inRange(r);
   // PM-72: forma assinada e mídia à parte, para o post voltar conferido e seguir valendo na rede.
-  const postEntries = await ownPosts.collectOwnPostEntries(me, { filter: inRange });
+  const postEntries = await (await loadOwnPosts()).collectOwnPostEntries(me, { filter: inRange });
   const tombstones = (await cacheNode.getAllTombstones()).filter(mine);
   const dms = (await cacheNode.getAllDmMessages()).filter(inRange).map((m) => ({ ...m, mediaDataUrl: "" }));
   const profile = {
@@ -156,7 +163,7 @@ async function applyContent(c, me) {
   // O arquivo vem de fora: cartão, citação e foto da DM passam pelo crivo do fio antes de ir para o aparelho.
   for (const m of c.dms || []) await cacheNode.saveDmMessage(sanitizeStoredDm(m));
   // PM-72: só volta o post que confere (autor, assinatura, versão, hash da mídia); sem `postEntries`, nada.
-  await ownPosts.restoreOwnPostEntries(c.postEntries, me);
+  await (await loadOwnPosts()).restoreOwnPostEntries(c.postEntries, me);
   // Backup de antes do PM-72 (posts na forma de tela): volta como voltava.
   for (const p of c.posts || []) await cacheNode.saveLocalPost(p);
   for (const t of c.tombstones || []) await cacheNode.saveTombstone(t);
