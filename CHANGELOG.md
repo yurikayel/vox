@@ -6,6 +6,10 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Correção: relay atende várias conexões e o 413 chega legível
+- `relay/server.py` usava `HTTPServer` (uma conexão por vez, sem prazo de socket): um cliente lento travava todos. Agora é `VoxRelayServer` (`ThreadingHTTPServer`, threads daemon, teto de 64 conexões em `VOX_RELAY_MAX_CONNECTIONS`) e cada leitura/escrita tem prazo de 10 s (`VOX_RELAY_SOCKET_TIMEOUT`). `inbox.py` e `vault_store.save_vault` ganharam lock (um leitor podia ver o JSON pela metade e apagar a mensagem; dois pedidos simultâneos podiam virar os dois dono do mesmo cofre).
+- Respostas 413/429 fechavam sem ler o corpo e o cliente recebia reset (erro 10053 no Windows). Agora toda resposta traz `Content-Length` e `Connection: close`, e o relay drena até 1 MiB (máx. 2 s) do corpo pendente antes de fechar. Testes: `relay/test_relay_threading.py` (9). Sem bump de SW.
+
 ### Correção: avisa no passo de criação quando a conta não grava no aparelho
 - `ensureLocalAccount` registra falha de quota/bloqueio e o onboarding mostra aviso em `#oauth-enrich-error` sem travar o fluxo. Testes: `tests/local-account-storage-full.test.js`, `tests/onboarding-steps.test.js`.
 
