@@ -100,7 +100,7 @@ function syncCurrentAccountMetadataToVault() {
 }
 
 /**
- * Conta ativa deste navegador; cria uma nova (chaves P-256) se ainda não houver.
+ * Conta ativa deste navegador; cria uma nova (chaves P-256) se ainda não houver. Chamadas concorrentes compartilham a mesma criação em voo (mesma conta para todos).
  * @returns {Promise<{ routeId: string, publicJwk: object, privateJwk: object, createdAt: number }>}
  */
 export async function ensureLocalAccount() {
