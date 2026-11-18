@@ -234,7 +234,8 @@ class TestSignalingIntegration(unittest.TestCase):
             s.sendall(req.encode("ascii"))
             resp = s.recv(1024).decode("utf-8")
             self.assertIn("HTTP/1.1 204 No Content", resp)
-            self.assertIn("Access-Control-Allow-Origin: *", resp)
+            self.assertNotIn("Access-Control-Allow-Origin", resp)
+            self.assertIn("Vary: Origin", resp)
         finally:
             s.close()
 
