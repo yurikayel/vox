@@ -77,7 +77,7 @@ No PWA: wizard passo 4 → **Verificar Relay HTTP**, ou `#/settings/network` →
 O `server.py` confere cada pedido antes da rota ([ADR-027](../adr/027-autorizacao-no-relay-dono-e-origem.md), [referência](../specs/relay-api.md)):
 
 - **Relay em loopback atrás de túnel ou proxy** (cloudflared, Caddy no mesmo host): ponha o nome público em **`VOX_RELAY_ALLOWED_HOSTS`** (ex.: `VOX_RELAY_ALLOWED_HOSTS=signal.coletivo.org`). Sem isso, o relay responde `421`.
-- **Espelho do app em outro domínio:** ponha a origem em **`VOX_RELAY_ALLOWED_ORIGINS`**. As origens oficiais (GitHub Pages, Cloudflare Pages) e localhost já estão liberadas.
+- **Espelho do app em outro domínio:** ponha a origem em **`VOX_RELAY_ALLOWED_ORIGINS`**. As origens oficiais (GitHub Pages, Cloudflare Pages) e localhost já estão liberadas; a variável vale também para o CORS: origem fora da lista não consegue ler as respostas do relay.
 - **Limite de escrita:** `VOX_RELAY_WRITE_LIMIT_PER_MIN` (padrão 120 por IP). Atrás de proxy, todo mundo chega com o IP do proxy; suba o limite se a comunidade for grande.
 - O nó Windows (`VoxPopuli-ZeroMemory.exe`) libera o próprio túnel sozinho.
 

@@ -393,11 +393,20 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
             return
 
     def _set_cors_headers(self):
-        self.send_header("Access-Control-Allow-Origin", "*")
+        """CORS por origem (T32): só reflete a origem do app, de loopback ou de `VOX_RELAY_ALLOWED_ORIGINS`.
+
+        Origem estranha ou ausente não recebe `Allow-Origin` nem `Allow-Private-Network`: o navegador
+        bloqueia a leitura da resposta. `Vary: Origin` evita que um cache sirva a resposta de uma origem a outra.
+        """
+        self.send_header("Vary", "Origin")
+        self.send_header("Access-Control-Expose-Headers", "Retry-After")
+        origin = request_guard.cors_allow_origin(self.headers.get("Origin"))
+        if origin is None:
+            return
+        self.send_header("Access-Control-Allow-Origin", origin)
         self.send_header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, X-Vox-Delete-Token")
         self.send_header("Access-Control-Allow-Private-Network", "true")
-        self.send_header("Access-Control-Expose-Headers", "Retry-After")
 
     def _rejected(self, method):
         """PM-94: Host, Origin e Content-Type (`request_guard`), depois o limite por IP (`rate_limit`)."""

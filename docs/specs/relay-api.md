@@ -10,7 +10,7 @@ O Vox tem **dois processos** no diretório `relay/`. Eles são independentes:
 | **Sinalização** | `npm start` = `python relay/signaling.py [--port N]` | `3921` (ou `$PORT`) | `0.0.0.0` (ou `$HOST`) | WebSocket que só troca SDP/ICE entre pares. Não guarda conteúdo. | `relay/Dockerfile`, nó público Render (`wss://vox-sentinel.onrender.com`), HF Space |
 | **Relay completo** | `python relay/server.py [--host H --port N --cache-dir D]` | `3920` (ou `$VOX_RELAY_PORT`) | `127.0.0.1` | Cache Arweave, índice/espelho de comunidade, inbox de DM, relay cego, memória central, seeder P2P, troca OAuth. | Stewards, Node Zero (Windows/Linux), `vox-populi/` |
 
-Todas as respostas são JSON com CORS aberto (`OPTIONS` → `204`). Rota desconhecida → `404`.
+Todas as respostas são JSON com **CORS por origem**: `Access-Control-Allow-Origin` só é devolvido (refletindo a origem do pedido) para as origens do app (GitHub Pages `https://yurikayel.github.io`, Cloudflare Pages `https://vox-9df.pages.dev`), qualquer `http(s)://localhost` ou `127.0.0.1` (com qualquer porta) e as de `VOX_RELAY_ALLOWED_ORIGINS`; toda resposta leva `Vary: Origin`. Origem fora da lista (ou sem `Origin`) não recebe `Allow-Origin`: a resposta existe, mas o navegador bloqueia a leitura. `OPTIONS` → `204` sempre; só origem permitida recebe `Allow-Methods`, `Allow-Headers` e `Allow-Private-Network`. Rota desconhecida → `404`.
 
 **Política de pedido (PM-94, [ADR-027](../adr/027-autorizacao-no-relay-dono-e-origem.md), `request_guard.py` + `rate_limit.py`)**, antes de qualquer rota do `server.py`:
 - com o servidor em loopback, `Host` precisa ser de loopback ou estar em `VOX_RELAY_ALLOWED_HOSTS` → `421` (`request_guard.py:45-48,67-68`);
@@ -106,7 +106,7 @@ Configuração por variáveis de ambiente `VOX_OAUTH_<PROVEDOR>_CLIENT_ID` e `VO
 | `VOX_RELAY_INBOX_DIR`, `VOX_RELAY_BLIND_DIR`, `VOX_CENTRAL_MEMORY_DIR` | server | Diretórios específicos (senão, ficam sob o cache). |
 | `VOX_OAUTH_<P>_CLIENT_ID` / `_CLIENT_SECRET` | server | Habilita `/oauth/exchange` para o provedor `P`. |
 | `VOX_RELAY_ALLOWED_HOSTS` | server | Nomes extras aceitos no `Host` quando o relay escuta em loopback (ex.: o endereço do túnel), separados por vírgula. |
-| `VOX_RELAY_ALLOWED_ORIGINS` | server | Origens extras que podem fazer `POST`/`DELETE` (ex.: um espelho do app), separadas por vírgula. |
+| `VOX_RELAY_ALLOWED_ORIGINS` | server | Origens extras (ex.: um espelho do app), separadas por vírgula, comparação exata sem curinga e sem barra final. Elas podem fazer `POST`/`DELETE` e ler as respostas (CORS). As do app e `localhost`/`127.0.0.1` já vêm liberadas. |
 | `VOX_RELAY_WRITE_LIMIT_PER_MIN` | server | Define o `per_min` das três classes HTTP de escrita (`mailbox`, `beacon`, `write`) quando não há override por classe (`rate_limit.py:58-62`; padrão efetivo 120/60/30 conforme a classe). |
 | `VOX_RELAY_RATE_<CLASSE>_PER_MIN` | server | Fichas por minuto do token bucket da classe (`MAILBOX`, `BEACON`, `WRITE`, `SIGNAL`, `SIGNAL_MSG`; padrões em `rate_limit.py:34-39`). |
 | `VOX_RELAY_RATE_<CLASSE>_BURST` | server | Rajada máxima da classe (padrão em `rate_limit.py:34-39`; se inválido, `min(burst padrão, per_min)` — `rate_limit.py:62`). |
@@ -158,7 +158,7 @@ Variáveis: `VOX_RELAY_RATE_<CLASSE>_PER_MIN` e `_BURST` por classe; `VOX_RELAY_
 | Local / loopback / `server.py` direto | `0` | Sem proxy. |
 | `relay/Dockerfile` (HF Space, Railway) | conforme a plataforma | O Dockerfile não define a variável; vale a regra da plataforma de borda (conte os proxies). |
 
-CORS: `Access-Control-Allow-Origin: *` em toda resposta (`server.py:311`), com `Access-Control-Expose-Headers: Retry-After` (`server.py:315`); `POST`/`DELETE` com `Origin` fora da lista do app dão `403` (`request_guard.py:71-72`). Os campos abaixo só repetem o que difere da regra.
+CORS: `Access-Control-Allow-Origin` só para origem da lista (`request_guard.cors_allow_origin`, `server._set_cors_headers`), `Vary: Origin` e `Access-Control-Expose-Headers: Retry-After` em toda resposta; `POST`/`DELETE` com `Origin` fora da lista do app dão `403` (`request_guard.py`). Os campos abaixo só repetem o que difere da regra.
 
 | Endpoint / mailbox | Teto do corpo | Teto de quantidade | TTL / limpeza | Onde guarda |
 |---|---|---|---|---|
@@ -190,7 +190,7 @@ CORS da sinalização: `Access-Control-Allow-Origin: *` só nas respostas HTTP d
 6. **Memória central e cofre sem TTL** e sem teto total (o teto por item já vale; falta o teto de quantidade e de bytes somados).
 7. **`/tx/<id>` lê a resposta do gateway inteira em memória**, sem teto de bytes, e só limita o disco se `VOX_RELAY_MAX_CACHE_MB` existir (sem ela, cache ilimitado).
 8. **`/vox/mirror` lê `Content-Length` sem teto antes de validar** (`server.py:606`); o teto de 256 KB só vale depois da leitura. Há outros pontos do mesmo padrão (corpo lido pelo `Content-Length` informado em `inbox` e `blind_relay`, mas com teto antes da leitura).
-9. **CORS `*`** em todas as respostas do `server.py` e da sinalização; a defesa é o filtro de `Origin` nas escritas, que não cobre `GET` (`GET` de qualquer página lê inbox, estado e índices se alcançar o relay).
+9. **Resolvida no `server.py`:** o CORS agora reflete só origem da lista (T32); página de outro site não lê `GET` de inbox, estado nem índices. **Pendente:** a sinalização (`signaling.py`) e o nó Windows (`ZeroCentralMemory.cs`) ainda devolvem `Access-Control-Allow-Origin: *`. Na sinalização só as respostas de saúde/status, sem dado de usuário; o nó Windows tem a mesma exposição do relay antigo e merece PR próprio. Um `GET` de origem estranha ainda é *executado* (só a leitura é bloqueada no navegador).
 10. **Beacon sem teto de quantidade de `nodeId`:** cada `nodeId` novo cria um registro na janela de TTL (`p2p_seeder.py:149-186`); o rate limit só limita `POST`/`DELETE` por IP (`rate_limit.py:130-131`), não o número de pares distintos.
 11. **Resolvida:** o `server.py` era um `HTTPServer` de uma thread só e uma conexão lenta bloqueava as demais. Agora é `VoxRelayServer` (`ThreadingHTTPServer`, uma thread daemon por conexão, teto `VOX_RELAY_MAX_CONNECTIONS`) e o handler tem prazo de socket (`VOX_RELAY_SOCKET_TIMEOUT`). O prazo vale por leitura, não no total: quem manda um byte a cada poucos segundos ainda segura uma thread, e o teto de conexões limita o estrago. Estado compartilhado sob lock: `rate_limit` (por classe), `central_memory`, `blind_relay`, `p2p_seeder`, cache em disco, e, desde esta mudança, `inbox` e `save_vault`.
 
