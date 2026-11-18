@@ -25,6 +25,8 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 - `modal-host` liga o preso quando o contêiner ganha conteúdo; `clearModalHost` desliga e restaura o foco.
 - Menu ⋯ da publicação (`post-more-menu`) usa o mesmo preso enquanto a folha está aberta.
 - Testes: `tests/focus-trap.test.js` (DOM falso em Node). Sem bump de SW.
+### Acessibilidade: alt significativo ou decorativo em imagens do feed, lightbox e compositor
+- Posts com legenda visível passam a usar `alt=""` na hero (evita repetir título/corpo para leitores de tela); `imageAlt` explícito, foto sem legenda e prévia do compositor inline seguem regras dedicadas (`photo-chrome.js`, `composer-media.js`, `post-media-lightbox.js`). Testes: `tests/image-alt.test.js`. Sem bump de SW.
 
 ### Correção: relay cego não perde deltas no cold boot; memória central confere item e blob
 - **Snapshot apaga por serial, não por timestamp:** só somem os envelopes com `0 < serial <= coveredSerial`; antes, um delta com relógio atrasado e serial acima da cobertura era apagado em silêncio. Snapshot que recua `coveredSerial` agora dá `400` (abriria um buraco). Sem `coveredSerial` nada é apagado (vale o TTL de 7 dias).
