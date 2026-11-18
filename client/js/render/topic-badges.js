@@ -4,8 +4,14 @@ import { escapeHtml } from "./util.js";
 import { renderInReviewPillHtml } from "./review-banner.js";
 import { renderChannelHeldPillHtml } from "./channel-bar.js";
 
+/** Prefixos de tag cívica reconhecidos no título. @type {string[]} */
 export const CIVIC_TAGS = ["[Pauta]", "[Bug]", "[Ideia]", "[Debate Geral]"];
 
+/**
+ * Tag cívica explícita ou extraída do prefixo do título.
+ * @param {object} [topic={}] Tópico com `civicTag`, `tag` ou `title`.
+ * @returns {string} Tag encontrada ou `""`.
+ */
 export function extractTopicCivicTag(topic = {}) {
   if (topic.civicTag) return String(topic.civicTag);
   if (topic.tag) return String(topic.tag);
@@ -13,6 +19,11 @@ export function extractTopicCivicTag(topic = {}) {
   return match ? match[0] : "";
 }
 
+/**
+ * Selos HTML da linha do tópico (revisão, canal, fixado, encerrado, chave nova, tag cívica).
+ * @param {object} topic Metadados do tópico na lista.
+ * @returns {string} Fragmento com pills separadas por ` · `.
+ */
 export function resolveTopicBadgesHtml(topic) {
   const pin = topic.isPinned
     ? `<span class="badge-pill community-pinned-pill" title="Tópico fixado pela moderação">📌 Fixado</span> · `

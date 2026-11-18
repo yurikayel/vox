@@ -1,4 +1,10 @@
-/** @file Single-topic thread view and detail text. */
+/**
+ * @file Página de tópico único: hero de mídia, corpo, respostas e moderação.
+ *
+ * Reutiliza cartões de feed e selos de revisão/arquivo; roteamento fica no controller da rota `#/t/…`.
+ *
+ * @module render/topic
+ */
 import * as mock from "../mock.js";
 import * as social from "../social.js";
 import * as hashtags from "../hashtags.js";
@@ -31,6 +37,14 @@ function shareTopicAria(topicId) {
   return `Compartilhar desativado. ${mod.QUARANTINE_HINT}`;
 }
 
+/**
+ * Corpo do tópico na página de detalhe (título + markdown + selo notário).
+ * @param {string} topicId ID do tópico (para contexto futuro).
+ * @param {string} title Título bruto.
+ * @param {string} bodyText Corpo em markdown.
+ * @param {object|null} [notaryRecord=null] Registro ANS-104 para badge.
+ * @returns {string}
+ */
 export function renderTopicDetailText(topicId, title, bodyText, notaryRecord = null) {
   const disp = postOwnership.formatPostDisplay({ title, body: bodyText });
   if (disp.mode === "empty") return "";
@@ -316,6 +330,19 @@ function renderTopicUnavailableHtml(topic) {
   return "";
 }
 
+/**
+ * Monta a tela de detalhe do tópico (breadcrumb, conteúdo ou indisponível, respostas achatadas).
+ * @param {HTMLElement} main Container `#app-main`.
+ * @param {string} topicId ID do tópico na URL.
+ * @param {object} topic Metadados do post (autor, mídia, flags de moderação).
+ * @param {object[]} replies Lista de respostas para a thread.
+ * @param {object} [options={}]
+ * @param {object|null} [options.topicData=null] Corpo estendido quando separado do índice.
+ * @param {boolean} [options.isMod=false] Exibe ações de moderador.
+ * @param {string} [options.communityId=""] Círculo de origem para breadcrumb.
+ * @param {string} [options.communityTitle=""] Nome legível do círculo.
+ * @returns {void}
+ */
 export function renderTopic(main, topicId, topic, replies, { topicData = null, isMod = false, communityId = "", communityTitle = "" } = {}) {
   const ctx = extractTopicViewContext(topic, topicData, communityId);
   const backLink = renderTopicBreadcrumbHtml(ctx.commId, communityTitle);

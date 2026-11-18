@@ -4,6 +4,7 @@
  */
 import { escapeHtml } from "./util.js";
 
+/** Etapas padrão do compositor de publicação social. @type {Array<{key: string, title: string, required?: string[], requiredMsg?: string}>} */
 export const COMPOSE_TOPIC_STEPS = [
   { key: "type", title: "O que você vai publicar?" },
   { key: "civic", title: "Que tipo de post cívico?" },
@@ -12,7 +13,12 @@ export const COMPOSE_TOPIC_STEPS = [
   { key: "review", title: "Revisar e publicar" },
 ];
 
-/** Cabeçalho da etapa: "Etapa N de M" + barra de progresso segmentada. */
+/**
+ * Cabeçalho "Etapa N de M" com barra segmentada.
+ * @param {number} index Índice da etapa ativa (0-based).
+ * @param {Array<{title: string}>} [steps=COMPOSE_TOPIC_STEPS]
+ * @returns {string}
+ */
 export function renderStepHeader(index, steps = COMPOSE_TOPIC_STEPS) {
   const segs = steps.map((_, i) => `<span class="compose-step-seg${i <= index ? " is-done" : ""}"></span>`).join("");
   return `
@@ -23,7 +29,17 @@ export function renderStepHeader(index, steps = COMPOSE_TOPIC_STEPS) {
       </div>`;
 }
 
-/** Rodapé com Voltar/Continuar (ou Publicar na última etapa). */
+/**
+ * Rodapé com Cancelar/Voltar e Continuar ou botão de publicar.
+ * @param {number} index Índice da etapa.
+ * @param {object} [options={}]
+ * @param {string} [options.backHref="#/"] Destino do cancelar na primeira etapa.
+ * @param {boolean} [options.last=false] Se é a última etapa (mostra submit).
+ * @param {string} [options.submitId=""] Id do botão publicar.
+ * @param {string} [options.submitLabel="Publicar"]
+ * @param {boolean} [options.hideNext=false] Esconde continuar/publicar.
+ * @returns {string}
+ */
 export function renderStepNav(index, { backHref = "#/", last = false, submitId = "", submitLabel = "Publicar", hideNext = false } = {}) {
   const back = index === 0
     ? `<a class="agora-btn agora-btn--secondary" href="${escapeHtml(backHref)}">Cancelar</a>`
@@ -34,7 +50,14 @@ export function renderStepNav(index, { backHref = "#/", last = false, submitId =
   return `<div class="agora-composer-actions compose-step-nav">${back}${hideNext ? "" : next}</div>`;
 }
 
-/** Envolve o conteúdo de uma etapa; só a primeira começa visível. */
+/**
+ * Seção de uma etapa com corpo, validação e navegação.
+ * @param {number} index Índice da etapa.
+ * @param {string} bodyHtml Conteúdo interno.
+ * @param {object} navOpts Opções repassadas a {@link renderStepNav}.
+ * @param {Array<object>} [steps=COMPOSE_TOPIC_STEPS]
+ * @returns {string}
+ */
 export function renderStep(index, bodyHtml, navOpts, steps = COMPOSE_TOPIC_STEPS) {
   const last = index === steps.length - 1;
   const req = steps[index].required || [];
@@ -49,8 +72,9 @@ export function renderStep(index, bodyHtml, navOpts, steps = COMPOSE_TOPIC_STEPS
 }
 
 /**
- * Lista de revisão genérica: cada linha copia, ao abrir a etapa, o valor do campo `from`.
+ * Lista de revisão genérica: cada linha copia o valor do campo `from` na etapa revisão.
  * @param {Array<{label:string, from:string, empty?:string, long?:boolean}>} rows
+ * @returns {string}
  */
 export function renderReviewList(rows) {
   const items = rows.map((r) => `
@@ -96,7 +120,12 @@ export function renderFeiraDisabled(communityId) {
   });
 }
 
-/** Monta todas as etapas de um formulário a partir de uma lista `[{key,title,required?,body}]`. */
+/**
+ * Concatena todas as etapas de um wizard/compositor.
+ * @param {Array<{key: string, title: string, body: string, required?: string[], requiredMsg?: string}>} steps
+ * @param {object} navOpts Opções de navegação por etapa.
+ * @returns {string}
+ */
 export function renderSteps(steps, navOpts) {
   return steps.map((st, i) => renderStep(i, st.body, navOpts, steps)).join("");
 }

@@ -7,7 +7,14 @@ function modeButtonHtml(communityId, mode, label) {
   return `<button type="button" class="btn btn-sm btn-outline btn-channel-mode" data-comm="${escapeHtml(communityId)}" data-mode="${mode}" data-requires-entry>${label}</button>`;
 }
 
-/** Faixa: moderação vê o estado e o botão de trocar; quem não modera vê o aviso só quando é canal. */
+/**
+ * Faixa no topo da comunidade: aviso de canal ou botão para moderador alternar modo (PM-81).
+ * @param {object} meta Metadados da comunidade (id, postingMode).
+ * @param {object} [options={}]
+ * @param {string} [options.communityId=""] ID se não vier em `meta`.
+ * @param {boolean} [options.isMod=false] Se o visitante é moderador.
+ * @returns {string} HTML da faixa ou `""` quando não há o que mostrar.
+ */
 export function renderChannelBarHtml(meta, { communityId = "", isMod = false } = {}) {
   const id = communityId || meta?.id || "";
   if (isChannel(meta)) {
@@ -18,15 +25,28 @@ export function renderChannelBarHtml(meta, { communityId = "", isMod = false } =
   return `<div class="community-channel-bar community-channel-bar-off">${modeButtonHtml(id, POSTING_MODE_MODS, "📣 Transformar em canal")}</div>`;
 }
 
-/** "Novo post" no topo: some só para quem não modera um canal. */
+/**
+ * Se o botão "Novo post" deve aparecer no topo da comunidade.
+ * @param {object} meta Metadados da comunidade.
+ * @param {boolean} [isMod=false] Se o visitante é moderador.
+ * @returns {boolean} Falso em canal para quem não modera.
+ */
 export function showsComposeButton(meta, isMod = false) {
   return Boolean(isMod) || !isChannel(meta);
 }
 
+/**
+ * Selo "Fora do canal" em post retido por modo canal.
+ * @returns {string}
+ */
 export function renderChannelHeldPillHtml() {
   return `<span class="badge-pill community-channel-held-pill" title="Neste canal só a moderação publica: este post só aparece para quem publicou e para a moderação">📣 Fora do canal</span>`;
 }
 
+/**
+ * Card vazio quando o visitante não pode ver o tópico fora do canal.
+ * @returns {string}
+ */
 export function renderChannelHiddenTopicShellHtml() {
   return `
     <div class="card empty community-channel-hidden" role="status">

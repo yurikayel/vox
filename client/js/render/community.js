@@ -1,4 +1,10 @@
-/** @file Home, communities, listings, governance proposals UI. */
+/**
+ * @file Comunidades: vitrine, ficha Orkut, abas de posts/feira/governança e composição de propostas.
+ *
+ * Contagens e telemetria refletem somente o que o aparelho já carregou (sem números fictícios centrais).
+ *
+ * @module render/community
+ */
 import * as mock from "../mock.js";
 import * as communityUpdates from "../community-updates.js";
 import * as listing from "../listing.js";
@@ -28,6 +34,13 @@ import { renderCommunityHeaderToolbar } from "./community-toolbar.js";
 import { renderChannelBarHtml, showsComposeButton } from "./channel-bar.js";
 export { CIVIC_TAGS, extractTopicCivicTag } from "./topic-badges.js";
 
+/**
+ * Avatar da comunidade com fallback de inicial colorida.
+ * @param {object} [meta={}] Metadados (`image`, `title`, etc.).
+ * @param {string} [communityId=""] Slug para cor de acento.
+ * @param {string} [sizeClass="community-avatar-lg"] Classe de tamanho CSS.
+ * @returns {string} HTML do bloco de avatar.
+ */
 export function renderCommunityAvatarHtml(meta = {}, communityId = "", sizeClass = "community-avatar-lg") {
   const image = meta.image || meta.avatar || meta.photo || "";
   const title = meta.title || communityId || "Comunidade";
@@ -44,6 +57,14 @@ export function renderCommunityAvatarHtml(meta = {}, communityId = "", sizeClass
   </div>`;
 }
 
+/**
+ * Caixa estilo Orkut com membros recentes e link «ver todos».
+ * @param {object} meta Metadados da comunidade.
+ * @param {string} communityId Slug da rota.
+ * @param {object[]} [recentPeople=[]] Pessoas recentes com `routeId`.
+ * @param {number|null} [memberCount=null] Total conhecido para o título.
+ * @returns {string} HTML da seção ou `""` sem pessoas.
+ */
 export function renderCommunityOrkutMembersBox(meta, communityId, recentPeople = [], memberCount = null) {
   if (!recentPeople || !recentPeople.length) return "";
   const displayList = recentPeople.slice(0, 8);
@@ -157,9 +178,14 @@ function resolveTopicAuthorMeta(topic) {
   return { author, authorHandle, authorDisplay, authorAvatar };
 }
 
+/** @type {number} Tamanho de página padrão da lista de tópicos da comunidade. */
 export const TOPICS_PAGE_SIZE = 20;
 
-/** LAN-14: aviso de posts recolhidos pela quarentena de chave nova, com "ver mesmo assim". */
+/**
+ * Aviso LAN-14 de posts recolhidos por quarentena de chave nova, com «ver mesmo assim».
+ * @param {number} count Quantidade de posts recolhidos.
+ * @returns {string} HTML do aviso `.community-newkey-notice`.
+ */
 export function renderNewKeyHeldNoticeHtml(count) {
   const n = Number(count) || 0;
   const what = n === 1 ? "1 post de chave nova está recolhido" : `${n} posts de chaves novas estão recolhidos`;
@@ -199,6 +225,14 @@ function renderTopicRowMeta(topic) {
     </p>`;
 }
 
+/**
+ * Linha resumida de tópico na lista da comunidade (título, selos, thumb).
+ * @param {object} topic Tópico com metadados de atividade.
+ * @param {object} [options={}]
+ * @param {string} [options.communityId=""] ID da comunidade (contexto futuro).
+ * @param {string} [options.communityTitle=""] Título da comunidade.
+ * @returns {string} HTML do `<article class="community-topic-row">`.
+ */
 export function renderCommunityTopicRow(topic, { communityId: _communityId = "", communityTitle: _communityTitle = "" } = {}) {
   const badgesHtml = resolveTopicBadgesHtml(topic);
   const title = resolveTopicCleanTitle(topic);
@@ -242,6 +276,14 @@ function renderCommunityMembersStatsBlock({ memberCount, modCount, isMember }) {
       </section>`;
 }
 
+/**
+ * Aba Membros: grade online + estatísticas honestas.
+ * @param {object} meta Metadados da comunidade.
+ * @param {string} communityId Slug.
+ * @param {object[]} [recentPeople=[]] Atividade recente na malha.
+ * @param {boolean} [isMember=false] Se o visitante é membro.
+ * @returns {string} HTML do painel de membros.
+ */
 export function renderCommunityMembersTab(meta, communityId, recentPeople = [], isMember = false) {
   const summary = buildCommunityMembersSummary(meta, communityId, recentPeople, isMember, 24);
   return `
@@ -288,7 +330,17 @@ function resolveNeighborReadPct(communityId, isDemoComm, readOriginStats) {
   return { localReadPct: null, readOriginInsufficient: true };
 }
 
-/** Estatísticas honestas para painel «Sustentada por vizinhos» (sem ranking de nós). */
+/**
+ * Agregados locais para o painel «Sustentada por vizinhos» (sem ranking público de nós).
+ * @param {object} [options={}]
+ * @param {object[]} [options.recentPeople=[]] Pessoas recentes.
+ * @param {string} [options.communityId=""] Comunidade medida.
+ * @param {number|null} [options.memberCount=null] Membros conhecidos.
+ * @param {string} [options.gatewayState="all_ok"] Saúde do gateway (`critical`, etc.).
+ * @param {boolean} [options.isDemo=false] Se usa estimativas demo.
+ * @param {object|null} [options.readOriginStats=null] Telemetria de origem de leitura.
+ * @returns {object} Métricas para {@link renderCommunityNeighborPanel}.
+ */
 export function computeCommunityNeighborStats({
   recentPeople = [],
   communityId = "",
@@ -391,7 +443,13 @@ function renderCommunitySeedStepList(communityId, state, ctx) {
     </ol>`;
 }
 
-/** Checklist V-P05 (~3 min) — passos honestos pós-criação. */
+/**
+ * Checklist V-P05 pós-criação (~3 min) com passos verificáveis no aparelho.
+ * @param {string} communityId Comunidade recém-criada.
+ * @param {object} state Progresso salvo (`invitesSent`, `dismissed`, etc.).
+ * @param {object} [ctx={}] Contagem de tópicos e flags de rede.
+ * @returns {string} HTML da seção ou `""` se completa/dispensada.
+ */
 export function renderCommunitySeedChecklist(communityId, state, ctx = {}) {
   const { topicCount = 0, peerEnabled = true, commOnly = false } = ctx;
   if (!communityId || !state || state.dismissed) return "";
@@ -477,6 +535,14 @@ function renderHomeCommunityCard(c) {
     </article>`;
 }
 
+/**
+ * Lista de comunidades (vitrine territorial) com banner de catch-up.
+ * @param {HTMLElement} main Container `#/communities`.
+ * @param {object[]} communities Cards com `id`, título e métricas locais.
+ * @param {object} [options={}]
+ * @param {number} [options.totalUnread=0] Total de novidades para o banner.
+ * @returns {void}
+ */
 export function renderHome(main, communities, { totalUnread = 0 } = {}) {
   const catchupBanner = renderCommunityCatchupBanner({ totalUnread });
   const head = renderPageHead({
@@ -493,6 +559,11 @@ export function renderHome(main, communities, { totalUnread = 0 } = {}) {
   main.innerHTML += `${head}<div class="agora-community-list">${catchupBanner}${items}</div>`;
 }
 
+/**
+ * Faixa de chips «pessoas nesta comunidade» com atalho de adicionar contato.
+ * @param {object[]} [people=[]] Participantes com `routeId` e nome.
+ * @returns {string} HTML do cartão ou `""` se vazio.
+ */
 export function renderCommunityPeopleStrip(people = []) {
   if (!people.length) return "";
   const chips = people
@@ -648,6 +719,15 @@ function renderCommunityPageHtml({ communityId, accent, top, main, aside }) {
     </div>`;
 }
 
+/**
+ * Página completa da comunidade (cabeçalho, abas, lateral de vizinhos).
+ * @param {HTMLElement} main Container da rota `#/c/…`.
+ * @param {string} communityId Slug.
+ * @param {object[]} topics Tópicos carregados.
+ * @param {object} [meta={}] Ficha Orkut e metadados.
+ * @param {object} [opts={}] Abas, propostas, checklist, stats de vizinhos.
+ * @returns {void}
+ */
 export function renderCommunity(main, communityId, topics, meta = {}, opts = {}) {
   const activeTab = opts.activeTab || "posts";
   const accent = getCommunityColor(communityId);
@@ -686,6 +766,12 @@ const TAB_RENDERERS = {
   members: (c) => renderCommunityMembersTab(c.meta, c.communityId, c.recentPeople, c.isMember),
 };
 
+/**
+ * Conteúdo de uma aba da comunidade (posts, membros, classificados, governança).
+ * @param {string} [tab="posts"] Aba ativa.
+ * @param {object} [ctx={}] Contexto montado por {@link renderCommunity}.
+ * @returns {string} HTML do slot da aba.
+ */
 export function renderCommunityTabContent(tab = "posts", ctx = {}) {
   const activeTab = tab || "posts";
   const renderer = TAB_RENDERERS[activeTab];
@@ -707,6 +793,15 @@ function renderTopicPaginationButton(totalCount, visibleCount) {
     </div>`;
 }
 
+/**
+ * Lista interna de tópicos com paginação «carregar mais».
+ * @param {object[]} topics Todos os tópicos conhecidos.
+ * @param {string} communityId Slug.
+ * @param {string} commTitle Título para contexto das linhas.
+ * @param {string} composeHref Link do botão criar (vazio desabilita).
+ * @param {number} [visibleCount=TOPICS_PAGE_SIZE] Quantos itens mostrar.
+ * @returns {string} HTML da lista e botão de paginação.
+ */
 export function renderCommunityTopicFeedInner(topics, communityId, commTitle, composeHref, visibleCount = TOPICS_PAGE_SIZE) {
   if (!topics.length) {
     return `<div class="empty community-vox-empty"><p>Nenhum post nesta comunidade ainda.</p>${composeHref ? `<a class="btn btn-primary btn-sm" href="${composeHref}">Criar o primeiro post</a>` : ""}</div>`;
@@ -719,6 +814,17 @@ export function renderCommunityTopicFeedInner(topics, communityId, commTitle, co
   return `<div class="community-vox-topic-list">${items}</div>${paginationHtml}`;
 }
 
+/**
+ * Aba Posts com ordenação, busca local e CTA de nova publicação.
+ * @param {string} communityId Slug.
+ * @param {string} commTitle Nome da comunidade.
+ * @param {object[]} topics Tópicos.
+ * @param {object} [options={}]
+ * @param {string} [options.sortMode="active"] Modo de ordenação (`active`, `newest`, `pinned`).
+ * @param {number} [options.visibleCount=TOPICS_PAGE_SIZE] Página visível.
+ * @param {boolean} [options.canCompose=true] Exibe botão + Post.
+ * @returns {string} HTML da seção de feed.
+ */
 export function renderCommunityPostsTab(communityId, commTitle, topics, { sortMode = "active", visibleCount = TOPICS_PAGE_SIZE, canCompose = true } = {}) {
   const composeHref = canCompose ? `#/compose/topic?c=${encodeURIComponent(communityId)}` : "";
   const inner = renderCommunityTopicFeedInner(topics, communityId, commTitle, composeHref, visibleCount);
@@ -775,6 +881,14 @@ function renderCommunityListingsTab(communityId, commTitle, meta, listings) {
     </div>`;
 }
 
+/**
+ * Aba Governança com lista de propostas e CTA de nova proposta.
+ * @param {string} communityId Slug.
+ * @param {string} commTitle Título legível.
+ * @param {object} meta Metadados (reservado para regras futuras).
+ * @param {object[]} [proposals=[]] Propostas conhecidas.
+ * @returns {string} HTML do painel.
+ */
 export function renderCommunityGovernanceTab(communityId, commTitle, meta, proposals = []) {
   const actions = `
     <div class="community-vox-panel">
@@ -811,6 +925,14 @@ function renderProposalMetaFooter(item, commId, timeLabel) {
     </div>`;
 }
 
+/**
+ * Cartão resumido de proposta na lista de governança.
+ * @param {object} item Proposta com título, corpo e estado.
+ * @param {object} [options={}]
+ * @param {string} [options.communityId=""] Comunidade padrão.
+ * @param {string} [options.communityTitle=""] Título (contexto).
+ * @returns {string} HTML do cartão.
+ */
 export function renderProposalItem(item, { communityId = "", communityTitle: _communityTitle = "" } = {}) {
   const author = item.author || item.owner || "";
   const labels = resolvePostAuthorLabels(author, {
@@ -843,6 +965,11 @@ export function renderProposalItem(item, { communityId = "", communityTitle: _co
     </article>`;
 }
 
+/**
+ * Selo colorido do estado da proposta (`open`, `merged`, `rejected`, `expired`).
+ * @param {string} state Chave de estado.
+ * @returns {string} HTML do `.status-pill`.
+ */
 export function renderProposalStatusBadge(state) {
   if (state === "merged") {
     return `<span class="status-pill status-merged">🟣 Aprovada (Merged)</span>`;
@@ -904,6 +1031,13 @@ function renderListingContent(item, price) {
     </div>`;
 }
 
+/**
+ * Cartão de oferta na feira comunitária (preço, Pix, DM).
+ * @param {object} item Oferta/listing.
+ * @param {object} [options={}]
+ * @param {string} [options.communityTitle=""] Nome da feira no contexto.
+ * @returns {string} HTML do cartão ou `""` se apagado por gossip.
+ */
 export function renderListingItem(item, { communityTitle = "" } = {}) {
   if (gossipRetract.shouldHideGossipDeletedPost(item)) return "";
   const author = item.author || item.owner || "";
@@ -970,6 +1104,13 @@ function proposalReviewStepHtml() {
         ${renderComposeSignaturePanel()}`;
 }
 
+/**
+ * Wizard de nova proposta de governança (diff opcional + assinatura).
+ * @param {HTMLElement} main Container da rota.
+ * @param {string} communityId Comunidade alvo.
+ * @param {string} [commTitle=""] Título no kicker.
+ * @returns {void}
+ */
 export function renderComposeProposal(main, communityId, commTitle = "") {
   const backHref = `#/c/${encodeURIComponent(communityId)}?tab=governance`;
   const nav = { backHref, submitId: "btn-submit-proposal", submitLabel: "Publicar Proposta Assinada" };

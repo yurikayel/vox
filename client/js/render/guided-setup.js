@@ -44,7 +44,12 @@ function capSelect(current) {
   return `<select id="net-g-cap" class="form-control">${opts}</select>`;
 }
 
-/** Rede: participar → quanto dado → só Wi-Fi → segundo plano → revisar. */
+/**
+ * Wizard guiado de configuração da rede; grava HTML em `main`.
+ * @param {HTMLElement} main Contêiner `#app-root` ou equivalente.
+ * @param {object} [settings={}] Valores atuais (`enabled`, `dailyCapMb`, `wifiOnly`, `backgroundRelay`).
+ * @returns {void}
+ */
 export function renderNetworkWizard(main, settings = {}) {
   const on = settings.enabled !== false;
   const steps = [
@@ -73,7 +78,11 @@ export function renderNetworkWizard(main, settings = {}) {
   main.innerHTML = wizardShell({ backHref: nav.backHref, kicker: "Configuração guiada da rede", formId: "form-network-wizard", stepsHtml: renderSteps(steps, nav) });
 }
 
-/** Senha Soberana: criar → confirmar → testar a memória → salvar o cofre. */
+/**
+ * Wizard de backup da identidade (Senha Soberana).
+ * @param {HTMLElement} main Contêiner da tela.
+ * @returns {void}
+ */
 export function renderBackupWizard(main) {
   const steps = [
     { key: "create", title: "Crie sua Senha Soberana", required: ["bk-pass"], requiredMsg: "Use pelo menos 12 caracteres (uma frase de 4 palavras serve).", body: `
@@ -98,7 +107,14 @@ export function renderBackupWizard(main) {
   });
 }
 
-/** Carteira: gerar ou importar → chave → backup → Pix → revisar. */
+/**
+ * Wizard opcional de carteira Arweave e chave Pix.
+ * @param {HTMLElement} main Contêiner da tela.
+ * @param {object} [options={}]
+ * @param {boolean} [options.hasWallet=false] Se já existe carteira neste aparelho.
+ * @param {string} [options.pix=""] Chave Pix pré-preenchida.
+ * @returns {void}
+ */
 export function renderWalletWizard(main, { hasWallet = false, pix = "" } = {}) {
   const steps = [
     { key: "mode", title: "Sua carteira", body: `
