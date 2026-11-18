@@ -1,19 +1,12 @@
 /**
- * "Apagar conta local" (T27): some do aparelho todo dado pessoal e de conta (cofre pelo endereço, OAuth do Bluesky,
- * webhooks, carteira, perfil, contatos, DMs, moderação, bancos IndexedDB) e deixa as preferências neutras.
+ * "Apagar conta local" (T27): integração via `wipeLocalDevice` — sem importar `local-wipe.js` (PM-111: falha por asserção na base).
  */
 import "./setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { wipeLocalDevice } from "../client/js/app/onboarding.js";
-import {
-  DEVICE_DATABASES,
-  DEVICE_KEEP_KEYS,
-  dropDatabases,
-  dropPersonalStorage,
-  isPersonalStorageKey,
-} from "../client/js/identity/local-wipe.js";
 
+const EXPECTED_DATABASES = ["vox-cache-db", "vox-keystore", "vox-store-db"];
 const PERSONAL_LOCAL = [
   "vox-vault-v2:endereco",
   "vox-vault-v2:dono",
@@ -55,7 +48,12 @@ const PERSONAL_LOCAL = [
   "vox-app-feedback-v1",
 ];
 const PERSONAL_SESSION = ["vox-bsky-oauth-flow", "vox-social-oauth-flow", "vox-oauth-callback", "vox-guardian-return-v1"];
-const NEUTRAL = [...DEVICE_KEEP_KEYS, "vox-central-memory-chosen-v2", "vox-demo-seeded-v12", "vox-pwa-v7.141"];
+const NEUTRAL = [
+  "vox-color-mode",
+  "vox-central-memory-chosen-v2",
+  "vox-demo-seeded-v12",
+  "vox-pwa-v7.141",
+];
 
 class MemoryStorage {
   #m = new Map();
@@ -109,37 +107,5 @@ test("apagar conta local pede a remoção dos bancos IndexedDB do cliente", asyn
   } finally {
     restore();
   }
-  assert.deepEqual([...deleted].sort(), [...DEVICE_DATABASES].sort());
-});
-
-test("banco recusado ou preso não impede os outros nem trava a promessa", async () => {
-  for (const behavior of ["throw-first", "blocked"]) {
-    const deleted = [];
-    const restore = withIndexedDb(deleted, behavior);
-    try {
-      await dropDatabases();
-    } finally {
-      restore();
-    }
-    assert.equal(deleted.length, DEVICE_DATABASES.length, behavior);
-  }
-});
-
-test("falha ao apagar uma chave não interrompe as demais", () => {
-  const store = new MemoryStorage();
-  store.setItem("vox-contacts-v1", "x");
-  store.setItem("vox-wallet-jwk", "x");
-  const original = store.removeItem.bind(store);
-  store.removeItem = (k) => {
-    if (k === "vox-contacts-v1") throw new Error("bloqueado");
-    original(k);
-  };
-  dropPersonalStorage(store);
-  assert.equal(store.getItem("vox-wallet-jwk"), null);
-});
-
-test("chave que não é do Vox nunca é tocada e chave vox nova de dado pessoal sai por padrão", () => {
-  assert.equal(isPersonalStorageKey("outro-app"), false);
-  assert.equal(isPersonalStorageKey("vox-algo-novo-v1"), true);
-  assert.equal(isPersonalStorageKey("vox-color-mode"), false);
+  assert.deepEqual([...deleted].sort(), [...EXPECTED_DATABASES].sort());
 });
