@@ -38,6 +38,7 @@ const LOCAL_WIPE_KEYS = [
 ];
 
 let cachedAccount = null;
+let ensureLocalAccountInflight = null;
 
 /**
  * Grava a conta ativa (chave privada já na forma guardada: cifrada ou travada).
@@ -70,10 +71,6 @@ async function generateNewAccountKeys() {
   return { routeId: born.routeId, publicJwk: born.publicJwk, privateJwk: await sealJson(born.privateJwk), createdAt: Date.now() };
 }
 
-function resolveVaultDisplayName(enrich, existing) {
-  return getDisplayName() || enrich?.displayName || existing.displayName || "";
-}
-
 function buildVaultAccountEntry(acc, existing, extras = {}) {
   const enrich = getProfileEnrichment() || existing.enrichment || null;
   const now = Date.now();
@@ -82,7 +79,7 @@ function buildVaultAccountEntry(acc, existing, extras = {}) {
     routeId: acc.routeId,
     publicJwk: acc.publicJwk || existing.publicJwk,
     privateJwk: acc.privateJwk || existing.privateJwk,
-    displayName: resolveVaultDisplayName(enrich, existing),
+    displayName: getDisplayName() || enrich?.displayName || existing.displayName || "",
     enrichment: enrich,
     createdAt: acc.createdAt || existing.createdAt || now,
     lastUsedAt: existing.lastUsedAt || now,
@@ -107,21 +104,24 @@ function syncCurrentAccountMetadataToVault() {
  * @returns {Promise<{ routeId: string, publicJwk: object, privateJwk: object, createdAt: number }>}
  */
 export async function ensureLocalAccount() {
-  const existing = await loadStoredLocalAccount();
-  if (existing) {
-    cachedAccount = existing;
+  if (ensureLocalAccountInflight) return ensureLocalAccountInflight;
+  ensureLocalAccountInflight = (async () => {
+    const existing = await loadStoredLocalAccount();
+    if (existing) {
+      cachedAccount = existing;
+      syncCurrentAccountMetadataToVault();
+      return cachedAccount;
+    }
+    const fresh = await generateNewAccountKeys();
+    try { storeActiveAccount(fresh); } catch { cachedAccount = fresh; }
     syncCurrentAccountMetadataToVault();
     return cachedAccount;
-  }
-
-  const fresh = await generateNewAccountKeys();
+  })();
   try {
-    storeActiveAccount(fresh);
-  } catch {
-    cachedAccount = fresh;
+    return await ensureLocalAccountInflight;
+  } finally {
+    ensureLocalAccountInflight = null;
   }
-  syncCurrentAccountMetadataToVault();
-  return cachedAccount;
 }
 
 /**
