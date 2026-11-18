@@ -121,15 +121,19 @@ test("validateEmailEntryIssue mapeia foco ao campo que falhou (LT-07)", async ()
   const emailKit = await import("../client/js/email-kit.js");
   assert.equal(typeof emailKit.validateEmailEntryIssue, "function");
   const cases = [
-    [{ rawName: "", email: "", pass: "" }, "oauth-custom-name-input"],
-    [{ rawName: "Duda", email: "sem-arroba", pass: "dozechar!!!!" }, "oauth-entry-email-input"],
-    [{ rawName: "Duda", email: "duda@exemplo.com", pass: "curta" }, "oauth-entry-pass-input"],
+    [{ rawName: "", email: "", pass: "" }, "name"],
+    [{ rawName: "Duda", email: "sem-arroba", pass: "dozechar!!!!" }, "email"],
+    [{ rawName: "Duda", email: "duda@exemplo.com", pass: "curta" }, "pass"],
   ];
-  for (const [values, fieldId] of cases) {
-    assert.equal(emailKit.validateEmailEntryIssue(values)?.fieldId, fieldId);
+  for (const [values, field] of cases) {
+    assert.equal(emailKit.validateEmailEntryIssue(values)?.field, field);
     assert.equal(emailKit.validateEmailEntryIssue(values)?.message, emailKit.validateEmailEntry(values));
   }
   assert.equal(emailKit.validateEmailEntryIssue({ rawName: "Duda", email: "", pass: "" }), null);
+  const focusIds = { name: "oauth-custom-name-input", email: "oauth-entry-email-input", pass: "oauth-entry-pass-input" };
+  const c = { innerHTML: "" };
+  render.renderOAuthEnrich(c);
+  for (const id of Object.values(focusIds)) assert.ok(c.innerHTML.includes(`id="${id}"`), id);
 });
 
 test("setOAuthEnrichError com mensagem vazia esconde e não foca", async () => {
