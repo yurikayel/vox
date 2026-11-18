@@ -1,5 +1,7 @@
 # Triagem CodeQL — release PR #262 (`develop` → `main`)
 
+> **Status:** canônico (triagem de release) · **Owner:** mantenedor · **Revisado:** 2026-11-18
+
 Documento canônico para alertas do delta do release **#262** (novembro/2026). Dispensas no GitHub Security só com OK explícito do mantenedor e referência a este arquivo.
 
 ## Correções merged em `develop`
