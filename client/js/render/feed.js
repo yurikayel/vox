@@ -1,4 +1,10 @@
-/** @file Feed, composer, post cards, comments, stories. */
+/**
+ * @file Feed da Ágora: composer inline, cartões de post, comentários, stories e feeds externos.
+ *
+ * Gera HTML estático; eventos e persistência ficam nos controllers de rota e em `social.js`.
+ *
+ * @module render/feed
+ */
 import * as mock from "../mock.js";
 import * as social from "../social.js";
 import * as hashtags from "../hashtags.js";
@@ -33,6 +39,11 @@ import { renderPhotoHiddenMessageHtml } from "./photo-chrome.js";
 import { renderCivicBlock, renderCivicPendingNote, renderCivicFeedIntro } from "./civic-block.js";
 import { isElectoralModeActive } from "../electoral-period.js";
 
+/**
+ * Faixa compacta do composer no topo (atalho para o inline composer).
+ * @param {string} [displayName=""] Nome exibido no avatar.
+ * @returns {string} HTML do composer colapsável.
+ */
 export function renderComposerStrip(displayName = "") {
   return renderInlineComposer({ displayName });
 }
@@ -174,6 +185,13 @@ function renderComposerMeta() {
     </div>`;
 }
 
+/**
+ * Composer inline do feed (colapsado + formulário com anexos Lo-Fi).
+ * @param {object} [options={}]
+ * @param {string} [options.userRouteId=""] Conta que publica.
+ * @param {string} [options.displayName=""] Rótulo do avatar.
+ * @returns {string} HTML do bloco `#feed-inline-composer`.
+ */
 export function renderInlineComposer({ userRouteId = "", displayName = "" } = {}) {
   const label = displayName || (userRouteId ? mock.getAuthorDisplay(userRouteId) : "") || "Você";
   const avatarHtml = userRouteId ? renderAvatarHtml(userRouteId, label) : '<span class="avatar">✍</span>';
@@ -196,6 +214,11 @@ export function renderInlineComposer({ userRouteId = "", displayName = "" } = {}
     </div>`;
 }
 
+/**
+ * Layout visual do cartão: `github`, `photo` ou `text`.
+ * @param {object|null} t Post ou tópico.
+ * @returns {"github"|"photo"|"text"}
+ */
 export function getPostFeedLayout(t) {
   if (t?.githubGist?.lines?.length) return "github";
   if (t?.image || t?.video || t?.audio || t?.mediaRef?.hash) return "photo";
@@ -213,6 +236,11 @@ function renderPostGithubGist(t) {
   </div>`;
 }
 
+/**
+ * Copia o post como citação Markdown para compartilhar fora do Vox.
+ * @param {object|null} post Publicação com `id`, título, corpo e autor.
+ * @returns {string} Bloco Markdown ou `""` se `post` for nulo.
+ */
 export function formatPostMarkdown(post) {
   if (!post) return "";
   const author = post.author || post.owner || "";
@@ -228,10 +256,23 @@ export function formatPostMarkdown(post) {
   return `> **${authorDisplay}** (@${authorHandle}) · *Vox*\n>\n> **${title}**\n>\n> ${body}\n>\n> 🔗 Ver no Vox: ${url}`;
 }
 
+/**
+ * ID estável do painel de comentários para `aria-controls`.
+ * @param {string} topicId ID do tópico.
+ * @returns {string} Identificador DOM sanitizado.
+ */
 export function commentsPanelId(topicId) {
   return `post-comments-${String(topicId || "").replace(/[^a-zA-Z0-9_-]/g, "")}`;
 }
 
+/**
+ * Formulário oculto de resposta aninhada a um comentário.
+ * @param {string} parentId ID do comentário pai.
+ * @param {string} topicId Tópico raiz.
+ * @param {string} commId Comunidade (pode ser vazia no feed global).
+ * @param {string} [mentionHandle=""] @handle pré-preenchido.
+ * @returns {string} HTML do `<form class="post-comment-nested-reply">`.
+ */
 export function renderCommentNestedReplyComposer(parentId, topicId, commId, mentionHandle = "") {
   const mention = mentionHandle ? `@${mentionHandle} ` : "";
   return `
@@ -263,6 +304,15 @@ function renderReplyNestedList(children, byParent, topicId, commId) {
   return `<ul class="post-comment-nested-list">${items}</ul>`;
 }
 
+/**
+ * Uma resposta na lista inline (com reações, aninhamento e composer filho).
+ * @param {object} r Comentário ou reply.
+ * @param {object} [options={}]
+ * @param {object|null} [options.byParent=null] Mapa `parentId → filhos` para threads.
+ * @param {string} [options.topicId=""] Tópico para links e composer.
+ * @param {string} [options.commId=""] Comunidade do tópico.
+ * @returns {string} HTML de `<li class="post-comment-item">`.
+ */
 export function renderInlineReplyItem(r, { byParent = null, topicId = "", commId = "" } = {}) {
   const rAuthor = r.author || r.owner || "";
   const rLabels = resolvePostAuthorLabels(rAuthor, {
@@ -295,6 +345,14 @@ export function renderInlineReplyItem(r, { byParent = null, topicId = "", commId
     </li>`;
 }
 
+/**
+ * Lista de comentários agrupados em thread.
+ * @param {object[]} [replies=[]] Respostas brutas.
+ * @param {object} [options={}]
+ * @param {string} [options.topicId=""] ID do tópico.
+ * @param {string} [options.commId=""] ID da comunidade.
+ * @returns {string} HTML da área `.post-comments-feed`.
+ */
 export function renderCommentList(replies = [], { topicId = "", commId = "" } = {}) {
   if (!replies.length) {
     return `<div class="post-comments-feed"><p class="post-comments-empty">Nenhuma resposta ainda.</p></div>`;
@@ -315,7 +373,16 @@ function renderInlineReplyComposer(topicId, commId) {
     </form>`;
 }
 
-/** Comentários ficam **fora** de `.post-media-hero` — superfície normal do card, nunca overlay na foto. */
+/**
+ * Painel de comentários do cartão (fora do hero de mídia, nunca sobre a foto).
+ * @param {string} topicId ID do tópico.
+ * @param {string} [commId=""] Comunidade associada.
+ * @param {object} [options={}]
+ * @param {object[]} [options.replies=[]] Respostas a listar.
+ * @param {boolean} [options.expanded=false] Se o painel abre expandido.
+ * @param {string} [options.prefaceHtml=""] Aviso antes da lista (ex.: foto oculta).
+ * @returns {string} HTML do container `.post-comments`.
+ */
 export function renderPostComments(topicId, commId = "", { replies = [], expanded = false, prefaceHtml = "" } = {}) {
   const panelId = commentsPanelId(topicId);
   const openCls = expanded ? " is-open" : "";
@@ -323,11 +390,23 @@ export function renderPostComments(topicId, commId = "", { replies = [], expande
   return `<div class="post-comments post-comments-surface${openCls}" id="${escapeHtml(panelId)}"${hid} data-topic="${escapeHtml(topicId)}" data-comm="${escapeHtml(commId)}">${prefaceHtml}${renderCommentList(replies, { topicId, commId })}${renderInlineReplyComposer(topicId, commId)}</div>`;
 }
 
+/**
+ * Atributos `disabled`/`title` quando o post está em quarentena local (compartilhar bloqueado).
+ * @param {string} postId ID do post.
+ * @returns {string} Fragmento HTML de atributos ou `""`.
+ */
 export function quarantineShareAttrs(postId) {
   if (!mod.isPostQuarantined(postId)) return "";
   return ` disabled aria-disabled="true" title="${escapeHtml(mod.QUARANTINE_HINT)}"`;
 }
 
+/**
+ * Botão para alternar quarentena local do post.
+ * @param {string} postId ID do post.
+ * @param {object} [options={}]
+ * @param {boolean} [options.asMenuItem=true] Usa `role="menuitem"` no menu overflow.
+ * @returns {string} HTML do botão de quarentena.
+ */
 export function renderQuarantineAction(postId, { asMenuItem = true } = {}) {
   const id = String(postId || "");
   const on = mod.isPostQuarantined(id);
@@ -339,6 +418,11 @@ export function renderQuarantineAction(postId, { asMenuItem = true } = {}) {
   </button>`;
 }
 
+/**
+ * Ações Editar/Apagar para publicação própria local (não em replies).
+ * @param {object} t Post com `isOwnLocalPost` e `id`.
+ * @returns {string} HTML do menu ou `""` se não for dono local.
+ */
 export function renderPostOwnerMenu(t) {
   if (!t?.isOwnLocalPost || t.type === "reply") return "";
   const syncTip = escapeHtml(i18n.localMutateEditDeleteTooltip);
@@ -534,6 +618,11 @@ function renderPostMediaHero(t, overlayHeaderHtml = "", overlayFooterHtml = "") 
   return "";
 }
 
+/**
+ * Corpo textual do post (markdown leve ou legenda única).
+ * @param {object} post Publicação com título/corpo.
+ * @returns {string} HTML do corpo ou `""` se vazio.
+ */
 export function renderPostTextHtml(post) {
   const id = post?.id || "";
   const href = id ? `#/t/${encodeURIComponent(id)}` : "#";
@@ -589,6 +678,12 @@ function renderFrameCltContent(state) {
     </div>`;
 }
 
+/**
+ * Conteúdo dinâmico de Open Frame (enquete, abaixo-assinado ou CLT).
+ * @param {object} frame Definição do frame parseado.
+ * @param {object|null} state Estado calculado para o visitante.
+ * @returns {string} HTML interno do frame ou `""`.
+ */
 export function renderFrameContentHtml(frame, state) {
   if (!state) return "";
   if (state.kind === "poll") return renderFramePollContent(state);
@@ -606,6 +701,11 @@ function renderFrameButtons(t, frame, localAction) {
     .join("");
 }
 
+/**
+ * Cartão Open Frame anexado ao post (mini-app assinado localmente).
+ * @param {object} t Post com campo `frame`.
+ * @returns {string} HTML do `.vox-frame` ou `""` se inválido.
+ */
 export function renderPostFrame(t) {
   if (!t.frame) return "";
   const parsed = frames.parseFrame(t.frame);
@@ -786,6 +886,13 @@ function renderTextOrGithubPostItem(t, author, labels, layout, isPinned) {
     </article>`;
 }
 
+/**
+ * Cartão completo de publicação no feed (layout foto, texto ou gist GitHub).
+ * @param {object} t Post normalizado.
+ * @param {object} [opts={}]
+ * @param {boolean} [opts.isPinned] Destaca fita de fixado.
+ * @returns {string} HTML do `<article class="post">` ou `""` se apagado por gossip.
+ */
 export function renderPostItem(t, opts = {}) {
   if (gossipRetract.shouldHideGossipDeletedPost(t)) return "";
   const author = t.author || t.owner || "";
@@ -801,6 +908,11 @@ export function renderPostItem(t, opts = {}) {
   return renderTextOrGithubPostItem(t, author, labels, layout, opts.isPinned);
 }
 
+/**
+ * Faixa horizontal de stories (perfis demo ou lista customizada).
+ * @param {object[]|null} [customProfiles=null] Perfis com `routeId`, `name`, `avatar`.
+ * @returns {string} HTML da strip ou placeholder oculto se vazio.
+ */
 export function renderStoriesStrip(customProfiles = null) {
   const profiles = customProfiles || Object.values(mock.MOCK_DEMO_PROFILES || {});
   if (!profiles.length) return '<div class="stories-strip stories-strip--empty" style="display:none;"></div>';
@@ -830,6 +942,11 @@ const FEED_TAB_ICONS = {
   following: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m16 11 2 2 4-4"/></svg>`,
 };
 
+/**
+ * Chips de filtro de feed no topo da Ágora (mesmas chaves que a query `?feed=`).
+ * @param {string} [activeFeed="for-you"] Feed selecionado.
+ * @returns {string} HTML da barra de abas.
+ */
 export function renderFeedTabsBar(activeFeed = "for-you") {
   const tabs = [
     { key: "for-you", href: "#/", icon: FEED_TAB_ICONS.social, label: "Social" },
@@ -890,6 +1007,11 @@ function renderBskyFormAndImport() {
     </div>`;
 }
 
+/**
+ * Painel de gestão de perfis Bluesky seguidos via ingestão AT Protocol.
+ * @param {string[]} [subscriptions=[]] Handles já inscritos.
+ * @returns {string} HTML do gerenciador `.bsky-feed-manager`.
+ */
 export function renderExternalFeedManagerHtml(subscriptions = []) {
   const list = Array.isArray(subscriptions) ? subscriptions : [];
   const chips = list
@@ -947,6 +1069,16 @@ function renderFeedEmptyState(activeFeed) {
   </div>`;
 }
 
+/**
+ * Página do feed principal: stories, abas, composer e lista de posts.
+ * @param {HTMLElement} main Container da Ágora.
+ * @param {object[]} [topics=[]] Posts a renderizar.
+ * @param {object} [opts={}]
+ * @param {string} [opts.activeFeed] Filtro ativo (`civic`, `external`, etc.).
+ * @param {string} [opts.userRouteId] Conta para o composer.
+ * @param {string[]} [opts.externalSubs] Handles Bluesky quando `activeFeed === "external"`.
+ * @returns {void}
+ */
 export function renderFeed(main, topics = [], opts = {}) {
   const activeFeed = opts.activeFeed || "for-you";
   const userRouteId = opts.userRouteId || "";

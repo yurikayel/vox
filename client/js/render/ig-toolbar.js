@@ -1,4 +1,8 @@
-/** Barra IG-like: like, comentar, republicar, compartilhar (avião), salvar. Sem zap. */
+/**
+ * @file Barra de ações estilo IG: curtir, comentar, republicar, compartilhar e salvar (sem zap).
+ *
+ * Respeita quarentena de post (botões desabilitados).
+ */
 
 import * as social from "../social.js";
 import * as mod from "../moderation.js";
@@ -42,6 +46,12 @@ function renderIgShareBtn(t, authorDisplay) {
   return `<button class="action-btn btn-share btn-share-post ${exploded ? "exploded" : ""}" data-id="${escapeHtml(t.id)}" data-count="${baseExplodes}" data-title="${escapeHtml(t.title)}" data-author="${escapeHtml(authorDisplay || "")}" data-body="${bodySlice}" data-comm="${escapeHtml(t.communityId || "")}" aria-label="Compartilhar" title="Compartilhar"${shareAttrs(t.id)}>${iconShare()}${countSpan}</button>`;
 }
 
+/**
+ * Toolbar horizontal com contadores de engajamento e estado local (like/save/explode).
+ * @param {object} t Post/tópico (id, communityId, contagens, corpo).
+ * @param {string} authorDisplay Nome exibido para atributos de compartilhar.
+ * @returns {string}
+ */
 export function renderIgToolbar(t, authorDisplay) {
   const liked = social.isLiked(t.id);
   const likes = social.getLikesCount(t.id, Number(t.likesCount) || 0);

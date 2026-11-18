@@ -97,6 +97,11 @@ function renderVoxelPassportExport(address, isCurrentWallet) {
     </div>`;
 }
 
+/**
+ * HTML da aba Passaporte Cívico (voxels, trilhas e conquistas).
+ * @param {object} [params={}] `receipts`, `options`, `unlockedAchievements`, `address`, `isCurrentWallet`.
+ * @returns {string}
+ */
 export function renderProfileVoxelsTab(params = {}) {
   const receipts = params.receipts || [];
   const balance = computeVoxelBalance(receipts, params.options || {});
