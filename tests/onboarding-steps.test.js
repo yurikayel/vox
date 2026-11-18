@@ -79,3 +79,55 @@ test("ADR-032 §6: entrada 1-etapa com e-mail, senha sem confirmação, frase op
     assert.ok(card.includes(`id="${id}"`), `falta #${id} no cartão §6.5`);
   }
 });
+
+function oauthErrorDom() {
+  const mk = () => ({ textContent: "", hidden: true, focusCalls: 0, focus() { this.focusCalls += 1; } });
+  const errorEl = mk();
+  const passEl = mk();
+  const map = { "oauth-enrich-error": errorEl, "oauth-entry-pass-input": passEl };
+  return { errorEl, passEl, doc: { getElementById: (id) => map[id] ?? null } };
+}
+
+test("setOAuthEnrichError com focusId mostra mensagem e foca o campo", async () => {
+  const { errorEl, passEl, doc } = oauthErrorDom();
+  const prev = globalThis.document;
+  globalThis.document = doc;
+  try {
+    const { setOAuthEnrichError } = await import("../client/js/app/onboarding.js");
+    setOAuthEnrichError("Senha curta", "oauth-entry-pass-input");
+    assert.equal(errorEl.textContent, "Senha curta");
+    assert.equal(errorEl.hidden, false);
+    assert.equal(passEl.focusCalls, 1);
+  } finally {
+    globalThis.document = prev;
+  }
+});
+
+test("setOAuthEnrichError sem focusId não chama focus", async () => {
+  const { errorEl, passEl, doc } = oauthErrorDom();
+  const prev = globalThis.document;
+  globalThis.document = doc;
+  try {
+    const { setOAuthEnrichError } = await import("../client/js/app/onboarding.js");
+    setOAuthEnrichError("Falha");
+    assert.equal(errorEl.textContent, "Falha");
+    assert.equal(passEl.focusCalls, 0);
+  } finally {
+    globalThis.document = prev;
+  }
+});
+
+test("setOAuthEnrichError com mensagem vazia esconde e não foca", async () => {
+  const { errorEl, passEl, doc } = oauthErrorDom();
+  const prev = globalThis.document;
+  globalThis.document = doc;
+  try {
+    const { setOAuthEnrichError } = await import("../client/js/app/onboarding.js");
+    setOAuthEnrichError("", "oauth-entry-pass-input");
+    assert.equal(errorEl.textContent, "");
+    assert.equal(errorEl.hidden, true);
+    assert.equal(passEl.focusCalls, 0);
+  } finally {
+    globalThis.document = prev;
+  }
+});
