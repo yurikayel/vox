@@ -1,7 +1,7 @@
 /**
- * Eventos Nostr (NIP-01) com assinatura Schnorr BIP-340 em secp256k1 — JS puro, sem dependência.
- * Base do teste de fumaça dos relays (REV-19) e da sinalização por Nostr (REV-09).
- * Usa só BigInt + WebCrypto (SHA-256), disponível no navegador e no Node ≥ 20.
+ * @file Eventos Nostr (NIP-01): hash, assinatura Schnorr e verificação no cliente.
+ *
+ * Schnorr BIP-340 em secp256k1 — JS puro (BigInt + WebCrypto). Base dos relays (REV-19) e sinalização Nostr (REV-09).
  */
 
 const P = 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2fn;
@@ -66,6 +66,10 @@ function liftX(x) {
   return { x, y: (y & 1n) === 0n ? y : P - y };
 }
 
+/** Operação `hexToBytes` do módulo.
+ * @param {*} [hex] Parâmetro `hex`.
+ * @returns {*} Resultado da operação.
+ */
 export function hexToBytes(hex) {
   const clean = String(hex || "").trim();
   if (clean.length % 2 !== 0 || /[^0-9a-f]/i.test(clean)) throw new Error("hex inválido");
@@ -74,6 +78,10 @@ export function hexToBytes(hex) {
   return out;
 }
 
+/** Operação `bytesToHex` do módulo.
+ * @param {*} [bytes] Bytes do data item.
+ * @returns {*} Resultado da operação.
+ */
 export function bytesToHex(bytes) {
   return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
 }
@@ -91,6 +99,10 @@ function concatBytes(...parts) {
   return out;
 }
 
+/** Operação `sha256` do módulo.
+ * @param {*} [bytes] Bytes do data item.
+ * @returns {*} Resultado da operação.
+ */
 export async function sha256(bytes) {
   return new Uint8Array(await globalThis.crypto.subtle.digest("SHA-256", bytes));
 }
@@ -104,7 +116,9 @@ function assertLen(bytes, len, label) {
   if (!(bytes instanceof Uint8Array) || bytes.length !== len) throw new Error(`${label}: esperado ${len} bytes`);
 }
 
-/** Chave pública x-only (32 bytes) de uma chave secreta de 32 bytes. */
+/** Chave pública x-only (32 bytes) de uma chave secreta de 32 bytes. 
+ * @param {*} [secretKey] Chave secreta (32 bytes).
+ * @returns {*} Resultado da operação.*/
 export function getPublicKey(secretKey) {
   assertLen(secretKey, 32, "chave secreta");
   const d = bytesToInt(secretKey);
@@ -112,7 +126,11 @@ export function getPublicKey(secretKey) {
   return intToBytes(pointMul(G, d).x);
 }
 
-/** Assinatura BIP-340 (64 bytes) de uma mensagem de 32 bytes. */
+/** Assinatura BIP-340 (64 bytes) de uma mensagem de 32 bytes. 
+ * @param {*} [message] Mensagem a assinar ou verificar.
+ * @param {*} [secretKey] Chave secreta (32 bytes).
+ * @param {*} [auxRand] Entropia auxiliar opcional.
+ * @returns {*} Resultado da operação.*/
 export async function schnorrSign(message, secretKey, auxRand = globalThis.crypto.getRandomValues(new Uint8Array(32))) {
   assertLen(message, 32, "mensagem");
   assertLen(auxRand, 32, "aux");
@@ -131,7 +149,11 @@ export async function schnorrSign(message, secretKey, auxRand = globalThis.crypt
   return concatBytes(rx, intToBytes(mod(k + e * d, N)));
 }
 
-/** Verificação BIP-340. Retorna false (nunca lança) para entradas inválidas. */
+/** Verificação BIP-340. Retorna false (nunca lança) para entradas inválidas. 
+ * @param {*} [signature] Assinatura Schnorr.
+ * @param {*} [message] Mensagem a assinar ou verificar.
+ * @param {*} [publicKey] Chave pública em hex.
+ * @returns {*} Resultado da operação.*/
 export async function schnorrVerify(signature, message, publicKey) {
   try {
     assertLen(signature, 64, "assinatura");
@@ -152,7 +174,10 @@ export async function schnorrVerify(signature, message, publicKey) {
 /**
  * Segredo compartilhado ECDH secp256k1 (coordenada x, 32 bytes) entre a minha chave secreta
  * e a chave pública x-only do outro par. Usado para cifrar a sinalização (REV-09).
- */
+ 
+ * @param {*} [secretKey] Chave secreta (32 bytes).
+ * @param {*} [publicKeyHex] Chave pública em hex.
+ * @returns {*} Resultado da operação.*/
 export function getSharedSecret(secretKey, publicKeyHex) {
   assertLen(secretKey, 32, "chave secreta");
   const pub = liftX(bytesToInt(hexToBytes(publicKeyHex)));
@@ -162,7 +187,8 @@ export function getSharedSecret(secretKey, publicKeyHex) {
   return intToBytes(pointMul(pub, d).x);
 }
 
-/** Chave secreta aleatória válida (32 bytes). */
+/** Chave secreta aleatória válida (32 bytes). 
+ * @returns {*} Resultado da operação.*/
 export function generateSecretKey() {
   for (;;) {
     const sk = globalThis.crypto.getRandomValues(new Uint8Array(32));
@@ -171,13 +197,18 @@ export function generateSecretKey() {
   }
 }
 
-/** id NIP-01: sha256 do JSON canônico [0, pubkey, created_at, kind, tags, content]. */
+/** id NIP-01: sha256 do JSON canônico [0, pubkey, created_at, kind, tags, content]. 
+ * @param {object} [fields] Campos do evento NIP-01.
+ * @returns {*} Resultado da operação.*/
 export async function computeEventId({ pubkey, created_at, kind, tags = [], content = "" }) {
   const serialized = JSON.stringify([0, pubkey, created_at, kind, tags, content]);
   return bytesToHex(await sha256(new TextEncoder().encode(serialized)));
 }
 
-/** Monta e assina um evento NIP-01. */
+/** Monta e assina um evento NIP-01. 
+ * @param {object} [fields] Campos do evento NIP-01.
+ * @param {*} [secretKey] Chave secreta (32 bytes).
+ * @returns {*} Resultado da operação.*/
 export async function finalizeEvent({ kind, tags = [], content = "", created_at }, secretKey) {
   const pubkey = bytesToHex(getPublicKey(secretKey));
   const event = { pubkey, created_at: created_at ?? Math.floor(Date.now() / 1000), kind, tags, content };
@@ -186,7 +217,9 @@ export async function finalizeEvent({ kind, tags = [], content = "", created_at 
   return event;
 }
 
-/** Confere id e assinatura de um evento recebido. */
+/** Confere id e assinatura de um evento recebido. 
+ * @param {*} [event] Evento Nostr.
+ * @returns {*} Resultado da operação.*/
 export async function verifyEvent(event) {
   if (!event || typeof event.id !== "string" || typeof event.sig !== "string") return false;
   try {
@@ -197,5 +230,7 @@ export async function verifyEvent(event) {
   }
 }
 
-/** Faixa efêmera do NIP-01: relays repassam e não guardam. */
+/** Faixa efêmera do NIP-01: relays repassam e não guardam. 
+ * @param {*} [kind] Kind numérico do evento.
+ * @returns {*} Resultado da operação.*/
 export const isEphemeralKind = (kind) => Number.isInteger(kind) && kind >= 20000 && kind < 30000;

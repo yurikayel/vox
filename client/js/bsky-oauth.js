@@ -1,4 +1,6 @@
 /**
+ * @file Login OAuth/OIDC no Bluesky (AT Protocol) com DPoP e sessão local.
+ *
  * @module bsky-oauth
  * Login do Bluesky via OAuth do AT Protocol, 100% no navegador (cliente público):
  * PAR + PKCE (S256) + DPoP (ES256). Sem app registrado e sem servidor — o client_id é a URL
@@ -6,15 +8,20 @@
  * client_id de loopback previsto pela especificação.
  *
  * Fluxo: startBskyLogin() → página do Bluesky → oauth-callback.html → completeBskyLogin().
- * A sessão (tokens + chave DPoP) fica só neste aparelho e permite postar direto.
- */
+ * A sessão (tokens + chave DPoP) fica só neste aparelho e permite postar direto.*/
 
+/** URL ou endpoint público. @type {string} */
 export const BSKY_ENTRYWAY = "https://bsky.social";
+/** Export `BSKY_SCOPE` do módulo. @type {string} */
 export const BSKY_SCOPE = "atproto transition:generic";
 const FLOW_KEY = "vox-bsky-oauth-flow";
 const SESSION_KEY = "vox-bsky-oauth-session";
 const enc = new TextEncoder();
 
+/** Operação `b64url` do módulo.
+ * @param {*} [bytes] Bytes do data item.
+ * @returns {*} Resultado da operação.
+ */
 export function b64url(bytes) {
   let s = "";
   new Uint8Array(bytes).forEach((b) => { s += String.fromCharCode(b); });
@@ -29,7 +36,9 @@ async function sha256b64url(text) {
   return b64url(await crypto.subtle.digest("SHA-256", enc.encode(text)));
 }
 
-/** Base pública do app (diretório do index.html), ex.: https://user.github.io/vox/ */
+/** Base pública do app (diretório do index.html), ex.: https://user.github.io/vox/ 
+ * @param {*} [loc] Objeto `location` ou equivalente.
+ * @returns {*} Resultado da operação.*/
 export function appBaseUrl(loc = globalThis.location) {
   const path = loc.pathname.endsWith("/") ? loc.pathname : loc.pathname.replace(/[^/]*$/, "");
   return `${loc.origin}${path}`;
@@ -39,7 +48,9 @@ function isLoopback(loc) {
   return ["localhost", "127.0.0.1", "[::1]"].includes(loc.hostname);
 }
 
-/** client_id e redirect_uri conforme o ambiente (loopback em dev, metadados publicados em produção). */
+/** client_id e redirect_uri conforme o ambiente (loopback em dev, metadados publicados em produção). 
+ * @param {*} [loc] Objeto `location` ou equivalente.
+ * @returns {*} Resultado da operação.*/
 export function bskyClientConfig(loc = globalThis.location) {
   const base = appBaseUrl(loc);
   if (isLoopback(loc)) {
@@ -62,7 +73,12 @@ async function signJwt(header, payload, privateJwk) {
   return `${input}.${b64url(sig)}`;
 }
 
-/** Prova DPoP (RFC 9449) para uma requisição. */
+/** Prova DPoP (RFC 9449) para uma requisição. 
+ * @param {*} [keys] Par de chaves DPoP.
+ * @param {*} [htm] Método HTTP do DPoP.
+ * @param {*} [htu] URL do recurso no DPoP.
+ * @param {object} [dpopExtras] Nonce e token de acesso opcionais do DPoP.
+ * @returns {*} Resultado da operação.*/
 export async function dpopProof(keys, htm, htu, { nonce = "", accessToken = "" } = {}) {
   const { kty, crv, x, y } = keys.publicJwk;
   const payload = { jti: randomToken(16), htm, htu: htu.split(/[?#]/)[0], iat: Math.floor(Date.now() / 1000) };
@@ -76,7 +92,12 @@ function needsNonceRetry(res, body) {
   return Boolean(res.headers.get("DPoP-Nonce")) && (body?.error === "use_dpop_nonce" || header.includes("use_dpop_nonce"));
 }
 
-/** fetch com DPoP e uma nova tentativa quando o servidor exige nonce. */
+/** fetch com DPoP e uma nova tentativa quando o servidor exige nonce. 
+ * @param {*} [keys] Par de chaves DPoP.
+ * @param {*} [url] URL de destino.
+ * @param {*} [init] Opções do `fetch`.
+ * @param {*} [state] Estado OAuth persistido.
+ * @returns {*} Resultado da operação.*/
 export async function dpopFetch(keys, url, init = {}, state = {}) {
   const method = init.method || "GET";
   for (let attempt = 0; attempt < 2; attempt += 1) {
@@ -102,7 +123,9 @@ async function authServerMetadata(issuer = BSKY_ENTRYWAY) {
   return getJson(`${issuer.replace(/\/$/, "")}/.well-known/oauth-authorization-server`);
 }
 
-/** DID → { handle, pds } a partir do documento DID (plc.directory ou did:web). */
+/** DID → { handle, pds } a partir do documento DID (plc.directory ou did:web). 
+ * @param {*} [did] DID do usuário Bluesky.
+ * @returns {*} Resultado da operação.*/
 export async function resolveDid(did) {
   const url = did.startsWith("did:web:") ? `https://${did.slice(8)}/.well-known/did.json` : `https://plc.directory/${did}`;
   const doc = await getJson(url);
@@ -115,7 +138,8 @@ function readFlow() {
   try { return JSON.parse(sessionStorage.getItem(FLOW_KEY) || "null"); } catch { return null; }
 }
 
-/** Inicia o login: PAR no servidor de autorização e redireciona para a tela do Bluesky. */
+/** Inicia o login: PAR no servidor de autorização e redireciona para a tela do Bluesky. 
+ * @param {object} [options] Opções do fluxo (ex.: `loginHint`).*/
 export async function startBskyLogin({ loginHint = "" } = {}) {
   const meta = await authServerMetadata();
   const { clientId, redirectUri } = bskyClientConfig();
@@ -154,7 +178,9 @@ async function exchangeCode(flow, code) {
  * Conclui o login com os parâmetros do callback (?code&state&iss). Verifica state e emissor (RFC 9207: se o servidor
  * anuncia `authorization_response_iss_parameter_supported`, callback sem `iss` é recusado),
  * resolve DID → handle/PDS e guarda a sessão. Retorna { handle, did, pds }.
- */
+ 
+ * @param {object} [callback] Parâmetros do callback OAuth (`code`, `state`, `iss`).
+ * @returns {*} Resultado da operação.*/
 export async function completeBskyLogin({ code, state, iss }) {
   const flow = readFlow();
   sessionStorage.removeItem(FLOW_KEY);
@@ -172,10 +198,15 @@ export async function completeBskyLogin({ code, state, iss }) {
   return { handle: who.handle, did: tok.sub, pds: who.pds };
 }
 
+/** Carrega BskySession do armazenamento ou rede.
+ * @returns {*} Resultado da operação.
+ */
 export function loadBskySession() {
   try { return JSON.parse(localStorage.getItem(SESSION_KEY) || "null"); } catch { return null; }
 }
 
+/** Limpa BskySession armazenados.
+ */
 export function clearBskySession() {
   localStorage.removeItem(SESSION_KEY);
 }
@@ -192,7 +223,9 @@ async function refreshSession(s) {
   return next;
 }
 
-/** Publica um post no Bluesky com a sessão OAuth (DPoP). */
+/** Publica um post no Bluesky com a sessão OAuth (DPoP). 
+ * @param {*} [text] Texto de entrada.
+ * @returns {*} Resultado da operação.*/
 export async function postWithBskySession(text) {
   let s = loadBskySession();
   if (!s) return { ok: false, error: "Bluesky não conectado por login." };

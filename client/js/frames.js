@@ -1,11 +1,14 @@
 /**
+ * @file Frames interativos em posts (enquete, petição, CLT): estado e persistência local.
+ 
  * Módulo Open Frames para Vox (v6.2).
  * Cooptagem FOSS da especificação Open Frames (of:* + of:accepts:vox).
  * Permite mini-apps declarativos no feed (enquetes, abaixo-assinados, simuladores CLT),
- * com ações assinadas via chave local P-256, sem iframes e sem scripts remotos arbitrários.
- */
+ * com ações assinadas via chave local P-256, sem iframes e sem scripts remotos arbitrários.*/
 
+/** Constante de configuração exportada. @type {Array} */
 export const ALLOWED_FRAME_KINDS = ["poll", "petition", "clt"];
+/** Chave em `localStorage` (só neste aparelho). @type {string} */
 export const FRAME_STORAGE_KEY = "vox-frame-actions";
 
 function validateFrameBasics(raw) {
@@ -19,7 +22,9 @@ function validateFrameBasics(raw) {
 
 /**
  * Valida e normaliza a definição de um Open Frame declarativo.
- */
+ 
+ * @param {*} [raw] Valor bruto de entrada.
+ * @returns {*} Resultado da operação.*/
 export function parseFrame(raw) {
   const err = validateFrameBasics(raw);
   if (err) return { valid: false, error: err };
@@ -66,7 +71,9 @@ function extractButtons(raw) {
 
 /**
  * Persistência rápida de ações locais para evitar flicker na renderização inicial.
- */
+ 
+ * @param {*} [postId] Id do post com frame.
+ * @returns {*} Resultado da operação.*/
 export function getUserFrameAction(postId) {
   if (typeof window === "undefined" || !window.localStorage || !postId) return null;
   try {
@@ -78,6 +85,10 @@ export function getUserFrameAction(postId) {
   }
 }
 
+/** Persiste UserFrameAction localmente.
+ * @param {*} [postId] Id do post com frame.
+ * @param {*} [action] Parâmetro `action`.
+ */
 export function saveUserFrameAction(postId, action) {
   if (typeof window === "undefined" || !window.localStorage || !postId) return;
   try {
@@ -88,6 +99,8 @@ export function saveUserFrameAction(postId, action) {
   } catch {}
 }
 
+/** Limpa UserFrameActions armazenados.
+ */
 export function clearUserFrameActions() {
   if (typeof window === "undefined" || !window.localStorage) return;
   try {
@@ -97,7 +110,9 @@ export function clearUserFrameActions() {
 
 /**
  * Constrói payload canônico para assinatura ECDSA P-256 de uma ação de frame.
- */
+ 
+ * @param {object} [action] Ação do usuário no frame.
+ * @returns {*} Resultado da operação.*/
 export function buildFrameActionPayload({ postId, frameKind, buttonIndex, buttonLabel, inputText = "", userAddress }) {
   const addr = userAddress || "anon";
   return {
@@ -144,7 +159,11 @@ function tallyVotes(frame, actions = [], localAction = null) {
 
 /**
  * Apuração de Enquete (poll): 1 membro = 1 voto, com opção de votos iniciais.
- */
+ 
+ * @param {*} [frame] Definição do frame.
+ * @param {*} [actions] Ações remotas agregadas.
+ * @param {*} [localAction] Ação local do usuário.
+ * @returns {*} Resultado da operação.*/
 export function computePollState(frame, actions = [], localAction = null) {
   const { counts, userChoice } = tallyVotes(frame, actions, localAction);
   let totalVotes = 0;
@@ -161,7 +180,11 @@ export function computePollState(frame, actions = [], localAction = null) {
 
 /**
  * Apuração de Abaixo-assinado (petition): soma assinaturas únicas e calcula meta.
- */
+ 
+ * @param {*} [frame] Definição do frame.
+ * @param {*} [actions] Ações remotas agregadas.
+ * @param {*} [localAction] Ação local do usuário.
+ * @returns {*} Resultado da operação.*/
 export function computePetitionState(frame, actions = [], localAction = null) {
   const uniqueAuthors = new Set();
   for (const a of actions) {
@@ -201,7 +224,11 @@ const CLT_SIMULATION_RESULTS = {
 
 /**
  * Calculadora rápida CLT: simulação local determinística baseada no salário mínimo (R$ 1.518,00).
- */
+ 
+ * @param {*} [frame] Definição do frame.
+ * @param {*} [_actions] Parâmetro `_actions`.
+ * @param {*} [localAction] Ação local do usuário.
+ * @returns {*} Resultado da operação.*/
 export function computeCltState(frame, _actions = [], localAction = null) {
   const choice = localAction?.buttonIndex || 0;
   const match = CLT_SIMULATION_RESULTS[choice];
@@ -218,7 +245,11 @@ export function computeCltState(frame, _actions = [], localAction = null) {
 
 /**
  * Despachante de apuração de estado para qualquer kind suportado.
- */
+ 
+ * @param {*} [frame] Definição do frame.
+ * @param {*} [actions] Ações remotas agregadas.
+ * @param {*} [localAction] Ação local do usuário.
+ * @returns {*} Resultado da operação.*/
 export function getFrameState(frame, actions = [], localAction = null) {
   if (!frame || !frame.kind) return null;
   if (frame.kind === "poll") return computePollState(frame, actions, localAction);
