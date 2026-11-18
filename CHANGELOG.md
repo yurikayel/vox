@@ -6,6 +6,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Documentação: sub-itens abertos de LT-06 e LT-07 no plano de testes do login
+- `docs/process/plano-testes-login.md` §5.1 lista, com arquivo:linha, os achados abertos de duas abas e de recarga/teclado. Só documentação; sem correção prometida.
+
 ### Docs: relay-api §6 alinhado ao rate limit real e `VOX_RELAY_TRUST_PROXY_HOPS` por deploy
 - Referências de linha atualizadas, `signal_msg` descarta sem resposta e por IP, riscos de hops baixo (balde único, caso do nó Render hoje com 0) e alto (spoofing de `X-Forwarded-For`) e valor por host. `client/sw.js` intocado.
 
