@@ -334,14 +334,32 @@ function acceptPact() {
 
 /**
  * "Apagar conta local": as chaves da conta, o cofre na malha e todo dado pessoal do aparelho (lista em `local-wipe.js`).
- * O localStorage e o sessionStorage saem na hora; a promessa termina quando os bancos IndexedDB também saíram.
- * @returns {Promise<void>}
+ * O localStorage e o sessionStorage saem na hora; a promessa termina quando os bancos IndexedDB também saíram
+ * ou o navegador provou que não saem (outra aba segurando): `complete` só é true se tudo foi apagado de fato.
+ * @returns {Promise<{ complete: boolean, pending: string[] }>} `pending` lista os bancos que ficaram
  */
-export function wipeLocalDevice() {
+export async function wipeLocalDevice() {
   const accountGone = localAccount.wipeLocalAccount();
   forgetAllMesh();
   localAccount.dropAllPersonalStorage();
-  return Promise.resolve(accountGone).then(() => localAccount.dropDatabases());
+  await accountGone;
+  const pending = await localAccount.dropDatabases();
+  return { complete: pending.length === 0, pending };
+}
+
+/**
+ * Texto do aviso depois de "Apagar conta local", sem prometer o que não aconteceu.
+ * @param {{ complete: boolean, pending: string[] }} outcome resultado de `wipeLocalDevice`
+ * @returns {{ message: string, kind: "info" | "error" }}
+ */
+export function describeWipeOutcome(outcome) {
+  if (outcome?.complete) return { message: "Chaves deste navegador apagadas.", kind: "info" };
+  return {
+    message:
+      "Apagamos o que deu, mas parte das chaves ainda está neste navegador: outra aba do Vox está usando. " +
+      "Feche as outras abas e apague de novo.",
+    kind: "error",
+  };
 }
 
 /** Conta acabou de nascer: pede ao navegador para não apagar e avisa que ela ainda não tem saída (ADR-032). */
