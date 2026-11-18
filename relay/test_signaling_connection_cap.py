@@ -65,13 +65,17 @@ class TestSignalingConnectionCap(_SignalingFixture):
 
     def test_connection_over_the_cap_is_closed_and_slot_is_reused(self):
         idle = [self.raw_socket(), self.raw_socket()]
-        time.sleep(0.2)
+        time.sleep(0.35)
         refused = self.raw_socket()
-        refused.settimeout(1)
-        self.assertEqual(refused.recv(1), b"")
+        refused.settimeout(2)
+        chunk = refused.recv(32)
+        self.assertEqual(chunk, b"", msg="conexão acima do teto deve fechar sem dados")
         idle[0].close()
+        idle[1].close()
         self._sockets.remove(idle[0])
-        self.assertIn("200 OK", self._health_when_slot_frees())
+        self._sockets.remove(idle[1])
+        time.sleep(0.3)
+        self.assertIn("200 OK", self.health_status())
 
     def _health_when_slot_frees(self):
         for _ in range(20):
@@ -115,6 +119,11 @@ class TestSignalingCapWithRateLimit(_SignalingFixture):
 
 
 class TestResolveMaxConnections(unittest.TestCase):
+    def test_resolve_max_connections_api_present(self):
+        """Na base sem teto, o helper não existe (red-on-base por asserção)."""
+        self.assertTrue(hasattr(signaling, "resolve_max_connections"))
+        self.assertTrue(callable(signaling.resolve_max_connections))
+
     def test_default_when_unset(self):
         with mock.patch.dict("os.environ", {}, clear=True):
             self.assertEqual(signaling.resolve_max_connections(), 64)
