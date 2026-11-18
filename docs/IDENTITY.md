@@ -1,6 +1,6 @@
 # Identidade e criptografia
 
-> **Status:** canônico · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-13
+> **Status:** canônico · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-17
 
 Uma história única em fases — evita misturar promessas do README com o que o PWA Fase 1 entrega.
 
@@ -63,7 +63,7 @@ Ordem recomendada de entrega:
 - **Sync entre aparelhos:** rota `#/sync?b=…` por link ou QR Code. O link leva só o cofre cifrado; a Senha Soberana (12+ caracteres) é digitada no outro aparelho (PM-92).
 - **Servidor da memória central:** só muda por escolha da pessoa. Link, par ou servidor apenas sugerem, e o app pergunta mostrando o domínio (PM-91).
 - **Backup no seu e-mail (2026-11-12):** semanal e mensal, ligados em **Sua rede** (`#/settings`) com a Senha Soberana uma única vez. O app prepara um arquivo `.txt` cifrado e a pessoa o manda para o próprio e-mail pelo compartilhar do sistema (ou baixa, onde o navegador não compartilha arquivo). Não há servidor: o Vox não guarda nem conhece o endereço, e e-mail não é chave nem login. Detalhes abaixo.
-- **Wipe local:** `wipeLocalAccount()` em `client/js/identity/local-account.js`.
+- **Wipe local:** `wipeLocalAccount()` em `client/js/identity/local-account.js` apaga as chaves da conta; "Apagar conta local" (`wipeLocalDevice()` em `client/js/app/onboarding.js`) vai além e apaga todo dado pessoal do aparelho: toda chave `vox*` de localStorage e sessionStorage fora da lista de preferências neutras e caches (`local-wipe.js`) e os bancos IndexedDB `vox-cache-db`, `vox-keystore` e `vox-store-db`. Ameaça T29 em [THREAT-MODEL](./THREAT-MODEL.md).
 
 ### Backup no seu e-mail (`client/js/inbox-backup.js`, `client/js/app/inbox-backup-ui.js`)
 
