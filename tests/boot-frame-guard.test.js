@@ -7,7 +7,14 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import vm from "node:vm";
 
-const source = fs.readFileSync(new URL("../client/boot-frame-guard.js", import.meta.url), "utf8");
+test("T33: index referencia frame-guard no boot (RED na base)", () => {
+  const html = fs.readFileSync(new URL("../client/index.html", import.meta.url), "utf8");
+  assert.ok(html.includes('src="boot-frame-guard.js"'), "boot-frame-guard precisa carregar cedo no index");
+});
+
+function readFrameGuardSource() {
+  return fs.readFileSync(new URL("../client/boot-frame-guard.js", import.meta.url), "utf8");
+}
 
 /**
  * Carrega o boot numa sandbox e devolve a API exposta em `globalThis.__VOX_FRAME_GUARD__`.
@@ -28,7 +35,7 @@ function loadFrameGuard({ skipAuto = true, window: win, document: doc } = {}) {
     globalThis: null,
   };
   sandbox.globalThis = sandbox;
-  vm.runInNewContext(source, sandbox, { filename: "boot-frame-guard.js" });
+  vm.runInNewContext(readFrameGuardSource(), sandbox, { filename: "boot-frame-guard.js" });
   return sandbox.__VOX_FRAME_GUARD__;
 }
 
