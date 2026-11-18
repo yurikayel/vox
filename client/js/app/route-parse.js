@@ -197,3 +197,62 @@ export function parseRoute() {
     { name: "not-found" }
   );
 }
+
+const TITLE_SUFFIX = "Vox";
+
+const ROUTE_TITLES = {
+  home: "Ágora",
+  vote: "Votação",
+  "tag-feed": "Etiqueta",
+  communities: "Comunidades",
+  people: "Pessoas",
+  connect: "Conectar",
+  perfil: "Meu perfil",
+  profile: "Perfil",
+  "pix-lookup": "Buscar Pix",
+  "network-settings": "Rede",
+  "linked-accounts": "Redes vinculadas",
+  "steward-wizard": "Guardião da rede",
+  "network-wizard": "Guia da rede",
+  "handle-lookup": "Buscar arroba",
+  "dm-list": "Mensagens",
+  "dm-thread": "Conversa",
+  voxpedia: "Voxpedia",
+  "ajuda-teste": "Teste aberto",
+  status: "Saúde do nó",
+  "labs-frames": "Laboratório",
+  "labs-mofn": "Laboratório",
+  "labs-dungeon": "Laboratório",
+  dungeon: "Dungeon",
+  community: "Comunidade",
+  "community-avisos": "Avisos",
+  "compose-aviso": "Novo aviso",
+  proposal: "Proposta",
+  topic: "Conversa",
+  wallet: "Carteira",
+  "wallet-wizard": "Guia da carteira",
+  "backup-wizard": "Guia do backup",
+  "recovery-phrase": "Frase de recuperação",
+  guardians: "Guardiões",
+  "guardian-return": "Guardião",
+  "guardian-recover": "Recuperar conta",
+  "compose-community": "Nova comunidade",
+  "compose-listing": "Novo classificado",
+  "compose-proposal": "Nova proposta",
+  "compose-topic": "Nova conversa",
+  "compose-reply": "Responder",
+  sync: "Sincronizar",
+  "not-found": "Página não encontrada",
+};
+
+/**
+ * Título do documento para uma rota, no formato "Tela · Vox".
+ *
+ * @param {{name?: string}} route Descritor de {@link parseRoute}.
+ * @returns {string} Título; rota desconhecida cai em "Ágora · Vox".
+ */
+export function routeTitle(route) {
+  const screen = ROUTE_TITLES[route?.name] || ROUTE_TITLES.home;
+  return `${screen} · ${TITLE_SUFFIX}`;
+}
+
