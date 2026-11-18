@@ -46,6 +46,10 @@ Stdlib pura. `test_server.py` sobe o handler HTTP em memória e exercita as rota
 
 `npm run test:e2e` abre Chromium real (Playwright para Python: `pip install playwright` e `python -m playwright install chromium`), com o cliente servido localmente e **toda rede de fora bloqueada**. Cobre entrada e recarga com IndexedDB, as rotas principais, os assistentes em etapas e dois navegadores na malha. Não roda no CI; a malha de dois navegadores do CI é `scripts/mesh-e2e.mjs`.
 
+### 3.1.1 Login no navegador (`scripts/login-e2e.mjs`, LT-08)
+
+Chromium real contra um servidor estático em loopback, com toda rede de fora abortada e toda tentativa anotada. Cria só com nome e apaga; cria com e-mail + senha + frase, confere o kit (link, código `VOX1:`, arquivo `.txt`), apaga e volta **num aparelho novo** por link, código, arquivo e frase; recusa senha errada, texto sem kit, frase com palavra trocada e e-mail + senha sem cofre (cai na malha: aviso, sem conta). A senha não pode aparecer em nenhuma tentativa de rede nem no storage. Manual do mantenedor (não roda no CI): `npm install --no-save playwright-core` e depois `node scripts/login-e2e.mjs` (`CHROMIUM_EXECUTABLE_PATH` aponta para um Chrome já instalado). Guardiões, QR e malha com dois aparelhos ficam nos testes de fluxo; ver [plano-testes-login.md](./process/plano-testes-login.md) §5.
+
 ### 3.2 Cobertura não é meta
 
 Não há gate de cobertura. Teste novo entra porque confere um comportamento (com o nome do comportamento), não para tocar linhas. A varredura de cobertura de 2026-11-16 (99 arquivos `coverage-*`) foi triada: os defeitos reais que ela achou viraram correções com teste próprio (`tests/achados-cobertura.test.js`), e os arquivos de varredura não entraram.
