@@ -28,6 +28,7 @@ MAX_HEADER_SIZE = 64 * 1024  # 64 KB max handshake headers
 MAX_WS_MESSAGE_SIZE = MAX_WS_FRAME_SIZE  # teto da mensagem remontada (todos os fragmentos juntos)
 HANDSHAKE_TIMEOUT = 10.0  # segundos para o handshake HTTP chegar inteiro
 FRAME_TIMEOUT = 30.0  # segundos para o resto de um quadro depois do cabeçalho
+DEFAULT_MAX_CONNECTIONS = 64
 CONTROL_OPCODES = frozenset({0x8, 0x9, 0xA})
 DATA_OPCODES = frozenset({0x0, 0x1, 0x2})  # continuação, texto, binário
 MAX_CONTROL_PAYLOAD = 125
@@ -153,6 +154,20 @@ class MessageAssembler:
         self.opcode = None
         self.parts = bytearray()
         return done
+
+
+def _positive_int(raw, default: int) -> int:
+    try:
+        value = int(str(raw or "").strip())
+    except ValueError:
+        return default
+    return value if value > 0 else default
+
+
+def resolve_max_connections(env=None) -> int:
+    """Conexões atendidas ao mesmo tempo (`VOX_SIGNAL_MAX_CONNECTIONS`); as demais são fechadas na hora."""
+    raw = (env if env is not None else os.environ).get("VOX_SIGNAL_MAX_CONNECTIONS")
+    return _positive_int(raw, DEFAULT_MAX_CONNECTIONS)
 
 
 def resolve_port(cli_port=None, default: int = DEFAULT_PORT) -> int:
@@ -465,8 +480,30 @@ class WebSocketHandler(socketserver.BaseRequestHandler):
 
 
 class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
+    """Uma thread por conexão (daemon), com teto de conexões simultâneas (mesmo padrão de `VoxRelayServer`)."""
+
     allow_reuse_address = True
     daemon_threads = True
+
+    def __init__(self, server_address, handler_class, max_connections=None, **kwargs):
+        self._slots = threading.BoundedSemaphore(max_connections or resolve_max_connections())
+        super().__init__(server_address, handler_class, **kwargs)
+
+    def process_request(self, request, client_address):
+        if not self._slots.acquire(blocking=False):
+            self.shutdown_request(request)
+            return
+        try:
+            super().process_request(request, client_address)
+        except BaseException:
+            self._slots.release()
+            raise
+
+    def process_request_thread(self, request, client_address):
+        try:
+            super().process_request_thread(request, client_address)
+        finally:
+            self._slots.release()
 
 
 def main():
