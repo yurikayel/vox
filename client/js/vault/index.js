@@ -49,6 +49,7 @@ export {
   forgetAllMesh,
   forgetMine as forgetMeshMine,
   heldCount,
+  isVaultAddress,
   loadHeld,
   loadMine as loadMeshMine,
   loadNotices as loadMeshNotices,
