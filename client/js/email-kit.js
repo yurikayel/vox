@@ -292,20 +292,49 @@ export async function createEmailAccountKit({ rawName, email, pass, includePhras
   return { ok: true, routeId: saved.routeId, kit };
 }
 
+const EMAIL_ENTRY_FOCUS_IDS = {
+  name: "oauth-custom-name-input",
+  email: "oauth-entry-email-input",
+  pass: "oauth-entry-pass-input",
+};
+
+/**
+ * Primeira falha de validação da entrada com id do campo para foco (LT-07).
+ * @param {{ rawName?: string, email?: string, pass?: string, includePhrase?: boolean }} values Valores do formulário.
+ * @returns {{ message: string, fieldId: string } | null} `null` quando válido.
+ */
+function emailEntryValidationIssue({ rawName = "", email = "", pass = "", includePhrase = false } = {}) {
+  if (!rawName) return { message: "Digite um nome ou apelido para continuar.", fieldId: EMAIL_ENTRY_FOCUS_IDS.name };
+  if (!email && !pass && !includePhrase) return null;
+  if (!email || !email.includes("@")) {
+    return { message: "Informe um e-mail válido para enviar seu kit de volta.", fieldId: EMAIL_ENTRY_FOCUS_IDS.email };
+  }
+  if (pass.length < oauthVault.VAULT_PASSPHRASE_MIN) {
+    return {
+      message: `Use uma senha com pelo menos ${oauthVault.VAULT_PASSPHRASE_MIN} caracteres (uma frase de 4 palavras serve).`,
+      fieldId: EMAIL_ENTRY_FOCUS_IDS.pass,
+    };
+  }
+  return null;
+}
+
 /**
  * Valida os campos de entrada em uma etapa (§6.2).
  * Sem e-mail e senha (e com a frase desmarcada), libera a entrada só com o nome (§6.2.5).
  * @param {{ rawName?: string, email?: string, pass?: string, includePhrase?: boolean }} values Valores do formulário.
  * @returns {string} Mensagem de erro ou `""` se válido.
  */
-export function validateEmailEntry({ rawName = "", email = "", pass = "", includePhrase = false } = {}) {
-  if (!rawName) return "Digite um nome ou apelido para continuar.";
-  if (!email && !pass && !includePhrase) return "";
-  if (!email || !email.includes("@")) return "Informe um e-mail válido para enviar seu kit de volta.";
-  if (pass.length < oauthVault.VAULT_PASSPHRASE_MIN) {
-    return `Use uma senha com pelo menos ${oauthVault.VAULT_PASSPHRASE_MIN} caracteres (uma frase de 4 palavras serve).`;
-  }
-  return "";
+export function validateEmailEntry(values) {
+  return emailEntryValidationIssue(values)?.message ?? "";
+}
+
+/**
+ * Mesma validação que `validateEmailEntry`, com o id do primeiro campo inválido (form `#form-oauth-custom-name`).
+ * @param {{ rawName?: string, email?: string, pass?: string, includePhrase?: boolean }} values Valores do formulário.
+ * @returns {{ message: string, fieldId: string } | null} `null` quando válido.
+ */
+export function validateEmailEntryIssue(values) {
+  return emailEntryValidationIssue(values);
 }
 
 /**
