@@ -34,9 +34,9 @@ Pessoas reais ficam fora até nova decisão: toda validação é por máquina ou
 | Unidade (formatos, derivações, decisões) | `node:test` | `tests/*.test.js` | sim |
 | Fluxo com vários aparelhos | `node:test` com troca de storage por aparelho e relay falso em memória (`as(w, quem, fn)` de `mesh-vault-flow.test.js`; `guardians-harness.js`) | `tests/*-flow.test.js`, `tests/guardian*.test.js` | sim |
 | Vetores de criptografia | valores fixos de PBKDF2, HKDF, P-256 e Shamir conferidos contra referência | `tests/vault-v2.test.js`, `tests/mesh-vault.test.js`, `tests/recovery-phrase.test.js` | sim |
-| Propriedade / fuzz | entradas aleatórias com semente fixa (sem dependência nova) | **a criar** (§5, LT-04) | sim |
+| Propriedade / fuzz | entradas aleatórias com semente fixa (sem dependência nova) | `tests/login-properties-phrase.test.js`, `tests/login-properties-files.test.js` | sim |
 | Tela (HTML e ligação de eventos) | render em string + documento falso | `tests/onboarding-steps.test.js`, `tests/mesh-vault-ui.test.js` | sim |
-| Navegador local | Chrome headless contra `npx serve client` em loopback, sem tráfego para fora | **a criar** (§5, LT-08) | não no início (manual do mantenedor) |
+| Navegador local | Chrome headless contra `npx serve client` em loopback, sem tráfego para fora | `scripts/login-e2e.mjs` | não no início (manual do mantenedor) |
 | Relay real | `unittest` do relay + ida e volta pelo `relay/server.py` local | `relay/test_*.py` | sim |
 
 Regra: teste novo de login usa **criptografia real** (WebCrypto do Node) e só falsifica a rede e o storage. Mock de
@@ -52,9 +52,9 @@ Legenda: ✅ coberto · ◐ parcial · ✖ falta. A coluna "Falta" vira item da 
 |---|---|---|
 | Só com nome: conta nasce, `routeId` estável depois de recarregar | ✅ `genesis.test.js`, `local-account.test.js` | — |
 | Com e-mail e senha: cofre v2 gravado, endereço normalizado (maiúsculas, espaços) | ✅ `vault-v2.test.js`, `mesh-vault.test.js` | — |
-| Senha abaixo do mínimo (`VAULT_PASSPHRASE_MIN`) recusada com mensagem | ◐ `vault-v2.test.js` | conferir texto e foco na tela (LT-07) |
+| Senha abaixo do mínimo (`VAULT_PASSPHRASE_MIN`) recusada com mensagem e foco no campo que errou | ✅ `vault-v2.test.js`, `onboarding-steps.test.js`, `email-kit.test.js` (#210) | — |
 | Conta nasce com saída (kit, frase ou cofre) e o aviso de saída some só depois | ✅ `account-exit.test.js`, `account-exit-banner.test.js` | — |
-| Duas abas criando ao mesmo tempo não geram duas contas | ✖ | LT-06 |
+| Duas abas criando ao mesmo tempo não geram duas contas | ◐ duas chamadas na mesma aba dão uma conta só (`local-account-race.test.js`, #209) | duas abas de verdade (LT-06) |
 
 ### 3.2 Voltar com e-mail e senha (caminho principal, ADR-037 §3.4)
 
@@ -66,7 +66,7 @@ Legenda: ✅ coberto · ◐ parcial · ✖ falta. A coluna "Falta" vira item da 
 | Senha errada: nenhum aviso chega à dona, nada é liberado | ✅ `mesh-vault-flow.test.js` | — |
 | Pedido expira em 72 h; quem guarda offline responde quando volta; relógio: pedido do futuro (folga de 5 min), 24 h e 72 h exatas, relógio de quem guarda voltando | ✅ `mesh-vault-flow.test.js`, `mesh-vault-clock.test.js` | — |
 | Recarregar a página no meio retoma o mesmo pedido | ◐ `startMeshRestore` retoma por endereço | teste de tela com recarga (LT-07) |
-| Cofre chega de vários guardiões: abre uma vez, sem conta duplicada | ◐ liberação única por guardião | vários guardiões respondendo juntos (LT-02) |
+| Cofre chega de vários guardiões: abre uma vez, sem conta duplicada | ✅ `login-network-faults.test.js` (três guardiões no mesmo tick, resposta duplicada; #207) | — |
 | Senha trocada depois das cópias: cópia velha não abre com a senha nova e é substituída | ✅ `mesh-vault-flow.test.js`, `profile-vault-change.test.js` | — |
 
 ### 3.3 Kit por e-mail, link `#/sync` e código `VOX1`
@@ -74,7 +74,7 @@ Legenda: ✅ coberto · ◐ parcial · ✖ falta. A coluna "Falta" vira item da 
 | Comportamento | Testes hoje | Falta |
 |---|---|---|
 | `mailto:` leva o cofre cifrado, **nunca a senha**; a frase só vai se marcada | ✅ `email-kit.test.js` | — |
-| Link e código abrem com a senha e recusam com outra | ✅ `qr-sync-record.test.js`, `qr-url.test.js` | links truncados ou com espaço colado (LT-04) |
+| Link e código abrem com a senha e recusam com outra | ✅ `qr-sync-record.test.js`, `qr-url.test.js`, `login-properties-phrase.test.js` (links e `VOX1:` truncados, espaço colado; #208) | — |
 | "Corrigir e-mail" revoga o endereço errado | ✅ `tests/email-kit-correct.test.js` (#190) | — |
 
 ### 3.4 Frase de recuperação (12 ou 24 palavras)
@@ -82,7 +82,7 @@ Legenda: ✅ coberto · ◐ parcial · ✖ falta. A coluna "Falta" vira item da 
 | Comportamento | Testes hoje | Falta |
 |---|---|---|
 | Frase gera as mesmas chaves (HKDF "vox-semente-v1") | ✅ `recovery-phrase.test.js`, `account-phrase.test.js` | — |
-| Palavra errada, ordem trocada ou soma de verificação inválida recusadas | ✅ `recovery-phrase.test.js` | todas as trocas de uma palavra (LT-04) |
+| Palavra errada, ordem trocada ou soma de verificação inválida recusadas | ✅ `recovery-phrase.test.js`, `login-properties-phrase.test.js` (trocas de uma palavra; #208) | — |
 | Conta travada pede a senha para mostrar a frase | ✅ `key-lock.test.js` | — |
 | Só conta como saída depois de digitar 3 palavras sorteadas | ✅ `account-phrase.test.js` | — |
 
@@ -90,7 +90,7 @@ Legenda: ✅ coberto · ◐ parcial · ✖ falta. A coluna "Falta" vira item da 
 
 | Comportamento | Testes hoje | Falta |
 |---|---|---|
-| M de N junta, M−1 não junta; divisões diferentes não se misturam | ✅ `guardians.test.js` | todas as combinações de M de N para N ≤ 7 (LT-04) |
+| M de N junta, M−1 não junta; divisões diferentes não se misturam | ✅ `guardians.test.js`, `login-properties-files.test.js` (todas as combinações de M de N para N ≤ 7; #208) | — |
 | Pedido aberto só no app do guardião, com idade e código curto | ✅ `guardian-return.test.js` | — |
 | Trocar ou tirar guardiões revoga os pedaços antigos | ✅ `guardians-trocar.test.js` | — |
 | Veto da dona também no caminho dos guardiões | ✖ (adiado no ADR-037 §3.5) | LT-09 |
@@ -100,7 +100,7 @@ Legenda: ✅ coberto · ◐ parcial · ✖ falta. A coluna "Falta" vira item da 
 | Comportamento | Testes hoje | Falta |
 |---|---|---|
 | QR/link entre aparelhos e `peer-sync` | ✅ `peer-sync.test.js`, `qr-sync-record.test.js` | — |
-| Arquivo `.voxid` / `.txt` abre e recusa arquivo de outro formato | ◐ `account-backup.test.js` | arquivo vazio, gigante ou binário (LT-04) |
+| Arquivo `.voxid` / `.txt` abre e recusa arquivo de outro formato | ✅ `account-backup.test.js`, `login-properties-files.test.js` (vazio, ~600 KB e binário; #208) | — |
 | Login social só liga contas e nunca vira chave do Vox | ✅ `social-login.test.js`, `linked-accounts.test.js` | — |
 
 ### 3.7 Conta no aparelho
@@ -117,8 +117,9 @@ Legenda: ✅ coberto · ◐ parcial · ✖ falta. A coluna "Falta" vira item da 
 Cada caminho que usa rede roda contra um relay falso que pode: estar fora do ar, demorar, devolver erro 4xx/5xx,
 devolver JSON inválido, entregar a mesma mensagem duas vezes, entregar fora de ordem e perder mensagens. O que se
 espera em todos os casos: **nenhuma exceção sem tratamento, nenhum estado meio escrito, mensagem clara na tela e
-nova tentativa na próxima volta** (10 min para quem guarda, 15 s para quem espera). Hoje só "fora do ar" e
-"reentrega" estão cobertos na malha; o resto é LT-02.
+nova tentativa na próxima volta** (10 min para quem guarda, 15 s para quem espera). Cobertos na malha: "fora do ar",
+"reentrega", erro 5xx, JSON inválido e mensagem duplicada (`login-network-faults.test.js`, #207). Faltam relay lento,
+entrega fora de ordem e mensagem perdida (resto do LT-02).
 
 Ambiente: relógio errado (±5 min aceito, mais que isso recusado), aparelho sem chave do aparelho (cópias não são
 guardadas), WebCrypto ausente (tela avisa), duas abas abertas (uma volta por aba, sem corrida no storage).
@@ -128,18 +129,18 @@ guardadas), WebCrypto ausente (tela avisa), duas abas abertas (uma volta por aba
 | ID | Item | Arquivo | Tamanho |
 |---|---|---|---|
 | LT-01 | ~~Wipe apaga também as quatro chaves `vox-cofre-malha-*`~~ **feito** (o wipe esquecia as cópias guardadas; corrigido com `forgetAllMesh`) | `tests/mesh-vault-ui.test.js` | P |
-| LT-02 | Relay falso com falhas programáveis (fora, lento, 5xx, JSON ruim, duplicado, fora de ordem) e vários guardiões respondendo juntos | `tests/login-network-faults.test.js` | M |
+| LT-02 | Relay falso com falhas programáveis (fora, lento, 5xx, JSON ruim, duplicado, fora de ordem) e vários guardiões respondendo juntos — **em parte** (#207: 5xx, JSON ruim, duplicado e três guardiões no mesmo tick, sem defeito; faltam lento, fora de ordem e perda) | `tests/login-network-faults.test.js` | M |
 | LT-03 | ~~"Corrigir e-mail" revoga o endereço errado e o novo abre~~ **feito** (#190, `tests/email-kit-correct.test.js`; guarda em `email-kit.js`) | `tests/email-kit-correct.test.js` | P |
-| LT-04 | Propriedade com semente fixa: troca de uma palavra da frase, links truncados, combinações de Shamir, arquivos estranhos, JSON aleatório em cada chave de storage | `tests/login-properties.test.js` | M |
+| LT-04 | ~~Propriedade com semente fixa: troca de uma palavra da frase, links truncados, combinações de Shamir, arquivos estranhos, JSON aleatório em cada chave de storage~~ **feito** (#208; achados: `holderTick` e `writeSeed` quebram com JSON que não é objeto no storage, e esses dois casos ficaram fora do sorteio até a correção) | `tests/login-properties-phrase.test.js`, `tests/login-properties-files.test.js` | M |
 | LT-05 | ~~Relógio: pedido do futuro, relógio voltando, virada de 24 h e de 72 h exatas~~ **feito** (nenhum defeito: a espera conta do relógio de quem guarda, então relógio para trás só atrasa a entrega) | `tests/mesh-vault-clock.test.js`, `tests/mesh-vault-flow.test.js` | P |
-| LT-06 | Duas abas e storage cheio ou bloqueado | `tests/login-storage-edge.test.js` | M |
-| LT-07 | Tela: foco, mensagens de erro, `aria-live`, recarga no meio da espera, teclado só | `tests/mesh-vault-ui.test.js`, `tests/onboarding-steps.test.js` | M |
-| LT-08 | Navegador local: criar → kit → apagar → voltar por cada caminho, em Chrome headless, só loopback | `scripts/login-e2e.mjs` (manual do mantenedor até entrar no CI) | G |
+| LT-06 | Duas abas e storage cheio ou bloqueado — **em parte** (#209: duas chamadas na mesma aba dão uma conta só; faltam duas abas de verdade e o aviso de storage cheio no passo de criação) | `tests/local-account-race.test.js`, `tests/login-storage-edge.test.js` | M |
+| LT-07 | Tela: foco, mensagens de erro, `aria-live`, recarga no meio da espera, teclado só — **em parte** (#210: erro na entrada leva o foco ao campo que errou; faltam recarga no meio da espera e teclado só) | `tests/mesh-vault-ui.test.js`, `tests/onboarding-steps.test.js` | M |
+| LT-08 | ~~Navegador local: criar → kit → apagar → voltar por cada caminho, em Chrome headless, só loopback~~ **feito** (#198; um aparelho: só nome, e-mail+senha+frase; volta por link, código VOX1, arquivo e frase em aparelho novo; recusas; senha fora de rede e storage. Guardiões, QR e malha com dois aparelhos ficam nos testes de fluxo. Achado: após apagar, o app mostra o pacto, não a entrada) | `scripts/login-e2e.mjs` (manual do mantenedor até entrar no CI) | G |
 | LT-09 | Veto da dona no caminho dos guardiões (depende de decisão no ADR-037 §3.5) | `tests/guardian-return.test.js` | M |
-| LT-10 | Matriz de ida e volta: para cada par (como criou × como volta), mesmo `routeId` e mesma assinatura | `tests/login-roundtrip-matrix.test.js` | M |
+| LT-10 | ~~Matriz de ida e volta: para cada par (como criou × como volta), mesmo `routeId` e mesma assinatura~~ **feito** (#213: 20 pares; os pares sem caminho de volta estão listados no cabeçalho do arnês; cofre na malha × malha fica em `mesh-vault-flow.test.js`) | `tests/login-roundtrip-keys.test.js`, `tests/login-roundtrip-vault.test.js` (arnês `tests/login-roundtrip-harness.js`) | M |
 
-LT-10 é o teste que mais prova INV-1: hoje cada caminho tem sua ida e volta, mas não existe uma tabela que cruze
-todos os jeitos de criar com todos os jeitos de voltar.
+LT-10 é o teste que mais prova INV-1: cruza todos os jeitos de criar com todos os jeitos de voltar que o código tem
+hoje.
 
 ## 6. Critério de pronto para mudanças no login
 
