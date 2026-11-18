@@ -27,7 +27,7 @@ test("QuotaExceeded — conta em memória, issue e regravação", async () => {
     const acc = await localAccount.ensureLocalAccount();
     assert.ok(acc.routeId);
     assert.equal(localStorage.getItem(ACCOUNT_KEY), null);
-    assert.equal(localAccount.getAccountStorageIssue()?.reason, "QuotaExceededError: quota");
+    assert.equal(localAccount.getAccountStorageIssue()?.reason, "QuotaExceededError");
     localStorage.setItem = orig;
     localAccount.storeActiveAccount(acc);
     assert.equal(localAccount.getAccountStorageIssue(), null);
