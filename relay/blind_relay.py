@@ -48,21 +48,22 @@ def set_relay_dir(path: Path) -> Path:
 
 
 def ensure_channel_dir(channel_id: str) -> Path:
+    # Tira o que não é id e depois `basename`, para um separador não virar caminho.
     stripped = "".join(c for c in str(channel_id) if c.isalnum() or c in ("-", "_"))
-    match = _CHANNEL_ID.fullmatch(stripped)
-    if match is None:
+    base = os.path.basename(stripped)
+    if _CHANNEL_ID.fullmatch(base) is None:
         raise ValueError("ID de canal comunitário inválido")
-    chan_path = RELAY_DIR / match.group(0)
+    chan_path = RELAY_DIR / base
     chan_path.mkdir(parents=True, exist_ok=True)
     return chan_path
 
 
 def _stored_file(chan_path: Path, name: str) -> Optional[Path]:
     """Arquivo do canal só se o nome é um dos nossos (sem separador e sem `..`)."""
-    match = _STORED_NAME.fullmatch(os.path.basename(name))
-    if match is None:
+    base = os.path.basename(name)
+    if _STORED_NAME.fullmatch(base) is None:
         return None
-    return chan_path / match.group(0)
+    return chan_path / base
 
 
 def _coerce_int(value: Any, field: str, default: int = 0) -> int:
