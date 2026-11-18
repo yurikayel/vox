@@ -9,7 +9,7 @@ import * as localAccount from "../identity/index.js";
 import * as profileDirectory from "../profile-directory.js";
 import { isWelcomeRouteId } from "../vox-welcome-profile.js";
 import { escapeHtml } from "../shared/html.js";
-import { parseInstant } from "../shared/date-format.js";
+import { formatAbsoluteDate, parseInstant } from "../shared/date-format.js";
 import { shortId } from "../short-id.js";
 
 // Reexportados para a UI. O domínio importa da origem, nunca daqui (docs/ARCHITECTURE.md, "Camadas").
