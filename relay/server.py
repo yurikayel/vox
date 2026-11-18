@@ -584,6 +584,8 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
         self._reply_transaction(data, "MISS")
 
     def _fetch_transaction(self, tx_id):
+        if not is_tx_id(tx_id):
+            return None
         limit = purge_schedule.resolve_max_tx_bytes()
         for gateway in UPSTREAM_GATEWAYS:
             try:
