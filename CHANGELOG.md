@@ -42,6 +42,8 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ### Correção: `fetch` sem prazo ganha timeout (`fetch-timeout.js`)
 - Helper `fetchWithTimeout` (AbortController + prazo padrão 8 s, aceita `signal` externo, rejeita mesmo se o `fetch` ignorar o signal). Migrados `central-memory`, `graphql` (inclui `gateways.json`), `upload` e `turn-credentials` (rede muda cai na espera padrão). `central-memory-hydrate` e `memory-server-choice` não fazem `fetch` direto. Teste: `tests/fetch-timeout.test.js`. Release: se o módulo novo entrar no precache, incluir `fetch-timeout.js` em `client/sw.js` (não tocado aqui).
+### Correção: erros engolidos na DM não perdem mais chave nem mensagem
+- `ensureDmKeys` e a caixa de saída guardam o texto ilegível em `*-ilegivel` antes de regravar; a mensagem vencida só sai da caixa depois de marcada "Não entregue"; `dispatchSealedEnvelope` devolve `failed` quando nem a caixa guardou; DM direta que não abre, reação não enviada e backup que não monta agora avisam a pessoa. Testes: `tests/dm-erros-engolidos.test.js`.
 
 ### Correção: avisa no passo de criação quando a conta não grava no aparelho
 - `ensureLocalAccount` registra falha de quota/bloqueio e o onboarding mostra aviso em `#oauth-enrich-error` sem travar o fluxo. Testes: `tests/local-account-storage-full.test.js`, `tests/onboarding-steps.test.js`.
