@@ -7,7 +7,14 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 ## [Não lançado]
 
 ### Correção: acessibilidade do login (cofre na malha e "Já tenho conta")
-- Faixa "Foi você?" é anunciada quando aparece (`role="alert"`, em vez de `alertdialog`); depois de responder, o foco vai para a próxima faixa ou para um lugar estável, e não cai no `body` (WCAG 4.1.3 e 2.4.3). Região de status da malha fica sempre no DOM, vazia até ter texto; erro de "Já tenho conta" sem `aria-live` duplicado; seta do "← Voltar" escondida do leitor. SW `v7.142`. Testes: `tests/mesh-vault-ui.test.js`.
+- Faixa "Foi você?" é anunciada quando aparece (`role="alert"`, em vez de `alertdialog`); depois de responder, o foco vai para a próxima faixa ou para um lugar estável, e não cai no `body` (WCAG 4.1.3 e 2.4.3). Região de status da malha fica sempre no DOM, vazia até ter texto; erro de "Já tenho conta" sem `aria-live` duplicado; seta do "← Voltar" escondida do leitor. SW `v7.143`. Testes: `tests/mesh-vault-ui.test.js`.
+
+### Documentação: ADR-039, Rust por fases (proposed)
+- [ADR-039](./docs/adr/039-rust-por-fases.md) (**proposed**): mais Rust com o tempo, onde ganha em segurança, em 6 fases (fundação de CI, `vox-core` de referência, Argon2id do cofre, troca da cripto própria e ML-KEM, relay, nó nativo). A chave privada P-256 do navegador continua no WebCrypto não exportável; WebAssembly só para o que o WebCrypto não tem. Decisão A-27 em [DECISOES.md](./docs/DECISOES.md). Sem código e sem bump de SW.
+
+### Testes: "Corrigir e-mail" revoga o endereço errado (LT-03)
+- `tests/email-kit-correct.test.js`: com criptografia real e só rede/storage falsos, o e-mail errado deixa de abrir (revogado com a prova de dono), o certo com a mesma senha abre o mesmo `routeId`, a senha não vai ao `mailto:`/storage/rede, e corrigir para o mesmo e-mail não estraga nada.
+- Correção: `createEmailAccountKit` recusa e-mail sem `@` antes de gravar; antes gravava o cofre novo e revogava o anterior para só então falhar ao montar o kit (a tela já barrava, a função não).
 
 ### Documentação: emenda da revisão do ADR-038
 - `about` do manifesto é só o texto longo (apresentação, regras, links); título, descrição curta, foto, categoria e modo de publicação continuam só no `community_update`, para não haver duas fontes.

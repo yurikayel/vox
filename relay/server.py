@@ -26,9 +26,11 @@ from relay import vault_store
 from relay import inbox
 from relay import mirror_validate
 from relay import p2p_seeder
+from relay import rate_limit
 from relay import request_guard
 
 DEFAULT_PORT = 3920
+REJECTED_BODY_DRAIN_MAX = 64 * 1024
 DEFAULT_HOST = "127.0.0.1"
 
 
@@ -310,13 +312,26 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, X-Vox-Delete-Token")
         self.send_header("Access-Control-Allow-Private-Network", "true")
+        self.send_header("Access-Control-Expose-Headers", "Retry-After")
 
     def _rejected(self, method):
-        """PM-94: Host, Origin, Content-Type e limite por IP (`request_guard`)."""
-        reason = request_guard.reject_reason(method, self.headers, self.server.server_address[0], self.client_address[0])
+        """PM-94: Host, Origin e Content-Type (`request_guard`), depois o limite por IP (`rate_limit`)."""
+        reason = request_guard.reject_reason(method, self.headers, self.server.server_address[0])
+        if not reason:
+            ip = rate_limit.client_ip(self.client_address[0], self.headers.get("X-Forwarded-For"))
+            reason = rate_limit.http_rejection(method, self.path, ip)
         if reason:
-            self._send_json({"error": reason[1]}, reason[0])
+            self._discard_small_body()
+            retry = {"Retry-After": str(reason[2])} if len(reason) > 2 else None
+            self._send_json({"error": reason[1]}, reason[0], retry)
         return bool(reason)
+
+    def _discard_small_body(self):
+        """Lê o corpo (até 64 KB) de um pedido recusado: fechar com bytes não lidos reseta a conexão e o cliente
+        não chega a ver o 429 nem o `Retry-After`."""
+        size = self._get_content_length()
+        if 0 < size <= REJECTED_BODY_DRAIN_MAX:
+            self.rfile.read(size)
 
     def _get_content_length(self):
         try:
@@ -497,9 +512,11 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
     def _handle_inbox_get(self, to_addr):
         self._send_json({"envelopes": inbox.get_envelopes(to_addr)})
 
-    def _send_json(self, payload, status=200):
+    def _send_json(self, payload, status=200, extra_headers=None):
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
+        for name, value in (extra_headers or {}).items():
+            self.send_header(name, value)
         self._set_cors_headers()
         self.end_headers()
         self.wfile.write(json.dumps(payload).encode("utf-8"))
