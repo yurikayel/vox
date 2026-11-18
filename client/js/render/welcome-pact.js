@@ -17,7 +17,7 @@ const AVATARS = Object.freeze(["mei", "yara", "andre", "fernanda", "pri", "kaue"
 const PILLARS = Object.freeze([
   { icon: "🛡️", title: "Seus dados são seus", desc: "Suas mensagens e publicações pertencem a você. Nenhuma empresa controla sua conta." },
   { icon: "🤝", title: "Rede cooperativa", desc: "Cada aparelho ajuda a levar os posts adiante — sem servidores caros nem dono." },
-  { icon: "🎛️", title: "Controle total", desc: "Respeita Wi-Fi e teto diário de dados. Pause quando quiser." },
+  { icon: "🎛️", title: "Controle total", desc: "Usa só o Wi‑Fi quando você quiser e respeita um limite diário de internet. Pause a ajuda à malha quando quiser." },
 ]);
 
 function renderMosaic() {

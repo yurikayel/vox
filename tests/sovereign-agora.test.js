@@ -68,7 +68,7 @@ test("sovereign agora — saúde do nó mostra pares reais e mantém IDs de hidr
     relayStatus: { online: true },
     rtcStatus: { remotePeersConnected: 3 },
   });
-  assert.ok(main.innerHTML.includes("3 pares"));
+  assert.ok(main.innerHTML.includes("3 aparelhos"));
   assert.ok(main.innerHTML.includes('id="status-storage-bar"'));
   assert.ok(main.innerHTML.includes('id="status-sw-cache"'));
 });

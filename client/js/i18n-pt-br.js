@@ -1,34 +1,33 @@
 /**
- * @file Microcopy pt-BR — gossip de retratação, feira e malha.
- 
- * Cadeias pt-BR — microcopy pós-gossip de retratação (GOSSIP_UPDATE / GOSSIP_DELETE).*/
+ * @file Microcopy pt-BR — feira, malha e edição/apagar com propagação entre aparelhos.
+ */
 
 /** Export `appShellFooterTagline` do módulo. @type {string} */
 export const appShellFooterTagline = "Voz do povo, aparelho a aparelho";
 
 /** Export `localMutateEditDeleteTooltip` do módulo. @type {string} */
 export const localMutateEditDeleteTooltip =
-  "Alterações valem já aqui. Com pares online, editar e apagar propagam na malha via gossip de retratação.";
+  "Alterações valem já aqui. Com outros aparelhos online, editar e apagar se espalham na malha com aviso assinado.";
 
 /** Export `localMutateEditDeleteHint` do módulo. @type {string} */
 export const localMutateEditDeleteHint =
-  "Efeito imediato aqui; com pares online a retratação sincroniza na malha.";
+  "Efeito imediato aqui; com aparelhos online a correção se sincroniza na malha.";
 
 /** Export `localMutateComposerHint` do módulo. @type {string} */
 export const localMutateComposerHint =
-  "Editar/apagar: efeito imediato aqui; retratação na malha quando houver pares online.";
+  "Editar/apagar: efeito imediato aqui; a correção na malha quando houver aparelhos online.";
 
 /** Export `localMutateUpdatedToast` do módulo. @type {string} */
 export const localMutateUpdatedToast =
-  "Publicação atualizada aqui; retratação na malha quando houver pares online.";
+  "Publicação atualizada aqui; correção na malha quando houver aparelhos online.";
 
 /** Export `localMutateDeletedToast` do módulo. @type {string} */
 export const localMutateDeletedToast =
-  "Publicação apagada aqui; retratação na malha quando houver pares online.";
+  "Publicação apagada aqui; aviso na malha quando houver aparelhos online.";
 
 /** Export `listingMutateStatusTooltip` do módulo. @type {string} */
 export const listingMutateStatusTooltip =
-  "Status atualiza já aqui. Com pares online, a mudança propaga na malha via gossip (GOSSIP_UPDATE).";
+  "Status atualiza já aqui. Com aparelhos online, a mudança se espalha na malha.";
 
 /** Export `listingRetractLabel` do módulo. @type {string} */
 export const listingRetractLabel = "Retirar da feira";
@@ -47,15 +46,14 @@ export const listingRetractedToast = "Oferta retirada da feira.";
 
 /** Export `listingVerifiedBadgeTitle` do módulo. @type {string} */
 export const listingVerifiedBadgeTitle =
-  "Oferta assinada criptograficamente neste aparelho (verifyPayload).";
+  "Oferta assinada e conferida neste aparelho.";
 
 /** Export `meshDiscoverableLabel` do módulo. @type {string} */
 export const meshDiscoverableLabel = "Aparecer na busca da malha";
 
 /** Export `meshDiscoverableHint` do módulo. @type {string} */
 export const meshDiscoverableHint =
-  "Publica um cartão assinado (nome, foto, bio) para pares conectados — opt-in, sem diretório central.";
+  "Se você quiser, publica nome, foto e bio para aparelhos conectados — sem lista central.";
 
 /** Export `peopleSectionMesh` do módulo. @type {string} */
 export const peopleSectionMesh = "🔗🟢";
-
