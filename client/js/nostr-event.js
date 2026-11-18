@@ -234,3 +234,51 @@ export async function verifyEvent(event) {
  * @param {*} [kind] Kind numérico do evento.
  * @returns {*} Resultado da operação.*/
 export const isEphemeralKind = (kind) => Number.isInteger(kind) && kind >= 20000 && kind < 30000;
+
+/** Tolerância de relógio e de idade de um evento recebido: fora de ±10 min ele é descartado (anti-replay). */
+export const EVENT_WINDOW_S = 600;
+
+/**
+ * Evento com `created_at` inteiro dentro da janela de tolerância, para cima e para baixo.
+ * Barra o replay de evento antigo depois que a janela de ids vistos já o esqueceu.
+ * @param {{created_at?: unknown}|null|undefined} event Evento recebido, sem confiança no formato.
+ * @param {number} [nowMs] Relógio em milissegundos (injetável em teste).
+ * @param {number} [windowS] Tolerância em segundos.
+ * @returns {boolean} `true` se o evento é recente o bastante para ser considerado.
+ */
+export function isFreshEvent(event, nowMs = Date.now(), windowS = EVENT_WINDOW_S) {
+  const at = event?.created_at;
+  return Number.isInteger(at) && Math.abs(Math.floor(nowMs / 1000) - at) <= windowS;
+}
+
+/**
+ * Janela de ids de evento já aceitos, limitada em quantidade E em tempo. Só deve receber ids de eventos
+ * com assinatura verificada: quem não assina não consegue empurrar ids para expulsar os verdadeiros.
+ * O prazo cobre o pior caso de um evento datado no futuro (2× a janela de frescor).
+ * @param {{limit?: number, ttlMs?: number, now?: () => number}} [opts] Teto de ids, prazo e relógio.
+ * @returns {{has: (id: string) => boolean, add: (id: string) => boolean, readonly size: number}}
+ *   `add` devolve `false` quando o id já estava na janela.
+ */
+export function createSeenWindow({ limit = 4096, ttlMs = 2 * EVENT_WINDOW_S * 1000, now = Date.now } = {}) {
+  const entries = new Map();
+  const prune = () => {
+    const cutoff = now() - ttlMs;
+    for (const [id, at] of entries) {
+      if (at > cutoff) break;
+      entries.delete(id);
+    }
+  };
+  return {
+    has: (id) => (prune(), entries.has(id)),
+    add(id) {
+      prune();
+      if (entries.has(id)) return false;
+      entries.set(id, now());
+      if (entries.size > limit) entries.delete(entries.keys().next().value);
+      return true;
+    },
+    get size() {
+      return entries.size;
+    },
+  };
+}

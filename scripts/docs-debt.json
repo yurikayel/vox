@@ -173,9 +173,6 @@
   "jsdoc:getNodeHealthAriaLabel",
   "jsdoc:formatLatency"
  ],
- "client/js/nostr-signaling.js": [
-  "jsdoc:buildNostrSignalingCandidates"
- ],
  "client/js/nostr-transport.js": [
   "jsdoc:SIGNAL_KIND",
   "jsdoc:DEFAULT_ROOM",

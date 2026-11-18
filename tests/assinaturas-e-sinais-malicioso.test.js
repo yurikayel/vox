@@ -315,7 +315,7 @@ test("nostr-transport - send para par desconhecido, sem `to` ou com mensagem inv
   for (const msg of [null, undefined, {}, { to: "ninguem" }, { to: 5 }, "x"]) assert.equal(t.send(msg), false);
 });
 
-test.todo("nostr-transport - BUG: hello com assinatura inválida registra o par (handleEvent nunca chama verifyEvent)", async () => {
+test("nostr-transport - hello com assinatura inválida não registra o par (verifyEvent antes de qualquer efeito)", async () => {
   const { t } = transporte();
   const par = novoPar();
   const ev = await finalizeEvent({ kind: SIGNAL_KIND, tags: [["t", DEFAULT_ROOM]], content: JSON.stringify({ type: "hello", from: "peer_forjado" }) }, par.sk);
@@ -323,7 +323,7 @@ test.todo("nostr-transport - BUG: hello com assinatura inválida registra o par 
   assert.equal(t.knows("peer_forjado"), false, "evento com sig inválida deveria ser descartado");
 });
 
-test.todo("nostr-transport - BUG: hello forjado com o peerId da vítima toma o lugar dela (pubkey sem prova de posse)", async () => {
+test("nostr-transport - hello forjado (sem assinatura) com o peerId da vítima não toma o lugar dela", async () => {
   const { t, recebidas } = transporte();
   const golpista = novoPar();
   const forjado = { id: "f".repeat(64), pubkey: golpista.pub, kind: SIGNAL_KIND, created_at: 1, sig: "00".repeat(64),
@@ -333,7 +333,7 @@ test.todo("nostr-transport - BUG: hello forjado com o peerId da vítima toma o l
   assert.deepEqual(recebidas, []);
 });
 
-test.todo("nostr-transport - BUG: replay de offer volta a ser entregue depois de 2000 eventos distintos (janela `seen` curta e preenchível sem assinatura)", async () => {
+test("nostr-transport - replay de offer continua barrado depois de 2000 eventos distintos sem assinatura (só verificado entra em `seen`)", async () => {
   const { t, recebidas } = transporte();
   const ev = await dirigido(t, novoPar(), { type: "offer", from: "peer_x", sdp: "v=0" });
   await t._handleEvent(ev);
@@ -342,11 +342,102 @@ test.todo("nostr-transport - BUG: replay de offer volta a ser entregue depois de
   assert.equal(recebidas.length, 1, "o replay deveria continuar barrado (por created_at ou janela maior)");
 });
 
-test.todo("nostr-transport - BUG: peer-info com address e dmPub de tipo errado ou gigante é repassado sem validar", async () => {
+test("nostr-transport - peer-info com address e dmPub de tipo errado ou gigante não é repassado", async () => {
   const { t, recebidas } = transporte();
   await t._handleEvent(await dirigido(t, novoPar(), { type: "peer-info", from: "peer_x", address: { toString: "x" }, dmPub: "y".repeat(2 * 1024 * 1024) }));
-  const joined = recebidas.find((m) => m.type === "peer-joined");
-  assert.ok(!joined || (typeof joined.address === "string" && JSON.stringify(joined.dmPub || "").length < 4096));
+  assert.deepEqual(recebidas, [], "peer-info inválido não vira peer-joined");
+  assert.equal(t.knows("peer_x"), false);
+});
+
+/** WebSocket falso que guarda o que o transporte publica (EVENT) e entrega eventos ao handler. */
+function transporteComSocket() {
+  const enviados = [];
+  class WS {
+    constructor() {
+      this.readyState = 1;
+      queueMicrotask(() => this.onopen?.());
+    }
+    send(frame) {
+      enviados.push(JSON.parse(frame));
+    }
+    close() {}
+  }
+  const { t, recebidas } = transporte({ relays: ["wss://fake"], WebSocketImpl: WS });
+  return { t, recebidas, enviados };
+}
+
+const helloDe = (par, from, extra = {}) => finalizeEvent({ kind: SIGNAL_KIND, tags: [["t", DEFAULT_ROOM]], content: JSON.stringify({ type: "hello", from }), ...extra }, par.sk);
+
+test("nostr-transport - hello assinado e fresco registra o par; o primeiro pubkey de um peerId vale, mesmo com assinatura boa do golpista", async () => {
+  const { t, enviados } = transporteComSocket();
+  t.start();
+  try {
+    const real = novoPar();
+    const golpista = novoPar();
+    await t._handleEvent(await helloDe(real, "peer_vitima"));
+    await t._handleEvent(await helloDe(golpista, "peer_vitima"));
+    await new Promise((r) => setTimeout(r, 50));
+    assert.equal(t.knows("peer_vitima"), true);
+    assert.equal(t.send({ to: "peer_vitima", type: "answer", sdp: "y" }), true);
+    await new Promise((r) => setTimeout(r, 50));
+    const dirigidos = enviados.filter((f) => f[0] === "EVENT").map((f) => f[1]).filter((ev) => ev.tags.some((x) => x[0] === "p"));
+    assert.ok(dirigidos.length >= 1);
+    assert.ok(dirigidos.every((ev) => ev.tags.find((x) => x[0] === "p")[1] === real.pub), "tudo vai para a chave do primeiro, nunca a do golpista");
+  } finally {
+    t.stop();
+  }
+});
+
+test("nostr-transport - hello velho ou datado do futuro fora da janela é descartado, mesmo com assinatura válida", async () => {
+  const { t } = transporte();
+  const agora = Math.floor(Date.now() / 1000);
+  const velho = await helloDe(novoPar(), "peer_velho", { created_at: agora - 3600 });
+  const futuro = await helloDe(novoPar(), "peer_futuro", { created_at: agora + 3600 });
+  await t._handleEvent(velho);
+  await t._handleEvent(futuro);
+  assert.equal(t.knows("peer_velho"), false);
+  assert.equal(t.knows("peer_futuro"), false);
+});
+
+test("nostr-transport - offer de outra chave com o `from` de par já conhecido não toma o lugar nem é entregue", async () => {
+  const { t, recebidas } = transporte();
+  const real = novoPar();
+  const golpista = novoPar();
+  await t._handleEvent(await helloDe(real, "peer_vitima"));
+  await t._handleEvent(await dirigido(t, golpista, { type: "offer", from: "peer_vitima", sdp: "do-golpe" }));
+  await t._handleEvent(await dirigido(t, golpista, { type: "peer-info", from: "peer_vitima", address: "vx_golpe", dmPub: null }));
+  assert.deepEqual(recebidas, []);
+  await t._handleEvent(await dirigido(t, real, { type: "offer", from: "peer_vitima", sdp: "legitima" }));
+  assert.deepEqual(recebidas.map((m) => m.sdp), ["legitima"]);
+});
+
+test("nostr-transport - evento forjado com id e assinatura de outro conteúdo é recusado", async () => {
+  const { t } = transporte();
+  const par = novoPar();
+  const ev = await helloDe(par, "peer_original");
+  await t._handleEvent({ ...ev, content: JSON.stringify({ type: "hello", from: "peer_trocado" }) });
+  assert.equal(t.knows("peer_trocado"), false);
+  assert.equal(t.knows("peer_original"), false);
+});
+
+test("nostr-transport - peer-info válido, com address texto curto e dmPub objeto pequeno, é repassado", async () => {
+  const { t, recebidas } = transporte();
+  await t._handleEvent(await dirigido(t, novoPar(), { type: "peer-info", from: "peer_x", address: "vx_ok", dmPub: { kty: "EC", x: "a" } }));
+  assert.deepEqual(recebidas, [{ type: "peer-joined", peerId: "peer_x", address: "vx_ok", dmPub: { kty: "EC", x: "a" } }]);
+});
+
+test("nostr-transport - peer-info com address muito longo, dmPub array ou peerId gigante não é repassado", async () => {
+  const { t, recebidas } = transporte();
+  const par = novoPar();
+  const casos = [
+    { type: "peer-info", from: "p1", address: "a".repeat(257) },
+    { type: "peer-info", from: "p2", dmPub: ["x"] },
+    { type: "peer-info", from: "p3", dmPub: { k: "y".repeat(5000) } },
+    { type: "peer-info", from: "p".repeat(129), address: "ok" },
+    { type: "peer-info", from: "p4", address: 7 },
+  ];
+  for (const c of casos) await t._handleEvent(await dirigido(t, par, c));
+  assert.deepEqual(recebidas, []);
 });
 
 // ---------------------------------------------------------------- nostr-signaling (stub: contrato)
@@ -380,14 +471,16 @@ test("nostr-signaling - entrada que não é lista (texto, objeto, null) cai na l
   }
 });
 
-test.todo("nostr-signaling - BUG: candidato sem host ('wss://', 'ws://') passa pelo filtro", () => {
+test("nostr-signaling - candidato sem host ('wss://', 'ws://') é recusado", () => {
   const lista = nostrSignaling.buildNostrSignalingCandidates(["wss://", "ws://", "wss:// "]);
-  assert.ok(!lista.includes("wss://") && !lista.includes("ws://"));
+  assert.ok(!lista.includes("wss://") && !lista.includes("ws://") && !lista.includes("wss:// "));
+  assert.deepEqual(nostrSignaling.buildNostrSignalingCandidates(["wss://user:senha@relay.exemplo"]), nostrSignaling.DEFAULT_NOSTR_RELAYS);
 });
 
-test.todo("nostr-signaling - BUG: ws:// em claro é aceito como relay de sinalização (SDP e ICE vão cifrados, mas hello e metadados não)", () => {
+test("nostr-signaling - ws:// em claro é recusado como relay de sinalização (hello e metadados não vão cifrados)", () => {
   const lista = nostrSignaling.buildNostrSignalingCandidates(["ws://relay.exemplo"]);
   assert.ok(!lista.includes("ws://relay.exemplo"));
+  assert.ok(lista.every((u) => u.startsWith("wss://")));
 });
 
 test("signer - o helper de testes (v1) também é aceito pelo verificador real", async () => {
