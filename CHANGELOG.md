@@ -6,6 +6,8 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Documentação: modelo de ameaças com cinco ameaças abertas (T30–T34)
+- [THREAT-MODEL.md](./docs/THREAT-MODEL.md): slowloris no relay, 413 sem drenar o corpo, CORS `*` em GETs sem auth, GitHub Pages sem cabeçalhos de segurança e endereço do cofre v1 sem sal; cada uma com arquivo:linha e mitigação proposta. Só docs; sem bump de SW.
 ### Documentação: sub-itens abertos de LT-06 e LT-07 no plano de testes do login
 - `docs/process/plano-testes-login.md` §5.1 lista, com arquivo:linha, os achados abertos de duas abas e de recarga/teclado. Só documentação; sem correção prometida.
 
