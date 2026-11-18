@@ -19,15 +19,8 @@ import urllib.request
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
-from relay import blind_relay
-from relay import oauth_exchange
-from relay import central_memory
-from relay import vault_store
-from relay import inbox
-from relay import mirror_validate
-from relay import p2p_seeder
-from relay import rate_limit
-from relay import request_guard
+from relay import blind_relay, central_memory, inbox, mirror_validate, oauth_exchange
+from relay import p2p_seeder, rate_limit, request_guard, vault_store
 
 DEFAULT_PORT = 3920
 REJECTED_BODY_DRAIN_MAX = 64 * 1024
@@ -619,8 +612,12 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
             self._send_json({"error": str(error)}, 500)
 
     def _handle_mirror_post(self):
+        content_length = self._get_content_length()
+        if content_length > mirror_validate.MAX_MIRROR_BODY_BYTES:
+            self._send_json({"code": "mirror.body_too_large", "error": "Corpo excede 256 KiB."}, 413)
+            return
         try:
-            body = self.rfile.read(self._get_content_length())
+            body = self.rfile.read(content_length)
         except Exception as error:
             self._send_json({"error": str(error)}, 500)
             return
