@@ -1,6 +1,6 @@
 # ADR-021: Integridade na entrada — forma assinada guardada, tudo que entra é conferido
 
-**Status:** accepted (implementado) · **Revisado:** 2026-11-10 · **Relacionados:** PR yurikayel/vox#49, PM-80, PM-84, PM-86, PM-87, PM-88, PM-85, [THREAT-MODEL T16–T18](../THREAT-MODEL.md), [ADR-022](./022-memoria-central-por-consentimento.md)
+**Status:** accepted (implementado; §2.6 aberta: post v1 sem proteção em campo aninhado, e `sigv: 2` só passa a ser assinada em 24/11/2026) · **Revisado:** 2026-11-10 · **Relacionados:** PR yurikayel/vox#49, PM-80, PM-84, PM-86, PM-87, PM-88, PM-85, [THREAT-MODEL T16–T18](../THREAT-MODEL.md), [ADR-022](./022-memoria-central-por-consentimento.md)
 
 ## 1. Contexto
 
