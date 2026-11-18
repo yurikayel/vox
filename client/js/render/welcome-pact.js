@@ -59,7 +59,10 @@ function renderPillar(p) {
     </li>`;
 }
 
-/** Etapa final do onboarding: só a confirmação de 18+ (ADR-020) e as ações; os pilares ficam no modal do pacto. */
+/**
+ * Última etapa do onboarding: confirmação 18+ (ADR-020) e botões de entrada.
+ * @returns {string}
+ */
 export function renderPactStepHtml() {
   return `
     <h2 class="genesis-panel-title">Último passo</h2>
@@ -71,6 +74,10 @@ export function renderPactStepHtml() {
     </div>`;
 }
 
+/**
+ * Overlay do pacto de boas-vindas com mosaico, pilares e ações.
+ * @returns {string}
+ */
 export function renderPactModalHtml() {
   return `
     <div class="modal-overlay modal-sheet" id="pact-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="pact-welcome-title">
