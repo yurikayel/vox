@@ -86,9 +86,9 @@ export function pythonOutcome(file, output) {
  * @returns {{ ok: boolean, headline: string }}
  */
 export function verdict(kind, results, testCount) {
-  const red = results.filter((r) => r.outcome === "assert").length;
   if (kind === "skip") return { ok: true, headline: `Pulado pelo rótulo \`${SKIP_LABEL}\`.` };
-  if (kind === "info") return { ok: true, headline: `Só informa (PR não é \`fix:\`): ${red} teste(s) vermelho(s) na base.` };
+  if (kind === "info") return { ok: true, headline: "Só informa (PR não é `fix:`): os testes não foram rodados contra a base." };
+  const red = results.filter((r) => r.outcome === "assert").length;
   if (testCount === 0) return { ok: false, headline: "PR `fix:` sem teste novo ou alterado: nada prova o defeito." };
   if (red > 0) return { ok: true, headline: `${red} teste(s) falham por asserção na base: o defeito está provado.` };
   return {
@@ -166,7 +166,7 @@ function main() {
   const changed = git(["diff", "--name-only", "--diff-filter=AM", baseSha, "HEAD"], root).split("\n").filter(Boolean);
   const tests = pickTests(changed);
   const kind = prKind(process.env.PR_TITLE || "", parseLabels(process.env.PR_LABELS));
-  const results = runOnBase(baseSha, root, tests);
+  const results = kind === "fix" ? runOnBase(baseSha, root, tests) : [];
   const result = verdict(kind, results, tests.js.length + tests.py.length);
   const markdown = summaryMarkdown(result, results);
   if (process.env.GITHUB_STEP_SUMMARY) fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, markdown);
