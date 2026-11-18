@@ -12,9 +12,9 @@ function renderGatewayTableRowsHtml(gatewayHealth) {
 
 function renderMirrorExportLineHtml(mirrorExport) {
   if (mirrorExport?.mirror_last_error) {
-    return `<p><strong>Espelho relay (última falha):</strong> <code>${escapeHtml(mirrorExport.mirror_last_error)}</code> · ${escapeHtml(mirrorExport.mirror_last_error_community || "—")} · ${escapeHtml(mirrorExport.mirror_last_error_at || "")}</p>`;
+    return `<p><strong>Cópia no servidor comunitário (última falha):</strong> <code>${escapeHtml(mirrorExport.mirror_last_error)}</code> · ${escapeHtml(mirrorExport.mirror_last_error_community || "—")} · ${escapeHtml(mirrorExport.mirror_last_error_at || "")}</p>`;
   }
-  return `<p class="meta"><strong>Espelho relay:</strong> sem falha registrada neste aparelho.</p>`;
+  return `<p class="meta"><strong>Cópia no servidor comunitário:</strong> sem falha registrada neste aparelho.</p>`;
 }
 
 /** Estado da leitura do Arweave em palavras de gente (a tela não mostra o código interno). */
@@ -26,9 +26,9 @@ function readStateLabel(state) {
 
 function renderLeituraReservaNoteHtml(state) {
   if (state !== "all_ok") {
-    return `<p class="desc status-leigo-note">Quando aparece <strong>leitura reserva</strong>, os gateways Arweave falharam ou demoraram aqui — o app usa cache local ou relay comunitário. Isso é plano B de leitura, não significa que você quebrou a rede.</p>`;
+    return `<p class="desc status-leigo-note">Quando aparece <strong>leitura reserva</strong>, os pontos de leitura falharam ou demoraram aqui — o app usa o que já está guardado ou um servidor comunitário. É plano B, não significa que você quebrou a rede.</p>`;
   }
-  return `<p class="desc status-leigo-note">Gateways respondendo neste aparelho. Se um dia aparecer <strong>leitura reserva</strong>, é leitura de backup (cache ou vizinhos), não falha sua.</p>`;
+  return `<p class="desc status-leigo-note">Pontos de leitura respondendo neste aparelho. Se um dia aparecer <strong>leitura reserva</strong>, é backup (o que já está guardado ou vizinhos), não falha sua.</p>`;
 }
 
 function renderStatusTilesHtml(state, relayStatus, rtcStatus) {
@@ -37,24 +37,24 @@ function renderStatusTilesHtml(state, relayStatus, rtcStatus) {
   return `
     <div class="agora-tiles">
       <div class="agora-tile${readOk ? "" : " agora-tile--bronze"}">
-        <span class="agora-tile-label">Leitura Arweave</span>
+        <span class="agora-tile-label">Leitura pública</span>
         <span class="agora-tile-value">${escapeHtml(readStateLabel(state))}</span>
-        <span class="agora-tile-hint">${readOk ? "Gateways respondendo" : "Leitura reserva ativa"}</span>
+        <span class="agora-tile-hint">${readOk ? "Pontos de leitura ok" : "Leitura reserva ativa"}</span>
       </div>
       <div class="agora-tile${relayStatus?.online ? "" : " agora-tile--bronze"}">
-        <span class="agora-tile-label">Relay HTTP</span>
+        <span class="agora-tile-label">Servidor comunitário</span>
         <span class="agora-tile-value">${relayStatus?.online ? "Online" : "Offline"}</span>
-        <span class="agora-tile-hint">${relayStatus?.online ? "Relay comunitário alcançável" : "Sem relay local — app segue no cache"}</span>
+        <span class="agora-tile-hint">${relayStatus?.online ? "Alcançável daqui" : "Sem servidor por perto — app segue do que está guardado"}</span>
       </div>
       <div class="agora-tile agora-tile--teal">
-        <span class="agora-tile-label">Pares conectados</span>
-        <span class="agora-tile-value">${peers} ${peers === 1 ? "par" : "pares"}</span>
-        <span class="agora-tile-hint">WebRTC direto entre aparelhos</span>
+        <span class="agora-tile-label">Aparelhos conectados</span>
+        <span class="agora-tile-value">${peers} ${peers === 1 ? "aparelho" : "aparelhos"}</span>
+        <span class="agora-tile-hint">Ligação direta entre aparelhos</span>
       </div>
       <div class="agora-tile agora-tile--bronze">
-        <span class="agora-tile-label">Criptografia local</span>
+        <span class="agora-tile-label">Assinatura da conta</span>
         <span class="agora-tile-value">P-256 (ECDSA)</span>
-        <span class="agora-tile-hint">Assinatura no próprio aparelho</span>
+        <span class="agora-tile-hint">Cada ação é assinada neste aparelho</span>
       </div>
     </div>`;
 }
@@ -93,8 +93,8 @@ function renderNodeHealthHeadHtml() {
   return `
       <header class="agora-page-head agora-page-head--wide">
         <div class="agora-page-head-text">
-          <h1 class="agora-page-title">Saúde do nó</h1>
-          <p class="agora-page-sub">Sem envio externo — só cache local e tentativas de leitura registradas neste aparelho.</p>
+          <h1 class="agora-page-title">Como está este aparelho na rede</h1>
+          <p class="agora-page-sub">Sem envio externo — só o que está guardado aqui e as tentativas de leitura deste aparelho.</p>
         </div>
         <div class="agora-page-actions">
           <a class="agora-btn agora-btn--secondary" href="#/settings/network">Preferências de rede</a>
@@ -107,7 +107,7 @@ function renderStorageTabletHtml() {
   return `
       <section class="agora-tablet">
         <div class="agora-tablet-head">
-          <h2 class="agora-section-title">Armazenamento IndexedDB</h2>
+          <h2 class="agora-section-title">Espaço neste navegador</h2>
           <span class="agora-section-label" id="status-storage-label">Calculando…</span>
         </div>
         <div class="agora-bar" aria-hidden="true"><span class="is-teal" id="status-storage-bar" style="width:0%"></span></div>
@@ -119,17 +119,17 @@ function renderMeshTabletHtml({ state, relayStatus, relayLabel, relayHost, mirro
   return `
       <section class="agora-tablet card">
         <div class="agora-tablet-head">
-          <h2 class="agora-section-title">Status da malha (neste aparelho)</h2>
+          <h2 class="agora-section-title">Malha — rede entre aparelhos (aqui)</h2>
         </div>
         ${renderLeituraReservaNoteHtml(state)}
         <dl class="agora-kv">
-          <div class="agora-kv-row"><dt>Leitura Arweave</dt><dd>${escapeHtml(readStateLabel(state))}</dd></div>
-          <div class="agora-kv-row"><dt>Relay HTTP</dt><dd class="${relayStatus?.online ? "" : "is-bronze"}">${relayLabel} · ${relayHost}</dd></div>
-          <div class="agora-kv-row"><dt>Versão do cache (Service Worker)</dt><dd class="is-hash"><code id="status-sw-cache">…</code></dd></div>
+          <div class="agora-kv-row"><dt>Leitura pública</dt><dd>${escapeHtml(readStateLabel(state))}</dd></div>
+          <div class="agora-kv-row"><dt>Servidor comunitário</dt><dd class="${relayStatus?.online ? "" : "is-bronze"}">${relayLabel} · ${relayHost}</dd></div>
+          <div class="agora-kv-row"><dt>Versão salva do app</dt><dd class="is-hash"><code id="status-sw-cache">…</code></dd></div>
         </dl>
         <div class="status-mirror-line">${renderMirrorExportLineHtml(mirrorExport)}</div>
         <table class="status-gw-table agora-table">
-          <thead><tr><th>Gateway</th><th>OK</th><th>Falhas</th></tr></thead>
+          <thead><tr><th>Ponto de leitura</th><th>OK</th><th>Falhas</th></tr></thead>
           <tbody>${renderGatewayTableRowsHtml(gatewayHealth)}</tbody>
         </table>
       </section>`;
@@ -156,21 +156,21 @@ function renderSignalingTelemetryTabletHtml(signalingStats) {
   return `
       <section class="agora-tablet card" id="status-signaling-card">
         <div class="agora-tablet-head">
-          <h2 class="agora-section-title">Sinalização por caminho (neste aparelho)</h2>
+          <h2 class="agora-section-title">Como o app achou outros aparelhos</h2>
           <div class="agora-page-actions">
             <button type="button" class="agora-btn agora-btn--secondary" id="status-copy-signaling-btn">Copiar relatório</button>
             <button type="button" class="agora-btn agora-btn--secondary" id="status-reset-signaling-btn">Zerar</button>
           </div>
         </div>
-        <p class="desc">Contadores locais de WebSocket vs Nostr para a retrospectiva (PM-18) — nada é enviado daqui.</p>
-        <p class="desc"><strong>Tempo até o 1º par:</strong> ${renderFirstPeerLineHtml(signalingStats?.firstPeer)}</p>
+        <p class="desc">Contadores só neste aparelho — nada disso é enviado para fora.</p>
+        <p class="desc"><strong>Tempo até o 1º aparelho:</strong> ${renderFirstPeerLineHtml(signalingStats?.firstPeer)}</p>
         <table class="status-gw-table agora-table">
           <thead><tr><th>Caminho</th><th>Tentativas</th><th>Sucessos</th><th>Falhas</th><th>Tempo médio</th></tr></thead>
           <tbody>
             ${renderSignalingRowHtml("Canal WebSocket", ch.ws)}
             ${renderSignalingRowHtml("Canal Nostr", ch.nostr)}
-            ${renderSignalingRowHtml("Pares via WebSocket", peers.ws)}
-            ${renderSignalingRowHtml("Pares via Nostr", peers.nostr)}
+            ${renderSignalingRowHtml("Aparelhos via WebSocket", peers.ws)}
+            ${renderSignalingRowHtml("Aparelhos via Nostr", peers.nostr)}
           </tbody>
         </table>
         <p class="desc" id="status-signaling-feedback" aria-live="polite"></p>

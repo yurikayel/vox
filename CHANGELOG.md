@@ -45,6 +45,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 ### Correção: registro do service worker sem erro engolido (S30-S28)
 - `client/js/boot-sw.js`: falha ao registrar `./sw.js` passa a ir para `console.warn` em vez de um `catch` vazio; o app continua sem offline naquele aparelho, mas fica rastreável em diagnóstico. Sem bump de SW (só o boot).
 - Testes: `tests/boot-sw.test.js`.
+### Correção: jargão nas telas de status, pacto e i18n (S30-S15)
+- `#/status`, pacto de boas-vindas e `i18n-pt-br.js` passam a usar português claro alinhado ao glossário da interface (malha, aparelhos, servidor comunitário), sem `gossip`, `verifyPayload`, `IndexedDB` ou `PM-18` na superfície. Algoritmo da conta (`P-256`) permanece visível na tela de status.
+- Testes: `tests/jargao-ui.test.js` (novo, 4 casos; falham na base por asserção). Sem bump de SW.
 
 ### Correção: relay cego não perde deltas no cold boot; memória central confere item e blob
 - **Snapshot apaga por serial, não por timestamp:** só somem os envelopes com `0 < serial <= coveredSerial`; antes, um delta com relógio atrasado e serial acima da cobertura era apagado em silêncio. Snapshot que recua `coveredSerial` agora dá `400` (abriria um buraco). Sem `coveredSerial` nada é apagado (vale o TTL de 7 dias).
