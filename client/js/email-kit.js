@@ -5,19 +5,15 @@
  * O e-mail leva o link `#/sync?b=…` e o código cifrado `VOX1:…`, além de data, nome e `vx_…`.
  * A senha nunca vai no e-mail. A frase de recuperação é opcional e vem desmarcada por padrão.
  */
-
-import * as accountExit from "./identity/index.js";
 import * as localAccount from "./identity/index.js";
 import * as oauthVault from "./vault/index.js";
 import * as share from "./share.js";
 import { decodeVaultBundleFromUrl, encodeVaultBundleForUrl, normalizeVaultEmail } from "./vault/index.js";
-
 /** Prefixo do código cifrado colável em "Já tenho conta". */
 export const VOX_KIT_PREFIX = "VOX1:";
 /** Teto conservador de URI `mailto:` para caber em clientes de e-mail e Windows (< 2.000). */
 export const MAILTO_MAX_CHARS = 1950;
 const PHRASE_EMAIL_KEY_PREFIX = "vox-phrase-in-email-v1:";
-
 const phraseEmailKey = (routeId) => PHRASE_EMAIL_KEY_PREFIX + routeId;
 
 /**
@@ -35,7 +31,6 @@ export function recordPhraseSentInEmail(routeId = localAccount.getCachedRouteIdS
     return false;
   }
 }
-
 /**
  * Remove o registro de frase enviada por e-mail (por exemplo, ao refazer o rascunho sem a frase).
  * @param {string} [routeId] Identificador da conta (padrão: conta ativa).
@@ -48,7 +43,6 @@ export function clearPhraseSentInEmail(routeId = localAccount.getCachedRouteIdSy
     /* ignore */
   }
 }
-
 /**
  * Lê o timestamp em que a frase foi marcada para envio por e-mail nesta conta.
  * @param {string} [routeId] Identificador da conta (padrão: conta ativa).
@@ -63,7 +57,6 @@ export function getPhraseSentInEmailAt(routeId = localAccount.getCachedRouteIdSy
     return null;
   }
 }
-
 /**
  * Texto curto para Perfil → Segurança quando a frase foi incluída no e-mail (§6.4).
  * @param {string} [routeId] Identificador da conta (padrão: conta ativa).
@@ -75,7 +68,6 @@ export function formatPhraseSentInEmailNotice(routeId = localAccount.getCachedRo
   const dateLabel = new Date(at).toLocaleDateString("pt-BR");
   return `Frase enviada por e-mail em ${dateLabel} (quem ler sua caixa de entrada entra na conta sem a senha).`;
 }
-
 /**
  * Marca que a conta ganhou saída soberana pelo kit de e-mail confirmado (§6.5).
  * @param {string} [routeId] Identificador da conta (padrão: conta ativa).
@@ -83,7 +75,7 @@ export function formatPhraseSentInEmailNotice(routeId = localAccount.getCachedRo
  * @returns {boolean} `true` se marcou.
  */
 export function confirmEmailKitSent(routeId = localAccount.getCachedRouteIdSync(), now = Date.now()) {
-  return accountExit.markAccountExit("email", routeId, now);
+  return localAccount.markAccountExit("email", routeId, now);
 }
 
 function resolveSyncBaseUrl(baseUrl) {
@@ -126,7 +118,6 @@ function selectMailtoUrl(email, subject, parts) {
   const mailtoUrl = minimalMailto.length <= MAILTO_MAX_CHARS ? minimalMailto : buildMailtoUri(email, subject, parts.syncUrl);
   return { mailtoUrl, truncatedForMailto: true };
 }
-
 /**
  * Monta o kit de retorno por e-mail (assunto, corpo para copiar/baixar e URI `mailto:` dentro do teto).
  * Nunca aceita nem inclui a senha no texto.
@@ -181,7 +172,6 @@ function collectKitCandidates(raw) {
   if (!/\s/.test(raw)) out.push(raw);
   return out;
 }
-
 /**
  * Extrai o token codificado do cofre de um link `#/sync?b=…`, código `VOX1:…` ou texto do e-mail.
  * @param {string} rawText Texto colado pelo usuário.
@@ -195,7 +185,6 @@ export function extractEncodedVaultFromText(rawText) {
   }
   return "";
 }
-
 /**
  * Decodifica o registro do cofre cifrado a partir de link `#/sync?b=…`, código `VOX1:…` ou e-mail colado.
  * @param {string} rawText Texto colado pelo usuário.
@@ -205,7 +194,6 @@ export function extractVaultRecordFromEmailKit(rawText) {
   const encoded = extractEncodedVaultFromText(rawText);
   return encoded ? decodeVaultBundleFromUrl(encoded) : null;
 }
-
 /**
  * Dispara a abertura do rascunho `mailto:` sem tirar o aplicativo da página atual.
  * @param {string} mailtoUrl URI `mailto:` completo.
@@ -223,7 +211,6 @@ export function triggerMailtoDraft(mailtoUrl, doc = globalThis.document) {
   link.remove?.();
   return true;
 }
-
 /**
  * Copia assunto e corpo do kit para colar no webmail.
  * @param {{ copyText?: string }} kit Kit gerado por `buildEmailKit`.
@@ -240,7 +227,6 @@ export async function copyEmailKit(kit) {
     return false;
   }
 }
-
 /**
  * Baixa o kit como arquivo `.txt` e confirma a saída soberana local.
  * @param {{ copyText?: string, filename?: string }} kit Kit gerado por `buildEmailKit`.
@@ -254,7 +240,6 @@ export function downloadEmailKitFile(kit, routeId = localAccount.getCachedRouteI
   share.showToast("Cópia do acesso salva neste aparelho.");
   return true;
 }
-
 /**
  * Define o nome, garante a conta local com semente, salva o cofre por e-mail/senha e gera o kit (§6.2–§6.4).
  * Ao corrigir e-mail (`draftState.pass` já preenchido), migra o cofre e revoga o endereço anterior (§6.3.7).
@@ -267,7 +252,7 @@ export async function createEmailAccountKit({ rawName, email, pass, includePhras
   if (!normalizedEmail.includes("@")) return { ok: false, reason: "Informe um e-mail válido." };
   localAccount.setDisplayName(rawName);
   const acc = await localAccount.ensureLocalAccount();
-  await accountExit.hasSovereignExit(acc.routeId);
+  await localAccount.hasSovereignExit(acc.routeId);
   let phrase = "";
   if (includePhrase) {
     const { getAccountPhrase } = await import("./identity/index.js");
@@ -291,52 +276,28 @@ export async function createEmailAccountKit({ rawName, email, pass, includePhras
   });
   return { ok: true, routeId: saved.routeId, kit };
 }
-
-const EMAIL_ENTRY_FOCUS_IDS = {
-  name: "oauth-custom-name-input",
-  email: "oauth-entry-email-input",
-  pass: "oauth-entry-pass-input",
-};
-
 /**
- * Primeira falha de validação da entrada com id do campo para foco (LT-07).
+ * Primeira falha de validação da entrada (§6.2 / LT-07).
  * @param {{ rawName?: string, email?: string, pass?: string, includePhrase?: boolean }} values Valores do formulário.
- * @returns {{ message: string, fieldId: string } | null} `null` quando válido.
+ * @returns {{ message: string, field: "name"|"email"|"pass" } | null}
  */
-function emailEntryValidationIssue({ rawName = "", email = "", pass = "", includePhrase = false } = {}) {
-  if (!rawName) return { message: "Digite um nome ou apelido para continuar.", fieldId: EMAIL_ENTRY_FOCUS_IDS.name };
+export function validateEmailEntryIssue({ rawName = "", email = "", pass = "", includePhrase = false } = {}) {
+  if (!rawName) return { message: "Digite um nome ou apelido para continuar.", field: "name" };
   if (!email && !pass && !includePhrase) return null;
-  if (!email || !email.includes("@")) {
-    return { message: "Informe um e-mail válido para enviar seu kit de volta.", fieldId: EMAIL_ENTRY_FOCUS_IDS.email };
-  }
+  if (!email || !email.includes("@")) return { message: "Informe um e-mail válido para enviar seu kit de volta.", field: "email" };
   if (pass.length < oauthVault.VAULT_PASSPHRASE_MIN) {
-    return {
-      message: `Use uma senha com pelo menos ${oauthVault.VAULT_PASSPHRASE_MIN} caracteres (uma frase de 4 palavras serve).`,
-      fieldId: EMAIL_ENTRY_FOCUS_IDS.pass,
-    };
+    return { message: `Use uma senha com pelo menos ${oauthVault.VAULT_PASSPHRASE_MIN} caracteres (uma frase de 4 palavras serve).`, field: "pass" };
   }
   return null;
 }
-
 /**
- * Valida os campos de entrada em uma etapa (§6.2).
- * Sem e-mail e senha (e com a frase desmarcada), libera a entrada só com o nome (§6.2.5).
+ * Mensagem de erro de `validateEmailEntryIssue` ou `""` (§6.2 / §6.2.5).
  * @param {{ rawName?: string, email?: string, pass?: string, includePhrase?: boolean }} values Valores do formulário.
  * @returns {string} Mensagem de erro ou `""` se válido.
  */
 export function validateEmailEntry(values) {
-  return emailEntryValidationIssue(values)?.message ?? "";
+  return validateEmailEntryIssue(values)?.message ?? "";
 }
-
-/**
- * Mesma validação que `validateEmailEntry`, com o id do primeiro campo inválido (form `#form-oauth-custom-name`).
- * @param {{ rawName?: string, email?: string, pass?: string, includePhrase?: boolean }} values Valores do formulário.
- * @returns {{ message: string, fieldId: string } | null} `null` quando válido.
- */
-export function validateEmailEntryIssue(values) {
-  return emailEntryValidationIssue(values);
-}
-
 /**
  * Tenta restaurar uma conta existente a partir de link/código do kit, frase (ADR-032),
  * arquivos `.txt`/`.voxid` ou busca de cofre por e-mail/senha (§6.3.8).
