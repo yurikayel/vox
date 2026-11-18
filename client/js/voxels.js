@@ -1,15 +1,20 @@
 /**
+ * @file Voxels cívicos — recibos assinados, saldo e passaporte exportável.
+ 
  * Voxels & Civic Achievements — Sistema de Reconhecimento e Gamificação Ética Local-First.
- * ADR-013: Incentivo à infraestrutura e colaboração cívica sem alcances comprados nem plutocracia.
- */
+ * ADR-013: Incentivo à infraestrutura e colaboração cívica sem alcances comprados nem plutocracia.*/
 import { computeBlobHash } from "./media-blob.js";
 import * as localAccount from "./identity/index.js";
 
+/** Identificador de schema exportado. @type {string} */
 export const SCHEMA_VOXEL_RECEIPT = "vox-voxel-receipt-v1";
+/** Identificador de schema exportado. @type {string} */
 export const SCHEMA_VOXEL_PASSPORT = "vox-voxel-passport-v1";
 
+/** Constante de configuração exportada. @type {*} */
 export const VOXEL_CATEGORIES = Object.freeze(["forja", "agora", "cuidado"]);
 
+/** Constante de configuração exportada. @type {*} */
 export const DEFAULT_ACTION_REWARDS = Object.freeze({
   relay_cache_uptime: 10,
   seed_blob_share: 5,
@@ -20,6 +25,7 @@ export const DEFAULT_ACTION_REWARDS = Object.freeze({
   cuidado_accessibility_item: 25,
 });
 
+/** Export `ACHIEVEMENT_CATALOG` do módulo. @type {*} */
 export const ACHIEVEMENT_CATALOG = Object.freeze([
   {
     id: "forja_farol_iniciante",
@@ -104,6 +110,10 @@ function normalizeAmount(amount, action) {
   return DEFAULT_ACTION_REWARDS[action] || 1;
 }
 
+/** Operação `createVoxelReceipt` do módulo.
+ * @param {*} [params] Parâmetro `params`.
+ * @returns {*} Resultado da operação.
+ */
 export async function createVoxelReceipt(params = {}) {
   const routeId = normalizeRouteId(params.routeId);
   const category = normalizeCategory(params.category);
@@ -137,6 +147,10 @@ export async function createVoxelReceipt(params = {}) {
   };
 }
 
+/** Valida entrada de VoxelReceipt.
+ * @param {*} [receipt] Parâmetro `receipt`.
+ * @returns {*} Resultado da operação.
+ */
 export function validateVoxelReceipt(receipt) {
   if (!receipt || typeof receipt !== "object") return { ok: false, reason: "invalid-type" };
   if (receipt.schema !== SCHEMA_VOXEL_RECEIPT) return { ok: false, reason: "invalid-schema" };
@@ -152,6 +166,13 @@ export function validateVoxelReceipt(receipt) {
   return { ok: true };
 }
 
+/** Operação `calculateDecayedAmount` do módulo.
+ * @param {*} [amount] Parâmetro `amount`.
+ * @param {*} [receiptTime] Parâmetro `receiptTime`.
+ * @param {*} [nowTime] Parâmetro `nowTime`.
+ * @param {*} [halfLifeDays] Parâmetro `halfLifeDays`.
+ * @returns {*} Resultado da operação.
+ */
 export function calculateDecayedAmount(amount, receiptTime, nowTime, halfLifeDays) {
   if (!halfLifeDays || halfLifeDays <= 0) return amount;
   const elapsedMs = Math.max(0, nowTime - receiptTime);
@@ -160,6 +181,11 @@ export function calculateDecayedAmount(amount, receiptTime, nowTime, halfLifeDay
   return amount * decayFactor;
 }
 
+/** Calcula VoxelBalance.
+ * @param {*} [receipts] Parâmetro `receipts`.
+ * @param {*} [options] Opções de enquete.
+ * @returns {*} Resultado da operação.
+ */
 export function computeVoxelBalance(receipts = [], options = {}) {
   const now = options.now || Date.now();
   const forjaHalfLife = options.decayHalfLifeDays || 0;
@@ -190,6 +216,10 @@ export function computeVoxelBalance(receipts = [], options = {}) {
   return { total, byCategory: roundedByCategory, validReceiptsCount: validCount };
 }
 
+/** Operação `extractEvaluationContext` do módulo.
+ * @param {*} [receipts] Parâmetro `receipts`.
+ * @returns {*} Resultado da operação.
+ */
 export function extractEvaluationContext(receipts = []) {
   const ctx = {
     uptimeHours: 0,
@@ -214,6 +244,11 @@ export function extractEvaluationContext(receipts = []) {
   return ctx;
 }
 
+/** Operação `evaluateAchievements` do módulo.
+ * @param {*} [receipts] Parâmetro `receipts`.
+ * @param {*} [unlockedIds] Parâmetro `unlockedIds`.
+ * @returns {*} Resultado da operação.
+ */
 export function evaluateAchievements(receipts = [], unlockedIds = []) {
   const currentUnlockedSet = new Set(unlockedIds);
   const context = extractEvaluationContext(receipts);
@@ -241,6 +276,13 @@ export function evaluateAchievements(receipts = [], unlockedIds = []) {
   return { unlocked, newlyUnlocked, totalUnlockedCount: unlocked.length };
 }
 
+/** Monta VoxelPassport para uso no cliente.
+ * @param {*} [routeId] Parâmetro `routeId`.
+ * @param {*} [receipts] Parâmetro `receipts`.
+ * @param {*} [unlockedIds] Parâmetro `unlockedIds`.
+ * @param {*} [options] Opções de enquete.
+ * @returns {*} Resultado da operação.
+ */
 export function buildVoxelPassport(routeId, receipts = [], unlockedIds = [], options = {}) {
   const cleanRoute = normalizeRouteId(routeId);
   const balance = computeVoxelBalance(receipts, options);
@@ -256,15 +298,28 @@ export function buildVoxelPassport(routeId, receipts = [], unlockedIds = [], opt
   };
 }
 
+/** Chave em `localStorage` (só neste aparelho). @type {string} */
 export const STORAGE_VOXELS_RECEIPTS_PREFIX = "vox_voxel_receipts_";
+/** Limite numérico do módulo. @type {number} */
 export const MAX_STORED_RECEIPTS = 500;
+/** Chave em `localStorage` (só neste aparelho). @type {string} */
 export const LAST_NODE_REWARD_KEY = "vox_last_node_uptime_reward";
+/** Limite ou intervalo em milissegundos. @type {number} */
 export const COOLDOWN_NODE_REWARD_MS = 3600_000;
 
+/** Obtém StorageKey.
+ * @param {*} [routeId] Parâmetro `routeId`.
+ * @returns {*} Resultado da operação.
+ */
 export function getStorageKey(routeId) {
   return `${STORAGE_VOXELS_RECEIPTS_PREFIX}${normalizeRouteId(routeId)}`;
 }
 
+/** Carrega VoxelReceipts do armazenamento ou rede.
+ * @param {*} [routeId] Parâmetro `routeId`.
+ * @param {*} [storage] Armazenamento injetável.
+ * @returns {*} Resultado da operação.
+ */
 export function loadVoxelReceipts(routeId, storage = globalThis.localStorage) {
   if (!storage) return [];
   try {
@@ -278,6 +333,11 @@ export function loadVoxelReceipts(routeId, storage = globalThis.localStorage) {
   }
 }
 
+/** Persiste VoxelReceipt localmente.
+ * @param {*} [receipt] Parâmetro `receipt`.
+ * @param {*} [storage] Armazenamento injetável.
+ * @returns {*} Resultado da operação.
+ */
 export function saveVoxelReceipt(receipt, storage = globalThis.localStorage) {
   const val = validateVoxelReceipt(receipt);
   if (!val.ok) throw new Error(`Recibo de voxel inválido: ${val.reason}`);
@@ -295,22 +355,44 @@ export function saveVoxelReceipt(receipt, storage = globalThis.localStorage) {
   return { ok: true, count: pruned.length };
 }
 
+/** Limpa VoxelReceipts armazenados.
+ * @param {*} [routeId] Parâmetro `routeId`.
+ * @param {*} [storage] Armazenamento injetável.
+ */
 export function clearVoxelReceipts(routeId, storage = globalThis.localStorage) {
   if (!storage) return;
   storage.removeItem(getStorageKey(routeId));
 }
 
+/** Operação `recordCivicAction` do módulo.
+ * @param {*} [params] Parâmetro `params`.
+ * @param {*} [storage] Armazenamento injetável.
+ * @returns {*} Resultado da operação.
+ */
 export async function recordCivicAction(params = {}, storage = globalThis.localStorage) {
   const receipt = await createVoxelReceipt(params);
   saveVoxelReceipt(receipt, storage);
   return receipt;
 }
 
+/** Operação `passportDownloadFilename` do módulo.
+ * @param {*} [routeId] Parâmetro `routeId`.
+ * @param {*} [ts] Parâmetro `ts`.
+ * @returns {*} Resultado da operação.
+ */
 export function passportDownloadFilename(routeId, ts = Date.now()) {
   const slug = String(routeId || "local").replace(/[^\w-]/g, "").slice(0, 24);
   return `vox-passaporte-civico-${slug}-${ts}.json`;
 }
 
+/** Operação `exportSignedVoxelPassport` do módulo.
+ * @param {*} [routeId] Parâmetro `routeId`.
+ * @param {*} [receipts] Parâmetro `receipts`.
+ * @param {*} [unlockedIds] Parâmetro `unlockedIds`.
+ * @param {*} [signFn] Parâmetro `signFn`.
+ * @param {*} [options] Opções de enquete.
+ * @returns {*} Resultado da operação.
+ */
 export async function exportSignedVoxelPassport(routeId, receipts = [], unlockedIds = [], signFn = null, options = {}) {
   const passportDraft = buildVoxelPassport(routeId, receipts, unlockedIds, options);
   if (typeof signFn !== "function") {
@@ -330,6 +412,11 @@ export async function exportSignedVoxelPassport(routeId, receipts = [], unlocked
   };
 }
 
+/** Operação `verifySignedVoxelPassport` do módulo.
+ * @param {*} [passport] Parâmetro `passport`.
+ * @param {*} [verifyFn] Parâmetro `verifyFn`.
+ * @returns {*} Resultado da operação.
+ */
 export async function verifySignedVoxelPassport(passport, verifyFn = null) {
   if (!passport || typeof passport !== "object") return { isValid: false, reason: "invalid-object" };
   if (passport.schema !== SCHEMA_VOXEL_PASSPORT) return { isValid: false, reason: "invalid-schema" };
@@ -344,6 +431,13 @@ export async function verifySignedVoxelPassport(passport, verifyFn = null) {
   return { isValid: true, isSigned: false, reason: "Passaporte íntegro em formato padrão (sem assinatura)" };
 }
 
+/** Operação `checkAndRecordNodeZeroReward` do módulo.
+ * @param {*} [routeId] Parâmetro `routeId`.
+ * @param {*} [isNodeOnline] Parâmetro `isNodeOnline`.
+ * @param {*} [now] Instante de referência, em ms.
+ * @param {*} [storage] Armazenamento injetável.
+ * @returns {*} Resultado da operação.
+ */
 export async function checkAndRecordNodeZeroReward(routeId, isNodeOnline, now = Date.now(), storage = globalThis.localStorage) {
   if (!isNodeOnline || !storage) return { rewarded: false, reason: "node-offline" };
   const lastTs = Number(storage.getItem(LAST_NODE_REWARD_KEY) || 0);
@@ -379,6 +473,10 @@ async function probeRelayOnline(checkRelayFn) {
   }
 }
 
+/** Operação `triggerLocalNodeBoostReward` do módulo.
+ * @param {object} [options={}] Contexto do reforço de nó.
+ * @returns {*} Resultado da operação.
+ */
 export async function triggerLocalNodeBoostReward({
   routeId = null,
   checkRelayFn = null,

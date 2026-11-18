@@ -1,9 +1,11 @@
 /**
+ * @file Filtros e compressão lo-fi de mídia (imagem, áudio, vídeo, oclusão).
+ 
  * Vox Media Lo-Fi Engine — Ultraleveza Cívica e Soberana.
- * Limites calibrados: fotos <= 99 KB (1080p), áudios <= 60s (blocos de 15s), vídeos <= 10s (blocos de 2s @ 360p).
- */
+ * Limites calibrados: fotos <= 99 KB (1080p), áudios <= 60s (blocos de 15s), vídeos <= 10s (blocos de 2s @ 360p).*/
 import { computeBlobHash, parseDataUrl } from "./media-blob.js";
 
+/** Export `LOFI_LIMITS` do módulo. @type {*} */
 export const LOFI_LIMITS = Object.freeze({
   PHOTO_MAX_BYTES: 99 * 1024, // 101.376 bytes cravados (Arweave Free Tier <= 100 KiB)
   PHOTO_MAX_DIMENSION: 1080,
@@ -17,6 +19,12 @@ export const LOFI_LIMITS = Object.freeze({
   VIDEO_MAX_WIDTH: 360,
 });
 
+/** Operação `calculateConstrainedDimensions` do módulo.
+ * @param {*} [srcW] Parâmetro `srcW`.
+ * @param {*} [srcH] Parâmetro `srcH`.
+ * @param {*} [maxDim] Parâmetro `maxDim`.
+ * @returns {*} Resultado da operação.
+ */
 export function calculateConstrainedDimensions(srcW, srcH, maxDim = LOFI_LIMITS.PHOTO_MAX_DIMENSION) {
   const w = Number(srcW) || 1;
   const h = Number(srcH) || 1;
@@ -27,6 +35,10 @@ export function calculateConstrainedDimensions(srcW, srcH, maxDim = LOFI_LIMITS.
   return { width: Math.max(1, Math.round((w * maxDim) / h)), height: maxDim };
 }
 
+/** Interpreta AspectRatio.
+ * @param {*} [aspect] Parâmetro `aspect`.
+ * @returns {*} Resultado da operação.
+ */
 export function parseAspectRatio(aspect) {
   if (aspect === "16:9") return 16 / 9;
   if (aspect === "9:16") return 9 / 16;
@@ -36,6 +48,12 @@ export function parseAspectRatio(aspect) {
   return null;
 }
 
+/** Operação `calculateCropAndBounds` do módulo.
+ * @param {*} [srcW] Parâmetro `srcW`.
+ * @param {*} [srcH] Parâmetro `srcH`.
+ * @param {object} [bounds={}] Limites de recorte.
+ * @returns {*} Resultado da operação.
+ */
 export function calculateCropAndBounds(srcW, srcH, { aspect = "original", maxLong = 1920, maxShort = 1080 } = {}) {
   const origW = Number(srcW) || 1;
   const origH = Number(srcH) || 1;
@@ -70,6 +88,11 @@ export function calculateCropAndBounds(srcW, srcH, { aspect = "original", maxLon
   return { sx, sy, sWidth, sHeight, destW, destH };
 }
 
+/** Operação `applyXeroxDither` do módulo.
+ * @param {*} [ctx] Parâmetro `ctx`.
+ * @param {*} [width] Largura em pixels.
+ * @param {*} [height] Altura em pixels.
+ */
 export function applyXeroxDither(ctx, width, height) {
   const imgData = ctx.getImageData(0, 0, width, height);
   const data = imgData.data;
@@ -94,6 +117,11 @@ export function applyXeroxDither(ctx, width, height) {
   ctx.putImageData(imgData, 0, 0);
 }
 
+/** Operação `applyRisographDuotone` do módulo.
+ * @param {*} [ctx] Parâmetro `ctx`.
+ * @param {*} [width] Largura em pixels.
+ * @param {*} [height] Altura em pixels.
+ */
 export function applyRisographDuotone(ctx, width, height) {
   const imgData = ctx.getImageData(0, 0, width, height);
   const data = imgData.data;
@@ -110,6 +138,11 @@ export function applyRisographDuotone(ctx, width, height) {
   ctx.putImageData(imgData, 0, 0);
 }
 
+/** Operação `applyVhsCamcorder` do módulo.
+ * @param {*} [ctx] Parâmetro `ctx`.
+ * @param {*} [width] Largura em pixels.
+ * @param {*} [height] Altura em pixels.
+ */
 export function applyVhsCamcorder(ctx, width, height) {
   const imgData = ctx.getImageData(0, 0, width, height);
   const data = imgData.data;
@@ -127,6 +160,13 @@ export function applyVhsCamcorder(ctx, width, height) {
   ctx.putImageData(imgData, 0, 0);
 }
 
+/** Operação `applyLofiFilter` do módulo.
+ * @param {*} [ctx] Parâmetro `ctx`.
+ * @param {*} [width] Largura em pixels.
+ * @param {*} [height] Altura em pixels.
+ * @param {*} [filterName] Parâmetro `filterName`.
+ * @returns {*} Resultado da operação.
+ */
 export function applyLofiFilter(ctx, width, height, filterName = "normal") {
   if (filterName === "xerox") return applyXeroxDither(ctx, width, height);
   if (filterName === "risograph") return applyRisographDuotone(ctx, width, height);
@@ -183,6 +223,11 @@ function downscaleAndReoptimizeCanvas(canvas, maxBytes) {
   }
 }
 
+/** Operação `optimizeCanvasQualityUnderCeiling` do módulo.
+ * @param {*} [canvas] Parâmetro `canvas`.
+ * @param {object} [options={}] Limites de qualidade ou compressão.
+ * @returns {*} Resultado da operação.
+ */
 export function optimizeCanvasQualityUnderCeiling(canvas, { maxBytes = LOFI_LIMITS.PHOTO_MAX_BYTES } = {}) {
   const initial = probeCanvasQuality(canvas, 0.95, maxBytes);
   if (initial) return initial;
@@ -204,10 +249,19 @@ export function optimizeCanvasQualityUnderCeiling(canvas, { maxBytes = LOFI_LIMI
   };
 }
 
+/** Operação `compressCanvasWithClamp` do módulo.
+ * @param {*} [canvas] Parâmetro `canvas`.
+ * @param {object} [options={}] Limites de qualidade ou compressão.
+ * @returns {*} Resultado da operação.
+ */
 export function compressCanvasWithClamp(canvas, { quality: _quality = LOFI_LIMITS.PHOTO_DEFAULT_QUALITY, maxBytes = LOFI_LIMITS.PHOTO_MAX_BYTES } = {}) {
   return optimizeCanvasQualityUnderCeiling(canvas, { maxBytes });
 }
 
+/** Operação `calculateAudioChunks` do módulo.
+ * @param {*} [durationSeconds] Parâmetro `durationSeconds`.
+ * @returns {*} Resultado da operação.
+ */
 export function calculateAudioChunks(durationSeconds) {
   const s = Math.max(1, Math.min(Number(durationSeconds) || 1, LOFI_LIMITS.AUDIO_MAX_SECONDS));
   const chunkSec = LOFI_LIMITS.AUDIO_CHUNK_SECONDS;
@@ -220,6 +274,10 @@ export function calculateAudioChunks(durationSeconds) {
   };
 }
 
+/** Operação `calculateVideoChunks` do módulo.
+ * @param {*} [durationSeconds] Parâmetro `durationSeconds`.
+ * @returns {*} Resultado da operação.
+ */
 export function calculateVideoChunks(durationSeconds) {
   const s = Math.max(1, Math.min(Number(durationSeconds) || 1, LOFI_LIMITS.VIDEO_MAX_SECONDS));
   const chunkSec = LOFI_LIMITS.VIDEO_CHUNK_SECONDS;
@@ -232,6 +290,11 @@ export function calculateVideoChunks(durationSeconds) {
   };
 }
 
+/** Operação `sliceBufferIntoFixedChunks` do módulo.
+ * @param {*} [bufferOrUint8] Parâmetro `bufferOrUint8`.
+ * @param {*} [maxChunkBytes] Parâmetro `maxChunkBytes`.
+ * @returns {*} Resultado da operação.
+ */
 export function sliceBufferIntoFixedChunks(bufferOrUint8, maxChunkBytes = LOFI_LIMITS.PHOTO_MAX_BYTES) {
   const bytes = bufferOrUint8 instanceof Uint8Array ? bufferOrUint8 : new Uint8Array(bufferOrUint8);
   const total = bytes.byteLength;
@@ -246,6 +309,10 @@ export function sliceBufferIntoFixedChunks(bufferOrUint8, maxChunkBytes = LOFI_L
   return chunks;
 }
 
+/** Monta MediaChunkManifest para uso no cliente.
+ * @param {object} [options={}] Opções de manifesto.
+ * @returns {*} Resultado da operação.
+ */
 export async function buildMediaChunkManifest({ type = "audio", mime = "audio/webm", durationSeconds = 0, chunks = [] }) {
   const blocks = [];
   let totalBytes = 0;
@@ -277,12 +344,19 @@ export async function buildMediaChunkManifest({ type = "audio", mime = "audio/we
    Criptografia Oclusiva Zero-Knowledge (AES-GCM-256 para Google Drive / Nuvem Cega)
    ========================================================================= */
 
+/** Operação `generateOclusionKey` do módulo.
+ * @returns {*} Resultado da operação.
+ */
 export async function generateOclusionKey() {
   const subtle = globalThis.crypto?.subtle;
   if (!subtle) throw new Error("SubtleCrypto indisponível");
   return await subtle.generateKey({ name: "AES-GCM", length: 256 }, true, ["encrypt", "decrypt"]);
 }
 
+/** Operação `exportOclusionKey` do módulo.
+ * @param {*} [cryptoKey] Parâmetro `cryptoKey`.
+ * @returns {*} Resultado da operação.
+ */
 export async function exportOclusionKey(cryptoKey) {
   const subtle = globalThis.crypto?.subtle;
   const raw = await subtle.exportKey("raw", cryptoKey);
@@ -294,6 +368,10 @@ export async function exportOclusionKey(cryptoKey) {
   return hex;
 }
 
+/** Operação `importOclusionKey` do módulo.
+ * @param {*} [hexKey] Parâmetro `hexKey`.
+ * @returns {*} Resultado da operação.
+ */
 export async function importOclusionKey(hexKey) {
   const subtle = globalThis.crypto?.subtle;
   const len = hexKey.length / 2;
@@ -304,6 +382,11 @@ export async function importOclusionKey(hexKey) {
   return await subtle.importKey("raw", bytes, { name: "AES-GCM", length: 256 }, true, ["encrypt", "decrypt"]);
 }
 
+/** Operação `encryptBlobForOclusion` do módulo.
+ * @param {*} [dataBufferOrUint8] Parâmetro `dataBufferOrUint8`.
+ * @param {*} [cryptoKey] Parâmetro `cryptoKey`.
+ * @returns {*} Resultado da operação.
+ */
 export async function encryptBlobForOclusion(dataBufferOrUint8, cryptoKey) {
   const subtle = globalThis.crypto?.subtle;
   const iv = new Uint8Array(12);
@@ -318,6 +401,11 @@ export async function encryptBlobForOclusion(dataBufferOrUint8, cryptoKey) {
   return result;
 }
 
+/** Operação `decryptBlobFromOclusion` do módulo.
+ * @param {*} [encryptedUint8] Parâmetro `encryptedUint8`.
+ * @param {*} [cryptoKey] Parâmetro `cryptoKey`.
+ * @returns {*} Resultado da operação.
+ */
 export async function decryptBlobFromOclusion(encryptedUint8, cryptoKey) {
   const subtle = globalThis.crypto?.subtle;
   const bytes = encryptedUint8 instanceof Uint8Array ? encryptedUint8 : new Uint8Array(encryptedUint8);

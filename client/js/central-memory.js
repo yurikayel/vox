@@ -1,9 +1,10 @@
 /**
+ * @file Sincronização com servidor de memória central (push/pull e hidratação).
+ 
  * @module central-memory
  * Cliente de sincronização automática com o nó local zero-central-memory.
  * Copia todos os artefatos locais para o disco do nó local e reidrata o estado
- * completo ao iniciar ou reconectar, evitando perda de memória da rede.
- */
+ * completo ao iniciar ou reconectar, evitando perda de memória da rede.*/
 
 import * as cacheNode from "./cache-node.js";
 import * as hydrate from "./central-memory-hydrate.js";
@@ -29,23 +30,32 @@ let lastServerTimestamp = 0;
 let lastLocalSyncMs = 0;
 let lastHydratedCallback = null;
 
+/** Operação `resetCentralMemoryCursor` do módulo.
+ */
 export function resetCentralMemoryCursor() {
   lastServerRevision = 0;
   lastServerTimestamp = 0;
   lastLocalSyncMs = 0;
 }
 
-/** PM-91: servidor anunciado por um par (ou pelo próprio servidor) só vira sugestão; nada muda sem a pessoa. */
+/** PM-91: servidor anunciado por um par (ou pelo próprio servidor) só vira sugestão; nada muda sem a pessoa. 
+ * @param {*} [rawUrl] URL bruta descoberta.
+ * @param {*} [source] Origem da sugestão de memória.
+ * @returns {*} Resultado da operação.*/
 export function registerDiscoveredMemoryUrl(rawUrl, source = "par") {
   return serverChoice.suggestMemoryServer(rawUrl, source);
 }
 
-/** O servidor escolhido, se for público (é o que este aparelho anuncia aos pares). */
+/** O servidor escolhido, se for público (é o que este aparelho anuncia aos pares). 
+ * @returns {*} Resultado da operação.*/
 export function getDiscoveredPublicMemoryUrl() {
   const chosen = serverChoice.getChosenMemoryServer();
   return /^https:\/\//i.test(chosen) ? chosen : "";
 }
 
+/** Define CentralMemoryAutoPush.
+ * @param {*} [enabled] Parâmetro `enabled`.
+ */
 export function setCentralMemoryAutoPush(enabled) {
   autoPushEnabled = Boolean(enabled);
   const sink = autoPushEnabled ? notifyCentralMemory : null;
@@ -54,6 +64,9 @@ export function setCentralMemoryAutoPush(enabled) {
   profileDirectory.registerProfileMemorySink(sink);
 }
 
+/** Operação `notifyCentralMemory` do módulo.
+ * @param {*} [event] Evento Nostr.
+ */
 export function notifyCentralMemory(event) {
   if (!autoPushEnabled || !event || isHydratingFromCentralMemory()) return;
   void pushEventToCentralMemory(event);
@@ -79,11 +92,15 @@ function extractMemoryParamFromLocation() {
   }
 }
 
-/** Link com `?memory=` (ou `?relay=`): vira sugestão, perguntada ao abrir o app (PM-91). */
+/** Link com `?memory=` (ou `?relay=`): vira sugestão, perguntada ao abrir o app (PM-91). 
+ * @returns {*} Resultado da operação.*/
 export function captureMemoryUrlFromLocation() {
   return serverChoice.suggestMemoryServer(extractMemoryParamFromLocation(), "link");
 }
 
+/** Obtém CentralMemoryUrls.
+ * @returns {*} Resultado da operação.
+ */
 export function getCentralMemoryUrls() {
   const storedMemoryUrl = serverChoice.getChosenMemoryServer();
   const configured = typeof getRelayHttpUrls === "function" ? getRelayHttpUrls() : [];
@@ -93,6 +110,9 @@ export function getCentralMemoryUrls() {
   return [...new Set(merged)];
 }
 
+/** Indica se HydratingFromCentralMemory.
+ * @returns {*} Resultado da operação.
+ */
 export function isHydratingFromCentralMemory() {
   return hydratingDepth > 0;
 }
@@ -130,6 +150,10 @@ async function postToFirstAvailable(path, payload) {
   return null;
 }
 
+/** Operação `pushEventToCentralMemory` do módulo.
+ * @param {*} [event] Evento Nostr.
+ * @returns {*} Resultado da operação.
+ */
 export async function pushEventToCentralMemory(event) {
   if (!event || typeof event !== "object" || isHydratingFromCentralMemory()) {
     return null;
@@ -301,6 +325,10 @@ function recordRemoteSyncWatermark(remote, syncStartedMs) {
   lastLocalSyncMs = syncStartedMs;
 }
 
+/** Operação `syncWithCentralMemory` do módulo.
+ * @param {object} [options={}] Opções da operação.
+ * @returns {*} Resultado da operação.
+ */
 export async function syncWithCentralMemory({ onHydrated } = {}) {
   if (syncInFlight) return { ok: false, skipped: true };
   syncInFlight = true;
@@ -323,6 +351,10 @@ export async function syncWithCentralMemory({ onHydrated } = {}) {
   }
 }
 
+/** Operação `startCentralMemoryLoop` do módulo.
+ * @param {object} [options={}] Opções da operação.
+ * @returns {*} Resultado da operação.
+ */
 export function startCentralMemoryLoop({ intervalMs = 15000, onHydrated } = {}) {
   if (typeof onHydrated === "function") lastHydratedCallback = onHydrated;
   setCentralMemoryAutoPush(true);

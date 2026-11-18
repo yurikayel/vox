@@ -9,6 +9,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 ### Correção: relay — espelho recusa corpo grande cedo
 - `POST /vox/mirror` compara `Content-Length` com o teto de 256 KiB antes de ler o corpo e responde 413 com `mirror.body_too_large`, alinhado ao restante dos handlers de escrita.
 
+### Correção: uma só conta quando `ensureLocalAccount` corre em paralelo
+- Chamadas simultâneas com armazenamento vazio compartilham a mesma criação em voo e o mesmo `routeId` persistido. Teste: `tests/local-account-race.test.js`.
+
 ### Correção: acessibilidade do login (cofre na malha e "Já tenho conta")
 - Faixa "Foi você?" é anunciada quando aparece (`role="alert"`, em vez de `alertdialog`); depois de responder, o foco vai para a próxima faixa ou para um lugar estável, e não cai no `body` (WCAG 4.1.3 e 2.4.3). Região de status da malha fica sempre no DOM, vazia até ter texto; erro de "Já tenho conta" sem `aria-live` duplicado; seta do "← Voltar" escondida do leitor. SW `v7.143`. Testes: `tests/mesh-vault-ui.test.js`.
 

@@ -1,6 +1,7 @@
 /**
- * LAN-21 — estados de erro honestos: cada falha conhecida vira um texto que diz
- * o que aconteceu e o que a pessoa pode fazer. Nada "carrega para sempre".
+ * @file Erros honestos (LAN-21): textos claros por tipo de falha de envio ou sinalização.
+ *
+ * Classifica erros de upload e sinalização e expõe mensagens que dizem o que falhou e o que fazer.
  */
 
 const MESSAGES = Object.freeze({
@@ -20,6 +21,11 @@ const MESSAGES = Object.freeze({
     "Sem relay de mensagens agora: a mensagem fica na caixa de saída deste aparelho. Com o Vox aberto, ele tenta de novo sozinho por até 7 dias; ela chega quando você e a outra pessoa estiverem online ao mesmo tempo.",
 });
 
+/**
+ * Mensagem em português para um estado de erro conhecido.
+ * @param {string} kind Chave do estado (`quota`, `offline`, `signalingDown`, etc.).
+ * @returns {string}
+ */
 export function honestMessage(kind) {
   return MESSAGES[kind] || "";
 }
@@ -35,7 +41,11 @@ function statusOf(err, msg) {
   return Number(err?.status) || Number((msg.match(/HTTP (\d{3})/) || [])[1]) || 0;
 }
 
-/** Classifica um erro de envio (fetch, HTTP, Turbo, L1) num dos estados conhecidos. */
+/**
+ * Classifica um erro de envio (fetch, HTTP, Turbo, L1) num estado conhecido.
+ * @param {unknown} err Erro original ou mensagem.
+ * @returns {string} Chave do estado ou string vazia se desconhecido.
+ */
 export function classifyUploadError(err) {
   const msg = String(err?.message || err || "");
   const byStatus = STATUS_KINDS[statusOf(err, msg)];
@@ -47,7 +57,12 @@ export function classifyUploadError(err) {
   return "";
 }
 
-/** Erro com o texto honesto quando a causa é conhecida; senão, o erro original. */
+/**
+ * Substitui o erro por um `Error` com texto honesto quando a causa é conhecida.
+ * @param {unknown} err Erro original.
+ * @param {string} [fallbackPrefix=""] Prefixo se o erro não for classificável.
+ * @returns {Error}
+ */
 export function toHonestError(err, fallbackPrefix = "") {
   const kind = classifyUploadError(err);
   if (!kind) return err instanceof Error ? err : new Error(`${fallbackPrefix}${String(err)}`);
@@ -61,10 +76,20 @@ export function toHonestError(err, fallbackPrefix = "") {
  * LAN-21 — a sinalização só está "caída" quando o WebSocket já desistiu dos nós da lista
  * e nenhum relay Nostr está aberto nem abrindo. Enquanto um dos dois caminhos funciona, não há aviso.
  */
+/**
+ * Indica sinalização caída: WebSocket desistiu e não há relay Nostr ativo nem pendente.
+ * @param {object} [options={}] Estado atual dos canais.
+ * @param {boolean} [options.wsOpen=false] WebSocket aberto.
+ * @param {boolean} [options.wsGaveUp=false] WebSocket esgotou tentativas de reconexão.
+ * @param {number} [options.nostrOpen=0] Relays Nostr conectados.
+ * @param {number} [options.nostrPending=0] Relays Nostr em abertura.
+ * @returns {boolean}
+ */
 export function isSignalingDown({ wsOpen = false, wsGaveUp = false, nostrOpen = 0, nostrPending = 0 } = {}) {
   return !wsOpen && wsGaveUp && nostrOpen <= 0 && nostrPending <= 0;
 }
 
+/** Atraso em ms antes de declarar sinalização caída (evita aviso piscando). @type {number} */
 export const SIGNALING_DOWN_GRACE_MS = 5000;
 
 const SIGNALING_IDLE = Object.freeze({ wsOpen: false, wsGaveUp: false, nostrOpen: 0, nostrPending: 0 });
@@ -102,6 +127,13 @@ function createGraceFlag(graceMs, onChange) {
  * Estado da sinalização com carência: só avisa "caída" se a queda durar `graceMs`
  * (o reconecta do WebSocket e a abertura dos relays Nostr não fazem o aviso piscar).
  * `onChange(down)` dispara só nas viradas; `reset()` volta ao início sem disparar.
+ */
+/**
+ * Monitora sinalização com carência: só avisa após `graceMs` de queda contínua.
+ * @param {object} [options={}]
+ * @param {number} [options.graceMs=SIGNALING_DOWN_GRACE_MS] Carência em ms.
+ * @param {(down: boolean) => void} [options.onChange] Chamado nas viradas de estado.
+ * @returns {{ update: (patch?: object) => void, reset: () => void, isDown: () => boolean }}
  */
 export function createSignalingHealth({ graceMs = SIGNALING_DOWN_GRACE_MS, onChange = () => {} } = {}) {
   const state = { ...SIGNALING_IDLE };
