@@ -88,6 +88,12 @@ Assim a lista só pode diminuir. Quando chegar a zero, o arquivo fica vazio e a 
 - Dividir arquivo só para baixar métrica (`_part1`, `_part2`) ou mover sem porta de entrada. Isso só troca uma bagunça grande por várias pequenas.
 - Pôr exceção na auditoria para fazer um PR passar. Import proibido novo se resolve no código. Se a regra estiver errada, ela muda neste ADR, com revisão.
 
+### 3.4 Ciclos dentro da mesma camada (catraca)
+
+"Importar só para baixo" não enxerga ciclo entre módulos da mesma camada. `scripts/cycles-audit.mjs` (chamado por `npm run audit:layers`) monta o grafo de imports **estáticos** de `client/js` pela árvore sintática (espree), acha os componentes fortemente conexos de 2+ módulos e compara com `scripts/cycles-debt.json`. Reprova ciclo novo ou componente que ganhou módulo; componente menor ou desfeito reprova até `--prune` baixar o baseline (só desce). `import()` não conta: é o jeito aceito de quebrar ciclo, porque a carga é adiada e não há ciclo de avaliação.
+
+Medição de 18/11: a auditoria por regex apontava ~24 módulos em `app/` e ~20 entre `identity/`, `peer-sync` e `central-memory`; contando também `import()` são esses mesmos 24 + 20 módulos, mas só **2 componentes de 3 módulos** são ciclos estáticos. Um foi desfeito (`identity/inbox-backup.js` passou a carregar `own-posts.js` por `import()`, pois `own-posts` → `identity/index` → `inbox-backup`). Resta `app/onboarding.js` ↔ `onboarding-email.js` ↔ `screens-network.js`, no baseline até a entrada de e-mail ser mexida de novo (identidade congelada).
+
 ## 4. Consequências
 
 - **Positivas:**
