@@ -6,6 +6,8 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Acessibilidade: título e foco por rota; botões só com ícone rotulados
+- O roteador (`routeImpl`) passa a definir `document.title` como "Tela · Vox" e mover o foco para o h1 da tela (`tabindex=-1`) (`routeTitle` em `route-parse.js`, `announceRoute` em `route.js`). Botão de ocultar resposta (🛡️) e de remover conta do cofre (✕) ganham `aria-label`. Testes: `tests/a11y-rotas-botoes.test.js`. Sem mudança em `sw.js` (CACHE_NAME fica para o release).
 ### Correção: apagar conta no meio da criação não traz a conta de volta
 - `wipeLocalAccount` passa a incrementar uma época e soltar a criação em voo de `ensureLocalAccount`; a criação confere a época antes de gravar conta, chave de DM e entrada no cofre local e, se o wipe rodou no meio, desfaz a semente e a chave de DM que já tinha gravado. Quem esperava recebe a conta nova, nunca a apagada; chamada feita depois do wipe não entra mais na criação antiga. Duas abas (conta que ressuscita na outra aba) continua fora. `client/sw.js` e `CACHE_NAME` não mudaram. Testes: `tests/local-account-wipe-race.test.js`.
 ### Correção: vazamentos de WebSocket de sinalização e de listener no lab Open Frames
