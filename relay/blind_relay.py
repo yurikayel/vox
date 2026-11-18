@@ -16,6 +16,8 @@ import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
+from relay.safe_path import child_of, only_chars
+
 MAX_ENVELOPE_SIZE = 64 * 1024  # 64 KB por envelope
 MAX_SNAPSHOT_SIZE = 512 * 1024  # 512 KB por snapshot consolidado
 DEFAULT_TTL_SECONDS = 7 * 86400  # 7 dias de retenção para envelopes de canal
@@ -23,8 +25,22 @@ DEFAULT_TTL_SECONDS = 7 * 86400  # 7 dias de retenção para envelopes de canal
 _RELAY_LOCK = threading.RLock()
 _INT_TEXT = re.compile(r"\d{1,19}")
 _INT_LIMIT = 2**63
-_CHANNEL_ID = re.compile(r"[A-Za-z0-9_-]{1,128}")
-_STORED_NAME = re.compile(r"env_[0-9]{1,19}_[0-9a-f]{20}\.json|latest_snapshot\.json")
+_SNAPSHOT_NAME = "latest_snapshot.json"
+_ENVELOPE_PREFIX = "env_"
+_ENVELOPE_SUFFIX = ".json"
+_DIGITS = frozenset("0123456789")
+_HEX = frozenset("0123456789abcdef")
+
+
+def _is_stored_name(text: str) -> bool:
+    """True para `latest_snapshot.json` ou `env_<1-19 dígitos>_<20 hex minúsculos>.json`."""
+    if text == _SNAPSHOT_NAME:
+        return True
+    if not (text.startswith(_ENVELOPE_PREFIX) and text.endswith(_ENVELOPE_SUFFIX)):
+        return False
+    middle = text[len(_ENVELOPE_PREFIX):-len(_ENVELOPE_SUFFIX)]
+    stamp, sep, digest = middle.partition("_")
+    return bool(sep) and only_chars(stamp, _DIGITS, 1, 19) and only_chars(digest, _HEX, 20, 20)
 
 
 def resolve_relay_dir(env: Optional[Dict[str, str]] = None) -> Path:
@@ -51,19 +67,20 @@ def ensure_channel_dir(channel_id: str) -> Path:
     # Tira o que não é id e depois `basename`, para um separador não virar caminho.
     stripped = "".join(c for c in str(channel_id) if c.isalnum() or c in ("-", "_"))
     base = os.path.basename(stripped)
-    if _CHANNEL_ID.fullmatch(base) is None:
-        raise ValueError("ID de canal comunitário inválido")
-    chan_path = RELAY_DIR / base
+    try:
+        chan_path = child_of(RELAY_DIR, base)
+    except ValueError as err:
+        raise ValueError("ID de canal comunitário inválido") from err
     chan_path.mkdir(parents=True, exist_ok=True)
     return chan_path
 
 
 def _stored_file(chan_path: Path, name: str) -> Optional[Path]:
-    """Arquivo do canal só se o nome é um dos nossos (sem separador e sem `..`)."""
-    base = os.path.basename(name)
-    if _STORED_NAME.fullmatch(base) is None:
+    """Arquivo do canal só se o nome é um dos nossos (sem separador, sem `..` e sem symlink para fora)."""
+    try:
+        return child_of(chan_path, os.path.basename(name), _is_stored_name)
+    except ValueError:
         return None
-    return chan_path / base
 
 
 def _coerce_int(value: Any, field: str, default: int = 0) -> int:
