@@ -11,6 +11,7 @@
  */
 
 import { avisoExpiresAt, isAvisoTopic } from "../aviso/aviso-link.js";
+import { formatPtBrDateTimeShort, parseInstant } from "./shared/date-format.js";
 import { isModerator } from "./moderation.js";
 import { roleFields, validateRoleFields } from "./aviso-roles.js";
 
@@ -281,7 +282,7 @@ export function latestAvisoCount(items = [], avisoId = "", meta = {}) {
 
 
 function formatWhen(eventAt) {
-  return new Date(eventAt).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
+  return formatPtBrDateTimeShort(eventAt);
 }
 
 /**
@@ -299,8 +300,12 @@ function formatWhen(eventAt) {
 export function buildAvisoShareText({ aviso, communityName = "", code = "" }) {
   const lines = [`📣 *Aviso — ${communityName || "comunidade"}*`, `*${aviso.title}*`];
   if (aviso.body) lines.push(aviso.body);
-  if (aviso.eventAt) lines.push(`Quando: ${formatWhen(aviso.eventAt)}${aviso.eventPlace ? ` · ${aviso.eventPlace}` : ""}`);
-  const options = aviso.eventAt ? "✅ Ciente · 🙋 Vou · 🤔 Talvez · ❌ Não vou" : "✅ Ciente";
+  const hasEvent = parseInstant(aviso.eventAt) != null;
+  if (hasEvent) {
+    const whenLabel = formatWhen(aviso.eventAt);
+    lines.push(`Quando: ${whenLabel}${aviso.eventPlace ? ` · ${aviso.eventPlace}` : ""}`);
+  }
+  const options = hasEvent ? "✅ Ciente · 🙋 Vou · 🤔 Talvez · ❌ Não vou" : "✅ Ciente";
   lines.push(`Responda aqui: ${options}`);
   if (code) lines.push(`Código do aviso: ${code}`);
   return lines.join("\n");

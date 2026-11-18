@@ -9,6 +9,7 @@ import * as localAccount from "../identity/index.js";
 import * as profileDirectory from "../profile-directory.js";
 import { isWelcomeRouteId } from "../vox-welcome-profile.js";
 import { escapeHtml } from "../shared/html.js";
+import { parseInstant } from "../shared/date-format.js";
 import { shortId } from "../short-id.js";
 
 // Reexportados para a UI. O domínio importa da origem, nunca daqui (docs/ARCHITECTURE.md, "Camadas").
@@ -161,37 +162,7 @@ export function resolvePostAuthorLabels(author, { authorDisplay: override = "", 
   return formatAuthorResult(routeId, fullName, profileHandle);
 }
 
-function parseTsDate(ts) {
-  if (!ts || isNaN(Number(ts))) return null;
-  const d = new Date(Number(ts));
-  return isNaN(d.getTime()) ? null : d;
-}
-
-function pad2(n) {
-  return String(n).padStart(2, "0");
-}
-
-/**
- * Data calendário DD/MM/AAAA a partir de timestamp.
- * @param {number|string} ts Instantâneo em ms.
- * @returns {string}
- */
-export function formatAbsoluteDate(ts) {
-  const d = parseTsDate(ts);
-  if (!d) return "";
-  return `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}/${d.getFullYear()}`;
-}
-
-/**
- * Data e hora local DD/MM/AAAA HH:MM.
- * @param {number|string} ts
- * @returns {string}
- */
-export function formatAbsoluteDateTime(ts) {
-  const d = parseTsDate(ts);
-  if (!d) return "";
-  return `${formatAbsoluteDate(ts)} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
-}
+export { formatAbsoluteDate, formatAbsoluteDateTime } from "../shared/date-format.js";
 
 /**
  * ISO 8601 do instantâneo ou `""` se inválido.
@@ -199,7 +170,7 @@ export function formatAbsoluteDateTime(ts) {
  * @returns {string}
  */
 export function formatIsoTimestamp(ts) {
-  const d = parseTsDate(ts);
+  const d = parseInstant(ts);
   return d ? d.toISOString() : "";
 }
 
