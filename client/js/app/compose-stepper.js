@@ -1,5 +1,7 @@
 /** @file Navegação do compositor em etapas: uma tela por vez, validação por etapa e revisão. */
 
+import { focusAfterComposePublish } from "../render/compose-chrome.js";
+
 /** Etapas que só deixam avançar quando o campo obrigatório está preenchido. */
 const REQUIRED_BY_STEP = { write: "topic-body" };
 
@@ -104,6 +106,15 @@ export function goToComposeStep(form, index) {
     fillGenericReview(form);
   }
   focusStep(steps[target]);
+}
+
+/**
+ * Reposiciona o foco após publicação em formulário em etapas (antes de sair da rota).
+ * @param {string} [message] Anúncio curto para leitores de tela.
+ * @returns {void}
+ */
+export function focusComposeAfterSteppedPublish(message) {
+  focusAfterComposePublish({ message });
 }
 
 /**
