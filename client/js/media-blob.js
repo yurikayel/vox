@@ -1,13 +1,25 @@
+/**
+ * @file Blob de mídia endereçável por hash (SHA-256) fora do gossip JSON.
+ */
+
 // Vox Media Blob - Content-Addressed P2P Media Blobs (SHA-256)
 // Separa o tráfego pesado de mídia base64 do mesh leve de fofocas JSON.
 import { MEDIA_FIELD } from "./post-wire.js";
 
 const DATA_URL_REGEX = /^data:([a-zA-Z0-9/+.-]+);base64,([A-Za-z0-9+/=\r\n]+)$/;
 
+/** Indica se DataUrl.
+ * @param {*} [str] Parâmetro `str`.
+ * @returns {*} Resultado da operação.
+ */
 export function isDataUrl(str) {
   return typeof str === "string" && DATA_URL_REGEX.test(str.trim());
 }
 
+/** Interpreta DataUrl.
+ * @param {*} [dataUrl] Parâmetro `dataUrl`.
+ * @returns {*} Resultado da operação.
+ */
 export function parseDataUrl(dataUrl) {
   if (!isDataUrl(dataUrl)) {
     throw new Error("Formato de Data URL inválido ou não suportado");
@@ -20,6 +32,10 @@ export function parseDataUrl(dataUrl) {
   return { mime, base64, byteLength };
 }
 
+/** Operação `base64ToUint8Array` do módulo.
+ * @param {*} [base64] Parâmetro `base64`.
+ * @returns {*} Resultado da operação.
+ */
 export function base64ToUint8Array(base64) {
   if (typeof atob === "function") {
     const binary = atob(base64);
@@ -36,6 +52,10 @@ export function base64ToUint8Array(base64) {
   throw new Error("Ambiente sem suporte a decodificação base64");
 }
 
+/** Operação `dataUrlToUint8Array` do módulo.
+ * @param {*} [dataUrl] Parâmetro `dataUrl`.
+ * @returns {*} Resultado da operação.
+ */
 export function dataUrlToUint8Array(dataUrl) {
   const parsed = parseDataUrl(dataUrl);
   return base64ToUint8Array(parsed.base64);
@@ -50,6 +70,10 @@ function bufferToHex(buffer) {
   return hex;
 }
 
+/** Calcula BlobHash.
+ * @param {*} [data] Bytes ou buffer de entrada.
+ * @returns {*} Resultado da operação.
+ */
 export async function computeBlobHash(data) {
   if (!data) throw new Error("Dados não fornecidos para cálculo de hash");
   let bytes;
@@ -74,6 +98,11 @@ export async function computeBlobHash(data) {
   return bufferToHex(digest);
 }
 
+/** Operação `createMediaRef` do módulo.
+ * @param {*} [dataUrl] Parâmetro `dataUrl`.
+ * @param {*} [metadata] Parâmetro `metadata`.
+ * @returns {*} Resultado da operação.
+ */
 export async function createMediaRef(dataUrl, metadata = {}) {
   const parsed = parseDataUrl(dataUrl);
   const hash = await computeBlobHash(dataUrl);
@@ -85,6 +114,10 @@ export async function createMediaRef(dataUrl, metadata = {}) {
   };
 }
 
+/** Operação `detachMedia` do módulo.
+ * @param {*} [post] Post ou registro.
+ * @returns {*} Resultado da operação.
+ */
 export async function detachMedia(post) {
   if (!post || typeof post !== "object") {
     return { detachedPost: post, mediaBlob: null };
@@ -112,7 +145,10 @@ export async function detachMedia(post) {
   return { detachedPost, mediaBlob };
 }
 
-/** Campo de tela (`video`, `audio` ou `image`) com os dados do blob do `mediaRef`; null se o blob não é deste post. */
+/** Campo de tela (`video`, `audio` ou `image`) com os dados do blob do `mediaRef`; null se o blob não é deste post. 
+ * @param {*} [post] Post ou registro.
+ * @param {*} [mediaBlob] Parâmetro `mediaBlob`.
+ * @returns {*} Resultado da operação.*/
 export function mediaFields(post, mediaBlob) {
   if (!post || typeof post !== "object") return null;
   if (!mediaBlob || typeof mediaBlob !== "object") return null;
@@ -128,7 +164,9 @@ function mediaKind(mime) {
   return "image";
 }
 
-/** PM-88: blob do `mediaHash` remontado do post de tela (com `MEDIA_FIELD` aplicado); null sem mídia local. */
+/** PM-88: blob do `mediaHash` remontado do post de tela (com `MEDIA_FIELD` aplicado); null sem mídia local. 
+ * @param {*} [post] Post ou registro.
+ * @returns {*} Resultado da operação.*/
 export function blobFromLocalPost(post) {
   const hash = typeof post?.mediaHash === "string" ? post.mediaHash : "";
   const data = hash ? post[mediaKind(post.mediaRef?.mime)] : null;
@@ -137,13 +175,19 @@ export function blobFromLocalPost(post) {
   return { hash, mime, byteLength, data };
 }
 
-/** Post com a mídia do blob em `MEDIA_FIELD`, fora da forma assinada; sem blob do post, o post como veio. */
+/** Post com a mídia do blob em `MEDIA_FIELD`, fora da forma assinada; sem blob do post, o post como veio. 
+ * @param {*} [post] Post ou registro.
+ * @param {*} [mediaBlob] Parâmetro `mediaBlob`.
+ * @returns {*} Resultado da operação.*/
 export function withLocalMedia(post, mediaBlob) {
   const fields = mediaFields(post, mediaBlob);
   return fields ? { ...post, [MEDIA_FIELD]: fields } : post;
 }
 
-/** PM-87: blob do `mediaHash` assinado — o que veio junto com o post (se o conteúdo bate) ou o já guardado. */
+/** PM-87: blob do `mediaHash` assinado — o que veio junto com o post (se o conteúdo bate) ou o já guardado. 
+ * @param {*} [post] Post ou registro.
+ * @param {*} [mediaBlob] Parâmetro `mediaBlob`.
+ * @returns {*} Resultado da operação.*/
 export async function blobForPost(post, mediaBlob) {
   const hash = typeof post?.mediaHash === "string" ? post.mediaHash : "";
   if (!hash) return null;
@@ -152,6 +196,10 @@ export async function blobForPost(post, mediaBlob) {
   return mediaBlob;
 }
 
+/** Operação `verifyMediaBlob` do módulo.
+ * @param {*} [mediaBlob] Parâmetro `mediaBlob`.
+ * @returns {*} Resultado da operação.
+ */
 export async function verifyMediaBlob(mediaBlob) {
   if (!mediaBlob || !mediaBlob.hash || !mediaBlob.data) return false;
   try {
@@ -164,6 +212,9 @@ export async function verifyMediaBlob(mediaBlob) {
 
 let blobMemorySink = null;
 
+/** Operação `registerBlobMemorySink` do módulo.
+ * @param {*} [fn] Parâmetro `fn`.
+ */
 export function registerBlobMemorySink(fn) {
   blobMemorySink = typeof fn === "function" ? fn : null;
 }
@@ -216,4 +267,5 @@ class BlobStorage {
   }
 }
 
+/** Export `defaultBlobStorage` do módulo. @type {*} */
 export const defaultBlobStorage = new BlobStorage(150);
