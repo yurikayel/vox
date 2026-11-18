@@ -65,7 +65,7 @@ Legenda: ✅ coberto · ◐ parcial · ✖ falta. A coluna "Falta" vira item da 
 | "Não fui eu" bloqueia para sempre; decisão forjada é ignorada | ✅ `mesh-vault-flow.test.js` | — |
 | Senha errada: nenhum aviso chega à dona, nada é liberado | ✅ `mesh-vault-flow.test.js` | — |
 | Pedido expira em 72 h; quem guarda offline responde quando volta; relógio: pedido do futuro (folga de 5 min), 24 h e 72 h exatas, relógio de quem guarda voltando | ✅ `mesh-vault-flow.test.js`, `mesh-vault-clock.test.js` | — |
-| Recarregar a página no meio retoma o mesmo pedido | ◐ `startMeshRestore` retoma por endereço | teste de tela com recarga (LT-07) |
+| Recarregar a página no meio retoma o mesmo pedido | ◐ `startMeshRestore` retoma por endereço; a senha nunca é gravada, então após recarregar é digitada de novo | teste de tela com recarga (LT-07) |
 | Cofre chega de vários guardiões: abre uma vez, sem conta duplicada | ✅ `login-network-faults.test.js` (três guardiões no mesmo tick, resposta duplicada; #207) | — |
 | Senha trocada depois das cópias: cópia velha não abre com a senha nova e é substituída | ✅ `mesh-vault-flow.test.js`, `profile-vault-change.test.js` | — |
 
@@ -155,7 +155,7 @@ cada um vira teste (e, se o mantenedor decidir, correção) em PR próprio.
 | LT-07a | `hashchange` apaga o que a pessoa digitou na entrada: `routeImpl` chama `checkCantinaGate`, que chama `checkOAuthEnrichStep`, que reabre o modal e `renderOAuthEnrich` refaz o `innerHTML` do contêiner. Só o pacto tem guarda contra redesenho (`checkPactModal`). | `app/route.js:85,105`; `app/onboarding.js:258-268,230`; `render/genesis-entry.js:119` |
 | LT-07b | Sem focus trap nem Escape no modal de entrada: o `role="dialog" aria-modal="true"` não prende o Tab, e não há `keydown` no fluxo. O foco inicial existe só por etapa (`showGenesisStep` foca o primeiro campo), não ao abrir o diálogo, e ao fechar o foco não volta a quem abriu. | `render/genesis-entry.js:120,148,156` |
 | LT-07c | Kit perdido na recarga: o kit gerado por `createEmailAccountKit` só é mostrado por `showEmailKitCard` e não é gravado em lugar nenhum; recarregar antes de copiar, baixar ou confirmar perde o texto, embora a conta já esteja no storage. | `app/onboarding-email.js:70-74`; `email-kit.js` |
-| LT-07d | A espera da malha não retoma após recarga: o pedido persiste (`loadMeshPending`), mas o `poll` só nasce dentro de `startMeshRestore`, chamado pelo envio do formulário de volta, e para quando `#oauth-mesh-status` some. Depois da recarga a pessoa precisa digitar e-mail e senha de novo para voltar a olhar a resposta (aí o pedido é retomado pelo endereço). | `app/onboarding-email.js:147-165,175` |
+| LT-07d | A espera da malha não retoma após recarga: o pedido persiste (`loadMeshPending`), mas o `poll` só nasce dentro de `startMeshRestore`, chamado pelo envio do formulário de volta, e para quando `#oauth-mesh-status` some. Depois da recarga o e-mail volta preenchido, mas a pessoa precisa digitar a senha de novo (por segurança ela não fica em storage; CodeQL 282) para voltar a olhar a resposta (aí o pedido é retomado pelo endereço). | `app/onboarding-email.js:147-165,175` |
 
 Pendência de confirmação em LT-06b: não foi rastreado se algum caminho da aba velha regrava a conta sozinho; a leitura
 acima vale para o que o código permite, não para o que já foi observado em duas abas reais.
