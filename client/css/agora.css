@@ -567,6 +567,19 @@ body,
   height: 18px;
 }
 
+@media (pointer: coarse), (max-width: 767px) {
+  .agora-btn {
+    min-height: 44px;
+  }
+
+  .agora-icon-btn {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
 .agora-btn--primary {
   background: var(--aurora-gradient);
   color: var(--on-gradient);
