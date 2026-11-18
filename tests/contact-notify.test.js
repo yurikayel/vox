@@ -58,13 +58,12 @@ test("contact-notify-flow - notifyContactAdded pula sistema/self, trata sem chav
     seal: async (_pub, text, meta) => ({ text, meta }),
     dispatch: async (to, env) => { sent.push({ to, env }); return "delivered"; },
   };
-  assert.equal(flow.addContactAndNotify("vx_bob", "Bob", deps), true);
-  await new Promise((r) => setTimeout(r, 10));
+  assert.equal(contacts.addContact("vx_bob", "Bob"), true);
+  await flow.notifyContactAdded("vx_bob", deps);
   assert.equal(sent.length, 1);
   assert.equal(sent[0].to, "vx_bob");
 
   assert.equal(flow.addContactAndNotify("vx_bob", "Bob", deps), true);
-  await new Promise((r) => setTimeout(r, 10));
   assert.equal(sent.length, 1, "não reenvia para quem já era contato");
 });
 

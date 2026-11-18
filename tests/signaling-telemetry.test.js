@@ -1,5 +1,5 @@
 import "./setup.js";
-import test from "node:test";
+import test, { mock } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
@@ -75,12 +75,12 @@ test("PM-18: formata relatório limpo sem IDs e tolera storage corrompido", () =
   assert.equal(localStorage.getItem(SIGNALING_TELEMETRY_KEY), null);
 });
 
-test("PM-18: createNostrTransport reporta onRelayAttempt em sucesso e falha antes de abrir", () => {
+test("PM-18: createNostrTransport reporta onRelayAttempt em sucesso e falha antes de abrir", async () => {
   const attempts = [];
   class FakeWS {
     constructor(url) {
       this.url = url;
-      setTimeout(() => (url.includes("ok") ? this.onopen?.() : this.onclose?.()), 0);
+      queueMicrotask(() => (url.includes("ok") ? this.onopen?.() : this.onclose?.()));
     }
     send() {}
     close() {}
@@ -94,15 +94,11 @@ test("PM-18: createNostrTransport reporta onRelayAttempt em sucesso e falha ante
     reconnectBaseMs: 5000,
   });
   t.start();
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      t.stop();
-      assert.equal(attempts.length, 2);
-      assert.ok(attempts.some((a) => a.ok === true));
-      assert.ok(attempts.some((a) => a.ok === false));
-      resolve();
-    }, 20);
-  });
+  for (let i = 0; i < 4; i++) await Promise.resolve();
+  t.stop();
+  assert.equal(attempts.length, 2);
+  assert.ok(attempts.some((a) => a.ok === true));
+  assert.ok(attempts.some((a) => a.ok === false));
 });
 
 test("PM-18: módulo está no precache do SW e ligado ao webrtc-peer e screens-status", () => {
