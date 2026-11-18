@@ -124,14 +124,3 @@ test("email-kit: validateEmailEntry aceita entrada só com nome e valida e-mail 
   assert.notEqual(emailKit.validateEmailEntry({ rawName: "Duda", email: "duda@exemplo.com", pass: "curta" }), "");
   assert.equal(emailKit.validateEmailEntry({ rawName: "Duda", email: "duda@exemplo.com", pass: PASS }), "");
 });
-
-test("email-kit: validateEmailEntryIssue mapeia foco ao campo que falhou (LT-07)", () => {
-  const nameOnly = { rawName: "", email: "", pass: "" };
-  assert.equal(emailKit.validateEmailEntryIssue(nameOnly)?.fieldId, "oauth-custom-name-input");
-  assert.equal(emailKit.validateEmailEntryIssue({ rawName: "Duda", email: "", pass: "" }), null);
-  const badMail = { rawName: "Duda", email: "sem-arroba", pass: PASS };
-  assert.equal(emailKit.validateEmailEntryIssue(badMail)?.fieldId, "oauth-entry-email-input");
-  const shortPass = { rawName: "Duda", email: "duda@exemplo.com", pass: "curta" };
-  assert.equal(emailKit.validateEmailEntryIssue(shortPass)?.fieldId, "oauth-entry-pass-input");
-  assert.equal(emailKit.validateEmailEntryIssue(shortPass)?.message, emailKit.validateEmailEntry(shortPass));
-});

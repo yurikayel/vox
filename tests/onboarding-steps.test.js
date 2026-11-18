@@ -117,6 +117,21 @@ test("setOAuthEnrichError sem focusId não chama focus", async () => {
   }
 });
 
+test("validateEmailEntryIssue mapeia foco ao campo que falhou (LT-07)", async () => {
+  const emailKit = await import("../client/js/email-kit.js");
+  assert.equal(typeof emailKit.validateEmailEntryIssue, "function");
+  const cases = [
+    [{ rawName: "", email: "", pass: "" }, "oauth-custom-name-input"],
+    [{ rawName: "Duda", email: "sem-arroba", pass: "dozechar!!!!" }, "oauth-entry-email-input"],
+    [{ rawName: "Duda", email: "duda@exemplo.com", pass: "curta" }, "oauth-entry-pass-input"],
+  ];
+  for (const [values, fieldId] of cases) {
+    assert.equal(emailKit.validateEmailEntryIssue(values)?.fieldId, fieldId);
+    assert.equal(emailKit.validateEmailEntryIssue(values)?.message, emailKit.validateEmailEntry(values));
+  }
+  assert.equal(emailKit.validateEmailEntryIssue({ rawName: "Duda", email: "", pass: "" }), null);
+});
+
 test("setOAuthEnrichError com mensagem vazia esconde e não foca", async () => {
   const { errorEl, passEl, doc } = oauthErrorDom();
   const prev = globalThis.document;
