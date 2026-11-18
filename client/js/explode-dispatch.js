@@ -20,9 +20,15 @@ import { copyStoryCardToClipboard } from "./story-card.js";
 import { recordExplosion } from "./social.js";
 import { escapeHtml } from "./shared/html.js";
 
+/** Export `EXPLODE_SHEET_ID` do módulo. @type {string} */
 export const EXPLODE_SHEET_ID = "explode-dispatch-sheet";
+/** Constante de configuração exportada. @type {Array} */
 export const DEFAULT_EXPLODE_TAGS = ["#Democracia", "#VozDoPovo", "#Vox"];
 
+/** Monta ExplodeText para uso no cliente.
+ * @param {object} [options={}] Texto e metadados do disparo.
+ * @returns {*} Resultado da operação.
+ */
 export function buildExplodeText({ title = "", body = "", url = "", hashtags = [] } = {}) {
   const cleanTitle = (title || "Mobilização no Vox").trim();
   const cleanBody = (body || "").replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
@@ -40,25 +46,45 @@ export function buildExplodeText({ title = "", body = "", url = "", hashtags = [
 
   return `${lead}\n\n📢 *${cleanTitle}*${quote}\n\n${action}${tagLine}${foot}`;
 }
+/** Export `buildJanonesExplodeText` do módulo. @type {*} */
 export const buildJanonesExplodeText = buildExplodeText;
 
+/** Monta TelegramShareUrl para uso no cliente.
+ * @param {*} [text] Texto de entrada.
+ * @param {*} [url] URL de destino.
+ * @returns {*} Resultado da operação.
+ */
 export function buildTelegramShareUrl(text, url) {
   const t = encodeURIComponent(String(text || ""));
   const u = encodeURIComponent(String(url || ""));
   return `https://t.me/share/url?url=${u}&text=${t}`;
 }
 
+/** Monta ThreadsIntentUrl para uso no cliente.
+ * @param {*} [text] Texto de entrada.
+ * @param {*} [url] URL de destino.
+ * @returns {*} Resultado da operação.
+ */
 export function buildThreadsIntentUrl(text, url) {
   const full = `${String(text || "")}\n${String(url || "")}`.trim();
   return `https://www.threads.net/intent/post?text=${encodeURIComponent(full)}`;
 }
 
+/** Monta FacebookShareUrl para uso no cliente.
+ * @param {*} [url] URL de destino.
+ * @param {*} [quote] Parâmetro `quote`.
+ * @returns {*} Resultado da operação.
+ */
 export function buildFacebookShareUrl(url, quote = "") {
   const u = encodeURIComponent(String(url || ""));
   const q = encodeURIComponent(String(quote || ""));
   return `https://www.facebook.com/sharer/sharer.php?u=${u}&quote=${q}`;
 }
 
+/** Monta TwitterExplodeText para uso no cliente.
+ * @param {object} [options={}] Texto e metadados do disparo.
+ * @returns {*} Resultado da operação.
+ */
 export function buildTwitterExplodeText({ title = "", body = "" } = {}) {
   const cleanTitle = (title || "Mobilização no Vox").trim();
   const cleanBody = (body || "").replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
@@ -76,6 +102,10 @@ export function buildTwitterExplodeText({ title = "", body = "" } = {}) {
   return `${trimmed}\n\n${tagStr}`;
 }
 
+/** Monta BlueskyExplodeText para uso no cliente.
+ * @param {object} [options={}] Texto e metadados do disparo.
+ * @returns {*} Resultado da operação.
+ */
 export function buildBlueskyExplodeText({ title = "", body = "", url = "" } = {}) {
   const cleanTitle = (title || "Mobilização no Vox").trim();
   const cleanBody = (body || "").replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
@@ -93,6 +123,10 @@ export function buildBlueskyExplodeText({ title = "", body = "", url = "" } = {}
   return `📢 ${cleanTitle}\n\n${url}\n\n${tagStr}`.trim();
 }
 
+/** Operação `quickExplodePost` do módulo.
+ * @param {*} [post] Post ou registro.
+ * @returns {*} Resultado da operação.
+ */
 export async function quickExplodePost(post) {
   const res = await executeExplodeBurst(post);
   share.showToast(
@@ -103,6 +137,10 @@ export async function quickExplodePost(post) {
   return res;
 }
 
+/** Operação `updateExplodeButtonsUi` do módulo.
+ * @param {*} [postId] Id do post com frame.
+ * @param {*} [count] Parâmetro `count`.
+ */
 export function updateExplodeButtonsUi(postId, count) {
   if (typeof document === "undefined" || !postId) return;
   const buttons = document.querySelectorAll(`.btn-share-post[data-id="${postId}"], .btn-explode-post[data-id="${postId}"]`);
@@ -162,6 +200,11 @@ function bumpPostExplodeCounter(post) {
   updateExplodeButtonsUi(post.id, exp.count);
 }
 
+/** Operação `executeExplodeBurst` do módulo.
+ * @param {*} [post] Post ou registro.
+ * @param {object} [options={}] Opções do burst ou cascata.
+ * @returns {*} Resultado da operação.
+ */
 export async function executeExplodeBurst(post, { triggerIntents = true } = {}) {
   const canonicalUrl = buildCanonicalTopicUrl(post?.id, { communityId: post?.communityId });
   const text = buildExplodeText({ title: post?.title, body: post?.body, url: canonicalUrl });
@@ -190,6 +233,7 @@ export async function executeExplodeBurst(post, { triggerIntents = true } = {}) 
 let activeExplodePost = null;
 let explodeWired = false;
 
+/** Export `APP_ICONS` do módulo. @type {object} */
 export const APP_ICONS = {
   whatsapp: `<svg class="app-logo-svg" width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
     <path fill="#25D366" d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2z"/>
@@ -311,6 +355,7 @@ const EXPLODE_EXTRA_CHIPS = [
   { action: "cascade", icon: "🌊", label: "Uma rede por vez", title: "Abre WhatsApp, X, Threads e Bluesky em sequência" },
 ];
 
+/** Export `VOX_LOGO_SRC` do módulo. @type {string} */
 export const VOX_LOGO_SRC = "./icons/icon-mark-black-128.png";
 
 function renderExplodeGridButton(btn, linked) {
@@ -359,6 +404,10 @@ function buildExplodeMoreHtml() {
   </details>`;
 }
 
+/** Monta ExplodeSheetHtml para uso no cliente.
+ * @param {*} [post] Post ou registro.
+ * @returns {*} Resultado da operação.
+ */
 export function buildExplodeSheetHtml(post) {
   return `
     <div class="explode-panel post-more-sheet-panel" role="document">
@@ -391,6 +440,9 @@ function ensureExplodeSheet(post) {
   return root;
 }
 
+/** Operação `openExplodeSheet` do módulo.
+ * @param {*} [post] Post ou registro.
+ */
 export function openExplodeSheet(post) {
   if (!post?.id) return;
   activeExplodePost = { ...post };
@@ -402,6 +454,8 @@ export function openExplodeSheet(post) {
   sheet.querySelector(".explode-primary")?.focus();
 }
 
+/** Operação `closeExplodeSheet` do módulo.
+ */
 export function closeExplodeSheet() {
   const sheet = document.getElementById(EXPLODE_SHEET_ID);
   if (!sheet?.classList.contains("is-open")) return;
@@ -428,6 +482,13 @@ function resolveIntentTargetUrl(action, text, url, post) {
   return "";
 }
 
+/** Operação `resolveBurstTargetUrl` do módulo.
+ * @param {*} [action] Parâmetro `action`.
+ * @param {*} [text] Texto de entrada.
+ * @param {*} [url] URL de destino.
+ * @param {*} [post] Post ou registro.
+ * @returns {*} Resultado da operação.
+ */
 export function resolveBurstTargetUrl(action, text, url, post) {
   if (action === "instagram") return "https://www.instagram.com/#vox-explode=1";
   if (action === "tiktok") return "https://www.tiktok.com/upload#vox-explode=1";
@@ -444,6 +505,11 @@ const AUTO_SUBMIT_SELECTORS = [
   'div[role="dialog"] div[role="button"]:not([aria-disabled="true"])',
 ];
 
+/** Operação `tryAutoSubmitExplodeIntent` do módulo.
+ * @param {*} [doc] Documento da página.
+ * @param {*} [loc] Objeto `location` ou equivalente.
+ * @returns {*} Resultado da operação.
+ */
 export function tryAutoSubmitExplodeIntent(doc = globalThis.document, loc = globalThis.location) {
   if (!doc || !loc || !String(loc.hash || "").includes("vox-explode=1")) return false;
   for (const sel of AUTO_SUBMIT_SELECTORS) {
@@ -484,7 +550,9 @@ async function handleExplodeGridActions(action, text, url, payload, post) {
   return false;
 }
 
+/** Export `CASCADE_BAR_ID` do módulo. @type {string} */
 export const CASCADE_BAR_ID = "explode-cascade-bar";
+/** Export `CASCADE_STEPS` do módulo. @type {Array} */
 export const CASCADE_STEPS = [
   { id: "whatsapp", label: "WhatsApp", icon: "📲" },
   { id: "twitter", label: "X (Twitter)", icon: "🐦" },
@@ -494,6 +562,8 @@ export const CASCADE_STEPS = [
 
 let activeCascade = null;
 
+/** Operação `removeCascadeBar` do módulo.
+ */
 export function removeCascadeBar() {
   document.getElementById(CASCADE_BAR_ID)?.remove();
   activeCascade = null;
@@ -534,6 +604,9 @@ function updateCascadeBarUi() {
   }
 }
 
+/** Operação `advanceCascadeExplode` do módulo.
+ * @returns {*} Resultado da operação.
+ */
 export function advanceCascadeExplode() {
   if (!activeCascade) return;
   const steps = getActiveCascadeSteps();
@@ -578,6 +651,10 @@ function mountCascadeBar(steps, post, stepIndex = 0) {
   bar.querySelector(".btn-cascade-next")?.focus();
 }
 
+/** Operação `startCascadeExplode` do módulo.
+ * @param {*} [post] Post ou registro.
+ * @param {object} [options={}] Opções do burst ou cascata.
+ */
 export function startCascadeExplode(post, { steps = CASCADE_STEPS, skipBurst = false } = {}) {
   if (!post?.id || typeof document === "undefined") return;
   closeExplodeSheet();
@@ -698,6 +775,8 @@ function handleDocumentExplodeClick(e) {
   }
 }
 
+/** Operação `attachExplodeHandlers` do módulo.
+ */
 export function attachExplodeHandlers() {
   if (explodeWired) return;
   explodeWired = true;

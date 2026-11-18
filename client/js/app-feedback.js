@@ -6,21 +6,31 @@
  * Fica no aparelho; a pessoa decide compartilhar com a equipe do piloto. No G1 não há envio automático.
  */
 
+/** Chave em `localStorage` (só neste aparelho). @type {string} */
 export const FEEDBACK_STORAGE_KEY = "vox-app-feedback-v1";
+/** Limite numérico do módulo. @type {number} */
 export const MAX_FEEDBACK = 100;
+/** Limite numérico do módulo. @type {number} */
 export const MAX_NOTE_LEN = 280;
 
+/** Constante de configuração exportada. @type {*} */
 export const FEEDBACK_KINDS = Object.freeze([
   { id: "quebrou", label: "Não funcionou" },
   { id: "confuso", label: "Não entendi" },
   { id: "exagero", label: "Não faz o que diz" },
 ]);
 
+/** Operação `findKind` do módulo.
+ * @param {*} [kindId] Parâmetro `kindId`.
+ * @returns {*} Resultado da operação.
+ */
 export function findKind(kindId) {
   return FEEDBACK_KINDS.find((k) => k.id === kindId) || null;
 }
 
-/** Só o nome da tela: rotas podem carregar endereços e IDs, que não entram no apontamento. */
+/** Só o nome da tela: rotas podem carregar endereços e IDs, que não entram no apontamento. 
+ * @param {*} [screen] Nome da rota/tela (sem IDs).
+ * @returns {*} Resultado da operação.*/
 export function normalizeScreen(screen) {
   const name = String(screen || "").trim().toLowerCase();
   return /^[a-z0-9-]{1,40}$/.test(name) ? name : "desconhecida";
@@ -31,7 +41,10 @@ function oneLine(text) {
   return String(text || "").replace(/\s+/g, " ").trim();
 }
 
-/** Valida e normaliza; lança Error com mensagem em português. */
+/** Valida e normaliza; lança Error com mensagem em português. 
+ * @param {object} [#1] Campos do objeto de entrada.
+ * @param {*} [now] Instante de referência, em ms.
+ * @returns {*} Resultado da operação.*/
 export function buildFeedback({ screen, kind, note = "", version = "" } = {}, now = Date.now()) {
   if (!findKind(kind)) throw new Error("Escolha o que aconteceu.");
   return {
@@ -48,6 +61,10 @@ function isValidRecord(rec) {
   return Boolean(rec) && Boolean(findKind(rec.kind)) && Number.isFinite(rec.ts) && !Number.isNaN(new Date(rec.ts).getTime());
 }
 
+/** Operação `listFeedback` do módulo.
+ * @param {*} [storage] Armazenamento injetável.
+ * @returns {*} Resultado da operação.
+ */
 export function listFeedback(storage = globalThis.localStorage) {
   try {
     const raw = JSON.parse(storage?.getItem(FEEDBACK_STORAGE_KEY) || "[]");
@@ -57,14 +74,19 @@ export function listFeedback(storage = globalThis.localStorage) {
   }
 }
 
-/** Acrescenta e mantém só os MAX_FEEDBACK mais recentes. Devolve o total guardado. */
+/** Acrescenta e mantém só os MAX_FEEDBACK mais recentes. Devolve o total guardado. 
+ * @param {*} [rec] Parâmetro `rec`.
+ * @param {*} [storage] Armazenamento injetável.
+ * @returns {*} Resultado da operação.*/
 export function saveFeedback(rec, storage = globalThis.localStorage) {
   const list = [...listFeedback(storage), rec].slice(-MAX_FEEDBACK);
   storage?.setItem(FEEDBACK_STORAGE_KEY, JSON.stringify(list));
   return list.length;
 }
 
-/** Contagem por tela e tipo, da mais apontada para a menos. */
+/** Contagem por tela e tipo, da mais apontada para a menos. 
+ * @param {*} [list] Lista em memória.
+ * @returns {*} Resultado da operação.*/
 export function summarizeByScreen(list = []) {
   const counts = new Map();
   for (const rec of list) {
@@ -86,7 +108,9 @@ function formatLine(rec) {
   return `- ${day} · tela ${rec.screen} · ${label}${note ? ` · "${note}"` : ""}`;
 }
 
-/** Texto para a pessoa colar no grupo do piloto (resumo + lista). */
+/** Texto para a pessoa colar no grupo do piloto (resumo + lista). 
+ * @param {*} [list] Lista em memória.
+ * @returns {*} Resultado da operação.*/
 export function formatFeedbackForShare(list = []) {
   if (!list.length) return "Nenhum apontamento salvo neste aparelho.";
   const versions = [...new Set(list.map((rec) => rec.version).filter(Boolean))];
