@@ -6,6 +6,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### CI: `red-on-base` só roda contra a base em PR `fix:`; teste de importar posts não depende de turnos do loop
+- `scripts/red-on-base.mjs`: PR que não é `fix:` (inclusive `release:` para `main`) não executa os testes novos contra a base; antes o job estourava 10 min com testes que travam na base. O veredito `info` agora diz que não rodou.
+- `tests/app-own-posts-ui.test.js`: `importar: arquivo da própria conta…` espera a condição (`waitFor`) em vez de 20 `setImmediate`, que falhava no Node 24 do CI.
 ### Correção e testes: transporte Nostr não lança com evento malformado; 15 suítes resgatadas das sessões S30
 - `client/js/nostr-transport.js`: `tagValue` aceita evento sem lista de tags ou tag que não é lista (antes `TypeError`).
 - Testes novos (dados das sessões Claude da rodada S30, que não tinham equivalente em `develop`): `app-*` (5), `assinaturas-e-sinais-malicioso`, `p2p-gossip-malicioso`, `peer-sync-malicioso`, `boot-scripts`, `qr-url-gf`, `repost-index`, `cofre-envelope-adversarial`, `cofre-link-e-backup-adversarial`, `identidade-chaves-adversarial`. Bugs conhecidos entram como `test.todo`.
