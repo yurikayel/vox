@@ -65,3 +65,31 @@ test("nostr-event - isEphemeralKind cobre só 20000–29999", () => {
   assert.equal(ne.isEphemeralKind(29999), true);
   assert.equal(ne.isEphemeralKind(30000), false);
 });
+
+test("nostr-event - isFreshEvent aceita só created_at inteiro dentro de ±10 min", () => {
+  const agora = 1_700_000_000_000;
+  const seg = agora / 1000;
+  assert.equal(ne.isFreshEvent({ created_at: seg }, agora), true);
+  assert.equal(ne.isFreshEvent({ created_at: seg - ne.EVENT_WINDOW_S }, agora), true);
+  assert.equal(ne.isFreshEvent({ created_at: seg + ne.EVENT_WINDOW_S }, agora), true);
+  assert.equal(ne.isFreshEvent({ created_at: seg - ne.EVENT_WINDOW_S - 1 }, agora), false);
+  assert.equal(ne.isFreshEvent({ created_at: seg + ne.EVENT_WINDOW_S + 1 }, agora), false);
+  for (const lixo of [null, undefined, {}, { created_at: "1700000000" }, { created_at: seg + 0.5 }, { created_at: NaN }]) {
+    assert.equal(ne.isFreshEvent(lixo, agora), false, String(lixo));
+  }
+});
+
+test("nostr-event - createSeenWindow: repetido é recusado, o teto expulsa o mais antigo e o prazo esquece", () => {
+  let t = 0;
+  const w = ne.createSeenWindow({ limit: 3, ttlMs: 1000, now: () => t });
+  assert.equal(w.add("a"), true);
+  assert.equal(w.add("a"), false);
+  assert.equal(w.has("a"), true);
+  for (const id of ["b", "c", "d"]) w.add(id);
+  assert.equal(w.size, 3);
+  assert.equal(w.has("a"), false, "o mais antigo saiu pelo teto");
+  t = 1001;
+  assert.equal(w.has("b"), false, "prazo vencido");
+  assert.equal(w.size, 0);
+  assert.equal(w.add("b"), true);
+});
