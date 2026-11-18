@@ -15,6 +15,11 @@ import threading
 import time
 import socketserver
 
+try:  # como pacote (testes, `python -m`) ou solto na mesma pasta (`python relay/signaling.py`, imagem Docker)
+    from relay import rate_limit
+except ImportError:
+    import rate_limit
+
 WS_GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 DEFAULT_HOST = "0.0.0.0"
 DEFAULT_PORT = 3921
@@ -167,11 +172,13 @@ def make_http_response(
     status_text: str,
     body: bytes = b"",
     content_type: str = "application/json",
+    extra_headers: tuple = (),
 ) -> bytes:
     lines = [
         f"HTTP/1.1 {status_code} {status_text}",
         f"Content-Type: {content_type}",
         f"Content-Length: {len(body)}",
+        *extra_headers,
         "Access-Control-Allow-Origin: *",
         "Access-Control-Allow-Methods: GET, HEAD, OPTIONS",
         "Access-Control-Allow-Headers: *",
@@ -270,6 +277,8 @@ registry = PeerRegistry()
 
 
 class WebSocketHandler(socketserver.BaseRequestHandler):
+    peer_ip = None  # IP usado no limite de taxa; definido no handshake
+
     def setup(self):
         self.peer_id = None
         self.closed = False
@@ -323,6 +332,10 @@ class WebSocketHandler(socketserver.BaseRequestHandler):
             )
             return False
 
+        self.peer_ip = self.resolve_peer_ip(headers)
+        if self.reject_if_throttled():
+            return False
+
         accept_val = compute_accept_key(sec_key)
         resp = (
             "HTTP/1.1 101 Switching Protocols\r\n"
@@ -331,6 +344,27 @@ class WebSocketHandler(socketserver.BaseRequestHandler):
             f"Sec-WebSocket-Accept: {accept_val}\r\n\r\n"
         )
         self.request.sendall(resp.encode("ascii"))
+        return True
+
+    def resolve_peer_ip(self, headers: dict):
+        """IP do cliente para o limite de taxa (respeita `VOX_RELAY_TRUST_PROXY_HOPS`); None sem endereço de rede."""
+        address = getattr(self, "client_address", None)
+        if not address:
+            return None
+        return rate_limit.client_ip(address[0], headers.get("x-forwarded-for"))
+
+    def reject_if_throttled(self) -> bool:
+        """Recusa a conexão com 429 + `Retry-After` quando o IP abriu WebSockets demais."""
+        wait = rate_limit.LIMITER.check("signal", self.peer_ip) if self.peer_ip else 0
+        if not wait:
+            return False
+        resp = make_http_response(
+            429, "Too Many Requests", body=b'{"error":"rate_limited"}', extra_headers=(f"Retry-After: {wait}",)
+        )
+        try:
+            self.request.sendall(resp)
+        except OSError:
+            pass
         return True
 
     def receive_loop(self):
@@ -363,6 +397,8 @@ class WebSocketHandler(socketserver.BaseRequestHandler):
         return True
 
     def handle_text_payload(self, payload: bytes):
+        if self.peer_ip and rate_limit.LIMITER.check("signal_msg", self.peer_ip):
+            return  # acima do limite da conexão: descarta sem responder
         try:
             msg = json.loads(payload.decode("utf-8"))
             self.dispatch_message(msg)
