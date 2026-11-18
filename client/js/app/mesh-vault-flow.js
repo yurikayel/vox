@@ -53,10 +53,11 @@ async function sendSigned(x, me, to, body) {
 
 // ---- Dona: mandar o cofre ----
 
+// Guardiões primeiro, e só quem ainda é laço mútuo: quem não é recusaria a cópia e gastaria uma das 7 vagas.
 async function holderCandidates(x, me) {
-  const guardians = x.guardiansOf(me) || [];
-  const ties = await Promise.resolve(x.mutual([...new Set(x.pool() || [])])).catch(() => []);
-  return [...new Set([...guardians, ...ties])].filter((id) => id && id !== me);
+  const pool = [...new Set([...(x.guardiansOf(me) || []), ...(x.pool() || [])])].filter((id) => id && id !== me);
+  const ties = new Set(await Promise.resolve(x.mutual(pool)).catch(() => []));
+  return pool.filter((id) => ties.has(id));
 }
 
 /**
@@ -70,7 +71,8 @@ export async function shareMyVault(d = null) {
   const mine = mesh.loadMeshMine();
   if (!me || !mine || mine.routeId !== me) return [];
   const sent = [];
-  for (const to of mesh.pickHolders(mine, await holderCandidates(x, me))) {
+  const candidates = await holderCandidates(x, me);
+  for (const to of mesh.pickHolders(mine, candidates).filter((id) => candidates.includes(id))) {
     const body = mesh.buildGuardBody({ to, address: mine.address, record: mine.record, updatedAt: mine.updatedAt });
     if (await sendSigned(x, me, to, body).catch(() => false)) sent.push(to);
   }
@@ -112,8 +114,11 @@ function onNotice(x, p) {
 
 function onDecision(p) {
   const held = mesh.loadHeld();
-  const req = held[p.author]?.requests?.[p.requestId];
-  if (!req || req.decision) return;
+  const requests = held[p.author]?.requests;
+  // `Object.hasOwn`: "__proto__" ou "constructor" como requestId não pode achar o protótipo e escrever nele.
+  if (!requests || typeof p.requestId !== "string" || !Object.hasOwn(requests, p.requestId)) return;
+  const req = requests[p.requestId];
+  if (!req || typeof req !== "object" || req.decision) return;
   req.decision = p.decision === "sim" ? "sim" : "nao";
   mesh.saveHeld(held);
 }
@@ -169,18 +174,44 @@ async function releaseTo(x, entry, id, req) {
   return Promise.resolve(x.push(mailbox, envelope)).then(() => true, () => false);
 }
 
+async function safeReleaseTo(x, entry, id, req) {
+  return releaseTo(x, entry, id, req).catch(() => false);
+}
+
 async function settleRequests(x, entry) {
   let released = 0;
   for (const [id, req] of Object.entries(entry.requests)) {
     const verdict = mesh.decideRequest(req, x.now());
-    if (verdict === "drop" && x.now() - req.t > mesh.REQUEST_MAX_AGE_MS) delete entry.requests[id];
+    // Vencido ou ilegível sai; vetado dentro do prazo fica, para o pedido não voltar como novo.
+    const live = Number.isFinite(req?.firstSeen) && x.now() - req.t <= mesh.REQUEST_MAX_AGE_MS;
+    if (verdict === "drop" && !live) delete entry.requests[id];
     if (verdict !== "release") continue;
-    if (await releaseTo(x, entry, id, req)) {
+    if (await safeReleaseTo(x, entry, id, req)) {
       req.answered = true;
       released += 1;
     }
   }
   return released;
+}
+
+const isPlainObject = (v) => Boolean(v) && typeof v === "object" && !Array.isArray(v);
+
+// Uma entrada ilegível (armazenamento corrompido) não pode travar a volta das outras donas.
+const isReadableEntry = (entry) => isPlainObject(entry) && mesh.isVaultAddress(entry.address);
+
+// Grava só os pedidos, sobre o que está guardado agora: a volta demora (rede) e um veto, uma troca de cofre ou um
+// "soltar" que chegaram no meio não podem ser desfeitos por uma cópia velha da guarda inteira.
+function saveRequests(owner, entry) {
+  const held = mesh.loadHeld();
+  const cur = held[owner];
+  if (!isReadableEntry(cur) || cur.address !== entry.address) return;
+  const fresh = isPlainObject(cur.requests) ? cur.requests : {};
+  const requests = { ...entry.requests };
+  for (const [id, r] of Object.entries(requests)) {
+    if (fresh[id]?.decision) requests[id] = { ...r, decision: fresh[id].decision };
+  }
+  held[owner] = { ...cur, requests };
+  mesh.saveHeld(held);
 }
 
 /**
@@ -193,14 +224,14 @@ export async function holderTick(d = null) {
   const x = await deps(d);
   const me = await Promise.resolve(x.getMe()).catch(() => "");
   if (!me) return { released: 0 };
-  const held = mesh.loadHeld();
   let released = 0;
-  for (const [owner, entry] of Object.entries(held)) {
-    entry.requests = entry.requests || {};
+  for (const [owner, entry] of Object.entries(mesh.loadHeld())) {
+    if (!isReadableEntry(entry)) continue;
+    entry.requests = isPlainObject(entry.requests) ? entry.requests : {};
     await noteNewRequests(x, me, owner, entry);
     released += await settleRequests(x, entry);
+    saveRequests(owner, entry);
   }
-  mesh.saveHeld(held);
   return { released };
 }
 
