@@ -11,6 +11,8 @@
  * @see docs/adr/023-moderacao-em-camadas-e-moderador-natural.md
  */
 
+import { randomBase36 } from "./shared/html.js";
+
 /**
  * Chave em `localStorage` das denúncias feitas neste aparelho.
  *
@@ -98,7 +100,7 @@ export function buildReport({ postId, authorRoute = "", communityId = "", reason
   if (!postId) throw new Error("Publicação não identificada.");
   if (!findReason(reason)) throw new Error("Escolha um motivo para a denúncia.");
   return {
-    id: `rep_${now.toString(36)}_${Math.random().toString(36).slice(2, 8)}`,
+    id: `rep_${now.toString(36)}_${randomBase36(6)}`,
     postId: String(postId),
     authorRoute: String(authorRoute || ""),
     communityId: String(communityId || ""),

@@ -28,6 +28,7 @@ import { getActiveUser, makeShellProps } from "./context.js";
 import { bindPollBuilder, readPollOptions } from "./compose-poll.js";
 import { assertCanPostTopic } from "./community-channel-flow.js";
 import { resolveCommunityMetadata, resolveTopicContent } from "./screens-community.js";
+import { randomBase36 } from "../shared/html.js";
 
 function updateCommunityPhotoPreview(previewEl, src, initial = "C") {
   if (!previewEl) return;
@@ -322,7 +323,7 @@ async function handleComposeTopicSubmit(e, communityId) {
   btn.disabled = true;
   btn.textContent = "Publicando…";
   try {
-    const topicId = "top_" + Math.random().toString(36).slice(2, 10);
+    const topicId = "top_" + randomBase36(8);
     await signAndBroadcastTopic(topicId, finalComm, inputs.title, inputs.body, inputs.civicTag);
     const permaResult = await tryUploadTopicToPermaweb(topicId, finalComm, inputs.title, inputs.body);
     showTopicPublishToast(permaResult);
@@ -469,7 +470,7 @@ function resolveContactPix(contactPix) {
 }
 
 async function executeListingPublish(form, pixNormalized, user, communityId) {
-  const listingId = `listing_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+  const listingId = `listing_${Date.now()}_${randomBase36(5)}`;
   const draft = listing.buildListingDraft({
     id: listingId,
     communityId,
@@ -581,7 +582,7 @@ export async function publishProposal({ communityId, title, body, diffText, user
   try {
     const now = Date.now();
     const signedProposal = await localAccount.signPayload({
-      id: `prop_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+      id: `prop_${Date.now()}_${randomBase36(5)}`,
       type: "governance-proposal",
       communityId,
       title,
@@ -716,7 +717,7 @@ export async function persistLocalReply(topicId, communityId, body, { parentId =
     throw new Error("Este debate foi encerrado pela moderação e não aceita novas respostas.");
   }
 
-  const replyId = "rep_" + Math.random().toString(36).slice(2, 10);
+  const replyId = "rep_" + randomBase36(8);
   const myDisplayName = localAccount.getDisplayName() || localAccount.getProfileEnrichment()?.displayName || "";
   const myAvatar = localAccount.getProfileEnrichment()?.avatarUrl || "";
   const signed = await localAccount.signPayload({
