@@ -9,6 +9,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 ### Correção: avisa no passo de criação quando a conta não grava no aparelho
 - `ensureLocalAccount` registra falha de quota/bloqueio e o onboarding mostra aviso em `#oauth-enrich-error` sem travar o fluxo. Testes: `tests/local-account-storage-full.test.js`, `tests/onboarding-steps.test.js`.
 
+### Correção: storage corrompido (JSON não-objeto) não quebra malha nem conta
+- Leitores das cópias na malha e das sementes ignoram JSON que não é objeto (top-level e, nas cópias, cada entrada inválida); mesmo tratamento que chave ausente ou JSON inválido. Testes: `tests/storage-corrupt.test.js`.
+
 ### Correção: foco no campo certo após erro na entrada (LT-07)
 - `setOAuthEnrichError` aceita `focusId` opcional; `validateEmailEntryIssue` aponta nome, e-mail ou senha conforme a falha. Testes: `tests/onboarding-steps.test.js`.
 

@@ -1,4 +1,10 @@
-/** @file Direct message inbox and thread UI (DM v2: quote-reply, reactions, context cards, read receipts, E2E photo, unread/pin/search). */
+/**
+ * @file Caixa de entrada e thread de mensagens diretas (DM v2).
+ *
+ * Monta HTML para lista de conversas e tela de thread; persistência e criptografia ficam fora deste módulo.
+ *
+ * @module render/dm
+ */
 import * as profileDirectory from "../profile-directory.js";
 import { getWelcomeProfile, WELCOME_ROUTE_ID } from "../vox-welcome-profile.js";
 import {
@@ -108,6 +114,18 @@ function renderDmHeroCard(contactList = []) {
     ${renderContactQuickHtml(contactList)}`;
 }
 
+/**
+ * Renderiza a lista de conversas (inbox completa ou compacta na coluna DM).
+ * @param {HTMLElement} main Container `#app-main` onde o HTML é injetado.
+ * @param {object[]} [conversations=[]] Conversas do cache local, já ordenadas pelo chamador ou por {@link sortAndFilterConversations}.
+ * @param {string} [_myAddress=""] Endereço da conta ativa (reservado para badges futuros).
+ * @param {object} [options={}] Opções de layout e filtro.
+ * @param {object[]} [options.contactList=[]] Contatos salvos para atalhos e datalist.
+ * @param {string} [options.searchQuery=""] Filtro de busca aplicado ao inbox.
+ * @param {boolean} [options.compact=false] Se verdadeiro, só o painel lateral de conversas.
+ * @param {string} [options.activePeer=""] Par selecionado no layout dividido (destaque visual).
+ * @returns {void}
+ */
 export function renderDmList(main, conversations = [], _myAddress = "", { contactList = [], searchQuery = "", compact = false, activePeer = "" } = {}) {
   const sorted = sortAndFilterConversations(conversations, { query: searchQuery, welcomeId: WELCOME_ROUTE_ID, resolveLabel: resolvePeerLabel });
   const emptyText = searchQuery ? "Nenhuma conversa encontrada para esta busca." : "Nenhuma conversa ainda. Toque em <strong>Nova conversa</strong> ou peça para alguém te mandar mensagem.";
@@ -280,6 +298,18 @@ function renderThreadComposerHtml(hasDmPub, pendingContextCard) {
     </div>`;
 }
 
+/**
+ * Renderiza a thread de mensagens com um par (bolhas, composer e avisos de chave E2E).
+ * @param {HTMLElement} main Container `#app-main`.
+ * @param {string} peerAddress Rota `vx_…` do destinatário ou par.
+ * @param {object[]} [messages=[]] Mensagens já carregadas para exibição.
+ * @param {string} [myAddress=""] Conta local (alinha bolhas enviadas vs recebidas).
+ * @param {object} [opts={}] Estado de rede e anexos pendentes.
+ * @param {boolean} [opts.isRtcOnline=false] Se o par está alcançável na malha agora.
+ * @param {boolean} [opts.hasDmPub=false] Se existe chave pública DM para cifrar anexos.
+ * @param {object|null} [opts.pendingContextCard=null] Cartão de contexto citado pendente no composer.
+ * @returns {void}
+ */
 export function renderDmThread(main, peerAddress, messages = [], myAddress = "", opts = {}) {
   const { isRtcOnline = false, hasDmPub = false, pendingContextCard = null } = opts;
   const peerLabel = resolvePeerLabel(peerAddress);
