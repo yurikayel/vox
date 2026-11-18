@@ -5,13 +5,19 @@ import * as share from "../share.js";
 import * as localAccount from "../identity/index.js";
 import * as oauthProfile from "../oauth-profile.js";
 import * as emailKit from "../email-kit.js";
-import { bindEmailEntryForm, handleRestoreFailure, readRestoreInputs } from "./onboarding-email.js";
+import {
+  bindEmailEntryForm,
+  clearGenesisResume,
+  handleRestoreFailure,
+  readGenesisResume,
+  readRestoreInputs,
+  resumeGenesisAfterRender,
+} from "./onboarding-email.js";
 import * as meshProfile from "../mesh-profile.js";
 import * as centralMemory from "../central-memory.js";
 import { syncIdentity } from "./screens-network.js";
 import { parseRoute } from "./route-parse.js";
 import * as ageGate from "../age-gate.js";
-import { FEEDBACK_STORAGE_KEY } from "../app-feedback.js";
 import {
   CANTINA_STORAGE_KEY,
   hasPassedCantinaGate,
@@ -25,6 +31,7 @@ import { startAccountExitBanner } from "./account-exit-banner.js";
 import * as inviteArrival from "../invite-arrival.js";
 import { addContactAndNotify } from "./contact-notify-flow.js";
 import { showConnect } from "./screens-people.js";
+import { forgetAllMesh } from "../vault/index.js";
 
 export { ensureOnboardingSideEffects } from "./onboarding-side-effects.js";
 
@@ -32,13 +39,27 @@ export { ensureOnboardingSideEffects } from "./onboarding-side-effects.js";
  * Mostra ou limpa mensagem de erro na etapa de enriquecimento OAuth.
  *
  * @param {string} message Texto de erro; vazio esconde o bloco.
+ * @param {string} [focusId] Id do campo a focar quando há mensagem.
  * @returns {void}
  */
-export function setOAuthEnrichError(message) {
+export function setOAuthEnrichError(message, focusId) {
   const el = document.getElementById("oauth-enrich-error");
   if (!el) return;
   el.textContent = message || "";
   el.hidden = !message;
+  if (message && focusId) document.getElementById(focusId)?.focus();
+}
+
+/** Aviso no passo de criação quando a conta ficou só na memória (armazenamento cheio ou bloqueado). */
+export const ACCOUNT_NOT_PERSISTED_WARN =
+  "Não deu para salvar a conta neste aparelho (armazenamento cheio ou bloqueado). Ela some se você fechar o app: libere espaço ou salve o arquivo de acesso antes de sair.";
+
+/**
+ * Mostra em `#oauth-enrich-error` se a conta ativa não foi gravada no aparelho; não bloqueia o fluxo.
+ * @returns {void}
+ */
+export function warnIfAccountNotPersisted() {
+  if (localAccount.getAccountStorageIssue()) setOAuthEnrichError(ACCOUNT_NOT_PERSISTED_WARN);
 }
 
 /**
@@ -130,6 +151,7 @@ function syncIdentityAndDirectoryAfterOnboarding() {
 }
 
 function completeEntryOnboarding(modalContainer, onComplete, result, toastMsg = "") {
+  clearGenesisResume();
   oauthProfile.skipOAuthEnrichment();
   if (toastMsg) share.showToast(toastMsg);
   syncIdentityAndDirectoryAfterOnboarding();
@@ -143,19 +165,28 @@ function bindOAuthProviderButton({ btnId, signInFn, fallbackError, labelFn, moda
   });
 }
 
-function finishNameOnlyEntry(rawName, modalContainer, onComplete) {
+async function finishNameOnlyEntry(rawName, modalContainer, onComplete) {
   if (!rawName) return setOAuthEnrichError("Digite um nome ou apelido para continuar.");
   setOAuthEnrichError("");
-  localAccount.setDisplayName(rawName);
-  completeEntryOnboarding(modalContainer, onComplete, { ok: true, customName: rawName }, `Bem-vindo, ${rawName}!`);
+  try {
+    await localAccount.ensureLocalAccount();
+    warnIfAccountNotPersisted();
+    localAccount.setDisplayName(rawName);
+    completeEntryOnboarding(modalContainer, onComplete, { ok: true, customName: rawName }, `Bem-vindo, ${rawName}!`);
+  } catch (err) {
+    setOAuthEnrichError(err?.message || "Erro ao criar conta.");
+  }
 }
 
 function bindCustomNameForm(modalContainer, onComplete) {
   const form = document.getElementById("form-oauth-custom-name");
   if (!form) return;
+  const genesisResume = readGenesisResume();
+  const entryResume = genesisResume?.step === "entry" ? genesisResume : null;
   bindEmailEntryForm(form, {
     finish: (result, toastMsg) => completeEntryOnboarding(modalContainer, onComplete, result, toastMsg),
-    finishNameOnly: (rawName) => finishNameOnlyEntry(rawName, modalContainer, onComplete),
+    finishNameOnly: (rawName) => void finishNameOnlyEntry(rawName, modalContainer, onComplete),
+    entryResume,
   });
 }
 
@@ -168,9 +199,11 @@ function bindSovereignPassphraseForm(modalContainer, onComplete) {
     setOAuthButtonBusy(btn, true);
     setOAuthEnrichError("");
     try {
-      const res = await emailKit.restoreAccountFromInputs(readRestoreInputs());
-      if (res.ok) completeEntryOnboarding(modalContainer, onComplete, { ok: true, restored: true, routeId: res.routeId }, `Identidade restaurada com sucesso! Bem-vindo(a), ${res.displayName || "Cidadão"}!`);
-      else handleRestoreFailure(res);
+      const inputs = readRestoreInputs();
+      const res = await emailKit.restoreAccountFromInputs(inputs);
+      const done = (ok) => completeEntryOnboarding(modalContainer, onComplete, { ok: true, restored: true, routeId: ok.routeId }, `Identidade restaurada com sucesso! Bem-vindo(a), ${ok.displayName || "Cidadão"}!`);
+      if (res.ok) done(res);
+      else handleRestoreFailure(res, inputs, done);
     } catch (err) {
       setOAuthEnrichError(err?.message || "Erro ao decifrar cofre soberano.");
     } finally {
@@ -226,6 +259,10 @@ export function openOAuthEnrichModal({ onComplete, withPact = false, mode = "ent
   bindOAuthProviderButton({ btnId: "btn-oauth-google", signInFn: () => oauthProfile.signInWithGoogle(), fallbackError: "Google indisponível", labelFn: () => "Perfil enriquecido com Google.", modalContainer, onDone: onComplete });
   bindOAuthProviderButton({ btnId: "btn-oauth-meta", signInFn: () => oauthProfile.signInWithMeta(), fallbackError: "Meta indisponível", labelFn: () => "Perfil enriquecido com Meta.", modalContainer, onDone: onComplete });
   bindOAuthProviderButton({ btnId: "btn-oauth-github", signInFn: () => oauthProfile.signInWithGithub(), fallbackError: "GitHub indisponível", labelFn: (res) => `Perfil enriquecido com GitHub (@${res.profile?.handle || ""}).`, modalContainer, onDone: onComplete });
+
+  resumeGenesisAfterRender(modalContainer, {
+    onEmailKitFinish: (result, toastMsg) => completeEntryOnboarding(modalContainer, onComplete, result, toastMsg),
+  });
 }
 
 /**
@@ -310,10 +347,34 @@ function acceptPact() {
   }
 }
 
-/** "Apagar conta local": as chaves e também o que a entrada grava (pacto, 18+ e apontamentos). */
-export function wipeLocalDevice() {
-  localAccount.wipeLocalAccount();
-  for (const key of ["vox-pact-accepted", ageGate.AGE_STORAGE_KEY, FEEDBACK_STORAGE_KEY]) localStorage.removeItem(key);
+/**
+ * "Apagar conta local": as chaves da conta, o cofre na malha e todo dado pessoal do aparelho (lista em `local-wipe.js`).
+ * O localStorage e o sessionStorage saem na hora; a promessa termina quando os bancos IndexedDB também saíram
+ * ou o navegador provou que não saem (outra aba segurando): `complete` só é true se tudo foi apagado de fato.
+ * @returns {Promise<{ complete: boolean, pending: string[] }>} `pending` lista os bancos que ficaram
+ */
+export async function wipeLocalDevice() {
+  const accountGone = localAccount.wipeLocalAccount();
+  forgetAllMesh();
+  localAccount.dropAllPersonalStorage();
+  await accountGone;
+  const pending = await localAccount.dropDatabases();
+  return { complete: pending.length === 0, pending };
+}
+
+/**
+ * Texto do aviso depois de "Apagar conta local", sem prometer o que não aconteceu.
+ * @param {{ complete: boolean, pending: string[] }} outcome resultado de `wipeLocalDevice`
+ * @returns {{ message: string, kind: "info" | "error" }}
+ */
+export function describeWipeOutcome(outcome) {
+  if (outcome?.complete) return { message: "Chaves deste navegador apagadas.", kind: "info" };
+  return {
+    message:
+      "Apagamos o que deu, mas parte das chaves ainda está neste navegador: outra aba do Vox está usando. " +
+      "Feche as outras abas e apague de novo.",
+    kind: "error",
+  };
 }
 
 /** Conta acabou de nascer: pede ao navegador para não apagar e avisa que ela ainda não tem saída (ADR-032). */

@@ -23,10 +23,9 @@ jobs:
     name: Compilar Vox.exe, VoxPopuli.exe e APKs
     runs-on: windows-latest
     timeout-minutes: 30
+    # Só leitura: roda também em pull_request, que não pode escrever nada.
     permissions:
-      contents: write
-      id-token: write
-      attestations: write
+      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -73,12 +72,6 @@ jobs:
           Pop-Location
           Get-Content out\SHA256SUMS | ForEach-Object { "``$_``" } | Add-Content $env:GITHUB_STEP_SUMMARY
 
-      - name: Atestação de origem
-        if: github.event_name != 'pull_request'
-        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
-        with:
-          subject-path: "out/*"
-
       - name: Guardar como artifact
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
@@ -86,11 +79,33 @@ jobs:
           path: out/
           retention-days: 14
 
+  publicar:
+    name: Atestar e publicar (só tag v* e manual)
+    needs: build
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # A escrita fica só aqui: nunca roda em pull_request.
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+      - name: Baixar os binários do build
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: vox-binarios
+          path: out/
+
+      - name: Atestação de origem
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: "out/*"
+
       - name: Publicar a Release
         if: startsWith(github.ref, 'refs/tags/v')
-        shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $notes = "Compilado pelo CI a partir de $env:GITHUB_SHA. Confira com SHA256SUMS ou com: gh attestation verify <arquivo> --repo $env:GITHUB_REPOSITORY"
-          gh release create $env:GITHUB_REF_NAME (Get-ChildItem out -File).FullName --title $env:GITHUB_REF_NAME --notes $notes
+          notes="Compilado pelo CI a partir de $GITHUB_SHA. Confira com SHA256SUMS ou com: gh attestation verify <arquivo> --repo $GITHUB_REPOSITORY"
+          gh release create "$GITHUB_REF_NAME" out/* --repo "$GITHUB_REPOSITORY" --title "$GITHUB_REF_NAME" --notes "$notes"

@@ -14,6 +14,7 @@ Entrada única para quem desenvolve, revisa ou opera. Todo `.md` novo em `docs/`
 5. [INFRA-CUSTOS.md](./INFRA-CUSTOS.md): onde tudo roda, secrets, free tiers, SPOFs.
 6. [CHANGELOG.md](../CHANGELOG.md): o que mudou.
 7. [DECISOES.md](./DECISOES.md): as decisões institucionais e de arquitetura em vigor, numa página, com o estado real.
+8. [GLOSSARIO.md](./GLOSSARIO.md): termos da interface em português claro (conta, cofre, malha, par…) — complementa a Voxpedia in-app.
 
 ## Pastas de `docs/`
 
@@ -35,6 +36,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 | [`legal/`](./legal/) | Conformidade (LGPD, Marco Civil) e licença |
 | [`design/`](./design/) · [`branding/`](./branding/) | Design system Sovereign Agora e arquivos de marca |
 | [`metrics/`](./metrics/) | Baselines de complexidade geradas por `npm run audit:complexity` |
+| [`security/`](./security/) | Triagens de CodeQL e notas de release de segurança |
 | [`archive/`](./archive/) | Planos e brainstorms SUPERSEDED, mantidos como histórico |
 | [`agent-reports/`](./agent-reports/) | Relatórios de agentes (template do workspace) |
 
@@ -50,11 +52,14 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 | Testes e CI | [TESTES.md](./TESTES.md) |
 | Limites de complexidade | [HARDENING.md](./HARDENING.md) |
 | Modelo de ameaças | [THREAT-MODEL.md](./THREAT-MODEL.md) |
+| Triagem CodeQL do release #262 | [codeql-pr262-triagem.md](./security/codeql-pr262-triagem.md) |
 | Dependências e cadeia de suprimentos | [DEPENDENCIAS.md](./DEPENDENCIAS.md) |
 | Resposta a incidentes | [runbook-incidentes.md](./operations/runbook-incidentes.md) |
+| TURN em produção e segundo nó de sinalização | [turn-e-segundo-no.md](./operations/turn-e-segundo-no.md) |
 | Mutex de agentes | [metodo-agentes-mutex-e-revisor.md](./process/metodo-agentes-mutex-e-revisor.md) |
 | Evidência de testes, falso verde e auditoria | [qualidade-e-evidencia.md](./process/qualidade-e-evidencia.md) |
 | Norma de documentação (código e docs técnicos, `npm run audit:docs`) | [documentacao.md](./process/documentacao.md) |
+| Plano de testes do login (invariantes, matriz por caminho, lacunas LT-01–LT-10) | [plano-testes-login.md](./process/plano-testes-login.md) |
 | Primeiras tarefas para contribuir (PM-41, rascunho) | [primeiras-tarefas-contribuidor.md](./process/primeiras-tarefas-contribuidor.md) |
 | Segunda pessoa com acesso em etapas (LAN-30, rascunho) | [segunda-pessoa-acesso-gradual.md](./process/segunda-pessoa-acesso-gradual.md) |
 | Licença | [ADR-015](./adr/015-licenciamento-agplv3-e-governanca-de-bem-comum.md) · [licenca-e-contribuicoes.md](./legal/licenca-e-contribuicoes.md) |
@@ -62,6 +67,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 | ADRs (detalhe de cada decisão) | [adr/README.md](./adr/README.md) |
 | Tese de tração e preceitos | [direcionamento-crescimento-rede-2026-11.md](./strategy/direcionamento-crescimento-rede-2026-11.md) |
 | Navegação, banners de status e DoD dos docs | [CONTRIBUTING-DOCS.md](./CONTRIBUTING-DOCS.md) |
+| Termos da UI e copy leigo (pt-BR) | [GLOSSARIO.md](./GLOSSARIO.md) |
 
 > [!IMPORTANT]
 > **Regra anti-inflação:** é proibido criar outro plano mestre ("N=…", "T1–T10", checklist paralelo) sem um ADR que revogue o atual — hoje o [ADR-017](./adr/017-consolidacao-roadmap-unico.md). Ideias novas entram como brainstorm (banner + "Não substitui o ROADMAP").
@@ -86,7 +92,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 - [replicacao-por-grau-v0.md](./specs/replicacao-por-grau-v0.md): mídia no aparelho e replicação via **rede de seguidores** (diretriz base sem gravação no Arweave por enquanto; teto e regras por grau pendentes no PM-74)
 - [voluntariado-tres-trabalhos.md](./product/voluntariado-tres-trabalhos.md): os três trabalhos voluntários do piloto
 - [../client/DEV.md](../client/DEV.md): guia do desenvolvedor §0–§44 (histórico por sprint)
-- **ADRs:** [índice com status](./adr/README.md) (001–032) · [registro de decisões](./DECISOES.md) · **RFCs:** [rfc/README.md](./rfc/README.md) · [0001 — POSSE export](./rfc/0001-posse-export.md)
+- **ADRs:** [índice com status](./adr/README.md) (001–032) · [registro de decisões](./DECISOES.md) · **RFCs:** [rfc/README.md](./rfc/README.md) · [0001 — POSSE export](./rfc/0001-posse-export.md) · [0002 — snapshot autenticado do relay cego](./rfc/0002-snapshot-autenticado-do-relay-cego.md) (proposto)
 
 ### Specs de protocolo (malha, cache, módulos)
 
@@ -96,7 +102,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 - [profile-card-gossip-v0.md](./specs/profile-card-gossip-v0.md): cartão de perfil na malha (ver ADR-003)
 - [listing-signed-gossip-v1.md](./specs/listing-signed-gossip-v1.md): ofertas da Feira assinadas
 - [mirror-validate-v1.md](./specs/mirror-validate-v1.md): validação de espelho no relay
-- [community-module-manifest-v0.md](./specs/community-module-manifest-v0.md): manifesto de módulos de comunidade (backlog)
+- [community-manifest-v1.md](./specs/community-manifest-v1.md): manifesto de comunidade (subrede): tema por lista fechada, módulos só sugeridos, fork; rascunho do [ADR-038](./adr/038-subrede-malha-e-manifesto.md), sem código. Substitui o [v0](./specs/community-module-manifest-v0.md)
 - [open-frames-v2.md](./specs/open-frames-v2.md): Open Frames no feed
 - [embed-integration.md](./specs/embed-integration.md): widget embed · [vox-bridge-spike.md](./product/vox-bridge-spike.md): extensão MV3
 - [governance-proposta-feira-pin-template.md](./product/governance-proposta-feira-pin-template.md): template de proposta Feira ↔ pin

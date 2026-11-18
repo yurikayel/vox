@@ -35,6 +35,7 @@ import {
 } from "./screens-compose.js";
 import { handleRepostClick } from "./repost-ui.js";
 import { markFrameChoice, refreshFrameContent, resolvePostForFrame } from "./frame-ui.js";
+import { syncIdentity } from "./screens-network.js";
 
 function handleGossipReply(item, cur) {
   const topicArticle = document.querySelector(`article[data-id="${item.replyTo}"]`);
@@ -112,12 +113,25 @@ function refreshAfterCentralMemorySync() {
   }
 }
 
+/** S30-S5: sincronização entre abas; import dinâmico — incluir em `SHELL_ASSETS` quando o PR tocar `sw.js`. */
+function wireTabSyncAtBoot() {
+  void import("../identity/index.js").then((identity) => {
+    identity.startTabSync({
+      onReload: ({ reason }) => {
+        if (reason === "identity") void syncIdentity();
+        void route();
+      },
+    });
+  });
+}
+
 /**
  * Registra listeners de gossip, signaling e recompensa de voxel local (boot social).
  *
  * @returns {void}
  */
 export function initGossipListeners() {
+  wireTabSyncAtBoot();
   peers.onGossipPost((item) => {
     const cur = parseRoute();
     if (item?.type === "reply" && item.replyTo) {

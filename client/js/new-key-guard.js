@@ -1,4 +1,6 @@
 /**
+ * @file Quarentena de chaves novas (PoW e idade) em comunidades sensíveis.
+ 
  * LAN-14 — chave nova: prova de trabalho leve (PoW) e quarentena por comunidade.
  *
  * Sem servidor e sem ranking pago. Cada aparelho anota quando viu cada chave pela primeira vez.
@@ -11,17 +13,21 @@
  * conta como conhecido, para não recolher a comunidade inteira de quem acabou de instalar.
  *
  * Parâmetros (ajuste aqui e em docs/strategy/backlog-lancamento-publico-2026-11.md):
- *   NEW_KEY_AGE_MS = 24 h · POW_BITS = 14 (≈16 mil SHA-256 em média, ~1 s num celular de entrada).
- */
+ *   NEW_KEY_AGE_MS = 24 h · POW_BITS = 14 (≈16 mil SHA-256 em média, ~1 s num celular de entrada).*/
 
+/** Limite ou intervalo em milissegundos. @type {*} */
 export const NEW_KEY_AGE_MS = 24 * 60 * 60 * 1000;
+/** Export `POW_BITS` do módulo. @type {number} */
 export const POW_BITS = 14;
+/** Chave em `localStorage` (só neste aparelho). @type {string} */
 export const FIRST_SEEN_STORAGE_KEY = "vox-key-first-seen-v1";
 const MAX_TRACKED_KEYS = 10000;
 const POW_BATCH = 64;
 const POW_MAX_TRIES = 1 << 22;
 
-/** Bits zero no começo do hash (NIP-13 usa a mesma conta). */
+/** Bits zero no começo do hash (NIP-13 usa a mesma conta). 
+ * @param {*} [bytes] Bytes do data item.
+ * @returns {*} Resultado da operação.*/
 export function leadingZeroBits(bytes) {
   let bits = 0;
   for (const b of bytes) {
@@ -39,7 +45,9 @@ async function powDigest(author, id, nonce) {
   return new Uint8Array(await crypto.subtle.digest("SHA-256", data));
 }
 
-/** Acha um nonce cujo hash, preso a autor e id, tem `bits` zeros no começo. */
+/** Acha um nonce cujo hash, preso a autor e id, tem `bits` zeros no começo. 
+ * @param {object} [opts] Opções do mint de PoW.
+ * @returns {*} Resultado da operação.*/
 export async function mintPow({ author, id, bits = POW_BITS }) {
   if (!author || !id) throw new Error("PoW precisa de autor e id.");
   for (let start = 0; start < POW_MAX_TRIES; start += POW_BATCH) {
@@ -51,7 +59,10 @@ export async function mintPow({ author, id, bits = POW_BITS }) {
   throw new Error("PoW não encontrado.");
 }
 
-/** Recalcula o hash: não confia no `bits` declarado. */
+/** Recalcula o hash: não confia no `bits` declarado. 
+ * @param {*} [item] Item com prova de trabalho.
+ * @param {*} [minBits] Mínimo de bits zero exigidos no PoW.
+ * @returns {*} Resultado da operação.*/
 export async function hasValidPow(item, minBits = POW_BITS) {
   const nonce = Number(item?.pow?.nonce);
   if (!item?.author || !item?.id || !Number.isSafeInteger(nonce) || nonce < 0) return false;
@@ -83,7 +94,8 @@ function trimKeys(keys) {
 /**
  * Caderno de "primeira vez que vi esta chave", só neste aparelho.
  * @param {{ storage?: Storage | null, now?: () => number, ageMs?: number }} [opts]
- */
+ 
+ * @returns {*} Resultado da operação.*/
 export function createKeyAgeBook({ storage = globalThis.localStorage, now = () => Date.now(), ageMs = NEW_KEY_AGE_MS } = {}) {
   let book = null;
   function load() {
@@ -116,9 +128,15 @@ export function createKeyAgeBook({ storage = globalThis.localStorage, now = () =
 
 const defaultBook = createKeyAgeBook();
 
+/** Operação `noteKeySeen` do módulo.
+ * @param {*} [author] Autor do payload.
+ * @returns {*} Resultado da operação.
+ */
 export const noteKeySeen = (author) => defaultBook.noteSeen(author);
 
-/** A comunidade pediu quarentena de chave nova? */
+/** A comunidade pediu quarentena de chave nova? 
+ * @param {*} [community] Comunidade ou metadados.
+ * @returns {*} Resultado da operação.*/
 export function wantsNewKeyQuarantine(community) {
   return Boolean(community?.newKeyQuarantine);
 }
@@ -126,7 +144,11 @@ export function wantsNewKeyQuarantine(community) {
 /**
  * Ids dos posts recolhidos pela quarentena da comunidade: chave nova, sem PoW suficiente,
  * que não é do dono da comunidade nem de quem está vendo.
- */
+ 
+ * @param {*} [topics] Lista de tópicos.
+ * @param {*} [community] Comunidade ou metadados.
+ * @param {*} [opts] Opções da quarentena.
+ * @returns {*} Resultado da operação.*/
 export async function heldByQuarantine(topics, community, opts = {}) {
   const held = new Set();
   if (!wantsNewKeyQuarantine(community)) return held;
@@ -147,16 +169,25 @@ function isQuarantineCandidate(topic, exempt, book) {
 
 const revealed = new Set();
 
-/** "Ver mesmo assim": mostra os recolhidos desta comunidade até recarregar o app. */
+/** "Ver mesmo assim": mostra os recolhidos desta comunidade até recarregar o app. 
+ * @param {*} [communityId] Id da comunidade.*/
 export function revealHeld(communityId) {
   revealed.add(communityId);
 }
 
+/** Indica se HeldRevealed.
+ * @param {*} [communityId] Id da comunidade.
+ * @returns {*} Resultado da operação.
+ */
 export function isHeldRevealed(communityId) {
   return revealed.has(communityId);
 }
 
-/** Calcula e anexa o PoW antes de assinar, se a comunidade pede quarentena. */
+/** Calcula e anexa o PoW antes de assinar, se a comunidade pede quarentena. 
+ * @param {*} [payload] Payload a publicar.
+ * @param {*} [community] Comunidade ou metadados.
+ * @param {*} [author] Autor do payload.
+ * @returns {*} Resultado da operação.*/
 export async function attachPowIfWanted(payload, community, author) {
   if (!wantsNewKeyQuarantine(community) || !author || !payload?.id) return payload;
   payload.pow = await mintPow({ author, id: payload.id });

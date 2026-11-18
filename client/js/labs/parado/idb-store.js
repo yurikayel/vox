@@ -7,6 +7,8 @@
  * 3. Tabela chave-valor genérica assíncrona.
  */
 
+import { randomBase36 } from "../../shared/html.js";
+
 export const DB_NAME = "vox-store-db";
 export const DB_VERSION = 1;
 
@@ -50,7 +52,15 @@ export function openStoreDB() {
       const db = e.target.result;
       createStoresIfMissing(db);
     };
-    req.onsuccess = (e) => resolve(e.target.result || req.result);
+    req.onsuccess = (e) => {
+      const db = e.target.result || req.result;
+      // "Apagar conta local" remove o banco: solta a conexão para a remoção não ficar presa.
+      db.onversionchange = () => {
+        db.close();
+        dbPromise = null;
+      };
+      resolve(db);
+    };
     req.onerror = () => reject(req.error || new Error("Falha ao abrir IndexedDB"));
   });
   return dbPromise;
@@ -87,7 +97,7 @@ export function enqueueOutboxItem({ action, payload, target = "arweave", id = nu
   if (!action || !payload) {
     return Promise.reject(new Error("action e payload são mandatários na fila outbox"));
   }
-  const itemId = id || `out_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+  const itemId = id || `out_${Date.now()}_${randomBase36(7)}`;
   const item = {
     id: itemId,
     action,

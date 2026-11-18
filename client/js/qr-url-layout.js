@@ -1,6 +1,7 @@
 /**
+ * @file Layout de módulos QR (ISO/IEC 18004): grade funcional, máscara e bits de formato.
+ *
  * @module qr-url-layout
- * Function patterns, zigzag fill, mask, format bits (ECC L) and, from version 7, version bits.
  */
 
 /** Alignment pattern centres per version (ISO/IEC 18004 Annex E). */
@@ -16,6 +17,11 @@ const ALIGNMENT_CENTERS = {
   11: [6, 30, 54],
 };
 
+/**
+ * Cópia profunda da matriz booleana de módulos.
+ * @param {boolean[][]} modules Grade de módulos.
+ * @returns {boolean[][]}
+ */
 export function cloneModules(modules) {
   return modules.map((row) => row.slice());
 }
@@ -109,6 +115,11 @@ function reserveFormat(grid) {
   }
 }
 
+/**
+ * Monta grade só com padrões funcionais (finders, timing, alinhamento, versão).
+ * @param {number} version Versão QR (2–11 suportadas para alinhamento).
+ * @returns {{ modules: boolean[][], func: boolean[][], size: number, version: number }}
+ */
 export function buildFunctionGrid(version) {
   const size = 17 + 4 * version;
   const modules = Array.from({ length: size }, () => new Array(size).fill(false));
@@ -133,6 +144,12 @@ function visitPair(grid, right, y, onCell) {
   }
 }
 
+/**
+ * Percorre células de dados em ordem de codificação (zigzag).
+ * @param {{ size: number, func: boolean[][] }} grid Grade com máscara funcional.
+ * @param {(x: number, y: number) => void} onCell Callback por célula não reservada.
+ * @returns {void}
+ */
 export function walkData(grid, onCell) {
   const n = grid.size;
   for (let right = n - 1; right >= 1; right -= 2) {
@@ -144,6 +161,12 @@ export function walkData(grid, onCell) {
   }
 }
 
+/**
+ * Grava bits de dados nas células livres da grade.
+ * @param {{ modules: boolean[][], func: boolean[][] }} grid Grade alvo.
+ * @param {number[]} bits Bits 0/1.
+ * @returns {void}
+ */
 export function placeDataBits(grid, bits) {
   let i = 0;
   walkData(grid, (x, y) => {
@@ -152,6 +175,13 @@ export function placeDataBits(grid, bits) {
   });
 }
 
+/**
+ * Bit de máscara ISO para coordenadas e índice de máscara 0–7.
+ * @param {number} mask Índice da máscara.
+ * @param {number} x Coluna.
+ * @param {number} y Linha.
+ * @returns {boolean}
+ */
 export function maskBit(mask, x, y) {
   switch (mask) {
     case 0: return (x + y) % 2 === 0;
@@ -166,6 +196,12 @@ export function maskBit(mask, x, y) {
   }
 }
 
+/**
+ * Aplica máscara invertendo módulos de dados não funcionais.
+ * @param {{ modules: boolean[][], func: boolean[][], size: number }} grid Grade.
+ * @param {number} mask Índice da máscara.
+ * @returns {void}
+ */
 export function applyMask(grid, mask) {
   const n = grid.size;
   for (let y = 0; y < n; y++) {
@@ -176,6 +212,11 @@ export function applyMask(grid, mask) {
   }
 }
 
+/**
+ * 15 bits de formato (ECC nível L + máscara) com BCH.
+ * @param {number} mask Índice da máscara aplicada.
+ * @returns {number}
+ */
 export function formatBits(mask) {
   const data = (1 << 3) | mask;
   let rem = data;
@@ -197,11 +238,22 @@ function writeFormatCopy(grid, bits) {
   for (let i = 8; i < 15; i++) put(8, n - 15 + i, i);
 }
 
+/**
+ * Escreve bits de formato nas duas cópias reservadas e registra `grid.mask`.
+ * @param {object} grid Grade QR.
+ * @param {number} mask Índice da máscara.
+ * @returns {void}
+ */
 export function writeFormat(grid, mask) {
   writeFormatCopy(grid, formatBits(mask));
   grid.mask = mask;
 }
 
+/**
+ * Lê índice de máscara a partir da grade final.
+ * @param {boolean[][]} modules Módulos com formato gravado.
+ * @returns {number}
+ */
 export function readFormatMask(modules) {
   const g = (x, y) => (modules[y][x] ? 1 : 0);
   let bits = 0;
@@ -248,10 +300,21 @@ function scoreBlocks(modules) {
   return s;
 }
 
+/**
+ * Penalidade ISO (runs + blocos 2×2) para escolha de máscara.
+ * @param {boolean[][]} modules Grade completa.
+ * @returns {number}
+ */
 export function scoreGrid(modules) {
   return scoreRuns(modules) + scoreBlocks(modules);
 }
 
+/**
+ * Testa máscaras 0–7 e devolve a grade com menor penalidade.
+ * @param {{ modules: boolean[][], func: boolean[][], size: number, version: number }} base Grade funcional.
+ * @param {number[]} bits Bits de dados codificados.
+ * @returns {{ modules: boolean[][], mask: number, size: number }}
+ */
 export function pickMaskedGrid(base, bits) {
   placeDataBits(base, bits);
   let best = null;

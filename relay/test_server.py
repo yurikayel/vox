@@ -108,10 +108,11 @@ class TestVoxRelayServer(unittest.TestCase):
             self.assertEqual(data.get("cacheBytes"), len(body) + 64)
 
     def test_options_cors(self):
-        req = urllib.request.Request(self._url("/health"), method="OPTIONS")
+        origin = "https://yurikayel.github.io"
+        req = urllib.request.Request(self._url("/health"), method="OPTIONS", headers={"Origin": origin})
         with urllib.request.urlopen(req, timeout=2) as resp:
             self.assertEqual(resp.status, 204)
-            self.assertEqual(resp.headers.get("Access-Control-Allow-Origin"), "*")
+            self.assertEqual(resp.headers.get("Access-Control-Allow-Origin"), origin)
 
     def test_invalid_tx_id_returns_400(self):
         req = urllib.request.Request(self._url("/tx/invalid_short_id"))
@@ -868,7 +869,7 @@ class TestVoxRelayServer(unittest.TestCase):
         req = urllib.request.Request(
             self._url("/memory/ingest"),
             data=json.dumps({"type": "GOSSIP", "item": post_item}).encode("utf-8"),
-            headers={"Content-Type": "application/json"},
+            headers={"Content-Type": "application/json", "Origin": "http://localhost:8080"},
             method="POST",
         )
         with urllib.request.urlopen(req, timeout=2) as resp:
@@ -878,7 +879,7 @@ class TestVoxRelayServer(unittest.TestCase):
             self.assertTrue(res["changed"])
             self.assertEqual(res["counts"]["posts"], 1)
 
-        blob_hash = "a" * 64
+        blob_hash = hashlib.sha256(bytes(3)).hexdigest()  # "AAAA" em base64 = 3 bytes zero; o relay confere o hash
         sync_payload = {
             "posts": [
                 {

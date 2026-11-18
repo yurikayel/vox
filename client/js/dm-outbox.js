@@ -4,20 +4,33 @@
  * Lógica pura; o transporte e o fio de mensagens chegam por dependências.
  */
 
+/** Chave em `localStorage` (só neste aparelho). @type {string} */
 export const OUTBOX_KEY = "vox-dm-outbox-v1";
+/** Limite ou intervalo em milissegundos. @type {*} */
 export const OUTBOX_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+/** Limite numérico do módulo. @type {number} */
 export const OUTBOX_MAX_ITEMS = 100;
+/** Limite numérico do módulo. @type {*} */
 export const OUTBOX_MAX_BYTES = 2 * 1024 * 1024;
 const RELAY_BACKOFF_BASE_MS = 60 * 1000;
 const RELAY_BACKOFF_MAX_MS = 30 * 60 * 1000;
 
-function readList(storage) {
+/** Caixa ilegível: guarda o texto original à parte antes que a próxima gravação o apague. */
+function setAsideUnreadable(storage, raw) {
   try {
-    const list = JSON.parse(storage?.getItem(OUTBOX_KEY) || "[]");
-    return Array.isArray(list) ? list.filter((e) => e?.to && e?.envelope?.id) : [];
-  } catch {
-    return [];
-  }
+    storage?.setItem(`${OUTBOX_KEY}-ilegivel`, raw);
+  } catch {}
+}
+
+function readList(storage) {
+  let raw = null;
+  try {
+    raw = storage?.getItem(OUTBOX_KEY) || "[]";
+    const list = JSON.parse(raw);
+    if (Array.isArray(list)) return list.filter((e) => e?.to && e?.envelope?.id);
+  } catch {}
+  if (raw !== null) setAsideUnreadable(storage, raw);
+  return [];
 }
 
 function writeList(list, storage) {
@@ -29,11 +42,17 @@ function writeList(list, storage) {
   }
 }
 
+/** Operação `listOutbox` do módulo.
+ * @param {*} [storage] Armazenamento injetável.
+ * @returns {*} Resultado da operação.
+ */
 export function listOutbox(storage = globalThis.localStorage) {
   return readList(storage);
 }
 
-/** Espera antes da tentativa n no relay: 1, 2, 4… até 30 min. */
+/** Espera antes da tentativa n no relay: 1, 2, 4… até 30 min. 
+ * @param {*} [attempts] Número da tentativa (a partir de 1).
+ * @returns {*} Resultado da operação.*/
 export function relayBackoffMs(attempts) {
   const n = Math.max(1, Number(attempts) || 1);
   return Math.min(RELAY_BACKOFF_MAX_MS, RELAY_BACKOFF_BASE_MS * 2 ** (n - 1));
@@ -41,7 +60,9 @@ export function relayBackoffMs(attempts) {
 
 const entryBytes = (entry) => JSON.stringify(entry).length;
 
-/** Aplica os limites de quantidade e de tamanho: sai o mais antigo. */
+/** Aplica os limites de quantidade e de tamanho: sai o mais antigo. 
+ * @param {*} [list] Lista em memória.
+ * @returns {*} Resultado da operação.*/
 export function trimOutbox(list) {
   const kept = [...list].sort((a, b) => a.queuedAt - b.queuedAt);
   const dropped = [];
@@ -54,7 +75,11 @@ export function trimOutbox(list) {
   return { kept, dropped };
 }
 
-/** Põe o envelope na caixa. Devolve os que saíram por falta de espaço (viram "Não entregue"). */
+/** Põe o envelope na caixa. Devolve os que saíram por falta de espaço (viram "Não entregue"). 
+ * @param {*} [to] Destinatário (endereço ou rota).
+ * @param {*} [envelope] Envelope cifrado da DM.
+ * @param {object} [opts] `storage` e `now` opcionais.
+ * @returns {*} Resultado da operação.*/
 export function enqueueEnvelope(to, envelope, { storage = globalThis.localStorage, now = Date.now() } = {}) {
   if (!to || !envelope?.id) return { queued: false, dropped: [] };
   const list = readList(storage).filter((e) => e.envelope.id !== envelope.id);
@@ -64,7 +89,10 @@ export function enqueueEnvelope(to, envelope, { storage = globalThis.localStorag
   return { queued, dropped };
 }
 
-/** Separa a caixa em: entregar direto, tentar o relay, vencido e esperar. */
+/** Separa a caixa em: entregar direto, tentar o relay, vencido e esperar. 
+ * @param {*} [list] Lista em memória.
+ * @param {object} [ctx] `isConnected` e `now` para planejar envios.
+ * @returns {*} Resultado da operação.*/
 export function planOutbox(list, { isConnected, now }) {
   const plan = { direct: [], relay: [], expired: [], wait: [] };
   for (const e of list) {
@@ -91,13 +119,18 @@ async function deliverOne(entry, direct, d, now) {
 async function markSafe(d, entry, status) {
   try {
     await d.markStatus(entry.to, entry.envelope.id, status);
-  } catch {}
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /**
  * Uma passada pela caixa. `d`: { storage, now(), isConnected(addr), sendDirect(addr, env) → bool,
  * pushRelay(addr, env) → Promise, markStatus(addr, id, status) }.
- */
+ 
+ * @param {*} [d] Parâmetro `d`.
+ * @returns {*} Resultado da operação.*/
 export async function flushOutbox(d) {
   const now = d.now();
   const plan = planOutbox(readList(d.storage), { isConnected: d.isConnected, now });
@@ -108,14 +141,17 @@ export async function flushOutbox(d) {
     done.add(entry.envelope.id);
     await markSafe(d, entry, status);
   }
+  let expired = 0;
   for (const entry of plan.expired) {
+    // Sem a marca "Não entregue" a mensagem sumiria sem aviso: fica na caixa e tenta marcar na próxima passada.
+    if (!(await markSafe(d, entry, "failed"))) continue;
     done.add(entry.envelope.id);
-    await markSafe(d, entry, "failed");
+    expired += 1;
   }
   const touched = new Map([...plan.direct, ...plan.relay].map((e) => [e.envelope.id, e]));
   const rest = readList(d.storage)
     .filter((e) => !done.has(e.envelope.id))
     .map((e) => touched.get(e.envelope.id) || e);
   writeList(rest, d.storage);
-  return { sent: done.size - plan.expired.length, expired: plan.expired.length, waiting: rest.length };
+  return { sent: done.size - expired, expired, waiting: rest.length };
 }

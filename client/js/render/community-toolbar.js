@@ -2,7 +2,14 @@
 
 import { escapeHtml } from "./util.js";
 
-/** Barra de ações do topo da comunidade. `canCompose` falso esconde "Novo post" (canal, para quem não modera; PM-81). */
+/**
+ * Barra de ações do topo da comunidade (entrar, compartilhar, gênesis, novo post).
+ * @param {string} communityId ID da comunidade.
+ * @param {string} commTitle Título para compartilhar.
+ * @param {boolean} isMember Se o visitante já é membro.
+ * @param {boolean} [canCompose=true] Falso esconde "Novo post" (canal PM-81).
+ * @returns {string}
+ */
 export function renderCommunityHeaderToolbar(communityId, commTitle, isMember, canCompose = true) {
   return `
     <div class="community-vox-toolbar" role="toolbar" aria-label="Ações da comunidade">

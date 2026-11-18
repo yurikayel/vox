@@ -6,8 +6,20 @@
 
 const NOTES_KEY = "vox-profile-notes-v1";
 
+/**
+ * Operação `NOTE_MAX` do módulo.
+ * @type {*}
+ */
 export const NOTE_MAX = 80;
+/**
+ * Operação `NOTE_TTL_MS` do módulo.
+ * @type {*}
+ */
 export const NOTE_TTL_MS = 24 * 60 * 60 * 1000;
+/**
+ * Operação `NOTE_HINT` do módulo.
+ * @type {*}
+ */
 export const NOTE_HINT =
   "Nota neste aparelho / na malha se o cartão de perfil circular. Não é Stories do Instagram.";
 
@@ -30,16 +42,33 @@ function saveMap(map) {
   }
 }
 
+/**
+ * Operação `clipNote` do módulo.
+ * @param {*} [text] Parâmetro `text`.
+ * @returns {*} Resultado da operação.
+ */
 export function clipNote(text) {
   return String(text || "").replace(/\s+/g, " ").trim().slice(0, NOTE_MAX);
 }
 
+/**
+ * Operação `isNoteFresh` do módulo.
+ * @param {*} [rec] Parâmetro `rec`.
+ * @param {*} [now] Parâmetro `now`.
+ * @returns {*} Resultado da operação.
+ */
 export function isNoteFresh(rec, now = Date.now()) {
   const at = Number(rec?.updatedAt) || 0;
   if (!rec?.text || !at) return false;
   return now - at < NOTE_TTL_MS;
 }
 
+/**
+ * Operação `getNote` do módulo.
+ * @param {*} [routeId] Parâmetro `routeId`.
+ * @param {*} [now] Parâmetro `now`.
+ * @returns {*} Resultado da operação.
+ */
 export function getNote(routeId, now = Date.now()) {
   const id = String(routeId || "").trim();
   if (!id) return null;
@@ -48,6 +77,12 @@ export function getNote(routeId, now = Date.now()) {
   return { text: rec.text, updatedAt: rec.updatedAt };
 }
 
+/**
+ * Operação `setNote` do módulo.
+ * @param {*} [routeId] Parâmetro `routeId`.
+ * @param {*} [text] Parâmetro `text`.
+ * @returns {*} Resultado da operação.
+ */
 export function setNote(routeId, text) {
   const id = String(routeId || "").trim();
   if (!id) return null;
@@ -64,10 +99,22 @@ export function setNote(routeId, text) {
   return rec;
 }
 
+/**
+ * Operação `clearNote` do módulo.
+ * @param {*} [routeId] Parâmetro `routeId`.
+ * @returns {*} Resultado da operação.
+ */
 export function clearNote(routeId) {
   return setNote(routeId, "");
 }
 
+/**
+ * Operação `ingestRemoteNote` do módulo.
+ * @param {*} [routeId] Parâmetro `routeId`.
+ * @param {*} [text] Parâmetro `text`.
+ * @param {*} [updatedAt] Parâmetro `updatedAt`.
+ * @returns {*} Resultado da operação.
+ */
 export function ingestRemoteNote(routeId, text, updatedAt) {
   const id = String(routeId || "").trim();
   const clipped = clipNote(text);
@@ -83,6 +130,9 @@ export function ingestRemoteNote(routeId, text, updatedAt) {
   return rec;
 }
 
+/**
+ * Reseta estado de teste (`__resetNotesForTests`).
+ */
 export function __resetNotesForTests() {
   try {
     localStorage.removeItem(NOTES_KEY);

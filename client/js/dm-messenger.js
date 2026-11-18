@@ -1,17 +1,23 @@
 /**
+ * @file Modelo de DM: payload, reações, pins, leitura e listagem de conversas.
+ 
  * @module dm-messenger
  * Protocolo de mensageiro essencial DM v2 (E2E):
  * - Quote-Reply (responder mensagem específica dentro do envelope cifrado)
  * - Reações rápidas em bolhas (👍 ❤️ 🔥 🙏 ✅)
  * - Recibos de leitura E2E (✓✓ Lido) e anexo de foto/comprovante comprimido (<= 24 KB)
  * - Cartões nativos de contexto (Oferta da Feira, Pix, Tópico)
- * - Estado local de não lidas (unread), conversas fixadas (pin) e busca instantânea
- */
+ * - Estado local de não lidas (unread), conversas fixadas (pin) e busca instantânea*/
 
+/** Chave em `localStorage` (só neste aparelho). @type {string} */
 export const DM_READ_STORAGE_KEY = "vox-dm-read-ts-v1";
+/** Chave em `localStorage` (só neste aparelho). @type {string} */
 export const DM_PINS_STORAGE_KEY = "vox-dm-pins-v1";
+/** Limite numérico do módulo. @type {number} */
 export const MAX_PINNED_PEERS = 3;
+/** Limite numérico do módulo. @type {number} */
 export const MAX_DM_MEDIA_CHARS = 24000;
+/** Export `DM_REACTION_EMOJIS` do módulo. @type {Array} */
 export const DM_REACTION_EMOJIS = ["👍", "❤️", "🔥", "🙏", "✅"];
 const DEFAULT_WELCOME_ID = "vx_voxbrasil_welcome";
 
@@ -21,14 +27,27 @@ function clip(str, max = 90) {
   return s.length > max ? `${s.slice(0, max - 1)}…` : s;
 }
 
+/** Teto de `id`, `pixKey`, `communityId` e autor da citação: acima disso o campo é descartado, nunca cortado. */
+const MAX_REF_CHARS = 200;
+
+/** Campo que identifica algo (id, chave Pix, comunidade): cortar mudaria o que ele aponta, então o longo demais some. */
+function boundedRef(value) {
+  const s = String(value ?? "").trim();
+  return s.length <= MAX_REF_CHARS ? s : "";
+}
+
+/** Normaliza ReplyMeta.
+ * @param {*} [raw] Valor bruto de entrada.
+ * @returns {*} Resultado da operação.
+ */
 export function normalizeReplyMeta(raw) {
   if (!raw || typeof raw !== "object") return null;
-  const id = String(raw.id || "").trim();
+  const id = boundedRef(raw.id);
   const snippet = clip(raw.snippet || raw.text || "", 90);
   if (!id || !snippet) return null;
   return {
     id,
-    author: String(raw.author || raw.from || "").trim(),
+    author: boundedRef(raw.author || raw.from),
     snippet,
   };
 }
@@ -48,30 +67,50 @@ function getFirstParam(params, ...keys) {
   return "";
 }
 
+/** Rota interna do app (`#/…`, sem espaço): o único destino que o cartão de contexto pode abrir. */
+const INTERNAL_ROUTE_RE = /^#\/\S{0,500}$/;
+
+/**
+ * O cartão vem de outra pessoa e o endereço vai para um `href`: só rota interna passa. `javascript:`, `data:`,
+ * `//host` e links externos caem para "" (o cartão fica sem o botão Abrir).
+ */
+function safeCardRoute(raw) {
+  const route = String(raw ?? "").trim();
+  return INTERNAL_ROUTE_RE.test(route) ? route : "";
+}
+
+/** Normaliza ContextCard.
+ * @param {*} [raw] Valor bruto de entrada.
+ * @returns {*} Resultado da operação.
+ */
 export function normalizeContextCard(raw) {
   if (!raw || typeof raw !== "object") return null;
   const type = String(raw.type || "listing").toLowerCase();
   if (!["listing", "topic", "pix", "community"].includes(type)) return null;
 
   const title = clip(raw.title || "", 100);
-  const pixKey = String(fallbackProp(raw, "pixKey", "pix")).trim();
+  const pixKey = boundedRef(fallbackProp(raw, "pixKey", "pix"));
   if (!title && !pixKey) return null;
 
   const price = clip(fallbackProp(raw, "price", "priceBrl"), 32);
-  const url = String(fallbackProp(raw, "url", "href")).trim();
+  const url = safeCardRoute(fallbackProp(raw, "url", "href"));
   return {
     type,
-    id: String(raw.id || "").trim(),
+    id: boundedRef(raw.id),
     title: title || "Apoio via Pix",
     price,
     priceBrl: price,
     pixKey,
-    communityId: String(fallbackProp(raw, "communityId", "comm")).trim(),
+    communityId: boundedRef(fallbackProp(raw, "communityId", "comm")),
     url,
     href: url,
   };
 }
 
+/** Normaliza MediaDataUrl.
+ * @param {*} [raw] Valor bruto de entrada.
+ * @returns {*} Resultado da operação.
+ */
 export function normalizeMediaDataUrl(raw) {
   const s = String(raw || "").trim();
   if (!s || s.length > MAX_DM_MEDIA_CHARS) return "";
@@ -79,6 +118,26 @@ export function normalizeMediaDataUrl(raw) {
   return s;
 }
 
+/**
+ * Passa pelo mesmo crivo do fio recebido tudo o que numa DM veio de fora (backup, linha antiga do aparelho):
+ * cartão, citação e foto. Os demais campos seguem como estão.
+ * @param {*} msg DM como gravada.
+ * @returns {object|null} A DM com cartão, citação e foto normalizados; `null` se não for objeto.
+ */
+export function sanitizeStoredDm(msg) {
+  if (!msg || typeof msg !== "object" || Array.isArray(msg)) return null;
+  return {
+    ...msg,
+    replyTo: normalizeReplyMeta(msg.replyTo),
+    contextCard: normalizeContextCard(msg.contextCard),
+    mediaDataUrl: normalizeMediaDataUrl(msg.mediaDataUrl),
+  };
+}
+
+/** Operação `serializeDmPayload` do módulo.
+ * @param {object} [options={}] Campos do payload.
+ * @returns {*} Resultado da operação.
+ */
 export function serializeDmPayload({
   text = "",
   replyTo = null,
@@ -101,6 +160,10 @@ export function serializeDmPayload({
   return JSON.stringify(out);
 }
 
+/** Operação `serializeDmReaction` do módulo.
+ * @param {object} [options={}] Campos do payload.
+ * @returns {*} Resultado da operação.
+ */
 export function serializeDmReaction({ targetId = "", emoji = "" } = {}) {
   const id = String(targetId || "").trim();
   const em = String(emoji || "").trim();
@@ -115,6 +178,10 @@ export function serializeDmReaction({ targetId = "", emoji = "" } = {}) {
   });
 }
 
+/** Operação `serializeDmReadReceipt` do módulo.
+ * @param {object} [options={}] Campos do payload.
+ * @returns {*} Resultado da operação.
+ */
 export function serializeDmReadReceipt({ upToTs = Date.now() } = {}) {
   const ts = Number(upToTs) || Date.now();
   return JSON.stringify({
@@ -133,6 +200,10 @@ function tryParseV2Json(str) {
   }
 }
 
+/** Interpreta DmPayload.
+ * @param {*} [raw] Valor bruto de entrada.
+ * @returns {*} Resultado da operação.
+ */
 export function parseDmPayload(raw) {
   const str = String(raw ?? "");
   const parsed = tryParseV2Json(str);
@@ -161,6 +232,12 @@ export function parseDmPayload(raw) {
   };
 }
 
+/** Operação `toggleReactionMap` do módulo.
+ * @param {*} [reactions] Parâmetro `reactions`.
+ * @param {*} [emoji] Parâmetro `emoji`.
+ * @param {*} [actor] Parâmetro `actor`.
+ * @returns {*} Resultado da operação.
+ */
 export function toggleReactionMap(reactions = {}, emoji = "", actor = "") {
   const em = String(emoji || "").trim();
   const who = String(actor || "").trim();
@@ -181,6 +258,10 @@ function resolveDmContextUrl(type, id, communityId) {
   return "";
 }
 
+/** Interpreta DmContextFromHash.
+ * @param {*} [hashStr] Parâmetro `hashStr`.
+ * @returns {*} Resultado da operação.
+ */
 export function parseDmContextFromHash(hashStr = "") {
   const qIdx = String(hashStr || "").indexOf("?");
   if (qIdx < 0) return null;
@@ -226,6 +307,12 @@ function normalizeListingHrefArgs(authorOrItem, itemOrComm, opts = {}) {
   };
 }
 
+/** Monta ListingDmHref para uso no cliente.
+ * @param {*} [authorOrItem] Parâmetro `authorOrItem`.
+ * @param {*} [itemOrComm] Parâmetro `itemOrComm`.
+ * @param {*} [opts] Opções da quarentena.
+ * @returns {*} Resultado da operação.
+ */
 export function buildListingDmHref(authorOrItem, itemOrComm, opts = {}) {
   const { author, item, communityId, price, pixKey } = normalizeListingHrefArgs(
     authorOrItem,
@@ -244,6 +331,10 @@ export function buildListingDmHref(authorOrItem, itemOrComm, opts = {}) {
   return `${base}?${params.toString()}`;
 }
 
+/** Operação `extractInlineVoxCard` do módulo.
+ * @param {*} [text] Texto de entrada.
+ * @returns {*} Resultado da operação.
+ */
 export function extractInlineVoxCard(text = "") {
   const s = String(text || "");
   const topicMatch = s.match(/#\/t\/([a-zA-Z0-9_-]+)/);
@@ -280,12 +371,20 @@ function readJsonStorage(key, fallback) {
   }
 }
 
+/** Obtém LastReadTs.
+ * @param {*} [peerAddress] Parâmetro `peerAddress`.
+ * @returns {*} Resultado da operação.
+ */
 export function getLastReadTs(peerAddress) {
   if (!peerAddress) return 0;
   const map = readJsonStorage(DM_READ_STORAGE_KEY, {});
   return Number(map[peerAddress]) || 0;
 }
 
+/** Operação `markThreadRead` do módulo.
+ * @param {*} [peerAddress] Parâmetro `peerAddress`.
+ * @param {*} [ts] Parâmetro `ts`.
+ */
 export function markThreadRead(peerAddress, ts = Date.now()) {
   if (!peerAddress) return;
   const map = readJsonStorage(DM_READ_STORAGE_KEY, {});
@@ -300,6 +399,12 @@ export function markThreadRead(peerAddress, ts = Date.now()) {
   } catch {}
 }
 
+/** Calcula UnreadCount.
+ * @param {*} [messages] Parâmetro `messages`.
+ * @param {*} [peerAddress] Parâmetro `peerAddress`.
+ * @param {*} [myAddress] Endereço do destinatário autenticado.
+ * @returns {*} Resultado da operação.
+ */
 export function computeUnreadCount(messages = [], peerAddress = "", myAddress = "") {
   if (!peerAddress || !Array.isArray(messages)) return 0;
   const lastRead = getLastReadTs(peerAddress);
@@ -309,15 +414,26 @@ export function computeUnreadCount(messages = [], peerAddress = "", myAddress = 
   }).length;
 }
 
+/** Obtém PinnedPeers.
+ * @returns {*} Resultado da operação.
+ */
 export function getPinnedPeers() {
   const arr = readJsonStorage(DM_PINS_STORAGE_KEY, []);
   return Array.isArray(arr) ? arr.filter((x) => typeof x === "string" && x) : [];
 }
 
+/** Indica se PeerPinned.
+ * @param {*} [peerAddress] Parâmetro `peerAddress`.
+ * @returns {*} Resultado da operação.
+ */
 export function isPeerPinned(peerAddress) {
   return getPinnedPeers().includes(String(peerAddress || ""));
 }
 
+/** Operação `togglePinPeer` do módulo.
+ * @param {*} [peerAddress] Parâmetro `peerAddress`.
+ * @returns {*} Resultado da operação.
+ */
 export function togglePinPeer(peerAddress) {
   const peer = String(peerAddress || "").trim();
   if (!peer) return { pinned: false, list: getPinnedPeers() };
@@ -352,6 +468,11 @@ function conversationMatchesQuery(conv, q, resolveLabel) {
   return peer.includes(q) || label.includes(q) || text.includes(q);
 }
 
+/** Operação `sortAndFilterConversations` do módulo.
+ * @param {*} [conversations] Parâmetro `conversations`.
+ * @param {object} [filters={}] Filtros de busca e ordenação.
+ * @returns {*} Resultado da operação.
+ */
 export function sortAndFilterConversations(
   conversations = [],
   { query = "", welcomeId = DEFAULT_WELCOME_ID, resolveLabel = null } = {}

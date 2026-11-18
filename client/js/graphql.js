@@ -1,3 +1,8 @@
+/**
+ * @file Cliente GraphQL Arweave — gateways, comunidades, tópicos e cache de DM pub.
+ */
+
+import { fetchWithTimeout } from "./fetch-timeout.js";
 import { honestMessage } from "./honest-errors.js";
 import * as cacheNode from "./cache-node.js";
 import * as peers from "./peers.js";
@@ -267,9 +272,12 @@ const QUERIES = {
 let gatewayConfig = null;
 const dataCache = new Map();
 
+/** Carrega Config do armazenamento ou rede.
+ * @returns {*} Resultado da operação.
+ */
 export async function loadConfig() {
   if (gatewayConfig) return gatewayConfig;
-  const res = await fetch("./config/gateways.json");
+  const res = await fetchWithTimeout("./config/gateways.json");
   gatewayConfig = await res.json();
   return gatewayConfig;
 }
@@ -277,15 +285,24 @@ export async function loadConfig() {
 /**
  * PM-50: só gateways com URL GraphQL entram nas consultas. Um gateway que não indexa o
  * `App-Name` do Vox responderia "nada" e contaria como testemunha de omissão.
- */
+ 
+ * @param {*} [cfg] Configuração carregada.
+ * @returns {*} Resultado da operação.*/
 export function graphqlGateways(cfg) {
   return (cfg?.gateways || []).filter((gw) => typeof gw.graphql === "string" && gw.graphql.startsWith("http"));
 }
 
+/** Reset de estado interno para testes.
+ */
 export function __resetGatewayConfigForTests() {
   gatewayConfig = null;
 }
 
+/** Operação `tagValue` do módulo.
+ * @param {*} [tags] Lista de tags ANS-104.
+ * @param {*} [name] Parâmetro `name`.
+ * @returns {*} Resultado da operação.
+ */
 export function tagValue(tags, name) {
   if (!Array.isArray(tags)) return "";
   const t = tags.find((x) => x.name === name);
@@ -338,13 +355,12 @@ function mapReply(node) {
 const GATEWAY_TIMEOUT_MS = 8000;
 
 async function queryOne(gqlUrl, query, variables) {
-  const res = await fetch(gqlUrl, {
+  const res = await fetchWithTimeout(gqlUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ query, variables }),
     // LAN-27: gateway lento não segura a leitura; 402/429/5xx caem para o próximo.
-    signal: AbortSignal.timeout(GATEWAY_TIMEOUT_MS),
-  });
+  }, { timeoutMs: GATEWAY_TIMEOUT_MS });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const json = await res.json();
   if (json.errors?.length) throw new Error(json.errors[0].message);
@@ -416,7 +432,7 @@ function isValidRawResponse(res, text) {
 
 async function tryFetchRawFromUrl(url, label) {
   try {
-    const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
+    const res = await fetchWithTimeout(url, {}, { timeoutMs: 6000 });
     const text = await res.text();
     if (!isValidRawResponse(res, text)) {
       recordGatewayAttempt(label, false);
@@ -451,6 +467,9 @@ async function fetchRawFromGateways(txId) {
   return null;
 }
 
+/** Busca Communities nos gateways configurados.
+ * @returns {*} Resultado da operação.
+ */
 export async function fetchCommunities() {
   const { data, gateway } = await withGateways((url) =>
     queryOne(url, QUERIES.communities, {})
@@ -461,6 +480,11 @@ export async function fetchCommunities() {
 }
 
 
+/** Busca TopicsByOwners nos gateways configurados.
+ * @param {*} [owners] Parâmetro `owners`.
+ * @param {object} [options={}] Opções adicionais da consulta.
+ * @returns {*} Resultado da operação.
+ */
 export async function fetchTopicsByOwners(owners = [], { after } = {}) {
   const list = Array.isArray(owners) ? owners.filter(Boolean) : [];
   if (!list.length) return { items: [], gateway: "", demo: false };
@@ -473,6 +497,10 @@ export async function fetchTopicsByOwners(owners = [], { after } = {}) {
   return { items, gateway, demo: false };
 }
 
+/** Busca Topics nos gateways configurados.
+ * @param {*} [communityId] Id da comunidade.
+ * @returns {*} Resultado da operação.
+ */
 export async function fetchTopics(communityId) {
   const { data, gateway } = await withGateways((url) =>
     queryOne(url, QUERIES.topics, { communityId })
@@ -482,6 +510,11 @@ export async function fetchTopics(communityId) {
   return { items, gateway, demo: false };
 }
 
+/** Operação `queryAllGateways` do módulo.
+ * @param {*} [query] Parâmetro `query`.
+ * @param {*} [variables] Parâmetro `variables`.
+ * @returns {*} Resultado da operação.
+ */
 export async function queryAllGateways(query, variables) {
   const cfg = await loadConfig();
   const gateways = graphqlGateways(cfg);
@@ -519,6 +552,10 @@ function recordEdgeInMap(edgeMap, edge, gateway) {
   }
 }
 
+/** Operação `mergeTopicEdgesWithConsensus` do módulo.
+ * @param {*} [gatewayResults] Parâmetro `gatewayResults`.
+ * @returns {*} Resultado da operação.
+ */
 export function mergeTopicEdgesWithConsensus(gatewayResults) {
   const edgeMap = new Map();
   for (const res of gatewayResults || []) {
@@ -537,6 +574,10 @@ export function mergeTopicEdgesWithConsensus(gatewayResults) {
   }));
 }
 
+/** Busca RecentTopics nos gateways configurados.
+ * @param {object} [options={}] Opções da consulta.
+ * @returns {*} Resultado da operação.
+ */
 export async function fetchRecentTopics({ crossCheck = false } = {}) {
   if (crossCheck) {
     try {
@@ -567,6 +608,10 @@ export async function fetchRecentTopics({ crossCheck = false } = {}) {
   return { items, gateway, demo: false, crossChecked: false };
 }
 
+/** Busca TopicById nos gateways configurados.
+ * @param {*} [topicId] Parâmetro `topicId`.
+ * @returns {*} Resultado da operação.
+ */
 export async function fetchTopicById(topicId) {
   try {
     const { data } = await withGateways((url) =>
@@ -579,6 +624,10 @@ export async function fetchTopicById(topicId) {
   }
 }
 
+/** Busca Replies nos gateways configurados.
+ * @param {*} [topicId] Parâmetro `topicId`.
+ * @returns {*} Resultado da operação.
+ */
 export async function fetchReplies(topicId) {
   const { data, gateway } = await withGateways((url) =>
     queryOne(url, QUERIES.replies, { topicId })
@@ -588,6 +637,10 @@ export async function fetchReplies(topicId) {
   return { items, gateway, demo: false };
 }
 
+/** Busca UserMemberships nos gateways configurados.
+ * @param {*} [address] Parâmetro `address`.
+ * @returns {*} Resultado da operação.
+ */
 export async function fetchUserMemberships(address) {
   try {
     const { data } = await withGateways((url) =>
@@ -609,6 +662,10 @@ export async function fetchUserMemberships(address) {
 
 const KNOWN_DM_PUBS_KEY = "vox-known-dm-pubs";
 
+/** Operação `cacheUserDmPub` do módulo.
+ * @param {*} [address] Parâmetro `address`.
+ * @param {*} [pubJwk] Parâmetro `pubJwk`.
+ */
 export function cacheUserDmPub(address, pubJwk) {
   if (!address || !pubJwk) return;
   try {
@@ -619,6 +676,10 @@ export function cacheUserDmPub(address, pubJwk) {
   } catch {}
 }
 
+/** Obtém CachedUserDmPub.
+ * @param {*} [address] Parâmetro `address`.
+ * @returns {*} Resultado da operação.
+ */
 export function getCachedUserDmPub(address) {
   if (!address) return null;
   try {
@@ -631,6 +692,10 @@ export function getCachedUserDmPub(address) {
   }
 }
 
+/** Busca UserDmPub nos gateways configurados.
+ * @param {*} [address] Parâmetro `address`.
+ * @returns {*} Resultado da operação.
+ */
 export async function fetchUserDmPub(address) {
   if (!address) return null;
   const cached = getCachedUserDmPub(address);
@@ -652,6 +717,10 @@ export async function fetchUserDmPub(address) {
   return null;
 }
 
+/** Busca Handle nos gateways configurados.
+ * @param {*} [rawSlug] Parâmetro `rawSlug`.
+ * @returns {*} Resultado da operação.
+ */
 export async function fetchHandle(rawSlug) {
   const slug = handles.normalizeSlug(rawSlug);
   if (!slug) return null;
@@ -674,6 +743,10 @@ export async function fetchHandle(rawSlug) {
   }
 }
 
+/** Busca HandleForAddress nos gateways configurados.
+ * @param {*} [address] Parâmetro `address`.
+ * @returns {*} Resultado da operação.
+ */
 export async function fetchHandleForAddress(address) {
   if (!address) return null;
   const cached = handles.getCachedAddressHandle(address);
@@ -694,6 +767,10 @@ export async function fetchHandleForAddress(address) {
   return null;
 }
 
+/** Busca ModActions nos gateways configurados.
+ * @param {*} [communityId] Id da comunidade.
+ * @returns {*} Resultado da operação.
+ */
 export async function fetchModActions(communityId) {
   try {
     const { data } = await withGateways((url) =>
@@ -722,6 +799,11 @@ function cacheAndRecordTx(txId, data, origin, comm) {
   return data;
 }
 
+/** Busca TransactionData nos gateways configurados.
+ * @param {*} [txId] Parâmetro `txId`.
+ * @param {object} [options={}] Opções adicionais da consulta.
+ * @returns {*} Resultado da operação.
+ */
 export async function fetchTransactionData(txId, { communityId = "" } = {}) {
   if (!txId) return { body: "", raw: "" };
   if (dataCache.has(txId)) return dataCache.get(txId);
@@ -760,6 +842,10 @@ function mapProfileCard(node) {
   };
 }
 
+/** Busca ProfileCardOnChain nos gateways configurados.
+ * @param {object} [options={}] Opções da consulta.
+ * @returns {*} Resultado da operação.
+ */
 export async function fetchProfileCardOnChain({ address, routeId } = {}) {
   const targetAddr = String(address || "").trim();
   const targetRoute = String(routeId || "").trim();

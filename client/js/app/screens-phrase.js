@@ -73,4 +73,6 @@ export async function showRecoveryPhrase() {
     e.preventDefault();
     void revealPhrase();
   });
+  const first = document.getElementById("phrase-pass") || document.getElementById("btn-phrase-show");
+  first?.focus({ preventScroll: true });
 }

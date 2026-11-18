@@ -1,6 +1,6 @@
 # Catálogo de funcionalidades — Vox
 
-> **Status:** canônico · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-13
+> **Status:** canônico · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-17
 > Fonte: rotas de `client/js/app/route-parse.js`, imports reais em `client/js/**` e `tests/*.test.js`. Ao plugar ou remover um módulo, atualize a linha correspondente aqui.
 
 **Legenda de status**
@@ -11,6 +11,7 @@
 | **depende de config** | Código no ar, mas só funciona com app registrado, relay ou secret configurado. |
 | **lab** | Rota experimental (`#/labs/*`) — não é produção. |
 | **escrito, não plugado** | Módulo e testes existem; **nenhum ponto de entrada carrega**. Desde o PM-04 fica em `UNPLUGGED_MODULES` no `sw.js`, **fora do precache**; o teste `shell-reachability` mantém a lista honesta. |
+| **planejado** | Decisão (ADR) e spec escritas; nenhum código. |
 | **stub** | Esqueleto ou lista de configuração, sem a lógica principal. |
 | **demo** | Perfis fictícios de `mock.js` que só aparecem com o **modo demonstração** ligado em `#/settings/network`, sempre com a faixa "Modo demonstração" (LAN-10). Fora dele, falha de rede mostra "sem conexão", nunca conteúdo de exemplo. |
 
@@ -46,6 +47,7 @@
 | Moderação: fixar, trancar, ocultar | comunidade | `moderation.js` | no ar | `moderation*` |
 | Denunciar publicação (motivos, canais oficiais para casos graves, DM cifrada ao moderador) | post ⋯ | `report.js`, `app/report-flow.js`, `app/report-dm.js`, `report-review.js` | no ar (LAN-12, PM-69): a denúncia assinada vai por DM à moderação, cujo aparelho arquiva até a revisão ("⏳ Em revisão", 48 h) se passar nas salvaguardas; sem fila central | `report`, `report-flow`, `report-review` |
 | Canal: só a moderação publica posts, todos comentam | faixa na página da comunidade | `community-channel.js`, `app/community-channel-flow.js`, `render/channel-bar.js` | no ar (PM-81): `community_update` com `postingMode`; a regra vale na leitura de cada aparelho ([spec](./specs/canal-comunidade-v0.md)) | `community-channel` |
+| Manifesto de comunidade v1 (subrede: texto longo, tema de lista fechada, sugestões de relay que cada pessoa liga) | página da comunidade, Ajustes → Rede | — | **planejado** ([ADR-038](./adr/038-subrede-malha-e-manifesto.md) proposto, [spec v1](./specs/community-manifest-v1.md)) | — |
 | Proposta com diff + voto assinado | `#/c/:id/proposal/:id`, `#/vote` | `governance.js`, `app/vote-confirm.js` | no ar | `governance`, `vote-stitch` |
 | Enquete cívica 2–6 opções | composer cívico | `civic-post.js` | no ar | `civic-post` |
 | Feira (classificados assinados) | `#/c/:id?tab=feira`, `#/compose/listing` | `listing.js`, `listing-ui.js` | no ar | `listing*` |
@@ -75,6 +77,7 @@
 | Perfil, Voxels, passaporte | `#/perfil`, `#/u/:addr` | `app/screens-profile.js`, `voxels.js` | no ar (Voxels só locais) | `voxels`, `profile-*` |
 | Importar nome/foto (Google, Meta, Bluesky, X, TikTok, GitHub) | Perfil (fora da entrada desde o ADR-032) | `social-login.js`, `oauth-profile.js`, `bsky-oauth.js` | depende de config (Kwai: "em breve") | `social-login`, `oauth-profile` |
 | DMs E2E | `#/dm`, `#/dm/:addr` | `crypto-dm.js`, `dm-messenger.js`, `inbox.js`, `dm-outbox.js` | no ar; entrega offline **depende de relay** (inbox padrão `127.0.0.1:3920`). Caixa de saída (PM-78): o que não saiu é reenviado enquanto o app está aberto, por até 7 dias ("⏳ Aguardando" → "⚠ Não entregue") | `crypto-dm`, `dm-*`, `inbox`, `dm-outbox` |
+| Mochila de DMs (repasse cego entre aparelhos) | — | `dm-outbox.js` (só o passo 0, PM-78); `dm-mochila.js` ainda não existe | **parcial**: caixa de saída no ar; envelope v2 e repasse (PM-79, passos 1 e 2) não implementados; [spec](./specs/mochila-dm-v0.md) | `dm-outbox` |
 | Convite com vínculo assinado (padrinho) | `#/connect/:id?convite=` | `vox-link.js`, `app/vox-link-flow.js`, `render/vox-link.js` | no ar (PM-82): aceite assinado por quem entra e confirmação automática de quem convidou (10 aceites, 30 dias); passa pela malha e pela memória central. Base do moderador natural (PM-83, em **lab** `vox.lab.moderador`; [spec](./specs/moderador-natural-v0.md)) | `vox-link` |
 | Pareamento por QR sem servidor | — | `airgap-webrtc.js` | **escrito, não plugado** | `airgap-webrtc` |
 | Carteira Arweave + assistente | `#/wallet`, `#/wallet/guia` | `wallet.js`, `app/screens-guided.js` | no ar | `wallet` |

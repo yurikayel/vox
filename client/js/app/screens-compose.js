@@ -20,7 +20,7 @@ import * as communitySeed from "../community-seed-checklist.js";
 import { attachPowIfWanted } from "../new-key-guard.js";
 import { parseChatTranscriptToMarkdown } from "../chat-bridge.js";
 import { createCivicNotaryRecord } from "../perma-notary.js";
-import { bindComposeStepper, goToComposeStep } from "./compose-stepper.js";
+import { bindComposeStepper, focusComposeAfterSteppedPublish, goToComposeStep } from "./compose-stepper.js";
 import { renderFeiraDisabled } from "../render/compose-steps.js";
 import { attachInlineComposerHandlers, expandInlineComposer } from "./inline-composer.js";
 import { appendPollOptionsToBody } from "../civic-post.js";
@@ -28,6 +28,7 @@ import { getActiveUser, makeShellProps } from "./context.js";
 import { bindPollBuilder, readPollOptions } from "./compose-poll.js";
 import { assertCanPostTopic } from "./community-channel-flow.js";
 import { resolveCommunityMetadata, resolveTopicContent } from "./screens-community.js";
+import { randomBase36 } from "../shared/html.js";
 
 function updateCommunityPhotoPreview(previewEl, src, initial = "C") {
   if (!previewEl) return;
@@ -133,8 +134,7 @@ async function handleCommunityCreate(state, e) {
     await signAndBroadcastCommunity(data);
     await uploadCommunityToPermaweb({ id: data.id, title: data.title, category: data.category, description: data.desc, image: data.image });
     communitySeed.markSeedPending(data.id);
-    share.showToast("Comunidade criada na rede!");
-    location.hash = `#/c/${encodeURIComponent(data.id)}?seed=1`;
+    leaveComposeAfterPublish("Comunidade criada na rede!", `#/c/${encodeURIComponent(data.id)}?seed=1`);
   } catch (err) {
     share.showToast(`Erro: ${err.message}`, "error");
     btn.disabled = false;
@@ -278,6 +278,12 @@ async function signAndBroadcastTopic(topicId, finalComm, title, body, civicTag =
   peers.broadcastGossip(signed);
 }
 
+function leaveComposeAfterPublish(message, hash) {
+  share.showToast(message);
+  focusComposeAfterSteppedPublish(message);
+  location.hash = hash;
+}
+
 function showTopicPublishToast(permawebResult) {
   if (permawebResult?.success) {
     const badge = permawebResult.via === "turbo" ? "Turbo ⚡" : "Arweave";
@@ -322,10 +328,11 @@ async function handleComposeTopicSubmit(e, communityId) {
   btn.disabled = true;
   btn.textContent = "Publicando…";
   try {
-    const topicId = "top_" + Math.random().toString(36).slice(2, 10);
+    const topicId = "top_" + randomBase36(8);
     await signAndBroadcastTopic(topicId, finalComm, inputs.title, inputs.body, inputs.civicTag);
     const permaResult = await tryUploadTopicToPermaweb(topicId, finalComm, inputs.title, inputs.body);
     showTopicPublishToast(permaResult);
+    focusComposeAfterSteppedPublish("Post publicado.");
 
     await triggerTopicReplicationAndPosse({ id: topicId, communityId: finalComm, title: inputs.title, civicTag: inputs.civicTag, body: inputs.body });
     location.hash = `#/t/${encodeURIComponent(topicId)}?c=${encodeURIComponent(finalComm)}`;
@@ -469,7 +476,7 @@ function resolveContactPix(contactPix) {
 }
 
 async function executeListingPublish(form, pixNormalized, user, communityId) {
-  const listingId = `listing_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+  const listingId = `listing_${Date.now()}_${randomBase36(5)}`;
   const draft = listing.buildListingDraft({
     id: listingId,
     communityId,
@@ -484,8 +491,7 @@ async function executeListingPublish(form, pixNormalized, user, communityId) {
   if (!check.valid) throw new Error(check.error || "Oferta inválida");
   await cacheNode.saveLocalPost(signed);
   peers.broadcastGossip(signed);
-  share.showToast(i18n.listingPublishedToast);
-  location.hash = `#/c/${encodeURIComponent(communityId)}?tab=listings`;
+  leaveComposeAfterPublish(i18n.listingPublishedToast, `#/c/${encodeURIComponent(communityId)}?tab=listings`);
 }
 
 /**
@@ -581,7 +587,7 @@ export async function publishProposal({ communityId, title, body, diffText, user
   try {
     const now = Date.now();
     const signedProposal = await localAccount.signPayload({
-      id: `prop_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+      id: `prop_${Date.now()}_${randomBase36(5)}`,
       type: "governance-proposal",
       communityId,
       title,
@@ -597,8 +603,7 @@ export async function publishProposal({ communityId, title, body, diffText, user
     });
     await cacheNode.saveLocalPost(signedProposal);
     peers.broadcastGossip(signedProposal);
-    share.showToast("Proposta publicada na governança!");
-    location.hash = `#/c/${encodeURIComponent(communityId)}/proposal/${encodeURIComponent(signedProposal.id)}`;
+    leaveComposeAfterPublish("Proposta publicada na governança!", `#/c/${encodeURIComponent(communityId)}/proposal/${encodeURIComponent(signedProposal.id)}`);
   } catch (err) {
     share.showToast(`Erro ao publicar proposta: ${err.message}`, "error");
     if (btn) {
@@ -636,6 +641,28 @@ async function resolveParentReplyContext(parentId, communityId) {
   }
 }
 
+function bindComposeReplySubmit(form, topicId, communityId, parentId) {
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById("btn-submit-reply");
+    const body = document.getElementById("reply-body")?.value.trim();
+
+    btn.disabled = true;
+    btn.textContent = "Enviando…";
+    try {
+      await persistLocalReply(topicId, communityId, body, { parentId });
+      leaveComposeAfterPublish(
+        "Resposta enviada.",
+        `#/t/${encodeURIComponent(topicId)}?c=${encodeURIComponent(communityId)}`,
+      );
+    } catch (err) {
+      share.showToast(`Erro: ${err.message}`, "error");
+      btn.disabled = false;
+      btn.textContent = "Enviar Resposta";
+    }
+  });
+}
+
 function renderLockedTopicNotice(main, topicId, communityId) {
   main.innerHTML = `
     <div class="card compose-card" style="text-align:center; padding: 2rem 1rem;">
@@ -667,25 +694,7 @@ export async function showComposeReply(topicId, communityId, parentId = "") {
   render.renderComposeReply(main, topicId, communityId, { parentId, parentAuthor, parentExcerpt });
 
   const form = document.getElementById("form-compose-reply");
-  if (form) {
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const btn = document.getElementById("btn-submit-reply");
-      const body = document.getElementById("reply-body")?.value.trim();
-
-      btn.disabled = true;
-      btn.textContent = "Enviando…";
-      try {
-        await persistLocalReply(topicId, communityId, body, { parentId });
-        share.showToast("Resposta enviada!");
-        location.hash = `#/t/${encodeURIComponent(topicId)}?c=${encodeURIComponent(communityId)}`;
-      } catch (err) {
-        share.showToast(`Erro: ${err.message}`, "error");
-        btn.disabled = false;
-        btn.textContent = "Enviar Resposta";
-      }
-    });
-  }
+  if (form) bindComposeReplySubmit(form, topicId, communityId, parentId);
 }
 
 async function tryUploadReplyToPermaweb(topicId, communityId, body, replyId, authorDisplay) {
@@ -716,7 +725,7 @@ export async function persistLocalReply(topicId, communityId, body, { parentId =
     throw new Error("Este debate foi encerrado pela moderação e não aceita novas respostas.");
   }
 
-  const replyId = "rep_" + Math.random().toString(36).slice(2, 10);
+  const replyId = "rep_" + randomBase36(8);
   const myDisplayName = localAccount.getDisplayName() || localAccount.getProfileEnrichment()?.displayName || "";
   const myAvatar = localAccount.getProfileEnrichment()?.avatarUrl || "";
   const signed = await localAccount.signPayload({

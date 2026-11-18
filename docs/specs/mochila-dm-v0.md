@@ -1,6 +1,6 @@
 # Mochila de DMs (v0): caixa de saída e repasse cego entre aparelhos
 
-> **Status:** parcial (spec aceita; passo 0 implementado no PM-78, passos 1 e 2 não implementados, PM-79) · **Owner:** mantenedor · **Revisado:** 2026-11-10
+> **Status:** parcial (spec aceita; passo 0 implementado no PM-78 em `client/js/dm-outbox.js`, passos 1 e 2 não implementados, PM-79 aberto) · **Owner:** mantenedor · **Revisado:** 2026-11-17
 > Relacionados: [ADR-020 §2.1](../adr/020-postura-de-operacao-do-piloto-g1.md) (denúncia por DM), [replicação por grau](./replicacao-por-grau-v0.md), [relay-api.md](./relay-api.md) (inbox), `client/js/app/dm-wire.js`, `client/js/crypto-dm.js`.
 
 ## Problema
@@ -47,7 +47,7 @@ Decisão (10/11/2026): **qualquer aparelho conectado carrega, com pouco espaço.
 
 **Denúncia:** "carregada" conta como enviada no fluxo do PM-69; o arquivamento só acontece quando a denúncia chega ao aparelho de quem modera.
 
-**Onde entra no código:** o aperto de mão por inventário do PM-80 ([sync-inventario-v0](./sync-inventario-v0.md), `peer-sync.js`) ganha uma lista de envelopes oferecidos; `client/js/dm-mochila.js` (fila, cotas, prazo, escolha de quem carrega, tentativa de abrir); `crypto-dm.js` (v2); `dm-wire.js` (quarto caminho). Os tipos `MOCHILA_PUT` e `MOCHILA_OFFER` precisam entrar no `peers.js`, que já passa do limite de tamanho: os tratadores ficam no módulo novo, e uma extração real do `peers.js` compensa as linhas.
+**Onde entra no código:** o aperto de mão por inventário do PM-80 ([sync-inventario-v0](./sync-inventario-v0.md), `peer-sync.js`) ganha uma lista de envelopes oferecidos; `client/js/dm-mochila.js` (**módulo planejado, ainda não existe** em 17/11; hoje só há o `dm-outbox.js` do passo 0; fila, cotas, prazo, escolha de quem carrega, tentativa de abrir); `crypto-dm.js` (v2); `dm-wire.js` (quarto caminho). Os tipos `MOCHILA_PUT` e `MOCHILA_OFFER` precisam entrar no `peers.js`, que já passa do limite de tamanho: os tratadores ficam no módulo novo, e uma extração real do `peers.js` compensa as linhas.
 
 ## Métrica do piloto
 

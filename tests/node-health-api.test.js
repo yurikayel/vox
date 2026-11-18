@@ -1,5 +1,5 @@
 import "../tests/setup.js";
-import test from "node:test";
+import test, { mock } from "node:test";
 import assert from "node:assert/strict";
 import { pingNodeEndpoint, pingNodeList } from "../client/js/labs/parado/node-health-api.js";
 import { NODE_STATUS } from "../client/js/labs/parado/node-health-model.js";
@@ -15,16 +15,23 @@ test("node-health-api - pingNodeEndpoint com resposta rápida classifica como he
 });
 
 test("node-health-api - pingNodeEndpoint com latência artificial classifica degraded", async () => {
-  const mockFetch = async () => {
-    await new Promise((r) => setTimeout(r, 320));
-    return { ok: true, status: 200 };
-  };
-  const result = await pingNodeEndpoint("https://node-slow.vox.org", 1000, mockFetch);
+  mock.timers.enable({ apis: ["setTimeout", "Date"] });
+  try {
+    const mockFetch = async () => {
+      await new Promise((r) => setTimeout(r, 320));
+      return { ok: true, status: 200 };
+    };
+    const pending = pingNodeEndpoint("https://node-slow.vox.org", 1000, mockFetch);
+    mock.timers.tick(320);
+    const result = await pending;
 
-  assert.equal(result.url, "https://node-slow.vox.org");
-  assert.equal(result.status, NODE_STATUS.DEGRADED);
-  assert.equal(result.error, null);
-  assert.ok(result.latencyMs >= 300);
+    assert.equal(result.url, "https://node-slow.vox.org");
+    assert.equal(result.status, NODE_STATUS.DEGRADED);
+    assert.equal(result.error, null);
+    assert.ok(result.latencyMs >= 300);
+  } finally {
+    mock.timers.reset();
+  }
 });
 
 test("node-health-api - pingNodeEndpoint com falha de rede retorna offline", async () => {

@@ -6,6 +6,209 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Correção: sinalização (`signaling.py`) com a mesma política de origem do relay completo (R6)
+- Fim do `Access-Control-Allow-Origin: *` e do `Allow-Headers: *`: o CORS usa `request_guard.cors_allow_origin` (valor da lista, `Vary: Origin` sempre, nada de `Allow-*` para origem estranha). O handshake do WebSocket recusa com `403` `Origin` fora da lista ou com caractere de controle; sem `Origin` (cliente nativo, nó Linux) segue permitido. App no GitHub Pages/Cloudflare Pages e `localhost` continuam conectando. Testes: `relay/test_signaling_origem.py` (10); `test_signaling.py` não afirma mais `*`. Sem bump de SW.
+### Segurança: contêiner do relay roda como `vox` (não-root), sem senha de modelo no coturn e portas no host só em loopback
+- `relay/Dockerfile`: usuário `vox` (uid 10001), `USER vox`, `VOLUME` para `/app/.cache` e `/app/.inbox` (dono `vox`), `HEALTHCHECK` com stdlib em `/health`. A sinalização continua em `0.0.0.0` só dentro do contêiner.
+- `relay/deploy/docker-compose.yml`: portas 3921 e 3920 publicadas em `127.0.0.1` por padrão (`VOX_SIGNALING_BIND` / `VOX_RELAY_BIND` para abrir de propósito) e healthcheck por serviço.
+- `relay/deploy/turnserver.conf`: senha de modelo trocada por placeholder `__DEFINIR_SENHA_TURN__` (coturn recusa autenticação até o runbook definir a credencial real).
+- `relay/render.yaml`: comentário sobre `VOX_RELAY_TRUST_PROXY_HOPS` não definido; valor é decisão do dono do deploy.
+- Testes: `relay/test_infra_layout.py` (+4: USER não-root, HEALTHCHECK, sem senha no turnserver, publicação só em loopback). Build da imagem não rodado aqui (Docker indisponível): NOT RUN. Sem bump de SW.
+### Docs: divergências doc × código (HARDENING, ADR-002, ADR-021, release-metadata)
+- `HARDENING.md`: dívida de camadas é 0 (`layers-debt.json` com `violations: []`); ADR-002 ganha emenda 1 (relay `POST /oauth/exchange`); ADR-021 status "implementado, §2.6 aberta"; `release-metadata.json` e README regenerados (315e334, 1962 JS + 244 Python).
+### Correção: CSP — `frame-src` vira lista explícita (R7 da revisão DevSecOps)
+- `client/index.html` e `client/_headers`: `frame-src 'self' blob: https:` passa a `'self' blob:` + `accounts.google.com`, `www.facebook.com`, `web.facebook.com`, `staticxx.facebook.com` (os únicos iframes de rede são os dos SDKs de `oauth-profile.js`; os cartuchos usam `srcdoc`).
+- Mantidos de propósito: `script-src` com `accounts.google.com` e `connect.facebook.net` (`signInWithGoogle`/`signInWithMeta*` ainda carregam esses scripts quando o operador configura `oauth.json`); `connect-src https: wss:` (relay, gateway, PDS Bluesky e Turbo digitados pela pessoa); `img-src`/`media-src https:` (avatar e mídia de posts vêm de URL remota arbitrária).
+- `tests/csp.test.js`: 2 testes novos (`frame-src` sem `https:` solto; `script-src` só com hosts que o código ainda usa).
+
+### Documentação: RFC 0002 propõe autenticar o snapshot do relay cego (lacuna 12 do `relay-api.md`)
+- `docs/rfc/0002-snapshot-autenticado-do-relay-cego.md`: prova de dono por cabeçalho no padrão do ADR-027, teto de salto de `coveredSerial` e `epoch`, idempotência, modos `compat`/`enforce`, ataques e testes que fecham os `skip`. **Só proposta, sem código** (`relay/*.py` intocado); decisões D1–D7 pendentes do dono. `docs/specs/relay-api.md` marca a lacuna 12 como proposta. Sem bump de SW.
+### Docs: runbook de TURN em produção e segundo nó de sinalização (R10)
+- `docs/operations/turn-e-segundo-no.md`: estado medido, caminho A (Worker Cloudflare), caminho B (coturn), segundo nó com failover e variáveis do relay, checklists e decisões do dono. Só documento; limites de free tier marcados NÃO VERIFICADO. Sem bump de SW.
+### Correção: gossip P2P com teto de tamanho, tipo só de lista e sincronização que não amplifica banda (R3)
+- `client/js/peers.js`: mensagem acima de 1 MiB, post/edição/lápide acima de 512 KiB e cartão acima de 64 KiB são descartados em silêncio e contados (`getGossipDropCounts()`: `oversizedMessage`, `oversizedItem`, `oversizedProfileCard`, `unknownType`); tipos vêm de um `Map` (antes `obj[type]`: `"__proto__"` derrubava `handleVoxMessage`). Constantes e contadores em `peers-gossip-profile.js` (já no precache do SW).
+- `client/js/peer-sync.js`: `nonce` e hashes só valem como texto; `SYNC_WANT` só é servido uma vez e só com o nonce do nosso inventário; `loadBlob` que lança deixa o post ir sem blob. `post-supersede.js`: lápide só com `ts` também vale. Testes: os 8 `test.todo` de `p2p-gossip-malicioso` e `peer-sync-malicioso` viraram testes (+2 novos). Sem bump de SW.
+### Correção (R1, cripto): transporte Nostr verifica assinatura e não deixa tomar o `peerId` de outro
+- `client/js/nostr-transport.js`: `handleEvent` confere formato, kind, sala, destinatário e frescor (±10 min) e depois `verifyEvent` (id + Schnorr) antes de qualquer efeito. O `hello` não ganhou campo: a assinatura do próprio evento cobre pubkey, sala e `peerId`. O primeiro pubkey de um `peerId` vale em `hello`, `peer-info`, `offer`, `answer` e `ice` (antes uma `offer` com `from` alheio sobrescrevia o par). `peer-info` valida tipo e tamanho de `address` (≤256) e `dmPub` (objeto ≤4096 em JSON); evento acima de 128 KiB e `peerId` acima de 128 caracteres são descartados. `b64` deixa de estourar a pilha com payload grande.
+- `client/js/nostr-event.js`: `isFreshEvent` e `createSeenWindow` (ids só de eventos verificados, teto 4096 e prazo de 20 min); a janela antiga de 2000 ids era esvaziável por eventos sem assinatura.
+- `client/js/nostr-signaling.js`: candidato precisa ser `wss://` com host e sem credenciais; `ws://` e `wss://` vazio saem.
+- Testes: os seis `test.todo` de bug de `tests/assinaturas-e-sinais-malicioso.test.js` viraram testes normais, mais seis novos ali e dois em `tests/nostr-event.test.js`. Pendente (arquivo de outra sessão): `getNostrRelays` em `webrtc-peer.js` ainda repassa `ws://` ao transporte. Sem bump de SW.
+### Arquitetura: catraca de ciclos de import (ADR-035 §3.4); ciclo `identity/inbox-backup` ↔ `own-posts` desfeito
+- `scripts/cycles-audit.mjs` + `cycles-lib.mjs` (chamado por `npm run audit:layers`): componentes fortemente conexos do grafo de imports estáticos por AST; baseline em `scripts/cycles-debt.json` (1 componente de 3 módulos, só desce). `inbox-backup.js` carrega `own-posts.js` por `import()` (sem mudar comportamento). Testes: `tests/cycles-audit.test.js` (4). Sem bump de SW.
+### Correção: `Access-Control-Allow-Origin` sai de constante, não do cabeçalho `Origin` (CodeQL 283, py/http-response-splitting)
+- `request_guard.cors_allow_origin` devolve a entrada correspondente de `APP_ORIGINS` / `VOX_RELAY_ALLOWED_ORIGINS` (ou a origem de loopback reconstruída de esquema e nome fixos e porta numérica) em vez de ecoar o texto recebido, e recusa origem com CR, LF, tab, espaço, NUL ou outro caractere de controle antes de comparar. Origem de loopback com caminho, usuário ou porta inválida deixa de receber CORS. Testes: `relay/test_cors_origens.py` (13). Sem bump de SW.
+### Correção: busca upstream de transação só com id já validado (CodeQL 287)
+- `relay/server.py`: `_fetch_transaction` recusa imediatamente se `is_tx_id` falhar (43 caracteres, conjunto fixo), antes de montar o URL nos gateways da lista fechada. Sem bump de SW.
+### Correção: caminho do cofre na memória central via `safe_path.child_of` (CodeQL path-injection)
+- `relay/vault_store.py`: arquivo `vaults/<id>.json` só é resolvido com `child_of` após validar o nome. Sem bump de SW.
+### Correção: e-mail e Senha Soberana fora de `sessionStorage` (CodeQL 282 / 284)
+- `app/onboarding-email.js`: o rascunho (`vox-genesis-resume-v1`) guarda só passo, nome e sinalizadores; `pass` e `email` são descartados em `writeGenesisResume`. Após recarregar, e-mail e senha voltam vazios (foco no primeiro campo do passo); na espera da malha a pessoa preenche os dois de novo e o pedido continua pelo endereço em `loadMeshPending`. `readGenesisResume` regrava rascunhos antigos que ainda tinham segredo ou e-mail. Testes: `tests/onboarding-reload-keyboard.test.js`. Sem bump de SW.
+### Refatoração: nome externo vira caminho só por `relay/safe_path.py` (alertas CodeQL `py/path-injection` 266–281)
+- Novo `child_of(raiz, nome, é_válido)`: validador de caracteres e tamanho (sem regex) como primeira porta e `realpath` do filho com `startswith(realpath(raiz) + os.sep)` como segunda; recusa com `ValueError` (inclui symlink para fora da raiz). Usado em `blind_relay.py` (canal, envelopes, snapshot), `inbox.py` (caixa e mensagem) e `server.py` (`/tx/`, `/vox/index/`, `POST /vox/mirror`). `TX_ID_REGEX` e os demais padrões viram funções de conjunto de caracteres (`is_tx_id`, `is_index_name`, `_is_stored_name`); o `$` aceitava `\n` final. Respostas HTTP iguais; `inbox` com endereço só de símbolos (ex. `!!!`) deixa de gravar na raiz da caixa e passa a recusar. CodeQL não foi rodado localmente: a prova é o job do CI. Nome acima de 255 caracteres é recusado antes do validador e nenhuma regex toca texto externo (`py/polynomial-redos`, alertas 285 e 286). Testes: `relay/test_safe_path.py` (17). Sem bump de SW.
+### CI: `red-on-base` só roda contra a base em PR `fix:`; teste de importar posts não depende de turnos do loop
+- `scripts/red-on-base.mjs`: PR que não é `fix:` (inclusive `release:` para `main`) não executa os testes novos contra a base; antes o job estourava 10 min com testes que travam na base. O veredito `info` agora diz que não rodou.
+- `tests/app-own-posts-ui.test.js`: `importar: arquivo da própria conta…` espera a condição (`waitFor`) em vez de 20 `setImmediate`, que falhava no Node 24 do CI.
+### Correção: CORS do relay completo reflete só origem permitida (THREAT-MODEL T32)
+- `relay/server.py` deixa de mandar `Access-Control-Allow-Origin: *`: reflete a origem só se for do app (GitHub Pages, Cloudflare Pages), `localhost`/`127.0.0.1` ou de `VOX_RELAY_ALLOWED_ORIGINS`, e sempre manda `Vary: Origin`. Origem estranha ou ausente não recebe `Allow-Origin`, `Allow-Methods`, `Allow-Headers` nem `Allow-Private-Network` (preflight incluso). Testes: `relay/test_cors_origens.py` (9). Pendente: `signaling.py` (só saúde) e `ZeroCentralMemory.cs` ainda usam `*`. Sem bump de SW.
+### Correção e testes: transporte Nostr não lança com evento malformado; 15 suítes resgatadas das sessões S30
+- `client/js/nostr-transport.js`: `tagValue` aceita evento sem lista de tags ou tag que não é lista (antes `TypeError`).
+- Testes novos (dados das sessões Claude da rodada S30, que não tinham equivalente em `develop`): `app-*` (5), `assinaturas-e-sinais-malicioso`, `p2p-gossip-malicioso`, `peer-sync-malicioso`, `boot-scripts`, `qr-url-gf`, `repost-index`, `cofre-envelope-adversarial`, `cofre-link-e-backup-adversarial`, `identidade-chaves-adversarial`. Bugs conhecidos entram como `test.todo`.
+### Correção: teto global de conexões no servidor de sinalização
+- `relay/signaling.py`: `ThreadedTCPServer` passa a limitar conexões simultâneas (padrão 64, `VOX_SIGNAL_MAX_CONNECTIONS`); acima do teto a conexão nova é fechada na hora, no mesmo padrão de `VoxRelayServer`. Limites por IP (`signal`, `signal_msg`) inalterados. Testes: `relay/test_signaling_connection_cap.py` (5). Sem bump de SW.
+### Correção: backpressure do chunked-transfer não deixa setInterval nem listeners pendurados
+- `waitForBackpressure` centraliza limpeza do poll (`BACKPRESSURE_POLL_MS`), remove listeners de `bufferedamountlow` / `close` / `error` e honora `AbortSignal`; `sendChunksWithBackpressure` aceita `options.signal` e `ChunkReassembler.dispose()` solta transferências parciais. Sem bump de SW. Testes: `tests/chunked-transfer-timers.test.js`.
+### Acessibilidade: alvos de toque ≥44px no compose, nav e ações de post (S30-S12)
+- Composer inline (ícones de anexo e **Postar**), abas da sidebar com `pointer: coarse`, curtir/comentar/salvar no feed e overlay de foto passam a `min-height`/`min-width` de 44px só em toque ou viewport ≤767px; botões primários do compositor Ágora (`agora-btn`) e fechar gaveta (`agora-icon-btn`) no mesmo critério. Desktop com mouse mantém densidade anterior. Sem bump de SW — checagem manual: DevTools modo responsivo + inspecionar caixa de toque nos três fluxos.
+### Correção: clickjacking no GitHub Pages (THREAT-MODEL T33)
+- `client/boot-frame-guard.js` (script estático fora de `client/js/` para não exigir entrada no precache do SW): no boot, se a página não é a janela de topo, esconde o shell e mostra aviso com link `target="_top"`. Testes: `tests/boot-frame-guard.test.js`.
+### Correção: toasts anunciam por aria-live sem roubar foco
+- `showToast` atualiza regiões `vox-toast-status` (`polite`) e `vox-toast-alert` (`assertive` em erros); o balão visual fica com `aria-hidden`. O shell injeta as regiões no markup. Testes: `tests/toast-live-region.test.js`. Sem bump de SW.
+### Correção: integridade e timeout do carregador arweave (S27)
+- `client/js/arweave-lib.js` exporta o sha384 do inventário, valida o timeout HTTP (1–120 000 ms) e confere o bundle vendorizado antes do `import()`, alinhado a `docs/DEPENDENCIAS.md`. Testes: `tests/arweave-integridade.test.js`. Sem bump de SW (comportamento só em caminhos Arweave já raros com `arweaveUpload` desligado).
+### Acessibilidade: foco do teclado após publicar no compositor
+- Após publicação bem-sucedida, o foco vai para o gatilho recolhido do feed ou para a região de anúncio da etapa de revisão (compositor em etapas, resposta e feira). Testes: `tests/compose-focus-after-publish.test.js`. Sem bump de SW.
+### Correção: preso de foco em modais e menu ⋯ (S30-S9)
+- Módulo reutilizável `client/js/render/focus-trap.js`: Tab e Shift+Tab circulam dentro do diálogo; ao fechar, o foco volta a quem abriu.
+- `modal-host` liga o preso quando o contêiner ganha conteúdo; `clearModalHost` desliga e restaura o foco.
+- Menu ⋯ da publicação (`post-more-menu`) usa o mesmo preso enquanto a folha está aberta.
+- Testes: `tests/focus-trap.test.js` (DOM falso em Node). Sem bump de SW.
+### Acessibilidade: alt significativo ou decorativo em imagens do feed, lightbox e compositor
+- Posts com legenda visível passam a usar `alt=""` na hero (evita repetir título/corpo para leitores de tela); `imageAlt` explícito, foto sem legenda e prévia do compositor inline seguem regras dedicadas (`photo-chrome.js`, `composer-media.js`, `post-media-lightbox.js`). Testes: `tests/image-alt.test.js`. Sem bump de SW.
+### Testes: esperas fixas em suíte legada trocadas por timers simulados ou awaits
+- Nove arquivos em `tests/` (`node-health-api`, `contact-notify`, `dom-delegates`, `mesh-vault-ui`, `webrtc`, `chunked-transfer`, `signaling-telemetry`, `nostr-ephemeral-relay`) deixam de usar `setTimeout` real onde dava para manter o comportamento com `mock.timers`, microtarefas, `setImmediate` ou awaits explícitos (`peer-sync.test.js` mantém 50 ms: inventário é disparado sem `await` em `announce`). `tests/setup.js` intocado. Sem bump de SW.
+### Testes: login com rede ruim (LT-02 resto, S30-S7)
+- `tests/login-rede-ruim.test.js`: relay falso por `fetch` (fora do ar, 5xx, JSON ilegível, lixo, queda no meio); criar e restaurar cofre v2 com cripto real; mensagens honestas (LAN-21) e avisos de `handleRestoreFailure` na volta sem servidor ou com cofre corrompido; separa 5xx de “sem servidor”. Pendência anotada: `probeVaultUrl` sem timeout (S3 / `fetch-timeout`).
+
+### Correção: GET do cofre com corpo ilegível não finge “sem servidor”
+- `client/js/vault/vault-store.js` (`probeVaultUrl`): quando o relay responde HTTP 200 mas o JSON quebra, o servidor conta como alcançado (`reachable: true`) em vez de offline; a volta não marca `noServer` e a tela não pede link do e-mail à toa. Prova: `tests/login-rede-ruim.test.js` (red-on-base). Sem bump de SW.
+### Correção: conta e rota sincronizadas entre abas (S30-S5)
+- Quando a conta ativa ou o hash mudam em outra aba do mesmo origin, esta aba recarrega a identidade a partir do `localStorage` (`switchActiveAccount` / `ensureLocalAccount`) e repinta a rota, sem criar conta nova. Canal `vox-tab-sync-v0` para hash; `storage` para chaves de identidade. Boot em `initGossipListeners` via `client/js/identity/tab-sync.js` (sem entrada no service worker). Testes: `tests/tab-sync.test.js`.
+### Documentação: glossário pt-BR da interface (S30-S25)
+- [GLOSSARIO.md](./docs/GLOSSARIO.md): linguagem leiga para termos da UI (conta, cofre, malha, par, guardiões, steward, mensagens, comunidades). Entrada no [índice docs/](./docs/README.md). Sem código e sem bump de SW.
+### Documentação: ROADMAP alinhado ao `develop` (login, DM, timeout, render)
+- `docs/ROADMAP.md`: cabeçalho **Revisado** em 18/11/2026; *Onde estamos* e **REV-09** com prazos no `relay/signaling.py`; **REV-14** com passo 4 (ADR-037); lacunas **LT-02,06,07,09** e **LT-01,03,04,05,08,10** em *Concluído*; **DOC-04** e **PM-115** com evidência de testes de render/DM. Sem código e sem bump de SW.
+### Correção: datas em pt-BR centralizadas e sem "Invalid Date"
+- `client/js/shared/date-format.js` concentra `parseInstant` e formatação pt-BR (curta, por extenso e só data). Call sites em `render/util.js`, `aviso.js`, `render/aviso.js`, `app/sorteio-flow.js`, `app/natural-mod-flow.js` e `email-kit.js` deixam de chamar `toLocaleString`/`toLocaleDateString` soltos; instantâneo inválido vira texto vazio. Testes: `tests/date-format.test.js`. Sem bump de SW.
+### Correção: registro do service worker sem erro engolido (S30-S28)
+- `client/js/boot-sw.js`: falha ao registrar `./sw.js` passa a ir para `console.warn` em vez de um `catch` vazio; o app continua sem offline naquele aparelho, mas fica rastreável em diagnóstico. Sem bump de SW (só o boot).
+- Testes: `tests/boot-sw.test.js`.
+### Correção: jargão nas telas de status, pacto e i18n (S30-S15)
+- `#/status`, pacto de boas-vindas e `i18n-pt-br.js` passam a usar português claro alinhado ao glossário da interface (malha, aparelhos, servidor comunitário), sem `gossip`, `verifyPayload`, `IndexedDB` ou `PM-18` na superfície. Algoritmo da conta (`P-256`) permanece visível na tela de status.
+- Testes: `tests/jargao-ui.test.js` (novo, 4 casos; falham na base por asserção). Sem bump de SW.
+### Testes: LT-08 E2E de login sem falso verde (S30-S2)
+- `scripts/login-e2e.mjs`: exit 1 em falha real; `pageerror` do Chromium passa a ser asserção (antes só acumulava); import do Playwright sem `catch` mudo; variáveis `PLAYWRIGHT_CORE_PATH` e `CHROMIUM_EXECUTABLE_PATH` documentadas no cabeçalho.
+### Testes: fumaça offline no navegador (S30)
+- `scripts/offline-e2e.mjs`: Chromium headless, só loopback; após precache do Service Worker, emula offline e recarrega (servidor local inalcançável), classifica falha de rede como `offline` e cria conta só com nome com chip **Offline** visível. Manual do mantenedor (fora do CI), mesmo modelo que `scripts/login-e2e.mjs`. Sem bump de SW.
+### Testes: lacunas em `client/js/app/` (S30-S18)
+- Novos: `tests/navigation.test.js` (desvio `setRoute`/`route`), `tests/context-shell.test.js` (`makeShellProps`, quarentena no compartilhar), `tests/route-wire.test.js` (`wireRoute`, `routeImpl`, `routeTitle` e `#/settings/network`). Sem bump de SW.
+### Testes: lacunas S30-S21 (`short-id`, `post-supersede`)
+- `tests/short-id.test.js`: encurtamento de `vx_`, `0x`, `did:` e conta oficial para rótulo.
+- `tests/post-supersede.test.js`: `isSupersededLocally` com lápide, versão local mais nova e choque de autor. Sem bump de SW.
+### Testes: malha — inventário peer-sync, tetos PM-52 e ingestão de cache-manifest
+- `tests/peer-sync-wants.test.js`: `computeWants`, `inventoryMessage` e ordem de `messagesForWant` (remoções antes de posts e cartões).
+- `tests/peers-settings-cap.test.js`: `clampCellularCapMb`, `canServeNow` (Wi-Fi, `wifiOnly`, teto no 4G) e normalização ao salvar preferências.
+- `tests/peers-cache-manifest-guard.test.js`: ingestão rejeita formato, assinatura e `communityId` divergente; manifesto antigo não sobrescreve o mais novo; pins de várias comunidades viram prioridade WANT. Sem bump de SW.
+### Testes: feed, revisão e canal (`render/`)
+- `tests/render-feed-review-channel.test.js`: painel de comentários e composer aninhado escapam ids hostis; quarentena local desabilita compartilhar com `data-id` seguro; pílula "em revisão" e shells do canal. Complementa PR #232 (dm, pauta, tag-polis). Sem bump de SW.
+### Testes: cofre no armazenamento e limpeza local (S19)
+- `tests/vault-store-adversarial.test.js`: cópia local revogada não expõe registro; JSON corrompido no aparelho cede ao cofre remoto mais novo; gravação local/remota e revogação com marca `revoked`.
+- `tests/account-backup-wrap-adversarial.test.js`: `peekBackupKind`, senha vazia, adulteração do envelope e iteração fora da faixa no wrap do arquivo de soberania.
+- `tests/local-wipe-adversarial.test.js`: confirmação dupla, política de chaves pessoais vs neutras e tolerância à ausência de `indexedDB`. Sem bump de SW.
+
+### Correção: relay cego não perde deltas no cold boot; memória central confere item e blob
+- **Snapshot apaga por serial, não por timestamp:** só somem os envelopes com `0 < serial <= coveredSerial`; antes, um delta com relógio atrasado e serial acima da cobertura era apagado em silêncio. Snapshot que recua `coveredSerial` agora dá `400` (abriria um buraco). Sem `coveredSerial` nada é apagado (vale o TTL de 7 dias).
+- **Listagem:** com `since_serial` a ordem é por serial, então a página cortada em 100 é contígua e o cliente pagina sem pular itens. Arquivo ruim no disco (serial/timestamp fora do formato) não derruba mais a listagem do canal; `serial`/`timestamp` inválidos na entrada dão `400`.
+- **Ids de envelope:** derivados do conteúdo (`env_<ts>_<sha256>`); antes, mesmo timestamp com nonce vazio ou igual nos 16 primeiros caracteres sobrescrevia o envelope anterior de outro remetente. Reenvio idêntico é idempotente e não renova a validade.
+- **Memória central:** `MAX_ITEM_BYTES` (512 KB) passa a valer para post, perfil, tombstone e manifesto; o SHA-256 do blob é conferido contra `hash` (mesma regra do `computeBlobHash` do cliente), então lixo sob hash alheio deixa de bloquear o blob verdadeiro.
+- **Só documentado (mudança de contrato):** snapshot sem autenticação e `GET` sem aviso de corte em 100 ([relay-api.md](./docs/specs/relay-api.md), "Mudanças de contrato pendentes"). Testes: `relay/test_blind_relay_adversarial.py`, `relay/test_central_memory_limites.py`. Teste alterado de propósito: `test_store_snapshot_and_prune_deltas` (poda por serial) e fixtures de blob em `test_server.py` e `test_relay_limites_e_rotas.py` (hash agora confere). Sem bump de SW.
+### Correção: storage corrompido nos guardiões, na trava de chaves e nas saídas (rodada 2)
+- `guardians.js`, `key-lock.js`, `account-exit.js` e `identity-seed.js` leem o `localStorage` pelos helpers comuns de `identity/keystore.js` (`readStoredRecord`, `writeStoredJson`, `ownRecord`): array, número, string, null, `__proto__` e JSON inválido contam como vazio, sem misturar chaves de índice no mapa nem apagar o que é válido; entradas e divisões malformadas são ignoradas.
+- Cota cheia não lança nem finge: `storeHeldShare`, `applyReceipt` e `recordOwnerSplit` devolvem `false`, `dropHeldShare` devolve `null`, `lockKeys` devolve `null` (a cópia anterior segue valendo) e `sendGuardianShares` responde `storage-full` com aviso na tela. Testes: `tests/storage-corrupt-2.test.js`. Casos de `local-account.js` ficam como `todo` no mesmo arquivo.
+### Correção: relay atende várias conexões e o 413 chega legível
+- `relay/server.py` usava `HTTPServer` (uma conexão por vez, sem prazo de socket): um cliente lento travava todos. Agora é `VoxRelayServer` (`ThreadingHTTPServer`, threads daemon, teto de 64 conexões em `VOX_RELAY_MAX_CONNECTIONS`) e cada leitura/escrita tem prazo de 10 s (`VOX_RELAY_SOCKET_TIMEOUT`). `inbox.py` e `vault_store.save_vault` ganharam lock (um leitor podia ver o JSON pela metade e apagar a mensagem; dois pedidos simultâneos podiam virar os dois dono do mesmo cofre).
+- Respostas 413/429 fechavam sem ler o corpo e o cliente recebia reset (erro 10053 no Windows). Agora toda resposta traz `Content-Length` e `Connection: close`, e o relay drena até 1 MiB (máx. 2 s) do corpo pendente antes de fechar. `blind_relay.store_envelope` passa a sanear o `nonce` do envelope (virava parte do nome do arquivo; com `../` ou `\` escapava do diretório do canal). Testes: `relay/test_relay_threading.py` (10). Sem bump de SW.
+### Correção: "Apagar conta local" apaga de fato e só diz "apagadas" quando apagou
+- Sai também a credencial TURN própria (`vox-custom-turn-config`) e o cache de apelidos→endereço (`vox-handles-cache`); antes ambos ficavam na lista de "neutros". O cofre de chaves (`keystore.js`) fecha cada conexão ao terminar a operação, atende o aviso de versão e `closeKeystore()` solta tudo (e esquece a chave do aparelho em memória) antes de `deleteDatabase`; o armazém de laboratório (`vox-store-db`) também solta a conexão no aviso de versão. Banco que o navegador bloqueia (outra aba segurando) não conta mais como apagado: `wipeLocalDevice` devolve `{ complete, pending }` e o Perfil mostra aviso de erro pedindo para fechar as outras abas. Sem bump de SW (`CACHE_NAME` só no release). Testes: `tests/device-wipe.test.js`.
+
+### Infra: `vox-relay` do docker-compose sobe e `release-binarios` só escreve no release
+- `relay/Dockerfile` copia todos os módulos para `/app/relay/` (pacote, `PYTHONPATH=/app`) em vez de quatro arquivos soltos; o `server.py` (que faz `from relay import ...`) passa a subir com `python -m relay.server`. O CMD padrão segue sendo só o sinalizador (`relay/signaling.py`), usado por Render/HF. `relay/.dockerignore` deixa os `test_*.py` de fora; o compose aponta cache e caixa de entrada para os volumes (`VOX_RELAY_CACHE_DIR`, `VOX_RELAY_INBOX_DIR`).
+- `release-binarios.yml`: o build roda com `contents: read` (inclusive em `pull_request`); `contents: write`, `id-token` e `attestations` ficam no job `publicar`, que não roda em PR. Sem mudança no SW.
+### Correção: cartão de contexto da DM revalidado na tela e na restauração do backup
+- A restauração do backup no e-mail gravava o cartão, a citação e a foto da DM crus, e a tela os lia crus: `href` externo ou `javascript:`, foto por URL externa (pixel de rastreio) e campos de 1 MB passavam. Agora `sanitizeStoredDm` normaliza na restauração e `render/dm.js` revalida na leitura (cobre também linhas já gravadas). `id`, `pixKey`, `communityId` e autor da citação acima de 200 caracteres são descartados, não cortados. Testes: `tests/dm-card-restore-adversarial.test.js`.
+### Acessibilidade: título e foco por rota; botões só com ícone rotulados
+- O roteador (`routeImpl`) passa a definir `document.title` como "Tela · Vox" e mover o foco para o h1 da tela (`tabindex=-1`) (`routeTitle` em `route-parse.js`, `announceRoute` em `route.js`). Botão de ocultar resposta (🛡️) e de remover conta do cofre (✕) ganham `aria-label`. Testes: `tests/a11y-rotas-botoes.test.js`. Sem mudança em `sw.js` (CACHE_NAME fica para o release).
+### Correção: apagar conta no meio da criação não traz a conta de volta
+- `wipeLocalAccount` passa a incrementar uma época e soltar a criação em voo de `ensureLocalAccount`; a criação confere a época antes de gravar conta, chave de DM e entrada no cofre local e, se o wipe rodou no meio, desfaz a semente e a chave de DM que já tinha gravado. Quem esperava recebe a conta nova, nunca a apagada; chamada feita depois do wipe não entra mais na criação antiga. Duas abas (conta que ressuscita na outra aba) continua fora. `client/sw.js` e `CACHE_NAME` não mudaram. Testes: `tests/local-account-wipe-race.test.js`.
+### Correção: vazamentos de WebSocket de sinalização e de listener no lab Open Frames
+- `connectSignaling` reaproveita o socket vivo da mesma URL (ou solta e fecha o antigo) em vez de abrir um novo a cada `savePeerSettings`/`initWebRtc`, inclusive em chamadas concorrentes. O lab Open Frames remove o listener `message` ao remontar e ao sair da rota (`hashchange`). `client/sw.js` intocado (CACHE_NAME só no release). Testes: `tests/vazamentos-ws-labs.test.js`.
+### Documentação: PRs mesclados que não tinham linha (#181–#218)
+Entradas acrescentadas por conferência dos PRs mesclados em `develop` com este arquivo. Só acréscimo; nada reescrito. Os PRs anteriores ao #177 já entram por tema nas seções abaixo. Sem bump de SW.
+- **Relay:** rate limit por IP em token bucket, por classe de endpoint (`mailbox`, `beacon`, `write`, `signal`, `signal_msg`), com 429 e `Retry-After` (`relay/rate_limit.py`, #203). Testes de `GET /`, `/status`, `/ping` e `/peer/beacon` (`relay/test_relay_get_endpoints.py`, 7 casos, #194).
+- **Segurança e identidade:** "Apagar conta local" passa a apagar toda chave `vox-`/`vox_`/`vox.` do storage (exceto lista de preferências neutras) e os bancos IndexedDB `vox-cache-db`, `vox-keystore` e `vox-store-db` (`identity/local-wipe.js`, #197).
+- **DMs:** `tests/dm-adversarial.test.js` (33 casos) e 5 correções pequenas que eles provaram necessárias (#202).
+- **Cofre na malha:** testes de relógio nas bordas de 5 min, 24 h e 72 h (LT-05, `tests/mesh-vault-clock.test.js`, 8 casos, #189) e testes adversariais com correções pequenas em `vault/*` e `mesh-vault-flow.js` (#218).
+- **Plano de testes do login:** LT-02 falhas de rede (`tests/login-network-faults.test.js`, 7 casos, #207), LT-04 propriedades com semente fixa (#208), LT-08 E2E em navegador local, manual do mantenedor (`scripts/login-e2e.mjs`, #198); matriz do plano atualizada (#216).
+- **Testes de rota:** `#/communities` (`tests/route-communities.test.js`, #195).
+- **ADR:** emendas de revisão dos ADR-034, 035 e 036, sem mudar status (#181).
+- **Documentação:** JSDoc do lote 5, `client/js/render` (#215); 9 âncoras `#L` corrigidas no dossiê arquivado (#191); 4 contradições entre specs, ROADMAP e código (embed, moderador natural, mochila, matriz do CI) (#192); escolha de modelo e esforço por tarefa no método de agentes (#199); fluxo de PR para `develop` no `antigravity-operating.md` (#206).
+
+### Documentação: modelo de ameaças com cinco ameaças abertas (T30–T34)
+- [THREAT-MODEL.md](./docs/THREAT-MODEL.md): slowloris no relay, 413 sem drenar o corpo, CORS `*` em GETs sem auth, GitHub Pages sem cabeçalhos de segurança e endereço do cofre v1 sem sal; cada uma com arquivo:linha e mitigação proposta. Só docs; sem bump de SW.
+### Documentação: sub-itens abertos de LT-06 e LT-07 no plano de testes do login
+- `docs/process/plano-testes-login.md` §5.1 lista, com arquivo:linha, os achados abertos de duas abas e de recarga/teclado. Só documentação; sem correção prometida.
+
+### Docs: relay-api §6 alinhado ao rate limit real e `VOX_RELAY_TRUST_PROXY_HOPS` por deploy
+- Referências de linha atualizadas, `signal_msg` descarta sem resposta e por IP, riscos de hops baixo (balde único, caso do nó Render hoje com 0) e alto (spoofing de `X-Forwarded-For`) e valor por host. `client/sw.js` intocado.
+
+### Correção: `fetch` sem prazo ganha timeout (`fetch-timeout.js`)
+- Helper `fetchWithTimeout` (AbortController + prazo padrão 8 s, aceita `signal` externo, rejeita mesmo se o `fetch` ignorar o signal). Migrados `central-memory`, `graphql` (inclui `gateways.json`), `upload` e `turn-credentials` (rede muda cai na espera padrão). `central-memory-hydrate` e `memory-server-choice` não fazem `fetch` direto. Teste: `tests/fetch-timeout.test.js`. Release: se o módulo novo entrar no precache, incluir `fetch-timeout.js` em `client/sw.js` (não tocado aqui).
+### Correção: erros engolidos na DM não perdem mais chave nem mensagem
+- `ensureDmKeys` e a caixa de saída guardam o texto ilegível em `*-ilegivel` antes de regravar; a mensagem vencida só sai da caixa depois de marcada "Não entregue"; `dispatchSealedEnvelope` devolve `failed` quando nem a caixa guardou; DM direta que não abre, reação não enviada e backup que não monta agora avisam a pessoa. Testes: `tests/dm-erros-engolidos.test.js`.
+
+### Correção: avisa no passo de criação quando a conta não grava no aparelho
+- `ensureLocalAccount` registra falha de quota/bloqueio e o onboarding mostra aviso em `#oauth-enrich-error` sem travar o fluxo. Testes: `tests/local-account-storage-full.test.js`, `tests/onboarding-steps.test.js`.
+
+### Correção: storage corrompido (JSON não-objeto) não quebra malha nem conta
+- Leitores das cópias na malha e das sementes ignoram JSON que não é objeto (top-level e, nas cópias, cada entrada inválida); mesmo tratamento que chave ausente ou JSON inválido. Testes: `tests/storage-corrupt.test.js`.
+
+### Correção: foco no campo certo após erro na entrada (LT-07)
+- `setOAuthEnrichError` aceita `focusId` opcional; `validateEmailEntryIssue` aponta nome, e-mail ou senha conforme a falha. Testes: `tests/onboarding-steps.test.js`.
+
+### Correção: entrada retoma após recarga (LT-07)
+- Rascunho da criação de conta e espera do cofre na malha voltam no `sessionStorage` após recarregar a página; o pedido à malha continua pelo endereço já gravado. Foco inicial na tela da frase; cartão de impressão fora da ordem de Tab. Testes: `tests/onboarding-reload-keyboard.test.js`.
+
+### Correção: relay — espelho recusa corpo grande cedo
+- `POST /vox/mirror` compara `Content-Length` com o teto de 256 KiB antes de ler o corpo e responde 413 com `mirror.body_too_large`, alinhado ao restante dos handlers de escrita.
+
+### Correção: uma só conta quando `ensureLocalAccount` corre em paralelo
+- Chamadas simultâneas com armazenamento vazio compartilham a mesma criação em voo e o mesmo `routeId` persistido. Teste: `tests/local-account-race.test.js`.
+
+### Correção: acessibilidade do login (cofre na malha e "Já tenho conta")
+- Faixa "Foi você?" é anunciada quando aparece (`role="alert"`, em vez de `alertdialog`); depois de responder, o foco vai para a próxima faixa ou para um lugar estável, e não cai no `body` (WCAG 4.1.3 e 2.4.3). Região de status da malha fica sempre no DOM, vazia até ter texto; erro de "Já tenho conta" sem `aria-live` duplicado; seta do "← Voltar" escondida do leitor. SW `v7.143`. Testes: `tests/mesh-vault-ui.test.js`.
+
+### Documentação: ADR-039, Rust por fases (proposed)
+- [ADR-039](./docs/adr/039-rust-por-fases.md) (**proposed**): mais Rust com o tempo, onde ganha em segurança, em 6 fases (fundação de CI, `vox-core` de referência, Argon2id do cofre, troca da cripto própria e ML-KEM, relay, nó nativo). A chave privada P-256 do navegador continua no WebCrypto não exportável; WebAssembly só para o que o WebCrypto não tem. Decisão A-27 em [DECISOES.md](./docs/DECISOES.md). Sem código e sem bump de SW.
+
+### Testes: "Corrigir e-mail" revoga o endereço errado (LT-03)
+- `tests/email-kit-correct.test.js`: com criptografia real e só rede/storage falsos, o e-mail errado deixa de abrir (revogado com a prova de dono), o certo com a mesma senha abre o mesmo `routeId`, a senha não vai ao `mailto:`/storage/rede, e corrigir para o mesmo e-mail não estraga nada.
+- Correção: `createEmailAccountKit` recusa e-mail sem `@` antes de gravar; antes gravava o cofre novo e revogava o anterior para só então falhar ao montar o kit (a tela já barrava, a função não).
+
+### Documentação: emenda da revisão do ADR-038
+- `about` do manifesto é só o texto longo (apresentação, regras, links); título, descrição curta, foto, categoria e modo de publicação continuam só no `community_update`, para não haver duas fontes.
+- O `community_update` passa a seguir o mesmo cálculo de versão do manifesto quando o v1 for implementado (futuro limitado a 10 minutos, sem volta): hoje uma atualização datada no futuro distante trava título e descrição. Testes esperados acrescentados na spec v1 §9.
+- Linha "manifesto de comunidade v1 — planejado" em [FEATURES.md](./docs/FEATURES.md). Sem código, sem bump de SW.
+
+### Documentação: ADR-038, subrede e manifesto de comunidade v1 (proposto)
+- [ADR-038](./docs/adr/038-subrede-malha-e-manifesto.md) (**proposed**): a comunidade é um território assinado na malha mais um manifesto que só sugere. Mesma regra de permissão do PM-09; `issuedAt` só cresce; tema por lista fechada com contraste; módulos aceitos pela pessoa, um por um; extensões só na v2; fork é `communityId` novo.
+- Spec [community-manifest-v1](./docs/specs/community-manifest-v1.md) substitui o rascunho v0. Ameaça T28 no [THREAT-MODEL](./docs/THREAT-MODEL.md), decisão A-26 e EXP-03 no ROADMAP apontando para o ADR. Sem código e sem bump de SW.
+
+### Novidade: cofre na malha e tela única de volta (ADR-037)
+- Quem entra com e-mail e senha passa a ter o cofre cifrado (o mesmo v2) copiado para até 7 laços mútuos, guardiões primeiro, que o guardam como caixa preta. Num aparelho novo, se o cofre não está em lugar nenhum, o Vox pede o cofre à malha por uma caixa cega do relay: quem guarda avisa a dona ("Foi você?") e libera depois de 24 h, ou já com "Fui eu"; "Não fui eu" veta aquele pedido. Pedido vale 72 h. Sem servidor de contas e sem criptografia nova (`client/js/vault/mesh-vault.js`, `client/js/app/mesh-vault-flow.js`, `client/js/app/mesh-vault-ui.js`).
+- "Já tenho conta" vira um caminho só: e-mail, senha e Entrar; kit, frase, guardiões, QR e arquivos ficam em "Outras formas de voltar".
+- Correção encontrada pelo plano de testes: "Apagar conta local" agora apaga também as cópias guardadas para outros, o pedido de volta e os avisos.
+- Ameaça T27 no [THREAT-MODEL](./docs/THREAT-MODEL.md), decisão A-25 e [plano de testes do login](./docs/process/plano-testes-login.md) (invariantes, matriz por caminho e lacunas LT-01–LT-10).
+- Testes: `tests/mesh-vault.test.js` (21), `tests/mesh-vault-flow.test.js` (20, vários aparelhos com relay falso e criptografia real), `tests/mesh-vault-ui.test.js` (9). SW `v7.141`.
+
 ### Documentação: aceite dos ADR-034, ADR-035 e ADR-036
 - **ADR-035** passa a **accepted** (camadas e contextos; catraca `audit:layers` no CI; `vault/` e `identity/` feitos).
 - **ADR-034** e **ADR-036** passam a **aceito como direção** (direção aceita pelo mantenedor; nada implementado sem RFC 0002 e LAN-18 onde couber). Atualiza [DECISOES.md](./docs/DECISOES.md) A-22–A-24. Sem bump de SW.
@@ -729,6 +932,8 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ### Qualidade
 - `npm test` travava localmente: o teste "dois pares" do `nostr-transport` esperava tempos fixos, falhava com a suíte inteira no mesmo processo e deixava o `setInterval` do hello vivo. Agora espera a condição e para os transportes no `finally`; a suíte roda em segundos.
+### Correção: limpeza periódica de expirados e teto padrão em `/tx` (lacunas 5 e 7)
+- `relay/purge_schedule.py`: thread daemon varre inbox (72 h) e canal cego (7 d) a cada `VOX_RELAY_PURGE_INTERVAL_SECONDS` (900; `0` desliga), pasta a pasta, parando no desligamento. `VOX_RELAY_MAX_CACHE_MB` passa a ter padrão 512 (`0` = sem teto) e `/tx` recusa com `413` resposta acima de `VOX_RELAY_MAX_TX_MB` (32) sem lê-la inteira. Testes: `relay/test_purge_schedule.py` (6). Sem bump de SW.
 
 ## SW v7.33 → v7.38 — 2026-11-08 (PRs #13–#28)
 

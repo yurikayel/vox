@@ -15,6 +15,12 @@ import threading
 import time
 import socketserver
 
+try:  # como pacote (testes, `python -m`) ou solto na mesma pasta (`python relay/signaling.py`, imagem Docker)
+    from relay import rate_limit, request_guard
+except ImportError:
+    import rate_limit
+    import request_guard
+
 WS_GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 DEFAULT_HOST = "0.0.0.0"
 DEFAULT_PORT = 3921
@@ -23,6 +29,7 @@ MAX_HEADER_SIZE = 64 * 1024  # 64 KB max handshake headers
 MAX_WS_MESSAGE_SIZE = MAX_WS_FRAME_SIZE  # teto da mensagem remontada (todos os fragmentos juntos)
 HANDSHAKE_TIMEOUT = 10.0  # segundos para o handshake HTTP chegar inteiro
 FRAME_TIMEOUT = 30.0  # segundos para o resto de um quadro depois do cabeçalho
+DEFAULT_MAX_CONNECTIONS = 64
 CONTROL_OPCODES = frozenset({0x8, 0x9, 0xA})
 DATA_OPCODES = frozenset({0x0, 0x1, 0x2})  # continuação, texto, binário
 MAX_CONTROL_PAYLOAD = 125
@@ -150,6 +157,20 @@ class MessageAssembler:
         return done
 
 
+def _positive_int(raw, default: int) -> int:
+    try:
+        value = int(str(raw or "").strip())
+    except ValueError:
+        return default
+    return value if value > 0 else default
+
+
+def resolve_max_connections(env=None) -> int:
+    """Conexões atendidas ao mesmo tempo (`VOX_SIGNAL_MAX_CONNECTIONS`); as demais são fechadas na hora."""
+    raw = (env if env is not None else os.environ).get("VOX_SIGNAL_MAX_CONNECTIONS")
+    return _positive_int(raw, DEFAULT_MAX_CONNECTIONS)
+
+
 def resolve_port(cli_port=None, default: int = DEFAULT_PORT) -> int:
     if cli_port is not None:
         try:
@@ -162,19 +183,35 @@ def resolve_port(cli_port=None, default: int = DEFAULT_PORT) -> int:
     return default
 
 
+def cors_headers(origin) -> tuple:
+    """Cabeçalhos `Access-Control-Allow-*` para a origem do pedido; vazio se ela não está na lista permitida."""
+    allowed = request_guard.cors_allow_origin(origin)
+    if allowed is None:
+        return ()
+    return (
+        f"Access-Control-Allow-Origin: {allowed}",
+        "Access-Control-Allow-Methods: GET, HEAD, OPTIONS",
+        "Access-Control-Allow-Headers: Content-Type",
+    )
+
+
 def make_http_response(
     status_code: int,
     status_text: str,
     body: bytes = b"",
     content_type: str = "application/json",
+    extra_headers: tuple = (),
+    origin=None,
 ) -> bytes:
+    """Resposta HTTP da sinalização. CORS segue `request_guard.cors_allow_origin`: o valor vem da lista de origens
+    (nunca do cabeçalho recebido) e `Vary: Origin` sempre vai junto; origem fora da lista não recebe `Allow-*`."""
     lines = [
         f"HTTP/1.1 {status_code} {status_text}",
         f"Content-Type: {content_type}",
         f"Content-Length: {len(body)}",
-        "Access-Control-Allow-Origin: *",
-        "Access-Control-Allow-Methods: GET, HEAD, OPTIONS",
-        "Access-Control-Allow-Headers: *",
+        *extra_headers,
+        "Vary: Origin",
+        *cors_headers(origin),
         "Connection: close",
         "",
         "",
@@ -189,10 +226,10 @@ def parse_http_target(request_line: str):
     return method, path
 
 
-def handle_http_request(request_sock, request_line: str, peer_count: int = 0) -> None:
+def handle_http_request(request_sock, request_line: str, peer_count: int = 0, origin=None) -> None:
     method, path = parse_http_target(request_line)
     if method == "OPTIONS":
-        resp = make_http_response(204, "No Content", body=b"")
+        resp = make_http_response(204, "No Content", body=b"", origin=origin)
     elif method in ("GET", "HEAD"):
         clean_path = path.split("?")[0]
         if clean_path in ("/", "/health", "/status", "/ping"):
@@ -203,11 +240,11 @@ def handle_http_request(request_sock, request_line: str, peer_count: int = 0) ->
                 "peers": peer_count,
             }).encode("utf-8")
             body = b"" if method == "HEAD" else payload
-            resp = make_http_response(200, "OK", body=body)
+            resp = make_http_response(200, "OK", body=body, origin=origin)
         else:
-            resp = make_http_response(404, "Not Found", body=b'{"error":"not_found"}')
+            resp = make_http_response(404, "Not Found", body=b'{"error":"not_found"}', origin=origin)
     else:
-        resp = make_http_response(405, "Method Not Allowed", body=b'{"error":"method_not_allowed"}')
+        resp = make_http_response(405, "Method Not Allowed", body=b'{"error":"method_not_allowed"}', origin=origin)
     try:
         request_sock.sendall(resp)
     except Exception:
@@ -270,6 +307,8 @@ registry = PeerRegistry()
 
 
 class WebSocketHandler(socketserver.BaseRequestHandler):
+    peer_ip = None  # IP usado no limite de taxa; definido no handshake
+
     def setup(self):
         self.peer_id = None
         self.closed = False
@@ -320,7 +359,15 @@ class WebSocketHandler(socketserver.BaseRequestHandler):
                 self.request,
                 header_lines[0] if header_lines else "",
                 peer_count=len(registry.peers),
+                origin=headers.get("origin"),
             )
+            return False
+
+        if self.reject_if_foreign_origin(headers.get("origin")):
+            return False
+
+        self.peer_ip = self.resolve_peer_ip(headers)
+        if self.reject_if_throttled():
             return False
 
         accept_val = compute_accept_key(sec_key)
@@ -331,6 +378,42 @@ class WebSocketHandler(socketserver.BaseRequestHandler):
             f"Sec-WebSocket-Accept: {accept_val}\r\n\r\n"
         )
         self.request.sendall(resp.encode("ascii"))
+        return True
+
+    def reject_if_foreign_origin(self, origin) -> bool:
+        """Recusa com 403 o handshake vindo de página fora da lista de origens (`request_guard`).
+
+        Sem `Origin` (cliente nativo, nó Linux) passa: só navegador manda o cabeçalho, e é ele que carrega
+        cookies/rede local de terceiros para um WebSocket aberto por página alheia.
+        """
+        if not origin or request_guard.cors_allow_origin(origin) is not None:
+            return False
+        resp = make_http_response(403, "Forbidden", body=b'{"error":"origin_not_allowed"}')
+        try:
+            self.request.sendall(resp)
+        except OSError:
+            pass
+        return True
+
+    def resolve_peer_ip(self, headers: dict):
+        """IP do cliente para o limite de taxa (respeita `VOX_RELAY_TRUST_PROXY_HOPS`); None sem endereço de rede."""
+        address = getattr(self, "client_address", None)
+        if not address:
+            return None
+        return rate_limit.client_ip(address[0], headers.get("x-forwarded-for"))
+
+    def reject_if_throttled(self) -> bool:
+        """Recusa a conexão com 429 + `Retry-After` quando o IP abriu WebSockets demais."""
+        wait = rate_limit.LIMITER.check("signal", self.peer_ip) if self.peer_ip else 0
+        if not wait:
+            return False
+        resp = make_http_response(
+            429, "Too Many Requests", body=b'{"error":"rate_limited"}', extra_headers=(f"Retry-After: {wait}",)
+        )
+        try:
+            self.request.sendall(resp)
+        except OSError:
+            pass
         return True
 
     def receive_loop(self):
@@ -363,6 +446,8 @@ class WebSocketHandler(socketserver.BaseRequestHandler):
         return True
 
     def handle_text_payload(self, payload: bytes):
+        if self.peer_ip and rate_limit.LIMITER.check("signal_msg", self.peer_ip):
+            return  # acima do limite da conexão: descarta sem responder
         try:
             msg = json.loads(payload.decode("utf-8"))
             self.dispatch_message(msg)
@@ -429,8 +514,30 @@ class WebSocketHandler(socketserver.BaseRequestHandler):
 
 
 class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
+    """Uma thread por conexão (daemon), com teto de conexões simultâneas (mesmo padrão de `VoxRelayServer`)."""
+
     allow_reuse_address = True
     daemon_threads = True
+
+    def __init__(self, server_address, handler_class, max_connections=None, **kwargs):
+        self._slots = threading.BoundedSemaphore(max_connections or resolve_max_connections())
+        super().__init__(server_address, handler_class, **kwargs)
+
+    def process_request(self, request, client_address):
+        if not self._slots.acquire(blocking=False):
+            self.shutdown_request(request)
+            return
+        try:
+            super().process_request(request, client_address)
+        except BaseException:
+            self._slots.release()
+            raise
+
+    def process_request_thread(self, request, client_address):
+        try:
+            super().process_request_thread(request, client_address)
+        finally:
+            self._slots.release()
 
 
 def main():

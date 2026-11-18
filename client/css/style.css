@@ -2301,7 +2301,7 @@ body.post-more-sheet-open {
   flex: 1 1 0;
   min-width: 0;
   max-width: 4.5rem;
-  min-height: 40px;
+  min-height: 44px;
   flex-direction: row;
   align-items: center;
   justify-content: center;
@@ -2354,7 +2354,7 @@ body.post-more-sheet-open {
   align-items: center;
   justify-content: center;
   gap: 0;
-  min-height: 40px;
+  min-height: 44px;
   font-size: 1.15rem;
   line-height: 1;
   border: none;
@@ -9186,6 +9186,56 @@ blockquote.repost-cite {
   body.printing-phrase > :not(#phrase-print-root) { display: none !important; }
   body.printing-phrase > #phrase-print-root { display: block; padding: 1.5cm; color: #000; background: #fff; }
   body.printing-phrase > #phrase-print-root .phrase-words { grid-template-columns: repeat(3, 1fr); font-size: 14pt; padding-left: 1.5cm; }
+}
+
+/* S30-S12: alvos de toque ≥44px em compose, nav e ações de post (desktop com mouse inalterado) */
+@media (pointer: coarse), (max-width: 767px) {
+  .inline-composer-tool {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .btn-inline-submit,
+  .btn-inline-echo {
+    min-height: 44px;
+    padding-block: 10px;
+    box-sizing: border-box;
+  }
+
+  .post-toolbar .action-btn,
+  .post-ig-toolbar .action-btn,
+  .post-layout-photo > .post-ig-toolbar .action-btn,
+  .post-layout-photo .post-media-hero .post-ig-toolbar .action-btn {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 10px;
+    box-sizing: border-box;
+    justify-content: center;
+  }
+
+  .post-ig-header .btn-post-more-menu {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 10px;
+    box-sizing: border-box;
+  }
+
+  .toolbar-overflow-menu .action-btn {
+    min-height: 44px;
+  }
+}
+
+@media (pointer: coarse) {
+  .tab-item {
+    min-height: 44px;
+    min-width: 44px;
+    box-sizing: border-box;
+  }
 }
 
 /* ADR-032 §3.4 — tela dos guardiões (#/guardioes) */

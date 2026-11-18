@@ -5,6 +5,11 @@ import { renderUnifiedDiffHtml } from "./diff-html.js";
 
 const FENCE_RE = /```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g;
 
+/**
+ * Separa trechos de texto e blocos cercados por <code>```</code>.
+ * @param {string} text Corpo em markdown.
+ * @returns {Array<{type: "text"|"code", value: string, lang?: string}>}
+ */
 export function splitMarkdownFences(text) {
   const src = String(text ?? "");
   const parts = [];
@@ -51,7 +56,11 @@ function renderCodeBlock(code, lang) {
   </div>`;
 }
 
-/** HTML seguro para corpo de post (sem título). */
+/**
+ * HTML seguro para corpo de post: parágrafos com hashtags e blocos de código/diff.
+ * @param {string} text Markdown do corpo (sem título).
+ * @returns {string}
+ */
 export function renderPostBodyMarkdown(text) {
   const parts = splitMarkdownFences(text);
   return parts

@@ -4,6 +4,11 @@
  * Erro, teto do mês ou limite por IP: espera antes de pedir de novo e o app segue sem TURN.
  */
 
+import { fetchWithTimeout } from "./fetch-timeout.js";
+
+/** Prazo do pedido ao Worker; estourou, cai na espera padrão. */
+export const TURN_FETCH_TIMEOUT_MS = 8000;
+
 /** Margem antes do vencimento: credencial que vence em menos que isso já não é usada. */
 export const EXPIRY_MARGIN_MS = 5 * 60 * 1000;
 /** Espera depois de falha de rede ou resposta estranha. */
@@ -41,11 +46,12 @@ function retryDelay(res) {
  * Um pedido ao Worker: credenciais válidas e a vida delas, ou quanto esperar antes de pedir de novo.
  * @param {string} url
  * @param {typeof fetch} fetchImpl
+ * @param {number} [timeoutMs] prazo do pedido.
  * @returns {Promise<{ servers: Array<object>, ttlMs: number } | { servers: null, retryMs: number }>}
  */
-export async function fetchCredentials(url, fetchImpl) {
+export async function fetchCredentials(url, fetchImpl, timeoutMs = TURN_FETCH_TIMEOUT_MS) {
   try {
-    const res = await fetchImpl(url, { method: "GET", cache: "no-store", credentials: "omit" });
+    const res = await fetchWithTimeout(url, { method: "GET", cache: "no-store", credentials: "omit" }, { timeoutMs, fetchImpl });
     if (!res.ok) return { servers: null, retryMs: retryDelay(res) };
     const body = await res.json();
     const servers = sanitizeIceServers(body?.iceServers);

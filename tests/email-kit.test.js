@@ -123,4 +123,8 @@ test("email-kit: validateEmailEntry aceita entrada só com nome e valida e-mail 
   assert.notEqual(emailKit.validateEmailEntry({ rawName: "Duda", email: "sem-arroba", pass: PASS }), "");
   assert.notEqual(emailKit.validateEmailEntry({ rawName: "Duda", email: "duda@exemplo.com", pass: "curta" }), "");
   assert.equal(emailKit.validateEmailEntry({ rawName: "Duda", email: "duda@exemplo.com", pass: PASS }), "");
+  assert.equal(typeof emailKit.validateEmailEntryIssue, "function");
+  assert.equal(emailKit.validateEmailEntryIssue({ rawName: "", email: "", pass: "" })?.field, "name");
+  assert.equal(emailKit.validateEmailEntryIssue({ rawName: "Duda", email: "sem-arroba", pass: PASS })?.field, "email");
+  assert.equal(emailKit.validateEmailEntryIssue({ rawName: "Duda", email: "duda@exemplo.com", pass: "curta" })?.field, "pass");
 });

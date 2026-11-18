@@ -12,10 +12,11 @@ import * as postOwnership from "../post-ownership.js";
 import * as mediaBlob from "../media-blob.js";
 import * as photoTags from "../photo-tags.js";
 import { openPhotoTagPicker } from "./photo-tag-picker.js";
-import { escapeHtml } from "../shared/html.js";
+import { escapeHtml, randomBase36 } from "../shared/html.js";
 import * as permanence from "../permanence-notice.js";
 import { attachPowIfWanted } from "../new-key-guard.js";
 import { assertCanPostTopic } from "./community-channel-flow.js";
+import { focusAfterComposePublish } from "../render/compose-chrome.js";
 
 let inlineComposerImageDataUrl = "";
 let inlineComposerMedia = { type: "", dataUrl: "", byteLength: 0 };
@@ -117,7 +118,7 @@ function attachComposerMediaToPayload(payload) {
 }
 
 function buildInlineTopicPayload({ title, body, commSlug }) {
-  const topicId = "top_" + Math.random().toString(36).slice(2, 10);
+  const topicId = "top_" + randomBase36(8);
   const enrichment = localAccount.getProfileEnrichment();
   const myDisplayName = localAccount.getDisplayName() || enrichment?.displayName || "";
   const myAvatar = enrichment?.avatarUrl || "";
@@ -640,6 +641,7 @@ async function executeInlinePublish(form, onPublished, state, shouldEcho = false
   syncInlineComposerUi();
   collapseInlineComposer();
   showPublishToast(permaResult);
+  focusAfterComposePublish();
   if (typeof onPublished === "function") await onPublished(signed);
   else location.reload();
 

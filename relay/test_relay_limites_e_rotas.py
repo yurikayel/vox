@@ -162,7 +162,7 @@ class RelayHttpEndpointsTest(unittest.TestCase):
         st, _ = self._req("/memory/ingest", method="POST", body={"event": {"id": "e_cov", "type": "topic", "author": "vx_a", "ts": 9999999999999}})
         self.assertIn(st, (200, 201))
         blob_h = hashlib.sha256(b"AAAA").hexdigest()
-        st, _ = self._req("/memory/sync", method="POST", body={"items": [{"id": "e_s2", "type": "topic", "author": "vx_a", "ts": 9999999999999}], "blobs": [{"hash": blob_h, "data": "QUFBQQ=="}]})
+        st, _ = self._req("/memory/sync", method="POST", body={"items": [{"id": "e_s2", "type": "topic", "author": "vx_a", "ts": 9999999999999}], "blobs": [{"hash": blob_h, "data": "data:application/octet-stream;base64,QUFBQQ=="}]})
         self.assertEqual(st, 200)
         self.assertEqual(self._req("/memory/status")[0], 200)
         self.assertEqual(self._req("/memory/state?since=0&includeBlobs=1")[0], 200)
@@ -367,11 +367,11 @@ class RelayHelpersAndSignalingTest(unittest.TestCase):
                 {"type": "GOSSIP_UPDATE", "item": {"id": "gp1", "author": "vx_a", "ts": 9999999999999, "body": "v2"}},
                 {"type": "GOSSIP_DELETE", "tombstone": {"id": "gp1", "author": "vx_a", "editedAt": 9999999999999}},
                 {"type": "CACHE_MANIFEST", "item": {"communityId": "c1", "issuedAt": 9999999999999}},
-                {"type": "MEDIA_BLOB", "blob": {"hash": "c" * 64, "data": "QUFBQQ=="}},
+                {"type": "MEDIA_BLOB", "blob": {"hash": hashlib.sha256(b"AAAA").hexdigest(), "data": "data:application/octet-stream;base64,QUFBQQ=="}},
             ]:
                 central_memory.ingest_event(ev)
             blobs = central_memory.export_state(since=0, include_blobs=True).get("blobs", [])
-            self.assertTrue(any(b.get("hash") == "c" * 64 for b in blobs))
+            self.assertTrue(any(b.get("hash") == hashlib.sha256(b"AAAA").hexdigest() for b in blobs))
             blind_relay.store_snapshot("ch_ep", {"snapshot": {"x": 1}, "epoch": 2})
             self.assertRaises(ValueError, blind_relay.store_snapshot, "ch_ep", {"snapshot": {"x": 1}, "epoch": 1})
             self.assertRaises(ValueError, blind_relay.store_envelope, "ch_ep", {"sender": "a", "sig": "b", "blob": "x" * 70000})

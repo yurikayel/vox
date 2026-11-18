@@ -1,9 +1,15 @@
-/** @file Shared HTML/time/author helpers for Vox render layer. */
+/**
+ * @file Utilitários de renderização: HTML, tempo relativo, autores e avatares.
+ *
+ * Reexporta `escapeHtml` e `shortId` só para a camada de UI (domínio importa da origem).
+ * @module render/util
+ */
 import * as mock from "../mock.js";
 import * as localAccount from "../identity/index.js";
 import * as profileDirectory from "../profile-directory.js";
 import { isWelcomeRouteId } from "../vox-welcome-profile.js";
 import { escapeHtml } from "../shared/html.js";
+import { formatAbsoluteDate, parseInstant } from "../shared/date-format.js";
 import { shortId } from "../short-id.js";
 
 // Reexportados para a UI. O domínio importa da origem, nunca daqui (docs/ARCHITECTURE.md, "Camadas").
@@ -21,6 +27,10 @@ export function normalizePostAspect(aspect) {
   return POST_ASPECTS.has(aspect) ? aspect : "original";
 }
 
+/**
+ * Raiz da aplicação no DOM (`#app-root`).
+ * @returns {HTMLElement|null}
+ */
 export const root = () => document.getElementById("app-root");
 
 /**
@@ -127,7 +137,15 @@ function formatAuthorResult(routeId, fullName, profileHandle) {
   return { primary, secondaryHandle, authorDisplay, authorHandle, routeTitle: routeId };
 }
 
-/** Nome + @handle ou ID curto uma vez (title = routeId completo). */
+/**
+ * Rótulos de autor para cabeçalho de post (nome, @handle, routeId no title).
+ * @param {string} author `routeId` do autor.
+ * @param {object} [options={}]
+ * @param {string} [options.authorDisplay=""] Nome forçado.
+ * @param {string} [options.authorHandle=""] Handle forçado.
+ * @param {boolean} [options.isOwnLocalPost=false] Trata como post do usuário local.
+ * @returns {{primary: string, secondaryHandle: string, authorDisplay: string, authorHandle: string, routeTitle: string}}
+ */
 export function resolvePostAuthorLabels(author, { authorDisplay: override = "", authorHandle: optHandle = "", isOwnLocalPost = false } = {}) {
   const routeId = String(author || "");
   if (isWelcomeRouteId(routeId)) {
@@ -144,33 +162,23 @@ export function resolvePostAuthorLabels(author, { authorDisplay: override = "", 
   return formatAuthorResult(routeId, fullName, profileHandle);
 }
 
-function parseTsDate(ts) {
-  if (!ts || isNaN(Number(ts))) return null;
-  const d = new Date(Number(ts));
-  return isNaN(d.getTime()) ? null : d;
-}
+export { formatAbsoluteDate, formatAbsoluteDateTime } from "../shared/date-format.js";
 
-function pad2(n) {
-  return String(n).padStart(2, "0");
-}
-
-export function formatAbsoluteDate(ts) {
-  const d = parseTsDate(ts);
-  if (!d) return "";
-  return `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}/${d.getFullYear()}`;
-}
-
-export function formatAbsoluteDateTime(ts) {
-  const d = parseTsDate(ts);
-  if (!d) return "";
-  return `${formatAbsoluteDate(ts)} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
-}
-
+/**
+ * ISO 8601 do instantâneo ou `""` se inválido.
+ * @param {number|string} ts
+ * @returns {string}
+ */
 export function formatIsoTimestamp(ts) {
-  const d = parseTsDate(ts);
+  const d = parseInstant(ts);
   return d ? d.toISOString() : "";
 }
 
+/**
+ * Partes de exibição temporal de um post (relativo, absoluto, ISO, title attr).
+ * @param {number|string} ts
+ * @returns {{relative: string, absDate: string, iso: string, display: string, titleAttr: string}}
+ */
 export function postTimeParts(ts) {
   const relative = formatTimeAgo(ts);
   const absDate = formatAbsoluteDate(ts);
@@ -184,6 +192,14 @@ export function postTimeParts(ts) {
   };
 }
 
+/**
+ * Bloco de meta do autor (nome, handle, tempo) abaixo do avatar no post.
+ * @param {string} author `routeId` para link do perfil.
+ * @param {object} labels Saída de {@link resolvePostAuthorLabels}.
+ * @param {string} timeLabel Texto relativo já formatado.
+ * @param {object} [options={}] `ts`, `absDate`, `absDateTime` opcionais.
+ * @returns {string}
+ */
 export function renderPostAuthorMetaLines(author, labels, timeLabel, options = {}) {
   const { primary, secondaryHandle, routeTitle } = labels;
   const titleAttr = routeTitle ? ` title="${escapeHtml(routeTitle)}"` : "";
@@ -209,6 +225,11 @@ export function renderPostAuthorMetaLines(author, labels, timeLabel, options = {
         </div>`;
 }
 
+/**
+ * Cor HSL estável derivada do hash do ID da comunidade (selos e avatares).
+ * @param {string} [id=""]
+ * @returns {string} Valor CSS `hsl(...)`.
+ */
 export function getCommunityColor(id = "") {
   let hash = 0;
   for (let i = 0; i < id.length; i++) {
@@ -218,6 +239,14 @@ export function getCommunityColor(id = "") {
   const hue = Math.abs(hash) % 360;
   return `hsl(${hue}, 65%, 45%)`;
 }
+/**
+ * Avatar com imagem e fallback de inicial, ou só inicial.
+ * @param {string} author `routeId`.
+ * @param {string} authorDisplay Nome para alt/título.
+ * @param {string} [sizeClass=""] Classes de tamanho.
+ * @param {string} [avatarOverride=""] URL forçada.
+ * @returns {string}
+ */
 export function renderAvatarHtml(author, authorDisplay, sizeClass = "", avatarOverride = "") {
   const avatarUrl =
     avatarOverride || profileDirectory.getAuthorAvatarSync(author) || mock.getAuthorAvatar(author);
@@ -231,6 +260,11 @@ export function renderAvatarHtml(author, authorDisplay, sizeClass = "", avatarOv
   return `<span class="avatar${squircle} ${sizeClass}">${authorInitial}</span>`;
 }
 
+/**
+ * Tempo relativo curto (`agora`, `5m`, `2h`, `3d`, meses/anos).
+ * @param {number|string} ts
+ * @returns {string}
+ */
 export function formatTimeAgo(ts) {
   if (!ts || isNaN(Number(ts))) return "recente";
   const diff = Math.max(0, Date.now() - Number(ts));
@@ -261,6 +295,11 @@ function formatHeadingOrParagraph(trimmed) {
   return `<p>${formatInlineMd(trimmed)}</p>`;
 }
 
+/**
+ * Subconjunto de markdown: títulos, listas, negrito/itálico/código inline.
+ * @param {string} md
+ * @returns {string}
+ */
 export function renderMarkdownLight(md) {
   if (!md) return "";
   const lines = String(md).split("\n");
@@ -289,7 +328,13 @@ export function renderMarkdownLight(md) {
   return out.join("");
 }
 
-/** LAN-12 — item "Denunciar" dos menus ⋯ (o clique abre app/report-flow.js via delegação). */
+/**
+ * Item "Denunciar" dos menus ⋯ (LAN-12; clique tratado em report-flow).
+ * @param {string} postId ID do post.
+ * @param {string} [author=""] Autor para o fluxo.
+ * @param {string} [communityId=""] Comunidade de contexto.
+ * @returns {string}
+ */
 export function renderReportMenuItem(postId, author = "", communityId = "") {
   return `<button type="button" class="action-btn btn-report-post" data-id="${escapeHtml(postId)}" data-author="${escapeHtml(author)}" data-comm="${escapeHtml(communityId)}" role="menuitem" aria-label="Denunciar publicação">
     <span aria-hidden="true">⚑</span>

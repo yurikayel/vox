@@ -23,7 +23,7 @@ Crie um registro DNS `A` (e opcionalmente `AAAA`) apontando seu subdomínio (ex:
 ### 2. Ajustar Configurações
 1. Edite [`Caddyfile`](./Caddyfile) e troque `signal.sua-comunidade.org` pelo seu domínio real.
 2. Edite [`turnserver.conf`](./turnserver.conf):
-   - Altere `user=vox:troque-esta-senha-comunitaria` para uma credencial forte.
+   - Substitua o placeholder `user=vox:__DEFINIR_SENHA_TURN__` por uma credencial forte gerada com `openssl rand -hex 24`, na sua cópia de produção (fora do git). Sem isso o coturn recusa autenticação, de propósito.
    - Se a VPS estiver atrás de NAT (como AWS EC2 ou Oracle Cloud), descomente `external-ip=SEU_IP_PUBLICO`.
 
 ### 3. Liberar Portas no Firewall (UFW / Security Group)

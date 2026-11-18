@@ -1,18 +1,29 @@
 /**
+ * @file Ofertas da feira — rascunho assinado, status e validação.
+ 
  * Módulo de Feira Comunitária e Classificados (Fase M1).
- * Suporte a ofertas locais (Type: listing) sem intermediação de pagamento.
- */
+ * Suporte a ofertas locais (Type: listing) sem intermediação de pagamento.*/
 
+/** Microcopy exibida na interface. @type {string} */
 export const LISTING_DISCLAIMER =
   "O Vox não intermedia pagamento nem cobra taxas. Combine no DM e use Pix direto.";
 
+/** Export `LISTING_TYPE` do módulo. @type {string} */
 export const LISTING_TYPE = "listing";
 
+/** Indica se ListingItem.
+ * @param {*} [item] Item com prova de trabalho.
+ * @returns {*} Resultado da operação.
+ */
 export function isListingItem(item) {
   return item?.type === LISTING_TYPE;
 }
 
-/** Campos mínimos antes de `localAccount.signPayload` (gossip v1.1). */
+/**
+ * Monta rascunho de anúncio antes da assinatura gossip v1.1.
+ * @param {object} [options={}] Campos do anúncio.
+ * @returns {object}
+ */
 export function buildListingDraft({
   id,
   communityId,
@@ -44,13 +55,20 @@ export function buildListingDraft({
   };
 }
 
+/** Operação `stripListingSignatureFields` do módulo.
+ * @param {*} [item] Item com prova de trabalho.
+ * @returns {*} Resultado da operação.
+ */
 export function stripListingSignatureFields(item) {
   if (!item) return null;
   const { sig: _sig, pubKey: _pubKey, ...rest } = item;
   return rest;
 }
 
-/** Atualização assinada de status (vendido/reservado) via GOSSIP_UPDATE. */
+/** Atualização assinada de status (vendido/reservado) via GOSSIP_UPDATE. 
+ * @param {*} [base] Parâmetro `base`.
+ * @param {*} [listingStatus] Parâmetro `listingStatus`.
+ * @returns {*} Resultado da operação.*/
 export function buildListingStatusUpdate(base, listingStatus) {
   const clean = stripListingSignatureFields(base);
   if (!clean?.id) throw new Error("Oferta inválida");
@@ -62,6 +80,10 @@ export function buildListingStatusUpdate(base, listingStatus) {
   };
 }
 
+/** Valida entrada de SignedListingGossip.
+ * @param {*} [item] Item com prova de trabalho.
+ * @returns {*} Resultado da operação.
+ */
 export function validateSignedListingGossip(item) {
   if (!isListingItem(item)) {
     return { valid: false, error: "tipo inválido" };
@@ -74,6 +96,10 @@ export function validateSignedListingGossip(item) {
   return { valid: true, error: null };
 }
 
+/** Indica se CommercialEnabled.
+ * @param {*} [communityMeta] Parâmetro `communityMeta`.
+ * @returns {*} Resultado da operação.
+ */
 export function isCommercialEnabled(communityMeta) {
   if (!communityMeta) return false;
   if (communityMeta.commercialEnabled === true || communityMeta.commercialEnabled === "true") {
@@ -85,6 +111,10 @@ export function isCommercialEnabled(communityMeta) {
   return false;
 }
 
+/** Normaliza PriceLabel.
+ * @param {*} [raw] Valor bruto de entrada.
+ * @returns {*} Resultado da operação.
+ */
 export function normalizePriceLabel(raw) {
   if (!raw) return "";
   const cleaned = String(raw).trim();
@@ -101,11 +131,20 @@ export function normalizePriceLabel(raw) {
   return `R$ ${cleaned}`;
 }
 
+/** Normaliza LocationLabel.
+ * @param {*} [raw] Valor bruto de entrada.
+ * @param {*} [maxLen] Parâmetro `maxLen`.
+ * @returns {*} Resultado da operação.
+ */
 export function normalizeLocationLabel(raw, maxLen = 60) {
   if (!raw) return "";
   return String(raw).trim().slice(0, maxLen);
 }
 
+/** Normaliza ListingStatus.
+ * @param {*} [status] Parâmetro `status`.
+ * @returns {*} Resultado da operação.
+ */
 export function normalizeListingStatus(status) {
   const s = String(status || "available").trim().toLowerCase();
   if (s === "sold" || s === "vendido") return "sold";
@@ -113,6 +152,10 @@ export function normalizeListingStatus(status) {
   return "available";
 }
 
+/** Operação `formatListingStatus` do módulo.
+ * @param {*} [status] Parâmetro `status`.
+ * @returns {*} Resultado da operação.
+ */
 export function formatListingStatus(status) {
   const s = normalizeListingStatus(status);
   if (s === "sold") return "Vendido";
@@ -120,6 +163,10 @@ export function formatListingStatus(status) {
   return "Disponível";
 }
 
+/** Valida entrada de ListingInput.
+ * @param {object} [options={}] Campos do anúncio.
+ * @returns {*} Resultado da operação.
+ */
 export function validateListingInput({ title, body, priceLabel: _priceLabel } = {}) {
   const cleanTitle = String(title || "").trim();
   const cleanBody = String(body || "").trim();

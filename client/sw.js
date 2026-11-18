@@ -4,7 +4,7 @@
 
 // O Service Worker atua no cache offline do shell e notificações de status, sem abrir WebRTC.
 
-const CACHE_NAME = "vox-pwa-v7.140-real-network-audio-video-upload";
+const CACHE_NAME = "vox-pwa-v7.143-real-network-audio-video-upload";
 
 const SHELL_ASSETS = [
 
@@ -189,6 +189,7 @@ const SHELL_ASSETS = [
   "./js/app/feedback-flow.js",
   "./js/age-gate.js",
   "./js/render/modal-host.js",
+  "./js/render/focus-trap.js",
 
   "./js/posse-dispatch.js",
   "./js/explode-dispatch.js",
@@ -213,6 +214,7 @@ const SHELL_ASSETS = [
   "./js/identity/index.js",
   "./js/identity/keys.js",
   "./js/identity/local-account.js",
+  "./js/identity/tab-sync.js",
   "./js/account-social-match.js",
   "./js/sig-format.js",
   "./js/signed-verify.js",
@@ -248,6 +250,7 @@ const SHELL_ASSETS = [
   "./js/vault/envelope.js",
   "./js/vault/oauth-vault.js",
   "./js/vault/passphrase-vault.js",
+  "./js/vault/mesh-vault.js",
   "./js/vault/vault-store.js",
   "./js/identity/keystore.js",
   "./js/identity/key-at-rest.js",
@@ -265,6 +268,8 @@ const SHELL_ASSETS = [
   "./js/app/screens-guardians.js",
   "./js/identity/guardian-return.js",
   "./js/app/guardian-return-flow.js",
+  "./js/app/mesh-vault-flow.js",
+  "./js/app/mesh-vault-ui.js",
   "./js/render/guardian-return.js",
   "./js/app/screens-guardian-return.js",
   "./js/render/recovery-phrase.js",
@@ -290,6 +295,7 @@ const SHELL_ASSETS = [
   "./js/signaling-telemetry.js",
 
   "./js/genesis.js",
+  "./js/fetch-timeout.js",
   "./js/graphql.js",
 
   "./js/data/profiles-brazil-uf.js",
@@ -344,6 +350,7 @@ const SHELL_ASSETS = [
 
   "./js/render/util.js",
   "./js/shared/html.js",
+  "./js/shared/date-format.js",
   "./js/short-id.js",
 
   "./js/render/shell.js",
