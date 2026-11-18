@@ -7,8 +7,7 @@
 
 import * as localAccount from "./local-account.js";
 import * as cacheNode from "../cache-node.js";
-import { isLocked } from "./keystore.js";
-import { readStoredRecord } from "./storage-json.js";
+import { isLocked, readStoredRecord } from "./keystore.js";
 
 /**
  * Tipos de saída soberana (ADR-032 §3.2). `frase` e `guardioes` chegam nos passos seguintes; `anterior` é o

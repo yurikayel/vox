@@ -11,9 +11,11 @@
  * chave pela referência. Qualquer falha antes disso deixa tudo como estava.
  */
 
-import { KeyLockedError, KeystoreUnavailableError, LOCKED_TAG, isLocked, loadKey, openSealed, removeKey, storeKey } from "./keystore.js";
+import {
+  KeyLockedError, KeystoreUnavailableError, LOCKED_TAG, isLocked, loadKey, openSealed, ownRecord, readStoredRecord, removeKey, storeKey,
+  writeStoredJson,
+} from "./keystore.js";
 import { decryptVaultRecord, encryptVaultV2 } from "../vault/envelope.js";
-import { ownRecord, readStoredRecord, writeStoredJson } from "./storage-json.js";
 
 const LOCKED_COPIES = "vox-locked-keys-v1";
 /** Mesmo mínimo do cofre (`VAULT_PASSPHRASE_MIN`): senha curta não trava nada. */

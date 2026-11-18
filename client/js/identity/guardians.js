@@ -8,8 +8,7 @@
  *   exportar ("caixa preta"). No máximo 20 donas; uma divisão nova da mesma dona substitui a anterior.
  */
 
-import { openSealed, sealJsonStrict } from "./keystore.js";
-import { isPlainRecord, ownRecord, readStoredRecord, writeStoredJson } from "./storage-json.js";
+import { isPlainRecord, openSealed, ownRecord, readStoredRecord, sealJsonStrict, writeStoredJson } from "./keystore.js";
 import { MAX_N, MIN_M, SPLIT_ID_BYTES, splitSecret } from "../shamir-gf256.js";
 
 /** Pedaço da dona para o guardião. */
