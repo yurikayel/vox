@@ -38,6 +38,8 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 - Quando a conta ativa ou o hash mudam em outra aba do mesmo origin, esta aba recarrega a identidade a partir do `localStorage` (`switchActiveAccount` / `ensureLocalAccount`) e repinta a rota, sem criar conta nova. Canal `vox-tab-sync-v0` para hash; `storage` para chaves de identidade. Boot em `initGossipListeners` via `client/js/identity/tab-sync.js` (sem entrada no service worker). Testes: `tests/tab-sync.test.js`.
 ### Documentação: glossário pt-BR da interface (S30-S25)
 - [GLOSSARIO.md](./docs/GLOSSARIO.md): linguagem leiga para termos da UI (conta, cofre, malha, par, guardiões, steward, mensagens, comunidades). Entrada no [índice docs/](./docs/README.md). Sem código e sem bump de SW.
+### Documentação: ROADMAP alinhado ao `develop` (login, DM, timeout, render)
+- `docs/ROADMAP.md`: cabeçalho **Revisado** em 18/11/2026; *Onde estamos* e **REV-09** com prazos no `relay/signaling.py`; **REV-14** com passo 4 (ADR-037); lacunas **LT-02,06,07,09** e **LT-01,03,04,05,08,10** em *Concluído*; **DOC-04** e **PM-115** com evidência de testes de render/DM. Sem código e sem bump de SW.
 
 ### Correção: relay cego não perde deltas no cold boot; memória central confere item e blob
 - **Snapshot apaga por serial, não por timestamp:** só somem os envelopes com `0 < serial <= coveredSerial`; antes, um delta com relógio atrasado e serial acima da cobertura era apagado em silêncio. Snapshot que recua `coveredSerial` agora dá `400` (abriria um buraco). Sem `coveredSerial` nada é apagado (vale o TTL de 7 dias).
