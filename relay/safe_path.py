@@ -14,6 +14,10 @@ import re
 from pathlib import Path
 from typing import Union
 
+#: Teto do nome (igual ao limite de nome de arquivo da maioria dos sistemas), checado ANTES de casar o
+#: padrão: texto externo gigante nunca chega à regex (CodeQL `py/polynomial-redos`).
+MAX_NAME_LENGTH = 255
+
 #: Id curto padrão (canal, comunidade): letras, dígitos, `_` e `-`.
 SAFE_NAME = re.compile(r"[A-Za-z0-9_-]{1,128}")
 
@@ -21,12 +25,13 @@ SAFE_NAME = re.compile(r"[A-Za-z0-9_-]{1,128}")
 def child_of(root: Union[str, "os.PathLike[str]"], name: str, pattern: "re.Pattern[str]" = SAFE_NAME) -> Path:
     """Caminho de `name` dentro de `root`, ou `ValueError` se `name` não for seguro.
 
+    O nome com mais de `MAX_NAME_LENGTH` caracteres é recusado sem passar pelo padrão.
     `pattern` precisa casar o nome inteiro (`fullmatch`). Depois disso, o caminho
     resolvido com `realpath` tem de começar por `realpath(root) + os.sep`; a própria
     raiz não vale como filho. O arquivo não precisa existir.
     """
     text = str(name)
-    if pattern.fullmatch(text) is None:
+    if len(text) > MAX_NAME_LENGTH or pattern.fullmatch(text) is None:
         raise ValueError("nome fora do formato permitido")
     root_real = os.path.realpath(root)
     full = os.path.realpath(os.path.join(root_real, text))
