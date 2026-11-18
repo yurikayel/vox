@@ -16,6 +16,8 @@ import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
+from relay.safe_path import child_of
+
 MAX_ENVELOPE_SIZE = 64 * 1024  # 64 KB por envelope
 MAX_SNAPSHOT_SIZE = 512 * 1024  # 512 KB por snapshot consolidado
 DEFAULT_TTL_SECONDS = 7 * 86400  # 7 dias de retenção para envelopes de canal
@@ -53,17 +55,20 @@ def ensure_channel_dir(channel_id: str) -> Path:
     base = os.path.basename(stripped)
     if _CHANNEL_ID.fullmatch(base) is None:
         raise ValueError("ID de canal comunitário inválido")
-    chan_path = RELAY_DIR / base
+    try:
+        chan_path = child_of(RELAY_DIR, base, _CHANNEL_ID)
+    except ValueError as err:
+        raise ValueError("ID de canal comunitário inválido") from err
     chan_path.mkdir(parents=True, exist_ok=True)
     return chan_path
 
 
 def _stored_file(chan_path: Path, name: str) -> Optional[Path]:
-    """Arquivo do canal só se o nome é um dos nossos (sem separador e sem `..`)."""
-    base = os.path.basename(name)
-    if _STORED_NAME.fullmatch(base) is None:
+    """Arquivo do canal só se o nome é um dos nossos (sem separador, sem `..` e sem symlink para fora)."""
+    try:
+        return child_of(chan_path, os.path.basename(name), _STORED_NAME)
+    except ValueError:
         return None
-    return chan_path / base
 
 
 def _coerce_int(value: Any, field: str, default: int = 0) -> int:

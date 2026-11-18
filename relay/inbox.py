@@ -11,7 +11,14 @@ import json
 import threading
 import time
 import os
+import re
 from pathlib import Path
+
+from relay.safe_path import child_of
+
+# Depois de `sanitize_filename` só sobram letras/dígitos (Unicode, como `str.isalnum`), `-` e `_`.
+_ADDR_NAME = re.compile(r"[\w-]+")
+_MESSAGE_NAME = re.compile(r"[\w-]*\.json")
 
 DEFAULT_TTL_SECONDS = 72 * 3600  # 72 horas
 MAX_ENVELOPE_SIZE = 32 * 1024     # 32 KB por mensagem
@@ -64,6 +71,16 @@ def sanitize_filename(name: str) -> str:
     return "".join(c for c in str(name) if c.isalnum() or c in ("-", "_"))
 
 
+def _addr_dir(to_address: str) -> Path:
+    """Pasta da caixa do endereço, dentro de INBOX_DIR; `ValueError` se o nome não der caminho seguro."""
+    return child_of(INBOX_DIR, sanitize_filename(to_address), _ADDR_NAME)
+
+
+def _message_file(addr_dir: Path, message_id: str) -> Path:
+    """Arquivo da mensagem dentro da caixa; `ValueError` se o nome não der caminho seguro."""
+    return child_of(addr_dir, f"{sanitize_filename(message_id)}.json", _MESSAGE_NAME)
+
+
 def store_envelope(to_address: str, envelope: dict, ttl_seconds: int = DEFAULT_TTL_SECONDS) -> dict:
     with _INBOX_LOCK:
         return _store_envelope_locked(to_address, envelope, ttl_seconds)
@@ -86,7 +103,11 @@ def _store_envelope_locked(to_address: str, envelope: dict, ttl_seconds: int) ->
     ensure_inbox_dir()
     clean_addr = sanitize_filename(to_address)
     clean_id = sanitize_filename(msg_id)
-    addr_dir = INBOX_DIR / clean_addr
+    try:
+        addr_dir = _addr_dir(to_address)
+        target_file = _message_file(addr_dir, msg_id)
+    except ValueError as err:
+        raise ValueError("Endereço de destino inválido") from err
     addr_dir.mkdir(parents=True, exist_ok=True)
 
     now = time.time()
@@ -103,7 +124,6 @@ def _store_envelope_locked(to_address: str, envelope: dict, ttl_seconds: int) ->
     if delete_hash:
         record["delHash"] = delete_hash
 
-    target_file = addr_dir / f"{clean_id}.json"
     target_file.write_text(json.dumps(record), encoding="utf-8")
 
     return {
@@ -123,8 +143,10 @@ def get_envelopes(to_address: str) -> list:
 def _get_envelopes_locked(to_address: str) -> list:
     if not to_address:
         return []
-    clean_addr = sanitize_filename(to_address)
-    addr_dir = INBOX_DIR / clean_addr
+    try:
+        addr_dir = _addr_dir(to_address)
+    except ValueError:
+        return []
     if not addr_dir.is_dir():
         return []
 
@@ -161,7 +183,10 @@ def delete_envelope(to_address: str, message_id: str, token: str = None) -> str:
 def _delete_envelope_locked(to_address: str, message_id: str, token) -> str:
     if not to_address or not message_id:
         return NOT_FOUND
-    target_file = INBOX_DIR / sanitize_filename(to_address) / f"{sanitize_filename(message_id)}.json"
+    try:
+        target_file = _message_file(_addr_dir(to_address), message_id)
+    except ValueError:
+        return NOT_FOUND
     if not target_file.is_file():
         return NOT_FOUND
     try:
