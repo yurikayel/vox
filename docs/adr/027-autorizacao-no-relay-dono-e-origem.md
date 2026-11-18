@@ -34,7 +34,7 @@ O Vox não tem conta no servidor. Então a prova de dono precisa sair de algo qu
 
 - **O que muda para quem usa:** nada visível. O cofre e a DM continuam iguais; a prova e a chave de apagar viajam sozinhas.
 - **Para quem opera nó por túnel:** o endereço do túnel precisa estar em `VOX_RELAY_ALLOWED_HOSTS` no relay Python ([kit do steward](../operations/steward-relay-kit.md)). O nó Windows libera o próprio túnel sozinho.
-- **Espelho do app em outro domínio:** precisa entrar em `VOX_RELAY_ALLOWED_ORIGINS` para gravar.
+- **Espelho do app em outro domínio:** precisa entrar em `VOX_RELAY_ALLOWED_ORIGINS` para gravar e para ler as respostas (CORS por origem).
 - **Limites:**
   - cofre v2 gravado antes do SW v7.65 fica sem dono até a próxima gravação com a senha;
   - envelope de DM sem `del` (cliente antigo) segue sem chave de apagar até expirar;
