@@ -11,6 +11,7 @@
  * Pool de relays validado pelo teste de fumaça (REV-19, scripts/nostr-smoke.mjs).
  */
 import { finalizeEvent, generateSecretKey, getPublicKey, getSharedSecret, bytesToHex, sha256 } from "./nostr-event.js";
+import { randomBase36 } from "./shared/html.js";
 
 export const SIGNAL_KIND = 25050;
 export const DEFAULT_ROOM = "vox-brasil-v1";
@@ -122,7 +123,7 @@ function openRelay(ctx, slot) {
     scheduleReconnect(ctx, slot, false);
     return;
   }
-  const subId = `vox-${Math.random().toString(36).slice(2, 8)}`;
+  const subId = `vox-${randomBase36(6)}`;
   trackRelayStatus(ctx, ws, () => {
     slot.failures = 0;
     ws.send(JSON.stringify(["REQ", subId, { kinds: [SIGNAL_KIND], "#t": [ctx.room], since: Math.floor(Date.now() / 1000) - 30 }]));

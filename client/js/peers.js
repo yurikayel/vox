@@ -23,6 +23,7 @@ import { isBeforeGenesisMs, isTestRouteId } from "./genesis.js";
 import { isSupersededLocally } from "./post-supersede.js";
 import { getRelayHttpUrls } from "./inbox.js";
 import { createPeerSync, defaultPeerSyncDeps, SYNC_INV, SYNC_WANT } from "./peer-sync.js";
+import { randomBase36 } from "./shared/html.js";
 
 export {
   collectPriorityPinTxIds,
@@ -47,7 +48,7 @@ const PEER_METRICS_KEY = "vox-peer-metrics";
 const DAILY_USAGE_KEY = "vox-daily-usage";
 const CHANNEL_NAME = "vox-peer-v0";
 
-const myPeerId = "peer_" + Math.random().toString(36).substring(2, 9);
+const myPeerId = "peer_" + randomBase36(7);
 const peerSync = createPeerSync(defaultPeerSyncDeps(myPeerId));
 let broadcastChannel = null;
 const pendingRequests = new Map(); // txId -> Array of resolver functions
