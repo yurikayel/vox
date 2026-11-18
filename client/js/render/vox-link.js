@@ -28,7 +28,17 @@ const STATE_TEXT = {
   confirmed: (name) => `✓ Vínculo com ${name} confirmado pelas duas pessoas.`,
 };
 
-/** `state`: "none" (pode aceitar), "pending" ou "confirmed". */
+/**
+ * Cartão de convite/vínculo na tela Conectar (PM-82/83).
+ * @param {object} [options={}]
+ * @param {string} [options.name=""] Nome do convidante.
+ * @param {"none"|"pending"|"confirmed"} [options.state="none"]
+ * @param {boolean} [options.canSponsor=false] Checkbox de padrinho.
+ * @param {boolean} [options.sponsorDefault=false] Padrinho marcado por padrão.
+ * @param {boolean} [options.canSwitch=false] Permite trocar padrinho.
+ * @param {boolean} [options.options=false] Mostra opções avançadas de vínculo.
+ * @returns {string}
+ */
 export function renderInviteCardHtml({ name = "", state = "none", canSponsor = false, sponsorDefault = false, canSwitch = false, options = false } = {}) {
   const who = escapeHtml(name);
   if (STATE_TEXT[state]) {

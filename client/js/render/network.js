@@ -30,7 +30,13 @@ const PARTICIPATION_LAYERS = [
   },
 ];
 
-/** Camada inferida para destaque na UI (não persiste estado separado). */
+/**
+ * Camada de participação inferida para destaque na UI (não persiste sozinha).
+ * @param {object} [settings={}] Preferências de rede do aparelho.
+ * @param {object} [options={}]
+ * @param {string} [options.customSignalingUrl=""] URL WSS configurada.
+ * @returns {"passive"|"active"|"supporter"|"steward"}
+ */
 export function inferParticipationLayer(settings = {}, { customSignalingUrl = "" } = {}) {
   if (settings.enabled === false) return "passive";
   const signaling = String(customSignalingUrl || "").trim();
@@ -263,7 +269,11 @@ function renderQuotaAndLimitFieldsHtml(settings) {
     </div>`;
 }
 
-/** Card de opt-in do nó pesado (Apoiador); o nó leve segue como padrão. */
+/**
+ * Card de opt-in do modo Apoiador (nó pesado no Wi-Fi).
+ * @param {object} [settings={}] Deve incluir `supporter`.
+ * @returns {string}
+ */
 export function renderSupporterCardHtml(settings = {}) {
   const on = Boolean(settings.supporter);
   const text = on
@@ -280,7 +290,11 @@ export function renderSupporterCardHtml(settings = {}) {
     </div>`;
 }
 
-/** LAN-19: aviso de IP e modo "só TURN". */
+/**
+ * Aviso de IP visível e checkbox "só via TURN" (LAN-19).
+ * @param {object} [settings={}]
+ * @returns {string}
+ */
 export function renderTurnOnlyHtml(settings = {}) {
   return `
     <p class="desc" id="net-ip-notice" style="font-size:0.78rem; margin:0.25rem 0 0.5rem;">
@@ -516,6 +530,15 @@ const STEWARD_STEP_RENDERERS = {
     </div>`,
 };
 
+/**
+ * Assistente steward em 5 passos (V-P01).
+ * @param {HTMLElement} main Contêiner da tela.
+ * @param {object} [options={}]
+ * @param {object} [options.draft={}] Rascunho do formulário.
+ * @param {number} [options.step=1] Passo atual (1–5).
+ * @param {object|null} [options.mirrorLast=null] Último teste de espelho.
+ * @returns {void}
+ */
 export function renderStewardWizard(main, { draft = {}, step = 1, mirrorLast = null } = {}) {
   const s = Math.min(5, Math.max(1, Number(step) || 1));
   const d = draft || {};
