@@ -43,6 +43,7 @@
 | [036](./036-agilidade-criptografica-pos-quantica.md) | Agilidade criptográfica e transição pós-quântica: todo formato diz o seu algoritmo; DM híbrida (ECDH + ML-KEM) primeiro; assinatura por pré-compromisso ML-DSA até o "dia Q" | aceito como direção (RFC/LAN-18 antes do código; assinatura depende da RFC 0002) |
 | [037](./037-cofre-na-malha.md) | Cofre na malha: cópias do cofre cifrado com até 7 laços mútuos, pedido por caixa cega, espera de 24 h com veto da dona e tela única de volta | accepted (SW v7.141) |
 | [038](./038-subrede-malha-e-manifesto.md) | Subrede: a comunidade é um território assinado na malha (regra do PM-09) mais um manifesto que só sugere tema, infraestrutura e, na v2, cartuchos; fork é `communityId` novo | proposed (só documentação) |
+| [039](./039-rust-por-fases.md) | Rust por fases: mais Rust com o tempo, onde ganha em segurança (cripto que o WebCrypto não tem, formatos tipados, relay, nó nativo); a chave privada no navegador continua no WebCrypto | proposed (só documentação) |
 
 **Registro de uma página** com as decisões institucionais e de arquitetura em vigor, o estado real de cada uma e o que ainda está em aberto: [DECISOES.md](../DECISOES.md).
 
