@@ -6,6 +6,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Infra: `vox-relay` do docker-compose sobe e `release-binarios` só escreve no release
+- `relay/Dockerfile` copia todos os módulos para `/app/relay/` (pacote, `PYTHONPATH=/app`) em vez de quatro arquivos soltos; o `server.py` (que faz `from relay import ...`) passa a subir com `python -m relay.server`. O CMD padrão segue sendo só o sinalizador (`relay/signaling.py`), usado por Render/HF. `relay/.dockerignore` deixa os `test_*.py` de fora; o compose aponta cache e caixa de entrada para os volumes (`VOX_RELAY_CACHE_DIR`, `VOX_RELAY_INBOX_DIR`).
+- `release-binarios.yml`: o build roda com `contents: read` (inclusive em `pull_request`); `contents: write`, `id-token` e `attestations` ficam no job `publicar`, que não roda em PR. Sem mudança no SW.
 ### Correção: cartão de contexto da DM revalidado na tela e na restauração do backup
 - A restauração do backup no e-mail gravava o cartão, a citação e a foto da DM crus, e a tela os lia crus: `href` externo ou `javascript:`, foto por URL externa (pixel de rastreio) e campos de 1 MB passavam. Agora `sanitizeStoredDm` normaliza na restauração e `render/dm.js` revalida na leitura (cobre também linhas já gravadas). `id`, `pixKey`, `communityId` e autor da citação acima de 200 caracteres são descartados, não cortados. Testes: `tests/dm-card-restore-adversarial.test.js`.
 ### Acessibilidade: título e foco por rota; botões só com ícone rotulados
