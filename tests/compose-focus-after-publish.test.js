@@ -1,12 +1,9 @@
 import "../tests/setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
-import {
-  COMPOSE_PUBLISH_STATUS_ID,
-  ensureComposePublishStatus,
-  focusAfterComposePublish,
-} from "../client/js/render/compose-chrome.js";
 import { renderStepNav, COMPOSE_TOPIC_STEPS } from "../client/js/render/compose-steps.js";
+
+const PUBLISH_STATUS_ID = "vox-compose-publish-status";
 
 function mockEl(tag = "div") {
   const el = {
@@ -60,14 +57,15 @@ function mockEl(tag = "div") {
 
 test("compose-focus — última etapa expõe região de anúncio para foco pós-publicar", () => {
   const html = renderStepNav(COMPOSE_TOPIC_STEPS.length - 1, { last: true, submitId: "btn-submit-topic" });
-  assert.ok(html.includes(`id="${COMPOSE_PUBLISH_STATUS_ID}"`), "falta região de status na revisão");
+  assert.ok(html.includes(`id="${PUBLISH_STATUS_ID}"`), "falta região de status na revisão");
   assert.ok(html.includes('role="status"'));
   const mid = renderStepNav(1, { last: false });
-  assert.ok(!mid.includes(COMPOSE_PUBLISH_STATUS_ID), "etapas intermediárias não trazem a região");
+  assert.ok(!mid.includes(PUBLISH_STATUS_ID), "etapas intermediárias não trazem a região");
 });
 
-test("compose-focus — feed recolhido recebe foco após publicar", () => {
-  const collapsed = mockEl("motion");
+test("compose-focus — feed recolhido recebe foco após publicar", async () => {
+  const { focusAfterComposePublish } = await import("../client/js/render/compose-chrome.js");
+  const collapsed = mockEl("div");
   collapsed.classList.add("inline-composer-collapsed");
   const root = mockEl("div");
   root.id = "feed-inline-composer";
@@ -86,6 +84,9 @@ test("compose-focus — feed recolhido recebe foco após publicar", () => {
 });
 
 test("compose-focus — sem inline recolhido, foco e anúncio vão para a região de status", async () => {
+  const { COMPOSE_PUBLISH_STATUS_ID, ensureComposePublishStatus, focusAfterComposePublish } = await import(
+    "../client/js/render/compose-chrome.js"
+  );
   const body = mockEl("body");
   const registry = new Map();
   globalThis.__voxFocused = null;
