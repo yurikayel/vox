@@ -27,12 +27,24 @@ test("QuotaExceeded — conta em memória, issue e regravação", async () => {
     const acc = await localAccount.ensureLocalAccount();
     assert.ok(acc.routeId);
     assert.equal(localStorage.getItem(ACCOUNT_KEY), null);
-    assert.ok(localAccount.getAccountStorageIssue());
-    assert.equal(localAccount.isActiveAccountPersisted(), false);
+    assert.equal(localAccount.getAccountStorageIssue()?.reason, "QuotaExceededError: quota");
     localStorage.setItem = orig;
     localAccount.storeActiveAccount(acc);
     assert.equal(localAccount.getAccountStorageIssue(), null);
-    assert.equal(localAccount.isActiveAccountPersisted(), true);
+    assert.ok(localStorage.getItem(ACCOUNT_KEY));
+  } finally {
+    localStorage.setItem = orig;
+  }
+});
+
+test("storeActiveAccount propaga falha de gravação", async () => {
+  const localAccount = await import("../client/js/identity/local-account.js");
+  localStorage.clear();
+  await localAccount.wipeLocalAccount();
+  const acc = await localAccount.ensureLocalAccount();
+  const orig = patchAccountQuota();
+  try {
+    assert.throws(() => localAccount.storeActiveAccount({ ...acc, createdAt: Date.now() }), (err) => err?.name === "QuotaExceededError");
   } finally {
     localStorage.setItem = orig;
   }

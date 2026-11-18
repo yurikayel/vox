@@ -39,7 +39,6 @@ const LOCAL_WIPE_KEYS = [
 
 let cachedAccount = null;
 let ensureLocalAccountInflight = null;
-/** @type {{ reason: string } | null} falha ao gravar `vox-local-account-v1` (quota, bloqueio…) */
 let accountPersistIssue = null;
 
 /**
@@ -49,37 +48,13 @@ let accountPersistIssue = null;
  */
 export function storeActiveAccount(acc) {
   cachedAccount = acc;
-  try {
-    localStorage.setItem(ACCOUNT_STORAGE, JSON.stringify(acc));
-    accountPersistIssue = null;
-  } catch (err) {
-    accountPersistIssue = { reason: err?.name || "storage_blocked" };
-  }
+  localStorage.setItem(ACCOUNT_STORAGE, JSON.stringify(acc));
+  accountPersistIssue = null;
   return acc;
 }
 
-/**
- * Última falha ao persistir a conta ativa neste aparelho, ou `null` se a gravação está ok.
- * @returns {{ reason: string } | null}
- */
-export function getAccountStorageIssue() {
-  return accountPersistIssue;
-}
-
-/**
- * A conta ativa está no `localStorage` (não só na memória da aba)?
- * @returns {boolean}
- */
-export function isActiveAccountPersisted() {
-  if (accountPersistIssue) return false;
-  if (!cachedAccount?.routeId) return true;
-  try {
-    const raw = localStorage.getItem(ACCOUNT_STORAGE);
-    return Boolean(raw && JSON.parse(raw)?.routeId === cachedAccount.routeId);
-  } catch {
-    return false;
-  }
-}
+/** @returns {{ reason: string } | null} falha ao criar conta neste aparelho, ou `null` se ok. */
+export function getAccountStorageIssue() { return accountPersistIssue; }
 
 async function loadStoredLocalAccount() {
   try {
@@ -143,7 +118,7 @@ export async function ensureLocalAccount() {
       return cachedAccount;
     }
     const fresh = await generateNewAccountKeys();
-    storeActiveAccount(fresh);
+    try { storeActiveAccount(fresh); } catch (err) { accountPersistIssue = { reason: err?.message ? `${err.name}: ${err.message}` : (err?.name || "storage_blocked") }; cachedAccount = fresh; }
     syncCurrentAccountMetadataToVault();
     return cachedAccount;
   })();
@@ -504,8 +479,7 @@ export function setMeshDiscoverable(on) {
  * @returns {Promise<void>}
  */
 export function wipeLocalAccount() {
-  cachedAccount = null;
-  accountPersistIssue = null;
+  cachedAccount = null; accountPersistIssue = null;
   dropStorageKeys(localStorage, LOCAL_WIPE_KEYS);
   dropSessionPassphrase();
   return keyLock.forgetAllLockedAccounts().catch(() => {});

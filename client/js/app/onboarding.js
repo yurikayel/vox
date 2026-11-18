@@ -160,10 +160,14 @@ function bindOAuthProviderButton({ btnId, signInFn, fallbackError, labelFn, moda
 async function finishNameOnlyEntry(rawName, modalContainer, onComplete) {
   if (!rawName) return setOAuthEnrichError("Digite um nome ou apelido para continuar.");
   setOAuthEnrichError("");
-  await localAccount.ensureLocalAccount();
-  warnIfAccountNotPersisted();
-  localAccount.setDisplayName(rawName);
-  completeEntryOnboarding(modalContainer, onComplete, { ok: true, customName: rawName }, `Bem-vindo, ${rawName}!`);
+  try {
+    await localAccount.ensureLocalAccount();
+    warnIfAccountNotPersisted();
+    localAccount.setDisplayName(rawName);
+    completeEntryOnboarding(modalContainer, onComplete, { ok: true, customName: rawName }, `Bem-vindo, ${rawName}!`);
+  } catch (err) {
+    setOAuthEnrichError(err?.message || "Erro ao criar conta.");
+  }
 }
 
 function bindCustomNameForm(modalContainer, onComplete) {
