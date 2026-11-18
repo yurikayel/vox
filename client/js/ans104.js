@@ -9,12 +9,20 @@ const SIG_LEN = 512;
 const OWNER_LEN = 512;
 const enc = new TextEncoder();
 
+/** Operação `b64UrlToBytes` do módulo.
+ * @param {*} [b64url] Parâmetro `b64url`.
+ * @returns {*} Resultado da operação.
+ */
 export function b64UrlToBytes(b64url) {
   const b64 = String(b64url).replace(/-/g, "+").replace(/_/g, "/");
   const bin = atob(b64 + "===".slice((b64.length + 3) % 4));
   return Uint8Array.from(bin, (c) => c.charCodeAt(0));
 }
 
+/** Operação `bytesToB64Url` do módulo.
+ * @param {*} [bytes] Bytes do data item.
+ * @returns {*} Resultado da operação.
+ */
 export function bytesToB64Url(bytes) {
   let bin = "";
   for (const b of bytes) bin += String.fromCharCode(b);
@@ -35,7 +43,9 @@ async function sha(algo, bytes) {
   return new Uint8Array(await crypto.subtle.digest(algo, bytes));
 }
 
-/** Arweave deepHash (SHA-384) sobre blobs e listas aninhadas. */
+/** Arweave deepHash (SHA-384) sobre blobs e listas aninhadas. 
+ * @param {*} [data] Bytes ou buffer de entrada.
+ * @returns {*} Resultado da operação.*/
 export async function deepHash(data) {
   if (Array.isArray(data)) {
     let acc = await sha("SHA-384", concat([enc.encode("list"), enc.encode(String(data.length))]));
@@ -65,7 +75,9 @@ function avroString(s) {
   return concat([avroLong(bytes.length), bytes]);
 }
 
-/** Tags no formato Avro exigido pelo ANS-104. */
+/** Tags no formato Avro exigido pelo ANS-104. 
+ * @param {*} [tags] Lista de tags ANS-104.
+ * @returns {*} Resultado da operação.*/
 export function serializeTags(tags = []) {
   if (!tags.length) return new Uint8Array(0);
   const parts = [avroLong(tags.length)];
@@ -111,7 +123,10 @@ function assembleItem({ signature, owner, anchor, tagBytes, tagCount, data }) {
 /**
  * Cria e assina um data item ANS-104.
  * @returns {{ id: string, bytes: Uint8Array }}
- */
+ 
+ * @param {*} [data] Bytes ou buffer de entrada.
+ * @param {*} [tags] Lista de tags ANS-104.
+ * @param {*} [jwk] JWK da carteira.*/
 export async function createSignedDataItem(data, tags, jwk) {
   const payload = typeof data === "string" ? enc.encode(data) : data;
   const owner = b64UrlToBytes(jwk.n);
@@ -170,6 +185,10 @@ function readFlagged32(bytes, offset) {
   return { value, offset: exists ? offset + 32 : offset };
 }
 
+/** Interpreta BinaryDataItem.
+ * @param {*} [bytes] Bytes do data item.
+ * @returns {*} Resultado da operação.
+ */
 export function parseBinaryDataItem(bytes) {
   if (!bytes || bytes.length < 1076) return { ok: false, reason: "tam-insuficiente" };
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
@@ -224,7 +243,9 @@ async function verifyRsaPssSignature(ownerBytes, signature, message) {
 
 /**
  * Valida matematicamente a assinatura RSA-PSS de um data item dissecado.
- */
+ 
+ * @param {*} [parsed] Item já parseado.
+ * @returns {*} Resultado da operação.*/
 export async function verifyParsedDataItem(parsed) {
   if (!parsed?.ok) return { valid: false, reason: parsed?.reason || "invalido" };
   const message = await buildDataItemDeepHash(parsed);
@@ -243,7 +264,9 @@ export async function verifyParsedDataItem(parsed) {
 
 /**
  * Parsing e validação de assinatura em etapa única.
- */
+ 
+ * @param {*} [bytes] Bytes do data item.
+ * @returns {*} Resultado da operação.*/
 export async function parseAndVerifyDataItem(bytes) {
   const parsed = parseBinaryDataItem(bytes);
   if (!parsed.ok) return { valid: false, reason: parsed.reason };

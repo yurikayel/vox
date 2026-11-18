@@ -1,19 +1,29 @@
-/** Perfil oficial da plataforma Vox — primeiro contato (V-DIS). */
+/**
+ * @file Onboarding da conta oficial de boas-vindas e comunidade padrão.
+  Perfil oficial da plataforma Vox — primeiro contato (V-DIS).*/
 
 import * as cacheNode from "./cache-node.js";
 import * as social from "./social.js";
 
+/** Export `WELCOME_ROUTE_ID` do módulo. @type {string} */
 export const WELCOME_ROUTE_ID = "vx_voxbrasil_welcome";
 
 /** Avatar institucional: logo branco em tile opaco, squircle (light/dark). */
-/** Mesma marca, já no precache: o arquivo de 512 px era cópia exata do icon-512.png e só aparecia como avatar. */
+/** Mesma marca, já no precache: o arquivo de 512 px era cópia exata do icon-512.png e só aparecia como avatar. 
+ * @type {string}*/
 export const OFFICIAL_PROFILE_AVATAR = "./icons/icon-white-192.png";
 
-/** @deprecated Card removido — migrado para intro via DM. */
+/** @deprecated Card removido — migrado para intro via DM. 
+ * @type {string}*/
 export const WELCOME_CARD_SEEN_KEY = "vox-welcome-card-seen";
+/** Chave em `localStorage` (só neste aparelho). @type {string} */
 export const WELCOME_DM_INTRO_SEEN_KEY = "vox-welcome-dm-intro-seen";
+/** Chave em `localStorage` (só neste aparelho). @type {string} */
 export const WELCOME_DM_SEED_KEY = "vox-welcome-dm-seeded-v3";
 
+/** Obtém WelcomeProfile.
+ * @returns {*} Resultado da operação.
+ */
 export function getWelcomeProfile() {
   return {
     routeId: WELCOME_ROUTE_ID,
@@ -34,6 +44,9 @@ export function getWelcomeProfile() {
   };
 }
 
+/** Obtém WelcomeDmText.
+ * @returns {*} Resultado da operação.
+ */
 export function getWelcomeDmText() {
   return (
     "Oi! 👋 Sou o Vox — a conta oficial que te dá boas-vindas por aqui.\n\n" +
@@ -53,6 +66,8 @@ function readWelcomeIntroSeen() {
   return false;
 }
 
+/** Operação `markWelcomeIntroSeen` do módulo.
+ */
 export function markWelcomeIntroSeen() {
   try {
     localStorage.setItem(WELCOME_DM_INTRO_SEEN_KEY, "1");
@@ -67,6 +82,9 @@ export function markWelcomeCardSeen() {
   markWelcomeIntroSeen();
 }
 
+/** Operação `shouldShowWelcomeFeedHint` do módulo.
+ * @returns {*} Resultado da operação.
+ */
 export function shouldShowWelcomeFeedHint() {
   try {
     if (readWelcomeIntroSeen()) return false;
@@ -76,15 +94,24 @@ export function shouldShowWelcomeFeedHint() {
   }
 }
 
-/** @deprecated Card removido do feed */
+/** @deprecated Card removido do feed 
+ * @returns {*} Resultado da operação.*/
 export function shouldShowWelcomeCard() {
   return false;
 }
 
+/** Indica se WelcomeRouteId.
+ * @param {*} [routeId] Parâmetro `routeId`.
+ * @returns {*} Resultado da operação.
+ */
 export function isWelcomeRouteId(routeId) {
   return String(routeId || "") === WELCOME_ROUTE_ID;
 }
 
+/** Operação `ensureWelcomeDmSeed` do módulo.
+ * @param {*} [myRouteId] Parâmetro `myRouteId`.
+ * @returns {*} Resultado da operação.
+ */
 export async function ensureWelcomeDmSeed(myRouteId) {
   if (!myRouteId || localStorage.getItem(WELCOME_DM_SEED_KEY)) return false;
   await cacheNode.saveDmMessage({
@@ -100,14 +127,20 @@ export async function ensureWelcomeDmSeed(myRouteId) {
   return true;
 }
 
+/** Export `OFFICIAL_COMMUNITY_ID` do módulo. @type {string} */
 export const OFFICIAL_COMMUNITY_ID = "vox";
 
+/** Operação `ensureWelcomeWatch` do módulo.
+ */
 export function ensureWelcomeWatch() {
   if (!social.getWatchedProfiles().includes(WELCOME_ROUTE_ID)) {
     social.toggleWatch(WELCOME_ROUTE_ID);
   }
 }
 
+/** Operação `ensureDefaultCommunityMembership` do módulo.
+ * @param {*} [myRouteId] Parâmetro `myRouteId`.
+ */
 export async function ensureDefaultCommunityMembership(myRouteId) {
   if (!myRouteId) return;
   try {
@@ -133,6 +166,10 @@ export async function ensureDefaultCommunityMembership(myRouteId) {
   } catch {}
 }
 
+/** Operação `runWelcomeOnboarding` do módulo.
+ * @param {*} [myRouteId] Parâmetro `myRouteId`.
+ * @returns {*} Resultado da operação.
+ */
 export async function runWelcomeOnboarding(myRouteId) {
   const dmJustSeeded = await ensureWelcomeDmSeed(myRouteId);
   ensureWelcomeWatch();
@@ -140,9 +177,11 @@ export async function runWelcomeOnboarding(myRouteId) {
   return { dmJustSeeded };
 }
 
+/** Export `OFFICIAL_WELCOME_POST_BODY` do módulo. @type {string} */
 export const OFFICIAL_WELCOME_POST_BODY =
   "Bem-vindo ao Vox! 📢 Esta é a sua praça pública digital: uma rede cidadã que roda direto no seu aparelho, sem algoritmos de ódio, sem venda de dados e imune ao controle de bilionários. Aqui, conversas e comunidades pertencem a você. Suas publicações viajam de bolso em bolso pela malha P2P e ficam salvas de forma soberana. Explore o feed, participe das deliberações locais, conecte-se com pessoas reais e ajude a construir uma comunicação livre e popular no Brasil. O Vox é nosso! 🇧🇷✨";
 
+/** Export `OFFICIAL_WELCOME_TOPIC_ID` do módulo. @type {string} */
 export const OFFICIAL_WELCOME_TOPIC_ID = "vox-official-manifesto-welcome";
 
 function getOrCreateWelcomeTimestamp() {
@@ -157,6 +196,9 @@ function getOrCreateWelcomeTimestamp() {
   return created;
 }
 
+/** Obtém OfficialWelcomeTopic.
+ * @returns {*} Resultado da operação.
+ */
 export function getOfficialWelcomeTopic() {
   const created = getOrCreateWelcomeTimestamp();
   return {
