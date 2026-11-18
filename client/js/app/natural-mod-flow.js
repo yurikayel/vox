@@ -4,6 +4,7 @@
  */
 import * as natural from "../natural-mod.js";
 import { VOX_LINK_TYPE } from "../vox-link.js";
+import { formatPtBrDateOnly } from "../shared/date-format.js";
 import { escapeHtml } from "../shared/html.js";
 import { isModerator } from "../moderation.js";
 
@@ -59,7 +60,7 @@ export function renderMyLinksHtml(model) {
   const common = model.common.length ? `<p><strong>Vínculos comuns:</strong> ${model.common.map(person).join(", ")}.</p>` : "";
   const onlyMediation = model.mediationOnly?.length
     ? `<p><strong>Só para mediação:</strong> ${model.mediationOnly.map(person).join(", ")} (sem poder de arquivar).</p>` : "";
-  const when = model.switching ? new Date(model.switching.at).toLocaleDateString("pt-BR") : "";
+  const when = model.switching ? formatPtBrDateOnly(model.switching.at) : "";
   const switching = model.switching ? `<p><strong>Troca de padrinho em andamento:</strong> ${person(model.switching.to)} passa a ser seu padrinho em ${when}.</p>` : "";
   return `<details class="card natural-mod-links"><summary>🤝 Meus vínculos</summary>
     ${sponsorLine(model)}${switching}${kids}${common}${onlyMediation}

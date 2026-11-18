@@ -15,7 +15,7 @@ import { bytesToB64Url, computeRouteId, verifyPayload } from "../signed-verify.j
 import { computeAccountSocialKey, detectSocialAvatarType, matchesOAuthEnrichment } from "../account-social-match.js";
 
 export { computeRouteId, verifyPayload };
-export { LOCAL_WIPE_NOTICE, confirmLocalWipe } from "./local-wipe.js";
+export { LOCAL_WIPE_NOTICE, confirmLocalWipe, dropAllPersonalStorage, dropDatabases } from "./local-wipe.js";
 
 const ACCOUNT_STORAGE = "vox-local-account-v1";
 const DISPLAY_NAME_STORAGE = "vox-display-name";
@@ -38,6 +38,10 @@ const LOCAL_WIPE_KEYS = [
 ];
 
 let cachedAccount = null;
+let ensureLocalAccountInflight = null;
+// Sobe a cada `wipeLocalAccount`: criação em voo que começou numa época anterior não grava mais nada.
+let wipeEpoch = 0;
+let accountPersistIssue = null;
 
 /**
  * Grava a conta ativa (chave privada já na forma guardada: cifrada ou travada).
@@ -47,19 +51,51 @@ let cachedAccount = null;
 export function storeActiveAccount(acc) {
   cachedAccount = acc;
   localStorage.setItem(ACCOUNT_STORAGE, JSON.stringify(acc));
+  accountPersistIssue = null;
   return acc;
 }
 
-async function loadStoredLocalAccount() {
+/** @returns {{ reason: string } | null} falha ao criar conta neste aparelho, ou `null` se ok. */
+export function getAccountStorageIssue() {
+  return accountPersistIssue;
+}
+
+async function loadStoredLocalAccount(epoch) {
   try {
     const stored = localStorage.getItem(ACCOUNT_STORAGE);
     if (!stored) return null;
     const parsed = JSON.parse(stored);
     if (parsed?.routeId && parsed?.publicJwk && parsed?.privateJwk) {
-      await cryptoDm.ensureDmKeys();
+      const dm = await cryptoDm.ensureDmKeys();
+      if (epoch !== wipeEpoch) dropDmKeypairOf(dm.publicJwk);
       return parsed;
     }
   } catch {}
+  return null;
+}
+
+/** Tira a chave de DM do armazenamento só se for a deste par; a de outra conta (mais nova) fica. */
+function dropDmKeypairOf(publicJwk) {
+  try {
+    const stored = JSON.parse(localStorage.getItem(DM_KEYPAIR_STORAGE) || "null");
+    if (JSON.stringify(stored?.publicJwk) === JSON.stringify(publicJwk)) localStorage.removeItem(DM_KEYPAIR_STORAGE);
+  } catch {}
+}
+
+/**
+ * Cria conta nova, mas só grava a chave de DM se o wipe não rodou no meio. Se rodou, desfaz o que já foi gravado
+ * (semente e chave de DM) e devolve `null`: a conta apagada não pode voltar.
+ */
+async function createAccountUnlessWiped(epoch) {
+  const born = await identitySeed.createSeededAccount();
+  let account = null;
+  if (epoch === wipeEpoch) {
+    await cryptoDm.setDmKeypair(born.dmKeypair);
+    account = { routeId: born.routeId, publicJwk: born.publicJwk, privateJwk: await sealJson(born.privateJwk), createdAt: Date.now() };
+  }
+  if (account && epoch === wipeEpoch) return account;
+  dropDmKeypairOf(born.dmKeypair.publicJwk);
+  identitySeed.forgetSeed(born.routeId);
   return null;
 }
 
@@ -70,10 +106,6 @@ async function generateNewAccountKeys() {
   return { routeId: born.routeId, publicJwk: born.publicJwk, privateJwk: await sealJson(born.privateJwk), createdAt: Date.now() };
 }
 
-function resolveVaultDisplayName(enrich, existing) {
-  return getDisplayName() || enrich?.displayName || existing.displayName || "";
-}
-
 function buildVaultAccountEntry(acc, existing, extras = {}) {
   const enrich = getProfileEnrichment() || existing.enrichment || null;
   const now = Date.now();
@@ -82,7 +114,7 @@ function buildVaultAccountEntry(acc, existing, extras = {}) {
     routeId: acc.routeId,
     publicJwk: acc.publicJwk || existing.publicJwk,
     privateJwk: acc.privateJwk || existing.privateJwk,
-    displayName: resolveVaultDisplayName(enrich, existing),
+    displayName: getDisplayName() || enrich?.displayName || existing.displayName || "",
     enrichment: enrich,
     createdAt: acc.createdAt || existing.createdAt || now,
     lastUsedAt: existing.lastUsedAt || now,
@@ -102,26 +134,41 @@ function syncCurrentAccountMetadataToVault() {
   } catch {}
 }
 
-/**
- * Conta ativa deste navegador; cria uma nova (chaves P-256) se ainda não houver.
- * @returns {Promise<{ routeId: string, publicJwk: object, privateJwk: object, createdAt: number }>}
- */
-export async function ensureLocalAccount() {
-  const existing = await loadStoredLocalAccount();
+/** Uma tentativa de achar ou criar a conta; `null` se o wipe rodou no meio (nada foi gravado em nome da conta apagada). */
+async function resolveLocalAccount(epoch) {
+  const existing = await loadStoredLocalAccount(epoch);
+  if (epoch !== wipeEpoch) return null;
   if (existing) {
     cachedAccount = existing;
     syncCurrentAccountMetadataToVault();
     return cachedAccount;
   }
-
-  const fresh = await generateNewAccountKeys();
+  const fresh = await createAccountUnlessWiped(epoch);
+  if (!fresh) return null;
   try {
     storeActiveAccount(fresh);
-  } catch {
+  } catch (err) {
+    accountPersistIssue = { reason: err?.name || "storage_blocked" };
     cachedAccount = fresh;
   }
   syncCurrentAccountMetadataToVault();
   return cachedAccount;
+}
+
+/**
+ * Conta ativa deste navegador; cria uma nova (chaves P-256) se ainda não houver. Chamadas concorrentes compartilham a mesma criação em voo (mesma conta para todos).
+ * Se `wipeLocalAccount` rodar no meio, o que estava em voo é descartado sem gravar nada e quem esperava recebe a conta nova (nunca a apagada).
+ * @returns {Promise<{ routeId: string, publicJwk: object, privateJwk: object, createdAt: number }>}
+ */
+export async function ensureLocalAccount() {
+  if (ensureLocalAccountInflight) return ensureLocalAccountInflight;
+  const run = resolveLocalAccount(wipeEpoch).then((acc) => acc || ensureLocalAccount());
+  ensureLocalAccountInflight = run;
+  try {
+    return await run;
+  } finally {
+    if (ensureLocalAccountInflight === run) ensureLocalAccountInflight = null;
+  }
 }
 
 /**
@@ -474,7 +521,10 @@ export function setMeshDiscoverable(on) {
  * @returns {Promise<void>}
  */
 export function wipeLocalAccount() {
+  wipeEpoch += 1;
+  ensureLocalAccountInflight = null;
   cachedAccount = null;
+  accountPersistIssue = null;
   dropStorageKeys(localStorage, LOCAL_WIPE_KEYS);
   dropSessionPassphrase();
   return keyLock.forgetAllLockedAccounts().catch(() => {});

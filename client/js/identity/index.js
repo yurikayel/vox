@@ -26,6 +26,10 @@ export * from "./inbox-backup.js";
 /** Guardiões: dividir a conta, guardar pedaços e pedir a conta de volta. */
 export * from "./guardians.js";
 export * from "./guardian-return.js";
+/** Escalar P-256 a partir de bytes de HKDF (ADR-032 §5.2), para chaves derivadas fora da conta (ADR-037). */
+export { scalarFromBytes } from "./p256.js";
 /** Chave do aparelho para segredos em repouso e migração das chaves antigas guardadas em claro. */
 export * from "./keystore.js";
 export * from "./key-at-rest.js";
+/** Sincronização de conta e rota entre abas do mesmo origin (S30-S5). */
+export { startTabSync, reloadIdentityFromStorage, readStoredRouteId, TAB_SYNC_CHANNEL } from "./tab-sync.js";

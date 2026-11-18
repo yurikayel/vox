@@ -5,8 +5,13 @@
  * sem estourar buffers WebRTC e sem derrubar nós seeders móveis (Android WebView).
  */
 
+import { randomBase36 } from "../../shared/html.js";
+
 export const DEFAULT_CHUNK_SIZE = 16 * 1024; // 16 KiB
 export const MAX_BUFFERED_AMOUNT = 64 * 1024; // 64 KiB backpressure limit
+/** Intervalo do poll de backpressure enquanto o buffer do canal está cheio (ms). */
+/** @type {number} */
+export const BACKPRESSURE_POLL_MS = 20;
 
 export function computeChecksum(str) {
   let hash = 2166136261;
@@ -22,7 +27,7 @@ export function slicePayloadIntoChunks(payload, chunkSize = DEFAULT_CHUNK_SIZE, 
     throw new Error("payload é obrigatório para fatiamento");
   }
   const serialized = typeof payload === "string" ? payload : JSON.stringify(payload);
-  const xferId = transferId || `xfer_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+  const xferId = transferId || `xfer_${Date.now()}_${randomBase36(7)}`;
   const totalChunks = Math.ceil(serialized.length / chunkSize) || 1;
   const chunks = [];
 
@@ -106,16 +111,33 @@ export class ChunkReassembler {
   clearTransfer(transferId) {
     return this.transfers.delete(transferId);
   }
+
+  /** Libera transferências parciais ao desmontar o consumidor. */
+  dispose() {
+    this.transfers.clear();
+  }
 }
 
-export async function sendChunksWithBackpressure(dataChannel, chunks, onProgress = null) {
+/**
+ * Envia chunks respeitando backpressure do RTCDataChannel.
+ * @param {object} dataChannel
+ * @param {object[]} chunks
+ * @param {((sent: number, total: number) => void)|null} [onProgress]
+ * @param {{ signal?: AbortSignal }} [options]
+ * @returns {Promise<boolean>}
+ */
+export async function sendChunksWithBackpressure(dataChannel, chunks, onProgress = null, options = null) {
   if (!dataChannel || typeof dataChannel.send !== "function") {
     throw new Error("dataChannel com método send() é mandatário");
   }
+  const signal = options?.signal ?? null;
 
   for (let i = 0; i < chunks.length; i++) {
+    if (signal?.aborted) {
+      throw signal.reason ?? new DOMException("Aborted", "AbortError");
+    }
     const chunk = chunks[i];
-    await waitForBackpressure(dataChannel);
+    await waitForBackpressure(dataChannel, { signal });
     dataChannel.send(JSON.stringify(chunk));
     if (typeof onProgress === "function") {
       onProgress(i + 1, chunks.length);
@@ -124,28 +146,68 @@ export async function sendChunksWithBackpressure(dataChannel, chunks, onProgress
   return true;
 }
 
-function waitForBackpressure(dataChannel) {
+function abortBackpressureReason(signal) {
+  return signal.reason ?? new DOMException("Aborted", "AbortError");
+}
+
+function releaseBackpressureWait(state, dataChannel, signal) {
+  if (state.timer !== null) {
+    clearInterval(state.timer);
+    state.timer = null;
+  }
+  if (typeof dataChannel.removeEventListener === "function") {
+    if (state.onLow) dataChannel.removeEventListener("bufferedamountlow", state.onLow);
+    if (state.onClose) dataChannel.removeEventListener("close", state.onClose);
+    if (state.onError) dataChannel.removeEventListener("error", state.onError);
+  }
+  if (state.onAbort && signal?.removeEventListener) {
+    signal.removeEventListener("abort", state.onAbort);
+  }
+}
+
+function startBackpressureWait(dataChannel, signal) {
+  const state = { settled: false, timer: null, onLow: null, onClose: null, onError: null, onAbort: null };
+  return new Promise((resolve, reject) => {
+    const finish = (err) => {
+      if (state.settled) return;
+      state.settled = true;
+      releaseBackpressureWait(state, dataChannel, signal);
+      if (err) reject(err);
+      else resolve();
+    };
+
+    state.timer = setInterval(() => {
+      if (dataChannel.bufferedAmount <= MAX_BUFFERED_AMOUNT) finish();
+    }, BACKPRESSURE_POLL_MS);
+
+    if (signal?.addEventListener) {
+      state.onAbort = () => finish(abortBackpressureReason(signal));
+      signal.addEventListener("abort", state.onAbort);
+    }
+    if (typeof dataChannel.addEventListener !== "function") return;
+
+    state.onLow = () => finish();
+    dataChannel.addEventListener("bufferedamountlow", state.onLow);
+    state.onClose = () => finish(new Error("RTCDataChannel fechado durante backpressure"));
+    dataChannel.addEventListener("close", state.onClose);
+    state.onError = () => finish(new Error("RTCDataChannel em erro durante backpressure"));
+    dataChannel.addEventListener("error", state.onError);
+  });
+}
+
+/**
+ * Aguarda bufferedAmount baixar; cancela timers e listeners em abort/fechamento.
+ * @param {object} dataChannel
+ * @param {{ signal?: AbortSignal }} [options]
+ * @returns {Promise<void>}
+ */
+export function waitForBackpressure(dataChannel, options = null) {
+  const signal = options?.signal ?? null;
   if (dataChannel.bufferedAmount === undefined || dataChannel.bufferedAmount <= MAX_BUFFERED_AMOUNT) {
     return Promise.resolve();
   }
-  return new Promise((resolve) => {
-    let cleanup = null;
-    const timer = setInterval(() => {
-      if (dataChannel.bufferedAmount <= MAX_BUFFERED_AMOUNT) {
-        clearInterval(timer);
-        if (cleanup) cleanup();
-        resolve();
-      }
-    }, 20);
-
-    if (typeof dataChannel.addEventListener === "function") {
-      const onLow = () => {
-        clearInterval(timer);
-        dataChannel.removeEventListener("bufferedamountlow", onLow);
-        resolve();
-      };
-      cleanup = () => dataChannel.removeEventListener("bufferedamountlow", onLow);
-      dataChannel.addEventListener("bufferedamountlow", onLow);
-    }
-  });
+  if (signal?.aborted) {
+    return Promise.reject(abortBackpressureReason(signal));
+  }
+  return startBackpressureWait(dataChannel, signal);
 }

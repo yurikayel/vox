@@ -1,7 +1,12 @@
-/** @file #/ajuda/teste — roteiro honesto para testadores (teste aberto). */
+/**
+ * @file Página #/ajuda/teste — roteiro honesto para testadores do piloto aberto.
+ *
+ * HTML estático de orientação (PWA, pacto, feira demo, privacidade); sem leitura de malha.
+ */
 import { escapeHtml } from "./util.js";
 import { VOX_GITHUB_DOCS } from "./voxpedia.js";
 
+/** URL do rastreador de issues do repositório Vox no GitHub. @type {string} */
 export const VOX_GITHUB_ISSUES = "https://github.com/yurikayel/vox/issues";
 
 const DEMO_COMMUNITY = "demo-aprenda-vox";

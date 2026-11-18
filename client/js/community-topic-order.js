@@ -4,7 +4,9 @@ import * as postOwnership from "./post-ownership.js";
 
 /**
  * Obtém o timestamp canônico de criação de um tópico, com fallback para createdAt e timestamp.
- */
+ 
+ * @param {*} [topic] Tópico ou registro de post.
+ * @returns {*} Resultado da operação.*/
 export function resolveTopicCreatedAtTs(topic = {}) {
   return Number(topic.ts || topic.createdAt || topic.timestamp) || 0;
 }
@@ -12,14 +14,18 @@ export function resolveTopicCreatedAtTs(topic = {}) {
 /**
  * Determina o timestamp da atividade mais recente de um tópico.
  * Em arquitetura de fórum tradicional (bumping), cada nova resposta eleva a discussão.
- */
+ 
+ * @param {*} [topic] Tópico ou registro de post.
+ * @returns {*} Resultado da operação.*/
 export function resolveTopicLastActivityTs(topic = {}) {
   const postTs = resolveTopicCreatedAtTs(topic);
   const replyTs = Number(topic.lastReplyTs) || 0;
   return Math.max(postTs, replyTs);
 }
 
-/** Ordenação padrão de fórum: tópicos com atividade/respostas recentes sobem ao topo. */
+/** Ordenação padrão de fórum: tópicos com atividade/respostas recentes sobem ao topo. 
+ * @param {*} [topics] Lista de tópicos.
+ * @returns {*} Resultado da operação.*/
 export function sortTopicsByActivity(topics = []) {
   if (!Array.isArray(topics)) return [];
   return [...topics].sort((a, b) => {
@@ -31,7 +37,9 @@ export function sortTopicsByActivity(topics = []) {
   });
 }
 
-/** Ordenação cronológica estrita pela criação do post. */
+/** Ordenação cronológica estrita pela criação do post. 
+ * @param {*} [topics] Lista de tópicos.
+ * @returns {*} Resultado da operação.*/
 export function sortTopicsByNewest(topics = []) {
   if (!Array.isArray(topics)) return [];
   return [...topics].sort((a, b) => {
@@ -48,7 +56,8 @@ export function sortTopicsByNewest(topics = []) {
  * - "pinned": Exibe exclusivamente tópicos fixados e pautas ativas de governança.
  * @param {Array} topics
  * @param {"active"|"newest"|"pinned"} mode
- */
+ 
+ * @returns {*} Resultado da operação.*/
 export function orderCommunityTopics(topics = [], mode = "active") {
   if (!Array.isArray(topics)) return [];
   if (mode === "pinned") {
@@ -65,7 +74,13 @@ export function orderCommunityTopics(topics = [], mode = "active") {
   return [...sortFn(pinned), ...sortFn(regular)];
 }
 
-/** Junta tópicos locais e da rede (sem repetir) e soma as respostas locais à contagem e à última atividade. */
+/** Junta tópicos locais e da rede (sem repetir) e soma as respostas locais à contagem e à última atividade. 
+ * @param {*} [localTopics] Parâmetro `localTopics`.
+ * @param {*} [topics] Lista de tópicos.
+ * @param {*} [user] Parâmetro `user`.
+ * @param {*} [replyCounts] Parâmetro `replyCounts`.
+ * @param {*} [replyActivity] Parâmetro `replyActivity`.
+ * @returns {*} Resultado da operação.*/
 export function mergeTopicsWithLocalReplies(localTopics, topics, user, replyCounts, replyActivity = {}) {
   const seen = new Set();
   const merged = [];

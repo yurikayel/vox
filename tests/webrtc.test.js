@@ -1,5 +1,5 @@
 import "../tests/setup.js";
-import test from "node:test";
+import test, { mock } from "node:test";
 import assert from "node:assert/strict";
 import * as webrtcPeer from "../client/js/webrtc-peer.js";
 
@@ -210,12 +210,18 @@ test("webrtc - fila candidatos ICE antes de remoteDescription e protege glare du
   globalThis.RTCIceCandidate = function (c) { return c; };
 
   await webrtcPeer.initWebRtc("peer_z_polite");
-  await Promise.all([
-    webrtcPeer.handleSignalingMessage({ type: "registered", peers: ["peer_a_impolite"] }),
-    webrtcPeer.handleSignalingMessage({ type: "offer", from: "peer_a_impolite", sdp: { type: "offer", sdp: "oA" } }),
-    webrtcPeer.handleSignalingMessage({ type: "ice", from: "peer_a_impolite", candidate: { candidate: "cand1" } }),
-  ]);
-  await new Promise((r) => setTimeout(r, 35));
+  mock.timers.enable({ apis: ["setTimeout"] });
+  try {
+    await Promise.all([
+      webrtcPeer.handleSignalingMessage({ type: "registered", peers: ["peer_a_impolite"] }),
+      webrtcPeer.handleSignalingMessage({ type: "offer", from: "peer_a_impolite", sdp: { type: "offer", sdp: "oA" } }),
+      webrtcPeer.handleSignalingMessage({ type: "ice", from: "peer_a_impolite", candidate: { candidate: "cand1" } }),
+    ]);
+    mock.timers.tick(35);
+    for (let i = 0; i < 4; i++) await Promise.resolve();
+  } finally {
+    mock.timers.reset();
+  }
 
   assert.equal(pcs.length, 2);
   assert.equal(pcs[0].closed, true);

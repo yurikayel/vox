@@ -41,7 +41,7 @@ function bindSignalingReportActions(swVersionProvider) {
 export async function showStatus() {
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "network", "Status"));
-  render.renderLoading(main, "Medindo a saúde do nó…");
+  render.renderLoading(main, "Medindo como este aparelho está na rede…");
   const relayStatus = await peers.checkDesktopRelay();
   render.renderStatusPage(main, {
     gatewayHealth: gatewayTelemetry.getGatewayHealthSummary(),

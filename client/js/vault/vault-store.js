@@ -14,8 +14,9 @@ import { LEGACY_VAULT_PREFIX } from "./vault-legacy.js";
 export const VAULT_STORAGE_PREFIX = "vox-vault-v2:";
 
 async function probeVaultUrl(baseUrl, lookupKey) {
+  let res;
   try {
-    const res = await fetch(`${baseUrl}/memory/vault/${lookupKey}`, {
+    res = await fetch(`${baseUrl}/memory/vault/${lookupKey}`, {
       method: "GET",
       headers: { Accept: "application/json" },
     });
@@ -24,7 +25,7 @@ async function probeVaultUrl(baseUrl, lookupKey) {
     const data = await res.json();
     return { reachable: true, record: data?.record || null };
   } catch {
-    return { reachable: false, record: null };
+    return { reachable: Boolean(res?.ok), record: null };
   }
 }
 

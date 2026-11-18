@@ -14,7 +14,7 @@ import * as cacheNode from "./cache-node.js";
 export async function isSupersededLocally(item, store = cacheNode) {
   const incomingTime = item.editedAt || item.ts || 0;
   const tombstone = await store.getTombstone(item.id);
-  if (tombstone && (tombstone.editedAt || 0) >= incomingTime) return true;
+  if (tombstone && (tombstone.editedAt || tombstone.ts || 0) >= incomingTime) return true;
 
   const existing = await store.getLocalPost(item.id);
   if (existing) {

@@ -10,19 +10,33 @@
  *   (ECDH secp256k1 → SHA-256 → AES-GCM). Decifrar com sucesso autentica o remetente.
  * Pool de relays validado pelo teste de fumaça (REV-19, scripts/nostr-smoke.mjs).
  */
-import { finalizeEvent, generateSecretKey, getPublicKey, getSharedSecret, bytesToHex, sha256 } from "./nostr-event.js";
+import {
+  finalizeEvent, verifyEvent, isFreshEvent, createSeenWindow, generateSecretKey, getPublicKey, getSharedSecret, bytesToHex, sha256,
+} from "./nostr-event.js";
+import { randomBase36 } from "./shared/html.js";
 
 export const SIGNAL_KIND = 25050;
 export const DEFAULT_ROOM = "vox-brasil-v1";
 const KEY_LABEL = new TextEncoder().encode("vox-nostr-signal-v1");
-const SEEN_LIMIT = 2000;
+const HEX64 = /^[0-9a-f]{64}$/;
+const SIGNAL_TYPES = new Set(["offer", "answer", "ice"]);
+/** Tetos de entrada vinda da rede: o relay não limita por nós. */
+const MAX_CONTENT_CHARS = 128 * 1024;
+const MAX_PEER_ID_CHARS = 128;
+const MAX_ADDRESS_CHARS = 256;
+const MAX_DMPUB_JSON_CHARS = 4096;
 const HELLO_INTERVAL_MS = 120000;
 /** PM-17: reconexão com espera crescente e troca de relay depois de falhas seguidas. */
 const RECONNECT_BASE_MS = 1000;
 const RECONNECT_MAX_MS = 60000;
 const MAX_FAILURES = 3;
 
-const b64 = (bytes) => btoa(String.fromCharCode(...bytes));
+/** Base64 em blocos: `String.fromCharCode(...bytes)` estoura a pilha com payload grande. */
+const b64 = (bytes) => {
+  let bin = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(bin);
+};
 const unb64 = (str) => Uint8Array.from(atob(str), (c) => c.charCodeAt(0));
 
 async function deriveKey(secretKey, theirPubHex) {
@@ -45,7 +59,16 @@ export async function decryptFrom(secretKey, theirPubHex, content) {
   return JSON.parse(new TextDecoder().decode(plain));
 }
 
-const tagValue = (event, name) => (event.tags || []).find((t) => t[0] === name)?.[1] || "";
+/**
+ * Valor da primeira tag com o nome dado; evento sem lista de tags (ou com tag que não é lista) dá "".
+ * @param {{tags?: unknown}|null|undefined} event Evento recebido do relay, sem confiança no formato.
+ * @param {string} name Nome da tag (ex.: "p", "t").
+ * @returns {string} Valor da tag ou string vazia.
+ */
+const tagValue = (event, name) => {
+  const tags = Array.isArray(event?.tags) ? event.tags : [];
+  return tags.find((t) => Array.isArray(t) && t[0] === name)?.[1] || "";
+};
 
 function publish(ctx, event) {
   const frame = JSON.stringify(["EVENT", event]);
@@ -72,42 +95,73 @@ async function sendPeerInfo(ctx, remotePeerId, reply) {
   await sendDirected(ctx, theirPub, { type: "peer-info", address, dmPub, reply });
 }
 
+const isHex64 = (v) => typeof v === "string" && HEX64.test(v);
+const isPeerId = (v) => typeof v === "string" && v.length > 0 && v.length <= MAX_PEER_ID_CHARS;
+const isPlainObject = (v) => typeof v === "object" && v !== null && !Array.isArray(v);
+
+/**
+ * Primeiro pubkey que reivindica um peerId fica com ele; quem chega depois com outra chave é recusado.
+ * @returns {"new"|"same"|"conflict"} Situação do par diante do pubkey que o reivindicou agora.
+ */
+function claimPeer(ctx, peerId, pubkey) {
+  const known = ctx.pubByPeer.get(peerId);
+  if (known === undefined) {
+    ctx.pubByPeer.set(peerId, pubkey);
+    return "new";
+  }
+  return known === pubkey ? "same" : "conflict";
+}
+
+/** Endereço e chave de DM de um `peer-info`: tipo e tamanho conferidos; `null` se algum campo é inválido. */
+function sanitizePeerInfo(msg) {
+  const address = msg.address ?? "";
+  const dmPub = msg.dmPub ?? null;
+  const addressOk = typeof address === "string" && address.length <= MAX_ADDRESS_CHARS;
+  const dmPubOk = dmPub === null || (isPlainObject(dmPub) && JSON.stringify(dmPub).length <= MAX_DMPUB_JSON_CHARS);
+  return addressOk && dmPubOk ? { address, dmPub } : null;
+}
+
 async function onHello(ctx, event, body) {
-  if (!body?.from || body.from === ctx.peerId || ctx.pubByPeer.has(body.from)) return;
-  ctx.pubByPeer.set(body.from, event.pubkey);
+  if (!isPeerId(body?.from) || body.from === ctx.peerId) return;
+  if (claimPeer(ctx, body.from, event.pubkey) !== "new") return;
   await sendPeerInfo(ctx, body.from, true);
 }
 
 async function onPeerInfo(ctx, event, msg) {
-  if (!ctx.pubByPeer.has(msg.from)) ctx.pubByPeer.set(msg.from, event.pubkey);
-  ctx.onMessage({ type: "peer-joined", peerId: msg.from, address: msg.address || "", dmPub: msg.dmPub || null });
+  const info = sanitizePeerInfo(msg);
+  if (!info || claimPeer(ctx, msg.from, event.pubkey) === "conflict") return;
+  ctx.onMessage({ type: "peer-joined", peerId: msg.from, address: info.address, dmPub: info.dmPub });
   if (msg.reply) await sendPeerInfo(ctx, msg.from, false);
 }
 
 async function onDirected(ctx, event) {
   const msg = await decryptFrom(ctx.sk, event.pubkey, event.content);
-  if (!msg?.from || msg.from === ctx.peerId) return;
+  if (!isPeerId(msg?.from) || msg.from === ctx.peerId) return;
   if (msg.type === "peer-info") return onPeerInfo(ctx, event, msg);
-  if (["offer", "answer", "ice"].includes(msg.type)) {
-    ctx.pubByPeer.set(msg.from, event.pubkey);
-    ctx.onMessage(msg);
-  }
+  if (!SIGNAL_TYPES.has(msg.type) || claimPeer(ctx, msg.from, event.pubkey) === "conflict") return;
+  ctx.onMessage(msg);
 }
 
-function remember(ctx, id) {
-  if (ctx.seen.has(id)) return false;
-  ctx.seen.add(id);
-  if (ctx.seen.size > SEEN_LIMIT) ctx.seen.delete(ctx.seen.values().next().value);
-  return true;
-}
-
-async function handleEvent(ctx, event) {
-  if (!event?.id || event.pubkey === ctx.pub || !remember(ctx, event.id)) return;
-  if (tagValue(event, "t") !== ctx.room) return;
+/** Checagens baratas, antes da verificação Schnorr (cara em JS puro): formato, sala, destinatário e frescor. */
+function isCandidate(ctx, event) {
+  if (!isPlainObject(event) || !isHex64(event.id) || !isHex64(event.pubkey)) return false;
+  if (event.kind !== SIGNAL_KIND || event.pubkey === ctx.pub) return false;
+  if (typeof event.content !== "string" || event.content.length > MAX_CONTENT_CHARS) return false;
+  if (tagValue(event, "t") !== ctx.room) return false;
   const to = tagValue(event, "p");
+  return (!to || to === ctx.pub) && isFreshEvent(event);
+}
+
+/**
+ * Nenhum efeito antes de id e assinatura conferirem; só evento verificado entra na janela de replay.
+ * O `hello` não leva campo novo: a assinatura do próprio evento cobre pubkey, sala (tag t), peerId e data.
+ */
+async function handleEvent(ctx, event) {
+  if (!isCandidate(ctx, event) || ctx.seen.has(event.id)) return;
+  if (!(await verifyEvent(event)) || !ctx.seen.add(event.id)) return;
   try {
-    if (!to) await onHello(ctx, event, JSON.parse(event.content));
-    else if (to === ctx.pub) await onDirected(ctx, event);
+    if (!tagValue(event, "p")) await onHello(ctx, event, JSON.parse(event.content));
+    else await onDirected(ctx, event);
   } catch {
     /* evento malformado ou não destinado a nós */
   }
@@ -122,7 +176,7 @@ function openRelay(ctx, slot) {
     scheduleReconnect(ctx, slot, false);
     return;
   }
-  const subId = `vox-${Math.random().toString(36).slice(2, 8)}`;
+  const subId = `vox-${randomBase36(6)}`;
   trackRelayStatus(ctx, ws, () => {
     slot.failures = 0;
     ws.send(JSON.stringify(["REQ", subId, { kinds: [SIGNAL_KIND], "#t": [ctx.room], since: Math.floor(Date.now() / 1000) - 30 }]));
@@ -252,7 +306,7 @@ function createContext(opts) {
     sockets: [],
     pubByPeer: new Map(),
     infoSent: new Set(),
-    seen: new Set(),
+    seen: createSeenWindow(),
     timer: null,
   };
 }

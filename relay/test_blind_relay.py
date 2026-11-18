@@ -66,6 +66,7 @@ class TestBlindRelay(unittest.TestCase):
                 "version": 1,
                 "sender": "vendedor" * 4,
                 "timestamp": 1000 + i * 100,
+                "serial": i + 1,
                 "nonce": f"nonce_{i}",
                 "sig": "assinatura" * 4,
                 "payload": f"item_{i}",
@@ -73,10 +74,11 @@ class TestBlindRelay(unittest.TestCase):
 
         self.assertEqual(len(blind_relay.list_envelopes("comunidade_feira")), 5)
 
-        # Emite snapshot consolidado no timestamp 1400 (pruning deltas < 1400)
+        # Snapshot consolidado cobre os seriais 1..4 (a poda é por serial, não por timestamp)
         snapshot = {
             "epoch": 2,
             "timestamp": 1400,
+            "coveredSerial": 4,
             "snapshot": "Y_STATE_CONSOLIDADO_V2_BASE64",
         }
         blind_relay.store_snapshot("comunidade_feira", snapshot, prune_older=True)
@@ -86,10 +88,10 @@ class TestBlindRelay(unittest.TestCase):
         self.assertEqual(latest["epoch"], 2)
         self.assertEqual(latest["snapshot"], "Y_STATE_CONSOLIDADO_V2_BASE64")
 
-        # Deltas antes de 1400 devem ter sido podados
+        # Só o serial 5 (acima da cobertura) deve restar
         remaining = blind_relay.list_envelopes("comunidade_feira")
         self.assertEqual(len(remaining), 1)
-        self.assertEqual(remaining[0]["timestamp"], 1400)
+        self.assertEqual(remaining[0]["serial"], 5)
 
 
 if __name__ == "__main__":

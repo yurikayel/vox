@@ -26,7 +26,7 @@ test("renderStatusPage - shows gateway state and relay", () => {
   assert.ok(!main.innerHTML.includes(">degraded<"));
   assert.ok(main.innerHTML.includes("arweave_net"));
   assert.ok(main.innerHTML.includes("Offline"));
-  assert.ok(main.innerHTML.includes("Espelho relay"));
+  assert.ok(main.innerHTML.includes("servidor comunitário"));
 });
 
 test("renderStatusPage - mirror_last_error exportável", () => {

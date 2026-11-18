@@ -1,6 +1,7 @@
 # Moderador natural e vínculo assinado (v0)
 
-> **Status:** parcial (vínculo assinado implementado no PM-82; moderador natural, PM-83, com spec aceita e ainda não implementado) · **Owner:** mantenedor · **Revisado:** 2026-11-10
+> **Status:** implementada em laboratório (vínculo assinado no PM-82; moderador natural no PM-83, lotes A a F, atrás da flag `vox.lab.moderador`) · **Owner:** mantenedor · **Revisado:** 2026-11-17
+> **Evidência (17/11):** ROADMAP marca PM-83 `[x]`; módulos `client/js/natural-mod.js` (lógica pura) e `client/js/app/natural-mod-flow.js` (flag `NATURAL_MOD_LAB_KEY`), `client/js/app/natural-case-flow.js`; testes `tests/natural-mod.test.js` e `tests/moderation-natural-loader.test.js`. Não rodei a suíte nesta revisão (só documentação).
 > Relacionados: [denúncia que arquiva até a revisão (PM-69)](../ROADMAP.md), [canal (PM-81)](./canal-comunidade-v0.md), `client/js/vox-link.js`, `client/js/app/vox-link-flow.js`, `client/js/report-review.js`.
 
 ## Problema
@@ -56,7 +57,7 @@ Qualquer aparelho confere o vínculo sozinho, sem servidor. Ele vale se todas as
 
 O vínculo **não vai ao Arweave**, mas circula pela malha e é enviado à **memória central** (servidor de steward), como todo item gravado no aparelho. Qualquer aparelho conectado, e quem opera a memória central, consegue ver quem convidou quem. Para quem atua em política isso é sensível, e por isso o aceite diz isso antes do botão. Quem não aceita não fica com vínculo nenhum; nesse caso, a denúncia contra essa pessoa segue direto para a moderação tradicional.
 
-## PM-83: moderador natural (a implementar)
+## PM-83: moderador natural (desenho original; implementado, ver os lotes abaixo)
 
 ### Quem recebe a denúncia
 

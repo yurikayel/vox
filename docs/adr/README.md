@@ -6,7 +6,7 @@
 | ADR | Título | Status |
 |---|---|---|
 | [001](./001-contribution-attestation-export.md) | Atestação exportável de contribuição P2P | proposed |
-| [002](./002-oauth-profile-enrich-client.md) | Enriquecimento de perfil via OAuth (client-only) | accepted |
+| [002](./002-oauth-profile-enrich-client.md) | Enriquecimento de perfil via OAuth (client-only) | accepted (emenda 1: relay de troca OAuth) |
 | [003](./003-profile-card-gossip.md) | Cartão de perfil na malha (PROFILE_CARD gossip, opt-in) | accepted |
 | [004](./004-gateway-honest-fallback.md) | Fallback de gateway — pill honesta (Leitura reserva) | accepted |
 | [005](./005-collective-profile-m-of-n.md) | Perfil coletivo M-de-N (tese T02) | proposed (spec + lab) |
@@ -25,7 +25,7 @@
 | [018](./018-selo-govbr-via-parceiro-publico.md) | Selo gov.br opcional via parceiro público, desacoplado do login | proposed |
 | [019](./019-esquecer-por-padrao-e-memoria-civica.md) | Esquecer por padrão; memória cívica por três caminhos | accepted (não implementado) |
 | [020](./020-postura-de-operacao-do-piloto-g1.md) | Postura de operação do piloto G1: operador, voluntários em baixo risco, 18+, uma denúncia arquiva | accepted (18+ implementado) |
-| [021](./021-integridade-na-entrada-forma-assinada.md) | Integridade na entrada: forma assinada guardada, tudo que entra é conferido | accepted (implementado; `sigv: 2` em PM-85) |
+| [021](./021-integridade-na-entrada-forma-assinada.md) | Integridade na entrada: forma assinada guardada, tudo que entra é conferido | accepted (implementado; §2.6 aberta: v1 aninhado sem proteção; `sigv: 2` em PM-85) |
 | [022](./022-memoria-central-por-consentimento.md) | Memória central: servidor escolhido pela pessoa, nunca fonte de verdade | accepted (implementado) |
 | [023](./023-moderacao-em-camadas-e-moderador-natural.md) | Moderação em camadas: moderador natural assimétrico e vínculo assinado | accepted (vínculo implementado; moderador natural em PM-83; emenda 1 aceita) |
 | [024](./024-divulgacao-responsavel-e-honestidade-de-seguranca.md) | Divulgação responsável e honestidade sobre segurança (institucional) | accepted |
@@ -41,6 +41,9 @@
 | [034](./034-raiz-e-subchaves-por-aparelho.md) | Raiz e subchaves por aparelho: a chave de hoje vira a raiz (o `vx_…` não muda); perder o celular é revogar uma subchave | aceito como direção (RFC 0002 e LAN-18 antes do código) |
 | [035](./035-camadas-e-contextos.md) | Camadas e contextos no cliente: importar só para baixo (catraca no CI), uma porta de entrada por assunto | accepted (`audit:layers` no CI; `vault/` e `identity/` feitos) |
 | [036](./036-agilidade-criptografica-pos-quantica.md) | Agilidade criptográfica e transição pós-quântica: todo formato diz o seu algoritmo; DM híbrida (ECDH + ML-KEM) primeiro; assinatura por pré-compromisso ML-DSA até o "dia Q" | aceito como direção (RFC/LAN-18 antes do código; assinatura depende da RFC 0002) |
+| [037](./037-cofre-na-malha.md) | Cofre na malha: cópias do cofre cifrado com até 7 laços mútuos, pedido por caixa cega, espera de 24 h com veto da dona e tela única de volta | accepted (SW v7.141) |
+| [038](./038-subrede-malha-e-manifesto.md) | Subrede: a comunidade é um território assinado na malha (regra do PM-09) mais um manifesto que só sugere tema, infraestrutura e, na v2, cartuchos; fork é `communityId` novo | proposed (só documentação) |
+| [039](./039-rust-por-fases.md) | Rust por fases: mais Rust com o tempo, onde ganha em segurança (cripto que o WebCrypto não tem, formatos tipados, relay, nó nativo); a chave privada no navegador continua no WebCrypto | proposed (só documentação) |
 
 **Registro de uma página** com as decisões institucionais e de arquitetura em vigor, o estado real de cada uma e o que ainda está em aberto: [DECISOES.md](../DECISOES.md).
 

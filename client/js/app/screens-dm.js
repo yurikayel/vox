@@ -33,6 +33,7 @@ export async function pollInboxMessages(user) {
     const sealedList = await inbox.pullMine(user);
     let count = 0;
     for (const env of sealedList) {
+      if (env?.to && env.to !== user) continue; // selada para outra conta: não é minha
       try {
         const rawText = await cryptoDm.open(env);
         await ingestDecryptedEnvelope(env, rawText);
@@ -166,6 +167,7 @@ export async function handleSendDmSubmit(user, peerAddress, peerDmPub) {
   try {
     const status = await sealAndPersistOutgoingDm(user, peerAddress, peerDmPub, text);
     if (status === "pending-retry") share.showToast(honestMessage("dmNoRelay"));
+    if (status === "failed") share.showToast("Não deu para guardar a mensagem neste aparelho (sem espaço). Ela não foi enviada.", "error");
     activeReplyDraft = null;
     pendingContextDraft = null;
     activeMediaDraft = "";
@@ -185,7 +187,9 @@ async function handleToggleBubbleReaction(user, peerAddress, peerDmPub, msgId, e
       const wire = dmMsg.serializeDmReaction({ targetId: msgId, emoji });
       const env = await cryptoDm.seal(peerDmPub, wire, { from: user, to: peerAddress });
       await dispatchSealedEnvelope(peerAddress, env);
-    } catch {}
+    } catch {
+      share.showToast("A reação ficou só neste aparelho: não deu para enviá-la.", "error");
+    }
   }
   showDmThread(peerAddress);
 }
@@ -387,6 +391,9 @@ export function initDmListeners() {
       } else {
         share.showToast(`Nova mensagem de ${envelope.from.slice(0, 8)}…`);
       }
-    } catch {}
+    } catch {
+      // Chegou direto (sem cópia no relay): se não abrir ou não gravar, ninguém mais tem esta mensagem.
+      share.showToast(`Chegou uma mensagem de ${envelope.from.slice(0, 8)}… que não deu para abrir. Peça para a pessoa mandar de novo.`, "error");
+    }
   });
 }

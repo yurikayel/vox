@@ -54,7 +54,7 @@ test("nostr-ephemeral-relay - dois WebSockets trocam evento efêmero kind 25050"
       };
     });
     wsB.send(JSON.stringify(["REQ", "subB", { kinds: [25050], "#t": ["pm99"] }]));
-    await new Promise((r) => setTimeout(r, 40));
+    for (let i = 0; i < 4; i++) await Promise.resolve();
     wsA.send(JSON.stringify(["EVENT", { id: "ev_1", kind: 25050, pubkey: "p1", tags: [["t", "pm99"]], content: "oi" }]));
     const received = await gotB;
     assert.equal(received.content, "oi");

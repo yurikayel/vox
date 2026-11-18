@@ -1,7 +1,16 @@
-/** @file Unified diff → HTML seguro (posts, propostas, markdown). */
+/**
+ * @file Converte diff unificado em HTML escapado (posts, propostas, blocos ```diff```).
+ *
+ * Usa {@link governance.parseUnifiedDiff}; linhas vazias viram string vazia.
+ */
 import * as gov from "../governance.js";
 import { escapeHtml } from "./util.js";
 
+/**
+ * Renderiza texto de diff unificado como viewer com classes por tipo de linha.
+ * @param {string} diffText Conteúdo no formato unified diff.
+ * @returns {string} HTML do `.diff-viewer` ou `""` quando não há linhas.
+ */
 export function renderUnifiedDiffHtml(diffText) {
   const lines = gov.parseUnifiedDiff(diffText);
   if (!lines.length) return "";

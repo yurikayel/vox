@@ -9,7 +9,7 @@ import { escapeHtml } from "./util.js";
 import { renderImportPanelHtml } from "./oauth-import.js";
 
 function genesisStep(key, bodyHtml, { back = "", hidden = true } = {}) {
-  const backBtn = back ? `<button type="button" class="genesis-back" data-genesis-go="${back}">← Voltar</button>` : "";
+  const backBtn = back ? `<button type="button" class="genesis-back" data-genesis-go="${back}"><span aria-hidden="true">←</span> Voltar</button>` : "";
   return `<section class="genesis-step" data-genesis-step="${key}"${hidden ? " hidden" : ""}>${backBtn}${bodyHtml}</section>`;
 }
 
@@ -69,20 +69,30 @@ export function renderEmailKitCardHtml({ email = "", mailtoUrl = "" } = {}) {
           </div>`;
 }
 
-/** Conta que já existe: e-mail e senha, link/código do e-mail, frase (ADR-032), guardiões, QR do outro aparelho ou arquivos .txt. */
+/**
+ * Conta que já existe (ADR-037 §3.4): um caminho principal, e-mail e senha, que procura neste aparelho, nos servidores
+ * escolhidos e na malha. Link ou código do e-mail, frase, guardiões, QR e arquivos ficam em "Outras formas de voltar".
+ */
 function renderGenesisHaveHtml() {
   return `
           <h2 class="genesis-panel-title">Já tenho conta</h2>
-          <p class="genesis-lead"><strong>Com e-mail e senha:</strong> digite os dois para buscar seu cofre. Sem servidor conectado, cole o link <code>#/sync?b=…</code>, código <code>VOX1:…</code> ou o texto do e-mail.</p>
-          <p class="genesis-lead"><strong>Com a frase:</strong> digite as 12 (ou 24) palavras na ordem. Não precisa de internet. Sem a frase, <a href="#/voltar">peça a volta aos seus guardiões</a>.</p>
-          <p class="genesis-lead"><strong>Com o outro aparelho:</strong> nele, abra Perfil → QR para outro aparelho e aponte a câmera deste.</p>
+          <p class="genesis-lead">Digite o e-mail e a senha que você usou. Procuramos seu cofre neste aparelho e na sua rede, sem servidor de contas.</p>
           <form id="form-oauth-restore-passphrase" class="genesis-inline-form genesis-inline-form--stack">
-            <input type="email" id="oauth-restore-email-input" class="agora-inscription genesis-input" autocomplete="username" placeholder="Seu e-mail (se cadastrou)" aria-label="Seu e-mail" />
-            <input type="password" id="oauth-sovereign-passphrase-input" class="agora-inscription genesis-input" placeholder="Senha Soberana" autocomplete="current-password" aria-label="Senha Soberana" />
-            <textarea id="oauth-restore-kit-text" class="genesis-input" rows="2" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Link #/sync?b=…, código VOX1:… ou texto do e-mail (se precisar)" aria-label="Link ou código do e-mail"></textarea>
-            <textarea id="oauth-restore-phrase" class="genesis-input" rows="2" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Ou frase de recuperação: 12 ou 24 palavras" aria-label="Frase de recuperação"></textarea>
-            <input type="file" id="oauth-restore-files" class="genesis-input" accept=".txt,.voxid,.json,text/plain,application/json" multiple aria-label="Arquivo de acesso ou backups (.txt / .voxid)" />
+            <input type="email" id="oauth-restore-email-input" class="agora-inscription genesis-input" autocomplete="username" placeholder="Seu e-mail" aria-label="Seu e-mail" />
+            <input type="password" id="oauth-sovereign-passphrase-input" class="agora-inscription genesis-input" placeholder="Sua senha" autocomplete="current-password" aria-label="Sua senha" />
             <button type="submit" id="btn-oauth-restore-passphrase" class="agora-btn agora-btn--primary">Entrar</button>
+            <p id="oauth-mesh-status" class="genesis-lead" role="status" aria-live="polite"></p>
+            <details class="genesis-other-ways" id="genesis-other-ways">
+              <summary>Outras formas de voltar</summary>
+              <p class="genesis-lead"><strong>Link ou código do e-mail:</strong> cole abaixo (com a senha acima). É o caminho mais rápido.</p>
+              <textarea id="oauth-restore-kit-text" class="genesis-input" rows="2" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Link #/sync?b=…, código VOX1:… ou texto do e-mail" aria-label="Link ou código do e-mail"></textarea>
+              <p class="genesis-lead"><strong>Frase:</strong> as 12 (ou 24) palavras na ordem. Não precisa de internet.</p>
+              <textarea id="oauth-restore-phrase" class="genesis-input" rows="2" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Frase de recuperação: 12 ou 24 palavras" aria-label="Frase de recuperação"></textarea>
+              <p class="genesis-lead"><strong>Guardiões:</strong> <a href="#/voltar">peça a volta aos seus guardiões</a>.</p>
+              <p class="genesis-lead"><strong>Outro aparelho:</strong> nele, abra Perfil → QR para outro aparelho e aponte a câmera deste.</p>
+              <p class="genesis-lead"><strong>Arquivo:</strong> o arquivo de acesso ou os backups do e-mail (.txt / .voxid).</p>
+              <input type="file" id="oauth-restore-files" class="genesis-input" accept=".txt,.voxid,.json,text/plain,application/json" multiple aria-label="Arquivo de acesso ou backups (.txt / .voxid)" />
+            </details>
           </form>`;
 }
 
@@ -90,7 +100,7 @@ function renderGenesisHaveHtml() {
 function renderGenesisStepsHtml(currentName, invite = null) {
   return `
         <section class="genesis-panel genesis-panel--steps">
-          <div id="oauth-enrich-error" class="oauth-enrich-error" role="alert" aria-live="polite" hidden></div>
+          <div id="oauth-enrich-error" class="oauth-enrich-error" role="alert" hidden></div>
           ${genesisStep("entry", renderGenesisEntryHtml(currentName, invite), { hidden: false })}
           ${genesisStep("have", renderGenesisHaveHtml(), { back: "entry" })}
           ${genesisStep("pact", renderPactStepHtml())}

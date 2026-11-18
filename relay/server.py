@@ -12,29 +12,53 @@ import json
 import os
 import re
 import stat
+import sys
 import tempfile
 import threading
+import time
 import urllib.error
 import urllib.request
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-from relay import blind_relay
-from relay import oauth_exchange
-from relay import central_memory
-from relay import vault_store
-from relay import inbox
-from relay import mirror_validate
-from relay import p2p_seeder
-from relay import request_guard
+from relay import blind_relay, central_memory, inbox, mirror_validate, oauth_exchange, p2p_seeder, purge_schedule, rate_limit, request_guard, vault_store
+from relay.safe_path import SAFE_CHARS, child_of, only_chars
 
 DEFAULT_PORT = 3920
 DEFAULT_HOST = "127.0.0.1"
+# Corpo que o cliente ainda manda depois de uma resposta antecipada (413, 429...): o relay lê até este teto, por
+# no máximo REJECTED_BODY_DRAIN_SECONDS, antes de fechar. Fechar com bytes não lidos faz o TCP mandar RST e o
+# cliente não chega a ler o status (no Windows, erro 10053). Acima do teto o reset continua valendo.
+REJECTED_BODY_DRAIN_MAX = 1024 * 1024
+REJECTED_BODY_DRAIN_SECONDS = 2.0
+DEFAULT_SOCKET_TIMEOUT = 10.0
+DEFAULT_MAX_CONNECTIONS = 64
+LISTEN_BACKLOG = 128
 
 
 def resolve_listen_port(env=None, default=DEFAULT_PORT):
     raw = str((env if env is not None else os.environ).get("VOX_RELAY_PORT") or "").strip()
     return int(raw) if raw.isdigit() else default
+
+
+def _positive_number(raw, default, cast):
+    try:
+        value = cast(str(raw or "").strip())
+    except ValueError:
+        return default
+    return value if value > 0 else default
+
+
+def resolve_socket_timeout(env=None):
+    """Segundos que uma leitura ou escrita no socket pode esperar (`VOX_RELAY_SOCKET_TIMEOUT`)."""
+    raw = (env if env is not None else os.environ).get("VOX_RELAY_SOCKET_TIMEOUT")
+    return _positive_number(raw, DEFAULT_SOCKET_TIMEOUT, float)
+
+
+def resolve_max_connections(env=None):
+    """Conexões atendidas ao mesmo tempo (`VOX_RELAY_MAX_CONNECTIONS`); as demais são fechadas na hora."""
+    raw = (env if env is not None else os.environ).get("VOX_RELAY_MAX_CONNECTIONS")
+    return _positive_number(raw, DEFAULT_MAX_CONNECTIONS, int)
 
 
 def resolve_cache_dir(env=None):
@@ -59,10 +83,38 @@ UPSTREAM_GATEWAYS = [
     "https://turbo-gateway.com/raw",
 ]
 
-TX_ID_REGEX = re.compile(r"^[A-Za-z0-9_-]{43}$")
+# Validação por conjunto de caracteres e tamanho, sem regex: um `$` aceitaria `\n` final e regex sobre texto
+# externo é alvo de `py/polynomial-redos`.
+TX_ID_LENGTH = 43
+INDEX_SLUG_CHARS = SAFE_CHARS | {"."}
+INDEX_PREFIX = "index_"
+INDEX_SUFFIX = ".json"
+
+
+def is_tx_id(text):
+    """True para um id de transação Arweave: 43 caracteres entre letras ASCII, dígitos, `_` e `-`."""
+    return only_chars(text, SAFE_CHARS, TX_ID_LENGTH, TX_ID_LENGTH)
+
+
+def is_index_name(text):
+    """True para `index_<id>.json`, com o id de 1 a 128 caracteres entre letras ASCII, dígitos, `.`, `_` e `-`."""
+    return (
+        text.startswith(INDEX_PREFIX)
+        and text.endswith(INDEX_SUFFIX)
+        and only_chars(text[len(INDEX_PREFIX):-len(INDEX_SUFFIX)], INDEX_SLUG_CHARS)
+    )
+
+
 CACHE_HASH_SUFFIX = ".sha256"
 INTEGRITY_FAILURES = 0
 _CACHE_WRITE_LOCK = threading.RLock()
+
+
+def _count_integrity_failure():
+    global INTEGRITY_FAILURES
+    with _CACHE_WRITE_LOCK:
+        INTEGRITY_FAILURES += 1
+
 
 def ensure_cache_dir():
     with _CACHE_WRITE_LOCK:
@@ -110,11 +162,14 @@ def cache_dir_bytes():
 
 
 def max_cache_bytes():
-    raw = os.environ.get("VOX_RELAY_MAX_CACHE_MB", "").strip()
-    if not raw:
-        return None
+    """Teto do cache em bytes (padrão 512 MB; `VOX_RELAY_MAX_CACHE_MB=0` explícito = sem teto)."""
+    return purge_schedule.resolve_max_cache_bytes()
+
+
+def _cache_child(name, is_valid):
+    """Caminho de `name` dentro do cache, ou None se o nome não serve (formato ou symlink para fora)."""
     try:
-        return int(float(raw)) * 1024 * 1024
+        return child_of(CACHE_DIR, name, is_valid)
     except ValueError:
         return None
 
@@ -207,14 +262,13 @@ def _is_allowed_cache_entry(cache_file, sidecar=False):
 
 
 def read_verified_cache_entry(cache_file):
-    global INTEGRITY_FAILURES
     try:
         cache_file = Path(cache_file)
     except (TypeError, ValueError):
-        INTEGRITY_FAILURES += 1
+        _count_integrity_failure()
         return None
     if not _is_allowed_cache_entry(cache_file):
-        INTEGRITY_FAILURES += 1
+        _count_integrity_failure()
         return None
     try:
         data = _read_stable_cache_file(cache_file)
@@ -228,13 +282,13 @@ def read_verified_cache_entry(cache_file):
             or re.fullmatch(r"[0-9a-f]{64}", expected) is None
             or not hmac.compare_digest(expected, actual)
         ):
-            INTEGRITY_FAILURES += 1
+            _count_integrity_failure()
             remove_cache_entry(cache_file)
             return None
         os.utime(cache_file, None)
         return data
     except (OSError, UnicodeError, ValueError, TypeError):
-        INTEGRITY_FAILURES += 1
+        _count_integrity_failure()
         remove_cache_entry(cache_file)
         return None
 
@@ -304,18 +358,90 @@ def _evict_cache_entries(files, current_bytes, incoming_bytes, max_bytes, protec
         except OSError:
             pass
 
+class _CountingReader:
+    """Envolve `rfile` e conta os bytes do corpo lidos com `read` (o que sobrar é drenado ao fechar)."""
+
+    def __init__(self, raw):
+        self._raw = raw
+        self.consumed = 0
+
+    def read(self, size=-1):
+        data = self._raw.read(size)
+        self.consumed += len(data)
+        return data
+
+    def __getattr__(self, name):
+        return getattr(self._raw, name)
+
+
 class VoxRelayHandler(BaseHTTPRequestHandler):
+    # Prazo de cada leitura/escrita no socket: cliente que para de falar perde a conexão em vez de prendê-la.
+    timeout = resolve_socket_timeout()
+    _response_started = False
+
+    def setup(self):
+        super().setup()
+        self.rfile = _CountingReader(self.rfile)
+
+    def handle_one_request(self):
+        self._response_started = False
+        super().handle_one_request()
+        self._drain_unread_body()
+
+    def send_response(self, code, message=None):
+        self._response_started = True
+        super().send_response(code, message)
+
+    def end_headers(self):
+        """Toda resposta fecha a conexão (HTTP/1.0): o cliente sabe que não deve reaproveitá-la."""
+        self.send_header("Connection", "close")
+        super().end_headers()
+
+    def _drain_unread_body(self):
+        """Depois de uma resposta antecipada, lê (até o teto e o prazo) o corpo que o cliente ainda manda.
+
+        Sem isso, fechar o socket com bytes pendentes vira RST e o cliente perde o 413/429 que acabou de receber.
+        """
+        headers = getattr(self, "headers", None)
+        if not self._response_started or headers is None:
+            return
+        pending = min(self._get_content_length() - self.rfile.consumed, REJECTED_BODY_DRAIN_MAX)
+        deadline = time.monotonic() + REJECTED_BODY_DRAIN_SECONDS
+        try:
+            while pending > 0 and time.monotonic() < deadline:
+                self.connection.settimeout(max(0.05, deadline - time.monotonic()))
+                chunk = self.rfile.read1(min(pending, 64 * 1024))
+                if not chunk:
+                    return
+                pending -= len(chunk)
+        except OSError:
+            return
+
     def _set_cors_headers(self):
-        self.send_header("Access-Control-Allow-Origin", "*")
+        """CORS por origem (T32): só reflete a origem do app, de loopback ou de `VOX_RELAY_ALLOWED_ORIGINS`.
+
+        Origem estranha ou ausente não recebe `Allow-Origin` nem `Allow-Private-Network`: o navegador
+        bloqueia a leitura da resposta. `Vary: Origin` evita que um cache sirva a resposta de uma origem a outra.
+        """
+        self.send_header("Vary", "Origin")
+        self.send_header("Access-Control-Expose-Headers", "Retry-After")
+        origin = request_guard.cors_allow_origin(self.headers.get("Origin"))
+        if origin is None:
+            return
+        self.send_header("Access-Control-Allow-Origin", origin)
         self.send_header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, X-Vox-Delete-Token")
         self.send_header("Access-Control-Allow-Private-Network", "true")
 
     def _rejected(self, method):
-        """PM-94: Host, Origin, Content-Type e limite por IP (`request_guard`)."""
-        reason = request_guard.reject_reason(method, self.headers, self.server.server_address[0], self.client_address[0])
+        """PM-94: Host, Origin e Content-Type (`request_guard`), depois o limite por IP (`rate_limit`)."""
+        reason = request_guard.reject_reason(method, self.headers, self.server.server_address[0])
+        if not reason:
+            ip = rate_limit.client_ip(self.client_address[0], self.headers.get("X-Forwarded-For"))
+            reason = rate_limit.http_rejection(method, self.path, ip)
         if reason:
-            self._send_json({"error": reason[1]}, reason[0])
+            retry = {"Retry-After": str(reason[2])} if len(reason) > 2 else None
+            self._send_json({"error": reason[1]}, reason[0], retry)
         return bool(reason)
 
     def _get_content_length(self):
@@ -434,25 +560,33 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
         }
 
     def _handle_transaction(self, tx_id):
-        if not TX_ID_REGEX.match(tx_id):
+        if not is_tx_id(tx_id):
             self._reply_not_found(b"TX ID invalido", 400)
             return
 
         ensure_cache_dir()
-        cache_file = CACHE_DIR / tx_id
-        data = read_verified_cache_entry(cache_file) if cache_file.is_file() else None
+        # None quando o nome já é um symlink para fora do cache: trata como ausente e não grava por cima.
+        cache_file = _cache_child(tx_id, is_tx_id)
+        data = read_verified_cache_entry(cache_file) if cache_file is not None and cache_file.is_file() else None
         if data is not None:
             self._reply_transaction(data, "HIT")
             return
 
         data = self._fetch_transaction(tx_id)
+        if data is TX_TOO_LARGE:
+            self._reply_not_found(b"Transacao acima do teto do relay", 413)
+            return
         if data is None:
             self._reply_not_found(b"Transacao nao encontrada nos gateways upstream")
             return
-        self._cache_transaction(cache_file, data)
+        if cache_file is not None:
+            self._cache_transaction(cache_file, data)
         self._reply_transaction(data, "MISS")
 
     def _fetch_transaction(self, tx_id):
+        if not is_tx_id(tx_id):
+            return None
+        limit = purge_schedule.resolve_max_tx_bytes()
         for gateway in UPSTREAM_GATEWAYS:
             try:
                 request = urllib.request.Request(
@@ -460,7 +594,7 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
                 )
                 with urllib.request.urlopen(request, timeout=8) as response:
                     if response.status == 200:
-                        return response.read()
+                        return _read_capped(response, limit)
             except Exception:
                 continue
         return None
@@ -481,8 +615,8 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
 
     def _handle_index(self, comm_slug):
         ensure_cache_dir()
-        index_file = CACHE_DIR / f"index_{comm_slug}.json"
-        if index_file.is_file():
+        index_file = _cache_child(f"index_{comm_slug}.json", is_index_name)
+        if index_file is not None and index_file.is_file():
             data = read_verified_cache_entry(index_file)
             if data is not None:
                 self.send_response(200)
@@ -497,15 +631,20 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
     def _handle_inbox_get(self, to_addr):
         self._send_json({"envelopes": inbox.get_envelopes(to_addr)})
 
-    def _send_json(self, payload, status=200):
+    def _send_json(self, payload, status=200, extra_headers=None):
+        body = json.dumps(payload).encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        for name, value in (extra_headers or {}).items():
+            self.send_header(name, value)
         self._set_cors_headers()
         self.end_headers()
-        self.wfile.write(json.dumps(payload).encode("utf-8"))
+        self.wfile.write(body)
 
     def _reply_not_found(self, message=b"Rota nao encontrada no Vox Relay", status=404):
         self.send_response(status)
+        self.send_header("Content-Length", str(len(message)))
         self._set_cors_headers()
         self.end_headers()
         self.wfile.write(message)
@@ -602,8 +741,13 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
             self._send_json({"error": str(error)}, 500)
 
     def _handle_mirror_post(self):
+        content_length = self._get_content_length()
+        if content_length > mirror_validate.MAX_MIRROR_BODY_BYTES:
+            err = {"code": "mirror.body_too_large", "error": "Corpo excede 256 KiB."}
+            self._send_json(err, 413)
+            return
         try:
-            body = self.rfile.read(self._get_content_length())
+            body = self.rfile.read(content_length)
         except Exception as error:
             self._send_json({"error": str(error)}, 500)
             return
@@ -616,7 +760,7 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
     def _store_mirror(self, body, comm_id):
         try:
             ensure_cache_dir()
-            index_file = CACHE_DIR / f"index_{comm_id}.json"
+            index_file = child_of(CACHE_DIR, f"index_{comm_id}.json", is_index_name)
             if not store_cache_entry_with_quota(index_file, body):
                 self._send_json({"error": "quota de cache excedida"}, 507)
                 return
@@ -690,10 +834,58 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
         self._set_cors_headers()
         self.end_headers()
 
+TX_TOO_LARGE = object()
+
+
+def _read_capped(response, limit):
+    """Corpo do gateway, ou `TX_TOO_LARGE` se passar de `limit` bytes; lê no máximo `limit + 1`."""
+    declared = response.headers.get("Content-Length") if getattr(response, "headers", None) else None
+    if declared and declared.isdigit() and int(declared) > limit:
+        return TX_TOO_LARGE
+    data = response.read(limit + 1)
+    return TX_TOO_LARGE if len(data) > limit else data
+
+
+class VoxRelayServer(ThreadingHTTPServer):
+    """Uma thread por conexão (daemon), com teto de conexões simultâneas.
+
+    Cliente lento só prende a própria thread. Passou do teto, a conexão nova é fechada na hora: o relay segue
+    atendendo as que já estão dentro em vez de acumular threads.
+    """
+
+    daemon_threads = True
+    request_queue_size = LISTEN_BACKLOG
+
+    def __init__(self, server_address, handler_class, max_connections=None):
+        self._slots = threading.BoundedSemaphore(max_connections or resolve_max_connections())
+        super().__init__(server_address, handler_class)
+
+    def process_request(self, request, client_address):
+        if not self._slots.acquire(blocking=False):
+            self.shutdown_request(request)
+            return
+        try:
+            super().process_request(request, client_address)
+        except BaseException:
+            self._slots.release()
+            raise
+
+    def process_request_thread(self, request, client_address):
+        try:
+            super().process_request_thread(request, client_address)
+        finally:
+            self._slots.release()
+
+    def handle_error(self, request, client_address):
+        """Cliente que some no meio da resposta (reset, prazo estourado) não é falha do relay: sem traceback."""
+        if isinstance(sys.exc_info()[1], (ConnectionError, TimeoutError)):
+            return
+        super().handle_error(request, client_address)
+
+
 def run_server(host=DEFAULT_HOST, port=DEFAULT_PORT):
     ensure_cache_dir()
-    server_address = (host, port)
-    httpd = HTTPServer(server_address, VoxRelayHandler)
+    httpd = VoxRelayServer((host, port), VoxRelayHandler)
     print("======================================================")
     print("  Vox Relay Desktop — Nó Local de Espelho & Cache")
     print(f"  Escutando em: http://{host}:{port}")

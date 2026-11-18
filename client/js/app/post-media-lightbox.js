@@ -1,5 +1,9 @@
 /** @file Full-screen post image lightbox (clean media, no overlay text). */
 
+import { coerceImageAltString } from "../render/photo-chrome.js";
+
+export { coerceImageAltString };
+
 let keyHandler = null;
 
 function getLightbox() {
@@ -13,7 +17,7 @@ function closePostMediaLightbox() {
   const img = lb.querySelector(".post-lightbox-img");
   if (img) {
     img.removeAttribute("src");
-    img.alt = "";
+    img.alt = coerceImageAltString("");
   }
   document.body.classList.remove("post-lightbox-open");
   if (keyHandler) {
@@ -33,7 +37,7 @@ function extractMediaFromTrigger(el) {
   const img = el.matches("img") ? el : el.querySelector("img");
   const dataset = el.dataset || {};
   const src = resolveMediaValue(dataset.mediaSrc, img ? img.src : el.getAttribute("src"));
-  const alt = resolveMediaValue(dataset.mediaAlt, img ? img.alt : el.getAttribute("alt"));
+  const alt = coerceImageAltString(resolveMediaValue(dataset.mediaAlt, img ? img.alt : el.getAttribute("alt")));
   return { src, alt };
 }
 
@@ -56,7 +60,7 @@ function navigateLightbox(direction) {
   const { src, alt } = extractMediaFromTrigger(triggers[nextIdx]);
   if (src && currentImg) {
     currentImg.src = src;
-    currentImg.alt = alt || "";
+    currentImg.alt = coerceImageAltString(alt);
   }
 }
 
@@ -73,7 +77,7 @@ export function openPostMediaLightbox(src, alt = "") {
   const img = lb.querySelector(".post-lightbox-img");
   if (!img) return;
   img.src = src;
-  img.alt = alt;
+  img.alt = coerceImageAltString(alt);
   lb.hidden = false;
   document.body.classList.add("post-lightbox-open");
   lb.querySelector(".post-lightbox-close")?.focus();

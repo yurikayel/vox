@@ -79,20 +79,26 @@ test("chunked-transfer - despacho com backpressure emula dreno do buffer", async
     send(msg) {
       sentMessages.push(msg);
     },
+    addEventListener(evt, fn) {
+      if (evt === "bufferedamountlow") this._onLow = fn;
+    },
+    removeEventListener(evt) {
+      if (evt === "bufferedamountlow") this._onLow = undefined;
+    },
+    drainBuffer() {
+      this.bufferedAmount = 10000;
+      this._onLow?.();
+    },
   };
-
-  // Simula esvaziamento assíncrono do buffer após 30ms
-  setTimeout(() => {
-    mockChannel.bufferedAmount = 10000;
-  }, 30);
 
   const chunks = chunkedTransfer.slicePayloadIntoChunks("Mensagem rápida", 100);
   let progressCalls = 0;
 
-  const ok = await chunkedTransfer.sendChunksWithBackpressure(mockChannel, chunks, () => {
+  const pending = chunkedTransfer.sendChunksWithBackpressure(mockChannel, chunks, () => {
     progressCalls++;
   });
-
+  queueMicrotask(() => mockChannel.drainBuffer());
+  const ok = await pending;
   assert.equal(ok, true);
   assert.equal(sentMessages.length, chunks.length);
   assert.equal(progressCalls, chunks.length);

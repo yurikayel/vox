@@ -8,7 +8,7 @@
  *   tirada da própria chave de assinatura.
  */
 
-import { LOCKED_TAG, isLocked, openSealed, sealJson } from "./keystore.js";
+import { LOCKED_TAG, isLocked, openSealed, readStoredRecord, sealJson } from "./keystore.js";
 import * as keyLock from "./key-lock.js";
 import { identityFromSeed, newSeed } from "./recovery-phrase.js";
 import { bytesToB64Url, computeRouteId } from "../signed-verify.js";
@@ -18,12 +18,9 @@ export const SEED_STORAGE = "vox-identity-seed-v1";
 
 const fromB64url = (s) => Uint8Array.from(atob(String(s).replace(/-/g, "+").replace(/_/g, "/")), (c) => c.charCodeAt(0));
 
+/** Mapa plano no `localStorage`; array, primitivo ou null contam como vazio. */
 function readSeeds() {
-  try {
-    return JSON.parse(localStorage.getItem(SEED_STORAGE) || "{}") || {};
-  } catch {
-    return {};
-  }
+  return readStoredRecord(SEED_STORAGE);
 }
 
 function writeSeed(routeId, value) {

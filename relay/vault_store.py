@@ -16,6 +16,7 @@ import json
 from typing import Any, Dict, Optional, Tuple
 
 from relay import central_memory
+from relay.safe_path import child_of
 
 VAULT_MIN_ITERATIONS = 100_000
 VAULT_MAX_ITERATIONS = 5_000_000
@@ -44,11 +45,18 @@ def is_servable_vault(record: Any) -> bool:
     )
 
 
+def _vault_json_name(name: str) -> bool:
+    return name.endswith(".json") and len(name) > 5 and central_memory._is_valid_id(name[: -len(".json")])
+
+
 def _vault_file(lookup_key: str):
     clean = str(lookup_key or "").strip().lower()
     if not central_memory._is_valid_id(clean):
         return None
-    return central_memory.MEMORY_DIR / "vaults" / f"{clean}.json"
+    try:
+        return child_of(central_memory.MEMORY_DIR / "vaults", f"{clean}.json", _vault_json_name)
+    except ValueError:
+        return None
 
 
 def _read_stored(vault_file) -> Optional[Dict[str, Any]]:
@@ -102,7 +110,16 @@ def _authorize(stored: Optional[Dict[str, Any]], record: Dict[str, Any], token: 
 
 
 def save_vault(lookup_key: str, payload: Any) -> str:
-    """Grava o cofre se a prova do dono confere. Devolve `saved`, `invalid` ou `forbidden`."""
+    """Grava o cofre se a prova do dono confere. Devolve `saved`, `invalid` ou `forbidden`.
+
+    Ler o dono, autorizar e gravar é uma só decisão: sob o lock da memória central, duas gravações simultâneas
+    num cofre sem dono não podem as duas virar o primeiro dono.
+    """
+    with central_memory._MEMORY_LOCK:
+        return _save_vault_locked(lookup_key, payload)
+
+
+def _save_vault_locked(lookup_key: str, payload: Any) -> str:
     vault_file = _vault_file(lookup_key)
     record, token = _split_payload(payload)
     if vault_file is None or not is_servable_vault(record):

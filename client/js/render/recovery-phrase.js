@@ -60,7 +60,7 @@ export function renderPhraseWordsHtml({ words, kind }) {
       <button type="button" class="agora-btn" id="btn-phrase-print">Imprimir cartão</button>
       <button type="button" class="agora-btn agora-btn--primary" id="btn-phrase-written">Já anotei</button>
     </div>
-    <div class="phrase-print-card" id="phrase-print-card" aria-hidden="true">
+    <div class="phrase-print-card" id="phrase-print-card" aria-hidden="true" tabindex="-1">
       <h1>Vox — frase de recuperação</h1>
       <p>${WARNING}</p>
       ${wordListHtml(words)}

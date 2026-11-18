@@ -1,16 +1,18 @@
 /**
- * Vox Perma-Notary — Cartório Cívico e Prova de Existência Criptográfica na Arweave.
- * Permite que assembleias, comitês populares e movimentos ancorem atas e decisões históricas
- * de forma imutável, auditável e verificável em 1 clique (anti-fraude e anti-apagamento).
+ * @file Cartório cívico Perma-Notary: prova de existência de atas na Arweave.
+ *
+ * Hash canônico, registro assinável e selo HTML verificável.
  */
 import { computeBlobHash } from "./media-blob.js";
 import { escapeHtml } from "./shared/html.js";
 
+/** Versão do protocolo de notário cívico. @type {string} */
 export const NOTARY_PROTOCOL = "vox-notary-v1";
 
 /**
- * Normaliza o texto de forma canônica para que variações de CRLF/LF ou espaços
- * não quebrem a prova criptográfica de integridade.
+ * Normaliza texto para hash estável (fins de linha e espaços nas bordas).
+ * @param {string} text Texto bruto.
+ * @returns {string}
  */
 export function canonicalizeDocumentText(text) {
   return String(text || "")
@@ -36,7 +38,15 @@ function sanitizeWitnesses(witnesses) {
 }
 
 /**
- * Cria o registro de cartório cívico com hash SHA-256, timestamp e testemunhas.
+ * Cria registro de cartório com hash SHA-256 e metadados para tags Arweave.
+ * @param {object} [options={}]
+ * @param {string} [options.title] Título curto do documento.
+ * @param {string} [options.bodyText] Corpo do documento.
+ * @param {string} [options.author] Autoria exibida.
+ * @param {string} [options.communityId] Comunidade associada.
+ * @param {string[]} [options.witnesses] Rotas ou ids de testemunhas.
+ * @returns {Promise<object>}
+ * @throws {Error} Se o corpo canônico ficar vazio.
  */
 export async function createCivicNotaryRecord({
   title = "Ata de Deliberação Comunitária",
@@ -71,6 +81,12 @@ export async function createCivicNotaryRecord({
 
 /**
  * Valida a autenticidade de um texto contra um registro de cartório cívico.
+ */
+/**
+ * Compara texto atual ao hash gravado no registro de cartório.
+ * @param {object} notaryRecord Registro emitido por {@link createCivicNotaryRecord}.
+ * @param {string} [currentText=""] Texto a verificar.
+ * @returns {Promise<{ isValid: boolean, reason: string, expectedHash?: string, computedHash?: string, timestamp?: number }>}
  */
 export async function verifyCivicNotaryRecord(notaryRecord, currentText = "") {
   if (!notaryRecord || !notaryRecord.documentHash) {
@@ -115,6 +131,13 @@ function formatNotaryDate(timestamp) {
 
 /**
  * Renderiza o selo visual de cartório popular para inclusão em atas e posts.
+ */
+/**
+ * HTML do selo de ata cívica para embutir em posts.
+ * @param {object} notaryRecord Registro com `documentHash` e `timestamp`.
+ * @param {object} [options={}]
+ * @param {boolean} [options.isVerified=true] Se a verificação local passou.
+ * @returns {string} HTML ou string vazia sem registro válido.
  */
 export function renderNotaryBadgeHtml(notaryRecord, { isVerified = true } = {}) {
   if (!notaryRecord?.documentHash) return "";

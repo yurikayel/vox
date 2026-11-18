@@ -1,4 +1,10 @@
-/** @file OAuth, pact/zap/edit modals, people search. */
+/**
+ * @file Busca de pessoas, prévia de conexão e modais (pacto, zap Pix, edição de post).
+ *
+ * Reexporta passos de gênese OAuth de `genesis-entry.js`; modais montam HTML no `modal-host` do chamador.
+ *
+ * @module render/oauth-modals
+ */
 import { renderPactModalHtml } from "./welcome-pact.js";
 import * as brcode from "../brcode.js";
 import { PIX_PAYER_CHECK_NOTICE_PT } from "../pix-key.js";
@@ -63,6 +69,13 @@ function renderPeopleSection(title, people) {
     </section>`;
 }
 
+/**
+ * Corpo da lista do diretório: busca ativa, seções agrupadas ou lista plana.
+ * @param {object|null} sections Blocos `contacts`, `mesh`, `tour` ou `all`.
+ * @param {object[]} results Resultados filtrados quando há query.
+ * @param {string} query Texto de busca bruto.
+ * @returns {string} HTML das linhas de cidadão ou estado vazio.
+ */
 export function resolvePeopleSearchBody(sections, results, query) {
   const q = escapeHtml(query);
   const hasQuery = Boolean(String(query || "").trim());
@@ -137,6 +150,18 @@ function renderPeopleInviteSection(query, routeId, inviteLink) {
   });
 }
 
+/**
+ * Tela completa do diretório de cidadãos (busca, convite e quem adicionou você).
+ * @param {HTMLElement} main Container principal da rota `#/people`.
+ * @param {object} [options={}]
+ * @param {object|null} [options.sections=null] Índice agrupado quando não há busca.
+ * @param {object[]} [options.results=[]] Resultados da busca.
+ * @param {string} [options.query=""] Query atual (campo de busca).
+ * @param {object[]} [options.addedBy=[]] Avisos «adicionou você».
+ * @param {string} [options.routeId=""] Conta local para card de convite.
+ * @param {string} [options.inviteLink=""] URL de conexão pronta para compartilhar.
+ * @returns {void}
+ */
 export function renderPeopleSearch(main, { sections = null, results = [], query = "", addedBy = [], routeId = "", inviteLink = "" } = {}) {
   const q = escapeHtml(query);
   const body = resolvePeopleSearchBody(sections, results, query);
@@ -162,6 +187,15 @@ export function renderPeopleSearch(main, { sections = null, results = [], query 
     </div>`;
 }
 
+/**
+ * Prévia antes de adicionar alguém aos contatos (cartão + ações DM/perfil/compartilhar).
+ * @param {HTMLElement} main Container da rota `#/connect/…`.
+ * @param {object|null} profile Dados de exibição do par.
+ * @param {string} routeId Identificador `vx_…`.
+ * @param {object} [options={}]
+ * @param {boolean} [options.isContact=false] Desabilita «adicionar» se já for contato.
+ * @returns {void}
+ */
 export function renderConnectPreview(main, profile, routeId, { isContact = false } = {}) {
   const name = escapeHtml(profile?.name || routeId);
   const bio = profile?.bio ? `<p class="desc">${escapeHtml(profile.bio)}</p>` : "";
@@ -188,11 +222,21 @@ export function renderConnectPreview(main, profile, routeId, { isContact = false
     </div>`;
 }
 
+/**
+ * Abre o modal do Pacto de Boas-Vindas no host informado.
+ * @param {HTMLElement|null} container Elemento que recebe o overlay (ex. modal-host).
+ * @returns {void}
+ */
 export function renderPactModal(container) {
   if (!container) return;
   container.innerHTML = renderPactModalHtml();
 }
 
+/**
+ * Remove o HTML do pacto do host (fecha sem animação).
+ * @param {HTMLElement|null} container Mesmo host usado em {@link renderPactModal}.
+ * @returns {void}
+ */
 export function closePactModal(container) {
   if (container) container.innerHTML = "";
 }
@@ -237,6 +281,17 @@ function renderZapAmountButtonsHtml(initialAmount) {
     </div>`;
 }
 
+/**
+ * Modal de apoio Pix (BR Code gerado offline) para um post ou autor.
+ * @param {HTMLElement|null} container Host do overlay.
+ * @param {object} [options={}]
+ * @param {string} [options.author=""] Rota do autor (metadado; não exposto na UI).
+ * @param {string} [options.authorName="Autor"] Nome exibido no título.
+ * @param {string} [options.pixKey=""] Chave Pix declarada no perfil.
+ * @param {string} [options.title=""] Trecho do post citado no cabeçalho.
+ * @param {number} [options.defaultAmount=5] Valor inicial em reais.
+ * @returns {void}
+ */
 export function renderZapModal(container, { author: _author = "", authorName = "Autor", pixKey = "", title = "", defaultAmount = 5 } = {}) {
   if (!container) return;
   const initialAmount = defaultAmount || 5;
@@ -262,10 +317,22 @@ export function renderZapModal(container, { author: _author = "", authorName = "
     </div>`;
 }
 
+/**
+ * Fecha o modal Zap limpando o host.
+ * @param {HTMLElement|null} container Host do overlay Zap.
+ * @returns {void}
+ */
 export function closeZapModal(container) {
   if (container) container.innerHTML = "";
 }
 
+/**
+ * Texto inicial do textarea de edição conforme o modo de exibição do post (título+corpo ou legenda).
+ * @param {object} [post={}]
+ * @param {string} [post.title=""] Título salvo.
+ * @param {string} [post.body=""] Corpo salvo.
+ * @returns {string} Texto único para o campo de edição.
+ */
 export function postEditInitialText({ title = "", body = "" } = {}) {
   const disp = postOwnership.formatPostDisplay({ title, body });
   if (disp.mode === "caption") return disp.text || "";
@@ -273,6 +340,16 @@ export function postEditInitialText({ title = "", body = "" } = {}) {
   return [title, body].filter(Boolean).join("\n").trim();
 }
 
+/**
+ * Modal de edição local de publicação (mutação só neste aparelho).
+ * @param {HTMLElement|null} container Host do overlay.
+ * @param {object} [options={}]
+ * @param {string} [options.id=""] ID do post editado.
+ * @param {string} [options.title=""] Título atual.
+ * @param {string} [options.body=""] Corpo atual.
+ * @param {boolean} [options.hasImage=false] Exibe opção de remover imagem.
+ * @returns {void}
+ */
 export function renderPostEditModal(container, { id = "", title = "", body = "", hasImage = false } = {}) {
   if (!container) return;
   const initialText = postEditInitialText({ title, body });
@@ -303,6 +380,11 @@ export function renderPostEditModal(container, { id = "", title = "", body = "",
     </div>`;
 }
 
+/**
+ * Fecha o modal de edição de post.
+ * @param {HTMLElement|null} container Host usado em {@link renderPostEditModal}.
+ * @returns {void}
+ */
 export function closePostEditModal(container) {
   if (container) container.innerHTML = "";
 }
