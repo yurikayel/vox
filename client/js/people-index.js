@@ -13,6 +13,10 @@ import { shortId } from "./short-id.js";
 import { isTestRouteId } from "./genesis.js";
 
 const DEFAULT_PREFER_SOURCES = ["system", "self", "contact", "vault", "mesh-card", "mesh-author", "route-direct"];
+/**
+ * Operação `PEOPLE_SEARCH_OK_METRIC` do módulo.
+ * @type {*}
+ */
 export const PEOPLE_SEARCH_OK_METRIC = "vox-metric-people-search-ok";
 
 function isFallbackRouteName(name, routeId) {
@@ -59,6 +63,10 @@ function isSameSocialIdentity(entryA, entryB) {
   return isSameNamedLocalIdentity(entryA, entryB, entryA.name, entryB.name);
 }
 
+/**
+ * Operação `isSameGoogleIdentity` do módulo.
+ * @type {*}
+ */
 export const isSameGoogleIdentity = isSameSocialIdentity;
 
 function pruneSocialDuplicates(map, entry, preferSources) {
@@ -207,6 +215,10 @@ function comparePeopleEntries(a, b) {
   return String(a.routeId || "").localeCompare(String(b.routeId || ""));
 }
 
+/**
+ * Operação `buildPeopleIndex` do módulo.
+ * @returns {*} Resultado da operação.
+ */
 export async function buildPeopleIndex() {
   const map = new Map();
 
@@ -238,6 +250,9 @@ export async function buildPeopleIndex() {
 /**
  * Pares da malha sem nome escolhido (só a chave `vx_…`) são visitantes de passagem ou contas
  * temporárias: não entram na lista do diretório. Continuam achados pela busca por chave.
+ 
+ * @param {*} [p] Parâmetro `p`.
+ * @returns {*} Resultado da operação.
  */
 export function hasChosenName(p) {
   return profileDirectory.hasChosenCardName(p);
@@ -254,6 +269,10 @@ export function isListedPerson(p) {
   return p?.source === "self" || p?.source === "system" || hasChosenName(p);
 }
 
+/**
+ * Operação `buildPeopleSections` do módulo.
+ * @returns {*} Resultado da operação.
+ */
 export async function buildPeopleSections() {
   const all = await buildPeopleIndex();
   const contactsList = all.filter(
@@ -266,6 +285,9 @@ export async function buildPeopleSections() {
   return { contacts: contactsList, mesh, tour, all: all.filter(isListedPerson) };
 }
 
+/**
+ * Operação `recordPeopleSearchOk` do módulo.
+ */
 export function recordPeopleSearchOk() {
   try {
     localStorage.setItem(PEOPLE_SEARCH_OK_METRIC, String(Date.now()));
@@ -313,6 +335,11 @@ function matchesPerson(p, ql, cleanQl, handleRoute) {
   return matchesTextQuery(pHandle, ql, cleanQl);
 }
 
+/**
+ * Operação `searchPeople` do módulo.
+ * @param {*} [query] Parâmetro `query`.
+ * @returns {*} Resultado da operação.
+ */
 export async function searchPeople(query) {
   const q = String(query || "").trim();
   const all = await buildPeopleIndex();
@@ -344,6 +371,12 @@ export async function searchPeople(query) {
   return results;
 }
 
+/**
+ * Operação `extractRecentAuthors` do módulo.
+ * @param {*} [topics] Parâmetro `topics`.
+ * @param {*} [limit] Parâmetro `limit`.
+ * @returns {*} Resultado da operação.
+ */
 export function extractRecentAuthors(topics, limit = 8) {
   const out = [];
   const seen = new Set();
@@ -360,6 +393,11 @@ export function extractRecentAuthors(topics, limit = 8) {
   return out;
 }
 
+/**
+ * Operação `parseConnectTarget` do módulo.
+ * @param {*} [input] Parâmetro `input`.
+ * @returns {*} Resultado da operação.
+ */
 export function parseConnectTarget(input) {
   const raw = String(input || "").trim();
   if (!raw) return null;

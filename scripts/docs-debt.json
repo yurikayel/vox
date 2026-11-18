@@ -12,18 +12,6 @@
  "client/js/arweave-lib.js": [
   "returns:loadArweave"
  ],
- "client/js/brcode.js": [
-  "param:sanitizeAscii:str",
-  "param:sanitizeAscii:maxLen",
-  "returns:sanitizeAscii",
-  "param:formatTlv:tag",
-  "param:formatTlv:value",
-  "returns:formatTlv",
-  "param:parseNumericAmount:raw",
-  "returns:parseNumericAmount",
-  "param:calculateCrc16:str",
-  "returns:calculateCrc16"
- ],
  "client/js/labs/parado/bridging-rank.js": [
   "jsdoc:MIN_VOTERS_FOR_BRIDGING",
   "jsdoc:calculateClusterAgreeRate",
@@ -74,47 +62,12 @@
   "returns:colorModeToggleHint",
   "returns:initColorMode"
  ],
- "client/js/community-seed-checklist.js": [
-  "jsdoc:markSeedPending",
-  "jsdoc:clearSeedPending",
-  "jsdoc:getSeedPendingCommunityId",
-  "jsdoc:loadSeedState",
-  "jsdoc:saveSeedState",
-  "returns:isSeedComplete",
-  "returns:shouldOfferSeedRitual",
-  "jsdoc:recordSeedInvite",
-  "jsdoc:dismissSeedRitual",
-  "jsdoc:finalizeSeedIfComplete"
- ],
- "client/js/community-unread.js": [
-  "jsdoc:LAST_SEEN_STORAGE_KEY",
-  "jsdoc:loadLastSeenMap",
-  "jsdoc:saveLastSeenMap",
-  "jsdoc:getCommunityLastSeenTs",
-  "jsdoc:markCommunitySeen",
-  "param:computeCommunityUnreadCount:topics",
-  "param:computeCommunityUnreadCount:lastSeenTs",
-  "returns:computeCommunityUnreadCount",
-  "jsdoc:renderCommunityUnreadBadge",
-  "jsdoc:renderCommunityCatchupBanner"
- ],
  "client/js/contacts.js": [
   "jsdoc:listContacts",
   "jsdoc:addContact",
   "jsdoc:removeContact",
   "jsdoc:hasContact",
   "jsdoc:__resetContactsForTests"
- ],
- "client/js/contribution-attestation.js": [
-  "jsdoc:ATTESTATION_TYPE",
-  "jsdoc:SCHEMA_VERSION",
-  "jsdoc:EXPORT_COOLDOWN_MS",
-  "jsdoc:getExportCooldownRemainingMs",
-  "jsdoc:markExportDone",
-  "jsdoc:buildAttestationDraft",
-  "jsdoc:buildSignedContributionAttestation",
-  "jsdoc:validateContributionAttestation",
-  "jsdoc:attestationDownloadFilename"
  ],
  "client/js/data/profiles-brazil-uf.js": [
   "jsdoc:STEREOTYPE_DISCLAIMER_NOTE",
@@ -166,17 +119,6 @@
   "jsdoc:getKeyValue",
   "jsdoc:clearStore"
  ],
- "client/js/labs/parado/identity-link.js": [
-  "jsdoc:IDENTITY_LINK_TYPE",
-  "jsdoc:__resetIdentityLinksForTests",
-  "jsdoc:saveVerifiedIdentityLink",
-  "jsdoc:getLinkedArweaveAddress",
-  "jsdoc:getLinkedRouteId",
-  "jsdoc:createIdentityLink",
-  "jsdoc:verifyIdentityLink",
-  "jsdoc:buildIdentityLinkArweaveTags",
-  "jsdoc:publishIdentityLinkOnChain"
- ],
  "client/js/labs/parado/kit-genesis.js": [
   "jsdoc:deepFreeze",
   "jsdoc:KIT_BAIRRO",
@@ -186,25 +128,6 @@
   "jsdoc:getKitManifest",
   "jsdoc:validateKitManifest",
   "jsdoc:instantiateCommunityFromKit"
- ],
- "client/js/labs/collective-mofn.js": [
-  "jsdoc:SCHEMA",
-  "jsdoc:LAB_SENTENCE",
-  "jsdoc:bytesToB64Url",
-  "jsdoc:b64UrlToBytes",
-  "jsdoc:publicJwkLite",
-  "jsdoc:canonicalString",
-  "jsdoc:encodeBody",
-  "jsdoc:computeRouteId",
-  "jsdoc:generateMember",
-  "jsdoc:publicMember",
-  "jsdoc:createDraft",
-  "jsdoc:signAsMember",
-  "jsdoc:withSignature",
-  "jsdoc:signWithMembers",
-  "jsdoc:verifySignature",
-  "jsdoc:validateShape",
-  "jsdoc:verifyManifest"
  ],
  "client/js/labs/mofn-lab.js": [
   "jsdoc:renderMofnLab",
@@ -260,18 +183,6 @@
   "jsdoc:decryptFrom",
   "returns:createNostrTransport"
  ],
- "client/js/oauth-profile.js": [
-  "jsdoc:loadOAuthConfig",
-  "jsdoc:__resetOAuthConfigForTests",
-  "jsdoc:applyGoogleCredential",
-  "jsdoc:signInWithGoogle",
-  "jsdoc:signInWithMeta",
-  "returns:signInWithMetaIdentity",
-  "jsdoc:signInWithGithub",
-  "jsdoc:skipOAuthEnrichment",
-  "jsdoc:hasSkippedOAuth",
-  "jsdoc:hasCompletedOAuthStep"
- ],
  "client/js/peers-blob-affinity.js": [
   "header",
   "jsdoc:isBlobPeerSoftPriorityEnabled",
@@ -297,30 +208,6 @@
   "jsdoc:markProfileCardSeen",
   "param:seenStamp:item",
   "returns:seenStamp"
- ],
- "client/js/people-index.js": [
-  "jsdoc:PEOPLE_SEARCH_OK_METRIC",
-  "jsdoc:isSameGoogleIdentity",
-  "jsdoc:buildPeopleIndex",
-  "param:hasChosenName:p",
-  "returns:hasChosenName",
-  "jsdoc:buildPeopleSections",
-  "jsdoc:recordPeopleSearchOk",
-  "jsdoc:searchPeople",
-  "jsdoc:extractRecentAuthors",
-  "jsdoc:parseConnectTarget"
- ],
- "client/js/photo-tags.js": [
-  "jsdoc:TAGS_MAX",
-  "jsdoc:TAGS_HINT",
-  "jsdoc:clampPct",
-  "jsdoc:normalizeTag",
-  "jsdoc:sanitizeTags",
-  "jsdoc:getLocalTags",
-  "jsdoc:setLocalTags",
-  "jsdoc:listTags",
-  "jsdoc:addTag",
-  "jsdoc:__resetPhotoTagsForTests"
  ],
  "client/js/pix-key.js": [
   "jsdoc:detectPixType",
@@ -371,18 +258,6 @@
   "jsdoc:buildProfileCardArweaveTags",
   "jsdoc:publishProfileCardOnChain"
  ],
- "client/js/profile-note.js": [
-  "jsdoc:NOTE_MAX",
-  "jsdoc:NOTE_TTL_MS",
-  "jsdoc:NOTE_HINT",
-  "jsdoc:clipNote",
-  "jsdoc:isNoteFresh",
-  "jsdoc:getNote",
-  "jsdoc:setNote",
-  "jsdoc:clearNote",
-  "jsdoc:ingestRemoteNote",
-  "jsdoc:__resetNotesForTests"
- ],
  "client/js/qr-url-codec.js": [
   "jsdoc:VOX_SHARE_HASH",
   "jsdoc:isVoxShareUrl",
@@ -424,18 +299,6 @@
   "param:flattenReplyThread:replies",
   "param:flattenReplyThread:maxDepth",
   "returns:flattenReplyThread"
- ],
- "client/js/repost-draft.js": [
-  "jsdoc:REPOST_LABEL",
-  "jsdoc:REPOST_HINT",
-  "jsdoc:excerptOf",
-  "jsdoc:newTopicId",
-  "jsdoc:getOriginalId",
-  "jsdoc:isRepost",
-  "jsdoc:postsCiting",
-  "jsdoc:countCites",
-  "jsdoc:findOwnCite",
-  "jsdoc:buildRepostDraft"
  ],
  "client/js/repost-index.js": [
   "jsdoc:rememberVisible",
@@ -513,18 +376,6 @@
   "jsdoc:downloadStoryCardPng",
   "jsdoc:copyStoryCardToClipboard"
  ],
- "client/js/labs/parado/testimonials.js": [
-  "jsdoc:TESTIMONIAL_TYPE",
-  "jsdoc:TESTIMONIAL_APPROVAL_TYPE",
-  "jsdoc:TESTIMONIAL_STATUS",
-  "jsdoc:MAX_TESTIMONIAL_LENGTH",
-  "jsdoc:validateTestimonialInput",
-  "jsdoc:buildTestimonialTags",
-  "jsdoc:buildTestimonialApprovalTags",
-  "jsdoc:matchApprovals",
-  "jsdoc:filterApprovedTestimonials",
-  "jsdoc:renderCommunityBadgesHtml"
- ],
  "client/js/topic-permaweb.js": [
   "header",
   "param:uploadTopicMediaToPermaweb:blob",
@@ -546,70 +397,11 @@
   "jsdoc:postData",
   "jsdoc:postBinary"
  ],
- "client/js/labs/parado/vox-identity.js": [
-  "jsdoc:HEADER_SIZE",
-  "jsdoc:SENDER_OFFSET",
-  "jsdoc:AUDIENCE_OFFSET",
-  "jsdoc:TIMESTAMP_OFFSET",
-  "jsdoc:NONCE_OFFSET",
-  "jsdoc:CAPS_HASH_OFFSET",
-  "jsdoc:PAYLOAD_HASH_OFFSET",
-  "jsdoc:DRIFT_TOLERANCE_MS",
-  "jsdoc:IDENTITY_STORAGE_KEY",
-  "jsdoc:BACKUP_ALGO",
-  "jsdoc:BACKUP_ITERATIONS",
-  "jsdoc:bytesToHex",
-  "jsdoc:hexToBytes",
-  "jsdoc:bytesToB64Url",
-  "jsdoc:b64UrlToBytes",
-  "jsdoc:computeSha256",
-  "jsdoc:buildCanonicalBinaryHeader",
-  "jsdoc:parseCanonicalBinaryHeader",
-  "jsdoc:validateHeaderTimestamp",
-  "jsdoc:deriveBackupKey",
-  "jsdoc:encryptSeedBackup",
-  "jsdoc:decryptSeedBackup",
-  "jsdoc:generateIdentity",
-  "jsdoc:persistIdentity",
-  "jsdoc:signCanonicalHeader",
-  "jsdoc:verifyCanonicalHeader",
-  "jsdoc:canonicalizePayload",
-  "jsdoc:buildSignedEnvelope",
-  "jsdoc:verifySignedEnvelope",
-  "jsdoc:requestStoragePersistence",
-  "jsdoc:getCachedIdentity",
-  "jsdoc:resetIdentityCacheForTesting"
- ],
- "client/js/labs/parado/webxdc-crdt.js": [
-  "jsdoc:EPOCH_COMPACT_THRESHOLD",
-  "jsdoc:MAX_SNAPSHOT_BYTES",
-  "jsdoc:MAX_CLOCK_DRIFT_MS",
-  "jsdoc:isNewer",
-  "jsdoc:validateStoreId",
-  "jsdoc:validateTimestamp",
-  "jsdoc:IdLookupStore",
-  "jsdoc:createIdLookupStore",
-  "jsdoc:EpochCompactor",
-  "jsdoc:createEpochCompactor",
-  "jsdoc:coldBootFetch"
- ],
  "client/js/labs/parado/webxdc-host.js": [
   "jsdoc:MAX_INFO_LEN",
   "jsdoc:MAX_SUMMARY_LEN",
   "jsdoc:validateWebxdcUpdate",
   "jsdoc:createSandboxedIframe",
   "jsdoc:createWebxdcHost"
- ],
- "client/js/labs/parado/webxdc-loader.js": [
-  "jsdoc:PRELUDE_SCRIPT",
-  "jsdoc:CSP_META_TAG",
-  "jsdoc:MIME_TYPES",
-  "jsdoc:decompressDeflateRaw",
-  "jsdoc:parseZipEntries",
-  "jsdoc:bufferToDataUrl",
-  "jsdoc:detectMimeType",
-  "jsdoc:buildWebxdcBridgeScript",
-  "jsdoc:inlineCartridgeAssets",
-  "jsdoc:prepareSandboxedSrcdoc"
  ]
 }

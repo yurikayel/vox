@@ -12,21 +12,70 @@
 
 import * as idbStore from "./idb-store.js";
 
+/**
+ * Operação `HEADER_SIZE` do módulo.
+ * @type {*}
+ */
 export const HEADER_SIZE = 152;
+/**
+ * Operação `SENDER_OFFSET` do módulo.
+ * @type {*}
+ */
 export const SENDER_OFFSET = 0;
+/**
+ * Operação `AUDIENCE_OFFSET` do módulo.
+ * @type {*}
+ */
 export const AUDIENCE_OFFSET = 32;
+/**
+ * Operação `TIMESTAMP_OFFSET` do módulo.
+ * @type {*}
+ */
 export const TIMESTAMP_OFFSET = 64;
+/**
+ * Operação `NONCE_OFFSET` do módulo.
+ * @type {*}
+ */
 export const NONCE_OFFSET = 72;
+/**
+ * Operação `CAPS_HASH_OFFSET` do módulo.
+ * @type {*}
+ */
 export const CAPS_HASH_OFFSET = 88;
+/**
+ * Operação `PAYLOAD_HASH_OFFSET` do módulo.
+ * @type {*}
+ */
 export const PAYLOAD_HASH_OFFSET = 120;
 
+/**
+ * Operação `DRIFT_TOLERANCE_MS` do módulo.
+ * @type {*}
+ */
 export const DRIFT_TOLERANCE_MS = 10 * 60 * 1000; // +-10 minutos
+/**
+ * Operação `IDENTITY_STORAGE_KEY` do módulo.
+ * @type {*}
+ */
 export const IDENTITY_STORAGE_KEY = "vox-identity-v1";
+/**
+ * Operação `BACKUP_ALGO` do módulo.
+ * @type {*}
+ */
 export const BACKUP_ALGO = "PBKDF2-AES-GCM-256";
+/**
+ * Operação `BACKUP_ITERATIONS` do módulo.
+ * @type {*}
+ */
 export const BACKUP_ITERATIONS = 100000;
 
 let cachedIdentity = null;
 
+/**
+ * Operação `bytesToHex` do módulo.
+ * @param {*} [bytes] Parâmetro `bytes`.
+ * @returns {*} Resultado da operação.
+ */
 export function bytesToHex(bytes) {
   if (!bytes) return "";
   const arr = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
@@ -37,6 +86,11 @@ export function bytesToHex(bytes) {
   return hex;
 }
 
+/**
+ * Operação `hexToBytes` do módulo.
+ * @param {*} [hex] Parâmetro `hex`.
+ * @returns {*} Resultado da operação.
+ */
 export function hexToBytes(hex) {
   if (!hex || typeof hex !== "string") return new Uint8Array(0);
   const clean = hex.length % 2 !== 0 ? `0${hex}` : hex;
@@ -48,6 +102,11 @@ export function hexToBytes(hex) {
   return out;
 }
 
+/**
+ * Operação `bytesToB64Url` do módulo.
+ * @param {*} [bytes] Parâmetro `bytes`.
+ * @returns {*} Resultado da operação.
+ */
 export function bytesToB64Url(bytes) {
   const arr = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
   let bin = "";
@@ -57,6 +116,11 @@ export function bytesToB64Url(bytes) {
   return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
+/**
+ * Operação `b64UrlToBytes` do módulo.
+ * @param {*} [b64url] Parâmetro `b64url`.
+ * @returns {*} Resultado da operação.
+ */
 export function b64UrlToBytes(b64url) {
   if (!b64url) return new Uint8Array(0);
   const padded = String(b64url).replace(/-/g, "+").replace(/_/g, "/");
@@ -68,6 +132,11 @@ export function b64UrlToBytes(b64url) {
   return out;
 }
 
+/**
+ * Operação `computeSha256` do módulo.
+ * @param {*} [data] Parâmetro `data`.
+ * @returns {*} Resultado da operação.
+ */
 export async function computeSha256(data) {
   let bytes;
   if (typeof data === "string") {
@@ -83,6 +152,11 @@ export async function computeSha256(data) {
   return new Uint8Array(digest);
 }
 
+/**
+ * Operação `buildCanonicalBinaryHeader` do módulo.
+ * @param {Object} options Campos do cabeçalho ou envelope (desestruturados).
+ * @returns {*} Resultado da operação.
+ */
 export function buildCanonicalBinaryHeader({
   sender,
   audience,
@@ -135,6 +209,11 @@ function normalize16Bytes(input) {
   return out;
 }
 
+/**
+ * Operação `parseCanonicalBinaryHeader` do módulo.
+ * @param {*} [headerBytes] Parâmetro `headerBytes`.
+ * @returns {*} Resultado da operação.
+ */
 export function parseCanonicalBinaryHeader(headerBytes) {
   if (!headerBytes || headerBytes.byteLength !== HEADER_SIZE) {
     throw new Error(`Cabeçalho binário inválido: esperado ${HEADER_SIZE} bytes`);
@@ -152,6 +231,13 @@ export function parseCanonicalBinaryHeader(headerBytes) {
   };
 }
 
+/**
+ * Operação `validateHeaderTimestamp` do módulo.
+ * @param {*} [headerBytes] Parâmetro `headerBytes`.
+ * @param {*} [now] Parâmetro `now`.
+ * @param {*} [driftToleranceMs] Parâmetro `driftToleranceMs`.
+ * @returns {*} Resultado da operação.
+ */
 export function validateHeaderTimestamp(
   headerBytes,
   now = Date.now(),
@@ -166,6 +252,12 @@ export function validateHeaderTimestamp(
   };
 }
 
+/**
+ * Operação `deriveBackupKey` do módulo.
+ * @param {*} [passphrase] Parâmetro `passphrase`.
+ * @param {*} [salt] Parâmetro `salt`.
+ * @returns {*} Resultado da operação.
+ */
 export async function deriveBackupKey(passphrase, salt) {
   const enc = new TextEncoder().encode(passphrase);
   const baseKey = await crypto.subtle.importKey("raw", enc, "PBKDF2", false, ["deriveKey"]);
@@ -183,6 +275,12 @@ export async function deriveBackupKey(passphrase, salt) {
   );
 }
 
+/**
+ * Operação `encryptSeedBackup` do módulo.
+ * @param {*} [seed] Parâmetro `seed`.
+ * @param {*} [passphrase] Parâmetro `passphrase`.
+ * @returns {*} Resultado da operação.
+ */
 export async function encryptSeedBackup(seed, passphrase) {
   const salt = crypto.getRandomValues(new Uint8Array(16));
   const iv = crypto.getRandomValues(new Uint8Array(12));
@@ -197,6 +295,12 @@ export async function encryptSeedBackup(seed, passphrase) {
   };
 }
 
+/**
+ * Operação `decryptSeedBackup` do módulo.
+ * @param {*} [bundle] Parâmetro `bundle`.
+ * @param {*} [passphrase] Parâmetro `passphrase`.
+ * @returns {*} Resultado da operação.
+ */
 export async function decryptSeedBackup(bundle, passphrase) {
   const salt = hexToBytes(bundle.salt);
   const iv = hexToBytes(bundle.iv);
@@ -225,6 +329,11 @@ async function generateKeyPairBundle() {
   return { signPair, rawPublic, nonExtractablePrivate, agreePair, rawAgreePublic };
 }
 
+/**
+ * Operação `generateIdentity` do módulo.
+ * @param {Object} options Campos do cabeçalho ou envelope (desestruturados).
+ * @returns {*} Resultado da operação.
+ */
 export async function generateIdentity({ passphrase = null, persist = true } = {}) {
   const seed = crypto.getRandomValues(new Uint8Array(32));
   const backupBundle = passphrase ? await encryptSeedBackup(seed, passphrase) : null;
@@ -250,6 +359,10 @@ export async function generateIdentity({ passphrase = null, persist = true } = {
   return identity;
 }
 
+/**
+ * Operação `persistIdentity` do módulo.
+ * @param {*} [identity] Parâmetro `identity`.
+ */
 export async function persistIdentity(identity) {
   try {
     const meta = {
@@ -265,6 +378,12 @@ export async function persistIdentity(identity) {
   }
 }
 
+/**
+ * Operação `signCanonicalHeader` do módulo.
+ * @param {*} [privateKey] Parâmetro `privateKey`.
+ * @param {*} [headerBuffer] Parâmetro `headerBuffer`.
+ * @returns {*} Resultado da operação.
+ */
 export async function signCanonicalHeader(privateKey, headerBuffer) {
   if (!headerBuffer || headerBuffer.byteLength !== HEADER_SIZE) {
     throw new Error(`Buffer deve ter exatamente ${HEADER_SIZE} bytes`);
@@ -273,6 +392,13 @@ export async function signCanonicalHeader(privateKey, headerBuffer) {
   return new Uint8Array(sig);
 }
 
+/**
+ * Operação `verifyCanonicalHeader` do módulo.
+ * @param {*} [publicKey] Parâmetro `publicKey`.
+ * @param {*} [signature] Parâmetro `signature`.
+ * @param {*} [headerBuffer] Parâmetro `headerBuffer`.
+ * @returns {*} Resultado da operação.
+ */
 export async function verifyCanonicalHeader(publicKey, signature, headerBuffer) {
   if (!headerBuffer || headerBuffer.byteLength !== HEADER_SIZE) return false;
   if (!signature || signature.byteLength !== 64) return false;
@@ -283,6 +409,11 @@ export async function verifyCanonicalHeader(publicKey, signature, headerBuffer) 
   }
 }
 
+/**
+ * Operação `canonicalizePayload` do módulo.
+ * @param {*} [payload] Parâmetro `payload`.
+ * @returns {*} Resultado da operação.
+ */
 export function canonicalizePayload(payload) {
   if (payload instanceof Uint8Array) {
     return { serialized: bytesToB64Url(payload), bytes: payload, isBinary: true };
@@ -315,6 +446,11 @@ function assembleEnvelopeObject({ identity, parsed, docId, caps, serializedPaylo
   };
 }
 
+/**
+ * Operação `buildSignedEnvelope` do módulo.
+ * @param {Object} options Campos do cabeçalho ou envelope (desestruturados).
+ * @returns {*} Resultado da operação.
+ */
 export async function buildSignedEnvelope({
   identity,
   audience,
@@ -357,6 +493,13 @@ async function reconstructHeaderFromEnvelope(envelope) {
   });
 }
 
+/**
+ * Operação `verifySignedEnvelope` do módulo.
+ * @param {*} [envelope] Parâmetro `envelope`.
+ * @param {*} [publicKey] Parâmetro `publicKey`.
+ * @param {Object} [options] `now` e `driftToleranceMs` para validação temporal.
+ * @returns {*} Resultado da operação.
+ */
 export async function verifySignedEnvelope(
   envelope,
   publicKey,
@@ -381,6 +524,10 @@ export async function verifySignedEnvelope(
   };
 }
 
+/**
+ * Operação `requestStoragePersistence` do módulo.
+ * @returns {*} Resultado da operação.
+ */
 export async function requestStoragePersistence() {
   if (typeof navigator !== "undefined" && navigator.storage && navigator.storage.persist) {
     try {
@@ -392,6 +539,10 @@ export async function requestStoragePersistence() {
   return false;
 }
 
+/**
+ * Operação `getCachedIdentity` do módulo.
+ * @returns {*} Resultado da operação.
+ */
 export function getCachedIdentity() {
   if (!cachedIdentity) return null;
   return Object.freeze({
@@ -403,6 +554,9 @@ export function getCachedIdentity() {
   });
 }
 
+/**
+ * Operação `resetIdentityCacheForTesting` do módulo.
+ */
 export function resetIdentityCacheForTesting() {
   cachedIdentity = null;
 }
