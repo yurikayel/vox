@@ -5,17 +5,17 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import "./setup.js";
 import * as render from "../client/js/render.js";
-import {
-  GENESIS_RESUME_KEY,
-  clearGenesisResume,
-  persistGenesisEntryDraft,
-  persistGenesisMeshWait,
-  readGenesisResume,
-  resumeGenesisAfterRender,
-  writeGenesisResume,
-} from "../client/js/app/onboarding-email.js";
 import { renderPhraseIntroHtml, renderPhraseWordsHtml } from "../client/js/render/recovery-phrase.js";
 import { renderBackupWizard } from "../client/js/render/guided-setup.js";
+
+async function genesisEmail() {
+  return import("../client/js/app/onboarding-email.js");
+}
+
+test("onboarding: GENESIS_RESUME_KEY exportada (RED na base)", async () => {
+  const { GENESIS_RESUME_KEY } = await genesisEmail();
+  assert.equal(GENESIS_RESUME_KEY, "vox-genesis-resume-v1");
+});
 
 function fakeInput(id) {
   return {
@@ -84,7 +84,13 @@ function mountGenesisModal() {
   return { modal, doc, inputs, mk };
 }
 
-test("readGenesisResume / writeGenesisResume na sessionStorage", () => {
+test("readGenesisResume / writeGenesisResume na sessionStorage", async () => {
+  const {
+    GENESIS_RESUME_KEY,
+    clearGenesisResume,
+    readGenesisResume,
+    writeGenesisResume,
+  } = await genesisEmail();
   const store = new Map();
   const ss = {
     getItem: (k) => store.get(k) ?? null,
@@ -100,7 +106,8 @@ test("readGenesisResume / writeGenesisResume na sessionStorage", () => {
   assert.equal(readGenesisResume(ss), null);
 });
 
-test("persistGenesisMeshWait grava passo have + meshWaiting", () => {
+test("persistGenesisMeshWait grava passo have + meshWaiting", async () => {
+  const { persistGenesisMeshWait, readGenesisResume } = await genesisEmail();
   const store = new Map();
   const ss = { getItem: (k) => store.get(k) ?? null, setItem: (k, v) => store.set(k, v), removeItem: (k) => store.delete(k) };
   persistGenesisMeshWait({ email: "ana@exemplo.com", pass: "senha forte de teste!" }, ss);
@@ -111,6 +118,7 @@ test("persistGenesisMeshWait grava passo have + meshWaiting", () => {
 });
 
 test("resumeGenesisAfterRender preenche volta e chama startMeshRestore (LT-07 recarga)", async () => {
+  const { writeGenesisResume, resumeGenesisAfterRender } = await genesisEmail();
   const { modal, doc, mk } = mountGenesisModal();
   mk("oauth-restore-email-input");
   mk("oauth-sovereign-passphrase-input");
@@ -142,7 +150,8 @@ test("resumeGenesisAfterRender preenche volta e chama startMeshRestore (LT-07 re
   }
 });
 
-test("persistGenesisEntryDraft grava rascunho da entrada", () => {
+test("persistGenesisEntryDraft grava rascunho da entrada", async () => {
+  const { persistGenesisEntryDraft, readGenesisResume } = await genesisEmail();
   const store = new Map();
   const ss = { getItem: (k) => store.get(k) ?? null, setItem: (k, v) => store.set(k, v), removeItem: (k) => store.delete(k) };
   persistGenesisEntryDraft({ rawName: "Duda", email: "duda@exemplo.com", pass: "senha forte de teste!", includePhrase: true }, ss);
