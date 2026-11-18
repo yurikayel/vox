@@ -34,6 +34,8 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ### Correção: GET do cofre com corpo ilegível não finge “sem servidor”
 - `client/js/vault/vault-store.js` (`probeVaultUrl`): quando o relay responde HTTP 200 mas o JSON quebra, o servidor conta como alcançado (`reachable: true`) em vez de offline; a volta não marca `noServer` e a tela não pede link do e-mail à toa. Prova: `tests/login-rede-ruim.test.js` (red-on-base). Sem bump de SW.
+### Correção: conta e rota sincronizadas entre abas (S30-S5)
+- Quando a conta ativa ou o hash mudam em outra aba do mesmo origin, esta aba recarrega a identidade a partir do `localStorage` (`switchActiveAccount` / `ensureLocalAccount`) e repinta a rota, sem criar conta nova. Canal `vox-tab-sync-v0` para hash; `storage` para chaves de identidade. Boot em `initGossipListeners` via `client/js/identity/tab-sync.js` (sem entrada no service worker). Testes: `tests/tab-sync.test.js`.
 
 ### Correção: relay cego não perde deltas no cold boot; memória central confere item e blob
 - **Snapshot apaga por serial, não por timestamp:** só somem os envelopes com `0 < serial <= coveredSerial`; antes, um delta com relógio atrasado e serial acima da cobertura era apagado em silêncio. Snapshot que recua `coveredSerial` agora dá `400` (abriria um buraco). Sem `coveredSerial` nada é apagado (vale o TTL de 7 dias).
