@@ -1,5 +1,7 @@
 /** Draft puro de republicação — sem peers/DOM. */
 
+import { randomBase36 } from "./shared/html.js";
+
 export const REPOST_LABEL = "Republicar";
 export const REPOST_HINT =
   "Cria um post local que cita o original. Feed cronológico — sem impulsionar.";
@@ -12,7 +14,7 @@ export function excerptOf(post, max = EXCERPT_MAX) {
 }
 
 export function newTopicId() {
-  return `top_${Math.random().toString(36).slice(2, 10)}`;
+  return `top_${randomBase36(8)}`;
 }
 
 export function getOriginalId(post) {
