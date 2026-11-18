@@ -46,7 +46,16 @@ export async function decryptFrom(secretKey, theirPubHex, content) {
   return JSON.parse(new TextDecoder().decode(plain));
 }
 
-const tagValue = (event, name) => (event.tags || []).find((t) => t[0] === name)?.[1] || "";
+/**
+ * Valor da primeira tag com o nome dado; evento sem lista de tags (ou com tag que não é lista) dá "".
+ * @param {{tags?: unknown}|null|undefined} event Evento recebido do relay, sem confiança no formato.
+ * @param {string} name Nome da tag (ex.: "p", "t").
+ * @returns {string} Valor da tag ou string vazia.
+ */
+const tagValue = (event, name) => {
+  const tags = Array.isArray(event?.tags) ? event.tags : [];
+  return tags.find((t) => Array.isArray(t) && t[0] === name)?.[1] || "";
+};
 
 function publish(ctx, event) {
   const frame = JSON.stringify(["EVENT", event]);
