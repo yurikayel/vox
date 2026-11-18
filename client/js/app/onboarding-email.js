@@ -16,28 +16,30 @@ const EMAIL_ENTRY_FOCUS_ID = { name: "oauth-custom-name-input", email: "oauth-en
 /** Rascunho da entrada / espera da malha entre recargas (só `sessionStorage`, some ao fechar a aba). */
 export const GENESIS_RESUME_KEY = "vox-genesis-resume-v1";
 
-/** Aviso ao retomar a espera da malha: a senha nunca fica guardada, então é pedida de novo. */
-const MESH_RESUME_ASK_PASS = "Você estava esperando seu cofre chegar. Por segurança o Vox não guarda sua senha: digite a Senha Soberana de novo para continuar a espera.";
+/** Aviso ao retomar a espera da malha: e-mail e senha não ficam guardados. */
+const MESH_RESUME_ASK_PASS =
+  "Você estava esperando seu cofre chegar. Por segurança o Vox não guarda e-mail nem senha: preencha os dois de novo para continuar a espera.";
 
 /**
- * Cópia do rascunho sem a Senha Soberana: segredo nunca vai a storage, nem em `sessionStorage`.
+ * Cópia do rascunho sem e-mail nem Senha Soberana: nada sensível vai a `sessionStorage`.
  * @param {object} state
  * @returns {object}
  */
-function withoutPassword(state) {
+function sanitizeResumeForStorage(state) {
   const safe = { ...state };
   delete safe.pass;
+  delete safe.email;
   return safe;
 }
 
 /**
- * Rascunho gravado por versões antigas podia trazer `pass` em claro: apaga a chave e regrava sem a senha.
- * @param {object} state rascunho lido, com `pass`
+ * Rascunho antigo podia trazer `pass` ou `email` em claro: regrava só metadados de passo.
+ * @param {object} state rascunho lido
  * @param {Storage} store
- * @returns {object} rascunho sem senha
+ * @returns {object} rascunho saneado
  */
-function scrubLegacyPassword(state, store) {
-  const safe = withoutPassword(state);
+function scrubLegacySecrets(state, store) {
+  const safe = sanitizeResumeForStorage(state);
   try {
     store.removeItem(GENESIS_RESUME_KEY);
     store.setItem(GENESIS_RESUME_KEY, JSON.stringify(safe));
@@ -56,7 +58,8 @@ export function readGenesisResume(store = globalThis.sessionStorage) {
   try {
     const raw = store?.getItem(GENESIS_RESUME_KEY);
     const state = raw ? JSON.parse(raw) : null;
-    return state && typeof state === "object" && "pass" in state ? scrubLegacyPassword(state, store) : state;
+    if (!state || typeof state !== "object") return state;
+    return "pass" in state || "email" in state ? scrubLegacySecrets(state, store) : state;
   } catch {
     return null;
   }
@@ -71,7 +74,7 @@ export function readGenesisResume(store = globalThis.sessionStorage) {
 export function writeGenesisResume(state, store = globalThis.sessionStorage) {
   try {
     if (!state) store?.removeItem(GENESIS_RESUME_KEY);
-    else store?.setItem(GENESIS_RESUME_KEY, JSON.stringify(withoutPassword(state)));
+    else store?.setItem(GENESIS_RESUME_KEY, JSON.stringify(sanitizeResumeForStorage(state)));
   } catch {
     /* sessionStorage indisponível */
   }
@@ -93,17 +96,17 @@ export function clearGenesisResume(store = globalThis.sessionStorage) {
  * @returns {void}
  */
 export function persistGenesisEntryDraft(values, store = globalThis.sessionStorage) {
-  writeGenesisResume({ step: "entry", meshWaiting: false, ...values }, store);
+  const { rawName, includePhrase } = values;
+  writeGenesisResume({ step: "entry", meshWaiting: false, rawName, includePhrase }, store);
 }
 
 /**
- * Marca que a espera da malha está em curso; guarda só o e-mail, nunca a senha.
- * @param {{ email: string }} creds
+ * Marca que a espera da malha está em curso; não grava e-mail nem senha.
  * @param {Storage} [store]
  * @returns {void}
  */
-export function persistGenesisMeshWait(creds, store = globalThis.sessionStorage) {
-  writeGenesisResume({ step: "have", meshWaiting: true, email: creds.email }, store);
+export function persistGenesisMeshWait(store = globalThis.sessionStorage) {
+  writeGenesisResume({ step: "have", meshWaiting: true }, store);
 }
 
 function setInputValue(id, value) {
@@ -113,18 +116,16 @@ function setInputValue(id, value) {
   else el.value = String(value);
 }
 
-/** Reabre a entrada com o que não é segredo; o campo de senha volta vazio e recebe o foco. */
+/** Reabre a entrada sem PII guardada; e-mail e senha voltam vazios (foco no e-mail). */
 function applyEntryResume(resume) {
   setInputValue("oauth-custom-name-input", resume.rawName);
-  setInputValue("oauth-entry-email-input", resume.email);
   setInputValue("oauth-entry-include-phrase", resume.includePhrase);
-  document.getElementById("oauth-entry-pass-input")?.focus();
+  document.getElementById("oauth-entry-email-input")?.focus();
 }
 
-/** Reabre a volta só com o e-mail; o campo de senha volta vazio e recebe o foco. */
-function applyRestoreResume(resume) {
-  setInputValue("oauth-restore-email-input", resume.email);
-  document.getElementById("oauth-sovereign-passphrase-input")?.focus();
+/** Reabre a volta sem dados guardados; e-mail e senha são preenchidos de novo. */
+function applyRestoreResume() {
+  document.getElementById("oauth-restore-email-input")?.focus();
 }
 
 function bindEntryDraftPersistence(form) {
@@ -164,7 +165,7 @@ function showEmailKitCard({ kit, routeId, email, form, finish }) {
   if (links) links.hidden = true;
   slot.innerHTML = render.renderEmailKitCardHtml({ email: kit.to, mailtoUrl: kit.mailtoUrl });
   slot.hidden = false;
-  writeGenesisResume({ step: "email-kit", email: kit.to, routeId, mailtoUrl: kit.mailtoUrl, meshWaiting: false });
+  writeGenesisResume({ step: "email-kit", routeId, mailtoUrl: kit.mailtoUrl, meshWaiting: false });
   document.getElementById("btn-email-kit-fix-email")?.addEventListener("click", () => {
     slot.hidden = true;
     form.hidden = false;
@@ -210,7 +211,7 @@ async function handleEntryFormSubmit({ draftState, form, finish, finishNameOnly 
  * @param {{ finish: (result: object, toastMsg?: string) => void, finishNameOnly: (rawName: string) => void }} done
  */
 export function bindEmailEntryForm(form, { finish, finishNameOnly, entryResume = null }) {
-  const draftState = { email: entryResume?.email || "", pass: "" };
+  const draftState = { email: "", pass: "" };
   bindEntryPasswordToggle();
   bindEntryDraftPersistence(form);
   if (entryResume) applyEntryResume(entryResume);
@@ -271,7 +272,7 @@ async function meshOps() {
  * @returns {Promise<void>}
  */
 export async function startMeshRestore({ email, pass }, onRestored) {
-  persistGenesisMeshWait({ email });
+  persistGenesisMeshWait();
   const { flow, vault, ops } = await meshOps();
   const address = await vault.meshVaultAddress(pass, email);
   if (vault.loadMeshPending()?.address !== address) {
@@ -305,8 +306,8 @@ function genesisStepShower(panel) {
  */
 function resumeGenesisHave(resume, show) {
   show("have");
-  applyRestoreResume(resume);
-  if (resume.meshWaiting && resume.email) setOAuthEnrichError(MESH_RESUME_ASK_PASS);
+  applyRestoreResume();
+  if (resume.meshWaiting) setOAuthEnrichError(MESH_RESUME_ASK_PASS);
 }
 
 function resumeGenesisEmailKit(resume, show, onEmailKitFinish) {
@@ -314,8 +315,8 @@ function resumeGenesisEmailKit(resume, show, onEmailKitFinish) {
   show("entry");
   const form = document.getElementById("form-oauth-custom-name");
   if (!form) return;
-  const kit = { to: resume.email || "", mailtoUrl: resume.mailtoUrl };
-  showEmailKitCard({ kit, routeId: resume.routeId || "", email: resume.email || kit.to, form, finish: onEmailKitFinish });
+  const kit = { to: document.getElementById("oauth-entry-email-input")?.value.trim() || "", mailtoUrl: resume.mailtoUrl };
+  showEmailKitCard({ kit, routeId: resume.routeId || "", email: kit.to, form, finish: onEmailKitFinish });
 }
 
 /**

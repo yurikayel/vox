@@ -100,8 +100,8 @@ test("readGenesisResume / writeGenesisResume na sessionStorage", async () => {
   clearGenesisResume(ss);
   assert.equal(readGenesisResume(ss), null);
   writeGenesisResume({ step: "entry", email: "a@b.c" }, ss);
-  assert.deepEqual(readGenesisResume(ss), { step: "entry", email: "a@b.c" });
-  assert.equal(store.get(GENESIS_RESUME_KEY)?.includes("a@b.c"), true);
+  assert.deepEqual(readGenesisResume(ss), { step: "entry" });
+  assert.equal(store.get(GENESIS_RESUME_KEY)?.includes("a@b.c"), false);
   clearGenesisResume(ss);
   assert.equal(readGenesisResume(ss), null);
 });
@@ -116,16 +116,17 @@ function storedText(...storages) {
   return storages.flatMap((s) => [...s.store.entries()].flat()).join(" ");
 }
 
-test("persistGenesisMeshWait grava passo have + meshWaiting, só com o e-mail", async () => {
+test("persistGenesisMeshWait grava passo have + meshWaiting, sem e-mail nem senha", async () => {
   const { persistGenesisMeshWait, readGenesisResume } = await genesisEmail();
   const ss = mapStorage();
-  persistGenesisMeshWait({ email: "ana@exemplo.com", pass: SENHA }, ss);
+  persistGenesisMeshWait(ss);
   const resume = readGenesisResume(ss);
   assert.equal(resume.step, "have");
   assert.equal(resume.meshWaiting, true);
-  assert.equal(resume.email, "ana@exemplo.com");
+  assert.equal("email" in resume, false);
   assert.equal("pass" in resume, false);
   assert.equal(storedText(ss).includes(SENHA), false);
+  assert.equal(storedText(ss).includes("ana@exemplo.com"), false);
 });
 
 test("resumeGenesisAfterRender reabre a volta com senha vazia, foco nela e sem retomar a malha sozinha (LT-07)", async () => {
@@ -143,13 +144,13 @@ test("resumeGenesisAfterRender reabre a volta com senha vazia, foco nela e sem r
     globalThis.sessionStorage = mapStorage();
     writeGenesisResume({ step: "have", email: "ana@exemplo.com", meshWaiting: true });
     resumeGenesisAfterRender(modal, { onEmailKitFinish: () => {} });
-    assert.equal(doc.getElementById("oauth-restore-email-input").value, "ana@exemplo.com");
+    assert.equal(doc.getElementById("oauth-restore-email-input").value, "");
     const pass = doc.getElementById("oauth-sovereign-passphrase-input");
     assert.equal(pass.value, "");
-    assert.equal(pass.focused, true);
+    assert.equal(doc.getElementById("oauth-restore-email-input").focused, true);
     assert.equal(modal._steps.get("have").hidden, false);
     assert.equal(errorBox.hidden, false);
-    assert.match(errorBox.textContent, /digite a Senha Soberana de novo/);
+    assert.match(errorBox.textContent, /não guarda e-mail nem senha/);
   } finally {
     globalThis.document = prevDoc;
     globalThis.sessionStorage = prevSs;
@@ -163,16 +164,18 @@ test("persistGenesisEntryDraft grava rascunho da entrada sem a senha", async () 
   const resume = readGenesisResume(ss);
   assert.equal(resume.step, "entry");
   assert.equal(resume.rawName, "Duda");
-  assert.equal(resume.email, "duda@exemplo.com");
+  assert.equal("email" in resume, false);
   assert.equal(resume.includePhrase, true);
   assert.equal(storedText(ss).includes(SENHA), false);
 });
 
-test("writeGenesisResume descarta `pass` mesmo que o chamador o inclua", async () => {
+test("writeGenesisResume descarta `pass` e `email` mesmo que o chamador os inclua", async () => {
   const { writeGenesisResume, GENESIS_RESUME_KEY } = await genesisEmail();
   const ss = mapStorage();
   writeGenesisResume({ step: "have", email: "a@b.c", pass: SENHA }, ss);
-  assert.equal(ss.store.get(GENESIS_RESUME_KEY).includes(SENHA), false);
+  const raw = ss.store.get(GENESIS_RESUME_KEY);
+  assert.equal(raw.includes(SENHA), false);
+  assert.equal(raw.includes("a@b.c"), false);
 });
 
 test("readGenesisResume apaga senha deixada por versão antiga e devolve o resto", async () => {
@@ -180,9 +183,9 @@ test("readGenesisResume apaga senha deixada por versão antiga e devolve o resto
   const ss = mapStorage();
   ss.setItem(GENESIS_RESUME_KEY, JSON.stringify({ step: "have", meshWaiting: true, email: "ana@exemplo.com", pass: SENHA }));
   const resume = readGenesisResume(ss);
-  assert.deepEqual(resume, { step: "have", meshWaiting: true, email: "ana@exemplo.com" });
+  assert.deepEqual(resume, { step: "have", meshWaiting: true });
   assert.equal(storedText(ss).includes(SENHA), false);
-  assert.equal(ss.store.get(GENESIS_RESUME_KEY).includes("ana@exemplo.com"), true);
+  assert.equal(ss.store.get(GENESIS_RESUME_KEY).includes("ana@exemplo.com"), false);
 });
 
 test("digitar a senha na entrada não deixa o valor em sessionStorage nem localStorage (CodeQL 282)", async () => {
@@ -204,6 +207,7 @@ test("digitar a senha na entrada não deixa o valor em sessionStorage nem localS
     listeners.input();
     assert.ok(ss.store.size > 0, "o rascunho sem segredo continua sendo gravado");
     assert.equal(storedText(ss, ls).includes(SENHA), false);
+    assert.equal(storedText(ss, ls).includes("Duda@Exemplo.com"), false);
   } finally {
     globalThis.document = prev.doc;
     globalThis.sessionStorage = prev.ss;
