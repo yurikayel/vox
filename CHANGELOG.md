@@ -6,6 +6,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Correção: storage corrompido nos guardiões, na trava de chaves e nas saídas (rodada 2)
+- `guardians.js`, `key-lock.js`, `account-exit.js` e `identity-seed.js` leem o `localStorage` pelos helpers comuns de `identity/keystore.js` (`readStoredRecord`, `writeStoredJson`, `ownRecord`): array, número, string, null, `__proto__` e JSON inválido contam como vazio, sem misturar chaves de índice no mapa nem apagar o que é válido; entradas e divisões malformadas são ignoradas.
+- Cota cheia não lança nem finge: `storeHeldShare`, `applyReceipt` e `recordOwnerSplit` devolvem `false`, `dropHeldShare` devolve `null`, `lockKeys` devolve `null` (a cópia anterior segue valendo) e `sendGuardianShares` responde `storage-full` com aviso na tela. Testes: `tests/storage-corrupt-2.test.js`. Casos de `local-account.js` ficam como `todo` no mesmo arquivo.
 ### Correção: relay atende várias conexões e o 413 chega legível
 - `relay/server.py` usava `HTTPServer` (uma conexão por vez, sem prazo de socket): um cliente lento travava todos. Agora é `VoxRelayServer` (`ThreadingHTTPServer`, threads daemon, teto de 64 conexões em `VOX_RELAY_MAX_CONNECTIONS`) e cada leitura/escrita tem prazo de 10 s (`VOX_RELAY_SOCKET_TIMEOUT`). `inbox.py` e `vault_store.save_vault` ganharam lock (um leitor podia ver o JSON pela metade e apagar a mensagem; dois pedidos simultâneos podiam virar os dois dono do mesmo cofre).
 - Respostas 413/429 fechavam sem ler o corpo e o cliente recebia reset (erro 10053 no Windows). Agora toda resposta traz `Content-Length` e `Connection: close`, e o relay drena até 1 MiB (máx. 2 s) do corpo pendente antes de fechar. `blind_relay.store_envelope` passa a sanear o `nonce` do envelope (virava parte do nome do arquivo; com `../` ou `\` escapava do diretório do canal). Testes: `relay/test_relay_threading.py` (10). Sem bump de SW.
