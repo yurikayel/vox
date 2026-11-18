@@ -1,0 +1,6 @@
+test_*.py
+deploy/
+.cache/
+.inbox/
+__pycache__/
+*.md

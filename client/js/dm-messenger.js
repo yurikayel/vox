@@ -27,18 +27,27 @@ function clip(str, max = 90) {
   return s.length > max ? `${s.slice(0, max - 1)}…` : s;
 }
 
+/** Teto de `id`, `pixKey`, `communityId` e autor da citação: acima disso o campo é descartado, nunca cortado. */
+const MAX_REF_CHARS = 200;
+
+/** Campo que identifica algo (id, chave Pix, comunidade): cortar mudaria o que ele aponta, então o longo demais some. */
+function boundedRef(value) {
+  const s = String(value ?? "").trim();
+  return s.length <= MAX_REF_CHARS ? s : "";
+}
+
 /** Normaliza ReplyMeta.
  * @param {*} [raw] Valor bruto de entrada.
  * @returns {*} Resultado da operação.
  */
 export function normalizeReplyMeta(raw) {
   if (!raw || typeof raw !== "object") return null;
-  const id = String(raw.id || "").trim();
+  const id = boundedRef(raw.id);
   const snippet = clip(raw.snippet || raw.text || "", 90);
   if (!id || !snippet) return null;
   return {
     id,
-    author: String(raw.author || raw.from || "").trim(),
+    author: boundedRef(raw.author || raw.from),
     snippet,
   };
 }
@@ -80,19 +89,19 @@ export function normalizeContextCard(raw) {
   if (!["listing", "topic", "pix", "community"].includes(type)) return null;
 
   const title = clip(raw.title || "", 100);
-  const pixKey = String(fallbackProp(raw, "pixKey", "pix")).trim();
+  const pixKey = boundedRef(fallbackProp(raw, "pixKey", "pix"));
   if (!title && !pixKey) return null;
 
   const price = clip(fallbackProp(raw, "price", "priceBrl"), 32);
   const url = safeCardRoute(fallbackProp(raw, "url", "href"));
   return {
     type,
-    id: String(raw.id || "").trim(),
+    id: boundedRef(raw.id),
     title: title || "Apoio via Pix",
     price,
     priceBrl: price,
     pixKey,
-    communityId: String(fallbackProp(raw, "communityId", "comm")).trim(),
+    communityId: boundedRef(fallbackProp(raw, "communityId", "comm")),
     url,
     href: url,
   };
@@ -107,6 +116,22 @@ export function normalizeMediaDataUrl(raw) {
   if (!s || s.length > MAX_DM_MEDIA_CHARS) return "";
   if (!/^data:image\/(?:jpeg|jpg|png|webp);base64,[A-Za-z0-9+/=]+$/i.test(s)) return "";
   return s;
+}
+
+/**
+ * Passa pelo mesmo crivo do fio recebido tudo o que numa DM veio de fora (backup, linha antiga do aparelho):
+ * cartão, citação e foto. Os demais campos seguem como estão.
+ * @param {*} msg DM como gravada.
+ * @returns {object|null} A DM com cartão, citação e foto normalizados; `null` se não for objeto.
+ */
+export function sanitizeStoredDm(msg) {
+  if (!msg || typeof msg !== "object" || Array.isArray(msg)) return null;
+  return {
+    ...msg,
+    replyTo: normalizeReplyMeta(msg.replyTo),
+    contextCard: normalizeContextCard(msg.contextCard),
+    mediaDataUrl: normalizeMediaDataUrl(msg.mediaDataUrl),
+  };
 }
 
 /** Operação `serializeDmPayload` do módulo.

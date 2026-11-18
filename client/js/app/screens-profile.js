@@ -22,7 +22,7 @@ import * as welcomeProfile from "../vox-welcome-profile.js";
 import * as meshProfile from "../mesh-profile.js";
 import * as centralMemory from "../central-memory.js";
 import { getCachedBskyPosts } from "../bsky-feed.js";
-import { openOAuthEnrichModal, wipeLocalDevice } from "./onboarding.js";
+import { describeWipeOutcome, openOAuthEnrichModal, wipeLocalDevice } from "./onboarding.js";
 import { getActiveUser, makeShellProps } from "./context.js";
 import { syncIdentity } from "./screens-network.js";
 import { KIND_WRAPPED, exportAccountBundle, importAccountBundle, peekBackupKind } from "../identity/index.js";
@@ -344,8 +344,9 @@ function clearPassphraseField() {
 async function runLocalWipe(activeTab) {
   if (!localAccount.confirmLocalWipe()) return;
   clearPassphraseField();
-  wipeLocalDevice();
-  share.showToast("Chaves deste navegador apagadas.");
+  const outcome = await wipeLocalDevice();
+  const { message, kind } = describeWipeOutcome(outcome);
+  share.showToast(message, kind);
   await showProfile(null, activeTab);
 }
 

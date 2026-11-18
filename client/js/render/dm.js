@@ -11,6 +11,9 @@ import {
   DM_REACTION_EMOJIS,
   extractInlineVoxCard,
   isPeerPinned,
+  normalizeContextCard,
+  normalizeMediaDataUrl,
+  normalizeReplyMeta,
   sortAndFilterConversations,
 } from "../dm-messenger.js";
 import { escapeHtml, shortId, renderAvatarHtml } from "./util.js";
@@ -222,11 +225,13 @@ function renderDmMessageBubbles(messages, myAddress) {
       const cls = m.from === myAddress || m.status === "sent" || m.status === "read" ? "sent" : "received";
       const timeStr = m.ts ? new Date(m.ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
       const statusLabel = formatBubbleStatusLabel(m.status);
-      const card = m.contextCard || extractInlineVoxCard(m.text);
-      const mediaHtml = m.mediaDataUrl ? `<div class="dm-bubble-media"><img class="dm-bubble-img" src="${escapeHtml(m.mediaDataUrl)}" alt="Foto cifrada E2E" loading="lazy" /></div>` : "";
+      // A linha pode ter vindo de backup ou de versão antiga: cartão, foto e citação passam de novo pelo crivo do fio.
+      const card = normalizeContextCard(m.contextCard) || extractInlineVoxCard(m.text);
+      const media = normalizeMediaDataUrl(m.mediaDataUrl);
+      const mediaHtml = media ? `<div class="dm-bubble-media"><img class="dm-bubble-img" src="${escapeHtml(media)}" alt="Foto cifrada E2E" loading="lazy" /></div>` : "";
       return `
         <div class="dm-bubble ${cls}" data-msg-id="${escapeHtml(m.id)}">
-          ${renderBubbleReplyQuote(m.replyTo)}
+          ${renderBubbleReplyQuote(normalizeReplyMeta(m.replyTo))}
           ${renderBubbleContextCard(card)}
           ${mediaHtml}
           <div class="dm-bubble-text">${escapeHtml(m.text)}</div>
