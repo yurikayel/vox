@@ -22,7 +22,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 from relay import blind_relay, central_memory, inbox, mirror_validate, oauth_exchange, p2p_seeder, purge_schedule, rate_limit, request_guard, vault_store
-from relay.safe_path import child_of
+from relay.safe_path import SAFE_CHARS, child_of, only_chars
 
 DEFAULT_PORT = 3920
 DEFAULT_HOST = "127.0.0.1"
@@ -83,9 +83,28 @@ UPSTREAM_GATEWAYS = [
     "https://turbo-gateway.com/raw",
 ]
 
-# Sempre com `fullmatch`: `.match` com `$` aceitaria um `\n` final.
-TX_ID_REGEX = re.compile(r"[A-Za-z0-9_-]{43}")
-INDEX_NAME_REGEX = re.compile(r"index_[A-Za-z0-9._-]{1,128}\.json")
+# Validação por conjunto de caracteres e tamanho, sem regex: um `$` aceitaria `\n` final e regex sobre texto
+# externo é alvo de `py/polynomial-redos`.
+TX_ID_LENGTH = 43
+INDEX_SLUG_CHARS = SAFE_CHARS | {"."}
+INDEX_PREFIX = "index_"
+INDEX_SUFFIX = ".json"
+
+
+def is_tx_id(text):
+    """True para um id de transação Arweave: 43 caracteres entre letras ASCII, dígitos, `_` e `-`."""
+    return only_chars(text, SAFE_CHARS, TX_ID_LENGTH, TX_ID_LENGTH)
+
+
+def is_index_name(text):
+    """True para `index_<id>.json`, com o id de 1 a 128 caracteres entre letras ASCII, dígitos, `.`, `_` e `-`."""
+    return (
+        text.startswith(INDEX_PREFIX)
+        and text.endswith(INDEX_SUFFIX)
+        and only_chars(text[len(INDEX_PREFIX):-len(INDEX_SUFFIX)], INDEX_SLUG_CHARS)
+    )
+
+
 CACHE_HASH_SUFFIX = ".sha256"
 INTEGRITY_FAILURES = 0
 _CACHE_WRITE_LOCK = threading.RLock()
@@ -147,10 +166,10 @@ def max_cache_bytes():
     return purge_schedule.resolve_max_cache_bytes()
 
 
-def _cache_child(name, pattern):
+def _cache_child(name, is_valid):
     """Caminho de `name` dentro do cache, ou None se o nome não serve (formato ou symlink para fora)."""
     try:
-        return child_of(CACHE_DIR, name, pattern)
+        return child_of(CACHE_DIR, name, is_valid)
     except ValueError:
         return None
 
@@ -541,13 +560,13 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
         }
 
     def _handle_transaction(self, tx_id):
-        if TX_ID_REGEX.fullmatch(tx_id) is None:
+        if not is_tx_id(tx_id):
             self._reply_not_found(b"TX ID invalido", 400)
             return
 
         ensure_cache_dir()
         # None quando o nome já é um symlink para fora do cache: trata como ausente e não grava por cima.
-        cache_file = _cache_child(tx_id, TX_ID_REGEX)
+        cache_file = _cache_child(tx_id, is_tx_id)
         data = read_verified_cache_entry(cache_file) if cache_file is not None and cache_file.is_file() else None
         if data is not None:
             self._reply_transaction(data, "HIT")
@@ -594,7 +613,7 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
 
     def _handle_index(self, comm_slug):
         ensure_cache_dir()
-        index_file = _cache_child(f"index_{comm_slug}.json", INDEX_NAME_REGEX)
+        index_file = _cache_child(f"index_{comm_slug}.json", is_index_name)
         if index_file is not None and index_file.is_file():
             data = read_verified_cache_entry(index_file)
             if data is not None:
@@ -739,7 +758,7 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
     def _store_mirror(self, body, comm_id):
         try:
             ensure_cache_dir()
-            index_file = child_of(CACHE_DIR, f"index_{comm_id}.json", INDEX_NAME_REGEX)
+            index_file = child_of(CACHE_DIR, f"index_{comm_id}.json", is_index_name)
             if not store_cache_entry_with_quota(index_file, body):
                 self._send_json({"error": "quota de cache excedida"}, 507)
                 return

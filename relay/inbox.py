@@ -11,14 +11,11 @@ import json
 import threading
 import time
 import os
-import re
 from pathlib import Path
 
 from relay.safe_path import child_of
 
-# Depois de `sanitize_filename` só sobram letras/dígitos (Unicode, como `str.isalnum`), `-` e `_`.
-_ADDR_NAME = re.compile(r"[\w-]+")
-_MESSAGE_NAME = re.compile(r"[\w-]*\.json")
+_MESSAGE_SUFFIX = ".json"
 
 DEFAULT_TTL_SECONDS = 72 * 3600  # 72 horas
 MAX_ENVELOPE_SIZE = 32 * 1024     # 32 KB por mensagem
@@ -71,14 +68,24 @@ def sanitize_filename(name: str) -> str:
     return "".join(c for c in str(name) if c.isalnum() or c in ("-", "_"))
 
 
+def _is_word_name(text: str, allow_empty: bool = False) -> bool:
+    """True se `text` só tem letras/dígitos (Unicode, como `str.isalnum`), `-` e `_` (o que sobra de `sanitize_filename`)."""
+    return (allow_empty or bool(text)) and all(c.isalnum() or c in "-_" for c in text)
+
+
+def _is_message_name(text: str) -> bool:
+    """True para `<nome>.json`, com o nome (possivelmente vazio) já sanitizado."""
+    return text.endswith(_MESSAGE_SUFFIX) and _is_word_name(text[:-len(_MESSAGE_SUFFIX)], allow_empty=True)
+
+
 def _addr_dir(to_address: str) -> Path:
     """Pasta da caixa do endereço, dentro de INBOX_DIR; `ValueError` se o nome não der caminho seguro."""
-    return child_of(INBOX_DIR, sanitize_filename(to_address), _ADDR_NAME)
+    return child_of(INBOX_DIR, sanitize_filename(to_address), _is_word_name)
 
 
 def _message_file(addr_dir: Path, message_id: str) -> Path:
     """Arquivo da mensagem dentro da caixa; `ValueError` se o nome não der caminho seguro."""
-    return child_of(addr_dir, f"{sanitize_filename(message_id)}.json", _MESSAGE_NAME)
+    return child_of(addr_dir, f"{sanitize_filename(message_id)}{_MESSAGE_SUFFIX}", _is_message_name)
 
 
 def store_envelope(to_address: str, envelope: dict, ttl_seconds: int = DEFAULT_TTL_SECONDS) -> dict:
