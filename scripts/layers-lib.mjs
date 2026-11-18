@@ -72,10 +72,10 @@ function literalSource(node) {
   return node?.type === "Literal" && typeof node.value === "string" ? node.value : null;
 }
 
-function sourceOf(node) {
+function sourceOf(node, withDynamic) {
   if (node.type === "ImportDeclaration" || node.type === "ExportAllDeclaration") return literalSource(node.source);
   if (node.type === "ExportNamedDeclaration") return node.source ? literalSource(node.source) : null;
-  if (node.type === "ImportExpression") return literalSource(node.source);
+  if (node.type === "ImportExpression" && withDynamic) return literalSource(node.source);
   return null;
 }
 
@@ -93,13 +93,14 @@ function walk(node, visit) {
 /**
  * Especificadores relativos importados por um módulo: estáticos, reexportações e `import()` com texto literal.
  * @param {string} code código-fonte do módulo
+ * @param {{dynamic?: boolean}} [opts] `dynamic: false` ignora `import()` (só carga estática); padrão: inclui
  * @returns {string[]} ex.: ["./peers.js", "../app/context.js"]
  */
-export function importSpecifiers(code) {
+export function importSpecifiers(code, { dynamic = true } = {}) {
   const ast = espree.parse(code, { ecmaVersion: "latest", sourceType: "module" });
   const out = new Set();
   walk(ast, (node) => {
-    const src = sourceOf(node);
+    const src = sourceOf(node, dynamic);
     if (src && src.startsWith(".")) out.add(src);
   });
   return [...out];

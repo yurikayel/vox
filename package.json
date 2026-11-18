@@ -20,7 +20,7 @@
     "lint:relay": "python scripts/lint_relay.py",
     "audit:complexity": "node scripts/complexity-audit.mjs",
     "audit:docs": "node scripts/docs-audit.mjs",
-    "audit:layers": "node scripts/layers-audit.mjs",
+    "audit:layers": "node scripts/layers-audit.mjs && node scripts/cycles-audit.mjs",
     "release-line": "python scripts/release_line.py",
     "release-metadata": "python scripts/release_line.py --metadata-only"
   },
