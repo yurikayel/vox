@@ -8,18 +8,15 @@ Regras, em ordem:
    Pages e qualquer localhost) ou das liberadas em `VOX_RELAY_ALLOWED_ORIGINS`. Pedido sem `Origin` (ferramenta
    de linha de comando, nó de steward) passa.
 3. **Content-Type:** POST só com `application/json`, o que obriga o navegador a perguntar antes (preflight).
-4. **Limite por IP:** no máximo `VOX_RELAY_WRITE_LIMIT_PER_MIN` (padrão 120) escritas por minuto por IP.
+
+O limite de escritas por IP não mora aqui: é o token bucket de `rate_limit.py`, aplicado depois destas regras.
 """
 
 import os
-import threading
-import time
-from collections import defaultdict, deque
 from urllib.parse import urlsplit
 
 APP_ORIGINS = ("https://yurikayel.github.io", "https://vox-9df.pages.dev")
 LOOPBACK_NAMES = ("127.0.0.1", "localhost", "::1")
-DEFAULT_WRITE_LIMIT = 120
 WRITE_METHODS = ("POST", "DELETE")
 
 
@@ -65,32 +62,7 @@ def is_json_content_type(value):
     return str(value or "").split(";")[0].strip().lower() == "application/json"
 
 
-class WriteRateLimiter:
-    """Janela deslizante de 60 s por IP, só para POST e DELETE."""
-
-    def __init__(self, limit_per_min=None, clock=time.monotonic):
-        configured = limit_per_min or os.environ.get("VOX_RELAY_WRITE_LIMIT_PER_MIN") or DEFAULT_WRITE_LIMIT
-        self.limit = max(1, int(configured))
-        self.clock = clock
-        self.hits = defaultdict(deque)
-        self.lock = threading.Lock()
-
-    def allow(self, ip):
-        now = self.clock()
-        with self.lock:
-            window = self.hits[ip]
-            while window and now - window[0] >= 60:
-                window.popleft()
-            if len(window) >= self.limit:
-                return False
-            window.append(now)
-            return True
-
-
-WRITE_LIMITER = WriteRateLimiter()
-
-
-def reject_reason(method, headers, bound_host, client_ip, limiter=None):
+def reject_reason(method, headers, bound_host):
     """Motivo para recusar o pedido como `(status, mensagem)`, ou None se ele pode seguir."""
     if not host_allowed(headers.get("Host"), bound_host):
         return 421, "Host não reconhecido por este relay"
@@ -100,6 +72,4 @@ def reject_reason(method, headers, bound_host, client_ip, limiter=None):
         return 403, "Origem não autorizada a escrever neste relay"
     if method == "POST" and not is_json_content_type(headers.get("Content-Type")):
         return 415, "Envie Content-Type: application/json"
-    if not (limiter or WRITE_LIMITER).allow(client_ip):
-        return 429, "Muitas escritas deste endereço; tente de novo em um minuto"
     return None
