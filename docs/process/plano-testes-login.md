@@ -133,14 +133,32 @@ guardadas), WebCrypto ausente (tela avisa), duas abas abertas (uma volta por aba
 | LT-03 | ~~"Corrigir e-mail" revoga o endereço errado e o novo abre~~ **feito** (#190, `tests/email-kit-correct.test.js`; guarda em `email-kit.js`) | `tests/email-kit-correct.test.js` | P |
 | LT-04 | ~~Propriedade com semente fixa: troca de uma palavra da frase, links truncados, combinações de Shamir, arquivos estranhos, JSON aleatório em cada chave de storage~~ **feito** (#208; achados: `holderTick` e `writeSeed` quebram com JSON que não é objeto no storage, e esses dois casos ficaram fora do sorteio até a correção) | `tests/login-properties-phrase.test.js`, `tests/login-properties-files.test.js` | M |
 | LT-05 | ~~Relógio: pedido do futuro, relógio voltando, virada de 24 h e de 72 h exatas~~ **feito** (nenhum defeito: a espera conta do relógio de quem guarda, então relógio para trás só atrasa a entrega) | `tests/mesh-vault-clock.test.js`, `tests/mesh-vault-flow.test.js` | P |
-| LT-06 | Duas abas e storage cheio ou bloqueado — **em parte** (#209: duas chamadas na mesma aba dão uma conta só; faltam duas abas de verdade e o aviso de storage cheio no passo de criação) | `tests/local-account-race.test.js`, `tests/login-storage-edge.test.js` | M |
-| LT-07 | Tela: foco, mensagens de erro, `aria-live`, recarga no meio da espera, teclado só — **em parte** (#210: erro na entrada leva o foco ao campo que errou; faltam recarga no meio da espera e teclado só) | `tests/mesh-vault-ui.test.js`, `tests/onboarding-steps.test.js` | M |
+| LT-06 | Duas abas e storage cheio ou bloqueado — **em parte** (#209: duas chamadas na mesma aba dão uma conta só; faltam duas abas de verdade e o aviso de storage cheio no passo de criação; achados abertos em §5.1: LT-06a a LT-06c) | `tests/local-account-race.test.js`, `tests/login-storage-edge.test.js` | M |
+| LT-07 | Tela: foco, mensagens de erro, `aria-live`, recarga no meio da espera, teclado só — **em parte** (#210: erro na entrada leva o foco ao campo que errou; faltam recarga no meio da espera e teclado só; achados abertos em §5.1: LT-07a a LT-07d) | `tests/mesh-vault-ui.test.js`, `tests/onboarding-steps.test.js` | M |
 | LT-08 | ~~Navegador local: criar → kit → apagar → voltar por cada caminho, em Chrome headless, só loopback~~ **feito** (#198; um aparelho: só nome, e-mail+senha+frase; volta por link, código VOX1, arquivo e frase em aparelho novo; recusas; senha fora de rede e storage. Guardiões, QR e malha com dois aparelhos ficam nos testes de fluxo. Achado: após apagar, o app mostra o pacto, não a entrada) | `scripts/login-e2e.mjs` (manual do mantenedor até entrar no CI) | G |
 | LT-09 | Veto da dona no caminho dos guardiões (depende de decisão no ADR-037 §3.5) | `tests/guardian-return.test.js` | M |
 | LT-10 | ~~Matriz de ida e volta: para cada par (como criou × como volta), mesmo `routeId` e mesma assinatura~~ **feito** (#213: 20 pares; os pares sem caminho de volta estão listados no cabeçalho do arnês; cofre na malha × malha fica em `mesh-vault-flow.test.js`) | `tests/login-roundtrip-keys.test.js`, `tests/login-roundtrip-vault.test.js` (arnês `tests/login-roundtrip-harness.js`) | M |
 
 LT-10 é o teste que mais prova INV-1: cruza todos os jeitos de criar com todos os jeitos de voltar que o código tem
 hoje.
+
+### 5.1 Sub-itens abertos de LT-06 e LT-07 (achados conferidos no código)
+
+Conferidos em `client/js` na base `8eee7e4`. Todos **abertos**: são o que o código faz hoje, sem promessa de correção;
+cada um vira teste (e, se o mantenedor decidir, correção) em PR próprio.
+
+| Sub-item | Achado | Onde |
+|---|---|---|
+| LT-06a | Nenhuma ponte entre abas no login: não há `storage` event, Web Locks nem `BroadcastChannel` no caminho de conta/entrada. O único `BroadcastChannel` é o da malha de pares (`vox-peer-v0`), que não trata conta. | busca em `client/js`; `peers.js:720` |
+| LT-06b | Conta apagada numa aba continua viva na outra: `cachedAccount` fica em memória e `getCachedRouteIdSync` devolve o `routeId` antigo sem reler o storage; qualquer `storeActiveAccount` dessa aba regrava a conta apagada. | `identity/local-account.js:153`, `:49-52` |
+| LT-06c | Corrida ao criar conta entre abas: a trava `ensureLocalAccountInflight` é variável de módulo, vale só dentro da aba. Duas abas leem o storage vazio (`:116`), geram chaves (`:122`) e a última a gravar (`:124`) vence; a outra aba segue com um `routeId` que não está mais no storage. | `identity/local-account.js:115-124` |
+| LT-07a | `hashchange` apaga o que a pessoa digitou na entrada: `routeImpl` chama `checkCantinaGate`, que chama `checkOAuthEnrichStep`, que reabre o modal e `renderOAuthEnrich` refaz o `innerHTML` do contêiner. Só o pacto tem guarda contra redesenho (`checkPactModal`). | `app/route.js:85,105`; `app/onboarding.js:258-268,230`; `render/genesis-entry.js:119` |
+| LT-07b | Sem focus trap nem Escape no modal de entrada: o `role="dialog" aria-modal="true"` não prende o Tab, e não há `keydown` no fluxo. O foco inicial existe só por etapa (`showGenesisStep` foca o primeiro campo), não ao abrir o diálogo, e ao fechar o foco não volta a quem abriu. | `render/genesis-entry.js:120,148,156` |
+| LT-07c | Kit perdido na recarga: o kit gerado por `createEmailAccountKit` só é mostrado por `showEmailKitCard` e não é gravado em lugar nenhum; recarregar antes de copiar, baixar ou confirmar perde o texto, embora a conta já esteja no storage. | `app/onboarding-email.js:70-74`; `email-kit.js` |
+| LT-07d | A espera da malha não retoma após recarga: o pedido persiste (`loadMeshPending`), mas o `poll` só nasce dentro de `startMeshRestore`, chamado pelo envio do formulário de volta, e para quando `#oauth-mesh-status` some. Depois da recarga a pessoa precisa digitar e-mail e senha de novo para voltar a olhar a resposta (aí o pedido é retomado pelo endereço). | `app/onboarding-email.js:147-165,175` |
+
+Pendência de confirmação em LT-06b: não foi rastreado se algum caminho da aba velha regrava a conta sozinho; a leitura
+acima vale para o que o código permite, não para o que já foi observado em duas abas reais.
 
 ## 6. Critério de pronto para mudanças no login
 
