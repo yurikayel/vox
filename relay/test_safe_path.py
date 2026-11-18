@@ -3,10 +3,11 @@
 import os
 import re
 import tempfile
+import time
 import unittest
 from pathlib import Path
 
-from relay.safe_path import SAFE_NAME, child_of
+from relay.safe_path import MAX_NAME_LENGTH, SAFE_NAME, child_of
 
 
 class ChildOfTest(unittest.TestCase):
@@ -39,6 +40,27 @@ class ChildOfTest(unittest.TestCase):
         for bad in ("", "abc\n", "\nabc", "a" * 129, "a b", "a\x00b"):
             with self.subTest(name=repr(bad)), self.assertRaises(ValueError):
                 child_of(self.root, bad)
+
+    def test_huge_text_is_refused_fast_without_reaching_the_pattern(self):
+        class Spy:
+            calls = 0
+
+            def fullmatch(self, text):
+                Spy.calls += 1
+                return re.compile(r"[\w-]+").fullmatch(text)
+
+        huge = "a" * 5_000_000
+        started = time.monotonic()
+        with self.assertRaises(ValueError):
+            child_of(self.root, huge, Spy())
+        self.assertLess(time.monotonic() - started, 0.5)
+        self.assertEqual(Spy.calls, 0)
+
+    def test_name_at_the_length_cap_is_accepted(self):
+        name = "a" * MAX_NAME_LENGTH
+        self.assertEqual(child_of(self.root, name, re.compile(r"[a-z]+")).name, name)
+        with self.assertRaises(ValueError):
+            child_of(self.root, name + "a", re.compile(r"[a-z]+"))
 
     def test_custom_pattern_is_the_first_gate(self):
         pattern = re.compile(r"env_[0-9]{1,5}\.json")
