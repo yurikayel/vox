@@ -75,7 +75,7 @@ Legenda: ✅ coberto · ◐ parcial · ✖ falta. A coluna "Falta" vira item da 
 |---|---|---|
 | `mailto:` leva o cofre cifrado, **nunca a senha**; a frase só vai se marcada | ✅ `email-kit.test.js` | — |
 | Link e código abrem com a senha e recusam com outra | ✅ `qr-sync-record.test.js`, `qr-url.test.js` | links truncados ou com espaço colado (LT-04) |
-| "Corrigir e-mail" revoga o endereço errado | ◐ | LT-03 |
+| "Corrigir e-mail" revoga o endereço errado | ✅ `tests/email-kit-correct.test.js` (#190) | — |
 
 ### 3.4 Frase de recuperação (12 ou 24 palavras)
 
@@ -129,7 +129,7 @@ guardadas), WebCrypto ausente (tela avisa), duas abas abertas (uma volta por aba
 |---|---|---|---|
 | LT-01 | ~~Wipe apaga também as quatro chaves `vox-cofre-malha-*`~~ **feito** (o wipe esquecia as cópias guardadas; corrigido com `forgetAllMesh`) | `tests/mesh-vault-ui.test.js` | P |
 | LT-02 | Relay falso com falhas programáveis (fora, lento, 5xx, JSON ruim, duplicado, fora de ordem) e vários guardiões respondendo juntos | `tests/login-network-faults.test.js` | M |
-| LT-03 | "Corrigir e-mail" revoga o endereço errado e o novo abre | `tests/email-kit.test.js` | P |
+| LT-03 | ~~"Corrigir e-mail" revoga o endereço errado e o novo abre~~ **feito** (#190, `tests/email-kit-correct.test.js`; guarda em `email-kit.js`) | `tests/email-kit-correct.test.js` | P |
 | LT-04 | Propriedade com semente fixa: troca de uma palavra da frase, links truncados, combinações de Shamir, arquivos estranhos, JSON aleatório em cada chave de storage | `tests/login-properties.test.js` | M |
 | LT-05 | ~~Relógio: pedido do futuro, relógio voltando, virada de 24 h e de 72 h exatas~~ **feito** (nenhum defeito: a espera conta do relógio de quem guarda, então relógio para trás só atrasa a entrega) | `tests/mesh-vault-clock.test.js`, `tests/mesh-vault-flow.test.js` | P |
 | LT-06 | Duas abas e storage cheio ou bloqueado | `tests/login-storage-edge.test.js` | M |
