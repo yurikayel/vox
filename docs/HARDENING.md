@@ -22,6 +22,7 @@ A coluna **Enforcement hoje** diz o que a ferramenta faz de fato; a coluna **Alv
 | Comandos por função Python | — | **30** | Ruff `PLR0915` | só informa no CI (`--exit-zero`) | 7 funções (12/11) | ERROR |
 | Erros de pyflakes (nome indefinido, import/variável sem uso) | 0 | **0** | Ruff `F` | **ERROR** no CI | 0 | ERROR |
 | Imports que sobem de camada (ADR-035) | 0 | **0 novos** | `npm run audit:layers` (árvore sintática, espree) | **ERROR** no CI para import novo | 0 imports (18/11): `scripts/layers-debt.json` está com `violations: []` | catraca |
+| Ciclos de import no cliente (ADR-035) | 0 | **0 novos, nenhum crescendo** | `npm run audit:layers` (`scripts/cycles-audit.mjs`, componentes fortemente conexos por árvore sintática; só import estático) | **ERROR** no CI para ciclo novo ou componente maior | 1 componente de 3 módulos (18/11; eram 2 componentes de 3 módulos estáticos, ou 24 + 20 módulos contando `import()`), em `scripts/cycles-debt.json` | catraca (baseline só desce, `--prune`) |
 | Acoplamento CBO / coesão LCOM | por camada | por camada | **não medidos** | — | — | Ratchet |
 | Herança DIT | composição | exceção justificada | revisão | arquitetural | — | — |
 
