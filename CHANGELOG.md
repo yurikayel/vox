@@ -6,6 +6,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Correção: vazamentos de WebSocket de sinalização e de listener no lab Open Frames
+- `connectSignaling` reaproveita o socket vivo da mesma URL (ou solta e fecha o antigo) em vez de abrir um novo a cada `savePeerSettings`/`initWebRtc`, inclusive em chamadas concorrentes. O lab Open Frames remove o listener `message` ao remontar e ao sair da rota (`hashchange`). `client/sw.js` intocado (CACHE_NAME só no release). Testes: `tests/vazamentos-ws-labs.test.js`.
+
 ### Correção: avisa no passo de criação quando a conta não grava no aparelho
 - `ensureLocalAccount` registra falha de quota/bloqueio e o onboarding mostra aviso em `#oauth-enrich-error` sem travar o fluxo. Testes: `tests/local-account-storage-full.test.js`, `tests/onboarding-steps.test.js`.
 
