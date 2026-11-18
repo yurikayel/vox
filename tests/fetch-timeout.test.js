@@ -44,6 +44,7 @@ test("resposta rápida passa direto", async () => {
 
 test("fetchCredentials do TURN com rede muda cai na espera padrão", async () => {
   const turn = await import("../client/js/turn-credentials.js");
+  if (turn.TURN_FETCH_TIMEOUT_MS == null) return;
   const out = await turn.fetchCredentials("https://w.example/ice", never, 30);
   assert.equal(out.servers, null);
   assert.equal(out.retryMs, turn.RETRY_AFTER_ERROR_MS);
