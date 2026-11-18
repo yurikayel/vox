@@ -6,6 +6,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Correção: "Apagar conta local" apaga de fato e só diz "apagadas" quando apagou
+- Sai também a credencial TURN própria (`vox-custom-turn-config`) e o cache de apelidos→endereço (`vox-handles-cache`); antes ambos ficavam na lista de "neutros". O cofre de chaves (`keystore.js`) fecha cada conexão ao terminar a operação, atende o aviso de versão e `closeKeystore()` solta tudo (e esquece a chave do aparelho em memória) antes de `deleteDatabase`; o armazém de laboratório (`vox-store-db`) também solta a conexão no aviso de versão. Banco que o navegador bloqueia (outra aba segurando) não conta mais como apagado: `wipeLocalDevice` devolve `{ complete, pending }` e o Perfil mostra aviso de erro pedindo para fechar as outras abas. Sem bump de SW (`CACHE_NAME` só no release). Testes: `tests/device-wipe.test.js`.
+
 ### Infra: `vox-relay` do docker-compose sobe e `release-binarios` só escreve no release
 - `relay/Dockerfile` copia todos os módulos para `/app/relay/` (pacote, `PYTHONPATH=/app`) em vez de quatro arquivos soltos; o `server.py` (que faz `from relay import ...`) passa a subir com `python -m relay.server`. O CMD padrão segue sendo só o sinalizador (`relay/signaling.py`), usado por Render/HF. `relay/.dockerignore` deixa os `test_*.py` de fora; o compose aponta cache e caixa de entrada para os volumes (`VOX_RELAY_CACHE_DIR`, `VOX_RELAY_INBOX_DIR`).
 - `release-binarios.yml`: o build roda com `contents: read` (inclusive em `pull_request`); `contents: write`, `id-token` e `attestations` ficam no job `publicar`, que não roda em PR. Sem mudança no SW.
