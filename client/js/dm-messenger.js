@@ -48,6 +48,18 @@ function getFirstParam(params, ...keys) {
   return "";
 }
 
+/** Rota interna do app (`#/…`, sem espaço): o único destino que o cartão de contexto pode abrir. */
+const INTERNAL_ROUTE_RE = /^#\/\S{0,500}$/;
+
+/**
+ * O cartão vem de outra pessoa e o endereço vai para um `href`: só rota interna passa. `javascript:`, `data:`,
+ * `//host` e links externos caem para "" (o cartão fica sem o botão Abrir).
+ */
+function safeCardRoute(raw) {
+  const route = String(raw ?? "").trim();
+  return INTERNAL_ROUTE_RE.test(route) ? route : "";
+}
+
 export function normalizeContextCard(raw) {
   if (!raw || typeof raw !== "object") return null;
   const type = String(raw.type || "listing").toLowerCase();
@@ -58,7 +70,7 @@ export function normalizeContextCard(raw) {
   if (!title && !pixKey) return null;
 
   const price = clip(fallbackProp(raw, "price", "priceBrl"), 32);
-  const url = String(fallbackProp(raw, "url", "href")).trim();
+  const url = safeCardRoute(fallbackProp(raw, "url", "href"));
   return {
     type,
     id: String(raw.id || "").trim(),
