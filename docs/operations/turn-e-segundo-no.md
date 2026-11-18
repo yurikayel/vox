@@ -1,6 +1,6 @@
 # Runbook: TURN em produção e segundo nó de sinalização
 
-> **Status:** runbook para o dono executar · **Escrito:** 2026-11-18 · **Muda código ou config?** Não. Este documento só descreve passos. Os arquivos citados ficam como estão.
+> **Status:** canônico (runbook para o dono executar) · **Escrito:** 2026-11-18 · **Muda código ou config?** Não. Este documento só descreve passos. Os arquivos citados ficam como estão.
 > Referências: [INFRA-CUSTOS.md](../INFRA-CUSTOS.md) · [workers/turn/README.md](../../workers/turn/README.md) · [relay/deploy/README.md](../../relay/deploy/README.md) · [runbook-incidentes.md](./runbook-incidentes.md)
 > Regra deste texto: nenhuma senha, token, ID de conta ou URL real. Tudo entre `<...>` é placeholder que o dono preenche.
 
