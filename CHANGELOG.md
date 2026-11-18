@@ -7,7 +7,7 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 ## [Não lançado]
 
 ### Correção: storage corrompido (JSON não-objeto) não quebra malha nem conta
-- `loadHeld` e leitura de sementes tratam número, array, string, booleano e `null` no JSON como mapa vazio, como já acontece com JSON inválido. Testes: `tests/storage-corrupt.test.js`.
+- Leitores das cópias na malha e das sementes ignoram JSON que não é objeto (top-level e, nas cópias, cada entrada inválida); mesmo tratamento que chave ausente ou JSON inválido. Testes: `tests/storage-corrupt.test.js`.
 
 ### Correção: acessibilidade do login (cofre na malha e "Já tenho conta")
 - Faixa "Foi você?" é anunciada quando aparece (`role="alert"`, em vez de `alertdialog`); depois de responder, o foco vai para a próxima faixa ou para um lugar estável, e não cai no `body` (WCAG 4.1.3 e 2.4.3). Região de status da malha fica sempre no DOM, vazia até ter texto; erro de "Já tenho conta" sem `aria-live` duplicado; seta do "← Voltar" escondida do leitor. SW `v7.143`. Testes: `tests/mesh-vault-ui.test.js`.
