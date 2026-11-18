@@ -19,6 +19,7 @@ import { applySkyTheme } from "../sky-theme.js";
 import { appShellFooterTagline } from "../i18n-pt-br.js";
 import * as localAccount from "../identity/index.js";
 import { escapeHtml, root, renderAvatarHtml } from "./util.js";
+import { renderToastLiveRegionsHtml } from "../honest-errors.js";
 
 /** Squircle branco + X azul — mesmo asset em claro/escuro (sem tile navy na shell). */
 export const BRAND_MARK_SRC = "icons/logo-mark.png";
@@ -538,6 +539,7 @@ function renderShellMarkup({ activeTab, sidebarHtml, identity, chipHtml }) {
       </div>
     </div>
     ${renderIdentityDrawer(identity, chipHtml)}
+    ${renderToastLiveRegionsHtml()}
   `;
 }
 
