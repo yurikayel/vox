@@ -57,8 +57,7 @@
   "jsdoc:MAX_BUFFERED_AMOUNT",
   "jsdoc:computeChecksum",
   "jsdoc:slicePayloadIntoChunks",
-  "jsdoc:ChunkReassembler",
-  "jsdoc:sendChunksWithBackpressure"
+  "jsdoc:ChunkReassembler"
  ],
  "client/js/labs/parado/civic-credential.js": [
   "jsdoc:CREDENTIAL_SCHEMA_VERSION",
