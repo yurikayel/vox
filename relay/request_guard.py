@@ -60,16 +60,45 @@ def origin_allowed(origin, env=None):
     return text in APP_ORIGINS or text in _env_list("VOX_RELAY_ALLOWED_ORIGINS", env)
 
 
-def cors_allow_origin(origin, env=None):
-    """Origem a devolver em `Access-Control-Allow-Origin`, ou None se o navegador não deve ler a resposta.
+def _has_control_chars(value):
+    """Verdadeiro se o texto traz CR, LF, tab, espaço, NUL ou qualquer caractere de controle."""
+    return any(ord(char) <= 0x20 or ord(char) == 0x7F for char in value)
 
-    Diferente de `origin_allowed` (que deixa passar pedido sem `Origin`), aqui a origem precisa existir
-    e estar na lista: sem `Origin` não há leitura entre sites a liberar.
+
+def _loopback_origin(text):
+    """Origem de loopback reconstruída só de constantes (esquema, nome) e da porta numérica, ou None.
+
+    Não devolve o texto recebido: esquema e nome saem de tuplas fixas, a porta passa por `int`. Origem com
+    caminho, usuário ou porta inválida não reconstrói igual ao original e é recusada.
     """
-    text = str(origin or "").strip()
-    if not text or not origin_allowed(text, env):
+    try:
+        parts = urlsplit(text)
+        port = parts.port
+    except ValueError:
         return None
-    return text
+    scheme = next((item for item in ("http", "https") if item == parts.scheme), None)
+    host = next((item for item in LOOPBACK_NAMES if item == (parts.hostname or "")), None)
+    if scheme is None or host is None:
+        return None
+    rebuilt = f"{scheme}://{'[::1]' if host == '::1' else host}" + (f":{int(port)}" if port is not None else "")
+    return rebuilt if rebuilt == text else None
+
+
+def cors_allow_origin(origin, env=None):
+    """Valor de `Access-Control-Allow-Origin` para o pedido, ou None se o navegador não deve ler a resposta.
+
+    O valor devolvido nunca é o texto recebido (evita divisão de resposta HTTP, CodeQL
+    `py/http-response-splitting`): é a entrada correspondente de `APP_ORIGINS`, de
+    `VOX_RELAY_ALLOWED_ORIGINS` ou a origem de loopback reconstruída. Origem com CR/LF ou outro caractere de
+    controle é recusada antes de qualquer comparação. Diferente de `origin_allowed`, sem `Origin` não há
+    leitura entre sites a liberar.
+    """
+    raw = str(origin or "")
+    if not raw or _has_control_chars(raw):
+        return None
+    text = raw.lower().rstrip("/")
+    listed = (*APP_ORIGINS, *_env_list("VOX_RELAY_ALLOWED_ORIGINS", env))
+    return next((entry for entry in listed if entry == text), None) or _loopback_origin(text)
 
 
 def is_json_content_type(value):
