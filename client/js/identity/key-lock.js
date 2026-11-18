@@ -13,6 +13,7 @@
 
 import { KeyLockedError, KeystoreUnavailableError, LOCKED_TAG, isLocked, loadKey, openSealed, removeKey, storeKey } from "./keystore.js";
 import { decryptVaultRecord, encryptVaultV2 } from "../vault/envelope.js";
+import { ownRecord, readStoredRecord, writeStoredJson } from "./storage-json.js";
 
 const LOCKED_COPIES = "vox-locked-keys-v1";
 /** Mesmo mínimo do cofre (`VAULT_PASSPHRASE_MIN`): senha curta não trava nada. */
@@ -26,17 +27,14 @@ const signKid = (routeId) => `sign:${routeId}`;
 const dmKid = (routeId) => `dm:${routeId}`;
 const lockedRef = (kid) => ({ locked: LOCKED_TAG, kid });
 
+/** Mapa `routeId → cópia`; o que estiver guardado e não for mapa conta como vazio. */
 function readCopies() {
-  try {
-    const raw = localStorage.getItem(LOCKED_COPIES);
-    return raw ? JSON.parse(raw) : {};
-  } catch {
-    return {};
-  }
+  return readStoredRecord(LOCKED_COPIES);
 }
 
+/** @returns {boolean} se gravou (cota cheia não lança: quem chama não pode dar a cópia por feita) */
 function writeCopies(map) {
-  localStorage.setItem(LOCKED_COPIES, JSON.stringify(map));
+  return writeStoredJson(LOCKED_COPIES, map);
 }
 
 async function keyFor(atRest, algo, usages) {
@@ -88,7 +86,8 @@ async function storeDmKey(routeId, dmKeypair) {
 
 /**
  * Trava as chaves de uma conta. Recebe as chaves abertas (e a semente, se houver: ADR-032) e a Senha Soberana;
- * devolve as referências que substituem as chaves guardadas, ou null se este aparelho não consegue travar.
+ * devolve as referências que substituem as chaves guardadas, ou null se este aparelho não consegue travar
+ * (inclusive sem espaço para gravar a cópia por senha: nada é trocado, e a cópia anterior segue valendo).
  * @param {{ routeId: string, publicJwk: object, privateJwk: object, dmKeypair?: object, seed?: string|null }} account chaves abertas da conta
  * @param {string} passphrase Senha Soberana (mínimo `LOCK_MIN_PASSPHRASE`)
  * @returns {Promise<{ privateJwk: object, dmPrivateJwk: object|null }|null>}
@@ -100,7 +99,7 @@ export async function lockKeys({ routeId, publicJwk, privateJwk, dmKeypair, seed
   if (!signId) return null;
   const dmId = await storeDmKey(routeId, dmKeypair).catch(() => null);
   const copy = await encryptVaultV2({ routeId, privateJwk, dmKeypair: dmId ? dmKeypair : null, seed }, secret);
-  writeCopies({ ...readCopies(), [routeId]: copy });
+  if (!writeCopies({ ...readCopies(), [routeId]: copy })) return null;
   sessionKeys.delete(signId);
   if (dmId) sessionKeys.delete(dmId);
   return { privateJwk: lockedRef(signId), dmPrivateJwk: dmId ? lockedRef(dmId) : null };
@@ -116,7 +115,7 @@ export async function lockKeys({ routeId, publicJwk, privateJwk, dmKeypair, seed
 export async function openLockedCopy(routeId, passphrase) {
   const secret = String(passphrase || "").trim();
   if (!secret) throw new KeyLockedError();
-  const record = readCopies()[routeId];
+  const record = ownRecord(readCopies(), routeId);
   if (!record) {
     throw new KeyLockedError("A cópia travada desta conta não está neste aparelho. Restaure pelo cofre ou pelo arquivo .voxid.");
   }
@@ -128,13 +127,14 @@ export async function openLockedCopy(routeId, passphrase) {
 }
 
 /**
- * Apaga a cópia por senha e as chaves não exportáveis de uma conta.
+ * Apaga a cópia por senha e as chaves não exportáveis de uma conta. Sem espaço para regravar o mapa, a cópia
+ * (cifrada pela senha, inútil sem ela) fica, e as chaves não exportáveis saem do mesmo jeito.
  * @param {string} routeId conta (`vx_…`)
  * @returns {Promise<void>}
  */
 export async function forgetLockedAccount(routeId) {
   const copies = readCopies();
-  if (copies[routeId]) {
+  if (Object.hasOwn(copies, routeId)) {
     delete copies[routeId];
     writeCopies(copies);
   }
