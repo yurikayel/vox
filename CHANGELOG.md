@@ -32,6 +32,17 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 - `wipeLocalAccount` passa a incrementar uma época e soltar a criação em voo de `ensureLocalAccount`; a criação confere a época antes de gravar conta, chave de DM e entrada no cofre local e, se o wipe rodou no meio, desfaz a semente e a chave de DM que já tinha gravado. Quem esperava recebe a conta nova, nunca a apagada; chamada feita depois do wipe não entra mais na criação antiga. Duas abas (conta que ressuscita na outra aba) continua fora. `client/sw.js` e `CACHE_NAME` não mudaram. Testes: `tests/local-account-wipe-race.test.js`.
 ### Correção: vazamentos de WebSocket de sinalização e de listener no lab Open Frames
 - `connectSignaling` reaproveita o socket vivo da mesma URL (ou solta e fecha o antigo) em vez de abrir um novo a cada `savePeerSettings`/`initWebRtc`, inclusive em chamadas concorrentes. O lab Open Frames remove o listener `message` ao remontar e ao sair da rota (`hashchange`). `client/sw.js` intocado (CACHE_NAME só no release). Testes: `tests/vazamentos-ws-labs.test.js`.
+### Documentação: PRs mesclados que não tinham linha (#181–#218)
+Entradas acrescentadas por conferência dos PRs mesclados em `develop` com este arquivo. Só acréscimo; nada reescrito. Os PRs anteriores ao #177 já entram por tema nas seções abaixo. Sem bump de SW.
+- **Relay:** rate limit por IP em token bucket, por classe de endpoint (`mailbox`, `beacon`, `write`, `signal`, `signal_msg`), com 429 e `Retry-After` (`relay/rate_limit.py`, #203). Testes de `GET /`, `/status`, `/ping` e `/peer/beacon` (`relay/test_relay_get_endpoints.py`, 7 casos, #194).
+- **Segurança e identidade:** "Apagar conta local" passa a apagar toda chave `vox-`/`vox_`/`vox.` do storage (exceto lista de preferências neutras) e os bancos IndexedDB `vox-cache-db`, `vox-keystore` e `vox-store-db` (`identity/local-wipe.js`, #197).
+- **DMs:** `tests/dm-adversarial.test.js` (33 casos) e 5 correções pequenas que eles provaram necessárias (#202).
+- **Cofre na malha:** testes de relógio nas bordas de 5 min, 24 h e 72 h (LT-05, `tests/mesh-vault-clock.test.js`, 8 casos, #189) e testes adversariais com correções pequenas em `vault/*` e `mesh-vault-flow.js` (#218).
+- **Plano de testes do login:** LT-02 falhas de rede (`tests/login-network-faults.test.js`, 7 casos, #207), LT-04 propriedades com semente fixa (#208), LT-08 E2E em navegador local, manual do mantenedor (`scripts/login-e2e.mjs`, #198); matriz do plano atualizada (#216).
+- **Testes de rota:** `#/communities` (`tests/route-communities.test.js`, #195).
+- **ADR:** emendas de revisão dos ADR-034, 035 e 036, sem mudar status (#181).
+- **Documentação:** JSDoc do lote 5, `client/js/render` (#215); 9 âncoras `#L` corrigidas no dossiê arquivado (#191); 4 contradições entre specs, ROADMAP e código (embed, moderador natural, mochila, matriz do CI) (#192); escolha de modelo e esforço por tarefa no método de agentes (#199); fluxo de PR para `develop` no `antigravity-operating.md` (#206).
+
 ### Documentação: modelo de ameaças com cinco ameaças abertas (T30–T34)
 - [THREAT-MODEL.md](./docs/THREAT-MODEL.md): slowloris no relay, 413 sem drenar o corpo, CORS `*` em GETs sem auth, GitHub Pages sem cabeçalhos de segurança e endereço do cofre v1 sem sal; cada uma com arquivo:linha e mitigação proposta. Só docs; sem bump de SW.
 ### Documentação: sub-itens abertos de LT-06 e LT-07 no plano de testes do login
