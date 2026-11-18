@@ -48,6 +48,8 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 ### Correção: jargão nas telas de status, pacto e i18n (S30-S15)
 - `#/status`, pacto de boas-vindas e `i18n-pt-br.js` passam a usar português claro alinhado ao glossário da interface (malha, aparelhos, servidor comunitário), sem `gossip`, `verifyPayload`, `IndexedDB` ou `PM-18` na superfície. Algoritmo da conta (`P-256`) permanece visível na tela de status.
 - Testes: `tests/jargao-ui.test.js` (novo, 4 casos; falham na base por asserção). Sem bump de SW.
+### Testes: LT-08 E2E de login sem falso verde (S30-S2)
+- `scripts/login-e2e.mjs`: exit 1 em falha real; `pageerror` do Chromium passa a ser asserção (antes só acumulava); import do Playwright sem `catch` mudo; variáveis `PLAYWRIGHT_CORE_PATH` e `CHROMIUM_EXECUTABLE_PATH` documentadas no cabeçalho.
 
 ### Correção: relay cego não perde deltas no cold boot; memória central confere item e blob
 - **Snapshot apaga por serial, não por timestamp:** só somem os envelopes com `0 < serial <= coveredSerial`; antes, um delta com relógio atrasado e serial acima da cobertura era apagado em silêncio. Snapshot que recua `coveredSerial` agora dá `400` (abriria um buraco). Sem `coveredSerial` nada é apagado (vale o TTL de 7 dias).
