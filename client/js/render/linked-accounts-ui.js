@@ -104,6 +104,10 @@ function renderAdvanced(accounts) {
     </details>`;
 }
 
+/**
+ * Tela completa de Redes Vinculadas (lista + opções avançadas).
+ * @returns {string}
+ */
 export function renderLinkedAccountsHtml() {
   const accounts = loadLinkedAccounts();
   const rows = SUPPORTED_NETWORKS.map((net) => renderNetworkRow(net, accounts[net.id])).join("");
@@ -123,6 +127,11 @@ export function renderLinkedAccountsHtml() {
     </div>`;
 }
 
+/**
+ * Injeta {@link renderLinkedAccountsHtml} no contêiner da rota.
+ * @param {HTMLElement|null} main
+ * @returns {void}
+ */
 export function renderLinkedAccountsPage(main) {
   if (!main) return;
   main.innerHTML = renderLinkedAccountsHtml();

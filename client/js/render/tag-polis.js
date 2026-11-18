@@ -1,4 +1,6 @@
-/** @file Hashtag feed and Pol.is-lite report HTML. */
+/**
+ * @file Feed local por hashtag e relatório HTML estilo Pol.is-lite.
+ */
 import * as hashtags from "../hashtags.js";
 import { escapeHtml } from "./util.js";
 import { renderPostItem } from "./feed.js";
@@ -34,6 +36,13 @@ function renderTagFeedEmptyState(cleanSlug) {
   `;
 }
 
+/**
+ * Monta #/tag/:slug com posts do índice local ou estado vazio.
+ * @param {HTMLElement|null} main Contêiner da página.
+ * @param {string} slug Hashtag (sem #).
+ * @param {Array<object>} [posts=[]] Posts indexados neste aparelho.
+ * @returns {void}
+ */
 export function renderTagFeed(main, slug, posts = []) {
   if (!main) return;
   const cleanSlug = hashtags.slugifyTag(slug) || slug;
@@ -86,6 +95,12 @@ function renderPolisStatementItem(s) {
     </div>`;
 }
 
+/**
+ * HTML do bloco de deliberação Pol.is-lite embutido em proposta/post.
+ * @param {object|null} report Relatório com `statements` e contagens.
+ * @param {object} [_userVotes={}] Votos do usuário (reservado).
+ * @returns {string}
+ */
 export function renderPolisReportHtml(report, _userVotes = {}) {
   if (!report || !Array.isArray(report.statements)) return "";
   const totalVoters = report.totalVoters || 0;

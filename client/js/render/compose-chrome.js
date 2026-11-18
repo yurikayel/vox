@@ -8,7 +8,12 @@ const COMPOSE_TYPES = [
   { key: "community", label: "Nova comunidade", hint: "Fundar um círculo", href: () => "#/compose/community" },
 ];
 
-/** Seletor "Tipo de registro" (Stitch tela 9) — cada tipo é uma rota de composição existente. */
+/**
+ * Grade de tipos de registro (publicação, proposta, feira, comunidade) com rota ativa.
+ * @param {string} activeKey Chave do tipo marcado (`topic`, `proposal`, …).
+ * @param {string} [communityId=""] ID para montar query `?c=` nos links.
+ * @returns {string}
+ */
 export function renderComposeTypeSelector(activeKey, communityId = "") {
   const items = COMPOSE_TYPES.map((t) => {
     const active = t.key === activeKey;
@@ -20,7 +25,10 @@ export function renderComposeTypeSelector(activeKey, communityId = "") {
   return `<nav class="agora-compose-types" aria-label="Tipo de registro"><p class="agora-field-label">Tipo de registro</p><div class="agora-compose-types-grid">${items}</div></nav>`;
 }
 
-/** Painel de assinatura (Stitch): explica que a publicação é assinada no aparelho. */
+/**
+ * Painel que explica assinatura local antes de publicar.
+ * @returns {string}
+ */
 export function renderComposeSignaturePanel() {
   return `
     <section class="agora-signature-panel" aria-label="Assinatura criptográfica">

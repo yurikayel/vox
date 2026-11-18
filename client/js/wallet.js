@@ -1,8 +1,13 @@
+/**
+ * @file Carteira Arweave local — JWK cifrado, sessão e saldo.
+ */
+
 import * as ans104 from "./ans104.js";
 import { loadArweave } from "./arweave-lib.js";
 import { isSealed, openSealed, sealJson } from "./identity/keys.js";
 
 const STORAGE_KEY = "vox-wallet-jwk";
+/** Export `WALLET_KIND_ENCRYPTED` do módulo. @type {string} */
 export const WALLET_KIND_ENCRYPTED = "vox-wallet-encrypted";
 const KDF_ITERATIONS = 100000;
 
@@ -33,6 +38,9 @@ async function deriveAesKey(passphrase, salt) {
   );
 }
 
+/** Indica se WalletEncrypted.
+ * @returns {*} Resultado da operação.
+ */
 export function isWalletEncrypted() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -44,6 +52,10 @@ export function isWalletEncrypted() {
   }
 }
 
+/** Operação `encryptStoredWallet` do módulo.
+ * @param {*} [passphrase] Senha para cifrar ou desbloquear.
+ * @returns {*} Resultado da operação.
+ */
 export async function encryptStoredWallet(passphrase) {
   const current = await openStoredWallet();
   if (!current) throw new Error("Nenhuma carteira encontrada para cifrar");
@@ -68,6 +80,10 @@ export async function encryptStoredWallet(passphrase) {
   return envelope;
 }
 
+/** Operação `unlockWallet` do módulo.
+ * @param {*} [passphrase] Senha para cifrar ou desbloquear.
+ * @returns {*} Resultado da operação.
+ */
 export async function unlockWallet(passphrase) {
   const raw = localStorage.getItem(STORAGE_KEY);
   if (!raw) throw new Error("Nenhuma carteira armazenada");
@@ -91,10 +107,14 @@ export async function unlockWallet(passphrase) {
   }
 }
 
+/** Operação `lockWallet` do módulo.
+ */
 export function lockWallet() {
   sessionJwk = null;
 }
 
+/** Reset de estado interno para testes.
+ */
 export function __resetSessionForTests() {
   sessionJwk = null;
 }
@@ -108,7 +128,8 @@ function readStoredWallet() {
   }
 }
 
-/** Carteira já aberta nesta sessão, ou guardada em claro (dado antigo). Cifrada: use `openStoredWallet`. */
+/** Carteira já aberta nesta sessão, ou guardada em claro (dado antigo). Cifrada: use `openStoredWallet`. 
+ * @returns {*} Resultado da operação.*/
 export function getStoredJwk() {
   if (sessionJwk) return sessionJwk;
   const parsed = readStoredWallet();
@@ -116,7 +137,8 @@ export function getStoredJwk() {
   return parsed;
 }
 
-/** PM-93: abre a carteira cifrada pelo aparelho para esta sessão. Nunca gera outra por cima. */
+/** PM-93: abre a carteira cifrada pelo aparelho para esta sessão. Nunca gera outra por cima. 
+ * @returns {*} Resultado da operação.*/
 export async function openStoredWallet() {
   if (sessionJwk) return sessionJwk;
   const parsed = readStoredWallet();
@@ -125,7 +147,8 @@ export async function openStoredWallet() {
   return sessionJwk;
 }
 
-/** Guarda a carteira cifrada pelo aparelho (em claro só se o navegador não guarda a chave do aparelho). */
+/** Guarda a carteira cifrada pelo aparelho (em claro só se o navegador não guarda a chave do aparelho). 
+ * @param {*} [jwk] JWK da carteira.*/
 export async function saveJwk(jwk) {
   if (!jwk || typeof jwk !== "object") {
     throw new Error("JWK inválido");
@@ -134,21 +157,33 @@ export async function saveJwk(jwk) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(await sealJson(jwk)));
 }
 
+/** Operação `removeWallet` do módulo.
+ */
 export function removeWallet() {
   sessionJwk = null;
   localStorage.removeItem(STORAGE_KEY);
 }
 
+/** Verifica Wallet.
+ * @returns {*} Resultado da operação.
+ */
 export function hasWallet() {
   return Boolean(getStoredJwk() || isSealed(readStoredWallet()));
 }
 
+/** Obtém Address.
+ * @returns {*} Resultado da operação.
+ */
 export async function getAddress() {
   const jwk = await openStoredWallet();
   if (!jwk) return null;
   return ans104.jwkToAddress(jwk);
 }
 
+/** Obtém Balance.
+ * @param {*} [address] Parâmetro `address`.
+ * @returns {*} Resultado da operação.
+ */
 export async function getBalance(address) {
   if (!address) return "0.000";
   try {
@@ -160,6 +195,9 @@ export async function getBalance(address) {
   }
 }
 
+/** Operação `generateNewWallet` do módulo.
+ * @returns {*} Resultado da operação.
+ */
 export async function generateNewWallet() {
   const pair = await crypto.subtle.generateKey(
     { name: "RSA-PSS", modulusLength: 4096, publicExponent: new Uint8Array([1, 0, 1]), hash: "SHA-256" },
@@ -172,6 +210,9 @@ export async function generateNewWallet() {
   return { jwk, address };
 }
 
+/** Operação `ensureWallet` do módulo.
+ * @returns {*} Resultado da operação.
+ */
 export async function ensureWallet() {
   const existing = await openStoredWallet();
   if (existing) return existing;

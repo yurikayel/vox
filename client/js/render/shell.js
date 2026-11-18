@@ -1,4 +1,10 @@
-/** @file App shell, sidebar, feed nav, loading/error banners. */
+/**
+ * @file Shell do PWA: sidebar, topbar, identidade, estados de carregamento e avisos operacionais.
+ *
+ * Injeta layout fixo em `#app-root`; o conteúdo das rotas preenche `#app-main` retornado por {@link renderShell}.
+ *
+ * @module render/shell
+ */
 import * as mock from "../mock.js";
 import { getFlags } from "../feature-flags.js";
 import {
@@ -17,6 +23,11 @@ import { escapeHtml, root, renderAvatarHtml } from "./util.js";
 /** Squircle branco + X azul — mesmo asset em claro/escuro (sem tile navy na shell). */
 export const BRAND_MARK_SRC = "icons/logo-mark.png";
 
+/**
+ * URL do mark Vox; não varia com tema (mesmo PNG em claro e escuro).
+ * @param {boolean} _dark Reservado para skins futuras; ignorado hoje.
+ * @returns {string} Caminho relativo do ícone ({@link BRAND_MARK_SRC}).
+ */
 export function brandMarkSrcForColorScheme(_dark) {
   return BRAND_MARK_SRC;
 }
@@ -43,6 +54,13 @@ const ICONS = {
   voxpedia: `<svg class="tab-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="14" y2="11"/></svg>`,
 };
 
+/**
+ * Chip de estado da rede no rodapé da sidebar (ativo, offline ou somente leitura).
+ * @param {object|null} metrics Métricas locais do nó (ex.: blobs entregues).
+ * @param {object|null} rtcStatus Pares RTC e flag `isOnline`.
+ * @param {object|null} settings Preferências de participação (`enabled`).
+ * @returns {string} HTML do link para `#/settings/network`.
+ */
 export function renderNetworkChip(metrics, rtcStatus, settings) {
   const isEnabled = settings?.enabled !== false;
   if (!isEnabled) {
@@ -74,6 +92,11 @@ function renderWalletBadge(walletAddress) {
   return `<a class="wallet-badge account-access connected" href="#/perfil" title="${escapeHtml(tip)}" aria-label="Perfil de ${escapeHtml(display)}">${USER_ICON_SVG}<span class="wallet-badge-label">${escapeHtml(shortName)}</span></a>`;
 }
 
+/**
+ * Abas de filtro de feed na sidebar (Social, Cívico, Seguindo, externo, Tudo).
+ * @param {string} [activeFeed="for-you"] Chave do feed ativo (`for-you`, `civic`, etc.).
+ * @returns {string} HTML do `<nav class="sidebar-feed-nav">`.
+ */
 export function renderFeedNav(activeFeed = "for-you") {
   const isForYou = activeFeed === "for-you";
   const isCivic = activeFeed === "civic";
@@ -212,12 +235,20 @@ const NAV_ITEMS = [
 
 const DM_BADGE_HTML = `<span class="agora-dm-badge" data-dm-badge hidden aria-hidden="true"></span>`;
 
-/** Total de mensagens recebidas e não lidas, somando todas as conversas. */
+/**
+ * Total de mensagens recebidas e não lidas, somando todas as conversas.
+ * @param {object[]} [conversations=[]] Conversas do cache com campo `unreadCount`.
+ * @returns {number} Soma de não lidas.
+ */
 export function sumUnreadDms(conversations = []) {
   return conversations.reduce((acc, c) => acc + (Number(c?.unreadCount) || 0), 0);
 }
 
-/** Texto do contador: vazio quando zero, "99+" acima de 99. */
+/**
+ * Texto do contador de DM para badge: vazio quando zero, `99+` acima de 99.
+ * @param {number} count Total de não lidas.
+ * @returns {string} Rótulo curto ou string vazia.
+ */
 export function formatDmBadge(count) {
   const n = Number(count) || 0;
   if (n <= 0) return "";
@@ -415,7 +446,8 @@ function networkChipText(chipHtml) {
 /**
  * Círculos territoriais (Stitch): comunidades locais deste aparelho. Renderizado vazio e
  * hidratado de forma assíncrona a partir do IndexedDB — nenhuma contagem fictícia.
- * @param {Array<{id:string,name?:string,title?:string,unread?:number}>} communities
+ * @param {Array<{id:string,name?:string,title?:string,unread?:number}>} communities Comunidades locais conhecidas.
+ * @returns {string} HTML da seção de círculos, ou `""` se a lista estiver vazia.
  */
 export function renderCirclesList(communities = []) {
   const items = communities.filter((c) => c && c.id).slice(0, 6);
@@ -477,6 +509,12 @@ function renderSidebar(activeTab, { showFeedNav, activeFeed, chipHtml, walletBad
     </aside>`;
 }
 
+/**
+ * Atualiza o hint «Sincronizando…» no rodapé da sidebar (não confundir com topbar mobile).
+ * @param {boolean} active Se há sync em andamento.
+ * @param {string} [detail=""] Mensagem curta; padrão «Sincronizando…».
+ * @returns {void}
+ */
 export function updateTopBarSync(active, detail = "") {
   const el = document.getElementById("top-sync-hint");
   if (!el) return;
@@ -509,6 +547,21 @@ function attachShellBehaviors() {
   attachTopBarBehavior();
 }
 
+/**
+ * Monta o layout completo do app e devolve o elemento `#app-main` para a rota preencher.
+ * @param {object} options Metadados da tela e estado de rede.
+ * @param {string} [options.title] Reservado (título por rota no `main`).
+ * @param {string} [options.subtitle] Reservado.
+ * @param {string} [options.breadcrumb] HTML opcional inserido no topo do `main`.
+ * @param {string|null} [options.walletAddress] Conta ativa para badge e gaveta.
+ * @param {string} [options.activeTab="home"] Aba destacada na sidebar.
+ * @param {object} [options.metrics] Métricas do nó para o chip de rede.
+ * @param {object} [options.rtcStatus] Estado RTC.
+ * @param {object} [options.settings] Configuração de participação na malha.
+ * @param {string} [options.activeFeed="for-you"] Feed ativo quando `showFeedNav` é verdadeiro.
+ * @param {boolean} [options.showFeedNav=false] Exibe abas de feed na sidebar.
+ * @returns {HTMLElement|null} Elemento `#app-main`.
+ */
 export function renderShell({
   title: _title,
   subtitle: _subtitle,
@@ -537,7 +590,11 @@ export function renderShell({
   return main;
 }
 
-/** Aviso operacional do kill-switch (LAN-08), definido em config/flags.json. */
+/**
+ * Faixa de aviso operacional do kill-switch (LAN-08), definida em `config/flags.json`.
+ * @param {string|null|undefined} notice Texto; omitido quando não há aviso.
+ * @returns {string} HTML da faixa ou `""`.
+ */
 export function renderOpsNotice(notice) {
   if (!notice) return "";
   return `<div class="ops-notice-banner" role="status">${escapeHtml(notice)}</div>`;
@@ -548,7 +605,10 @@ function mountOpsNotice(main) {
   if (html && main?.insertAdjacentHTML) main.insertAdjacentHTML("beforebegin", html);
 }
 
-/** Faixa fixa do modo demonstração (LAN-10): nunca deixa perfil fictício parecer real. */
+/**
+ * Faixa fixa do modo demonstração (LAN-10): deixa explícito que perfis são fictícios.
+ * @returns {string} HTML do banner com botão «Sair da demonstração».
+ */
 export function renderDemoModeBanner() {
   return `
     <div class="demo-mode-banner" role="status" id="demo-mode-banner">
@@ -568,8 +628,14 @@ function mountDemoModeBanner(main) {
 }
 
 /**
- * Cabeçalho de página no padrão Stitch (título epigráfico + subtítulo + ações), sem etiquetas.
- * @param {{ title: string, subtitle?: string, actionsHtml?: string, id?: string, wide?: boolean }} opts
+ * Cabeçalho de página no padrão Stitch (título epigráfico + subtítulo + ações).
+ * @param {object} options
+ * @param {string} options.title Título principal (H1).
+ * @param {string} [options.subtitle=""] Linha de apoio.
+ * @param {string} [options.actionsHtml=""] Botões à direita.
+ * @param {string} [options.id=""] `id` opcional do `<header>`.
+ * @param {boolean} [options.wide=false] Classe `--wide` para layouts full-bleed.
+ * @returns {string} HTML do cabeçalho.
  */
 export function renderPageHead({ title, subtitle = "", actionsHtml = "", id = "", wide = false }) {
   const subHtml = subtitle ? `<p class="agora-page-sub">${escapeHtml(subtitle)}</p>` : "";
@@ -584,6 +650,12 @@ export function renderPageHead({ title, subtitle = "", actionsHtml = "", id = ""
     </header>`;
 }
 
+/**
+ * Placeholder esqueleto enquanto a rota carrega dados.
+ * @param {HTMLElement} main Container da rota.
+ * @param {string} [msg="Carregando…"] Texto para leitores de tela (`aria-label`).
+ * @returns {void}
+ */
 export function renderLoading(main, msg = "Carregando…") {
   main.innerHTML = `
     <div class="skeleton-container" aria-busy="true" aria-label="${escapeHtml(msg)}">
@@ -606,10 +678,21 @@ export function renderLoading(main, msg = "Carregando…") {
     </div>`;
 }
 
+/**
+ * Mensagem de erro simples ocupando a rota.
+ * @param {HTMLElement} main Container da rota.
+ * @param {string} message Texto escapado para o usuário.
+ * @returns {void}
+ */
 export function renderError(main, message) {
   main.innerHTML = `<div class="error">${escapeHtml(message)}</div>`;
 }
 
+/**
+ * Aviso no topo do feed quando não há rede (conteúdo só local, sem demo fake).
+ * @param {HTMLElement} main Container do feed.
+ * @returns {void}
+ */
 export function renderDemoBanner(main) {
   main.insertAdjacentHTML(
     "afterbegin",
@@ -617,6 +700,12 @@ export function renderDemoBanner(main) {
   );
 }
 
+/**
+ * Ativa o indicador de sync no rodapé durante ingestão via gateway.
+ * @param {HTMLElement} main Container (não alterado diretamente).
+ * @param {string} label Rótulo curto opcional no hint de sync.
+ * @returns {void}
+ */
 export function renderGatewayBanner(main, label) {
   updateTopBarSync(true, label ? "Sincronizando conteúdos…" : "Sincronizando…");
 }

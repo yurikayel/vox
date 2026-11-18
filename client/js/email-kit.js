@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @module email-kit
  * @file ADR-032 §6.4–§6.7 — kit de recuperação enviado por `mailto:` para o próprio e-mail.
  *
@@ -6,7 +6,6 @@
  * A senha nunca vai no e-mail. A frase de recuperação é opcional e vem desmarcada por padrão.
  */
 
-import * as accountExit from "./identity/index.js";
 import * as localAccount from "./identity/index.js";
 import * as oauthVault from "./vault/index.js";
 import * as share from "./share.js";
@@ -83,7 +82,7 @@ export function formatPhraseSentInEmailNotice(routeId = localAccount.getCachedRo
  * @returns {boolean} `true` se marcou.
  */
 export function confirmEmailKitSent(routeId = localAccount.getCachedRouteIdSync(), now = Date.now()) {
-  return accountExit.markAccountExit("email", routeId, now);
+  return localAccount.markAccountExit("email", routeId, now);
 }
 
 function resolveSyncBaseUrl(baseUrl) {
@@ -267,7 +266,7 @@ export async function createEmailAccountKit({ rawName, email, pass, includePhras
   if (!normalizedEmail.includes("@")) return { ok: false, reason: "Informe um e-mail válido." };
   localAccount.setDisplayName(rawName);
   const acc = await localAccount.ensureLocalAccount();
-  await accountExit.hasSovereignExit(acc.routeId);
+  await localAccount.hasSovereignExit(acc.routeId);
   let phrase = "";
   if (includePhrase) {
     const { getAccountPhrase } = await import("./identity/index.js");
@@ -293,19 +292,33 @@ export async function createEmailAccountKit({ rawName, email, pass, includePhras
 }
 
 /**
- * Valida os campos de entrada em uma etapa (§6.2).
+ * Primeira falha de validação da entrada (§6.2 / LT-07).
  * Sem e-mail e senha (e com a frase desmarcada), libera a entrada só com o nome (§6.2.5).
+ * @param {{ rawName?: string, email?: string, pass?: string, includePhrase?: boolean }} values Valores do formulário.
+ * @returns {{ message: string, field: "name"|"email"|"pass" } | null} `null` quando válido.
+ */
+export function validateEmailEntryIssue({ rawName = "", email = "", pass = "", includePhrase = false } = {}) {
+  if (!rawName) return { message: "Digite um nome ou apelido para continuar.", field: "name" };
+  if (!email && !pass && !includePhrase) return null;
+  if (!email || !email.includes("@")) {
+    return { message: "Informe um e-mail válido para enviar seu kit de volta.", field: "email" };
+  }
+  if (pass.length < oauthVault.VAULT_PASSPHRASE_MIN) {
+    return {
+      message: `Use uma senha com pelo menos ${oauthVault.VAULT_PASSPHRASE_MIN} caracteres (uma frase de 4 palavras serve).`,
+      field: "pass",
+    };
+  }
+  return null;
+}
+
+/**
+ * Mensagem de erro de `validateEmailEntryIssue` ou `""` (§6.2 / §6.2.5).
  * @param {{ rawName?: string, email?: string, pass?: string, includePhrase?: boolean }} values Valores do formulário.
  * @returns {string} Mensagem de erro ou `""` se válido.
  */
-export function validateEmailEntry({ rawName = "", email = "", pass = "", includePhrase = false } = {}) {
-  if (!rawName) return "Digite um nome ou apelido para continuar.";
-  if (!email && !pass && !includePhrase) return "";
-  if (!email || !email.includes("@")) return "Informe um e-mail válido para enviar seu kit de volta.";
-  if (pass.length < oauthVault.VAULT_PASSPHRASE_MIN) {
-    return `Use uma senha com pelo menos ${oauthVault.VAULT_PASSPHRASE_MIN} caracteres (uma frase de 4 palavras serve).`;
-  }
-  return "";
+export function validateEmailEntry(values) {
+  return validateEmailEntryIssue(values)?.message ?? "";
 }
 
 /**

@@ -36,13 +36,19 @@ function write(storage, key, value) {
   }
 }
 
-/** `https://…`, ou `http://` só no próprio aparelho (loopback). Devolve sem barra no fim, ou "". */
+/** `https://…`, ou `http://` só no próprio aparelho (loopback). Devolve sem barra no fim, ou "". 
+ * @param {*} [raw] Valor bruto de entrada.
+ * @returns {*} Resultado da operação.*/
 export function normalizeMemoryServerUrl(raw) {
   const url = String(raw || "").trim().replace(/\/+$/, "");
   if (/^https:\/\/[^\s/]+/i.test(url)) return url;
   return /^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/i.test(url) ? url : "";
 }
 
+/** Operação `memoryServerHost` do módulo.
+ * @param {*} [url] URL de destino.
+ * @returns {*} Resultado da operação.
+ */
 export function memoryServerHost(url) {
   try {
     return new URL(url).host;
@@ -51,10 +57,18 @@ export function memoryServerHost(url) {
   }
 }
 
+/** Obtém ChosenMemoryServer.
+ * @param {*} [storage] Armazenamento injetável.
+ * @returns {*} Resultado da operação.
+ */
 export function getChosenMemoryServer(storage = globalThis.localStorage) {
   return normalizeMemoryServerUrl(read(storage, CHOSEN_KEY));
 }
 
+/** Obtém MemorySuggestion.
+ * @param {*} [storage] Armazenamento injetável.
+ * @returns {*} Resultado da operação.
+ */
 export function getMemorySuggestion(storage = globalThis.localStorage) {
   try {
     const parsed = JSON.parse(read(storage, SUGGESTION_KEY) || "null");
@@ -73,7 +87,11 @@ function dismissedList(storage) {
   }
 }
 
-/** Registra a sugestão sem trocar nada. Devolve a URL sugerida, ou "" se foi ignorada. */
+/** Registra a sugestão sem trocar nada. Devolve a URL sugerida, ou "" se foi ignorada. 
+ * @param {*} [raw] Valor bruto de entrada.
+ * @param {*} [source] Origem da sugestão de memória.
+ * @param {*} [storage] Armazenamento injetável.
+ * @returns {*} Resultado da operação.*/
 export function suggestMemoryServer(raw, source, storage = globalThis.localStorage) {
   const url = normalizeMemoryServerUrl(raw);
   if (!url || url === getChosenMemoryServer(storage) || dismissedList(storage).includes(url)) return "";
@@ -81,7 +99,10 @@ export function suggestMemoryServer(raw, source, storage = globalThis.localStora
   return url;
 }
 
-/** Escolha explícita: passa a ser o servidor da memória central e o relay de reserva das DMs. */
+/** Escolha explícita: passa a ser o servidor da memória central e o relay de reserva das DMs. 
+ * @param {*} [raw] Valor bruto de entrada.
+ * @param {*} [storage] Armazenamento injetável.
+ * @returns {*} Resultado da operação.*/
 export function chooseMemoryServer(raw, storage = globalThis.localStorage) {
   const url = normalizeMemoryServerUrl(raw);
   if (!url) return "";
@@ -91,6 +112,9 @@ export function chooseMemoryServer(raw, storage = globalThis.localStorage) {
   return url;
 }
 
+/** Operação `dismissMemorySuggestion` do módulo.
+ * @param {*} [storage] Armazenamento injetável.
+ */
 export function dismissMemorySuggestion(storage = globalThis.localStorage) {
   const suggestion = getMemorySuggestion(storage);
   write(storage, SUGGESTION_KEY, "");
@@ -102,7 +126,9 @@ export function dismissMemorySuggestion(storage = globalThis.localStorage) {
 /**
  * O endereço gravado sem perguntar (chave antiga) vira sugestão. O relay de reserva só sai junto
  * se foi gravado pelo mesmo caminho (mesmo valor); um relay escolhido na tela Rede fica.
- */
+ 
+ * @param {*} [storage] Armazenamento injetável.
+ * @returns {*} Resultado da operação.*/
 export function migrateLegacyMemoryServer(storage = globalThis.localStorage) {
   const legacy = read(storage, LEGACY_KEY).trim().replace(/\/+$/, "");
   if (!legacy) return "";
@@ -111,6 +137,10 @@ export function migrateLegacyMemoryServer(storage = globalThis.localStorage) {
   return suggestMemoryServer(legacy, "anterior", storage);
 }
 
+/** Operação `memorySuggestionQuestion` do módulo.
+ * @param {object} [options={}] Contexto da sugestão.
+ * @returns {*} Resultado da operação.
+ */
 export function memorySuggestionQuestion({ url, source }) {
   return [
     `${SOURCE_TEXT[source] || SOURCE_TEXT.par} sugere guardar uma cópia dos seus dados no servidor:`,
@@ -124,7 +154,11 @@ export function memorySuggestionQuestion({ url, source }) {
   ].join("\n");
 }
 
-/** Pergunta uma vez sobre a sugestão pendente. Devolve a URL escolhida, ou "". */
+/**
+ * Pergunta uma vez sobre servidor de memória sugerido; devolve URL escolhida ou "".
+ * @param {object} [options={}] Função `confirm` e armazenamento injetáveis.
+ * @returns {string}
+ */
 export function askAboutMemorySuggestion({ confirmFn = globalThis.confirm, storage = globalThis.localStorage } = {}) {
   const suggestion = getMemorySuggestion(storage);
   if (!suggestion || typeof confirmFn !== "function") return "";
