@@ -7,17 +7,38 @@
  * 3. Renderização de comunidades como crachás de identidade social explícita.
  */
 
+/**
+ * Operação `TESTIMONIAL_TYPE` do módulo.
+ * @type {*}
+ */
 export const TESTIMONIAL_TYPE = "testimonial";
+/**
+ * Operação `TESTIMONIAL_APPROVAL_TYPE` do módulo.
+ * @type {*}
+ */
 export const TESTIMONIAL_APPROVAL_TYPE = "testimonial-approval";
 
+/**
+ * Operação `TESTIMONIAL_STATUS` do módulo.
+ * @type {*}
+ */
 export const TESTIMONIAL_STATUS = {
   PENDING: "pending",
   APPROVED: "approved",
   REJECTED: "rejected",
 };
 
+/**
+ * Operação `MAX_TESTIMONIAL_LENGTH` do módulo.
+ * @type {*}
+ */
 export const MAX_TESTIMONIAL_LENGTH = 1500;
 
+/**
+ * Operação `validateTestimonialInput` do módulo.
+ * @param {Object} options Campos do depoimento ou tags.
+ * @returns {*} Resultado da operação.
+ */
 export function validateTestimonialInput({ text, recipientAddress, authorAddress }) {
   const cleanText = String(text || "").trim();
   if (!cleanText) {
@@ -38,6 +59,11 @@ export function validateTestimonialInput({ text, recipientAddress, authorAddress
   return { valid: true, text: cleanText, recipientAddress, authorAddress };
 }
 
+/**
+ * Operação `buildTestimonialTags` do módulo.
+ * @param {Object} options Campos do depoimento ou tags.
+ * @returns {*} Resultado da operação.
+ */
 export function buildTestimonialTags({ recipientAddress, authorAddress, ts = Date.now() }) {
   return [
     { name: "App-Name", value: "vox-brasil" },
@@ -48,6 +74,11 @@ export function buildTestimonialTags({ recipientAddress, authorAddress, ts = Dat
   ];
 }
 
+/**
+ * Operação `buildTestimonialApprovalTags` do módulo.
+ * @param {Object} options Campos do depoimento ou tags.
+ * @returns {*} Resultado da operação.
+ */
 export function buildTestimonialApprovalTags({ testimonialTxId, recipientAddress, ts = Date.now() }) {
   return [
     { name: "App-Name", value: "vox-brasil" },
@@ -58,6 +89,12 @@ export function buildTestimonialApprovalTags({ testimonialTxId, recipientAddress
   ];
 }
 
+/**
+ * Operação `matchApprovals` do módulo.
+ * @param {*} [testimonials] Parâmetro `testimonials`.
+ * @param {*} [approvals] Parâmetro `approvals`.
+ * @returns {*} Resultado da operação.
+ */
 export function matchApprovals(testimonials = [], approvals = []) {
   const approvalMap = new Map();
   for (const a of approvals) {
@@ -77,11 +114,22 @@ export function matchApprovals(testimonials = [], approvals = []) {
   });
 }
 
+/**
+ * Operação `filterApprovedTestimonials` do módulo.
+ * @param {*} [testimonials] Parâmetro `testimonials`.
+ * @param {*} [approvals] Parâmetro `approvals`.
+ * @returns {*} Resultado da operação.
+ */
 export function filterApprovedTestimonials(testimonials = [], approvals = []) {
   const matched = matchApprovals(testimonials, approvals);
   return matched.filter((t) => t.status === TESTIMONIAL_STATUS.APPROVED);
 }
 
+/**
+ * Operação `renderCommunityBadgesHtml` do módulo.
+ * @param {*} [communities] Parâmetro `communities`.
+ * @returns {*} Resultado da operação.
+ */
 export function renderCommunityBadgesHtml(communities = []) {
   if (!Array.isArray(communities) || communities.length === 0) {
     return `<div class="vox-badges-empty">Nenhuma comunidade vinculada como crachá.</div>`;

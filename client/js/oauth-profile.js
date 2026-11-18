@@ -5,6 +5,10 @@ import { restoreOrBindGoogleIdentity, restoreOrBindMetaIdentity } from "./vault/
 
 let configCache = null;
 
+/**
+ * Operação `loadOAuthConfig` do módulo.
+ * @returns {*} Resultado da operação.
+ */
 export async function loadOAuthConfig() {
   if (configCache) return configCache;
   try {
@@ -19,6 +23,9 @@ export async function loadOAuthConfig() {
   return configCache;
 }
 
+/**
+ * Reseta estado de teste (`__resetOAuthConfigForTests`).
+ */
 export function __resetOAuthConfigForTests() {
   configCache = null;
 }
@@ -43,6 +50,11 @@ function extractJwtPayload(credential) {
   }
 }
 
+/**
+ * Operação `applyGoogleCredential` do módulo.
+ * @param {*} [credential] Parâmetro `credential`.
+ * @param {*} [resolve] Parâmetro `resolve`.
+ */
 export async function applyGoogleCredential(credential, resolve) {
   try {
     const payload = extractJwtPayload(credential);
@@ -63,6 +75,10 @@ export async function applyGoogleCredential(credential, resolve) {
   }
 }
 
+/**
+ * Operação `signInWithGoogle` do módulo.
+ * @returns {*} Resultado da operação.
+ */
 export async function signInWithGoogle() {
   const cfg = await loadOAuthConfig();
   const clientId = cfg?.googleClientId || "";
@@ -108,6 +124,10 @@ function fetchMetaProfile(resolve) {
   });
 }
 
+/**
+ * Operação `signInWithMeta` do módulo.
+ * @returns {*} Resultado da operação.
+ */
 export async function signInWithMeta() {
   const cfg = await loadOAuthConfig();
   const appId = cfg?.facebookAppId || "";
@@ -134,6 +154,8 @@ export async function signInWithMeta() {
 /**
  * Só identidade do Facebook para "Redes Vinculadas" (sem enriquecer perfil nem cofre).
  * A Graph API não devolve @usuário público; retorna nome e id escopado do app.
+ 
+ * @returns {*} Resultado da operação.
  */
 export async function signInWithMetaIdentity() {
   const cfg = await loadOAuthConfig();
@@ -158,6 +180,11 @@ function resolveGithubHandleInput(handle) {
   return "";
 }
 
+/**
+ * Operação `signInWithGithub` do módulo.
+ * @param {*} [handle] Parâmetro `handle`.
+ * @returns {*} Resultado da operação.
+ */
 export async function signInWithGithub(handle = "") {
   const cleanHandle = resolveGithubHandleInput(handle);
   if (!cleanHandle) return { ok: false, reason: "Usuário GitHub não informado." };
@@ -177,14 +204,25 @@ export async function signInWithGithub(handle = "") {
   }
 }
 
+/**
+ * Operação `skipOAuthEnrichment` do módulo.
+ */
 export function skipOAuthEnrichment() {
   localStorage.setItem("vox-oauth-skipped", "1");
 }
 
+/**
+ * Operação `hasSkippedOAuth` do módulo.
+ * @returns {*} Resultado da operação.
+ */
 export function hasSkippedOAuth() {
   return localStorage.getItem("vox-oauth-skipped") === "1";
 }
 
+/**
+ * Operação `hasCompletedOAuthStep` do módulo.
+ * @returns {*} Resultado da operação.
+ */
 export function hasCompletedOAuthStep() {
   return hasSkippedOAuth() || Boolean(localAccount.getProfileEnrichment()?.oauthProvider);
 }

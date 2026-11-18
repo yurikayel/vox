@@ -9,6 +9,10 @@
 
 /**
  * Remove acentos, caracteres diacríticos e caracteres não compatíveis com o padrão EMV.
+ 
+ * @param {*} [str] Parâmetro `str`.
+ * @param {*} [maxLen] Parâmetro `maxLen`.
+ * @returns {*} Resultado da operação.
  */
 export function sanitizeAscii(str, maxLen = 25) {
   if (!str) return "";
@@ -22,6 +26,10 @@ export function sanitizeAscii(str, maxLen = 25) {
 
 /**
  * Formata um elemento TLV (Tag-Length-Value) conforme o padrão EMV.
+ 
+ * @param {*} [tag] Parâmetro `tag`.
+ * @param {*} [value] Parâmetro `value`.
+ * @returns {*} Resultado da operação.
  */
 export function formatTlv(tag, value) {
   if (value === null || value === undefined) return "";
@@ -34,6 +42,9 @@ export function formatTlv(tag, value) {
 
 /**
  * Converte entradas numéricas ou em texto (ex: 5, "5.00", "R$ 28", "28,50") em formato monetário decimal.
+ 
+ * @param {*} [raw] Parâmetro `raw`.
+ * @returns {*} Resultado da operação.
  */
 export function parseNumericAmount(raw) {
   if (raw === null || raw === undefined) return null;
@@ -56,6 +67,9 @@ export function parseNumericAmount(raw) {
 /**
  * Calcula o checksum CRC16-CCITT (polinômio 0x1021, valor inicial 0xFFFF).
  * Padrão exigido no campo ID 63 do BR Code do Banco Central.
+ 
+ * @param {*} [str] Parâmetro `str`.
+ * @returns {*} Resultado da operação.
  */
 export function calculateCrc16(str) {
   let crc = 0xffff;

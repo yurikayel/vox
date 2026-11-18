@@ -1,7 +1,9 @@
 /** Checklist seed pós-criação de comunidade (V-P05) — ritual ~3 min, localStorage. */
 const PENDING_KEY = "vox-community-seed-pending";
 
-/** Tour/mock — ritual de seed não se aplica a testadores na rede demo. */
+/** Tour/mock — ritual de seed não se aplica a testadores na rede demo. 
+ * @type {*}
+ */
 export const SEED_RITUAL_SKIP_COMMUNITY_IDS = new Set([
   "demo-aprenda-vox",
   "demo-aprenda-vox-mirror",
@@ -9,6 +11,10 @@ export const SEED_RITUAL_SKIP_COMMUNITY_IDS = new Set([
 ]);
 const stateKey = (communityId) => `vox-community-seed-${communityId}`;
 
+/**
+ * Operação `markSeedPending` do módulo.
+ * @param {*} [communityId] Parâmetro `communityId`.
+ */
 export function markSeedPending(communityId) {
   if (!communityId) return;
   try {
@@ -18,6 +24,10 @@ export function markSeedPending(communityId) {
   }
 }
 
+/**
+ * Operação `clearSeedPending` do módulo.
+ * @param {*} [communityId] Parâmetro `communityId`.
+ */
 export function clearSeedPending(communityId) {
   try {
     const cur = localStorage.getItem(PENDING_KEY);
@@ -27,6 +37,10 @@ export function clearSeedPending(communityId) {
   }
 }
 
+/**
+ * Operação `getSeedPendingCommunityId` do módulo.
+ * @returns {*} Resultado da operação.
+ */
 export function getSeedPendingCommunityId() {
   try {
     return localStorage.getItem(PENDING_KEY) || "";
@@ -37,6 +51,11 @@ export function getSeedPendingCommunityId() {
 
 /** @typedef {{ activeAck: boolean, invitesSent: number, commOnlyNudgeSeen: boolean, dismissed: boolean }} SeedState */
 
+/**
+ * Operação `loadSeedState` do módulo.
+ * @param {*} [communityId] Parâmetro `communityId`.
+ * @returns {*} Resultado da operação.
+ */
 export function loadSeedState(communityId) {
   const base = { activeAck: false, invitesSent: 0, commOnlyNudgeSeen: false, dismissed: false };
   if (!communityId) return base;
@@ -55,6 +74,12 @@ export function loadSeedState(communityId) {
   }
 }
 
+/**
+ * Operação `saveSeedState` do módulo.
+ * @param {*} [communityId] Parâmetro `communityId`.
+ * @param {*} [partial] Parâmetro `partial`.
+ * @returns {*} Resultado da operação.
+ */
 export function saveSeedState(communityId, partial) {
   if (!communityId) return loadSeedState("");
   const next = { ...loadSeedState(communityId), ...partial };
@@ -69,6 +94,8 @@ export function saveSeedState(communityId, partial) {
 /**
  * @param {SeedState} state
  * @param {{ topicCount?: number, peerEnabled?: boolean }} ctx
+ 
+ * @returns {*} Resultado da operação.
  */
 export function isSeedComplete(state, { topicCount = 0, peerEnabled = true } = {}) {
   if (state.dismissed) return true;
@@ -82,6 +109,8 @@ export function isSeedComplete(state, { topicCount = 0, peerEnabled = true } = {
  * @param {string} communityId
  * @param {string|null} userAddress
  * @param {{ owner?: string }} meta
+ 
+ * @returns {*} Resultado da operação.
  */
 export function shouldOfferSeedRitual(communityId, userAddress, meta = {}) {
   if (!communityId || !userAddress) return false;
@@ -94,16 +123,32 @@ export function shouldOfferSeedRitual(communityId, userAddress, meta = {}) {
   return owner === userAddress;
 }
 
+/**
+ * Operação `recordSeedInvite` do módulo.
+ * @param {*} [communityId] Parâmetro `communityId`.
+ * @returns {*} Resultado da operação.
+ */
 export function recordSeedInvite(communityId) {
   const state = loadSeedState(communityId);
   return saveSeedState(communityId, { invitesSent: Math.min(99, state.invitesSent + 1) });
 }
 
+/**
+ * Operação `dismissSeedRitual` do módulo.
+ * @param {*} [communityId] Parâmetro `communityId`.
+ * @returns {*} Resultado da operação.
+ */
 export function dismissSeedRitual(communityId) {
   clearSeedPending(communityId);
   return saveSeedState(communityId, { dismissed: true });
 }
 
+/**
+ * Operação `finalizeSeedIfComplete` do módulo.
+ * @param {*} [communityId] Parâmetro `communityId`.
+ * @param {*} [ctx] Parâmetro `ctx`.
+ * @returns {*} Resultado da operação.
+ */
 export function finalizeSeedIfComplete(communityId, ctx) {
   const state = loadSeedState(communityId);
   if (isSeedComplete(state, ctx)) clearSeedPending(communityId);

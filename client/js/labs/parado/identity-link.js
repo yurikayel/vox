@@ -10,6 +10,10 @@ import * as wallet from "../../wallet.js";
 import * as ans104 from "../../ans104.js";
 import * as upload from "../../upload.js";
 
+/**
+ * Operação `IDENTITY_LINK_TYPE` do módulo.
+ * @type {*}
+ */
 export const IDENTITY_LINK_TYPE = "identity-link";
 const IDENTITY_STORAGE_KEY = "vox-identity-links-v1";
 
@@ -27,12 +31,19 @@ function loadIdentityMap() {
   }
 }
 
+/**
+ * Reseta estado de teste (`__resetIdentityLinksForTests`).
+ */
 export function __resetIdentityLinksForTests() {
   try {
     localStorage.removeItem(IDENTITY_STORAGE_KEY);
   } catch {}
 }
 
+/**
+ * Operação `saveVerifiedIdentityLink` do módulo.
+ * @param {*} [link] Parâmetro `link`.
+ */
 export function saveVerifiedIdentityLink(link) {
   if (!link?.statement?.routeId || !link?.statement?.arweaveAddress) return;
   const store = loadIdentityMap();
@@ -43,11 +54,21 @@ export function saveVerifiedIdentityLink(link) {
   } catch {}
 }
 
+/**
+ * Operação `getLinkedArweaveAddress` do módulo.
+ * @param {*} [routeId] Parâmetro `routeId`.
+ * @returns {*} Resultado da operação.
+ */
 export function getLinkedArweaveAddress(routeId) {
   if (!routeId) return null;
   return loadIdentityMap().routeToAr[routeId] || null;
 }
 
+/**
+ * Operação `getLinkedRouteId` do módulo.
+ * @param {*} [arweaveAddress] Parâmetro `arweaveAddress`.
+ * @returns {*} Resultado da operação.
+ */
 export function getLinkedRouteId(arweaveAddress) {
   if (!arweaveAddress) return null;
   return loadIdentityMap().arToRoute[arweaveAddress] || null;
@@ -69,6 +90,11 @@ async function signStatementWithRsaJwk(statementBytes, currentJwk) {
   return ans104.bytesToB64Url(new Uint8Array(rsaSigBuf));
 }
 
+/**
+ * Operação `createIdentityLink` do módulo.
+ * @param {Object} [options] `routeId`, `arweaveAddress` e `jwk` opcionais.
+ * @returns {*} Resultado da operação.
+ */
 export async function createIdentityLink({ routeId, arweaveAddress, jwk } = {}) {
   const currentRouteId = routeId || (await localAccount.getRouteId());
   const currentJwk = jwk || (await wallet.ensureWallet());
@@ -126,6 +152,11 @@ async function verifyRsaStatementSignature(statement, arPubKey, arSig) {
   }
 }
 
+/**
+ * Operação `verifyIdentityLink` do módulo.
+ * @param {*} [link] Parâmetro `link`.
+ * @returns {*} Resultado da operação.
+ */
 export async function verifyIdentityLink(link) {
   if (!hasValidLinkStructure(link)) return false;
   const { statement, vxPubKey, vxSig, arPubKey, arSig } = link;
@@ -147,6 +178,11 @@ export async function verifyIdentityLink(link) {
   return verifyRsaStatementSignature(statement, arPubKey, arSig);
 }
 
+/**
+ * Operação `buildIdentityLinkArweaveTags` do módulo.
+ * @param {*} [link] Parâmetro `link`.
+ * @returns {*} Resultado da operação.
+ */
 export function buildIdentityLinkArweaveTags(link) {
   return [
     { name: "App-Name", value: "vox-brasil" },
@@ -158,6 +194,12 @@ export function buildIdentityLinkArweaveTags(link) {
   ];
 }
 
+/**
+ * Operação `publishIdentityLinkOnChain` do módulo.
+ * @param {*} [link] Parâmetro `link`.
+ * @param {Object} [options] `uploadFn` opcional para publicar na cadeia.
+ * @returns {*} Resultado da operação.
+ */
 export async function publishIdentityLinkOnChain(link, { uploadFn = upload.postData } = {}) {
   const valid = await verifyIdentityLink(link);
   if (!valid) throw new Error("Link de identidade inválido ou adulterado.");
