@@ -8,8 +8,11 @@
  * no que um aparelho sozinho alcança. Guardiões, QR entre aparelhos e a malha precisam de mais de um aparelho e
  * continuam nos testes de fluxo (`mesh-vault-flow.test.js`, `guardian*.test.js`).
  *
- * Uso: `PLAYWRIGHT_CORE_PATH=<.../playwright-core/index.mjs> node scripts/login-e2e.mjs`
- * (ou `npm install --no-save playwright-core`). `CHROMIUM_EXECUTABLE_PATH` aponta para um Chrome já instalado.
+ * Ambiente (Playwright + Chromium):
+ * - `playwright-core` no `node_modules` da raiz, **ou** `PLAYWRIGHT_CORE_PATH` apontando para `playwright-core/index.mjs`
+ *   (senão: `npm install --no-save playwright-core` na raiz).
+ * - `CHROMIUM_EXECUTABLE_PATH` (opcional): Chrome/Chromium instalado; sem isso usa o binário do pacote (`npx playwright-core install chromium`).
+ * Execução: `node scripts/login-e2e.mjs`. Exit 0 só com todos os cenários passando; falha real → exit 1 (sem falso verde).
  */
 import http from "node:http";
 import fs from "node:fs";
@@ -37,7 +40,16 @@ const MIME = {
 async function loadPlaywright() {
   const explicit = process.env.PLAYWRIGHT_CORE_PATH;
   if (explicit) return import(pathToFileURL(explicit).href);
-  try { return await import("playwright-core"); } catch { return import("playwright"); }
+  try {
+    return await import("playwright-core");
+  } catch (errCore) {
+    try {
+      return await import("playwright");
+    } catch (errFull) {
+      const hint = errFull?.message || errCore?.message || String(errFull);
+      throw new Error(`FALHOU: playwright indisponível (defina PLAYWRIGHT_CORE_PATH ou instale playwright-core). ${hint}`);
+    }
+  }
 }
 
 function startStaticServer() {
@@ -196,6 +208,10 @@ function checkNoPasswordLeak(device, label) {
   }
 }
 
+function checkNoPageErrors(device, label) {
+  check(device.errors.length === 0, `${label}: erros JS na página: ${device.errors.join(" | ")}`);
+}
+
 async function scenarioNameOnly(browser, baseUrl) {
   const dev = await newDevice(browser, baseUrl);
   try {
@@ -210,6 +226,7 @@ async function scenarioNameOnly(browser, baseUrl) {
     const dump = await storageDump(dev.page);
     check(secrets.every((v) => !dump.includes(v)), "nenhuma chave da conta apagada sobra no storage");
     checkNoPasswordLeak(dev, "só nome");
+    checkNoPageErrors(dev, "só nome");
     console.log(`PASS [só nome] routeId=${id.slice(0, 10)}… criado, estável, apagado`);
   } finally { await dev.context.close(); }
 }
@@ -223,6 +240,7 @@ async function expectReturn(env, label, fields, routeId) {
     check(out.id === routeId, `${label}: voltou com outro routeId (${out.id}) ou falhou: ${out.msg}`);
     check(!(await storageDump(dev.page)).includes(PASS), `${label}: senha ficou no storage`);
     checkNoPasswordLeak(dev, label);
+    checkNoPageErrors(dev, label);
     console.log(`PASS [volta ${label}] mesmo routeId`);
   } finally { await dev.context.close(); }
 }
@@ -240,6 +258,7 @@ async function refuses(dev, label, fields) {
   check(out.id === null && out.msg, `${label}: devia recusar com mensagem, deu id=${out.id} msg="${out.msg}"`);
   check((await routeIdOf(dev.page)) === out.before, `${label}: a recusa trocou a conta do aparelho`);
   checkNoPasswordLeak(dev, label);
+  checkNoPageErrors(dev, label);
   console.log(`PASS [recusa ${label}] "${out.msg.slice(0, 60)}"`);
 }
 
@@ -274,6 +293,7 @@ async function scenarioEmail(env) {
     await expectReturn(env, "frase (sem senha)", { phrase }, kit.routeId);
     await expectRefusal(env, "e-mail e senha sem cofre em lugar nenhum (cai na malha: aviso, sem conta)", { email: EMAIL, pass: PASS });
     checkNoPasswordLeak(dev, "e-mail");
+    checkNoPageErrors(dev, "e-mail");
     console.log(`PASS [e-mail] ${dev.seen.length} tentativas de rede (${dev.seen.filter((r) => !r.allowed).length} abortadas fora do servidor local), nenhuma com a senha`);
   } finally { await dev.context.close(); }
 }
@@ -294,4 +314,7 @@ async function main() {
   }
 }
 
-await main();
+main().catch((err) => {
+  console.error(err?.stack || String(err));
+  process.exit(1);
+});
