@@ -1,13 +1,15 @@
 /**
+ * @file Posts cívicos — tags, enquetes, votação e divisão por esfera.
+ 
  * @module civic-post
  * Esfera cívica do feed: decide se um post é "cívico" (habilita interações cívicas — posicionamento,
  * enquete, encaminhamento para votação formal) ou "social" (post comum).
  *
  * Um post só é cívico quando carrega uma TAG CÍVICA **e** cumpre todos os requisitos abaixo.
- * Puro (sem DOM, sem IndexedDB) — testável em Node.
- */
+ * Puro (sem DOM, sem IndexedDB) — testável em Node.*/
 
-/** Tags cívicas canônicas (mesmo formato do seletor do compositor: `[Pauta]`…). */
+/** Tags cívicas canônicas (mesmo formato do seletor do compositor: `[Pauta]`…). 
+ * @type {object}*/
 export const CIVIC_TAGS = {
   "[Pauta]": { kind: "pauta", label: "Pauta" },
   "[Ideia]": { kind: "ideia", label: "Ideia" },
@@ -27,12 +29,17 @@ const HASHTAG_TO_TAG = {
   consulta: "[Enquete]",
 };
 
+/** Export `CIVIC_MIN_TITLE` do módulo. @type {number} */
 export const CIVIC_MIN_TITLE = 8;
+/** Export `CIVIC_MIN_BODY` do módulo. @type {number} */
 export const CIVIC_MIN_BODY = 40;
+/** Export `CIVIC_POLL_MIN` do módulo. @type {number} */
 export const CIVIC_POLL_MIN = 2;
+/** Export `CIVIC_POLL_MAX` do módulo. @type {number} */
 export const CIVIC_POLL_MAX = 6;
 
-/** Requisitos exibidos ao usuário (a ordem é a da checagem). */
+/** Requisitos exibidos ao usuário (a ordem é a da checagem). 
+ * @type {Array}*/
 export const CIVIC_REQUIREMENTS = [
   { key: "tag", label: "Tag cívica: #pauta, #ideia, #debate ou #enquete" },
   { key: "title", label: `Título com pelo menos ${CIVIC_MIN_TITLE} caracteres` },
@@ -42,6 +49,7 @@ export const CIVIC_REQUIREMENTS = [
   { key: "options", label: `Enquete: ${CIVIC_POLL_MIN} a ${CIVIC_POLL_MAX} opções, uma por linha começando com “- ”`, onlyFor: "enquete" },
 ];
 
+/** Export `CIVIC_STANCES` do módulo. @type {Array} */
 export const CIVIC_STANCES = [
   { key: "concordo", label: "Concordo" },
   { key: "discordo", label: "Discordo" },
@@ -68,13 +76,17 @@ function tagFromHashtags(body) {
   return "";
 }
 
-/** Tag cívica do post: campo `civicTag`, prefixo no título ou hashtag no corpo. */
+/** Tag cívica do post: campo `civicTag`, prefixo no título ou hashtag no corpo. 
+ * @param {*} [post] Post ou registro.
+ * @returns {*} Resultado da operação.*/
 export function resolveCivicTag(post = {}) {
   if (CIVIC_TAGS[post.civicTag]) return post.civicTag;
   return tagFromTitlePrefix(post.title) || tagFromHashtags(post.body);
 }
 
-/** Opções de enquete: linhas do corpo iniciadas por "- ", "* ", "• " ou "( )". */
+/** Opções de enquete: linhas do corpo iniciadas por "- ", "* ", "• " ou "( )". 
+ * @param {*} [body] Corpo do post.
+ * @returns {*} Resultado da operação.*/
 export function parsePollOptions(body = "") {
   return String(body)
     .split(/\r?\n/)
@@ -120,7 +132,9 @@ export function classifyCivicPost(post = {}) {
   return { isCivic: missing.length === 0, tag, kind: meta.kind, label: meta.label, missing, options };
 }
 
-/** Escolhas disponíveis: opções da enquete (`opt:N`) ou posicionamento concordo/discordo/abstenção. */
+/** Escolhas disponíveis: opções da enquete (`opt:N`) ou posicionamento concordo/discordo/abstenção. 
+ * @param {*} [classification] Classificação cívica do post.
+ * @returns {*} Resultado da operação.*/
 export function civicChoicesFor(classification) {
   if (classification?.kind === "enquete") {
     return classification.options.map((label, i) => ({ key: `opt:${i}`, label }));
@@ -128,6 +142,11 @@ export function civicChoicesFor(classification) {
   return CIVIC_STANCES;
 }
 
+/** Indica se ValidCivicChoice.
+ * @param {*} [classification] Classificação cívica do post.
+ * @param {*} [choice] Parâmetro `choice`.
+ * @returns {*} Resultado da operação.
+ */
 export function isValidCivicChoice(classification, choice) {
   return civicChoicesFor(classification).some((c) => c.key === choice);
 }
@@ -150,6 +169,11 @@ function latestVotePerAuthor(votes) {
   return latest;
 }
 
+/** Operação `tallyCivicVotes` do módulo.
+ * @param {*} [votes] Parâmetro `votes`.
+ * @param {*} [me] Parâmetro `me`.
+ * @returns {*} Resultado da operação.
+ */
 export function tallyCivicVotes(votes = [], me = "") {
   const latest = latestVotePerAuthor(votes);
   const out = new Map();
@@ -166,7 +190,10 @@ export function tallyCivicVotes(votes = [], me = "") {
 /**
  * Separa posts em esferas. Posts cívicos recebem `civic` (classificação) e `civicTally`.
  * Posts próprios com tag cívica mas sem requisitos recebem `civicPending` (lista do que falta).
- */
+ 
+ * @param {*} [posts] Lista de posts.
+ * @param {object} [opts] Opções da divisão por esfera.
+ * @returns {*} Resultado da operação.*/
 export function splitFeedBySphere(posts = [], { votes = [], me = "" } = {}) {
   const tallies = tallyCivicVotes(votes, me);
   const social = [];
@@ -184,7 +211,9 @@ export function splitFeedBySphere(posts = [], { votes = [], me = "" } = {}) {
   return { social, civic };
 }
 
-/** Rótulos legíveis dos requisitos pendentes. */
+/** Rótulos legíveis dos requisitos pendentes. 
+ * @param {*} [missing] Lista de requisitos faltantes.
+ * @returns {*} Resultado da operação.*/
 export function describeMissingRequirements(missing = []) {
   return CIVIC_REQUIREMENTS.filter((r) => missing.includes(r.key)).map((r) => r.label);
 }
@@ -192,7 +221,10 @@ export function describeMissingRequirements(missing = []) {
 /**
  * Acrescenta as opções do construtor de enquete ao corpo como linhas "- opção" (formato que
  * `parsePollOptions` lê). Ignora vazias, repetidas e as que já estão no texto; respeita o máximo.
- */
+ 
+ * @param {*} [body] Corpo do post.
+ * @param {*} [options] Opções de enquete.
+ * @returns {*} Resultado da operação.*/
 export function appendPollOptionsToBody(body = "", options = []) {
   const existing = new Set(parsePollOptions(body).map((o) => o.toLowerCase()));
   const clean = [];

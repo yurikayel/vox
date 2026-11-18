@@ -1,13 +1,20 @@
 /**
+ * @file Inbox HTTP do relay — URLs, push/pull de envelopes selados.
+ 
  * Cliente de Inbox Efêmero do Relay (Fase 4 & T2/V-P08)
  * Envio, busca e exclusão de envelopes cifrados fora do permaweb com TTL.
- * Suporta cascata Primário + Buddy (failover automático sem perda de confiança).
- */
+ * Suporta cascata Primário + Buddy (failover automático sem perda de confiança).*/
 
+/** Chave em `localStorage` (só neste aparelho). @type {string} */
 export const RELAY_HTTP_STORAGE_KEY = "vox-relay-http-url";
+/** Chave em `localStorage` (só neste aparelho). @type {string} */
 export const RELAY_BUDDY_HTTP_STORAGE_KEY = "vox-relay-buddy-http-url";
 const DEFAULT_RELAY_HTTP = "http://127.0.0.1:3920";
 
+/** Normaliza RelayHttpBase.
+ * @param {*} [raw] Valor bruto de entrada.
+ * @returns {*} Resultado da operação.
+ */
 export function normalizeRelayHttpBase(raw) {
   if (!raw || !String(raw).trim()) return null;
   let url = String(raw).trim().replace(/\/+$/, "");
@@ -21,6 +28,9 @@ export function normalizeRelayHttpBase(raw) {
   return url.replace(/\/+$/, "");
 }
 
+/** Persiste RelayHttpUrl localmente.
+ * @param {*} [raw] Valor bruto de entrada.
+ */
 export function saveRelayHttpUrl(raw) {
   const normalized = normalizeRelayHttpBase(raw);
   if (normalized) {
@@ -30,6 +40,9 @@ export function saveRelayHttpUrl(raw) {
   }
 }
 
+/** Persiste RelayBuddyHttpUrl localmente.
+ * @param {*} [raw] Valor bruto de entrada.
+ */
 export function saveRelayBuddyHttpUrl(raw) {
   const normalized = normalizeRelayHttpBase(raw);
   if (normalized) {
@@ -39,6 +52,9 @@ export function saveRelayBuddyHttpUrl(raw) {
   }
 }
 
+/** Obtém RelayBuddyHttpUrl.
+ * @returns {*} Resultado da operação.
+ */
 export function getRelayBuddyHttpUrl() {
   try {
     const raw = localStorage.getItem(RELAY_BUDDY_HTTP_STORAGE_KEY);
@@ -47,6 +63,9 @@ export function getRelayBuddyHttpUrl() {
   return null;
 }
 
+/** Obtém RelayHttpUrl.
+ * @returns {*} Resultado da operação.
+ */
 export function getRelayHttpUrl() {
   try {
     const explicit = localStorage.getItem(RELAY_HTTP_STORAGE_KEY);
@@ -60,6 +79,10 @@ export function getRelayHttpUrl() {
   return DEFAULT_RELAY_HTTP;
 }
 
+/** Obtém RelayHttpUrls.
+ * @param {*} [baseUrl] URL base do relay.
+ * @returns {*} Resultado da operação.
+ */
 export function getRelayHttpUrls(baseUrl = null) {
   if (baseUrl) {
     const normalized = normalizeRelayHttpBase(baseUrl);
@@ -74,6 +97,12 @@ export function getRelayHttpUrls(baseUrl = null) {
   return list;
 }
 
+/** Operação `pushSealed` do módulo.
+ * @param {*} [toAddress] Parâmetro `toAddress`.
+ * @param {*} [envelope] Envelope cifrado da DM.
+ * @param {*} [baseUrl] URL base do relay.
+ * @returns {*} Resultado da operação.
+ */
 export async function pushSealed(toAddress, envelope, baseUrl = null) {
   if (!toAddress || !envelope) {
     throw new Error("toAddress e envelope são obrigatórios");
@@ -105,6 +134,11 @@ export async function pushSealed(toAddress, envelope, baseUrl = null) {
   throw lastErr || new Error("Falha no envio ao inbox em todos os relays configurados");
 }
 
+/** Operação `pullMine` do módulo.
+ * @param {*} [myAddress] Endereço do destinatário autenticado.
+ * @param {*} [baseUrl] URL base do relay.
+ * @returns {*} Resultado da operação.
+ */
 export async function pullMine(myAddress, baseUrl = null) {
   if (!myAddress) return [];
   const targets = getRelayHttpUrls(baseUrl);
@@ -124,7 +158,12 @@ export async function pullMine(myAddress, baseUrl = null) {
   return [];
 }
 
-/** Apaga o envelope já lido. PM-94: envelope novo só sai com a chave de apagar (`cryptoDm.openDeleteToken`). */
+/** Apaga o envelope já lido. PM-94: envelope novo só sai com a chave de apagar (`cryptoDm.openDeleteToken`). 
+ * @param {*} [myAddress] Endereço do destinatário autenticado.
+ * @param {*} [messageId] Id da mensagem selada.
+ * @param {*} [deleteToken] Token de exclusão do relay.
+ * @param {*} [baseUrl] URL base do relay.
+ * @returns {*} Resultado da operação.*/
 export async function deleteSealed(myAddress, messageId, deleteToken = null, baseUrl = null) {
   if (!myAddress || !messageId) return false;
   const targets = getRelayHttpUrls(baseUrl);

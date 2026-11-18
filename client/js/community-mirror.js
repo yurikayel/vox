@@ -1,14 +1,19 @@
 /**
+ * @file Espelho de comunidade no relay HTTP — payload compacto e telemetria.
+ 
  * Espelho local de índice de comunidade no relay HTTP (V-I03 / V-P06).
- * O cliente monta JSON leve e envia POST /vox/mirror para acelerar leitura na LAN.
- */
+ * O cliente monta JSON leve e envia POST /vox/mirror para acelerar leitura na LAN.*/
 
 import { validateManifestBody } from "./cache-manifest.js";
 import { getRelayHttpUrls } from "./inbox.js";
 
+/** Limite numérico do módulo. @type {*} */
 export const MIRROR_MAX_BODY_BYTES = 256 * 1024;
+/** Limite numérico do módulo. @type {number} */
 export const MIRROR_MAX_TOPICS = 500;
+/** Export `COMMUNITY_ID_PATTERN` do módulo. @type {*} */
 export const COMMUNITY_ID_PATTERN = /^[a-zA-Z0-9._-]{1,128}$/;
+/** Chave em `localStorage` (só neste aparelho). @type {string} */
 export const MIRROR_TELEMETRY_KEY = "vox-mirror-telemetry";
 
 const MIRROR_ERROR_PT = {
@@ -22,6 +27,9 @@ const MIRROR_ERROR_PT = {
   "mirror.local_validation": "Pré-validação local falhou.",
 };
 
+/** Indica se MirrorVerbose.
+ * @returns {*} Resultado da operação.
+ */
 export function isMirrorVerbose() {
   try {
     return localStorage.getItem("VOX_MIRROR_VERBOSE") === "1";
@@ -30,10 +38,18 @@ export function isMirrorVerbose() {
   }
 }
 
+/** Operação `mirrorUserMessage` do módulo.
+ * @param {*} [code] Parâmetro `code`.
+ * @param {*} [fallback] Parâmetro `fallback`.
+ * @returns {*} Resultado da operação.
+ */
 export function mirrorUserMessage(code, fallback = "") {
   return MIRROR_ERROR_PT[code] || fallback || "Índice não enviado ao relay.";
 }
 
+/** Carrega MirrorTelemetry do armazenamento ou rede.
+ * @returns {*} Resultado da operação.
+ */
 export function loadMirrorTelemetry() {
   try {
     const raw = localStorage.getItem(MIRROR_TELEMETRY_KEY);
@@ -57,6 +73,11 @@ function saveMirrorTelemetry(state) {
   }
 }
 
+/** Operação `recordMirrorOutcome` do módulo.
+ * @param {*} [communityId] Id da comunidade.
+ * @param {*} [outcome] Parâmetro `outcome`.
+ * @returns {*} Resultado da operação.
+ */
 export function recordMirrorOutcome(communityId, outcome) {
   const cid = String(communityId || "").trim();
   const state = loadMirrorTelemetry();
@@ -75,12 +96,19 @@ export function recordMirrorOutcome(communityId, outcome) {
   return entry;
 }
 
+/** Obtém MirrorStatusForCommunity.
+ * @param {*} [communityId] Id da comunidade.
+ * @returns {*} Resultado da operação.
+ */
 export function getMirrorStatusForCommunity(communityId) {
   const cid = String(communityId || "").trim();
   if (!cid) return null;
   return loadMirrorTelemetry().byCommunity[cid] || null;
 }
 
+/** Obtém MirrorLastErrorExport.
+ * @returns {*} Resultado da operação.
+ */
 export function getMirrorLastErrorExport() {
   const err = loadMirrorTelemetry().lastError;
   if (!err) return null;
@@ -118,6 +146,11 @@ function validateCommunityCacheManifest(cacheManifest) {
   return null;
 }
 
+/** Valida entrada de CommunityMirrorPayload.
+ * @param {*} [payload] Payload a publicar.
+ * @param {*} [bodyBytes] Parâmetro `bodyBytes`.
+ * @returns {*} Resultado da operação.
+ */
 export function validateCommunityMirrorPayload(payload, bodyBytes = null) {
   const communityId = String(payload?.communityId || "").trim();
   if (!communityId || !COMMUNITY_ID_PATTERN.test(communityId)) {
@@ -136,6 +169,12 @@ export function validateCommunityMirrorPayload(payload, bodyBytes = null) {
   return { valid: true };
 }
 
+/** Monta CommunityMirrorIndex para uso no cliente.
+ * @param {*} [community] Comunidade ou metadados.
+ * @param {*} [topics] Lista de tópicos.
+ * @param {*} [options] Opções de enquete.
+ * @returns {*} Resultado da operação.
+ */
 export function buildCommunityMirrorIndex(community, topics = [], options = {}) {
   const communityId = String(community?.communityId || community?.id || "").trim();
   if (!communityId) {
@@ -207,6 +246,11 @@ async function postMirrorToSingleTarget(root, body) {
   }
 }
 
+/** Operação `postCommunityMirrorToRelay` do módulo.
+ * @param {*} [indexPayload] Parâmetro `indexPayload`.
+ * @param {*} [baseUrl] URL base do relay.
+ * @returns {*} Resultado da operação.
+ */
 export async function postCommunityMirrorToRelay(indexPayload, baseUrl = null) {
   const communityId = indexPayload?.communityId;
   if (!communityId) throw new Error("communityId obrigatório");
@@ -238,6 +282,13 @@ export async function postCommunityMirrorToRelay(indexPayload, baseUrl = null) {
   throw lastErr || new Error("Falha ao espelhar comunidade em todos os relays configurados");
 }
 
+/** Operação `mirrorCommunityToRelay` do módulo.
+ * @param {*} [community] Comunidade ou metadados.
+ * @param {*} [topics] Lista de tópicos.
+ * @param {*} [baseUrl] URL base do relay.
+ * @param {*} [options] Opções de enquete.
+ * @returns {*} Resultado da operação.
+ */
 export async function mirrorCommunityToRelay(community, topics, baseUrl = null, options = {}) {
   const index = buildCommunityMirrorIndex(community, topics, options);
   const result = await postCommunityMirrorToRelay(index, baseUrl);
@@ -252,7 +303,12 @@ function shouldNotifyMirrorFailure(options = {}) {
   return Boolean(options.manual || options.notify || isMirrorVerbose());
 }
 
-/** Best-effort: não propaga erro (ex.: relay offline), salvo flag verbose ou disparo manual. */
+/** Best-effort: não propaga erro (ex.: relay offline), salvo flag verbose ou disparo manual. 
+ * @param {*} [community] Comunidade ou metadados.
+ * @param {*} [topics] Lista de tópicos.
+ * @param {*} [baseUrl] URL base do relay.
+ * @param {*} [options] Opções de enquete.
+ * @returns {*} Resultado da operação.*/
 export async function tryMirrorCommunityToRelay(community, topics, baseUrl = null, options = {}) {
   try {
     return await mirrorCommunityToRelay(community, topics, baseUrl, options);
@@ -274,7 +330,11 @@ export async function tryMirrorCommunityToRelay(community, topics, baseUrl = nul
   }
 }
 
-/** Disparo manual do wizard steward (step 5). */
+/** Disparo manual do wizard steward (step 5). 
+ * @param {*} [communityId] Id da comunidade.
+ * @param {*} [topics] Lista de tópicos.
+ * @param {*} [baseUrl] URL base do relay.
+ * @returns {*} Resultado da operação.*/
 export async function testMirrorForSteward(communityId, topics = [], baseUrl = null) {
   const cid = String(communityId || "").trim();
   const { showToast } = await import("./share.js");

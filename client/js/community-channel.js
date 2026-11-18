@@ -6,16 +6,25 @@
 
 import { isModerator } from "./moderation.js";
 
+/** Export `POSTING_MODE_MODS` do módulo. @type {string} */
 export const POSTING_MODE_MODS = "mods";
+/** Export `POSTING_MODE_OPEN` do módulo. @type {string} */
 export const POSTING_MODE_OPEN = "open";
 
+/** Indica se Channel.
+ * @param {*} [meta] Metadados da comunidade.
+ * @returns {*} Resultado da operação.
+ */
 export const isChannel = (meta) => meta?.postingMode === POSTING_MODE_MODS;
 
 const topicAuthor = (topic) => String(topic?.owner || topic?.author || "");
 const sameAddress = (a, b) => Boolean(a) && Boolean(b) && a.toLowerCase() === b.toLowerCase();
 const isModOf = (meta, who) => isModerator(who, meta?.owner, meta?.moderators);
 
-/** Pode publicar tópico? `selves`: as identidades do aparelho (ativa e conta local). */
+/** Pode publicar tópico? `selves`: as identidades do aparelho (ativa e conta local). 
+ * @param {*} [meta] Metadados da comunidade.
+ * @param {*} [selves] Identidades do aparelho (ativa e locais).
+ * @returns {*} Resultado da operação.*/
 export function canPostTopic(meta, selves) {
   if (!isChannel(meta)) return true;
   return [].concat(selves).some((self) => self && isModOf(meta, self));
@@ -25,7 +34,11 @@ export function canPostTopic(meta, selves) {
  * Lista vista por `viewer` (uma identidade ou a lista das do aparelho): tópico de quem não modera some para os outros enquanto a comunidade for canal
  * (inclusive os antigos: a data do tópico é de quem publica e não serve de prova). Voltar a "aberta" mostra tudo.
  * O autor e a moderação continuam vendo, marcado com `channelHeld`.
- */
+ 
+ * @param {*} [topics] Lista de tópicos.
+ * @param {*} [meta] Metadados da comunidade.
+ * @param {*} [viewer] Quem está vendo (endereço ou lista).
+ * @returns {*} Resultado da operação.*/
 export function filterChannelTopics(topics, meta, viewer = "") {
   if (!isChannel(meta)) return topics;
   const viewers = [].concat(viewer).filter(Boolean);
@@ -39,14 +52,22 @@ export function filterChannelTopics(topics, meta, viewer = "") {
   return out;
 }
 
-/** Página do tópico: quem não pode ver recebe o tópico marcado `channelHidden` (a tela mostra só o aviso). */
+/** Página do tópico: quem não pode ver recebe o tópico marcado `channelHidden` (a tela mostra só o aviso). 
+ * @param {*} [topic] Tópico ou registro de post.
+ * @param {*} [meta] Metadados da comunidade.
+ * @param {*} [viewer] Quem está vendo (endereço ou lista).
+ * @returns {*} Resultado da operação.*/
 export function filterChannelTopic(topic, meta, viewer = "") {
   if (!topic) return topic;
   const [visible] = filterChannelTopics([topic], meta, viewer);
   return visible || { ...topic, channelHidden: true };
 }
 
-/** Corpo do `community_update` que troca o modo; quem chama assina e espalha. */
+/** Corpo do `community_update` que troca o modo; quem chama assina e espalha. 
+ * @param {*} [communityId] Id da comunidade.
+ * @param {*} [mode] Parâmetro `mode`.
+ * @param {*} [now] Instante de referência, em ms.
+ * @returns {*} Resultado da operação.*/
 export function buildPostingModeUpdate(communityId, mode, now = Date.now()) {
   if (!communityId) throw new Error("Comunidade sem id.");
   if (mode !== POSTING_MODE_MODS && mode !== POSTING_MODE_OPEN) throw new Error(`Modo de publicação inválido: ${mode}`);
