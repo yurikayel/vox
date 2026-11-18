@@ -8,6 +8,8 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ### Correção: teto global de conexões no servidor de sinalização
 - `relay/signaling.py`: `ThreadedTCPServer` passa a limitar conexões simultâneas (padrão 64, `VOX_SIGNAL_MAX_CONNECTIONS`); acima do teto a conexão nova é fechada na hora, no mesmo padrão de `VoxRelayServer`. Limites por IP (`signal`, `signal_msg`) inalterados. Testes: `relay/test_signaling_connection_cap.py` (5). Sem bump de SW.
+### Correção: backpressure do chunked-transfer não deixa setInterval nem listeners pendurados
+- `waitForBackpressure` centraliza limpeza do poll (`BACKPRESSURE_POLL_MS`), remove listeners de `bufferedamountlow` / `close` / `error` e honra `AbortSignal`; `sendChunksWithBackpressure` aceita `options.signal` e `ChunkReassembler.dispose()` solta transferências parciais. Sem bump de SW. Testes: `tests/chunked-transfer-timers.test.js`.
 ### Correção: relay cego não perde deltas no cold boot; memória central confere item e blob
 - **Snapshot apaga por serial, não por timestamp:** só somem os envelopes com `0 < serial <= coveredSerial`; antes, um delta com relógio atrasado e serial acima da cobertura era apagado em silêncio. Snapshot que recua `coveredSerial` agora dá `400` (abriria um buraco). Sem `coveredSerial` nada é apagado (vale o TTL de 7 dias).
 - **Listagem:** com `since_serial` a ordem é por serial, então a página cortada em 100 é contígua e o cliente pagina sem pular itens. Arquivo ruim no disco (serial/timestamp fora do formato) não derruba mais a listagem do canal; `serial`/`timestamp` inválidos na entrada dão `400`.
