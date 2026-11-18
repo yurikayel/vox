@@ -13,6 +13,86 @@ import { setOAuthButtonBusy, setOAuthEnrichError, warnIfAccountNotPersisted } fr
 /** Inputs de `#form-oauth-custom-name` (genesis-entry) para foco após erro na entrada (LT-07). */
 const EMAIL_ENTRY_FOCUS_ID = { name: "oauth-custom-name-input", email: "oauth-entry-email-input", pass: "oauth-entry-pass-input" };
 
+/** Rascunho da entrada / espera da malha entre recargas (só `sessionStorage`, some ao fechar a aba). */
+export const GENESIS_RESUME_KEY = "vox-genesis-resume-v1";
+
+/**
+ * Lê o rascunho da entrada após recarga.
+ * @param {Storage} [store]
+ * @returns {object|null}
+ */
+export function readGenesisResume(store = globalThis.sessionStorage) {
+  try {
+    const raw = store?.getItem(GENESIS_RESUME_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Grava ou apaga o rascunho da entrada (`null` limpa).
+ * @param {object|null} state
+ * @param {Storage} [store]
+ * @returns {void}
+ */
+export function writeGenesisResume(state, store = globalThis.sessionStorage) {
+  try {
+    if (!state) store?.removeItem(GENESIS_RESUME_KEY);
+    else store?.setItem(GENESIS_RESUME_KEY, JSON.stringify(state));
+  } catch {
+    /* sessionStorage indisponível */
+  }
+}
+
+/** @param {Storage} [store] */
+export function clearGenesisResume(store = globalThis.sessionStorage) {
+  writeGenesisResume(null, store);
+}
+
+/**
+ * @param {object} values campos da entrada
+ * @param {Storage} [store]
+ */
+export function persistGenesisEntryDraft(values, store = globalThis.sessionStorage) {
+  writeGenesisResume({ step: "entry", meshWaiting: false, ...values }, store);
+}
+
+/**
+ * @param {{ email: string, pass: string }} creds
+ * @param {Storage} [store]
+ */
+export function persistGenesisMeshWait(creds, store = globalThis.sessionStorage) {
+  writeGenesisResume({ step: "have", meshWaiting: true, email: creds.email, pass: creds.pass }, store);
+}
+
+function setInputValue(id, value) {
+  const el = document.getElementById(id);
+  if (!el || value == null || value === "") return;
+  if ("checked" in el && typeof value === "boolean") el.checked = value;
+  else el.value = String(value);
+}
+
+function applyEntryResume(resume) {
+  setInputValue("oauth-custom-name-input", resume.rawName);
+  setInputValue("oauth-entry-email-input", resume.email);
+  setInputValue("oauth-entry-pass-input", resume.pass);
+  setInputValue("oauth-entry-include-phrase", resume.includePhrase);
+}
+
+function applyRestoreResume(resume) {
+  setInputValue("oauth-restore-email-input", resume.email);
+  setInputValue("oauth-sovereign-passphrase-input", resume.pass);
+}
+
+function bindEntryDraftPersistence(form) {
+  form.addEventListener("input", () => {
+    const v = readEntryFormValues();
+    if (v.email || v.pass || v.rawName) persistGenesisEntryDraft(v);
+    else if (!readGenesisResume()?.meshWaiting) clearGenesisResume();
+  });
+}
+
 function bindEntryPasswordToggle() {
   const input = document.getElementById("oauth-entry-pass-input");
   const toggle = document.getElementById("btn-oauth-toggle-pass");
@@ -42,6 +122,7 @@ function showEmailKitCard({ kit, routeId, email, form, finish }) {
   if (links) links.hidden = true;
   slot.innerHTML = render.renderEmailKitCardHtml({ email: kit.to, mailtoUrl: kit.mailtoUrl });
   slot.hidden = false;
+  writeGenesisResume({ step: "email-kit", email: kit.to, routeId, mailtoUrl: kit.mailtoUrl, meshWaiting: false });
   document.getElementById("btn-email-kit-fix-email")?.addEventListener("click", () => {
     slot.hidden = true;
     form.hidden = false;
@@ -52,6 +133,7 @@ function showEmailKitCard({ kit, routeId, email, form, finish }) {
   document.getElementById("btn-email-kit-download")?.addEventListener("click", () => emailKit.downloadEmailKitFile(kit, routeId));
   const done = (confirmExit) => {
     if (confirmExit) emailKit.confirmEmailKitSent(routeId);
+    clearGenesisResume();
     finish({ ok: true, routeId, email }, `Bem-vindo(a), ${localAccount.getDisplayName()}!`);
   };
   document.getElementById("btn-email-kit-confirm")?.addEventListener("click", () => done(true));
@@ -85,9 +167,11 @@ async function handleEntryFormSubmit({ draftState, form, finish, finishNameOnly 
  * @param {HTMLFormElement} form `#form-oauth-custom-name`
  * @param {{ finish: (result: object, toastMsg?: string) => void, finishNameOnly: (rawName: string) => void }} done
  */
-export function bindEmailEntryForm(form, { finish, finishNameOnly }) {
-  const draftState = { email: "", pass: "" };
+export function bindEmailEntryForm(form, { finish, finishNameOnly, entryResume = null }) {
+  const draftState = { email: entryResume?.email || "", pass: entryResume?.pass || "" };
   bindEntryPasswordToggle();
+  bindEntryDraftPersistence(form);
+  if (entryResume) applyEntryResume(entryResume);
   document.getElementById("btn-oauth-name-only")?.addEventListener("click", () => void finishNameOnly(readEntryFormValues().rawName));
   form.addEventListener("submit", (e) => {
     e.preventDefault();
@@ -145,6 +229,7 @@ async function meshOps() {
  * @returns {Promise<void>}
  */
 export async function startMeshRestore({ email, pass }, onRestored) {
+  persistGenesisMeshWait({ email, pass });
   const { flow, vault, ops } = await meshOps();
   const address = await vault.meshVaultAddress(pass, email);
   if (vault.loadMeshPending()?.address !== address) {
@@ -156,11 +241,53 @@ export async function startMeshRestore({ email, pass }, onRestored) {
   const poll = async () => {
     if (!document.getElementById("oauth-mesh-status")) return;
     const res = await tryMeshRestoreOnce({ email, pass }, ops).catch(() => ({ ok: false, reason: "waiting" }));
-    if (res.ok) return onRestored(res);
+    if (res.ok) {
+      clearGenesisResume();
+      return onRestored(res);
+    }
     if (res.reason !== "waiting") return setOAuthEnrichError(res.reason);
     setTimeout(() => void poll(), MESH_POLL_MS);
   };
   void poll();
+}
+
+function genesisStepShower(panel) {
+  return (key) => {
+    panel.querySelectorAll("[data-genesis-step]").forEach((s) => { s.hidden = s.dataset.genesisStep !== key; });
+  };
+}
+
+async function resumeGenesisHave(resume, show, onMeshRestored, startMesh) {
+  show("have");
+  applyRestoreResume(resume);
+  if (!resume.meshWaiting || !resume.email || !resume.pass) return;
+  await startMesh({ email: resume.email, pass: resume.pass }, onMeshRestored);
+}
+
+function resumeGenesisEmailKit(resume, show, onEmailKitFinish) {
+  if (!resume.mailtoUrl) return;
+  show("entry");
+  const form = document.getElementById("form-oauth-custom-name");
+  if (!form) return;
+  const kit = { to: resume.email || "", mailtoUrl: resume.mailtoUrl };
+  showEmailKitCard({ kit, routeId: resume.routeId || "", email: resume.email || kit.to, form, finish: onEmailKitFinish });
+}
+
+/**
+ * Depois de `renderOAuthEnrich`, reabre o passo salvo e retoma espera da malha ou cartão do e-mail.
+ * @param {ParentNode} modalContainer `#modal-container`
+ * @param {{ onMeshRestored: Function, onEmailKitFinish: Function, startMesh?: (creds: object, cb: Function) => Promise<void> }} hooks
+ * @returns {Promise<void>}
+ */
+export async function resumeGenesisAfterRender(modalContainer, { onMeshRestored, onEmailKitFinish, startMesh = startMeshRestore }) {
+  const resume = readGenesisResume();
+  if (!resume?.step) return;
+  const panel = modalContainer.querySelector(".genesis-panel--steps");
+  if (!panel) return;
+  const show = genesisStepShower(panel);
+  if (resume.step === "entry") return void (show("entry"), applyEntryResume(resume));
+  if (resume.step === "have") return resumeGenesisHave(resume, show, onMeshRestored, startMesh);
+  if (resume.step === "email-kit") resumeGenesisEmailKit(resume, show, onEmailKitFinish);
 }
 
 /**

@@ -5,7 +5,14 @@ import * as share from "../share.js";
 import * as localAccount from "../identity/index.js";
 import * as oauthProfile from "../oauth-profile.js";
 import * as emailKit from "../email-kit.js";
-import { bindEmailEntryForm, handleRestoreFailure, readRestoreInputs } from "./onboarding-email.js";
+import {
+  bindEmailEntryForm,
+  clearGenesisResume,
+  handleRestoreFailure,
+  readGenesisResume,
+  readRestoreInputs,
+  resumeGenesisAfterRender,
+} from "./onboarding-email.js";
 import * as meshProfile from "../mesh-profile.js";
 import * as centralMemory from "../central-memory.js";
 import { syncIdentity } from "./screens-network.js";
@@ -144,6 +151,7 @@ function syncIdentityAndDirectoryAfterOnboarding() {
 }
 
 function completeEntryOnboarding(modalContainer, onComplete, result, toastMsg = "") {
+  clearGenesisResume();
   oauthProfile.skipOAuthEnrichment();
   if (toastMsg) share.showToast(toastMsg);
   syncIdentityAndDirectoryAfterOnboarding();
@@ -173,9 +181,12 @@ async function finishNameOnlyEntry(rawName, modalContainer, onComplete) {
 function bindCustomNameForm(modalContainer, onComplete) {
   const form = document.getElementById("form-oauth-custom-name");
   if (!form) return;
+  const genesisResume = readGenesisResume();
+  const entryResume = genesisResume?.step === "entry" ? genesisResume : null;
   bindEmailEntryForm(form, {
     finish: (result, toastMsg) => completeEntryOnboarding(modalContainer, onComplete, result, toastMsg),
     finishNameOnly: (rawName) => void finishNameOnlyEntry(rawName, modalContainer, onComplete),
+    entryResume,
   });
 }
 
@@ -248,6 +259,12 @@ export function openOAuthEnrichModal({ onComplete, withPact = false, mode = "ent
   bindOAuthProviderButton({ btnId: "btn-oauth-google", signInFn: () => oauthProfile.signInWithGoogle(), fallbackError: "Google indisponível", labelFn: () => "Perfil enriquecido com Google.", modalContainer, onDone: onComplete });
   bindOAuthProviderButton({ btnId: "btn-oauth-meta", signInFn: () => oauthProfile.signInWithMeta(), fallbackError: "Meta indisponível", labelFn: () => "Perfil enriquecido com Meta.", modalContainer, onDone: onComplete });
   bindOAuthProviderButton({ btnId: "btn-oauth-github", signInFn: () => oauthProfile.signInWithGithub(), fallbackError: "GitHub indisponível", labelFn: (res) => `Perfil enriquecido com GitHub (@${res.profile?.handle || ""}).`, modalContainer, onDone: onComplete });
+
+  const meshDone = (res) => completeEntryOnboarding(modalContainer, onComplete, { ok: true, restored: true, routeId: res.routeId }, `Identidade restaurada com sucesso! Bem-vindo(a), ${res.displayName || "Cidadão"}!`);
+  void resumeGenesisAfterRender(modalContainer, {
+    onMeshRestored: meshDone,
+    onEmailKitFinish: (result, toastMsg) => completeEntryOnboarding(modalContainer, onComplete, result, toastMsg),
+  });
 }
 
 /**

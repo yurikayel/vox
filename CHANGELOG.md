@@ -96,6 +96,9 @@ Entradas acrescentadas por conferência dos PRs mesclados em `develop` com este 
 ### Correção: foco no campo certo após erro na entrada (LT-07)
 - `setOAuthEnrichError` aceita `focusId` opcional; `validateEmailEntryIssue` aponta nome, e-mail ou senha conforme a falha. Testes: `tests/onboarding-steps.test.js`.
 
+### Correção: entrada retoma após recarga (LT-07)
+- Rascunho da criação de conta e espera do cofre na malha voltam no `sessionStorage` após recarregar a página; o pedido à malha continua pelo endereço já gravado. Foco inicial na tela da frase; cartão de impressão fora da ordem de Tab. Testes: `tests/onboarding-reload-keyboard.test.js`.
+
 ### Correção: relay — espelho recusa corpo grande cedo
 - `POST /vox/mirror` compara `Content-Length` com o teto de 256 KiB antes de ler o corpo e responde 413 com `mirror.body_too_large`, alinhado ao restante dos handlers de escrita.
 
