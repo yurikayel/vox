@@ -198,7 +198,15 @@ test("restaurar: registro de formato errado vindo do relay falha fechado com men
   assert.match(res.reason, /corrompidos/);
 });
 
-test.todo("restaurar: JSON corrompido de servidor que respondeu 200 conta como 'sem servidor' (noServer=true) — deveria contar como alcançado (probeVaultUrl)");
+test("restaurar: JSON ilegível do servidor não finge 'sem servidor'", async () => {
+  await createAccount();
+  installRelay({ current: "badjson" });
+  freshDevice();
+  const res = await restoreFromPassphraseVault(PASS, { email: EMAIL });
+  assert.equal(res.ok, false);
+  assert.equal(res.notFound, true);
+  assert.equal(res.noServer, false, "resposta 200 com corpo inválido: servidor alcançado, não offline");
+});
 
 test("restaurar: senha errada continua falhando fechado com rede boa", async () => {
   await createAccount();

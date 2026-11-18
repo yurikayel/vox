@@ -30,7 +30,10 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 ### Testes: esperas fixas em suíte legada trocadas por timers simulados ou awaits
 - Nove arquivos em `tests/` (`node-health-api`, `contact-notify`, `dom-delegates`, `mesh-vault-ui`, `webrtc`, `chunked-transfer`, `signaling-telemetry`, `nostr-ephemeral-relay`) deixam de usar `setTimeout` real onde dava para manter o comportamento com `mock.timers`, microtarefas, `setImmediate` ou awaits explícitos (`peer-sync.test.js` mantém 50 ms: inventário é disparado sem `await` em `announce`). `tests/setup.js` intocado. Sem bump de SW.
 ### Testes: login com rede ruim (LT-02 resto, S30-S7)
-- `tests/login-rede-ruim.test.js`: relay falso por `fetch` (fora do ar, 5xx, JSON ilegível, lixo, queda no meio); criar e restaurar cofre v2 com cripto real; mensagens honestas (LAN-21) e avisos de `handleRestoreFailure` na volta sem servidor ou com cofre corrompido; separa 5xx de “sem servidor”. Pendências anotadas: `probeVaultUrl` sem timeout (S3) e GET com corpo inválido tratado como offline.
+- `tests/login-rede-ruim.test.js`: relay falso por `fetch` (fora do ar, 5xx, JSON ilegível, lixo, queda no meio); criar e restaurar cofre v2 com cripto real; mensagens honestas (LAN-21) e avisos de `handleRestoreFailure` na volta sem servidor ou com cofre corrompido; separa 5xx de “sem servidor”. Pendência anotada: `probeVaultUrl` sem timeout (S3 / `fetch-timeout`).
+
+### Correção: GET do cofre com corpo ilegível não finge “sem servidor”
+- `client/js/vault/vault-store.js` (`probeVaultUrl`): quando o relay responde HTTP 200 mas o JSON quebra, o servidor conta como alcançado (`reachable: true`) em vez de offline; a volta não marca `noServer` e a tela não pede link do e-mail à toa. Prova: `tests/login-rede-ruim.test.js` (red-on-base). Sem bump de SW.
 
 ### Correção: relay cego não perde deltas no cold boot; memória central confere item e blob
 - **Snapshot apaga por serial, não por timestamp:** só somem os envelopes com `0 < serial <= coveredSerial`; antes, um delta com relógio atrasado e serial acima da cobertura era apagado em silêncio. Snapshot que recua `coveredSerial` agora dá `400` (abriria um buraco). Sem `coveredSerial` nada é apagado (vale o TTL de 7 dias).
