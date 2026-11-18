@@ -42,6 +42,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 - `docs/ROADMAP.md`: cabeçalho **Revisado** em 18/11/2026; *Onde estamos* e **REV-09** com prazos no `relay/signaling.py`; **REV-14** com passo 4 (ADR-037); lacunas **LT-02,06,07,09** e **LT-01,03,04,05,08,10** em *Concluído*; **DOC-04** e **PM-115** com evidência de testes de render/DM. Sem código e sem bump de SW.
 ### Correção: datas em pt-BR centralizadas e sem "Invalid Date"
 - `client/js/shared/date-format.js` concentra `parseInstant` e formatação pt-BR (curta, por extenso e só data). Call sites em `render/util.js`, `aviso.js`, `render/aviso.js`, `app/sorteio-flow.js`, `app/natural-mod-flow.js` e `email-kit.js` deixam de chamar `toLocaleString`/`toLocaleDateString` soltos; instantâneo inválido vira texto vazio. Testes: `tests/date-format.test.js`. Sem bump de SW.
+### Correção: registro do service worker sem erro engolido (S30-S28)
+- `client/js/boot-sw.js`: falha ao registrar `./sw.js` passa a ir para `console.warn` em vez de um `catch` vazio; o app continua sem offline naquele aparelho, mas fica rastreável em diagnóstico. Sem bump de SW (só o boot).
+- Testes: `tests/boot-sw.test.js`.
 
 ### Correção: relay cego não perde deltas no cold boot; memória central confere item e blob
 - **Snapshot apaga por serial, não por timestamp:** só somem os envelopes com `0 < serial <= coveredSerial`; antes, um delta com relógio atrasado e serial acima da cobertura era apagado em silêncio. Snapshot que recua `coveredSerial` agora dá `400` (abriria um buraco). Sem `coveredSerial` nada é apagado (vale o TTL de 7 dias).
