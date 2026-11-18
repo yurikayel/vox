@@ -55,9 +55,11 @@ Testes: `relay/test_signaling.py`.
 
 | Rota | Método | Descrição |
 |---|---|---|
-| `/relay/envelope/<canal>?since=&since_serial=` | GET | Lista pacotes opacos do canal (o relay não inspeciona o conteúdo). |
-| `/relay/envelope/<canal>` | POST | Deposita envelope. Máx. **64 KB**; retenção **7 dias**. |
-| `/relay/snapshot/<canal>` | GET / POST | Último snapshot consolidado do canal. Máx. **512 KB**. |
+| `/relay/envelope/<canal>?since=&since_serial=` | GET | Lista pacotes opacos do canal (o relay não inspeciona o conteúdo). Com `since_serial=N` (N > 0): `serial > N`, **ordenado por serial**, até 100; a página cortada é contígua e o cliente pagina repetindo com o maior serial recebido até vir vazia. Sem ele: `timestamp >= since`, ordenado por timestamp. |
+| `/relay/envelope/<canal>` | POST | Deposita envelope. Máx. **64 KB**; retenção **7 dias**. `timestamp` e `serial`, se presentes, são inteiros não negativos (senão `400`). O `id` vem do conteúdo (`env_<ts>_<sha256>`): reenvio idêntico é idempotente e não renova a validade; envelopes diferentes não se sobrescrevem. |
+| `/relay/snapshot/<canal>` | GET / POST | Último snapshot consolidado do canal. Máx. **512 KB**. `epoch` tem de crescer e `coveredSerial` não pode recuar (senão `400`). Ao gravar, o relay apaga **só** os envelopes com `0 < serial <= coveredSerial`; sem `coveredSerial` nada é apagado (o TTL de 7 dias cuida). |
+
+**Mudanças de contrato pendentes** (não feitas por exigirem `server.py` ou decisão do mantenedor): (a) o `GET` de envelopes não informa que cortou em 100; o cliente só sabe pelo tamanho da página (`len == 100` → pedir de novo). Falta um campo ou cabeçalho (`truncated` / `nextSerial`) e um modo "desde o início" por serial (`since_serial=0` hoje significa "por timestamp"). (b) `POST /relay/snapshot/<canal>` **não é autenticado**: qualquer um grava um snapshot com `coveredSerial` alto e apaga os envelopes do canal, ou grava `epoch` enorme e trava os snapshots seguintes. Quem pode emitir snapshot é decisão do mantenedor (ligada ao ADR-027). Testes em `skip` documentam os dois casos.
 
 ### Memória central (`central_memory.py`, "Modo 3")
 
@@ -146,12 +148,12 @@ CORS: `Access-Control-Allow-Origin: *` em toda resposta (`server.py:311`), com `
 | `POST /vox/mirror` | `256 KB` (`mirror_validate.py:9,80`); o handler lê `Content-Length` sem teto antes (`server.py:606`) | `500` tópicos por espelho (`mirror_validate.py:10,117`); nº de comunidades: mesmo teto em bytes do cache | sem TTL; sobrescreve `index_<id>.json`; `507` se passar da cota (`server.py:620-624`) | disco (`CACHE_DIR`) |
 | `/inbox/<addr>` POST | `32 KB` (`inbox.py:16,73`; `server.py:628`) | nenhum por endereço nem total (lacuna) (`inbox.py:62-105`) | TTL `72 h` (`inbox.py:15`); expirado só sai quando alguém faz `GET` ou `DELETE` naquele endereço (`inbox.py:118-123`); `purge_all_expired` existe (`inbox.py:157`) mas nada no relay a chama | disco (`INBOX_DIR/<addr>/<id>.json`) |
 | `/inbox/<addr>` GET | n/a | devolve todos os envelopes do endereço, sem paginação (`inbox.py:108-129`) | ver linha anterior | disco |
-| `/relay/envelope/<canal>` POST | `64 KB` (`blind_relay.py:17,60`; `server.py:575`) | nenhum por canal nem total (lacuna) | TTL `7 dias` (`blind_relay.py:19`); expirado só sai quando alguém lista o canal (`blind_relay.py:93-95`); snapshot novo apaga os deltas mais antigos (`blind_relay.py:147,168`) | disco (`RELAY_DIR/<canal>/env_*.json`) |
-| `/relay/envelope/<canal>` GET | n/a | `100` por resposta (`blind_relay.py:81,108`) | idem | disco |
-| `/relay/snapshot/<canal>` POST | `512 KB` (`blind_relay.py:18,118`; `server.py:590`) | `1` por canal (`latest_snapshot.json`, `blind_relay.py:127,145`); nº de canais: nenhum (lacuna) | sem TTL: o snapshot fica até ser substituído | disco |
-| `/memory/ingest`, `/memory/sync` | `4 MB` (`MAX_BLOB_BYTES*2`, `server.py:552`; `central_memory.py:27`) | nenhum para posts, perfis, tombstones, manifestos e blobs (lacuna) (`central_memory.py:414-435`); `MAX_ITEM_BYTES = 512 KB` está definida (`central_memory.py:26`) mas **não é usada** em lugar nenhum | sem TTL: o estado só cresce; corte da gênese remove o que for anterior à gênese (`central_memory.py:135`) | disco (journal + estado + `blobs/`, `central_memory.py:79-95,180-185`), espelhado em memória (`_STATE_CACHE`, `:30`) |
+| `/relay/envelope/<canal>` POST | `64 KB` (`blind_relay.py:19,100`; `server.py:575`) | nenhum por canal nem total (lacuna) | TTL `7 dias` (`blind_relay.py:21`); expirado só sai quando alguém lista o canal (`blind_relay.py:124-140`, expiração em `:134`); snapshot novo apaga só os envelopes cobertos por `coveredSerial` (`blind_relay.py:228,248`), não por timestamp | disco (`RELAY_DIR/<canal>/env_*.json`) |
+| `/relay/envelope/<canal>` GET | n/a | `100` por resposta (`blind_relay.py:143,167`), em ordem de serial com `since_serial`; **sem aviso de que cortou** (lacuna, ver "Mudanças de contrato pendentes") | idem | disco |
+| `/relay/snapshot/<canal>` POST | `512 KB` (`blind_relay.py:20,202`; `server.py:590`) | `1` por canal (`latest_snapshot.json`, `blind_relay.py:212,225`); nº de canais: nenhum (lacuna) | sem TTL: o snapshot fica até ser substituído; **sem autenticação** (lacuna) | disco |
+| `/memory/ingest`, `/memory/sync` | `4 MB` (`MAX_BLOB_BYTES*2`, `server.py:552`; `central_memory.py:27`) | nenhum de **quantidade** para posts, perfis, tombstones, manifestos e blobs (lacuna); cada item de post, perfil, tombstone e manifesto tem teto de `MAX_ITEM_BYTES = 512 KB` (`central_memory.py:30,229-246`; decorador `@_capped` em `:266,303,331,358`): acima disso o item é recusado (`changed=false` no ingest; ignorado no lote do sync) — o `413` ainda precisaria de `server.py` | sem TTL: o estado só cresce; corte da gênese remove o que for anterior à gênese (`central_memory.py:135`) | disco (journal + estado + `blobs/`, `central_memory.py:79-95,180-185`), espelhado em memória (`_STATE_CACHE`, `:30`) |
 | `/memory/blob/<sha256>` GET | n/a | n/a | n/a | disco |
-| blob de mídia (`MEDIA_BLOB`) | `2 MB` (`central_memory.py:27,347`) | nenhum (lacuna) | sem TTL | disco |
+| blob de mídia (`MEDIA_BLOB`) | `2 MB` (`central_memory.py:32,395`); o SHA-256 do conteúdo tem de bater com `hash`, na mesma regra do `computeBlobHash` do cliente (data URL base64 → bytes decodificados; outro texto → UTF-8) (`central_memory.py:249-263,384`) | nenhum (lacuna) | sem TTL | disco |
 | `/memory/vault/<chave>` POST | `4 MB` (limite da memória, `server.py:552`); sem teto próprio (lacuna) (`vault_store.py:104-122`) | nenhum de cofres (lacuna) | sem TTL; regravar exige a prova do dono (`vault_store.py:104-110`) | disco |
 | `/p2p/seed` POST | `16 KB` (`server.py:655-657`) | `64` seeds simultâneos (`p2p_seeder.py:26`), `512 MB` somados (`p2p_seeder.py:25,89-91`) | sem TTL; remoção só por `DELETE /p2p/seed/<hash>` | **memória** (`active_seeds`, `p2p_seeder.py:39`); some ao reiniciar |
 | `/peer/beacon` POST | `16 KB` (`server.py:640-642`) | nenhum (lacuna): um `nodeId` novo por pedido (`p2p_seeder.py:149-186`) | TTL `60 s` (`p2p_seeder.py:27`); a varredura roda no próprio `POST`/`GET` (`p2p_seeder.py:186,202`) | **memória** (`known_peers`) |
@@ -167,11 +169,13 @@ CORS da sinalização: `Access-Control-Allow-Origin: *` só nas respostas HTTP d
 3. **Sinalização:** sem teto de pares conectados e sem prazo de ociosidade na conexão WebSocket aberta (`signaling.py:224-273,292-293`).
 4. **Mailboxes sem teto de quantidade:** inbox por endereço, envelopes por canal cego, número de canais, cofres, posts/perfis/blobs da memória central.
 5. **Limpeza só preguiçosa:** inbox e canal cego só descartam o expirado quando alguém lê aquele endereço ou canal; `purge_all_expired` não é chamada pelo relay. Endereço que ninguém lê mais fica no disco para sempre.
-6. **Memória central e cofre sem TTL** e sem teto total; `MAX_ITEM_BYTES` declarada e não aplicada.
+6. **Memória central e cofre sem TTL** e sem teto total (o teto por item já vale; falta o teto de quantidade e de bytes somados).
 7. **`/tx/<id>` lê a resposta do gateway inteira em memória**, sem teto de bytes, e só limita o disco se `VOX_RELAY_MAX_CACHE_MB` existir (sem ela, cache ilimitado).
 8. **`/vox/mirror` lê `Content-Length` sem teto antes de validar** (`server.py:606`); o teto de 256 KB só vale depois da leitura. Há outros pontos do mesmo padrão (corpo lido pelo `Content-Length` informado em `inbox` e `blind_relay`, mas com teto antes da leitura).
 9. **CORS `*`** em todas as respostas do `server.py` e da sinalização; a defesa é o filtro de `Origin` nas escritas, que não cobre `GET` (`GET` de qualquer página lê inbox, estado e índices se alcançar o relay).
 10. **Beacon sem teto de quantidade de `nodeId`:** cada `nodeId` novo cria um registro na janela de TTL (`p2p_seeder.py:149-186`); o rate limit só limita `POST`/`DELETE` por IP (`rate_limit.py:130-131`), não o número de pares distintos.
 11. **Servidor `HTTPServer` de uma thread só** (`server.py:696`): uma conexão lenta bloqueia as demais; não há `timeout` de socket no `server.py`.
 
-Testes de referência: `test_request_guard.py`, `test_rate_limit.py`, `test_relay_limites_e_rotas.py`, `test_blind_relay.py`, `test_p2p_seeder.py`, `test_signaling_robustez.py`.
+12. **Snapshot do relay cego sem autenticação e `GET` de envelopes sem aviso de corte** — ver "Mudanças de contrato pendentes" na seção do relay cego (`test_blind_relay_adversarial.py` tem os casos em `skip`).
+
+Testes de referência: `test_blind_relay_adversarial.py`, `test_central_memory_limites.py`, `test_request_guard.py`, `test_rate_limit.py`, `test_relay_limites_e_rotas.py`, `test_blind_relay.py`, `test_p2p_seeder.py`, `test_signaling_robustez.py`.

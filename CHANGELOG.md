@@ -6,6 +6,13 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Correção: relay cego não perde deltas no cold boot; memória central confere item e blob
+- **Snapshot apaga por serial, não por timestamp:** só somem os envelopes com `0 < serial <= coveredSerial`; antes, um delta com relógio atrasado e serial acima da cobertura era apagado em silêncio. Snapshot que recua `coveredSerial` agora dá `400` (abriria um buraco). Sem `coveredSerial` nada é apagado (vale o TTL de 7 dias).
+- **Listagem:** com `since_serial` a ordem é por serial, então a página cortada em 100 é contígua e o cliente pagina sem pular itens. Arquivo ruim no disco (serial/timestamp fora do formato) não derruba mais a listagem do canal; `serial`/`timestamp` inválidos na entrada dão `400`.
+- **Ids de envelope:** derivados do conteúdo (`env_<ts>_<sha256>`); antes, mesmo timestamp com nonce vazio ou igual nos 16 primeiros caracteres sobrescrevia o envelope anterior de outro remetente. Reenvio idêntico é idempotente e não renova a validade.
+- **Memória central:** `MAX_ITEM_BYTES` (512 KB) passa a valer para post, perfil, tombstone e manifesto; o SHA-256 do blob é conferido contra `hash` (mesma regra do `computeBlobHash` do cliente), então lixo sob hash alheio deixa de bloquear o blob verdadeiro.
+- **Só documentado (mudança de contrato):** snapshot sem autenticação e `GET` sem aviso de corte em 100 ([relay-api.md](./docs/specs/relay-api.md), "Mudanças de contrato pendentes"). Testes: `relay/test_blind_relay_adversarial.py`, `relay/test_central_memory_limites.py`. Teste alterado de propósito: `test_store_snapshot_and_prune_deltas` (poda por serial) e fixtures de blob em `test_server.py` e `test_relay_limites_e_rotas.py` (hash agora confere). Sem bump de SW.
+
 ### Correção: avisa no passo de criação quando a conta não grava no aparelho
 - `ensureLocalAccount` registra falha de quota/bloqueio e o onboarding mostra aviso em `#oauth-enrich-error` sem travar o fluxo. Testes: `tests/local-account-storage-full.test.js`, `tests/onboarding-steps.test.js`.
 
