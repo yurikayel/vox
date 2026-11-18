@@ -6,6 +6,8 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Correção: cartão de contexto da DM revalidado na tela e na restauração do backup
+- A restauração do backup no e-mail gravava o cartão, a citação e a foto da DM crus, e a tela os lia crus: `href` externo ou `javascript:`, foto por URL externa (pixel de rastreio) e campos de 1 MB passavam. Agora `sanitizeStoredDm` normaliza na restauração e `render/dm.js` revalida na leitura (cobre também linhas já gravadas). `id`, `pixKey`, `communityId` e autor da citação acima de 200 caracteres são descartados, não cortados. Testes: `tests/dm-card-restore-adversarial.test.js`.
 ### Acessibilidade: título e foco por rota; botões só com ícone rotulados
 - O roteador (`routeImpl`) passa a definir `document.title` como "Tela · Vox" e mover o foco para o h1 da tela (`tabindex=-1`) (`routeTitle` em `route-parse.js`, `announceRoute` em `route.js`). Botão de ocultar resposta (🛡️) e de remover conta do cofre (✕) ganham `aria-label`. Testes: `tests/a11y-rotas-botoes.test.js`. Sem mudança em `sw.js` (CACHE_NAME fica para o release).
 ### Correção: apagar conta no meio da criação não traz a conta de volta
