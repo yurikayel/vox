@@ -8,7 +8,6 @@ import shutil
 import socket
 import tempfile
 import threading
-import time
 import unittest
 from http.server import HTTPServer
 from pathlib import Path
@@ -27,17 +26,18 @@ class TestMirrorBodyCap(unittest.TestCase):
         self.port = self.httpd.server_address[1]
         self.thread = threading.Thread(target=self.httpd.serve_forever, daemon=True)
         self.thread.start()
-        time.sleep(0.05)
 
     def tearDown(self):
         if self.conn is not None:
             try:
                 self.conn.close()
-            except Exception:
-                pass
+            except (ConnectionResetError, BrokenPipeError, OSError):
+                pass  # conexão já encerrada pelo relay após resposta antecipada
             self.conn = None
         self.httpd.shutdown()
         self.httpd.server_close()
+        self.thread.join(timeout=5)
+        self.assertFalse(self.thread.is_alive(), "thread do servidor não encerrou a tempo")
 
     @classmethod
     def setUpClass(cls):
