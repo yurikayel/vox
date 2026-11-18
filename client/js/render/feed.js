@@ -582,7 +582,7 @@ function renderAudioHero(audioSrc, overlayHeaderHtml, overlayFooterHtml) {
 }
 
 function renderImageHero(t, layer, overlayHeaderHtml, overlayFooterHtml) {
-  const alt = escapeHtml(t.imageAlt || t.title || "");
+  const alt = escapeHtml(t.imageAlt || t.title || "Foto da publicação");
   const src = escapeHtml(t.image);
   const aspect = normalizePostAspect(t?.aspectRatio);
   const aspectClass = `post-aspect-${aspect.replace(":", "-")}`;
@@ -715,7 +715,7 @@ export function renderPostFrame(t) {
   const state = frames.getFrameState(frame, [], localAction);
 
   const imgHtml = frame["of:image"]
-    ? `<div class="vox-frame-media"><img class="vox-frame-img" src="${escapeHtml(frame["of:image"])}" alt="${escapeHtml(frame.title || t.title)}" loading="lazy" /></div>`
+    ? `<div class="vox-frame-media"><img class="vox-frame-img" src="${escapeHtml(frame["of:image"])}" alt="${escapeHtml(frame.title || t.title || "Imagem do quadro")}" loading="lazy" /></div>`
     : "";
 
   return `

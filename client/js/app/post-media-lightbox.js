@@ -73,7 +73,7 @@ export function openPostMediaLightbox(src, alt = "") {
   const img = lb.querySelector(".post-lightbox-img");
   if (!img) return;
   img.src = src;
-  img.alt = alt;
+  img.alt = alt || "";
   lb.hidden = false;
   document.body.classList.add("post-lightbox-open");
   lb.querySelector(".post-lightbox-close")?.focus();

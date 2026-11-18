@@ -6,6 +6,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Correção: imagens de conteúdo sempre com texto alternativo
+- Post com imagem sem legenda/`imageAlt` caía em `alt=""`; agora usa "Foto da publicação" (e "Imagem do quadro" no frame). Lightbox nunca recebe `alt` nulo. Teste de guarda: `tests/img-alt-guard.test.js`.
+
 ### Docs: relay-api §6 alinhado ao rate limit real e `VOX_RELAY_TRUST_PROXY_HOPS` por deploy
 - Referências de linha atualizadas, `signal_msg` descarta sem resposta e por IP, riscos de hops baixo (balde único, caso do nó Render hoje com 0) e alto (spoofing de `X-Forwarded-For`) e valor por host. `client/sw.js` intocado.
 
