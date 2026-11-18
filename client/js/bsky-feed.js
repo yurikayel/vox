@@ -1,10 +1,17 @@
 /** @file Ingestão predatória soberana de feeds do Bluesky (AT Protocol) — 100% client-side via API pública. */
 
+/** Chave em `localStorage` (só neste aparelho). @type {string} */
 export const BSKY_SUBS_STORAGE_KEY = "vox-bsky-subs-v1";
+/** Chave em `localStorage` (só neste aparelho). @type {string} */
 export const BSKY_POST_CACHE_KEY = "vox-bsky-cached-posts-v1";
+/** URL ou endpoint público. @type {string} */
 export const BSKY_PUBLIC_ENDPOINT = "https://public.api.bsky.app/xrpc";
+/** Constante de configuração exportada. @type {Array} */
 export const BSKY_DEFAULT_SEEDS = ["lula.com.br", "brasildefato.com.br", "theintercept.com"];
 
+/** Carrega BskySubscriptions do armazenamento ou rede.
+ * @returns {*} Resultado da operação.
+ */
 export function loadBskySubscriptions() {
   if (typeof localStorage === "undefined") return [...BSKY_DEFAULT_SEEDS];
   try {
@@ -17,6 +24,9 @@ export function loadBskySubscriptions() {
   }
 }
 
+/** Persiste BskySubscriptions localmente.
+ * @param {*} [handles] Parâmetro `handles`.
+ */
 export function saveBskySubscriptions(handles) {
   if (typeof localStorage === "undefined") return;
   const clean = Array.from(
@@ -29,6 +39,10 @@ export function saveBskySubscriptions(handles) {
   localStorage.setItem(BSKY_SUBS_STORAGE_KEY, JSON.stringify(clean));
 }
 
+/** Operação `addBskySubscription` do módulo.
+ * @param {*} [handle] Parâmetro `handle`.
+ * @returns {*} Resultado da operação.
+ */
 export function addBskySubscription(handle) {
   const current = loadBskySubscriptions();
   const clean = String(handle || "").trim().replace(/^@/, "").toLowerCase();
@@ -38,6 +52,10 @@ export function addBskySubscription(handle) {
   return next;
 }
 
+/** Operação `removeBskySubscription` do módulo.
+ * @param {*} [handle] Parâmetro `handle`.
+ * @returns {*} Resultado da operação.
+ */
 export function removeBskySubscription(handle) {
   const current = loadBskySubscriptions();
   const clean = String(handle || "").trim().replace(/^@/, "").toLowerCase();
@@ -46,6 +64,9 @@ export function removeBskySubscription(handle) {
   return next;
 }
 
+/** Obtém CachedBskyPosts.
+ * @returns {*} Resultado da operação.
+ */
 export function getCachedBskyPosts() {
   if (typeof localStorage === "undefined") return [];
   try {
@@ -57,6 +78,9 @@ export function getCachedBskyPosts() {
   }
 }
 
+/** Operação `cacheBskyPosts` do módulo.
+ * @param {*} [posts] Lista de posts.
+ */
 export function cacheBskyPosts(posts) {
   if (typeof localStorage === "undefined" || !Array.isArray(posts) || !posts.length) return;
   try {
@@ -70,21 +94,40 @@ export function cacheBskyPosts(posts) {
   } catch {}
 }
 
+/** Obtém CachedBskyPostById.
+ * @param {*} [id] Parâmetro `id`.
+ * @returns {*} Resultado da operação.
+ */
 export function getCachedBskyPostById(id) {
   if (!id) return null;
   return getCachedBskyPosts().find((p) => p.id === id) || null;
 }
 
+/** Monta BskyAuthorFeedUrl para uso no cliente.
+ * @param {*} [actor] Parâmetro `actor`.
+ * @param {*} [limit] Parâmetro `limit`.
+ * @returns {*} Resultado da operação.
+ */
 export function buildBskyAuthorFeedUrl(actor, limit = 20) {
   const a = encodeURIComponent(String(actor || "").trim().replace(/^@/, ""));
   return `${BSKY_PUBLIC_ENDPOINT}/app.bsky.feed.getAuthorFeed?actor=${a}&limit=${limit}`;
 }
 
+/** Monta BskyFollowsUrl para uso no cliente.
+ * @param {*} [actor] Parâmetro `actor`.
+ * @param {*} [limit] Parâmetro `limit`.
+ * @returns {*} Resultado da operação.
+ */
 export function buildBskyFollowsUrl(actor, limit = 50) {
   const a = encodeURIComponent(String(actor || "").trim().replace(/^@/, ""));
   return `${BSKY_PUBLIC_ENDPOINT}/app.bsky.graph.getFollows?actor=${a}&limit=${limit}`;
 }
 
+/** Busca BskyFollows nos gateways configurados.
+ * @param {*} [actor] Parâmetro `actor`.
+ * @param {*} [limit] Parâmetro `limit`.
+ * @returns {*} Resultado da operação.
+ */
 export async function fetchBskyFollows(actor, limit = 50) {
   const clean = String(actor || "").trim().replace(/^@/, "");
   if (!clean) return [];
@@ -99,6 +142,11 @@ export async function fetchBskyFollows(actor, limit = 50) {
   }
 }
 
+/** Operação `importBskyFollows` do módulo.
+ * @param {*} [actor] Parâmetro `actor`.
+ * @param {*} [limit] Parâmetro `limit`.
+ * @returns {*} Resultado da operação.
+ */
 export async function importBskyFollows(actor, limit = 50) {
   const follows = await fetchBskyFollows(actor, limit);
   if (!follows.length) return { added: 0, total: loadBskySubscriptions().length };
@@ -108,11 +156,18 @@ export async function importBskyFollows(actor, limit = 50) {
   return { added: next.length - current.length, total: next.length };
 }
 
+/** Operação `exportBskySubscriptionsJson` do módulo.
+ * @returns {*} Resultado da operação.
+ */
 export function exportBskySubscriptionsJson() {
   const subs = loadBskySubscriptions();
   return JSON.stringify({ version: 1, exportedAt: new Date().toISOString(), subscriptions: subs }, null, 2);
 }
 
+/** Operação `importSubscriptionsList` do módulo.
+ * @param {*} [rawText] Parâmetro `rawText`.
+ * @returns {*} Resultado da operação.
+ */
 export function importSubscriptionsList(rawText) {
   if (!rawText || typeof rawText !== "string") return 0;
   let handles = [];
@@ -130,6 +185,10 @@ export function importSubscriptionsList(rawText) {
   return merged.length - current.length;
 }
 
+/** Operação `quoteExternalPostText` do módulo.
+ * @param {*} [post] Post ou registro.
+ * @returns {*} Resultado da operação.
+ */
 export function quoteExternalPostText(post) {
   const handle = post?.authorHandle || "@bluesky";
   const url = post?.externalUrl || "";
@@ -137,6 +196,10 @@ export function quoteExternalPostText(post) {
   return `> 🌐 **Citação Soberana de ${handle}** ([Ver original](${url})):\n> "${body}"\n\n`;
 }
 
+/** Operação `extractPostImage` do módulo.
+ * @param {*} [embed] Parâmetro `embed`.
+ * @returns {*} Resultado da operação.
+ */
 export function extractPostImage(embed) {
   if (!embed) return "";
   if (Array.isArray(embed.images) && embed.images.length) {
@@ -173,6 +236,10 @@ function resolveBskyPostTimestamp(record = {}, post = {}) {
   return new Date(tsRaw).getTime();
 }
 
+/** Normaliza BskyPost.
+ * @param {*} [item] Item com prova de trabalho.
+ * @returns {*} Resultado da operação.
+ */
 export function normalizeBskyPost(item) {
   const p = item?.post;
   if (!p) return null;
@@ -201,6 +268,11 @@ export function normalizeBskyPost(item) {
   };
 }
 
+/** Busca BskyAuthorFeed nos gateways configurados.
+ * @param {*} [handle] Parâmetro `handle`.
+ * @param {*} [limit] Parâmetro `limit`.
+ * @returns {*} Resultado da operação.
+ */
 export async function fetchBskyAuthorFeed(handle, limit = 15) {
   const clean = String(handle || "").trim().replace(/^@/, "");
   if (!clean) return [];
@@ -217,6 +289,11 @@ export async function fetchBskyAuthorFeed(handle, limit = 15) {
   }
 }
 
+/** Busca AggregatedBskyFeed nos gateways configurados.
+ * @param {*} [handles] Parâmetro `handles`.
+ * @param {*} [limitPerUser] Parâmetro `limitPerUser`.
+ * @returns {*} Resultado da operação.
+ */
 export async function fetchAggregatedBskyFeed(handles = loadBskySubscriptions(), limitPerUser = 12) {
   const list = (Array.isArray(handles) ? handles : []).slice(0, 15);
   if (!list.length) return [];

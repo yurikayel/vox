@@ -1,4 +1,8 @@
-/** Resolve display/avatar/bio: mock, welcome, cards locais, self (V-DIS-06). */
+/**
+ * @file Diretório local de cartões de perfil descobríveis na malha.
+ *
+ * Resolve nome, avatar e bio: mock, boas-vindas, cartões locais e identidade ativa (V-DIS-06).
+ */
 
 import * as mock from "./mock.js";
 import * as localAccount from "./identity/index.js";
@@ -15,6 +19,9 @@ function isSafeCardKey(id) {
   return Boolean(id) && !FORBIDDEN_CARD_KEYS.has(id);
 }
 
+/** Operação `registerProfileMemorySink` do módulo.
+ * @param {*} [fn] Parâmetro `fn`.
+ */
 export function registerProfileMemorySink(fn) {
   profileMemorySink = typeof fn === "function" ? fn : null;
 }
@@ -54,6 +61,11 @@ function normalizeSocialAvatarBase(av) {
   return clean;
 }
 
+/** Indica se SameCardIdentity.
+ * @param {*} [cardA] Parâmetro `cardA`.
+ * @param {*} [cardB] Parâmetro `cardB`.
+ * @returns {*} Resultado da operação.
+ */
 export function isSameCardIdentity(cardA, cardB) {
   if (!cardA || !cardB) return false;
   const isAlias = Boolean(cardA.arweaveAddress && cardB.arweaveAddress && cardA.arweaveAddress === cardB.arweaveAddress);
@@ -64,6 +76,9 @@ export function isSameCardIdentity(cardA, cardB) {
   return Boolean(avA && avB && avA === avB);
 }
 
+/** Operação `pruneCardsMatchingSocialIdentity` do módulo.
+ * @param {object} [options={}] Critérios de identidade social.
+ */
 export function pruneCardsMatchingSocialIdentity({ canonicalRouteId, displayName, avatarUrl } = {}) {
   const cards = loadCardsMap();
   const target = { name: displayName, avatarUrl };
@@ -93,6 +108,10 @@ function pruneConflictingIdentityCards(cards, id, nextCard) {
   }
 }
 
+/** Define ProfileCard.
+ * @param {*} [routeId] Parâmetro `routeId`.
+ * @param {*} [partial] Parâmetro `partial`.
+ */
 export function setProfileCard(routeId, partial) {
   const id = String(routeId || "").trim();
   if (!isSafeCardKey(id) || isTestRouteId(id)) return;
@@ -107,12 +126,19 @@ export function setProfileCard(routeId, partial) {
   if (profileMemorySink && isShareableCard(nextCard)) profileMemorySink({ type: "PROFILE_CARD", card: nextCard });
 }
 
+/** Obtém ProfileCard.
+ * @param {*} [routeId] Parâmetro `routeId`.
+ * @returns {*} Resultado da operação.
+ */
 export function getProfileCard(routeId) {
   const id = String(routeId || "").trim();
   if (!isSafeCardKey(id)) return null;
   return loadCardsMap().get(id) || null;
 }
 
+/** Operação `removeProfileCard` do módulo.
+ * @param {*} [routeId] Parâmetro `routeId`.
+ */
 export function removeProfileCard(routeId) {
   const id = String(routeId || "").trim();
   if (!isSafeCardKey(id)) return;
@@ -162,6 +188,9 @@ export function listShareableProfileCards() {
   return listDiscoverableProfileCards().filter(isShareableCard);
 }
 
+/** Operação `listDiscoverableProfileCards` do módulo.
+ * @returns {*} Resultado da operação.
+ */
 export function listDiscoverableProfileCards() {
   const cards = loadCardsMap();
   const all = Array.from(cards.values()).filter((c) => {
@@ -183,6 +212,8 @@ export function listDiscoverableProfileCards() {
   return deduped;
 }
 
+/** Reset de estado interno para testes.
+ */
 export function __resetProfileCardsForTests() {
   try {
     localStorage.removeItem(CARDS_KEY);
@@ -239,6 +270,10 @@ function resolveIdentityMeta({ id, card, mockProf, myId }) {
   return pickIdentityMeta(card, mockProf);
 }
 
+/** Operação `resolveProfile` do módulo.
+ * @param {*} [routeId] Parâmetro `routeId`.
+ * @returns {*} Resultado da operação.
+ */
 export async function resolveProfile(routeId) {
   const id = String(routeId || "").trim();
   if (!id) return { routeId: "", name: "", handle: "", avatar: "", bio: "", pronouns: "", gender: "", orientation: "" };
@@ -265,6 +300,10 @@ export async function resolveProfile(routeId) {
   };
 }
 
+/** Obtém AuthorDisplaySync.
+ * @param {*} [routeId] Parâmetro `routeId`.
+ * @returns {*} Resultado da operação.
+ */
 export function getAuthorDisplaySync(routeId) {
   if (isWelcomeRouteId(routeId)) return getWelcomeProfile().name;
   const card = getProfileCard(routeId);
@@ -284,6 +323,10 @@ export function getAuthorDisplaySync(routeId) {
   return "";
 }
 
+/** Obtém AuthorAvatarSync.
+ * @param {*} [routeId] Parâmetro `routeId`.
+ * @returns {*} Resultado da operação.
+ */
 export function getAuthorAvatarSync(routeId) {
   if (isWelcomeRouteId(routeId)) return getWelcomeProfile().avatar;
   const card = getProfileCard(routeId);
@@ -303,6 +346,10 @@ export function getAuthorAvatarSync(routeId) {
   return "";
 }
 
+/** Busca AndCacheOnChainProfile nos gateways configurados.
+ * @param {*} [target] Parâmetro `target`.
+ * @returns {*} Resultado da operação.
+ */
 export async function fetchAndCacheOnChainProfile(target) {
   const id = String(target || "").trim();
   if (!id) return null;

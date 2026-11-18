@@ -1,12 +1,15 @@
 /**
+ * @file Governança comunitária — propostas, voto e apuração no cliente.
+ 
  * Módulo de Governança Comunitária e Deliberação FOSS (Fase G1 / Snapshot-style).
  * Implementa propostas com diff, votação descentralizada assinada localmente (ECDSA P-256),
- * regra canônica de marco de corte anti-brigading (Eligibility-Cutoff) e apuração no cliente.
- */
+ * regra canônica de marco de corte anti-brigading (Eligibility-Cutoff) e apuração no cliente.*/
 
 /**
  * Valida os dados de entrada de uma proposta.
- */
+ 
+ * @param {object} [options] Campos do objeto de entrada.
+ * @returns {*} Resultado da operação.*/
 export function validateProposalInput({ title, body, diffText = "", communityId }) {
   if (!communityId || typeof communityId !== "string" || !communityId.trim()) {
     return { valid: false, error: "Identificador da comunidade é obrigatório." };
@@ -36,7 +39,9 @@ export function validateProposalInput({ title, body, diffText = "", communityId 
 
 /**
  * Normaliza e valida a escolha de voto.
- */
+ 
+ * @param {*} [raw] Valor bruto de entrada.
+ * @returns {*} Resultado da operação.*/
 export function normalizeVoteChoice(raw) {
   const clean = String(raw || "").trim().toLowerCase();
   if (clean === "sim" || clean === "yes" || clean === "aprovar") return "yes";
@@ -48,7 +53,9 @@ export function normalizeVoteChoice(raw) {
 /**
  * Verifica elegibilidade de um eleitor com base no marco de corte (Eligibility-Cutoff).
  * O eleitor DEVE ter aderido à comunidade antes da abertura da proposta.
- */
+ 
+ * @param {object} [options] Campos do objeto de entrada.
+ * @returns {*} Resultado da operação.*/
 export function isEligibleToVote({ membershipTs, proposalCreatedAt }) {
   if (!membershipTs || !proposalCreatedAt) return false;
   const mTs = Number(membershipTs);
@@ -59,7 +66,12 @@ export function isEligibleToVote({ membershipTs, proposalCreatedAt }) {
 
 /**
  * Determina o estado da proposta com base nos votos e no encerramento.
- */
+ 
+ * @param {*} [proposal] Proposta de governança.
+ * @param {*} [yesCount] Votos sim contabilizados.
+ * @param {*} [noCount] Votos não contabilizados.
+ * @param {*} [now] Instante de referência, em ms.
+ * @returns {*} Resultado da operação.*/
 export function resolveProposalState(proposal, yesCount, noCount, now = Date.now()) {
   const closesAt = Number(proposal.closesAt) || 0;
   const isClosed = closesAt > 0 && now >= closesAt;
@@ -128,7 +140,9 @@ function evaluateVoteRecord(author, v, memberMap, proposalCreatedAt, counts) {
  * 1. 1 membro = 1 voto (sem multiplicador de badges ou karma).
  * 2. Apenas o voto mais recente de cada autor é considerado.
  * 3. Votos posteriores ao Eligibility-Cutoff são catalogados como inelegíveis (não alteram a contagem).
- */
+ 
+ * @param {object} [options] Campos do objeto de entrada.
+ * @returns {*} Resultado da operação.*/
 export function computeTally({ proposal, votes = [], memberships = [], now = Date.now() }) {
   if (!proposal) {
     return { yes: 0, no: 0, abstain: 0, totalEligible: 0, totalVotes: 0, ineligibleCount: 0, state: "rejected", votesDetail: [] };
@@ -163,7 +177,9 @@ export function computeTally({ proposal, votes = [], memberships = [], now = Dat
 
 /**
  * Analisa e tokeniza um texto de diff unificado (estilo git diff) para exibição visual limpa.
- */
+ 
+ * @param {*} [diffText] Texto do diff unificado.
+ * @returns {*} Resultado da operação.*/
 export function parseUnifiedDiff(diffText) {
   if (!diffText) return [];
   const lines = String(diffText).split("\n");

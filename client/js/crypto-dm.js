@@ -1,7 +1,8 @@
 /**
- * Criptografia E2E para Mensagens Diretas Efêmeras (Fase 4)
- * ECDH P-256 (chave efêmera por mensagem) + AES-GCM-256 via WebCrypto API.
- * Separado da chave JWK RSA Arweave de autoria pública.
+ * @file Criptografia E2E de DMs (ECDH P-256 efêmero + AES-GCM-256 via WebCrypto).
+ *
+ * Par de chaves de DM separado da chave JWK RSA de autoria Arweave.
+ * @module crypto-dm
  */
 
 import { openSealed, sealJson } from "./identity/keys.js";
@@ -36,7 +37,10 @@ function parseJwkInput(jwkOrStr) {
   return jwkOrStr;
 }
 
-/** Par ECDH novo, em claro (só em memória). */
+/**
+ * Gera par ECDH P-256 novo, com chaves em JWK (só em memória).
+ * @returns {Promise<{ publicJwk: JsonWebKey, privateJwk: JsonWebKey }>}
+ */
 export async function generateDmKeypair() {
   const pair = await crypto.subtle.generateKey(ECDH_ALGO, true, ["deriveKey"]);
   return {
@@ -46,8 +50,8 @@ export async function generateDmKeypair() {
 }
 
 /**
- * Par de DM como está guardado: a chave privada vem cifrada pelo aparelho (PM-93) ou, em dado antigo, em claro.
- * Existindo um par guardado, nunca gera outro por cima.
+ * Garante par de DM no armazenamento (privada cifrada PM-93); não sobrescreve par existente.
+ * @returns {Promise<{ publicJwk: JsonWebKey, privateJwk: string|JsonWebKey }>}
  */
 export async function ensureDmKeys() {
   try {
@@ -63,22 +67,37 @@ export async function ensureDmKeys() {
   return stored;
 }
 
+/**
+ * JWK pública ECDH do par de DM deste aparelho.
+ * @returns {Promise<JsonWebKey>}
+ */
 export async function getPublicJwk() {
   const { publicJwk } = await ensureDmKeys();
   return publicJwk;
 }
 
-/** Par de DM aberto (chave privada em claro), para backup. Par travado (PM-93 etapa 2): `KeyLockedError`. */
+/**
+ * Par de DM com chave privada aberta (para backup). Pode lançar `KeyLockedError` (PM-93).
+ * @returns {Promise<{ publicJwk: JsonWebKey, privateJwk: JsonWebKey }>}
+ */
 export async function getDmKeypair() {
   const stored = await ensureDmKeys();
   return { publicJwk: stored.publicJwk, privateJwk: await openSealed(stored.privateJwk) };
 }
 
-/** Par de DM na forma guardada (cifrada), para copiar entre contas sem abrir. */
+/**
+ * Par de DM como guardado (privada ainda cifrada).
+ * @returns {Promise<{ publicJwk: JsonWebKey, privateJwk: string|JsonWebKey }>}
+ */
 export async function getDmKeypairAtRest() {
   return ensureDmKeys();
 }
 
+/**
+ * Substitui o par de DM local (a privada é re-cifrada antes de guardar).
+ * @param {{ publicJwk?: JsonWebKey, privateJwk?: JsonWebKey }} keypair Par em JWK.
+ * @returns {Promise<boolean>} `false` se faltar chave.
+ */
 export async function setDmKeypair(keypair) {
   if (!keypair?.publicJwk || !keypair?.privateJwk) return false;
   const stored = { publicJwk: keypair.publicJwk, privateJwk: await sealJson(keypair.privateJwk) };
@@ -129,6 +148,16 @@ function sanitizeEcPublicJwk(toPubInput) {
   };
 }
 
+/**
+ * Cifra texto para o destinatário (envelope DM v1 com token de apagar PM-94).
+ * @param {JsonWebKey|string} toPubInput JWK pública ECDH do destinatário.
+ * @param {string} plaintext Conteúdo em texto claro.
+ * @param {object} [options={}]
+ * @param {string} [options.from=""] Identificador da origem (AAD).
+ * @param {string} [options.to=""] Identificador do destino (AAD).
+ * @returns {Promise<object>} Envelope com `ephPub`, `iv`, `ct`, `del`, etc.
+ * @throws {Error} Se a chave pública for inválida.
+ */
 export async function seal(toPubInput, plaintext, { from = "", to = "" } = {}) {
   const cleanJwk = sanitizeEcPublicJwk(toPubInput);
   const recipientPubKey = await crypto.subtle.importKey("jwk", cleanJwk, ECDH_ALGO, false, []);
@@ -164,6 +193,13 @@ async function recipientAesKey(envelope, privateJwkOverride) {
   return deriveAesKey(privKey, ephPubKey, ["decrypt"]);
 }
 
+/**
+ * Abre envelope DM v1 e devolve o texto plano.
+ * @param {object} envelope Envelope produzido por {@link seal}.
+ * @param {JsonWebKey|null} [privateJwkOverride=null] Chave privada alternativa (fora do armazenamento).
+ * @returns {Promise<string>}
+ * @throws {Error} Envelope inválido ou falha de descriptografia.
+ */
 export async function open(envelope, privateJwkOverride = null) {
   if (!envelope || envelope.v !== 1 || !envelope.ephPub || !envelope.iv || !envelope.ct) {
     throw new Error("Envelope DM inválido");
@@ -182,7 +218,12 @@ export async function open(envelope, privateJwkOverride = null) {
   return new TextDecoder().decode(ptBuffer);
 }
 
-/** PM-94: chave de apagar do envelope no relay (hex), ou null em envelope antigo, sem `del`. */
+/**
+ * Extrai token de apagar (hex) do envelope PM-94, ou `null` se ausente.
+ * @param {object} envelope Envelope DM.
+ * @param {JsonWebKey|null} [privateJwkOverride=null] Chave privada alternativa.
+ * @returns {Promise<string|null>}
+ */
 export async function openDeleteToken(envelope, privateJwkOverride = null) {
   if (!envelope?.del?.iv || !envelope.del.ct || !envelope.ephPub) return null;
   const aesKey = await recipientAesKey(envelope, privateJwkOverride);
