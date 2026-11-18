@@ -1,5 +1,11 @@
 # Render Blueprint para implantação gratuita do Nó Sentinela Vox
 # Documentação: https://render.com/docs/blueprint-spec
+#
+# VOX_RELAY_TRUST_PROXY_HOPS: NÃO definido aqui de propósito. Com 0 (padrão) o rate limit usa o IP do
+# socket; com N >= 1 ele confia nas N últimas entradas de X-Forwarded-For. O valor certo depende de
+# quantos proxies a Render põe à frente deste serviço e de quem mais pode escrever esse cabeçalho:
+# errado, ou limita todos os clientes juntos (N baixo demais) ou deixa o cliente forjar o próprio IP
+# (N alto demais). Decisão do dono do deploy; confirme na documentação da Render e defina no painel.
 services:
   - type: web
     name: vox-sentinel
