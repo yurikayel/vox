@@ -20,6 +20,8 @@ function mount() {
 }
 
 const settle = async () => { for (let i = 0; i < 20; i++) await new Promise((r) => setImmediate(r)); };
+/** Espera uma condição ficar verdadeira (até `ms`), em vez de contar turnos do loop de eventos, que varia no CI. */
+const waitFor = async (cond, ms = 3000) => { const fim = Date.now() + ms; while (!cond() && Date.now() < fim) await new Promise((r) => setTimeout(r, 5)); };
 const fileOf = (text) => ({ text: async () => text });
 
 async function freshAccountWithPost() {
@@ -99,7 +101,7 @@ test("importar: arquivo da própria conta restaura o post apagado e chama onDone
   ui.bindOwnPostsSection(() => { done += 1; });
   input.files = [fileOf(file.text)];
   input.listeners.change();
-  await settle();
+  await waitFor(() => done === 1);
   assert.equal(done, 1);
   assert.equal((await cacheNode.getAllLocalPosts()).some((p) => p.id === signed.id), true);
 });
