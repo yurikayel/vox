@@ -8,7 +8,7 @@
  *   exportar ("caixa preta"). No máximo 20 donas; uma divisão nova da mesma dona substitui a anterior.
  */
 
-import { openSealed, sealJsonStrict } from "./keystore.js";
+import { isPlainRecord, openSealed, ownRecord, readStoredRecord, sealJsonStrict, writeStoredJson } from "./keystore.js";
 import { MAX_N, MIN_M, SPLIT_ID_BYTES, splitSecret } from "../shamir-gf256.js";
 
 /** Pedaço da dona para o guardião. */
@@ -30,19 +30,6 @@ const TYPES = [SHARE_TYPE, RECEIPT_TYPE, REVOKE_TYPE];
 const ownerMapKey = (routeId) => `vox-guardians-v1:${routeId}`;
 const toB64url = (bytes) => btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 const clip = (s, max) => String(s || "").trim().slice(0, max);
-
-function readJson(key, fallback) {
-  try {
-    const value = JSON.parse(localStorage.getItem(key) || "null");
-    return value && typeof value === "object" ? value : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-function writeJson(key, value) {
-  localStorage.setItem(key, JSON.stringify(value));
-}
 
 /**
  * Divide o segredo e monta um corpo (a assinar) por guardião.
@@ -142,14 +129,20 @@ function secretSizeMatchesKind({ kind, y }) {
 
 // ---- Mapa da dona: quem guarda cada pedaço, sem os pedaços. ----
 
+/** Divisão com a forma que o resto do módulo assume; a que estiver corrompida vale como "sem divisão". */
+function isValidSplit(map) {
+  return Boolean(map) && typeof map.splitId === "string" && map.splitId !== "" && Number.isFinite(map.m) && Number.isFinite(map.n)
+    && Array.isArray(map.guardians) && map.guardians.every((g) => isPlainRecord(g) && typeof g.routeId === "string");
+}
+
 /**
- * Divisão ativa da dona, ou null.
+ * Divisão ativa da dona, ou null (também quando o que está guardado não tem a forma esperada; nada é apagado).
  * @param {string} owner
  * @returns {{ splitId: string, m: number, n: number, guardians: { routeId: string, x: number, sentAt: number, heldAt: number|null }[] }|null}
  */
 export function getOwnerSplit(owner) {
-  const map = readJson(ownerMapKey(owner), null);
-  return map?.splitId ? map : null;
+  const map = readStoredRecord(ownerMapKey(owner), null);
+  return isValidSplit(map) ? map : null;
 }
 
 /**
@@ -157,10 +150,11 @@ export function getOwnerSplit(owner) {
  * @param {string} owner
  * @param {{ splitId: string, m: number, guardians: string[] }} choice o guardião `i` recebeu `x = i + 1`
  * @param {number} [now]
+ * @returns {boolean} se gravou (sem espaço no navegador, a divisão anterior segue valendo)
  */
 export function recordOwnerSplit(owner, { splitId, m, guardians: chosen }, now = Date.now()) {
   const guardians = chosen.map((routeId, i) => ({ routeId, x: i + 1, sentAt: now, heldAt: null }));
-  writeJson(ownerMapKey(owner), { splitId, m, n: chosen.length, guardians });
+  return writeStoredJson(ownerMapKey(owner), { splitId, m, n: chosen.length, guardians });
 }
 
 /**
@@ -178,7 +172,7 @@ export function countConfirmed(owner) {
  * Aplica um recibo já verificado; só conta se veio do guardião que recebeu aquele `x` daquela divisão.
  * @param {string} owner
  * @param {object} receipt corpo assinado de `RECEIPT_TYPE`
- * @returns {boolean} se o recibo valeu
+ * @returns {boolean} se o recibo valeu (e ficou gravado)
  */
 export function applyReceipt(owner, receipt) {
   const split = getOwnerSplit(owner);
@@ -186,8 +180,7 @@ export function applyReceipt(owner, receipt) {
   const guardian = split.guardians.find((g) => g.routeId === receipt.author && g.x === receipt.x);
   if (!guardian) return false;
   guardian.heldAt = receipt.released ? null : Number(receipt.heldAt) || Date.now();
-  writeJson(ownerMapKey(owner), split);
-  return true;
+  return writeStoredJson(ownerMapKey(owner), split);
 }
 
 /**
@@ -200,8 +193,12 @@ export function clearOwnerSplit(owner) {
 
 // ---- Guarda do guardião: caixa preta. ----
 
+/** Pedaços guardados; ficam só as entradas bem formadas, cuja chave é a própria dona. */
 function readHeld() {
-  return readJson(HELD_STORAGE, {});
+  const held = readStoredRecord(HELD_STORAGE);
+  return Object.fromEntries(
+    Object.entries(held).filter(([id, entry]) => isPlainRecord(entry) && entry.owner === id && isPlainRecord(entry.sealed)),
+  );
 }
 
 /**
@@ -220,18 +217,17 @@ export function listHeld() {
  * @param {object} share corpo assinado de `SHARE_TYPE`
  * @param {string} me conta deste aparelho
  * @param {number} [now]
- * @returns {Promise<boolean>}
+ * @returns {Promise<boolean>} se guardou (sem espaço para gravar, não guardou)
  */
 export async function storeHeldShare(share, me, now = Date.now()) {
   const held = readHeld();
-  if (share.author === me || (!held[share.author] && Object.keys(held).length >= MAX_HELD)) return false;
+  if (share.author === me || (!ownRecord(held, share.author) && Object.keys(held).length >= MAX_HELD)) return false;
   const sealed = await sealJsonStrict(share).catch(() => null);
   if (!sealed) return false;
   held[share.author] = {
     owner: share.author, ownerName: clip(share.ownerName, 80), splitId: share.splitId, x: share.x, heldAt: now, sealed,
   };
-  writeJson(HELD_STORAGE, held);
-  return true;
+  return writeStoredJson(HELD_STORAGE, held);
 }
 
 /**
@@ -240,7 +236,7 @@ export async function storeHeldShare(share, me, now = Date.now()) {
  * @returns {Promise<object|null>}
  */
 export async function openHeldShare(owner) {
-  const entry = readHeld()[owner];
+  const entry = ownRecord(readHeld(), owner);
   return entry ? openSealed(entry.sealed) : null;
 }
 
@@ -248,13 +244,13 @@ export async function openHeldShare(owner) {
  * Apaga o pedaço de uma dona; com `splitId`, só se for daquela divisão (revogação).
  * @param {string} owner
  * @param {string} [splitId]
- * @returns {{ splitId: string, x: number }|null} o que foi apagado
+ * @returns {{ splitId: string, x: number }|null} o que foi apagado; null também quando não deu para gravar (o pedaço continua)
  */
 export function dropHeldShare(owner, splitId = "") {
   const held = readHeld();
-  const entry = held[owner];
+  const entry = ownRecord(held, owner);
   if (!entry || (splitId && entry.splitId !== splitId)) return null;
   delete held[owner];
-  writeJson(HELD_STORAGE, held);
+  if (!writeStoredJson(HELD_STORAGE, held)) return null;
   return { splitId: entry.splitId, x: entry.x };
 }
