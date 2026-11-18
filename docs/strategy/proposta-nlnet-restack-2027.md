@@ -1,6 +1,6 @@
 # Proposta ao NLnet Restack (PM-42 / LAN-36): rascunho de trabalho
 
-> **Status:** rascunho · **Owner:** mantenedor (quem submete) · **Revisado:** 2026-11-09 · **Prazo:** 03/01/2027, 12:00 CET
+> **Status:** rascunho · **Owner:** mantenedor (quem submete) · **Revisado:** 2026-11-17 · **Prazo:** 03/01/2027, 12:00 CET
 > Não substitui o [ROADMAP](../ROADMAP.md). Este documento junta os fatos, os riscos e um rascunho em inglês campo a campo. **A versão submetida precisa ser reescrita pelo mantenedor, com as próprias palavras** (ver §1.2).
 
 ## 1. Antes de escrever: três riscos que decidem a proposta
@@ -78,7 +78,7 @@ Tarefas e horas na §4. O valor/hora depende do mantenedor.
 
 ### Background (máx. 2.000): **o mantenedor escreve**
 
-Fatos do projeto que podem entrar: começou em 22/10/2026; 800 commits; CI com 5 checks obrigatórios; cerca de 950 testes automatizados (JS e Python); limites de complexidade bloqueantes; modelo de ameaças e inventário de dependências públicos. **A experiência pessoal e a dimensão europeia (§1.1) são do mantenedor.** Não preencha com suposições.
+Fatos do projeto que podem entrar: começou em 22/10/2026; 800 commits; CI com 5 checks obrigatórios; testes automatizados (JS e Python; contagem atual em [release-metadata.json](../release-metadata.json)); limites de complexidade bloqueantes; modelo de ameaças e inventário de dependências públicos. **A experiência pessoal e a dimensão europeia (§1.1) são do mantenedor.** Não preencha com suposições.
 
 ### Other funding sources (máx. 1.000): **conferir**
 
