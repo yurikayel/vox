@@ -104,3 +104,56 @@ export async function applyDirectoryProfileCard(card) {
   if (!(await localAccount.verifyPayload(signed))) return false;
   return applyVerifiedProfileCardItem(signed);
 }
+
+/*
+ * Tetos de tamanho do gossip P2P e contagem do descarte. Par malicioso manda payload gigante ou tipo estranho;
+ * o aparelho descarta em silêncio (sem lançar) e só incrementa um contador. Valores coerentes com o projeto:
+ * 1 MiB por mensagem (quadro do relay de sinalização, `relay/signaling.py`), 512 KiB por post/lápide
+ * (`MAX_ITEM_BYTES` da memória central) e 64 KiB por cartão. Vivem aqui porque este módulo já está no precache do SW.
+ */
+/** Teto da mensagem inteira recebida da malha (item + blob + metadados), em bytes UTF-8. */
+export const MAX_GOSSIP_MESSAGE_BYTES = 1024 * 1024;
+/** Teto de um post, edição ou lápide recebido, em bytes UTF-8. */
+export const MAX_GOSSIP_ITEM_BYTES = 512 * 1024;
+/** Teto de um cartão de perfil recebido, em bytes UTF-8. */
+export const MAX_PROFILE_CARD_BYTES = 64 * 1024;
+
+const drops = { oversizedMessage: 0, oversizedItem: 0, oversizedProfileCard: 0, unknownType: 0 };
+
+/**
+ * Soma um descarte ao contador do motivo dado.
+ * @param {"oversizedMessage"|"oversizedItem"|"oversizedProfileCard"|"unknownType"} reason Motivo do descarte.
+ */
+export function noteGossipDrop(reason) {
+  if (Object.hasOwn(drops, reason)) drops[reason] += 1;
+}
+
+/**
+ * Cópia dos contadores de descarte desta sessão (memória; zeram ao recarregar).
+ * @returns {{oversizedMessage: number, oversizedItem: number, oversizedProfileCard: number, unknownType: number}} Contagens.
+ */
+export function getGossipDropCounts() {
+  return { ...drops };
+}
+
+/** Zera os contadores (uso em testes). */
+export function resetGossipDropCounts() {
+  for (const key of Object.keys(drops)) drops[key] = 0;
+}
+
+/**
+ * Valor serializado passa do teto? Valor que não serializa (ciclo, BigInt) conta como acima do teto.
+ * @param {unknown} value Mensagem ou item.
+ * @param {number} maxBytes Teto em bytes UTF-8.
+ * @returns {boolean} true se deve ser descartado.
+ */
+export function exceedsBytes(value, maxBytes) {
+  try {
+    const text = JSON.stringify(value);
+    if (typeof text !== "string") return false;
+    // Cada unidade UTF-16 ocupa 1 a 3 bytes: acima do teto em unidades já passou; abaixo de teto/3 não passa; no meio, mede.
+    return text.length > maxBytes || (text.length * 3 > maxBytes && new TextEncoder().encode(text).length > maxBytes);
+  } catch {
+    return true;
+  }
+}

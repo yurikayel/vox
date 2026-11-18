@@ -205,13 +205,13 @@ test("peer-sync-malicioso - shortHash é estável para entradas estranhas e semp
   assert.equal(await sync.shortHash(42), await sync.shortHash("42"));
 });
 
-test.todo("peer-sync-malicioso - BUG: nonce e hash numéricos passam na validação (o regex coage número para texto)", () => {
+test("peer-sync-malicioso - nonce e hash numéricos passam na validação (o regex coage número para texto)", () => {
   assert.equal(sync.parseInventory({ ...goodInv, nonce: 12345678 }), null, "nonce deve ser texto");
   assert.equal(sync.parseWant({ ackOf: "n", posts: [12345678901], dels: [], cards: [] }), null, "hash deve ser texto");
   assert.equal(sync.parseWant({ ackOf: "n", posts: [[HASH]], dels: [], cards: [] }), null, "lista aninhada vira texto no regex");
 });
 
-test.todo("peer-sync-malicioso - BUG: SYNC_WANT repetido é servido toda vez (sem consumir o nonce): amplificação de banda", async () => {
+test("peer-sync-malicioso - SYNC_WANT repetido é servido toda vez (sem consumir o nonce): amplificação de banda", async () => {
   const { peer } = aparelho({ posts: [post("p1", 1)] });
   const nonce = await peer.onConnect(() => {});
   const h = await sync.shortHash("p1");
@@ -222,21 +222,21 @@ test.todo("peer-sync-malicioso - BUG: SYNC_WANT repetido é servido toda vez (se
   assert.equal(repeticao, 0, "o mesmo pedido da mesma conexão não deveria ser servido de novo");
 });
 
-test.todo("peer-sync-malicioso - BUG: SYNC_WANT com nonce desconhecido ainda recebe os itens do recorte", async () => {
+test("peer-sync-malicioso - SYNC_WANT com nonce desconhecido ainda recebe os itens do recorte", async () => {
   const { peer } = aparelho({ posts: [post("p1", 1)] });
   await peer.onConnect(() => {});
   const enviados = await peer.onWant({ ackOf: "nonce-que-nunca-existiu", posts: [await sync.shortHash("p1")], dels: [], cards: [] }, () => {});
   assert.equal(enviados, 0, "sem inventário anunciado nesta conexão, não há o que servir");
 });
 
-test.todo("peer-sync-malicioso - BUG: um loadBlob que lança impede o envio de todos os outros posts do pedido", async () => {
+test("peer-sync-malicioso - um loadBlob que lança impede o envio de todos os outros posts do pedido", async () => {
   const { peer } = aparelho(
     { posts: [post("p1", 2, { mediaHash: "ruim" }), post("p2", 1)] },
     { loadBlob: async (p) => { if (p.mediaHash === "ruim") throw new Error("registro corrompido"); return null; } },
   );
-  await peer.onConnect(() => {});
+  const nonce = await peer.onConnect(() => {});
   const out = [];
-  const want = { ackOf: "x", posts: [await sync.shortHash("p1"), await sync.shortHash("p2")], dels: [], cards: [] };
+  const want = { ackOf: nonce, posts: [await sync.shortHash("p1"), await sync.shortHash("p2")], dels: [], cards: [] };
   await peer.onWant(want, (m) => out.push(m)).catch(() => {});
   assert.ok(out.some((m) => m.item?.id === "p2"), "o post sem foto deveria ir mesmo assim");
 });
