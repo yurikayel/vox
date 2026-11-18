@@ -28,6 +28,9 @@ const NONCE_RE = /^[A-Za-z0-9_-]{8,32}$/;
 const HASH_CACHE_MAX = 20000;
 const hashCache = new Map();
 
+/** Só texto passa: o regex coagiria número ou lista aninhada para texto e aceitaria. */
+const isHash = (h) => typeof h === "string" && HASH_RE.test(h);
+const isNonce = (n) => typeof n === "string" && NONCE_RE.test(n);
 const isSigned = (x) => Boolean(x?.sig && x?.pubKey);
 const itemVersion = (x) => Number(x?.editedAt || x?.ts || 0);
 const cardContent = (c) => JSON.stringify([c.name || "", c.avatarUrl || "", c.bio || "", c.handle || "", c.discoverable !== false]);
@@ -104,7 +107,7 @@ const validVersion = (v) => (typeof v === "number" && Number.isFinite(v) && v >=
 
 function parseEntries(list, max) {
   if (!Array.isArray(list) || list.length > max) return null;
-  const ok = list.every((e) => Array.isArray(e) && e.length === 2 && HASH_RE.test(e[0]) && validVersion(e[1]));
+  const ok = list.every((e) => Array.isArray(e) && e.length === 2 && isHash(e[0]) && validVersion(e[1]));
   return ok ? list : null;
 }
 
@@ -114,7 +117,7 @@ function parseEntries(list, max) {
  * @returns {{nonce: string, posts: Array, dels: Array, cards: Array}|null} Pares `[hash, versão]` por tipo, ou null.
  */
 export function parseInventory(msg) {
-  if (msg?.v !== 1 || !NONCE_RE.test(String(msg.nonce || ""))) return null;
+  if (msg?.v !== 1 || !isNonce(msg.nonce)) return null;
   const posts = parseEntries(msg.posts, SYNC_LIMITS.posts);
   const dels = parseEntries(msg.dels, SYNC_LIMITS.dels);
   const cards = parseEntries(msg.cards, SYNC_LIMITS.cards);
@@ -137,7 +140,7 @@ export function computeWants(remote, local) {
 }
 
 function parseHashes(list, max) {
-  return Array.isArray(list) && list.length <= max && list.every((h) => HASH_RE.test(h)) ? list : null;
+  return Array.isArray(list) && list.length <= max && list.every(isHash) ? list : null;
 }
 
 /**
@@ -171,6 +174,15 @@ const noBlob = async () => null;
 /** Bytes do blob pelo que de fato viaja (`data`), não pelo `byteLength` declarado. */
 const blobBytes = (blob) => Math.ceil(String(blob?.data || "").length * 0.75);
 
+/** Blob que falha ao carregar (registro corrompido) vira "sem blob": o post segue, os outros também. */
+async function loadBlobSafely(loadBlob, post) {
+  try {
+    return await loadBlob(post);
+  } catch {
+    return null;
+  }
+}
+
 /**
  * PM-88: põe o blob do `mediaHash` ao lado de cada GOSSIP, dentro de SYNC_BLOB_LIMITS (mais novos primeiro).
  * Blob que não bate com o hash, passa do teto por blob ou estoura o teto da conexão não vai; o post segue sem ele.
@@ -183,7 +195,7 @@ export async function attachBlobs(messages, loadBlob = noBlob) {
   const out = [];
   for (const m of messages) {
     const hash = m.type === "GOSSIP" ? m.item?.mediaHash : "";
-    const blob = hash ? await loadBlob(m.item) : null;
+    const blob = hash ? await loadBlobSafely(loadBlob, m.item) : null;
     const size = blobBytes(blob);
     const fits = Boolean(blob) && blob.hash === hash && size <= SYNC_BLOB_LIMITS.perBlob && size <= budget;
     if (fits) budget -= size;
@@ -232,11 +244,13 @@ async function answerInventory(msg, replyFn, deps) {
   return wants;
 }
 
-/** Passo 3: o pedido confirma que o outro lado fala inventário (cancela o prazo) e recebe só o que pediu. */
+/** Passo 3: o pedido, com o nonce do nosso inventário, confirma que o outro lado fala inventário (cancela o prazo) e recebe só o que pediu, uma vez. */
 async function serveWant(msg, replyFn, deps, pending) {
   const want = parseWant(msg);
   if (!want) return 0;
-  if (pending.has(want.ackOf)) deps.clearTimer(pending.get(want.ackOf));
+  // Sem inventário anunciado nesta conexão (ou já atendido) não há o que servir: o nonce vale uma vez.
+  if (!pending.has(want.ackOf)) return 0;
+  deps.clearTimer(pending.get(want.ackOf));
   pending.delete(want.ackOf);
   const out = await attachBlobs(messagesForWant(want, await buildInventory(await deps.loadShared())), deps.loadBlob);
   for (const m of out) replyFn({ ...m, fromPeer: deps.fromPeer });

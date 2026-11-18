@@ -38,6 +38,9 @@ async function entrega(msg, source = "rtc") {
   return { vistos, respostas };
 }
 
+/** Contador de descarte; 0 se o módulo ainda não o exporta (a asserção, não um TypeError, é que deve falhar). */
+const conta = (k) => peers.getGossipDropCounts?.()[k] ?? 0;
+
 const trocaPrimeiroChar = (s) => (s[0] === "A" ? "B" : "A") + s.slice(1);
 
 test("p2p-malicioso - controle: post assinado e novo é guardado e anunciado uma vez", async () => {
@@ -282,7 +285,7 @@ test("p2p-malicioso - WANT com txId de objeto ou gigante não responde", async (
   assert.deepEqual(respostas, []);
 });
 
-test.todo("p2p-malicioso - BUG: lápide só com ts (sem editedAt) não impede o post velho de voltar", async () => {
+test("p2p-malicioso - lápide só com ts (sem editedAt) não impede o post velho de voltar", async () => {
   liga();
   const alice = await person();
   const post = await postAssinado(alice, { ts: Date.now() - 3000 });
@@ -292,23 +295,49 @@ test.todo("p2p-malicioso - BUG: lápide só com ts (sem editedAt) não impede o 
   assert.equal(vistos.length, 0, "handleGossipDeleteMessage usa editedAt||ts; isSupersededLocally só editedAt");
 });
 
-test.todo("p2p-malicioso - BUG: type '__proto__' derruba handleVoxMessage (handler vira Object.prototype)", async () => {
+test("p2p-malicioso - type '__proto__' derruba handleVoxMessage (handler vira Object.prototype)", async () => {
   liga();
-  await assert.doesNotReject(() => peers.handleVoxMessage(JSON.parse('{"type":"__proto__"}'), () => {}, "rtc"));
+  const antes = conta("unknownType");
+  for (const type of ["__proto__", "constructor", "toString", "hasOwnProperty", 7, null, ["WANT"]]) {
+    const msg = JSON.parse(JSON.stringify({ type }));
+    await assert.doesNotReject(() => peers.handleVoxMessage(msg, () => {}, "rtc"));
+  }
+  assert.equal(conta("unknownType") - antes, 7, "cada tipo fora da lista é contado");
 });
 
-test.todo("p2p-malicioso - BUG: post assinado de 5 MB é aceito e guardado (GOSSIP não tem teto de tamanho)", async () => {
+test("p2p-malicioso - post assinado de 5 MB é aceito e guardado (GOSSIP não tem teto de tamanho)", async () => {
   liga();
   const alice = await person();
   const gigante = await postAssinado(alice, { body: "x".repeat(5 * MESSAGE_CAP_BYTES) });
+  const antes = conta("oversizedMessage");
   const { vistos } = await entrega({ type: "GOSSIP", item: gigante });
   assert.equal(vistos.length, 0, "payload acima do teto deve ser descartado antes de guardar e repassar");
+  assert.equal(await cacheNode.getLocalPost(gigante.id), null);
+  assert.equal(conta("oversizedMessage"), antes + 1);
 });
 
-test.todo("p2p-malicioso - BUG: lápide assinada de 5 MB é aceita e guardada (sem teto de tamanho)", async () => {
+test("p2p-malicioso - lápide assinada de 5 MB é aceita e guardada (sem teto de tamanho)", async () => {
   liga();
   const alice = await person();
   const lapide = await alice.sign({ id: novoId(), type: "tombstone", ts: Date.now(), nota: "x".repeat(5 * MESSAGE_CAP_BYTES) });
   await peers.handleVoxMessage({ type: "GOSSIP_DELETE", tombstone: lapide }, () => {}, "rtc");
   assert.equal(await cacheNode.getTombstone(lapide.id), null);
+});
+
+test("p2p-malicioso - post entre o teto do item e o da mensagem é descartado e contado como item", async () => {
+  liga();
+  const alice = await person();
+  const medio = await postAssinado(alice, { body: "x".repeat(peers.MAX_GOSSIP_ITEM_BYTES + 10) });
+  const antes = conta("oversizedItem");
+  const { vistos } = await entrega({ type: "GOSSIP", item: medio });
+  assert.equal(vistos.length, 0);
+  assert.equal(conta("oversizedItem"), antes + 1);
+});
+
+test("p2p-malicioso - post logo abaixo do teto do item continua aceito (formato legítimo intacto)", async () => {
+  liga();
+  const alice = await person();
+  const justo = await postAssinado(alice, { body: "x".repeat(peers.MAX_GOSSIP_ITEM_BYTES - 2048) });
+  const { vistos } = await entrega({ type: "GOSSIP", item: justo });
+  assert.equal(vistos.length, 1);
 });
