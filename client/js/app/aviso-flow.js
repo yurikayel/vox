@@ -19,6 +19,7 @@ import { bindComposeStepper } from "./compose-stepper.js";
 import { renderComposeBlocked } from "../render/compose-steps.js";
 import { getActiveUser, makeShellProps } from "./context.js";
 import { resolveCommunityMetadata } from "./screens-community.js";
+import { randomBase36 } from "../shared/html.js";
 
 /**
  * Chave em `localStorage` da flag de laboratório dos avisos (valor `"1"` liga).
@@ -104,7 +105,7 @@ function callFields(ctx, a, now) {
   return { call, myRole, received, suggested };
 }
 
-const newId = (prefix) => `${prefix}_${Math.random().toString(36).slice(2, 10)}`;
+const newId = (prefix) => `${prefix}_${randomBase36(8)}`;
 
 async function signAndPublish(payload) {
   const signed = await localAccount.signPayload(payload);

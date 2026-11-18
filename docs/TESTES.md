@@ -1,6 +1,6 @@
 # Testes — como rodar, escrever e o que o CI checa
 
-> **Status:** canônico · **Owner:** mantenedor / qualidade · **Revisado:** 2026-11-17 (§3.3 Tier A pelo CODEOWNERS; §4 conferida com o `ci.yml`; §3.4 vermelho na base, PM-111)
+> **Status:** canônico · **Owner:** mantenedor / qualidade · **Revisado:** 2026-11-17 (§4 com os 10 workflows; §3.3 Tier A pelo CODEOWNERS; §4 conferida com o `ci.yml`; §3.4 vermelho na base, PM-111)
 > Contagem atual de testes: **só** em [release-metadata.json](./release-metadata.json) (`test_js`, `test_python`).
 > **Como relatar e o que é proibido** (PASS / FAIL / NOT RUN / BLOCKED, falso verde, determinismo, auditoria): [process/qualidade-e-evidencia.md](./process/qualidade-e-evidencia.md). Verificação completa antes do merge: `npm run validate`.
 
@@ -82,7 +82,12 @@ Rodar localmente: `node scripts/red-on-base.mjs origin/develop` com `PR_TITLE="f
 | `codeql.yml` (PR e push em `main`/`develop`, e semanal) | Análise estática do GitHub CodeQL | Conforme o ruleset do repositório |
 | `windows-node-zero-smoke.yml` | PyInstaller + smoke do Node Zero no Windows | Sim |
 | `nostr-smoke.yml` (semanal) | Publica e lê um evento efêmero em cada relay Nostr do pool (REV-19) | Não (agenda) |
-| `deps-mensal.yml` (dia 1 de cada mês) | `npm audit` · teste de inventário · hash de CDN contra [DEPENDENCIAS.md](./DEPENDENCIAS.md) (`scripts/deps-check-cdn.mjs`) · `npm outdated` no resumo (LAN-20) | Não (agenda) |
+| `deps-mensal.yml` (dia 1 de cada mês, 09:00 UTC; também manual) | `npm audit` · teste de inventário · hash de CDN contra [DEPENDENCIAS.md](./DEPENDENCIAS.md) (`scripts/deps-check-cdn.mjs`) · `npm outdated` no resumo (LAN-20); falha agendada abre issue `alerta-automatico` (PM-61). **Ainda sem execução registrada:** `gh run list --workflow deps-mensal.yml` não devolve nenhuma em 17/11, então o fluxo não foi observado de ponta a ponta | Não (agenda) |
+| `sentinel-keepalive.yml` (a cada 14 min; também manual) | `curl` em `/health` de cada nó sentinela (segredos `SENTINEL_NODE_1…3`; sem segredo, usa `vox-sentinel.onrender.com`); falha gera alerta | Não (agenda) |
+| `deploy-pages.yml` (push em `main` que toque `client/**`, `docs/**` ou o script de OAuth; também manual) | Monta `_site` com `client/*` e publica no GitHub Pages | Não (deploy) |
+| `deploy-shell-b.yml` (mesmo gatilho do Pages; manual exige digitar `DEPLOY`) | Publica `client/` no Cloudflare Pages (shell B); sem os segredos `CLOUDFLARE_*` só avisa e não publica | Não (deploy) |
+| `deploy-relay-hf.yml` (push em `main` que toque `relay/**`; também manual) | Sincroniza `relay/` no Space do Hugging Face; sem `HF_TOKEN`/`HF_SPACE` só avisa e não publica | Não (deploy) |
+| `release-binarios.yml` (PR que toque `android/**` ou `packaging/*-windows*/**`; tag `v*`; manual) | No Windows: PyInstaller (`VoxPopuli.exe`), `Vox.exe` (csc + WebView2) e APKs, com `SHA256SUMS` e atestado; roda nos PRs como build de prova | Não listado no `ci.yml`; **a confirmar** se o ruleset o exige |
 
 ## 5. Complexidade
 
