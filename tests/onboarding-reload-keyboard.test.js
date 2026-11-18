@@ -100,65 +100,119 @@ test("readGenesisResume / writeGenesisResume na sessionStorage", async () => {
   clearGenesisResume(ss);
   assert.equal(readGenesisResume(ss), null);
   writeGenesisResume({ step: "entry", email: "a@b.c" }, ss);
-  assert.deepEqual(readGenesisResume(ss), { step: "entry", email: "a@b.c" });
-  assert.equal(store.get(GENESIS_RESUME_KEY)?.includes("a@b.c"), true);
+  assert.deepEqual(readGenesisResume(ss), { step: "entry" });
+  assert.equal(store.get(GENESIS_RESUME_KEY)?.includes("a@b.c"), false);
   clearGenesisResume(ss);
   assert.equal(readGenesisResume(ss), null);
 });
 
-test("persistGenesisMeshWait grava passo have + meshWaiting", async () => {
+const SENHA = "senha forte de teste!";
+
+function mapStorage(store = new Map()) {
+  return { store, getItem: (k) => store.get(k) ?? null, setItem: (k, v) => store.set(k, String(v)), removeItem: (k) => store.delete(k) };
+}
+
+function storedText(...storages) {
+  return storages.flatMap((s) => [...s.store.entries()].flat()).join(" ");
+}
+
+test("persistGenesisMeshWait grava passo have + meshWaiting, sem e-mail nem senha", async () => {
   const { persistGenesisMeshWait, readGenesisResume } = await genesisEmail();
-  const store = new Map();
-  const ss = { getItem: (k) => store.get(k) ?? null, setItem: (k, v) => store.set(k, v), removeItem: (k) => store.delete(k) };
-  persistGenesisMeshWait({ email: "ana@exemplo.com", pass: "senha forte de teste!" }, ss);
+  const ss = mapStorage();
+  persistGenesisMeshWait(ss);
   const resume = readGenesisResume(ss);
   assert.equal(resume.step, "have");
   assert.equal(resume.meshWaiting, true);
-  assert.equal(resume.email, "ana@exemplo.com");
+  assert.equal("email" in resume, false);
+  assert.equal("pass" in resume, false);
+  assert.equal(storedText(ss).includes(SENHA), false);
+  assert.equal(storedText(ss).includes("ana@exemplo.com"), false);
 });
 
-test("resumeGenesisAfterRender preenche volta e chama startMeshRestore (LT-07 recarga)", async () => {
+test("resumeGenesisAfterRender reabre a volta com senha vazia, foco nela e sem retomar a malha sozinha (LT-07)", async () => {
   const { writeGenesisResume, resumeGenesisAfterRender } = await genesisEmail();
   const { modal, doc, mk } = mountGenesisModal();
   mk("oauth-restore-email-input");
   mk("oauth-sovereign-passphrase-input");
-  mk("oauth-mesh-status");
+  const errorBox = { textContent: "", hidden: true };
+  const getById = doc.getElementById;
+  doc.getElementById = (id) => (id === "oauth-enrich-error" ? errorBox : getById(id));
   const prevDoc = globalThis.document;
   const prevSs = globalThis.sessionStorage;
   try {
     globalThis.document = doc;
-    const store = new Map();
-    globalThis.sessionStorage = {
-      getItem: (k) => store.get(k) ?? null,
-      setItem: (k, v) => store.set(k, v),
-      removeItem: (k) => store.delete(k),
-    };
-    writeGenesisResume({ step: "have", email: "ana@exemplo.com", pass: "senha forte de teste!", meshWaiting: true });
-    let meshStarted = 0;
-    await resumeGenesisAfterRender(modal, {
-      onMeshRestored: () => {},
-      onEmailKitFinish: () => {},
-      startMesh: () => { meshStarted++; return Promise.resolve(); },
-    });
-    assert.equal(doc.getElementById("oauth-restore-email-input").value, "ana@exemplo.com");
-    assert.equal(doc.getElementById("oauth-sovereign-passphrase-input").value, "senha forte de teste!");
-    assert.equal(meshStarted, 1);
+    globalThis.sessionStorage = mapStorage();
+    writeGenesisResume({ step: "have", email: "ana@exemplo.com", meshWaiting: true });
+    resumeGenesisAfterRender(modal, { onEmailKitFinish: () => {} });
+    assert.equal(doc.getElementById("oauth-restore-email-input").value, "");
+    const pass = doc.getElementById("oauth-sovereign-passphrase-input");
+    assert.equal(pass.value, "");
+    assert.equal(doc.getElementById("oauth-restore-email-input").focused, true);
     assert.equal(modal._steps.get("have").hidden, false);
+    assert.equal(errorBox.hidden, false);
+    assert.match(errorBox.textContent, /não guarda e-mail nem senha/);
   } finally {
     globalThis.document = prevDoc;
     globalThis.sessionStorage = prevSs;
   }
 });
 
-test("persistGenesisEntryDraft grava rascunho da entrada", async () => {
+test("persistGenesisEntryDraft grava rascunho da entrada sem a senha", async () => {
   const { persistGenesisEntryDraft, readGenesisResume } = await genesisEmail();
-  const store = new Map();
-  const ss = { getItem: (k) => store.get(k) ?? null, setItem: (k, v) => store.set(k, v), removeItem: (k) => store.delete(k) };
-  persistGenesisEntryDraft({ rawName: "Duda", email: "duda@exemplo.com", pass: "senha forte de teste!", includePhrase: true }, ss);
+  const ss = mapStorage();
+  persistGenesisEntryDraft({ rawName: "Duda", email: "duda@exemplo.com", pass: SENHA, includePhrase: true }, ss);
   const resume = readGenesisResume(ss);
   assert.equal(resume.step, "entry");
   assert.equal(resume.rawName, "Duda");
+  assert.equal("email" in resume, false);
   assert.equal(resume.includePhrase, true);
+  assert.equal(storedText(ss).includes(SENHA), false);
+});
+
+test("writeGenesisResume descarta `pass` e `email` mesmo que o chamador os inclua", async () => {
+  const { writeGenesisResume, GENESIS_RESUME_KEY } = await genesisEmail();
+  const ss = mapStorage();
+  writeGenesisResume({ step: "have", email: "a@b.c", pass: SENHA }, ss);
+  const raw = ss.store.get(GENESIS_RESUME_KEY);
+  assert.equal(raw.includes(SENHA), false);
+  assert.equal(raw.includes("a@b.c"), false);
+});
+
+test("readGenesisResume apaga senha deixada por versão antiga e devolve o resto", async () => {
+  const { readGenesisResume, GENESIS_RESUME_KEY } = await genesisEmail();
+  const ss = mapStorage();
+  ss.setItem(GENESIS_RESUME_KEY, JSON.stringify({ step: "have", meshWaiting: true, email: "ana@exemplo.com", pass: SENHA }));
+  const resume = readGenesisResume(ss);
+  assert.deepEqual(resume, { step: "have", meshWaiting: true });
+  assert.equal(storedText(ss).includes(SENHA), false);
+  assert.equal(ss.store.get(GENESIS_RESUME_KEY).includes("ana@exemplo.com"), false);
+});
+
+test("digitar a senha na entrada não deixa o valor em sessionStorage nem localStorage (CodeQL 282)", async () => {
+  const { bindEmailEntryForm } = await genesisEmail();
+  const ids = ["oauth-custom-name-input", "oauth-entry-email-input", "oauth-entry-pass-input", "oauth-entry-include-phrase"];
+  const inputs = new Map(ids.map((id) => [id, fakeInput(id)]));
+  const listeners = {};
+  const form = { addEventListener: (type, fn) => { listeners[type] = fn; } };
+  const prev = { doc: globalThis.document, ss: globalThis.sessionStorage, ls: globalThis.localStorage };
+  const ss = mapStorage();
+  const ls = mapStorage();
+  try {
+    globalThis.document = { getElementById: (id) => inputs.get(id) || null };
+    globalThis.sessionStorage = ss;
+    globalThis.localStorage = ls;
+    bindEmailEntryForm(form, { finish: () => {}, finishNameOnly: () => {} });
+    inputs.get("oauth-entry-email-input").value = "Duda@Exemplo.com";
+    inputs.get("oauth-entry-pass-input").value = SENHA;
+    listeners.input();
+    assert.ok(ss.store.size > 0, "o rascunho sem segredo continua sendo gravado");
+    assert.equal(storedText(ss, ls).includes(SENHA), false);
+    assert.equal(storedText(ss, ls).includes("Duda@Exemplo.com"), false);
+  } finally {
+    globalThis.document = prev.doc;
+    globalThis.sessionStorage = prev.ss;
+    globalThis.localStorage = prev.ls;
+  }
 });
 
 test("frase de recuperação — cartão de impressão fora da ordem de Tab", () => {
