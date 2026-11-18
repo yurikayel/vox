@@ -71,17 +71,23 @@ export function bindInboxBackupSection(rerender) {
   const btn = document.querySelector("[data-inbox-send]");
   if (!btn) return;
   btn.disabled = true;
-  void backup.buildInboxBackup("completo").then((built) => {
-    btn.disabled = false;
-    btn.addEventListener("click", () => void sendInboxBackup("completo", built));
-  });
+  void backup.buildInboxBackup("completo").then(
+    (built) => {
+      btn.disabled = false;
+      btn.addEventListener("click", () => void sendInboxBackup("completo", built));
+    },
+    (err) => share.showToast(`Backup não ficou pronto: ${err?.message || "erro ao montar"}`, "error"),
+  );
 }
 
 /** Mostra, ao abrir o app, o aviso do backup vencido (o mensal antes do semanal), já montado, um por toque. */
 export async function showDueInboxBackup() {
   const period = backup.dueInboxBackups()[0];
   if (!period || document.querySelector(".inbox-backup-due")) return;
-  const built = await backup.buildInboxBackup(period).catch(() => null);
+  const built = await backup.buildInboxBackup(period).catch((err) => {
+    share.showToast(`Seu backup ${LABEL[period]} não ficou pronto: ${err?.message || "erro ao montar"}`, "error");
+    return null;
+  });
   if (!built || document.querySelector(".inbox-backup-due")) return;
   const bar = document.createElement("div");
   bar.className = "card inbox-backup-due";

@@ -163,7 +163,7 @@ export async function ingestDecryptedEnvelope(env, rawText) {
  *
  * @param {string} peerAddress Destinatário.
  * @param {object} envelope Envelope já selado (`crypto-dm.seal`).
- * @returns {Promise<"delivered"|"queued-relay"|"pending-retry">} `pending-retry` quando ficou na caixa de saída local.
+ * @returns {Promise<"delivered"|"queued-relay"|"pending-retry"|"failed">} `pending-retry` quando ficou na caixa de saída local; `failed` quando nem a caixa guardou (armazenamento cheio ou bloqueado).
  */
 export async function dispatchSealedEnvelope(peerAddress, envelope) {
   if (peers.sendDirectMessageTransport(peerAddress, envelope) === "rtc") {
@@ -173,9 +173,9 @@ export async function dispatchSealedEnvelope(peerAddress, envelope) {
     await inbox.pushSealed(peerAddress, envelope);
     return "queued-relay";
   } catch {
-    const { dropped } = outbox.enqueueEnvelope(peerAddress, envelope);
+    const { queued, dropped } = outbox.enqueueEnvelope(peerAddress, envelope);
     for (const e of dropped) markDmStatus(e.to, e.envelope.id, "failed").catch(() => {});
-    return "pending-retry";
+    return queued ? "pending-retry" : "failed";
   }
 }
 

@@ -15,13 +15,22 @@ export const OUTBOX_MAX_BYTES = 2 * 1024 * 1024;
 const RELAY_BACKOFF_BASE_MS = 60 * 1000;
 const RELAY_BACKOFF_MAX_MS = 30 * 60 * 1000;
 
-function readList(storage) {
+/** Caixa ilegível: guarda o texto original à parte antes que a próxima gravação o apague. */
+function setAsideUnreadable(storage, raw) {
   try {
-    const list = JSON.parse(storage?.getItem(OUTBOX_KEY) || "[]");
-    return Array.isArray(list) ? list.filter((e) => e?.to && e?.envelope?.id) : [];
-  } catch {
-    return [];
-  }
+    storage?.setItem(`${OUTBOX_KEY}-ilegivel`, raw);
+  } catch {}
+}
+
+function readList(storage) {
+  let raw = null;
+  try {
+    raw = storage?.getItem(OUTBOX_KEY) || "[]";
+    const list = JSON.parse(raw);
+    if (Array.isArray(list)) return list.filter((e) => e?.to && e?.envelope?.id);
+  } catch {}
+  if (raw !== null) setAsideUnreadable(storage, raw);
+  return [];
 }
 
 function writeList(list, storage) {
@@ -110,7 +119,10 @@ async function deliverOne(entry, direct, d, now) {
 async function markSafe(d, entry, status) {
   try {
     await d.markStatus(entry.to, entry.envelope.id, status);
-  } catch {}
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -129,14 +141,17 @@ export async function flushOutbox(d) {
     done.add(entry.envelope.id);
     await markSafe(d, entry, status);
   }
+  let expired = 0;
   for (const entry of plan.expired) {
+    // Sem a marca "Não entregue" a mensagem sumiria sem aviso: fica na caixa e tenta marcar na próxima passada.
+    if (!(await markSafe(d, entry, "failed"))) continue;
     done.add(entry.envelope.id);
-    await markSafe(d, entry, "failed");
+    expired += 1;
   }
   const touched = new Map([...plan.direct, ...plan.relay].map((e) => [e.envelope.id, e]));
   const rest = readList(d.storage)
     .filter((e) => !done.has(e.envelope.id))
     .map((e) => touched.get(e.envelope.id) || e);
   writeList(rest, d.storage);
-  return { sent: done.size - plan.expired.length, expired: plan.expired.length, waiting: rest.length };
+  return { sent: done.size - expired, expired, waiting: rest.length };
 }

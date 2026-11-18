@@ -54,13 +54,15 @@ export async function generateDmKeypair() {
  * @returns {Promise<{ publicJwk: JsonWebKey, privateJwk: string|JsonWebKey }>}
  */
 export async function ensureDmKeys() {
-  try {
-    const raw = localStorage.getItem(DM_KEYPAIR_STORAGE);
-    if (raw) {
+  const raw = localStorage.getItem(DM_KEYPAIR_STORAGE);
+  if (raw) {
+    try {
       const parsed = JSON.parse(raw);
       if (parsed?.publicJwk && parsed?.privateJwk) return parsed;
-    }
-  } catch {}
+    } catch {}
+    // Par ilegível: gerar outro apagaria a chave que decifra as DMs antigas. Guarda o original antes.
+    localStorage.setItem(`${DM_KEYPAIR_STORAGE}-ilegivel`, raw);
+  }
   const fresh = await generateDmKeypair();
   const stored = { publicJwk: fresh.publicJwk, privateJwk: await sealJson(fresh.privateJwk) };
   localStorage.setItem(DM_KEYPAIR_STORAGE, JSON.stringify(stored));
