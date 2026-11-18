@@ -58,6 +58,7 @@ function syncHint() {
 const FAILURES = {
   "not-mutual": "Só dá para escolher quem tem laço mútuo com você.",
   "no-key": "Ainda não temos a chave de mensagem de alguém da lista. Peça para a pessoa abrir o Vox e tente de novo.",
+  "storage-full": "O navegador está sem espaço para anotar a divisão. Libere espaço do site e escolha os guardiões de novo.",
 };
 
 async function submitGuardians() {

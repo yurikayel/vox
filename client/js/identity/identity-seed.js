@@ -12,6 +12,7 @@ import { LOCKED_TAG, isLocked, openSealed, sealJson } from "./keystore.js";
 import * as keyLock from "./key-lock.js";
 import { identityFromSeed, newSeed } from "./recovery-phrase.js";
 import { bytesToB64Url, computeRouteId } from "../signed-verify.js";
+import { readStoredRecord } from "./storage-json.js";
 
 /** Chave do `localStorage` com as sementes deste aparelho (entra na limpeza local). */
 export const SEED_STORAGE = "vox-identity-seed-v1";
@@ -19,17 +20,8 @@ export const SEED_STORAGE = "vox-identity-seed-v1";
 const fromB64url = (s) => Uint8Array.from(atob(String(s).replace(/-/g, "+").replace(/_/g, "/")), (c) => c.charCodeAt(0));
 
 /** Mapa plano no `localStorage`; array, primitivo ou null contam como vazio. */
-function plainRecord(value) {
-  return value !== null && typeof value === "object" && !Array.isArray(value);
-}
-
 function readSeeds() {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(SEED_STORAGE) || "{}");
-    return plainRecord(parsed) ? parsed : {};
-  } catch {
-    return {};
-  }
+  return readStoredRecord(SEED_STORAGE);
 }
 
 function writeSeed(routeId, value) {
