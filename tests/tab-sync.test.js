@@ -1,21 +1,26 @@
 /**
  * S30-S5: outra aba trocou conta ou rota — esta aba recarrega sem criar conta duplicada.
  */
+import fs from "node:fs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import "./setup.js";
 import * as keyLock from "../client/js/identity/key-lock.js";
 import * as localAccount from "../client/js/identity/local-account.js";
-import {
-  readStoredRouteId,
-  reloadIdentityFromStorage,
-  startTabSync,
-  TAB_SYNC_CHANNEL,
-} from "../client/js/identity/tab-sync.js";
 
 const ACCOUNT_KEY = "vox-local-account-v1";
 
-test("tab-sync: readStoredRouteId lê só o que está no storage", () => {
+async function tabSync() {
+  return import("../client/js/identity/tab-sync.js");
+}
+
+test("tab-sync: precache do SW lista tab-sync.js (RED na base)", () => {
+  const sw = fs.readFileSync(new URL("../client/sw.js", import.meta.url), "utf8");
+  assert.ok(sw.includes('"./js/identity/tab-sync.js"'), "SHELL_ASSETS deve precachear tab-sync");
+});
+
+test("tab-sync: readStoredRouteId lê só o que está no storage", async () => {
+  const { readStoredRouteId } = await tabSync();
   localStorage.clear();
   assert.equal(readStoredRouteId(), "");
   localStorage.setItem(ACCOUNT_KEY, JSON.stringify({ routeId: "vx_test_1" }));
@@ -23,6 +28,7 @@ test("tab-sync: readStoredRouteId lê só o que está no storage", () => {
 });
 
 test("tab-sync: reloadIdentityFromStorage não cria conta nova se o storage já tem conta", async () => {
+  const { readStoredRouteId, reloadIdentityFromStorage } = await tabSync();
   localStorage.clear();
   keyLock.__resetKeyLockForTests();
   const born = await localAccount.ensureLocalAccount();
@@ -37,6 +43,7 @@ test("tab-sync: reloadIdentityFromStorage não cria conta nova se o storage já 
 });
 
 test("tab-sync: outra aba trocou a conta ativa — cache em memória alinha ao storage", async () => {
+  const { readStoredRouteId, reloadIdentityFromStorage } = await tabSync();
   localStorage.clear();
   keyLock.__resetKeyLockForTests();
   const first = await localAccount.ensureLocalAccount();
@@ -63,7 +70,8 @@ test("tab-sync: outra aba trocou a conta ativa — cache em memória alinha ao s
   assert.equal(localAccount.getCachedRouteIdSync(), first.routeId);
 });
 
-test("tab-sync: BroadcastChannel propaga hash de rota entre abas", () => {
+test("tab-sync: BroadcastChannel propaga hash de rota entre abas", async () => {
+  const { startTabSync, TAB_SYNC_CHANNEL } = await tabSync();
   globalThis.BroadcastChannel.channels.clear();
   const reloaded = [];
   const win = {
