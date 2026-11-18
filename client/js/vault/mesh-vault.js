@@ -282,11 +282,7 @@ function plainRecord(value) {
 export function loadHeld() {
   const held = readJson(HELD_STORAGE, {});
   if (!plainRecord(held)) return {};
-  const out = {};
-  for (const [owner, entry] of Object.entries(held)) {
-    if (plainRecord(entry)) out[owner] = entry;
-  }
-  return out;
+  return Object.fromEntries(Object.entries(held).filter(([, entry]) => plainRecord(entry)));
 }
 
 /**
