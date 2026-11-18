@@ -4,6 +4,11 @@
  */
 import test from "node:test";
 import assert from "node:assert/strict";
+
+/** Espera o encadeamento `decide` → `finally` → `refreshNoticeBanner` sem dormir de verdade. */
+async function drainAsyncChain(steps = 6) {
+  for (let i = 0; i < steps; i++) await Promise.resolve();
+}
 import "./setup.js";
 import * as render from "../client/js/render.js";
 import { tryMeshRestoreOnce } from "../client/js/app/onboarding-email.js";
@@ -117,11 +122,11 @@ test("faixa \"Foi você?\" — mostra o pedido mais antigo; os botões mandam si
   assert.equal(refreshNoticeBanner({ doc, decide, notices: () => [...queue] }), true);
   assert.match(doc.getElementById(NOTICE_BANNER_ID).html, /data-request="r1"/);
   doc.getElementById("btnMeshVaultNo").listeners.click();
-  await new Promise((r) => setTimeout(r, 0));
+  await drainAsyncChain();
   assert.deepEqual(decided, [["r1", "nao"]]);
   assert.match(doc.getElementById(NOTICE_BANNER_ID).html, /data-request="r2"/, "o próximo aparece");
   doc.getElementById("btnMeshVaultYes").listeners.click();
-  await new Promise((r) => setTimeout(r, 0));
+  await drainAsyncChain();
   assert.deepEqual(decided[1], ["r2", "sim"]);
   assert.equal(doc.getElementById(NOTICE_BANNER_ID), null, "sem pedidos, sem faixa");
 });
@@ -142,10 +147,10 @@ test("faixa \"Foi você?\" — depois de responder, o foco vai para a próxima f
   const decide = async (id) => { queue = queue.filter((n) => n.requestId !== id); };
   refreshNoticeBanner({ doc, decide, notices: () => [...queue] });
   doc.getElementById("btnMeshVaultNo").listeners.click();
-  await new Promise((r) => setTimeout(r, 0));
+  await drainAsyncChain();
   assert.equal(doc.focused.at(-1), "btnMeshVaultYes", "o botão da próxima faixa ganha o foco");
   doc.getElementById("btnMeshVaultYes").listeners.click();
-  await new Promise((r) => setTimeout(r, 0));
+  await drainAsyncChain();
   assert.equal(doc.focused.at(-1), "body", "sem faixa, o foco não cai no nada: vai para o body");
 });
 

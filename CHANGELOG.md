@@ -27,6 +27,8 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 - Testes: `tests/focus-trap.test.js` (DOM falso em Node). Sem bump de SW.
 ### Acessibilidade: alt significativo ou decorativo em imagens do feed, lightbox e compositor
 - Posts com legenda visível passam a usar `alt=""` na hero (evita repetir título/corpo para leitores de tela); `imageAlt` explícito, foto sem legenda e prévia do compositor inline seguem regras dedicadas (`photo-chrome.js`, `composer-media.js`, `post-media-lightbox.js`). Testes: `tests/image-alt.test.js`. Sem bump de SW.
+### Testes: esperas fixas em suíte legada trocadas por timers simulados ou awaits
+- Nove arquivos em `tests/` (`node-health-api`, `contact-notify`, `dom-delegates`, `mesh-vault-ui`, `webrtc`, `chunked-transfer`, `signaling-telemetry`, `nostr-ephemeral-relay`) deixam de usar `setTimeout` real onde dava para manter o comportamento com `mock.timers`, microtarefas, `setImmediate` ou awaits explícitos (`peer-sync.test.js` mantém 50 ms: inventário é disparado sem `await` em `announce`). `tests/setup.js` intocado. Sem bump de SW.
 
 ### Correção: relay cego não perde deltas no cold boot; memória central confere item e blob
 - **Snapshot apaga por serial, não por timestamp:** só somem os envelopes com `0 < serial <= coveredSerial`; antes, um delta com relógio atrasado e serial acima da cobertura era apagado em silêncio. Snapshot que recua `coveredSerial` agora dá `400` (abriria um buraco). Sem `coveredSerial` nada é apagado (vale o TTL de 7 dias).
