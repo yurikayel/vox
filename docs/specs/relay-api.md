@@ -108,13 +108,15 @@ Configuração por variáveis de ambiente `VOX_OAUTH_<PROVEDOR>_CLIENT_ID` e `VO
 | `VOX_RELAY_WRITE_LIMIT_PER_MIN` | server | Define o `per_min` das três classes HTTP de escrita (`mailbox`, `beacon`, `write`) quando não há override por classe (`rate_limit.py:58-62`; padrão efetivo 120/60/30 conforme a classe). |
 | `VOX_RELAY_RATE_<CLASSE>_PER_MIN` | server | Fichas por minuto do token bucket da classe (`MAILBOX`, `BEACON`, `WRITE`, `SIGNAL`, `SIGNAL_MSG`; padrões em `rate_limit.py:34-39`). |
 | `VOX_RELAY_RATE_<CLASSE>_BURST` | server | Rajada máxima da classe (padrão em `rate_limit.py:34-39`; se inválido, `min(burst padrão, per_min)` — `rate_limit.py:62`). |
+| `VOX_RELAY_SOCKET_TIMEOUT` | server | Segundos que cada leitura/escrita no socket espera antes de a conexão cair (padrão 10). |
+| `VOX_RELAY_MAX_CONNECTIONS` | server | Conexões atendidas ao mesmo tempo (padrão 64); a que passa do teto é fechada na hora. |
 | `VOX_RELAY_TRUST_PROXY_HOPS` | server + signaling | Número de proxies confiáveis à frente; com N ≥ 1 o IP vem da N-ésima entrada da direita em `X-Forwarded-For` (`rate_limit.py:144-147,165-173`). |
 
 ## 4. Testes
 
 `npm run test:relay` (ou `python -m unittest discover -s relay -p "test_*.py"`):
 `test_server.py` (rotas e cache), `test_signaling.py`, `test_blind_relay.py`, `test_mirror_validate.py`,
-`test_oauth_exchange.py`, `test_p2p_seeder.py`, `test_desktop_launchers.py`, `test_central_memory_vault.py`, `test_request_guard.py` (PM-94).
+`test_oauth_exchange.py`, `test_p2p_seeder.py`, `test_desktop_launchers.py`, `test_central_memory_vault.py`, `test_request_guard.py` (PM-94), `test_relay_threading.py` (cliente lento, teto de conexões, 413 legível, estado sob threads).
 
 ## 5. Exposição pública
 
@@ -135,6 +137,8 @@ Estado **medido no código em `origin/develop` (8eee7e4), 2026-11-18**; só desc
 | `signal_msg` | cada mensagem de texto, contada por IP (conexões do mesmo IP dividem o balde); excedente é **descartado sem resposta** | 600 / 200 (`rate_limit.py:39`, `signaling.py:400-401`) |
 
 `GET`/`HEAD`/`OPTIONS` não gastam ficha (`rate_limit.py:127-128`). O guarda de `Host` do PM-94 vale também para `GET` (`request_guard.py:67-68`, `server.py:348-350`). No `server.py`, `GET /status` e `GET /ping` caem na rota desconhecida → `404` (`server.py:387-388`); esses caminhos existem só na sinalização (`signaling.py:205-215`).
+
+**Resposta antecipada (`413`, `429`, `400`...):** toda resposta leva `Content-Length` e `Connection: close`. Se o cliente ainda tem corpo a enviar, o relay o lê (até 1 MiB e no máximo 2 s) antes de fechar; fechar com bytes pendentes manda RST e o cliente (no Windows, erro 10053) perde o status. Corpo declarado acima de 1 MiB continua levando reset.
 
 Variáveis: `VOX_RELAY_RATE_<CLASSE>_PER_MIN` e `_BURST` por classe; `VOX_RELAY_WRITE_LIMIT_PER_MIN` sobrescreve o `per_min` de `mailbox`, `beacon` e `write` quando a variável da classe não está definida (`rate_limit.py:54-64`). IP atrás de proxy: ver a subseção seguinte.
 
@@ -157,7 +161,7 @@ CORS: `Access-Control-Allow-Origin: *` em toda resposta (`server.py:311`), com `
 | Endpoint / mailbox | Teto do corpo | Teto de quantidade | TTL / limpeza | Onde guarda |
 |---|---|---|---|---|
 | `GET /tx/<id>` + cache Arweave | resposta do gateway sem teto de leitura (`server.py:461-463`, `urlopen().read()`); só o id é validado (`server.py:62`) | teto em bytes do diretório, **só se** `VOX_RELAY_MAX_CACHE_MB` definida (`server.py:112-120`); sem teto de arquivos; sem a variável: nenhum (lacuna) | evicção por mtime ao passar do teto (`server.py:261-290`); sem TTL | disco (`CACHE_DIR`) |
-| `POST /vox/mirror` | `256 KB` (`mirror_validate.py:9,80`); o handler lê `Content-Length` sem teto antes (`server.py:606`) | `500` tópicos por espelho (`mirror_validate.py:10,117`); nº de comunidades: mesmo teto em bytes do cache | sem TTL; sobrescreve `index_<id>.json`; `507` se passar da cota (`server.py:620-624`) | disco (`CACHE_DIR`) |
+| `POST /vox/mirror` | `256 KB` (`mirror_validate.py:9,80`); o handler compara `Content-Length` com o teto antes de ler e responde 413 (`server.py`, `_handle_mirror_post`) | `500` tópicos por espelho (`mirror_validate.py:10,117`); nº de comunidades: mesmo teto em bytes do cache | sem TTL; sobrescreve `index_<id>.json`; `507` se passar da cota (`server.py:620-624`) | disco (`CACHE_DIR`) |
 | `/inbox/<addr>` POST | `32 KB` (`inbox.py:16,73`; `server.py:628`) | nenhum por endereço nem total (lacuna) (`inbox.py:62-105`) | TTL `72 h` (`inbox.py:15`); expirado só sai quando alguém faz `GET` ou `DELETE` naquele endereço (`inbox.py:118-123`); `purge_all_expired` existe (`inbox.py:157`) mas nada no relay a chama | disco (`INBOX_DIR/<addr>/<id>.json`) |
 | `/inbox/<addr>` GET | n/a | devolve todos os envelopes do endereço, sem paginação (`inbox.py:108-129`) | ver linha anterior | disco |
 | `/relay/envelope/<canal>` POST | `64 KB` (`blind_relay.py:17,60`; `server.py:575`) | nenhum por canal nem total (lacuna) | TTL `7 dias` (`blind_relay.py:19`); expirado só sai quando alguém lista o canal (`blind_relay.py:93-95`); snapshot novo apaga os deltas mais antigos (`blind_relay.py:147,168`) | disco (`RELAY_DIR/<canal>/env_*.json`) |
@@ -186,6 +190,6 @@ CORS da sinalização: `Access-Control-Allow-Origin: *` só nas respostas HTTP d
 8. **`/vox/mirror` lê `Content-Length` sem teto antes de validar** (`server.py:606`); o teto de 256 KB só vale depois da leitura. Há outros pontos do mesmo padrão (corpo lido pelo `Content-Length` informado em `inbox` e `blind_relay`, mas com teto antes da leitura).
 9. **CORS `*`** em todas as respostas do `server.py` e da sinalização; a defesa é o filtro de `Origin` nas escritas, que não cobre `GET` (`GET` de qualquer página lê inbox, estado e índices se alcançar o relay).
 10. **Beacon sem teto de quantidade de `nodeId`:** cada `nodeId` novo cria um registro na janela de TTL (`p2p_seeder.py:149-186`); o rate limit só limita `POST`/`DELETE` por IP (`rate_limit.py:130-131`), não o número de pares distintos.
-11. **Servidor `HTTPServer` de uma thread só** (`server.py:696`): uma conexão lenta bloqueia as demais; não há `timeout` de socket no `server.py`.
+11. **Resolvida:** o `server.py` era um `HTTPServer` de uma thread só e uma conexão lenta bloqueava as demais. Agora é `VoxRelayServer` (`ThreadingHTTPServer`, uma thread daemon por conexão, teto `VOX_RELAY_MAX_CONNECTIONS`) e o handler tem prazo de socket (`VOX_RELAY_SOCKET_TIMEOUT`). O prazo vale por leitura, não no total: quem manda um byte a cada poucos segundos ainda segura uma thread, e o teto de conexões limita o estrago. Estado compartilhado sob lock: `rate_limit` (por classe), `central_memory`, `blind_relay`, `p2p_seeder`, cache em disco, e, desde esta mudança, `inbox` e `save_vault`.
 
 Testes de referência: `test_request_guard.py`, `test_rate_limit.py`, `test_relay_limites_e_rotas.py`, `test_blind_relay.py`, `test_p2p_seeder.py`, `test_signaling_robustez.py`.
