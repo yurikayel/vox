@@ -7,7 +7,7 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 ## [Não lançado]
 
 ### Correção: storage corrompido nos guardiões, na trava de chaves e nas saídas (rodada 2)
-- `guardians.js`, `key-lock.js`, `account-exit.js` e `identity-seed.js` leem o `localStorage` pelo helper comum `identity/storage-json.js`: array, número, string, null, `__proto__` e JSON inválido contam como vazio, sem misturar chaves de índice no mapa nem apagar o que é válido; entradas e divisões malformadas são ignoradas.
+- `guardians.js`, `key-lock.js`, `account-exit.js` e `identity-seed.js` leem o `localStorage` pelos helpers comuns de `identity/keystore.js` (`readStoredRecord`, `writeStoredJson`, `ownRecord`): array, número, string, null, `__proto__` e JSON inválido contam como vazio, sem misturar chaves de índice no mapa nem apagar o que é válido; entradas e divisões malformadas são ignoradas.
 - Cota cheia não lança nem finge: `storeHeldShare`, `applyReceipt` e `recordOwnerSplit` devolvem `false`, `dropHeldShare` devolve `null`, `lockKeys` devolve `null` (a cópia anterior segue valendo) e `sendGuardianShares` responde `storage-full` com aviso na tela. Testes: `tests/storage-corrupt-2.test.js`. Casos de `local-account.js` ficam como `todo` no mesmo arquivo.
 
 ### Correção: avisa no passo de criação quando a conta não grava no aparelho
