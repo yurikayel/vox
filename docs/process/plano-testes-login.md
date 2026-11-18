@@ -1,6 +1,6 @@
 # Plano de testes do login — Vox
 
-> **Status:** canônico (rascunho vivo) · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-17 (ADR-037)
+> **Status:** canônico (rascunho vivo) · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-17 (ADR-037; LT-05 feito)
 > Evidência de testes: [qualidade-e-evidencia.md](./qualidade-e-evidencia.md) · Como rodar a suíte: [TESTES.md](../TESTES.md) · Ameaças: [THREAT-MODEL.md](../THREAT-MODEL.md) T20–T27
 > Decisões cobertas: [ADR-025](../adr/025-cofre-v2-so-a-senha-abre.md), [ADR-026](../adr/026-chaves-em-repouso-trava-depois-do-backup.md), [ADR-032](../adr/032-login-perene-a-conta-nasce-com-saida.md), [ADR-037](../adr/037-cofre-na-malha.md).
 
@@ -64,7 +64,7 @@ Legenda: ✅ coberto · ◐ parcial · ✖ falta. A coluna "Falta" vira item da 
 | Cofre ausente → pedido na malha, aviso "esperando", 24 h ou "Fui eu", e volta | ✅ `mesh-vault-flow.test.js`, `mesh-vault-ui.test.js` | — |
 | "Não fui eu" bloqueia para sempre; decisão forjada é ignorada | ✅ `mesh-vault-flow.test.js` | — |
 | Senha errada: nenhum aviso chega à dona, nada é liberado | ✅ `mesh-vault-flow.test.js` | — |
-| Pedido expira em 72 h; quem guarda offline responde quando volta | ✅ `mesh-vault-flow.test.js` | relógio pulando para trás (LT-05) |
+| Pedido expira em 72 h; quem guarda offline responde quando volta; relógio: pedido do futuro (folga de 5 min), 24 h e 72 h exatas, relógio de quem guarda voltando | ✅ `mesh-vault-flow.test.js`, `mesh-vault-clock.test.js` | — |
 | Recarregar a página no meio retoma o mesmo pedido | ◐ `startMeshRestore` retoma por endereço | teste de tela com recarga (LT-07) |
 | Cofre chega de vários guardiões: abre uma vez, sem conta duplicada | ◐ liberação única por guardião | vários guardiões respondendo juntos (LT-02) |
 | Senha trocada depois das cópias: cópia velha não abre com a senha nova e é substituída | ✅ `mesh-vault-flow.test.js`, `profile-vault-change.test.js` | — |
@@ -131,7 +131,7 @@ guardadas), WebCrypto ausente (tela avisa), duas abas abertas (uma volta por aba
 | LT-02 | Relay falso com falhas programáveis (fora, lento, 5xx, JSON ruim, duplicado, fora de ordem) e vários guardiões respondendo juntos | `tests/login-network-faults.test.js` | M |
 | LT-03 | "Corrigir e-mail" revoga o endereço errado e o novo abre | `tests/email-kit.test.js` | P |
 | LT-04 | Propriedade com semente fixa: troca de uma palavra da frase, links truncados, combinações de Shamir, arquivos estranhos, JSON aleatório em cada chave de storage | `tests/login-properties.test.js` | M |
-| LT-05 | Relógio: pedido do futuro, relógio voltando, virada de 24 h e de 72 h exatas | `tests/mesh-vault-flow.test.js` | P |
+| LT-05 | ~~Relógio: pedido do futuro, relógio voltando, virada de 24 h e de 72 h exatas~~ **feito** (nenhum defeito: a espera conta do relógio de quem guarda, então relógio para trás só atrasa a entrega) | `tests/mesh-vault-clock.test.js`, `tests/mesh-vault-flow.test.js` | P |
 | LT-06 | Duas abas e storage cheio ou bloqueado | `tests/login-storage-edge.test.js` | M |
 | LT-07 | Tela: foco, mensagens de erro, `aria-live`, recarga no meio da espera, teclado só | `tests/mesh-vault-ui.test.js`, `tests/onboarding-steps.test.js` | M |
 | LT-08 | Navegador local: criar → kit → apagar → voltar por cada caminho, em Chrome headless, só loopback | `scripts/login-e2e.mjs` (manual do mantenedor até entrar no CI) | G |
