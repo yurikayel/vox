@@ -61,6 +61,8 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 - `tests/peer-sync-wants.test.js`: `computeWants`, `inventoryMessage` e ordem de `messagesForWant` (remoções antes de posts e cartões).
 - `tests/peers-settings-cap.test.js`: `clampCellularCapMb`, `canServeNow` (Wi-Fi, `wifiOnly`, teto no 4G) e normalização ao salvar preferências.
 - `tests/peers-cache-manifest-guard.test.js`: ingestão rejeita formato, assinatura e `communityId` divergente; manifesto antigo não sobrescreve o mais novo; pins de várias comunidades viram prioridade WANT. Sem bump de SW.
+### Testes: feed, revisão e canal (`render/`)
+- `tests/render-feed-review-channel.test.js`: painel de comentários e composer aninhado escapam ids hostis; quarentena local desabilita compartilhar com `data-id` seguro; pílula "em revisão" e shells do canal. Complementa PR #232 (dm, pauta, tag-polis). Sem bump de SW.
 
 ### Correção: relay cego não perde deltas no cold boot; memória central confere item e blob
 - **Snapshot apaga por serial, não por timestamp:** só somem os envelopes com `0 < serial <= coveredSerial`; antes, um delta com relógio atrasado e serial acima da cobertura era apagado em silêncio. Snapshot que recua `coveredSerial` agora dá `400` (abriria um buraco). Sem `coveredSerial` nada é apagado (vale o TTL de 7 dias).
