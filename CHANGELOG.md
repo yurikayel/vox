@@ -6,6 +6,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Correção e testes: transporte Nostr não lança com evento malformado; 15 suítes resgatadas das sessões S30
+- `client/js/nostr-transport.js`: `tagValue` aceita evento sem lista de tags ou tag que não é lista (antes `TypeError`).
+- Testes novos (dados das sessões Claude da rodada S30, que não tinham equivalente em `develop`): `app-*` (5), `assinaturas-e-sinais-malicioso`, `p2p-gossip-malicioso`, `peer-sync-malicioso`, `boot-scripts`, `qr-url-gf`, `repost-index`, `cofre-envelope-adversarial`, `cofre-link-e-backup-adversarial`, `identidade-chaves-adversarial`. Bugs conhecidos entram como `test.todo`.
 ### Correção: teto global de conexões no servidor de sinalização
 - `relay/signaling.py`: `ThreadedTCPServer` passa a limitar conexões simultâneas (padrão 64, `VOX_SIGNAL_MAX_CONNECTIONS`); acima do teto a conexão nova é fechada na hora, no mesmo padrão de `VoxRelayServer`. Limites por IP (`signal`, `signal_msg`) inalterados. Testes: `relay/test_signaling_connection_cap.py` (5). Sem bump de SW.
 ### Correção: backpressure do chunked-transfer não deixa setInterval nem listeners pendurados
