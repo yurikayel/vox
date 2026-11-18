@@ -21,7 +21,7 @@ A coluna **Enforcement hoje** diz o que a ferramenta faz de fato; a coluna **Alv
 | Linhas por arquivo | ≤ 250 | **350** | ESLint `max-lines` | WARN | 25 arquivos (12/11; eram 27 em 09/11) | ERROR novo |
 | Comandos por função Python | — | **30** | Ruff `PLR0915` | só informa no CI (`--exit-zero`) | 7 funções (12/11) | ERROR |
 | Erros de pyflakes (nome indefinido, import/variável sem uso) | 0 | **0** | Ruff `F` | **ERROR** no CI | 0 | ERROR |
-| Imports que sobem de camada (ADR-035) | 0 | **0 novos** | `npm run audit:layers` (árvore sintática, espree) | **ERROR** no CI para import novo | 11 imports em 6 arquivos (17/11), em `scripts/layers-debt.json` | catraca |
+| Imports que sobem de camada (ADR-035) | 0 | **0 novos** | `npm run audit:layers` (árvore sintática, espree) | **ERROR** no CI para import novo | 0 imports (18/11): `scripts/layers-debt.json` está com `violations: []` | catraca |
 | Acoplamento CBO / coesão LCOM | por camada | por camada | **não medidos** | — | — | Ratchet |
 | Herança DIT | composição | exceção justificada | revisão | arquitetural | — | — |
 
