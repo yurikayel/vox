@@ -21,7 +21,7 @@ import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-from relay import blind_relay, central_memory, inbox, mirror_validate, oauth_exchange, p2p_seeder, rate_limit, request_guard, vault_store
+from relay import blind_relay, central_memory, inbox, mirror_validate, oauth_exchange, p2p_seeder, purge_schedule, rate_limit, request_guard, vault_store
 
 DEFAULT_PORT = 3920
 DEFAULT_HOST = "127.0.0.1"
@@ -140,13 +140,8 @@ def cache_dir_bytes():
 
 
 def max_cache_bytes():
-    raw = os.environ.get("VOX_RELAY_MAX_CACHE_MB", "").strip()
-    if not raw:
-        return None
-    try:
-        return int(float(raw)) * 1024 * 1024
-    except ValueError:
-        return None
+    """Teto do cache em bytes (padrão 512 MB; `VOX_RELAY_MAX_CACHE_MB=0` explícito = sem teto)."""
+    return purge_schedule.resolve_max_cache_bytes()
 
 
 def cache_hash_path(cache_file):
@@ -547,6 +542,9 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
             return
 
         data = self._fetch_transaction(tx_id)
+        if data is TX_TOO_LARGE:
+            self._reply_not_found(b"Transacao acima do teto do relay", 413)
+            return
         if data is None:
             self._reply_not_found(b"Transacao nao encontrada nos gateways upstream")
             return
@@ -554,6 +552,7 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
         self._reply_transaction(data, "MISS")
 
     def _fetch_transaction(self, tx_id):
+        limit = purge_schedule.resolve_max_tx_bytes()
         for gateway in UPSTREAM_GATEWAYS:
             try:
                 request = urllib.request.Request(
@@ -561,7 +560,7 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
                 )
                 with urllib.request.urlopen(request, timeout=8) as response:
                     if response.status == 200:
-                        return response.read()
+                        return _read_capped(response, limit)
             except Exception:
                 continue
         return None
@@ -800,6 +799,18 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
         self.send_response(404)
         self._set_cors_headers()
         self.end_headers()
+
+TX_TOO_LARGE = object()
+
+
+def _read_capped(response, limit):
+    """Corpo do gateway, ou `TX_TOO_LARGE` se passar de `limit` bytes; lê no máximo `limit + 1`."""
+    declared = response.headers.get("Content-Length") if getattr(response, "headers", None) else None
+    if declared and declared.isdigit() and int(declared) > limit:
+        return TX_TOO_LARGE
+    data = response.read(limit + 1)
+    return TX_TOO_LARGE if len(data) > limit else data
+
 
 class VoxRelayServer(ThreadingHTTPServer):
     """Uma thread por conexão (daemon), com teto de conexões simultâneas.

@@ -905,6 +905,8 @@ Entradas acrescentadas por conferência dos PRs mesclados em `develop` com este 
 
 ### Qualidade
 - `npm test` travava localmente: o teste "dois pares" do `nostr-transport` esperava tempos fixos, falhava com a suíte inteira no mesmo processo e deixava o `setInterval` do hello vivo. Agora espera a condição e para os transportes no `finally`; a suíte roda em segundos.
+### Correção: limpeza periódica de expirados e teto padrão em `/tx` (lacunas 5 e 7)
+- `relay/purge_schedule.py`: thread daemon varre inbox (72 h) e canal cego (7 d) a cada `VOX_RELAY_PURGE_INTERVAL_SECONDS` (900; `0` desliga), pasta a pasta, parando no desligamento. `VOX_RELAY_MAX_CACHE_MB` passa a ter padrão 512 (`0` = sem teto) e `/tx` recusa com `413` resposta acima de `VOX_RELAY_MAX_TX_MB` (32) sem lê-la inteira. Testes: `relay/test_purge_schedule.py` (6). Sem bump de SW.
 
 ## SW v7.33 → v7.38 — 2026-11-08 (PRs #13–#28)
 
