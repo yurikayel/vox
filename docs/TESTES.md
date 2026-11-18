@@ -87,7 +87,7 @@ Rodar localmente: `node scripts/red-on-base.mjs origin/develop` com `PR_TITLE="f
 | `deploy-pages.yml` (push em `main` que toque `client/**`, `docs/**` ou o script de OAuth; também manual) | Monta `_site` com `client/*` e publica no GitHub Pages | Não (deploy) |
 | `deploy-shell-b.yml` (mesmo gatilho do Pages; manual exige digitar `DEPLOY`) | Publica `client/` no Cloudflare Pages (shell B); sem os segredos `CLOUDFLARE_*` só avisa e não publica | Não (deploy) |
 | `deploy-relay-hf.yml` (push em `main` que toque `relay/**`; também manual) | Sincroniza `relay/` no Space do Hugging Face; sem `HF_TOKEN`/`HF_SPACE` só avisa e não publica | Não (deploy) |
-| `release-binarios.yml` (PR que toque `android/**` ou `packaging/*-windows*/**`; tag `v*`; manual) | No Windows: PyInstaller (`VoxPopuli.exe`), `Vox.exe` (csc + WebView2) e APKs, com `SHA256SUMS` e atestado; roda nos PRs como build de prova | Não listado no `ci.yml`; **a confirmar** se o ruleset o exige |
+| `release-binarios.yml` (PR que toque `android/**` ou `packaging/*-windows*/**`; tag `v*`; manual) | No Windows: PyInstaller (`VoxPopuli.exe`), `Vox.exe` (csc + WebView2) e APKs, com `SHA256SUMS` e atestado (atestado e Release num job `publicar` separado, com `contents: write`, que não roda em PR); roda nos PRs como build de prova | Não listado no `ci.yml`; **a confirmar** se o ruleset o exige |
 
 ## 5. Complexidade
 

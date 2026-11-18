@@ -232,7 +232,7 @@ function renderTopicReplyRow(r, isMod, { depth = 0, topicId = "", commId = "", i
   const rLabels = resolvePostAuthorLabels(rAuthor, { authorDisplay: r.authorDisplay, isOwnLocalPost: r.isOwnLocalPost });
   const rBadge = r.isLocalP2p ? `<span class="badge-pill p2p-pill">Na rede</span>` : `<span class="badge-pill permanent-pill">Guardado</span>`;
   const rTime = postTimeParts(r.ts);
-  const modBtn = isMod ? `<button class="btn btn-sm btn-danger btn-mod-hide" data-id="${escapeHtml(r.id)}" data-type="reply">🛡️</button>` : "";
+  const modBtn = isMod ? `<button class="btn btn-sm btn-danger btn-mod-hide" data-id="${escapeHtml(r.id)}" data-type="reply" aria-label="Ocultar resposta da rede" title="Ocultar resposta da rede"><span aria-hidden="true">🛡️</span></button>` : "";
   const replyHref = `#/compose/reply?t=${encodeURIComponent(topicId)}&c=${encodeURIComponent(commId)}&p=${encodeURIComponent(r.id)}`;
   const replyBtn = (topicId && !isLocked) ? `<a class="post-comment-action btn-reply-to-reply" href="${replyHref}" aria-label="Responder a ${escapeHtml(rLabels.authorDisplay)}">Responder</a>` : "";
   // Até 4 níveis de recuo, cada um com a sua linha-guia (Stitch tela 6); daí para baixo fica no 4º.
