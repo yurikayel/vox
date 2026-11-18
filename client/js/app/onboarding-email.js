@@ -57,8 +57,8 @@ function showEmailKitCard({ kit, routeId, email, form, finish }) {
 
 async function handleEntryFormSubmit({ draftState, form, finish, finishNameOnly }) {
   const v = readEntryFormValues();
-  const err = emailKit.validateEmailEntry(v);
-  if (err) return setOAuthEnrichError(err, "oauth-entry-pass-input");
+  const issue = emailKit.validateEmailEntryIssue(v);
+  if (issue) return setOAuthEnrichError(issue.message, issue.fieldId);
   setOAuthEnrichError("");
   if (!v.email && !v.pass) return finishNameOnly(v.rawName);
   const btn = document.getElementById("btn-oauth-save-name");
