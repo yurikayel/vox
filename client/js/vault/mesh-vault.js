@@ -40,6 +40,8 @@ export const WAIT_MS = 24 * 60 * 60 * 1000;
 /** Pedido mais velho que isto é descartado. */
 export const REQUEST_MAX_AGE_MS = 72 * 60 * 60 * 1000;
 const CLOCK_SKEW_MS = 5 * 60 * 1000;
+/** Quanto no futuro pode estar a data de um cofre guardado (relógio errado da dona não trava as trocas seguintes). */
+const GUARD_FUTURE_MS = 60 * 60 * 1000;
 
 /** Prefixo da caixa dos pedidos de um cofre. */
 export const BOX_PREFIX = "vxcof_";
@@ -69,7 +71,7 @@ async function sha256Hex(text) {
  * @returns {boolean}
  */
 export function isVaultAddress(address) {
-  return ADDRESS_RE.test(String(address || ""));
+  return typeof address === "string" && ADDRESS_RE.test(address);
 }
 
 /**
@@ -302,20 +304,22 @@ export function heldCount() {
   return Object.keys(loadHeld()).length;
 }
 
-/** Forma do corpo que dá para guardar: endereço de cofre, data numérica e cofre-objeto dentro do teto. */
-function isGuardableBody(body) {
+/** Forma do corpo que dá para guardar: endereço de cofre, data numérica (não no futuro) e cofre-objeto dentro do teto. */
+function isGuardableBody(body, now) {
   if (!isVaultAddress(body?.address) || !Number.isFinite(body.updatedAt)) return false;
-  if (!body.record || typeof body.record !== "object") return false;
+  if (body.updatedAt > now + GUARD_FUTURE_MS) return false;
+  if (!body.record || typeof body.record !== "object" || Array.isArray(body.record)) return false;
   return JSON.stringify(body.record).length <= MAX_RECORD_CHARS;
 }
 
 /**
  * Aceita (ou troca) o cofre de uma dona. Recusa forma errada, cofre grande, versão mais velha e dona nova além do teto.
  * @param {{ author: string, address: string, record: object, updatedAt: number }} body corpo já conferido
+ * @param {number} [now] relógio (a data do cofre não pode passar de uma hora à frente dele)
  * @returns {"ok"|"invalid"|"stale"|"full"}
  */
-export function acceptGuard(body) {
-  if (!isGuardableBody(body)) return "invalid";
+export function acceptGuard(body, now = Date.now()) {
+  if (!isGuardableBody(body, now)) return "invalid";
   const held = loadHeld();
   const prev = held[body.author];
   if (prev && prev.updatedAt >= body.updatedAt) return "stale";
@@ -346,6 +350,7 @@ export function dropHeld(owner) {
  * @returns {"release"|"wait"|"drop"}
  */
 export function decideRequest(req, now = Date.now()) {
+  if (!Number.isFinite(req?.t) || !Number.isFinite(req.firstSeen)) return "drop";
   if (req.decision === "nao" || req.answered) return "drop";
   if (now - req.t > REQUEST_MAX_AGE_MS) return "drop";
   if (req.decision === "sim") return "release";
@@ -371,7 +376,7 @@ export function loadMine() {
 export function rememberMine({ routeId, address, record, updatedAt = Date.now() }) {
   if (!routeId || !isVaultAddress(address) || JSON.stringify(record).length > MAX_RECORD_CHARS) return;
   const prev = loadMine();
-  const previousHolders = prev?.routeId === routeId ? prev.sentTo || [] : [];
+  const previousHolders = prev?.routeId === routeId ? [...new Set([...(prev.sentTo || []), ...(prev.previousHolders || [])])].slice(0, MAX_HOLDERS) : [];
   writeJson(MINE_STORAGE, { routeId, address, record, updatedAt, sentTo: [], previousHolders });
   globalThis.dispatchEvent?.(new CustomEvent("vox-cofre-malha-mudou"));
 }
@@ -425,13 +430,17 @@ export function pickHolders(mine, candidates) {
 
 // ---- Avisos (aparelho da dona) ----
 
+function isNotice(n) {
+  return Boolean(n) && typeof n.holder === "string" && typeof n.requestId === "string" && Number.isFinite(n.firstSeen);
+}
+
 /**
  * Avisos de pedido ainda sem decisão desta conta.
  * @returns {{ holder: string, requestId: string, firstSeen: number }[]}
  */
 export function loadNotices() {
   const list = readJson(NOTICES_STORAGE, []);
-  return Array.isArray(list) ? list : [];
+  return Array.isArray(list) ? list.filter(isNotice) : [];
 }
 
 /**
@@ -466,7 +475,7 @@ export function takeNotices(requestId) {
  */
 export function loadPending(now = Date.now()) {
   const p = readJson(PENDING_STORAGE, null);
-  if (!p?.request || now - p.request.t > REQUEST_MAX_AGE_MS) return null;
+  if (!Number.isFinite(p?.request?.t) || now - p.request.t > REQUEST_MAX_AGE_MS) return null;
   return p;
 }
 
