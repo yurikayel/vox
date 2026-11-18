@@ -3,7 +3,7 @@ services:
     build:
       context: ..
       dockerfile: Dockerfile
-    command: ["python", "-u", "signaling.py", "--host", "0.0.0.0", "--port", "3921"]
+    command: ["python", "-u", "relay/signaling.py", "--host", "0.0.0.0", "--port", "3921"]
     container_name: vox-signaling
     restart: unless-stopped
     expose:
@@ -13,11 +13,13 @@ services:
     build:
       context: ..
       dockerfile: Dockerfile
-    command: ["python", "-u", "server.py", "--host", "0.0.0.0", "--port", "3920"]
+    command: ["python", "-u", "-m", "relay.server", "--host", "0.0.0.0", "--port", "3920"]
     container_name: vox-relay
     restart: unless-stopped
     environment:
       - VOX_RELAY_MAX_CACHE_MB=${VOX_RELAY_MAX_CACHE_MB:-512}
+      - VOX_RELAY_CACHE_DIR=/app/.cache
+      - VOX_RELAY_INBOX_DIR=/app/.inbox
     volumes:
       - vox_inbox:/app/.inbox
       - vox_relay_cache:/app/.cache

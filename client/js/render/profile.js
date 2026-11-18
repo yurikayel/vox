@@ -1190,7 +1190,7 @@ function renderVaultAccountRow(acc, currentAddress, totalAccounts) {
     ? '<span class="badge-pill p2p-pill" style="font-size:0.75rem;">Ativa</span>'
     : `<button type="button" class="btn btn-xs btn-primary btn-switch-vault-account" data-route="${escapeHtml(acc.routeId)}">Alternar</button>`;
   const removeBtn = !isCurrent && totalAccounts > 1
-    ? `<button type="button" class="btn btn-xs btn-outline btn-remove-vault-account" data-route="${escapeHtml(acc.routeId)}" title="Remover do cofre local">✕</button>`
+    ? `<button type="button" class="btn btn-xs btn-outline btn-remove-vault-account" data-route="${escapeHtml(acc.routeId)}" title="Remover do cofre local" aria-label="Remover do cofre local"><span aria-hidden="true">✕</span></button>`
     : "";
 
   return `

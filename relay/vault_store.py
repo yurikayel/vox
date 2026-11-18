@@ -102,7 +102,16 @@ def _authorize(stored: Optional[Dict[str, Any]], record: Dict[str, Any], token: 
 
 
 def save_vault(lookup_key: str, payload: Any) -> str:
-    """Grava o cofre se a prova do dono confere. Devolve `saved`, `invalid` ou `forbidden`."""
+    """Grava o cofre se a prova do dono confere. Devolve `saved`, `invalid` ou `forbidden`.
+
+    Ler o dono, autorizar e gravar é uma só decisão: sob o lock da memória central, duas gravações simultâneas
+    num cofre sem dono não podem as duas virar o primeiro dono.
+    """
+    with central_memory._MEMORY_LOCK:
+        return _save_vault_locked(lookup_key, payload)
+
+
+def _save_vault_locked(lookup_key: str, payload: Any) -> str:
     vault_file = _vault_file(lookup_key)
     record, token = _split_payload(payload)
     if vault_file is None or not is_servable_vault(record):
