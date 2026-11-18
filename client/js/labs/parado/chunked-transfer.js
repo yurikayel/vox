@@ -5,6 +5,8 @@
  * sem estourar buffers WebRTC e sem derrubar nós seeders móveis (Android WebView).
  */
 
+import { randomBase36 } from "../../shared/html.js";
+
 export const DEFAULT_CHUNK_SIZE = 16 * 1024; // 16 KiB
 export const MAX_BUFFERED_AMOUNT = 64 * 1024; // 64 KiB backpressure limit
 
@@ -22,7 +24,7 @@ export function slicePayloadIntoChunks(payload, chunkSize = DEFAULT_CHUNK_SIZE, 
     throw new Error("payload é obrigatório para fatiamento");
   }
   const serialized = typeof payload === "string" ? payload : JSON.stringify(payload);
-  const xferId = transferId || `xfer_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+  const xferId = transferId || `xfer_${Date.now()}_${randomBase36(7)}`;
   const totalChunks = Math.ceil(serialized.length / chunkSize) || 1;
   const chunks = [];
 
