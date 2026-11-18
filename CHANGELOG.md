@@ -9,6 +9,10 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 ### Documentação: ADR-039, Rust por fases (proposto)
 - [ADR-039](./docs/adr/039-rust-por-fases.md) (**proposed**): mais Rust com o tempo, onde ganha em segurança, em 6 fases (fundação de CI, `vox-core` de referência, Argon2id do cofre, troca da cripto própria e ML-KEM, relay, nó nativo). A chave privada P-256 do navegador continua no WebCrypto não exportável; WebAssembly só para o que o WebCrypto não tem. Decisão A-27 em [DECISOES.md](./docs/DECISOES.md). Sem código e sem bump de SW.
 
+### Testes: "Corrigir e-mail" revoga o endereço errado (LT-03)
+- `tests/email-kit-correct.test.js`: com criptografia real e só rede/storage falsos, o e-mail errado deixa de abrir (revogado com a prova de dono), o certo com a mesma senha abre o mesmo `routeId`, a senha não vai ao `mailto:`/storage/rede, e corrigir para o mesmo e-mail não estraga nada.
+- Correção: `createEmailAccountKit` recusa e-mail sem `@` antes de gravar; antes gravava o cofre novo e revogava o anterior para só então falhar ao montar o kit (a tela já barrava, a função não).
+
 ### Documentação: emenda da revisão do ADR-038
 - `about` do manifesto é só o texto longo (apresentação, regras, links); título, descrição curta, foto, categoria e modo de publicação continuam só no `community_update`, para não haver duas fontes.
 - O `community_update` passa a seguir o mesmo cálculo de versão do manifesto quando o v1 for implementado (futuro limitado a 10 minutos, sem volta): hoje uma atualização datada no futuro distante trava título e descrição. Testes esperados acrescentados na spec v1 §9.
