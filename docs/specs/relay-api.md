@@ -104,7 +104,9 @@ Configuração por variáveis de ambiente `VOX_OAUTH_<PROVEDOR>_CLIENT_ID` e `VO
 | `PORT`, `HOST` | signaling | Porta e bind (padrão de PaaS). |
 | `VOX_RELAY_PORT` | server | Porta (padrão 3920). |
 | `VOX_RELAY_CACHE_DIR` | server | Diretório base de cache (`.cache/` ou `%LOCALAPPDATA%`). |
-| `VOX_RELAY_MAX_CACHE_MB` | server | Teto do cache em disco. |
+| `VOX_RELAY_MAX_CACHE_MB` | server | Teto do cache em disco em MB. Padrão **512**; `0` explícito = sem teto; inválido volta ao padrão. |
+| `VOX_RELAY_MAX_TX_MB` | server | Maior resposta de gateway aceita em `/tx/<id>` (padrão 32); acima dela o relay responde `413` sem guardar nada. |
+| `VOX_RELAY_PURGE_INTERVAL_SECONDS` | server | Intervalo da varredura de expirados do inbox (72 h) e do canal cego (7 d) (padrão 900; mínimo 1; `0` desliga). |
 | `VOX_RELAY_INBOX_DIR`, `VOX_RELAY_BLIND_DIR`, `VOX_CENTRAL_MEMORY_DIR` | server | Diretórios específicos (senão, ficam sob o cache). |
 | `VOX_OAUTH_<P>_CLIENT_ID` / `_CLIENT_SECRET` | server | Habilita `/oauth/exchange` para o provedor `P`. |
 | `VOX_RELAY_ALLOWED_HOSTS` | server | Nomes extras aceitos no `Host` quando o relay escuta em loopback (ex.: o endereço do túnel), separados por vírgula. |
@@ -188,9 +190,9 @@ CORS da sinalização: `Access-Control-Allow-Origin: *` só nas respostas HTTP d
 2. **IP agregado atrás de proxy sem `VOX_RELAY_TRUST_PROXY_HOPS`.** Sem essa variável, o bucket usa só o IP do socket (`rate_limit.py:167-173`); atrás de um único NAT ou túnel muitos clientes compartilham o mesmo limite.
 3. **Sinalização:** sem teto de pares conectados e sem prazo de ociosidade na conexão WebSocket aberta (`signaling.py:224-273,292-293`).
 4. **Mailboxes sem teto de quantidade:** inbox por endereço, envelopes por canal cego, número de canais, cofres, posts/perfis/blobs da memória central.
-5. **Limpeza só preguiçosa:** inbox e canal cego só descartam o expirado quando alguém lê aquele endereço ou canal; `purge_all_expired` não é chamada pelo relay. Endereço que ninguém lê mais fica no disco para sempre.
+5. ~~Limpeza só preguiçosa~~ **Resolvida para inbox e canal cego** (`relay/purge_schedule.py`): thread daemon varre expirados a cada `VOX_RELAY_PURGE_INTERVAL_SECONDS` (900 s), uma pasta por vez sob a trava do módulo, e para no desligamento. Memória central e cofre seguem sem TTL (lacuna 6).
 6. **Memória central e cofre sem TTL** e sem teto total (o teto por item já vale; falta o teto de quantidade e de bytes somados).
-7. **`/tx/<id>` lê a resposta do gateway inteira em memória**, sem teto de bytes, e só limita o disco se `VOX_RELAY_MAX_CACHE_MB` existir (sem ela, cache ilimitado).
+7. ~~`/tx/<id>` sem teto~~ **Resolvida:** a leitura do gateway para em `VOX_RELAY_MAX_TX_MB` (32 MB) e devolve `413` (lê no máximo teto+1 byte; olha `Content-Length` antes); `VOX_RELAY_MAX_CACHE_MB` tem padrão de 512 MB (`0` = sem teto, só se explicitado).
 8. **`/vox/mirror` lê `Content-Length` sem teto antes de validar** (`server.py:606`); o teto de 256 KB só vale depois da leitura. Há outros pontos do mesmo padrão (corpo lido pelo `Content-Length` informado em `inbox` e `blind_relay`, mas com teto antes da leitura).
 9. **Resolvida no `server.py`:** o CORS agora reflete só origem da lista (T32); página de outro site não lê `GET` de inbox, estado nem índices. **Pendente:** a sinalização (`signaling.py`) e o nó Windows (`ZeroCentralMemory.cs`) ainda devolvem `Access-Control-Allow-Origin: *`. Na sinalização só as respostas de saúde/status, sem dado de usuário; o nó Windows tem a mesma exposição do relay antigo e merece PR próprio. Um `GET` de origem estranha ainda é *executado* (só a leitura é bloqueada no navegador).
 10. **Beacon sem teto de quantidade de `nodeId`:** cada `nodeId` novo cria um registro na janela de TTL (`p2p_seeder.py:149-186`); o rate limit só limita `POST`/`DELETE` por IP (`rate_limit.py:130-131`), não o número de pares distintos.
