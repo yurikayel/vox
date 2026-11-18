@@ -6,6 +6,7 @@
  * A senha nunca vai no e-mail. A frase de recuperação é opcional e vem desmarcada por padrão.
  */
 
+import { formatPtBrDateOnly } from "./shared/date-format.js";
 import * as localAccount from "./identity/index.js";
 import * as oauthVault from "./vault/index.js";
 import * as share from "./share.js";
@@ -71,7 +72,7 @@ export function getPhraseSentInEmailAt(routeId = localAccount.getCachedRouteIdSy
 export function formatPhraseSentInEmailNotice(routeId = localAccount.getCachedRouteIdSync()) {
   const at = getPhraseSentInEmailAt(routeId);
   if (!at) return "";
-  const dateLabel = new Date(at).toLocaleDateString("pt-BR");
+  const dateLabel = formatPtBrDateOnly(at);
   return `Frase enviada por e-mail em ${dateLabel} (quem ler sua caixa de entrada entra na conta sem a senha).`;
 }
 
