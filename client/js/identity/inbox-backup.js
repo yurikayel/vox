@@ -6,6 +6,7 @@
 import * as cacheNode from "../cache-node.js";
 import * as contacts from "../contacts.js";
 import * as cryptoDm from "../crypto-dm.js";
+import { sanitizeStoredDm } from "../dm-messenger.js";
 import { exportAccountBundle, importAccountBundle } from "./account-backup.js";
 import { unwrapBackup } from "./account-backup-wrap.js";
 import * as localAccount from "./local-account.js";
@@ -152,7 +153,8 @@ function applyProfile(profile, me) {
 async function applyContent(c, me) {
   applyProfile(c.profile, me);
   for (const x of c.contacts || []) contacts.addContact(x.routeId, x.label);
-  for (const m of c.dms || []) await cacheNode.saveDmMessage(m);
+  // O arquivo vem de fora: cartão, citação e foto da DM passam pelo crivo do fio antes de ir para o aparelho.
+  for (const m of c.dms || []) await cacheNode.saveDmMessage(sanitizeStoredDm(m));
   // PM-72: só volta o post que confere (autor, assinatura, versão, hash da mídia); sem `postEntries`, nada.
   await ownPosts.restoreOwnPostEntries(c.postEntries, me);
   // Backup de antes do PM-72 (posts na forma de tela): volta como voltava.
