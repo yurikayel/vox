@@ -19,6 +19,7 @@ import {
   apoiarFromMenu,
   marcarFromMenu,
 } from "./post-more-actions.js";
+import { createFocusTrap } from "../render/focus-trap.js";
 
 const SHEET_ID = "post-more-sheet";
 
@@ -59,6 +60,8 @@ function ensurePostMoreSheet() {
 let activeContext = null;
 let lastOpener = null;
 let wired = false;
+/** @type {ReturnType<typeof createFocusTrap>|null} */
+let sheetTrap = null;
 
 function setSheetOpen(sheet, open) {
   if (open) {
@@ -94,9 +97,8 @@ export function closePostMoreMenu() {
   if (!sheet?.classList.contains("is-open")) return;
   setSheetOpen(sheet, false);
   activeContext = null;
-  const opener = lastOpener;
   lastOpener = null;
-  opener?.focus?.();
+  sheetTrap?.deactivate();
 }
 
 /**
@@ -113,6 +115,8 @@ export function openPostMoreMenu(ctx, openerEl) {
   lastOpener = openerEl instanceof HTMLElement ? openerEl : null;
   refreshSheetExtras(sheet, activeContext);
   setSheetOpen(sheet, true);
+  if (!sheetTrap) sheetTrap = createFocusTrap(sheet);
+  sheetTrap.activate({ returnFocus: lastOpener ?? document.activeElement });
   sheet.querySelector(".post-more-sheet-item")?.focus();
 }
 

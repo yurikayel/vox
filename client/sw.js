@@ -189,6 +189,7 @@ const SHELL_ASSETS = [
   "./js/app/feedback-flow.js",
   "./js/age-gate.js",
   "./js/render/modal-host.js",
+  "./js/render/focus-trap.js",
 
   "./js/posse-dispatch.js",
   "./js/explode-dispatch.js",
