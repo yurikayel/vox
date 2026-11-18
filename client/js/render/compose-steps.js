@@ -3,6 +3,7 @@
  * Marcação pura; a navegação vive em `app/compose-stepper.js`.
  */
 import { escapeHtml } from "./util.js";
+import { COMPOSE_PUBLISH_STATUS_ID } from "./compose-chrome.js";
 
 /** Etapas padrão do compositor de publicação social. @type {Array<{key: string, title: string, required?: string[], requiredMsg?: string}>} */
 export const COMPOSE_TOPIC_STEPS = [
@@ -47,7 +48,10 @@ export function renderStepNav(index, { backHref = "#/", last = false, submitId =
   const next = last
     ? `<button type="submit" class="agora-btn agora-btn--primary btn-publish-pill" id="${escapeHtml(submitId)}">${escapeHtml(submitLabel)}</button>`
     : `<button type="button" class="agora-btn agora-btn--primary" data-step-next>Continuar</button>`;
-  return `<div class="agora-composer-actions compose-step-nav">${back}${hideNext ? "" : next}</div>`;
+  const publishStatus = last
+    ? `<p id="${COMPOSE_PUBLISH_STATUS_ID}" class="compose-publish-status" tabindex="-1" role="status" aria-live="polite" aria-atomic="true"></p>`
+    : "";
+  return `<div class="agora-composer-actions compose-step-nav">${back}${hideNext ? "" : next}</div>${publishStatus}`;
 }
 
 /**

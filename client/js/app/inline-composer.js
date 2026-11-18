@@ -16,6 +16,7 @@ import { escapeHtml, randomBase36 } from "../shared/html.js";
 import * as permanence from "../permanence-notice.js";
 import { attachPowIfWanted } from "../new-key-guard.js";
 import { assertCanPostTopic } from "./community-channel-flow.js";
+import { focusAfterComposePublish } from "../render/compose-chrome.js";
 
 let inlineComposerImageDataUrl = "";
 let inlineComposerMedia = { type: "", dataUrl: "", byteLength: 0 };
@@ -640,6 +641,7 @@ async function executeInlinePublish(form, onPublished, state, shouldEcho = false
   syncInlineComposerUi();
   collapseInlineComposer();
   showPublishToast(permaResult);
+  focusAfterComposePublish();
   if (typeof onPublished === "function") await onPublished(signed);
   else location.reload();
 
