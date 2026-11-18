@@ -350,6 +350,7 @@ const SHELL_ASSETS = [
 
   "./js/render/util.js",
   "./js/shared/html.js",
+  "./js/shared/date-format.js",
   "./js/short-id.js",
 
   "./js/render/shell.js",
