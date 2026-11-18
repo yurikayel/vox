@@ -8,6 +8,11 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ### Documentação: modelo de ameaças com cinco ameaças abertas (T30–T34)
 - [THREAT-MODEL.md](./docs/THREAT-MODEL.md): slowloris no relay, 413 sem drenar o corpo, CORS `*` em GETs sem auth, GitHub Pages sem cabeçalhos de segurança e endereço do cofre v1 sem sal; cada uma com arquivo:linha e mitigação proposta. Só docs; sem bump de SW.
+### Documentação: sub-itens abertos de LT-06 e LT-07 no plano de testes do login
+- `docs/process/plano-testes-login.md` §5.1 lista, com arquivo:linha, os achados abertos de duas abas e de recarga/teclado. Só documentação; sem correção prometida.
+
+### Docs: relay-api §6 alinhado ao rate limit real e `VOX_RELAY_TRUST_PROXY_HOPS` por deploy
+- Referências de linha atualizadas, `signal_msg` descarta sem resposta e por IP, riscos de hops baixo (balde único, caso do nó Render hoje com 0) e alto (spoofing de `X-Forwarded-For`) e valor por host. `client/sw.js` intocado.
 
 ### Correção: avisa no passo de criação quando a conta não grava no aparelho
 - `ensureLocalAccount` registra falha de quota/bloqueio e o onboarding mostra aviso em `#oauth-enrich-error` sem travar o fluxo. Testes: `tests/local-account-storage-full.test.js`, `tests/onboarding-steps.test.js`.
