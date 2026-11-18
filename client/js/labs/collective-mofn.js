@@ -3,10 +3,23 @@
  * Não é threshold/Shamir; não toca a conta de produção.
  */
 
+/**
+ * Operação `SCHEMA` do módulo.
+ * @type {*}
+ */
 export const SCHEMA = "vox-collective-manifesto-lab-v0";
+/**
+ * Operação `LAB_SENTENCE` do módulo.
+ * @type {*}
+ */
 export const LAB_SENTENCE =
   "Perfil coletivo é tese/lab; sua conta continua 1 chave neste aparelho.";
 
+/**
+ * Operação `bytesToB64Url` do módulo.
+ * @param {*} [bytes] Parâmetro `bytes`.
+ * @returns {*} Resultado da operação.
+ */
 export function bytesToB64Url(bytes) {
   let bin = "";
   const arr = new Uint8Array(bytes);
@@ -16,6 +29,11 @@ export function bytesToB64Url(bytes) {
   return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
+/**
+ * Operação `b64UrlToBytes` do módulo.
+ * @param {*} [b64url] Parâmetro `b64url`.
+ * @returns {*} Resultado da operação.
+ */
 export function b64UrlToBytes(b64url) {
   let b64 = String(b64url).replace(/-/g, "+").replace(/_/g, "/");
   const pad = b64.length % 4;
@@ -28,19 +46,39 @@ export function b64UrlToBytes(b64url) {
   return out;
 }
 
+/**
+ * Operação `publicJwkLite` do módulo.
+ * @param {*} [jwk] Parâmetro `jwk`.
+ * @returns {*} Resultado da operação.
+ */
 export function publicJwkLite(jwk) {
   return { kty: jwk.kty, crv: jwk.crv, x: jwk.x, y: jwk.y };
 }
 
+/**
+ * Operação `canonicalString` do módulo.
+ * @param {*} [obj] Parâmetro `obj`.
+ * @returns {*} Resultado da operação.
+ */
 export function canonicalString(obj) {
   return JSON.stringify(obj, Object.keys(obj).sort());
 }
 
+/**
+ * Operação `encodeBody` do módulo.
+ * @param {*} [manifest] Parâmetro `manifest`.
+ * @returns {*} Resultado da operação.
+ */
 export function encodeBody(manifest) {
   const { signatures: _s, ...body } = manifest;
   return new TextEncoder().encode(canonicalString(body));
 }
 
+/**
+ * Operação `computeRouteId` do módulo.
+ * @param {*} [pubJwk] Parâmetro `pubJwk`.
+ * @returns {*} Resultado da operação.
+ */
 export async function computeRouteId(pubJwk) {
   if (!pubJwk?.x || !pubJwk?.y) return "";
   const raw = new TextEncoder().encode(`P-256:${pubJwk.x}:${pubJwk.y}`);
@@ -48,6 +86,10 @@ export async function computeRouteId(pubJwk) {
   return "vx_" + bytesToB64Url(hash).slice(0, 20);
 }
 
+/**
+ * Operação `generateMember` do módulo.
+ * @returns {*} Resultado da operação.
+ */
 export async function generateMember() {
   const pair = await crypto.subtle.generateKey(
     { name: "ECDSA", namedCurve: "P-256" },
@@ -60,6 +102,11 @@ export async function generateMember() {
   return { routeId, publicJwk, privateJwk };
 }
 
+/**
+ * Operação `publicMember` do módulo.
+ * @param {*} [member] Parâmetro `member`.
+ * @returns {*} Resultado da operação.
+ */
 export function publicMember(member) {
   return { routeId: member.routeId, publicJwk: publicJwkLite(member.publicJwk) };
 }
@@ -70,6 +117,11 @@ function assertThreshold(n, m) {
   }
 }
 
+/**
+ * Operação `createDraft` do módulo.
+ * @param {Object} options Campos do manifesto coletivo (nome, membros, threshold, etc.).
+ * @returns {*} Resultado da operação.
+ */
 export function createDraft({ name, members, threshold, statement, issuedAt }) {
   const pubs = members.map(publicMember).sort((a, b) => a.routeId.localeCompare(b.routeId));
   assertThreshold(pubs.length, Number(threshold));
@@ -109,6 +161,12 @@ function memberOf(manifest, routeId) {
   return manifest.members.find((m) => m.routeId === routeId) || null;
 }
 
+/**
+ * Operação `signAsMember` do módulo.
+ * @param {*} [manifest] Parâmetro `manifest`.
+ * @param {*} [member] Parâmetro `member`.
+ * @returns {*} Resultado da operação.
+ */
 export async function signAsMember(manifest, member) {
   const expected = await computeRouteId(member.publicJwk);
   if (!expected || expected !== member.routeId) throw new Error("routeId ≠ JWK");
@@ -122,11 +180,24 @@ export async function signAsMember(manifest, member) {
   return { routeId: member.routeId, sig: bytesToB64Url(buf) };
 }
 
+/**
+ * Operação `withSignature` do módulo.
+ * @param {*} [manifest] Parâmetro `manifest`.
+ * @param {*} [signature] Parâmetro `signature`.
+ * @returns {*} Resultado da operação.
+ */
 export function withSignature(manifest, signature) {
   const rest = manifest.signatures.filter((s) => s.routeId !== signature.routeId);
   return { ...manifest, signatures: [...rest, signature] };
 }
 
+/**
+ * Operação `signWithMembers` do módulo.
+ * @param {*} [manifest] Parâmetro `manifest`.
+ * @param {*} [members] Parâmetro `members`.
+ * @param {*} [k] Parâmetro `k`.
+ * @returns {*} Resultado da operação.
+ */
 export async function signWithMembers(manifest, members, k) {
   let out = manifest;
   const take = members.slice(0, k);
@@ -136,6 +207,12 @@ export async function signWithMembers(manifest, members, k) {
   return out;
 }
 
+/**
+ * Operação `verifySignature` do módulo.
+ * @param {*} [manifest] Parâmetro `manifest`.
+ * @param {*} [signature] Parâmetro `signature`.
+ * @returns {*} Resultado da operação.
+ */
 export async function verifySignature(manifest, signature) {
   const member = memberOf(manifest, signature?.routeId);
   if (!member || !signature?.sig) return false;
@@ -154,6 +231,11 @@ export async function verifySignature(manifest, signature) {
   }
 }
 
+/**
+ * Operação `validateShape` do módulo.
+ * @param {*} [manifest] Parâmetro `manifest`.
+ * @returns {*} Resultado da operação.
+ */
 export function validateShape(manifest) {
   if (!manifest || manifest.schema !== SCHEMA) return "schema";
   if (manifest.kind !== "lab") return "kind";
@@ -174,6 +256,11 @@ async function countValidSignatures(manifest) {
   return validCount;
 }
 
+/**
+ * Operação `verifyManifest` do módulo.
+ * @param {*} [manifest] Parâmetro `manifest`.
+ * @returns {*} Resultado da operação.
+ */
 export async function verifyManifest(manifest) {
   const required = Number(manifest?.threshold) || 0;
   const shapeErr = validateShape(manifest);

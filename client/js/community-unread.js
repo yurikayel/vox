@@ -2,6 +2,10 @@
 import { resolveTopicLastActivityTs } from "./community-topic-order.js";
 import { escapeHtml } from "./shared/html.js";
 
+/**
+ * Operação `LAST_SEEN_STORAGE_KEY` do módulo.
+ * @type {*}
+ */
 export const LAST_SEEN_STORAGE_KEY = "vox-community-last-seen-v1";
 
 function getStorage() {
@@ -12,6 +16,10 @@ function getStorage() {
   }
 }
 
+/**
+ * Operação `loadLastSeenMap` do módulo.
+ * @returns {*} Resultado da operação.
+ */
 export function loadLastSeenMap() {
   const store = getStorage();
   if (!store) return {};
@@ -23,6 +31,10 @@ export function loadLastSeenMap() {
   }
 }
 
+/**
+ * Operação `saveLastSeenMap` do módulo.
+ * @param {*} [map] Parâmetro `map`.
+ */
 export function saveLastSeenMap(map = {}) {
   const store = getStorage();
   if (!store) return;
@@ -31,12 +43,22 @@ export function saveLastSeenMap(map = {}) {
   } catch {}
 }
 
+/**
+ * Operação `getCommunityLastSeenTs` do módulo.
+ * @param {*} [communityId] Parâmetro `communityId`.
+ * @returns {*} Resultado da operação.
+ */
 export function getCommunityLastSeenTs(communityId) {
   if (!communityId) return 0;
   const map = loadLastSeenMap();
   return Number(map[communityId]) || 0;
 }
 
+/**
+ * Operação `markCommunitySeen` do módulo.
+ * @param {*} [communityId] Parâmetro `communityId`.
+ * @param {*} [ts] Parâmetro `ts`.
+ */
 export function markCommunitySeen(communityId, ts = Date.now()) {
   if (!communityId) return;
   const map = loadLastSeenMap();
@@ -47,6 +69,10 @@ export function markCommunitySeen(communityId, ts = Date.now()) {
 /**
  * Conta tópicos com atividade posterior ao último visto.
  * Se lastSeenTs não existir (primeira visita), retorna 0 para não gerar falsa urgência.
+ 
+ * @param {*} [topics] Parâmetro `topics`.
+ * @param {*} [lastSeenTs] Parâmetro `lastSeenTs`.
+ * @returns {*} Resultado da operação.
  */
 export function computeCommunityUnreadCount(topics = [], lastSeenTs = 0) {
   if (!Array.isArray(topics) || !lastSeenTs || lastSeenTs <= 0) return 0;
@@ -59,12 +85,22 @@ export function computeCommunityUnreadCount(topics = [], lastSeenTs = 0) {
   return unread;
 }
 
+/**
+ * Operação `renderCommunityUnreadBadge` do módulo.
+ * @param {*} [unreadCount] Parâmetro `unreadCount`.
+ * @returns {*} Resultado da operação.
+ */
 export function renderCommunityUnreadBadge(unreadCount) {
   const n = Number(unreadCount) || 0;
   if (n <= 0) return "";
   return `<span class="badge-pill community-unread-pill" aria-label="${n} novidades">${n} novos</span>`;
 }
 
+/**
+ * Operação `renderCommunityCatchupBanner` do módulo.
+ * @param {Object} [options] Total de não lidos e opções de exibição.
+ * @returns {*} Resultado da operação.
+ */
 export function renderCommunityCatchupBanner({ totalUnread = 0 } = {}) {
   const n = Number(totalUnread) || 0;
   if (n === 0) {
