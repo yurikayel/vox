@@ -10,6 +10,9 @@ import * as emailKit from "../email-kit.js";
 import { normalizeVaultEmail } from "../vault/index.js";
 import { setOAuthButtonBusy, setOAuthEnrichError } from "./onboarding.js";
 
+/** Inputs de `#form-oauth-custom-name` (genesis-entry) para foco após erro na entrada (LT-07). */
+const EMAIL_ENTRY_FOCUS_ID = { name: "oauth-custom-name-input", email: "oauth-entry-email-input", pass: "oauth-entry-pass-input" };
+
 function bindEntryPasswordToggle() {
   const input = document.getElementById("oauth-entry-pass-input");
   const toggle = document.getElementById("btn-oauth-toggle-pass");
@@ -57,8 +60,8 @@ function showEmailKitCard({ kit, routeId, email, form, finish }) {
 
 async function handleEntryFormSubmit({ draftState, form, finish, finishNameOnly }) {
   const v = readEntryFormValues();
-  const err = emailKit.validateEmailEntry(v);
-  if (err) return setOAuthEnrichError(err);
+  const issue = emailKit.validateEmailEntryIssue(v);
+  if (issue) return setOAuthEnrichError(issue.message, EMAIL_ENTRY_FOCUS_ID[issue.field]);
   setOAuthEnrichError("");
   if (!v.email && !v.pass) return finishNameOnly(v.rawName);
   const btn = document.getElementById("btn-oauth-save-name");
