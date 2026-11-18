@@ -54,6 +54,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 - `scripts/offline-e2e.mjs`: Chromium headless, só loopback; após precache do Service Worker, emula offline e recarrega (servidor local inalcançável), classifica falha de rede como `offline` e cria conta só com nome com chip **Offline** visível. Manual do mantenedor (fora do CI), mesmo modelo que `scripts/login-e2e.mjs`. Sem bump de SW.
 ### Testes: lacunas em `client/js/app/` (S30-S18)
 - Novos: `tests/navigation.test.js` (desvio `setRoute`/`route`), `tests/context-shell.test.js` (`makeShellProps`, quarentena no compartilhar), `tests/route-wire.test.js` (`wireRoute`, `routeImpl`, `routeTitle` e `#/settings/network`). Sem bump de SW.
+### Testes: lacunas S30-S21 (`short-id`, `post-supersede`)
+- `tests/short-id.test.js`: encurtamento de `vx_`, `0x`, `did:` e conta oficial para rótulo.
+- `tests/post-supersede.test.js`: `isSupersededLocally` com lápide, versão local mais nova e choque de autor. Sem bump de SW.
 
 ### Correção: relay cego não perde deltas no cold boot; memória central confere item e blob
 - **Snapshot apaga por serial, não por timestamp:** só somem os envelopes com `0 < serial <= coveredSerial`; antes, um delta com relógio atrasado e serial acima da cobertura era apagado em silêncio. Snapshot que recua `coveredSerial` agora dá `400` (abriria um buraco). Sem `coveredSerial` nada é apagado (vale o TTL de 7 dias).
