@@ -3,11 +3,22 @@ services:
     build:
       context: ..
       dockerfile: Dockerfile
+    # Dentro do contêiner o bind é 0.0.0.0 (necessário para o mapeamento funcionar). No host, a
+    # porta fica em 127.0.0.1 por padrão. Para abrir de propósito (ex.: acesso direto na LAN),
+    # defina VOX_SIGNALING_BIND=0.0.0.0 no .env e entenda que a porta fica exposta na rede.
     command: ["python", "-u", "relay/signaling.py", "--host", "0.0.0.0", "--port", "3921"]
     container_name: vox-signaling
     restart: unless-stopped
+    ports:
+      - "${VOX_SIGNALING_BIND:-127.0.0.1}:3921:3921"
     expose:
       - "3921"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request;urllib.request.urlopen('http://127.0.0.1:3921/health',timeout=4)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
 
   vox-relay:
     build:
@@ -20,11 +31,22 @@ services:
       - VOX_RELAY_MAX_CACHE_MB=${VOX_RELAY_MAX_CACHE_MB:-512}
       - VOX_RELAY_CACHE_DIR=/app/.cache
       - VOX_RELAY_INBOX_DIR=/app/.inbox
+      # VOX_RELAY_TRUST_PROXY_HOPS não é definido aqui: o valor certo depende de quantos proxies
+      # reescrevem X-Forwarded-For à frente do relay (decisão do dono do deploy; ver relay/render.yaml).
     volumes:
       - vox_inbox:/app/.inbox
       - vox_relay_cache:/app/.cache
+    # Mesmo critério da sinalização: loopback no host por padrão; VOX_RELAY_BIND=0.0.0.0 abre de propósito.
+    ports:
+      - "${VOX_RELAY_BIND:-127.0.0.1}:3920:3920"
     expose:
       - "3920"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request;urllib.request.urlopen('http://127.0.0.1:3920/health',timeout=4)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
 
   caddy:
     image: caddy:2-alpine

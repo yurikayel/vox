@@ -51,6 +51,44 @@ class DockerfileDoRelay(unittest.TestCase):
         self.assertNotIn('"server.py"', compose)
 
 
+def valores_da_instrucao(nome):
+    """Argumentos de cada instrução `nome` do Dockerfile (ex.: `USER vox` -> ['vox'])."""
+    valores = []
+    for linha in (RELAY / "Dockerfile").read_text(encoding="utf-8").splitlines():
+        partes = linha.split(None, 1)
+        if partes and partes[0].upper() == nome and len(partes) == 2:
+            valores.append(partes[1].strip())
+    return valores
+
+
+class SegurancaDoContainer(unittest.TestCase):
+    def test_imagem_roda_como_usuario_nao_root(self):
+        usuarios = valores_da_instrucao("USER")
+        self.assertTrue(usuarios, "Dockerfile sem instrução USER: o processo roda como root")
+        self.assertNotIn(usuarios[-1].split(":")[0].lower(), ("root", "0"), "USER final é root")
+
+    def test_imagem_tem_healthcheck(self):
+        self.assertTrue(valores_da_instrucao("HEALTHCHECK"), "Dockerfile sem HEALTHCHECK")
+
+    def test_turnserver_nao_traz_senha_de_modelo(self):
+        texto = (RELAY / "deploy" / "turnserver.conf").read_text(encoding="utf-8")
+        self.assertNotIn("troque-esta-senha-comunitaria", texto, "senha de modelo ainda no turnserver.conf")
+        credenciais = [linha for linha in texto.splitlines() if linha.startswith("user=")]
+        self.assertTrue(credenciais, "turnserver.conf sem linha user=")
+        for linha in credenciais:
+            self.assertRegex(linha, r"^user=[^:]+:__[A-Z_]+__$", "user= deve ser placeholder, não senha")
+
+    def test_compose_publica_portas_do_relay_so_em_loopback_por_padrao(self):
+        compose = (RELAY / "deploy" / "docker-compose.yml").read_text(encoding="utf-8")
+        for porta in ("3920", "3921"):
+            self.assertRegex(
+                compose,
+                rf'"\$\{{[A-Z_]+:-127\.0\.0\.1\}}:{porta}:{porta}"',
+                f"porta {porta} não publica em 127.0.0.1 por padrão",
+            )
+        self.assertNotRegex(compose, r'"\$\{[A-Z_]+:-0\.0\.0\.0\}:', "publicação padrão em 0.0.0.0")
+
+
 class PermissoesDoReleaseBinarios(unittest.TestCase):
     def test_escrita_so_em_job_que_nao_roda_em_pull_request(self):
         blocos = blocos_de_job(WORKFLOW.read_text(encoding="utf-8"))
