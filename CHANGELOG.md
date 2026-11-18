@@ -6,7 +6,10 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
-### Documentação: ADR-039, Rust por fases (proposto)
+### Correção: acessibilidade do login (cofre na malha e "Já tenho conta")
+- Faixa "Foi você?" é anunciada quando aparece (`role="alert"`, em vez de `alertdialog`); depois de responder, o foco vai para a próxima faixa ou para um lugar estável, e não cai no `body` (WCAG 4.1.3 e 2.4.3). Região de status da malha fica sempre no DOM, vazia até ter texto; erro de "Já tenho conta" sem `aria-live` duplicado; seta do "← Voltar" escondida do leitor. SW `v7.143`. Testes: `tests/mesh-vault-ui.test.js`.
+
+### Documentação: ADR-039, Rust por fases (proposed)
 - [ADR-039](./docs/adr/039-rust-por-fases.md) (**proposed**): mais Rust com o tempo, onde ganha em segurança, em 6 fases (fundação de CI, `vox-core` de referência, Argon2id do cofre, troca da cripto própria e ML-KEM, relay, nó nativo). A chave privada P-256 do navegador continua no WebCrypto não exportável; WebAssembly só para o que o WebCrypto não tem. Decisão A-27 em [DECISOES.md](./docs/DECISOES.md). Sem código e sem bump de SW.
 
 ### Testes: "Corrigir e-mail" revoga o endereço errado (LT-03)

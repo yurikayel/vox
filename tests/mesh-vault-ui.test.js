@@ -33,7 +33,20 @@ test("Já tenho conta — e-mail, senha e Entrar vêm antes de \"Outras formas d
   assert.ok(at('href="#/voltar"') > details, "guardiões em outras formas");
   assert.ok(html.includes("QR para outro aparelho"));
   assert.ok(html.includes("sem servidor de contas"), "a tela diz que não há servidor de contas");
-  assert.match(html, /id="oauth-mesh-status"[^>]*role="status"[^>]*hidden/, "aviso da malha começa escondido e é anunciado");
+  const status = /<p id="oauth-mesh-status"[^>]*>/.exec(html)[0];
+  assert.match(status, /role="status"/, "aviso da malha é uma região de status");
+  assert.match(status, /aria-live="polite"/);
+  assert.doesNotMatch(status, /\bhidden\b/, "região fica no DOM (vazia) para o leitor pegar o texto novo");
+});
+
+test("Já tenho conta — erro com um só aviso (role=alert) e ← Voltar com a seta escondida do leitor", () => {
+  const c = { innerHTML: "" };
+  render.renderOAuthEnrich(c);
+  const err = /<div id="oauth-enrich-error"[^>]*>/.exec(c.innerHTML)[0];
+  assert.match(err, /role="alert"/);
+  assert.doesNotMatch(err, /aria-live/, "role=alert já anuncia; sem aria-live duplicado");
+  assert.ok(c.innerHTML.includes('<span aria-hidden="true">←</span> Voltar'), "seta fora do nome acessível");
+  assert.ok(!c.innerHTML.includes("← Voltar"), "sem seta solta no texto do botão");
 });
 
 test("volta pela malha — esperando, a tentativa só repassa a espera", async () => {
@@ -79,9 +92,11 @@ test("volta pela malha — cofre chegou mas não abriu: mantém o pedido e diz p
 /** Documento mínimo: guarda elementos por id e os botões com seus ouvintes. */
 function fakeDoc() {
   const byId = new Map();
-  const button = (id) => ({ id, listeners: {}, addEventListener(type, fn) { this.listeners[type] = fn; } });
+  const focused = [];
+  const button = (id) => ({ id, listeners: {}, addEventListener(type, fn) { this.listeners[type] = fn; }, focus() { focused.push(id); } });
   const doc = {
-    body: { appendChild: (el) => byId.set(el.id, el) },
+    focused,
+    body: { appendChild: (el) => byId.set(el.id, el), focus() { focused.push("body"); } },
     getElementById: (id) => byId.get(id) || null,
     createElement: () => ({
       set innerHTML(html) {
@@ -115,8 +130,23 @@ test("faixa \"Foi você?\" — texto pergunta e orienta trocar a senha; sem avis
   const html = renderNoticeBannerHtml({ requestId: "r", firstSeen: Date.UTC(2026, 10, 17, 12) });
   assert.match(html, /Foi você\?/);
   assert.match(html, /troque sua senha/);
-  assert.match(html, /role="alertdialog"/);
+  assert.match(html, /role="alert"/, "faixa é anunciada quando aparece");
+  assert.doesNotMatch(html, /alertdialog/, "não é diálogo: não tem foco preso nem Esc");
+  assert.match(html, /aria-label="Pedido para abrir sua conta"/);
   assert.equal(refreshNoticeBanner({ doc: fakeDoc(), decide: async () => {}, notices: () => [] }), false);
+});
+
+test("faixa \"Foi você?\" — depois de responder, o foco vai para a próxima faixa; sem ela, para um lugar estável", async () => {
+  const doc = fakeDoc();
+  let queue = [{ requestId: "r2", firstSeen: 20, holders: 1 }, { requestId: "r1", firstSeen: 10, holders: 2 }];
+  const decide = async (id) => { queue = queue.filter((n) => n.requestId !== id); };
+  refreshNoticeBanner({ doc, decide, notices: () => [...queue] });
+  doc.getElementById("btnMeshVaultNo").listeners.click();
+  await new Promise((r) => setTimeout(r, 0));
+  assert.equal(doc.focused.at(-1), "btnMeshVaultYes", "o botão da próxima faixa ganha o foco");
+  doc.getElementById("btnMeshVaultYes").listeners.click();
+  await new Promise((r) => setTimeout(r, 0));
+  assert.equal(doc.focused.at(-1), "body", "sem faixa, o foco não cai no nada: vai para o body");
 });
 
 test("ligar a malha — uma vez por página, e só roda com conta", () => {
