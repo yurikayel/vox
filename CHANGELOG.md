@@ -20,6 +20,11 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 - `client/js/arweave-lib.js` exporta o sha384 do inventário, valida o timeout HTTP (1–120 000 ms) e confere o bundle vendorizado antes do `import()`, alinhado a `docs/DEPENDENCIAS.md`. Testes: `tests/arweave-integridade.test.js`. Sem bump de SW (comportamento só em caminhos Arweave já raros com `arweaveUpload` desligado).
 ### Acessibilidade: foco do teclado após publicar no compositor
 - Após publicação bem-sucedida, o foco vai para o gatilho recolhido do feed ou para a região de anúncio da etapa de revisão (compositor em etapas, resposta e feira). Testes: `tests/compose-focus-after-publish.test.js`. Sem bump de SW.
+### Correção: preso de foco em modais e menu ⋯ (S30-S9)
+- Módulo reutilizável `client/js/render/focus-trap.js`: Tab e Shift+Tab circulam dentro do diálogo; ao fechar, o foco volta a quem abriu.
+- `modal-host` liga o preso quando o contêiner ganha conteúdo; `clearModalHost` desliga e restaura o foco.
+- Menu ⋯ da publicação (`post-more-menu`) usa o mesmo preso enquanto a folha está aberta.
+- Testes: `tests/focus-trap.test.js` (DOM falso em Node). Sem bump de SW.
 
 ### Correção: relay cego não perde deltas no cold boot; memória central confere item e blob
 - **Snapshot apaga por serial, não por timestamp:** só somem os envelopes com `0 < serial <= coveredSerial`; antes, um delta com relógio atrasado e serial acima da cobertura era apagado em silêncio. Snapshot que recua `coveredSerial` agora dá `400` (abriria um buraco). Sem `coveredSerial` nada é apagado (vale o TTL de 7 dias).
