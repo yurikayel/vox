@@ -6,6 +6,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Infra: `vox-relay` do docker-compose sobe e `release-binarios` só escreve no release
+- `relay/Dockerfile` copia todos os módulos para `/app/relay/` (pacote, `PYTHONPATH=/app`) em vez de quatro arquivos soltos; o `server.py` (que faz `from relay import ...`) passa a subir com `python -m relay.server`. O CMD padrão segue sendo só o sinalizador (`relay/signaling.py`), usado por Render/HF. `relay/.dockerignore` deixa os `test_*.py` de fora; o compose aponta cache e caixa de entrada para os volumes (`VOX_RELAY_CACHE_DIR`, `VOX_RELAY_INBOX_DIR`).
+- `release-binarios.yml`: o build roda com `contents: read` (inclusive em `pull_request`); `contents: write`, `id-token` e `attestations` ficam no job `publicar`, que não roda em PR. Sem mudança no SW.
 ### Correção: avisa no passo de criação quando a conta não grava no aparelho
 - `ensureLocalAccount` registra falha de quota/bloqueio e o onboarding mostra aviso em `#oauth-enrich-error` sem travar o fluxo. Testes: `tests/local-account-storage-full.test.js`, `tests/onboarding-steps.test.js`.
 
