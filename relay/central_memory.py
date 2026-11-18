@@ -10,6 +10,10 @@ backup (.bak) + journal append-only para recuperação imediata pós-queda.
 
 from __future__ import annotations
 
+import base64
+import binascii
+import functools
+import hashlib
 import json
 import os
 import re
@@ -24,6 +28,7 @@ from relay import genesis_guard
 HASH_HEX_REGEX = re.compile(r"^[0-9a-fA-F]{64}$")
 SAFE_ID_REGEX = re.compile(r"^[A-Za-z0-9._:-]{1,160}$")
 MAX_ITEM_BYTES = 512 * 1024
+_DATA_URL_REGEX = re.compile(r"data:[a-zA-Z0-9/+.-]+;base64,([A-Za-z0-9+/=\r\n]+)")
 MAX_BLOB_BYTES = 2 * 1024 * 1024
 
 _MEMORY_LOCK = threading.RLock()
@@ -221,6 +226,44 @@ def _is_valid_id(raw_id: Any) -> bool:
     return isinstance(raw_id, str) and bool(SAFE_ID_REGEX.match(raw_id.strip()))
 
 
+def _item_within_limit(item: Dict[str, Any]) -> bool:
+    """True se o item serializado cabe em `MAX_ITEM_BYTES`."""
+    return len(json.dumps(item, ensure_ascii=False).encode("utf-8")) <= MAX_ITEM_BYTES
+
+
+def _capped(apply_fn):
+    """Faz `apply_fn(state, item)` recusar (False) item acima de `MAX_ITEM_BYTES`.
+
+    Num lote (`/memory/sync`) o item grande é ignorado e os demais seguem.
+    """
+
+    @functools.wraps(apply_fn)
+    def wrapper(state: Dict[str, Any], item: Dict[str, Any]) -> bool:
+        if isinstance(item, dict) and not _item_within_limit(item):
+            return False
+        return apply_fn(state, item)
+
+    return wrapper
+
+
+def _blob_sha256(data: str) -> Optional[str]:
+    """SHA-256 do conteúdo, igual a `computeBlobHash` do cliente (media-blob.js).
+
+    Data URL base64 -> hash dos bytes decodificados; qualquer outro texto -> hash do UTF-8.
+    Devolve None se o base64 da data URL não decodifica ou o texto não é UTF-8 válido.
+    """
+    match = _DATA_URL_REGEX.fullmatch(data.strip())
+    try:
+        if match is None:
+            return hashlib.sha256(data.encode("utf-8")).hexdigest()
+        b64 = re.sub(r"[\r\n]", "", match.group(1))
+        raw = base64.b64decode(b64 + "=" * (-len(b64) % 4), validate=True)
+    except (binascii.Error, ValueError):
+        return None
+    return hashlib.sha256(raw).hexdigest()
+
+
+@_capped
 def _apply_post(state: Dict[str, Any], item: Dict[str, Any]) -> bool:
     if not isinstance(item, dict):
         return False
@@ -257,6 +300,7 @@ def _apply_post(state: Dict[str, Any], item: Dict[str, Any]) -> bool:
     return True
 
 
+@_capped
 def _apply_tombstone(state: Dict[str, Any], tombstone: Dict[str, Any]) -> bool:
     if not isinstance(tombstone, dict):
         return False
@@ -284,6 +328,7 @@ def _apply_tombstone(state: Dict[str, Any], tombstone: Dict[str, Any]) -> bool:
     return True
 
 
+@_capped
 def _apply_profile(state: Dict[str, Any], card: Dict[str, Any]) -> bool:
     if not isinstance(card, dict):
         return False
@@ -310,6 +355,7 @@ def _apply_profile(state: Dict[str, Any], card: Dict[str, Any]) -> bool:
     return True
 
 
+@_capped
 def _apply_manifest(state: Dict[str, Any], manifest: Dict[str, Any]) -> bool:
     if not isinstance(manifest, dict):
         return False
@@ -334,6 +380,8 @@ def _apply_blob(state: Dict[str, Any], blob: Dict[str, Any]) -> bool:
     blob_hash = str(blob.get("hash") or "").strip().lower()
     data = blob.get("data")
     if not HASH_HEX_REGEX.match(blob_hash) or not isinstance(data, str) or not data:
+        return False
+    if _blob_sha256(data) != blob_hash:
         return False
     raw_bytes = json.dumps(
         {
