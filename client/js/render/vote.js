@@ -8,6 +8,7 @@
 import { escapeHtml, shortId, formatTimeAgo } from "./util.js";
 import { renderPageHead } from "./shell.js";
 
+/** Filtros da tela Democracia Direta. @type {ReadonlyArray<{key: string, label: string}>} */
 export const VOTE_FILTERS = Object.freeze([
   { key: "all", label: "Todas" },
   { key: "open", label: "Em votação" },
@@ -22,7 +23,12 @@ const STATE_LABELS = {
   expired: "Expirada sem quórum",
 };
 
-/** @param {{ state?: string }} item @param {string} filter */
+/**
+ * Se a pauta entra no filtro selecionado.
+ * @param {{ state?: string }} item Pauta normalizada.
+ * @param {string} filter Chave de {@link VOTE_FILTERS}.
+ * @returns {boolean}
+ */
 export function matchesVoteFilter(item, filter) {
   const state = item?.state || "open";
   if (filter === "open") return state === "open";
@@ -32,8 +38,9 @@ export function matchesVoteFilter(item, filter) {
 }
 
 /**
- * Agrega indicadores reais para o cabeçalho.
+ * Agrega indicadores reais para o cabeçalho da tela Vote.
  * @param {Array<{ state?: string, tally?: { totalEligible?: number }, communityId?: string }>} items
+ * @returns {{ open: number, merged: number, votes: number, communities: number, total: number }}
  */
 export function computeVoteStats(items = []) {
   const open = items.filter((i) => (i.state || "open") === "open").length;
@@ -43,7 +50,12 @@ export function computeVoteStats(items = []) {
   return { open, merged, votes, communities, total: items.length };
 }
 
-/** @param {number} closesAt @param {number} now */
+/**
+ * Texto humano até o encerramento da votação.
+ * @param {number} closesAt Instantâneo de fechamento, ms.
+ * @param {number} [now=Date.now()]
+ * @returns {string}
+ */
 export function formatCountdown(closesAt, now = Date.now()) {
   const ms = Number(closesAt) - now;
   if (!closesAt || Number.isNaN(ms)) return "";
@@ -176,7 +188,9 @@ function renderBallot(item, detailBtn) {
 const STATE_CHOICE_LABEL = { yes: "Sim", no: "Não", abstain: "Abstenção" };
 
 /**
- * @param {object} item pauta normalizada (ver showVote em screens-community.js)
+ * Card de uma pauta com apuração e ações de voto.
+ * @param {object} item Pauta normalizada (ver showVote em screens-community.js).
+ * @returns {string}
  */
 export function renderDeliberation(item) {
   const state = item.state || "open";
@@ -216,8 +230,11 @@ function renderEmpty(activeFilter, hasAny) {
 }
 
 /**
- * @param {Array<object>} items pautas normalizadas
- * @param {{ filter?: string }} [opts]
+ * Página completa Democracia Direta com hero, filtros e lista.
+ * @param {Array<object>} items Pautas normalizadas.
+ * @param {object} [opts={}]
+ * @param {string} [opts.filter="all"]
+ * @returns {string}
  */
 export function renderVoteDashboard(items = [], { filter = "all" } = {}) {
   const visible = items.filter((i) => matchesVoteFilter(i, filter));

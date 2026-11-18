@@ -25,8 +25,9 @@ function renderFormalVoteLink(post) {
 }
 
 /**
- * Bloco de interação de um post cívico: posicionamento (concordo/discordo/abstenção) ou enquete,
- * com apuração parcial (1 voto assinado por pessoa).
+ * Bloco de interação de um post cívico: posicionamento ou enquete com apuração parcial.
+ * @param {object} post Post com `civic`, `civicTally` e id.
+ * @returns {string} HTML do bloco ou `""` se não for post cívico.
  */
 export function renderCivicBlock(post) {
   if (!post?.civic?.isCivic) return "";
@@ -47,7 +48,11 @@ export function renderCivicBlock(post) {
     </section>`;
 }
 
-/** Aviso (só nos próprios posts) do que falta para um post com tag cívica entrar na aba Cívico. */
+/**
+ * Aviso do que falta para o post entrar na aba Cívico (`civicPending`).
+ * @param {object} post Post com lista de requisitos pendentes.
+ * @returns {string} HTML do aviso ou `""` quando não há pendências.
+ */
 export function renderCivicPendingNote(post) {
   const labels = describeMissingRequirements(post?.civicPending || []);
   if (!labels.length) return "";
@@ -59,7 +64,10 @@ export function renderCivicPendingNote(post) {
     </aside>`;
 }
 
-/** Introdução da aba Cívico: requisitos e atalho para compor uma pauta. */
+/**
+ * Cabeçalho introdutório da aba Cívico com requisitos e link para novo post.
+ * @returns {string}
+ */
 export function renderCivicFeedIntro() {
   const items = CIVIC_REQUIREMENTS.map((r) => `<li>${escapeHtml(r.label)}</li>`).join("");
   return `

@@ -59,7 +59,18 @@ function renderStatusTilesHtml(state, relayStatus, rtcStatus) {
     </div>`;
 }
 
-/** Saúde do nó (Stitch tela 11): ladrilhos de estado, armazenamento e gateways — só dados locais. */
+/**
+ * Página #/status: telemetria local (gateways, relay, WebRTC, IndexedDB).
+ * @param {HTMLElement} main Contêiner substituído por `innerHTML`.
+ * @param {object} [options={}]
+ * @param {object} [options.gatewayHealth={}]
+ * @param {object} [options.relayStatus={}]
+ * @param {string} [options.relayHttpUrl=""]
+ * @param {object|null} [options.mirrorExport=null]
+ * @param {object} [options.rtcStatus={}]
+ * @param {object|null} [options.signalingStats=null]
+ * @returns {void}
+ */
 export function renderStatusPage(
   main,
   { gatewayHealth = {}, relayStatus = {}, relayHttpUrl = "", mirrorExport = null, rtcStatus = {}, signalingStats = null } = {},
@@ -166,7 +177,13 @@ function renderSignalingTelemetryTabletHtml(signalingStats) {
       </section>`;
 }
 
-/** Preenche a barra de armazenamento com `navigator.storage.estimate()` (quando disponível). */
+/**
+ * Atualiza barra e rótulo de uso do IndexedDB na página de status.
+ * @param {object} [options={}]
+ * @param {number} [options.usage=0] Bytes usados.
+ * @param {number} [options.quota=0] Cota estimada.
+ * @returns {void}
+ */
 export function hydrateStatusStorage({ usage = 0, quota = 0 } = {}) {
   const label = typeof document !== "undefined" ? document.getElementById("status-storage-label") : null;
   const bar = typeof document !== "undefined" ? document.getElementById("status-storage-bar") : null;

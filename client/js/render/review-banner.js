@@ -4,6 +4,10 @@ import { escapeHtml } from "./util.js";
 import { describeDeadline, openCasesForPost } from "../report-review.js";
 import { findReason } from "../report.js";
 
+/**
+ * Selo compacto "Em revisão" para listas de tópicos.
+ * @returns {string}
+ */
 export function renderInReviewPillHtml() {
   return `<span class="badge-pill community-review-pill" title="Arquivada depois de uma denúncia: só o autor e a moderação veem até a revisão">⏳ Em revisão</span>`;
 }
@@ -29,8 +33,15 @@ function renderModeratorReviewHtml(topicId, communityId, cases) {
 }
 
 /**
- * Aviso no topo do tópico em revisão. O autor vê o estado e o prazo; quem modera vê também
- * os motivos (das denúncias recebidas neste aparelho) e decide.
+ * Faixa no topo do tópico arquivado por denúncia; moderador vê ações e motivos.
+ * @param {object} topic Tópico com `inReview` e `reviewSince`.
+ * @param {object} [options={}]
+ * @param {boolean} [options.isMod=false]
+ * @param {string} [options.topicId=""]
+ * @param {string} [options.communityId=""]
+ * @param {number} [options.now=Date.now()]
+ * @param {Array<object>|null} [options.cases=null] Denúncias locais (senão abre do índice).
+ * @returns {string} HTML ou `""` se não está em revisão.
  */
 export function renderReviewBannerHtml(topic, { isMod = false, topicId = "", communityId = "", now = Date.now(), cases = null } = {}) {
   if (!topic?.inReview) return "";
@@ -44,6 +55,10 @@ export function renderReviewBannerHtml(topic, { isMod = false, topicId = "", com
     </div>`;
 }
 
+/**
+ * Card quando a publicação foi arquivada definitivamente pela moderação.
+ * @returns {string}
+ */
 export function renderArchivedTopicShellHtml() {
   return `
     <div class="card empty review-archived" role="status">

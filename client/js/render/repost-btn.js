@@ -1,4 +1,8 @@
-/** Botão de republicar — ciclo de 2 setas; check = já republicado. */
+/**
+ * @file Botão de republicar no estilo IG: ícone de ciclo + contagem visível.
+ *
+ * Estado ativo quando este aparelho já republicou o post (repost-index).
+ */
 
 import { escapeHtml } from "./util.js";
 import { REPOST_LABEL } from "../repost-draft.js";
@@ -8,6 +12,12 @@ const ARROWS =
   '<path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M8 16H3v5"/>';
 const CHECK = '<path class="icon-repost-check" d="M8 12.2 10.4 14.6 16 9"/>';
 
+/**
+ * SVG do ícone de republicar (setas ou check quando já republicado).
+ * @param {boolean} checked Se este aparelho já republicou.
+ * @param {number} [size=18] Largura e altura em px.
+ * @returns {string}
+ */
 export function iconCycle(checked, size = 18) {
   const mark = checked ? CHECK : "";
   return `<svg class="action-icon icon-repost" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ARROWS}${mark}</svg>`;
@@ -18,6 +28,13 @@ function countSpan(n) {
   return `<span class="overlay-action-count action-count count-reposts">${n}</span>`;
 }
 
+/**
+ * Botão de ação republicar/desfazer com contagem e dados para o fluxo de composição.
+ * @param {object} t Post (id, title, author/owner).
+ * @param {object} [options={}]
+ * @param {number} [options.size=18] Tamanho do ícone em px.
+ * @returns {string}
+ */
 export function renderRepostBtn(t, { size = 18 } = {}) {
   const id = t?.id || "";
   const on = hasOwnRepost(id);
