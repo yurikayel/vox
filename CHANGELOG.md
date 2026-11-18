@@ -16,6 +16,11 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 - Testes: `relay/test_infra_layout.py` (+4: USER não-root, HEALTHCHECK, sem senha no turnserver, publicação só em loopback). Build da imagem não rodado aqui (Docker indisponível): NOT RUN. Sem bump de SW.
 ### Docs: divergências doc × código (HARDENING, ADR-002, ADR-021, release-metadata)
 - `HARDENING.md`: dívida de camadas é 0 (`layers-debt.json` com `violations: []`); ADR-002 ganha emenda 1 (relay `POST /oauth/exchange`); ADR-021 status "implementado, §2.6 aberta"; `release-metadata.json` e README regenerados (315e334, 1962 JS + 244 Python).
+### Correção: CSP — `frame-src` vira lista explícita (R7 da revisão DevSecOps)
+- `client/index.html` e `client/_headers`: `frame-src 'self' blob: https:` passa a `'self' blob:` + `accounts.google.com`, `www.facebook.com`, `web.facebook.com`, `staticxx.facebook.com` (os únicos iframes de rede são os dos SDKs de `oauth-profile.js`; os cartuchos usam `srcdoc`).
+- Mantidos de propósito: `script-src` com `accounts.google.com` e `connect.facebook.net` (`signInWithGoogle`/`signInWithMeta*` ainda carregam esses scripts quando o operador configura `oauth.json`); `connect-src https: wss:` (relay, gateway, PDS Bluesky e Turbo digitados pela pessoa); `img-src`/`media-src https:` (avatar e mídia de posts vêm de URL remota arbitrária).
+- `tests/csp.test.js`: 2 testes novos (`frame-src` sem `https:` solto; `script-src` só com hosts que o código ainda usa).
+
 ### Correção: `Access-Control-Allow-Origin` sai de constante, não do cabeçalho `Origin` (CodeQL 283, py/http-response-splitting)
 - `request_guard.cors_allow_origin` devolve a entrada correspondente de `APP_ORIGINS` / `VOX_RELAY_ALLOWED_ORIGINS` (ou a origem de loopback reconstruída de esquema e nome fixos e porta numérica) em vez de ecoar o texto recebido, e recusa origem com CR, LF, tab, espaço, NUL ou outro caractere de controle antes de comparar. Origem de loopback com caminho, usuário ou porta inválida deixa de receber CORS. Testes: `relay/test_cors_origens.py` (13). Sem bump de SW.
 ### CI: `red-on-base` só roda contra a base em PR `fix:`; teste de importar posts não depende de turnos do loop
