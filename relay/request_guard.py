@@ -7,6 +7,8 @@ Regras, em ordem:
 2. **Origin:** POST e DELETE vindos de navegador só são aceitos das origens do app (GitHub Pages, Cloudflare
    Pages e qualquer localhost) ou das liberadas em `VOX_RELAY_ALLOWED_ORIGINS`. Pedido sem `Origin` (ferramenta
    de linha de comando, nó de steward) passa.
+   A mesma lista decide o CORS (`cors_allow_origin`): a origem só é refletida em `Access-Control-Allow-Origin`
+   se estiver nela, então página de outro site não lê a resposta de nenhuma rota.
 3. **Content-Type:** POST só com `application/json`, o que obriga o navegador a perguntar antes (preflight).
 
 O limite de escritas por IP não mora aqui: é o token bucket de `rate_limit.py`, aplicado depois destas regras.
@@ -56,6 +58,18 @@ def origin_allowed(origin, env=None):
     if text.startswith(("http://", "https://")) and is_loopback(text):
         return True
     return text in APP_ORIGINS or text in _env_list("VOX_RELAY_ALLOWED_ORIGINS", env)
+
+
+def cors_allow_origin(origin, env=None):
+    """Origem a devolver em `Access-Control-Allow-Origin`, ou None se o navegador não deve ler a resposta.
+
+    Diferente de `origin_allowed` (que deixa passar pedido sem `Origin`), aqui a origem precisa existir
+    e estar na lista: sem `Origin` não há leitura entre sites a liberar.
+    """
+    text = str(origin or "").strip()
+    if not text or not origin_allowed(text, env):
+        return None
+    return text
 
 
 def is_json_content_type(value):

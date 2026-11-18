@@ -58,6 +58,8 @@ Ao abrir o Vox no navegador (`http://127.0.0.1:8080`), o cliente consulta automa
 
 **Política de pedido (PM-94, `request_guard.py`):** `Host` de loopback (ou `VOX_RELAY_ALLOWED_HOSTS`), `POST`/`DELETE` só das origens do app (ou `VOX_RELAY_ALLOWED_ORIGINS`), `POST` só `application/json`, e no máximo `VOX_RELAY_WRITE_LIMIT_PER_MIN` escritas por minuto por IP.
 
+**CORS:** o relay só devolve `Access-Control-Allow-Origin` (com `Vary: Origin`) para as origens do app (`https://yurikayel.github.io`, `https://vox-9df.pages.dev`), para `http(s)://localhost` e `127.0.0.1` e para as listadas em **`VOX_RELAY_ALLOWED_ORIGINS`** (separadas por vírgula, origem exata, ex.: `https://meu-espelho.example,https://outro.example`). Outras páginas não conseguem ler as respostas; `Access-Control-Allow-Private-Network` também só vai para origem permitida. Quem publica o app em outro domínio precisa pôr esse domínio na variável, senão o navegador bloqueia a leitura.
+
 Referência completa (limites, TTLs, variáveis de ambiente, testes): **[docs/specs/relay-api.md](../docs/specs/relay-api.md)**.
 
 ---
