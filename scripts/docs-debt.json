@@ -34,11 +34,6 @@
   "jsdoc:rankCommentsByBridging",
   "jsdoc:shouldApplyConstructiveFriction"
  ],
- "client/js/bsky-oauth.js": [
-  "param:dpopProof:#4",
-  "param:startBskyLogin:#1",
-  "param:completeBskyLogin:#1"
- ],
  "client/js/central-memory-hydrate.js": [
   "jsdoc:itemTimestamp",
   "param:hydrateBlobs:blobs",
@@ -70,9 +65,6 @@
   "jsdoc:issueCivicCredential",
   "jsdoc:verifyCivicCredential",
   "jsdoc:renderCivicCredentialBadgeHtml"
- ],
- "client/js/civic-post.js": [
-  "param:splitFeedBySphere:#2"
  ],
  "client/js/color-mode.js": [
   "jsdoc:VOX_COLOR_MODE_KEY",
@@ -135,16 +127,9 @@
   "jsdoc:UF_ROUTE_IDS",
   "jsdoc:buildUfDemoProfilesMap"
  ],
- "client/js/dm-outbox.js": [
-  "param:enqueueEnvelope:#3",
-  "param:planOutbox:#2"
- ],
  "client/js/electoral-period.js": [
   "jsdoc:isInElectoralWindow",
   "jsdoc:isElectoralModeActive"
- ],
- "client/js/frames.js": [
-  "param:buildFrameActionPayload:#1"
  ],
  "client/js/gateway-telemetry.js": [
   "jsdoc:READ_ORIGIN_MIN_SAMPLE",
@@ -155,11 +140,6 @@
  "client/js/gossip-retract-ui.js": [
   "jsdoc:isGossipRetractUiEnabled",
   "jsdoc:renderGossipDeletedTopicShellHtml"
- ],
- "client/js/governance.js": [
-  "param:validateProposalInput:#1",
-  "param:isEligibleToVote:#1",
-  "param:computeTally:#1"
  ],
  "client/js/handles.js": [
   "jsdoc:RESERVED_HANDLES",
@@ -246,9 +226,6 @@
  "client/js/mesh-profile.js": [
   "jsdoc:syncMeshProfileCard"
  ],
- "client/js/new-key-guard.js": [
-  "param:mintPow:#1"
- ],
  "client/js/labs/parado/node-health-api.js": [
   "jsdoc:pingNodeEndpoint",
   "jsdoc:pingNodeList"
@@ -274,9 +251,6 @@
   "jsdoc:getNodeHealthLabelPtBr",
   "jsdoc:getNodeHealthAriaLabel",
   "jsdoc:formatLatency"
- ],
- "client/js/nostr-event.js": [
-  "param:computeEventId:#1"
  ],
  "client/js/nostr-signaling.js": [
   "jsdoc:buildNostrSignalingCandidates"
