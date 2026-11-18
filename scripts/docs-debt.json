@@ -10,7 +10,6 @@
   "jsdoc:completeAirgapHandshake"
  ],
  "client/js/arweave-lib.js": [
-  "param:loadArweave:timeout",
   "returns:loadArweave"
  ],
  "client/js/brcode.js": [
