@@ -23,6 +23,8 @@ DEFAULT_TTL_SECONDS = 7 * 86400  # 7 dias de retenção para envelopes de canal
 _RELAY_LOCK = threading.RLock()
 _INT_TEXT = re.compile(r"\d{1,19}")
 _INT_LIMIT = 2**63
+_CHANNEL_ID = re.compile(r"[A-Za-z0-9_-]{1,128}")
+_STORED_NAME = re.compile(r"env_[0-9]{1,19}_[0-9a-f]{20}\.json|latest_snapshot\.json")
 
 
 def resolve_relay_dir(env: Optional[Dict[str, str]] = None) -> Path:
@@ -46,12 +48,21 @@ def set_relay_dir(path: Path) -> Path:
 
 
 def ensure_channel_dir(channel_id: str) -> Path:
-    clean = "".join(c for c in str(channel_id) if c.isalnum() or c in ("-", "_"))
-    if not clean:
+    stripped = "".join(c for c in str(channel_id) if c.isalnum() or c in ("-", "_"))
+    match = _CHANNEL_ID.fullmatch(stripped)
+    if match is None:
         raise ValueError("ID de canal comunitário inválido")
-    chan_path = RELAY_DIR / clean
+    chan_path = RELAY_DIR / match.group(0)
     chan_path.mkdir(parents=True, exist_ok=True)
     return chan_path
+
+
+def _stored_file(chan_path: Path, name: str) -> Optional[Path]:
+    """Arquivo do canal só se o nome é um dos nossos (sem separador e sem `..`)."""
+    match = _STORED_NAME.fullmatch(os.path.basename(name))
+    if match is None:
+        return None
+    return chan_path / match.group(0)
 
 
 def _coerce_int(value: Any, field: str, default: int = 0) -> int:
@@ -106,7 +117,9 @@ def store_envelope(channel_id: str, envelope: Dict[str, Any], ttl_seconds: int =
 
     with _RELAY_LOCK:
         chan_path = ensure_channel_dir(channel_id)
-        file_path = chan_path / f"{msg_id}.json"
+        file_path = _stored_file(chan_path, f"{msg_id}.json")
+        if file_path is None:
+            raise ValueError("id de envelope inválido")
         existing = _read_live_record(file_path, int(time.time()))
         if existing is not None:
             return existing
@@ -157,7 +170,10 @@ def list_envelopes(channel_id: str, since_ts: int = 0, since_serial: int = 0, li
         by_serial = since_serial > 0
         entries = []
         for file in chan_path.glob("env_*.json"):
-            loaded = _load_listable(file, now)
+            stored = _stored_file(chan_path, file.name)
+            if stored is None:
+                continue
+            loaded = _load_listable(stored, now)
             if loaded is None:
                 continue
             env, ts, serial = loaded
@@ -209,7 +225,9 @@ def store_snapshot(channel_id: str, snapshot_data: Dict[str, Any], prune_older: 
 
     with _RELAY_LOCK:
         chan_path = ensure_channel_dir(channel_id)
-        snap_path = chan_path / "latest_snapshot.json"
+        snap_path = _stored_file(chan_path, "latest_snapshot.json")
+        if snap_path is None:
+            raise ValueError("nome de snapshot inválido")
         curr = _read_current_snapshot(snap_path)
         if curr is not None:
             _assert_snapshot_advances(curr, epoch, covered_serial)
@@ -235,8 +253,8 @@ def get_latest_snapshot(channel_id: str) -> Optional[Dict[str, Any]]:
             chan_path = ensure_channel_dir(channel_id)
         except ValueError:
             return None
-        snap_path = chan_path / "latest_snapshot.json"
-        if not snap_path.is_file():
+        snap_path = _stored_file(chan_path, "latest_snapshot.json")
+        if snap_path is None or not snap_path.is_file():
             return None
         try:
             data = json.loads(snap_path.read_text(encoding="utf-8"))
@@ -256,16 +274,19 @@ def prune_covered_deltas(chan_path: Path, covered_serial: int) -> int:
     if covered_serial <= 0:
         return removed
     for file in chan_path.glob("env_*.json"):
+        stored = _stored_file(chan_path, file.name)
+        if stored is None:
+            continue
         try:
-            data = json.loads(file.read_text(encoding="utf-8"))
+            data = json.loads(stored.read_text(encoding="utf-8"))
             serial = _coerce_int(data.get("envelope", {}).get("serial"), "serial")
         except json.JSONDecodeError:
-            file.unlink(missing_ok=True)
+            stored.unlink(missing_ok=True)
             removed += 1
             continue
         except (ValueError, TypeError, AttributeError, OSError):
             continue
         if 0 < serial <= covered_serial:
-            file.unlink(missing_ok=True)
+            stored.unlink(missing_ok=True)
             removed += 1
     return removed
