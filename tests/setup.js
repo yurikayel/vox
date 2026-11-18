@@ -96,6 +96,7 @@ export class MockIndexedDBStore {
 export const mockStores = new Map();
 
 export const mockDB = {
+  close() {},
   objectStoreNames: {
     contains: (name) => mockStores.has(name),
   },
