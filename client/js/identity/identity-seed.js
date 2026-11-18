@@ -18,9 +18,15 @@ export const SEED_STORAGE = "vox-identity-seed-v1";
 
 const fromB64url = (s) => Uint8Array.from(atob(String(s).replace(/-/g, "+").replace(/_/g, "/")), (c) => c.charCodeAt(0));
 
+/** Mapa plano no `localStorage`; array, primitivo ou null contam como vazio. */
+function plainRecord(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
 function readSeeds() {
   try {
-    return JSON.parse(localStorage.getItem(SEED_STORAGE) || "{}") || {};
+    const parsed = JSON.parse(localStorage.getItem(SEED_STORAGE) || "{}");
+    return plainRecord(parsed) ? parsed : {};
   } catch {
     return {};
   }
