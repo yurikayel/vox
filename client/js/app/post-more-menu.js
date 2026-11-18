@@ -9,6 +9,7 @@
  * @see client/js/report.js
  */
 
+import { trapFocus } from "../render/focus-trap.js";
 import * as share from "../share.js";
 import { openQrUrlSheet } from "../qr-url.js";
 import * as mod from "../moderation.js";
@@ -58,6 +59,7 @@ function ensurePostMoreSheet() {
 
 let activeContext = null;
 let lastOpener = null;
+let releaseTrap = null;
 let wired = false;
 
 function setSheetOpen(sheet, open) {
@@ -94,9 +96,9 @@ export function closePostMoreMenu() {
   if (!sheet?.classList.contains("is-open")) return;
   setSheetOpen(sheet, false);
   activeContext = null;
-  const opener = lastOpener;
   lastOpener = null;
-  opener?.focus?.();
+  releaseTrap?.();
+  releaseTrap = null;
 }
 
 /**
@@ -113,6 +115,8 @@ export function openPostMoreMenu(ctx, openerEl) {
   lastOpener = openerEl instanceof HTMLElement ? openerEl : null;
   refreshSheetExtras(sheet, activeContext);
   setSheetOpen(sheet, true);
+  releaseTrap?.({ restore: false });
+  releaseTrap = trapFocus(sheet, { onEscape: closePostMoreMenu, restoreTo: lastOpener });
   sheet.querySelector(".post-more-sheet-item")?.focus();
 }
 
@@ -273,10 +277,4 @@ export function attachPostMoreMenuHandlers() {
   if (wired) return;
   wired = true;
   document.addEventListener("click", handlePostMoreMenuDocumentClick);
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && document.getElementById(SHEET_ID)?.classList.contains("is-open")) {
-      e.preventDefault();
-      closePostMoreMenu();
-    }
-  });
 }

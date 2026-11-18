@@ -1,10 +1,17 @@
 /**
  * @file Contêiner de modal avulso no <body>, para modais que abrem fora do #modal-container
- * (denúncia, apontamento). Criado sob demanda; limpar o conteúdo fecha o modal.
+ * (denúncia, apontamento). Criado sob demanda; limpar o conteúdo fecha o modal. Enquanto aberto,
+ * prende o foco: Tab circular, Esc fecha e o foco volta a quem abriu (ver `focus-trap.js`).
  */
 
+import { trapFocus } from "./focus-trap.js";
+
+/** Soltura da armadilha de foco de cada contêiner aberto. */
+const releases = new WeakMap();
+
 /**
- * Garante um contêiner de modal no `<body>` pelo `id` (cria se não existir).
+ * Garante um contêiner de modal no `<body>` pelo `id` (cria se não existir) e, se ele ainda não prende
+ * o foco, passa a prender.
  * @param {string} id ID do elemento.
  * @param {Document} [doc=globalThis.document]
  * @returns {HTMLElement}
@@ -16,16 +23,22 @@ export function modalHost(id, doc = globalThis.document) {
     el.id = id;
     doc.body.appendChild(el);
   }
+  if (doc.addEventListener && !releases.has(el)) {
+    releases.set(el, trapFocus(el, { onEscape: () => clearModalHost(id, doc), doc }));
+  }
   return el;
 }
 
 /**
- * Esvazia o contêiner do modal (fecha visualmente sem remover o nó).
+ * Esvazia o contêiner do modal (fecha visualmente sem remover o nó), solta o foco e o devolve a quem abriu.
  * @param {string} id ID do elemento.
  * @param {Document} [doc=globalThis.document]
  * @returns {void}
  */
 export function clearModalHost(id, doc = globalThis.document) {
   const el = doc?.getElementById?.(id);
-  if (el) el.innerHTML = "";
+  if (!el) return;
+  el.innerHTML = "";
+  releases.get(el)?.();
+  releases.delete(el);
 }

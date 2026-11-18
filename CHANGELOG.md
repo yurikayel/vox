@@ -6,6 +6,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Correção: menu ⋯ e modais prendem o foco
+- Novo `render/focus-trap.js`: Tab/Shift+Tab circulares, Esc fecha e o foco volta ao gatilho. Aplicado no menu ⋯ da publicação e em `modalHost` (denúncia, apontamento). Pendência de release: acrescentar `./js/render/focus-trap.js` ao precache do `sw.js`. Testes: `tests/focus-trap.test.js`, `tests/modal-host-focus.test.js`.
+
 ### Correção: avisa no passo de criação quando a conta não grava no aparelho
 - `ensureLocalAccount` registra falha de quota/bloqueio e o onboarding mostra aviso em `#oauth-enrich-error` sem travar o fluxo. Testes: `tests/local-account-storage-full.test.js`, `tests/onboarding-steps.test.js`.
 
