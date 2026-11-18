@@ -25,7 +25,9 @@ Todas as respostas são JSON com **CORS por origem**: `Access-Control-Allow-Orig
 | `/`, `/health`, `/status`, `/ping` | HTTP GET | Health check (usado pelo `sentinel-keepalive.yml`). |
 | qualquer outra | WebSocket (RFC 6455) | Troca de mensagens de sinalização entre pares. Frame máx. **1 MB**, cabeçalho de handshake máx. **64 KB**. |
 
-Testes: `relay/test_signaling.py`.
+**Origem e CORS:** mesma política do `server.py` (`request_guard.cors_allow_origin`, lista do app + `localhost` + `VOX_RELAY_ALLOWED_ORIGINS`). As respostas HTTP mandam `Vary: Origin` e só trazem `Access-Control-Allow-*` (valor tirado da lista, nunca eco do cabeçalho) para origem permitida; nunca `*`. No handshake do WebSocket, `Origin` fora da lista (ou com caractere de controle) → `403` `{"error":"origin_not_allowed"}`; sem `Origin` (cliente nativo, nó Linux) passa.
+
+Testes: `relay/test_signaling.py`, `relay/test_signaling_origem.py`.
 
 ## 2. Relay completo (`server.py`)
 

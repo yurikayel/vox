@@ -16,9 +16,10 @@ import time
 import socketserver
 
 try:  # como pacote (testes, `python -m`) ou solto na mesma pasta (`python relay/signaling.py`, imagem Docker)
-    from relay import rate_limit
+    from relay import rate_limit, request_guard
 except ImportError:
     import rate_limit
+    import request_guard
 
 WS_GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 DEFAULT_HOST = "0.0.0.0"
@@ -182,21 +183,35 @@ def resolve_port(cli_port=None, default: int = DEFAULT_PORT) -> int:
     return default
 
 
+def cors_headers(origin) -> tuple:
+    """Cabeçalhos `Access-Control-Allow-*` para a origem do pedido; vazio se ela não está na lista permitida."""
+    allowed = request_guard.cors_allow_origin(origin)
+    if allowed is None:
+        return ()
+    return (
+        f"Access-Control-Allow-Origin: {allowed}",
+        "Access-Control-Allow-Methods: GET, HEAD, OPTIONS",
+        "Access-Control-Allow-Headers: Content-Type",
+    )
+
+
 def make_http_response(
     status_code: int,
     status_text: str,
     body: bytes = b"",
     content_type: str = "application/json",
     extra_headers: tuple = (),
+    origin=None,
 ) -> bytes:
+    """Resposta HTTP da sinalização. CORS segue `request_guard.cors_allow_origin`: o valor vem da lista de origens
+    (nunca do cabeçalho recebido) e `Vary: Origin` sempre vai junto; origem fora da lista não recebe `Allow-*`."""
     lines = [
         f"HTTP/1.1 {status_code} {status_text}",
         f"Content-Type: {content_type}",
         f"Content-Length: {len(body)}",
         *extra_headers,
-        "Access-Control-Allow-Origin: *",
-        "Access-Control-Allow-Methods: GET, HEAD, OPTIONS",
-        "Access-Control-Allow-Headers: *",
+        "Vary: Origin",
+        *cors_headers(origin),
         "Connection: close",
         "",
         "",
@@ -211,10 +226,10 @@ def parse_http_target(request_line: str):
     return method, path
 
 
-def handle_http_request(request_sock, request_line: str, peer_count: int = 0) -> None:
+def handle_http_request(request_sock, request_line: str, peer_count: int = 0, origin=None) -> None:
     method, path = parse_http_target(request_line)
     if method == "OPTIONS":
-        resp = make_http_response(204, "No Content", body=b"")
+        resp = make_http_response(204, "No Content", body=b"", origin=origin)
     elif method in ("GET", "HEAD"):
         clean_path = path.split("?")[0]
         if clean_path in ("/", "/health", "/status", "/ping"):
@@ -225,11 +240,11 @@ def handle_http_request(request_sock, request_line: str, peer_count: int = 0) ->
                 "peers": peer_count,
             }).encode("utf-8")
             body = b"" if method == "HEAD" else payload
-            resp = make_http_response(200, "OK", body=body)
+            resp = make_http_response(200, "OK", body=body, origin=origin)
         else:
-            resp = make_http_response(404, "Not Found", body=b'{"error":"not_found"}')
+            resp = make_http_response(404, "Not Found", body=b'{"error":"not_found"}', origin=origin)
     else:
-        resp = make_http_response(405, "Method Not Allowed", body=b'{"error":"method_not_allowed"}')
+        resp = make_http_response(405, "Method Not Allowed", body=b'{"error":"method_not_allowed"}', origin=origin)
     try:
         request_sock.sendall(resp)
     except Exception:
@@ -344,7 +359,11 @@ class WebSocketHandler(socketserver.BaseRequestHandler):
                 self.request,
                 header_lines[0] if header_lines else "",
                 peer_count=len(registry.peers),
+                origin=headers.get("origin"),
             )
+            return False
+
+        if self.reject_if_foreign_origin(headers.get("origin")):
             return False
 
         self.peer_ip = self.resolve_peer_ip(headers)
@@ -359,6 +378,21 @@ class WebSocketHandler(socketserver.BaseRequestHandler):
             f"Sec-WebSocket-Accept: {accept_val}\r\n\r\n"
         )
         self.request.sendall(resp.encode("ascii"))
+        return True
+
+    def reject_if_foreign_origin(self, origin) -> bool:
+        """Recusa com 403 o handshake vindo de página fora da lista de origens (`request_guard`).
+
+        Sem `Origin` (cliente nativo, nó Linux) passa: só navegador manda o cabeçalho, e é ele que carrega
+        cookies/rede local de terceiros para um WebSocket aberto por página alheia.
+        """
+        if not origin or request_guard.cors_allow_origin(origin) is not None:
+            return False
+        resp = make_http_response(403, "Forbidden", body=b'{"error":"origin_not_allowed"}')
+        try:
+            self.request.sendall(resp)
+        except OSError:
+            pass
         return True
 
     def resolve_peer_ip(self, headers: dict):
