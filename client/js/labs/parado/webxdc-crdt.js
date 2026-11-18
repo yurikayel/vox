@@ -8,11 +8,31 @@
  * 4. Compactador de épocas com assinaturas, cursor por coveredSerial e proteção de estado incompleto.
  */
 
+/**
+ * Operação `EPOCH_COMPACT_THRESHOLD` do módulo.
+ * @type {*}
+ */
 export const EPOCH_COMPACT_THRESHOLD = 50;
+/**
+ * Operação `MAX_SNAPSHOT_BYTES` do módulo.
+ * @type {*}
+ */
 export const MAX_SNAPSHOT_BYTES = 512 * 1024;
+/**
+ * Operação `MAX_CLOCK_DRIFT_MS` do módulo.
+ * @type {*}
+ */
 export const MAX_CLOCK_DRIFT_MS = 10 * 60 * 1000; // 10 minutos
 const FORBIDDEN_IDS = new Set(["__proto__", "prototype", "constructor"]);
 
+/**
+ * Operação `isNewer` do módulo.
+ * @param {*} [tsA] Parâmetro `tsA`.
+ * @param {*} [senderA] Parâmetro `senderA`.
+ * @param {*} [tsB] Parâmetro `tsB`.
+ * @param {*} [senderB] Parâmetro `senderB`.
+ * @returns {*} Resultado da operação.
+ */
 export function isNewer(tsA, senderA, tsB, senderB) {
   const a = Number(tsA) || 0;
   const b = Number(tsB) || 0;
@@ -21,6 +41,11 @@ export function isNewer(tsA, senderA, tsB, senderB) {
   return String(senderA || "").localeCompare(String(senderB || "")) > 0;
 }
 
+/**
+ * Operação `validateStoreId` do módulo.
+ * @param {*} [id] Parâmetro `id`.
+ * @returns {*} Resultado da operação.
+ */
 export function validateStoreId(id) {
   if (typeof id !== "string" || !id.trim()) {
     throw new Error("ID do item deve ser uma string não vazia");
@@ -32,6 +57,11 @@ export function validateStoreId(id) {
   return clean;
 }
 
+/**
+ * Operação `validateTimestamp` do módulo.
+ * @param {*} [ts] Parâmetro `ts`.
+ * @returns {*} Resultado da operação.
+ */
 export function validateTimestamp(ts) {
   const num = Number(ts);
   if (!Number.isFinite(num) || num <= 0) {
@@ -63,6 +93,10 @@ function sortOrderDeterministically(order, items) {
   });
 }
 
+/**
+ * Operação `default` do módulo.
+ * @type {*}
+ */
 export class IdLookupStore {
   constructor(initialState = {}) {
     this.items = new Map();
@@ -292,6 +326,11 @@ export class IdLookupStore {
   }
 }
 
+/**
+ * Operação `createIdLookupStore` do módulo.
+ * @param {*} [initialState] Parâmetro `initialState`.
+ * @returns {*} Resultado da operação.
+ */
 export function createIdLookupStore(initialState = {}) {
   return new IdLookupStore(initialState);
 }
@@ -462,6 +501,10 @@ function upsertRemoteItemIfNewer({ items, order, id, raw, rTs, rSender }) {
   }
 }
 
+/**
+ * Operação `default` do módulo.
+ * @type {*}
+ */
 export class EpochCompactor {
   constructor({
     channelId,
@@ -540,6 +583,11 @@ export class EpochCompactor {
   }
 }
 
+/**
+ * Operação `createEpochCompactor` do módulo.
+ * @param {*} [options] Parâmetro `options`.
+ * @returns {*} Resultado da operação.
+ */
 export function createEpochCompactor(options) {
   return new EpochCompactor(options);
 }
@@ -562,6 +610,11 @@ async function postSnapshotToRelay(relayUrl, channelId, payload, fetchImpl) {
   return res.json();
 }
 
+/**
+ * Operação `coldBootFetch` do módulo.
+ * @param {Object} options `channelId`, `relayUrl` e `fetchImpl` opcional.
+ * @returns {*} Resultado da operação.
+ */
 export async function coldBootFetch({ channelId, relayUrl, fetchImpl = globalThis.fetch }) {
   const base = String(relayUrl || "").replace(/\/+$/, "");
   const baseData = await fetchBaseSnapshot(base, channelId, fetchImpl);

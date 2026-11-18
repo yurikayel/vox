@@ -8,6 +8,10 @@
  * 4. Injeção de Prelude de bloqueio WebRTC e CSP de rede zero (connect-src 'none').
  */
 
+/**
+ * Operação `PRELUDE_SCRIPT` do módulo.
+ * @type {*}
+ */
 export const PRELUDE_SCRIPT = `
 (function() {
   try {
@@ -18,9 +22,17 @@ export const PRELUDE_SCRIPT = `
 })();
 `.trim();
 
+/**
+ * Operação `CSP_META_TAG` do módulo.
+ * @type {*}
+ */
 export const CSP_META_TAG =
   '<meta http-equiv="Content-Security-Policy" content="default-src \'none\'; script-src \'unsafe-inline\' data:; style-src \'unsafe-inline\' data:; img-src data:; font-src data:; media-src data:; connect-src \'none\';">';
 
+/**
+ * Operação `MIME_TYPES` do módulo.
+ * @type {*}
+ */
 export const MIME_TYPES = {
   png: "image/png",
   jpg: "image/jpeg",
@@ -36,6 +48,11 @@ export const MIME_TYPES = {
   json: "application/json",
 };
 
+/**
+ * Operação `decompressDeflateRaw` do módulo.
+ * @param {*} [bytes] Parâmetro `bytes`.
+ * @returns {*} Resultado da operação.
+ */
 export async function decompressDeflateRaw(bytes) {
   if (typeof DecompressionStream === "undefined") {
     throw new Error("DecompressionStream não suportado neste ambiente");
@@ -65,6 +82,11 @@ function concatChunks(chunks) {
   return out;
 }
 
+/**
+ * Operação `parseZipEntries` do módulo.
+ * @param {*} [buffer] Parâmetro `buffer`.
+ * @returns {*} Resultado da operação.
+ */
 export async function parseZipEntries(buffer) {
   const bytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
@@ -106,6 +128,12 @@ async function parseLocalHeader(bytes, view, pos) {
   return { entry: data ? { name, data } : null, nextPos: dataStart + compSize };
 }
 
+/**
+ * Operação `bufferToDataUrl` do módulo.
+ * @param {*} [bytes] Parâmetro `bytes`.
+ * @param {*} [mimeType] Parâmetro `mimeType`.
+ * @returns {*} Resultado da operação.
+ */
 export function bufferToDataUrl(bytes, mimeType = "application/octet-stream") {
   let bin = "";
   const arr = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
@@ -115,11 +143,22 @@ export function bufferToDataUrl(bytes, mimeType = "application/octet-stream") {
   return `data:${mimeType};base64,${btoa(bin)}`;
 }
 
+/**
+ * Operação `detectMimeType` do módulo.
+ * @param {*} [filename] Parâmetro `filename`.
+ * @returns {*} Resultado da operação.
+ */
 export function detectMimeType(filename) {
   const ext = String(filename).split(".").pop().toLowerCase();
   return MIME_TYPES[ext] || "application/octet-stream";
 }
 
+/**
+ * Operação `buildWebxdcBridgeScript` do módulo.
+ * @param {*} [selfName] Parâmetro `selfName`.
+ * @param {*} [selfAddr] Parâmetro `selfAddr`.
+ * @returns {*} Resultado da operação.
+ */
 export function buildWebxdcBridgeScript(selfName = "Cidadão Vox", selfAddr = "vx_local") {
   const jsonName = JSON.stringify(selfName);
   const jsonAddr = JSON.stringify(selfAddr);
@@ -144,6 +183,12 @@ export function buildWebxdcBridgeScript(selfName = "Cidadão Vox", selfAddr = "v
 </script>`.trim();
 }
 
+/**
+ * Operação `inlineCartridgeAssets` do módulo.
+ * @param {*} [html] Parâmetro `html`.
+ * @param {*} [entries] Parâmetro `entries`.
+ * @returns {*} Resultado da operação.
+ */
 export function inlineCartridgeAssets(html, entries) {
   let processed = html;
 
@@ -178,6 +223,12 @@ export function inlineCartridgeAssets(html, entries) {
   return processed;
 }
 
+/**
+ * Operação `prepareSandboxedSrcdoc` do módulo.
+ * @param {*} [entries] Parâmetro `entries`.
+ * @param {Object} [options] `selfName` e `selfAddr` do bridge sandbox.
+ * @returns {*} Resultado da operação.
+ */
 export function prepareSandboxedSrcdoc(entries, { selfName = "Cidadão Vox", selfAddr = "vx_local" } = {}) {
   const indexFile = entries["index.html"] || entries["./index.html"];
   if (!indexFile) {

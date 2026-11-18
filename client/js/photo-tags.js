@@ -4,7 +4,15 @@
  */
 
 const TAGS_KEY = "vox-photo-tags-v1";
+/**
+ * Operação `TAGS_MAX` do módulo.
+ * @type {*}
+ */
 export const TAGS_MAX = 12;
+/**
+ * Operação `TAGS_HINT` do módulo.
+ * @type {*}
+ */
 export const TAGS_HINT =
   "Marca local; quem não está na sua agenda não é notificado magicamente.";
 
@@ -27,12 +35,22 @@ function saveAll(map) {
   }
 }
 
+/**
+ * Operação `clampPct` do módulo.
+ * @param {*} [n] Parâmetro `n`.
+ * @returns {*} Resultado da operação.
+ */
 export function clampPct(n) {
   const v = Number(n);
   if (!Number.isFinite(v)) return 0;
   return Math.max(0, Math.min(100, Math.round(v * 10) / 10));
 }
 
+/**
+ * Operação `normalizeTag` do módulo.
+ * @param {*} [raw] Parâmetro `raw`.
+ * @returns {*} Resultado da operação.
+ */
 export function normalizeTag(raw) {
   const targetId = String(raw?.targetId || "").trim().slice(0, 80);
   if (!targetId) return null;
@@ -44,6 +62,11 @@ export function normalizeTag(raw) {
   };
 }
 
+/**
+ * Operação `sanitizeTags` do módulo.
+ * @param {*} [list] Parâmetro `list`.
+ * @returns {*} Resultado da operação.
+ */
 export function sanitizeTags(list) {
   if (!Array.isArray(list)) return [];
   const out = [];
@@ -60,12 +83,23 @@ export function sanitizeTags(list) {
   return out;
 }
 
+/**
+ * Operação `getLocalTags` do módulo.
+ * @param {*} [postId] Parâmetro `postId`.
+ * @returns {*} Resultado da operação.
+ */
 export function getLocalTags(postId) {
   const id = String(postId || "").trim();
   if (!id) return [];
   return sanitizeTags(loadAll()[id]);
 }
 
+/**
+ * Operação `setLocalTags` do módulo.
+ * @param {*} [postId] Parâmetro `postId`.
+ * @param {*} [tags] Parâmetro `tags`.
+ * @returns {*} Resultado da operação.
+ */
 export function setLocalTags(postId, tags) {
   const id = String(postId || "").trim();
   if (!id) return [];
@@ -77,16 +111,30 @@ export function setLocalTags(postId, tags) {
   return clean;
 }
 
+/**
+ * Operação `listTags` do módulo.
+ * @param {*} [post] Parâmetro `post`.
+ * @returns {*} Resultado da operação.
+ */
 export function listTags(post) {
   const fromPost = sanitizeTags(post?.photoTags);
   if (fromPost.length) return fromPost;
   return getLocalTags(post?.id);
 }
 
+/**
+ * Operação `addTag` do módulo.
+ * @param {*} [list] Parâmetro `list`.
+ * @param {*} [raw] Parâmetro `raw`.
+ * @returns {*} Resultado da operação.
+ */
 export function addTag(list, raw) {
   return sanitizeTags([...(list || []), raw]);
 }
 
+/**
+ * Reseta estado de teste (`__resetPhotoTagsForTests`).
+ */
 export function __resetPhotoTagsForTests() {
   try {
     localStorage.removeItem(TAGS_KEY);
