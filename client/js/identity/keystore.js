@@ -50,19 +50,56 @@ function requestToPromise(req) {
   });
 }
 
-function openDb() {
+/** Conexões abertas agora: "Apagar conta local" precisa fechá-las, senão o navegador segura a remoção do banco. */
+const openConnections = new Set();
+
+function releaseConnection(db) {
+  openConnections.delete(db);
+  try {
+    db.close();
+  } catch {
+    /* conexão já fechada */
+  }
+}
+
+async function openDb() {
   const idb = globalThis.indexedDB;
-  if (!idb?.open) return Promise.resolve(null);
+  if (!idb?.open) return null;
   const req = idb.open(DB_NAME, 1);
   req.onupgradeneeded = (event) => {
     const db = event?.target?.result || req.result;
     if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE, { keyPath: "id" });
   };
-  return requestToPromise(req);
+  const db = await requestToPromise(req);
+  openConnections.add(db);
+  // Outra aba (ou a limpeza local) quer apagar o banco: solta esta conexão em vez de travá-la.
+  db.onversionchange = () => releaseConnection(db);
+  return db;
 }
 
-function storeOf(db, mode) {
-  return db.transaction(STORE, mode).objectStore(STORE);
+/**
+ * Abre o banco, roda `run` sobre o armazém e fecha a conexão no fim (nada fica aberto entre chamadas).
+ * @param {IDBTransactionMode} mode
+ * @param {(store: IDBObjectStore) => Promise<any>} run
+ * @returns {Promise<any>} o que `run` devolveu, ou null se o IndexedDB não existe
+ */
+async function inStore(mode, run) {
+  const db = await openDb();
+  if (!db) return null;
+  try {
+    return await run(db.transaction(STORE, mode).objectStore(STORE));
+  } finally {
+    releaseConnection(db);
+  }
+}
+
+/**
+ * Fecha as conexões abertas e esquece a chave do aparelho em memória; chamado antes de apagar `vox-keystore`.
+ * Sem isso, a chave seguiria viva na aba depois que a cópia guardada sumiu.
+ */
+export function closeKeystore() {
+  for (const db of [...openConnections]) releaseConnection(db);
+  devicePromise = null;
 }
 
 /**
@@ -71,9 +108,7 @@ function storeOf(db, mode) {
  * @returns {Promise<CryptoKey|null>}
  */
 export async function loadKey(id) {
-  const db = await openDb();
-  if (!db) return null;
-  const entry = await requestToPromise(storeOf(db, "readonly").get(id));
+  const entry = await inStore("readonly", (store) => requestToPromise(store.get(id)));
   return entry?.key || null;
 }
 
@@ -84,10 +119,8 @@ export async function loadKey(id) {
  * @returns {Promise<CryptoKey|null>}
  */
 export async function storeKey(id, key) {
-  const db = await openDb();
-  if (!db) return null;
-  await requestToPromise(storeOf(db, "readwrite").put({ id, key, createdAt: Date.now() }));
-  return loadKey(id);
+  const wrote = await inStore("readwrite", (store) => requestToPromise(store.put({ id, key, createdAt: Date.now() })));
+  return wrote === null ? null : loadKey(id);
 }
 
 /**
@@ -96,8 +129,7 @@ export async function storeKey(id, key) {
  * @returns {Promise<void>}
  */
 export async function removeKey(id) {
-  const db = await openDb();
-  if (db) await requestToPromise(storeOf(db, "readwrite").delete(id));
+  await inStore("readwrite", (store) => requestToPromise(store.delete(id)));
 }
 
 async function loadOrCreateDeviceKey() {

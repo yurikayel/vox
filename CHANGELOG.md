@@ -6,6 +6,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Correção: "Apagar conta local" apaga de fato e só diz "apagadas" quando apagou
+- Sai também a credencial TURN própria (`vox-custom-turn-config`) e o cache de apelidos→endereço (`vox-handles-cache`); antes ambos ficavam na lista de "neutros". O cofre de chaves (`keystore.js`) fecha cada conexão ao terminar a operação, atende o aviso de versão e `closeKeystore()` solta tudo (e esquece a chave do aparelho em memória) antes de `deleteDatabase`; o armazém de laboratório (`vox-store-db`) também solta a conexão no aviso de versão. Banco que o navegador bloqueia (outra aba segurando) não conta mais como apagado: `wipeLocalDevice` devolve `{ complete, pending }` e o Perfil mostra aviso de erro pedindo para fechar as outras abas. Sem bump de SW (`CACHE_NAME` só no release). Testes: `tests/device-wipe.test.js`.
+
 ### Correção: avisa no passo de criação quando a conta não grava no aparelho
 - `ensureLocalAccount` registra falha de quota/bloqueio e o onboarding mostra aviso em `#oauth-enrich-error` sem travar o fluxo. Testes: `tests/local-account-storage-full.test.js`, `tests/onboarding-steps.test.js`.
 
