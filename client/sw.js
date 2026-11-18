@@ -214,6 +214,7 @@ const SHELL_ASSETS = [
   "./js/identity/index.js",
   "./js/identity/keys.js",
   "./js/identity/local-account.js",
+  "./js/identity/tab-sync.js",
   "./js/account-social-match.js",
   "./js/sig-format.js",
   "./js/signed-verify.js",
