@@ -53,6 +53,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 | Modelo de ameaças | [THREAT-MODEL.md](./THREAT-MODEL.md) |
 | Dependências e cadeia de suprimentos | [DEPENDENCIAS.md](./DEPENDENCIAS.md) |
 | Resposta a incidentes | [runbook-incidentes.md](./operations/runbook-incidentes.md) |
+| TURN em produção e segundo nó de sinalização | [turn-e-segundo-no.md](./operations/turn-e-segundo-no.md) |
 | Mutex de agentes | [metodo-agentes-mutex-e-revisor.md](./process/metodo-agentes-mutex-e-revisor.md) |
 | Evidência de testes, falso verde e auditoria | [qualidade-e-evidencia.md](./process/qualidade-e-evidencia.md) |
 | Norma de documentação (código e docs técnicos, `npm run audit:docs`) | [documentacao.md](./process/documentacao.md) |

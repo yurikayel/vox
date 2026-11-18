@@ -23,6 +23,8 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ### Documentação: RFC 0002 propõe autenticar o snapshot do relay cego (lacuna 12 do `relay-api.md`)
 - `docs/rfc/0002-snapshot-autenticado-do-relay-cego.md`: prova de dono por cabeçalho no padrão do ADR-027, teto de salto de `coveredSerial` e `epoch`, idempotência, modos `compat`/`enforce`, ataques e testes que fecham os `skip`. **Só proposta, sem código** (`relay/*.py` intocado); decisões D1–D7 pendentes do dono. `docs/specs/relay-api.md` marca a lacuna 12 como proposta. Sem bump de SW.
+### Docs: runbook de TURN em produção e segundo nó de sinalização (R10)
+- `docs/operations/turn-e-segundo-no.md`: estado medido, caminho A (Worker Cloudflare), caminho B (coturn), segundo nó com failover e variáveis do relay, checklists e decisões do dono. Só documento; limites de free tier marcados NÃO VERIFICADO. Sem bump de SW.
 ### Correção: `Access-Control-Allow-Origin` sai de constante, não do cabeçalho `Origin` (CodeQL 283, py/http-response-splitting)
 - `request_guard.cors_allow_origin` devolve a entrada correspondente de `APP_ORIGINS` / `VOX_RELAY_ALLOWED_ORIGINS` (ou a origem de loopback reconstruída de esquema e nome fixos e porta numérica) em vez de ecoar o texto recebido, e recusa origem com CR, LF, tab, espaço, NUL ou outro caractere de controle antes de comparar. Origem de loopback com caminho, usuário ou porta inválida deixa de receber CORS. Testes: `relay/test_cors_origens.py` (13). Sem bump de SW.
 ### CI: `red-on-base` só roda contra a base em PR `fix:`; teste de importar posts não depende de turnos do loop
