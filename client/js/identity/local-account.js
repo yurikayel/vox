@@ -39,6 +39,7 @@ const LOCAL_WIPE_KEYS = [
 
 let cachedAccount = null;
 let ensureLocalAccountInflight = null;
+let accountPersistIssue = null;
 
 /**
  * Grava a conta ativa (chave privada já na forma guardada: cifrada ou travada).
@@ -48,7 +49,13 @@ let ensureLocalAccountInflight = null;
 export function storeActiveAccount(acc) {
   cachedAccount = acc;
   localStorage.setItem(ACCOUNT_STORAGE, JSON.stringify(acc));
+  accountPersistIssue = null;
   return acc;
+}
+
+/** @returns {{ reason: string } | null} falha ao criar conta neste aparelho, ou `null` se ok. */
+export function getAccountStorageIssue() {
+  return accountPersistIssue;
 }
 
 async function loadStoredLocalAccount() {
@@ -113,7 +120,12 @@ export async function ensureLocalAccount() {
       return cachedAccount;
     }
     const fresh = await generateNewAccountKeys();
-    try { storeActiveAccount(fresh); } catch { cachedAccount = fresh; }
+    try {
+      storeActiveAccount(fresh);
+    } catch (err) {
+      accountPersistIssue = { reason: err?.name || "storage_blocked" };
+      cachedAccount = fresh;
+    }
     syncCurrentAccountMetadataToVault();
     return cachedAccount;
   })();
@@ -475,6 +487,7 @@ export function setMeshDiscoverable(on) {
  */
 export function wipeLocalAccount() {
   cachedAccount = null;
+  accountPersistIssue = null;
   dropStorageKeys(localStorage, LOCAL_WIPE_KEYS);
   dropSessionPassphrase();
   return keyLock.forgetAllLockedAccounts().catch(() => {});

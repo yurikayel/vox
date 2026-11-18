@@ -136,6 +136,35 @@ test("validateEmailEntryIssue mapeia foco ao campo que falhou (LT-07)", async ()
   for (const id of Object.values(focusIds)) assert.ok(c.innerHTML.includes(`id="${id}"`), id);
 });
 
+test("warnIfAccountNotPersisted expõe API (RED na base)", async () => {
+  const mod = await import("../client/js/app/onboarding.js");
+  assert.equal(typeof mod.warnIfAccountNotPersisted, "function");
+});
+
+test("warnIfAccountNotPersisted mostra aviso em oauth-enrich-error", async () => {
+  const { errorEl, doc } = oauthErrorDom();
+  const prev = globalThis.document;
+  globalThis.document = doc;
+  const orig = localStorage.setItem.bind(localStorage);
+  localStorage.setItem = (key, val) => {
+    if (key === "vox-local-account-v1") throw new DOMException("quota", "QuotaExceededError");
+    return orig(key, val);
+  };
+  try {
+    localStorage.clear();
+    const localAccount = await import("../client/js/identity/local-account.js");
+    await localAccount.wipeLocalAccount();
+    await localAccount.ensureLocalAccount();
+    const { warnIfAccountNotPersisted } = await import("../client/js/app/onboarding.js");
+    warnIfAccountNotPersisted();
+    assert.match(errorEl.textContent, /armazenamento cheio ou bloqueado/);
+    assert.equal(errorEl.hidden, false);
+  } finally {
+    localStorage.setItem = orig;
+    globalThis.document = prev;
+  }
+});
+
 test("setOAuthEnrichError com mensagem vazia esconde e não foca", async () => {
   const { errorEl, passEl, doc } = oauthErrorDom();
   const prev = globalThis.document;
