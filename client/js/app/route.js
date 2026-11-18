@@ -1,6 +1,6 @@
 /** @file Hash router — dispatches to screen modules. */
 import { closePostMoreMenu } from "./post-more-menu.js";
-import { parseRoute } from "./route-parse.js";
+import { parseRoute, routeTitle } from "./route-parse.js";
 import { setRoute } from "./navigation.js";
 import { checkCantinaGate } from "./onboarding.js";
 import { showHome, showCommunities, showTagFeed } from "./screens-home.js";
@@ -76,6 +76,24 @@ const ROUTE_DISPATCH_TABLE = {
 };
 
 /**
+ * Atualiza `document.title` e move o foco para o h1 da tela (tabindex -1, sem entrar na ordem de Tab).
+ * Sem h1 na tela, o foco não se mexe.
+ *
+ * @param {{name?: string}} route Descritor da rota aplicada.
+ * @param {Document} [doc] Documento (injetável nos testes).
+ * @returns {boolean} `true` se um h1 recebeu o foco.
+ */
+export function announceRoute(route, doc = globalThis.document) {
+  if (!doc) return false;
+  doc.title = routeTitle(route);
+  const h1 = doc.querySelector("#app-root h1") || doc.querySelector("h1");
+  if (!h1) return false;
+  if (!h1.hasAttribute("tabindex")) h1.setAttribute("tabindex", "-1");
+  h1.focus({ preventScroll: true });
+  return true;
+}
+
+/**
  * Aplica a rota atual: fecha menus, checa portão e despacha para a tela.
  *
  * @returns {Promise<void>}
@@ -85,7 +103,9 @@ export async function routeImpl() {
   checkCantinaGate();
   const r = parseRoute();
   const handler = ROUTE_DISPATCH_TABLE[r.name] || (() => showHome());
-  return await handler(r);
+  const result = await handler(r);
+  announceRoute(r);
+  return result;
 }
 
 /**

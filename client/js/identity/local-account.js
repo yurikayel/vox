@@ -39,6 +39,8 @@ const LOCAL_WIPE_KEYS = [
 
 let cachedAccount = null;
 let ensureLocalAccountInflight = null;
+// Sobe a cada `wipeLocalAccount`: criação em voo que começou numa época anterior não grava mais nada.
+let wipeEpoch = 0;
 let accountPersistIssue = null;
 
 /**
@@ -58,16 +60,42 @@ export function getAccountStorageIssue() {
   return accountPersistIssue;
 }
 
-async function loadStoredLocalAccount() {
+async function loadStoredLocalAccount(epoch) {
   try {
     const stored = localStorage.getItem(ACCOUNT_STORAGE);
     if (!stored) return null;
     const parsed = JSON.parse(stored);
     if (parsed?.routeId && parsed?.publicJwk && parsed?.privateJwk) {
-      await cryptoDm.ensureDmKeys();
+      const dm = await cryptoDm.ensureDmKeys();
+      if (epoch !== wipeEpoch) dropDmKeypairOf(dm.publicJwk);
       return parsed;
     }
   } catch {}
+  return null;
+}
+
+/** Tira a chave de DM do armazenamento só se for a deste par; a de outra conta (mais nova) fica. */
+function dropDmKeypairOf(publicJwk) {
+  try {
+    const stored = JSON.parse(localStorage.getItem(DM_KEYPAIR_STORAGE) || "null");
+    if (JSON.stringify(stored?.publicJwk) === JSON.stringify(publicJwk)) localStorage.removeItem(DM_KEYPAIR_STORAGE);
+  } catch {}
+}
+
+/**
+ * Cria conta nova, mas só grava a chave de DM se o wipe não rodou no meio. Se rodou, desfaz o que já foi gravado
+ * (semente e chave de DM) e devolve `null`: a conta apagada não pode voltar.
+ */
+async function createAccountUnlessWiped(epoch) {
+  const born = await identitySeed.createSeededAccount();
+  let account = null;
+  if (epoch === wipeEpoch) {
+    await cryptoDm.setDmKeypair(born.dmKeypair);
+    account = { routeId: born.routeId, publicJwk: born.publicJwk, privateJwk: await sealJson(born.privateJwk), createdAt: Date.now() };
+  }
+  if (account && epoch === wipeEpoch) return account;
+  dropDmKeypairOf(born.dmKeypair.publicJwk);
+  identitySeed.forgetSeed(born.routeId);
   return null;
 }
 
@@ -106,33 +134,40 @@ function syncCurrentAccountMetadataToVault() {
   } catch {}
 }
 
+/** Uma tentativa de achar ou criar a conta; `null` se o wipe rodou no meio (nada foi gravado em nome da conta apagada). */
+async function resolveLocalAccount(epoch) {
+  const existing = await loadStoredLocalAccount(epoch);
+  if (epoch !== wipeEpoch) return null;
+  if (existing) {
+    cachedAccount = existing;
+    syncCurrentAccountMetadataToVault();
+    return cachedAccount;
+  }
+  const fresh = await createAccountUnlessWiped(epoch);
+  if (!fresh) return null;
+  try {
+    storeActiveAccount(fresh);
+  } catch (err) {
+    accountPersistIssue = { reason: err?.name || "storage_blocked" };
+    cachedAccount = fresh;
+  }
+  syncCurrentAccountMetadataToVault();
+  return cachedAccount;
+}
+
 /**
  * Conta ativa deste navegador; cria uma nova (chaves P-256) se ainda não houver. Chamadas concorrentes compartilham a mesma criação em voo (mesma conta para todos).
+ * Se `wipeLocalAccount` rodar no meio, o que estava em voo é descartado sem gravar nada e quem esperava recebe a conta nova (nunca a apagada).
  * @returns {Promise<{ routeId: string, publicJwk: object, privateJwk: object, createdAt: number }>}
  */
 export async function ensureLocalAccount() {
   if (ensureLocalAccountInflight) return ensureLocalAccountInflight;
-  ensureLocalAccountInflight = (async () => {
-    const existing = await loadStoredLocalAccount();
-    if (existing) {
-      cachedAccount = existing;
-      syncCurrentAccountMetadataToVault();
-      return cachedAccount;
-    }
-    const fresh = await generateNewAccountKeys();
-    try {
-      storeActiveAccount(fresh);
-    } catch (err) {
-      accountPersistIssue = { reason: err?.name || "storage_blocked" };
-      cachedAccount = fresh;
-    }
-    syncCurrentAccountMetadataToVault();
-    return cachedAccount;
-  })();
+  const run = resolveLocalAccount(wipeEpoch).then((acc) => acc || ensureLocalAccount());
+  ensureLocalAccountInflight = run;
   try {
-    return await ensureLocalAccountInflight;
+    return await run;
   } finally {
-    ensureLocalAccountInflight = null;
+    if (ensureLocalAccountInflight === run) ensureLocalAccountInflight = null;
   }
 }
 
@@ -486,6 +521,8 @@ export function setMeshDiscoverable(on) {
  * @returns {Promise<void>}
  */
 export function wipeLocalAccount() {
+  wipeEpoch += 1;
+  ensureLocalAccountInflight = null;
   cachedAccount = null;
   accountPersistIssue = null;
   dropStorageKeys(localStorage, LOCAL_WIPE_KEYS);
