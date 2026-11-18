@@ -6,6 +6,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Correção: relay atende várias conexões e o 413 chega legível
+- `relay/server.py` usava `HTTPServer` (uma conexão por vez, sem prazo de socket): um cliente lento travava todos. Agora é `VoxRelayServer` (`ThreadingHTTPServer`, threads daemon, teto de 64 conexões em `VOX_RELAY_MAX_CONNECTIONS`) e cada leitura/escrita tem prazo de 10 s (`VOX_RELAY_SOCKET_TIMEOUT`). `inbox.py` e `vault_store.save_vault` ganharam lock (um leitor podia ver o JSON pela metade e apagar a mensagem; dois pedidos simultâneos podiam virar os dois dono do mesmo cofre).
+- Respostas 413/429 fechavam sem ler o corpo e o cliente recebia reset (erro 10053 no Windows). Agora toda resposta traz `Content-Length` e `Connection: close`, e o relay drena até 1 MiB (máx. 2 s) do corpo pendente antes de fechar. `blind_relay.store_envelope` passa a sanear o `nonce` do envelope (virava parte do nome do arquivo; com `../` ou `\` escapava do diretório do canal). Testes: `relay/test_relay_threading.py` (10). Sem bump de SW.
 ### Correção: "Apagar conta local" apaga de fato e só diz "apagadas" quando apagou
 - Sai também a credencial TURN própria (`vox-custom-turn-config`) e o cache de apelidos→endereço (`vox-handles-cache`); antes ambos ficavam na lista de "neutros". O cofre de chaves (`keystore.js`) fecha cada conexão ao terminar a operação, atende o aviso de versão e `closeKeystore()` solta tudo (e esquece a chave do aparelho em memória) antes de `deleteDatabase`; o armazém de laboratório (`vox-store-db`) também solta a conexão no aviso de versão. Banco que o navegador bloqueia (outra aba segurando) não conta mais como apagado: `wipeLocalDevice` devolve `{ complete, pending }` e o Perfil mostra aviso de erro pedindo para fechar as outras abas. Sem bump de SW (`CACHE_NAME` só no release). Testes: `tests/device-wipe.test.js`.
 

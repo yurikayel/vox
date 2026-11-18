@@ -61,7 +61,7 @@ def store_envelope(channel_id: str, envelope: Dict[str, Any], ttl_seconds: int =
         raise ValueError(f"Envelope excede o tamanho máximo de {MAX_ENVELOPE_SIZE} bytes")
 
     ts = int(envelope.get("timestamp") or (time.time() * 1000))
-    nonce = str(envelope.get("nonce") or "")[:16]
+    nonce = "".join(c for c in str(envelope.get("nonce") or "")[:16] if c.isalnum() or c in ("-", "_"))
     msg_id = f"env_{ts}_{nonce}"
 
     with _RELAY_LOCK:
