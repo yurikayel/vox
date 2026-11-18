@@ -2,6 +2,7 @@
  * @file Cliente GraphQL Arweave — gateways, comunidades, tópicos e cache de DM pub.
  */
 
+import { fetchWithTimeout } from "./fetch-timeout.js";
 import { honestMessage } from "./honest-errors.js";
 import * as cacheNode from "./cache-node.js";
 import * as peers from "./peers.js";
@@ -276,7 +277,7 @@ const dataCache = new Map();
  */
 export async function loadConfig() {
   if (gatewayConfig) return gatewayConfig;
-  const res = await fetch("./config/gateways.json");
+  const res = await fetchWithTimeout("./config/gateways.json");
   gatewayConfig = await res.json();
   return gatewayConfig;
 }
@@ -354,13 +355,12 @@ function mapReply(node) {
 const GATEWAY_TIMEOUT_MS = 8000;
 
 async function queryOne(gqlUrl, query, variables) {
-  const res = await fetch(gqlUrl, {
+  const res = await fetchWithTimeout(gqlUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ query, variables }),
     // LAN-27: gateway lento não segura a leitura; 402/429/5xx caem para o próximo.
-    signal: AbortSignal.timeout(GATEWAY_TIMEOUT_MS),
-  });
+  }, { timeoutMs: GATEWAY_TIMEOUT_MS });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const json = await res.json();
   if (json.errors?.length) throw new Error(json.errors[0].message);
@@ -432,7 +432,7 @@ function isValidRawResponse(res, text) {
 
 async function tryFetchRawFromUrl(url, label) {
   try {
-    const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
+    const res = await fetchWithTimeout(url, {}, { timeoutMs: 6000 });
     const text = await res.text();
     if (!isValidRawResponse(res, text)) {
       recordGatewayAttempt(label, false);
