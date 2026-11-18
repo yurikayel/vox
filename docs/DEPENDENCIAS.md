@@ -63,6 +63,7 @@ Desde o PM-95 toda action é fixada pelo **SHA do commit**, com a versão em com
 | `actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d` | v6.0.0 | `deploy-pages.yml` | Oficial do GitHub. |
 | `actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9` | v5.0.0 | `deploy-pages.yml` | Oficial do GitHub. |
 | `actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346` | v5.0.1 | `deploy-pages.yml` | Oficial do GitHub. |
+| `actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c` | v8.0.1 | `release-binarios.yml` | Oficial do GitHub. Leva os binários do job de build ao job `publicar`. |
 | `actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8` | v4.2.2 | `release-binarios.yml` | Oficial do GitHub. Gera a atestação de origem dos binários (PM-45). |
 | `github/codeql-action/init@33d7b85da1a04171e211befe2c739303b9a4c066` | v4.39.3 | `codeql.yml` | Oficial do GitHub. SAST (PM-95). |
 | `github/codeql-action/analyze@33d7b85da1a04171e211befe2c739303b9a4c066` | v4.39.3 | `codeql.yml` | Oficial do GitHub. SAST (PM-95). |
