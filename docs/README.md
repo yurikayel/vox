@@ -36,6 +36,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 | [`legal/`](./legal/) | Conformidade (LGPD, Marco Civil) e licença |
 | [`design/`](./design/) · [`branding/`](./branding/) | Design system Sovereign Agora e arquivos de marca |
 | [`metrics/`](./metrics/) | Baselines de complexidade geradas por `npm run audit:complexity` |
+| [`security/`](./security/) | Triagens de CodeQL e notas de release de segurança |
 | [`archive/`](./archive/) | Planos e brainstorms SUPERSEDED, mantidos como histórico |
 | [`agent-reports/`](./agent-reports/) | Relatórios de agentes (template do workspace) |
 
@@ -51,6 +52,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 | Testes e CI | [TESTES.md](./TESTES.md) |
 | Limites de complexidade | [HARDENING.md](./HARDENING.md) |
 | Modelo de ameaças | [THREAT-MODEL.md](./THREAT-MODEL.md) |
+| Triagem CodeQL do release #262 | [codeql-pr262-triagem.md](./security/codeql-pr262-triagem.md) |
 | Dependências e cadeia de suprimentos | [DEPENDENCIAS.md](./DEPENDENCIAS.md) |
 | Resposta a incidentes | [runbook-incidentes.md](./operations/runbook-incidentes.md) |
 | TURN em produção e segundo nó de sinalização | [turn-e-segundo-no.md](./operations/turn-e-segundo-no.md) |
