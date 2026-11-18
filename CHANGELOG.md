@@ -6,6 +6,8 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Correção: apagar conta no meio da criação não traz a conta de volta
+- `wipeLocalAccount` passa a incrementar uma época e soltar a criação em voo de `ensureLocalAccount`; a criação confere a época antes de gravar conta, chave de DM e entrada no cofre local e, se o wipe rodou no meio, desfaz a semente e a chave de DM que já tinha gravado. Quem esperava recebe a conta nova, nunca a apagada; chamada feita depois do wipe não entra mais na criação antiga. Duas abas (conta que ressuscita na outra aba) continua fora. `client/sw.js` e `CACHE_NAME` não mudaram. Testes: `tests/local-account-wipe-race.test.js`.
 ### Correção: vazamentos de WebSocket de sinalização e de listener no lab Open Frames
 - `connectSignaling` reaproveita o socket vivo da mesma URL (ou solta e fecha o antigo) em vez de abrir um novo a cada `savePeerSettings`/`initWebRtc`, inclusive em chamadas concorrentes. O lab Open Frames remove o listener `message` ao remontar e ao sair da rota (`hashchange`). `client/sw.js` intocado (CACHE_NAME só no release). Testes: `tests/vazamentos-ws-labs.test.js`.
 ### Documentação: modelo de ameaças com cinco ameaças abertas (T30–T34)
