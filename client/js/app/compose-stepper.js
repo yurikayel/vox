@@ -109,13 +109,6 @@ export function goToComposeStep(form, index) {
 }
 
 /**
- * Liga Voltar/Continuar. Registrar ANTES do handler de publicação: um submit fora da última
- * etapa (ex.: Enter num campo) vira "Continuar" e não publica.
- *
- * @param {HTMLFormElement} form Formulário do compositor em etapas.
- * @returns {void}
- */
-/**
  * Reposiciona o foco após publicação em formulário em etapas (antes de sair da rota).
  * @param {string} [message] Anúncio curto para leitores de tela.
  * @returns {void}
@@ -124,6 +117,13 @@ export function focusComposeAfterSteppedPublish(message) {
   focusAfterComposePublish({ message });
 }
 
+/**
+ * Liga Voltar/Continuar. Registrar ANTES do handler de publicação: um submit fora da última
+ * etapa (ex.: Enter num campo) vira "Continuar" e não publica.
+ *
+ * @param {HTMLFormElement} form Formulário do compositor em etapas.
+ * @returns {void}
+ */
 export function bindComposeStepper(form) {
   if (!form || form.dataset.stepperBound === "1") return;
   form.dataset.stepperBound = "1";
