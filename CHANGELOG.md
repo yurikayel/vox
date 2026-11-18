@@ -8,6 +8,12 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ### Correção: sinalização (`signaling.py`) com a mesma política de origem do relay completo (R6)
 - Fim do `Access-Control-Allow-Origin: *` e do `Allow-Headers: *`: o CORS usa `request_guard.cors_allow_origin` (valor da lista, `Vary: Origin` sempre, nada de `Allow-*` para origem estranha). O handshake do WebSocket recusa com `403` `Origin` fora da lista ou com caractere de controle; sem `Origin` (cliente nativo, nó Linux) segue permitido. App no GitHub Pages/Cloudflare Pages e `localhost` continuam conectando. Testes: `relay/test_signaling_origem.py` (10); `test_signaling.py` não afirma mais `*`. Sem bump de SW.
+### Segurança: contêiner do relay roda como `vox` (não-root), sem senha de modelo no coturn e portas no host só em loopback
+- `relay/Dockerfile`: usuário `vox` (uid 10001), `USER vox`, `VOLUME` para `/app/.cache` e `/app/.inbox` (dono `vox`), `HEALTHCHECK` com stdlib em `/health`. A sinalização continua em `0.0.0.0` só dentro do contêiner.
+- `relay/deploy/docker-compose.yml`: portas 3921 e 3920 publicadas em `127.0.0.1` por padrão (`VOX_SIGNALING_BIND` / `VOX_RELAY_BIND` para abrir de propósito) e healthcheck por serviço.
+- `relay/deploy/turnserver.conf`: senha de modelo trocada por placeholder `__DEFINIR_SENHA_TURN__` (coturn recusa autenticação até o runbook definir a credencial real).
+- `relay/render.yaml`: comentário sobre `VOX_RELAY_TRUST_PROXY_HOPS` não definido; valor é decisão do dono do deploy.
+- Testes: `relay/test_infra_layout.py` (+4: USER não-root, HEALTHCHECK, sem senha no turnserver, publicação só em loopback). Build da imagem não rodado aqui (Docker indisponível): NOT RUN. Sem bump de SW.
 ### Correção: `Access-Control-Allow-Origin` sai de constante, não do cabeçalho `Origin` (CodeQL 283, py/http-response-splitting)
 - `request_guard.cors_allow_origin` devolve a entrada correspondente de `APP_ORIGINS` / `VOX_RELAY_ALLOWED_ORIGINS` (ou a origem de loopback reconstruída de esquema e nome fixos e porta numérica) em vez de ecoar o texto recebido, e recusa origem com CR, LF, tab, espaço, NUL ou outro caractere de controle antes de comparar. Origem de loopback com caminho, usuário ou porta inválida deixa de receber CORS. Testes: `relay/test_cors_origens.py` (13). Sem bump de SW.
 ### CI: `red-on-base` só roda contra a base em PR `fix:`; teste de importar posts não depende de turnos do loop
