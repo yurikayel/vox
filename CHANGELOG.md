@@ -50,6 +50,8 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 - Testes: `tests/jargao-ui.test.js` (novo, 4 casos; falham na base por asserção). Sem bump de SW.
 ### Testes: LT-08 E2E de login sem falso verde (S30-S2)
 - `scripts/login-e2e.mjs`: exit 1 em falha real; `pageerror` do Chromium passa a ser asserção (antes só acumulava); import do Playwright sem `catch` mudo; variáveis `PLAYWRIGHT_CORE_PATH` e `CHROMIUM_EXECUTABLE_PATH` documentadas no cabeçalho.
+### Testes: fumaça offline no navegador (S30)
+- `scripts/offline-e2e.mjs`: Chromium headless, só loopback; após precache do Service Worker, emula offline e recarrega (servidor local inalcançável), classifica falha de rede como `offline` e cria conta só com nome com chip **Offline** visível. Manual do mantenedor (fora do CI), mesmo modelo que `scripts/login-e2e.mjs`. Sem bump de SW.
 
 ### Correção: relay cego não perde deltas no cold boot; memória central confere item e blob
 - **Snapshot apaga por serial, não por timestamp:** só somem os envelopes com `0 < serial <= coveredSerial`; antes, um delta com relógio atrasado e serial acima da cobertura era apagado em silêncio. Snapshot que recua `coveredSerial` agora dá `400` (abriria um buraco). Sem `coveredSerial` nada é apagado (vale o TTL de 7 dias).
