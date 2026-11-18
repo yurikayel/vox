@@ -1,4 +1,10 @@
-/** @file Profiles, wallet, Pix, compose screens. */
+/**
+ * @file Perfis em grade, carteira, consulta Pix e telas de composição (tópico, resposta, oferta).
+ *
+ * Delega cartões de post ao `feed.js` e passos cívicos ao `compose-steps.js`.
+ *
+ * @module render/profile
+ */
 import * as mock from "../mock.js";
 import * as social from "../social.js";
 import * as listing from "../listing.js";
@@ -337,7 +343,16 @@ function renderProfilePostGrid(posts, pinnedPostId = "") {
   return `<div class="profile-grid">${tiles}</div>`;
 }
 
-/** Minimal IG shell for handle-not-found and similar states. */
+/**
+ * Shell mínimo estilo Instagram para @ não encontrado ou estados vazios.
+ * @param {HTMLElement} main Container da rota.
+ * @param {object} [options={}]
+ * @param {string} [options.handle=""] @handle buscado.
+ * @param {string} [options.title=""] Título do cartão.
+ * @param {string} [options.bodyHtml=""] Corpo HTML já seguro.
+ * @param {string} [options.actionsHtml=""] Botões de ação.
+ * @returns {void}
+ */
 export function renderProfileGridNotFound(main, { handle = "", title = "", bodyHtml = "", actionsHtml = "" } = {}) {
   const handleLine = handle ? `<h1 class="profile-grid-handle">@${escapeHtml(handle)}</h1>` : (isWelcomeRouteId(handle) ? '<h1 class="profile-grid-handle">@vox</h1>' : "");
   main.innerHTML = `
@@ -520,6 +535,12 @@ function shouldShowProfileAboutTab(address, isCurrentWallet, finalReadme, starre
   return isCurrentWallet || finalReadme || hasStereotype || isWelcomeRouteId(address) || starredList.length || memberships.length;
 }
 
+/**
+ * Normaliza query `?tab=` do perfil (legado `starred`/`communities` → `about`).
+ * @param {string} tab Valor da URL.
+ * @param {boolean} isCurrentWallet Se é o próprio perfil (permite aba Salvos).
+ * @returns {string} Chave canônica da aba.
+ */
 export function normalizeProfileTab(tab, isCurrentWallet) {
   let t = tab || "posts";
   if (t === "starred" || t === "communities") return "about";
@@ -527,6 +548,15 @@ export function normalizeProfileTab(tab, isCurrentWallet) {
   return t;
 }
 
+/**
+ * Monta o perfil em grade (cabeçalho, abas e slot de conteúdo).
+ * @param {HTMLElement} main Container da rota `#/u/…`.
+ * @param {string} address Rota `vx_…` do perfil.
+ * @param {object[]} [memberships=[]] Comunidades do autor.
+ * @param {boolean} [isCurrentWallet=false] Se é a conta local.
+ * @param {object} [opts={}] Posts, aba ativa, Pix, carteira Arweave, etc.
+ * @returns {void}
+ */
 export function renderProfile(main, address, memberships = [], isCurrentWallet = false, opts = {}) {
   const { finalGithub, finalReadme, finalPinned } = resolveProfileCustomFields(address, isCurrentWallet, opts.githubHandle, opts.readme, opts.pinnedPostId);
   const identityMeta = resolveProfileIdentityMeta(address, isCurrentWallet, opts.identityMeta);
@@ -594,6 +624,12 @@ function renderProfileSavedTab(savedList) {
   return `<div class="profile-grid-empty empty"><p>Nenhum post salvo neste aparelho.</p></div>`;
 }
 
+/**
+ * HTML interno de uma aba do perfil (posts, amizades, voxels, sobre, salvos).
+ * @param {string} [currentTab="posts"] Aba solicitada.
+ * @param {object} [params={}] Dados passados por {@link renderProfile}.
+ * @returns {string} HTML do slot da aba.
+ */
 export function renderProfileTabContent(currentTab = "posts", params = {}) {
   const norm = normalizeProfileTab(currentTab, params.isCurrentWallet);
   if (norm === "posts") return renderProfilePostGrid(params.authorPostList, params.finalPinned);
@@ -638,6 +674,13 @@ function renderPixNotFoundCard(queryStr) {
     </div>`;
 }
 
+/**
+ * Resultado da consulta de chave Pix no índice local.
+ * @param {HTMLElement} main Container da rota.
+ * @param {string} [query=""] Chave buscada (para estado vazio).
+ * @param {object|null} [profile=null] Perfil encontrado com Pix mascarado.
+ * @returns {void}
+ */
 export function renderPixLookup(main, query = "", profile = null) {
   const content = profile ? renderPixFoundCard(profile) : renderPixNotFoundCard(escapeHtml(query));
   main.innerHTML = `
@@ -645,6 +688,13 @@ export function renderPixLookup(main, query = "", profile = null) {
     ${content}`;
 }
 
+/**
+ * Lista reivindicantes quando o mesmo @handle foi publicado por mais de um endereço.
+ * @param {HTMLElement} main Container da rota.
+ * @param {string} slug Handle em conflito (sem @).
+ * @param {object[]} [claimants=[]] Entradas com `owner`, `txId`.
+ * @returns {void}
+ */
 export function renderHandleConflict(main, slug, claimants = []) {
   const items = claimants
     .map(
@@ -714,7 +764,16 @@ function renderWalletStatusBox(hasWallet, address, balance) {
     </section>`;
 }
 
-/** Carteira Soberana (Stitch tela 14): saldo real, Pix configurado, custódia e importação JWK. */
+/**
+ * Tela Carteira Soberana (Stitch tela 14): saldo Arweave, Pix e importação JWK.
+ * @param {HTMLElement} main Container da rota `#/wallet`.
+ * @param {object} [options={}]
+ * @param {string|null} [options.address=null] Endereço AR conectado.
+ * @param {string} [options.balance="0.000"] Saldo formatado.
+ * @param {boolean} [options.hasWallet=false] Se há carteira no aparelho.
+ * @param {string|null} [options.error=null] Mensagem de erro a exibir.
+ * @returns {void}
+ */
 export function renderWallet(main, { address = null, balance = "0.000", hasWallet = false, error = null } = {}) {
   const statusBox = renderWalletStatusBox(hasWallet, address, balance);
   const errorBox = error ? `<div class="error">${escapeHtml(error)}</div>` : "";
@@ -844,6 +903,11 @@ function communityReviewStepHtml() {
       ${renderComposeSignaturePanel()}`;
 }
 
+/**
+ * Wizard de criação de comunidade (etapas nome → foto → regras).
+ * @param {HTMLElement} main Container da rota `#/compose/community`.
+ * @returns {void}
+ */
 export function renderComposeCommunity(main) {
   const nav = { backHref: "#/communities", submitId: "btn-submit-comm", submitLabel: "Publicar comunidade" };
   const steps = [
@@ -917,9 +981,13 @@ function renderComposeTargetPill(communityId) {
 }
 
 /**
- * Postar, no estilo Instagram: primeiro a esfera (Social ou Cívico).
- * - Social → o composer da Ágora aberto, com foto, voz, música, vídeo e texto.
- * - Cívico → etapas: categoria → onde e título → texto → revisar.
+ * Composer de nova publicação: esfera Social (inline) ou fluxo cívico em etapas.
+ * @param {HTMLElement} main Container da rota `#/compose/topic`.
+ * @param {string} communityId Círculo pré-selecionado (vazio = escolha livre).
+ * @param {object} [options={}]
+ * @param {string} [options.userRouteId=""] Conta publicadora.
+ * @param {string} [options.displayName=""] Nome no composer social.
+ * @returns {void}
  */
 export function renderComposeTopic(main, communityId, { userRouteId = "", displayName = "" } = {}) {
   const backHref = communityId ? `#/c/${encodeURIComponent(communityId)}` : "#/";
@@ -1000,6 +1068,17 @@ function renderComposeReviewStep() {
         ${renderComposeSignaturePanel()}`;
 }
 
+/**
+ * Tela de resposta a tópico ou comentário (com banner de contexto opcional).
+ * @param {HTMLElement} main Container da rota.
+ * @param {string} topicId Tópico respondido.
+ * @param {string} communityId Comunidade do tópico.
+ * @param {object} [options={}]
+ * @param {string} [options.parentId=""] ID do comentário pai, se houver.
+ * @param {string} [options.parentAuthor=""] @handle citado.
+ * @param {string} [options.parentExcerpt=""] Trecho do comentário pai.
+ * @returns {void}
+ */
 export function renderComposeReply(main, topicId, communityId, { parentId = "", parentAuthor = "", parentExcerpt = "" } = {}) {
   const replyContextHtml = parentId
     ? `<div class="reply-context-banner" style="background:var(--surface-soft, rgba(255, 255, 255, 0.04)); border-left:3px solid var(--primary, #00b4d8); padding:10px 14px; margin-bottom:14px; border-radius:var(--radius-sm); font-size:0.88rem;">
@@ -1065,6 +1144,14 @@ function listingDetailsStepHtml() {
       </div>`;
 }
 
+/**
+ * Wizard de nova oferta na feira comunitária.
+ * @param {HTMLElement} main Container da rota `#/compose/listing`.
+ * @param {string} communityId Comunidade da feira.
+ * @param {string} [commTitle=""] Título legível no kicker.
+ * @param {object} [prefill={}] Valores iniciais (`defaultPix`, etc.).
+ * @returns {void}
+ */
 export function renderComposeListing(main, communityId, commTitle = "", prefill = {}) {
   const titleDisplay = commTitle || communityId || "Feira";
   const defaultPix = prefill.defaultPix || "";

@@ -268,6 +268,11 @@ function writeJson(key, value) {
   }
 }
 
+/** Mapa plano no `localStorage`; array, primitivo ou null contam como vazio. */
+function plainRecord(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
 // ---- Guarda (aparelho de quem guarda) ----
 
 /**
@@ -276,7 +281,8 @@ function writeJson(key, value) {
  */
 export function loadHeld() {
   const held = readJson(HELD_STORAGE, {});
-  return held && typeof held === "object" ? held : {};
+  if (!plainRecord(held)) return {};
+  return Object.fromEntries(Object.entries(held).filter(([, entry]) => plainRecord(entry)));
 }
 
 /**
