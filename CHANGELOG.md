@@ -6,6 +6,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Correção: foco no campo certo após erro na entrada (LT-07)
+- `setOAuthEnrichError` aceita `focusId` opcional; `validateEmailEntryIssue` aponta nome, e-mail ou senha conforme a falha. Testes: `tests/onboarding-steps.test.js`.
+
 ### Correção: relay — espelho recusa corpo grande cedo
 - `POST /vox/mirror` compara `Content-Length` com o teto de 256 KiB antes de ler o corpo e responde 413 com `mirror.body_too_large`, alinhado ao restante dos handlers de escrita.
 
