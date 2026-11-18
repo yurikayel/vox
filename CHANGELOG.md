@@ -57,6 +57,10 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 ### Testes: lacunas S30-S21 (`short-id`, `post-supersede`)
 - `tests/short-id.test.js`: encurtamento de `vx_`, `0x`, `did:` e conta oficial para rótulo.
 - `tests/post-supersede.test.js`: `isSupersededLocally` com lápide, versão local mais nova e choque de autor. Sem bump de SW.
+### Testes: malha — inventário peer-sync, tetos PM-52 e ingestão de cache-manifest
+- `tests/peer-sync-wants.test.js`: `computeWants`, `inventoryMessage` e ordem de `messagesForWant` (remoções antes de posts e cartões).
+- `tests/peers-settings-cap.test.js`: `clampCellularCapMb`, `canServeNow` (Wi-Fi, `wifiOnly`, teto no 4G) e normalização ao salvar preferências.
+- `tests/peers-cache-manifest-guard.test.js`: ingestão rejeita formato, assinatura e `communityId` divergente; manifesto antigo não sobrescreve o mais novo; pins de várias comunidades viram prioridade WANT. Sem bump de SW.
 
 ### Correção: relay cego não perde deltas no cold boot; memória central confere item e blob
 - **Snapshot apaga por serial, não por timestamp:** só somem os envelopes com `0 < serial <= coveredSerial`; antes, um delta com relógio atrasado e serial acima da cobertura era apagado em silêncio. Snapshot que recua `coveredSerial` agora dá `400` (abriria um buraco). Sem `coveredSerial` nada é apagado (vale o TTL de 7 dias).
