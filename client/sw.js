@@ -293,6 +293,7 @@ const SHELL_ASSETS = [
   "./js/signaling-telemetry.js",
 
   "./js/genesis.js",
+  "./js/fetch-timeout.js",
   "./js/graphql.js",
 
   "./js/data/profiles-brazil-uf.js",
