@@ -7,18 +7,22 @@ o texto claro (zero-knowledge). Suporta compactação de épocas com snapshots
 consolidados (ex.: Y.encodeStateAsUpdateV2) para garantir cold boot veloz.
 """
 
+import hashlib
 import json
 import os
+import re
 import threading
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 MAX_ENVELOPE_SIZE = 64 * 1024  # 64 KB por envelope
 MAX_SNAPSHOT_SIZE = 512 * 1024  # 512 KB por snapshot consolidado
 DEFAULT_TTL_SECONDS = 7 * 86400  # 7 dias de retenção para envelopes de canal
 
 _RELAY_LOCK = threading.RLock()
+_INT_TEXT = re.compile(r"\d{1,19}")
+_INT_LIMIT = 2**63
 
 
 def resolve_relay_dir(env: Optional[Dict[str, str]] = None) -> Path:
@@ -50,6 +54,42 @@ def ensure_channel_dir(channel_id: str) -> Path:
     return chan_path
 
 
+def _coerce_int(value: Any, field: str, default: int = 0) -> int:
+    """Converte `value` em inteiro não negativo ou levanta ValueError.
+
+    Aceita int e texto só de dígitos (o que o cliente envia); vazio, None e 0
+    viram `default`. Recusa bool, float, lista, objeto e texto livre, que antes
+    entravam no disco e derrubavam a listagem do canal inteiro.
+    """
+    if isinstance(value, bool) or not isinstance(value, (int, str, type(None))):
+        raise ValueError(f"Campo '{field}' deve ser inteiro")
+    if value is None or value == "" or value == 0:
+        return default
+    if isinstance(value, str) and not _INT_TEXT.fullmatch(value):
+        raise ValueError(f"Campo '{field}' deve ser inteiro")
+    number = int(value)
+    if number < 0 or number > _INT_LIMIT:
+        raise ValueError(f"Campo '{field}' fora do intervalo")
+    return number
+
+
+def _envelope_id(envelope: Dict[str, Any], ts: int) -> str:
+    """Id estável: o mesmo envelope dá o mesmo id; envelopes diferentes não colidem."""
+    canonical = json.dumps(envelope, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return f"env_{ts}_{hashlib.sha256(canonical).hexdigest()[:20]}"
+
+
+def _read_live_record(file_path: Path, now: int) -> Optional[Dict[str, Any]]:
+    """Registro já gravado, se for objeto válido e ainda não tiver expirado."""
+    try:
+        data = json.loads(file_path.read_text(encoding="utf-8"))
+        if isinstance(data, dict) and _coerce_int(data.get("expiresAt"), "expiresAt") >= now:
+            return data
+    except (ValueError, TypeError, OSError):
+        pass
+    return None
+
+
 def store_envelope(channel_id: str, envelope: Dict[str, Any], ttl_seconds: int = DEFAULT_TTL_SECONDS) -> Dict[str, Any]:
     if not isinstance(envelope, dict):
         raise ValueError("Envelope deve ser um dicionário JSON")
@@ -60,13 +100,16 @@ def store_envelope(channel_id: str, envelope: Dict[str, Any], ttl_seconds: int =
     if len(raw_bytes) > MAX_ENVELOPE_SIZE:
         raise ValueError(f"Envelope excede o tamanho máximo de {MAX_ENVELOPE_SIZE} bytes")
 
-    ts = int(envelope.get("timestamp") or (time.time() * 1000))
-    nonce = str(envelope.get("nonce") or "")[:16]
-    msg_id = f"env_{ts}_{nonce}"
+    ts = _coerce_int(envelope.get("timestamp"), "timestamp", int(time.time() * 1000))
+    _coerce_int(envelope.get("serial"), "serial")
+    msg_id = _envelope_id(envelope, ts)
 
     with _RELAY_LOCK:
         chan_path = ensure_channel_dir(channel_id)
         file_path = chan_path / f"{msg_id}.json"
+        existing = _read_live_record(file_path, int(time.time()))
+        if existing is not None:
+            return existing
         record = {
             "id": msg_id,
             "channelId": channel_id,
@@ -78,7 +121,32 @@ def store_envelope(channel_id: str, envelope: Dict[str, Any], ttl_seconds: int =
         return record
 
 
+def _load_listable(file_path: Path, now: int) -> Optional[Tuple[Dict[str, Any], int, int]]:
+    """(envelope, timestamp, serial) de um arquivo do canal, ou None se não serve.
+
+    Expirado é removido; ilegível ou com campos fora do formato é ignorado, para
+    um arquivo ruim não derrubar a listagem do canal inteiro.
+    """
+    try:
+        data = json.loads(file_path.read_text(encoding="utf-8"))
+        expires = _coerce_int(data.get("expiresAt"), "expiresAt")
+        env = data.get("envelope")
+        if expires < now:
+            file_path.unlink(missing_ok=True)
+            return None
+        ts = _coerce_int(env.get("timestamp"), "timestamp")
+        return env, ts, _coerce_int(env.get("serial"), "serial")
+    except (ValueError, TypeError, AttributeError, OSError):
+        return None
+
+
 def list_envelopes(channel_id: str, since_ts: int = 0, since_serial: int = 0, limit: int = 100) -> List[Dict[str, Any]]:
+    """Envelopes do canal em ordem estável.
+
+    Com `since_serial > 0` devolve `serial > since_serial` ordenados por serial:
+    a página cortada em `limit` é contígua e o cliente pagina repetindo com
+    `since_serial = maior serial recebido`. Sem ele, filtra `timestamp >= since_ts`.
+    """
     with _RELAY_LOCK:
         try:
             chan_path = ensure_channel_dir(channel_id)
@@ -86,26 +154,42 @@ def list_envelopes(channel_id: str, since_ts: int = 0, since_serial: int = 0, li
             return []
 
         now = int(time.time())
-        results = []
+        by_serial = since_serial > 0
+        entries = []
         for file in chan_path.glob("env_*.json"):
-            try:
-                data = json.loads(file.read_text(encoding="utf-8"))
-                if data.get("expiresAt", 0) < now:
-                    file.unlink(missing_ok=True)
-                    continue
-                env = data.get("envelope", {})
-                ts = int(env.get("timestamp", 0))
-                serial = int(env.get("serial", 0))
-                if since_serial > 0:
-                    if serial > since_serial:
-                        results.append(env)
-                elif ts >= since_ts:
-                    results.append(env)
-            except (json.JSONDecodeError, OSError):
+            loaded = _load_listable(file, now)
+            if loaded is None:
                 continue
+            env, ts, serial = loaded
+            if (serial > since_serial) if by_serial else (ts >= since_ts):
+                entries.append((serial, ts, env) if by_serial else (ts, serial, env))
+        entries.sort(key=lambda item: item[:2])
+        return [item[2] for item in entries[:limit]]
 
-        results.sort(key=lambda x: int(x.get("timestamp", 0)))
-        return results[:limit]
+
+def _read_current_snapshot(snap_path: Path) -> Optional[Dict[str, Any]]:
+    """Registro do snapshot atual, ou None se não existir ou estiver ilegível."""
+    if not snap_path.is_file():
+        return None
+    try:
+        curr = json.loads(snap_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return None
+    return curr if isinstance(curr, dict) else None
+
+
+def _assert_snapshot_advances(curr: Dict[str, Any], epoch: int, covered_serial: int) -> None:
+    """Recusa snapshot que não avança a época ou que recua a cobertura.
+
+    Recuar `coveredSerial` deixaria um buraco: os deltas entre o novo e o antigo
+    já foram podados pelo snapshot anterior e o cold boot não os recuperaria.
+    """
+    curr_epoch = _coerce_int(curr.get("epoch"), "epoch")
+    if epoch <= curr_epoch:
+        raise ValueError(f"Época do snapshot ({epoch}) deve ser estritamente maior que a época atual ({curr_epoch})")
+    curr_covered = _coerce_int(curr.get("coveredSerial"), "coveredSerial")
+    if covered_serial < curr_covered:
+        raise ValueError(f"coveredSerial ({covered_serial}) não pode ficar abaixo do atual ({curr_covered})")
 
 
 def store_snapshot(channel_id: str, snapshot_data: Dict[str, Any], prune_older: bool = True) -> Dict[str, Any]:
@@ -118,21 +202,17 @@ def store_snapshot(channel_id: str, snapshot_data: Dict[str, Any], prune_older: 
     if len(raw_bytes) > MAX_SNAPSHOT_SIZE:
         raise ValueError(f"Snapshot excede limite de {MAX_SNAPSHOT_SIZE} bytes")
 
-    epoch = int(snapshot_data.get("epoch") or 1)
-    timestamp = int(snapshot_data.get("timestamp") or (time.time() * 1000))
-    covered_serial = int(snapshot_data.get("coveredSerial") or snapshot_data.get("covered_serial") or 0)
+    epoch = _coerce_int(snapshot_data.get("epoch"), "epoch", 1)
+    timestamp = _coerce_int(snapshot_data.get("timestamp"), "timestamp", int(time.time() * 1000))
+    covered_raw = snapshot_data.get("coveredSerial") or snapshot_data.get("covered_serial")
+    covered_serial = _coerce_int(covered_raw, "coveredSerial")
 
     with _RELAY_LOCK:
         chan_path = ensure_channel_dir(channel_id)
         snap_path = chan_path / "latest_snapshot.json"
-        if snap_path.is_file():
-            try:
-                curr = json.loads(snap_path.read_text(encoding="utf-8"))
-                curr_epoch = int(curr.get("epoch", 0))
-                if epoch <= curr_epoch:
-                    raise ValueError(f"Época do snapshot ({epoch}) deve ser estritamente maior que a época atual ({curr_epoch})")
-            except (json.JSONDecodeError, OSError):
-                pass
+        curr = _read_current_snapshot(snap_path)
+        if curr is not None:
+            _assert_snapshot_advances(curr, epoch, covered_serial)
 
         record = {
             "channelId": channel_id,
@@ -144,8 +224,8 @@ def store_snapshot(channel_id: str, snapshot_data: Dict[str, Any], prune_older: 
         }
         snap_path.write_text(json.dumps(record, ensure_ascii=False), encoding="utf-8")
 
-        if prune_older and timestamp > 0:
-            prune_older_deltas(chan_path, timestamp)
+        if prune_older:
+            prune_covered_deltas(chan_path, covered_serial)
         return record
 
 
@@ -165,16 +245,27 @@ def get_latest_snapshot(channel_id: str) -> Optional[Dict[str, Any]]:
             return None
 
 
-def prune_older_deltas(chan_path: Path, before_timestamp: int) -> int:
+def prune_covered_deltas(chan_path: Path, covered_serial: int) -> int:
+    """Remove só os envelopes que o snapshot comprovadamente cobre (`0 < serial <= covered_serial`).
+
+    O critério é o mesmo do cold boot (`since_serial`). Por timestamp, um delta
+    com relógio atrasado e serial acima da cobertura seria apagado em silêncio.
+    Envelope sem serial não tem como ser provado coberto e fica até o TTL.
+    """
     removed = 0
+    if covered_serial <= 0:
+        return removed
     for file in chan_path.glob("env_*.json"):
         try:
             data = json.loads(file.read_text(encoding="utf-8"))
-            ts = int(data.get("envelope", {}).get("timestamp", 0))
-            if ts < before_timestamp:
-                file.unlink(missing_ok=True)
-                removed += 1
-        except (json.JSONDecodeError, OSError):
+            serial = _coerce_int(data.get("envelope", {}).get("serial"), "serial")
+        except json.JSONDecodeError:
+            file.unlink(missing_ok=True)
+            removed += 1
+            continue
+        except (ValueError, TypeError, AttributeError, OSError):
+            continue
+        if 0 < serial <= covered_serial:
             file.unlink(missing_ok=True)
             removed += 1
     return removed

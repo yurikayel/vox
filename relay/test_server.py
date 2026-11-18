@@ -878,7 +878,7 @@ class TestVoxRelayServer(unittest.TestCase):
             self.assertTrue(res["changed"])
             self.assertEqual(res["counts"]["posts"], 1)
 
-        blob_hash = "a" * 64
+        blob_hash = hashlib.sha256(bytes(3)).hexdigest()  # "AAAA" em base64 = 3 bytes zero; o relay confere o hash
         sync_payload = {
             "posts": [
                 {
