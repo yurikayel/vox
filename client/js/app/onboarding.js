@@ -30,15 +30,16 @@ export { ensureOnboardingSideEffects } from "./onboarding-side-effects.js";
 
 /**
  * Mostra ou limpa mensagem de erro na etapa de enriquecimento OAuth.
- *
  * @param {string} message Texto de erro; vazio esconde o bloco.
+ * @param {string} [focusId] Id do campo a focar quando há mensagem.
  * @returns {void}
  */
-export function setOAuthEnrichError(message) {
+export function setOAuthEnrichError(message, focusId) {
   const el = document.getElementById("oauth-enrich-error");
   if (!el) return;
   el.textContent = message || "";
   el.hidden = !message;
+  if (message && focusId) document.getElementById(focusId)?.focus();
 }
 
 /**
@@ -232,7 +233,6 @@ export function openOAuthEnrichModal({ onComplete, withPact = false, mode = "ent
 
 /**
  * Avança para pacto ou reabre modal de entrada conforme estado local.
- *
  * @returns {void}
  */
 export function checkOAuthEnrichStep() {
@@ -250,7 +250,6 @@ export function checkOAuthEnrichStep() {
 
 /**
  * Orquestra portão de entrada, read-first e enriquecimento OAuth na troca de rota.
- *
  * @returns {void}
  */
 export function checkCantinaGate() {
