@@ -54,7 +54,9 @@ export function storeActiveAccount(acc) {
 }
 
 /** @returns {{ reason: string } | null} falha ao criar conta neste aparelho, ou `null` se ok. */
-export function getAccountStorageIssue() { return accountPersistIssue; }
+export function getAccountStorageIssue() {
+  return accountPersistIssue;
+}
 
 async function loadStoredLocalAccount() {
   try {
@@ -118,7 +120,12 @@ export async function ensureLocalAccount() {
       return cachedAccount;
     }
     const fresh = await generateNewAccountKeys();
-    try { storeActiveAccount(fresh); } catch (err) { accountPersistIssue = { reason: err?.message ? `${err.name}: ${err.message}` : (err?.name || "storage_blocked") }; cachedAccount = fresh; }
+    try {
+      storeActiveAccount(fresh);
+    } catch (err) {
+      accountPersistIssue = { reason: err?.name || "storage_blocked" };
+      cachedAccount = fresh;
+    }
     syncCurrentAccountMetadataToVault();
     return cachedAccount;
   })();
@@ -479,7 +486,8 @@ export function setMeshDiscoverable(on) {
  * @returns {Promise<void>}
  */
 export function wipeLocalAccount() {
-  cachedAccount = null; accountPersistIssue = null;
+  cachedAccount = null;
+  accountPersistIssue = null;
   dropStorageKeys(localStorage, LOCAL_WIPE_KEYS);
   dropSessionPassphrase();
   return keyLock.forgetAllLockedAccounts().catch(() => {});
