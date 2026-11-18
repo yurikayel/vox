@@ -52,7 +52,15 @@ export function openStoreDB() {
       const db = e.target.result;
       createStoresIfMissing(db);
     };
-    req.onsuccess = (e) => resolve(e.target.result || req.result);
+    req.onsuccess = (e) => {
+      const db = e.target.result || req.result;
+      // "Apagar conta local" remove o banco: solta a conexão para a remoção não ficar presa.
+      db.onversionchange = () => {
+        db.close();
+        dbPromise = null;
+      };
+      resolve(db);
+    };
     req.onerror = () => reject(req.error || new Error("Falha ao abrir IndexedDB"));
   });
   return dbPromise;

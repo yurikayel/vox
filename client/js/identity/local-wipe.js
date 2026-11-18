@@ -4,6 +4,8 @@
  * quem conhece cada uma.
  */
 
+import { closeKeystore } from "./keystore.js";
+
 /** O que a limpeza apaga e o que ela não alcança (mostrado no Perfil e nas duas confirmações). */
 export const LOCAL_WIPE_NOTICE =
   "Apaga chaves JWK DESTE navegador. Posts no permaweb, relay/inbox e arquivo .json/.voxid em disco NÃO são apagados.";
@@ -55,7 +57,6 @@ export const DEVICE_KEEP_KEYS = [
   "vox-demo-mode",
   "vox-mock-purged-v1",
   "vox-custom-signaling-url",
-  "vox-custom-turn-config",
   "vox-turn-only",
   "vox-relay-http-url",
   "vox-relay-buddy-http-url",
@@ -68,7 +69,6 @@ export const DEVICE_KEEP_KEYS = [
   "vox-peer-metrics",
   "vox-daily-usage",
   "vox-metric-people-search-ok",
-  "vox-handles-cache",
   "vox-cache-manifest-by-comm",
 ];
 
@@ -107,30 +107,48 @@ export function dropPersonalStorage(store) {
   dropStorageKeys(store, keys.filter((k) => typeof k === "string" && isPersonalStorageKey(k)));
 }
 
+/** Quanto esperar, depois de o navegador avisar que outra conexão segura o banco, antes de dar a remoção por não feita. */
+export const BLOCKED_WAIT_MS = 2000;
+
 /**
- * Apaga um banco IndexedDB; termina também se o navegador recusar ou segurar a remoção (conexão aberta).
+ * Apaga um banco IndexedDB e diz se apagou de fato. Banco que não existe (ou IndexedDB ausente) conta como apagado;
+ * recusa do navegador, exceção ou conexão de outra aba que não soltou o banco a tempo contam como NÃO apagado.
  * @param {string} name nome do banco
- * @returns {Promise<void>}
+ * @param {number} [blockedWaitMs] espera após o aviso de "bloqueado" até desistir
+ * @returns {Promise<boolean>} true só se o navegador confirmou a remoção
  */
-export function deleteDatabase(name) {
+export function deleteDatabase(name, blockedWaitMs = BLOCKED_WAIT_MS) {
   return new Promise((resolve) => {
+    let timer = null;
+    const finish = (deleted) => {
+      clearTimeout(timer);
+      resolve(deleted);
+    };
     try {
       const req = globalThis.indexedDB?.deleteDatabase?.(name);
-      if (!req) return resolve();
-      req.onsuccess = req.onerror = req.onblocked = () => resolve();
+      if (!req) return resolve(true);
+      req.onsuccess = () => finish(true);
+      req.onerror = () => finish(false);
+      req.onblocked = () => {
+        timer = setTimeout(() => finish(false), blockedWaitMs);
+      };
     } catch {
-      resolve();
+      resolve(false);
     }
   });
 }
 
 /**
- * Apaga os bancos IndexedDB do cliente, cada um isolado.
+ * Apaga os bancos IndexedDB do cliente, cada um isolado. Antes, fecha as conexões do próprio app (o cofre de
+ * chaves) e esquece a chave do aparelho em memória, para a remoção não ficar presa por nós mesmos.
  * @param {string[]} [names] bancos
- * @returns {Promise<void>}
+ * @param {number} [blockedWaitMs] espera por banco bloqueado (veja `deleteDatabase`)
+ * @returns {Promise<string[]>} bancos que NÃO foram apagados (vazio = tudo apagado)
  */
-export async function dropDatabases(names = DEVICE_DATABASES) {
-  await Promise.all(names.map((n) => deleteDatabase(n)));
+export async function dropDatabases(names = DEVICE_DATABASES, blockedWaitMs = BLOCKED_WAIT_MS) {
+  closeKeystore();
+  const results = await Promise.all(names.map((n) => deleteDatabase(n, blockedWaitMs)));
+  return names.filter((_, i) => !results[i]);
 }
 
 /** Apaga os dados pessoais de localStorage e sessionStorage (síncrono, vale antes de qualquer recarga). */
