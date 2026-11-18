@@ -122,21 +122,35 @@ Hoje **não existe** relay completo público: só a sinalização roda na nuvem.
 
 ## 6. Limites e retenção
 
-Estado **medido no código em `origin/develop` (c661aa0), 2026-11-17**; só descreve, não propõe mudança. Caminhos relativos a `relay/`. "Nenhum (lacuna)" = o código não impõe o limite.
+Estado **medido no código em `origin/develop` (8eee7e4), 2026-11-18**; só descreve, não propõe mudança. Caminhos relativos a `relay/`. "Nenhum (lacuna)" = o código não impõe o limite.
 
-**Rate limit (`rate_limit.py`):** token bucket em memória, um mapa por (classe, IP). Cada classe tem `per_min` fichas por minuto e rajada `burst` (`rate_limit.py:34-39,70-71`). Bucket cheio volta a encher e sai do mapa (`rate_limit.py:81-87`); por classe há no máximo `MAX_ENTRIES` = 20 000 IPs, descartando o menos recente (`rate_limit.py:42,98-99`). IPv6 conta por rede /64 (`rate_limit.py:160-161`). Resposta `429` com corpo JSON e cabeçalho `Retry-After` em segundos (`rate_limit.py:140-141`, `server.py:322-326,315`).
+**Rate limit (`rate_limit.py`):** token bucket em memória, um mapa por (classe, IP). Cada classe tem `per_min` fichas por minuto e rajada `burst` (`rate_limit.py:34-40,71-72`). Bucket cheio volta a encher e sai do mapa (`rate_limit.py:81-87`); por classe há no máximo `MAX_ENTRIES` = 20 000 IPs, descartando o menos recente (`rate_limit.py:42,98-99`). IPv6 conta por rede /64 (`rate_limit.py:158-161`). Resposta `429` com corpo JSON e cabeçalho `Retry-After` em segundos (`rate_limit.py:135-141`, `server.py:310-318,307`; na sinalização o corpo é `{"error":"rate_limited"}`, `signaling.py:357-362`).
 
 | Classe | O que limita | Padrão (por min / rajada) |
 |---|---|---|
-| `mailbox` | `POST`/`DELETE` em rotas que começam com `/inbox`, `/memory/` ou `/relay/` | 120 / 60 (`rate_limit.py:35,43-44,125-132`) |
+| `mailbox` | `POST`/`DELETE` em rotas que começam com `/inbox`, `/memory/` ou `/relay/` | 120 / 60 (`rate_limit.py:35,43,125-132`) |
 | `beacon` | `POST`/`DELETE` em `/peer/beacon` ou `/p2p/seed` (prefixo) | 60 / 30 (`rate_limit.py:36,44-45,130-131`) |
 | `write` | demais `POST`/`DELETE` do `server.py` (espelho, OAuth, 404 de escrita, etc.) | 60 / 30 (`rate_limit.py:37,125-132`) |
-| `signal` | cada nova conexão WebSocket na sinalização | 30 / 15 (`rate_limit.py:38`, `signaling.py:356-362`) |
-| `signal_msg` | cada mensagem de texto em conexão já aberta | 600 / 200 (`rate_limit.py:39`, `signaling.py:399-401`) |
+| `signal` | cada nova conexão WebSocket na sinalização | 30 / 15 (`rate_limit.py:38`, `signaling.py:357-362`) |
+| `signal_msg` | cada mensagem de texto, contada por IP (conexões do mesmo IP dividem o balde); excedente é **descartado sem resposta** | 600 / 200 (`rate_limit.py:39`, `signaling.py:400-401`) |
 
 `GET`/`HEAD`/`OPTIONS` não gastam ficha (`rate_limit.py:127-128`). O guarda de `Host` do PM-94 vale também para `GET` (`request_guard.py:67-68`, `server.py:348-350`). No `server.py`, `GET /status` e `GET /ping` caem na rota desconhecida → `404` (`server.py:387-388`); esses caminhos existem só na sinalização (`signaling.py:205-215`).
 
-Variáveis: `VOX_RELAY_RATE_<CLASSE>_PER_MIN` e `_BURST` por classe; `VOX_RELAY_WRITE_LIMIT_PER_MIN` sobrescreve o `per_min` de `mailbox`, `beacon` e `write` quando a variável da classe não está definida (`rate_limit.py:54-64`). IP atrás de proxy: `VOX_RELAY_TRUST_PROXY_HOPS` (`rate_limit.py:17-19,144-147`).
+Variáveis: `VOX_RELAY_RATE_<CLASSE>_PER_MIN` e `_BURST` por classe; `VOX_RELAY_WRITE_LIMIT_PER_MIN` sobrescreve o `per_min` de `mailbox`, `beacon` e `write` quando a variável da classe não está definida (`rate_limit.py:54-64`). IP atrás de proxy: ver a subseção seguinte.
+
+**`VOX_RELAY_TRUST_PROXY_HOPS` (`rate_limit.py:144-149,165-173`).** Lida uma vez na importação (mudar exige reiniciar). `0` (padrão; também vale para vazio, não numérico ou negativo) ignora `X-Forwarded-For` e usa o IP do socket. Com `N ≥ 1`, o IP é a N-ésima entrada **da direita**; se a lista tiver menos de N entradas ou a escolhida não for IP, cai no IP do socket. Vale para `server.py` (`:313`) e `signaling.py` (`:354`).
+
+- **Valor baixo demais** (inclusive 0 atrás de proxy): o socket é sempre o IP do proxy, então **todos os clientes dividem um balde por classe** — um cliente ruidoso trava os demais com `429`.
+- **Valor alto demais**: a entrada escolhida passa a ser uma que o cliente escreveu (o que ele manda fica à esquerda), então ele escolhe o próprio IP, troca de balde a cada pedido e **burla o limite** (spoofing de `X-Forwarded-For`). Só dá para confiar em tantas entradas quantos proxies seus existem à frente.
+- **Sem proxy** (acesso direto, loopback, túnel que não acrescenta o cabeçalho): deixe `0`.
+
+| Deploy | Valor | Situação / base |
+|---|---|---|
+| Nó público Render (`vox-sentinel.onrender.com`, `relay/render.yaml`) | `1` (alvo) | **Hoje 0**: o blueprint não define `envVars`, então todos os clientes dividem um balde. `1` assume que o balanceador do Render é o único proxy e acrescenta o IP de quem conectou; **não foi medido aqui** — antes de fixar, confirme que a última entrada do cabeçalho é o IP do cliente (e não um IP de borda compartilhado, o que repetiria o balde único). Ajuste no painel do serviço ou com `envVars` no `render.yaml` (PR próprio; este é só documentação). |
+| Caddy de `relay/deploy/` (`Caddyfile`, `reverse_proxy` para sinalização e relay) | `1` | Um proxy (Caddy) à frente, que acrescenta o IP do cliente ao `X-Forwarded-For`. Se houver outro proxy na frente do Caddy (ex.: Cloudflare), some um por camada. `docker-compose.yml` não define a variável hoje. |
+| Túnel Cloudflare do Node Zero, em `server.py` | medir | O `cloudflared` acrescenta o cabeçalho, mas o número de entradas não foi conferido; até medir, `0` (balde único, seguro). |
+| Local / loopback / `server.py` direto | `0` | Sem proxy. |
+| `relay/Dockerfile` (HF Space, Railway) | conforme a plataforma | O Dockerfile não define a variável; vale a regra da plataforma de borda (conte os proxies). |
 
 CORS: `Access-Control-Allow-Origin: *` em toda resposta (`server.py:311`), com `Access-Control-Expose-Headers: Retry-After` (`server.py:315`); `POST`/`DELETE` com `Origin` fora da lista do app dão `403` (`request_guard.py:71-72`). Os campos abaixo só repetem o que difere da regra.
 
@@ -156,7 +170,7 @@ CORS: `Access-Control-Allow-Origin: *` em toda resposta (`server.py:311`), com `
 | `/p2p/seed` POST | `16 KB` (`server.py:655-657`) | `64` seeds simultâneos (`p2p_seeder.py:26`), `512 MB` somados (`p2p_seeder.py:25,89-91`) | sem TTL; remoção só por `DELETE /p2p/seed/<hash>` | **memória** (`active_seeds`, `p2p_seeder.py:39`); some ao reiniciar |
 | `/peer/beacon` POST | `16 KB` (`server.py:640-642`) | nenhum (lacuna): um `nodeId` novo por pedido (`p2p_seeder.py:149-186`) | TTL `60 s` (`p2p_seeder.py:27`); a varredura roda no próprio `POST`/`GET` (`p2p_seeder.py:186,202`) | **memória** (`known_peers`) |
 | `/oauth/exchange` POST | `8 KB` (`server.py:539`) | n/a | nada é guardado | n/a |
-| Sinalização (`signaling.py`) | quadro WebSocket `1 MB`, mensagem remontada `1 MB`, cabeçalho `64 KB` (`signaling.py:26-28`); handshake `10 s`, resto do quadro `30 s` (`signaling.py:29-30`) | por IP: token bucket `signal` 30/15 por minuto/rajada em novas conexões (`signaling.py:356-362`, `rate_limit.py:38`); `signal_msg` 600/200 por mensagem de texto (`signaling.py:399-401`, `rate_limit.py:39`); sem teto de pares conectados (lacuna) (`signaling.py:224-273`) | conexão aberta não tem prazo de ociosidade (`signaling.py:292-293`) | **memória** (`PeerRegistry`) |
+| Sinalização (`signaling.py`) | quadro WebSocket `1 MB`, mensagem remontada `1 MB`, cabeçalho `64 KB` (`signaling.py:26-28`); handshake `10 s`, resto do quadro `30 s` (`signaling.py:29-30`) | por IP: token bucket `signal` 30/15 por minuto/rajada em novas conexões (`signaling.py:357-362`, `rate_limit.py:38`); `signal_msg` 600/200 por mensagem de texto (`signaling.py:400-401`, `rate_limit.py:39`); sem teto de pares conectados (lacuna) (`signaling.py:224-273`) | conexão aberta não tem prazo de ociosidade (`signaling.py:292-293`) | **memória** (`PeerRegistry`) |
 
 CORS da sinalização: `Access-Control-Allow-Origin: *` só nas respostas HTTP de saúde (`signaling.py:175`); o WebSocket não checa `Origin` (nenhuma verificação encontrada).
 
