@@ -14,6 +14,7 @@ Entrada única para quem desenvolve, revisa ou opera. Todo `.md` novo em `docs/`
 5. [INFRA-CUSTOS.md](./INFRA-CUSTOS.md): onde tudo roda, secrets, free tiers, SPOFs.
 6. [CHANGELOG.md](../CHANGELOG.md): o que mudou.
 7. [DECISOES.md](./DECISOES.md): as decisões institucionais e de arquitetura em vigor, numa página, com o estado real.
+8. [GLOSSARIO.md](./GLOSSARIO.md): termos da interface em português claro (conta, cofre, malha, par…) — complementa a Voxpedia in-app.
 
 ## Pastas de `docs/`
 
@@ -63,6 +64,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 | ADRs (detalhe de cada decisão) | [adr/README.md](./adr/README.md) |
 | Tese de tração e preceitos | [direcionamento-crescimento-rede-2026-11.md](./strategy/direcionamento-crescimento-rede-2026-11.md) |
 | Navegação, banners de status e DoD dos docs | [CONTRIBUTING-DOCS.md](./CONTRIBUTING-DOCS.md) |
+| Termos da UI e copy leigo (pt-BR) | [GLOSSARIO.md](./GLOSSARIO.md) |
 
 > [!IMPORTANT]
 > **Regra anti-inflação:** é proibido criar outro plano mestre ("N=…", "T1–T10", checklist paralelo) sem um ADR que revogue o atual — hoje o [ADR-017](./adr/017-consolidacao-roadmap-unico.md). Ideias novas entram como brainstorm (banner + "Não substitui o ROADMAP").
