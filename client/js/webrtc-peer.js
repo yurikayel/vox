@@ -458,11 +458,30 @@ export function disconnectWebRtc() {
   resetSignalingIndex();
 }
 
+/**
+ * Evita sockets de sinalização empilhados: reaproveita o vivo se a URL é a mesma; senão solta e fecha o antigo.
+ * @param {string} url URL desejada.
+ * @returns {boolean} Verdadeiro se é preciso abrir um socket novo.
+ */
+function reuseOrReleaseSignalingSocket(url) {
+  const ws = signalingWs;
+  if (!ws) return true;
+  const live = ws.readyState === WebSocket.CONNECTING || ws.readyState === WebSocket.OPEN;
+  if (live && ws.url === url) return false;
+  ws.onopen = ws.onmessage = ws.onerror = ws.onclose = null;
+  try {
+    ws.close();
+  } catch {}
+  signalingWs = null;
+  return true;
+}
+
 async function connectSignaling() {
   if (!isWebRtcEnabled || !currentPeerId) return;
   if (typeof process !== "undefined" && process.env?.NODE_ENV === "test") return;
   const config = await loadSignalingConfig();
   const url = getSignalingUrl(config);
+  if (!isWebRtcEnabled || !reuseOrReleaseSignalingSocket(url)) return;
 
   const startedAt = Date.now();
   try {

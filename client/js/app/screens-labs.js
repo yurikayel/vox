@@ -8,6 +8,16 @@ import { getActiveUser, makeShellProps } from "./context.js";
 import { renderMofnLab, wireMofnLab } from "../labs/mofn-lab.js";
 import { renderDungeonLab, wireDungeonLab } from "../labs/ai-social-dungeon-lab.js";
 
+/** Remove o listener `message` do host de frames da visita anterior (e o da própria saída da rota). */
+let detachFramesHost = null;
+
+/** Solta o host de frames atual, se houver. */
+function releaseFramesHost() {
+  const detach = detachFramesHost;
+  detachFramesHost = null;
+  detach?.();
+}
+
 /**
  * Monta o lab Open Frames com iframe sandbox e log de ações.
  *
@@ -16,15 +26,15 @@ import { renderDungeonLab, wireDungeonLab } from "../labs/ai-social-dungeon-lab.
 export async function showLabsFrames() {
   const user = await getActiveUser();
   const main = render.renderShell(makeShellProps(user, "home", "Open Frames"));
-  main.innerHTML += `
-    <a class="back-link" href="#/voxpedia">← Voxpedia</a>
-    <div class="card">
-      <h2>Open Frames (lab)</h2>
-      <p class="desc">Iframe sandbox em origem opaca (sem <code>allow-same-origin</code>): o host só aceita mensagens da janela do próprio iframe, em lista fechada (<code>of:ready</code>, <code>of:resize</code>, <code>of:action</code>).</p>
-      <div id="labs-frame-host" style="margin-top:0.75rem;"></div>
-      <p class="meta" id="labs-frame-log" aria-live="polite">Nenhuma ação recebida ainda.</p>
-    </div>`;
-  const host = main.querySelector("#labs-frame-host");
+  mountFramesLab(main);
+}
+
+/**
+ * Cria o iframe sandbox do demo e o anexa ao host.
+ * @param {HTMLElement} host Contêiner do iframe.
+ * @returns {HTMLIFrameElement} O iframe criado.
+ */
+function createDemoFrame(host) {
   const iframe = document.createElement("iframe");
   iframe.title = "Open Frame demo";
   iframe.sandbox = "allow-scripts allow-forms";
@@ -34,14 +44,40 @@ export async function showLabsFrames() {
   iframe.style.border = "1px solid var(--border)";
   iframe.style.borderRadius = "8px";
   host.appendChild(iframe);
-  const origin = typeof window !== "undefined" ? window.location.origin : "";
-  openFramesHost.attachOpenFrameHost(host, iframe, {
+  return iframe;
+}
+
+/**
+ * Monta o conteúdo do lab Open Frames em `main`, trocando o host de frames da visita anterior.
+ *
+ * @param {HTMLElement} main Contêiner do shell.
+ * @param {Window} [win=window] Janela que recebe o listener `message` e o `hashchange` de saída.
+ * @returns {void}
+ */
+export function mountFramesLab(main, win = window) {
+  releaseFramesHost();
+  main.innerHTML += `
+    <a class="back-link" href="#/voxpedia">← Voxpedia</a>
+    <div class="card">
+      <h2>Open Frames (lab)</h2>
+      <p class="desc">Iframe sandbox em origem opaca (sem <code>allow-same-origin</code>): o host só aceita mensagens da janela do próprio iframe, em lista fechada (<code>of:ready</code>, <code>of:resize</code>, <code>of:action</code>).</p>
+      <div id="labs-frame-host" style="margin-top:0.75rem;"></div>
+      <p class="meta" id="labs-frame-log" aria-live="polite">Nenhuma ação recebida ainda.</p>
+    </div>`;
+  const host = main.querySelector("#labs-frame-host");
+  const iframe = createDemoFrame(host);
+  const origin = win.location?.origin || "";
+  const detach = openFramesHost.attachOpenFrameHost(host, iframe, {
     allowedOrigins: origin ? [origin] : [],
+    win,
     onAction: (payload) => {
       const log = main.querySelector("#labs-frame-log");
       if (log) log.textContent = `Ação recebida do frame: ${String(payload?.action || "?")} (${String(payload?.value ?? "")})`;
     },
   });
+  detachFramesHost = detach;
+  // Ao sair da rota (hash muda) o listener some; se voltar à mesma rota, `showLabsFrames` remonta.
+  win.addEventListener("hashchange", releaseFramesHost, { once: true });
 }
 
 /**
