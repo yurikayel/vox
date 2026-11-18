@@ -24,6 +24,15 @@ import { isSupersededLocally } from "./post-supersede.js";
 import { getRelayHttpUrls } from "./inbox.js";
 import { createPeerSync, defaultPeerSyncDeps, SYNC_INV, SYNC_WANT } from "./peer-sync.js";
 import { randomBase36 } from "./shared/html.js";
+import {
+  MAX_GOSSIP_ITEM_BYTES,
+  MAX_GOSSIP_MESSAGE_BYTES,
+  MAX_PROFILE_CARD_BYTES,
+  exceedsBytes,
+  noteGossipDrop,
+} from "./peers-gossip-profile.js";
+
+export { getGossipDropCounts, MAX_GOSSIP_ITEM_BYTES, MAX_GOSSIP_MESSAGE_BYTES, MAX_PROFILE_CARD_BYTES } from "./peers-gossip-profile.js";
 
 export {
   collectPriorityPinTxIds,
@@ -364,21 +373,25 @@ export async function isTxInUserCommunityScope(txId, cachedData) {
   return scope.has(commId);
 }
 
-const MAX_PROFILE_CARD_SIZE = 65536; // 64 KB max profile card
 const TXID_REGEX = /^[a-zA-Z0-9_-]{3,128}$/;
 
 function isValidTxId(txId) {
   return typeof txId === "string" && TXID_REGEX.test(txId);
 }
 
+/** Item recebido (post, edição, lápide ou cartão) acima do teto do seu tipo: descartado e contado. */
+function isOversizedItem(item) {
+  const isCard = item?.type === profileCard.PROFILE_CARD_TYPE || item?.routeId !== undefined;
+  const max = isCard ? MAX_PROFILE_CARD_BYTES : MAX_GOSSIP_ITEM_BYTES;
+  if (!exceedsBytes(item, max)) return false;
+  noteGossipDrop(isCard ? "oversizedProfileCard" : "oversizedItem");
+  return true;
+}
+
 async function handleProfileCardHello(card) {
   if (!card || typeof card !== "object" || !card.pubKey || !card.sig || !card.author) return;
   if (moderation.shouldDropGossip(card.author)) return;
-  try {
-    if (JSON.stringify(card).length > MAX_PROFILE_CARD_SIZE) return;
-  } catch {
-    return;
-  }
+  if (isOversizedItem(card)) return;
   const valid = await localAccount.verifyPayload(card);
   if (valid) {
     await gossipProfile.applyVerifiedProfileCardItem(card);
@@ -428,9 +441,9 @@ function handleBlobMessage(msg) {
   pendingRequests.delete(msg.txId);
 }
 
-const VOX_MESSAGE_HANDLERS = {
+const VOX_MESSAGE_HANDLERS = new Map(Object.entries({
   PROFILE_CARD_HELLO: (msg) => handleProfileCardHello(msg.card),
-  PROFILE_CARD: (msg) => gossipProfile.applyDirectoryProfileCard(msg.card),
+  PROFILE_CARD: (msg) => (isOversizedItem(msg.card) ? null : gossipProfile.applyDirectoryProfileCard(msg.card)),
   MEMORY_BEACON: (msg) =>
     msg.memoryUrl ? centralMemory.registerDiscoveredMemoryUrl(msg.memoryUrl) : null,
   WANT: (msg, replyFn, settings, source) => handleWantMessage(msg, replyFn, settings, source),
@@ -447,7 +460,7 @@ const VOX_MESSAGE_HANDLERS = {
   CACHE_MANIFEST: (msg, _replyFn, _settings, source) => (msg.item ? handleCacheManifestMessage(msg.item, source) : null),
   [SYNC_INV]: (msg, replyFn, _settings, source) => (source === "rtc" ? peerSync.onInventory(msg, replyFn) : null),
   [SYNC_WANT]: (msg, replyFn, _settings, source) => (source === "rtc" ? peerSync.onWant(msg, replyFn) : null),
-};
+}));
 
 /**
  * Despacha uma mensagem da malha para o tratador do seu `type` (WANT, BLOB, DM, GOSSIP, SYNC_INV etc.). Com a ajuda
@@ -462,10 +475,11 @@ export async function handleVoxMessage(msg, replyFn, source = "broadcast") {
   const settings = getPeerSettings();
   if (!settings.enabled) return;
 
-  const handler = VOX_MESSAGE_HANDLERS[msg.type];
-  if (handler) {
-    await handler(msg, replyFn, settings, source);
-  }
+  if (exceedsBytes(msg, MAX_GOSSIP_MESSAGE_BYTES)) return noteGossipDrop("oversizedMessage");
+  // Map, não objeto: `type` vem de fora e "__proto__"/"constructor" não podem resolver para nada herdado.
+  const handler = typeof msg.type === "string" ? VOX_MESSAGE_HANDLERS.get(msg.type) : undefined;
+  if (!handler) return noteGossipDrop("unknownType");
+  await handler(msg, replyFn, settings, source);
 }
 
 function relayToMesh(payload, source = "rtc") {
@@ -516,7 +530,7 @@ function isOutsideLiveNetwork(item) {
 
 /** `sentBlob`: a mídia do `mediaHash`, que viaja ao lado do post (PM-87); só entra e segue adiante se bate com o hash. */
 async function handleGossipMessage(item, source = "rtc", sentBlob = null) {
-  if (!item?.id || !item?.sig) return;
+  if (!item?.id || !item?.sig || isOversizedItem(item)) return;
   if (moderation.shouldDropGossip(item.author) || isOutsideLiveNetwork(item)) return;
   if (await isSupersededLocally(item)) return;
   if (!(await localAccount.verifyPayload(item))) return;
@@ -558,7 +572,7 @@ function isMalformedOrBlockedUpdate(item) {
 }
 
 async function handleGossipUpdateMessage(item, source = "rtc") {
-  if (isMalformedOrBlockedUpdate(item)) return;
+  if (isMalformedOrBlockedUpdate(item) || isOversizedItem(item)) return;
   if (await isGossipUpdateSuperseded(item)) return;
   if (!(await localAccount.verifyPayload(item))) return;
 
@@ -590,11 +604,14 @@ async function isTombstoneSuperseded(tombstone) {
   return false;
 }
 
+/** Lápide sem campos, grande demais, de autor bloqueado ou sem data: nem chega à assinatura. */
+function isMalformedOrBlockedTombstone(tombstone) {
+  if (!tombstone?.id || !tombstone?.sig || !tombstone?.author || isOversizedItem(tombstone)) return true;
+  return moderation.shouldDropGossip(tombstone.author) || !(tombstone.editedAt || tombstone.ts);
+}
+
 async function handleGossipDeleteMessage(tombstone, source = "rtc") {
-  if (!tombstone?.id || !tombstone?.sig || !tombstone?.author) return;
-  if (moderation.shouldDropGossip(tombstone.author)) return;
-  const deleteTime = tombstone.editedAt || tombstone.ts || 0;
-  if (!deleteTime) return;
+  if (isMalformedOrBlockedTombstone(tombstone)) return;
   if (await isTombstoneSuperseded(tombstone)) return;
 
   const valid = await localAccount.verifyPayload(tombstone);
