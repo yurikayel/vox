@@ -8,7 +8,7 @@ import * as render from "../render.js";
 import * as localAccount from "../identity/index.js";
 import * as emailKit from "../email-kit.js";
 import { normalizeVaultEmail } from "../vault/index.js";
-import { setOAuthButtonBusy, setOAuthEnrichError } from "./onboarding.js";
+import { setOAuthButtonBusy, setOAuthEnrichError, warnIfAccountNotPersisted } from "./onboarding.js";
 
 /** Inputs de `#form-oauth-custom-name` (genesis-entry) para foco após erro na entrada (LT-07). */
 const EMAIL_ENTRY_FOCUS_ID = { name: "oauth-custom-name-input", email: "oauth-entry-email-input", pass: "oauth-entry-pass-input" };
@@ -69,6 +69,7 @@ async function handleEntryFormSubmit({ draftState, form, finish, finishNameOnly 
   try {
     const out = await emailKit.createEmailAccountKit({ ...v, draftState });
     if (!out.ok) return setOAuthEnrichError(out.reason);
+    warnIfAccountNotPersisted();
     emailKit.triggerMailtoDraft(out.kit.mailtoUrl);
     showEmailKitCard({ kit: out.kit, routeId: out.routeId, email: v.email, form, finish });
   } catch (errCreate) {
@@ -87,7 +88,7 @@ async function handleEntryFormSubmit({ draftState, form, finish, finishNameOnly 
 export function bindEmailEntryForm(form, { finish, finishNameOnly }) {
   const draftState = { email: "", pass: "" };
   bindEntryPasswordToggle();
-  document.getElementById("btn-oauth-name-only")?.addEventListener("click", () => finishNameOnly(readEntryFormValues().rawName));
+  document.getElementById("btn-oauth-name-only")?.addEventListener("click", () => void finishNameOnly(readEntryFormValues().rawName));
   form.addEventListener("submit", (e) => {
     e.preventDefault();
     void handleEntryFormSubmit({ draftState, form, finish, finishNameOnly });
