@@ -3,6 +3,7 @@
  */
 
 import { currentInvite } from "./vox-link.js";
+import { resolveToastLiveRegion } from "./honest-errors.js";
 
 /**
  * Baixa um arquivo; o endereço temporário só sai depois (liberar no clique cancela o download em alguns navegadores).
@@ -29,17 +30,27 @@ export const SHARE_CLIPBOARD_SUCCESS_TOAST = "Link copiado — cole onde quiser 
 /** Microcopy exibida na interface. @type {string} */
 export const SHARE_CLIPBOARD_RICH_TOAST = "Texto formatado copiado — cole no Zap ou onde quiser.";
 
-/** Operação `showToast` do módulo.
- * @param {*} [message] Mensagem a assinar ou verificar.
- * @param {*} [type] Parâmetro `type`.
+/**
+ * Exibe toast visual e anuncia o texto numa região `aria-live` (sem mover o foco).
+ * @param {string} message Texto do aviso.
+ * @param {string} [type="info"] `error` usa região assertiva; demais tipos são `polite`.
  */
 export function showToast(message, type = "info") {
   if (typeof process !== "undefined" && process.env?.NODE_ENV === "test") return;
+  if (typeof document === "undefined") return;
   const existing = document.querySelector(".vox-toast");
   if (existing) existing.remove();
 
+  const region = resolveToastLiveRegion(document, type);
+  region.textContent = "";
+  const timer = setTimeout(() => {
+    region.textContent = message;
+  }, 50);
+  timer.unref?.();
+
   const toast = document.createElement("div");
   toast.className = `vox-toast ${type}`;
+  toast.setAttribute("aria-hidden", "true");
   toast.textContent = message;
   document.body.appendChild(toast);
 

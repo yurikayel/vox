@@ -149,3 +149,51 @@ export function createSignalingHealth({ graceMs = SIGNALING_DOWN_GRACE_MS, onCha
   }
   return { update, reset, isDown: flag.get };
 }
+
+const TOAST_LIVE_REGION_STYLE =
+  "position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0";
+
+/** Id da região `aria-live="polite"` para toasts informativos. @type {string} */
+export const TOAST_STATUS_REGION_ID = "vox-toast-status";
+
+/** Id da região assertiva (`role="alert"`) para toasts de erro. @type {string} */
+export const TOAST_ALERT_REGION_ID = "vox-toast-alert";
+
+/**
+ * Erros vão para região assertiva; demais tipos usam `polite`.
+ * @param {string} [type] Tipo do toast (`info`, `warning`, `error`, …).
+ * @returns {boolean}
+ */
+export function isToastTypeAssertive(type) {
+  return type === "error";
+}
+
+/**
+ * HTML das regiões vivas estáveis de toast (injetadas no shell; texto atualizado por `showToast` em `share.js`).
+ * @returns {string}
+ */
+export function renderToastLiveRegionsHtml() {
+  const hidden = `style="${TOAST_LIVE_REGION_STYLE}" aria-atomic="true"`;
+  return `<div id="${TOAST_STATUS_REGION_ID}" role="status" aria-live="polite" ${hidden}></div><div id="${TOAST_ALERT_REGION_ID}" role="alert" ${hidden}></div>`;
+}
+
+/**
+ * Devolve a região viva do toast (a do shell ou criada sob demanda antes do shell montar).
+ * @param {Document} doc Documento alvo.
+ * @param {string} [type] Tipo do toast.
+ * @returns {HTMLElement}
+ */
+export function resolveToastLiveRegion(doc, type) {
+  const isError = isToastTypeAssertive(type);
+  const id = isError ? TOAST_ALERT_REGION_ID : TOAST_STATUS_REGION_ID;
+  const found = doc.getElementById?.(id);
+  if (found) return found;
+  const region = doc.createElement("div");
+  region.id = id;
+  region.setAttribute("role", isError ? "alert" : "status");
+  if (!isError) region.setAttribute("aria-live", "polite");
+  region.setAttribute("aria-atomic", "true");
+  region.style.cssText = TOAST_LIVE_REGION_STYLE;
+  doc.body.appendChild(region);
+  return region;
+}
