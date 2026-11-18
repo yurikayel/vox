@@ -39,6 +39,8 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 - `request_guard.cors_allow_origin` devolve a entrada correspondente de `APP_ORIGINS` / `VOX_RELAY_ALLOWED_ORIGINS` (ou a origem de loopback reconstruída de esquema e nome fixos e porta numérica) em vez de ecoar o texto recebido, e recusa origem com CR, LF, tab, espaço, NUL ou outro caractere de controle antes de comparar. Origem de loopback com caminho, usuário ou porta inválida deixa de receber CORS. Testes: `relay/test_cors_origens.py` (13). Sem bump de SW.
 ### Correção: busca upstream de transação só com id já validado (CodeQL 287)
 - `relay/server.py`: `_fetch_transaction` recusa imediatamente se `is_tx_id` falhar (43 caracteres, conjunto fixo), antes de montar o URL nos gateways da lista fechada. Sem bump de SW.
+### Correção: caminho do cofre na memória central via `safe_path.child_of` (CodeQL path-injection)
+- `relay/vault_store.py`: arquivo `vaults/<id>.json` só é resolvido com `child_of` após validar o nome. Sem bump de SW.
 ### Correção: e-mail e Senha Soberana fora de `sessionStorage` (CodeQL 282 / 284)
 - `app/onboarding-email.js`: o rascunho (`vox-genesis-resume-v1`) guarda só passo, nome e sinalizadores; `pass` e `email` são descartados em `writeGenesisResume`. Após recarregar, e-mail e senha voltam vazios (foco no primeiro campo do passo); na espera da malha a pessoa preenche os dois de novo e o pedido continua pelo endereço em `loadMeshPending`. `readGenesisResume` regrava rascunhos antigos que ainda tinham segredo ou e-mail. Testes: `tests/onboarding-reload-keyboard.test.js`. Sem bump de SW.
 ### Refatoração: nome externo vira caminho só por `relay/safe_path.py` (alertas CodeQL `py/path-injection` 266–281)
