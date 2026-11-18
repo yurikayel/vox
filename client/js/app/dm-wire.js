@@ -87,15 +87,54 @@ async function handleNaturalCasePayload(env, rawText) {
   } catch {}
 }
 
+/** Folga de relógio aceita entre quem manda e quem recebe; acima disso o `ts` do envelope não vale. */
+const MAX_CLOCK_SKEW_MS = 10 * 60 * 1000;
+
+/**
+ * Hora da mensagem no fio. O `ts` do envelope não é assinado nem entra no AAD: quem manda (ou o relay) pode pôr
+ * qualquer valor. Número positivo e não além da folga vale; o resto vira a hora de chegada. Sem isso, um `ts` no
+ * futuro prende a mensagem no fim do fio e a conversa no topo, e ela nunca sai de "não lida".
+ */
+function arrivalTs(ts, now = Date.now()) {
+  const valid = typeof ts === "number" && Number.isFinite(ts) && ts > 0 && ts <= now + MAX_CLOCK_SKEW_MS;
+  return valid ? ts : now;
+}
+
+/** Texto, cartão, foto ou citação: sem nenhum dos quatro (tipo desconhecido ou vazio) não há o que mostrar. */
+function hasContent(parsed) {
+  return Boolean(parsed.text || parsed.contextCard || parsed.mediaDataUrl || parsed.replyTo);
+}
+
+/** O id é a chave da mensagem em todas as conversas: reaproveitá-lo reescreveria a mensagem (e as reações) de outro fio. */
+async function isKnownMessageId(id) {
+  return (await cacheNode.getAllDmMessages()).some((m) => m.id === id);
+}
+
+function saveIncomingMessage(env, parsed) {
+  return cacheNode.saveDmMessage({
+    id: env.id,
+    peerAddress: env.from,
+    from: env.from,
+    to: env.to,
+    text: parsed.text,
+    replyTo: parsed.replyTo,
+    contextCard: parsed.contextCard,
+    mediaDataUrl: parsed.mediaDataUrl,
+    ts: arrivalTs(env.ts),
+    status: "received",
+  });
+}
+
 /**
  * Processa um envelope recebido e já decifrado.
  *
  * Reação, confirmação de leitura e aviso de contato só atualizam o estado local sem abrir conversa.
  * Mensagem é guardada; se trouxer denúncia ou resposta de papel, o tratamento especial roda em seguida.
+ * Mensagem sem conteúdo, ou com um `id` que já existe em qualquer fio, não é guardada (replay não reescreve nada).
  *
  * @param {{id: string, from: string, to: string, ts?: number}} env Envelope.
  * @param {string} rawText Texto decifrado.
- * @returns {Promise<boolean|string>} `false` quando reação/leitura não acham mensagem; `"contact_added"` para aviso de contato; `"guardian"` para mensagem de guardião (não vai para o fio).
+ * @returns {Promise<boolean|string>} `false` quando reação/leitura não acham mensagem ou a mensagem vem vazia; `"contact_added"` para aviso de contato; `"guardian"` para mensagem de guardião (não vai para o fio); `"duplicate"` quando o `id` já estava guardado.
  */
 export async function ingestDecryptedEnvelope(env, rawText) {
   if ((await receiveGuardianDm(env, rawText)) || (await receiveMeshDm(env, rawText))) return "guardian";
@@ -110,18 +149,9 @@ export async function ingestDecryptedEnvelope(env, rawText) {
   if (parsed.kind === "read") {
     return applyReadReceipt(env.from, parsed.upToTs);
   }
-  await cacheNode.saveDmMessage({
-    id: env.id,
-    peerAddress: env.from,
-    from: env.from,
-    to: env.to,
-    text: parsed.text,
-    replyTo: parsed.replyTo,
-    contextCard: parsed.contextCard,
-    mediaDataUrl: parsed.mediaDataUrl,
-    ts: env.ts || Date.now(),
-    status: "received",
-  });
+  if (!hasContent(parsed)) return false;
+  if (await isKnownMessageId(env.id)) return "duplicate";
+  await saveIncomingMessage(env, parsed);
   await handleReportPayload(env, rawText);
   await handleRoleClaimPayload(rawText);
   await handleNaturalCasePayload(env, rawText);
