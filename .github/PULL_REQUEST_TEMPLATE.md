@@ -9,7 +9,7 @@
 
 | Verificação | Comando | Status | Evidência |
 |---|---|---|---|
-| Suíte | `npm test` | PASS / FAIL / NOT RUN / BLOCKED | ex.: exit 0, 855 JS + 89 Python |
+| Suíte | `npm test` | PASS / FAIL / NOT RUN / BLOCKED | ex.: exit 0; contagens atuais em [release-metadata.json](../docs/release-metadata.json) |
 | Lint, complexidade e documentação | `npm run validate` | | |
 
 ## Checklist

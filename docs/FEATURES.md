@@ -1,6 +1,6 @@
 # Catálogo de funcionalidades — Vox
 
-> **Status:** canônico · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-13
+> **Status:** canônico · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-17
 > Fonte: rotas de `client/js/app/route-parse.js`, imports reais em `client/js/**` e `tests/*.test.js`. Ao plugar ou remover um módulo, atualize a linha correspondente aqui.
 
 **Legenda de status**
@@ -77,6 +77,7 @@
 | Perfil, Voxels, passaporte | `#/perfil`, `#/u/:addr` | `app/screens-profile.js`, `voxels.js` | no ar (Voxels só locais) | `voxels`, `profile-*` |
 | Importar nome/foto (Google, Meta, Bluesky, X, TikTok, GitHub) | Perfil (fora da entrada desde o ADR-032) | `social-login.js`, `oauth-profile.js`, `bsky-oauth.js` | depende de config (Kwai: "em breve") | `social-login`, `oauth-profile` |
 | DMs E2E | `#/dm`, `#/dm/:addr` | `crypto-dm.js`, `dm-messenger.js`, `inbox.js`, `dm-outbox.js` | no ar; entrega offline **depende de relay** (inbox padrão `127.0.0.1:3920`). Caixa de saída (PM-78): o que não saiu é reenviado enquanto o app está aberto, por até 7 dias ("⏳ Aguardando" → "⚠ Não entregue") | `crypto-dm`, `dm-*`, `inbox`, `dm-outbox` |
+| Mochila de DMs (repasse cego entre aparelhos) | — | `dm-outbox.js` (só o passo 0, PM-78); `dm-mochila.js` ainda não existe | **parcial**: caixa de saída no ar; envelope v2 e repasse (PM-79, passos 1 e 2) não implementados; [spec](./specs/mochila-dm-v0.md) | `dm-outbox` |
 | Convite com vínculo assinado (padrinho) | `#/connect/:id?convite=` | `vox-link.js`, `app/vox-link-flow.js`, `render/vox-link.js` | no ar (PM-82): aceite assinado por quem entra e confirmação automática de quem convidou (10 aceites, 30 dias); passa pela malha e pela memória central. Base do moderador natural (PM-83, em **lab** `vox.lab.moderador`; [spec](./specs/moderador-natural-v0.md)) | `vox-link` |
 | Pareamento por QR sem servidor | — | `airgap-webrtc.js` | **escrito, não plugado** | `airgap-webrtc` |
 | Carteira Arweave + assistente | `#/wallet`, `#/wallet/guia` | `wallet.js`, `app/screens-guided.js` | no ar | `wallet` |
