@@ -35,7 +35,12 @@ import { renderRepostCiteHtml } from "./repost-cite.js";
 import { renderRepostBtn } from "./repost-btn.js";
 import { rememberVisible } from "../repost-index.js";
 import { groupRepliesForThread } from "../reply-thread.js";
-import { renderPhotoHiddenMessageHtml } from "./photo-chrome.js";
+import {
+  renderPhotoHiddenMessageHtml,
+  resolvePostImageAltText,
+  renderPostImageLightboxTriggerHtml,
+} from "./photo-chrome.js";
+import { composerPreviewImageAltAttr } from "../composer-media.js";
 import { renderCivicBlock, renderCivicPendingNote, renderCivicFeedIntro } from "./civic-block.js";
 import { isElectoralModeActive } from "../electoral-period.js";
 
@@ -75,7 +80,7 @@ function renderComposerAspectBar() {
 function renderComposerPreviewWrap() {
   return `
     <div class="inline-composer-preview hidden" id="inline-topic-preview-wrap" hidden>
-      <img id="inline-topic-preview" class="inline-composer-preview-img hidden" alt="Prévia da imagem" hidden />
+      <img id="inline-topic-preview" class="inline-composer-preview-img hidden" ${composerPreviewImageAltAttr()} hidden />
       <div id="inline-topic-preview-audio-wrap" class="inline-composer-preview-audio hidden" hidden>
         <div class="inline-composer-preview-audio-header">
           <span>🎙️</span>
@@ -582,16 +587,13 @@ function renderAudioHero(audioSrc, overlayHeaderHtml, overlayFooterHtml) {
 }
 
 function renderImageHero(t, layer, overlayHeaderHtml, overlayFooterHtml) {
-  const alt = escapeHtml(t.imageAlt || t.title || "");
-  const src = escapeHtml(t.image);
+  const altText = resolvePostImageAltText(t);
   const aspect = normalizePostAspect(t?.aspectRatio);
   const aspectClass = `post-aspect-${aspect.replace(":", "-")}`;
   return `
     <div class="post-media-container post-media-hero ${aspectClass}" data-aspect="${escapeHtml(aspect)}">
       ${overlayHeaderHtml}
-      <button type="button" class="post-media-lightbox-trigger" aria-label="Ver imagem em tela cheia" data-media-src="${src}" data-media-alt="${alt}">
-        <img class="post-media post-media-hero-img" src="${src}" alt="${alt}" loading="lazy" />
-      </button>
+      ${renderPostImageLightboxTriggerHtml(t.image, altText)}
       ${layer}
       ${overlayFooterHtml}
     </div>`;
