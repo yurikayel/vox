@@ -24,7 +24,7 @@ function installRelay(mode) {
   globalThis.fetch = async (url, opts = {}) => {
     const method = opts.method || "GET";
     const key = String(url).split("/memory/vault/")[1];
-    calls.push({ method, key });
+    calls.push({ method, key, signal: opts.signal });
     const m = typeof mode.current === "function" ? mode.current(method, calls.length) : mode.current;
     if (m === "down") throw new TypeError("Failed to fetch");
     if (m === "5xx") return { ok: false, status: 503, json: async () => ({}) };
@@ -217,5 +217,19 @@ test("restaurar: senha errada continua falhando fechado com rede boa", async () 
   assert.equal(res.ok, false);
 });
 
-test.todo("restaurar: GET do cofre sem timeout — relay lento deixa 'Entrar' pendurado para sempre (probeVaultUrl; S3 / fetch-timeout)");
+test("restaurar: GET do cofre tem timeout — relay lento não deixa 'Entrar' pendurado para sempre", async () => {
+  freshDevice();
+  const relay = installRelay({ current: (_method, n) => (n === 1 ? "hang" : "down") });
+  let guardTimer;
+  const guard = new Promise((resolve) => {
+    guardTimer = setTimeout(() => resolve("hung"), 4800);
+  });
+  const out = await Promise.race([restoreFromPassphraseVault(PASS, { email: EMAIL }), guard]);
+  clearTimeout(guardTimer);
+  assert.notEqual(out, "hung", "probeVaultUrl deve vencer o prazo em vez de travar");
+  assert.equal(out.ok, false);
+  assert.equal(out.noServer, true);
+  assert.equal(relay.calls[0]?.signal?.aborted, true, "AbortSignal passado ao fetch foi abortado no timeout");
+});
+
 test.todo("criar: conta trava (lockAfterPasswordBackup) mesmo quando nenhum servidor aceitou o cofre (remote=0) e a só cópia está neste aparelho");
