@@ -66,6 +66,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 | Decisões institucionais e de arquitetura (registro) | [DECISOES.md](./DECISOES.md) |
 | ADRs (detalhe de cada decisão) | [adr/README.md](./adr/README.md) |
 | Tese de tração e preceitos | [direcionamento-crescimento-rede-2026-11.md](./strategy/direcionamento-crescimento-rede-2026-11.md) |
+| Retrato do repo (nov/2026, portões e drift main/develop) | [analise-repositorio-vox-2026-11.md](./strategy/analise-repositorio-vox-2026-11.md) |
 | Navegação, banners de status e DoD dos docs | [CONTRIBUTING-DOCS.md](./CONTRIBUTING-DOCS.md) |
 | Termos da UI e copy leigo (pt-BR) | [GLOSSARIO.md](./GLOSSARIO.md) |
 
