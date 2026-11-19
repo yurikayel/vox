@@ -7,7 +7,6 @@ import "./setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import * as cu from "../client/js/community-updates.js";
-import * as cav from "../client/js/shared/community-avatar-image.js";
 import * as cacheNode from "../client/js/cache-node.js";
 import * as localAccount from "../client/js/identity/local-account.js";
 import * as peers from "../client/js/peers.js";
@@ -41,6 +40,13 @@ test("PM-09: só foto, título, descrição e categoria passam", () => {
   });
   assert.deepEqual(picked, { title: "Novo", image: "https://example.com/nova.jpg", avatar: "https://example.com/nova.jpg" });
   assert.deepEqual(cu.pickCommunityUpdateFields({ title: 42, description: "" }), {});
+});
+
+const SVG_IMG = "data:image/svg+xml;base64,PHN2Zy8+";
+
+test("PM-09: SVG não passa em pickCommunityUpdateFields (red-on-base #8)", () => {
+  const picked = cu.pickCommunityUpdateFields({ image: SVG_IMG, avatar: SVG_IMG, title: "X" });
+  assert.deepEqual(picked, { title: "X" });
 });
 
 test("PM-09: update de estranho é ignorado; o do dono vale e não troca id nem dono", () => {
@@ -140,12 +146,11 @@ test("PM-09: gossip não grava update com SVG ou imagem acima do teto", async ()
     id: "comm_update_cinema_svg",
     type: "community_update",
     communityId: "cinema",
-    image: "data:image/svg+xml;base64,PHN2Zy8+",
+    image: SVG_IMG,
     updatedAt: 4000,
   });
   await peers.handleVoxMessage({ type: "GOSSIP", item: svgUpdate, fromPeer: "peer_svg" }, () => {}, "rtc");
   assert.equal(await cacheNode.getLocalPost("comm_update_cinema_svg"), null);
-  assert.equal(cav.communityGossipHasRejectedImages(svgUpdate), true);
 });
 
 function renderHeaderHtml(opts) {
