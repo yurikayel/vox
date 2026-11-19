@@ -514,9 +514,13 @@ function syncProfileDirectoryFromGossip(item) {
   }
 }
 
-/** PM-09: update de comunidade assinado por quem não é dono nem moderador não entra nem segue adiante. */
-async function isRejectedCommunityUpdate(item) {
-  return item.type === "community_update" && !(await cacheNode.isCommunityUpdateAcceptable(item));
+/** PM-09 + imagem: community/community_update com mídia insegura ou update sem permissão. */
+async function isRejectedCommunityGossipItem(item) {
+  if (item.type !== "community" && item.type !== "community_update") return false;
+  const { communityGossipHasRejectedImages } = await import("./shared/community-avatar-image.js");
+  if (communityGossipHasRejectedImages(item)) return true;
+  if (item.type === "community_update") return !(await cacheNode.isCommunityUpdateAcceptable(item));
+  return false;
 }
 
 /**
@@ -541,7 +545,7 @@ async function handleGossipMessage(item, source = "rtc", sentBlob = null) {
   }
 
   if (!allowGossipFromAuthor(item.author)) return;
-  if (await isRejectedCommunityUpdate(item)) return;
+  if (await isRejectedCommunityGossipItem(item)) return;
   noteKeySeen(item.author);
 
   syncProfileDirectoryFromGossip(item);
@@ -580,7 +584,7 @@ async function handleGossipUpdateMessage(item, source = "rtc") {
     await applyAndRelayProfileCard(item, "GOSSIP_UPDATE", source);
     return;
   }
-  if (await isRejectedCommunityUpdate(item)) return;
+  if (await isRejectedCommunityGossipItem(item)) return;
 
   await cacheNode.saveLocalPost(item);
   dispatchGossipPost(item, source);
