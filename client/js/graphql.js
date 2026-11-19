@@ -361,9 +361,15 @@ async function queryOne(gqlUrl, query, variables) {
     body: JSON.stringify({ query, variables }),
     // LAN-27: gateway lento não segura a leitura; 402/429/5xx caem para o próximo.
   }, { timeoutMs: GATEWAY_TIMEOUT_MS });
-  const raw = await readResponseText(res, 4096);
-  if (!res.ok) throw new Error(`HTTP ${res.status}${raw ? `: ${raw.slice(0, 200)}` : ""}`);
-  const json = JSON.parse(raw);
+  let json;
+  if (typeof res.text === "function") {
+    const raw = await readResponseText(res, 4096);
+    if (!res.ok) throw new Error(`HTTP ${res.status}${raw ? `: ${raw.slice(0, 200)}` : ""}`);
+    json = JSON.parse(raw);
+  } else {
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    json = await res.json();
+  }
   if (json.errors?.length) throw new Error(json.errors[0].message);
   return filterGraphqlData(json.data);
 }

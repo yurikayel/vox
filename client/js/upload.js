@@ -38,6 +38,19 @@ export function buildTags(type, fields = {}) {
   return tags;
 }
 
+/** Corpo JSON de resposta Turbo (texto drenado ou `json()` em mocks de teste). */
+async function parseTurboOkBody(res, text) {
+  if (text) {
+    try {
+      return JSON.parse(text);
+    } catch {
+      return {};
+    }
+  }
+  if (typeof res.json !== "function") return {};
+  return res.json().catch(() => ({}));
+}
+
 export async function uploadToTurbo(itemBytes) {
   let lastErr = null;
   for (const url of TURBO_ENDPOINTS) {
@@ -47,14 +60,9 @@ export async function uploadToTurbo(itemBytes) {
         headers: { "Content-Type": "application/octet-stream" },
         body: itemBytes,
       }, { timeoutMs: 15000 });
-      const text = await res.text().catch(() => "");
+      const text = typeof res.text === "function" ? await res.text().catch(() => "") : "";
       if (res.ok) {
-        let body = {};
-        try {
-          body = JSON.parse(text);
-        } catch {
-          /* corpo vazio ou não-JSON */
-        }
+        const body = await parseTurboOkBody(res, text);
         return { ok: true, status: res.status, body };
       }
       lastErr = new Error(`HTTP ${res.status}${text ? `: ${text.slice(0, 200)}` : ""}`);
