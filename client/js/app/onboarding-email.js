@@ -310,12 +310,23 @@ function resumeGenesisHave(resume, show) {
   if (resume.meshWaiting) setOAuthEnrichError(MESH_RESUME_ASK_PASS);
 }
 
+function hydrateKitFromMailto(mailtoUrl) {
+  const raw = String(mailtoUrl || "");
+  const q = raw.indexOf("?");
+  const to = raw.startsWith("mailto:") ? decodeURIComponent(raw.slice(7, q >= 0 ? q : raw.length)) : "";
+  const params = new URLSearchParams(q >= 0 ? raw.slice(q + 1) : "");
+  const subject = params.get("subject") || "";
+  const body = params.get("body") || "";
+  const copyText = subject && body ? `Assunto: ${subject}\n\n${body}` : body;
+  return { to, subject, body, copyText, filename: "vox-acesso.txt", mailtoUrl: raw };
+}
+
 function resumeGenesisEmailKit(resume, show, onEmailKitFinish) {
   if (!resume.mailtoUrl) return;
   show("entry");
   const form = document.getElementById("form-oauth-custom-name");
   if (!form) return;
-  const kit = { to: document.getElementById("oauth-entry-email-input")?.value.trim() || "", mailtoUrl: resume.mailtoUrl };
+  const kit = hydrateKitFromMailto(resume.mailtoUrl);
   showEmailKitCard({ kit, routeId: resume.routeId || "", email: kit.to, form, finish: onEmailKitFinish });
 }
 

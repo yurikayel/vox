@@ -6,6 +6,12 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Code: LT-07a/b/c — proteção contra redesenho no `hashchange`, focus trap/Escape e retomada do kit de e-mail
+- `client/js/app/onboarding.js` (`LT-07a`): `checkOAuthEnrichStep` não redesenha o modal quando `#oauth-enrich-overlay` já está aberto.
+- `client/js/render/genesis-entry.js`, `client/js/render/focus-trap.js` (`LT-07b`): `renderOAuthEnrich` ativa focus trap (ignorando seções `[hidden]` e tratando `Escape`), foca o primeiro campo ao abrir e `closeOAuthEnrich` devolve o foco ao elemento anterior.
+- `client/js/app/onboarding-email.js` (`LT-07c`): `resumeGenesisEmailKit` reconstrói `to` e `copyText` do `mailtoUrl` salvo em `sessionStorage`, mantendo copiar e baixar funcionais após recarregar a página.
+- `tests/onboarding-reload-keyboard.test.js`, `docs/process/plano-testes-login.md`: 3 testes `PM-111` red-on-base.
+
 ### Code: LT-06b (cache de conta entre abas) e leitura JSON segura em `local-account.js`
 - `client/js/identity/local-account.js`: `getCachedRouteIdSync` e `syncCurrentAccountMetadataToVault` descartam `cachedAccount` quando `vox-local-account-v1` foi apagado do `localStorage` por outra aba (`LT-06b`), impedindo que a conta apagada fique viva em memória ou ressuscite em `vox-accounts-vault-v1`; leituras de JSON (`readVaultMap`, `getProfileEnrichment`, `getPixKey`, `loadStoredLocalAccount`) passam por `readStoredRecord`/`isPlainRecord` (`keystore.js`).
 - `client/js/identity/tab-sync.js`, `tests/tab-sync.test.js`, `docs/process/plano-testes-login.md`: limpeza incondicional ao recarregar storage vazio e testes `PM-111` red-on-base.
