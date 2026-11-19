@@ -6,6 +6,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Docs: revisão PTLD e reorganização escaneável do `README.md`
+- `README.md`: enxugado de ~361 para ~225 linhas mantendo 100% dos fatos e regexes do `release_line.py`; topo direto com tabela de acesso rápido, matriz tripartite (`Vox` / `Vox Populi` / `Vox Memoria` + nota Steward kit ≠ 4º produto), quickstart movido para cima, remoção de resíduos antigos (`Nó Zero`/`Node Zero`, LaTeX cru `≤ 320p`, `polis.js` em `labs/parado/`, `workers/` na árvore), inclusão de links para `mvp-tecnico-vox-2026-11.md`, `auditoria-features-arquitetura-2026-11.md` e `GLOSSARIO.md`, e emojificação contida como âncora visual. Sem código nem bump de SW.
+
 ### Docs: taxonomia tripartite `Vox` · `Vox Populi` · `Vox Memoria` e Conexão local (ADR-011)
 - `docs/adr/011-taxonomia-tripartite-produtos-vox.md`: emenda formalizando cliente único (`Vox`), nó de apoio + dashboard simples (`Vox Populi`) e nó de memória perene + dashboard CPU/disco/banda (`Vox Memoria`, substituindo `VoxPopuli-ZeroMemory` / `Node Zero`), além de **Conexão local** (*Usando seu nó*, substituindo `Local Boost`) e exclusão mútua de nó local (`Vox Populi` XOR `Vox Memoria`, encerramento limpo ao trocar).
 - `docs/GLOSSARIO.md`, `README.md`, `docs/strategy/analise-repositorio-vox-2026-11.md`, `docs/operations/steward-relay-kit.md`: alinhados à nova nomenclatura. Sem alteração de código nem bump de SW.
