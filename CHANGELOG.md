@@ -6,7 +6,13 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
-_Sem entradas pendentes após release 2026-11-19._
+### Code: drena corpo HTTP em erros relay (413/429)
+- `readResponseText` em `fetch-timeout.js`; `central-memory`, `graphql` e `upload` leem o corpo antes de fechar a resposta.
+
+### Docs: PM-112 spike mutação Tier A
+- `docs/process/pm-112-mutation-spike-2026-11.md` — Stryker adiado; PM-111 + adversarial até F2.
+
+_Sem outras entradas pendentes pós-release 2026-11-19._
 
 ## [2026-11-19] — SW `v7.146-dm-limits-6b` (release #296–#302)
 

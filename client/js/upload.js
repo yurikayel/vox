@@ -47,11 +47,17 @@ export async function uploadToTurbo(itemBytes) {
         headers: { "Content-Type": "application/octet-stream" },
         body: itemBytes,
       }, { timeoutMs: 15000 });
+      const text = await res.text().catch(() => "");
       if (res.ok) {
-        const body = await res.json().catch(() => ({}));
+        let body = {};
+        try {
+          body = JSON.parse(text);
+        } catch {
+          /* corpo vazio ou não-JSON */
+        }
         return { ok: true, status: res.status, body };
       }
-      lastErr = new Error(`HTTP ${res.status}`);
+      lastErr = new Error(`HTTP ${res.status}${text ? `: ${text.slice(0, 200)}` : ""}`);
       lastErr.status = res.status;
     } catch (e) {
       lastErr = e;

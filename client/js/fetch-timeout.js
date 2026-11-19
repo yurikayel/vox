@@ -57,3 +57,19 @@ export function fetchWithTimeout(url, init = {}, opts = {}) {
     unlink();
   });
 }
+
+/**
+ * Lê o corpo da resposta (sucesso ou erro) para o socket fechar limpo após 413/429 do relay.
+ * @param {Response} res
+ * @param {number} [maxChars=8192] recorte para mensagens de erro
+ * @returns {Promise<string>}
+ */
+export async function readResponseText(res, maxChars = 8192) {
+  try {
+    const text = await res.text();
+    if (text.length <= maxChars) return text;
+    return `${text.slice(0, maxChars - 1)}…`;
+  } catch {
+    return "";
+  }
+}
