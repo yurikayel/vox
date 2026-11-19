@@ -6,6 +6,13 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+_Sem entradas pendentes após release 2026-11-19._
+
+## [2026-11-19] — SW `v7.146-dm-limits-6b` (release #296–#302)
+
+### Release
+- `develop` → `main`: #296 mapa BR · #297 IXV/docs · #298 foto comunidade · #299 accept raster · #300 DM 32k + ledger react/read · #301 gatilho INF · #302 [`pacote-anti-bus-factor.md`](./docs/operations/pacote-anti-bus-factor.md). Pós-deploy: hard refresh ([`ops-pages-rollback.md`](./docs/operations/ops-pages-rollback.md)).
+
 ### Code: DM #6b — teto de texto 32k e anti-replay de reação/leitura
 - `MAX_DM_TEXT_CHARS` (32.768) em `dm-messenger.js`; `maxlength` no compositor; payload acima do teto não vira balão.
 - `dm-envelope-ledger.js` + `dm-wire.js`: `env.id` de react/read processado uma vez (`duplicate` no replay).
