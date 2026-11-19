@@ -64,6 +64,10 @@ test("community-orkut - renderCommunity header renders Orkut photo, owner displa
   assert.ok(html.includes("community-vox-avatar-wrap"), "Must have community-vox-avatar-wrap");
   assert.ok(html.includes("https://example.com/cinema.png"), "Must render community photo");
   assert.ok(html.includes("input-comm-photo-file"), "Owner can change community photo");
+  assert.ok(
+    html.includes('accept="image/jpeg,image/png,image/webp,image/gif"'),
+    "community photo input restringe MIME raster"
+  );
 
   // Ficha Técnica Orkut
   assert.ok(html.includes("community-orkut-ficha"), "Must have community-orkut-ficha");
