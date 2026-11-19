@@ -135,7 +135,7 @@ Síntese para a próxima rodada trimestral. **Nenhum código de terceiros** na V
 
 - **Institucional:** forks ativos, nicho claro, QA com baseline de supressões — modelo para **bus factor** e editais.
 - **Features de referência (19/11/2026):** moderação transparente + fila emergência (**REV-20**, **LAN-04**); checkbox de cross-post no compositor; painel de operações de storage (inspira **Vox Memoria**); notificações por projeto na comunidade (**PM-23**).
-- **Detalhe (11 rotas, nov/2026):** ver [brainstorm-enois-observacao-2026-11.md](../brainstorms/brainstorm-enois-observacao-2026-11.md).
+- **Detalhe (11 rotas + catálogo IXV-01…14, nov/2026):** ver [brainstorm-enois-observacao-2026-11.md](../brainstorms/brainstorm-enois-observacao-2026-11.md) (§6 índice; §7 Salas Precisas); vocabulário UI em [GLOSSARIO.md](../GLOSSARIO.md) (candidatos IXV).
 - **Lições em uma linha cada:** (1) `/explorar` + `disabledModules` → menu enxuto e **PM-01** lazy; (2) aba **Rituais** + RSVP → **PM-97** / **PM-23** ([modo-assembleia-v0](../specs/modo-assembleia-v0.md)); (3) copy E2E mínima em mensagens → DM e onboarding; (4) painel storage + moderação + `docs/proof/` em PR → **REV-20**.
 - **Não copiar:** backend que decide fora do aparelho; live integrado (ANPD, INF-01); confessionário anônimo global; dezenas de salas no precache.
 
