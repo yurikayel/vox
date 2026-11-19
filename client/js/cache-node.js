@@ -480,6 +480,9 @@ export function invalidateReplyCountsCache() {
  */
 export async function saveLocalPost(post) {
   if (!post?.id || !post?.type) return false;
+  const { sanitizeCommunityGossipImages, communityGossipHasRejectedImages } = await import("./shared/community-avatar-image.js");
+  if (communityGossipHasRejectedImages(post)) return false;
+  post = sanitizeCommunityGossipImages(post);
   const tombstone = await getTombstone(post.id);
   const postTime = post.editedAt || post.ts || 0;
   if (tombstone && (tombstone.editedAt || 0) >= postTime) return false;
@@ -707,6 +710,8 @@ export async function getLocalCommunities() {
  */
 export async function isCommunityUpdateAcceptable(update) {
   if (!update?.communityId) return false;
+  const { communityGossipHasRejectedImages } = await import("./shared/community-avatar-image.js");
+  if (communityGossipHasRejectedImages(update)) return false;
   const post = await getLocalPost(communityUpdates.canonicalCommunityPostId(update.communityId));
   if (!post || post.type !== "community") return true;
   return communityUpdates.canUpdateCommunity(buildLocalCommunityRecord(post), update.author);

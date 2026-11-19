@@ -7,6 +7,7 @@ import "./setup.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import * as cu from "../client/js/community-updates.js";
+import * as cav from "../client/js/shared/community-avatar-image.js";
 import * as cacheNode from "../client/js/cache-node.js";
 import * as localAccount from "../client/js/identity/local-account.js";
 import * as peers from "../client/js/peers.js";
@@ -15,7 +16,8 @@ import * as render from "../client/js/render.js";
 const OWNER = "vx_dono";
 const MOD = "vx_moderador";
 const STRANGER = "vx_estranho";
-const BASE = { id: "cinema", communityId: "cinema", title: "Cinema", owner: OWNER, image: "dono.png", avatar: "dono.png" };
+const IMG_DONO = "https://example.com/dono.jpg";
+const BASE = { id: "cinema", communityId: "cinema", title: "Cinema", owner: OWNER, image: IMG_DONO, avatar: IMG_DONO };
 
 function update(author, fields, t) {
   return { id: `comm_update_cinema_${t}`, type: "community_update", communityId: "cinema", author, ts: t, updatedAt: t, ...fields };
@@ -35,19 +37,19 @@ test("PM-09: só dono e moderador listado podem atualizar", () => {
 test("PM-09: só foto, título, descrição e categoria passam", () => {
   const picked = cu.pickCommunityUpdateFields({
     id: "x", author: STRANGER, owner: STRANGER, moderators: STRANGER, sig: "s", pubKey: {},
-    title: "Novo", image: "nova.png", visibility: "closed", commercialEnabled: true,
+    title: "Novo", image: "https://example.com/nova.jpg", visibility: "closed", commercialEnabled: true,
   });
-  assert.deepEqual(picked, { title: "Novo", image: "nova.png", avatar: "nova.png" });
+  assert.deepEqual(picked, { title: "Novo", image: "https://example.com/nova.jpg", avatar: "https://example.com/nova.jpg" });
   assert.deepEqual(cu.pickCommunityUpdateFields({ title: 42, description: "" }), {});
 });
 
 test("PM-09: update de estranho é ignorado; o do dono vale e não troca id nem dono", () => {
   const out = cu.applyCommunityUpdates(BASE, [
-    update(STRANGER, { title: "Sequestrada", image: "golpe.png" }, 3),
+    update(STRANGER, { title: "Sequestrada", image: "https://evil.example/golpe.jpg" }, 3),
     update(OWNER, { title: "Cinema Nacional" }, 2),
   ]);
   assert.equal(out.title, "Cinema Nacional");
-  assert.equal(out.image, "dono.png");
+  assert.equal(out.image, IMG_DONO);
   assert.equal(out.id, "cinema");
   assert.equal(out.owner, OWNER);
   assert.equal(out.author, undefined, "o author do update não vaza para o registro");
@@ -55,12 +57,12 @@ test("PM-09: update de estranho é ignorado; o do dono vale e não troca id nem 
 });
 
 test("PM-09: a atualização mais nova vence, em qualquer ordem de chegada", () => {
-  const older = update(OWNER, { title: "Velho", image: "velha.png" }, 10);
+  const older = update(OWNER, { title: "Velho", image: "https://example.com/velha.jpg" }, 10);
   const newer = update(OWNER, { title: "Novo" }, 20);
   for (const list of [[older, newer], [newer, older]]) {
     const out = cu.applyCommunityUpdates(BASE, list);
     assert.equal(out.title, "Novo");
-    assert.equal(out.image, "velha.png", "campo que o mais novo não traz fica do anterior");
+    assert.equal(out.image, "https://example.com/velha.jpg", "campo que o mais novo não traz fica do anterior");
   }
 });
 
@@ -85,7 +87,7 @@ async function signAs(fresh, payload) {
 async function seedOwnerCommunity() {
   await cacheNode.clearLocalPosts();
   const community = await signAs(true, {
-    id: "c_cinema", type: "community", communityId: "cinema", title: "Cinema", image: "dono.png", ts: 1000,
+    id: "c_cinema", type: "community", communityId: "cinema", title: "Cinema", image: IMG_DONO, ts: 1000,
   });
   await cacheNode.saveLocalPost(community);
   return community;
@@ -100,7 +102,7 @@ test("PM-09: getLocalCommunities ignora update de estranho e post que tenta toma
     id: "c_cinema_squat", type: "community", communityId: "cinema", title: "Minha agora", ts: 1,
   });
   const strangerUpdate = await signAs(false, {
-    id: "comm_update_cinema_2", type: "community_update", communityId: "cinema", title: "Sequestrada", image: "golpe.png", updatedAt: 3000,
+    id: "comm_update_cinema_2", type: "community_update", communityId: "cinema", title: "Sequestrada", image: "https://evil.example/golpe.jpg", updatedAt: 3000,
   });
   for (const item of [ownerUpdate, squat, strangerUpdate]) await cacheNode.saveLocalPost(item);
 
@@ -108,7 +110,7 @@ test("PM-09: getLocalCommunities ignora update de estranho e post que tenta toma
   assert.equal(list.length, 1);
   assert.equal(list[0].owner, community.author);
   assert.equal(list[0].title, "Cinema Nacional");
-  assert.equal(list[0].image, "dono.png");
+  assert.equal(list[0].image, IMG_DONO);
 });
 
 test("PM-09: gossip não grava nem repassa update de estranho", async () => {
@@ -130,6 +132,20 @@ test("PM-09: gossip não grava nem repassa update de estranho", async () => {
   assert.ok(await cacheNode.getLocalPost("comm_update_teatro_1"), "sem a comunidade aqui, guarda; o filtro de exibição decide");
 
   assert.equal(await cacheNode.isCommunityUpdateAcceptable({ ...strangerUpdate, communityId: "" }), false);
+});
+
+test("PM-09: gossip não grava update com SVG ou imagem acima do teto", async () => {
+  await seedOwnerCommunity();
+  const svgUpdate = await signAs(false, {
+    id: "comm_update_cinema_svg",
+    type: "community_update",
+    communityId: "cinema",
+    image: "data:image/svg+xml;base64,PHN2Zy8+",
+    updatedAt: 4000,
+  });
+  await peers.handleVoxMessage({ type: "GOSSIP", item: svgUpdate, fromPeer: "peer_svg" }, () => {}, "rtc");
+  assert.equal(await cacheNode.getLocalPost("comm_update_cinema_svg"), null);
+  assert.equal(cav.communityGossipHasRejectedImages(svgUpdate), true);
 });
 
 function renderHeaderHtml(opts) {

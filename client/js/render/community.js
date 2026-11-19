@@ -11,6 +11,7 @@ import * as listing from "../listing.js";
 import * as hashtags from "../hashtags.js";
 import * as listingUi from "../listing-ui.js";
 import * as gossipRetract from "../gossip-retract-ui.js";
+import { sanitizeMediaUrl } from "../shared/html.js";
 import * as profileDirectory from "../profile-directory.js";
 import { renderCommunityCatchupBanner } from "../community-unread.js";
 import { renderPageHead } from "./shell.js";
@@ -42,7 +43,7 @@ export { CIVIC_TAGS, extractTopicCivicTag } from "./topic-badges.js";
  * @returns {string} HTML do bloco de avatar.
  */
 export function renderCommunityAvatarHtml(meta = {}, communityId = "", sizeClass = "community-avatar-lg") {
-  const image = meta.image || meta.avatar || meta.photo || "";
+  const image = sanitizeMediaUrl(meta.image || meta.avatar || meta.photo || "");
   const title = meta.title || communityId || "Comunidade";
   const initial = (title || "C").slice(0, 1).toUpperCase();
   const accent = getCommunityColor(communityId);
@@ -162,8 +163,9 @@ function topicReplyCount(topic) {
 }
 
 function renderTopicRowThumb(topic, topicHref) {
-  if (!topic.image || gossipRetract.shouldHideGossipDeletedPost(topic)) return "";
-  return `<a class="community-topic-row-thumb" href="${topicHref}" aria-hidden="true"><img src="${escapeHtml(topic.image)}" alt="" width="48" height="48" loading="lazy" /></a>`;
+  const thumb = sanitizeMediaUrl(topic.image);
+  if (!thumb || gossipRetract.shouldHideGossipDeletedPost(topic)) return "";
+  return `<a class="community-topic-row-thumb" href="${topicHref}" aria-hidden="true"><img src="${escapeHtml(thumb)}" alt="" width="48" height="48" loading="lazy" /></a>`;
 }
 
 function resolveTopicAuthorMeta(topic) {
