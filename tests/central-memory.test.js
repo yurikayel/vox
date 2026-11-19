@@ -55,27 +55,30 @@ test("central-memory - syncWithCentralMemory envia estado local e reidrata posts
   globalThis.fetch = async (url, options = {}) => {
     if (String(url).endsWith("/memory/sync")) {
       capturedBody = JSON.parse(options.body);
+      const payload = {
+        status: "ok",
+        mode: "zero-central-memory",
+        revision: 5,
+        counts: { posts: 2, tombstones: 1, profiles: 1, manifests: 0, blobs: 0 },
+        posts: [
+          ...capturedBody.posts,
+          remotePost,
+        ],
+        tombstones: [remoteTomb],
+        profiles: [
+          { routeId: remote.routeId, name: "Peer Persistido", bio: "Bio reidratada", signedCard: remoteCard },
+        ],
+        manifests: [],
+        blobs: [],
+      };
+      const bodyText = JSON.stringify(payload);
       return {
         ok: true,
-        json: async () => ({
-          status: "ok",
-          mode: "zero-central-memory",
-          revision: 5,
-          counts: { posts: 2, tombstones: 1, profiles: 1, manifests: 0, blobs: 0 },
-          posts: [
-            ...capturedBody.posts,
-            remotePost,
-          ],
-          tombstones: [remoteTomb],
-          profiles: [
-            { routeId: remote.routeId, name: "Peer Persistido", bio: "Bio reidratada", signedCard: remoteCard },
-          ],
-          manifests: [],
-          blobs: [],
-        }),
+        text: async () => bodyText,
+        json: async () => payload,
       };
     }
-    return { ok: false };
+    return { ok: false, text: async () => "" };
   };
 
   try {
