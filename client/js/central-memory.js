@@ -121,9 +121,13 @@ export function isHydratingFromCentralMemory() {
 async function fetchJsonWithTimeout(url, options = {}) {
   try {
     const res = await fetchWithTimeout(url, options, { timeoutMs: REQUEST_TIMEOUT_MS });
-    const text = await readResponseText(res);
+    if (typeof res.text === "function") {
+      const text = await readResponseText(res);
+      if (!res.ok) return null;
+      if (text) return JSON.parse(text);
+    }
     if (!res.ok) return null;
-    return JSON.parse(text);
+    return typeof res.json === "function" ? await res.json() : null;
   } catch {
     return null;
   }
