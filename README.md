@@ -4,8 +4,8 @@
 [![Identity](https://img.shields.io/badge/Identity-WebCrypto%20P--256-blueviolet.svg)](./client/js/identity/local-account.js)
 [![Preservação](https://img.shields.io/badge/Preserva%C3%A7%C3%A3o-rede%20de%20seguidores-black.svg)](./docs/adr/019-esquecer-por-padrao-e-memoria-civica.md)
 [![License: AGPL v3](https://img.shields.io/badge/License-GNU%20AGPLv3-crimson.svg)](./LICENSE)
-[![Tests](https://img.shields.io/badge/tests-2281%20passing%20%C2%B7%209%20skipped%20%C2%B7%2011%20todo-success.svg)](./docs/TESTES.md)
-[![Service Worker](https://img.shields.io/badge/SW-v7.144--pm01--periphery--lazy-informational.svg)](./client/sw.js)
+[![Tests](https://img.shields.io/badge/tests-2288%20passing%20%C2%B7%209%20skipped%20%C2%B7%2011%20todo-success.svg)](./docs/TESTES.md)
+[![Service Worker](https://img.shields.io/badge/SW-v7.146--dm--limits--6b-informational.svg)](./client/sw.js)
 
 **Vox** é um PWA cívico *local-first* — sem bundler, sem servidor central de login e sem leilão de alcance — para ampliar a participação popular e a autonomia das comunidades. Conta, chaves e dados nascem no aparelho; o conteúdo circula pela **rede de seguidores** (você replica o que segue).
 
@@ -209,13 +209,13 @@ Há um estudo inicial de interoperabilidade aberta com o *Tramitado*, sem integr
 
 | Campo | Valor |
 |---|---|
-| **Commit SHA** | `d00b3d1` |
-| **Suíte de Testes** | **2302** (`1982` JS + `320` Python) |
-| **Service Worker** | `vox-pwa-v7.144-pm01-periphery-lazy` |
+| **Commit SHA** | `ec95779` |
+| **Suíte de Testes** | **2309** (`1989` JS + `320` Python) |
+| **Service Worker** | `vox-pwa-v7.146-dm-limits-6b` |
 
 *Tabela regenerada por `npm run release-line` (grava [docs/release-metadata.json](./docs/release-metadata.json)). Nenhum outro documento deve repetir esses números.*
 
-*Medido em `develop`. O total **2302** inclui **9** testes pulados (8 JS + 1 Python) e **11** `todo` (JS) — testes que efetivamente passam: **2281** (1962 JS + 319 Python). Última Release de binários no GitHub: `v7.40` (09/11/2026), anterior ao Service Worker atual.*
+*Medido em `develop`. O total **2309** inclui **9** testes pulados (8 JS + 1 Python) e **11** `todo` (JS) — testes que efetivamente passam: **2288** (1969 JS + 319 Python). Última Release de binários no GitHub: `v7.40` (09/11/2026), anterior ao Service Worker atual.*
 
 O Service Worker pode manter a versão anterior em cache: depois de uma atualização, recarregue ou use `Ctrl+Shift+R`. Antes de tratar um build como validado, confira os checks do CI no commit exato.
 
