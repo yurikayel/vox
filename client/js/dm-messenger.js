@@ -17,6 +17,8 @@ export const DM_PINS_STORAGE_KEY = "vox-dm-pins-v1";
 export const MAX_PINNED_PEERS = 3;
 /** Limite numérico do módulo. @type {number} */
 export const MAX_DM_MEDIA_CHARS = 24000;
+/** Teto de caracteres do corpo de texto de uma DM (entrada e saída). @type {number} */
+export const MAX_DM_TEXT_CHARS = 32_768;
 /** Export `DM_REACTION_EMOJIS` do módulo. @type {Array} */
 export const DM_REACTION_EMOJIS = ["👍", "❤️", "🔥", "🙏", "✅"];
 const DEFAULT_WELCOME_ID = "vx_voxbrasil_welcome";
@@ -25,6 +27,12 @@ function clip(str, max = 90) {
   const s = String(str || "").replace(/\s+/g, " ").trim();
   if (!s) return "";
   return s.length > max ? `${s.slice(0, max - 1)}…` : s;
+}
+
+/** Texto acima do teto é descartado (mensagem sem corpo válido). @param {*} raw */
+function boundedDmText(raw) {
+  const s = String(raw ?? "");
+  return s.length <= MAX_DM_TEXT_CHARS ? s : "";
 }
 
 /** Teto de `id`, `pixKey`, `communityId` e autor da citação: acima disso o campo é descartado, nunca cortado. */
@@ -144,7 +152,7 @@ export function serializeDmPayload({
   contextCard = null,
   mediaDataUrl = "",
 } = {}) {
-  const cleanText = String(text ?? "");
+  const cleanText = boundedDmText(text);
   const cleanReply = normalizeReplyMeta(replyTo);
   const cleanCard = normalizeContextCard(contextCard);
   const cleanMedia = normalizeMediaDataUrl(mediaDataUrl);
@@ -208,7 +216,7 @@ export function parseDmPayload(raw) {
   const str = String(raw ?? "");
   const parsed = tryParseV2Json(str);
   if (!parsed) {
-    return { kind: "message", text: str, replyTo: null, contextCard: null, mediaDataUrl: "" };
+    return { kind: "message", text: boundedDmText(str), replyTo: null, contextCard: null, mediaDataUrl: "" };
   }
   if (parsed.kind === "react" && parsed.targetId && DM_REACTION_EMOJIS.includes(parsed.emoji)) {
     return {
@@ -225,7 +233,7 @@ export function parseDmPayload(raw) {
   }
   return {
     kind: "message",
-    text: String(parsed.text ?? ""),
+    text: boundedDmText(parsed.text),
     replyTo: normalizeReplyMeta(parsed.replyTo),
     contextCard: normalizeContextCard(parsed.contextCard),
     mediaDataUrl: normalizeMediaDataUrl(parsed.mediaDataUrl),
