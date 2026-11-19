@@ -1,6 +1,6 @@
 # Glossário da interface (pt-BR)
 
-> **Status:** canônico (linguagem leiga para contribuidores e revisão de copy) · **Owner:** mantenedor doc · **Revisado:** 2026-11-19
+> **Status:** canônico (linguagem leiga para contribuidores e revisão de copy) · **Owner:** mantenedor doc · **Revisado:** 2026-11-20
 
 Este glossário traduz para português claro os nomes que aparecem no app, nas mensagens de ajuda e na documentação. Ele **não** substitui a **Voxpedia** (`#/voxpedia` no app), que é a ajuda dentro do PWA; aqui a fonte é o repositório, para quem escreve textos, revisa PRs ou responde dúvidas sem abrir o cliente.
 
@@ -76,6 +76,30 @@ Para identidade e criptografia em profundidade: [IDENTITY.md](./IDENTITY.md). Pa
 | **Moderador** | Quem assina ações de moderação; seu cliente pode ocultar conteúdo — não “apaga do mundo” o que já propagou. |
 | **Convite com vínculo** | Link `#/connect/…` com token: quem entra e quem convidou assinam o vínculo (padrinho); base do moderador natural em lab. |
 | **Padrinho** | Quem convidou com aceite assinado; em moderação natural, pode arquivar posts do afilhado dentro de regras rígidas. |
+
+---
+
+## Comunidade e praça (candidatos IXV)
+
+Termos de produto inspirados na observação Énóis, com nome Vox. Códigos **IXV-01…14** e ondas: [brainstorm Énóis](./brainstorms/brainstorm-enois-observacao-2026-11.md). Onde diz *candidato*, ainda **não** está na UI.
+
+| Termo na UI (candidato) | O que significa, em poucas palavras |
+| --- | --- |
+| **Ágora** | Feed principal e **Início** da nav — rota `#/`, não confundir com `#/explorar`. |
+| **Explorar** (IXV-01) | Hub **lazy** (`#/explorar`, pós-PM-01) para descobrir módulos opcionais (Feira, Mesa, Salas Precisas); não substitui a Ágora. |
+| **Posts temporários** (IXV-02) | Publicação com prazo visível (ex.: 24 h, 7 dias); política de esquecimento ([ADR-019](./adr/019-esquecer-por-padrao-e-memoria-civica.md)). |
+| **Assuntos** (IXV-04) | Filtros em pills numa comunidade (`#/c/:id`): avisos, pautas, Feira, dúvidas — em vez de um único mural sem foco. |
+| **Recorrente** (IXV-05) | Encontros que voltam no tempo (ritualRule); nome de UI para rituais ligados a aviso assinado e [modo assembleia](./specs/modo-assembleia-v0.md). |
+| **Salvos** (IXV-06) | Marcadores locais evoluindo para rota `#/salvos` e pastas no aparelho. |
+| **Mensagens protegidas** (IXV-07) | DM com linguagem simples sobre criptografia e senha no aparelho. |
+| **Para responsáveis** (IXV-07) | Página de orientação 18+ e uso seguro (`#/responsavel` ou Voxpedia), espelho do Énóis `/responsavel`. |
+| **Nota de contexto** (IXV-08) | Acrescento **assinado** preso a um tópico pai (correção, ata, fonte) — não é apagar nem moderar o post original. |
+| **Coluna** (IXV-09) | Texto longo da comunidade ou do perfil (`kind: "coluna"`) fora da timeline da Ágora — estatuto, guia, diário. |
+| **Molduras cívicas** (IXV-10) | Decoração de perfil via **Voxels**, só opções de uma lista CSS fechada. |
+| **Mural fixado** (IXV-12) | Conjunto de posts fixados pela moderação ou curadoria da comunidade. |
+| **Sugestão na pauta** (IXV-12) | Proposta leve de mudar regra local, votada na **Governança**, sem virar post no feed. |
+| **Salas Precisas** (IXV-13) | Módulo de **finalidade única** plugado pela **comunidade** (contexto fechado, permissões mínimas); ex.: **Mesa** (RPG) em `#/dungeon`. |
+| **Livro de transparência** (IXV-14) | Relatório público de moderação e provas de interface (REV-20, `docs/proof/` em PRs). |
 
 ---
 

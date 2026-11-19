@@ -6,6 +6,11 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Docs: catálogo IXV (Énóis → Vox) e glossário (nov/2026)
+- `docs/brainstorms/brainstorm-enois-observacao-2026-11.md`: ondas 1–3 com IXV-01…14, §6 índice, §7 explicações (Salas Precisas, Nota de contexto, Coluna).
+- `docs/GLOSSARIO.md`: subseção candidatos IXV (Ágora × Explorar, Salas Precisas, etc.).
+- `docs/strategy/mapa-mapa-ecossistema-aposentado-2026-11.md`: §4.2 ponte ao catálogo IXV.
+
 ### Docs: alavancas do mapa, observação Énóis, spec PM-23 (nov/2026)
 - `docs/strategy/mapa-mapa-ecossistema-aposentado-2026-11.md`: §4.2 Énóis expandido; §4.4 cinco alavancas; §4.5 top 5; §3.1 próxima checagem 2027-02-19; §8 fontes reordenadas.
 - `docs/brainstorms/brainstorm-enois-observacao-2026-11.md` (novo): 11 rotas, não-copiar, ondas candidatas.
