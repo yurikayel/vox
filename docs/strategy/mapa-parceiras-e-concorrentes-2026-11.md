@@ -2,7 +2,7 @@
 
 > **Status:** brainstorm / pesquisa · **Owner:** mantenedor / revisor · **Revisado:** 2026-11-19
 > **Não substitui o [ROADMAP.md](../ROADMAP.md)** ([ADR-017](../adr/017-consolidacao-roadmap-unico.md)). É uma lista de observação: ninguém aqui é "inimigo" nem "aliado" por decreto. Parceira e concorrente descrevem **relação e função**, não caráter.
-> **Aviso de método:** rodada inicial 2026-11-10 (maioria **fontes secundárias**); addendum **2026-11-19** com **fontes primárias** onde indicado (GitHub `Varanda-org/varanda`, sites do Fediverso BR, repos Énóis). Cada número traz tipo e data. Onde não há fonte, a linha diz **"não verificado"**. Nenhuma linha deve ser publicada fora do repositório sem checar a fonte primária.
+> **Aviso de método:** rodada inicial 2026-11-10 (maioria **fontes secundárias**); addendum **2026-11-19** com **fontes primárias** onde indicado (GitHub `Varanda-org/varanda`, sites do Fediverso BR, repos Énóis); addendum **§4.2–§4.5** (alavancas + Énóis detalhado) na mesma data. Cada número traz tipo e data. Onde não há fonte, a linha diz **"não verificado"**. Nenhuma linha deve ser publicada fora do repositório sem checar a fonte primária.
 
 ## 1. Critérios
 
@@ -100,15 +100,15 @@ Coração organizado da soberania digital BR hoje; **ausente na rodada 2026-11-1
 
 ### 3.1 Tracking — concorrentes e alternativas BR (features recentes)
 
-Modelo para rotações trimestrais. **Próxima checagem sugerida:** 2026-02-19.
+Modelo para rotações trimestrais. **Próxima checagem sugerida:** 2027-02-19.
 
 | Ator | Última verificação | Entregas recentes (fonte) | O que a Vox pode espelhar (*clean-room*) | Próxima checagem |
 |---|---|---|---|---|
-| **Varanda** | 2026-11-19 | P2P ativo; previews OG/JPEG; push; Feira/Páginas; App Store gate [19] | Página pública de link compartilhado + assinatura (**PM-105**); não o modelo SMS/associação | 2026-02-19 |
-| **Etnias** | 2026-11-19 | Lançamento nov/2026; escala declarada em imprensa [1] | Nicho identitário + Feira; termos e consentimento | 2026-02-19 |
-| **Poosting** | 2026-11-11 | Feed cronológico; convite; marketing "sem algoritmo" [17] | Discurso POSSE vs centralização; não copiar produto fechado | 2026-02-19 |
-| **Énóis** | 2026-11-19 | `moderacao-transparencia`, `ComposerCrossPost`, painel storage, notif. por projeto [20][23] | **REV-20** / **LAN-04**; destino no compositor (Social/Cívico/Comunidade); inspiração dashboard **Vox Memoria** ([ADR-011](../adr/011-taxonomia-tripartite-produtos-vox.md)) | 2026-02-19 |
-| **Kwai** | 2025-12 (imprensa) | MAU BR; live e comércio [16] | Cache, baixa banda (não competir em vídeo recomendado) | 2026-02-19 |
+| **Varanda** | 2026-11-19 | P2P ativo; previews OG/JPEG; push; Feira/Páginas; App Store gate [19] | Página pública de link compartilhado + assinatura (**PM-105**); não o modelo SMS/associação | 2027-02-19 |
+| **Etnias** | 2026-11-19 | Lançamento nov/2026; escala declarada em imprensa [1] | Nicho identitário + Feira; termos e consentimento | 2027-02-19 |
+| **Poosting** | 2026-11-11 | Feed cronológico; convite; marketing "sem algoritmo" [17] | Discurso POSSE vs centralização; não copiar produto fechado | 2027-02-19 |
+| **Énóis** | 2026-11-19 | `moderacao-transparencia`, `ComposerCrossPost`, painel storage, notif. por projeto [20][23] | **REV-20** / **LAN-04**; destino no compositor (Social/Cívico/Comunidade); inspiração dashboard **Vox Memoria** ([ADR-011](../adr/011-taxonomia-tripartite-produtos-vox.md)) | 2027-02-19 |
+| **Kwai** | 2025-12 (imprensa) | MAU BR; live e comércio [16] | Cache, baixa banda (não competir em vídeo recomendado) | 2027-02-19 |
 
 ### 3.2 Tracking — plataformas globais (out–nov/2026)
 
@@ -135,10 +135,45 @@ Síntese para a próxima rodada trimestral. **Nenhum código de terceiros** na V
 
 - **Institucional:** forks ativos, nicho claro, QA com baseline de supressões — modelo para **bus factor** e editais.
 - **Features de referência (19/11/2026):** moderação transparente + fila emergência (**REV-20**, **LAN-04**); checkbox de cross-post no compositor; painel de operações de storage (inspira **Vox Memoria**); notificações por projeto na comunidade (**PM-23**).
+- **Detalhe (11 rotas, nov/2026):** ver [brainstorm-enois-observacao-2026-11.md](../brainstorms/brainstorm-enois-observacao-2026-11.md).
+- **Lições em uma linha cada:** (1) `/explorar` + `disabledModules` → menu enxuto e **PM-01** lazy; (2) aba **Rituais** + RSVP → **PM-97** / **PM-23** ([modo-assembleia-v0](../specs/modo-assembleia-v0.md)); (3) copy E2E mínima em mensagens → DM e onboarding; (4) painel storage + moderação + `docs/proof/` em PR → **REV-20**.
+- **Não copiar:** backend que decide fora do aparelho; live integrado (ANPD, INF-01); confessionário anônimo global; dezenas de salas no precache.
 
 ### 4.3 Ecossistema BR (Fediverso + cívico)
 
 **Etnias** reforça nicho identitário + Feira; **MSG GOV** (Matrix + `gov.br`) valida [ADR-018](../adr/018-selo-govbr-via-parceiro-publico.md); **Alquimídia / WebSocialBR / FediGov** são interlocutores naturais quando o Vox sair do modo fechado. **Sua Voz** e **Tramitado** permanecem na lista até confirmar links.
+
+### 4.4 Cinco alavancas práticas (síntese mapa 20+20, nov/2026)
+
+#### 4.4.1 Hábito e retenção sem algoritmo tóxico
+
+Nextdoor, grupos do Facebook, WeChat, Kwai e Snapchat mostram retorno por **utilidade local** (aviso, indicação, evento), não por discurso de soberania. **Vox:** motor **PM-97** (aviso assinado) + Feira + **PM-23**; **PM-01** / **PM-70–71** / **LAN-23** para celular de entrada; menos cliques entre oferta, DM e Pix na Feira; [ADR-019](../adr/019-esquecer-por-padrao-e-memoria-civica.md) e notas 24 h como argumento de produto (“o cotidiano evapora; só o que a comunidade registra vira ata”).
+
+#### 4.4.2 Deliberação que fecha ciclo
+
+Loomio, Decidim, Pol.is, Nossas/BONDE: legitimidade vem de justificativa em discordância, funil visível e ação de 30 segundos. **Vox:** **PM-23** + [modo-assembleia-v0](../specs/modo-assembleia-v0.md) (`blockReason`, `decisionStatus`); `labs/parado/polis.js` e `bridging-rank.js` sob **REV-02** pós-PM-01; `aviso-roles.js` para vagas e quórum.
+
+#### 4.4.3 Anti-burnout, moderação e comunidade dev
+
+Fediverso, Discord, Reddit, Serenata, OccupySaaS: instâncias morrem por burnout e custo concentrado. **Vox:** steward com buddy (**V-P08**), custo distribuído (Vox Populi / Vox Memoria), **PM-81** + termo na entrada (`community-termo.js`, lab); boas primeiras issues em [primeiras-tarefas-contribuidor.md](../process/primeiras-tarefas-contribuidor.md).
+
+#### 4.4.4 Acervo útil e pertencimento local
+
+Pinterest, LinkedIn, YouTube, Noosfero, Etnias: o que dura é acervo buscável, não feed infinito. **Vox:** mural fixado + busca local em IndexedDB; identidade no manifesto ([ADR-038](../adr/038-subrede-malha-e-manifesto.md)) com Feira e Pix.
+
+#### 4.4.5 Blindagem institucional e coleta zero
+
+Signal, Matrix MSG GOV, Data Privacy Brasil: defesa jurídica = não ter o dado no servidor. **Vox:** zero e-mail/SMS no relay (contraste Varanda); **REV-12** / **REV-18**; porta aberta [ADR-018](../adr/018-selo-govbr-via-parceiro-publico.md) sem depender de governo para existir.
+
+### 4.5 Top 5 — maior retorno / menor custo
+
+| # | Aprendizado | Fonte | Item Vox |
+|---|---|---|---|
+| 1 | POSSE com preview rico (OG + capa) | Varanda | **PM-105** |
+| 2 | Painel de operações + moderação transparente | Énóis | **Vox Memoria**, **REV-20** ([brainstorm](../brainstorms/brainstorm-enois-observacao-2026-11.md)) |
+| 3 | Justificativa curta + status pós-decisão | Loomio + Decidim | **PM-23** + [spec](../specs/modo-assembleia-v0.md) |
+| 4 | Leveza em Android de entrada + efemeridade como valor | Kwai + Snapchat | **PM-01** (prioridade de código) |
+| 5 | Coleta zero + 18+ estrito + sem SVG/live sem lastro | Signal + PeerTube + ANPD | **REV-12**; nota técnica §3.2 (SVG) |
 
 ## 5. O que a pesquisa mostrou (leitura crítica)
 
@@ -151,7 +186,7 @@ Síntese para a próxima rodada trimestral. **Nenhum código de terceiros** na V
 
 ## 6. Como observar e aprender (rotina)
 
-- **Revisão trimestral:** atualizar §3.1, §3.2 e §4, revisar Conf. e datas em §8.
+- **Revisão trimestral:** atualizar §3.1, §3.2, §4 (incl. §4.4–§4.5), revisar Conf. e datas em §8.
 - **Checklist técnica:** para atores BR P2P/open, 1 passagem por GitHub (commits/PRs/releases) por rodada.
 - **Ficha por organização** (1 página): só fontes públicas; observação **não é contato**.
 - **Primeiras fichas sugeridas (atualizado):** Varanda (PM-105), Etnias, Data Privacy Brasil, Alquimídia/WebSocialBR, Poosting.
@@ -188,6 +223,6 @@ Síntese para a próxima rodada trimestral. **Nenhum código de terceiros** na V
 18. [OccupySaaS](https://occupysaas.com/) · [GitHub](https://github.com/occupysaas)
 19. [Varanda — GitHub `Varanda-org/varanda`](https://github.com/Varanda-org/varanda) · [varanda.app](https://varanda.app) (consultados 2026-11-19; atividade de PRs mergeados)
 20. [Énóis — GitHub `Rede-ENois`](https://github.com/Rede-ENois) · [enois.ia.br](https://enois.ia.br) (consultado 2026-11-19)
-23. Énóis — PRs/commits 19/11/2026 (nomes citados no repo: `moderacao-transparencia`, `ComposerCrossPost`, `storage-operacoes-painel`, `community-project-notifications`) — consulta GitHub mantenedor
 21. [Alquimídia](https://alquimidia.org/) · [nossa.social.br](https://nossa.social.br)
 22. [Bolha.us](https://bolha.us/) · [WebSocialBR](https://websocial.org.br/) · [FediGov](https://fedigov.org.br/) · [Rede pela Soberania Digital](https://red.org.br/) · [URSAL](https://ursal.zone/) (consultados 2026-11-19)
+23. Énóis — PRs/commits 19/11/2026 (nomes citados no repo: `moderacao-transparencia`, `ComposerCrossPost`, `storage-operacoes-painel`, `community-project-notifications`) — consulta GitHub mantenedor
