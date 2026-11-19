@@ -6,6 +6,10 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Docs: revisão PTLD e reorganização escaneável do `README.md`
+- `README.md`: reestruturado (~361 → 269 linhas) preservando todos os fatos e os padrões do `scripts/release_line.py` — alerta `[!IMPORTANT]` de estado logo no topo (laboratório sem piloto, `arweaveUpload: false`, sinalização 1× Render + Nostr sem TURN, infra adiada até >50 ativos, `main` atrás de `develop`), navegação rápida em lista, arquitetura tripartite (`Vox` / `Vox Populi` / `Vox Memoria`, Steward kit ≠ 4º produto e mini-Mermaid de nó único), matriz de plataformas em 3 colunas, quickstart com requisitos (Node ≥ 22, Python 3.11+, `npm ci`, `npm run validate`), capacidades em 5 temas responsivos com legenda fixa (`✅`/`🧪`/`🚧`/`⏸️`) conferida contra `docs/FEATURES.md`, novidades e tags em `<details>`, diagrama Mermaid de arquitetura, seção de transparência técnica, jargão alinhado ao `GLOSSARIO.md`, remoção de nomes legados (`Nó Zero`/`Node Zero`), um emoji único por H2 e links para `mvp-tecnico-vox-2026-11.md`, `auditoria-features-arquitetura-2026-11.md` e `SECURITY.md`.
+- `docs/release-metadata.json` e selo/nota de testes no `README.md`: regerados por `npm run release-line` pós-#290/#291 (**2279 passing · 9 skipped · 13 todo**, total 2301 = 1981 JS + 320 Python). Sem código de produto nem bump de SW.
+
 ### Docs: taxonomia tripartite `Vox` · `Vox Populi` · `Vox Memoria` e Conexão local (ADR-011)
 - `docs/adr/011-taxonomia-tripartite-produtos-vox.md`: emenda formalizando cliente único (`Vox`), nó de apoio + dashboard simples (`Vox Populi`) e nó de memória perene + dashboard CPU/disco/banda (`Vox Memoria`, substituindo `VoxPopuli-ZeroMemory` / `Node Zero`), além de **Conexão local** (*Usando seu nó*, substituindo `Local Boost`) e exclusão mútua de nó local (`Vox Populi` XOR `Vox Memoria`, encerramento limpo ao trocar).
 - `docs/GLOSSARIO.md`, `README.md`, `docs/strategy/analise-repositorio-vox-2026-11.md`, `docs/operations/steward-relay-kit.md`: alinhados à nova nomenclatura. Sem alteração de código nem bump de SW.
