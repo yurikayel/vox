@@ -2,6 +2,8 @@
 
 Stewards são **voluntários da comunidade**, não o mantenedor do repositório Vox. Este kit fecha o pacote mínimo para a camada **Steward** em [`espacos-digitais-infra.md`](../strategy/espacos-digitais-infra.md): qualquer coletivo sobe relay + sinalização **sem** depender do mantenedor.
 
+> **Steward kit ≠ 4º produto ([ADR-011](../adr/011-taxonomia-tripartite-produtos-vox.md)):** é o **pacote de ops** para implantar o **Vox Memoria** (relay + memória + sinalização) em modo VPS/coletivo com TLS e cotas. Não é app na loja nem 4º produto na UI — o wizard `#/settings/network/steward` no **Vox** apenas aponta a URL.
+
 **Status:** canônico (V-I08 fechado em `main`) — compose + Caddy (`/health`, `/vox/*`), quota via env, wizard `#/settings/network/steward`, kits 1-clique Windows/Linux.
 
 ---
@@ -79,7 +81,7 @@ O `server.py` confere cada pedido antes da rota ([ADR-027](../adr/027-autorizaca
 - **Relay em loopback atrás de túnel ou proxy** (cloudflared, Caddy no mesmo host): ponha o nome público em **`VOX_RELAY_ALLOWED_HOSTS`** (ex.: `VOX_RELAY_ALLOWED_HOSTS=signal.coletivo.org`). Sem isso, o relay responde `421`.
 - **Espelho do app em outro domínio:** ponha a origem em **`VOX_RELAY_ALLOWED_ORIGINS`**. As origens oficiais (GitHub Pages, Cloudflare Pages) e localhost já estão liberadas; a variável vale também para o CORS: origem fora da lista não consegue ler as respostas do relay.
 - **Limite de escrita:** `VOX_RELAY_WRITE_LIMIT_PER_MIN` (padrão 120 por IP). Atrás de proxy, todo mundo chega com o IP do proxy; suba o limite se a comunidade for grande.
-- O nó Windows (`VoxPopuli-ZeroMemory.exe`) libera o próprio túnel sozinho.
+- O nó Windows (**Vox Memoria**, compilado em `packaging/zero-central-memory-windows/`) libera o próprio túnel sozinho.
 
 ### Snapshot do relay cego: dono do canal e reinício ([RFC 0002](../rfc/0002-snapshot-autenticado-do-relay-cego.md))
 
