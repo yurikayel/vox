@@ -42,7 +42,7 @@ Para identidade e criptografia em profundidade: [IDENTITY.md](./IDENTITY.md). Pa
 | **Nó leve** | Seu aparelho repassa trechos que já tem em cache, com limites de disco e banda. |
 | **Apoiador da rede** | Nó um pouco mais generoso (mais disco/banda, em geral no Wi-Fi). |
 | **Modo guardião** (rede) | Aparelho como nó de cache fixo maior (em desenvolvimento/plugável); **não** é o mesmo que “guardiões” da recuperação de conta. |
-| **Steward** | Pessoa ou grupo que opera **relay**, signaling ou memória central para uma comunidade — infraestrutura substituível, não dono da sua conta. |
+| **Steward** | Pessoa ou grupo que implanta o **Vox Memoria** em modo VPS/coletivo (relay + sinalização + TLS via **Kit steward**, que é pacote de ops e não um 4º app) — infraestrutura substituível, não dono da sua conta. |
 | **Relay** | Servidor que **não lê conteúdo em claro**: repassa envelopes cifrados (DM offline, cofre remoto, OAuth em deploy). |
 | **Memória central** | Serviço do **Vox Memoria** (`central_memory.py` / binário local) que guarda histórico e blobs entre reinícios; mantenedor ou comunidade escolhe quanto ceder de CPU, disco e banda. |
 | **Signaling** | Serviço auxiliar para o WebRTC “se achar” atrás de roteador (NAT); não vê o conteúdo das conversas. |
