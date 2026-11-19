@@ -43,6 +43,8 @@ export const COMPOSER_IMAGE_ALLOWED_MIMES = Object.freeze([
   "image/webp",
   "image/gif",
 ]);
+/** Valor do atributo HTML `accept` nos inputs de imagem raster. @type {string} */
+export const COMPOSER_IMAGE_ACCEPT_ATTR = COMPOSER_IMAGE_ALLOWED_MIMES.join(",");
 /** 0 desliga o teto de pixels; padrão 4096 no lado maior. 
  * @type {number}*/
 export const COMPOSER_IMAGE_MAX_DIMENSION = 4096;
