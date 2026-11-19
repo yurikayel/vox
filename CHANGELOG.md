@@ -6,6 +6,11 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Code: cofre na malha — teto de pedidos pendentes por guarda contra flood de avisos
+- `client/js/vault/mesh-vault.js`: `addNotice` deixa de descartar avisos antigos não decididos (`slice(-50)`) e aplica teto de 7 avisos pendentes por guarda (`MAX_NOTICES_PER_HOLDER = 7`, teto total 50).
+- `client/js/app/mesh-vault-flow.js`: `noteNewRequests` limita a 7 pedidos em aberto não decididos por dona em cada guarda (`MAX_REQUESTS_PER_OWNER = 7`), impedindo que flood de pedidos desloque o pedido inicial da fila de veto.
+- `tests/mesh-vault-adversarial-flow.test.js`: reativa teste adversarial de flood de 60 pedidos (`PM-111` red-on-base).
+
 ### Code: bordas adversariais do cofre v2 e arquivo cifrado (`.voxid`)
 - `client/js/vault/vault-crypto.js`: `encryptVaultV2` valida `iterations` inteiro dentro da faixa aceita por `isV2Record` (`[100_000, 5_000_000]`), recusando com `RangeError` antes de gravar cofre que o app não abriria.
 - `client/js/identity/account-backup-wrap.js`: `decryptWrappedBytes` decodifica `env.salt` dentro do `try/catch`, devolvendo erro amigável quando o Base64 do sal está corrompido.
