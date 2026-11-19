@@ -12,6 +12,7 @@ import * as hashtags from "../hashtags.js";
 import * as listingUi from "../listing-ui.js";
 import * as gossipRetract from "../gossip-retract-ui.js";
 import { sanitizeMediaUrl } from "../shared/html.js";
+import { COMPOSER_IMAGE_ACCEPT_ATTR } from "../composer-media.js";
 import * as profileDirectory from "../profile-directory.js";
 import { renderCommunityCatchupBanner } from "../community-unread.js";
 import { renderPageHead } from "./shell.js";
@@ -589,7 +590,7 @@ export function renderCommunityPeopleStrip(people = []) {
 function renderCommunityHeaderAvatar(meta, communityId, canChangePhoto) {
   const photoBtn = canChangePhoto ? `
     <label class="btn-change-comm-photo" title="Alterar foto da comunidade (estilo Orkut)">
-      <input type="file" id="input-comm-photo-file" accept="image/*" style="display:none;" />
+      <input type="file" id="input-comm-photo-file" accept="${COMPOSER_IMAGE_ACCEPT_ATTR}" style="display:none;" />
       <span class="btn-change-comm-photo-label">📷 Alterar foto</span>
     </label>` : "";
   return `<div class="community-vox-avatar-wrap">${renderCommunityAvatarHtml(meta, communityId, "community-avatar-lg")}${photoBtn}</div>`;
