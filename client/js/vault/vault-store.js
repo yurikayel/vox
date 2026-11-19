@@ -7,19 +7,22 @@
  */
 
 import { getCentralMemoryUrls } from "../central-memory.js";
+import { fetchWithTimeout } from "../fetch-timeout.js";
 import { deriveVaultAddress, isRevokedRecord, legacyLookupKey } from "./vault-crypto.js";
 import { LEGACY_VAULT_PREFIX } from "./vault-legacy.js";
 
 /** Prefixo das chaves do cofre v2 no `localStorage`. */
 export const VAULT_STORAGE_PREFIX = "vox-vault-v2:";
+const REMOTE_FETCH_TIMEOUT_MS = 4000;
 
 async function probeVaultUrl(baseUrl, lookupKey) {
   let res;
   try {
-    res = await fetch(`${baseUrl}/memory/vault/${lookupKey}`, {
-      method: "GET",
-      headers: { Accept: "application/json" },
-    });
+    res = await fetchWithTimeout(
+      `${baseUrl}/memory/vault/${lookupKey}`,
+      { method: "GET", headers: { Accept: "application/json" } },
+      { timeoutMs: REMOTE_FETCH_TIMEOUT_MS },
+    );
     if (!res) return { reachable: false, record: null };
     if (!res.ok) return { reachable: true, record: null };
     const data = await res.json();
