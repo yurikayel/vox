@@ -6,6 +6,11 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Code: DM #6b — teto de texto 32k e anti-replay de reação/leitura
+- `MAX_DM_TEXT_CHARS` (32.768) em `dm-messenger.js`; `maxlength` no compositor; payload acima do teto não vira balão.
+- `dm-envelope-ledger.js` + `dm-wire.js`: `env.id` de react/read processado uma vez (`duplicate` no replay).
+- SW `v7.146-dm-limits-6b`. Testes adversariais reativados.
+
 ### Code: foto de comunidade — raster, compressão e filtro na malha
 - `client/js/shared/raster-file-to-jpeg.js`, `community-avatar-image.js`: JPEG na criação/troca; `sanitizeMediaUrl` na renderização; gossip `community`/`community_update` recusa SVG e data URL acima do teto.
 - DM reusa `compressRasterFileToJpegDataUrl`. Testes `tests/community-avatar-image.test.js`.

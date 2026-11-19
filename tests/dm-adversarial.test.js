@@ -173,7 +173,7 @@ test("dm adversarial - envelope sem id não grava nada e não derruba", async ()
   assert.deepEqual(await textsOf(peer), []);
 });
 
-test("dm adversarial - replay de reação liga e desliga a reação", { skip: "sem fix pequeno: exige guardar os ids de envelope já vistos (estado persistente novo); anotado no PR" }, async () => {
+test("dm adversarial - replay de reação liga e desliga a reação", async () => {
   const peer = nextPeer();
   await ingestDecryptedEnvelope(envOf(peer), "alvo");
   const [target] = await cacheNode.getDmMessages(peer);
@@ -291,11 +291,20 @@ test("dm adversarial - título, preço e citação gigantes são cortados no tam
   assert.ok(parsed.contextCard.price.length <= 32);
 });
 
-test("dm adversarial - texto gigante de uma única DM é guardado inteiro, sem teto", { skip: "decisão de produto pendente: não há limite de texto no compositor nem na entrada; precisa fixar o teto (e o que fazer acima dele) antes de cortar. Anotado no PR" }, async () => {
+test("dm adversarial - texto acima de 32k não grava balão", async () => {
   const peer = nextPeer();
   await ingestDecryptedEnvelope(envOf(peer), "A".repeat(5_000_000));
-  const [msg] = await cacheNode.getDmMessages(peer);
-  assert.ok(!msg || msg.text.length <= 100_000, "texto acima do teto não pode ser guardado inteiro");
+  assert.deepEqual(await textsOf(peer), [], "texto acima do teto não pode ser guardado");
+});
+
+test("dm adversarial - texto no teto de 32k entra; um char a mais não", async () => {
+  const peerOk = nextPeer();
+  const atCap = "B".repeat(dmMsg.MAX_DM_TEXT_CHARS);
+  await ingestDecryptedEnvelope(envOf(peerOk), atCap);
+  assert.equal((await cacheNode.getDmMessages(peerOk))[0]?.text?.length, dmMsg.MAX_DM_TEXT_CHARS);
+  const peerBig = nextPeer();
+  await ingestDecryptedEnvelope(envOf(peerBig), `${atCap}x`);
+  assert.deepEqual(await textsOf(peerBig), []);
 });
 
 test("dm adversarial - mensagem sem texto, sem cartão e sem foto (tipo desconhecido) não vira balão vazio", async () => {

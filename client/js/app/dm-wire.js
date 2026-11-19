@@ -23,6 +23,7 @@ import { parseContactAddedDm } from "../contact-notify.js";
 import { receiveContactAddedDm } from "./contact-notify-flow.js";
 import { receiveGuardianDm } from "./guardians-flow.js";
 import { receiveMeshDm } from "./mesh-vault-flow.js";
+import { isSeenDmEnvelopeId, markSeenDmEnvelopeId } from "../dm-envelope-ledger.js";
 
 /**
  * Liga ou desliga a reação de alguém numa mensagem do fio.
@@ -144,10 +145,16 @@ export async function ingestDecryptedEnvelope(env, rawText) {
   }
   const parsed = dmMsg.parseDmPayload(rawText);
   if (parsed.kind === "react") {
-    return applyBubbleReaction(env.from, env.from, parsed.targetId, parsed.emoji);
+    if (isSeenDmEnvelopeId(env.id)) return "duplicate";
+    const applied = await applyBubbleReaction(env.from, env.from, parsed.targetId, parsed.emoji);
+    if (applied) markSeenDmEnvelopeId(env.id);
+    return applied;
   }
   if (parsed.kind === "read") {
-    return applyReadReceipt(env.from, parsed.upToTs);
+    if (isSeenDmEnvelopeId(env.id)) return "duplicate";
+    const updated = await applyReadReceipt(env.from, parsed.upToTs);
+    markSeenDmEnvelopeId(env.id);
+    return updated;
   }
   if (!hasContent(parsed)) return false;
   if (await isKnownMessageId(env.id)) return "duplicate";
