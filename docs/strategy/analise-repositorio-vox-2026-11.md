@@ -8,7 +8,7 @@ Espelho versionado do retrato do repo: arquitetura, portões (pessoas / infra >5
 
 **Vox** é um **PWA local-first** de participação cívica: identidade e chaves no aparelho, feed/comunidades/governança/DM cifrada, Feira, POSSE — com compromisso de **código aberto (AGPL)**, transparência e **sem vender alcance**.
 
-Decisões de produto recentes (alinhadas ao [lobby](../../../lobby.md) e ao [ROADMAP](../ROADMAP.md)):
+Decisões de produto recentes (alinhadas ao handoff `lobby.md` na raiz do workspace `politica/` e ao [ROADMAP](../ROADMAP.md)):
 
 | Decisão | Implicação |
 |--------|------------|
@@ -18,9 +18,9 @@ Decisões de produto recentes (alinhadas ao [lobby](../../../lobby.md) e ao [ROA
 | **Infra de relays adiada até >50 ativos (19/11/2026)** | Cloudflare (TURN, 2º signaling), Render (trust proxy, pinger), snapshot `enforce` no cliente — **preparar no código/docs**, **ops só após gatilho**; INF-01…INF-04 em [`ROADMAP.md`](../ROADMAP.md) via [#283](https://github.com/yurikayel/vox/pull/283) mergeado em `develop` |
 | **Uma pessoa no controle do repo** | Código público, mas **bus factor 1** até LAN-30 / segundo revisor |
 
-Tese de tração (não é roadmap): [direcionamento-crescimento-rede-2026-11.md](../strategy\direcionamento-crescimento-rede-2026-11.md) — Brasil, nicho relacional, **uma praça que funciona** antes de “viralizar protocolo”; 4 camadas (Passivo → Steward); **sem leaderboard**.
+Tese de tração (não é roadmap): [direcionamento-crescimento-rede-2026-11.md](./direcionamento-crescimento-rede-2026-11.md) — Brasil, nicho relacional, **uma praça que funciona** antes de “viralizar protocolo”; 4 camadas (Passivo → Steward); **sem leaderboard**.
 
-Tripé de produtos ([ADR-011](../adr\011-taxonomia-tripartite-produtos-vox.md)): **cliente** (`vox`), **nó apoio** (`vox populi`), **memória central dev** (ZeroMemory / `central_memory.py`).
+Tripé de produtos ([ADR-011](../adr/011-taxonomia-tripartite-produtos-vox.md)): **cliente** (`vox`), **nó apoio** (`vox populi`), **memória central dev** (ZeroMemory / `central_memory.py`).
 
 ---
 
@@ -53,20 +53,20 @@ flowchart TB
 
 ### Cliente (`client/`)
 
-- **Sem bundler:** HTML + CSS + **ES modules**; roteamento em [client/js/app/route-parse.js](../../client\js\app\route-parse.js) + telas em `app/screens-*.js`.
+- **Sem bundler:** HTML + CSS + **ES modules**; roteamento em [client/js/app/route-parse.js](../../client/js/app/route-parse.js) + telas em `app/screens-*.js`.
 - **~300 módulos** em `client/js/`: domínio na raiz (`peers.js`, `crypto-dm.js`, `governance.js`, …), UI em `render/`, laboratório em `labs/` e `dungeon/`.
-- **Camadas (ADR-035, accepted):** regra em [scripts/layers-lib.mjs](../../scripts\layers-lib.mjs) — `app` → tudo; `render` → render+base; `base` → base; `labs` → labs+base. Contextos **`identity/`** e **`vault/`** com **portas** (`index.js`, `keys.js`, `envelope.js`) para quebrar ciclos.
-- **Service Worker** [client/sw.js](../../client\sw.js): precache do shell, `CACHE_NAME` **v7.143**; lista `UNPLUGGED_MODULES` tira ~21 módulos mortos do cache ([labs/parado/](../../client\js\labs\parado\README.md)).
-- **Rede:** WebRTC/gossip ([peers.js](../../client\js\peers.js), [peer-sync.js](../../client\js\peer-sync.js)), sinalização WebSocket **e** Nostr efêmero (REV-09), opcional memória central local, upload Arweave **desligado por flag**.
+- **Camadas (ADR-035, accepted):** regra em [scripts/layers-lib.mjs](../../scripts/layers-lib.mjs) — `app` → tudo; `render` → render+base; `base` → base; `labs` → labs+base. Contextos **`identity/`** e **`vault/`** com **portas** (`index.js`, `keys.js`, `envelope.js`) para quebrar ciclos.
+- **Service Worker** [client/sw.js](../../client/sw.js): precache do shell, `CACHE_NAME` **v7.143**; lista `UNPLUGGED_MODULES` tira ~21 módulos mortos do cache ([labs/parado/](../../client/js/labs/parado/README.md)).
+- **Rede:** WebRTC/gossip ([peers.js](../../client/js/peers.js), [peer-sync.js](../../client/js/peer-sync.js)), sinalização WebSocket **e** Nostr efêmero (REV-09), opcional memória central local, upload Arweave **desligado por flag**.
 
 ### Relay (`relay/`)
 
-- **Signaling** ([signaling.py](../../relay\signaling.py)): ICE/SDP; limite de conexões, rate limit (#203).
-- **Relay completo** ([server.py](../../relay\server.py)): cache de txs, inbox DM, OAuth exchange, cofre central, genesis guard — CORS endurecido (#265), paths via [safe_path.py](../../relay\safe_path.py) e [vault_store.py](../../relay\vault_store.py).
-- **Blind relay / P2P seed / mirror:** módulos separados; specs em [docs/specs/relay-api.md](../specs\relay-api.md).
+- **Signaling** ([signaling.py](../../relay/signaling.py)): ICE/SDP; limite de conexões, rate limit (#203).
+- **Relay completo** ([server.py](../../relay/server.py)): cache de txs, inbox DM, OAuth exchange, cofre central, genesis guard — CORS endurecido (#265), paths via [safe_path.py](../../relay/safe_path.py) e [vault_store.py](../../relay/vault_store.py).
+- **Blind relay / P2P seed / mirror:** módulos separados; specs em [docs/specs/relay-api.md](../specs/relay-api.md).
 - **Deploy:** Render (sinalização), espelhos GitHub Pages / Cloudflare; **não** há relay completo público operado por terceiro (REV-04).
-- **Snapshot cego pós-#281 (`develop`):** [`relay/snapshot_auth.py`](../../relay\snapshot_auth.py) + [`blind_relay.py`](../../relay\blind_relay.py); `POST /relay/snapshot/<canal>` via [`server.py`](../../relay\server.py) (`_handle_blind_snapshot_post`) lê `X-Vox-Snapshot-Proof`; padrão `VOX_RELAY_SNAPSHOT_AUTH=compat` (sem prova → aceito como legado, sem podar); `enforce` → `403`. Só snapshot autenticado poda; cliente ainda não manda prova (D2 do RFC) → **INF-04** (>50).
-- **Política vigente (gatilho >50 ativos):** manter Render + cron [`sentinel-keepalive.yml`](../../.github\workflows\sentinel-keepalive.yml) endurecido (#282: 3×60 s, issue só se as 3 falharem); **não** deploy TURN, 2º nó, `VOX_RELAY_TRUST_PROXY_HOPS` nem relay `enforce` até **>50 ativos** (pico de `peers` em `/health` como indicador inicial; contagem ainda manual).
+- **Snapshot cego pós-#281 (`develop`):** [`relay/snapshot_auth.py`](../../relay/snapshot_auth.py) + [`blind_relay.py`](../../relay/blind_relay.py); `POST /relay/snapshot/<canal>` via [`server.py`](../../relay/server.py) (`_handle_blind_snapshot_post`) lê `X-Vox-Snapshot-Proof`; padrão `VOX_RELAY_SNAPSHOT_AUTH=compat` (sem prova → aceito como legado, sem podar); `enforce` → `403`. Só snapshot autenticado poda; cliente ainda não manda prova (D2 do RFC) → **INF-04** (>50).
+- **Política vigente (gatilho >50 ativos):** manter Render + cron [`sentinel-keepalive.yml`](../../.github/workflows/sentinel-keepalive.yml) endurecido (#282: 3×60 s, issue só se as 3 falharem); **não** deploy TURN, 2º nó, `VOX_RELAY_TRUST_PROXY_HOPS` nem relay `enforce` até **>50 ativos** (pico de `peers` em `/health` como indicador inicial; contagem ainda manual).
 
 ### Tooling e qualidade
 
@@ -80,11 +80,11 @@ flowchart TB
 
 | Área | Função |
 |------|--------|
-| [`client/js/app/`](../../client\js\app) | Orquestração de telas e fluxos (onboarding, compose, DM, comunidade) |
-| [`client/js/render/`](../../client\js\render) | Geração de HTML (sem DOM pesado no domínio) |
-| [`client/js/identity/`](../../client\js\identity) | Conta local, frase, guardiões, cofre relacionado |
-| [`client/js/vault/`](../../client\js\vault) | Criptografia de cofre, mesh vault (ADR-037) |
-| [`client/js/labs/parado/`](../../client\js\labs\parado) | Código testado mas **não plugado** (webxdc, kit-genesis, polis, …) |
+| [`client/js/app/`](../../client/js/app) | Orquestração de telas e fluxos (onboarding, compose, DM, comunidade) |
+| [`client/js/render/`](../../client/js/render) | Geração de HTML (sem DOM pesado no domínio) |
+| [`client/js/identity/`](../../client/js/identity) | Conta local, frase, guardiões, cofre relacionado |
+| [`client/js/vault/`](../../client/js/vault) | Criptografia de cofre, mesh vault (ADR-037) |
+| [`client/js/labs/parado/`](../../client/js/labs/parado) | Código testado mas **não plugado** (webxdc, kit-genesis, polis, …) |
 | [`relay/`](../../relay) | Backend Python + testes espelhando API |
 | [`docs/adr/`](../adr) | Decisões (032 identidade, 035 camadas, 037 malha, 038 subrede proposta, …) |
 | [`docs/specs/`](../specs) | Protocolos e APIs |
@@ -98,7 +98,7 @@ Governança de código: **hardening** (LLOC, CC, nesting) em [docs/HARDENING.md]
 
 ## Roadmap (onde o projeto *diz* que vai)
 
-Fonte única de prioridade: [docs/ROADMAP.md](../ROADMAP.md) + calendário [brainstorm-roadmap-2027.md](../brainstorms\brainstorm-roadmap-2027.md).
+Fonte única de prioridade: [docs/ROADMAP.md](../ROADMAP.md) + calendário [brainstorm-roadmap-2027.md](../brainstorms/brainstorm-roadmap-2027.md).
 
 **Autoavaliação do próprio roadmap (“Onde estamos”, nov/2026):**
 
@@ -115,7 +115,7 @@ Fonte única de prioridade: [docs/ROADMAP.md](../ROADMAP.md) + calendário [brai
 |--------|-------------------|
 | Calendário Dez/2026–T1 (texto antigo) | Ainda cita REV-01, REV-10, NET-02 em marcos de trimestre |
 | Seção INF + decisão 19/11 | Ops de relay **só** após >50 ativos; preparação em código já feita (#281, runbook) |
-| [lobby.md](../../../lobby.md) | Handoff fechado em `develop` `e994a1b` |
+| `lobby.md` (workspace `politica/`, fora de `vox/`) | Handoff fechado em `develop` `e994a1b` |
 
 **Nota de leitura:** dez/2026–T1 **não** devem iniciar deploy TURN/2º nó abaixo do gatilho; datas de **desistência jurídica** (associação, parecer) seguem válidas e **independentes** do gatilho de infra.
 
@@ -214,9 +214,9 @@ flowchart LR
 
 1. [FEATURES.md](../FEATURES.md) — o que existe de verdade  
 2. [ROADMAP.md](../ROADMAP.md) § “Onde estamos” e P0  
-3. [ADR-035 camadas](../adr\035-camadas-e-contextos.md) + [identity/index](../../client\js\identity\index.js)  
-4. [relay/README.md](../../relay\README.md) + [relay-api.md](../specs\relay-api.md)  
-5. [docs/security/codeql-pr262-triagem.md](../security\codeql-pr262-triagem.md) — o que foi tratado no release  
+3. [ADR-035 camadas](../adr/035-camadas-e-contextos.md) + [identity/index](../../client/js/identity/index.js)  
+4. [relay/README.md](../../relay/README.md) + [relay-api.md](../specs/relay-api.md)  
+5. [docs/security/codeql-pr262-triagem.md](../security/codeql-pr262-triagem.md) — o que foi tratado no release  
 
 ---
 
@@ -228,7 +228,7 @@ flowchart LR
 
 **Só após >50 usuários ativos (ops — INF-*):**
 
-- INF-01: TURN produção ([runbook](../operations\turn-e-segundo-no.md))
+- INF-01: TURN produção ([runbook](../operations/turn-e-segundo-no.md))
 - INF-02: 2º signaling (REV-01)
 - INF-03: `VOX_RELAY_TRUST_PROXY_HOPS` + pinger externo (~5 min)
 - INF-04: cliente com prova + relay `enforce`
