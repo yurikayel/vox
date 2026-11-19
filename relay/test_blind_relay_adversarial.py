@@ -4,8 +4,9 @@ test_blind_relay_adversarial.py — Testes adversariais do relay cego.
 
 Foco: perda silenciosa no cold boot (limpeza por timestamp em vez de serial),
 listagem truncada, envelopes que se sobrescrevem, dado envenenado no disco e
-tetos de tamanho. Itens que dependem de mudança de contrato (autenticação do
-snapshot, sinalização de truncamento) ficam em `skip` com a razão.
+tetos de tamanho e snapshot forjado (RFC 0002). O item que depende de mudança de
+contrato (sinalização de truncamento) fica em `skip` com a razão. Quem poda o canal
+é só o snapshot autenticado: os testes de poda mandam a prova de dono (`PROVA`).
 """
 
 import json
@@ -13,10 +14,12 @@ import tempfile
 import time
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from relay import blind_relay
 
 CANAL = "canal_adv"
+PROVA = "ab" * 32  # prova de dono qualquer (64 hex): o relay a trata como valor opaco
 
 
 def _env(serial, timestamp, **extra):
@@ -59,7 +62,7 @@ class TestColdBootNaoPerdeDeltas(_RelayDirCase):
             blind_relay.store_envelope(CANAL, _env(serial, agora - 60_000 + serial))
 
         blind_relay.store_snapshot(
-            CANAL, {"snapshot": "ESTADO", "epoch": 2, "timestamp": agora, "coveredSerial": 5}
+            CANAL, {"snapshot": "ESTADO", "epoch": 2, "timestamp": agora, "coveredSerial": 5}, proof=PROVA
         )
 
         restantes = blind_relay.list_envelopes(CANAL, since_serial=5)
@@ -73,6 +76,7 @@ class TestColdBootNaoPerdeDeltas(_RelayDirCase):
         blind_relay.store_snapshot(
             CANAL,
             {"snapshot": "ESTADO", "epoch": 2, "timestamp": agora + 365 * 86_400_000, "coveredSerial": 1},
+            proof=PROVA,
         )
 
         self.assertEqual(_serials(blind_relay.list_envelopes(CANAL, since_serial=1)), [2, 3])
@@ -81,7 +85,7 @@ class TestColdBootNaoPerdeDeltas(_RelayDirCase):
         agora = int(time.time() * 1000)
         blind_relay.store_envelope(CANAL, _env(0, agora - 5000, nonce="legado"))
         blind_relay.store_snapshot(
-            CANAL, {"snapshot": "ESTADO", "epoch": 2, "timestamp": agora, "coveredSerial": 9}
+            CANAL, {"snapshot": "ESTADO", "epoch": 2, "timestamp": agora, "coveredSerial": 9}, proof=PROVA
         )
         self.assertEqual(len(blind_relay.list_envelopes(CANAL, since_ts=0)), 1)
 
@@ -90,11 +94,11 @@ class TestColdBootNaoPerdeDeltas(_RelayDirCase):
         for serial in range(1, 8):
             blind_relay.store_envelope(CANAL, _env(serial, agora + serial))
         blind_relay.store_snapshot(
-            CANAL, {"snapshot": "A", "epoch": 2, "timestamp": agora, "coveredSerial": 5}
+            CANAL, {"snapshot": "A", "epoch": 2, "timestamp": agora, "coveredSerial": 5}, proof=PROVA
         )
         with self.assertRaises(ValueError):
             blind_relay.store_snapshot(
-                CANAL, {"snapshot": "B", "epoch": 3, "timestamp": agora, "coveredSerial": 2}
+                CANAL, {"snapshot": "B", "epoch": 3, "timestamp": agora, "coveredSerial": 2}, proof=PROVA
             )
         self.assertEqual(blind_relay.get_latest_snapshot(CANAL)["snapshot"], "A")
 
@@ -102,7 +106,7 @@ class TestColdBootNaoPerdeDeltas(_RelayDirCase):
         agora = int(time.time() * 1000)
         for serial in range(1, 4):
             blind_relay.store_envelope(CANAL, _env(serial, agora - 1000 + serial))
-        blind_relay.store_snapshot(CANAL, {"snapshot": "A", "epoch": 2, "timestamp": agora})
+        blind_relay.store_snapshot(CANAL, {"snapshot": "A", "epoch": 2, "timestamp": agora}, proof=PROVA)
         self.assertEqual(len(blind_relay.list_envelopes(CANAL, since_ts=0)), 3)
 
 
@@ -207,7 +211,7 @@ class TestDadoEnvenenado(_RelayDirCase):
         blind_relay.store_envelope(CANAL, _env(1, 1000))
         pasta = blind_relay.ensure_channel_dir(CANAL)
         (pasta / "env_9_x.json").write_text(json.dumps({"envelope": {"serial": "x"}}), encoding="utf-8")
-        blind_relay.store_snapshot(CANAL, {"snapshot": "A", "epoch": 2, "coveredSerial": 1})
+        blind_relay.store_snapshot(CANAL, {"snapshot": "A", "epoch": 2, "coveredSerial": 1}, proof=PROVA)
         self.assertEqual(blind_relay.list_envelopes(CANAL, since_ts=0), [])
 
 
@@ -229,23 +233,75 @@ class TestTetosDeTamanho(_RelayDirCase):
             blind_relay.store_envelope(CANAL, _env(1, 1000, payload=com_emoji))
 
     def test_snapshot_gigante_e_recusado_e_o_anterior_fica(self):
-        blind_relay.store_snapshot(CANAL, {"snapshot": "bom", "epoch": 2})
+        blind_relay.store_snapshot(CANAL, {"snapshot": "bom", "epoch": 2}, proof=PROVA)
         with self.assertRaises(ValueError):
             blind_relay.store_snapshot(
-                CANAL, {"snapshot": "x" * blind_relay.MAX_SNAPSHOT_SIZE, "epoch": 3}
+                CANAL, {"snapshot": "x" * blind_relay.MAX_SNAPSHOT_SIZE, "epoch": 3}, proof=PROVA
             )
         self.assertEqual(blind_relay.get_latest_snapshot(CANAL)["snapshot"], "bom")
 
 
+def _canal_com_dez_envelopes():
+    agora = int(time.time() * 1000)
+    for serial in range(1, 11):
+        blind_relay.store_envelope(CANAL, _env(serial, agora - 1000 + serial))
+    return agora
+
+
+def _modo(valor):
+    return mock.patch.dict("os.environ", {"VOX_RELAY_SNAPSHOT_AUTH": valor})
+
+
 class TestSnapshotSemAutenticacao(_RelayDirCase):
-    @unittest.skip("contrato: quem pode emitir snapshot é decisão do mantenedor (ADR-027); relay-api.md §6")
-    def test_snapshot_forjado_com_coveredserial_enorme_nao_apaga_o_canal(self):
-        pass
+    def test_compat_snapshot_forjado_sem_prova_nao_apaga_o_canal(self):
+        agora = _canal_com_dez_envelopes()
+        forjado = {"snapshot": "FORJADO", "epoch": 2, "timestamp": agora, "coveredSerial": 10**9}
+        with _modo("compat"):
+            registro = blind_relay.store_snapshot(CANAL, forjado)
+        self.assertEqual(len(blind_relay.list_envelopes(CANAL, since_ts=0)), 10)
+        self.assertIs(registro["auth"], False)
 
-    @unittest.skip("contrato: época enorme trava o canal; exige autenticação do snapshot (relay-api.md §6)")
-    def test_epoca_enorme_nao_trava_snapshots_futuros(self):
-        pass
+    def test_enforce_snapshot_forjado_sem_prova_e_403_e_nao_apaga_o_canal(self):
+        agora = _canal_com_dez_envelopes()
+        forjado = {"snapshot": "FORJADO", "epoch": 2, "timestamp": agora, "coveredSerial": 10**9}
+        with _modo("enforce"), self.assertRaises(blind_relay.SnapshotForbidden):
+            blind_relay.store_snapshot(CANAL, forjado)
+        self.assertEqual(len(blind_relay.list_envelopes(CANAL, since_ts=0)), 10)
 
+    def test_coveredserial_enorme_com_prova_passa_do_teto_e_nao_apaga(self):
+        agora = _canal_com_dez_envelopes()
+        with self.assertRaises(ValueError):
+            blind_relay.store_snapshot(
+                CANAL, {"snapshot": "X", "epoch": 2, "timestamp": agora, "coveredSerial": 10**9}, proof=PROVA
+            )
+        self.assertEqual(len(blind_relay.list_envelopes(CANAL, since_ts=0)), 10)
+
+    def test_coveredserial_dentro_do_teto_com_prova_poda_so_o_coberto(self):
+        agora = _canal_com_dez_envelopes()
+        blind_relay.store_snapshot(
+            CANAL, {"snapshot": "OK", "epoch": 2, "timestamp": agora, "coveredSerial": 5}, proof=PROVA
+        )
+        self.assertEqual(_serials(blind_relay.list_envelopes(CANAL, since_ts=0)), [6, 7, 8, 9, 10])
+
+    def test_epoca_enorme_sem_prova_nao_trava_snapshots_futuros_em_enforce(self):
+        with _modo("enforce"):
+            with self.assertRaises(blind_relay.SnapshotForbidden):
+                blind_relay.store_snapshot(CANAL, {"snapshot": "FORJADO", "epoch": 2**62})
+            blind_relay.store_snapshot(CANAL, {"snapshot": "LEGIT", "epoch": 2}, proof=PROVA)
+        self.assertEqual(blind_relay.get_latest_snapshot(CANAL)["snapshot"], "LEGIT")
+
+    def test_epoca_enorme_sem_prova_nao_trava_snapshots_futuros_em_compat(self):
+        with _modo("compat"):
+            forjado = blind_relay.store_snapshot(CANAL, {"snapshot": "FORJADO", "epoch": 2**62})
+            self.assertIs(forjado["auth"], False)
+            blind_relay.store_snapshot(CANAL, {"snapshot": "LEGIT", "epoch": 2}, proof=PROVA)
+        self.assertEqual(blind_relay.get_latest_snapshot(CANAL)["snapshot"], "LEGIT")
+
+    def test_epoca_enorme_com_prova_e_recusada_e_o_canal_aceita_o_legitimo(self):
+        with self.assertRaises(ValueError):
+            blind_relay.store_snapshot(CANAL, {"snapshot": "X", "epoch": 2**62}, proof=PROVA)
+        blind_relay.store_snapshot(CANAL, {"snapshot": "LEGIT", "epoch": 2}, proof=PROVA)
+        self.assertEqual(blind_relay.get_latest_snapshot(CANAL)["epoch"], 2)
 
 if __name__ == "__main__":
     unittest.main()
