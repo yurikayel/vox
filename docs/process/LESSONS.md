@@ -1,6 +1,6 @@
 # Lições Estratégicas e Posicionamento Competitivo — Vox
 
-> **Status:** canônico (diagnóstico comparativo) · **Owner:** mantenedor · **Revisado:** 2026-10-23
+> **Status:** canônico (diagnóstico comparativo) · **Owner:** mantenedor · **Revisado:** 2026-11-19
 
 Este documento consolida o diagnóstico comparativo realizado sobre iniciativas de redes sociais alternativas, protocolos abertos e infraestruturas descentralizadas (**rede P2P BR de referência, Bluesky, Mastodon, Channel-01/Arboard e Pix**). Ele formaliza os erros a evitar, os acertos a incorporar e o *sweet spot* estratégico do Vox.
 
@@ -137,6 +137,12 @@ O repositório **[Arboard](https://github.com/rodrigopavezi/arboard)** (template
 | Canal de broadcast do autor → audiência | **Comunidades bidirecionais** (tópicos, respostas, moderação `mod-action`, malha P2P) |
 
 **O que o Vox não replica:** Arboard é essencialmente **unidirecional** (um canal, transmissão). O Vox expande a fundação de gateways para ecossistema social — incluindo **steward UX** (camadas Passivo→Steward), relay HTTP configurável e **retratação gossip** na malha — sem tratar o template como modelo completo de produto.
+
+---
+
+## 8b. Retenção por utilidade (mapa nov/2026)
+
+Redes que retêm sem algoritmo tóxico (Nextdoor, grupos locais, Kwai em aparelho barato) voltam por **aviso, feira, assembleia e ritual**, não por feed infinito. Na Vox, a trinca **PM-97 + Feira + PM-23** é o motor de hábito; soberania é o pacto, não o gancho semanal. Detalhe: [mapa §4.4](../strategy/mapa-mapa-ecossistema-aposentado-2026-11.md).
 
 ---
 
