@@ -6,6 +6,10 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Docs: relatório de auditoria (Fases 1–3) e alinhamento de `FEATURES.md` (DOC-06, nov/2026)
+- `docs/audits/auditoria-features-arquitetura-2026-11.md` (novo): consolidação empírica das Fases 1–3 (README × fatos, camadas/ciclos/portas ADR-035 e PM-01, matriz `FEATURES.md` × código × testes e top 10 gaps doc vs código); indexado em `docs/README.md`.
+- `docs/FEATURES.md`: revisado em 19/11/2026 — corrige `idb-store.js` e `node-health-*.js` (todos em `labs/parado/` / `UNPLUGGED_MODULES`), acrescenta Cofre na malha (ADR-037) e `identity/tab-sync.js`, corrige referência de teste `signed-verify` → `assinaturas-e-sinais-malicioso` e atualiza 18 caminhos pós-ADR-035 / #177 (`identity/`, `vault/`, `app/`, `labs/parado/`). Sem bump de SW.
+
 ### Docs: README e metadados de release alinhados ao código (auditoria fase 1, nov/2026)
 - `README.md`: selo de armazenamento deixa de dizer "Arweave Permaweb" (gravação pausada, REV-07); badge de testes **2276 passing · 9 skipped · 16 todo**; tabela e nota `develop` vs `main` e Release `v7.40`; Android 7.0+; ADRs apontam para o índice (39); PM-83 em laboratório; PR para `develop`; link para [análise do repositório](./docs/strategy/analise-repositorio-vox-2026-11.md).
 - `docs/release-metadata.json`: regerado por `npm run release-line` (`667fcda`, 1981 JS + 320 Python = 2301).
