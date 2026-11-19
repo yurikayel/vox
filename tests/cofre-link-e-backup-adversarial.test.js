@@ -128,7 +128,7 @@ test("peekBackupKind: JSON ruim, vazio e objeto não lançam", () => {
   assert.equal(peekBackupKind('{"kind":"vox-account-backup"}'), KIND_PLAIN);
 });
 
-test.todo("🔴 arquivo cifrado: salt com base64 inválido recusa com mensagem amigável (hoje vaza o erro cru do atob: b64UrlToBytes(env.salt) roda fora do try)", async () => {
+test("arquivo cifrado: salt, iv ou ct com base64 inválido recusa com mensagem amigável", async () => {
   const env = await wrapBackup(PLAIN, PASS);
   const resultados = [];
   for (const campo of ["salt", "iv", "ct"]) {

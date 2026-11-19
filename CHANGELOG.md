@@ -6,13 +6,16 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Code: bordas adversariais do cofre v2 e arquivo cifrado (`.voxid`)
+- `client/js/vault/vault-crypto.js`: `encryptVaultV2` valida `iterations` inteiro dentro da faixa aceita por `isV2Record` (`[100_000, 5_000_000]`), recusando com `RangeError` antes de gravar cofre que o app não abriria.
+- `client/js/identity/account-backup-wrap.js`: `decryptWrappedBytes` decodifica `env.salt` dentro do `try/catch`, devolvendo erro amigável quando o Base64 do sal está corrompido.
+- `tests/cofre-envelope-adversarial.test.js`, `tests/cofre-link-e-backup-adversarial.test.js`: 2 `test.todo` (`🔴`) promovidos a testes ativos (PM-111 red-on-base).
+
 ### Code: drena corpo HTTP em erros relay (413/429)
 - `readResponseText` em `fetch-timeout.js`; `central-memory`, `graphql` e `upload` leem o corpo antes de fechar a resposta.
 
 ### Docs: PM-112 spike mutação Tier A
 - `docs/process/pm-112-mutation-spike-2026-11.md` — Stryker adiado; PM-111 + adversarial até F2.
-
-_Sem outras entradas pendentes pós-release 2026-11-19._
 
 ## [2026-11-19] — SW `v7.146-dm-limits-6b` (release #296–#302)
 

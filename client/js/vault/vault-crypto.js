@@ -117,6 +117,9 @@ export function deriveVaultOwnerToken(passphrase, email = "") {
  * @returns {Promise<object>}
  */
 export async function encryptVaultV2(bundle, passphrase, iterations = VAULT_V2_ITERATIONS, email = "") {
+  if (!Number.isInteger(iterations) || iterations < MIN_ITERATIONS || iterations > MAX_ITERATIONS) {
+    throw new RangeError(`Iterações do cofre v2 fora da faixa [${MIN_ITERATIONS}, ${MAX_ITERATIONS}]`);
+  }
   const salt = crypto.getRandomValues(new Uint8Array(16));
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const key = await deriveAesKey(buildVaultSecret(passphrase, email), salt, iterations);
