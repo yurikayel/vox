@@ -59,6 +59,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 | Mutex de agentes | [metodo-agentes-mutex-e-revisor.md](./process/metodo-agentes-mutex-e-revisor.md) |
 | Evidência de testes, falso verde e auditoria | [qualidade-e-evidencia.md](./process/qualidade-e-evidencia.md) |
 | Norma de documentação (código e docs técnicos, `npm run audit:docs`) | [documentacao.md](./process/documentacao.md) |
+| Prompt Claude: auditoria features, docs e MVP técnico (nov/2026) | [prompt-claude-auditoria-mvp-tecnico-2026-11.md](./process/prompt-claude-auditoria-mvp-tecnico-2026-11.md) |
 | Plano de testes do login (invariantes, matriz por caminho, lacunas LT-01–LT-10) | [plano-testes-login.md](./process/plano-testes-login.md) |
 | Primeiras tarefas para contribuir (PM-41, rascunho) | [primeiras-tarefas-contribuidor.md](./process/primeiras-tarefas-contribuidor.md) |
 | Segunda pessoa com acesso em etapas (LAN-30, rascunho) | [segunda-pessoa-acesso-gradual.md](./process/segunda-pessoa-acesso-gradual.md) |
@@ -66,6 +67,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 | Decisões institucionais e de arquitetura (registro) | [DECISOES.md](./DECISOES.md) |
 | ADRs (detalhe de cada decisão) | [adr/README.md](./adr/README.md) |
 | Tese de tração e preceitos | [direcionamento-crescimento-rede-2026-11.md](./strategy/direcionamento-crescimento-rede-2026-11.md) |
+| Retrato do repo (nov/2026, portões e drift main/develop) | [analise-repositorio-vox-2026-11.md](./strategy/analise-repositorio-vox-2026-11.md) |
 | Navegação, banners de status e DoD dos docs | [CONTRIBUTING-DOCS.md](./CONTRIBUTING-DOCS.md) |
 | Termos da UI e copy leigo (pt-BR) | [GLOSSARIO.md](./GLOSSARIO.md) |
 
