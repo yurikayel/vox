@@ -90,54 +90,21 @@ npm start                         # sinalização WebRTC (relay/signaling.py, :3
 cd relay && python server.py      # relay completo (:3920): cache, inbox, espelho, memória, OAuth
 ```
 
-O `Vox Memoria` para Windows compila com `packaging/zero-central-memory-windows/build.ps1` (loopback `127.0.0.1:3920`/`:3921`; dados em `%LOCALAPPDATA%\VoxPopuli\NodeZero\central_memory`). O `Vox Populi` para Linux está em [`vox-populi/`](./vox-populi/). Endpoints em [relay-api.md](./docs/specs/relay-api.md); tiers e CI em [TESTES.md](./docs/TESTES.md); fluxo de contribuição em [CONTRIBUTING.md](./CONTRIBUTING.md).
+O `Vox Memoria` para Windows compila com `packaging/zero-central-memory-windows/build.ps1` e usa apenas loopback (`127.0.0.1:3920`/`:3921`). O `Vox Populi` para Linux está em [`vox-populi/`](./vox-populi/). Endpoints em [relay-api.md](./docs/specs/relay-api.md); tiers e CI em [TESTES.md](./docs/TESTES.md); fluxo de contribuição em [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ## 🛠️ O que já funciona
 
 Legenda: ✅ no ar · 🧪 laboratório (escrito, fora das telas ou atrás de flag) · 🚧 parcial · ⏸️ pausado. Lista canônica, com rotas, módulos e testes, em [FEATURES.md](./docs/FEATURES.md).
 
-### Praça e comunidades
+| Área | No ar | Limites honestos |
+|---|---|---|
+| **Praça e comunidades** | Feeds Social e Cívico; comunidades, fórum, Canal, enquetes, hashtags, modo eleitoral e moderação local | **Laboratório:** Pol.is não plugado e moderador natural atrás de flag |
+| **Identidade e recuperação** | Conta ECDSA P-256; cofre v2; frase de 12 palavras; cofre na malha; `.voxid`; apagar dados locais | **Parcial:** Guardiões Shamir. **Laboratório:** perfil coletivo M-de-N |
+| **Mensagens** | DMs cifradas de ponta a ponta; caixa de saída com reenvio por 7 dias | **Parcial:** entrega offline depende de relay de steward; “Esconder meu IP” depende de TURN |
+| **Mídia e distribuição** | Áudio e vídeo ≤ 320p; deduplicação SHA-256; sync por inventário; Notas de Perfil; republicar; POSSE | **Pausado:** gravação no Arweave. **Laboratório:** Webxdc + CRDT e outros 18 módulos fora das telas |
+| **Economia local e rede** | Feira; Pix Zaps; Voxels locais; diretório; Bluesky | **Parcial:** outras redes exigem `/oauth/exchange`. **Pausado:** Cartório Cívico. **Laboratório:** AI Social Dungeon |
 
-- ✅ Feeds Social (`#/`) e Cívico (`#/?feed=civic`), com posicionamento e enquetes de 2 a 6 opções.
-- ✅ Comunidades com fórum em árvore, `📌 Fixado`, `🔒 Encerrado`, tópicos que sobem com atividade e modo Canal, em que só a moderação publica (PM-81).
-- ✅ Moderação local: denúncia assinada que segue por DM cifrada à moderação (LAN-12, PM-69), quarentena de chave nova com prova de trabalho leve (LAN-14) e quarentena pessoal.
-- ✅ Hashtags e feed por tag (`#/tag/:slug`).
-- ✅ Modo eleitoral automático (REV-24, Res. TSE 23.755/2026).
-- 🧪 Agrupamento de opiniões estilo Pol.is (`polis.js`), não plugado.
-- 🧪 Moderador natural a partir de convites assinados (PM-83, flag `vox.lab.moderador`).
-
-### Identidade e recuperação
-
-- ✅ Conta local com chave ECDSA P-256 (`vx_…`), sem servidor central de login.
-- ✅ Cofre v2: só a Senha Soberana abre (PBKDF2 600k, [ADR-025](./docs/adr/025-cofre-v2-so-a-senha-abre.md)); chaves não exportáveis depois do backup ([ADR-026](./docs/adr/026-chaves-em-repouso-trava-depois-do-backup.md)).
-- ✅ Frase de recuperação de 12 palavras (`#/frase`, [ADR-032](./docs/adr/032-login-perene-a-conta-nasce-com-saida.md)).
-- ✅ Cofre na malha: cópias cifradas com laços mútuos, espera de 24 h ou aprovação "Fui eu" e veto "Não fui eu" ([ADR-037](./docs/adr/037-cofre-na-malha.md)).
-- 🚧 Guardiões Shamir (`#/guardioes`, `#/voltar`): dividir (padrão 3 de 5), devolver a conta, trocar e tirar já existem; o FEATURES ainda classifica como parcial.
-- ✅ Cofre multi-identidade `.voxid` e apagar tudo do aparelho em emergência (`identity/local-account.js`).
-- 🧪 Perfil coletivo M-de-N (`#/labs/mofn`, [ADR-005](./docs/adr/005-collective-profile-m-of-n.md)).
-
-### Mensagens
-
-- ✅ DMs cifradas de ponta a ponta (ECDH P-256 + AES-GCM-256), com caixa de saída e reenvio por 7 dias (PM-78).
-- 🚧 Entrega offline: depende de relay de steward, porque não há relay completo público (REV-04).
-- 🚧 "Esconder meu IP": a opção existe, mas não tem efeito enquanto não houver TURN (REV-10).
-
-### Mídia e distribuição
-
-- ✅ Áudio e vídeo leves (≤ 320p, `media-lofi.js`), deduplicação SHA-256 (`media-blob.js`) e sync por inventário (PM-80).
-- ✅ Notas de Perfil de 24 h, republicar com citação sem impulsionamento e marcação manual em fotos (sem reconhecimento facial).
-- ✅ Compartilhar e `EXPLODE!` (POSSE): o app prepara os rascunhos, quem publica é sempre a pessoa.
-- ⏸️ Gravação no Arweave (REV-07); a leitura de gateways continua.
-- 🧪 Cartuchos Webxdc + CRDT ([ADR-012](./docs/adr/012-soberania-digital-cintura-fina-cartuchos-webxdc.md)) e os demais módulos de `client/js/labs/parado/` (21 no total, fora do precache).
-
-### Economia local e rede
-
-- ✅ Feira de classificados assinados e Pix Zaps offline (`brcode.js`, com aviso de que o nome civil do DICT aparece — REV-13).
-- ✅ Voxels locais ([ADR-013](./docs/adr/013-sistema-voxels-e-conquistas-civicas.md)) e diretório `#/people`.
-- ✅ Contas vinculadas com Bluesky (AT Protocol no navegador).
-- 🚧 Outras redes vinculadas (X, Threads, GitHub, TikTok, Instagram) dependem de `/oauth/exchange` configurado.
-- ⏸️ Cartório Cívico (`perma-notary.js`): só calcula o hash SHA-256 local, sem gravar no Arweave (REV-07).
-- 🧪 AI Social Dungeon: demonstração sem IA e sem rede ([ADR-033](./docs/adr/033-ia-so-no-rpg-local-primeiro.md)).
+Recuperação soberana: [ADR-025](./docs/adr/025-cofre-v2-so-a-senha-abre.md) (cofre v2), [ADR-032](./docs/adr/032-login-perene-a-conta-nasce-com-saida.md) (frase e guardiões) e [ADR-037](./docs/adr/037-cofre-na-malha.md) (cofre na malha). Laboratórios: [ADR-005](./docs/adr/005-collective-profile-m-of-n.md) (M-de-N), [ADR-012](./docs/adr/012-soberania-digital-cintura-fina-cartuchos-webxdc.md) (Webxdc) e [ADR-033](./docs/adr/033-ia-so-no-rpg-local-primeiro.md) (RPG local).
 
 ## 🆕 Novidades de novembro/2026
 
@@ -154,11 +121,7 @@ Legenda: ✅ no ar · 🧪 laboratório (escrito, fora das telas ou atrás de fl
 Histórico integral em [CHANGELOG.md](./CHANGELOG.md) e [client/DEV.md §42–§44](./client/DEV.md#42-postar-em-etapas--social-ou-cívico).
 
 - **Experiência e produto:** design system *Sovereign Agora* ([ADR-016](./docs/adr/016-design-system-sovereign-agora-e-democracia-direta.md)); feeds Social e Cívico; fluxos em etapas (entrada, compositor, proposta, comunidade, Feira); assistentes (`#/settings/network/guia`, `#/backup`, `#/wallet/guia`); modo Canal (PM-81); modo eleitoral automático (REV-24); contas vinculadas Bluesky e OAuth via `/oauth/exchange` quando configurado.
-- **Identidade, recuperação e segurança** ([revisão DevSecOps de 10/11](./docs/audits/revisao-devsecops-2026-11-10.md)):
-  - cofre v2 (PM-90, [ADR-025](./docs/adr/025-cofre-v2-so-a-senha-abre.md)) e chaves em repouso (PM-93, [ADR-026](./docs/adr/026-chaves-em-repouso-trava-depois-do-backup.md));
-  - frase de 12/24 palavras (`#/frase`), guardiões (`#/guardioes`, `#/voltar`) e cofre na malha com espera de 24 h e veto;
-  - assinatura v2 (PM-85) e integridade (#49, PM-84, PM-86, PM-87): fotos viajam com `mediaHash` assinado, a memória central verifica assinatura e o cartão de perfil não ecoa sem fim;
-  - relay e pipeline (PM-94, PM-95, #281): autorização por dono e origem, snapshot `compat`, CodeQL, Dependabot, actions fixadas por SHA e catraca de camadas ([ADR-035](./docs/adr/035-camadas-e-contextos.md)).
+- **Identidade, recuperação e segurança:** cofre v2 e chaves em repouso; frase de 12/24 palavras, guardiões e cofre na malha; assinatura v2 e integridade de mídia; relay autorizado por dono e origem; snapshot `compat`; CodeQL, Dependabot e catraca de camadas ([revisão DevSecOps](./docs/audits/revisao-devsecops-2026-11-10.md), [ADR-035](./docs/adr/035-camadas-e-contextos.md)).
 - **Malha e resiliência:** sync por inventário (PM-80); caixa de saída de DMs com reenvio por 7 dias (PM-78); denúncia assinada arquivada até a revisão de 48 h (PM-69); quarentena de chave nova com prova de trabalho de 14 bits (LAN-14); nó leve (100 MB) ou de apoio (512 MB a 1 GB no Wi-Fi); mensagens de erro honestas (LAN-21); convite com vínculo assinado (PM-82) e moderador natural em laboratório (PM-83).
 - **Taxonomia:** um cliente (`Vox`) e dois nós opcionais, um por aparelho (`Vox Populi` ou `Vox Memoria`), com Kit steward como implantação do `Vox Memoria` em VPS (ADR-011, #289).
 
