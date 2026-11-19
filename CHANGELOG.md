@@ -6,6 +6,9 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Docs: mapa do tecido social digital BR (nov/2026)
+- `docs/strategy/mapa-parceiras-e-concorrentes-2026-11.md`: Varanda reclassificado (concorrente P2P, Conf. A, PolyForm); §2.2 Fediverso BR; §2.3 cívico; §3.1–3.2 tracking; §4 radar de aprendizados; Énóis (GPL-3.0); **Sua Voz** mantida; notas POSITIONING/LESSONS. Sem código nem bump de SW.
+
 ### Code: D4 repost-index, ciclo onboarding, D5 SIGV2 ensaio e PM-01 passo 1 (SW `v7.144`)
 - `client/js/repost-index.js`: normaliza `localStorage` não-objeto; promove `2 todo` em `tests/repost-index.test.js`.
 - `client/js/app/onboarding-oauth-ui.js` (novo): UI OAuth compartilhada; `screens-network.js` abre modal via `import()`; `scripts/cycles-debt.json` **0 ciclos**.
