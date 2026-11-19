@@ -1,6 +1,6 @@
 # Glossário da interface (pt-BR)
 
-> **Status:** canônico (linguagem leiga para contribuidores e revisão de copy) · **Owner:** mantenedor doc · **Revisado:** 2026-11-18
+> **Status:** canônico (linguagem leiga para contribuidores e revisão de copy) · **Owner:** mantenedor doc · **Revisado:** 2026-11-19
 
 Este glossário traduz para português claro os nomes que aparecem no app, nas mensagens de ajuda e na documentação. Ele **não** substitui a **Voxpedia** (`#/voxpedia` no app), que é a ajuda dentro do PWA; aqui a fonte é o repositório, para quem escreve textos, revisa PRs ou responde dúvidas sem abrir o cliente.
 
@@ -44,7 +44,7 @@ Para identidade e criptografia em profundidade: [IDENTITY.md](./IDENTITY.md). Pa
 | **Modo guardião** (rede) | Aparelho como nó de cache fixo maior (em desenvolvimento/plugável); **não** é o mesmo que “guardiões” da recuperação de conta. |
 | **Steward** | Pessoa ou grupo que opera **relay**, signaling ou memória central para uma comunidade — infraestrutura substituível, não dono da sua conta. |
 | **Relay** | Servidor que **não lê conteúdo em claro**: repassa envelopes cifrados (DM offline, cofre remoto, OAuth em deploy). |
-| **Memória central** | Nó opcional (ex.: `zero-central-memory`) que guarda histórico e blobs entre reinícios na fase Alpha/Beta; comunidade ou steward escolhe usá-la. |
+| **Memória central** | Serviço do **Vox Memoria** (`central_memory.py` / binário local) que guarda histórico e blobs entre reinícios; mantenedor ou comunidade escolhe quanto ceder de CPU, disco e banda. |
 | **Signaling** | Serviço auxiliar para o WebRTC “se achar” atrás de roteador (NAT); não vê o conteúdo das conversas. |
 | **Gateway** | Ponto de leitura GraphQL (Arweave/índice); o cliente consulta quando precisa buscar registros públicos. |
 | **Rede ativa** | Indicador na barra: quantos pares WebRTC conectados ou quanto você serviu — atalho para ajustes. |
@@ -83,8 +83,10 @@ Para identidade e criptografia em profundidade: [IDENTITY.md](./IDENTITY.md). Pa
 
 | Termo | O que significa, em poucas palavras |
 | --- | --- |
-| **Vox** | Cliente PWA (navegador ou app instalável): usar a rede sem ser técnico. |
-| **Vox populi** | Nó de apoio em segundo plano (relay/cache), sem interface pesada. |
+| **Vox** | Cliente único (PWA, `Vox.exe` ou `vox.apk`): todo mundo usa o mesmo app para ler, postar e conversar. |
+| **Vox Populi** | Nó de apoio leve em segundo plano + dashboard simplificado (ligar/pausar, só Wi-Fi, cota leve). Substitui o **Vox Memoria** se ambos forem abertos no mesmo aparelho. |
+| **Vox Memoria** | Nó de memória dedicado + dashboard de mantenedor para ceder X CPU, disco e banda à memória perene da rede. Substitui o **Vox Populi** se ambos forem abertos no mesmo aparelho (nó local único, [ADR-011](./adr/011-taxonomia-tripartite-produtos-vox.md)). |
+| **Conexão local** (*Usando seu nó*) | Enlace automático do cliente **Vox** com o **Vox Populi** ou **Vox Memoria** rodando na mesma máquina (`127.0.0.1`). Substitui o termo antigo "Local Boost". |
 | **Voxpedia** | Ajuda **dentro do app** (`#/voxpedia`), em camadas leigas; aponta para o GitHub quem for desenvolver. |
 | **PWA** | Site que pode ser “instalado” e guardar dados no aparelho como app. |
 | **WebRTC** | Tecnologia de conexão direta entre navegadores (usada na malha e em DMs online). |
