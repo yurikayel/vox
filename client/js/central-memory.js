@@ -6,7 +6,7 @@
  * Copia todos os artefatos locais para o disco do nó local e reidrata o estado
  * completo ao iniciar ou reconectar, evitando perda de memória da rede.*/
 
-import { fetchWithTimeout } from "./fetch-timeout.js";
+import { fetchWithTimeout, readResponseText } from "./fetch-timeout.js";
 import * as cacheNode from "./cache-node.js";
 import * as hydrate from "./central-memory-hydrate.js";
 import { isBeforeGenesisMs, isTestRouteId } from "./genesis.js";
@@ -121,8 +121,13 @@ export function isHydratingFromCentralMemory() {
 async function fetchJsonWithTimeout(url, options = {}) {
   try {
     const res = await fetchWithTimeout(url, options, { timeoutMs: REQUEST_TIMEOUT_MS });
+    if (typeof res.text === "function") {
+      const text = await readResponseText(res);
+      if (!res.ok) return null;
+      if (text) return JSON.parse(text);
+    }
     if (!res.ok) return null;
-    return await res.json();
+    return typeof res.json === "function" ? await res.json() : null;
   } catch {
     return null;
   }
