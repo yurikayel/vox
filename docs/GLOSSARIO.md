@@ -59,7 +59,7 @@ Para identidade e criptografia em profundidade: [IDENTITY.md](./IDENTITY.md). Pa
 | --- | --- |
 | **Mensagens** (DM) | Conversa privada entre dois `vx_…`. Texto cifrado para o destinatário; histórico fica neste aparelho; entrega online via malha/WebRTC ou offline via relay (TTL limitado). |
 | **Mochila** | Repasse **cego** de DMs entre aparelhos da mesma pessoa (em evolução): a mochila carrega envelopes sem ler o texto. |
-| **Para você** / **Seguindo** | Feeds no Início: autores que você segue vs mistura com descoberta recente — sem leilão de anúncios nem ranking opaco. |
+| **Para você** / **Seguindo** | Feeds na **Ágora**: autores que você segue vs mistura com descoberta recente — sem leilão de anúncios nem ranking opaco. |
 | **Postar** / **tópico** | Publicação em comunidade ou feed; assinada pela sua conta local. |
 | **POSSE** | Estratégia “publicar aqui e compartilhar o link” no WhatsApp ou outras redes; o Vox guarda o original, **não** posta sozinho no Instagram/Facebook. |
 | **Handle `@nome`** | Apelido legível; resolução depende do que você e contatos já viram — não é DNS centralizado de rede fechada. |
@@ -85,8 +85,8 @@ Termos de produto inspirados na observação Énóis, com nome Vox. Códigos **I
 
 | Termo na UI (candidato) | O que significa, em poucas palavras |
 | --- | --- |
-| **Início** *(ágora nos docs)* | Feed principal — rota `#/`. Copy para quem organiza usa **Início** ([síntese praça](./brainstorms/brainstorm-sintese-praca-de-colunas-2026-11-10.md): “Ágora” não na tela). Na nav do app hoje aparece **Ágora** (`shell.js`, [ADR-016](./adr/016-design-system-sovereign-agora-e-democracia-direta.md)). Não confundir com `#/explorar`. |
-| **Explorar** (IXV-01) | Hub **lazy** (`#/explorar`, pós-PM-01) para descobrir módulos opcionais (Feira, Mesa, Salas Precisas); não substitui o feed / **Início** (`#/`). |
+| **Ágora** | Aba e feed principal — rota `#/` (`shell.js`, [ADR-016](./adr/016-design-system-sovereign-agora-e-democracia-direta.md)). Nome com **duplo sentido:** a praça pública grega e **agora** (o que está acontecendo nos espaços públicos). Não confundir com **Explorar** (`#/explorar`). A marca do app continua sendo **Vox** ([síntese praça](./brainstorms/brainstorm-sintese-praca-de-colunas-2026-11-10.md)). |
+| **Explorar** (IXV-01) | Nome **Explorar** na UI — hub **lazy** (`#/explorar`, pós-PM-01) para descobrir módulos opcionais, Salas Precisas, Mesa, laboratórios; **não** substitui a **Ágora** (`#/`). |
 | **Posts temporários** (IXV-02) | Publicação com prazo visível (ex.: 24 h, 7 dias); política de esquecimento ([ADR-019](./adr/019-esquecer-por-padrao-e-memoria-civica.md)). |
 | **Assuntos** (IXV-04) | Filtros em pills numa comunidade (`#/c/:id`): avisos, pautas, Feira, dúvidas — em vez de um único mural sem foco. |
 | **Recorrente** (IXV-05) | Encontros que voltam no tempo (ritualRule); nome de UI para rituais ligados a aviso assinado e [modo assembleia](./specs/modo-assembleia-v0.md). |
@@ -94,7 +94,7 @@ Termos de produto inspirados na observação Énóis, com nome Vox. Códigos **I
 | **Mensagens protegidas** (IXV-07) | DM com linguagem simples sobre criptografia e senha no aparelho. |
 | **Para responsáveis** (IXV-07) | Página de orientação 18+ e uso seguro (`#/responsavel` ou Voxpedia), espelho do Énóis `/responsavel`. |
 | **Nota de contexto** (IXV-08) | Acrescento **assinado** preso a um tópico pai (correção, ata, fonte) — não é apagar nem moderar o post original. |
-| **Coluna** (IXV-09) | Texto longo da comunidade ou do perfil (`kind: "coluna"`) fora do feed / **Início** — estatuto, guia, diário. |
+| **Coluna** (IXV-09) | Equivalente a **blog** no Énóis (`/blogs`): texto longo (`kind: "coluna"`) fora do fluxo da **Ágora** — estatuto, guia, diário; acervo, não timeline. |
 | **Molduras cívicas** (IXV-10) | Decoração de perfil via **Voxels**, só opções de uma lista CSS fechada. |
 | **Mural fixado** (IXV-12) | Conjunto de posts fixados pela moderação ou curadoria da comunidade. |
 | **Sugestão na pauta** (IXV-12) | Proposta leve de mudar regra local, votada na **Governança**, sem virar post no feed. |

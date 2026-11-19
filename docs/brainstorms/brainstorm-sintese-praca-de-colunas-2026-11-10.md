@@ -1,6 +1,6 @@
 # Síntese — a praça de colunas
 
-> **Status:** brainstorm (síntese) · **Owner:** mantenedor · **Revisado:** 2026-11-11 (analogia da ágora no lugar do WeChat) · **Não substitui o [ROADMAP](../ROADMAP.md)** ([ADR-017](../adr/017-consolidacao-roadmap-unico.md))
+> **Status:** brainstorm (síntese) · **Owner:** mantenedor · **Revisado:** 2026-11-19 (Ágora na aba do feed; analogia 2026-11-11) · **Não substitui o [ROADMAP](../ROADMAP.md)** ([ADR-017](../adr/017-consolidacao-roadmap-unico.md))
 > **Origem:** consolida os seis brainstorms de 10/11/2026 e acrescenta uma pesquisa feita no mesmo dia sobre o PL 5.746/2026 e o campo pró-democrático de centro e de direita (§9). **Quando um doc de origem divergir desta síntese, vale a síntese.** Os docs de origem guardam o detalhe:
 > [5 pontos fracos](./brainstorm-5-pontos-fracos-2026-11-10.md) → [terceiro lugar](./brainstorm-terceiro-lugar-2026-11-10.md) → [público e gestos](./brainstorm-publico-e-gestos-conhecidos-2026-11-10.md) → [captação por perfil](./brainstorm-captacao-por-perfil-2026-11-10.md) → [refino: rede de ação](./brainstorm-refino-rede-de-acao-e-soberania-2026-11-10.md) → [nichos como colunas](./brainstorm-nichos-colunas-wechat-democratico-2026-11-10.md).
 > Tudo aqui é **candidato**: nada vira caixa no ROADMAP sem DoD e responsável. Nada foi enviado a ninguém.
@@ -24,9 +24,9 @@ A ágora de Atenas era uma praça comum cercada de *stoas*, galerias com colunat
 
 **Peça candidata que a ágora sugere: sorteio.** Atenas sorteava cargos para que os mesmos de sempre não os capturassem. No Vox, o sorteio escolheria quem confere a ata ou quem entra na comissão de contas. Para ninguém desconfiar do resultado, ele precisa ser conferível: cada participante registra antes um valor escondido e o revela depois. Fica para **depois das seis peças** (§5).
 
-**Onde a palavra não entra:**
-- **Marca pública.** "Ágora" esbarra em três nomes: a Ágora Investimentos (Bradesco), justo num produto que fala de caixa e Pix; o Movimento Agora!, que é político e faz parte do Pacto pela Democracia, o que fere a neutralidade (§9); e a Agora.io, empresa de vídeo em tempo real. A marca continua sendo Vox.
-- **Tela.** Quem organiza, com 50+, não conhece grego. Na tela, palavras simples: Aviso, Mural, Ata, Caixa. "Ágora" fica nos docs e no manifesto.
+**Onde a palavra entra — e onde não:**
+- **Marca pública.** A marca do produto continua sendo **Vox**. O nome **Ágora** na aba do feed não substitui a marca; mesmo assim "Ágora" esbarra em terceiros (Ágora Investimentos/Bradesco, Movimento Agora!, Agora.io) — cuidado em copy institucional e §9.
+- **Tela (aba do feed).** A aba principal chama **Ágora** (`#/`, [ADR-016](../adr/016-design-system-sovereign-agora-e-democracia-direta.md), `shell.js`): duplo sentido intencional — a **ágora** ateniense (praça pública) e **agora**, o que está acontecendo *neste momento* nos espaços públicos. **`#/explorar`** é outra tela (**Explorar**, vitrine lazy). Demais peças do cotidiano seguem palavras simples: Aviso, Mural, Ata, Caixa.
 - **Sem romantizar.** A ágora grega excluía mulheres, escravizados e estrangeiros. A do Vox é de qualquer pessoa adulta ([ADR-020](../adr/020-postura-de-operacao-do-piloto-g1.md)), e isso se diz sempre que a imagem aparecer.
 
 **Frase de manifesto:** "A ágora é agora." Serve para quem constrói e para o público da soberania digital. Para quem organiza, a mensagem continua sendo a dor (§8).
