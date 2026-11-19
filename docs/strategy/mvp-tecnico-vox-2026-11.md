@@ -38,7 +38,7 @@ Nenhuma conta do Vox depende de banco central de usuários; voltar significa rea
   - **Cofre na malha ([ADR-037](../adr/037-cofre-na-malha.md), SW v7.141)** — cópias cifradas em laços mútuos, pedido cego com espera de 24 h ou aprovação "Fui eu" e veto "Não fui eu".
   - **Invariantes fechados:** `LT-01`, `LT-03`, `LT-04`, `LT-05`, `LT-08` (E2E loopback) e `LT-10` (matriz 20 pares criar × voltar).
 - **Lacunas conhecidas (fora de promessa até fechar código):**
-  - `LT-02` parcial: faltam timeout em `probeVaultUrl` e não travar `lockAfterPasswordBackup` quando `remote=0` (`test.todo` em `tests/login-rede-ruim.test.js`).
+  - `LT-02` parcial: timeout em `probeVaultUrl` fechado (#291); resta não travar `lockAfterPasswordBackup` quando `remote=0` (`test.todo` em `tests/login-rede-ruim.test.js`).
   - `LT-06` parcial: `identity/tab-sync.js` cobre troca de conta/rota, mas faltam trava de criação simultânea entre duas abas e aviso de storage cheio.
   - `LT-07` parcial: retomada de recarga existe, mas faltam focus trap/Escape no modal de entrada e persistência do kit de e-mail antes da confirmação.
   - `LT-09` (veto da dona no caminho dos guardiões) e 4 achados adversariais do `mesh-vault` (`tests/mesh-vault-adversarial-flow.test.js`, `4 skip`).
@@ -57,7 +57,7 @@ Nenhuma conta do Vox depende de banco central de usuários; voltar significa rea
 - **Explicitamente fora do MVP técnico:**
   - **Relay `enforce` + envio de prova pelo cliente (`INF-04`):** aguarda >50 ativos e definição D2 do RFC 0002.
   - **Cripto nova (DM v2 assinada, subchaves `PM-13`, mochila v2 `PM-79`):** bloqueada até revisão externa de criptografia (`LAN-18`).
-  - **Higienização de DM já aplicada em `render/dm.js`:** `normalizeContextCard` e `normalizeMediaDataUrl` já filtram `contextCard.href` (`#^\/`) e `mediaDataUrl`; resta apenas promover os `2 todo` antigos em `tests/render-dm-proposal-tag.test.js` para testes ativos.
+  - **Higienização de DM (`render/dm.js`, #290):** `normalizeContextCard` e `normalizeMediaDataUrl` filtram `contextCard.href` e `mediaDataUrl`; `tests/render-dm-proposal-tag.test.js` promovido.
 
 ---
 
@@ -126,6 +126,6 @@ O MVP técnico considera-se **pronto e verificável em `develop`/`main`** quando
    - *Identidade e recuperação:* `tests/local-account.test.js`, `tests/recovery-phrase.test.js`, `tests/vault-v2.test.js`, `tests/guardians*.test.js`, `tests/mesh-vault*.test.js`, `tests/login-roundtrip-*.test.js`, `tests/login-network-faults.test.js`, `tests/login-rede-ruim.test.js`, `tests/tab-sync.test.js`.
    - *Integridade, DM e malha:* `tests/sig-format.test.js`, `tests/assinaturas-e-sinais-malicioso.test.js`, `tests/crypto-dm.test.js`, `tests/dm-outbox.test.js`, `tests/peer-sync.test.js`, `tests/gossip-photo.test.js`, `tests/nostr-transport.test.js`, `tests/rate-limit.test.js`, `tests/new-key-guard.test.js`.
    - *Shell, flags e relay:* `tests/shell-reachability.test.js` (pós-`PM-01` com núcleo offline ≤ 2,18 MiB), `tests/feature-flags.test.js`, `tests/release-metadata-drift.test.js`, `relay/test_server.py`, `relay/test_signaling_robustez.py`, `relay/test_blind_relay_snapshot_auth.py`.
-4. **Pendências de robustez `test.todo` fechadas:** `probeVaultUrl` timeout + `lockAfterPasswordBackup` com `remote=0` (`tests/login-rede-ruim.test.js`), `repost-index.js` (`tests/repost-index.test.js`) e promoção dos `2 todo` já cobertos por `render/dm.js` (`tests/render-dm-proposal-tag.test.js`).
+4. **Pendências de robustez `test.todo`:** fechados — `probeVaultUrl` timeout (#291), `repost-index.js` (D4), `render-dm` (#290). Aberto — `lockAfterPasswordBackup` com `remote=0` (`tests/login-rede-ruim.test.js`, ADR produto).
 5. **Documentação sincronizada:** `README.md` + `docs/release-metadata.json` (#285), `docs/audits/auditoria-features-arquitetura-2026-11.md` + `docs/FEATURES.md` (#286), `docs/ROADMAP.md` + `docs/process/plano-testes-login.md` + `docs/THREAT-MODEL.md` (#287) e esta spec (`docs/strategy/mvp-tecnico-vox-2026-11.md`) indexados em `docs/README.md` com `npm run audit:docs` = `0`.
 6. **CI completo (15/15 checks + CodeQL)** verde no SHA exato de cada PR antes de qualquer merge (e decisão explícita do mantenedor para o corte `develop` → `main`).

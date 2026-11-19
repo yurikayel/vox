@@ -4,7 +4,7 @@
 
 // O Service Worker atua no cache offline do shell e notificações de status, sem abrir WebRTC.
 
-const CACHE_NAME = "vox-pwa-v7.143-real-network-audio-video-upload";
+const CACHE_NAME = "vox-pwa-v7.144-pm01-periphery-lazy";
 
 const SHELL_ASSETS = [
 
@@ -63,6 +63,7 @@ const SHELL_ASSETS = [
   "./js/app/onboarding-side-effects.js",
 
   "./js/app/onboarding.js",
+  "./js/app/onboarding-oauth-ui.js",
   "./js/app/onboarding-email.js",
   "./js/app/account-exit-banner.js",
 
@@ -88,31 +89,9 @@ const SHELL_ASSETS = [
   "./js/app/screens-profile.js",
   "./js/app/profile-vault-sync.js",
 
-  "./js/app/screens-voxpedia.js",
   "./js/app/screens-not-found.js",
 
-  "./js/app/screens-ajuda-teste.js",
-
   "./js/app/screens-status.js",
-
-  "./js/app/screens-labs.js",
-
-  "./js/labs/collective-mofn.js",
-
-  "./js/labs/mofn-lab.js",
-  "./js/labs/ai-social-dungeon-lab.js",
-  "./js/community-pillar-pool.js",
-  "./js/rpg-sheet-and-lore.js",
-  "./js/rpg-crypto-table.js",
-  "./js/rpg-maritaca-router.js",
-  "./js/dungeon/dungeon-chrome.js",
-  "./js/dungeon/dungeon-controller.js",
-  "./js/dungeon/dungeon-state.js",
-  "./js/dungeon/rpg-illustrations.js",
-  "./js/dungeon/screen-camp.js",
-  "./js/dungeon/screen-dm.js",
-  "./js/dungeon/screen-sheet.js",
-  "./js/dungeon/screen-table.js",
 
   "./js/render/status.js",
 
