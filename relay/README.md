@@ -52,13 +52,16 @@ Ao abrir o Vox no navegador (`http://127.0.0.1:8080`), o cliente consulta automa
 | `/memory/sync` | `POST` | Sincronização bidirecional incremental (Delta Sync via `clientRevision`, `since` e `knownBlobs`). |
 | `/memory/blob/<hash>` | `GET` | Recuperação direta de blob multimídia deduplicado por SHA-256. |
 | `/memory/vault/<chave>` | `GET` / `POST` | Cofre v2 cifrado no cliente (ADR-025). Regravar exige a prova do dono `ownerToken` (PM-94, ADR-027). |
-| `/relay/snapshot/<canal>` | `GET` / `POST` | Último snapshot consolidado do relay cego. |
+| `/relay/snapshot/<canal>` | `GET` / `POST` | Último snapshot consolidado do relay cego. O `POST` leva a prova de dono em `X-Vox-Snapshot-Proof` ([RFC 0002](../docs/rfc/0002-snapshot-autenticado-do-relay-cego.md)); só snapshot autenticado poda envelopes. |
 | `/p2p/*`, `/peer/beacon` | vários | Seeder P2P e anúncio de pares. |
 | `/oauth/exchange` | `POST` | Troca código OAuth pelo `@usuário` (token descartado). |
 
 **Política de pedido (PM-94, `request_guard.py`):** `Host` de loopback (ou `VOX_RELAY_ALLOWED_HOSTS`), `POST`/`DELETE` só das origens do app (ou `VOX_RELAY_ALLOWED_ORIGINS`), `POST` só `application/json`, e no máximo `VOX_RELAY_WRITE_LIMIT_PER_MIN` escritas por minuto por IP.
 
 **Limpeza e limites (lacunas 5 e 7):** `purge_schedule.py` roda uma thread daemon que apaga o expirado do inbox (72 h) e do canal cego (7 d) a cada `VOX_RELAY_PURGE_INTERVAL_SECONDS` (padrão 900; `0` desliga). `VOX_RELAY_MAX_CACHE_MB` tem padrão **512** (`0` explícito = sem teto) e `VOX_RELAY_MAX_TX_MB` (padrão 32) limita a resposta de gateway aceita em `/tx/<id>`: acima disso, `413`.
+
+**Snapshot autenticado (RFC 0002):** `POST /relay/snapshot/<canal>` aceita o cabeçalho `X-Vox-Snapshot-Proof` (64 hex, HMAC calculado pelo cliente; o relay guarda só o SHA-256). **O primeiro a provar vira dono do canal**; depois, só a mesma prova grava (`403` sem ela ou com outra). `VOX_RELAY_SNAPSHOT_AUTH=compat` (padrão) aceita snapshot sem prova como `auth: false`, **sem podar** nem travar; `enforce` responde `403` sem prova. Tetos: `VOX_RELAY_SNAPSHOT_MAX_COVERED_JUMP` (1000) e `VOX_RELAY_SNAPSHOT_MAX_EPOCH_JUMP` (16). Conflito → `409` com `currentEpoch`/`currentCoveredSerial`; reenvio idêntico → `200` com `"idempotent": true`.
+**Reiniciar o dono (steward):** segredo perdido, relay em outro domínio ou falso dono → apague `latest_snapshot.json` do canal (`<VOX_RELAY_BLIND_DIR>/<canal>/latest_snapshot.json`; o diretório padrão está em `resolve_relay_dir`). O próximo snapshot com prova reivindica o canal; envelopes e TTL ficam como estão. Limite aceito: quem prova primeiro num canal novo vira dono, por isso o cliente confere a `sig` do snapshot contra os autores antes de aplicar.
 
 **CORS:** o relay só devolve `Access-Control-Allow-Origin` (com `Vary: Origin`) para as origens do app (`https://yurikayel.github.io`, `https://vox-9df.pages.dev`), para `http(s)://localhost` e `127.0.0.1` e para as listadas em **`VOX_RELAY_ALLOWED_ORIGINS`** (separadas por vírgula, origem exata, ex.: `https://meu-espelho.example,https://outro.example`). Outras páginas não conseguem ler as respostas; `Access-Control-Allow-Private-Network` também só vai para origem permitida. Quem publica o app em outro domínio precisa pôr esse domínio na variável, senão o navegador bloqueia a leitura.
 

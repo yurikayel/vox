@@ -21,7 +21,7 @@ import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-from relay import blind_relay, central_memory, inbox, mirror_validate, oauth_exchange, p2p_seeder, purge_schedule, rate_limit, request_guard, vault_store
+from relay import blind_relay, central_memory, inbox, mirror_validate, oauth_exchange, p2p_seeder, purge_schedule, rate_limit, request_guard, snapshot_auth, vault_store
 from relay.safe_path import SAFE_CHARS, child_of, only_chars
 
 DEFAULT_PORT = 3920
@@ -430,7 +430,7 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
             return
         self.send_header("Access-Control-Allow-Origin", origin)
         self.send_header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, X-Vox-Delete-Token")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, X-Vox-Delete-Token, X-Vox-Snapshot-Proof")
         self.send_header("Access-Control-Allow-Private-Network", "true")
 
     def _rejected(self, method):
@@ -733,8 +733,14 @@ class VoxRelayHandler(BaseHTTPRequestHandler):
         try:
             body = self.rfile.read(content_length)
             snap_data = json.loads(body.decode("utf-8"))
-            record = blind_relay.store_snapshot(channel_id, snap_data, prune_older=True)
-            self._send_json(record, 201)
+            proof = self.headers.get(snapshot_auth.PROOF_HEADER)
+            record = blind_relay.store_snapshot(channel_id, snap_data, prune_older=True, proof=proof)
+            self._send_json(record, 200 if record.get("idempotent") else 201)
+        except snapshot_auth.SnapshotForbidden as err:
+            self._send_json({"error": str(err)}, 403)
+        except snapshot_auth.SnapshotConflict as err:
+            conflict = {"error": str(err), "currentEpoch": err.current_epoch, "currentCoveredSerial": err.current_covered_serial}
+            self._send_json(conflict, 409)
         except ValueError as err:
             self._send_json({"error": str(err)}, 400)
         except Exception as error:
