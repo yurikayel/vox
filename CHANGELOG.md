@@ -6,6 +6,10 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Code: foto de comunidade — raster, compressão e filtro na malha
+- `client/js/shared/raster-file-to-jpeg.js`, `community-avatar-image.js`: JPEG na criação/troca; `sanitizeMediaUrl` na renderização; gossip `community`/`community_update` recusa SVG e data URL acima do teto.
+- DM reusa `compressRasterFileToJpegDataUrl`. Testes `tests/community-avatar-image.test.js`.
+
 ### Docs: catálogo IXV (Énóis → Vox) e glossário (nov/2026)
 - `docs/brainstorms/brainstorm-enois-observacao-2026-11.md`: ondas 1–3 com IXV-01…14, §6 índice, §7 explicações (Salas Precisas, Nota de contexto, Coluna).
 - `docs/GLOSSARIO.md`: subseção candidatos IXV (**Ágora**, **Explorar**, **Coluna** = blog, Salas Precisas).

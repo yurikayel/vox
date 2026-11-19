@@ -4,6 +4,7 @@
  * Autor deve ser dono ou moderador; só campos em {@link COMMUNITY_UPDATE_FIELDS} entram.
  */
 import { parseModerators } from "./moderation.js";
+import { acceptCommunityAvatarDataUrl } from "./shared/community-avatar-image.js";
 
 /** Valor de `type` em posts de atualização. @type {string} */
 export const COMMUNITY_UPDATE_TYPE = "community_update";
@@ -49,7 +50,13 @@ export function pickCommunityUpdateFields(update) {
   const out = {};
   for (const field of COMMUNITY_UPDATE_FIELDS) {
     const value = update?.[field];
-    if (typeof value === "string" && value) out[field] = value;
+    if (typeof value !== "string" || !value) continue;
+    if (field === "image" || field === "avatar") {
+      const safe = acceptCommunityAvatarDataUrl(value);
+      if (safe) out[field] = safe;
+    } else {
+      out[field] = value;
+    }
   }
   if (out.image && !out.avatar) out.avatar = out.image;
   if (out.avatar && !out.image) out.image = out.avatar;

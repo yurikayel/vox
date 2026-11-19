@@ -29,6 +29,11 @@ import { bindPollBuilder, readPollOptions } from "./compose-poll.js";
 import { assertCanPostTopic } from "./community-channel-flow.js";
 import { resolveCommunityMetadata, resolveTopicContent } from "./screens-community.js";
 import { randomBase36 } from "../shared/html.js";
+import {
+  acceptCommunityAvatarDataUrl,
+  compressCommunityAvatarFile,
+  validateCommunityAvatarFile,
+} from "../shared/community-avatar-image.js";
 
 function updateCommunityPhotoPreview(previewEl, src, initial = "C") {
   if (!previewEl) return;
@@ -40,15 +45,22 @@ function updateCommunityPhotoPreview(previewEl, src, initial = "C") {
 }
 
 function bindPhotoFileInput(fileInput, previewEl, state) {
-  fileInput?.addEventListener("change", (e) => {
+  fileInput?.addEventListener("change", async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      state.photoDataUrl = reader.result;
+    const check = validateCommunityAvatarFile(file);
+    if (!check.ok) {
+      share.showToast(check.message, "error");
+      e.target.value = "";
+      return;
+    }
+    try {
+      state.photoDataUrl = await compressCommunityAvatarFile(file);
       updateCommunityPhotoPreview(previewEl, state.photoDataUrl);
-    };
-    reader.readAsDataURL(file);
+    } catch (err) {
+      share.showToast(err.message || "Falha ao processar foto.", "error");
+      e.target.value = "";
+    }
   });
 }
 
@@ -61,7 +73,7 @@ function bindCommunityPhotoInputs(state) {
   bindPhotoFileInput(fileInput, previewEl, state);
 
   urlInput?.addEventListener("input", () => {
-    const url = urlInput.value.trim();
+    const url = acceptCommunityAvatarDataUrl(urlInput.value.trim());
     if (url) {
       state.photoDataUrl = url;
       updateCommunityPhotoPreview(previewEl, url);
@@ -101,7 +113,9 @@ function readCommunityInputs(state) {
     desc: document.getElementById("comm-desc")?.value.trim(),
     visibility: document.getElementById("comm-type")?.value || "open",
     newKeyQuarantine: Boolean(document.getElementById("comm-new-key-quarantine")?.checked),
-    image: state.photoDataUrl || document.getElementById("comm-photo-url")?.value.trim() || "",
+    image: acceptCommunityAvatarDataUrl(
+      state.photoDataUrl || document.getElementById("comm-photo-url")?.value.trim() || ""
+    ),
   };
 }
 
