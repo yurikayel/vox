@@ -235,3 +235,108 @@ test("backup guiado — ações críticas são botões ou links focáveis", () =
   assert.ok(main.innerHTML.includes('id="bk-pass"'));
   assert.doesNotMatch(main.innerHTML, /btn-backup-wizard-save[^>]*tabindex="-1"/);
 });
+
+test("LT-07a: checkOAuthEnrichStep não redesenha quando #oauth-enrich-overlay já está aberto", async () => {
+  const { checkOAuthEnrichStep } = await import("../client/js/app/onboarding.js");
+  const prevDoc = globalThis.document;
+  localStorage.clear();
+  try {
+    const modalContainer = { innerHTML: "<p>digitando...</p>" };
+    globalThis.document = {
+      getElementById: (id) => {
+        if (id === "oauth-enrich-overlay") return { id };
+        if (id === "modal-container") return modalContainer;
+        return null;
+      },
+    };
+    checkOAuthEnrichStep();
+    assert.equal(modalContainer.innerHTML, "<p>digitando...</p>", "não deve sobrescrever o modal já aberto");
+  } finally {
+    globalThis.document = prevDoc;
+  }
+});
+
+test("LT-07b: renderOAuthEnrich ativa focus trap, ignora etapas ocultas, trata Escape e devolve foco ao fechar", () => {
+  const prevDoc = globalThis.document;
+  try {
+    const keyListeners = [];
+    const opener = { focused: false, focus() { this.focused = true; } };
+    const entryInput = { hidden: false, closest: () => null, getAttribute: () => null, hasAttribute: () => false, focus() { doc.activeElement = this; } };
+    const hiddenHaveInput = { hidden: false, closest: (s) => (s === "[hidden]" ? {} : null), getAttribute: () => null, hasAttribute: () => false, focus() { doc.activeElement = this; } };
+    const entryBtn = { hidden: false, closest: () => null, getAttribute: () => null, hasAttribute: () => false, focus() { doc.activeElement = this; } };
+    const haveSection = { dataset: { genesisStep: "have" }, hidden: true, querySelector: () => entryInput };
+    const entrySection = { dataset: { genesisStep: "entry" }, hidden: false, querySelector: () => entryInput };
+    let skipped = false;
+    const doc = {
+      activeElement: opener,
+      addEventListener: (ev, fn) => { if (ev === "keydown") keyListeners.push(fn); },
+      removeEventListener: (ev, fn) => {
+        const i = keyListeners.indexOf(fn);
+        if (ev === "keydown" && i >= 0) keyListeners.splice(i, 1);
+      },
+    };
+    globalThis.document = doc;
+    const container = {
+      innerHTML: "",
+      contains: (el) => el === entryInput || el === entryBtn,
+      querySelectorAll: (sel) => (sel.includes("data-genesis-step") ? [entrySection, haveSection] : [entryInput, hiddenHaveInput, entryBtn]),
+      querySelector: (sel) => {
+        if (sel === '[data-genesis-step="have"]') return haveSection;
+        if (sel === "#btn-oauth-skip") return { click() { skipped = true; } };
+        return entryInput;
+      },
+    };
+    render.renderOAuthEnrich(container);
+    assert.equal(doc.activeElement, entryInput, "foco inicial no primeiro campo da entrada");
+    assert.equal(keyListeners.length, 1, "focus trap registrado");
+    keyListeners[0]({ key: "Tab", shiftKey: true, preventDefault() {} });
+    assert.equal(doc.activeElement, entryBtn, "Shift+Tab vai ao último visível, pulando etapa [hidden]");
+    haveSection.hidden = false;
+    entrySection.hidden = true;
+    keyListeners[0]({ key: "Escape" });
+    assert.equal(haveSection.hidden, true, "Escape em 'have' volta para 'entry'");
+    keyListeners[0]({ key: "Escape" });
+    assert.equal(skipped, true, "Escape na raiz aciona #btn-oauth-skip quando presente");
+    render.closeOAuthEnrich(container);
+    assert.equal(keyListeners.length, 0, "focus trap removido ao fechar");
+    assert.equal(opener.focused, true, "foco devolvido a quem abriu");
+  } finally {
+    globalThis.document = prevDoc;
+  }
+});
+
+test("LT-07c: resumeGenesisAfterRender no passo email-kit reconstrói copyText para copiar/baixar após recarga", async () => {
+  const { writeGenesisResume, resumeGenesisAfterRender } = await genesisEmail();
+  const { modal, doc } = mountGenesisModal();
+  const handlers = {};
+  const slot = { innerHTML: "", hidden: true };
+  const getById = doc.getElementById;
+  doc.getElementById = (id) => {
+    if (id === "oauth-email-kit-slot") return slot;
+    if (id.startsWith("btn-email-kit-")) return { addEventListener: (ev, fn) => { handlers[id] = fn; } };
+    return getById(id);
+  };
+  let copied = "";
+  const prevDoc = globalThis.document;
+  const prevSs = globalThis.sessionStorage;
+  const prevNav = globalThis.navigator;
+  try {
+    globalThis.document = doc;
+    globalThis.sessionStorage = mapStorage();
+    Object.defineProperty(globalThis, "navigator", {
+      value: { clipboard: { writeText: async (t) => { copied = t; } } },
+      configurable: true,
+    });
+    const mailtoUrl = "mailto:ana%40exemplo.org?subject=Vox%20Acesso&body=Chave%3A%20vx_123";
+    writeGenesisResume({ step: "email-kit", routeId: "vx_123", mailtoUrl, meshWaiting: false });
+    resumeGenesisAfterRender(modal, { onEmailKitFinish: () => {} });
+    assert.equal(slot.hidden, false);
+    assert.ok(slot.innerHTML.includes("ana@exemplo.org"), "e-mail restaurado do mailto");
+    await handlers["btn-email-kit-copy"]();
+    assert.match(copied, /Assunto: Vox Acesso[\s\S]*Chave: vx_123/);
+  } finally {
+    globalThis.document = prevDoc;
+    globalThis.sessionStorage = prevSs;
+    Object.defineProperty(globalThis, "navigator", { value: prevNav, configurable: true });
+  }
+});
