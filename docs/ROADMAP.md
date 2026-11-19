@@ -121,6 +121,17 @@ A meta e a forma de medir estão no [brainstorm §1](./brainstorms/brainstorm-ro
 | [ ] | **PM-107** | ops-humano | **Turma de extensão (coluna 8):** um professor parceiro, um pacote de issues e um nó por turma | 📅 semestre 2027.2 · DoD: ≥3 PRs de fora em `main` e 1 nó rodando · [primeiras tarefas](./process/primeiras-tarefas-contribuidor.md) |
 | [ ] | **PM-109** | doc | **Preparar 2028:** o que o modo eleitoral (REV-24) já cobre numa eleição municipal, o que falta e a revisão marcada para depois de 05/03/2028 (instruções do TSE) | 📅 T4/2027 · período eleitoral a partir de 16/08/2028 |
 
+### Infra dos relays — adiada até passar de 50 usuários ativos
+
+**Decisão do dono (19/11/2026):** não mexer na infra de relays (Cloudflare, Render etc.) agora; está **preparada** (runbook, RFC e ajustes de código já em `develop`) e só se executa quando houver **mais de 50 usuários ativos**. Sem uso por pessoas hoje, o custo e a superfície de operação não se justificam. "Ativo" ainda não tem medida automática: use o pico de `peers` em `/health` do nó de sinalização ou o relato do steward; a definição fina (janela de dias, por conta ou por aparelho) é do dono, e vale registrá-la aqui quando o gatilho se aproximar. Partida a frio do nó grátis da Render e alerta do keepalive são esperados nesse período (issue #280 foi só isso).
+
+| | ID | Tipo | Item | Evidência / nota |
+|---|---|---|---|---|
+| [ ] | **INF-01** | ops-humano | **TURN em produção:** Worker Cloudflare de credencial TURN (caminho A), teste com `curl`, depois PR que preenche `turnCredentialsUrl` em `client/config/signaling.json` (bump de SW). Antes: conferir os limites do plano grátis na fonte oficial (NÃO VERIFICADO), decidir cartão na conta e atualizar a nota de privacidade (o TURN vê os IPs) | 📅 gatilho: >50 ativos · [runbook](./operations/turn-e-segundo-no.md) (#271) · URL do Worker e print do uso citados aqui |
+| [ ] | **INF-02** | ops-humano | **Segundo nó de sinalização** com failover pela lista `signalingUrls` (hoje só `vox-sentinel.onrender.com`; o plano grátis dorme) | 📅 gatilho: >50 ativos · [runbook §4](./operations/turn-e-segundo-no.md) · `/health` e `wscat` dos dois nós citados aqui |
+| [ ] | **INF-03** | ops-humano | **Render:** definir `VOX_RELAY_TRUST_PROXY_HOPS` (valor sugerido **2**: Cloudflare + balanceador da Render; confirmar o formato real do `X-Forwarded-For` e testar que `X-Forwarded-For` forjado não muda o limite; se a lista tiver 1 entrada, usar 1) e pôr um **pinger externo** de 5 em 5 min no `/health`, porque o cron do GitHub roda a cada ~5–6 h e não mantém o nó acordado | 📅 gatilho: >50 ativos · [render.yaml](../relay/render.yaml) · [lacuna 2 da API](./specs/relay-api.md) · captura da variável (sem segredo) citada aqui |
+| [ ] | **INF-04** | code | **Snapshot autenticado, lado do cliente:** definir quem sorteia e distribui o `segredoSnapshot` (pergunta D2 do RFC), enviar `X-Vox-Snapshot-Proof`, conferir a `sig` dos autores antes de `mergeSnapshot`; depois passar o relay de `compat` para `enforce` | 📅 gatilho: >50 ativos (ou antes de ligar o laboratório `webxdc-crdt`) · [RFC 0002](./rfc/0002-snapshot-autenticado-do-relay-cego.md) · relay em `compat` no #281 |
+
 ## Rumo à rede pública (LAN)
 
 Porquê, critérios, fases e ordem: [backlog-lancamento-publico-2026-11.md](./strategy/backlog-lancamento-publico-2026-11.md). Três portões: **G1** piloto fechado → **G2** beta por convite → **G3** público. O caminho crítico é o **REV-12** (parecer), via LAN-01. "Resp." fica no backlog como papel até haver pessoa nomeada.
