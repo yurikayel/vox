@@ -6,6 +6,8 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### CI: keepalive do Render tolera partida a frio (#280)
+- `sentinel-keepalive.yml`: 60 s por tentativa, até 3 tentativas com pausa de 10 s; só conta falha se as 3 falharem, e o log/issue dizem quantas tentativas e o tempo de cada. Aviso no arquivo e no runbook: o cron do GitHub não é pontual; pinger externo de 5 em 5 min é decisão do dono. Sem bump de SW.
 ### Correção: sinalização (`signaling.py`) com a mesma política de origem do relay completo (R6)
 - Fim do `Access-Control-Allow-Origin: *` e do `Allow-Headers: *`: o CORS usa `request_guard.cors_allow_origin` (valor da lista, `Vary: Origin` sempre, nada de `Allow-*` para origem estranha). O handshake do WebSocket recusa com `403` `Origin` fora da lista ou com caractere de controle; sem `Origin` (cliente nativo, nó Linux) segue permitido. App no GitHub Pages/Cloudflare Pages e `localhost` continuam conectando. Testes: `relay/test_signaling_origem.py` (10); `test_signaling.py` não afirma mais `*`. Sem bump de SW.
 ### Segurança: contêiner do relay roda como `vox` (não-root), sem senha de modelo no coturn e portas no host só em loopback
