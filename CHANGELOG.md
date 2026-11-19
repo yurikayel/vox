@@ -6,6 +6,11 @@ Como manter: todo PR com mudança visível acrescenta uma linha em **Não lança
 
 ## [Não lançado]
 
+### Docs: alavancas do mapa, observação Énóis, spec PM-23 (nov/2026)
+- `docs/strategy/mapa-mapa-ecossistema-aposentado-2026-11.md`: §4.2 Énóis expandido; §4.4 cinco alavancas; §4.5 top 5; §3.1 próxima checagem 2027-02-19; §8 fontes reordenadas.
+- `docs/brainstorms/brainstorm-enois-observacao-2026-11.md` (novo): 11 rotas, não-copiar, ondas candidatas.
+- `docs/specs/modo-assembleia-v0.md` (novo): stub PM-23 (Loomio/Decidim, rituais, campos planos). Sem código nem bump de SW.
+
 ### Docs: mapa do tecido social digital BR (nov/2026)
 - `docs/strategy/mapa-mapa-ecossistema-aposentado-2026-11.md`: rede P2P BR de referência reclassificado (concorrente P2P, Conf. A, PolyForm); §2.2 Fediverso BR; §2.3 cívico; §3.1–3.2 tracking; §4 radar de aprendizados; Énóis (GPL-3.0); **Sua Voz** mantida; notas POSITIONING/LESSONS. Sem código nem bump de SW.
 
