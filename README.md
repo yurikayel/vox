@@ -96,11 +96,11 @@ O `Vox Memoria` para Windows compila com `packaging/zero-central-memory-windows/
 
 Legenda: ✅ no ar · 🧪 laboratório (escrito, fora das telas ou atrás de flag) · 🚧 parcial · ⏸️ pausado. Lista canônica, com rotas, módulos e testes, em [FEATURES.md](./docs/FEATURES.md).
 
-- **Praça e comunidades — no ar:** feeds Social e Cívico, comunidades, fórum, Canal, enquetes, hashtags, modo eleitoral e moderação local. **Laboratório:** Pol.is não plugado e moderador natural atrás de flag.
-- **Identidade e recuperação — no ar:** conta ECDSA P-256, cofre v2, frase de 12 palavras, cofre na malha, `.voxid` e apagar dados locais. **Parcial:** Guardiões Shamir. **Laboratório:** perfil coletivo M-de-N.
-- **Mensagens — no ar:** DMs cifradas de ponta a ponta e caixa de saída com reenvio por 7 dias. **Parcial:** entrega offline depende de relay de steward; “Esconder meu IP” depende de TURN.
-- **Mídia e distribuição — no ar:** áudio e vídeo ≤ 320p, deduplicação SHA-256, sync por inventário, Notas de Perfil, republicar e POSSE. **Pausado:** gravação no Arweave. **Laboratório:** Webxdc + CRDT e outros 18 módulos fora das telas.
-- **Economia local e rede — no ar:** Feira, Pix Zaps, Voxels locais, diretório e Bluesky. **Parcial:** outras redes exigem `/oauth/exchange`. **Pausado:** Cartório Cívico. **Laboratório:** AI Social Dungeon.
+- **Praça e comunidades:** ✅ feeds Social e Cívico, comunidades, fórum, Canal, enquetes, hashtags, modo eleitoral e moderação local · 🧪 Pol.is não plugado e moderador natural atrás de flag (`vox.lab.moderador`).
+- **Identidade e recuperação:** ✅ conta ECDSA P-256, cofre v2, frase de 12 palavras, cofre na malha, `.voxid` e apagar dados locais · 🚧 Guardiões Shamir · 🧪 perfil coletivo M-de-N.
+- **Mensagens:** ✅ DMs cifradas de ponta a ponta e caixa de saída com reenvio por 7 dias · 🚧 entrega offline depende de relay de steward; "Esconder meu IP" depende de TURN.
+- **Mídia e distribuição:** ✅ áudio e vídeo ≤ 320p, deduplicação SHA-256, sync por inventário, Notas de Perfil, republicar e `EXPLODE!` (POSSE) · ⏸️ gravação no Arweave · 🧪 Webxdc + CRDT (`client/js/labs/parado/`, 21 módulos fora do precache).
+- **Economia local e rede:** ✅ Feira, Pix Zaps, Voxels locais, diretório e Bluesky · 🚧 outras redes exigem `/oauth/exchange` · ⏸️ Cartório Cívico (só hash local) · 🧪 AI Social Dungeon.
 
 Recuperação soberana: [ADR-025](./docs/adr/025-cofre-v2-so-a-senha-abre.md) (cofre v2), [ADR-032](./docs/adr/032-login-perene-a-conta-nasce-com-saida.md) (frase e guardiões) e [ADR-037](./docs/adr/037-cofre-na-malha.md) (cofre na malha). Laboratórios: [ADR-005](./docs/adr/005-collective-profile-m-of-n.md) (M-de-N), [ADR-012](./docs/adr/012-soberania-digital-cintura-fina-cartuchos-webxdc.md) (Webxdc) e [ADR-033](./docs/adr/033-ia-so-no-rpg-local-primeiro.md) (RPG local).
 
