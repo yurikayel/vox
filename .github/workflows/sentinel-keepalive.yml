@@ -2,7 +2,11 @@ name: Sentinel Keepalive — Nós Base 24/7
 
 on:
   schedule:
-    # A cada 14 minutos (mantém instâncias gratuitas como Render e Koyeb ativas sem adormecer)
+    # Pedido a cada 14 minutos, mas o cron do GitHub NÃO é pontual: medido, roda de verdade a
+    # cada ~5-6 h. Logo o keepalive reduz, mas não elimina, a partida a frio do plano grátis da
+    # Render (a 1ª requisição após ociosidade leva ~13 s). Por isso o ping tem 60 s por tentativa
+    # e até 3 tentativas: a 1ª serve para acordar o nó. A alternativa robusta é um pinger externo
+    # gratuito de 5 em 5 min (decisão do dono; não implementado aqui).
     - cron: "*/14 * * * *"
   workflow_dispatch:
 
@@ -25,6 +29,9 @@ jobs:
           SENTINEL_NODE_1: ${{ secrets.SENTINEL_NODE_1 }}
           SENTINEL_NODE_2: ${{ secrets.SENTINEL_NODE_2 }}
           SENTINEL_NODE_3: ${{ secrets.SENTINEL_NODE_3 }}
+          ATTEMPT_TIMEOUT: "60"
+          MAX_ATTEMPTS: "3"
+          RETRY_PAUSE: "10"
         run: |
           echo "=============================================="
           echo "  Vox Sentinel Keepalive Ping"
@@ -42,6 +49,7 @@ jobs:
           fi
 
           failed=0
+          fail_detail=""
           for node in "${nodes[@]}"; do
             clean_url=$(echo "$node" | sed 's|/$||')
             if [[ ! "$clean_url" =~ ^https?:// ]]; then
@@ -50,27 +58,42 @@ jobs:
             health_url="${clean_url}/health"
 
             echo "Testando nó: $health_url ..."
-            response=$(curl -s -S -m 15 -w "\nHTTP_STATUS:%{http_code}\nTIME:%{time_total}s" "$health_url" || true)
-            http_code=$(echo "$response" | grep "HTTP_STATUS:" | cut -d':' -f2)
-            req_time=$(echo "$response" | grep "TIME:" | cut -d':' -f2)
+            attempts=0
+            ok=0
+            times=""
+            while [ "$attempts" -lt "$MAX_ATTEMPTS" ]; do
+              attempts=$((attempts + 1))
+              response=$(curl -s -S -m "$ATTEMPT_TIMEOUT" -w "\nHTTP_STATUS:%{http_code}\nTIME:%{time_total}" "$health_url" || true)
+              http_code=$(echo "$response" | grep "HTTP_STATUS:" | cut -d':' -f2)
+              req_time=$(echo "$response" | grep "TIME:" | cut -d':' -f2)
+              times="${times}${times:+, }${req_time:-0}s"
+              if [ "$http_code" = "200" ]; then
+                echo "  [OK] Nó ativo! Status 200 em ${req_time}s (tentativa ${attempts}/${MAX_ATTEMPTS})"
+                ok=1
+                break
+              fi
+              echo "  tentativa ${attempts}/${MAX_ATTEMPTS} falhou (HTTP ${http_code:-timeout}, ${req_time:-0}s)"
+              [ "$attempts" -lt "$MAX_ATTEMPTS" ] && sleep "$RETRY_PAUSE"
+            done
 
-            if [ "$http_code" = "200" ]; then
-              echo "  [OK] Nó ativo! Status 200 em ${req_time}"
-            else
-              echo "  [ALERTA] Falha no nó ($clean_url) — Código HTTP: ${http_code:-timeout}"
+            if [ "$ok" -ne 1 ]; then
+              echo "  [ALERTA] Falha no nó ($clean_url) após ${attempts} tentativas de até ${ATTEMPT_TIMEOUT}s (tempos: ${times})"
               failed=$((failed + 1))
+              fail_detail="${attempts} tentativas de até ${ATTEMPT_TIMEOUT}s (tempos: ${times})"
             fi
           done
 
           echo "=============================================="
           echo "Ping concluído: $((${#nodes[@]} - failed))/${#nodes[@]} nós ativos."
           echo "failed=$failed" >> "$GITHUB_OUTPUT"
+          echo "detail=$fail_detail" >> "$GITHUB_OUTPUT"
           echo "=============================================="
 
       - name: Alerta vira issue (PM-61)
         if: steps.ping.outputs.failed != '0' && github.event_name == 'schedule'
         env:
           GH_TOKEN: ${{ github.token }}
+          PING_DETAIL: ${{ steps.ping.outputs.detail }}
           ALERT_TITLE: "Alerta: nó de sinalização (Render) sem resposta no keepalive"
         run: |
           repo="$GITHUB_REPOSITORY"
@@ -84,4 +107,4 @@ jobs:
             exit 0
           fi
           gh issue create --repo "$repo" --label alerta-automatico --title "$ALERT_TITLE" \
-            --body "A execução $run_url falhou em $(date -u +%Y-%m-%dT%H:%MZ). Feche esta issue quando resolver; enquanto ela estiver aberta, novas falhas não abrem outra. Runbook: docs/operations/runbook-incidentes.md"
+            --body "A execução $run_url falhou em $(date -u +%Y-%m-%dT%H:%MZ) após ${PING_DETAIL:-3 tentativas}. Feche esta issue quando resolver; enquanto ela estiver aberta, novas falhas não abrem outra. Runbook: docs/operations/runbook-incidentes.md"
