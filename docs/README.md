@@ -68,6 +68,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 | ADRs (detalhe de cada decisão) | [adr/README.md](./adr/README.md) |
 | Tese de tração e preceitos | [direcionamento-crescimento-rede-2026-11.md](./strategy/direcionamento-crescimento-rede-2026-11.md) |
 | Retrato do repo (nov/2026, portões e drift main/develop) | [analise-repositorio-vox-2026-11.md](./strategy/analise-repositorio-vox-2026-11.md) |
+| Spec do MVP técnico (plataforma sem nicho, núcleo vs lazy vs labs, DoD) | [mvp-tecnico-vox-2026-11.md](./strategy/mvp-tecnico-vox-2026-11.md) |
 | Navegação, banners de status e DoD dos docs | [CONTRIBUTING-DOCS.md](./CONTRIBUTING-DOCS.md) |
 | Termos da UI e copy leigo (pt-BR) | [GLOSSARIO.md](./GLOSSARIO.md) |
 
@@ -112,6 +113,7 @@ Na raiz de `docs/` ficam só os documentos canônicos (tabela "Fonte de verdade"
 ## 2. Roadmap, estratégia e teses
 
 - [ROADMAP.md](./ROADMAP.md): **plano vivo**
+- [mvp-tecnico-vox-2026-11.md](./strategy/mvp-tecnico-vox-2026-11.md): **spec do MVP técnico** (10 seções: recorte do núcleo offline, recuperação, segurança, descentralização honesta, modularidade, DoD; sem nicho)
 - [direcionamento-crescimento-rede-2026-11.md](./strategy/direcionamento-crescimento-rede-2026-11.md): preceitos, escada de 4 camadas, moderação E1–E5
 - [rede-sustentada-participantes.md](./strategy/rede-sustentada-participantes.md) · [backlog-participacao-rede.md](./strategy/backlog-participacao-rede.md) (IDs V-P) · [infra-participativa-blindagem-crescimento.md](./strategy/infra-participativa-blindagem-crescimento.md) · [espacos-digitais-infra.md](./strategy/espacos-digitais-infra.md) (V-I01)
 - [campo-debate-aberto-ndp-2026-10.md](./strategy/campo-debate-aberto-ndp-2026-10.md): notas de campo, modelos A–D
